@@ -74,28 +74,30 @@ namespace Alex.Worlds
 		public InventoryManager InventoryManager { get; }
 		private SkyBox SkyRenderer { get; }
 
-		public long Time    { get; set; } = 0;
-		public bool Raining { get; set; } = false;
+		public long Time      { get; set; } = 1;
+		public long TimeOfDay { get; set; } = 1;
+		public bool Raining   { get; set; } = false;
 		
-		public bool DrowningDamage { get; set; } = true;
-		public bool CommandblockOutput { get; set; } = true;
-		public bool DoTiledrops { get; set; } = true;
-		public bool DoMobloot { get; set; } = true;
-		public bool KeepInventory { get; set; } = true;
-		public bool DoDaylightcycle { get; set; } = true;
-		public bool DoMobspawning { get; set; } = true;
-		public bool DoEntitydrops { get; set; } = true;
-		public bool DoFiretick { get; set; } = true;
-		public bool DoWeathercycle { get; set; } = true;
-		public bool Pvp { get; set; } = true;
-		public bool Falldamage { get; set; } = true;
-		public bool Firedamage { get; set; } = true;
-		public bool Mobgriefing { get; set; } = true;
-		public bool ShowCoordinates { get; set; } = true;
+		public bool DrowningDamage      { get; set; } = true;
+		public bool CommandblockOutput  { get; set; } = true;
+		public bool DoTiledrops         { get; set; } = true;
+		public bool DoMobloot           { get; set; } = true;
+		public bool KeepInventory       { get; set; } = true;
+		public bool DoDaylightcycle     { get; set; } = true;
+		public bool DoMobspawning       { get; set; } = true;
+		public bool DoEntitydrops       { get; set; } = true;
+		public bool DoFiretick          { get; set; } = true;
+		public bool DoWeathercycle      { get; set; } = true;
+		public bool Pvp                 { get; set; } = true;
+		public bool Falldamage          { get; set; } = true;
+		public bool Firedamage          { get; set; } = true;
+		public bool Mobgriefing         { get; set; } = true;
+		public bool ShowCoordinates     { get; set; } = true;
 		public bool NaturalRegeneration { get; set; } = true;
-		public bool TntExplodes { get; set; } = true;
+		public bool TntExplodes         { get; set; } = true;
 		public bool SendCommandfeedback { get; set; } = true;
-		public int RandomTickSpeed { get; set; } = 3;
+		public bool InstantRespawn      { get; set; } = false;
+		public int  RandomTickSpeed     { get; set; } = 3;
 
 		private Dimension _dimension = Dimension.Overworld;
 
@@ -331,10 +333,13 @@ namespace Alex.Worlds
 		public void OnTick()
 		{
 			Player?.OnTick();
+
+			Time++;
 			
 			if (DoDaylightcycle)
 			{
-				Time++;
+				var tod = TimeOfDay;
+				TimeOfDay = ((tod + 1) % 24000);
 			}
 		}
 		
@@ -477,8 +482,12 @@ namespace Alex.Worlds
 				var cy       = y & 0xff;
 				var cz       = z & 0xf;
 				
-				var chunkPos = new BlockCoordinates(cx, cy, cz);
+				var chunkPos   = new BlockCoordinates(cx, cy, cz);
+				var blockAtPos = chunk.GetBlockState(cx, cy, cz);
 
+				if (blockAtPos.Block.BlockMaterial == Material.Air)
+					return;
+				
 				chunk.RemoveBlockEntity(chunkPos);
 				EntityManager.RemoveBlockEntity(coords);
 				
@@ -658,18 +667,6 @@ namespace Alex.Worlds
 			return -1;
 		}
 
-		public bool HasBlock(int x, int y, int z)
-		{
-			ChunkColumn chunk;
-			if (ChunkManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
-			{
-				//Worlds.ChunkColumn realColumn = (Worlds.ChunkColumn)chunk;
-				return true;
-			}
-
-			return false;
-		}
-		
 		public void SetGameRule(MiNET.GameRule gameRule)
         {
 	        if (Enum.TryParse(gameRule.Name, out GameRulesEnum val))
@@ -743,6 +740,9 @@ namespace Alex.Worlds
 				case GameRulesEnum.SendCommandfeedback:
 					SendCommandfeedback = value;
 					break;
+				case GameRulesEnum.DoImmediateRespawn:
+					InstantRespawn = value;
+					break;
 			}
 		}
 
@@ -760,6 +760,8 @@ namespace Alex.Worlds
 		{
 			switch (rule)
 			{
+				case GameRulesEnum.DoImmediateRespawn:
+					return InstantRespawn;
 				case GameRulesEnum.DrowningDamage:
 					return DrowningDamage;
 				case GameRulesEnum.CommandblockOutput:
@@ -857,13 +859,17 @@ namespace Alex.Worlds
 
 		public void DespawnEntity(long entityId)
 		{
-			if (EntityManager.TryGet(entityId, out Entity entity))
-			{
-				PhysicsEngine.Remove(entity);
-				//entity.Dispose();
-			}
+			Ticker.ScheduleTick(
+				() =>
+				{
+					if (EntityManager.TryGet(entityId, out Entity entity))
+					{
+						PhysicsEngine.Remove(entity);
+						EntityManager.Remove(entityId);
+						//entity.Dispose();
+					}
+				}, 0);
 
-			EntityManager.Remove(entityId);
 			//	Log.Info($"Despawned entity {entityId}");
 		}
 
@@ -927,6 +933,7 @@ namespace Alex.Worlds
 		public void SetTime(long worldTime, long timeOfDay)
 		{
 			Time = worldTime;//timeOfDay;
+			TimeOfDay = Math.Abs(timeOfDay);
 		}
 
 		public void SetRain(bool raining)

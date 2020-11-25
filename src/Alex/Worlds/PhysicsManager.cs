@@ -525,10 +525,8 @@ namespace Alex.Worlds
 			    for (int z = minZ; z < maxZ; z++)
 			    {
 				    var coords = new BlockCoordinates(new Vector3(x,y,z));
-				    if (!world.HasBlock(coords.X, coords.Y, coords.Z))
-					    continue;
-
-				    var block = world.GetBlockState(coords);
+				    
+				    var block  = world.GetBlockState(coords);
 				    if (block == null)
 					    continue;
 				    

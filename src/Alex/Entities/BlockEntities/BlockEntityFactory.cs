@@ -80,7 +80,7 @@ namespace Alex.Entities.BlockEntities
 
 					case "minecraft:sign":
 					case "sign":
-						blockEntity = new SignBlockEntity(world, block, SignTexture);
+						blockEntity = new SignBlockEntity(world, block);
 
 						break;
 					

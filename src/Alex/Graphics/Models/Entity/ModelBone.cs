@@ -179,7 +179,6 @@ namespace Alex.Graphics.Models.Entity
 
 			private Matrix DefaultMatrix { get; set; } = Matrix.Identity;
 
-			public Matrix ChildMatrix { get; set; } = Matrix.Identity;
 			public void Update(IUpdateArgs args,
 				Matrix characterMatrix,
 				Vector3 diffuseColor,

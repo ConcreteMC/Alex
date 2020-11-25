@@ -182,8 +182,8 @@ namespace Alex.Graphics.Models
 		{
 			get
 			{
-				int i = (int)(World.Time % 24000L);
-				float f = ((float)i + 1f) / 24000.0F - 0.25F;
+				int  timeOfDay = (int)(World.TimeOfDay % 24000L);
+				float f = ((float)timeOfDay + 1f) / 24000.0F - 0.25F;
 
 				if (f < 0.0F)
 				{
@@ -196,7 +196,7 @@ namespace Alex.Graphics.Models
 				}
 
 				float f1 = 1.0F - (float)((Math.Cos((double)f * Math.PI) + 1.0D) / 2.0D);
-				f = f + (f1 - f) / 3.0F;
+				f += (f1 - f) / 3.0F;
 				return f;
 			}
 		}

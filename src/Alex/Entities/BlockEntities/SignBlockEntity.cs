@@ -17,10 +17,11 @@ namespace Alex.Entities.BlockEntities
 	public class SignBlockEntity : BlockEntity
 	{
 		private EntityModelRenderer.ModelBone RootBone { get; set; }
+
 		/// <inheritdoc />
-		public SignBlockEntity(World level, Block block, PooledTexture2D texture) : base(level, block)
+		public SignBlockEntity(World level, Block block) : base(level, block)
 		{
-			ModelRenderer = new EntityModelRenderer(new StandingSignEntityModel(), texture);
+			//ModelRenderer = new EntityModelRenderer(new StandingSignEntityModel(), texture);
 			
 			Width = 16;
 			Height = 16;
@@ -122,7 +123,7 @@ namespace Alex.Entities.BlockEntities
 		{
 			if (newBlock is WallSign)
 			{
-				ModelRenderer = new EntityModelRenderer(new WallSignEntityModel(), ModelRenderer.Texture);
+				ModelRenderer = new EntityModelRenderer(new WallSignEntityModel(), BlockEntityFactory.SignTexture);
 				
 				if (newBlock.BlockState.TryGetValue("facing", out var facing))
 				{
@@ -163,6 +164,8 @@ namespace Alex.Entities.BlockEntities
 			}
 			else if (newBlock is StandingSign)
 			{
+				ModelRenderer = new EntityModelRenderer(new StandingSignEntityModel(), BlockEntityFactory.SignTexture);
+				
 				if (newBlock.BlockState.TryGetValue("rotation", out var r))
 				{
 					if (byte.TryParse(r, out var rot))
@@ -176,10 +179,45 @@ namespace Alex.Entities.BlockEntities
 		/// <inheritdoc />
 		protected override void ReadFrom(NbtCompound compound)
 		{
-			Text1 = compound["Text1"].StringValue;
-			Text2 = compound["Text2"].StringValue;
-			Text3 = compound["Text3"].StringValue;
-			Text4 = compound["Text4"].StringValue;
+			if (compound.TryGet("text1", out var text1)
+			|| compound.TryGet("Text1", out text1))
+			{
+				if (text1 != null && text1.HasValue)
+				{
+					Text1 = text1.StringValue;
+				}
+			}
+			
+			if (compound.TryGet("text2", out var text2)
+			    || compound.TryGet("Text2", out text2))
+			{
+				if (text2 != null && text2.HasValue)
+				{
+					Text2 = text2.StringValue;
+				}
+			}
+			
+			if (compound.TryGet("text3", out var text3)
+			    || compound.TryGet("Text3", out text3))
+			{
+				if (text3 != null && text3.HasValue)
+				{
+					Text3 = text3.StringValue;
+				}
+			}
+			
+			if (compound.TryGet("text4", out var text4)
+			    || compound.TryGet("Text4", out text4))
+			{
+				if (text4 != null && text4.HasValue)
+				{
+					Text4 = text4.StringValue;
+				}
+			}
+			//Text1 = compound["Text1"].StringValue;
+			//Text2 = compound["Text2"].StringValue;
+			//Text3 = compound["Text3"].StringValue;
+			//Text4 = compound["Text4"].StringValue;
 		}
 
 		private void TextChanged()

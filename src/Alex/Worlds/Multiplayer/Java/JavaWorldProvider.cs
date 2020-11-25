@@ -947,13 +947,6 @@ namespace Alex.Worlds.Multiplayer.Java
 				var scoreboard = ScoreboardView;
 				if (scoreboard == null)
 					return;
-				
-				Log.Info($"Name: {packet.Name} Position: {packet.Position}");
-				
-				//scoreboard.TryGetObjective(packet.Name, out var )
-				//scoreboard.TryGetObjective(packet.Name, )
-				//scoreboard.Clear();
-				//scoreboard.AddObjective(new ScoreboardObjective(packet.Name, packet.Name, 0, ""));
 			}
 		}
 
@@ -1148,7 +1141,7 @@ namespace Alex.Worlds.Multiplayer.Java
 				switch (packet.Animation)
 				{
 					case EntityAnimationPacket.Animations.SwingMainArm:
-						entity.SwingArm(false);
+						entity.SwingArm(false, false);
 						break;
 
 					case EntityAnimationPacket.Animations.TakeDamage:
@@ -1159,6 +1152,7 @@ namespace Alex.Worlds.Multiplayer.Java
 						break;
 
 					case EntityAnimationPacket.Animations.SwingOffhand:
+						entity.SwingArm(false, true);
 						break;
 
 					case EntityAnimationPacket.Animations.CriticalEffect:
@@ -1212,7 +1206,7 @@ namespace Alex.Worlds.Multiplayer.Java
 		private void HandleDimension(NbtCompound dim)
 		{
 			Dimension dimension = Dimension.Overworld;
-			switch (dim["effects"].StringValue)
+			switch (dim["effects"]?.StringValue)
 			{
 				case "minecraft:the_nether":
 					dimension = Dimension.Nether;
@@ -1229,6 +1223,31 @@ namespace Alex.Worlds.Multiplayer.Java
 			}
 
 			World.Dimension = dimension;
+
+			var fixedTime = dim["fixed_time"];
+
+			if (fixedTime != null && fixedTime.HasValue)
+			{
+				if (fixedTime.TagType == NbtTagType.Long)
+				{
+					World.SetGameRule(GameRulesEnum.DoDaylightcycle, false);
+					World.SetTime(World.Time, fixedTime.LongValue);
+				}
+			}
+			else
+			{
+				World.SetGameRule(GameRulesEnum.DoDaylightcycle, true);
+			}
+
+			var hasSkyLight = dim["has_skylight"];
+
+			if (hasSkyLight != null && hasSkyLight.HasValue)
+			{
+				if (hasSkyLight.ByteValue == 1)
+				{
+					
+				}
+			}
 		}
 		
 		private void HandleRespawnPacket(RespawnPacket packet)
@@ -1376,10 +1395,7 @@ namespace Alex.Worlds.Multiplayer.Java
 					World?.SetRain(true);
 					break;
 				case GameStateReason.ChangeGamemode:
-					if (World?.Player is Player player)
-					{
-						player.UpdateGamemode((Gamemode) packet.Value);
-					}
+					World?.Player?.UpdateGamemode((Gamemode) packet.Value);
 					break;
 				case GameStateReason.ExitEnd:
 					break;
@@ -1776,7 +1792,7 @@ namespace Alex.Worlds.Multiplayer.Java
 			var flags = packet.Flags;
 			var player = World.Player;
 			
-			player.FlyingSpeed = packet.FlyingSpeed * 10f;
+			player.FlyingSpeed = packet.FlyingSpeed;
 
 				//player.FlyingSpeed = packet.FlyingSpeed * 10f;
 			player.FOVModifier = packet.FiedOfViewModifier;

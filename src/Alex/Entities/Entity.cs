@@ -733,19 +733,27 @@ namespace Alex.Entities
 
 		public void SwingArm(bool broadcast = false)
 		{
-			EntityModelRenderer.ModelBone bone = _rightArmModel;
+			bool isLeftHand = false;
+			
 			if (this is LivingEntity e)
 			{
 				if (e.IsLeftHanded)
 				{
-					bone = _leftArmModel;
+					isLeftHand = true;
 				}
 				else
 				{
-					bone = _rightArmModel;
+					isLeftHand = false;
 				}
 			}
 			
+			SwingArm(broadcast, isLeftHand);
+		}
+		
+		public void SwingArm(bool broadcast, bool leftHanded)
+		{
+			EntityModelRenderer.ModelBone bone = leftHanded ? _leftArmModel : _rightArmModel;
+
 			if (bone != null)
 			{
 				bone.Animations.Enqueue(new SwingAnimation(bone, TimeSpan.FromMilliseconds(200)));
@@ -753,7 +761,7 @@ namespace Alex.Entities
 
 			if (broadcast)
 			{
-				Network.PlayerAnimate(PlayerAnimations.SwingRightArm);
+				Network.PlayerAnimate(leftHanded ? PlayerAnimations.SwingLeftArm : PlayerAnimations.SwingRightArm);
 			}
 		}
 		

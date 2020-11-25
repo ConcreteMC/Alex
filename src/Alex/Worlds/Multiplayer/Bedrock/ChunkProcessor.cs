@@ -517,14 +517,17 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 								        {
 									        //if (blockEntity.X )
 									        var block = chunkColumn.GetBlockState(
-										        blockEntity.X & 0x0f, blockEntity.Y & 0xff, blockEntity.Z & 0x0f).Block;
+										        blockEntity.X & 0xf, blockEntity.Y & 0xff, blockEntity.Z & 0xf).Block;
 
-									        blockEntity.Block = block;
+									        if (block.BlockMaterial != Material.Air)
+									        {
+										        blockEntity.Block = block;
 
-									        chunkColumn.AddBlockEntity(
-										        new BlockCoordinates(
-											        blockEntity.X & 0x0f, blockEntity.Y & 0xff, blockEntity.Z & 0x0f),
-										        blockEntity);
+										        chunkColumn.AddBlockEntity(
+											        new BlockCoordinates(
+												        blockEntity.X & 0xf, blockEntity.Y & 0xff,
+												        blockEntity.Z & 0xf), blockEntity);
+									        }
 								        }
 							        }
 							        catch (Exception ex)

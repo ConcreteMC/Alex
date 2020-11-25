@@ -16,6 +16,7 @@ using Alex.API.Services;
 using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Blocks;
+using Alex.Blocks.Minecraft;
 using Alex.Entities;
 using Alex.Entities.BlockEntities;
 using Alex.Entities.Effects;
@@ -1033,7 +1034,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 			if (entity == null)
 			{
-				Log.Warn($"Unknown entity in MobArmorEquipment packet!");
+				Log.Warn($"Unknown entity in MobArmorEquipment packet! ({message.runtimeEntityId})");
 
 				return;
 			}
@@ -1386,17 +1387,20 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					message.coordinates.X, message.coordinates.Y, message.coordinates.Z);
 
 				var block = Client.World.GetBlockState(worldPos).Block;
-				
-				var blockEntity = BlockEntityFactory.ReadFrom(compound, Client.World, block);
 
-				if (blockEntity == null)
+				if (block.BlockMaterial != Material.Air)
 				{
-					//Log.Warn($"Null blockentity!");
-					return;
-				}
+					var blockEntity = BlockEntityFactory.ReadFrom(compound, Client.World, block);
 
-				Client.World.SetBlockEntity(
-					message.coordinates.X, message.coordinates.Y, message.coordinates.Z, blockEntity);
+					if (blockEntity == null)
+					{
+						//Log.Warn($"Null blockentity!");
+						return;
+					}
+
+					Client.World.SetBlockEntity(
+						message.coordinates.X, message.coordinates.Y, message.coordinates.Z, blockEntity);
+				}
 
 				//Log.Info($"Got block entity: {blockEntity.}");
 				/*if (Client.World.ChunkManager.TryGetChunk(
