@@ -9,7 +9,8 @@ namespace Alex.Blocks
 	    {
 		    this.Register("minecraft:air", () => new Air());
 		    this.Register("minecraft:cave_air", () => new Air());
-
+		    this.Register("minecraft:void_air", () => new Air());
+		    
 		    this.Register("minecraft:stone", () => new Stone());
 		    this.Register("minecraft:dirt", () => new Dirt());
 		    this.Register("minecraft:podzol", () => new Podzol());

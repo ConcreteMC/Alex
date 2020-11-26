@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -29,6 +30,7 @@ using Alex.Gui.Elements;
 using Alex.Items;
 using Alex.Net.Bedrock;
 using Alex.Net.Bedrock.Packets;
+using Alex.Net.Bedrock.Raknet;
 using Alex.ResourcePackLib.Json;
 using Alex.ResourcePackLib.Json.Converters;
 using Alex.ResourcePackLib.Json.Models.Entities;
@@ -133,6 +135,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	        }
         }
 
+        private bool _isInitialized = false;
         public void HandleMcpePlayStatus(McpePlayStatus message)
 		{
 			Log.Info($"Client status: {message.status}");
@@ -145,11 +148,16 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				Client.PlayerStatusChanged.Set();
 
 				Client.World.Player.EntityId = Client.EntityId;
-				
-				var packet = McpeSetLocalPlayerAsInitialized.CreateObject();
-				packet.runtimeEntityId = Client.EntityId;
 
-				Client.SendPacket(packet);
+				if (!_isInitialized)
+				{
+					var packet = McpeSetLocalPlayerAsInitialized.CreateObject();
+					packet.runtimeEntityId = Client.EntityId;
+
+					Client.SendPacket(packet);
+
+					_isInitialized = true;
+				}
 			}
 			else if (Client.PlayerStatus == 0)
 			{
@@ -245,7 +253,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			
 			Client.ChangeDimensionResetEvent.Set();
 		}
-
+		
 		public void HandleMcpeStartGame(McpeStartGame message)
 		{
 			Client.GameStarted = true;
@@ -272,6 +280,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			
 			//message.itemstates[0].
 
+			ChunkProcessor.Itemstates = message.itemstates;
+			
 			Dictionary<uint, BlockStateContainer> ourStates = new Dictionary<uint, BlockStateContainer>();
 
 			foreach (var bs in message.blockPalette)
@@ -1246,15 +1256,29 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				return;
 			}
 			
-			InventoryBase inventory = null;
-			if (message.inventoryId == 0x00)
+			InventoryBase inventory  = null;
+			var           startIndex = 0;
+			//var 
+			if (message.inventoryId == 0x00 //Inventory
+			 //   || message.inventoryId == 124 //UI
+			    || message.inventoryId == 120 //Armor
+			  //  || message.inventoryId == 119 //Offhand
+			 ) 
 			{
 				inventory = Client.World.Player.Inventory;
+
+				if (inventory is BedrockInventory bi)
+				{
+					//if (message.inventoryId == 0)
+					//	startIndex = bi.InventoryOffset;
+					if (message.inventoryId == 120)
+						startIndex = bi.BootsSlot;
+				}
 			}
 
 			if (inventory == null)
 			{
-				Log.Warn($"Unknown inventory ID: {message.inventoryId}");
+				Log.Warn($"(Inventory content) Unknown inventory ID: {message.inventoryId}");
 				return;
 			}
 
@@ -1267,7 +1291,9 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				var result = slot.ToAlexItem().Clone();
 				if (result != null)
 				{
-					inventory[usedIndex] = result;
+					result.StackID = slot.UniqueId;
+					inventory.SetSlot(startIndex+ index, result, true);
+					//inventory[usedIndex] = result;
 				}
 				else
                 {
@@ -1293,14 +1319,18 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			
 			InventoryBase inventory = null;
 
-			if (message.inventoryId == 0x00)
+			if (message.inventoryId == 0x00 //Inventory
+			    || message.inventoryId == 124 //UI
+			    || message.inventoryId == 120 //Armor
+			    || message.inventoryId == 119 //Offhand
+                                     )
 			{
 				inventory = Client.World.Player.Inventory;
 			}
 
 			if (inventory == null)
 			{
-				Log.Warn($"Unknown inventory ID: {message.inventoryId}");
+				Log.Warn($"(McpeInventorySlot) Unknown inventory ID: {message.inventoryId} ({JsonConvert.SerializeObject(message.item)})");
 				return;
 			}
 			
@@ -1309,7 +1339,38 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 			if (result != null)
             {
-	            inventory[index] = result;
+	           // result.StackID = message.uniqueid;
+	           switch (message.inventoryId)
+	           {
+		           case 119:
+		           {
+			           if (inventory is BedrockInventory bi)
+			           {
+				           bi.OffHand = result;
+			           }
+
+			           break;
+		           }
+
+		           case 120:
+		           {
+			           if (inventory is BedrockInventory bi)
+			           {
+				           bi.SetSlot(bi.BootsSlot + index, result, true);
+			           }
+
+			           // inventory.SetSlot();
+			           break;
+		           }
+
+		           case 124:
+			           inventory.SetCursor(result, true);
+			           break;
+		           default:
+			           inventory.SetSlot(index, result, true);
+			          // inventory[index] = result;
+			           break;
+	           }
             }
             else
             {
@@ -1423,6 +1484,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		
 		public void HandleMcpeChangeDimension(McpeChangeDimension message)
 		{
+			CustomConnectedPong.CanPing = false;
 			//base.HandleMcpeChangeDimension(message);
 			if (WorldProvider is BedrockWorldProvider provider)
 			{
@@ -1492,7 +1554,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 							}
 						}
 
-						if (!spawnChunkLoaded && ready)
+						if (!spawnChunkLoaded)
 						{
 							if (world.ChunkManager.TryGetChunk(chunkCoords, out _))
 							{
@@ -1501,7 +1563,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 						}
 
 
-						if (percentage >= 100 && ready && spawnChunkLoaded)
+						if (percentage >= 100 && spawnChunkLoaded)
 						{
 							break;
 						}
@@ -1517,6 +1579,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 					
 					Client.SendMcpeMovePlayer(new MiNET.Utils.PlayerLocation(message.position.X, message.position.Y, message.position.Z), false);
+					CustomConnectedPong.CanPing = false;
 				});
 			}
 		}
@@ -1849,9 +1912,35 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			UnhandledPackage(message);
 		}
 
+		private ulong _expectedLatency = 0;
+		public ulong ExpectedLatency
+		{
+			get => _expectedLatency;
+			set
+			{
+				_expectedLatency = value;
+				_latencySw.Restart();
+			}
+		}
+
+		private Stopwatch _latencySw = new Stopwatch();
 		public void HandleMcpeNetworkStackLatency(McpeNetworkStackLatency message)
 		{
-			Log.Info($"Stack latency: {message.timestamp} | {message.unknownFlag}");
+			if (message.timestamp == ExpectedLatency)
+			{
+				CustomConnectedPong.CanPing = false;
+				CustomConnectedPong.Latency = _latencySw.ElapsedMilliseconds;
+				/*if (!CustomConnectedPong.CanPing)
+				{
+					
+				}*/
+			} 
+			else if (message.timestamp > ExpectedLatency)
+			{
+				ExpectedLatency = message.timestamp;
+			}
+
+			//Log.Info($"Stack latency: {message.timestamp} | {message.unknownFlag}");
 			if (message.unknownFlag == 1)
 			{
 				var response = McpeNetworkStackLatency.CreateObject();

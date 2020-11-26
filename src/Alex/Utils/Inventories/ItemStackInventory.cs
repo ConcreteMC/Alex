@@ -6,6 +6,8 @@ using Alex.Worlds.Multiplayer.Bedrock;
 using Alex.Worlds.Singleplayer;
 using MiNET.Net;
 using MiNET.Utils;
+using Newtonsoft.Json;
+using NLog;
 
 namespace Alex.Utils.Inventories
 {
@@ -151,6 +153,9 @@ namespace Alex.Utils.Inventories
 
 	public static class ItemsExtensions
 	{
+		private static readonly ILogger Log = LogManager.GetCurrentClassLogger();
+		
+		private static JsonSerializerSettings SerializerSettings = new JsonSerializerSettings() {ReferenceLoopHandling = ReferenceLoopHandling.Ignore};
 		public static Item ToAlexItem(this MiNET.Items.Item item)
 		{
 			if (item == null)
@@ -158,7 +163,20 @@ namespace Alex.Utils.Inventories
 
 			Item result = null;
 
-			if (item.Id < 256) //Block
+			if (ChunkProcessor.Itemstates.TryGetValue(item.Id, out var itemState))
+			{
+				//item.Id = itemState.Id;
+				if (ItemFactory.TryGetItem(itemState.Id, item.Metadata, out result) || ItemFactory.TryGetItem(itemState.Name, out result))
+				{
+				//	Log.Info($"{item.Id} = {JsonConvert.SerializeObject(itemState, SerializerSettings)} || {JsonConvert.SerializeObject(result, SerializerSettings)}");
+				}
+				else
+				{
+				//	Log.Info($"{item.Id} = {JsonConvert.SerializeObject(itemState, SerializerSettings)}");
+				}
+			}
+			
+			if (result == null && item.Id < 256) //Block
 			{
 				var id         = item.Id;
 				var meta       = (byte) item.Metadata;
@@ -189,7 +207,7 @@ namespace Alex.Utils.Inventories
 
 				if (result != null)
 				{
-					result.Id = item.Id;
+					//result.Id = item.Id;
 					//result.Meta = item.Metadata;
 				}
 			}
@@ -206,7 +224,8 @@ namespace Alex.Utils.Inventories
 				result.Meta = item.Metadata;
 				result.Count = item.Count;
 				result.Nbt = item.ExtraData;
-
+				result.Id = item.Id;
+				
 				return result;
 			}
 

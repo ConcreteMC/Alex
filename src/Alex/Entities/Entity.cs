@@ -352,8 +352,8 @@ namespace Alex.Entities
 
 		            var renderer = inHand?.Renderer;
 		            if (renderer == null)
-		            {
-			            Log.Warn($"No renderer for item: {inHand.Name}");
+		            { 
+			            //Log.Warn($"No renderer for item: {inHand.Name}");
 			            return;
 		            }
 

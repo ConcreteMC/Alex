@@ -48,7 +48,7 @@ namespace Alex.Net
 			int hand,
 			int slot,
 			Vector3 cursorPosition);
-		public abstract void UseItem(Item item, int hand, ItemUseAction action);
+		public abstract void UseItem(Item item, int hand, ItemUseAction action, BlockCoordinates position, API.Blocks.BlockFace face, Vector3 cursorPosition);
 		public abstract void HeldItemChanged(Item item, short slot);
 		public abstract void Close();
 	}

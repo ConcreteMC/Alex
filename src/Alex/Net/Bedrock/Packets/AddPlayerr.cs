@@ -30,7 +30,7 @@ namespace Alex.Net.Bedrock.Packets
 			
 			try
 			{
-				this.item = this.AlternativeReadItem(false);
+				this.item = this.ReadItem();
 				this.metadata = this.ReadMetadataDictionaryAlternate();
 				this.flags = this.ReadUnsignedVarInt();
 			}

@@ -186,7 +186,7 @@ namespace Alex.Net.Bedrock.Packets
 				//var stream = (Stream)ReflectionHelper.GetPrivateFieldValue<MemoryStreamReader>(typeof(Packet), packet, "_reader");
 				count = packet.ReadUnsignedVarInt(); //VarInt.ReadInt32(stream);
 
-				for (int i = 0; i < count; ++i)
+				for (int i = 0; i < count; i++)
 				{
 					index = (int) packet.ReadUnsignedVarInt(); //VarInt.ReadInt32(stream);
 					type  = packet.ReadUnsignedVarInt(); //VarInt.ReadInt32(stream);
@@ -258,14 +258,15 @@ namespace Alex.Net.Bedrock.Packets
 		{
 			ItemStacks itemStacks = new ItemStacks();
 			uint       num        = packet.ReadUnsignedVarInt();
-			for (int index = 0; (long) index < (long) num; ++index)
+			for (int index = 0; (long) index < (long) num; index++)
 				itemStacks.Add(packet.AlternativeReadItem(networkIds));
 			return itemStacks;
 		}
 
 		public static Item AlternativeReadItem(this Packet packet, bool readNetworkId)
 		{
-			int networkId = -1;
+			Item stack;
+			int  networkId = -1;
 			if (readNetworkId)
 			{
 				networkId = packet.ReadSignedVarInt();
@@ -275,6 +276,8 @@ namespace Alex.Net.Bedrock.Packets
 					return new ItemAir();
 				}
 			}
+
+			return packet.ReadItem();
 			
 			int id = packet.ReadSignedVarInt();
 
@@ -290,7 +293,7 @@ namespace Alex.Net.Bedrock.Packets
 				metadata = 0;
 
 			byte count = (byte) (tmp & 0xff);
-			Item stack = ItemFactory.GetItem((short) id, metadata, count);
+			stack = ItemFactory.GetItem((short) id, metadata, count);
 			stack.UniqueId = networkId;
 			
 			ushort dataMarker = packet.ReadUshort(); // NbtLen
@@ -318,12 +321,13 @@ namespace Alex.Net.Bedrock.Packets
 			//	var stream = (Stream)ReflectionHelper.GetPrivateFieldValue<MemoryStreamReader>(typeof(Packet), packet, "_reader");
 				using (MemoryStream ms = new MemoryStream(nbtData))
 				{
-					var nbt = ReadNbt(ms);
+					stack.ExtraData = ReadNbtCompound(ms);
+					/*var nbt = ReadNbt(ms);
 
 					if (nbt != null)
 					{
 						stack.ExtraData = (NbtCompound) nbt.NbtFile.RootTag;
-					}
+					}*/
 					
 					//stack.ExtraData = ReadNbt(ms);
 				}
@@ -349,6 +353,17 @@ namespace Alex.Net.Bedrock.Packets
 			return stack;
 		}
 
+		public static NbtCompound ReadNbtCompound(Stream stream)
+		{
+			NbtFile file = new NbtFile();
+			file.BigEndian = false;
+			file.UseVarInt = false;
+
+			file.LoadFromStream(stream, NbtCompression.None);
+
+			return (NbtCompound) file.RootTag;
+		}
+		
 		public static void AlternativeWriteItem(this Packet packet, Item item)
 		{
 			if (item.UniqueId != -1)

@@ -41,12 +41,12 @@ namespace Alex.Utils.Inventories
         {
 	        get
 	        {
-		        return Get(36 + _selectedSlot);
+		        return Get(HotbarOffset + _selectedSlot);
 	        }
 	        set
 	        {
 		        //Slots[36 + _selectedSlot] = value;
-		        SetSlot(36 + _selectedSlot, value, true);
+		        SetSlot(HotbarOffset + _selectedSlot, value, true);
 	        }
         }
 
@@ -120,7 +120,7 @@ namespace Alex.Utils.Inventories
 
 		    for (int i = 0; i < 9; i++)
 		    {
-			    items[i] = Get(36 + i);
+			    items[i] = Get(HotbarOffset + i);
 		    }
 
 		    return items;

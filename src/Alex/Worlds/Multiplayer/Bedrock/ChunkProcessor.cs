@@ -35,6 +35,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 	    public IReadOnlyDictionary<uint, BlockStateContainer> BlockStateMap { get; set; } =
 		    new Dictionary<uint, BlockStateContainer>();
+
+	    public static Itemstates Itemstates { get; set; } = new Itemstates();
 	    
 	    private readonly ConcurrentDictionary<uint, BlockState> _convertedStates = new ConcurrentDictionary<uint, BlockState>();
 	    

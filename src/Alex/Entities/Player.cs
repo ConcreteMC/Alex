@@ -668,7 +668,7 @@ namespace Alex.Entities
 		                action = HasRaytraceResult ? ItemUseAction.RightClickBlock : ItemUseAction.RightClickAir;
 	                }
 	                
-                    Network?.UseItem(slot, hand, action);
+                    Network?.UseItem(slot, hand, action, coordR, face, remainder);
                     return true;
                 }
             }

@@ -74,12 +74,13 @@ namespace Alex.Net.Bedrock.Packets
                         break;
 
                     //The following are only here so we can join.
-                    case 0x1F:
-                        packet = new MobEquipment();
-                        break;
+                  //  case 0x1F:
+                    //    packet = new MobEquipment();
+                      //  break;
                     case 0x20:
-                        packet = new MobArmorEquipment();
-                        break;
+                         packet = new MobArmorEquipment();
+
+                         break;
                     case 0x27:
                         packet = new SetEntityData();
                         break;

@@ -38,7 +38,8 @@ namespace Alex.Items
 				Renderer = Renderer?.Clone(),
 				DisplayName = DisplayName,
 				ItemType = ItemType,
-				MaxStackSize = MaxStackSize
+				MaxStackSize = MaxStackSize,
+				StackID = StackID
 			};
 		}
 

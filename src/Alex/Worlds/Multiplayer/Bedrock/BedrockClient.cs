@@ -1029,7 +1029,10 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				    Face = (int) face,
 				    TransactionRecords = new List<TransactionRecord>()
 				    {
-
+						new WorldInteractionTransactionRecord()
+						{
+							//StackNetworkId = 
+						}
 				    },
 				    Item = minetItem,
 				    FromPosition = new System.Numerics.Vector3(p.KnownPosition.X, p.KnownPosition.Y, p.KnownPosition.Z),
@@ -1132,13 +1135,16 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			    Face = (int)face,
 			    Item = minetItem,
 			    Slot = slot,
-			    FromPosition = new System.Numerics.Vector3(entity.KnownPosition.X, entity.KnownPosition.Y, entity.KnownPosition.Z)
+			    FromPosition = new System.Numerics.Vector3(entity.KnownPosition.X, entity.KnownPosition.Y, entity.KnownPosition.Z),
+			    HasNetworkIds = true,
+			  //  BlockRuntimeId = 
+			  //  BlockRuntimeId = 
 		    };
 
 		  Session.SendPacket(packet);
 	    }
 
-	    public override void UseItem(Item item, int hand, ItemUseAction action)
+	    public override void UseItem(Item item, int hand, ItemUseAction action, BlockCoordinates position, API.Blocks.BlockFace face, Vector3 cursorPosition)
 	    {
 		    MiNET.Items.Item minetItem;// = GetMiNETItem(item);
 
@@ -1169,11 +1175,21 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		    }
 		    
 		    var packet = McpeInventoryTransaction.CreateObject();
+		   // packet.
 		    packet.transaction = new ItemUseTransaction()
 		    {
 			    ActionType = useAction,
+			    ClickPosition =
+				    new System.Numerics.Vector3(cursorPosition.X, cursorPosition.Y, cursorPosition.Z),
+			    //  TransactionType = McpeInventoryTransaction.TransactionType.ItemUse,
+			    // EntityId = NetworkEntityId,
+			    Position = new MiNET.Utils.BlockCoordinates(position.X, position.Y, position.Z),
+			    Face = (int)face,
 			    Item = minetItem,
-			    Slot = World.Player.Inventory.SelectedSlot
+			    Slot = World.Player.Inventory.SelectedSlot,
+			    FromPosition = new System.Numerics.Vector3(World.Player.KnownPosition.X, World.Player.KnownPosition.Y, World.Player.KnownPosition.Z),
+			   // Item = minetItem,
+			   // Slot = World.Player.Inventory.SelectedSlot
 		    };
 
 		    Session.SendPacket(packet);
@@ -1183,7 +1199,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		public override void HeldItemChanged(Item item, short slot)
 		{
-			var minetItem = GetMiNETItem(item);
+		//	var minetItem = GetMiNETItem(item);
 			
 			McpeMobEquipment packet = new MobEquipment();
 			packet.selectedSlot = (byte) slot;
@@ -1195,7 +1211,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			}
 			else
 			{
-				packet.item = minetItem;
+				packet.item = GetMiNETItem(item);
 			}
 
 			Session.SendPacket(packet);
@@ -1244,6 +1260,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		public void SendPing()
 		{
+			return;
 			if (CustomConnectedPong.CanPing)
 			{
 				ConnectedPing cp = ConnectedPing.CreateObject();
@@ -1255,11 +1272,11 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			}
 			else
 			{
-				McpeNetworkStackLatency nsl = McpeNetworkStackLatency.CreateObject();
+				/*McpeNetworkStackLatency nsl = McpeNetworkStackLatency.CreateObject();
 				nsl.timestamp = (ulong) DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 				nsl.unknownFlag = 1;
 				
-				Session?.SendPacket(nsl);
+				Session?.SendPacket(nsl);*/
 			}
 		}
 

@@ -41,6 +41,10 @@ namespace Alex.Gui.Forms
             {
                 GuiManager.ShowDialog(_activeForm = new CustomFormDialog(id, this, customForm, InputManager));
             }
+            else if (form is ModalForm modalForm)
+            {
+                GuiManager.ShowDialog(_activeForm = new ModalFormDialog(id, this, modalForm, InputManager));
+            }
             else
             {
                 Log.Warn($"Form type not supported: {form.GetType()}");

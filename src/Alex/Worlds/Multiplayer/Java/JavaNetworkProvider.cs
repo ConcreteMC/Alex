@@ -172,7 +172,7 @@ namespace Alex.Worlds.Multiplayer.Java
 			});
 		}
 
-		public override void UseItem(Item item, int hand, ItemUseAction action)
+		public override void UseItem(Item item, int hand, ItemUseAction action, BlockCoordinates position, API.Blocks.BlockFace face, Vector3 cursorPosition)
 		{
 			//if (!(action == ))
 			Client.SendPacket(new UseItemPacket()

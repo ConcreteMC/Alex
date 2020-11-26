@@ -258,7 +258,7 @@ namespace Alex.Entities.BlockEntities
 			var pos = KnownPosition + new Vector3(0f, 0.75f, 0f) + TextOffset;
 			//pos.Y = 0;
 
-			var rotation = RootBone.Rotation.Y;
+			//var rotation = RootBone.Rotation.Y;
 			
 			var distance = Vector3.Distance(pos, renderArgs.Camera.Position);
 			if (distance >= maxDistance)
@@ -270,7 +270,7 @@ namespace Alex.Entities.BlockEntities
 			
 			//var matrix = Matrix.CreateBillboard(quadPosition, cameraPosition, Vector3.Up, pForward);
 			
-			Matrix rotationMatrix = Matrix.CreateRotationY(MathUtils.ToRadians(RootBone.Rotation.Y)); //Yaw
+			//Matrix rotationMatrix = Matrix.CreateRotationY(MathUtils.ToRadians(RootBone.Rotation.Y)); //Yaw
 
 		//	Vector3 lookAtOffset = Vector3.Transform(Vector3.Backward, rotationMatrix);
 			//Direction = lookAtOffset;

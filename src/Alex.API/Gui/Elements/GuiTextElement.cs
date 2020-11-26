@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text;
 using System.Text.RegularExpressions;
 using Alex.API.Graphics.Typography;
 
@@ -125,6 +126,17 @@ namespace Alex.API.Gui.Elements
 
 		//private List<ClickableElement> ClickableElements = new List<ClickableElement>();
 
+		private bool _wrap = false;
+
+		public bool Wrap
+		{
+			get => _wrap;
+			set
+			{
+				_wrap = value;
+				OnTextUpdated();
+			}
+		}
 		public GuiTextElement(string text, bool hasBackground = false) : this(hasBackground)
 		{
 			Text = text;
@@ -205,9 +217,47 @@ namespace Alex.API.Gui.Elements
 		{
 			base.GetPreferredSize(out size, out minSize, out maxSize);
 			var scale = new Vector2(Scale, Scale);
-
-			string text = _text;
+			
+			string text = _renderText;
+			
 			var textSize = GetSize(text, scale);
+			
+			/*if (_wrap && textSize.X > MaxWidth)
+			{
+				StringBuilder sb    = new StringBuilder();
+				var           split = text.Split(' ');
+
+				int startIndex = 0;
+				int length     = split.Length - 1;
+				var sizeX      = textSize.X;
+
+				string line = "";
+				while (sizeX > MaxWidth)
+				{
+					length--;
+					
+					line = string.Join(' ', split, startIndex, length);
+					var ts   = GetSize(line, scale);
+					
+					sizeX = ts.X;
+				}
+
+				sb.AppendLine(line);
+				var lineLength = line.Length;
+
+				while (true)
+				{
+					string l = "";
+				}
+				
+				//var middle = string.Join(' ', split, 0, split.Length / 2);
+				//textSize = GetSize(middle, scale);
+
+				for (int i = 0; i < split.Length; i++)
+				{
+					
+				}
+			}*/
 
 			size = new Size((int)Math.Ceiling(textSize.X), (int)Math.Ceiling(textSize.Y));
 			minSize = size;
@@ -237,6 +287,7 @@ namespace Alex.API.Gui.Elements
 		    else
 			{
 				//var scale = new Vector2(Scale, Scale);
+				
 				_renderText = text;
 
 				GetPreferredSize(out var size, out var minSize, out var maxSize);
