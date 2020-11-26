@@ -20,7 +20,7 @@
 				<PackageReference Include="MonoGame.Framework.iOS" Version="3.8.0.1641" />
 			</ItemGroup>
 		</When>
-		<When Condition="$(DefineContstants.Contains(DIRECTX))">
+		<When Condition="$(DefineConstants.Contains(DIRECTX))">
 			<PropertyGroup>
 				<TargetFramework>netcoreapp3.1</TargetFramework>
 			</PropertyGroup>

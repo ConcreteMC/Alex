@@ -18,7 +18,7 @@ jobs:
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: 5.0.100
+        dotnet-version: 3.1.101
     
     - name: Get short SHA
       id: vars
@@ -40,12 +40,12 @@ jobs:
       uses: actions/upload-artifact@v1.0.0
       with:
         # Artifact name
-        name: linux-binaries
+        name: Linux Binaries
         # Directory containing files to upload
         path: "src/Alex/build-linux"
 
   windows:
-    name: Build Windows
+    name: Build Windows (OpenGL)
 
     runs-on: [windows-latest]
 
@@ -57,7 +57,7 @@ jobs:
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: 5.0.100
+        dotnet-version: 3.1.101
     
     - name: Get short SHA
       id: vars
@@ -75,7 +75,42 @@ jobs:
       uses: actions/upload-artifact@v1.0.0
       with:
         # Artifact name
-        name: windows-binaries
+        name: Windows OpenGL
+        # Directory containing files to upload
+        path: /build-win
+
+  directx:
+    name: Build Windows (DirectX)
+
+    runs-on: [windows-latest]
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: 'recursive'
+      
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 3.1.101
+    
+    - name: Get short SHA
+      id: vars
+      run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
+        
+    - name: Install dependencies
+      run: dotnet restore
+      working-directory: src/Alex
+      
+    - name: Build
+      run: dotnet publish --configuration Release --no-restore -o /build-win --version-suffix ${{steps.vars.outputs.sha_short}} --self-contained true -r win-x64 -p:DefineConstants=DIRECTX
+      working-directory: src/Alex
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v1.0.0
+      with:
+        # Artifact name
+        name: Windows DirectX
         # Directory containing files to upload
         path: /build-win
 
@@ -92,7 +127,7 @@ jobs:
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: 5.0.100
+        dotnet-version: 3.1.101
     
     - name: Get short SHA
       id: vars
@@ -114,6 +149,6 @@ jobs:
       uses: actions/upload-artifact@v1.0.0
       with:
         # Artifact name
-        name: mac-binaries
+        name: Mac OS binaries
         # Directory containing files to upload
         path: "src/Alex/build-osx"
