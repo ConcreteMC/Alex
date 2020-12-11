@@ -274,6 +274,8 @@ namespace Alex
 					}
 				}
 			}
+			
+			base.InactiveSleepTime = TimeSpan.Zero;
 
 			GraphicsDevice.PresentationParameters.MultiSampleCount = 8;
 

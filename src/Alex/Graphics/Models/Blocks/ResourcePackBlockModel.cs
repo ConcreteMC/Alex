@@ -37,11 +37,11 @@ namespace Alex.Graphics.Models.Blocks
 		
 		public static           bool       SmoothLighting { get; set; } = true;
 		
-		private BlockStateModel[] Models { get; set; }
-		protected ResourceManager Resources { get; }
+		private BlockStateModel[] Models    { get; set; }
+		private ResourceManager   Resources { get; }
 
-		protected Vector3 Min = new Vector3(float.MaxValue);
-		protected Vector3 Max = new Vector3(float.MinValue);
+		private Vector3 Min = new Vector3(float.MaxValue);
+		private Vector3 Max = new Vector3(float.MinValue);
 
 		public  BoundingBox[] Boxes         { get; set; } = new BoundingBox[0];
 		private bool          UseRandomizer { get; set; }
@@ -97,7 +97,7 @@ namespace Alex.Graphics.Models.Blocks
 			{
 				var box         = Boxes[i];
 				
-				var yDifference = box.Max.Y - box.Min.Y;
+				/*var yDifference = box.Max.Y - box.Min.Y;
 				if (yDifference < 0.01f)
 				{
 					box.Max.Y += (0.01f - yDifference);
@@ -113,7 +113,7 @@ namespace Alex.Graphics.Models.Blocks
 				if (zDifference < 0.01f)
 				{
 					box.Max.Z += (0.01f - zDifference);
-				}
+				}*/
 				
 				Boxes[i] = box;
 			}
@@ -127,7 +127,7 @@ namespace Alex.Graphics.Models.Blocks
 
 		private BoundingBox[] GetBoxes(Vector3 position)
 		{
-			return Boxes.Select(x => new BoundingBox(position + x.Min, position + x.Max)).ToArray();
+			return Boxes.Select(x => new BoundingBox(x.Min + position, x.Max + position)).ToArray();
 		}
 		
 		public override BoundingBox? GetPartBoundingBox(Vector3 position, BoundingBox entityBox)

@@ -88,9 +88,6 @@ namespace Alex.Entities
 		public  Vector3      Velocity      { get; set; } = Vector3.Zero;
 
 		/// <inheritdoc />
-		public PhysicsState State { get; set; } = new PhysicsState(Vector3.Zero, new PlayerLocation());
-
-		/// <inheritdoc />
 		public PhysicsState PreviousState { get; set; } = new PhysicsState(Vector3.Zero, new PlayerLocation());
 		
 		private float        _posOffset    = 0;
@@ -1144,7 +1141,7 @@ namespace Alex.Entities
 		}
 
 		private BoundingBox _boundingBox = new BoundingBox();
-		public  BoundingBox BoundingBox => GetBoundingBox();
+		public  BoundingBox BoundingBox => _boundingBox;
 		public virtual BoundingBox GetBoundingBox()
 		{
 			return _boundingBox;

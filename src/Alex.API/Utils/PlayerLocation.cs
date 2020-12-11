@@ -74,7 +74,7 @@ namespace Alex.API.Utils
 		{
 			return new Vector3(X, Y, Z);
 		}
-		
+		/*
 		public Vector3 ToRotationVector3(bool withPitch = false)
 		{
 			return new Vector3(withPitch ? Pitch : 0f, HeadYaw, 0f);
@@ -105,7 +105,7 @@ namespace Alex.API.Utils
 
 			return vector;
 		}
-
+*/
 		public static PlayerLocation operator *(PlayerLocation a, float b)
 		{
 			return new PlayerLocation(
@@ -117,15 +117,20 @@ namespace Alex.API.Utils
 				a.Pitch * b);
 		}
 		
-		public static PlayerLocation operator +(PlayerLocation b, Vector3 a)
+		public static PlayerLocation operator +(PlayerLocation a, Vector3 b)
 		{
+			var (x, y, z) = b;
+
 			return new PlayerLocation(
-				a.X + b.X,
-				a.Y + b.Y,
-				a.Z + b.Z,
-				b.HeadYaw,
-				b.Yaw,
-				b.Pitch);
+				a.X + x,
+				a.Y + y,
+				a.Z + z,
+				a.HeadYaw,
+				a.Yaw,
+				a.Pitch)
+			{
+				OnGround = a.OnGround
+			};
 		}
 
 		public static implicit operator Vector2(PlayerLocation a)
@@ -158,7 +163,7 @@ namespace Alex.API.Utils
 			
 		//}
 		
-		public Vector3 PreviewMove(Vector3 moveVector)
+	/*	public Vector3 PreviewMove(Vector3 moveVector)
 		{
 			return ToVector3() + moveVector; Vector3.Transform(moveVector,
 				       Matrix.CreateRotationY(-MathHelper.ToRadians(HeadYaw)));
@@ -171,6 +176,6 @@ namespace Alex.API.Utils
 			X = preview.X;
 			Y = preview.Y;
 			Z = preview.Z;
-		}
+		}*/
 	}
 }

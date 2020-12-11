@@ -27,6 +27,12 @@ namespace Alex.Worlds.Chunks
 
         public bool Draw(GraphicsDevice device, RenderStage stage, Effect effect, out int vertexCount)
         {
+            if (Disposed)
+            {
+                vertexCount = 0;
+                return false;
+            }
+
             var rStage = _stages[(int) stage];
 
             if (rStage == null)

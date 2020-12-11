@@ -127,7 +127,7 @@ namespace Alex.Worlds
 
 			Ticker.RegisterTicked(this);
 			Ticker.RegisterTicked(EntityManager);
-			Ticker.RegisterTicked(PhysicsEngine);
+			//Ticker.RegisterTicked(PhysicsEngine);
 			Ticker.RegisterTicked(ChunkManager);
 			
 			ChunkManager.Start();
