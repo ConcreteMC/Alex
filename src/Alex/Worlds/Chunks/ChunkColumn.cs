@@ -146,10 +146,8 @@ namespace Alex.Worlds.Chunks
 
 								try
 								{
-									ChunkData?.Remove(device, blockCoordinates);
+									//ChunkData?.Remove(device, blockCoordinates);
 
-									//var position = chunkPosition + new Vector3(x, by, z);
-									
 									var blockPosition = new BlockCoordinates(
 										(int) (chunkPosition.X + x), y + (sectionIndex << 4), (int) (chunkPosition.Z + z));
 									
@@ -161,7 +159,7 @@ namespace Alex.Worlds.Chunks
 										
 										var model = blockState.Model;
 
-										if (blockState != null && blockState.Block.RequiresUpdate)
+										if (blockState.Block.RequiresUpdate)
 										{
 											var newblockState = blockState.Block.BlockPlaced(
 												world, blockState, blockPosition);
@@ -189,6 +187,8 @@ namespace Alex.Worlds.Chunks
 											}
 										}
 										
+										ChunkData?.Remove(device, blockCoordinates);
+										
 										model.GetVertices(world, ChunkData, blockCoordinates, blockPosition, blockState.Block);
 									}
 								}
@@ -210,9 +210,6 @@ namespace Alex.Worlds.Chunks
 				
 				ChunkData?.ApplyChanges(device, true);
 				IsNew = false;
-
-				//if (ChunkData != null)
-				//	ChunkData = chunkData;
 			}
 			finally
 			{

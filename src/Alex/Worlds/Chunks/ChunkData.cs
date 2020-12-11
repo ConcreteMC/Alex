@@ -14,14 +14,30 @@ namespace Alex.Worlds.Chunks
 {
     public class ChunkData : IDisposable
     {
-        public         ConcurrentDictionary<RenderStage, ChunkRenderStage> RenderStages   { get; set; }
-
-        private static long                                                _instances = 0;
+        private        ChunkRenderStage[] _stages;
+        private static long               _instances = 0;
         public ChunkData()
         {
-            RenderStages = new ConcurrentDictionary<RenderStage, ChunkRenderStage>();
-
+            var availableStages = Enum.GetValues(typeof(RenderStage));
+            _stages = new ChunkRenderStage[availableStages.Length];
+            
+            
             Interlocked.Increment(ref _instances);
+        }
+
+        public bool Draw(GraphicsDevice device, RenderStage stage, Effect effect, out int vertexCount)
+        {
+            var rStage = _stages[(int) stage];
+
+            if (rStage == null)
+            {
+                vertexCount = 0;
+                return false;
+            }
+
+            vertexCount = rStage.Render(device, effect);
+
+            return true;
         }
 
         public MinifiedBlockShaderVertex[] Vertices
@@ -30,9 +46,13 @@ namespace Alex.Worlds.Chunks
             {
                 List<MinifiedBlockShaderVertex> vertices = new List<MinifiedBlockShaderVertex>();
 
-                foreach (var stage in RenderStages)
+                for (var index = 0; index < _stages.Length; index++)
                 {
-                    vertices.AddRange(stage.Value.BuildVertices());
+                    var stage = _stages[index];
+
+                    if (stage == null) continue;
+
+                    vertices.AddRange(stage.BuildVertices());
                 }
 
                 return vertices.ToArray();
@@ -47,7 +67,14 @@ namespace Alex.Worlds.Chunks
             byte skyLight,
             RenderStage stage)
         {
-            var rStage = RenderStages.GetOrAdd(stage, CreateRenderStage);
+            var rStage = _stages[(int) stage];
+
+            if (rStage == null)
+            {
+                rStage = CreateRenderStage(stage);
+                _stages[(int) stage] = rStage;
+            }
+           
             rStage.AddVertex(blockCoordinates, position, textureCoordinates, color, blockLight, skyLight);
         }
 
@@ -58,43 +85,53 @@ namespace Alex.Worlds.Chunks
 
         public void Remove(GraphicsDevice device, BlockCoordinates blockCoordinates)
         {
-            foreach (var stage in RenderStages.Values.ToArray())
+            for (var index = 0; index < _stages.Length; index++)
             {
-                stage.Remove(blockCoordinates);
+                var stage = _stages[index];
+
+                stage?.Remove(blockCoordinates);
             }
         }
 
         public bool Contains(BlockCoordinates coordinates)
         {
-            return RenderStages.Values.Any(x => x.Contains(coordinates));
+            return _stages.Where(x => x != null).Any(x => x.Contains(coordinates));
         }
 
         public void ApplyChanges(GraphicsDevice device, bool keepInMemory)
         {
-            foreach(var stage in RenderStages)
-                stage.Value.Apply(device, keepInMemory);
+            for (var index = 0; index < _stages.Length; index++)
+            {
+                var stage = _stages[index];
+                stage?.Apply(device, keepInMemory);
+            }
         }
 
         public bool                Disposed { get; private set; } = false;
         public void Dispose()
         {
+            if (Disposed)
+                return;
+            
            // lock (WriteLock)
            {
-             //  int size = Vertices != null ? Vertices.Length : 0;
-               // Buffer?.MarkForDisposal();
+               try
+               {
+                   Disposed = true;
 
-                foreach (var stage in RenderStages)
-                {
-                    stage.Value.Dispose();
-                }
+                   foreach (var stage in _stages.Where(x => x != null))
+                   {
+                       stage.Dispose();
+                   }
+               }
+               finally
+               {
+                   _stages = null;
 
-                RenderStages.Clear();
-                // Vertices = null;
-                
-                Disposed = true;
-                Interlocked.Decrement(ref _instances);
-               // Interlocked.Add(ref _totalSize, -size);
-            }
+                   //  Disposed = true;
+                   Interlocked.Decrement(ref _instances);
+               }
+           }
         }
     }
 }

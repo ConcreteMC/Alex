@@ -68,7 +68,7 @@ namespace Alex.API.Gui
 
         protected override void OnUpdate(GameTime gameTime)
         {
-            if (IsLayoutDirty)
+            if (IsLayoutDirty && !IsLayoutInProgress)
             {
                 UpdateLayout();
             }

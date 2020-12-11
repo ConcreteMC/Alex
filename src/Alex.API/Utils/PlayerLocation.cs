@@ -106,6 +106,17 @@ namespace Alex.API.Utils
 			return vector;
 		}
 
+		public static PlayerLocation operator *(PlayerLocation a, float b)
+		{
+			return new PlayerLocation(
+				a.X * b,
+				a.Y * b,
+				a.Z * b,
+				a.HeadYaw * b,
+				a.Yaw * b,
+				a.Pitch * b);
+		}
+		
 		public static PlayerLocation operator +(PlayerLocation b, Vector3 a)
 		{
 			return new PlayerLocation(
@@ -142,6 +153,11 @@ namespace Alex.API.Utils
 			return $"X={X}, Y={Y}, Z={Z}, HeadYaw={HeadYaw}, Yaw={Yaw}, Pitch={Pitch}";
 		}
 
+		//public PlayerLocation Clone()
+	//	{
+			
+		//}
+		
 		public Vector3 PreviewMove(Vector3 moveVector)
 		{
 			return ToVector3() + moveVector; Vector3.Transform(moveVector,

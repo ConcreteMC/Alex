@@ -560,7 +560,6 @@ namespace Alex.Worlds
 				stages = RenderStages;
 
 			var tempVertices    = 0;
-			int tempChunks      = 0;
 
 			ChunkData[]      chunks  = _renderedChunks;
 			RenderingShaders shaders = DefaultShaders;
@@ -626,9 +625,9 @@ namespace Alex.Worlds
 				tempVertices += DrawChunks(args.GraphicsDevice, chunks, effect, stage);
 			}
 
-			tempChunks = chunks.Count(x => x != null && x.RenderStages != null && x.RenderStages.Count > 0);
+		//	tempChunks = chunks.Count(x => x != null && x.RenderStages != null && x.RenderStages.Count > 0);
 
-			chunksRendered = tempChunks;
+			chunksRendered = chunks.Length;
 			drawnVertices = tempVertices;
 
 			args.GraphicsDevice.BlendState = originalBlendState;
@@ -642,9 +641,9 @@ namespace Alex.Worlds
 				var chunk = chunks[index];
 				if (chunk == null) continue;
 				
-				if (chunk.RenderStages.TryGetValue(stage, out var renderStage))
+				if (chunk.Draw(device, stage, effect, out var vertexCount))
 				{
-					verticeCount += renderStage.Render(device, effect);
+					verticeCount += vertexCount;
 				}
 			}
 

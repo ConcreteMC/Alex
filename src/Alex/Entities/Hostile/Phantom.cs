@@ -31,7 +31,7 @@ namespace Alex.Entities.Hostile
 		/// <inheritdoc />
 		public Phantom(World level) : base(EntityType.Phantom, level)
 		{
-			
+			IsAffectedByGravity = false;
 		}
 		
 		/// <inheritdoc />

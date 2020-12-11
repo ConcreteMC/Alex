@@ -195,12 +195,10 @@ namespace Alex.Net.Bedrock
 		//public ConcurrentDictionary<IPEndPoint, RakSession> _sessions = new ConcurrentDictionary<IPEndPoint, RakSession>();
 		private void SendConnectionRequest(IPEndPoint targetEndPoint, short mtuSize)
 		{
-			ConcurrentDictionary<IPEndPoint, RaknetSession> sessions = _connection.RakSessions;
-
-			RaknetSession session;
-			lock (sessions)
+			RaknetSession session = _connection.Session;
+		//	lock (session)
 			{
-				if (sessions.ContainsKey(targetEndPoint))
+				if (session != null)
 				{
 					Log.Warn($"Session already exist, ignoring");
 					return;
@@ -215,11 +213,12 @@ namespace Alex.Net.Bedrock
 
 				session.CustomMessageHandler = _connection.CustomMessageHandlerFactory?.Invoke(session);
 
-				if (!sessions.TryAdd(targetEndPoint, session))
+				_connection.Session = session;
+				/*if (!sessions.TryAdd(targetEndPoint, session))
 				{
 					Log.Warn($"Session already exist, ignoring");
 					return;
-				}
+				}*/
 			}
 
 			var packet = ConnectionRequest.CreateObject();

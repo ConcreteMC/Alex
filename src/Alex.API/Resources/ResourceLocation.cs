@@ -1,12 +1,13 @@
 using System;
+using System.Threading;
 
 namespace Alex.API.Resources
 {
     public class ResourceLocation : IEquatable<ResourceLocation>
     {
         public const string DefaultNamespace = "minecraft";
-        public string Namespace { get; private set; }
-        public string Path { get; private set; }
+        public string Namespace { get; }
+        public string Path { get; }
 
         public ResourceLocation(string key) : this(key.Contains(':') ? key.Substring(0, key.IndexOf(':')) : DefaultNamespace,
             key.Contains(':') ? key.Substring(key.IndexOf(':') + 1) : key)
@@ -18,6 +19,8 @@ namespace Alex.API.Resources
         {
             Namespace = @namespace;
             Path = path;
+
+           // _hashCode = GetUniqueId();
         }
 
         public int Length => Namespace.Length + Path.Length;
@@ -85,15 +88,33 @@ namespace Alex.API.Resources
             if (obj.GetType() != this.GetType()) return false;
             return Equals((ResourceLocation) obj);
         }
-
+        
         /// <summary>Serves as the default hash function.</summary>
         /// <returns>A hash code for the current object.</returns>
         public override int GetHashCode()
         {
             unchecked
             {
-                return ((Namespace != null ? StringComparer.InvariantCultureIgnoreCase.GetHashCode(Namespace) : 0) * 397) ^ (Path != null ? StringComparer.InvariantCultureIgnoreCase.GetHashCode(Path) : 0);
+                int hash1 = (5381 << 16) + 5381;
+                int hash2 = hash1;
+
+                for (int i = 0; i < Path.Length; i += 2)
+                {
+                    hash1 = ((hash1 << 5) + hash1) ^ Path[i];
+                    if (i == Path.Length - 1)
+                        break;
+                    hash2 = ((hash2 << 5) + hash2) ^ Path[i + 1];
+                }
+
+                return hash1 + (hash2 * 1566083941);
             }
+        }
+
+        private static int _uniqueIdCounter = int.MinValue;
+
+        private static int GetUniqueId()
+        {
+            return Interlocked.Increment(ref _uniqueIdCounter);
         }
     }
 }

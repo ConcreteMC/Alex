@@ -94,7 +94,7 @@ namespace Alex.Graphics.Camera
 
 		public override void Update(IUpdateArgs args)
 		{
-			var entityLocation = TrackingEntity.KnownPosition;
+			var entityLocation = TrackingEntity.RenderLocation;
 
 			
 			if (_mode == EntityCameraMode.FirstPerson)

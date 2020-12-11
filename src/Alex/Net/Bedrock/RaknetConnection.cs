@@ -48,13 +48,13 @@ namespace Alex.Net.Bedrock
 
 		private          UdpClient  _listener;
 		private readonly IPEndPoint _endpoint;
-
-		private Thread _receiveThread;
+		
 		private HighPrecisionTimer _tickerHighPrecisionTimer;
-		public readonly ConcurrentDictionary<IPEndPoint, RaknetSession> RakSessions = new ConcurrentDictionary<IPEndPoint, RaknetSession>();
+		//public readonly ConcurrentDictionary<IPEndPoint, RaknetSession> RakSessions = new ConcurrentDictionary<IPEndPoint, RaknetSession>();
 
-		public readonly RaknetHandler RaknetHandler;
-		public ConnectionInfo ConnectionInfo { get; }
+		public          RaknetSession  Session { get; set; } = null;
+		public readonly RaknetHandler  RaknetHandler;
+		public          ConnectionInfo ConnectionInfo { get; }
 
 		public bool FoundServer => RaknetHandler.HaveServer;
 
@@ -86,57 +86,29 @@ namespace Alex.Net.Bedrock
 
 			Log.Debug($"Creating listener for packets on {_endpoint}");
 			_listener = CreateListener(_endpoint);
-			_receiveThread = new Thread(ReceiveDatagram) {IsBackground = true, Priority = ThreadPriority.AboveNormal};
-			_receiveThread.Start(_listener);
+			_listener.BeginReceive(ReceiveCallback, _listener);
 
 			_tickerHighPrecisionTimer = new HighPrecisionTimer(10, SendTick, true);
 		}
 
-		public bool TryLocate(out (IPEndPoint serverEndPoint, string serverName) serverInfo, int numberOfAttempts = int.MaxValue)
-		{
-			return TryLocate(null, out serverInfo, numberOfAttempts);
-		}
-
-		public bool TryLocate(IPEndPoint targetEndPoint, out (IPEndPoint serverEndPoint, string serverName) serverInfo, int numberOfAttempts = int.MaxValue)
-		{
-			Start(); // Make sure we have started.
-
-			bool oldAutoConnect = AutoConnect;
-			AutoConnect = false;
-
-			while (!FoundServer && numberOfAttempts-- > 0)
-			{
-				SendUnconnectedPingInternal(targetEndPoint);
-				Task.Delay(100).Wait();
-			}
-
-			serverInfo = (RemoteEndpoint, RemoteServerName);
-
-			AutoConnect = oldAutoConnect;
-
-			return FoundServer;
-		}
-
-
 		public bool TryConnect(IPEndPoint targetEndPoint, int numberOfAttempts = int.MaxValue, short mtuSize = 1500)
 		{
 			Start(); // Make sure we have started the listener
-
-			RaknetSession session;
+			
 			do
 			{
 				RaknetHandler.SendOpenConnectionRequest1(targetEndPoint, mtuSize);
 				Task.Delay(300).Wait();
-			} while ((!RakSessions.TryGetValue(targetEndPoint, out session) && RakSessions.Count < 0) && numberOfAttempts-- > 0);
+			} while (Session == null && numberOfAttempts-- > 0);
 
-			if (session == null) return false;
+			if (Session == null) return false;
 
-			while (session.State != ConnectionState.Connected && numberOfAttempts-- > 0)
+			while (Session.State != ConnectionState.Connected && numberOfAttempts-- > 0)
 			{
 				Task.Delay(100).Wait();
 			}
 
-			return session.State == ConnectionState.Connected;
+			return Session.State == ConnectionState.Connected;
 		}
 
 		private void SendUnconnectedPingInternal(IPEndPoint targetEndPoint)
@@ -164,11 +136,7 @@ namespace Alex.Net.Bedrock
 			try
 			{
 				//Log.Info("Shutting down...");
-
-				foreach (var rakSession in RakSessions)
-				{
-					rakSession.Value.Close();
-				}
+				Session?.Close();
 
 				var timer = _tickerHighPrecisionTimer;
 				_tickerHighPrecisionTimer = null;
@@ -194,9 +162,9 @@ namespace Alex.Net.Bedrock
 			if (Environment.OSVersion.Platform != PlatformID.MacOSX)
 			{
 				//_listener.Client.ReceiveBufferSize = 1600*40000;
-				//listener.Client.ReceiveBufferSize = int.MaxValue;
+				listener.Client.ReceiveBufferSize = int.MaxValue;
 				//_listener.Client.SendBufferSize = 1600*40000;
-				//listener.Client.SendBufferSize = int.MaxValue;
+				listener.Client.SendBufferSize = int.MaxValue;
 			}
 
 			listener.DontFragment = true;
@@ -220,7 +188,7 @@ namespace Alex.Net.Bedrock
 			}
 
 		//	listener.
-			listener.ExclusiveAddressUse = true;
+			//listener.ExclusiveAddressUse = true;
 			listener.Client.Bind(endpoint);
 			return listener;
 		}
@@ -251,71 +219,62 @@ namespace Alex.Net.Bedrock
 			splits.Clear();
 		}
 
-
-		private void ReceiveDatagram(object state)
+		private void ReceiveCallback(IAsyncResult ar)
 		{
-			var listener = (UdpClient) state;
+			var listener = (UdpClient) ar.AsyncState;
+			
+			// Check if we already closed the server
+			if (listener?.Client == null) return;
 
-			while (true)
+			// WSAECONNRESET:
+			// The virtual circuit was reset by the remote side executing a hard or abortive close. 
+			// The application should close the socket; it is no longer usable. On a UDP-datagram socket 
+			// this error indicates a previous send operation resulted in an ICMP Port Unreachable message.
+			// Note the spocket settings on creation of the server. It makes us ignore these resets.
+			IPEndPoint senderEndpoint = null;
+
+			try
 			{
-				// Check if we already closed the server
-				if (listener?.Client == null) return;
+				var receiveBytes = listener.EndReceive(ar, ref senderEndpoint);
 
-				// WSAECONNRESET:
-				// The virtual circuit was reset by the remote side executing a hard or abortive close. 
-				// The application should close the socket; it is no longer usable. On a UDP-datagram socket 
-				// this error indicates a previous send operation resulted in an ICMP Port Unreachable message.
-				// Note the spocket settings on creation of the server. It makes us ignore these resets.
-				IPEndPoint senderEndpoint = null;
-				try
+				Interlocked.Increment(ref ConnectionInfo.NumberOfPacketsInPerSecond);
+				Interlocked.Add(ref ConnectionInfo.TotalPacketSizeInPerSecond, receiveBytes.Length);
+
+				if (receiveBytes.Length != 0)
 				{
-					var receiveBytes = listener.Receive(ref senderEndpoint);
-					if (receiveBytes.Length == 0)
-						continue;
-					//UdpReceiveResult result = listener.ReceiveAsync().Result;
-					//senderEndpoint = result.RemoteEndPoint;
-					//byte[] receiveBytes = result.Buffer;
-
-					if (receiveBytes.Length != 0)
+					//ThreadPool.QueueUserWorkItem(
+					//	(o) =>
 					{
-						Interlocked.Increment(ref ConnectionInfo.NumberOfPacketsInPerSecond);
-						Interlocked.Add(ref ConnectionInfo.TotalPacketSizeInPerSecond, receiveBytes.Length);
-						
-						//ThreadPool.QueueUserWorkItem(p =>
+						try
 						{
-							try
-							{
-								ReceiveDatagram(receiveBytes, senderEndpoint);
-							}
-							catch (Exception e)
-							{
-								Log.Warn($"Process message error from: {senderEndpoint.Address}", e);
-							}
-						}//);
-					}
-					else
-					{
-						Log.Warn("Unexpected end of transmission?");
-						continue;
-					}
+							ReceiveDatagram(receiveBytes, senderEndpoint);
+						}
+						catch (Exception e)
+						{
+							Log.Warn(e, $"Process message error from: {senderEndpoint.Address}");
+						}
+					} //);
 				}
-				catch (ObjectDisposedException e)
+				else
 				{
-					return;
+					Log.Warn("Unexpected end of transmission?");
 				}
-				catch (SocketException e)
-				{
-					// 10058 (just regular disconnect while listening)
-					if (e.ErrorCode == 10058) return;
-					if (e.ErrorCode == 10038) return;
-					if (e.ErrorCode == 10004) return;
 
-					if (Log.IsDebugEnabled) Log.Error("Unexpected end of receive", e);
+				listener.BeginReceive(ReceiveCallback, listener);
+			}
+			catch (ObjectDisposedException e) { }
+			catch (SocketException e)
+			{
+				// 10058 (just regular disconnect while listening)
+				if (e.ErrorCode == 10058) return;
+				if (e.ErrorCode == 10038) return;
+				if (e.ErrorCode == 10004) return;
 
-					if (listener.Client != null) continue; // ??
-
-					return;
-				}
+				if (Log.IsDebugEnabled) Log.Error("Unexpected end of receive", e);
+			}
+			catch (NullReferenceException ex)
+			{
+				Log.Warn(ex, $"Unexpected end of transmission");
 			}
 		}
 
@@ -341,10 +300,15 @@ namespace Alex.Net.Bedrock
 				return;
 			}
 
-			if (!RakSessions.TryGetValue(clientEndpoint, out RaknetSession rakSession))
+			var rakSession = Session;
+
+			if (rakSession == null || !Equals(Session.EndPoint, clientEndpoint))
+				return;
+
+			/*if (!RakSessions.TryGetValue(clientEndpoint, out RaknetSession rakSession))
 			{
 				return;
-			}
+			}*/
 
 			if (rakSession.Evicted) return;
 
@@ -377,7 +341,7 @@ namespace Alex.Net.Bedrock
 			{
 				rakSession.Disconnect("Bad packet received from client.");
 
-				Log.Warn($"Bad packet {receivedBytes.Span[0]}\n{Packet.HexDump(receivedBytes)}", e);
+				Log.Warn(e, $"Bad packet {receivedBytes.Span[0]}\n{Packet.HexDump(receivedBytes)}");
 				return;
 			}
 
@@ -478,7 +442,7 @@ namespace Alex.Net.Bedrock
 			}
 			catch (Exception e)
 			{
-				Log.Error("Error during split message parsing", e);
+				Log.Error(e, "Error during split message parsing");
 				if (Log.IsDebugEnabled) Log.Debug($"0x{buffer.Span[0]:x2}\n{Packet.HexDump(buffer)}");
 				session.Disconnect("Bad packet received from client.", false);
 			}
@@ -565,12 +529,8 @@ namespace Alex.Net.Bedrock
 
 		private async void SendTick(object obj)
 		{
-			var tasks = new List<Task>();
-			foreach (KeyValuePair<IPEndPoint, RaknetSession> session in RakSessions)
-			{
-				tasks.Add(session.Value.SendTickAsync(this));
-			}
-			await Task.WhenAll(tasks);
+			if (Session != null)
+				await Session.SendTickAsync(this);
 		}
 
 		internal async Task UpdateAsync(RaknetSession session)

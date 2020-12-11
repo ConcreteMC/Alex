@@ -1,5 +1,5 @@
-using System.Numerics;
 using Alex.API.Utils;
+using Microsoft.Xna.Framework;
 
 namespace Alex.Entities
 {
@@ -8,14 +8,27 @@ namespace Alex.Entities
 	/// </summary>
 	public class EntityMovement
 	{
-		public Entity Entity { get; }
+		public Entity  Entity  { get; }
+		public Vector3 Heading { get; private set; }
+		
 		public EntityMovement(Entity entity)
 		{
 			Entity = entity;
+			Heading = Vector3.Zero;
+		}
+
+		private object _headingLock = new object();
+		public void UpdateHeading(Vector3 heading)
+		{
+			lock (_headingLock)
+			{
+				Heading = Vector3.Transform(heading, Matrix.CreateRotationY(-MathHelper.ToRadians(Entity.KnownPosition.HeadYaw)));;
+			}
 		}
 		
 		public void MoveTo(PlayerLocation location)
 		{
+			//var difference = 
 			var distance = Microsoft.Xna.Framework.Vector3.Distance(
 				Entity.KnownPosition.ToVector3(), location.ToVector3());
 			
@@ -38,7 +51,7 @@ namespace Alex.Entities
 			Entity.DistanceMoved +=
 				MathF.Abs(Microsoft.Xna.Framework.Vector3.Distance(oldPosition, Entity.KnownPosition.ToVector3()));
 		}
-
+		
 		public void Teleport(PlayerLocation location)
 		{
 			Entity.KnownPosition = location;

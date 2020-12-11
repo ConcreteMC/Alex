@@ -2,17 +2,16 @@ using System;
 
 namespace Alex.API
 {
-    [Flags]
-    public enum RenderStage
+    public enum RenderStage : int
     {
-        OpaqueFullCube = 1,
-        Opaque = 4,
+        OpaqueFullCube = 0,
+        Opaque = 1,
        // LiquidOld = 16,
-        Transparent = 64,
-        Translucent = 256,
-        Animated = 1024,
+        Transparent = 2,
+        Translucent = 3,
+        Animated = 4,
         //AnimatedTranslucent = 4096,
-        Liquid = 8192
+        Liquid = 5
     }
 
    /* public static class RenderStageExtensions

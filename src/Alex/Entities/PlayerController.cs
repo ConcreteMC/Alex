@@ -227,7 +227,7 @@ namespace Alex.Entities
 			    }
 		    }
 
-		    float speedFactor = (float)Player.CalculateMovementSpeed();
+		    //float speedFactor = (float)Player.CalculateMovementSpeed();
 
 		    if (InputManager.IsDown(InputCommand.MoveForwards))
 			{
@@ -282,7 +282,7 @@ namespace Alex.Entities
 			{
 				if (Player.FeetInWater && InputManager.IsDown(InputCommand.MoveUp))
 				{
-					Player.Velocity = new Vector3(Player.Velocity.X, 1f * speedFactor, Player.Velocity.Z);
+					Player.Velocity = new Vector3(Player.Velocity.X, 1f, Player.Velocity.Z);
 				}
 				else if (!Player.IsInWater && Player.KnownPosition.OnGround && (InputManager.IsDown(InputCommand.Jump) || InputManager.IsDown(InputCommand.MoveUp)))
 				{
@@ -312,13 +312,13 @@ namespace Alex.Entities
 			
 		//	if (moveVector != Vector3.Zero)
 			{
-				var velocity = moveVector * speedFactor;
-				velocity = Vector3.Transform(velocity,
-					Matrix.CreateRotationY(-MathHelper.ToRadians(Player.KnownPosition.HeadYaw)));
+			//	var velocity = moveVector;
+				//velocity = Vector3.Transform(velocity,
+				//	Matrix.CreateRotationY(-MathHelper.ToRadians(Player.KnownPosition.HeadYaw)));
 
-				velocity = Player.Level.PhysicsEngine.UpdateEntity(Player, velocity);
+				//velocity = Player.Level.PhysicsEngine.CheckCollisions(Player, velocity);
 				
-				if (Player.IsFlying)
+				/*if (Player.IsFlying)
 				{
 					if ((Player.Velocity * new Vector3(1, 1, 1)).Length() < velocity.Length())
 					{
@@ -343,13 +343,14 @@ namespace Alex.Entities
 						
 						Player.Velocity = new Vector3(MathF.Abs(old.X) < 0.0001f ? velocity.X : old.X, Player.Velocity.Y, MathF.Abs(old.Z) < 0.0001f ? velocity.Z : old.Z);
 					}
-				}
+				}*/
 
 				//speedFactor *= 20;
 				//Player.Velocity += (moveVector * speedFactor);// new Vector3(moveVector.X * speedFactor, moveVector.Y * (speedFactor), moveVector.Z * speedFactor);
+				Player.Movement.UpdateHeading(moveVector);
 			}
 
-		    LastSpeedFactor = speedFactor;
+		   // LastSpeedFactor = speedFactor;
 
 			if (IgnoreNextUpdate)
 			{

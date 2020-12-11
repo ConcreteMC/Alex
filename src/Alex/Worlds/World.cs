@@ -177,7 +177,6 @@ namespace Alex.Worlds
 			}
 			
 			Player.KnownPosition = new PlayerLocation(GetSpawnPoint());
-			Camera.MoveTo(Player.KnownPosition, Vector3.Zero);
 
 			Options.FieldOfVision.ValueChanged += FieldOfVisionOnValueChanged;
 			Camera.FOV = Options.FieldOfVision.Value;
@@ -284,7 +283,7 @@ namespace Alex.Worlds
 			var camera = Camera;
 			
 			args.Camera = camera;
-			if (Player.FOVModifier != _fovModifier)
+			if (Math.Abs(Player.FOVModifier - _fovModifier) > 0f)
 			{
 				_fovModifier = Player.FOVModifier;
 
@@ -294,26 +293,32 @@ namespace Alex.Worlds
 			}
 			camera.Update(args);
 
-			_brightnessMod = SkyRenderer.BrightnessModifier;
+			//_brightnessMod = SkyRenderer.BrightnessModifier;
 			
 			SkyRenderer.Update(args);
 			ChunkManager.Update(args);
+			
 			EntityManager.Update(args);
 			PhysicsEngine.Update(args.GameTime);
 
-			var diffuseColor = Color.White.ToVector3() * SkyRenderer.BrightnessModifier;
-			ChunkManager.AmbientLightColor = diffuseColor;
-
-			if (Math.Abs(ChunkManager.BrightnessModifier - SkyRenderer.BrightnessModifier) > 0f)
+			if (Math.Abs(_brightnessMod - SkyRenderer.BrightnessModifier) > 0f)
 			{
-				ChunkManager.BrightnessModifier = SkyRenderer.BrightnessModifier;
-			}
+				_brightnessMod = SkyRenderer.BrightnessModifier;
+				
+				var diffuseColor = Color.White.ToVector3() * SkyRenderer.BrightnessModifier;
+				ChunkManager.AmbientLightColor = diffuseColor;
 
-			var modelRenderer = Player?.ModelRenderer;
+				if (Math.Abs(ChunkManager.BrightnessModifier - SkyRenderer.BrightnessModifier) > 0f)
+				{
+					ChunkManager.BrightnessModifier = SkyRenderer.BrightnessModifier;
+				}
+				
+				var modelRenderer = Player?.ModelRenderer;
 
-			if (modelRenderer != null)
-			{
-				modelRenderer.DiffuseColor = diffuseColor;
+				if (modelRenderer != null)
+				{
+					modelRenderer.DiffuseColor = diffuseColor;
+				}
 			}
 
 			Player.Update(args);
@@ -898,7 +903,7 @@ namespace Alex.Worlds
 				}
 				else
 				{
-					entity.Movement.Move(new System.Numerics.Vector3(position.X, position.Y, position.Z));
+					entity.Movement.Move(position);
 				}
 
 				if (updateLook)

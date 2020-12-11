@@ -112,14 +112,7 @@ namespace Alex.Gamestates.InGame
 			
 			World.SpawnPoint = WorldProvider.GetSpawnPoint();
 			World.Camera.MoveTo(World.GetSpawnPoint(), Vector3.Zero);
-			/*RichPresenceProvider.SetPresence(new RichPresence()
-						{
-							State = "Multiplayer",
-							Timestamps = Timestamps.Now,
-							Details = $"Playing on a {WorldProvider} server.",
-							Assets = RichPresenceProvider.GetDefaultAssets()
-						});
-						*/
+
 			base.OnLoad(args);
 		}
 
@@ -147,10 +140,9 @@ namespace Alex.Gamestates.InGame
 		}
 
 		private long _ramUsage = 0;
-		private long _threadsUsed, _maxThreads, _complPortUsed, _maxComplPorts;
+		private long _threadsUsed, _maxThreads;
 		private Biome _currentBiome = BiomeUtils.GetBiomeById(0);
 		private int _currentBiomeId = 0;
-		private DateTime _lastNetworkInfo = DateTime.UtcNow;
 		private void InitDebugInfo()
 		{
 			_debugInfo.AddDebugLeft(
@@ -172,7 +164,7 @@ namespace Alex.Gamestates.InGame
 			{
 				var pos = World.Player.KnownPosition;
 				var blockPos = pos.GetCoordinates3D();
-				return $"RenderPosition: (X={pos.X:F2}, Y={pos.Y:F2}, Z={pos.Z:F2}) / Block: ({blockPos.X:D}, {blockPos.Y:D}, {blockPos.Z:D})";
+				return $"Position: (X={pos.X:F2}, Y={pos.Y:F2}, Z={pos.Z:F2}, OnGround={pos.OnGround}) / Block: ({blockPos.X:D}, {blockPos.Y:D}, {blockPos.Z:D})";
 			});
 			
 			_debugInfo.AddDebugLeft(() =>
@@ -288,75 +280,65 @@ namespace Alex.Gamestates.InGame
 		private float AspectRatio { get; set; }
 
 		private DateTime _previousMemUpdate = DateTime.UtcNow;
+
 		protected override void OnUpdate(GameTime gameTime)
 		{
 			MiniMap.PlayerLocation = World.Player.KnownPosition;
-			
-			var args = new UpdateArgs()
-			{
-				Camera = World.Camera,
-				GraphicsDevice = Graphics,
-				GameTime = gameTime
-			};
+
+			var args = new UpdateArgs() {Camera = World.Camera, GraphicsDevice = Graphics, GameTime = gameTime};
 
 			_playingHud.CheckInput = Alex.GuiManager.ActiveDialog == null;
-			
-		//	if (Alex.IsActive)
+
+			//	if (Alex.IsActive)
+
+			if (Math.Abs(AspectRatio - Graphics.Viewport.AspectRatio) > 0f)
 			{
-				var newAspectRatio = Graphics.Viewport.AspectRatio;
-				if (AspectRatio != newAspectRatio)
+				World.Camera.UpdateAspectRatio(Graphics.Viewport.AspectRatio);
+				AspectRatio = Graphics.Viewport.AspectRatio;
+			}
+
+			if (!_playingHud.Chat.Focused)
+			{
+				World.Player.Controller.CheckMovementInput = Alex.IsActive && Alex.GuiManager.ActiveDialog == null;
+				World.Player.Controller.CheckInput = Alex.IsActive;
+
+				if (Alex.GuiManager.ActiveDialog == null)
 				{
-					World.Camera.UpdateAspectRatio(newAspectRatio);
-					AspectRatio = newAspectRatio;
-				}
-
-				//UpdateRayTracer(Alex.GraphicsDevice, World);
-
-				if (!_playingHud.Chat.Focused)
-				{
-					World.Player.Controller.CheckMovementInput = Alex.IsActive && Alex.GuiManager.ActiveDialog == null;
-					World.Player.Controller.CheckInput = Alex.IsActive;
-
-					if (Alex.GuiManager.ActiveDialog == null)
-					{
-						CheckInput(gameTime);
-					}
-				}
-				else
-				{
-					World.Player.Controller.CheckInput = false;
-				}
-
-				World.Update(args);
-
-				var now = DateTime.UtcNow;
-				if (now - _previousMemUpdate > TimeSpan.FromSeconds(5))
-				{
-					_previousMemUpdate = now;
-
-					//Task.Run(() =>
-					{
-						_ramUsage = Environment.WorkingSet;
-
-						ThreadPool.GetMaxThreads(out int maxThreads, out int maxCompletionPorts);
-						ThreadPool.GetAvailableThreads(out int availableThreads, out int availableComplPorts);
-						_threadsUsed = maxThreads - availableThreads;
-						_complPortUsed = maxCompletionPorts - availableComplPorts;
-
-						_maxThreads = maxThreads;
-						_maxComplPorts = maxCompletionPorts;
-						
-						var pos = World.Player.KnownPosition.GetCoordinates3D();
-						var biomeId = World.GetBiome(pos.X, pos.Y, pos.Z);
-						var biome = BiomeUtils.GetBiomeById(biomeId);
-						_currentBiomeId = biomeId;
-						_currentBiome = biome;
-					}//);
+					CheckInput(gameTime);
 				}
 			}
+			else
+			{
+				World.Player.Controller.CheckInput = false;
+			}
+
+			World.Update(args);
+
+			var now = DateTime.UtcNow;
+
+			if (now - _previousMemUpdate > TimeSpan.FromSeconds(5))
+			{
+				_previousMemUpdate = now;
+
+
+				_ramUsage = Environment.WorkingSet;
+
+				ThreadPool.GetMaxThreads(out int maxThreads, out _);
+				ThreadPool.GetAvailableThreads(out int availableThreads, out _);
+				_threadsUsed = maxThreads - availableThreads;
+
+				_maxThreads = maxThreads;
+
+				var pos     = World.Player.KnownPosition.GetCoordinates3D();
+				var biomeId = World.GetBiome(pos.X, pos.Y, pos.Z);
+				var biome   = BiomeUtils.GetBiomeById(biomeId);
+				_currentBiomeId = biomeId;
+				_currentBiome = biome;
+			}
+
 			base.OnUpdate(gameTime);
 		}
-		
+
 		//private Microsoft.Xna.Framework.BoundingBox RayTraceBoundingBox { get; set; }
 		private bool _renderNetworking = true;
 
@@ -411,11 +393,6 @@ namespace Alex.Gamestates.InGame
 					{
 						Alex.GuiManager.AddScreen(_debugInfo);
 					}
-				}
-
-				if (currentKeyboardState.IsKeyDown(KeyBinds.ReBuildChunks))
-				{
-					World.RebuildChunks();
 				}
 
 				if (currentKeyboardState.IsKeyDown(KeyBinds.Fog) && !_oldKeyboardState.IsKeyDown(KeyBinds.Fog))

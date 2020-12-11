@@ -22,7 +22,7 @@
 		</When>
 		<When Condition="$(DefineConstants.Contains(DIRECTX))">
 			<PropertyGroup>
-				<TargetFramework>netcoreapp3.1</TargetFramework>
+				<TargetFramework>net5.0</TargetFramework>
 			</PropertyGroup>
 			<ItemGroup>
 				<PackageReference Include="MonoGame.Framework.WindowsDX" Version="3.8.0.1641" />
@@ -30,7 +30,7 @@
 		</When>
 		<Otherwise>
 			<PropertyGroup>
-				<TargetFramework>netcoreapp3.1</TargetFramework>
+				<TargetFramework>net5.0</TargetFramework>
 			</PropertyGroup>
 			<ItemGroup>
 				<PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.0.1641" />

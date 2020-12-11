@@ -19,8 +19,8 @@ namespace Alex.Graphics.Models
 	//Thanks https://github.com/SirCmpwn/TrueCraft
 	public class SkyBox : IDisposable
 	{
-		private float MoonX = 1f/4f;
-		private float MoonY = 1f/2f;
+		private float _moonX = 1f/4f;
+		private float _moonY = 1f/2f;
 
 		private BasicEffect SkyPlaneEffect { get; set; }
 	    private BasicEffect  CelestialPlaneEffect { get; set; }
@@ -129,12 +129,12 @@ namespace Alex.Graphics.Models
 			_moonPlaneVertices = new[]
 			{
 				new VertexPositionTexture(new Vector3(-planeDistance, 0, -planeDistance), new Vector2(0, 0)),
-				new VertexPositionTexture(new Vector3(planeDistance, 0, -planeDistance), new Vector2(MoonX, 0)),
-				new VertexPositionTexture(new Vector3(-planeDistance, 0, planeDistance), new Vector2(0, MoonY)),
+				new VertexPositionTexture(new Vector3(planeDistance, 0, -planeDistance), new Vector2(_moonX, 0)),
+				new VertexPositionTexture(new Vector3(-planeDistance, 0, planeDistance), new Vector2(0, _moonY)),
 
-				new VertexPositionTexture(new Vector3(planeDistance, 0, -planeDistance), new Vector2(MoonX, 0)),
-				new VertexPositionTexture(new Vector3(planeDistance, 0, planeDistance), new Vector2(MoonX, MoonY)),
-				new VertexPositionTexture(new Vector3(-planeDistance, 0, planeDistance), new Vector2(0, MoonY)),
+				new VertexPositionTexture(new Vector3(planeDistance, 0, -planeDistance), new Vector2(_moonX, 0)),
+				new VertexPositionTexture(new Vector3(planeDistance, 0, planeDistance), new Vector2(_moonX, _moonY)),
+				new VertexPositionTexture(new Vector3(-planeDistance, 0, planeDistance), new Vector2(0, _moonY)),
 			};
 			MoonPlane = GpuResourceManager.GetBuffer(this, device, VertexPositionTexture.VertexDeclaration,
 				_moonPlaneVertices.Length, BufferUsage.WriteOnly);
@@ -284,15 +284,15 @@ namespace Alex.Graphics.Models
 		    }
 	    }
 	    
-	    private int CurrentMoonPhase = 0;
+	    private int _currentMoonPhase = 0;
 	    public void Update(IUpdateArgs args)
 	    {
 		    if (!RenderSkybox) return;
 		    
 		    var moonPhase = (int)(World.Time / 24000L % 8L + 8L) % 8;
-		    if (CurrentMoonPhase != moonPhase)
+		    if (_currentMoonPhase != moonPhase)
 		    {
-			    CurrentMoonPhase = moonPhase;
+			    _currentMoonPhase = moonPhase;
 			    
 			    var w = (1f / MoonTexture.Width) * (MoonTexture.Width / 4f);
 			    var h = (1f / MoonTexture.Height) * (MoonTexture.Height / 2f);
@@ -336,7 +336,6 @@ namespace Alex.Graphics.Models
 		    }
 	    }
 
-	    private static DepthStencilState DepthStencilState { get; } = new DepthStencilState() { DepthBufferEnable = false };
 	    private static RasterizerState RasterState { get; } = new RasterizerState() { CullMode = CullMode.None };
 	    
 	    private static BlendState CelestialBlendState { get; } = new BlendState()
@@ -344,10 +343,7 @@ namespace Alex.Graphics.Models
 		    AlphaSourceBlend = Microsoft.Xna.Framework.Graphics.Blend.SourceAlpha,
 		    AlphaDestinationBlend = Microsoft.Xna.Framework.Graphics.Blend.SourceAlpha,
 		    ColorDestinationBlend = Microsoft.Xna.Framework.Graphics.Blend.SourceAlpha,
-		    ColorSourceBlend = Microsoft.Xna.Framework.Graphics.Blend.SourceAlpha,
-		     // IndependentBlendEnable = true,
-		    //AlphaBlendFunction = BlendFunction.Add,
-		   // ColorBlendFunction = BlendFunction.Add
+		    ColorSourceBlend = Microsoft.Xna.Framework.Graphics.Blend.SourceAlpha
 	    };
 	    
 	    public void Draw(IRenderArgs renderArgs)
@@ -360,7 +356,6 @@ namespace Alex.Graphics.Models
 		    var raster = renderArgs.GraphicsDevice.RasterizerState;
 		    var bl = renderArgs.GraphicsDevice.BlendState;
 
-		  //  renderArgs.GraphicsDevice.DepthStencilState = DepthStencilState;
 		  renderArgs.GraphicsDevice.DepthStencilState = DepthStencilState.DepthRead;
 		    renderArgs.GraphicsDevice.RasterizerState = RasterState;
 			renderArgs.GraphicsDevice.BlendState = BlendState.AlphaBlend;
@@ -371,7 +366,6 @@ namespace Alex.Graphics.Models
 		    {
 			    var backup = renderArgs.GraphicsDevice.BlendState;
 			
-			    //renderArgs.GraphicsDevice.DepthStencilState = DepthStencilState;
 			    renderArgs.GraphicsDevice.BlendState = CelestialBlendState;
 			    
 			    DrawSun(renderArgs, renderArgs.Camera.Position);
@@ -394,7 +388,6 @@ namespace Alex.Graphics.Models
 			SkyPlaneEffect.World = Matrix.CreateRotationX(MathHelper.Pi)
 			                       * Matrix.CreateTranslation(0, 16, 0)
 			                       * Matrix.CreateTranslation(position);
-			                    //   * Matrix.CreateTranslation(position);
 		    
 			SkyPlaneEffect.DiffuseColor = SkyPlaneEffect.AmbientLightColor = WorldSkyColor.ToVector3();
 			
@@ -481,49 +474,6 @@ namespace Alex.Graphics.Models
 			SkyPlaneEffect?.Dispose();
 			CelestialPlaneEffect?.Dispose();
 			CloudsPlaneEffect?.Dispose();
-		}
-		
-		private static Color HSL2RGB(float h, float sl, float l)
-		{
-			// Thanks http://www.java2s.com/Code/CSharp/2D-Graphics/HSLtoRGBconversion.htm
-			float v, r, g, b;
-			r = g = b = l;   // default to gray
-			v = (l <= 0.5f) ? (l * (1.0f + sl)) : (l + sl - l * sl);
-			if (v > 0)
-			{
-				int sextant;
-				float m, sv, fract, vsf, mid1, mid2;
-				m = l + l - v;
-				sv = (v - m) / v;
-				h *= 6.0f;
-				sextant = (int)h;
-				fract = h - sextant;
-				vsf = v * sv * fract;
-				mid1 = m + vsf;
-				mid2 = v - vsf;
-				switch (sextant)
-				{
-					case 0:
-						r = v; g = mid1; b = m;
-						break;
-					case 1:
-						r = mid2; g = v; b = m;
-						break;
-					case 2:
-						r = m; g = v; b = mid1;
-						break;
-					case 3:
-						r = m; g = mid2; b = v;
-						break;
-					case 4:
-						r = mid1; g = m; b = v;
-						break;
-					case 5:
-						r = v; g = m; b = mid2;
-						break;
-				}
-			}
-			return new Color(r, g, b);
 		}
 	}
 }

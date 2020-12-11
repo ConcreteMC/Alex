@@ -29,6 +29,8 @@ namespace Alex.Entities.Passive
 			JavaEntityId = 65;
 			Height = 0.9;
 			Width = 0.5;
+
+			IsAffectedByGravity = false;
 		}
 
 		/// <inheritdoc />

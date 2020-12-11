@@ -186,8 +186,8 @@ namespace Alex.Graphics.Models.Entity
 			{
 				if (_disposed || Effect == null) return;
 
-				if (!Monitor.TryEnter(_disposeLock, 0))
-					return;
+				//if (!Monitor.TryEnter(_disposeLock, 0))
+				//	return;
 
 				try
 				{
@@ -253,7 +253,7 @@ namespace Alex.Graphics.Models.Entity
 				}
 				finally
 				{
-					Monitor.Exit(_disposeLock);
+				//	Monitor.Exit(_disposeLock);
 				}
 			}
 

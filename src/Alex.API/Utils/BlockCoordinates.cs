@@ -226,13 +226,7 @@ namespace Alex.API.Utils
 
 		public override int GetHashCode()
 		{
-			unchecked
-			{
-				int hashCode = X;
-				hashCode = (hashCode * 397) ^ Y;
-				hashCode = (hashCode * 397) ^ Z;
-				return hashCode;
-			}
+			return HashCode.Combine<int, int, int>(this.X, this.Y, this.Z);
 		}
 
 		public override string ToString()

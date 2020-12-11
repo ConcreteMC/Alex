@@ -47,7 +47,7 @@ namespace Alex.Entities
 		public PlayerController Controller { get; }
         public Vector3 Raytraced = Vector3.Zero;
         public Vector3 AdjacentRaytrace = Vector3.Zero;
-        public bool HasAdjacentRaytrace = false;
+
         public bool HasRaytraceResult = false;
 
         public bool IsWorldImmutable { get; set; } = false;
@@ -182,183 +182,168 @@ namespace Alex.Entities
 	    private double _destroyTimeNeeded = 0;
 	    private API.Blocks.BlockFace _destroyingFace;
 
-	    private int PreviousSlot { get; set; } = -1;
-	    private DateTime _lastTimeWithoutInput = DateTime.MinValue;
-	    private bool _prevCheckedInput = false;
-	    private DateTime _lastAnimate = DateTime.MinValue;
+	    private int  PreviousSlot { get; set; } = -1;
+	    public  bool CanSprint    => HealthManager.Hunger > 6;
 
-	    public bool CanSprint => HealthManager.Hunger > 6;
+	    public override void Update(IUpdateArgs args)
+	    {
+		    if (WaitingOnChunk && Age % 4 == 0)
+		    {
+			    NoAi = true;
 
-		public override void Update(IUpdateArgs args)
-		{
-			if (WaitingOnChunk && Age % 4 == 0)
-			{
-				NoAi = true;
-				
-				if (Level.GetChunk(KnownPosition.GetCoordinates3D(), true) != null)
-				{
-					WaitingOnChunk = false;
-				}
-			}
+			    if (Level.GetChunk(KnownPosition.GetCoordinates3D(), true) != null)
+			    {
+				    WaitingOnChunk = false;
+			    }
+		    }
 
-			ChunkCoordinates oldChunkCoordinates = new ChunkCoordinates(base.KnownPosition);
-			bool sprint = IsSprinting;
-			bool sneak = IsSneaking;
+		    bool sprint = IsSprinting;
+		    bool sneak  = IsSneaking;
 
-			if (!CanFly && IsFlying)
-				IsFlying = false;
+		    if (!CanFly && IsFlying)
+			    IsFlying = false;
 
-			if (IsSprinting && !CanSprint)
-			{
-				IsSprinting = false;
-			}
-			
-			Controller.Update(args.GameTime);
-			//KnownPosition.HeadYaw = KnownPosition.Yaw;
+		    if (IsSprinting && !CanSprint)
+		    {
+			    IsSprinting = false;
+		    }
 
-			if (IsSprinting && !sprint)
-			{
-				FOVModifier = 10;
-				
-				Network.EntityAction((int) EntityId, EntityAction.StartSprinting);
-			}
-			else if (!IsSprinting && sprint)
-			{
-				FOVModifier = 0;
-				
-				Network.EntityAction((int)EntityId, EntityAction.StopSprinting);
-			}
+		    Controller.Update(args.GameTime);
+		    //KnownPosition.HeadYaw = KnownPosition.Yaw;
 
-			if (IsSneaking != sneak)
-			{
-				if (IsSneaking)
-				{
-					Network.EntityAction((int)EntityId, EntityAction.StartSneaking);	
-					Level.Camera.UpdateOffset(new Vector3(0f, -0.15f, 0.35f));
-				}
-				else
-				{
-					Network.EntityAction((int)EntityId, EntityAction.StopSneaking);
-					Level.Camera.UpdateOffset(Vector3.Zero);
-				}
-			}
-			
-		//	DoHealthAndExhaustion();
+		    if (IsSprinting && !sprint)
+		    {
+			    FOVModifier = 10;
 
-			//var previousCheckedInput = _prevCheckedInput;
-			
-			if ((Controller.CheckInput && Controller.CheckMovementInput))
-			{
-				_prevCheckedInput = true;
-				if (Alex.Instance.GuiManager.ActiveDialog != null)
-				{
-					return;
-				}
+			    Network.EntityAction((int) EntityId, EntityAction.StartSprinting);
+		    }
+		    else if (!IsSprinting && sprint)
+		    {
+			    FOVModifier = 0;
 
-				UpdateBlockRayTracer();
-				UpdateRayTracer();
+			    Network.EntityAction((int) EntityId, EntityAction.StopSprinting);
+		    }
 
-				//if (Controller.InputManager.IsDown(InputCommand.LeftClick) && DateTime.UtcNow - _lastAnimate >= TimeSpan.FromMilliseconds(500))
-				//{
-				//	SwingArm(true);
-				//}
+		    if (IsSneaking != sneak)
+		    {
+			    if (IsSneaking)
+			    {
+				    Network.EntityAction((int) EntityId, EntityAction.StartSneaking);
+				    Level.Camera.UpdateOffset(new Vector3(0f, -0.15f, 0.35f));
+			    }
+			    else
+			    {
+				    Network.EntityAction((int) EntityId, EntityAction.StopSneaking);
+				    Level.Camera.UpdateOffset(Vector3.Zero);
+			    }
+		    }
 
-				bool didLeftClick  = Controller.InputManager.IsPressed(InputCommand.LeftClick);
-				bool didRightClick = Controller.InputManager.IsPressed(InputCommand.RightClick);
-				bool leftMouseBtnDown     = Controller.InputManager.IsDown(InputCommand.LeftClick);
-				
-				var hitEntity = HitEntity;
-				if (hitEntity != null && didLeftClick && hitEntity is LivingEntity)
-				{
-					if (_destroyingBlock)
-						StopBreakingBlock(forceCanceled:true);
-					
-					InteractWithEntity(hitEntity, true, IsLeftHanded ? 1 : 0);
-				}
-				else if (hitEntity != null && didRightClick && hitEntity is LivingEntity)
-				{
-					if (_destroyingBlock)
-						StopBreakingBlock(forceCanceled:true);
-					
-					InteractWithEntity(hitEntity, false, IsLeftHanded ? 1 : 0);
-				}
-				else if (hitEntity == null && !_destroyingBlock
-				                           && didLeftClick
-				                           && !HasRaytraceResult)
-				{
-					HandleLeftClick(IsLeftHanded ? Inventory.OffHand : Inventory.MainHand, IsLeftHanded ? 1 : 0);
-				}
-				else if (hitEntity == null 
-				         && !_destroyingBlock 
-				         && Controller.InputManager.IsBeginPress(InputCommand.LeftClick) 
-				         && !IsWorldImmutable 
-				         && HasRaytraceResult) //Destroying block.
-				{
-					StartBreakingBlock();
-				}
-				else if (_destroyingBlock)
-				{
-					if (!leftMouseBtnDown)
-					{
-						StopBreakingBlock();
-					}
-					else if (_destroyingTarget != new BlockCoordinates(Vector3.Floor(Raytraced)))
-					{
-						StopBreakingBlock(true, true);
+		    //	DoHealthAndExhaustion();
 
-						if (Gamemode != Gamemode.Creative)
-						{
-						//	StartBreakingBlock();
-						}
-					}
-				}
-				else if (didRightClick)
-				{
-					bool handledClick = false;
-					var  item         = IsLeftHanded ? Inventory.OffHand : Inventory.MainHand;// [Inventory.SelectedSlot];
-					// Log.Debug($"Right click!");
-					if (item != null)
-					{
-						handledClick = HandleClick(
-							item, IsLeftHanded ? 1 : 0, Inventory.HotbarOffset + Inventory.SelectedSlot);
-					}
+		    //var previousCheckedInput = _prevCheckedInput;
 
-					/*if (!handledClick && Inventory.OffHand != null && !(Inventory.OffHand is ItemAir))
-					{
-						handledClick = HandleRightClick(Inventory.OffHand, 1);
-					}*/
-				}
+		    if ((Controller.CheckInput && Controller.CheckMovementInput && Alex.Instance.GuiManager.ActiveDialog == null))
+		    {
 
-				if (hitEntity != null && HasCollision)
-				{
-					if (IsColliding(hitEntity))
-					{
-						//var distance = DistanceToHorizontal(hitEntity);
-					//	Velocity += (KnownPosition.ToVector3() - hitEntity.KnownPosition.ToVector3());
-					}
-				}
-            }
-			else
-			{
-				if (_destroyingBlock)
-				{
-					StopBreakingBlock();
-				}
+			    UpdateBlockRayTracer();
+			    UpdateRayTracer();
 
-				//_prevCheckedInput = false;
-				_lastTimeWithoutInput = DateTime.UtcNow;
-			}
+			    //if (Controller.InputManager.IsDown(InputCommand.LeftClick) && DateTime.UtcNow - _lastAnimate >= TimeSpan.FromMilliseconds(500))
+			    //{
+			    //	SwingArm(true);
+			    //}
 
-			if (PreviousSlot != Inventory.SelectedSlot)
-			{
-				var slot = Inventory.SelectedSlot;
-				Network?.HeldItemChanged(Inventory[Inventory.SelectedSlot], (short) slot);
-				PreviousSlot = slot;
-			}
+			    bool didLeftClick     = Controller.InputManager.IsPressed(InputCommand.LeftClick);
+			    bool didRightClick    = Controller.InputManager.IsPressed(InputCommand.RightClick);
+			    bool leftMouseBtnDown = Controller.InputManager.IsDown(InputCommand.LeftClick);
 
-			base.Update(args);
+			    var hitEntity = HitEntity;
 
-		}
+			    if (hitEntity != null && didLeftClick && hitEntity is LivingEntity)
+			    {
+				    if (_destroyingBlock)
+					    StopBreakingBlock(forceCanceled: true);
+
+				    InteractWithEntity(hitEntity, true, IsLeftHanded ? 1 : 0);
+			    }
+			    else if (hitEntity != null && didRightClick && hitEntity is LivingEntity)
+			    {
+				    if (_destroyingBlock)
+					    StopBreakingBlock(forceCanceled: true);
+
+				    InteractWithEntity(hitEntity, false, IsLeftHanded ? 1 : 0);
+			    }
+			    else if (hitEntity == null && !_destroyingBlock && didLeftClick && !HasRaytraceResult)
+			    {
+				    HandleLeftClick(IsLeftHanded ? Inventory.OffHand : Inventory.MainHand, IsLeftHanded ? 1 : 0);
+			    }
+			    else if (hitEntity == null && !_destroyingBlock
+			                               && Controller.InputManager.IsBeginPress(InputCommand.LeftClick)
+			                               && !IsWorldImmutable && HasRaytraceResult) //Destroying block.
+			    {
+				    StartBreakingBlock();
+			    }
+			    else if (_destroyingBlock)
+			    {
+				    if (!leftMouseBtnDown)
+				    {
+					    StopBreakingBlock();
+				    }
+				    else if (_destroyingTarget != new BlockCoordinates(Vector3.Floor(Raytraced)))
+				    {
+					    StopBreakingBlock(true, true);
+
+					    if (Gamemode != Gamemode.Creative)
+					    {
+						    //	StartBreakingBlock();
+					    }
+				    }
+			    }
+			    else if (didRightClick)
+			    {
+				    bool handledClick = false;
+				    var  item = IsLeftHanded ? Inventory.OffHand : Inventory.MainHand; // [Inventory.SelectedSlot];
+
+				    // Log.Debug($"Right click!");
+				    if (item != null)
+				    {
+					    handledClick = HandleClick(
+						    item, IsLeftHanded ? 1 : 0, Inventory.HotbarOffset + Inventory.SelectedSlot);
+				    }
+
+				    /*if (!handledClick && Inventory.OffHand != null && !(Inventory.OffHand is ItemAir))
+				    {
+					    handledClick = HandleRightClick(Inventory.OffHand, 1);
+				    }*/
+			    }
+
+			    if (hitEntity != null && HasCollision)
+			    {
+				    if (IsColliding(hitEntity))
+				    {
+					    //var distance = DistanceToHorizontal(hitEntity);
+					    //	Velocity += (KnownPosition.ToVector3() - hitEntity.KnownPosition.ToVector3());
+				    }
+			    }
+		    }
+		    else
+		    {
+			    if (_destroyingBlock)
+			    {
+				    StopBreakingBlock();
+			    }
+		    }
+
+		    if (PreviousSlot != Inventory.SelectedSlot)
+		    {
+			    var slot = Inventory.SelectedSlot;
+			    Network?.HeldItemChanged(Inventory[Inventory.SelectedSlot], (short) slot);
+			    PreviousSlot = slot;
+		    }
+
+		    base.Update(args);
+
+	    }
 
 	    private void InteractWithEntity(Entity entity, bool attack, int hand)
 	    {
@@ -456,11 +441,6 @@ namespace Alex.Entities
 							    AdjacentRaytraceBlock = Vector3.Floor(rawAdjacent);
 
 							    AdjacentRaytrace = rawAdjacent;
-							    HasAdjacentRaytrace = true;
-						    }
-						    else
-						    {
-							    HasAdjacentRaytrace = false;
 						    }
 
 						    return;
@@ -470,9 +450,7 @@ namespace Alex.Entities
 		    }
 
 		    SelBlock = null;
-		    //_raytracedBlock.Y = 999;
 		    HasRaytraceResult = false;
-		    HasAdjacentRaytrace = false;
 	    }
 	    
 	    private bool SetPlayerAdjacentSelectedBlock(World world, float xStart, Vector3 camPos, Vector3 lookVector, out Vector3 rawAdjacent)
@@ -498,7 +476,6 @@ namespace Alex.Entities
 		    var tick =  Interlocked.Increment(ref _destroyingTick);
 		    if (tick % 10 == 0)
 		    {
-			    _lastAnimate = DateTime.UtcNow;
 			    SwingArm(true);
 		    }
 		    
@@ -679,7 +656,7 @@ namespace Alex.Entities
 	    private bool CanPlaceBlock(BlockCoordinates coordinates, Block block)
 	    {
 		    var bb = block.BlockState.Model.GetBoundingBox(coordinates);
-		    var playerBb = GetBoundingBox(KnownPosition);
+		    var playerBb = BoundingBox;
 
 		    if (playerBb.Intersects(bb))
 		    {

@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Alex.API.Utils;
+using Microsoft.Xna.Framework;
 
 namespace Alex.API.Entities
 {
@@ -12,6 +13,21 @@ namespace Alex.API.Entities
 		float TerminalVelocity { get; set; }
 		Vector3 Velocity { get; set; }
 
+		//PhysicsState State         { get; set; }
+		PhysicsState PreviousState { get; set; }
+		
 		void OnTick();
+    }
+
+    public class PhysicsState
+    {
+	    public Vector3        Velocity { get; set; }
+	    public PlayerLocation Position { get; set; }
+
+	    public PhysicsState(Vector3 velocity, PlayerLocation position)
+	    {
+		    Velocity = velocity;
+		    Position = position;
+	    }
     }
 }
