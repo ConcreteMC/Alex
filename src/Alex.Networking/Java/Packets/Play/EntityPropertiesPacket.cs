@@ -65,6 +65,7 @@ namespace Alex.Networking.Java.Packets.Play
 	{
 		public const string FlyingSpeed   = "generic.flying_speed";
 		public const string MovementSpeed = "generic.movement_speed";
+		public const string GenericMovementSpeed = "minecraft:generic.movement_speed";
 	}
 
 	public class EntityProperty
@@ -93,7 +94,15 @@ namespace Alex.Networking.Java.Packets.Play
 
 		public void ApplyModifier(Modifier modifier)
 		{
-			Modifiers.TryAdd(modifier.Uuid, modifier);
+			if (!Modifiers.TryAdd(modifier.Uuid, modifier))
+			{
+				if (Modifiers.TryGetValue(modifier.Uuid, out var currentModifier))
+				{
+					currentModifier.Amount = modifier.Amount;
+					currentModifier.Operation = modifier.Operation;
+				//	currentModifier.Uuid = modifier.Uuid;
+				}
+			}
 		}
 
 		public void RemoveModifier(UUID key)

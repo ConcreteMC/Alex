@@ -212,6 +212,7 @@ namespace Alex.Worlds.Multiplayer.Java
 			abilitiesPacket.ServerBound = true;
 
 			abilitiesPacket.Flags = (byte) flags;
+			
 			//abilitiesPacket.FlyingSpeed = (float) player.FlyingSpeed;
 			//abilitiesPacket.WalkingSpeed = (float)player.MovementSpeed;
 
@@ -1780,7 +1781,7 @@ namespace Alex.Worlds.Multiplayer.Java
 			{
 				return;
 			}
-
+			
 			foreach (var prop in packet.Properties.Values)
 			{
 				target.AddOrUpdateProperty(prop);

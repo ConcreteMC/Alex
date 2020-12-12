@@ -106,75 +106,97 @@ namespace Alex.Worlds
 		
 		//private void Apply
 
-		private float NormalMovement(Entity e)
+		private Vector3 ConvertMovementIntoVelocity(Entity entity, out float slipperiness)
+		{
+			slipperiness = 0.6f;
+			
+			var movement = entity.Movement.Heading * 0.98F;
+			movement.Y = 0f;
+
+			float mag = movement.X * movement.X + movement.Z * movement.Z;
+			// don't do insignificant movement
+			if (mag < 0.01f) {
+				return Vector3.Zero;
+			}
+
+			//movement.X /= mag;
+			//movement.Z /= mag;
+
+			//mag *=  (float)entity.CalculateMovementSpeed();
+			//movement *=mag;
+			
+			if (!entity.KnownPosition.OnGround || entity.IsInWater)
+			{
+				movement *= 0.02f;
+			}
+			else
+			{
+				var blockcoords = entity.KnownPosition.GetCoordinates3D();
+
+				//if (entity.KnownPosition.Y % 1 <= 0.01f)
+				//{
+				//	blockcoords = blockcoords.BlockDown();
+			//	}
+			
+				if (entity.BoundingBox.Min.Y % 1 < 0.05f)
+				{
+					blockcoords.Y -= 1;
+				}
+				
+				var block = World.GetBlock(blockcoords.X, blockcoords.Y, blockcoords.Z);
+				slipperiness = (float) block.BlockMaterial.Slipperiness * 0.91f;
+					
+				movement *= (float)entity.CalculateMovementSpeed() * (0.1627714f / (slipperiness * slipperiness * slipperiness));
+			}
+
+			return movement;
+		}
+
+		private void UpdatePhysics(Entity e)
 		{
 			List<BoundingBox> boxes = new List<BoundingBox>();
 			
 			e.PreviousState.Position = (PlayerLocation)e.KnownPosition.Clone();
 			var velocityBeforeAdjustment = new Vector3(e.Velocity.X, e.Velocity.Y, e.Velocity.Z);
-			
-			float multiplier   = 0.02f;
-			float slipperiness = 0f;
-			
-			if (e.KnownPosition.OnGround)
-			{
-				var blockcoords = e.KnownPosition.GetCoordinates3D();
 
-				if (Math.Round(e.KnownPosition.Y, 2) % 1 == 0)
+			e.Velocity += (ConvertMovementIntoVelocity(e, out var slipperiness));
+
+			if (e.HasCollision)
+			{
+				e.Velocity = TruncateVelocity(e.Velocity);
+				
+				if (TestTerrainCollisionY(e, out var yCollisionPoint, out var yBox))
 				{
-					blockcoords = blockcoords.BlockDown();
+					e.CollidedWithWorld(
+						velocityBeforeAdjustment.Y < 0 ? Vector3.Down : Vector3.Up, yCollisionPoint,
+						velocityBeforeAdjustment.Y);
+
+					boxes.Add(yBox);
 				}
-				
-				var block        = World.GetBlock(blockcoords.X, blockcoords.Y, blockcoords.Z);
-				slipperiness = (float) block.BlockMaterial.Slipperiness;
-				slipperiness *= 0.91f;
 
-				multiplier = (float) (e.CalculateMovementSpeed()
-				                      * (0.1627714 / (slipperiness * slipperiness * slipperiness)));
-			}
+				if (TestTerrainCollisionX(e, out var xCollisionPoint, out var xBox))
+				{
+					e.CollidedWithWorld(
+						velocityBeforeAdjustment.X < 0 ? Vector3.Left : Vector3.Right, xCollisionPoint,
+						velocityBeforeAdjustment.X);
 
-			e.Velocity += (e.Movement.Heading * multiplier);
+					boxes.Add(xBox);
+				}
 
-			e.Velocity = TruncateVelocity(e.Velocity);
-			
-			if (TestTerrainCollisionY(e, out var yCollisionPoint, out var yBox))
-			{
-				e.CollidedWithWorld(
-					velocityBeforeAdjustment.Y < 0 ? Vector3.Down : Vector3.Up, yCollisionPoint, velocityBeforeAdjustment.Y);
+				if (TestTerrainCollisionZ(e, out var zCollisionPoint, out var zBox))
+				{
+					e.CollidedWithWorld(
+						velocityBeforeAdjustment.Z < 0 ? Vector3.Backward : Vector3.Forward, zCollisionPoint,
+						velocityBeforeAdjustment.Z);
 
-				boxes.Add(yBox);
-			}
-			
-			if (TestTerrainCollisionX(e, out var xCollisionPoint, out var xBox))
-			{
-				e.CollidedWithWorld(
-					velocityBeforeAdjustment.X < 0 ? Vector3.Left : Vector3.Right, xCollisionPoint, velocityBeforeAdjustment.X);
-				
-				boxes.Add(xBox);
-			}
-			
-			if (TestTerrainCollisionZ(e, out var zCollisionPoint, out var zBox))
-			{
-				e.CollidedWithWorld(
-					velocityBeforeAdjustment.Z < 0 ? Vector3.Backward : Vector3.Forward, zCollisionPoint, velocityBeforeAdjustment.Z);
-				
-				boxes.Add(zBox);
+					boxes.Add(zBox);
+				}
 			}
 
 			//TestTerrainCollisionCylinder(e, out var collision);
 			//	aabbEntity.TerrainCollision(collision, before);
 
-			var velocity = e.Velocity;
-			var pos      = e.KnownPosition;
-
-			/*pos = new PlayerLocation(
-				velocity.X < 0 ? pos.X - (-velocity.X) : pos.X + velocity.X, pos.Y + velocity.Y,
-				velocity.Z < 0 ? pos.Z - (-velocity.Z) : pos.Z + velocity.Z, pos.HeadYaw, pos.Yaw, pos.Pitch)
-			{
-				OnGround = pos.OnGround
-			};*/
-			
-			e.Movement.MoveTo(pos + velocity);
+			e.Movement.MoveTo(e.KnownPosition + e.Velocity);
 			
 			e.KnownPosition.OnGround = DetectOnGround(e);
 			
@@ -184,27 +206,33 @@ namespace Alex.Worlds
 			{
 				LastKnownHit = boxes.ToArray();
 			}
+
+			if (e.IsNoAi)
+				return;
 			
-			return slipperiness;
-		}
-		
-		private void UpdatePhysics(Entity e)
-		{
-			if (!e.NoAi || (e.NoAi && !e.ServerEntity))
+			if (e.IsInWater)
 			{
-				var   slipperiness = NormalMovement(e);
-				
-				var   position     = e.KnownPosition;
-				
-				float drag         = slipperiness;
-
-				if (!e.IsFlying && !position.OnGround && e.IsAffectedByGravity)
+				e.Velocity = new Vector3(e.Velocity.X * 0.8f, (float) (e.Velocity.Y - e.Gravity), e.Velocity.Z * 0.8f); //Liquid Drag
+			}
+			else if (e.IsInLava)
+			{
+				e.Velocity = new Vector3(e.Velocity.X * 0.5f, (float) (e.Velocity.Y - e.Gravity), e.Velocity.Z * 0.5f); //Liquid Drag
+			}
+			else
+			{
+				if (e.KnownPosition.OnGround)
 				{
-					drag = 0.91f;
-					e.Velocity -= new Vector3(0f, (float) (e.Gravity), 0f);
+					e.Velocity *= new Vector3(slipperiness, 0.98f, slipperiness);
 				}
-
-				e.Velocity *= new Vector3(drag, 0.98f, drag);
+				else
+				{
+					if (e.IsAffectedByGravity && !e.IsFlying)
+					{
+						e.Velocity -= new Vector3(0f, (float) (e.Gravity), 0f);
+					}
+					
+					e.Velocity *= new Vector3(0.91f, 0.98f, 0.91f);
+				}
 			}
 		}
 
@@ -633,7 +661,8 @@ namespace Alex.Worlds
 			
 			var offset = 0f;
 
-			if (Math.Round(entityBoundingBox.Min.Y) <= (int) entityBoundingBox.Min.Y)
+			//if (Math.Round(entityBoundingBox.Min.Y) <= (int) entityBoundingBox.Min.Y)
+			if (entityBoundingBox.Min.Y % 1 < 0.05f)
 			{
 				offset = -1f;
 			}

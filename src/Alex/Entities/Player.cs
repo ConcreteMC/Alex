@@ -61,7 +61,7 @@ namespace Alex.Entities
 			PlayerIndex = playerIndex;
 		    Controller = new PlayerController(graphics, world, inputManager, this, playerIndex);
 		   // Camera = camera;
-		    NoAi = false;
+		   // NoAi = false;
 
 			//Inventory = new Inventory(46);
 			//Inventory.SelectedHotbarSlotChanged += SelectedHotbarSlotChanged;
@@ -83,7 +83,7 @@ namespace Alex.Entities
         }
 
         /// <inheritdoc />
-        public override bool NoAi { get; set; }
+        public override bool NoAi { get; set; } = false;
 
         protected override void OnInventorySlotChanged(object sender, SlotChangedEventArgs e)
         {
@@ -708,8 +708,24 @@ namespace Alex.Entities
 		    Network?.PlayerOnGroundChanged(this, false);
 	    }
 	    
+	    private Vector3 _previous = Vector3.Zero;
+
+	    private int   _speedTick = 0;
+
+	    public float CurrentSpeed { get; set; } = 0f;
+	    //private vector
 		public override void OnTick()
 		{
+			if (_speedTick++ == 20)
+			{
+				_speedTick = 0;
+				var currentPosition = KnownPosition.ToVector3() * new Vector3(1f, 0f, 1f);
+				var distance        = Vector3.Distance(_previous, currentPosition);
+				CurrentSpeed = distance;
+				
+				_previous = currentPosition;
+			}
+			
 			if (_destroyingBlock)
 			{
 				BlockBreakTick();

@@ -176,7 +176,7 @@ namespace Alex.Gamestates.InGame
 			_debugInfo.AddDebugLeft(() =>
 			{
 				var pos = World.Player.Velocity;
-				return $"Velocity: (X={pos.X:F2}, Y={pos.Y:F2}, Z={pos.Z:F2}) / Target Speed: {(World.Player.Controller.LastSpeedFactor * 20f):F3} M/s";
+				return $"Velocity: (X={pos.X:F2}, Y={pos.Y:F2}, Z={pos.Z:F2}) ({World.Player.CurrentSpeed:F3} m/s)";// / Target Speed: {(World.Player.CalculateMovementSpeed() * 20f):F3} m/s";
 			});
 			_debugInfo.AddDebugLeft(() => $"Vertices: {World.Vertices:N0} ({GetBytesReadable((long)(World.Vertices * BlockShaderVertex.VertexDeclaration.VertexStride))})", TimeSpan.FromMilliseconds(500));
 		//	_debugInfo.AddDebugLeft(() => $"IndexBuffer Elements: {World.IndexBufferSize:N0} ({GetBytesReadable(World.IndexBufferSize * 4)})");

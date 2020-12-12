@@ -77,9 +77,11 @@ namespace Alex.Entities
 			GeometryName = geometry;
 			
 			UpdateSkin(skinTexture);
-			
-			MovementSpeed = 0.1f;
+
+			MovementSpeed = 0.1f;//0000000149011612f;//0000000149011612f;
 			FlyingSpeed = 0.4f;
+			//	MovementSpeed = 0.1f;
+			//		FlyingSpeed = 0.4f;
 		}
 
 		private static JsonSerializerSettings GeometrySerializationSettings = new JsonSerializerSettings()

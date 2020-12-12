@@ -120,6 +120,9 @@ namespace Alex.Entities
 		public bool HeadInWater  { get; set; } = false;
 		public bool FeetInWater  { get; set; } = false;
 		public bool IsInWater    { get; set; } = false;
+		
+		public bool HeadInLava  { get; set; } = false;
+		public bool FeetInLava  { get; set; } = false;
 		public bool IsInLava     { get; set; } = false;
 		public bool IsOutOfWater => !IsInWater;
 		public bool Invulnerable { get; set; } = false;
@@ -267,6 +270,7 @@ namespace Alex.Entities
 			}
 		}
 		
+		//private double
 		public double MovementSpeed
 		{
 			get
@@ -281,22 +285,28 @@ namespace Alex.Entities
 
 		public void AddOrUpdateProperty(EntityProperty property)
 		{
+			//Log.Info($"Update prop: {property.Key}= {property.Value}");
 			if (!_entityProperties.TryAdd(property.Key, property))
 			{
+				/*_entityProperties[property.Key].Value = property.Value;
+				
+				foreach (var modifier in property.Modifiers)
+				{
+					_entityProperties[property.Key].ApplyModifier(modifier.Value);
+				}*/
+			//	_entityProperties[property.Key].ApplyModifier();
 				_entityProperties[property.Key] = property;
 			}
 		}
 
 		public double CalculateMovementSpeed()
 		{
-			var baseMovementSpeed = BaseMovementSpeed / 2D;
-
 			var modifier =
 				(_entityProperties[
 					IsFlying ? Networking.Java.Packets.Play.EntityProperties.FlyingSpeed :
 						Networking.Java.Packets.Play.EntityProperties.MovementSpeed]).Calculate();
 
-			return modifier;
+			return (modifier)- 0.00475f;
 		}
 
 		private bool _skipRendering = false;
@@ -987,6 +997,7 @@ namespace Alex.Entities
 				{
 					HeadInBlock = false;
 				}
+				
 				if (headBlock.BlockMaterial == Material.Water || headBlock.IsWater)
 				{
 					HeadInWater = true;
@@ -994,6 +1005,15 @@ namespace Alex.Entities
 				else
 				{
 					HeadInWater = false;
+				}
+				
+				if (headBlock.BlockMaterial == Material.Lava || headBlock is Lava || headBlock is FlowingLava)
+				{
+					HeadInLava = true;
+				}
+				else
+				{
+					HeadInLava = false;
 				}
 			}
 
@@ -1026,16 +1046,16 @@ namespace Alex.Entities
 
 				if (feetBlock.Any(b => b.State.Block.BlockMaterial == Material.Lava))
 				{
-					IsInLava = true;
+					FeetInLava = true;
 				}
 				else
 				{
-					IsInLava = false;
+					FeetInLava = false;
 				}
 			}
 
 			IsInWater = FeetInWater || HeadInWater;
-
+			IsInLava = FeetInLava || HeadInLava;
 			//HealthManager.OnTick();
 		}
 		
@@ -1397,10 +1417,31 @@ namespace Alex.Entities
 		{
 			HealthManager.Exhaust(IsSprinting ? 0.2f : 0.05f);
 			var jumpVelocity = JumpVelocity;
-
-			if (_effects.TryGetValue(EffectType.JumpBoost, out var effect))
+			
+			if (IsInWater)
 			{
-				jumpVelocity += ((jumpVelocity * 0.5f) * effect.Level);
+				jumpVelocity = 0.04f;
+				
+				if (FeetInWater && !HeadInWater)
+				{
+					jumpVelocity += 0.3f;
+				}
+			}
+			else if (IsInLava)
+			{
+				jumpVelocity = 0.04f;
+				
+				if (FeetInLava && !HeadInLava)
+				{
+					jumpVelocity += 0.3f;
+				}
+			}
+			else
+			{
+				if (_effects.TryGetValue(EffectType.JumpBoost, out var effect))
+				{
+					jumpVelocity += ((jumpVelocity * 0.5f) * effect.Level);
+				}
 			}
 
 			//Movement.Move(new Vector3(0f, jumpVelocity, 0f));
