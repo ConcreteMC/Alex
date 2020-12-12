@@ -282,7 +282,7 @@ namespace Alex.Entities
 		public void AddOrUpdateProperty(EntityProperty property)
 		{
 			//Log.Info($"Update prop: {property.Key}= {property.Value}");
-			if (!_entityProperties.TryAdd(property.Key, property))
+			if (_entityProperties.TryAdd(property.Key, property))
 			{
 				/*_entityProperties[property.Key].Value = property.Value;
 				
@@ -291,6 +291,9 @@ namespace Alex.Entities
 					_entityProperties[property.Key].ApplyModifier(modifier.Value);
 				}*/
 			//	_entityProperties[property.Key].ApplyModifier();
+			}
+			else
+			{
 				_entityProperties[property.Key] = property;
 			}
 		}
@@ -1445,12 +1448,12 @@ namespace Alex.Entities
 			Network?.EntityAction((int) EntityId, EntityAction.Jump);
 		}
 		
-		public void AddEffect(Effect effect)
+		public void AddOrUpdateEffect(Effect effect)
 		{
-			if (_effects.TryAdd(effect.EffectId, effect))
-			{
-				effect.ApplyTo(this);
-			}
+			var effect1 = effect;
+			
+			effect = _effects.AddOrUpdate(effect.EffectId, effect, (type, e) => effect1);
+			effect?.ApplyTo(this);
 		}
 
 		public void RemoveEffect(EffectType effectType)
@@ -1459,6 +1462,27 @@ namespace Alex.Entities
 			{
 				removed.TakeFrom(this);
 			}
+		}
+
+		public bool TryGetEffect(EffectType type, out Effect effect)
+		{
+			return _effects.TryGetValue(type, out effect);
+		}
+		
+		public bool TryGetEffect<T>(EffectType type, out T effect) where T : Effect
+		{
+			if (_effects.TryGetValue(type, out var temp))
+			{
+				if (temp is T t)
+				{
+					effect = t;
+					return true;
+				}
+			}
+
+			effect = null;
+
+			return false;
 		}
 
 		public IEnumerable<Effect> AppliedEffects()

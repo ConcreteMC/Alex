@@ -377,7 +377,7 @@ namespace Alex.Graphics.Models
 					var y1 = pixelHeight * textureOffset.Y;
 					var y2 = pixelHeight * (textureOffset.Y + height);
 
-					/*if (mirrored)
+					if (mirrored)
 					{
 						TopLeft = new Vector2(x2, y1);
 						TopRight = new Vector2(x1, y1);
@@ -385,12 +385,12 @@ namespace Alex.Graphics.Models
 						BotRight = new Vector2(x1, y2);
 					}
 					else
-					{*/
+					{
 						TopLeft = new Vector2(x1, y1);
 						TopRight = new Vector2(x2, y1);
 						BotLeft = new Vector2(x1, y2);
 						BotRight = new Vector2(x2, y2);
-					//}
+					}
 				}
 			}
 		}

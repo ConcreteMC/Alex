@@ -29,8 +29,6 @@ namespace Alex.Entities
 
 		public PlayerIndex PlayerIndex { get; }
 
-		public float FOVModifier { get; set; } = 0;
-
 		public PlayerController Controller { get; }
         public Vector3 Raytraced = Vector3.Zero;
         public Vector3 AdjacentRaytrace = Vector3.Zero;
@@ -207,13 +205,11 @@ namespace Alex.Entities
 		    if (IsSprinting && !sprint)
 		    {
 			    FOVModifier = 10;
-
 			    Network.EntityAction((int) EntityId, EntityAction.StartSprinting);
 		    }
 		    else if (!IsSprinting && sprint)
 		    {
 			    FOVModifier = 0;
-
 			    Network.EntityAction((int) EntityId, EntityAction.StopSprinting);
 		    }
 
@@ -708,10 +704,22 @@ namespace Alex.Entities
 	    private Vector3 _previous = Vector3.Zero;
 
 	    private int   _speedTick = 0;
+	    private float _fovModifier      = 0f;
 
 	    public float CurrentSpeed { get; set; } = 0f;
+
+	    public float FOVModifier
+	    {
+		    get => _fovModifier;
+		    set
+		    {
+			    _fovModifier = value;
+			    Level.Camera.FOVModifier = value;
+		    }
+	    }
+
 	    //private vector
-		public override void OnTick()
+	    public override void OnTick()
 		{
 			if (_speedTick++ == 20)
 			{

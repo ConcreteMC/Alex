@@ -92,14 +92,15 @@ namespace Alex.Entities.Models
 					Rotation = new Vector3(0f,0f,0f),
 					BindPoseRotation = new Vector3(0f,0f,0f),
 					NeverRender = false,
-					Mirror = false,
+					Mirror = true,
 					Reset = false,
 					Cubes = new EntityModelCube[1]{
 						new EntityModelCube()
 						{
 							Origin = new Vector3(-6f,12f,-1f),
 							Size = new Vector3(2f, 12f, 2f),
-							Uv = new Vector2(40f, 16f)
+							Uv = new Vector2(40f, 16f),
+							Mirror = true
 						},
 					}
 				},
@@ -121,7 +122,7 @@ namespace Alex.Entities.Models
 					Rotation = new Vector3(0f,0f,0f),
 					BindPoseRotation = new Vector3(0f,0f,0f),
 					NeverRender = false,
-					Mirror = true,
+					Mirror = false,
 					Reset = false,
 					Cubes = new EntityModelCube[1]{
 						new EntityModelCube()
@@ -150,14 +151,15 @@ namespace Alex.Entities.Models
 					Rotation = new Vector3(0f,0f,0f),
 					BindPoseRotation = new Vector3(0f,0f,0f),
 					NeverRender = false,
-					Mirror = false,
+					Mirror = true,
 					Reset = false,
 					Cubes = new EntityModelCube[1]{
 						new EntityModelCube()
 						{
 							Origin = new Vector3(-3f,0f,-1f),
 							Size = new Vector3(2f, 12f, 2f),
-							Uv = new Vector2(0f, 16f)
+							Uv = new Vector2(0f, 16f),
+							Mirror = true
 						},
 					}
 				},
@@ -168,7 +170,7 @@ namespace Alex.Entities.Models
 					Rotation = new Vector3(0f,0f,0f),
 					BindPoseRotation = new Vector3(0f,0f,0f),
 					NeverRender = false,
-					Mirror = true,
+					Mirror = false,
 					Reset = false,
 					Cubes = new EntityModelCube[1]{
 						new EntityModelCube()

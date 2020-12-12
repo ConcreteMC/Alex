@@ -950,6 +950,11 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				case EffectType.JumpBoost:
 					effect = new JumpBoostEffect();
 					break;
+				
+				case EffectType.NightVision:
+					effect = new NightVisionEffect();
+					break;
+				
 				default:
 					Log.Warn($"Missing effect implementation: {(EffectType) message.effectId}");
 					return;
@@ -961,7 +966,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					effect.Duration = message.duration;
 					effect.Level = message.amplifier;
 					effect.Particles = message.particles;
-					entity.AddEffect(effect);
+					entity.AddOrUpdateEffect(effect);
 					break;
 				
 				case 2:

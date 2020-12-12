@@ -49,8 +49,7 @@ namespace Alex.Graphics.Camera
 			Mode = EntityCameraMode.FirstPerson;
 		}
 
-		private int _cameraIndex = 0;
-		
+		private int   _cameraIndex = 0;
 		public void ToggleMode()
 		{
 			Mode = _modes[(_cameraIndex++ % _modes.Length)];
@@ -73,6 +72,7 @@ namespace Alex.Graphics.Camera
 		}
 		
 		private static readonly Vector3 ThirdPersonOffset =  new Vector3(0, 2.5f, 3.5f);
+
 		private void UpdateThirdPerson(bool frontSideView)
 		{
 			Matrix rotationMatrix = Matrix.CreateRotationX(Rotation.Z) * //Pitch
@@ -96,7 +96,6 @@ namespace Alex.Graphics.Camera
 		{
 			var entityLocation = TrackingEntity.RenderLocation;
 
-			
 			if (_mode == EntityCameraMode.FirstPerson)
 			{
 				MoveTo(

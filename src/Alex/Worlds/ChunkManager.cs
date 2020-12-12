@@ -32,7 +32,7 @@ namespace Alex.Worlds
 		private AlexOptions                                         Options        { get; }
 		private ConcurrentDictionary<ChunkCoordinates, ChunkColumn> Chunks         { get; }
 		
-		public  RenderingShaders        DefaultShaders         { get; set; }
+		public  RenderingShaders        Shaders         { get; set; }
 		private CancellationTokenSource CancellationToken      { get; }
 		private BlockLightCalculations  BlockLightCalculations { get; }
 		private SkyLightCalculations    SkyLightCalculator     { get; }
@@ -51,9 +51,9 @@ namespace Alex.Worlds
 			var stillAtlas = Resources.Atlas.GetStillAtlas();
 	        
 			var fogStart = 0;
-			DefaultShaders = new RenderingShaders(Graphics);
-			DefaultShaders.SetTextures(stillAtlas);
-			DefaultShaders.SetAnimatedTextures(Resources.Atlas.GetAtlas(0));
+			Shaders = new RenderingShaders(Graphics);
+			Shaders.SetTextures(stillAtlas);
+			Shaders.SetAnimatedTextures(Resources.Atlas.GetAtlas(0));
 			
 			RenderDistance = Options.VideoOptions.RenderDistance;
 
@@ -108,54 +108,42 @@ namespace Alex.Worlds
 
 		public bool FogEnabled
 		{
-			get { return DefaultShaders.FogEnabled; }
+			get { return Shaders.FogEnabled; }
 			set
 			{
-				DefaultShaders.FogEnabled = value;
+				Shaders.FogEnabled = value;
 			}
 		}
 
 		public Vector3 FogColor
 		{
-			get { return DefaultShaders.FogColor; }
+			get { return Shaders.FogColor; }
 			set
 			{
-				DefaultShaders.FogColor = value;
+				Shaders.FogColor = value;
 				//  LightShaders.FogColor = value;
 			}
 		}
 
 		public float FogDistance
 		{
-			get { return DefaultShaders.FogDistance; }
+			get { return Shaders.FogDistance; }
 			set
 			{
-				DefaultShaders.FogDistance = value;
+				Shaders.FogDistance = value;
 				//  LightShaders.FogDistance = value;
 			}
 		}
 
 		public Vector3 AmbientLightColor
 		{
-			get { return DefaultShaders.AmbientLightColor; }
+			get { return Shaders.AmbientLightColor; }
 			set
 			{
-				DefaultShaders.AmbientLightColor = value;
+				Shaders.AmbientLightColor = value;
 			}
 		}
 
-		public float BrightnessModifier
-		{
-			get
-			{
-				return DefaultShaders.BrightnessModifier;
-			}
-			set
-			{
-				DefaultShaders.BrightnessModifier = value;
-			}
-		}
-		
 		/// <inheritdoc />
 		public void Start()
 		{
@@ -495,10 +483,6 @@ namespace Alex.Worlds
 		
 		public void Draw(IRenderArgs args, params RenderStage[] stages)
 		{
-			var view       = args.Camera.ViewMatrix;
-			var projection = args.Camera.ProjectionMatrix;
-
-			DefaultShaders.UpdateMatrix(view, projection);
 			var device = args.GraphicsDevice;
 
 			var originalSamplerState = device.SamplerStates[0];
@@ -562,7 +546,7 @@ namespace Alex.Worlds
 			var tempVertices    = 0;
 
 			ChunkData[]      chunks  = _renderedChunks;
-			RenderingShaders shaders = DefaultShaders;
+			RenderingShaders shaders = Shaders;
 
 		//	Effect transparentEffect = shaders.TransparentEffect;
 
@@ -679,13 +663,15 @@ namespace Alex.Worlds
 		float _timer        = 0.0f;
 		public void Update(IUpdateArgs args)
 		{
+			Shaders.Update(args.Camera);
+
 			_timer += (float)args.GameTime.ElapsedGameTime.TotalSeconds;
 			if (_timer >= (1.0f / _framerate ))
 			{
 				_timer -= 1.0f / _framerate ;
 				_currentFrame = (_currentFrame + 1) % Resources.Atlas.GetFrameCount();
 				
-				DefaultShaders.SetAnimatedTextures(Resources.Atlas.GetAtlas(_currentFrame));
+				Shaders.SetAnimatedTextures(Resources.Atlas.GetAtlas(_currentFrame));
 			}
 		}
 
