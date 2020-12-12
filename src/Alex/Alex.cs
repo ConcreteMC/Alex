@@ -12,6 +12,7 @@ using System.Threading;
 using Alex.API;
 using Alex.API.Data.Servers;
 using Alex.API.Events;
+using Alex.API.Graphics;
 using Alex.API.Graphics.Typography;
 using Alex.API.Gui;
 using Alex.API.Input;
@@ -39,6 +40,7 @@ using Alex.Worlds.Abstraction;
 using Alex.Worlds.Multiplayer.Bedrock;
 using Alex.Worlds.Multiplayer.Java;
 using Alex.Worlds.Singleplayer;
+using Alex.Worlds.Singleplayer.Generators;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Xna.Framework;
@@ -48,9 +50,11 @@ using Microsoft.Xna.Framework.Input;
 using MiNET;
 using Newtonsoft.Json;
 using NLog;
+using SharpVR;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
+using Color = Microsoft.Xna.Framework.Color;
 using DedicatedThreadPool = Alex.API.Utils.DedicatedThreadPool;
 using DedicatedThreadPoolSettings = Alex.API.Utils.DedicatedThreadPoolSettings;
 using GeometryModel = Alex.Worlds.Multiplayer.Bedrock.GeometryModel;
@@ -59,6 +63,7 @@ using Image = SixLabors.ImageSharp.Image;
 using Point = Microsoft.Xna.Framework.Point;
 using TextInputEventArgs = Microsoft.Xna.Framework.TextInputEventArgs;
 using ThreadType = Alex.API.Utils.ThreadType;
+using ETextureType = Valve.VR.ETextureType;
 
 namespace Alex
 {
@@ -112,6 +117,10 @@ namespace Alex
 		public ServerTypeManager ServerTypeManager { get; private set; }
 		public OptionsProvider   Options           { get; private set; }
 
+
+		private VrContext _vrContext;
+		private bool VrEnabled => _vrContext != null;
+		
 		public Alex(LaunchSettings launchSettings)
 		{
 			EntityProperty.Factory = new AlexPropertyFactory();
@@ -279,6 +288,8 @@ namespace Alex
 
 			DeviceManager.ApplyChanges();
 
+			InitializeVr();
+			
 			base.Initialize();
 
 			RichPresenceProvider.Initialize();
@@ -376,6 +387,9 @@ namespace Alex
 
 			WindowSize = this.Window.ClientBounds.Size;
 
+			if(LaunchSettings.Vr)
+				LoadVrContent();
+			
 			//	Log.Info($"Initializing Alex...");
 			ThreadPool.QueueUserWorkItem(
 				(o) =>
@@ -435,6 +449,132 @@ namespace Alex
 			PluginManager.ConfigureServices(serviceCollection);
 		}
 
+		#region VR
+		
+		private void InitializeVr()
+		{
+			if (LaunchSettings.Vr)
+			{
+				_vrContext = CreateVrContext();
+				_vrCameraWrapper = new VrCameraWrapper(_vrContext);
+			}
+		}
+
+		private static VrContext CreateVrContext()
+		{
+			if (!VrContext.CanCallNativeDll(out var error))
+			{
+				Log.Error(error);
+				return null;
+			}
+
+			var runtime = VrContext.RuntimeInstalled();
+			var hmdConnected = VrContext.HmdConnected();
+			Log.Debug($"VR Runtime: {(runtime ? "yes" : "no")}");
+			Log.Debug($"VR HMD: {(hmdConnected ? "yes" : "no")}");
+
+			if (!runtime)
+			{
+				Log.Error("VR Runtime not installed, failed to create VR service...");
+				return null;
+			}
+			
+			if (!hmdConnected)
+			{
+				Log.Error("No HMD connected, failed to create VR service...");
+				return null;
+			}
+
+			var vrContext = VrContext.Get();
+			
+			Log.Info("Initializing VR Runtime");
+			try
+			{
+				vrContext.Initialize();
+			}
+			catch (SharpVRException ex)
+			{
+				if(ex.ErrorCode == 108) 
+					Log.Error("No HMD is connected and SteamVR failed to report it...");
+				else
+					Log.Error($"Initializing the runtime failed with error {ex.Message}");
+				return null;
+			}
+			
+			return vrContext;
+		}
+
+		public ICameraWrapper CameraWrapper
+		{
+			get => _vrCameraWrapper;
+		}
+		
+		private VrCameraWrapper _vrCameraWrapper;
+		private RenderTarget2D _leftEye, _rightEye;
+		
+		protected void LoadVrContent()
+		{
+			if (VrEnabled)
+			{
+				_vrContext.GetRenderTargetSize(out var width, out var height);
+				_leftEye = new RenderTarget2D(GraphicsDevice, width, height);
+				_rightEye = new RenderTarget2D(GraphicsDevice, width, height);
+				
+				Log.Info($"Rendering to HMD with resolution {width}x{height}");
+			}
+		}
+
+		protected void UnloadVrContent()
+		{
+			if(VrEnabled)
+				_vrContext.Shutdown();
+		}
+
+		private void RenderEye(GameTime gameTime, Eye eye, Matrix hmd)
+		{
+			_vrCameraWrapper.Update(eye, hmd);
+			DoDraw(gameTime);
+		}
+		
+		private void DrawVr(GameTime gameTime)
+		{
+			Matrix hmdMatrix = Matrix.Identity;
+			if (VrEnabled)
+			{
+				_vrContext.WaitGetPoses();
+				hmdMatrix = _vrContext.Hmd.GetNextPose().ToMg();
+			}
+			GraphicsDevice.SetRenderTarget(_leftEye);
+			GraphicsDevice.Clear(Color.Black);
+			RenderEye(gameTime, Eye.Left, hmdMatrix);
+
+			if (VrEnabled)
+			{
+				GraphicsDevice.SetRenderTarget(_rightEye);
+				GraphicsDevice.Clear(Color.Black);
+				RenderEye(gameTime, Eye.Right, hmdMatrix);
+			}
+			
+			GraphicsDevice.SetRenderTarget(null);
+			GraphicsDevice.Clear(Color.Black);
+			
+			// Draw left eye to screen
+			_spriteBatch.Begin();
+			_spriteBatch.Draw(_leftEye, Vector2.Zero, Color.White);
+			_spriteBatch.End();
+			
+			if (VrEnabled)
+			{
+				// Submit the render targets for both eyes
+				var fieldInfo = typeof(Texture2D).GetField("glTexture", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+				var leftPtr = new IntPtr((int) fieldInfo.GetValue(_leftEye));
+				var rightPtr = new IntPtr((int) fieldInfo.GetValue(_rightEye));
+				_vrContext.Submit(Eye.Left, leftPtr, ETextureType.OpenGL);
+				_vrContext.Submit(Eye.Right, rightPtr, ETextureType.OpenGL);
+			}
+		}
+
+		#endregion
 		private void SetAntiAliasing(bool enabled, int count)
 		{
 			UIThreadQueue.Enqueue(
@@ -524,6 +664,9 @@ namespace Alex
 			GuiDebugHelper.Dispose();
 
 			PluginManager.UnloadAll();
+			
+			if(VrEnabled)
+				UnloadVrContent();
 		}
 
 		protected override void Update(GameTime gt)
@@ -552,8 +695,16 @@ namespace Alex
 			FpsMonitor.Update();
 			GraphicsDevice.RasterizerState = RasterizerState.CullClockwise;
 
+			if(VrEnabled)
+				DrawVr(gameTime);
+			else
+				DoDraw(gameTime);
+		}
+
+		private void DoDraw(GameTime gameTime)
+		{
 			GameStateManager.Draw(gameTime);
-			GuiManager.Draw(gameTime);
+			GuiManager.Draw(gameTime);			
 		}
 
 		private void InitializeGame(IProgressReceiver progressReceiver)
@@ -682,7 +833,17 @@ namespace Alex
 			}
 			else
 			{
-				GameStateManager.SetActiveState<TitleState>("title");
+				IsMultiplayer = false;
+
+				IsMouseVisible = false;
+
+				var generator = new FlatlandGenerator();
+				generator.Initialize();
+				var debugProvider = new SPWorldProvider(this, generator);
+				LoadWorld(debugProvider, debugProvider.Network);
+				
+				//GameStateManager.SetActiveState(new playins)
+				//GameStateManager.SetActiveState<TitleState>("title");
 			}
 
 			GameStateManager.RemoveState("splash");

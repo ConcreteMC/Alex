@@ -9,6 +9,7 @@ namespace Alex.API.Graphics
 		GraphicsDevice GraphicsDevice { get; }
 		SpriteBatch SpriteBatch { get; }
 		ICamera Camera { get; set; }
+		ICameraWrapper CameraWrapper { get; set; }
 	}
 
 	public interface IUpdateArgs

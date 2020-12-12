@@ -595,6 +595,10 @@ namespace Alex.Gamestates.InGame
 
 		protected override void OnDraw(IRenderArgs args)
 		{
+			if (args.CameraWrapper != null)
+			{
+				args.CameraWrapper.PreDraw(World.Camera);
+			}
 			args.Camera = World.Camera;
 
 			if (RenderMinimap)

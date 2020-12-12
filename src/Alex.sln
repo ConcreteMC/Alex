@@ -33,6 +33,8 @@ ProjectSection(SolutionItems) = preProject
 	..\Directory.Build.props = ..\Directory.Build.props
 EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpVR", "SharpVR\SharpVR.csproj", "{B48480F1-60AE-48F3-9CF2-B7E9E3B16FBF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Appveyor|Any CPU = Appveyor|Any CPU
@@ -125,6 +127,18 @@ Global
 		{BA612A7B-9397-4520-973D-3E2F07302D51}.Release|Any CPU.Build.0 = Release|Any CPU
 		{BA612A7B-9397-4520-973D-3E2F07302D51}.Release|x64.ActiveCfg = Release|x64
 		{BA612A7B-9397-4520-973D-3E2F07302D51}.Release|x64.Build.0 = Release|x64
+		{B48480F1-60AE-48F3-9CF2-B7E9E3B16FBF}.Appveyor|Any CPU.ActiveCfg = Debug|Any CPU
+		{B48480F1-60AE-48F3-9CF2-B7E9E3B16FBF}.Appveyor|Any CPU.Build.0 = Debug|Any CPU
+		{B48480F1-60AE-48F3-9CF2-B7E9E3B16FBF}.Appveyor|x64.ActiveCfg = Debug|Any CPU
+		{B48480F1-60AE-48F3-9CF2-B7E9E3B16FBF}.Appveyor|x64.Build.0 = Debug|Any CPU
+		{B48480F1-60AE-48F3-9CF2-B7E9E3B16FBF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B48480F1-60AE-48F3-9CF2-B7E9E3B16FBF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B48480F1-60AE-48F3-9CF2-B7E9E3B16FBF}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{B48480F1-60AE-48F3-9CF2-B7E9E3B16FBF}.Debug|x64.Build.0 = Debug|Any CPU
+		{B48480F1-60AE-48F3-9CF2-B7E9E3B16FBF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B48480F1-60AE-48F3-9CF2-B7E9E3B16FBF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B48480F1-60AE-48F3-9CF2-B7E9E3B16FBF}.Release|x64.ActiveCfg = Release|Any CPU
+		{B48480F1-60AE-48F3-9CF2-B7E9E3B16FBF}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

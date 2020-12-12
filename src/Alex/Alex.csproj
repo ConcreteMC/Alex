@@ -127,6 +127,7 @@
     <ProjectReference Include="..\Alex.API\Alex.API.csproj" />
     <ProjectReference Include="..\Alex.Networking\Alex.Networking.csproj" />
     <ProjectReference Include="..\Alex.ResourcePackLib\Alex.ResourcePackLib.csproj" />
+    <ProjectReference Include="..\SharpVR\SharpVR.csproj" />
   </ItemGroup>
 
   <ItemGroup>

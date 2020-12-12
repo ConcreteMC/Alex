@@ -15,7 +15,7 @@ namespace Alex.Graphics.Camera
 	    /// <summary>
 	    /// The nearest distance the camera will use
 	    /// </summary>
-	    public const float NearDistance = 0.15f;
+	    public float NearDistance { get; set; } = 0.15f;
 
 	    /// <summary>
 	    /// The furthest the camera can see
@@ -59,6 +59,8 @@ namespace Alex.Graphics.Camera
         }
 
         private Matrix _viewMatrix;
+
+        public Vector3 Up { get; set; } = Vector3.Up;
 
         /// <summary>
         /// 
@@ -126,9 +128,9 @@ namespace Alex.Graphics.Camera
 	        Vector3 lookAtOffset = Vector3.Transform(Vector3.Backward, rotationMatrix);
 	        Direction = lookAtOffset;
 
-	        var pos = Position + Vector3.Transform(Offset, Matrix.CreateRotationY(-Rotation.Y));
+	        var pos = Position;// + Vector3.Transform(Offset, Matrix.CreateRotationY(-Rotation.Y));
 	        
-			Target = pos + lookAtOffset;
+			Target = pos - lookAtOffset;
 	        _viewMatrix = Matrix.CreateLookAt(pos, Target, Vector3.Up);
 	        
 	        _frustum = new BoundingFrustum(_viewMatrix * _projectionMatrix);

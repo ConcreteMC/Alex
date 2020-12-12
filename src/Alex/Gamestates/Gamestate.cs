@@ -132,6 +132,7 @@ namespace Alex.Gamestates
 		public GraphicsDevice GraphicsDevice { get; set; }
 		public SpriteBatch SpriteBatch { get; set; }
 		public ICamera Camera { get; set; }
+		public ICameraWrapper CameraWrapper { get; set; }
 	}
 
 	public class UpdateArgs : IUpdateArgs
