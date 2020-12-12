@@ -72,7 +72,17 @@ namespace Alex.Entities.BlockEntities
 		public override PlayerLocation KnownPosition
 		{
 			get => base.KnownPosition + new Vector3(0.5f, 0, 0.5f);
-			set => base.KnownPosition = value;
+			set
+			{
+				base.KnownPosition = value;
+				base.RenderLocation = value;
+			}
+		}
+
+		internal override PlayerLocation RenderLocation
+		{
+			get => base.RenderLocation + new Vector3(0.5f, 0, 0.5f);
+			set => base.RenderLocation = value;
 		}
 
 		public virtual void SetData(byte action, NbtCompound compound)

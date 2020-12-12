@@ -81,7 +81,7 @@ namespace Alex.Entities
 				_boundingBox = GetBoundingBox(value);
 			}
 		}
-		internal       PlayerLocation RenderLocation { get; set; }
+		internal virtual PlayerLocation RenderLocation { get; set; }
 
 		public  Vector3      Velocity      { get; set; } = Vector3.Zero;
 

@@ -45,20 +45,20 @@ namespace Alex.Entities.BlockEntities
 			}
 		}
 
-		private bool _open;
-		public bool Open
+		private int _viewers;
+		public int Viewers
 		{
 			get
 			{
-				return _open;
+				return _viewers;
 			}
 			set
 			{
-				_open = value;
+				_viewers = value;
 
 				if (HeadBone != null)
 				{
-					var targetRotation = value ? new Vector3(90, 0, 0) : Vector3.Zero;
+					var targetRotation = _viewers > 0 ? new Vector3(90, 0, 0) : Vector3.Zero;
 
 					HeadBone.Animations.Enqueue(
 						new ServerAnimation(
@@ -129,12 +129,7 @@ namespace Alex.Entities.BlockEntities
 		{
 			if (actionId == 1)
 			{
-				var chestOpen = parameter > 0;
-
-				if (_open != chestOpen)
-				{
-					Open = chestOpen;
-				}
+				_viewers = parameter;
 			}
 		}
 

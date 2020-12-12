@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using System.Threading.Channels;
 using Alex.API.Utils;
 using Alex.Blocks;
 using Alex.Blocks.Minecraft;
@@ -19,6 +20,7 @@ using MiNET.Utils;
 using NLog;
 using BlockCoordinates = Alex.API.Utils.BlockCoordinates;
 using BlockState = Alex.Blocks.State.BlockState;
+using ChunkCoordinates = Alex.API.Utils.ChunkCoordinates;
 using NibbleArray = MiNET.Utils.NibbleArray;
 
 namespace Alex.Worlds.Multiplayer.Bedrock
@@ -43,9 +45,9 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	    private CancellationToken CancellationToken  { get; }
 	    public  bool              ClientSideLighting { get; set; } = true;
 
-	    private BedrockClient Client { get; }
-	    private BlobCache     Cache  { get; }
-        public ChunkProcessor(BedrockClient client, bool useAlexChunks, CancellationToken cancellationToken, BlobCache blobCache)
+	    private BedrockClient        Client  { get; }
+	    private BlobCache            Cache   { get; }
+	    public ChunkProcessor(BedrockClient client, bool useAlexChunks, CancellationToken cancellationToken, BlobCache blobCache)
         {
 	        Client = client;
 	        UseAlexChunks = useAlexChunks;
@@ -108,47 +110,91 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		        }, p);
         }
 
-        private void HandleChunkCachePacket(ulong[] blobs, uint subChunkCount,
+        private class BlobData
+        {
+	        private ulong[]              Hashes        { get; set; }
+	        private uint                SubChunkCount { get; set; }
+	        private int                 X             { get; set; }
+	        private int                 Z             { get; set; }
+	        private byte[]              Data          { get; set; }
+	        private Action<ChunkColumn> Callback      { get; set; }
+	        
+	        private BlobCache   BlobCache { get; }
+	        private List<ulong> _missingHashes = new List<ulong>();
+	        private List<ulong> _availableHashes = new List<ulong>();
+	        public BlobData(BlobCache blobCache, ulong[] blobHashes, uint subChunkCount, int x, int z, byte[] data, Action<ChunkColumn> callback)
+	        {
+		        BlobCache = blobCache;
+		        Hashes = blobHashes;
+		        SubChunkCount = subChunkCount;
+		        X = x;
+		        Z = z;
+		        Data = data;
+		        Callback = callback;
+		        
+		        foreach (var blob in blobHashes)
+		        {
+			        if (BlobCache.Contains(blob))
+			        {
+				        _availableHashes.Add(blob);
+			        }
+			        else
+			        {
+				        _missingHashes.Add(blob);
+			        }
+		        }
+	        }
+
+	        public bool IsComplete => _missingHashes.Count == 0;
+
+	        public ulong[] Missing   => _missingHashes.ToArray();
+	        public ulong[] Available => _availableHashes.ToArray();
+	        
+	        public bool TryBuild()
+	        {
+		        if (!IsComplete)
+			        return false;
+
+		        foreach (var blob in Hashes)
+		        {
+			        if (BlobCache.TryGet(blob, out var blobData))
+			        {
+				        
+			        }
+		        }
+
+		        return true;
+	        }
+        }
+
+        private ConcurrentDictionary<ChunkCoordinates, BlobData> _blobs =
+	        new ConcurrentDictionary<ChunkCoordinates, BlobData>();
+
+        private void HandleChunkCachePacket(ulong[] blobs,
+	        uint subChunkCount,
 	        byte[] chunkData,
 	        int cx,
 	        int cz,
 	        Action<ChunkColumn> callback)
         {
-	        //using (MemoryStream stream = new MemoryStream(chunkData))
-	        {
-		      //  NbtBinaryReader defStream = new NbtBinaryReader(stream, true);
-		        //var blobCount = defStream.ReadVarInt();
-
-		        List<ulong> missing = new List<ulong>();
-		        List<ulong> available = new List<ulong>();
-
-		        foreach (var blob in blobs)
+	        var blobData = _blobs.GetOrAdd(
+		        new ChunkCoordinates(cx, cz), (c) =>
 		        {
-			        if (Cache.Contains(blob))
-			        {
-				        available.Add(blob);
-			        }
-			        else
-			        {
-				        missing.Add(blob);
-			        }
-		        }
-		        
-		        Client.SendPacket(new McpeClientCacheBlobStatus()
-		        {
-			        hashHits = available.ToArray(),
-			        hashMisses = missing.ToArray()
+			        return new BlobData(Cache, blobs, subChunkCount, cx, cz, chunkData, callback);
 		        });
-	        }
+
+	        Client.SendPacket(
+		        new McpeClientCacheBlobStatus() {hashHits = blobData.Available, hashMisses = blobData.Missing});
         }
-        
+
         private void HandleChunk(bool cacheEnabled, ulong[] blobs, uint subChunkCount, byte[] chunkData, int cx, int cz, Action<ChunkColumn> callback)
         {
 	        if (cacheEnabled)
 	        {
 		        Log.Warn($"Unsupported cache enabled!");
-		       HandleChunkCachePacket(blobs, subChunkCount, chunkData, cx, cz, callback);
-		       return;
+				HandleChunkCachePacket(blobs, subChunkCount, chunkData, cx, cz, callback);
+
+				return;
 	        }
 	        
 	        if (subChunkCount < 1)
@@ -744,9 +790,24 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				        searchName = $"minecraft:{state.Value()}_sapling";
 				        //prefix = "_";
 				        break;
+
 			        case "flower_type":
-				        searchName = $"minecraft:{state.Value()}";
+			        {
+				        var sValue = state.Value();
+
+				        if (sValue.StartsWith("tulip"))
+				        {
+					        var split = sValue.Split('_');
+					        searchName = $"minecraft:{split[1]}_{split[0]}";
+				        }
+				        else
+				        {
+					        searchName = $"minecraft:{state.Value()}";
+				        }
+				        
 				        break;
+			        }
+
 			        case "double_plant_type":
 
 				        switch (state.Value())

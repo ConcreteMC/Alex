@@ -59,7 +59,7 @@ namespace Alex.Entities.BlockEntities
 		
 		public static BlockEntity ReadFrom(NbtCompound compound, World world, Block block)
 		{
-			if (compound.TryGet("id", out var tag))
+			if (compound.TryGet("id", out var tag) || compound.TryGet("ID", out tag))
 			{
 				var id = tag.StringValue;
 
