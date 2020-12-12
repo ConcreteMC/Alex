@@ -29,7 +29,7 @@ jobs:
       working-directory: src/Alex
       
     - name: Build
-      run: dotnet publish --configuration Release --no-restore -o "build-linux" --version-suffix ${{steps.vars.outputs.sha_short}} --self-contained true -r linux-x64
+      run: dotnet publish --configuration Release --no-restore -o "build-linux" --version-suffix ${{steps.vars.outputs.sha_short}} -r linux-x64 /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true /p:IncludeAllContentForselfExtract=true /p:PublishReadyToRun=true
       working-directory: src/Alex
 
     - name: Set executable permissions
@@ -68,7 +68,7 @@ jobs:
       working-directory: src/Alex
       
     - name: Build
-      run: dotnet publish --configuration Release --no-restore -o /build-win --version-suffix ${{steps.vars.outputs.sha_short}} --self-contained true -r win-x64
+      run: dotnet publish --configuration Release --no-restore -o /build-win --version-suffix ${{steps.vars.outputs.sha_short}} -r win-x64 /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true /p:IncludeAllContentForselfExtract=true /p:PublishReadyToRun=true
       working-directory: src/Alex
 
     - name: Upload artifact
@@ -103,7 +103,7 @@ jobs:
       working-directory: src/Alex
       
     - name: Build
-      run: dotnet publish --configuration Release --no-restore -o /build-win --version-suffix ${{steps.vars.outputs.sha_short}} --self-contained true -r win-x64 -p:DefineConstants=DIRECTX
+      run: dotnet publish --configuration Release --no-restore -o /build-win --version-suffix ${{steps.vars.outputs.sha_short}} -r win-x64 /p:DefineConstants=DIRECTX /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true /p:IncludeAllContentForselfExtract=true /p:PublishReadyToRun=true
       working-directory: src/Alex
 
     - name: Upload artifact
@@ -138,7 +138,7 @@ jobs:
       working-directory: src/Alex
       
     - name: Build
-      run: dotnet publish --configuration Release --no-restore -o "build-osx" --version-suffix ${{steps.vars.outputs.sha_short}} --self-contained true -r osx-x64
+      run: dotnet publish --configuration Release --no-restore -o "build-osx" --version-suffix ${{steps.vars.outputs.sha_short}} -r osx-x64 /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true /p:IncludeAllContentForselfExtract=true /p:PublishReadyToRun=true
       working-directory: src/Alex
 
     - name: Set executable permissions

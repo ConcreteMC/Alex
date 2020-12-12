@@ -74,6 +74,12 @@ namespace Alex
 
 		public static string Gpu             { get; private set; } = "";
 		public static string OperatingSystem { get; private set; } = "";
+		
+#if DIRECTX
+		public const string RenderingEngine = "DirectX";
+#else
+		public const string RenderingEngine = "OpenGL";
+#endif
 
 		public static string DotnetRuntime { get; } =
 			$"{System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription}";
@@ -257,7 +263,7 @@ namespace Alex
 
 		protected override void Initialize()
 		{
-			Window.Title = "Alex - " + VersionUtils.GetVersion();
+			Window.Title = $"Alex - {VersionUtils.GetVersion()} - {RenderingEngine}";
 
 			// InitCamera();
 			this.Window.TextInput += Window_TextInput;

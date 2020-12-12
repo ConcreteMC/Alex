@@ -193,6 +193,7 @@ namespace Alex.Gamestates.InGame
 			_debugInfo.AddDebugRight(Alex.OperatingSystem);
 			_debugInfo.AddDebugRight(Alex.Gpu);
 			_debugInfo.AddDebugRight($"{Alex.DotnetRuntime}\n");
+			_debugInfo.AddDebugRight(Alex.RenderingEngine);
 			//_debugInfo.AddDebugRight(() => MemoryUsageDisplay);
 			_debugInfo.AddDebugRight(() => $"RAM: {GetBytesReadable(_ramUsage, 2)}", TimeSpan.FromMilliseconds(1000));
 			_debugInfo.AddDebugRight(() => $"GPU: {GetBytesReadable(GpuResourceManager.GetMemoryUsage, 2)}", TimeSpan.FromMilliseconds(1000));

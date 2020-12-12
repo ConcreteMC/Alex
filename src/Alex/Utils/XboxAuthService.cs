@@ -20,9 +20,11 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NLog;
 using Org.BouncyCastle.Asn1.Nist;
+using Org.BouncyCastle.Asn1.Pkcs;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Generators;
 using Org.BouncyCastle.Crypto.Parameters;
+using Org.BouncyCastle.Crypto.Signers;
 using Org.BouncyCastle.Security;
 using Org.BouncyCastle.X509;
 using Logger = NLog.Logger;
@@ -55,8 +57,32 @@ namespace Alex.Utils
 		public byte[] X { get; }
 		public byte[] Y { get; }
 		
-		public ECDsa EcDsa { get; }
+		private  ECDsa   EcDsa  { get; }
 
+		public XboxAuthService()
+		{
+			BouncyKeyPair = GenerateKeys();
+			EcDsa = ConvertToSingKeyFormat(BouncyKeyPair);
+
+			ECPublicKeyParameters pubAsyKey = (ECPublicKeyParameters)BouncyKeyPair.Public;
+			X = pubAsyKey.Q.AffineXCoord.GetEncoded();
+			Y = pubAsyKey.Q.AffineYCoord.GetEncoded();
+		}
+		
+		private static AsymmetricCipherKeyPair GenerateKeys()
+		{
+			var  curve        = NistNamedCurves.GetByName("P-256");
+			var domainParams = new ECDomainParameters(curve.Curve, curve.G, curve.N, curve.H, curve.GetSeed());
+
+			var secureRandom = new SecureRandom();
+			var keyParams    = new ECKeyGenerationParameters(domainParams, secureRandom);
+
+			var generator = new ECKeyPairGenerator("ECDSA");
+			generator.Init(keyParams);
+			
+			return generator.GenerateKeyPair();
+		}
+		
 		private static ECDsa ConvertToSingKeyFormat(AsymmetricCipherKeyPair key)
 		{
 			ECPublicKeyParameters  pubAsyKey  = (ECPublicKeyParameters)key.Public;
@@ -75,30 +101,6 @@ namespace Alex.Utils
 			signParam.Validate();
 
 			return ECDsa.Create(signParam);
-		}
-		
-		public XboxAuthService()
-		{
-			BouncyKeyPair = GenerateKeys();
-			EcDsa = ConvertToSingKeyFormat(BouncyKeyPair);
-
-			ECPublicKeyParameters pubAsyKey = (ECPublicKeyParameters)BouncyKeyPair.Public;
-			X = pubAsyKey.Q.AffineXCoord.GetEncoded();
-			Y = pubAsyKey.Q.AffineYCoord.GetEncoded();
-		}
-		
-		public AsymmetricCipherKeyPair GenerateKeys()
-		{
-			var  curve        = NistNamedCurves.GetByName("P-256");
-			var domainParams = new ECDomainParameters(curve.Curve, curve.G, curve.N, curve.H, curve.GetSeed());
-
-			var secureRandom = new SecureRandom();
-			var keyParams    = new ECKeyGenerationParameters(domainParams, secureRandom);
-
-			var generator = new ECKeyPairGenerator("ECDSA");
-			generator.Init(keyParams);
-			
-			return generator.GenerateKeyPair();
 		}
 
 		static readonly char[] padding = { '=' };
@@ -500,6 +502,13 @@ namespace Alex.Utils
 				byte[] input = buffer.ToArray();
 
 			signed = EcDsa.SignHash(hash.ComputeHash(input));
+			
+			//var         signer = SignerUtilities.GetSigner(NistObjectIdentifiers.IdEcdsaWithSha3_256);
+			//signer.Init(true, (ECPrivateKeyParameters)BouncyKeyPair.Private);
+			//signer.BlockUpdate(input, 0, input.Length);
+			//var hashed = hash.ComputeHash(input);
+			//signer.BlockUpdate(hashed, 0, hashed.Length);
+			//signed = signer.GenerateSignature();
 			}
 
 			byte[] final;

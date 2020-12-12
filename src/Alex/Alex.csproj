@@ -6,7 +6,7 @@
     <StartupObject>Alex.Program</StartupObject>
     <Platforms>x64</Platforms>
     <Configurations>Debug;Release;Appveyor</Configurations>
-    <PublishTrimmed>true</PublishTrimmed>
+    <PublishTrimmed>false</PublishTrimmed>
     <Description>A Minecraft client written in C#</Description>
     <PackageProjectUrl>https://github.com/kennyvv/Alex</PackageProjectUrl>
     <PackageLicenseUrl>https://github.com/kennyvv/Alex/blob/master/LICENSE</PackageLicenseUrl>
@@ -45,8 +45,8 @@
 	</PropertyGroup>
   
   <PropertyGroup Condition="'$(Configuration)'=='Release'">
-    <PublishSingleFile>true</PublishSingleFile>
-    <SelfContained>true</SelfContained>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <IncludeAllContentForselfExtract>true</IncludeAllContentForselfExtract>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(OS)' == 'unix'">
