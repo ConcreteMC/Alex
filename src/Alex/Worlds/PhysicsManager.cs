@@ -228,7 +228,7 @@ namespace Alex.Worlds
 			{
 				if (e.KnownPosition.OnGround)
 				{
-					e.Velocity *= new Vector3(slipperiness, 0.98f, slipperiness);
+					e.Velocity *= new Vector3(slipperiness, 1f, slipperiness);
 				}
 				else
 				{
@@ -413,6 +413,19 @@ namespace Alex.Worlds
 			if (collisionExtent != null) // Collision detected, adjust accordingly
 			{
 				var    extent = collisionExtent.Value;
+				
+				if (CanClimb(entity.Velocity, entity.BoundingBox, blockBox) && entity.KnownPosition.OnGround)
+				{
+					var yDifference = blockBox.Max.Y - entity.BoundingBox.Min.Y;
+
+					if (yDifference > 0f)
+					{
+						entity.Velocity = new Vector3(entity.Velocity.X, MathF.Sqrt(2f * (float) (entity.Gravity) * (yDifference)), entity.Velocity.Z);
+
+						return false;
+					}
+				}
+				
 				float diff;
 				if (negative)
 					diff = -( entity.BoundingBox.Min.Y - extent);
@@ -516,6 +529,18 @@ namespace Alex.Worlds
 			if (collisionExtent != null) // Collision detected, adjust accordingly
 			{
 				var    extent = collisionExtent.Value;
+
+				if (CanClimb(entity.Velocity, entity.BoundingBox, blockBox) && entity.KnownPosition.OnGround)
+				{
+					var yDifference = blockBox.Max.Y - entity.BoundingBox.Min.Y;
+
+					if (yDifference > 0f)
+					{
+						entity.Velocity = new Vector3(entity.Velocity.X, MathF.Sqrt(2f * (float) (entity.Gravity) * (yDifference)), entity.Velocity.Z);
+
+						return false;
+					}
+				}
 				
 				float diff;
 				
@@ -627,6 +652,18 @@ namespace Alex.Worlds
 				
 				var    extent = collisionExtent.Value;
 
+				if (CanClimb(entity.Velocity, entity.BoundingBox, blockBox) && entity.KnownPosition.OnGround)
+				{
+					var yDifference = blockBox.Max.Y - entity.BoundingBox.Min.Y;
+
+					if (yDifference > 0f)
+					{
+						entity.Velocity = new Vector3(entity.Velocity.X, MathF.Sqrt(2f * (float) (entity.Gravity) * (yDifference )), entity.Velocity.Z);
+						
+						return false;
+					}
+				}
+				
 				float diff;
 				
 				if (negative)
@@ -673,6 +710,7 @@ namespace Alex.Worlds
 				offset = -1f;
 			}
 
+			bool foundGround = false;
 			foreach (var corner in entityBoundingBox.GetCorners()
 			   .Where(x => Math.Abs(x.Y - entityBoundingBox.Min.Y) < 0.001f))
 			{
@@ -685,18 +723,20 @@ namespace Alex.Worlds
 				if (block?.Model == null || !block.Block.Solid)
 					continue;
 
-				foreach (var box in block.Model.GetBoundingBoxes(blockcoords))
+				foreach (var box in block.Model.GetBoundingBoxes(blockcoords).OrderBy(x => x.Max.Y))
 				{
 					var yDifference = MathF.Abs(entityBoundingBox.Min.Y - box.Max.Y); // <= 0.01f
 
-					if (yDifference > 0.01f)
+					if (yDifference > 0.015f)
 						continue;
 
-					return true;
+					if (box.Intersects(entityBoundingBox))
+						foundGround = true;
+					//return true;
 				}
 			}
 
-			return false;
+			return foundGround;
 		}
 
 		public BoundingBox[] LastKnownHit { get; set; } = null;

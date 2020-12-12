@@ -32,7 +32,7 @@ namespace Alex.Entities.BlockEntities
 		}
 		
 		/// <inheritdoc />
-		public BlockEntity(World level, Block block) : base(-1, level, null)
+		public BlockEntity(World level, Block block) : base(level, null)
 		{
 			IsAffectedByGravity = false;
 			Block = block;

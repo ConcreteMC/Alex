@@ -6,7 +6,6 @@ namespace Alex.Entities.Hostile
 	{
 		public Wither(World level) : base((EntityType)52, level)
 		{
-			JavaEntityId = 64;
 			Height = 3.5;
 			Width = 0.9;
 		}

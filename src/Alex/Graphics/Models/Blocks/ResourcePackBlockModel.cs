@@ -122,17 +122,12 @@ namespace Alex.Graphics.Models.Blocks
 		/// <inheritdoc />
 		public override IEnumerable<BoundingBox> GetBoundingBoxes(Vector3 blockPos)
 		{
-			return GetBoxes(blockPos);
+			return Boxes.Select(x => x.OffsetBy(blockPos));
 		}
 
-		private BoundingBox[] GetBoxes(Vector3 position)
-		{
-			return Boxes.Select(x => new BoundingBox(x.Min + position, x.Max + position)).ToArray();
-		}
-		
 		public override BoundingBox? GetPartBoundingBox(Vector3 position, BoundingBox entityBox)
 		{
-			var boxes = GetBoxes(position);
+			var boxes = GetBoundingBoxes(position).ToArray();
 
 			foreach (var corner in entityBox.GetCorners().OrderBy(x => x.Y))
 			{

@@ -149,6 +149,7 @@ namespace Alex.Gamestates.InGame.Hud
 
 					if (InputManager.IsPressed(InputCommand.Exit) && CheckInput)
 					{
+						//Player.Controller.CheckMovementInput = false;
 						Alex.GameStateManager.SetActiveState<InGameMenuState>("ingamemenu");
 					}
 				}

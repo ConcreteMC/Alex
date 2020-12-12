@@ -62,13 +62,21 @@ namespace Alex.ResourcePackLib
 			List<MCPackModule> toRemove = new List<MCPackModule>();
 			foreach (var module in modules)
 			{
+				bool loaded = false;
 				try
 				{
-					module.Load();
+					loaded = module.Load();
+					loaded = true;
 				}
 				catch (Exception ex)
 				{
 					Log.Error(ex,$"Failed to load MCPack module: {module.Name} from {Manifest.Header.Name}: {ex}");
+					//toRemove.Add(module);
+				}
+
+				if (!loaded)
+				{
+					Log.Warn($"Failed to load MCPack module \'{module.Name}\' from {Manifest.Header.Name}.");
 					toRemove.Add(module);
 				}
 			}

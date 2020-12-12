@@ -63,9 +63,7 @@ namespace Alex.Entities
 		public EntityMovement Movement { get; }
 
 		public World Level { get; set; }
-
-		public int JavaEntityId { get; protected set; }
-		public int EntityTypeId { get; protected set; }
+		
 		public long EntityId { get; set; }
 		public bool IsSpawned { get; set; }
 
@@ -145,9 +143,9 @@ namespace Alex.Entities
 			}
 		}
 		public double Height { get; set; } = 1;
-		public double Width { get; set; } = 1;
-		public double Length => Width;
-		public double Drag { get; set; } = 0.02f;// 8f;
+		public double Width  { get; set; } = 1;
+		
+		public double Drag   { get; set; } = 0.02f;// 8f;
 
 		public double Gravity { get; set; } = 0.08f; //16.8f; //9.81f; //1.6f;
 		//Drag & gravity etc is Vanilla * 400
@@ -226,15 +224,13 @@ namespace Alex.Entities
 			get => _entityProperties;
 			//set => _entityProperties = value;
 		}
-
-		public double BaseMovementSpeed { get; set; }
-		public Entity(int entityTypeId, World level, NetworkProvider network)
+		
+		public Entity(World level, NetworkProvider network)
 		{
 			Network = network;
 
             EntityId = -1;
             Level = level;
-            EntityTypeId = entityTypeId;
             KnownPosition = new PlayerLocation();
             RenderLocation = new PlayerLocation();
             Inventory = new Inventory(46);
@@ -250,7 +246,7 @@ namespace Alex.Entities
 			HealthManager = new HealthManager(this);
 			UUID = new MiNET.Utils.UUID(Guid.NewGuid().ToByteArray());
 			
-			BaseMovementSpeed = 4.317D;
+			//BaseMovementSpeed = 4.317D;
 			
 			AddOrUpdateProperty(new FlyingSpeedProperty(this));
 			AddOrUpdateProperty(new MovementSpeedProperty(this));
@@ -502,8 +498,7 @@ namespace Alex.Entities
 		public bool ShowItemInHand { get; set; } = false;
 
 		internal bool RequiresRealTimeTick { get; set; } = true;
-		internal DateTime LastTickTime { get; set; } = DateTime.UtcNow;
-		
+
 		public void HandleJavaMetadata(MetaDataEntry entry)
 		{
 			if (entry.Index == 0 && entry is MetadataByte flags)
@@ -744,10 +739,9 @@ namespace Alex.Entities
 		private  Vector3 _prevUpdatePosition = Vector3.Zero;
 		private  float   _armRotation        = 0f;
 		private  float   _legRotation        = 0f;
-		public float   DistanceMoved { get; set; } = 0;
-
-		internal double   _timeStoppedMoving = 0;
-		private  float    _mvSpeed           = 0f;
+		
+		public  float DistanceMoved { get; set; } = 0;
+		private float _mvSpeed = 0f;
 
 		public bool ServerEntity { get; protected set; } = true;
 
@@ -1172,8 +1166,9 @@ namespace Alex.Entities
 		public virtual BoundingBox GetBoundingBox(Vector3 pos)
 		{
 			double halfWidth = (Width * Scale) / 2D;
-
-			return new BoundingBox(new Vector3((float)(pos.X - halfWidth), pos.Y, (float)(pos.Z - halfWidth)), new Vector3((float)(pos.X + halfWidth), (float)(pos.Y + (Height * Scale)), (float)(pos.Z + halfWidth)));
+			double halfDepth = (Width * Scale) / 2D;
+			
+			return new BoundingBox(new Vector3((float)(pos.X - halfWidth), pos.Y, (float)(pos.Z - halfDepth)), new Vector3((float)(pos.X + halfWidth), (float)(pos.Y + (Height * Scale)), (float)(pos.Z + halfDepth)));
 		}
 		
 		public bool IsColliding(IEntity other)

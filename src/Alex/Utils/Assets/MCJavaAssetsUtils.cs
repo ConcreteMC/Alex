@@ -63,7 +63,7 @@ namespace Alex.Utils.Assets
 
             if (_storage.Exists(assetsZipSavePath))
             {
-                Log.Info("Java assets already up to date!");
+                Log.Debug("Java assets already up to date!");
                 return assetsZipSavePath;
             }
             
@@ -73,7 +73,7 @@ namespace Alex.Utils.Assets
                 {
                     if (_storage.Exists(assetsZipSavePath))
                     {
-                        Log.Info("MCJava Assets Up to date!");
+                        Log.Debug("MCJava Assets Up to date!");
                         return assetsZipSavePath;
                     }
                 }

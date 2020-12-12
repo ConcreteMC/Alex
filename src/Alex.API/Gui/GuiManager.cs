@@ -177,7 +177,7 @@ namespace Alex.API.Gui
                 
                 foreach (var screen in screens)
                 {
-                    screen.Init(GuiRenderer, true);
+                    screen?.Init(GuiRenderer, true);
                 }
             }
 
@@ -185,10 +185,10 @@ namespace Alex.API.Gui
 
             foreach (var screen in screens)
             {
-                if (!(screen is IGameState) && screen != null)
-                {
-                    screen.Update(gameTime);
-                }
+                if (screen == null || screen is IGameState)
+                    continue;
+                
+                screen.Update(gameTime);
             }
 
            // DebugHelper.Update(gameTime);

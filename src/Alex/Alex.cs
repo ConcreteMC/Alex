@@ -604,7 +604,7 @@ namespace Alex
 					if (model != null)
 					{
 						PlayerModel = model;
-						Log.Info($"Player model loaded...");
+						Log.Debug($"Player model loaded...");
 					}
 				}
 			}
@@ -675,7 +675,7 @@ namespace Alex
 
 			if (PlayerTexture != null)
 			{
-				Log.Info($"Player skin loaded...");
+				Log.Debug($"Player skin loaded...");
 			}
 
 			if (LaunchSettings.ModelDebugging)

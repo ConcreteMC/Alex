@@ -1,34 +1,21 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 using System.Threading;
 using Alex.API.Blocks;
-using Alex.API.Entities;
 using Alex.API.Graphics;
 using Alex.API.Input;
-using Alex.API.Network;
 using Alex.API.Utils;
-using Alex.API.World;
 using Alex.Blocks.Minecraft;
 using Alex.Blocks.State;
-using Alex.Graphics.Camera;
 using Alex.Items;
 using Alex.Net;
-using Alex.Utils;
 using Alex.Utils.Inventories;
 using Alex.Worlds;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using MiNET.Net;
 using NLog;
 using BlockCoordinates = Alex.API.Utils.BlockCoordinates;
 using BoundingBox = Microsoft.Xna.Framework.BoundingBox;
-using ChunkCoordinates = Alex.API.Utils.ChunkCoordinates;
 using ContainmentType = Microsoft.Xna.Framework.ContainmentType;
-using IBlockState = Alex.Blocks.State.IBlockState;
-using Inventory = Alex.Utils.Inventories.Inventory;
-using MathF = System.MathF;
-using PlayerLocation = Alex.API.Utils.PlayerLocation;
 using Skin = Alex.API.Utils.Skin;
 
 namespace Alex.Entities
@@ -184,7 +171,13 @@ namespace Alex.Entities
 
 	    private int  PreviousSlot { get; set; } = -1;
 	    public  bool CanSprint    => HealthManager.Hunger > 6;
+	    private bool _skipUpdate = false;
 
+	    internal void SkipUpdate()
+	    {
+		    _skipUpdate = true;
+	    }
+	    
 	    public override void Update(IUpdateArgs args)
 	    {
 		    if (WaitingOnChunk && Age % 4 == 0)
@@ -242,7 +235,11 @@ namespace Alex.Entities
 
 		    //var previousCheckedInput = _prevCheckedInput;
 
-		    if ((Controller.CheckInput && Controller.CheckMovementInput && Alex.Instance.GuiManager.ActiveDialog == null))
+		    if (_skipUpdate)
+		    {
+			    _skipUpdate = false;
+		    }
+		    else if ((Controller.CheckInput && Controller.CheckMovementInput && Alex.Instance.GuiManager.ActiveDialog == null))
 		    {
 
 			    UpdateBlockRayTracer();

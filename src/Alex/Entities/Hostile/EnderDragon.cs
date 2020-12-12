@@ -6,7 +6,6 @@ namespace Alex.Entities.Hostile
 	{
 		public EnderDragon(World level) : base(EntityType.EnderDragon, level)
 		{
-			JavaEntityId = 63;
 			Height = 8;
 			Width = 16;
 		}

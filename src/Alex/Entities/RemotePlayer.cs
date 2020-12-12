@@ -228,7 +228,7 @@ namespace Alex.Entities
 		}
 
 		/// <inheritdoc />
-		public override bool NoAi {
+		/*public override bool NoAi {
 			get
 			{
 				return true;
@@ -237,7 +237,7 @@ namespace Alex.Entities
 			{
 				
 			} 
-		}
+		}*/
 
 		/// <inheritdoc />
 		protected override void HandleJavaMeta(MetaDataEntry entry)

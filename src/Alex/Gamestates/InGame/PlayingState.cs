@@ -299,7 +299,7 @@ namespace Alex.Gamestates.InGame
 				AspectRatio = Graphics.Viewport.AspectRatio;
 			}
 
-			if (!_playingHud.Chat.Focused)
+			if (!_playingHud.Chat.Focused && Alex.GameStateManager.GetActiveState() is PlayingState)
 			{
 				World.Player.Controller.CheckMovementInput = Alex.IsActive && Alex.GuiManager.ActiveDialog == null;
 				World.Player.Controller.CheckInput = Alex.IsActive;

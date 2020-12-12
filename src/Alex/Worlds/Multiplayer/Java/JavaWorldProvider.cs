@@ -506,7 +506,7 @@ namespace Alex.Worlds.Multiplayer.Java
 				if (entity == null)
 				{
 					Log.Warn($"Could not map entity: {knownData.Name}");
-					entity = new Entity((int) type, null, NetworkProvider);
+					entity = new Entity(null, NetworkProvider);
 				}
 
 				//if (knownData.Height)

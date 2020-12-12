@@ -481,7 +481,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 				if (entity == null)
 				{
-					entity = new Entity((int) type, null, Client);
+					entity = new Entity(null, Client);
 				}
 
 				if (renderer == null)

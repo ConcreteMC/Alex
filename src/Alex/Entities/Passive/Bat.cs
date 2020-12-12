@@ -26,7 +26,6 @@ namespace Alex.Entities.Passive
 		}
 		public Bat(World level) : base(EntityType.Bat, level)
 		{
-			JavaEntityId = 65;
 			Height = 0.9;
 			Width = 0.5;
 

@@ -880,16 +880,17 @@ namespace Alex.Worlds
 
 		public void UpdatePlayerPosition(PlayerLocation location)
 		{
-			var oldPosition = Player.KnownPosition;
+		//	var oldPosition = Player.KnownPosition;
 			
 			if (!ChunkManager.TryGetChunk(new ChunkCoordinates(location), out _))
 			{
 				Player.WaitingOnChunk = true;
 			}
 
-			Player.KnownPosition = location;
+			Player.Movement.MoveTo(location);
+			//Player.KnownPosition = location;
 			
-			Player.DistanceMoved += MathF.Abs(Vector3.Distance(oldPosition, location));
+			//Player.DistanceMoved += MathF.Abs(Vector3.Distance(oldPosition, location));
 		}
 
 		public void UpdateEntityPosition(long entityId, PlayerLocation position, bool relative = false, bool updateLook = false, bool updatePitch = false, bool teleport = false)
