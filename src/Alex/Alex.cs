@@ -78,7 +78,7 @@ namespace Alex
 		public static string DotnetRuntime { get; } =
 			$"{System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription}";
 
-		public const string Version = "1.0 DEV";
+		//public const string Version = "1.0 DEV";
 
 		public static bool IsMultiplayer { get; set; } = false;
 
@@ -257,7 +257,7 @@ namespace Alex
 
 		protected override void Initialize()
 		{
-			Window.Title = "Alex - " + Version;
+			Window.Title = "Alex - " + VersionUtils.GetVersion();
 
 			// InitCamera();
 			this.Window.TextInput += Window_TextInput;

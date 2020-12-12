@@ -96,11 +96,17 @@ namespace Alex.Worlds
 
 				var pitch = position.Pitch * alpha + previousStatePosition.Pitch * (1f - alpha);
 				//var pitch = MathHelper.Lerp(previousStatePosition.Pitch, position.Pitch, alpha);
-				
-				entity.RenderLocation = new PlayerLocation(pos, headYaw, yaw, pitch)
-				{
-					OnGround = position.OnGround
-				};
+
+				var renderLocation = entity.RenderLocation;
+				renderLocation.X = pos.X;
+				renderLocation.Y = pos.Y;
+				renderLocation.Z = pos.Z;
+				renderLocation.HeadYaw = headYaw;
+				renderLocation.Yaw = yaw;
+				renderLocation.Pitch = pitch;
+				renderLocation.OnGround = position.OnGround;
+
+				entity.RenderLocation = renderLocation;
 			}
 		}
 		

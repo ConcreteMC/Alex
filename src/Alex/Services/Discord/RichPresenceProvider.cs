@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using Alex.Utils;
 using DiscordRPC;
 
 namespace Alex.Services.Discord
@@ -80,7 +81,7 @@ namespace Alex.Services.Discord
         {
             return new RichPresence
             {
-                Details = "Running version " + Alex.Version,
+                Details = "Running version " + VersionUtils.GetVersion(),
                 State = "Hanging out",
                 Assets = GetDefaultAssets(),
                 Timestamps = Timestamps.Now

@@ -16,6 +16,7 @@ using Alex.Items;
 using Alex.Net;
 using Alex.ResourcePackLib.Json.Models.Items;
 using Alex.Services.Discord;
+using Alex.Utils;
 using Alex.Worlds;
 using Alex.Worlds.Abstraction;
 using Alex.Worlds.Singleplayer;
@@ -145,6 +146,7 @@ namespace Alex.Gamestates.InGame
 		private int _currentBiomeId = 0;
 		private void InitDebugInfo()
 		{
+			string gameVersion = VersionUtils.GetVersion();
 			_debugInfo.AddDebugLeft(
 				() =>
 				{
@@ -157,7 +159,7 @@ namespace Alex.Gamestates.InGame
 					}*/
 
 					return
-						$"Alex {Alex.Version} ({Alex.FpsMonitor.Value:##} FPS, {World.Ticker.TicksPerSecond:##} TPS, Chunk Updates: {World.EnqueuedChunkUpdates} queued, {World.ConcurrentChunkUpdates} active)";
+						$"Alex {gameVersion} ({Alex.FpsMonitor.Value:##} FPS, {World.Ticker.TicksPerSecond:##} TPS, Chunk Updates: {World.EnqueuedChunkUpdates} queued, {World.ConcurrentChunkUpdates} active)";
 				}, TimeSpan.FromMilliseconds(50));
 			
 			_debugInfo.AddDebugLeft(() =>

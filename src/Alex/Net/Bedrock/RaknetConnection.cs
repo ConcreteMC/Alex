@@ -235,7 +235,7 @@ namespace Alex.Net.Bedrock
 
 			try
 			{
-				var receiveBytes = listener.EndReceive(ar, ref senderEndpoint);
+				ReadOnlyMemory<byte> receiveBytes = listener.EndReceive(ar, ref senderEndpoint);
 
 				Interlocked.Increment(ref ConnectionInfo.NumberOfPacketsInPerSecond);
 				Interlocked.Add(ref ConnectionInfo.TotalPacketSizeInPerSecond, receiveBytes.Length);
