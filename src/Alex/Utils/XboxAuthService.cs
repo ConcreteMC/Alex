@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
@@ -19,12 +20,14 @@ using MiNET.Utils;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NLog;
+using Org.BouncyCastle.Asn1;
 using Org.BouncyCastle.Asn1.Nist;
 using Org.BouncyCastle.Asn1.Pkcs;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Generators;
 using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.Crypto.Signers;
+using Org.BouncyCastle.OpenSsl;
 using Org.BouncyCastle.Security;
 using Org.BouncyCastle.X509;
 using Logger = NLog.Logger;
@@ -51,24 +54,17 @@ namespace Alex.Utils
 		private string RefreshUri = "https://login.live.com/oauth20_token.srf";  // Get tokens endpoint
 		
 		private static FastRandom RND = new FastRandom();
-		
-		public AsymmetricCipherKeyPair BouncyKeyPair { get; }
-		
-		public byte[] X { get; }
-		public byte[] Y { get; }
+
+		private byte[] X { get; set; }
+		private byte[] Y { get; set; }
 		
 		private  ECDsa   EcDsa  { get; }
 
 		public XboxAuthService()
 		{
-			BouncyKeyPair = GenerateKeys();
-			EcDsa = ConvertToSingKeyFormat(BouncyKeyPair);
-
-			ECPublicKeyParameters pubAsyKey = (ECPublicKeyParameters)BouncyKeyPair.Public;
-			X = pubAsyKey.Q.AffineXCoord.GetEncoded();
-			Y = pubAsyKey.Q.AffineYCoord.GetEncoded();
+			EcDsa = ConvertToSingKeyFormat(GenerateKeys());
 		}
-		
+
 		private static AsymmetricCipherKeyPair GenerateKeys()
 		{
 			var  curve        = NistNamedCurves.GetByName("P-256");
@@ -83,7 +79,7 @@ namespace Alex.Utils
 			return generator.GenerateKeyPair();
 		}
 		
-		private static ECDsa ConvertToSingKeyFormat(AsymmetricCipherKeyPair key)
+		private ECDsa ConvertToSingKeyFormat(AsymmetricCipherKeyPair key)
 		{
 			ECPublicKeyParameters  pubAsyKey  = (ECPublicKeyParameters)key.Public;
 			ECPrivateKeyParameters privAsyKey = (ECPrivateKeyParameters)key.Private;
@@ -97,8 +93,12 @@ namespace Alex.Utils
 					Y = pubAsyKey.Q.AffineYCoord.GetEncoded()
 				}
 			};
+
 			signParam.D = CryptoUtils.FixDSize(privAsyKey.D.ToByteArrayUnsigned(), signParam.Q.X.Length);
 			signParam.Validate();
+
+			X = pubAsyKey.Q.AffineXCoord.GetEncoded();
+			Y = pubAsyKey.Q.AffineYCoord.GetEncoded();
 
 			return ECDsa.Create(signParam);
 		}
@@ -446,8 +446,6 @@ namespace Alex.Utils
 					deviceAuthResponse =
 						JsonConvert.DeserializeObject<AuthResponse<DeviceDisplayClaims>>(
 							resp);
-
-					Console.WriteLine();
 				}
 			}
 
@@ -500,15 +498,14 @@ namespace Alex.Utils
 				}
 
 				byte[] input = buffer.ToArray();
+				signed = EcDsa.SignHash(hash.ComputeHash(input));
 
-			signed = EcDsa.SignHash(hash.ComputeHash(input));
-			
-			//var         signer = SignerUtilities.GetSigner(NistObjectIdentifiers.IdEcdsaWithSha3_256);
-			//signer.Init(true, (ECPrivateKeyParameters)BouncyKeyPair.Private);
-			//signer.BlockUpdate(input, 0, input.Length);
-			//var hashed = hash.ComputeHash(input);
-			//signer.BlockUpdate(hashed, 0, hashed.Length);
-			//signed = signer.GenerateSignature();
+				//var         signer = SignerUtilities.GetSigner(NistObjectIdentifiers.IdEcdsaWithSha3_256);
+				//signer.Init(true, (ECPrivateKeyParameters)BouncyKeyPair.Private);
+				//signer.BlockUpdate(input, 0, input.Length);
+				//var hashed = hash.ComputeHash(input);
+				//signer.BlockUpdate(hashed, 0, hashed.Length);
+				//signed = signer.GenerateSignature();
 			}
 
 			byte[] final;

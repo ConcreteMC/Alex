@@ -2,7 +2,6 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net5.0</TargetFramework>
     <StartupObject>ResourceConverterCore.Program</StartupObject>
     <Configurations>Release;Debug;Appveyor</Configurations>
     <Platforms>x64;AnyCPU</Platforms>
