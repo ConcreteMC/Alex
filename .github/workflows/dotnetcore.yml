@@ -23,13 +23,9 @@ jobs:
     - name: Get short SHA
       id: vars
       run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
-        
-    - name: Install dependencies
-      run: dotnet restore
-      working-directory: src/Alex
       
     - name: Build
-      run: dotnet publish --configuration Release --no-restore -o "build-linux" --version-suffix ${{steps.vars.outputs.sha_short}} -r linux-x64 /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true /p:IncludeAllContentForselfExtract=true /p:PublishReadyToRun=true
+      run: dotnet publish --configuration Release -o "build-linux" --version-suffix ${{steps.vars.outputs.sha_short}} -r linux-x64 /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true /p:IncludeAllContentForselfExtract=true /p:PublishReadyToRun=true
       working-directory: src/Alex
 
     - name: Set executable permissions
@@ -62,13 +58,9 @@ jobs:
     - name: Get short SHA
       id: vars
       run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
-        
-    - name: Install dependencies
-      run: dotnet restore
-      working-directory: src/Alex
       
     - name: Build
-      run: dotnet publish --configuration Release --no-restore -o /build-win --version-suffix ${{steps.vars.outputs.sha_short}} -r win-x64 /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true /p:IncludeAllContentForselfExtract=true /p:PublishReadyToRun=true
+      run: dotnet publish --configuration Release -o /build-win --version-suffix ${{steps.vars.outputs.sha_short}} -r win-x64 /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true /p:IncludeAllContentForselfExtract=true /p:PublishReadyToRun=true
       working-directory: src/Alex
 
     - name: Upload artifact
@@ -97,13 +89,9 @@ jobs:
     - name: Get short SHA
       id: vars
       run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
-        
-    - name: Install dependencies
-      run: dotnet restore
-      working-directory: src/Alex
       
     - name: Build
-      run: dotnet publish --configuration DirectX --no-restore -o /build-win --version-suffix ${{steps.vars.outputs.sha_short}} -r win10-x64 /p:DefineConstants=DIRECTX /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true /p:IncludeAllContentForselfExtract=true /p:PublishReadyToRun=true
+      run: dotnet publish --configuration DirectX -o /build-win --version-suffix ${{steps.vars.outputs.sha_short}} -r win10-x64 /p:DefineConstants=DIRECTX /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true /p:IncludeAllContentForselfExtract=true /p:PublishReadyToRun=true
       working-directory: src/Alex
 
     - name: Upload artifact
@@ -132,13 +120,9 @@ jobs:
     - name: Get short SHA
       id: vars
       run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
-        
-    - name: Install dependencies
-      run: dotnet restore
-      working-directory: src/Alex
       
     - name: Build
-      run: dotnet publish --configuration Release --no-restore -o "build-osx" --version-suffix ${{steps.vars.outputs.sha_short}} -r osx-x64 /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true /p:IncludeAllContentForselfExtract=true /p:PublishReadyToRun=true
+      run: dotnet publish --configuration Release -o "build-osx" --version-suffix ${{steps.vars.outputs.sha_short}} -r osx-x64 /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true /p:IncludeAllContentForselfExtract=true /p:PublishReadyToRun=true
       working-directory: src/Alex
 
     - name: Set executable permissions
