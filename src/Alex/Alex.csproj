@@ -11,11 +11,12 @@
     <PackageProjectUrl>https://github.com/kennyvv/Alex</PackageProjectUrl>
     <PackageLicenseUrl>https://github.com/kennyvv/Alex/blob/master/LICENSE</PackageLicenseUrl>
     <RepositoryUrl>https://github.com/kennyvv/Alex</RepositoryUrl>
+    <PackageVersion />
   </PropertyGroup>
 
   <PropertyGroup>
     <Authors>kennyvv, TruDan</Authors>
-    <Version>1.0-DEV</Version>
+    <VersionSuffix>DEBUG</VersionSuffix>
   </PropertyGroup>
 
   <PropertyGroup>

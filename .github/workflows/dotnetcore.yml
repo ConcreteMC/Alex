@@ -16,7 +16,7 @@ jobs:
         submodules: 'recursive'
       
     - name: Setup .NET Core
-      uses: actions/setup-dotnet@v1
+      uses: actions/setup-dotnet@v1.7.2
       with:
         dotnet-version: 5.0.100
     
@@ -51,7 +51,7 @@ jobs:
         submodules: 'recursive'
       
     - name: Setup .NET Core
-      uses: actions/setup-dotnet@v1
+      uses: actions/setup-dotnet@v1.7.2
       with:
         dotnet-version: 5.0.100
     
@@ -82,7 +82,7 @@ jobs:
         submodules: 'recursive'
       
     - name: Setup .NET Core
-      uses: actions/setup-dotnet@v1
+      uses: actions/setup-dotnet@v1.7.2
       with:
         dotnet-version: 5.0.100
     
@@ -113,7 +113,7 @@ jobs:
         submodules: 'recursive'
       
     - name: Setup .NET Core
-      uses: actions/setup-dotnet@v1
+      uses: actions/setup-dotnet@v1.7.2
       with:
         dotnet-version: 5.0.100
     
