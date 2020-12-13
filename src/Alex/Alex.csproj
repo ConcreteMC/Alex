@@ -5,7 +5,7 @@
     <ApplicationIcon>Resources\Icon.ico</ApplicationIcon>
     <StartupObject>Alex.Program</StartupObject>
     <Platforms>x64</Platforms>
-    <Configurations>Debug;Release;Appveyor</Configurations>
+    <Configurations>Debug;Release;Appveyor;DirectX</Configurations>
     <PublishTrimmed>false</PublishTrimmed>
     <Description>A Minecraft client written in C#</Description>
     <PackageProjectUrl>https://github.com/kennyvv/Alex</PackageProjectUrl>
@@ -51,6 +51,13 @@
 
   <PropertyGroup Condition="'$(OS)' == 'unix'">
     <RuntimeIdentifier>linux-x64</RuntimeIdentifier>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)'=='DirectX'">
+    <TargetFramework>net5.0-windows</TargetFramework>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <IncludeAllContentForselfExtract>true</IncludeAllContentForselfExtract>
   </PropertyGroup>
   
   <ItemGroup>

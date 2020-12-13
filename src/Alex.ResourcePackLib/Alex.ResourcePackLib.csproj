@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
   <PropertyGroup>
     <OldToolsVersion>2.0</OldToolsVersion>
-    <Configurations>Release;Debug;Appveyor</Configurations>
+    <Configurations>Release;Debug;Appveyor;DirectX</Configurations>
     <Platforms>x64;AnyCPU</Platforms>
   </PropertyGroup>
   <ItemGroup>

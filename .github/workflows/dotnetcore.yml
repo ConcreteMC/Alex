@@ -103,7 +103,7 @@ jobs:
       working-directory: src/Alex
       
     - name: Build
-      run: dotnet publish --configuration Release --no-restore -o /build-win --version-suffix ${{steps.vars.outputs.sha_short}} -r win10-x64 /p:DefineConstants=DIRECTX /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true /p:IncludeAllContentForselfExtract=true /p:PublishReadyToRun=true
+      run: dotnet publish --configuration DirectX --no-restore -o /build-win --version-suffix ${{steps.vars.outputs.sha_short}} -r win10-x64 /p:DefineConstants=DIRECTX /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true /p:IncludeAllContentForselfExtract=true /p:PublishReadyToRun=true
       working-directory: src/Alex
 
     - name: Upload artifact

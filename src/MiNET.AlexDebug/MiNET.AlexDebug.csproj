@@ -2,7 +2,7 @@
 
     <PropertyGroup>
         <Platforms>AnyCPU;x64</Platforms>
-        <Configurations>Debug;Release;Appveyor</Configurations>
+        <Configurations>Debug;Release;Appveyor;DirectX</Configurations>
     </PropertyGroup>
 
     <ItemGroup>
