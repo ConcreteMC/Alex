@@ -1,8 +1,4 @@
 <Project>
-	<PropertyGroup>
-		<RuntimeIdentifiers>win-x64;linux-x64;osx-x64</RuntimeIdentifiers>
-	</PropertyGroup>
-
 	<Choose>
 		<When Condition="$(DefineConstants.Contains(ANDROID))">
 			<PropertyGroup>
@@ -23,6 +19,7 @@
 		<When Condition="'$(Configuration)'=='DirectX'">
 			<PropertyGroup>
 				<TargetFramework>net5.0-windows</TargetFramework>
+				<RuntimeIdentifier>win10-x64</RuntimeIdentifier>
 			</PropertyGroup>
 			<ItemGroup>
 				<PackageReference Include="MonoGame.Framework.WindowsDX" Version="3.8.0.1641" />
@@ -36,6 +33,7 @@
 		<Otherwise>
 			<PropertyGroup>
 				<TargetFramework>net5.0</TargetFramework>
+				<RuntimeIdentifiers>win-x64;linux-x64;osx-x64</RuntimeIdentifiers>
 			</PropertyGroup>
 			<ItemGroup>
 				<PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.0.1641" />
