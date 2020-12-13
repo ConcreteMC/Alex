@@ -39,11 +39,11 @@
     <OutputPath>../../Output/x64/Release/</OutputPath>
   </PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-	  <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-	  <OutputPath>../../Output/AnyCPU/Release/</OutputPath>
-	</PropertyGroup>
-  
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <OutputPath>../../Output/AnyCPU/Release/</OutputPath>
+  </PropertyGroup>
+
   <PropertyGroup Condition="'$(Configuration)'=='Release'">
     <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
     <IncludeAllContentForselfExtract>true</IncludeAllContentForselfExtract>
@@ -60,7 +60,7 @@
     <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
     <IncludeAllContentForselfExtract>true</IncludeAllContentForselfExtract>
   </PropertyGroup>
-  
+
   <ItemGroup>
     <Compile Remove="Graphics\Items\**" />
     <EmbeddedResource Remove="Graphics\Items\**" />
@@ -103,8 +103,10 @@
     <None Remove="Resources\Blockshader.xnb" />
     <None Remove="Resources\Lightmap.xnb" />
     <EmbeddedResource Include="Resources\Lightmap.xnb" />
+    <EmbeddedResource Include="Resources\Lightmap_dx.xnb" />
     <None Remove="Resources\Entityshader.xnb" />
     <EmbeddedResource Include="Resources\Entityshader.xnb" />
+    <EmbeddedResource Include="Resources\Entityshader_dx.xnb" />
     <Compile Remove="Particles\Systems\FlameParticleSystem.cs" />
     <Compile Remove="Particles\ParticleVertex.cs" />
     <Compile Remove="Particles\ParticleSystem.cs" />
@@ -161,6 +163,7 @@
 
   <ItemGroup>
     <EmbeddedResource Include="Resources\Blockshader.xnb" />
+    <EmbeddedResource Include="Resources\Blockshader_dx.xnb" />
   </ItemGroup>
 
   <ItemGroup>
@@ -179,15 +182,15 @@
     <Folder Include="Particles\Systems" />
   </ItemGroup>
 
-	<Target Name="ChangeAliasesOfNugetRefs" BeforeTargets="FindReferenceAssembliesForReferences;ResolveReferences">
-		<ItemGroup>
-			<ReferencePath Condition="'%(FileName)' == 'Splat'">
-				<Aliases>SuperSplat</Aliases>
-			</ReferencePath>
-			<ReferencePath Condition="'%(FileName)' == 'Chromely.CefGlue.Winapi'">
-				<Aliases>CefGlueWIN</Aliases>
-			</ReferencePath>
-		</ItemGroup>
-	</Target>
+  <Target Name="ChangeAliasesOfNugetRefs" BeforeTargets="FindReferenceAssembliesForReferences;ResolveReferences">
+    <ItemGroup>
+      <ReferencePath Condition="'%(FileName)' == 'Splat'">
+        <Aliases>SuperSplat</Aliases>
+      </ReferencePath>
+      <ReferencePath Condition="'%(FileName)' == 'Chromely.CefGlue.Winapi'">
+        <Aliases>CefGlueWIN</Aliases>
+      </ReferencePath>
+    </ItemGroup>
+  </Target>
 
 </Project>
