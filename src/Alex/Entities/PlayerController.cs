@@ -69,16 +69,8 @@ namespace Alex.Entities
 				{
 					GamepadSensitivity = newValue;
 				});
-			
-			/*Cameras = new Camera[]
-			{
-				new FirstPersonCamera(Vector3.Zero, Vector3.Zero),
-				new ThirdPersonCamera(Vector3.Zero, Vector3.Zero, ThirdPersonCamera.ThirdPersonCameraMode.Front), 
-				new ThirdPersonCamera(Vector3.Zero, Vector3.Zero, ThirdPersonCamera.ThirdPersonCameraMode.Back) 
-			};*/
-		}
 
-		private bool _inActive = true;
+		}
 
 		public bool CheckMovementInput
 		{
@@ -86,11 +78,29 @@ namespace Alex.Entities
 			set { _allowMovementInput = value; }
 		}
 
-		public bool CheckInput { get; set; } = true;
+		private bool _checkInput = true;
+
+		public bool CheckInput
+		{
+			get
+			{
+				return _checkInput;
+			}
+			set
+			{
+				if (value != _checkInput)
+				{
+					IgnoreNextUpdate = true;
+					Player.SkipUpdate();
+				}
+				
+				_checkInput = value;
+			}
+		}
 	    private bool _allowMovementInput = true;
 	    private bool IgnoreNextUpdate { get; set; } = false;
+	    
 		private DateTime _lastForward = DateTime.UtcNow;
-		private DateTime _lastJump = DateTime.UtcNow;
 		private DateTime _lastUp = DateTime.UtcNow;
 		
 		private Vector2 _previousMousePosition = Vector2.Zero;
@@ -109,28 +119,11 @@ namespace Alex.Entities
 				CheckGeneralInput(gt);
 				UpdateMovementInput(gt);
 		    }
-		    else if (!_inActive)
-		    {
-			    _inActive = true;
-		    }
 		}
 
 	    private void CheckGeneralInput(GameTime gt)
 	    {
-		   // if (World.FormManager.IsShowingForm)
-			//    return;
-		    
-			/*if (MouseInputListener.IsButtonDown(MouseButton.ScrollUp))
-		    {
-			    Player.Inventory.SelectedSlot--;
-		    }
-
-		    if (MouseInputListener.IsButtonDown(MouseButton.ScrollDown))
-		    {
-			    Player.Inventory.SelectedSlot++;
-		    }*/
-
-			if (InputManager.IsPressed(InputCommand.HotBarSelectPrevious) || MouseInputListener.IsButtonDown(MouseButton.ScrollUp))
+		    if (InputManager.IsPressed(InputCommand.HotBarSelectPrevious) || MouseInputListener.IsButtonDown(MouseButton.ScrollUp))
 			{
 				Player.Inventory.SelectedSlot--;
 			}
@@ -204,7 +197,11 @@ namespace Alex.Entities
 	    private double GamepadSensitivity { get; set; } = 200d;
 	    private void UpdateMovementInput(GameTime gt)
 	    {
-		    if (!_allowMovementInput) return;
+		    if (!_allowMovementInput)
+		    {
+			    Player.Movement.UpdateHeading(Vector3.Zero);
+			    return;
+		    }
 
 			var moveVector = Vector3.Zero;
 			var now = DateTime.UtcNow;

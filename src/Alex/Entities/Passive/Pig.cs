@@ -28,7 +28,6 @@ namespace Alex.Entities.Passive
 
 		public Pig(World level) : base((EntityType)12, level)
 		{
-			JavaEntityId = 90;
 			Height = 0.9;
 			Width = 0.9;
 		}

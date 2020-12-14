@@ -63,9 +63,7 @@ namespace Alex.Entities
 		public EntityMovement Movement { get; }
 
 		public World Level { get; set; }
-
-		public int JavaEntityId { get; protected set; }
-		public int EntityTypeId { get; protected set; }
+		
 		public long EntityId { get; set; }
 		public bool IsSpawned { get; set; }
 
@@ -83,12 +81,9 @@ namespace Alex.Entities
 				_boundingBox = GetBoundingBox(value);
 			}
 		}
-		internal       PlayerLocation RenderLocation { get; set; }
+		internal virtual PlayerLocation RenderLocation { get; set; }
 
 		public  Vector3      Velocity      { get; set; } = Vector3.Zero;
-
-		/// <inheritdoc />
-		public PhysicsState State { get; set; } = new PhysicsState(Vector3.Zero, new PlayerLocation());
 
 		/// <inheritdoc />
 		public PhysicsState PreviousState { get; set; } = new PhysicsState(Vector3.Zero, new PlayerLocation());
@@ -123,6 +118,9 @@ namespace Alex.Entities
 		public bool HeadInWater  { get; set; } = false;
 		public bool FeetInWater  { get; set; } = false;
 		public bool IsInWater    { get; set; } = false;
+		
+		public bool HeadInLava  { get; set; } = false;
+		public bool FeetInLava  { get; set; } = false;
 		public bool IsInLava     { get; set; } = false;
 		public bool IsOutOfWater => !IsInWater;
 		public bool Invulnerable { get; set; } = false;
@@ -145,9 +143,9 @@ namespace Alex.Entities
 			}
 		}
 		public double Height { get; set; } = 1;
-		public double Width { get; set; } = 1;
-		public double Length => Width;
-		public double Drag { get; set; } = 0.02f;// 8f;
+		public double Width  { get; set; } = 1;
+		
+		public double Drag   { get; set; } = 0.02f;// 8f;
 
 		public double Gravity { get; set; } = 0.08f; //16.8f; //9.81f; //1.6f;
 		//Drag & gravity etc is Vanilla * 400
@@ -226,15 +224,13 @@ namespace Alex.Entities
 			get => _entityProperties;
 			//set => _entityProperties = value;
 		}
-
-		public double BaseMovementSpeed { get; set; }
-		public Entity(int entityTypeId, World level, NetworkProvider network)
+		
+		public Entity(World level, NetworkProvider network)
 		{
 			Network = network;
 
             EntityId = -1;
             Level = level;
-            EntityTypeId = entityTypeId;
             KnownPosition = new PlayerLocation();
             RenderLocation = new PlayerLocation();
             Inventory = new Inventory(46);
@@ -250,7 +246,7 @@ namespace Alex.Entities
 			HealthManager = new HealthManager(this);
 			UUID = new MiNET.Utils.UUID(Guid.NewGuid().ToByteArray());
 			
-			BaseMovementSpeed = 4.317D;
+			//BaseMovementSpeed = 4.317D;
 			
 			AddOrUpdateProperty(new FlyingSpeedProperty(this));
 			AddOrUpdateProperty(new MovementSpeedProperty(this));
@@ -270,6 +266,7 @@ namespace Alex.Entities
 			}
 		}
 		
+		//private double
 		public double MovementSpeed
 		{
 			get
@@ -284,7 +281,18 @@ namespace Alex.Entities
 
 		public void AddOrUpdateProperty(EntityProperty property)
 		{
-			if (!_entityProperties.TryAdd(property.Key, property))
+			//Log.Info($"Update prop: {property.Key}= {property.Value}");
+			if (_entityProperties.TryAdd(property.Key, property))
+			{
+				/*_entityProperties[property.Key].Value = property.Value;
+				
+				foreach (var modifier in property.Modifiers)
+				{
+					_entityProperties[property.Key].ApplyModifier(modifier.Value);
+				}*/
+			//	_entityProperties[property.Key].ApplyModifier();
+			}
+			else
 			{
 				_entityProperties[property.Key] = property;
 			}
@@ -292,14 +300,12 @@ namespace Alex.Entities
 
 		public double CalculateMovementSpeed()
 		{
-			var baseMovementSpeed = BaseMovementSpeed / 2D;
-
 			var modifier =
 				(_entityProperties[
 					IsFlying ? Networking.Java.Packets.Play.EntityProperties.FlyingSpeed :
 						Networking.Java.Packets.Play.EntityProperties.MovementSpeed]).Calculate();
 
-			return modifier;
+			return (modifier)- 0.00475f;
 		}
 
 		private bool _skipRendering = false;
@@ -495,8 +501,7 @@ namespace Alex.Entities
 		public bool ShowItemInHand { get; set; } = false;
 
 		internal bool RequiresRealTimeTick { get; set; } = true;
-		internal DateTime LastTickTime { get; set; } = DateTime.UtcNow;
-		
+
 		public void HandleJavaMetadata(MetaDataEntry entry)
 		{
 			if (entry.Index == 0 && entry is MetadataByte flags)
@@ -737,10 +742,9 @@ namespace Alex.Entities
 		private  Vector3 _prevUpdatePosition = Vector3.Zero;
 		private  float   _armRotation        = 0f;
 		private  float   _legRotation        = 0f;
-		public float   DistanceMoved { get; set; } = 0;
-
-		internal double   _timeStoppedMoving = 0;
-		private  float    _mvSpeed           = 0f;
+		
+		public  float DistanceMoved { get; set; } = 0;
+		private float _mvSpeed = 0f;
 
 		public bool ServerEntity { get; protected set; } = true;
 
@@ -990,6 +994,7 @@ namespace Alex.Entities
 				{
 					HeadInBlock = false;
 				}
+				
 				if (headBlock.BlockMaterial == Material.Water || headBlock.IsWater)
 				{
 					HeadInWater = true;
@@ -997,6 +1002,15 @@ namespace Alex.Entities
 				else
 				{
 					HeadInWater = false;
+				}
+				
+				if (headBlock.BlockMaterial == Material.Lava || headBlock is Lava || headBlock is FlowingLava)
+				{
+					HeadInLava = true;
+				}
+				else
+				{
+					HeadInLava = false;
 				}
 			}
 
@@ -1029,16 +1043,16 @@ namespace Alex.Entities
 
 				if (feetBlock.Any(b => b.State.Block.BlockMaterial == Material.Lava))
 				{
-					IsInLava = true;
+					FeetInLava = true;
 				}
 				else
 				{
-					IsInLava = false;
+					FeetInLava = false;
 				}
 			}
 
 			IsInWater = FeetInWater || HeadInWater;
-
+			IsInLava = FeetInLava || HeadInLava;
 			//HealthManager.OnTick();
 		}
 		
@@ -1144,7 +1158,7 @@ namespace Alex.Entities
 		}
 
 		private BoundingBox _boundingBox = new BoundingBox();
-		public  BoundingBox BoundingBox => GetBoundingBox();
+		public  BoundingBox BoundingBox => _boundingBox;
 		public virtual BoundingBox GetBoundingBox()
 		{
 			return _boundingBox;
@@ -1155,8 +1169,9 @@ namespace Alex.Entities
 		public virtual BoundingBox GetBoundingBox(Vector3 pos)
 		{
 			double halfWidth = (Width * Scale) / 2D;
-
-			return new BoundingBox(new Vector3((float)(pos.X - halfWidth), pos.Y, (float)(pos.Z - halfWidth)), new Vector3((float)(pos.X + halfWidth), (float)(pos.Y + (Height * Scale)), (float)(pos.Z + halfWidth)));
+			double halfDepth = (Width * Scale) / 2D;
+			
+			return new BoundingBox(new Vector3((float)(pos.X - halfWidth), pos.Y, (float)(pos.Z - halfDepth)), new Vector3((float)(pos.X + halfWidth), (float)(pos.Y + (Height * Scale)), (float)(pos.Z + halfDepth)));
 		}
 		
 		public bool IsColliding(IEntity other)
@@ -1400,10 +1415,31 @@ namespace Alex.Entities
 		{
 			HealthManager.Exhaust(IsSprinting ? 0.2f : 0.05f);
 			var jumpVelocity = JumpVelocity;
-
-			if (_effects.TryGetValue(EffectType.JumpBoost, out var effect))
+			
+			if (IsInWater)
 			{
-				jumpVelocity += ((jumpVelocity * 0.5f) * effect.Level);
+				jumpVelocity = 0.04f;
+				
+				if (FeetInWater && !HeadInWater)
+				{
+					jumpVelocity += 0.3f;
+				}
+			}
+			else if (IsInLava)
+			{
+				jumpVelocity = 0.04f;
+				
+				if (FeetInLava && !HeadInLava)
+				{
+					jumpVelocity += 0.3f;
+				}
+			}
+			else
+			{
+				if (_effects.TryGetValue(EffectType.JumpBoost, out var effect))
+				{
+					jumpVelocity += ((jumpVelocity * 0.5f) * effect.Level);
+				}
 			}
 
 			//Movement.Move(new Vector3(0f, jumpVelocity, 0f));
@@ -1412,12 +1448,12 @@ namespace Alex.Entities
 			Network?.EntityAction((int) EntityId, EntityAction.Jump);
 		}
 		
-		public void AddEffect(Effect effect)
+		public void AddOrUpdateEffect(Effect effect)
 		{
-			if (_effects.TryAdd(effect.EffectId, effect))
-			{
-				effect.ApplyTo(this);
-			}
+			var effect1 = effect;
+			
+			effect = _effects.AddOrUpdate(effect.EffectId, effect, (type, e) => effect1);
+			effect?.ApplyTo(this);
 		}
 
 		public void RemoveEffect(EffectType effectType)
@@ -1426,6 +1462,27 @@ namespace Alex.Entities
 			{
 				removed.TakeFrom(this);
 			}
+		}
+
+		public bool TryGetEffect(EffectType type, out Effect effect)
+		{
+			return _effects.TryGetValue(type, out effect);
+		}
+		
+		public bool TryGetEffect<T>(EffectType type, out T effect) where T : Effect
+		{
+			if (_effects.TryGetValue(type, out var temp))
+			{
+				if (temp is T t)
+				{
+					effect = t;
+					return true;
+				}
+			}
+
+			effect = null;
+
+			return false;
 		}
 
 		public IEnumerable<Effect> AppliedEffects()

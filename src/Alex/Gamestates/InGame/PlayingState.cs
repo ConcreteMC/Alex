@@ -16,6 +16,7 @@ using Alex.Items;
 using Alex.Net;
 using Alex.ResourcePackLib.Json.Models.Items;
 using Alex.Services.Discord;
+using Alex.Utils;
 using Alex.Worlds;
 using Alex.Worlds.Abstraction;
 using Alex.Worlds.Singleplayer;
@@ -145,6 +146,7 @@ namespace Alex.Gamestates.InGame
 		private int _currentBiomeId = 0;
 		private void InitDebugInfo()
 		{
+			string gameVersion = VersionUtils.GetVersion();
 			_debugInfo.AddDebugLeft(
 				() =>
 				{
@@ -157,7 +159,7 @@ namespace Alex.Gamestates.InGame
 					}*/
 
 					return
-						$"Alex {Alex.Version} ({Alex.FpsMonitor.Value:##} FPS, {World.Ticker.TicksPerSecond:##} TPS, Chunk Updates: {World.EnqueuedChunkUpdates} queued, {World.ConcurrentChunkUpdates} active)";
+						$"Alex {gameVersion} ({Alex.FpsMonitor.Value:##} FPS, {World.Ticker.TicksPerSecond:##} TPS, Chunk Updates: {World.EnqueuedChunkUpdates} queued, {World.ConcurrentChunkUpdates} active)";
 				}, TimeSpan.FromMilliseconds(50));
 			
 			_debugInfo.AddDebugLeft(() =>
@@ -176,7 +178,7 @@ namespace Alex.Gamestates.InGame
 			_debugInfo.AddDebugLeft(() =>
 			{
 				var pos = World.Player.Velocity;
-				return $"Velocity: (X={pos.X:F2}, Y={pos.Y:F2}, Z={pos.Z:F2}) / Target Speed: {(World.Player.Controller.LastSpeedFactor * 20f):F3} M/s";
+				return $"Velocity: (X={pos.X:F2}, Y={pos.Y:F2}, Z={pos.Z:F2}) ({World.Player.CurrentSpeed:F3} m/s)";// / Target Speed: {(World.Player.CalculateMovementSpeed() * 20f):F3} m/s";
 			});
 			_debugInfo.AddDebugLeft(() => $"Vertices: {World.Vertices:N0} ({GetBytesReadable((long)(World.Vertices * BlockShaderVertex.VertexDeclaration.VertexStride))})", TimeSpan.FromMilliseconds(500));
 		//	_debugInfo.AddDebugLeft(() => $"IndexBuffer Elements: {World.IndexBufferSize:N0} ({GetBytesReadable(World.IndexBufferSize * 4)})");
@@ -191,6 +193,7 @@ namespace Alex.Gamestates.InGame
 			_debugInfo.AddDebugRight(Alex.OperatingSystem);
 			_debugInfo.AddDebugRight(Alex.Gpu);
 			_debugInfo.AddDebugRight($"{Alex.DotnetRuntime}\n");
+			_debugInfo.AddDebugRight(Alex.RenderingEngine);
 			//_debugInfo.AddDebugRight(() => MemoryUsageDisplay);
 			_debugInfo.AddDebugRight(() => $"RAM: {GetBytesReadable(_ramUsage, 2)}", TimeSpan.FromMilliseconds(1000));
 			_debugInfo.AddDebugRight(() => $"GPU: {GetBytesReadable(GpuResourceManager.GetMemoryUsage, 2)}", TimeSpan.FromMilliseconds(1000));
@@ -297,7 +300,7 @@ namespace Alex.Gamestates.InGame
 				AspectRatio = Graphics.Viewport.AspectRatio;
 			}
 
-			if (!_playingHud.Chat.Focused)
+			if (!_playingHud.Chat.Focused && Alex.GameStateManager.GetActiveState() is PlayingState)
 			{
 				World.Player.Controller.CheckMovementInput = Alex.IsActive && Alex.GuiManager.ActiveDialog == null;
 				World.Player.Controller.CheckInput = Alex.IsActive;

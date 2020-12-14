@@ -10,6 +10,7 @@ namespace Alex.Entities
 		{
 			switch (key)
 			{
+				case EntityProperties.GenericMovementSpeed:
 				case EntityProperties.MovementSpeed:
 					return new MovementSpeedProperty(value, modifiers);
 

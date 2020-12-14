@@ -5,17 +5,18 @@
     <ApplicationIcon>Resources\Icon.ico</ApplicationIcon>
     <StartupObject>Alex.Program</StartupObject>
     <Platforms>x64</Platforms>
-    <Configurations>Debug;Release;Appveyor</Configurations>
-    <PublishTrimmed>true</PublishTrimmed>
+    <Configurations>Debug;Release;Appveyor;DirectX</Configurations>
+    <PublishTrimmed>false</PublishTrimmed>
     <Description>A Minecraft client written in C#</Description>
     <PackageProjectUrl>https://github.com/kennyvv/Alex</PackageProjectUrl>
     <PackageLicenseUrl>https://github.com/kennyvv/Alex/blob/master/LICENSE</PackageLicenseUrl>
     <RepositoryUrl>https://github.com/kennyvv/Alex</RepositoryUrl>
+    <PackageVersion />
   </PropertyGroup>
 
   <PropertyGroup>
     <Authors>kennyvv, TruDan</Authors>
-    <Version>1.0-DEV</Version>
+    <VersionSuffix>DEBUG</VersionSuffix>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -39,20 +40,28 @@
     <OutputPath>../../Output/x64/Release/</OutputPath>
   </PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-	  <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-	  <OutputPath>../../Output/AnyCPU/Release/</OutputPath>
-	</PropertyGroup>
-  
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <OutputPath>../../Output/AnyCPU/Release/</OutputPath>
+  </PropertyGroup>
+
   <PropertyGroup Condition="'$(Configuration)'=='Release'">
-    <PublishSingleFile>true</PublishSingleFile>
-    <SelfContained>true</SelfContained>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <IncludeAllContentForselfExtract>true</IncludeAllContentForselfExtract>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(OS)' == 'unix'">
     <RuntimeIdentifier>linux-x64</RuntimeIdentifier>
   </PropertyGroup>
-  
+
+  <PropertyGroup Condition="'$(Configuration)'=='DirectX'">
+    <TargetFramework>net5.0-windows</TargetFramework>
+    <RuntimeIdentifier>win10-x64</RuntimeIdentifier>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <IncludeAllContentForselfExtract>true</IncludeAllContentForselfExtract>
+  </PropertyGroup>
+
   <ItemGroup>
     <Compile Remove="Graphics\Items\**" />
     <EmbeddedResource Remove="Graphics\Items\**" />
@@ -95,8 +104,10 @@
     <None Remove="Resources\Blockshader.xnb" />
     <None Remove="Resources\Lightmap.xnb" />
     <EmbeddedResource Include="Resources\Lightmap.xnb" />
+    <EmbeddedResource Include="Resources\Lightmap_dx.xnb" />
     <None Remove="Resources\Entityshader.xnb" />
     <EmbeddedResource Include="Resources\Entityshader.xnb" />
+    <EmbeddedResource Include="Resources\Entityshader_dx.xnb" />
     <Compile Remove="Particles\Systems\FlameParticleSystem.cs" />
     <Compile Remove="Particles\ParticleVertex.cs" />
     <Compile Remove="Particles\ParticleSystem.cs" />
@@ -107,20 +118,21 @@
 
   <ItemGroup>
     <PackageReference Include="CommandLineParser" Version="2.8.0" />
-    <PackageReference Include="DiscordRichPresence" Version="1.0.150" />
+    <PackageReference Include="DiscordRichPresence" Version="1.0.169" />
     <PackageReference Include="EasyPipes" Version="1.2.0" />
     <PackageReference Include="Hawezo.MojangSharp" Version="0.5.1" />
     <PackageReference Include="JKang.IpcServiceFramework.Server" Version="2.3.1" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="5.0.1" />
-    <PackageReference Include="Microsoft.Identity.Client" Version="4.14.0" />
+    <PackageReference Include="Microsoft.Identity.Client" Version="4.24.0" />
     <PackageReference Include="MiNET.fnbt" Version="1.0.22" />
-    <PackageReference Include="Mono.Cecil" Version="0.11.2" />
+    <PackageReference Include="Mono.Cecil" Version="0.11.3" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
-    <PackageReference Include="NLog" Version="4.7.2" />
+    <PackageReference Include="NLog" Version="4.7.6" />
     <PackageReference Include="System.Globalization" Version="4.3.0" />
     <PackageReference Include="System.Reactive.Core" Version="5.0.0" />
     <PackageReference Include="System.Reactive.Interfaces" Version="5.0.0" />
     <PackageReference Include="System.Reactive.Linq" Version="5.0.0" />
+    <PackageReference Include="System.Security.Cryptography.OpenSsl" Version="5.0.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -153,6 +165,7 @@
 
   <ItemGroup>
     <EmbeddedResource Include="Resources\Blockshader.xnb" />
+    <EmbeddedResource Include="Resources\Blockshader_dx.xnb" />
   </ItemGroup>
 
   <ItemGroup>
@@ -171,15 +184,15 @@
     <Folder Include="Particles\Systems" />
   </ItemGroup>
 
-	<Target Name="ChangeAliasesOfNugetRefs" BeforeTargets="FindReferenceAssembliesForReferences;ResolveReferences">
-		<ItemGroup>
-			<ReferencePath Condition="'%(FileName)' == 'Splat'">
-				<Aliases>SuperSplat</Aliases>
-			</ReferencePath>
-			<ReferencePath Condition="'%(FileName)' == 'Chromely.CefGlue.Winapi'">
-				<Aliases>CefGlueWIN</Aliases>
-			</ReferencePath>
-		</ItemGroup>
-	</Target>
+  <Target Name="ChangeAliasesOfNugetRefs" BeforeTargets="FindReferenceAssembliesForReferences;ResolveReferences">
+    <ItemGroup>
+      <ReferencePath Condition="'%(FileName)' == 'Splat'">
+        <Aliases>SuperSplat</Aliases>
+      </ReferencePath>
+      <ReferencePath Condition="'%(FileName)' == 'Chromely.CefGlue.Winapi'">
+        <Aliases>CefGlueWIN</Aliases>
+      </ReferencePath>
+    </ItemGroup>
+  </Target>
 
 </Project>

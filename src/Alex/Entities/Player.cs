@@ -1,34 +1,21 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 using System.Threading;
 using Alex.API.Blocks;
-using Alex.API.Entities;
 using Alex.API.Graphics;
 using Alex.API.Input;
-using Alex.API.Network;
 using Alex.API.Utils;
-using Alex.API.World;
 using Alex.Blocks.Minecraft;
 using Alex.Blocks.State;
-using Alex.Graphics.Camera;
 using Alex.Items;
 using Alex.Net;
-using Alex.Utils;
 using Alex.Utils.Inventories;
 using Alex.Worlds;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using MiNET.Net;
 using NLog;
 using BlockCoordinates = Alex.API.Utils.BlockCoordinates;
 using BoundingBox = Microsoft.Xna.Framework.BoundingBox;
-using ChunkCoordinates = Alex.API.Utils.ChunkCoordinates;
 using ContainmentType = Microsoft.Xna.Framework.ContainmentType;
-using IBlockState = Alex.Blocks.State.IBlockState;
-using Inventory = Alex.Utils.Inventories.Inventory;
-using MathF = System.MathF;
-using PlayerLocation = Alex.API.Utils.PlayerLocation;
 using Skin = Alex.API.Utils.Skin;
 
 namespace Alex.Entities
@@ -41,8 +28,6 @@ namespace Alex.Entities
         public static readonly float Height = 1.8F;
 
 		public PlayerIndex PlayerIndex { get; }
-
-		public float FOVModifier { get; set; } = 0;
 
 		public PlayerController Controller { get; }
         public Vector3 Raytraced = Vector3.Zero;
@@ -61,7 +46,7 @@ namespace Alex.Entities
 			PlayerIndex = playerIndex;
 		    Controller = new PlayerController(graphics, world, inputManager, this, playerIndex);
 		   // Camera = camera;
-		    NoAi = false;
+		   // NoAi = false;
 
 			//Inventory = new Inventory(46);
 			//Inventory.SelectedHotbarSlotChanged += SelectedHotbarSlotChanged;
@@ -83,7 +68,7 @@ namespace Alex.Entities
         }
 
         /// <inheritdoc />
-        public override bool NoAi { get; set; }
+        public override bool NoAi { get; set; } = false;
 
         protected override void OnInventorySlotChanged(object sender, SlotChangedEventArgs e)
         {
@@ -184,7 +169,13 @@ namespace Alex.Entities
 
 	    private int  PreviousSlot { get; set; } = -1;
 	    public  bool CanSprint    => HealthManager.Hunger > 6;
+	    private bool _skipUpdate = false;
 
+	    internal void SkipUpdate()
+	    {
+		    _skipUpdate = true;
+	    }
+	    
 	    public override void Update(IUpdateArgs args)
 	    {
 		    if (WaitingOnChunk && Age % 4 == 0)
@@ -214,13 +205,11 @@ namespace Alex.Entities
 		    if (IsSprinting && !sprint)
 		    {
 			    FOVModifier = 10;
-
 			    Network.EntityAction((int) EntityId, EntityAction.StartSprinting);
 		    }
 		    else if (!IsSprinting && sprint)
 		    {
 			    FOVModifier = 0;
-
 			    Network.EntityAction((int) EntityId, EntityAction.StopSprinting);
 		    }
 
@@ -242,7 +231,11 @@ namespace Alex.Entities
 
 		    //var previousCheckedInput = _prevCheckedInput;
 
-		    if ((Controller.CheckInput && Controller.CheckMovementInput && Alex.Instance.GuiManager.ActiveDialog == null))
+		    if (_skipUpdate)
+		    {
+			    _skipUpdate = false;
+		    }
+		    else if ((Controller.CheckInput && Controller.CheckMovementInput && Alex.Instance.GuiManager.ActiveDialog == null))
 		    {
 
 			    UpdateBlockRayTracer();
@@ -708,8 +701,36 @@ namespace Alex.Entities
 		    Network?.PlayerOnGroundChanged(this, false);
 	    }
 	    
-		public override void OnTick()
+	    private Vector3 _previous = Vector3.Zero;
+
+	    private int   _speedTick = 0;
+	    private float _fovModifier      = 0f;
+
+	    public float CurrentSpeed { get; set; } = 0f;
+
+	    public float FOVModifier
+	    {
+		    get => _fovModifier;
+		    set
+		    {
+			    _fovModifier = value;
+			    Level.Camera.FOVModifier = value;
+		    }
+	    }
+
+	    //private vector
+	    public override void OnTick()
 		{
+			if (_speedTick++ == 20)
+			{
+				_speedTick = 0;
+				var currentPosition = KnownPosition.ToVector3() * new Vector3(1f, 0f, 1f);
+				var distance        = Vector3.Distance(_previous, currentPosition);
+				CurrentSpeed = distance;
+				
+				_previous = currentPosition;
+			}
+			
 			if (_destroyingBlock)
 			{
 				BlockBreakTick();

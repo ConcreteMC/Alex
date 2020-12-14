@@ -14,7 +14,7 @@ namespace Alex.Worlds
 		Vector3 FogColor           { get; set; }
 		float   FogDistance        { get; set; }
 		Vector3 AmbientLightColor  { get; set; }
-		float   BrightnessModifier { get; set; }
+	//	float   BrightnessModifier { get; set; }
 
 		void Start();
 

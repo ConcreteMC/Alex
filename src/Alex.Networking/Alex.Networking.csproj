@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
   <PropertyGroup>
     <OldToolsVersion>2.0</OldToolsVersion>
-    <Configurations>Release;Debug;Appveyor</Configurations>
+    <Configurations>Release;Debug;Appveyor;DirectX</Configurations>
     <Platforms>x64;AnyCPU</Platforms>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
@@ -14,7 +14,7 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
-    <PackageReference Include="NLog" Version="4.7.2" />
+    <PackageReference Include="NLog" Version="4.7.6" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Alex.API\Alex.API.csproj" />

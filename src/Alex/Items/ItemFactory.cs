@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading.Tasks;
 using Alex.API.Resources;
 using Alex.API.Utils;
 using Alex.Blocks;
@@ -83,8 +84,6 @@ namespace Alex.Items
 		
 	    public static void Init(IRegistryManager registryManager, ResourceManager resources, McResourcePack resourcePack, IProgressReceiver progressReceiver = null)
 	    {
-		      var blockRegistry = registryManager.GetRegistry<Block>();
-		    
 		    ResourceManager = resources;
 		    ResourcePack = resourcePack;
 
@@ -101,95 +100,107 @@ namespace Alex.Items
 		    
 		    LoadModels();
 		    
-            Dictionary<ResourceLocation, Func<Item>> items = new Dictionary<ResourceLocation, Func<Item>>();
+            ConcurrentDictionary<ResourceLocation, Func<Item>> items = new ConcurrentDictionary<ResourceLocation, Func<Item>>();
             
-            for(int i = 0; i < blocks.Count; i++)
-		    {
-			    var entry = blocks.ElementAt(i);
-                progressReceiver?.UpdateProgress(i , blocks.Count, $"Processing block items...", entry.Key);
-                
-			    Item item;
-			    /*if (blockRegistry.TryGet(entry.Key, out var blockState))
-			   {
-				    item = new ItemBlock(blockState.Value);
-                }*/
-			    var bs = BlockFactory.GetBlockState(entry.Key);
-			    if (!(bs.Block is Air))
-			    {
-				    item = new ItemBlock(bs);
-				  //  Log.Info($"Registered block item: {entry.Key}");
-			    }
-			    else
-			    {
-				    continue;
-			    }
+           // for(int i = 0; i < blocks.Count; i++)
+           int done = 0;
+           Parallel.ForEach(
+	           blocks, e =>
+	           {
+		           try
+		           {
+			           var entry = e;
+			           progressReceiver?.UpdateProgress(done, blocks.Count, $"Processing block items...", entry.Key);
 
-			    var minetItem = MiNET.Items.ItemFactory.GetItem(entry.Key.Replace("minecraft:", ""));
-			    if (minetItem != null)
-			    {
-				    if (Enum.TryParse<ItemType>(minetItem.ItemType.ToString(), out ItemType t))
-				    {
-					    item.ItemType = t;
-				    }
+			           Item item;
+			           /*if (blockRegistry.TryGet(entry.Key, out var blockState))
+			          {
+				           item = new ItemBlock(blockState.Value);
+	                   }*/
+			           var bs = BlockFactory.GetBlockState(entry.Key);
 
-				    SetItemMaterial(item, minetItem.ItemMaterial);
-				   // item.Material = minetItem.ItemMaterial;
-				    
-				    item.Meta = minetItem.Metadata;
-				    item.Id = minetItem.Id;
-			    }
-			    
-			    item.Name = entry.Key;
-                item.DisplayName = entry.Key;
+			           if (!(bs.Block is Air))
+			           {
+				           item = new ItemBlock(bs);
+				           //  Log.Info($"Registered block item: {entry.Key}");
+			           }
+			           else
+			           {
+				           return;
+			           }
 
-			    var data = ItemEntries.FirstOrDefault(x =>
-				    x.name.Equals(entry.Key.Substring(10), StringComparison.InvariantCultureIgnoreCase));
-			    if (data != null)
-			    {
-				    item.MaxStackSize = data.stackSize;
-				    item.DisplayName = data.displayName;
-			    }
+			           var minetItem = MiNET.Items.ItemFactory.GetItem(entry.Key.Replace("minecraft:", ""));
 
-			    string ns = ResourceLocation.DefaultNamespace;
-			    string path = entry.Key;
-			    if (entry.Key.Contains(':'))
-			    {
-				    var index = entry.Key.IndexOf(':');
-				    ns = entry.Key.Substring(0, index);
-				    path = entry.Key.Substring(index + 1);
-			    }
-			    
-			    var key = new ResourceLocation(ns, $"block/{path}");
-			    
-			    ResourcePackModelBase model = null;
+			           if (minetItem != null)
+			           {
+				           if (Enum.TryParse<ItemType>(minetItem.ItemType.ToString(), out ItemType t))
+				           {
+					           item.ItemType = t;
+				           }
 
-			    if (!(ResourcePack.ItemModels.TryGetValue(key, out model)) && !(ResourcePack.BlockModels.TryGetValue(key, out model)))
-			    {
-				    foreach (var it in ResourcePack.ItemModels)
-				    {
-					    if (it.Key.Path.Equals(key.Path, StringComparison.InvariantCultureIgnoreCase))
-					    {
-						    model = it.Value;
+				           SetItemMaterial(item, minetItem.ItemMaterial);
+				           // item.Material = minetItem.ItemMaterial;
 
-						    break;
-					    }
-				    }
-			    }
+				           item.Meta = minetItem.Metadata;
+				           item.Id = minetItem.Id;
+			           }
 
-			    if (model == null)
-			    {
-				    Log.Warn($"Missing item render definition for block {entry.Key}, using default.");
-				    model = new ResourcePackItem() {Display = _defaultDisplayElements};
-			    }
+			           item.Name = entry.Key;
+			           item.DisplayName = entry.Key;
 
-			    item.Renderer = new ItemBlockModelRenderer(bs, model, resources);
-			    item.Renderer.Cache(resourcePack);
+			           var data = ItemEntries.FirstOrDefault(
+				           x => x.name.Equals(entry.Key.Substring(10), StringComparison.InvariantCultureIgnoreCase));
 
-				    items.TryAdd(entry.Key, () =>
-			    {
-				    return item.Clone();
-			    });
-		    }
+			           if (data != null)
+			           {
+				           item.MaxStackSize = data.stackSize;
+				           item.DisplayName = data.displayName;
+			           }
+
+			           string ns   = ResourceLocation.DefaultNamespace;
+			           string path = entry.Key;
+
+			           if (entry.Key.Contains(':'))
+			           {
+				           var index = entry.Key.IndexOf(':');
+				           ns = entry.Key.Substring(0, index);
+				           path = entry.Key.Substring(index + 1);
+			           }
+
+			           var key = new ResourceLocation(ns, $"block/{path}");
+
+			           ResourcePackModelBase model = null;
+
+			           if (!(ResourcePack.ItemModels.TryGetValue(key, out model))
+			               && !(ResourcePack.BlockModels.TryGetValue(key, out model)))
+			           {
+				           foreach (var it in ResourcePack.ItemModels)
+				           {
+					           if (it.Key.Path.Equals(key.Path, StringComparison.InvariantCultureIgnoreCase))
+					           {
+						           model = it.Value;
+
+						           break;
+					           }
+				           }
+			           }
+
+			           if (model == null)
+			           {
+				           Log.Debug($"Missing item render definition for block {entry.Key}, using default.");
+				           model = new ResourcePackItem() {Display = _defaultDisplayElements};
+			           }
+
+			           item.Renderer = new ItemBlockModelRenderer(bs, model, resources);
+			           item.Renderer.Cache(resourcePack);
+
+			           items.TryAdd(entry.Key, () => { return item.Clone(); });
+		           }
+		           finally
+		           {
+			           done++;
+		           }
+	           });
             
 		    for(int i = 0; i < ii.Count; i++)
 		    {
@@ -285,27 +296,28 @@ namespace Alex.Items
 
 	    private static void LoadModels()
 	    {
-		    foreach (var model in ResourcePack.ItemModels)
-		    {
-			    if (model.Value == null || model.Value.Textures == null || model.Value.Textures.Count == 0)
-				    continue;
-			    
-				ItemRenderers.AddOrUpdate(model.Key,
-				    (a) =>
-				    {
-					    var render = new ItemModelRenderer(model.Value);
-					    render.Cache(ResourcePack);
-					    return render;
-				    },
-				    (s, renderer) =>
-				    {
-					    var render = new ItemModelRenderer(model.Value);
-					    render.Cache(ResourcePack);
-					    
-					    return render;
-				    });
-			    
-		    }
+		    Parallel.ForEach(
+			    ResourcePack.ItemModels, model =>
+			    {
+				    if (model.Value == null || model.Value.Textures == null || model.Value.Textures.Count == 0)
+					    return;
+
+				    ItemRenderers.AddOrUpdate(
+					    model.Key, (a) =>
+					    {
+						    var render = new ItemModelRenderer(model.Value);
+						    render.Cache(ResourcePack);
+
+						    return render;
+					    }, (s, renderer) =>
+					    {
+						    var render = new ItemModelRenderer(model.Value);
+						    render.Cache(ResourcePack);
+
+						    return render;
+					    });
+
+			    });
 	    }
 
 	    public static bool ResolveItemName(int protocolId, out string res)

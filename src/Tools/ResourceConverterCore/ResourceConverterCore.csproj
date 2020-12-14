@@ -2,9 +2,8 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net5.0</TargetFramework>
     <StartupObject>ResourceConverterCore.Program</StartupObject>
-    <Configurations>Release;Debug;Appveyor</Configurations>
+    <Configurations>Release;Debug;Appveyor;DirectX</Configurations>
     <Platforms>x64;AnyCPU</Platforms>
   </PropertyGroup>
 
@@ -24,7 +23,7 @@
   </Target>
 
   <ItemGroup>
-    <PackageReference Include="Mono.TextTemplating" Version="2.0.5" />
+    <PackageReference Include="Mono.TextTemplating" Version="2.2.0" />
     <PackageReference Include="System.CodeDom" Version="5.0.0" />
   </ItemGroup>
 

@@ -230,9 +230,12 @@ namespace Alex.Blocks.Minecraft
 	        {
 		        if (Solid)
 		        {
-			        if (!FancyGraphics && neighbor.Solid && neighbor.IsFullBlock && neighbor.Transparent)
-				        return false;
-			        
+			        if (!FancyGraphics)
+			        {
+				        if (neighbor.Solid && neighbor.IsFullBlock && neighbor.Transparent)
+					        return false;
+			        }
+
 			        //	if (IsFullCube && Name.Equals(block.Name)) return false;
 			        if (neighbor.Solid && (neighbor.Transparent || !neighbor.IsFullCube))
 			        {

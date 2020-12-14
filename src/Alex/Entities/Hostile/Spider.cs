@@ -35,7 +35,6 @@ namespace Alex.Entities.Hostile
 		
 		public Spider(World level) : base((EntityType)35, level)
 		{
-			JavaEntityId = 52;
 			Height = 0.9;
 			Width = 1.4;
 		}

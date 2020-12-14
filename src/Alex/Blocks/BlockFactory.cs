@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading.Tasks;
 using Alex.API.Resources;
 using Alex.Blocks.Minecraft;
 using Alex.Blocks.State;
@@ -21,24 +23,11 @@ namespace Alex.Blocks
 		public static IReadOnlyDictionary<uint, BlockState> AllBlockstates => new ReadOnlyDictionary<uint, BlockState>(RegisteredBlockStates);
 		public static IReadOnlyDictionary<string, BlockStateVariantMapper> AllBlockstatesByName => new ReadOnlyDictionary<string, BlockStateVariantMapper>(BlockStateByName);
 		
-		private static readonly Dictionary<uint, BlockState> RegisteredBlockStates = new Dictionary<uint, BlockState>();
-		private static readonly Dictionary<string, BlockStateVariantMapper> BlockStateByName = new Dictionary<string, BlockStateVariantMapper>();
-		private static readonly Dictionary<uint, BlockModel> ModelCache = new Dictionary<uint, BlockModel>();
-		private static readonly Dictionary<long, string> ProtocolIdToBlockName = new Dictionary<long, string>();
+		private static readonly ConcurrentDictionary<uint, BlockState> RegisteredBlockStates = new ConcurrentDictionary<uint, BlockState>();
+		private static readonly ConcurrentDictionary<string, BlockStateVariantMapper> BlockStateByName = new ConcurrentDictionary<string, BlockStateVariantMapper>();
+		private static readonly ConcurrentDictionary<uint, BlockModel> ModelCache = new ConcurrentDictionary<uint, BlockModel>();
+		private static readonly ConcurrentDictionary<long, string> ProtocolIdToBlockName = new ConcurrentDictionary<long, string>();
 		private static ResourcePackLib.Json.Models.ResourcePackModelBase CubeModel { get; set; }
-		public static readonly LiquidBlockModel StationairyWaterModel = new LiquidBlockModel()
-		{
-			//IsFlowing = false,
-			IsLava = false,
-		//	Level = 8
-		};
-
-		public static readonly LiquidBlockModel StationairyLavaModel = new LiquidBlockModel()
-		{
-			//IsFlowing = false,
-			IsLava = true,
-			//Level = 8
-		};
 
 		private static BlockModel GetOrCacheModel(ResourceManager resources, McResourcePack resourcePack, BlockState state, uint id, bool rebuild)
 		{
@@ -160,9 +149,7 @@ namespace Alex.Blocks
 			McResourcePack resourcePack, bool replace,
 			bool reportMissing, IProgressReceiver progressReceiver)
 		{
-			long idCounter = 0;
-			var blockRegistry = registryManager.GetRegistry<Block>();
-			var blockModelRegistry = registryManager.GetRegistry<BlockModel>();
+			var          blockRegistry      = registryManager.GetRegistry<Block>();
 
 			var data = BlockData.FromJson(ResourceManager.ReadStringResource("Alex.Resources.NewBlocks.json"));
 			int total = data.Count;
@@ -170,8 +157,7 @@ namespace Alex.Blocks
 			int importCounter = 0;
 			int multipartBased = 0;
 
-			uint c = 0;
-			foreach (var entry in data)
+			Parallel.ForEach(data, entry =>
 			{
 				//double percentage = 100D * ((double) done / (double) total);
 				progressReceiver.UpdateProgress(done, total, $"Importing block models...", entry.Key);
@@ -207,9 +193,6 @@ namespace Alex.Blocks
 					{
 						foreach (var property in s.Properties)
 						{
-							//if (property.Key.Equals("waterlogged"))
-						//		continue;
-							
 							variantState =
 								(Blocks.State.BlockState) variantState.WithPropertyNoResolve(property.Key,
 									property.Value, false);
@@ -244,7 +227,9 @@ namespace Alex.Blocks
 					if (blockModel == null)
 					{
 						if (reportMissing && block.Renderable)
-							Log.Warn($"Missing blockmodel for blockstate {entry.Key}[{variantState.ToString()}]");
+						{
+							Log.Debug($"Missing blockmodel for blockstate {entry.Key}[{variantState.ToString()}]");
+						}
 
 						blockModel = UnknownBlockModel;
 					}
@@ -303,9 +288,9 @@ namespace Alex.Blocks
 				}
 
 				done++;
-			}
+			});
 
-			Log.Info($"Got {multipartBased} multi-part blockstate variants!");
+			Log.Info($"Loaded {multipartBased} multi-part blockstate variants!");
 			return importCounter;
 		}
 

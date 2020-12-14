@@ -8,6 +8,7 @@ using Alex.API.Resources;
 using Alex.API.Utils;
 using Alex.ResourcePackLib.Json;
 using Alex.ResourcePackLib.Json.Bedrock.Entity;
+using Alex.ResourcePackLib.Json.Bedrock.Sound;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NLog;
@@ -25,7 +26,8 @@ namespace Alex.ResourcePackLib
 		private ConcurrentDictionary<string, Image<Rgba32>> _bitmaps = new ConcurrentDictionary<string, Image<Rgba32>>();
         public IReadOnlyDictionary<string, Image<Rgba32>> Textures => _bitmaps;
 		public IReadOnlyDictionary<ResourceLocation, EntityDescription> EntityDefinitions { get; private set; } = new ConcurrentDictionary<ResourceLocation, EntityDescription>();
-
+		public SoundDefinitionFormat SoundDefinitions { get; private set; } = null;
+		
 		private readonly DirectoryInfo _workingDir;
 
 		public BedrockResourcePack(DirectoryInfo directory, ResourcePack.LoadProgress progressReporter = null)
@@ -48,7 +50,7 @@ namespace Alex.ResourcePackLib
 
 		private void Load(ResourcePack.LoadProgress progressReporter)
 		{
-            DirectoryInfo entityDefinitionsDir = null;
+			DirectoryInfo entityDefinitionsDir = null;
 
             Dictionary<string, FileInfo> entityGeometry = new Dictionary<string, FileInfo>();
             foreach (var dir in _workingDir.EnumerateDirectories())
@@ -83,7 +85,12 @@ namespace Alex.ResourcePackLib
                                 }
                             }
 
-                            break;
+                           // break;
+                        }
+
+                        if (dir.Name.Equals("sounds"))
+                        {
+	                        ProcessSounds(progressReporter, dir);
                         }
                     //}
                 //}
@@ -109,6 +116,23 @@ namespace Alex.ResourcePackLib
             Log.Info($"Processed {EntityDefinitions.Count} entity definitions");
         }
 
+		private void ProcessSounds(ResourcePack.LoadProgress progress, DirectoryInfo dir)
+		{
+			foreach (var file in dir.GetFiles())
+			{
+				if (file.Name.Equals("sound_definitions.json"))
+				{
+					using (var fs = file.OpenRead())
+					{
+						var fileContents = fs.ReadToEnd();
+						var json         = Encoding.UTF8.GetString(fileContents);
+						
+						SoundDefinitions = SoundDefinitionFormat.FromJson(json);
+					}
+				}
+			}
+		}
+		
 		private void LoadEntityDefinition(FileInfo entry, Dictionary<ResourceLocation, EntityDescription> entityDefinitions)
 		{
 			using (var stream = entry.Open(FileMode.Open))
@@ -170,7 +194,7 @@ namespace Alex.ResourcePackLib
 								{
 									if (_bitmaps.ContainsKey(texture.Value))
 									{
-										Log.Warn($"Duplicate bitmap: {texture.Value}");
+										//Log.Warn($"Duplicate bitmap: {texture.Value}");
 										continue;
 									}
 

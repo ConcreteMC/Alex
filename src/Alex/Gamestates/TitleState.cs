@@ -247,10 +247,11 @@ namespace Alex.Gamestates
 			}
 
 			var entity = new RemotePlayer("", null, null, skin.Texture);
-
+			entity.RenderLocation = new PlayerLocation(Vector3.Zero, 180f, 180f);
+			
 			AddChild(_playerView =
 				new GuiEntityModelView(
-						entity /*new PlayerMob("", null, null, skin.Texture, skin.Slim)*/) /*"geometry.humanoid.customSlim"*/
+						entity)
 					{
 						BackgroundOverlay = new Color(Color.Black, 0.15f),
 
@@ -330,7 +331,9 @@ namespace Alex.Gamestates
 			var yaw = (float)headYaw;
 
 			_playerView.SetEntityRotation(-yaw, pitch, -headYaw);
-
+			_playerView.Entity.RenderLocation.Yaw = -yaw;
+			_playerView.Entity.RenderLocation.HeadYaw = -headYaw;
+			_playerView.Entity.RenderLocation.Pitch = pitch;
 			KeyboardState s = Keyboard.GetState();
 			if (_prevKeyboardState.IsKeyDown(Keys.M) && s.IsKeyUp(Keys.M))
 			{
