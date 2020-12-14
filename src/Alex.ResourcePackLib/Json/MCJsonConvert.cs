@@ -33,6 +33,8 @@ namespace Alex.ResourcePackLib.Json
 			DefaultSettings.Converters.Add(new GuidConverter());
 			//DefaultSettings.Converters.Add(new MCElementsDictionaryConverter());
 			DefaultSettings.Converters.Add(new EntityModelConverter());
+			DefaultSettings.Converters.Add(new MobsModelConverter());
+			DefaultSettings.Converters.Add(new UvConverter());
 			Serializer = JsonSerializer.Create(DefaultSettings);
 		}
 

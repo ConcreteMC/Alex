@@ -181,19 +181,21 @@ namespace Alex
             }
         }
 
-        private bool CheckBedrockAssets(IProgressReceiver progressReceiver, out byte[] bedrockResources)
+        private bool CheckBedrockAssets(IProgressReceiver progressReceiver, out string bedrockResources)
         {
 	        bedrockResources = null;
 	        
 			try
 			{
 				string bedrockPath = BedrockAssetUtil.CheckAndDownloadResources(progressReceiver).Result;
-				if (string.IsNullOrWhiteSpace(bedrockPath) || !Storage.TryReadBytes(bedrockPath, out bedrockResources))
+				if (string.IsNullOrWhiteSpace(bedrockPath) || !Storage.Exists(bedrockPath))
 				{
 					Log.Warn("Could not load any of the required Bedrock assets! Are you connected to the internet?");
 					Log.Warn($"A manual fix is available, see: https://github.com/kennyvv/Alex/wiki/Bedrock-Assets");
 					return false;
 				}
+
+				bedrockResources = bedrockPath;
 			}
 			catch (Exception ex)
 			{
@@ -204,13 +206,13 @@ namespace Alex
 			return true;
 		}
 
-        private bool CheckJavaAssets(IProgressReceiver progressReceiver, out byte[] javaResources)
+        private bool CheckJavaAssets(IProgressReceiver progressReceiver, out string javaResources)
         {
 	        try
 	        {
 		        string path = AssetsUtil.EnsureTargetReleaseAsync(JavaProtocol.VersionId, progressReceiver).Result;
 
-		        if (!Storage.TryReadBytes(path, out javaResources))
+		        if (!Storage.Exists(path))
 		        {
 			        Log.Error($"Could not load any assets! Are you connected to the internet?");
 
@@ -219,6 +221,17 @@ namespace Alex
 			        //bedrockResources = null;
 			        return false;
 		        }
+		        
+		        javaResources = path;
+			        /*if (!Storage.TryReadBytes(path, out javaResources))
+			        {
+				        Log.Error($"Could not load any assets! Are you connected to the internet?");
+	
+				        javaResources = null;
+	
+				        //bedrockResources = null;
+				        return false;
+			        }*/
 	        }
 	        catch (Exception ex)
 	        {
@@ -262,8 +275,8 @@ namespace Alex
 	        Registries = JsonConvert.DeserializeObject<Registries>(ReadStringResource("Alex.Resources.registries.json"));
 	        progressReceiver?.UpdateProgress(100, "Loading registries...");
 	        
-			byte[] defaultResources;
-			byte[] defaultBedrock;
+			string defaultResources;
+			string defaultBedrock;
 
 			if (!CheckJavaAssets(progressReceiver, out defaultResources))
 			{
@@ -273,9 +286,9 @@ namespace Alex
 			Log.Info($"Loading vanilla resources...");
 			
 			progressReceiver?.UpdateProgress(0, "Loading vanilla resources...");
-			using (MemoryStream stream = new MemoryStream(defaultResources))
+			using (FileStream fs = Storage.OpenFileStream(defaultResources, FileMode.Open))
 			{
-				var vanilla = LoadResourcePack(progressReceiver, stream, false, preloadCallback);
+				var vanilla = LoadResourcePack(progressReceiver, fs, false, preloadCallback);
 				vanilla.Manifest.Name = "Vanilla";
 				
 				ActiveResourcePacks.AddFirst(vanilla);
@@ -286,7 +299,7 @@ namespace Alex
 				return false;
 			}
 
-			var bedrockPath = Path.Combine("assets", "bedrock");
+			/*var bedrockPath = Path.Combine("assets", "bedrock");
 
             DirectoryInfo directory;
             if (!Storage.TryGetDirectory(bedrockPath, out directory) && !Storage.TryCreateDirectory(bedrockPath))
@@ -299,26 +312,24 @@ namespace Alex
 
             if (directory.GetFileSystemInfos().Length == 0)
             {
-	            Log.Info($"Extracting required resources...");
-	            progressReceiver?.UpdateProgress(50, "Extracting resources...");
-
-	            byte[] zipped = defaultBedrock;//ReadResource("Alex.Resources.resources.zip");
-	            using (MemoryStream ms = new MemoryStream(zipped))
-	            {
-		            using (ZipArchive archive = new ZipArchive(ms, ZipArchiveMode.Read))
-		            {
-			            archive.ExtractToDirectory(directory.FullName);
-		            }
-	            }
-            }
+	           // Log.Info($"Extracting required resources...");
+	           // progressReceiver?.UpdateProgress(50, "Extracting resources...");
+			*/
+	           
+           // }
 
             Log.Info($"Loading bedrock resources...");
 			
 			progressReceiver?.UpdateProgress(0, "Loading bedrock resources...");
-			BedrockResourcePack = new BedrockResourcePack(directory, (percentage, file) =>
+
+			using (FileStream fs = Storage.OpenFileStream(defaultBedrock, FileMode.Open))
 			{
-				progressReceiver?.UpdateProgress(percentage, null, file);
-			});
+				using (ZipArchive zipArchive = new ZipArchive(fs, ZipArchiveMode.Read))
+				{
+					BedrockResourcePack = new BedrockResourcePack(
+						zipArchive, (percentage, file) => { progressReceiver?.UpdateProgress(percentage, null, file); });
+				}
+			}
 
 			EntityFactory.LoadModels(this, device, true, progressReceiver);
 
