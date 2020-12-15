@@ -53,7 +53,7 @@ namespace Alex.Gamestates.MainMenu.Options
                 _activeBtn = (btn, culture);
             }
 
-            Options.MiscelaneousOptions.Language.Value = culture.DisplayName;
+            Options.MiscelaneousOptions.Language.Value = culture.Code;
             //Alex.GuiRenderer.SetLanguage(culture.CultureInfo.Name);
         }
         
