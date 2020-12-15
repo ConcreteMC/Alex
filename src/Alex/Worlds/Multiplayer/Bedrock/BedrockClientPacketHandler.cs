@@ -201,13 +201,13 @@ namespace Alex.Worlds.Multiplayer.Bedrock
         private ResourcePackIds _resourcePackIds;
         public void HandleMcpeResourcePacksInfo(McpeResourcePacksInfo message)
         {
-	        Log.Info($"Got ResourcePackDataInfo. (ForcedToAccept={message.mustAccept} Scripting={message.hasScripts} Behavior Packs={message.behahaviorpackinfos.Count} ResourcePacks={message.resourcepackinfos.Count})");
+	        Log.Info($"Got ResourcePackDataInfo. (ForcedToAccept={message.mustAccept} Scripting={message.hasScripts} Behavior Packs={message.behahaviorpackinfos.Count} ResourcePacks={message.texturepacks.Count})");
 	        
 	        McpeResourcePackClientResponse response        = new McpeResourcePackClientResponse();
 	        ResourcePackIds                resourcePackIds = new ResourcePackIds();
-	        foreach (var packInfo in message.resourcepackinfos)
+	        foreach (var packInfo in message.texturepacks)
 	        {
-		        resourcePackIds.Add($"{packInfo.PackIdVersion.Id}_{packInfo.PackIdVersion.Version}");
+		        resourcePackIds.Add($"{packInfo.UUID}_{packInfo.Version}");
 	        }
 
 	        foreach (var packInfo in message.behahaviorpackinfos)
@@ -755,6 +755,18 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			{
 				itemStackInventory.HandleResponses(message.responses);
 			}
+		}
+
+		/// <inheritdoc />
+		public void HandleMcpeItemComponent(McpeItemComponent message)
+		{
+			UnhandledPackage(message);
+		}
+
+		/// <inheritdoc />
+		public void HandleMcpeFilterTextPacket(McpeFilterTextPacket message)
+		{
+			UnhandledPackage(message);
 		}
 
 		/// <inheritdoc />

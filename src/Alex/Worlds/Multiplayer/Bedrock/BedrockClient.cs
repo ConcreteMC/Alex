@@ -1201,7 +1201,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		{
 		//	var minetItem = GetMiNETItem(item);
 			
-			McpeMobEquipment packet = new MobEquipment();
+			McpeMobEquipment packet = new McpeMobEquipment();
 			packet.selectedSlot = (byte) slot;
 			packet.slot = (byte) slot;
 

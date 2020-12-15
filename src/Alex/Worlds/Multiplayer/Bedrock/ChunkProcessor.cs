@@ -82,7 +82,13 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	        return _convertedStates.GetOrAdd(p,
 		        (u, palleteId) =>
 		        {
-			        if (BlockStateMap.TryGetValue(palleteId, out var bs))
+			        if (!BlockStateMap.TryGetValue(palleteId, out var bs))
+			        {
+				        var a = MiNET.Blocks.BlockFactory.BlockPalette.FirstOrDefault(x => x.RuntimeId == palleteId);
+				        bs = a;
+			        }
+
+			        if (bs != null)
 			        {
 				        if (TryConvertBlockState(bs, out var convertedState))
 				        {
@@ -733,6 +739,10 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			        break;
 		        case "minecraft:tallgrass":
 			        searchName = "minecraft:tall_grass";
+			        break;
+		        case "minecraft:grass":
+			        searchName = "minecraft:grass_block";
+
 			        break;
 	        }
 	        
