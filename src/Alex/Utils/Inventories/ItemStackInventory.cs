@@ -163,7 +163,9 @@ namespace Alex.Utils.Inventories
 
 			Item result = null;
 
-			if (ChunkProcessor.Itemstates.TryGetValue(item.Id, out var itemState))
+			var itemState = ChunkProcessor.Itemstates.FirstOrDefault(x => x.Id == item.Id);
+			if (itemState != null)
+			//if (ChunkProcessor.Itemstates.TryGetValue(item.Id, out var itemState))
 			{
 				//item.Id = itemState.Id;
 				if (ItemFactory.TryGetItem(itemState.Id, item.Metadata, out result) || ItemFactory.TryGetItem(itemState.Name, out result))

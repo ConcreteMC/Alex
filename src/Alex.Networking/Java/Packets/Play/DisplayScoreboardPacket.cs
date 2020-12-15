@@ -1,5 +1,4 @@
 using Alex.Networking.Java.Util;
-using MiNET.Utils;
 
 namespace Alex.Networking.Java.Packets.Play
 {

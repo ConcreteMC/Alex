@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using Alex.ResourcePackLib.Json.Converters;
 using Microsoft.Xna.Framework;
-using MiNET.Utils.Skins;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NLog;

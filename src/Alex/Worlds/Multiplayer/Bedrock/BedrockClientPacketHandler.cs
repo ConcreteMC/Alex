@@ -234,7 +234,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
         public void HandleMcpeResourcePackStack(McpeResourcePackStack message)
         {
 	        Log.Info(
-		        $"Received ResourcePackStack, sending final response. (ForcedToAccept={message.mustAccept} Experimental={message.isExperimental} Gameversion={message.gameVersion} Behaviorpacks={message.behaviorpackidversions.Count} Resourcepacks={message.resourcepackidversions.Count})");
+		        $"Received ResourcePackStack, sending final response. (ForcedToAccept={message.mustAccept} Gameversion={message.gameVersion} Behaviorpacks={message.behaviorpackidversions.Count} Resourcepacks={message.resourcepackidversions.Count})");
 
 	        McpeResourcePackClientResponse response = new McpeResourcePackClientResponse();
 	        response.responseStatus = (byte) McpeResourcePackClientResponse.ResponseStatus.Completed;
