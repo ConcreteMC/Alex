@@ -113,6 +113,7 @@ namespace Alex.Worlds
 			}
 		}
 
+		public BackgroundWorker BackgroundWorker { get; }
 		public World(IServiceProvider serviceProvider, GraphicsDevice graphics, AlexOptions options,
 			NetworkProvider networkProvider)
 		{
@@ -127,7 +128,7 @@ namespace Alex.Worlds
 
 			Ticker.RegisterTicked(this);
 			Ticker.RegisterTicked(EntityManager);
-			//Ticker.RegisterTicked(PhysicsEngine);
+			Ticker.RegisterTicked(PhysicsEngine);
 			Ticker.RegisterTicked(ChunkManager);
 			
 			ChunkManager.Start();
@@ -196,6 +197,8 @@ namespace Alex.Worlds
 					Camera.SetRenderDistance(newValue);
 				});
 			Camera.SetRenderDistance(options.VideoOptions.RenderDistance);
+
+			BackgroundWorker = new BackgroundWorker();
 		}
 
 		private void FieldOfVisionOnValueChanged(int oldvalue, int newvalue)
@@ -805,6 +808,8 @@ namespace Alex.Worlds
 
 			EventDispatcher.UnregisterEvents(this);
 			
+			BackgroundWorker?.Dispose();
+
 			EntityManager.Dispose();
 			ChunkManager.Dispose();
 
@@ -844,6 +849,7 @@ namespace Alex.Worlds
 			{
 				PhysicsEngine.AddTickable(entity);
 
+				entity.OnSpawn();
 				return true;
 			}
 
@@ -853,17 +859,18 @@ namespace Alex.Worlds
 
 		public void DespawnEntity(long entityId)
 		{
-			Ticker.ScheduleTick(
+			BackgroundWorker.Enqueue(
 				() =>
 				{
 					if (EntityManager.TryGet(entityId, out Entity entity))
 					{
 						PhysicsEngine.Remove(entity);
 						EntityManager.Remove(entityId);
+
+						entity.OnDespawn();
 						//entity.Dispose();
 					}
-				}, 0);
-
+				});
 			//	Log.Info($"Despawned entity {entityId}");
 		}
 

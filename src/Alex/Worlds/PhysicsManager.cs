@@ -21,7 +21,7 @@ namespace Alex.Worlds
 	///		Handles entity physics
 	///		Collision detection heavily based on https://github.com/ddevault/TrueCraft/blob/master/TrueCraft.Core/Physics/PhysicsEngine.cs
 	/// </summary>
-    public class PhysicsManager
+    public class PhysicsManager : ITicked
     {
 	    private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(PhysicsManager));
 	    private World World { get; }
@@ -54,13 +54,14 @@ namespace Alex.Worlds
 			var frameTime = (float) elapsed.ElapsedGameTime.TotalSeconds; // / 50;
 			_frameAccumulator += frameTime;
 
-			if (_frameAccumulator >= (TargetTime * 1.3))
-			{
-				Log.Warn($"Physics running slow! DeltaTime={_frameAccumulator} seconds while Target={TargetTime} seconds");
-			}
+		//	if (_frameAccumulator >= (TargetTime * 1.3))
+		//	{
+			//	Log.Warn($"Physics running slow! Running {(_frameAccumulator / TargetTime)} ticks behind... (DeltaTime={_frameAccumulator}s Target={TargetTime}s)");
+		//	}
 
 			var entities = PhysicsEntities.ToArray();
-
+			//var realTime = entities.Where(x => (x.RequiresRealTimeTick || (x.IsRendered && x.ServerEntity))).ToArray();
+			
 			while (_frameAccumulator >= TargetTime)
 			{
 				foreach (var entity in entities)
@@ -82,32 +83,52 @@ namespace Alex.Worlds
 
 			foreach (var entity in entities)
 			{
-				var position              = entity.KnownPosition;
-				var previousStatePosition = entity.PreviousState.Position;
-
-				//var pos = Vector3.Lerp(previousStatePosition.ToVector3(), position.ToVector3(), alpha);
-				var pos = position.ToVector3() * alpha + previousStatePosition.ToVector3() * (1f - alpha);
-
-				//var yaw = MathHelper.Lerp(previousStatePosition.Yaw, position.Yaw, alpha);
-				var yaw = position.Yaw * alpha + previousStatePosition.Yaw * (1f - alpha);
-
-				//var headYaw = MathHelper.Lerp(previousStatePosition.HeadYaw, position.HeadYaw, alpha);
-				var headYaw = position.HeadYaw * alpha + previousStatePosition.HeadYaw * (1f - alpha);
-
-				var pitch = position.Pitch * alpha + previousStatePosition.Pitch * (1f - alpha);
-				//var pitch = MathHelper.Lerp(previousStatePosition.Pitch, position.Pitch, alpha);
-
-				var renderLocation = entity.RenderLocation;
-				renderLocation.X = pos.X;
-				renderLocation.Y = pos.Y;
-				renderLocation.Z = pos.Z;
-				renderLocation.HeadYaw = headYaw;
-				renderLocation.Yaw = yaw;
-				renderLocation.Pitch = pitch;
-				renderLocation.OnGround = position.OnGround;
-
-				entity.RenderLocation = renderLocation;
+				UpdateEntityLocation(entity, alpha);
 			}
+		}
+		
+		
+		/// <inheritdoc />
+		public void OnTick()
+		{
+			return;
+			var entities = PhysicsEntities.ToArray();
+			var realTime = entities.Where(x => (!x.RequiresRealTimeTick || (!x.IsRendered && x.ServerEntity))).ToArray();
+			
+			foreach (var entity in realTime)
+			{
+				UpdatePhysics(entity);
+				UpdateEntityLocation(entity, TargetTime);
+			}
+		}
+
+		private void UpdateEntityLocation(Entity entity, float alpha)
+		{
+			var position              = entity.KnownPosition;
+			var previousStatePosition = entity.PreviousState.Position;
+
+			//var pos = Vector3.Lerp(previousStatePosition.ToVector3(), position.ToVector3(), alpha);
+			var pos = position.ToVector3() * alpha + previousStatePosition.ToVector3() * (1f - alpha);
+
+			//var yaw = MathHelper.Lerp(previousStatePosition.Yaw, position.Yaw, alpha);
+			var yaw = position.Yaw * alpha + previousStatePosition.Yaw * (1f - alpha);
+
+			//var headYaw = MathHelper.Lerp(previousStatePosition.HeadYaw, position.HeadYaw, alpha);
+			var headYaw = position.HeadYaw * alpha + previousStatePosition.HeadYaw * (1f - alpha);
+
+			var pitch = position.Pitch * alpha + previousStatePosition.Pitch * (1f - alpha);
+			//var pitch = MathHelper.Lerp(previousStatePosition.Pitch, position.Pitch, alpha);
+
+			var renderLocation = entity.RenderLocation;
+			renderLocation.X = pos.X;
+			renderLocation.Y = pos.Y;
+			renderLocation.Z = pos.Z;
+			renderLocation.HeadYaw = headYaw;
+			renderLocation.Yaw = yaw;
+			renderLocation.Pitch = pitch;
+			renderLocation.OnGround = position.OnGround;
+
+			entity.RenderLocation = renderLocation;
 		}
 		
 		//private void Apply

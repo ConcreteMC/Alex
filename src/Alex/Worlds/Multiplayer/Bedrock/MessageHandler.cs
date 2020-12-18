@@ -153,11 +153,11 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 							             ?? new UnknownPacket((byte) id, internalBuffer);
 
 							//Hack for some servers that screw up the order.
-							if (packet is McpePlayerList)
-							{
-								messages.AddFirst(packet);
-							}
-							else
+						//	if (packet is McpePlayerList)
+						//	{
+								//		messages.AddFirst(packet);
+						//	}
+						//	else
 							{
 								messages.AddLast(packet);
 							}

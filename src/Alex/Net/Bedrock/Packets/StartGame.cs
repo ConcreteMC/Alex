@@ -137,19 +137,6 @@ namespace Alex.Net.Bedrock.Packets
 			enableNewInventorySystem = ReadBool();
 		}
 
-		public Nbt ReadNewNbt()
-		{
-			Nbt     nbt     = new Nbt();
-			NbtFile nbtFile = new NbtFile();
-			nbtFile.BigEndian = false;
-			nbtFile.UseVarInt = true;
-			nbtFile.AllowAlternativeRootTag = true;
-			
-			nbt.NbtFile = nbtFile;
-			nbtFile.LoadFromStream(_reader, NbtCompression.None);
-			return nbt;
-		}
-		
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(StartGame));
 		public BlockPalette ReadAlternateBlockPalette()
 		{
@@ -166,7 +153,7 @@ namespace Alex.Net.Bedrock.Packets
 				record.States = new List<IBlockState>();
 				
 				
-				var nbt     = ReadNewNbt();
+				var nbt     = NetworkUtils.ReadNewNbt(_reader);
 				var rootTag = nbt.NbtFile.RootTag;
 
 				if (rootTag is NbtList nbtList)

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using Alex.API.Entities;
 using Alex.API.Graphics;
@@ -44,6 +45,7 @@ namespace Alex.Worlds
 			_rendered = new Entity[0];
 		}
 
+		private Stopwatch _sw = new Stopwatch();
 		public void OnTick()
 		{
 			List<Entity> rendered = new List<Entity>(_rendered.Length);
@@ -52,11 +54,16 @@ namespace Alex.Worlds
 			var blockEntities = BlockEntities.Values.ToArray();
 
 			var cameraChunkPosition = new ChunkCoordinates(World.Camera.Position);
-
+			
 			foreach (var entity in entities.Concat(blockEntities))
 			{
+				_sw.Restart();
+				
 				entity.OnTick();
-
+				
+				var tickTime = _sw.ElapsedMilliseconds;
+				
+				
 				if (Math.Abs(new ChunkCoordinates(entity.KnownPosition).DistanceTo(cameraChunkPosition))
 				    > World.ChunkManager.RenderDistance)
 				{

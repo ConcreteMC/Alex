@@ -5,6 +5,7 @@ using Alex.ResourcePackLib;
 using Alex.Worlds;
 using fNbt;
 using Microsoft.Xna.Framework.Graphics;
+using MiNET.Items;
 using NLog;
 
 namespace Alex.Entities.BlockEntities
@@ -87,6 +88,21 @@ namespace Alex.Entities.BlockEntities
 					case "minecraft:skull":
 					case "skull":
 						blockEntity = new SkullBlockEntity(world, block, SkullTexture);
+						break;
+					
+					case "minecraft:flowerpot":
+					case "flowerpot":
+						blockEntity = new FlowerPotBlockEntity(world, block);
+						break;
+					
+					case "minecraft:itemframe":
+					case "itemframe":
+						blockEntity = new ItemFrameBlockEntity(world, block);
+						break;
+					
+					case "minecraft:furnace":
+					case "furnace":
+						blockEntity = new FurnaceBlockEntity(world, block);
 						break;
 					
 					default:

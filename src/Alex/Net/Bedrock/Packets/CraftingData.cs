@@ -84,8 +84,12 @@ namespace Alex.Net.Bedrock.Packets
 						int height = ReadVarInt(); // Height
 						
 						var recipe = new ShapedRecipe(width, height);
+
+						if (width > 3 || height > 3)
+						{
+						//	throw new Exception("Wrong number of ingredience. Width=" + width + ", height=" + height);
+						}
 						
-						if (width > 3 || height > 3) throw new Exception("Wrong number of ingredience. Width=" + width + ", height=" + height);
 						for (int w = 0; w < width; w++)
 						{
 							for (int h = 0; h < height; h++)

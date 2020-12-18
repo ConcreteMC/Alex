@@ -35,7 +35,8 @@ namespace Alex.API.World
 	    {
 		    lock (_tickLock)
 		    {
-			    var ticks = _scheduledTicks.Where(x => x.Value <= _tick).ToArray();
+			    var startTime = _sw.ElapsedMilliseconds;
+			    var ticks     = _scheduledTicks.Where(x => x.Value <= _tick).ToArray();
 
 			    foreach (var tick in ticks)
 			    {
@@ -55,9 +56,21 @@ namespace Alex.API.World
 				    }
 			    }
 
-			    foreach (var ticked in _tickedItems.ToArray())
+			    var scheduledTicksTime = _sw.ElapsedMilliseconds - startTime;
+
+			    var tickedItems = _tickedItems.ToArray();
+			    foreach (var ticked in tickedItems)
 			    {
 				    ticked.OnTick();
+			    }
+
+			    var endTime = _sw.ElapsedMilliseconds;
+
+			    var elapsedTickTime = endTime - startTime;
+
+			    if (elapsedTickTime > 50)
+			    {
+				    Log.Warn($"Ticking running slow! Tick took: {elapsedTickTime}ms of which {scheduledTicksTime} were spent on scheduled ticks. (ScheduledTicks={ticks.Length} TickedItems={tickedItems.Length})");
 			    }
 			    
 			    _tick++;
@@ -77,6 +90,14 @@ namespace Alex.API.World
 		    lock (_tickLock)
 		    {
 			    _tickedItems.AddLast(ticked);
+		    }
+	    }
+
+	    public void UnregisterTicked(ITicked ticked)
+	    {
+		    lock (_tickLock)
+		    {
+			    _tickedItems.Remove(ticked);
 		    }
 	    }
 	    

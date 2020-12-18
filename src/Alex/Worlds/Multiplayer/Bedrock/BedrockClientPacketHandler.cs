@@ -380,7 +380,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				//mob.HandleMetadata();
 					//	message.flags
 
-				mob.IsSpawned = true;
+			//	mob.IsSpawned = true;
 
 				_entityMapping.TryAdd(message.entityIdSelf, message.runtimeEntityId);
 				Client.World.SpawnEntity(mob.EntityId, mob);
@@ -417,20 +417,21 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					m.UUID = r.ClientUuid;
 					m.EntityId = r.EntityId;
 					m.SetInventory(new BedrockInventory(46));
-
+					m.Skin = r.Skin;
+					
 					if (!_players.TryAdd(r.ClientUuid, m))
 					{
 						Log.Warn($"Duplicate player record! {r.ClientUuid}");
 					}
 					else
 					{
-						if (UseCustomEntityModels)
+						/*if (UseCustomEntityModels)
 						{
 							actions.Add(() =>
 							{
 								m.LoadSkin(r.Skin);
 							});
-						}
+						}*/
 					}
 				}
 			}
@@ -445,7 +446,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	            }
             }
 
-			if (actions.Count > 0)
+			/*if (actions.Count > 0)
 			{
 				ThreadPool.QueueUserWorkItem(
 					o =>
@@ -455,7 +456,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 							action.Invoke();
 						}
 					});
-			}
+			}*/
 		}
 
 		public bool SpawnMob(long entityId,
@@ -1788,7 +1789,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 			if (_players.TryGetValue(message.uuid, out var player))
 			{
-				ThreadPool.QueueUserWorkItem((o) => { player.LoadSkin(message.skin); });
+				player.Skin = message.skin;
+				//ThreadPool.QueueUserWorkItem((o) => { player.LoadSkin(message.skin); });
 			}
 		}
 

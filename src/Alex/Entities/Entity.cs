@@ -1492,5 +1492,15 @@ namespace Alex.Entities
 				yield return effect;
 			}
 		}
+
+		public virtual void OnSpawn()
+		{
+			IsSpawned = true;
+		}
+
+		public virtual void OnDespawn()
+		{
+			IsSpawned = false;
+		}
 	}
 }

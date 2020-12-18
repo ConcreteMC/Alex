@@ -95,8 +95,46 @@ namespace Alex.Entities
 			},
 			MissingMemberHandling = MissingMemberHandling.Ignore
 		};
-		
-		public void LoadSkin(Skin skin)
+
+		private Skin _skin      = null;
+		private bool _skinDirty = false;
+		public Skin Skin
+		{
+			get
+			{
+				return _skin;
+			}
+			set
+			{
+				_skin = value;
+				_skinDirty = true;
+
+				if (IsSpawned)
+				{
+					QueueSkinProcessing();
+				}
+			}
+		}
+
+		/// <inheritdoc />
+		public override void OnSpawn()
+		{
+			base.OnSpawn();
+
+			QueueSkinProcessing();
+		}
+
+		private void QueueSkinProcessing()
+		{
+			Level.BackgroundWorker.Enqueue(
+				() =>
+				{
+					_skinDirty = false;
+					LoadSkin(_skin);
+				});
+		}
+
+		private void LoadSkin(Skin skin)
 		{
 			Image<Rgba32>   skinBitmap  = null;
 			if (!skin.TryGetBitmap(out skinBitmap))

@@ -41,7 +41,33 @@ namespace Alex.Net.Bedrock.Packets
 	public static class NetworkUtils
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(NetworkUtils));
-
+		
+		public static Nbt ReadNewNbt(Stream stream)
+		{
+			Nbt     nbt     = new Nbt();
+			NbtFile nbtFile = new NbtFile();
+			nbtFile.BigEndian = false;
+			nbtFile.UseVarInt = true;
+			nbtFile.AllowAlternativeRootTag = true;
+			
+			nbt.NbtFile = nbtFile;
+			nbtFile.LoadFromStream(stream, NbtCompression.None);
+			return nbt;
+		}
+		
+		public static Nbt ReadLegacyNbt(Stream stream)
+		{
+			Nbt     nbt     = new Nbt();
+			NbtFile nbtFile = new NbtFile();
+			nbtFile.BigEndian = false;
+			nbtFile.UseVarInt = true;
+			nbtFile.AllowAlternativeRootTag = true;
+			
+			nbt.NbtFile = nbtFile;
+			nbtFile.LoadFromStream(stream, NbtCompression.None);
+			return nbt;
+		}
+		
 		public static Item ReadItem2(this Packet packet)
 		{
 			int id = packet.ReadVarInt();
@@ -57,6 +83,8 @@ namespace Alex.Net.Bedrock.Packets
 			Item stack = ItemFactory.GetItem((short) id, metadata, count);
 
 			var nbtLen = packet.ReadUshort(); //_reader.ReadUInt16(); // NbtLen
+			//Log.Info($"NBT: 0x{nbtLen:X}");
+		
 			if (nbtLen == 0xffff)
 			{
 				var version = packet.ReadByte();
@@ -70,10 +98,11 @@ namespace Alex.Net.Bedrock.Packets
 			{
 				var nbtData = packet.ReadBytes(nbtLen);
 
-				using (MemoryStream ms = new MemoryStream(nbtData))
-				{
-					stack.ExtraData = Packet.ReadLegacyNbtCompound(ms);
-				}
+			//	using (MemoryStream ms = new MemoryStream(nbtData))
+				//{
+			//		stack.ExtraData = (NbtCompound) ReadLegacyNbt(ms).NbtFile.RootTag;
+					//stack.ExtraData = Packet.ReadLegacyNbtCompound(ms);
+			//	}
 			}
 
 			var canPlace = packet.ReadVarInt();

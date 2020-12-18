@@ -90,18 +90,29 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 			        if (bs != null)
 			        {
-				        if (TryConvertBlockState(bs, out var convertedState))
+				        var copy = new BlockStateContainer()
+				        {
+					        Data = bs.Data,
+					        Id = bs.Data,
+					        Name = bs.Name,
+					        States = bs.States,
+					        ItemInstance = bs.ItemInstance,
+					        RuntimeId = bs.RuntimeId,
+					        StatesCacheNbt = bs.StatesCacheNbt
+				        };
+				        
+				        if (TryConvertBlockState(copy, out var convertedState))
 				        {
 					        return convertedState;
 				        }
 
 				        var t = TranslateBlockState(
-					        BlockFactory.GetBlockState(bs.Name),
-					        -1, bs.Data);
+					        BlockFactory.GetBlockState(copy.Name),
+					        -1, copy.Data);
 
-				        if (t.Name == "Unknown" && !Failed.Contains(bs.Name))
+				        if (t.Name == "Unknown" && !Failed.Contains(copy.Name))
 				        {
-					        Failed.Add(bs.Name);
+					        Failed.Add(copy.Name);
 
 					        return t;
 					        //  File.WriteAllText(Path.Combine("failed", bs.Name + ".json"), JsonConvert.SerializeObject(bs, Formatting.Indented));
