@@ -87,7 +87,8 @@ namespace Alex.Entities
                 }
 				else
 				{
-					//Log.Warn($"No renderer found for {data.Name}");
+				//	if (data.OriginalName.Equals("armor_stand"))
+						Log.Warn($"No renderer found for {data.Name} - {data.OriginalName}");
 				}
 			}
 

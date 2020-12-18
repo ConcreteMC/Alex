@@ -26,6 +26,7 @@
     <EmbeddedResource Include="Resources\unknown_pack.png" />
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="Json\Bedrock\Models" />
     <Folder Include="Json\Tags\Blocks\" />
   </ItemGroup>
   <ItemGroup>

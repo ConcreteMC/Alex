@@ -6,6 +6,14 @@ namespace Alex.Entities
         {
             public static bool TryGetModel(string geometry, out EntityModel model)
             {
+				if (Alex.Instance.Resources.BedrockResourcePack.EntityModels.TryGetValue(geometry, out var m))
+				{
+					model = m;
+					return true;
+				}
+
+				model = null;
+				return false;
 	            if (geometry.Equals("geometry.npc")) { model = new Models.NpcModel(); return true; }
 				if (geometry.Equals("geometry.bed")) { model = new Models.BedModel(); return true; }
 				if (geometry.Equals("geometry.cape")) { model = new Models.CapeModel(); return true; }

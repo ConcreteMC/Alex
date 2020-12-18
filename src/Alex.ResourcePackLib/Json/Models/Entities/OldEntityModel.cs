@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using Alex.ResourcePackLib.Json.Converters;
 using Microsoft.Xna.Framework;
+using MiNET.Utils.Skins;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NLog;
@@ -96,7 +97,7 @@ namespace Alex.ResourcePackLib.Json.Models.Entities
 
     public class EntityModel
     {
-	    [JsonProperty("description")]
+	    [J("description")]
 	    public ModelDescription Description { get; set; }
 	    
 	    [J("bones")]
