@@ -66,7 +66,16 @@ namespace Alex.Net.Bedrock.Packets
             {
                 switch (messageId)
                 {
-                  //  case 0x07:
+                    case 0x0b:
+                        packet = new StartGame();
+                        break;
+                    case 0x34:
+                        packet = new CraftingData();
+                        break;
+                    case 0x91:
+                        packet = new CreativeContent();
+                        break;
+                    //  case 0x07:
                   //      packet = new McpeResourcePackStack();
                   //      break;
                    // case 0x0c:

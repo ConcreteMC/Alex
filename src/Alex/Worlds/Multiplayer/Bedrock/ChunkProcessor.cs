@@ -692,7 +692,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	        StringBuilder sb = new StringBuilder();
 	        sb.Append($"{record.Name}[");
 
-	        foreach (var state in record.States)
+	        var states = record.States.ToArray();
+	        foreach (var state in states)
 	        {
 		        sb.Append($"{state.Name}={state.Value()},");
 	        }

@@ -256,6 +256,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		
 		public void HandleMcpeStartGame(McpeStartGame message)
 		{
+			Log.Info($"Start game.");
 			Client.GameStarted = true;
 			
 			Client.EntityId = message.runtimeEntityId;
@@ -1783,8 +1784,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		public void HandleMcpePlayerSkin(McpePlayerSkin message)
 		{
-			UnhandledPackage(message);
-			return;
+			//UnhandledPackage(message);
+
 			if (_players.TryGetValue(message.uuid, out var player))
 			{
 				ThreadPool.QueueUserWorkItem((o) => { player.LoadSkin(message.skin); });
