@@ -1,4 +1,5 @@
 ﻿using System;
+using Microsoft.Xna.Framework;
 using Valve.VR;
 
 namespace SharpVR
@@ -16,24 +17,24 @@ namespace SharpVR
             Index = index;
         }
 
-        public HmdMatrix34_t GetPose()
+        public Matrix GetPose()
         {
-            return Context.ValidDevicePoses[Index].mDeviceToAbsoluteTracking;
+            return Context.ValidDevicePoses[Index].mDeviceToAbsoluteTracking.ToMg();
         }
 
-        public HmdMatrix34_t GetNextPose()
+        public Matrix GetNextPose()
         {
-            return Context.ValidNextDevicePoses[Index].mDeviceToAbsoluteTracking;
+            return Context.ValidNextDevicePoses[Index].mDeviceToAbsoluteTracking.ToMg();
         }
 
-        public HmdVector3_t GetVelocity()
+        public Vector3 GetVelocity()
         {
-            return Context.ValidDevicePoses[Index].vVelocity;
+            return Context.ValidDevicePoses[Index].vVelocity.ToMg();
         }
 
-        public HmdVector3_t GetAngularVelocity()
+        public Vector3 GetAngularVelocity()
         {
-            return Context.ValidDevicePoses[Index].vAngularVelocity;
+            return Context.ValidDevicePoses[Index].vAngularVelocity.ToMg();
         }
 
         internal static TrackedDevice Create(VrContext context, int index)

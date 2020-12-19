@@ -7,6 +7,7 @@ using Alex.API.Graphics.Typography;
 using Alex.API.Gui.Graphics;
 using Alex.API.Input;
 using Alex.API.Services;
+using Alex.Graphics.VR;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -59,6 +60,8 @@ namespace Alex.API.Gui
         private RenderTarget2D _vrGuiBaseTarget { get; set; }
         public ICameraWrapper CameraWrapper { get; set; }
 
+        internal VrService VrService { get; private set; }
+        
         private readonly VrContext _vrContext;
         private VrGuiCamera _camera;
 
@@ -80,7 +83,7 @@ namespace Alex.API.Gui
             ScaledResolution.ScaleChanged += ScaledResolutionOnScaleChanged;
             _camera = new VrGuiCamera()
             {
-                Position = new Vector3(0, 0, 0)
+                Position = new Vector3(0, 0, -10f)
             };
 
             FocusManager = new GuiFocusHelper(this, InputManager, game.GraphicsDevice);
@@ -128,6 +131,9 @@ namespace Alex.API.Gui
             GuiSpriteBatch = new GuiSpriteBatch(GuiRenderer, graphicsDevice, SpriteBatch);
             GuiRenderArgs =
                 new GuiRenderArgs(GraphicsDevice, SpriteBatch, ScaledResolution, GuiRenderer, new GameTime());
+
+            VrService = serviceProvider.GetService<VrService>();
+            
         }
 
         private bool _doInit = true;
@@ -199,6 +205,7 @@ namespace Alex.API.Gui
 
         public void Update(GameTime gameTime)
         {
+            _camera.Update(null);
             ScaledResolution.Update();
             
             var screens = Screens.ToArray();
@@ -238,7 +245,7 @@ namespace Alex.API.Gui
             {
                 _basicEffect = new BasicEffect(GraphicsDevice)
                 {
-                    World = Matrix.CreateConstrainedBillboard(Vector3.Zero, _camera.Position, Vector3.Forward, _camera.Forward, null)
+                    //World = Matrix.CreateConstrainedBillboard(Vector3.Zero, _camera.Position, Vector3.Forward, _camera.Forward, null)
                 };
             }
         }
@@ -256,9 +263,9 @@ namespace Alex.API.Gui
 
             try
             {
-                if (vrEnabled)
+                //if (vrEnabled)
                 {
-                    CameraWrapper.PreDraw(_camera);
+                    //CameraWrapper.PreDraw(_camera);
                     //EnsureGuiRenderTarget();
                     //GraphicsDevice.SetRenderTarget(_vrGuiBaseTarget);
                     // maybeADisposable =
@@ -294,21 +301,21 @@ namespace Alex.API.Gui
                     //                                    Matrix.CreateOrthographicOffCenter(0, GraphicsDevice.Viewport.Width, GraphicsDevice.Viewport.Height, 0, 0, 1);
                     //
 
-                    GuiSpriteBatch.Effect.Projection = CameraWrapper.Projection;
-                    GuiSpriteBatch.Effect.View = CameraWrapper.View;
-                    GuiSpriteBatch.Effect.World = Matrix.CreateScale(0.5f) * Matrix.CreateTranslation(0, 1f, 0);
+                    GuiSpriteBatch.Effect.Projection = VrService.GetProjectionMatrix();
+                    GuiSpriteBatch.Effect.View = VrService.GetViewMatrix(_camera.ViewMatrix);
+                    GuiSpriteBatch.Effect.World = Matrix.CreateScale(0.1f) * Matrix.CreateTranslation(0, 0f, 0f) * Matrix.CreateRotationZ(MathHelper.PiOver2);
                     //maybeADisposable = GraphicsDevice.PushRenderTarget(_vrGuiBaseTarget);
                     //GuiSpriteBatch.Effect = null;
                     GuiSpriteBatch.Begin();
                 }
-                else
-                {
-                    // GuiSpriteBatch.Effect.Projection = Matrix.CreateTranslation(-0.5f, -0.5f, 0) *
-                    //                                    Matrix.CreateOrthographicOffCenter(0,
-                    //                                        GraphicsDevice.Viewport.Width,
-                    //                                        GraphicsDevice.Viewport.Height, 0, 0, 1);
-                    GuiSpriteBatch.Begin();
-                }
+                // else
+                // {
+                //     // GuiSpriteBatch.Effect.Projection = Matrix.CreateTranslation(-0.5f, -0.5f, 0) *
+                //     //                                    Matrix.CreateOrthographicOffCenter(0,
+                //     //                                        GraphicsDevice.Viewport.Width,
+                //     //                                        GraphicsDevice.Viewport.Height, 0, 0, 1);
+                //     GuiSpriteBatch.Begin();
+                // }
 
                 ForEachScreen(screen =>
                 {

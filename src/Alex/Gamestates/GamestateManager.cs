@@ -205,7 +205,6 @@ namespace Alex.Gamestates
 				    SpriteBatch = SpriteBatch,
 				    GameTime = gameTime,
 				    GraphicsDevice = Graphics,
-				    CameraWrapper = Alex.Instance.CameraWrapper
 			    };
 
 			    activeState.Draw(args);

@@ -114,6 +114,9 @@
     <Compile Remove="Particles\ParticleSettings.cs" />
     <Compile Remove="Particles\ParticleManager.cs" />
     <Compile Remove="Particles\ParticleEmitter.cs" />
+    <None Update="openvr_api.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
   <ItemGroup>
@@ -180,6 +183,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Graphics\VR" />
     <Folder Include="Gui\Elements\Web" />
     <Folder Include="Particles\Systems" />
   </ItemGroup>

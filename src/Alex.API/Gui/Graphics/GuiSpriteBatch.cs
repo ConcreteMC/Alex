@@ -31,7 +31,7 @@ namespace Alex.API.Gui.Graphics
         private readonly GraphicsDevice _graphicsDevice;
         private readonly IGuiRenderer _renderer;
         private Texture2D _colorTexture;
-        private Matrix _renderMatrix = Matrix.Identity;
+        public Matrix RenderMatrix = Matrix.Identity;
 
         private bool _beginSpriteBatchAfterContext;
         private bool _hasBegun;
@@ -49,18 +49,17 @@ namespace Alex.API.Gui.Graphics
             };
             
             var cameraPosition = new Vector3(0, 0, 13);
-            cameraPosition = Vector3.Transform(
-                cameraPosition, Matrix.CreateScale(1));
+            cameraPosition = Vector3.Transform(cameraPosition, Matrix.CreateScale(1));
 
-            var view        = Matrix.CreateLookAt(cameraPosition, new Vector3(0, 0, 0), Vector3.UnitZ);
-            var projection  = Matrix.CreatePerspectiveFieldOfView(1, _graphicsDevice.Viewport.AspectRatio, 1, 500);
+            var view        = Matrix.CreateLookAt(cameraPosition, new Vector3(0, 0, 0), Vector3.Up);
+            var projection  = Matrix.CreatePerspectiveFieldOfView(1, _graphicsDevice.Viewport.AspectRatio, 1.0f, 1000.0f);
 
             Effect.World       = Matrix.CreateWorld(Vector3.Zero, Vector3.Forward, Vector3.Up);
             Effect.View        = view;
             Effect.Projection = projection;
             
-            Context = GraphicsContext.CreateContext(_graphicsDevice, BlendState.NonPremultiplied, DepthStencilState.None, RasterizerState, SamplerState.PointClamp);
-//            Context = GraphicsContext.CreateContext(_graphicsDevice, BlendState.NonPremultiplied, DepthStencilState.None, RasterizerState.CullNone, SamplerState.PointClamp);
+//            Context = GraphicsContext.CreateContext(_graphicsDevice, BlendState.NonPremultiplied, DepthStencilState.None, RasterizerState, SamplerState.PointClamp);
+            Context = GraphicsContext.CreateContext(_graphicsDevice, BlendState.AlphaBlend, DepthStencilState.Default, RasterizerState.CullNone, SamplerState.AnisotropicWrap);
 
             Font = _renderer.Font;
             ScaledResolution = _renderer.ScaledResolution;
@@ -103,7 +102,7 @@ namespace Alex.API.Gui.Graphics
         {
             if (_hasBegun) return;
 
-            SpriteBatch.Begin(SpriteSortMode.Deferred, Context.BlendState, Context.SamplerState, Context.DepthStencilState, Context.RasterizerState, Effect, ScaledResolution.TransformMatrix * _renderMatrix);
+            SpriteBatch.Begin(SpriteSortMode.Deferred, Context.BlendState, Context.SamplerState, Context.DepthStencilState, Context.RasterizerState, Effect, ScaledResolution.TransformMatrix * RenderMatrix);
 
             _hasBegun = true;
         }
@@ -133,13 +132,13 @@ namespace Alex.API.Gui.Graphics
 
         public IDisposable BeginTransform(Matrix transformMatrix, bool mergeTransform = true)
         {
-            var previousRenderMatrix = _renderMatrix;
+            var previousRenderMatrix = RenderMatrix;
             if (mergeTransform)
-                _renderMatrix = _renderMatrix * transformMatrix;
+                RenderMatrix = RenderMatrix * transformMatrix;
             else
-                _renderMatrix = transformMatrix;
+                RenderMatrix = transformMatrix;
 
-            return new ContextDisposable(() => { _renderMatrix = previousRenderMatrix; });
+            return new ContextDisposable(() => { RenderMatrix = previousRenderMatrix; });
         }
 
         public IDisposable BeginClipBounds(Rectangle scissorRectangle, bool mergeBounds = false)

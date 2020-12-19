@@ -13,7 +13,8 @@ namespace SharpVR
                 mat.m2, mat.m6, mat.m10, 0.0f,
                 mat.m3, mat.m7, mat.m11, 1.0f);
 
-            return m;
+            return Matrix.Invert(m);
+            //return m;
         }
 
         public static Matrix ToMg(this HmdMatrix44_t mat)
@@ -24,6 +25,12 @@ namespace SharpVR
                 mat.m2, mat.m6, mat.m10, mat.m14,
                 mat.m3, mat.m7, mat.m11, mat.m15);
 
+            return m;
+        }
+
+        public static Vector3 ToMg(this HmdVector3_t vec)
+        {
+            var m = new Vector3(vec.v0, vec.v1, vec.v2);
             return m;
         }
     }

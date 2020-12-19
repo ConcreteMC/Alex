@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using Microsoft.Xna.Framework;
 using Valve.VR;
 
 namespace SharpVR
@@ -132,6 +133,18 @@ namespace SharpVR
         {
             matrix = System.GetProjectionMatrix((EVREye) eye, zNear, zFar);
         }
+        
+        /// <summary>
+        /// Returns the projection matrix of the given eye.
+        /// </summary>
+        /// <param name="eye">Eye to get the projection matrix for.</param>
+        /// <param name="zNear">Near plane distance.</param>
+        /// <param name="zFar">Far plane distance.</param>
+        /// <param name="matrix">Projection matrix; note that this is column major.</param>
+        public Matrix GetProjectionMatrix(Eye eye, float zNear, float zFar)
+        {
+            return System.GetProjectionMatrix((EVREye) eye, zNear, zFar).ToMg();
+        }
 
         // NOT EXPOSED: public void GetProjectionRaw
 
@@ -151,6 +164,22 @@ namespace SharpVR
         public void GetEyeMatrix(Eye eye, out HmdMatrix34_t matrix)
         {
             matrix = System.GetEyeToHeadTransform((EVREye) eye);
+        }
+        
+        /// <summary>
+        /// Returns the view matrix transform between the view space and eye space. Eye space is the
+        /// per-eye flavor of view space that provides stereo disparity. Instead of
+        /// Model * View * Projection the model is Model * View * Eye * Projection. Normally
+        /// View and Eye will be multiplied together and treated as View in your application.
+        /// </summary>
+        /// <param name="eye">Eye to get the matrix for.</param>
+        /// <param name="matrix">Eye transform matrix.</param>
+        /// <remarks>
+        /// Matrix incorporates the user's interpupillary distance (IPD).
+        /// </remarks>
+        public Matrix GetEyeMatrix(Eye eye)
+        {
+            return System.GetEyeToHeadTransform((EVREye) eye).ToMg();
         }
 
         // NOT EXPOSED: bool GetTimeSinceLastVsync
