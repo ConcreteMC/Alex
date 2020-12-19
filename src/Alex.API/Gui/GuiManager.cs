@@ -82,14 +82,10 @@ namespace Alex.API.Gui
         private void ScaledResolutionOnScaleChanged(object sender, UiScaleEventArgs args)
         {
             Init(Game.GraphicsDevice, ServiceProvider);
-            SetSize(args.ScaledWidth, args.ScaledHeight);
-        }
-
-        public void SetSize(int width, int height)
-        {
+            
             foreach (var screen in Screens.ToArray())
             {
-                screen.UpdateSize(width, height);
+                screen.UpdateSize(args.ScaledWidth, args.ScaledHeight);
             }
         }
 

@@ -33,8 +33,6 @@ ProjectSection(SolutionItems) = preProject
 	..\Directory.Build.props = ..\Directory.Build.props
 EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpVR", "SharpVR\SharpVR.csproj", "{B48480F1-60AE-48F3-9CF2-B7E9E3B16FBF}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Appveyor|Any CPU = Appveyor|Any CPU
@@ -43,17 +41,20 @@ Global
 		Debug|x64 = Debug|x64
 		Release|Any CPU = Release|Any CPU
 		Release|x64 = Release|x64
-		DirectX|x64 = DirectX|x64
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C360D9A4-C1AC-4A41-8A49-ADE1306DB389}.Appveyor|Any CPU.ActiveCfg = Appveyor|Any CPU
+		{C360D9A4-C1AC-4A41-8A49-ADE1306DB389}.Appveyor|Any CPU.Build.0 = Appveyor|Any CPU
 		{C360D9A4-C1AC-4A41-8A49-ADE1306DB389}.Appveyor|x64.ActiveCfg = Appveyor|x64
 		{C360D9A4-C1AC-4A41-8A49-ADE1306DB389}.Appveyor|x64.Build.0 = Appveyor|x64
+		{C360D9A4-C1AC-4A41-8A49-ADE1306DB389}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C360D9A4-C1AC-4A41-8A49-ADE1306DB389}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C360D9A4-C1AC-4A41-8A49-ADE1306DB389}.Debug|x64.ActiveCfg = Debug|x64
 		{C360D9A4-C1AC-4A41-8A49-ADE1306DB389}.Debug|x64.Build.0 = Debug|x64
+		{C360D9A4-C1AC-4A41-8A49-ADE1306DB389}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C360D9A4-C1AC-4A41-8A49-ADE1306DB389}.Release|Any CPU.Build.0 = Release|Any CPU
 		{C360D9A4-C1AC-4A41-8A49-ADE1306DB389}.Release|x64.ActiveCfg = Release|x64
 		{C360D9A4-C1AC-4A41-8A49-ADE1306DB389}.Release|x64.Build.0 = Release|x64
-		{C360D9A4-C1AC-4A41-8A49-ADE1306DB389}.DirectX|x64.ActiveCfg = DirectX|x64
-		{C360D9A4-C1AC-4A41-8A49-ADE1306DB389}.DirectX|x64.Build.0 = DirectX|x64
 		{DFC77469-ABB6-4111-A961-AE9B3AD22F34}.Appveyor|Any CPU.ActiveCfg = Appveyor|Any CPU
 		{DFC77469-ABB6-4111-A961-AE9B3AD22F34}.Appveyor|Any CPU.Build.0 = Appveyor|Any CPU
 		{DFC77469-ABB6-4111-A961-AE9B3AD22F34}.Appveyor|x64.ActiveCfg = Appveyor|x64
@@ -66,8 +67,6 @@ Global
 		{DFC77469-ABB6-4111-A961-AE9B3AD22F34}.Release|Any CPU.Build.0 = Release|Any CPU
 		{DFC77469-ABB6-4111-A961-AE9B3AD22F34}.Release|x64.ActiveCfg = Release|x64
 		{DFC77469-ABB6-4111-A961-AE9B3AD22F34}.Release|x64.Build.0 = Release|x64
-		{DFC77469-ABB6-4111-A961-AE9B3AD22F34}.DirectX|x64.ActiveCfg = DirectX|x64
-		{DFC77469-ABB6-4111-A961-AE9B3AD22F34}.DirectX|x64.Build.0 = DirectX|x64
 		{F66C6662-266E-46DB-A8E6-C4F826B34DAC}.Appveyor|Any CPU.ActiveCfg = Appveyor|Any CPU
 		{F66C6662-266E-46DB-A8E6-C4F826B34DAC}.Appveyor|Any CPU.Build.0 = Appveyor|Any CPU
 		{F66C6662-266E-46DB-A8E6-C4F826B34DAC}.Appveyor|x64.ActiveCfg = Appveyor|x64
@@ -80,8 +79,6 @@ Global
 		{F66C6662-266E-46DB-A8E6-C4F826B34DAC}.Release|Any CPU.Build.0 = Release|Any CPU
 		{F66C6662-266E-46DB-A8E6-C4F826B34DAC}.Release|x64.ActiveCfg = Release|x64
 		{F66C6662-266E-46DB-A8E6-C4F826B34DAC}.Release|x64.Build.0 = Release|x64
-		{F66C6662-266E-46DB-A8E6-C4F826B34DAC}.DirectX|x64.ActiveCfg = DirectX|x64
-		{F66C6662-266E-46DB-A8E6-C4F826B34DAC}.DirectX|x64.Build.0 = DirectX|x64
 		{9ED91B80-5470-4EE2-A8F4-D3092D7684A1}.Appveyor|Any CPU.ActiveCfg = Appveyor|Any CPU
 		{9ED91B80-5470-4EE2-A8F4-D3092D7684A1}.Appveyor|Any CPU.Build.0 = Appveyor|Any CPU
 		{9ED91B80-5470-4EE2-A8F4-D3092D7684A1}.Appveyor|x64.ActiveCfg = Appveyor|x64
@@ -94,8 +91,6 @@ Global
 		{9ED91B80-5470-4EE2-A8F4-D3092D7684A1}.Release|Any CPU.Build.0 = Release|Any CPU
 		{9ED91B80-5470-4EE2-A8F4-D3092D7684A1}.Release|x64.ActiveCfg = Release|x64
 		{9ED91B80-5470-4EE2-A8F4-D3092D7684A1}.Release|x64.Build.0 = Release|x64
-		{9ED91B80-5470-4EE2-A8F4-D3092D7684A1}.DirectX|x64.ActiveCfg = DirectX|x64
-		{9ED91B80-5470-4EE2-A8F4-D3092D7684A1}.DirectX|x64.Build.0 = DirectX|x64
 		{11E4C649-76D0-4E6C-8FB9-E426941E74CD}.Appveyor|Any CPU.ActiveCfg = Appveyor|Any CPU
 		{11E4C649-76D0-4E6C-8FB9-E426941E74CD}.Appveyor|Any CPU.Build.0 = Appveyor|Any CPU
 		{11E4C649-76D0-4E6C-8FB9-E426941E74CD}.Appveyor|x64.ActiveCfg = Appveyor|x64
@@ -107,8 +102,6 @@ Global
 		{11E4C649-76D0-4E6C-8FB9-E426941E74CD}.Release|Any CPU.Build.0 = Release|Any CPU
 		{11E4C649-76D0-4E6C-8FB9-E426941E74CD}.Release|x64.ActiveCfg = Release|x64
 		{11E4C649-76D0-4E6C-8FB9-E426941E74CD}.Release|x64.Build.0 = Release|x64
-		{11E4C649-76D0-4E6C-8FB9-E426941E74CD}.DirectX|x64.ActiveCfg = DirectX|x64
-		{11E4C649-76D0-4E6C-8FB9-E426941E74CD}.DirectX|x64.Build.0 = DirectX|x64
 		{A5C2A962-01D1-42E1-9451-27F3E13DBD26}.Appveyor|Any CPU.ActiveCfg = Appveyor|Any CPU
 		{A5C2A962-01D1-42E1-9451-27F3E13DBD26}.Appveyor|Any CPU.Build.0 = Appveyor|Any CPU
 		{A5C2A962-01D1-42E1-9451-27F3E13DBD26}.Appveyor|x64.ActiveCfg = Appveyor|x64
@@ -120,8 +113,6 @@ Global
 		{A5C2A962-01D1-42E1-9451-27F3E13DBD26}.Release|Any CPU.Build.0 = Release|Any CPU
 		{A5C2A962-01D1-42E1-9451-27F3E13DBD26}.Release|x64.ActiveCfg = Release|Any CPU
 		{A5C2A962-01D1-42E1-9451-27F3E13DBD26}.Release|x64.Build.0 = Release|Any CPU
-		{A5C2A962-01D1-42E1-9451-27F3E13DBD26}.DirectX|x64.ActiveCfg = DirectX|x64
-		{A5C2A962-01D1-42E1-9451-27F3E13DBD26}.DirectX|x64.Build.0 = DirectX|x64
 		{BA612A7B-9397-4520-973D-3E2F07302D51}.Appveyor|Any CPU.ActiveCfg = Appveyor|Any CPU
 		{BA612A7B-9397-4520-973D-3E2F07302D51}.Appveyor|Any CPU.Build.0 = Appveyor|Any CPU
 		{BA612A7B-9397-4520-973D-3E2F07302D51}.Appveyor|x64.ActiveCfg = Appveyor|x64
@@ -134,22 +125,6 @@ Global
 		{BA612A7B-9397-4520-973D-3E2F07302D51}.Release|Any CPU.Build.0 = Release|Any CPU
 		{BA612A7B-9397-4520-973D-3E2F07302D51}.Release|x64.ActiveCfg = Release|x64
 		{BA612A7B-9397-4520-973D-3E2F07302D51}.Release|x64.Build.0 = Release|x64
-		{BA612A7B-9397-4520-973D-3E2F07302D51}.DirectX|x64.ActiveCfg = DirectX|x64
-		{BA612A7B-9397-4520-973D-3E2F07302D51}.DirectX|x64.Build.0 = DirectX|x64
-		{B48480F1-60AE-48F3-9CF2-B7E9E3B16FBF}.Appveyor|Any CPU.ActiveCfg = Debug|Any CPU
-		{B48480F1-60AE-48F3-9CF2-B7E9E3B16FBF}.Appveyor|Any CPU.Build.0 = Debug|Any CPU
-		{B48480F1-60AE-48F3-9CF2-B7E9E3B16FBF}.Appveyor|x64.ActiveCfg = Debug|Any CPU
-		{B48480F1-60AE-48F3-9CF2-B7E9E3B16FBF}.Appveyor|x64.Build.0 = Debug|Any CPU
-		{B48480F1-60AE-48F3-9CF2-B7E9E3B16FBF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B48480F1-60AE-48F3-9CF2-B7E9E3B16FBF}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B48480F1-60AE-48F3-9CF2-B7E9E3B16FBF}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{B48480F1-60AE-48F3-9CF2-B7E9E3B16FBF}.Debug|x64.Build.0 = Debug|Any CPU
-		{B48480F1-60AE-48F3-9CF2-B7E9E3B16FBF}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B48480F1-60AE-48F3-9CF2-B7E9E3B16FBF}.Release|Any CPU.Build.0 = Release|Any CPU
-		{B48480F1-60AE-48F3-9CF2-B7E9E3B16FBF}.Release|x64.ActiveCfg = Release|Any CPU
-		{B48480F1-60AE-48F3-9CF2-B7E9E3B16FBF}.Release|x64.Build.0 = Release|Any CPU
-		{B48480F1-60AE-48F3-9CF2-B7E9E3B16FBF}.DirectX|x64.ActiveCfg = DirectX|x64
-		{B48480F1-60AE-48F3-9CF2-B7E9E3B16FBF}.DirectX|x64.Build.0 = DirectX|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

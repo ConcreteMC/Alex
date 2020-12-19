@@ -50,9 +50,6 @@ namespace Alex
 		
 		[Option("debug", Default = false, Required = false, HelpText = "Enable Model Debugging mode")]
 		public bool ModelDebugging { get; set; } = false;
-
-		[Option("vr", Default = false, Required = false, HelpText = "Enable VR mode")]
-		public bool Vr { get; set; } = false;
 		
 		public LaunchSettings()
 		{
@@ -79,8 +76,8 @@ namespace Alex
 			_startupThread.Name = "UI Thread";
 			
 			var argsResult = Parser.Default.ParseArguments<LaunchSettings>(args)
-				.WithParsed(LaunchGame);
-			//.WithNotParsed()	
+				.WithParsed(LaunchGame)
+				;//.WithNotParsed()	
 			//launchSettings = ParseArguments(args);
 
 		}
