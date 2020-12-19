@@ -292,6 +292,8 @@ namespace Alex
 				vanilla.Manifest.Name = "Vanilla";
 				
 				ActiveResourcePacks.AddFirst(vanilla);
+				
+				Alex.AudioEngine.Initialize(vanilla);
 			}
 			
 			if (!CheckBedrockAssets(progressReceiver, out defaultBedrock))

@@ -9,16 +9,26 @@ namespace Alex.Utils.Assets
 	public partial class LauncherMeta
 	{
 		[J("arguments")] public Arguments Arguments { get; set; }
-		[J("assetIndex")] public LauncherMetaAssetIndex LauncherMetaAssetIndex { get; set; }
+		[J("assetIndex")] public LauncherMetaAssetIndex AssetIndex { get; set; }
+		
 		[J("assets")] public string Assets { get; set; }
+		
 		[J("downloads")] public LauncherMetaDownloads Downloads { get; set; }
+		
 		[J("id")] public string Id { get; set; }
+		
 		[J("libraries")] public Library[] Libraries { get; set; }
+		
 		[J("logging")] public Logging Logging { get; set; }
+		
 		[J("mainClass")] public string MainClass { get; set; }
+		
 		[J("minimumLauncherVersion")] public long MinimumLauncherVersion { get; set; }
+		
 		[J("releaseTime")] public System.DateTimeOffset ReleaseTime { get; set; }
+		
 		[J("time")] public System.DateTimeOffset Time { get; set; }
+		
 		[J("type")] public string Type { get; set; }
 	}
 

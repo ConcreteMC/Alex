@@ -42,6 +42,18 @@ namespace Alex.ResourcePackLib
 			Load(progressReporter);
 		}
 
+		public Stream GetStream(string path)
+		{
+			var entry = _archive.GetEntry(path);
+
+			if (entry == null || !entry.IsFile())
+			{
+				throw new FileNotFoundException();
+			}
+			
+			return entry.Open();
+		}
+		
 		public bool TryGetTexture(string name, out Image<Rgba32> texture)
 		{
 			return Textures.TryGetValue(NormalisePath(name), out texture);
@@ -55,6 +67,7 @@ namespace Alex.ResourcePackLib
 		private const RegexOptions RegexOpts = RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase;
 		private static readonly Regex IsEntityDefinition     = new Regex(@"^entity[\\\/](?'filename'.*)\.json$", RegexOpts);
 		private static readonly Regex IsEntityModel    = new Regex(@"^models[\\\/]entity[\\\/](?'filename'.*)\.json$", RegexOpts);
+		private static readonly Regex IsSoundDefinition    = new Regex(@"^sounds[\\\/]sound_definitions\.json$", RegexOpts);
 		private void Load(ResourcePack.LoadProgress progressReporter)
 		{
 			Dictionary<ResourceLocation, EntityDescription> entityDefinitions = new Dictionary<ResourceLocation, EntityDescription>();
@@ -83,6 +96,12 @@ namespace Alex.ResourcePackLib
 				if (IsEntityModel.IsMatch(entry.FullName))
 				{
 					LoadEntityModel(entry, entityModels);
+					continue;
+				}
+
+				if (IsSoundDefinition.IsMatch(entry.FullName))
+				{
+					ProcessSounds(progressReporter, entry);
 					continue;
 				}
 			}
@@ -240,20 +259,14 @@ namespace Alex.ResourcePackLib
 			return true;
 		}
 
-		private void ProcessSounds(ResourcePack.LoadProgress progress, DirectoryInfo dir)
+		private void ProcessSounds(ResourcePack.LoadProgress progress, ZipArchiveEntry entry)
 		{
-			foreach (var file in dir.GetFiles())
+			using (var fs = entry.Open())
 			{
-				if (file.Name.Equals("sound_definitions.json"))
-				{
-					using (var fs = file.OpenRead())
-					{
-						var fileContents = fs.ReadToEnd();
-						var json         = Encoding.UTF8.GetString(fileContents);
-						
-						SoundDefinitions = SoundDefinitionFormat.FromJson(json);
-					}
-				}
+				var fileContents = fs.ReadToEnd();
+				var json         = Encoding.UTF8.GetString(fileContents);
+
+				SoundDefinitions = SoundDefinitionFormat.FromJson(json);
 			}
 		}
 
@@ -404,7 +417,7 @@ namespace Alex.ResourcePackLib
 
 		public void Dispose()
 		{
-			//_archive?.Dispose();
+			_archive?.Dispose();
 		}
 	}
 }

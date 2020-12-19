@@ -4,6 +4,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Net.Http;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Alex.API.Services;
@@ -189,7 +190,9 @@ namespace Alex.Utils.Assets
                     }
 
                     // now we only care about asset index soooo... grab that
-                    var assetIndexJson = await httpClient.GetStringAsync(launcherMeta.LauncherMetaAssetIndex.Url);
+                    var assetIndexJson = await httpClient.GetStringAsync(launcherMeta.AssetIndex.Url);
+                    _storage.TryWriteString("assetIndex", assetIndexJson, Encoding.UTF8);
+                    
                     assetIndex = AssetIndex.FromJson(assetIndexJson);
 
                     int target = assetIndex.Objects.Count;

@@ -75,10 +75,10 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Sound
     public struct SoundElement
     {
         public SoundClass SoundClass;
-        public string String;
+        public string Path;
 
-        public static implicit operator SoundElement(SoundClass SoundClass) => new SoundElement { SoundClass = SoundClass };
-        public static implicit operator SoundElement(string String) => new SoundElement { String = String };
+        public static implicit operator SoundElement(SoundClass soundClass) => new SoundElement { SoundClass = soundClass };
+        public static implicit operator SoundElement(string path) => new SoundElement { Path = path };
     }
     
     internal class ParseStringConverter : JsonConverter
@@ -124,7 +124,7 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Sound
                 case JsonToken.String:
                 case JsonToken.Date:
                     var stringValue = serializer.Deserialize<string>(reader);
-                    return new SoundElement { String = stringValue };
+                    return new SoundElement { Path = stringValue };
                 case JsonToken.StartObject:
                     var objectValue = serializer.Deserialize<SoundClass>(reader);
                     return new SoundElement { SoundClass = objectValue };
@@ -135,9 +135,9 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Sound
         public override void WriteJson(JsonWriter writer, object untypedValue, JsonSerializer serializer)
         {
             var value = (SoundElement)untypedValue;
-            if (value.String != null)
+            if (value.Path != null)
             {
-                serializer.Serialize(writer, value.String);
+                serializer.Serialize(writer, value.Path);
                 return;
             }
             if (value.SoundClass != null)

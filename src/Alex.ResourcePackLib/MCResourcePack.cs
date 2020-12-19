@@ -18,6 +18,7 @@ using Alex.ResourcePackLib.Json.BlockStates;
 using Alex.ResourcePackLib.Json.Models;
 using Alex.ResourcePackLib.Json.Models.Blocks;
 using Alex.ResourcePackLib.Json.Models.Items;
+using Alex.ResourcePackLib.Json.Sound;
 using Alex.ResourcePackLib.Json.Textures;
 using NLog;
 using SixLabors.ImageSharp;
@@ -44,6 +45,7 @@ namespace Alex.ResourcePackLib
 		private static readonly Regex IsModelRegex          = new Regex(@"^assets[\\\/](?'namespace'.*)[\\\/]models[\\\/](?'filename'.*)\.json$", RegexOpts);
 		private static readonly Regex IsBlockStateRegex     = new Regex(@"^assets[\\\/](?'namespace'.*)[\\\/]blockstates[\\\/](?'filename'.*)\.json$", RegexOpts);
 		private static readonly Regex IsGlyphSizes          = new Regex(@"^assets[\\\/](?'namespace'.*)[\\\/]font[\\\/]glyph_sizes.bin$", RegexOpts);
+		private static readonly Regex IsSoundDefinition          = new Regex(@"^assets[\\\/](?'namespace'.*)[\\\/]sounds.json$", RegexOpts);
 
 		private readonly Dictionary<string, BlockStateResource> _blockStates   = new Dictionary<string, BlockStateResource>();
 		//private readonly Dictionary<string, BlockModel>         _blockModels   = new Dictionary<string, BlockModel>();
@@ -87,7 +89,8 @@ namespace Alex.ResourcePackLib
 		
 		public Image<Rgba32> FontBitmap { get; private set; }
 
-		private PngDecoder PngDecoder { get; }
+		private PngDecoder                           PngDecoder       { get; }
+		public  IDictionary<string, SoundDefinition> SoundDefinitions { get; private set; }
 		public McResourcePack(byte[] resourcePackData) : this(new ZipArchive(new MemoryStream(resourcePackData), ZipArchiveMode.Read, false), null)
 		{
 
@@ -150,6 +153,16 @@ namespace Alex.ResourcePackLib
 				count++;
 				
 				ProgressReporter?.Invoke((int)(((double)count / (double)total) * 100D), entry.Name);
+
+				if (IsSoundDefinition.IsMatch(entry.FullName))
+				{
+					using (var e = entry.Open())
+					{
+						SoundDefinitions = SoundDefinition.FromJson(Encoding.UTF8.GetString(e.ReadToEnd()));
+					}
+
+					continue;
+				}
 				
 				var textureMatchs = IsTextureResource.Match(entry.FullName);
 				if (textureMatchs.Success)

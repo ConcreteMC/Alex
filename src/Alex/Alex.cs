@@ -19,6 +19,7 @@ using Alex.API.Input.Listeners;
 using Alex.API.Resources;
 using Alex.API.Services;
 using Alex.API.Utils;
+using Alex.Audio;
 using Alex.Blocks.Minecraft;
 using Alex.Entities;
 using Alex.Gamestates;
@@ -121,7 +122,6 @@ namespace Alex
 		public Alex(LaunchSettings launchSettings)
 		{
 			EntityProperty.Factory = new AlexPropertyFactory();
-
 			/*MiNET.Utils.DedicatedThreadPool fastThreadPool =
 				ReflectionHelper.GetPrivateStaticPropertyValue<MiNET.Utils.DedicatedThreadPool>(
 					typeof(MiNetServer), "FastThreadPool");
@@ -210,6 +210,8 @@ namespace Alex
 			serviceCollection.AddSingleton<IOptionsProvider>(Options);
 
 			InitiatePluginSystem(serviceCollection);
+			
+			AudioEngine = new AudioEngine(Storage);
 
 			ConfigureServices(serviceCollection);
 
@@ -481,7 +483,8 @@ namespace Alex
 				});
 		}
 
-		private Point WindowSize { get; set; }
+		private Point  WindowSize  { get; set; }
+		public  AudioEngine AudioEngine { get; set; }
 
 		private void SetFullscreen(bool enabled)
 		{
