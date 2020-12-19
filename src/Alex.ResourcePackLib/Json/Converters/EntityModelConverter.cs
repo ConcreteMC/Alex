@@ -4,11 +4,14 @@ using Alex.ResourcePackLib.Json.Models.Entities;
 using Microsoft.Xna.Framework;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using NLog;
 
 namespace Alex.ResourcePackLib.Json.Converters
 {
 	public class EntityModelConverter : JsonConverter
 	{
+		private static ILogger Log = LogManager.GetCurrentClassLogger();
+		
 		public EntityModelConverter()
 		{
 			
@@ -179,10 +182,10 @@ namespace Alex.ResourcePackLib.Json.Converters
 			if (obj.Type != JTokenType.Object) 
 				return null;
 			
-			var jObject = (JObject)obj;
+			//var jObject = (JObject)obj;
 
-			return Decode180(jObject, serializer);
-			/*var         jObject = (JObject)obj;
+				//	return Decode180(jObject, serializer);
+			var         jObject = (JObject)obj;
 
 			if (jObject.TryGetValue(
 				"format_version", StringComparison.InvariantCultureIgnoreCase, out var versionToken))
@@ -195,10 +198,13 @@ namespace Alex.ResourcePackLib.Json.Converters
 					//	return Decode110(jObject, serializer);
 					case "1.12.0":
 						return Decode112(jObject, serializer);
+					default:
+						Log.Warn($"Invalid format version: {versionToken.Value<string>()}");
+						break;
 				}
-			}*/
-
-
+			}
+			
+			return Decode180(jObject, serializer);
 		}
 
 		/// <inheritdoc />

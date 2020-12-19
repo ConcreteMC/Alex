@@ -40,5 +40,18 @@ namespace Alex.ResourcePackLib.Json.Models.Entities
 		/// </summary>
 		[JsonProperty("visible_bounds_height")]
 		public double VisibleBoundsHeight { get; set; }
+
+		public ModelDescription Clone()
+		{
+			return new ModelDescription()
+			{
+				Identifier = Identifier,
+				TextureHeight = TextureHeight,
+				TextureWidth = TextureWidth,
+				VisibleBoundsHeight = VisibleBoundsHeight,
+				VisibleBoundsOffset = VisibleBoundsOffset,
+				VisibleBoundsWidth = VisibleBoundsWidth
+			};
+		}
 	}
 }

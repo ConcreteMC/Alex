@@ -227,8 +227,8 @@ namespace Alex.Graphics.Models.Entity
 					}
 
 					var userRotationMatrix = Matrix.CreateTranslation(-Definition.Pivot)
-					                         * Matrix.CreateRotationY(MathUtils.ToRadians(Rotation.Y))
 					                         * Matrix.CreateRotationX(MathUtils.ToRadians(Rotation.X))
+					                         * Matrix.CreateRotationY(MathUtils.ToRadians(Rotation.Y))
 					                         * Matrix.CreateRotationZ(MathUtils.ToRadians(Rotation.Z))
 					                         * Matrix.CreateTranslation(Definition.Pivot);
 

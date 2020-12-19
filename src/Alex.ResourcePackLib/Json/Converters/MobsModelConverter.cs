@@ -4,9 +4,11 @@ using Alex.ResourcePackLib.Json.Models.Entities;
 using Microsoft.Xna.Framework;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using NLog;
 
 namespace Alex.ResourcePackLib.Json.Converters
 {
+	[JsonConverter(typeof(MobsModelConverter))]
 	internal class MobsModelDefinition : Dictionary<string, EntityModel>
 	{
 		
@@ -14,6 +16,8 @@ namespace Alex.ResourcePackLib.Json.Converters
 	
 	internal class MobsModelConverter : JsonConverter
 	{
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(MobsModelConverter));
+		
 		/// <inheritdoc />
 		public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer)
 		{
@@ -111,8 +115,39 @@ namespace Alex.ResourcePackLib.Json.Converters
 					}
 				}
 			}
+		}
+		
+		private IEnumerable<EntityModel> Decode1140(JObject jObject, JsonSerializer serializer)
+		{
+			//EntityModel model = new EntityModel();
+			//model.Description = new ModelDescription();
+			foreach (var prop in jObject)
+			{
+				if (prop.Key.Equals("format_version"))
+					continue;
 
-			//return model;
+				var property = prop.Value;
+				if (property == null)
+					continue;
+
+				if (prop.Key.Equals("minecraft:geometry"))
+				{
+					if (property.Type == JTokenType.Array)
+					{
+						foreach (var geo in ((JArray)property).AsJEnumerable())
+						{
+							if (geo.Type == JTokenType.Object)
+							{
+								yield return DecodeSingle((JObject) geo, serializer);
+							}
+						}
+					}
+					else if (property.Type == JTokenType.Object)
+					{
+						yield return DecodeSingle((JObject) property, serializer);
+					}
+				}
+			}
 		}
 		
 		private IEnumerable<EntityModel> Decode180(JObject jObject, JsonSerializer serializer)
@@ -169,12 +204,27 @@ namespace Alex.ResourcePackLib.Json.Converters
 			if (jObject.TryGetValue(
 				"format_version", StringComparison.InvariantCultureIgnoreCase, out var versionToken))
 			{
-				switch (versionToken.Value<string>())
+				string format = versionToken.Value<string>();
+				switch (format)
 				{
 					case "1.8.0":
 					{
 						foreach (var model in Decode180(jObject, serializer))
 						{
+							if (model.Bones != null)
+							{
+								foreach (var bone in model.Bones)
+								{
+									if (bone.Cubes != null)
+									{
+										foreach (var cube in bone.Cubes)
+										{
+											//cube.Rotation = new Vector3(90f, 0f, 0f);
+										}
+									}
+								}
+							}
+
 							result.TryAdd(model.Description.Identifier, model);
 						}
 
@@ -187,11 +237,36 @@ namespace Alex.ResourcePackLib.Json.Converters
 					{
 						foreach (var model in Decode1120(jObject, serializer))
 						{
+							/*if (model.Bones != null)
+							{
+								foreach (var bone in model.Bones)
+								{
+									foreach (var cube in bone.Cubes)
+									{
+										
+									}
+								}
+							}*/
+							
+							//TODO: Fix cube pivot Note that in 1.12 this is flipped upside-down, but is fixed in 1.14.
+
 							result.TryAdd(model.Description.Identifier, model);
 						}
 						
 						break;
 					}
+
+					case "1.14.0":
+					{
+						foreach (var model in Decode1140(jObject, serializer))
+						{
+							result.TryAdd(model.Description.Identifier, model);
+						}
+						break;
+					}
+					default:
+						Log.Warn($"Invalid format_version: {format})");
+						break;
 				}
 			}
 			

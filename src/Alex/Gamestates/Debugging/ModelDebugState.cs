@@ -410,8 +410,25 @@ namespace Alex.Gamestates.Debugging
 			var renderer = _currentRenderer;
 			if (renderer == null)
 				return;
+			
+			var blendState       = context.GraphicsDevice.BlendState;
+			var depthPencilState = context.GraphicsDevice.DepthStencilState;
+			var samplerState     = context.GraphicsDevice.SamplerStates[0];
 
-			renderer?.Render(renderArgs, false);
+			try
+			{
+				context.GraphicsDevice.BlendState = BlendState.AlphaBlend;
+				context.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
+				context.GraphicsDevice.SamplerStates[0] = SamplerState.PointWrap;
+
+				renderer?.Render(renderArgs, false);
+			}
+			finally
+			{
+				context.GraphicsDevice.BlendState = blendState;
+				context.GraphicsDevice.DepthStencilState = depthPencilState;
+				context.GraphicsDevice.SamplerStates[0] = samplerState;
+			}
 		}
 
 		private int _previousIndex = -1;

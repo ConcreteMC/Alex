@@ -1,4 +1,5 @@
-﻿using Alex.API.Blocks;
+﻿using System.Linq;
+using Alex.API.Blocks;
 using Alex.API.Utils;
 using Alex.ResourcePackLib.Json;
 using Alex.ResourcePackLib.Json.Models.Entities;
@@ -167,59 +168,104 @@ namespace Alex.Graphics.Models
 
 		public sealed class Cube
 		{
-			private static readonly Color _defaultColor = Color.White;
-			
-			public Vector3 Size;
-			public Vector2 UvScale;
-			
-			private readonly Vector2 _textureSize;
+			private static readonly Color   DefaultColor = Color.White;
+			private readonly        Vector2 _textureSize;
 
-			public bool Mirrored { get; set; } = false;
-			public Cube(Vector3 size, Vector2 textureSize, EntityModelUV uv, Vector2 uvScale, bool mirrored)
+			private EntityModelCube Definition { get; set; }
+			private Vector3         _pivot;
+			private bool            _mirror = false;
+			
+			private static Vector3 FlipZ(Vector3 origin, Vector3 size)
 			{
-				Mirrored = mirrored;
-				UvScale = uvScale;
-				this.Size = size;
+				//return origin;
+				var newOrigin = new Vector3(origin.X, origin.Y, origin.Z);
+				if (newOrigin.Z >= 0)
+				{
+					newOrigin.Z = -(((MathF.Abs(origin.Z) / size.Z) + 1f) * size.Z);
+				}
+				else
+				{
+					newOrigin.Z = ((MathF.Abs(origin.Z) / size.Z) - 1f) * size.Z;
+				}
+
+				return newOrigin;
+			}
+			
+			public Cube(EntityModelCube cube, Vector2 textureSize, bool mirrored, float inflation)
+			{
+				Definition = cube;
+				_mirror = mirrored;
+				//Mirrored = mirrored;
+				var uv     = cube.Uv;
+				var size   = cube.InflatedSize(inflation);
+				var origin =  cube.InflatedOrigin(inflation);//, size;
+
+				_pivot = (cube.Pivot ?? (origin + (size / 2f)));
+			//	_center = cube.Origin + (cube.Size / 2f);
 				
 				//var inflated = size + new Vector3(inflate, inflate, inflate);
 				this._textureSize = textureSize; //new Vector2((size.X + size.Z) * 2, size.Y + size.Z);
 
 				//front verts with position and texture stuff
-				_topLeftFront = new Vector3(0.0f, 1.0f, 0.0f) * size;
-				_topLeftBack = new Vector3(0.0f, 1.0f, 1.0f) * size;
-				
-				_topRightFront = new Vector3(1.0f, 1.0f, 0.0f) * size;
-				_topRightBack = new Vector3(1.0f, 1.0f, 1.0f) * size;
+				_topLeftFront = new Vector3(origin.X, origin.Y + size.Y, origin.Z);
+				_topLeftBack = new Vector3(origin.X, origin.Y + size.Y, origin.Z + size.Z);// * size;
+
+				_topRightFront = new Vector3(origin.X + size.X, origin.Y + size.Y, origin.Z);// * size;
+				_topRightBack = new Vector3(origin.X + size.X, origin.Y + size.Y, origin.Z + size.Z);// * size;
 
 				// Calculate the position of the vertices on the bottom face.
-				_btmLeftFront = new Vector3(0.0f, 0.0f, 0.0f) * size;
-				_btmLeftBack = new Vector3(0.0f, 0.0f, 1.0f) * size;
-				_btmRightFront = new Vector3(1.0f, 0.0f, 0.0f) * size;
-				_btmRightBack = new Vector3(1.0f, 0.0f, 1.0f) * size;
+				_btmLeftFront = new Vector3(origin.X, origin.Y, origin.Z);// * size;
+				_btmLeftBack = new Vector3(origin.X, origin.Y, origin.Z + size.Z);//* size;
+				_btmRightFront = new Vector3(origin.X + size.X, origin.Y, origin.Z);// * size;
+				_btmRightBack =  new Vector3(origin.X + size.X, origin.Y, origin.Z + size.Z);// * size;
 
-				Front = GetFrontVertex(
+				Front = Modify(cube, GetFrontVertex(
 					uv.South.WithSize(size.X, size.Y),
-					uv.South.Size.HasValue ?  Vector2.Zero : new Vector2(size.Z, size.Z));
+					uv.South.Size.HasValue ?  Vector2.Zero : new Vector2(cube.Size.Z, cube.Size.Z)));
 
-				Back = GetBackVertex(
+				Back = Modify(cube, GetBackVertex(
 					uv.North.WithSize(size.X, size.Y),
-					uv.North.Size.HasValue ?  Vector2.Zero : new Vector2(size.Z + size.Z + size.X, size.Z));
+					uv.North.Size.HasValue ?  Vector2.Zero : new Vector2(cube.Size.Z + cube.Size.Z + cube.Size.X, cube.Size.Z)));
 
-				Left = GetLeftVertex(
+				Left = Modify(cube, GetLeftVertex(
 					uv.West.WithSize(size.Z, size.Y),
-					uv.West.Size.HasValue ?  Vector2.Zero : new Vector2(0, size.Z));
+					uv.West.Size.HasValue ?  Vector2.Zero : new Vector2(0, cube.Size.Z)));
 
-				Right = GetRightVertex(
+				Right = Modify(cube, GetRightVertex(
 					uv.East.WithSize(size.Z, size.Y), 
-					uv.East.Size.HasValue ?  Vector2.Zero : new Vector2(size.Z + size.X, size.Z));
+					uv.East.Size.HasValue ?  Vector2.Zero : new Vector2(cube.Size.Z + cube.Size.X, cube.Size.Z)));
 
-				Top = GetTopVertex(
+				Top = Modify(cube, GetTopVertex(
 					uv.Up.WithSize(size.X, size.Z),
-					uv.Up.Size.HasValue ?  Vector2.Zero : new Vector2(size.Z, 0));
+					uv.Up.Size.HasValue ?  Vector2.Zero : new Vector2(cube.Size.Z, 0)));
 
-				Bottom = GetBottomVertex(
+				Bottom = Modify(cube, GetBottomVertex(
 					uv.Down.WithSize(size.X, size.Z),
-					uv.Down.Size.HasValue ? Vector2.Zero : new Vector2(size.Z + size.X, 0));
+					uv.Down.Size.HasValue ? Vector2.Zero : new Vector2(cube.Size.Z + cube.Size.X, 0)));
+			}
+
+			private (VertexPositionColorTexture[] vertices, short[] indexes) Modify(EntityModelCube cube,
+				(VertexPositionColorTexture[] vertices, short[] indexes) data)
+			{
+				Matrix cubeMatrix = Matrix.Identity;
+				if (cube.Rotation.HasValue)
+				{
+					var rotation = cube.Rotation.Value;
+
+					cubeMatrix = Matrix.CreateTranslation(-_pivot)
+					             * Matrix.CreateRotationX(MathUtils.ToRadians(-rotation.X))
+					             * Matrix.CreateRotationY(MathUtils.ToRadians(rotation.Y))
+					             * Matrix.CreateRotationZ(MathUtils.ToRadians(rotation.Z))
+					             * Matrix.CreateTranslation(_pivot);
+				}
+
+				return (data.vertices.Select(
+					x =>
+					{
+						x.Position = Vector3.Transform(x.Position, cubeMatrix);
+
+						return x;
+					}).ToArray(), data.indexes);
 			}
 
 			public (VertexPositionColorTexture[] vertices, short[] indexes) Front, Back, Left, Right, Top, Bottom;
@@ -236,7 +282,7 @@ namespace Alex.Graphics.Models
 			private (VertexPositionColorTexture[] vertices, short[] indexes) GetLeftVertex(EntityModelUVData uv, Vector2 size)
 			{
 				//Vector3 normal = new Vector3(-1.0f, 0.0f, 0.0f) * Size;
-				Color normal = AdjustColor(_defaultColor, BlockFace.West);
+				Color normal = AdjustColor(DefaultColor, BlockFace.West);
 				
 				//var map = GetTextureMapping(uv + new Vector2(Size.Z + Size.X, Size.Z), Size.Z, Size.Y);
 				var map = GetTextureMapping(uv.Origin + size, uv.Size.Value.X, uv.Size.Value.Y);
@@ -261,7 +307,7 @@ namespace Alex.Graphics.Models
 			private (VertexPositionColorTexture[] vertices, short[] indexes) GetRightVertex(EntityModelUVData uv, Vector2 size)
 			{
 				//Vector3 normal = new Vector3(1.0f, 0.0f, 0.0f) * Size;
-				Color normal = AdjustColor(_defaultColor, BlockFace.East);
+				Color normal = AdjustColor(DefaultColor, BlockFace.East);
 				
 				var map = GetTextureMapping(uv.Origin + size, uv.Size.Value.X, uv.Size.Value.Y);
 				//var map = GetTextureMapping(uv + new Vector2(0, Size.Z), Size.Z, Size.Y);
@@ -285,7 +331,7 @@ namespace Alex.Graphics.Models
 			private (VertexPositionColorTexture[] vertices, short[] indexes) GetFrontVertex(EntityModelUVData uv, Vector2 size)
 			{
 				//Vector3 normal = new Vector3(0.0f, 0.0f, 1.0f) * Size;
-				Color normal = AdjustColor(_defaultColor, BlockFace.South);
+				Color normal = AdjustColor(DefaultColor, BlockFace.South);
 				
 				var map = GetTextureMapping(uv.Origin + size, uv.Size.Value.X, uv.Size.Value.Y);
 
@@ -308,7 +354,7 @@ namespace Alex.Graphics.Models
 			private (VertexPositionColorTexture[] vertices, short[] indexes) GetBackVertex(EntityModelUVData uv, Vector2 size)
 			{
 				//Vector3 normal = new Vector3(0.0f, 0.0f, -1.0f) * Size;
-				Color   normal = AdjustColor(_defaultColor, BlockFace.North);
+				Color   normal = AdjustColor(DefaultColor, BlockFace.North);
 				
 				var map = GetTextureMapping(uv.Origin + size, uv.Size.Value.X, uv.Size.Value.Y);
 				// Add the vertices for the RIGHT face. 
@@ -331,7 +377,7 @@ namespace Alex.Graphics.Models
 			private (VertexPositionColorTexture[] vertices, short[] indexes) GetTopVertex(EntityModelUVData uv, Vector2 size)
 			{
 			//	Vector3 normal = new Vector3(0.0f, 1.0f, 0.0f) * Size;
-			Color   normal = AdjustColor(_defaultColor, BlockFace.Up);
+			Color   normal = AdjustColor(DefaultColor, BlockFace.Up);
 			
 				var map    = GetTextureMapping(uv.Origin + size, uv.Size.Value.X, uv.Size.Value.Y);
 
@@ -354,7 +400,7 @@ namespace Alex.Graphics.Models
 			private (VertexPositionColorTexture[] vertices, short[] indexes) GetBottomVertex(EntityModelUVData uv, Vector2 size)
 			{
 			//	Vector3 normal = new Vector3(0.0f, -1.0f, 0.0f) * Size;
-			Color normal = AdjustColor(_defaultColor, BlockFace.Down);
+			Color normal = AdjustColor(DefaultColor, BlockFace.Down);
 			var   map    = GetTextureMapping(uv.Origin + size, uv.Size.Value.X, uv.Size.Value.Y);
 
 				// Add the vertices for the RIGHT face. 
@@ -375,7 +421,7 @@ namespace Alex.Graphics.Models
 
 			private TextureMapping GetTextureMapping(Vector2 textureOffset, float regionWidth, float regionHeight)
 			{
-				return new TextureMapping(_textureSize, textureOffset, regionWidth, regionHeight, Mirrored);
+				return new TextureMapping(_textureSize, textureOffset, regionWidth, regionHeight, _mirror);
 			}
 
 			private class TextureMapping

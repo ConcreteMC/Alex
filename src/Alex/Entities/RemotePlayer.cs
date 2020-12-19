@@ -6,8 +6,6 @@ using System.Text;
 using Alex.API.Graphics;
 using Alex.API.Network;
 using Alex.API.Utils;
-using Alex.Entities.Models;
-using Alex.Entities.Properties;
 using Alex.Graphics.Models.Entity;
 using Alex.Net;
 using Alex.Networking.Java.Packets.Play;
@@ -136,6 +134,9 @@ namespace Alex.Entities
 
 		private void LoadSkin(Skin skin)
 		{
+			if (skin == null)
+				return;
+			
 			Image<Rgba32>   skinBitmap  = null;
 			if (!skin.TryGetBitmap(out skinBitmap))
 			{
@@ -228,8 +229,9 @@ namespace Alex.Entities
 
 			if (model == null)
 			{
-				model = skin.Slim ? (EntityModel) new Models.HumanoidCustomslimModel() :
-					(EntityModel) new HumanoidModel();// new Models.HumanoidCustomGeometryHumanoidModel();
+				ModelFactory.TryGetModel(skin.Slim ? "geometry.humanoid.custom" : "geometry.humanoid.customSlim", out model);
+				/*model = skin.Slim ? (EntityModel) new Models.HumanoidCustomslimModel() :
+					(EntityModel) new HumanoidModel();*/ // new Models.HumanoidCustomGeometryHumanoidModel();
 			}
 
 			if (model != null && ValidateModel(model, Name))

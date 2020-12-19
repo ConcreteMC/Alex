@@ -60,7 +60,10 @@ namespace Alex.ResourcePackLib
 			Dictionary<ResourceLocation, EntityDescription> entityDefinitions = new Dictionary<ResourceLocation, EntityDescription>();
 			Dictionary<string, EntityModel> entityModels = new Dictionary<string, EntityModel>();
 
-			TryLoadMobModels(entityModels);
+			if (TryLoadMobModels(entityModels))
+			{
+				//Log.Info($"Loaded mobs.json: {entityModels.Count}");
+			}
 
 			var entries = _archive.Entries.ToArray();
 			var total   = entries.Length;
@@ -98,16 +101,17 @@ namespace Alex.ResourcePackLib
 		private Dictionary<string, EntityModel> ProcessEntityModels(Dictionary<string, EntityModel> models)
 		{
 			Dictionary<string, EntityModel> final = new Dictionary<string, EntityModel>();
-			LinkedList<KeyValuePair<string, EntityModel>> workQueue = new LinkedList<KeyValuePair<string, EntityModel>>();
+			Queue<KeyValuePair<string, EntityModel>> workQueue = new Queue<KeyValuePair<string, EntityModel>>();
 
 			foreach (var model in models.OrderBy(x => x.Key.Count(k => k == ':')))
 			{
-				workQueue.AddLast(model);
+				workQueue.Enqueue(model);
 			}
 
-			var item = workQueue.First;
+			//var item = workQueue.First;
 
-			while (item.Next != null)
+			//while (item.Next != null)
+			while(workQueue.TryDequeue(out var item))
 			{
 				try
 				{
@@ -115,50 +119,56 @@ namespace Alex.ResourcePackLib
 
 					EntityModel result = null;
 
-					/*if (!model.Key.Contains(":"))
+					if (!item.Key.Contains(":"))
 					{
-						final.TryAdd(model.Value.Description.Identifier, model.Value);
+						final.TryAdd(item.Key, model);
 						continue;
-					}*/
+					}
 
-						var    split         = model.Key.Split(':');
-					string sb            = "";
+					var    split         = item.Key.Split(':').Reverse().ToArray();
+						//string sb            = "";
 					bool   wasInterupted = false;
 
-					for (int i = split.Length - 1; i >= 0; i--)
+					for (int i = 0; i < split.Length; i++)
 					{
-					//	if (i == 0)
-					//		break;
-						
-						if (i == split.Length - 1)
+						//	if (i == 0)
+						//		break;
+						EntityModel requiredEntityModel;
+						if (i == split.Length - 1) //Last item
 						{
-							sb = split[i];
+							requiredEntityModel = model;
 						}
 						else
 						{
-							sb = $"{split[i]}:{sb}";
-						}
-
-						if (i != 0)
-						{
-							if (!final.TryGetValue(split[i], out var requiredEntityModel))
+							var key = split[i];
+							
+							if (!final.TryGetValue(key, out requiredEntityModel))
 							{
-								Log.Warn($"Could not find entity model: {split[i]} of {model.Key}");
+								Log.Warn($"Could not find entity model: {key} of {item.Key}");
 								wasInterupted = true;
-								workQueue.AddLast(model);
+								workQueue.Enqueue(item);
 
 								break;
 							}
-
-							if (i < split.Length - 1)
-							{
-								result += requiredEntityModel;
-							}
-							else
-							{
-								result = requiredEntityModel;
-							}
 						}
+
+						if (i == 0)
+						{
+							result = requiredEntityModel.Clone();
+						}
+						else
+						{
+							result += requiredEntityModel;
+						}
+
+						/*if (i > 0)
+						{
+							result += requiredEntityModel;
+						}
+						else
+						{
+							result = requiredEntityModel;
+						}*/
 
 						//final.TryAdd(split[i], result);
 					}
@@ -166,15 +176,21 @@ namespace Alex.ResourcePackLib
 					//models.TryAdd(sb, result);
 					if (!wasInterupted && result != null)
 					{
-						result.Description = model.Value.Description;
-						final[split[0]] = result;
+						result.Description = model.Description.Clone();
+
+						if (!final.TryAdd(split[^1], result))
+						{
+							Log.Warn($"Failed to add {split[0]}");
+						}
+
+						//final[split[0]] = result;
 					}
 				}
 				finally
 				{
-					item = item.Next;
+					//item = item.Next;
 					//item.Previous = null;
-					workQueue.Remove(item.Previous);
+				//	workQueue.Remove(item.Previous);
 				}
 			}
 
@@ -202,9 +218,9 @@ namespace Alex.ResourcePackLib
 						//return;
 					}
 
-					if (!models.TryAdd(item.Value.Description.Identifier, item.Value))
+					if (!models.TryAdd(item.Key, item.Value))
 					{
-						Log.Warn($"Duplicate geometry model: {item.Value.Description.Identifier}");
+						Log.Warn($"Duplicate geometry model: {item.Key}");
 
 					//	return;
 					}

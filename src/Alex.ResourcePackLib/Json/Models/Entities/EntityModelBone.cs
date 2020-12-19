@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using System.Linq;
+using Microsoft.Xna.Framework;
 
 namespace Alex.ResourcePackLib.Json.Models.Entities
 {
@@ -27,7 +28,7 @@ namespace Alex.ResourcePackLib.Json.Models.Entities
         /// Grow this box by this additive amount in all directions (in model space units)
         /// </summary>
         [J("inflate", NullValueHandling = N.Ignore)]
-        public double Inflate { get; set; } = 1.0;
+        public double Inflate { get; set; } = 0;
 
         /// <summary>
         /// The bone pivots around this point (in model space units).
@@ -39,10 +40,13 @@ namespace Alex.ResourcePackLib.Json.Models.Entities
         /// This is the initial rotation of the bone around the pivot, pre-animation (in degrees, x-then-y-then-z order).
         /// </summary>
         [J("rotation", NullValueHandling = N.Ignore)]
-        public Vector3 Rotation { get; set; } = Vector3.Zero;
+        public Vector3? Rotation { get; set; }
 		
+        /// <summary>
+        ///		The rotation for the bone (1.8.0 geometry only)
+        /// </summary>
         [J("bind_pose_rotation", NullValueHandling = N.Ignore)]
-        public Vector3 BindPoseRotation { get; set; } = Vector3.Zero;
+        public Vector3? BindPoseRotation { get; set; }
         
 		public bool NeverRender { get; set; } = false;
 		
@@ -57,6 +61,24 @@ namespace Alex.ResourcePackLib.Json.Models.Entities
 		/// </summary>
 		[J("cubes", NullValueHandling = N.Ignore)]
 		public EntityModelCube[] Cubes { get; set; }
+		
+		public EntityModelBone Clone()
+		{
+			return new EntityModelBone()
+			{
+				Inflate = Inflate,
+				Mirror = Mirror,
+				Pivot = Pivot,
+				Rotation = Rotation,
+				Locators = Locators,
+				Cubes = Cubes?.Select(x => x.Clone()).ToArray(),
+				Name = Name,
+				Parent = Parent,
+				Reset = Reset,
+				NeverRender = NeverRender,
+				BindPoseRotation = BindPoseRotation
+			};
+		}
     }
 
 	public sealed class EntityModelLocators

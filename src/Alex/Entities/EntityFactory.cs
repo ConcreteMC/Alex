@@ -161,16 +161,16 @@ namespace Alex.Entities
 					}
 
 					EntityModel model;
-				    if (ModelFactory.TryGetModel(modelKey, out model) && model != null)
+					if (ModelFactory.TryGetModel(modelKey + ".v1.8", out model) && model != null)
+					{
+						Add(resourceManager, graphics, def.Value, model, def.Value.Identifier);
+						Add(resourceManager, graphics, def.Value, model, def.Key.ToString());
+					}
+				    else if (ModelFactory.TryGetModel(modelKey, out model) && model != null)
 				    {
 				        Add(resourceManager, graphics, def.Value, model, def.Value.Identifier);
 				        Add(resourceManager, graphics, def.Value, model, def.Key.ToString());
                     }
-				    else if (ModelFactory.TryGetModel(modelKey + ".v1.8", out model) && model != null)
-				    {
-				        Add(resourceManager, graphics, def.Value, model, def.Value.Identifier);
-				        Add(resourceManager, graphics, def.Value, model, def.Key.ToString());
-				    }
 				}
 				catch (Exception ex)
 				{

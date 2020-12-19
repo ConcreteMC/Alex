@@ -68,7 +68,7 @@ namespace Alex.ResourcePackLib.Json.Converters
 
 		public override bool CanConvert(Type objectType)
 		{
-			return typeof(Vector3).IsAssignableFrom(objectType);
+			return typeof(Vector3).IsAssignableFrom(objectType) || typeof(Vector3?).IsAssignableFrom(objectType);
 		}
 	}
 
