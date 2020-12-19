@@ -95,21 +95,6 @@ namespace Alex.Graphics
 		    }
 	    }
 
-	    private class MipMappedImage
-	    {
-		    private Image<Rgba32>[] _levels;
-		    public  int             Levels => _levels.Length;
-		    public MipMappedImage(Image<Rgba32>[] levels)
-		    {
-			    _levels = levels;
-		    }
-
-		    public Image<Rgba32> GetLevel(int level)
-		    {
-			    return _levels[level];
-		    }
-	    }
-	    
 	    private void GenerateAtlas(GraphicsDevice device,
 		    IDictionary<ResourceLocation, ImageEntry> blockTextures,
 		    IProgressReceiver progressReceiver)

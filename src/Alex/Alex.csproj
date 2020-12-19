@@ -112,7 +112,6 @@
     <Compile Remove="Particles\ParticleVertex.cs" />
     <Compile Remove="Particles\ParticleSystem.cs" />
     <Compile Remove="Particles\ParticleSettings.cs" />
-    <Compile Remove="Particles\ParticleManager.cs" />
     <Compile Remove="Particles\ParticleEmitter.cs" />
   </ItemGroup>
 
@@ -181,7 +180,6 @@
   <ItemGroup>
     <Folder Include="Audio\Models" />
     <Folder Include="Gui\Elements\Web" />
-    <Folder Include="Particles\Systems" />
   </ItemGroup>
 
   <Target Name="ChangeAliasesOfNugetRefs" BeforeTargets="FindReferenceAssembliesForReferences;ResolveReferences">
