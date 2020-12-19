@@ -229,7 +229,7 @@ namespace Alex.Graphics.Models.Entity
 			{
 				var vertex = vertice;
 
-				if ((cube.Mirror.HasValue && !cube.Mirror.Value) || (!cube.Mirror.HasValue))
+				if (mirror)
 				{
 					//vertex.Position = RotateAboutOrigin(vertex.Position, sizeDivide, MathUtils.ToRadians(180f));
 				}

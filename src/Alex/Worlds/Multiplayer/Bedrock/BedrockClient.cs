@@ -365,11 +365,11 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		/// <inheritdoc />
 		public override void EntityFell(long entityId, float distance, bool inVoid)
 		{
-			McpeEntityFall fall = McpeEntityFall.CreateObject();
+			/*McpeEntityFall fall = McpeEntityFall.CreateObject();
 			fall.runtimeEntityId = entityId;
 			fall.fallDistance = distance;
 			fall.isInVoid = inVoid;
-			SendPacket(fall);
+			SendPacket(fall);*/
 		}
 
 		private void InventoryOnSlotChanged(object? sender, SlotChangedEventArgs e)
@@ -1201,7 +1201,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		{
 		//	var minetItem = GetMiNETItem(item);
 			
-			McpeMobEquipment packet = new MobEquipment();
+			McpeMobEquipment packet = new McpeMobEquipment();
 			packet.selectedSlot = (byte) slot;
 			packet.slot = (byte) slot;
 

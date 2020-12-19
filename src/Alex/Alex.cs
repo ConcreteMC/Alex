@@ -79,11 +79,17 @@ namespace Alex
 
 		public static string Gpu             { get; private set; } = "";
 		public static string OperatingSystem { get; private set; } = "";
+		
+#if DIRECTX
+		public const string RenderingEngine = "DirectX";
+#else
+		public const string RenderingEngine = "OpenGL";
+#endif
 
 		public static string DotnetRuntime { get; } =
 			$"{System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription}";
 
-		public const string Version = "1.0 DEV";
+		//public const string Version = "1.0 DEV";
 
 		public static bool IsMultiplayer { get; set; } = false;
 
@@ -266,7 +272,7 @@ namespace Alex
 
 		protected override void Initialize()
 		{
-			Window.Title = "Alex - " + Version;
+			Window.Title = $"Alex - {VersionUtils.GetVersion()} - {RenderingEngine}";
 
 			// InitCamera();
 			this.Window.TextInput += Window_TextInput;
@@ -283,6 +289,8 @@ namespace Alex
 					}
 				}
 			}
+			
+			base.InactiveSleepTime = TimeSpan.Zero;
 
 			GraphicsDevice.PresentationParameters.MultiSampleCount = 8;
 
@@ -304,8 +312,13 @@ namespace Alex
 			//	DebugFont = (WrappedSpriteFont) Content.Load<SpriteFont>("Alex.Resources.DebugFont.xnb");
 
 			//	ResourceManager.EntityEffect = Content.Load<Effect>("Alex.Resources.Entityshader.xnb").Clone();
+#if DIRECTX
+			ResourceManager.BlockEffect = Content.Load<Effect>("Alex.Resources.Blockshader_dx.xnb").Clone();
+			ResourceManager.LightingEffect = Content.Load<Effect>("Alex.Resources.Lightmap_dx.xnb").Clone();
+#else
 			ResourceManager.BlockEffect = Content.Load<Effect>("Alex.Resources.Blockshader.xnb").Clone();
 			ResourceManager.LightingEffect = Content.Load<Effect>("Alex.Resources.Lightmap.xnb").Clone();
+#endif
 			//	ResourceManager.BlockEffect.GraphicsDevice = GraphicsDevice;
 
 			_spriteBatch = new SpriteBatch(GraphicsDevice);
@@ -753,7 +766,7 @@ namespace Alex
 					if (model != null)
 					{
 						PlayerModel = model;
-						Log.Info($"Player model loaded...");
+						Log.Debug($"Player model loaded...");
 					}
 				}
 			}
@@ -824,7 +837,7 @@ namespace Alex
 
 			if (PlayerTexture != null)
 			{
-				Log.Info($"Player skin loaded...");
+				Log.Debug($"Player skin loaded...");
 			}
 
 			if (LaunchSettings.ModelDebugging)

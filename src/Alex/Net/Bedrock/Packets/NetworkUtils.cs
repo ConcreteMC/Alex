@@ -42,6 +42,60 @@ namespace Alex.Net.Bedrock.Packets
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(NetworkUtils));
 
+		public static Item ReadItem2(this Packet packet)
+		{
+			int id = packet.ReadVarInt();
+			if (id == 0)
+			{
+				return new ItemAir();
+			}
+
+			int   aux      = packet.ReadVarInt();
+			short metadata = (short) (aux >> 8);
+			if (metadata == short.MaxValue) metadata = -1;
+			byte count = (byte) (aux & 0xff);
+			Item stack = ItemFactory.GetItem((short) id, metadata, count);
+
+			var nbtLen = packet.ReadUshort(); //_reader.ReadUInt16(); // NbtLen
+			if (nbtLen == 0xffff)
+			{
+				var version = packet.ReadByte();
+
+				if (version == 1)
+				{
+					stack.ExtraData = (NbtCompound) packet.ReadNbt().NbtFile.RootTag;
+				}
+			}
+			else if (nbtLen > 0)
+			{
+				var nbtData = packet.ReadBytes(nbtLen);
+
+				using (MemoryStream ms = new MemoryStream(nbtData))
+				{
+					stack.ExtraData = Packet.ReadLegacyNbtCompound(ms);
+				}
+			}
+
+			var canPlace = packet.ReadVarInt();
+			for (int i = 0; i < canPlace; i++)
+			{
+				packet.ReadString();
+			}
+			
+			var canBreak = packet.ReadVarInt();
+			for (int i = 0; i < canBreak; i++)
+			{
+				packet.ReadString();
+			}
+
+			if (id == 513) // shield
+			{
+				packet.ReadSignedVarLong(); // something about tick, crap code
+			}
+
+			return stack;
+		}
+		
 		internal static bool ReadTag(this NbtTag tag, NbtBinaryReader readStream)
 		{
 			while (true)

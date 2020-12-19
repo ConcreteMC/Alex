@@ -21,6 +21,7 @@ using Alex.API.World;
 using Alex.Blocks;
 using Alex.Entities;
 using Alex.Entities.BlockEntities;
+using Alex.Entities.Effects;
 using Alex.Entities.Projectiles;
 using Alex.Gamestates;
 using Alex.Gamestates.InGame;
@@ -212,6 +213,7 @@ namespace Alex.Worlds.Multiplayer.Java
 			abilitiesPacket.ServerBound = true;
 
 			abilitiesPacket.Flags = (byte) flags;
+			
 			//abilitiesPacket.FlyingSpeed = (float) player.FlyingSpeed;
 			//abilitiesPacket.WalkingSpeed = (float)player.MovementSpeed;
 
@@ -505,7 +507,7 @@ namespace Alex.Worlds.Multiplayer.Java
 				if (entity == null)
 				{
 					Log.Warn($"Could not map entity: {knownData.Name}");
-					entity = new Entity((int) type, null, NetworkProvider);
+					entity = new Entity(null, NetworkProvider);
 				}
 
 				//if (knownData.Height)
@@ -1780,7 +1782,7 @@ namespace Alex.Worlds.Multiplayer.Java
 			{
 				return;
 			}
-
+			
 			foreach (var prop in packet.Properties.Values)
 			{
 				target.AddOrUpdateProperty(prop);
@@ -1793,10 +1795,12 @@ namespace Alex.Worlds.Multiplayer.Java
 			var player = World.Player;
 			
 			player.FlyingSpeed = packet.FlyingSpeed;
-
-				//player.FlyingSpeed = packet.FlyingSpeed * 10f;
-			player.FOVModifier = packet.FiedOfViewModifier;
 			
+			//player.AddOrUpdateProperty();
+
+			//player.FlyingSpeed = packet.FlyingSpeed * 10f;
+			player.FOVModifier = packet.FiedOfViewModifier;
+			//World.Camera.
 			//player.MovementSpeed = packet.WalkingSpeed;
 
 			player.CanFly = (flags & 0x04) != 0; //CanFly

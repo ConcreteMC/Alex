@@ -127,7 +127,7 @@ namespace Alex.Worlds
 
 			Ticker.RegisterTicked(this);
 			Ticker.RegisterTicked(EntityManager);
-			Ticker.RegisterTicked(PhysicsEngine);
+			//Ticker.RegisterTicked(PhysicsEngine);
 			Ticker.RegisterTicked(ChunkManager);
 			
 			ChunkManager.Start();
@@ -276,21 +276,21 @@ namespace Alex.Worlds
 	        EntityManager.Render2D(args);
         }
         
-		private float _fovModifier  = -1;
+	//	private float _fovModifier  = -1;
 		private float _brightnessMod = 0f;
 		public void Update(UpdateArgs args)
 		{
 			var camera = Camera;
 			
 			args.Camera = camera;
-			if (Math.Abs(Player.FOVModifier - _fovModifier) > 0f)
+			/*if (Math.Abs(Player.FOVModifier - _fovModifier) > 0f)
 			{
 				_fovModifier = Player.FOVModifier;
 
 				camera.FOV += _fovModifier;
 				camera.UpdateProjectionMatrix();
 				camera.FOV -= _fovModifier;
-			}
+			}*/
 			camera.Update(args);
 
 			//_brightnessMod = SkyRenderer.BrightnessModifier;
@@ -308,9 +308,9 @@ namespace Alex.Worlds
 				var diffuseColor = Color.White.ToVector3() * SkyRenderer.BrightnessModifier;
 				ChunkManager.AmbientLightColor = diffuseColor;
 
-				if (Math.Abs(ChunkManager.BrightnessModifier - SkyRenderer.BrightnessModifier) > 0f)
+				if (Math.Abs(ChunkManager.Shaders.BrightnessModifier - SkyRenderer.BrightnessModifier) > 0f)
 				{
-					ChunkManager.BrightnessModifier = SkyRenderer.BrightnessModifier;
+					ChunkManager.Shaders.BrightnessModifier = SkyRenderer.BrightnessModifier;
 				}
 				
 				var modelRenderer = Player?.ModelRenderer;
@@ -322,17 +322,6 @@ namespace Alex.Worlds
 			}
 
 			Player.Update(args);
-
-			if (Player.IsInWater)
-			{
-				ChunkManager.FogColor = new Vector3(0.2666667F, 0.6862745F, 0.9607844F) * BrightnessModifier;
-				ChunkManager.FogDistance = (float)Math.Pow(Options.VideoOptions.RenderDistance, 2) * 0.15f;
-			}
-			else
-			{
-				ChunkManager.FogColor = SkyRenderer.WorldFogColor.ToVector3();
-				ChunkManager.FogDistance = (float) Options.VideoOptions.RenderDistance * 16f * 0.8f;
-			}
 		}
 
 		public void OnTick()
@@ -880,16 +869,17 @@ namespace Alex.Worlds
 
 		public void UpdatePlayerPosition(PlayerLocation location)
 		{
-			var oldPosition = Player.KnownPosition;
+		//	var oldPosition = Player.KnownPosition;
 			
 			if (!ChunkManager.TryGetChunk(new ChunkCoordinates(location), out _))
 			{
 				Player.WaitingOnChunk = true;
 			}
 
-			Player.KnownPosition = location;
+			Player.Movement.MoveTo(location);
+			//Player.KnownPosition = location;
 			
-			Player.DistanceMoved += MathF.Abs(Vector3.Distance(oldPosition, location));
+			//Player.DistanceMoved += MathF.Abs(Vector3.Distance(oldPosition, location));
 		}
 
 		public void UpdateEntityPosition(long entityId, PlayerLocation position, bool relative = false, bool updateLook = false, bool updatePitch = false, bool teleport = false)

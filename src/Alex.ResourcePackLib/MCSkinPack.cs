@@ -1,9 +1,12 @@
 using System.Collections.Generic;
+using System.IO;
 using System.IO.Compression;
 using Alex.API.Utils;
 using Alex.ResourcePackLib.Json;
 using Alex.ResourcePackLib.Json.Bedrock;
 using Alex.ResourcePackLib.Json.Models.Entities;
+using NLog;
+using NLog.Fluent;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
@@ -26,14 +29,16 @@ namespace Alex.ResourcePackLib
 			Entry = entry;
 		}
 
-		internal virtual void Load()
+		internal virtual bool Load()
 		{
-			
+			return false;
 		}
 	}
 	
 	public class MCSkinPack : MCPackModule
 	{
+		private static readonly ILogger Log = LogManager.GetCurrentClassLogger();
+		
 		private static PngDecoder PngDecoder { get; } = new PngDecoder()
 		{
 			IgnoreMetadata = true
@@ -58,43 +63,58 @@ namespace Alex.ResourcePackLib
 		}
 		
 		/// <inheritdoc />
-		internal override void Load()
+		internal override bool Load()
 		{
-			List<LoadedSkin> skins = new List<LoadedSkin>();
-			using (var archive = new ZipArchive(Entry.Open(), ZipArchiveMode.Read))
+			try
 			{
-				var skinsEntry = archive.GetEntry("skins.json");
-				Info = MCJsonConvert.DeserializeObject<MCPackSkins>(skinsEntry.ReadAsString());
+				List<LoadedSkin> skins = new List<LoadedSkin>();
 
-				var geometryEntry = archive.GetEntry("geometry.json");
-
-				Dictionary<string, EntityModel> models =
-					MCJsonConvert.DeserializeObject<Dictionary<string, EntityModel>>(geometryEntry.ReadAsString());
-
-				foreach (var skin in Info.Skins)
+				using (var archive = new ZipArchive(Entry.Open(), ZipArchiveMode.Read))
 				{
-					EntityModel model;
-					if (!models.TryGetValue(skin.Geometry, out model))
-						continue;
+					var skinsEntry = archive.GetEntry("skins.json");
+					Info = MCJsonConvert.DeserializeObject<MCPackSkins>(skinsEntry.ReadAsString());
 
-					var textureEntry = archive.GetEntry(skin.Texture);
-					if (textureEntry == null)
-						continue;
-					
-					Image<Rgba32> img;
-					using (var s = textureEntry.Open())
+					var geometryEntry = archive.GetEntry("geometry.json");
+
+					Dictionary<string, EntityModel> models =
+						MCJsonConvert.DeserializeObject<Dictionary<string, EntityModel>>(geometryEntry.ReadAsString());
+
+					foreach (var skin in Info.Skins)
 					{
-						//img = new Bitmap(s);
-						img = Image.Load<Rgba32>(s.ReadToSpan(textureEntry.Length), PngDecoder);
+						EntityModel model;
+
+						if (!models.TryGetValue(skin.Geometry, out model))
+							continue;
+
+						var textureEntry = archive.GetEntry(skin.Texture);
+
+						if (textureEntry == null)
+							continue;
+
+						Image<Rgba32> img;
+
+						using (var s = textureEntry.Open())
+						{
+							//img = new Bitmap(s);
+							img = Image.Load<Rgba32>(s.ReadToSpan(textureEntry.Length), PngDecoder);
+						}
+
+						LoadedSkin loaded = new LoadedSkin(skin.LocalizationName, model, img);
+						skins.Add(loaded);
+						//skin.
 					}
-					
-					LoadedSkin loaded = new LoadedSkin(skin.LocalizationName, model, img);
-					skins.Add(loaded);
-					//skin.
 				}
+
+				Skins = skins.ToArray();
+
+				return true;
+			}
+			catch (InvalidDataException ex)
+			{
+				Log.Debug(ex, $"Could not load module. IsFile={Entry.IsFile()} IsDirectory={Entry.IsDirectory()}");
 			}
 
-			Skins = skins.ToArray();
+			return false;
 		}
 	}
 

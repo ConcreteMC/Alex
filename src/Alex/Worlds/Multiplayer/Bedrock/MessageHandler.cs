@@ -21,7 +21,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
         public                     Action               ConnectionAction   { get; set; }
         public                     Action<string, bool> DisconnectedAction { get; set; }
         
-        private protected readonly RaknetSession           _session;
+        private readonly RaknetSession           _session;
 
         public CryptoContext CryptoContext { get; set; }
         
@@ -145,9 +145,11 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 						long pos = s.Position;
 						ReadOnlyMemory<byte> internalBuffer = s.GetBuffer().AsMemory((int) s.Position, (int) len);
 						int id = VarInt.ReadInt32(s);
+
+						Packet packet = null;
 						try
 						{
-							var packet = PacketFactory.Create((byte) id, internalBuffer, "mcpe")
+							packet = PacketFactory.Create((byte) id, internalBuffer, "mcpe")
 							             ?? new UnknownPacket((byte) id, internalBuffer);
 
 							//Hack for some servers that screw up the order.
@@ -159,10 +161,12 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 							{
 								messages.AddLast(packet);
 							}
+
+							//var a = 0x91;
 						}
 						catch (Exception e)
 						{
-							if (Log.IsDebugEnabled) Log.Warn($"Error parsing bedrock message #{count} id={id}\n{Packet.HexDump(internalBuffer)}", e);
+							Log.Warn(e, $"Error parsing bedrock message #{count} id={id}\n{Packet.HexDump(internalBuffer)}");
 							//throw;
 							return; // Exit, but don't crash.
 						}
@@ -224,7 +228,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
             try
             {
-	          //  Log.Info($"Got: {message}");
+	       //     Log.Info($"Got packet: {message}");
                 _messageDispatcher.HandlePacket(message);
             }
             catch (Exception ex)

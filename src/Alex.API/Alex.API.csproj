@@ -3,19 +3,21 @@
     <OldToolsVersion>2.0</OldToolsVersion>
     <LangVersion>latest</LangVersion>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <Configurations>Release;Debug;Appveyor</Configurations>
+    <Configurations>Release;Debug;Appveyor;DirectX</Configurations>
     <Platforms>x64;AnyCPU</Platforms>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="log4net" Version="2.0.12" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="5.0.1" />
-    <PackageReference Include="MiNET" Version="1.0.2191" />
+    <PackageReference Include="MiNET" Version="1.0.2206" />
     <PackageReference Include="MiNET.fnbt" Version="1.0.22" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
-    <PackageReference Include="NLog" Version="4.7.2" />
+    <PackageReference Include="NLog" Version="4.7.6" />
     <PackageReference Include="Portable.BouncyCastle" Version="1.8.8" />
+    <PackageReference Include="SharpAvi" Version="2.1.2" />
     <PackageReference Include="SixLabors.ImageSharp" Version="1.0.2" />
     <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="1.0.0-beta11" />
-    <PackageReference Include="Tmds.DBus" Version="0.8.0" />
+    <PackageReference Include="Tmds.DBus" Version="0.9.1" />
   </ItemGroup>
   
   <ItemGroup>

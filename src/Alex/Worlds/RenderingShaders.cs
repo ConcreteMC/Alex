@@ -1,3 +1,6 @@
+using Alex.API.Graphics;
+using Alex.Entities.Effects;
+using Alex.Graphics.Camera;
 using Alex.Graphics.Effect;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -99,8 +102,11 @@ namespace Alex.Worlds
 			AnimatedTranslucentEffect.Texture = AnimatedEffect.Texture = texture;
 		}
 
-		public void UpdateMatrix(Matrix view, Matrix projection)
+		public void Update(ICamera camera /*Matrix view, Matrix projection*/)
 		{
+			var view       = camera.ViewMatrix;
+			var projection = camera.ProjectionMatrix;
+			
 			TransparentEffect.View = view;
 			TransparentEffect.Projection = projection;
 		    

@@ -8,18 +8,18 @@ namespace Alex.Entities.Properties
 	public class MovementSpeedProperty : EntityProperty
 	{
 		private Entity _entity;
-		public MovementSpeedProperty(double value = 0.7, Modifier[] modifiers = null) : this(null, value, modifiers)
+		public MovementSpeedProperty(double value = 0.699999988079071, Modifier[] modifiers = null) : this(null, value, modifiers)
 		{
 			
 		}
 
-		public MovementSpeedProperty(Entity entity, double value = 0.7, Modifier[] modifiers = null) : base(
+		public MovementSpeedProperty(Entity entity, double value = 0.699999988079071, Modifier[] modifiers = null) : base(
 			EntityProperties.MovementSpeed, value, modifiers)
 		{
 			_entity = entity;
 		}
 		
-		protected MovementSpeedProperty(string key, Entity entity, double value = 0.7, Modifier[] modifiers = null) : base(
+		protected MovementSpeedProperty(string key, Entity entity, double value = 0.699999988079071, Modifier[] modifiers = null) : base(
 			key, value, modifiers)
 		{
 			_entity = entity;
@@ -33,16 +33,16 @@ namespace Alex.Entities.Properties
 
 			if (_entity != null)
 			{
-				if (_entity.IsSprinting)
+				/*if (_entity.IsSprinting)
 				{
-					//baseModifiers.Add(
-					//	new Modifier(new UUID("662A6B8D-DA3E-4C1C-8813-96EA6097278D"), 0.29997683577f, ModifierMode.Multiply));
+					baseModifiers.Add(
+						new Modifier(new UUID("662A6B8D-DA3E-4C1C-8813-96EA6097278D"), 0.29997683577f, ModifierMode.Multiply));
 				}
 				else if (_entity.IsSneaking)
 				{
 					baseModifiers.Add(
 						new Modifier(new UUID("662A6B8D-DA3E-4C1C-8813-96EA6097278D"), -1f + 0.29997683576f, ModifierMode.Multiply));
-				}
+				}*/
 
 				/*foreach (var effect in _entity.AppliedEffects())
 				{

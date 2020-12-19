@@ -120,11 +120,10 @@ namespace Alex.Net.Bedrock
 			EndPoint = endPoint;
 			MtuSize = mtuSize;
 
-			InactivityTimeout = 8500;//Config.GetProperty("InactivityTimeout", 8500);
-			ResendThreshold = 10;//Config.GetProperty("ResendThreshold", 10);
+			InactivityTimeout = 8500;
+			ResendThreshold = 10;
 
 			_cancellationToken = new CancellationTokenSource();
-			//_tickerHighPrecisionTimer = new HighPrecisionTimer(10, SendTick, true);
 		}
 
 		/// <summary>
@@ -171,7 +170,7 @@ namespace Alex.Net.Bedrock
 			AddToOrderedChannel(message);
 		}
 
-		public void AddToOrderedChannel(Packet message)
+		private void AddToOrderedChannel(Packet message)
 		{
 			try
 			{
@@ -215,6 +214,7 @@ namespace Alex.Net.Bedrock
 			}
 			catch (Exception e)
 			{
+				Log.Error(e, "Something went wrong!");
 			}
 		}
 
@@ -270,7 +270,7 @@ namespace Alex.Net.Bedrock
 			}
 			catch (Exception e)
 			{
-				Log.Error($"Exit receive handler task for player", e);
+				Log.Error(e, $"Exit receive handler task for player");
 			}
 		}
 
@@ -322,7 +322,7 @@ namespace Alex.Net.Bedrock
 					catch (Exception e)
 					{
 						// ignore
-						Log.Warn($"Custom message handler error", e);
+						Log.Warn(e, $"Custom message handler error");
 					}
 				}
 

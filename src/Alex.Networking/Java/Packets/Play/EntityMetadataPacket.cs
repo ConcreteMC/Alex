@@ -8,7 +8,6 @@ using Alex.Networking.Java.Util;
 using fNbt;
 using JetBrains.Annotations;
 using Microsoft.Xna.Framework;
-using MiNET.Entities;
 
 namespace Alex.Networking.Java.Packets.Play
 {

@@ -201,13 +201,13 @@ namespace Alex.Worlds.Multiplayer.Bedrock
         private ResourcePackIds _resourcePackIds;
         public void HandleMcpeResourcePacksInfo(McpeResourcePacksInfo message)
         {
-	        Log.Info($"Got ResourcePackDataInfo. (ForcedToAccept={message.mustAccept} Scripting={message.hasScripts} Behavior Packs={message.behahaviorpackinfos.Count} ResourcePacks={message.resourcepackinfos.Count})");
+	        Log.Info($"Got ResourcePackDataInfo. (ForcedToAccept={message.mustAccept} Scripting={message.hasScripts} Behavior Packs={message.behahaviorpackinfos.Count} ResourcePacks={message.texturepacks.Count})");
 	        
 	        McpeResourcePackClientResponse response        = new McpeResourcePackClientResponse();
 	        ResourcePackIds                resourcePackIds = new ResourcePackIds();
-	        foreach (var packInfo in message.resourcepackinfos)
+	        foreach (var packInfo in message.texturepacks)
 	        {
-		        resourcePackIds.Add($"{packInfo.PackIdVersion.Id}_{packInfo.PackIdVersion.Version}");
+		        resourcePackIds.Add($"{packInfo.UUID}_{packInfo.Version}");
 	        }
 
 	        foreach (var packInfo in message.behahaviorpackinfos)
@@ -234,7 +234,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
         public void HandleMcpeResourcePackStack(McpeResourcePackStack message)
         {
 	        Log.Info(
-		        $"Received ResourcePackStack, sending final response. (ForcedToAccept={message.mustAccept} Experimental={message.isExperimental} Gameversion={message.gameVersion} Behaviorpacks={message.behaviorpackidversions.Count} Resourcepacks={message.resourcepackidversions.Count})");
+		        $"Received ResourcePackStack, sending final response. (ForcedToAccept={message.mustAccept} Gameversion={message.gameVersion} Behaviorpacks={message.behaviorpackidversions.Count} Resourcepacks={message.resourcepackidversions.Count})");
 
 	        McpeResourcePackClientResponse response = new McpeResourcePackClientResponse();
 	        response.responseStatus = (byte) McpeResourcePackClientResponse.ResponseStatus.Completed;
@@ -256,6 +256,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		
 		public void HandleMcpeStartGame(McpeStartGame message)
 		{
+			Log.Info($"Start game.");
 			Client.GameStarted = true;
 			
 			Client.EntityId = message.runtimeEntityId;
@@ -481,7 +482,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 				if (entity == null)
 				{
-					entity = new Entity((int) type, null, Client);
+					entity = new Entity(null, Client);
 				}
 
 				if (renderer == null)
@@ -758,6 +759,18 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		}
 
 		/// <inheritdoc />
+		public void HandleMcpeItemComponent(McpeItemComponent message)
+		{
+			UnhandledPackage(message);
+		}
+
+		/// <inheritdoc />
+		public void HandleMcpeFilterTextPacket(McpeFilterTextPacket message)
+		{
+			UnhandledPackage(message);
+		}
+
+		/// <inheritdoc />
 		public void HandleMcpeAlexEntityAnimation(McpeAlexEntityAnimation message)
 		{
 			Entity entity;
@@ -950,6 +963,11 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				case EffectType.JumpBoost:
 					effect = new JumpBoostEffect();
 					break;
+				
+				case EffectType.NightVision:
+					effect = new NightVisionEffect();
+					break;
+				
 				default:
 					Log.Warn($"Missing effect implementation: {(EffectType) message.effectId}");
 					return;
@@ -961,7 +979,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					effect.Duration = message.duration;
 					effect.Level = message.amplifier;
 					effect.Particles = message.particles;
-					entity.AddEffect(effect);
+					entity.AddOrUpdateEffect(effect);
 					break;
 				
 				case 2:
@@ -1766,8 +1784,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		public void HandleMcpePlayerSkin(McpePlayerSkin message)
 		{
-			UnhandledPackage(message);
-			return;
+			//UnhandledPackage(message);
+
 			if (_players.TryGetValue(message.uuid, out var player))
 			{
 				ThreadPool.QueueUserWorkItem((o) => { player.LoadSkin(message.skin); });

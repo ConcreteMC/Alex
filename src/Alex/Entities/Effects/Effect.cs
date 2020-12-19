@@ -28,6 +28,8 @@ namespace Alex.Entities.Effects
 		HealthBoost    = 21,
 		Absorption     = 22,
 		Saturation     = 23,
+		
+		FieldOfView = 254
 	}
 	
 	public class Effect
@@ -35,7 +37,7 @@ namespace Alex.Entities.Effects
 		public const int MaxDuration = 0x7fffffff;
 
 		public EffectType EffectId      { get; set; }
-		public int        Duration      { get; set; }
+		public int        Duration      { get; set; } = -1;
 		public int        Level         { get; set; }
 		public bool       Particles     { get; set; }
 		public Color      ParticleColor { get; set; } = Color.Black;
@@ -52,7 +54,7 @@ namespace Alex.Entities.Effects
 		public virtual void OnTick(Entity entity)
 		{
 			if (Duration > 0 && Duration != MaxDuration) Duration -= 1;
-			if (Duration < 20) entity.RemoveEffect(this.EffectId); // Need 20 tick grace for some effects that fade
+			if (Duration > 0 && Duration < 20) entity.RemoveEffect(this.EffectId); // Need 20 tick grace for some effects that fade
 		}
 
 		public override string ToString()

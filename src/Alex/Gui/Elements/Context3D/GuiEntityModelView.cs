@@ -13,7 +13,11 @@ namespace Alex.Gui.Elements.Context3D
             get { return Entity?.KnownPosition ?? new PlayerLocation(Vector3.Zero); }
             set
             {
-                if (Entity != null) Entity.KnownPosition = value;
+                if (Entity != null) 
+                {
+                    Entity.KnownPosition = value;
+                    Entity.RenderLocation = value;
+                }                    
             }
         }
 

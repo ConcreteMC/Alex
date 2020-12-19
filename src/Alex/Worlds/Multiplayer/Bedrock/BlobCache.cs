@@ -28,5 +28,15 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		{
 			return Storage.Exists(GetPath(hash));
 		}
+
+		public bool TryGet(ulong hash, out byte[] data)
+		{
+			return Storage.TryReadBytes(GetPath(hash), out data);
+		}
+
+		public bool TryStore(ulong hash, byte[] data)
+		{
+			return Storage.TryWriteBytes(GetPath(hash), data);
+		}
 	}
 }

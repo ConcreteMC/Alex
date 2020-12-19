@@ -1,0 +1,153 @@
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+
+namespace Alex.ResourcePackLib.Json.Bedrock.Sound
+{
+	public class SoundDefinitionFormat
+	{
+		[JsonProperty("format_version")]
+		public string FormatVersion { get; set; }
+
+		[JsonProperty("sound_definitions")]
+		public Dictionary<string, SoundDefinition> SoundDefinitions { get; set; }
+
+        public static SoundDefinitionFormat FromJson(string json) =>
+            JsonConvert.DeserializeObject<SoundDefinitionFormat>(json, Settings);
+        
+        private static readonly JsonSerializerSettings Settings = new JsonSerializerSettings
+        {
+            MetadataPropertyHandling = MetadataPropertyHandling.Ignore,
+            DateParseHandling = DateParseHandling.None,
+            Converters =
+            {
+                SoundElementConverter.Singleton,
+                new IsoDateTimeConverter { DateTimeStyles = DateTimeStyles.AssumeUniversal }
+            },
+        };
+    }
+	
+	public class SoundDefinition
+    {
+        [JsonProperty("category", NullValueHandling = NullValueHandling.Ignore)]
+        public string Category { get; set; }
+
+        [JsonProperty("sounds")]
+        public SoundElement[] Sounds { get; set; }
+
+        [JsonProperty("__use_legacy_max_distance", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonConverter(typeof(ParseStringConverter))]
+        public bool? UseLegacyMaxDistance { get; set; }
+
+        [JsonProperty("min_distance", NullValueHandling = NullValueHandling.Ignore)]
+        public long? MinDistance { get; set; }
+
+        [JsonProperty("max_distance", NullValueHandling = NullValueHandling.Ignore)]
+        public long? MaxDistance { get; set; }
+
+        [JsonProperty("subtitle", NullValueHandling = NullValueHandling.Ignore)]
+        public string Subtitle { get; set; }
+
+        [JsonProperty("pitch", NullValueHandling = NullValueHandling.Ignore)]
+        public double? Pitch { get; set; }
+    }
+
+    public class SoundClass
+    {
+        [JsonProperty("load_on_low_memory", NullValueHandling = NullValueHandling.Ignore)]
+        public bool? LoadOnLowMemory { get; set; }
+
+        [JsonProperty("name")]
+        public string Name { get; set; }
+
+        [JsonProperty("volume", NullValueHandling = NullValueHandling.Ignore)]
+        public double? Volume { get; set; }
+
+        [JsonProperty("pitch", NullValueHandling = NullValueHandling.Ignore)]
+        public double? Pitch { get; set; }
+
+        [JsonProperty("stream", NullValueHandling = NullValueHandling.Ignore)]
+        public bool? Stream { get; set; }
+    }
+
+    public struct SoundElement
+    {
+        public SoundClass SoundClass;
+        public string String;
+
+        public static implicit operator SoundElement(SoundClass SoundClass) => new SoundElement { SoundClass = SoundClass };
+        public static implicit operator SoundElement(string String) => new SoundElement { String = String };
+    }
+    
+    internal class ParseStringConverter : JsonConverter
+    {
+        public override bool CanConvert(Type t) => t == typeof(bool) || t == typeof(bool?);
+
+        public override object ReadJson(JsonReader reader, Type t, object existingValue, JsonSerializer serializer)
+        {
+            if (reader.TokenType == JsonToken.Null) return null;
+            var value = serializer.Deserialize<string>(reader);
+            bool b;
+            if (Boolean.TryParse(value, out b))
+            {
+                return b;
+            }
+            throw new Exception("Cannot unmarshal type bool");
+        }
+
+        public override void WriteJson(JsonWriter writer, object untypedValue, JsonSerializer serializer)
+        {
+            if (untypedValue == null)
+            {
+                serializer.Serialize(writer, null);
+                return;
+            }
+            var value = (bool)untypedValue;
+            var boolString = value ? "true" : "false";
+            serializer.Serialize(writer, boolString);
+            return;
+        }
+
+        public static readonly ParseStringConverter Singleton = new ParseStringConverter();
+    }
+
+    internal class SoundElementConverter : JsonConverter
+    {
+        public override bool CanConvert(Type t) => t == typeof(SoundElement) || t == typeof(SoundElement?);
+
+        public override object ReadJson(JsonReader reader, Type t, object existingValue, JsonSerializer serializer)
+        {
+            switch (reader.TokenType)
+            {
+                case JsonToken.String:
+                case JsonToken.Date:
+                    var stringValue = serializer.Deserialize<string>(reader);
+                    return new SoundElement { String = stringValue };
+                case JsonToken.StartObject:
+                    var objectValue = serializer.Deserialize<SoundClass>(reader);
+                    return new SoundElement { SoundClass = objectValue };
+            }
+            throw new Exception("Cannot unmarshal type SoundElement");
+        }
+
+        public override void WriteJson(JsonWriter writer, object untypedValue, JsonSerializer serializer)
+        {
+            var value = (SoundElement)untypedValue;
+            if (value.String != null)
+            {
+                serializer.Serialize(writer, value.String);
+                return;
+            }
+            if (value.SoundClass != null)
+            {
+                serializer.Serialize(writer, value.SoundClass);
+                return;
+            }
+            throw new Exception("Cannot marshal type SoundElement");
+        }
+
+        public static readonly SoundElementConverter Singleton = new SoundElementConverter();
+    }
+}

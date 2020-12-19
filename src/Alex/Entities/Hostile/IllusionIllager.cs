@@ -6,7 +6,6 @@ namespace Alex.Entities.Hostile
 	{
 		public IllusionIllager(World level) : base((EntityType)0, level)
 		{
-			JavaEntityId = 37;
 			Height = 0;
 			Width = 0;
 		}

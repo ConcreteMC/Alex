@@ -13,7 +13,7 @@ namespace Alex.Entities
 		
 		/// <inheritdoc />
 		public LivingEntity(int entityTypeId, World level, NetworkProvider network) : base(
-			entityTypeId, level, network)
+			level, network)
 		{
 			
 		}
