@@ -3,6 +3,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Net.Http;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Alex.API.Services;
@@ -55,6 +56,39 @@ namespace Alex.Utils.Assets
             }
         }
 
+        private string GetMinecraftPath()
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                return Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), ".minecraft", "versions");
+            }
+            
+            return Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".minecraft", "versions");
+        }
+        
+        private bool CheckLocal(string targetRelease, out string path)
+        {
+            path = null;
+
+            var mcPath = GetMinecraftPath();
+            mcPath = Path.Combine(mcPath, targetRelease);
+
+            if (Directory.Exists(mcPath))
+            {
+                mcPath = Path.Combine(mcPath, $"{targetRelease}.jar");
+
+                if (File.Exists(mcPath))
+                {
+                    path = mcPath;
+                    return true;
+                }
+            }
+
+            return false;
+        }
+        
         public async Task<string> EnsureTargetReleaseAsync(string targetRelease, IProgressReceiver progressReceiver)
         {
             var targetVersion = targetRelease; //manifest.Latest.Release;
@@ -83,141 +117,156 @@ namespace Alex.Utils.Assets
             {
                 _storage.Delete(assetsZipSavePath);
             }
-            
-            progressReceiver?.UpdateProgress(0, "Downloading assets...");
-            
+
+            if (CheckLocal(targetRelease, out var jarPath))
+            {
+                return jarPath;
+                // using(FileStream)
+            }
+            else
+            {
+
+                progressReceiver?.UpdateProgress(0, "Downloading assets...");
+
                 var manifest = await GetManifestAsync();
 
-
                 // not latest, update
-            Log.Info($"Downloading MCJava {targetVersion} Assets.");
+                Log.Info($"Downloading MCJava {targetVersion} Assets.");
 
-            var version = manifest.Versions.FirstOrDefault(v =>
-                string.Equals(v.Id, targetVersion, StringComparison.InvariantCultureIgnoreCase));
+                var version = manifest.Versions.FirstOrDefault(
+                    v => string.Equals(v.Id, targetVersion, StringComparison.InvariantCultureIgnoreCase));
 
-            if (version == null)
-            {
-                Log.Error("Version not found in versions? wut?");
-                return assetsZipSavePath;
-            }
-
-            LauncherMeta launcherMeta;
-            AssetIndex assetIndex;
-
-            var dirpath = Path.Combine("assets", $"java-{targetVersion}_cache");
-            if (!_storage.TryGetDirectory(dirpath, out var dir))
-            {
-                if (_storage.TryCreateDirectory(dirpath))
+                if (version == null)
                 {
-                    if (!_storage.TryGetDirectory(dirpath, out dir))
-                        return assetsZipSavePath;
+                    Log.Error("Version not found in versions? wut?");
+
+                    return assetsZipSavePath;
                 }
-            }
 
-            // fetch version's json thing
-            using (var httpClient = new HttpClient())
-            {
-                var launcherMetaJson = await httpClient.GetStringAsync(version.Url);
-                launcherMeta = LauncherMeta.FromJson(launcherMetaJson);
+                LauncherMeta launcherMeta;
+                AssetIndex   assetIndex;
 
-                // download client, prob usefil?
-                var clientJar = await httpClient.GetByteArrayAsync(launcherMeta.Downloads.Client.Url);
+                var dirpath = Path.Combine("assets", $"java-{targetVersion}_cache");
 
-
-                using (var clientMs = new MemoryStream(clientJar))
-                using (ZipArchive clientJarZip = new ZipArchive(clientMs, ZipArchiveMode.Read))
+                if (!_storage.TryGetDirectory(dirpath, out var dir))
                 {
-                    foreach (var entry in clientJarZip.Entries)
+                    if (_storage.TryCreateDirectory(dirpath))
                     {
-                        if (!entry.FullName.StartsWith("assets") && entry.FullName != "pack.mcmeta") continue;
+                        if (!_storage.TryGetDirectory(dirpath, out dir))
+                            return assetsZipSavePath;
+                    }
+                }
 
-                        var localpath = Path.Combine(dir.FullName, entry.FullName);
+                // fetch version's json thing
+                using (var httpClient = new HttpClient())
+                {
+                    var launcherMetaJson = await httpClient.GetStringAsync(version.Url);
+                    launcherMeta = LauncherMeta.FromJson(launcherMetaJson);
 
-                        if (!_storage.TryGetDirectory(Path.GetDirectoryName(localpath), out _))
+                    // download client, prob usefil?
+                    var clientJar = await httpClient.GetByteArrayAsync(launcherMeta.Downloads.Client.Url);
+
+
+                    using (var clientMs = new MemoryStream(clientJar))
+                    using (ZipArchive clientJarZip = new ZipArchive(clientMs, ZipArchiveMode.Read))
+                    {
+                        foreach (var entry in clientJarZip.Entries)
                         {
-                            _storage.TryCreateDirectory(Path.GetDirectoryName(localpath));
-                           // Directory.CreateDirectory(Path.GetDirectoryName(localpath));
+                            if (!entry.FullName.StartsWith("assets") && entry.FullName != "pack.mcmeta") continue;
+
+                            var localpath = Path.Combine(dir.FullName, entry.FullName);
+
+                            if (!_storage.TryGetDirectory(Path.GetDirectoryName(localpath), out _))
+                            {
+                                _storage.TryCreateDirectory(Path.GetDirectoryName(localpath));
+                                // Directory.CreateDirectory(Path.GetDirectoryName(localpath));
+                            }
+
+                            entry.ExtractToFile(localpath, true);
+
+                            Log.Debug($"Extracted Asset '{entry.Name}' (Size: {entry.Length})");
                         }
-                        
-                        entry.ExtractToFile(localpath, true);
-
-                        Log.Debug($"Extracted Asset '{entry.Name}' (Size: {entry.Length})");
                     }
-                }
 
-                // now we only care about asset index soooo... grab that
-                var assetIndexJson = await httpClient.GetStringAsync(launcherMeta.LauncherMetaAssetIndex.Url);
-                assetIndex = AssetIndex.FromJson(assetIndexJson);
+                    // now we only care about asset index soooo... grab that
+                    var assetIndexJson = await httpClient.GetStringAsync(launcherMeta.LauncherMetaAssetIndex.Url);
+                    assetIndex = AssetIndex.FromJson(assetIndexJson);
 
-                int target = assetIndex.Objects.Count;
+                    int target = assetIndex.Objects.Count;
 
-                int done = 0;
-                foreach (var assetIndexObject in assetIndex.Objects)
-                {
-                    // Skip ogg files
-                    if (assetIndexObject.Key.EndsWith(".ogg", StringComparison.InvariantCultureIgnoreCase))
-                        continue;
+                    int done = 0;
 
-                    var assetUrl = AssetResourceUri
-                        .Replace("{hash_sub2}", assetIndexObject.Value.Hash.Substring(0, 2))
-                        .Replace("{hash}", assetIndexObject.Value.Hash);
-
-                    progressReceiver?.UpdateProgress(done, target, "Downloading assets...", assetIndexObject.Key);
-                    
-                    try
+                    foreach (var assetIndexObject in assetIndex.Objects)
                     {
-                        var fileBytes = await httpClient.GetByteArrayAsync(assetUrl);
+                        // Skip ogg files
+                        if (assetIndexObject.Key.EndsWith(".ogg", StringComparison.InvariantCultureIgnoreCase))
+                            continue;
 
-                        var filename = Path.Combine("assets", assetIndexObject.Key);
+                        var assetUrl = AssetResourceUri
+                           .Replace("{hash_sub2}", assetIndexObject.Value.Hash.Substring(0, 2)).Replace(
+                                "{hash}", assetIndexObject.Value.Hash);
 
-                        var localpath = Path.Combine(dir.FullName, filename);
-                        
-                        if (!_storage.TryGetDirectory(Path.GetDirectoryName(localpath), out _))
+                        progressReceiver?.UpdateProgress(done, target, "Downloading assets...", assetIndexObject.Key);
+
+                        try
                         {
-                            _storage.TryCreateDirectory(Path.GetDirectoryName(localpath));
-                           // Directory.CreateDirectory(Path.GetDirectoryName(localpath));
+                            var fileBytes = await httpClient.GetByteArrayAsync(assetUrl);
+
+                            var filename = Path.Combine("assets", assetIndexObject.Key);
+
+                            var localpath = Path.Combine(dir.FullName, filename);
+
+                            if (!_storage.TryGetDirectory(Path.GetDirectoryName(localpath), out _))
+                            {
+                                _storage.TryCreateDirectory(Path.GetDirectoryName(localpath));
+                                // Directory.CreateDirectory(Path.GetDirectoryName(localpath));
+                            }
+
+                            //  File.WriteAllBytes(localpath, fileBytes);
+
+                            _storage.TryWriteBytes(localpath, fileBytes);
+
+                            Log.Debug(
+                                $"Downloaded asset '{assetIndexObject.Key}' (Hash: {assetIndexObject.Value.Hash})");
                         }
-                        
-                      //  File.WriteAllBytes(localpath, fileBytes);
+                        catch (Exception ex)
+                        {
+                            Log.Error(
+                                ex,
+                                $"Failed to download asset '{assetIndexObject.Key}' (Hash: {assetIndexObject.Value.Hash})");
 
-                        _storage.TryWriteBytes(localpath, fileBytes);
+                            continue;
+                        }
 
-                        Log.Debug($"Downloaded asset '{assetIndexObject.Key}' (Hash: {assetIndexObject.Value.Hash})");
+                        done++;
                     }
-                    catch (Exception ex)
-                    {
-                        Log.Error(ex, $"Failed to download asset '{assetIndexObject.Key}' (Hash: {assetIndexObject.Value.Hash})");
-                        continue;
-                    }
-
-                    done++;
                 }
-            }
 
-            //  make new zip m8
-            using (var ms = new MemoryStream())
-            {
-                using (var zip = new ZipArchive(ms, ZipArchiveMode.Create, true))
+                //  make new zip m8
+                using (var ms = new MemoryStream())
                 {
-                    foreach (var file in dir.EnumerateFiles("*", SearchOption.AllDirectories))
+                    using (var zip = new ZipArchive(ms, ZipArchiveMode.Create, true))
                     {
-                        zip.CreateEntryFromFile(file.FullName, Path.GetRelativePath(dir.FullName, file.FullName));
+                        foreach (var file in dir.EnumerateFiles("*", SearchOption.AllDirectories))
+                        {
+                            zip.CreateEntryFromFile(file.FullName, Path.GetRelativePath(dir.FullName, file.FullName));
+                        }
                     }
+
+                    // saving zip m8
+                    ms.Seek(0, SeekOrigin.Begin);
+                    var allBytes = ms.ToArray();
+
+                    _storage.TryWriteBytes(assetsZipSavePath, allBytes);
+                    Log.Info($"Written Archive to '{assetsZipSavePath}' (Size: {allBytes.Length})");
                 }
 
-                // saving zip m8
-                ms.Seek(0, SeekOrigin.Begin);
-                var allBytes = ms.ToArray();
-                
-                _storage.TryWriteBytes(assetsZipSavePath, allBytes);
-                Log.Info($"Written Archive to '{assetsZipSavePath}' (Size: {allBytes.Length})");
+                Thread.Sleep(500);
+                dir.Delete(true);
             }
-
+            
             _storage.TryWriteString(CurrentVersionStorageKey, targetVersion);
-
-            Thread.Sleep(500);
-            dir.Delete(true);
-
+            
             return assetsZipSavePath;
         }
     }
