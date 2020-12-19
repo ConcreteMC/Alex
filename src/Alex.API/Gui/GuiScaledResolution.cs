@@ -2,6 +2,7 @@
 using Alex.API.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using RocketUI;
 
 namespace Alex.API.Gui
 {
@@ -61,6 +62,7 @@ namespace Alex.API.Gui
 		}
 
 		private int _guiScale = 2;
+		private Size _viewportSize;
 
 		public int GuiScale
 		{
@@ -73,6 +75,16 @@ namespace Alex.API.Gui
 			}
 		}
 
+		public Size ViewportSize
+		{
+			get => _viewportSize;
+			set
+			{
+				_viewportSize = value;
+				Update();
+			}
+		}
+
 		private GraphicsDevice Graphics { get; }
 		private Viewport       Viewport => Graphics.Viewport;
 
@@ -81,8 +93,8 @@ namespace Alex.API.Gui
 			Graphics = game.GraphicsDevice;
 
 			Graphics.DeviceReset          += (sender, args) => Update();
-			game.Window.ClientSizeChanged += (sender, args) => Update();
-			game.Activated                += (sender, args) => Update();
+//			game.Window.ClientSizeChanged += (sender, args) => ViewportSize = new Size(Graphics.Viewport.Width,  Graphics.Viewport.Height);
+//			game.Activated                += (sender, args) => Update();
 
 			//TargetWidth = 480;
 			//TargetHeight = 320;
@@ -94,8 +106,8 @@ namespace Alex.API.Gui
 
 		public void Update()
 		{
-			var viewportWidth  = Graphics.Viewport.Width;
-			var viewportHeight = Graphics.Viewport.Height;
+			var viewportWidth  = ViewportSize.Width;
+			var viewportHeight = ViewportSize.Height;
 
 			CalculateScale(viewportWidth, viewportHeight, GuiScale, TargetWidth, TargetHeight, out var scaleFactor, out var scaledWidthD, out var scaledHeightD);
 
@@ -117,7 +129,7 @@ namespace Alex.API.Gui
 
 				ElementScale = new Vector2(scaleX, scaleY);
 
-				TransformMatrix = Matrix.CreateScale(scaleX, scaleY, 1f);
+				TransformMatrix = Matrix.CreateScale(scaleFactor);
 				InverseTransformMatrix = Matrix.Invert(TransformMatrix);
 
 				ScaleChanged?.Invoke(this, new UiScaleEventArgs(ScaledWidth, ScaledHeight, ScaleFactor));

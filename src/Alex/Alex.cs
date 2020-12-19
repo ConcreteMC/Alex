@@ -50,6 +50,7 @@ using Microsoft.Xna.Framework.Input;
 using MiNET;
 using Newtonsoft.Json;
 using NLog;
+using RocketUI;
 using SharpVR;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
@@ -125,7 +126,7 @@ namespace Alex
 
 
 		private VrContext _vrContext;
-		private bool VrEnabled => _vrContext != null;
+		public bool VrEnabled => _vrContext != null;
 		
 		public Alex(LaunchSettings launchSettings)
 		{
@@ -327,9 +328,18 @@ namespace Alex
 			GuiRenderer = new GuiRenderer();
 			//GuiRenderer.Init(GraphicsDevice);
 
-			GuiManager = new GuiManager(this, Services, InputManager, GuiRenderer, options);
+			GuiManager = new GuiManager(this, Services, InputManager, GuiRenderer, options, VrEnabled);
 			GuiManager.Init(GraphicsDevice, Services);
 
+			if (VrEnabled)
+			{
+				// GuiManager.GuiSpriteBatch.Effect = new BasicEffect(GraphicsDevice)
+				// {
+				// 	TextureEnabled = true,
+				// 	VertexColorEnabled = true
+				// };
+			}
+			
 			options.AlexOptions.VideoOptions.FancyGraphics.Bind(
 				(value, newValue) =>
 				{
@@ -469,6 +479,7 @@ namespace Alex
 			if (LaunchSettings.Vr)
 			{
 				_vrContext = CreateVrContext();
+				
 				_vrCameraWrapper = new VrCameraWrapper(_vrContext);
 			}
 		}
@@ -530,8 +541,15 @@ namespace Alex
 			if (VrEnabled)
 			{
 				_vrContext.GetRenderTargetSize(out var width, out var height);
+				//
+				// DeviceManager.PreferredBackBufferWidth = width;
+				// DeviceManager.PreferredBackBufferHeight = height;
+				DeviceManager.GraphicsProfile = GraphicsProfile.HiDef;
+				DeviceManager.ApplyChanges();
+				
 				_leftEye = new RenderTarget2D(GraphicsDevice, width, height);
 				_rightEye = new RenderTarget2D(GraphicsDevice, width, height);
+				GuiManager.ScaledResolution.ViewportSize = new RocketUI.Size(width, height);
 				
 				Log.Info($"Rendering to HMD with resolution {width}x{height}");
 			}
@@ -548,6 +566,13 @@ namespace Alex
 			_vrCameraWrapper.Update(eye, hmd);
 			DoDraw(gameTime);
 		}
+
+		private void UpdateVr(GameTime gameTime)
+		{
+			_vrContext.Update();
+			var hmd = _vrContext.Hmd.GetNextPose().ToMg();
+			
+		}
 		
 		private void DrawVr(GameTime gameTime)
 		{
@@ -557,18 +582,23 @@ namespace Alex
 				_vrContext.WaitGetPoses();
 				hmdMatrix = _vrContext.Hmd.GetNextPose().ToMg();
 			}
-			GraphicsDevice.SetRenderTarget(_leftEye);
-			GraphicsDevice.Clear(Color.Black);
-			RenderEye(gameTime, Eye.Left, hmdMatrix);
+
+			using (GraphicsDevice.PushRenderTarget(_leftEye))
+			{
+				GraphicsDevice.Clear(Color.Black);
+				RenderEye(gameTime, Eye.Left, hmdMatrix);
+			}
 
 			if (VrEnabled)
 			{
-				GraphicsDevice.SetRenderTarget(_rightEye);
-				GraphicsDevice.Clear(Color.Black);
-				RenderEye(gameTime, Eye.Right, hmdMatrix);
+				using (GraphicsDevice.PushRenderTarget(_rightEye))
+				{
+					GraphicsDevice.Clear(Color.Black);
+					RenderEye(gameTime, Eye.Right, hmdMatrix);
+				}
 			}
 			
-			GraphicsDevice.SetRenderTarget(null);
+			// the using statement calls a .SetRenderTarget(null), no worries.
 			GraphicsDevice.Clear(Color.Black);
 			
 			// Draw left eye to screen
@@ -665,6 +695,7 @@ namespace Alex
 			services.TryAddSingleton<XboxAuthService>();
 			
 			services.TryAddSingleton<BlobCache>();
+			services.TryAddSingleton<VrContext>(VrContext.Get());
 			; //Storage = storage;
 		}
 
@@ -698,6 +729,8 @@ namespace Alex
 
 			InputManager.Update(gt);
 
+			if (VrEnabled)
+				UpdateVr(gt);
 			GuiManager.Update(gt);
 			GameStateManager.Update(gt);
 			GuiDebugHelper.Update(gt);
@@ -717,6 +750,7 @@ namespace Alex
 		private void DoDraw(GameTime gameTime)
 		{
 			GameStateManager.Draw(gameTime);
+			GuiManager.CameraWrapper = CameraWrapper;
 			GuiManager.Draw(gameTime);			
 		}
 
@@ -848,15 +882,15 @@ namespace Alex
 			{
 				IsMultiplayer = false;
 
-				IsMouseVisible = false;
-
-				var generator = new FlatlandGenerator();
-				generator.Initialize();
-				var debugProvider = new SPWorldProvider(this, generator);
-				LoadWorld(debugProvider, debugProvider.Network);
-				
+				// IsMouseVisible = false;
+				//
+				// var generator = new FlatlandGenerator();
+				// generator.Initialize();
+				// var debugProvider = new SPWorldProvider(this, generator);
+				// LoadWorld(debugProvider, debugProvider.Network);
+				//
 				//GameStateManager.SetActiveState(new playins)
-				//GameStateManager.SetActiveState<TitleState>("title");
+				GameStateManager.SetActiveState<TitleState>("title");
 			}
 
 			GameStateManager.RemoveState("splash");

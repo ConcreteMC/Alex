@@ -144,7 +144,7 @@ namespace Alex.Graphics.Camera
 	        var pos = Position;// + Vector3.Transform(Offset, Matrix.CreateRotationY(-Rotation.Y));
 	        
 			Target = pos - lookAtOffset;
-	        _viewMatrix = Matrix.CreateLookAt(pos, Target, Vector3.Up);
+	        _viewMatrix = Matrix.CreateLookAt(pos, Target, Up);
 	        
 	        _frustum = new BoundingFrustum(_viewMatrix * _projectionMatrix);
 		}

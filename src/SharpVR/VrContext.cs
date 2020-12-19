@@ -248,8 +248,8 @@ namespace SharpVR
             var texBounds = new VRTextureBounds_t();
             texBounds.uMin = 0;
             texBounds.uMax = 1;
-            texBounds.vMin = 1;
-            texBounds.vMax = 0;
+            texBounds.vMin = 0;
+            texBounds.vMax = 1;
             OpenVR.Compositor.Submit((EVREye) eye, ref tex, ref texBounds, EVRSubmitFlags.Submit_Default);
         }
 

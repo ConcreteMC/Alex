@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using Alex.API.Gui.Graphics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -151,6 +153,7 @@ namespace Alex.API.Graphics
 
         #endregion
 
+        
         private PropertyState<GraphicsDevice, TPropertyType> CreateState<TPropertyType>(Func<GraphicsDevice, TPropertyType> getProperty, Action<GraphicsDevice, TPropertyType> setProperty)
         {
             return new PropertyState<GraphicsDevice, TPropertyType>(GraphicsDevice, getProperty(GraphicsDevice), setProperty);
@@ -217,5 +220,15 @@ namespace Alex.API.Graphics
         }
 
 
+    }
+
+    public static class GraphicsContextExtensions
+    {
+        public static IDisposable PushRenderTarget(this GraphicsDevice graphicsDevice, RenderTarget2D renderTarget)
+        {
+            var current = graphicsDevice.GetRenderTargets();
+            graphicsDevice.SetRenderTargets(renderTarget);
+            return new ContextDisposable(() => graphicsDevice.SetRenderTargets(current));
+        }
     }
 }

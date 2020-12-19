@@ -171,7 +171,7 @@ namespace Alex.Gui
 
 		private void InitGraphics()
 		{
-			_depthStencilState = DepthStencilState.None;
+			_depthStencilState = DepthStencilState.Default;
 			_rasterizerState = RasterizerState.CullNone;
 
 			_blendState = new BlendState()
@@ -206,13 +206,10 @@ namespace Alex.Gui
 	        device.Clear(Color.SkyBlue);
 
 	        using (var context = GraphicsContext.CreateContext(args.GraphicsDevice, _blendState, _depthStencilState, _rasterizerState, _samplerState))
+		        using(device.PushRenderTarget(_renderTarget))
 	        {
-		        device.SetRenderTarget(_renderTarget);
-
 		        _skyboxBuilder.Bind();
 				DrawSkyBoxCube(device);
-
-		        device.SetRenderTarget(null);
 	        }
         }
     }

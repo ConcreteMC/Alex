@@ -64,18 +64,16 @@ namespace Alex.Gui
             Camera.Position = args.Camera.Position;
             
             var device = args.GraphicsDevice;
-            var prevRenderTarget = device.GetRenderTargets();
-            device.SetRenderTarget(_mapTexture);
-
-            RenderMiniMap(device, args.SpriteBatch, args.GameTime);
-
-            device.SetRenderTargets(prevRenderTarget);
+            //var prevRenderTarget = device.GetRenderTargets();
+            using (device.PushRenderTarget(_mapTexture))
+            {
+                RenderMiniMap(device, args.SpriteBatch, args.GameTime);
+            }
         }
         
         private void InitMiniMap(GraphicsDevice device)
         {
             _mapTexture = new RenderTarget2D(device, Width, Height, false, SurfaceFormat.Color, DepthFormat.None);
-
         }
 
         private void RenderMiniMap(GraphicsDevice device, SpriteBatch spriteBatch, GameTime gameTime)

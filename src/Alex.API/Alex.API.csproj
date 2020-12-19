@@ -27,5 +27,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\RocketUI\RocketUI.csproj" />
+    <ProjectReference Include="..\SharpVR\SharpVR.csproj" />
   </ItemGroup>
 </Project>

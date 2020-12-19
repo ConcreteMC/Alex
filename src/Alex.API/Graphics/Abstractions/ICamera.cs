@@ -36,5 +36,10 @@ namespace Alex.API.Graphics
 	public interface ICameraWrapper
 	{
 		void PreDraw(ICamera camera);
+		Matrix View { get; }
+		Matrix Projection { get; }
+		Vector3 Position { get; }
+		Vector3 Forward { get; }
+		Vector3 Up { get; }
 	}
 }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Alex.API.GameStates;
+using Alex.API.Graphics;
 using Alex.API.Graphics.Typography;
 using Alex.API.Gui.Graphics;
 using Alex.API.Input;
@@ -10,6 +11,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using MiNET.Blocks;
+using SharpVR;
 
 namespace Alex.API.Gui
 {
@@ -28,7 +31,7 @@ namespace Alex.API.Gui
 
     public class GuiManager
     {
-       // public GuiDebugHelper DebugHelper { get; }
+        // public GuiDebugHelper DebugHelper { get; }
 
         public event EventHandler<GuiDrawScreenEventArgs> DrawScreen;
 
@@ -49,9 +52,23 @@ namespace Alex.API.Gui
         public List<GuiScreen> Screens { get; } = new List<GuiScreen>();
 
         public GuiDialogBase ActiveDialog { get; private set; }
-        
+
         private IServiceProvider ServiceProvider { get; }
-        public GuiManager(Game game, IServiceProvider serviceProvider, InputManager inputManager, IGuiRenderer guiRenderer, IOptionsProvider optionsProvider)
+
+        public bool VrModeEnabled { get; set; }
+        private RenderTarget2D _vrGuiBaseTarget { get; set; }
+        public ICameraWrapper CameraWrapper { get; set; }
+
+        private readonly VrContext _vrContext;
+        private VrGuiCamera _camera;
+
+        public GuiManager(Game game,
+            IServiceProvider serviceProvider,
+            InputManager inputManager,
+            IGuiRenderer guiRenderer,
+            IOptionsProvider optionsProvider,
+            bool vrModeEnabled = false
+        )
         {
             Game = game;
             ServiceProvider = serviceProvider;
@@ -61,6 +78,10 @@ namespace Alex.API.Gui
                 GuiScale = optionsProvider.AlexOptions.VideoOptions.GuiScale
             };
             ScaledResolution.ScaleChanged += ScaledResolutionOnScaleChanged;
+            _camera = new VrGuiCamera()
+            {
+                Position = new Vector3(0, 0, 400f)
+            };
 
             FocusManager = new GuiFocusHelper(this, InputManager, game.GraphicsDevice);
 
@@ -69,14 +90,18 @@ namespace Alex.API.Gui
             SpriteBatch = new SpriteBatch(Game.GraphicsDevice);
 
             GuiSpriteBatch = new GuiSpriteBatch(guiRenderer, Game.GraphicsDevice, SpriteBatch);
-            GuiRenderArgs = new GuiRenderArgs(Game.GraphicsDevice, SpriteBatch, ScaledResolution, GuiRenderer, new GameTime());
+            GuiRenderArgs = new GuiRenderArgs(Game.GraphicsDevice, SpriteBatch, ScaledResolution, GuiRenderer,
+                new GameTime());
+            //  DebugHelper = new GuiDebugHelper(this);
 
-          //  DebugHelper = new GuiDebugHelper(this);
+            optionsProvider.AlexOptions.VideoOptions.GuiScale.Bind((value, newValue) =>
+            {
+                ScaledResolution.GuiScale = newValue;
+            });
 
-          optionsProvider.AlexOptions.VideoOptions.GuiScale.Bind((value, newValue) =>
-              {
-                  ScaledResolution.GuiScale = newValue;
-              });
+            VrModeEnabled = vrModeEnabled;
+            if(vrModeEnabled)
+                _vrContext = serviceProvider.GetService<VrContext>();
         }
 
         private void ScaledResolutionOnScaleChanged(object sender, UiScaleEventArgs args)
@@ -98,13 +123,15 @@ namespace Alex.API.Gui
             GraphicsDevice = graphicsDevice;
             SpriteBatch = new SpriteBatch(graphicsDevice);
             GuiRenderer.Init(graphicsDevice, serviceProvider);
-            
+
             GuiSpriteBatch?.Dispose();
             GuiSpriteBatch = new GuiSpriteBatch(GuiRenderer, graphicsDevice, SpriteBatch);
-            GuiRenderArgs = new GuiRenderArgs(GraphicsDevice, SpriteBatch, ScaledResolution, GuiRenderer, new GameTime());
+            GuiRenderArgs =
+                new GuiRenderArgs(GraphicsDevice, SpriteBatch, ScaledResolution, GuiRenderer, new GameTime());
         }
 
         private bool _doInit = true;
+
         public void ApplyFont(IFont font)
         {
             GuiRenderer.Font = font;
@@ -116,8 +143,8 @@ namespace Alex.API.Gui
         public void ShowDialog(GuiDialogBase dialog)
         {
             ActiveDialog?.OnClose();
-            
-            if(ActiveDialog != null) RemoveScreen(ActiveDialog);
+
+            if (ActiveDialog != null) RemoveScreen(ActiveDialog);
             ActiveDialog = dialog;
             AddScreen(ActiveDialog);
 
@@ -129,12 +156,12 @@ namespace Alex.API.Gui
             if (ActiveDialog == dialog)
             {
                 dialog?.OnClose();
-                
+
                 Game.IsMouseVisible = false;
                 Mouse.SetPosition(Game.Window.ClientBounds.Width / 2, Game.Window.ClientBounds.Height / 2);
-                
+
                 RemoveScreen(ActiveDialog);
-                
+
                 ActiveDialog = null;
             }
         }
@@ -147,11 +174,12 @@ namespace Alex.API.Gui
                 {
                     dialog?.OnClose();
                     Screens.Remove(dialog);
-                    if(ActiveDialog == dialog) ActiveDialog = Screens.ToArray().LastOrDefault(e => e is TGuiDialog) as GuiDialogBase;
+                    if (ActiveDialog == dialog)
+                        ActiveDialog = Screens.ToArray().LastOrDefault(e => e is TGuiDialog) as GuiDialogBase;
                 }
             }
         }
-        
+
         public void AddScreen(GuiScreen screen)
         {
             screen.Init(GuiRenderer);
@@ -164,21 +192,21 @@ namespace Alex.API.Gui
             Screens.Remove(screen);
         }
 
-	    public bool HasScreen(GuiScreen screen)
-	    {
-		    return Screens.Contains(screen);
-	    }
+        public bool HasScreen(GuiScreen screen)
+        {
+            return Screens.Contains(screen);
+        }
 
         public void Update(GameTime gameTime)
         {
             ScaledResolution.Update();
-
+            
             var screens = Screens.ToArray();
 
             if (_doInit)
             {
                 _doInit = false;
-                
+
                 foreach (var screen in screens)
                 {
                     screen?.Init(GuiRenderer, true);
@@ -191,30 +219,130 @@ namespace Alex.API.Gui
             {
                 if (screen == null || screen is IGameState)
                     continue;
-                
+
                 screen.Update(gameTime);
             }
 
-           // DebugHelper.Update(gameTime);
+            // DebugHelper.Update(gameTime);
         }
+
+        private void EnsureGuiRenderTarget()
+        {
+            if (_vrGuiBaseTarget == null)
+            {
+                _vrGuiBaseTarget = new RenderTarget2D(GraphicsDevice, ScaledResolution.ScaledWidth,
+                    ScaledResolution.ScaledHeight);
+            }
+
+            if (_basicEffect == null)
+            {
+                _basicEffect = new BasicEffect(GraphicsDevice)
+                {
+                    World = Matrix.CreateConstrainedBillboard(Vector3.Zero, _camera.Position, Vector3.Forward, _camera.Forward, null)
+                };
+            }
+        }
+
+        private int i = 0;
+
+        private BasicEffect _basicEffect;
         
         public void Draw(GameTime gameTime)
         {
+            IDisposable maybeADisposable = null;
+
+            bool vrEnabled = VrModeEnabled;
+
+
             try
             {
-                GuiSpriteBatch.Begin();
+                if (vrEnabled)
+                {
+                    CameraWrapper.PreDraw(_camera);
+                    EnsureGuiRenderTarget();
+                    //GraphicsDevice.SetRenderTarget(_vrGuiBaseTarget);
+                    // maybeADisposable =
+                    //     GuiSpriteBatch.BeginTransform(Matrix.CreateTranslation(-(ScaledResolution.ScaledWidth / 2f), 0,
+                    //         15));
+                    //maybeADisposable =
+                    //    GuiSpriteBatch.BeginTransform(Matrix.CreateTranslation(1, 1, 1));
+
+                    //var pos = CameraWrapper.Position + (CameraWrapper.Forward * 10f);
+
+                    //GuiSpriteBatch.Effect.Projection = CameraWrapper.Projection;
+                    //GuiSpriteBatch.Effect.View = CameraWrapper.View;
+                    // GuiSpriteBatch.Effect.World = Matrix.Identity
+                    //                               //* Matrix.CreateScale(ScaledResolution.ScaleFactor)
+                    //                               * Matrix.CreateBillboard(pos, CameraWrapper.Position, Vector3.Up,
+                    //                                   CameraWrapper.Forward)
+                    // * Matrix.CreateTranslation(
+                    //     25*MathF.Sin(MathHelper.ToRadians(i/8f)), 
+                    //     25*MathF.Sin(MathHelper.ToRadians(i/4f)), 
+                    //     25*MathF.Cos(MathHelper.ToRadians(i/2f)));
+                    ;
+                    //i++;
+                    // var size = ScaledResolution.ViewportSize;
+                    // GuiSpriteBatch.Effect.Projection = CameraWrapper.Projection;
+                    // GuiSpriteBatch.Effect.View = CameraWrapper.View;
+                    // GuiSpriteBatch.Effect.World =
+                    //     // Matrix.CreateWorld(Vector3.Zero, Vector3.Forward,
+                    //     //     Vector3.Up)
+                    //     Matrix.CreateBillboard(, Vector3.Zero, Vector3.Up, CameraWrapper.Forward, null)
+                    //     * ScaledResolution.TransformMatrix;
+                    //*Matrix.CreateScale(1 / (16f / 16f));
+                    // GuiSpriteBatch.Effect.Projection = Matrix.CreateTranslation(-0.5f, -0.5f, 0) * 
+                    //                                    Matrix.CreateOrthographicOffCenter(0, GraphicsDevice.Viewport.Width, GraphicsDevice.Viewport.Height, 0, 0, 1);
+                    //
+                    maybeADisposable = GraphicsDevice.PushRenderTarget(_vrGuiBaseTarget);
+                    //GuiSpriteBatch.Effect = null;
+                    GuiSpriteBatch.Begin();
+                }
+                else
+                {
+                    // GuiSpriteBatch.Effect.Projection = Matrix.CreateTranslation(-0.5f, -0.5f, 0) *
+                    //                                    Matrix.CreateOrthographicOffCenter(0,
+                    //                                        GraphicsDevice.Viewport.Width,
+                    //                                        GraphicsDevice.Viewport.Height, 0, 0, 1);
+                    GuiSpriteBatch.Begin();
+                }
 
                 ForEachScreen(screen =>
                 {
-					screen.Draw(GuiSpriteBatch, gameTime);
+                    screen.Draw(GuiSpriteBatch, gameTime);
 
                     DrawScreen?.Invoke(this, new GuiDrawScreenEventArgs(screen, gameTime));
-                  //  DebugHelper.DrawScreen(screen);
+                    //  DebugHelper.DrawScreen(screen);
                 });
             }
             finally
             {
                 GuiSpriteBatch.End();
+                if (vrEnabled)
+                {
+                    if (maybeADisposable != null)
+                    {
+                        maybeADisposable.Dispose();
+
+                        _basicEffect.View = CameraWrapper.View;
+                        _basicEffect.Projection = CameraWrapper.Projection;
+                        var pos = (Vector3.Right * _vrGuiBaseTarget.Width / 2f)
+                                  + (Vector3.Up * _vrGuiBaseTarget.Height / 2f);
+//                                  + (Vector3.Backward * (Math.Max(_vrGuiBaseTarget.Width, _vrGuiBaseTarget.Height)));
+
+                        _basicEffect.World = Matrix.Identity
+                                             * Matrix.CreateBillboard(pos, CameraWrapper.Position, CameraWrapper.Up,
+                                                 CameraWrapper.Forward);
+                        
+                        SpriteBatch.Begin();
+                        var bounds = new Rectangle(_vrGuiBaseTarget.Bounds.Location, _vrGuiBaseTarget.Bounds.Size);
+                            bounds.Inflate(_vrGuiBaseTarget.Width * -0.1f,
+                            _vrGuiBaseTarget.Height * -0.1f);
+                        SpriteBatch.Draw(_vrGuiBaseTarget, bounds, Color.White);
+                        SpriteBatch.End();
+                    }
+                    //GraphicsDevice.SetRenderTarget(null);
+                }
+
             }
         }
 
@@ -223,7 +351,7 @@ namespace Alex.API.Gui
         {
             foreach (var screen in Screens.ToArray())
             {
-	            if (screen == null) continue;
+                if (screen == null) continue;
                 action.Invoke(screen);
             }
         }

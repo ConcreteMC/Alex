@@ -89,7 +89,7 @@ namespace Alex.Graphics.Camera
 
 
 			var heightOffset = new Vector3(0, 1.8f, 0);
-			ViewMatrix = Matrix.CreateLookAt(Position + lookAtOffset, Target + heightOffset, Vector3.Up);
+			ViewMatrix = Matrix.CreateLookAt(Position + lookAtOffset, Target + heightOffset, Up);
 		}
 
 		public override void Update(IUpdateArgs args)

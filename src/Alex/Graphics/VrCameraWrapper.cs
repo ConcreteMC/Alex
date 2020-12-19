@@ -19,6 +19,12 @@ namespace Alex.API.Graphics
             _hmd = hmd;
         }
         
+        public Matrix View { get; private set; }
+        public Matrix Projection { get; private set; }
+        public Vector3 Position { get; private set; }
+        public Vector3 Forward { get; private set; }
+        public Vector3 Up { get; private set; }
+
         public void PreDraw(ICamera camera)
         {
             Matrix projection;
@@ -28,10 +34,18 @@ namespace Alex.API.Graphics
             projection = hmdProjection.ToMg();
             eyeMatrix = hmdEye.ToMg();
 
-            var view = Matrix.CreateLookAt(camera.Position, camera.Target, Vector3.Up);
             var forward = Vector3.TransformNormal(camera.Forward, Matrix.Invert(_hmd * eyeMatrix));
-            camera.ProjectionMatrix = projection;
-            camera.ViewMatrix = view *Matrix.Invert( _hmd * eyeMatrix);
+            var target = camera.Position - forward;
+            var view = Matrix.CreateLookAt(camera.Position, camera.Target, camera.Up);
+
+            //View = view * Matrix.Invert(_hmd * eyeMatrix);
+            View = view * _hmd * eyeMatrix;
+            Projection = projection;
+            Forward = forward;
+            Up = camera.Up;
+            Position = camera.Position;
+            camera.ProjectionMatrix = Projection;
+            camera.ViewMatrix = View;
         }
     }
 }
