@@ -224,6 +224,21 @@ namespace Alex.API.Graphics
 
     public static class GraphicsContextExtensions
     {
+        public static IDisposable PushRenderTarget(this GraphicsDevice graphicsDevice, RenderTarget2D renderTarget, Viewport viewport)
+        {
+            var currentRenderTargets = graphicsDevice.GetRenderTargets();
+            graphicsDevice.SetRenderTargets(renderTarget);
+
+            var currentViewport = graphicsDevice.Viewport;
+            graphicsDevice.Viewport = viewport;
+            
+            return new ContextDisposable(() =>
+            {
+                graphicsDevice.SetRenderTargets(currentRenderTargets);
+                graphicsDevice.Viewport = currentViewport;
+            });
+        }
+        
         public static IDisposable PushRenderTarget(this GraphicsDevice graphicsDevice, RenderTarget2D renderTarget)
         {
             var current = graphicsDevice.GetRenderTargets();

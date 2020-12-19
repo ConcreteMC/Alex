@@ -65,6 +65,7 @@ using Point = Microsoft.Xna.Framework.Point;
 using TextInputEventArgs = Microsoft.Xna.Framework.TextInputEventArgs;
 using ThreadType = Alex.API.Utils.ThreadType;
 using ETextureType = Valve.VR.ETextureType;
+using Rectangle = Microsoft.Xna.Framework.Rectangle;
 
 namespace Alex
 {
@@ -583,7 +584,7 @@ namespace Alex
 				hmdMatrix = _vrContext.Hmd.GetNextPose().ToMg();
 			}
 
-			using (GraphicsDevice.PushRenderTarget(_leftEye))
+			using (GraphicsDevice.PushRenderTarget(_leftEye, new Viewport(0, 0, _leftEye.Width, _leftEye.Height)))
 			{
 				GraphicsDevice.Clear(Color.Black);
 				RenderEye(gameTime, Eye.Left, hmdMatrix);
@@ -591,7 +592,7 @@ namespace Alex
 
 			if (VrEnabled)
 			{
-				using (GraphicsDevice.PushRenderTarget(_rightEye))
+				using (GraphicsDevice.PushRenderTarget(_rightEye, new Viewport(0, 0, _rightEye.Width, _rightEye.Height)))
 				{
 					GraphicsDevice.Clear(Color.Black);
 					RenderEye(gameTime, Eye.Right, hmdMatrix);
@@ -603,8 +604,38 @@ namespace Alex
 			
 			// Draw left eye to screen
 			_spriteBatch.Begin();
-			_spriteBatch.Draw(_leftEye, Vector2.Zero, Color.White);
+			
+			
+		//	_spriteBatch.Draw(_leftEye, Vector2.Zero, Color.White);
+			_spriteBatch.Draw(_leftEye, new Rectangle(0, 0, GraphicsDevice.Viewport.Width / 2, GraphicsDevice.Viewport.Height), Color.White);
+			
+			_spriteBatch.Draw(_rightEye, new Rectangle(GraphicsDevice.Viewport.Width / 2, 0, GraphicsDevice.Viewport.Width / 2, GraphicsDevice.Viewport.Height), Color.White);
+			
 			_spriteBatch.End();
+
+			/*_spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Opaque, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullNone, null, GuiManager.ScaledResolution.TransformMatrix);
+			var debugpos = new Vector2(0, 0);
+			var debugSize = 12f;
+			if (GuiRenderer.Font != null)
+			{
+				GuiRenderer.Font.DrawString(_spriteBatch, $"VR CAMERA: Position ({CameraWrapper.Position.ToString()})", debugpos,
+					TextColor.BrightGreen);
+				debugpos += new Vector2(0, debugSize);
+				GuiRenderer.Font.DrawString(_spriteBatch, $"VR CAMERA Forward: ({CameraWrapper.Forward.ToString()})", debugpos,
+					TextColor.BrightGreen);
+
+				debugpos += new Vector2(0, debugSize);
+				GuiRenderer.Font.DrawString(_spriteBatch, $"VR CAMERA Up: ({CameraWrapper.Up.ToString()})", debugpos,
+					TextColor.BrightGreen);
+			}
+			_spriteBatch.End();*/
+			
+			
+			var cross = Vector3.Cross(CameraWrapper.Position, CameraWrapper.Forward);
+				
+			Log.Debug($"VR CAMERA: Position ({CameraWrapper.Position.ToString()})");
+			Log.Debug($"VR CAMERA: Forward ({CameraWrapper.Forward.ToString()}) // Cross: ({cross.ToString()})");
+			Log.Debug($"VR CAMERA: Up ({CameraWrapper.Up.ToString()})");
 			
 			if (VrEnabled)
 			{

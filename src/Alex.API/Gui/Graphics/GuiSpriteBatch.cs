@@ -42,22 +42,22 @@ namespace Alex.API.Gui.Graphics
             _graphicsDevice = graphicsDevice;
             SpriteBatch = spriteBatch;
 
-            // Effect = new BasicEffect(graphicsDevice)
-            // {
-            //     TextureEnabled = true,
-            //     VertexColorEnabled = true
-            // };
-            //
-            // var cameraPosition = new Vector3(0, 0, 13);
-            // cameraPosition = Vector3.Transform(
-            //     cameraPosition, Matrix.CreateScale(1));
-            //
-            // var view        = Matrix.CreateLookAt(cameraPosition, new Vector3(0, 0, 0), Vector3.UnitZ);
-            // var projection  = Matrix.CreatePerspectiveFieldOfView(1, _graphicsDevice.Viewport.AspectRatio, 1, 500);
-            //
-            // Effect.World       = Matrix.CreateWorld(Vector3.Zero, Vector3.Forward, Vector3.Up);
-            // Effect.View        = view;
-            // Effect.Projection = projection;
+            Effect = new BasicEffect(graphicsDevice)
+            {
+                TextureEnabled = true,
+                VertexColorEnabled = true
+            };
+            
+            var cameraPosition = new Vector3(0, 0, 13);
+            cameraPosition = Vector3.Transform(
+                cameraPosition, Matrix.CreateScale(1));
+
+            var view        = Matrix.CreateLookAt(cameraPosition, new Vector3(0, 0, 0), Vector3.UnitZ);
+            var projection  = Matrix.CreatePerspectiveFieldOfView(1, _graphicsDevice.Viewport.AspectRatio, 1, 500);
+
+            Effect.World       = Matrix.CreateWorld(Vector3.Zero, Vector3.Forward, Vector3.Up);
+            Effect.View        = view;
+            Effect.Projection = projection;
             
             Context = GraphicsContext.CreateContext(_graphicsDevice, BlendState.NonPremultiplied, DepthStencilState.None, RasterizerState, SamplerState.PointClamp);
 //            Context = GraphicsContext.CreateContext(_graphicsDevice, BlendState.NonPremultiplied, DepthStencilState.None, RasterizerState.CullNone, SamplerState.PointClamp);
@@ -103,7 +103,7 @@ namespace Alex.API.Gui.Graphics
         {
             if (_hasBegun) return;
 
-            SpriteBatch.Begin(SpriteSortMode.Deferred, Context.BlendState, Context.SamplerState, Context.DepthStencilState, Context.RasterizerState, null, ScaledResolution.TransformMatrix * _renderMatrix);
+            SpriteBatch.Begin(SpriteSortMode.Deferred, Context.BlendState, Context.SamplerState, Context.DepthStencilState, Context.RasterizerState, Effect, ScaledResolution.TransformMatrix * _renderMatrix);
 
             _hasBegun = true;
         }
@@ -444,7 +444,7 @@ namespace Alex.API.Gui.Graphics
 
         #endregion
 
-        //public BasicEffect Effect = null;
+        public BasicEffect Effect = null;
 
         private Texture2D ColorTexture
         {

@@ -80,7 +80,7 @@ namespace Alex.API.Gui
             ScaledResolution.ScaleChanged += ScaledResolutionOnScaleChanged;
             _camera = new VrGuiCamera()
             {
-                Position = new Vector3(0, 0, 400f)
+                Position = new Vector3(0, 0, 0)
             };
 
             FocusManager = new GuiFocusHelper(this, InputManager, game.GraphicsDevice);
@@ -259,7 +259,7 @@ namespace Alex.API.Gui
                 if (vrEnabled)
                 {
                     CameraWrapper.PreDraw(_camera);
-                    EnsureGuiRenderTarget();
+                    //EnsureGuiRenderTarget();
                     //GraphicsDevice.SetRenderTarget(_vrGuiBaseTarget);
                     // maybeADisposable =
                     //     GuiSpriteBatch.BeginTransform(Matrix.CreateTranslation(-(ScaledResolution.ScaledWidth / 2f), 0,
@@ -293,7 +293,11 @@ namespace Alex.API.Gui
                     // GuiSpriteBatch.Effect.Projection = Matrix.CreateTranslation(-0.5f, -0.5f, 0) * 
                     //                                    Matrix.CreateOrthographicOffCenter(0, GraphicsDevice.Viewport.Width, GraphicsDevice.Viewport.Height, 0, 0, 1);
                     //
-                    maybeADisposable = GraphicsDevice.PushRenderTarget(_vrGuiBaseTarget);
+
+                    GuiSpriteBatch.Effect.Projection = CameraWrapper.Projection;
+                    GuiSpriteBatch.Effect.View = CameraWrapper.View;
+                    GuiSpriteBatch.Effect.World = Matrix.CreateScale(0.5f) * Matrix.CreateTranslation(0, 1f, 0);
+                    //maybeADisposable = GraphicsDevice.PushRenderTarget(_vrGuiBaseTarget);
                     //GuiSpriteBatch.Effect = null;
                     GuiSpriteBatch.Begin();
                 }
@@ -329,10 +333,9 @@ namespace Alex.API.Gui
                                   + (Vector3.Up * _vrGuiBaseTarget.Height / 2f);
 //                                  + (Vector3.Backward * (Math.Max(_vrGuiBaseTarget.Width, _vrGuiBaseTarget.Height)));
 
-                        _basicEffect.World = Matrix.Identity
-                                             * Matrix.CreateBillboard(pos, CameraWrapper.Position, CameraWrapper.Up,
-                                                 CameraWrapper.Forward);
-                        
+                        _basicEffect.World = Matrix.CreateScale(0.5f)
+                                             * Matrix.CreateTranslation(pos);
+
                         SpriteBatch.Begin();
                         var bounds = new Rectangle(_vrGuiBaseTarget.Bounds.Location, _vrGuiBaseTarget.Bounds.Size);
                             bounds.Inflate(_vrGuiBaseTarget.Width * -0.1f,

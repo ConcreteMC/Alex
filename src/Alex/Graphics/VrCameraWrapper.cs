@@ -35,15 +35,15 @@ namespace Alex.API.Graphics
             eyeMatrix = hmdEye.ToMg();
 
             var forward = Vector3.TransformNormal(camera.Forward, Matrix.Invert(_hmd * eyeMatrix));
-            var target = camera.Position - forward;
+
             var view = Matrix.CreateLookAt(camera.Position, camera.Target, camera.Up);
 
-            //View = view * Matrix.Invert(_hmd * eyeMatrix);
             View = view * _hmd * eyeMatrix;
             Projection = projection;
             Forward = forward;
             Up = camera.Up;
             Position = camera.Position;
+            
             camera.ProjectionMatrix = Projection;
             camera.ViewMatrix = View;
         }
