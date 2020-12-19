@@ -67,11 +67,13 @@ namespace Alex.Entities.BlockEntities
 		{
 			
 		}
+
+		protected Vector3 Offset { get; set; } = new Vector3(0.5f, 0f, 0.5f);
 		
 		/// <inheritdoc />
 		public override PlayerLocation KnownPosition
 		{
-			get => base.KnownPosition + new Vector3(0.5f, 0, 0.5f);
+			get => base.KnownPosition + Offset;
 			set
 			{
 				base.KnownPosition = value;
@@ -81,7 +83,7 @@ namespace Alex.Entities.BlockEntities
 
 		internal override PlayerLocation RenderLocation
 		{
-			get => base.RenderLocation + new Vector3(0.5f, 0, 0.5f);
+			get => base.RenderLocation + Offset;
 			set => base.RenderLocation = value;
 		}
 

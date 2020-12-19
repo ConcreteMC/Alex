@@ -27,7 +27,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 {
     public class ChunkProcessor : IDisposable
     {
-	    private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ChunkProcessor));
+	    private static readonly Logger         Log = LogManager.GetCurrentClassLogger(typeof(ChunkProcessor));
+	    public static           ChunkProcessor Instance { get; set; }
 	    static ChunkProcessor()
 	    {
 		    
@@ -53,6 +54,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	        UseAlexChunks = useAlexChunks;
 	        CancellationToken = cancellationToken;
 	        Cache = blobCache;
+
+	        Instance = this;
         }
 
         public void HandleChunkData(bool cacheEnabled,
@@ -730,6 +733,63 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	        
 	        switch (record.Name)
 	        {
+		        case "minecraft:wall_sign":
+			        searchName = "minecraft:oak_wall_sign";
+			        break;
+		        case "minecraft:spruce_wall_sign":
+			        searchName = "minecraft:spruce_wall_sign";
+			        break;
+		        case "minecraft:birch_wall_sign":
+			        searchName = "minecraft:birch_wall_sign";
+			        break;
+		        case "minecraft:jungle_wall_sign":
+			        searchName = "minecraft:jungle_wall_sign";
+			        break;
+		        case "minecraft:acacia_wall_sign":
+			        searchName = "minecraft:acacia_wall_sign";
+			        break;
+		        case "minecraft:darkoak_wall_sign":
+			        searchName = "minecraft:dark_oak_wall_sign";
+			        break;
+		        case "minecraft:crimson_wall_sign":
+			        searchName = "minecraft:crimson_wall_sign";
+			        break;
+		        case "minecraft:warped_wall_sign":
+			        searchName = "minecraft:warped_wall_sign";
+			        break;
+		        
+		        
+		        case "minecraft:standing_sign":
+			        searchName = "minecraft:oak_sign";
+			        break;
+		        case "minecraft:spruce_standing_sign":
+			        searchName = "minecraft:spruce_sign";
+			        break;
+		        case "minecraft:birch_standing_sign":
+			        searchName = "minecraft:birch_sign";
+			        break;
+		        case "minecraft:jungle_standing_sign":
+			        searchName = "minecraft:jungle_sign";
+			        break;
+		        case "minecraft:acacia_standing_sign":
+			        searchName = "minecraft:acacia_sign";
+			        break;
+		        case "minecraft:darkoak_standing_sign":
+			        searchName = "minecraft:dark_oak_sign";
+			        break;
+		        case "minecraft:crimson_standing_sign":
+			        searchName = "minecraft:crimson_sign";
+			        break;
+		        case "minecraft:warped_standing_sign":
+			        searchName = "minecraft:warped_sign";
+			        break;
+
+		        case "minecraft:snow":
+			        searchName = "minecraft:snow_block";
+			        break;
+		        case "minecraft:snow_layer":
+			        searchName = "minecraft:snow";
+			        break;
 		        case "minecraft:torch":
 			        if (record.States.Any(x => x.Name.Equals("torch_facing_direction") && x.Value() != "top"))
 			        {
@@ -939,9 +999,21 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	        {
 		        switch (state.Name)
 		        {
+			        case "ground_sign_direction":
+				        r = r.WithProperty("rotation", state.Value());
+				        break;
+			        case "disarmed_bit":
+				        r = r.WithProperty("disarmed", state.Value() == "1" ? "true" : "false");
+				        break;
+			        case "powered_bit":
+				        r = r.WithProperty("powered", state.Value() == "1" ? "true" : "false");
+				        break;
+			        case "attached_bit":
+				        r = r.WithProperty("attached", state.Value() == "1" ? "true" : "false");
+				        break;
 			        case "direction":
 			        case "weirdo_direction":
-				        if (r.Block is FenceGate)
+				        if (r.Block is FenceGate || r.Block is TripwireHook)
 				        {
 					        switch (state.Value())
 					        {

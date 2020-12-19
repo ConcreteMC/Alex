@@ -120,7 +120,7 @@ namespace Alex.Gamestates.InGame
 		protected override void OnShow()
 		{
 			Alex.IsMouseVisible = false;
-			
+
 			if (RenderNetworking)
 				Alex.GuiManager.AddScreen(_networkDebugHud);
 			
@@ -129,6 +129,8 @@ namespace Alex.Gamestates.InGame
 
 			if (RenderDebug)
 				Alex.GuiManager.AddScreen(_debugInfo);
+			
+			_playingHud.Title.Ready();
 		}
 
 		protected override void OnHide()

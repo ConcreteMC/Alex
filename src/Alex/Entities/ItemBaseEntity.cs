@@ -13,7 +13,7 @@ namespace Alex.Entities
 	public class ItemBaseEntity : ThrowableEntity
 	{
 		/// <inheritdoc />
-		public ItemBaseEntity(EntityType type, World level) : base((int) type, level, null)
+		public ItemBaseEntity(World level) : base(level, null)
 		{
 			
 		}

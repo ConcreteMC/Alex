@@ -76,11 +76,25 @@ namespace Alex.Utils
 				{
 					data = wc.DownloadData(skinUri);
 				}
+				
+				ManualResetEvent resetEvent = new ManualResetEvent(false);
 
-				using (MemoryStream ms = new MemoryStream(data))
-				{
-					texture = GpuResourceManager.GetTexture2D("SkinUtils", graphics, ms);
-				}
+				PooledTexture2D text = null;
+				Alex.Instance.UIThreadQueue.Enqueue(
+					() =>
+					{
+						using (MemoryStream ms = new MemoryStream(data))
+						{
+							text = GpuResourceManager.GetTexture2D(
+								"SkinUtils", graphics, ms); // Texture2D.FromStream(graphics, ms);
+						}
+
+						resetEvent.Set();
+					});
+						
+				resetEvent.WaitOne();
+
+				texture = text;
 
 				return true;
 			}

@@ -463,7 +463,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			Guid uuid,
 			EntityType type,
 			PlayerLocation position,
-			Microsoft.Xna.Framework.Vector3 velocity, EntityAttributes attributes)
+			Microsoft.Xna.Framework.Vector3 velocity, EntityAttributes attributes, MetadataDictionary metadata)
 		{
 			Entity entity = null;
 
@@ -509,6 +509,10 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			entity.UUID = new MiNET.Utils.UUID(uuid.ToByteArray());
 			entity.SetInventory(new BedrockInventory(46));
 			
+			if (metadata != null)
+				entity.HandleMetadata(metadata);
+			//entity.ad
+			
 			Client.World.SpawnEntity(entityId, entity);
 
 			return true;
@@ -523,7 +527,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				SpawnMob(message.runtimeEntityId, Guid.NewGuid(), (EntityType) res,
 					new PlayerLocation(message.x, message.y, message.z, message.headYaw, message.yaw, message.pitch),
 					new Microsoft.Xna.Framework.Vector3(message.speedX, message.speedY, message.speedZ),
-					message.attributes);
+					message.attributes, message.metadata);
 				_entityMapping.TryAdd(message.entityIdSelf, message.runtimeEntityId);
 			}
 			else
@@ -1118,7 +1122,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			if (entity == null)
 				return;
 
-			if (entity is EntityFallingBlock fallingBlock)
+			/*if (entity is EntityFallingBlock fallingBlock)
 			{
 				foreach (var meta in message.metadata._entries.ToArray())
 				{
@@ -1144,7 +1148,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 							break;
 					}
 				}
-			}
+			}*/
 
 			entity.HandleMetadata(message.metadata);
 			//UnhandledPackage(message);
@@ -1167,8 +1171,9 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			if (entity == null)
 				return;
 			
-			var old = entity.Velocity;
-			entity.Velocity += new Microsoft.Xna.Framework.Vector3(velocity.X - old.X, velocity.Y - old.Y, velocity.Z - old.Z);
+			entity.Movement.Velocity(velocity);
+			//var old = entity.Velocity;
+			//entity.Velocity += new Microsoft.Xna.Framework.Vector3(velocity.X - old.X, velocity.Y - old.Y, velocity.Z - old.Z);
 
 			//UnhandledPackage(message);
 		}

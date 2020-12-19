@@ -196,7 +196,7 @@ namespace Alex.Graphics.Models
 				Definition = cube;
 				_mirror = mirrored;
 				//Mirrored = mirrored;
-				var uv     = cube.Uv;
+				var uv     = cube.Uv ?? new EntityModelUV();
 				var size   = cube.InflatedSize(inflation);
 				var origin =  cube.InflatedOrigin(inflation);//, size;
 

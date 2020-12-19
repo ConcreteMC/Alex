@@ -3,12 +3,18 @@ using Alex.Items;
 using Alex.Networking.Java.Packets.Play;
 using Alex.ResourcePackLib.Json.Models.Items;
 using Alex.Worlds;
+using Alex.Worlds.Multiplayer.Bedrock;
 using Microsoft.Xna.Framework;
+using MiNET.Blocks;
+using MiNET.Utils;
+using NLog;
 
 namespace Alex.Entities.Generic
 {
 	public class EntityFallingBlock : ItemEntity
 	{
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(EntityFallingBlock));
+		
 		/// <inheritdoc />
 		public EntityFallingBlock(World level) : base(level)
 		{
@@ -27,10 +33,32 @@ namespace Alex.Entities.Generic
 
 			if (entry.Index == 7 && entry is MetadataPosition position)
 			{
-				KnownPosition.X = position.Position.X;
-				KnownPosition.Y = position.Position.Y;
-				KnownPosition.Z = position.Position.Z;
+				RenderLocation.X = KnownPosition.X = position.Position.X;
+				RenderLocation.Y = KnownPosition.Y = position.Position.Y;
+				RenderLocation.Z = KnownPosition.Z = position.Position.Z;
 			}
+		}
+
+		/// <inheritdoc />
+		protected override bool HandleMetadata(MiNET.Entities.Entity.MetadataFlags flag, MetadataEntry entry)
+		{
+			if (flag == MiNET.Entities.Entity.MetadataFlags.Variant && entry is MetadataInt mdi)
+			{
+				var blockState = ChunkProcessor.Instance.GetBlockState((uint) mdi.Value);
+
+				if (ItemFactory.TryGetItem(blockState.Name, out var item))
+				{
+					SetItem(item);
+				}
+				else
+				{
+					Log.Info($"Could not get item: {blockState.Name}");
+				}
+				
+				return true;
+			}
+			
+			return base.HandleMetadata(flag, entry);
 		}
 
 		/// <inheritdoc />

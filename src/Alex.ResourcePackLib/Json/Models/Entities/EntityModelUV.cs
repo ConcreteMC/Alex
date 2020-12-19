@@ -26,15 +26,15 @@ namespace Alex.ResourcePackLib.Json.Models.Entities
 		[JsonProperty("down")]
 		public EntityModelUVData Down  { get; set; }
 
-		public EntityModelUV()
+		public EntityModelUV() : this(Vector2.Zero, false)
 		{
 			
 		}
 		
 		internal bool IsCube { get; }
-		public EntityModelUV(Vector2 origin)
+		public EntityModelUV(Vector2 origin, bool isCube = true)
 		{
-			IsCube = true;
+			IsCube = isCube;
 			var model = new EntityModelUVData() {Origin = origin};
 			Up = Down = North = West = South = East = model;
 		}
@@ -84,12 +84,12 @@ namespace Alex.ResourcePackLib.Json.Models.Entities
 		/// </summary>
 		[JsonProperty("uv")]
 		public Vector2 Origin { get; set; }
-		
+
 		/// <summary>
 		/// The face maps this many texels from the uv origin. If not specified, the box dimensions are used instead.
 		/// </summary>
 		[JsonProperty("uv_size"), JsonConverter(typeof(Vector2NullableConverter))]
-		public Vector2? Size { get; set; }
+		public Vector2? Size { get; set; } = null;
 
 		public EntityModelUVData Offset(Vector2 amount)
 		{

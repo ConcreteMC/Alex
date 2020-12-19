@@ -217,6 +217,10 @@ namespace Alex.Utils
 					entity = new TropicalFish(world);
 					break;
 				
+				case EntityType.FireworkRocket:
+					entity = new FireworkRocket(world, null);
+					break;
+				
 				//case EntityType.Human:
 					//entity = new PlayerMob("test", world, );
 				//	break;

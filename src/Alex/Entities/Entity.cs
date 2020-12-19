@@ -185,6 +185,7 @@ namespace Alex.Entities
 		public IItemRenderer ItemRenderer { get; private set; } = null;
 		
 		private EntityModelRenderer.ModelBone _leftArmModel;
+		private EntityModelRenderer.ModelBone _leftItemModel;
 		private EntityModelRenderer.ModelBone _rightArmModel;
 		private EntityModelRenderer.ModelBone _rightItemModel;
 		
@@ -683,27 +684,36 @@ namespace Alex.Entities
             
             var pivot = Vector3.Zero;
 
-            if (_rightItemModel != null)
+         /*   if (_leftItemModel != null)
             {
-	            pivot = _rightItemModel.Definition.Pivot;
+	            pivot = _leftItemModel.Definition.Pivot;
             }
-            else if (_rightArmModel != null)
+            else if (_leftArmModel != null)
             {
-	            pivot = _rightArmModel.Definition.Pivot;
-            }
+	            pivot = _leftArmModel.Definition.Pivot;
+            }*/
 					
             var scaleMatrix = Matrix.Identity;
 
-            if (ItemRenderer != null && _rightArmModel != null)
+            if (ItemRenderer != null && _leftArmModel != null)
             {
+	            if (_leftItemModel != null)
+	            {
+		            pivot = _leftItemModel.Definition.Pivot;
+	            }
+	            else
+	            {
+		            pivot = _leftArmModel.Definition.Pivot;
+	            }
+
 	            if ((ItemRenderer.DisplayPosition & DisplayPosition.ThirdPerson) != 0)
 		            scaleMatrix = Matrix.CreateTranslation(-pivot)
-		                          * Matrix.CreateRotationY(
-			                          MathUtils.ToRadians((1f / 16f) * _rightArmModel.Rotation.Y))
 		                          * Matrix.CreateRotationX(
-			                          MathUtils.ToRadians((1f / 16f) * _rightArmModel.Rotation.X))
+			                          MathUtils.ToRadians((1f / 16f) * _leftArmModel.Rotation.X))
+		                          * Matrix.CreateRotationY(
+			                          MathUtils.ToRadians((1f / 16f) * _leftArmModel.Rotation.X))
 		                          * Matrix.CreateRotationZ(
-			                          MathUtils.ToRadians((1f / 16f) * _rightArmModel.Rotation.Z))
+			                          MathUtils.ToRadians((1f / 16f) * _leftArmModel.Rotation.Z))
 		                          * Matrix.CreateTranslation(pivot);
             }
 
@@ -769,7 +779,7 @@ namespace Alex.Entities
 		
 		public void SwingArm(bool broadcast, bool leftHanded)
 		{
-			EntityModelRenderer.ModelBone bone = leftHanded ? _leftArmModel : _rightArmModel;
+			EntityModelRenderer.ModelBone bone = leftHanded ? _rightArmModel : _leftArmModel;
 
 			if (bone != null)
 			{
@@ -868,7 +878,7 @@ namespace Alex.Entities
 					_armRotation += dt;
 
 					rArmRot = new Vector3(
-						(0.5f + MathF.Cos(_armRotation)) * -7.5f, 0f, 0.1f + (MathF.Sin(_armRotation) * -1.5f));
+						(0.5f + MathF.Cos(_armRotation)) * 7.5f, 0f, 0.1f + (MathF.Sin(_armRotation) * -1.5f));
 				}
 
 
@@ -1129,6 +1139,7 @@ namespace Alex.Entities
 			ModelRenderer.GetBone("body", out _body);
 
 			ModelRenderer.GetBone("leftArm", out _leftArmModel);
+			ModelRenderer.GetBone("leftItem", out _leftItemModel);
 			ModelRenderer.GetBone("rightArm", out _rightArmModel);
 			ModelRenderer.GetBone("rightItem", out _rightItemModel);
 
@@ -1308,6 +1319,9 @@ namespace Alex.Entities
 			foreach (var str in clean.Split('\n'))
 			{
 				var line = str.Trim();
+				if (line.Length == 0)
+					continue;
+				
 				var stringCenter = Alex.Font.MeasureString(line, scale);
 				var c            = new Point((int) stringCenter.X, (int) stringCenter.Y);
 

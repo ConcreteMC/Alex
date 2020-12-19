@@ -761,7 +761,7 @@ namespace Alex
 						{
 							GameStateManager.AddState("play", playState);
 							GameStateManager.SetActiveState("play");
-
+							
 							return;
 						}
 

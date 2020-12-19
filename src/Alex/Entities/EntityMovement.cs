@@ -26,13 +26,25 @@ namespace Alex.Entities
 			}
 		}
 		
-		public void MoveTo(PlayerLocation location)
+		public void MoveTo(PlayerLocation location, bool updateLook = true)
 		{
 			//var difference = 
 			var distance = Microsoft.Xna.Framework.Vector3.Distance(
 				Entity.KnownPosition.ToVector3(), location.ToVector3());
-			
+
 			Entity.KnownPosition = location;
+			
+			//Entity.KnownPosition.X = location.X;
+			//Entity.KnownPosition.Y = location.Y;
+			//Entity.KnownPosition.Z = location.Z;
+			Entity.KnownPosition.OnGround = location.OnGround;
+
+			if (updateLook)
+			{
+				Entity.KnownPosition.Yaw = location.Yaw;
+				Entity.KnownPosition.HeadYaw = location.HeadYaw;
+				Entity.KnownPosition.Pitch = location.Pitch;
+			}
 
 			Entity.DistanceMoved += MathF.Abs(distance);
 		}
@@ -50,6 +62,27 @@ namespace Alex.Entities
 
 			Entity.DistanceMoved +=
 				MathF.Abs(Microsoft.Xna.Framework.Vector3.Distance(oldPosition, Entity.KnownPosition.ToVector3()));
+		}
+
+		public void Push(Vector3 velocity)
+		{
+			Entity.Velocity += velocity;
+		}
+
+		public void Velocity(Vector3 velocity)
+		{
+			var oldLength = (Entity.Velocity).Length();
+			if (oldLength < velocity.Length())
+			{
+				Entity.Velocity += new Vector3(velocity.X - Entity.Velocity.X, velocity.Y - Entity.Velocity.Y, velocity.Z - Entity.Velocity.Z);
+			}
+			else
+			{
+				Entity.Velocity = new Vector3(
+					MathF.Abs(Entity.Velocity.X) < 0.0001f ? velocity.Y : Entity.Velocity.X,
+					MathF.Abs(Entity.Velocity.Y) < 0.0001f ? velocity.Y : Entity.Velocity.Y,
+					MathF.Abs(Entity.Velocity.Z) < 0.0001f ? velocity.Z : Entity.Velocity.Z);
+			}
 		}
 		
 		public void Teleport(PlayerLocation location)

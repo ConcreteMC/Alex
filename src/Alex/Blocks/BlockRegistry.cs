@@ -455,10 +455,25 @@ namespace Alex.Blocks
 		    
 		    //Signs
 		    this.Register("minecraft:wall_sign", () => new WallSign());
-		    this.Register("minecraft:oak_wall_sign", () => new WallSign());
+		    this.Register("minecraft:oak_wall_sign", () => new WallSign(WoodType.Oak));
+		    this.Register("minecraft:spruce_wall_sign", () => new WallSign(WoodType.Spruce));
+		    this.Register("minecraft:birch_wall_sign", () => new WallSign(WoodType.Birch));
+		    this.Register("minecraft:jungle_wall_sign", () => new WallSign(WoodType.Jungle));
+		    this.Register("minecraft:acacia_wall_sign", () => new WallSign(WoodType.Acacia));
+		    this.Register("minecraft:dark_oak_wall_sign", () => new WallSign(WoodType.DarkOak));
+		    this.Register("minecraft:crimson_wall_sign", () => new WallSign(WoodType.Crimson));
+		    this.Register("minecraft:warped_wall_sign", () => new WallSign(WoodType.Warped));
 		    
 		    //Standing signs
 		    this.Register("minecraft:standing_sign", () => new StandingSign());
+		    this.Register("minecraft:oak_sign", () => new StandingSign(WoodType.Oak));
+		    this.Register("minecraft:spruce_sign", () => new StandingSign(WoodType.Spruce));
+		    this.Register("minecraft:birch_sign", () => new StandingSign(WoodType.Birch));
+		    this.Register("minecraft:jungle_sign", () => new StandingSign(WoodType.Jungle));
+		    this.Register("minecraft:acacia_sign", () => new StandingSign(WoodType.Acacia));
+		    this.Register("minecraft:dark_oak_sign", () => new StandingSign(WoodType.DarkOak));
+		    this.Register("minecraft:crimson_sign", () => new StandingSign(WoodType.Crimson));
+		    this.Register("minecraft:warped_sign", () => new StandingSign(WoodType.Warped));
 		    
 		    //Chests
 		    this.Register("minecraft:chest", () => new Chest());

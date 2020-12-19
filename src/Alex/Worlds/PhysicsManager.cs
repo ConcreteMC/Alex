@@ -35,13 +35,13 @@ namespace Alex.Worlds
 		
 		private Vector3 TruncateVelocity(Vector3 velocity)
 		{
-			if (Math.Abs(velocity.X) < 0.005f)
+			if (Math.Abs(velocity.X) < 0.0005f)
 				velocity = new Vector3(0, velocity.Y, velocity.Z);
 			
-			if (Math.Abs(velocity.Y) < 0.005f)
+			if (Math.Abs(velocity.Y) < 0.0005f)
 				velocity = new Vector3(velocity.X, 0, velocity.Z);
 			
-			if (Math.Abs(velocity.Z) < 0.005f)
+			if (Math.Abs(velocity.Z) < 0.0005f)
 				velocity = new Vector3(velocity.X, velocity.Y, 0);
 
 			return velocity;
@@ -171,7 +171,7 @@ namespace Alex.Worlds
 				}
 				
 				var block = World.GetBlock(blockcoords.X, blockcoords.Y, blockcoords.Z);
-				slipperiness = (float) block.BlockMaterial.Slipperiness * 0.91f;
+				slipperiness = (float) block.BlockMaterial.Slipperiness;
 					
 				movement *= (float)entity.CalculateMovementSpeed() * (0.1627714f / (slipperiness * slipperiness * slipperiness));
 			}
@@ -226,8 +226,6 @@ namespace Alex.Worlds
 			e.Movement.MoveTo(e.KnownPosition + e.Velocity);
 			
 			e.KnownPosition.OnGround = DetectOnGround(e);
-			
-			e.Velocity = TruncateVelocity(e.Velocity);
 
 			if (e is Player && boxes.Count > 0)
 			{
@@ -261,6 +259,8 @@ namespace Alex.Worlds
 					e.Velocity *= new Vector3(0.91f, 0.98f, 0.91f);
 				}
 			}
+			
+			e.Velocity = TruncateVelocity(e.Velocity);
 		}
 
 		private BoundingBox GetAABBVelocityBox(Entity entity)
@@ -563,6 +563,12 @@ namespace Alex.Worlds
 					}
 				}
 				
+				if (entity.KnownPosition.OnGround && MathF.Abs(blockBox.Max.Y - entity.BoundingBox.Min.Y) < 0.005f)
+				{
+					return false;
+				}
+
+				
 				float diff;
 				
 				if (negative)
@@ -671,18 +677,22 @@ namespace Alex.Worlds
 			if (collisionExtent != null) // Collision detected, adjust accordingly
 			{
 				
-				var    extent = collisionExtent.Value;
-
+				var extent      = collisionExtent.Value;
+				
+				var yDifference = blockBox.Max.Y - entity.BoundingBox.Min.Y;
 				if (CanClimb(entity.Velocity, entity.BoundingBox, blockBox) && entity.KnownPosition.OnGround)
 				{
-					var yDifference = blockBox.Max.Y - entity.BoundingBox.Min.Y;
-
 					if (yDifference > 0f)
 					{
 						entity.Velocity = new Vector3(entity.Velocity.X, MathF.Sqrt(2f * (float) (entity.Gravity) * (yDifference )), entity.Velocity.Z);
 						
 						return false;
 					}
+				}
+
+				if (entity.KnownPosition.OnGround && MathF.Abs(blockBox.Max.Y - entity.BoundingBox.Min.Y) < 0.005f)
+				{
+					return false;
 				}
 				
 				float diff;
@@ -705,11 +715,13 @@ namespace Alex.Worlds
 		{
 			if (velocity.Y < 0f)
 				return false;
+			
+			var yDifference = blockBox.Max.Y - entityBox.Min.Y;
 
 			if (!(blockBox.Max.Y > entityBox.Min.Y)) 
 				return false;
 
-			if ((blockBox.Max.Y - entityBox.Min.Y) > 0.55f)
+			if (yDifference > 0.55f)
 				return false;
 
 			if (GetIntersecting(World, entityBox).Any(bb => bb.Min.Y >= entityBox.Min.Y && bb.Min.Y <= entityBox.Max.Y))

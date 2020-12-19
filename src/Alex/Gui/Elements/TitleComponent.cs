@@ -40,6 +40,11 @@ namespace Alex.Gui.Elements
             };
 	    }
 
+		public void Ready()
+		{
+			Show();
+        }	
+
 	    #region Titles
 
 	    private ManualResetEventSlim TitleResetEvent = new ManualResetEventSlim(false);

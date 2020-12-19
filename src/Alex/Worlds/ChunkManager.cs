@@ -302,6 +302,9 @@ namespace Alex.Worlds
 				blockCoordinates => { return Chunks.ContainsKey((ChunkCoordinates) blockCoordinates); },
 				out BlockCoordinates coordinates))
 			{
+				if (coordinates.Y < 0 || coordinates.Y >= 256)
+					return false;
+				
 				ChunkCoordinates cc = (ChunkCoordinates) coordinates;
 
 				if (TryGetChunk(cc, out var c))

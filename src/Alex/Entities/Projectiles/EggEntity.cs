@@ -6,7 +6,7 @@ namespace Alex.Entities.Projectiles
 	public class EggEntity : ThrowableEntity
 	{
 		/// <inheritdoc />
-		public EggEntity(World level, NetworkProvider network) : base((int) EntityType.ThrownEgg, level, network)
+		public EggEntity(World level, NetworkProvider network) : base(level, network)
 		{
 			Width = 0.25;
 			//Length = 0.25;

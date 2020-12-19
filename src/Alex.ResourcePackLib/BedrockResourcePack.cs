@@ -163,7 +163,7 @@ namespace Alex.ResourcePackLib
 							
 							if (!final.TryGetValue(key, out requiredEntityModel))
 							{
-								Log.Warn($"Could not find entity model: {key} of {item.Key}");
+								//Log.Warn($"Could not find entity model: {key} of {item.Key}");
 								wasInterupted = true;
 								workQueue.Enqueue(item);
 

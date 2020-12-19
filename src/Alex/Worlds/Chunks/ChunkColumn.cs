@@ -240,11 +240,19 @@ namespace Alex.Worlds.Chunks
 
 		public ChunkSection GetSection(int y)
 		{
-			var section = Sections[y >> 4];
+			y = y >> 4;
+
+			if (y >= Sections.Length || y < 0)
+			{
+				throw new IndexOutOfRangeException($"Y value out of range! Expected a number between 0 & {Sections.Length - 1}, Got: {y}");
+			}
+			
+			var section = Sections[y];
+			
 			if (section == null)
 			{
 				var storage = CreateSection(true, 2);
-				Sections[y >> 4] = storage;
+				Sections[y] = storage;
 				return storage;
 			}
 

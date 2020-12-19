@@ -30,14 +30,12 @@ namespace Alex.Entities
 			new ConcurrentDictionary<ResourceLocation, Func<PooledTexture2D, EntityModelRenderer>>();
 
 		private static IReadOnlyDictionary<long, EntityData> _idToData;
-        private static IReadOnlyDictionary<EntityType, long> _typeToId; 
 		public static void Load(ResourceManager resourceManager, IProgressReceiver progressReceiver)
 		{
 			progressReceiver?.UpdateProgress(0, "Loading entity data...");
 
             Dictionary<long, EntityData> networkIdToData = new Dictionary<long, EntityData>();
-            Dictionary<EntityType, long> typeToId = new Dictionary<EntityType, long>();
-			EntityData[] entityObjects = JsonConvert.DeserializeObject<EntityData[]>(ResourceManager.ReadStringResource("Alex.Resources.NewEntities.txt"));
+            EntityData[] entityObjects = JsonConvert.DeserializeObject<EntityData[]>(ResourceManager.ReadStringResource("Alex.Resources.NewEntities.txt"));
 
             long unknownId = 0;
             for (int i = 0; i < entityObjects.Length; i++)
@@ -61,19 +59,9 @@ namespace Alex.Entities
 					Log.Warn($"Could not resolve {p.Name}'s protocol id!");
                     id = unknownId++;
                 }
-
-                if (EntityType.TryParse(p.Name, true, out EntityType entType))
-                {
-                    typeToId.TryAdd(entType, id);
-                }
-                else
-                {
-                    Log.Warn($"Could not add entity type: {p.Name}");
-                }
 			}
 
 			_idToData = networkIdToData;
-            _typeToId = typeToId;
         }
 
 		public static bool ModelByNetworkId(long networkId, out EntityModelRenderer renderer, out EntityData data)
@@ -98,7 +86,14 @@ namespace Alex.Entities
 
 		private static EntityModelRenderer TryGetRendererer(EntityData data, PooledTexture2D texture)
 		{
-			if (_registeredRenderers.TryGetValue(data.OriginalName, out var func))
+			string lookupName = data.OriginalName;
+
+			if (lookupName == "firework_rocket")
+			{
+				lookupName = "fireworks_rocket";
+			}
+			
+			if (_registeredRenderers.TryGetValue(lookupName, out var func))
 			{
 				return func(texture);
 			}
@@ -182,7 +177,7 @@ namespace Alex.Entities
                 }
 			}
 
-		    Log.Info($"Registered {(Assembly.GetExecutingAssembly().GetTypes().Count(t => t.Namespace == "Alex.Entities.Models"))} entity models");
+		//    Log.Info($"Registered {(Assembly.GetExecutingAssembly().GetTypes().Count(t => t.Namespace == "Alex.Entities.Models"))} entity models");
 		    Log.Info($"Registered {_registeredRenderers.Count} entity model renderers");
         }
 

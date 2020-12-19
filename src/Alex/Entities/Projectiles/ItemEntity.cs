@@ -15,7 +15,7 @@ namespace Alex.Entities.Projectiles
     {
         private static readonly ILogger Log = LogManager.GetCurrentClassLogger();
         
-        public ItemEntity(World level) : base(EntityType.Item, level)
+        public ItemEntity(World level) : base(level)
         {
             Width = 0.25;
             Height = 0.25;

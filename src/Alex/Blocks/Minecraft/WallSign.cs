@@ -2,8 +2,12 @@ namespace Alex.Blocks.Minecraft
 {
 	public class WallSign : Block
 	{
-		public WallSign() : base()
+		public WoodType WoodType { get; }
+		
+		public WallSign(WoodType woodType = WoodType.Oak) : base()
 		{
+			WoodType = woodType;
+			
 			Solid = false;
 			Transparent = true;
 			IsReplacible = false;
@@ -20,8 +24,11 @@ namespace Alex.Blocks.Minecraft
 
 	public class StandingSign : Block
 	{
-		public StandingSign()
+		public WoodType WoodType { get; }
+		public StandingSign(WoodType woodType = WoodType.Oak)
 		{
+			WoodType = woodType;
+			
 			Solid = false;
 			Transparent = true;
 			IsReplacible = false;
@@ -34,5 +41,17 @@ namespace Alex.Blocks.Minecraft
 			Hardness = 1;
 			BlockMaterial = Material.Wood;
 		}
+	}
+
+	public enum WoodType
+	{
+		Oak,
+		Spruce,
+		Birch,
+		Jungle,
+		Acacia,
+		DarkOak,
+		Crimson,
+		Warped
 	}
 }

@@ -896,25 +896,25 @@ namespace Alex.Worlds
 				entity.KnownPosition.OnGround = position.OnGround;
 				if (!relative)
 				{
-					entity.Movement.MoveTo(position);
+					entity.Movement.MoveTo(position, false);
 				}
 				else
 				{
 					entity.Movement.Move(position);
 				}
-
+				
 				if (updateLook)
 				{
-					//entity.KnownPosition.Yaw = position.Yaw;
 					if (updatePitch)
 					{
 						entity.KnownPosition.Pitch = position.Pitch;
 					}
-
+						
+					entity.KnownPosition.Yaw = position.Yaw;
 					entity.KnownPosition.HeadYaw = position.HeadYaw;
 					//	entity.UpdateHeadYaw(position.HeadYaw);
 				}
-            }
+			}
 		}
 
 		public void UpdateEntityLook(long entityId, float yaw, float pitch, bool onGround)

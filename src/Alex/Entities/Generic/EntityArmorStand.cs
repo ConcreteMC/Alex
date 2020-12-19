@@ -13,6 +13,9 @@ namespace Alex.Entities
 			(int) EntityType.ArmorStand, level, network)
 		{
 			//HealthManager.Invulnerable = true;
+			IsAffectedByGravity = false;
+			
+			SetSmall(false);
 		}
 
 		/// <inheritdoc />
@@ -23,6 +26,9 @@ namespace Alex.Entities
 			if (entry.Index == 14 && entry is MetadataByte data)
 			{
 				var isSmall = (data.Value & 0x01) != 0;
+				
+				SetSmall(isSmall);
+					
 				var hasArms = (data.Value & 0x04) != 0;
 				var noBasePlate = (data.Value & 0x08) != 0;
 				var setMarker = (data.Value & 0x10) != 0;
@@ -98,6 +104,20 @@ namespace Alex.Entities
 			if (ModelRenderer.GetBone(isLeftLeg ? "leftleg" : "rightleg", out var head))
 			{
 				head.Rotation = rotation;
+			}
+		}
+
+		public void SetSmall(bool small)
+		{
+			if (small)
+			{
+				Width = 0.5;
+				Height = 1.975;
+			}
+			else
+			{
+				Width = 0.25;
+				Height = 0.9875;
 			}
 		}
 	}

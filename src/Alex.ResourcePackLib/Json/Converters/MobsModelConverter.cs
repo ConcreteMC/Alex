@@ -233,6 +233,7 @@ namespace Alex.ResourcePackLib.Json.Converters
 
 					//case "1.10.0":
 					//	return Decode110(jObject, serializer);
+					case "1.10.0":
 					case "1.12.0":
 					{
 						foreach (var model in Decode1120(jObject, serializer))
@@ -256,6 +257,7 @@ namespace Alex.ResourcePackLib.Json.Converters
 						break;
 					}
 
+					case "1.16.0":
 					case "1.14.0":
 					{
 						foreach (var model in Decode1140(jObject, serializer))

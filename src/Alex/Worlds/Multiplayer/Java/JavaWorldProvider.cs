@@ -22,6 +22,7 @@ using Alex.Blocks;
 using Alex.Entities;
 using Alex.Entities.BlockEntities;
 using Alex.Entities.Effects;
+using Alex.Entities.Generic;
 using Alex.Entities.Projectiles;
 using Alex.Gamestates;
 using Alex.Gamestates.InGame;
@@ -490,6 +491,26 @@ namespace Alex.Worlds.Multiplayer.Java
 				
 				return null;
 			}
+			else if ((int) type == 26)
+			{
+				EntityFallingBlock itemEntity = new EntityFallingBlock(null);
+				itemEntity.EntityId = entityId;
+				itemEntity.Velocity = velocity;
+				itemEntity.KnownPosition = position;
+				
+				//itemEntity.SetItem(itemClone);
+
+				if (World.SpawnEntity(entityId, itemEntity))
+				{
+					return itemEntity;
+				}
+				else
+				{
+					Log.Warn($"Could not spawn in item entity, an entity with this entity id already exists! (Runtime: {entityId})");
+				}
+				
+				return null;
+			}
 			
 			Entity entity = null;
 			if (EntityFactory.ModelByNetworkId((long) type, out var renderer, out EntityData knownData))
@@ -925,7 +946,7 @@ namespace Alex.Worlds.Multiplayer.Java
 			{
 				case ScoreboardObjectivePacket.ObjectiveMode.Create:
 					//packet.Type
-					scoreboard.AddObjective(new ScoreboardObjective(packet.ObjectiveName, packet.Value.RawMessage, 0, ""));
+					scoreboard.AddObjective(new ScoreboardObjective(packet.ObjectiveName, packet.Value.RawMessage, 1, "dummy"));
 					break;
 
 				case ScoreboardObjectivePacket.ObjectiveMode.Remove:
@@ -949,6 +970,8 @@ namespace Alex.Worlds.Multiplayer.Java
 				var scoreboard = ScoreboardView;
 				if (scoreboard == null)
 					return;
+				
+			
 			}
 		}
 
@@ -1425,7 +1448,7 @@ namespace Alex.Worlds.Multiplayer.Java
 		{
 			foreach (var blockUpdate in packet.Records)
 			{
-				World?.SetBlockState(new BlockCoordinates(blockUpdate.X, blockUpdate.Y, blockUpdate.Z), BlockFactory.GetBlockState((uint) blockUpdate.BlockId));
+				World?.SetBlockState(new BlockCoordinates(blockUpdate.X, blockUpdate.Y, blockUpdate.Z), BlockFactory.GetBlockState((uint) blockUpdate.BlockId), BlockUpdatePriority.High | BlockUpdatePriority.Network);
 			}
 		}
 
@@ -1543,7 +1566,6 @@ namespace Alex.Worlds.Multiplayer.Java
 				float yaw = MathUtils.AngleToNotchianDegree(packet.Yaw);
 				mob.KnownPosition = new PlayerLocation(packet.X, packet.Y, packet.Z, yaw, yaw, -MathUtils.AngleToNotchianDegree(packet.Pitch));
 				mob.EntityId = packet.EntityId;
-				mob.IsSpawned = true;
 
 				World.SpawnEntity(packet.EntityId, mob);
 			}
@@ -1567,49 +1589,42 @@ namespace Alex.Worlds.Multiplayer.Java
 					World?.AddPlayerListItem(
 						new PlayerListItem(entity.UUID, entry.Name, (Gamemode) entry.Gamemode, entry.Ping, true));
 
-					if (entry.HasDisplayName)
+					if (_players.TryAdd(entity.UUID, entity))
 					{
-						if (ChatObject.TryParse(entry.DisplayName, out ChatObject chat))
-						{
-							entity.NameTag = chat.RawMessage;
-						}
-						else
-						{
-							entity.NameTag = entry.DisplayName;
-						}
-					}
-					else
-					{
-						entity.NameTag = entry.Name;
-					}
-
-					entity.HideNameTag = false;
-					entity.IsAlwaysShowName = true;
-
-					string skinJson = null;
-
-					foreach (var property in entry.Properties)
-					{
-						if (property.Name == "textures")
-						{
-							skinJson = Encoding.UTF8.GetString(Convert.FromBase64String(property.Value));
-						}
-					}
-					
-					if (_players.TryAdd(entity.UUID, entity) && skinJson != null)
-					{
-						if (Alex.GameStateManager.GetActiveState() is PlayingState)
-						{
-							actions.Add(
-								() =>
+						World.BackgroundWorker.Enqueue(
+							() =>
+							{
+								if (entry.HasDisplayName)
 								{
-									ProcessSkin(entity, skinJson);
-								});
-						}
-						else
-						{
-							ProcessSkin(entity, skinJson);
-						}
+									if (ChatObject.TryParse(entry.DisplayName, out ChatObject chat))
+									{
+										entity.NameTag = chat.RawMessage;
+									}
+									else
+									{
+										entity.NameTag = entry.DisplayName;
+									}
+								}
+								else
+								{
+									entity.NameTag = entry.Name;
+								}
+
+								entity.HideNameTag = false;
+								entity.IsAlwaysShowName = true;
+
+								string skinJson = null;
+
+								foreach (var property in entry.Properties)
+								{
+									if (property.Name == "textures")
+									{
+										skinJson = Encoding.UTF8.GetString(Convert.FromBase64String(property.Value));
+									}
+								}
+
+								ProcessSkin(entity, skinJson);
+							});
 					}
 				}
 			}
@@ -1657,26 +1672,13 @@ namespace Alex.Worlds.Multiplayer.Java
 					World?.RemovePlayerListItem(uuid);
 				}
 			}
-			
-			if (actions.Count > 0)
-			{
-				ThreadPool.QueueUserWorkItem(
-					o =>
-					{
-						foreach (var action in actions)
-						{
-							action.Invoke();
-						}
-					});
-			}
 		}
 
 		private void ProcessSkin(RemotePlayer entity, string skinJson)
 		{
 			if (SkinUtils.TryGetSkin(skinJson, Alex.GraphicsDevice, out var skin, out var skinSlim))
 			{
-				entity.GeometryName = skinSlim ? "geometry.humanoid.customSlim" :
-					"geometry.humanoid.custom";
+				entity.GeometryName = skinSlim ? "geometry.humanoid.customSlim" : "geometry.humanoid.custom";
 
 				entity.UpdateSkin(skin);
 			}
@@ -1739,7 +1741,7 @@ namespace Alex.Worlds.Multiplayer.Java
 			World.UpdateEntityPosition(packet.EntityID, new PlayerLocation(packet.X, packet.Y, packet.Z, yaw, yaw, -MathUtils.AngleToNotchianDegree(packet.Pitch))
 			{
 				OnGround = packet.OnGround
-			}, updateLook: true, updatePitch:true);
+			}, updateLook: true, updatePitch:true, relative:false, teleport:true);
 		}
 		
 		private Vector3 ModifyVelocity(Vector3 velocity)
@@ -1750,7 +1752,7 @@ namespace Alex.Worlds.Multiplayer.Java
 		private void HandleEntityVelocity(EntityVelocity packet)
 		{
 			Entity entity;
-			if (!World.TryGetEntity(packet.EntityId, out entity))
+			if (!World.EntityManager.TryGet(packet.EntityId, out entity))
 			{
 				if (packet.EntityId == World.Player.EntityId)
 				{
@@ -1763,10 +1765,13 @@ namespace Alex.Worlds.Multiplayer.Java
 				var velocity = ModifyVelocity(new Vector3(
 					packet.VelocityX, packet.VelocityY, packet.VelocityZ));
 
-				var old = entity.Velocity;
+				//var old = entity.Velocity;
 
-				entity.Velocity += new Microsoft.Xna.Framework.Vector3(
-					velocity.X - old.X, velocity.Y - old.Y, velocity.Z - old.Z);
+				entity.Movement.Velocity(velocity);
+			}
+			else
+			{
+				Log.Warn($"Invalid entity in EntityVelocity: {packet.EntityId}");
 			}
 		}
 
@@ -2145,12 +2150,27 @@ namespace Alex.Worlds.Multiplayer.Java
 				velocity = ModifyVelocity(new Vector3(packet.VelocityX, packet.VelocityY, packet.VelocityZ));
 			}
 			
-			SpawnMob(packet.EntityId, packet.Uuid, (EntityType)packet.Type, new PlayerLocation(packet.X, packet.Y, packet.Z, packet.Yaw, packet.Yaw, packet.Pitch)
+			var mob = SpawnMob(packet.EntityId, packet.Uuid, (EntityType)packet.Type, new PlayerLocation(packet.X, packet.Y, packet.Z, packet.Yaw, packet.Yaw, packet.Pitch)
 			{
 				//	OnGround = packet.SpawnMob
 			}, velocity);
-			
-			
+
+			if (mob is EntityFallingBlock efb)
+			{
+				//32
+				var blockId = packet.Data << 12 >> 12;
+				var metaData = packet.Data >> 12;
+
+				Log.Warn($"! Id={blockId} Meta={metaData} Raw={packet.Data}");
+				if (ItemFactory.TryGetItem((short) blockId, (short) metaData, out var item))
+				{
+					efb.SetItem(item);
+				}
+				else
+				{
+					
+				}
+			}
 		}
 
 		private void HandleSpawnMob(SpawnLivingEntity packet)
