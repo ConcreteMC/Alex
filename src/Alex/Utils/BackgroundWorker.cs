@@ -20,12 +20,21 @@ namespace Alex.Utils
 				while (!_cancellationTokenSource.IsCancellationRequested)
 				{
 					_manualResetEvent.WaitOne();
+
+					if (_cancellationTokenSource.IsCancellationRequested)
+						break;
 					
 					while (_workerQueue.TryDequeue(out var action))
 					{
 						action?.Invoke();
+
+						if (_cancellationTokenSource.IsCancellationRequested)
+							break;
 					}
 
+					if (_cancellationTokenSource.IsCancellationRequested)
+						break;
+					
 					_manualResetEvent.Reset();
 				}
 			});

@@ -1268,7 +1268,7 @@ namespace Alex.Entities
 			if (string.IsNullOrWhiteSpace(clean))
 				return;
 			
-			var halfWidth = -((((float) Width) * Scale));
+			var halfWidth = (float)(Width * _scale);
 			
 			var maxDistance = (renderArgs.Camera.FarDistance) / (64f);
 
@@ -1281,11 +1281,11 @@ namespace Alex.Entities
 
 			var cameraPosition = new Vector3(renderArgs.Camera.Position.X, 0, renderArgs.Camera.Position.Z);
 			
-			var rotation = new Vector3(KnownPosition.X, 0, KnownPosition.Z) - cameraPosition;
+			var rotation = cameraPosition - new Vector3(RenderLocation.X, 0, RenderLocation.Z);
 			rotation.Normalize();
 			
 			
-			var pos = KnownPosition + posOffset + (rotation * halfWidth);
+			var pos = RenderLocation + posOffset + (rotation * halfWidth);
 			//pos.Y = 0;
 			
 			var distance = Vector3.Distance(pos, renderArgs.Camera.Position);
@@ -1333,7 +1333,7 @@ namespace Alex.Entities
 
 				Alex.Font.DrawString(
 					renderArgs.SpriteBatch, line, renderPosition, TextColor.White, FontStyle.None, scale,
-					layerDepth: screenSpace.Z);
+					layerDepth: screenSpace.Z - 0.01f);
 
 				yOffset += c.Y;
 			}

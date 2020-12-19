@@ -362,7 +362,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			{
 				mob.EntityId = message.runtimeEntityId;
 
-				mob.KnownPosition = new PlayerLocation(
+				mob.RenderLocation = mob.KnownPosition = new PlayerLocation(
 					message.x, message.y, message.z, message.headYaw, message.yaw, message.pitch);
 
 				mob.Velocity = new Microsoft.Xna.Framework.Vector3(message.speedX, message.speedY, message.speedZ);
