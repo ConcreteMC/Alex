@@ -20,7 +20,7 @@ namespace Alex.API.World
 		private long                               _tick = 0;
 		public  long                               CurrentTick => _tick;
 
-		private HighPrecisionTimer TickTimer      { get; }
+		private HighPrecisionTimer TickTimer      { get; set; }
 		public  double             TicksPerSecond { get; set; }
 
 		public TickManager()
@@ -112,7 +112,11 @@ namespace Alex.API.World
 		/// <inheritdoc />
 		public void Dispose()
 		{
-			TickTimer.Dispose();
+			try
+			{
+				TickTimer?.Dispose();
+				TickTimer = null;
+			}catch(ObjectDisposedException){}
 		}
 	}
 

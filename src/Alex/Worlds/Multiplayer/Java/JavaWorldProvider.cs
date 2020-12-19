@@ -995,7 +995,7 @@ namespace Alex.Worlds.Multiplayer.Java
 
 		private void HandleUpdateViewDistancePacket(UpdateViewDistancePacket packet)
 		{
-			World.ChunkManager.RenderDistance = packet.ViewDistance / 16;
+			//World.ChunkManager.RenderDistance = packet.ViewDistance / 16;
 		}
 
 		private void HandleUpdateViewPositionPacket(UpdateViewPositionPacket packet)

@@ -67,7 +67,7 @@ namespace Alex.Entities
 			ShowItemInHand = true;
 			
 			IsInWater = false;
-			NoAi = true;
+			//NoAi = true;
 			
 			Velocity = Vector3.Zero;
 			PositionOffset = 1.62f;
@@ -82,6 +82,18 @@ namespace Alex.Entities
 			//		FlyingSpeed = 0.4f;
 		}
 
+		/// <inheritdoc />
+		public override bool NoAi {
+			get
+			{
+				return true;
+			}
+			set
+			{
+				
+			} 
+		}
+		
 		private static JsonSerializerSettings GeometrySerializationSettings = new JsonSerializerSettings()
 		{
 			Converters = new List<JsonConverter>()
@@ -266,18 +278,6 @@ namespace Alex.Entities
 
 			return valid;
 		}
-
-		/// <inheritdoc />
-		/*public override bool NoAi {
-			get
-			{
-				return true;
-			}
-			set
-			{
-				
-			} 
-		}*/
 
 		/// <inheritdoc />
 		protected override void HandleJavaMeta(MetaDataEntry entry)

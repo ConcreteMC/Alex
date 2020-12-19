@@ -142,14 +142,18 @@ namespace Alex.Worlds
 		{
 			if (_rendered != null)
 			{
+				var entities = _rendered;
+
+				if (entities.Length == 0)
+					return;
+				
+				
 				args.SpriteBatch.Begin(
 					SpriteSortMode.BackToFront, BlendState.NonPremultiplied, SamplerState.PointWrap,
 					DepthStencilState.DepthRead, RasterizerState);
 
 				try
 				{
-					var entities = _rendered;
-
 					foreach (var entity in entities)
 					{
 						if (!entity.HideNameTag)

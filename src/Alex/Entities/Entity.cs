@@ -1271,28 +1271,28 @@ namespace Alex.Entities
 			var halfWidth = (float)(Width * _scale);
 			
 			var maxDistance = (renderArgs.Camera.FarDistance) / (64f);
-
+			
+			//pos.Y = 0;
+			
+			var distance = Vector3.Distance(KnownPosition, renderArgs.Camera.Position);
+			if (distance >= maxDistance)
+			{
+				return;
+			}
+			
 			Vector3 posOffset = new Vector3(0, 0.25f, 0);
 
 			if (RenderEntity && ModelRenderer != null && ModelRenderer.Valid && !IsInvisible)
 			{
 				posOffset.Y += (float) (Height * Scale);
 			}
-
+			
 			var cameraPosition = new Vector3(renderArgs.Camera.Position.X, 0, renderArgs.Camera.Position.Z);
 			
 			var rotation = cameraPosition - new Vector3(RenderLocation.X, 0, RenderLocation.Z);
 			rotation.Normalize();
 			
-			
 			var pos = RenderLocation + posOffset + (rotation * halfWidth);
-			//pos.Y = 0;
-			
-			var distance = Vector3.Distance(pos, renderArgs.Camera.Position);
-			if (distance >= maxDistance)
-			{
-				return;
-			}
 
 			Vector2 textPosition;
 			
@@ -1304,16 +1304,6 @@ namespace Alex.Entities
 			textPosition.X = screenSpace.X;
 			textPosition.Y = screenSpace.Y;
 
-			float depth = screenSpace.Z;
-
-			var scaleRatio = (1.0f / depth);
-			//var scaleRatio = Alex.Instance.GuiRenderer.ScaledResolution.ScaleFactor;
-			//scale = 0.5f;
-			float scaler = NametagScale - (distance * (NametagScale / maxDistance));
-			//float scaler = NametagScale;
-			var scale = new Vector2(scaler * scaleRatio, scaler * scaleRatio);
-			//scale *= Alex.Instance.GuiRenderer.ScaledResolution.ElementScale;
-
 			Vector2 renderPosition = textPosition;
 			int yOffset = 0;
 			foreach (var str in clean.Split('\n'))
@@ -1322,7 +1312,7 @@ namespace Alex.Entities
 				if (line.Length == 0)
 					continue;
 				
-				var stringCenter = Alex.Font.MeasureString(line, scale);
+				var stringCenter = Alex.Font.MeasureString(line);
 				var c            = new Point((int) stringCenter.X, (int) stringCenter.Y);
 
 				renderPosition.X = (int) (textPosition.X - (c.X / 2d));
@@ -1332,8 +1322,8 @@ namespace Alex.Entities
 					new Rectangle(renderPosition.ToPoint(), c), new Color(Color.Black, 128), screenSpace.Z);
 
 				Alex.Font.DrawString(
-					renderArgs.SpriteBatch, line, renderPosition, TextColor.White, FontStyle.None, scale,
-					layerDepth: screenSpace.Z - 0.01f);
+					renderArgs.SpriteBatch, line, renderPosition, TextColor.White, FontStyle.None, 
+					layerDepth: screenSpace.Z - 0.0001f);
 
 				yOffset += c.Y;
 			}
