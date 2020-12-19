@@ -4,6 +4,7 @@ using System.Text;
 using System.Threading;
 using Alex.API;
 using Alex.API.Graphics;
+using Alex.API.Gui;
 using Alex.API.Network;
 using Alex.API.Services;
 using Alex.API.Utils;
@@ -26,7 +27,6 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using MiNET;
 using MiNET.Utils;
-using RocketUI;
 using DedicatedThreadPoolSettings = MiNET.Utils.DedicatedThreadPoolSettings;
 using PlayerLocation = Alex.API.Utils.PlayerLocation;
 

@@ -107,44 +107,6 @@ namespace Alex.Blocks.State
 			return false;
 		}
 
-		public bool ExactMatch(BlockState o)
-		{
-			if (o is BlockState other)
-			{
-				if (Values.Count != other.Values.Count)
-				{
-					return false;
-				}
-
-				bool equal = true;
-				foreach (var pair in ToDictionary())
-				{
-					// value;
-					if (other.TryGetValue(pair.Key, out string value))
-					{
-						// Require value be equal.
-						if (!value.Equals(pair.Value))
-						{
-							equal = false;
-							break;
-						}
-					}
-					else
-					{
-						// Require key be present.
-						equal = false;
-						break;
-					}
-				}
-
-				return equal;
-			}
-			else
-			{
-				return false;
-			}
-		}
-		
 		public bool Equals(BlockState other)
 		{
 			if (ReferenceEquals(null, other)) return false;
@@ -200,6 +162,8 @@ namespace Alex.Blocks.State
 				string key = splitted[0];
 				string value = splitted[1];
 
+				//if (key.ToLower() == "waterlogged")continue;
+				
 				values.Add(key, value);
 			}
 

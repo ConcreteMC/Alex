@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Channels;
 using Alex.API.Utils;
 using Alex.Blocks;
+using Alex.Blocks.Mapping;
 using Alex.Blocks.Minecraft;
 using Alex.Entities.BlockEntities;
 using Alex.Utils;
@@ -96,12 +97,10 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				        var copy = new BlockStateContainer()
 				        {
 					        Data = bs.Data,
-					        Id = bs.Data,
+					        Id = bs.Id,
 					        Name = bs.Name,
 					        States = bs.States,
-					        ItemInstance = bs.ItemInstance,
-					        RuntimeId = bs.RuntimeId,
-					        StatesCacheNbt = bs.StatesCacheNbt
+					        RuntimeId = bs.RuntimeId
 				        };
 				        
 				        if (TryConvertBlockState(copy, out var convertedState))
@@ -409,8 +408,9 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 									        if (result == null)
 									        {
-										        var results = BlockFactory.RuntimeIdTable.Where(xx => xx.Id == id)
-											       .ToArray();
+										        var results =
+											        MiNET.Blocks.BlockFactory.BlockStates.Where(xx => xx.RuntimeId == id).ToArray();// BlockFactory.RuntimeIdTable.Where(xx => xx.Id == id)
+											       //.ToArray();
 
 										        if (results.Length > 0)
 										        {
@@ -725,6 +725,30 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		        return true;
 	        }
 
+	        if (BlockFactory.BedrockStates.TryGetValue(record.Name, out var bedrockStates))
+	        {
+		        var defaultState = bedrockStates.GetDefaultState();
+
+		        if (defaultState != null)
+		        {
+			        if (record.States != null)
+			        {
+				        foreach (var prop in record.States)
+				        {
+					        defaultState = defaultState.WithProperty(
+						        prop.Name, prop.Value());
+				        }
+			        }
+
+			        if (defaultState is PeBlockState pebs)
+			        {
+				        result = pebs.Original;
+				        return true;
+			        }
+			        //result = defaultState.Block.BlockState.CloneSilent();
+		        }
+	        }
+
 	        var originalRecord = BlockStateToString(record);
 	        
 	        result = null;
@@ -953,7 +977,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		        r = BlockFactory.GetBlockState(searchName);
 	        }
 	        
-	        if (r == null || r.Name == "Unknown")
+	        /*if (r == null || r.Name == "Unknown")
 	        {
 		        var mapResult =
 			        BlockFactory.RuntimeIdTable.FirstOrDefault(xx =>
@@ -987,7 +1011,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				        r = BlockFactory.GetBlockState(mapResult.Name);
 			        }
 		        }
-	        }
+	        }*/
 
 	        if (r == null || r.Name == "Unknown")
 	        {

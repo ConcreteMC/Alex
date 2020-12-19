@@ -201,7 +201,7 @@ namespace Alex.Entities
 											bitmap.Mutate<Rgba32>(xx =>
 											{
 												xx.Resize(modelTextureSize.X, modelTextureSize.Y);
-												xx.Flip(FlipMode.Horizontal);
+											//	xx.Flip(FlipMode.Horizontal);
 											});
 
 											skinBitmap = bitmap;

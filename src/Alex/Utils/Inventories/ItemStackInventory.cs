@@ -197,7 +197,7 @@ namespace Alex.Utils.Inventories
 
 					ItemFactory.TryGetItem(t.Name, out result);
 				}
-				else
+				/*else
 				{
 					var block = BlockFactory.RuntimeIdTable.FirstOrDefault(x => x.Id == item.Id);
 
@@ -205,7 +205,7 @@ namespace Alex.Utils.Inventories
 					{
 						ItemFactory.TryGetItem(block.Name, out result);
 					}
-				}
+				}*/
 
 				if (result != null)
 				{

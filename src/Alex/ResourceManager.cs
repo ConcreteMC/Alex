@@ -13,6 +13,7 @@ using Alex.API.Resources;
 using Alex.API.Services;
 using Alex.API.Utils;
 using Alex.Blocks;
+using Alex.Blocks.Mapping;
 using Alex.Blocks.Minecraft;
 using Alex.Blocks.State;
 using Alex.Entities;
@@ -365,6 +366,8 @@ namespace Alex
 		            }
 	            }
             }
+            
+            BlockMapper.Init(progressReceiver);
             
             Options.AlexOptions.ResourceOptions.LoadedResourcesPacks.Bind(ResourcePacksChanged);
             _hasInit = true;

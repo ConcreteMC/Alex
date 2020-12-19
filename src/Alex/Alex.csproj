@@ -97,7 +97,6 @@
     <None Remove="Resources\items3.json" />
     <EmbeddedResource Include="Resources\items3.json" />
     <None Remove="Resources\resources.zip" />
-    <EmbeddedResource Include="Resources\resources.zip" />
     <None Update="skin.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
@@ -113,6 +112,8 @@
     <Compile Remove="Particles\ParticleSystem.cs" />
     <Compile Remove="Particles\ParticleSettings.cs" />
     <Compile Remove="Particles\ParticleEmitter.cs" />
+    <None Remove="Resources\blockmap.json" />
+    <EmbeddedResource Include="Resources\blockmap.json" />
   </ItemGroup>
 
   <ItemGroup>

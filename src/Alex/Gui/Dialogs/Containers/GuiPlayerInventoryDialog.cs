@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using Alex.API.Graphics.Typography;
+using Alex.API.Gui;
 using Alex.API.Gui.Elements;
 using Alex.API.Gui.Graphics;
 using Alex.API.Input;
@@ -16,7 +17,6 @@ using Alex.Utils.Inventories;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using NLog;
-using RocketUI;
 using GuiCursorEventArgs = Alex.API.Gui.Events.GuiCursorEventArgs;
 
 namespace Alex.Gui.Dialogs.Containers

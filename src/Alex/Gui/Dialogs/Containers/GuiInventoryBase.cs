@@ -12,7 +12,6 @@ using Alex.Items;
 using Alex.Utils;
 using Alex.Utils.Inventories;
 using Microsoft.Xna.Framework;
-using RocketUI;
 using GuiCursorEventArgs = Alex.API.Gui.Events.GuiCursorEventArgs;
 using GuiCursorMoveEventArgs = Alex.API.Gui.Events.GuiCursorMoveEventArgs;
 

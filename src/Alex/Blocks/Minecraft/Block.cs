@@ -1,6 +1,5 @@
 ﻿using System;
 using Alex.API.Blocks;
-using Alex.API.Items;
 using Alex.API.Resources;
 using Alex.API.Utils;
 using Alex.API.Utils.Noise;

@@ -3,16 +3,22 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Alex.API.Resources;
+using Alex.Blocks.Mapping;
 using Alex.Blocks.Minecraft;
 using Alex.Blocks.State;
 using Alex.Graphics.Models.Blocks;
 using Alex.ResourcePackLib;
 using Alex.ResourcePackLib.Json.BlockStates;
 using Alex.Utils;
+using MiNET.Blocks;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using Block = Alex.Blocks.Minecraft.Block;
 using BlockModel = Alex.Graphics.Models.Blocks.BlockModel;
+using LightBlock = Alex.Blocks.Minecraft.LightBlock;
 
 namespace Alex.Blocks
 {
@@ -25,6 +31,10 @@ namespace Alex.Blocks
 		
 		private static readonly ConcurrentDictionary<uint, BlockState> RegisteredBlockStates = new ConcurrentDictionary<uint, BlockState>();
 		private static readonly ConcurrentDictionary<string, BlockStateVariantMapper> BlockStateByName = new ConcurrentDictionary<string, BlockStateVariantMapper>();
+
+		public static readonly ConcurrentDictionary<string, BlockStateVariantMapper> BedrockStates =
+			new ConcurrentDictionary<string, BlockStateVariantMapper>();
+		
 		private static readonly ConcurrentDictionary<uint, BlockModel> ModelCache = new ConcurrentDictionary<uint, BlockModel>();
 		private static readonly ConcurrentDictionary<long, string> ProtocolIdToBlockName = new ConcurrentDictionary<long, string>();
 		private static ResourcePackLib.Json.Models.ResourcePackModelBase CubeModel { get; set; }
@@ -96,15 +106,12 @@ namespace Alex.Blocks
 			BlockStateByName.TryAdd("minecraft:light_block", lightBlockVariantMapper);
 			//RegisteredBlockStates.Add(Block.GetBlockStateID(), StationairyWaterModel);
 		}
-
-		public static TableEntry[] RuntimeIdTable { get; private set; }
+		
 
 		internal static int LoadResources(IRegistryManager registryManager, ResourceManager resources, McResourcePack resourcePack, bool replace,
 			bool reportMissing = false, IProgressReceiver progressReceiver = null)
 		{
-			var raw = ResourceManager.ReadStringResource("Alex.Resources.runtimeidtable.json");
-
-			RuntimeIdTable = TableEntry.FromJson(raw);
+			//RuntimeIdTable = TableEntry.FromJson(raw);
 
 			var blockEntries = resources.Registries.Blocks.Entries;
 
@@ -149,6 +156,15 @@ namespace Alex.Blocks
 			McResourcePack resourcePack, bool replace,
 			bool reportMissing, IProgressReceiver progressReceiver)
 		{
+			var raw = ResourceManager.ReadStringResource("Alex.Resources.blockmap.json");
+
+			var mapping = JsonConvert.DeserializeObject<BlockMap>(raw);
+
+			/*foreach (var entry in mapping)
+			{
+				
+			}*/
+
 			var          blockRegistry      = registryManager.GetRegistry<Block>();
 
 			var data = BlockData.FromJson(ResourceManager.ReadStringResource("Alex.Resources.NewBlocks.json"));
@@ -175,7 +191,7 @@ namespace Alex.Blocks
 					{
 					//	if (property.Key.Equals("waterlogged"))
 					//		continue;
-						
+					//if (property.Key.ToLower() == "waterlogged")continue;
 						defaultState = (BlockState) defaultState.WithPropertyNoResolve(property.Key,
 							property.Value.FirstOrDefault(), false);
 					}
@@ -193,6 +209,7 @@ namespace Alex.Blocks
 					{
 						foreach (var property in s.Properties)
 						{
+							//if (property.Key.ToLower() == "waterlogged")continue;
 							variantState =
 								(Blocks.State.BlockState) variantState.WithPropertyNoResolve(property.Key,
 									property.Value, false);
@@ -290,7 +307,111 @@ namespace Alex.Blocks
 				done++;
 			});
 
+			//Dictionary<string, BlockStateVariantMapper> bedrockVariantMappers =
+			//	new Dictionary<string, BlockStateVariantMapper>();
+			
+			Regex                                       regex                 = new Regex(@"(?'key'[\:a-zA-Z_\d][^\[]*)(\[(?'data'.*)\])?", RegexOptions.Compiled);
+
+			var array = mapping.ToArray();
+			for (var index = 0; index < array.Length; index++)
+			{
+				var state = array[index];
+
+				if (state.Value.BedrockIdentifier == null)
+					continue;
+
+				var match = regex.Match(state.Key);
+
+				if (!match.Groups["key"].Success)
+				{
+					Log.Warn($"Entry without key!");
+					continue;
+				}
+
+				progressReceiver?.UpdateProgress(index, array.Length, "Mapping blockstates...", $"{state.Value.BedrockIdentifier}");
+
+				BlockState pcVariant = GetBlockState(match.Groups["key"].Value);
+
+				if (pcVariant != null)
+				{
+					Dictionary<string, string> properties = null;
+
+					if (match.Groups["data"].Success)
+					{
+						properties = BlockState.ParseData(match.Groups["data"].Value);
+						
+						var p = properties.ToArray();
+
+						for (var i = 0; i < p.Length; i++)
+						{
+							//if (p[i].Key.ToLower() == "waterlogged")continue;
+							
+							var prop = p[i];
+
+							if (i == p.Length - 1)
+							{
+								pcVariant = pcVariant.WithProperty(prop.Key, prop.Value);
+							}
+							else
+							{
+								pcVariant = pcVariant.WithPropertyNoResolve(prop.Key, prop.Value);
+							}
+						}
+					}
+				}
+
+				if (pcVariant == null)
+				{
+					Log.Warn($"Map failed: {match.Groups["key"].Value} -> {state.Value.BedrockIdentifier}");
+
+					continue;
+				}
+
+				pcVariant = pcVariant.CloneSilent();
+				
+				PeBlockState bedrockState = new PeBlockState(pcVariant);
+
+				bedrockState.Name = state.Value.BedrockIdentifier;
+
+				if (state.Value.BedrockStates != null && state.Value.BedrockStates.Count > 0)
+				{
+					foreach (var bs in state.Value.BedrockStates)
+					{
+						//bedrockState = bedrockState.WithPropertyNoResolve(bs.Key, bs.Value.ToString(), false);
+						bedrockState.Values[bs.Key] = bs.Value.ToString();
+					}
+					//bedrockState.Values = state.Value.BedrockStates;
+				}
+
+				bedrockState.AppliedModels = pcVariant.AppliedModels;
+				bedrockState.IsMultiPart = pcVariant.IsMultiPart;
+				bedrockState.MultiPartHelper = pcVariant.MultiPartHelper;
+				bedrockState.Model = pcVariant.Model;
+				bedrockState.Block = pcVariant.Block;
+				bedrockState.ID = (uint) index;
+				
+				if (!BedrockStates.TryGetValue(state.Value.BedrockIdentifier, out var mapper))
+				{
+					bedrockState.Default = true;
+					mapper = new BlockStateVariantMapper();
+				}
+
+				bedrockState.VariantMapper = mapper;
+
+				if (!mapper.TryAdd(bedrockState.WithLocation(bedrockState.Name).Value))
+				{
+					Log.Warn($"Failed to add bedrockstate: {state.Value.BedrockIdentifier}");
+				}
+				
+				BedrockStates[state.Value.BedrockIdentifier] = mapper;
+				//var bs = BlockState.FromString(state.Key);
+			}
+
+			//BedrockStates = bedrockVariantMappers;
+
 			Log.Info($"Loaded {multipartBased} multi-part blockstate variants!");
+			Log.Info($"Loaded {BedrockStates.Count} mappings...");
+			
 			return importCounter;
 		}
 

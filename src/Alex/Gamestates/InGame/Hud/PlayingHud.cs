@@ -13,7 +13,6 @@ using Alex.Gui.Elements.Inventory;
 using Alex.Utils.Inventories;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
-using RocketUI;
 
 namespace Alex.Gamestates.InGame.Hud
 {

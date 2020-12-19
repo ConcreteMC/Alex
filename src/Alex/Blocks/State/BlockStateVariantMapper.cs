@@ -16,6 +16,9 @@ namespace Alex.Blocks.State
 		
         public bool TryResolve(BlockState source, string property, string value, bool prioritize, out BlockState result, params string[] requiredMatches)
         {
+          //  property = property.ToLowerInvariant();
+            value = value.ToLowerInvariant();
+            
             var copiedProperties = source.ToDictionary();
             copiedProperties[property] = value.ToString();
 
@@ -32,12 +35,13 @@ namespace Alex.Blocks.State
                 return true;
             }
 
-            foreach (var variant in matching)
+            foreach (var variant in matching.OrderBy(x => copiedProperties.Count - x.Values.Count))
             {
                 bool valid = true;
                 foreach (var requiredMatch in requiredMatches)
                 {
-                    if (!(copiedProperties.TryGetValue(requiredMatch, out string copyValue) && variant.TryGetValue(requiredMatch, out string variantValue) && copyValue == variantValue))
+                    if (!(copiedProperties.TryGetValue(requiredMatch, out string copyValue) 
+                          && variant.TryGetValue(requiredMatch, out string variantValue) && copyValue == variantValue))
                     {
                         valid = false;
                         break;
@@ -65,6 +69,14 @@ namespace Alex.Blocks.State
                     }
                 }
 
+                if (matches == copiedProperties.Count)
+                {
+                    highestMatch = matches;
+                    highest = variant;
+
+                    break;
+                }
+                
                 if (matches > highestMatch)
                 {
                     highestMatch = matches;

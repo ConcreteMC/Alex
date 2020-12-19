@@ -5,6 +5,7 @@ using Alex.API.Data;
 using Alex.API.Events;
 using Alex.API.Events.World;
 using Alex.API.Graphics.Typography;
+using Alex.API.Gui;
 using Alex.API.Gui.Elements.Controls;
 using Alex.API.Gui.Graphics;
 using Alex.API.Utils;
@@ -14,7 +15,6 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using MiNET;
 using NLog;
-using RocketUI;
 
 namespace Alex.Gui.Elements
 {

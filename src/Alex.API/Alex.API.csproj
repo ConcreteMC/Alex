@@ -23,9 +23,5 @@
   <ItemGroup>
     <Folder Include="Gui\Events\" />
     <Folder Include="Gui\Abstractions\" />
-    <Folder Include="Molang\Tokens" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\RocketUI\RocketUI.csproj" />
   </ItemGroup>
 </Project>
