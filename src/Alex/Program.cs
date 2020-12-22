@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Alex.API.Input;
 using Alex.API.Services;
 using Alex.Utils;
+using Alex.Utils.Auth;
 using CommandLine;
 using Microsoft.Extensions.DependencyInjection;
 using NLog;

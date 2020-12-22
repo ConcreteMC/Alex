@@ -14,6 +14,7 @@ using Alex.API.Utils;
 using Alex.Gamestates.Common;
 using Alex.Gui;
 using Alex.Utils;
+using Alex.Utils.Auth;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using Newtonsoft.Json;

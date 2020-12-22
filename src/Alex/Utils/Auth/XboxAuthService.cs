@@ -6,13 +6,11 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Alex.API.Utils;
 using Jose;
 using MiNET;
 using MiNET.Net;
@@ -20,19 +18,15 @@ using MiNET.Utils;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NLog;
-using Org.BouncyCastle.Asn1;
 using Org.BouncyCastle.Asn1.Nist;
-using Org.BouncyCastle.Asn1.Pkcs;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Generators;
 using Org.BouncyCastle.Crypto.Parameters;
-using Org.BouncyCastle.Crypto.Signers;
-using Org.BouncyCastle.OpenSsl;
 using Org.BouncyCastle.Security;
 using Org.BouncyCastle.X509;
 using Logger = NLog.Logger;
 
-namespace Alex.Utils
+namespace Alex.Utils.Auth
 {
 	public class XboxAuthService
 	{
@@ -159,73 +153,73 @@ namespace Alex.Utils
 		public ChainData DecodedChain { get; private set; } = null;
 
 		public AsymmetricCipherKeyPair MinecraftKeyPair { get; private set; } = CryptoUtils.GenerateClientKey();
-        public async Task<bool> RequestMinecraftChain(AuthResponse<XuiDisplayClaims<XstsXui>> token, AsymmetricCipherKeyPair key)
-        {
-			var b = SubjectPublicKeyInfoFactory.CreateSubjectPublicKeyInfo(MinecraftKeyPair.Public).GetEncoded().EncodeBase64();
 
-            var body = new MCChainPostData()
-			{
-				IdentityPublicKey = b
-			};
-			
+		public async Task<bool> RequestMinecraftChain(AuthResponse<XuiDisplayClaims<XstsXui>> token)
+		{
+			var b = SubjectPublicKeyInfoFactory.CreateSubjectPublicKeyInfo(MinecraftKeyPair.Public).GetEncoded()
+			   .EncodeBase64();
+
+			var body = new MCChainPostData() {IdentityPublicKey = b};
+
 			var client = GetClient();
-			//using (var client = new HttpClient())
+
+			using (var r = new HttpRequestMessage(HttpMethod.Post, MinecraftAuthUrl))
 			{
-				using (var r = new HttpRequestMessage(HttpMethod.Post,
-					MinecraftAuthUrl))
+				r.Headers.Add("Authorization", $"XBL3.0 x={token.DisplayClaims.Xui[0].UserHash};{token.Token}");
+				r.Headers.Add("User-Agent", "MCPE/Android");
+				r.Headers.Add("Client-Version", McpeProtocolInfo.ProtocolVersion.ToString());
+
+				SetHeadersAndContent(r, body);
+
+				try
 				{
-					//r.Headers.Add("x-xbl-contract-version", "1");
-					
-					r.Content = SetHttpContent(body, out var jsonData);
-					r.Headers.Add("Authorization", $"XBL3.0 x={token.DisplayClaims.Xui[0].UserHash};{token.Token}");
-					r.Headers.Add("User-Agent", "MCPE/Android");
-					r.Headers.Add("Client-Version", McpeProtocolInfo.ProtocolVersion.ToString());
-                    //Sign(r, jsonData);
-                    try
-                    {
-	                    using (var response = await client
-		                    .SendAsync(r, HttpCompletionOption.ResponseContentRead)
-		                    .ConfigureAwait(false))
-	                    {
-		                    response.EnsureSuccessStatusCode();
+					using (var response = await client.SendAsync(r, HttpCompletionOption.ResponseContentRead)
+					   .ConfigureAwait(false))
+					{
+						response.EnsureSuccessStatusCode();
 
-		                    var rawResponse = await response.Content.ReadAsStringAsync();
+						var rawResponse = await response.Content.ReadAsStringAsync();
 
-		                    DecodedChain = new ChainData();
-		                    dynamic a = JObject.Parse(rawResponse);
-		                    var chain = ((JArray)a.chain).Values<string>().ToArray();
-		                    DecodedChain.Chain = new CertificateData[chain.Length];
-		                    for (int i = 0; i < chain.Length; i++)
-		                    {
-			                    var element = chain[i];
-			                    try
-			                    {
-				                    DecodedChain.Chain[i] = JWT.Payload<CertificateData>(element);
-			                    }
-			                    catch (Exception ex)
-			                    {
-				                    Log.Error($"Could not parse chain element: {ex.ToString()}");
-			                    }
-		                    }
+						DecodedChain = new ChainData();
+						dynamic a     = JObject.Parse(rawResponse);
+						var     chain = ((JArray) a.chain).Values<string>().ToArray();
+						DecodedChain.Chain = new CertificateData[chain.Length];
 
-		                    //DecodedChain = JsonConvert.DeserializeObject<ChainData>(rawResponse);
-		                    MinecraftChain = Encoding.UTF8.GetBytes(rawResponse);
-                         //   //Log.Debug($"Chain: {rawResponse}");
-	                    }
-                    }
-                    catch (Exception ex)
-                    {
-						Log.Warn($"AHHH: {ex.ToString()}");
-						return false;
-                    }
+						for (int i = 0; i < chain.Length; i++)
+						{
+							var element = chain[i];
+
+							try
+							{
+								DecodedChain.Chain[i] = JWT.Payload<CertificateData>(element);
+							}
+							catch (Exception ex)
+							{
+								Log.Error($"Could not parse chain element: {ex.ToString()}");
+							}
+						}
+
+						//DecodedChain = JsonConvert.DeserializeObject<ChainData>(rawResponse);
+						MinecraftChain = Encoding.UTF8.GetBytes(rawResponse);
+						//   //Log.Debug($"Chain: {rawResponse}");
+					}
+				}
+				catch (Exception ex)
+				{
+					Log.Warn($"AHHH: {ex.ToString()}");
+
+					return false;
 				}
 			}
-			
-		//	//Log.Debug($"Xbox login processed!");
+
+			//	//Log.Debug($"Xbox login processed!");
 			return true;
-        }
-		
-        private async Task<AuthResponse<XuiDisplayClaims<XstsXui>>> DoXsts(HttpClient client, AuthResponse<DeviceDisplayClaims> deviceToken, AuthResponse<TitleDisplayClaims> titleToken, string userToken)
+		}
+
+		private async Task<AuthResponse<XuiDisplayClaims<XstsXui>>> DoXsts(HttpClient client,
+	        AuthResponse<DeviceDisplayClaims> deviceToken,
+	        AuthResponse<TitleDisplayClaims> titleToken,
+	        string userToken)
         {
 	        //var key = EcDsa.ExportParameters(false);
 	        var authRequest = new AuthRequest
@@ -235,91 +229,55 @@ namespace Alex.Utils
 		        Properties = new Dictionary<string, object>()
 		        {
 			        {"UserTokens", new string[] {userToken}},
-			       // {"DeviceToken", $"d={deviceToken.Token}"},
-			       // {/* {"TitleToken", titleToken.Token},*/}
-			        { "SandboxId", "RETAIL" },
-			        {"ProofKey", new Dictionary<string, string>()
-			        {
-				        {"crv", "P-256"},
-				        {"alg", "ES256"},
-				        {"use", "sig"},
-				        {"kty", "EC"},
-				        {"x", UrlSafe(X)},
-				        {"y", UrlSafe(Y)}
-			        }}
+			        // {"DeviceToken", $"d={deviceToken.Token}"},
+			        // {/* {"TitleToken", titleToken.Token},*/}
+			        {"SandboxId", "RETAIL"},
+			        {"ProofKey", new ProofKey(UrlSafe(X), UrlSafe(Y))}
 		        }
 	        };
-			
-	        AuthResponse<XuiDisplayClaims<XstsXui>> titleAuthResponse;
-	        //var                                     client = GetClient();
-	        //using (var client = new HttpClient())
+
+
+	        using (var r = new HttpRequestMessage(HttpMethod.Post, XblAuth))
 	        {
-		        using (var r = new HttpRequestMessage(HttpMethod.Post,
-			        XblAuth))
+		        r.Headers.Add("User-Agent", "MCPE/Android");
+		        r.Headers.Add("Client-Version", McpeProtocolInfo.ProtocolVersion.ToString());
+		        SetHeadersAndContent(r, authRequest);
+
+		        using (var response = await client.SendAsync(r, HttpCompletionOption.ResponseContentRead)
+			       .ConfigureAwait(false))
 		        {
-			        r.Headers.Add("x-xbl-contract-version", "1");
-			        r.Headers.Add("User-Agent", "MCPE/Android");
-			        r.Headers.Add("Client-Version", McpeProtocolInfo.ProtocolVersion.ToString());
-			        r.Content = SetHttpContent(authRequest, out var jsonData);
+			        response.EnsureSuccessStatusCode();
 
-			        Sign(r, jsonData);
+			        var rawResponse = await response.Content.ReadAsStringAsync();
 
-			        using (var response = await client
-				       .SendAsync(r, HttpCompletionOption.ResponseContentRead)
-				       .ConfigureAwait(false))
-			        {
-				        response.EnsureSuccessStatusCode();
+			        // Console.WriteLine(rawResponse);
+			        // Console.WriteLine();
+			        return JsonConvert.DeserializeObject<AuthResponse<XuiDisplayClaims<XstsXui>>>(rawResponse);
 
-				        var rawResponse = await response.Content.ReadAsStringAsync();
-
-				       // Console.WriteLine(rawResponse);
-				       // Console.WriteLine();
-				        titleAuthResponse =
-					        JsonConvert.DeserializeObject<AuthResponse<XuiDisplayClaims<XstsXui>>>(
-						        rawResponse);
-
-				        //Log.Debug($"Xsts Auth: {rawResponse}");
-			        }
+			        //Log.Debug($"Xsts Auth: {rawResponse}");
 		        }
 	        }
-
-	        return titleAuthResponse;
         }
 
         private async Task<AuthResponse<XuiDisplayClaims<XstsXui>>> ObtainXbox(HttpClient client,
 	        AuthResponse<DeviceDisplayClaims> deviceToken,
-	        AuthResponse<XuiDisplayClaims<Xui>> userToken)
+	        string accessToken)
         {
 	        var authRequest = new Dictionary<string, object>()
 	        {
-		        {"AccessToken", $"t={userToken.Token}"},
+		        {"AccessToken", $"t={accessToken}"},
 		        {"AppId", ClientId},
 		        {"deviceToken", deviceToken.Token},
 		        {"Sandbox", "RETAIL"},
 		        {"UseModernGamertag", true},
 		        {"SiteName", "user.auth.xboxlive.com"},
 		        {"RelyingParty", "https://multiplayer.minecraft.net/"},
-		        {
-			        "ProofKey",
-			        new Dictionary<string, string>()
-			        {
-				        {"crv", "P-256"},
-				        {"alg", "ES256"},
-				        {"use", "sig"},
-				        {"kty", "EC"},
-				        {"x", UrlSafe(X)},
-				        {"y", UrlSafe(Y)}
-			        }
-		        }
+		        {"ProofKey", new ProofKey(UrlSafe(X), UrlSafe(Y))}
 	        };
 	        
 	        using (var r = new HttpRequestMessage(HttpMethod.Post, "https://sisu.xboxlive.com/authorize"))
 	        {
-		        r.Headers.Add("x-xbl-contract-version", "3");
-		        
-		        r.Content = SetHttpContent(authRequest, out var jsonData);
-
-		        Sign(r, jsonData);
+		        SetHeadersAndContent(r, authRequest);
 
 		        var content = await r.Content.ReadAsStringAsync();
 		        Console.WriteLine($"SISI REQUEST: {content}");
@@ -385,14 +343,8 @@ namespace Alex.Utils
 			using (var r = new HttpRequestMessage(HttpMethod.Post,
 				TitleAuth))
 			{
-				r.Headers.Add("x-xbl-contract-version", "1");
-							
-				//var json = JsonConvert.SerializeObject(authRequest);
-				//Console.WriteLine(json);
-				r.Content = SetHttpContent(authRequest, out var jsonData);
-							
-				Sign(r, jsonData);
-							
+				SetHeadersAndContent(r, authRequest);
+
 				using (var response = await client
 					.SendAsync(r, HttpCompletionOption.ResponseContentRead)
 					.ConfigureAwait(false))
@@ -402,136 +354,91 @@ namespace Alex.Utils
 					titleAuthResponse =
 						JsonConvert.DeserializeObject<AuthResponse<TitleDisplayClaims>>(
 							await response.Content.ReadAsStringAsync());
-
-					//Log.Debug($"Title Auth: {JsonConvert.SerializeObject(titleAuthResponse)}");
 				}
 			}
 
 			return titleAuthResponse;
 		}
 
-		private async Task<AuthResponse<XuiDisplayClaims<Xui>>> ObtainUserToken(HttpClient client, string accessToken)
+        private async Task<AuthResponse<XuiDisplayClaims<Xui>>> ObtainUserToken(HttpClient client, string accessToken)
+        {
+	        //var key = EcDsa.ExportParameters(false);
+
+	        var authRequest = new AuthRequest
+	        {
+		        RelyingParty = "http://auth.xboxlive.com",
+		        TokenType = "JWT",
+		        Properties = new Dictionary<string, object>()
+		        {
+			        {"AuthMethod", "RPS"},
+			        {"RpsTicket", "t=" + accessToken},
+			        {"SiteName", "user.auth.xboxlive.com"},
+			        {"ProofKey", new ProofKey(UrlSafe(X), UrlSafe(Y))}
+		        }
+	        };
+
+	        using (var r = new HttpRequestMessage(HttpMethod.Post, UserAuth))
+	        {
+		        SetHeadersAndContent(r, authRequest);
+
+		        using (var response = await client.SendAsync(r, HttpCompletionOption.ResponseContentRead)
+			       .ConfigureAwait(false))
+		        {
+			        response.EnsureSuccessStatusCode();
+
+			        return
+				        JsonConvert.DeserializeObject<AuthResponse<XuiDisplayClaims<Xui>>>(
+					        await response.Content.ReadAsStringAsync());
+		        }
+	        }
+        }
+
+        private void SetHeadersAndContent(HttpRequestMessage request, object data)
 		{
-			//var key = EcDsa.ExportParameters(false);
+			request.Headers.Add("x-xbl-contract-version", "1");
+			request.Headers.Add("User-Agent", "MCPE/Android");
 			
-			var authRequest = new AuthRequest
-			{
-				RelyingParty = "http://auth.xboxlive.com",
-				TokenType = "JWT",
-				Properties = new Dictionary<string, object>()
-				{
-					{"AuthMethod", "RPS"},
-					{"RpsTicket", "t="+accessToken},
-					{ "SiteName", "user.auth.xboxlive.com" },
-					{"ProofKey", new Dictionary<string, string>()
-					{
-						{"crv", "P-256"},
-						{"alg", "ES256"},
-						{"use", "sig"},
-						{"kty", "EC"},
-						{"x", UrlSafe(X)},
-						{"y", UrlSafe(Y)}
-					}}
-				}
-			};
-
-			AuthResponse<XuiDisplayClaims<Xui>> authResponse;
-			//using (var client = new HttpClient())
-			//var client = GetClient();
-			{
-				using (var r = new HttpRequestMessage(HttpMethod.Post,
-					UserAuth))
-				{
-					r.Headers.Add("x-xbl-contract-version", "3");
-
-					r.Content = SetHttpContent(authRequest, out var jsonData);
-					Sign(r, jsonData);
-
-					using (var response = await client
-						.SendAsync(r, HttpCompletionOption.ResponseContentRead)
-						.ConfigureAwait(false))
-					{
-						response.EnsureSuccessStatusCode();
-
-						authResponse =
-							JsonConvert.DeserializeObject<AuthResponse<XuiDisplayClaims<Xui>>>(
-								await response.Content.ReadAsStringAsync());
-
-						//Log.Debug($"User Auth Result: {JsonConvert.SerializeObject(authResponse)}");
-					}
-				}
-			}
-
-			return authResponse;
-		}
-		
-		private async Task<AuthResponse<DeviceDisplayClaims>> ObtainDeviceToken(HttpClient client, string deviceId)
-		{
-			var id = Guid.NewGuid().ToString();
-			var serial = Guid.NewGuid().ToString();
-			//UUID uuid = new UUID(Guid.NewGuid().ToByteArray());
-
-		//	var key = EcDsa.ExportParameters(false);
-			var authRequest = new AuthRequest
-			{
-				RelyingParty = "http://auth.xboxlive.com",
-				TokenType = "JWT",
-				Properties = new Dictionary<string, object>()
-				{
-					{"AuthMethod", "ProofOfPossession"},
-					{"Id", $"{{{id}}}"},
-					{"DeviceType", "Android"},
-					{"Version", "10"},
-					{ 
-						"ProofKey", new Dictionary<string, string>()
-						{
-							{"crv", "P-256"},
-							{"alg", "ES256"},
-							{"use", "sig"},
-							{"kty", "EC"},
-							{"x",UrlSafe(X)},
-							{"y", UrlSafe(Y)}
-						}
-					}
-				}
-			};
-
-			AuthResponse<DeviceDisplayClaims> deviceAuthResponse;
-			//using (var client = new HttpClient())
-		//	var client = GetClient();
-			using (var r = new HttpRequestMessage(HttpMethod.Post,
-				DeviceAuth))
-			{
-				//r.Headers.Clear();
-				
-				r.Headers.Add("x-xbl-contract-version", "3");
-
-				//var json = JsonConvert.SerializeObject(authRequest);
-				//Console.WriteLine($"Device Request: " + json);
-				r.Content = SetHttpContent(authRequest, out var jsonData);
-
-				Sign(r, jsonData);
-
-				using (var response = await client
-					.SendAsync(r, HttpCompletionOption.ResponseContentRead)
-					.ConfigureAwait(false))
-				{
-					var resp = await response.Content.ReadAsStringAsync();
-
-					response.EnsureSuccessStatusCode();
-
-					Console.WriteLine($"Device Response: " + resp);
-					
-					deviceAuthResponse =
-						JsonConvert.DeserializeObject<AuthResponse<DeviceDisplayClaims>>(
-							resp);
-				}
-			}
-
-			return deviceAuthResponse;
+			request.Content = SetHttpContent(data, out var jsonData);
+			Sign(request, jsonData);
 		}
 
-		private void Sign(HttpRequestMessage request, byte[] body)
+        private async Task<AuthResponse<DeviceDisplayClaims>> ObtainDeviceToken(HttpClient client, string deviceId)
+        {
+	        var id = Guid.NewGuid().ToString();
+
+	        var authRequest = new AuthRequest
+	        {
+		        RelyingParty = "http://auth.xboxlive.com",
+		        TokenType = "JWT",
+		        Properties = new Dictionary<string, object>()
+		        {
+			        {"AuthMethod", "ProofOfPossession"},
+			        {"Id", $"{{{id}}}"},
+			        {"DeviceType", "Android"},
+			        {"Version", "10"},
+			        {"ProofKey", new ProofKey(UrlSafe(X), UrlSafe(Y))}
+		        }
+	        };
+
+	        using (var r = new HttpRequestMessage(HttpMethod.Post, DeviceAuth))
+	        {
+		        SetHeadersAndContent(r, authRequest);
+
+		        using (var response = await client.SendAsync(r, HttpCompletionOption.ResponseContentRead)
+			       .ConfigureAwait(false))
+		        {
+			        var resp = await response.Content.ReadAsStringAsync();
+
+			        response.EnsureSuccessStatusCode();
+
+			        Console.WriteLine($"Device Response: " + resp);
+
+			        return JsonConvert.DeserializeObject<AuthResponse<DeviceDisplayClaims>>(resp);
+		        }
+	        }
+        }
+
+        private void Sign(HttpRequestMessage request, byte[] body)
 		{
 			var hash = SHA256.Create();
 
@@ -690,12 +597,7 @@ namespace Alex.Utils
 				Console.WriteLine();
 
 				HttpClient client    = GetClient();
-				var        userToken = await ObtainUserToken(client, token.AccessToken);
-				
-				Console.WriteLine();
-				
-				Console.WriteLine($"User Token: {JsonConvert.SerializeObject(userToken, Formatting.Indented)}");
-				
+
 				Console.WriteLine();
 				
 				var deviceToken = await ObtainDeviceToken(client, deviceId);
@@ -705,12 +607,8 @@ namespace Alex.Utils
 				Console.WriteLine($"Device Token: {JsonConvert.SerializeObject(deviceToken, Formatting.Indented)}");
 				
 				Console.WriteLine();
-				
-				//var titleAuth = await DoTitleAuth(deviceToken, token.AccessToken);
 
-				//var xsts = await DoXsts(client, deviceToken, null, userToken.Token);
-
-				var xsts = await ObtainXbox(client, deviceToken, userToken);
+				var xsts = await ObtainXbox(client, deviceToken, token.AccessToken);
 				
 				Console.WriteLine();
 				
@@ -719,7 +617,7 @@ namespace Alex.Utils
 				Console.WriteLine();
 				
 				
-				return (await RequestMinecraftChain(xsts, MinecraftKeyPair), new BedrockTokenPair()
+				return (await RequestMinecraftChain(xsts), new BedrockTokenPair()
 				{
 					AccessToken = token.AccessToken,
 					ExpiryTime = DateTime.UtcNow.AddSeconds(token.ExpiresIn),
@@ -738,10 +636,10 @@ namespace Alex.Utils
 			var client      = GetClient();
 			var userToken   = await ObtainUserToken(client, accessToken);
 			var deviceToken = await ObtainDeviceToken(client, "");
-			var xsts        = await ObtainXbox(client, deviceToken, userToken);
+			var xsts        = await ObtainXbox(client, deviceToken, accessToken);
 			//var xsts      = await DoXsts(client, null, null, userToken.Token);
 
-			return await RequestMinecraftChain(xsts, MinecraftKeyPair);
+			return await RequestMinecraftChain(xsts);
 		}
 
 		public async Task<(bool success, BedrockTokenPair token)> RefreshTokenAsync(string refreshToken)
@@ -828,10 +726,6 @@ namespace Alex.Utils
 		private HttpClient GetClient()
 		{
 			_httpClient.DefaultRequestHeaders.Add("Cache-Control", "no-cache");
-			//_httpClient.DefaultRequestHeaders.UserAgent.Clear();
-			//_httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("");
-			//_httpClient.DefaultRequestHeaders.UserAgent.Add(ne);
-			//_httpClient.DefaultRequestHeaders.UserAgent.Clear();
 			return _httpClient;
 		}
 
@@ -857,14 +751,10 @@ namespace Alex.Utils
 			public string Url;
 			public Dictionary<string, string> PostData;
 
-			public object Content;
-			
 			public Request(string url)
 			{
 				Url = url;
 				PostData = new Dictionary<string, string>();
-
-				Content = null;
 			}
 		}
 
@@ -879,140 +769,5 @@ namespace Alex.Utils
 				Body = body;
 			}
 		};
-
-		public class AuthRequest
-		{
-			[JsonProperty("RelyingParty")]
-			public string RelyingParty { get; set; }
-
-			[JsonProperty("TokenType")]
-			public string TokenType { get; set; }
-
-			[JsonProperty("Properties")]
-			public Dictionary<string, object> Properties { get; set; }
-		}
-
-		public class Properties
-		{
-			[JsonProperty("AuthMethod")]
-			public string AuthMethod { get; set; }
-
-			[JsonProperty("SiteName")]
-			public string SiteName { get; set; }
-
-			[JsonProperty("RpsTicket")]
-			public string RpsTicket { get; set; }
-		}
-		
-		public class AuthResponse<TClaims>
-		{
-			[JsonProperty("IssueInstant")]
-			public string IssueInstant { get; set; }
-
-			[JsonProperty("NotAfter")]
-			public string NotAfter { get; set; }
-
-			[JsonProperty("Token")]
-			public string Token { get; set; }
-
-			[JsonProperty("DisplayClaims")]
-			public TClaims DisplayClaims { get; set; }
-		}
-
-		public class XstsXui
-		{
-		//	[JsonProperty("agg")]
-		//	public string AgeGroup { get; set; }
-			
-			[JsonProperty("gtg")]
-			public string Gamertag { get; set; }
-
-			[JsonProperty("xid")]
-			public string XUID { get; set; }
-			
-			[JsonProperty("uhs")]
-			public string UserHash { get; set; }
-		}
-		
-		public class XuiDisplayClaims<TType>
-		{
-			[JsonProperty("xui")]
-			public TType[] Xui { get; set; }
-		}
-
-		public class Xui
-		{
-			[JsonProperty("uhs")]
-			public string Uhs { get; set; }
-		}
-		
-		public class DeviceDisplayClaims
-		{
-			[JsonProperty("xdi")]
-			public XDI Xdi { get; set; }
-		}
-
-		public class XDI
-		{
-			[JsonProperty("did")]
-			public string DID { get; set; }
-		}
-		
-		public class TitleDisplayClaims
-		{
-			[JsonProperty("xti")]
-			public XTI Xti { get; set; }
-		}
-
-		public class XTI
-		{
-			[JsonProperty("tid")]
-			public string TID { get; set; }
-		}
-	}
-	public class MsaDeviceAuthConnectResponse
-	{
-		public string user_code;
-		public string device_code;
-		public string verification_uri;
-		public int interval;
-		public int expires_in;
-	};
-	
-	public class MsaDeviceAuthPollState
-	{
-		[JsonProperty("user_id")]
-		public string UserId;
-		
-		[JsonProperty("token_type")]
-		public string TokenType;
-		
-		[JsonProperty("scope")]
-		public string Scope;
-		
-		[JsonProperty("access_token")]
-		public string AccessToken;
-		
-		[JsonProperty("refresh_token")]
-		public string RefreshToken;
-		
-		//public int interval;
-		[JsonProperty("expires_in")]
-		public int ExpiresIn;
-		
-		[JsonProperty("error")]
-		public string Error;
-	};
-
-	public class BedrockTokenPair
-	{
-		[JsonProperty("access_token")]
-		public string AccessToken;
-		
-		[JsonProperty("refresh_token")]
-		public string RefreshToken;
-
-		[JsonProperty("expiry_time")]
-		public DateTime ExpiryTime;
 	}
 }

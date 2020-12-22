@@ -37,6 +37,7 @@ using Alex.ResourcePackLib.Json.Models.Entities;
 using Alex.Services;
 using Alex.Services.Discord;
 using Alex.Utils;
+using Alex.Utils.Auth;
 using Alex.Worlds.Abstraction;
 using Alex.Worlds.Multiplayer.Bedrock;
 using Alex.Worlds.Multiplayer.Java;

@@ -28,6 +28,7 @@ using Alex.Net.Bedrock.Raknet;
 using Alex.ResourcePackLib.Json;
 using Alex.ResourcePackLib.Json.Models.Entities;
 using Alex.Utils;
+using Alex.Utils.Auth;
 using Alex.Utils.Inventories;
 using Jose;
 using Microsoft.Extensions.DependencyInjection;

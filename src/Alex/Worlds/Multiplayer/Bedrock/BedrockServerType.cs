@@ -6,6 +6,7 @@ using Alex.Gui;
 using Alex.Net;
 using Alex.Services;
 using Alex.Utils;
+using Alex.Utils.Auth;
 using Alex.Worlds.Abstraction;
 using Microsoft.Extensions.DependencyInjection;
 using MiNET.Net;
