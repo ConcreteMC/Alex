@@ -47,20 +47,29 @@ namespace Alex.Utils.Auth
 		private const string AuthorizationUri = "https://login.live.com/oauth20_authorize.srf";  // Authorization code endpoint
 		private const string RedirectUri = "https://login.live.com/oauth20_desktop.srf";  // Callback endpoint
 		private const string RefreshUri = "https://login.live.com/oauth20_token.srf";  // Get tokens endpoint
-		private byte[] X { get; set; }
-		private byte[] Y { get; set; }
+		private string X { get; set; }
+		private string Y { get; set; }
 		
 		private  ECDsa   EcDsa  { get; }
 
-		private static CookieContainer   _cookieContainer;
-		private static HttpClientHandler _clienthandler;
+		private CookieContainer   _cookieContainer;
+		private HttpClientHandler _clienthandler;
+		private readonly HttpClient        _httpClient;
 		public XboxAuthService()
 		{
 			EcDsa = ConvertToSingKeyFormat(GenerateKeys());
 			
 			_cookieContainer = new CookieContainer();
-			_clienthandler = new HttpClientHandler { AllowAutoRedirect = true, UseCookies = true, CookieContainer = _cookieContainer };
+			
+			_clienthandler = new HttpClientHandler
+			{
+				AllowAutoRedirect = true, 
+				UseCookies = true, 
+				CookieContainer = _cookieContainer
+			};
 			_httpClient = new HttpClient(_clienthandler);
+			_httpClient.DefaultRequestHeaders.Add("Cache-Control", "no-cache");
+			_httpClient.DefaultRequestHeaders.Add("x-xbl-contract-version", "1");
 		}
 
 		private static AsymmetricCipherKeyPair GenerateKeys()
@@ -95,8 +104,8 @@ namespace Alex.Utils.Auth
 			signParam.D = CryptoUtils.FixDSize(privAsyKey.D.ToByteArrayUnsigned(), signParam.Q.X.Length);
 			signParam.Validate();
 
-			X = pubAsyKey.Q.AffineXCoord.GetEncoded();
-			Y = pubAsyKey.Q.AffineYCoord.GetEncoded();
+			X = UrlSafe(pubAsyKey.Q.AffineXCoord.GetEncoded());
+			Y = UrlSafe(pubAsyKey.Q.AffineYCoord.GetEncoded());
 
 			return ECDsa.Create(signParam);
 		}
@@ -154,14 +163,12 @@ namespace Alex.Utils.Auth
 
 		public AsymmetricCipherKeyPair MinecraftKeyPair { get; private set; } = CryptoUtils.GenerateClientKey();
 
-		public async Task<bool> RequestMinecraftChain(AuthResponse<XuiDisplayClaims<XstsXui>> token)
+		public async Task<bool> RequestMinecraftChain(HttpClient client, AuthResponse<XuiDisplayClaims<XstsXui>> token)
 		{
 			var b = SubjectPublicKeyInfoFactory.CreateSubjectPublicKeyInfo(MinecraftKeyPair.Public).GetEncoded()
 			   .EncodeBase64();
 
 			var body = new MCChainPostData() {IdentityPublicKey = b};
-
-			var client = GetClient();
 
 			using (var r = new HttpRequestMessage(HttpMethod.Post, MinecraftAuthUrl))
 			{
@@ -218,7 +225,6 @@ namespace Alex.Utils.Auth
 
 		private async Task<AuthResponse<XuiDisplayClaims<XstsXui>>> DoXsts(HttpClient client,
 	        AuthResponse<DeviceDisplayClaims> deviceToken,
-	        AuthResponse<TitleDisplayClaims> titleToken,
 	        string userToken)
         {
 	        //var key = EcDsa.ExportParameters(false);
@@ -229,10 +235,10 @@ namespace Alex.Utils.Auth
 		        Properties = new Dictionary<string, object>()
 		        {
 			        {"UserTokens", new string[] {userToken}},
-			        // {"DeviceToken", $"d={deviceToken.Token}"},
+			        /* {"DeviceToken", $"d={deviceToken.Token}"},*/
 			        // {/* {"TitleToken", titleToken.Token},*/}
 			        {"SandboxId", "RETAIL"},
-			        {"ProofKey", new ProofKey(UrlSafe(X), UrlSafe(Y))}
+			        {"ProofKey", new ProofKey(X, Y)}
 		        }
 	        };
 
@@ -272,17 +278,14 @@ namespace Alex.Utils.Auth
 		        {"UseModernGamertag", true},
 		        {"SiteName", "user.auth.xboxlive.com"},
 		        {"RelyingParty", "https://multiplayer.minecraft.net/"},
-		        {"ProofKey", new ProofKey(UrlSafe(X), UrlSafe(Y))}
+		        {"ProofKey", new ProofKey(X, Y)}
 	        };
-	        
-	        using (var r = new HttpRequestMessage(HttpMethod.Post, "https://sisu.xboxlive.com/authorize"))
+
+	        var r = new HttpRequestMessage(HttpMethod.Post, "https://sisu.xboxlive.com/authorize");
 	        {
 		        SetHeadersAndContent(r, authRequest);
 
-		        var content = await r.Content.ReadAsStringAsync();
-		        Console.WriteLine($"SISI REQUEST: {content}");
-
-		        using (var response = await client.SendAsync(r, HttpCompletionOption.ResponseContentRead)
+		        using (var response = await client.SendAsync(r)
 			       .ConfigureAwait(false))
 		        {
 			        var rawResponse = await response.Content.ReadAsStringAsync();
@@ -306,7 +309,6 @@ namespace Alex.Utils.Auth
 
 			        Console.WriteLine();
 
-
 			        response.EnsureSuccessStatusCode();
 
 			       return JsonConvert.DeserializeObject<AuthResponse<XuiDisplayClaims<XstsXui>>>(rawResponse);
@@ -314,7 +316,7 @@ namespace Alex.Utils.Auth
 	        }
         }
 
-        private async Task<AuthResponse<TitleDisplayClaims>> DoTitleAuth(AuthResponse<DeviceDisplayClaims> deviceToken, string accessToken)
+        private async Task<AuthResponse<TitleDisplayClaims>> DoTitleAuth(HttpClient client, AuthResponse<DeviceDisplayClaims> deviceToken, string accessToken)
 		{
 			var authRequest = new AuthRequest
 			{
@@ -326,20 +328,10 @@ namespace Alex.Utils.Auth
 					{"DeviceToken", deviceToken.Token},
 					{"RpsTicket", $"t={accessToken}" },
 					{ "SiteName", "user.auth.xboxlive.com" },
-					{"ProofKey", new Dictionary<string, string>()
-					{
-						{"crv", "P-256"},
-						{"alg", "ES256"},
-						{"use", "sig"},
-						{"kty", "EC"},
-						{"x", UrlSafe(X)},
-						{"y", UrlSafe(Y)}
-					}}
+					{"ProofKey", new ProofKey(X, Y)}
 				}
 			};
 			
-			AuthResponse<TitleDisplayClaims> titleAuthResponse;
-			var client = GetClient();
 			using (var r = new HttpRequestMessage(HttpMethod.Post,
 				TitleAuth))
 			{
@@ -351,13 +343,11 @@ namespace Alex.Utils.Auth
 				{
 					response.EnsureSuccessStatusCode();
 
-					titleAuthResponse =
+					return
 						JsonConvert.DeserializeObject<AuthResponse<TitleDisplayClaims>>(
 							await response.Content.ReadAsStringAsync());
 				}
 			}
-
-			return titleAuthResponse;
 		}
 
         private async Task<AuthResponse<XuiDisplayClaims<Xui>>> ObtainUserToken(HttpClient client, string accessToken)
@@ -373,7 +363,7 @@ namespace Alex.Utils.Auth
 			        {"AuthMethod", "RPS"},
 			        {"RpsTicket", "t=" + accessToken},
 			        {"SiteName", "user.auth.xboxlive.com"},
-			        {"ProofKey", new ProofKey(UrlSafe(X), UrlSafe(Y))}
+			        {"ProofKey", new ProofKey(X, Y)}
 		        }
 	        };
 
@@ -395,16 +385,13 @@ namespace Alex.Utils.Auth
 
         private void SetHeadersAndContent(HttpRequestMessage request, object data)
 		{
-			request.Headers.Add("x-xbl-contract-version", "1");
-			request.Headers.Add("User-Agent", "MCPE/Android");
-			
 			request.Content = SetHttpContent(data, out var jsonData);
 			Sign(request, jsonData);
 		}
 
         private async Task<AuthResponse<DeviceDisplayClaims>> ObtainDeviceToken(HttpClient client, string deviceId)
         {
-	        var id = Guid.NewGuid().ToString();
+	      //  var id = Guid.NewGuid().ToString();
 
 	        var authRequest = new AuthRequest
 	        {
@@ -413,14 +400,15 @@ namespace Alex.Utils.Auth
 		        Properties = new Dictionary<string, object>()
 		        {
 			        {"AuthMethod", "ProofOfPossession"},
-			        {"Id", $"{{{id}}}"},
-			        {"DeviceType", "Android"},
-			        {"Version", "10"},
-			        {"ProofKey", new ProofKey(UrlSafe(X), UrlSafe(Y))}
+			        {"Id", $"{{{deviceId}}}"},
+			        {"DeviceType", "Nintendo"},
+			        {"SerialNumber", Guid.NewGuid().ToString()},
+			        {"Version", "0.0.0.0"},
+			        {"ProofKey", new ProofKey(X, Y)}
 		        }
 	        };
 
-	        using (var r = new HttpRequestMessage(HttpMethod.Post, DeviceAuth))
+	        var r = new HttpRequestMessage(HttpMethod.Post, DeviceAuth);
 	        {
 		        SetHeadersAndContent(r, authRequest);
 
@@ -431,7 +419,7 @@ namespace Alex.Utils.Auth
 
 			        response.EnsureSuccessStatusCode();
 
-			        Console.WriteLine($"Device Response: " + resp);
+			        //Console.WriteLine($"Device Response: " + resp);
 
 			        return JsonConvert.DeserializeObject<AuthResponse<DeviceDisplayClaims>>(resp);
 		        }
@@ -487,13 +475,6 @@ namespace Alex.Utils.Auth
 
 				byte[] input = buffer.ToArray();
 				signed = EcDsa.SignHash(hash.ComputeHash(input));
-
-				//var         signer = SignerUtilities.GetSigner(NistObjectIdentifiers.IdEcdsaWithSha3_256);
-				//signer.Init(true, (ECPrivateKeyParameters)BouncyKeyPair.Private);
-				//signer.BlockUpdate(input, 0, input.Length);
-				//var hashed = hash.ComputeHash(input);
-				//signer.BlockUpdate(hashed, 0, hashed.Length);
-				//signed = signer.GenerateSignature();
 			}
 
 			byte[] final;
@@ -528,33 +509,28 @@ namespace Alex.Utils.Auth
 			
 			return unixTimestamp;
 		}
-		
-		public static void SerializeJsonIntoStream(object value, Stream stream)
-		{
-			using (var sw = new StreamWriter(stream, new UTF8Encoding(false), 1024, true))
-			{
-				using (var jtw = new JsonTextWriter(sw) {Formatting = Formatting.Indented})
-				{
-					var js = new JsonSerializer() { };
-					js.Serialize(jtw, value);
-					jtw.Flush();
-				}
-			}
-		}
-		
+
 		private static HttpContent SetHttpContent(object content, out byte[] data)
 		{
 			HttpContent httpContent = null;
 
 			if (content != null)
 			{
-				var ms = new MemoryStream();
-				SerializeJsonIntoStream(content, ms);
-				ms.Seek(0, SeekOrigin.Begin);
-				httpContent = new StreamContent(ms);
-				httpContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+				using (MemoryStream ms = new MemoryStream())
+				{
+					using (TextWriter tw = new StreamWriter(ms))
+					{
+						using (var jtw = new JsonTextWriter(tw) {Formatting = Formatting.Indented})
+						{
+							new JsonSerializer().Serialize(jtw, content);
+						}
+					}
 
-				data = ms.ToArray();
+					data = ms.ToArray();
+				}
+
+				httpContent = new ByteArrayContent(data);
+				httpContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
 			}
 			else
 			{
@@ -563,17 +539,17 @@ namespace Alex.Utils.Auth
 
 			return httpContent;
 		}
-		
+
 		private async Task<Response> Send(Request request)
 		{
 			var content = new FormUrlEncodedContent(request.PostData);
 
-			HttpClient client = GetClient();
-			//client.BaseAddress = new Uri(request.Url);
+			HttpClient client = _httpClient;
 
 			var res = await client.PostAsync(request.Url, content);
 
 			string body = await res.Content.ReadAsStringAsync();
+			
 			return new Response(res.StatusCode, body);
 		}
 
@@ -581,43 +557,44 @@ namespace Alex.Utils.Auth
 		{
 			try
 			{
+				HttpClient client = _httpClient;
+				
 				string r = "authorization_pending";
 				MsaDeviceAuthPollState token = null;
 				while (r == "authorization_pending" && !cancellationToken.IsCancellationRequested)
 				{
-					var poll = await DevicePollState(deviceCode);
+					var poll = await DevicePollState(client, deviceCode);
 					r = poll.Error;
 					token = poll;
 				}
 				
-				Console.WriteLine();
+				//Console.WriteLine();
 				
-				Console.WriteLine($"Live: {JsonConvert.SerializeObject(token, Formatting.Indented)}");
-				
-				Console.WriteLine();
+				//Console.WriteLine($"Live: {JsonConvert.SerializeObject(token, Formatting.Indented)}");
 
-				HttpClient client    = GetClient();
-
-				Console.WriteLine();
+				//Console.WriteLine();
 				
 				var deviceToken = await ObtainDeviceToken(client, deviceId);
 
-				Console.WriteLine();
+				//Console.WriteLine();
 				
-				Console.WriteLine($"Device Token: {JsonConvert.SerializeObject(deviceToken, Formatting.Indented)}");
+				//Console.WriteLine($"Device Token: {JsonConvert.SerializeObject(deviceToken, Formatting.Indented)}");
 				
-				Console.WriteLine();
+				//Console.WriteLine();
 
-				var xsts = await ObtainXbox(client, deviceToken, token.AccessToken);
+				var userToken = await ObtainUserToken(client, token.AccessToken);
+
+				//var xsts = await ObtainXbox(client, deviceToken, token.AccessToken);
+				var xsts = await DoXsts(client, deviceToken, userToken.Token);
 				
-				Console.WriteLine();
+				//Console.WriteLine();
 				
-				Console.WriteLine($"XSTS Token: {JsonConvert.SerializeObject(xsts, Formatting.Indented)}");
+				//Console.WriteLine($"XSTS Token: {JsonConvert.SerializeObject(xsts, Formatting.Indented)}");
 				
-				Console.WriteLine();
+				//Console.WriteLine();
 				
 				
-				return (await RequestMinecraftChain(xsts), new BedrockTokenPair()
+				return (await RequestMinecraftChain(client, xsts), new BedrockTokenPair()
 				{
 					AccessToken = token.AccessToken,
 					ExpiryTime = DateTime.UtcNow.AddSeconds(token.ExpiresIn),
@@ -632,14 +609,12 @@ namespace Alex.Utils.Auth
 
 		public async Task<bool> TryAuthenticate(string accessToken)
 		{
-			//return false;//
-			var client      = GetClient();
-			var userToken   = await ObtainUserToken(client, accessToken);
-			var deviceToken = await ObtainDeviceToken(client, "");
-			var xsts        = await ObtainXbox(client, deviceToken, accessToken);
-			//var xsts      = await DoXsts(client, null, null, userToken.Token);
-
-			return await RequestMinecraftChain(xsts);
+			var userToken   = await ObtainUserToken(_httpClient, accessToken);
+			var deviceToken = await ObtainDeviceToken(_httpClient, Guid.NewGuid().ToString());
+			//var xsts        = await ObtainXbox(_httpClient, deviceToken, accessToken);
+			var xsts = await DoXsts(_httpClient, deviceToken, userToken.Token);
+			
+			return await RequestMinecraftChain(_httpClient, xsts);
 		}
 
 		public async Task<(bool success, BedrockTokenPair token)> RefreshTokenAsync(string refreshToken)
@@ -667,7 +642,7 @@ namespace Alex.Utils.Auth
 
 			try
 			{
-				AccessTokens tokens = await GetTokensUsingGET($"{RefreshUri}", new Dictionary<string, string> { 
+				AccessTokens tokens = await Get($"{RefreshUri}", new Dictionary<string, string> { 
 					{ "client_id", ClientId  },
 					{ "grant_type", "refresh_token" },
 					{ "scope", "service::user.auth.xboxlive.com::MBI_SSL" },
@@ -693,7 +668,6 @@ namespace Alex.Utils.Auth
 		public async Task<MsaDeviceAuthConnectResponse> StartDeviceAuthConnect()
 		{
 			Request request = new Request($"https://login.live.com/oauth20_connect.srf?client_id={ClientId}");
-			//request.["client_id"] = ClientId;
 			request.PostData["client_id"] = ClientId;
 			request.PostData["scope"] = "service::user.auth.xboxlive.com::MBI_SSL";
 			request.PostData["response_type"] = "device_code";
@@ -701,47 +675,35 @@ namespace Alex.Utils.Auth
 			var response = await Send(request);
 			if (response.Status != HttpStatusCode.OK)
 				throw new Exception("Failed to start sign in flow: non-200 status code");
-		//	Log.Info($"Body: " + response.Body);
+			
 			return JsonConvert.DeserializeObject<MsaDeviceAuthConnectResponse>(response.Body);
 		}
-		//MsaDeviceAuthPollState
-		
-		public async Task<MsaDeviceAuthPollState> DevicePollState(string deviceCode)
+		private async Task<MsaDeviceAuthPollState> DevicePollState(HttpClient client, string deviceCode)
 		{
 			Request request = new Request($"https://login.live.com/oauth20_token.srf?client_id={ClientId}");
 			request.PostData["client_id"] = ClientId;
 			request.PostData["device_code"] = deviceCode;
 			request.PostData["grant_type"] = "urn:ietf:params:oauth:grant-type:device_code";
-			//request.PostData["response_type"] = "device_code";
-			
+
 			var response = await Send(request);
 			if (response.Status != HttpStatusCode.OK && (int)response.Status != 400)
 				throw new Exception($"Failed to start sign in flow: non-200 status code: {response.Status}");
-			//Log.Info($"Body: " + response.Body);
+
 			return JsonConvert.DeserializeObject<MsaDeviceAuthPollState>(response.Body);
 		}
 
-		private readonly HttpClient _httpClient;
 
-		private HttpClient GetClient()
-		{
-			_httpClient.DefaultRequestHeaders.Add("Cache-Control", "no-cache");
-			return _httpClient;
-		}
-
-		private async Task<AccessTokens> GetTokensUsingGET(string uri, Dictionary<string, string> parameters)
+		private async Task<AccessTokens> Get(string uri, Dictionary<string, string> parameters)
 		{
 			AccessTokens tokens = null;
 
-			var client = GetClient();
-			{
-				var encodedContent = new FormUrlEncodedContent (parameters);
-				var response = await client.PostAsync(uri, encodedContent);
+			var client         = _httpClient;
+			var encodedContent = new FormUrlEncodedContent(parameters);
+			var response       = await client.PostAsync(uri, encodedContent);
 
-				var res = await response.Content.ReadAsStringAsync();
-                
-				tokens = JsonConvert.DeserializeObject<AccessTokens>(res);
-			}
+			var res = await response.Content.ReadAsStringAsync();
+
+			tokens = JsonConvert.DeserializeObject<AccessTokens>(res);
 
 			return tokens;
 		}

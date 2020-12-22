@@ -33,10 +33,11 @@ namespace Alex
 			_startupThread = Thread.CurrentThread;
 			_startupThread.Name = "UI Thread";
 			
-			Test();
-			Console.ReadLine();
+		//	Test();
+		//	Console.ReadLine();
 			
-			return;
+		//	return;
+		//	return;
 			
 			var argsResult = Parser.Default.ParseArguments<LaunchSettings>(args)
 				.WithParsed(LaunchGame)
@@ -54,7 +55,7 @@ namespace Alex
 			
 			XboxAuthService.OpenBrowser(authConnect.verification_uri);
 			
-			await authService.DoDeviceCodeLogin("", authConnect.device_code, CancellationToken.None);
+			await authService.DoDeviceCodeLogin(Guid.NewGuid().ToString(), authConnect.device_code, CancellationToken.None);
 		}
 
 		private static void LaunchGame(LaunchSettings launchSettings)
