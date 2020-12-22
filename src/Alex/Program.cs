@@ -32,11 +32,28 @@ namespace Alex
 			_startupThread = Thread.CurrentThread;
 			_startupThread.Name = "UI Thread";
 			
+			Test();
+			Console.ReadLine();
+			
+			return;
+			
 			var argsResult = Parser.Default.ParseArguments<LaunchSettings>(args)
 				.WithParsed(LaunchGame)
 				;//.WithNotParsed()	
 			//launchSettings = ParseArguments(args);
 
+		}
+
+		private static async void Test()
+		{
+			XboxAuthService authService = new XboxAuthService();
+			var             authConnect = await authService.StartDeviceAuthConnect();
+			
+			Console.WriteLine($"Code: {authConnect.user_code}");
+			
+			XboxAuthService.OpenBrowser(authConnect.verification_uri);
+			
+			await authService.DoDeviceCodeLogin("", authConnect.device_code, CancellationToken.None);
 		}
 
 		private static void LaunchGame(LaunchSettings launchSettings)
