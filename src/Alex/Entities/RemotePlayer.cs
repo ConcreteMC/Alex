@@ -209,14 +209,19 @@ namespace Alex.Entities
 											int newHeight = modelTextureSize.Y > textureSize.Y ? textureSize.Y : modelTextureSize.Y;
 											int newWidth = modelTextureSize.X > textureSize.X ? textureSize.X: modelTextureSize.X;
 					
-											var bitmap = skinBitmap;
+											if (modelTextureSize.Y > textureSize.Y)
+											{
+												skinBitmap = SkinUtils.ConvertSkin(skinBitmap, modelTextureSize.X, modelTextureSize.Y);
+											}
+
+											/*var bitmap = skinBitmap;
 											bitmap.Mutate<Rgba32>(xx =>
 											{
 												xx.Resize(modelTextureSize.X, modelTextureSize.Y);
 											//	xx.Flip(FlipMode.Horizontal);
 											});
 
-											skinBitmap = bitmap;
+											skinBitmap = bitmap;*/
 										}
 									}
 								}

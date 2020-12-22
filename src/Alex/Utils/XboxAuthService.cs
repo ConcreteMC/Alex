@@ -228,7 +228,7 @@ namespace Alex.Utils
 			return true;
         }
 		
-        private async Task<AuthResponse<XuiDisplayClaims<XstsXui>>> DoXsts(AuthResponse<DeviceDisplayClaims> deviceToken, AuthResponse<TitleDisplayClaims> titleToken, string userToken)
+        private async Task<AuthResponse<XuiDisplayClaims<XstsXui>>> DoXsts(HttpClient client, AuthResponse<DeviceDisplayClaims> deviceToken, AuthResponse<TitleDisplayClaims> titleToken, string userToken)
         {
 	        //var key = EcDsa.ExportParameters(false);
 	        var authRequest = new AuthRequest
@@ -254,7 +254,7 @@ namespace Alex.Utils
 	        };
 			
 	        AuthResponse<XuiDisplayClaims<XstsXui>> titleAuthResponse;
-	        var                                     client = GetClient();
+	        //var                                     client = GetClient();
 	        //using (var client = new HttpClient())
 	        {
 		        using (var r = new HttpRequestMessage(HttpMethod.Post,
@@ -705,7 +705,7 @@ namespace Alex.Utils
 				
 				//var titleAuth = await DoTitleAuth(deviceToken, token.AccessToken);
 
-				var xsts1 = await DoXsts(deviceToken, null, userToken.Token);
+				var xsts1 = await DoXsts(client, deviceToken, null, userToken.Token);
 				
 				//Console.WriteLine($"XSTS Token: {JsonConvert.SerializeObject(xsts1, Formatting.Indented)}");
 				
@@ -727,11 +727,12 @@ namespace Alex.Utils
 
 		public async Task<bool> TryAuthenticate(string accessToken)
 		{
-			return false;//
-		//	var userToken = await ObtainUserToken(accessToken);
-		//	var xsts = await DoXsts(null, null, userToken.Token);
+			//return false;//
+			var client    = GetClient();
+			var userToken = await ObtainUserToken(client, accessToken);
+			var xsts      = await DoXsts(client, null, null, userToken.Token);
 
-		//	return await RequestMinecraftChain(xsts, MinecraftKeyPair);
+			return await RequestMinecraftChain(xsts, MinecraftKeyPair);
 		}
 
 		public async Task<(bool success, BedrockTokenPair token)> RefreshTokenAsync(string refreshToken)

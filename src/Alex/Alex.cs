@@ -654,7 +654,15 @@ namespace Alex
 						modelTextureSize.Y = (int) PlayerModel.Description.TextureHeight;
 					}
 
-					PlayerTexture = skinImage.Clone<Rgba32>();
+					if (modelTextureSize.Y > skinImage.Height)
+					{
+						PlayerTexture = SkinUtils.ConvertSkin(skinImage, modelTextureSize.X, modelTextureSize.Y);
+					}
+					else
+					{
+						PlayerTexture = skinImage;//.Clone<Rgba32>();
+					}
+
 					/*
 					var textureSize = new Point(skinImage.Width, skinImage.Height);
 
