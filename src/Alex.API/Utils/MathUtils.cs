@@ -52,9 +52,9 @@ namespace Alex.API.Utils
 			return AngleToDegree(angle);
 		}
 
-		public static float FromFixedPoint(int f)
+		public static float FromFixedPoint(short f)
 		{
-			return ((float) f) / (32.0f * 128.0f);
+			return f / (32.0f * 128.0f);
 		}
 
 		public static int HsvToRGB(float hue, float saturation, float value)

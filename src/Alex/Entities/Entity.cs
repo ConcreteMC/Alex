@@ -130,7 +130,7 @@ namespace Alex.Entities
 		//public HealthManager HealthManager { get; set; }
 		public string NameTag { get; set; }
 
-		public virtual bool NoAi { get; set; } = true;
+		public virtual bool NoAi { get; set; } = false;
 		public bool HideNameTag { get; set; } = false;
 		public bool Silent { get; set; }
 
@@ -713,6 +713,8 @@ namespace Alex.Entities
 
 		public virtual void Update(IUpdateArgs args)
 		{
+			Movement?.Update(args.GameTime);
+			
 			var renderer = ModelRenderer;
 			CalculateLegMovement(args);
 			
@@ -981,6 +983,8 @@ namespace Alex.Entities
 		{
 			Age++;
 
+			Movement?.OnTick();
+			
 			HealthManager.OnTick();
 
 			if (_isHit && Age > _hitAnimationEnd)

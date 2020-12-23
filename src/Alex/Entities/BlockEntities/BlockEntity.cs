@@ -37,6 +37,8 @@ namespace Alex.Entities.BlockEntities
 			HasPhysics = false;
 			IsAffectedByGravity = false;
 			Block = block;
+
+			base.Movement.InterpolatedMovement = false;
 		}
 
 		/// <inheritdoc />
@@ -74,7 +76,7 @@ namespace Alex.Entities.BlockEntities
 		/// <inheritdoc />
 		public override PlayerLocation KnownPosition
 		{
-			get => base.KnownPosition + Offset;
+			get => base.KnownPosition;
 			set
 			{
 				base.KnownPosition = value;
@@ -84,7 +86,7 @@ namespace Alex.Entities.BlockEntities
 
 		internal override PlayerLocation RenderLocation
 		{
-			get => base.RenderLocation;
+			get => base.RenderLocation + Offset;
 			set => base.RenderLocation = value;
 		}
 

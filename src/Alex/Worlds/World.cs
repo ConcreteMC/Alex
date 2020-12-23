@@ -916,6 +916,8 @@ namespace Alex.Worlds
 					entity.Movement.Move(position);
 				}
 				
+				entity.Velocity = Vector3.Zero;
+				
 				if (updateLook)
 				{
 					if (updatePitch)

@@ -1688,17 +1688,20 @@ namespace Alex.Worlds.Multiplayer.Java
 		{
 			if (packet.EntityId == World.Player.EntityId)
 				return;
-			
-			var yaw = MathUtils.AngleToNotchianDegree(packet.Yaw);
-			World.UpdateEntityPosition(packet.EntityId, new PlayerLocation(MathUtils.FromFixedPoint(packet.DeltaX),
-				MathUtils.FromFixedPoint(packet.DeltaY),
-				MathUtils.FromFixedPoint(packet.DeltaZ),
-				yaw, 
-				yaw,
-				-MathUtils.AngleToNotchianDegree(packet.Pitch))
+
+			//if (World.TryGetEntity(packet.EntityId, out var entity))
 			{
-				OnGround = packet.OnGround
-			}, true, true, true);
+			//	var     currentPosition = entity.KnownPosition;
+				//currentPosition.X 
+				var yaw = MathUtils.AngleToNotchianDegree(packet.Yaw);
+
+				World.UpdateEntityPosition(
+					packet.EntityId,
+					new PlayerLocation(
+						MathUtils.FromFixedPoint(packet.DeltaX), MathUtils.FromFixedPoint(packet.DeltaY),
+						MathUtils.FromFixedPoint(packet.DeltaZ), yaw, yaw,
+						-MathUtils.AngleToNotchianDegree(packet.Pitch)) {OnGround = packet.OnGround}, true, true, true);
+			}
 		}
 
 		private void HandleEntityRelativeMove(EntityRelativeMove packet)

@@ -79,12 +79,12 @@ namespace Alex.Worlds
 				_frameAccumulator -= TargetTime;
 			}
 
-			var alpha = (float) (_frameAccumulator / TargetTime);
+			/*var alpha = (float) (_frameAccumulator / TargetTime);
 
 			foreach (var entity in entities)
 			{
 				UpdateEntityLocation(entity, alpha);
-			}
+			}*/
 		}
 		
 		
@@ -104,31 +104,7 @@ namespace Alex.Worlds
 
 		private void UpdateEntityLocation(Entity entity, float alpha)
 		{
-			var position              = entity.KnownPosition;
-			var previousStatePosition = entity.PreviousState.Position;
-
-			//var pos = Vector3.Lerp(previousStatePosition.ToVector3(), position.ToVector3(), alpha);
-			var pos = position.ToVector3() * alpha + previousStatePosition.ToVector3() * (1f - alpha);
-
-			//var yaw = MathHelper.Lerp(previousStatePosition.Yaw, position.Yaw, alpha);
-			var yaw = position.Yaw * alpha + previousStatePosition.Yaw * (1f - alpha);
-
-			//var headYaw = MathHelper.Lerp(previousStatePosition.HeadYaw, position.HeadYaw, alpha);
-			var headYaw = position.HeadYaw * alpha + previousStatePosition.HeadYaw * (1f - alpha);
-
-			var pitch = position.Pitch * alpha + previousStatePosition.Pitch * (1f - alpha);
-			//var pitch = MathHelper.Lerp(previousStatePosition.Pitch, position.Pitch, alpha);
-
-			var renderLocation = entity.RenderLocation;
-			renderLocation.X = pos.X;
-			renderLocation.Y = pos.Y;
-			renderLocation.Z = pos.Z;
-			renderLocation.HeadYaw = headYaw;
-			renderLocation.Yaw = yaw;
-			renderLocation.Pitch = pitch;
-			renderLocation.OnGround = position.OnGround;
-
-			entity.RenderLocation = renderLocation;
+			
 		}
 		
 		//private void Apply
@@ -183,11 +159,12 @@ namespace Alex.Worlds
 		{
 			List<BoundingBox> boxes = new List<BoundingBox>();
 			
-			e.PreviousState.Position = (PlayerLocation)e.KnownPosition.Clone();
 			var velocityBeforeAdjustment = new Vector3(e.Velocity.X, e.Velocity.Y, e.Velocity.Z);
 
 			e.Velocity += (ConvertMovementIntoVelocity(e, out var slipperiness));
 
+			e.Velocity = TruncateVelocity(e.Velocity);
+			
 			//if (e.HasCollision)
 			{
 				e.Velocity = TruncateVelocity(e.Velocity);
@@ -269,7 +246,7 @@ namespace Alex.Worlds
 				}
 			}
 
-			e.Velocity = TruncateVelocity(e.Velocity);
+			//e.Velocity = TruncateVelocity(e.Velocity);
 		}
 
 		private BoundingBox GetAABBVelocityBox(Entity entity)
@@ -585,11 +562,12 @@ namespace Alex.Worlds
 
 				
 				float diff;
-				
+				var   bound = entity.BoundingBox;
+
 				if (negative)
-					diff = -(entity.BoundingBox.Min.X - extent);
+					diff = -(bound.Min.X - extent);
 				else
-					diff = (extent - entity.BoundingBox.Max.X);
+					diff = (extent - bound.Max.X);
 				
 				//Log.Warn($"Collision! Extent={extent} MinX={ entity.BoundingBox.Min.X} MaxX={ entity.BoundingBox.Max.X} Negative={negative} Diff={diff}");
 				
@@ -710,18 +688,20 @@ namespace Alex.Worlds
 						return false;
 					}
 				}
-
+				
 				if (entity.KnownPosition.OnGround && MathF.Abs(blockBox.Max.Y - testBox.Min.Y) < 0.005f)
 				{
 					return false;
 				}
 				
 				float diff;
-				
+
+				var bound = entity.BoundingBox;
+
 				if (negative)
-					diff = -(entity.BoundingBox.Min.Z - extent);
+					diff = -(bound.Min.Z - extent);
 				else
-					diff = (extent - entity.BoundingBox.Max.Z);
+					diff = (extent - bound.Max.Z);
 				
 		//		Log.Warn($"Collision! Extent={extent} MinZ={entity.BoundingBox.Min.Z} MaxZ={entity.BoundingBox.Max.Z} Negative={negative} Diff={diff}");
 				
