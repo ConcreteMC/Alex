@@ -34,7 +34,7 @@ namespace Alex.Gamestates.Debugging
 
             // World = new World(alex, alex.GraphicsDevice, alex.Services.GetService<IOptionsProvider>().AlexOptions,
            //     new FirstPersonCamera(16, Vector3.Zero, Vector3.Zero), new DebugNetworkProvider());
-            
+           
             BlockModelExplorer = new BlockModelExplorer(alex, null);
             EntityModelExplorer = new EntityModelExplorer(alex, null);
 
@@ -202,7 +202,18 @@ namespace Alex.Gamestates.Debugging
 
             protected override void UpdateViewMatrix()
             {
-                ViewMatrix = Matrix.CreateLookAt(Position + EntityPositionOffset, Position, Vector3.Up);
+                //ViewMatrix = Matrix.CreateLookAt(Position + EntityPositionOffset, Position, Vector3.Up);
+                
+                Matrix rotationMatrix = Matrix.CreateRotationX(-Rotation.Z) * //Pitch
+                                        Matrix.CreateRotationY(-Rotation.Y); //Yaw
+
+                Vector3 lookAtOffset = Vector3.Transform(Vector3.Backward, rotationMatrix);
+                Direction = lookAtOffset;
+
+                var pos = Position + Vector3.Transform(Offset, Matrix.CreateRotationY(-Rotation.Y));
+	        
+                Target = pos + lookAtOffset;
+                ViewMatrix = Matrix.CreateLookAt(pos, Target, Vector3.Up);
 
                 //    Matrix rotationMatrix = (Matrix.CreateRotationX(Rotation.X) *
                 //                            Matrix.CreateRotationY(Rotation.Y));

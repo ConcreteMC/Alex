@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using Alex.API;
 using Alex.API.Graphics;
 using Alex.API.Gui;
 using Alex.API.Gui.Elements.Controls;
@@ -21,6 +22,7 @@ using Alex.ResourcePackLib;
 using Alex.ResourcePackLib.Json.Bedrock.Entity;
 using Alex.ResourcePackLib.Json.Models.Entities;
 using Alex.Worlds;
+using Alex.Worlds.Chunks;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -435,7 +437,7 @@ namespace Alex.Gamestates.Debugging
 
 		public override void Update(UpdateArgs args)
 		{
-			_currentRenderer?.Update(args, Location);
+			_currentRenderer?.Update(args, new PlayerLocation(Vector3.Zero));
 		}
 
 		public override string GetDebugInfo()
@@ -467,61 +469,31 @@ namespace Alex.Gamestates.Debugging
 			_blockStates = BlockFactory.AllBlockstates.Values.ToArray();
 		}
 
-		private BlockShaderVertex[] _vertices  = null;
-		private int[]                              _indices   = null;
-		private bool                               _canRender = false;
-
-		private PooledVertexBuffer _buffer      = null;
-		private PooledIndexBuffer  _indexBuffer = null;
-
 		private AlphaTestEffect _alphaEffect = null;
 		private BasicEffect     _basicEffect = null;
 		private Effect          _currentEffect;
 
+		private ChunkData _data = null;
 		private void SetVertices()
 		{
-		/*	var b = _blockStates[_index];
+			var b     = _blockStates[_index];
+			var world = new ItemRenderingWorld(b.Block);
+				
+			var       old       = _data;
+			ChunkData chunkData = new ChunkData();
+			b.Model
+							.GetVertices(world, chunkData, _location.GetCoordinates3D(), _location, b.Block);
 
-			var vertices = b.Model
-							.GetVertices(World
-									   , Vector3.Zero, _blockStates[_index].Block);
+			_data = chunkData;
+			_data.ApplyChanges(Alex.GraphicsDevice, true);
 
-			if (vertices.vertices.Length > 0 && vertices.indexes.Length > 0)
-			{
-				var oldBuffer      = _buffer;
-				var oldIndexBuffer = _indexBuffer;
-
-				var newBuffer = GpuResourceManager.GetBuffer(this, Alex.GraphicsDevice,
-															 VertexPositionNormalTextureColor.VertexDeclaration,
-															 vertices.vertices.Length, BufferUsage.None);
-
-				var newIndexBuffer = GpuResourceManager.GetIndexBuffer(this, Alex.GraphicsDevice,
-																	   IndexElementSize.ThirtyTwoBits,
-																	   vertices.indexes.Length, BufferUsage.None);
-
-				newBuffer.SetData(vertices.vertices);
-
-				newIndexBuffer.SetData(vertices.indexes);
-
-				_buffer      = newBuffer;
-				_indexBuffer = newIndexBuffer;
-
-				oldIndexBuffer?.MarkForDisposal();
-				oldBuffer?.MarkForDisposal();
-
-				GraphicsDevice.Indices = _indexBuffer;
-				GraphicsDevice.SetVertexBuffer(_buffer);
-
-				_canRender = true;
-			}*/
-
+			old?.Dispose();
 			// _vertices = vertices.vertices;
 			// _indices = vertices.indexes;
 		}
 
 		public override void Next()
 		{
-			_canRender = false;
 			if (_index + 1 >= _blockStates.Length)
 			{
 				_index = 0;
@@ -536,8 +508,6 @@ namespace Alex.Gamestates.Debugging
 
 		public override void Previous()
 		{
-			_canRender = false;
-
 			if (_index - 1 < 0)
 			{
 				_index = _blockStates.Length - 1;
@@ -569,18 +539,21 @@ namespace Alex.Gamestates.Debugging
 
 		public override void Render(GraphicsContext context, RenderArgs renderArgs)
 		{
-			if (!_canRender)
+			if (_data == null)
 				return;
 
+			var data = _data;
 			if (_currentEffect != null)
 			{
-				foreach (var pass in _currentEffect.CurrentTechnique.Passes)
-				{
-					pass.Apply();
-
-					context.GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0,
-																 _indexBuffer.IndexCount / 3);
-				}
+				//context.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
+				//context.GraphicsDevice.SamplerStates[0] = SamplerState.PointWrap;
+				
+				data.Draw(context.GraphicsDevice, RenderStage.OpaqueFullCube, _currentEffect, out _);
+				data.Draw(context.GraphicsDevice, RenderStage.Opaque, _currentEffect, out _);
+				data.Draw(context.GraphicsDevice, RenderStage.Transparent, _currentEffect, out _);
+				data.Draw(context.GraphicsDevice, RenderStage.Translucent, _currentEffect, out _);
+				data.Draw(context.GraphicsDevice, RenderStage.Animated, _currentEffect, out _);
+				data.Draw(context.GraphicsDevice, RenderStage.Liquid, _currentEffect, out _);
 			}
 		}
 
@@ -598,7 +571,7 @@ namespace Alex.Gamestates.Debugging
 
 		public override void Update(UpdateArgs args)
 		{
-			/*var world = Matrix.CreateTranslation(-_rotationCenter) *
+			var world = Matrix.CreateTranslation(-_rotationCenter) *
 						(Matrix.CreateRotationX(MathHelper.ToRadians(_location.Pitch)) *
 						 Matrix.CreateRotationY(MathHelper.ToRadians(_location.Yaw)) *
 						 Matrix.CreateRotationZ(MathHelper.ToRadians(_location.Pitch))) *
@@ -619,7 +592,7 @@ namespace Alex.Gamestates.Debugging
 
 			_alphaEffect.Projection = _basicEffect.Projection = args.Camera.ProjectionMatrix;
 			_alphaEffect.View       = _basicEffect.View       = args.Camera.ViewMatrix;
-			//  _alphaEffect.World  = _basicEffect.World = world;
+			  _alphaEffect.World  = _basicEffect.World = Matrix.CreateScale(1f/16f);
 
 			var block = _blockStates[_index];
 
@@ -639,7 +612,7 @@ namespace Alex.Gamestates.Debugging
 				_previousIndex = _index;
 			}
 
-			_currentEffect = (block.Block.Transparent || block.Block.Animated) ? (Effect) _alphaEffect : _basicEffect;*/
+			_currentEffect = (block.Block.Transparent || block.Block.Animated) ? (Effect) _alphaEffect : _basicEffect;
 		}
 
 		public override string GetDebugInfo()
