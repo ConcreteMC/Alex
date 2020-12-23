@@ -41,8 +41,8 @@ namespace Alex.Utils.Auth
 		private const string XblAuth = "https://xsts.auth.xboxlive.com/xsts/authorize";
 		private const string MinecraftAuthUrl = "https://multiplayer.minecraft.net/authentication";
 
-		private const string ClientId = "0000000048183522";
-		//"00000000441cc96b";
+		//private const string ClientId = "0000000048183522";
+		private const string ClientId = "00000000441cc96b";
 		
 		private const string AuthorizationUri = "https://login.live.com/oauth20_authorize.srf";  // Authorization code endpoint
 		private const string RedirectUri = "https://login.live.com/oauth20_desktop.srf";  // Callback endpoint

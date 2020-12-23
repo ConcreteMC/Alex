@@ -248,6 +248,8 @@ namespace Alex
         public string DeviceID { get; private set; } = null;
         private void LoadHWID()
         {
+	        DeviceID = Guid.NewGuid().ToString();
+	        return;
 	        string hwid = "";
 	        string path = "hwid.txt";
 
