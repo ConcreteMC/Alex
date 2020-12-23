@@ -173,7 +173,7 @@ namespace Alex.Utils.Auth
 			using (var r = new HttpRequestMessage(HttpMethod.Post, MinecraftAuthUrl))
 			{
 				r.Headers.Add("Authorization", $"XBL3.0 x={token.DisplayClaims.Xui[0].UserHash};{token.Token}");
-				r.Headers.Add("User-Agent", "MCPE/Android");
+				//r.Headers.Add("User-Agent", "MCPE/Android");
 				r.Headers.Add("Client-Version", McpeProtocolInfo.ProtocolVersion.ToString());
 
 				SetHeadersAndContent(r, body);
@@ -208,6 +208,7 @@ namespace Alex.Utils.Auth
 
 						//DecodedChain = JsonConvert.DeserializeObject<ChainData>(rawResponse);
 						MinecraftChain = Encoding.UTF8.GetBytes(rawResponse);
+					//	File.WriteAllBytes("/home/kenny/xbox.json", MinecraftChain);
 						//   //Log.Debug($"Chain: {rawResponse}");
 					}
 				}
@@ -225,6 +226,7 @@ namespace Alex.Utils.Auth
 
 		private async Task<AuthResponse<XuiDisplayClaims<XstsXui>>> DoXsts(HttpClient client,
 	        AuthResponse<DeviceDisplayClaims> deviceToken,
+	        AuthResponse<TitleDisplayClaims> title,
 	        string userToken)
         {
 	        //var key = EcDsa.ExportParameters(false);
@@ -235,8 +237,8 @@ namespace Alex.Utils.Auth
 		        Properties = new Dictionary<string, object>()
 		        {
 			        {"UserTokens", new string[] {userToken}},
-			        /* {"DeviceToken", $"d={deviceToken.Token}"},*/
-			        // {/* {"TitleToken", titleToken.Token},*/}
+			         {"DeviceToken", deviceToken.Token},
+			         {"TitleToken", title.Token},
 			        {"SandboxId", "RETAIL"},
 			        {"ProofKey", new ProofKey(X, Y)}
 		        }
@@ -256,8 +258,8 @@ namespace Alex.Utils.Auth
 
 			        var rawResponse = await response.Content.ReadAsStringAsync();
 
-			        // Console.WriteLine(rawResponse);
-			        // Console.WriteLine();
+			       //  Console.WriteLine(rawResponse);
+			       //  Console.WriteLine();
 			        return JsonConvert.DeserializeObject<AuthResponse<XuiDisplayClaims<XstsXui>>>(rawResponse);
 
 			        //Log.Debug($"Xsts Auth: {rawResponse}");
@@ -400,7 +402,7 @@ namespace Alex.Utils.Auth
 		        Properties = new Dictionary<string, object>()
 		        {
 			        {"AuthMethod", "ProofOfPossession"},
-			        {"Id", $"{{{deviceId}}}"},
+			        {"Id", deviceId},
 			        {"DeviceType", "Nintendo"},
 			        {"SerialNumber", Guid.NewGuid().ToString()},
 			        {"Version", "0.0.0.0"},
@@ -584,8 +586,10 @@ namespace Alex.Utils.Auth
 
 				var userToken = await ObtainUserToken(client, token.AccessToken);
 
+				var title = await DoTitleAuth(client, deviceToken, token.AccessToken);
+				
 				//var xsts = await ObtainXbox(client, deviceToken, token.AccessToken);
-				var xsts = await DoXsts(client, deviceToken, userToken.Token);
+				var xsts = await DoXsts(client, deviceToken, title, userToken.Token);
 				
 				//Console.WriteLine();
 				
@@ -611,8 +615,9 @@ namespace Alex.Utils.Auth
 		{
 			var userToken   = await ObtainUserToken(_httpClient, accessToken);
 			var deviceToken = await ObtainDeviceToken(_httpClient, Guid.NewGuid().ToString());
+			var titleToken  = await DoTitleAuth(_httpClient, deviceToken, accessToken);
 			//var xsts        = await ObtainXbox(_httpClient, deviceToken, accessToken);
-			var xsts = await DoXsts(_httpClient, deviceToken, userToken.Token);
+			var xsts = await DoXsts(_httpClient, deviceToken, titleToken, userToken.Token);
 			
 			return await RequestMinecraftChain(_httpClient, xsts);
 		}

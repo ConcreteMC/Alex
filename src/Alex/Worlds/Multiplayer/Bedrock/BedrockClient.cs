@@ -575,6 +575,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
                 var jsonChain = JsonConvert.SerializeObject(hack);
 
                 certChain = Encoding.UTF8.GetBytes(jsonChain); // XblmsaService.MinecraftChain;
+                //File.WriteAllBytes("/home/kenny/xbox.json", certChain);
             }
             else
             {
