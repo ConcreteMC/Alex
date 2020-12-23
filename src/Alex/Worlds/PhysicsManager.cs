@@ -163,11 +163,9 @@ namespace Alex.Worlds
 
 			e.Velocity += (ConvertMovementIntoVelocity(e, out var slipperiness));
 
-			e.Velocity = TruncateVelocity(e.Velocity);
-			
 			//if (e.HasCollision)
 			{
-				e.Velocity = TruncateVelocity(e.Velocity);
+				//e.Velocity = TruncateVelocity(e.Velocity);
 				
 				if (TestTerrainCollisionY(e, out var yCollisionPoint, out var yBox))
 				{
@@ -196,7 +194,9 @@ namespace Alex.Worlds
 					boxes.Add(zBox);
 				}
 			}
-
+			
+			e.Velocity = TruncateVelocity(e.Velocity);
+			
 			//TestTerrainCollisionCylinder(e, out var collision);
 			//	aabbEntity.TerrainCollision(collision, before);
 
@@ -480,9 +480,10 @@ namespace Alex.Worlds
 				negative = false;
 			}
 
-			float? collisionExtent = null;
+			float?            collisionExtent = null;
 			
-			bool   climable        = true;
+			List<BoundingBox> boxes           = new List<BoundingBox>();
+			bool              climable        = true;
 			for (int x = (int) (Math.Floor(testBox.Min.X)); x <= (int) (Math.Ceiling(testBox.Max.X)); x++)
 			{
 				for (int z = (int) (Math.Floor(testBox.Min.Z)); z <= (int) (Math.Ceiling(testBox.Max.Z)); z++)
@@ -510,10 +511,11 @@ namespace Alex.Worlds
 							
 							if (testBox.Intersects(box))
 							{
-								if (climable && box.Max.Y > entity.BoundingBox.Min.Y && entity.KnownPosition.OnGround)
-								{
-									climable = CanClimb(entity.Velocity, entity.BoundingBox, box);
-								}
+								boxes.Add(box);
+							//	if (climable && box.Max.Y > entity.BoundingBox.Min.Y && entity.KnownPosition.OnGround)
+							//	{
+							//		climable = CanClimb(entity.Velocity, entity.BoundingBox, box);
+							//	}
 								
 								if (negative)
 								{
@@ -543,7 +545,7 @@ namespace Alex.Worlds
 			{
 				var    extent = collisionExtent.Value;
 
-				if (climable && entity.KnownPosition.OnGround)
+				/*if (climable && entity.KnownPosition.OnGround)
 				{
 					var yDifference = blockBox.Max.Y - entity.BoundingBox.Min.Y;
 
@@ -553,26 +555,67 @@ namespace Alex.Worlds
 
 						return false;
 					}
-				}
+				}*/
 				
 				if (entity.KnownPosition.OnGround && MathF.Abs(blockBox.Max.Y - testBox.Min.Y) < 0.005f)
 				{
-					return false;
+				//	return false;
 				}
 
 				
-				float diff;
+				//float diff;
 				var   bound = entity.BoundingBox;
 
-				if (negative)
+			/*	if (negative)
 					diff = -(bound.Min.X - extent);
 				else
 					diff = (extent - bound.Max.X);
 				
+				if (entity.KnownPosition.OnGround && MathF.Abs(blockBox.Max.Y - testBox.Min.Y) < 0.0005f)
+				{
+					return false;
+				}*/
+			
+				double diff;
+				foreach (var box in boxes.OrderByDescending(x => x.Max.Y))
+				{
+					if (box.Max.Y > bound.Min.Y)
+					{
+						if (entity.KnownPosition.OnGround && CanClimb(entity.Velocity, bound, box))
+						{
+							var yDifference = box.Max.Y - entity.BoundingBox.Min.Y;
+
+							if (yDifference > 0f && yDifference <= MaxJumpHeight)
+							{
+								entity.Velocity = new Vector3(
+									entity.Velocity.X, MathF.Sqrt(2f * (float) (entity.Gravity) * (yDifference)),
+									entity.Velocity.Z);
+
+								return false;
+							}
+						}
+
+						blockBox = box;
+						
+						if (negative)
+							diff = -(bound.Min.X - box.Max.X);
+						else
+							diff = (box.Min.X - bound.Max.X);
+							
+						entity.Velocity = new Vector3((float) diff, entity.Velocity.Y, entity.Velocity.Z);
+						
+						Log.Info($"HIT X! Entity Y={testBox.Min.Y:F8} Block Y={blockBox.Max.Y:F8} Entity-X={(negative ? bound.Min.X : bound.Max.X):F8} Block-X={(negative ? box.Max.X : box.Min.X):F8} X-Difference={diff:F8}");
+						
+						return true;
+					}
+				}
+				
+				//
+				
 				//Log.Warn($"Collision! Extent={extent} MinX={ entity.BoundingBox.Min.X} MaxX={ entity.BoundingBox.Max.X} Negative={negative} Diff={diff}");
 				
-				entity.Velocity = new Vector3(diff, entity.Velocity.Y, entity.Velocity.Z);
-				return true;
+				//entity.Velocity = new Vector3(diff, entity.Velocity.Y, entity.Velocity.Z);
+				//return true;
 			}
 			
 			return false;
@@ -614,9 +657,9 @@ namespace Alex.Worlds
 				negative = false;
 			}
 
-			float? collisionExtent = null;
-			bool   climable        = true;
-
+			float?            collisionExtent = null;
+			bool              climable        = true;
+			List<BoundingBox> boxes           = new List<BoundingBox>();
 			for (int x = (int) (Math.Floor(testBox.Min.X)); x <= (int) (Math.Ceiling(testBox.Max.X)); x++)
 			{
 				for (int z = (int) (Math.Floor(testBox.Min.Z)); z <= (int) (Math.Ceiling(testBox.Max.Z)); z++)
@@ -644,11 +687,8 @@ namespace Alex.Worlds
 							
 							if (testBox.Intersects(box))
 							{
-								if (climable && box.Max.Y > entity.BoundingBox.Min.Y && entity.KnownPosition.OnGround)
-								{
-									climable = CanClimb(entity.Velocity, entity.BoundingBox, box);
-								}
-								
+								boxes.Add(box);
+
 								if (negative)
 								{
 									if ((collisionExtent == null || collisionExtent.Value < box.Max.Z))
@@ -678,8 +718,8 @@ namespace Alex.Worlds
 				
 				var extent      = collisionExtent.Value;
 				
-				var yDifference = blockBox.Max.Y - entity.BoundingBox.Min.Y;
-				if (climable && entity.KnownPosition.OnGround)
+				//var yDifference = blockBox.Max.Y - entity.BoundingBox.Min.Y;
+				/*if (climable && entity.KnownPosition.OnGround)
 				{
 					if (yDifference > 0f)
 					{
@@ -687,26 +727,53 @@ namespace Alex.Worlds
 						
 						return false;
 					}
-				}
-				
-				if (entity.KnownPosition.OnGround && MathF.Abs(blockBox.Max.Y - testBox.Min.Y) < 0.005f)
-				{
-					return false;
-				}
-				
-				float diff;
-
+				}*/
 				var bound = entity.BoundingBox;
+				
 
-				if (negative)
-					diff = -(bound.Min.Z - extent);
-				else
-					diff = (extent - bound.Max.Z);
+				/*
+				 * if (entity.KnownPosition.OnGround && MathF.Abs(box.Max.Y - testBox.Min.Y) < 0.0005f)
+					{
+						return false;
+					}
+				 */
+				double diff;
+				foreach (var box in boxes.OrderByDescending(x => x.Max.Y))
+				{
+					if (box.Max.Y > bound.Min.Y)
+					{
+						if (entity.KnownPosition.OnGround && CanClimb(entity.Velocity, bound, box))
+						{
+							var yDifference = box.Max.Y - entity.BoundingBox.Min.Y;
+							if (yDifference > 0f && yDifference <= MaxJumpHeight)
+							{
+								entity.Velocity = new Vector3(entity.Velocity.X, MathF.Sqrt(2f * (float) (entity.Gravity) * (yDifference )), entity.Velocity.Z);
+						
+								return false;
+							}
+						}
+						
+						blockBox = box;
+						
+						if (negative)
+							diff = -(bound.Min.Z - box.Max.Z);
+						else
+							diff = (box.Min.Z - bound.Max.Z);
+						
+						entity.Velocity = new Vector3(entity.Velocity.X, entity.Velocity.Y, (float) diff);
+						
+						Log.Info($"HIT Z! Entity Y={testBox.Min.Y:F} Block Y={blockBox.Max.Y:F8} Entity-Z={(negative ? bound.Min.Z : bound.Max.Z):F8} Block-Z={(negative ? box.Max.Z : box.Min.Z):F8} Z-Difference={diff:F8}");
+						
+						return true;
+					}
+				}
+
+				//Log.Info($"HIT Z! Entity Y={testBox.Min.Y:F} Block Y={blockBox.Max.Y:F8} Entity-Z={(negative ? bound.Min.Z : bound.Max.Z):F8} Block-Z={extent:F8} Z-Difference={diff:F8}");
 				
 		//		Log.Warn($"Collision! Extent={extent} MinZ={entity.BoundingBox.Min.Z} MaxZ={entity.BoundingBox.Max.Z} Negative={negative} Diff={diff}");
 				
-				entity.Velocity = new Vector3(entity.Velocity.X, entity.Velocity.Y, diff);
-				return true;
+				//entity.Velocity = new Vector3(entity.Velocity.X, entity.Velocity.Y, diff);
+				//return false;
 			}
 			
 			return false;
@@ -714,7 +781,7 @@ namespace Alex.Worlds
 		
 		private bool CanClimb(Vector3 velocity, BoundingBox entityBox, BoundingBox blockBox)
 		{
-			if (velocity.Y < 0f)
+			if (velocity.Y < 0f || velocity.Y > 0f)
 				return false;
 			
 			var yDifference = blockBox.Max.Y - entityBox.Min.Y;
@@ -722,7 +789,7 @@ namespace Alex.Worlds
 			//if (!(blockBox.Max.Y > entityBox.Min.Y)) 
 			//	return false;
 
-			if (yDifference > 0.55f)
+			if (yDifference > MaxJumpHeight)
 				return false;
 
 			if (GetIntersecting(World, entityBox).Any(bb => bb.Min.Y >= entityBox.Min.Y && bb.Min.Y <= entityBox.Max.Y))
@@ -731,6 +798,8 @@ namespace Alex.Worlds
 			return true;
 		}
 
+		private const float MaxJumpHeight = 0.55f;
+		
 		private bool DetectOnGround(Entity e)
 		{
 			var entityBoundingBox =

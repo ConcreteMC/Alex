@@ -483,7 +483,7 @@ namespace Alex.Gamestates.InGame
 						foreach (var bb in World.PhysicsEngine.LastKnownHit)
 						{
 							args.SpriteBatch.RenderBoundingBox(bb, World.Camera.ViewMatrix,
-								World.Camera.ProjectionMatrix, Color.YellowGreen);
+								World.Camera.ProjectionMatrix, Color.YellowGreen, true);
 						}
 					}
 				}
