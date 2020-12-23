@@ -281,20 +281,20 @@ namespace Alex.Worlds
 		
 		private void AdjustVelocityForCollision(Entity entity, BoundingBox problem)
 		{
-			var velocity = entity.Velocity;
-			
+			var   velocity = entity.Velocity;
+
 			if (entity.Velocity.X < 0)
-				velocity.X = entity.BoundingBox.Min.X - problem.Max.X;
+				velocity.X = -(entity.BoundingBox.Min.X - problem.Max.X);
 			if (entity.Velocity.X > 0)
 				velocity.X = entity.BoundingBox.Max.X - problem.Min.X;
 			
 			if (entity.Velocity.Y < 0)
-				velocity.Y = entity.BoundingBox.Min.Y - problem.Max.Y;
+				velocity.Y = -(entity.BoundingBox.Min.Y - problem.Max.Y);
 			if (entity.Velocity.Y > 0)
 				velocity.Y = entity.BoundingBox.Max.Y - problem.Min.Y;
 			
 			if (entity.Velocity.Z < 0)
-				velocity.Z = entity.BoundingBox.Min.Z - problem.Max.Z;
+				velocity.Z = -(entity.BoundingBox.Min.Z - problem.Max.Z);
 			if (entity.Velocity.Z > 0)
 				velocity.Z = entity.BoundingBox.Max.Z - problem.Min.Z;
 			
@@ -435,7 +435,7 @@ namespace Alex.Worlds
 			{
 				var    extent = collisionExtent.Value;
 				
-				if (CanClimb(entity.Velocity, entity.BoundingBox, blockBox) && entity.KnownPosition.OnGround)
+				/*if (!negative && CanClimb(entity.Velocity, testBox, blockBox) && entity.KnownPosition.OnGround)
 				{
 					var yDifference = blockBox.Max.Y - entity.BoundingBox.Min.Y;
 
@@ -445,7 +445,7 @@ namespace Alex.Worlds
 
 						return false;
 					}
-				}
+				}*/
 				
 				float diff;
 				if (negative)
@@ -495,7 +495,8 @@ namespace Alex.Worlds
 			}
 
 			float? collisionExtent = null;
-
+			
+			bool   climable        = true;
 			for (int x = (int) (Math.Floor(testBox.Min.X)); x <= (int) (Math.Ceiling(testBox.Max.X)); x++)
 			{
 				for (int z = (int) (Math.Floor(testBox.Min.Z)); z <= (int) (Math.Ceiling(testBox.Max.Z)); z++)
@@ -523,6 +524,11 @@ namespace Alex.Worlds
 							
 							if (testBox.Intersects(box))
 							{
+								if (climable && box.Max.Y > entity.BoundingBox.Min.Y && entity.KnownPosition.OnGround)
+								{
+									climable = CanClimb(entity.Velocity, entity.BoundingBox, box);
+								}
+								
 								if (negative)
 								{
 									if ((collisionExtent == null || collisionExtent.Value < box.Max.X))
@@ -551,7 +557,7 @@ namespace Alex.Worlds
 			{
 				var    extent = collisionExtent.Value;
 
-				if (CanClimb(entity.Velocity, entity.BoundingBox, blockBox) && entity.KnownPosition.OnGround)
+				if (climable && entity.KnownPosition.OnGround)
 				{
 					var yDifference = blockBox.Max.Y - entity.BoundingBox.Min.Y;
 
@@ -563,7 +569,7 @@ namespace Alex.Worlds
 					}
 				}
 				
-				if (entity.KnownPosition.OnGround && MathF.Abs(blockBox.Max.Y - entity.BoundingBox.Min.Y) < 0.005f)
+				if (entity.KnownPosition.OnGround && MathF.Abs(blockBox.Max.Y - testBox.Min.Y) < 0.005f)
 				{
 					return false;
 				}
@@ -622,6 +628,7 @@ namespace Alex.Worlds
 			}
 
 			float? collisionExtent = null;
+			bool   climable        = true;
 
 			for (int x = (int) (Math.Floor(testBox.Min.X)); x <= (int) (Math.Ceiling(testBox.Max.X)); x++)
 			{
@@ -650,6 +657,11 @@ namespace Alex.Worlds
 							
 							if (testBox.Intersects(box))
 							{
+								if (climable && box.Max.Y > entity.BoundingBox.Min.Y && entity.KnownPosition.OnGround)
+								{
+									climable = CanClimb(entity.Velocity, entity.BoundingBox, box);
+								}
+								
 								if (negative)
 								{
 									if ((collisionExtent == null || collisionExtent.Value < box.Max.Z))
@@ -680,7 +692,7 @@ namespace Alex.Worlds
 				var extent      = collisionExtent.Value;
 				
 				var yDifference = blockBox.Max.Y - entity.BoundingBox.Min.Y;
-				if (CanClimb(entity.Velocity, entity.BoundingBox, blockBox) && entity.KnownPosition.OnGround)
+				if (climable && entity.KnownPosition.OnGround)
 				{
 					if (yDifference > 0f)
 					{
@@ -690,7 +702,7 @@ namespace Alex.Worlds
 					}
 				}
 
-				if (entity.KnownPosition.OnGround && MathF.Abs(blockBox.Max.Y - entity.BoundingBox.Min.Y) < 0.005f)
+				if (entity.KnownPosition.OnGround && MathF.Abs(blockBox.Max.Y - testBox.Min.Y) < 0.005f)
 				{
 					return false;
 				}
