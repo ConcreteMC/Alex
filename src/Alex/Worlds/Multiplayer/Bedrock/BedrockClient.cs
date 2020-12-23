@@ -843,12 +843,14 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	        var serialized = JsonConvert.SerializeObject(
 		        new BedrockSkinData(skin)
 		        {
+			        SelfSignedID = Alex.Resources.DeviceID,
 			        ClientRandomId = new Random().Next(),
 			        LanguageCode = Alex.GuiRenderer.Language.Code.Replace("-", "_"),
 			        // Alex.Services.GetService<IOptionsProvider>().AlexOptions.MiscelaneousOptions.Language.Value,
 			        ServerAddress = $"{ServerEndpoint.Address.ToString()}:{ServerEndpoint.Port.ToString()}",
 			        ThirdPartyName = username,
-			        DeviceId = Alex.Resources.DeviceID
+			        DeviceId = Alex.Resources.DeviceID,
+			        GameVersion = McpeProtocolInfo.GameVersion
 		        },
 		        new JsonSerializerSettings()
 		        {

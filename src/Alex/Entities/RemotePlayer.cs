@@ -86,6 +86,9 @@ namespace Alex.Entities
 			FlyingSpeed = 0.4f;
 			//	MovementSpeed = 0.1f;
 			//		FlyingSpeed = 0.4f;
+
+			IsAffectedByGravity = false;
+			HasPhysics = false;
 		}
 
 		/// <inheritdoc />

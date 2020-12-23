@@ -546,14 +546,8 @@ namespace Alex.Worlds.Multiplayer.Java
             }
 			else
 			{
-				Log.Warn($"Could not create entity of type: {(int) type}:{(knownData != null ? knownData.Name : type.ToString())} (Missing entityfactory mapping...)");
+			//	Log.Warn($"Could not create entity of type: {(int) type}:{(knownData != null ? knownData.Name : type.ToString())} (Missing entityfactory mapping...)");
 
-				return null;
-			}
-
-			if (entity == null)
-			{
-				Log.Warn($"Could not create entity of type: {(int) type}:{(knownData != null ? knownData.Name : type.ToString())}");
 				return null;
 			}
 
@@ -1676,12 +1670,16 @@ namespace Alex.Worlds.Multiplayer.Java
 
 		private void ProcessSkin(RemotePlayer entity, string skinJson)
 		{
-			if (SkinUtils.TryGetSkin(skinJson, Alex.GraphicsDevice, out var skin, out var skinSlim))
-			{
-				entity.GeometryName = skinSlim ? "geometry.humanoid.customSlim" : "geometry.humanoid.custom";
+			World.BackgroundWorker.Enqueue(
+				() =>
+				{
+					if (SkinUtils.TryGetSkin(skinJson, Alex.GraphicsDevice, out var skin, out var skinSlim))
+					{
+						entity.GeometryName = skinSlim ? "geometry.humanoid.customSlim" : "geometry.humanoid.custom";
 
-				entity.UpdateSkin(skin);
-			}
+						entity.UpdateSkin(skin);
+					}
+				});
 		}
 
 		private void HandleEntityLookAndRelativeMove(EntityLookAndRelativeMove packet)
@@ -2003,39 +2001,45 @@ namespace Alex.Worlds.Multiplayer.Java
 			        } //);
 		        });
         }
-        
+
         private void HandleBlockEntityData(BlockEntityDataPacket packet)
         {
-			//Log.Warn($"Got block entity data for ({packet.Location}) Action={packet.Action}");
+	        World.BackgroundWorker.Enqueue(
+		        () =>
+		        {
+			        //Log.Warn($"Got block entity data for ({packet.Location}) Action={packet.Action}");
 
-			if (World.EntityManager.TryGetBlockEntity(packet.Location, out var entity))
-			{
-				var block = World.GetBlock(packet.Location);
-				entity.Block = block;
-				
-				entity.SetData(packet.Action, packet.Compound);
-			}
-			else
-			{
-				try
-				{
-					var block       = World.GetBlock(packet.Location);
-					var blockEntity = BlockEntityFactory.ReadFrom(packet.Compound, World, block);
+			        if (World.EntityManager.TryGetBlockEntity(packet.Location, out var entity))
+			        {
+				        var block = World.GetBlock(packet.Location);
+				        entity.Block = block;
 
-					if (blockEntity != null)
-					{
-						World.SetBlockEntity(packet.Location.X, packet.Location.Y, packet.Location.Z, blockEntity);
-						//Log.Info($"Added block entity of type \"{blockEntity.GetType()}\" ({packet.Location})");
-					}
-				}
-				catch (Exception ex)
-				{
-					Log.Warn(ex, $"Could not add block entity: {packet.Compound.ToString()}");
-				}
-			}
+				        entity.SetData(packet.Action, packet.Compound);
+			        }
+			        else
+			        {
+				        try
+				        {
+					        var block       = World.GetBlock(packet.Location);
+					        var blockEntity = BlockEntityFactory.ReadFrom(packet.Compound, World, block);
+
+					        if (blockEntity != null)
+					        {
+						        World.SetBlockEntity(
+							        packet.Location.X, packet.Location.Y, packet.Location.Z, blockEntity);
+
+						        //Log.Info($"Added block entity of type \"{blockEntity.GetType()}\" ({packet.Location})");
+					        }
+				        }
+				        catch (Exception ex)
+				        {
+					        Log.Warn(ex, $"Could not add block entity: {packet.Compound.ToString()}");
+				        }
+			        }
+		        });
         }
 
-		private void HandleKeepAlivePacket(KeepAlivePacket packet)
+        private void HandleKeepAlivePacket(KeepAlivePacket packet)
 		{
 			KeepAlivePacket response = new KeepAlivePacket();
 			response.KeepAliveid = packet.KeepAliveid;
@@ -2146,43 +2150,50 @@ namespace Alex.Worlds.Multiplayer.Java
 
 		private void HandleSpawnEntity(SpawnEntity packet)
 		{
-			var velocity = Vector3.Zero;
+			//World.BackgroundWorker.Enqueue(
+			//	() =>
+			//	{
+					var velocity = Vector3.Zero;
 
-			if (packet.Data > 0)
-			{
-				velocity = ModifyVelocity(new Vector3(packet.VelocityX, packet.VelocityY, packet.VelocityZ));
-			}
-			
-			var mob = SpawnMob(packet.EntityId, packet.Uuid, (EntityType)packet.Type, new PlayerLocation(packet.X, packet.Y, packet.Z, packet.Yaw, packet.Yaw, packet.Pitch)
-			{
-				//	OnGround = packet.SpawnMob
-			}, velocity);
+					if (packet.Data > 0)
+					{
+						velocity = ModifyVelocity(new Vector3(packet.VelocityX, packet.VelocityY, packet.VelocityZ));
+					}
 
-			if (mob is EntityFallingBlock efb)
-			{
-				//32
-				var blockId = packet.Data << 12 >> 12;
-				var metaData = packet.Data >> 12;
+					var mob = SpawnMob(
+						packet.EntityId, packet.Uuid, (EntityType) packet.Type, new PlayerLocation(
+							packet.X, packet.Y, packet.Z, packet.Yaw, packet.Yaw, packet.Pitch)
+						{
+							//	OnGround = packet.SpawnMob
+						}, velocity);
 
-				Log.Warn($"! Id={blockId} Meta={metaData} Raw={packet.Data}");
-				if (ItemFactory.TryGetItem((short) blockId, (short) metaData, out var item))
-				{
-					efb.SetItem(item);
-				}
-				else
-				{
-					
-				}
-			}
+					if (mob is EntityFallingBlock efb)
+					{
+						//32
+						var blockId  = packet.Data << 12 >> 12;
+						var metaData = packet.Data >> 12;
+
+						if (ItemFactory.TryGetItem((short) blockId, (short) metaData, out var item))
+						{
+							efb.SetItem(item);
+						}
+						else { }
+					}
+				//});
 		}
 
 		private void HandleSpawnMob(SpawnLivingEntity packet)
 		{
-			SpawnMob(packet.EntityId, packet.Uuid, (EntityType)packet.Type, new PlayerLocation(packet.X, packet.Y, packet.Z, packet.Yaw, packet.Yaw, packet.Pitch)
-			{
-			//	OnGround = packet.SpawnMob
-			}, ModifyVelocity(new Vector3(
-				packet.VelocityX, packet.VelocityY, packet.VelocityZ)));
+			/*World.BackgroundWorker.Enqueue(
+				() =>
+				{*/
+					SpawnMob(
+						packet.EntityId, packet.Uuid, (EntityType) packet.Type, new PlayerLocation(
+							packet.X, packet.Y, packet.Z, packet.Yaw, packet.Yaw, packet.Pitch)
+						{
+							//	OnGround = packet.SpawnMob
+						}, ModifyVelocity(new Vector3(packet.VelocityX, packet.VelocityY, packet.VelocityZ)));
+			//	});
 		}
 
 		private void HandleDisconnectPacket(DisconnectPacket packet)

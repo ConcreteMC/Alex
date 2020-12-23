@@ -66,6 +66,9 @@ namespace Alex.Entities
 			ServerEntity = false;
 			RequiresRealTimeTick = true;
 			AlwaysTick = true;
+			
+			IsAffectedByGravity = true;
+			HasPhysics = true;
         }
 
         /// <inheritdoc />
