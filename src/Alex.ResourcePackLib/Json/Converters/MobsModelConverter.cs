@@ -83,6 +83,39 @@ namespace Alex.ResourcePackLib.Json.Converters
 
 			return model;
 		}
+
+		private IEnumerable<EntityModel> Decode1100(JObject jObject, JsonSerializer serializer)
+		{
+			foreach (var prop in jObject)
+			{
+				if (prop.Key.Equals("format_version"))
+					continue;
+
+				var property = prop.Value;
+
+				if (property == null)
+					continue;
+
+
+				if (property.Type == JTokenType.Array)
+				{
+					foreach (var geo in ((JArray) property).AsJEnumerable())
+					{
+						if (geo.Type == JTokenType.Object)
+						{
+							yield return DecodeSingle((JObject) geo, serializer);
+						}
+					}
+				}
+				else if (property.Type == JTokenType.Object)
+				{
+					var item = DecodeSingle((JObject) property, serializer);
+					item.Description.Identifier = prop.Key;
+					
+					yield return item;
+				}
+			}
+		}
 		
 		private IEnumerable<EntityModel> Decode1120(JObject jObject, JsonSerializer serializer)
 		{
@@ -242,9 +275,17 @@ namespace Alex.ResourcePackLib.Json.Converters
 					break;
 				}
 
-				//case "1.10.0":
-				//	return Decode110(jObject, serializer);
 				case "1.10.0":
+				{
+					foreach (var model in Decode1100(jObject, serializer))
+					{
+						result.TryAdd(model.Description.Identifier, model);
+					}
+
+					break;
+				}
+
+				//case "1.10.0":
 				case "1.12.0":
 				{
 					foreach (var model in Decode1120(jObject, serializer))

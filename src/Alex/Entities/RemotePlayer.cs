@@ -211,6 +211,11 @@ namespace Alex.Entities
 							if (processedModels == null || processedModels.Count == 0)
 							{
 								Log.Warn($"!! Model count was 0 for player {Name} !!");
+
+							//	if (!Directory.Exists("failures"))
+							//		Directory.CreateDirectory("failures");
+								
+							//	File.WriteAllText(Path.Combine("failures", $"{Environment.TickCount64}.json"), skin.GeometryData);
 							}
 							else
 							{
