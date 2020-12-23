@@ -34,6 +34,7 @@ namespace Alex.Entities.BlockEntities
 		/// <inheritdoc />
 		public BlockEntity(World level, Block block) : base(level, null)
 		{
+			HasPhysics = false;
 			IsAffectedByGravity = false;
 			Block = block;
 		}
@@ -77,13 +78,13 @@ namespace Alex.Entities.BlockEntities
 			set
 			{
 				base.KnownPosition = value;
-				base.RenderLocation = value;
+				//base.RenderLocation = value;
 			}
 		}
 
 		internal override PlayerLocation RenderLocation
 		{
-			get => base.RenderLocation + Offset;
+			get => base.RenderLocation;
 			set => base.RenderLocation = value;
 		}
 

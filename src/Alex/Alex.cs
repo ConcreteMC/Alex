@@ -32,6 +32,7 @@ using Alex.Net;
 using Alex.Networking.Java.Packets;
 using Alex.Networking.Java.Packets.Play;
 using Alex.Plugins;
+using Alex.ResourcePackLib;
 using Alex.ResourcePackLib.Json;
 using Alex.ResourcePackLib.Json.Models.Entities;
 using Alex.Services;
@@ -48,20 +49,14 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using MiNET;
 using Newtonsoft.Json;
 using NLog;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
-using SixLabors.ImageSharp.Processing;
-using DedicatedThreadPool = Alex.API.Utils.DedicatedThreadPool;
-using DedicatedThreadPoolSettings = Alex.API.Utils.DedicatedThreadPoolSettings;
-using GeometryModel = Alex.Worlds.Multiplayer.Bedrock.GeometryModel;
 using GuiDebugHelper = Alex.Gui.GuiDebugHelper;
 using Image = SixLabors.ImageSharp.Image;
 using Point = Microsoft.Xna.Framework.Point;
 using TextInputEventArgs = Microsoft.Xna.Framework.TextInputEventArgs;
-using ThreadType = Alex.API.Utils.ThreadType;
 
 namespace Alex
 {
@@ -610,16 +605,16 @@ namespace Alex
 
 			if (storage.TryReadString("skin.json", out var str, Encoding.UTF8))
 			{
-				if (GeometryModel.TryParse(str, null, out var geometryModel))
+				Dictionary<string, EntityModel> models = new Dictionary<string, EntityModel>();
+				BedrockResourcePack.LoadEntityModel(str, models);
+				models = BedrockResourcePack.ProcessEntityModels(models);
+				
+				if (models.Count > 0)
 				{
-					var model = geometryModel.FindGeometry("geometry.humanoid.custom");
-
-					if (model == null)
-						model = geometryModel.FindGeometry("geometry.humanoid.customSlim");
-
-					if (model != null)
+					if (models.TryGetValue("geometry.humanoid.custom", out var entityModel) || models.TryGetValue(
+						"geometry.humanoid.customSlim", out entityModel))
 					{
-						PlayerModel = model;
+						PlayerModel = entityModel;
 						Log.Debug($"Player model loaded...");
 					}
 				}

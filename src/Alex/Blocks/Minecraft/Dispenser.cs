@@ -10,6 +10,8 @@ namespace Alex.Blocks.Minecraft
 
 			Hardness = 3.5f;
 			BlockMaterial = Material.Circuits;
+			
+			CanInteract = true;
 		}
 	}
 }

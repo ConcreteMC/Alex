@@ -132,14 +132,24 @@ namespace Alex.Blocks
 		    this.Register("minecraft:daylight_detector", () => new DaylightDetector());
 		    this.Register("minecraft:redstone_block", () => new RedstoneBlock());
 		    this.Register("minecraft:hopper", () => new Hopper());
-		    this.Register("minecraft:light_weighted_pressure_plate", () => new LightWeightedPressurePlate());
-		    this.Register("minecraft:heavy_weighted_pressure_plate", () => new HeavyWeightedPressurePlate());
-		    this.Register("minecraft:stone_pressure_plate", () => new StonePressurePlate());
-		    this.Register("minecraft:oak_pressure_plate", () => new StonePressurePlate());
 		    this.Register("minecraft:torch", () => new Torch());
 		    this.Register("minecraft:wall_torch", () => new Torch(true));
 		    this.Register("minecraft:redstone_torch", () => new RedstoneTorch());
 		    this.Register("minecraft:redstone_wall_torch", () => new RedstoneTorch(true));
+		    
+		    //Pressure plates
+		    this.Register("minecraft:light_weighted_pressure_plate", () => new LightWeightedPressurePlate());
+		    this.Register("minecraft:heavy_weighted_pressure_plate", () => new HeavyWeightedPressurePlate());
+		    this.Register("minecraft:stone_pressure_plate", () => new StonePressurePlate());
+		    this.Register("minecraft:polished_blackstone_pressure_plate", () => new PressurePlate());
+		    this.Register("minecraft:oak_pressure_plate", () => new PressurePlate());
+		    this.Register("minecraft:spruce_pressure_plate", () => new PressurePlate());
+		    this.Register("minecraft:birch_pressure_plate", () => new PressurePlate());
+		    this.Register("minecraft:jungle_pressure_plate", () => new PressurePlate());
+		    this.Register("minecraft:acacia_pressure_plate", () => new PressurePlate());
+		    this.Register("minecraft:dark_oak_pressure_plate", () => new PressurePlate());
+		    this.Register("minecraft:warped_pressure_plate", () => new PressurePlate());
+		    this.Register("minecraft:crimson_pressure_plate", () => new PressurePlate());
 		    
 		    //Buttons
 		    this.Register("minecraft:stone_button", () => new StoneButton());

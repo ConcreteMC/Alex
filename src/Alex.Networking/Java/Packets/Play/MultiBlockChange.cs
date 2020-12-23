@@ -28,7 +28,11 @@ namespace Alex.Networking.Java.Packets.Play
 				var l     = stream.ReadVarLong();
 				
 				var rawId = l >> 12;
-				var x     = (int)(l << 4 >> 8);
+
+				//var coordinates = l << 52 >> 52;
+				//var x           = coordinates >> 8;
+				//var z = coordinates << 
+				var x     = (int)(l << 4 >> 60);
 				var z     = (int)(l << 8 >> 4);
 				var y     = (int)(l << 12 >> 12);
 				

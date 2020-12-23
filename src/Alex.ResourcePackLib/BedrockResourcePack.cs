@@ -105,19 +105,16 @@ namespace Alex.ResourcePackLib
 					continue;
 				}
 			}
-			
-			Log.Info($"Loaded {entityModels.Count} entity geometry files.");
-			
 			EntityModels = ProcessEntityModels(entityModels);
 
-			Log.Info($"Imported {EntityModels.Count} entity geometries.");
+			Log.Info($"Processed {EntityModels.Count} entity models");
 		
 			EntityDefinitions = entityDefinitions;
             Log.Info($"Processed {EntityDefinitions.Count} entity definitions");
         }
 
 		public IReadOnlyDictionary<string, EntityModel> EntityModels { get; private set; }
-		private Dictionary<string, EntityModel> ProcessEntityModels(Dictionary<string, EntityModel> models)
+		public static Dictionary<string, EntityModel> ProcessEntityModels(Dictionary<string, EntityModel> models, Func<string, EntityModel> lookup = null)
 		{
 			Dictionary<string, EntityModel> final = new Dictionary<string, EntityModel>();
 			Queue<KeyValuePair<string, EntityModel>> workQueue = new Queue<KeyValuePair<string, EntityModel>>();
@@ -163,11 +160,26 @@ namespace Alex.ResourcePackLib
 							
 							if (!final.TryGetValue(key, out requiredEntityModel))
 							{
-								//Log.Warn($"Could not find entity model: {key} of {item.Key}");
-								wasInterupted = true;
-								workQueue.Enqueue(item);
+								if (lookup != null)
+								{
+									requiredEntityModel = lookup.Invoke(key);
 
-								break;
+									if (requiredEntityModel == null)
+									{
+										wasInterupted = true;
+										workQueue.Enqueue(item);
+
+										break;
+									}
+								}
+								else
+								{
+									//Log.Warn($"Could not find entity model: {key} of {item.Key}");
+									wasInterupted = true;
+									workQueue.Enqueue(item);
+
+									break;
+								}
 							}
 						}
 
@@ -216,14 +228,19 @@ namespace Alex.ResourcePackLib
 			return final;
 		}
 		
-		private void LoadEntityModel(ZipArchiveEntry entry, Dictionary<string, EntityModel> models)
+		private static void LoadEntityModel(ZipArchiveEntry entry, Dictionary<string, EntityModel> models)
 		{
 			string json;
 			using (var stream = entry.Open())
 			{
 				json = Encoding.UTF8.GetString(stream.ReadToEnd());
 			}
-			
+
+			LoadEntityModel(json, models);
+		}
+		
+		public static void LoadEntityModel(string json, Dictionary<string, EntityModel> models)
+		{
 			var d = MCJsonConvert.DeserializeObject<MobsModelDefinition>(json);
 			//if (decoded == null)
 			if (d != null)
@@ -232,7 +249,7 @@ namespace Alex.ResourcePackLib
 				{
 					if (item.Value.Description?.Identifier == null)
 					{
-						Log.Warn($"Missing identifier for {entry.Name}");
+						Log.Warn($"Missing identifier for {item.Key}");
 
 						//return;
 					}

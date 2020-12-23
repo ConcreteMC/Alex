@@ -10,6 +10,7 @@ using Alex.API.Utils;
 using Alex.Graphics.Models.Entity;
 using Alex.Net;
 using Alex.Networking.Java.Packets.Play;
+using Alex.ResourcePackLib;
 using Alex.ResourcePackLib.Json;
 using Alex.ResourcePackLib.Json.Converters;
 using Alex.ResourcePackLib.Json.Models.Entities;
@@ -201,42 +202,45 @@ namespace Alex.Entities
 						{
 							var resourcePatch = JsonConvert.DeserializeObject<SkinResourcePatch>(
 								skin.ResourcePatch, GeometrySerializationSettings);
-							
-							GeometryModel geometryModel = null;
-							if (!GeometryModel.TryParse(skin.GeometryData, resourcePatch, out geometryModel))
+
+							Dictionary<string, EntityModel> models = new Dictionary<string, EntityModel>();
+							BedrockResourcePack.LoadEntityModel(skin.GeometryData, models);
+
+							var processedModels = BedrockResourcePack.ProcessEntityModels(models);
+						
+							if (processedModels == null || processedModels.Count == 0)
 							{
-								Log.Debug($"Failed to parse geometry for player {Name}");
-							}
-							
-							if (geometryModel == null || geometryModel.Geometry.Count == 0)
-							{
-								//Log.Warn($"!! Model count was 0 for player {Name} !!");
+								Log.Warn($"!! Model count was 0 for player {Name} !!");
 							}
 							else
 							{
 								if (resourcePatch?.Geometry != null)
 								{
-									model = geometryModel.FindGeometry(resourcePatch.Geometry.Default);
-
-									if (model == null)
+									if (!processedModels.TryGetValue(resourcePatch.Geometry.Default, out model))
 									{
 										Log.Debug(
 											$"Invalid geometry: {resourcePatch.Geometry.Default} for player {Name}");
 									}
 									else
 									{
-										var modelTextureSize = new Point((int) model.Description.TextureWidth, (int) model.Description.TextureHeight);
-										
+										var modelTextureSize = new Point(
+											(int) model.Description.TextureWidth,
+											(int) model.Description.TextureHeight);
+
 										var textureSize = new Point(skinBitmap.Width, skinBitmap.Height);
 
 										if (modelTextureSize != textureSize)
 										{
-											int newHeight = modelTextureSize.Y > textureSize.Y ? textureSize.Y : modelTextureSize.Y;
-											int newWidth = modelTextureSize.X > textureSize.X ? textureSize.X: modelTextureSize.X;
-					
+											int newHeight = modelTextureSize.Y > textureSize.Y ? textureSize.Y :
+												modelTextureSize.Y;
+
+											int newWidth = modelTextureSize.X > textureSize.X ? textureSize.X :
+												modelTextureSize.X;
+
 											if (modelTextureSize.Y > textureSize.Y)
 											{
-												skinBitmap = SkinUtils.ConvertSkin(skinBitmap, modelTextureSize.X, modelTextureSize.Y);
+												skinBitmap = SkinUtils.ConvertSkin(
+													skinBitmap, modelTextureSize.X, modelTextureSize.Y);
 											}
 
 											/*var bitmap = skinBitmap;
@@ -359,9 +363,9 @@ namespace Alex.Entities
 				SkinFlags.ApplyTo(modelRenderer);
 		}
 
-		private        bool            ValidModel { get; set; }
-		private static PooledTexture2D _steve;
-		private static PooledTexture2D _alex;
+		private        bool                ValidModel { get; set; }
+		private static PooledTexture2D     _steve;
+		private static PooledTexture2D     _alex;
 
 		internal void UpdateSkin(PooledTexture2D skinTexture)
 		{

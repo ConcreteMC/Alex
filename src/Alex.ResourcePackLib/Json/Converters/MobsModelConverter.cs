@@ -9,7 +9,7 @@ using NLog;
 namespace Alex.ResourcePackLib.Json.Converters
 {
 	[JsonConverter(typeof(MobsModelConverter))]
-	internal class MobsModelDefinition : Dictionary<string, EntityModel>
+	public class MobsModelDefinition : Dictionary<string, EntityModel>
 	{
 		
 	}
@@ -165,17 +165,24 @@ namespace Alex.ResourcePackLib.Json.Converters
 					continue;
 
 
-			/*	if (property.Type == JTokenType.Array)
+				if (property.Type == JTokenType.Array)
 				{
 					foreach (var geo in property.Values())
 					{
 						if (geo.Type == JTokenType.Object)
 						{
-							yield return DecodeSingle((JObject) geo, serializer);
+							var singleDecode = DecodeSingle((JObject) geo, serializer);
+
+							if (singleDecode != null)
+							{
+								singleDecode.Description.Identifier = prop.Key;
+
+								yield return singleDecode;
+							}
 						}
 					}
 				}
-				else */if (property.Type == JTokenType.Object)
+				else if (property.Type == JTokenType.Object)
 				{
 					var singleDecode = DecodeSingle((JObject) property, serializer);
 
@@ -198,78 +205,81 @@ namespace Alex.ResourcePackLib.Json.Converters
 
 			if (obj.Type != JTokenType.Object) 
 				return null;
-			
-			var                 jObject = (JObject)obj;
-			MobsModelDefinition result  = new MobsModelDefinition();
+
+			string              formatVersion = "1.8.0";
+			var                 jObject       = (JObject)obj;
+			MobsModelDefinition result        = new MobsModelDefinition();
 			if (jObject.TryGetValue(
 				"format_version", StringComparison.InvariantCultureIgnoreCase, out var versionToken))
 			{
 				string format = versionToken.Value<string>();
-				switch (format)
+				formatVersion = format;
+			}
+
+			switch (formatVersion)
+			{
+				case "1.8.0":
 				{
-					case "1.8.0":
+					foreach (var model in Decode180(jObject, serializer))
 					{
-						foreach (var model in Decode180(jObject, serializer))
+						if (model.Bones != null)
 						{
-							if (model.Bones != null)
+							foreach (var bone in model.Bones)
 							{
-								foreach (var bone in model.Bones)
-								{
-									if (bone.Cubes != null)
-									{
-										foreach (var cube in bone.Cubes)
-										{
-											//cube.Rotation = new Vector3(90f, 0f, 0f);
-										}
-									}
-								}
-							}
-
-							result.TryAdd(model.Description.Identifier, model);
-						}
-
-						break;
-					}
-
-					//case "1.10.0":
-					//	return Decode110(jObject, serializer);
-					case "1.10.0":
-					case "1.12.0":
-					{
-						foreach (var model in Decode1120(jObject, serializer))
-						{
-							/*if (model.Bones != null)
-							{
-								foreach (var bone in model.Bones)
+								if (bone.Cubes != null)
 								{
 									foreach (var cube in bone.Cubes)
 									{
-										
+										//cube.Rotation = new Vector3(90f, 0f, 0f);
 									}
 								}
-							}*/
-							
-							//TODO: Fix cube pivot Note that in 1.12 this is flipped upside-down, but is fixed in 1.14.
-
-							result.TryAdd(model.Description.Identifier, model);
+							}
 						}
-						
-						break;
+
+						result.TryAdd(model.Description.Identifier, model);
 					}
 
-					case "1.16.0":
-					case "1.14.0":
-					{
-						foreach (var model in Decode1140(jObject, serializer))
-						{
-							result.TryAdd(model.Description.Identifier, model);
-						}
-						break;
-					}
-					default:
-						Log.Warn($"Invalid format_version: {format})");
-						break;
+					break;
 				}
+
+				//case "1.10.0":
+				//	return Decode110(jObject, serializer);
+				case "1.10.0":
+				case "1.12.0":
+				{
+					foreach (var model in Decode1120(jObject, serializer))
+					{
+						/*if (model.Bones != null)
+						{
+							foreach (var bone in model.Bones)
+							{
+								foreach (var cube in bone.Cubes)
+								{
+									
+								}
+							}
+						}*/
+							
+						//TODO: Fix cube pivot Note that in 1.12 this is flipped upside-down, but is fixed in 1.14.
+
+						result.TryAdd(model.Description.Identifier, model);
+					}
+						
+					break;
+				}
+
+				case "1.16.0":
+				case "1.14.0":
+				{
+					foreach (var model in Decode1140(jObject, serializer))
+					{
+						result.TryAdd(model.Description.Identifier, model);
+					}
+					break;
+				}
+				default:
+					Log.Warn($"Invalid format_version: {formatVersion})");
+					break;
 			}
 			
 			//model.Description.Identifier = obj.

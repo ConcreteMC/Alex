@@ -12,6 +12,7 @@ namespace Alex.Blocks.Minecraft
 			Transparent = true;
 			IsReplacible = false;
 			Renderable = false;
+			CanInteract = true;
 			
 			HasHitbox = true;
 
@@ -33,6 +34,7 @@ namespace Alex.Blocks.Minecraft
 			Transparent = true;
 			IsReplacible = false;
 			Renderable = false;
+			CanInteract = true;
 			
 			HasHitbox = true;
 

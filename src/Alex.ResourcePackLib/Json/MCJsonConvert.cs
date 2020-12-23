@@ -35,6 +35,7 @@ namespace Alex.ResourcePackLib.Json
 			DefaultSettings.Converters.Add(new EntityModelConverter());
 			DefaultSettings.Converters.Add(new MobsModelConverter());
 			DefaultSettings.Converters.Add(new UvConverter());
+			DefaultSettings.Converters.Add(new FontDefinitionConverter());
 			Serializer = JsonSerializer.Create(DefaultSettings);
 		}
 

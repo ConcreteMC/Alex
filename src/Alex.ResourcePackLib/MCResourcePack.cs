@@ -15,6 +15,7 @@ using Alex.API.Utils;
 using Alex.ResourcePackLib.Generic;
 using Alex.ResourcePackLib.Json;
 using Alex.ResourcePackLib.Json.BlockStates;
+using Alex.ResourcePackLib.Json.Fonts;
 using Alex.ResourcePackLib.Json.Models;
 using Alex.ResourcePackLib.Json.Models.Blocks;
 using Alex.ResourcePackLib.Json.Models.Items;
@@ -45,6 +46,8 @@ namespace Alex.ResourcePackLib
 		private static readonly Regex IsModelRegex          = new Regex(@"^assets[\\\/](?'namespace'.*)[\\\/]models[\\\/](?'filename'.*)\.json$", RegexOpts);
 		private static readonly Regex IsBlockStateRegex     = new Regex(@"^assets[\\\/](?'namespace'.*)[\\\/]blockstates[\\\/](?'filename'.*)\.json$", RegexOpts);
 		private static readonly Regex IsGlyphSizes          = new Regex(@"^assets[\\\/](?'namespace'.*)[\\\/]font[\\\/]glyph_sizes.bin$", RegexOpts);
+		private static readonly Regex IsFontDefinition          = new Regex(@"^assets[\\\/](?'namespace'.*)[\\\/]font[\\\/](?'filename'.*)\.json$", RegexOpts);
+		private static readonly Regex IsParticle          = new Regex(@"^assets[\\\/](?'namespace'.*)[\\\/]particles[\\\/](?'filename'.*)\.json$", RegexOpts);
 		private static readonly Regex IsSoundDefinition          = new Regex(@"^assets[\\\/](?'namespace'.*)[\\\/]sounds.json$", RegexOpts);
 
 		private readonly Dictionary<string, BlockStateResource> _blockStates   = new Dictionary<string, BlockStateResource>();
@@ -144,7 +147,6 @@ namespace Alex.ResourcePackLib
 			Manifest = GetManifest(archive, ResourcePackType.Java);
 			
 			Dictionary<ResourceLocation, ResourcePackModelBase> models = new Dictionary<ResourceLocation, ResourcePackModelBase>();
-			//Dictionary<string, ResourcePackItem> items = new Dictionary<string, ResourcePackItem>();
 
 			var total = archive.Entries.Count;
 			int count = 0;
@@ -154,6 +156,11 @@ namespace Alex.ResourcePackLib
 				
 				ProgressReporter?.Invoke((int)(((double)count / (double)total) * 100D), entry.Name);
 
+				if (IsParticle.IsMatch(entry.FullName))
+				{
+					continue;
+				}
+				
 				if (IsSoundDefinition.IsMatch(entry.FullName))
 				{
 					using (var e = entry.Open())
@@ -269,19 +276,14 @@ namespace Alex.ResourcePackLib
 
 		private void LoadTextureMeta(ZipArchiveEntry entry, Match match)
 		{
-			//var textureName = SanitizeFilename(match.Groups["filename"].Value);
 			if (!TryGetTextureMeta(new ResourceLocation(match.Groups["namespace"].Value, SanitizeFilename(match.Groups["filename"].Value)), out var meta))
 			{
 				LoadBitmapMeta(entry, match);
 			}
-			
-			//	_textureCache[match.Groups["filename"].Value] = TextureUtils.ImageToTexture2D(Graphics, bmp);
 		}
 
 		private void ProcessTexture(ZipArchiveEntry entry, Match match)
 		{
-			//if (!TryGetBitmap(resource, out _))
-			//{
 			try
 			{
 				LoadBitmap(entry, match);
@@ -289,10 +291,7 @@ namespace Alex.ResourcePackLib
 			catch (Exception ex)
 			{
 				Log.Warn(ex, $"Could not load texture from resourcepack: {entry.FullName}");
-				//	}
 			}
-
-			//	_textureCache[match.Groups["filename"].Value] = TextureUtils.ImageToTexture2D(Graphics, bmp);
 		}
 
 		private Image<Rgba32> LoadBitmap(ZipArchiveEntry entry, Match match)
@@ -317,6 +316,21 @@ namespace Alex.ResourcePackLib
 		}
 		
 		#region BitmapFont
+
+		private void LoadFontDefinition(ZipArchiveEntry entry)
+		{
+			ReadOnlySpan<byte> content;
+			using (var stream = entry.Open())
+			{
+				content = stream.ReadToEnd();
+			}
+
+			FontDefinitionFile file = MCJsonConvert.DeserializeObject<FontDefinitionFile>(Encoding.UTF8.GetString(content));
+
+			if (file?.Providers == null)
+				return;
+
+		}
 		
 		private void LoadFont(ZipArchive archive)
 		{
@@ -324,7 +338,15 @@ namespace Alex.ResourcePackLib
 
 			foreach (var entry in archive.Entries)
 			{
-				var fontTextureMatch = IsFontTextureResource.Match(entry.FullName);
+				var fontDefinitionMatch = IsFontDefinition.Match(entry.FullName);
+
+				if (fontDefinitionMatch.Success)
+				{
+					LoadFontDefinition(entry);
+					continue;
+				}
+				
+				var fontTextureMatch    = IsFontTextureResource.Match(entry.FullName);
 				if (fontTextureMatch.Success)
 				{
 					if (fontTextureMatch.Groups["filename"].Value == "ascii")
@@ -333,6 +355,8 @@ namespace Alex.ResourcePackLib
 						
 						break;
 					}
+					
+					continue;
 				}
 			}
 

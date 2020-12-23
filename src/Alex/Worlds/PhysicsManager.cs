@@ -188,7 +188,7 @@ namespace Alex.Worlds
 
 			e.Velocity += (ConvertMovementIntoVelocity(e, out var slipperiness));
 
-			if (e.HasCollision)
+			//if (e.HasCollision)
 			{
 				e.Velocity = TruncateVelocity(e.Velocity);
 				
