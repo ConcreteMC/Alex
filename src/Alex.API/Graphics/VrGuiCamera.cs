@@ -51,16 +51,16 @@ namespace Alex.API.Graphics
             
             Matrix.Invert(cxt.Hmd.GetPose()).Decompose(out var scale, out var rotation, out var translation);
 
-            _vrOffsetPosition = translation;
+            //_vrOffsetPosition = translation;
             //Target = Position + Vector3.Transform(Vector3.Backward, rotation);
             Forward = Vector3.Normalize(Target - Position);
             //rotation.Conjugate();
             var rot = Matrix.CreateFromQuaternion(rotation);
-            var t = Position + Vector3.TransformNormal(Vector3.Forward,  rot);
+            var t = Position + Forward;//Vector3.TransformNormal(Vector3.Forward,  rot);
             var u = Vector3.TransformNormal(Vector3.Up, rot);
             ProjectionMatrix = Matrix.CreatePerspectiveFieldOfView(FOV, AspectRatio, 0.1f, 1000.0f);
             //ViewMatrix = Matrix.CreateScale(scale) * Matrix.CreateFromQuaternion(rotation) * Matrix.CreateTranslation(Position);
-            ViewMatrix = Matrix.CreateLookAt(Position, t, u)
+            ViewMatrix = Matrix.CreateLookAt(Position, Position + Vector3.Forward, Vector3.Up)
                 ;
             // var scaleStr = $"Scale: {scale.X:F2}, {scale.Y:F2}, {scale.Z:F2}";
             // var rotationStr = $"Rotation: {rotation.X:F2}, {rotation.Y:F2}, {rotation.Z:F2}";
