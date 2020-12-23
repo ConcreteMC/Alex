@@ -101,17 +101,21 @@ namespace Alex.Graphics.VR
             var handle = info.GetValue(renderTarget) as SharpDX.Direct3D11.Texture2D;
             _textures[eyeNo].handle = handle.NativePointer;
             _textures[eyeNo].eType = ETextureType.DirectX;
+            _textureBounds[eyeNo].uMin = 0;
+            _textureBounds[eyeNo].uMax = 1;
+            _textureBounds[eyeNo].vMin = 0;
+            _textureBounds[eyeNo].vMax = 1;
 #else
             var info = typeof(RenderTarget2D).GetField("glTexture", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
             var glTexture = (int)info.GetValue(renderTarget);
             _textures[eyeNo].handle = new System.IntPtr(glTexture);
             _textures[eyeNo].eType = ETextureType.OpenGL;
-#endif
-            _textures[eyeNo].eColorSpace = EColorSpace.Gamma;
             _textureBounds[eyeNo].uMin = 0;
             _textureBounds[eyeNo].uMax = 1;
-            _textureBounds[eyeNo].vMin = 0;
-            _textureBounds[eyeNo].vMax = 1;
+            _textureBounds[eyeNo].vMin = 1;
+            _textureBounds[eyeNo].vMax = 0;
+#endif
+            _textures[eyeNo].eColorSpace = EColorSpace.Gamma;
 
             return renderTarget;
         }
@@ -129,7 +133,7 @@ namespace Alex.Graphics.VR
             _renderTargets[1] = CreateRenderTargetForEye(Eye.Right);
 
             var guiManager = _serviceProvider.GetService<GuiManager>();
-            guiManager.ScaledResolution.ViewportSize = new Size(_renderTargets[0].Width,_renderTargets[0].Height );
+            guiManager.ScaledResolution.ViewportSize = new Size(_renderTargets[0].Width, _renderTargets[0].Height);
         }
 
         public void Draw(Action doDraw)
@@ -157,7 +161,7 @@ namespace Alex.Graphics.VR
         public Matrix GetViewMatrix(Eye eye, Matrix parent)
         {
             var matrixEyePos = _context.GetEyeMatrix(eye);
-            return Matrix.Invert(parent) * (_context.Hmd.GetPose() * matrixEyePos);
+            return parent * Matrix.Invert(_context.Hmd.GetPose() * matrixEyePos);
         }
 
         public Matrix GetViewMatrix(Matrix parent) => GetViewMatrix(Eye, parent);

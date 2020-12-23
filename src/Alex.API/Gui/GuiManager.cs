@@ -81,10 +81,7 @@ namespace Alex.API.Gui
                 GuiScale = optionsProvider.AlexOptions.VideoOptions.GuiScale
             };
             ScaledResolution.ScaleChanged += ScaledResolutionOnScaleChanged;
-            _camera = new VrGuiCamera()
-            {
-                Position = new Vector3(0, 0, -10f)
-            };
+            _camera = new VrGuiCamera();
 
             FocusManager = new GuiFocusHelper(this, InputManager, game.GraphicsDevice);
 
@@ -105,6 +102,9 @@ namespace Alex.API.Gui
             VrModeEnabled = vrModeEnabled;
             if(vrModeEnabled)
                 _vrContext = serviceProvider.GetService<VrContext>();
+            _debugAxis = new DebugAxisComponent(game);
+            _debugAxis.Initialize();
+            //game.Components.Add(_debugAxis);
         }
 
         private void ScaledResolutionOnScaleChanged(object sender, UiScaleEventArgs args)
@@ -205,8 +205,8 @@ namespace Alex.API.Gui
 
         public void Update(GameTime gameTime)
         {
-            _camera.Update(null);
             ScaledResolution.Update();
+            _camera.Update(null);
             
             var screens = Screens.ToArray();
 
@@ -253,7 +253,8 @@ namespace Alex.API.Gui
         private int i = 0;
 
         private BasicEffect _basicEffect;
-        
+        private DebugAxisComponent _debugAxis;
+
         public void Draw(GameTime gameTime)
         {
             IDisposable maybeADisposable = null;
@@ -301,9 +302,21 @@ namespace Alex.API.Gui
                     //                                    Matrix.CreateOrthographicOffCenter(0, GraphicsDevice.Viewport.Width, GraphicsDevice.Viewport.Height, 0, 0, 1);
                     //
 
-                    GuiSpriteBatch.Effect.Projection = VrService.GetProjectionMatrix();
-                    GuiSpriteBatch.Effect.View = VrService.GetViewMatrix(_camera.ViewMatrix);
-                    GuiSpriteBatch.Effect.World = Matrix.CreateScale(0.1f) * Matrix.CreateTranslation(0, 0f, 0f) * Matrix.CreateRotationZ(MathHelper.PiOver2);
+                    var proj = VrService.GetProjectionMatrix();
+                    var view = VrService.GetViewMatrix(_camera.ViewMatrix);
+
+                    if (_debugAxis.Effect != null)
+                    {
+                        _debugAxis.Effect.Projection = proj;
+                        _debugAxis.Effect.View = view;
+                        _debugAxis.Draw(gameTime);
+                    }
+                    GuiSpriteBatch.Effect.Projection = proj;
+                    GuiSpriteBatch.Effect.View = view;
+                    GuiSpriteBatch.Effect.World = Matrix.CreateScale(2f / ScaledResolution.ViewportSize.Width) * Matrix.CreateWorld(Vector3.Zero, Vector3.Forward, Vector3.Up)
+//                                                  * Matrix.CreateTranslation(0, 0f, 0f) 
+                                                 // * Matrix.CreateRotationZ(MathHelper.PiOver2)
+                        ;
                     //maybeADisposable = GraphicsDevice.PushRenderTarget(_vrGuiBaseTarget);
                     //GuiSpriteBatch.Effect = null;
                     GuiSpriteBatch.Begin();
