@@ -843,7 +843,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		        new BedrockSkinData(skin)
 		        {
 			        ClientRandomId = new Random().Next(),
-			        LanguageCode = Alex.GuiRenderer.Language.Code,
+			        LanguageCode = Alex.GuiRenderer.Language.Code.Replace("-", "_"),
 			        // Alex.Services.GetService<IOptionsProvider>().AlexOptions.MiscelaneousOptions.Language.Value,
 			        ServerAddress = $"{ServerEndpoint.Address.ToString()}:{ServerEndpoint.Port.ToString()}",
 			        ThirdPartyName = username,

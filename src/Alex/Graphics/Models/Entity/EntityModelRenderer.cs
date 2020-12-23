@@ -168,7 +168,7 @@ namespace Alex.Graphics.Models.Entity
 
 					if (cube.Uv.IsOutOfBound(textureSize))
 					{
-						continue;
+					//	continue;
 					}
 
 					var  inflation = (float) (cube.Inflate ?? bone.Inflate);

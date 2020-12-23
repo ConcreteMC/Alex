@@ -695,26 +695,36 @@ namespace Alex.Entities
 					
             var scaleMatrix = Matrix.Identity;
 
-            if (ItemRenderer != null && _leftArmModel != null)
+            if (ItemRenderer != null)
             {
-	            if (_leftItemModel != null)
-	            {
-		            pivot = _leftItemModel.Definition.Pivot;
-	            }
-	            else
-	            {
-		            pivot = _leftArmModel.Definition.Pivot;
-	            }
+	            EntityModelRenderer.ModelBone arm = null;
 
-	            if ((ItemRenderer.DisplayPosition & DisplayPosition.ThirdPerson) != 0)
-		            scaleMatrix = Matrix.CreateTranslation(-pivot)
-		                          * Matrix.CreateRotationX(
-			                          MathUtils.ToRadians((1f / 16f) * _leftArmModel.Rotation.X))
-		                          * Matrix.CreateRotationY(
-			                          MathUtils.ToRadians((1f / 16f) * _leftArmModel.Rotation.X))
-		                          * Matrix.CreateRotationZ(
-			                          MathUtils.ToRadians((1f / 16f) * _leftArmModel.Rotation.Z))
-		                          * Matrix.CreateTranslation(pivot);
+	            if (_leftArmModel != null)
+		            arm = _leftArmModel;
+	            else if (_rightArmModel != null)
+		            arm = _rightArmModel;
+
+	            if (arm != null)
+	            {
+		            if (_leftItemModel != null)
+		            {
+			            pivot = _leftItemModel.Definition.Pivot;
+		            }
+		            else
+		            {
+			            pivot = arm.Definition.Pivot;
+		            }
+
+		            if ((ItemRenderer.DisplayPosition & DisplayPosition.ThirdPerson) != 0)
+			            scaleMatrix = Matrix.CreateTranslation(-pivot)
+			                          * Matrix.CreateRotationX(
+				                          MathUtils.ToRadians((1f / 16f) * arm.Rotation.X))
+			                          * Matrix.CreateRotationY(
+				                          MathUtils.ToRadians((1f / 16f) * arm.Rotation.Y))
+			                          * Matrix.CreateRotationZ(
+				                          MathUtils.ToRadians((1f / 16f) * arm.Rotation.Z))
+			                          * Matrix.CreateTranslation(pivot);
+	            }
             }
 
             ItemRenderer?.Update(
