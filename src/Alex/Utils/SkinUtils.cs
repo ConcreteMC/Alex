@@ -11,12 +11,197 @@ using Newtonsoft.Json;
 using NLog;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Processing;
+using Point = System.Drawing.Point;
+using Rectangle = SixLabors.ImageSharp.Rectangle;
 
 namespace Alex.Utils
 {
+	public enum SkinSize
+	{
+		W64H32,
+		W64H64
+	}
+	
 	public static class SkinUtils
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger();
+
+		public static Image<Rgba32> ConvertSkin(Image<Rgba32> input, int width, int height)
+		{
+			SkinSize size       = SkinSize.W64H32;
+			SkinSize sourceSize = SkinSize.W64H32;
+			
+			if (width / height == 2)
+				size = SkinSize.W64H64;
+			else if (width / height == 1)
+				size = SkinSize.W64H32;
+			
+			if (input.Width / input.Height == 2)
+				sourceSize = SkinSize.W64H64;
+			else if (input.Width / input.Height == 1)
+				sourceSize = SkinSize.W64H32;
+
+			if (size == sourceSize)
+				return input;
+
+			Image<Rgba32> output = new Image<Rgba32>(width, height, new Rgba32(255, 255, 255, 0f));
+			output.Mutate(
+				m =>
+				{
+					//Head
+					var cloned = input.Clone();
+					cloned.Mutate(x => x.Crop(new Rectangle(0, 0, 32, 16)));
+
+					m.DrawImage(cloned, 1f);
+					
+					//Hat
+					cloned = input.Clone();
+					cloned.Mutate(x => x.Crop(new Rectangle(32, 0, 32, 16)));
+					
+					m.DrawImage(cloned, new SixLabors.ImageSharp.Point(32, 0), 1f);
+					
+					//Body
+					var body = input.Clone();
+					body.Mutate(x => x.Crop(new Rectangle(16, 16, 24, 16)));
+					m.DrawImage(body, new SixLabors.ImageSharp.Point(16, 16), 1f);
+					
+					//Legs
+					var leg = input.Clone();
+					leg.Mutate(x => x.Crop(new Rectangle(0, 16, 16, 16)));
+					
+					m.DrawImage(leg, new SixLabors.ImageSharp.Point(0, 16), 1f); //Right Leg
+
+					var clonedLeg = leg.Clone();
+					leg.Mutate(
+						x =>
+						{
+							var outer = clonedLeg.Clone();
+							outer.Mutate(o =>
+							{
+								o.Crop(new Rectangle(0, 4, 4, 12));
+								o.Flip(FlipMode.Horizontal);
+							});
+							
+							x.DrawImage(outer, new SixLabors.ImageSharp.Point(8, 4), 1f);
+							
+							var inner = clonedLeg.Clone();
+							inner.Mutate(o =>
+							{
+								o.Crop(new Rectangle(8, 4, 4, 12));
+								o.Flip(FlipMode.Horizontal);
+							});
+
+							x.DrawImage(inner, new SixLabors.ImageSharp.Point(0, 4), 1f);
+							
+							var front = clonedLeg.Clone();
+							front.Mutate(o =>
+							{
+								o.Crop(new Rectangle(4, 4, 4, 12));
+								o.Flip(FlipMode.Horizontal);
+							});
+
+							x.DrawImage(front, new SixLabors.ImageSharp.Point(4, 4), 1f);
+							
+							var back = clonedLeg.Clone();
+							back.Mutate(o =>
+							{
+								o.Crop(new Rectangle(12, 4, 4, 12));
+								o.Flip(FlipMode.Horizontal);
+							});
+
+							x.DrawImage(back, new SixLabors.ImageSharp.Point(12, 4), 1f);
+							
+							var top = clonedLeg.Clone();
+							top.Mutate(o =>
+							{
+								o.Crop(new Rectangle(4, 0, 4, 4));
+								o.Flip(FlipMode.Horizontal);
+							});
+
+							x.DrawImage(top, new SixLabors.ImageSharp.Point(4, 0), 1f);
+							
+							var bottom = clonedLeg.Clone();
+							bottom.Mutate(o =>
+							{
+								o.Crop(new Rectangle(8, 0, 4, 4));
+								o.Flip(FlipMode.Horizontal);
+							});
+
+							x.DrawImage(bottom, new SixLabors.ImageSharp.Point(8, 0), 1f);
+						});
+					m.DrawImage(leg, new SixLabors.ImageSharp.Point(16, 48), 1f); //Left Leg
+					
+					//Arms
+					var arm = input.Clone();
+					arm.Mutate(x => x.Crop(new Rectangle(40, 16, 16, 16)));
+					m.DrawImage(arm, new SixLabors.ImageSharp.Point(40, 16), 1f); //Right Arm
+					
+					var clonedArm = arm.Clone();
+					arm.Mutate(
+						x =>
+						{
+							var outer = clonedArm.Clone();
+							outer.Mutate(o =>
+							{
+								o.Crop(new Rectangle(0, 4, 4, 12));
+								o.Flip(FlipMode.Horizontal);
+							});
+							
+							x.DrawImage(outer, new SixLabors.ImageSharp.Point(8, 4), 1f);
+							
+							var inner = clonedArm.Clone();
+							inner.Mutate(o =>
+							{
+								o.Crop(new Rectangle(8, 4, 4, 12));
+								o.Flip(FlipMode.Horizontal);
+							});
+
+							x.DrawImage(inner, new SixLabors.ImageSharp.Point(0, 4), 1f);
+							
+							var front = clonedArm.Clone();
+							front.Mutate(o =>
+							{
+								o.Crop(new Rectangle(4, 4, 4, 12));
+								o.Flip(FlipMode.Horizontal);
+							});
+
+							x.DrawImage(front, new SixLabors.ImageSharp.Point(4, 4), 1f);
+							
+							var back = clonedArm.Clone();
+							back.Mutate(o =>
+							{
+								o.Crop(new Rectangle(12, 4, 4, 12));
+								o.Flip(FlipMode.Horizontal);
+							});
+
+							x.DrawImage(back, new SixLabors.ImageSharp.Point(12, 4), 1f);
+							
+							var top = clonedArm.Clone();
+							top.Mutate(o =>
+							{
+								o.Crop(new Rectangle(4, 0, 4, 4));
+								o.Flip(FlipMode.Horizontal);
+							});
+
+							x.DrawImage(top, new SixLabors.ImageSharp.Point(4, 0), 1f);
+							
+							var bottom = clonedArm.Clone();
+							bottom.Mutate(o =>
+							{
+								o.Crop(new Rectangle(8, 0, 4, 4));
+								o.Flip(FlipMode.Horizontal);
+							});
+
+							x.DrawImage(bottom, new SixLabors.ImageSharp.Point(8, 0), 1f);
+						});
+				//	arm.Mutate(x => x.Flip(FlipMode.Horizontal));
+					m.DrawImage(arm, new SixLabors.ImageSharp.Point(32, 48), 1f); //Left Arm
+				});
+
+			return output;
+		}
+		
 		public static bool TryGetSkin(string json, GraphicsDevice graphics, out PooledTexture2D texture, out bool isSlim)
 		{
 			isSlim = false;

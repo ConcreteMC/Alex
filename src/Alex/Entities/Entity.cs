@@ -695,26 +695,36 @@ namespace Alex.Entities
 					
             var scaleMatrix = Matrix.Identity;
 
-            if (ItemRenderer != null && _leftArmModel != null)
+            if (ItemRenderer != null)
             {
-	            if (_leftItemModel != null)
-	            {
-		            pivot = _leftItemModel.Definition.Pivot;
-	            }
-	            else
-	            {
-		            pivot = _leftArmModel.Definition.Pivot;
-	            }
+	            EntityModelRenderer.ModelBone arm = null;
 
-	            if ((ItemRenderer.DisplayPosition & DisplayPosition.ThirdPerson) != 0)
-		            scaleMatrix = Matrix.CreateTranslation(-pivot)
-		                          * Matrix.CreateRotationX(
-			                          MathUtils.ToRadians((1f / 16f) * _leftArmModel.Rotation.X))
-		                          * Matrix.CreateRotationY(
-			                          MathUtils.ToRadians((1f / 16f) * _leftArmModel.Rotation.X))
-		                          * Matrix.CreateRotationZ(
-			                          MathUtils.ToRadians((1f / 16f) * _leftArmModel.Rotation.Z))
-		                          * Matrix.CreateTranslation(pivot);
+	            if (_leftArmModel != null)
+		            arm = _leftArmModel;
+	            else if (_rightArmModel != null)
+		            arm = _rightArmModel;
+
+	            if (arm != null)
+	            {
+		            if (_leftItemModel != null)
+		            {
+			            pivot = _leftItemModel.Definition.Pivot;
+		            }
+		            else
+		            {
+			            pivot = arm.Definition.Pivot;
+		            }
+
+		            if ((ItemRenderer.DisplayPosition & DisplayPosition.ThirdPerson) != 0)
+			            scaleMatrix = Matrix.CreateTranslation(-pivot)
+			                          * Matrix.CreateRotationX(
+				                          MathUtils.ToRadians((1f / 16f) * arm.Rotation.X))
+			                          * Matrix.CreateRotationY(
+				                          MathUtils.ToRadians((1f / 16f) * arm.Rotation.Y))
+			                          * Matrix.CreateRotationZ(
+				                          MathUtils.ToRadians((1f / 16f) * arm.Rotation.Z))
+			                          * Matrix.CreateTranslation(pivot);
+	            }
             }
 
             ItemRenderer?.Update(
@@ -1268,31 +1278,31 @@ namespace Alex.Entities
 			if (string.IsNullOrWhiteSpace(clean))
 				return;
 			
-			var halfWidth = -((((float) Width) * Scale));
+			var halfWidth = (float)(Width * _scale);
 			
 			var maxDistance = (renderArgs.Camera.FarDistance) / (64f);
-
+			
+			//pos.Y = 0;
+			
+			var distance = Vector3.Distance(KnownPosition, renderArgs.Camera.Position);
+			if (distance >= maxDistance)
+			{
+				return;
+			}
+			
 			Vector3 posOffset = new Vector3(0, 0.25f, 0);
 
 			if (RenderEntity && ModelRenderer != null && ModelRenderer.Valid && !IsInvisible)
 			{
 				posOffset.Y += (float) (Height * Scale);
 			}
-
+			
 			var cameraPosition = new Vector3(renderArgs.Camera.Position.X, 0, renderArgs.Camera.Position.Z);
 			
-			var rotation = new Vector3(KnownPosition.X, 0, KnownPosition.Z) - cameraPosition;
+			var rotation = cameraPosition - new Vector3(RenderLocation.X, 0, RenderLocation.Z);
 			rotation.Normalize();
 			
-			
-			var pos = KnownPosition + posOffset + (rotation * halfWidth);
-			//pos.Y = 0;
-			
-			var distance = Vector3.Distance(pos, renderArgs.Camera.Position);
-			if (distance >= maxDistance)
-			{
-				return;
-			}
+			var pos = RenderLocation + posOffset + (rotation * halfWidth);
 
 			Vector2 textPosition;
 			
@@ -1304,16 +1314,6 @@ namespace Alex.Entities
 			textPosition.X = screenSpace.X;
 			textPosition.Y = screenSpace.Y;
 
-			float depth = screenSpace.Z;
-
-			var scaleRatio = (1.0f / depth);
-			//var scaleRatio = Alex.Instance.GuiRenderer.ScaledResolution.ScaleFactor;
-			//scale = 0.5f;
-			float scaler = NametagScale - (distance * (NametagScale / maxDistance));
-			//float scaler = NametagScale;
-			var scale = new Vector2(scaler * scaleRatio, scaler * scaleRatio);
-			//scale *= Alex.Instance.GuiRenderer.ScaledResolution.ElementScale;
-
 			Vector2 renderPosition = textPosition;
 			int yOffset = 0;
 			foreach (var str in clean.Split('\n'))
@@ -1322,7 +1322,7 @@ namespace Alex.Entities
 				if (line.Length == 0)
 					continue;
 				
-				var stringCenter = Alex.Font.MeasureString(line, scale);
+				var stringCenter = Alex.Font.MeasureString(line);
 				var c            = new Point((int) stringCenter.X, (int) stringCenter.Y);
 
 				renderPosition.X = (int) (textPosition.X - (c.X / 2d));
@@ -1332,8 +1332,8 @@ namespace Alex.Entities
 					new Rectangle(renderPosition.ToPoint(), c), new Color(Color.Black, 128), screenSpace.Z);
 
 				Alex.Font.DrawString(
-					renderArgs.SpriteBatch, line, renderPosition, TextColor.White, FontStyle.None, scale,
-					layerDepth: screenSpace.Z);
+					renderArgs.SpriteBatch, line, renderPosition, TextColor.White, FontStyle.None, 
+					layerDepth: screenSpace.Z - 0.0001f);
 
 				yOffset += c.Y;
 			}

@@ -31,7 +31,8 @@ namespace Alex.ResourcePackLib.Json.Models.Entities
 			
 		}
 		
-		internal bool IsCube { get; }
+		[JsonIgnore]
+		public bool IsCube { get; }
 		public EntityModelUV(Vector2 origin, bool isCube = true)
 		{
 			IsCube = isCube;
@@ -74,6 +75,24 @@ namespace Alex.ResourcePackLib.Json.Models.Entities
 		public static implicit operator EntityModelUV(Vector2 vector)
 		{
 			return new EntityModelUV(vector);
+		}
+
+		public bool IsOutOfBound(Vector2 textureSize)
+		{
+			if (IsCube)
+			{
+				return (Down.Origin.Y >= textureSize.Y);
+			}
+			
+			foreach (BlockFace face in Enum.GetValues<BlockFace>())
+			{
+				var f = GetFace(face);
+
+				if (f.Origin.Y >= textureSize.Y)
+					return true;
+			}
+
+			return false;
 		}
 	}
 

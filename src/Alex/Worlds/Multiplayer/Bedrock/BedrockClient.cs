@@ -28,6 +28,7 @@ using Alex.Net.Bedrock.Raknet;
 using Alex.ResourcePackLib.Json;
 using Alex.ResourcePackLib.Json.Models.Entities;
 using Alex.Utils;
+using Alex.Utils.Auth;
 using Alex.Utils.Inventories;
 using Jose;
 using Microsoft.Extensions.DependencyInjection;
@@ -842,7 +843,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		        new BedrockSkinData(skin)
 		        {
 			        ClientRandomId = new Random().Next(),
-			        LanguageCode = Alex.GuiRenderer.Language.Code,
+			        LanguageCode = Alex.GuiRenderer.Language.Code.Replace("-", "_"),
 			        // Alex.Services.GetService<IOptionsProvider>().AlexOptions.MiscelaneousOptions.Language.Value,
 			        ServerAddress = $"{ServerEndpoint.Address.ToString()}:{ServerEndpoint.Port.ToString()}",
 			        ThirdPartyName = username,

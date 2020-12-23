@@ -36,6 +36,7 @@ namespace Alex.Blocks
 		    this.Register("minecraft:obsidian", () => new Obsidian());
 		    this.Register("minecraft:fire", () => new Fire());
 		    this.Register("minecraft:mob_spawner", () => new MobSpawner());
+		    this.Register("minecraft:spawner", () => new MobSpawner());
 		    
 		    this.Register("minecraft:crafting_table", () => new CraftingTable());
 		    this.Register("minecraft:wheat", () => new Wheat());

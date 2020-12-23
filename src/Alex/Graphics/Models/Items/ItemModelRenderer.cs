@@ -214,22 +214,22 @@ namespace Alex.Graphics.Models.Items
 
             var world = Matrix.Identity;
 
-            var a = new Vector3(0.5f, 1.0f, 0.5f);
+            var a = new Vector3(0.5f, 0.5f, 0.5f);
 
             if (activeDisplayItem != null)
             {
-                var displayTrans = new Vector3(activeDisplayItem.Translation.X / 32f,
-                    activeDisplayItem.Translation.Y / 32f,
-                    activeDisplayItem.Translation.Z / 32f);
+                var displayTrans = new Vector3(activeDisplayItem.Translation.X,
+                    activeDisplayItem.Translation.Y,
+                    activeDisplayItem.Translation.Z) * (1f / 16f);
                 
                 world *= 
                     Matrix.CreateTranslation(-a) * 
                     Matrix.CreateScale(activeDisplayItem.Scale)
-                    * Matrix.CreateTranslation(displayTrans.X, displayTrans.Y, displayTrans.Z)
                     * Matrix.CreateFromAxisAngle(Vector3.Right, MathUtils.ToRadians(activeDisplayItem.Rotation.X))
                     * Matrix.CreateFromAxisAngle(Vector3.Backward, MathUtils.ToRadians(activeDisplayItem.Rotation.Z))
                     * Matrix.CreateFromAxisAngle(Vector3.Up, MathUtils.ToRadians(activeDisplayItem.Rotation.Y))
-                    * Matrix.CreateTranslation(a);
+                    * Matrix.CreateTranslation(a)
+                    * Matrix.CreateTranslation(displayTrans.X, displayTrans.Y, displayTrans.Z);
             }
             else
             {
@@ -249,7 +249,7 @@ namespace Alex.Graphics.Models.Items
             }
             else if ((_displayPosition & ResourcePackLib.Json.Models.Items.DisplayPosition.ThirdPerson) != 0)
             {
-                offset += new Vector3(-2f / 16f, 0f, -3f / 16f);
+                offset += new Vector3(-2f / 16f, 0f, -2f / 16f);
                 world *= Matrix.CreateRotationX(-MathF.PI / 4f);
             }
 

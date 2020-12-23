@@ -17,7 +17,7 @@ namespace Alex.Gui.Forms
             
             GuiStackContainer stackContainer = new GuiStackContainer();
             stackContainer.Orientation = Orientation.Horizontal;
-            stackContainer.ChildAnchor = Alignment.MiddleFill;
+            stackContainer.ChildAnchor = Alignment.MiddleCenter;
             stackContainer.Anchor = Alignment.MiddleFill;
             
             Image = new FormImage(ImageUrl);

@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Alex.API.Input;
 using Alex.API.Services;
 using Alex.Utils;
+using Alex.Utils.Auth;
 using CommandLine;
 using Microsoft.Extensions.DependencyInjection;
 using NLog;
@@ -32,11 +33,29 @@ namespace Alex
 			_startupThread = Thread.CurrentThread;
 			_startupThread.Name = "UI Thread";
 			
+		//	Test();
+		//	Console.ReadLine();
+			
+		//	return;
+		//	return;
+			
 			var argsResult = Parser.Default.ParseArguments<LaunchSettings>(args)
 				.WithParsed(LaunchGame)
 				;//.WithNotParsed()	
 			//launchSettings = ParseArguments(args);
 
+		}
+
+		private static async void Test()
+		{
+			XboxAuthService authService = new XboxAuthService();
+			var             authConnect = await authService.StartDeviceAuthConnect();
+			
+			Console.WriteLine($"Code: {authConnect.user_code}");
+			
+			XboxAuthService.OpenBrowser(authConnect.verification_uri);
+			
+			await authService.DoDeviceCodeLogin(Guid.NewGuid().ToString(), authConnect.device_code, CancellationToken.None);
 		}
 
 		private static void LaunchGame(LaunchSettings launchSettings)

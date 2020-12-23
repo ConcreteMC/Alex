@@ -805,6 +805,11 @@ namespace Alex.Worlds
 		{
 			if (_destroyed) return;
 			_destroyed = true;
+			
+			Ticker.UnregisterTicked(this);
+			Ticker.UnregisterTicked(EntityManager);
+			Ticker.UnregisterTicked(PhysicsEngine);
+			Ticker.UnregisterTicked(ChunkManager);
 
 			EventDispatcher.UnregisterEvents(this);
 			

@@ -171,9 +171,9 @@ namespace Alex.Graphics.Models
 			private static readonly Color   DefaultColor = Color.White;
 			private readonly        Vector2 _textureSize;
 
-			private EntityModelCube Definition { get; set; }
-			private Vector3         _pivot;
-			private bool            _mirror = false;
+			private readonly EntityModel _model;
+			private readonly Vector3     _pivot;
+			private readonly bool        _mirror = false;
 			
 			private static Vector3 FlipZ(Vector3 origin, Vector3 size)
 			{
@@ -191,20 +191,36 @@ namespace Alex.Graphics.Models
 				return newOrigin;
 			}
 			
-			public Cube(EntityModelCube cube, Vector2 textureSize, bool mirrored, float inflation)
+			private static Vector3 FlipX(Vector3 origin, Vector3 size)
 			{
-				Definition = cube;
+				//return origin;
+				var newOrigin = new Vector3(origin.X, origin.Y, origin.Z);
+				if (newOrigin.X >= 0)
+				{
+					newOrigin.X = -(((MathF.Abs(origin.X) / size.X) + 1f) * size.X);
+				}
+				else
+				{
+					newOrigin.X = ((MathF.Abs(origin.X) / size.X) - 1f) * size.X;
+				}
+
+				return newOrigin;
+			}
+			
+			public Cube(EntityModel model, EntityModelCube cube, Vector2 textureSize, bool mirrored, float inflation)
+			{
+				_model = model;
 				_mirror = mirrored;
 				//Mirrored = mirrored;
 				var uv     = cube.Uv ?? new EntityModelUV();
 				var size   = cube.InflatedSize(inflation);
-				var origin =  cube.InflatedOrigin(inflation);//, size;
+				var origin = cube.InflatedOrigin(inflation);//, size;
 
 				_pivot = (cube.Pivot ?? (origin + (size / 2f)));
-			//	_center = cube.Origin + (cube.Size / 2f);
-				
-				//var inflated = size + new Vector3(inflate, inflate, inflate);
-				this._textureSize = textureSize; //new Vector2((size.X + size.Z) * 2, size.Y + size.Z);
+
+				this._textureSize = textureSize;
+		//		var xScale = (textureSize.X / model.Description.TextureWidth);
+		//		var yScale = (textureSize.Y / model.Description.TextureHeight);
 
 				//front verts with position and texture stuff
 				_topLeftFront = new Vector3(origin.X, origin.Y + size.Y, origin.Z);
@@ -421,7 +437,7 @@ namespace Alex.Graphics.Models
 
 			private TextureMapping GetTextureMapping(Vector2 textureOffset, float regionWidth, float regionHeight)
 			{
-				return new TextureMapping(_textureSize, textureOffset, regionWidth, regionHeight, _mirror);
+				return new TextureMapping(new Vector2(_model.Description.TextureWidth, _model.Description.TextureHeight), _textureSize, textureOffset, regionWidth, regionHeight, _mirror);
 			}
 
 			private class TextureMapping
@@ -431,15 +447,20 @@ namespace Alex.Graphics.Models
 				public Vector2 BotLeft { get; }
 				public Vector2 BotRight { get; }
 
-				public TextureMapping(Vector2 textureSize, Vector2 textureOffset, float width, float height, bool mirrored)
+				public TextureMapping(Vector2 modelTexture,
+					Vector2 textureSize,
+					Vector2 textureOffset,
+					float width,
+					float height,
+					bool mirrored)
 				{
-					var pixelWidth = (1f / textureSize.X);
-					var pixelHeight = (1f / textureSize.Y);
+					var texelWidth  = (1f / textureSize.X);
+					var texelHeight = (1f / textureSize.Y);
 
-					var x1 = pixelWidth * textureOffset.X;
-					var x2 = pixelWidth * (textureOffset.X + width);
-					var y1 = pixelHeight * textureOffset.Y;
-					var y2 = pixelHeight * (textureOffset.Y + height);
+					var x1 = texelWidth * textureOffset.X;
+					var x2 = x1 + (width * texelWidth);
+					var y1 = texelHeight * (textureOffset.Y);
+					var y2 = y1 + (height * texelHeight);
 
 					if (mirrored)
 					{

@@ -25,6 +25,7 @@ using Alex.Entities;
 using Alex.Gamestates;
 using Alex.Gamestates.Debugging;
 using Alex.Gamestates.InGame;
+using Alex.Gamestates.Login;
 using Alex.Graphics.Models.Blocks;
 using Alex.Gui;
 using Alex.Net;
@@ -36,6 +37,7 @@ using Alex.ResourcePackLib.Json.Models.Entities;
 using Alex.Services;
 using Alex.Services.Discord;
 using Alex.Utils;
+using Alex.Utils.Auth;
 using Alex.Worlds.Abstraction;
 using Alex.Worlds.Multiplayer.Bedrock;
 using Alex.Worlds.Multiplayer.Java;
@@ -653,7 +655,15 @@ namespace Alex
 						modelTextureSize.Y = (int) PlayerModel.Description.TextureHeight;
 					}
 
-					PlayerTexture = skinImage.Clone<Rgba32>();
+					if (modelTextureSize.Y > skinImage.Height)
+					{
+						PlayerTexture = SkinUtils.ConvertSkin(skinImage, modelTextureSize.X, modelTextureSize.Y);
+					}
+					else
+					{
+						PlayerTexture = skinImage;//.Clone<Rgba32>();
+					}
+
 					/*
 					var textureSize = new Point(skinImage.Width, skinImage.Height);
 

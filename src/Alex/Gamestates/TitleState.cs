@@ -13,6 +13,7 @@ using Alex.API.Services;
 using Alex.API.Utils;
 using Alex.Entities;
 using Alex.Gamestates.Common;
+using Alex.Gamestates.Login;
 using Alex.Gamestates.MainMenu;
 using Alex.Gamestates.Multiplayer;
 using Alex.Graphics.Models.Entity;
@@ -21,6 +22,7 @@ using Alex.Gui.Elements;
 using Alex.Gui.Elements.Context3D;
 using Alex.Items;
 using Alex.ResourcePackLib.Json.Models.Entities;
+using Alex.Utils;
 using Alex.Utils.Inventories;
 using Alex.Worlds.Abstraction;
 using Alex.Worlds.Singleplayer;
@@ -376,7 +378,6 @@ namespace Alex.Gamestates
 			
 			
 			ApplyModel(_playerView.Entity);
-			
 			base.OnShow();
 		}
 

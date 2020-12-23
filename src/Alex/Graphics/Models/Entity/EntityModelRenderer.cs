@@ -78,21 +78,16 @@ namespace Alex.Graphics.Models.Entity
 			//	new Vector2(model.Description.TextureWidth, model.Description.TextureHeight) :
 			//	new Vector2(model.Texturewidth, model.Textureheight);
 			
-			var modelTextureSize = new Vector2(model.Description.TextureWidth, model.Description.TextureHeight);
+			//var modelTextureSize = new Vector2(model.Description.TextureWidth, model.Description.TextureHeight);
 			
 			var actualTextureSize = new Vector2(texture.Width, texture.Height);
-				
-			if (modelTextureSize.X == 0 && modelTextureSize.Y == 0)
-				modelTextureSize = actualTextureSize;
-			
-			var uvScale = actualTextureSize / modelTextureSize;// / actualTextureSize;
-			
+
 			foreach (var bone in model.Bones.Where(x => string.IsNullOrWhiteSpace(x.Parent)))
 			{
 				//if (bone.NeverRender) continue;
 				if (modelBones.ContainsKey(bone.Name)) continue;
 				
-				var processed = ProcessBone(texture, model, bone, vertices, uvScale, actualTextureSize , modelBones);
+				var processed = ProcessBone(texture, model, bone, vertices, actualTextureSize , modelBones);
 				
 				if (!modelBones.TryAdd(bone.Name, processed))
 				{
@@ -147,14 +142,19 @@ namespace Alex.Graphics.Models.Entity
 			return origin;
 		}
 
-		private ModelBone ProcessBone(PooledTexture2D texture, EntityModel source, EntityModelBone bone, List<VertexPositionColorTexture> vertices, Vector2 uvScale, Vector2 textureSize, Dictionary<string, ModelBone> modelBones)
+		private ModelBone ProcessBone(PooledTexture2D texture,
+			EntityModel source,
+			EntityModelBone bone,
+			List<VertexPositionColorTexture> vertices,
+			Vector2 textureSize,
+			Dictionary<string, ModelBone> modelBones)
 		{
-			ModelBone           modelBone;
-				
+			ModelBone modelBone;
+
 			List<short> indices = new List<short>();
 
 			//bone.Pivot *= new Vector3(-1f, 1f, 1f);
-			
+
 			if (bone.Cubes != null)
 			{
 				foreach (var cube in bone.Cubes)
@@ -162,12 +162,18 @@ namespace Alex.Graphics.Models.Entity
 					if (cube == null)
 					{
 						Log.Warn("Cube was null!");
+
 						continue;
+					}
+
+					if (cube.Uv.IsOutOfBound(textureSize))
+					{
+					//	continue;
 					}
 
 					var  inflation = (float) (cube.Inflate ?? bone.Inflate);
 					var  mirror    = cube.Mirror ?? bone.Mirror;
-					Cube built     = new Cube(cube, textureSize, mirror, inflation);
+					Cube built     = new Cube(source, cube, textureSize, mirror, inflation);
 
 					vertices = ModifyCubeIndexes(vertices, cube, ref built.Front, bone, inflation);
 					vertices = ModifyCubeIndexes(vertices, cube, ref built.Back, bone, inflation);
@@ -176,9 +182,10 @@ namespace Alex.Graphics.Models.Entity
 					vertices = ModifyCubeIndexes(vertices, cube, ref built.Left, bone, inflation);
 					vertices = ModifyCubeIndexes(vertices, cube, ref built.Right, bone, inflation);
 
-					indices.AddRange(built.Front.indexes.Concat(built.Back.indexes).Concat(built.Top.indexes)
-					   .Concat(built.Bottom.indexes).Concat(built.Left.indexes).Concat(built.Right.indexes)
-					   .ToArray());
+					indices.AddRange(
+						built.Front.indexes.Concat(built.Back.indexes).Concat(built.Top.indexes)
+						   .Concat(built.Bottom.indexes).Concat(built.Left.indexes).Concat(built.Right.indexes)
+						   .ToArray());
 				}
 			}
 
@@ -195,7 +202,7 @@ namespace Alex.Graphics.Models.Entity
 				             * Matrix.CreateTranslation(bone.Pivot);
 			}
 
-			modelBone = new ModelBone(texture, indices.ToArray(), bone,  boneMatrix);
+			modelBone = new ModelBone(texture, indices.ToArray(), bone, boneMatrix);
 
 			if (bone.Rotation.HasValue)
 			{
@@ -204,15 +211,15 @@ namespace Alex.Graphics.Models.Entity
 			}
 
 			modelBone.Setup(Alex.Instance.GraphicsDevice);
-			
+
 			foreach (var childBone in source.Bones.Where(
 				x => string.Equals(x.Parent, bone.Name, StringComparison.InvariantCultureIgnoreCase)))
 			{
-				var child = ProcessBone(texture, source, childBone, vertices, uvScale, textureSize, modelBones);
+				var child = ProcessBone(texture, source, childBone, vertices, textureSize, modelBones);
 				child.Parent = modelBone;
-				
+
 				modelBone.AddChild(child);
-				
+
 				if (!modelBones.TryAdd(childBone.Name, child))
 				{
 					Log.Warn($"Failed to add bone! {childBone.Name}");

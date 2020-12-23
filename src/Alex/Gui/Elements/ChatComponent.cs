@@ -413,7 +413,9 @@ namespace Alex.Gui.Elements
 			string msg = message.RawMessage;
 
 			TextColor lastColor = TextColor.White;
-			var lines = CalculateLines(msg).Reverse().ToArray();
+
+			var lines = msg.Split('\n').SelectMany(x => CalculateLines(msg).Reverse()).ToArray();
+
 			for (var index = 0; index < lines.Length; index++)
 			{
 				var line = lines[index];

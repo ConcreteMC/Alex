@@ -26,7 +26,7 @@ namespace Alex.Worlds
 		private ConcurrentDictionary<BlockCoordinates, BlockEntity> BlockEntities { get; }
 		private GraphicsDevice                                      Device        { get; }
 
-		public  int             EntityCount      => Entities.Count;
+		public  int             EntityCount      => Entities.Count + BlockEntities.Count;
 		public  int             EntitiesRendered { get; private set; } = 0;
 		public  long            VertexCount      { get; private set; }
 		private World           World            { get; }
@@ -91,17 +91,12 @@ namespace Alex.Worlds
 
 		public void Update(IUpdateArgs args)
 		{
-			var entities      = Entities.Values.ToArray();
-			var blockEntities = BlockEntities.Values.ToArray();
+			//var entities      = Entities.Values.ToArray();
+			//var blockEntities = BlockEntities.Values.ToArray();
 
-			foreach (var entity in entities.Concat(blockEntities))
+			foreach (var entity in _rendered)
 			{
-				/*if (entity.ModelRenderer != null)
-					entity.ModelRenderer.DiffuseColor =
-						(new Color(245, 245, 225).ToVector3() * ((1f / 16f) * entity.SurroundingLightValue))
-						* World.BrightnessModifier;*/
-
-				if (entity.IsRendered)
+				//if (entity.IsRendered)
 					entity.Update(args);
 			}
 		}
@@ -147,14 +142,18 @@ namespace Alex.Worlds
 		{
 			if (_rendered != null)
 			{
+				var entities = _rendered;
+
+				if (entities.Length == 0)
+					return;
+				
+				
 				args.SpriteBatch.Begin(
-					SpriteSortMode.Deferred, BlendState.NonPremultiplied, SamplerState.PointWrap,
+					SpriteSortMode.BackToFront, BlendState.NonPremultiplied, SamplerState.PointWrap,
 					DepthStencilState.DepthRead, RasterizerState);
 
 				try
 				{
-					var entities = _rendered;
-
 					foreach (var entity in entities)
 					{
 						if (!entity.HideNameTag)
