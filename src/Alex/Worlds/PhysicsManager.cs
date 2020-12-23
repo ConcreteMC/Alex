@@ -604,7 +604,7 @@ namespace Alex.Worlds
 							
 						entity.Velocity = new Vector3((float) diff, entity.Velocity.Y, entity.Velocity.Z);
 						
-						Log.Info($"HIT X! Entity Y={testBox.Min.Y:F8} Block Y={blockBox.Max.Y:F8} Entity-X={(negative ? bound.Min.X : bound.Max.X):F8} Block-X={(negative ? box.Max.X : box.Min.X):F8} X-Difference={diff:F8}");
+					 //	Log.Info($"HIT X! Entity Y={testBox.Min.Y:F8} Block Y={blockBox.Max.Y:F8} Entity-X={(negative ? bound.Min.X : bound.Max.X):F8} Block-X={(negative ? box.Max.X : box.Min.X):F8} X-Difference={diff:F8}");
 						
 						return true;
 					}
@@ -762,7 +762,7 @@ namespace Alex.Worlds
 						
 						entity.Velocity = new Vector3(entity.Velocity.X, entity.Velocity.Y, (float) diff);
 						
-						Log.Info($"HIT Z! Entity Y={testBox.Min.Y:F} Block Y={blockBox.Max.Y:F8} Entity-Z={(negative ? bound.Min.Z : bound.Max.Z):F8} Block-Z={(negative ? box.Max.Z : box.Min.Z):F8} Z-Difference={diff:F8}");
+						//Log.Info($"HIT Z! Entity Y={testBox.Min.Y:F} Block Y={blockBox.Max.Y:F8} Entity-Z={(negative ? bound.Min.Z : bound.Max.Z):F8} Block-Z={(negative ? box.Max.Z : box.Min.Z):F8} Z-Difference={diff:F8}");
 						
 						return true;
 					}
