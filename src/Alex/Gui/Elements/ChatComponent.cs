@@ -120,6 +120,9 @@ namespace Alex.Gui.Elements
 						alpha = (float) (1f - ((elapse.TotalMilliseconds / _renderTimeout.TotalMilliseconds) * 1f));
 					}
 
+					if (alpha <= 0)
+						break;
+					
 					DrawChatLine(graphics, msg.message, alpha, ref offset);
 
 					if (offset.Y - 48f >= targetHeight)
@@ -135,9 +138,11 @@ namespace Alex.Gui.Elements
 			var size = Font.MeasureString(text);
 			while (size.X > Bounds.Width)
 			{
-				string current = text;
-				text = current.Remove(current.Length - 1, 1);
-				rest = current.Substring(current.Length - 1, 1) + rest;
+				string current        = text;
+				var    lastWhiteSpace = current.LastIndexOf(' ');
+				
+				text = current.Remove(lastWhiteSpace, current.Length - lastWhiteSpace);
+				rest = current.Substring(lastWhiteSpace, current.Length - lastWhiteSpace).TrimStart() + rest;
 
 				size = Font.MeasureString(text);
 			}
@@ -414,19 +419,34 @@ namespace Alex.Gui.Elements
 
 			TextColor lastColor = TextColor.White;
 
-			var lines = msg.Split('\n').SelectMany(x => CalculateLines(msg).Reverse()).ToArray();
-
-			for (var index = 0; index < lines.Length; index++)
+			foreach (var split in msg.Split('\n'))
 			{
-				var line = lines[index];
-				if (lastColor != TextColor.White)
+				foreach (var line in CalculateLines(split).Reverse())
 				{
-					line = $"§{lastColor.Code}{line}";
-				}
+					var t = line;
+					if (lastColor != TextColor.White)
+					{
+						t = $"§{lastColor.Code}{t}";
+					}
 
-				lastColor = FindLastColor(line);
+					lastColor = FindLastColor(t);
 
-				_chatEntries.Push((line, DateTime.UtcNow));
+					_chatEntries.Push((t, DateTime.UtcNow));
+                }
+
+				/*for (var index = 0; index < lines.Length; index++)
+				{
+					var line = lines[index];
+
+					if (lastColor != TextColor.White)
+					{
+						line = $"§{lastColor.Code}{line}";
+					}
+
+					lastColor = FindLastColor(line);
+
+					_chatEntries.Push((line, DateTime.UtcNow));
+				}*/
 			}
 		}
 
