@@ -222,6 +222,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			var  done               = false;
 			int  previousPercentage = 0;
 			bool hasSpawnChunk      = false;
+			
+			Stopwatch sw = Stopwatch.StartNew();
 
 			while (true)
 			{
@@ -230,12 +232,21 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 				percentage = (int) ((100 / target) * World.ChunkManager.ChunkCount);
 
-				if (Client.GameStarted && percentage != previousPercentage)
+				if (Client.GameStarted)
 				{
-					progressReport(LoadingState.LoadingChunks, percentage);
-					previousPercentage = percentage;
-
+					if (percentage != previousPercentage)
+					{
+						progressReport(LoadingState.LoadingChunks, percentage);
+						previousPercentage = percentage;
+					}
 					//Log.Info($"Progress: {percentage} ({ChunksReceived} of {target})");
+				}
+				
+				if ((!Client.GameStarted || percentage == 0) && sw.ElapsedMilliseconds >= 5000)
+				{
+					Log.Warn($"Failed to connect to server, timed-out.");
+				
+					return false;
 				}
 
 				if (!statusChanged)
