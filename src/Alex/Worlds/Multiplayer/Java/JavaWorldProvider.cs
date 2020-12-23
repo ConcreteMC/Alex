@@ -1448,14 +1448,17 @@ namespace Alex.Worlds.Multiplayer.Java
 		{
 			foreach (var blockUpdate in packet.Records)
 			{
-				World?.SetBlockState(new BlockCoordinates(blockUpdate.X, blockUpdate.Y, blockUpdate.Z), BlockFactory.GetBlockState((uint) blockUpdate.BlockId), BlockUpdatePriority.High | BlockUpdatePriority.Network);
+				World?.SetBlockState(
+					new BlockCoordinates(blockUpdate.X, blockUpdate.Y, blockUpdate.Z), 
+					BlockFactory.GetBlockState(blockUpdate.BlockId),
+					BlockUpdatePriority.High | BlockUpdatePriority.Network);
 			}
 		}
 
 		private void HandleBlockChangePacket(BlockChangePacket packet)
 		{
 			//throw new NotImplementedException();
-			World?.SetBlockState(packet.Location, BlockFactory.GetBlockState((uint) packet.PalleteId));
+			World?.SetBlockState(packet.Location, BlockFactory.GetBlockState(packet.PalleteId));
 		}
 
 		private void HandleHeldItemChangePacket(HeldItemChangePacket packet)
@@ -1504,10 +1507,7 @@ namespace Alex.Worlds.Multiplayer.Java
 			InventoryBase inventory = null;
 			if (packet.WindowId == 0)
 			{
-				if (World?.Player is Player player)
-				{
-					inventory = player.Inventory;
-				}
+				inventory = World.Player.Inventory;
 			}
 			else
 			{
@@ -1586,7 +1586,7 @@ namespace Alex.Worlds.Multiplayer.Java
 					entity.UpdateGamemode((Gamemode) entry.Gamemode);
 					entity.UUID = new MiNET.Utils.UUID(entry.UUID.ToByteArray());
 					
-					World?.AddPlayerListItem(
+					World.AddPlayerListItem(
 						new PlayerListItem(entity.UUID, entry.Name, (Gamemode) entry.Gamemode, entry.Ping, true));
 
 					if (_players.TryAdd(entity.UUID, entity))
@@ -1905,7 +1905,7 @@ namespace Alex.Worlds.Multiplayer.Java
         }
 
         //private BlockingCollection<ChunkDataPacket> _chunkQueue = new BlockingCollection<ChunkDataPacket>();
-        private unsafe void HandleChunkData(ChunkDataPacket chunk)
+        private void HandleChunkData(ChunkDataPacket chunk)
         {
 	        ThreadPool.QueueUserWorkItem(
 		        (o) =>

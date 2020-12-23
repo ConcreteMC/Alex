@@ -1239,15 +1239,36 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			}
 		}
 
-		private GuiDialogBase _activeDialog;
+		private void InventoryOnCursorChanged(object sender, CursorChangedEventArgs e)
+		{
+			if (e.IsServerTransaction)
+				return;
+
+			
+		}
+		
+		private void InventoryOnSlotChanged(object sender, SlotChangedEventArgs e)
+		{
+			if (e.IsServerTransaction)
+				return;
+			
+			
+		}
+		
 		public void HandleMcpeContainerOpen(McpeContainerOpen message)
 		{
 			try
 			{
 				var windowId = message.windowId;
 				var dialog = Client.World.InventoryManager.Show(Client.World.Player.Inventory, message.windowId, (ContainerType) message.type);
+				dialog.Inventory.CursorChanged += InventoryOnCursorChanged;
+				dialog.Inventory.SlotChanged += InventoryOnSlotChanged;
+				
 				dialog.OnContainerClose += (sender, args) =>
 				{
+					dialog.Inventory.CursorChanged -= InventoryOnCursorChanged;
+					dialog.Inventory.SlotChanged -= InventoryOnSlotChanged;
+					
 					var packet = McpeContainerClose.CreateObject();
 					packet.windowId = windowId;
 					Client.SendPacket(packet);
@@ -1261,10 +1282,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		public void HandleMcpeContainerClose(McpeContainerClose message)
 		{
-			if (_activeDialog != null)
-			{
-				AlexInstance.GuiManager.HideDialog(_activeDialog);
-			}
+			Client.World.InventoryManager.Close(message.windowId);
 		}
 
         public void HandleMcpeInventoryContent(McpeInventoryContent message)
@@ -1275,6 +1293,29 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				return;
 			}
 
+			var startIndex = 0;
+			if (Client.World.InventoryManager.TryGet((int) message.inventoryId, out var container))
+			{
+				for (var index = 0; index < message.input.Count; index++)
+				{
+					var slot = message.input[index];
+
+					var result = slot.ToAlexItem().Clone();
+					if (result != null)
+					{
+						result.StackID = slot.UniqueId;
+						container.Inventory.SetSlot(startIndex+ index, result, true);
+						//inventory[usedIndex] = result;
+					}
+					else
+					{
+						Log.Warn($"Failed to set window slot: {index} Id: {slot.Id}:{slot.Metadata} (Window={message.inventoryId})");
+					}
+				}
+
+				return;
+			}
+			
 			if (Client.World.Player.Inventory is ItemStackInventory isi)
 			{
 				isi.HandleInventoryContent(message.inventoryId, message.input);
@@ -1282,7 +1323,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			}
 			
 			InventoryBase inventory  = null;
-			var           startIndex = 0;
 			//var 
 			if (message.inventoryId == 0x00 //Inventory
 			 //   || message.inventoryId == 124 //UI
@@ -1332,6 +1372,18 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			if (message.item == null)
 			{
 				Log.Warn($"Invalid inventory slot packet! Item was null.");
+				return;
+			}
+
+			if (Client.World.InventoryManager.TryGet((int) message.inventoryId, out var container))
+			{
+				var slotIndex  = (int)message.slot;
+				var item = message.item.ToAlexItem().Clone();
+
+				if (item != null)
+				{
+					container.Inventory.SetSlot(slotIndex, item, true);
+				}
 				return;
 			}
 
@@ -1869,7 +1921,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				case "sidebar":
 					scoreboard.Clear();
 					scoreboard.AddObjective(new ScoreboardObjective(message.objectiveName, message.displayName, message.sortOrder, message.criteriaName));
-					Log.Info($"SCOREBOARD OBJECTIVE: {message.objectiveName} CRITERIA: {message.criteriaName}");
 					//scoreboard.AddString(message.displayName);
 					break;
 			}

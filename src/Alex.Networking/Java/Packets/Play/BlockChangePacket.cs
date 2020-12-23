@@ -12,12 +12,12 @@ namespace Alex.Networking.Java.Packets.Play
 	    }
 
 	    public BlockCoordinates Location;
-	    public int PalleteId;
+	    public uint PalleteId;
 
 	    public override void Decode(MinecraftStream stream)
 	    {
 		    Location = stream.ReadPosition();
-		    PalleteId = stream.ReadVarInt();
+		    PalleteId = (uint) stream.ReadVarInt();
 	    }
 
 	    public override void Encode(MinecraftStream stream)

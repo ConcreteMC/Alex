@@ -166,7 +166,7 @@ namespace Alex.Graphics.Models.Entity
 						continue;
 					}
 
-					if (cube.Uv.IsOutOfBound(textureSize))
+					//if (cube.Uv.IsOutOfBound(textureSize))
 					{
 					//	continue;
 					}

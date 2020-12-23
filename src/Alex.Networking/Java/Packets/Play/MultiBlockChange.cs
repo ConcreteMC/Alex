@@ -38,7 +38,7 @@ namespace Alex.Networking.Java.Packets.Play
 				update.X = (x & 15) + (ChunkX * 16);
 				update.Z = (z & 15) + (ChunkZ * 16);
 				update.Y = (y & 15) + (sectionY * 16);
-				update.BlockId = (int) rawId;
+				update.BlockId = (uint) rawId;
 
 				Records[i] = update;
 			}
@@ -55,7 +55,7 @@ namespace Alex.Networking.Java.Packets.Play
 		    public int Y;
 		    public int Z;
 
-			public int BlockId;
+			public uint BlockId;
 	    }
     }
 }
