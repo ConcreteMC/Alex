@@ -26,7 +26,7 @@ namespace Alex.API.Graphics
         public Vector3 Forward { get; set; } = Vector3.Backward;
         public Matrix ViewMatrix { get; set; } = Matrix.Identity;
 
-        private Vector3 _basePosition = new Vector3(1f, 1f, 2f), _vrOffsetPosition;
+        private Vector3 _basePosition = new Vector3(1f, 0f, 1f), _vrOffsetPosition;
         
         
         public void Move(Vector3 scale)
@@ -49,9 +49,9 @@ namespace Alex.API.Graphics
             var cxt = VrContext.Get();
             if (!(cxt.Initialized && cxt.Hmd.IsConnected)) return;
             
-            Matrix.Invert(cxt.Hmd.GetPose()).Decompose(out var scale, out var rotation, out var translation);
+           cxt.Hmd.GetPose().Decompose(out var scale, out var rotation, out var translation);
 
-            //_vrOffsetPosition = translation;
+            _vrOffsetPosition = translation;
             //Target = Position + Vector3.Transform(Vector3.Backward, rotation);
             Forward = Vector3.Normalize(Target - Position);
             //rotation.Conjugate();
@@ -60,7 +60,7 @@ namespace Alex.API.Graphics
             var u = Vector3.TransformNormal(Vector3.Up, rot);
             ProjectionMatrix = Matrix.CreatePerspectiveFieldOfView(FOV, AspectRatio, 0.1f, 1000.0f);
             //ViewMatrix = Matrix.CreateScale(scale) * Matrix.CreateFromQuaternion(rotation) * Matrix.CreateTranslation(Position);
-            ViewMatrix = Matrix.CreateLookAt(Position, Position + Vector3.Forward, Vector3.Up)
+            ViewMatrix = Matrix.CreateLookAt(Position, Position + Vector3.Backward, Vector3.Up)
                 ;
             // var scaleStr = $"Scale: {scale.X:F2}, {scale.Y:F2}, {scale.Z:F2}";
             // var rotationStr = $"Rotation: {rotation.X:F2}, {rotation.Y:F2}, {rotation.Z:F2}";
