@@ -852,6 +852,8 @@ namespace Alex.Worlds
 		{
 			if (EntityManager.AddEntity(entityId, entity))
 			{
+				//entity.RenderLocation = entity.KnownPosition;
+				
 				PhysicsEngine.AddTickable(entity);
 
 				entity.OnSpawn();

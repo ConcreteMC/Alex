@@ -177,6 +177,9 @@ namespace Alex.Entities
                 }
 			}
 
+			if (_registeredRenderers.TryGetValue("minecraft:armor_stand", out var func))
+				_registeredRenderers.TryAdd("minecraft:armorstand", func);
+			
 		//    Log.Info($"Registered {(Assembly.GetExecutingAssembly().GetTypes().Count(t => t.Namespace == "Alex.Entities.Models"))} entity models");
 		    Log.Info($"Registered {_registeredRenderers.Count} entity model renderers");
         }

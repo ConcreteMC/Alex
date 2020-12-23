@@ -138,9 +138,9 @@ namespace Alex.Worlds
 			slipperiness = 0.6f;
 			
 			var movement = entity.Movement.Heading * 0.98F;
-			movement.Y = 0f;
+			//movement.Y = 0f;
 
-			float mag = movement.X * movement.X + movement.Z * movement.Z;
+			float mag = movement.LengthSquared();//movement.X * movement.X + movement.Z * movement.Z;
 			// don't do insignificant movement
 			if (mag < 0.01f) {
 				return Vector3.Zero;
@@ -234,32 +234,41 @@ namespace Alex.Worlds
 
 			if (e.IsNoAi)
 				return;
-			
-			if (e.IsInWater)
+
+			if (e.IsFlying && e is Player)
 			{
-				e.Velocity = new Vector3(e.Velocity.X * 0.8f, (float) (e.Velocity.Y - e.Gravity), e.Velocity.Z * 0.8f); //Liquid Drag
-			}
-			else if (e.IsInLava)
-			{
-				e.Velocity = new Vector3(e.Velocity.X * 0.5f, (float) (e.Velocity.Y - e.Gravity), e.Velocity.Z * 0.5f); //Liquid Drag
+				e.Velocity *= new Vector3(0.9f, 0.9f, 0.9f);
 			}
 			else
 			{
-				if (e.KnownPosition.OnGround)
+				if (e.IsInWater)
 				{
-					e.Velocity *= new Vector3(slipperiness, 1f, slipperiness);
+					e.Velocity = new Vector3(
+						e.Velocity.X * 0.8f, (float) (e.Velocity.Y - e.Gravity), e.Velocity.Z * 0.8f); //Liquid Drag
+				}
+				else if (e.IsInLava)
+				{
+					e.Velocity = new Vector3(
+						e.Velocity.X * 0.5f, (float) (e.Velocity.Y - e.Gravity), e.Velocity.Z * 0.5f); //Liquid Drag
 				}
 				else
 				{
-					if (e.IsAffectedByGravity && !e.IsFlying)
+					if (e.KnownPosition.OnGround)
 					{
-						e.Velocity -= new Vector3(0f, (float) (e.Gravity), 0f);
+						e.Velocity *= new Vector3(slipperiness, 1f, slipperiness);
 					}
-					
-					e.Velocity *= new Vector3(0.91f, 0.98f, 0.91f);
+					else
+					{
+						if (e.IsAffectedByGravity && !e.IsFlying)
+						{
+							e.Velocity -= new Vector3(0f, (float) (e.Gravity), 0f);
+						}
+
+						e.Velocity *= new Vector3(0.91f, 0.98f, 0.91f);
+					}
 				}
 			}
-			
+
 			e.Velocity = TruncateVelocity(e.Velocity);
 		}
 
@@ -730,8 +739,8 @@ namespace Alex.Worlds
 			
 			var yDifference = blockBox.Max.Y - entityBox.Min.Y;
 
-			if (!(blockBox.Max.Y > entityBox.Min.Y)) 
-				return false;
+			//if (!(blockBox.Max.Y > entityBox.Min.Y)) 
+			//	return false;
 
 			if (yDifference > 0.55f)
 				return false;

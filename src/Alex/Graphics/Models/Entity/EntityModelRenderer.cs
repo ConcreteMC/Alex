@@ -317,12 +317,15 @@ namespace Alex.Graphics.Models.Entity
 		{
 			if (Bones == null) return;
 
+			var matrix = Matrix.CreateRotationY(MathUtils.ToRadians(180f)) * Matrix.CreateScale(Scale / 16f)
+			                                                               * Matrix.CreateRotationY(
+				                                                               MathUtils.ToRadians(-(position.Yaw)))
+			                                                               * Matrix.CreateTranslation(position);
+			
 			foreach (var bone in Bones.Where(x => x.Value.Parent == null))
 			{
 				bone.Value.Update(
-					args,
-					Matrix.CreateRotationY(MathUtils.ToRadians(180f)) * Matrix.CreateScale(Scale / 16f) * Matrix.CreateRotationY(MathUtils.ToRadians(-(position.Yaw)))
-					                                * Matrix.CreateTranslation(position), EntityColor * DiffuseColor, position);
+					args, matrix, EntityColor * DiffuseColor, position);
 			}
 		}
 

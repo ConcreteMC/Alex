@@ -42,6 +42,7 @@ namespace Alex.Entities
         //public Camera Camera { get; internal set; }
         public Player(GraphicsDevice graphics, InputManager inputManager, string name, World world, Skin skin, NetworkProvider networkProvider, PlayerIndex playerIndex) : base(name, world, networkProvider, skin.Texture)
         {
+	        IsSpawned = true;
 		//	DoRotationCalculations = false;
 			PlayerIndex = playerIndex;
 		    Controller = new PlayerController(graphics, world, inputManager, this, playerIndex);
@@ -701,12 +702,7 @@ namespace Alex.Entities
 		    Network?.PlayerOnGroundChanged(this, false);
 	    }
 	    
-	    private Vector3 _previous = Vector3.Zero;
-
-	    private int   _speedTick = 0;
 	    private float _fovModifier      = 0f;
-
-	    public float CurrentSpeed { get; set; } = 0f;
 
 	    public float FOVModifier
 	    {
@@ -721,16 +717,6 @@ namespace Alex.Entities
 	    //private vector
 	    public override void OnTick()
 		{
-			if (_speedTick++ == 20)
-			{
-				_speedTick = 0;
-				var currentPosition = KnownPosition.ToVector3() * new Vector3(1f, 0f, 1f);
-				var distance        = Vector3.Distance(_previous, currentPosition);
-				CurrentSpeed = distance;
-				
-				_previous = currentPosition;
-			}
-			
 			if (_destroyingBlock)
 			{
 				BlockBreakTick();

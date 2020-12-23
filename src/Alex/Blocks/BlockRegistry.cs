@@ -480,6 +480,17 @@ namespace Alex.Blocks
 		    this.Register("minecraft:chest", () => new Chest());
 		    this.Register("minecraft:trapped_chest", () => new TrappedChest());
 		    this.Register("minecraft:ender_chest", () => new EnderChest());
+		    
+		    //Saplings
+		    
+		    this.Register("minecraft:oak_sapling", () => new Sapling(WoodType.Oak));
+		    this.Register("minecraft:spruce_sapling", () => new Sapling(WoodType.Spruce));
+		    this.Register("minecraft:birch_sapling", () => new Sapling(WoodType.Birch));
+		    this.Register("minecraft:jungle_sapling", () => new Sapling(WoodType.Jungle));
+		    this.Register("minecraft:acacia_sapling", () => new Sapling(WoodType.Acacia));
+		    this.Register("minecraft:dark_oak_sapling", () => new Sapling(WoodType.DarkOak));
+		    this.Register("minecraft:crimson_sapling", () => new Sapling(WoodType.Crimson));
+		    this.Register("minecraft:warped_sapling", () => new Sapling(WoodType.Warped));
 	    }
     }
 }

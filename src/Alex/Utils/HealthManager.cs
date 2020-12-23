@@ -70,6 +70,8 @@ namespace Alex.Utils
 		}
 
 		public float MaxExhaustion { get; set; } = 5f;
+		public short AvailableAir  { get; set; } = 300;
+		public short MaxAir        { get; set; } = 300;
 
 		public HealthManager(Entity entity)
 		{

@@ -14,6 +14,7 @@ using Alex.Graphics.Models;
 using Alex.Net;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using NLog;
 using ContainmentType = Microsoft.Xna.Framework.ContainmentType;
 using UUID = MiNET.Utils.UUID;
 
@@ -21,10 +22,12 @@ namespace Alex.Worlds
 {
 	public class EntityManager : IDisposable, ITicked
 	{
-		private ConcurrentDictionary<long, Entity>                  Entities      { get; }
-		private ConcurrentDictionary<MiNET.Utils.UUID, Entity>      EntityByUUID  { get; }
-		private ConcurrentDictionary<BlockCoordinates, BlockEntity> BlockEntities { get; }
-		private GraphicsDevice                                      Device        { get; }
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(EntityManager));
+		
+		private                 ConcurrentDictionary<long, Entity>                  Entities      { get; }
+		private                 ConcurrentDictionary<MiNET.Utils.UUID, Entity>      EntityByUUID  { get; }
+		private                 ConcurrentDictionary<BlockCoordinates, BlockEntity> BlockEntities { get; }
+		private                 GraphicsDevice                                      Device        { get; }
 
 		public  int             EntityCount      => Entities.Count + BlockEntities.Count;
 		public  int             EntitiesRendered { get; private set; } = 0;
@@ -89,6 +92,7 @@ namespace Alex.Worlds
 			_rendered = rendered.ToArray();
 		}
 
+		private Stopwatch _updateWatch = new Stopwatch();
 		public void Update(IUpdateArgs args)
 		{
 			//var entities      = Entities.Values.ToArray();
@@ -96,8 +100,16 @@ namespace Alex.Worlds
 
 			foreach (var entity in _rendered)
 			{
+				_updateWatch.Restart();
 				//if (entity.IsRendered)
 					entity.Update(args);
+
+				var elapsed = _updateWatch.ElapsedMilliseconds;
+
+				if (elapsed > 13)
+				{
+					Log.Warn($"Entity update took to long! Spent {elapsed}ms on entity of type {entity} (EntityId={entity.EntityId})");
+				}
 			}
 		}
 

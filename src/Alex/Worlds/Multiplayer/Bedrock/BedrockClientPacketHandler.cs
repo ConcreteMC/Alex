@@ -340,7 +340,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			Client.World.UpdatePlayerPosition(new 
 				PlayerLocation(message.x, message.y, message.z));
 
-			Client.SendMcpeMovePlayer(new MiNET.Utils.PlayerLocation(message.x, message.y, message.z), false);
+			Client.SendMcpeMovePlayer(new MiNET.Utils.PlayerLocation(message.x, message.y, message.z), Client.World.Player.KnownPosition.OnGround);
 		}
 
 
@@ -364,7 +364,10 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				mob.EntityId = message.runtimeEntityId;
 
 				mob.KnownPosition = new PlayerLocation(
-					message.x, message.y, message.z, message.headYaw, message.yaw, message.pitch);
+					message.x, message.y, message.z, message.headYaw, message.yaw, message.pitch)
+				{
+					OnGround = true
+				};
 
 				mob.Velocity = new Microsoft.Xna.Framework.Vector3(message.speedX, message.speedY, message.speedZ);
 
@@ -402,7 +405,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		public void HandleMcpePlayerList(McpePlayerList message)
 		{
-			List<Action> actions = new List<Action>();
 			if (message.records is PlayerAddRecords addRecords)
 			{
 				foreach (var r in addRecords)
@@ -414,7 +416,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 					Client.World?.AddPlayerListItem(new PlayerListItem(r.ClientUuid, r.DisplayName, (Gamemode)((int)r.GameMode), 0, false));
 
-					RemotePlayer m = new RemotePlayer(r.DisplayName, Client.World as World, Client, null);
+					RemotePlayer m = new RemotePlayer(r.DisplayName, Client.World, Client, null);
 					m.UUID = r.ClientUuid;
 					m.EntityId = r.EntityId;
 					m.SetInventory(new BedrockInventory(46));
@@ -423,16 +425,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					if (!_players.TryAdd(r.ClientUuid, m))
 					{
 						Log.Warn($"Duplicate player record! {r.ClientUuid}");
-					}
-					else
-					{
-						/*if (UseCustomEntityModels)
-						{
-							actions.Add(() =>
-							{
-								m.LoadSkin(r.Skin);
-							});
-						}*/
 					}
 				}
 			}
@@ -446,18 +438,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		            }
 	            }
             }
-
-			/*if (actions.Count > 0)
-			{
-				ThreadPool.QueueUserWorkItem(
-					o =>
-					{
-						foreach (var action in actions)
-						{
-							action.Invoke();
-						}
-					});
-			}*/
 		}
 
 		public bool SpawnMob(long entityId,
@@ -604,6 +584,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				var direction = (itemEntity.KnownPosition.ToVector3() - new Microsoft.Xna.Framework.Vector3(
 					target.KnownPosition.X, targetBoundingBox.Max.Y, target.KnownPosition.Z));
 
+				direction.Normalize();
+				
 				itemEntity.Velocity = direction / 20f;
 			}
 		}
@@ -1566,8 +1548,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			if (WorldProvider is BedrockWorldProvider provider)
 			{
 				var chunkCoords =
-					new ChunkCoordinates(new PlayerLocation(message.position.X, message.position.Y,
-						message.position.Z));
+					new ChunkCoordinates(new PlayerLocation(Client.World.SpawnPoint.X, Client.World.SpawnPoint.Y,
+						Client.World.SpawnPoint.Z));
 				
 				LoadingWorldState loadingWorldState = new LoadingWorldState();
 
@@ -1600,6 +1582,10 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					
 					do
 					{
+						chunkCoords =
+							new ChunkCoordinates(new PlayerLocation(Client.World.Player.KnownPosition.X, Client.World.Player.KnownPosition.Y,
+								Client.World.Player.KnownPosition.Z));
+						
 						if (!spawnChunkLoaded && percentage >= 100)
 						{
 							loadingWorldState.UpdateProgress(LoadingState.Spawning, 99);
@@ -1631,11 +1617,15 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 							}
 						}
 
-						if (!spawnChunkLoaded)
+						//if (!spawnChunkLoaded)
 						{
 							if (world.ChunkManager.TryGetChunk(chunkCoords, out _))
 							{
 								spawnChunkLoaded = true;
+							}
+							else
+							{
+								spawnChunkLoaded = false;
 							}
 						}
 
@@ -1654,8 +1644,12 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 					AlexInstance.GameStateManager.Back();
 
-					
-					Client.SendMcpeMovePlayer(new MiNET.Utils.PlayerLocation(message.position.X, message.position.Y, message.position.Z), false);
+					var p = Client.World.Player.KnownPosition;
+
+					Client.SendMcpeMovePlayer(
+						new MiNET.Utils.PlayerLocation(p.X, p.Y, p.Z, p.HeadYaw, p.Yaw, p.Pitch),
+						Client.World.Player.KnownPosition.OnGround);
+					//Client.SendMcpeMovePlayer(new MiNET.Utils.PlayerLocation(Client.World.Player.KnownPosition.X, Client.World.Player.KnownPosition.Y, Client.World.Player.KnownPosition.Z), false);
 					CustomConnectedPong.CanPing = false;
 				});
 			}

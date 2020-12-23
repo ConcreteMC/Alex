@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using Alex.API.Graphics;
 using Alex.API.Network;
 using Alex.API.Utils;
@@ -44,9 +45,12 @@ namespace Alex.Entities
 		public PlayerSkinFlags SkinFlags { get; }
 
 		public int Score { get; set; } = 0;
-		
+
+		private PooledTexture2D _texture;
 		public RemotePlayer(string name, World level, NetworkProvider network, PooledTexture2D skinTexture, string geometry = "geometry.humanoid.customSlim") : base(63, level, network)
 		{
+			_texture = skinTexture;
+			
 			SkinFlags = new PlayerSkinFlags()
 			{
 				Value = 0xff
@@ -73,8 +77,9 @@ namespace Alex.Entities
 			PositionOffset = 1.62f;
 
 			GeometryName = geometry;
-			
-			UpdateSkin(skinTexture);
+
+			_skinDirty = true;
+			//UpdateSkin(skinTexture);
 
 			MovementSpeed = 0.1f;//0000000149011612f;//0000000149011612f;
 			FlyingSpeed = 0.4f;
@@ -131,17 +136,37 @@ namespace Alex.Entities
 		{
 			base.OnSpawn();
 
-			QueueSkinProcessing();
+			if (_skinDirty)
+			{
+				QueueSkinProcessing();
+			}
 		}
 
 		private void QueueSkinProcessing()
 		{
-			Level.BackgroundWorker.Enqueue(
-				() =>
+			Action action = () =>
+			{
+				if (_skin == null)
 				{
-					_skinDirty = false;
+					UpdateSkin(_texture);
+				}
+				else
+				{
 					LoadSkin(_skin);
-				});
+				}
+
+				_skinDirty = false;
+			};
+			
+			if (Level?.BackgroundWorker == null)
+			{
+				action();
+			}
+			else
+			{
+				Level.BackgroundWorker.Enqueue(
+					action);
+			}
 		}
 
 		private void LoadSkin(Skin skin)
@@ -334,62 +359,69 @@ namespace Alex.Entities
 				SkinFlags.ApplyTo(modelRenderer);
 		}
 
-		private bool ValidModel { get; set; }
+		private        bool            ValidModel { get; set; }
+		private static PooledTexture2D _steve;
+		private static PooledTexture2D _alex;
+
 		internal void UpdateSkin(PooledTexture2D skinTexture)
 		{
 			if (skinTexture != null && ModelRenderer != null)
 			{
 				ModelRenderer.Texture = skinTexture;
+
 				return;
 			}
-			
+
 			string geometry = "geometry.humanoid.customSlim";
+
 			if (skinTexture == null)
 			{
 				string skinVariant = "entity/alex";
-				var    uuid        = UUID.GetBytes();
+				skinTexture = _alex;
 
-				if ((uuid[3] ^ uuid[7] ^ uuid[11] ^ uuid[15]) % 2 == 0)
+				var uuid = UUID.GetBytes();
+
+				bool isSteve = (uuid[3] ^ uuid[7] ^ uuid[11] ^ uuid[15]) % 2 == 0;
+
+				if (isSteve)
 				{
 					skinVariant = "entity/steve";
 					geometry = "geometry.humanoid.custom";
+
+					skinTexture = _steve;
 				}
-				
-				if (Alex.Instance.Resources.ResourcePack.TryGetBitmap(skinVariant, out var rawTexture))
+
+				if (skinTexture == null)
 				{
-					skinTexture = TextureUtils.BitmapToTexture2D(Alex.Instance.GraphicsDevice, rawTexture);
-					//skinBitmap = rawTexture;
+					if (Alex.Instance.Resources.ResourcePack.TryGetBitmap(skinVariant, out var rawTexture))
+					{
+						skinTexture = TextureUtils.BitmapToTexture2D(Alex.Instance.GraphicsDevice, rawTexture);
+
+						if (isSteve)
+							_steve = skinTexture;
+						else
+							_alex = skinTexture;
+
+						//skinBitmap = rawTexture;
+					}
 				}
-				else
+
+				if (skinTexture == null)
 				{
 					skinTexture = TextureUtils.BitmapToTexture2D(Alex.Instance.GraphicsDevice, Alex.PlayerTexture);
 				}
 			}
-			
-			//if (skinSlim)
+
+
+			if (ModelFactory.TryGetModel(geometry, out var m))
 			{
-				//var gotModel = ModelFactory.TryGetModel(GeometryName,
-				//	out EntityModel m);
-				
-				//ValidModel = gotModel;
-				if (ModelFactory.TryGetModel(geometry, out var m))
-				{
-					_model = m;
-					ValidModel = true;
-					ModelRenderer = new EntityModelRenderer(_model, skinTexture);
-					//UpdateModelParts();
-				}
+				_model = m;
+				ValidModel = true;
+				ModelRenderer = new EntityModelRenderer(_model, skinTexture);
+
+				_texture = skinTexture;
+				//UpdateModelParts();
 			}
-			/*else
-			{
-				if (ModelFactory.TryGetModel("geometry.humanoid.custom",
-					out EntityModel m))
-				{
-					_model = m;
-					ModelRenderer = new EntityModelRenderer(_model, skinTexture);
-					UpdateModelParts();
-				}
-			}*/
 		}
 	}
 }

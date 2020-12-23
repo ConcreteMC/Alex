@@ -30,7 +30,7 @@ namespace Alex.Entities
 		{
 			//var difference = 
 			var distance = Microsoft.Xna.Framework.Vector3.Distance(
-				Entity.KnownPosition.ToVector3(), location.ToVector3());
+				Entity.KnownPosition.ToVector3() * new Vector3(1f, 0f, 1f), location.ToVector3() * new Vector3(1f, 0f, 1f));
 
 			Entity.KnownPosition = location;
 			
@@ -61,7 +61,7 @@ namespace Alex.Entities
 			Entity.KnownPosition.Z += direction.Z;
 
 			Entity.DistanceMoved +=
-				MathF.Abs(Microsoft.Xna.Framework.Vector3.Distance(oldPosition, Entity.KnownPosition.ToVector3()));
+				MathF.Abs(Microsoft.Xna.Framework.Vector3.Distance(oldPosition * new Vector3(1f, 0f, 1f), Entity.KnownPosition.ToVector3() * new Vector3(1f, 0f, 1f)));
 		}
 
 		public void Push(Vector3 velocity)

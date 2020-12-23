@@ -50,6 +50,8 @@ namespace Alex.Net.Bedrock
 		private readonly IPEndPoint _endpoint;
 		
 		private HighPrecisionTimer _tickerHighPrecisionTimer;
+
+		private Thread _readingThread;
 		//public readonly ConcurrentDictionary<IPEndPoint, RaknetSession> RakSessions = new ConcurrentDictionary<IPEndPoint, RaknetSession>();
 
 		public          RaknetSession  Session { get; set; } = null;
@@ -84,9 +86,12 @@ namespace Alex.Net.Bedrock
 		{
 			if (_listener != null) return;
 
+			_readingThread = new Thread(ReceiveCallback);
+
 			Log.Debug($"Creating listener for packets on {_endpoint}");
 			_listener = CreateListener(_endpoint);
-			_listener.BeginReceive(ReceiveCallback, _listener);
+			_readingThread.Start();
+		//	_listener.BeginReceive(ReceiveCallback, _listener);
 
 			_tickerHighPrecisionTimer = new HighPrecisionTimer(10, SendTick, true);
 		}
@@ -219,62 +224,68 @@ namespace Alex.Net.Bedrock
 			splits.Clear();
 		}
 
-		private void ReceiveCallback(IAsyncResult ar)
+		private async void ReceiveCallback(object o)
 		{
-			var listener = (UdpClient) ar.AsyncState;
-			
-			// Check if we already closed the server
-			if (listener?.Client == null) return;
-
-			// WSAECONNRESET:
-			// The virtual circuit was reset by the remote side executing a hard or abortive close. 
-			// The application should close the socket; it is no longer usable. On a UDP-datagram socket 
-			// this error indicates a previous send operation resulted in an ICMP Port Unreachable message.
-			// Note the spocket settings on creation of the server. It makes us ignore these resets.
-			IPEndPoint senderEndpoint = null;
-
-			try
+			while (_listener != null)
 			{
-				ReadOnlyMemory<byte> receiveBytes = listener.EndReceive(ar, ref senderEndpoint);
+				var listener = _listener;
 
-				Interlocked.Increment(ref ConnectionInfo.NumberOfPacketsInPerSecond);
-				Interlocked.Add(ref ConnectionInfo.TotalPacketSizeInPerSecond, receiveBytes.Length);
+				// Check if we already closed the server
+				if (listener?.Client == null) return;
 
-				if (receiveBytes.Length != 0)
+				// WSAECONNRESET:
+				// The virtual circuit was reset by the remote side executing a hard or abortive close. 
+				// The application should close the socket; it is no longer usable. On a UDP-datagram socket 
+				// this error indicates a previous send operation resulted in an ICMP Port Unreachable message.
+				// Note the spocket settings on creation of the server. It makes us ignore these resets.
+				IPEndPoint senderEndpoint = null;
+
+				try
 				{
-					//ThreadPool.QueueUserWorkItem(
-					//	(o) =>
+					//ReadOnlyMemory<byte> receiveBytes = listener.EndReceive(ar, ref senderEndpoint);
+					var receive      = await listener.ReceiveAsync();
+					var receiveBytes = receive.Buffer;
+					senderEndpoint = receive.RemoteEndPoint;
+					
+					Interlocked.Increment(ref ConnectionInfo.NumberOfPacketsInPerSecond);
+					Interlocked.Add(ref ConnectionInfo.TotalPacketSizeInPerSecond, receiveBytes.Length);
+
+					if (receiveBytes.Length != 0)
 					{
-						try
+						//ThreadPool.QueueUserWorkItem(
+						//	(o) =>
 						{
-							ReceiveDatagram(receiveBytes, senderEndpoint);
-						}
-						catch (Exception e)
-						{
-							Log.Warn(e, $"Process message error from: {senderEndpoint.Address}");
-						}
-					} //);
+							try
+							{
+								ReceiveDatagram(receiveBytes, senderEndpoint);
+							}
+							catch (Exception e)
+							{
+								Log.Warn(e, $"Process message error from: {senderEndpoint.Address}");
+							}
+						} //);
+					}
+					else
+					{
+						Log.Warn("Unexpected end of transmission?");
+					}
+
+					//listener.BeginReceive(ReceiveCallback, listener);
 				}
-				else
+				catch (ObjectDisposedException e) { }
+				catch (SocketException e)
 				{
-					Log.Warn("Unexpected end of transmission?");
+					// 10058 (just regular disconnect while listening)
+					if (e.ErrorCode == 10058) return;
+					if (e.ErrorCode == 10038) return;
+					if (e.ErrorCode == 10004) return;
+
+					if (Log.IsDebugEnabled) Log.Error("Unexpected end of receive", e);
 				}
-
-				listener.BeginReceive(ReceiveCallback, listener);
-			}
-			catch (ObjectDisposedException e) { }
-			catch (SocketException e)
-			{
-				// 10058 (just regular disconnect while listening)
-				if (e.ErrorCode == 10058) return;
-				if (e.ErrorCode == 10038) return;
-				if (e.ErrorCode == 10004) return;
-
-				if (Log.IsDebugEnabled) Log.Error("Unexpected end of receive", e);
-			}
-			catch (NullReferenceException ex)
-			{
-				Log.Warn(ex, $"Unexpected end of transmission");
+				catch (NullReferenceException ex)
+				{
+					Log.Warn(ex, $"Unexpected end of transmission");
+				}
 			}
 		}
 

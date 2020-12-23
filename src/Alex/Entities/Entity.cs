@@ -64,8 +64,8 @@ namespace Alex.Entities
 
 		public World Level { get; set; }
 		
-		public long EntityId { get; set; }
-		public bool IsSpawned { get; set; }
+		public long EntityId  { get; set; }
+		public bool IsSpawned { get; set; } = false;
 
 		private        PlayerLocation _knownPosition = new PlayerLocation();
 
@@ -542,16 +542,17 @@ namespace Alex.Entities
 		{
 			foreach (var meta in metadata._entries)
 			{
-				switch ((MiNET.Entities.Entity.MetadataFlags) meta.Key)
+				switch ((int) (MiNET.Entities.Entity.MetadataFlags) meta.Key)
 				{
-					case MiNET.Entities.Entity.MetadataFlags.CollisionBoxHeight:
+					case (int) MiNET.Entities.Entity.MetadataFlags.CollisionBoxHeight:
 					{
 						if (meta.Value is MetadataFloat flt)
 						{
 							Height = flt.Value;
 						}
 					} break;
-					case MiNET.Entities.Entity.MetadataFlags.CollisionBoxWidth:
+					
+					case (int) MiNET.Entities.Entity.MetadataFlags.CollisionBoxWidth:
 					{
 						if (meta.Value is MetadataFloat fltw)
 						{
@@ -559,31 +560,33 @@ namespace Alex.Entities
 						//	Length = fltw.Value;
 						}
 					} break;
-					case MiNET.Entities.Entity.MetadataFlags.Scale:
+					
+					case (int) MiNET.Entities.Entity.MetadataFlags.Scale:
 					{
 						if (meta.Value is MetadataFloat flt)
 						{
 							Scale = flt.Value;
 						}
 					} break;
-					case MiNET.Entities.Entity.MetadataFlags.EntityFlags:
+					
+					case (int) MiNET.Entities.Entity.MetadataFlags.EntityFlags2:
+					case (int) MiNET.Entities.Entity.MetadataFlags.EntityFlags:
 					{
 						if (meta.Value is MetadataLong lng)
 						{
 							HandleEntityFlags(lng.Value);
 						}
-					}
-						break;
-					case MiNET.Entities.Entity.MetadataFlags.NameTag:
+					} break;
+					
+					case (int) MiNET.Entities.Entity.MetadataFlags.NameTag:
 					{
 						if (meta.Value is MetadataString nametag)
 						{
 							NameTag = nametag.Value;
 						}
-					}
-						break;
+					} break;
 
-					case MiNET.Entities.Entity.MetadataFlags.HideNameTag:
+					case (int) MiNET.Entities.Entity.MetadataFlags.HideNameTag:
 					{
 						if (meta.Value is MiNET.Utils.MetadataByte hideNameTag)
 						{
@@ -591,11 +594,27 @@ namespace Alex.Entities
 						}
 						break;
 					}
+
+					case (int) MiNET.Entities.Entity.MetadataFlags.MaxAir:
+					{
+						if (meta.Value is MiNET.Utils.MetadataShort airTag)
+						{
+							HealthManager.MaxAir = airTag.Value;
+						}
+					} break;
 					
+					case (int) MiNET.Entities.Entity.MetadataFlags.AvailableAir:
+					{
+						if (meta.Value is MiNET.Utils.MetadataShort airTag)
+						{
+							HealthManager.AvailableAir = airTag.Value;
+						}
+					} break;
+
 					default:
 						if (!HandleMetadata((MiNET.Entities.Entity.MetadataFlags) meta.Key, meta.Value))
 						{
-							Log.Debug($"Unknown flag: {(MiNET.Entities.Entity.MetadataFlags) meta.Key}");
+							Log.Debug($"Unimplemented flag: {(MiNET.Entities.Entity.MetadataFlags) meta.Key}");
 						}
 
 						break;
@@ -673,18 +692,16 @@ namespace Alex.Entities
 		public virtual void Update(IUpdateArgs args)
 		{
 			var renderer = ModelRenderer;
-
-			if (((!RenderEntity || IsInvisible) && !ShowItemInHand) || renderer == null || _skipRendering) return;
+			CalculateLegMovement(args);
 			
-			renderer.Update(args, RenderLocation);
+			if (((!RenderEntity || IsInvisible) && !ShowItemInHand) || renderer == null || _skipRendering) return;
 
-            CalculateLegMovement(args);
+			//if (IsRendered)
+				renderer.Update(args, RenderLocation);
 
-            if (!ShowItemInHand || _skipRendering || ItemRenderer == null) return;
-            
-            var pivot = Vector3.Zero;
+			if (!ShowItemInHand || _skipRendering || ItemRenderer == null) return;
 
-         /*   if (_leftItemModel != null)
+			/*   if (_leftItemModel != null)
             {
 	            pivot = _leftItemModel.Definition.Pivot;
             }
@@ -706,6 +723,8 @@ namespace Alex.Entities
 
 	            if (arm != null)
 	            {
+		            Vector3 pivot;
+
 		            if (_leftItemModel != null)
 		            {
 			            pivot = _leftItemModel.Definition.Pivot;
@@ -817,13 +836,13 @@ namespace Alex.Entities
 
 			var dt = (float) args.GameTime.ElapsedGameTime.TotalSeconds;
 
-			if (!ServerEntity)
+			/*if (!ServerEntity)
 			{
 				var distanceMoved = DistanceMoved;
 				DistanceMoved = 0;
 
 				_mvSpeed = (float) (distanceMoved * (TimeSpan.FromSeconds(1) / args.GameTime.ElapsedGameTime));
-			}
+			}*/
 
 			Animate(distSQ, dt);
 			
@@ -868,9 +887,9 @@ namespace Alex.Entities
 			// Test arm rotations
 			if (!IsSneaking && _leftArmModel != null && _rightArmModel != null)
 			{
-				Vector3 rArmRot = Vector3.Zero;
+				Vector3 rArmRot;
 
-				if (distSQ > 0f)
+				if (_mvSpeed > 0f)
 				{
 					if (!IsMoving)
 					{
@@ -932,15 +951,13 @@ namespace Alex.Entities
 		private   DateTime _nextUpdate     = DateTime.MinValue;
 		private   DateTime _previousUpdate = DateTime.MinValue;
 		protected int      SurroundingLightValue { get; private set; } = 15;
+		public    float    CurrentSpeed          => _mvSpeed;
 		public virtual void OnTick() 
 		{
-			SeenEntities.Clear();
-			UnseenEntities.Clear();
-			
 			Age++;
 
 			HealthManager.OnTick();
-			
+
 			if (_isHit && Age > _hitAnimationEnd)
 			{
 				_isHit = false;
@@ -958,7 +975,7 @@ namespace Alex.Entities
 
 			_previousPosition = KnownPosition;
 
-			if (ServerEntity && DateTime.UtcNow >= _nextUpdate)
+			if (DateTime.UtcNow >= _nextUpdate)
 			{
 				var distanceMoved = DistanceMoved;
 				DistanceMoved = 0;
@@ -1014,7 +1031,7 @@ namespace Alex.Entities
 				{
 					HeadInBlock = false;
 				}
-				
+
 				if (headBlock.BlockMaterial == Material.Water || headBlock.IsWater)
 				{
 					HeadInWater = true;
@@ -1023,7 +1040,7 @@ namespace Alex.Entities
 				{
 					HeadInWater = false;
 				}
-				
+
 				if (headBlock.BlockMaterial == Material.Lava || headBlock is Lava || headBlock is FlowingLava)
 				{
 					HeadInLava = true;
@@ -1049,7 +1066,7 @@ namespace Alex.Entities
 			{
 				AboveWater = false;
 			}
-			
+
 			if (feetBlock != null)
 			{
 				if (feetBlock.Any(b => b.State.Block.BlockMaterial == Material.Water || b.State.Block.IsWater))
@@ -1075,7 +1092,7 @@ namespace Alex.Entities
 			IsInLava = FeetInLava || HeadInLava;
 			//HealthManager.OnTick();
 		}
-		
+
 		private int _turnTicks;
 		private int turnTicksLimit = 10;
 		private float _lastRotationYawHead = 0f;
@@ -1210,60 +1227,7 @@ namespace Alex.Entities
 
 			return true;
 		}
-		
-		public double DistanceToHorizontal(IEntity entity)
-		{
-			if (entity == null) return -1;
-			return Vector2.Distance(KnownPosition, entity.KnownPosition);
-		}
 
-		public double DistanceTo(IEntity entity)
-		{
-			if (entity == null) return -1;
-			return Vector3.Distance(KnownPosition, entity.KnownPosition);
-		}
-		
-		private HashSet<IEntity> SeenEntities   { get; set; } = new HashSet<IEntity>();
-		private HashSet<IEntity> UnseenEntities { get; set; } = new HashSet<IEntity>();
-		public virtual bool CanSee(IEntity target)
-		{
-			if (SeenEntities.Contains(target)) return true;
-			if (UnseenEntities.Contains(target)) return false;
-
-			Vector3 entityPos = KnownPosition + new Vector3(0, (float) (this is Player ? 1.62f : Height), 0);
-			Vector3 targetPos = target.KnownPosition + new Vector3(0, (float) (target is Player ? 1.62f : target.Height), 0);
-			float distance = Vector3.Distance(entityPos, targetPos);
-
-			Vector3 rayPos    = entityPos;
-			var     direction = Vector3.Normalize(targetPos - entityPos);
-
-			if (distance < direction.Length())
-			{
-				UnseenEntities.Add(target);
-				return true;
-			}
-
-			do
-			{
-				if (Level.GetBlock(rayPos).Solid)
-				{
-					//Log.Debug($"{GetType()} can not see target");
-					//BroadcastEntityEvent();
-					UnseenEntities.Add(target);
-					return false;
-				}
-
-				//var particle = new DustParticle(Level, Color.AntiqueWhite);
-				//particle.Position = rayPos;
-				//particle.Spawn();
-
-				rayPos += direction;
-			} while (distance > Vector3.Distance(entityPos, rayPos));
-
-			SeenEntities.Add(target);
-			return true;
-		}
-		
 		private bool Compare(int a, int b, int m)
 		{
 			a = a >> m;
@@ -1278,7 +1242,7 @@ namespace Alex.Entities
 			if (string.IsNullOrWhiteSpace(clean))
 				return;
 			
-			var halfWidth = (float)(Width * _scale);
+			//var halfWidth = (float)(Width * _scale);
 			
 			var maxDistance = (renderArgs.Camera.FarDistance) / (64f);
 			
@@ -1302,7 +1266,8 @@ namespace Alex.Entities
 			var rotation = cameraPosition - new Vector3(RenderLocation.X, 0, RenderLocation.Z);
 			rotation.Normalize();
 			
-			var pos = RenderLocation + posOffset + (rotation * halfWidth);
+			var halfWidth = (float)(Width * _scale);
+			var pos       = RenderLocation + posOffset + (rotation * halfWidth);
 
 			Vector2 textPosition;
 			
@@ -1407,8 +1372,7 @@ namespace Alex.Entities
 		{
 			bone.Rendered = !isInvisible;
 		}
-		
-		public static float NametagScale { get; set; } = 2f;
+
 		public void Dispose()
 		{
 			var model = ModelRenderer;

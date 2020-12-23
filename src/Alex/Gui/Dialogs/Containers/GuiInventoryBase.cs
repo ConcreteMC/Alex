@@ -307,7 +307,7 @@ namespace Alex.Gui.Dialogs.Containers
 			}
 		}
 
-		private Item SelectedItem { get; set; }
+		private Item SelectedItem { get; set; } = null;
 
 		private InventoryContainerItem HoverItem       { get; set; } = null;
 		private InventoryContainerItem HighlightedSlot { get; set; } = null;
@@ -346,7 +346,7 @@ namespace Alex.Gui.Dialogs.Containers
 
 		private void SetOverlayText(Item item)
 		{
-			if (item == null)
+			if (item == null || item is ItemAir)
 			{
 				TextOverlay.IsVisible = false;
 			}

@@ -1121,7 +1121,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		    }
 		    else
 		    {
-			    minetItem = GetMiNETItem(entity.Inventory[slot]);
+			    var orig = entity.Inventory[slot];
+			    minetItem = GetMiNETItem(orig);
 		    }
 		    
 		    var packet = McpeInventoryTransaction.CreateObject();
@@ -1138,6 +1139,10 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			    Slot = slot,
 			    FromPosition = new System.Numerics.Vector3(entity.KnownPosition.X, entity.KnownPosition.Y, entity.KnownPosition.Z),
 			    HasNetworkIds = true,
+			    TransactionRecords = new List<TransactionRecord>()
+			    {
+				    
+			    }
 			  //  BlockRuntimeId = 
 			  //  BlockRuntimeId = 
 		    };
