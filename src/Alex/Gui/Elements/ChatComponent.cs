@@ -139,10 +139,18 @@ namespace Alex.Gui.Elements
 			while (size.X > Bounds.Width)
 			{
 				string current        = text;
-				var    lastWhiteSpace = current.LastIndexOf(' ');
-				
-				text = current.Remove(lastWhiteSpace, current.Length - lastWhiteSpace);
-				rest = current.Substring(lastWhiteSpace, current.Length - lastWhiteSpace).TrimStart() + rest;
+
+				var lastWhiteSpace = current.LastIndexOf(' ');
+				if (lastWhiteSpace > 0)
+				{
+					text = current.Remove(lastWhiteSpace, current.Length - lastWhiteSpace);
+                    rest = current.Substring(lastWhiteSpace, current.Length - lastWhiteSpace).TrimStart() + rest;
+				}
+				else
+				{
+					text = current.Remove(current.Length - 1, 1);
+					rest = current.Substring( current.Length - 1, 1) + rest;
+				}
 
 				size = Font.MeasureString(text);
 			}
