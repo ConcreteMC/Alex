@@ -638,11 +638,6 @@ namespace Alex.Net.Bedrock
 
 		public void Close()
 		{
-			if (!ConnectionInfo.RakSessions.TryRemove(EndPoint, out _))
-			{
-				return;
-			}
-
 			State = ConnectionState.Unconnected;
 			Evicted = true;
 			CustomMessageHandler = null;
