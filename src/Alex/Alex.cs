@@ -736,7 +736,7 @@ namespace Alex
 
 				if (serverType.TryGetWorldProvider(connectionDetails, profile, out provider, out networkProvider))
 				{
-					LoadWorld(provider, networkProvider);
+					LoadWorld(provider, networkProvider, true);
 				}
 			}
 			catch (Exception ex)
@@ -745,11 +745,18 @@ namespace Alex
 			}
 		}
 
-		public void LoadWorld(WorldProvider worldProvider, NetworkProvider networkProvider)
+		public void LoadWorld(WorldProvider worldProvider, NetworkProvider networkProvider, bool isServer = false)
 		{
 			PlayingState playState = new PlayingState(this, GraphicsDevice, worldProvider, networkProvider);
 
-			LoadingWorldState loadingScreen = new LoadingWorldState();
+			var               parentState   = GameStateManager.GetActiveState();
+
+			if (parentState is PlayingState)
+				parentState = null;
+			
+			LoadingWorldState loadingScreen = new LoadingWorldState(parentState);
+			loadingScreen.ConnectingToServer = isServer;
+			
 			GameStateManager.AddState("loading", loadingScreen);
 			GameStateManager.SetActiveState("loading");
 
@@ -774,6 +781,7 @@ namespace Alex
 						{
 							var s = new DisconnectedScreen();
 							s.DisconnectedTextElement.TranslationKey = "multiplayer.status.cannot_connect";
+							s.ParentState = parentState;
 							GameStateManager.SetActiveState(s, false);
 
 							worldProvider.Dispose();

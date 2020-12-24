@@ -10,7 +10,7 @@ namespace Alex.Worlds.Abstraction
 {
 	public abstract class WorldProvider : IDisposable
 	{
-		public delegate void ProgressReport(LoadingState state, int percentage);
+		public delegate void ProgressReport(LoadingState state, int percentage, string subTitle = null);
 
 		protected World  World  { get; set; }
 		public    ITitleComponent TitleComponent { get; set; }

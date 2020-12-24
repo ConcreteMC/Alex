@@ -79,7 +79,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			{
 				_tickTime++;
 
-				if (World.Player != null && Client.HasSpawned && _gameStarted)
+				if (World.Player != null && Client.CanSpawn && _gameStarted)
 				{
 					//	player.IsSpawned = Spawned;
 
@@ -117,7 +117,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					}
 				}
 
-				if (_tickTime % 20 == 0 && Client.HasSpawned && _gameStarted)
+				if (_tickTime % 20 == 0 && Client.CanSpawn && _gameStarted)
 				{
 					Client.SendPing();
 				}
@@ -201,7 +201,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			var resetEvent = new ManualResetEventSlim(false);
 
 			Client.Start(resetEvent);
-			progressReport(LoadingState.ConnectingToServer, 50);
+			progressReport(LoadingState.ConnectingToServer, 50, "Establishing a connection...");
 
 			//	Client.HaveServer = true;
 
@@ -214,7 +214,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				return LoadResult.Timeout;
 			}
 
-			progressReport(LoadingState.ConnectingToServer, 98);
+			progressReport(LoadingState.ConnectingToServer, 98, "Waiting on server confirmation...");
 
 			//progressReport(LoadingState.LoadingChunks, 0);
 
@@ -226,6 +226,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			
 			Stopwatch sw = Stopwatch.StartNew();
 
+			bool slowNotified = false;
 			while (true)
 			{
 				double radiusSquared = Math.Pow(Client.ChunkRadius, 2);
@@ -233,17 +234,28 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 				percentage = (int) ((100 / target) * World.ChunkManager.ChunkCount);
 
-				if (Client.GameStarted)
+				//if (Client.GameStarted)
 				{
 					if (percentage != previousPercentage)
 					{
 						progressReport(LoadingState.LoadingChunks, percentage);
 						previousPercentage = percentage;
+						sw.Restart();
+					} 
+					else if (sw.ElapsedMilliseconds >= 500)
+					{
+						progressReport(LoadingState.LoadingChunks, percentage, "Please wait...");
 					}
 					//Log.Info($"Progress: {percentage} ({ChunksReceived} of {target})");
 				}
+
+				if (!slowNotified && percentage == 0 && sw.ElapsedMilliseconds >= 3000)
+				{
+					slowNotified = true;
+					progressReport(LoadingState.ConnectingToServer, 98, "The server seems to be a little slow, please wait...");
+				}
 				
-				if ((!Client.GameStarted || percentage == 0) && sw.ElapsedMilliseconds >= 5000)
+				if ((!Client.GameStarted || percentage == 0) && sw.ElapsedMilliseconds >= 15000)
 				{
 					if (Client.DisconnectReason == DisconnectReason.Kicked)
 					{
@@ -257,15 +269,10 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 				if (!statusChanged)
 				{
-					if (Client.PlayerStatus == 3 || Client.PlayerStatusChanged.WaitOne(50) || Client.HasSpawned
+					if (Client.PlayerStatusChanged.WaitOne(50) || Client.CanSpawn
 					    || Client.ChangeDimensionResetEvent.WaitOne(5))
 					{
 						statusChanged = true;
-
-						//Client.SendMcpeMovePlayer();
-
-
-						//Client.IsEmulator = false;
 					}
 				}
 
@@ -285,17 +292,11 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					{
 						break;
 					}
+					else
+					{
+						progressReport(LoadingState.Spawning, 99, "Waiting on spawn confirmation...");
+					}
 				}
-
-				/*if (!VerifyConnection())
-				{
-					//Client.ShowDisconnect("Connection lost.");
-					Log.Warn($"Could not verify connection...");
-					
-					timer.Stop();
-
-					return false;
-				}*/
 			}
 
 			var p = World.Player.KnownPosition;
@@ -307,7 +308,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			//SkyLightCalculations.Calculate(WorldReceiver as World);
 
 			//Client.IsEmulator = false;
-			progressReport(LoadingState.Spawning, 99);
+			//progressReport(LoadingState.Spawning, 99);
 			timer.Stop();
 
 			_gameStarted = true;

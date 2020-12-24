@@ -144,8 +144,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			
 			if (Client.PlayerStatus == 3)
 			{
-				Client.HasSpawned = true;
-
 				Client.PlayerStatusChanged.Set();
 
 				Client.World.Player.EntityId = Client.EntityId;
@@ -1551,7 +1549,10 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					new ChunkCoordinates(new PlayerLocation(Client.World.SpawnPoint.X, Client.World.SpawnPoint.Y,
 						Client.World.SpawnPoint.Z));
 				
-				LoadingWorldState loadingWorldState = new LoadingWorldState();
+				LoadingWorldState loadingWorldState = new LoadingWorldState()
+				{
+					ConnectingToServer = true
+				};
 
 				AlexInstance.GameStateManager.SetActiveState(loadingWorldState, true);
 				loadingWorldState.UpdateProgress(LoadingState.LoadingChunks, 0);
@@ -1588,7 +1589,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 						
 						if (!spawnChunkLoaded && percentage >= 100)
 						{
-							loadingWorldState.UpdateProgress(LoadingState.Spawning, 99);
+							loadingWorldState.UpdateProgress(LoadingState.Spawning, 99, "Waiting for spawn chunk...");
 						}
 						else
 						{

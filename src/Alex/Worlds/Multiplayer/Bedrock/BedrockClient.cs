@@ -79,9 +79,9 @@ namespace Alex.Worlds.Multiplayer.Bedrock
         private CancellationTokenSource CancellationTokenSource { get; }
         
         public McpeNetworkChunkPublisherUpdate LastChunkPublish { get; set; }
-        public bool HasSpawned { get; set; }
+        public bool CanSpawn => PlayerStatus == 3;
         public AutoResetEvent PlayerStatusChanged { get; set; } = new AutoResetEvent(false);
-        public AutoResetEvent ChangeDimensionResetEvent = new AutoResetEvent(false);
+        public AutoResetEvent ChangeDimensionResetEvent { get; } = new AutoResetEvent(false);
         private IEventDispatcher EventDispatcher { get; }
         public RaknetConnection Connection { get; }
         private MessageHandler MessageHandler { get; set; }

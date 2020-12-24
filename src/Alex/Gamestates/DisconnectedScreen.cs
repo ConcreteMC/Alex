@@ -1,4 +1,5 @@
-﻿using Alex.API.Gui;
+﻿using Alex.API.GameStates;
+using Alex.API.Gui;
 using Alex.API.Gui.Elements;
 using Alex.API.Gui.Elements.Controls;
 using Alex.API.Utils;
@@ -29,7 +30,7 @@ namespace Alex.Gamestates
 	    private static DisconnectedScreen _activeScreen = null;
 	    public         string             Reason                  { get; set; } = "disconnect.lost";
 	    public         GuiTextElement     DisconnectedTextElement { get; private set; }
-		public DisconnectedScreen()
+	    public DisconnectedScreen()
 		{
 			TitleTranslationKey = "multiplayer.disconnect.generic";
 
@@ -51,7 +52,15 @@ namespace Alex.Gamestates
 
 		private void MenuButtonClicked()
 		{
-			Alex.GameStateManager.SetActiveState<TitleState>("title");
+			if (ParentState != null)
+			{
+				Alex.GameStateManager.SetActiveState(ParentState);
+			}
+			else
+			{
+				Alex.GameStateManager.SetActiveState<TitleState>("title");
+			}
+
 			Alex.IsMouseVisible = true;
 		}
 
