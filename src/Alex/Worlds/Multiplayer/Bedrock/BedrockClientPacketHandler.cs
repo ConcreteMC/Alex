@@ -129,9 +129,9 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			        msg = $"Invalid server signature!";
 		        }
 		        
-		        Client.ShowDisconnect(msg);
+		        Client.ShowDisconnect(msg, false, false, DisconnectReason.Network);
 		        
-		        Log.Error(e, $"Could complete handshake: {e.ToString()}");
+		        Log.Error(e, $"Could not complete handshake: {e.ToString()}");
 		        throw;
 	        }
         }
@@ -171,14 +171,14 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			else
 			{
 				Log.Warn($"Received unknown Play Status... {message.status}");
-				Client.ShowDisconnect($"Unrecognized play status.", false, true);
+				Client.ShowDisconnect($"Unrecognized play status.", false, true, DisconnectReason.Network);
 			}
 		}
 
         public void HandleMcpeDisconnect(McpeDisconnect message)
         {
             Log.Info($"Received disconnect: {message.message}");
-            Client.ShowDisconnect(message.message, false, true);
+            Client.ShowDisconnect(message.message, false, true, DisconnectReason.Kicked);
             
            // Client.
            // base.HandleMcpeDisconnect(message);

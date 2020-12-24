@@ -356,7 +356,7 @@ namespace Alex.Worlds.Multiplayer.Java
 		private BlockingCollection<ChunkColumn> _generatingHelper = new BlockingCollection<ChunkColumn>();
 		private int _chunksReceived = 0;
 
-		public override bool Load(ProgressReport progressReport)
+		public override LoadResult Load(ProgressReport progressReport)
 		{
 			progressReport(LoadingState.ConnectingToServer, 0);
 
@@ -364,16 +364,16 @@ namespace Alex.Worlds.Multiplayer.Java
 			{
 				_disconnected = true;
 
-				return false;
+				return LoadResult.Failed;
 			}
 
-			if (_disconnected) return false;
+			if (_disconnected) return LoadResult.Failed;
 
 			progressReport(LoadingState.ConnectingToServer, 99);
 
 			_loginCompleteEvent.WaitOne();
 
-			if (_disconnected) return false;
+			if (_disconnected) return LoadResult.Failed;
 
 			progressReport(LoadingState.LoadingChunks, 0);
 
@@ -464,7 +464,7 @@ namespace Alex.Worlds.Multiplayer.Java
 			World.Player.Inventory.CursorChanged += InventoryOnCursorChanged;
 			World.Player.Inventory.Closed += (sender, args) => { ClosedContainer(0); };
 
-			return true;
+			return LoadResult.Done;
 		}
 
 		private Queue<Entity> _entitySpawnQueue = new Queue<Entity>();

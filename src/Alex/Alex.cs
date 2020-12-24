@@ -760,9 +760,9 @@ namespace Alex
 					{
 						GameStateManager.RemoveState("play");
 						
-						bool connected = worldProvider.Load(loadingScreen.UpdateProgress);
+						var result = worldProvider.Load(loadingScreen.UpdateProgress);
 
-						if (networkProvider.IsConnected && connected)
+						if (networkProvider.IsConnected && result == LoadResult.Done)
 						{
 							GameStateManager.AddState("play", playState);
 							GameStateManager.SetActiveState("play");
@@ -770,11 +770,14 @@ namespace Alex
 							return;
 						}
 
-						var s = new DisconnectedScreen();
-						s.DisconnectedTextElement.TranslationKey = "multiplayer.status.cannot_connect";
-						GameStateManager.SetActiveState(s, false);
-						
-						worldProvider.Dispose();
+						if (result != LoadResult.Aborted)
+						{
+							var s = new DisconnectedScreen();
+							s.DisconnectedTextElement.TranslationKey = "multiplayer.status.cannot_connect";
+							GameStateManager.SetActiveState(s, false);
+
+							worldProvider.Dispose();
+						}
 					}
 					finally
 					{

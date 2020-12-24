@@ -242,7 +242,7 @@ namespace Alex.Worlds.Singleplayer
 			return _generator.GetSpawnPoint();
 		}
 
-		public override bool Load(ProgressReport progressReport)
+		public override LoadResult Load(ProgressReport progressReport)
 		{
 			//	ChunkManager.DoMultiPartCalculations = false;
 
@@ -282,7 +282,7 @@ namespace Alex.Worlds.Singleplayer
 
 			UpdateThread.Start();
 
-			return true;
+			return LoadResult.Done;
 		}
 
 		public override void Dispose()

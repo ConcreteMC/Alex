@@ -31,11 +31,19 @@ namespace Alex.Worlds.Abstraction
 			Initiate();
 		}
 
-		public abstract bool Load(ProgressReport progressReport);
+		public abstract LoadResult Load(ProgressReport progressReport);
 
 		public virtual void Dispose()
 		{
 
 		}
+	}
+
+	public enum LoadResult 
+	{
+		Done,
+		Failed,
+		Timeout,
+		Aborted
 	}
 }

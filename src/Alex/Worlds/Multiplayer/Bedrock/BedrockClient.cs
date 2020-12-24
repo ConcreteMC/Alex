@@ -463,8 +463,9 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			RequestChunkRadius(newvalue);
 		}
 
-		private bool _disconnectShown = false;
-		public void ShowDisconnect(string reason, bool useTranslation = false, bool overrideActive = false)
+		public  DisconnectReason DisconnectReason { get; private set; }
+		private bool             _disconnectShown = false;
+		public void ShowDisconnect(string reason, bool useTranslation = false, bool overrideActive = false, DisconnectReason disconnectReason = DisconnectReason.Unknown)
 		{
 			if (Alex.GameStateManager.GetActiveState() is DisconnectedScreen s && overrideActive)
 			{
@@ -484,6 +485,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				return;
 			
 			_disconnectShown = true;
+
+			DisconnectReason = disconnectReason;
 
 			s = new DisconnectedScreen();
             if (useTranslation)
@@ -1236,7 +1239,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			Task.Delay(500).ContinueWith(task =>
 			{
 
-
 				try
 				{
 					Connection.Stop();
@@ -1298,5 +1300,12 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			//WorkerThreadPool.Dispose();
 			//_threadPool.WaitForThreadsExit();
 		}
+	}
+
+	public enum DisconnectReason
+	{
+		Network,
+		Kicked,
+		Unknown
 	}
 }
