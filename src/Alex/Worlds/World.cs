@@ -978,8 +978,20 @@ namespace Alex.Worlds
 			PlayerList.Entries.Remove(item);
 		}
 
-		public void UpdatePlayerListLatency(MiNET.Utils.UUID uuid, int latency)
+		public void UpdatePlayerLatency(MiNET.Utils.UUID uuid, int latency)
 		{
+			if (Player.UUID.Equals(uuid))
+			{
+				Player.Latency = latency;
+			}
+			else if (EntityManager.TryGet(uuid, out var player))
+			{
+				if (player is RemotePlayer p)
+				{
+					p.Latency = latency;
+				}
+			}
+			
 			if (PlayerList.Entries.TryGetValue(uuid, out var item))
 			{
 				item.Ping = latency;

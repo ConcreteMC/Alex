@@ -115,13 +115,14 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 						_lastPrioritization = _tickTime;
 					}
+					
+					
+					if (_tickTime % 20 == 0 && World.Player.IsSpawned)
+					{
+						Client.SendPing();
+					}
 				}
 
-				if (_tickTime % 20 == 0 && Client.CanSpawn && _gameStarted)
-				{
-					Client.SendPing();
-				}
-				
 				//World.Player.OnTick();
 				//World.EntityManager.Tick();
 				//World.PhysicsEngine.Tick();

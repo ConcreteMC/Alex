@@ -233,6 +233,7 @@ namespace Alex.Worlds.Multiplayer.Java
 				var player = World.Player;
 				if (player != null && Spawned)
 				{
+					Client.Latency = player.Latency;
 					player.IsSpawned = Spawned;
 
 					//if (isTick)
@@ -1573,12 +1574,16 @@ namespace Alex.Worlds.Multiplayer.Java
 			{
 				foreach (var entry in packet.AddPlayerEntries)
 				{
+					var uuid = new MiNET.Utils.UUID(entry.UUID.ToByteArray());
+					if (_players.ContainsKey(uuid))
+						continue;
+					
 					RemotePlayer entity = new RemotePlayer(
 						entry.Name, (World) World, NetworkProvider, _alexSkin,
 						"geometry.humanoid.custom");
 
 					entity.UpdateGamemode((Gamemode) entry.Gamemode);
-					entity.UUID = new MiNET.Utils.UUID(entry.UUID.ToByteArray());
+					entity.UUID = uuid;
 					
 					World.AddPlayerListItem(
 						new PlayerListItem(entity.UUID, entry.Name, (Gamemode) entry.Gamemode, entry.Ping, true));
@@ -1626,7 +1631,9 @@ namespace Alex.Worlds.Multiplayer.Java
 			{
 				foreach (var entry in packet.UpdateLatencyEntries)
 				{
-					World?.UpdatePlayerListLatency(new MiNET.Utils.UUID(entry.UUID.ToByteArray()), entry.Ping);
+					var uuid = new MiNET.Utils.UUID(entry.UUID.ToByteArray());
+					
+					World?.UpdatePlayerLatency(uuid, entry.Ping);
 				}
 			}
 			else if (packet.Action == PlayerListAction.UpdateDisplayName)

@@ -45,7 +45,8 @@ namespace Alex.Entities
 		
 		public PlayerSkinFlags SkinFlags { get; }
 
-		public int Score { get; set; } = 0;
+		public int Score   { get; set; } = 0;
+		public int Latency { get; set; } = 0;
 
 		private PooledTexture2D _texture;
 		public RemotePlayer(string name, World level, NetworkProvider network, PooledTexture2D skinTexture, string geometry = "geometry.humanoid.customSlim") : base(63, level, network)

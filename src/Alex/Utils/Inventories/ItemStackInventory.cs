@@ -184,7 +184,7 @@ namespace Alex.Utils.Inventories
 			{
 			}
 			
-			if (result == null && item.Id < 256) //Block
+			if (result == null && item.Id < 256 && item.Id >= 0) //Block
 			{
 				var id         = item.Id;
 				var meta       = (byte) item.Metadata;

@@ -1541,6 +1541,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		
 		public void HandleMcpeChangeDimension(McpeChangeDimension message)
 		{
+			bool couldPing = CustomConnectedPong.CanPing;
 			CustomConnectedPong.CanPing = false;
 			//base.HandleMcpeChangeDimension(message);
 			if (WorldProvider is BedrockWorldProvider provider)
@@ -1548,7 +1549,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				var chunkCoords =
 					new ChunkCoordinates(new PlayerLocation(Client.World.SpawnPoint.X, Client.World.SpawnPoint.Y,
 						Client.World.SpawnPoint.Z));
-				
+
+				Client.World.Player.IsSpawned = false;
 				LoadingWorldState loadingWorldState = new LoadingWorldState()
 				{
 					ConnectingToServer = true
@@ -1642,7 +1644,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 						//	await Task.Delay(50);
 						//}
 					} while (true);
-
+					
 					AlexInstance.GameStateManager.Back();
 
 					var p = Client.World.Player.KnownPosition;
@@ -1651,7 +1653,9 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 						new MiNET.Utils.PlayerLocation(p.X, p.Y, p.Z, p.HeadYaw, p.Yaw, p.Pitch),
 						Client.World.Player.KnownPosition.OnGround);
 					//Client.SendMcpeMovePlayer(new MiNET.Utils.PlayerLocation(Client.World.Player.KnownPosition.X, Client.World.Player.KnownPosition.Y, Client.World.Player.KnownPosition.Z), false);
-					CustomConnectedPong.CanPing = false;
+
+					Client.World.Player.IsSpawned = true;
+					CustomConnectedPong.CanPing = couldPing;
 				});
 			}
 		}

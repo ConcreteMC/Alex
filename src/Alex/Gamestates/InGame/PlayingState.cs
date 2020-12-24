@@ -478,13 +478,12 @@ namespace Alex.Gamestates.InGame
 						args.SpriteBatch.RenderBoundingBox(World.Player.GetBoundingBox(), World.Camera.ViewMatrix,
 							World.Camera.ProjectionMatrix, Color.Red);
 
-					if (World.PhysicsEngine.LastKnownHit != null)
+					var hit = World.Player.Movement.LastCollision;
+
+					foreach (var bb in hit)
 					{
-						foreach (var bb in World.PhysicsEngine.LastKnownHit)
-						{
-							args.SpriteBatch.RenderBoundingBox(bb, World.Camera.ViewMatrix,
-								World.Camera.ProjectionMatrix, Color.YellowGreen, true);
-						}
+						args.SpriteBatch.RenderBoundingBox(
+							bb, World.Camera.ViewMatrix, World.Camera.ProjectionMatrix, Color.YellowGreen, true);
 					}
 				}
 			}

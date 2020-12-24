@@ -42,7 +42,7 @@ namespace Alex.Entities
         //public Camera Camera { get; internal set; }
         public Player(GraphicsDevice graphics, InputManager inputManager, string name, World world, Skin skin, NetworkProvider networkProvider, PlayerIndex playerIndex) : base(name, world, networkProvider, skin.Texture)
         {
-	        IsSpawned = true;
+	        //IsSpawned = true;
 		//	DoRotationCalculations = false;
 			PlayerIndex = playerIndex;
 		    Controller = new PlayerController(graphics, world, inputManager, this, playerIndex);

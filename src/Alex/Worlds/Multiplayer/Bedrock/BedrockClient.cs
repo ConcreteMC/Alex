@@ -246,52 +246,14 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 							//else
 							//	Log.Info(str);
 								
-							_connectionInfo = new ConnectionInfo(StartTime, CustomConnectedPong.Latency, nakReceive, ackReceived, ackSent, fails, resends, packetSizeIn, packetSizeOut, packetCountIn, packetCountOut);
+							_connectionInfo = new ConnectionInfo(StartTime, World.Player.Latency, nakReceive, ackReceived, ackSent, fails, resends, packetSizeIn, packetSizeOut, packetCountIn, packetCountOut);
 						}, null, 1000, 1000);
 					
 					Connection.Start();
-
-				/*	try
-					{
-						var ticker = ReflectionHelper.GetPrivateFieldValue<HighPrecisionTimer>(
-							typeof(RakConnection), Connection, "_tickerHighPrecisionTimer");
-
-						ticker.Dispose();
-					}catch{}
-					
-					_timer = new System.Timers.Timer(10);
-					_timer.Elapsed += (sender, args) =>
-					{
-						Session?.SendTickAsync(Connection);
-
-						var sessions =
-							ReflectionHelper.GetPrivateFieldValue<ConcurrentDictionary<IPEndPoint, RakSession>>(
-								typeof(RakConnection), Connection, "_rakSessions");// Connection._rakSessions;
-						
-						var tasks = new List<Task>();
-						foreach (KeyValuePair<IPEndPoint, RakSession> session in sessions)
-						{
-							tasks.Add(session.Value.SendTickAsync(Connection));
-						}
-
-						Task.WaitAll(tasks.ToArray());
-
-						//foreach (var session in Connection.ConnectionInfo.RakSessions)
-						//Session?.SendTickAsync(Connection).Wait();
-					};
-					_timer.Start();*/
-
-				//	var listener = ReflectionHelper.GetPrivateFieldValue<UdpClient>(typeof(RakConnection), Connection, "_listener");
-					//listener.DontFragment = true;
-					//listener.Client.ReceiveBufferSize = 131072;
-					//listener.Client.SendBufferSize = 131072;
-					//listener.ExclusiveAddressUse = true;
-					//listener.EnableBroadcast = false;
 					
 					if (Connection.TryConnect(ServerEndpoint))
 					{
 						resetEvent.Set();
-						//resetEvent.Set();
 					}
 				}
 			});
@@ -1271,7 +1233,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		public void SendPing()
 		{
-			return;
+			//return;
 			if (CustomConnectedPong.CanPing)
 			{
 				ConnectedPing cp = ConnectedPing.CreateObject();
