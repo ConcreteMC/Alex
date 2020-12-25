@@ -66,6 +66,15 @@ namespace Alex.Utils.Queue
             return item;
         }
 
+        /// <inheritdoc />
+        public override bool TryDequeue(out KeyValuePair<TPriority, TElement> value)
+        {
+            lock (_sync)
+            {
+                return base.TryDequeue(out value);
+            }
+        }
+
         public bool TryDequeue(out TElement item)
         {
             lock (_sync)
@@ -126,6 +135,15 @@ namespace Alex.Utils.Queue
             lock (_sync)
             {
                 return base.Peek();
+            }
+        }
+
+        /// <inheritdoc />
+        public override bool TryPeek(out KeyValuePair<TPriority, TElement> value)
+        {
+            lock (_sync)
+            {
+                return base.TryPeek(out value);
             }
         }
 

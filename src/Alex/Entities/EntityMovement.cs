@@ -68,43 +68,24 @@ namespace Alex.Entities
 			var               velocityBeforeAdjustment = new Vector3(amount.X, amount.Y, amount.Z);
 			
 			List<BoundingBox> boxes                    = new List<BoundingBox>();
-			if (TestTerrainCollisionY(ref amount, out var yCollisionPoint, out var yBox))
+			if (TestTerrainCollisionY(ref amount, out var yCollisionPoint, out var yBox, boxes))
 			{
+				if (velocityBeforeAdjustment.Y <= 0f)
+					Entity.KnownPosition.OnGround = true;
+				
 				Entity.Velocity *= new Vector3(1f, 0f, 1f);
 				//Entity.Velocity += new Vector3(0f, direction.Y, 0f);
 				
 				Entity.CollidedWithWorld(
 					velocityBeforeAdjustment.Y < 0 ? Vector3.Down : Vector3.Up, yCollisionPoint,
 					velocityBeforeAdjustment.Y);
-
-				boxes.Add(yBox);
 			}
 
 			float collisionX = 0f;
-			bool  collideX   = TestTerrainCollisionX(ref amount, out var xCollisionPoint, out var xBox, out collisionX);
-			/*{
-				Entity.Velocity *= new Vector3(0f, 1f, 1f);
-				//Entity.Velocity += new Vector3(direction.X, 0f, 0f);
-				
-				Entity.CollidedWithWorld(
-					velocityBeforeAdjustment.X < 0 ? Vector3.Left : Vector3.Right, xCollisionPoint,
-					velocityBeforeAdjustment.X);
-
-				boxes.Add(xBox);
-			}*/
-
+			bool  collideX   = TestTerrainCollisionX(ref amount, out var xCollisionPoint, out var xBox, out collisionX, boxes);
+			
 			float collisionZ = 0f;
-			bool  collideZ   = TestTerrainCollisionZ(ref amount, out var zCollisionPoint, out var zBox, out collisionZ);
-			/*{
-				Entity.Velocity *= new Vector3(1f, 1f, 0f);
-				//Entity.Velocity += new Vector3(0f, 0f, direction.Z);
-				
-				Entity.CollidedWithWorld(
-					velocityBeforeAdjustment.Z < 0 ? Vector3.Backward : Vector3.Forward, zCollisionPoint,
-					velocityBeforeAdjustment.Z);
-
-				boxes.Add(zBox);
-			}*/
+			bool  collideZ   = TestTerrainCollisionZ(ref amount, out var zCollisionPoint, out var zBox, out collisionZ, boxes);
 
 			var canJump = true;
 			if (Entity.KnownPosition.OnGround)
@@ -147,33 +128,31 @@ namespace Alex.Entities
 				if (collideX)
 				{
 					amount.X = collisionX;
-					Entity.Velocity *= new Vector3(0f, 1f, 1f);
+					Entity.Velocity = new Vector3(0f, Entity.Velocity.Y, Entity.Velocity.Z);
 					//Entity.Velocity += new Vector3(direction.X, 0f, 0f);
 				
 					Entity.CollidedWithWorld(
 						velocityBeforeAdjustment.X < 0 ? Vector3.Left : Vector3.Right, xCollisionPoint,
 						velocityBeforeAdjustment.X);
-
-					boxes.Add(xBox);
 				}
 
 				if (collideZ)
 				{
 					amount.Z = collisionZ;
-					Entity.Velocity *= new Vector3(1f, 1f, 0f);
+					Entity.Velocity = new Vector3(Entity.Velocity.X, Entity.Velocity.Y, 0f);
+					//Entity.Velocity *= new Vector3(1f, 1f, 0f);
 					//Entity.Velocity += new Vector3(0f, 0f, direction.Z);
 				
 					Entity.CollidedWithWorld(
 						velocityBeforeAdjustment.Z < 0 ? Vector3.Backward : Vector3.Forward, zCollisionPoint,
 						velocityBeforeAdjustment.Z);
-
-					boxes.Add(zBox);
 				}
 			}
 			
 			Entity.KnownPosition += amount;
 			//Entity.KnownPosition.Y += (amount.Y - offset);
 			//Entity.KnownPosition.Z += amount.Z;
+			
 			Entity.KnownPosition.OnGround = DetectOnGround();
 
 			if (boxes.Count > 0)
@@ -356,7 +335,7 @@ namespace Alex.Entities
 			return foundGround;
 		}
 		
-		private bool TestTerrainCollisionY(ref Vector3 velocity, out Vector3 collisionPoint, out BoundingBox blockBox)
+		private bool TestTerrainCollisionY(ref Vector3 velocity, out Vector3 collisionPoint, out BoundingBox blockBox, List<BoundingBox> boxes)
 		{
 			collisionPoint = Vector3.Zero;
 			blockBox = new BoundingBox();
@@ -418,6 +397,8 @@ namespace Alex.Entities
 							
 							if (testBox.Intersects(box))
 							{
+								boxes.Add(box);
+								
 								if (negative)
 								{
 									if ((collisionExtent == null || collisionExtent.Value < box.Max.Y))
@@ -477,7 +458,7 @@ namespace Alex.Entities
 			return false;
 		}
 
-		private bool TestTerrainCollisionX(ref Vector3 velocity, out Vector3 collisionPoint, out BoundingBox blockBox, out float result)
+		private bool TestTerrainCollisionX(ref Vector3 velocity, out Vector3 collisionPoint, out BoundingBox blockBox, out float result, List<BoundingBox> boxes)
 		{
 			result = velocity.X;
 			collisionPoint = Vector3.Zero;
@@ -515,7 +496,6 @@ namespace Alex.Entities
 
 			float?            collisionExtent = null;
 			
-			List<BoundingBox> boxes           = new List<BoundingBox>();
 			bool              climable        = true;
 			//var flooredY = 
 			for (int x = (int) (Math.Floor(testBox.Min.X)); x <= (int) (Math.Ceiling(testBox.Max.X)); x++)
@@ -536,11 +516,17 @@ namespace Alex.Entities
 							
 							if (negative)
 							{
+								if (box.Max.X <= testBox.Min.X)
+									continue;
+								
 								if (Entity.BoundingBox.Min.X - box.Max.X < 0)
 									continue;
 							}
 							else
 							{
+								if (box.Min.Z >= testBox.Max.Z)
+									continue;
+								
 								if (box.Min.X - Entity.BoundingBox.Max.X < 0)
 									continue;
 							}
@@ -548,11 +534,7 @@ namespace Alex.Entities
 							if (testBox.Intersects(box))
 							{
 								boxes.Add(box);
-							//	if (climable && box.Max.Y > entity.BoundingBox.Min.Y && entity.KnownPosition.OnGround)
-							//	{
-							//		climable = CanClimb(entity.Velocity, entity.BoundingBox, box);
-							//	}
-								
+
 								if (negative)
 								{
 									if ((collisionExtent == null || collisionExtent.Value < box.Max.X))
@@ -615,7 +597,7 @@ namespace Alex.Entities
 			return false;
 		}
 
-		private bool TestTerrainCollisionZ(ref Vector3 velocity, out Vector3 collisionPoint, out BoundingBox blockBox, out float result)
+		private bool TestTerrainCollisionZ(ref Vector3 velocity, out Vector3 collisionPoint, out BoundingBox blockBox, out float result, List<BoundingBox> boxes)
 		{
 			result = velocity.Z;
 			collisionPoint = Vector3.Zero;
@@ -654,7 +636,7 @@ namespace Alex.Entities
 
 			float?            collisionExtent = null;
 			bool              climable        = true;
-			List<BoundingBox> boxes           = new List<BoundingBox>();
+			
 			for (int x = (int) (Math.Floor(testBox.Min.X)); x <= (int) (Math.Ceiling(testBox.Max.X)); x++)
 			{
 				for (int z = (int) (Math.Floor(testBox.Min.Z)); z <= (int) (Math.Ceiling(testBox.Max.Z)); z++)
@@ -670,13 +652,20 @@ namespace Alex.Entities
 						foreach (var box in blockState.Model.GetBoundingBoxes(coords))
 						{
 							if (box.Max.Y <= testBox.Min.Y) continue;
+
 							if (negative)
 							{
+								if (box.Max.Z <= testBox.Min.Z)
+									continue;
+								
 								if (Entity.BoundingBox.Min.Z - box.Max.Z < 0)
 									continue;
 							}
 							else
 							{
+								if (box.Min.X >= testBox.Max.X)
+									continue;
+								
 								if (box.Min.Z - Entity.BoundingBox.Max.Z < 0)
 									continue;
 							}

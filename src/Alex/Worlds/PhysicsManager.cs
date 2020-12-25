@@ -35,13 +35,13 @@ namespace Alex.Worlds
 		
 		private Vector3 TruncateVelocity(Vector3 velocity)
 		{
-			if (Math.Abs(velocity.X) < 0.0005f)
+			if (Math.Abs(velocity.X) < 0.005f)
 				velocity = new Vector3(0, velocity.Y, velocity.Z);
 			
-			if (Math.Abs(velocity.Y) < 0.0005f)
+			if (Math.Abs(velocity.Y) < 0.005f)
 				velocity = new Vector3(velocity.X, 0, velocity.Z);
 			
-			if (Math.Abs(velocity.Z) < 0.0005f)
+			if (Math.Abs(velocity.Z) < 0.005f)
 				velocity = new Vector3(velocity.X, velocity.Y, 0);
 
 			return velocity;
@@ -157,6 +157,8 @@ namespace Alex.Worlds
 
 		private void UpdatePhysics(Entity e)
 		{
+			if (!e.IsSpawned)
+				return;
 			//var velocityBeforeAdjustment = new Vector3(e.Velocity.X, e.Velocity.Y, e.Velocity.Z);
 
 			e.Velocity += (ConvertMovementIntoVelocity(e, out var slipperiness));

@@ -56,7 +56,7 @@ namespace Alex.Net.Bedrock
 
 		public          RaknetSession  Session { get; set; } = null;
 		public readonly RaknetHandler  RaknetHandler;
-		public          ConnectionInfo ConnectionInfo { get; }
+		public   ConnectionInfo ConnectionInfo { get; }
 
 		public bool FoundServer => RaknetHandler.HaveServer;
 
@@ -65,6 +65,8 @@ namespace Alex.Net.Bedrock
 			get => RaknetHandler.AutoConnect;
 			set => RaknetHandler.AutoConnect = value;
 		}
+
+		public bool IsNetworkOutOfOrder => Session?.IsOutOfOrder ?? false;
 
 		// This is only used in client scenarios. Will contain
 		// information regarding a located server.
@@ -252,6 +254,7 @@ namespace Alex.Net.Bedrock
 
 					if (receiveBytes.Length != 0)
 					{
+						//Log.Info($"Buffer size: {receiveBytes.Length}");
 						//ThreadPool.QueueUserWorkItem(
 						//	(o) =>
 						{
@@ -350,16 +353,16 @@ namespace Alex.Net.Bedrock
 			}
 			catch (Exception e)
 			{
-				rakSession.Disconnect("Bad packet received from client.");
+				rakSession.Disconnect("Bad packet received from server.");
 
 				Log.Warn(e, $"Bad packet {receivedBytes.Span[0]}\n{Packet.HexDump(receivedBytes)}");
 				return;
 			}
 
-			EnqueueAck(rakSession, datagram.Header.DatagramSequenceNumber);
-
 			if (Log.IsTraceEnabled) Log.Trace($"Receive datagram #{datagram.Header.DatagramSequenceNumber} for {_endpoint}");
 
+			EnqueueAck(rakSession, datagram.Header.DatagramSequenceNumber);
+			
 			HandleDatagram(rakSession, datagram);
 			datagram.PutPool();
 		}
@@ -376,7 +379,7 @@ namespace Alex.Net.Bedrock
 				}
 
 				message.Timer.Restart();
-				session.HandleRakMessage(message);
+				session.HandleRakMessage(datagram, message);
 			}
 		}
 
@@ -421,10 +424,11 @@ namespace Alex.Net.Bedrock
 
 			var buffer = new Memory<byte>(new byte[contiguousLength]);
 
-			Reliability headerReliability = splitPart.ReliabilityHeader.Reliability;
-			var headerReliableMessageNumber = splitPart.ReliabilityHeader.ReliableMessageNumber;
-			var headerOrderingChannel = splitPart.ReliabilityHeader.OrderingChannel;
-			var headerOrderingIndex = splitPart.ReliabilityHeader.OrderingIndex;
+			Reliability headerReliability           = splitPart.ReliabilityHeader.Reliability;
+			var         headerReliableMessageNumber = splitPart.ReliabilityHeader.ReliableMessageNumber;
+			var         headerOrderingChannel       = splitPart.ReliabilityHeader.OrderingChannel;
+			var         headerOrderingIndex         = splitPart.ReliabilityHeader.OrderingIndex;
+			var         headerSequencingIndex       = splitPart.ReliabilityHeader.SequencingIndex;
 
 			int position = 0;
 			foreach (SplitPartPacket spp in splitPartList)
@@ -445,6 +449,7 @@ namespace Alex.Net.Bedrock
 					ReliableMessageNumber = headerReliableMessageNumber,
 					OrderingChannel = headerOrderingChannel,
 					OrderingIndex = headerOrderingIndex,
+					SequencingIndex = headerSequencingIndex
 				};
 
 				if (Log.IsTraceEnabled) Log.Trace($"Assembled split packet {fullMessage.ReliabilityHeader.Reliability} message #{fullMessage.ReliabilityHeader.ReliableMessageNumber}, OrdIdx: #{fullMessage.ReliabilityHeader.OrderingIndex}");
@@ -464,7 +469,7 @@ namespace Alex.Net.Bedrock
 
 		private void EnqueueAck(RaknetSession session, Int24 datagramSequenceNumber)
 		{
-			session.OutgoingAckQueue.Enqueue(datagramSequenceNumber);
+			session.Acknowledge(datagramSequenceNumber);
 		}
 
 		private void HandleAck(RaknetSession session, Ack ack, ConnectionInfo connectionInfo)
@@ -552,12 +557,12 @@ namespace Alex.Net.Bedrock
 			{
 				long now = DateTime.UtcNow.Ticks / TimeSpan.TicksPerMillisecond;
 				long lastUpdate = session.LastUpdatedTime.Ticks / TimeSpan.TicksPerMillisecond;
-
+				
 				if (!session.WaitForAck && (session.ResendCount > session.ResendThreshold || lastUpdate + session.InactivityTimeout < now))
 				{
 					//TODO: Seems to have lost code here. This should actually count the resends too.
 					// Spam is a bit too much. The Russians have trouble with bad connections.
-					session.DetectLostConnection();
+					Session.DetectLostConnection();
 					session.WaitForAck = true;
 				}
 

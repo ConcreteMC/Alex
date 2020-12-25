@@ -44,7 +44,7 @@ namespace Alex.Net.Bedrock
 			var messageType = (DefaultMessageIdTypes) messageId;
 
 			// Increase fast, decrease slow on 1s ticks.
-			if (_connectionInfo.NumberOfPlayers < _connectionInfo.RakSessions.Count) _connectionInfo.NumberOfPlayers = _connectionInfo.RakSessions.Count;
+			//if (_connectionInfo.NumberOfPlayers < _connectionInfo.RakSessions.Count) _connectionInfo.NumberOfPlayers = _connectionInfo.RakSessions.Count;
 
 			Packet message = null;
 			try

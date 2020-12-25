@@ -121,8 +121,8 @@ namespace Alex.Gamestates.InGame
 		{
 			Alex.IsMouseVisible = false;
 
-			if (RenderNetworking)
-				Alex.GuiManager.AddScreen(_networkDebugHud);
+			//if (RenderNetworking) 
+			Alex.GuiManager.AddScreen(_networkDebugHud);
 			
 			base.OnShow();
 			Alex.GuiManager.AddScreen(_playingHud);
@@ -361,11 +361,13 @@ namespace Alex.Gamestates.InGame
 
 					if (value)
 					{
-						Alex.GuiManager.AddScreen(_networkDebugHud);
+						_networkDebugHud.Advanced = true;
+						//Alex.GuiManager.AddScreen(_networkDebugHud);
 					}
 					else
 					{
-						Alex.GuiManager.RemoveScreen(_networkDebugHud);
+						_networkDebugHud.Advanced = false;
+						//Alex.GuiManager.RemoveScreen(_networkDebugHud);
 					}
 				}
 			}

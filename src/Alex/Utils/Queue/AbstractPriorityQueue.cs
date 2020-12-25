@@ -125,6 +125,27 @@ namespace Alex.Utils.Queue
 
             return item;
         }
+        
+        public virtual bool TryDequeue(out KeyValuePair<TPriority, TElement> value)
+        {
+            value = default;
+
+            if (_count == 0)
+                return false;
+
+            var      node = _nodes[1];
+            
+            TElement item = node.Element;   // first element at 1
+            Swap(1, _count);            // last element at _count
+            _nodes[_count] = null;      // release hold on the object
+
+            _count--;                   // update count after the element is really gone but before Sink
+
+            Sink(1);                    // move item "down" while heap principles are not met
+
+            value = new KeyValuePair<TPriority, TElement>(node.Priority, item);
+            return true;
+        }
 
         /// <summary>
         /// Returns the first element in the queue (element with max priority) without removing it from the queue.
@@ -137,6 +158,18 @@ namespace Alex.Utils.Queue
             return _nodes[1].Element;   // first element at 1
         }
 
+        public virtual bool TryPeek(out KeyValuePair<TPriority, TElement> value)
+        {
+            if (_count == 0)
+            {
+                value = default;
+                return false;
+            }
+
+            value = new KeyValuePair<TPriority, TElement>(_nodes[1].Priority, _nodes[1].Element);//.Element;
+            return true;
+        }
+        
         /// <summary>
         /// Remove all items from the queue. Capacity is not changed.
         /// </summary>

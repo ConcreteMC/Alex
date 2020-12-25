@@ -79,7 +79,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			{
 				_tickTime++;
 
-				if (World.Player != null && Client.CanSpawn && _gameStarted)
+				if (World.Player != null && Client.CanSpawn && World.Player.IsSpawned && _gameStarted)
 				{
 					//	player.IsSpawned = Spawned;
 
@@ -183,13 +183,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			Client.World = World;
 			//World.Player.SetInventory(new BedrockInventory(46));
 
-			CustomConnectedPong.CanPing = true;
+			//CustomConnectedPong.CanPing = true;
 			World.Ticker.RegisterTicked(this);
-		}
-
-		private bool VerifyConnection()
-		{
-			return Client.IsConnected;
 		}
 
 		public override LoadResult Load(ProgressReport progressReport)
@@ -227,36 +222,56 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			
 			Stopwatch sw = Stopwatch.StartNew();
 
-			bool slowNotified = false;
+			bool         slowNotified = false;
+			bool         outOfOrder   = false;
+			LoadingState state        = LoadingState.ConnectingToServer;
+			string       subTitle     = "";
 			while (true)
 			{
+				if (Client.Connection.IsNetworkOutOfOrder && !outOfOrder)
+				{
+					subTitle = "Waiting for network to catch up...";
+					outOfOrder = true;
+				}
+				else if (!Client.Connection.IsNetworkOutOfOrder && outOfOrder)
+				{
+					subTitle = "";
+					outOfOrder = false;
+					sw.Restart();
+				}
+				
+				if (!outOfOrder && sw.ElapsedMilliseconds >= 500)
+				{
+					subTitle = "Slow network, please wait...";
+				}
+				
 				double radiusSquared = Math.Pow(Client.ChunkRadius, 2);
 				var    target        = radiusSquared;
 
 				percentage = (int) ((100 / target) * World.ChunkManager.ChunkCount);
-
-				if (percentage > 0)
+				progressReport(state, percentage, subTitle);
+				
+				if (((percentage >= 25 && hasSpawnChunk)))
 				{
+					if (statusChanged)
+					{
+						break;
+					}
+
+					subTitle = "Waiting on spawn confirmation...";
+					state = LoadingState.Spawning;
+				}
+				else if (percentage > 0)
+				{
+					state = LoadingState.LoadingChunks;
 					if (percentage != previousPercentage)
 					{
-						progressReport(LoadingState.LoadingChunks, percentage);
 						previousPercentage = percentage;
 						sw.Restart();
-					} 
-					else if (sw.ElapsedMilliseconds >= 500)
-					{
-						progressReport(LoadingState.LoadingChunks, percentage, "Please wait...");
 					}
-					//Log.Info($"Progress: {percentage} ({ChunksReceived} of {target})");
 				}
 
-				if (!slowNotified && percentage == 0 && sw.ElapsedMilliseconds >= 3000)
-				{
-					slowNotified = true;
-					progressReport(LoadingState.ConnectingToServer, 98, "The server seems to be a little slow, please wait...");
-				}
-				
-				if ((!Client.GameStarted || percentage == 0) && sw.ElapsedMilliseconds >= 15000)
+				if ((!Client.GameStarted || percentage == 0) && sw.ElapsedMilliseconds >= 15000 && !Client.Connection.IsNetworkOutOfOrder && !outOfOrder)
 				{
 					if (Client.DisconnectReason == DisconnectReason.Kicked)
 					{
@@ -286,18 +301,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 						hasSpawnChunk = true;
 					}
 				}
-
-				if (((percentage >= 100 && hasSpawnChunk)))
-				{
-					if (statusChanged)
-					{
-						break;
-					}
-					else
-					{
-						progressReport(LoadingState.Spawning, 99, "Waiting on spawn confirmation...");
-					}
-				}
 			}
 
 			var p = World.Player.KnownPosition;
@@ -312,6 +315,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			//progressReport(LoadingState.Spawning, 99);
 			timer.Stop();
 
+			World.Player.IsSpawned = true;
 			_gameStarted = true;
 			
 			//TODO: Check if spawn position is safe.

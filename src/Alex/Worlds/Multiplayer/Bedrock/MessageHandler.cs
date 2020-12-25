@@ -24,6 +24,9 @@ namespace Alex.Worlds.Multiplayer.Bedrock
         private readonly RaknetSession           _session;
 
         public CryptoContext CryptoContext { get; set; }
+
+        private DateTime _lastPacketReceived;
+        public  TimeSpan TimeSinceLastPacket => DateTime.UtcNow - _lastPacketReceived;
         
         public MessageHandler(RaknetSession session, IMcpeClientMessageHandler handler) : base()
         {
@@ -189,6 +192,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 						ReliableMessageNumber = wrapper.ReliabilityHeader.ReliableMessageNumber,
 						OrderingChannel = wrapper.ReliabilityHeader.OrderingChannel,
 						OrderingIndex = wrapper.ReliabilityHeader.OrderingIndex,
+						SequencingIndex = wrapper.ReliabilityHeader.SequencingIndex
 					};
 
 					try
@@ -224,6 +228,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
         private void HandleGamePacket(Packet message)
         {
+	        _lastPacketReceived = DateTime.UtcNow;
             Stopwatch sw = Stopwatch.StartNew();
 
             try

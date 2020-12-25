@@ -100,8 +100,9 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	        }
         }
 
-        public bool GameStarted { get; set; } = false;
-        private ChunkProcessor ChunkProcessor { get; }
+        public  TimeSpan       TimeSinceLastPacket => MessageHandler?.TimeSinceLastPacket ?? TimeSpan.Zero;
+        public  bool           GameStarted         { get; set; } = false;
+        private ChunkProcessor ChunkProcessor      { get; }
 		public BedrockClient(Alex alex, IEventDispatcher eventDispatcher, IPEndPoint endpoint, PlayerProfile playerProfile, DedicatedThreadPool threadPool, BedrockWorldProvider wp)
 		{
 			PacketFactory.CustomPacketFactory = new AlexPacketFactory();
@@ -218,7 +219,14 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					Connection.ConnectionInfo.ThroughPut = new Timer(
 						state =>
 						{
-							Connection.ConnectionInfo.NumberOfPlayers = Connection.ConnectionInfo.RakSessions.Count;
+							if (CustomConnectedPong.CanPing)
+							{
+								World.Player.Latency = (int) CustomConnectedPong.Latency;
+							}
+
+							var nakSent = Connection.ConnectionInfo.NumberOfPlayers;
+							Connection.ConnectionInfo.NumberOfPlayers = 0;
+						//	Connection.ConnectionInfo.NumberOfPlayers = Connection.ConnectionInfo.RakSessions.Count;
 							Interlocked.Exchange(ref Connection.ConnectionInfo.NumberOfDeniedConnectionRequestsPerSecond, 0);
 							long   packetSizeOut = Interlocked.Exchange(ref Connection.ConnectionInfo.TotalPacketSizeOutPerSecond, 0L);
 							long   packetSizeIn = Interlocked.Exchange(ref Connection.ConnectionInfo.TotalPacketSizeInPerSecond, 0L);
@@ -233,20 +241,32 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 							long resends = Interlocked.Exchange(ref Connection.ConnectionInfo.NumberOfResends, 0L);
 							long fails = Interlocked.Exchange(ref Connection.ConnectionInfo.NumberOfFails, 0L);
 
-							/*string str = string.Format("Pkt in/out(#/s) {0}/{1}, ", (object) packetCountIn, (object) packetCountOut)
+							string str = string.Format("Pkt in/out(#/s) {0}/{1}, ", packetCountIn, packetCountOut)
 							             + string.Format(
-								             "ACK(in-out)/NAK/RSND/FTO(#/s) ({0}-{1})/{2}/{3}/{4}, ", (object) ackReceived,
-								             (object) ackSent, (object) nakReceive, (object) resends, (object) fails)
-							             + string.Format("THR in/out(Mbps) {0:F}/{1:F}, ", (object) throughPutIn, (object) throughtPutOut)
+								             "ACK(in-out)/NAK/RSND/FTO(#/s) ({0}-{1})/({2}-{3})/{4}/{5}, ",ackReceived,
+								             ackSent, nakReceive, nakSent, resends, fails)
 							             + string.Format(
-								             "PktSz Total in/out(B/s){0}/{1}, ", (object) packetSizeIn, (object) packetSizeOut);*/
+								             "PktSz Total in/out(B/s){0}/{1}, ", packetSizeIn, packetSizeOut);
 
 							//if (Config.GetProperty("ServerInfoInTitle", false))
 							//	Console.Title = str;
 							//else
-							//	Log.Info(str);
-								
-							_connectionInfo = new ConnectionInfo(StartTime, World.Player.Latency, nakReceive, ackReceived, ackSent, fails, resends, packetSizeIn, packetSizeOut, packetCountIn, packetCountOut);
+								Log.Info(str);
+
+							ConnectionInfo.NetworkState networkState = ConnectionInfo.NetworkState.Ok;
+
+							if (Connection.IsNetworkOutOfOrder)
+							{
+								networkState = ConnectionInfo.NetworkState.OutOfOrder;
+							}else if (MessageHandler.TimeSinceLastPacket.TotalMilliseconds >= 250)
+							{
+								networkState = ConnectionInfo.NetworkState.Slow;
+							}
+							
+							_connectionInfo = new ConnectionInfo(
+								StartTime, Connection.ConnectionInfo.Latency, nakReceive, ackReceived, ackSent, fails, resends,
+								packetSizeIn, packetSizeOut, packetCountIn, packetCountOut,
+								networkState);
 						}, null, 1000, 1000);
 					
 					Connection.Start();
@@ -269,13 +289,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			Stopwatch sw = new Stopwatch();
 			this.Connection.Start();
 
-			var listener = ReflectionHelper.GetPrivateFieldValue<UdpClient>(typeof(RaknetConnection), Connection, "_listener");
-			listener.DontFragment = true;
-			//listener.Client.ReceiveBufferSize = 2000;
-			//listener.Client.SendBufferSize = 2000;
-			//listener.ExclusiveAddressUse = true;
-			listener.EnableBroadcast = false;
-			
 			bool autoConnect = this.Connection.AutoConnect;
 			this.Connection.AutoConnect = false;
 			while (!this.Connection.FoundServer)
@@ -425,10 +438,13 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			RequestChunkRadius(newvalue);
 		}
 
+		public  bool             Transfered       { get; set; } = false;
 		public  DisconnectReason DisconnectReason { get; private set; }
 		private bool             _disconnectShown = false;
 		public void ShowDisconnect(string reason, bool useTranslation = false, bool overrideActive = false, DisconnectReason disconnectReason = DisconnectReason.Unknown)
 		{
+			if (Transfered)
+				return;
 			if (Alex.GameStateManager.GetActiveState() is DisconnectedScreen s && overrideActive)
 			{
 				if (useTranslation)
@@ -1231,6 +1247,21 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			Session?.SendPacket(new DisconnectionNotification());
 		}
 
+		private ulong _expectedLatency = 0;
+		public ulong ExpectedLatency
+		{
+			get => _expectedLatency;
+			set
+			{
+				_expectedLatency = value;
+				_latencySw.Restart();
+			}
+		}
+
+		public long Latency => _latencySw.ElapsedMilliseconds;
+		
+		private Stopwatch _latencySw = new Stopwatch();
+		public  ulong     LastSentPing { get; private set; }
 		public void SendPing()
 		{
 			//return;
@@ -1245,11 +1276,15 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			}
 			else
 			{
-				/*McpeNetworkStackLatency nsl = McpeNetworkStackLatency.CreateObject();
+				//ExpectedLatency = 0;
+				McpeNetworkStackLatency nsl = McpeNetworkStackLatency.CreateObject();
 				nsl.timestamp = (ulong) DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 				nsl.unknownFlag = 1;
 				
-				Session?.SendPacket(nsl);*/
+				Session?.SendPacket(nsl);
+				LastSentPing = nsl.timestamp;
+				
+				_latencySw.Restart();
 			}
 		}
 

@@ -144,6 +144,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			
 			if (Client.PlayerStatus == 3)
 			{
+				CustomConnectedPong.CanPing = true;
 				Client.PlayerStatusChanged.Set();
 
 				Client.World.Player.EntityId = Client.EntityId;
@@ -809,7 +810,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		public void HandleMcpeNetworkChunkPublisherUpdate(McpeNetworkChunkPublisherUpdate message)
 		{
-			((BedrockClient)Client).LastChunkPublish = message;
+			Client.LastChunkPublish = message;
 			//UnhandledPackage(message);
 			//Log.Info($"Chunk publisher update: {message.coordinates} | {message.radius}");
 		}
@@ -1764,6 +1765,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		
 		public void HandleMcpeTransfer(McpeTransfer message)
 		{
+			Client.Transfered = true;
 			 Client.SendDisconnectionNotification();
 			 WorldProvider.Dispose();
 			 
@@ -1987,36 +1989,26 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		{
 			UnhandledPackage(message);
 		}
-
-		private ulong _expectedLatency = 0;
-		public ulong ExpectedLatency
-		{
-			get => _expectedLatency;
-			set
-			{
-				_expectedLatency = value;
-				_latencySw.Restart();
-			}
-		}
-
-		private Stopwatch _latencySw = new Stopwatch();
+		
 		public void HandleMcpeNetworkStackLatency(McpeNetworkStackLatency message)
 		{
-			if (message.timestamp == ExpectedLatency)
+			var unixTime = (ulong) DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+			if (message.timestamp == Client.ExpectedLatency)
 			{
 				CustomConnectedPong.CanPing = false;
-				CustomConnectedPong.Latency = _latencySw.ElapsedMilliseconds;
+				CustomConnectedPong.Latency = Client.World.Player.Latency = (int) Client.Latency;
 				/*if (!CustomConnectedPong.CanPing)
 				{
 					
 				}*/
 			} 
-			else if (message.timestamp > ExpectedLatency)
+			else
 			{
-				ExpectedLatency = message.timestamp;
+				CustomConnectedPong.Latency = Client.World.Player.Latency = (int) (unixTime - Client.LastSentPing);
+				//Client.ExpectedLatency = message.timestamp;
 			}
 
-			//Log.Info($"Stack latency: {message.timestamp} | {message.unknownFlag}");
+			Log.Info($"Stack latency: {message.timestamp} | {message.unknownFlag}");
 			if (message.unknownFlag == 1)
 			{
 				var response = McpeNetworkStackLatency.CreateObject();

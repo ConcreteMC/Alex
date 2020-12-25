@@ -53,7 +53,7 @@ namespace Alex.Net.Bedrock.Raknet
 			{
 				byte flags = ReadByte();
 				var header = new ReliabilityHeader();
-
+//header.ReliableMessageNumber
 				header.Reliability = (Reliability) ((flags & 0b011100000) >> 5);
 				header.HasSplit = (flags & 0b00010000) > 0;
 
