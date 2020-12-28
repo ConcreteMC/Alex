@@ -89,20 +89,27 @@ namespace Alex.Utils.Assets
 
             return false;
         }
+
+        public bool TryGetStoredVersion(out string storedVersion)
+        {
+            if (_storage.TryReadString(CurrentVersionStorageKey, out var currentVersion))
+            {
+                storedVersion = currentVersion;
+                return true;
+            }
+
+            storedVersion = null;
+            return false;
+        }
         
         public async Task<string> EnsureTargetReleaseAsync(string targetRelease, IProgressReceiver progressReceiver)
         {
             var targetVersion = targetRelease; //manifest.Latest.Release;
 
+       //     string assetDirectory    = Path.Combine("assets", "java");
             string assetsZipSavePath = Path.Combine("assets", $"java-{targetVersion}.zip");
 
-            if (_storage.Exists(assetsZipSavePath))
-            {
-                Log.Debug("Java assets already up to date!");
-                return assetsZipSavePath;
-            }
-            
-            if (_storage.TryReadString(CurrentVersionStorageKey, out var currentVersion))
+            if (TryGetStoredVersion(out string currentVersion))
             {
                 if (currentVersion == targetVersion)
                 {
@@ -114,19 +121,14 @@ namespace Alex.Utils.Assets
                 }
             }
 
-            if (_storage.Exists(assetsZipSavePath))
+            /*if (CheckLocal(targetRelease, out var jarPath))
             {
-                _storage.Delete(assetsZipSavePath);
-            }
-
-            if (CheckLocal(targetRelease, out var jarPath))
-            {
+                _storage.TryWriteString(CurrentVersionStorageKey, targetRelease);
                 return jarPath;
                 // using(FileStream)
             }
-            else
+            else*/
             {
-
                 progressReceiver?.UpdateProgress(0, "Downloading assets...");
 
                 var manifest = await GetManifestAsync();
@@ -165,31 +167,35 @@ namespace Alex.Utils.Assets
                     launcherMeta = LauncherMeta.FromJson(launcherMetaJson);
 
                     // download client, prob usefil?
-                    var clientJar = await httpClient.GetByteArrayAsync(launcherMeta.Downloads.Client.Url);
+                    //var clientJar = await httpClient.GetByteArrayAsync(launcherMeta.Downloads.Client.Url);
 
 
-                    using (var clientMs = new MemoryStream(clientJar))
-                    using (ZipArchive clientJarZip = new ZipArchive(clientMs, ZipArchiveMode.Read))
-                    {
-                        foreach (var entry in clientJarZip.Entries)
-                        {
-                            if (!entry.FullName.StartsWith("assets") && entry.FullName != "pack.mcmeta") continue;
+                   // using (var clientMs = new MemoryStream(clientJar))
+                   
+                   using (var clientMs = await httpClient.GetStreamAsync(launcherMeta.Downloads.Client.Url))
+                   {
+                       using (ZipArchive clientJarZip = new ZipArchive(clientMs, ZipArchiveMode.Read))
+                       {
+                           foreach (var entry in clientJarZip.Entries)
+                           {
+                               if (!entry.FullName.StartsWith("assets") && entry.FullName != "pack.mcmeta") continue;
 
-                            var localpath = Path.Combine(dir.FullName, entry.FullName);
+                               var localpath = Path.Combine(dir.FullName, entry.FullName);
 
-                            if (!_storage.TryGetDirectory(Path.GetDirectoryName(localpath), out _))
-                            {
-                                _storage.TryCreateDirectory(Path.GetDirectoryName(localpath));
-                                // Directory.CreateDirectory(Path.GetDirectoryName(localpath));
-                            }
+                               if (!_storage.TryGetDirectory(Path.GetDirectoryName(localpath), out _))
+                               {
+                                   _storage.TryCreateDirectory(Path.GetDirectoryName(localpath));
+                                   // Directory.CreateDirectory(Path.GetDirectoryName(localpath));
+                               }
 
-                            entry.ExtractToFile(localpath, true);
+                               entry.ExtractToFile(localpath, true);
 
-                            Log.Debug($"Extracted Asset '{entry.Name}' (Size: {entry.Length})");
-                        }
-                    }
+                               Log.Debug($"Extracted Asset '{entry.Name}' (Size: {entry.Length})");
+                           }
+                       }
+                   }
 
-                    // now we only care about asset index soooo... grab that
+                   // now we only care about asset index soooo... grab that
                     var assetIndexJson = await httpClient.GetStringAsync(launcherMeta.AssetIndex.Url);
                     _storage.TryWriteString("assetIndex", assetIndexJson, Encoding.UTF8);
                     

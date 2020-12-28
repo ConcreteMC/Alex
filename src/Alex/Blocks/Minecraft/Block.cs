@@ -7,8 +7,10 @@ using Alex.API.World;
 using Alex.Blocks.Properties;
 using Alex.Blocks.State;
 using Alex.Entities;
+using Alex.Graphics.Models.Blocks;
 using Alex.Items;
 using Alex.ResourcePackLib.Json;
+using Alex.ResourcePackLib.Json.BlockStates;
 using Alex.Utils;
 using Alex.Worlds;
 using Alex.Worlds.Abstraction;
@@ -35,7 +37,7 @@ namespace Alex.Blocks.Minecraft
 		public bool Animated { get; set; } = false;
 		public bool Renderable { get; set; }
 		public bool HasHitbox { get; set; }
-		public bool IsFullCube { get; set; } = true;
+		public virtual bool IsFullCube { get; set; } = true;
 		public bool IsFullBlock { get; set; } = true;
 
 		public bool RandomTicked { get; set; } = false;
@@ -106,21 +108,19 @@ namespace Alex.Blocks.Minecraft
 
 		public virtual BlockState BlockPlaced(IBlockAccess world, BlockState state, BlockCoordinates position)
 		{
-			return state;
-			/*if (BlockState is BlockState s)
-			{
-				if (s.IsMultiPart)
-				{
-					BlockStateResource blockStateResource;
+			//return state;
 
-					if (Alex.Instance.Resources.ResourcePack.BlockStates.TryGetValue(s.Name, out blockStateResource))
-					{
-						BlockState.Model = new CachedResourcePackModel(Alex.Instance.Resources,
-							MultiPartModels.GetBlockStateModels(world, position, s.VariantMapper.GetDefaultState(), blockStateResource));
-						world.SetBlockState(position.X, position.Y, position.Z, BlockState);
-					}
+			if (state.IsMultiPart)
+			{
+				BlockStateResource blockStateResource;
+
+				if (Alex.Instance.Resources.ResourcePack.BlockStates.TryGetValue(state.Name, out blockStateResource))
+				{
+					return MultiPartModelHelper.GetBlockState(world, position, state, blockStateResource);
 				}
-			}*/
+			}
+
+			return state;
 		}
 
 		public virtual void BlockUpdate(World world, BlockCoordinates position, BlockCoordinates updatedBlock)

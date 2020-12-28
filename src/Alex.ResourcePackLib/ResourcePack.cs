@@ -4,6 +4,8 @@ using System.IO;
 using System.IO.Compression;
 using Alex.API.Utils;
 using Alex.ResourcePackLib.Generic;
+using Alex.ResourcePackLib.IO;
+using Alex.ResourcePackLib.IO.Abstract;
 using Alex.ResourcePackLib.Json;
 using NLog;
 using NLog.Fluent;
@@ -27,7 +29,7 @@ namespace Alex.ResourcePackLib
 
 	    }
 
-	    protected static ResourcePackManifest GetManifest(ZipArchive archive, ResourcePackType type)
+	    protected static ResourcePackManifest GetManifest(IFilesystem archive, ResourcePackType type)
 	    {
 		    if (type == ResourcePackType.Java)
 		    {
@@ -74,7 +76,7 @@ namespace Alex.ResourcePackLib
 		    return null;
 	    }
 
-		public static ResourcePack LoadFromArchive(ZipArchive archive)
+		public static ResourcePack LoadFromArchive(IFilesystem archive)
 	    {
 			ResourcePack pack = new ResourcePack();
 		    if (archive.GetEntry("pack.mcmeta") != null)

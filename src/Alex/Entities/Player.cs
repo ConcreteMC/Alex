@@ -420,7 +420,7 @@ namespace Alex.Entities
 			    var     flooredBlock = Vector3.Floor(targetPoint);
 			    var     block        = Level.GetBlockState(targetPoint);
 
-			    if (block != null && block.Block.HasHitbox)
+			    if (block != null && block.Block.HasHitbox && block.Model != null)
 			    {
 				    foreach (var bbox in block.Model.GetBoundingBoxes(flooredBlock))
 				    {

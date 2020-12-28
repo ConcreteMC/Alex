@@ -13,6 +13,8 @@ using Alex.API.Graphics.Typography;
 using Alex.API.Resources;
 using Alex.API.Utils;
 using Alex.ResourcePackLib.Generic;
+using Alex.ResourcePackLib.IO;
+using Alex.ResourcePackLib.IO.Abstract;
 using Alex.ResourcePackLib.Json;
 using Alex.ResourcePackLib.Json.BlockStates;
 using Alex.ResourcePackLib.Json.Fonts;
@@ -94,12 +96,12 @@ namespace Alex.ResourcePackLib
 
 		private PngDecoder                           PngDecoder       { get; }
 		public  IDictionary<string, SoundDefinition> SoundDefinitions { get; private set; }
-		public McResourcePack(byte[] resourcePackData) : this(new ZipArchive(new MemoryStream(resourcePackData), ZipArchiveMode.Read, false), null)
+		public McResourcePack(byte[] resourcePackData) : this(new ZipFileSystem(new MemoryStream(resourcePackData)), null)
 		{
 
 		}
 
-		public McResourcePack(ZipArchive archive, McResourcePackPreloadCallback preloadCallback, LoadProgress progressReporter = null)
+		public McResourcePack(IFilesystem archive, McResourcePackPreloadCallback preloadCallback, LoadProgress progressReporter = null)
 		{
 			ProgressReporter = progressReporter;
 			
@@ -113,7 +115,7 @@ namespace Alex.ResourcePackLib
 		}
 
 
-		private void Preload(ZipArchive archive)
+		private void Preload(IFilesystem archive)
 		{
 			if (IsPreLoaded) return;
 
@@ -135,7 +137,7 @@ namespace Alex.ResourcePackLib
 			return filename.Replace("\\", "/");
 		}
 
-		private void Load(ZipArchive archive)
+		private void Load(IFilesystem archive)
 		{
 			if (!IsPreLoaded)
 			{
@@ -251,7 +253,7 @@ namespace Alex.ResourcePackLib
 		}
 
 
-		private void LoadMeta(ZipArchive archive)
+		private void LoadMeta(IFilesystem archive)
 		{
 			ResourcePackInfo info;
 
@@ -274,7 +276,7 @@ namespace Alex.ResourcePackLib
 			Info = info;
 		}
 
-		private void LoadTextureMeta(ZipArchiveEntry entry, Match match)
+		private void LoadTextureMeta(IFile entry, Match match)
 		{
 			if (!TryGetTextureMeta(new ResourceLocation(match.Groups["namespace"].Value, SanitizeFilename(match.Groups["filename"].Value)), out var meta))
 			{
@@ -282,7 +284,7 @@ namespace Alex.ResourcePackLib
 			}
 		}
 
-		private void ProcessTexture(ZipArchiveEntry entry, Match match)
+		private void ProcessTexture(IFile entry, Match match)
 		{
 			try
 			{
@@ -294,7 +296,7 @@ namespace Alex.ResourcePackLib
 			}
 		}
 
-		private Image<Rgba32> LoadBitmap(ZipArchiveEntry entry, Match match)
+		private Image<Rgba32> LoadBitmap(IFile entry, Match match)
 		{
 			var resource = new ResourceLocation(match.Groups["namespace"].Value, SanitizeFilename(match.Groups["filename"].Value));
 
@@ -317,7 +319,7 @@ namespace Alex.ResourcePackLib
 		
 		#region BitmapFont
 
-		private void LoadFontDefinition(ZipArchiveEntry entry)
+		private void LoadFontDefinition(IFile entry)
 		{
 			ReadOnlySpan<byte> content;
 			using (var stream = entry.Open())
@@ -332,9 +334,9 @@ namespace Alex.ResourcePackLib
 
 		}
 		
-		private void LoadFont(ZipArchive archive)
+		private void LoadFont(IFilesystem archive)
 		{
-			List<ZipArchiveEntry> asciiFontEnties = new List<ZipArchiveEntry>();
+			List<IFile> asciiFontEnties = new List<IFile>();
 
 			foreach (var entry in archive.Entries)
 			{
@@ -367,7 +369,7 @@ namespace Alex.ResourcePackLib
 		}
 
 		private bool DidPreload { get; set; } = false;
-		private void LoadBitmapFont(ZipArchiveEntry entry)
+		private void LoadBitmapFont(IFile entry)
 		{
 			var match = IsFontTextureResource.Match(entry.FullName);
 
@@ -390,7 +392,7 @@ namespace Alex.ResourcePackLib
 			//Font = new BitmapFont(Graphics, fontBitmap, 16, BitmapFontCharacters.ToCharArray().ToList());
 		}
 		
-		private void LoadGlyphSizes(ZipArchiveEntry entry)
+		private void LoadGlyphSizes(IFile entry)
 		{
 			byte[] glyphWidth;// = new byte[65536];
 			using (Stream stream = entry.Open())
@@ -458,7 +460,7 @@ namespace Alex.ResourcePackLib
 			return false;
 		}
 		
-		private TextureMeta LoadBitmapMeta(ZipArchiveEntry entry, Match match)
+		private TextureMeta LoadBitmapMeta(IFile entry, Match match)
 		{
 			TextureMeta meta;
 			using (var stream = entry.Open())
@@ -496,13 +498,13 @@ namespace Alex.ResourcePackLib
 					foreach (var sVariant in part.Apply)
 					{
 						sVariant.ResourcePack = this;
-						if (!TryGetBlockModel(sVariant.ModelName, out var model))
+						/*if (!TryGetBlockModel(sVariant.ModelName, out var model))
 						{
 							Log.Debug($"Could not get multipart blockmodel! Variant: {blockStateResource} Model: {sVariant.ModelName}");
 							continue;
-						}
+						}*/
 
-							sVariant.Model = model;
+					//	sVariant.Model = model;
 					}
 				}
 			}
@@ -513,13 +515,13 @@ namespace Alex.ResourcePackLib
 					foreach (var sVariant in variant.Value)
 					{
 						sVariant.ResourcePack = this;
-						if (!TryGetBlockModel(sVariant.ModelName, out var model))
+						/*if (!TryGetBlockModel(sVariant.ModelName, out var model))
 						{
 							Log.Debug($"Could not get blockmodel for variant! Variant: {variant.Key} Model: {sVariant.ModelName}");
 							continue;
-						}
+						}*/
 
-						sVariant.Model = model;
+						//sVariant.Model = model;
 					}
 				}
 			}
@@ -527,7 +529,7 @@ namespace Alex.ResourcePackLib
 			return blockStateResource;
 		}
 		
-		private void LoadBlockState(ZipArchiveEntry entry, Match match)
+		private void LoadBlockState(IFile entry, Match match)
 		{
 			try
 			{
@@ -569,7 +571,7 @@ namespace Alex.ResourcePackLib
 
 		#region Models
 		
-		private ResourcePackModelBase ReadModel(ZipArchiveEntry entry, ResourceLocation location)
+		private ResourcePackModelBase ReadModel(IFile entry, ResourceLocation location)
 		{
 			try
 			{
@@ -640,7 +642,7 @@ namespace Alex.ResourcePackLib
 
 		#region Localization
 
-		private void LoadLocalization(ZipArchiveEntry entry, Match match)
+		private void LoadLocalization(IFile entry, Match match)
 		{
 			string name = match.Groups["filename"].Value;
 			string nameSpace = match.Groups["namespace"].Value;

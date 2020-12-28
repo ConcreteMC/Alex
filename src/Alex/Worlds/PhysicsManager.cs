@@ -334,7 +334,7 @@ namespace Alex.Worlds
 
 			    var block = world.GetBlockState(coords);
 
-			    if (block == null)
+			    if (block == null || block.Model == null)
 				    continue;
 
 			    if (!block.Block.Solid)

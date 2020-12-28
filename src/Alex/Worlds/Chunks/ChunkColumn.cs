@@ -159,7 +159,7 @@ namespace Alex.Worlds.Chunks
 										
 										var model = blockState.Model;
 
-										if (blockState.Block.RequiresUpdate)
+										if (blockState.Block.RequiresUpdate || blockState.IsMultiPart)
 										{
 											var newblockState = blockState.Block.BlockPlaced(
 												world, blockState, blockPosition);
@@ -173,7 +173,7 @@ namespace Alex.Worlds.Chunks
 											}
 										}
 
-										if (blockState.IsMultiPart)
+										/*if (blockState.IsMultiPart)
 										{
 											var newBlockState = MultiPartModelHelper.GetBlockState(
 												world, blockPosition, blockState, blockState.MultiPartHelper);
@@ -185,11 +185,15 @@ namespace Alex.Worlds.Chunks
 												section.Set(state.Storage, x, y, z, blockState);
 												model = blockState.Model;
 											}
-										}
+										}*/
 										
 										ChunkData?.Remove(device, blockCoordinates);
-										
-										model.GetVertices(world, ChunkData, blockCoordinates, blockPosition, blockState.Block);
+
+										if (model != null)
+										{
+											model.GetVertices(
+												world, ChunkData, blockCoordinates, blockPosition, blockState.Block);
+										}
 									}
 								}
 								finally

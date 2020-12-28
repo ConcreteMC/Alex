@@ -49,7 +49,7 @@ namespace Alex.Graphics.Models.Blocks
 		public ResourcePackBlockModel(ResourceManager resources, BlockStateModel[] models, bool useRandomizer = false)
 		{
 			Resources = resources;
-			Models = models.Select(x =>
+			/*Models = models.Select(x =>
 			{
 				return new BlockStateModel()
 				{
@@ -57,7 +57,7 @@ namespace Alex.Graphics.Models.Blocks
 					Weight = x.Weight,
 					X = x.X,
 					Y = x.Y,
-					ModelName = x.ModelName,
+					ModelName = x.ModelName/*,
 					Model = new ResourcePackLib.Json.Models.ResourcePackModelBase()
 					{
 						AmbientOcclusion = x.Model.AmbientOcclusion,
@@ -85,7 +85,9 @@ namespace Alex.Graphics.Models.Blocks
 						}).ToArray()
 					}
 				};
-			}).ToArray();
+			}).ToArray();*/
+
+			Models = models;
 			
 			//Models = models;
 			UseRandomizer = useRandomizer;
@@ -233,25 +235,29 @@ namespace Alex.Graphics.Models.Blocks
 			for (var index = 0; index < models.Length; index++)
 			{
 				var model = models[index];
-				GenerateBoundingBoxes(model, model.Model, out Vector3 min, out Vector3 max);
 
-				if (max.X > Max.X)
-					Max.X = max.X;
+				if (Resources.BlockModelRegistry.TryGet(model.ModelName, out var registryEntry))
+				{
+					GenerateBoundingBoxes(model, registryEntry.Value, out Vector3 min, out Vector3 max);
 
-				if (max.Y > Max.Y)
-					Max.Y = max.Y;
+					if (max.X > Max.X)
+						Max.X = max.X;
 
-				if (max.Z > Max.Z)
-					Max.Z = max.Z;
+					if (max.Y > Max.Y)
+						Max.Y = max.Y;
 
-				if (min.X < Min.X)
-					Min.X = min.X;
+					if (max.Z > Max.Z)
+						Max.Z = max.Z;
 
-				if (min.Y < Min.Y)
-					Min.Y = min.Y;
+					if (min.X < Min.X)
+						Min.X = min.X;
 
-				if (min.Z < Min.Z)
-					Min.Z = min.Z;
+					if (min.Y < Min.Y)
+						Min.Y = min.Y;
+
+					if (min.Z < Min.Z)
+						Min.Z = min.Z;
+				}
 			}
 		}
 
@@ -581,10 +587,16 @@ namespace Alex.Graphics.Models.Blocks
 			Biome biome)
 		{
 			//bsModel.Y = Math.Abs(180 - bsModel.Y);
-			var model     = bsModel.Model;
+			ResourcePackModelBase model = null;//     = bsModel.Model;
+
+			if (!Resources.BlockModelRegistry.TryGet(bsModel.ModelName, out var registryEntry))
+			{
+				return;
+			}
+			model = registryEntry.Value;
+			
 			var baseColor = baseBlock.BlockMaterial.TintColor;
-
-
+			
 			for (var index = 0; index < model.Elements.Length; index++)
 			{
 				var element = model.Elements[index];
@@ -714,7 +726,7 @@ namespace Alex.Graphics.Models.Blocks
 					faceColor = AdjustColor(faceColor, facing, element.Shade);
 
 					var uvMap = GetTextureUVMap(
-						Resources, face.Value.Texture, x1, x2, y1, y2, face.Value.Rotation, faceColor);
+						Resources, ResolveTexture(model, face.Value.Texture), x1, x2, y1, y2, face.Value.Rotation, faceColor);
 					
 					var vertices = GetFaceVertices(face.Key, element.From, element.To, uvMap);
 
@@ -816,7 +828,7 @@ namespace Alex.Graphics.Models.Blocks
 					{
 						var bsModel = models[bsModelIndex];
 
-						if (bsModel.Model == null) continue;
+						if (string.IsNullOrWhiteSpace(bsModel.ModelName)) continue;
 
 						CalculateModel(
 							world, blockCoordinates, chunkBuilder, position, baseBlock, bsModel,

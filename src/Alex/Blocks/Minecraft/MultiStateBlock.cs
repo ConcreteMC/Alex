@@ -16,10 +16,7 @@ namespace Alex.Blocks.Minecraft
 		{
 			if (BlockState is BlockState state)
 			{
-				if (state.MultiPartHelper != null)
-				{
-					
-				}
+				
 			}
 			base.BlockUpdate(world, position, updatedBlock);
 		}

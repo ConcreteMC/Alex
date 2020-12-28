@@ -26,15 +26,36 @@ namespace Alex.Blocks.State
 
 		public string Name { get; set; }
 		public uint ID { get; set; }
-		public BlockModel Model { get; set; }
-		public Block Block { get; set; } = new Air();
-		public bool IsMultiPart { get; set; } = false;
-		public bool Default { get; set; } = false;
+		
+		internal Func<BlockModel> ResolveModel { get; set; }
 
-		public string[] AppliedModels { get; set; } = new string[0];
+		private  BlockModel       _model = null;
+		public BlockModel Model
+		{
+			get
+			{
+				if (_model == null && ResolveModel != null)
+				{
+					_model = ResolveModel();
+					ResolveModel = null;
+				}
+
+				return _model;
+			}
+			set
+			{
+				_model = value;
+			}
+		}
+
+		public   Block            Block        { get; set; } = new Air();
+		public   bool             IsMultiPart  { get; set; } = false;
+		public   bool             Default      { get; set; } = false;
+
+		//public string[] AppliedModels { get; set; } = new string[0];
 		
 		//TODO: Remove
-		internal BlockStateResource MultiPartHelper { get; set; }
+		//internal BlockStateResource MultiPartHelper { get; set; }
 		
 		public BlockStateVariantMapper VariantMapper { get; set; }
 
@@ -179,12 +200,13 @@ namespace Alex.Blocks.State
 				Values = new Dictionary<string, string>(Values /*, new StateComparer()*/),
 				Block = Block,
 				VariantMapper = VariantMapper,
+				ResolveModel = ResolveModel,
 				Model = Model,
 				Default = Default,
 			//	Location = Location == null ? null : new ResourceLocation(Location.Namespace, Location.Path),
-				AppliedModels = AppliedModels,
+		//		AppliedModels = AppliedModels,
 				IsMultiPart = IsMultiPart,
-				MultiPartHelper = MultiPartHelper
+				//	MultiPartHelper = MultiPartHelper
 			};
 			return bs;
 		}

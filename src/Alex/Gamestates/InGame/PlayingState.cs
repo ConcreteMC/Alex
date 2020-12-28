@@ -236,7 +236,7 @@ namespace Alex.Gamestates.InGame
 						if (blockstate != null && blockstate.Block.HasHitbox)
 						{
 							sb.AppendLine($"{blockstate.Name} (S: {bs.Storage})");
-							if (blockstate.IsMultiPart)
+							/*if (blockstate.IsMultiPart)
 							{
 								sb.AppendLine($"MultiPart=true");
 								sb.AppendLine();
@@ -247,7 +247,7 @@ namespace Alex.Gamestates.InGame
 								{
 									sb.AppendLine(model);
 								}
-							}
+							}*/
 
 							var dict = blockstate.ToDictionary();
 

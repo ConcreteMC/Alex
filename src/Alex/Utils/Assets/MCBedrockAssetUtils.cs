@@ -4,6 +4,7 @@ using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using Alex.API.Services;
 using Alex.Gamestates.InGame;
@@ -26,8 +27,22 @@ namespace Alex.Utils.Assets
             Storage = storage;
         }
 
-        public async Task<string> CheckAndDownloadResources(IProgressReceiver progressReceiver)
+        public bool TryGetStoredAssetVersion(out string version)
         {
+            if (Storage.TryReadString(CurrentBedrockVersionStorageKey, out var currentVersion))
+            {
+                version = currentVersion;
+
+                return true;
+            }
+
+            version = null;
+            return false;
+        }
+
+        public bool CheckUpdate(IProgressReceiver progressReceiver, out string path)
+        {
+            path = String.Empty;
             progressReceiver?.UpdateProgress(0, "Checking for resource updates...");
             
             using var httpClient = new HttpClient(new HttpClientHandler
@@ -37,82 +52,90 @@ namespace Alex.Utils.Assets
 
             try
             {
-                string assetsZipSavePath = String.Empty;
+              //  string assetsZipSavePath = String.Empty;
 
-                if (Storage.TryReadString(CurrentBedrockVersionStorageKey, out var currentVersion))
+                string currentVersion;
+                if (TryGetStoredAssetVersion(out currentVersion))
                 {
-                    assetsZipSavePath = Path.Combine("assets", $"bedrock-{currentVersion}.zip");
+                    path = Path.Combine("assets", $"bedrock-{currentVersion}.zip");
 
-                    if (!Storage.Exists(assetsZipSavePath))
+                    if (!Storage.Exists(path))
                         currentVersion = null;
                 }
 
                 try
                 {
-                 //   var preRedirectHeaders = await httpClient.SendAsync(
-                  //      new HttpRequestMessage(HttpMethod.Get, DownloadURL), HttpCompletionOption.ResponseHeadersRead);
-                 //   if (preRedirectHeaders.StatusCode == HttpStatusCode.MovedPermanently)
-                  //  {
-                        var zipDownloadHeaders =
-                            await httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Get,
-                                DownloadURL), HttpCompletionOption.ResponseHeadersRead);
+                    var zipDownloadHeaders = httpClient.Send(
+                        new HttpRequestMessage(HttpMethod.Get, DownloadURL), HttpCompletionOption.ResponseHeadersRead);
 
-                        var fileName = zipDownloadHeaders.Content?.Headers?.ContentDisposition?.FileName ??
-                                       zipDownloadHeaders.RequestMessage?.RequestUri?.LocalPath;
-                        var versionMatch = ExtractVersionFromFilename.Match(fileName);
-                        if (versionMatch.Success)
+                    var fileName = zipDownloadHeaders.Content?.Headers?.ContentDisposition?.FileName
+                                   ?? zipDownloadHeaders.RequestMessage?.RequestUri?.LocalPath;
+
+                    var versionMatch = ExtractVersionFromFilename.Match(fileName);
+
+                    if (versionMatch.Success)
+                    {
+                        var latestVersion = versionMatch.Groups["version"].Value;
+
+                        if (latestVersion != currentVersion
+                            || (!string.IsNullOrWhiteSpace(path) && !Storage.Exists(path)))
                         {
-                            var latestVersion = versionMatch.Groups["version"].Value;
+                            if (Storage.Exists(path))
+                                Storage.Delete(path);
+                            
+                            progressReceiver?.UpdateProgress(
+                                0, "Downloading latest bedrock assets...", "This could take a while...");
 
-                            if (latestVersion != currentVersion
-                                || (!string.IsNullOrWhiteSpace(assetsZipSavePath)
-                                    && !Storage.Exists(assetsZipSavePath)))
+                            /* zipDownloadHeaders = await httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Get,
+                                 zipDownloadHeaders.Headers.Location), HttpCompletionOption.ResponseContentRead);
+                             var content = await zipDownloadHeaders.Content.ReadAsByteArrayAsync();*/
+                            Stopwatch sw = new Stopwatch();
+                            WebClient wc = new WebClient();
+
+                            wc.DownloadProgressChanged += (sender, args) =>
                             {
+                                var downloadSpeed =
+                                    $"Download speed: {PlayingState.GetBytesReadable((long) (Convert.ToDouble(args.BytesReceived) / sw.Elapsed.TotalSeconds), 2)}/s";
+
                                 progressReceiver?.UpdateProgress(
-                                    0, "Downloading latest bedrock assets...", "This could take a while...");
+                                    args.ProgressPercentage, $"Downloading latest bedrock assets...", downloadSpeed);
+                            };
 
-                                /* zipDownloadHeaders = await httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Get,
-                                     zipDownloadHeaders.Headers.Location), HttpCompletionOption.ResponseContentRead);
-                                 var content = await zipDownloadHeaders.Content.ReadAsByteArrayAsync();*/
-
-                                Stopwatch sw = Stopwatch.StartNew();
-                                WebClient wc = new WebClient();
-
-                                wc.DownloadProgressChanged += (sender, args) =>
-                                {
-                                    var downloadSpeed =
-                                        $"Download speed: {PlayingState.GetBytesReadable((long) (Convert.ToDouble(args.BytesReceived) / sw.Elapsed.TotalSeconds), 2)}/s";
-
-                                    progressReceiver?.UpdateProgress(
-                                        args.ProgressPercentage,
-                                        $"Downloading latest bedrock assets...",
-                                        downloadSpeed);
-                                };
-
-
-                                var content = await wc.DownloadDataTaskAsync(zipDownloadHeaders.RequestMessage.RequestUri);
-
-                                assetsZipSavePath = Path.Combine("assets", $"bedrock-{latestVersion}.zip");
+                            bool   complete = false;
+                            string archivePath = string.Empty;
+                            wc.DownloadDataCompleted += (sender, args) =>
+                            {
+                                var content = args.Result;
                                 
+                                archivePath = Path.Combine("assets", $"bedrock-{latestVersion}.zip");
+
                                 // save locally
+                                
                                 Storage.TryWriteString(CurrentBedrockVersionStorageKey, latestVersion);
+                                
+                                Storage.TryWriteBytes(archivePath, content);
 
-                                Storage.TryWriteBytes(assetsZipSavePath, content);
-
-                                var existingPath = Path.Combine("assets", "bedrock");
-
-                                Storage.TryDeleteDirectory(existingPath);
-                            }
-
+                                complete = true;
+                            };
+                            
+                            wc.DownloadDataAsync(zipDownloadHeaders.RequestMessage.RequestUri);
+                            sw.Restart();
+                            
+                            SpinWait.SpinUntil(() => complete);
+                            
+                            path = archivePath;
+                            
+                            return true;
                         }
-                   // }
+                    }
 
-                    return assetsZipSavePath;
+                    return false;
                 }
                 catch (Exception ex)
                 {
                     Log.Error(ex, "Failed to download bedrock assets...");
-                    return assetsZipSavePath;
+
+                    return false;
                 }
             }
             catch(Exception ex)

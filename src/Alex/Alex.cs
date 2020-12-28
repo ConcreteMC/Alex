@@ -294,6 +294,12 @@ namespace Alex
 		protected override void LoadContent()
 		{
 			Stopwatch loadingStopwatch = Stopwatch.StartNew();
+			
+			var builtInFont = ResourceManager.ReadResource("Alex.Resources.default_font.png");
+			
+			var image = Image.Load<Rgba32>(builtInFont);
+			OnResourcePackPreLoadCompleted(image, McResourcePack.BitmapFontCharacters.ToList());
+			
 			var       options          = Services.GetService<IOptionsProvider>();
 			options.Load();
 
@@ -572,6 +578,7 @@ namespace Alex
 		private void InitializeGame(IProgressReceiver progressReceiver)
 		{
 			progressReceiver.UpdateProgress(0, "Initializing...");
+
 			API.Extensions.Init(GraphicsDevice);
 			MCPacketFactory.Load();
 			//ConfigureServices();

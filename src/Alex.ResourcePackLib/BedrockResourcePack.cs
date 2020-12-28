@@ -9,6 +9,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using Alex.API.Resources;
 using Alex.API.Utils;
+using Alex.ResourcePackLib.IO.Abstract;
 using Alex.ResourcePackLib.Json;
 using Alex.ResourcePackLib.Json.Bedrock.Entity;
 using Alex.ResourcePackLib.Json.Bedrock.Sound;
@@ -33,9 +34,9 @@ namespace Alex.ResourcePackLib
 		public IReadOnlyDictionary<ResourceLocation, EntityDescription> EntityDefinitions { get; private set; } = new ConcurrentDictionary<ResourceLocation, EntityDescription>();
 		public SoundDefinitionFormat SoundDefinitions { get; private set; } = null;
 		
-		private readonly ZipArchive _archive;
+		private readonly IFilesystem _archive;
 
-		public BedrockResourcePack(ZipArchive archive, ResourcePack.LoadProgress progressReporter = null)
+		public BedrockResourcePack(IFilesystem archive, ResourcePack.LoadProgress progressReporter = null)
 		{
 			_archive = archive;
 
@@ -46,7 +47,7 @@ namespace Alex.ResourcePackLib
 		{
 			var entry = _archive.GetEntry(path);
 
-			if (entry == null || !entry.IsFile())
+			if (entry == null)
 			{
 				throw new FileNotFoundException();
 			}
@@ -228,7 +229,7 @@ namespace Alex.ResourcePackLib
 			return final;
 		}
 		
-		private static void LoadEntityModel(ZipArchiveEntry entry, Dictionary<string, EntityModel> models)
+		private static void LoadEntityModel(IFile entry, Dictionary<string, EntityModel> models)
 		{
 			string json;
 			using (var stream = entry.Open())
@@ -276,7 +277,7 @@ namespace Alex.ResourcePackLib
 			return true;
 		}
 
-		private void ProcessSounds(ResourcePack.LoadProgress progress, ZipArchiveEntry entry)
+		private void ProcessSounds(ResourcePack.LoadProgress progress, IFile entry)
 		{
 			using (var fs = entry.Open())
 			{
@@ -293,7 +294,7 @@ namespace Alex.ResourcePackLib
 			v18,
 			v110
 		}
-		private void LoadEntityDefinition(ZipArchiveEntry entry, Dictionary<ResourceLocation, EntityDescription> entityDefinitions)
+		private void LoadEntityDefinition(IFile entry, Dictionary<ResourceLocation, EntityDescription> entityDefinitions)
 		{
 			using (var stream = entry.Open())
 			{

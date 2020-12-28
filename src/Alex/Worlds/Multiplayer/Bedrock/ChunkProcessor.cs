@@ -424,7 +424,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 										        }
 									        }
 
-									        if (result == null)
+									        /*if (result == null)
 									        {
 										        result = new BlockState()
 										        {
@@ -434,7 +434,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 										        };
 										        
 										        Log.Info($"Unknown block: {id}:{meta}");
-									        }
+									        }*/
 									        
 									        if (result != null)
 									        {

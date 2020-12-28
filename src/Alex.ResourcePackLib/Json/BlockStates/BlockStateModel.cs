@@ -15,10 +15,10 @@ namespace Alex.ResourcePackLib.Json.BlockStates
 		[JsonProperty("model")]
 		public string ModelName { get; set; }
 
-		private ResourcePackModelBase _model = null;
+		//private ResourcePackModelBase _model = null;
 		
-		[JsonIgnore]
-		public ResourcePackModelBase Model
+		//[JsonIgnore]
+		/*public ResourcePackModelBase Model
 		{
 			get
 			{
@@ -38,7 +38,7 @@ namespace Alex.ResourcePackLib.Json.BlockStates
 			{
 				_model = value;
 			}
-		}
+		}*/
 
 		/// <summary>
 		/// Rotation of the model on the x-axis in increments of 90 degrees.

@@ -20,7 +20,6 @@ namespace Alex.API.Services
 
             Directory.CreateDirectory(DataDirectory);
             Directory.CreateDirectory(Path.Combine(DataDirectory, "assets"));
-            Directory.CreateDirectory(Path.Combine(DataDirectory, "assets", "bedrock"));
             Directory.CreateDirectory(Path.Combine(DataDirectory, "assets", "resourcepacks"));
         }
 
