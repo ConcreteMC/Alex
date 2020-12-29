@@ -1,3 +1,6 @@
+using Alex.API.Blocks;
+using Microsoft.Xna.Framework;
+
 namespace Alex.Blocks.Minecraft
 {
 	public class Snow : Block
@@ -8,9 +11,10 @@ namespace Alex.Blocks.Minecraft
 			Transparent = true;
 			IsReplacible = false;
 			IsFullCube = false;
-			//BlockMaterial = Material.Snow;
-			
+
 			Hardness = 0.2f;
+			
+			BlockMaterial = Material.Snow.Clone().SetTintType(TintType.Color, Color.Snow);
 		}
 	}
 }

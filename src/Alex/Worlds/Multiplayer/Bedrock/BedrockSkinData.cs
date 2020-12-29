@@ -18,9 +18,10 @@ namespace Alex.Worlds.Multiplayer.Bedrock
         public string ServerAddress { get; set; }
         public string LanguageCode { get; set; }
 
-        public string DeviceId { get; set; } = Guid.NewGuid().ToString();
-        public string DeviceModel { get; set; } = "Alex";
-        public int DeviceOS { get; set; } = 7;
+        public string SelfSignedID { get; set; } = Guid.NewGuid().ToString();
+        public string DeviceId     { get; set; } = Guid.NewGuid().ToString();
+        public string DeviceModel  { get; set; } = "(Standard system devices) System devices";
+        public int    DeviceOS     { get; set; } = 1;
 
         public int UIProfile { get; set; } = 0;
         public int GuiScale { get; set; } = 0;

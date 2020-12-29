@@ -28,8 +28,7 @@ namespace Alex.ResourcePackLib.Json.Textures
         [JsonProperty("height")]
         public long Height { get; set; }
 
-        [JsonProperty("frametime")]
-        public long Frametime { get; set; }
+        [JsonProperty("frametime")] public int Frametime { get; set; } = 1;
 
         [JsonProperty("frames")]
         public FrameElement[] Frames { get; set; }

@@ -4,11 +4,17 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Threading;
 using Alex.Net.Bedrock;
+using MiNET;
 using MiNET.Net;
 using MiNET.Net.RakNet;
 using MiNET.Utils;
 using NLog;
+using Org.BouncyCastle.Utilities.Zlib;
+using CompressionLevel = MonoGame.Framework.Utilities.Deflate.CompressionLevel;
+using CompressionMode = MonoGame.Framework.Utilities.Deflate.CompressionMode;
+using CryptoContext = MiNET.Utils.CryptoContext;
 
 namespace Alex.Worlds.Multiplayer.Bedrock
 {
@@ -24,6 +30,9 @@ namespace Alex.Worlds.Multiplayer.Bedrock
         private readonly RaknetSession           _session;
 
         public CryptoContext CryptoContext { get; set; }
+
+        private DateTime _lastPacketReceived;
+        public  TimeSpan TimeSinceLastPacket => DateTime.UtcNow - _lastPacketReceived;
         
         public MessageHandler(RaknetSession session, IMcpeClientMessageHandler handler) : base()
         {
@@ -95,6 +104,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			return sendList;
 		}
 
+        public AutoResetEvent FirstEncryptedPacketWaitHandle = new AutoResetEvent(false);
 		public Packet HandleOrderedSend(Packet packet)
 		{
 			if (!packet.ForceClear && CryptoContext != null && CryptoContext.UseEncryption && packet is McpeWrapper wrapper)
@@ -110,6 +120,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			return packet;
 		}
 
+		private bool _hasEncrypted = false;
 		public void HandlePacket(Packet message)
 		{
 			if (message is McpeWrapper wrapper)
@@ -117,19 +128,22 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				var messages = new LinkedList<Packet>();
 
 				// Get bytes to process
-				ReadOnlyMemory<byte> payload = wrapper.payload;
+				var payload = wrapper.payload.ToArray();
 
 				// Decrypt bytes
 
+
 				if (CryptoContext != null && CryptoContext.UseEncryption)
 				{
-					// This call copies the entire buffer, but what can we do? It is kind of compensated by not
-					// creating a new buffer when parsing the packet (only a mem-slice)
+					FirstEncryptedPacketWaitHandle.Set();
+
 					payload = CryptoUtils.Decrypt(payload, CryptoContext);
+
+					_hasEncrypted = true;
 				}
-				
-				var stream = new MemoryStreamReader(payload);
-				using (var deflateStream = new DeflateStream(stream, CompressionMode.Decompress, false))
+
+				//var stream = new MemoryStreamReader(payload);
+				using (var deflateStream = new DeflateStream(new MemoryStream(payload), System.IO.Compression.CompressionMode.Decompress, false))
 				{
 					using var s = new MemoryStream();
 					deflateStream.CopyTo(s);
@@ -153,11 +167,11 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 							             ?? new UnknownPacket((byte) id, internalBuffer);
 
 							//Hack for some servers that screw up the order.
-							if (packet is McpePlayerList)
-							{
-								messages.AddFirst(packet);
-							}
-							else
+						//	if (packet is McpePlayerList)
+						//	{
+								//		messages.AddFirst(packet);
+						//	}
+						//	else
 							{
 								messages.AddLast(packet);
 							}
@@ -189,6 +203,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 						ReliableMessageNumber = wrapper.ReliabilityHeader.ReliableMessageNumber,
 						OrderingChannel = wrapper.ReliabilityHeader.OrderingChannel,
 						OrderingIndex = wrapper.ReliabilityHeader.OrderingIndex,
+						SequencingIndex = wrapper.ReliabilityHeader.SequencingIndex
 					};
 
 					try
@@ -224,6 +239,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
         private void HandleGamePacket(Packet message)
         {
+	        _lastPacketReceived = DateTime.UtcNow;
             Stopwatch sw = Stopwatch.StartNew();
 
             try

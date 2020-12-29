@@ -2,23 +2,23 @@
 using System.Collections.Generic;
 using System.Linq;
 using Alex.API.Data;
-using Alex.API.Events;
-using Alex.API.Events.World;
 using Alex.API.Graphics.Typography;
+using Alex.API.Gui;
 using Alex.API.Gui.Elements.Controls;
 using Alex.API.Gui.Graphics;
 using Alex.API.Utils;
+using Alex.Net;
 using Alex.Utils;
 using Alex.Worlds;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using MiNET;
 using NLog;
-using RocketUI;
+using MessageType = Alex.API.Data.MessageType;
 
 namespace Alex.Gui.Elements
 {
-	public class ChatComponent : GuiTextInput
+	public class ChatComponent : GuiTextInput, IChatRecipient
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ChatComponent));
 		
@@ -27,18 +27,16 @@ namespace Alex.Gui.Elements
 		public int UnfocusedHeight { get; set; } = 100;
 		public int FocusedHeight { get; set; } = 180;
 		
-		private IEventDispatcher EventDispatcher { get; }
-		public ChatComponent(IEventDispatcher eventDispatcher)
+		public  NetworkProvider  Network         { get; set; }
+
+		public ChatComponent()
 		{
-			EventDispatcher = eventDispatcher;
 			Anchor = Alignment.BottomLeft;
 
 			MaxHeight = Height;
 			Height = 180;
 			Width = 320;
-
-			eventDispatcher.RegisterEvents(this);
-
+			
 			Font = Alex.Instance.GuiRenderer.Font;
 		}
 
@@ -120,6 +118,9 @@ namespace Alex.Gui.Elements
 						alpha = (float) (1f - ((elapse.TotalMilliseconds / _renderTimeout.TotalMilliseconds) * 1f));
 					}
 
+					if (alpha <= 0)
+						break;
+					
 					DrawChatLine(graphics, msg.message, alpha, ref offset);
 
 					if (offset.Y - 48f >= targetHeight)
@@ -135,9 +136,19 @@ namespace Alex.Gui.Elements
 			var size = Font.MeasureString(text);
 			while (size.X > Bounds.Width)
 			{
-				string current = text;
-				text = current.Remove(current.Length - 1, 1);
-				rest = current.Substring(current.Length - 1, 1) + rest;
+				string current        = text;
+
+				var lastWhiteSpace = current.LastIndexOf(' ');
+				if (lastWhiteSpace > 0)
+				{
+					text = current.Remove(lastWhiteSpace, current.Length - lastWhiteSpace);
+                    rest = current.Substring(lastWhiteSpace, current.Length - lastWhiteSpace) + rest;
+				}
+				else
+				{
+					text = current.Remove(current.Length - 1, 1);
+					rest = current.Substring( current.Length - 1, 1) + rest;
+				}
 
 				size = Font.MeasureString(text);
 			}
@@ -384,8 +395,9 @@ namespace Alex.Gui.Elements
 			{
 				if (Alex.IsMultiplayer)
 				{
-					EventDispatcher.DispatchEvent(
-						new ChatMessagePublishEvent(new ChatObject(TextBuilder.Text)));
+					Network?.SendChatMessage(new ChatObject(TextBuilder.Text));
+					//EventDispatcher.DispatchEvent(
+					//	new ChatMessagePublishEvent(new ChatObject(TextBuilder.Text)));
 				}
 				else
 				{
@@ -399,32 +411,40 @@ namespace Alex.Gui.Elements
 			Dismiss();
 		}
 
-		[EventHandler]
-		private void OnChatMessageReceived(ChatMessageReceivedEvent e)
-		{
-			if (!e.IsChat())
-				return;
-			
-			Receive(e.ChatObject);
-		}
-
 		private void Receive(ChatObject message)
 		{
 			string msg = message.RawMessage;
 
 			TextColor lastColor = TextColor.White;
-			var lines = CalculateLines(msg).Reverse().ToArray();
-			for (var index = 0; index < lines.Length; index++)
+
+			foreach (var split in msg.Split('\n'))
 			{
-				var line = lines[index];
-				if (lastColor != TextColor.White)
+				foreach (var line in CalculateLines(split).Reverse())
 				{
-					line = $"§{lastColor.Code}{line}";
-				}
+					var t = line;
+					if (lastColor != TextColor.White)
+					{
+						t = $"§{lastColor.Code}{t}";
+					}
 
-				lastColor = FindLastColor(line);
+					lastColor = FindLastColor(t);
 
-				_chatEntries.Push((line, DateTime.UtcNow));
+					_chatEntries.Push((t, DateTime.UtcNow));
+                }
+
+				/*for (var index = 0; index < lines.Length; index++)
+				{
+					var line = lines[index];
+
+					if (lastColor != TextColor.White)
+					{
+						line = $"§{lastColor.Code}{line}";
+					}
+
+					lastColor = FindLastColor(line);
+
+					_chatEntries.Push((line, DateTime.UtcNow));
+				}*/
 			}
 		}
 
@@ -451,8 +471,19 @@ namespace Alex.Gui.Elements
 
 		public void Unload()
 		{
-			EventDispatcher.UnregisterEvents(this);
+		
 		}
+
+		/// <inheritdoc />
+		public void AddMessage(ChatObject message, MessageType messageType)
+		{
+			Receive(message);
+		}
+	}
+
+	public interface IChatRecipient
+	{
+		void AddMessage(ChatObject message, MessageType messageType);
 	}
 }
 

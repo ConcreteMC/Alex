@@ -194,5 +194,11 @@ namespace Alex.Worlds.Multiplayer.Java
 			NetworkReportTimer?.Change(Timeout.Infinite, Timeout.Infinite);
 			NetworkReportTimer?.Dispose();
 		}
+
+		/// <inheritdoc />
+		public override void SendChatMessage(ChatObject message)
+		{
+			SendChatMessage(message.RawMessage);
+		}
 	}
 }

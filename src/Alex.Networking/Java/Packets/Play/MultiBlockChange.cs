@@ -12,20 +12,34 @@ namespace Alex.Networking.Java.Packets.Play
 
 		public override void Decode(MinecraftStream stream)
 		{
-			ChunkX = stream.ReadInt();
-			ChunkZ = stream.ReadInt();
+			var chunkSectionPos = stream.ReadLong();
+			ChunkX = (int) (chunkSectionPos >> 42);
+			var sectionY = (int)(chunkSectionPos << 44 >> 44);
+			ChunkZ = (int) (chunkSectionPos << 22 >> 42);
+
+			var inverse = stream.ReadBool();
+			//ChunkX = stream.ReadInt();
+		//	ChunkZ = stream.ReadInt();
 
 			int recordCount = stream.ReadVarInt();
 			Records = new BlockUpdate[recordCount];
 			for (int i = 0; i < Records.Length; i++)
 			{
-				byte horizontalPos = (byte)stream.ReadByte();
+				var encoded     = stream.ReadVarLong();
+				
+				// long encoded = rawId << 12 | (blockLocalX << 8 | blockLocalZ << 4 | blockLocalY)
+				var rawId = encoded >> 12;
+				var x     = (int) ((encoded >> 8) & 0xF);
+				var y     = (int) (encoded & 0xF);
+				var z     = (int) ((encoded >> 4) & 0xF);
+				
+				//byte horizontalPos = (byte)stream.ReadByte();
 
 				BlockUpdate update = new BlockUpdate();
-				update.X = (horizontalPos >> 4 & 15) + (ChunkX * 16);
-				update.Z = (horizontalPos & 15) + (ChunkZ * 16);
-				update.Y = (byte)stream.ReadByte();
-				update.BlockId = stream.ReadVarInt();
+				update.X = (ChunkX << 4) + x;
+				update.Z = (ChunkZ << 4) + z;
+				update.Y = (sectionY << 4) + y;
+				update.BlockId = (uint) rawId;
 
 				Records[i] = update;
 			}
@@ -42,7 +56,7 @@ namespace Alex.Networking.Java.Packets.Play
 		    public int Y;
 		    public int Z;
 
-			public int BlockId;
+			public uint BlockId;
 	    }
     }
 }

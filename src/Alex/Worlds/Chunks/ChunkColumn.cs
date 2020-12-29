@@ -134,8 +134,6 @@ namespace Alex.Worlds.Chunks
 						{
 							for (int y = 0; y < 16; y++)
 							{
-								var  blockCoordinates = new BlockCoordinates(x, y + (sectionIndex * 16), z);
-								
 								bool scheduled        = section.IsScheduled(x, y, z);
 								bool blockLightUpdate = section.IsBlockLightScheduled(x, y, z);
 								bool skyLightUpdate   = section.IsSkylightUpdateScheduled(x, y, z);
@@ -146,10 +144,9 @@ namespace Alex.Worlds.Chunks
 
 								try
 								{
-									//ChunkData?.Remove(device, blockCoordinates);
-
 									var blockPosition = new BlockCoordinates(
 										(int) (chunkPosition.X + x), y + (sectionIndex << 4), (int) (chunkPosition.Z + z));
+									ChunkData?.Remove(device, blockPosition);
 									
 									foreach (var state in section.GetAll(x, y, z))
 									{
@@ -159,7 +156,7 @@ namespace Alex.Worlds.Chunks
 										
 										var model = blockState.Model;
 
-										if (blockState.Block.RequiresUpdate)
+										if (blockState.Block.RequiresUpdate || blockState.IsMultiPart)
 										{
 											var newblockState = blockState.Block.BlockPlaced(
 												world, blockState, blockPosition);
@@ -173,7 +170,7 @@ namespace Alex.Worlds.Chunks
 											}
 										}
 
-										if (blockState.IsMultiPart)
+										/*if (blockState.IsMultiPart)
 										{
 											var newBlockState = MultiPartModelHelper.GetBlockState(
 												world, blockPosition, blockState, blockState.MultiPartHelper);
@@ -185,11 +182,13 @@ namespace Alex.Worlds.Chunks
 												section.Set(state.Storage, x, y, z, blockState);
 												model = blockState.Model;
 											}
+										}*/
+
+										if (model != null)
+										{
+											model.GetVertices(
+												world, ChunkData, blockPosition, blockPosition, blockState.Block);
 										}
-										
-										ChunkData?.Remove(device, blockCoordinates);
-										
-										model.GetVertices(world, ChunkData, blockCoordinates, blockPosition, blockState.Block);
 									}
 								}
 								finally
@@ -240,11 +239,19 @@ namespace Alex.Worlds.Chunks
 
 		public ChunkSection GetSection(int y)
 		{
-			var section = Sections[y >> 4];
+			y = y >> 4;
+
+			if (y >= Sections.Length || y < 0)
+			{
+				throw new IndexOutOfRangeException($"Y value out of range! Expected a number between 0 & {Sections.Length - 1}, Got: {y}");
+			}
+			
+			var section = Sections[y];
+			
 			if (section == null)
 			{
 				var storage = CreateSection(true, 2);
-				Sections[y >> 4] = storage;
+				Sections[y] = storage;
 				return storage;
 			}
 

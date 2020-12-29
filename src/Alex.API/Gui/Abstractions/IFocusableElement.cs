@@ -1,6 +1,4 @@
-﻿using RocketUI;
-
-namespace Alex.API.Gui
+﻿namespace Alex.API.Gui
 {
     public interface IFocusableElement : IGuiElement
     {

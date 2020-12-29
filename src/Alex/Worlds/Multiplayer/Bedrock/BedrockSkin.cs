@@ -116,31 +116,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			Animations = new List<Animation>();
 		}
 
-		public static GeometryModel Parse(string json)
-		{
-			var settings = new JsonSerializerSettings();
-			settings.NullValueHandling = NullValueHandling.Ignore;
-			settings.DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate;
-			settings.MissingMemberHandling = MissingMemberHandling.Ignore;
-			settings.Formatting = Formatting.Indented;
-			settings.ContractResolver = new CamelCasePropertyNamesContractResolver();
-
-			return JsonConvert.DeserializeObject<GeometryModel>(json, settings);
-		}
-
-		public static string ToJson(GeometryModel geometryModel)
-		{
-			var settings = new JsonSerializerSettings();
-			settings.NullValueHandling = NullValueHandling.Ignore;
-			settings.DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate;
-			settings.MissingMemberHandling = MissingMemberHandling.Ignore;
-			//settings.Formatting = Formatting.Indented;
-			settings.ContractResolver = new CamelCasePropertyNamesContractResolver();
-			settings.Converters.Add(new StringEnumConverter {NamingStrategy = new CamelCaseNamingStrategy()});
-
-			return JsonConvert.SerializeObject(geometryModel, settings);
-		}
-
 
 		public static string ToJson(SkinResourcePatch model)
 		{
@@ -155,21 +130,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			string json = JsonConvert.SerializeObject(model, settings);
 
 			return json;
-		}
-
-		public static SkinResourcePatch ToJSkinResourcePatch(string json)
-		{
-			var settings = new JsonSerializerSettings();
-			settings.NullValueHandling = NullValueHandling.Ignore;
-			settings.DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate;
-			settings.MissingMemberHandling = MissingMemberHandling.Error;
-			//settings.Formatting = Formatting.Indented;
-			settings.ContractResolver = new CamelCasePropertyNamesContractResolver();
-			settings.Converters.Add(new StringEnumConverter {CamelCaseText = true});
-
-			var obj = JsonConvert.DeserializeObject<SkinResourcePatch>(json, settings);
-
-			return obj;
 		}
 
 		public object Clone()

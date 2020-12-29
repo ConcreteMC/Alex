@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using Alex.API.Graphics.Typography;
+using Alex.API.Gui;
 using Alex.API.Gui.Elements;
 using Alex.API.Gui.Graphics;
 using Alex.API.Input;
@@ -16,7 +17,6 @@ using Alex.Utils.Inventories;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using NLog;
-using RocketUI;
 using GuiCursorEventArgs = Alex.API.Gui.Events.GuiCursorEventArgs;
 
 namespace Alex.Gui.Dialogs.Containers
@@ -108,9 +108,10 @@ namespace Alex.Gui.Dialogs.Containers
                 slot.InventoryIndex = inventoryIndex;
             }
 
-            foreach (var slot in AddSlots(98, 18, 2, 4, 41, 0))
+            var playerInventory = player.Inventory;
+            foreach (var slot in AddSlots(98, 18, 2, 4, 1, 999))
             {
-                slot.Item = Inventory[slot.InventoryIndex];
+                slot.Item = playerInventory.GetCraftingSlot(slot.InventoryIndex);// Inventory[slot.InventoryIndex];
               //  slot.HighlightedBackground = new Microsoft.Xna.Framework.Color(Color.Purple, 0.5f);
             }
 
@@ -165,7 +166,19 @@ namespace Alex.Gui.Dialogs.Containers
         
         protected override void OnSlotChanged(InventoryContainerItem slot, Item item, bool isServerTransaction)
         {
-            Inventory.SetSlot(slot.InventoryIndex, item, isServerTransaction);
+            if (slot.InventoryId == 120)
+            {
+                //Armor
+            }
+            if (slot.InventoryId == 999)
+            {
+                //Crafting   
+            }
+            else
+            {
+                Inventory.SetSlot(slot.InventoryIndex, item, isServerTransaction);
+            }
+
             // Inventory[slot.InventoryIndex] = item;
         }
 

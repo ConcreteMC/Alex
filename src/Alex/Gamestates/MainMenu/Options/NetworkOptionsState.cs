@@ -7,7 +7,6 @@ using Alex.API.Gui.Graphics;
 using Alex.API.Utils;
 using Alex.Gui;
 using Microsoft.Xna.Framework;
-using RocketUI;
 
 namespace Alex.Gamestates.MainMenu.Options
 {

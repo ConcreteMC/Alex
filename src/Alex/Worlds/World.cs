@@ -8,8 +8,6 @@ using Alex.API;
 using Alex.API.Data.Options;
 using Alex.API.Data.Servers;
 using Alex.API.Entities;
-using Alex.API.Events;
-using Alex.API.Events.World;
 using Alex.API.Graphics;
 using Alex.API.Gui;
 using Alex.API.Network;
@@ -70,7 +68,6 @@ namespace Alex.Worlds
 		public Player Player { get; set; }
 		private AlexOptions Options { get; }
 		
-		private IEventDispatcher EventDispatcher { get; }
 		public InventoryManager InventoryManager { get; }
 		private SkyBox SkyRenderer { get; }
 
@@ -113,6 +110,7 @@ namespace Alex.Worlds
 			}
 		}
 
+		public BackgroundWorker BackgroundWorker { get; }
 		public World(IServiceProvider serviceProvider, GraphicsDevice graphics, AlexOptions options,
 			NetworkProvider networkProvider)
 		{
@@ -127,13 +125,12 @@ namespace Alex.Worlds
 
 			Ticker.RegisterTicked(this);
 			Ticker.RegisterTicked(EntityManager);
-			//Ticker.RegisterTicked(PhysicsEngine);
+			Ticker.RegisterTicked(PhysicsEngine);
 			Ticker.RegisterTicked(ChunkManager);
 			
 			ChunkManager.Start();
 			var profileService = serviceProvider.GetRequiredService<IPlayerProfileService>();
 			var resources = serviceProvider.GetRequiredService<ResourceManager>();
-			EventDispatcher = serviceProvider.GetRequiredService<IEventDispatcher>();
 			
 			string username = string.Empty;
 			PooledTexture2D texture;
@@ -183,8 +180,6 @@ namespace Alex.Worlds
 
 			PhysicsEngine.AddTickable(Player);
 
-			EventDispatcher.RegisterEvents(this);
-
 			var guiManager = serviceProvider.GetRequiredService<GuiManager>();
 			InventoryManager = new InventoryManager(guiManager);
 				
@@ -196,6 +191,8 @@ namespace Alex.Worlds
 					Camera.SetRenderDistance(newValue);
 				});
 			Camera.SetRenderDistance(options.VideoOptions.RenderDistance);
+
+			BackgroundWorker = new BackgroundWorker();
 		}
 
 		private void FieldOfVisionOnValueChanged(int oldvalue, int newvalue)
@@ -802,9 +799,14 @@ namespace Alex.Worlds
 		{
 			if (_destroyed) return;
 			_destroyed = true;
-
-			EventDispatcher.UnregisterEvents(this);
 			
+			Ticker.UnregisterTicked(this);
+			Ticker.UnregisterTicked(EntityManager);
+			Ticker.UnregisterTicked(PhysicsEngine);
+			Ticker.UnregisterTicked(ChunkManager);
+
+			BackgroundWorker?.Dispose();
+
 			EntityManager.Dispose();
 			ChunkManager.Dispose();
 
@@ -842,8 +844,13 @@ namespace Alex.Worlds
 		{
 			if (EntityManager.AddEntity(entityId, entity))
 			{
-				PhysicsEngine.AddTickable(entity);
+				//entity.RenderLocation = entity.KnownPosition;
+				if (entity.HasPhysics)
+				{
+					PhysicsEngine.AddTickable(entity);
+				}
 
+				entity.OnSpawn();
 				return true;
 			}
 
@@ -853,17 +860,22 @@ namespace Alex.Worlds
 
 		public void DespawnEntity(long entityId)
 		{
-			Ticker.ScheduleTick(
+			BackgroundWorker.Enqueue(
 				() =>
 				{
 					if (EntityManager.TryGet(entityId, out Entity entity))
 					{
-						PhysicsEngine.Remove(entity);
+						if (entity.HasPhysics)
+						{
+							PhysicsEngine.Remove(entity);
+						}
+
 						EntityManager.Remove(entityId);
+
+						entity.OnDespawn();
 						//entity.Dispose();
 					}
-				}, 0);
-
+				});
 			//	Log.Info($"Despawned entity {entityId}");
 		}
 
@@ -889,25 +901,27 @@ namespace Alex.Worlds
 				entity.KnownPosition.OnGround = position.OnGround;
 				if (!relative)
 				{
-					entity.Movement.MoveTo(position);
+					entity.Movement.MoveTo(position, false);
 				}
 				else
 				{
 					entity.Movement.Move(position);
 				}
-
+				
+				entity.Velocity = Vector3.Zero;
+				
 				if (updateLook)
 				{
-					//entity.KnownPosition.Yaw = position.Yaw;
 					if (updatePitch)
 					{
 						entity.KnownPosition.Pitch = position.Pitch;
 					}
-
+						
+					entity.KnownPosition.Yaw = position.Yaw;
 					entity.KnownPosition.HeadYaw = position.HeadYaw;
 					//	entity.UpdateHeadYaw(position.HeadYaw);
 				}
-            }
+			}
 		}
 
 		public void UpdateEntityLook(long entityId, float yaw, float pitch, bool onGround)
@@ -956,8 +970,20 @@ namespace Alex.Worlds
 			PlayerList.Entries.Remove(item);
 		}
 
-		public void UpdatePlayerListLatency(MiNET.Utils.UUID uuid, int latency)
+		public void UpdatePlayerLatency(MiNET.Utils.UUID uuid, int latency)
 		{
+			if (Player.UUID.Equals(uuid))
+			{
+				Player.Latency = latency;
+			}
+			else if (EntityManager.TryGet(uuid, out var player))
+			{
+				if (player is RemotePlayer p)
+				{
+					p.Latency = latency;
+				}
+			}
+			
 			if (PlayerList.Entries.TryGetValue(uuid, out var item))
 			{
 				item.Ping = latency;

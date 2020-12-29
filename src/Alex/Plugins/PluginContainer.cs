@@ -2,7 +2,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Reflection;
-using Alex.API.Events;
 
 namespace Alex.Plugins
 {
@@ -117,12 +116,6 @@ namespace Alex.Plugins
         public void Register<TType>(DependencyLifetime lifetime = DependencyLifetime.Singleton)
         {
             throw new NotImplementedException("Please use RegisterSingleton instead.");
-
-            var type = typeof(TType);
-            if (!Services.TryAdd(type, new ServiceItem(this, type, lifetime)))
-            {
-                throw new DuplicateTypeException();
-            }
         }
 
         /// <summary>
@@ -136,7 +129,7 @@ namespace Alex.Plugins
             var type = typeof(TType);
             if (!Services.TryAdd(type, new ServiceItem(this, type, value)))
             {
-                throw new DuplicateTypeException();
+                throw new Exception();
             }
         }
 
@@ -149,7 +142,7 @@ namespace Alex.Plugins
         {
             if (!Services.TryAdd(type, new ServiceItem(this, type, value)))
             {
-                throw new DuplicateTypeException();
+                throw new Exception();
             }
         }
 

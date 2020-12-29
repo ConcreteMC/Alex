@@ -17,19 +17,14 @@ namespace Alex.Graphics.Models.Blocks
 
 		public virtual void GetVertices(IBlockAccess blockAccess, ChunkData chunkBuilder, BlockCoordinates blockCoordinates, Vector3 position, Block baseBlock)
         {
-            //return new VerticesResult(new BlockShaderVertex[0], new int[0], null);
+			
         }
 
-	    public virtual BoundingBox GetBoundingBox(Vector3 position)
+		public virtual IEnumerable<BoundingBox> GetBoundingBoxes(Vector3 blockPos)
 	    {
-			return new BoundingBox(position, position + Vector3.One);
+		    yield return new BoundingBox(blockPos, blockPos + Vector3.One);
 	    }
 
-	    public virtual BoundingBox? GetPartBoundingBox(Vector3 position, BoundingBox entityBox)
-	    {
-		    return new BoundingBox(position, position + Vector3.One);
-	    }
-	    
 	    protected BlockShaderVertex[] GetFaceVertices(BlockFace blockFace, Vector3 startPosition, Vector3 endPosition, BlockTextureData uvmap)
 		{
 			Color faceColor = Color.White;
@@ -153,7 +148,7 @@ namespace Alex.Graphics.Models.Blocks
 			}
 		}
 
-		public static void GetLight(IBlockAccess world, Vector3 facePosition, out byte blockLight, out byte skyLight, bool smooth = false)
+	    protected static void GetLight(IBlockAccess world, Vector3 facePosition, out byte blockLight, out byte skyLight, bool smooth = false)
 		{
 			var faceBlock = world.GetBlockState(facePosition).Block;
 			
@@ -231,6 +226,26 @@ namespace Alex.Graphics.Models.Blocks
 
 		    //(byte)Math.Min(Math.Max(0, blockLight + skyLight), 15);
 	    }
+		
+		protected static string ResolveTexture(ResourcePackLib.Json.Models.ResourcePackModelBase var, string texture)
+		{
+			if (texture[0] != '#')
+				return texture;
+			
+			var modified = texture.Substring(1);
+			if (var.Textures.TryGetValue(modified, out texture))
+			{
+				if (texture[0] == '#')
+				{
+					if (!var.Textures.TryGetValue(texture.Substring(1), out texture))
+					{
+						texture = "no_texture";
+					}
+				}
+			}
+
+			return texture;
+		}
 
 		protected BlockTextureData GetTextureUVMap(ResourceManager resources,
 			string texture,
@@ -288,15 +303,15 @@ namespace Alex.Graphics.Models.Blocks
 			BlockFace.West
 		};
 
-		public static BlockFace[] FACE_ROTATION_X =
+	    protected static BlockFace[] FACE_ROTATION_X =
 		{
 			BlockFace.North,
 			BlockFace.Down,
 			BlockFace.South,
 			BlockFace.Up
 		};
-		
-		public static BlockFace[] INVALID_FACE_ROTATION_X = new BlockFace[]
+
+		protected static BlockFace[] INVALID_FACE_ROTATION_X = new BlockFace[]
 		{
 			BlockFace.East,
 			BlockFace.West,
@@ -337,11 +352,6 @@ namespace Alex.Graphics.Models.Blocks
 			b /= aColors.Length;
 
 			return new Color(r, g, b);
-		}
-
-		public virtual IEnumerable<BoundingBox> GetBoundingBoxes(Vector3 blockPos)
-		{
-			yield return GetBoundingBox(blockPos);
 		}
 	}
 }

@@ -28,6 +28,12 @@ namespace Alex.Gui.Elements.Context3D
             get => _entity;
             set
             {
+                
+                if (!value.IsSpawned)
+                {
+                    value.OnSpawn();
+                    
+                }
                 _entity = value;
                 Drawable = _entity?.ModelRenderer == null ? null : new EntityDrawable(_entity);
             }

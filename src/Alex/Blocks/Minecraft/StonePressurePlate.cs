@@ -1,12 +1,18 @@
 namespace Alex.Blocks.Minecraft
 {
-	public class StonePressurePlate : Block
+	public class StonePressurePlate : PressurePlate
 	{
-		public StonePressurePlate() : base()
+		
+	}
+
+	public class PressurePlate : Block
+	{
+		public PressurePlate() : base()
 		{
-			Solid = false;
+			Solid = true;
 			Transparent = true;
 			IsReplacible = false;
+			IsFullBlock = false;
 			
 			Hardness = 0.5f;
 		}

@@ -13,11 +13,15 @@ using Alex.API.Graphics.Typography;
 using Alex.API.Resources;
 using Alex.API.Utils;
 using Alex.ResourcePackLib.Generic;
+using Alex.ResourcePackLib.IO;
+using Alex.ResourcePackLib.IO.Abstract;
 using Alex.ResourcePackLib.Json;
 using Alex.ResourcePackLib.Json.BlockStates;
+using Alex.ResourcePackLib.Json.Fonts;
 using Alex.ResourcePackLib.Json.Models;
 using Alex.ResourcePackLib.Json.Models.Blocks;
 using Alex.ResourcePackLib.Json.Models.Items;
+using Alex.ResourcePackLib.Json.Sound;
 using Alex.ResourcePackLib.Json.Textures;
 using NLog;
 using SixLabors.ImageSharp;
@@ -37,35 +41,39 @@ namespace Alex.ResourcePackLib
 		public const string BitmapFontCharacters = "\u00c0\u00c1\u00c2\u00c8\u00ca\u00cb\u00cd\u00d3\u00d4\u00d5\u00da\u00df\u00e3\u00f5\u011f\u0130\u0131\u0152\u0153\u015e\u015f\u0174\u0175\u017e\u0207\u0000\u0000\u0000\u0000\u0000\u0000\u0000 !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~\u0000\u00c7\u00fc\u00e9\u00e2\u00e4\u00e0\u00e5\u00e7\u00ea\u00eb\u00e8\u00ef\u00ee\u00ec\u00c4\u00c5\u00c9\u00e6\u00c6\u00f4\u00f6\u00f2\u00fb\u00f9\u00ff\u00d6\u00dc\u00f8\u00a3\u00d8\u00d7\u0192\u00e1\u00ed\u00f3\u00fa\u00f1\u00d1\u00aa\u00ba\u00bf\u00ae\u00ac\u00bd\u00bc\u00a1\u00ab\u00bb\u2591\u2592\u2593\u2502\u2524\u2561\u2562\u2556\u2555\u2563\u2551\u2557\u255d\u255c\u255b\u2510\u2514\u2534\u252c\u251c\u2500\u253c\u255e\u255f\u255a\u2554\u2569\u2566\u2560\u2550\u256c\u2567\u2568\u2564\u2565\u2559\u2558\u2552\u2553\u256b\u256a\u2518\u250c\u2588\u2584\u258c\u2590\u2580\u03b1\u03b2\u0393\u03c0\u03a3\u03c3\u03bc\u03c4\u03a6\u0398\u03a9\u03b4\u221e\u2205\u2208\u2229\u2261\u00b1\u2265\u2264\u2320\u2321\u00f7\u2248\u00b0\u2219\u00b7\u221a\u207f\u00b2\u25a0\u0000";
 		private const RegexOptions RegexOpts = RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase;
 
-		private static readonly Regex IsLanguageResource = new Regex(@"^assets[\\\/](?'namespace'.*)[\\\/]lang[\\\/](?'filename'.*)\.(?'filetype'json|lang)$", RegexOpts);
-		private static readonly Regex IsFontTextureResource = new Regex(@"^assets[\\\/](?'namespace'.*)[\\\/]textures[\\\/]font[\\\/](?'filename'.*)\.png$", RegexOpts);
-		private static readonly Regex IsTextureResource     = new Regex(@"^assets[\\\/](?'namespace'.*)[\\\/]textures[\\\/](?'filename'.*)\.png$", RegexOpts);
-		private static readonly Regex IsTextureMetaResource     = new Regex(@"^assets[\\\/](?'namespace'.*)[\\\/]textures[\\\/](?'filename'.*)\.png.mcmeta$", RegexOpts);
-		private static readonly Regex IsModelRegex          = new Regex(@"^assets[\\\/](?'namespace'.*)[\\\/]models[\\\/](?'filename'.*)\.json$", RegexOpts);
-		private static readonly Regex IsBlockStateRegex     = new Regex(@"^assets[\\\/](?'namespace'.*)[\\\/]blockstates[\\\/](?'filename'.*)\.json$", RegexOpts);
-		private static readonly Regex IsGlyphSizes          = new Regex(@"^assets[\\\/](?'namespace'.*)[\\\/]font[\\\/]glyph_sizes.bin$", RegexOpts);
+		private static readonly Regex IsLanguageResource    = new(@"^assets[\\\/](?'namespace'.*)[\\\/]lang[\\\/](?'filename'.*)\.(?'filetype'json|lang)$", RegexOpts);
+		private static readonly Regex IsFontTextureResource = new(@"^assets[\\\/](?'namespace'.*)[\\\/]textures[\\\/]font[\\\/](?'filename'.*)\.png$", RegexOpts);
+		private static readonly Regex IsTextureResource     = new(@"^assets[\\\/](?'namespace'.*)[\\\/]textures[\\\/](?'filename'.*)\.png$", RegexOpts);
+		private static readonly Regex IsTextureMetaResource = new(@"^assets[\\\/](?'namespace'.*)[\\\/]textures[\\\/](?'filename'.*)\.png.mcmeta$", RegexOpts);
+		private static readonly Regex IsModelRegex          = new(@"^assets[\\\/](?'namespace'.*)[\\\/]models[\\\/](?'filename'.*)\.json$", RegexOpts);
+		private static readonly Regex IsBlockStateRegex     = new(@"^assets[\\\/](?'namespace'.*)[\\\/]blockstates[\\\/](?'filename'.*)\.json$", RegexOpts);
+		private static readonly Regex IsGlyphSizes          = new(@"^assets[\\\/](?'namespace'.*)[\\\/]font[\\\/]glyph_sizes.bin$", RegexOpts);
+		private static readonly Regex IsFontDefinition      = new(@"^assets[\\\/](?'namespace'.*)[\\\/]font[\\\/](?'filename'.*)\.json$", RegexOpts);
+		private static readonly Regex IsParticle            = new(@"^assets[\\\/](?'namespace'.*)[\\\/]particles[\\\/](?'filename'.*)\.json$", RegexOpts);
+		private static readonly Regex IsSoundDefinition     = new(@"^assets[\\\/](?'namespace'.*)[\\\/]sounds.json$", RegexOpts);
 
-		private readonly Dictionary<string, BlockStateResource> _blockStates   = new Dictionary<string, BlockStateResource>();
+		private readonly Dictionary<string, Lazy<BlockStateResource>> _blockStates   = new(StringComparer.OrdinalIgnoreCase);
 		//private readonly Dictionary<string, BlockModel>         _blockModels   = new Dictionary<string, BlockModel>();
-		private readonly Dictionary<ResourceLocation, ResourcePackModelBase>   _models    = new Dictionary<ResourceLocation, ResourcePackModelBase>();
+		private readonly Dictionary<ResourceLocation, ResourcePackModelBase>   _models    = new();
 		//private readonly Dictionary<string, Texture2D>          _textureCache  = new Dictionary<string, Texture2D>();
-		private readonly Dictionary<ResourceLocation, Image<Rgba32>>             _bitmapCache   = new Dictionary<ResourceLocation, Image<Rgba32>>();
-		private readonly Dictionary<ResourceLocation, TextureMeta>        _textureMetaCache   = new Dictionary<ResourceLocation, TextureMeta>();
-		private readonly Dictionary<string, LanguageResource>	_languageCache = new Dictionary<string, LanguageResource>();
+		private readonly Dictionary<ResourceLocation, Lazy<Image<Rgba32>>> _bitmapCache      = new();
+		private readonly Dictionary<ResourceLocation, TextureMeta>         _textureMetaCache = new();
+		private readonly Dictionary<string, LanguageResource>              _languageCache    = new(StringComparer.OrdinalIgnoreCase);
 
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(McResourcePack));
 
-		public IReadOnlyDictionary<string, BlockStateResource> BlockStates       => _blockStates;
+		public IReadOnlyDictionary<string, Lazy<BlockStateResource>> BlockStates       => _blockStates;
 
 		public IReadOnlyDictionary<ResourceLocation, ResourcePackModelBase> BlockModels =>
-			_models.Where(x => x.Value.Type == ModelType.Block).ToDictionary(x => x.Key, x => x.Value);
+			_models.Where(x => x.Value.Type == ModelType.Block)
+			   .ToDictionary(x => x.Key, x => x.Value);
 		
 		public IReadOnlyDictionary<ResourceLocation, ResourcePackModelBase>   ItemModels        => _models;
 		public IReadOnlyDictionary<ResourceLocation, TextureMeta> TextureMetas => _textureMetaCache;
-		public IReadOnlyDictionary<ResourceLocation, Image<Rgba32>>          Textures          => _bitmapCache;
+		public IReadOnlyDictionary<ResourceLocation, Lazy<Image<Rgba32>>>          Textures          => _bitmapCache;
 		public IReadOnlyDictionary<string, LanguageResource>   Languages		 => _languageCache;
 		
-		public ResourcePackInfo Info { get; private set; }
+		public new ResourcePackInfo Info { get; private set; }
 		public ResourcePackManifest Manifest { get; set; } = null;
 
 		//public IFont Font { get; private set; }
@@ -87,13 +95,14 @@ namespace Alex.ResourcePackLib
 		
 		public Image<Rgba32> FontBitmap { get; private set; }
 
-		private PngDecoder PngDecoder { get; }
-		public McResourcePack(byte[] resourcePackData) : this(new ZipArchive(new MemoryStream(resourcePackData), ZipArchiveMode.Read, false), null)
+		private PngDecoder                           PngDecoder       { get; }
+		public  IDictionary<string, SoundDefinition> SoundDefinitions { get; private set; }
+		public McResourcePack(byte[] resourcePackData) : this(new ZipFileSystem(new MemoryStream(resourcePackData)), null)
 		{
 
 		}
 
-		public McResourcePack(ZipArchive archive, McResourcePackPreloadCallback preloadCallback, LoadProgress progressReporter = null)
+		public McResourcePack(IFilesystem archive, McResourcePackPreloadCallback preloadCallback, LoadProgress progressReporter = null)
 		{
 			ProgressReporter = progressReporter;
 			
@@ -107,7 +116,7 @@ namespace Alex.ResourcePackLib
 		}
 
 
-		private void Preload(ZipArchive archive)
+		private void Preload(IFilesystem archive)
 		{
 			if (IsPreLoaded) return;
 
@@ -129,7 +138,7 @@ namespace Alex.ResourcePackLib
 			return filename.Replace("\\", "/");
 		}
 
-		private void Load(ZipArchive archive)
+		private void Load(IFilesystem archive)
 		{
 			if (!IsPreLoaded)
 			{
@@ -141,7 +150,6 @@ namespace Alex.ResourcePackLib
 			Manifest = GetManifest(archive, ResourcePackType.Java);
 			
 			Dictionary<ResourceLocation, ResourcePackModelBase> models = new Dictionary<ResourceLocation, ResourcePackModelBase>();
-			//Dictionary<string, ResourcePackItem> items = new Dictionary<string, ResourcePackItem>();
 
 			var total = archive.Entries.Count;
 			int count = 0;
@@ -150,6 +158,21 @@ namespace Alex.ResourcePackLib
 				count++;
 				
 				ProgressReporter?.Invoke((int)(((double)count / (double)total) * 100D), entry.Name);
+
+				if (IsParticle.IsMatch(entry.FullName))
+				{
+					continue;
+				}
+				
+				if (IsSoundDefinition.IsMatch(entry.FullName))
+				{
+					using (var e = entry.Open())
+					{
+						SoundDefinitions = SoundDefinition.FromJson(Encoding.UTF8.GetString(e.ReadToEnd()));
+					}
+
+					continue;
+				}
 				
 				var textureMatchs = IsTextureResource.Match(entry.FullName);
 				if (textureMatchs.Success)
@@ -212,7 +235,7 @@ namespace Alex.ResourcePackLib
 				count++;
 			}
 
-			var blockStates = _blockStates.ToArray();
+			/*var blockStates = _blockStates.ToArray();
 			total = blockStates.Length;
 			count = 0;
 			
@@ -220,10 +243,10 @@ namespace Alex.ResourcePackLib
 			{
 				ProgressReporter?.Invoke((int)(((double)count / (double)total) * 100D), blockState.Key.ToString());
 				
-				_blockStates[blockState.Key] = ProcessBlockState(blockState.Value);
+				_blockStates[blockState.Key] = blockState.Value;
 
 				count++;
-			}
+			}*/
 
 			LoadColormap();
 
@@ -231,7 +254,7 @@ namespace Alex.ResourcePackLib
 		}
 
 
-		private void LoadMeta(ZipArchive archive)
+		private void LoadMeta(IFilesystem archive)
 		{
 			ResourcePackInfo info;
 
@@ -254,21 +277,16 @@ namespace Alex.ResourcePackLib
 			Info = info;
 		}
 
-		private void LoadTextureMeta(ZipArchiveEntry entry, Match match)
+		private void LoadTextureMeta(IFile entry, Match match)
 		{
-			//var textureName = SanitizeFilename(match.Groups["filename"].Value);
 			if (!TryGetTextureMeta(new ResourceLocation(match.Groups["namespace"].Value, SanitizeFilename(match.Groups["filename"].Value)), out var meta))
 			{
 				LoadBitmapMeta(entry, match);
 			}
-			
-			//	_textureCache[match.Groups["filename"].Value] = TextureUtils.ImageToTexture2D(Graphics, bmp);
 		}
 
-		private void ProcessTexture(ZipArchiveEntry entry, Match match)
+		private void ProcessTexture(IFile entry, Match match)
 		{
-			//if (!TryGetBitmap(resource, out _))
-			//{
 			try
 			{
 				LoadBitmap(entry, match);
@@ -276,13 +294,10 @@ namespace Alex.ResourcePackLib
 			catch (Exception ex)
 			{
 				Log.Warn(ex, $"Could not load texture from resourcepack: {entry.FullName}");
-				//	}
 			}
-
-			//	_textureCache[match.Groups["filename"].Value] = TextureUtils.ImageToTexture2D(Graphics, bmp);
 		}
 
-		private Image<Rgba32> LoadBitmap(ZipArchiveEntry entry, Match match)
+		private Lazy<Image<Rgba32>> LoadBitmap(IFile entry, Match match)
 		{
 			var resource = new ResourceLocation(match.Groups["namespace"].Value, SanitizeFilename(match.Groups["filename"].Value));
 
@@ -290,28 +305,54 @@ namespace Alex.ResourcePackLib
 			{
 				return result;
 			}
-			
-			Image<Rgba32> img;
-			using (var s = entry.Open())
-			{
-				//img = new Bitmap(s);
-				var data = s.ReadToSpan(entry.Length);
-				img = Image.Load<Rgba32>(data, PngDecoder);
-			}
 
-			_bitmapCache[resource] = img;
-			return img;
+			_bitmapCache[resource] = new Lazy<Image<Rgba32>>(
+				() =>
+				{
+					Image<Rgba32> img;
+					using (var s = entry.Open())
+					{
+						//img = new Bitmap(s);
+						var data = s.ReadToSpan(entry.Length);
+						return Image.Load<Rgba32>(data, PngDecoder);
+					}
+				});
+			
+			return _bitmapCache[resource];
 		}
 		
 		#region BitmapFont
-		
-		private void LoadFont(ZipArchive archive)
+
+		private void LoadFontDefinition(IFile entry)
 		{
-			List<ZipArchiveEntry> asciiFontEnties = new List<ZipArchiveEntry>();
+			ReadOnlySpan<byte> content;
+			using (var stream = entry.Open())
+			{
+				content = stream.ReadToEnd();
+			}
+
+			FontDefinitionFile file = MCJsonConvert.DeserializeObject<FontDefinitionFile>(Encoding.UTF8.GetString(content));
+
+			if (file?.Providers == null)
+				return;
+
+		}
+		
+		private void LoadFont(IFilesystem archive)
+		{
+			List<IFile> asciiFontEnties = new List<IFile>();
 
 			foreach (var entry in archive.Entries)
 			{
-				var fontTextureMatch = IsFontTextureResource.Match(entry.FullName);
+				var fontDefinitionMatch = IsFontDefinition.Match(entry.FullName);
+
+				if (fontDefinitionMatch.Success)
+				{
+					LoadFontDefinition(entry);
+					continue;
+				}
+				
+				var fontTextureMatch    = IsFontTextureResource.Match(entry.FullName);
 				if (fontTextureMatch.Success)
 				{
 					if (fontTextureMatch.Groups["filename"].Value == "ascii")
@@ -320,6 +361,8 @@ namespace Alex.ResourcePackLib
 						
 						break;
 					}
+					
+					continue;
 				}
 			}
 
@@ -330,7 +373,7 @@ namespace Alex.ResourcePackLib
 		}
 
 		private bool DidPreload { get; set; } = false;
-		private void LoadBitmapFont(ZipArchiveEntry entry)
+		private void LoadBitmapFont(IFile entry)
 		{
 			var match = IsFontTextureResource.Match(entry.FullName);
 
@@ -339,7 +382,7 @@ namespace Alex.ResourcePackLib
 				var fontBitmap = LoadBitmap(entry, match);
 				//ProcessTexture(entry, match);
 
-				FontBitmap = fontBitmap;
+				FontBitmap = fontBitmap.Value;
 
 				if (!DidPreload)
 				{
@@ -353,7 +396,7 @@ namespace Alex.ResourcePackLib
 			//Font = new BitmapFont(Graphics, fontBitmap, 16, BitmapFontCharacters.ToCharArray().ToList());
 		}
 		
-		private void LoadGlyphSizes(ZipArchiveEntry entry)
+		private void LoadGlyphSizes(IFile entry)
 		{
 			byte[] glyphWidth;// = new byte[65536];
 			using (Stream stream = entry.Open())
@@ -414,14 +457,17 @@ namespace Alex.ResourcePackLib
 
 		public bool TryGetBitmap(ResourceLocation textureName, out Image<Rgba32> bitmap)
 		{
-			if (_bitmapCache.TryGetValue(textureName, out bitmap))
+			if (_bitmapCache.TryGetValue(textureName, out var val))
+			{
+				bitmap = val.Value;
 				return true;
-			
+			}
+
 			bitmap = null;
 			return false;
 		}
 		
-		private TextureMeta LoadBitmapMeta(ZipArchiveEntry entry, Match match)
+		private void LoadBitmapMeta(IFile entry, Match match)
 		{
 			TextureMeta meta;
 			using (var stream = entry.Open())
@@ -434,7 +480,6 @@ namespace Alex.ResourcePackLib
 			}
 
 			_textureMetaCache[new ResourceLocation(match.Groups["namespace"].Value, SanitizeFilename(match.Groups["filename"].Value))] = meta;
-			return meta;
 		}
 
 		public bool TryGetTextureMeta(ResourceLocation textureName, out TextureMeta meta)
@@ -449,48 +494,8 @@ namespace Alex.ResourcePackLib
 		#endregion
 
 		#region Block States
-		
-		private BlockStateResource ProcessBlockState(BlockStateResource blockStateResource)
-		{
-			if (blockStateResource.Parts.Length > 0)
-			{
-				foreach (var part in blockStateResource.Parts)
-				{
-					foreach (var sVariant in part.Apply)
-					{
-						sVariant.ResourcePack = this;
-						if (!TryGetBlockModel(sVariant.ModelName, out var model))
-						{
-							Log.Debug($"Could not get multipart blockmodel! Variant: {blockStateResource} Model: {sVariant.ModelName}");
-							continue;
-						}
 
-							sVariant.Model = model;
-					}
-				}
-			}
-			else
-			{
-				foreach (var variant in blockStateResource.Variants)
-				{
-					foreach (var sVariant in variant.Value)
-					{
-						sVariant.ResourcePack = this;
-						if (!TryGetBlockModel(sVariant.ModelName, out var model))
-						{
-							Log.Debug($"Could not get blockmodel for variant! Variant: {variant.Key} Model: {sVariant.ModelName}");
-							continue;
-						}
-
-						sVariant.Model = model;
-					}
-				}
-			}
-
-			return blockStateResource;
-		}
-		
-		private void LoadBlockState(ZipArchiveEntry entry, Match match)
+		private void LoadBlockState(IFile entry, Match match)
 		{
 			try
 			{
@@ -498,19 +503,20 @@ namespace Alex.ResourcePackLib
 				string nameSpace = match.Groups["namespace"].Value;
 				string key = $"{nameSpace}:{name}";
 
-				using (var stream = entry.Open())
-				{
-					var json = Encoding.UTF8.GetString(stream.ReadToSpan(entry.Length));
+				_blockStates[key] = new Lazy<BlockStateResource>(
+					() =>
+					{
+						using (var stream = entry.Open())
+						{
+							var json = Encoding.UTF8.GetString(stream.ReadToSpan(entry.Length));
 
-					var blockState = MCJsonConvert.DeserializeObject<BlockStateResource>(json);
-					blockState.Name      = name;
-					blockState.Namespace = nameSpace;
+							var blockState = MCJsonConvert.DeserializeObject<BlockStateResource>(json);
+							blockState.Name = name;
+							blockState.Namespace = nameSpace;
 
-					
-					_blockStates[key] = blockState;
-
-					//return blockState;
-				}
+							return blockState;
+						}
+					});
 			}
 			catch (Exception ex)
 			{
@@ -521,8 +527,11 @@ namespace Alex.ResourcePackLib
 		
 		public bool TryGetBlockState(string modelName, out BlockStateResource stateResource)
 		{
-			if (_blockStates.TryGetValue(modelName, out stateResource))
+			if (_blockStates.TryGetValue(modelName, out var lazy))
+			{
+				stateResource = lazy.Value;
 				return true;
+			}
 
 			stateResource = null;
 			return false;
@@ -532,14 +541,14 @@ namespace Alex.ResourcePackLib
 
 		#region Models
 		
-		private ResourcePackModelBase ReadModel(ZipArchiveEntry entry, ResourceLocation location)
+		private ResourcePackModelBase ReadModel(IFile entry, ResourceLocation location)
 		{
 			try
 			{
 				using (var stream = entry.Open())
 				{
 					var model = MCJsonConvert.DeserializeObject<ResourcePackModelBase>(Encoding.UTF8.GetString(stream.ReadToSpan(entry.Length)));
-					model.Type = location.Path.Contains("block/", StringComparison.InvariantCultureIgnoreCase) ?
+					model.Type = location.Path.Contains("block/", StringComparison.OrdinalIgnoreCase) ?
 						ModelType.Block : ModelType.Item;
 
 					return model;
@@ -558,7 +567,7 @@ namespace Alex.ResourcePackLib
 			if (_models.TryGetValue(resourceLocation, out var existingModel))
 				return existingModel;
 			
-			if (!string.IsNullOrWhiteSpace(model.ParentName) && !model.ParentName.Equals(resourceLocation.Path, StringComparison.InvariantCultureIgnoreCase))
+			if (!string.IsNullOrWhiteSpace(model.ParentName) && !model.ParentName.Equals(resourceLocation.Path, StringComparison.OrdinalIgnoreCase))
 			{
 				ResourceLocation parentKey = new ResourceLocation(model.ParentName);
 
@@ -586,7 +595,7 @@ namespace Alex.ResourcePackLib
 			if (BlockModels.TryGetValue(modelName, out model))
 				return true;
 
-			var m = BlockModels.FirstOrDefault(x => x.Key.ToString().EndsWith(modelName.Path, StringComparison.InvariantCultureIgnoreCase))
+			var m = BlockModels.FirstOrDefault(x => x.Key.ToString().EndsWith(modelName.Path, StringComparison.OrdinalIgnoreCase))
 			                    .Value;
 
 			if (m != null)
@@ -603,12 +612,12 @@ namespace Alex.ResourcePackLib
 
 		#region Localization
 
-		private void LoadLocalization(ZipArchiveEntry entry, Match match)
+		private void LoadLocalization(IFile entry, Match match)
 		{
 			string name = match.Groups["filename"].Value;
 			string nameSpace = match.Groups["namespace"].Value;
 
-			bool isJson = match.Groups["filetype"].Value.Equals("json", StringComparison.InvariantCultureIgnoreCase);
+			bool isJson = match.Groups["filetype"].Value.Equals("json", StringComparison.OrdinalIgnoreCase);
 
 			using (var stream = entry.Open())
 			{
@@ -618,6 +627,12 @@ namespace Alex.ResourcePackLib
 				if (isJson)
 				{
 					lang = MCJsonConvert.DeserializeObject<LanguageResource>(text);
+
+					if (lang.CultureCode == null)
+					{
+						if (lang.TryGetValue("language.code", out var code))
+							lang.CultureCode = code;
+					}
 				}
 				else
 				{

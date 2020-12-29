@@ -68,6 +68,8 @@
 		NavigateRight,
 		
 		Navigate,
-		NavigateBack
+		NavigateBack,
+
+		DropItem
     }
 }

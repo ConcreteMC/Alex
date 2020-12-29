@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Alex.API.Gui;
 using Alex.API.Gui.Elements.Controls;
 using Alex.API.Utils;
 using Alex.Gamestates.MainMenu.Options.Elements;
@@ -9,7 +10,6 @@ using Alex.ResourcePackLib;
 using Alex.ResourcePackLib.Generic;
 using Microsoft.Xna.Framework;
 using NLog;
-using RocketUI;
 
 namespace Alex.Gamestates.MainMenu.Options
 {
@@ -163,7 +163,7 @@ namespace Alex.Gamestates.MainMenu.Options
             {
                 try
                 {
-                    if (resource.FullName.EndsWith(".zip", StringComparison.InvariantCultureIgnoreCase))
+                    if (resource.FullName.EndsWith(".zip", StringComparison.OrdinalIgnoreCase))
                     {
                         if (Alex.Resources.TryLoadResourcePackInfo(resource.FullName,
                             out ResourcePackManifest packInfo))

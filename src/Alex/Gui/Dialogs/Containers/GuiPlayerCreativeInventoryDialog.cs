@@ -5,7 +5,6 @@ using Alex.Gui.Elements.Inventory;
 using Alex.Items;
 using Alex.Utils.Inventories;
 using Microsoft.Xna.Framework;
-using RocketUI;
 
 namespace Alex.Gui.Dialogs.Containers
 {

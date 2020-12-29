@@ -164,10 +164,10 @@ namespace Alex.API
 					CubeVertices[index].Color = color;
 				}
 
-				var x = box.Max.X - box.Min.X;
-				var y = box.Max.Y - box.Min.Y;
-				var z = box.Max.Z - box.Min.Z;
-				effect.World = Matrix.CreateScale(new Vector3(x, y, z)) * Matrix.CreateTranslation(box.Min);
+				var x = (box.Max.X - box.Min.X) + 0.05f;
+				var y = (box.Max.Y - box.Min.Y) + 0.05f;
+				var z = (box.Max.Z - box.Min.Z) + 0.05f;
+				effect.World = Matrix.CreateScale(new Vector3(x,y,z)) * Matrix.CreateTranslation(box.Min - new Vector3(0.025f));
 				effect.Alpha = 0.5f;
 			}
 

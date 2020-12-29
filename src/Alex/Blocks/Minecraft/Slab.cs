@@ -17,7 +17,20 @@ namespace Alex.Blocks.Minecraft
 	    {
 		    Solid = true;
 		    Transparent = true;
-		    IsFullCube = false;
+	    }
+
+	    /// <inheritdoc />
+	    public override bool IsFullCube {
+		    get
+		    {
+			    if (BlockState.TryGetValue("type", out string t))
+			    {
+				    if (t == "double")
+					    return true;
+			    }
+			    return false;
+		    }
+		    set { }
 	    }
     }
 }

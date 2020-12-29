@@ -1,26 +1,29 @@
+using System.Linq;
 using Alex.API.Resources;
 using Alex.Graphics.Models.Blocks;
+using Alex.ResourcePackLib;
+using Alex.ResourcePackLib.Json.Models;
 
 namespace Alex.Blocks
 {
-    public class BlockModelEntry : IRegistryEntry<BlockModel>
+    public class BlockModelEntry : IRegistryEntry<ResourcePackModelBase>
     {
-        public BlockModel Value { get; }
+        public ResourcePackModelBase Value { get; }
 
-        public BlockModelEntry(BlockModel model)
+        public BlockModelEntry(ResourcePackModelBase model)
         {
             Value = model;
         }
-        
+
         public ResourceLocation Location { get; private set; }
-        public IRegistryEntry<BlockModel> WithLocation(ResourceLocation location)
+        public IRegistryEntry<ResourcePackModelBase> WithLocation(ResourceLocation location)
         {
             Location = location;
             return this;
         }
     }
-    
-    public class BlockModelRegistry : RegistryBase<BlockModel>
+
+    public class BlockModelRegistry : RegistryBase<ResourcePackModelBase>
     {
         public BlockModelRegistry() : base("BlockModel")
         {
@@ -29,19 +32,23 @@ namespace Alex.Blocks
 
         private void RegisterBuiltIn()
         {
-            Register("minecraft:water", new BlockModelEntry(new LiquidBlockModel()
-            {
-                //IsFlowing = false,
-                IsLava = false,
-               // Level = 8
-            }));
+            
+        }
 
-            Register("minecraft:lava", new BlockModelEntry(new LiquidBlockModel()
-            {
-             //   IsFlowing = false,
-                IsLava = true,
-             //   Level = 8
-            }));
+        public int LoadResourcePack(IProgressReceiver progressReceiver, McResourcePack resourcePack)
+        {
+            int imported = 0;
+            var total    = resourcePack.BlockModels.Count;
+            progressReceiver?.UpdateProgress(0, total, "Loading block models...");
+            
+            foreach (var blockmodel in resourcePack.BlockModels.Where(x => x.Value.Elements.Length > 0))
+            {   
+                progressReceiver?.UpdateProgress(imported, total, null, blockmodel.Key.ToString());
+                Register(blockmodel.Key, new BlockModelEntry(blockmodel.Value));
+                imported++;
+            }
+
+            return imported;
         }
     }
 }

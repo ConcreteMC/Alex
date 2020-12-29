@@ -36,6 +36,7 @@ namespace Alex.Blocks
 		    this.Register("minecraft:obsidian", () => new Obsidian());
 		    this.Register("minecraft:fire", () => new Fire());
 		    this.Register("minecraft:mob_spawner", () => new MobSpawner());
+		    this.Register("minecraft:spawner", () => new MobSpawner());
 		    
 		    this.Register("minecraft:crafting_table", () => new CraftingTable());
 		    this.Register("minecraft:wheat", () => new Wheat());
@@ -44,6 +45,7 @@ namespace Alex.Blocks
 		    this.Register("minecraft:ladder", () => new Ladder());
 		    this.Register("minecraft:rail", () => new Rail());
 		    this.Register("minecraft:snow", () => new Snow());
+		    this.Register("minecraft:snow_block", () => new SnowBlock());
 		    this.Register("minecraft:ice", () => new Ice());
 		    this.Register("minecraft:blue_ice", () => new BlueIce());
 		    this.Register("minecraft:cactus", () => new Cactus());
@@ -131,14 +133,24 @@ namespace Alex.Blocks
 		    this.Register("minecraft:daylight_detector", () => new DaylightDetector());
 		    this.Register("minecraft:redstone_block", () => new RedstoneBlock());
 		    this.Register("minecraft:hopper", () => new Hopper());
-		    this.Register("minecraft:light_weighted_pressure_plate", () => new LightWeightedPressurePlate());
-		    this.Register("minecraft:heavy_weighted_pressure_plate", () => new HeavyWeightedPressurePlate());
-		    this.Register("minecraft:stone_pressure_plate", () => new StonePressurePlate());
-		    this.Register("minecraft:oak_pressure_plate", () => new StonePressurePlate());
 		    this.Register("minecraft:torch", () => new Torch());
 		    this.Register("minecraft:wall_torch", () => new Torch(true));
 		    this.Register("minecraft:redstone_torch", () => new RedstoneTorch());
 		    this.Register("minecraft:redstone_wall_torch", () => new RedstoneTorch(true));
+		    
+		    //Pressure plates
+		    this.Register("minecraft:light_weighted_pressure_plate", () => new LightWeightedPressurePlate());
+		    this.Register("minecraft:heavy_weighted_pressure_plate", () => new HeavyWeightedPressurePlate());
+		    this.Register("minecraft:stone_pressure_plate", () => new StonePressurePlate());
+		    this.Register("minecraft:polished_blackstone_pressure_plate", () => new PressurePlate());
+		    this.Register("minecraft:oak_pressure_plate", () => new PressurePlate());
+		    this.Register("minecraft:spruce_pressure_plate", () => new PressurePlate());
+		    this.Register("minecraft:birch_pressure_plate", () => new PressurePlate());
+		    this.Register("minecraft:jungle_pressure_plate", () => new PressurePlate());
+		    this.Register("minecraft:acacia_pressure_plate", () => new PressurePlate());
+		    this.Register("minecraft:dark_oak_pressure_plate", () => new PressurePlate());
+		    this.Register("minecraft:warped_pressure_plate", () => new PressurePlate());
+		    this.Register("minecraft:crimson_pressure_plate", () => new PressurePlate());
 		    
 		    //Buttons
 		    this.Register("minecraft:stone_button", () => new StoneButton());
@@ -455,15 +467,41 @@ namespace Alex.Blocks
 		    
 		    //Signs
 		    this.Register("minecraft:wall_sign", () => new WallSign());
-		    this.Register("minecraft:oak_wall_sign", () => new WallSign());
+		    this.Register("minecraft:oak_wall_sign", () => new WallSign(WoodType.Oak));
+		    this.Register("minecraft:spruce_wall_sign", () => new WallSign(WoodType.Spruce));
+		    this.Register("minecraft:birch_wall_sign", () => new WallSign(WoodType.Birch));
+		    this.Register("minecraft:jungle_wall_sign", () => new WallSign(WoodType.Jungle));
+		    this.Register("minecraft:acacia_wall_sign", () => new WallSign(WoodType.Acacia));
+		    this.Register("minecraft:dark_oak_wall_sign", () => new WallSign(WoodType.DarkOak));
+		    this.Register("minecraft:crimson_wall_sign", () => new WallSign(WoodType.Crimson));
+		    this.Register("minecraft:warped_wall_sign", () => new WallSign(WoodType.Warped));
 		    
 		    //Standing signs
 		    this.Register("minecraft:standing_sign", () => new StandingSign());
+		    this.Register("minecraft:oak_sign", () => new StandingSign(WoodType.Oak));
+		    this.Register("minecraft:spruce_sign", () => new StandingSign(WoodType.Spruce));
+		    this.Register("minecraft:birch_sign", () => new StandingSign(WoodType.Birch));
+		    this.Register("minecraft:jungle_sign", () => new StandingSign(WoodType.Jungle));
+		    this.Register("minecraft:acacia_sign", () => new StandingSign(WoodType.Acacia));
+		    this.Register("minecraft:dark_oak_sign", () => new StandingSign(WoodType.DarkOak));
+		    this.Register("minecraft:crimson_sign", () => new StandingSign(WoodType.Crimson));
+		    this.Register("minecraft:warped_sign", () => new StandingSign(WoodType.Warped));
 		    
 		    //Chests
 		    this.Register("minecraft:chest", () => new Chest());
 		    this.Register("minecraft:trapped_chest", () => new TrappedChest());
 		    this.Register("minecraft:ender_chest", () => new EnderChest());
+		    
+		    //Saplings
+		    
+		    this.Register("minecraft:oak_sapling", () => new Sapling(WoodType.Oak));
+		    this.Register("minecraft:spruce_sapling", () => new Sapling(WoodType.Spruce));
+		    this.Register("minecraft:birch_sapling", () => new Sapling(WoodType.Birch));
+		    this.Register("minecraft:jungle_sapling", () => new Sapling(WoodType.Jungle));
+		    this.Register("minecraft:acacia_sapling", () => new Sapling(WoodType.Acacia));
+		    this.Register("minecraft:dark_oak_sapling", () => new Sapling(WoodType.DarkOak));
+		    this.Register("minecraft:crimson_sapling", () => new Sapling(WoodType.Crimson));
+		    this.Register("minecraft:warped_sapling", () => new Sapling(WoodType.Warped));
 	    }
     }
 }

@@ -95,20 +95,21 @@ namespace Alex.Graphics.Camera
 		public override void Update(IUpdateArgs args)
 		{
 			var entityLocation = TrackingEntity.RenderLocation;
-
+			var entityPhysicalLocation = TrackingEntity.KnownPosition;
+			
 			if (_mode == EntityCameraMode.FirstPerson)
 			{
 				MoveTo(
 					entityLocation + new Vector3(0, Player.EyeLevel, 0),
 					new Vector3(
-						MathHelper.ToRadians(entityLocation.HeadYaw),
-						MathHelper.ToRadians(entityLocation.HeadYaw),
-						MathHelper.ToRadians(entityLocation.Pitch)));
+						MathHelper.ToRadians(entityPhysicalLocation.HeadYaw),
+						MathHelper.ToRadians(entityPhysicalLocation.HeadYaw),
+						MathHelper.ToRadians(entityPhysicalLocation.Pitch)));
 			}
 			else
 			{
 				MoveTo(entityLocation.ToVector3(), 
-					new Vector3(MathHelper.ToRadians(entityLocation.HeadYaw), MathHelper.ToRadians(entityLocation.HeadYaw), MathHelper.ToRadians(entityLocation.Pitch)));
+					new Vector3(MathHelper.ToRadians(entityPhysicalLocation.HeadYaw), MathHelper.ToRadians(entityPhysicalLocation.HeadYaw), MathHelper.ToRadians(entityPhysicalLocation.Pitch)));
 			}
 		}
 	}

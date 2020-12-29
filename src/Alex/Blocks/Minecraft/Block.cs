@@ -1,6 +1,5 @@
 ﻿using System;
 using Alex.API.Blocks;
-using Alex.API.Items;
 using Alex.API.Resources;
 using Alex.API.Utils;
 using Alex.API.Utils.Noise;
@@ -8,8 +7,10 @@ using Alex.API.World;
 using Alex.Blocks.Properties;
 using Alex.Blocks.State;
 using Alex.Entities;
+using Alex.Graphics.Models.Blocks;
 using Alex.Items;
 using Alex.ResourcePackLib.Json;
+using Alex.ResourcePackLib.Json.BlockStates;
 using Alex.Utils;
 using Alex.Worlds;
 using Alex.Worlds.Abstraction;
@@ -36,19 +37,13 @@ namespace Alex.Blocks.Minecraft
 		public bool Animated { get; set; } = false;
 		public bool Renderable { get; set; }
 		public bool HasHitbox { get; set; }
-		public bool IsFullCube { get; set; } = true;
+		public virtual bool IsFullCube { get; set; } = true;
 		public bool IsFullBlock { get; set; } = true;
 
 		public bool RandomTicked { get; set; } = false;
 		public bool IsReplacible { get; set; } = false;
 		public bool RequiresUpdate { get; set; } = false;
 		public bool CanInteract { get; set; } = false;
-
-		public string Name
-		{
-			get { return Location.ToString(); }
-			set { Location = value; }
-		}
 		
 	    public virtual byte LightValue { get; set; } = 0;
 	    public int LightOpacity { get; set; } = 1;
@@ -107,21 +102,19 @@ namespace Alex.Blocks.Minecraft
 
 		public virtual BlockState BlockPlaced(IBlockAccess world, BlockState state, BlockCoordinates position)
 		{
-			return state;
-			/*if (BlockState is BlockState s)
-			{
-				if (s.IsMultiPart)
-				{
-					BlockStateResource blockStateResource;
+			//return state;
 
-					if (Alex.Instance.Resources.ResourcePack.BlockStates.TryGetValue(s.Name, out blockStateResource))
-					{
-						BlockState.Model = new CachedResourcePackModel(Alex.Instance.Resources,
-							MultiPartModels.GetBlockStateModels(world, position, s.VariantMapper.GetDefaultState(), blockStateResource));
-						world.SetBlockState(position.X, position.Y, position.Z, BlockState);
-					}
+			if (state.IsMultiPart)
+			{
+				Lazy<BlockStateResource> blockStateResource;
+
+				if (Alex.Instance.Resources.ResourcePack.BlockStates.TryGetValue(state.Name, out blockStateResource))
+				{
+					return MultiPartModelHelper.GetBlockState(world, position, state, blockStateResource.Value);
 				}
-			}*/
+			}
+
+			return state;
 		}
 
 		public virtual void BlockUpdate(World world, BlockCoordinates position, BlockCoordinates updatedBlock)
@@ -216,11 +209,6 @@ namespace Alex.Blocks.Minecraft
 			return secondsForBreak;
 		}
 
-        public virtual bool CanCollide()
-        {
-	        return true;
-        }
-
         public virtual bool ShouldRenderFace(BlockFace face, Block neighbor)
         {
 	        if (!neighbor.Renderable)
@@ -272,7 +260,7 @@ namespace Alex.Blocks.Minecraft
         public virtual bool CanAttach(BlockFace face, Block block)
         {
 	        return block.Solid && (block.IsFullCube || (block.BlockState.Name.Equals(
-		        BlockState.Name, StringComparison.InvariantCultureIgnoreCase)));
+		        BlockState.Name, StringComparison.OrdinalIgnoreCase)));
         }
 
         protected static string GetShape(BlockState state)
@@ -302,24 +290,7 @@ namespace Alex.Blocks.Minecraft
 		    return DisplayName ?? GetType().Name;
 	    }
 
-		public virtual BlockState GetDefaultState()
-		{
-			BlockState r = null;
-			if (BlockState is BlockState s)
-			{
-				r = s.VariantMapper.GetDefaultState();
-			}
-
-			if (r == null)
-				return new BlockState()
-				{
-
-				};
-
-			return r;
-		}
-
-		public ResourceLocation Location { get; private set; }
+	    public ResourceLocation Location { get; private set; }
 		public IRegistryEntry<Block> WithLocation(ResourceLocation location)
 		{
 			Location = location;

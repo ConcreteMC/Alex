@@ -10,11 +10,12 @@ namespace Alex.Worlds.Abstraction
 {
 	public abstract class WorldProvider : IDisposable
 	{
-		public delegate void ProgressReport(LoadingState state, int percentage);
+		public delegate void ProgressReport(LoadingState state, int percentage, string subTitle = null);
 
-		protected World  World  { get; set; }
+		protected World           World          { get; set; }
 		public    ITitleComponent TitleComponent { get; set; }
-		public ScoreboardView ScoreboardView { get; set; }
+		public    IChatRecipient  ChatRecipient  { get; set; }
+		public    ScoreboardView  ScoreboardView { get; set; }
 		protected WorldProvider()
 		{
 			
@@ -31,11 +32,19 @@ namespace Alex.Worlds.Abstraction
 			Initiate();
 		}
 
-		public abstract bool Load(ProgressReport progressReport);
+		public abstract LoadResult Load(ProgressReport progressReport);
 
 		public virtual void Dispose()
 		{
 
 		}
+	}
+
+	public enum LoadResult 
+	{
+		Done,
+		Failed,
+		Timeout,
+		Aborted
 	}
 }

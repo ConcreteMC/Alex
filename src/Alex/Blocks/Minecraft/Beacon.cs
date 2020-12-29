@@ -8,7 +8,8 @@ namespace Alex.Blocks.Minecraft
 			Transparent = true;
 			IsReplacible = false;
 			LightValue = 15;
-
+			CanInteract = true;
+			
 			Hardness = 3;
 
 			BlockMaterial = Material.Glass;

@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Channels;
 using Alex.API.Utils;
 using Alex.Blocks;
+using Alex.Blocks.Mapping;
 using Alex.Blocks.Minecraft;
 using Alex.Entities.BlockEntities;
 using Alex.Utils;
@@ -27,7 +28,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 {
     public class ChunkProcessor : IDisposable
     {
-	    private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ChunkProcessor));
+	    private static readonly Logger         Log = LogManager.GetCurrentClassLogger(typeof(ChunkProcessor));
+	    public static           ChunkProcessor Instance { get; set; }
 	    static ChunkProcessor()
 	    {
 		    
@@ -53,6 +55,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	        UseAlexChunks = useAlexChunks;
 	        CancellationToken = cancellationToken;
 	        Cache = blobCache;
+
+	        Instance = this;
         }
 
         public void HandleChunkData(bool cacheEnabled,
@@ -90,18 +94,27 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 			        if (bs != null)
 			        {
-				        if (TryConvertBlockState(bs, out var convertedState))
+				        var copy = new BlockStateContainer()
+				        {
+					        Data = bs.Data,
+					        Id = bs.Id,
+					        Name = bs.Name,
+					        States = bs.States,
+					        RuntimeId = bs.RuntimeId
+				        };
+				        
+				        if (TryConvertBlockState(copy, out var convertedState))
 				        {
 					        return convertedState;
 				        }
 
 				        var t = TranslateBlockState(
-					        BlockFactory.GetBlockState(bs.Name),
-					        -1, bs.Data);
+					        BlockFactory.GetBlockState(copy.Name),
+					        -1, copy.Data);
 
-				        if (t.Name == "Unknown" && !Failed.Contains(bs.Name))
+				        if (t.Name == "Unknown" && !Failed.Contains(copy.Name))
 				        {
-					        Failed.Add(bs.Name);
+					        Failed.Add(copy.Name);
 
 					        return t;
 					        //  File.WriteAllText(Path.Combine("failed", bs.Name + ".json"), JsonConvert.SerializeObject(bs, Formatting.Indented));
@@ -395,8 +408,9 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 									        if (result == null)
 									        {
-										        var results = BlockFactory.RuntimeIdTable.Where(xx => xx.Id == id)
-											       .ToArray();
+										        var results =
+											        MiNET.Blocks.BlockFactory.BlockStates.Where(xx => xx.RuntimeId == id).ToArray();// BlockFactory.RuntimeIdTable.Where(xx => xx.Id == id)
+											       //.ToArray();
 
 										        if (results.Length > 0)
 										        {
@@ -410,7 +424,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 										        }
 									        }
 
-									        if (result == null)
+									        /*if (result == null)
 									        {
 										        result = new BlockState()
 										        {
@@ -420,7 +434,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 										        };
 										        
 										        Log.Info($"Unknown block: {id}:{meta}");
-									        }
+									        }*/
 									        
 									        if (result != null)
 									        {
@@ -711,6 +725,30 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		        return true;
 	        }
 
+	        if (BlockFactory.BedrockStates.TryGetValue(record.Name, out var bedrockStates))
+	        {
+		        var defaultState = bedrockStates.GetDefaultState();
+
+		        if (defaultState != null)
+		        {
+			        if (record.States != null)
+			        {
+				        foreach (var prop in record.States)
+				        {
+					        defaultState = defaultState.WithProperty(
+						        prop.Name, prop.Value());
+				        }
+			        }
+
+			        if (defaultState is PeBlockState pebs)
+			        {
+				        result = pebs.Original;
+				        return true;
+			        }
+			        //result = defaultState.Block.BlockState.CloneSilent();
+		        }
+	        }
+
 	        var originalRecord = BlockStateToString(record);
 	        
 	        result = null;
@@ -719,6 +757,67 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	        
 	        switch (record.Name)
 	        {
+		        case "minecraft:invisible_bedrock":
+		        case "minecraft:invisibleBedrock":
+			        searchName = "minecraft:barrier";
+			        break;
+		        case "minecraft:wall_sign":
+			        searchName = "minecraft:oak_wall_sign";
+			        break;
+		        case "minecraft:spruce_wall_sign":
+			        searchName = "minecraft:spruce_wall_sign";
+			        break;
+		        case "minecraft:birch_wall_sign":
+			        searchName = "minecraft:birch_wall_sign";
+			        break;
+		        case "minecraft:jungle_wall_sign":
+			        searchName = "minecraft:jungle_wall_sign";
+			        break;
+		        case "minecraft:acacia_wall_sign":
+			        searchName = "minecraft:acacia_wall_sign";
+			        break;
+		        case "minecraft:darkoak_wall_sign":
+			        searchName = "minecraft:dark_oak_wall_sign";
+			        break;
+		        case "minecraft:crimson_wall_sign":
+			        searchName = "minecraft:crimson_wall_sign";
+			        break;
+		        case "minecraft:warped_wall_sign":
+			        searchName = "minecraft:warped_wall_sign";
+			        break;
+		        
+		        
+		        case "minecraft:standing_sign":
+			        searchName = "minecraft:oak_sign";
+			        break;
+		        case "minecraft:spruce_standing_sign":
+			        searchName = "minecraft:spruce_sign";
+			        break;
+		        case "minecraft:birch_standing_sign":
+			        searchName = "minecraft:birch_sign";
+			        break;
+		        case "minecraft:jungle_standing_sign":
+			        searchName = "minecraft:jungle_sign";
+			        break;
+		        case "minecraft:acacia_standing_sign":
+			        searchName = "minecraft:acacia_sign";
+			        break;
+		        case "minecraft:darkoak_standing_sign":
+			        searchName = "minecraft:dark_oak_sign";
+			        break;
+		        case "minecraft:crimson_standing_sign":
+			        searchName = "minecraft:crimson_sign";
+			        break;
+		        case "minecraft:warped_standing_sign":
+			        searchName = "minecraft:warped_sign";
+			        break;
+
+		        case "minecraft:snow":
+			        searchName = "minecraft:snow_block";
+			        break;
+		        case "minecraft:snow_layer":
+			        searchName = "minecraft:snow";
+			        break;
 		        case "minecraft:torch":
 			        if (record.States.Any(x => x.Name.Equals("torch_facing_direction") && x.Value() != "top"))
 			        {
@@ -882,7 +981,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		        r = BlockFactory.GetBlockState(searchName);
 	        }
 	        
-	        if (r == null || r.Name == "Unknown")
+	        /*if (r == null || r.Name == "Unknown")
 	        {
 		        var mapResult =
 			        BlockFactory.RuntimeIdTable.FirstOrDefault(xx =>
@@ -916,7 +1015,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				        r = BlockFactory.GetBlockState(mapResult.Name);
 			        }
 		        }
-	        }
+	        }*/
 
 	        if (r == null || r.Name == "Unknown")
 	        {
@@ -928,9 +1027,21 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	        {
 		        switch (state.Name)
 		        {
+			        case "ground_sign_direction":
+				        r = r.WithProperty("rotation", state.Value());
+				        break;
+			        case "disarmed_bit":
+				        r = r.WithProperty("disarmed", state.Value() == "1" ? "true" : "false");
+				        break;
+			        case "powered_bit":
+				        r = r.WithProperty("powered", state.Value() == "1" ? "true" : "false");
+				        break;
+			        case "attached_bit":
+				        r = r.WithProperty("attached", state.Value() == "1" ? "true" : "false");
+				        break;
 			        case "direction":
 			        case "weirdo_direction":
-				        if (r.Block is FenceGate)
+				        if (r.Block is FenceGate || r.Block is TripwireHook)
 				        {
 					        switch (state.Value())
 					        {

@@ -27,9 +27,13 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
+using Alex.API.Utils;
+using Alex.Net.Bedrock.Raknet;
+using Alex.Utils;
 using MiNET;
 using MiNET.Net;
 using MiNET.Net.RakNet;
@@ -45,17 +49,19 @@ namespace Alex.Net.Bedrock
 
 		private readonly RaknetConnection _packetSender;
 
-		private long _lastOrderingIndex = -1; // That's the first message with wrapper
-		private AutoResetEvent _packetQueuedWaitEvent = new AutoResetEvent(false);
-		private AutoResetEvent _packetHandledWaitEvent = new AutoResetEvent(false);
-		private object _eventSync = new object();
+		private long _lastSequencingIndex = -1;
+		private long _lastOrderingIndex   = -1; // That's the first message with wrapper
+	//	private AutoResetEvent _packetQueuedWaitEvent = new AutoResetEvent(false);
+	//	private AutoResetEvent _packetHandledWaitEvent = new AutoResetEvent(false);
+		private object _eventSync    = new object();
+		private object _sequenceSync = new object();
 
-		private readonly ConcurrentPriorityQueue<int, Packet> _orderingBufferQueue = new ConcurrentPriorityQueue<int, Packet>();
-		private CancellationTokenSource _cancellationToken;
-		private Thread _orderedQueueProcessingThread;
-
-
-		public object EncryptionSyncRoot { get; } = new object();
+		private readonly Utils.Queue.ConcurrentPriorityQueue<Packet, int> _sequencingQueue =
+			new Utils.Queue.ConcurrentPriorityQueue<Packet, int>();
+		private readonly Utils.Queue.ConcurrentPriorityQueue<Packet, int> _orderingBufferQueue = new Utils.Queue.ConcurrentPriorityQueue<Packet, int>();
+		private          CancellationTokenSource                          _cancellationToken;
+		private          Thread                                           _orderedQueueProcessingThread;
+		private          Thread                                           _sequencedQueueProcessingThread;
 
 		public ConnectionInfo ConnectionInfo { get; }
 
@@ -102,11 +108,14 @@ namespace Alex.Net.Bedrock
 		/// </summary>
 		public long Rto { get; set; }
 
+		public int OrderingErrors = 0;
+
 		public long InactivityTimeout { get; }
 		public int ResendThreshold { get; }
 
 		public ConcurrentDictionary<int, SplitPartPacket[]> Splits { get; } = new ConcurrentDictionary<int, SplitPartPacket[]>();
-		public ConcurrentQueue<int> OutgoingAckQueue { get; } = new ConcurrentQueue<int>();
+		private ConcurrentQueue<int> OutgoingAckQueue { get; } = new ConcurrentQueue<int>();
+		private ConcurrentQueue<int> OutgoingNackQueue { get; } = new ConcurrentQueue<int>();
 		public ConcurrentDictionary<int, Datagram> WaitingForAckQueue { get; } = new ConcurrentDictionary<int, Datagram>();
 
 
@@ -120,7 +129,7 @@ namespace Alex.Net.Bedrock
 			EndPoint = endPoint;
 			MtuSize = mtuSize;
 
-			InactivityTimeout = 8500;
+			InactivityTimeout = 30000;
 			ResendThreshold = 10;
 
 			_cancellationToken = new CancellationTokenSource();
@@ -131,7 +140,7 @@ namespace Alex.Net.Bedrock
 		///     on RakNet message level. May come from either UDP or TCP, matters not.
 		/// </summary>
 		/// <param name="message"></param>
-		internal void HandleRakMessage(Packet message)
+		internal void HandleRakMessage(Datagram datagram, Packet message)
 		{
 			if (message == null) return;
 
@@ -148,7 +157,8 @@ namespace Alex.Net.Bedrock
 					break;
 				case Reliability.UnreliableSequenced:
 				case Reliability.ReliableSequenced:
-					AddToSequencedChannel(message);
+					AddToOrderedChannel(message);
+					//AddToSequencedChannel(message);
 					break;
 				case Reliability.Unreliable:
 				case Reliability.UnreliableWithAckReceipt:
@@ -165,51 +175,87 @@ namespace Alex.Net.Bedrock
 			}
 		}
 
-		public void AddToSequencedChannel(Packet message)
+		private void AddToSequencedChannel(Packet message)
 		{
-			AddToOrderedChannel(message);
+			try
+			{
+				if (_cancellationToken.Token.IsCancellationRequested) return;
+				
+				Interlocked.Exchange(ref _lastSequencingIndex, message.ReliabilityHeader.SequencingIndex);
+				AddToOrderedChannel(message);
+			}
+			catch (Exception e)
+			{
+				Log.Error(e, "Something went wrong!");
+			}
 		}
 
+		private ManualResetEvent _orderingResetEvent = new ManualResetEvent(false);
+		private DateTime         _orderingStart      = DateTime.UtcNow;
 		private void AddToOrderedChannel(Packet message)
 		{
 			try
 			{
 				if (_cancellationToken.Token.IsCancellationRequested) return;
 
-				if (message.ReliabilityHeader.OrderingIndex <= _lastOrderingIndex) return;
-
 				lock (_eventSync)
 				{
-					//Log.Debug($"Received packet {message.Id} with ordering index={message.ReliabilityHeader.OrderingIndex}. Current index={_lastOrderingIndex}");
+					var lastOrderingIndex = Interlocked.Read(ref _lastOrderingIndex);
 
-					if (_orderingBufferQueue.Count == 0 && message.ReliabilityHeader.OrderingIndex == _lastOrderingIndex + 1)
+					if (message.ReliabilityHeader.OrderingIndex <= lastOrderingIndex)
 					{
-						if (_orderedQueueProcessingThread != null)
-						{
-							// Remove the thread again? But need to deal with cancellation token, so not entirely easy.
-							// Needs refactoring of the processing thread first.
-						}
-						_lastOrderingIndex = message.ReliabilityHeader.OrderingIndex;
+					//	return;
+					}
+					
+					if (_orderingBufferQueue.Count == 0 && message.ReliabilityHeader.OrderingIndex == lastOrderingIndex + 1)
+					{
+						IsOutOfOrder = false;
+
+						Interlocked.Exchange(ref _lastOrderingIndex, message.ReliabilityHeader.OrderingIndex);
+
 						HandlePacket(message);
 						return;
 					}
 
-					if (_orderedQueueProcessingThread == null)
+					bool doOrdering = message.ReliabilityHeader.OrderingIndex == lastOrderingIndex + 1;
+					if (IsOutOfOrder)
 					{
-						_orderedQueueProcessingThread = new Thread(ProcessOrderedQueue)
+						if (message.ReliabilityHeader.OrderingIndex - lastOrderingIndex > 1000) //200 packets behind should be ok
 						{
-							IsBackground = true,
-							Name = $"Ordering Thread [{EndPoint}]"
-						};
-						_orderedQueueProcessingThread.Start();
-						if (Log.IsDebugEnabled) Log.Warn($"Started processing thread for {Username}");
+							Log.Warn($"Discarded ordered packet! Index: {lastOrderingIndex + 1}");
+							Interlocked.Exchange(ref _lastOrderingIndex, lastOrderingIndex + 1);
+							doOrdering = true;
+							IsOutOfOrder = false;
+						}
 					}
-
-					_orderingBufferQueue.Enqueue(message.ReliabilityHeader.OrderingIndex, message);
-					if (message.ReliabilityHeader.OrderingIndex == _lastOrderingIndex + 1)
+					else
 					{
-						WaitHandle.SignalAndWait(_packetQueuedWaitEvent, _packetHandledWaitEvent);
+						if (message.ReliabilityHeader.OrderingIndex != lastOrderingIndex + 1)
+						{
+							if (!IsOutOfOrder)
+							{
+								IsOutOfOrder = true;
+								_orderingStart = DateTime.UtcNow;
+
+								if (Log.IsDebugEnabled)
+									Log.Debug(
+										$"Datagram out of order. Expected {lastOrderingIndex + 1}, but was {message.ReliabilityHeader.OrderingIndex}.");
+							}
+						}
 					}
+					
+					_orderingBufferQueue.Enqueue(message, message.ReliabilityHeader.OrderingIndex);
+
+					if (doOrdering)
+					{
+
+						_orderingResetEvent.Set();
+						
+						if (_orderedQueueProcessingThread == null)
+							StartOrderingThread();
+					}
+					
+					
 				}
 			}
 			catch (Exception e)
@@ -218,48 +264,103 @@ namespace Alex.Net.Bedrock
 			}
 		}
 
+		private void StartOrderingThread()
+		{
+			_orderedQueueProcessingThread = new Thread(ProcessOrderedQueue)
+			{
+				IsBackground = true,
+				Name = $"Ordering Thread [{EndPoint}]"
+			};
+			_orderedQueueProcessingThread.Start();
+			if (Log.IsDebugEnabled) Log.Warn($"Started network ordering thread.");
+		}
+		
+		public bool IsOutOfOrder          { get; private set; } = false;
+		public int  FirstEncryptedMessage { get; set; }
+
 		private void ProcessOrderedQueue()
 		{
 			try
 			{
 				while (!_cancellationToken.IsCancellationRequested)
 				{
-					if (_orderingBufferQueue.TryPeek(out KeyValuePair<int, Packet> pair))
+					while (_orderingBufferQueue.TryPeek(out KeyValuePair<int, Packet> pair) && !_cancellationToken.IsCancellationRequested)
 					{
-						if (pair.Key == _lastOrderingIndex + 1)
+						var lastOrderingIndex = Interlocked.Read(ref _lastOrderingIndex);
+						if (pair.Key == lastOrderingIndex + 1)
 						{
+							IsOutOfOrder = false;
 							if (_orderingBufferQueue.TryDequeue(out pair))
 							{
-								//Log.Debug($"Handling packet ordering index={pair.Value.ReliabilityHeader.OrderingIndex}. Current index={_lastOrderingIndex}");
-
-								_lastOrderingIndex = pair.Key;
+								Interlocked.Exchange(ref _lastOrderingIndex, pair.Key);
+								
 								HandlePacket(pair.Value);
-
-								if (_orderingBufferQueue.Count == 0)
-								{
-									WaitHandle.SignalAndWait(_packetHandledWaitEvent, _packetQueuedWaitEvent, 500, true);
-								}
 							}
 						}
-						else if (pair.Key <= _lastOrderingIndex)
+						else if (pair.Key <= lastOrderingIndex)
 						{
-							if (Log.IsDebugEnabled) Log.Debug($"{Username} - Resent. Expected {_lastOrderingIndex + 1}, but was {pair.Key}.");
+							if (Log.IsDebugEnabled) Log.Debug($"Datagram resent. Expected {lastOrderingIndex + 1}, but was {pair.Key}.");
 							if (_orderingBufferQueue.TryDequeue(out pair))
 							{
 								pair.Value.PutPool();
 							}
 						}
-						else
+					}
+
+					if (!_orderingResetEvent.WaitOne(500)) //Keep the thread alive for longer.
+						return;
+				}
+			}
+			catch (ObjectDisposedException)
+			{
+				// Ignore. Comes from the reset events being waited on while being disposed. Not a problem.
+			}
+			catch (Exception e)
+			{
+				Log.Error(e, $"Exit receive handler task for player");
+			}
+
+			_orderedQueueProcessingThread = null;
+		}
+		
+		private void StartSequencingThread()
+		{
+			_sequencedQueueProcessingThread = new Thread(ProcessSequenceQueue)
+			{
+				IsBackground = true,
+				Name = $"Sequencing Thread [{EndPoint}]"
+			};
+			_sequencedQueueProcessingThread.Start();
+			if (Log.IsDebugEnabled) Log.Warn($"Started network sequencing thread.");
+		}
+		
+		private void ProcessSequenceQueue()
+		{
+			try
+			{
+				while (_sequencingQueue.TryPeek(out KeyValuePair<int, Packet> pair)
+				       && !_cancellationToken.IsCancellationRequested)
+				{
+					var lastSequenceIndex = Interlocked.Read(ref _lastSequencingIndex);
+
+					if (pair.Key == lastSequenceIndex + 1)
+					{
+						IsOutOfOrder = false;
+
+						if (_sequencingQueue.TryDequeue(out pair))
 						{
-							if (Log.IsDebugEnabled) Log.Debug($"{Username} - Wrong sequence. Expected {_lastOrderingIndex + 1}, but was {pair.Key}.");
-							WaitHandle.SignalAndWait(_packetHandledWaitEvent, _packetQueuedWaitEvent, 500, true);
+							Interlocked.Exchange(ref _lastSequencingIndex, pair.Key);
+							AddToOrderedChannel(pair.Value);
 						}
 					}
-					else
+					else if (pair.Key <= lastSequenceIndex)
 					{
-						if (_orderingBufferQueue.Count == 0)
+						if (Log.IsDebugEnabled)
+							Log.Debug($"Datagram resent. Expected {lastSequenceIndex + 1}, but was {pair.Key}.");
+
+						if (_sequencingQueue.TryDequeue(out pair))
 						{
-							WaitHandle.SignalAndWait(_packetHandledWaitEvent, _packetQueuedWaitEvent, 500, true);
+							pair.Value.PutPool();
 						}
 					}
 				}
@@ -272,12 +373,21 @@ namespace Alex.Net.Bedrock
 			{
 				Log.Error(e, $"Exit receive handler task for player");
 			}
+
+			_sequencedQueueProcessingThread = null;
 		}
 
 		private void HandlePacket(Packet message)
 		{
 			if (message == null) return;
-
+			
+			/*if ((message.ReliabilityHeader.Reliability == Reliability.ReliableSequenced 
+			     || message.ReliabilityHeader.Reliability == Reliability.UnreliableSequenced)
+			    && message.ReliabilityHeader.SequencingIndex < Interlocked.Read(ref _lastSequencingIndex))
+			{
+				return;
+			}
+			*/
 			try
 			{
 			//	RakOfflineHandler.TraceReceive(Log, message);
@@ -331,7 +441,7 @@ namespace Alex.Net.Bedrock
 					long elapsedMilliseconds = message.Timer.ElapsedMilliseconds;
 					if (elapsedMilliseconds > 1000)
 					{
-						Log.Warn("Packet (0x{1:x2}) handling too long {0}ms for {2}", elapsedMilliseconds, message.Id, Username);
+						Log.Warn($"Packet (0x{message.Id:x2}) handling too long {elapsedMilliseconds}ms ({message.ToString()})");
 					}
 				}
 				else
@@ -350,16 +460,34 @@ namespace Alex.Net.Bedrock
 			}
 		}
 
+		private long _pongsReceived    = 0;
+		private long _totalLatency = 0;
 		private void HandleConnectedPong(ConnectedPong connectedPong)
 		{
+			var now = DateTime.UtcNow.Ticks / TimeSpan.TicksPerMillisecond;
 			// Ignore
+			if (_pings.Remove(connectedPong.sendpingtime))
+			{
+				long responseTime = now - connectedPong.sendpingtime;
+				//_totalLatency += responseTime;
+
+				ConnectionInfo.Latency = responseTime; //_totalLatency / ++_pongsReceived;
+			}
+
+			foreach (var ping in _pings.ToArray())
+			{
+				long responseTime = now - ping;
+
+				if (responseTime > 2500)
+					_pings.Remove(ping);
+			}
 		}
 
 		protected virtual void HandleConnectedPing(ConnectedPing message)
 		{
 			var packet = ConnectedPong.CreateObject();
 			packet.sendpingtime = message.sendpingtime;
-			packet.sendpongtime = DateTimeOffset.UtcNow.Ticks / TimeSpan.TicksPerMillisecond;
+			packet.sendpongtime = DateTime.UtcNow.Ticks / TimeSpan.TicksPerMillisecond;
 			SendPacket(packet);
 		}
 
@@ -415,7 +543,7 @@ namespace Alex.Net.Bedrock
 
 		protected virtual void HandleDisconnectionNotification()
 		{
-			Disconnect("Client requested disconnected", false);
+			Disconnect("Server requested disconnect", false);
 		}
 
 		public virtual void Disconnect(string reason, bool sendDisconnect = true)
@@ -424,17 +552,29 @@ namespace Alex.Net.Bedrock
 			Close();
 		}
 
+		private DateTime             _lastDetectionSendTime = DateTime.UtcNow;
+		private DateTime             _lastPingTIme          = DateTime.UtcNow;
+		private ThreadSafeList<long> _pings                 = new ThreadSafeList<long>();
 		public void DetectLostConnection()
 		{
-			var ping = DetectLostConnections.CreateObject();
-			SendPacket(ping);
+			long now        = DateTime.UtcNow.Ticks / TimeSpan.TicksPerMillisecond;
+			long lastUpdate = _lastDetectionSendTime.Ticks / TimeSpan.TicksPerMillisecond;
+
+			if (now - lastUpdate > 2500)
+			{
+				var ping = DetectLostConnections.CreateObject();
+				//ping.ReliabilityHeader.Reliability = Reliability.Unreliable;
+				SendPacket(ping);
+
+				_lastDetectionSendTime = DateTime.UtcNow;
+			}
 		}
 
 		// MCPE Login handling
 
 
-		private Queue<Packet> _sendQueueNotConcurrent = new Queue<Packet>();
-		private object _queueSync = new object();
+		private ConcurrentQueue<Packet> _sendQueue = new ConcurrentQueue<Packet>();
+	//	private object                  _queueSync              = new object();
 
 		public void SendPacket(Packet packet)
 		{
@@ -449,9 +589,9 @@ namespace Alex.Net.Bedrock
 
 		//	RakOfflineHandler.TraceSend(packet);
 
-			lock (_queueSync)
+			//lock (_queueSync)
 			{
-				_sendQueueNotConcurrent.Enqueue(packet);
+				_sendQueue.Enqueue(packet);
 			}
 		}
 
@@ -463,12 +603,12 @@ namespace Alex.Net.Bedrock
 			{
 				if (_tickCounter++ >= 5)
 				{
-					await Task.WhenAll(SendAckQueueAsync(), UpdateAsync(), SendQueueAsync(), connection.UpdateAsync(this));
+					await Task.WhenAll(SendAckQueueAsync(), SendNackQueueAsync(), UpdateAsync(), SendQueueAsync(), connection.UpdateAsync(this));
 					_tickCounter = 0;
 				}
 				else
 				{
-					await Task.WhenAll(SendAckQueueAsync(), SendQueueAsync());
+					await Task.WhenAll(SendAckQueueAsync(), SendNackQueueAsync(), SendQueueAsync());
 				}
 			}
 			catch (Exception e)
@@ -502,7 +642,7 @@ namespace Alex.Net.Bedrock
 					// Disconnect user
 					//ThreadPool.QueueUserWorkItem(o =>
 					{
-						Disconnect("You've been kicked with reason: Network timeout.");
+						Disconnect("Network timeout.");
 						Close();
 					}//);
 
@@ -511,8 +651,25 @@ namespace Alex.Net.Bedrock
 
 				if (State != ConnectionState.Connected && CustomMessageHandler != null && lastUpdate + 3000 < now)
 				{
-					Disconnect("You've been kicked with reason: Lost connection."); 
+					Disconnect("Lost connection."); 
 					return;
+				}
+
+				if (State == ConnectionState.Connected)
+				{
+					lastUpdate = _lastPingTIme.Ticks / TimeSpan.TicksPerMillisecond;
+
+					if (now - lastUpdate > 2500)
+					{
+						ConnectedPing connectedPing = ConnectedPing.CreateObject();
+						connectedPing.sendpingtime = now;
+						//connectedPing.ReliabilityHeader.Reliability = Reliability.Unreliable;
+
+						SendPacket(connectedPing);
+
+						_pings.TryAdd(connectedPing.sendpingtime);
+						_lastPingTIme = DateTime.UtcNow;
+					}
 				}
 			}
 			finally
@@ -521,11 +678,37 @@ namespace Alex.Net.Bedrock
 			}
 		}
 
+		private async Task SendNackQueueAsync()
+		{
+			RaknetSession session    = this;
+			var           queue      = session.OutgoingNackQueue;
+			int           queueCount = queue.Count;
+
+			if (queueCount == 0) return;
+
+			var acks = new CustomNak();
+			for (int i = 0; i < queueCount; i++)
+			{
+				if (!queue.TryDequeue(out int ack)) break;
+
+				ConnectionInfo.NumberOfPlayers++;
+				acks.naks.Add(ack);
+			}
+
+			if (acks.naks.Count > 0)
+			{
+				byte[] data = acks.Encode();
+				await _packetSender.SendDataAsync(data, session.EndPoint);
+				
+			}
+			//acks.PutPool();
+		}
+		
 		private async Task SendAckQueueAsync()
 		{
-			RaknetSession session = this;
-			var queue = session.OutgoingAckQueue;
-			int queueCount = queue.Count;
+			RaknetSession session    = this;
+			var           queue      = session.OutgoingAckQueue;
+			int           queueCount = queue.Count;
 
 			if (queueCount == 0) return;
 
@@ -543,16 +726,15 @@ namespace Alex.Net.Bedrock
 				byte[] data = acks.Encode();
 				await _packetSender.SendDataAsync(data, session.EndPoint);
 			}
-
 			//acks.PutPool();
 		}
 
 		private SemaphoreSlim _syncHack = new SemaphoreSlim(1, 1);
 
 		[SuppressMessage("ReSharper", "InconsistentlySynchronizedField")]
-		public async Task SendQueueAsync(int millisecondsWait = 0)
+		private async Task SendQueueAsync(int millisecondsWait = 0)
 		{
-			if (_sendQueueNotConcurrent.Count == 0) return;
+			if (_sendQueue.Count == 0) return;
 
 			// Extremely important that this will not allow more than one thread at a time.
 			// This methods handle ordering and potential encryption, hence order matters.
@@ -561,17 +743,14 @@ namespace Alex.Net.Bedrock
 			try
 			{
 				var sendList = new List<Packet>();
-				Queue<Packet> queue = _sendQueueNotConcurrent;
-				int length = queue.Count;
+				//Queue<Packet> queue = _sendQueueNotConcurrent;
+				int length = _sendQueue.Count;
 				for (int i = 0; i < length; i++)
 				{
 					Packet packet;
-					lock (_queueSync)
-					{
-						if (queue.Count == 0) break;
 
-						if (!queue.TryDequeue(out packet)) break;
-					}
+					if (!_sendQueue.TryDequeue(out packet))
+						break;
 
 					if (packet == null) continue;
 
@@ -623,7 +802,7 @@ namespace Alex.Net.Bedrock
 			if (packet.ReliabilityHeader.Reliability == Reliability.Undefined)
 				packet.ReliabilityHeader.Reliability = Reliability.Reliable; // Questionable practice
 
-			_packetSender.SendPacketAsync(this, packet).Wait();
+			_packetSender.SendPacket(this, packet);
 		}
 
 		public IPEndPoint GetClientEndPoint()
@@ -638,13 +817,9 @@ namespace Alex.Net.Bedrock
 
 		public void Close()
 		{
-			if (!ConnectionInfo.RakSessions.TryRemove(EndPoint, out _))
-			{
-				return;
-			}
-
 			State = ConnectionState.Unconnected;
 			Evicted = true;
+			
 			CustomMessageHandler = null;
 
 			// Send with high priority, bypass queue
@@ -653,8 +828,8 @@ namespace Alex.Net.Bedrock
 			SendQueueAsync(500).Wait();
 
 			_cancellationToken.Cancel();
-			_packetQueuedWaitEvent.Set();
-			_packetHandledWaitEvent.Set();
+		//	_packetQueuedWaitEvent.Set();
+		//	_packetHandledWaitEvent.Set();
 			_orderingBufferQueue.Clear();
 
 			_packetSender.Close(this);
@@ -663,8 +838,8 @@ namespace Alex.Net.Bedrock
 			{
 				_orderedQueueProcessingThread = null;
 				_cancellationToken.Dispose();
-				_packetQueuedWaitEvent.Close();
-				_packetHandledWaitEvent.Close();
+			//	_packetQueuedWaitEvent.Close();
+			//	_packetHandledWaitEvent.Close();
 			}
 			catch
 			{
@@ -672,6 +847,24 @@ namespace Alex.Net.Bedrock
 			}
 
 			if (Log.IsDebugEnabled) Log.Info($"Closed network session for player {Username}");
+		}
+		
+		private long                 _lastDatagramSequenceNumber = -1;
+		public void Acknowledge(Int24 datagramSequenceNumber)
+		{
+			var integerValue = datagramSequenceNumber.IntValue();
+			var last         = Interlocked.Exchange(ref _lastDatagramSequenceNumber, integerValue);
+			var skipped      = last - integerValue - 1;
+
+			if (skipped > 0)
+			{
+				for (long i = last + 1; i < integerValue - 1; i++)
+				{
+					OutgoingNackQueue.Enqueue((int) i);
+				}
+			}
+
+			OutgoingAckQueue.Enqueue(datagramSequenceNumber);
 		}
 	}
 }

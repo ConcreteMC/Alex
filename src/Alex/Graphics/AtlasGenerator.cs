@@ -25,6 +25,8 @@ using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 using SixLabors.ImageSharp.Processing.Processors.Transforms;
+using Point = SixLabors.ImageSharp.Point;
+using Rectangle = SixLabors.ImageSharp.Rectangle;
 
 namespace Alex.Graphics
 {
@@ -59,7 +61,7 @@ namespace Alex.Graphics
 		    Dictionary<ResourceLocation, ImageEntry> textures,
 		    IProgressReceiver progressReceiver)
 	    {
-		    foreach (var texture in resourcePack.Textures.Where(x => x.Key.Path.StartsWith("block/", StringComparison.InvariantCultureIgnoreCase)))
+		    foreach (var texture in resourcePack.Textures.Where(x => x.Key.Path.StartsWith("block/", StringComparison.OrdinalIgnoreCase)))
 		    {
 			    if (textures.ContainsKey(texture.Key))
 			    {
@@ -68,7 +70,7 @@ namespace Alex.Graphics
 			    
 			    TextureMeta meta = null;
 			    resourcePack.TryGetTextureMeta(texture.Key, out meta);
-			    textures.Add(texture.Key, new ImageEntry(texture.Value, meta));
+			    textures.Add(texture.Key, new ImageEntry(texture.Value.Value, meta));
 		    }
 	    }
 
@@ -95,21 +97,6 @@ namespace Alex.Graphics
 		    }
 	    }
 
-	    private class MipMappedImage
-	    {
-		    private Image<Rgba32>[] _levels;
-		    public  int             Levels => _levels.Length;
-		    public MipMappedImage(Image<Rgba32>[] levels)
-		    {
-			    _levels = levels;
-		    }
-
-		    public Image<Rgba32> GetLevel(int level)
-		    {
-			    return _levels[level];
-		    }
-	    }
-	    
 	    private void GenerateAtlas(GraphicsDevice device,
 		    IDictionary<ResourceLocation, ImageEntry> blockTextures,
 		    IProgressReceiver progressReceiver)
@@ -167,7 +154,7 @@ namespace Alex.Graphics
 		    {
 			    if (!blockFrames.TryGetValue(other.Key, out _))
 			    {
-				    blockFrames.Add(other.Key, GetFrames(other.Value.Image, TextureWidth, TextureHeight));
+				    blockFrames.Add(other.Key, GetFrames(other.Value, TextureWidth, TextureHeight));
 			    }
 		    }
 
@@ -392,9 +379,11 @@ namespace Alex.Graphics
 		    return done;
 	    }
 
-	    private Image<Rgba32>[] GetFrames(Image<Rgba32> source, int frameWidth, int frameHeight)
+	    private Image<Rgba32>[] GetFrames(ImageEntry entry, int frameWidth, int frameHeight)
 	    {
-		    int framesInWidth = source.Width / frameWidth;
+		    var source         = entry.Image;
+		    
+		    int framesInWidth  = source.Width / frameWidth;
 		    int framesInHeight = source.Height / frameHeight;
 
 		    //List<Image<Rgba32>> result = new List<Image<Rgba32>>();
@@ -403,18 +392,59 @@ namespace Alex.Graphics
 		    for (int x = 0; x < framesInWidth; x++)
 		    for (int y = 0; y < framesInHeight; y++)
 		    {
-			    var newBitmap = new Image<Rgba32>(frameWidth, frameHeight);
+			    var x1 = x;
 
-			    TextureUtils.CopyRegionIntoImage(
+			    var y1 = y;
+
+			    var newBitmap = entry.Image.Clone(
+				    img => img.Crop(
+					    new Rectangle(
+						    new Point(x1 * frameWidth, y1 * frameHeight), new Size(frameWidth, frameHeight))));
+
+			    /*TextureUtils.CopyRegionIntoImage(
 				    source,
 				    new System.Drawing.Rectangle(x * frameWidth, y * frameHeight, frameWidth, frameHeight),
-				    ref newBitmap, new System.Drawing.Rectangle(0, 0, frameWidth, frameHeight));
+				    ref newBitmap, new System.Drawing.Rectangle(0, 0, frameWidth, frameHeight));*/
 
 			    result[counter++] = newBitmap;
 			    //result.Add(newBitmap);
 		    }
 
-		    return result.ToArray();
+		   /* if (entry.Meta?.Animation != null)
+		    {
+			    var anim       = entry.Meta.Animation;
+			    var frameTime  = Math.Max(anim.Frametime, 1);
+			    
+			    var frameCount = result.Length;
+
+			    if (anim.Frames != null && anim.Frames.Length > 0)
+				    frameCount = anim.Frames.Length;
+
+			    //frameCount *= frameTime;
+			    
+			    Image<Rgba32>[] copy = new Image<Rgba32>[frameCount];
+			    int             idx  = 0;
+			    for (int i = 0; i < copy.Length; i += frameTime)
+			    {
+				    long index = idx++;
+
+				    if (anim.Frames != null && anim.Frames.Length > 0)
+				    {
+					    var f = anim.Frames[index];
+					    index = f.Integer ?? f.FrameClass.Index;
+				    }
+
+				    for (int f = i; f < i + frameTime; f++)
+				    {
+					    copy[f] = result[index % result.Length];
+				    }
+			    }
+
+			    return copy;
+		    }*/
+
+
+		    return result;
 	    }
 
 	    public int TextureWidth { get; private set; } = 16;

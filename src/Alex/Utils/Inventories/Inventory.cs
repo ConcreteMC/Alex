@@ -6,7 +6,9 @@ namespace Alex.Utils.Inventories
 {
     public class Inventory : InventoryBase
     {
-	    protected byte _selectedSlot = 0;
+	    private   InventoryBase CraftingInventory { get; } = new InventoryBase(5);
+	    
+	    protected byte          _selectedSlot = 0;
 
 	    public virtual int SelectedSlot
 	    {
@@ -124,6 +126,16 @@ namespace Alex.Utils.Inventories
 		    }
 
 		    return items;
+	    }
+
+	    public void SetCraftingSlot(int slot, Item item, bool serverTransaction)
+	    {
+		    CraftingInventory.SetSlot(slot, item, serverTransaction);
+	    }
+	    
+	    public Item GetCraftingSlot(int slot)
+	    {
+		    return CraftingInventory[slot];
 	    }
 
 	    internal void TriggerClosedEvent()

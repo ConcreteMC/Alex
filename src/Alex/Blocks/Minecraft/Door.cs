@@ -51,7 +51,7 @@ namespace Alex.Blocks.Minecraft
 			bool isUpper = false;
 			if (blockState.TryGetValue("half", out string half))
 			{
-				isUpper = half.Equals("upper", StringComparison.InvariantCultureIgnoreCase);
+				isUpper = half.Equals("upper", StringComparison.OrdinalIgnoreCase);
 			}
 			
 			if (updated == coordinates + BlockCoordinates.Up && !isUpper)
@@ -81,7 +81,7 @@ namespace Alex.Blocks.Minecraft
 		public override BlockState BlockPlaced(IBlockAccess world, BlockState state, BlockCoordinates position)
 		{
 			if (state.TryGetValue("half", out string half) && half.Equals(
-				"upper", StringComparison.InvariantCultureIgnoreCase))
+				"upper", StringComparison.OrdinalIgnoreCase))
 			{
 				return Update(world, state, position, position + BlockCoordinates.Down);
 			}
@@ -101,11 +101,6 @@ namespace Alex.Blocks.Minecraft
 		public override bool ShouldRenderFace(BlockFace face, Block neighbor)
 		{
 			return true;
-		}
-		
-		public override bool CanCollide()
-		{
-			return !BlockState.GetTypedValue(OPEN);
 		}
 	}
 }

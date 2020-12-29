@@ -50,11 +50,13 @@ namespace Alex.Net.Bedrock
 		private readonly IPEndPoint _endpoint;
 		
 		private HighPrecisionTimer _tickerHighPrecisionTimer;
+
+		private Thread _readingThread;
 		//public readonly ConcurrentDictionary<IPEndPoint, RaknetSession> RakSessions = new ConcurrentDictionary<IPEndPoint, RaknetSession>();
 
 		public          RaknetSession  Session { get; set; } = null;
 		public readonly RaknetHandler  RaknetHandler;
-		public          ConnectionInfo ConnectionInfo { get; }
+		public   ConnectionInfo ConnectionInfo { get; }
 
 		public bool FoundServer => RaknetHandler.HaveServer;
 
@@ -63,6 +65,8 @@ namespace Alex.Net.Bedrock
 			get => RaknetHandler.AutoConnect;
 			set => RaknetHandler.AutoConnect = value;
 		}
+
+		public bool IsNetworkOutOfOrder => Session?.IsOutOfOrder ?? false;
 
 		// This is only used in client scenarios. Will contain
 		// information regarding a located server.
@@ -84,9 +88,12 @@ namespace Alex.Net.Bedrock
 		{
 			if (_listener != null) return;
 
+			_readingThread = new Thread(ReceiveCallback);
+
 			Log.Debug($"Creating listener for packets on {_endpoint}");
 			_listener = CreateListener(_endpoint);
-			_listener.BeginReceive(ReceiveCallback, _listener);
+			_readingThread.Start();
+		//	_listener.BeginReceive(ReceiveCallback, _listener);
 
 			_tickerHighPrecisionTimer = new HighPrecisionTimer(10, SendTick, true);
 		}
@@ -219,62 +226,68 @@ namespace Alex.Net.Bedrock
 			splits.Clear();
 		}
 
-		private void ReceiveCallback(IAsyncResult ar)
+		private async void ReceiveCallback(object o)
 		{
-			var listener = (UdpClient) ar.AsyncState;
-			
-			// Check if we already closed the server
-			if (listener?.Client == null) return;
-
-			// WSAECONNRESET:
-			// The virtual circuit was reset by the remote side executing a hard or abortive close. 
-			// The application should close the socket; it is no longer usable. On a UDP-datagram socket 
-			// this error indicates a previous send operation resulted in an ICMP Port Unreachable message.
-			// Note the spocket settings on creation of the server. It makes us ignore these resets.
-			IPEndPoint senderEndpoint = null;
-
-			try
+			while (_listener != null)
 			{
-				ReadOnlyMemory<byte> receiveBytes = listener.EndReceive(ar, ref senderEndpoint);
+				var listener = _listener;
 
-				Interlocked.Increment(ref ConnectionInfo.NumberOfPacketsInPerSecond);
-				Interlocked.Add(ref ConnectionInfo.TotalPacketSizeInPerSecond, receiveBytes.Length);
+				// Check if we already closed the server
+				if (listener?.Client == null) return;
 
-				if (receiveBytes.Length != 0)
+				// WSAECONNRESET:
+				// The virtual circuit was reset by the remote side executing a hard or abortive close. 
+				// The application should close the socket; it is no longer usable. On a UDP-datagram socket 
+				// this error indicates a previous send operation resulted in an ICMP Port Unreachable message.
+				// Note the spocket settings on creation of the server. It makes us ignore these resets.
+				IPEndPoint senderEndpoint = null;
+
+				try
 				{
-					//ThreadPool.QueueUserWorkItem(
-					//	(o) =>
+					var receive      = await listener.ReceiveAsync();
+					var receiveBytes = receive.Buffer;
+					senderEndpoint = receive.RemoteEndPoint;
+					
+					Interlocked.Increment(ref ConnectionInfo.NumberOfPacketsInPerSecond);
+					Interlocked.Add(ref ConnectionInfo.TotalPacketSizeInPerSecond, receiveBytes.Length);
+
+					if (receiveBytes.Length != 0)
 					{
-						try
-						{
-							ReceiveDatagram(receiveBytes, senderEndpoint);
-						}
-						catch (Exception e)
-						{
-							Log.Warn(e, $"Process message error from: {senderEndpoint.Address}");
-						}
-					} //);
+						//Log.Info($"Buffer size: {receiveBytes.Length}");
+						//ThreadPool.QueueUserWorkItem(
+						//	(o) =>
+						//{
+							try
+							{
+								ReceiveDatagram(receiveBytes, senderEndpoint);
+							}
+							catch (Exception e)
+							{
+								Log.Warn(e, $"Process message error from: {senderEndpoint.Address}");
+							}
+						//} );
+					}
+					else
+					{
+						Log.Warn("Unexpected end of transmission?");
+					}
+
+					//listener.BeginReceive(ReceiveCallback, listener);
 				}
-				else
+				catch (ObjectDisposedException e) { }
+				catch (SocketException e)
 				{
-					Log.Warn("Unexpected end of transmission?");
+					// 10058 (just regular disconnect while listening)
+					if (e.ErrorCode == 10058) return;
+					if (e.ErrorCode == 10038) return;
+					if (e.ErrorCode == 10004) return;
+
+					if (Log.IsDebugEnabled) Log.Error("Unexpected end of receive", e);
 				}
-
-				listener.BeginReceive(ReceiveCallback, listener);
-			}
-			catch (ObjectDisposedException e) { }
-			catch (SocketException e)
-			{
-				// 10058 (just regular disconnect while listening)
-				if (e.ErrorCode == 10058) return;
-				if (e.ErrorCode == 10038) return;
-				if (e.ErrorCode == 10004) return;
-
-				if (Log.IsDebugEnabled) Log.Error("Unexpected end of receive", e);
-			}
-			catch (NullReferenceException ex)
-			{
-				Log.Warn(ex, $"Unexpected end of transmission");
+				catch (NullReferenceException ex)
+				{
+					Log.Warn(ex, $"Unexpected end of transmission");
+				}
 			}
 		}
 
@@ -339,16 +352,16 @@ namespace Alex.Net.Bedrock
 			}
 			catch (Exception e)
 			{
-				rakSession.Disconnect("Bad packet received from client.");
+				rakSession.Disconnect("Bad packet received from server.");
 
 				Log.Warn(e, $"Bad packet {receivedBytes.Span[0]}\n{Packet.HexDump(receivedBytes)}");
 				return;
 			}
 
-			EnqueueAck(rakSession, datagram.Header.DatagramSequenceNumber);
-
 			if (Log.IsTraceEnabled) Log.Trace($"Receive datagram #{datagram.Header.DatagramSequenceNumber} for {_endpoint}");
 
+			EnqueueAck(rakSession, datagram.Header.DatagramSequenceNumber);
+			
 			HandleDatagram(rakSession, datagram);
 			datagram.PutPool();
 		}
@@ -365,7 +378,7 @@ namespace Alex.Net.Bedrock
 				}
 
 				message.Timer.Restart();
-				session.HandleRakMessage(message);
+				session.HandleRakMessage(datagram, message);
 			}
 		}
 
@@ -410,10 +423,11 @@ namespace Alex.Net.Bedrock
 
 			var buffer = new Memory<byte>(new byte[contiguousLength]);
 
-			Reliability headerReliability = splitPart.ReliabilityHeader.Reliability;
-			var headerReliableMessageNumber = splitPart.ReliabilityHeader.ReliableMessageNumber;
-			var headerOrderingChannel = splitPart.ReliabilityHeader.OrderingChannel;
-			var headerOrderingIndex = splitPart.ReliabilityHeader.OrderingIndex;
+			Reliability headerReliability           = splitPart.ReliabilityHeader.Reliability;
+			var         headerReliableMessageNumber = splitPart.ReliabilityHeader.ReliableMessageNumber;
+			var         headerOrderingChannel       = splitPart.ReliabilityHeader.OrderingChannel;
+			var         headerOrderingIndex         = splitPart.ReliabilityHeader.OrderingIndex;
+			var         headerSequencingIndex       = splitPart.ReliabilityHeader.SequencingIndex;
 
 			int position = 0;
 			foreach (SplitPartPacket spp in splitPartList)
@@ -434,6 +448,7 @@ namespace Alex.Net.Bedrock
 					ReliableMessageNumber = headerReliableMessageNumber,
 					OrderingChannel = headerOrderingChannel,
 					OrderingIndex = headerOrderingIndex,
+					SequencingIndex = headerSequencingIndex
 				};
 
 				if (Log.IsTraceEnabled) Log.Trace($"Assembled split packet {fullMessage.ReliabilityHeader.Reliability} message #{fullMessage.ReliabilityHeader.ReliableMessageNumber}, OrdIdx: #{fullMessage.ReliabilityHeader.OrderingIndex}");
@@ -453,7 +468,7 @@ namespace Alex.Net.Bedrock
 
 		private void EnqueueAck(RaknetSession session, Int24 datagramSequenceNumber)
 		{
-			session.OutgoingAckQueue.Enqueue(datagramSequenceNumber);
+			session.Acknowledge(datagramSequenceNumber);
 		}
 
 		private void HandleAck(RaknetSession session, Ack ack, ConnectionInfo connectionInfo)
@@ -541,12 +556,12 @@ namespace Alex.Net.Bedrock
 			{
 				long now = DateTime.UtcNow.Ticks / TimeSpan.TicksPerMillisecond;
 				long lastUpdate = session.LastUpdatedTime.Ticks / TimeSpan.TicksPerMillisecond;
-
+				
 				if (!session.WaitForAck && (session.ResendCount > session.ResendThreshold || lastUpdate + session.InactivityTimeout < now))
 				{
 					//TODO: Seems to have lost code here. This should actually count the resends too.
 					// Spam is a bit too much. The Russians have trouble with bad connections.
-					session.DetectLostConnection();
+					Session.DetectLostConnection();
 					session.WaitForAck = true;
 				}
 
@@ -601,6 +616,16 @@ namespace Alex.Net.Bedrock
 			}
 		}
 
+		public void SendPacket(RaknetSession session, Packet message)
+		{
+			foreach (Datagram datagram in Datagram.CreateDatagrams(message, session.MtuSize, session))
+			{
+				SendDatagram(session, datagram);
+			}
+
+			message.PutPool();
+		}
+		
 		public async Task SendPacketAsync(RaknetSession session, Packet message)
 		{
 			foreach (Datagram datagram in Datagram.CreateDatagrams(message, session.MtuSize, session))
@@ -624,6 +649,48 @@ namespace Alex.Net.Bedrock
 			}
 		}
 
+		
+		public void SendDatagram(RaknetSession session, Datagram datagram)
+		{
+			if (datagram.MessageParts.Count == 0)
+			{
+				Log.Warn($"Failed to send #{datagram.Header.DatagramSequenceNumber.IntValue()}");
+				datagram.PutPool();
+				return;
+			}
+
+			if (datagram.TransmissionCount > 10)
+			{
+				if (Log.IsDebugEnabled) Log.Warn($"Retransmission count exceeded. No more resend of #{datagram.Header.DatagramSequenceNumber.IntValue()} Type: {datagram.FirstMessageId} (0x{datagram.FirstMessageId:x2}) for {session.Username}");
+
+				datagram.PutPool();
+
+				Interlocked.Increment(ref ConnectionInfo.NumberOfFails);
+				//TODO: Disconnect! Because of encryption, this connection can't be used after this point
+				return;
+			}
+
+			datagram.Header.DatagramSequenceNumber = Interlocked.Increment(ref session.DatagramSequenceNumber);
+			datagram.TransmissionCount++;
+			datagram.RetransmitImmediate = false;
+
+			//Memory<byte> buffer = new byte[1600];;// ArrayPool<byte>.Shared.Rent(1600);
+			//int      length = (int) datagram.GetEncoded(ref buffer);
+
+			datagram.Timer.Restart();
+
+			if (!ConnectionInfo.DisableAck && !ConnectionInfo.IsEmulator && !session.WaitingForAckQueue.TryAdd(datagram.Header.DatagramSequenceNumber.IntValue(), datagram))
+			{
+				Log.Warn($"Datagram sequence unexpectedly existed in the ACK/NAK queue already {datagram.Header.DatagramSequenceNumber.IntValue()}");
+				datagram.PutPool();
+			}
+
+			//lock (session.SyncRoot)
+			{
+				SendData(datagram.Encode(), session.EndPoint);
+				//ArrayPool<byte>.Shared.Return(buffer);
+			}
+		}
 
 		public async Task SendDatagramAsync(RaknetSession session, Datagram datagram)
 		{

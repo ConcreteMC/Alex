@@ -16,7 +16,8 @@ namespace Alex.Net.Bedrock.Packets
 			//base.DecodePacket();
 			Id = IsMcpe ? (byte) ReadVarInt() : ReadByte();
 			
-			ReadNewRecipes();
+			//ReadNewRecipes();
+			recipes = ReadRecipes();
 			potionTypeRecipes = ReadPotionTypeRecipes();
 			potionContainerRecipes = ReadPotionContainerChangeRecipes();
 			isClean = ReadBool();
@@ -66,7 +67,7 @@ namespace Alex.Net.Bedrock.Packets
 						int resultCount = ReadVarInt(); // 1?
 						for (int j = 0; j < resultCount; j++)
 						{
-							recipe.Result.Add(this.ReadItem2());
+							recipe.Result.Add(this.ReadItem2(false));
 						}
 						recipe.Id = ReadUUID(); // Id
 						recipe.Block = ReadString(); // block?
@@ -84,8 +85,12 @@ namespace Alex.Net.Bedrock.Packets
 						int height = ReadVarInt(); // Height
 						
 						var recipe = new ShapedRecipe(width, height);
+
+						if (width > 3 || height > 3)
+						{
+						//	throw new Exception("Wrong number of ingredience. Width=" + width + ", height=" + height);
+						}
 						
-						if (width > 3 || height > 3) throw new Exception("Wrong number of ingredience. Width=" + width + ", height=" + height);
 						for (int w = 0; w < width; w++)
 						{
 							for (int h = 0; h < height; h++)
@@ -97,7 +102,7 @@ namespace Alex.Net.Bedrock.Packets
 						int resultCount = ReadVarInt(); // 1?
 						for (int j = 0; j < resultCount; j++)
 						{
-							recipe.Result.Add(this.ReadItem2());
+							recipe.Result.Add(this.ReadItem2(false));
 						}
 						recipe.Id = ReadUUID(); // Id
 						recipe.Block = ReadString(); // block?
@@ -112,7 +117,7 @@ namespace Alex.Net.Bedrock.Packets
 					{
 						var recipe = new SmeltingRecipe();
 						short id = (short) ReadSignedVarInt(); // input (with metadata) 
-						Item result = this.ReadItem2(); // Result
+						Item result = this.ReadItem2(false); // Result
 						recipe.Block = ReadString(); // block?
 						recipe.Input = ItemFactory.GetItem(id, 0);
 						recipe.Result = result;

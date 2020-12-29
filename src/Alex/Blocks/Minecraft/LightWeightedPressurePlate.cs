@@ -4,10 +4,11 @@ namespace Alex.Blocks.Minecraft
 	{
 		public LightWeightedPressurePlate() : base()
 		{
-			Solid = false;
+			Solid = true;
 			Transparent = true;
 			IsReplacible = false;
-
+			IsFullBlock = false;
+			
 			Hardness = 0.5f;
 			
 			BlockMaterial  = Material.Iron;

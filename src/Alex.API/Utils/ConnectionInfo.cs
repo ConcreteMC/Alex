@@ -18,7 +18,8 @@ namespace Alex.API.Network
         public long PacketsIn  { get; set; }
         public long PacketsOut { get; set; }
         
-        public ConnectionInfo(DateTime connectionOpenedTime, long latency, long? nack, long? ack, long? acksSent, long? fails, long? resends, long bytesIn, long bytesOut, long packetsIn, long packetsOut)
+        public NetworkState State { get; }
+        public ConnectionInfo(DateTime connectionOpenedTime, long latency, long? nack, long? ack, long? acksSent, long? fails, long? resends, long bytesIn, long bytesOut, long packetsIn, long packetsOut, NetworkState state = NetworkState.Ok)
         {
             ConnectionOpenedTime = connectionOpenedTime;
             Latency = latency;
@@ -31,6 +32,18 @@ namespace Alex.API.Network
             BytesOut = bytesOut;
             PacketsIn = packetsIn;
             PacketsOut = packetsOut;
+            State = state;
+        }
+        
+        public ConnectionInfo(){}
+
+        public enum NetworkState 
+        {
+            Ok,
+            OutOfOrder,
+            Slow,
+            HighPing,
+            PacketLoss
         }
     }
 }

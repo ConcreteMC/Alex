@@ -164,11 +164,14 @@ namespace Alex.Utils.Inventories
 			Item result = null;
 
 			var itemState = ChunkProcessor.Itemstates.FirstOrDefault(x => x.Id == item.Id);
+			if (itemState == null)
+				itemState = MiNET.Items.ItemFactory.Itemstates.FirstOrDefault(x => x.Id == item.Id);
+			
 			if (itemState != null)
 			//if (ChunkProcessor.Itemstates.TryGetValue(item.Id, out var itemState))
 			{
 				//item.Id = itemState.Id;
-				if (ItemFactory.TryGetItem(itemState.Id, item.Metadata, out result) || ItemFactory.TryGetItem(itemState.Name, out result))
+				if (ItemFactory.TryGetItem(itemState.Name, out result) || ItemFactory.TryGetItem(itemState.Id, item.Metadata, out result) )
 				{
 				//	Log.Info($"{item.Id} = {JsonConvert.SerializeObject(itemState, SerializerSettings)} || {JsonConvert.SerializeObject(result, SerializerSettings)}");
 				}
@@ -177,8 +180,11 @@ namespace Alex.Utils.Inventories
 				//	Log.Info($"{item.Id} = {JsonConvert.SerializeObject(itemState, SerializerSettings)}");
 				}
 			}
+			else
+			{
+			}
 			
-			if (result == null && item.Id < 256) //Block
+			if (result == null && item.Id < 256 && item.Id >= 0) //Block
 			{
 				var id         = item.Id;
 				var meta       = (byte) item.Metadata;
@@ -197,7 +203,7 @@ namespace Alex.Utils.Inventories
 
 					ItemFactory.TryGetItem(t.Name, out result);
 				}
-				else
+				/*else
 				{
 					var block = BlockFactory.RuntimeIdTable.FirstOrDefault(x => x.Id == item.Id);
 
@@ -205,7 +211,7 @@ namespace Alex.Utils.Inventories
 					{
 						ItemFactory.TryGetItem(block.Name, out result);
 					}
-				}
+				}*/
 
 				if (result != null)
 				{

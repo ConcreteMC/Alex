@@ -41,5 +41,7 @@ namespace Alex.API.Services
 
         bool Exists(string key);
         bool Delete(string key);
+
+        FileStream OpenFileStream(string key, FileMode access);
     }
 }

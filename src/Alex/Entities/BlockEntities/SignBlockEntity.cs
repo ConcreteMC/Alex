@@ -10,6 +10,7 @@ using Alex.Graphics.Models.Entity.BlockEntities;
 using Alex.Worlds;
 using fNbt;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using MathF = Alex.API.Utils.MathF;
 
 namespace Alex.Entities.BlockEntities
@@ -25,6 +26,8 @@ namespace Alex.Entities.BlockEntities
 			
 			Width = 16;
 			Height = 16;
+			
+				//	Offset = Vector3.Zero;
 		}
 
 		/// <inheritdoc />
@@ -115,7 +118,7 @@ namespace Alex.Entities.BlockEntities
 			{
 				_rotation = Math.Clamp(value, (byte)0, (byte)15);
 				
-				_yRotation          = _rotation * 22.5f;
+				_yRotation          = _rotation * -22.5f;
 				if (RootBone != null)
 				{
 					var headRotation = RootBone.Rotation;
@@ -126,7 +129,7 @@ namespace Alex.Entities.BlockEntities
 			}
 		}
 
-		private Vector3 TextOffset = Vector3.Zero;
+		private float TextOffset = 0.1f;
 		protected override void BlockChanged(Block oldBlock, Block newBlock)
 		{
 			if (newBlock is WallSign)
@@ -137,26 +140,15 @@ namespace Alex.Entities.BlockEntities
 				{
 					if (Enum.TryParse<BlockFace>(facing, true, out var face))
 					{
-						Offset = (face.Opposite().GetVector3() * 0.5f);
-						TextOffset = face.GetVector3() * 0.2f;
-						
-						if (MathF.Abs(Offset.X) > 0f)
-						{
-							Offset = new Vector3(Offset.X, Offset.Y, -0.5f);
-						}
-						else if (MathF.Abs(Offset.Z) > 0f)
-						{
-							Offset = new Vector3(-0.5f, Offset.Y, Offset.Z);
-						}
-						
+						TextOffset = 0.4f;
 						switch (face)
 						{
-							case BlockFace.East:
-								Rotation = 12;
-								break;
-
 							case BlockFace.West:
 								Rotation = 4;
+								break;
+
+							case BlockFace.East:
+								Rotation = 12;
 								break;
 
 							case BlockFace.North:
@@ -173,12 +165,12 @@ namespace Alex.Entities.BlockEntities
 			else if (newBlock is StandingSign)
 			{
 				ModelRenderer = new EntityModelRenderer(new StandingSignEntityModel(), BlockEntityFactory.SignTexture);
-				
+				TextOffset = -0.1f;
 				if (newBlock.BlockState.TryGetValue("rotation", out var r))
 				{
 					if (byte.TryParse(r, out var rot))
 					{
-						Rotation = rot;
+						Rotation = (byte) rot;// // ((rot + 3) % 15);
 					}
 				}
 			}
@@ -187,6 +179,8 @@ namespace Alex.Entities.BlockEntities
 		/// <inheritdoc />
 		protected override void ReadFrom(NbtCompound compound)
 		{
+			base.ReadFrom(compound);
+			
 			if (compound.TryGet("text1", out var text1)
 			|| compound.TryGet("Text1", out text1))
 			{
@@ -245,76 +239,83 @@ namespace Alex.Entities.BlockEntities
 			}
 		}
 
+		private BasicEffect _basicEffect = null;
 		/// <inheritdoc />
 		public override void RenderNametag(IRenderArgs renderArgs)
 		{
-						string clean = NameTag;
+			var sb = renderArgs.SpriteBatch;
 
+			if (_basicEffect == null)
+			{
+				_basicEffect = new BasicEffect(renderArgs.GraphicsDevice);
+				_basicEffect.FogEnabled = false;
+				_basicEffect.LightingEnabled = false;
+				_basicEffect.VertexColorEnabled = true;
+				_basicEffect.TextureEnabled = true;
+			}
+			
+			_basicEffect.Projection = renderArgs.Camera.ProjectionMatrix;
+			_basicEffect.View = renderArgs.Camera.ViewMatrix;
+
+			string clean = NameTag;
 			if (string.IsNullOrWhiteSpace(clean))
 				return;
 			
 			var maxDistance = (renderArgs.Camera.FarDistance) / (64f);
-
-			var pos = KnownPosition + new Vector3(0f, 0.75f, 0f) + TextOffset;
-			//pos.Y = 0;
-
-			//var rotation = RootBone.Rotation.Y;
 			
+			Vector3 lookAtOffset = Vector3.Transform(Vector3.Forward, Matrix.CreateRotationY(MathUtils.ToRadians(_yRotation)));
+			lookAtOffset *= TextOffset;
+			
+			var pos = this.RenderLocation + new Vector3(lookAtOffset.X, 0.75f, lookAtOffset.Z);
+
+			var world = Matrix.CreateScale(1f / 96f) * Matrix.CreateRotationY(MathUtils.ToRadians(_yRotation))
+			                                         * Matrix.CreateTranslation(pos);
+
+			world.Up = -world.Up;
+
+			_basicEffect.World = world;
+		
 			var distance = Vector3.Distance(pos, renderArgs.Camera.Position);
 			if (distance >= maxDistance)
 			{
 				return;
 			}
 
-			Vector2 textPosition;
-			
-			//var matrix = Matrix.CreateBillboard(quadPosition, cameraPosition, Vector3.Up, pForward);
-			
-			//Matrix rotationMatrix = Matrix.CreateRotationY(MathUtils.ToRadians(RootBone.Rotation.Y)); //Yaw
-
-		//	Vector3 lookAtOffset = Vector3.Transform(Vector3.Backward, rotationMatrix);
-			//Direction = lookAtOffset;
-
-		//	var pos = Position + Vector3.Transform(Offset, Matrix.CreateRotationY(-Rotation.Y));
-	        
-		//	var target = pos + lookAtOffset;
-
-			var screenSpace = renderArgs.GraphicsDevice.Viewport.Project(pos, 
-				renderArgs.Camera.ProjectionMatrix,
-				renderArgs.Camera.ViewMatrix,
-				Matrix.Identity);
-
-			textPosition.X = screenSpace.X;
-			textPosition.Y = screenSpace.Y;
-
-			Vector2 renderPosition = textPosition;
-			int yOffset = 0;
-			foreach (var str in clean.Split('\n'))
+			try
 			{
-				var line = str.Trim();
-				var stringCenter = Alex.Font.MeasureString(line);
-				var c            = new Point((int) stringCenter.X, (int) stringCenter.Y);
+				sb.End();
+			
+				sb.Begin(SpriteSortMode.Immediate, BlendState.NonPremultiplied, SamplerState.PointWrap,
+					DepthStencilState.DepthRead, effect: _basicEffect);
+				
+				Vector2 renderPosition = Vector2.Zero;
+				int     yOffset        = 0;
 
-				renderPosition.X = (int) (textPosition.X - (c.X / 2d));
-				renderPosition.Y = (int) (textPosition.Y - (c.Y / 2d)) + yOffset;
+				foreach (var str in clean.Split('\n'))
+				{
+					var line = str.Trim();
 
-				//renderArgs.SpriteBatch.FillRectangle(
-				//	new Rectangle(renderPosition.ToPoint(), c), new Color(Color.Black, 128), screenSpace.Z);
+					var stringCenter = Alex.Font.MeasureString(line);
 
-				Alex.Font.DrawString(
-					renderArgs.SpriteBatch, line, renderPosition, TextColor.Black, FontStyle.None, Vector2.One,
-					layerDepth: screenSpace.Z);
+					var c = new Point((int) stringCenter.X, (int) stringCenter.Y);
 
-				yOffset += c.Y;
+					renderPosition.X = (int) -(c.X * 0.5f);
+					renderPosition.Y = (int) yOffset;
+
+					//renderArgs.SpriteBatch.FillRectangle(
+					//	new Rectangle(renderPosition.ToPoint(), c), new Color(Color.Black, 128), screenSpace.Z);
+
+					Alex.Font.DrawString(sb, line, renderPosition, TextColor.Black, FontStyle.None, Vector2.One);
+
+					yOffset += c.Y;
+				}
 			}
-		}
-		
-		private Vector3 Offset { get; set; } = Vector3.Zero;
-		/// <inheritdoc />
-		public override PlayerLocation KnownPosition
-		{
-			get => base.KnownPosition + Offset;
-			set => base.KnownPosition = value;
+			finally
+			{
+				sb.End();
+				sb.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, SamplerState.PointWrap,
+					DepthStencilState.DepthRead);
+			}
 		}
 	}
 }

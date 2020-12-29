@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using fNbt;
 using fNbt.Tags;
 using MiNET.Items;
@@ -41,23 +42,55 @@ namespace Alex.Net.Bedrock.Packets
 	public static class NetworkUtils
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(NetworkUtils));
-
-		public static Item ReadItem2(this Packet packet)
+		
+		public static Nbt ReadNewNbt(Stream stream)
 		{
-			int id = packet.ReadVarInt();
+			Nbt     nbt     = new Nbt();
+			NbtFile nbtFile = new NbtFile();
+			nbtFile.BigEndian = false;
+			nbtFile.UseVarInt = true;
+			nbtFile.AllowAlternativeRootTag = true;
+			
+			nbt.NbtFile = nbtFile;
+			nbtFile.LoadFromStream(stream, NbtCompression.None);
+			return nbt;
+		}
+		
+		public static Nbt ReadLegacyNbt(Stream stream)
+		{
+			Nbt     nbt     = new Nbt();
+			NbtFile nbtFile = new NbtFile();
+			nbtFile.BigEndian = false;
+			nbtFile.UseVarInt = true;
+			nbtFile.AllowAlternativeRootTag = true;
+			
+			nbt.NbtFile = nbtFile;
+			nbtFile.LoadFromStream(stream, NbtCompression.None);
+			return nbt;
+		}
+		
+		public static Item ReadItem2(this Packet packet, bool networkIds = true)
+		{
+			int id  = packet.ReadVarInt();
+
 			if (id == 0)
 			{
 				return new ItemAir();
 			}
 
+
 			int   aux      = packet.ReadVarInt();
 			short metadata = (short) (aux >> 8);
 			if (metadata == short.MaxValue) metadata = -1;
 			byte count = (byte) (aux & 0xff);
+			
+			//ItemFactory.Itemstates.FirstOrDefault(x => x.Id == )
 			Item stack = ItemFactory.GetItem((short) id, metadata, count);
 
-			var nbtLen = packet.ReadUshort(); //_reader.ReadUInt16(); // NbtLen
-			if (nbtLen == 0xffff)
+			var nbtLen = packet.ReadShort(); //_reader.ReadUInt16(); // NbtLen
+			//Log.Info($"NBT: 0x{nbtLen:X}");
+		
+			if (nbtLen == -1)
 			{
 				var version = packet.ReadByte();
 
@@ -65,15 +98,21 @@ namespace Alex.Net.Bedrock.Packets
 				{
 					stack.ExtraData = (NbtCompound) packet.ReadNbt().NbtFile.RootTag;
 				}
+				else
+				{
+					throw new NotSupportedException($"Invalid NBT data version: {version}");
+				}
 			}
 			else if (nbtLen > 0)
 			{
+				//packet.ReadNbt();
 				var nbtData = packet.ReadBytes(nbtLen);
 
-				using (MemoryStream ms = new MemoryStream(nbtData))
-				{
-					stack.ExtraData = Packet.ReadLegacyNbtCompound(ms);
-				}
+				//	using (MemoryStream ms = new MemoryStream(nbtData))
+				//{
+				//		stack.ExtraData = (NbtCompound) ReadLegacyNbt(ms).NbtFile.RootTag;
+				//stack.ExtraData = Packet.ReadLegacyNbtCompound(ms);
+				//	}
 			}
 
 			var canPlace = packet.ReadVarInt();

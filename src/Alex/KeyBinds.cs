@@ -69,7 +69,9 @@ namespace Alex
 		    {InputCommand.Right, Keys.Right},
 		    {InputCommand.Left, Keys.Left},
 		    {InputCommand.Up, Keys.Up},
-		    {InputCommand.Down, Keys.Down}
+		    {InputCommand.Down, Keys.Down},
+		    
+		    {InputCommand.DropItem, Keys.Q}
 	    };
 	}
 }

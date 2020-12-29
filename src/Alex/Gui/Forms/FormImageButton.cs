@@ -1,8 +1,8 @@
 using System;
+using Alex.API.Gui;
 using Alex.API.Gui.Elements.Controls;
 using Alex.API.Gui.Elements.Layout;
 using Alex.API.Gui.Graphics;
-using RocketUI;
 
 namespace Alex.Gui.Forms
 {
@@ -17,7 +17,7 @@ namespace Alex.Gui.Forms
             
             GuiStackContainer stackContainer = new GuiStackContainer();
             stackContainer.Orientation = Orientation.Horizontal;
-            stackContainer.ChildAnchor = Alignment.MiddleFill;
+            stackContainer.ChildAnchor = Alignment.MiddleCenter;
             stackContainer.Anchor = Alignment.MiddleFill;
             
             Image = new FormImage(ImageUrl);

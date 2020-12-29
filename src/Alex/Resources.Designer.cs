@@ -111,20 +111,6 @@ namespace Alex {
             }
         }
         
-        internal static byte[] grey_black_gradient01 {
-            get {
-                object obj = ResourceManager.GetObject("grey_black_gradient01", resourceCulture);
-                return ((byte[])(obj));
-            }
-        }
-        
-        internal static byte[] goodblur {
-            get {
-                object obj = ResourceManager.GetObject("goodblur", resourceCulture);
-                return ((byte[])(obj));
-            }
-        }
-        
         internal static byte[] DebugFont {
             get {
                 object obj = ResourceManager.GetObject("DebugFont", resourceCulture);

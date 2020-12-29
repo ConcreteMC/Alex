@@ -18,6 +18,7 @@ namespace Alex.Graphics.Models.Entity.BlockEntities
 				{
 					Name = "root",
 					Pivot = Vector3.Zero,
+					//BindPoseRotation = new Vector3(0f, 90f, 0f),
 					Cubes = new[]
 					{
 						new EntityModelCube()
@@ -52,12 +53,12 @@ namespace Alex.Graphics.Models.Entity.BlockEntities
 				new EntityModelBone()
 				{
 					Name = "root",
-					Pivot = Vector3.Zero,
+					Pivot = new Vector3(0f, 0f, 0f),
 					Cubes = new[]
 					{
 						new EntityModelCube()
 						{
-							Origin = new Vector3(0, 2.5f, 0),
+							Origin = new Vector3(-8f, 2.5f, 7f),
 							Size = new Vector3(16, 11, 1),
 							Uv = new Vector2(9, 2)
 						}

@@ -3,12 +3,18 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.IO.Compression;
+using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using Alex.API.Resources;
 using Alex.API.Utils;
+using Alex.ResourcePackLib.IO.Abstract;
 using Alex.ResourcePackLib.Json;
 using Alex.ResourcePackLib.Json.Bedrock.Entity;
 using Alex.ResourcePackLib.Json.Bedrock.Sound;
+using Alex.ResourcePackLib.Json.Converters;
+using Alex.ResourcePackLib.Json.Models.Entities;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NLog;
@@ -23,159 +29,339 @@ namespace Alex.ResourcePackLib
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(BedrockResourcePack));
 
-		private ConcurrentDictionary<string, Image<Rgba32>> _bitmaps = new ConcurrentDictionary<string, Image<Rgba32>>();
-        public IReadOnlyDictionary<string, Image<Rgba32>> Textures => _bitmaps;
+		private ConcurrentDictionary<string,Lazy<Image<Rgba32>>> _bitmaps = new ConcurrentDictionary<string, Lazy<Image<Rgba32>>>();
+        public IReadOnlyDictionary<string, Lazy<Image<Rgba32>>> Textures => _bitmaps;
 		public IReadOnlyDictionary<ResourceLocation, EntityDescription> EntityDefinitions { get; private set; } = new ConcurrentDictionary<ResourceLocation, EntityDescription>();
 		public SoundDefinitionFormat SoundDefinitions { get; private set; } = null;
 		
-		private readonly DirectoryInfo _workingDir;
+		private readonly IFilesystem _archive;
 
-		public BedrockResourcePack(DirectoryInfo directory, ResourcePack.LoadProgress progressReporter = null)
+		public BedrockResourcePack(IFilesystem archive, ResourcePack.LoadProgress progressReporter = null)
 		{
-			
-			_workingDir = directory;
+			_archive = archive;
 
 			Load(progressReporter);
 		}
 
+		public Stream GetStream(string path)
+		{
+			var entry = _archive.GetEntry(path);
+
+			if (entry == null)
+			{
+				throw new FileNotFoundException();
+			}
+			
+			return entry.Open();
+		}
+		
 		public bool TryGetTexture(string name, out Image<Rgba32> texture)
 		{
-			return Textures.TryGetValue(NormalisePath(name), out texture);
+			if (Textures.TryGetValue(NormalisePath(name), out var t))
+
+			{
+				texture = t.Value;
+
+				return true;
+			}
+
+			texture = null;
+
+			return false;
 		}
 
 		private string NormalisePath(string path)
 		{
 			return path.Replace('\\', '/').ToLowerInvariant();
 		}
-
+		
+		private const RegexOptions RegexOpts = RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase;
+		private static readonly Regex IsEntityDefinition     = new Regex(@"^entity[\\\/](?'filename'.*)\.json$", RegexOpts);
+		private static readonly Regex IsEntityModel    = new Regex(@"^models[\\\/]entity[\\\/](?'filename'.*)\.json$", RegexOpts);
+		private static readonly Regex IsSoundDefinition    = new Regex(@"^sounds[\\\/]sound_definitions\.json$", RegexOpts);
 		private void Load(ResourcePack.LoadProgress progressReporter)
 		{
-			DirectoryInfo entityDefinitionsDir = null;
+			Dictionary<ResourceLocation, EntityDescription> entityDefinitions = new Dictionary<ResourceLocation, EntityDescription>();
+			Dictionary<string, EntityModel> entityModels = new Dictionary<string, EntityModel>();
 
-            Dictionary<string, FileInfo> entityGeometry = new Dictionary<string, FileInfo>();
-            foreach (var dir in _workingDir.EnumerateDirectories())
-            {
-               // if (entityDefinitionsDir == null && dir.Name.Equals("definitions"))
-               // {
-                  //  foreach (var d in dir.EnumerateDirectories())
-                   // {
-                        if (dir.Name.Equals("entity"))
-                        {
-                            entityDefinitionsDir = dir;
+			if (TryLoadMobModels(entityModels))
+			{
+				//Log.Info($"Loaded mobs.json: {entityModels.Count}");
+			}
 
-                            var files = dir.GetFiles();
-                            var total = files.Length;
+			var entries = _archive.Entries.ToArray();
+			var total   = entries.Length;
+			int count   = 0;
+			
+			foreach (var entry in entries)
+			{
+				count++;
+				progressReporter?.Invoke((int)(((double)count / (double)total) * 100D), entry.FullName);
+				
+				if (IsEntityDefinition.IsMatch(entry.FullName))
+				{
+					LoadEntityDefinition(entry, entityDefinitions);
+					continue;
+				}
 
-                            int count = 0;
-                            foreach (var file in files)
-                            {
-	                            count++;
-	                            progressReporter?.Invoke((int)(((double)count / (double)total) * 100D), file.Name);
-                                if (!entityGeometry.TryAdd(file.Name, file))
-                                {
-	                                if (entityGeometry.TryGetValue(file.Name, out var current))
-	                                {
-		                                if (current.LastWriteTimeUtc < file.LastWriteTimeUtc)
-		                                {
-			                                entityGeometry[file.Name] = file;
-			                                continue;
-		                                }
-	                                }
-                                    Log.Warn($"Failed to add to entity geo dictionary (1)! {file.Name}");
-                                }
-                            }
+				if (IsEntityModel.IsMatch(entry.FullName))
+				{
+					LoadEntityModel(entry, entityModels);
+					continue;
+				}
 
-                           // break;
-                        }
+				if (IsSoundDefinition.IsMatch(entry.FullName))
+				{
+					ProcessSounds(progressReporter, entry);
+					continue;
+				}
+			}
+			EntityModels = ProcessEntityModels(entityModels);
 
-                        if (dir.Name.Equals("sounds"))
-                        {
-	                        ProcessSounds(progressReporter, dir);
-                        }
-                    //}
-                //}
-
-                if (entityDefinitionsDir != null)
-                    break;
-            }
-
-
-            if (entityDefinitionsDir == null || !entityDefinitionsDir.Exists)
-            {
-                Log.Warn("Could not find entity definitions folder!");
-                return;
-            }
-
-            Dictionary<ResourceLocation, EntityDescription> entityDefinitions = new Dictionary<ResourceLocation, EntityDescription>();
-            foreach (var def in entityDefinitionsDir.EnumerateFiles())
-            {
-                LoadEntityDefinition(def, entityDefinitions);
-            }
-
-            EntityDefinitions = entityDefinitions;
-            Log.Info($"Processed {EntityDefinitions.Count} entity definitions");
+			//Log.Info($"Processed {EntityModels.Count} entity models");
+		
+			EntityDefinitions = entityDefinitions;
+           // Log.Info($"Processed {EntityDefinitions.Count} entity definitions");
         }
 
-		private void ProcessSounds(ResourcePack.LoadProgress progress, DirectoryInfo dir)
+		public IReadOnlyDictionary<string, EntityModel> EntityModels { get; private set; }
+		public static Dictionary<string, EntityModel> ProcessEntityModels(Dictionary<string, EntityModel> models, Func<string, EntityModel> lookup = null)
 		{
-			foreach (var file in dir.GetFiles())
+			Dictionary<string, EntityModel> final = new Dictionary<string, EntityModel>();
+			Queue<KeyValuePair<string, EntityModel>> workQueue = new Queue<KeyValuePair<string, EntityModel>>();
+
+			foreach (var model in models.OrderBy(x => x.Key.Count(k => k == ':')))
 			{
-				if (file.Name.Equals("sound_definitions.json"))
+				workQueue.Enqueue(model);
+			}
+
+			//var item = workQueue.First;
+
+			//while (item.Next != null)
+			while(workQueue.TryDequeue(out var item))
+			{
+				try
 				{
-					using (var fs = file.OpenRead())
+					var model = item.Value;
+
+					EntityModel result = null;
+
+					if (!item.Key.Contains(":"))
 					{
-						var fileContents = fs.ReadToEnd();
-						var json         = Encoding.UTF8.GetString(fileContents);
-						
-						SoundDefinitions = SoundDefinitionFormat.FromJson(json);
+						final.TryAdd(item.Key, model);
+						continue;
+					}
+
+					var    split         = item.Key.Split(':').Reverse().ToArray();
+						//string sb            = "";
+					bool   wasInterupted = false;
+
+					for (int i = 0; i < split.Length; i++)
+					{
+						//	if (i == 0)
+						//		break;
+						EntityModel requiredEntityModel;
+						if (i == split.Length - 1) //Last item
+						{
+							requiredEntityModel = model;
+						}
+						else
+						{
+							var key = split[i];
+							
+							if (!final.TryGetValue(key, out requiredEntityModel))
+							{
+								if (lookup != null)
+								{
+									requiredEntityModel = lookup.Invoke(key);
+
+									if (requiredEntityModel == null)
+									{
+										wasInterupted = true;
+										workQueue.Enqueue(item);
+
+										break;
+									}
+								}
+								else
+								{
+									//Log.Warn($"Could not find entity model: {key} of {item.Key}");
+									wasInterupted = true;
+									workQueue.Enqueue(item);
+
+									break;
+								}
+							}
+						}
+
+						if (i == 0)
+						{
+							result = requiredEntityModel.Clone();
+						}
+						else
+						{
+							result += requiredEntityModel;
+						}
+
+						/*if (i > 0)
+						{
+							result += requiredEntityModel;
+						}
+						else
+						{
+							result = requiredEntityModel;
+						}*/
+
+						//final.TryAdd(split[i], result);
+					}
+
+					//models.TryAdd(sb, result);
+					if (!wasInterupted && result != null)
+					{
+						result.Description = model.Description.Clone();
+
+						if (!final.TryAdd(split[^1], result))
+						{
+							Log.Warn($"Failed to add {split[0]}");
+						}
+
+						//final[split[0]] = result;
+					}
+				}
+				finally
+				{
+					//item = item.Next;
+					//item.Previous = null;
+				//	workQueue.Remove(item.Previous);
+				}
+			}
+
+			return final;
+		}
+		
+		private static void LoadEntityModel(IFile entry, Dictionary<string, EntityModel> models)
+		{
+			string json;
+			using (var stream = entry.Open())
+			{
+				json = Encoding.UTF8.GetString(stream.ReadToEnd());
+			}
+
+			LoadEntityModel(json, models);
+		}
+		
+		public static void LoadEntityModel(string json, Dictionary<string, EntityModel> models)
+		{
+			var d = MCJsonConvert.DeserializeObject<MobsModelDefinition>(json);
+			//if (decoded == null)
+			if (d != null)
+			{
+				foreach (var item in d)
+				{
+					if (item.Value.Description?.Identifier == null)
+					{
+						Log.Warn($"Missing identifier for {item.Key}");
+
+						//return;
+					}
+
+					if (!models.TryAdd(item.Key, item.Value))
+					{
+						Log.Warn($"Duplicate geometry model: {item.Key}");
+
+					//	return;
 					}
 				}
 			}
 		}
 		
-		private void LoadEntityDefinition(FileInfo entry, Dictionary<ResourceLocation, EntityDescription> entityDefinitions)
+		private bool TryLoadMobModels(Dictionary<string, EntityModel> models)
 		{
-			using (var stream = entry.Open(FileMode.Open))
+			var mobsJson = _archive.GetEntry("models/mobs.json");
+
+			if (mobsJson == null)
+				return false;
+
+			LoadEntityModel(mobsJson, models);
+
+			return true;
+		}
+
+		private void ProcessSounds(ResourcePack.LoadProgress progress, IFile entry)
+		{
+			using (var fs = entry.Open())
+			{
+				var fileContents = fs.ReadToEnd();
+				var json         = Encoding.UTF8.GetString(fileContents);
+
+				SoundDefinitions = SoundDefinitionFormat.FromJson(json);
+			}
+		}
+
+		private enum DefFormat
+		{
+			unknown,
+			v18,
+			v110
+		}
+		private void LoadEntityDefinition(IFile entry, Dictionary<ResourceLocation, EntityDescription> entityDefinitions)
+		{
+			using (var stream = entry.Open())
 			{
 				var json = Encoding.UTF8.GetString(stream.ReadToSpan(entry.Length));
 
-				string fileName = Path.GetFileNameWithoutExtension(entry.Name);
+				//string fileName = Path.GetFileNameWithoutExtension(entry.Name);
 
 				Dictionary<ResourceLocation, EntityDescription> definitions = new Dictionary<ResourceLocation, EntityDescription>();
 				
 				JObject obj  = JObject.Parse(json, new JsonLoadSettings());
+
+				DefFormat format = DefFormat.unknown;
+				if (obj.TryGetValue("format_version", out var ftv))
+				{
+					if (ftv.Type == JTokenType.String)
+					{
+						switch (ftv.Value<string>())
+						{
+							case "1.10.0":
+								format = DefFormat.v110;
+								break;
+							case "1.8.0":
+								format = DefFormat.v18;
+								break;
+						}
+					}
+				}
 				foreach (var e in obj)
 				{
 					if (e.Key == "format_version") continue;
 
-					if (e.Key == "minecraft:client_entity")
+					if (e.Key == "minecraft:client_entity" && e.Value != null)
 					{
-						var model = e.Value.ToObject<EntityDescriptionWrapper>(JsonSerializer.Create(new JsonSerializerSettings()
+						EntityDescription desc = null;
+						var               clientEntity = (JObject) e.Value;
+						
+						if (clientEntity.TryGetValue("description", out var descriptionToken))
+						{
+							if (descriptionToken.Type == JTokenType.Object)
+							{
+								desc = descriptionToken.ToObject<EntityDescription>();
+							}
+						}
+						
+						/*desc = e.Value.ToObject<EntityDescriptionWrapper>(JsonSerializer.Create(new JsonSerializerSettings()
 						{
 							Converters = MCJsonConvert.DefaultSettings.Converters,
 							MissingMemberHandling = MissingMemberHandling.Ignore,
 							NullValueHandling = NullValueHandling.Ignore,
-						}));
-						if (model != null)
+						}));*/
+
+						if (desc != null)
 						{
-							if (!definitions.TryAdd(model.Description.Identifier, model.Description))
+							if (!definitions.TryAdd(desc.Identifier, desc))
 							{
-								Log.Warn($"Duplicate definition: {model.Description.Identifier}");
+								Log.Warn($"Duplicate definition: {desc.Identifier}");
 							}
-						}
-						else
-						{
-							/*if (e.Value.Type == JTokenType.Array)
-							{
-								var models = e.Value.ToObject<EntityDescriptionWrapper[]>(JsonSerializer.Create(MCJsonConvert.DefaultSettings));
-								if (models != null)
-								{
-									foreach (var model in models)
-									{
-										
-									}
-								}
-							}*/
 						}
 					}
 				}
@@ -183,12 +369,12 @@ namespace Alex.ResourcePackLib
 				foreach (var def in definitions)
 				{
 					//def.Value.Filename = fileName;
-					if (!entityDefinitions.ContainsKey(def.Key))
+					if (def.Value != null && def.Value.Textures != null)
 					{
-						entityDefinitions.Add(def.Key, def.Value);
-						try
+						//if (entityDefinitions.TryAdd(def.Key, def.Value))
 						{
-							if (def.Value != null && def.Value.Textures != null)
+							//entityDefinitions.Add(def.Key, def.Value);
+							try
 							{
 								foreach (var texture in def.Value.Textures)
 								{
@@ -198,33 +384,34 @@ namespace Alex.ResourcePackLib
 										continue;
 									}
 
-									var bmp = TryLoad(Path.Combine(_workingDir.FullName, texture.Value + ".png"));
-
-									if (bmp == null)
-										bmp = TryLoad(Path.Combine(_workingDir.FullName, texture.Value + ".tga"));
-									
-									if (bmp != null)
-										_bitmaps.TryAdd(texture.Value, bmp);
-									
-									/*string texturePath = Path.Combine(_workingDir.FullName, texture.Value + ".png");
-									if (File.Exists(texturePath))
+									if (_archive.GetEntry(texture.Value + ".tga") != null)
 									{
-										Image<Rgba32> bmp = null;
-										using (FileStream fs = new FileStream(texturePath, FileMode.Open))
-										{
-											bmp = Image.Load<Rgba32>(fs);
-										//	bmp = new Image(fs);
-										}
-
-										if (bmp != null)
-											_bitmaps.TryAdd(texture.Value, bmp);
-									}*/
+										_bitmaps.TryAdd(texture.Value, new Lazy<Image<Rgba32>>(
+											() =>
+											{
+												return TryLoad(texture.Value + ".tga");
+											}));
+									}
+									else if (_archive.GetEntry(texture.Value + ".png") != null)
+									{
+										_bitmaps.TryAdd(texture.Value, new Lazy<Image<Rgba32>>(
+											() =>
+											{
+												return TryLoad(texture.Value + ".png");
+											}));
+									}
 								}
 							}
+							catch (Exception ex)
+							{
+								Log.Warn($"Could not load texture! {ex}");
+							}
+
+							entityDefinitions[def.Key] = def.Value;
 						}
-						catch (Exception ex)
+					//	else
 						{
-							Log.Warn($"Could not load texture! {ex}");
+						//	Log.Warn($"Tried loading duplicate entity: {def.Key}");
 						}
 					}
 				}
@@ -233,10 +420,11 @@ namespace Alex.ResourcePackLib
 		
 		private Image<Rgba32> TryLoad(string file)
 		{
-			if (File.Exists(file))
+			var entry = _archive.GetEntry(file);
+			if (entry != null)
 			{
 				Image<Rgba32> bmp = null;
-				using (FileStream fs = new FileStream(file, FileMode.Open))
+				using (var fs = entry.Open())
 				{
 					if (file.EndsWith(".tga"))
 					{
@@ -266,7 +454,7 @@ namespace Alex.ResourcePackLib
 
 		public void Dispose()
 		{
-			//_archive?.Dispose();
+			_archive?.Dispose();
 		}
 	}
 }

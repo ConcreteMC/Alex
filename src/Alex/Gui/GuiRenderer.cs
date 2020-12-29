@@ -13,7 +13,6 @@ using Alex.ResourcePackLib;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using RocketUI;
 using Size = System.Drawing.Size;
 
 namespace Alex.Gui
@@ -159,17 +158,18 @@ namespace Alex.Gui
 				CultureInfo.DefaultThreadCurrentUICulture = Culture;
 				CultureInfo.DefaultThreadCurrentUICulture = Culture;
 */
-				if (_languages.TryGetValue(cultureCode.Replace("-", "_").ToLower(), out var lng))
+				if (_languages.TryGetValue(cultureCode, out var lng))
 				{
 					Language = lng;
-
+					ChatParser.Language = lng;
+					
 					return true;
 				}
 
 				if (_resourceManager.ResourcePack == null)
 					return false;
 
-				var matchingResults = _resourceManager.ResourcePack.Languages
+				/*var matchingResults = _resourceManager.ResourcePack.Languages
 				   .Where(x => x.Value.CultureCode == cultureCode).Select(x => x.Value).ToArray();
 
 				if (matchingResults.Length <= 0) return false;
@@ -184,7 +184,7 @@ namespace Alex.Gui
 
 				Language = newLanguage;
 
-				return true;
+				return true;*/
 			}
 			catch (CultureNotFoundException)
 			{
@@ -206,7 +206,9 @@ namespace Alex.Gui
 			int done      = 0;
 			foreach (var lng in resourcePack.Languages)
 			{
-				var key = lng.Key.Split(':')[1].ToLower();
+				if (lng.Value?.CultureCode == null)
+					continue;
+				var key = lng.Value.CultureCode.ToLower();
 				
 				progressReceiver?.UpdateProgress(done, languages, "Loading languages...", key);
 				try

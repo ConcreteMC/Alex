@@ -5,7 +5,6 @@ using Alex.API.Input;
 using Alex.API.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
-using RocketUI;
 using GuiCursorEventArgs = Alex.API.Gui.Events.GuiCursorEventArgs;
 using GuiCursorMoveEventArgs = Alex.API.Gui.Events.GuiCursorMoveEventArgs;
 

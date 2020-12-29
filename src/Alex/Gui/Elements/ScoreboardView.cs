@@ -2,11 +2,11 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using Alex.API.Gui;
 using Alex.API.Gui.Elements;
 using Alex.API.Gui.Elements.Layout;
 using Alex.API.Gui.Graphics;
 using Microsoft.Xna.Framework;
-using RocketUI;
 
 namespace Alex.Gui.Elements
 {
@@ -176,6 +176,9 @@ namespace Alex.Gui.Elements
 			
 			foreach (var entry in entries)
 			{
+				if (CriteriaName == "dummy")
+					entry.Value.ShowScore = false;
+				
 				RemoveChild(entry.Value);
 				AddChild(entry.Value);
 			}
@@ -217,6 +220,18 @@ namespace Alex.Gui.Elements
 			{
 				_displayName = value;
 				Left.Text = $"{value}  ";
+			}
+		}
+
+		private bool _showScore = true;
+		public bool ShowScore
+		{
+			get => _showScore;
+			set
+			{
+				_showScore = value;
+
+				RightText.IsVisible = _showScore;
 			}
 		}
 

@@ -15,8 +15,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Alex.API;
 using Alex.API.Data.Options;
-using Alex.API.Events;
-using Alex.API.Events.World;
+
 using Alex.API.Services;
 using Alex.API.Utils;
 using Alex.Entities;
@@ -28,6 +27,7 @@ using Alex.Net.Bedrock.Raknet;
 using Alex.ResourcePackLib.Json;
 using Alex.ResourcePackLib.Json.Models.Entities;
 using Alex.Utils;
+using Alex.Utils.Auth;
 using Alex.Utils.Inventories;
 using Jose;
 using Microsoft.Extensions.DependencyInjection;
@@ -52,6 +52,7 @@ using SixLabors.ImageSharp.Advanced;
 using SixLabors.ImageSharp.Formats.Png;
 using BlockCoordinates = Alex.API.Utils.BlockCoordinates;
 using ConnectionInfo = Alex.API.Network.ConnectionInfo;
+using CryptoContext = Alex.Net.Bedrock.CryptoContext;
 using DedicatedThreadPool = MiNET.Utils.DedicatedThreadPool;
 using Description = MiNET.Utils.Skins.Description;
 using Item = Alex.Items.Item;
@@ -78,10 +79,9 @@ namespace Alex.Worlds.Multiplayer.Bedrock
         private CancellationTokenSource CancellationTokenSource { get; }
         
         public McpeNetworkChunkPublisherUpdate LastChunkPublish { get; set; }
-        public bool HasSpawned { get; set; }
+        public bool CanSpawn => PlayerStatus == 3;
         public AutoResetEvent PlayerStatusChanged { get; set; } = new AutoResetEvent(false);
-        public AutoResetEvent ChangeDimensionResetEvent = new AutoResetEvent(false);
-        private IEventDispatcher EventDispatcher { get; }
+        public AutoResetEvent ChangeDimensionResetEvent { get; } = new AutoResetEvent(false);
         public RaknetConnection Connection { get; }
         private MessageHandler MessageHandler { get; set; }
         private RaknetSession Session { get; set; }//=> Connection.ConnectionInfo.RakSessions.Values.FirstOrDefault();
@@ -99,9 +99,12 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	        }
         }
 
-        public bool GameStarted { get; set; } = false;
-        private ChunkProcessor ChunkProcessor { get; }
-		public BedrockClient(Alex alex, IEventDispatcher eventDispatcher, IPEndPoint endpoint, PlayerProfile playerProfile, DedicatedThreadPool threadPool, BedrockWorldProvider wp)
+        public  TimeSpan                   TimeSinceLastPacket => MessageHandler?.TimeSinceLastPacket ?? TimeSpan.Zero;
+        public  bool                       GameStarted         { get; set; } = false;
+        private ChunkProcessor             ChunkProcessor      { get; }
+        private BedrockClientPacketHandler PacketHandler       { get; set; }
+
+        public BedrockClient(Alex alex, IPEndPoint endpoint, PlayerProfile playerProfile, DedicatedThreadPool threadPool, BedrockWorldProvider wp)
 		{
 			PacketFactory.CustomPacketFactory = new AlexPacketFactory();
 			
@@ -138,7 +141,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 			//	bool hasSession = Session != null;
 
-			var handler = new MessageHandler(session, new BedrockClientPacketHandler(this, eventDispatcher, wp, playerProfile, alex, CancellationTokenSource.Token, ChunkProcessor));
+			BedrockClientPacketHandler packetHandler;
+			var handler = new MessageHandler(session, packetHandler = new BedrockClientPacketHandler(this, wp, playerProfile, alex, CancellationTokenSource.Token, ChunkProcessor));
 				
 				if (MessageHandler != null)
 					Log.Warn($"Messagehandler was already set.");
@@ -163,12 +167,11 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					};
 					
 					MessageHandler = handler;
+					PacketHandler = packetHandler;
 				}
 
 				return handler;
 			};
-
-			EventDispatcher = eventDispatcher;
 		}
 
 		private void ClientSideLightingChanged(bool oldvalue, bool newvalue)
@@ -190,10 +193,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			
 			//player.Inventory.CursorChanged += InventoryOnCursorChanged;
 		//	player.Inventory.SlotChanged += InventoryOnSlotChanged;
-			
-			
-			EventDispatcher?.RegisterEvents(this);
-			
+
 			ConnectionAcceptedWaitHandle = resetEvent;
 			
 			ThreadPool.QueueUserWorkItem(o =>
@@ -217,7 +217,14 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					Connection.ConnectionInfo.ThroughPut = new Timer(
 						state =>
 						{
-							Connection.ConnectionInfo.NumberOfPlayers = Connection.ConnectionInfo.RakSessions.Count;
+							if (CustomConnectedPong.CanPing)
+							{
+								World.Player.Latency = (int) CustomConnectedPong.Latency;
+							}
+
+							var nakSent = Connection.ConnectionInfo.NumberOfPlayers;
+							Connection.ConnectionInfo.NumberOfPlayers = 0;
+						//	Connection.ConnectionInfo.NumberOfPlayers = Connection.ConnectionInfo.RakSessions.Count;
 							Interlocked.Exchange(ref Connection.ConnectionInfo.NumberOfDeniedConnectionRequestsPerSecond, 0);
 							long   packetSizeOut = Interlocked.Exchange(ref Connection.ConnectionInfo.TotalPacketSizeOutPerSecond, 0L);
 							long   packetSizeIn = Interlocked.Exchange(ref Connection.ConnectionInfo.TotalPacketSizeInPerSecond, 0L);
@@ -232,65 +239,43 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 							long resends = Interlocked.Exchange(ref Connection.ConnectionInfo.NumberOfResends, 0L);
 							long fails = Interlocked.Exchange(ref Connection.ConnectionInfo.NumberOfFails, 0L);
 
-							/*string str = string.Format("Pkt in/out(#/s) {0}/{1}, ", (object) packetCountIn, (object) packetCountOut)
+							string str = string.Format("Pkt in/out(#/s) {0}/{1}, ", packetCountIn, packetCountOut)
 							             + string.Format(
-								             "ACK(in-out)/NAK/RSND/FTO(#/s) ({0}-{1})/{2}/{3}/{4}, ", (object) ackReceived,
-								             (object) ackSent, (object) nakReceive, (object) resends, (object) fails)
-							             + string.Format("THR in/out(Mbps) {0:F}/{1:F}, ", (object) throughPutIn, (object) throughtPutOut)
+								             "ACK(in-out)/NAK/RSND/FTO(#/s) ({0}-{1})/({2}-{3})/{4}/{5}, ",ackReceived,
+								             ackSent, nakReceive, nakSent, resends, fails)
 							             + string.Format(
-								             "PktSz Total in/out(B/s){0}/{1}, ", (object) packetSizeIn, (object) packetSizeOut);*/
+								             "PktSz Total in/out(B/s){0}/{1}, ", packetSizeIn, packetSizeOut);
 
 							//if (Config.GetProperty("ServerInfoInTitle", false))
 							//	Console.Title = str;
 							//else
 							//	Log.Info(str);
-								
-							_connectionInfo = new ConnectionInfo(StartTime, CustomConnectedPong.Latency, nakReceive, ackReceived, ackSent, fails, resends, packetSizeIn, packetSizeOut, packetCountIn, packetCountOut);
+
+							ConnectionInfo.NetworkState networkState = ConnectionInfo.NetworkState.Ok;
+
+							if (Connection.IsNetworkOutOfOrder)
+							{
+								networkState = ConnectionInfo.NetworkState.OutOfOrder;
+							}else if (MessageHandler.TimeSinceLastPacket.TotalMilliseconds >= 250)
+							{
+								networkState = ConnectionInfo.NetworkState.Slow;
+							}
+							else if (Connection.ConnectionInfo.Latency > 250)
+							{
+								networkState = ConnectionInfo.NetworkState.HighPing;
+							}
+							
+							_connectionInfo = new ConnectionInfo(
+								StartTime, Connection.ConnectionInfo.Latency, nakReceive, ackReceived, ackSent, fails, resends,
+								packetSizeIn, packetSizeOut, packetCountIn, packetCountOut,
+								networkState);
 						}, null, 1000, 1000);
 					
 					Connection.Start();
-
-				/*	try
-					{
-						var ticker = ReflectionHelper.GetPrivateFieldValue<HighPrecisionTimer>(
-							typeof(RakConnection), Connection, "_tickerHighPrecisionTimer");
-
-						ticker.Dispose();
-					}catch{}
-					
-					_timer = new System.Timers.Timer(10);
-					_timer.Elapsed += (sender, args) =>
-					{
-						Session?.SendTickAsync(Connection);
-
-						var sessions =
-							ReflectionHelper.GetPrivateFieldValue<ConcurrentDictionary<IPEndPoint, RakSession>>(
-								typeof(RakConnection), Connection, "_rakSessions");// Connection._rakSessions;
-						
-						var tasks = new List<Task>();
-						foreach (KeyValuePair<IPEndPoint, RakSession> session in sessions)
-						{
-							tasks.Add(session.Value.SendTickAsync(Connection));
-						}
-
-						Task.WaitAll(tasks.ToArray());
-
-						//foreach (var session in Connection.ConnectionInfo.RakSessions)
-						//Session?.SendTickAsync(Connection).Wait();
-					};
-					_timer.Start();*/
-
-				//	var listener = ReflectionHelper.GetPrivateFieldValue<UdpClient>(typeof(RakConnection), Connection, "_listener");
-					//listener.DontFragment = true;
-					//listener.Client.ReceiveBufferSize = 131072;
-					//listener.Client.SendBufferSize = 131072;
-					//listener.ExclusiveAddressUse = true;
-					//listener.EnableBroadcast = false;
 					
 					if (Connection.TryConnect(ServerEndpoint))
 					{
 						resetEvent.Set();
-						//resetEvent.Set();
 					}
 				}
 			});
@@ -306,13 +291,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			Stopwatch sw = new Stopwatch();
 			this.Connection.Start();
 
-			var listener = ReflectionHelper.GetPrivateFieldValue<UdpClient>(typeof(RaknetConnection), Connection, "_listener");
-			listener.DontFragment = true;
-			//listener.Client.ReceiveBufferSize = 2000;
-			//listener.Client.SendBufferSize = 2000;
-			//listener.ExclusiveAddressUse = true;
-			listener.EnableBroadcast = false;
-			
 			bool autoConnect = this.Connection.AutoConnect;
 			this.Connection.AutoConnect = false;
 			while (!this.Connection.FoundServer)
@@ -430,26 +408,16 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			Session.SendPacket(packet);
 		}
 
-		[EventHandler(EventPriority.Highest)]
-		private void OnSendChatMessage(ChatMessagePublishEvent e)
+		public void MarkAsInitialized()
 		{
-			if (e.IsCancelled)
-				return;
+			var packet = McpeSetLocalPlayerAsInitialized.CreateObject();
+			packet.runtimeEntityId = EntityId;
 
-			var message = e.ChatObject.RawMessage;
-			if (message[0] == '/')
-			{
-				McpeCommandRequest commandRequest = McpeCommandRequest.CreateObject();
-				commandRequest.command = message;
-				commandRequest.unknownUuid = new MiNET.Utils.UUID(Guid.NewGuid().ToString());
-				Session.SendPacket(commandRequest);
-			}
-			else
-			{
-				SendChat(message);
-			}
+			SendPacket(packet);
+
+			//_isInitialized = true;
 		}
-		
+
 		public int ChunkRadius { get; set; }
 		public long EntityId { get; set; }
 		public long NetworkEntityId { get; set; }
@@ -462,9 +430,13 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			RequestChunkRadius(newvalue);
 		}
 
-		private bool _disconnectShown = false;
-		public void ShowDisconnect(string reason, bool useTranslation = false, bool overrideActive = false)
+		public  bool             Transfered       { get; set; } = false;
+		public  DisconnectReason DisconnectReason { get; private set; }
+		private bool             _disconnectShown = false;
+		public void ShowDisconnect(string reason, bool useTranslation = false, bool overrideActive = false, DisconnectReason disconnectReason = DisconnectReason.Unknown)
 		{
+			if (Transfered)
+				return;
 			if (Alex.GameStateManager.GetActiveState() is DisconnectedScreen s && overrideActive)
 			{
 				if (useTranslation)
@@ -483,6 +455,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				return;
 			
 			_disconnectShown = true;
+
+			DisconnectReason = disconnectReason;
 
 			s = new DisconnectedScreen();
             if (useTranslation)
@@ -574,6 +548,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
                 var jsonChain = JsonConvert.SerializeObject(hack);
 
                 certChain = Encoding.UTF8.GetBytes(jsonChain); // XblmsaService.MinecraftChain;
+                //File.WriteAllBytes("/home/kenny/xbox.json", certChain);
             }
             else
             {
@@ -612,14 +587,14 @@ namespace Alex.Worlds.Multiplayer.Bedrock
                 payload = data
             };
 
-            MessageHandler.CryptoContext = new CryptoContext() {ClientKey = clientKey, UseEncryption = false,};
+            MessageHandler.CryptoContext = new MiNET.Utils.CryptoContext() {ClientKey = clientKey, UseEncryption = false,};
 
             SendPacket(loginPacket);
-            
-       /*     var packet = McpeClientCacheStatus.CreateObject();
-            packet.enabled = false;
-				
-            Session.SendPacket(packet);*/
+
+            /*     var packet = McpeClientCacheStatus.CreateObject();
+                 packet.enabled = false;
+				     
+                 Session.SendPacket(packet);*/
 
         //    Session.CryptoContext.UseEncryption = true;
         }
@@ -628,6 +603,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		{
 			var movePlayerPacket = McpeMovePlayer.CreateObject();
 			movePlayerPacket.runtimeEntityId = EntityId;
+			movePlayerPacket.otherRuntimeEntityId = NetworkEntityId;
 			movePlayerPacket.x = location.X;
 			movePlayerPacket.y = location.Y;
 			movePlayerPacket.z = location.Z;
@@ -658,13 +634,14 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				}
 		        
 				// Create a decrytor to perform the stream transform.
+				
 				IBufferedCipher decryptor = CipherUtilities.GetCipher("AES/CFB8/NoPadding");
 				decryptor.Init(false, new ParametersWithIV(new KeyParameter(secret), secret.Take(16).ToArray()));
 
 				IBufferedCipher encryptor = CipherUtilities.GetCipher("AES/CFB8/NoPadding");
 				encryptor.Init(true, new ParametersWithIV(new KeyParameter(secret), secret.Take(16).ToArray()));
 
-				handler.CryptoContext = new CryptoContext
+				handler.CryptoContext = new MiNET.Utils.CryptoContext
 				{
 					Decryptor = decryptor,
 					Encryptor = encryptor,
@@ -672,12 +649,13 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					Key = secret,
 					ClientKey = handler.CryptoContext.ClientKey
 				};
-
-			//	Thread.Sleep(1250);
 				
+				Thread.Sleep(1250);
+
 				McpeClientToServerHandshake magic = McpeClientToServerHandshake.CreateObject();
 				Session.SendPacket(magic);
-				
+
+				//Session.FirstEncryptedMessage = Connection.Session.ReliableMessageNumber;
 				Log.Info($"Encryption initiated!");
 			}
 			catch (Exception e)
@@ -769,11 +747,11 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		        //abc.geometry["default"] = model.Name;
 
-		        var           newModel = new EntityModel() {Bones = model.Bones, Description = model.Description};
+		        //var           newModel = new EntityModel() {Bones = model.Bones, Description = model.Description};
 		        GeometryModel mm       = new GeometryModel();
-		        mm.Geometry.Add(newModel);
+		        mm.Geometry.Add(model.Description.Identifier, model);
 
-		        var modelIdentifier = newModel.Description.Identifier;
+		        var modelIdentifier = model.Description.Identifier;
 		        
 		        skin = new Skin()
 		        {
@@ -841,12 +819,14 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	        var serialized = JsonConvert.SerializeObject(
 		        new BedrockSkinData(skin)
 		        {
+			        SelfSignedID = Alex.Resources.DeviceID,
 			        ClientRandomId = new Random().Next(),
-			        LanguageCode = Alex.GuiRenderer.Language.Code,
+			        LanguageCode = Alex.GuiRenderer.Language.Code.Replace("-", "_"),
 			        // Alex.Services.GetService<IOptionsProvider>().AlexOptions.MiscelaneousOptions.Language.Value,
 			        ServerAddress = $"{ServerEndpoint.Address.ToString()}:{ServerEndpoint.Port.ToString()}",
 			        ThirdPartyName = username,
-			        DeviceId = Alex.Resources.DeviceID
+			        DeviceId = Alex.Resources.DeviceID,
+			        GameVersion = McpeProtocolInfo.GameVersion
 		        },
 		        new JsonSerializerSettings()
 		        {
@@ -1120,7 +1100,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		    }
 		    else
 		    {
-			    minetItem = GetMiNETItem(entity.Inventory[slot]);
+			    var orig = entity.Inventory[slot];
+			    minetItem = GetMiNETItem(orig);
 		    }
 		    
 		    var packet = McpeInventoryTransaction.CreateObject();
@@ -1137,6 +1118,10 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			    Slot = slot,
 			    FromPosition = new System.Numerics.Vector3(entity.KnownPosition.X, entity.KnownPosition.Y, entity.KnownPosition.Z),
 			    HasNetworkIds = true,
+			    TransactionRecords = new List<TransactionRecord>()
+			    {
+				    
+			    }
 			  //  BlockRuntimeId = 
 			  //  BlockRuntimeId = 
 		    };
@@ -1221,12 +1206,14 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		public override void Close()
 		{
+			if (PacketHandler != null)
+				PacketHandler.ReportPackets();
+			
 			CancellationTokenSource?.Cancel();
 			SendDisconnectionNotification();
 
 			Task.Delay(500).ContinueWith(task =>
 			{
-
 
 				try
 				{
@@ -1245,6 +1232,23 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			//Task.Delay(500).ContinueWith(task => { base.StopClient(); });
 		}
 
+		/// <inheritdoc />
+		public override void SendChatMessage(ChatObject msg)
+		{
+			var message = msg.RawMessage; 
+			if (message[0] == '/')
+			{
+				McpeCommandRequest commandRequest = McpeCommandRequest.CreateObject();
+				commandRequest.command = message;
+				commandRequest.unknownUuid = new MiNET.Utils.UUID(Guid.NewGuid().ToString());
+				Session.SendPacket(commandRequest);
+			}
+			else
+			{
+				SendChat(message);
+			}
+		}
+
 		public void RequestChunkRadius(int radius)
 		{
 			var packet = McpeRequestChunkRadius.CreateObject();
@@ -1258,10 +1262,25 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			Session?.SendPacket(new DisconnectionNotification());
 		}
 
+		private ulong _expectedLatency = 0;
+		public ulong ExpectedLatency
+		{
+			get => _expectedLatency;
+			set
+			{
+				_expectedLatency = value;
+				_latencySw.Restart();
+			}
+		}
+
+		public long Latency => _latencySw.ElapsedMilliseconds;
+		
+		private Stopwatch _latencySw = new Stopwatch();
+		public  ulong     LastSentPing { get; private set; }
 		public void SendPing()
 		{
-			return;
-			if (CustomConnectedPong.CanPing)
+			//return;
+			/*if (CustomConnectedPong.CanPing)
 			{
 				ConnectedPing cp = ConnectedPing.CreateObject();
 				cp.sendpingtime = DateTimeOffset.UtcNow.Ticks / TimeSpan.TicksPerMillisecond;
@@ -1272,22 +1291,32 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			}
 			else
 			{
-				/*McpeNetworkStackLatency nsl = McpeNetworkStackLatency.CreateObject();
+				//ExpectedLatency = 0;
+				McpeNetworkStackLatency nsl = McpeNetworkStackLatency.CreateObject();
 				nsl.timestamp = (ulong) DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 				nsl.unknownFlag = 1;
 				
-				Session?.SendPacket(nsl);*/
-			}
+				Session?.SendPacket(nsl);
+				LastSentPing = nsl.timestamp;
+				
+				_latencySw.Restart();
+			}*/
 		}
 
 
 		public void Dispose()
 		{
-			EventDispatcher?.UnregisterEvents(this);
 			
 			Close();
 			//WorkerThreadPool.Dispose();
 			//_threadPool.WaitForThreadsExit();
 		}
+	}
+
+	public enum DisconnectReason
+	{
+		Network,
+		Kicked,
+		Unknown
 	}
 }

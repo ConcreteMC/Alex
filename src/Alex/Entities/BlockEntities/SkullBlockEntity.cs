@@ -3,7 +3,6 @@ using Alex.API.Blocks;
 using Alex.API.Graphics;
 using Alex.API.Utils;
 using Alex.Blocks.Minecraft;
-using Alex.Entities.Models;
 using Alex.Graphics.Models.Entity;
 using Alex.Graphics.Models.Entity.BlockEntities;
 using Alex.Worlds;
@@ -157,7 +156,11 @@ namespace Alex.Entities.BlockEntities
 						
 						if (_dragon != null)
 						{
-							ModelRenderer = new EntityModelRenderer(new DragonHeadModel(), _dragon);
+							if (ModelFactory.TryGetModel("geometry.dragon_head", out var dragonHead))
+							{
+								ModelRenderer = new EntityModelRenderer(dragonHead, _dragon);
+							}
+
 							//ModelRenderer.Texture = _dragon;
 						}
 						break;
@@ -217,8 +220,18 @@ namespace Alex.Entities.BlockEntities
 		/// <inheritdoc />
 		public override PlayerLocation KnownPosition
 		{
-			get => base.KnownPosition + Offset;
+			get => base.KnownPosition;
 			set => base.KnownPosition = value;
+		}
+		
+		/// <inheritdoc />
+		internal override PlayerLocation RenderLocation
+		{
+			get => base.RenderLocation + Offset;
+			set
+			{
+				base.RenderLocation = value;
+			}
 		}
 	}
 }

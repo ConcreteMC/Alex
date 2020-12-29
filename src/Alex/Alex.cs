@@ -11,7 +11,6 @@ using System.Text;
 using System.Threading;
 using Alex.API;
 using Alex.API.Data.Servers;
-using Alex.API.Events;
 using Alex.API.Graphics.Typography;
 using Alex.API.Gui;
 using Alex.API.Input;
@@ -19,22 +18,26 @@ using Alex.API.Input.Listeners;
 using Alex.API.Resources;
 using Alex.API.Services;
 using Alex.API.Utils;
+using Alex.Audio;
 using Alex.Blocks.Minecraft;
 using Alex.Entities;
 using Alex.Gamestates;
 using Alex.Gamestates.Debugging;
 using Alex.Gamestates.InGame;
+using Alex.Gamestates.Login;
 using Alex.Graphics.Models.Blocks;
 using Alex.Gui;
 using Alex.Net;
 using Alex.Networking.Java.Packets;
 using Alex.Networking.Java.Packets.Play;
 using Alex.Plugins;
+using Alex.ResourcePackLib;
 using Alex.ResourcePackLib.Json;
 using Alex.ResourcePackLib.Json.Models.Entities;
 using Alex.Services;
 using Alex.Services.Discord;
 using Alex.Utils;
+using Alex.Utils.Auth;
 using Alex.Worlds.Abstraction;
 using Alex.Worlds.Multiplayer.Bedrock;
 using Alex.Worlds.Multiplayer.Java;
@@ -45,20 +48,14 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using MiNET;
 using Newtonsoft.Json;
 using NLog;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
-using SixLabors.ImageSharp.Processing;
-using DedicatedThreadPool = Alex.API.Utils.DedicatedThreadPool;
-using DedicatedThreadPoolSettings = Alex.API.Utils.DedicatedThreadPoolSettings;
-using GeometryModel = Alex.Worlds.Multiplayer.Bedrock.GeometryModel;
 using GuiDebugHelper = Alex.Gui.GuiDebugHelper;
 using Image = SixLabors.ImageSharp.Image;
 using Point = Microsoft.Xna.Framework.Point;
 using TextInputEventArgs = Microsoft.Xna.Framework.TextInputEventArgs;
-using ThreadType = Alex.API.Utils.ThreadType;
 
 namespace Alex
 {
@@ -121,7 +118,6 @@ namespace Alex
 		public Alex(LaunchSettings launchSettings)
 		{
 			EntityProperty.Factory = new AlexPropertyFactory();
-
 			/*MiNET.Utils.DedicatedThreadPool fastThreadPool =
 				ReflectionHelper.GetPrivateStaticPropertyValue<MiNET.Utils.DedicatedThreadPool>(
 					typeof(MiNetServer), "FastThreadPool");
@@ -210,6 +206,8 @@ namespace Alex
 			serviceCollection.AddSingleton<IOptionsProvider>(Options);
 
 			InitiatePluginSystem(serviceCollection);
+			
+			AudioEngine = new AudioEngine(Storage);
 
 			ConfigureServices(serviceCollection);
 
@@ -295,6 +293,12 @@ namespace Alex
 		protected override void LoadContent()
 		{
 			Stopwatch loadingStopwatch = Stopwatch.StartNew();
+			
+			var builtInFont = ResourceManager.ReadResource("Alex.Resources.default_font.png");
+			
+			var image = Image.Load<Rgba32>(builtInFont);
+			OnResourcePackPreLoadCompleted(image, McResourcePack.BitmapFontCharacters.ToList());
+			
 			var       options          = Services.GetService<IOptionsProvider>();
 			options.Load();
 
@@ -481,7 +485,8 @@ namespace Alex
 				});
 		}
 
-		private Point WindowSize { get; set; }
+		private Point  WindowSize  { get; set; }
+		public  AudioEngine AudioEngine { get; set; }
 
 		private void SetFullscreen(bool enabled)
 		{
@@ -518,7 +523,6 @@ namespace Alex
 
 			services.TryAddSingleton<IRegistryManager, RegistryManager>();
 
-			services.TryAddSingleton<IEventDispatcher, EventDispatcher>();
 			services.TryAddSingleton<ResourceManager>();
 			services.TryAddSingleton<GuiManager>((o) => this.GuiManager);
 			services.TryAddSingleton<ServerTypeManager>(ServerTypeManager);
@@ -572,14 +576,10 @@ namespace Alex
 		private void InitializeGame(IProgressReceiver progressReceiver)
 		{
 			progressReceiver.UpdateProgress(0, "Initializing...");
+
 			API.Extensions.Init(GraphicsDevice);
 			MCPacketFactory.Load();
 			//ConfigureServices();
-
-			var eventDispatcher = Services.GetRequiredService<IEventDispatcher>() as EventDispatcher;
-
-			foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
-				eventDispatcher.LoadFrom(assembly);
 
 			//var options = Services.GetService<IOptionsProvider>();
 
@@ -605,17 +605,17 @@ namespace Alex
 
 			if (storage.TryReadString("skin.json", out var str, Encoding.UTF8))
 			{
-				if (GeometryModel.TryParse(str, null, out var geometryModel))
+				Dictionary<string, EntityModel> models = new Dictionary<string, EntityModel>();
+				BedrockResourcePack.LoadEntityModel(str, models);
+				models = BedrockResourcePack.ProcessEntityModels(models);
+				
+				if (models.Count > 0)
 				{
-					var model = geometryModel.FindGeometry("geometry.humanoid.custom");
-
-					if (model == null)
-						model = geometryModel.FindGeometry("geometry.humanoid.customSlim");
-
-					if (model != null)
+					if (models.TryGetValue("geometry.humanoid.custom", out var entityModel) || models.TryGetValue(
+						"geometry.humanoid.customSlim", out entityModel))
 					{
-						PlayerModel = model;
-						Log.Debug($"Player model loaded...");
+						PlayerModel = entityModel;
+						Log.Info($"Player model loaded...");
 					}
 				}
 			}
@@ -650,7 +650,15 @@ namespace Alex
 						modelTextureSize.Y = (int) PlayerModel.Description.TextureHeight;
 					}
 
-					PlayerTexture = skinImage.Clone<Rgba32>();
+					if (modelTextureSize.Y > skinImage.Height)
+					{
+						PlayerTexture = SkinUtils.ConvertSkin(skinImage, modelTextureSize.X, modelTextureSize.Y);
+					}
+					else
+					{
+						PlayerTexture = skinImage.Clone();//.Clone<Rgba32>();
+					}
+
 					/*
 					var textureSize = new Point(skinImage.Width, skinImage.Height);
 
@@ -686,7 +694,7 @@ namespace Alex
 
 			if (PlayerTexture != null)
 			{
-				Log.Debug($"Player skin loaded...");
+				Log.Info($"Player skin loaded...");
 			}
 
 			if (LaunchSettings.ModelDebugging)
@@ -719,16 +727,13 @@ namespace Alex
 		{
 			try
 			{
-				var eventDispatcher = Services.GetRequiredService<IEventDispatcher>() as EventDispatcher;
-				eventDispatcher?.Reset();
-
 				WorldProvider   provider;
 				NetworkProvider networkProvider;
 				IsMultiplayer = true;
 
 				if (serverType.TryGetWorldProvider(connectionDetails, profile, out provider, out networkProvider))
 				{
-					LoadWorld(provider, networkProvider);
+					LoadWorld(provider, networkProvider, true);
 				}
 			}
 			catch (Exception ex)
@@ -737,11 +742,18 @@ namespace Alex
 			}
 		}
 
-		public void LoadWorld(WorldProvider worldProvider, NetworkProvider networkProvider)
+		public void LoadWorld(WorldProvider worldProvider, NetworkProvider networkProvider, bool isServer = false)
 		{
 			PlayingState playState = new PlayingState(this, GraphicsDevice, worldProvider, networkProvider);
 
-			LoadingWorldState loadingScreen = new LoadingWorldState();
+			var               parentState   = GameStateManager.GetActiveState();
+
+			if (parentState is PlayingState)
+				parentState = null;
+			
+			LoadingWorldState loadingScreen = new LoadingWorldState(parentState);
+			loadingScreen.ConnectingToServer = isServer;
+			
 			GameStateManager.AddState("loading", loadingScreen);
 			GameStateManager.SetActiveState("loading");
 
@@ -752,21 +764,25 @@ namespace Alex
 					{
 						GameStateManager.RemoveState("play");
 						
-						bool connected = worldProvider.Load(loadingScreen.UpdateProgress);
+						var result = worldProvider.Load(loadingScreen.UpdateProgress);
 
-						if (networkProvider.IsConnected && connected)
+						if (networkProvider.IsConnected && result == LoadResult.Done)
 						{
 							GameStateManager.AddState("play", playState);
 							GameStateManager.SetActiveState("play");
-
+							
 							return;
 						}
 
-						var s = new DisconnectedScreen();
-						s.DisconnectedTextElement.TranslationKey = "multiplayer.status.cannot_connect";
-						GameStateManager.SetActiveState(s, false);
-						
-						worldProvider.Dispose();
+						if (result != LoadResult.Aborted)
+						{
+							var s = new DisconnectedScreen();
+							s.DisconnectedTextElement.TranslationKey = "multiplayer.status.cannot_connect";
+							s.ParentState = parentState;
+							GameStateManager.SetActiveState(s, false);
+
+							worldProvider.Dispose();
+						}
 					}
 					finally
 					{

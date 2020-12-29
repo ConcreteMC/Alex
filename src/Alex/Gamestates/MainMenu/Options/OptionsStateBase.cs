@@ -11,7 +11,6 @@ using Alex.Gui;
 using Alex.Gui.Elements;
 using Microsoft.Xna.Framework;
 using NLog;
-using RocketUI;
 
 namespace Alex.Gamestates.MainMenu.Options
 {

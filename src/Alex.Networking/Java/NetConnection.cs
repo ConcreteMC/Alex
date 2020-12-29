@@ -110,23 +110,30 @@ namespace Alex.Networking.Java
 
         private void Disconnected(bool notified)
         {
-            lock (_disconnectSync)
-            {
-                if ((bool) _disconnectSync) return;
-                _disconnectSync = true;
-            }
+	        try
+	        {
+		        lock (_disconnectSync)
+		        {
+			        if ((bool) _disconnectSync) return;
+			        _disconnectSync = true;
+		        }
 
-            if (!CancellationToken.IsCancellationRequested)
-            {
-                CancellationToken.Cancel();
-            }
+		        if (!CancellationToken.IsCancellationRequested)
+		        {
+			        CancellationToken.Cancel();
+		        }
 
-            Socket.Shutdown(SocketShutdown.Both);
-            Socket.Close();
+		        Socket.Shutdown(SocketShutdown.Both);
+		        Socket.Close();
 
-            OnConnectionClosed?.Invoke(this, new ConnectionClosedEventArgs(this, notified));
+		        OnConnectionClosed?.Invoke(this, new ConnectionClosedEventArgs(this, notified));
 
-	        IsConnected = false;
+		        IsConnected = false;
+	        }
+	        catch (ObjectDisposedException)
+	        {
+		        //Ok
+	        }
         }
 
 	    public void InitEncryption(byte[] sharedKey)

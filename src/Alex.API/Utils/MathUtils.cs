@@ -9,27 +9,9 @@ namespace Alex.API.Utils
 		{
 			return centreAngle + Clamp(NormDeg(targetAngle - centreAngle), -maximumDifference, maximumDifference);
 		}
-		public static float normalAbsoluteAngleDegrees(float angle)
-		{
-			return (angle %= 360f) >= 0 ? angle : (angle + 360f);
-		}
 
 		// normalizes a double degrees angle to between +180 and -180
 		public static float NormDeg(float a)
-		{
-			a %= 360f;
-			if (a >= 180f)
-			{
-				a -= 360f;
-			}
-			if (a < -180)
-			{
-				a += 360f;
-			}
-			return a;
-		}
-
-		public static double NormDeg(double a)
 		{
 			a %= 360f;
 			if (a >= 180f)
@@ -70,28 +52,9 @@ namespace Alex.API.Utils
 			return AngleToDegree(angle);
 		}
 
-		public static sbyte DegreeToAngle(float angle)
+		public static float FromFixedPoint(short f)
 		{
-			return (sbyte)(((angle % 360) / 360) * 256);
-		}
-
-		public static float FromFixedPoint(int f)
-		{
-			return ((float) f) / (32.0f * 128.0f);
-		}
-
-		public static uint Hash(uint value)
-		{
-			unchecked
-			{
-				value ^= value >> 16;
-				value *= 0x85ebca6b;
-				value ^= value >> 13;
-				value *= 0xc2b2ae35;
-				value ^= value >> 16;
-			}
-
-			return value;
+			return f / (32.0f * 128.0f);
 		}
 
 		public static int HsvToRGB(float hue, float saturation, float value)

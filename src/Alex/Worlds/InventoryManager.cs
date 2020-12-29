@@ -31,7 +31,7 @@ namespace Alex.Worlds
 					//		inv = new GuiChestDialog(new InventoryBase(90));
 //
 					//		break;
-						case ContainerType.Chest:
+					case ContainerType.Chest:
 							inv = new GuiChestDialog(new InventoryBase(90)
 							{
 								InventoryId = containerId

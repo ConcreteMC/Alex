@@ -60,7 +60,7 @@ namespace Alex.Worlds.Singleplayer.Generators
 								//chunk.Height[((z << 4) + (x))] = 70;
 							}
 
-							// chunk.SetSkyLight(x, 70, z, 15);
+							chunk.SetSkyLight(x, 2, z, 15);
 							//  chunk.SetSkyLight(x, 71, z, 15);
 							//  chunk.SetSkyLight(x, 69, z, 15);
 						}

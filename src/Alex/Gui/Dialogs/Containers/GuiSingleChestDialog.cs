@@ -3,7 +3,6 @@ using Alex.Gui.Elements.Inventory;
 using Alex.Items;
 using Alex.Utils;
 using Alex.Utils.Inventories;
-using RocketUI;
 
 namespace Alex.Gui.Dialogs.Containers
 {
@@ -20,13 +19,13 @@ namespace Alex.Gui.Dialogs.Containers
 			}
 
 			//7 139
-			foreach (var slot in AddSlots(8, 140, 9, 27, 9, playerInventory.InventoryId))
+			foreach (var slot in AddSlots(8, 140, 9, 27, playerInventory.InventoryOffset, playerInventory.InventoryId))
 			{
 				slot.Item = playerInventory[slot.InventoryIndex];
 			}
 
 			//7, 197
-			foreach (var slot in AddSlots(8, 198, 9, 9, 0, playerInventory.InventoryId))
+			foreach (var slot in AddSlots(8, 198, 9, 9, playerInventory.HotbarOffset, playerInventory.InventoryId))
 			{
 				slot.Item = playerInventory[slot.InventoryIndex];
 			}

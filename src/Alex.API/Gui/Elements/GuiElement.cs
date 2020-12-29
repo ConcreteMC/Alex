@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Alex.API.Gui.Graphics;
 using Microsoft.Xna.Framework;
-using RocketUI;
 
 namespace Alex.API.Gui.Elements
 {
@@ -265,19 +264,18 @@ namespace Alex.API.Gui.Elements
 
 		public bool TryFindParent(GuiElementPredicate predicate, out IGuiElement parentElement)
 		{
-			if (ParentElement == null)
+			parentElement = ParentElement;
+			if (parentElement == null)
 			{
-				parentElement = null;
 				return false;
 			}
 
-			if (predicate(ParentElement))
+			if (predicate(parentElement))
 			{
-				parentElement = ParentElement;
 				return true;
 			}
 
-			return ParentElement.TryFindParent(predicate, out parentElement);
+			return parentElement.TryFindParent(predicate, out parentElement);
 		}
 
 		public bool TryFindParentOfType<TGuiElement>(GuiElementPredicate<TGuiElement> predicate,

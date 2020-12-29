@@ -1,12 +1,13 @@
 namespace Alex.Blocks.Minecraft
 {
-	public class HeavyWeightedPressurePlate : Block
+	public class HeavyWeightedPressurePlate : PressurePlate
 	{
 		public HeavyWeightedPressurePlate() : base()
 		{
-			Solid = false;
+			Solid = true;
 			Transparent = true;
 			IsReplacible = false;
+			IsFullBlock = false;
 			
 			Hardness = 0.5f;
 			

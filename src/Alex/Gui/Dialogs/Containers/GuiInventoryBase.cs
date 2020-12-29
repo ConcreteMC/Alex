@@ -12,7 +12,6 @@ using Alex.Items;
 using Alex.Utils;
 using Alex.Utils.Inventories;
 using Microsoft.Xna.Framework;
-using RocketUI;
 using GuiCursorEventArgs = Alex.API.Gui.Events.GuiCursorEventArgs;
 using GuiCursorMoveEventArgs = Alex.API.Gui.Events.GuiCursorMoveEventArgs;
 
@@ -308,7 +307,7 @@ namespace Alex.Gui.Dialogs.Containers
 			}
 		}
 
-		private Item SelectedItem { get; set; }
+		private Item SelectedItem { get; set; } = null;
 
 		private InventoryContainerItem HoverItem       { get; set; } = null;
 		private InventoryContainerItem HighlightedSlot { get; set; } = null;
@@ -347,7 +346,7 @@ namespace Alex.Gui.Dialogs.Containers
 
 		private void SetOverlayText(Item item)
 		{
-			if (item == null)
+			if (item == null || item is ItemAir)
 			{
 				TextOverlay.IsVisible = false;
 			}

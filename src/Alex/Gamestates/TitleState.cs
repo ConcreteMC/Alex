@@ -4,6 +4,7 @@ using System.IO;
 using System.Threading;
 using Alex.API.Graphics;
 using Alex.API.Graphics.Textures;
+using Alex.API.Gui;
 using Alex.API.Gui.Elements;
 using Alex.API.Gui.Elements.Controls;
 using Alex.API.Gui.Elements.Layout;
@@ -12,6 +13,7 @@ using Alex.API.Services;
 using Alex.API.Utils;
 using Alex.Entities;
 using Alex.Gamestates.Common;
+using Alex.Gamestates.Login;
 using Alex.Gamestates.MainMenu;
 using Alex.Gamestates.Multiplayer;
 using Alex.Graphics.Models.Entity;
@@ -20,6 +22,7 @@ using Alex.Gui.Elements;
 using Alex.Gui.Elements.Context3D;
 using Alex.Items;
 using Alex.ResourcePackLib.Json.Models.Entities;
+using Alex.Utils;
 using Alex.Utils.Inventories;
 using Alex.Worlds.Abstraction;
 using Alex.Worlds.Singleplayer;
@@ -28,7 +31,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using NLog;
-using RocketUI;
 using Color = Microsoft.Xna.Framework.Color;
 
 namespace Alex.Gamestates
@@ -294,7 +296,7 @@ namespace Alex.Gamestates
 			Alex.GameStateManager.AddState("serverlist", new MultiplayerServerSelectionState(_backgroundSkyBox));
 			//Alex.GameStateManager.AddState("profileSelection", new ProfileSelectionState(_backgroundSkyBox));
 			
-			ApplyModel(_playerView.Entity);
+			//ApplyModel(_playerView.Entity);
 		}
 
 		private void ChangeSKinBtnPressed()
@@ -376,7 +378,6 @@ namespace Alex.Gamestates
 			
 			
 			ApplyModel(_playerView.Entity);
-			
 			base.OnShow();
 		}
 

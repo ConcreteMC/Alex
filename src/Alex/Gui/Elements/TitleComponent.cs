@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Threading;
 using Alex.API.Graphics.Typography;
+using Alex.API.Gui;
 using Alex.API.Gui.Elements;
 using Alex.API.Gui.Elements.Layout;
 using Alex.API.Gui.Graphics;
 using Alex.API.Utils;
 using Microsoft.Xna.Framework;
-using RocketUI;
 
 namespace Alex.Gui.Elements
 {
@@ -39,6 +39,11 @@ namespace Alex.Gui.Elements
 				Text =	""
             };
 	    }
+
+		public void Ready()
+		{
+			Show();
+        }	
 
 	    #region Titles
 

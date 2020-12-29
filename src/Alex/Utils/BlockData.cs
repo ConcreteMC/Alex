@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Alex.API.Resources;
 using Newtonsoft.Json;
 
 namespace Alex.Utils

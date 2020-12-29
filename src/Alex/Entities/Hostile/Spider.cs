@@ -71,7 +71,7 @@ namespace Alex.Entities.Hostile
 		private bool _wasMoving = false;
 		private Stopwatch _timeSinceStartMoving = new Stopwatch();
 		/// <inheritdoc />
-		protected override void Animate(float distSQ, float dt)
+		protected override void Animate(float distSQ, float dt, float mvSpeed)
 		{
 			bool moving = distSQ > 0f;
 
@@ -79,7 +79,7 @@ namespace Alex.Entities.Hostile
 			{
 				if (!_wasMoving && moving)
 				{
-					//_timeSinceStartMoving.Restart();
+					_timeSinceStartMoving.Restart();
 				}
 
 				_wasMoving = moving;
@@ -87,14 +87,14 @@ namespace Alex.Entities.Hostile
 			
 			if (!moving)
 			{
-				Leg0.Rotation = new Vector3(0f, 45f, -45f);
-				Leg1.Rotation = new Vector3(0f, -45f, 45f);
-				Leg2.Rotation = new Vector3(0f, 22.5f, -33.3f);
-				Leg3.Rotation = new Vector3(0f, -22.5f, 33.3f);
-				Leg4.Rotation = new Vector3(0f, -22.5f, -33.3f);
-				Leg5.Rotation = new Vector3(0f, 22.5f, 33.3f);
-				Leg6.Rotation = new Vector3(0f, -45f, -45f);
-				Leg7.Rotation = new Vector3(0f, 45f, 45f);
+				Leg0.Rotation = new Vector3(0f, 45f, 45f);
+				Leg1.Rotation = new Vector3(0f, -45f, -45f);
+				Leg2.Rotation = new Vector3(0f, 22.5f, 33.3f);
+				Leg3.Rotation = new Vector3(0f, -22.5f, -33.3f);
+				Leg4.Rotation = new Vector3(0f, -22.5f, 33.3f);
+				Leg5.Rotation = new Vector3(0f, 22.5f, -33.3f);
+				Leg6.Rotation = new Vector3(0f, -45f, 45f);
+				Leg7.Rotation = new Vector3(0f, 45f, -45f);
 				
 				return;
 			}
@@ -106,14 +106,14 @@ namespace Alex.Entities.Hostile
 
 			var animTime = (float)_timeSinceStartMoving.Elapsed.TotalSeconds;
 			
-			Leg0.Rotation = new Vector3(0f, -MathF.Abs(MathF.Cos(animTime * 76.34f + 90f * 0f) * 22.92f), MathF.Abs(MathF.Sin(animTime * 38.17f + 90f * 0f) * 22.92f));
-			Leg1.Rotation = new Vector3(0f, MathF.Abs(MathF.Cos(animTime * 76.34f + 90f * 0f) * 22.92f), -MathF.Abs(MathF.Sin(animTime * 38.17f + 90f * 0f) * 22.92f));
-			Leg2.Rotation = new Vector3(0f, -MathF.Abs(MathF.Cos(animTime * 76.34f + 90f * 1f) * 22.92f), MathF.Abs(MathF.Sin(animTime * 38.17f + 90f * 1f) * 22.92f));
-			Leg3.Rotation = new Vector3(0f, MathF.Abs(MathF.Cos(animTime * 76.34f + 90f * 1f) * 22.92f), -MathF.Abs(MathF.Sin(animTime * 38.17f + 90f * 1f) * 22.92f));
-			Leg4.Rotation = new Vector3(0f, -MathF.Abs(MathF.Cos(animTime * 76.34f + 90f * 2f) * 22.92f), MathF.Abs(MathF.Sin(animTime * 38.17f + 90f * 2f) * 22.92f));
-			Leg5.Rotation = new Vector3(0f, MathF.Abs(MathF.Cos(animTime * 76.34f + 90f * 2f) * 22.92f), -MathF.Abs(MathF.Sin(animTime * 38.17f + 90f * 2f) * 22.92f));
-			Leg6.Rotation = new Vector3(0f, -MathF.Abs(MathF.Cos(animTime * 76.34f + 90f * 3f) * 22.92f), MathF.Abs(MathF.Sin(animTime * 38.17f + 90f * 3f) * 22.92f));
-			Leg7.Rotation = new Vector3(0f, MathF.Abs(MathF.Cos(animTime * 76.34f + 90f * 3f) * 22.92f), -MathF.Abs(MathF.Sin(animTime * 38.17f + 90f * 3f) * 22.92f));
+			Leg0.Rotation = new Vector3(0f, -MathF.Abs(MathF.Cos(animTime * 76.34f* 0f) * 22.92f), MathF.Abs(MathF.Sin(animTime * 38.17f * 0f) * 22.92f));
+			Leg1.Rotation = new Vector3(0f, MathF.Abs(MathF.Cos(animTime * 76.34f * 0f) * 22.92f), -MathF.Abs(MathF.Sin(animTime * 38.17f * 0f) * 22.92f));
+			Leg2.Rotation = new Vector3(0f, -MathF.Abs(MathF.Cos(animTime * 76.34f * 1f) * 22.92f), MathF.Abs(MathF.Sin(animTime * 38.17f * 1f) * 22.92f));
+			Leg3.Rotation = new Vector3(0f, MathF.Abs(MathF.Cos(animTime * 76.34f* 1f) * 22.92f), -MathF.Abs(MathF.Sin(animTime * 38.17f * 1f) * 22.92f));
+			Leg4.Rotation = new Vector3(0f, -MathF.Abs(MathF.Cos(animTime * 76.34f * 2f) * 22.92f), MathF.Abs(MathF.Sin(animTime * 38.17f * 2f) * 22.92f));
+			Leg5.Rotation = new Vector3(0f, MathF.Abs(MathF.Cos(animTime * 76.34f * 2f) * 22.92f), -MathF.Abs(MathF.Sin(animTime * 38.17f * 2f) * 22.92f));
+			Leg6.Rotation = new Vector3(0f, -MathF.Abs(MathF.Cos(animTime * 76.34f * 3f) * 22.92f), MathF.Abs(MathF.Sin(animTime * 38.17f * 3f) * 22.92f));
+			Leg7.Rotation = new Vector3(0f, MathF.Abs(MathF.Cos(animTime * 76.34f * 3f) * 22.92f), -MathF.Abs(MathF.Sin(animTime * 38.17f * 3f) * 22.92f));
 		}
 	}
 }

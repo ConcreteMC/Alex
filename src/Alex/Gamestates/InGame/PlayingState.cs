@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
 using Alex.API;
 using Alex.API.Graphics;
+using Alex.API.Gui;
 using Alex.API.Network;
 using Alex.API.Services;
 using Alex.API.Utils;
@@ -26,7 +28,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using MiNET;
 using MiNET.Utils;
-using RocketUI;
+using BoundingBox = Microsoft.Xna.Framework.BoundingBox;
 using DedicatedThreadPoolSettings = MiNET.Utils.DedicatedThreadPoolSettings;
 using PlayerLocation = Alex.API.Utils.PlayerLocation;
 
@@ -72,7 +74,11 @@ namespace Alex.Gamestates.InGame
 			WorldProvider.TitleComponent = title;
 
 			_playingHud = new PlayingHud(Alex, World.Player, title);
+			_playingHud.Chat.Network = networkProvider;
+			
 			WorldProvider.ScoreboardView = _playingHud.Scoreboard;
+			WorldProvider.ChatRecipient = _playingHud;
+			//WorldProvider.ScoreboardView
 			
 			_debugInfo = new GuiDebugInfo();
             InitDebugInfo();
@@ -120,15 +126,17 @@ namespace Alex.Gamestates.InGame
 		protected override void OnShow()
 		{
 			Alex.IsMouseVisible = false;
-			
-			if (RenderNetworking)
-				Alex.GuiManager.AddScreen(_networkDebugHud);
+
+			//if (RenderNetworking) 
+			Alex.GuiManager.AddScreen(_networkDebugHud);
 			
 			base.OnShow();
 			Alex.GuiManager.AddScreen(_playingHud);
 
 			if (RenderDebug)
 				Alex.GuiManager.AddScreen(_debugInfo);
+			
+			_playingHud.Title.Ready();
 		}
 
 		protected override void OnHide()
@@ -234,7 +242,7 @@ namespace Alex.Gamestates.InGame
 						if (blockstate != null && blockstate.Block.HasHitbox)
 						{
 							sb.AppendLine($"{blockstate.Name} (S: {bs.Storage})");
-							if (blockstate.IsMultiPart)
+							/*if (blockstate.IsMultiPart)
 							{
 								sb.AppendLine($"MultiPart=true");
 								sb.AppendLine();
@@ -245,7 +253,7 @@ namespace Alex.Gamestates.InGame
 								{
 									sb.AppendLine(model);
 								}
-							}
+							}*/
 
 							var dict = blockstate.ToDictionary();
 
@@ -359,11 +367,13 @@ namespace Alex.Gamestates.InGame
 
 					if (value)
 					{
-						Alex.GuiManager.AddScreen(_networkDebugHud);
+						_networkDebugHud.Advanced = true;
+						//Alex.GuiManager.AddScreen(_networkDebugHud);
 					}
 					else
 					{
-						Alex.GuiManager.RemoveScreen(_networkDebugHud);
+						_networkDebugHud.Advanced = false;
+						//Alex.GuiManager.RemoveScreen(_networkDebugHud);
 					}
 				}
 			}
@@ -420,15 +430,16 @@ namespace Alex.Gamestates.InGame
 
 				if (World?.Player != null && World.Player.HasRaytraceResult)
 				{
-					var player   = World?.Player;
-					var block    = player.SelBlock;
-					var blockPos = player.RaytracedBlock;
-
-					if (block != null)
+					var               player   = World?.Player;
+					var               block    = player.SelBlock;
+					var               blockPos = player.RaytracedBlock;
+					var boxes    = player.RaytraceBoundingBoxes;
+					
+					if (boxes != null && boxes.Length >0)
 					{
-						foreach (var boundingBox in block.BlockState.Model.GetBoundingBoxes(blockPos))
+						foreach (var boundingBox in boxes)
 						{
-							if (player.SelBlock.CanInteract || !World.Player.IsWorldImmutable)
+							if (block.CanInteract || !World.Player.IsWorldImmutable)
 							{
 								Color color = Color.LightGray;
 
@@ -476,13 +487,12 @@ namespace Alex.Gamestates.InGame
 						args.SpriteBatch.RenderBoundingBox(World.Player.GetBoundingBox(), World.Camera.ViewMatrix,
 							World.Camera.ProjectionMatrix, Color.Red);
 
-					if (World.PhysicsEngine.LastKnownHit != null)
+					var hit = World.Player.Movement.LastCollision;
+
+					foreach (var bb in hit)
 					{
-						foreach (var bb in World.PhysicsEngine.LastKnownHit)
-						{
-							args.SpriteBatch.RenderBoundingBox(bb, World.Camera.ViewMatrix,
-								World.Camera.ProjectionMatrix, Color.YellowGreen);
-						}
+						args.SpriteBatch.RenderBoundingBox(
+							bb, World.Camera.ViewMatrix, World.Camera.ProjectionMatrix, Color.YellowGreen, true);
 					}
 				}
 			}

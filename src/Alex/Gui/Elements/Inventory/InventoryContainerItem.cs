@@ -1,4 +1,5 @@
 using Alex.API.Graphics.Typography;
+using Alex.API.Gui;
 using Alex.API.Gui.Elements;
 using Alex.API.Gui.Elements.Controls;
 using Alex.API.Gui.Graphics;
@@ -8,7 +9,6 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using NLog;
-using RocketUI;
 
 namespace Alex.Gui.Elements.Inventory
 {

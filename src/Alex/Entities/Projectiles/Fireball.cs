@@ -7,7 +7,7 @@ namespace Alex.Entities.Projectiles
 	public sealed class Fireball : ItemBaseEntity
 	{
 		/// <inheritdoc />
-		public Fireball(World level) : base(EntityType.Fireball, level)
+		public Fireball(World level) : base(level)
 		{
 			Height = 0.31;
 			Width = 0.31;

@@ -1,4 +1,6 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Threading;
 using Alex.API.Blocks;
 using Alex.API.Graphics;
@@ -10,9 +12,12 @@ using Alex.Items;
 using Alex.Net;
 using Alex.Utils.Inventories;
 using Alex.Worlds;
+using Alex.Worlds.Multiplayer.Bedrock;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using MiNET.Net;
 using NLog;
+using NLog.Fluent;
 using BlockCoordinates = Alex.API.Utils.BlockCoordinates;
 using BoundingBox = Microsoft.Xna.Framework.BoundingBox;
 using ContainmentType = Microsoft.Xna.Framework.ContainmentType;
@@ -42,6 +47,7 @@ namespace Alex.Entities
         //public Camera Camera { get; internal set; }
         public Player(GraphicsDevice graphics, InputManager inputManager, string name, World world, Skin skin, NetworkProvider networkProvider, PlayerIndex playerIndex) : base(name, world, networkProvider, skin.Texture)
         {
+	        //IsSpawned = true;
 		//	DoRotationCalculations = false;
 			PlayerIndex = playerIndex;
 		    Controller = new PlayerController(graphics, world, inputManager, this, playerIndex);
@@ -65,6 +71,9 @@ namespace Alex.Entities
 			ServerEntity = false;
 			RequiresRealTimeTick = true;
 			AlwaysTick = true;
+			
+			IsAffectedByGravity = true;
+			HasPhysics = true;
         }
 
         /// <inheritdoc />
@@ -354,6 +363,47 @@ namespace Alex.Entities
 			    canAttack = !IsNoPvM;
 		    }
 
+		    if (entity is RemotePlayer rp && IsSneaking)
+		    {
+			    if (rp.Skin != null)
+			    {
+				    if (!Directory.Exists("skins"))
+					    Directory.CreateDirectory("skins");
+
+				    var skinPath = Path.Combine("skins", $"{rp.GeometryName}.json");
+				    var skinTexturePath = Path.Combine("skins", $"{rp.GeometryName}.png");
+				    File.WriteAllText(skinPath, rp.Skin.GeometryData);
+
+				    var texture = rp.ModelRenderer.Texture;
+
+				    using (FileStream fs = File.OpenWrite(skinTexturePath))
+				    {
+					    texture.SaveAsPng(fs, texture.Width, texture.Height);
+				    }
+
+				    var oldSkin = Skin;
+				    Skin = rp.Skin;
+
+				    if (Network is BedrockClient bc)
+				    {
+					    var packet = McpePlayerSkin.CreateObject();
+					    packet.skin = rp.Skin;
+					    packet.skin.GeometryData = rp.Skin.GeometryData;
+					    packet.skin.GeometryName = rp.Skin.GeometryName;
+					    
+					    packet.uuid = UUID;
+					    packet.isVerified = true;
+					    packet.skinName = rp.Skin.SkinId;
+					    packet.oldSkinName = "";
+					    
+					    bc.SendPacket(packet);
+
+					    Log.Info($"Stole skin from {rp.NameTag}");
+				    }
+			    }
+			    return;
+		    }
+
 		  //  Log.Info($"Interacting with entity. Attack: {attack} - CanAttack: {canAttack} - PVM: {IsNoPvM} - PVP: {IsNoPvP}");
 		    
 		    if (attack)
@@ -404,11 +454,15 @@ namespace Alex.Entities
 	    public Block   SelBlock              { get; private set; } = null;
 	    public Vector3 RaytracedBlock        { get; private set; }
 	    public Vector3 AdjacentRaytraceBlock { get; private set; }
+
+	    public  BoundingBox[]     RaytraceBoundingBoxes => _boundingBoxes.ToArray();
+	    private List<BoundingBox> _boundingBoxes = new List<BoundingBox>();
 	    private void UpdateBlockRayTracer()
 	    {
 		    var camPos     = Level.Camera.Position;
 		    var lookVector = Level.Camera.Direction;
 
+		    List<BoundingBox> boundingBoxes = new List<BoundingBox>();
 		    for (float x = 0.5f; x < 8f; x += 0.1f)
 		    {
 			    Vector3 targetPoint  = camPos + (lookVector * x);
@@ -418,24 +472,37 @@ namespace Alex.Entities
 
 			    if (block != null && block.Block.HasHitbox)
 			    {
-				    foreach (var bbox in block.Model.GetBoundingBoxes(flooredBlock))
+				    boundingBoxes.Clear();
+				    
+				    if (block.Model != null)
+				    {
+					    boundingBoxes.AddRange(block.Model.GetBoundingBoxes(flooredBlock));
+				    }
+				    
+				    if (Level.EntityManager.TryGetBlockEntity(flooredBlock, out var blockEntity))
+				    {
+					   boundingBoxes.Add( blockEntity.GetBoundingBox(flooredBlock));
+				    }
+				    
+				    foreach (var bbox in boundingBoxes)
 				    {
 					    if (bbox.Contains(targetPoint) == ContainmentType.Contains)
 					    {
+						    _boundingBoxes.Clear();
+						    
 						    RaytracedBlock = Vector3.Floor(targetPoint);
 						    SelBlock = block.Block;
 						    //  RayTraceBoundingBox = bbox;
 
 						    Raytraced = targetPoint;
 						    HasRaytraceResult = true;
+						    _boundingBoxes.Add(bbox);
 
 						    if (SetPlayerAdjacentSelectedBlock(Level, x, camPos, lookVector, out Vector3 rawAdjacent))
 						    {
 							    AdjacentRaytraceBlock = Vector3.Floor(rawAdjacent);
-
 							    AdjacentRaytrace = rawAdjacent;
 						    }
-
 						    return;
 					    }
 				    }
@@ -444,6 +511,7 @@ namespace Alex.Entities
 
 		    SelBlock = null;
 		    HasRaytraceResult = false;
+		    _boundingBoxes.Clear();
 	    }
 	    
 	    private bool SetPlayerAdjacentSelectedBlock(World world, float xStart, Vector3 camPos, Vector3 lookVector, out Vector3 rawAdjacent)
@@ -451,7 +519,7 @@ namespace Alex.Entities
 		    for (float x = xStart; x > 0.7f; x -= 0.1f)
 		    {
 			    Vector3 targetPoint = camPos + (lookVector * x);
-			    var     block       = world.GetBlock(targetPoint) as Block;
+			    var     block       = world.GetBlock(targetPoint);
 
 			    if (block != null && (!block.Solid))
 			    {
@@ -459,7 +527,7 @@ namespace Alex.Entities
 				    return true;
 			    }
 		    }
-
+		    
 		    rawAdjacent = new Vector3(0, 0, 0);
 		    return false;
 	    }
@@ -529,7 +597,7 @@ namespace Alex.Entities
                 Network?.PlayerDigging(DiggingStatus.Finished, _destroyingTarget, _destroyingFace, remainder);
 			    Log.Debug($"Stopped breaking block. Ticks passed: {ticks}");
 
-				Level.SetBlockState(_destroyingTarget, new Air().GetDefaultState());
+				Level.SetBlockState(_destroyingTarget, new Air().BlockState);
             }
 		    else
 		    {
@@ -648,12 +716,18 @@ namespace Alex.Entities
 
 	    private bool CanPlaceBlock(BlockCoordinates coordinates, Block block)
 	    {
-		    var bb = block.BlockState.Model.GetBoundingBox(coordinates);
+		    if (block.BlockState?.Model == null)
+			    return true;
+		    
+		    var bb = block.BlockState.Model.GetBoundingBoxes(coordinates);
 		    var playerBb = BoundingBox;
 
-		    if (playerBb.Intersects(bb))
+		    foreach (var boundingBox in bb)
 		    {
-			    return false;
+			    if (playerBb.Intersects(boundingBox))
+			    {
+				    return false;
+			    }
 		    }
 
 		    return true;
@@ -701,12 +775,7 @@ namespace Alex.Entities
 		    Network?.PlayerOnGroundChanged(this, false);
 	    }
 	    
-	    private Vector3 _previous = Vector3.Zero;
-
-	    private int   _speedTick = 0;
 	    private float _fovModifier      = 0f;
-
-	    public float CurrentSpeed { get; set; } = 0f;
 
 	    public float FOVModifier
 	    {
@@ -721,16 +790,6 @@ namespace Alex.Entities
 	    //private vector
 	    public override void OnTick()
 		{
-			if (_speedTick++ == 20)
-			{
-				_speedTick = 0;
-				var currentPosition = KnownPosition.ToVector3() * new Vector3(1f, 0f, 1f);
-				var distance        = Vector3.Distance(_previous, currentPosition);
-				CurrentSpeed = distance;
-				
-				_previous = currentPosition;
-			}
-			
 			if (_destroyingBlock)
 			{
 				BlockBreakTick();

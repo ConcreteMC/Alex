@@ -3,10 +3,8 @@ using System.Diagnostics;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
-using Alex.API.Events;
 using Alex.API.Services;
 using Alex.API.World;
-using Alex.Entities;
 using Alex.Gui.Forms;
 using Alex.Net;
 using Alex.Net.Bedrock.Raknet;
@@ -14,11 +12,13 @@ using Alex.Utils.Inventories;
 using Alex.Worlds.Abstraction;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
+using MiNET;
 using MiNET.Net;
 using MiNET.Utils;
 using NLog;
 using ChunkCoordinates = Alex.API.Utils.ChunkCoordinates;
 using MathF = System.MathF;
+using Player = Alex.Entities.Player;
 using PlayerLocation = Alex.API.Utils.PlayerLocation;
 
 namespace Alex.Worlds.Multiplayer.Bedrock
@@ -29,21 +29,16 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		
 		public Alex Alex { get; }
 		protected BedrockClient Client { get; }
-		private IEventDispatcher EventDispatcher { get; }
 		public BedrockFormManager FormManager { get; }
 		
 		public BedrockWorldProvider(Alex alex, IPEndPoint endPoint, PlayerProfile profile, DedicatedThreadPool threadPool,
 			out NetworkProvider networkProvider)
 		{
 			Alex = alex;
-			var eventDispatcher = alex.Services.GetRequiredService<IEventDispatcher>();
-			EventDispatcher = eventDispatcher;
 			
 			//Client = new ExperimentalBedrockClient(alex, alex.Services, this, endPoint);
-			Client = new BedrockClient(alex, eventDispatcher, endPoint, profile, threadPool, this);
+			Client = new BedrockClient(alex, endPoint, profile, threadPool, this);
 			networkProvider = Client;
-			
-			EventDispatcher.RegisterEvents(this);
 
 			var guiManager = Alex.GuiManager;
 			FormManager = new BedrockFormManager(networkProvider, guiManager, alex.InputManager);
@@ -78,7 +73,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			{
 				_tickTime++;
 
-				if (World.Player != null && Client.HasSpawned && _gameStarted)
+				if (World.Player != null && World.Player.IsSpawned && _gameStarted)
 				{
 					//	player.IsSpawned = Spawned;
 
@@ -110,17 +105,19 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 						SendLocation(pos);
 
 						_lastLocation = pos;
+						
 						UnloadChunks(new ChunkCoordinates(pos), Client.ChunkRadius + 3);
 
 						_lastPrioritization = _tickTime;
 					}
+					
+					
+					if (_tickTime % 20 == 0 && World.Player.IsSpawned)
+					{
+						Client.SendPing();
+					}
 				}
 
-				if (_tickTime % 20 == 0 && Client.HasSpawned && _gameStarted)
-				{
-					Client.SendPing();
-				}
-				
 				//World.Player.OnTick();
 				//World.EntityManager.Tick();
 				//World.PhysicsEngine.Tick();
@@ -138,7 +135,16 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		private void UnloadChunks(ChunkCoordinates center, double maxViewDistance)
 		{
 			var chunkPublisher = Client.LastChunkPublish;
-			
+
+			ChunkCoordinates publisherCenter = center;
+
+			if (chunkPublisher != null)
+			{
+				publisherCenter = new ChunkCoordinates(
+					new Vector3(
+						chunkPublisher.coordinates.X, chunkPublisher.coordinates.Y, chunkPublisher.coordinates.Z));
+			}
+
 			//Client.ChunkRadius
 			foreach (var chunk in World.ChunkManager.GetAllChunks())
 			{
@@ -146,12 +152,11 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				
 				if (chunkPublisher != null)
 				{
-					if (chunk.Key.DistanceTo(new ChunkCoordinates(new Vector3(chunkPublisher.coordinates.X,
-						chunkPublisher.coordinates.Y, chunkPublisher.coordinates.Z))) < (chunkPublisher.radius / 16f))
+					if (chunk.Key.DistanceTo(publisherCenter) < (chunkPublisher.radius / 16f))
 						continue;
 				}
 				
-				if (distance > maxViewDistance)
+				if (distance > Alex.Options.AlexOptions.VideoOptions.RenderDistance.Value)
 				{
 					//_chunkCache.TryRemove(chunkColumn.Key, out var waste);
 					UnloadChunk(chunk.Key);
@@ -181,16 +186,11 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			Client.World = World;
 			//World.Player.SetInventory(new BedrockInventory(46));
 
-			CustomConnectedPong.CanPing = true;
+			//CustomConnectedPong.CanPing = true;
 			World.Ticker.RegisterTicked(this);
 		}
 
-		private bool VerifyConnection()
-		{
-			return Client.IsConnected;
-		}
-
-		public override bool Load(ProgressReport progressReport)
+		public override LoadResult Load(ProgressReport progressReport)
 		{
 			Client.GameStarted = false;
 			
@@ -200,7 +200,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			var resetEvent = new ManualResetEventSlim(false);
 
 			Client.Start(resetEvent);
-			progressReport(LoadingState.ConnectingToServer, 50);
+			progressReport(LoadingState.ConnectingToServer, 50, "Establishing a connection...");
 
 			//	Client.HaveServer = true;
 
@@ -210,10 +210,10 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				//Client.ShowDisconnect("Could not connect to server!");
 				Log.Warn($"Failed to connect to server, resetevent not triggered.");
 				
-				return false;
+				return LoadResult.Timeout;
 			}
 
-			progressReport(LoadingState.ConnectingToServer, 98);
+			progressReport(LoadingState.ConnectingToServer, 98, "Waiting on server confirmation...");
 
 			//progressReport(LoadingState.LoadingChunks, 0);
 
@@ -222,33 +222,76 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			var  done               = false;
 			int  previousPercentage = 0;
 			bool hasSpawnChunk      = false;
+			
+			Stopwatch sw = Stopwatch.StartNew();
 
+			bool         slowNotified = false;
+			bool         outOfOrder   = false;
+			LoadingState state        = LoadingState.ConnectingToServer;
+			string       subTitle     = "";
 			while (true)
 			{
+				if (Client.Connection.IsNetworkOutOfOrder && !outOfOrder)
+				{
+					subTitle = "Waiting for network to catch up...";
+					outOfOrder = true;
+				}
+				else if (!Client.Connection.IsNetworkOutOfOrder && outOfOrder)
+				{
+					subTitle = "";
+					outOfOrder = false;
+					sw.Restart();
+				}
+				
+				if (!outOfOrder && sw.ElapsedMilliseconds >= 500)
+				{
+					subTitle = "Slow network, please wait...";
+				}
+				
 				double radiusSquared = Math.Pow(Client.ChunkRadius, 2);
 				var    target        = radiusSquared;
 
 				percentage = (int) ((100 / target) * World.ChunkManager.ChunkCount);
-
-				if (Client.GameStarted && percentage != previousPercentage)
+				progressReport(state, percentage, subTitle);
+				
+				if (((percentage >= 50 && hasSpawnChunk)))
 				{
-					progressReport(LoadingState.LoadingChunks, percentage);
-					previousPercentage = percentage;
+					if (Client.GameStarted && statusChanged && !Client.Connection.IsNetworkOutOfOrder)
+					{
+						break;
+					}
 
-					//Log.Info($"Progress: {percentage} ({ChunksReceived} of {target})");
+					subTitle = "Waiting on spawn confirmation...";
+					state = LoadingState.Spawning;
+				}
+				else if (percentage > 0)
+				{
+					state = LoadingState.LoadingChunks;
+					if (percentage != previousPercentage)
+					{
+						previousPercentage = percentage;
+						sw.Restart();
+					}
+				}
+
+				if ((!Client.GameStarted || percentage == 0) && sw.ElapsedMilliseconds >= 15000 && !Client.Connection.IsNetworkOutOfOrder && !outOfOrder)
+				{
+					if (Client.DisconnectReason == DisconnectReason.Kicked)
+					{
+						return LoadResult.Aborted;
+					}
+					
+					Log.Warn($"Failed to connect to server, timed-out.");
+				
+					return LoadResult.Timeout;
 				}
 
 				if (!statusChanged)
 				{
-					if (Client.PlayerStatus == 3 || Client.PlayerStatusChanged.WaitOne(50) || Client.HasSpawned
+					if (Client.PlayerStatusChanged.WaitOne(50) || Client.CanSpawn
 					    || Client.ChangeDimensionResetEvent.WaitOne(5))
 					{
 						statusChanged = true;
-
-						//Client.SendMcpeMovePlayer();
-
-
-						//Client.IsEmulator = false;
 					}
 				}
 
@@ -261,24 +304,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 						hasSpawnChunk = true;
 					}
 				}
-
-				if (((percentage >= 100 || hasSpawnChunk)))
-				{
-					if (statusChanged)
-					{
-						break;
-					}
-				}
-
-				/*if (!VerifyConnection())
-				{
-					//Client.ShowDisconnect("Connection lost.");
-					Log.Warn($"Could not verify connection...");
-					
-					timer.Stop();
-
-					return false;
-				}*/
 			}
 
 			var p = World.Player.KnownPosition;
@@ -290,13 +315,13 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			//SkyLightCalculations.Calculate(WorldReceiver as World);
 
 			//Client.IsEmulator = false;
-			progressReport(LoadingState.Spawning, 99);
+			//progressReport(LoadingState.Spawning, 99);
 			timer.Stop();
 
+			World.Player.IsSpawned = true;
 			_gameStarted = true;
-			
 			//TODO: Check if spawn position is safe.
-			return true;
+			return LoadResult.Done;
 		}
 
 		private bool _gameStarted = false;
@@ -305,8 +330,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		{
 			base.Dispose();
 			Client.Dispose();
-			
-			EventDispatcher?.UnregisterEvents(this);
 		}
 	}
 }

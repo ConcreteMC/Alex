@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Alex.API.Data.Servers;
 using Alex.API.Graphics;
 using Alex.API.Utils;
+using Alex.Blocks;
 using Alex.Blocks.Minecraft;
 using Alex.Blocks.State;
 using Alex.Blocks.Storage;
@@ -177,11 +178,10 @@ namespace Alex.Worlds.Chunks
 			
 			if (state == null)
 			{
-				Log.Warn($"State == null");
-				return;
+				state = BlockFactory.GetBlockState("minecraft:air");
 			}
 
-			var coordsIndex = GetCoordinateIndex(x, y, z);
+			//var coordsIndex = GetCoordinateIndex(x, y, z);
 
 			if (storage == 0)
 			{

@@ -11,15 +11,12 @@ namespace Alex.Net.Bedrock.Packets
     {
         private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(AlexPacketFactory));
         
-        private byte[] PrevBuffer { get; set; }
         public Packet Create(byte messageId, ReadOnlyMemory<byte> buffer, string ns)
         {
             if (ns == "raknet")
                 return CreateRakNet(messageId, buffer);
 
             return CreatePe(messageId, buffer);
-            
-            return null;
         }
 
         private Packet CreateRakNet(byte messageId, ReadOnlyMemory<byte> buffer)
@@ -35,9 +32,9 @@ namespace Alex.Net.Bedrock.Packets
               //  case 132:
               //      PrevBuffer = buffer.ToArray();
                //     break;
-                case 16:
-                    packet = new RequestAccepted();
-                    break;
+              //  case 16:
+             //       packet = new RequestAccepted();
+             //       break;
             }
 
             try
@@ -47,12 +44,6 @@ namespace Alex.Net.Bedrock.Packets
             catch (System.ArgumentOutOfRangeException ex)
             {
                 Log.Warn(ex, $"RakNet processing: {ex.ToString()}");
-                if (PrevBuffer != null)
-                {
-                    Memory<byte> newBuffer = new Memory<byte>(PrevBuffer.Concat(buffer.ToArray()).ToArray());
-
-                    packet?.Decode(newBuffer);
-                }
             }
             
             return packet;
@@ -99,9 +90,9 @@ namespace Alex.Net.Bedrock.Packets
                  //   case 0x32:
                  //       packet = new InventorySlot();
                  //       break;
-               //     case 0x6f: //Fixes entity delta
-              //          packet = new EntityDelta();
-              //          break;
+                    case 0x6f: //Fixes entity delta
+                        packet = new EntityDelta();
+                        break;
               //      case 0x77:
               //          packet = new AvailableEntityIdentifiers();
               //          break;

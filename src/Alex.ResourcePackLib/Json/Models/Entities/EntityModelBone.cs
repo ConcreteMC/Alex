@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using System.Linq;
+using Microsoft.Xna.Framework;
 
 namespace Alex.ResourcePackLib.Json.Models.Entities
 {
@@ -8,34 +9,76 @@ namespace Alex.ResourcePackLib.Json.Models.Entities
 
     public sealed class EntityModelBone
 	{
+		/// <summary>
+		/// Animation files refer to this bone via this identifier.
+		/// </summary>
 		[J("name")]
 		public string Name { get; set; }
-		public string Material { get; set; } = string.Empty;
 
+		/// <summary>
+		/// Bone that this bone is relative to.  If the parent bone moves, this bone will move along with it.
+		/// </summary>
 		[J("parent", NullValueHandling = N.Ignore)]
 		public string Parent { get; set; } = string.Empty;
 
 		[J("locators", NullValueHandling = N.Ignore)]
         public EntityModelLocators Locators { get; set; }
 
+        /// <summary>
+        /// Grow this box by this additive amount in all directions (in model space units)
+        /// </summary>
         [J("inflate", NullValueHandling = N.Ignore)]
-        public double Inflate { get; set; } = 1.0;
-        
-        [J("rotation", NullValueHandling = N.Ignore)]
-        public Vector3 Rotation { get; set; } = Vector3.Zero;
-        
+        public double Inflate { get; set; } = 0;
+
+        /// <summary>
+        /// The bone pivots around this point (in model space units).
+        /// </summary>
         [J("pivot", NullValueHandling = N.Ignore)]
         public Vector3 Pivot { get; set; }
+        
+        /// <summary>
+        /// This is the initial rotation of the bone around the pivot, pre-animation (in degrees, x-then-y-then-z order).
+        /// </summary>
+        [J("rotation", NullValueHandling = N.Ignore)]
+        public Vector3? Rotation { get; set; }
 		
+        /// <summary>
+        ///		The rotation for the bone (1.8.0 geometry only)
+        /// </summary>
         [J("bind_pose_rotation", NullValueHandling = N.Ignore)]
-        public Vector3 BindPoseRotation { get; set; } = Vector3.Zero;
+        public Vector3? BindPoseRotation { get; set; }
         
 		public bool NeverRender { get; set; } = false;
+		
+		/// <summary>
+		/// Mirrors the UV's of the unrotated cubes along the x axis, also causes the east/west faces to get flipped.
+		/// </summary>
 		public bool Mirror { get; set; } = false;
 		public bool Reset { get; set; } = false;
 		
+		/// <summary>
+		/// This is the list of cubes associated with this bone.
+		/// </summary>
 		[J("cubes", NullValueHandling = N.Ignore)]
 		public EntityModelCube[] Cubes { get; set; }
+		
+		public EntityModelBone Clone()
+		{
+			return new EntityModelBone()
+			{
+				Inflate = Inflate,
+				Mirror = Mirror,
+				Pivot = Pivot,
+				Rotation = Rotation,
+				Locators = Locators,
+				Cubes = Cubes?.Select(x => x.Clone()).ToArray(),
+				Name = Name,
+				Parent = Parent,
+				Reset = Reset,
+				NeverRender = NeverRender,
+				BindPoseRotation = BindPoseRotation
+			};
+		}
     }
 
 	public sealed class EntityModelLocators

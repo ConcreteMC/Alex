@@ -62,6 +62,9 @@ namespace Alex.Gamestates.MainMenu.Options
             var activeLang = Alex.GuiRenderer.Language;
             foreach (var lng in Alex.GuiRenderer.Languages.OrderBy(x => x.Key))
             {
+                if (System.Text.Encoding.UTF8.GetByteCount(lng.Value.DisplayName) != lng.Value.DisplayName.Length)//Filter-out non-ascii languages
+                    continue;
+                
                 bool active = lng.Value.Code.Equals(activeLang.Code);
                 
                 GuiButton btn = new GuiButton(GetButtonText(lng.Value, active), () =>
