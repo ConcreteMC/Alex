@@ -574,7 +574,7 @@ namespace Alex.Graphics.Models.Blocks
 
 						var faceColor = baseColor;
 
-						bool hasTint = (face.Value.TintIndex.HasValue && face.Value.TintIndex == 0) || baseBlock.BlockMaterial.TintType != TintType.Default;
+						bool hasTint = (face.Value.TintIndex.HasValue && face.Value.TintIndex == 0);
 
 						if (hasTint)
 						{
