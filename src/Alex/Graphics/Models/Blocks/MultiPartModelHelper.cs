@@ -115,7 +115,7 @@ namespace Alex.Graphics.Models.Blocks
 			
 			if (baseblockState.TryGetValue(rule, out string stateValue))
 			{
-				if (stateValue.Equals(value, StringComparison.InvariantCultureIgnoreCase))
+				if (stateValue.Equals(value, StringComparison.OrdinalIgnoreCase))
 				{
 					return true;
 				}
@@ -228,7 +228,7 @@ namespace Alex.Graphics.Models.Blocks
 
 			if (baseblockState.TryGetValue(rule, out string val))
 			{
-				return val.Equals(value, StringComparison.InvariantCultureIgnoreCase);
+				return val.Equals(value, StringComparison.OrdinalIgnoreCase);
 			}
 
 			return false;

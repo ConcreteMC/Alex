@@ -163,7 +163,7 @@ namespace Alex.Gamestates.MainMenu.Options
             {
                 try
                 {
-                    if (resource.FullName.EndsWith(".zip", StringComparison.InvariantCultureIgnoreCase))
+                    if (resource.FullName.EndsWith(".zip", StringComparison.OrdinalIgnoreCase))
                     {
                         if (Alex.Resources.TryLoadResourcePackInfo(resource.FullName,
                             out ResourcePackManifest packInfo))

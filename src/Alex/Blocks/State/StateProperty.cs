@@ -7,7 +7,7 @@ namespace Alex.Blocks.State
 {
 	public abstract class StateProperty : IStateProperty
 	{
-		public static Dictionary<string, StateProperty> _registeredTypes = new Dictionary<string, StateProperty>(StringComparer.InvariantCultureIgnoreCase);
+		//public static Dictionary<string, StateProperty> _registeredTypes = new Dictionary<string, StateProperty>(StringComparer.InvariantCultureIgnoreCase);
 		public string Name { get; }
 
 		protected StateProperty(string name)
@@ -15,16 +15,6 @@ namespace Alex.Blocks.State
 			Name = name;
 
 			//_registeredTypes.TryAdd(name, this);
-		}
-
-		public static StateProperty Parse(string name)
-		{
-			if (_registeredTypes.TryGetValue(name, out StateProperty property))
-			{
-				return property;
-			}
-
-			return new UnknownProperty(name);
 		}
 
 		public override bool Equals(object obj)
@@ -45,7 +35,7 @@ namespace Alex.Blocks.State
 
 		public bool Equals(IStateProperty other)
 		{
-			return other.Name.Equals(Name, StringComparison.InvariantCultureIgnoreCase);/*&&
+			return other.Name.Equals(Name, StringComparison.OrdinalIgnoreCase);/*&&
 			       other.PropertyType.IsEquivalentTo(PropertyType);*/
 		}
 	}

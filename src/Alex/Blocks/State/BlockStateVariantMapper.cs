@@ -18,24 +18,22 @@ namespace Alex.Blocks.State
         {
           //  property = property.ToLowerInvariant();
             value = value.ToLowerInvariant();
-            
-            var copiedProperties = source.ToDictionary();
-            copiedProperties[property] = value.ToString();
 
             int highestMatch = 0;
             BlockState highest = null;
 
-            var matching = GetVariants().Where(x =>
-                (x.TryGetValue(property, out string xVal) &&
-                 xVal.Equals(value, StringComparison.InvariantCultureIgnoreCase))).ToArray();
+            var matching = Variants.Where(x => x[property].Equals(value, StringComparison.OrdinalIgnoreCase)).ToArray();
 
             if (matching.Length == 1)
             {
                 result = matching.FirstOrDefault();
                 return true;
             }
+            
+            var copiedProperties = new Dictionary<string, string>(source, StringComparer.OrdinalIgnoreCase);
+            copiedProperties[property] = value.ToString();
 
-            foreach (var variant in matching.OrderBy(x => copiedProperties.Count - x.Values.Count))
+            foreach (var variant in matching)
             {
                 bool valid = true;
                 foreach (var requiredMatch in requiredMatches)
@@ -52,24 +50,27 @@ namespace Alex.Blocks.State
                     continue;
 				
                 int matches = 0;
-                foreach (var copy in copiedProperties.Where(x => x.Key != property))
+                foreach (var copy in copiedProperties)
                 {
+                    if (copy.Key.Equals(property))
+                        continue;
+                    
                     //Check if variant value matches copy value.
-                    if (variant.TryGetValue(copy.Key, out string val) && copy.Value.Equals(val, StringComparison.InvariantCultureIgnoreCase))
+                    if (variant.TryGetValue(copy.Key, out string val) && copy.Value.Equals(val, StringComparison.OrdinalIgnoreCase))
                     {
                         matches++;
                     }
                 }
 
-                foreach (var variantProp in variant.ToDictionary())
+                /*foreach (var variantProp in variant)
                 {
-                    if (!copiedProperties.ContainsKey(variantProp.Key))
+                    if (!source.Contains(variantProp.Key))
                     {
                         matches--;
                     }
-                }
+                }*/
 
-                if (matches == copiedProperties.Count)
+                if (matches == source.Count)
                 {
                     highestMatch = matches;
                     highest = variant;

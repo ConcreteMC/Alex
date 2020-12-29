@@ -9,6 +9,8 @@ namespace Alex.API.Resources
         public string Namespace { get; }
         public string Path { get; }
 
+        private readonly int _hash;
+
         public ResourceLocation(string key) : this(key.Contains(':') ? key.Substring(0, key.IndexOf(':')) : DefaultNamespace,
             key.Contains(':') ? key.Substring(key.IndexOf(':') + 1) : key)
         {
@@ -20,7 +22,8 @@ namespace Alex.API.Resources
             Namespace = @namespace;
             Path = path;
 
-           // _hashCode = GetUniqueId();
+            _hash = $"{@namespace}:{@path}".GetHashCode(StringComparison.OrdinalIgnoreCase);
+            // _hashCode = GetUniqueId();
         }
 
         public int Length => Namespace.Length + Path.Length;
@@ -32,10 +35,10 @@ namespace Alex.API.Resources
 
         public static bool operator ==(ResourceLocation a, ResourceLocation b)
         {
-            if (a.ToString().Equals(b.ToString(), StringComparison.InvariantCultureIgnoreCase))
-                return true;
-
-            return false;
+            if (a == null || b == null)
+                return false;
+            
+            return a._hash == b._hash;
         }
 
         public static bool operator !=(ResourceLocation a, ResourceLocation b)
@@ -50,24 +53,6 @@ namespace Alex.API.Resources
             return $"{Namespace}:{Path}";
         }
 
-        /// <summary>Determines whether the specified object is equal to the current object.</summary>
-        /// <param name="obj">The object to compare with the current object.</param>
-        /// <returns>true if the specified object  is equal to the current object; otherwise, false.</returns>
-      /*  public override bool Equals(object obj)
-        {
-            if (obj is ResourceLocation b)
-            {
-                return this == b;
-            }
-
-            if (obj is string str)
-            {
-                return ToString().Equals(str, StringComparison.InvariantCultureIgnoreCase);
-            }
-
-            return false;
-        }*/
-
         /// <summary>Indicates whether the current object is equal to another object of the same type.</summary>
         /// <param name="other">An object to compare with this object.</param>
         /// <returns>true if the current object is equal to the <paramref name="other">other</paramref> parameter; otherwise, false.</returns>
@@ -75,7 +60,9 @@ namespace Alex.API.Resources
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return string.Equals(Namespace, other.Namespace, StringComparison.InvariantCultureIgnoreCase) && string.Equals(Path, other.Path, StringComparison.InvariantCultureIgnoreCase);
+
+            return _hash == other._hash;
+            // return string.Equals(Namespace, other.Namespace, StringComparison.OrdinalIgnoreCase) && string.Equals(Path, other.Path, StringComparison.OrdinalIgnoreCase);
         }
 
         /// <summary>Determines whether the specified object is equal to the current object.</summary>
@@ -93,28 +80,7 @@ namespace Alex.API.Resources
         /// <returns>A hash code for the current object.</returns>
         public override int GetHashCode()
         {
-            unchecked
-            {
-                int hash1 = (5381 << 16) + 5381;
-                int hash2 = hash1;
-
-                for (int i = 0; i < Path.Length; i += 2)
-                {
-                    hash1 = ((hash1 << 5) + hash1) ^ Path[i];
-                    if (i == Path.Length - 1)
-                        break;
-                    hash2 = ((hash2 << 5) + hash2) ^ Path[i + 1];
-                }
-
-                return hash1 + (hash2 * 1566083941);
-            }
-        }
-
-        private static int _uniqueIdCounter = int.MinValue;
-
-        private static int GetUniqueId()
-        {
-            return Interlocked.Increment(ref _uniqueIdCounter);
+            return _hash;
         }
     }
 }

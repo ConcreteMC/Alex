@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using Alex.API.Blocks.Properties;
 using Alex.API.Graphics;
 using Alex.API.Resources;
@@ -13,33 +15,25 @@ using NLog;
 
 namespace Alex.Blocks.State
 {
-	public class BlockState : IEquatable<BlockState>, IRegistryEntry<BlockState>
+	public class BlockState : IEquatable<BlockState>, IRegistryEntry<BlockState>, IEnumerable<KeyValuePair<string, string>>
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(BlockState));
 
 		protected internal Dictionary<string, string> Values { get; set; }
-
+		public             int                        Count  => Values.Count;
 		public BlockState()
 		{
-			Values = new Dictionary<string, string>(/*new StateComparer()*/);
+			Values = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 		}
 
 		public string Name { get; set; }
 		public uint ID { get; set; }
-		
-		internal Func<BlockModel> ResolveModel { get; set; }
 
 		private  BlockModel       _model = null;
 		public BlockModel Model
 		{
 			get
 			{
-				if (_model == null && ResolveModel != null)
-				{
-					_model = ResolveModel();
-					ResolveModel = null;
-				}
-
 				return _model;
 			}
 			set
@@ -95,7 +89,7 @@ namespace Alex.Blocks.State
 				return result;
 			}
 
-			return WithPropertyNoResolve(property, value);
+			return this;
 		}
 		
 		public BlockState WithProperty(string property, string value)
@@ -103,9 +97,14 @@ namespace Alex.Blocks.State
 			return WithProperty(property, value, true);
 		}
 
+		public bool Contains(string property)
+		{
+			return Values.ContainsKey(property);
+		}
+
 		public IDictionary<string, string> ToDictionary()
 		{
-			var dictionary = new Dictionary<string, string>(/*new StateComparer()*/);
+			var dictionary = new Dictionary<string, string>(Count, StringComparer.Ordinal);
 			foreach (var kv in Values)
 			{
 				dictionary.TryAdd(kv.Key, kv.Value.ToString().ToLowerInvariant());
@@ -116,16 +115,6 @@ namespace Alex.Blocks.State
 		public bool TryGetValue(string property, out string value)
 		{
 			return Values.TryGetValue(property, out value);
-			
-			var r = Values.FirstOrDefault(x => x.Key.Equals(property, StringComparison.InvariantCultureIgnoreCase));
-			if (!r.Equals(default(KeyValuePair<string, string>)))
-			{
-				value = r.Value.ToString().ToLowerInvariant();
-				return true;
-			}
-
-			value = default(string);
-			return false;
 		}
 
 		public bool Equals(BlockState other)
@@ -133,6 +122,21 @@ namespace Alex.Blocks.State
 			if (ReferenceEquals(null, other)) return false;
 			if (ReferenceEquals(this, other)) return true;
 			return ID == other.ID;
+		}
+
+		/// <inheritdoc />
+		IEnumerator IEnumerable.GetEnumerator()
+		{
+			return GetEnumerator();
+		}
+
+		/// <inheritdoc />
+		public IEnumerator<KeyValuePair<string, string>> GetEnumerator()
+		{
+			foreach (var kv in Values)
+			{
+				yield return kv;
+			}
 		}
 
 		public override string ToString()
@@ -153,39 +157,17 @@ namespace Alex.Blocks.State
 
 			return sb.ToString();
 		}
-
-		public static BlockState FromString(string data)
-		{
-			BlockState state = new BlockState();
-
-			var kvs = ParseData(data);
-			foreach (var kv in kvs)
-			{
-				state.Values.Add(kv.Key, kv.Value);
-			}
-
-			return state;
-		}
-
+		
+		private static readonly Regex VariantParser = new Regex("(?'property'[^=,]*?)=(?'value'[^,]*)", RegexOptions.Compiled);
 		public static Dictionary<string, string> ParseData(string variant)
 		{
-			Dictionary<string, string> values = new Dictionary<string, string>();
+			var matches = VariantParser.Matches(variant);
+			
+			Dictionary<string, string> values  = new Dictionary<string, string>(matches.Count);
 
-			string[] splitVariants = variant.Split(',');
-			foreach (var split in splitVariants)
+			foreach (Match match in matches)
 			{
-				string[] splitted = split.Split('=');
-				if (splitted.Length <= 1)
-				{
-					continue;
-				}
-
-				string key = splitted[0];
-				string value = splitted[1];
-
-				//if (key.ToLower() == "waterlogged")continue;
-				
-				values.Add(key, value);
+				values[match.Groups["property"].Value] = match.Groups["value"].Value;
 			}
 
 			return values;
@@ -200,7 +182,7 @@ namespace Alex.Blocks.State
 				Values = new Dictionary<string, string>(Values /*, new StateComparer()*/),
 				Block = Block,
 				VariantMapper = VariantMapper,
-				ResolveModel = ResolveModel,
+		//		ResolveModel = ResolveModel,
 				Model = Model,
 				Default = Default,
 			//	Location = Location == null ? null : new ResourceLocation(Location.Namespace, Location.Path),
@@ -225,5 +207,13 @@ namespace Alex.Blocks.State
 		}
 
 		public BlockState Value => this;
+
+		public string this[string property]
+		{
+			get
+			{
+				return Values[property];
+			}
+		}
 	}
 }

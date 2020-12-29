@@ -29,8 +29,8 @@ namespace Alex.ResourcePackLib
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(BedrockResourcePack));
 
-		private ConcurrentDictionary<string, Image<Rgba32>> _bitmaps = new ConcurrentDictionary<string, Image<Rgba32>>();
-        public IReadOnlyDictionary<string, Image<Rgba32>> Textures => _bitmaps;
+		private ConcurrentDictionary<string,Lazy<Image<Rgba32>>> _bitmaps = new ConcurrentDictionary<string, Lazy<Image<Rgba32>>>();
+        public IReadOnlyDictionary<string, Lazy<Image<Rgba32>>> Textures => _bitmaps;
 		public IReadOnlyDictionary<ResourceLocation, EntityDescription> EntityDefinitions { get; private set; } = new ConcurrentDictionary<ResourceLocation, EntityDescription>();
 		public SoundDefinitionFormat SoundDefinitions { get; private set; } = null;
 		
@@ -57,7 +57,17 @@ namespace Alex.ResourcePackLib
 		
 		public bool TryGetTexture(string name, out Image<Rgba32> texture)
 		{
-			return Textures.TryGetValue(NormalisePath(name), out texture);
+			if (Textures.TryGetValue(NormalisePath(name), out var t))
+
+			{
+				texture = t;
+
+				return true;
+			}
+
+			texture = null;
+
+			return false;
 		}
 
 		private string NormalisePath(string path)
@@ -374,13 +384,22 @@ namespace Alex.ResourcePackLib
 										continue;
 									}
 
-									var bmp = TryLoad(texture.Value + ".png");
-
-									if (bmp == null)
-										bmp = TryLoad(texture.Value + ".tga");
-
-									if (bmp != null)
-										_bitmaps.TryAdd(texture.Value, bmp);
+									if (_archive.GetEntry(texture.Value + ".tga") != null)
+									{
+										_bitmaps.TryAdd(texture.Value, new Lazy<Image<Rgba32>>(
+											() =>
+											{
+												return TryLoad(texture.Value + ".tga");
+											}));
+									}
+									else if (_archive.GetEntry(texture.Value + ".png") != null)
+									{
+										_bitmaps.TryAdd(texture.Value, new Lazy<Image<Rgba32>>(
+											() =>
+											{
+												return TryLoad(texture.Value + ".png");
+											}));
+									}
 								}
 							}
 							catch (Exception ex)

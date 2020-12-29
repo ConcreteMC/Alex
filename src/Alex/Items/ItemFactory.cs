@@ -149,7 +149,7 @@ namespace Alex.Items
 			           item.DisplayName = entry.Key;
 
 			           var data = ItemEntries.FirstOrDefault(
-				           x => x.name.Equals(entry.Key.Substring(10), StringComparison.InvariantCultureIgnoreCase));
+				           x => x.name.Equals(entry.Key.Substring(10), StringComparison.OrdinalIgnoreCase));
 
 			           if (data != null)
 			           {
@@ -176,7 +176,7 @@ namespace Alex.Items
 			           {
 				           foreach (var it in ResourcePack.ItemModels)
 				           {
-					           if (it.Key.Path.Equals(key.Path, StringComparison.InvariantCultureIgnoreCase))
+					           if (it.Key.Path.Equals(key.Path, StringComparison.OrdinalIgnoreCase))
 					           {
 						           model = it.Value;
 
@@ -240,7 +240,7 @@ namespace Alex.Items
                 item.DisplayName = entry.Key;
 
 			    var data = ItemEntries.FirstOrDefault(x =>
-				    x.name.Equals(entry.Key.Substring(10), StringComparison.InvariantCultureIgnoreCase));
+				    x.name.Equals(entry.Key.Substring(10), StringComparison.OrdinalIgnoreCase));
 			    if (data != null)
 			    {
 				    item.MaxStackSize = data.stackSize;
@@ -260,7 +260,7 @@ namespace Alex.Items
 
 			    foreach (var it in ResourcePack.ItemModels)
 			    {
-				    if (it.Key.Path.Equals(key.Path, StringComparison.InvariantCultureIgnoreCase))
+				    if (it.Key.Path.Equals(key.Path, StringComparison.OrdinalIgnoreCase))
 				    {
 					    //Log.Info($"Model found: {entry.Key} = {it.Key}");
 					    ItemModelRenderer renderer;
@@ -343,7 +343,7 @@ namespace Alex.Items
 
 		    var a = Items.Where(x => x.Key.Path.Length >= name.Path.Length)
 			   .OrderBy(x => name.ToString().Length - x.Key.ToString().Length).FirstOrDefault(
-				    x => x.Key.Path.EndsWith(name.Path, StringComparison.InvariantCultureIgnoreCase));
+				    x => x.Key.Path.EndsWith(name.Path, StringComparison.OrdinalIgnoreCase));
 
 		    if (a.Value != null)
 		    {

@@ -44,12 +44,6 @@ namespace Alex.Blocks.Minecraft
 		public bool IsReplacible { get; set; } = false;
 		public bool RequiresUpdate { get; set; } = false;
 		public bool CanInteract { get; set; } = false;
-
-		public string Name
-		{
-			get { return Location.ToString(); }
-			set { Location = value; }
-		}
 		
 	    public virtual byte LightValue { get; set; } = 0;
 	    public int LightOpacity { get; set; } = 1;
@@ -215,11 +209,6 @@ namespace Alex.Blocks.Minecraft
 			return secondsForBreak;
 		}
 
-        public virtual bool CanCollide()
-        {
-	        return true;
-        }
-
         public virtual bool ShouldRenderFace(BlockFace face, Block neighbor)
         {
 	        if (!neighbor.Renderable)
@@ -271,7 +260,7 @@ namespace Alex.Blocks.Minecraft
         public virtual bool CanAttach(BlockFace face, Block block)
         {
 	        return block.Solid && (block.IsFullCube || (block.BlockState.Name.Equals(
-		        BlockState.Name, StringComparison.InvariantCultureIgnoreCase)));
+		        BlockState.Name, StringComparison.OrdinalIgnoreCase)));
         }
 
         protected static string GetShape(BlockState state)
@@ -301,24 +290,7 @@ namespace Alex.Blocks.Minecraft
 		    return DisplayName ?? GetType().Name;
 	    }
 
-		public virtual BlockState GetDefaultState()
-		{
-			BlockState r = null;
-			if (BlockState is BlockState s)
-			{
-				r = s.VariantMapper.GetDefaultState();
-			}
-
-			if (r == null)
-				return new BlockState()
-				{
-
-				};
-
-			return r;
-		}
-
-		public ResourceLocation Location { get; private set; }
+	    public ResourceLocation Location { get; private set; }
 		public IRegistryEntry<Block> WithLocation(ResourceLocation location)
 		{
 			Location = location;

@@ -533,7 +533,7 @@ namespace Alex.Entities
                 Network?.PlayerDigging(DiggingStatus.Finished, _destroyingTarget, _destroyingFace, remainder);
 			    Log.Debug($"Stopped breaking block. Ticks passed: {ticks}");
 
-				Level.SetBlockState(_destroyingTarget, new Air().GetDefaultState());
+				Level.SetBlockState(_destroyingTarget, new Air().BlockState);
             }
 		    else
 		    {
@@ -652,12 +652,18 @@ namespace Alex.Entities
 
 	    private bool CanPlaceBlock(BlockCoordinates coordinates, Block block)
 	    {
-		    var bb = block.BlockState.Model.GetBoundingBox(coordinates);
+		    if (block.BlockState?.Model == null)
+			    return true;
+		    
+		    var bb = block.BlockState.Model.GetBoundingBoxes(coordinates);
 		    var playerBb = BoundingBox;
 
-		    if (playerBb.Intersects(bb))
+		    foreach (var boundingBox in bb)
 		    {
-			    return false;
+			    if (playerBb.Intersects(boundingBox))
+			    {
+				    return false;
+			    }
 		    }
 
 		    return true;

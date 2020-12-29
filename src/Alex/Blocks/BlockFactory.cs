@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -27,14 +28,15 @@ namespace Alex.Blocks
 	{
 		private static NLog.Logger Log = NLog.LogManager.GetCurrentClassLogger(typeof(BlockFactory));
 
-		public static IReadOnlyDictionary<uint, BlockState> AllBlockstates => new ReadOnlyDictionary<uint, BlockState>(RegisteredBlockStates);
-		public static IReadOnlyDictionary<string, BlockStateVariantMapper> AllBlockstatesByName => new ReadOnlyDictionary<string, BlockStateVariantMapper>(BlockStateByName);
+		public static IReadOnlyDictionary<uint, BlockState> AllBlockstates => RegisteredBlockStates;
+		public static IReadOnlyDictionary<string, BlockStateVariantMapper> AllBlockstatesByName => BlockStateByName;
 		
 		private static readonly ConcurrentDictionary<uint, BlockState> RegisteredBlockStates = new ConcurrentDictionary<uint, BlockState>();
-		private static readonly ConcurrentDictionary<string, BlockStateVariantMapper> BlockStateByName = new ConcurrentDictionary<string, BlockStateVariantMapper>();
 
-		public static readonly ConcurrentDictionary<string, BlockStateVariantMapper> BedrockStates =
+		private static readonly ConcurrentDictionary<string, BlockStateVariantMapper> BlockStateByName =
 			new ConcurrentDictionary<string, BlockStateVariantMapper>();
+
+		public static readonly ConcurrentDictionary<string, BlockStateVariantMapper> BedrockStates = new ConcurrentDictionary<string, BlockStateVariantMapper>();
 		
 		//private static readonly ConcurrentDictionary<uint, BlockModel> ModelCache = new ConcurrentDictionary<uint, BlockModel>();
 		private static readonly ConcurrentDictionary<long, string> ProtocolIdToBlockName = new ConcurrentDictionary<long, string>();
@@ -75,7 +77,7 @@ namespace Alex.Blocks
 		}
 		
 
-		internal static int LoadResources(IRegistryManager registryManager, ResourceManager resources, McResourcePack resourcePack, bool replace,
+		internal static int LoadBlockstates(IRegistryManager registryManager, ResourceManager resources, McResourcePack resourcePack, bool replace,
 			bool reportMissing = false, IProgressReceiver progressReceiver = null)
 		{
 			//RuntimeIdTable = TableEntry.FromJson(raw);
@@ -109,11 +111,13 @@ namespace Alex.Blocks
 			bool reportMissing,
 			IProgressReceiver progressReceiver)
 		{
-			var raw = ResourceManager.ReadStringResource("Alex.Resources.blockmap.json");
+			Stopwatch sw  = Stopwatch.StartNew();
+			var       raw = ResourceManager.ReadStringResource("Alex.Resources.blockmap.json");
 
 			var mapping = JsonConvert.DeserializeObject<BlockMap>(raw);
 			
-			var blockRegistry = registryManager.GetRegistry<Block>();
+			var blockRegistry      = registryManager.GetRegistry<Block>();
+			//var blockStateRegistry = registryManager.GetRegistry<BlockState>();
 
 			var data = BlockData.FromJson(ResourceManager.ReadStringResource("Alex.Resources.NewBlocks.json"));
 			int total = data.Count;
@@ -124,7 +128,7 @@ namespace Alex.Blocks
 			Parallel.ForEach(
 				data, entry =>
 				{
-					//double percentage = 100D * ((double) done / (double) total);
+					//double percentage = 100D * ((double) done / (double) total);blockstate variants
 					progressReceiver.UpdateProgress(done, total, $"Importing block models...", entry.Key);
 
 					if (resourcePack.TryGetBlockState(entry.Key, out var blockStateResource))
@@ -166,15 +170,11 @@ namespace Alex.Blocks
 
 								continue;
 							}
-
-							string                displayName = entry.Key;
+							
 							IRegistryEntry<Block> registryEntry;
-
 							if (!blockRegistry.TryGet(entry.Key, out registryEntry))
 							{
-								registryEntry = new UnknownBlock(id);
-								displayName = $"(MISSING) {displayName}";
-
+								registryEntry = new UnknownBlock();
 								registryEntry = registryEntry.WithLocation(entry.Key); // = entry.Key;
 							}
 							else
@@ -183,7 +183,12 @@ namespace Alex.Blocks
 							}
 
 							var block = registryEntry.Value;
+							if (string.IsNullOrWhiteSpace(block.DisplayName))
+								block.DisplayName =  entry.Key;
 
+							variantState.Block = block.Value;
+							block.BlockState = variantState;
+							
 							variantState.Model = ResolveModel(resources, blockStateResource, variantState);
 							if (variantState.Model == null)
 							{
@@ -193,12 +198,6 @@ namespace Alex.Blocks
 							if (variantState.IsMultiPart) multipartBased++;
 
 							variantState.Default = s.Default;
-
-							if (string.IsNullOrWhiteSpace(block.DisplayName))
-								block.DisplayName = displayName;
-
-							variantState.Block = block;
-							block.BlockState = variantState;
 
 							if (variantMap.TryAdd(variantState))
 							{
@@ -314,7 +313,7 @@ namespace Alex.Blocks
 						//bedrockState.AppliedModels = pcVariant.AppliedModels;
 						bedrockState.IsMultiPart = pcVariant.IsMultiPart;
 					//	bedrockState.MultiPartHelper = pcVariant.MultiPartHelper;
-						bedrockState.ResolveModel = pcVariant.ResolveModel;
+					//	bedrockState.ResolveModel = pcVariant.ResolveModel;
 						bedrockState.Model = pcVariant.Model;
 						bedrockState.Block = pcVariant.Block;
 						bedrockState.ID = (uint) Interlocked.Increment(ref counter);
@@ -339,7 +338,7 @@ namespace Alex.Blocks
 					BedrockStates[m.Key] = mapper;
 				});
 
-			Log.Info($"Loaded {multipartBased} multi-part blockstate variants!");
+			Log.Info($"Loaded {multipartBased} multi-part blockstates!");
 			Log.Info($"Loaded {BedrockStates.Count} mappings...");
 
 			return importCounter;
@@ -379,7 +378,7 @@ namespace Alex.Blocks
 				var models = MultiPartModelHelper.GetModels(state, blockStateResource);
 
 			//	state.MultiPartHelper = blockStateResource;
-				state.IsMultiPart = true;
+				state.IsMultiPart = blockStateResource.Parts.Any(x => x.When != null && x.When.Length > 0);
 				//state.AppliedModels = models.Select(x => x.ModelName).ToArray();
 
 				return new ResourcePackBlockModel(resources, models);
@@ -412,7 +411,7 @@ namespace Alex.Blocks
 
 			BlockStateVariant blockStateVariant = null;
 
-			var data = state.ToDictionary();
+			//var data = state.ToDictionary();
 
 			int                                     closestMatch = 0;
 			KeyValuePair<string, BlockStateVariant> closest      = default(KeyValuePair<string, BlockStateVariant>);
@@ -420,13 +419,13 @@ namespace Alex.Blocks
 			foreach (var v in blockStateResource.Variants)
 			{
 				int matches           = 0;
-				var variantBlockState = Blocks.State.BlockState.FromString(v.Key);
-
-				foreach (var kv in data)
+				//var variantBlockState = Blocks.State.BlockState.FromString(v.Key);
+				var variant = Blocks.State.BlockState.ParseData(v.Key);
+				foreach (var kv in state)
 				{
-					if (variantBlockState.TryGetValue(kv.Key, out string vValue))
+					if (variant.TryGetValue(kv.Key, out string vValue))
 					{
-						if (vValue.Equals(kv.Value, StringComparison.InvariantCultureIgnoreCase))
+						if (vValue.Equals(kv.Value, StringComparison.OrdinalIgnoreCase))
 						{
 							matches++;
 						}
@@ -446,7 +445,7 @@ namespace Alex.Blocks
 					closestMatch = matches;
 					closest = v;
 
-					if (matches == data.Count)
+					if (matches == state.Count)
 						break;
 				}
 			}
@@ -505,28 +504,5 @@ namespace Alex.Blocks
 			id = (int)(stateId >> 4);
 			meta = (byte)(stateId & 0x0F);
 		}
-
-		public partial class TableEntry
-		{
-			[JsonProperty("runtimeID")]
-			public long RuntimeId { get; set; }
-
-			[JsonProperty("name")]
-			public string Name { get; set; }
-
-			[JsonProperty("id")]
-			public long Id { get; set; }
-
-			[JsonProperty("data")]
-			public long Data { get; set; }
-
-			public static TableEntry[] FromJson(string json)
-			{
-				return JsonConvert.DeserializeObject<TableEntry[]>(json, new JsonSerializerSettings()
-				{
-					
-				});
-			}
-		}
-    }
+	}
 }

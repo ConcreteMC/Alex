@@ -162,10 +162,14 @@ namespace Alex
             {
 	            imported = bmr.LoadResourcePack(progressReceiver, resourcePack);
             }
-			BlockFactory.LoadResources(RegistryManager, this, resourcePack, replaceModels, reportMissingModels, progressReceiver);
-            sw.Stop();
 
-            Log.Info($"Imported {imported} blockstate variants from resourcepack in {sw.ElapsedMilliseconds}ms!");
+            Log.Info($"Imported {imported} block models from resourcepack in {sw.ElapsedMilliseconds}ms!");
+            
+            sw.Restart();
+            
+            imported = BlockFactory.LoadBlockstates(RegistryManager, this, resourcePack, replaceModels, reportMissingModels, progressReceiver);
+            
+            Log.Info($"Imported {imported} blockstates from resourcepack in {sw.ElapsedMilliseconds}ms!");
         }
 
         private void LoadTextures(GraphicsDevice device, IProgressReceiver progressReceiver,

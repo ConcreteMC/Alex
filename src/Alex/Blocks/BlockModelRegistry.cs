@@ -14,7 +14,7 @@ namespace Alex.Blocks
         {
             Value = model;
         }
-        
+
         public ResourceLocation Location { get; private set; }
         public IRegistryEntry<ResourcePackModelBase> WithLocation(ResourceLocation location)
         {

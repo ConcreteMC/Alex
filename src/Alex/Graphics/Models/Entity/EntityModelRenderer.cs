@@ -213,7 +213,7 @@ namespace Alex.Graphics.Models.Entity
 			modelBone.Setup(Alex.Instance.GraphicsDevice);
 
 			foreach (var childBone in source.Bones.Where(
-				x => string.Equals(x.Parent, bone.Name, StringComparison.InvariantCultureIgnoreCase)))
+				x => string.Equals(x.Parent, bone.Name, StringComparison.OrdinalIgnoreCase)))
 			{
 				var child = ProcessBone(texture, source, childBone, vertices, textureSize, modelBones);
 				child.Parent = modelBone;

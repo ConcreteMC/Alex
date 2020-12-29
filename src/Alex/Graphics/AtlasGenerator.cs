@@ -59,7 +59,7 @@ namespace Alex.Graphics
 		    Dictionary<ResourceLocation, ImageEntry> textures,
 		    IProgressReceiver progressReceiver)
 	    {
-		    foreach (var texture in resourcePack.Textures.Where(x => x.Key.Path.StartsWith("block/", StringComparison.InvariantCultureIgnoreCase)))
+		    foreach (var texture in resourcePack.Textures.Where(x => x.Key.Path.StartsWith("block/", StringComparison.OrdinalIgnoreCase)))
 		    {
 			    if (textures.ContainsKey(texture.Key))
 			    {
