@@ -201,7 +201,7 @@ namespace Alex.Entities
 						if (resourceManager.BedrockResourcePack.Textures.TryGetValue(texture,
 							out var bmp))
 						{
-							t = TextureUtils.BitmapToTexture2D(graphics, bmp);
+							t = TextureUtils.BitmapToTexture2D(graphics, bmp.Value);
 						}
 					}
 
@@ -221,7 +221,7 @@ namespace Alex.Entities
 						if (resourceManager.BedrockResourcePack.Textures.TryGetValue(texture,
 							out var bmp))
 						{
-							t = TextureUtils.BitmapToTexture2D(graphics, bmp);
+							t = TextureUtils.BitmapToTexture2D(graphics, bmp.Value);
 						}
 
 						return new EntityModelRenderer(model, t);

@@ -2,11 +2,11 @@ using System;
 
 namespace Alex.ResourcePackLib
 {
-	public class Lazy<T> where T : class
+	public class LazyO<T> where T : class
 	{
 		private Func<T> _valueGenerator;
 		private T       _value = null;
- 		public Lazy(Func<T> valueGenerator)
+ 		public LazyO(Func<T> valueGenerator)
         {
 	        _valueGenerator = valueGenerator;
         }
@@ -23,7 +23,7 @@ namespace Alex.ResourcePackLib
 		        return _value;
 	        }
         }
-		public static implicit operator T(Lazy<T> val)
+		public static implicit operator T(LazyO<T> val)
 		{
 			return val.Value;
 		}

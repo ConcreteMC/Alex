@@ -60,7 +60,7 @@ namespace Alex.ResourcePackLib
 			if (Textures.TryGetValue(NormalisePath(name), out var t))
 
 			{
-				texture = t;
+				texture = t.Value;
 
 				return true;
 			}

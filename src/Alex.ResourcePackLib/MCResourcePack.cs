@@ -52,7 +52,7 @@ namespace Alex.ResourcePackLib
 		private static readonly Regex IsParticle            = new(@"^assets[\\\/](?'namespace'.*)[\\\/]particles[\\\/](?'filename'.*)\.json$", RegexOpts);
 		private static readonly Regex IsSoundDefinition     = new(@"^assets[\\\/](?'namespace'.*)[\\\/]sounds.json$", RegexOpts);
 
-		private readonly Dictionary<string, BlockStateResource> _blockStates   = new(StringComparer.OrdinalIgnoreCase);
+		private readonly Dictionary<string, Lazy<BlockStateResource>> _blockStates   = new(StringComparer.OrdinalIgnoreCase);
 		//private readonly Dictionary<string, BlockModel>         _blockModels   = new Dictionary<string, BlockModel>();
 		private readonly Dictionary<ResourceLocation, ResourcePackModelBase>   _models    = new();
 		//private readonly Dictionary<string, Texture2D>          _textureCache  = new Dictionary<string, Texture2D>();
@@ -62,7 +62,7 @@ namespace Alex.ResourcePackLib
 
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(McResourcePack));
 
-		public IReadOnlyDictionary<string, BlockStateResource> BlockStates       => _blockStates;
+		public IReadOnlyDictionary<string, Lazy<BlockStateResource>> BlockStates       => _blockStates;
 
 		public IReadOnlyDictionary<ResourceLocation, ResourcePackModelBase> BlockModels =>
 			_models.Where(x => x.Value.Type == ModelType.Block)
@@ -235,7 +235,7 @@ namespace Alex.ResourcePackLib
 				count++;
 			}
 
-			var blockStates = _blockStates.ToArray();
+			/*var blockStates = _blockStates.ToArray();
 			total = blockStates.Length;
 			count = 0;
 			
@@ -246,7 +246,7 @@ namespace Alex.ResourcePackLib
 				_blockStates[blockState.Key] = blockState.Value;
 
 				count++;
-			}
+			}*/
 
 			LoadColormap();
 
@@ -382,7 +382,7 @@ namespace Alex.ResourcePackLib
 				var fontBitmap = LoadBitmap(entry, match);
 				//ProcessTexture(entry, match);
 
-				FontBitmap = fontBitmap;
+				FontBitmap = fontBitmap.Value;
 
 				if (!DidPreload)
 				{
@@ -467,7 +467,7 @@ namespace Alex.ResourcePackLib
 			return false;
 		}
 		
-		private TextureMeta LoadBitmapMeta(IFile entry, Match match)
+		private void LoadBitmapMeta(IFile entry, Match match)
 		{
 			TextureMeta meta;
 			using (var stream = entry.Open())
@@ -480,7 +480,6 @@ namespace Alex.ResourcePackLib
 			}
 
 			_textureMetaCache[new ResourceLocation(match.Groups["namespace"].Value, SanitizeFilename(match.Groups["filename"].Value))] = meta;
-			return meta;
 		}
 
 		public bool TryGetTextureMeta(ResourceLocation textureName, out TextureMeta meta)
@@ -504,19 +503,20 @@ namespace Alex.ResourcePackLib
 				string nameSpace = match.Groups["namespace"].Value;
 				string key = $"{nameSpace}:{name}";
 
-				using (var stream = entry.Open())
-				{
-					var json = Encoding.UTF8.GetString(stream.ReadToSpan(entry.Length));
+				_blockStates[key] = new Lazy<BlockStateResource>(
+					() =>
+					{
+						using (var stream = entry.Open())
+						{
+							var json = Encoding.UTF8.GetString(stream.ReadToSpan(entry.Length));
 
-					var blockState = MCJsonConvert.DeserializeObject<BlockStateResource>(json);
-					blockState.Name      = name;
-					blockState.Namespace = nameSpace;
+							var blockState = MCJsonConvert.DeserializeObject<BlockStateResource>(json);
+							blockState.Name = name;
+							blockState.Namespace = nameSpace;
 
-					
-					_blockStates[key] = blockState;
-
-					//return blockState;
-				}
+							return blockState;
+						}
+					});
 			}
 			catch (Exception ex)
 			{
@@ -527,8 +527,11 @@ namespace Alex.ResourcePackLib
 		
 		public bool TryGetBlockState(string modelName, out BlockStateResource stateResource)
 		{
-			if (_blockStates.TryGetValue(modelName, out stateResource))
+			if (_blockStates.TryGetValue(modelName, out var lazy))
+			{
+				stateResource = lazy.Value;
 				return true;
+			}
 
 			stateResource = null;
 			return false;
@@ -624,6 +627,12 @@ namespace Alex.ResourcePackLib
 				if (isJson)
 				{
 					lang = MCJsonConvert.DeserializeObject<LanguageResource>(text);
+
+					if (lang.CultureCode == null)
+					{
+						if (lang.TryGetValue("language.code", out var code))
+							lang.CultureCode = code;
+					}
 				}
 				else
 				{

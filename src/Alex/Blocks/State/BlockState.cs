@@ -34,7 +34,7 @@ namespace Alex.Blocks.State
 		{
 			get
 			{
-				return _model;
+				return _model ?? new MissingBlockModel();
 			}
 			set
 			{
@@ -161,14 +161,28 @@ namespace Alex.Blocks.State
 		private static readonly Regex VariantParser = new Regex("(?'property'[^=,]*?)=(?'value'[^,]*)", RegexOptions.Compiled);
 		public static Dictionary<string, string> ParseData(string variant)
 		{
-			var matches = VariantParser.Matches(variant);
-			
-			Dictionary<string, string> values  = new Dictionary<string, string>(matches.Count);
+			var match = VariantParser.Match(variant);
 
-			foreach (Match match in matches)
+			Dictionary<string, string> values  = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+			if (match.Success)
 			{
-				values[match.Groups["property"].Value] = match.Groups["value"].Value;
+				Match lastMatch = null;
+
+				do
+				{
+					//	var match = matches[i];
+					values.Add(match.Groups["property"].Value, match.Groups["value"].Value);
+
+					lastMatch = match;
+					match = match.NextMatch();
+
+					if (!match.Success)
+						break;
+				} while (match != lastMatch);
 			}
+
+			//values[match.Groups["property"].Value] = match.Groups["value"].Value;
 
 			return values;
 		}

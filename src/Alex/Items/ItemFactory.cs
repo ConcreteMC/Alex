@@ -201,95 +201,103 @@ namespace Alex.Items
 			           done++;
 		           }
 	           });
-            
-		    for(int i = 0; i < ii.Count; i++)
-		    {
-			    var entry = ii.ElementAt(i);
-                progressReceiver?.UpdateProgress(i, ii.Count, $"Processing items...", entry.Key);
-                
-			    Item item;
-			    /*if (blockRegistry.TryGet(entry.Key, out var blockState))
-			   {
-				    item = new ItemBlock(blockState.Value);
-                }*/
-			 /*   if (blocks.ContainsKey(entry.Key) && blockRegistry.TryGet(entry.Key, out var registryEntry))
-			    {
-				    item = new ItemBlock(registryEntry.Value);
-			    }
-			    else
-			    {*/
-				    item = new Item();
-			   // }
 
-			    var minetItem = MiNET.Items.ItemFactory.GetItem(entry.Key.Replace("minecraft:", ""));
-			    if (minetItem != null)
-			    {
-				    if (Enum.TryParse<ItemType>(minetItem.ItemType.ToString(), out ItemType t))
-				    {
-					    item.ItemType = t;
-				    }
-				    
-				    SetItemMaterial(item, minetItem.ItemMaterial);
-				    
-				   // item.Material = minetItem.ItemMaterial;
-				    item.Meta = minetItem.Metadata;
-				    item.Id = minetItem.Id;
-			    }
-			    
-			    item.Name = entry.Key;
-                item.DisplayName = entry.Key;
+           int i = 0;
 
-			    var data = ItemEntries.FirstOrDefault(x =>
-				    x.name.Equals(entry.Key.Substring(10), StringComparison.OrdinalIgnoreCase));
-			    if (data != null)
-			    {
-				    item.MaxStackSize = data.stackSize;
-				    item.DisplayName = data.displayName;
-			    }
-			    
-			    string ns   = ResourceLocation.DefaultNamespace;
-			    string path = entry.Key;
-			    if (entry.Key.Contains(':'))
-			    {
-				    var index = entry.Key.IndexOf(':');
-				    ns = entry.Key.Substring(0, index);
-				    path = entry.Key.Substring(index + 1);
-			    }
-			    
-			    var key = new ResourceLocation(ns, $"item/{path}");
+           Parallel.ForEach(
+	           ii, (entry) =>
+	           {
+		           // var entry = ii.ElementAt(i);
+		           progressReceiver?.UpdateProgress(i++, ii.Count, $"Processing items...", entry.Key);
+		           var  resourceLocation = new ResourceLocation(entry.Key);
+		           resourceLocation = new ResourceLocation(resourceLocation.Namespace, $"item/{resourceLocation.Path}");
 
-			    foreach (var it in ResourcePack.ItemModels)
-			    {
-				    if (it.Key.Path.Equals(key.Path, StringComparison.OrdinalIgnoreCase))
-				    {
-					    //Log.Info($"Model found: {entry.Key} = {it.Key}");
-					    ItemModelRenderer renderer;
-					    if (ItemRenderers.TryGetValue(it.Key, out renderer))
-					    {
+		           if (items.ContainsKey(resourceLocation))
+			           return;
+		           
+		           Item item;
+		           /*if (blockRegistry.TryGet(entry.Key, out var blockState))
+		          {
+			           item = new ItemBlock(blockState.Value);
+	               }*/
+		           /*   if (blocks.ContainsKey(entry.Key) && blockRegistry.TryGet(entry.Key, out var registryEntry))
+		              {
+			              item = new ItemBlock(registryEntry.Value);
+		              }
+		              else
+		              {*/
+		           item = new Item();
+		           // }
 
-					    }
-					    else if (ItemRenderers.TryGetValue(key, out renderer))
+		           var minetItem = MiNET.Items.ItemFactory.GetItem(resourceLocation.Path);
 
-					    {
+		           if (minetItem != null)
+		           {
+			           if (Enum.TryParse<ItemType>(minetItem.ItemType.ToString(), out ItemType t))
+			           {
+				           item.ItemType = t;
+			           }
 
-					    }
+			           SetItemMaterial(item, minetItem.ItemMaterial);
 
-					    if (renderer != null)
-					    {
-						    //Log.Debug($"Found renderer for {entry.Key}, textures: {it.Value.Textures.Count}");
-						    item.Renderer = renderer;
-						    break;
-					    }
-				    }
-			    }
+			           // item.Material = minetItem.ItemMaterial;
+			           item.Meta = minetItem.Metadata;
+			           item.Id = minetItem.Id;
+		           }
 
-			    if (item.Renderer == null)
-			    {
-				    Log.Warn($"Could not find item model renderer for: {key.ToString()}");
-			    }
-			    
-			    items.TryAdd(key, () => { return item.Clone(); });
-		    }
+		           item.Name = entry.Key;
+		           item.DisplayName = entry.Key;
+
+		           var data = ItemEntries.FirstOrDefault(
+			           x => x.name.Equals(resourceLocation.Path, StringComparison.OrdinalIgnoreCase));
+
+		           if (data != null)
+		           {
+			           item.MaxStackSize = data.stackSize;
+			           item.DisplayName = data.displayName;
+		           }
+		           
+		           ItemModelRenderer renderer;
+		           if (!ItemRenderers.TryGetValue(resourceLocation, out renderer))
+		           {
+			           var r = ItemRenderers.FirstOrDefault(
+				           x => x.Key.Path.Equals(resourceLocation.Path, StringComparison.OrdinalIgnoreCase));
+
+			           if (r.Value != null)
+				           renderer = r.Value;
+
+			           //  if (ResourcePack.ItemModels.TryGetValue(resourceLocation, out var itemModel)) { }
+		           }
+
+		           if (renderer != null)
+					item.Renderer = renderer;
+
+		           /*foreach (var it in ResourcePack.ItemModels)
+		           {
+			           if (it.Key.Path.Equals(resourceLocation.Path, StringComparison.OrdinalIgnoreCase))
+			           {
+				           //Log.Info($"Model found: {entry.Key} = {it.Key}");
+				          
+				           if (ItemRenderers.TryGetValue(it.Key, out renderer)) { }
+				           else if (ItemRenderers.TryGetValue(key, out renderer)) { }
+
+				           if (renderer != null)
+				           {
+					           //Log.Debug($"Found renderer for {entry.Key}, textures: {it.Value.Textures.Count}");
+					           item.Renderer = renderer;
+
+					           break;
+				           }
+			           }
+		           }*/
+
+		           if (item.Renderer == null)
+		           {
+			           Log.Warn($"Could not find item model renderer for: {resourceLocation}");
+		           }
+
+		           items.TryAdd(resourceLocation, () => { return item.Clone(); });
+	           });
 
 			Items = new ReadOnlyDictionary<ResourceLocation, Func<Item>>(items);
 	    }

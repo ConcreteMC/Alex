@@ -20,9 +20,9 @@ namespace Alex.Graphics.Models.Blocks
 			
         }
 
-		public virtual IEnumerable<BoundingBox> GetBoundingBoxes(BlockCoordinates blockPos)
+		public virtual IEnumerable<BoundingBox> GetBoundingBoxes(Vector3 blockPos)
 	    {
-		    yield return new BoundingBox(blockPos, blockPos + new BlockCoordinates(1,1,1));
+		    yield return new BoundingBox(blockPos, blockPos + Vector3.One);
 	    }
 
 	    protected BlockShaderVertex[] GetFaceVertices(BlockFace blockFace, Vector3 startPosition, Vector3 endPosition, BlockTextureData uvmap)

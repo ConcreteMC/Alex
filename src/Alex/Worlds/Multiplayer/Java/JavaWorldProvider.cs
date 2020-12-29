@@ -574,7 +574,8 @@ namespace Alex.Worlds.Multiplayer.Java
 						PooledTexture2D texture2D = null;
 						if (Alex.Resources.BedrockResourcePack.Textures.TryGetValue(texture, out var bmp))
 						{
-							PooledTexture2D t = TextureUtils.BitmapToTexture2D(Alex.GraphicsDevice, bmp);
+							var             bitmapValue = bmp.Value;
+							PooledTexture2D t           = TextureUtils.BitmapToTexture2D(Alex.GraphicsDevice, bitmapValue);
 
 							texture2D = t;
 						}

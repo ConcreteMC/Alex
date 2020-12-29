@@ -32,7 +32,7 @@ namespace Alex.API.Resources
         {
             return new ResourceLocation(input);
         }
-
+        
         public static bool operator ==(ResourceLocation a, ResourceLocation b)
         {
             if (a == null || b == null)

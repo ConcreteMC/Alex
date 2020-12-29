@@ -33,6 +33,7 @@ using Alex.ResourcePackLib.Json.Models;
 using Alex.ResourcePackLib.Json.Models.Blocks;
 using Alex.Utils;
 using Alex.Utils.Assets;
+using JetBrains.Profiler.Api;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
@@ -167,7 +168,11 @@ namespace Alex
             
             sw.Restart();
             
+            MeasureProfiler.StartCollectingData();
             imported = BlockFactory.LoadBlockstates(RegistryManager, this, resourcePack, replaceModels, reportMissingModels, progressReceiver);
+            MeasureProfiler.SaveData();
+            
+            MeasureProfiler.StopCollectingData();
             
             Log.Info($"Imported {imported} blockstates from resourcepack in {sw.ElapsedMilliseconds}ms!");
         }
@@ -179,10 +184,10 @@ namespace Alex
 	        
             if (!isFirst)
             {
-	    //        Atlas.LoadResourcePackOnTop(device,
-		//            ActiveResourcePacks.First(),
-		//            resourcePack,
-		 //           progressReceiver);
+	            Atlas.LoadResourcePackOnTop(device,
+		            ActiveResourcePacks.First(),
+		            resourcePack,
+		            progressReceiver);
             }
             else
             {
@@ -499,6 +504,8 @@ namespace Alex
 	        {
 		        Alex.GuiRenderer.SetLanguage(CultureInfo.InstalledUICulture.Name);
 	        }
+	        
+	        progress?.UpdateProgress(100, "Loading language...");
 	        
 	        var f = ActiveResourcePacks.LastOrDefault(x => x.FontBitmap != null);
 	        if (f != null)

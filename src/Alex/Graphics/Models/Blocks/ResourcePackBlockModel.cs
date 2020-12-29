@@ -25,6 +25,17 @@ using Matrix = System.Drawing.Drawing2D.Matrix;
 
 namespace Alex.Graphics.Models.Blocks
 {
+	public class BlockStateModelWrapper
+	{
+		public BlockStateModel       BlockStateModel { get; }
+		public ResourcePackModelBase BlockModel      { get; }
+
+		public BlockStateModelWrapper(BlockStateModel model, ResourcePackModelBase blockModel)
+		{
+			BlockStateModel = model;
+			BlockModel = blockModel;
+		}
+	}
 	public class ResourcePackBlockModel : BlockModel
 	{
 		private static readonly Logger        Log = LogManager.GetCurrentClassLogger(typeof(SPWorldProvider));
@@ -37,8 +48,8 @@ namespace Alex.Graphics.Models.Blocks
 		
 		public static           bool       SmoothLighting { get; set; } = true;
 		
-		private BlockStateModel[] Models    { get; set; }
-		private ResourceManager   Resources { get; }
+		private BlockStateModelWrapper[] Models    { get; set; }
+		private ResourceManager          Resources { get; }
 
 		private Vector3 _min = new Vector3(float.MaxValue);
 		private Vector3 _max = new Vector3(float.MinValue);
@@ -46,15 +57,15 @@ namespace Alex.Graphics.Models.Blocks
 		private  BoundingBox[] Boxes         { get; set; }
 		private bool          UseRandomizer { get; set; }
 		private int           WeightSum     { get; }
-		public ResourcePackBlockModel(ResourceManager resources, BlockStateModel[] models, bool useRandomizer = false)
+		public ResourcePackBlockModel(ResourceManager resources, BlockStateModelWrapper[] models, bool useRandomizer = false)
 		{
 			Resources = resources;
 
-			Models = models;
+			Models = models.Where(x => x != null).ToArray();
 			
 			//Models = models;
 			UseRandomizer = useRandomizer;
-			WeightSum = models.Sum(x => x.Weight);
+			WeightSum = Models.Sum(x => x.BlockStateModel.Weight);
 			
 			Boxes = CalculateBoundingBoxes(Models);
 
@@ -85,7 +96,7 @@ namespace Alex.Graphics.Models.Blocks
 		}
 
 		/// <inheritdoc />
-		public override IEnumerable<BoundingBox> GetBoundingBoxes(BlockCoordinates blockPos)
+		public override IEnumerable<BoundingBox> GetBoundingBoxes(Vector3 blockPos)
 		{
 			return Boxes.Select(x => x.OffsetBy(blockPos));
 		}
@@ -118,16 +129,16 @@ namespace Alex.Graphics.Models.Blocks
 			return me.ShouldRenderFace(face, theBlock);
 		}
 		
-		protected BoundingBox[] CalculateBoundingBoxes(BlockStateModel[] models)
+		protected BoundingBox[] CalculateBoundingBoxes(BlockStateModelWrapper[] models)
 		{
 			List<BoundingBox> boundingBoxes = new List<BoundingBox>();
 			for (var index = 0; index < models.Length; index++)
 			{
 				var model = models[index];
 
-				if (Resources.BlockModelRegistry.TryGet(model.ModelName, out var registryEntry))
+				//if (Resources.BlockModelRegistry.TryGet(model.ModelName, out var registryEntry))
 				{
-					var boxes = GenerateBoundingBoxes(model, registryEntry.Value, out Vector3 min, out Vector3 max);
+					var boxes = GenerateBoundingBoxes(model.BlockStateModel, model.BlockModel, out Vector3 min, out Vector3 max);
 					boundingBoxes.AddRange(boxes);
 					
 					if (max.X > _max.X)
@@ -476,13 +487,14 @@ namespace Alex.Graphics.Models.Blocks
 			Vector3 position,
 			Block baseBlock,
 			BlockStateModel blockStateModel,
+			ResourcePackModelBase model,
 			Biome biome)
 		{
 			//bsModel.Y = Math.Abs(180 - bsModel.Y);
 
-			if (Resources.BlockModelRegistry.TryGet(blockStateModel.ModelName, out var registryEntry))
+			//if (Resources.BlockModelRegistry.TryGet(blockStateModel.ModelName, out var registryEntry))
 			{
-				var model = registryEntry.Value;
+				//var model = registryEntry.Value;
 
 				var baseColor = baseBlock.BlockMaterial.TintColor;
 
@@ -685,7 +697,7 @@ namespace Alex.Graphics.Models.Blocks
 
 			if (UseRandomizer)
 			{
-				BlockStateModel selectedModel = null;
+				BlockStateModelWrapper selectedModel = null;
 
 				var rnd = MathF.Abs(NoiseGenerator.GetValue(position.X * position.Y, position.Z * position.X))
 				          * WeightSum;
@@ -693,7 +705,7 @@ namespace Alex.Graphics.Models.Blocks
 				for (var index = 0; index < Models.Length; index++)
 				{
 					var model = Models[index];
-					rnd -= model.Weight;
+					rnd -= model.BlockStateModel.Weight;
 
 					if (rnd < 0)
 					{
@@ -703,7 +715,7 @@ namespace Alex.Graphics.Models.Blocks
 					}
 				}
 
-				CalculateModel(world, blockCoordinates, chunkBuilder, position, baseBlock, selectedModel, biome);
+				CalculateModel(world, blockCoordinates, chunkBuilder, position, baseBlock, selectedModel.BlockStateModel, selectedModel.BlockModel, biome);
 			}
 			else
 			{
@@ -711,9 +723,9 @@ namespace Alex.Graphics.Models.Blocks
 				{
 					var bsModel = Models[bsModelIndex];
 
-					if (string.IsNullOrWhiteSpace(bsModel.ModelName)) continue;
+				//	if (string.IsNullOrWhiteSpace(bsModel.ModelName)) continue;
 
-					CalculateModel(world, blockCoordinates, chunkBuilder, position, baseBlock, bsModel, biome);
+					CalculateModel(world, blockCoordinates, chunkBuilder, position, baseBlock, bsModel.BlockStateModel, bsModel.BlockModel, biome);
 				}
 			}
 		}

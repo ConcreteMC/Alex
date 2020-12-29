@@ -29,17 +29,14 @@ namespace Alex.Blocks
 		private static NLog.Logger Log = NLog.LogManager.GetCurrentClassLogger(typeof(BlockFactory));
 
 		public static IReadOnlyDictionary<uint, BlockState> AllBlockstates => RegisteredBlockStates;
-		public static IReadOnlyDictionary<string, BlockStateVariantMapper> AllBlockstatesByName => BlockStateByName;
+		public static IReadOnlyDictionary<ResourceLocation, BlockStateVariantMapper> AllBlockstatesByName => BlockStateByName;
 		
 		private static readonly ConcurrentDictionary<uint, BlockState> RegisteredBlockStates = new ConcurrentDictionary<uint, BlockState>();
 
-		private static readonly ConcurrentDictionary<string, BlockStateVariantMapper> BlockStateByName =
-			new ConcurrentDictionary<string, BlockStateVariantMapper>();
+		private static readonly ConcurrentDictionary<ResourceLocation, BlockStateVariantMapper> BlockStateByName =
+			new ConcurrentDictionary<ResourceLocation, BlockStateVariantMapper>();
 
-		public static readonly ConcurrentDictionary<string, BlockStateVariantMapper> BedrockStates = new ConcurrentDictionary<string, BlockStateVariantMapper>();
-		
-		//private static readonly ConcurrentDictionary<uint, BlockModel> ModelCache = new ConcurrentDictionary<uint, BlockModel>();
-		private static readonly ConcurrentDictionary<long, string> ProtocolIdToBlockName = new ConcurrentDictionary<long, string>();
+		public static readonly ConcurrentDictionary<ResourceLocation, BlockStateVariantMapper> BedrockStates = new ConcurrentDictionary<ResourceLocation, BlockStateVariantMapper>();
 
 		private static bool _builtin = false;
 		private static void RegisterBuiltinBlocks()
@@ -82,19 +79,6 @@ namespace Alex.Blocks
 		{
 			//RuntimeIdTable = TableEntry.FromJson(raw);
 
-			var blockEntries = resources.Registries.Blocks.Entries;
-
-			progressReceiver?.UpdateProgress(0, "Loading block registry...");
-			for (int i = 0; i < blockEntries.Count; i++)
-			{
-				var kv = blockEntries.ElementAt(i);
-
-				progressReceiver?.UpdateProgress(i, blockEntries.Count, "Loading block registry...",
-					kv.Key);
-
-				ProtocolIdToBlockName.TryAdd(kv.Value.ProtocolId, kv.Key);
-			}
-
 			progressReceiver?.UpdateProgress(0, "Loading block models...");
 
 			RegisterBuiltinBlocks();
@@ -104,6 +88,7 @@ namespace Alex.Blocks
 		
 		//public static BlockModel UnknownBlockModel { get; set; }
 
+		private static readonly Regex _blockMappingRegex = new Regex(@"(?'key'[\:a-zA-Z_\d][^\[]*)(\[(?'data'.*)\])?", RegexOptions.Compiled);
 		private static int LoadModels(IRegistryManager registryManager,
 			ResourceManager resources,
 			McResourcePack resourcePack,
@@ -131,126 +116,130 @@ namespace Alex.Blocks
 					//double percentage = 100D * ((double) done / (double) total);blockstate variants
 					progressReceiver.UpdateProgress(done, total, $"Importing block models...", entry.Key);
 
-					if (resourcePack.TryGetBlockState(entry.Key, out var blockStateResource))
+					done++;
+					if (!resourcePack.TryGetBlockState(entry.Key, out var blockStateResource))
 					{
-						var variantMap   = new BlockStateVariantMapper();
-						var defaultState = new BlockState {Name = entry.Key, VariantMapper = variantMap};
+						Log.Warn($"Could not find blockstate with key: {entry.Key}");
 
-						if (entry.Value.Properties != null)
+						return;
+					}
+
+					var location     = new ResourceLocation(entry.Key);
+					var variantMap   = new BlockStateVariantMapper();
+					var defaultState = new BlockState {Name = entry.Key, VariantMapper = variantMap};
+					defaultState = defaultState.WithLocation(location).Value;
+					
+					if (entry.Value.Properties != null)
+					{
+						foreach (var property in entry.Value.Properties)
 						{
-							foreach (var property in entry.Value.Properties)
+							defaultState = (BlockState) defaultState.WithPropertyNoResolve(
+								property.Key, property.Value.FirstOrDefault(), false);
+						}
+					}
+
+					foreach (var s in entry.Value.States)
+					{
+						if (!replace && RegisteredBlockStates.TryGetValue(s.ID, out BlockState st))
+						{
+							Log.Warn(
+								$"Duplicate blockstate id (Existing: {st.Name}[{st.ToString()}]) ");
+
+							continue;
+						}
+						
+						BlockState variantState = (BlockState) (defaultState).CloneSilent();
+						variantState.ID = s.ID;
+						variantState.Name = entry.Key;
+
+						if (s.Properties != null)
+						{
+							foreach (var property in s.Properties)
 							{
-								defaultState = (BlockState) defaultState.WithPropertyNoResolve(
-									property.Key, property.Value.FirstOrDefault(), false);
+								//if (property.Key.ToLower() == "waterlogged")continue;
+								variantState = (Blocks.State.BlockState) variantState.WithPropertyNoResolve(
+									property.Key, property.Value, false);
 							}
 						}
 
-						foreach (var s in entry.Value.States)
+						IRegistryEntry<Block> registryEntry;
+
+						if (!blockRegistry.TryGet(location, out registryEntry))
 						{
-							var id = s.ID;
+							registryEntry = new UnknownBlock();
+							registryEntry = registryEntry.WithLocation(location); // = entry.Key;
+						}
+						else
+						{
+							registryEntry = registryEntry.WithLocation(location);
+						}
 
-							BlockState variantState = (BlockState) (defaultState).CloneSilent();
-							variantState.ID = id;
-							variantState.Name = entry.Key;
+						var block = registryEntry.Value;
 
-							if (s.Properties != null)
+						if (string.IsNullOrWhiteSpace(block.DisplayName))
+							block.DisplayName = entry.Key;
+
+						variantState.Block = block.Value;
+						block.BlockState = variantState;
+
+						variantState.Model = ResolveModel(resources, blockStateResource, variantState);
+
+						if (variantState.Model == null)
+						{
+							Log.Warn($"No model found for {entry.Key}[{variantState.ToString()}]");
+						}
+
+						if (variantState.IsMultiPart) multipartBased++;
+
+						variantState.Default = s.Default;
+
+						if (variantMap.TryAdd(variantState))
+						{
+							if (!RegisteredBlockStates.TryAdd(variantState.ID, variantState))
 							{
-								foreach (var property in s.Properties)
+								if (replace)
 								{
-									//if (property.Key.ToLower() == "waterlogged")continue;
-									variantState = (Blocks.State.BlockState) variantState.WithPropertyNoResolve(
-										property.Key, property.Value, false);
-								}
-							}
-
-							if (!replace && RegisteredBlockStates.TryGetValue(id, out BlockState st))
-							{
-								Log.Warn(
-									$"Duplicate blockstate id (Existing: {st.Name}[{st.ToString()}] | New: {entry.Key}[{variantState.ToString()}]) ");
-
-								continue;
-							}
-							
-							IRegistryEntry<Block> registryEntry;
-							if (!blockRegistry.TryGet(entry.Key, out registryEntry))
-							{
-								registryEntry = new UnknownBlock();
-								registryEntry = registryEntry.WithLocation(entry.Key); // = entry.Key;
-							}
-							else
-							{
-								registryEntry = registryEntry.WithLocation(entry.Key);
-							}
-
-							var block = registryEntry.Value;
-							if (string.IsNullOrWhiteSpace(block.DisplayName))
-								block.DisplayName =  entry.Key;
-
-							variantState.Block = block.Value;
-							block.BlockState = variantState;
-							
-							variantState.Model = ResolveModel(resources, blockStateResource, variantState);
-							if (variantState.Model == null)
-							{
-								Log.Warn($"No model found for {entry.Key}[{variantState.ToString()}]");
-							}
-
-							if (variantState.IsMultiPart) multipartBased++;
-
-							variantState.Default = s.Default;
-
-							if (variantMap.TryAdd(variantState))
-							{
-								if (!RegisteredBlockStates.TryAdd(variantState.ID, variantState))
-								{
-									if (replace)
-									{
-										RegisteredBlockStates[variantState.ID] = variantState;
-										importCounter++;
-									}
-									else
-									{
-										Log.Warn(
-											$"Failed to add blockstate (variant), key already exists! ({variantState.ID} - {variantState.Name})");
-									}
+									RegisteredBlockStates[variantState.ID] = variantState;
+									importCounter++;
 								}
 								else
 								{
-									importCounter++;
+									Log.Warn(
+										$"Failed to add blockstate (variant), key already exists! ({variantState.ID} - {variantState.Name})");
 								}
 							}
 							else
 							{
-								Log.Warn(
-									$"Could not add variant to variant map: {variantState.Name}[{variantState.ToString()}]");
+								importCounter++;
 							}
 						}
-
-						if (!BlockStateByName.TryAdd(defaultState.Name, variantMap))
+						else
 						{
-							if (replace)
-							{
-								BlockStateByName[defaultState.Name] = variantMap;
-							}
-							else
-							{
-								Log.Warn($"Failed to add blockstate, key already exists! ({defaultState.Name})");
-							}
+							Log.Warn(
+								$"Could not add variant to variant map: {variantState.Name}[{variantState.ToString()}]");
 						}
 					}
-					else
-					{
-						Log.Warn($"Could not find blockstate with key: {entry.Key}");
-					}
 
-					done++;
+					if (!BlockStateByName.TryAdd(location, variantMap))
+					{
+						if (replace)
+						{
+							BlockStateByName[location] = variantMap;
+						}
+						else
+						{
+							Log.Warn($"Failed to add blockstate, key already exists! ({defaultState.Name})");
+						}
+					}
 				});
 
-			Regex regex    = new Regex(@"(?'key'[\:a-zA-Z_\d][^\[]*)(\[(?'data'.*)\])?", RegexOptions.Compiled);
+			var blockStateTime = sw.Elapsed;
+			
 			var   mappings = mapping.GroupBy(x => x.Value.BedrockIdentifier).ToArray();
 
 			int counter = 1;
 
+			sw.Restart();
 			Parallel.ForEach(
 				mappings, (m) =>
 				{
@@ -261,24 +250,25 @@ namespace Alex.Blocks
 
 					foreach (var state in m)
 					{
-						var match = regex.Match(state.Key);
-
-						if (!match.Groups["key"].Success)
+						var match     = _blockMappingRegex.Match(state.Key);
+						var keyMatch  = match.Groups["key"];
+						var dataMatch = match.Groups["data"];
+						
+						if (!keyMatch.Success)
 						{
 							Log.Warn($"Entry without key!");
 
 							continue;
 						}
 
-						BlockState pcVariant = GetBlockState(match.Groups["key"].Value);
+						BlockState pcVariant = GetBlockState(keyMatch.Value);
 
 						if (pcVariant != null)
 						{
-							Dictionary<string, string> properties = null;
-
-							if (match.Groups["data"].Success)
+							pcVariant = pcVariant.Clone();
+							if (dataMatch.Success)
 							{
-								properties = BlockState.ParseData(match.Groups["data"].Value);
+								var properties = BlockState.ParseData(dataMatch.Value);
 
 								var p = properties.ToArray();
 
@@ -292,7 +282,7 @@ namespace Alex.Blocks
 									}
 									else
 									{
-										pcVariant = pcVariant.WithPropertyNoResolve(prop.Key, prop.Value);
+										pcVariant = pcVariant.WithPropertyNoResolve(prop.Key, prop.Value, false);
 									}
 								}
 							}
@@ -338,8 +328,8 @@ namespace Alex.Blocks
 					BedrockStates[m.Key] = mapper;
 				});
 
-			Log.Info($"Loaded {multipartBased} multi-part blockstates!");
-			Log.Info($"Loaded {BedrockStates.Count} mappings...");
+			//Log.Info($"Loaded {multipartBased} multi-part blockstates!");
+			Log.Info($"Loaded {BedrockStates.Count} mappings in {sw.ElapsedMilliseconds}ms...");
 
 			return importCounter;
 		}
@@ -375,13 +365,24 @@ namespace Alex.Blocks
 
 			if (blockStateResource != null && blockStateResource.Parts != null && blockStateResource.Parts.Length > 0)
 			{
-				var models = MultiPartModelHelper.GetModels(state, blockStateResource);
+				var                      models        = MultiPartModelHelper.GetModels(state, blockStateResource);
+				BlockStateModelWrapper[] modelWrappers = new BlockStateModelWrapper[models.Length];
 
-			//	state.MultiPartHelper = blockStateResource;
+				for (var index = 0; index < models.Length; index++)
+				{
+					var model = models[index];
+
+					if (resources.BlockModelRegistry.TryGet(model.ModelName, out var registryEntry))
+					{
+						modelWrappers[index] = new BlockStateModelWrapper(model, registryEntry.Value);
+					}
+				}
+
+				//	state.MultiPartHelper = blockStateResource;
 				state.IsMultiPart = blockStateResource.Parts.Any(x => x.When != null && x.When.Length > 0);
 				//state.AppliedModels = models.Select(x => x.ModelName).ToArray();
 
-				return new ResourcePackBlockModel(resources, models);
+				return new ResourcePackBlockModel(resources, modelWrappers);
 			}
 
 			if (blockStateResource?.Variants == null || blockStateResource.Variants.Count == 0)
@@ -389,7 +390,7 @@ namespace Alex.Blocks
 				return null;
 			}
 
-			if (blockStateResource.Variants.Count == 1)
+			/*if (blockStateResource.Variants.Count == 1)
 			{
 				var v = blockStateResource.Variants.FirstOrDefault();
 
@@ -407,7 +408,7 @@ namespace Alex.Blocks
 				}
 
 				return new ResourcePackBlockModel(resources, models.ToArray(), v.Value.ToArray().Length > 1);
-			}
+			}*/
 
 			BlockStateVariant blockStateVariant = null;
 
@@ -466,8 +467,20 @@ namespace Alex.Blocks
 
 				return null;
 			}
+			
+			BlockStateModelWrapper[] wrappers = new BlockStateModelWrapper[asArray.Length];
 
-			return new ResourcePackBlockModel(resources, asArray, asArray.Length > 1);
+			for (var index = 0; index < asArray.Length; index++)
+			{
+				var model = asArray[index];
+
+				if (resources.BlockModelRegistry.TryGet(model.ModelName, out var registryEntry))
+				{
+					wrappers[index] = new BlockStateModelWrapper(model, registryEntry.Value);
+				}
+			}
+			
+			return new ResourcePackBlockModel(resources, wrappers, wrappers.Length > 1);
 		}
 
 		private static readonly BlockState AirState = new BlockState(){Name = "Unknown"};

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 
 namespace Alex.API.Localization
@@ -10,8 +11,9 @@ namespace Alex.API.Localization
             get { return GetString(key); }
         }
 
-        private readonly Dictionary<string, string> _translations = new Dictionary<string, string>();
+        private readonly Dictionary<string, string> _translations = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
+        public bool Loaded { get; private set; } = false;
         public CultureLanguage()
         {
             
@@ -19,11 +21,16 @@ namespace Alex.API.Localization
 
         public void Load(IDictionary<string, string> translations)
         {
+            if (Loaded)
+                return;
+            
             foreach (var translation in translations)
             {
 				if (_translations.ContainsKey(translation.Key)) continue;
                 _translations[translation.Key] = translation.Value;
             }
+
+            Loaded = true;
         }
 
         public string GetString(string key)
