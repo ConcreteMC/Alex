@@ -615,7 +615,7 @@ namespace Alex
 						"geometry.humanoid.customSlim", out entityModel))
 					{
 						PlayerModel = entityModel;
-						Log.Debug($"Player model loaded...");
+						Log.Info($"Player model loaded...");
 					}
 				}
 			}
@@ -656,7 +656,7 @@ namespace Alex
 					}
 					else
 					{
-						PlayerTexture = skinImage;//.Clone<Rgba32>();
+						PlayerTexture = skinImage.Clone();//.Clone<Rgba32>();
 					}
 
 					/*
@@ -694,7 +694,7 @@ namespace Alex
 
 			if (PlayerTexture != null)
 			{
-				Log.Debug($"Player skin loaded...");
+				Log.Info($"Player skin loaded...");
 			}
 
 			if (LaunchSettings.ModelDebugging)

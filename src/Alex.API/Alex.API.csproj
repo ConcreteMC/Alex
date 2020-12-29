@@ -21,7 +21,16 @@
   </ItemGroup>
   
   <ItemGroup>
+    <Folder Include="Events" />
     <Folder Include="Gui\Events\" />
     <Folder Include="Gui\Abstractions\" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <Compile Remove="Events\EventPriority.cs" />
+    <Compile Remove="Events\EventHandlerAttribute.cs" />
+    <Compile Remove="Events\EventDispatcher.cs" />
+    <Compile Remove="Events\Event.cs" />
+    <Compile Remove="Events\DuplicateTypeException.cs" />
   </ItemGroup>
 </Project>

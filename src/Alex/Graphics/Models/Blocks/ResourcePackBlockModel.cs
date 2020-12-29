@@ -574,7 +574,7 @@ namespace Alex.Graphics.Models.Blocks
 
 						var faceColor = baseColor;
 
-						bool hasTint = face.Value.TintIndex.HasValue && face.Value.TintIndex == 0;
+						bool hasTint = (face.Value.TintIndex.HasValue && face.Value.TintIndex == 0) || baseBlock.BlockMaterial.TintType != TintType.Default;
 
 						if (hasTint)
 						{
@@ -615,8 +615,11 @@ namespace Alex.Graphics.Models.Blocks
 									break;
 
 								case TintType.Foliage:
-									faceColor = Resources.ResourcePack.GetFoliageColor(
-										biome.Temperature, biome.Downfall, (int) position.Y);
+									if (face.Value.TintIndex.HasValue && face.Value.TintIndex == 0)
+									{
+										faceColor = Resources.ResourcePack.GetFoliageColor(
+											biome.Temperature, biome.Downfall, (int) position.Y);
+									}
 
 									break;
 

@@ -757,6 +757,10 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	        
 	        switch (record.Name)
 	        {
+		        case "minecraft:invisible_bedrock":
+		        case "minecraft:invisibleBedrock":
+			        searchName = "minecraft:barrier";
+			        break;
 		        case "minecraft:wall_sign":
 			        searchName = "minecraft:oak_wall_sign";
 			        break;

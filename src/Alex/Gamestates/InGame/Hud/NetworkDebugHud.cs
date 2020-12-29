@@ -103,6 +103,16 @@ namespace Alex.Gamestates.InGame.Hud
                         WarningElement.Text = "Warning: Slow networking detected!";
 
                         break;
+                    
+                    case ConnectionInfo.NetworkState.HighPing:
+                        WarningElement.Text = "Warning: High latency detected, this may cause lag.";
+                        
+                        break;
+                    
+                    case ConnectionInfo.NetworkState.PacketLoss:
+                        WarningElement.Text = "Warning: Packet loss detected!";
+                        
+                        break;
                 }
 
                 if (_state)

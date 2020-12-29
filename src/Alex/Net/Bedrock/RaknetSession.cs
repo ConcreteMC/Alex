@@ -157,7 +157,8 @@ namespace Alex.Net.Bedrock
 					break;
 				case Reliability.UnreliableSequenced:
 				case Reliability.ReliableSequenced:
-					AddToSequencedChannel(message);
+					AddToOrderedChannel(message);
+					//AddToSequencedChannel(message);
 					break;
 				case Reliability.Unreliable:
 				case Reliability.UnreliableWithAckReceipt:
@@ -203,7 +204,7 @@ namespace Alex.Net.Bedrock
 
 					if (message.ReliabilityHeader.OrderingIndex <= lastOrderingIndex)
 					{
-						return;
+					//	return;
 					}
 					
 					if (_orderingBufferQueue.Count == 0 && message.ReliabilityHeader.OrderingIndex == lastOrderingIndex + 1)
@@ -219,13 +220,13 @@ namespace Alex.Net.Bedrock
 					bool doOrdering = message.ReliabilityHeader.OrderingIndex == lastOrderingIndex + 1;
 					if (IsOutOfOrder)
 					{
-						/*if (message.ReliabilityHeader.OrderingIndex - lastOrderingIndex > 350) //200 packets behind should be ok
+						if (message.ReliabilityHeader.OrderingIndex - lastOrderingIndex > 1000) //200 packets behind should be ok
 						{
 							Log.Warn($"Discarded ordered packet! Index: {lastOrderingIndex + 1}");
 							Interlocked.Exchange(ref _lastOrderingIndex, lastOrderingIndex + 1);
 							doOrdering = true;
 							IsOutOfOrder = false;
-						}*/
+						}
 					}
 					else
 					{
@@ -274,7 +275,9 @@ namespace Alex.Net.Bedrock
 			if (Log.IsDebugEnabled) Log.Warn($"Started network ordering thread.");
 		}
 		
-		public bool IsOutOfOrder { get; private set; } = false;
+		public bool IsOutOfOrder          { get; private set; } = false;
+		public int  FirstEncryptedMessage { get; set; }
+
 		private void ProcessOrderedQueue()
 		{
 			try
@@ -378,13 +381,13 @@ namespace Alex.Net.Bedrock
 		{
 			if (message == null) return;
 			
-			if ((message.ReliabilityHeader.Reliability == Reliability.ReliableSequenced 
+			/*if ((message.ReliabilityHeader.Reliability == Reliability.ReliableSequenced 
 			     || message.ReliabilityHeader.Reliability == Reliability.UnreliableSequenced)
 			    && message.ReliabilityHeader.SequencingIndex < Interlocked.Read(ref _lastSequencingIndex))
 			{
 				return;
 			}
-			
+			*/
 			try
 			{
 			//	RakOfflineHandler.TraceReceive(Log, message);
@@ -438,7 +441,7 @@ namespace Alex.Net.Bedrock
 					long elapsedMilliseconds = message.Timer.ElapsedMilliseconds;
 					if (elapsedMilliseconds > 1000)
 					{
-						Log.Warn("Packet (0x{1:x2}) handling too long {0}ms for {2}", elapsedMilliseconds, message.Id, Username);
+						Log.Warn($"Packet (0x{message.Id:x2}) handling too long {elapsedMilliseconds}ms ({message.ToString()})");
 					}
 				}
 				else
@@ -570,8 +573,8 @@ namespace Alex.Net.Bedrock
 		// MCPE Login handling
 
 
-		private Queue<Packet> _sendQueueNotConcurrent = new Queue<Packet>();
-		private object _queueSync = new object();
+		private ConcurrentQueue<Packet> _sendQueue = new ConcurrentQueue<Packet>();
+	//	private object                  _queueSync              = new object();
 
 		public void SendPacket(Packet packet)
 		{
@@ -586,9 +589,9 @@ namespace Alex.Net.Bedrock
 
 		//	RakOfflineHandler.TraceSend(packet);
 
-			lock (_queueSync)
+			//lock (_queueSync)
 			{
-				_sendQueueNotConcurrent.Enqueue(packet);
+				_sendQueue.Enqueue(packet);
 			}
 		}
 
@@ -731,7 +734,7 @@ namespace Alex.Net.Bedrock
 		[SuppressMessage("ReSharper", "InconsistentlySynchronizedField")]
 		private async Task SendQueueAsync(int millisecondsWait = 0)
 		{
-			if (_sendQueueNotConcurrent.Count == 0) return;
+			if (_sendQueue.Count == 0) return;
 
 			// Extremely important that this will not allow more than one thread at a time.
 			// This methods handle ordering and potential encryption, hence order matters.
@@ -740,17 +743,14 @@ namespace Alex.Net.Bedrock
 			try
 			{
 				var sendList = new List<Packet>();
-				Queue<Packet> queue = _sendQueueNotConcurrent;
-				int length = queue.Count;
+				//Queue<Packet> queue = _sendQueueNotConcurrent;
+				int length = _sendQueue.Count;
 				for (int i = 0; i < length; i++)
 				{
 					Packet packet;
-					lock (_queueSync)
-					{
-						if (queue.Count == 0) break;
 
-						if (!queue.TryDequeue(out packet)) break;
-					}
+					if (!_sendQueue.TryDequeue(out packet))
+						break;
 
 					if (packet == null) continue;
 
@@ -802,7 +802,7 @@ namespace Alex.Net.Bedrock
 			if (packet.ReliabilityHeader.Reliability == Reliability.Undefined)
 				packet.ReliabilityHeader.Reliability = Reliability.Reliable; // Questionable practice
 
-			_packetSender.SendPacketAsync(this, packet).Wait();
+			_packetSender.SendPacket(this, packet);
 		}
 
 		public IPEndPoint GetClientEndPoint()
@@ -819,6 +819,7 @@ namespace Alex.Net.Bedrock
 		{
 			State = ConnectionState.Unconnected;
 			Evicted = true;
+			
 			CustomMessageHandler = null;
 
 			// Send with high priority, bypass queue

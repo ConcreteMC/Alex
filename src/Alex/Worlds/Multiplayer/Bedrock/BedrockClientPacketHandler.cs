@@ -94,13 +94,24 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	        var options = alex.Services.GetRequiredService<IOptionsProvider>().AlexOptions;
 	        options.VideoOptions.CustomSkins.Bind((value, newValue) => UseCustomEntityModels = newValue);
 	        UseCustomEntityModels = options.VideoOptions.CustomSkins.Value;
+	        
+	        
         }
 
-        public bool ReportUnhandled { get; set; } = false;
+        public  bool                  ReportUnhandled { get; set; } = true;
+        private Dictionary<int, (Type type, ulong count)> UnhandledPackets = new Dictionary<int, (Type type, ulong count)>();
         private void UnhandledPackage(Packet packet)
 		{
-			if (ReportUnhandled)
+			if (UnhandledPackets.TryAdd(packet.Id, (packet.GetType(), 1)))
+			{
 				Log.Warn($"Unhandled bedrock packet: {packet.GetType().Name} (0x{packet.Id:X2})");
+			}
+			else
+			{
+				var value = UnhandledPackets[packet.Id];
+				value.count++;
+				UnhandledPackets[packet.Id] = value;
+			}
 		}
 
         public void HandleMcpeServerToClientHandshake(McpeServerToClientHandshake message)
@@ -131,13 +142,13 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		        throw;
 	        }
         }
-
-        private bool _isInitialized = false;
+        
+        private bool _markedAsInitalized = false;
         public void HandleMcpePlayStatus(McpePlayStatus message)
 		{
 			Log.Info($"Client status: {message.status}");
 			Client.PlayerStatus = message.status;
-			
+
 			if (Client.PlayerStatus == 3)
 			{
 				CustomConnectedPong.CanPing = true;
@@ -145,15 +156,15 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 				Client.World.Player.EntityId = Client.EntityId;
 
-				if (!_isInitialized)
+				if (!_markedAsInitalized)
 				{
-					var packet = McpeSetLocalPlayerAsInitialized.CreateObject();
-					packet.runtimeEntityId = Client.EntityId;
-
-					Client.SendPacket(packet);
-
-					_isInitialized = true;
+					Client.MarkAsInitialized();
+					_markedAsInitalized = true;
 				}
+
+				Client.RequestChunkRadius(AlexInstance.Options.AlexOptions.VideoOptions.RenderDistance.Value);
+				//	_markedAsInitalized = true;
+				//}
 			}
 			else if (Client.PlayerStatus == 0)
 			{
@@ -677,7 +688,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				
 				Client.World?.SetBlockState(
 					new BlockCoordinates(message.coordinates.X, message.coordinates.Y, message.coordinates.Z), 
-					converted, (int) message.storage, priority | BlockUpdatePriority.Network);
+					converted, (int) message.storage, BlockUpdatePriority.High | BlockUpdatePriority.Network);
 			}
 			else
 			{
@@ -1189,12 +1200,11 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					case 1:
 						entity.SwingArm();
 						break;
-					//case 4: //Critical hit!
-						//entity.EntityHurt();
-					//	break;
+					case 4: //Critical hit!
+						entity.EntityHurt();
+						break;
 					default:
-						UnhandledPackage(message);
-
+						Log.Info($"Unknown McpeAnimate action ID: {message.actionId}");
 						break;
 				}
 			}
@@ -1305,17 +1315,30 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			if (message.inventoryId == 0x00 //Inventory
 			 //   || message.inventoryId == 124 //UI
 			    || message.inventoryId == 120 //Armor
-			  //  || message.inventoryId == 119 //Offhand
+			    || message.inventoryId == 119 //Offhand
 			 ) 
 			{
+				
 				inventory = Client.World.Player.Inventory;
-
 				if (inventory is BedrockInventory bi)
 				{
-					//if (message.inventoryId == 0)
-					//	startIndex = bi.InventoryOffset;
-					if (message.inventoryId == 120)
+					if (message.inventoryId == 0)
+					{
+						startIndex = bi.InventoryOffset;
+					}
+					else if (message.inventoryId == 120)
+					{
 						startIndex = bi.BootsSlot;
+					} 
+					else if (message.inventoryId == 119)
+					{
+						startIndex = bi.OffHandSlot;
+					}
+
+				/*	if (message.inventoryId == 124)
+					{
+						startIndex = bi.slot
+					}*/
 				}
 			}
 
@@ -1335,7 +1358,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				if (result != null)
 				{
 					result.StackID = slot.UniqueId;
-					inventory.SetSlot(startIndex+ index, result, true);
+					inventory.SetSlot(startIndex + index, result, true);
 					//inventory[usedIndex] = result;
 				}
 				else
@@ -2028,6 +2051,19 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		public void HandleFtlCreatePlayer(FtlCreatePlayer message)
 		{
 			UnhandledPackage(message);
+		}
+		
+		/// <inheritdoc />
+		public void ReportPackets()
+		{
+			var entries = UnhandledPackets.ToArray();
+			UnhandledPackets.Clear();
+			
+			foreach (var p in entries)
+			{
+				Log.Warn(
+					$"Unhandled packet: {p.Value.type.FullName} * {p.Value.count} (0x{p.Key:x2})");
+			}
 		}
 	}
 }

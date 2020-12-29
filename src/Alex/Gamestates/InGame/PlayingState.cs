@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -27,6 +28,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using MiNET;
 using MiNET.Utils;
+using BoundingBox = Microsoft.Xna.Framework.BoundingBox;
 using DedicatedThreadPoolSettings = MiNET.Utils.DedicatedThreadPoolSettings;
 using PlayerLocation = Alex.API.Utils.PlayerLocation;
 
@@ -428,15 +430,16 @@ namespace Alex.Gamestates.InGame
 
 				if (World?.Player != null && World.Player.HasRaytraceResult)
 				{
-					var player   = World?.Player;
-					var block    = player.SelBlock;
-					var blockPos = player.RaytracedBlock;
-
-					if (block != null)
+					var               player   = World?.Player;
+					var               block    = player.SelBlock;
+					var               blockPos = player.RaytracedBlock;
+					var boxes    = player.RaytraceBoundingBoxes;
+					
+					if (boxes != null && boxes.Length >0)
 					{
-						foreach (var boundingBox in block.BlockState.Model.GetBoundingBoxes(blockPos))
+						foreach (var boundingBox in boxes)
 						{
-							if (player.SelBlock.CanInteract || !World.Player.IsWorldImmutable)
+							if (block.CanInteract || !World.Player.IsWorldImmutable)
 							{
 								Color color = Color.LightGray;
 

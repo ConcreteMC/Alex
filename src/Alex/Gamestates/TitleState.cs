@@ -296,7 +296,7 @@ namespace Alex.Gamestates
 			Alex.GameStateManager.AddState("serverlist", new MultiplayerServerSelectionState(_backgroundSkyBox));
 			//Alex.GameStateManager.AddState("profileSelection", new ProfileSelectionState(_backgroundSkyBox));
 			
-			ApplyModel(_playerView.Entity);
+			//ApplyModel(_playerView.Entity);
 		}
 
 		private void ChangeSKinBtnPressed()

@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using Alex.API.Blocks;
 using Alex.API.Graphics;
@@ -408,11 +409,15 @@ namespace Alex.Entities
 	    public Block   SelBlock              { get; private set; } = null;
 	    public Vector3 RaytracedBlock        { get; private set; }
 	    public Vector3 AdjacentRaytraceBlock { get; private set; }
+
+	    public  BoundingBox[]     RaytraceBoundingBoxes => _boundingBoxes.ToArray();
+	    private List<BoundingBox> _boundingBoxes = new List<BoundingBox>();
 	    private void UpdateBlockRayTracer()
 	    {
 		    var camPos     = Level.Camera.Position;
 		    var lookVector = Level.Camera.Direction;
 
+		    List<BoundingBox> boundingBoxes = new List<BoundingBox>();
 		    for (float x = 0.5f; x < 8f; x += 0.1f)
 		    {
 			    Vector3 targetPoint  = camPos + (lookVector * x);
@@ -420,26 +425,39 @@ namespace Alex.Entities
 			    var     flooredBlock = Vector3.Floor(targetPoint);
 			    var     block        = Level.GetBlockState(targetPoint);
 
-			    if (block != null && block.Block.HasHitbox && block.Model != null)
+			    if (block != null && block.Block.HasHitbox)
 			    {
-				    foreach (var bbox in block.Model.GetBoundingBoxes(flooredBlock))
+				    boundingBoxes.Clear();
+				    
+				    if (block.Model != null)
+				    {
+					    boundingBoxes.AddRange(block.Model.GetBoundingBoxes(flooredBlock));
+				    }
+				    
+				    if (Level.EntityManager.TryGetBlockEntity(flooredBlock, out var blockEntity))
+				    {
+					   boundingBoxes.Add( blockEntity.GetBoundingBox(flooredBlock));
+				    }
+				    
+				    foreach (var bbox in boundingBoxes)
 				    {
 					    if (bbox.Contains(targetPoint) == ContainmentType.Contains)
 					    {
+						    _boundingBoxes.Clear();
+						    
 						    RaytracedBlock = Vector3.Floor(targetPoint);
 						    SelBlock = block.Block;
 						    //  RayTraceBoundingBox = bbox;
 
 						    Raytraced = targetPoint;
 						    HasRaytraceResult = true;
+						    _boundingBoxes.Add(bbox);
 
 						    if (SetPlayerAdjacentSelectedBlock(Level, x, camPos, lookVector, out Vector3 rawAdjacent))
 						    {
 							    AdjacentRaytraceBlock = Vector3.Floor(rawAdjacent);
-
 							    AdjacentRaytrace = rawAdjacent;
 						    }
-
 						    return;
 					    }
 				    }
@@ -448,6 +466,7 @@ namespace Alex.Entities
 
 		    SelBlock = null;
 		    HasRaytraceResult = false;
+		    _boundingBoxes.Clear();
 	    }
 	    
 	    private bool SetPlayerAdjacentSelectedBlock(World world, float xStart, Vector3 camPos, Vector3 lookVector, out Vector3 rawAdjacent)
@@ -455,7 +474,7 @@ namespace Alex.Entities
 		    for (float x = xStart; x > 0.7f; x -= 0.1f)
 		    {
 			    Vector3 targetPoint = camPos + (lookVector * x);
-			    var     block       = world.GetBlock(targetPoint) as Block;
+			    var     block       = world.GetBlock(targetPoint);
 
 			    if (block != null && (!block.Solid))
 			    {
@@ -463,7 +482,7 @@ namespace Alex.Entities
 				    return true;
 			    }
 		    }
-
+		    
 		    rawAdjacent = new Vector3(0, 0, 0);
 		    return false;
 	    }

@@ -244,7 +244,6 @@ namespace Alex.Net.Bedrock
 
 				try
 				{
-					//ReadOnlyMemory<byte> receiveBytes = listener.EndReceive(ar, ref senderEndpoint);
 					var receive      = await listener.ReceiveAsync();
 					var receiveBytes = receive.Buffer;
 					senderEndpoint = receive.RemoteEndPoint;
@@ -257,7 +256,7 @@ namespace Alex.Net.Bedrock
 						//Log.Info($"Buffer size: {receiveBytes.Length}");
 						//ThreadPool.QueueUserWorkItem(
 						//	(o) =>
-						{
+						//{
 							try
 							{
 								ReceiveDatagram(receiveBytes, senderEndpoint);
@@ -266,7 +265,7 @@ namespace Alex.Net.Bedrock
 							{
 								Log.Warn(e, $"Process message error from: {senderEndpoint.Address}");
 							}
-						} //);
+						//} );
 					}
 					else
 					{
@@ -617,6 +616,16 @@ namespace Alex.Net.Bedrock
 			}
 		}
 
+		public void SendPacket(RaknetSession session, Packet message)
+		{
+			foreach (Datagram datagram in Datagram.CreateDatagrams(message, session.MtuSize, session))
+			{
+				SendDatagram(session, datagram);
+			}
+
+			message.PutPool();
+		}
+		
 		public async Task SendPacketAsync(RaknetSession session, Packet message)
 		{
 			foreach (Datagram datagram in Datagram.CreateDatagrams(message, session.MtuSize, session))
@@ -640,6 +649,48 @@ namespace Alex.Net.Bedrock
 			}
 		}
 
+		
+		public void SendDatagram(RaknetSession session, Datagram datagram)
+		{
+			if (datagram.MessageParts.Count == 0)
+			{
+				Log.Warn($"Failed to send #{datagram.Header.DatagramSequenceNumber.IntValue()}");
+				datagram.PutPool();
+				return;
+			}
+
+			if (datagram.TransmissionCount > 10)
+			{
+				if (Log.IsDebugEnabled) Log.Warn($"Retransmission count exceeded. No more resend of #{datagram.Header.DatagramSequenceNumber.IntValue()} Type: {datagram.FirstMessageId} (0x{datagram.FirstMessageId:x2}) for {session.Username}");
+
+				datagram.PutPool();
+
+				Interlocked.Increment(ref ConnectionInfo.NumberOfFails);
+				//TODO: Disconnect! Because of encryption, this connection can't be used after this point
+				return;
+			}
+
+			datagram.Header.DatagramSequenceNumber = Interlocked.Increment(ref session.DatagramSequenceNumber);
+			datagram.TransmissionCount++;
+			datagram.RetransmitImmediate = false;
+
+			//Memory<byte> buffer = new byte[1600];;// ArrayPool<byte>.Shared.Rent(1600);
+			//int      length = (int) datagram.GetEncoded(ref buffer);
+
+			datagram.Timer.Restart();
+
+			if (!ConnectionInfo.DisableAck && !ConnectionInfo.IsEmulator && !session.WaitingForAckQueue.TryAdd(datagram.Header.DatagramSequenceNumber.IntValue(), datagram))
+			{
+				Log.Warn($"Datagram sequence unexpectedly existed in the ACK/NAK queue already {datagram.Header.DatagramSequenceNumber.IntValue()}");
+				datagram.PutPool();
+			}
+
+			//lock (session.SyncRoot)
+			{
+				SendData(datagram.Encode(), session.EndPoint);
+				//ArrayPool<byte>.Shared.Return(buffer);
+			}
+		}
 
 		public async Task SendDatagramAsync(RaknetSession session, Datagram datagram)
 		{

@@ -106,7 +106,7 @@ namespace Alex.Entities.BlockEntities
 						break;
 					
 					default:
-						Log.Warn($"Missing block entity type: {id}");
+						Log.Debug($"Missing block entity type: {id}");
 
 						break;
 				}

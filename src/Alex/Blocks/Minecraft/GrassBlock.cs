@@ -1,3 +1,4 @@
+using System;
 using Alex.API.Blocks;
 using Alex.API.Utils;
 using Alex.Blocks.Properties;
@@ -9,7 +10,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class GrassBlock : Block
 	{
-		private static readonly PropertyBool Snowy = new PropertyBool("snowy");
+		private static readonly PropertyBool Snowy = new PropertyBool("snowy", "true", "false");
 		public GrassBlock() : base()
 		{
 			Solid = true;
@@ -28,9 +29,9 @@ namespace Alex.Blocks.Minecraft
 		{
 			get
 			{
-				if (BlockState.GetTypedValue(Snowy))
+				if (BlockState.TryGetValue("snowy", out string val) && val.Equals("true", StringComparison.OrdinalIgnoreCase))
 				{
-					return Material.Grass.Clone().SetTintType(TintType.Color, Color.Snow);
+					return Material.Snow;//.Clone().SetTintType(TintType.Color, Color.Snow);
 				}
 				else
 				{

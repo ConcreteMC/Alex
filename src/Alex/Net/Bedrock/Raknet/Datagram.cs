@@ -284,6 +284,7 @@ namespace Alex.Net.Bedrock.Raknet
 				messagePart.ReliabilityHeader.OrderingChannel = 0;
 				messagePart.ReliabilityHeader.OrderingIndex = message.ReliabilityHeader.OrderingIndex;
 				messagePart.ReliabilityHeader.HasSplit = false;
+				//messagePart.ReliabilityHeader.SequencingIndex = 
 				messagePart.Buffer = encodedMessage;
 
 				return new List<MessagePart>(1) {messagePart};

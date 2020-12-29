@@ -134,8 +134,6 @@ namespace Alex.Worlds.Chunks
 						{
 							for (int y = 0; y < 16; y++)
 							{
-								var  blockCoordinates = new BlockCoordinates(x, y + (sectionIndex * 16), z);
-								
 								bool scheduled        = section.IsScheduled(x, y, z);
 								bool blockLightUpdate = section.IsBlockLightScheduled(x, y, z);
 								bool skyLightUpdate   = section.IsSkylightUpdateScheduled(x, y, z);
@@ -146,10 +144,9 @@ namespace Alex.Worlds.Chunks
 
 								try
 								{
-									//ChunkData?.Remove(device, blockCoordinates);
-
 									var blockPosition = new BlockCoordinates(
 										(int) (chunkPosition.X + x), y + (sectionIndex << 4), (int) (chunkPosition.Z + z));
+									ChunkData?.Remove(device, blockPosition);
 									
 									foreach (var state in section.GetAll(x, y, z))
 									{
@@ -186,13 +183,11 @@ namespace Alex.Worlds.Chunks
 												model = blockState.Model;
 											}
 										}*/
-										
-										ChunkData?.Remove(device, blockCoordinates);
 
 										if (model != null)
 										{
 											model.GetVertices(
-												world, ChunkData, blockCoordinates, blockPosition, blockState.Block);
+												world, ChunkData, blockPosition, blockPosition, blockState.Block);
 										}
 									}
 								}

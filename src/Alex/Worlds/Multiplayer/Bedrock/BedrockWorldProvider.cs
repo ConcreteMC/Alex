@@ -73,7 +73,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			{
 				_tickTime++;
 
-				if (World.Player != null && Client.CanSpawn && World.Player.IsSpawned && _gameStarted)
+				if (World.Player != null && World.Player.IsSpawned && _gameStarted)
 				{
 					//	player.IsSpawned = Spawned;
 
@@ -105,6 +105,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 						SendLocation(pos);
 
 						_lastLocation = pos;
+						
 						UnloadChunks(new ChunkCoordinates(pos), Client.ChunkRadius + 3);
 
 						_lastPrioritization = _tickTime;
@@ -134,7 +135,16 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		private void UnloadChunks(ChunkCoordinates center, double maxViewDistance)
 		{
 			var chunkPublisher = Client.LastChunkPublish;
-			
+
+			ChunkCoordinates publisherCenter = center;
+
+			if (chunkPublisher != null)
+			{
+				publisherCenter = new ChunkCoordinates(
+					new Vector3(
+						chunkPublisher.coordinates.X, chunkPublisher.coordinates.Y, chunkPublisher.coordinates.Z));
+			}
+
 			//Client.ChunkRadius
 			foreach (var chunk in World.ChunkManager.GetAllChunks())
 			{
@@ -142,12 +152,11 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				
 				if (chunkPublisher != null)
 				{
-					if (chunk.Key.DistanceTo(new ChunkCoordinates(new Vector3(chunkPublisher.coordinates.X,
-						chunkPublisher.coordinates.Y, chunkPublisher.coordinates.Z))) < (chunkPublisher.radius / 16f))
+					if (chunk.Key.DistanceTo(publisherCenter) < (chunkPublisher.radius / 16f))
 						continue;
 				}
 				
-				if (distance > maxViewDistance)
+				if (distance > Alex.Options.AlexOptions.VideoOptions.RenderDistance.Value)
 				{
 					//_chunkCache.TryRemove(chunkColumn.Key, out var waste);
 					UnloadChunk(chunk.Key);
@@ -245,9 +254,9 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				percentage = (int) ((100 / target) * World.ChunkManager.ChunkCount);
 				progressReport(state, percentage, subTitle);
 				
-				if (((percentage >= 25 && hasSpawnChunk)))
+				if (((percentage >= 50 && hasSpawnChunk)))
 				{
-					if (statusChanged)
+					if (Client.GameStarted && statusChanged && !Client.Connection.IsNetworkOutOfOrder)
 					{
 						break;
 					}
@@ -311,7 +320,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 			World.Player.IsSpawned = true;
 			_gameStarted = true;
-			
 			//TODO: Check if spawn position is safe.
 			return LoadResult.Done;
 		}

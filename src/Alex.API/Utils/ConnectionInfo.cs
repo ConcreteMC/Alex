@@ -41,7 +41,9 @@ namespace Alex.API.Network
         {
             Ok,
             OutOfOrder,
-            Slow
+            Slow,
+            HighPing,
+            PacketLoss
         }
     }
 }
