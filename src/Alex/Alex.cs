@@ -11,7 +11,6 @@ using System.Text;
 using System.Threading;
 using Alex.API;
 using Alex.API.Data.Servers;
-using Alex.API.Events;
 using Alex.API.Graphics.Typography;
 using Alex.API.Gui;
 using Alex.API.Input;
@@ -524,7 +523,6 @@ namespace Alex
 
 			services.TryAddSingleton<IRegistryManager, RegistryManager>();
 
-			services.TryAddSingleton<IEventDispatcher, EventDispatcher>();
 			services.TryAddSingleton<ResourceManager>();
 			services.TryAddSingleton<GuiManager>((o) => this.GuiManager);
 			services.TryAddSingleton<ServerTypeManager>(ServerTypeManager);
@@ -582,11 +580,6 @@ namespace Alex
 			API.Extensions.Init(GraphicsDevice);
 			MCPacketFactory.Load();
 			//ConfigureServices();
-
-			var eventDispatcher = Services.GetRequiredService<IEventDispatcher>() as EventDispatcher;
-
-			foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
-				eventDispatcher.LoadFrom(assembly);
 
 			//var options = Services.GetService<IOptionsProvider>();
 
@@ -734,9 +727,6 @@ namespace Alex
 		{
 			try
 			{
-				var eventDispatcher = Services.GetRequiredService<IEventDispatcher>() as EventDispatcher;
-				eventDispatcher?.Reset();
-
 				WorldProvider   provider;
 				NetworkProvider networkProvider;
 				IsMultiplayer = true;

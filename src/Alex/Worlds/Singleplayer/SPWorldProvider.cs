@@ -5,8 +5,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Alex.API;
 using Alex.API.Data.Options;
-using Alex.API.Events;
-using Alex.API.Events.World;
 using Alex.API.Network;
 using Alex.API.Services;
 using Alex.API.Utils;
@@ -90,6 +88,12 @@ namespace Alex.Worlds.Singleplayer
 		{
 			
 		}
+
+		/// <inheritdoc />
+		public override void SendChatMessage(ChatObject message)
+		{
+			
+		}
 	}
 	public class SPWorldProvider : WorldProvider
 	{
@@ -105,13 +109,11 @@ namespace Alex.Worlds.Singleplayer
 
         private IOptionsProvider OptionsProvider { get; }
         private AlexOptions Options => OptionsProvider.AlexOptions;
-        private IEventDispatcher EventDispatcher { get; }
-		public SPWorldProvider(Alex alex, IWorldGenerator worldGenerator)
+        public SPWorldProvider(Alex alex, IWorldGenerator worldGenerator)
 		{
 			Alex = alex;
 			OptionsProvider = alex.Services.GetRequiredService<IOptionsProvider>();
-			EventDispatcher = alex.Services.GetRequiredService<IEventDispatcher>();
-			
+
 			_generator = worldGenerator;
 		
 			ThreadCancellationTokenSource = new CancellationTokenSource();

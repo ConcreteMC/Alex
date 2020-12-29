@@ -1,16 +1,15 @@
 using System;
 using Alex.API.Data;
-using Alex.API.Events;
-using Alex.API.Events.World;
 using Alex.API.Gui;
 using Alex.API.Gui.Elements;
 using Alex.API.Gui.Elements.Layout;
 using Alex.API.Gui.Graphics;
+using Alex.API.Utils;
 using Microsoft.Xna.Framework;
 
 namespace Alex.Gui.Elements.Hud
 {
-    public class TipPopupComponent : GuiContainer
+    public class TipPopupComponent : GuiContainer, IChatRecipient
     {
         private GuiTextElement Tip { get; set; }
         private GuiTextElement Popup { get; set; }
@@ -45,31 +44,6 @@ namespace Alex.Gui.Elements.Hud
             AddChild(Popup);
         }
 
-        [EventHandler]
-        public void OnChatMessage(ChatMessageReceivedEvent e)
-        {
-            if (e.IsChat())
-                return;
-
-            switch (e.Type)
-            {
-                case MessageType.Popup:
-                    Popup.Text = e.ChatObject.RawMessage;
-                    PopupHideTime = DateTime.UtcNow + TimeSpan.FromSeconds(3);
-                    Popup.IsVisible = true;
-                    
-                    break;
-                case MessageType.Tip:
-                    Tip.Text = e.ChatObject.RawMessage;
-                    TipHideTime = DateTime.UtcNow + TimeSpan.FromSeconds(3);
-                    Tip.IsVisible = true;
-                    
-                    break;
-            }
-            
-            DoUpdate = true;
-        }
-
         protected override void OnUpdate(GameTime gameTime)
         {
             base.OnUpdate(gameTime);
@@ -89,6 +63,28 @@ namespace Alex.Gui.Elements.Hud
 
             if (!Tip.IsVisible && !Popup.IsVisible)
                 DoUpdate = false;
+        }
+
+        /// <inheritdoc />
+        public void AddMessage(ChatObject message, MessageType messageType)
+        {
+            switch (messageType)
+            {
+                case MessageType.Popup:
+                    Popup.Text = message.RawMessage;
+                    PopupHideTime = DateTime.UtcNow + TimeSpan.FromSeconds(3);
+                    Popup.IsVisible = true;
+                    
+                    break;
+                case MessageType.Tip:
+                    Tip.Text = message.RawMessage;
+                    TipHideTime = DateTime.UtcNow + TimeSpan.FromSeconds(3);
+                    Tip.IsVisible = true;
+                    
+                    break;
+            }
+
+            DoUpdate = true;
         }
     }
 }

@@ -51,5 +51,7 @@ namespace Alex.Net
 		public abstract void UseItem(Item item, int hand, ItemUseAction action, BlockCoordinates position, API.Blocks.BlockFace face, Vector3 cursorPosition);
 		public abstract void HeldItemChanged(Item item, short slot);
 		public abstract void Close();
+
+		public abstract void SendChatMessage(ChatObject message);
 	}
 }

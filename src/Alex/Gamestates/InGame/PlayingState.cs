@@ -72,7 +72,11 @@ namespace Alex.Gamestates.InGame
 			WorldProvider.TitleComponent = title;
 
 			_playingHud = new PlayingHud(Alex, World.Player, title);
+			_playingHud.Chat.Network = networkProvider;
+			
 			WorldProvider.ScoreboardView = _playingHud.Scoreboard;
+			WorldProvider.ChatRecipient = _playingHud;
+			//WorldProvider.ScoreboardView
 			
 			_debugInfo = new GuiDebugInfo();
             InitDebugInfo();

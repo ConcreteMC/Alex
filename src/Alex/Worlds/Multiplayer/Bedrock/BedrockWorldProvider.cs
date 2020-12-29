@@ -3,7 +3,6 @@ using System.Diagnostics;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
-using Alex.API.Events;
 using Alex.API.Services;
 using Alex.API.World;
 using Alex.Gui.Forms;
@@ -30,21 +29,16 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		
 		public Alex Alex { get; }
 		protected BedrockClient Client { get; }
-		private IEventDispatcher EventDispatcher { get; }
 		public BedrockFormManager FormManager { get; }
 		
 		public BedrockWorldProvider(Alex alex, IPEndPoint endPoint, PlayerProfile profile, DedicatedThreadPool threadPool,
 			out NetworkProvider networkProvider)
 		{
 			Alex = alex;
-			var eventDispatcher = alex.Services.GetRequiredService<IEventDispatcher>();
-			EventDispatcher = eventDispatcher;
 			
 			//Client = new ExperimentalBedrockClient(alex, alex.Services, this, endPoint);
-			Client = new BedrockClient(alex, eventDispatcher, endPoint, profile, threadPool, this);
+			Client = new BedrockClient(alex, endPoint, profile, threadPool, this);
 			networkProvider = Client;
-			
-			EventDispatcher.RegisterEvents(this);
 
 			var guiManager = Alex.GuiManager;
 			FormManager = new BedrockFormManager(networkProvider, guiManager, alex.InputManager);
@@ -328,8 +322,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		{
 			base.Dispose();
 			Client.Dispose();
-			
-			EventDispatcher?.UnregisterEvents(this);
 		}
 	}
 }

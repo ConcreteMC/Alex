@@ -11,8 +11,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Alex.API.Data;
 using Alex.API.Data.Options;
-using Alex.API.Events;
-using Alex.API.Events.World;
 using Alex.API.Graphics;
 using Alex.API.Input;
 using Alex.API.Services;
@@ -90,7 +88,6 @@ namespace Alex.Worlds.Multiplayer.Java
 		private TcpClient TcpClient;
 
 		//private DedicatedThreadPool ThreadPool;
-		private IEventDispatcher EventDispatcher { get; }
 		public string Hostname { get; set; }
 		
 		private JavaNetworkProvider NetworkProvider { get; }
@@ -101,7 +98,6 @@ namespace Alex.Worlds.Multiplayer.Java
 			Endpoint = endPoint;
 
 			OptionsProvider = alex.Services.GetRequiredService<IOptionsProvider>();
-			EventDispatcher = alex.Services.GetRequiredService<IEventDispatcher>();
 			
 		//	ThreadPool = new DedicatedThreadPool(new DedicatedThreadPoolSettings(Environment.ProcessorCount));
 
@@ -111,8 +107,6 @@ namespace Alex.Worlds.Multiplayer.Java
 			
 			NetworkProvider = new JavaNetworkProvider(Client);;
 			networkProvider = NetworkProvider;
-			
-			EventDispatcher.RegisterEvents(this);
 
 			Options.VideoOptions.RenderDistance.Bind(RenderDistanceSettingChanged);
 		}
@@ -331,15 +325,7 @@ namespace Alex.Worlds.Multiplayer.Java
 			_alexSkin = TextureUtils.BitmapToTexture2D(Alex.GraphicsDevice, rawTexture);
 			World.Ticker.RegisterTicked(this);
 		}
-
-		[EventHandler(EventPriority.Highest)]
-		private void OnPublishChatMessage(ChatMessagePublishEvent e)
-		{
-			if (e.IsCancelled)
-				return;
-			
-			NetworkProvider.SendChatMessage(e.ChatObject.RawMessage);
-		}
+		
 
 		private int _transactionIds = 0;
 		/*void IChatProvider.RequestTabComplete(string text, out int transactionId)
@@ -1855,7 +1841,10 @@ namespace Alex.Worlds.Multiplayer.Java
 						msgType = MessageType.Popup;
 						break;
 				}
-				EventDispatcher.DispatchEvent(new ChatMessageReceivedEvent(chat, msgType));
+				
+				ChatRecipient?.AddMessage(chat, msgType);
+
+				//EventDispatcher.DispatchEvent(new ChatMessageReceivedEvent(chat, msgType));
 			}
 			else
 			{

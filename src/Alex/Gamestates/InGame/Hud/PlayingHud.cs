@@ -1,4 +1,4 @@
-﻿using Alex.API.Events;
+﻿using Alex.API.Data;
 using Alex.API.Gui;
 using Alex.API.Gui.Elements;
 using Alex.API.Gui.Elements.Layout;
@@ -16,7 +16,7 @@ using Microsoft.Xna.Framework;
 
 namespace Alex.Gamestates.InGame.Hud
 {
-    public class PlayingHud : GuiScreen
+    public class PlayingHud : GuiScreen, IChatRecipient
     {
         private readonly GuiItemHotbar _hotbar;
         private readonly PlayerController _playerController;
@@ -67,7 +67,7 @@ namespace Alex.Gamestates.InGame.Hud
 	        _hotbar.Anchor = Alignment.BottomCenter;
 	        _hotbar.Padding = Thickness.Zero;
 
-			Chat = new ChatComponent(game.Services.GetRequiredService<IEventDispatcher>());
+			Chat = new ChatComponent();
 	        Chat.Enabled = false;
 	        Chat.Anchor = Alignment.BottomLeft;
 
@@ -97,8 +97,6 @@ namespace Alex.Gamestates.InGame.Hud
 
         protected override void OnInit(IGuiRenderer renderer)
         {
-	        Alex.Services.GetRequiredService<IEventDispatcher>().RegisterEvents(_tipPopupComponent);
-
 	        _bottomContainer.AddChild(_tipPopupComponent);
 
 	        _healthContainer.AddChild(_healthComponent);
@@ -186,7 +184,20 @@ namespace Alex.Gamestates.InGame.Hud
         {
 	        Chat.Unload();
 	        
-	        Alex.Services.GetRequiredService<IEventDispatcher>().UnregisterEvents(_tipPopupComponent);
+        }
+
+        /// <inheritdoc />
+        public void AddMessage(ChatObject message, MessageType type)
+        {
+	        if (type == MessageType.Raw || type == MessageType.Chat || type == MessageType.Whisper
+	            || type == MessageType.Announcement || type == MessageType.System)
+	        {
+		        Chat?.AddMessage(message, type);
+	        }
+	        else
+	        {
+		        _tipPopupComponent?.AddMessage(message, type);
+	        }
         }
     }
 }

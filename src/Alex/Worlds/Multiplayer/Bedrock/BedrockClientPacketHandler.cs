@@ -9,8 +9,6 @@ using System.Numerics;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
-using Alex.API.Events;
-using Alex.API.Events.World;
 using Alex.API.Graphics;
 using Alex.API.Gui;
 using Alex.API.Services;
@@ -72,19 +70,17 @@ namespace Alex.Worlds.Multiplayer.Bedrock
         private CancellationToken CancellationToken { get; }
         private ChunkProcessor ChunkProcessor { get; }
 
-        private WorldProvider WorldProvider { get; }
-        private PlayerProfile PlayerProfile { get; }
-        private IEventDispatcher EventDispatcher { get; }
-        private IStorageSystem Storage { get; }
-        private bool UseCustomEntityModels { get; set; }
+        private WorldProvider  WorldProvider         { get; }
+        private PlayerProfile  PlayerProfile         { get; }
+        private IStorageSystem Storage               { get; }
+        private bool           UseCustomEntityModels { get; set; }
 
-        public BedrockClientPacketHandler(BedrockClient client, IEventDispatcher eventDispatcher, WorldProvider worldProvider, PlayerProfile profile, Alex alex, CancellationToken cancellationToken, ChunkProcessor chunkProcessor) //:
+        public BedrockClientPacketHandler(BedrockClient client, WorldProvider worldProvider, PlayerProfile profile, Alex alex, CancellationToken cancellationToken, ChunkProcessor chunkProcessor) //:
 	       // base(client)
         {
 	        //Plugin = plugin;
 	        Storage = alex.Services.GetRequiredService<IStorageSystem>();
-	        
-	        EventDispatcher = eventDispatcher;
+
 	        Client = client;
 	        AlexInstance = alex;
 	        CancellationToken = cancellationToken;
@@ -244,7 +240,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
         public void HandleMcpeText(McpeText message)
 		{
-			EventDispatcher.DispatchEvent(new ChatMessageReceivedEvent(new ChatObject(message.message), (MessageType) message.type));
+			WorldProvider?.ChatRecipient?.AddMessage(new ChatObject(message.message), (MessageType) message.type);
+		//	EventDispatcher.DispatchEvent(new ChatMessageReceivedEvent(new ChatObject(message.message), (MessageType) message.type));
 		}
 
 		public void HandleMcpeSetTime(McpeSetTime message)

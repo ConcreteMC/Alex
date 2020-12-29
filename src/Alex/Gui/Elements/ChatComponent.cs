@@ -2,23 +2,23 @@
 using System.Collections.Generic;
 using System.Linq;
 using Alex.API.Data;
-using Alex.API.Events;
-using Alex.API.Events.World;
 using Alex.API.Graphics.Typography;
 using Alex.API.Gui;
 using Alex.API.Gui.Elements.Controls;
 using Alex.API.Gui.Graphics;
 using Alex.API.Utils;
+using Alex.Net;
 using Alex.Utils;
 using Alex.Worlds;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using MiNET;
 using NLog;
+using MessageType = Alex.API.Data.MessageType;
 
 namespace Alex.Gui.Elements
 {
-	public class ChatComponent : GuiTextInput
+	public class ChatComponent : GuiTextInput, IChatRecipient
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ChatComponent));
 		
@@ -27,18 +27,16 @@ namespace Alex.Gui.Elements
 		public int UnfocusedHeight { get; set; } = 100;
 		public int FocusedHeight { get; set; } = 180;
 		
-		private IEventDispatcher EventDispatcher { get; }
-		public ChatComponent(IEventDispatcher eventDispatcher)
+		public  NetworkProvider  Network         { get; set; }
+
+		public ChatComponent()
 		{
-			EventDispatcher = eventDispatcher;
 			Anchor = Alignment.BottomLeft;
 
 			MaxHeight = Height;
 			Height = 180;
 			Width = 320;
-
-			eventDispatcher.RegisterEvents(this);
-
+			
 			Font = Alex.Instance.GuiRenderer.Font;
 		}
 
@@ -144,7 +142,7 @@ namespace Alex.Gui.Elements
 				if (lastWhiteSpace > 0)
 				{
 					text = current.Remove(lastWhiteSpace, current.Length - lastWhiteSpace);
-                    rest = current.Substring(lastWhiteSpace, current.Length - lastWhiteSpace).TrimStart() + rest;
+                    rest = current.Substring(lastWhiteSpace, current.Length - lastWhiteSpace) + rest;
 				}
 				else
 				{
@@ -397,8 +395,9 @@ namespace Alex.Gui.Elements
 			{
 				if (Alex.IsMultiplayer)
 				{
-					EventDispatcher.DispatchEvent(
-						new ChatMessagePublishEvent(new ChatObject(TextBuilder.Text)));
+					Network?.SendChatMessage(new ChatObject(TextBuilder.Text));
+					//EventDispatcher.DispatchEvent(
+					//	new ChatMessagePublishEvent(new ChatObject(TextBuilder.Text)));
 				}
 				else
 				{
@@ -410,15 +409,6 @@ namespace Alex.Gui.Elements
 			}
 
 			Dismiss();
-		}
-
-		[EventHandler]
-		private void OnChatMessageReceived(ChatMessageReceivedEvent e)
-		{
-			if (!e.IsChat())
-				return;
-			
-			Receive(e.ChatObject);
 		}
 
 		private void Receive(ChatObject message)
@@ -481,8 +471,19 @@ namespace Alex.Gui.Elements
 
 		public void Unload()
 		{
-			EventDispatcher.UnregisterEvents(this);
+		
 		}
+
+		/// <inheritdoc />
+		public void AddMessage(ChatObject message, MessageType messageType)
+		{
+			Receive(message);
+		}
+	}
+
+	public interface IChatRecipient
+	{
+		void AddMessage(ChatObject message, MessageType messageType);
 	}
 }
 

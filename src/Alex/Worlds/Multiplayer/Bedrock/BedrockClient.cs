@@ -15,8 +15,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Alex.API;
 using Alex.API.Data.Options;
-using Alex.API.Events;
-using Alex.API.Events.World;
+
 using Alex.API.Services;
 using Alex.API.Utils;
 using Alex.Entities;
@@ -82,7 +81,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
         public bool CanSpawn => PlayerStatus == 3;
         public AutoResetEvent PlayerStatusChanged { get; set; } = new AutoResetEvent(false);
         public AutoResetEvent ChangeDimensionResetEvent { get; } = new AutoResetEvent(false);
-        private IEventDispatcher EventDispatcher { get; }
         public RaknetConnection Connection { get; }
         private MessageHandler MessageHandler { get; set; }
         private RaknetSession Session { get; set; }//=> Connection.ConnectionInfo.RakSessions.Values.FirstOrDefault();
@@ -103,7 +101,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
         public  TimeSpan       TimeSinceLastPacket => MessageHandler?.TimeSinceLastPacket ?? TimeSpan.Zero;
         public  bool           GameStarted         { get; set; } = false;
         private ChunkProcessor ChunkProcessor      { get; }
-		public BedrockClient(Alex alex, IEventDispatcher eventDispatcher, IPEndPoint endpoint, PlayerProfile playerProfile, DedicatedThreadPool threadPool, BedrockWorldProvider wp)
+		public BedrockClient(Alex alex, IPEndPoint endpoint, PlayerProfile playerProfile, DedicatedThreadPool threadPool, BedrockWorldProvider wp)
 		{
 			PacketFactory.CustomPacketFactory = new AlexPacketFactory();
 			
@@ -140,7 +138,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 			//	bool hasSession = Session != null;
 
-			var handler = new MessageHandler(session, new BedrockClientPacketHandler(this, eventDispatcher, wp, playerProfile, alex, CancellationTokenSource.Token, ChunkProcessor));
+			var handler = new MessageHandler(session, new BedrockClientPacketHandler(this, wp, playerProfile, alex, CancellationTokenSource.Token, ChunkProcessor));
 				
 				if (MessageHandler != null)
 					Log.Warn($"Messagehandler was already set.");
@@ -169,8 +167,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 				return handler;
 			};
-
-			EventDispatcher = eventDispatcher;
 		}
 
 		private void ClientSideLightingChanged(bool oldvalue, bool newvalue)
@@ -192,10 +188,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			
 			//player.Inventory.CursorChanged += InventoryOnCursorChanged;
 		//	player.Inventory.SlotChanged += InventoryOnSlotChanged;
-			
-			
-			EventDispatcher?.RegisterEvents(this);
-			
+
 			ConnectionAcceptedWaitHandle = resetEvent;
 			
 			ThreadPool.QueueUserWorkItem(o =>
@@ -406,26 +399,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			Session.SendPacket(packet);
 		}
 
-		[EventHandler(EventPriority.Highest)]
-		private void OnSendChatMessage(ChatMessagePublishEvent e)
-		{
-			if (e.IsCancelled)
-				return;
-
-			var message = e.ChatObject.RawMessage;
-			if (message[0] == '/')
-			{
-				McpeCommandRequest commandRequest = McpeCommandRequest.CreateObject();
-				commandRequest.command = message;
-				commandRequest.unknownUuid = new MiNET.Utils.UUID(Guid.NewGuid().ToString());
-				Session.SendPacket(commandRequest);
-			}
-			else
-			{
-				SendChat(message);
-			}
-		}
-		
 		public int ChunkRadius { get; set; }
 		public long EntityId { get; set; }
 		public long NetworkEntityId { get; set; }
@@ -1234,6 +1207,23 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			//Task.Delay(500).ContinueWith(task => { base.StopClient(); });
 		}
 
+		/// <inheritdoc />
+		public override void SendChatMessage(ChatObject msg)
+		{
+			var message = msg.RawMessage; 
+			if (message[0] == '/')
+			{
+				McpeCommandRequest commandRequest = McpeCommandRequest.CreateObject();
+				commandRequest.command = message;
+				commandRequest.unknownUuid = new MiNET.Utils.UUID(Guid.NewGuid().ToString());
+				Session.SendPacket(commandRequest);
+			}
+			else
+			{
+				SendChat(message);
+			}
+		}
+
 		public void RequestChunkRadius(int radius)
 		{
 			var packet = McpeRequestChunkRadius.CreateObject();
@@ -1291,7 +1281,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		public void Dispose()
 		{
-			EventDispatcher?.UnregisterEvents(this);
 			
 			Close();
 			//WorkerThreadPool.Dispose();

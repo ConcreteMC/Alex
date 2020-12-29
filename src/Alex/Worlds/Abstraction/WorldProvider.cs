@@ -12,9 +12,10 @@ namespace Alex.Worlds.Abstraction
 	{
 		public delegate void ProgressReport(LoadingState state, int percentage, string subTitle = null);
 
-		protected World  World  { get; set; }
+		protected World           World          { get; set; }
 		public    ITitleComponent TitleComponent { get; set; }
-		public ScoreboardView ScoreboardView { get; set; }
+		public    IChatRecipient  ChatRecipient  { get; set; }
+		public    ScoreboardView  ScoreboardView { get; set; }
 		protected WorldProvider()
 		{
 			

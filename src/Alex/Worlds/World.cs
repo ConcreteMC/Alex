@@ -8,8 +8,6 @@ using Alex.API;
 using Alex.API.Data.Options;
 using Alex.API.Data.Servers;
 using Alex.API.Entities;
-using Alex.API.Events;
-using Alex.API.Events.World;
 using Alex.API.Graphics;
 using Alex.API.Gui;
 using Alex.API.Network;
@@ -70,7 +68,6 @@ namespace Alex.Worlds
 		public Player Player { get; set; }
 		private AlexOptions Options { get; }
 		
-		private IEventDispatcher EventDispatcher { get; }
 		public InventoryManager InventoryManager { get; }
 		private SkyBox SkyRenderer { get; }
 
@@ -134,7 +131,6 @@ namespace Alex.Worlds
 			ChunkManager.Start();
 			var profileService = serviceProvider.GetRequiredService<IPlayerProfileService>();
 			var resources = serviceProvider.GetRequiredService<ResourceManager>();
-			EventDispatcher = serviceProvider.GetRequiredService<IEventDispatcher>();
 			
 			string username = string.Empty;
 			PooledTexture2D texture;
@@ -183,8 +179,6 @@ namespace Alex.Worlds
 			Camera.FOV = Options.FieldOfVision.Value;
 
 			PhysicsEngine.AddTickable(Player);
-
-			EventDispatcher.RegisterEvents(this);
 
 			var guiManager = serviceProvider.GetRequiredService<GuiManager>();
 			InventoryManager = new InventoryManager(guiManager);
@@ -811,8 +805,6 @@ namespace Alex.Worlds
 			Ticker.UnregisterTicked(PhysicsEngine);
 			Ticker.UnregisterTicked(ChunkManager);
 
-			EventDispatcher.UnregisterEvents(this);
-			
 			BackgroundWorker?.Dispose();
 
 			EntityManager.Dispose();
