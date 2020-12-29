@@ -130,11 +130,11 @@ namespace Alex.Entities
 			return null;
 		}
 		
-		public static void LoadModels(ResourceManager resourceManager, GraphicsDevice graphics, bool replaceModels, IProgressReceiver progressReceiver = null)
+		public static int LoadModels(BedrockResourcePack resourcePack, GraphicsDevice graphics, bool replaceModels, IProgressReceiver progressReceiver = null)
 		{
-			var entityDefinitions = resourceManager.BedrockResourcePack.EntityDefinitions;
-			int done = 0;
-			int total = entityDefinitions.Count;
+			var entityDefinitions = resourcePack.EntityDefinitions;
+			int done              = 0;
+			int total             = entityDefinitions.Count;
 
 			foreach (var def in entityDefinitions)
 			{
@@ -158,13 +158,13 @@ namespace Alex.Entities
 					EntityModel model;
 					if (ModelFactory.TryGetModel(modelKey + ".v1.8", out model) && model != null)
 					{
-						Add(resourceManager, graphics, def.Value, model, def.Value.Identifier);
-						Add(resourceManager, graphics, def.Value, model, def.Key.ToString());
+						Add(resourcePack, graphics, def.Value, model, def.Value.Identifier);
+						Add(resourcePack, graphics, def.Value, model, def.Key.ToString());
 					}
 				    else if (ModelFactory.TryGetModel(modelKey, out model) && model != null)
 				    {
-				        Add(resourceManager, graphics, def.Value, model, def.Value.Identifier);
-				        Add(resourceManager, graphics, def.Value, model, def.Key.ToString());
+				        Add(resourcePack, graphics, def.Value, model, def.Value.Identifier);
+				        Add(resourcePack, graphics, def.Value, model, def.Key.ToString());
                     }
 				}
 				catch (Exception ex)
@@ -181,10 +181,11 @@ namespace Alex.Entities
 				_registeredRenderers.TryAdd("minecraft:armorstand", func);
 			
 		//    Log.Info($"Registered {(Assembly.GetExecutingAssembly().GetTypes().Count(t => t.Namespace == "Alex.Entities.Models"))} entity models");
-		    Log.Info($"Registered {_registeredRenderers.Count} entity model renderers");
-        }
+		   // Log.Info($"Loaded {_registeredRenderers.Count} entity models");
+		   return _registeredRenderers.Count;
+		}
 
-		private static void Add(ResourceManager resourceManager, GraphicsDevice graphics, EntityDescription def, EntityModel model, ResourceLocation name)
+		private static void Add(BedrockResourcePack resourcepack, GraphicsDevice graphics, EntityDescription def, EntityModel model, ResourceLocation name)
 		{
 			_registeredRenderers.AddOrUpdate(name,
 				(t) =>
@@ -198,7 +199,7 @@ namespace Alex.Entities
 							texture = textures.FirstOrDefault().Value;
 						}
 
-						if (resourceManager.BedrockResourcePack.Textures.TryGetValue(texture,
+						if (resourcepack.Textures.TryGetValue(texture,
 							out var bmp))
 						{
 							t = TextureUtils.BitmapToTexture2D(graphics, bmp.Value);
@@ -218,7 +219,7 @@ namespace Alex.Entities
 							texture = textures.FirstOrDefault().Value;
 						}
 
-						if (resourceManager.BedrockResourcePack.Textures.TryGetValue(texture,
+						if (resourcepack.Textures.TryGetValue(texture,
 							out var bmp))
 						{
 							t = TextureUtils.BitmapToTexture2D(graphics, bmp.Value);

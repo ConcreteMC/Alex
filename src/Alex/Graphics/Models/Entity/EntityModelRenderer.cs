@@ -207,7 +207,7 @@ namespace Alex.Graphics.Models.Entity
 			if (bone.Rotation.HasValue)
 			{
 				var r = bone.Rotation.Value;
-				modelBone.Rotation = new Vector3(-r.X, r.Y, r.Z);
+				modelBone.Rotation = new Vector3(r.X, r.Y, r.Z);
 			}
 
 			modelBone.Setup(Alex.Instance.GraphicsDevice);
@@ -259,7 +259,7 @@ namespace Alex.Graphics.Models.Entity
 		private static RasterizerState RasterizerState = new RasterizerState()
 		{
 			DepthBias = 0f,
-			CullMode = CullMode.CullClockwiseFace,
+			CullMode = CullMode.CullCounterClockwiseFace,
 			FillMode = FillMode.Solid
 		};
 		
@@ -278,6 +278,7 @@ namespace Alex.Graphics.Models.Entity
 			{
 				args.GraphicsDevice.BlendState = BlendState.Opaque;
 				args.GraphicsDevice.RasterizerState = RasterizerState;
+				//args.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
 				
 				args.GraphicsDevice.SetVertexBuffer(VertexBuffer);
 
@@ -317,7 +318,7 @@ namespace Alex.Graphics.Models.Entity
 		{
 			if (Bones == null) return;
 
-			var matrix = Matrix.CreateRotationY(MathUtils.ToRadians(180f)) * Matrix.CreateScale(Scale / 16f)
+			var matrix =Matrix.CreateScale(Scale / 16f) * Matrix.CreateRotationY(MathUtils.ToRadians(180f))
 			                                                               * Matrix.CreateRotationY(
 				                                                               MathUtils.ToRadians(-(position.Yaw)))
 			                                                               * Matrix.CreateTranslation(position);

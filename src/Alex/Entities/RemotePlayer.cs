@@ -207,6 +207,11 @@ namespace Alex.Entities
 							var resourcePatch = JsonConvert.DeserializeObject<SkinResourcePatch>(
 								skin.ResourcePatch, GeometrySerializationSettings);
 
+							//if (!Directory.Exists("skins"))
+							//	Directory.CreateDirectory("skins");
+								
+							//File.WriteAllText(Path.Combine("skins", $"{Environment.TickCount64}.json"), skin.GeometryData);
+							
 							Dictionary<string, EntityModel> models = new Dictionary<string, EntityModel>();
 							BedrockResourcePack.LoadEntityModel(skin.GeometryData, models);
 
@@ -215,11 +220,6 @@ namespace Alex.Entities
 							if (processedModels == null || processedModels.Count == 0)
 							{
 								Log.Warn($"!! Model count was 0 for player {Name} !!");
-
-							//	if (!Directory.Exists("failures"))
-							//		Directory.CreateDirectory("failures");
-								
-							//	File.WriteAllText(Path.Combine("failures", $"{Environment.TickCount64}.json"), skin.GeometryData);
 							}
 							else
 							{

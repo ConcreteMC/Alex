@@ -740,18 +740,18 @@ namespace Alex.Entities
             {
 	            EntityModelRenderer.ModelBone arm = null;
 
-	            if (_leftArmModel != null)
-		            arm = _leftArmModel;
-	            else if (_rightArmModel != null)
+	            if (_rightArmModel != null)
 		            arm = _rightArmModel;
+	            else if (_leftArmModel != null)
+		            arm = _leftArmModel;
 
 	            if (arm != null)
 	            {
 		            Vector3 pivot;
 
-		            if (_leftItemModel != null)
+		            if (_rightItemModel != null)
 		            {
-			            pivot = _leftItemModel.Definition.Pivot;
+			            pivot = _rightItemModel.Definition.Pivot;
 		            }
 		            else
 		            {
@@ -832,7 +832,7 @@ namespace Alex.Entities
 		
 		public void SwingArm(bool broadcast, bool leftHanded)
 		{
-			EntityModelRenderer.ModelBone bone = leftHanded ? _rightArmModel : _leftArmModel;
+			EntityModelRenderer.ModelBone bone = leftHanded ? _leftArmModel : _rightArmModel;
 
 			if (bone != null)
 			{

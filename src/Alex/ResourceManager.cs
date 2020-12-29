@@ -126,8 +126,7 @@ namespace Alex
 			Log.Info($"Loading resource pack...");
 			
 			McResourcePack resourcePack = null;
-
-
+			
 			resourcePack = new McResourcePack(
 				fs, preloadCallback, (percentage, file) =>
 				{
@@ -139,15 +138,6 @@ namespace Alex
 			Log.Info($"Loaded {resourcePack.BlockModels.Count} block models from resourcepack");
 			Log.Info($"Loaded {resourcePack.ItemModels.Count} item models from resourcepack");
 			Log.Info($"Loading resourcepack took: {sw.ElapsedMilliseconds}ms");
-
-			var language = resourcePack.Languages.Values.FirstOrDefault(x => x.Namespace.Equals("minecraft"));
-			if (language != null)
-			{
-				foreach (var translation in language)
-				{
-					ChatParser.TranslationRules[translation.Key] = translation.Value;
-				}
-			}
 
 			return resourcePack;
 		}
@@ -352,7 +342,7 @@ namespace Alex
 
 	        Alex.AudioEngine.Initialize(vanilla);
 
-	        Log.Info($"Loading bedrock resources...");
+	       // Log.Info($"Loading bedrock resources...");
 			
 			progressReceiver?.UpdateProgress(0, "Loading bedrock resources...");
 			
@@ -360,21 +350,24 @@ namespace Alex
 			{
 				BedrockResourcePack = new BedrockResourcePack(
 					fileSystem, (percentage, file) => { progressReceiver?.UpdateProgress(percentage, null, file); });
+				
+				int modelCount = EntityFactory.LoadModels(BedrockResourcePack, device, true, progressReceiver);
+
+				Log.Info($"Imported {modelCount} entity models...");
 			}
 
-			EntityFactory.LoadModels(this, device, true, progressReceiver);
-
-			Log.Info($"Loading known entity data...");
+			//Log.Info($"Loading known entity data...");
 			EntityFactory.Load(this, progressReceiver);
 
             Storage.TryGetDirectory(Path.Combine("assets", "resourcepacks"), out DirectoryInfo root);
             ResourcePackDirectory = root;
 
             LoadRegistries(progressReceiver);
+            
+	        LoadResourcePacks(
+		        device, progressReceiver, Options.AlexOptions.ResourceOptions.LoadedResourcesPacks.Value);
 
-            LoadResourcePacks(device, progressReceiver, Options.AlexOptions.ResourceOptions.LoadedResourcesPacks.Value);
-
-            ItemFactory.Init(RegistryManager, this, ResourcePack, progressReceiver);
+	        ItemFactory.Init(RegistryManager, this, ResourcePack, progressReceiver);
 			
 	        BlockEntityFactory.LoadResources(device, ResourcePack);
             

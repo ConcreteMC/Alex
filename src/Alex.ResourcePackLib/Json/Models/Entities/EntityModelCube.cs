@@ -77,8 +77,12 @@ namespace Alex.ResourcePackLib.Json.Models.Entities
 	  public Vector3 InflatedOrigin(float amount)
 	  {
 		  //  var s         = InflatedSize(amount);
-		  var inflation      = amount / 2f;
-		  var origin         = new Vector3(Origin.X - inflation, Origin.Y - inflation, Origin.Z - inflation);
+		  var inflation      = (amount / 2f);
+
+		  if (amount > 0f)
+			  inflation = -inflation;
+		  
+		  var origin         = new Vector3(Origin.X + inflation, Origin.Y + inflation, Origin.Z + inflation);
 
 		  return origin;
 		  if (amount == 0f)

@@ -161,7 +161,8 @@ namespace Alex.Gui
 				if (_languages.TryGetValue(cultureCode, out var lng))
 				{
 					Language = lng;
-
+					ChatParser.Language = lng;
+					
 					return true;
 				}
 

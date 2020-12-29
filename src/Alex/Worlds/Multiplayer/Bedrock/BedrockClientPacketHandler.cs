@@ -2008,7 +2008,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				//Client.ExpectedLatency = message.timestamp;
 			}
 
-			Log.Info($"Stack latency: {message.timestamp} | {message.unknownFlag}");
+			//Log.Info($"Stack latency: {message.timestamp} | {message.unknownFlag}");
 			if (message.unknownFlag == 1)
 			{
 				var response = McpeNetworkStackLatency.CreateObject();

@@ -269,7 +269,7 @@ namespace Alex.Graphics.Models
 					var rotation = cube.Rotation.Value;
 
 					cubeMatrix = Matrix.CreateTranslation(-_pivot)
-					             * Matrix.CreateRotationX(MathUtils.ToRadians(-rotation.X))
+					             * Matrix.CreateRotationX(MathUtils.ToRadians(rotation.X))
 					             * Matrix.CreateRotationY(MathUtils.ToRadians(rotation.Y))
 					             * Matrix.CreateRotationZ(MathUtils.ToRadians(rotation.Z))
 					             * Matrix.CreateTranslation(_pivot);

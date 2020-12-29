@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Alex.API.Localization;
 
 namespace Alex.API.Utils
 {
@@ -18,38 +19,6 @@ namespace Alex.API.Utils
 		}
 
 		/// <summary>
-		/// Specify whether translation rules have been loaded
-		/// </summary>
-		private static bool RulesInitialized = false;
-
-		/// <summary>
-		/// Set of translation rules for formatting text
-		/// </summary>
-		public static Dictionary<string, string> TranslationRules = new Dictionary<string, string>();
-
-		/// <summary>
-		/// Initialize translation rules.
-		/// Necessary for properly printing some chat messages.
-		/// </summary>
-		public static void InitTranslations() { if (!RulesInitialized) { InitRules(); RulesInitialized = true; } }
-
-		/// <summary>
-		/// Internal rule initialization method. Looks for local rule file or download it from Mojang asset servers.
-		/// </summary>
-		private static void InitRules()
-		{
-			//Small default dictionnary of translation rules
-			TranslationRules["chat.type.admin"] = "[%s: %s]";
-			TranslationRules["chat.type.announcement"] = "§d[%s] %s";
-			TranslationRules["chat.type.emote"] = " * %s %s";
-			TranslationRules["chat.type.text"] = "<%s> %s";
-			TranslationRules["multiplayer.player.joined"] = "§e%s joined the game.";
-			TranslationRules["multiplayer.player.left"] = "§e%s left the game.";
-			TranslationRules["commands.message.display.incoming"] = "§7%s whispers to you: %s";
-			TranslationRules["commands.message.display.outgoing"] = "§7You whisper to %s: %s";
-		}
-
-		/// <summary>
 		/// Format text using a specific formatting rule.
 		/// Example : * %s %s + ["ORelio", "is doing something"] = * ORelio is doing something
 		/// </summary>
@@ -58,12 +27,12 @@ namespace Alex.API.Utils
 		/// <returns>Returns the formatted text according to the given data</returns>
 		public static string TranslateString(string rulename, List<string> using_data)
 		{
-			if (!RulesInitialized) { InitRules(); RulesInitialized = true; }
-			if (TranslationRules.ContainsKey(rulename))
+		//	if (!RulesInitialized) { InitRules(); RulesInitialized = true; }
+			//if (TranslationRules.ContainsKey(rulename))
 			{
-				int using_idx = 0;
-				string rule = TranslationRules[rulename];
-				StringBuilder result = new StringBuilder();
+				int           using_idx = 0;
+				string        rule      = Language.GetString(rulename);//[rulename];
+				StringBuilder result    = new StringBuilder();
 				for (int i = 0; i < rule.Length; i++)
 				{
 					if (rule[i] == '%' && i + 1 < rule.Length)
@@ -99,7 +68,7 @@ namespace Alex.API.Utils
 				}
 				return result.ToString();
 			}
-			else return "[" + rulename + "] " + String.Join(" ", using_data);
+			//else return "[" + rulename + "] " + String.Join(" ", using_data);
 		}
 
 		/// <summary>
@@ -171,5 +140,7 @@ namespace Alex.API.Utils
 
 			return "";
 		}
+
+		public static CultureLanguage Language { get; set; } = new CultureLanguage();
 	}
 }

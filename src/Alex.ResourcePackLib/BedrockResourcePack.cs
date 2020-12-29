@@ -118,10 +118,10 @@ namespace Alex.ResourcePackLib
 			}
 			EntityModels = ProcessEntityModels(entityModels);
 
-			Log.Info($"Processed {EntityModels.Count} entity models");
+			//Log.Info($"Processed {EntityModels.Count} entity models");
 		
 			EntityDefinitions = entityDefinitions;
-            Log.Info($"Processed {EntityDefinitions.Count} entity definitions");
+           // Log.Info($"Processed {EntityDefinitions.Count} entity definitions");
         }
 
 		public IReadOnlyDictionary<string, EntityModel> EntityModels { get; private set; }

@@ -217,6 +217,7 @@ namespace Alex.Graphics.Models.Entity
 					
 					Matrix yawPitchMatrix = Matrix.Identity;
 
+					var pivot = Definition.Pivot * new Vector3(-1f, 1f, 1f);
 					if (ApplyHeadYaw || ApplyPitch)
 					{
 						var headYaw = ApplyHeadYaw ? MathUtils.ToRadians(-(modelLocation.HeadYaw - modelLocation.Yaw)) :
@@ -224,19 +225,29 @@ namespace Alex.Graphics.Models.Entity
 
 						var pitch = ApplyPitch ? MathUtils.ToRadians(modelLocation.Pitch) : 0f;
 
-						yawPitchMatrix = Matrix.CreateTranslation(-Definition.Pivot)
+						yawPitchMatrix = Matrix.CreateTranslation(-pivot)
 						                 * Matrix.CreateFromYawPitchRoll(headYaw, pitch, 0f)
-						                 * Matrix.CreateTranslation(Definition.Pivot);
+						                 * Matrix.CreateTranslation(pivot);
 					}
 
-					var userRotationMatrix = Matrix.CreateTranslation(-Definition.Pivot)
+					var userRotationMatrix = Matrix.CreateTranslation(-pivot)
 					                         * Matrix.CreateRotationX(MathUtils.ToRadians(Rotation.X))
 					                         * Matrix.CreateRotationY(MathUtils.ToRadians(Rotation.Y))
 					                         * Matrix.CreateRotationZ(MathUtils.ToRadians(Rotation.Z))
-					                         * Matrix.CreateTranslation(Definition.Pivot);
+					                         * Matrix.CreateTranslation(pivot);
 
-					Effect.World = yawPitchMatrix * userRotationMatrix * DefaultMatrix * characterMatrix;
+					var world    = yawPitchMatrix * userRotationMatrix * DefaultMatrix * characterMatrix;
+					var forward  = world.Forward;
+					var backward = world.Backward;
+					var left     = world.Left;
+					var right    = world.Right;
 
+					world.Left = right;
+					world.Right = left;
+				//	world.Forward = backward;
+					//world.Backward = forward;
+
+					Effect.World = world;
 					Effect.DiffuseColor = diffuseColor;
 					var children = Children.ToArray();
 
@@ -342,6 +353,7 @@ namespace Alex.Graphics.Models.Entity
 					Effect = new AlphaTestEffect(device);
 					Effect.Texture = Texture;
 					Effect.VertexColorEnabled = true;
+
 				}
 			}
 		}
