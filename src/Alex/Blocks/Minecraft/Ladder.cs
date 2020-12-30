@@ -18,16 +18,17 @@ namespace Alex.Blocks.Minecraft
 			
 			BlockMaterial = Material.Wood;
 			Hardness = 0.4f;
-
+			HasHitbox = true;
 		}
 
 		public override bool CanClimb(BlockFace face)
 		{
 			if (BlockState.TryGetValue("facing", out var val))
 			{
-				BlockFace facing = Enum.Parse<BlockFace>(val);
-
-				return facing.Opposite() == face;
+				if (Enum.TryParse<BlockFace>(val, true, out var facing))
+				{
+					return facing.Opposite() == face;
+				}
 			}
 
 			return false;

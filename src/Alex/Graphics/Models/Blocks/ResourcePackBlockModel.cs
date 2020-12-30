@@ -69,30 +69,28 @@ namespace Alex.Graphics.Models.Blocks
 			
 			Boxes = CalculateBoundingBoxes(Models);
 
-			/*for (int i = 0; i < Boxes.Length; i++)
+			for (int i = 0; i < Boxes.Length; i++)
 			{
-				var box         = Boxes[i];
-				
-				/*var yDifference = box.Max.Y - box.Min.Y;
-				if (yDifference < 0.01f)
+				var box        = Boxes[i];
+				var dimensions = box.GetDimensions();
+
+				if (dimensions.X < 0.01f)
 				{
-					box.Max.Y += (0.01f - yDifference);
+					box.Inflate(new Vector3(0.01f - dimensions.X, 0f, 0f));
+				}
+				
+				if (dimensions.Y < 0.01f)
+				{
+					box.Inflate(new Vector3(0f, 0.01f - dimensions.Y, 0f));
+				}
+				
+				if (dimensions.Z < 0.01f)
+				{
+					box.Inflate(new Vector3(0f, 0f, 0.01f - dimensions.Z));
 				}
 
-				var xDifference = box.Max.X - box.Min.X;
-				if (xDifference < 0.01f)
-				{
-					box.Max.X += (0.01f - xDifference);
-				}
-				
-				var zDifference = box.Max.Z - box.Min.Z;
-				if (zDifference < 0.01f)
-				{
-					box.Max.Z += (0.01f - zDifference);
-				}*
-				
 				Boxes[i] = box;
-			}*/
+			}
 		}
 
 		/// <inheritdoc />

@@ -48,6 +48,23 @@ namespace Alex.API.Utils
             box.Max.Y += ha;
             box.Max.Z += ha;
         }
+        
+        /// <summary>
+        /// Inflates this bounding box by the given amount.
+        /// </summary>
+        /// <param name="box">This bounding box.</param>
+        /// <param name="amount">The amount to inflate by.</param>
+        public static void Inflate( this BoundingBox box, Vector3 amount )
+        {
+            var ha = amount * 0.5f;
+            
+            box.Min.X -= ha.X;
+            box.Min.Y -= ha.Y;
+            box.Min.Z -= ha.Z;
+            box.Max.X += ha.X;
+            box.Max.Y += ha.Y;
+            box.Max.Z += ha.Z;
+        }
 
         /// <summary>
         /// Gets the center coordinates of this bounding box.

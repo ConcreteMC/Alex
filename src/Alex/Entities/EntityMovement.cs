@@ -65,20 +65,20 @@ namespace Alex.Entities
 
 			//TODO: Fix position offset
 
-			var               velocityBeforeAdjustment = new Vector3(amount.X, amount.Y, amount.Z);
+			var               beforeAdjustment = new Vector3(amount.X, amount.Y, amount.Z);
 			
 			List<BoundingBox> boxes                    = new List<BoundingBox>();
 			if (TestTerrainCollisionY(ref amount, out var yCollisionPoint, out var yBox, boxes))
 			{
-				if (velocityBeforeAdjustment.Y <= 0f)
+				if (beforeAdjustment.Y <= 0f)
 					Entity.KnownPosition.OnGround = true;
 				
 				Entity.Velocity *= new Vector3(1f, 0f, 1f);
 				//Entity.Velocity += new Vector3(0f, direction.Y, 0f);
 				
 				Entity.CollidedWithWorld(
-					velocityBeforeAdjustment.Y < 0 ? Vector3.Down : Vector3.Up, yCollisionPoint,
-					velocityBeforeAdjustment.Y);
+					beforeAdjustment.Y < 0 ? Vector3.Down : Vector3.Up, yCollisionPoint,
+					beforeAdjustment.Y);
 			}
 
 			float collisionX = 0f;
@@ -127,13 +127,28 @@ namespace Alex.Entities
 			{
 				if (collideX)
 				{
-					amount.X = collisionX;
-					Entity.Velocity = new Vector3(0f, Entity.Velocity.Y, Entity.Velocity.Z);
 					//Entity.Velocity += new Vector3(direction.X, 0f, 0f);
-				
+
 					Entity.CollidedWithWorld(
-						velocityBeforeAdjustment.X < 0 ? Vector3.Left : Vector3.Right, xCollisionPoint,
-						velocityBeforeAdjustment.X);
+						beforeAdjustment.X < 0 ? Vector3.Left : Vector3.Right, xCollisionPoint,
+						beforeAdjustment.X);
+					
+					var dir = (xCollisionPoint - Entity.KnownPosition);
+					dir.Normalize();
+					var block = Entity.Level.GetBlockState(xCollisionPoint);
+					if (block != null && block.Block.CanClimb(dir.GetBlockFace()))
+					{
+						//amount.Y += MathF.Abs(beforeAdjustment.X);
+						amount.X = 0;
+						amount.Y = Math.Max(amount.Y, beforeAdjustment.X * 0.3f);
+						Entity.Velocity = new Vector3(0f, Entity.Velocity.Y, Entity.Velocity.Z);
+					}
+					else
+					{
+						amount.X = collisionX;
+
+						Entity.Velocity = new Vector3(0f, Entity.Velocity.Y, Entity.Velocity.Z);
+					}
 				}
 
 				if (collideZ)
@@ -144,8 +159,25 @@ namespace Alex.Entities
 					//Entity.Velocity += new Vector3(0f, 0f, direction.Z);
 				
 					Entity.CollidedWithWorld(
-						velocityBeforeAdjustment.Z < 0 ? Vector3.Backward : Vector3.Forward, zCollisionPoint,
-						velocityBeforeAdjustment.Z);
+						beforeAdjustment.Z < 0 ? Vector3.Backward : Vector3.Forward, zCollisionPoint,
+						beforeAdjustment.Z);
+					
+					var dir = (zCollisionPoint - Entity.KnownPosition);
+					dir.Normalize();
+					
+					var block = Entity.Level.GetBlockState(zCollisionPoint);
+					if (block != null && block.Block.CanClimb(dir.GetBlockFace()))
+					{
+						amount.Z = 0;
+						amount.Y = Math.Max(amount.Y, beforeAdjustment.Z *0.3f);
+						Entity.Velocity = new Vector3(Entity.Velocity.X, Entity.Velocity.Y, 0f);
+					}
+					else
+					{
+						amount.Z = collisionZ;
+
+						Entity.Velocity = new Vector3(Entity.Velocity.X, Entity.Velocity.Y, 0f);
+					}
 				}
 			}
 			

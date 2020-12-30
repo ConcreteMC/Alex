@@ -520,10 +520,11 @@ namespace Alex.Entities
 		    var lookVector = Level.Camera.Direction;
 
 		    List<BoundingBox> boundingBoxes = new List<BoundingBox>();
-		    for (float x = 0.5f; x < 8f; x += 0.1f)
+		   // var               ray           = new Ray(camPos, lookVector * 8f);
+		    
+		    for (float x = (float) (Width * Scale); x < 8f; x += 0.01f)
 		    {
 			    Vector3 targetPoint  = camPos + (lookVector * x);
-			    
 			    var     flooredBlock = Vector3.Floor(targetPoint);
 			    var     block        = Level.GetBlockState(targetPoint);
 
