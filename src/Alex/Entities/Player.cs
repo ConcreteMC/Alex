@@ -1,6 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using Alex.API.Blocks;
 using Alex.API.Graphics;
@@ -10,18 +12,33 @@ using Alex.Blocks.Minecraft;
 using Alex.Blocks.State;
 using Alex.Items;
 using Alex.Net;
+using Alex.ResourcePackLib.Json;
+using Alex.ResourcePackLib.Json.Models.Entities;
+using Alex.Utils;
 using Alex.Utils.Inventories;
 using Alex.Worlds;
 using Alex.Worlds.Multiplayer.Bedrock;
+using LibNoise.Combiner;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using MiNET.LevelDB;
 using MiNET.Net;
+using MiNET.Utils.Skins;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Serialization;
 using NLog;
 using NLog.Fluent;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats.Png;
+using SixLabors.ImageSharp.PixelFormats;
 using BlockCoordinates = Alex.API.Utils.BlockCoordinates;
 using BoundingBox = Microsoft.Xna.Framework.BoundingBox;
 using ContainmentType = Microsoft.Xna.Framework.ContainmentType;
+using GeometryIdentifier = Alex.Worlds.Multiplayer.Bedrock.GeometryIdentifier;
+using GeometryModel = Alex.Worlds.Multiplayer.Bedrock.GeometryModel;
 using Skin = Alex.API.Utils.Skin;
+using SkinResourcePatch = Alex.Worlds.Multiplayer.Bedrock.SkinResourcePatch;
 
 namespace Alex.Entities
 {
@@ -363,9 +380,9 @@ namespace Alex.Entities
 			    canAttack = !IsNoPvM;
 		    }
 
-		    if (entity is RemotePlayer rp && IsSneaking)
+		    if (IsSneaking)
 		    {
-			    if (rp.Skin != null)
+			    /*if (rp.Skin != null)
 			    {
 				    if (!Directory.Exists("skins"))
 					    Directory.CreateDirectory("skins");
@@ -384,23 +401,10 @@ namespace Alex.Entities
 				    var oldSkin = Skin;
 				    Skin = rp.Skin;
 
-				    if (Network is BedrockClient bc)
-				    {
-					    var packet = McpePlayerSkin.CreateObject();
-					    packet.skin = rp.Skin;
-					    packet.skin.GeometryData = rp.Skin.GeometryData;
-					    packet.skin.GeometryName = rp.Skin.GeometryName;
-					    
-					    packet.uuid = UUID;
-					    packet.isVerified = true;
-					    packet.skinName = rp.Skin.SkinId;
-					    packet.oldSkinName = "";
-					    
-					    bc.SendPacket(packet);
-
-					    Log.Info($"Stole skin from {rp.NameTag}");
-				    }
-			    }
+				   
+			    }*/
+			    
+			    SteelSkin(entity);
 			    return;
 		    }
 
@@ -417,6 +421,59 @@ namespace Alex.Entities
 		    }
 	    }
 
+	    private void SteelSkin(Entity sourceEntity)
+	    {
+		    if (Network is BedrockClient bc)
+		    {
+			    MiNET.Utils.Skins.Skin skin = null;
+			    
+			    if (sourceEntity is RemotePlayer player)
+			    {
+				    if (player.Skin != null)
+					    skin = player.Skin;
+			    }
+			    else
+			    {
+				    if (sourceEntity?.ModelRenderer?.Model == null)
+					    return;
+				    
+				    var model   = sourceEntity.ModelRenderer.Model;
+				    skin = model.ToSkin();
+			    }
+
+			    if (skin == null)
+				    return;
+
+			    var texture = sourceEntity.ModelRenderer.Texture;
+
+			    if (skin.Data == null || skin.Data.Length == 0)
+			    {
+				    skin = skin.UpdateTexture(texture);
+			    }
+
+			    var packet = McpePlayerSkin.CreateObject();
+			    packet.skin = skin;
+
+			    packet.uuid = UUID;
+			    packet.isVerified = true;
+			    packet.skinName = skin.SkinId;
+			    packet.oldSkinName = "";
+
+			    bc.SendPacket(packet);
+
+			    Skin = skin;
+			    Log.Info($"Stole skin from {sourceEntity.NameTag}");
+			    
+			   /* File.WriteAllText(Path.Combine("skins", skin.SkinId + ".json"), skin.GeometryData);
+
+			    if (skin.TryGetBitmap(out var bmp))
+			    {
+				    bmp.SaveAsPng(Path.Combine("skins", skin.SkinId + ".png"));
+			    }*/
+		    }
+		    
+	    }
+	    
 	    public Entity HitEntity { get; private set; } = null;
 	    public Entity[] EntitiesInRange { get; private set; } = null;
 

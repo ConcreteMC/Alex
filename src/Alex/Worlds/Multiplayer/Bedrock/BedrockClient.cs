@@ -742,12 +742,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			        }
 			        skinData = ms.ToArray();
 		        }
-
-		       //var modelName = model.Name ?? model.Description.Identifier;
-
-		        //abc.geometry["default"] = model.Name;
-
-		        //var           newModel = new EntityModel() {Bones = model.Bones, Description = model.Description};
+		        
 		        GeometryModel mm       = new GeometryModel();
 		        mm.Geometry.Add(model.Description.Identifier, model);
 

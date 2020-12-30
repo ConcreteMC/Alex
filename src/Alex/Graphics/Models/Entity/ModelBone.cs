@@ -217,7 +217,7 @@ namespace Alex.Graphics.Models.Entity
 					
 					Matrix yawPitchMatrix = Matrix.Identity;
 
-					var pivot = Definition.Pivot * new Vector3(-1f, 1f, 1f);
+					var pivot = (Definition.Pivot ?? Vector3.Zero) * new Vector3(-1f, 1f, 1f);
 					if (ApplyHeadYaw || ApplyPitch)
 					{
 						var headYaw = ApplyHeadYaw ? MathUtils.ToRadians(-(modelLocation.HeadYaw - modelLocation.Yaw)) :

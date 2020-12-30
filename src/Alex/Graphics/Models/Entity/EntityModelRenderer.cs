@@ -50,8 +50,11 @@ namespace Alex.Graphics.Models.Entity
 
 		public long Vertices => CanRender && VertexBuffer != null ? VertexBuffer.VertexCount : 0;
 		//public float Height { get; private set; } = 0f;
+		
+		public EntityModel Model { get; }
 		public EntityModelRenderer(EntityModel model, PooledTexture2D texture)
 		{
+			Model = model;
 			//	Model = model;
 			if (texture == null)
 			{
@@ -82,9 +85,13 @@ namespace Alex.Graphics.Models.Entity
 			
 			var actualTextureSize = new Vector2(texture.Width, texture.Height);
 
+			int counter = 0;
 			foreach (var bone in model.Bones.Where(x => string.IsNullOrWhiteSpace(x.Parent)))
 			{
 				//if (bone.NeverRender) continue;
+				if (string.IsNullOrWhiteSpace(bone.Name))
+					bone.Name = $"bone{counter++}";
+				
 				if (modelBones.ContainsKey(bone.Name)) continue;
 				
 				var processed = ProcessBone(texture, model, bone, vertices, actualTextureSize , modelBones);
@@ -110,36 +117,6 @@ namespace Alex.Graphics.Models.Entity
 			
 			Valid = true;
 			_texture = texture;
-		}
-
-		private static Vector3 FlipX(Vector3 origin, Vector3 size)
-		{
-			//return origin;
-			if (origin.X >= 0)
-			{
-				origin.X = -(((MathF.Abs(origin.X) / size.X) + 1) * size.X);
-			}
-			else
-			{
-				origin.X = ((MathF.Abs(origin.X) / size.X) - 1) * size.X;
-			}
-
-			return origin;
-		}
-		
-		private static Vector3 FlipZ(Vector3 origin, Vector3 size)
-		{
-			//return origin;
-			if (origin.Z >= 0)
-			{
-				origin.Z = -(((MathF.Abs(origin.Z) / size.Z) + 1) * size.Z);
-			}
-			else
-			{
-				origin.Z = ((MathF.Abs(origin.Z) / size.Z) - 1) * size.Z;
-			}
-
-			return origin;
 		}
 
 		private ModelBone ProcessBone(PooledTexture2D texture,
@@ -189,17 +166,18 @@ namespace Alex.Graphics.Models.Entity
 				}
 			}
 
+			var pivot      = bone.Pivot ?? Vector3.Zero;
 			var boneMatrix = Matrix.Identity;
 
 			if (bone.BindPoseRotation.HasValue)
 			{
 				var rotation = bone.BindPoseRotation.Value;
 
-				boneMatrix = Matrix.CreateTranslation(-bone.Pivot)
+				boneMatrix = Matrix.CreateTranslation(-pivot)
 				             * Matrix.CreateRotationX(MathUtils.ToRadians(-rotation.X))
 				             * Matrix.CreateRotationY(MathUtils.ToRadians(rotation.Y))
 				             * Matrix.CreateRotationZ(MathUtils.ToRadians(rotation.Z))
-				             * Matrix.CreateTranslation(bone.Pivot);
+				             * Matrix.CreateTranslation(pivot);
 			}
 
 			modelBone = new ModelBone(texture, indices.ToArray(), bone, boneMatrix);
@@ -211,18 +189,25 @@ namespace Alex.Graphics.Models.Entity
 			}
 
 			modelBone.Setup(Alex.Instance.GraphicsDevice);
-
+			
 			foreach (var childBone in source.Bones.Where(
-				x => string.Equals(x.Parent, bone.Name, StringComparison.OrdinalIgnoreCase)))
+				x => x.Parent != null && string.Equals(x.Parent, bone.Name, StringComparison.OrdinalIgnoreCase)))
 			{
+				if (childBone.Parent != null && childBone.Parent.Equals(childBone.Name))
+					continue;
+
+				if (string.IsNullOrWhiteSpace(childBone.Name))
+					childBone.Name = Guid.NewGuid().ToString();
+				
 				var child = ProcessBone(texture, source, childBone, vertices, textureSize, modelBones);
 				child.Parent = modelBone;
 
 				modelBone.AddChild(child);
-
+				
 				if (!modelBones.TryAdd(childBone.Name, child))
 				{
 					Log.Warn($"Failed to add bone! {childBone.Name}");
+					break;
 				}
 			}
 
@@ -329,7 +314,6 @@ namespace Alex.Graphics.Models.Entity
 					args, matrix, EntityColor * DiffuseColor, position);
 			}
 		}
-
 		public bool GetBone(string name, out ModelBone bone)
 		{
 			if (string.IsNullOrWhiteSpace(name) || Bones == null || Bones.Count == 0)

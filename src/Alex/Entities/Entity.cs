@@ -747,7 +747,7 @@ namespace Alex.Entities
 
 	            if (arm != null)
 	            {
-		            Vector3 pivot;
+		            Vector3? pivot;
 
 		            if (_rightItemModel != null)
 		            {
@@ -758,15 +758,17 @@ namespace Alex.Entities
 			            pivot = arm.Definition.Pivot;
 		            }
 
+		            pivot ??= Vector3.Zero;
+		            
 		            if ((ItemRenderer.DisplayPosition & DisplayPosition.ThirdPerson) != 0)
-			            scaleMatrix = Matrix.CreateTranslation(-pivot)
+			            scaleMatrix = Matrix.CreateTranslation(-pivot.Value)
 			                          * Matrix.CreateRotationX(
 				                          MathUtils.ToRadians((1f / 16f) * arm.Rotation.X))
 			                          * Matrix.CreateRotationY(
 				                          MathUtils.ToRadians((1f / 16f) * arm.Rotation.Y))
 			                          * Matrix.CreateRotationZ(
 				                          MathUtils.ToRadians((1f / 16f) * arm.Rotation.Z))
-			                          * Matrix.CreateTranslation(pivot);
+			                          * Matrix.CreateTranslation(pivot.Value);
 	            }
             }
 
@@ -1235,10 +1237,18 @@ namespace Alex.Entities
 		
 		public virtual BoundingBox GetBoundingBox(Vector3 pos)
 		{
-			double halfWidth = (Width * Scale) / 2D;
-			double halfDepth = (Width * Scale) / 2D;
+			var width  = Width;
+			var height = Height;
+			if (ModelRenderer?.Model != null)
+			{
+				width += ModelRenderer.Model.Description.VisibleBoundsWidth;
+				height += ModelRenderer.Model.Description.VisibleBoundsHeight;
+			}
 			
-			return new BoundingBox(new Vector3((float)(pos.X - halfWidth), pos.Y, (float)(pos.Z - halfDepth)), new Vector3((float)(pos.X + halfWidth), (float)(pos.Y + (Height * Scale)), (float)(pos.Z + halfDepth)));
+			double halfWidth = (width * Scale) / 2D;
+			double halfDepth = (width * Scale) / 2D;
+			
+			return new BoundingBox(new Vector3((float)(pos.X - halfWidth), pos.Y, (float)(pos.Z - halfDepth)), new Vector3((float)(pos.X + halfWidth), (float)(pos.Y + (height * Scale)), (float)(pos.Z + halfDepth)));
 		}
 		
 		public bool IsColliding(IEntity other)
