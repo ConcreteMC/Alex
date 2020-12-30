@@ -63,10 +63,7 @@ namespace Alex.Worlds
 				_sw.Restart();
 				
 				entity.OnTick();
-				
-				var tickTime = _sw.ElapsedMilliseconds;
-				
-				
+
 				if (Math.Abs(new ChunkCoordinates(entity.KnownPosition).DistanceTo(cameraChunkPosition))
 				    > World.ChunkManager.RenderDistance)
 				{
@@ -75,7 +72,7 @@ namespace Alex.Worlds
 					continue;
 				}
 
-				var entityBox = entity.GetBoundingBox();
+				var entityBox = entity.GetVisibilityBoundingBox(entity.RenderLocation);
 
 				if (World.Camera.BoundingFrustum.Contains(
 					new Microsoft.Xna.Framework.BoundingBox(entityBox.Min, entityBox.Max)) != ContainmentType.Disjoint)

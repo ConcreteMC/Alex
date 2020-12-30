@@ -1234,23 +1234,41 @@ namespace Alex.Entities
 			//var pos = KnownPosition;
 			//return GetBoundingBox(pos);
 		}
-		
+
 		public virtual BoundingBox GetBoundingBox(Vector3 pos)
 		{
-			var width  = Width;
-			var height = Height;
-			if (ModelRenderer?.Model != null)
-			{
-				width += ModelRenderer.Model.Description.VisibleBoundsWidth;
-				height += ModelRenderer.Model.Description.VisibleBoundsHeight;
-			}
+			var    width     = Width;
+			var    height    = Height;
 			
 			double halfWidth = (width * Scale) / 2D;
 			double halfDepth = (width * Scale) / 2D;
-			
-			return new BoundingBox(new Vector3((float)(pos.X - halfWidth), pos.Y, (float)(pos.Z - halfDepth)), new Vector3((float)(pos.X + halfWidth), (float)(pos.Y + (height * Scale)), (float)(pos.Z + halfDepth)));
+
+			return new BoundingBox(
+				new Vector3((float) (pos.X - halfWidth), pos.Y, (float) (pos.Z - halfDepth)),
+				new Vector3(
+					(float) (pos.X + halfWidth), (float) (pos.Y + (height * Scale)), (float) (pos.Z + halfDepth)));
 		}
-		
+
+		public virtual BoundingBox GetVisibilityBoundingBox(Vector3 pos)
+		{
+			var width  = Width;
+			var height = Height;
+
+			if (ModelRenderer?.Model != null)
+			{
+				width = ModelRenderer.Model.Description.VisibleBoundsWidth;
+				height = ModelRenderer.Model.Description.VisibleBoundsHeight;
+			}
+
+			double halfWidth = (width * Scale) / 2D;
+			double halfDepth = (width * Scale) / 2D;
+
+			return new BoundingBox(
+				new Vector3((float) (pos.X - halfWidth), pos.Y, (float) (pos.Z - halfDepth)),
+				new Vector3(
+					(float) (pos.X + halfWidth), (float) (pos.Y + (height * Scale)), (float) (pos.Z + halfDepth)));
+		}
+
 		public bool IsColliding(IEntity other)
 		{
 			return IsColliding(GetBoundingBox(), other);
