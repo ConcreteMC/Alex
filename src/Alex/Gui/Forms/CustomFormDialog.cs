@@ -6,6 +6,7 @@ using Alex.API.Gui.Elements.Controls;
 using Alex.API.Gui.Elements.Layout;
 using Alex.API.Input;
 using Alex.API.Utils;
+using Microsoft.Xna.Framework;
 using MiNET.Net;
 using MiNET.UI;
 using Newtonsoft.Json;
@@ -15,26 +16,18 @@ namespace Alex.Gui.Forms
     public class CustomFormDialog : FormBase
     {
         //private Dictionary<>
-        private CustomForm Form { get; }
-        private GuiButton SubmitButton { get; }
+        private GuiStackContainer Header       { get; }
+        private CustomForm        Form         { get; }
+        private GuiButton         SubmitButton { get; }
         public CustomFormDialog(uint formId, BedrockFormManager parent, CustomForm form, InputManager inputManager) : base(formId, parent, inputManager)
         {
-            Container.AddChild(new GuiTextElement()
-            {
-                Anchor = Alignment.TopCenter,
-                Text = form.Title,
-                FontStyle = FontStyle.Bold,
-                Scale = 2f,
-                TextColor = TextColor.White
-            });
-
             Form = form;
             
             GuiScrollableStackContainer stackContainer = new GuiScrollableStackContainer();
             stackContainer.Orientation = Orientation.Vertical;
             stackContainer.Anchor = Alignment.Fill;
             stackContainer.ChildAnchor = Alignment.MiddleFill;
-            
+            stackContainer.Background = Color.Black * 0.35f;
             var margin = new Thickness(5,5);
             
             foreach (var element in form.Content)
@@ -56,7 +49,7 @@ namespace Alex.Gui.Forms
                         GuiTextInput guiInput = new GuiTextInput()
                         {
                             Value = input.Value,
-                            PlaceHolder = input.Placeholder,
+                            PlaceHolder = !string.IsNullOrWhiteSpace(input.Placeholder) ? input.Placeholder : input.Text,
                             Margin = margin
                         };
                         
@@ -127,7 +120,47 @@ namespace Alex.Gui.Forms
 
             stackContainer.AddChild(SubmitButton);
             
-            Container.AddChild(stackContainer);
+            Background = Color.Transparent;
+
+            var width  = 356;
+            var height = width;
+			
+            ContentContainer.Width = ContentContainer.MinWidth = ContentContainer.MaxWidth = width;
+            ContentContainer.Height = ContentContainer.MinHeight = ContentContainer.MaxHeight = height;
+            
+            SetFixedSize(width, height);
+            
+            ContentContainer.AutoSizeMode = AutoSizeMode.None;
+			
+            Container.Anchor = Alignment.MiddleCenter;
+
+            var bodyWrapper = new GuiContainer();
+            bodyWrapper.Anchor = Alignment.Fill;
+            bodyWrapper.Padding = new Thickness(5, 0);
+            bodyWrapper.AddChild(stackContainer);
+            
+            Container.AddChild(bodyWrapper);
+            
+            Container.AddChild(Header = new GuiStackContainer()
+            {
+                Anchor = Alignment.TopFill,
+                ChildAnchor = Alignment.BottomCenter,
+                Height = 32,
+                Padding = new Thickness(3),
+                Background = Color.Black * 0.5f
+            });
+            
+            Header.AddChild(new GuiTextElement()
+            {
+                Text      = FixContrast(form.Title),
+                TextColor = TextColor.White,
+                Scale     = 2f,
+                FontStyle = FontStyle.DropShadow,
+                
+                Anchor = Alignment.BottomCenter,
+            });
+			
+            stackContainer.Margin = new Thickness(0, Header.Height, 0, 0);
         }
 
         private string Serialize()

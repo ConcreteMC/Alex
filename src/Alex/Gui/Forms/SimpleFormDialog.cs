@@ -3,8 +3,10 @@ using Alex.API.Graphics.Typography;
 using Alex.API.Gui;
 using Alex.API.Gui.Elements;
 using Alex.API.Gui.Elements.Controls;
+using Alex.API.Gui.Elements.Layout;
 using Alex.API.Input;
 using Alex.API.Utils;
+using Microsoft.Xna.Framework;
 using MiNET.Net;
 using MiNET.UI;
 
@@ -12,16 +14,20 @@ namespace Alex.Gui.Forms
 {
     public class SimpleFormDialog : FormBase
     {
-        private GuiStackMenu StackMenu { get; }
+        private GuiStackContainer      Header { get; }
+        //public  GuiMultiStackContainer Footer { get; }
+        
+        private GuiStackMenu           StackMenu { get; }
         public SimpleFormDialog(uint formId, BedrockFormManager parent, SimpleForm form, InputManager inputManager) : base(formId, parent, inputManager)
         {
             StackMenu = new GuiStackMenu();
             StackMenu.Anchor = Alignment.Fill;
-            StackMenu.ChildAnchor = Alignment.MiddleFill;
-            
+            StackMenu.ChildAnchor = Alignment.MiddleCenter;
+            StackMenu.Background = Color.Black * 0.35f;
+
             if (!string.IsNullOrWhiteSpace(form.Content))
             {
-                StackMenu.AddMenuItem(form.Content, () => {}, false);
+                StackMenu.AddLabel(FixContrast(form.Content));
                 StackMenu.AddSpacer();
             }
 
@@ -55,21 +61,50 @@ namespace Alex.Gui.Forms
                     }
                 }
                 
-                StackMenu.AddMenuItem(button.Text, submitAction);
+                var item = StackMenu.AddMenuItem(button.Text, submitAction);
             }
             
-            Container.AddChild(StackMenu);
+            Background = Color.Transparent;
+
+            var width  = 356;
+            var height = width;
+			
+            ContentContainer.Width = ContentContainer.MinWidth = ContentContainer.MaxWidth = width;
+            ContentContainer.Height = ContentContainer.MinHeight = ContentContainer.MaxHeight = height;
             
-            Container.AddChild(new GuiTextElement()
+            SetFixedSize(width, height);
+            
+            ContentContainer.AutoSizeMode = AutoSizeMode.None;
+			
+            Container.Anchor = Alignment.MiddleCenter;
+
+            var bodyWrapper = new GuiContainer();
+            bodyWrapper.Anchor = Alignment.Fill;
+            bodyWrapper.Padding = new Thickness(5, 0);
+            bodyWrapper.AddChild(StackMenu);
+            
+            Container.AddChild(bodyWrapper);
+            
+            Container.AddChild(Header = new GuiStackContainer()
             {
-                Anchor = Alignment.TopCenter,
-                Text = form.Title,
-                FontStyle = FontStyle.Bold,
-                Scale = 2f,
-                TextColor = TextColor.White
+                Anchor = Alignment.TopFill,
+                ChildAnchor = Alignment.BottomCenter,
+                Height = 32,
+                Padding = new Thickness(3),
+                Background = Color.Black * 0.5f
             });
             
-            AddChild(Container);
+            Header.AddChild(new GuiTextElement()
+            {
+                Text      = FixContrast(form.Title),
+                TextColor = TextColor.White,
+                Scale     = 2f,
+                FontStyle = FontStyle.DropShadow,
+                
+                Anchor = Alignment.BottomCenter,
+            });
+			
+            StackMenu.Margin = new Thickness(0, Header.Height, 0, 0);
         }
     }
 }

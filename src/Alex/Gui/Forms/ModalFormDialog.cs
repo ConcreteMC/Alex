@@ -140,7 +140,7 @@ namespace Alex.Gui.Forms
 			
 			Header.AddChild(new GuiTextElement()
 			{
-				Text      = form.Title,
+				Text      = FixContrast(form.Title),
 				TextColor = TextColor.White,
 				Scale     = 2f,
 				FontStyle = FontStyle.DropShadow,

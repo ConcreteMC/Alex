@@ -204,6 +204,9 @@ namespace Alex.Entities
 	    
 	    public override void Update(IUpdateArgs args)
 	    {
+		    bool hasActiveDialog = Alex.Instance.GuiManager.ActiveDialog != null;
+		    Controller.CheckMovementInput = !hasActiveDialog;
+		    
 		    if (WaitingOnChunk && Age % 4 == 0)
 		    {
 			    NoAi = true;
@@ -224,7 +227,7 @@ namespace Alex.Entities
 		    {
 			    IsSprinting = false;
 		    }
-
+		    
 		    Controller.Update(args.GameTime);
 		    //KnownPosition.HeadYaw = KnownPosition.Yaw;
 
@@ -261,7 +264,7 @@ namespace Alex.Entities
 		    {
 			    _skipUpdate = false;
 		    }
-		    else if ((Controller.CheckInput && Controller.CheckMovementInput && Alex.Instance.GuiManager.ActiveDialog == null))
+		    else if ((Controller.CheckInput && Controller.CheckMovementInput && !hasActiveDialog))
 		    {
 
 			    UpdateBlockRayTracer();
@@ -360,6 +363,9 @@ namespace Alex.Entities
 			    PreviousSlot = slot;
 		    }
 
+		    if (hasActiveDialog)
+			    _skipUpdate = true;
+		    
 		    base.Update(args);
 
 	    }

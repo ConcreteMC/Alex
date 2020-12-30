@@ -1,4 +1,5 @@
 ﻿using System;
+using Alex.API.Gui.Elements.Controls;
 using Alex.API.Input;
 using Alex.API.Input.Listeners;
 using Alex.API.Services;
@@ -6,6 +7,7 @@ using Alex.API.Utils;
 using Alex.Graphics.Camera;
 using Alex.Gui.Dialogs.Containers;
 using Alex.Worlds;
+using Alex.Worlds.Multiplayer.Bedrock;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -112,41 +114,56 @@ namespace Alex.Entities
 			UpdatePlayerInput(gameTime);
 	    }
 
+		private bool _previousAllowMovementInput = true;
 	    private void UpdatePlayerInput(GameTime gt)
 	    {
 		    if (CheckInput)
 		    {
 				CheckGeneralInput(gt);
+				
+				if (_allowMovementInput != _previousAllowMovementInput)
+				{
+					CenterCursor();
+					_previousAllowMovementInput = _allowMovementInput;
+					return;
+				}
 				UpdateMovementInput(gt);
 		    }
 		}
 
 	    private void CheckGeneralInput(GameTime gt)
 	    {
-		    if (InputManager.IsPressed(InputCommand.HotBarSelectPrevious) || MouseInputListener.IsButtonDown(MouseButton.ScrollUp))
-			{
-				Player.Inventory.SelectedSlot--;
-			}
-			else if (InputManager.IsPressed(InputCommand.HotBarSelectNext) || MouseInputListener.IsButtonDown(MouseButton.ScrollDown))
-			{
-				Player.Inventory.SelectedSlot++;
-			}
-			
-		    if (InputManager.IsPressed(InputCommand.HotBarSelect1)) Player.Inventory.SelectedSlot = 0;
-		    if (InputManager.IsPressed(InputCommand.HotBarSelect2)) Player.Inventory.SelectedSlot = 1;
-		    if (InputManager.IsPressed(InputCommand.HotBarSelect3)) Player.Inventory.SelectedSlot = 2;
-		    if (InputManager.IsPressed(InputCommand.HotBarSelect4)) Player.Inventory.SelectedSlot = 3;
-		    if (InputManager.IsPressed(InputCommand.HotBarSelect5)) Player.Inventory.SelectedSlot = 4;
-		    if (InputManager.IsPressed(InputCommand.HotBarSelect6)) Player.Inventory.SelectedSlot = 5;
-		    if (InputManager.IsPressed(InputCommand.HotBarSelect7)) Player.Inventory.SelectedSlot = 6;
-		    if (InputManager.IsPressed(InputCommand.HotBarSelect8)) Player.Inventory.SelectedSlot = 7;
-		    if (InputManager.IsPressed(InputCommand.HotBarSelect9)) Player.Inventory.SelectedSlot = 8;
+		    _allowMovementInput = Alex.Instance.GuiManager.ActiveDialog == null;
 
-		    if (InputManager.IsPressed(InputCommand.ToggleCamera))
+		    if (_allowMovementInput)
 		    {
-			    World.Camera.ToggleMode();
+			    if (InputManager.IsPressed(InputCommand.HotBarSelectPrevious)
+			        || MouseInputListener.IsButtonDown(MouseButton.ScrollUp))
+			    {
+				    Player.Inventory.SelectedSlot--;
+			    }
+			    else if (InputManager.IsPressed(InputCommand.HotBarSelectNext)
+			             || MouseInputListener.IsButtonDown(MouseButton.ScrollDown))
+			    {
+				    Player.Inventory.SelectedSlot++;
+			    }
+
+			    if (InputManager.IsPressed(InputCommand.HotBarSelect1)) Player.Inventory.SelectedSlot = 0;
+			    if (InputManager.IsPressed(InputCommand.HotBarSelect2)) Player.Inventory.SelectedSlot = 1;
+			    if (InputManager.IsPressed(InputCommand.HotBarSelect3)) Player.Inventory.SelectedSlot = 2;
+			    if (InputManager.IsPressed(InputCommand.HotBarSelect4)) Player.Inventory.SelectedSlot = 3;
+			    if (InputManager.IsPressed(InputCommand.HotBarSelect5)) Player.Inventory.SelectedSlot = 4;
+			    if (InputManager.IsPressed(InputCommand.HotBarSelect6)) Player.Inventory.SelectedSlot = 5;
+			    if (InputManager.IsPressed(InputCommand.HotBarSelect7)) Player.Inventory.SelectedSlot = 6;
+			    if (InputManager.IsPressed(InputCommand.HotBarSelect8)) Player.Inventory.SelectedSlot = 7;
+			    if (InputManager.IsPressed(InputCommand.HotBarSelect9)) Player.Inventory.SelectedSlot = 8;
+
+			    if (InputManager.IsPressed(InputCommand.ToggleCamera))
+			    {
+				    World.Camera.ToggleMode();
+			    }
 		    }
-		    
+
 		    if (InputManager.IsPressed(InputCommand.Exit))
 		    {
 			    var activeDialog = Alex.Instance.GuiManager.ActiveDialog;
@@ -162,17 +179,21 @@ namespace Alex.Entities
 		    }
 			else if (InputManager.IsPressed(InputCommand.ToggleInventory))
 			{
-				if (_guiPlayerInventoryDialog == null)
+				if (!(Alex.Instance.GuiManager.FocusManager.FocusedElement is GuiTextInput))
 				{
-					//_allowMovementInput = false;
-					Alex.Instance.GuiManager.ShowDialog(_guiPlayerInventoryDialog = new GuiPlayerInventoryDialog(Player, Player.Inventory));
-				}
-				else
-				{
-					CenterCursor();
-					//_allowMovementInput = true;
-					Alex.Instance.GuiManager.HideDialog(_guiPlayerInventoryDialog);
-					_guiPlayerInventoryDialog = null;
+					if (_guiPlayerInventoryDialog == null)
+					{
+						//_allowMovementInput = false;
+						Alex.Instance.GuiManager.ShowDialog(
+							_guiPlayerInventoryDialog = new GuiPlayerInventoryDialog(Player, Player.Inventory));
+					}
+					else
+					{
+						CenterCursor();
+						//_allowMovementInput = true;
+						Alex.Instance.GuiManager.HideDialog(_guiPlayerInventoryDialog);
+						_guiPlayerInventoryDialog = null;
+					}
 				}
 			}
 
@@ -306,50 +327,10 @@ namespace Alex.Entities
 			}
 
 			WasInWater = Player.FeetInWater;
-			
-		//	if (moveVector != Vector3.Zero)
-			{
-			//	var velocity = moveVector;
-				//velocity = Vector3.Transform(velocity,
-				//	Matrix.CreateRotationY(-MathHelper.ToRadians(Player.KnownPosition.HeadYaw)));
+			Player.Movement.UpdateHeading(moveVector);
 
-				//velocity = Player.Level.PhysicsEngine.CheckCollisions(Player, velocity);
-				
-				/*if (Player.IsFlying)
-				{
-					if ((Player.Velocity * new Vector3(1, 1, 1)).Length() < velocity.Length())
-					{
-						var old = Player.Velocity;
-						Player.Velocity += new Vector3(velocity.X - old.X, velocity.Y - old.Y, velocity.Z - old.Z);
-					}
-					else
-					{
-						Player.Velocity = new Vector3(velocity.X, velocity.Y, velocity.Z);
-					}
-				}
-				else
-				{
-					var old = Player.Velocity;
-					var oldLength = (Player.Velocity * new Vector3(1, 0, 1)).Length();
-					if (oldLength < velocity.Length())
-					{
-						Player.Velocity += new Vector3(velocity.X - old.X, 0, velocity.Z - old.Z);
-					}
-					else
-					{
-						
-						Player.Velocity = new Vector3(MathF.Abs(old.X) < 0.0001f ? velocity.X : old.X, Player.Velocity.Y, MathF.Abs(old.Z) < 0.0001f ? velocity.Z : old.Z);
-					}
-				}*/
-
-				//speedFactor *= 20;
-				//Player.Velocity += (moveVector * speedFactor);// new Vector3(moveVector.X * speedFactor, moveVector.Y * (speedFactor), moveVector.Z * speedFactor);
-				Player.Movement.UpdateHeading(moveVector);
-			}
-
-		   // LastSpeedFactor = speedFactor;
-
-			if (IgnoreNextUpdate)
+				// LastSpeedFactor = speedFactor;
+		    if (IgnoreNextUpdate)
 			{
 				IgnoreNextUpdate = false;
 			}
@@ -379,15 +360,11 @@ namespace Alex.Entities
 				if (checkMouseInput)
 				{
 					var e = MouseInputListener.GetCursorPosition();
-
-					var centerX = Graphics.Viewport.Width / 2;
-					var centerY = Graphics.Viewport.Height / 2;
-
+					
 					if (e.X < 10 || e.X > Graphics.Viewport.Width - 10 || e.Y < 10
 					    || e.Y > Graphics.Viewport.Height - 10)
 					{
-						_previousMousePosition = new Vector2(centerX, centerY);
-						Mouse.SetPosition(centerX, centerY);
+						CenterCursor();
 						IgnoreNextUpdate = true;
 					}
 					else
