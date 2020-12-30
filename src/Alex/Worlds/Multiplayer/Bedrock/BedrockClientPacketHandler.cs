@@ -1324,7 +1324,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				{
 					if (message.inventoryId == 0)
 					{
-						startIndex = bi.InventoryOffset;
+						//startIndex = bi.InventoryOffset;
 					}
 					else if (message.inventoryId == 120)
 					{

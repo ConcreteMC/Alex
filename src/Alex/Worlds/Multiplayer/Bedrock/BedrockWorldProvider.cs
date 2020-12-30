@@ -254,7 +254,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				percentage = (int) ((100 / target) * World.ChunkManager.ChunkCount);
 				progressReport(state, percentage, subTitle);
 				
-				if (((percentage >= 50 && hasSpawnChunk)))
+				if (((percentage >= 75 && hasSpawnChunk)))
 				{
 					if (Client.GameStarted && statusChanged && !Client.Connection.IsNetworkOutOfOrder)
 					{

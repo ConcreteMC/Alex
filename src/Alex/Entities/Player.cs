@@ -217,6 +217,12 @@ namespace Alex.Entities
 			    }
 		    }
 
+		    if (!IsSpawned)
+		    {
+			    base.Update(args);
+			    return;
+		    }
+
 		    bool sprint = IsSprinting;
 		    bool sneak  = IsSneaking;
 
