@@ -7,6 +7,7 @@
 			Renderable = false;
 			HasHitbox = false;
 			Solid = true;
+			Transparent = true;
 			
 			Hardness = 60000;
 		}
