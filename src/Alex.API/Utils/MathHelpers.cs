@@ -8,6 +8,15 @@ namespace Alex.API.Utils
 	{
 		public static double PiOver180 = Math.PI / 180.0;
 
+		public static float Clamp(float x, float lowerlimit, float upperlimit)
+		{
+			if (x < lowerlimit)
+				x = lowerlimit;
+			if (x > upperlimit)
+				x = upperlimit;
+			return x;
+		}
+		
 		public static double SinInterpolation(double a, double b, double t)
 		{
 			return a + Math.Sin(t * PiOver180) * (b - a);
@@ -92,6 +101,14 @@ namespace Alex.API.Utils
 		{
 			float t = Saturate((v - edge0) / (edge1 - edge0));
 			return t * t * (3.0f - (2.0f * t));
+		}
+		
+		public static float Smoothstep2(float edge0, float edge1, float x)
+		{
+			// Scale, bias and saturate x to 0..1 range
+			x = Clamp((x - edge0) / (edge1 - edge0), 0.0F, 1.0F);
+			// Evaluate polynomial
+			return x * x * (3 - 2 * x);
 		}
 
 		public const float PI = 3.1415926535f;

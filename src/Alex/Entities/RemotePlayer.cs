@@ -21,13 +21,13 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MiNET;
+using MiNET.Worlds;
 using Newtonsoft.Json;
 using NLog;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 using LogManager = NLog.LogManager;
-using MathF = Alex.API.Utils.MathF;
 using Point = System.Drawing.Point;
 using Skin = MiNET.Utils.Skins.Skin;
 
@@ -36,7 +36,7 @@ namespace Alex.Entities
 	public class RemotePlayer : LivingEntity
 	{
 		private static readonly Logger   Log = LogManager.GetCurrentClassLogger(typeof(RemotePlayer));
-		public                  Gamemode Gamemode { get; private set; }
+		public  GameMode Gamemode { get; private set; }
 
 		private EntityModel _model;
 
@@ -364,7 +364,7 @@ namespace Alex.Entities
 			}
 		}
 
-		public void UpdateGamemode(Gamemode gamemode)
+		public void UpdateGamemode(GameMode gamemode)
 		{
 			Gamemode = gamemode;
 		}

@@ -20,7 +20,6 @@ using Alex.Worlds.Chunks;
 using Alex.Worlds.Singleplayer;
 using Microsoft.Xna.Framework;
 using NLog;
-using MathF = Alex.API.Utils.MathF;
 using Matrix = System.Drawing.Drawing2D.Matrix;
 
 namespace Alex.Graphics.Models.Blocks

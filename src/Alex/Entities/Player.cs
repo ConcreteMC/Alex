@@ -24,6 +24,7 @@ using Microsoft.Xna.Framework.Graphics;
 using MiNET.LevelDB;
 using MiNET.Net;
 using MiNET.Utils.Skins;
+using MiNET.Worlds;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
@@ -321,7 +322,7 @@ namespace Alex.Entities
 				    {
 					    StopBreakingBlock(true, true);
 
-					    if (Gamemode != Gamemode.Creative)
+					    if (Gamemode != GameMode.Creative)
 					    {
 						    //	StartBreakingBlock();
 					    }
@@ -662,7 +663,7 @@ namespace Alex.Entities
                 return;
 		    }
 
-		    if ((Gamemode == Gamemode.Creative  || ticks >= _destroyTimeNeeded) && !forceCanceled)
+		    if ((Gamemode == GameMode.Creative  || ticks >= _destroyTimeNeeded) && !forceCanceled)
 		    {
                 Network?.PlayerDigging(DiggingStatus.Finished, _destroyingTarget, _destroyingFace, remainder);
 			    Log.Debug($"Stopped breaking block. Ticks passed: {ticks}");

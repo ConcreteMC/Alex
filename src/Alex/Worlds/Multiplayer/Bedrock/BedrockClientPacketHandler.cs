@@ -36,7 +36,6 @@ using Alex.Utils;
 using Alex.Utils.Auth;
 using Alex.Utils.Inventories;
 using Alex.Worlds.Abstraction;
-using Alex.Worlds.Singleplayer;
 using fNbt;
 using Jose;
 using Microsoft.Extensions.DependencyInjection;
@@ -44,6 +43,7 @@ using MiNET;
 using MiNET.Net;
 using MiNET.UI;
 using MiNET.Utils;
+using MiNET.Worlds;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NLog;
@@ -51,6 +51,7 @@ using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.Security;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
+using AnvilWorldProvider = Alex.Worlds.Singleplayer.AnvilWorldProvider;
 using BlockCoordinates = Alex.API.Utils.BlockCoordinates;
 using ChunkCoordinates = Alex.API.Utils.ChunkCoordinates;
 using MathF = System.MathF;
@@ -325,7 +326,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			Client.RequestChunkRadius(Client.ChunkRadius);
 			
 			Client.World.Player.EntityId = message.runtimeEntityId;
-			Client.World.Player.UpdateGamemode((Gamemode) message.playerGamemode);
+			Client.World.Player.UpdateGamemode((GameMode) message.playerGamemode);
 
 			foreach (var gr in message.gamerules)
 			{
@@ -421,7 +422,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 						continue;
 					}
 
-					Client.World?.AddPlayerListItem(new PlayerListItem(r.ClientUuid, r.DisplayName, (Gamemode)((int)r.GameMode), 0, false));
+					Client.World?.AddPlayerListItem(new PlayerListItem(r.ClientUuid, r.DisplayName, (GameMode)((int)r.GameMode), 0, false));
 
 					RemotePlayer m = new RemotePlayer(r.DisplayName, Client.World, Client, null);
 					m.UUID = r.ClientUuid;
@@ -1693,7 +1694,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		public void HandleMcpeSetPlayerGameType(McpeSetPlayerGameType message)
 		{
-			Client.World.Player.UpdateGamemode((Gamemode) message.gamemode);
+			Client.World.Player.UpdateGamemode((GameMode) message.gamemode);
 		}
 
 		public void HandleMcpeSimpleEvent(McpeSimpleEvent message)

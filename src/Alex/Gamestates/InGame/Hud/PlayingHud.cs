@@ -13,6 +13,7 @@ using Alex.Gui.Elements.Inventory;
 using Alex.Utils.Inventories;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
+using MiNET.Worlds;
 
 namespace Alex.Gamestates.InGame.Hud
 {
@@ -169,7 +170,7 @@ namespace Alex.Gamestates.InGame.Hud
 				}
 			}
 
-			_hotbar.ShowItemCount = _hungerComponent.IsVisible = _healthComponent.IsVisible = Player.Gamemode != Gamemode.Creative;
+			_hotbar.ShowItemCount = _hungerComponent.IsVisible = _healthComponent.IsVisible = Player.Gamemode != GameMode.Creative;
 			//if (Player.Gamemode != Gamemode.Creative){}
 
 			base.OnUpdate(gameTime);

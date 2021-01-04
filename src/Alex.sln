@@ -16,10 +16,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		NuGet.Config = NuGet.Config
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{B4A8F155-1C9C-4133-81D5-8FCFB4831292}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ResourceConverterCore", "Tools\ResourceConverterCore\ResourceConverterCore.csproj", "{11E4C649-76D0-4E6C-8FB9-E426941E74CD}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Testing", "Testing", "{38FF8D15-D5F6-4F90-820C-95E57363A07C}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MiNET.AlexDebug", "MiNET.AlexDebug\MiNET.AlexDebug.csproj", "{A5C2A962-01D1-42E1-9451-27F3E13DBD26}"
@@ -92,19 +88,6 @@ Global
 		{9ED91B80-5470-4EE2-A8F4-D3092D7684A1}.Release|x64.Build.0 = Release|x64
 		{9ED91B80-5470-4EE2-A8F4-D3092D7684A1}.DirectX|x64.ActiveCfg = DirectX|x64
 		{9ED91B80-5470-4EE2-A8F4-D3092D7684A1}.DirectX|x64.Build.0 = DirectX|x64
-		{11E4C649-76D0-4E6C-8FB9-E426941E74CD}.Appveyor|Any CPU.ActiveCfg = Appveyor|Any CPU
-		{11E4C649-76D0-4E6C-8FB9-E426941E74CD}.Appveyor|Any CPU.Build.0 = Appveyor|Any CPU
-		{11E4C649-76D0-4E6C-8FB9-E426941E74CD}.Appveyor|x64.ActiveCfg = Appveyor|x64
-		{11E4C649-76D0-4E6C-8FB9-E426941E74CD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{11E4C649-76D0-4E6C-8FB9-E426941E74CD}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{11E4C649-76D0-4E6C-8FB9-E426941E74CD}.Debug|x64.ActiveCfg = Debug|x64
-		{11E4C649-76D0-4E6C-8FB9-E426941E74CD}.Debug|x64.Build.0 = Debug|x64
-		{11E4C649-76D0-4E6C-8FB9-E426941E74CD}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{11E4C649-76D0-4E6C-8FB9-E426941E74CD}.Release|Any CPU.Build.0 = Release|Any CPU
-		{11E4C649-76D0-4E6C-8FB9-E426941E74CD}.Release|x64.ActiveCfg = Release|x64
-		{11E4C649-76D0-4E6C-8FB9-E426941E74CD}.Release|x64.Build.0 = Release|x64
-		{11E4C649-76D0-4E6C-8FB9-E426941E74CD}.DirectX|x64.ActiveCfg = DirectX|x64
-		{11E4C649-76D0-4E6C-8FB9-E426941E74CD}.DirectX|x64.Build.0 = DirectX|x64
 		{A5C2A962-01D1-42E1-9451-27F3E13DBD26}.Appveyor|Any CPU.ActiveCfg = Appveyor|Any CPU
 		{A5C2A962-01D1-42E1-9451-27F3E13DBD26}.Appveyor|Any CPU.Build.0 = Appveyor|Any CPU
 		{A5C2A962-01D1-42E1-9451-27F3E13DBD26}.Appveyor|x64.ActiveCfg = Appveyor|x64
@@ -123,7 +106,6 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{11E4C649-76D0-4E6C-8FB9-E426941E74CD} = {B4A8F155-1C9C-4133-81D5-8FCFB4831292}
 		{A5C2A962-01D1-42E1-9451-27F3E13DBD26} = {38FF8D15-D5F6-4F90-820C-95E57363A07C}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution

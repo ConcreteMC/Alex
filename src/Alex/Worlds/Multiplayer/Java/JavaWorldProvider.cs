@@ -40,7 +40,6 @@ using Alex.ResourcePackLib.Json.Models.Entities;
 using Alex.Utils;
 using Alex.Utils.Inventories;
 using Alex.Worlds.Abstraction;
-using Alex.Worlds.Chunks;
 using Alex.Worlds.Lighting;
 using fNbt;
 using Microsoft.Extensions.DependencyInjection;
@@ -48,9 +47,11 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MiNET;
 using MiNET.Utils;
+using MiNET.Worlds;
 using Newtonsoft.Json;
 using NLog;
 using BlockCoordinates = Alex.API.Utils.BlockCoordinates;
+using ChunkColumn = Alex.Worlds.Chunks.ChunkColumn;
 using ChunkCoordinates = Alex.API.Utils.ChunkCoordinates;
 using ConnectionState = Alex.Networking.Java.ConnectionState;
 using DedicatedThreadPool = Alex.API.Utils.DedicatedThreadPool;
@@ -1402,7 +1403,7 @@ namespace Alex.Worlds.Multiplayer.Java
 					World?.SetRain(true);
 					break;
 				case GameStateReason.ChangeGamemode:
-					World?.Player?.UpdateGamemode((Gamemode) packet.Value);
+					World?.Player?.UpdateGamemode((GameMode) packet.Value);
 					break;
 				case GameStateReason.ExitEnd:
 					break;
@@ -1569,11 +1570,11 @@ namespace Alex.Worlds.Multiplayer.Java
 						entry.Name, (World) World, NetworkProvider, _alexSkin,
 						"geometry.humanoid.custom");
 
-					entity.UpdateGamemode((Gamemode) entry.Gamemode);
+					entity.UpdateGamemode((GameMode) entry.Gamemode);
 					entity.UUID = uuid;
 					
 					World.AddPlayerListItem(
-						new PlayerListItem(entity.UUID, entry.Name, (Gamemode) entry.Gamemode, entry.Ping, true));
+						new PlayerListItem(entity.UUID, entry.Name, (GameMode) entry.Gamemode, entry.Ping, true));
 
 					if (_players.TryAdd(entity.UUID, entity))
 					{
@@ -1866,7 +1867,7 @@ namespace Alex.Worlds.Multiplayer.Java
 			//World.ChunkManager.RenderDistance = packet.ViewDistance / 16;
 			
 			World.Player.EntityId = packet.EntityId;
-			World.Player.UpdateGamemode((Gamemode) packet.Gamemode);
+			World.Player.UpdateGamemode((GameMode) packet.Gamemode);
 			
 			HandleDimension(packet.Dimension);
 		}
