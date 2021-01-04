@@ -13,6 +13,7 @@ using Alex.API.Resources;
 using Alex.API.Utils;
 using Alex.Blocks.Minecraft;
 using Alex.Entities.Effects;
+using Alex.Entities.Meta;
 using Alex.Entities.Properties;
 using Alex.Gamestates;
 using Alex.Graphics.Models.Entity;

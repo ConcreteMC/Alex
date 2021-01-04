@@ -1,10 +1,9 @@
 using System;
 using Alex.API.Utils;
-using Alex.Entities;
 using Microsoft.Xna.Framework;
 using MathF = System.MathF;
 
-namespace Alex.Utils
+namespace Alex.Entities.Meta
 {
 	public class HealthManager
 	{

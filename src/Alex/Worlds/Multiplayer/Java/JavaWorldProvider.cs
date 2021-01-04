@@ -505,7 +505,7 @@ namespace Alex.Worlds.Multiplayer.Java
 				if (Enum.TryParse<EntityType>(knownData.Name, true, out var realType))
 				{
 					type = realType;
-					entity = realType.Create(null);
+					entity = EntityFactory.Create(realType, null);
 				}
 				else
 				{

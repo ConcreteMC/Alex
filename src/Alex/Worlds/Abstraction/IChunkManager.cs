@@ -3,7 +3,7 @@ using Alex.API.Utils;
 using Alex.Worlds.Chunks;
 using Microsoft.Xna.Framework;
 
-namespace Alex.Worlds
+namespace Alex.Worlds.Abstraction
 {
 	public interface IChunkManager
 	{

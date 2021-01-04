@@ -466,7 +466,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 				if (renderer != null)
 				{
-					entity = type.Create(null);
+					entity = EntityFactory.Create(type, null);
 				}
 
 				if (entity == null)

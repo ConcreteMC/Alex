@@ -1,10 +1,9 @@
 using Alex.Net;
 using Alex.Networking.Java.Packets.Play;
-using Alex.Utils;
 using Alex.Worlds;
 using Microsoft.Xna.Framework;
 
-namespace Alex.Entities
+namespace Alex.Entities.Generic
 {
 	public class EntityArmorStand : LivingEntity
 	{

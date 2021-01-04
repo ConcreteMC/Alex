@@ -1,9 +1,8 @@
 using System;
-using System.Collections.Generic;
 using System.Threading;
 using MiNET.Utils;
 
-namespace Alex.Utils
+namespace Alex.Utils.Queue
 {
     public class PrioritizedActionQueue
     {

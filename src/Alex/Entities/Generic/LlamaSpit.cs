@@ -1,7 +1,6 @@
-using Alex.Net;
 using Alex.Worlds;
 
-namespace Alex.Entities
+namespace Alex.Entities.Generic
 {
 	public class LlamaSpit : Entity
 	{

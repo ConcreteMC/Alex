@@ -1,6 +1,6 @@
 using Newtonsoft.Json;
 
-namespace Alex.Utils
+namespace Alex.Utils.Auth
 {
 	[JsonObject(MemberSerialization.OptIn)]
 	public class AccessTokens
