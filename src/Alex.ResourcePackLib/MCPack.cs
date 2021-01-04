@@ -4,6 +4,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using Alex.ResourcePackLib.Exceptions;
+using Alex.ResourcePackLib.IO.Abstract;
 using Alex.ResourcePackLib.Json;
 using Alex.ResourcePackLib.Json.Bedrock;
 using NLog;
@@ -17,12 +18,12 @@ namespace Alex.ResourcePackLib
 		public McPackManifest Manifest { get; private set; }
 		public MCPackModule[] Modules { get; private set; }
 		
-		public MCPack(ZipArchive archive)
+		public MCPack(IFilesystem archive)
 		{
 			Load(archive);
 		}
 
-		private void Load(ZipArchive archive)
+		private void Load(IFilesystem archive)
 		{
 			var manifestEntry = archive.GetEntry("manifest.json");
 			var contentEntry  = archive.GetEntry("content.zipe");

@@ -21,7 +21,6 @@
   </ItemGroup>
   
   <ItemGroup>
-    <Folder Include="Events" />
     <Folder Include="Gui\Events\" />
     <Folder Include="Gui\Abstractions\" />
   </ItemGroup>

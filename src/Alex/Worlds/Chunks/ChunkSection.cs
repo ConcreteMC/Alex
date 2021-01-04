@@ -17,38 +17,36 @@ namespace Alex.Worlds.Chunks
     {
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ChunkSection));
 
-		protected int _blockRefCount;
-		protected int _tickRefCount;
+		protected int BlockRefCount;
+		protected int TickRefCount;
 
-		public int Blocks => _blockRefCount;
+		public int Blocks => BlockRefCount;
 
-		protected BlockStorage[] _blockStorages;
-		public NibbleArray BlockLight;
-		public NibbleArray SkyLight;
+		protected readonly BlockStorage[] BlockStorages;
+		public             NibbleArray    BlockLight;
+		public             NibbleArray    SkyLight;
 
-		private System.Collections.BitArray ScheduledUpdates;
-        private System.Collections.BitArray ScheduledSkylightUpdates;
-        private System.Collections.BitArray ScheduledBlocklightUpdates;
-
-        public int ScheduledUpdatesCount { get; private set; } = 0;
+		private readonly System.Collections.BitArray _scheduledUpdates;
+        private readonly System.Collections.BitArray _scheduledSkylightUpdates;
+        private readonly System.Collections.BitArray _scheduledBlocklightUpdates;
+        
         public int SkyLightUpdates { get; private set; } = 0;
         public int BlockLightUpdates { get; private set; } = 0;
         
         public List<BlockCoordinates> LightSources { get; } = new List<BlockCoordinates>();
         
-		public bool IsAllAir => _blockRefCount == 0;
-		private ChunkColumn Owner { get; }
-        public ChunkSection(ChunkColumn owner, bool storeSkylight, int sections = 2)
+		public bool IsAllAir => BlockRefCount == 0;
+
+        public ChunkSection(bool storeSkylight, int sections = 2)
         {
-	        Owner = owner;
 	        if (sections <= 0)
 		        sections = 1;
 
 	        //Data = new BlockStorage();
-	        _blockStorages = new BlockStorage[sections];
+	        BlockStorages = new BlockStorage[sections];
 	        for (int i = 0; i < sections; i++)
 	        {
-		        _blockStorages[i] = new BlockStorage();
+		        BlockStorages[i] = new BlockStorage();
 	        }
 	        
 	        this.BlockLight = new NibbleArray(new byte[2048]);
@@ -60,9 +58,9 @@ namespace Alex.Worlds.Chunks
 				MiNET.Worlds.ChunkColumn.Fill<byte>(SkyLight.Data, 0x00);
 			}
 
-		    ScheduledUpdates = new System.Collections.BitArray(new byte[(16 * 16 * 16) / 8 ]);
-		    ScheduledSkylightUpdates = new System.Collections.BitArray(new byte[(16 * 16 * 16) / 8 ]);
-		    ScheduledBlocklightUpdates = new System.Collections.BitArray(new byte[(16 * 16 * 16) / 8 ]);
+		    _scheduledUpdates = new System.Collections.BitArray(new byte[(16 * 16 * 16) / 8 ]);
+		    _scheduledSkylightUpdates = new System.Collections.BitArray(new byte[(16 * 16 * 16) / 8 ]);
+		    _scheduledBlocklightUpdates = new System.Collections.BitArray(new byte[(16 * 16 * 16) / 8 ]);
         }
 
         protected static int GetCoordinateIndex(int x, int y, int z)
@@ -72,37 +70,37 @@ namespace Alex.Worlds.Chunks
 
         public bool IsScheduled(int x, int y, int z)
 		{
-		    return ScheduledUpdates.Get(GetCoordinateIndex(x, y, z));
+		    return _scheduledUpdates.Get(GetCoordinateIndex(x, y, z));
 		}
 
 		public void SetScheduled(int x, int y, int z, bool value)
 		{
 			var idx = GetCoordinateIndex(x, y, z);
 
-			var oldValue = ScheduledUpdates[idx];
+			var oldValue = _scheduledUpdates[idx];
 
 			if (oldValue && !value)
 			{
-				ScheduledUpdatesCount--;
+				//ScheduledUpdatesCount--;
 			}
 			else if (!oldValue && value)
 			{
-				ScheduledUpdatesCount++;
+				//ScheduledUpdatesCount++;
 			}
 			
-            ScheduledUpdates.Set(idx, value);
+            _scheduledUpdates.Set(idx, value);
 		}
 
 		public bool IsBlockLightScheduled(int x, int y, int z)
 		{
-			return ScheduledBlocklightUpdates.Get(GetCoordinateIndex(x, y, z));
+			return _scheduledBlocklightUpdates.Get(GetCoordinateIndex(x, y, z));
 		}
 
 		public void SetBlockLightScheduled(int x, int y, int z, bool value)
 		{
 			var idx = GetCoordinateIndex(x, y, z);
 
-			var oldValue = ScheduledBlocklightUpdates[idx];
+			var oldValue = _scheduledBlocklightUpdates[idx];
 
 			if (oldValue && !value)
 			{
@@ -113,13 +111,13 @@ namespace Alex.Worlds.Chunks
 				BlockLightUpdates++;
 			}
 			
-			ScheduledBlocklightUpdates.Set(idx, value);
+			_scheduledBlocklightUpdates.Set(idx, value);
 		}
 
 		public bool IsSkylightUpdateScheduled(int x, int y, int z)
 		{
 		    return
-		        ScheduledSkylightUpdates.Get(GetCoordinateIndex(x, y,
+		        _scheduledSkylightUpdates.Get(GetCoordinateIndex(x, y,
 		            z));
 		}
 
@@ -127,7 +125,7 @@ namespace Alex.Worlds.Chunks
 		{
 			var idx = GetCoordinateIndex(x, y, z);
 
-			var oldValue = ScheduledSkylightUpdates[idx];
+			var oldValue = _scheduledSkylightUpdates[idx];
 
 			if (oldValue && !value)
 			{
@@ -138,7 +136,7 @@ namespace Alex.Worlds.Chunks
 				SkyLightUpdates++;
 			}
 			
-			ScheduledSkylightUpdates.Set(idx, value);
+			_scheduledSkylightUpdates.Set(idx, value);
 
 			return value;
 		}
@@ -150,7 +148,7 @@ namespace Alex.Worlds.Chunks
 
         public IEnumerable<BlockEntry> GetAll(int x, int y, int z)
         {
-	        for (int i = 0; i < _blockStorages.Length; i++)
+	        for (int i = 0; i < BlockStorages.Length; i++)
 	        {
 		        yield return new BlockEntry(Get(x, y, z, i), i);
 	        }
@@ -158,10 +156,10 @@ namespace Alex.Worlds.Chunks
 
         public BlockState Get(int x, int y, int z, int section)
         {
-	        if (section > _blockStorages.Length)
+	        if (section > BlockStorages.Length)
 		        throw new IndexOutOfRangeException($"The storage id {section} does not exist!");
 
-	        return _blockStorages[section].Get(x, y, z);
+	        return BlockStorages[section].Get(x, y, z);
         }
 
         public void Set(int x, int y, int z, BlockState state)
@@ -171,7 +169,7 @@ namespace Alex.Worlds.Chunks
 
 		public void Set(int storage, int x, int y, int z, BlockState state)
 		{
-			if (storage > _blockStorages.Length)
+			if (storage > BlockStorages.Length)
 				throw new IndexOutOfRangeException($"The storage id {storage} does not exist!");
 			
 			var blockCoordinates = new BlockCoordinates(x, y, z);
@@ -208,11 +206,11 @@ namespace Alex.Worlds.Chunks
 
 					if (!(block is Air))
 					{
-						--this._blockRefCount;
+						--this.BlockRefCount;
 
 						if (block.RandomTicked)
 						{
-							--this._tickRefCount;
+							--this.TickRefCount;
 						}
 					}
 				}
@@ -225,18 +223,18 @@ namespace Alex.Worlds.Chunks
             {
 	            if (!(block1 is Air))
 	            {
-		            ++this._blockRefCount;
+		            ++this.BlockRefCount;
 
 		            if (block1.RandomTicked)
 		            {
-			            ++this._tickRefCount;
+			            ++this.TickRefCount;
 		            }
 	            }
             }
 
             if (state != null)
             {
-	            _blockStorages[storage].Set(x, y, z, state);
+	            BlockStorages[storage].Set(x, y, z, state);
             }
 
             //ScheduledUpdates.Set(coordsIndex, true);
@@ -250,12 +248,12 @@ namespace Alex.Worlds.Chunks
 
 		public bool IsEmpty()
 		{
-			return this._blockRefCount == 0;
+			return this.BlockRefCount == 0;
 		}
         
 		public bool NeedsRandomTick()
 		{
-			return this._tickRefCount > 0;
+			return this.TickRefCount > 0;
 		}
 
 		public bool SetSkylight(int x, int y, int z, int value)
@@ -302,8 +300,8 @@ namespace Alex.Worlds.Chunks
 
 		public virtual void RemoveInvalidBlocks()
 		{
-			this._blockRefCount = 0;
-			this._tickRefCount = 0;
+			this.BlockRefCount = 0;
+			this.TickRefCount = 0;
 
 			for (int x = 0; x < 16; x++)
 			{
@@ -315,11 +313,11 @@ namespace Alex.Worlds.Chunks
 
 						if (!(block is Air))
 						{
-							++this._blockRefCount;
+							++this.BlockRefCount;
 
 							if (block.RandomTicked)
 							{
-								++this._tickRefCount;
+								++this.TickRefCount;
 							}
 						}
 					}
@@ -329,9 +327,9 @@ namespace Alex.Worlds.Chunks
 
 		public void Dispose()
 	    {
-		    for (int i = 0; i < _blockStorages.Length; i++)
+		    for (int i = 0; i < BlockStorages.Length; i++)
 		    {
-			    _blockStorages[i]?.Dispose();
+			    BlockStorages[i]?.Dispose();
 		    }
 	    }
 

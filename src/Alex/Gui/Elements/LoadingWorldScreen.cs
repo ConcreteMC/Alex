@@ -1,20 +1,17 @@
-﻿using Alex.API.GameStates;
-using Alex.API.Graphics.Typography;
-using Alex.API.Gui;
+﻿using Alex.API.Gui;
 using Alex.API.Gui.Elements;
 using Alex.API.Gui.Elements.Layout;
 using Alex.API.Gui.Graphics;
 using Alex.API.Utils;
 using Alex.API.World;
-using Alex.Gamestates.Common;
 using Microsoft.Xna.Framework;
 using NLog;
 
-namespace Alex.Gamestates
+namespace Alex.Gui.Elements
 {
-    public class LoadingWorldState : GuiInGameStateBase
+    public class LoadingWorldScreen : GuiScreen
     {
-	    private static readonly Logger    Log = LogManager.GetCurrentClassLogger(typeof(LoadingWorldState));
+	    private static readonly Logger    Log = LogManager.GetCurrentClassLogger(typeof(LoadingWorldScreen));
 	    
 	    private readonly        GuiProgressBar _progressBar;
 	    private readonly        GuiTextElement _textDisplay;
@@ -54,7 +51,7 @@ namespace Alex.Gamestates
 		    }
 	    }
 
-	    public LoadingWorldState(IGameState parent = null)
+	    public LoadingWorldScreen()
 		{
 			GuiStackContainer progressBarContainer;
 
@@ -70,7 +67,9 @@ namespace Alex.Gamestates
 				Orientation = Orientation.Vertical
 			});
 			
-			if (parent == null)
+			BackgroundOverlay = new Color(Color.Black, 0.65f);
+			
+			/*if (parent == null)
 			{
 				Background = new GuiTexture2D
 				{ 
@@ -85,7 +84,7 @@ namespace Alex.Gamestates
 			{
 				ParentState = parent;
 				HeaderTitle.IsVisible = false;
-			}
+			}*/
 			
 			progressBarContainer.AddChild(_textDisplay = new GuiTextElement()
 			{
@@ -129,7 +128,7 @@ namespace Alex.Gamestates
 					Text = Text, TextColor = TextColor.White, Anchor = Alignment.BottomLeft, HasShadow = false
 				});
 
-			HeaderTitle.TranslationKey = "menu.loadingLevel";
+			//HeaderTitle.TranslationKey = "menu.loadingLevel";
 
 			UpdateProgress(LoadingState.ConnectingToServer, 10);
 		}
@@ -173,21 +172,14 @@ namespace Alex.Gamestates
 	    /// <inheritdoc />
 	    protected override void OnDraw(GuiSpriteBatch graphics, GameTime gameTime)
 	    {
-		    if (ParentState is IGuiElement gui)
-		    {
-			    gui.Draw(graphics, gameTime);
-		    }
-
+		    ParentElement?.Draw(graphics, gameTime);
 		    base.OnDraw(graphics, gameTime);
 	    }
 
 	    /// <inheritdoc />
 	    protected override void OnUpdateLayout()
 	    {
-		    if (ParentState is IGuiElement gui)
-		    {
-			    gui.InvalidateLayout();
-		    }
+		    ParentElement?.InvalidateLayout();
 		    
 		    base.OnUpdateLayout();
 	    }

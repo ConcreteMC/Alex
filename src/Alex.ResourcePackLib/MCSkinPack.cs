@@ -2,6 +2,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using Alex.API.Utils;
+using Alex.ResourcePackLib.IO;
+using Alex.ResourcePackLib.IO.Abstract;
 using Alex.ResourcePackLib.Json;
 using Alex.ResourcePackLib.Json.Bedrock;
 using Alex.ResourcePackLib.Json.Models.Entities;
@@ -23,8 +25,8 @@ namespace Alex.ResourcePackLib
 			}
 		}
 
-		protected ZipArchiveEntry Entry { get; }
-		protected MCPackModule(ZipArchiveEntry entry)
+		protected IFile Entry { get; }
+		protected MCPackModule(IFile entry)
 		{
 			Entry = entry;
 		}
@@ -57,7 +59,7 @@ namespace Alex.ResourcePackLib
 		public LoadedSkin[] Skins { get; private set; }
 		
 		/// <inheritdoc />
-		internal MCSkinPack(ZipArchiveEntry entry) : base(entry)
+		internal MCSkinPack(IFile entry) : base(entry)
 		{
 			
 		}
@@ -69,7 +71,7 @@ namespace Alex.ResourcePackLib
 			{
 				List<LoadedSkin> skins = new List<LoadedSkin>();
 
-				using (var archive = new ZipArchive(Entry.Open(), ZipArchiveMode.Read))
+				using (var archive = new ZipFileSystem(Entry.Open()))
 				{
 					var skinsEntry = archive.GetEntry("skins.json");
 					Info = MCJsonConvert.DeserializeObject<MCPackSkins>(skinsEntry.ReadAsString());
@@ -111,7 +113,7 @@ namespace Alex.ResourcePackLib
 			}
 			catch (InvalidDataException ex)
 			{
-				Log.Debug(ex, $"Could not load module. IsFile={Entry.IsFile()} IsDirectory={Entry.IsDirectory()}");
+				Log.Debug(ex, $"Could not load module.");
 			}
 
 			return false;

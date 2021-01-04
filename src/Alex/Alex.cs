@@ -27,6 +27,7 @@ using Alex.Gamestates.InGame;
 using Alex.Gamestates.Login;
 using Alex.Graphics.Models.Blocks;
 using Alex.Gui;
+using Alex.Gui.Elements;
 using Alex.Net;
 using Alex.Networking.Java.Packets;
 using Alex.Networking.Java.Packets.Play;
@@ -751,11 +752,12 @@ namespace Alex
 			if (parentState is PlayingState)
 				parentState = null;
 			
-			LoadingWorldState loadingScreen = new LoadingWorldState(parentState);
+			LoadingWorldScreen loadingScreen = new LoadingWorldScreen();
 			loadingScreen.ConnectingToServer = isServer;
 			
-			GameStateManager.AddState("loading", loadingScreen);
-			GameStateManager.SetActiveState("loading");
+			GuiManager.AddScreen(loadingScreen);
+			//GameStateManager.AddState("loading", loadingScreen);
+			//GameStateManager.SetActiveState("loading");
 
 			ThreadPool.QueueUserWorkItem(
 				o =>
@@ -786,7 +788,8 @@ namespace Alex
 					}
 					finally
 					{
-						GameStateManager.RemoveState("loading");
+						GuiManager.RemoveScreen(loadingScreen);
+						//GameStateManager.RemoveState("loading");
 					}
 				});
 		}

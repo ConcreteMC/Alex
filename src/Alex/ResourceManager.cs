@@ -335,7 +335,7 @@ namespace Alex
 
 			progressReceiver?.UpdateProgress(0, "Loading vanilla resources...");
 			
-	        var vanilla = LoadResourcePack(progressReceiver, new RealFileSystem(defaultResources), preloadCallback);
+	        var vanilla = LoadResourcePack(progressReceiver, new DiskFileSystem(defaultResources), preloadCallback);
 	        vanilla.Manifest.Name = "Vanilla";
 				
 	        ActiveResourcePacks.AddFirst(vanilla);
@@ -346,7 +346,7 @@ namespace Alex
 			
 			progressReceiver?.UpdateProgress(0, "Loading bedrock resources...");
 			
-			using (RealFileSystem fileSystem = new RealFileSystem(defaultBedrock))
+			using (DiskFileSystem fileSystem = new DiskFileSystem(defaultBedrock))
 			{
 				BedrockResourcePack = new BedrockResourcePack(
 					fileSystem, (percentage, file) => { progressReceiver?.UpdateProgress(percentage, null, file); });
@@ -408,7 +408,7 @@ namespace Alex
 
 		        try
 		        {
-			        using (var archive = new ZipArchive(file.Open(FileMode.Open, FileAccess.Read), ZipArchiveMode.Read))
+			        using (var archive = new ZipFileSystem(file.Open(FileMode.Open, FileAccess.Read)))
 			        {
 				        MCPack pack = new MCPack(archive);
 				        Packs.Add(pack);

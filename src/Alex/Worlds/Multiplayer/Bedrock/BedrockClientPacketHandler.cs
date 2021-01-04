@@ -1573,13 +1573,14 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 						Client.World.SpawnPoint.Z));
 
 				Client.World.Player.IsSpawned = false;
-				LoadingWorldState loadingWorldState = new LoadingWorldState()
+				LoadingWorldScreen loadingWorldScreen = new LoadingWorldScreen()
 				{
 					ConnectingToServer = true
 				};
 
-				AlexInstance.GameStateManager.SetActiveState(loadingWorldState, true);
-				loadingWorldState.UpdateProgress(LoadingState.LoadingChunks, 0);
+				AlexInstance.GuiManager.AddScreen(loadingWorldScreen);
+			//	AlexInstance.GameStateManager.SetActiveState(loadingWorldState, true);
+				loadingWorldScreen.UpdateProgress(LoadingState.LoadingChunks, 0);
 
 				ThreadPool.QueueUserWorkItem((o) =>
 				{
@@ -1613,7 +1614,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 						
 						if (!spawnChunkLoaded && percentage >= 100)
 						{
-							loadingWorldState.UpdateProgress(LoadingState.Spawning, 99, "Waiting for spawn chunk...");
+							loadingWorldScreen.UpdateProgress(LoadingState.Spawning, 99, "Waiting for spawn chunk...");
 						}
 						else
 						{
@@ -1624,7 +1625,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 							if (percentage != previousPercentage)
 							{
-								loadingWorldState.UpdateProgress(LoadingState.LoadingChunks,
+								loadingWorldScreen.UpdateProgress(LoadingState.LoadingChunks,
 									percentage);
 								previousPercentage = percentage;
 
@@ -1667,7 +1668,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 						//}
 					} while (true);
 					
-					AlexInstance.GameStateManager.Back();
+					AlexInstance.GuiManager.RemoveScreen(loadingWorldScreen);
+					//AlexInstance.GameStateManager.Back();
 
 					var p = Client.World.Player.KnownPosition;
 

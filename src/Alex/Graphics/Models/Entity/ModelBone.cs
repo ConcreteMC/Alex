@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using Alex.API.Entities;
 using Alex.API.Graphics;
 using Alex.API.Utils;
 using Alex.ResourcePackLib.Json.Models.Entities;
@@ -13,11 +12,11 @@ namespace Alex.Graphics.Models.Entity
 {
 	public partial class EntityModelRenderer
 	{
-		public class ModelBone : IDisposable, IAttachable
+		public class ModelBone : IDisposable
 		{
-			private Texture2D Texture { get; set; }
-			private PooledIndexBuffer Buffer { get; set; }
-			private List<IAttachable> Children { get; set; } = new List<IAttachable>();
+			private Texture2D         Texture  { get; set; }
+			private PooledIndexBuffer Buffer   { get; set; }
+			private List<ModelBone>   Children { get; set; } = new List<ModelBone>();
 			
 			private Vector3 _rotation = Vector3.Zero;
 
@@ -324,7 +323,7 @@ namespace Alex.Graphics.Models.Entity
 				}
 			}
 
-			public void AddChild(IAttachable modelBone)
+			public void AddChild(ModelBone modelBone)
 			{
 				if (!Children.Contains(modelBone))
 				{
@@ -336,7 +335,7 @@ namespace Alex.Graphics.Models.Entity
 				}
 			}
 
-			public void Remove(IAttachable modelBone)
+			public void Remove(ModelBone modelBone)
 			{
 				if (Children.Contains(modelBone))
 				{

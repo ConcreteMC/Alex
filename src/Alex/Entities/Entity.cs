@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Alex.API;
 using Alex.API.Data.Servers;
-using Alex.API.Entities;
 using Alex.API.Graphics;
 using Alex.API.Graphics.Typography;
 using Alex.API.Network;
@@ -43,7 +42,7 @@ using UUID = Alex.API.Utils.UUID;
 
 namespace Alex.Entities
 {
-	public class Entity : IEntity, IPhysicsEntity
+	public class Entity
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(Entity));
 
@@ -375,12 +374,7 @@ namespace Alex.Entities
 
             if ((inHand == null || inHand.Count == 0 || inHand.Id <= 0) && ItemRenderer != null && ModelRenderer != null)
             {
-                if (ModelRenderer.GetBone("rightItem", out EntityModelRenderer.ModelBone bone))
-                {
-	                bone.Remove(ItemRenderer);
-                }
-
-                ItemRenderer = null;
+	            ItemRenderer = null;
                 return;
             }
 
@@ -1270,12 +1264,12 @@ namespace Alex.Entities
 					(float) (pos.X + halfWidth), (float) (pos.Y + (height * Scale)), (float) (pos.Z + halfDepth)));
 		}
 
-		public bool IsColliding(IEntity other)
+		public bool IsColliding(Entity other)
 		{
 			return IsColliding(GetBoundingBox(), other);
 		}
 
-		public bool IsColliding(BoundingBox bbox, IEntity other)
+		public bool IsColliding(BoundingBox bbox, Entity other)
 		{
 			//if (!Compare((int) KnownPosition.X, (int) other.KnownPosition.X, 5)) return false;
 			//if (!Compare((int) KnownPosition.Z, (int) other.KnownPosition.Z, 5)) return false;

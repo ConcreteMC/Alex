@@ -6,13 +6,13 @@ using Alex.ResourcePackLib.IO.Abstract;
 
 namespace Alex.ResourcePackLib.IO
 {
-	public class RealFileSystem : IFilesystem
+	public class DiskFileSystem : IFilesystem
 	{
 		/// <inheritdoc />
 		public IReadOnlyCollection<IFile> Entries { get; }
 
 		private string Root { get; }
-		public RealFileSystem(string path)
+		public DiskFileSystem(string path)
 		{
 			Root = path;
 			

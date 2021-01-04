@@ -234,7 +234,7 @@ namespace Alex.Worlds.Chunks
 		
 		protected virtual ChunkSection CreateSection(bool storeSkylight, int sections)
 		{
-			return new ChunkSection(this, storeSkylight, sections);
+			return new ChunkSection(storeSkylight, sections);
 		}
 
 		public ChunkSection GetSection(int y)

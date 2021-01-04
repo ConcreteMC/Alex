@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using Alex.API.Blocks;
-using Alex.API.Entities;
 using Alex.API.Graphics;
 using Alex.API.Utils;
 using Alex.Blocks.Minecraft;
@@ -108,7 +107,7 @@ namespace Alex.Graphics.Models.Items
         }
     }
 
-    public class ItemModelRenderer<TVertice> : Model, IAttachable, IItemRenderer where TVertice : struct, IVertexType
+    public class ItemModelRenderer<TVertice> : Model, IItemRenderer where TVertice : struct, IVertexType
     {
         public ResourcePackModelBase Model { get; }
 

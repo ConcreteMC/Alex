@@ -1,6 +1,4 @@
-﻿using Alex.API.Entities;
-using Alex.API.Utils;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 
 namespace Alex.API.Graphics
 {

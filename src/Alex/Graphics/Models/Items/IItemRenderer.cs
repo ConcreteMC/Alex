@@ -1,5 +1,5 @@
-using Alex.API.Entities;
 using Alex.API.Graphics;
+using Alex.API.Utils;
 using Alex.ResourcePackLib;
 using Alex.ResourcePackLib.Json.Models;
 using Alex.ResourcePackLib.Json.Models.Items;
@@ -8,7 +8,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Alex.Graphics.Models.Items
 {
-    public interface IItemRenderer : IAttachable
+    public interface IItemRenderer
     {
         ResourcePackModelBase Model { get; }
 
@@ -20,6 +20,9 @@ namespace Alex.Graphics.Models.Items
         Color           DiffuseColor      { get; set; }
 
         void Update(GraphicsDevice device, ICamera camera);
+        void Update(IUpdateArgs args, Matrix characterMatrix, Vector3 diffuseColor, PlayerLocation modelLocation);
+
+        void Render(IRenderArgs args, bool mock, out int vertices);
 
         void Cache(McResourcePack pack);
 

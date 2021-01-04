@@ -7,7 +7,6 @@ using System.Threading;
 using Alex.API;
 using Alex.API.Data.Options;
 using Alex.API.Data.Servers;
-using Alex.API.Entities;
 using Alex.API.Graphics;
 using Alex.API.Gui;
 using Alex.API.Network;

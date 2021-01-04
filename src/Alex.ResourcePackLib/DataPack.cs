@@ -2,8 +2,8 @@
 using Alex.ResourcePackLib.Json.Tags;
 using System.Collections.Generic;
 using System.IO;
-using System.IO.Compression;
 using System.Linq;
+using Alex.ResourcePackLib.IO.Abstract;
 
 namespace Alex.ResourcePackLib
 {
@@ -12,8 +12,8 @@ namespace Alex.ResourcePackLib
 		private readonly Dictionary<string, Tag> _blockTags = new Dictionary<string, Tag>();
 		private readonly Dictionary<string, Tag> _itemTags = new Dictionary<string, Tag>();
 
-		private ZipArchive _archive;
-	    public DataPack(ZipArchive archive)
+		private IFilesystem _archive;
+	    public DataPack(IFilesystem archive)
 	    {
 		    _archive = archive;
 
@@ -50,7 +50,7 @@ namespace Alex.ResourcePackLib
 			}
 	    }
 
-		private Tag LoadTag(ZipArchiveEntry entry)
+		private Tag LoadTag(IFile entry)
 		{
 			string nameSpace = entry.FullName.Split('/')[1];
 			string name = Path.GetFileNameWithoutExtension(entry.FullName);
