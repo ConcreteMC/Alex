@@ -290,20 +290,7 @@ namespace Alex
         public string DeviceID { get; private set; } = null;
         private void LoadHWID()
         {
-	        string hwid = "";
-	        string path = "hwid.txt";
-
-	        if (Storage.TryReadString(path, out hwid))
-	        {
-		        DeviceID = hwid;
-
-		        return;
-	        }
-
-	        hwid = Guid.NewGuid().ToString();
-	        Storage.TryWriteString(path, hwid);
-
-	        DeviceID = hwid;
+	        DeviceID = Guid.NewGuid().ToString();
         }
         
         public DirectoryInfo SkinPackDirectory { get; private set; } = null;

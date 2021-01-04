@@ -18,7 +18,7 @@ namespace Alex.Gui.Elements
 				Orientation = Orientation.Vertical
 			};
 			
-			container.AddChild(new GuiTextElement("Please wait...")
+			container.AddChild(new GuiTextElement("Authenticating...")
 			{
 				Anchor = Alignment.MiddleCenter
 			});
