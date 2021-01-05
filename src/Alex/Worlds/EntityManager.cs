@@ -275,7 +275,7 @@ namespace Alex.Worlds
 
 	    public IEnumerable<Entity> GetEntities(Vector3 camPos, int radius)
 	    {
-		    return Entities.Values.ToArray().Where(x => x.IsRendered && Math.Abs(x.KnownPosition.DistanceTo(new PlayerLocation(camPos))) < radius).ToArray();
+		    return Entities.Values.ToArray().Where(x => x.IsRendered && Math.Abs(Vector3.DistanceSquared(x.KnownPosition.ToVector3(), camPos)) < radius).ToArray();
 	    }
 
 	    public void ClearEntities()

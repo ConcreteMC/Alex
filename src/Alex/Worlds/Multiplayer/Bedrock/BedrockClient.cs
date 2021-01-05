@@ -653,6 +653,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				IBufferedCipher encryptor = CipherUtilities.GetCipher("AES/CFB8/NoPadding");
 				encryptor.Init(true, new ParametersWithIV(new KeyParameter(secret), secret.Take(16).ToArray()));
 
+				Thread.Sleep(1250);
+				
 				handler.CryptoContext = new MiNET.Utils.CryptoContext
 				{
 					Decryptor = decryptor,
@@ -661,7 +663,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					Key = secret,
 					ClientKey = handler.CryptoContext.ClientKey
 				};
-
 				//Thread.Sleep(1250);
 
 				McpeClientToServerHandshake magic = McpeClientToServerHandshake.CreateObject();

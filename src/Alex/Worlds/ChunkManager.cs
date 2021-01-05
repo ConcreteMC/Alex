@@ -403,6 +403,7 @@ namespace Alex.Worlds
 			var chunks = Chunks.ToArray();
 			Chunks.Clear();
 
+			_renderedChunks = new ChunkData[0];
 			foreach (var chunk in chunks)
 			{
 				chunk.Value.Dispose();
@@ -558,6 +559,13 @@ namespace Alex.Worlds
 			//{
 			//	transparentEffect = shaders.OpaqueEffect;
 			//}
+			
+			if (CancellationToken.IsCancellationRequested || chunks == null)
+			{
+				drawnVertices = 0;
+				chunksRendered = 0;
+				return;
+			}
 			
 			foreach (var stage in stages)
 			{

@@ -259,8 +259,8 @@ namespace Alex.Net.Bedrock
 			if (Log.IsDebugEnabled) Log.Warn($"Started network ordering thread.");
 		}
 		
-		public bool IsOutOfOrder          { get; private set; } = false;
-		public int  FirstEncryptedMessage { get; set; }
+		public bool             IsOutOfOrder          { get; private set; } = false;
+		public ManualResetEventSlim FirstEncryptedMessage { get; set; }         = new ManualResetEventSlim(false);
 
 		private void ProcessOrderedQueue()
 		{

@@ -124,7 +124,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 	        try
 	        {
-		        Client.Connection.Session.FirstEncryptedMessage = message.ReliabilityHeader.ReliableMessageNumber;
+		       // Client.Connection.Session.FirstEncryptedMessage = message.ReliabilityHeader.OrderingIndex;
 		        
 		        var data = JWT.Payload<HandshakeData>(token);
 		        Client.InitiateEncryption(Base64Url.Decode(x5u), Base64Url.Decode(data.salt.TrimEnd('=')));
@@ -1570,14 +1570,11 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 				ThreadPool.QueueUserWorkItem((o) =>
 				{
-					McpePlayerAction action = McpePlayerAction.CreateObject();
-					action.runtimeEntityId = Client.EntityId;
-					action.actionId = (int) PlayerAction.DimensionChangeAck;
-					Client.SendPacket(action);
-
 					World world = Client.World;
 
 					world.ClearChunksAndEntities();
+					
+					
 					//world.ChunkManager.ClearChunks();
 					world.UpdatePlayerPosition(new PlayerLocation(message.position.X, message.position.Y, message.position.Z));
 					
@@ -1653,6 +1650,11 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 						//	await Task.Delay(50);
 						//}
 					} while (true);
+					
+					McpePlayerAction action = McpePlayerAction.CreateObject();
+					action.runtimeEntityId = Client.EntityId;
+					action.actionId = (int) PlayerAction.DimensionChangeAck;
+					Client.SendPacket(action);
 					
 					AlexInstance.GuiManager.RemoveScreen(loadingWorldScreen);
 					//AlexInstance.GameStateManager.Back();

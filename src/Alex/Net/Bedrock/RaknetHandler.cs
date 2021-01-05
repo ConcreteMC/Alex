@@ -141,11 +141,11 @@ namespace Alex.Net.Bedrock
 		public ManualResetEvent ConnectionResetEvent = new ManualResetEvent(false);
 		public void SendOpenConnectionRequest1(IPEndPoint targetEndPoint, short mtuSize)
 		{
-			MtuSize = (short) (mtuSize - 28); // This is what we will use from connections this point forward
+			MtuSize = (short) (mtuSize); // This is what we will use from connections this point forward
 
 			var packet = OpenConnectionRequest1.CreateObject();
 			packet.raknetProtocolVersion = 10;
-			packet.mtuSize = mtuSize;
+			packet.mtuSize = (short) (mtuSize + 28);
 
 			byte[] data = packet.Encode();
 

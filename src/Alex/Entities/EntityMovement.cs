@@ -94,10 +94,11 @@ namespace Alex.Entities
 				bool collideZ = TestTerrainCollisionZ(
 					ref amount, out var zCollisionPoint, out var zBox, out collisionZ, boxes);
 
-				var canJump = true;
+				var canJump = false;
 
 				if (Entity.KnownPosition.OnGround)
 				{
+					canJump = true;
 					var adjusted     = Entity.GetBoundingBox(Entity.KnownPosition + amount);
 					var intersecting = PhysicsManager.GetIntersecting(Entity.Level, adjusted);
 					var targetY      = 0f;
@@ -107,7 +108,7 @@ namespace Alex.Entities
 					{
 						var yDifference = box.Max.Y - Entity.BoundingBox.Min.Y;
 
-						if (yDifference > MaxJumpHeight || (box.Min.Y > adjusted.Min.Y && box.Min.Y <= adjusted.Max.Y))
+						if (yDifference > MaxJumpHeight)
 						{
 							canJump = false;
 
@@ -120,17 +121,22 @@ namespace Alex.Entities
 
 					if (canJump && targetY > 0f)
 					{
+						var originalY = amount.Y;
 						amount.Y = targetY;
 						//var a = intersecting.
+						adjusted     = Entity.GetBoundingBox(Entity.KnownPosition + amount);
+
+						if (PhysicsManager.GetIntersecting(Entity.Level, adjusted).Any(
+							bb => bb.Max.Y > adjusted.Min.Y && bb.Min.Y <= adjusted.Max.Y))
+						{
+							canJump = false;
+							amount.Y = originalY;
+						}
 					}
 					else
 					{
 						canJump = false;
 					}
-				}
-				else
-				{
-					canJump = false;
 				}
 
 				if (!canJump)
@@ -209,7 +215,7 @@ namespace Alex.Entities
 			UpdateTarget();
 			
 			Entity.DistanceMoved +=
-				MathF.Abs(Microsoft.Xna.Framework.Vector3.Distance(oldPosition * new Vector3(1f, 0f, 1f), Entity.KnownPosition.ToVector3() * new Vector3(1f, 0f, 1f)));
+				MathF.Abs(Microsoft.Xna.Framework.Vector3.Distance(oldPosition , Entity.KnownPosition.ToVector3()));
 
 			return amount;
 		}
@@ -229,7 +235,7 @@ namespace Alex.Entities
 			}
 			
 			var distance = Microsoft.Xna.Framework.Vector3.DistanceSquared(
-				Entity.RenderLocation.ToVector3(), target.ToVector3());
+				Entity.RenderLocation.ToVector3() * new Vector3(1f, 0f, 1f), target.ToVector3() * new Vector3(1f, 0f, 1f));
 
 			if (distance >= 16f)
 			{

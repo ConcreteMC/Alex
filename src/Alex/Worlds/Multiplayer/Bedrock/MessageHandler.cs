@@ -156,10 +156,12 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 			return packet;
 		}
-
-		private bool _hasEncrypted = false;
+		
 		public void HandlePacket(Packet message)
 		{
+			if (_session.Evicted)
+				return;
+			
 			if (message is McpeWrapper wrapper)
 			{
 				var messages = new List<Packet>();
@@ -170,11 +172,9 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				// Decrypt bytes
 
 
-				if (CryptoContext != null && CryptoContext.UseEncryption && message.ReliabilityHeader.ReliableMessageNumber > _session.FirstEncryptedMessage)
+				if (CryptoContext != null && CryptoContext.UseEncryption)
 				{
 					payload = CryptoUtils.Decrypt(payload, CryptoContext);
-
-					_hasEncrypted = true;
 				}
 
 				using (var stream = new MemoryStream(payload))
@@ -183,15 +183,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					{
 						using (var s = new MemoryStream())
 						{
-							//stream.CopyTo(s);
-							try
-							{
-								deflateStream.CopyTo(s);
-							}
-							catch (InvalidDataException ex)
-							{
-								var a = "b";
-							}
+							deflateStream.CopyTo(s);
 
 							s.Position = 0;
 
@@ -220,8 +212,9 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 								catch (Exception e)
 								{
 									Log.Warn(
-										e, $"Error parsing bedrock message #{count} id={id}\n{Packet.HexDump(internalBuffer)}");
+										e, $"Error parsing bedrock message #{count} id={id} (Buffer size={internalBuffer.Length})");
 
+									
 									//throw;
 									return; // Exit, but don't crash.
 								}

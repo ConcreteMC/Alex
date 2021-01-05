@@ -201,10 +201,10 @@ namespace Alex.Worlds
 
 		//public long WorldTime { get; private set; } = 6000;
 
-		public PlayerList PlayerList { get; }
-		public TickManager Ticker { get; }
-		public EntityManager EntityManager { get; }
-		public ChunkManager ChunkManager { get; private set; }
+		public PlayerList     PlayerList    { get; }
+		public TickManager    Ticker        { get; }
+		public EntityManager  EntityManager { get; set; }
+		public ChunkManager   ChunkManager  { get; private set; }
 		public PhysicsManager PhysicsEngine { get; set; }
 
 		public long Vertices
@@ -244,6 +244,9 @@ namespace Alex.Worlds
         
         public void Render(IRenderArgs args)
         {
+	        if (_destroyed)
+		        return;
+	        
 	        Graphics.DepthStencilState = DepthStencilState.Default;
 	        Graphics.SamplerStates[0] = SamplerState.PointWrap;
 
@@ -276,6 +279,9 @@ namespace Alex.Worlds
 		private float _brightnessMod = 0f;
 		public void Update(UpdateArgs args)
 		{
+			if (_destroyed)
+				return;
+			
 			var camera = Camera;
 			
 			args.Camera = camera;
@@ -777,7 +783,10 @@ namespace Alex.Worlds
 			BackgroundWorker?.Dispose();
 
 			EntityManager.Dispose();
+			EntityManager = null;
+			
 			ChunkManager.Dispose();
+			ChunkManager = null;
 
 			Player.Dispose();
 			Ticker.Dispose();
