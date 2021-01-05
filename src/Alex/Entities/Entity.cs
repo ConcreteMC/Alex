@@ -684,9 +684,9 @@ namespace Alex.Entities
 			var  renderer = ModelRenderer;
 			long rendered = 0;
 
-			if (((RenderEntity && !IsInvisible) || ShowItemInHand) && renderer != null && !_skipRendering)
+			if (!IsInvisible && RenderEntity)
 			{
-				renderer.Render(renderArgs, IsInvisible || !RenderEntity);
+				renderer.Render(renderArgs);
 
 				if (renderer.Valid)
 				{

@@ -423,7 +423,7 @@ namespace Alex.Gamestates.Debugging
 				context.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
 				context.GraphicsDevice.SamplerStates[0] = SamplerState.PointWrap;
 
-				renderer?.Render(renderArgs, false);
+				renderer?.Render(renderArgs);
 			}
 			finally
 			{

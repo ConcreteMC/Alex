@@ -14,9 +14,7 @@ namespace Alex.Graphics.Models.Entity
 	{
 		public class ModelBone : IDisposable
 		{
-			private Texture2D         Texture  { get; set; }
-			private PooledIndexBuffer Buffer   { get; set; }
-			private List<ModelBone>   Children { get; set; } = new List<ModelBone>();
+			internal List<ModelBone> Children { get; set; } = new List<ModelBone>();
 			
 			private Vector3 _rotation = Vector3.Zero;
 
@@ -35,15 +33,17 @@ namespace Alex.Graphics.Models.Entity
 			public bool IsAnimating => CurrentAnim != null || Animations.Count > 0;
 			internal EntityModelBone Definition { get; }
 			
-			private short[] Indices { get; }
-			public ModelBone(Texture2D texture, short[] indices, EntityModelBone bone, Matrix defaultMatrix)
+			public int StartIndex   { get; }
+			public int ElementCount { get; }
+			public ModelBone(EntityModelBone bone, Matrix defaultMatrix, int startIndex, int elementCount)
 			{
-				Texture = texture;
 				Definition = bone;
-				Indices = indices;
+				//Indices = indices;
 				Animations = new Queue<ModelBoneAnimation>();
 
 				DefaultMatrix = defaultMatrix;
+				StartIndex = startIndex;
+				ElementCount = elementCount;
 			}
 
 			//private bool _isDirty = true;
@@ -84,11 +84,9 @@ namespace Alex.Graphics.Models.Entity
 					}
 				}
 			}
-			
-			private AlphaTestEffect Effect { get; set; }
-			
-			private object _disposeLock = new object();
-			public void Render(IRenderArgs args, bool mock, out int vertices)
+
+			//private object _disposeLock = new object();
+			/*public void Render(IRenderArgs args, bool mock, out int vertices)
 			{
 				vertices = 0;
 				
@@ -100,7 +98,6 @@ namespace Alex.Graphics.Models.Entity
 				{
 					if (!Definition.NeverRender && Rendered)
 					{
-						var buffer = Buffer;
 						var effect = Effect;
 
 						if (!(buffer == null || effect == null || effect.Texture == null || effect.IsDisposed
@@ -165,7 +162,7 @@ namespace Alex.Graphics.Models.Entity
 				{
 					Monitor.Exit(_disposeLock);
 				}
-			}
+			}*/
 
 			public void ClearAnimations()
 			{
@@ -180,13 +177,13 @@ namespace Alex.Graphics.Models.Entity
 			}
 
 			private Matrix DefaultMatrix { get; set; } = Matrix.Identity;
-
+			public  Matrix WorldMatrix   { get; set; } = Matrix.Identity;
+			
 			public void Update(IUpdateArgs args,
 				Matrix characterMatrix,
-				Vector3 diffuseColor,
 				PlayerLocation modelLocation)
 			{
-				if (_disposed || Effect == null) return;
+				if (_disposed) return;
 
 				//if (!Monitor.TryEnter(_disposeLock, 0))
 				//	return;
@@ -243,25 +240,20 @@ namespace Alex.Graphics.Models.Entity
 
 					world.Left = right;
 					world.Right = left;
+					WorldMatrix = world;
 				//	world.Forward = backward;
 					//world.Backward = forward;
 
-					Effect.World = world;
-					Effect.DiffuseColor = diffuseColor;
+					//Effect.World = world;
+					//Effect.DiffuseColor = diffuseColor;
 					var children = Children.ToArray();
 
 					if (children.Length > 0)
 					{
 						foreach (var child in children)
 						{
-							child.Update(args, userRotationMatrix * characterMatrix, diffuseColor, modelLocation);
+							child.Update(args, userRotationMatrix * characterMatrix, modelLocation);
 						}
-					}
-
-					//if (_isDirty || Indices.Length > Buffer.IndexCount)
-					{
-						UpdateVertexBuffer(args.GraphicsDevice);
-						//	_isDirty = false;
 					}
 				}
 				finally
@@ -270,57 +262,10 @@ namespace Alex.Graphics.Models.Entity
 				}
 			}
 
-			private bool _updateQueued = false;
-			private void UpdateVertexBuffer(GraphicsDevice device)
-			{
-				if (_disposed || _updateQueued) return;
-				
-				var               indices       = Indices;
-				PooledIndexBuffer currentBuffer = Buffer;
-				if (indices.Length > 0 && (Buffer == null || currentBuffer.IndexCount != indices.Length))
-				{
-					_updateQueued = true;
-					
-					Alex.Instance.UIThreadQueue.Enqueue(
-						() =>
-						{
-							if (_disposed)
-								return;
-							
-							PooledIndexBuffer buffer = GpuResourceManager.GetIndexBuffer(
-								this, device, IndexElementSize.SixteenBits, indices.Length, BufferUsage.None);
-
-							buffer.SetData(indices);
-							Buffer = buffer;
-
-							currentBuffer?.MarkForDisposal();
-							
-							_updateQueued = false;
-						});
-				}
-			}
-
-			internal void SetTexture(PooledTexture2D texture)
-			{
-				if (_disposed) return;
-				
-				if (Effect != null)
-				{
-					Effect.Texture = texture;
-				}
-
-				Texture = texture;
-			}
-
 			private bool _disposed = false;
 			public void Dispose()
 			{
 				_disposed = true;
-				lock (_disposeLock)
-				{
-					Effect?.Dispose();
-					Buffer?.MarkForDisposal();
-				}
 			}
 
 			public void AddChild(ModelBone modelBone)
@@ -344,17 +289,6 @@ namespace Alex.Graphics.Models.Entity
 			}
 
 			public string Name => Definition.Name;
-
-			public void Setup(GraphicsDevice device)
-			{
-				if (Effect == null)
-				{
-					Effect = new AlphaTestEffect(device);
-					Effect.Texture = Texture;
-					Effect.VertexColorEnabled = true;
-
-				}
-			}
 		}
 	}
 }
