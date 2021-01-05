@@ -9,6 +9,7 @@ using System.Net;
 using System.Reflection;
 using System.Text;
 using Alex.API.Data.Options;
+using Alex.API.Graphics;
 using Alex.API.Resources;
 using Alex.API.Services;
 using Alex.API.Utils;
@@ -39,6 +40,7 @@ using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Newtonsoft.Json;
 using NLog;
+using SixLabors.ImageSharp;
 using DateTime = System.DateTime;
 using Task = System.Threading.Tasks.Task;
 
@@ -69,6 +71,8 @@ namespace Alex
 		
 		public List<MCPack>       Packs              { get; } = new List<MCPack>();
 		public BlockModelRegistry BlockModelRegistry { get; private set; }
+		
+		public static PooledTexture2D NethergamesLogo { get; private set; }
 		public ResourceManager(IServiceProvider serviceProvider)
 		{
 			Atlas = new AtlasGenerator();
@@ -379,6 +383,9 @@ namespace Alex
             Options.AlexOptions.ResourceOptions.LoadedResourcesPacks.Bind(ResourcePacksChanged);
             _hasInit = true;
             
+            var data = ReadResource("Alex.Resources.nethergames.png");
+            NethergamesLogo = TextureUtils.BitmapToTexture2D(Alex.GraphicsDevice, Image.Load(data));
+	            
             return true;
 		}
 

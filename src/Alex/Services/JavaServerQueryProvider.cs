@@ -59,7 +59,13 @@ namespace Alex.Services
 			await QueryJavaServerAsync(connectionDetails, pingCallback, statusCallBack);
         }
 
-        private static async Task QueryJavaServerAsync(ServerConnectionDetails connectionDetails, PingServerDelegate pingCallback, ServerStatusDelegate statusCallBack)
+	    /// <inheritdoc />
+	    public Task StartLanDiscovery(CancellationToken cancellationToken, LandDiscoveryDelegate callback = null)
+	    {
+		    return Task.CompletedTask;
+	    }
+
+	    private static async Task QueryJavaServerAsync(ServerConnectionDetails connectionDetails, PingServerDelegate pingCallback, ServerStatusDelegate statusCallBack)
         {
 	        CancellationTokenSource cts = new CancellationTokenSource(10000);
 	        using TcpClient client       = new TcpClient();

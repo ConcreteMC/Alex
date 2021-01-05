@@ -133,7 +133,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					Alex.Services.GetRequiredService<BlobCache>());
 
 				ChunkProcessor.ClientSideLighting = Options.VideoOptions.ClientSideLighting;
-				ChunkProcessor.Instance = ChunkProcessor;
+				//ChunkProcessor.Instance = ChunkProcessor;
 			}
 
 			Connection = new RaknetConnection();
@@ -1312,7 +1312,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		public void Dispose()
 		{
-			ChunkProcessor.Instance = null;
+			//ChunkProcessor.Instance = null;
 			Close();
 			//WorkerThreadPool.Dispose();
 			//_threadPool.WaitForThreadsExit();

@@ -115,6 +115,20 @@ namespace Alex.Net.Bedrock
 
 			return Session.State == ConnectionState.Connected;
 		}
+		
+		public void SendUnconnectedPingInternal(IPEndPoint targetEndPoint)
+		{
+			byte[] data = new UnconnectedPing()
+			{
+				pingId = Stopwatch.GetTimestamp(),
+				guid = RaknetHandler.ClientGuid
+			}.Encode();
+			
+			if (targetEndPoint != null)
+				SendData(data, targetEndPoint);
+			else
+				SendData(data, new IPEndPoint(IPAddress.Broadcast, 19132));
+		}
 
 		public void Stop()
 		{

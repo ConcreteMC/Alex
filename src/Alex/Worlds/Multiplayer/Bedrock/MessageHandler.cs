@@ -170,7 +170,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				// Decrypt bytes
 
 
-				if (CryptoContext != null && CryptoContext.UseEncryption && message.ReliabilityHeader.OrderingIndex > _session.FirstEncryptedMessage)
+				if (CryptoContext != null && CryptoContext.UseEncryption && message.ReliabilityHeader.ReliableMessageNumber > _session.FirstEncryptedMessage)
 				{
 					payload = CryptoUtils.Decrypt(payload, CryptoContext);
 

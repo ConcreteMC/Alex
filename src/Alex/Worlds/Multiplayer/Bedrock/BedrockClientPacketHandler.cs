@@ -124,7 +124,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 	        try
 	        {
-		        Client.Connection.Session.FirstEncryptedMessage = message.ReliabilityHeader.OrderingIndex;
+		        Client.Connection.Session.FirstEncryptedMessage = message.ReliabilityHeader.ReliableMessageNumber;
 		        
 		        var data = JWT.Payload<HandshakeData>(token);
 		        Client.InitiateEncryption(Base64Url.Decode(x5u), Base64Url.Decode(data.salt.TrimEnd('=')));

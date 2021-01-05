@@ -245,7 +245,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				
 				if (!outOfOrder && sw.ElapsedMilliseconds >= 500)
 				{
-					subTitle = "Slow network, please wait...";
+					//subTitle = "Slow network, please wait...";
 				}
 				
 				double radiusSquared = Math.Pow(Client.ChunkRadius, 2);
@@ -263,6 +263,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 					subTitle = "Waiting on spawn confirmation...";
 					state = LoadingState.Spawning;
+					
+					//Log.Warn($"Status: {statusChanged} | Gamestarted: {Client.GameStarted} | OutOfOrder: {Client.Connection.IsNetworkOutOfOrder}");
 				}
 				else if (percentage > 0)
 				{

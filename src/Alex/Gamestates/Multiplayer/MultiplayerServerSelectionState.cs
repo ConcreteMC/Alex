@@ -1,6 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 using Alex.API.Data.Servers;
 using Alex.API.Graphics;
@@ -13,6 +15,8 @@ using Alex.Gamestates.Common;
 using Alex.Gamestates.Login;
 using Alex.Gui;
 using Alex.Gui.Elements;
+using Alex.Utils;
+using Alex.Worlds.Multiplayer.Bedrock;
 using Microsoft.Xna.Framework;
 using NLog;
 
@@ -30,11 +34,13 @@ namespace Alex.Gamestates.Multiplayer
 
 	    private readonly IListStorageProvider<SavedServerEntry> _listProvider;
 
-	    private GuiPanoramaSkyBox _skyBox;
+	    private GuiPanoramaSkyBox       _skyBox;
+	    private CancellationTokenSource CancellationTokenSource { get; }
 		public MultiplayerServerSelectionState(GuiPanoramaSkyBox skyBox) : base()
 		{
 			_skyBox = skyBox;
-
+			CancellationTokenSource = new CancellationTokenSource();
+			
 			_listProvider = GetService<IListStorageProvider<SavedServerEntry>>();
 
 		    Title = "Multiplayer";
@@ -89,10 +95,44 @@ namespace Alex.Gamestates.Multiplayer
 	    protected override void OnShow()
 	    {
 		    base.OnShow();
+
+		    CancellationTokenSource
+			    cts = CancellationTokenSource.CreateLinkedTokenSource(CancellationTokenSource.Token);
+		    
+		    foreach (var serverType in Alex.ServerTypeManager.GetAll())
+		    {
+			    serverType.QueryProvider.StartLanDiscovery(cts.Token, async r =>
+			    {
+				    if (r.QueryResponse.Success)
+				    {
+					    GuiServerListEntryElement entry = new GuiServerListEntryElement(
+						    serverType,
+						    new SavedServerEntry()
+						    {
+							    ServerType = serverType.Id,
+							    Host = r.QueryResponse.Status.Address,
+							    Port = r.QueryResponse.Status.Port,
+							    Name = r.QueryResponse.Status.EndPoint.ToString(),
+							    InternalIdentifier = Guid.NewGuid()
+						    });
+
+					    entry.SaveEntry = false;
+					    
+					    entry.ConnectionEndpoint = r.EndPoint;
+					    entry.ServerName = $"[LAN] {r.QueryResponse.Status.Query.Description.Text}";
+					    
+					    AddItem(entry);
+
+					    await entry.PingAsync(false);
+				    }
+			    });
+		    }
+		    
+		    cts.CancelAfter(30000);
 		    
 		  //  var queryProvider = GetService<IServerQueryProvider>();
-		    
-		    _listProvider.Load();
+
+		  _listProvider.Load();
 
 		    Reload();
 	    }
@@ -100,6 +140,24 @@ namespace Alex.Gamestates.Multiplayer
 	    private void Reload()
 	    {
 		    ClearItems();
+
+		    if (Alex.ServerTypeManager.TryGet("bedrock", out ServerTypeImplementation serverTypeImplementation))
+		    {
+			    var item = new GuiServerListEntryElement(
+				    serverTypeImplementation,
+				    new SavedServerEntry()
+				    {
+					    CachedIcon = ResourceManager.NethergamesLogo,
+					    Host = "play.nethergames.org",
+					    Name = "NetherGames",
+					    Port = 19132,
+					    ServerType = serverTypeImplementation.Id
+				    });
+
+			    item.SaveEntry = false;
+
+			    AddItem(item);	  
+		    }
 		    
 		    Task previousTask = null;
 		    foreach (var entry in _listProvider.Data.ToArray())
@@ -258,6 +316,13 @@ namespace Alex.Gamestates.Multiplayer
 
 	    private void SaveAll()
 	    {
+		    foreach (var item in Items.ToArray())
+		    {
+			    if (!item.SaveEntry)
+			    {
+				    RemoveItem(item);
+			    }
+		    }
 		    _listProvider.Save(_listProvider.Data);
 		  /*  foreach (var entry in _listProvider.Data.ToArray())
 		    {
@@ -332,6 +397,9 @@ namespace Alex.Gamestates.Multiplayer
 	    protected override void OnHide()
 	    {
 		    base.OnHide();
+		    
+		    CancellationTokenSource.Cancel();
+		    
 			SaveAll();
 	    }
 

@@ -46,6 +46,7 @@ namespace Alex.Gamestates.Multiplayer
 		internal SavedServerEntry SavedServerEntry;
 		internal Guid             InternalIdentifier = Guid.NewGuid();
 
+		public bool                     SaveEntry                { get; set; } = true;
 		public ServerTypeImplementation ServerTypeImplementation { get; }
 		public GuiServerListEntryElement(ServerTypeImplementation serverTypeImplementation, SavedServerEntry entry) : this(
 			serverTypeImplementation.QueryProvider,

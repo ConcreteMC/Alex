@@ -29,7 +29,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
     public class ChunkProcessor : IDisposable
     {
 	    private static readonly Logger         Log = LogManager.GetCurrentClassLogger(typeof(ChunkProcessor));
-	    public static           ChunkProcessor Instance { get; set; }
+	    public static           ChunkProcessor Instance { get; private set; }
 	    static ChunkProcessor()
 	    {
 		    
@@ -57,7 +57,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	        CancellationToken = cancellationToken;
 	        Cache = blobCache;
 
-	        //Instance = this;
+	        Instance = this;
         }
 
 	    private ConcurrentQueue<Action> _actionQueue = new ConcurrentQueue<Action>();
@@ -291,7 +291,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	        {
 		        using (MemoryStream stream = new MemoryStream(chunkData))
 		        {
-			        NbtBinaryReader defStream = new NbtBinaryReader(stream, true);
+			        using NbtBinaryReader defStream = new NbtBinaryReader(stream, true);
 
 			        for (int s = 0; s < subChunkCount; s++)
 			        {
@@ -331,16 +331,16 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 							        wordCount++;
 						        }
 						        
-						        uint[] words = new uint[wordCount];
+						        int[] words = new int[wordCount];
 
 						        Span<byte> blockData = new Span<byte>(new byte[wordCount * 4]);
 						        defStream.Read(blockData);
 
 						        for (int w = 0; w < wordCount; w++)
 						        {
-							        words[w] = ((uint) blockData[w * 4]) | ((uint) blockData[w * 4 + 1]) << 8
-							                                             | ((uint) blockData[w * 4 + 2]) << 16
-							                                             | ((uint) blockData[w * 4 + 3]) << 24;
+							        words[w] = ((int) blockData[w * 4]) | ((int) blockData[w * 4 + 1]) << 8
+							                                             | ((int) blockData[w * 4 + 2]) << 16
+							                                             | ((int) blockData[w * 4 + 3]) << 24;
 						        }
 
 						        int[] pallete;// = new int[0];
@@ -366,10 +366,10 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 						        int position = 0;
 						        for (int w = 0; w < wordCount; w++)
 						        {
-							        uint word = words[w];
+							        int word = words[w];
 							        for (int block = 0; block < blocksPerWord; block++)
 							        {
-								        //if (position >= 4096) break; // padding bytes
+								        if (position >= 4096) break; // padding bytes
 
 								        uint state =
 									        (uint) ((word >> ((position % blocksPerWord) * blockSize)) &

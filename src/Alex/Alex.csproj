@@ -116,6 +116,8 @@
     <EmbeddedResource Include="Resources\blockmap.json" />
     <None Remove="Resources\default_font.png" />
     <EmbeddedResource Include="Resources\default_font.png" />
+    <None Remove="Resources\nethergames.png" />
+    <EmbeddedResource Include="Resources\nethergames.png" />
   </ItemGroup>
 
   <ItemGroup>

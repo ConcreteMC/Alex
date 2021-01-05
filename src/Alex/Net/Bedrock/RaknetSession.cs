@@ -200,26 +200,15 @@ namespace Alex.Net.Bedrock
 
 				lock (_eventSync)
 				{
-					if (message.ReliabilityHeader.OrderingIndex <= Interlocked.Read(ref _lastOrderingIndex))
+					var last = Interlocked.Read(ref _lastOrderingIndex);
+					if (message.ReliabilityHeader.OrderingIndex <= last)
 					{
 						return;
 					}
 
-					bool isMatch = Interlocked.CompareExchange(
-						ref _lastOrderingIndex, message.ReliabilityHeader.OrderingIndex,
-						message.ReliabilityHeader.OrderingIndex - 1) == message.ReliabilityHeader.OrderingIndex - 1;
-					
+					bool isMatch = message.ReliabilityHeader.OrderingIndex == last + 1;
+
 					if (_orderingBufferQueue.Count == 0 && isMatch)
-					{
-						IsOutOfOrder = false;
-
-						HandlePacket(message);
-
-						return;
-					}
-
-					/*if (_orderingBufferQueue.Count == 0 && message.ReliabilityHeader.OrderingIndex
-						== Interlocked.Read(ref _lastOrderingIndex) + 1)
 					{
 						IsOutOfOrder = false;
 
@@ -228,7 +217,7 @@ namespace Alex.Net.Bedrock
 						HandlePacket(message);
 
 						return;
-					}*/
+					}
 					
 					if (IsOutOfOrder)
 					{
@@ -299,12 +288,12 @@ namespace Alex.Net.Bedrock
 					{
 						var lastOrderingIndex = Interlocked.Read(ref _lastOrderingIndex);
 
-						if (Interlocked.CompareExchange(ref _lastOrderingIndex, pair.Key, pair.Key - 1) == pair.Key - 1)
+						if (lastOrderingIndex + 1 == pair.Key)
 						{
 							IsOutOfOrder = false;
 							if (_orderingBufferQueue.TryDequeue(out pair))
 							{
-								//Interlocked.Exchange(ref _lastOrderingIndex, pair.Key);
+								Interlocked.Exchange(ref _lastOrderingIndex, pair.Key);
 								
 								HandlePacket(pair.Value);
 							}
@@ -333,60 +322,6 @@ namespace Alex.Net.Bedrock
 			}
 
 			_orderedQueueProcessingThread = null;
-		}
-		
-		private void StartSequencingThread()
-		{
-			_sequencedQueueProcessingThread = new Thread(ProcessSequenceQueue)
-			{
-				IsBackground = true,
-				Name = $"Sequencing Thread [{EndPoint}]"
-			};
-			_sequencedQueueProcessingThread.Start();
-			if (Log.IsDebugEnabled) Log.Warn($"Started network sequencing thread.");
-		}
-		
-		private void ProcessSequenceQueue()
-		{
-			try
-			{
-				while (_sequencingQueue.TryPeek(out KeyValuePair<int, Packet> pair)
-				       && !_cancellationToken.IsCancellationRequested)
-				{
-					var lastSequenceIndex = Interlocked.Read(ref _lastSequencingIndex);
-
-					if (pair.Key == lastSequenceIndex + 1)
-					{
-						IsOutOfOrder = false;
-
-						if (_sequencingQueue.TryDequeue(out pair))
-						{
-							Interlocked.Exchange(ref _lastSequencingIndex, pair.Key);
-							AddToOrderedChannel(pair.Value);
-						}
-					}
-					else if (pair.Key <= lastSequenceIndex)
-					{
-						if (Log.IsDebugEnabled)
-							Log.Debug($"Datagram resent. Expected {lastSequenceIndex + 1}, but was {pair.Key}.");
-
-						if (_sequencingQueue.TryDequeue(out pair))
-						{
-							pair.Value.PutPool();
-						}
-					}
-				}
-			}
-			catch (ObjectDisposedException)
-			{
-				// Ignore. Comes from the reset events being waited on while being disposed. Not a problem.
-			}
-			catch (Exception e)
-			{
-				Log.Error(e, $"Exit receive handler task for player");
-			}
-
-			_sequencedQueueProcessingThread = null;
 		}
 
 		private void HandlePacket(Packet message)

@@ -157,11 +157,12 @@ namespace Alex.Net.Bedrock
 		{
 			if (message.mtuSize != MtuSize)
 			{
-			//	Log.Warn($"Error, mtu differ from what we sent. Received {message.mtuSize} bytes");
-				//return;
+				if (message.mtuSize > MtuSize)
+				{
+						Log.Warn($"Error, mtu differ from what we sent. Received {message.mtuSize} bytes");
+					return;
+				}
 			}
-
-		//	Log.Warn($"Server with ID {message.serverGuid} security={message.serverHasSecurity}, mtu agreed on {message.mtuSize}");
 
 			SendOpenConnectionRequest2(senderEndpoint, message.mtuSize);
 		}
@@ -184,7 +185,9 @@ namespace Alex.Net.Bedrock
 		{
 			if (HaveServer)
 				return;
-		//	Log.Warn("MTU Size: " + message.mtuSize);
+
+			MtuSize = message.mtuSize;
+			Log.Warn("MTU Size: " + message.mtuSize);
 		//	Log.Warn("Client Endpoint: " + message.clientEndpoint);
 
 			HaveServer = true;
