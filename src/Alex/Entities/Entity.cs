@@ -105,28 +105,7 @@ namespace Alex.Entities
 		}
 
 		public  Vector3      Velocity      { get; set; } = Vector3.Zero;
-
-		/// <inheritdoc />
-		public PhysicsState PreviousState { get; set; } = new PhysicsState(Vector3.Zero, new PlayerLocation());
 		
-		private float        _posOffset    = 0;
-		private bool         _posOffsetSet = false;
-
-		public float PositionOffset
-		{
-			get
-			{
-				if (!_posOffsetSet)
-					return (float) Height;
-				return _posOffset;
-			}
-			set
-			{
-				_posOffsetSet = true;
-				_posOffset = value;
-			}
-		}
-
 		//public HealthManager HealthManager { get; set; }
 		public string NameTag { get; set; }
 

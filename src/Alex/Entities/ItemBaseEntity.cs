@@ -42,6 +42,7 @@ namespace Alex.Entities
 				CanRender = true;
 				ItemRenderer = item.Renderer.Clone();
 				ItemRenderer.DisplayPosition = DisplayPosition.Ground;
+			//	ItemRenderer.ActiveDisplayItem = null;
 			}
 			else
 			{

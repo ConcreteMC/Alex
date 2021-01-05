@@ -76,7 +76,6 @@ namespace Alex.Entities
 			//NoAi = true;
 			
 			Velocity = Vector3.Zero;
-			PositionOffset = 1.62f;
 
 			GeometryName = geometry;
 

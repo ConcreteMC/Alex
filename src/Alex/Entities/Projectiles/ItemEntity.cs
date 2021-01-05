@@ -32,24 +32,23 @@ namespace Alex.Entities.Projectiles
         {
             if (CanRender)
             {
-                var bb       = base.BoundingBox;
-                var knownPos = bb.GetCenter();
+                var knownPos = KnownPosition.ToVector3();
+            //    var bb       = base.BoundingBox;
+               // var knownPos = bb.GetCenter();
                 
                 if (DoRotation)
                 {
-                    var offset = new Vector3((float) Width, (float) Height, (float) Width) / 2f;
-                    
-                    ItemRenderer.Update(args, Matrix.Identity 
-                                              * Matrix.CreateScale(Scale)
+                    //var offset = new Vector3((float) Width, (float) Height, (float) Width) / 2f;
+                    var offset = new Vector3(0.5f, 0f, 0.5f);
+                    ItemRenderer.Update(args, Matrix.CreateScale(Scale)
                                               * Matrix.CreateTranslation(-offset)
                                               * Matrix.CreateRotationY(MathHelper.ToRadians(_rotation)) 
                                               * Matrix.CreateTranslation(offset)
-                                              * Matrix.CreateTranslation((knownPos)), Color.White.ToVector3(), KnownPosition);
+                                              * Matrix.CreateTranslation((knownPos - offset)), Color.White.ToVector3(), KnownPosition);
                 }
                 else
                 {
-                    ItemRenderer.Update(args, Matrix.Identity 
-                                              * Matrix.CreateScale(Scale)
+                    ItemRenderer.Update(args,  Matrix.CreateScale(Scale)
                                                               * Matrix.CreateRotationY(MathHelper.ToRadians(KnownPosition.Yaw))
                                                               * Matrix.CreateTranslation(knownPos), Color.White.ToVector3(), KnownPosition);
                 }

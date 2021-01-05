@@ -128,7 +128,7 @@ namespace Alex.Graphics.Models.Items
             }
         }
 
-        public DisplayElement ActiveDisplayItem { get; private set; } = DisplayElement.Default;
+        public DisplayElement ActiveDisplayItem { get; set; } = DisplayElement.Default;
 
         private void UpdateDisplay()
         {
@@ -170,13 +170,6 @@ namespace Alex.Graphics.Models.Items
         }
 
         private Matrix _parentMatrix = Matrix.Identity;
-
-        /// <inheritdoc />
-        public bool ApplyHeadYaw { get; set; }
-
-        /// <inheritdoc />
-        public bool ApplyPitch { get; set; }
-
         public void Update(IUpdateArgs args, Matrix characterMatrix, Vector3 diffuseColor, PlayerLocation modelLocation)
         {
             _parentMatrix = characterMatrix;
@@ -212,11 +205,11 @@ namespace Alex.Graphics.Models.Items
             var activeDisplayItem = ActiveDisplayItem;
 
             var world = Matrix.Identity;
-
-            var a = new Vector3(0.5f, 0.5f, 0.5f);
-
+            
             if (activeDisplayItem != null)
             {
+                var a = new Vector3(0.5f, 0.5f, 0.5f);
+                
                 var displayTrans = new Vector3(activeDisplayItem.Translation.X,
                     activeDisplayItem.Translation.Y,
                     activeDisplayItem.Translation.Z) * (1f / 16f);
