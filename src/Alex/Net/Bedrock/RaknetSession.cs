@@ -118,7 +118,7 @@ namespace Alex.Net.Bedrock
 		private ConcurrentQueue<int> OutgoingNackQueue { get; } = new ConcurrentQueue<int>();
 		public ConcurrentDictionary<int, Datagram> WaitingForAckQueue { get; } = new ConcurrentDictionary<int, Datagram>();
 
-
+		public short CompressionThreshold { get; set; } = -1;
 		public RaknetSession(ConnectionInfo connectionInfo, RaknetConnection packetSender, IPEndPoint endPoint, short mtuSize, ICustomMessageHandler messageHandler = null)
 		{
 			Log.Debug($"Create session for {endPoint}");

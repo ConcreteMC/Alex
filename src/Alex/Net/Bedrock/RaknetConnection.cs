@@ -74,7 +74,7 @@ namespace Alex.Net.Bedrock
 		public string RemoteServerName { get; set; }
 
 		public Func<RaknetSession, ICustomMessageHandler> CustomMessageHandlerFactory { get; set; }
-		
+
 		public RaknetConnection()
 		{
 			_endpoint = new IPEndPoint(IPAddress.Any, 0);

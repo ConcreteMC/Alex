@@ -66,7 +66,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					var wrapper = McpeWrapper.CreateObject();
 					wrapper.ReliabilityHeader.Reliability = Reliability.ReliableOrdered;
 					wrapper.ForceClear = true;
-					wrapper.payload = Compression.CompressPacketsForWrapper(new List<Packet> {packet});
+					wrapper.payload = Compress(new List<Packet>(){packet});
 					wrapper.Encode(); // prepare
 					packet.PutPool();
 					sendList.Add(wrapper);
@@ -96,13 +96,49 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			{
 				var batch = McpeWrapper.CreateObject();
 				batch.ReliabilityHeader.Reliability = Reliability.ReliableOrdered;
-				batch.payload = Compression.CompressPacketsForWrapper(sendInBatch);
+				batch.payload = Compress(sendInBatch);
 				batch.Encode(); // prepare
 				sendList.Add(batch);
 			}
 
 			return sendList;
 		}
+
+        private byte[] Compress(ICollection<Packet> packets)
+        {
+	        long length = 0;
+	        foreach (Packet packet in packets) length += packet.Encode().Length;
+
+	        var compressionLevel = _session.CompressionThreshold > -1 && length >= _session.CompressionThreshold ?
+		        System.IO.Compression.CompressionLevel.Fastest : System.IO.Compression.CompressionLevel.NoCompression;
+
+	        using (MemoryStream stream = MiNetServer.MemoryStreamManager.GetStream())
+	        {
+		        int checksum;
+
+		        using (var compressStream = new DeflateStream(stream, compressionLevel, true))
+		        {
+			        foreach (Packet packet in packets)
+			        {
+				        byte[] bs = packet.Encode();
+
+				        if (bs != null && bs.Length > 0)
+				        {
+					        BatchUtils.WriteLength(compressStream, bs.Length);
+					        compressStream.Write(bs, 0, bs.Length);
+				        }
+
+				        packet.PutPool();
+			        }
+
+			        compressStream.Flush();
+		        }
+
+		        byte[] bytes = stream.ToArray();
+
+		        return bytes;
+	        }
+        }
 
         public AutoResetEvent FirstEncryptedPacketWaitHandle = new AutoResetEvent(false);
 		public Packet HandleOrderedSend(Packet packet)
@@ -165,18 +201,10 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 						{
 							packet = PacketFactory.Create((byte) id, internalBuffer, "mcpe")
 							             ?? new UnknownPacket((byte) id, internalBuffer);
+							
+							messages.AddLast(packet);
 
-							//Hack for some servers that screw up the order.
-						//	if (packet is McpePlayerList)
-						//	{
-								//		messages.AddFirst(packet);
-						//	}
-						//	else
-							{
-								messages.AddLast(packet);
-							}
-
-							//var a = 0x91;
+								//var a = 0x91;
 						}
 						catch (Exception e)
 						{

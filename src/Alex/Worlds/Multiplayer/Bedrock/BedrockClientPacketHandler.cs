@@ -730,7 +730,12 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		public void HandleMcpeNetworkSettings(McpeNetworkSettings message)
 		{
-			UnhandledPackage(message);
+			//Client.Connection.Session.
+			var threshold = BitConverter.ToInt16(new byte[] {message.unknown, message.compressionThreshold});
+			Client.Connection.Session.CompressionThreshold = threshold;
+			
+			Log.Info($"Compression Threshold: {threshold}");
+			//UnhandledPackage(message);
 		}
 
 		/// <inheritdoc />

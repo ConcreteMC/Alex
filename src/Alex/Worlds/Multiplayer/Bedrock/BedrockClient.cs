@@ -256,7 +256,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 							if (Connection.IsNetworkOutOfOrder)
 							{
 								networkState = ConnectionInfo.NetworkState.OutOfOrder;
-							}else if (MessageHandler.TimeSinceLastPacket.TotalMilliseconds >= 250)
+							}
+							else if (MessageHandler != null && MessageHandler.TimeSinceLastPacket.TotalMilliseconds >= 250)
 							{
 								networkState = ConnectionInfo.NetworkState.Slow;
 							}
