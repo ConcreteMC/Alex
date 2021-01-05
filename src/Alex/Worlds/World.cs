@@ -898,16 +898,6 @@ namespace Alex.Worlds
 			if (EntityManager.TryGet(entityId, out Entity entity))
 			{
 				entity.KnownPosition.OnGround = position.OnGround;
-				if (!relative)
-				{
-					entity.Movement.MoveTo(position, false);
-				}
-				else
-				{
-					entity.Movement.Move(position);
-				}
-				
-				entity.Velocity = Vector3.Zero;
 				
 				if (updateLook)
 				{
@@ -920,6 +910,18 @@ namespace Alex.Worlds
 					entity.KnownPosition.HeadYaw = position.HeadYaw;
 					//	entity.UpdateHeadYaw(position.HeadYaw);
 				}
+				
+				if (relative)
+				{
+					//var adjusted = entity 
+					entity.Movement.Move(position.ToVector3());
+				}
+				else
+				{
+					entity.Movement.MoveTo(position, false);
+				}
+				
+				entity.Velocity = Vector3.Zero;
 			}
 		}
 

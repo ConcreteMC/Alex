@@ -259,7 +259,7 @@ namespace Alex.Entities
 					}
 					else
 					{
-						Log.Debug($"Geometry data null for player {Name}");
+						//Log.Debug($"Geometry data null for player {Name}");
 					}
 				}
 

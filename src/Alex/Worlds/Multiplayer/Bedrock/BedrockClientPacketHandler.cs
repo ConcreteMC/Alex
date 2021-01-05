@@ -666,9 +666,10 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 						endPosition.HeadYaw = ed.HasHeadYaw ? endPosition.HeadYaw : known.HeadYaw;
 						endPosition.Pitch = ed.HasPitch ? -endPosition.Pitch : known.Pitch;
 
-						entity.KnownPosition = endPosition;
+						//entity.KnownPosition = endPosition;
+						entity.Movement.MoveTo(endPosition);
 						
-						entity.DistanceMoved += MathF.Abs(Microsoft.Xna.Framework.Vector3.Distance(before.ToVector3(), endPosition.ToVector3()));
+						//entity.DistanceMoved += MathF.Abs(Microsoft.Xna.Framework.Vector3.Distance(before.ToVector3(), endPosition.ToVector3()));
 					}
 				}
 			}

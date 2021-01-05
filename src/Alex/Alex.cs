@@ -11,6 +11,7 @@ using System.Text;
 using System.Threading;
 using Alex.API;
 using Alex.API.Data.Servers;
+using Alex.API.Graphics;
 using Alex.API.Graphics.Typography;
 using Alex.API.Gui;
 using Alex.API.Input;
@@ -236,6 +237,13 @@ namespace Alex
 
 			TextureUtils.RenderThread = Thread.CurrentThread;
 			TextureUtils.QueueOnRenderThread = action => UIThreadQueue.Enqueue(action);
+		}
+
+		/// <inheritdoc />
+		protected override void OnExiting(object sender, EventArgs args)
+		{
+			GpuResourceManager.ReportIncorrectlyDisposedBuffers = false;
+			base.OnExiting(sender, args);
 		}
 
 		private void KeyboardInputCreated(object sender, KeyboardInputListener e)
