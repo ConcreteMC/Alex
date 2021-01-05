@@ -1999,8 +1999,8 @@ namespace Alex.Worlds.Multiplayer.Java
 
 			        if (World.EntityManager.TryGetBlockEntity(packet.Location, out var entity))
 			        {
-				        var block = World.GetBlock(packet.Location);
-				        entity.Block = block;
+				        var block = World.GetBlockState(packet.Location);
+				        entity.Block = block.Block;
 
 				        entity.SetData(packet.Action, packet.Compound);
 			        }
@@ -2008,8 +2008,8 @@ namespace Alex.Worlds.Multiplayer.Java
 			        {
 				        try
 				        {
-					        var block       = World.GetBlock(packet.Location);
-					        var blockEntity = BlockEntityFactory.ReadFrom(packet.Compound, World, block);
+					        var block       = World.GetBlockState(packet.Location);
+					        var blockEntity = BlockEntityFactory.ReadFrom(packet.Compound, World, block.Block);
 
 					        if (blockEntity != null)
 					        {

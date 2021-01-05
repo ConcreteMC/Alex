@@ -145,8 +145,8 @@ namespace Alex.Worlds
 					blockcoords.Y -= 1;
 				}
 				
-				var block = World.GetBlock(blockcoords.X, blockcoords.Y, blockcoords.Z);
-				slipperiness = (float) block.BlockMaterial.Slipperiness;
+				var block = World.GetBlockState(blockcoords.X, blockcoords.Y, blockcoords.Z);
+				slipperiness = (float) block.Block.BlockMaterial.Slipperiness;
 					
 				movement *= (float)entity.CalculateMovementSpeed() * (0.1627714f / (slipperiness * slipperiness * slipperiness));
 			}

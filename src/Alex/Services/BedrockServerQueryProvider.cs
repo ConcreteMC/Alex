@@ -37,7 +37,7 @@ namespace Alex.Services
 
 					client = new BedrockClient(Game, serverEndpoint,
 						new PlayerProfile(string.Empty, $"Pinger{serverEndpoint.ToString()}",
-							$"Pinger{serverEndpoint.ToString()}", null, null, null), threadPool, null)
+							$"Pinger{serverEndpoint.ToString()}", null, null, null), null)
 					{
 						
 						//IgnoreUnConnectedPong = true

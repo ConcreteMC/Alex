@@ -31,13 +31,13 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		protected BedrockClient Client { get; }
 		public BedrockFormManager FormManager { get; }
 		
-		public BedrockWorldProvider(Alex alex, IPEndPoint endPoint, PlayerProfile profile, DedicatedThreadPool threadPool,
+		public BedrockWorldProvider(Alex alex, IPEndPoint endPoint, PlayerProfile profile,
 			out NetworkProvider networkProvider)
 		{
 			Alex = alex;
 			
 			//Client = new ExperimentalBedrockClient(alex, alex.Services, this, endPoint);
-			Client = new BedrockClient(alex, endPoint, profile, threadPool, this);
+			Client = new BedrockClient(alex, endPoint, profile, this);
 			networkProvider = Client;
 
 			var guiManager = Alex.GuiManager;
@@ -254,7 +254,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				percentage = (int) ((100 / target) * World.ChunkManager.ChunkCount);
 				progressReport(state, percentage, subTitle);
 				
-				if (((percentage >= 75 && hasSpawnChunk)))
+				if (((percentage >= 50 && hasSpawnChunk)))
 				{
 					if (Client.GameStarted && statusChanged && !Client.Connection.IsNetworkOutOfOrder)
 					{

@@ -52,7 +52,6 @@ namespace Alex.Net.Bedrock
 		private HighPrecisionTimer _tickerHighPrecisionTimer;
 
 		private Thread _readingThread;
-		//public readonly ConcurrentDictionary<IPEndPoint, RaknetSession> RakSessions = new ConcurrentDictionary<IPEndPoint, RaknetSession>();
 
 		public          RaknetSession  Session { get; set; } = null;
 		public readonly RaknetHandler  RaknetHandler;
@@ -89,11 +88,9 @@ namespace Alex.Net.Bedrock
 			if (_listener != null) return;
 
 			_readingThread = new Thread(ReceiveCallback);
-
-			Log.Debug($"Creating listener for packets on {_endpoint}");
+			
 			_listener = CreateListener(_endpoint);
 			_readingThread.Start();
-		//	_listener.BeginReceive(ReceiveCallback, _listener);
 
 			_tickerHighPrecisionTimer = new HighPrecisionTimer(10, SendTick, true);
 		}
@@ -116,26 +113,6 @@ namespace Alex.Net.Bedrock
 			}
 
 			return Session.State == ConnectionState.Connected;
-		}
-
-		private void SendUnconnectedPingInternal(IPEndPoint targetEndPoint)
-		{
-			var packet = new UnconnectedPing
-			{
-				pingId = Stopwatch.GetTimestamp() /*incoming.pingId*/,
-				guid = RaknetHandler.ClientGuid
-			};
-
-			var data = packet.Encode();
-
-			if (targetEndPoint != null)
-			{
-				SendData(data, targetEndPoint);
-			}
-			else
-			{
-				SendData(data, new IPEndPoint(IPAddress.Broadcast, 19132));
-			}
 		}
 
 		public void Stop()

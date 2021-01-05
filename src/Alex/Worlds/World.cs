@@ -429,37 +429,7 @@ namespace Alex.Worlds
             return 0;
         }
 
-		public Block GetBlock(BlockCoordinates position)
-		{
-			return GetBlock(position.X, position.Y, position.Z);
-		}
-
-		public Block GetBlock(Vector3 position)
-        {
-            return GetBlock(position.X, position.Y, position.Z);
-        }
-
-		public Block GetBlock(float x, float y, float z)
-	    {
-		    return GetBlock((int) Math.Floor(x), (int) Math.Floor(y), (int) Math.Floor(z)); // Fix. xd
-	    }
-
-		public Block GetBlock(int x, int y, int z)
-        {
-	      //  try
-	      //  {
-		        ChunkColumn chunk;
-		        if (ChunkManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
-		        {
-			        return chunk.GetBlockState(x & 0xf, y & 0xff, z & 0xf).Block;
-		        }
-			//}
-		//	catch { }
-
-	        return Airstate.Block;
-        }
-
-		public void SetBlockEntity(int x, int y, int z, BlockEntity blockEntity)
+        public void SetBlockEntity(int x, int y, int z, BlockEntity blockEntity)
 		{
 			var coords      = new BlockCoordinates(x, y, z);
 			var chunkCoords = new ChunkCoordinates(x >> 4, z >> 4);

@@ -26,10 +26,10 @@ namespace Alex.API.Gui.Graphics
 
         public GraphicsContext Context { get; }
 
-        private readonly GraphicsDevice _graphicsDevice;
-        private readonly IGuiRenderer _renderer;
-        private Texture2D _colorTexture;
-        private Matrix _renderMatrix = Matrix.Identity;
+        private readonly GraphicsDevice  _graphicsDevice;
+        private readonly IGuiRenderer    _renderer;
+        private          PooledTexture2D _colorTexture;
+        private          Matrix          _renderMatrix = Matrix.Identity;
 
         private bool _beginSpriteBatchAfterContext;
         private bool _hasBegun;
@@ -414,7 +414,7 @@ namespace Alex.API.Gui.Graphics
 
         public void Dispose()
         {
-            _colorTexture?.Dispose();
+            _colorTexture?.MarkForDisposal();
             SpriteBatch?.Dispose();
         }
 

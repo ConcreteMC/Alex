@@ -1023,11 +1023,13 @@ namespace Alex.Entities
 		}
 		
 			var blockBelowFeet = Level?.GetBlockStates(knownDown.X, knownDown.Y, knownDown.Z);
-			var feetBlock = Level?.GetBlockStates(knownPos.X, knownPos.Y, knownPos.Z).ToArray();
-			var headBlock = Level?.GetBlock(KnownPosition.GetCoordinates3D() + new BlockCoordinates(0, 1, 0));
+			var feetBlock      = Level?.GetBlockStates(knownPos.X, knownPos.Y, knownPos.Z).ToArray();
+			var headBlockState = Level?.GetBlockState(KnownPosition.GetCoordinates3D() + new BlockCoordinates(0, 1, 0));
 
-			if (headBlock != null)
+			if (headBlockState != null)
 			{
+				var headBlock = headBlockState.Block;
+				
 				if (headBlock.Solid)
 				{
 					HeadInBlock = true;

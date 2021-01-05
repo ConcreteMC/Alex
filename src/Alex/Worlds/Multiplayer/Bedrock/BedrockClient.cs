@@ -104,7 +104,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
         private ChunkProcessor             ChunkProcessor      { get; }
         private BedrockClientPacketHandler PacketHandler       { get; set; }
 
-        public BedrockClient(Alex alex, IPEndPoint endpoint, PlayerProfile playerProfile, DedicatedThreadPool threadPool, BedrockWorldProvider wp)
+        public BedrockClient(Alex alex, IPEndPoint endpoint, PlayerProfile playerProfile, BedrockWorldProvider wp)
 		{
 			PacketFactory.CustomPacketFactory = new AlexPacketFactory();
 			
@@ -124,12 +124,18 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			//ReflectionHelper.SetPrivateStaticFieldValue();
 			//MiNetServer.FastThreadPool = threadPool;
 
-			ChunkProcessor = new ChunkProcessor(this, 
-				alex.Services.GetRequiredService<IOptionsProvider>().AlexOptions.MiscelaneousOptions.ServerSideLighting,
-				CancellationTokenSource.Token, Alex.Services.GetRequiredService<BlobCache>());
+			if (wp != null)
+			{
+				ChunkProcessor = new ChunkProcessor(
+					this,
+					alex.Services.GetRequiredService<IOptionsProvider>().AlexOptions.MiscelaneousOptions
+					   .ServerSideLighting, CancellationTokenSource.Token,
+					Alex.Services.GetRequiredService<BlobCache>());
 
-			ChunkProcessor.ClientSideLighting = Options.VideoOptions.ClientSideLighting;
-			
+				ChunkProcessor.ClientSideLighting = Options.VideoOptions.ClientSideLighting;
+				ChunkProcessor.Instance = ChunkProcessor;
+			}
+
 			Connection = new RaknetConnection();
 			ServerEndpoint = endpoint;
 			Connection.ConnectionInfo.DisableAck = false;
@@ -1302,7 +1308,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		public void Dispose()
 		{
-			
+			ChunkProcessor.Instance = null;
 			Close();
 			//WorkerThreadPool.Dispose();
 			//_threadPool.WaitForThreadsExit();

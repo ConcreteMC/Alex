@@ -590,9 +590,9 @@ namespace Alex.Entities
 		    for (float x = xStart; x > 0.7f; x -= 0.1f)
 		    {
 			    Vector3 targetPoint = camPos + (lookVector * x);
-			    var     block       = world.GetBlock(targetPoint);
+			    var     blockState  = world.GetBlockState(targetPoint);
 
-			    if (block != null && (!block.Solid))
+			    if (blockState != null && (!blockState.Block.Solid))
 			    {
 				    rawAdjacent = targetPoint;
 				    return true;
@@ -624,7 +624,8 @@ namespace Alex.Entities
 			var floored  = new BlockCoordinates(Vector3.Floor(Raytraced));
 			var adjacent = AdjacentRaytrace;
 			
-		    var block    = Level.GetBlock(floored);
+		    var blockState = Level.GetBlockState(floored);
+		    var block      = blockState.Block;
 		    if (!block.HasHitbox)
 		    {
 			    return;
@@ -715,8 +716,9 @@ namespace Alex.Entities
 			    //IBlock block = null;
 			    if (/*!IsWorldImmutable &&*/ HasRaytraceResult)
 			    {
-				    var existingBlock = Level.GetBlock(coordR);
-				    bool isBlockItem = slot is ItemBlock;
+				    var  existingBlockState = Level.GetBlockState(coordR);
+				    var  existingBlock      = existingBlockState.Block;
+				    bool isBlockItem        = slot is ItemBlock;
 				    
 				    if (existingBlock.CanInteract && (!isBlockItem || IsSneaking))
 				    {

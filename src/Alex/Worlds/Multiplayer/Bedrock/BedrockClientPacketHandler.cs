@@ -1497,42 +1497,18 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 				var block = Client.World.GetBlockState(worldPos).Block;
 
-				if (block.BlockMaterial != Material.Air)
+				//if (block.BlockMaterial != Material.Air)
 				{
 					var blockEntity = BlockEntityFactory.ReadFrom(compound, Client.World, block);
 
 					if (blockEntity == null)
 					{
-						//Log.Warn($"Null blockentity!");
 						return;
 					}
 
 					Client.World.SetBlockEntity(
 						message.coordinates.X, message.coordinates.Y, message.coordinates.Z, blockEntity);
 				}
-
-				//Log.Info($"Got block entity: {blockEntity.}");
-				/*if (Client.World.ChunkManager.TryGetChunk(
-					new ChunkCoordinates(
-						worldPos),
-					out var cc))
-				{
-					var blockCoordinates = new BlockCoordinates(
-						message.coordinates.X & 0x0f, message.coordinates.Y & 0xff, message.coordinates.Z & 0x0f);
-
-					//var block = cc.GetBlockState(blockCoordinates.X, blockCoordinates.Y, blockCoordinates.Z);
-					//blockEntity.Block = block.Block;
-
-					if (cc.RemoveBlockEntity(blockCoordinates))
-					{
-						Client.World.EntityManager.RemoveBlockEntity(worldPos);
-					}
-
-					if (cc.AddBlockEntity(blockCoordinates, blockEntity))
-					{
-						Client.World.EntityManager.AddBlockEntity(worldPos, blockEntity);
-					}
-				}*/
 			}
 			else
 			{
