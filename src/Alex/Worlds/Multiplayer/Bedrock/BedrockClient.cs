@@ -625,24 +625,28 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		public void InitiateEncryption(byte[] serverKey, byte[] randomKeyToken)
 		{
+
 			try
 			{
-				ECPublicKeyParameters remotePublicKey = (ECPublicKeyParameters)
-					PublicKeyFactory.CreateKey(serverKey);
+				ECPublicKeyParameters remotePublicKey = (ECPublicKeyParameters) PublicKeyFactory.CreateKey(serverKey);
 
 				var handler = MessageHandler;
-				
+
 				ECDHBasicAgreement agreement = new ECDHBasicAgreement();
 				agreement.Init(handler.CryptoContext.ClientKey.Private);
 				byte[] secret;
+
 				using (var sha = SHA256.Create())
 				{
-					secret = sha.ComputeHash(randomKeyToken.Concat(agreement.CalculateAgreement(remotePublicKey).ToByteArrayUnsigned()).ToArray());
+					secret = sha.ComputeHash(
+						randomKeyToken.Concat(agreement.CalculateAgreement(remotePublicKey).ToByteArrayUnsigned())
+						   .ToArray());
 				}
-		        
+
 				// Create a decrytor to perform the stream transform.
-				
+
 				IBufferedCipher decryptor = CipherUtilities.GetCipher("AES/CFB8/NoPadding");
+
 				decryptor.Init(false, new ParametersWithIV(new KeyParameter(secret), secret.Take(16).ToArray()));
 
 				IBufferedCipher encryptor = CipherUtilities.GetCipher("AES/CFB8/NoPadding");
@@ -656,8 +660,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					Key = secret,
 					ClientKey = handler.CryptoContext.ClientKey
 				};
-				
-				Thread.Sleep(1250);
+
+				//Thread.Sleep(1250);
 
 				McpeClientToServerHandshake magic = McpeClientToServerHandshake.CreateObject();
 				Session.SendPacket(magic);
@@ -671,7 +675,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			}
 		}
 
-        private static ECDsa ConvertToSingKeyFormat(AsymmetricCipherKeyPair key)
+		private static ECDsa ConvertToSingKeyFormat(AsymmetricCipherKeyPair key)
         {
             ECPublicKeyParameters pubAsyKey = (ECPublicKeyParameters)key.Public;
             ECPrivateKeyParameters privAsyKey = (ECPrivateKeyParameters)key.Private;

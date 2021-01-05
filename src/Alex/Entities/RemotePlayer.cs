@@ -146,30 +146,33 @@ namespace Alex.Entities
 			}
 		}
 
+		private int _skinQueuedCount = 0;
 		private void QueueSkinProcessing()
 		{
-			Action action = () =>
+			if (Interlocked.CompareExchange(ref _skinQueuedCount, 1, 0) == 0)
 			{
-				if (_skin == null)
+				if (Level?.BackgroundWorker == null)
 				{
-					UpdateSkin(_texture);
+					ProcessSkin();
 				}
 				else
 				{
-					LoadSkin(_skin);
+					Level.BackgroundWorker.Enqueue(ProcessSkin);
 				}
+			}
+		}
 
-				_skinDirty = false;
-			};
-			
-			if (Level?.BackgroundWorker == null)
+		private void ProcessSkin()
+		{
+			_skinQueuedCount = 0;
+			_skinDirty = false;
+			if (_skin == null)
 			{
-				action();
+				UpdateSkin(_texture);
 			}
 			else
 			{
-				Level.BackgroundWorker.Enqueue(
-					action);
+				LoadSkin(_skin);
 			}
 		}
 

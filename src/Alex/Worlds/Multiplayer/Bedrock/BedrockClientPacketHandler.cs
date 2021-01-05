@@ -124,6 +124,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 	        try
 	        {
+		        Client.Connection.Session.FirstEncryptedMessage = message.ReliabilityHeader.OrderingIndex;
+		        
 		        var data = JWT.Payload<HandshakeData>(token);
 		        Client.InitiateEncryption(Base64Url.Decode(x5u), Base64Url.Decode(data.salt.TrimEnd('=')));
 	        }
@@ -155,12 +157,12 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				CustomConnectedPong.CanPing = true;
 				Client.PlayerStatusChanged.Set();
 
-				Client.World.Player.EntityId = Client.EntityId;
+				//Client.World.Player.EntityId = Client.EntityId;
 
 				if (!_markedAsInitalized)
 				{
-					Client.MarkAsInitialized();
-					_markedAsInitalized = true;
+					//Client.MarkAsInitialized();
+					//_markedAsInitalized = true;
 				}
 
 				Client.RequestChunkRadius(AlexInstance.Options.AlexOptions.VideoOptions.RenderDistance.Value);
@@ -687,10 +689,15 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			if (converted != null)
 			{
 				BlockUpdatePriority priority = (BlockUpdatePriority) message.blockPriority;
+
+				if ((priority & BlockUpdatePriority.NoGraphic) != 0)
+				{
+					
+				}
 				
 				Client.World?.SetBlockState(
 					new BlockCoordinates(message.coordinates.X, message.coordinates.Y, message.coordinates.Z), 
-					converted, (int) message.storage, BlockUpdatePriority.High | BlockUpdatePriority.Network);
+					converted, (int) message.storage, priority);
 			}
 			else
 			{

@@ -443,10 +443,10 @@ namespace Alex.Worlds
 				var cz       = z & 0xf;
 				
 				var chunkPos   = new BlockCoordinates(cx, cy, cz);
-				var blockAtPos = chunk.GetBlockState(cx, cy, cz);
+			//	var blockAtPos = chunk.GetBlockState(cx, cy, cz);
 
-				if (blockAtPos.Block.BlockMaterial == Material.Air)
-					return;
+				//if (blockAtPos.Block.BlockMaterial == Material.Air)
+				//	return;
 				
 				chunk.RemoveBlockEntity(chunkPos);
 				EntityManager.RemoveBlockEntity(coords);

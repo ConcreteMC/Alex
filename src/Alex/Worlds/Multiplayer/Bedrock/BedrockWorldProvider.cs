@@ -256,7 +256,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				
 				if (((percentage >= 50 && hasSpawnChunk)))
 				{
-					if (Client.GameStarted && statusChanged && !Client.Connection.IsNetworkOutOfOrder)
+					if (statusChanged && Client.GameStarted && !Client.Connection.IsNetworkOutOfOrder)
 					{
 						break;
 					}
@@ -288,8 +288,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 				if (!statusChanged)
 				{
-					if (Client.PlayerStatusChanged.WaitOne(50) || Client.CanSpawn
-					    || Client.ChangeDimensionResetEvent.WaitOne(5))
+					if (Client.PlayerStatusChanged.WaitOne(50)
+					    || Client.PlayerStatus == 3)
 					{
 						statusChanged = true;
 					}
@@ -312,6 +312,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				new MiNET.Utils.PlayerLocation(p.X, p.Y, p.Z, p.HeadYaw, p.Yaw, p.Pitch),
 				World.Player.KnownPosition.OnGround);
 
+			Client.MarkAsInitialized();
+			
 			//SkyLightCalculations.Calculate(WorldReceiver as World);
 
 			//Client.IsEmulator = false;

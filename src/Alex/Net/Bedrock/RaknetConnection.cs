@@ -27,6 +27,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
@@ -615,10 +616,14 @@ namespace Alex.Net.Bedrock
 
 		public async Task SendPacketAsync(RaknetSession session, List<Packet> messages)
 		{
-			foreach (Datagram datagram in Datagram.CreateDatagrams(messages, session.MtuSize, session))
-			{
-				await SendDatagramAsync(session, datagram);
-			}
+			await Task.WhenAll(
+				Datagram.CreateDatagrams(messages, session.MtuSize, session)
+				   .Select(async x => await SendDatagramAsync(session, x)));
+			
+			//foreach (Datagram datagram in Datagram.CreateDatagrams(messages, session.MtuSize, session))
+			//{
+			//	await SendDatagramAsync(session, datagram);
+			//}
 
 			foreach (Packet message in messages)
 			{
@@ -629,6 +634,9 @@ namespace Alex.Net.Bedrock
 		
 		public void SendDatagram(RaknetSession session, Datagram datagram)
 		{
+			SendDatagramAsync(session, datagram).Wait();
+
+			return;
 			if (datagram.MessageParts.Count == 0)
 			{
 				Log.Warn($"Failed to send #{datagram.Header.DatagramSequenceNumber.IntValue()}");
@@ -714,6 +722,9 @@ namespace Alex.Net.Bedrock
 
 		public void SendData(byte[] data, IPEndPoint targetEndPoint)
 		{
+			SendDataAsync(data, targetEndPoint).Wait();
+
+			return;
 			try
 			{
 				_listener.Send(data, data.Length, targetEndPoint); // Less thread-issues it seems

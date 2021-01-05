@@ -200,37 +200,49 @@ namespace Alex.Net.Bedrock
 
 				lock (_eventSync)
 				{
-					var lastOrderingIndex = Interlocked.Read(ref _lastOrderingIndex);
-
-					if (message.ReliabilityHeader.OrderingIndex <= lastOrderingIndex)
+					if (message.ReliabilityHeader.OrderingIndex <= Interlocked.Read(ref _lastOrderingIndex))
 					{
-					//	return;
+						return;
 					}
+
+					bool isMatch = Interlocked.CompareExchange(
+						ref _lastOrderingIndex, message.ReliabilityHeader.OrderingIndex,
+						message.ReliabilityHeader.OrderingIndex - 1) == message.ReliabilityHeader.OrderingIndex - 1;
 					
-					if (_orderingBufferQueue.Count == 0 && message.ReliabilityHeader.OrderingIndex == lastOrderingIndex + 1)
+					if (_orderingBufferQueue.Count == 0 && isMatch)
+					{
+						IsOutOfOrder = false;
+
+						HandlePacket(message);
+
+						return;
+					}
+
+					/*if (_orderingBufferQueue.Count == 0 && message.ReliabilityHeader.OrderingIndex
+						== Interlocked.Read(ref _lastOrderingIndex) + 1)
 					{
 						IsOutOfOrder = false;
 
 						Interlocked.Exchange(ref _lastOrderingIndex, message.ReliabilityHeader.OrderingIndex);
 
 						HandlePacket(message);
-						return;
-					}
 
-					bool doOrdering = message.ReliabilityHeader.OrderingIndex == lastOrderingIndex + 1;
+						return;
+					}*/
+					
 					if (IsOutOfOrder)
 					{
-						if (message.ReliabilityHeader.OrderingIndex - lastOrderingIndex > 1000) //200 packets behind should be ok
+						/*if (message.ReliabilityHeader.OrderingIndex - lastOrderingIndex > 1000) //200 packets behind should be ok
 						{
 							Log.Warn($"Discarded ordered packet! Index: {lastOrderingIndex + 1}");
 							Interlocked.Exchange(ref _lastOrderingIndex, lastOrderingIndex + 1);
 							doOrdering = true;
 							IsOutOfOrder = false;
-						}
+						}*/
 					}
 					else
 					{
-						if (message.ReliabilityHeader.OrderingIndex != lastOrderingIndex + 1)
+						if (!isMatch)
 						{
 							if (!IsOutOfOrder)
 							{
@@ -239,16 +251,15 @@ namespace Alex.Net.Bedrock
 
 								if (Log.IsDebugEnabled)
 									Log.Debug(
-										$"Datagram out of order. Expected {lastOrderingIndex + 1}, but was {message.ReliabilityHeader.OrderingIndex}.");
+										$"Datagram out of order. Expected {Interlocked.Read(ref _lastOrderingIndex) + 1}, but was {message.ReliabilityHeader.OrderingIndex}.");
 							}
 						}
 					}
 					
 					_orderingBufferQueue.Enqueue(message, message.ReliabilityHeader.OrderingIndex);
 
-					if (doOrdering)
+					if (isMatch)
 					{
-
 						_orderingResetEvent.Set();
 						
 						if (_orderedQueueProcessingThread == null)
@@ -287,12 +298,13 @@ namespace Alex.Net.Bedrock
 					while (_orderingBufferQueue.TryPeek(out KeyValuePair<int, Packet> pair) && !_cancellationToken.IsCancellationRequested)
 					{
 						var lastOrderingIndex = Interlocked.Read(ref _lastOrderingIndex);
-						if (pair.Key == lastOrderingIndex + 1)
+
+						if (Interlocked.CompareExchange(ref _lastOrderingIndex, pair.Key, pair.Key - 1) == pair.Key - 1)
 						{
 							IsOutOfOrder = false;
 							if (_orderingBufferQueue.TryDequeue(out pair))
 							{
-								Interlocked.Exchange(ref _lastOrderingIndex, pair.Key);
+								//Interlocked.Exchange(ref _lastOrderingIndex, pair.Key);
 								
 								HandlePacket(pair.Value);
 							}
