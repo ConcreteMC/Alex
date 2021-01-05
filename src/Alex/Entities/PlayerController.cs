@@ -162,6 +162,11 @@ namespace Alex.Entities
 			    {
 				    World.Camera.ToggleMode();
 			    }
+
+				if (InputManager.IsPressed(InputCommand.DropItem))
+				{
+					Player.DropHeldItem();
+				}
 		    }
 
 		    if (InputManager.IsPressed(InputCommand.Exit))

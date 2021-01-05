@@ -200,7 +200,7 @@ namespace Alex.Entities
 				if (!skin.IsPersonaSkin)
 				{
 					if (!string.IsNullOrWhiteSpace(skin.GeometryData) && !skin.GeometryData.Equals(
-						"null", StringComparison.OrdinalIgnoreCase))
+						"null", StringComparison.InvariantCultureIgnoreCase))
 					{
 						try
 						{

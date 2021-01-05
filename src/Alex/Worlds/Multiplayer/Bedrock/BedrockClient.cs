@@ -51,6 +51,7 @@ using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Advanced;
 using SixLabors.ImageSharp.Formats.Png;
 using BlockCoordinates = Alex.API.Utils.BlockCoordinates;
+using BlockFace = Alex.API.Blocks.BlockFace;
 using ConnectionInfo = Alex.API.Network.ConnectionInfo;
 using CryptoContext = Alex.Net.Bedrock.CryptoContext;
 using DedicatedThreadPool = MiNET.Utils.DedicatedThreadPool;
@@ -223,10 +224,10 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					Connection.ConnectionInfo.ThroughPut = new Timer(
 						state =>
 						{
-							if (CustomConnectedPong.CanPing)
-							{
-								World.Player.Latency = (int) CustomConnectedPong.Latency;
-							}
+							//if (CustomConnectedPong.CanPing)
+							//{
+							//	World.Player.Latency = (int) CustomConnectedPong.Latency;
+							//}
 
 							var nakSent = Connection.ConnectionInfo.NumberOfPlayers;
 							Connection.ConnectionInfo.NumberOfPlayers = 0;
@@ -957,7 +958,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
                        // TransactionType = McpeInventoryTransaction.TransactionType.ItemUse,
                        // EntityId = NetworkEntityId,
                         Position = new MiNET.Utils.BlockCoordinates(position.X, position.Y, position.Z),
-                        Face = (int) face,
+                        Face = (int) ConvertBlockFace(face),
                         Slot = player.Inventory.SelectedSlot,
                         //Item = item.
                         Item = MiNET.Items.ItemFactory.GetItem(item.Id, item.Meta, item.Count)
@@ -969,6 +970,10 @@ namespace Alex.Worlds.Multiplayer.Bedrock
                 else if (status == DiggingStatus.Cancelled)
                 {
                     SendPlayerAction(PlayerAction.AbortBreak, position, (int) face);
+                }
+                else if (status == DiggingStatus.DropItem)
+                {
+	                SendPlayerAction(PlayerAction.DropItem, position, (int) face);
                 }
             }
         }
@@ -994,6 +999,44 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		    return minetItem;
 	    }
 
+	    private MiNET.BlockFace ConvertBlockFace(API.Blocks.BlockFace face)
+	    {
+		    MiNET.BlockFace updatedFace =MiNET.BlockFace.None;
+
+		    switch (face)
+		    {
+			    case BlockFace.Down:
+				    updatedFace = MiNET.BlockFace.Down;
+				    break;
+
+			    case BlockFace.Up:
+				    updatedFace = MiNET.BlockFace.Up;
+				    break;
+
+			    case BlockFace.East:
+				    updatedFace = MiNET.BlockFace.East;
+				    break;
+
+			    case BlockFace.West:
+				    updatedFace = MiNET.BlockFace.West;
+				    break;
+
+			    case BlockFace.North:
+				    updatedFace = MiNET.BlockFace.North;
+				    break;
+
+			    case BlockFace.South:
+				    updatedFace = MiNET.BlockFace.Down;
+				    break;
+
+			    case BlockFace.None:
+				    updatedFace = MiNET.BlockFace.None;
+				    break;
+		    }
+
+		    return updatedFace;
+	    }
+	    
 	    public override void BlockPlaced(BlockCoordinates position, API.Blocks.BlockFace face, int hand, int slot, Vector3 cursorPosition, Entity entity)
 	    {
 		    if (entity is Player p)
@@ -1002,7 +1045,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			    var minetItem = GetMiNETItem(itemInHand);
 			    
 			    Log.Info($"Placing block, slot={slot} InHand={itemInHand.ToString()} face={face} pos={position}");
-			    
+
 			    var packet = McpeInventoryTransaction.CreateObject();
 			    packet.transaction = new ItemUseTransaction()
 			    {
@@ -1012,7 +1055,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				    //TransactionType = McpeInventoryTransaction.TransactionType.ItemUse,
 				    // = NetworkEntityId,
 				    Position = new MiNET.Utils.BlockCoordinates(position.X, position.Y, position.Z),
-				    Face = (int) face,
+				    Face = (int) ConvertBlockFace(face),
 				    TransactionRecords = new List<TransactionRecord>()
 				    {
 						new WorldInteractionTransactionRecord()
@@ -1119,7 +1162,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			  //  TransactionType = McpeInventoryTransaction.TransactionType.ItemUse,
 			   // EntityId = NetworkEntityId,
 			    Position = new MiNET.Utils.BlockCoordinates(position.X, position.Y, position.Z),
-			    Face = (int)face,
+			    Face = (int) ConvertBlockFace(face),
 			    Item = minetItem,
 			    Slot = slot,
 			    FromPosition = new System.Numerics.Vector3(entity.KnownPosition.X, entity.KnownPosition.Y, entity.KnownPosition.Z),
@@ -1175,7 +1218,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			    //  TransactionType = McpeInventoryTransaction.TransactionType.ItemUse,
 			    // EntityId = NetworkEntityId,
 			    Position = new MiNET.Utils.BlockCoordinates(position.X, position.Y, position.Z),
-			    Face = (int)face,
+			    Face = (int) ConvertBlockFace(face),
 			    Item = minetItem,
 			    Slot = World.Player.Inventory.SelectedSlot,
 			    FromPosition = new System.Numerics.Vector3(World.Player.KnownPosition.X, World.Player.KnownPosition.Y, World.Player.KnownPosition.Z),

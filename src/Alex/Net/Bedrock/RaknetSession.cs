@@ -158,7 +158,6 @@ namespace Alex.Net.Bedrock
 				case Reliability.UnreliableSequenced:
 				case Reliability.ReliableSequenced:
 					AddToOrderedChannel(message);
-					//AddToSequencedChannel(message);
 					break;
 				case Reliability.Unreliable:
 				case Reliability.UnreliableWithAckReceipt:
@@ -172,21 +171,6 @@ namespace Alex.Net.Bedrock
 				default:
 					Log.Warn($"Receive packet with unexpected reliability={message.ReliabilityHeader.Reliability}");
 					break;
-			}
-		}
-
-		private void AddToSequencedChannel(Packet message)
-		{
-			try
-			{
-				if (_cancellationToken.Token.IsCancellationRequested) return;
-				
-				Interlocked.Exchange(ref _lastSequencingIndex, message.ReliabilityHeader.SequencingIndex);
-				AddToOrderedChannel(message);
-			}
-			catch (Exception e)
-			{
-				Log.Error(e, "Something went wrong!");
 			}
 		}
 
@@ -286,24 +270,31 @@ namespace Alex.Net.Bedrock
 				{
 					while (_orderingBufferQueue.TryPeek(out KeyValuePair<int, Packet> pair) && !_cancellationToken.IsCancellationRequested)
 					{
-						var lastOrderingIndex = Interlocked.Read(ref _lastOrderingIndex);
+						lock (_eventSync)
+						{
+							var lastOrderingIndex = Interlocked.Read(ref _lastOrderingIndex);
 
-						if (lastOrderingIndex + 1 == pair.Key)
-						{
-							IsOutOfOrder = false;
-							if (_orderingBufferQueue.TryDequeue(out pair))
+							if (lastOrderingIndex + 1 == pair.Key)
 							{
-								Interlocked.Exchange(ref _lastOrderingIndex, pair.Key);
-								
-								HandlePacket(pair.Value);
+								IsOutOfOrder = false;
+
+								if (_orderingBufferQueue.TryDequeue(out pair))
+								{
+									Interlocked.Exchange(ref _lastOrderingIndex, pair.Key);
+
+									HandlePacket(pair.Value);
+								}
 							}
-						}
-						else if (pair.Key <= lastOrderingIndex)
-						{
-							if (Log.IsDebugEnabled) Log.Debug($"Datagram resent. Expected {lastOrderingIndex + 1}, but was {pair.Key}.");
-							if (_orderingBufferQueue.TryDequeue(out pair))
+							else if (pair.Key <= lastOrderingIndex)
 							{
-								pair.Value.PutPool();
+								if (Log.IsDebugEnabled)
+									Log.Debug(
+										$"Datagram resent. Expected {lastOrderingIndex + 1}, but was {pair.Key}.");
+
+								if (_orderingBufferQueue.TryDequeue(out pair))
+								{
+									pair.Value.PutPool();
+								}
 							}
 						}
 					}

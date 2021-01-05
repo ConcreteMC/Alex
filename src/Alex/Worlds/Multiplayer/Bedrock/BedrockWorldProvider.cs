@@ -156,7 +156,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 						continue;
 				}
 				
-				if (distance > Alex.Options.AlexOptions.VideoOptions.RenderDistance.Value)
+				if (distance > maxViewDistance)
 				{
 					//_chunkCache.TryRemove(chunkColumn.Key, out var waste);
 					UnloadChunk(chunk.Key);
@@ -229,7 +229,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			bool         outOfOrder   = false;
 			LoadingState state        = LoadingState.ConnectingToServer;
 			string       subTitle     = "";
-			while (true)
+			while (Client.IsConnected)
 			{
 				if (Client.Connection.IsNetworkOutOfOrder && !outOfOrder)
 				{
@@ -261,7 +261,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 						break;
 					}
 
-					subTitle = "Waiting on spawn confirmation...";
+					subTitle = Client.Connection.IsNetworkOutOfOrder ? "Waiting for the network to catch up..." : "Waiting on spawn confirmation...";
 					state = LoadingState.Spawning;
 					
 					//Log.Warn($"Status: {statusChanged} | Gamestarted: {Client.GameStarted} | OutOfOrder: {Client.Connection.IsNetworkOutOfOrder}");

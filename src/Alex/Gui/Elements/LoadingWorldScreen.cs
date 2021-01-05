@@ -1,5 +1,7 @@
-﻿using Alex.API.Gui;
+﻿using System;
+using Alex.API.Gui;
 using Alex.API.Gui.Elements;
+using Alex.API.Gui.Elements.Controls;
 using Alex.API.Gui.Elements.Layout;
 using Alex.API.Gui.Graphics;
 using Alex.API.Utils;
@@ -13,11 +15,11 @@ namespace Alex.Gui.Elements
     {
 	    private static readonly Logger    Log = LogManager.GetCurrentClassLogger(typeof(LoadingWorldScreen));
 	    
-	    private readonly        GuiProgressBar _progressBar;
-	    private readonly        GuiTextElement _textDisplay;
-	    private readonly        GuiTextElement _subTextDisplay;
-	    private readonly        GuiTextElement _percentageDisplay;
-		
+	    private readonly GuiProgressBar _progressBar;
+	    private readonly GuiTextElement _textDisplay;
+	    private readonly GuiTextElement _subTextDisplay;
+	    private readonly GuiTextElement _percentageDisplay;
+	    private readonly GuiButton      _cancelButton;
 	    public string Text
 	    {
 		    get { return _textDisplay?.Text ?? string.Empty; }
@@ -48,6 +50,7 @@ namespace Alex.Gui.Elements
 		    {
 			    _connectingToServer = value;
 			    UpdateProgress(CurrentState, Percentage, SubText);
+			    _cancelButton.IsVisible = value;
 		    }
 	    }
 
@@ -128,14 +131,26 @@ namespace Alex.Gui.Elements
 					Text = Text, TextColor = TextColor.White, Anchor = Alignment.BottomLeft, HasShadow = false
 				});
 
+			AddChild(_cancelButton = new GuiButton("Cancel", Cancel)
+			{
+				Anchor = Alignment.TopLeft
+			});
+			
 			//HeaderTitle.TranslationKey = "menu.loadingLevel";
 
 			UpdateProgress(LoadingState.ConnectingToServer, 10);
 		}
 
+	    private void Cancel()
+	    {
+		    CancelAction?.Invoke();
+	    }
+
 	    public LoadingState CurrentState { get; private set; } = LoadingState.ConnectingToServer;
-	    public int Percentage { get; private set; } = 0;
-		public void UpdateProgress(LoadingState state, int percentage, string substring = null)
+	    public int          Percentage   { get; private set; } = 0;
+	    public Action       CancelAction { get; set; }         = null;
+
+	    public void UpdateProgress(LoadingState state, int percentage, string substring = null)
 	    {
 		    switch (state)
 		    {

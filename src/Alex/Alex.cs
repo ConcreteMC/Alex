@@ -762,7 +762,12 @@ namespace Alex
 			
 			LoadingWorldScreen loadingScreen = new LoadingWorldScreen();
 			loadingScreen.ConnectingToServer = isServer;
-			
+			loadingScreen.CancelAction = () =>
+			{
+				GuiManager.RemoveScreen(loadingScreen);
+				worldProvider?.Dispose();
+			};
+
 			GuiManager.AddScreen(loadingScreen);
 			//GameStateManager.AddState("loading", loadingScreen);
 			//GameStateManager.SetActiveState("loading");

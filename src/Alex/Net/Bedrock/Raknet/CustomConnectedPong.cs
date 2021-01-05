@@ -5,21 +5,6 @@ namespace Alex.Net.Bedrock.Raknet
 {
 	public class CustomConnectedPong : ConnectedPong
 	{
-		public static bool CanPing
-		{
-			get
-			{
-				return false;
-			}
-			set
-			{
-				
-			}
-		}
-
-		public static long Latency { get; set; } = 0;
-		public static long LastSentPing { get; set; } = 0;
-		
 		public CustomConnectedPong()
 		{
 			
@@ -32,11 +17,11 @@ namespace Alex.Net.Bedrock.Raknet
 			{
 				base.DecodePacket();
 
-				Latency = (DateTimeOffset.UtcNow.Ticks / TimeSpan.TicksPerMillisecond) - sendpingtime;
+			//	Latency = (DateTimeOffset.UtcNow.Ticks / TimeSpan.TicksPerMillisecond) - sendpingtime;
 			}
 			catch
 			{
-				CanPing = false;
+				//CanPing = false;
 			}
 		}
 	}

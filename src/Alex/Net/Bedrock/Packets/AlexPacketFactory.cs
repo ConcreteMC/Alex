@@ -57,6 +57,10 @@ namespace Alex.Net.Bedrock.Packets
             {
                 switch (messageId)
                 {
+                    case 55:
+                        packet = new AdventureSettings();
+
+                        break;
                     case 0x0b:
                         packet = new StartGame();
                         break;

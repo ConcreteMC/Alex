@@ -99,11 +99,22 @@ namespace Alex.Net.Bedrock
 		public bool TryConnect(IPEndPoint targetEndPoint, int numberOfAttempts = int.MaxValue, short mtuSize = 1500)
 		{
 			Start(); // Make sure we have started the listener
-			
+
+			bool connecting = false;
 			do
 			{
-				RaknetHandler.SendOpenConnectionRequest1(targetEndPoint, mtuSize);
-				Task.Delay(300).Wait();
+				if (!connecting)
+					RaknetHandler.SendOpenConnectionRequest1(targetEndPoint, mtuSize);
+
+				if (!RaknetHandler.ConnectionResetEvent.WaitOne(500))
+				{
+					mtuSize -= 10;
+				}
+				else
+				{
+					connecting = true;
+				}
+				
 			} while (Session == null && numberOfAttempts-- > 0);
 
 			if (Session == null) return false;
@@ -166,7 +177,7 @@ namespace Alex.Net.Bedrock
 				listener.Client.SendBufferSize = int.MaxValue;
 			}
 
-			listener.DontFragment = true;
+			//listener.DontFragment = true;
 			listener.EnableBroadcast = false;
 
 			if (Environment.OSVersion.Platform != PlatformID.Unix && Environment.OSVersion.Platform != PlatformID.MacOSX)

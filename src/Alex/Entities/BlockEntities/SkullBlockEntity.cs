@@ -26,8 +26,8 @@ namespace Alex.Entities.BlockEntities
 		{
 			ModelRenderer = new EntityModelRenderer(new SkullBlockEntityModel(), texture);
 			
-			Width = 8;
-			Height = 8;
+			Width = 0.5f;
+			Height =  0.5f;
 		}
 
 		protected override void UpdateModelParts()

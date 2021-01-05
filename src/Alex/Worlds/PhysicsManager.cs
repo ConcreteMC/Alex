@@ -91,21 +91,8 @@ namespace Alex.Worlds
 		public void OnTick()
 		{
 			return;
-			var entities = PhysicsEntities.ToArray();
-			var realTime = entities.Where(x => (!x.RequiresRealTimeTick || (!x.IsRendered && x.ServerEntity))).ToArray();
-			
-			foreach (var entity in realTime)
-			{
-				UpdatePhysics(entity);
-				UpdateEntityLocation(entity, TargetTime);
-			}
 		}
 
-		private void UpdateEntityLocation(Entity entity, float alpha)
-		{
-			
-		}
-		
 		//private void Apply
 
 		private Vector3 ConvertMovementIntoVelocity(Entity entity, out float slipperiness)
@@ -181,6 +168,11 @@ namespace Alex.Worlds
 			if (e.IsNoAi)
 				return;
 
+			var gravity = e.Gravity;
+
+			if (!e.IsAffectedByGravity)
+				gravity = 0;
+
 			if (e.IsFlying && e is Player)
 			{
 				e.Velocity *= new Vector3(0.9f, 0.9f, 0.9f);
@@ -190,12 +182,12 @@ namespace Alex.Worlds
 				if (e.IsInWater)
 				{
 					e.Velocity = new Vector3(
-						e.Velocity.X * 0.8f, (float) (e.Velocity.Y - e.Gravity), e.Velocity.Z * 0.8f); //Liquid Drag
+						e.Velocity.X * 0.8f, (float) (e.Velocity.Y - gravity), e.Velocity.Z * 0.8f); //Liquid Drag
 				}
 				else if (e.IsInLava)
 				{
 					e.Velocity = new Vector3(
-						e.Velocity.X * 0.5f, (float) (e.Velocity.Y - e.Gravity), e.Velocity.Z * 0.5f); //Liquid Drag
+						e.Velocity.X * 0.5f, (float) (e.Velocity.Y - gravity), e.Velocity.Z * 0.5f); //Liquid Drag
 				}
 				else
 				{
@@ -207,7 +199,7 @@ namespace Alex.Worlds
 					{
 						if (e.IsAffectedByGravity && !e.IsFlying)
 						{
-							e.Velocity -= new Vector3(0f, (float) (e.Gravity), 0f);
+							e.Velocity -= new Vector3(0f, (float) (gravity), 0f);
 						}
 
 						e.Velocity *= new Vector3(0.91f, 0.98f, 0.91f);

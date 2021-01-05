@@ -47,12 +47,12 @@ namespace Alex.Entities
 			//Entity.KnownPosition.Z = location.Z;
 			//Entity.KnownPosition.OnGround = location.OnGround;
 
-			//if (updateLook)
-			//{
-			//	Entity.KnownPosition.Yaw = location.Yaw;
-			//	Entity.KnownPosition.HeadYaw = location.HeadYaw;
-			//	Entity.KnownPosition.Pitch = location.Pitch;
-			//}
+			if (updateLook)
+			{
+				//Entity.KnownPosition.Yaw = location.Yaw;
+				//Entity.KnownPosition.HeadYaw = location.HeadYaw;
+				//Entity.KnownPosition.Pitch = location.Pitch;
+			}
 			
 			UpdateTarget();
 
@@ -240,7 +240,7 @@ namespace Alex.Entities
 			{
 				_frameAccumulator = 0;
 				_from = (PlayerLocation) Entity.RenderLocation.Clone();
-				_target = (PlayerLocation) Entity.KnownPosition.Clone();
+				_target = (PlayerLocation) target.Clone();
 			}
 		}
 
@@ -318,7 +318,8 @@ namespace Alex.Entities
 
 			//var headYaw = targetPosition.HeadYaw;
 			//var headYaw = MathHelper.Lerp(previousStatePosition.HeadYaw, targetPosition.HeadYaw, alpha);
-			var headYaw = targetHeadYaw * alpha + previousHeadYaw * (1f - alpha);
+			//var headYawDifference = MathF.Abs(targetHeadYaw - previousHeadYaw);
+			var headYaw          = targetHeadYaw * alpha + previousHeadYaw * (1f - alpha);
 
 			//var pitch = targetPosition.Pitch;
 			var pitch = targetPitch * alpha + previousPitch * (1f - alpha);

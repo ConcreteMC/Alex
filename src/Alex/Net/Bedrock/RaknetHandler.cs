@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Net;
+using System.Threading;
 using MiNET;
 using MiNET.Net;
 using MiNET.Net.RakNet;
@@ -137,9 +138,10 @@ namespace Alex.Net.Bedrock
 			}
 		}
 
+		public ManualResetEvent ConnectionResetEvent = new ManualResetEvent(false);
 		public void SendOpenConnectionRequest1(IPEndPoint targetEndPoint, short mtuSize)
 		{
-			MtuSize = mtuSize; // This is what we will use from connections this point forward
+			MtuSize = (short) (mtuSize - 28); // This is what we will use from connections this point forward
 
 			var packet = OpenConnectionRequest1.CreateObject();
 			packet.raknetProtocolVersion = 10;
@@ -157,17 +159,17 @@ namespace Alex.Net.Bedrock
 		{
 			if (message.mtuSize != MtuSize)
 			{
-				if (message.mtuSize > MtuSize)
-				{
-						Log.Warn($"Error, mtu differ from what we sent. Received {message.mtuSize} bytes");
-					return;
-				}
+				Log.Warn($"Error, mtu differ from what we sent. Received {message.mtuSize}, expected {MtuSize}");
+
+				//return;
 			}
+
+			ConnectionResetEvent.Set();
 
 			SendOpenConnectionRequest2(senderEndpoint, message.mtuSize);
 		}
 
-		private void SendOpenConnectionRequest2(IPEndPoint targetEndPoint, short mtuSize)
+		public void SendOpenConnectionRequest2(IPEndPoint targetEndPoint, short mtuSize)
 		{
 			var packet = OpenConnectionRequest2.CreateObject();
 			packet.remoteBindingAddress = targetEndPoint;

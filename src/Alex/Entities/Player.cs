@@ -202,7 +202,7 @@ namespace Alex.Entities
 	    {
 		    _skipUpdate = true;
 	    }
-	    
+
 	    public override void Update(IUpdateArgs args)
 	    {
 		    bool hasActiveDialog = Alex.Instance.GuiManager.ActiveDialog != null;
@@ -603,6 +603,18 @@ namespace Alex.Entities
 		    return false;
 	    }
 
+	    public void DropHeldItem()
+	    {
+		    var floored = new BlockCoordinates(Vector3.Floor(Raytraced));
+		    var face    = GetTargetFace();
+		    
+		    var adjacent = AdjacentRaytrace;
+		    var flooredAdj = Vector3.Floor(adjacent);
+		    var remainder = new Vector3(adjacent.X - flooredAdj.X, adjacent.Y - flooredAdj.Y, adjacent.Z - flooredAdj.Z);
+		    
+		    Network?.PlayerDigging(DiggingStatus.DropItem, floored, face, remainder);
+	    }
+	    
 	    private void BlockBreakTick()
 	    {
 		    var tick =  Interlocked.Increment(ref _destroyingTick);

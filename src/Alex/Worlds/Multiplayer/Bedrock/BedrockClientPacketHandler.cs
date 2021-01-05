@@ -154,7 +154,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 			if (Client.PlayerStatus == 3)
 			{
-				CustomConnectedPong.CanPing = true;
 				Client.PlayerStatusChanged.Set();
 
 				//Client.World.Player.EntityId = Client.EntityId;
@@ -1552,8 +1551,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		
 		public void HandleMcpeChangeDimension(McpeChangeDimension message)
 		{
-			bool couldPing = CustomConnectedPong.CanPing;
-			CustomConnectedPong.CanPing = false;
 			//base.HandleMcpeChangeDimension(message);
 			if (WorldProvider is BedrockWorldProvider provider)
 			{
@@ -1668,7 +1665,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					//Client.SendMcpeMovePlayer(new MiNET.Utils.PlayerLocation(Client.World.Player.KnownPosition.X, Client.World.Player.KnownPosition.Y, Client.World.Player.KnownPosition.Z), false);
 
 					Client.World.Player.IsSpawned = true;
-					CustomConnectedPong.CanPing = couldPing;
 				});
 			}
 		}
@@ -2007,8 +2003,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			var unixTime = (ulong) DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 			if (message.timestamp == Client.ExpectedLatency)
 			{
-				CustomConnectedPong.CanPing = false;
-				CustomConnectedPong.Latency = Client.World.Player.Latency = (int) Client.Latency;
+				//CustomConnectedPong.CanPing = false;
+				//CustomConnectedPong.Latency = Client.World.Player.Latency = (int) Client.Latency;
 				/*if (!CustomConnectedPong.CanPing)
 				{
 					
@@ -2016,7 +2012,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			} 
 			else
 			{
-				CustomConnectedPong.Latency = Client.World.Player.Latency = (int) (unixTime - Client.LastSentPing);
+				//CustomConnectedPong.Latency = Client.World.Player.Latency = (int) (unixTime - Client.LastSentPing);
 				//Client.ExpectedLatency = message.timestamp;
 			}
 
