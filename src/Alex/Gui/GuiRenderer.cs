@@ -127,22 +127,10 @@ namespace Alex.Gui
 			_graphicsDevice  = graphics;
 			_resourceManager = serviceProvider.GetRequiredService<ResourceManager>();
 			LoadEmbeddedTextures();
-
-			var resourcePack = _resourceManager?.ResourcePack;
-			if (resourcePack != null)
-			{
-				//LoadResourcePack(resourcePack, null);
-			}
 		}
 
 		private void OnFontChanged()
 		{
-		}
-
-		public void LoadResourcePack(McResourcePack resourcePack, IProgressReceiver progressReceiver)
-		{
-			LoadLanguages(resourcePack, progressReceiver);
-			LoadResourcePackTextures(resourcePack, progressReceiver);
 		}
 
 		//private CultureInfo Culture { get; set; }
@@ -165,10 +153,7 @@ namespace Alex.Gui
 					
 					return true;
 				}
-
-				if (_resourceManager.ResourcePack == null)
-					return false;
-
+				
 				/*var matchingResults = _resourceManager.ResourcePack.Languages
 				   .Where(x => x.Value.CultureCode == cultureCode).Select(x => x.Value).ToArray();
 
@@ -249,21 +234,21 @@ namespace Alex.Gui
 		}
 
 
-		public void LoadResourcePackTextures(McResourcePack resourcePack, IProgressReceiver progressReceiver)
+		public void LoadResourcePackTextures(ResourceManager resourceManager, IProgressReceiver progressReceiver)
 		{
 			//progressReceiver?.UpdateProgress(0, null, "gui/widgets");
 			//LoadTextureFromResourcePack(GuiTextures.AlexLogo, resourcePack, "");
 
 			// First load Widgets
 			progressReceiver?.UpdateProgress(0, null, "gui/widgets");
-			if (resourcePack.TryGetBitmap("gui/widgets", out var widgetsBmp))
+			if (resourceManager.TryGetBitmap("gui/widgets", out var widgetsBmp))
 			{
 				_widgets = TextureUtils.BitmapToTexture2D(_graphicsDevice, widgetsBmp);
 				LoadWidgets(_widgets);
 			}
 
 			progressReceiver?.UpdateProgress(25, null, "gui/icons");
-			if (resourcePack.TryGetBitmap("gui/icons", out var icons))
+			if (resourceManager.TryGetBitmap("gui/icons", out var icons))
 			{
 				_icons = TextureUtils.BitmapToTexture2D(_graphicsDevice, icons);
 				LoadIcons(_icons);
@@ -278,37 +263,37 @@ namespace Alex.Gui
 
 			// Backgrounds
 			progressReceiver?.UpdateProgress(50, null, "gui/options_background");
-			LoadTextureFromResourcePack(GuiTextures.OptionsBackground, resourcePack, "gui/options_background", 2f);
+			LoadTextureFromResourcePack(GuiTextures.OptionsBackground, resourceManager, "gui/options_background", 2f);
 
 			// Load Gui Containers
 			{
 				progressReceiver?.UpdateProgress(0, null, "gui/container/inventory");
 				
-				if (resourcePack.TryGetBitmap("gui/container/inventory", out var bmp))
+				if (resourceManager.TryGetBitmap("gui/container/inventory", out var bmp))
 				{
 					_inventory = TextureUtils.BitmapToTexture2D(_graphicsDevice, bmp);
 					LoadTextureFromSpriteSheet(GuiTextures.InventoryPlayerBackground, _inventory, new Rectangle(0, 0, 176, 166), IconSize);
 				}
 
-				if (resourcePack.TryGetBitmap("gui/container/generic_54", out var genericInvBmp))
+				if (resourceManager.TryGetBitmap("gui/container/generic_54", out var genericInvBmp))
 				{
 					_chestInventory = TextureUtils.BitmapToTexture2D(_graphicsDevice, genericInvBmp);
 					LoadTextureFromSpriteSheet(GuiTextures.InventoryChestBackground, _chestInventory, new Rectangle(0, 0, 175, 221), IconSize);
 				}
 
-				if (resourcePack.TryGetBitmap("gui/container/crafting_table", out var craftingTable))
+				if (resourceManager.TryGetBitmap("gui/container/crafting_table", out var craftingTable))
 				{
 					_craftingTable = TextureUtils.BitmapToTexture2D(_graphicsDevice, craftingTable);
 					LoadTextureFromSpriteSheet(GuiTextures.InventoryCraftingTable, _craftingTable, new Rectangle(0, 0, 175, 165), IconSize);
 				}
 				
-				if (resourcePack.TryGetBitmap("gui/container/furnace", out var furnace))
+				if (resourceManager.TryGetBitmap("gui/container/furnace", out var furnace))
 				{
 					_furnace = TextureUtils.BitmapToTexture2D(_graphicsDevice, furnace);
 					LoadTextureFromSpriteSheet(GuiTextures.InventoryFurnace, _furnace, new Rectangle(0, 0, 175, 165), IconSize);
 				}
 
-				if (resourcePack.TryGetBitmap("gui/container/creative_inventory/tab_item_search", out var tabImage))
+				if (resourceManager.TryGetBitmap("gui/container/creative_inventory/tab_item_search", out var tabImage))
 				{
 					_tabItemSearch = TextureUtils.BitmapToTexture2D(_graphicsDevice, tabImage);
 					LoadTextureFromSpriteSheet(GuiTextures.InventoryCreativeItemSearch, _tabItemSearch, new Rectangle(0, 0, 194, 135), IconSize);
@@ -319,15 +304,15 @@ namespace Alex.Gui
 			progressReceiver?.UpdateProgress(75, null, "gui/title/background");
 			
 			// Panorama
-			LoadTextureFromResourcePack(GuiTextures.Panorama0, resourcePack, "gui/title/background/panorama_0");
-			LoadTextureFromResourcePack(GuiTextures.Panorama1, resourcePack, "gui/title/background/panorama_1");
-			LoadTextureFromResourcePack(GuiTextures.Panorama2, resourcePack, "gui/title/background/panorama_2");
-			LoadTextureFromResourcePack(GuiTextures.Panorama3, resourcePack, "gui/title/background/panorama_3");
-			LoadTextureFromResourcePack(GuiTextures.Panorama4, resourcePack, "gui/title/background/panorama_4");
-			LoadTextureFromResourcePack(GuiTextures.Panorama5, resourcePack, "gui/title/background/panorama_5");
+			LoadTextureFromResourcePack(GuiTextures.Panorama0, resourceManager, "gui/title/background/panorama_0");
+			LoadTextureFromResourcePack(GuiTextures.Panorama1, resourceManager, "gui/title/background/panorama_1");
+			LoadTextureFromResourcePack(GuiTextures.Panorama2, resourceManager, "gui/title/background/panorama_2");
+			LoadTextureFromResourcePack(GuiTextures.Panorama3, resourceManager, "gui/title/background/panorama_3");
+			LoadTextureFromResourcePack(GuiTextures.Panorama4, resourceManager, "gui/title/background/panorama_4");
+			LoadTextureFromResourcePack(GuiTextures.Panorama5, resourceManager, "gui/title/background/panorama_5");
 
 			// Other
-			LoadTextureFromResourcePack(GuiTextures.DefaultServerIcon, resourcePack, "misc/unknown_server");
+			LoadTextureFromResourcePack(GuiTextures.DefaultServerIcon, resourceManager, "misc/unknown_server");
 			
 			progressReceiver?.UpdateProgress(100, null, "");
 		}
@@ -403,10 +388,10 @@ namespace Alex.Gui
 			return _textureCache[guiTexture];
 		}
 
-		private void LoadTextureFromResourcePack(GuiTextures guiTexture, McResourcePack resourcePack, string path,
+		private void LoadTextureFromResourcePack(GuiTextures guiTexture, ResourceManager resources, string path,
 												 float       scale = 1f)
 		{
-			if (resourcePack.TryGetBitmap(path, out var texture))
+			if (resources.TryGetBitmap(path, out var texture))
 			{
 				_textureCache[guiTexture] = TextureUtils.BitmapToTexture2D(_graphicsDevice, texture);
 			}

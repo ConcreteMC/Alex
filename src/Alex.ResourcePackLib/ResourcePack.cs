@@ -7,6 +7,7 @@ using Alex.ResourcePackLib.Generic;
 using Alex.ResourcePackLib.IO;
 using Alex.ResourcePackLib.IO.Abstract;
 using Alex.ResourcePackLib.Json;
+using Alex.ResourcePackLib.Json.Bedrock;
 using NLog;
 using NLog.Fluent;
 using SixLabors.ImageSharp;
@@ -21,9 +22,8 @@ namespace Alex.ResourcePackLib
 	    
 	    private static readonly ILogger Log = LogManager.GetCurrentClassLogger();
 	    
-	    public LoadProgress ProgressReporter { get; set; } = null;
-	    //public ResourcePackType     Type { get;    private set; }
-		public  ResourcePackManifest Info { get;    protected set; }
+	    public LoadProgress         ProgressReporter { get; set; } = null;
+	    public ResourcePackManifest Info             { get; protected set; }
 		protected ResourcePack()
 	    {
 
@@ -60,7 +60,7 @@ namespace Alex.ResourcePackLib
 							
 							var bmp  = Image.Load(stream).CloneAs<Rgba32>();
 
-							return new ResourcePackManifest(bmp, "", info.Description);
+							return new ResourcePackManifest(bmp, "", info.Description, ResourcePackType.Java);
 						}
 					}
 				}
@@ -69,7 +69,7 @@ namespace Alex.ResourcePackLib
 					Log.Warn(ex, $"Could not read resourcepack logo: {archive.ToString()}");
 				}
 
-				return new ResourcePackManifest("", info.Description);
+				return new ResourcePackManifest("", info.Description, ResourcePackType.Java);
 			}
 
 			entry = archive.GetEntry("manifest.json");
@@ -77,6 +77,40 @@ namespace Alex.ResourcePackLib
 			if (entry != null)
 			{
 				//Load bedrock meta
+				McPackManifest info;
+
+				using (TextReader reader = new StreamReader(entry.Open()))
+				{
+					info =
+						MCJsonConvert.DeserializeObject<McPackManifest>(reader.ReadToEnd());
+
+					//info = new ResourcePackInfo() {Description = wrap.Header.Description};
+					//info = wrap.pack;
+				}
+
+				try
+				{
+					var imgEntry = archive.GetEntry("pack_icon.png");
+
+					if (imgEntry != null && imgEntry.Length > 0)
+					{
+						// Bitmap bmp = new Bitmap(imgEntry.Open());
+						using (var stream = imgEntry.Open())
+						{
+							//var data = stream.ReadToSpan(entry.Length);
+							
+							var bmp = Image.Load(stream).CloneAs<Rgba32>();
+
+							return new ResourcePackManifest(bmp, info.Header.Name, info.Header.Description, ResourcePackType.Bedrock);
+						}
+					}
+				}
+				catch (Exception ex)
+				{
+					Log.Warn(ex, $"Could not read resourcepack logo: {archive.ToString()}");
+				}
+
+				return new ResourcePackManifest(info.Header.Name, info.Header.Description, ResourcePackType.Bedrock);
 			}
 
 

@@ -140,7 +140,7 @@ namespace Alex.Worlds
 			}
 			else
 			{
-				resources.ResourcePack.TryGetBitmap("entity/alex", out var rawTexture);
+				resources.TryGetBitmap("entity/alex", out var rawTexture);
 				texture = TextureUtils.BitmapToTexture2D(graphics, rawTexture);
 			}
 			

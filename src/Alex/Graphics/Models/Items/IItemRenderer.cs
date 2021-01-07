@@ -24,7 +24,7 @@ namespace Alex.Graphics.Models.Items
 
         void Render(IRenderArgs args, bool mock, out int vertices);
 
-        void Cache(McResourcePack pack);
+        bool Cache(ResourceManager pack);
 
         IItemRenderer Clone();
     }

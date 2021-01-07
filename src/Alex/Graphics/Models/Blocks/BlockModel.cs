@@ -2,6 +2,7 @@
 using System.Linq;
 using Alex.API.Blocks;
 using Alex.API.Graphics;
+using Alex.API.Resources;
 using Alex.API.Utils;
 using Alex.Blocks.Minecraft;
 using Alex.Utils;
@@ -248,7 +249,7 @@ namespace Alex.Graphics.Models.Blocks
 		}
 
 		protected BlockTextureData GetTextureUVMap(ResourceManager resources,
-			string texture,
+			ResourceLocation texture,
 			float x1,
 			float x2,
 			float y1,

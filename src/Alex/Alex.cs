@@ -695,7 +695,7 @@ namespace Alex
 			}
 			else
 			{
-				if (Resources.ResourcePack.TryGetBitmap("entity/alex", out var img))
+				if (Resources.TryGetBitmap("entity/alex", out var img))
 				{
 					PlayerTexture = img;
 				}

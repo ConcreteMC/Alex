@@ -605,7 +605,7 @@ namespace Alex.Graphics.Models.Blocks
 									else
 									{
 
-										faceColor = Resources.ResourcePack.GetGrassColor(
+										faceColor = Resources.GetGrassColor(
 											biome.Temperature, biome.Downfall, (int) position.Y);
 									}
 
@@ -614,7 +614,7 @@ namespace Alex.Graphics.Models.Blocks
 								case TintType.Foliage:
 									if (face.Value.TintIndex.HasValue && face.Value.TintIndex == 0)
 									{
-										faceColor = Resources.ResourcePack.GetFoliageColor(
+										faceColor = Resources.GetFoliageColor(
 											biome.Temperature, biome.Downfall, (int) position.Y);
 									}
 
@@ -687,7 +687,7 @@ namespace Alex.Graphics.Models.Blocks
 		private Color GetGrassBiomeColor(IBlockAccess access, int x, int y, int z)
 		{
 			var biome = access.GetBiome(new BlockCoordinates(x, y, z));
-			return Resources.ResourcePack.GetGrassColor(
+			return Resources.GetGrassColor(
 				biome.Temperature, biome.Downfall, y);
 		}
 

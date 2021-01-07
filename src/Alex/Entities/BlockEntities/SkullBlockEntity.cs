@@ -82,7 +82,7 @@ namespace Alex.Entities.BlockEntities
 					case SkullType.Skeleton:
 						if (_skeleton == null)
 						{
-							if (Alex.Instance.Resources.ResourcePack.TryGetBitmap(
+							if (Alex.Instance.Resources.TryGetBitmap(
 								"minecraft:entity/skeleton/skeleton", out var bmp))
 							{
 								_skeleton = TextureUtils.BitmapToTexture2D(Alex.Instance.GraphicsDevice, bmp);
@@ -99,7 +99,7 @@ namespace Alex.Entities.BlockEntities
 					case SkullType.WitherSkeleton:
 						if (_witherSkeleton == null)
 						{
-							if (Alex.Instance.Resources.ResourcePack.TryGetBitmap(
+							if (Alex.Instance.Resources.TryGetBitmap(
 								"minecraft:entity/skeleton/wither_skeleton", out var bmp))
 							{
 								_witherSkeleton = TextureUtils.BitmapToTexture2D(Alex.Instance.GraphicsDevice, bmp);
@@ -115,7 +115,7 @@ namespace Alex.Entities.BlockEntities
 					case SkullType.Zombie:
 						if (_zombie == null)
 						{
-							if (Alex.Instance.Resources.ResourcePack.TryGetBitmap(
+							if (Alex.Instance.Resources.TryGetBitmap(
 								"minecraft:entity/zombie/zombie", out var bmp))
 							{
 								_zombie = TextureUtils.BitmapToTexture2D(Alex.Instance.GraphicsDevice, bmp);
@@ -131,7 +131,7 @@ namespace Alex.Entities.BlockEntities
 					case SkullType.Creeper:
 						if (_creeper == null)
 						{
-							if (Alex.Instance.Resources.ResourcePack.TryGetBitmap(
+							if (Alex.Instance.Resources.TryGetBitmap(
 								"minecraft:entity/creeper/creeper", out var bmp))
 							{
 								_creeper = TextureUtils.BitmapToTexture2D(Alex.Instance.GraphicsDevice, bmp);
@@ -147,7 +147,7 @@ namespace Alex.Entities.BlockEntities
 					case SkullType.Dragon:
 						if (_dragon == null)
 						{
-							if (Alex.Instance.Resources.ResourcePack.TryGetBitmap(
+							if (Alex.Instance.Resources.TryGetBitmap(
 								"minecraft:entity/enderdragon/dragon", out var bmp))
 							{
 								_dragon = TextureUtils.BitmapToTexture2D(Alex.Instance.GraphicsDevice, bmp);

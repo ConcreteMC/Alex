@@ -29,7 +29,7 @@ namespace Alex.Graphics.Models.Items
            
         }
 
-        public override void Cache(McResourcePack pack)
+        public override bool Cache(ResourceManager pack)
         {
             if (!Model.Textures.TryGetValue("layer0", out var t))
             {
@@ -38,7 +38,7 @@ namespace Alex.Graphics.Models.Items
 
             if (t == null)
             {
-                return;
+                return false;
             }
 
             List<VertexPositionColor> vertices = new List<VertexPositionColor>();
@@ -84,6 +84,8 @@ namespace Alex.Graphics.Models.Items
             }
 
             Vertices = vertices.ToArray();
+
+            return true;
         }
 
         private IEnumerable<VertexPositionColor> Modify(IEnumerable<VertexPositionColor> vertices, Vector3 offset)
@@ -101,7 +103,7 @@ namespace Alex.Graphics.Models.Items
         {
             return new ItemModelRenderer(Model)
             {
-                Vertices = Vertices.Clone() as VertexPositionColor[],
+                Vertices = Vertices != null ? Vertices.Clone() as VertexPositionColor[] : null,
            //     Indexes = Indexes.ToArray()
             };
         }
@@ -303,8 +305,9 @@ namespace Alex.Graphics.Models.Items
             }
         }
 
-        public virtual void Cache(McResourcePack pack)
+        public virtual bool Cache(ResourceManager pack)
         {
+            return false;
             //Buffer = GpuResourceManager.GetBuffer(this, )
         }
 

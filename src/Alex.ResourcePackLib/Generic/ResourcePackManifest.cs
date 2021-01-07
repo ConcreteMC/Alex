@@ -21,18 +21,20 @@ namespace Alex.ResourcePackLib.Generic
 		    }
 	    }
 
-	    public string Name { get; set; }
-		public string Description { get; }
-		public Image<Rgba32> Icon { get; }
+	    public string           Name        { get; set; }
+		public string           Description { get; }
+		public Image<Rgba32>    Icon        { get; }
+		public ResourcePackType Type        { get; }
 
-	    internal ResourcePackManifest(Image<Rgba32> icon, string name, string description)
+	    internal ResourcePackManifest(Image<Rgba32> icon, string name, string description, ResourcePackType type = ResourcePackType.Unknown)
 	    {
 		    Icon = icon;
 		    Name = name;
 		    Description = description;
+		    Type = type;
 	    }
 
-	    internal ResourcePackManifest(string name, string description) : this(UnknownPack, name, description)
+	    internal ResourcePackManifest(string name, string description, ResourcePackType type = ResourcePackType.Unknown) : this(UnknownPack, name, description, type)
 	    {
 
 	    }

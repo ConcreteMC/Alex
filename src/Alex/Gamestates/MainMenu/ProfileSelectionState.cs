@@ -69,7 +69,7 @@ namespace Alex.Gamestates.MainMenu
             
             if (_defaultSkin == null)
             {
-                Alex.Instance.Resources.ResourcePack.TryGetBitmap("entity/alex", out var rawTexture);
+                Alex.Instance.Resources.TryGetBitmap("entity/alex", out var rawTexture);
                 _defaultSkin = new Skin()
                 {
                     Slim = true,

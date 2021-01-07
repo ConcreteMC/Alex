@@ -189,7 +189,7 @@ namespace Alex.Entities
 				{
 					Log.Warn($"No custom skin data for player {Name}");
 
-					if (Alex.Instance.Resources.ResourcePack.TryGetBitmap("entity/alex", out var rawTexture))
+					if (Alex.Instance.Resources.TryGetBitmap("entity/alex", out var rawTexture))
 					{
 						skinBitmap = rawTexture;
 					}
@@ -421,7 +421,7 @@ namespace Alex.Entities
 
 				if (skinTexture == null)
 				{
-					if (Alex.Instance.Resources.ResourcePack.TryGetBitmap(skinVariant, out var rawTexture))
+					if (Alex.Instance.Resources.TryGetBitmap(skinVariant, out var rawTexture))
 					{
 						skinTexture = TextureUtils.BitmapToTexture2D(Alex.Instance.GraphicsDevice, rawTexture);
 

@@ -25,7 +25,7 @@ namespace Alex.Items
 	    private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ItemFactory));
 
 		private static ResourceManager ResourceManager { get; set; }
-		private static McResourcePack ResourcePack { get; set; }
+		//private static McResourcePack ResourcePack { get; set; }
 		private static IReadOnlyDictionary<ResourceLocation, Func<Item>> Items { get; set; }
 		private static SecondItemEntry[] SecItemEntries { get; set; }
 		private static ItemEntry[] ItemEntries { get; set; }
@@ -82,10 +82,10 @@ namespace Alex.Items
 			{"firstperson_lefthand", new DisplayElement(new Vector3(0, 225, 0), new Vector3(0,0,0), new Vector3(0.4f, 0.4f, 0.4f))}
 		};
 		
-	    public static void Init(IRegistryManager registryManager, ResourceManager resources, McResourcePack resourcePack, IProgressReceiver progressReceiver = null)
+	    public static void Init(IRegistryManager registryManager, ResourceManager resources, IProgressReceiver progressReceiver = null)
 	    {
 		    ResourceManager = resources;
-		    ResourcePack = resourcePack;
+		   // ResourcePack = resourcePack;
 
 		    var otherRaw = ResourceManager.ReadStringResource("Alex.Resources.items3.json");
 		    SecItemEntries = JsonConvert.DeserializeObject<SecondItemEntry[]>(otherRaw);
@@ -98,7 +98,7 @@ namespace Alex.Items
 		    var ii = resources.Registries.Items.Entries;
 		    var blocks = resources.Registries.Blocks.Entries;
 		    
-		    LoadModels();
+		   // LoadModels();
 		    
             ConcurrentDictionary<ResourceLocation, Func<Item>> items = new ConcurrentDictionary<ResourceLocation, Func<Item>>();
             
@@ -171,10 +171,9 @@ namespace Alex.Items
 
 			           ResourcePackModelBase model = null;
 
-			           if (!(ResourcePack.ItemModels.TryGetValue(key, out model))
-			               && !(ResourcePack.BlockModels.TryGetValue(key, out model)))
+			           if (!(ResourceManager.TryGetBlockModel(key, out model)) && !(ResourceManager.TryGetItemModel(key, out model)))
 			           {
-				           foreach (var it in ResourcePack.ItemModels)
+				           /*foreach (var it in ResourcePack.ItemModels)
 				           {
 					           if (it.Key.Path.Equals(key.Path, StringComparison.OrdinalIgnoreCase))
 					           {
@@ -182,7 +181,7 @@ namespace Alex.Items
 
 						           break;
 					           }
-				           }
+				           }*/
 			           }
 
 			           if (model == null)
@@ -192,9 +191,13 @@ namespace Alex.Items
 			           }
 
 			           item.Renderer = new ItemBlockModelRenderer(bs, model, resources);
-			           item.Renderer.Cache(resourcePack);
+			           item.Renderer.Cache(resources);
 
-			           items.TryAdd(entry.Key, () => { return item.Clone(); });
+
+			           if (!items.TryAdd(entry.Key, () => { return item.Clone(); }))
+			           {
+				           items[entry.Key] = () => { return item.Clone(); };
+			           }
 		           }
 		           finally
 		           {
@@ -260,11 +263,22 @@ namespace Alex.Items
 		           ItemModelRenderer renderer;
 		           if (!ItemRenderers.TryGetValue(resourceLocation, out renderer))
 		           {
-			           var r = ItemRenderers.FirstOrDefault(
-				           x => x.Key.Path.Equals(resourceLocation.Path, StringComparison.OrdinalIgnoreCase));
+			           if (ResourceManager.TryGetItemModel(resourceLocation, out var model))
+			           {
+				           renderer = new ItemModelRenderer(model);
+				           renderer.Cache(ResourceManager);
 
-			           if (r.Value != null)
-				           renderer = r.Value;
+				           ItemRenderers.TryAdd(resourceLocation, renderer);
+			           }
+
+			           if (renderer == null)
+			           {
+				           var r = ItemRenderers.FirstOrDefault(
+					           x => x.Key.Path.Equals(resourceLocation.Path, StringComparison.OrdinalIgnoreCase));
+
+				           if (r.Value != null)
+					           renderer = r.Value;
+			           }
 
 			           //  if (ResourcePack.ItemModels.TryGetValue(resourceLocation, out var itemModel)) { }
 		           }
@@ -296,37 +310,50 @@ namespace Alex.Items
 			           Log.Warn($"Could not find item model renderer for: {resourceLocation}");
 		           }
 
-		           items.TryAdd(resourceLocation, () => { return item.Clone(); });
+		           if (!items.TryAdd(resourceLocation, () => { return item.Clone(); }))
+		           {
+			           items[resourceLocation] = () => { return item.Clone(); };
+		           }
 	           });
 
 			Items = new ReadOnlyDictionary<ResourceLocation, Func<Item>>(items);
 	    }
 
-	    private static void LoadModels()
+	    /*private static void LoadModels()
 	    {
-		    Parallel.ForEach(
-			    ResourcePack.ItemModels, model =>
+		    void processItem(KeyValuePair<string, ResourcePackModelBase> model)
+		    {
+			    if (model.Value == null || model.Value.Textures == null || model.Value.Textures.Count == 0)
+				    return;
+
+			    ItemRenderers.AddOrUpdate(
+				    model.Key, (a) =>
+				    {
+					    var render = new ItemModelRenderer(model.Value);
+					    render.Cache(ResourceManager);
+
+					    return render;
+				    }, (s, renderer) =>
+				    {
+					    var render = new ItemModelRenderer(model.Value);
+					    render.Cache(ResourceManager);
+
+					    return render;
+				    });
+		    }
+
+		    if (ResourceManager.Asynchronous)
+		    {
+			    Parallel.ForEach(ResourceManager.ItemModels, processItem);
+		    }
+		    else
+		    {
+			    foreach (var item in ResourceManager.ItemModels)
 			    {
-				    if (model.Value == null || model.Value.Textures == null || model.Value.Textures.Count == 0)
-					    return;
-
-				    ItemRenderers.AddOrUpdate(
-					    model.Key, (a) =>
-					    {
-						    var render = new ItemModelRenderer(model.Value);
-						    render.Cache(ResourcePack);
-
-						    return render;
-					    }, (s, renderer) =>
-					    {
-						    var render = new ItemModelRenderer(model.Value);
-						    render.Cache(ResourcePack);
-
-						    return render;
-					    });
-
-			    });
-	    }
+				    processItem(item);
+			    }
+		    }
+	    }*/
 
 	    public static bool ResolveItemName(int protocolId, out string res)
 	    {

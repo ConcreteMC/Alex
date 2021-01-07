@@ -106,11 +106,11 @@ namespace Alex.Blocks.Minecraft
 
 			if (state.IsMultiPart)
 			{
-				Lazy<BlockStateResource> blockStateResource;
+				BlockStateResource blockStateResource;
 
-				if (Alex.Instance.Resources.ResourcePack.BlockStates.TryGetValue(state.Name, out blockStateResource))
+				if (Alex.Instance.Resources.TryGetBlockState(state.Name, out blockStateResource))
 				{
-					return MultiPartModelHelper.GetBlockState(world, position, state, blockStateResource.Value);
+					return MultiPartModelHelper.GetBlockState(world, position, state, blockStateResource);
 				}
 			}
 

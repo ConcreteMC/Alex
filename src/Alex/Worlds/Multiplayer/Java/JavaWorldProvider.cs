@@ -313,7 +313,7 @@ namespace Alex.Worlds.Multiplayer.Java
 		{
 			//	World?.UpdatePlayerPosition(_lastReceivedLocation);
 
-			Alex.Resources.ResourcePack.TryGetBitmap("entity/alex", out var rawTexture);
+			Alex.Resources.TryGetBitmap("entity/alex", out var rawTexture);
 			_alexSkin = TextureUtils.BitmapToTexture2D(Alex.GraphicsDevice, rawTexture);
 			World.Ticker.RegisterTicked(this);
 			//_initiated = true;
@@ -556,7 +556,7 @@ namespace Alex.Worlds.Multiplayer.Java
 
 							texture2D = t;
 						}
-						else if (Alex.Resources.ResourcePack.TryGetBitmap(texture, out var bmp2))
+						else if (Alex.Resources.TryGetBitmap(texture, out var bmp2))
 						{
 							texture2D = TextureUtils.BitmapToTexture2D(Alex.GraphicsDevice, bmp2);
 						}

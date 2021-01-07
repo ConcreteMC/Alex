@@ -103,7 +103,7 @@ namespace Alex
 			{
 				profile.Skin = new Skin();
 
-				if (alex.Resources.ResourcePack.TryGetBitmap("entity/alex", out var rawTexture))
+				if (alex.Resources.TryGetBitmap("entity/alex", out var rawTexture))
 				{
 					profile.Skin.Texture = TextureUtils.BitmapToTexture2D(alex.GraphicsDevice, rawTexture);
 					profile.Skin.Slim = true;

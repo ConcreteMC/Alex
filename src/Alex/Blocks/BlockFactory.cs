@@ -74,7 +74,7 @@ namespace Alex.Blocks
 		}
 		
 
-		internal static int LoadBlockstates(IRegistryManager registryManager, ResourceManager resources, McResourcePack resourcePack, bool replace,
+		internal static int LoadBlockstates(IRegistryManager registryManager, ResourceManager resources, bool replace,
 			bool reportMissing = false, IProgressReceiver progressReceiver = null)
 		{
 			//RuntimeIdTable = TableEntry.FromJson(raw);
@@ -83,7 +83,7 @@ namespace Alex.Blocks
 
 			RegisterBuiltinBlocks();
 
-			return LoadModels(registryManager, resources, resourcePack, replace, reportMissing, progressReceiver);
+			return LoadModels(registryManager, resources, replace, reportMissing, progressReceiver);
 		}
 		
 		//public static BlockModel UnknownBlockModel { get; set; }
@@ -91,7 +91,6 @@ namespace Alex.Blocks
 		private static readonly Regex _blockMappingRegex = new Regex(@"(?'key'[\:a-zA-Z_\d][^\[]*)(\[(?'data'.*)\])?", RegexOptions.Compiled);
 		private static int LoadModels(IRegistryManager registryManager,
 			ResourceManager resources,
-			McResourcePack resourcePack,
 			bool replace,
 			bool reportMissing,
 			IProgressReceiver progressReceiver)
@@ -113,7 +112,7 @@ namespace Alex.Blocks
 			void LoadEntry(KeyValuePair<string, BlockData> entry)
 			{
 				done++;
-				if (!resourcePack.TryGetBlockState(entry.Key, out var blockStateResource))
+				if (!resources.TryGetBlockState(entry.Key, out var blockStateResource))
 				{
 					if (reportMissing)
 						Log.Warn($"Could not find blockstate with key: {entry.Key}");
@@ -227,7 +226,7 @@ namespace Alex.Blocks
 				}
 			}
 
-			if (resourcePack.Asynchronous)
+			if (resources.Asynchronous)
 			{
 				Parallel.ForEach(data, LoadEntry);
 			}

@@ -57,24 +57,37 @@ namespace Alex.Graphics
 		    _stillFrame = default;
 	    }
 
-	    private void GetTextures(McResourcePack resourcePack,
+	    public void GetTextures(McResourcePack resourcePack,
 		    Dictionary<ResourceLocation, ImageEntry> textures,
 		    IProgressReceiver progressReceiver)
 	    {
 		    foreach (var texture in resourcePack.Textures.Where(x => x.Key.Path.StartsWith("block/", StringComparison.OrdinalIgnoreCase)))
 		    {
-			    if (textures.ContainsKey(texture.Key))
-			    {
-				    continue;
-			    }
-			    
+
 			    TextureMeta meta = null;
 			    resourcePack.TryGetTextureMeta(texture.Key, out meta);
-			    textures.Add(texture.Key, new ImageEntry(texture.Value.Value, meta));
+			    //var entry = new ImageEntry(texture.Value.Value, meta);
+			    
+			    if (textures.ContainsKey(texture.Key))
+			    {
+				    if (meta != null)
+				    {
+					    textures[texture.Key].Meta = meta;
+				    }
+
+				    if (texture.Value.Value != null)
+					    textures[texture.Key].Image = texture.Value.Value;
+
+				    //textures[texture.Key] = entry;
+			    }
+			    else
+			    {
+				    textures.Add(texture.Key, new ImageEntry(texture.Value.Value, meta));
+			    }
 		    }
 	    }
 
-	    public void LoadResourcePack(GraphicsDevice graphicsDevice,
+	    public Dictionary<ResourceLocation, ImageEntry> LoadResourcePack(GraphicsDevice graphicsDevice,
 		    McResourcePack resourcePack,
 		    IProgressReceiver progressReceiver)
 	    {
@@ -83,12 +96,17 @@ namespace Alex.Graphics
 		    GetTextures(resourcePack, textures, progressReceiver);
 
 		    GenerateAtlas(graphicsDevice, textures, progressReceiver);
+
+		    return textures;
 	    }
 
-	    private class ImageEntry
+	    public class ImageEntry
 	    {
-		    public Image<Rgba32> Image { get; }
-		    public TextureMeta Meta { get; }
+		    public Image<Rgba32> Image { get; set; }
+		    public TextureMeta   Meta  { get; set; }
+
+		    public int Width  => Image.Width;
+		    public int Height => Image.Height;
 
 		    public ImageEntry(Image<Rgba32> image, TextureMeta meta)
 		    {
@@ -154,7 +172,12 @@ namespace Alex.Graphics
 		    {
 			    if (!blockFrames.TryGetValue(other.Key, out _))
 			    {
-				    blockFrames.Add(other.Key, GetFrames(other.Value, TextureWidth, TextureHeight));
+				    var f = GetFrames(other.Value, TextureWidth, TextureHeight);
+
+				    if (f.Length > 0)
+				    {
+					    blockFrames.Add(other.Key, f);
+				    }
 			    }
 		    }
 
@@ -450,29 +473,29 @@ namespace Alex.Graphics
 	    public int TextureWidth { get; private set; } = 16;
 	    public int TextureHeight { get; private set; }= 16;
 
-        public void LoadResourcePackOnTop(GraphicsDevice device, McResourcePack vanilla, McResourcePack resourcePack, IProgressReceiver progressReceiver)
+        public void LoadResourcePackOnTop(GraphicsDevice device, Dictionary<ResourceLocation, ImageEntry> loadedTextures, McResourcePack resourcePack, IProgressReceiver progressReceiver, bool build)
 		{
 
-            int textureWidth = 16, textureHeight = 16;
+            int textureWidth = TextureWidth, textureHeight = TextureHeight;
             
-			Dictionary<ResourceLocation, Image<Rgba32>>   vanillaTextures = new Dictionary<ResourceLocation, Image<Rgba32>>();
+			//Dictionary<ResourceLocation, ImageEntry>   vanillaTextures = new Dictionary<ResourceLocation, ImageEntry>();
 
 			//GetTextures(vanilla, vanillaTextures, progressReceiver);
 			
-			Dictionary<ResourceLocation, Image<Rgba32>>   textures = new Dictionary<ResourceLocation, Image<Rgba32>>();
+			//Dictionary<ResourceLocation, ImageEntry>   loadedTextures = new Dictionary<ResourceLocation, ImageEntry>();
+			GetTextures(resourcePack, loadedTextures, progressReceiver);
 
-			//GetTextures(resourcePack, textures, progressReceiver);
-
-			foreach (var image in vanillaTextures.ToArray())
+			foreach (var image in loadedTextures.ToArray())
 			{
-				if (!textures.ContainsKey(image.Key))
-				{
-					textures.Add(image.Key, image.Value);
-				}
+				//if (!textures.ContainsKey(image.Key))
+				//{
+				//	textures.Add(image.Key, image.Value);
+				//}
 
 				var texture = image.Value;
-				if (texture.Width > textureWidth && texture.Width % 16 == 0 && texture.Height > textureHeight &&
-				    texture.Height % 16 == 0)
+
+				if ((texture.Width > textureWidth && texture.Width % 16 == 0)
+				    && (texture.Height > textureHeight && texture.Height % 16 == 0))
 				{
 					if (texture.Width == texture.Height)
 					{
@@ -482,14 +505,21 @@ namespace Alex.Graphics
 				}
 			}
 			
-			var a     = (int)Math.Ceiling(textures.Count / 32D);
-			int height = a * TextureHeight;
+			//var a     = (int)Math.Ceiling(textures.Count / 32D);
+		//	int height = a * TextureHeight;
 			
-			AtlasSize = new Vector2(Math.Min(32, textures.Count), height);
+			//AtlasSize = new Vector2(Math.Min(32, textures.Count), height);
             TextureHeight = textureHeight;
             TextureWidth = textureWidth;
 
-          //  GenerateAtlas(device, textures, progressReceiver);
+            if (build) GenerateAtlas(device, loadedTextures, progressReceiver);
+            
+            //loadedTextures.Clear();
+
+           // foreach (var texture in textures)
+           // {
+	       //     loadedTextures.Add(texture.Key, texture.Value);
+           // }
 		}
 
 

@@ -74,7 +74,6 @@ namespace Alex.ResourcePackLib
 		public IReadOnlyDictionary<string, LanguageResource>   Languages		 => _languageCache;
 		
 		//public new ResourcePackInfo Info { get; private set; }
-		public ResourcePackManifest Manifest { get; set; } = null;
 
 		//public IFont Font { get; private set; }
 		
@@ -651,9 +650,10 @@ namespace Alex.ResourcePackLib
 
 		#endregion
 		
-		public Color GetGrassColor(float temp, float rain, int elevation)
+		public bool TryGetGrassColor(float temp, float rain, int elevation, out Color color)
 		{
-			if (GrassColors == null) return new Color(94, 157, 52);
+			color = new Color(94, 157, 52);
+			if (GrassColors == null) return false;
 
 			temp = MathHelper.Clamp(temp - elevation * 0.00166667f, 0f, 1f);
 			rain = MathHelper.Clamp(rain, 0f, 1f) * temp;
@@ -668,12 +668,15 @@ namespace Alex.ResourcePackLib
 			
 			var result = GrassColors[indx];
 
-			return new Color(result.R, result.G, result.B);
+			color = new Color(result.R, result.G, result.B);
+			
+			return true;
 		}
 
-		public Color GetFoliageColor(float temp, float rain, int elevation)
+		public bool TryGetFoliageColor(float temp, float rain, int elevation, out Color color)
 		{
-			if (FoliageColors == null) return new Color(94, 157, 52);
+			color = new Color(94, 157, 52);
+			if (FoliageColors == null) return false;
 			temp = MathHelper.Clamp(temp - elevation * 0.00166667f, 0f, 1f);
 			rain = MathHelper.Clamp(rain, 0f, 1f) * temp;
 
@@ -687,7 +690,8 @@ namespace Alex.ResourcePackLib
 
 			var result = FoliageColors[indx];
 
-			return new Color(result.R, result.G, result.B);
+			color = new Color(result.R, result.G, result.B);
+			return true;
 		}
 
 
