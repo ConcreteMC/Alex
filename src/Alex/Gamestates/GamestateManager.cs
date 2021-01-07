@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using Alex.API.GameStates;
 using Alex.API.Gui;
 using Microsoft.Xna.Framework;
@@ -80,6 +81,16 @@ namespace Alex.Gamestates
 	        return false;
         }
 
+        public bool RemoveState<TStateType>(TStateType state) where TStateType : class, IGameState
+        {
+	        var key = States.FirstOrDefault(x => x.Value == state);
+
+	        if (key.Key == null)
+		        return false;
+
+	        return RemoveState(key.Key);
+        }
+        
 	    public bool RemoveState(string name)
 	    {
 		    IGameState state;

@@ -56,6 +56,8 @@ namespace Alex.Worlds
 			Shaders.SetTextures(stillAtlas);
 			Shaders.SetAnimatedTextures(Resources.Atlas.GetAtlas(0));
 			
+			_renderSampler.MaxMipLevel = stillAtlas.LevelCount;
+			
 			RenderDistance = Options.VideoOptions.RenderDistance;
 
 			Options.VideoOptions.RenderDistance.Bind(
@@ -444,7 +446,7 @@ namespace Alex.Worlds
 
 		public bool UseWireFrames { get; set; } = false;
 
-		private static readonly SamplerState RenderSampler = new SamplerState()
+		private readonly SamplerState _renderSampler = new SamplerState()
 		{
 			Filter = TextureFilter.PointMipLinear	,
 			AddressU = TextureAddressMode.Wrap,
@@ -460,14 +462,14 @@ namespace Alex.Worlds
 			// ComparisonFunction = 
 		};
 
-		private static DepthStencilState DepthStencilState { get; } = new DepthStencilState()
+		private DepthStencilState DepthStencilState { get; } = new DepthStencilState()
 		{
 			DepthBufferEnable = true,
 			DepthBufferFunction = CompareFunction.Less,
 			DepthBufferWriteEnable = true
 		};
 
-		private static RasterizerState RasterizerState = new RasterizerState()
+		private readonly RasterizerState _rasterizerState = new RasterizerState()
 		{
 			//DepthBias = 0.0001f,
 			CullMode = CullMode.CullClockwiseFace,
@@ -476,7 +478,7 @@ namespace Alex.Worlds
 			//ScissorTestEnable = true
 		};
 
-		private static BlendState TranslucentBlendState { get; } = new BlendState()
+		private BlendState TranslucentBlendState { get; } = new BlendState()
 		{
 			AlphaSourceBlend = Microsoft.Xna.Framework.Graphics.Blend.SourceAlpha,
 			AlphaDestinationBlend = Microsoft.Xna.Framework.Graphics.Blend.InverseSourceAlpha,
@@ -494,10 +496,10 @@ namespace Alex.Worlds
 
 			var originalSamplerState = device.SamplerStates[0];
 
-			device.SamplerStates[0] = RenderSampler;
+			device.SamplerStates[0] = _renderSampler;
 
 			RasterizerState originalState = device.RasterizerState;
-			args.GraphicsDevice.RasterizerState = RasterizerState;
+			args.GraphicsDevice.RasterizerState = _rasterizerState;
 
 			bool usingWireFrames = UseWireFrames;
 
@@ -654,6 +656,7 @@ namespace Alex.Worlds
 		public void Dispose()
 		{
 			//Graphics?.Dispose();
+			_renderSampler.Dispose();
 			CancellationToken.Cancel();
 			UpdateQueue.Clear();
 			FastUpdateQueue.Clear();

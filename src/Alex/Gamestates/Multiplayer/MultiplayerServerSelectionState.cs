@@ -18,6 +18,7 @@ using Alex.Gui.Elements;
 using Alex.Utils;
 using Alex.Worlds.Multiplayer.Bedrock;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Input;
 using NLog;
 
 namespace Alex.Gamestates.Multiplayer
@@ -83,7 +84,7 @@ namespace Alex.Gamestates.Multiplayer
 			    {
 				    TranslationKey = "selectServer.refresh"
 			    });
-			    row.AddChild(new GuiButton("Cancel", OnCancelButtonPressed)
+			    row.AddChild(new GuiBackButton()
 			    {
 				    TranslationKey = "gui.cancel"
 			    });

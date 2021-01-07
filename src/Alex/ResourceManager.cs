@@ -33,6 +33,7 @@ using Alex.ResourcePackLib.IO.Abstract;
 using Alex.ResourcePackLib.Json.BlockStates;
 using Alex.ResourcePackLib.Json.Models;
 using Alex.ResourcePackLib.Json.Models.Blocks;
+using Alex.ResourcePackLib.Json.Models.Entities;
 using Alex.Utils;
 using Alex.Utils.Assets;
 using JetBrains.Profiler.Api;
@@ -72,8 +73,9 @@ namespace Alex
 		public static Effect BlockEffect { get; set; }
 		public static Effect LightingEffect { get; set; }
 		
-		public List<MCPack>       Packs              { get; } = new List<MCPack>();
-		public BlockModelRegistry BlockModelRegistry { get; private set; }
+		public List<MCPack>        Packs               { get; } = new List<MCPack>();
+		public BlockModelRegistry  BlockModelRegistry  { get; private set; }
+		public EntityModelRegistry EntityModelRegistry { get; private set; }
 		
 		public static PooledTexture2D NethergamesLogo { get; private set; }
 		public ResourceManager(IServiceProvider serviceProvider)
@@ -507,6 +509,7 @@ namespace Alex
 
 	        foreach (var resourcePack in ActiveBedrockResourcePacks)
 	        {
+		        LoadEntityModels(resourcePack, progress);
 		        int modelCount = EntityFactory.LoadModels(resourcePack, device, true, progress);
 
 		        Log.Info($"Imported {modelCount} entity models...");
@@ -529,11 +532,27 @@ namespace Alex
 		        PreloadCallback?.Invoke(f.FontBitmap, McResourcePack.BitmapFontCharacters.ToList());
 	        }
         }
+
+        private void LoadEntityModels(BedrockResourcePack resourcePack, IProgressReceiver progressReceiver = null)
+        {
+	        Stopwatch sw            = Stopwatch.StartNew();
+	        var       modelRegistry = EntityModelRegistry;
+
+	        int imported = 0;
+	        imported = modelRegistry.LoadResourcePack(progressReceiver, resourcePack, true);
+
+	        Log.Info($"Imported {imported} block models from resourcepack in {sw.ElapsedMilliseconds}ms!");
+            
+	        sw.Stop();
+        }
         
         private void LoadRegistries(IProgressReceiver progress)
         {
 	        progress.UpdateProgress(0, "Loading block model registry...");
 	        RegistryManager.AddRegistry<BlockModelEntry, ResourcePackModelBase>(BlockModelRegistry = new BlockModelRegistry());
+	        
+	        progress.UpdateProgress(0, "Loading entity model registry...");
+	        RegistryManager.AddRegistry<EntityModelEntry, EntityModel>(EntityModelRegistry = new EntityModelRegistry());
 	        
 	        progress.UpdateProgress(0, "Loading blockstate registry...");
 	        RegistryManager.AddRegistry(new RegistryBase<BlockState>("blockstate"));

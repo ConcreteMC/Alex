@@ -317,6 +317,12 @@ namespace Alex.Graphics
 		    {
 			    int mipWidth  = (int) System.Math.Max(1, image.Width >> level);
 			    int mipHeight = (int) System.Math.Max(1, image.Height >> level);
+
+			    if (mipWidth == 1 && mipHeight == 1)
+			    {
+				    Alex.MipMapLevel = level;
+				    break;
+			    }
 			    
 			    var bmp = image.CloneAs<Rgba32>(); //.CloneAs<Rgba32>();
 			    bmp.Mutate(x => x.Resize(mipWidth, mipHeight, KnownResamplers.NearestNeighbor, true));
@@ -333,7 +339,7 @@ namespace Alex.Graphics
 			    }
 
 			    //TODO: Resample per texture instead of whole texture map.
-
+			    
 			    texture.SetData(level, null, colorData, 0, colorData.Length);
 		    }
 

@@ -60,6 +60,7 @@ namespace Alex.Gamestates
 			//{
 			Alex.GameStateManager.RemoveState("play");
 			Alex.GameStateManager.SetActiveState<TitleState>("title");
+			Alex.GameStateManager.RemoveState(this);
 			//}
 
 			Alex.IsMouseVisible = true;
