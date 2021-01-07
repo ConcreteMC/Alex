@@ -9,10 +9,11 @@ namespace Alex.ResourcePackLib.IO
 {
 	public class ZipFileSystem : IFilesystem
 	{
-		private ZipArchive                       _archive;
-		private ReadOnlyCollection<ZipFileEntry> _entries;
-		public ZipFileSystem(Stream stream)
+		private          ZipArchive                       _archive;
+		private          ReadOnlyCollection<ZipFileEntry> _entries;
+		public ZipFileSystem(Stream stream, string name)
 		{
+			Name = name;
 			_archive = new ZipArchive(stream, ZipArchiveMode.Read, false);
 			
 			List<ZipFileEntry> entries = new List<ZipFileEntry>();
@@ -23,7 +24,10 @@ namespace Alex.ResourcePackLib.IO
 
 			_entries = new ReadOnlyCollection<ZipFileEntry>(entries);
 		}
-		
+
+		/// <inheritdoc />
+		public string Name { get; }
+
 		/// <inheritdoc />
 		public IReadOnlyCollection<IFile> Entries 
 		{
@@ -34,6 +38,9 @@ namespace Alex.ResourcePackLib.IO
 		}
 
 		/// <inheritdoc />
+		public bool CanReadAsync => false;
+
+		/// <inheritdoc />
 		public IFile GetEntry(string name)
 		{
 			var result = _archive.GetEntry(name);
@@ -42,6 +49,11 @@ namespace Alex.ResourcePackLib.IO
 				return new ZipFileEntry(result);
 
 			return null;
+		}
+		
+		public override string ToString()
+		{
+			return $"Zip: {Name}";
 		}
 		
 		/// <inheritdoc />

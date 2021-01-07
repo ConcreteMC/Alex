@@ -71,7 +71,7 @@ namespace Alex.ResourcePackLib
 			{
 				List<LoadedSkin> skins = new List<LoadedSkin>();
 
-				using (var archive = new ZipFileSystem(Entry.Open()))
+				using (var archive = new ZipFileSystem(Entry.Open(), Entry.Name))
 				{
 					var skinsEntry = archive.GetEntry("skins.json");
 					Info = MCJsonConvert.DeserializeObject<MCPackSkins>(skinsEntry.ReadAsString());

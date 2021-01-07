@@ -73,7 +73,7 @@ namespace Alex.ResourcePackLib
 		public IReadOnlyDictionary<ResourceLocation, Lazy<Image<Rgba32>>>          Textures          => _bitmapCache;
 		public IReadOnlyDictionary<string, LanguageResource>   Languages		 => _languageCache;
 		
-		public new ResourcePackInfo Info { get; private set; }
+		//public new ResourcePackInfo Info { get; private set; }
 		public ResourcePackManifest Manifest { get; set; } = null;
 
 		//public IFont Font { get; private set; }
@@ -97,13 +97,12 @@ namespace Alex.ResourcePackLib
 
 		private PngDecoder                           PngDecoder       { get; }
 		public  IDictionary<string, SoundDefinition> SoundDefinitions { get; private set; }
-		public McResourcePack(byte[] resourcePackData) : this(new ZipFileSystem(new MemoryStream(resourcePackData)), null)
-		{
-
-		}
-
+		
+		private IFilesystem Filesystem  { get; set; }
+		public  bool        Asynchronous => Filesystem.CanReadAsync;
 		public McResourcePack(IFilesystem archive, McResourcePackPreloadCallback preloadCallback, LoadProgress progressReporter = null)
 		{
+			Filesystem = archive;
 			ProgressReporter = progressReporter;
 			
 			PngDecoder = new PngDecoder()
@@ -146,9 +145,12 @@ namespace Alex.ResourcePackLib
 			}
 
 			if (IsLoaded) return;
-			
-			Manifest = GetManifest(archive, ResourcePackType.Java);
-			
+
+			//if (Info == null)
+			//{
+			//	Info = GetManifest(archive, ResourcePackType.Java);
+			//}
+
 			Dictionary<ResourceLocation, ResourcePackModelBase> models = new Dictionary<ResourceLocation, ResourcePackModelBase>();
 
 			var total = archive.Entries.Count;
@@ -256,7 +258,8 @@ namespace Alex.ResourcePackLib
 
 		private void LoadMeta(IFilesystem archive)
 		{
-			ResourcePackInfo info;
+			Info = GetManifest(archive);
+			/*ResourcePackInfo info;
 
 			var entry = archive.GetEntry("pack.mcmeta");
 			if (entry == null)
@@ -274,7 +277,7 @@ namespace Alex.ResourcePackLib
 				}
 			}
 
-			Info = info;
+			Info = info;*/
 		}
 
 		private void LoadTextureMeta(IFile entry, Match match)
@@ -690,6 +693,8 @@ namespace Alex.ResourcePackLib
 
 		public void Dispose()
 		{
+			Filesystem?.Dispose();
+			Filesystem = null;
 			//_archive?.Dispose();
 		}
 	}

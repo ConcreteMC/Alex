@@ -155,6 +155,7 @@ namespace Alex.Gamestates.Multiplayer
 				    });
 
 			    item.SaveEntry = false;
+			    item.PingAsync(true);
 
 			    AddItem(item);	  
 		    }

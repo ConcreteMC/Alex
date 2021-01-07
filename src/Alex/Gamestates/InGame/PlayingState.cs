@@ -482,17 +482,20 @@ namespace Alex.Gamestates.InGame
 								World.Camera.ProjectionMatrix, entity == hitEntity ? Color.Red : Color.Yellow);
 						}
 					}
-					
+
 					if (World?.Player != null)
-						args.SpriteBatch.RenderBoundingBox(World.Player.GetBoundingBox(), World.Camera.ViewMatrix,
-							World.Camera.ProjectionMatrix, Color.Red);
-
-					var hit = World.Player.Movement.LastCollision;
-
-					foreach (var bb in hit)
 					{
 						args.SpriteBatch.RenderBoundingBox(
-							bb, World.Camera.ViewMatrix, World.Camera.ProjectionMatrix, Color.YellowGreen, true);
+							World.Player.GetBoundingBox(), World.Camera.ViewMatrix, World.Camera.ProjectionMatrix,
+							Color.Red);
+
+						var hit = World.Player.Movement.LastCollision;
+
+						foreach (var bb in hit)
+						{
+							args.SpriteBatch.RenderBoundingBox(
+								bb.Box, World.Camera.ViewMatrix, World.Camera.ProjectionMatrix, bb.Color, true);
+						}
 					}
 				}
 			}
@@ -501,7 +504,7 @@ namespace Alex.Gamestates.InGame
 				args.SpriteBatch.End();
 			}
 			
-			World.Render2D(args);
+			World?.Render2D(args);
 		}
 
 		public static string GetCardinalDirection(PlayerLocation cam)

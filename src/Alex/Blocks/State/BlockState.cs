@@ -89,6 +89,7 @@ namespace Alex.Blocks.State
 				return result;
 			}
 
+			Log.Warn($"Invalid property on state {Name} ({property}={value})");
 			return this;
 		}
 		

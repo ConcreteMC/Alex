@@ -759,11 +759,6 @@ namespace Alex.Entities
             ItemRenderer?.Update(args.GraphicsDevice, args.Camera);
 		}
 
-        public void UpdateHeadYaw(float rotation)
-        {
-            KnownPosition.HeadYaw = rotation;
-        }
-
 		private long _hitAnimationEnd = 0;
 		private bool _isHit = false;
 		public void EntityHurt()

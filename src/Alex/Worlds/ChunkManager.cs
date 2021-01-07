@@ -326,6 +326,8 @@ namespace Alex.Worlds
 		/// <inheritdoc />
 		public void AddChunk(ChunkColumn chunk, ChunkCoordinates position, bool doUpdates = false)
 		{
+			if (CancellationToken.IsCancellationRequested)
+				return;
 			//chunk.CalculateHeight();
 			
 			Chunks.AddOrUpdate(

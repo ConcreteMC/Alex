@@ -108,18 +108,21 @@ namespace Alex
 			{
 				return false;
 			}
-
-			ResourcePackLib.ResourcePack info;
+			
 			using(FileStream stream = File.OpenRead(file))
-			using (var archive = new ZipFileSystem(stream))
-				info = ResourcePackLib.ResourcePack.LoadFromArchive(archive);
+			using (var archive = new ZipFileSystem(stream, Path.GetFileNameWithoutExtension(file)))
+			{
+				manifest = ResourcePackLib.ResourcePack.GetManifest(archive);
 
-			if (info == null || info == default)
+				if (manifest != null)
+					manifest.Name = archive.Name;
+			}
+
+			if (manifest == null)
 			{
 				return false;
 			}
 
-			manifest = info.Info;
 			return true;
 		}
 
@@ -127,7 +130,7 @@ namespace Alex
 		{
 			Stopwatch sw = Stopwatch.StartNew();
 			
-			Log.Info($"Loading resource pack...");
+			Log.Info($"Loading resource pack ({fs.Name})...");
 			
 			McResourcePack resourcePack = null;
 			
@@ -155,7 +158,7 @@ namespace Alex
             int imported = 0;
             if (modelRegistry is BlockModelRegistry bmr)
             {
-	            imported = bmr.LoadResourcePack(progressReceiver, resourcePack);
+	            imported = bmr.LoadResourcePack(progressReceiver, resourcePack, replaceModels);
             }
 
             Log.Info($"Imported {imported} block models from resourcepack in {sw.ElapsedMilliseconds}ms!");
@@ -163,7 +166,8 @@ namespace Alex
             sw.Restart();
             
             MeasureProfiler.StartCollectingData();
-            imported = BlockFactory.LoadBlockstates(RegistryManager, this, resourcePack, replaceModels, reportMissingModels, progressReceiver);
+            if (resourcePack != null)
+				imported = BlockFactory.LoadBlockstates(RegistryManager, this, resourcePack, replaceModels, reportMissingModels, progressReceiver);
             MeasureProfiler.SaveData();
             
             MeasureProfiler.StopCollectingData();
@@ -327,7 +331,8 @@ namespace Alex
 			progressReceiver?.UpdateProgress(0, "Loading vanilla resources...");
 			
 	        var vanilla = LoadResourcePack(progressReceiver, new DiskFileSystem(defaultResources), preloadCallback);
-	        vanilla.Manifest.Name = "Vanilla";
+	        if (vanilla.Manifest != null)
+				vanilla.Manifest.Name = "Vanilla";
 				
 	        ActiveResourcePacks.AddFirst(vanilla);
 
@@ -402,7 +407,7 @@ namespace Alex
 
 		        try
 		        {
-			        using (var archive = new ZipFileSystem(file.Open(FileMode.Open, FileAccess.Read)))
+			        using (var archive = new ZipFileSystem(file.Open(FileMode.Open, FileAccess.Read), file.Name))
 			        {
 				        MCPack pack = new MCPack(archive);
 				        Packs.Add(pack);
@@ -420,7 +425,14 @@ namespace Alex
         {
 	        var countBefore = ActiveResourcePacks.Count;
 	        
-	        var first = ActiveResourcePacks.First.Value;
+	        var first  = ActiveResourcePacks.First.Value;
+	        var before = ActiveResourcePacks.ToArray();
+
+	        foreach (var item in before.Skip(1))
+	        {
+		        item.Dispose();
+	        }
+	        
 	        ActiveResourcePacks.Clear();
 
 	        ActiveResourcePacks.AddFirst(first);
@@ -438,13 +450,13 @@ namespace Alex
 			        string resourcePackPath = Path.Combine(ResourcePackDirectory.FullName, file);
 			        if (File.Exists(resourcePackPath))
 			        {
-				        Log.Info($"Loading resourcepack {file}...");
+				        //Log.Info($"Loading resourcepack {file}...");
 
-				        using (FileStream stream = new FileStream(resourcePackPath, FileMode.Open))
+				        //using (FileStream stream = new FileStream(resourcePackPath, FileMode.Open))
 				        {
-					        using (ZipFileSystem zipFileSystem = new ZipFileSystem(stream))
+					       // using (ZipFileSystem zipFileSystem = )
 					        {
-						        var pack = LoadResourcePack(progress, zipFileSystem, null);
+						        var pack = LoadResourcePack(progress, new ZipFileSystem(new FileStream(resourcePackPath, FileMode.Open), Path.GetFileNameWithoutExtension(resourcePackPath)), null);
 
 						        if (pack.Manifest != null && string.IsNullOrWhiteSpace(pack.Manifest.Name))
 						        {
@@ -471,7 +483,7 @@ namespace Alex
 		        if (isFirst)
 		        { //Only load models for vanilla until above we fix blockstate replacement issues.
 			        isFirst = false;
-			        break;
+			       // break;
 		        }
 	        }
 

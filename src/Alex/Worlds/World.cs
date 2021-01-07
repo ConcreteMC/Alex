@@ -270,8 +270,9 @@ namespace Alex.Worlds
 
         public void Render2D(IRenderArgs args)
         {
-	        args.Camera = Camera;
-
+	        if (_destroyed)
+		        return;
+	        
 	        EntityManager.Render2D(args);
         }
         
