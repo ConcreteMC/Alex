@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using Alex.API.Utils;
 using Alex.Blocks.Minecraft;
 using Alex.Worlds.Chunks;
@@ -9,16 +10,18 @@ using NLog;
 
 namespace Alex.Worlds.Lighting
 {
-    public class BlockLightCalculations
+    public class BlockLightCalculations : IDisposable
     {
         private static readonly ILogger Log = LogManager.GetCurrentClassLogger(typeof(BlockLightCalculations));
         private static ConcurrentQueue<(BlockCoordinates coords, Func<bool> action)> Queue { get; } = new ConcurrentQueue<(BlockCoordinates coords, Func<bool> action)>();
 		private static ConcurrentDictionary<ChunkCoordinates, ConcurrentQueue<BlockCoordinates>> ChunkQueues { get; } = new ConcurrentDictionary<ChunkCoordinates, ConcurrentQueue<BlockCoordinates>>();
 		
-        private World World { get; }
-        public BlockLightCalculations(World level)
+        private World             World             { get; }
+        private CancellationToken CancellationToken { get; }
+        public BlockLightCalculations(World level, CancellationToken cancellationToken)
         {
 	        World = level;
+	        CancellationToken = cancellationToken;
         }
 
         public void Remove(ChunkCoordinates coordinates)
@@ -47,7 +50,7 @@ namespace Alex.Worlds.Lighting
 	        int count = 0;
 	        if (ChunkQueues.TryGetValue(coordinates, out var queue))
 	        {
-		        while (queue.TryDequeue(out var coords))
+		        while (queue.TryDequeue(out var coords) && !CancellationToken.IsCancellationRequested)
 		        {
 			        ProcessNode(World, coords, queue);
 			        count++;
@@ -261,6 +264,13 @@ namespace Alex.Worlds.Lighting
 					lightBfsQueue.Enqueue(coord);
 				}
 			}
+		}
+
+		/// <inheritdoc />
+		public void Dispose()
+		{
+			Queue.Clear();
+			ChunkQueues.Clear();
 		}
     }
 }

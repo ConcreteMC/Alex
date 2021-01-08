@@ -7,13 +7,12 @@ namespace Alex.Worlds.Abstraction
 {
 	public interface IChunkManager
 	{
-		int     ChunkCount         { get; }
-		long    Vertices           { get; }
-		int     RenderedChunks     { get; }
-		bool    FogEnabled         { get; set; }
-		Vector3 FogColor           { get; set; }
-		float   FogDistance        { get; set; }
-		Vector3 AmbientLightColor  { get; set; }
+		int     ChunkCount        { get; }
+		int     RenderedChunks    { get; }
+		bool    FogEnabled        { get; set; }
+		Vector3 FogColor          { get; set; }
+		float   FogDistance       { get; set; }
+		Vector3 AmbientLightColor { get; set; }
 	//	float   BrightnessModifier { get; set; }
 
 		void Start();

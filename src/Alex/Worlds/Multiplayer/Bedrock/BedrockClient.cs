@@ -105,6 +105,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
         private ChunkProcessor             ChunkProcessor      { get; }
         private BedrockClientPacketHandler PacketHandler       { get; set; }
 
+        private readonly List<IDisposable> _disposables = new List<IDisposable>();
         public BedrockClient(Alex alex, IPEndPoint endpoint, PlayerProfile playerProfile, BedrockWorldProvider wp)
 		{
 			PacketFactory.CustomPacketFactory = new AlexPacketFactory();
@@ -119,8 +120,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			
 			ChunkRadius = Options.VideoOptions.RenderDistance;
 			
-			Options.VideoOptions.RenderDistance.Bind(RenderDistanceChanged);
-			Options.VideoOptions.ClientSideLighting.Bind(ClientSideLightingChanged);
+			_disposables.Add(Options.VideoOptions.RenderDistance.Bind(RenderDistanceChanged));
+			_disposables.Add(Options.VideoOptions.ClientSideLighting.Bind(ClientSideLightingChanged));
 		//WorkerThreadPool = threadPool;
 			//ReflectionHelper.SetPrivateStaticFieldValue();
 			//MiNetServer.FastThreadPool = threadPool;
@@ -170,7 +171,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					handler.DisconnectedAction = (reason, sendDisconnect) =>
 					{
 						Log.Warn($"Got disconnected from server: {reason}");
-						ShowDisconnect(reason, false, false);
+						ShowDisconnect(reason, false, false, DisconnectReason.Unknown);
 					};
 					
 					MessageHandler = handler;
@@ -445,7 +446,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		{
 			if (Transfered)
 				return;
-			if (Alex.GameStateManager.GetActiveState() is DisconnectedScreen s && overrideActive)
+		
+			if (_disconnectShown && overrideActive && Alex.GameStateManager.GetActiveState() is DisconnectedScreen s)
 			{
 				if (useTranslation)
 				{
@@ -1356,6 +1358,13 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		public void Dispose()
 		{
+			foreach (var disposable in _disposables.ToArray())
+			{
+				disposable.Dispose();
+			}
+			
+			_disposables.Clear();
+			
 			//ChunkProcessor.Instance = null;
 			Close();
 			//WorkerThreadPool.Dispose();

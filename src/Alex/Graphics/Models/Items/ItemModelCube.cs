@@ -10,21 +10,21 @@ namespace Alex.Graphics.Models.Items
 
         public bool Mirrored { get; set; } = false;
 
-        public ItemModelCube(Vector3 size)
+        public ItemModelCube(Vector3 size, Vector3 position)
         {
             this.Size = size;
 
             //front verts with position and texture stuff
-            _topLeftFront = new Vector3(0.0f, 1.0f, 0.0f) * Size;
-            _topLeftBack = new Vector3(0.0f, 1.0f, 1.0f) * Size;
-            _topRightFront = new Vector3(1.0f, 1.0f, 0.0f) * Size;
-            _topRightBack = new Vector3(1.0f, 1.0f, 1.0f) * Size;
+            _topLeftFront = new Vector3(position.X, position.Y + 1.0f, position.Z) * Size;
+            _topLeftBack = new Vector3(position.X, position.Y + 1.0f, position.Z + 1.0f) * Size;
+            _topRightFront = new Vector3(position.X + 1.0f, position.Y + 1.0f, position.Z) * Size;
+            _topRightBack = new Vector3(position.X + 1.0f, position.Y + 1.0f, position.Z + 1.0f) * Size;
 
             // Calculate the position of the vertices on the bottom face.
-            _btmLeftFront = new Vector3(0.0f, 0.0f, 0.0f) * Size;
-            _btmLeftBack = new Vector3(0.0f, 0.0f, 1.0f) * Size;
-            _btmRightFront = new Vector3(1.0f, 0.0f, 0.0f) * Size;
-            _btmRightBack = new Vector3(1.0f, 0.0f, 1.0f) * Size;
+            _btmLeftFront = new Vector3(position.X, position.Y, position.Z ) * Size;
+            _btmLeftBack = new Vector3(position.X, position.Y, position.Z + 1.0f) * Size;
+            _btmRightFront = new Vector3(position.X + 1.0f, position.Y, position.Z ) * Size;
+            _btmRightBack = new Vector3(position.X + 1.0f, position.Y, position.Z + 1.0f) * Size;
         }
 
         public VertexPositionColor[] Front, Back, Left, Right, Top, Bottom;

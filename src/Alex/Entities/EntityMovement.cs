@@ -423,10 +423,10 @@ namespace Alex.Entities
 
 				var block = Entity.Level.GetBlockState(blockcoords.X, blockcoords.Y, blockcoords.Z);
 
-				if (block?.Model == null || !block.Block.Solid)
+				if (!block.Block.Solid)
 					continue;
 
-				foreach (var box in block.Model.GetBoundingBoxes(blockcoords).OrderBy(x => x.Max.Y))
+				foreach (var box in block.Block.GetBoundingBoxes(blockcoords).OrderBy(x => x.Max.Y))
 				{
 					var yDifference = MathF.Abs(entityBoundingBox.Min.Y - box.Max.Y); // <= 0.01f
 
@@ -494,12 +494,12 @@ namespace Alex.Entities
 					for (int y = (int)(Math.Floor(testBox.Min.Y)); y <= (int)(Math.Ceiling(testBox.Max.Y)); y++)
 					{
 						var blockState = Entity.Level.GetBlockState(x, y, z);
-						if (blockState?.Model == null || !blockState.Block.Solid)
+						if (!blockState.Block.Solid)
 							continue;
 
 						var coords = new Vector3(x, y, z);
 
-						foreach (var box in blockState.Model.GetBoundingBoxes(coords))
+						foreach (var box in blockState.Block.GetBoundingBoxes(coords))
 						{
 							if (testCylinder.Intersects(box))
 							{
@@ -568,12 +568,12 @@ namespace Alex.Entities
 					for (int y = (int) (Math.Floor(testBox.Min.Y)); y <= (int) (Math.Ceiling(testBox.Max.Y)); y++)
 					{
 						var blockState = Entity.Level.GetBlockState(x, y, z);
-						if (blockState?.Model == null || !blockState.Block.Solid)
+						if (!blockState.Block.Solid)
 							continue;
 
 						var coords = new Vector3(x, y, z);
 						
-						foreach (var box in blockState.Model.GetBoundingBoxes(coords))
+						foreach (var box in blockState.Block.GetBoundingBoxes(coords))
 						{
 							if (negative)
 							{
@@ -674,12 +674,12 @@ namespace Alex.Entities
 					for (int y = (int) (Math.Floor(testBox.Min.Y)); y <= (int) (Math.Ceiling(testBox.Max.Y)); y++)
 					{
 						var blockState = Entity.Level.GetBlockState(x, y, z);
-						if (blockState?.Model == null || !blockState.Block.Solid)
+						if (!blockState.Block.Solid)
 							continue;
 
 						var coords = new Vector3(x, y, z);
 						
-						foreach (var box in blockState.Model.GetBoundingBoxes(coords))
+						foreach (var box in blockState.Block.GetBoundingBoxes(coords))
 						{
 							if (box.Max.Y <= testBox.Min.Y) continue;
 							
@@ -788,12 +788,12 @@ namespace Alex.Entities
 					for (int y = (int) (Math.Floor(testBox.Min.Y)); y <= (int) (Math.Ceiling(testBox.Max.Y)); y++)
 					{
 						var blockState = Entity.Level.GetBlockState(x, y, z);
-						if (blockState?.Model == null || !blockState.Block.Solid)
+						if (!blockState.Block.Solid)
 							continue;
 
 						var coords = new Vector3(x, y, z);
 						
-						foreach (var box in blockState.Model.GetBoundingBoxes(coords))
+						foreach (var box in blockState.Block.GetBoundingBoxes(coords))
 						{
 							if (box.Max.Y <= testBox.Min.Y) continue;
 

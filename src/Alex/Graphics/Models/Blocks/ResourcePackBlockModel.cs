@@ -487,6 +487,7 @@ namespace Alex.Graphics.Models.Blocks
 			ResourcePackModelBase model,
 			Biome biome)
 		{
+			var positionOffset = baseBlock.GetOffset(NoiseGenerator, position);
 			//bsModel.Y = Math.Abs(180 - bsModel.Y);
 
 			//if (Resources.BlockModelRegistry.TryGet(blockStateModel.ModelName, out var registryEntry))
@@ -502,7 +503,8 @@ namespace Alex.Graphics.Models.Blocks
 
 					element.From *= Scale;
 
-					foreach (var face in element.Faces)
+					var faces = element.Faces.ToArray();
+					foreach (var face in faces)
 					{
 						var facing   = face.Key;
 						var cullFace = face.Value.CullFace ?? face.Key;
@@ -523,8 +525,6 @@ namespace Alex.Graphics.Models.Blocks
 
 						if (!ShouldRenderFace(world, facing, position, baseBlock))
 							continue;
-
-						var positionOffset = baseBlock.GetOffset(NoiseGenerator, position);
 
 						var   uv = face.Value.UV;
 						float x1 = 0, x2 = 0, y1 = 0, y2 = 0;
@@ -627,9 +627,9 @@ namespace Alex.Graphics.Models.Blocks
 
 						faceColor = AdjustColor(faceColor, facing, element.Shade);
 
-						var uvMap = GetTextureUVMap(
-							Resources, ResolveTexture(model, face.Value.Texture), x1, x2, y1, y2, face.Value.Rotation, faceColor);
-
+						BlockTextureData uvMap = GetTextureUVMap(
+								Resources, face.Value.Texture, x1, x2, y1, y2, face.Value.Rotation, faceColor);
+						
 						var vertices = GetFaceVertices(face.Key, element.From, element.To, uvMap);
 
 						vertices = ProcessVertices(vertices, blockStateModel, element, uvMap, facing, face.Value);

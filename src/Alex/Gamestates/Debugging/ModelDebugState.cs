@@ -480,7 +480,7 @@ namespace Alex.Gamestates.Debugging
 			var world = new ItemRenderingWorld(b.Block);
 				
 			var       old       = _data;
-			ChunkData chunkData = new ChunkData();
+			ChunkData chunkData = new ChunkData(ChunkCoordinates.Zero);
 			b.Model
 							.GetVertices(world, chunkData, _location.GetCoordinates3D(), _location, b.Block);
 

@@ -33,13 +33,13 @@ namespace Alex.Worlds.Chunks
 		public int X { get; set; }
 		public int Z { get; set; }
 
-		public          bool IsNew           { get; set; } = true;
-		public bool SkyLightDirty => Sections != null && Sections.Sum(x => x.SkyLightUpdates) > 0; 
-		public          bool BlockLightDirty => Sections != null && Sections.Sum(x => x.BlockLightUpdates) > 0; 
-		public readonly Stopwatch LightUpdateWatch = new Stopwatch();
-		public          ChunkSection[] Sections { get; set; } = new ChunkSection[16];
-		public          int[] BiomeId = ArrayOf<int>.Create(16 * 16 * 256, 1);
-		public          short[] Height = new short[256];
+		public           bool           IsNew           { get; set; } = true;
+		public           bool           SkyLightDirty   => Sections != null && Sections.Sum(x => x.SkyLightUpdates) > 0; 
+		public           bool           BlockLightDirty => Sections != null && Sections.Sum(x => x.BlockLightUpdates) > 0; 
+		private readonly  Stopwatch      _lightUpdateWatch = new Stopwatch();
+		public           ChunkSection[] Sections { get; set; } = new ChunkSection[16];
+		private readonly int[]          _biomeId = ArrayOf<int>.Create(16 * 16 * 256, 1);
+		private readonly  short[]        _height  = new short[256];
 		
 		public  object                                              UpdateLock { get; set; } = new object();
 		private ConcurrentDictionary<BlockCoordinates, BlockEntity> BlockEntities { get; }
@@ -48,7 +48,7 @@ namespace Alex.Worlds.Chunks
 		internal ChunkData ChunkData { get; private set; }
 		private object _dataLock = new object();
 		
-		private ChunkOctree _octree;
+		//private ChunkOctree _octree;
 		public ChunkColumn(int x, int z)
 		{
 			X = x;
@@ -60,11 +60,11 @@ namespace Alex.Worlds.Chunks
 			}
 			
 			BlockEntities = new ConcurrentDictionary<BlockCoordinates, BlockEntity>();
-			LightUpdateWatch.Start();
+			_lightUpdateWatch.Start();
 			
-			ChunkData = new ChunkData();
+			ChunkData = new ChunkData(new ChunkCoordinates(x, z));
 			
-			var index = new Vector3(x << 4, 0, z << 4);
+			/*var index = new Vector3(x << 4, 0, z << 4);
 			var sizeOffs = 16 * 0.5f - 0.5f;
 			Vector3 boundsMin = new Vector3(
 				index.X - sizeOffs,
@@ -77,7 +77,7 @@ namespace Alex.Worlds.Chunks
 				index.Z + sizeOffs
 			);
 			var bounds = new BoundingBox( boundsMin, boundsMax );
-			_octree = new ChunkOctree( bounds );
+			_octree = new ChunkOctree( bounds );*/
 		}
 
 		public void ScheduleBorder()
@@ -271,9 +271,7 @@ namespace Alex.Worlds.Chunks
 
 			var section  = GetSection(y);
 			section.Set(storage, x, y - 16 * (y >> 4), z, state);
-
-
-		//	_heightDirty = true;
+			//	_heightDirty = true;
 		}
 
 		private void RecalculateHeight(int x, int z, bool doLighting = true)
@@ -403,7 +401,7 @@ namespace Alex.Worlds.Chunks
 			if ((bx < 0 || bx > ChunkWidth) || (bz < 0 || bz > ChunkDepth))
 				return;
 
-			Height[((bz << 4) + (bx))] = h;
+			_height[((bz << 4) + (bx))] = h;
 		}
 
 		public byte GetHeight(int bx, int bz)
@@ -411,7 +409,7 @@ namespace Alex.Worlds.Chunks
 			if ((bx < 0 || bx > ChunkWidth) || (bz < 0 || bz > ChunkDepth))
 				return 255;
 
-			return (byte) Height[((bz << 4) + (bx))];
+			return (byte) _height[((bz << 4) + (bx))];
 		}
 
 		public void SetBiome(int bx, int by, int bz, int biome)
@@ -419,7 +417,7 @@ namespace Alex.Worlds.Chunks
 			if ((bx < 0 || bx > ChunkWidth) || (bz < 0 || bz > ChunkDepth))
 				return;
 
-			BiomeId[(by << 8 | bz << 4 | bx)] = biome;
+			_biomeId[(by << 8 | bz << 4 | bx)] = biome;
 		}
 
 		public int GetBiome(int bx, int by, int bz)
@@ -427,7 +425,7 @@ namespace Alex.Worlds.Chunks
 			if ((bx < 0 || bx > ChunkWidth) || (bz < 0 || bz > ChunkDepth))
 				return 0;
 
-			return BiomeId[(by << 8 | bz << 4 | bx)];
+			return _biomeId[(by << 8 | bz << 4 | bx)];
 		}
 
 		public byte GetBlocklight(int bx, int by, int bz)

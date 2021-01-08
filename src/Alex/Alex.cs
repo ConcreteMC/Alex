@@ -575,12 +575,17 @@ namespace Alex
 
 		protected override void Draw(GameTime gameTime)
 		{
+			GraphicsDevice.Present();
 			FpsMonitor.Update();
 			GraphicsDevice.RasterizerState = RasterizerState.CullClockwise;
 
 			GameStateManager.Draw(gameTime);
 			GuiManager.Draw(gameTime);
+
+			this.Metrics = GraphicsDevice.Metrics;
 		}
+
+		public GraphicsMetrics Metrics { get; set; } = new GraphicsMetrics();
 
 		private void InitializeGame(IProgressReceiver progressReceiver)
 		{
@@ -791,12 +796,15 @@ namespace Alex
 
 						if (result != LoadResult.Aborted)
 						{
-							var s = new DisconnectedScreen();
-							s.DisconnectedTextElement.TranslationKey = "multiplayer.status.cannot_connect";
-							s.ParentState = parentState;
-							GameStateManager.SetActiveState(s, false);
+							if (!(GameStateManager.GetActiveState() is DisconnectedScreen))
+							{
+								var s = new DisconnectedScreen();
+								s.DisconnectedTextElement.TranslationKey = "multiplayer.status.cannot_connect";
+								s.ParentState = parentState;
+								GameStateManager.SetActiveState(s, false);
 
-							worldProvider.Dispose();
+								worldProvider.Dispose();
+							}
 						}
 					}
 					finally

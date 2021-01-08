@@ -109,7 +109,8 @@ namespace Alex.Worlds
 			}
 		}
 
-		public BackgroundWorker BackgroundWorker { get; }
+		public  BackgroundWorker  BackgroundWorker { get; }
+		private List<IDisposable> _disposables = new List<IDisposable>();
 		public World(IServiceProvider serviceProvider, GraphicsDevice graphics, AlexOptions options,
 			NetworkProvider networkProvider)
 		{
@@ -173,8 +174,8 @@ namespace Alex.Worlds
 			}
 			
 			Player.KnownPosition = new PlayerLocation(GetSpawnPoint());
-
-			Options.FieldOfVision.ValueChanged += FieldOfVisionOnValueChanged;
+			_disposables.Add(options.FieldOfVision.Bind(FieldOfVisionOnValueChanged));
+			//Options.FieldOfVision.ValueChanged += FieldOfVisionOnValueChanged;
 			Camera.FOV = Options.FieldOfVision.Value;
 
 			PhysicsEngine.AddTickable(Player);
@@ -183,12 +184,14 @@ namespace Alex.Worlds
 			InventoryManager = new InventoryManager(guiManager);
 				
 			SkyRenderer = new SkyBox(serviceProvider, graphics, this);
+
+			_disposables.Add(
+				options.VideoOptions.RenderDistance.Bind(
+					(old, newValue) =>
+					{
+						Camera.SetRenderDistance(newValue);
+					}));
 			
-			options.VideoOptions.RenderDistance.Bind(
-				(old, newValue) =>
-				{
-					Camera.SetRenderDistance(newValue);
-				});
 			Camera.SetRenderDistance(options.VideoOptions.RenderDistance);
 
 			BackgroundWorker = new BackgroundWorker();
@@ -206,12 +209,7 @@ namespace Alex.Worlds
 		public EntityManager  EntityManager { get; set; }
 		public ChunkManager   ChunkManager  { get; private set; }
 		public PhysicsManager PhysicsEngine { get; set; }
-
-		public long Vertices
-        {
-            get { return ChunkManager.Vertices + EntityManager.VertexCount; }
-        }
-
+		
 		public int ChunkCount
         {
             get { return ChunkManager.ChunkCount; }
@@ -227,17 +225,7 @@ namespace Alex.Worlds
 			get { return ChunkManager.EnqueuedChunkUpdates; }
 		}
 
-		public void ResetChunks()
-        {
-            ChunkManager.ClearChunks();
-        }
-
-        public void RebuildChunks()
-        {
-          //  ChunkManager.RebuildAll();
-        }
-
-        public void ToggleWireFrame()
+		public void ToggleWireFrame()
         {
 	        ChunkManager.UseWireFrames = !ChunkManager.UseWireFrames;
         }
@@ -529,7 +517,8 @@ namespace Alex.Worlds
 
 			if (Options.VideoOptions.ClientSideLighting && Dimension == Dimension.Overworld)
 			{
-				new SkyLightCalculations().Calculate(this, source);
+				ChunkManager.SkyLightCalculator.Calculate(this, source);
+				//new SkyLightCalculations().Calculate(this, source);
 			}
 
 			ScheduleBlockUpdate(source, new BlockCoordinates(x + 1, y, z));
@@ -775,6 +764,12 @@ namespace Alex.Worlds
 		{
 			if (_destroyed) return;
 			_destroyed = true;
+
+			foreach (var disposable in _disposables)
+			{
+				disposable.Dispose();
+			}
+			_disposables.Clear();
 			
 			Ticker.UnregisterTicked(this);
 			Ticker.UnregisterTicked(EntityManager);

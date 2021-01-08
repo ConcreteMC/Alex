@@ -532,7 +532,7 @@ namespace Alex.Entities
 		    var camPos     = Level.Camera.Position;
 		    var lookVector = Level.Camera.Direction;
 
-		    List<BoundingBox> boundingBoxes = new List<BoundingBox>();
+		    //List<BoundingBox> boundingBoxes = new List<BoundingBox>();
 		   // var               ray           = new Ray(camPos, lookVector * 8f);
 		    
 		    for (float x = (float) (Width * Scale); x < 8f; x += 0.01f)
@@ -543,18 +543,10 @@ namespace Alex.Entities
 
 			    if (block != null && block.Block.HasHitbox)
 			    {
-				    boundingBoxes.Clear();
-				    
-				    if (block.Model != null)
-				    {
-					    boundingBoxes.AddRange(block.Model.GetBoundingBoxes(flooredBlock));
-				    }
-				    
-				    if (Level.EntityManager.TryGetBlockEntity(flooredBlock, out var blockEntity))
-				    {
-					   boundingBoxes.Add( blockEntity.GetBoundingBox(flooredBlock));
-				    }
-				    
+				    //boundingBoxes.Clear();
+
+				    var boundingBoxes = block.Block.GetBoundingBoxes(flooredBlock).ToArray();
+
 				    foreach (var bbox in boundingBoxes)
 				    {
 					    if (bbox.Contains(targetPoint) == ContainmentType.Contains)
@@ -567,13 +559,14 @@ namespace Alex.Entities
 
 						    Raytraced = targetPoint;
 						    HasRaytraceResult = true;
-						    _boundingBoxes.Add(bbox);
+						    _boundingBoxes.AddRange(boundingBoxes);
 
 						    if (SetPlayerAdjacentSelectedBlock(Level, x, camPos, lookVector, out Vector3 rawAdjacent))
 						    {
 							    AdjacentRaytraceBlock = Vector3.Floor(rawAdjacent);
 							    AdjacentRaytrace = rawAdjacent;
 						    }
+						    
 						    return;
 					    }
 				    }

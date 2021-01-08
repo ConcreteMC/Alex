@@ -753,8 +753,14 @@ namespace Alex.Net.Bedrock
 			return NetworkIdentifier;
 		}
 
+		private bool _closed = false;
 		public void Close()
 		{
+			if (_closed)
+				return;
+
+			_closed = true;
+			
 			State = ConnectionState.Unconnected;
 			Evicted = true;
 			

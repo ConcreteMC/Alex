@@ -129,7 +129,7 @@ namespace Alex.API
 			BoundingBox box,
 			Matrix view,
 			Matrix projection,
-			Color color, bool asCube = false)
+			Color color, bool asCube = false, BasicEffect effect = null)
 		{
 			if (_effect == null)
 			{
@@ -142,6 +142,9 @@ namespace Alex.API
 				};
 			}
 
+			if (effect == null)
+				effect = _effect;
+			
 			var corners = box.GetCorners();
 			for (var i = 0; i < 8; i++)
 			{
@@ -149,13 +152,13 @@ namespace Alex.API
 				Verts[i].Color = color;
 			}
 
-			_effect.View = view;
-			_effect.Projection = projection;
+			effect.View = view;
+			effect.Projection = projection;
 			
-			var oldDiffuse = _effect.DiffuseColor;
+			var oldDiffuse = effect.DiffuseColor;
 			//effect.DiffuseColor = color.ToVector3();
 
-			var alpha = _effect.Alpha;
+			var alpha = effect.Alpha;
 			if (asCube)
 			{
 				for (var index = 0; index < CubeVertices.Length; index++)
@@ -169,8 +172,8 @@ namespace Alex.API
 				var x = (box.Max.X - box.Min.X) + inflation;
 				var y = (box.Max.Y - box.Min.Y) + inflation;
 				var z = (box.Max.Z - box.Min.Z) + inflation;
-				_effect.World = Matrix.CreateScale(new Vector3(x,y,z)) * Matrix.CreateTranslation(box.Min - new Vector3(inflation / 2f));
-				_effect.Alpha = 0.5f;
+				effect.World = Matrix.CreateScale(new Vector3(x,y,z)) * Matrix.CreateTranslation(box.Min - new Vector3(inflation / 2f));
+				effect.Alpha = 0.5f;
 			}
 
 			foreach (var pass in _effect.CurrentTechnique.Passes)
@@ -194,9 +197,9 @@ namespace Alex.API
 				}
 			}
 
-			_effect.DiffuseColor = oldDiffuse;
-			_effect.World = Matrix.Identity;
-			_effect.Alpha = alpha;
+			effect.DiffuseColor = oldDiffuse;
+			effect.World = Matrix.Identity;
+			effect.Alpha = alpha;
 		}
 
 		#region Fields

@@ -23,5 +23,13 @@ namespace Alex.ResourcePackLib.Json.Models
 		/// Specifies whether or not to scale the faces across the whole block. Can be true or false. Defaults to false.
 		/// </summary>
 		public bool Rescale { get; set; } = false;
+
+		public ModelElementRotation Clone()
+		{
+			return new ModelElementRotation()
+			{
+				Angle = Angle, Axis = Axis, Origin = new Vector3(Origin.X, Origin.Y, Origin.Z), Rescale = Rescale
+			};
+		}
 	}
 }

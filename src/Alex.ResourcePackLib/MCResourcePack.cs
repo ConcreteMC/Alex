@@ -236,6 +236,37 @@ namespace Alex.ResourcePackLib
 				count++;
 			}
 
+			foreach (var m in models.Where(x => x.Value.Type == ModelType.Block)
+			   .OrderByDescending(x => !string.IsNullOrWhiteSpace(x.Value.ParentName)))
+			{
+				var model = m.Value;
+
+				if (model.Elements != null)
+				{
+					for (var index = 0; index < model.Elements.Length; index++)
+					{
+						var element = model.Elements[index];
+
+						if (element.Faces != null)
+						{
+							foreach (var face in element.Faces.ToArray())
+							{
+								if (face.Value != null && !string.IsNullOrWhiteSpace(face.Value.Texture))
+								{
+									var result = ResolveTexture(model, face.Value.Texture);
+
+									if (!string.IsNullOrWhiteSpace(result))
+									{
+										model.Elements[index].Faces[face.Key].Texture = result;
+									}
+								}
+
+								//face.Value.Texture
+							}
+						}
+					}
+				}
+			}
 			/*var blockStates = _blockStates.ToArray();
 			total = blockStates.Length;
 			count = 0;
@@ -461,7 +492,7 @@ namespace Alex.ResourcePackLib
 		{
 			if (_bitmapCache.TryGetValue(textureName, out var val))
 			{
-				bitmap = val.Value;
+				bitmap = val.Value.Clone();
 				return true;
 			}
 
@@ -558,7 +589,7 @@ namespace Alex.ResourcePackLib
 			}
 			catch (Exception ex)
 			{
-				Log.Error(ex, $"Error loading model.");
+				Log.Error(ex, $"Error loading model: ({location})");
 
 				return null;
 			}
@@ -568,7 +599,7 @@ namespace Alex.ResourcePackLib
 		{
 			if (_models.TryGetValue(resourceLocation, out var existingModel))
 				return existingModel;
-			
+
 			if (!string.IsNullOrWhiteSpace(model.ParentName) && !model.ParentName.Equals(resourceLocation.Path, StringComparison.OrdinalIgnoreCase))
 			{
 				ResourceLocation parentKey = new ResourceLocation(model.ParentName);
@@ -584,12 +615,35 @@ namespace Alex.ResourcePackLib
 
 				if (parent != null)
 				{
-					model.Parent = parent;
+					model.UpdateValuesFromParent(parent);
+					//model.Parent = parent;
 				}
 			}
-			
+
 			_models.Add(resourceLocation, model);
 			return model;
+		}
+		
+		private static string ResolveTexture(ResourcePackModelBase var, string texture)
+		{
+			if (texture[0] != '#')
+				return texture;
+
+			var original = texture;
+			var modified = texture.Substring(1);
+			if (var.Textures.TryGetValue(modified, out texture))
+			{
+				if (texture[0] == '#')
+				{
+					if (!var.Textures.TryGetValue(texture.Substring(1), out texture))
+					{
+						//texture = "no_texture";
+						return original;
+					}
+				}
+			}
+
+			return texture;
 		}
 		
 		public bool TryGetBlockModel(ResourceLocation modelName, out ResourcePackModelBase model)

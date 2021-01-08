@@ -141,10 +141,15 @@ namespace Alex.Net.Bedrock
 				SendData(data, new IPEndPoint(IPAddress.Broadcast, 19132));
 		}
 
+		private bool _stopped = false;
 		public void Stop()
 		{
 			try
 			{
+				if (_stopped)
+					return;
+
+				_stopped = true;
 				//Log.Info("Shutting down...");
 				Session?.Close();
 

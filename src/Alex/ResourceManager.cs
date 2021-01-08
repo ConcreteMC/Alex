@@ -170,7 +170,7 @@ namespace Alex
 			}
 			catch (Exception ex)
 			{
-				Log.Warn($"Failed to load.");
+				Log.Warn(ex, $"Failed to load.");
 			}
 
 			return null;
@@ -594,8 +594,9 @@ namespace Alex
 			bitmap = null;
 			foreach (var resourcePack in ActiveResourcePacks.Reverse())
 			{
-				if (resourcePack.TryGetBitmap(location, out bitmap))
+				if (resourcePack.TryGetBitmap(location, out var f))
 				{
+					bitmap = f;
 					return true;
 				}
 			}

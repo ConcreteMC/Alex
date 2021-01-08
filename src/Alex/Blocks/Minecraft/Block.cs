@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Alex.API.Blocks;
 using Alex.API.Resources;
 using Alex.API.Utils;
@@ -88,6 +89,19 @@ namespace Alex.Blocks.Minecraft
 			Transparent = false;
 			Renderable = true;
 			HasHitbox = true;
+		}
+
+		public virtual IEnumerable<BoundingBox> GetBoundingBoxes(Vector3 blockPos)
+		{
+			if (BlockState?.Model != null)
+			{
+				foreach (var bb in BlockState.Model.GetBoundingBoxes(blockPos))
+					yield return bb;
+			}
+			else
+			{
+				yield return new BoundingBox(blockPos, blockPos + Vector3.One);
+			}
 		}
 
 		public virtual Vector3 GetOffset(IModule3D noise, BlockCoordinates position)

@@ -88,19 +88,21 @@ namespace Alex.Graphics.Camera
 			Direction = Vector3.Transform(Vector3.Backward, rotationMatrix);
 
 
-			var heightOffset = new Vector3(0, 1.8f, 0);
+			var heightOffset = new Vector3(0, (float) TrackingEntity.Height, 0);
 			ViewMatrix = Matrix.CreateLookAt(Position + lookAtOffset, Target + heightOffset, Vector3.Up);
+			
+			_frustum = new BoundingFrustum(ViewMatrix * ProjectionMatrix);
 		}
 
 		public override void Update(IUpdateArgs args)
 		{
-			var entityLocation = TrackingEntity.RenderLocation;
+			var entityLocation = TrackingEntity.RenderLocation.ToVector3();
 			var entityPhysicalLocation = TrackingEntity.KnownPosition;
 			
 			if (_mode == EntityCameraMode.FirstPerson)
 			{
 				MoveTo(
-					entityLocation + new Vector3(0, Player.EyeLevel, 0),
+					entityLocation + new Vector3(0, (float) (TrackingEntity.Height - 0.175f), 0),
 					new Vector3(
 						MathHelper.ToRadians(entityPhysicalLocation.HeadYaw),
 						MathHelper.ToRadians(entityPhysicalLocation.HeadYaw),
@@ -108,7 +110,7 @@ namespace Alex.Graphics.Camera
 			}
 			else
 			{
-				MoveTo(entityLocation.ToVector3(), 
+				MoveTo(entityLocation, 
 					new Vector3(MathHelper.ToRadians(entityPhysicalLocation.HeadYaw), MathHelper.ToRadians(entityPhysicalLocation.HeadYaw), MathHelper.ToRadians(entityPhysicalLocation.Pitch)));
 			}
 		}

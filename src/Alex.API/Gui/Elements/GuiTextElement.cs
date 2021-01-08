@@ -96,6 +96,8 @@ namespace Alex.API.Gui.Elements
 		    }
 	    }
 
+		public TextAlignment TextAlignment { get; set; } = TextAlignment.None;
+
 		private bool _fixedSize = false;
 		[DebuggerVisible]
 		public bool HasFixedSize
@@ -170,26 +172,57 @@ namespace Alex.API.Gui.Elements
 		protected override void OnDraw(GuiSpriteBatch graphics, GameTime gameTime)
         {
 	        var text = _renderText;
-            if (!string.IsNullOrWhiteSpace(text))
-            {
-	            //base.OnDraw(graphics, gameTime);
-	            
-				/*var size = Font.MeasureString(text, Scale);
-				while (size.X > RenderBounds.Width && text.Length >= 1)
-				{
-					text = text.Substring(0, text.Length - 1);
-					size = Font.MeasureString(text, Scale);
-				}*/
-				
-	           // graphics.FillRectangle(new Rectangle(RenderPosition.ToPoint(), Size.ToPoint()), BackgroundOverlay);
-	           if (HasBackground && BackgroundOverlay.HasValue && BackgroundOverlay.Color.HasValue)
-	           {
-		           graphics.SpriteBatch.FillRectangle(new Rectangle(RenderPosition.ToPoint(), Size /*GetSize(text, _scale).ToPoint()*/), BackgroundOverlay.Color.Value);
-	           }
 
-	           Font.DrawString(graphics.SpriteBatch, text, RenderPosition, TextColor, FontStyle, _scale, TextOpacity, Rotation, RotationOrigin);
-	          //  graphics.DrawString(RenderPosition, text, Font, TextColor, FontStyle, Scale, Rotation, RotationOrigin, TextOpacity);
-			}
+	        if (!string.IsNullOrWhiteSpace(text))
+	        {
+		        //base.OnDraw(graphics, gameTime);
+
+		        /*var size = Font.MeasureString(text, Scale);
+		        while (size.X > RenderBounds.Width && text.Length >= 1)
+		        {
+			        text = text.Substring(0, text.Length - 1);
+			        size = Font.MeasureString(text, Scale);
+		        }*/
+
+		        // graphics.FillRectangle(new Rectangle(RenderPosition.ToPoint(), Size.ToPoint()), BackgroundOverlay);
+		        //if (HasBackground && BackgroundOverlay.HasValue && BackgroundOverlay.Color.HasValue)
+		        // {
+		        //   graphics.SpriteBatch.FillRectangle(new Rectangle(RenderPosition.ToPoint(), Size /*GetSize(text, _scale).ToPoint()*/), BackgroundOverlay.Color.Value);
+		        // }
+		        var renderPosition = RenderPosition;
+
+		        foreach (var line in text.Split('\n'))
+		        {
+			        var size     = Font.MeasureString(line, _scale);
+			        var position = renderPosition;
+
+			        if ((TextAlignment & TextAlignment.Right) != 0)
+			        {
+				        position.X = RenderBounds.Right - size.X;
+			        }
+			        
+			        if ((TextAlignment & TextAlignment.Center) != 0)
+			        {
+				        position.X = RenderBounds.Left + (size.X / 2f);
+			        }
+
+			        if (HasBackground && BackgroundOverlay.HasValue && BackgroundOverlay.Color.HasValue)
+			        {
+				        var p = position.ToPoint();
+				        var s = size.ToPoint();
+
+				        graphics.SpriteBatch.FillRectangle(
+					        new Rectangle(p, s),
+					        BackgroundOverlay.Color.Value);
+			        }
+
+			        Font.DrawString(
+				        graphics.SpriteBatch, line, position, TextColor, FontStyle, _scale, TextOpacity, Rotation,
+				        RotationOrigin);
+
+			        renderPosition.Y += size.Y;
+		        }
+	        }
         }
 
 

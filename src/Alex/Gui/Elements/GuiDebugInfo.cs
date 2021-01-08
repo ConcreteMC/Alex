@@ -32,49 +32,53 @@ namespace Alex.Gui.Elements
 			});
         }
 
-        public void AddDebugLeft(string text)
+        public void AddDebugLeft(string text, bool hasBackground = true)
         {
-            _leftContainer.AddChild(new GuiTextElement(text, false)
-            {
-                TextColor = TextColor.White,
-                FontStyle = FontStyle.DropShadow,
-                Scale = 1f,
-                BackgroundOverlay = Color.Black * 0.25f
-            });
-        }
-
-        public void AddDebugLeft(Func<string> getDebugString, TimeSpan interval = new TimeSpan())
-        {
-            _leftContainer.AddChild(new GuiAutoUpdatingTextElement(getDebugString, false)
+            _leftContainer.AddChild(new GuiTextElement(text, hasBackground)
             {
                 TextColor = TextColor.White,
                 FontStyle = FontStyle.DropShadow,
                 Scale = 1f,
                 BackgroundOverlay = Color.Black * 0.25f,
-                Interval = interval
+                TextAlignment = TextAlignment.Left
             });
         }
 
-        public void AddDebugRight(string text)
+        public void AddDebugLeft(Func<string> getDebugString, TimeSpan interval = new TimeSpan(), bool hasBackground = true)
         {
-            _rightContainer.AddChild(new GuiTextElement(text, false)
-            {
-                TextColor = TextColor.White,
-                FontStyle = FontStyle.DropShadow,
-                Scale = 1f,
-                BackgroundOverlay = Color.Black * 0.25f
-            });
-        }
-
-        public void AddDebugRight(Func<string> getDebugString, TimeSpan interval = new TimeSpan())
-        {
-            _rightContainer.AddChild(new GuiAutoUpdatingTextElement(getDebugString, false)
+            _leftContainer.AddChild(new GuiAutoUpdatingTextElement(getDebugString, hasBackground)
             {
                 TextColor = TextColor.White,
                 FontStyle = FontStyle.DropShadow,
                 Scale = 1f,
                 BackgroundOverlay = Color.Black * 0.25f,
-                Interval = interval
+                Interval = interval,
+                TextAlignment = TextAlignment.Left
+            });
+        }
+
+        public void AddDebugRight(string text, bool hasBackground = true)
+        {
+            _rightContainer.AddChild(new GuiTextElement(text, hasBackground)
+            {
+                TextColor = TextColor.White,
+                FontStyle = FontStyle.DropShadow,
+                Scale = 1f,
+                BackgroundOverlay = Color.Black * 0.25f,
+                TextAlignment = TextAlignment.Right
+            });
+        }
+
+        public void AddDebugRight(Func<string> getDebugString, TimeSpan interval = new TimeSpan(), bool hasBackground = true)
+        {
+            _rightContainer.AddChild(new GuiAutoUpdatingTextElement(getDebugString, hasBackground)
+            {
+                TextColor = TextColor.White,
+                FontStyle = FontStyle.DropShadow,
+                Scale = 1f,
+                BackgroundOverlay = Color.Black * 0.25f,
+                Interval = interval,
+                TextAlignment = TextAlignment.Right
 			});
         }
 

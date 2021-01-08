@@ -286,14 +286,14 @@ namespace Alex.Worlds
 		    var min = box.Min;
 		    var max = box.Max;
 
-		    var minX = (int) Math.Floor(min.X);
-		    var maxX = (int) Math.Ceiling(max.X);
+		    var minX = (int) MathF.Floor(min.X);
+		    var maxX = (int) MathF.Ceiling(max.X);
 
-		    var minZ = (int) Math.Floor(min.Z);
-		    var maxZ = (int) Math.Ceiling(max.Z);
+		    var minZ = (int) MathF.Floor(min.Z);
+		    var maxZ = (int) MathF.Ceiling(max.Z);
 
-		    var minY = (int) Math.Floor(min.Y);
-		    var maxY = (int) Math.Ceiling(max.Y);
+		    var minY = (int) MathF.Floor(min.Y);
+		    var maxY = (int) MathF.Ceiling(max.Y);
 
 		    for (int x = minX; x < maxX; x++)
 		    for (int y = minY; y < maxY; y++)
@@ -303,13 +303,13 @@ namespace Alex.Worlds
 
 			    var block = world.GetBlockState(coords);
 
-			    if (block == null || block.Model == null)
+			    if (block == null)
 				    continue;
 
 			    if (!block.Block.Solid)
 				    continue;
 
-			    foreach (var blockBox in block.Model.GetBoundingBoxes(coords))
+			    foreach (var blockBox in block.Block.GetBoundingBoxes(coords))
 			    {
 				    if (box.Intersects(blockBox))
 				    {

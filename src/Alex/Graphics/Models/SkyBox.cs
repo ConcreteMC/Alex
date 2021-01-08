@@ -22,9 +22,9 @@ namespace Alex.Graphics.Models
 		private float _moonX = 1f/4f;
 		private float _moonY = 1f/2f;
 
-		private BasicEffect SkyPlaneEffect { get; set; }
-	    private BasicEffect  CelestialPlaneEffect { get; set; }
-		private BasicEffect CloudsPlaneEffect { get; set; }
+		private BasicEffect     SkyPlaneEffect       { get; set; }
+	    private BasicEffect     CelestialPlaneEffect { get; set; }
+		private AlphaTestEffect CloudsPlaneEffect    { get; set; }
 
 	    private PooledVertexBuffer CloudsPlane { get; set; }
         private PooledVertexBuffer SkyPlane { get; set; }
@@ -156,10 +156,15 @@ namespace Alex.Graphics.Models
 
 		private void SetupClouds(GraphicsDevice device, int planeDistance)
 		{
-			CloudsPlaneEffect = new BasicEffect(device);
+			CloudsPlaneEffect = new AlphaTestEffect(device);
 			CloudsPlaneEffect.Texture = CloudTexture;
-			CloudsPlaneEffect.TextureEnabled = true;
-			CloudsPlaneEffect.Alpha = 0.5f;
+			CloudsPlaneEffect.FogEnabled = true;
+			CloudsPlaneEffect.FogEnd = 64 * 0.8f;
+			CloudsPlaneEffect.FogStart = 0f;
+			//CloudsPlaneEffect.FogEnabled = false;
+			//CloudsPlaneEffect.DiffuseColor
+			//CloudsPlaneEffect.TextureEnabled = true;
+			//CloudsPlaneEffect.Alpha = 0.5f;
 			
 			var cloudVertices = new[]
 			{
@@ -331,8 +336,6 @@ namespace Alex.Graphics.Models
 		    {
 			    CloudsPlaneEffect.View = camera.ViewMatrix;
 			    CloudsPlaneEffect.Projection = camera.ProjectionMatrix;
-			    
-			    CloudsPlaneEffect.World = Matrix.CreateTranslation(position.X, 127, position.Z);
 		    }
 	    }
 
@@ -371,8 +374,11 @@ namespace Alex.Graphics.Models
 			    DrawSun(renderArgs, renderArgs.Camera.Position);
 
 			    DrawMoon(renderArgs, renderArgs.Camera.Position);
-			    
+
 			    renderArgs.GraphicsDevice.BlendState = backup;
+			    
+			    if (EnableClouds)
+				    DrawClouds(renderArgs, renderArgs.Camera.Position);
 		    }
 
 			DrawVoid(renderArgs, renderArgs.Camera.Position);
@@ -403,8 +409,12 @@ namespace Alex.Graphics.Models
 		private void DrawClouds(IRenderArgs renderArgs, Vector3 position)
 		{
 			// Clouds
-			//CloudsPlaneEffect.AmbientLightColor = WorldSkyColor.ToVector3();
-
+		//	CloudsPlaneEffect.
+		//	CloudsPlaneEffect.DiffuseColor = WorldSkyColor.ToVector3();
+			CloudsPlaneEffect.FogColor = AtmosphereColor.ToVector3();
+			CloudsPlaneEffect.World = Matrix.CreateTranslation(0, 16, 0) 
+			                          * Matrix.CreateTranslation(position);
+			
             renderArgs.GraphicsDevice.SetVertexBuffer(CloudsPlane);
 			foreach (var pass in CloudsPlaneEffect.CurrentTechnique.Passes)
 			{

@@ -43,43 +43,52 @@ namespace Alex.Graphics.Models.Items
 
             List<VertexPositionColor> vertices = new List<VertexPositionColor>();
          
-            if (pack.TryGetBitmap(t, out var rawTexture))
+            if (pack.TryGetBitmap(t, out var texture))
             {
-                var texture = rawTexture.CloneAs<Rgba32>();
-
-                float toolPosX = 0.0f;
-                float toolPosY = 1.0f;
-                float toolPosZ = (1f / 16f) * 7.5f;
-
-                for (int y = 0; y < texture.Height; y++)
+                try
                 {
-                    for (int x = 0; x < texture.Width; x++)
+                    //  var texture = rawTexture.CloneAs<Rgba32>();
+
+                    float toolPosX = 0.0f;
+                    float toolPosY = 1.0f;
+                    float toolPosZ = (1f / 16f) * 7.5f;
+
+                    for (int y = 0; y < texture.Height; y++)
                     {
-                        var pixel = texture[x, y];
-                        if (pixel.A == 0)
+                        for (int x = 0; x < texture.Width; x++)
                         {
-                            continue;
+                            var pixel = texture[x, y];
+
+                            if (pixel.A == 0)
+                            {
+                                continue;
+                            }
+
+                            Color color = new Color(pixel.R, pixel.G, pixel.B, pixel.A);
+                            var origin = new Vector3(
+                                (toolPosX + (1f / texture.Width) * x), toolPosY - (1f / texture.Height) * y, toolPosZ);
+                            
+                            ItemModelCube built = new ItemModelCube(
+                                new Vector3(1f / texture.Width, 1f / texture.Height, 1f / 16f), Vector3.Zero);
+
+                            built.BuildCube(color);
+
+                            vertices.AddRange(
+                                Modify(
+                                    built.Front.Concat(built.Bottom).Concat(built.Back).Concat(built.Top)
+                                       .Concat(built.Left).Concat(built.Right), origin));
+                            //vertices.AddRange(built.Front);
+                           // vertices.AddRange(built.Bottom);
+                           // vertices.AddRange(built.Back);
+                            //vertices.AddRange(built.Top);
+                           // vertices.AddRange(built.Left);
+                           // vertices.AddRange(built.Right);
                         }
-
-                        Color color = new Color(pixel.R, pixel.G, pixel.B, pixel.A);
-
-                        ItemModelCube built =
-                            new ItemModelCube(new Vector3(1f / texture.Width, 1f / texture.Height, 1f / 16f));
-                        built.BuildCube(color);
-
-                        var origin = new Vector3(
-                            (toolPosX + (1f / texture.Width) * x),
-                            toolPosY - (1f / texture.Height) * y,
-                            toolPosZ
-                        );
-
-                        vertices.AddRange(Modify(built.Front, origin));
-                        vertices.AddRange(Modify(built.Bottom, origin));
-                        vertices.AddRange(Modify(built.Back, origin));
-                        vertices.AddRange(Modify(built.Top, origin));
-                        vertices.AddRange(Modify(built.Left, origin));
-                        vertices.AddRange(Modify(built.Right, origin));
                     }
+                }
+                finally
+                {
+                    texture.Dispose();
                 }
             }
 

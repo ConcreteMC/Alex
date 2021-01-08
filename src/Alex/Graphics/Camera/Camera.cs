@@ -8,8 +8,8 @@ namespace Alex.Graphics.Camera
 {
     public class Camera : ICamera
     {
-	    private BoundingFrustum _frustum = new BoundingFrustum(Matrix.Identity);
-	    public  BoundingFrustum BoundingFrustum => _frustum;// new BoundingFrustum(ViewMatrix * ProjectionMatrix);
+	    protected BoundingFrustum _frustum = new BoundingFrustum(Matrix.Identity);
+	    public    BoundingFrustum BoundingFrustum => _frustum;// new BoundingFrustum(ViewMatrix * ProjectionMatrix);
 
 	    /// <summary>
 	    /// The nearest distance the camera will use

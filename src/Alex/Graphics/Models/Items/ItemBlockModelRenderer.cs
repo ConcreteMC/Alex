@@ -43,7 +43,7 @@ namespace Alex.Graphics.Models.Items
             if (Vertices != null)
                 return true;
             
-            ChunkData chunkData = new ChunkData();
+            ChunkData chunkData = new ChunkData(ChunkCoordinates.Zero);
             _block.Model.GetVertices(new ItemRenderingWorld(_block.Block), chunkData, BlockCoordinates.Zero, Vector3.Zero, _block.Block);
             
             var rawVertices = chunkData.Vertices;

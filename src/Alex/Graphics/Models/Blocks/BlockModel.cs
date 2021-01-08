@@ -227,35 +227,16 @@ namespace Alex.Graphics.Models.Blocks
 
 		    //(byte)Math.Min(Math.Max(0, blockLight + skyLight), 15);
 	    }
-		
-		protected static string ResolveTexture(ResourcePackLib.Json.Models.ResourcePackModelBase var, string texture)
-		{
-			if (texture[0] != '#')
-				return texture;
-			
-			var modified = texture.Substring(1);
-			if (var.Textures.TryGetValue(modified, out texture))
-			{
-				if (texture[0] == '#')
-				{
-					if (!var.Textures.TryGetValue(texture.Substring(1), out texture))
-					{
-						texture = "no_texture";
-					}
-				}
-			}
 
-			return texture;
-		}
-
-		protected BlockTextureData GetTextureUVMap(ResourceManager resources,
+	    protected BlockTextureData GetTextureUVMap(ResourceManager resources,
 			ResourceLocation texture,
 			float x1,
 			float x2,
 			float y1,
 			float y2,
 			int rot,
-			Color color)
+			Color color,
+			TextureInfo textureInfo = null)
 		{
 			if (resources == null)
 			{
@@ -270,7 +251,10 @@ namespace Alex.Graphics.Models.Blocks
 					color, color);
 			}
 
-			var textureInfo = resources.Atlas.GetAtlasLocation(texture);
+			if (textureInfo == null)
+			{
+				textureInfo = resources.Atlas.GetAtlasLocation(texture);
+			}
 
 			var tw = textureInfo.Width;
 			var th = textureInfo.Height;

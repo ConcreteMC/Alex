@@ -103,6 +103,7 @@ namespace Alex.Items
             ConcurrentDictionary<ResourceLocation, Func<Item>> items = new ConcurrentDictionary<ResourceLocation, Func<Item>>();
             
            // for(int i = 0; i < blocks.Count; i++)
+           // List<ResourceLocation> addedCurrently = n
            int done = 0;
            Parallel.ForEach(
 	           blocks, e =>
@@ -187,16 +188,19 @@ namespace Alex.Items
 			           if (model == null)
 			           {
 				           Log.Debug($"Missing item render definition for block {entry.Key}, using default.");
-				           model = new ResourcePackItem() {Display = _defaultDisplayElements};
+				         //  model = new ResourcePackItem() {Display = _defaultDisplayElements};
 			           }
-
-			           item.Renderer = new ItemBlockModelRenderer(bs, model, resources);
-			           item.Renderer.Cache(resources);
-
-
-			           if (!items.TryAdd(entry.Key, () => { return item.Clone(); }))
+			           else
 			           {
-				           items[entry.Key] = () => { return item.Clone(); };
+
+				           item.Renderer = new ItemBlockModelRenderer(bs, model, resources);
+				           item.Renderer.Cache(resources);
+
+
+				           if (!items.TryAdd(entry.Key, () => { return item.Clone(); }))
+				           {
+					          // items[entry.Key] = () => { return item.Clone(); };
+				           }
 			           }
 		           }
 		           finally
@@ -286,25 +290,6 @@ namespace Alex.Items
 		           if (renderer != null)
 					item.Renderer = renderer;
 
-		           /*foreach (var it in ResourcePack.ItemModels)
-		           {
-			           if (it.Key.Path.Equals(resourceLocation.Path, StringComparison.OrdinalIgnoreCase))
-			           {
-				           //Log.Info($"Model found: {entry.Key} = {it.Key}");
-				          
-				           if (ItemRenderers.TryGetValue(it.Key, out renderer)) { }
-				           else if (ItemRenderers.TryGetValue(key, out renderer)) { }
-
-				           if (renderer != null)
-				           {
-					           //Log.Debug($"Found renderer for {entry.Key}, textures: {it.Value.Textures.Count}");
-					           item.Renderer = renderer;
-
-					           break;
-				           }
-			           }
-		           }*/
-
 		           if (item.Renderer == null)
 		           {
 			           Log.Warn($"Could not find item model renderer for: {resourceLocation}");
@@ -312,7 +297,8 @@ namespace Alex.Items
 
 		           if (!items.TryAdd(resourceLocation, () => { return item.Clone(); }))
 		           {
-			           items[resourceLocation] = () => { return item.Clone(); };
+			           //var oldItem = items[resourceLocation];
+			         //  items[resourceLocation] = () => { return item.Clone(); };
 		           }
 	           });
 

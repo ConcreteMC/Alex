@@ -91,7 +91,8 @@ namespace Alex.Worlds.Multiplayer.Java
 		//private DedicatedThreadPool ThreadPool;
 		public string Hostname { get; set; }
 		
-		private JavaNetworkProvider NetworkProvider { get; }
+		private          JavaNetworkProvider NetworkProvider { get; }
+		private readonly List<IDisposable>   _disposables = new List<IDisposable>();
 		public JavaWorldProvider(Alex alex, IPEndPoint endPoint, PlayerProfile profile, out NetworkProvider networkProvider)
 		{
 			Alex = alex;
@@ -109,7 +110,7 @@ namespace Alex.Worlds.Multiplayer.Java
 			NetworkProvider = new JavaNetworkProvider(Client);;
 			networkProvider = NetworkProvider;
 
-			Options.VideoOptions.RenderDistance.Bind(RenderDistanceSettingChanged);
+			_disposables.Add(Options.VideoOptions.RenderDistance.Bind(RenderDistanceSettingChanged));
 		}
 
 		private void RenderDistanceSettingChanged(int oldvalue, int newvalue)
@@ -140,7 +141,7 @@ namespace Alex.Worlds.Multiplayer.Java
 		private bool _disconnectShown = false;
 		public void ShowDisconnect(string reason, bool useTranslation = false, bool force = false)
 		{
-			if (Alex.GameStateManager.GetActiveState() is DisconnectedScreen s && force)
+			if (_disconnectShown && force && Alex.GameStateManager.GetActiveState() is DisconnectedScreen s)
 			{
 				if (useTranslation)
 				{
@@ -2427,6 +2428,13 @@ namespace Alex.Worlds.Multiplayer.Java
 		public override void Dispose()
 		{
 			base.Dispose();
+
+			foreach (var disposable in _disposables.ToArray())
+			{
+				disposable.Dispose();
+			}
+			
+			_disposables.Clear();
 
 			Client.Stop();
 			TcpClient.Dispose();
