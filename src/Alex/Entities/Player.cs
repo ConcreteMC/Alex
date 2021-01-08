@@ -894,5 +894,30 @@ namespace Alex.Entities
 			
 			base.OnTick();
 		}
-	}
+
+	    public void LookAt(Vector3 targetPosition, bool aimWithHead)
+	    {
+		    var    view        = targetPosition - KnownPosition.ToVector3();
+		    var    dz          = view.Z;
+		    var    dx          = view.X;
+		    
+		    float tanOutput   = 90f - MathUtils.RadianToDegree(MathF.Atan(dx / (dz)));
+		    float thetaOffset = 270f;
+		    if (dz < 0)
+		    {
+			    thetaOffset = 90;
+		    }
+		    var yaw = thetaOffset + tanOutput;
+
+		    if (aimWithHead)
+		    {
+			    var bDiff = MathF.Sqrt((dx * dx) + (dz * dz));
+			    var dy    = (KnownPosition.Y + Height) - (targetPosition.Y);
+			    KnownPosition.Pitch = MathUtils.RadianToDegree(MathF.Atan(dy / (bDiff)));
+		    }
+
+		    KnownPosition.Yaw = yaw;
+		    KnownPosition.HeadYaw = yaw;
+	    }
+    }
 }

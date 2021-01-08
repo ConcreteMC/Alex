@@ -689,6 +689,10 @@ namespace Alex.Worlds.Multiplayer.Java
 			{
 				HandleEntityHeadLook(headlook);
 			}
+			else if (packet is FacePlayerPacket facePlayerPacket)
+			{
+				HandleFacePlayer(facePlayerPacket);
+			}
 			else if (packet is EntityVelocity velocity)
 			{
 				HandleEntityVelocity(velocity);
@@ -1658,12 +1662,14 @@ namespace Alex.Worlds.Multiplayer.Java
 			World.BackgroundWorker.Enqueue(
 				() =>
 				{
-					if (SkinUtils.TryGetSkin(skinJson, Alex.GraphicsDevice, out var skin, out var skinSlim))
+					SkinUtils.TryGetSkin(skinJson, Alex.GraphicsDevice, (skin, slim) =>
 					{
-						entity.GeometryName = skinSlim ? "geometry.humanoid.customSlim" : "geometry.humanoid.custom";
-
-						entity.UpdateSkin(skin);
-					}
+						if (skin != null)
+						{
+							entity.GeometryName = slim ? "geometry.humanoid.customSlim" : "geometry.humanoid.custom";
+							entity.UpdateSkin(skin);
+						}
+					});
 				});
 		}
 
@@ -1696,6 +1702,26 @@ namespace Alex.Worlds.Multiplayer.Java
 			{
 				OnGround = packet.OnGround
 			}, true);
+		}
+
+		private void HandleFacePlayer(FacePlayerPacket packet)
+		{
+			bool    isEntity       = packet.IsEntity;
+			Vector3 targetPosition = packet.Target;
+			if (isEntity)
+			{
+				if (World.TryGetEntity(packet.EntityId, out var entity))
+				{
+					targetPosition = entity.RenderLocation.ToVector3();
+
+					if (packet.LookAtEyes)
+					{
+						targetPosition.Y += (float)entity.Height;
+					}
+				}
+			}
+
+			World.Player.LookAt(targetPosition, packet.AimWithHead);
 		}
 
 		private void HandleEntityHeadLook(EntityHeadLook packet)

@@ -58,13 +58,13 @@ namespace Alex.Graphics.Models.Entity
 			if (model != null)
 			{
 				var bones = new Dictionary<string, ModelBone>();
-				Cache(texture, model, bones);
+				BuildModel(texture, model, bones);
 
 				Bones = bones;
 			}
 		}
 
-		private void Cache(PooledTexture2D texture, EntityModel model, Dictionary<string, ModelBone> modelBones)
+		private void BuildModel(PooledTexture2D texture, EntityModel model, Dictionary<string, ModelBone> modelBones)
 		{
 			List<VertexPositionColorTexture> vertices = new List<VertexPositionColorTexture>();
 
@@ -98,7 +98,7 @@ namespace Alex.Graphics.Models.Entity
 				VertexPositionColorTexture.VertexDeclaration, vertices.Count, BufferUsage.WriteOnly);
 			VertexBuffer.SetData(vertices.ToArray());
 
-			Effect = new AlphaTestEffect(texture.GraphicsDevice);
+			Effect = new AlphaTestEffect(Alex.Instance.GraphicsDevice);
 			Effect.Texture = texture;
 			Effect.VertexColorEnabled = true;
 			

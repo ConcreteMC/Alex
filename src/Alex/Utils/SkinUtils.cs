@@ -211,9 +211,9 @@ namespace Alex.Utils
 			return output;
 		}
 		
-		public static bool TryGetSkin(string json, GraphicsDevice graphics, out PooledTexture2D texture, out bool isSlim)
+		public static void TryGetSkin(string json, GraphicsDevice graphics, Action<PooledTexture2D, bool> onComplete)
 		{
-			isSlim = false;
+			//isSlim = false;
 			try
 			{
 				TexturesResponse r = JsonConvert.DeserializeObject<TexturesResponse>(json);
@@ -228,8 +228,6 @@ namespace Alex.Utils
 							data = wc.DownloadData(url);
 						}
 
-						ManualResetEvent resetEvent = new ManualResetEvent(false);
-
 						PooledTexture2D text = null;
 						Alex.Instance.UIThreadQueue.Enqueue(
 							() =>
@@ -240,15 +238,16 @@ namespace Alex.Utils
 										"SkinUtils", graphics, ms); // Texture2D.FromStream(graphics, ms);
 								}
 
-								resetEvent.Set();
+								onComplete?.Invoke(text, r.textures.SKIN.metadata?.model == "slim");
+								//resetEvent.Set();
 							});
 						
-						resetEvent.WaitOne();
+						//resetEvent.WaitOne();
 
-						texture = text;
-						isSlim = (r.textures.SKIN.metadata?.model == "slim");
+						//texture = text;
+						//isSlim = (r.textures.SKIN.metadata?.model == "slim");
 
-						return true;
+						//return true;
 					}
 				}
 			}
@@ -257,8 +256,8 @@ namespace Alex.Utils
 				Log.Warn(ex, $"Could not retrieve skin: {ex.ToString()}");
 			}
 
-			texture = null;
-			return false;
+			//texture = null;
+			//return false;
 		}
 		
 		public static bool TryGetSkin(Uri skinUri, GraphicsDevice graphics, out PooledTexture2D texture)
