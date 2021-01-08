@@ -104,7 +104,8 @@ namespace Alex.Entities
 			}
 		}
 
-		public  Vector3      Velocity      { get; set; } = Vector3.Zero;
+		public float   Slipperines { get; set; } = 0.6f;
+		public Vector3 Velocity    { get; set; } = Vector3.Zero;
 		
 		//public HealthManager HealthManager { get; set; }
 		public string NameTag { get; set; }
@@ -306,7 +307,10 @@ namespace Alex.Entities
 					IsFlying ? Networking.Java.Packets.Play.EntityProperties.FlyingSpeed :
 						Networking.Java.Packets.Play.EntityProperties.MovementSpeed]).Calculate();
 
-			return (modifier)- 0.00475f;
+			if (IsSneaking)
+				modifier *= 0.29997683577f;
+			
+			return (modifier);
 		}
 
 		private bool _skipRendering = false;

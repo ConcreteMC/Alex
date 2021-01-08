@@ -135,20 +135,80 @@ namespace Alex.Worlds
 				var block = World.GetBlockState(blockcoords.X, blockcoords.Y, blockcoords.Z);
 				slipperiness = (float) block.Block.BlockMaterial.Slipperiness;
 					
-				movement *= (float)entity.CalculateMovementSpeed() * (0.1627714f / (slipperiness * slipperiness * slipperiness));
+				//movement *= (float)entity.CalculateMovementSpeed() * (0.1627714f / (slipperiness * slipperiness * slipperiness));
+				movement *= (float) entity.CalculateMovementSpeed() * (0.1627714f / (slipperiness * slipperiness * slipperiness));
 			}
 
 			return movement;
 		}
 
+		private float GetSlipperiness(Entity entity)
+		{
+			var blockcoords = entity.KnownPosition.GetCoordinates3D();
+
+			//if (entity.KnownPosition.Y % 1 <= 0.01f)
+			//{
+			//	blockcoords = blockcoords.BlockDown();
+			//	}
+			
+			if (entity.BoundingBox.Min.Y % 1 < 0.05f)
+			{
+				blockcoords.Y -= 1;
+			}
+				
+			var block = World.GetBlockState(blockcoords.X, blockcoords.Y, blockcoords.Z);
+			var slipperiness = (float) block.Block.BlockMaterial.Slipperiness;
+
+			return slipperiness;
+		}
+
+		private Vector3 ConvertHeading(Entity entity, float multiplier)
+		{
+			var heading  = entity.Movement.Heading;
+			var strafe   = heading.X;
+			var forward  = heading.Z;
+			var vertical = entity.IsFlying ? heading.Y : 0f;
+			
+			var speed    = MathF.Sqrt(strafe * strafe + forward * forward + vertical * vertical);
+			if (speed < 0.01f)
+				return Vector3.Zero;
+
+			speed = multiplier / MathF.Max(speed, 1f);
+
+			strafe *= speed;
+			forward *= speed;
+			vertical *= speed;
+			
+
+			return new Vector3(strafe, vertical, forward);
+		}
+		
 		private void UpdatePhysics(Entity e)
 		{
 			if (!e.IsSpawned)
 				return;
 			//var velocityBeforeAdjustment = new Vector3(e.Velocity.X, e.Velocity.Y, e.Velocity.Z);
 
-			e.Velocity += (ConvertMovementIntoVelocity(e, out var slipperiness));
+			var slipperiness = GetSlipperiness(e);
+			slipperiness *= 0.91f;
 
+			//var mod = 1f;
+
+			//if (e.IsSprinting)
+			//	mod = 1.3f;
+			//else if (e.IsSneaking)
+			//	mod = 0.3f;
+
+			//var movementSpeed = (float)( e.IsFlying ? e.FlyingSpeed : e.MovementSpeed);
+			
+			var multiplier = (float)e.CalculateMovementSpeed() * (0.1627714f / (slipperiness * slipperiness * slipperiness));
+			
+			e.Velocity += ConvertHeading(e, e.KnownPosition.OnGround ? multiplier : 0.02f);
+			//var momentum     = e.Velocity * e.Slipperines * 0.91f;
+			//var acceleration = (ConvertMovementIntoVelocity(e, out var slipperiness));
+			e.Slipperines = slipperiness;
+			
+			//e.Velocity = new Vector3(momentum.X, e.Velocity.Y, momentum.Z) + acceleration;
 			//if (e.HasCollision)
 			{
 				//e.Velocity = TruncateVelocity(e.Velocity);
