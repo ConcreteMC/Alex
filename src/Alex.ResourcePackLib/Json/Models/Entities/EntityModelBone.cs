@@ -19,10 +19,10 @@ namespace Alex.ResourcePackLib.Json.Models.Entities
 		/// Bone that this bone is relative to.  If the parent bone moves, this bone will move along with it.
 		/// </summary>
 		[J("parent", NullValueHandling = N.Ignore)]
-		public string Parent { get; set; } = string.Empty;
+		public string Parent { get; set; } = null;
 
 		[J("locators", NullValueHandling = N.Ignore)]
-        public EntityModelLocators Locators { get; set; }
+		public EntityModelLocators Locators { get; set; } = null;
 
         /// <summary>
         /// Grow this box by this additive amount in all directions (in model space units)
@@ -34,19 +34,19 @@ namespace Alex.ResourcePackLib.Json.Models.Entities
         /// The bone pivots around this point (in model space units).
         /// </summary>
         [J("pivot", NullValueHandling = N.Ignore)]
-        public Vector3 Pivot { get; set; }
-        
+        public Vector3? Pivot { get; set; }
+
         /// <summary>
         /// This is the initial rotation of the bone around the pivot, pre-animation (in degrees, x-then-y-then-z order).
         /// </summary>
         [J("rotation", NullValueHandling = N.Ignore)]
-        public Vector3? Rotation { get; set; }
-		
+        public Vector3? Rotation { get; set; } = null;
+
         /// <summary>
         ///		The rotation for the bone (1.8.0 geometry only)
         /// </summary>
         [J("bind_pose_rotation", NullValueHandling = N.Ignore)]
-        public Vector3? BindPoseRotation { get; set; }
+        public Vector3? BindPoseRotation { get; set; } = null;
         
 		public bool NeverRender { get; set; } = false;
 		

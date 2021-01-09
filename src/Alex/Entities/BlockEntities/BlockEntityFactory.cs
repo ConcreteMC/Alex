@@ -18,9 +18,9 @@ namespace Alex.Entities.BlockEntities
 		internal static         PooledTexture2D SkullTexture      { get; set; }
 		internal static         PooledTexture2D SignTexture      { get; set; }
 		
-		public static void LoadResources(GraphicsDevice graphicsDevice, McResourcePack resourcePack)
+		public static void LoadResources(GraphicsDevice graphicsDevice, ResourceManager resources)
 		{
-			if (resourcePack.TryGetBitmap("minecraft:entity/chest/normal", out var bmp))
+			if (resources.TryGetBitmap("minecraft:entity/chest/normal", out var bmp))
 			{
 				ChestTexture = TextureUtils.BitmapToTexture2D(graphicsDevice, bmp);
 			}
@@ -29,7 +29,7 @@ namespace Alex.Entities.BlockEntities
 				Log.Warn($"Could not load chest texture.");
 			}
 			
-			if (resourcePack.TryGetBitmap("minecraft:entity/chest/ender", out var enderBmp))
+			if (resources.TryGetBitmap("minecraft:entity/chest/ender", out var enderBmp))
 			{
 				EnderChestTexture = TextureUtils.BitmapToTexture2D(graphicsDevice, enderBmp);
 			}
@@ -38,7 +38,7 @@ namespace Alex.Entities.BlockEntities
 				Log.Warn($"Could not load enderchest texture");
 			}
 			
-			if (resourcePack.TryGetBitmap("minecraft:entity/steve", out var steveBmp))
+			if (resources.TryGetBitmap("minecraft:entity/steve", out var steveBmp))
 			{
 				SkullTexture = TextureUtils.BitmapToTexture2D(graphicsDevice, steveBmp);
 			}
@@ -48,7 +48,7 @@ namespace Alex.Entities.BlockEntities
 			}
 			
 						
-			if (resourcePack.TryGetBitmap("minecraft:entity/signs/oak", out var signBmp))
+			if (resources.TryGetBitmap("minecraft:entity/signs/oak", out var signBmp))
 			{
 				SignTexture = TextureUtils.BitmapToTexture2D(graphicsDevice, signBmp);
 			}

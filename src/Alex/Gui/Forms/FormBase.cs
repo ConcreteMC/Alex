@@ -1,6 +1,7 @@
 using Alex.API.Gui;
 using Alex.API.Gui.Elements.Layout;
 using Alex.API.Input;
+using Alex.API.Utils;
 using Microsoft.Xna.Framework;
 
 namespace Alex.Gui.Forms
@@ -25,7 +26,15 @@ namespace Alex.Gui.Forms
             //   Container.Anchor = Alignment.FillCenter;
 
             //    AddChild(Container);
-        }    
+        }
+
+        protected string FixContrast(string text)
+        {
+            return text
+               .Replace(TextColor.Gray.ToString(), TextColor.White.ToString())
+               .Replace(TextColor.DarkGray.ToString(), TextColor.White.ToString())
+               .Replace(TextColor.Black.ToString(), TextColor.White.ToString());
+        }
         
         protected override void OnUpdate(GameTime gameTime)
         {
@@ -40,6 +49,12 @@ namespace Alex.Gui.Forms
                 if (!Alex.Instance.IsMouseVisible)
                     Alex.Instance.IsMouseVisible = true;
             }
+        }
+
+        /// <inheritdoc />
+        public override void OnClose()
+        {
+            
         }
     }
 }

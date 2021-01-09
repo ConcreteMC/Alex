@@ -9,15 +9,15 @@ namespace Alex.Worlds.Multiplayer.Java
 {
     public class JavaChunkSection : ChunkSection
     {
-        public JavaChunkSection(ChunkColumn owner, bool storeSkylight, int sections = 2) : base(owner, storeSkylight, sections)
+        public JavaChunkSection(bool storeSkylight, int sections = 2) : base(storeSkylight, sections)
         {
             
         }
 
         public override void RemoveInvalidBlocks()
         {
-            this._blockRefCount = 0;
-            this._tickRefCount = 0;
+            this.BlockRefCount = 0;
+            this.TickRefCount = 0;
 
             for (int x = 0; x < 16; x++)
             {
@@ -37,11 +37,11 @@ namespace Alex.Worlds.Multiplayer.Java
 
                         if (!(block is Air))
                         {
-                            ++this._blockRefCount;
+                            ++this.BlockRefCount;
 
                             if (block.RandomTicked)
                             {
-                                ++this._tickRefCount;
+                                ++this.TickRefCount;
                             }
 
                             if (block.BlockMaterial.IsWatterLoggable)
@@ -91,7 +91,7 @@ namespace Alex.Worlds.Multiplayer.Java
 
         public void Read(MinecraftStream ms)
         {
-            _blockStorages[0].Read(ms);
+            BlockStorages[0].Read(ms);
 
             for (int x = 0; x < 16; x++)
             {

@@ -7,6 +7,7 @@ using Alex.ResourcePackLib.Generic;
 using Alex.ResourcePackLib.IO;
 using Alex.ResourcePackLib.IO.Abstract;
 using Alex.ResourcePackLib.Json;
+using Alex.ResourcePackLib.Json.Bedrock;
 using NLog;
 using NLog.Fluent;
 using SixLabors.ImageSharp;
@@ -22,80 +23,99 @@ namespace Alex.ResourcePackLib
 	    private static readonly ILogger Log = LogManager.GetCurrentClassLogger();
 	    
 	    public LoadProgress         ProgressReporter { get; set; } = null;
-		public ResourcePackType     Type             { get; private set; }
-		public ResourcePackManifest Info             { get; private set; }
+	    public ResourcePackManifest Info             { get; protected set; }
 		protected ResourcePack()
 	    {
 
 	    }
 
-	    protected static ResourcePackManifest GetManifest(IFilesystem archive, ResourcePackType type)
-	    {
-		    if (type == ResourcePackType.Java)
-		    {
-			    var entry = archive.GetEntry("pack.mcmeta");
-			    if (entry != null)
-			    {
-				    ResourcePackInfo info;
-				    using (TextReader reader = new StreamReader(entry.Open()))
-				    {
-					    ResourcePackInfoWrapper wrap = MCJsonConvert.DeserializeObject<ResourcePackInfoWrapper>(reader.ReadToEnd());
-					    info = wrap.pack;
-				    }
+		public static ResourcePackManifest GetManifest(IFilesystem archive)
+		{
+			//if (archive.GetEntry("pack.mcmeta") != null)
 
-				    try
-				    {
-					    var imgEntry = archive.GetEntry("pack.png");
-					    if (imgEntry != null)
-					    {
-						    // Bitmap bmp = new Bitmap(imgEntry.Open());
-						    using (var stream = imgEntry.Open())
-						    {
-							    var bmp = Image.Load<Rgba32>(stream.ReadToSpan(entry.Length));
-							    return new ResourcePackManifest(bmp, "", info.Description);
-						    }
-					    }
-				    }
-				    catch (Exception ex)
-				    {
-					    Log.Warn(ex, $"Could not read resourcepack logo: {archive.ToString()}");
-				    }
+			var entry = archive.GetEntry("pack.mcmeta");
 
-				    return new ResourcePackManifest("", info.Description);
-			    }
-			    else
-			    {
-					throw new InvalidResourcePackException();
-			    }
+			if (entry != null)
+			{
+				ResourcePackInfo info;
+
+				using (TextReader reader = new StreamReader(entry.Open()))
+				{
+					ResourcePackInfoWrapper wrap =
+						MCJsonConvert.DeserializeObject<ResourcePackInfoWrapper>(reader.ReadToEnd());
+
+					info = wrap.pack;
+				}
+
+				try
+				{
+					var imgEntry = archive.GetEntry("pack.png");
+
+					if (imgEntry != null && imgEntry.Length > 0)
+					{
+						// Bitmap bmp = new Bitmap(imgEntry.Open());
+						using (var stream = imgEntry.Open())
+						{
+							//var data = stream.ReadToSpan(entry.Length);
+							
+							var bmp  = Image.Load(stream).CloneAs<Rgba32>();
+
+							return new ResourcePackManifest(bmp, "", info.Description, ResourcePackType.Java);
+						}
+					}
+				}
+				catch (Exception ex)
+				{
+					Log.Warn(ex, $"Could not read resourcepack logo: {archive.ToString()}");
+				}
+
+				return new ResourcePackManifest("", info.Description, ResourcePackType.Java);
 			}
-			else if (type == ResourcePackType.Bedrock)
-		    {
 
-		    }
+			entry = archive.GetEntry("manifest.json");
 
-		    return null;
-	    }
+			if (entry != null)
+			{
+				//Load bedrock meta
+				McPackManifest info;
 
-		public static ResourcePack LoadFromArchive(IFilesystem archive)
-	    {
-			ResourcePack pack = new ResourcePack();
-		    if (archive.GetEntry("pack.mcmeta") != null)
-		    {
-			    pack.Type = ResourcePackType.Java;
+				using (TextReader reader = new StreamReader(entry.Open()))
+				{
+					info =
+						MCJsonConvert.DeserializeObject<McPackManifest>(reader.ReadToEnd());
+
+					//info = new ResourcePackInfo() {Description = wrap.Header.Description};
+					//info = wrap.pack;
+				}
+
+				try
+				{
+					var imgEntry = archive.GetEntry("pack_icon.png");
+
+					if (imgEntry != null && imgEntry.Length > 0)
+					{
+						// Bitmap bmp = new Bitmap(imgEntry.Open());
+						using (var stream = imgEntry.Open())
+						{
+							//var data = stream.ReadToSpan(entry.Length);
+							
+							var bmp = Image.Load(stream).CloneAs<Rgba32>();
+
+							return new ResourcePackManifest(bmp, info.Header.Name, info.Header.Description, ResourcePackType.Bedrock);
+						}
+					}
+				}
+				catch (Exception ex)
+				{
+					Log.Warn(ex, $"Could not read resourcepack logo: {archive.ToString()}");
+				}
+
+				return new ResourcePackManifest(info.Header.Name, info.Header.Description, ResourcePackType.Bedrock);
 			}
-		    else if (archive.GetEntry("manifest.json") != null)
-		    {
-			    pack.Type = ResourcePackType.Bedrock;
-			}
-		    else
-		    {
-			    throw new InvalidResourcePackException();
-		    }
 
-		    pack.Info = GetManifest(archive, pack.Type);
 
-		    return pack;
-	    }
+			return null;
+		}
     }
 
 	public class InvalidResourcePackException : Exception

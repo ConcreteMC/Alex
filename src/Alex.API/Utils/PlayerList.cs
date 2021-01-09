@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using MiNET.Worlds;
 
 namespace Alex.API.Utils
 {
@@ -16,7 +17,7 @@ namespace Alex.API.Utils
 	{
 		public MiNET.Utils.UUID UUID     { get; set; }
 		public string           Username { get; set; }
-		public Gamemode         Gamemode { get; set; } = Gamemode.Survival;
+		public GameMode         Gamemode { get; set; } = GameMode.Survival;
 		public int              Ping     { get; set; } = 0;
 
 		public bool IsJavaPlayer { get; set; } = false;
@@ -25,7 +26,7 @@ namespace Alex.API.Utils
 
 		}
 
-		public PlayerListItem(MiNET.Utils.UUID id, string username, Gamemode gamemode, int ping, bool isJavaPlayer)
+		public PlayerListItem(MiNET.Utils.UUID id, string username, GameMode gamemode, int ping, bool isJavaPlayer)
 		{
 			UUID = id;
 			Username = username;

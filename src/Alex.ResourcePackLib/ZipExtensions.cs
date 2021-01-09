@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using System.IO.Compression;
+using Alex.ResourcePackLib.IO.Abstract;
 
 namespace Alex.ResourcePackLib
 {
@@ -15,7 +16,7 @@ namespace Alex.ResourcePackLib
 		    return entry.FullName.EndsWith("/");
 	    }
 
-	    public static string ReadAsString(this ZipArchiveEntry entry)
+	    public static string ReadAsString(this IFile entry)
 	    {
 		    using (TextReader reader = new StreamReader(entry.Open()))
 		    {

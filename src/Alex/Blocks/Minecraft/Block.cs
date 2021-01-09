@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Alex.API.Blocks;
 using Alex.API.Resources;
 using Alex.API.Utils;
@@ -90,6 +91,19 @@ namespace Alex.Blocks.Minecraft
 			HasHitbox = true;
 		}
 
+		public virtual IEnumerable<BoundingBox> GetBoundingBoxes(Vector3 blockPos)
+		{
+			if (BlockState?.Model != null)
+			{
+				foreach (var bb in BlockState.Model.GetBoundingBoxes(blockPos))
+					yield return bb;
+			}
+			else
+			{
+				yield return new BoundingBox(blockPos, blockPos + Vector3.One);
+			}
+		}
+
 		public virtual Vector3 GetOffset(IModule3D noise, BlockCoordinates position)
 		{
 			return Vector3.Zero;
@@ -106,11 +120,11 @@ namespace Alex.Blocks.Minecraft
 
 			if (state.IsMultiPart)
 			{
-				Lazy<BlockStateResource> blockStateResource;
+				BlockStateResource blockStateResource;
 
-				if (Alex.Instance.Resources.ResourcePack.BlockStates.TryGetValue(state.Name, out blockStateResource))
+				if (Alex.Instance.Resources.TryGetBlockState(state.Name, out blockStateResource))
 				{
-					return MultiPartModelHelper.GetBlockState(world, position, state, blockStateResource.Value);
+					return MultiPartModelHelper.GetBlockState(world, position, state, blockStateResource);
 				}
 			}
 

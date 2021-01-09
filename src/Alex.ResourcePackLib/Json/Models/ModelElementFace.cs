@@ -31,5 +31,19 @@ namespace Alex.ResourcePackLib.Json.Models
 		/// </summary>
 		public int? TintIndex { get; set; } = null;
 
+		public ModelElementFace Clone()
+		{
+			ModelElementFace clone = new ModelElementFace();
+
+			if (UV != null)
+				clone.UV = UV.Clone();
+
+			clone.Texture = Texture;
+			clone.CullFace = CullFace;
+			clone.Rotation = Rotation;
+			clone.TintIndex = TintIndex;
+			
+			return clone;
+		}
 	}
 }

@@ -5,7 +5,9 @@ namespace Alex.ResourcePackLib.IO.Abstract
 {
 	public interface IFilesystem : IDisposable
 	{
-		IReadOnlyCollection<IFile> Entries { get; }
+		string                     Name         { get; }
+		IReadOnlyCollection<IFile> Entries      { get; }
+		bool                       CanReadAsync { get; }
 
 		IFile GetEntry(string name);
 	}

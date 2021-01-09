@@ -4,6 +4,15 @@ using System.Collections.Generic;
 namespace Alex.API.Gui
 {
     [Flags]
+    public enum TextAlignment
+    {
+        None   = 0b00000000,
+        Left   = 0b00000010,
+        Center = 0b00001000,
+        Right  = 0b00000100,
+    }
+
+    [Flags]
 
     public enum Alignment
     {

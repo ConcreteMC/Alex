@@ -1,4 +1,6 @@
-﻿namespace Alex.API.Utils.Noise
+﻿using System;
+
+namespace Alex.API.Utils.Noise
 {
 	public class NoiseBlender : SelectorModule, IModule3D, IModule2D
 	{
@@ -82,7 +84,7 @@
 			float v0 = ((IModule3D)_lowerLimitNoise).GetValue(x, y, z);
 			float v1 = ((IModule3D)_upperLimitNoise).GetValue(x, y, z);
 			float alpha = (((IModule3D)_mainNoise).GetValue(x, y, z) + 1.0f) / 2.0f;
-			return MathF.Smoothstep(v0, v1, alpha);
+			return MathHelpers.Smoothstep2(v0, v1, alpha);
 		}
 
 		public float GetValue(float x, float y)
@@ -91,7 +93,7 @@
 			float upper = ((IModule2D)_upperLimitNoise).GetValue(x, y);
 			float alpha = (((IModule2D)_mainNoise).GetValue(x, y) + 1.0f) / 2.0f;
 
-			return MathF.Smoothstep(lower, upper, alpha);
+			return MathHelpers.Smoothstep2(lower, upper, alpha);
 		}
 
 		#endregion

@@ -23,7 +23,7 @@ namespace Alex.Entities.Hostile
 			{
 				_isCharged = value;
 
-				Level.BackgroundWorker.Enqueue(
+				/*Level.BackgroundWorker.Enqueue(
 					() =>
 					{
 						Image<Rgba32> texture        = null;
@@ -91,10 +91,10 @@ namespace Alex.Entities.Hostile
 							ModelRenderer = new EntityModelRenderer(
 								normal, TextureUtils.BitmapToTexture2D(Alex.Instance.GraphicsDevice, texture));
 						}
-					});
+					});*/
 
-				//TryUpdateGeometry(
-				//	"minecraft:creeper", value ? "charged" : "default", value ? "charged" : "default");
+				TryUpdateGeometry(
+					"minecraft:creeper", value ? "charged" : "default", value ? "charged" : "default");
 			}
 		}
 

@@ -15,15 +15,17 @@ namespace Alex.API.Graphics.Typography
         Vector2 MeasureString(string text, Vector2 scale);
         //void MeasureString(string text, out Vector2 size);
 
-        void DrawString(SpriteBatch   sb, 
-                        string text, 
-                        Vector2 position,
-                        TextColor     color,
-                        FontStyle     style      = FontStyle.None, Vector2? scale = null,
-                        float         opacity    = 1f,
-                        float         rotation   = 0f, Vector2? origin = null,
-                        SpriteEffects effects    = SpriteEffects.None,
-                        float         layerDepth = 0f);
+        void DrawString(SpriteBatch sb,
+            string text,
+            Vector2 position,
+            TextColor color,
+            FontStyle style = FontStyle.None,
+            Vector2? scale = null,
+            float opacity = 1f,
+            float rotation = 0f,
+            Vector2? origin = null,
+            SpriteEffects effects = SpriteEffects.None,
+            float layerDepth = 0f);
     }
 
     public interface IFontGlyph

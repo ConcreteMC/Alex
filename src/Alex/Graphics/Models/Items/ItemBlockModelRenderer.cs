@@ -38,12 +38,12 @@ namespace Alex.Graphics.Models.Items
             Offset = new Vector3(0f, -0.5f, 0f);
         }
         
-        public override void Cache(McResourcePack pack)
+        public override bool Cache(ResourceManager pack)
         {
             if (Vertices != null)
-                return;
+                return true;
             
-            ChunkData chunkData = new ChunkData();
+            ChunkData chunkData = new ChunkData(ChunkCoordinates.Zero);
             _block.Model.GetVertices(new ItemRenderingWorld(_block.Block), chunkData, BlockCoordinates.Zero, Vector3.Zero, _block.Block);
             
             var rawVertices = chunkData.Vertices;
@@ -58,6 +58,8 @@ namespace Alex.Graphics.Models.Items
                 x => new VertexPositionColorTexture(x.Position, x.Color, x.TexCoords)).ToArray();
 
             chunkData.Dispose();
+
+            return true;
         }
 
         protected override void InitEffect(BasicEffect effect)

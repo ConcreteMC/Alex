@@ -7,7 +7,6 @@ using System.Threading;
 using Alex.API;
 using Alex.API.Data.Options;
 using Alex.API.Data.Servers;
-using Alex.API.Entities;
 using Alex.API.Graphics;
 using Alex.API.Gui;
 using Alex.API.Network;
@@ -110,7 +109,8 @@ namespace Alex.Worlds
 			}
 		}
 
-		public BackgroundWorker BackgroundWorker { get; }
+		public  BackgroundWorker  BackgroundWorker { get; }
+		private List<IDisposable> _disposables = new List<IDisposable>();
 		public World(IServiceProvider serviceProvider, GraphicsDevice graphics, AlexOptions options,
 			NetworkProvider networkProvider)
 		{
@@ -141,7 +141,7 @@ namespace Alex.Worlds
 			}
 			else
 			{
-				resources.ResourcePack.TryGetBitmap("entity/alex", out var rawTexture);
+				resources.TryGetBitmap("entity/alex", out var rawTexture);
 				texture = TextureUtils.BitmapToTexture2D(graphics, rawTexture);
 			}
 			
@@ -174,8 +174,8 @@ namespace Alex.Worlds
 			}
 			
 			Player.KnownPosition = new PlayerLocation(GetSpawnPoint());
-
-			Options.FieldOfVision.ValueChanged += FieldOfVisionOnValueChanged;
+			_disposables.Add(options.FieldOfVision.Bind(FieldOfVisionOnValueChanged));
+			//Options.FieldOfVision.ValueChanged += FieldOfVisionOnValueChanged;
 			Camera.FOV = Options.FieldOfVision.Value;
 
 			PhysicsEngine.AddTickable(Player);
@@ -184,12 +184,14 @@ namespace Alex.Worlds
 			InventoryManager = new InventoryManager(guiManager);
 				
 			SkyRenderer = new SkyBox(serviceProvider, graphics, this);
+
+			_disposables.Add(
+				options.VideoOptions.RenderDistance.Bind(
+					(old, newValue) =>
+					{
+						Camera.SetRenderDistance(newValue);
+					}));
 			
-			options.VideoOptions.RenderDistance.Bind(
-				(old, newValue) =>
-				{
-					Camera.SetRenderDistance(newValue);
-				});
 			Camera.SetRenderDistance(options.VideoOptions.RenderDistance);
 
 			BackgroundWorker = new BackgroundWorker();
@@ -202,17 +204,12 @@ namespace Alex.Worlds
 
 		//public long WorldTime { get; private set; } = 6000;
 
-		public PlayerList PlayerList { get; }
-		public TickManager Ticker { get; }
-		public EntityManager EntityManager { get; }
-		public ChunkManager ChunkManager { get; private set; }
+		public PlayerList     PlayerList    { get; }
+		public TickManager    Ticker        { get; }
+		public EntityManager  EntityManager { get; set; }
+		public ChunkManager   ChunkManager  { get; private set; }
 		public PhysicsManager PhysicsEngine { get; set; }
-
-		public long Vertices
-        {
-            get { return ChunkManager.Vertices + EntityManager.VertexCount; }
-        }
-
+		
 		public int ChunkCount
         {
             get { return ChunkManager.ChunkCount; }
@@ -228,23 +225,16 @@ namespace Alex.Worlds
 			get { return ChunkManager.EnqueuedChunkUpdates; }
 		}
 
-		public void ResetChunks()
-        {
-            ChunkManager.ClearChunks();
-        }
-
-        public void RebuildChunks()
-        {
-          //  ChunkManager.RebuildAll();
-        }
-
-        public void ToggleWireFrame()
+		public void ToggleWireFrame()
         {
 	        ChunkManager.UseWireFrames = !ChunkManager.UseWireFrames;
         }
         
         public void Render(IRenderArgs args)
         {
+	        if (_destroyed)
+		        return;
+	        
 	        Graphics.DepthStencilState = DepthStencilState.Default;
 	        Graphics.SamplerStates[0] = SamplerState.PointWrap;
 
@@ -268,8 +258,9 @@ namespace Alex.Worlds
 
         public void Render2D(IRenderArgs args)
         {
-	        args.Camera = Camera;
-
+	        if (_destroyed)
+		        return;
+	        
 	        EntityManager.Render2D(args);
         }
         
@@ -277,6 +268,9 @@ namespace Alex.Worlds
 		private float _brightnessMod = 0f;
 		public void Update(UpdateArgs args)
 		{
+			if (_destroyed)
+				return;
+			
 			var camera = Camera;
 			
 			args.Camera = camera;
@@ -430,37 +424,7 @@ namespace Alex.Worlds
             return 0;
         }
 
-		public Block GetBlock(BlockCoordinates position)
-		{
-			return GetBlock(position.X, position.Y, position.Z);
-		}
-
-		public Block GetBlock(Vector3 position)
-        {
-            return GetBlock(position.X, position.Y, position.Z);
-        }
-
-		public Block GetBlock(float x, float y, float z)
-	    {
-		    return GetBlock((int) Math.Floor(x), (int) Math.Floor(y), (int) Math.Floor(z)); // Fix. xd
-	    }
-
-		public Block GetBlock(int x, int y, int z)
-        {
-	      //  try
-	      //  {
-		        ChunkColumn chunk;
-		        if (ChunkManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
-		        {
-			        return chunk.GetBlockState(x & 0xf, y & 0xff, z & 0xf).Block;
-		        }
-			//}
-		//	catch { }
-
-	        return Airstate.Block;
-        }
-
-		public void SetBlockEntity(int x, int y, int z, BlockEntity blockEntity)
+        public void SetBlockEntity(int x, int y, int z, BlockEntity blockEntity)
 		{
 			var coords      = new BlockCoordinates(x, y, z);
 			var chunkCoords = new ChunkCoordinates(x >> 4, z >> 4);
@@ -474,10 +438,10 @@ namespace Alex.Worlds
 				var cz       = z & 0xf;
 				
 				var chunkPos   = new BlockCoordinates(cx, cy, cz);
-				var blockAtPos = chunk.GetBlockState(cx, cy, cz);
+			//	var blockAtPos = chunk.GetBlockState(cx, cy, cz);
 
-				if (blockAtPos.Block.BlockMaterial == Material.Air)
-					return;
+				//if (blockAtPos.Block.BlockMaterial == Material.Air)
+				//	return;
 				
 				chunk.RemoveBlockEntity(chunkPos);
 				EntityManager.RemoveBlockEntity(coords);
@@ -553,7 +517,8 @@ namespace Alex.Worlds
 
 			if (Options.VideoOptions.ClientSideLighting && Dimension == Dimension.Overworld)
 			{
-				new SkyLightCalculations().Calculate(this, source);
+				ChunkManager.SkyLightCalculator.Calculate(this, source);
+				//new SkyLightCalculations().Calculate(this, source);
 			}
 
 			ScheduleBlockUpdate(source, new BlockCoordinates(x + 1, y, z));
@@ -799,6 +764,12 @@ namespace Alex.Worlds
 		{
 			if (_destroyed) return;
 			_destroyed = true;
+
+			foreach (var disposable in _disposables)
+			{
+				disposable.Dispose();
+			}
+			_disposables.Clear();
 			
 			Ticker.UnregisterTicked(this);
 			Ticker.UnregisterTicked(EntityManager);
@@ -808,7 +779,10 @@ namespace Alex.Worlds
 			BackgroundWorker?.Dispose();
 
 			EntityManager.Dispose();
+			EntityManager = null;
+			
 			ChunkManager.Dispose();
+			ChunkManager = null;
 
 			Player.Dispose();
 			Ticker.Dispose();
@@ -899,16 +873,6 @@ namespace Alex.Worlds
 			if (EntityManager.TryGet(entityId, out Entity entity))
 			{
 				entity.KnownPosition.OnGround = position.OnGround;
-				if (!relative)
-				{
-					entity.Movement.MoveTo(position, false);
-				}
-				else
-				{
-					entity.Movement.Move(position);
-				}
-				
-				entity.Velocity = Vector3.Zero;
 				
 				if (updateLook)
 				{
@@ -921,6 +885,18 @@ namespace Alex.Worlds
 					entity.KnownPosition.HeadYaw = position.HeadYaw;
 					//	entity.UpdateHeadYaw(position.HeadYaw);
 				}
+				
+				if (relative)
+				{
+					//var adjusted = entity 
+					entity.Movement.Move(position.ToVector3());
+				}
+				else
+				{
+					entity.Movement.MoveTo(position, false);
+				}
+				
+				entity.Velocity = Vector3.Zero;
 			}
 		}
 

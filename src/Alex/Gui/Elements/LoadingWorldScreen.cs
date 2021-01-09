@@ -1,26 +1,25 @@
-﻿using Alex.API.GameStates;
-using Alex.API.Graphics.Typography;
+﻿using System;
 using Alex.API.Gui;
 using Alex.API.Gui.Elements;
+using Alex.API.Gui.Elements.Controls;
 using Alex.API.Gui.Elements.Layout;
 using Alex.API.Gui.Graphics;
 using Alex.API.Utils;
 using Alex.API.World;
-using Alex.Gamestates.Common;
 using Microsoft.Xna.Framework;
 using NLog;
 
-namespace Alex.Gamestates
+namespace Alex.Gui.Elements
 {
-    public class LoadingWorldState : GuiInGameStateBase
+    public class LoadingWorldScreen : GuiScreen
     {
-	    private static readonly Logger    Log = LogManager.GetCurrentClassLogger(typeof(LoadingWorldState));
+	    private static readonly Logger    Log = LogManager.GetCurrentClassLogger(typeof(LoadingWorldScreen));
 	    
-	    private readonly        GuiProgressBar _progressBar;
-	    private readonly        GuiTextElement _textDisplay;
-	    private readonly        GuiTextElement _subTextDisplay;
-	    private readonly        GuiTextElement _percentageDisplay;
-		
+	    private readonly GuiProgressBar _progressBar;
+	    private readonly GuiTextElement _textDisplay;
+	    private readonly GuiTextElement _subTextDisplay;
+	    private readonly GuiTextElement _percentageDisplay;
+	    private readonly GuiButton      _cancelButton;
 	    public string Text
 	    {
 		    get { return _textDisplay?.Text ?? string.Empty; }
@@ -51,10 +50,11 @@ namespace Alex.Gamestates
 		    {
 			    _connectingToServer = value;
 			    UpdateProgress(CurrentState, Percentage, SubText);
+			    _cancelButton.IsVisible = value;
 		    }
 	    }
 
-	    public LoadingWorldState(IGameState parent = null)
+	    public LoadingWorldScreen()
 		{
 			GuiStackContainer progressBarContainer;
 
@@ -70,7 +70,9 @@ namespace Alex.Gamestates
 				Orientation = Orientation.Vertical
 			});
 			
-			if (parent == null)
+			BackgroundOverlay = new Color(Color.Black, 0.65f);
+			
+			/*if (parent == null)
 			{
 				Background = new GuiTexture2D
 				{ 
@@ -85,7 +87,7 @@ namespace Alex.Gamestates
 			{
 				ParentState = parent;
 				HeaderTitle.IsVisible = false;
-			}
+			}*/
 			
 			progressBarContainer.AddChild(_textDisplay = new GuiTextElement()
 			{
@@ -129,14 +131,26 @@ namespace Alex.Gamestates
 					Text = Text, TextColor = TextColor.White, Anchor = Alignment.BottomLeft, HasShadow = false
 				});
 
-			HeaderTitle.TranslationKey = "menu.loadingLevel";
+			AddChild(_cancelButton = new GuiButton("Cancel", Cancel)
+			{
+				Anchor = Alignment.TopLeft
+			});
+			
+			//HeaderTitle.TranslationKey = "menu.loadingLevel";
 
 			UpdateProgress(LoadingState.ConnectingToServer, 10);
 		}
 
+	    private void Cancel()
+	    {
+		    CancelAction?.Invoke();
+	    }
+
 	    public LoadingState CurrentState { get; private set; } = LoadingState.ConnectingToServer;
-	    public int Percentage { get; private set; } = 0;
-		public void UpdateProgress(LoadingState state, int percentage, string substring = null)
+	    public int          Percentage   { get; private set; } = 0;
+	    public Action       CancelAction { get; set; }         = null;
+
+	    public void UpdateProgress(LoadingState state, int percentage, string substring = null)
 	    {
 		    switch (state)
 		    {
@@ -173,21 +187,14 @@ namespace Alex.Gamestates
 	    /// <inheritdoc />
 	    protected override void OnDraw(GuiSpriteBatch graphics, GameTime gameTime)
 	    {
-		    if (ParentState is IGuiElement gui)
-		    {
-			    gui.Draw(graphics, gameTime);
-		    }
-
+		    ParentElement?.Draw(graphics, gameTime);
 		    base.OnDraw(graphics, gameTime);
 	    }
 
 	    /// <inheritdoc />
 	    protected override void OnUpdateLayout()
 	    {
-		    if (ParentState is IGuiElement gui)
-		    {
-			    gui.InvalidateLayout();
-		    }
+		    ParentElement?.InvalidateLayout();
 		    
 		    base.OnUpdateLayout();
 	    }

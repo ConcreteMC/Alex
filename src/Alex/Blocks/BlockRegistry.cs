@@ -77,6 +77,7 @@ namespace Alex.Blocks
 		    this.Register("minecraft:tripwire", () => new Tripwire());
 		    this.Register("minecraft:beacon", () => new Beacon());
 		    this.Register("minecraft:cobblestone_wall", () => new CobblestoneWall());
+		    this.Register("minecraft:andesite_wall", () => new AndesiteWall());
 		    this.Register("minecraft:flower_pot", () => new FlowerPot());
 		    this.Register("minecraft:carrots", () => new Carrots());
 		    this.Register("minecraft:potatoes", () => new Potatoes());
@@ -493,7 +494,6 @@ namespace Alex.Blocks
 		    this.Register("minecraft:ender_chest", () => new EnderChest());
 		    
 		    //Saplings
-		    
 		    this.Register("minecraft:oak_sapling", () => new Sapling(WoodType.Oak));
 		    this.Register("minecraft:spruce_sapling", () => new Sapling(WoodType.Spruce));
 		    this.Register("minecraft:birch_sapling", () => new Sapling(WoodType.Birch));

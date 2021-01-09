@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -12,11 +13,30 @@ namespace Alex.API.Services
 
 	public delegate void PingServerDelegate(ServerPingResponse response);
 	public delegate void ServerStatusDelegate(ServerQueryResponse reponse);
+	public delegate Task LandDiscoveryDelegate(LanDiscoveryResult result);
+	
     public interface IServerQueryProvider
     {
 	  //  Task QueryBedrockServerAsync(string hostname, ushort port, PingServerDelegate pingCallback = null, ServerStatusDelegate statusCallBack = null);
 		Task QueryServerAsync(ServerConnectionDetails connectionDetails, PingServerDelegate pingCallback = null, ServerStatusDelegate statusCallBack = null);
 
+		Task StartLanDiscovery(CancellationToken cancellationToken, LandDiscoveryDelegate callback = null);
+    }
+
+    public class LanDiscoveryResult
+    {
+	    public IPEndPoint          EndPoint      { get; set; }
+	    public ServerPingResponse  PingResponse  { get; set; }
+	    public ServerQueryResponse QueryResponse { get; set; }
+
+	    public LanDiscoveryResult(IPEndPoint endPoint,
+		    ServerPingResponse pingResponse,
+		    ServerQueryResponse queryResponse)
+	    {
+		    EndPoint = endPoint;
+		    PingResponse = pingResponse;
+		    QueryResponse = queryResponse;
+	    }
     }
     
     public class ServerConnectionDetails

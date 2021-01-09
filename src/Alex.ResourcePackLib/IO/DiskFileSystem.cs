@@ -6,15 +6,22 @@ using Alex.ResourcePackLib.IO.Abstract;
 
 namespace Alex.ResourcePackLib.IO
 {
-	public class RealFileSystem : IFilesystem
+	public class DiskFileSystem : IFilesystem
 	{
+		/// <inheritdoc />
+		public string Name { get; }
+
 		/// <inheritdoc />
 		public IReadOnlyCollection<IFile> Entries { get; }
 
+		/// <inheritdoc />
+		public bool CanReadAsync => true;
+
 		private string Root { get; }
-		public RealFileSystem(string path)
+		public DiskFileSystem(string path)
 		{
 			Root = path;
+			Name = Path.GetDirectoryName(path);
 			
 			List<IFile> entries = new List<IFile>();
 			foreach (var file in Directory.EnumerateFiles(Root, "*", SearchOption.AllDirectories))
@@ -25,12 +32,23 @@ namespace Alex.ResourcePackLib.IO
 			Entries = new ReadOnlyCollection<IFile>(entries);
 		}
 
+		private static string NormalizePath(string path)
+		{
+			return path.Replace('\\', '/');
+		}
+
 		/// <inheritdoc />
 		public IFile GetEntry(string name)
 		{
 			return Entries.FirstOrDefault(x => x.FullName == name);
 		}
-		
+
+		/// <inheritdoc />
+		public override string ToString()
+		{
+			return $"Disk: {Root}";
+		}
+
 		/// <inheritdoc />
 		public void Dispose()
 		{
@@ -52,7 +70,7 @@ namespace Alex.ResourcePackLib.IO
 			public FileSystemEntry(FileInfo fileInfo, string relativePath)
 			{
 				_fileInfo = fileInfo;
-				FullName = relativePath;
+				FullName = NormalizePath(relativePath);
 			}
 
 			/// <inheritdoc />

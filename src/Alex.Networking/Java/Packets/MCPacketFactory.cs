@@ -284,6 +284,7 @@ namespace Alex.Networking.Java.Packets
 			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x30, () => new PlayerAbilitiesPacket());
 			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x31, () => new CombatEventPacket());
 			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x32, () => new PlayerListItemPacket()); //< -----
+			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x33, () => new FacePlayerPacket());
 			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x34, () => new PlayerPositionAndLookPacket());
 			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x36, () => new DestroyEntitiesPacket());
 			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x39, () => new RespawnPacket());

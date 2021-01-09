@@ -240,7 +240,7 @@ namespace Alex.Gamestates
 			Skin skin = _playerProfileService?.CurrentProfile?.Skin;
 			if (skin == null)
 			{
-				Alex.Resources.ResourcePack.TryGetBitmap("entity/alex", out var rawTexture);
+				Alex.Resources.TryGetBitmap("entity/alex", out var rawTexture);
 				skin = new Skin()
 				{
 					Slim = true,

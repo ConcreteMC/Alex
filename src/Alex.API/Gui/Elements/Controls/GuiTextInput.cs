@@ -66,6 +66,7 @@ namespace Alex.API.Gui.Elements.Controls
         {
             MinWidth = 100;
             MinHeight = 20;
+            Height = MinHeight;
             BackgroundOverlay = Color.Black;
 
             TextBuilder = new TextInputBuilder(text);

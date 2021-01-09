@@ -16,6 +16,8 @@
 // From the original Jason Bevins's Libnoise (http://libnoise.sourceforge.net)
 // Modified for 2D voronoi by Kenny van Vulpen
 
+using System;
+
 namespace Alex.API.Utils.Noise
 {
 	/// <summary>

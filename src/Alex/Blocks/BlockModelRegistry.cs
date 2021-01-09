@@ -35,7 +35,7 @@ namespace Alex.Blocks
             
         }
 
-        public int LoadResourcePack(IProgressReceiver progressReceiver, McResourcePack resourcePack)
+        public int LoadResourcePack(IProgressReceiver progressReceiver, McResourcePack resourcePack, bool replace)
         {
             int imported = 0;
             var total    = resourcePack.BlockModels.Count;
@@ -44,7 +44,21 @@ namespace Alex.Blocks
             foreach (var blockmodel in resourcePack.BlockModels.Where(x => x.Value.Elements.Length > 0))
             {   
                 progressReceiver?.UpdateProgress(imported, total, null, blockmodel.Key.ToString());
-                Register(blockmodel.Key, new BlockModelEntry(blockmodel.Value));
+                var key = blockmodel.Key;
+
+                if (ContainsKey(key))
+                {
+                    if (replace)
+                    {
+                        var entry = new BlockModelEntry(blockmodel.Value);
+                        Set(key, () => entry);
+                    }
+                }
+                else
+                {
+                    Register(blockmodel.Key, new BlockModelEntry(blockmodel.Value));
+                }
+
                 imported++;
             }
 

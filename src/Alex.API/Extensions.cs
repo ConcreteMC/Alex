@@ -129,11 +129,11 @@ namespace Alex.API
 			BoundingBox box,
 			Matrix view,
 			Matrix projection,
-			Color color, bool asCube = false)
+			Color color, bool asCube = false, BasicEffect effect = null)
 		{
-			if (effect == null)
+			if (_effect == null)
 			{
-				effect = new BasicEffect(sb.GraphicsDevice)
+				_effect = new BasicEffect(sb.GraphicsDevice)
 				{
 					VertexColorEnabled = true,
 					FogEnabled = false,
@@ -142,11 +142,14 @@ namespace Alex.API
 				};
 			}
 
+			if (effect == null)
+				effect = _effect;
+			
 			var corners = box.GetCorners();
 			for (var i = 0; i < 8; i++)
 			{
-				verts[i].Position = corners[i];
-				verts[i].Color = color;
+				Verts[i].Position = corners[i];
+				Verts[i].Color = color;
 			}
 
 			effect.View = view;
@@ -164,14 +167,16 @@ namespace Alex.API
 					CubeVertices[index].Color = color;
 				}
 
-				var x = (box.Max.X - box.Min.X) + 0.05f;
-				var y = (box.Max.Y - box.Min.Y) + 0.05f;
-				var z = (box.Max.Z - box.Min.Z) + 0.05f;
-				effect.World = Matrix.CreateScale(new Vector3(x,y,z)) * Matrix.CreateTranslation(box.Min - new Vector3(0.025f));
+				const float inflation = 0.025f;
+
+				var x = (box.Max.X - box.Min.X) + inflation;
+				var y = (box.Max.Y - box.Min.Y) + inflation;
+				var z = (box.Max.Z - box.Min.Z) + inflation;
+				effect.World = Matrix.CreateScale(new Vector3(x,y,z)) * Matrix.CreateTranslation(box.Min - new Vector3(inflation / 2f));
 				effect.Alpha = 0.5f;
 			}
 
-			foreach (var pass in effect.CurrentTechnique.Passes)
+			foreach (var pass in _effect.CurrentTechnique.Passes)
 			{
 				pass.Apply();
 
@@ -179,12 +184,12 @@ namespace Alex.API
 				{
 					sb.GraphicsDevice.DrawUserIndexedPrimitives(
 						PrimitiveType.LineList,
-						verts,
+						Verts,
 						0,
 						8,
-						indices,
+						Indices,
 						0,
-						indices.Length / 2);
+						Indices.Length / 2);
 				}
 				else
 				{
@@ -201,9 +206,9 @@ namespace Alex.API
 
 		private static readonly VertexPositionColor[] CubeVertices = new VertexPositionColor[36];
 		
-		private static readonly VertexPositionColor[] verts = new VertexPositionColor[8];
+		private static readonly VertexPositionColor[] Verts = new VertexPositionColor[8];
 
-		private static readonly short[] indices =
+		private static readonly short[] Indices =
 		{
 			0, 1,
 			1, 2,
@@ -219,8 +224,8 @@ namespace Alex.API
 			7, 4
 		};
 
-		private static BasicEffect effect;
-		private static VertexDeclaration vertDecl;
+		private static BasicEffect _effect;
+		private static VertexDeclaration _vertDecl;
 
 		#endregion
 		

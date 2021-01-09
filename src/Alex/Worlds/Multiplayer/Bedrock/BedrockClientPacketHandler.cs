@@ -36,7 +36,6 @@ using Alex.Utils;
 using Alex.Utils.Auth;
 using Alex.Utils.Inventories;
 using Alex.Worlds.Abstraction;
-using Alex.Worlds.Singleplayer;
 using fNbt;
 using Jose;
 using Microsoft.Extensions.DependencyInjection;
@@ -44,6 +43,7 @@ using MiNET;
 using MiNET.Net;
 using MiNET.UI;
 using MiNET.Utils;
+using MiNET.Worlds;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NLog;
@@ -51,6 +51,7 @@ using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.Security;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
+using AnvilWorldProvider = Alex.Worlds.Singleplayer.AnvilWorldProvider;
 using BlockCoordinates = Alex.API.Utils.BlockCoordinates;
 using ChunkCoordinates = Alex.API.Utils.ChunkCoordinates;
 using MathF = System.MathF;
@@ -123,6 +124,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 	        try
 	        {
+		       // Client.Connection.Session.FirstEncryptedMessage = message.ReliabilityHeader.OrderingIndex;
+		        
 		        var data = JWT.Payload<HandshakeData>(token);
 		        Client.InitiateEncryption(Base64Url.Decode(x5u), Base64Url.Decode(data.salt.TrimEnd('=')));
 	        }
@@ -151,15 +154,14 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 			if (Client.PlayerStatus == 3)
 			{
-				CustomConnectedPong.CanPing = true;
 				Client.PlayerStatusChanged.Set();
 
-				Client.World.Player.EntityId = Client.EntityId;
+				//Client.World.Player.EntityId = Client.EntityId;
 
 				if (!_markedAsInitalized)
 				{
-					Client.MarkAsInitialized();
-					_markedAsInitalized = true;
+					//Client.MarkAsInitialized();
+					//_markedAsInitalized = true;
 				}
 
 				Client.RequestChunkRadius(AlexInstance.Options.AlexOptions.VideoOptions.RenderDistance.Value);
@@ -325,7 +327,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			Client.RequestChunkRadius(Client.ChunkRadius);
 			
 			Client.World.Player.EntityId = message.runtimeEntityId;
-			Client.World.Player.UpdateGamemode((Gamemode) message.playerGamemode);
+			Client.World.Player.UpdateGamemode((GameMode) message.playerGamemode);
 
 			foreach (var gr in message.gamerules)
 			{
@@ -421,7 +423,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 						continue;
 					}
 
-					Client.World?.AddPlayerListItem(new PlayerListItem(r.ClientUuid, r.DisplayName, (Gamemode)((int)r.GameMode), 0, false));
+					Client.World?.AddPlayerListItem(new PlayerListItem(r.ClientUuid, r.DisplayName, (GameMode)((int)r.GameMode), 0, false));
 
 					RemotePlayer m = new RemotePlayer(r.DisplayName, Client.World, Client, null);
 					m.UUID = r.ClientUuid;
@@ -466,7 +468,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 				if (renderer != null)
 				{
-					entity = type.Create(null);
+					entity = EntityFactory.Create(type, null);
 				}
 
 				if (entity == null)
@@ -665,9 +667,10 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 						endPosition.HeadYaw = ed.HasHeadYaw ? endPosition.HeadYaw : known.HeadYaw;
 						endPosition.Pitch = ed.HasPitch ? -endPosition.Pitch : known.Pitch;
 
-						entity.KnownPosition = endPosition;
+						//entity.KnownPosition = endPosition;
+						entity.Movement.MoveTo(endPosition);
 						
-						entity.DistanceMoved += MathF.Abs(Microsoft.Xna.Framework.Vector3.Distance(before.ToVector3(), endPosition.ToVector3()));
+						//entity.DistanceMoved += MathF.Abs(Microsoft.Xna.Framework.Vector3.Distance(before.ToVector3(), endPosition.ToVector3()));
 					}
 				}
 			}
@@ -685,10 +688,15 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			if (converted != null)
 			{
 				BlockUpdatePriority priority = (BlockUpdatePriority) message.blockPriority;
+
+				if ((priority & BlockUpdatePriority.NoGraphic) != 0)
+				{
+					
+				}
 				
 				Client.World?.SetBlockState(
 					new BlockCoordinates(message.coordinates.X, message.coordinates.Y, message.coordinates.Z), 
-					converted, (int) message.storage, BlockUpdatePriority.High | BlockUpdatePriority.Network);
+					converted, (int) message.storage, priority);
 			}
 			else
 			{
@@ -728,7 +736,12 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		public void HandleMcpeNetworkSettings(McpeNetworkSettings message)
 		{
-			UnhandledPackage(message);
+			//Client.Connection.Session.
+			var threshold = BitConverter.ToInt16(new byte[] {message.unknown, message.compressionThreshold});
+			Client.Connection.Session.CompressionThreshold = threshold;
+			
+			Log.Info($"Compression Threshold: {threshold}");
+			//UnhandledPackage(message);
 		}
 
 		/// <inheritdoc />
@@ -1324,7 +1337,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				{
 					if (message.inventoryId == 0)
 					{
-						startIndex = bi.InventoryOffset;
+						//startIndex = bi.InventoryOffset;
 					}
 					else if (message.inventoryId == 120)
 					{
@@ -1490,42 +1503,18 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 				var block = Client.World.GetBlockState(worldPos).Block;
 
-				if (block.BlockMaterial != Material.Air)
+				//if (block.BlockMaterial != Material.Air)
 				{
 					var blockEntity = BlockEntityFactory.ReadFrom(compound, Client.World, block);
 
 					if (blockEntity == null)
 					{
-						//Log.Warn($"Null blockentity!");
 						return;
 					}
 
 					Client.World.SetBlockEntity(
 						message.coordinates.X, message.coordinates.Y, message.coordinates.Z, blockEntity);
 				}
-
-				//Log.Info($"Got block entity: {blockEntity.}");
-				/*if (Client.World.ChunkManager.TryGetChunk(
-					new ChunkCoordinates(
-						worldPos),
-					out var cc))
-				{
-					var blockCoordinates = new BlockCoordinates(
-						message.coordinates.X & 0x0f, message.coordinates.Y & 0xff, message.coordinates.Z & 0x0f);
-
-					//var block = cc.GetBlockState(blockCoordinates.X, blockCoordinates.Y, blockCoordinates.Z);
-					//blockEntity.Block = block.Block;
-
-					if (cc.RemoveBlockEntity(blockCoordinates))
-					{
-						Client.World.EntityManager.RemoveBlockEntity(worldPos);
-					}
-
-					if (cc.AddBlockEntity(blockCoordinates, blockEntity))
-					{
-						Client.World.EntityManager.AddBlockEntity(worldPos, blockEntity);
-					}
-				}*/
 			}
 			else
 			{
@@ -1562,8 +1551,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		
 		public void HandleMcpeChangeDimension(McpeChangeDimension message)
 		{
-			bool couldPing = CustomConnectedPong.CanPing;
-			CustomConnectedPong.CanPing = false;
 			//base.HandleMcpeChangeDimension(message);
 			if (WorldProvider is BedrockWorldProvider provider)
 			{
@@ -1572,24 +1559,22 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 						Client.World.SpawnPoint.Z));
 
 				Client.World.Player.IsSpawned = false;
-				LoadingWorldState loadingWorldState = new LoadingWorldState()
+				LoadingWorldScreen loadingWorldScreen = new LoadingWorldScreen()
 				{
 					ConnectingToServer = true
 				};
 
-				AlexInstance.GameStateManager.SetActiveState(loadingWorldState, true);
-				loadingWorldState.UpdateProgress(LoadingState.LoadingChunks, 0);
+				AlexInstance.GuiManager.AddScreen(loadingWorldScreen);
+			//	AlexInstance.GameStateManager.SetActiveState(loadingWorldState, true);
+				loadingWorldScreen.UpdateProgress(LoadingState.LoadingChunks, 0);
 
 				ThreadPool.QueueUserWorkItem((o) =>
 				{
-					McpePlayerAction action = McpePlayerAction.CreateObject();
-					action.runtimeEntityId = Client.EntityId;
-					action.actionId = (int) PlayerAction.DimensionChangeAck;
-					Client.SendPacket(action);
-
 					World world = Client.World;
 
 					world.ClearChunksAndEntities();
+					
+					
 					//world.ChunkManager.ClearChunks();
 					world.UpdatePlayerPosition(new PlayerLocation(message.position.X, message.position.Y, message.position.Z));
 					
@@ -1612,7 +1597,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 						
 						if (!spawnChunkLoaded && percentage >= 100)
 						{
-							loadingWorldState.UpdateProgress(LoadingState.Spawning, 99, "Waiting for spawn chunk...");
+							loadingWorldScreen.UpdateProgress(LoadingState.Spawning, 99, "Waiting for spawn chunk...");
 						}
 						else
 						{
@@ -1623,7 +1608,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 							if (percentage != previousPercentage)
 							{
-								loadingWorldState.UpdateProgress(LoadingState.LoadingChunks,
+								loadingWorldScreen.UpdateProgress(LoadingState.LoadingChunks,
 									percentage);
 								previousPercentage = percentage;
 
@@ -1666,7 +1651,13 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 						//}
 					} while (true);
 					
-					AlexInstance.GameStateManager.Back();
+					McpePlayerAction action = McpePlayerAction.CreateObject();
+					action.runtimeEntityId = Client.EntityId;
+					action.actionId = (int) PlayerAction.DimensionChangeAck;
+					Client.SendPacket(action);
+					
+					AlexInstance.GuiManager.RemoveScreen(loadingWorldScreen);
+					//AlexInstance.GameStateManager.Back();
 
 					var p = Client.World.Player.KnownPosition;
 
@@ -1676,7 +1667,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					//Client.SendMcpeMovePlayer(new MiNET.Utils.PlayerLocation(Client.World.Player.KnownPosition.X, Client.World.Player.KnownPosition.Y, Client.World.Player.KnownPosition.Z), false);
 
 					Client.World.Player.IsSpawned = true;
-					CustomConnectedPong.CanPing = couldPing;
 				});
 			}
 		}
@@ -1693,7 +1683,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		public void HandleMcpeSetPlayerGameType(McpeSetPlayerGameType message)
 		{
-			Client.World.Player.UpdateGamemode((Gamemode) message.gamemode);
+			Client.World.Player.UpdateGamemode((GameMode) message.gamemode);
 		}
 
 		public void HandleMcpeSimpleEvent(McpeSimpleEvent message)
@@ -2015,8 +2005,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			var unixTime = (ulong) DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 			if (message.timestamp == Client.ExpectedLatency)
 			{
-				CustomConnectedPong.CanPing = false;
-				CustomConnectedPong.Latency = Client.World.Player.Latency = (int) Client.Latency;
+				//CustomConnectedPong.CanPing = false;
+				//CustomConnectedPong.Latency = Client.World.Player.Latency = (int) Client.Latency;
 				/*if (!CustomConnectedPong.CanPing)
 				{
 					
@@ -2024,7 +2014,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			} 
 			else
 			{
-				CustomConnectedPong.Latency = Client.World.Player.Latency = (int) (unixTime - Client.LastSentPing);
+				//CustomConnectedPong.Latency = Client.World.Player.Latency = (int) (unixTime - Client.LastSentPing);
 				//Client.ExpectedLatency = message.timestamp;
 			}
 

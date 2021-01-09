@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using Alex.ResourcePackLib.Json.Models.Blocks;
 using Alex.ResourcePackLib.Json.Models.Items;
 using Newtonsoft.Json;
@@ -26,10 +27,10 @@ namespace Alex.ResourcePackLib.Json.Models
         [JsonProperty("gui_light"), JsonConverter(typeof(StringEnumConverter))]
         public GuiLight? GuiLight;
         
-        [JsonIgnore]
-        private ResourcePackModelBase _parent = null;
+       // [JsonIgnore]
+        //private ResourcePackModelBase _parent = null;
         
-        [JsonIgnore]
+        /*[JsonIgnore]
         public ResourcePackModelBase Parent
         {
             get => _parent;
@@ -38,11 +39,11 @@ namespace Alex.ResourcePackLib.Json.Models
                 _parent = value;
                 UpdateValuesFromParent(value);
             }
-        }
+        }*/
 
         [JsonIgnore] public ModelType Type { get; internal set; } = ModelType.Unknown;
         
-        private void UpdateValuesFromParent(ResourcePackModelBase parent)
+        public void UpdateValuesFromParent(ResourcePackModelBase parent)
         {
             if (parent == null) return;
 		    
@@ -53,17 +54,23 @@ namespace Alex.ResourcePackLib.Json.Models
 
             if (Elements.Length == 0 && parent.Elements.Length > 0)
             {
-                Elements = (ModelElement[]) parent.Elements.Clone();
+                Elements = parent.Elements.Select(x => x.Clone()).ToArray();//.Clone();
             }
 
             foreach (var kvp in parent.Textures)
             {
-                Textures.TryAdd(kvp.Key, kvp.Value);
+                if (!Textures.ContainsKey(kvp.Key))
+                {
+                    Textures.Add(kvp.Key, kvp.Value);
+                }
             }
 
             foreach (var kvp in parent.Display)
             {
-                Display.TryAdd(kvp.Key, kvp.Value);
+                if (!Display.ContainsKey(kvp.Key))
+                {
+                    Display.Add(kvp.Key, kvp.Value);
+                }
             }
         }
         

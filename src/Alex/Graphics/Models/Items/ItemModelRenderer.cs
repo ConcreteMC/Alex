@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using Alex.API.Blocks;
-using Alex.API.Entities;
 using Alex.API.Graphics;
 using Alex.API.Utils;
 using Alex.Blocks.Minecraft;
@@ -30,7 +29,7 @@ namespace Alex.Graphics.Models.Items
            
         }
 
-        public override void Cache(McResourcePack pack)
+        public override bool Cache(ResourceManager pack)
         {
             if (!Model.Textures.TryGetValue("layer0", out var t))
             {
@@ -39,52 +38,63 @@ namespace Alex.Graphics.Models.Items
 
             if (t == null)
             {
-                return;
+                return false;
             }
 
             List<VertexPositionColor> vertices = new List<VertexPositionColor>();
          
-            if (pack.TryGetBitmap(t, out var rawTexture))
+            if (pack.TryGetBitmap(t, out var texture))
             {
-                var texture = rawTexture.CloneAs<Rgba32>();
-
-                float toolPosX = 0.0f;
-                float toolPosY = 1.0f;
-                float toolPosZ = (1f / 16f) * 7.5f;
-
-                for (int y = 0; y < texture.Height; y++)
+                try
                 {
-                    for (int x = 0; x < texture.Width; x++)
+                    //  var texture = rawTexture.CloneAs<Rgba32>();
+
+                    float toolPosX = 0.0f;
+                    float toolPosY = 1.0f;
+                    float toolPosZ = (1f / 16f) * 7.5f;
+
+                    for (int y = 0; y < texture.Height; y++)
                     {
-                        var pixel = texture[x, y];
-                        if (pixel.A == 0)
+                        for (int x = 0; x < texture.Width; x++)
                         {
-                            continue;
+                            var pixel = texture[x, y];
+
+                            if (pixel.A == 0)
+                            {
+                                continue;
+                            }
+
+                            Color color = new Color(pixel.R, pixel.G, pixel.B, pixel.A);
+                            var origin = new Vector3(
+                                (toolPosX + (1f / texture.Width) * x), toolPosY - (1f / texture.Height) * y, toolPosZ);
+                            
+                            ItemModelCube built = new ItemModelCube(
+                                new Vector3(1f / texture.Width, 1f / texture.Height, 1f / 16f), Vector3.Zero);
+
+                            built.BuildCube(color);
+
+                            vertices.AddRange(
+                                Modify(
+                                    built.Front.Concat(built.Bottom).Concat(built.Back).Concat(built.Top)
+                                       .Concat(built.Left).Concat(built.Right), origin));
+                            //vertices.AddRange(built.Front);
+                           // vertices.AddRange(built.Bottom);
+                           // vertices.AddRange(built.Back);
+                            //vertices.AddRange(built.Top);
+                           // vertices.AddRange(built.Left);
+                           // vertices.AddRange(built.Right);
                         }
-
-                        Color color = new Color(pixel.R, pixel.G, pixel.B, pixel.A);
-
-                        ItemModelCube built =
-                            new ItemModelCube(new Vector3(1f / texture.Width, 1f / texture.Height, 1f / 16f));
-                        built.BuildCube(color);
-
-                        var origin = new Vector3(
-                            (toolPosX + (1f / texture.Width) * x),
-                            toolPosY - (1f / texture.Height) * y,
-                            toolPosZ
-                        );
-
-                        vertices.AddRange(Modify(built.Front, origin));
-                        vertices.AddRange(Modify(built.Bottom, origin));
-                        vertices.AddRange(Modify(built.Back, origin));
-                        vertices.AddRange(Modify(built.Top, origin));
-                        vertices.AddRange(Modify(built.Left, origin));
-                        vertices.AddRange(Modify(built.Right, origin));
                     }
+                }
+                finally
+                {
+                    texture.Dispose();
                 }
             }
 
             Vertices = vertices.ToArray();
+
+            return true;
         }
 
         private IEnumerable<VertexPositionColor> Modify(IEnumerable<VertexPositionColor> vertices, Vector3 offset)
@@ -102,13 +112,13 @@ namespace Alex.Graphics.Models.Items
         {
             return new ItemModelRenderer(Model)
             {
-                Vertices = Vertices.Clone() as VertexPositionColor[],
+                Vertices = Vertices != null ? Vertices.Clone() as VertexPositionColor[] : null,
            //     Indexes = Indexes.ToArray()
             };
         }
     }
 
-    public class ItemModelRenderer<TVertice> : Model, IAttachable, IItemRenderer where TVertice : struct, IVertexType
+    public class ItemModelRenderer<TVertice> : Model, IItemRenderer where TVertice : struct, IVertexType
     {
         public ResourcePackModelBase Model { get; }
 
@@ -129,7 +139,7 @@ namespace Alex.Graphics.Models.Items
             }
         }
 
-        public DisplayElement ActiveDisplayItem { get; private set; } = DisplayElement.Default;
+        public DisplayElement ActiveDisplayItem { get; set; } = DisplayElement.Default;
 
         private void UpdateDisplay()
         {
@@ -171,13 +181,6 @@ namespace Alex.Graphics.Models.Items
         }
 
         private Matrix _parentMatrix = Matrix.Identity;
-
-        /// <inheritdoc />
-        public bool ApplyHeadYaw { get; set; }
-
-        /// <inheritdoc />
-        public bool ApplyPitch { get; set; }
-
         public void Update(IUpdateArgs args, Matrix characterMatrix, Vector3 diffuseColor, PlayerLocation modelLocation)
         {
             _parentMatrix = characterMatrix;
@@ -213,11 +216,11 @@ namespace Alex.Graphics.Models.Items
             var activeDisplayItem = ActiveDisplayItem;
 
             var world = Matrix.Identity;
-
-            var a = new Vector3(0.5f, 0.5f, 0.5f);
-
+            
             if (activeDisplayItem != null)
             {
+                var a = new Vector3(0.5f, 0.5f, 0.5f);
+                
                 var displayTrans = new Vector3(activeDisplayItem.Translation.X,
                     activeDisplayItem.Translation.Y,
                     activeDisplayItem.Translation.Z) * (1f / 16f);
@@ -311,8 +314,9 @@ namespace Alex.Graphics.Models.Items
             }
         }
 
-        public virtual void Cache(McResourcePack pack)
+        public virtual bool Cache(ResourceManager pack)
         {
+            return false;
             //Buffer = GpuResourceManager.GetBuffer(this, )
         }
 

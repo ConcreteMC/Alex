@@ -10,6 +10,7 @@ using Alex.Gamestates.Common;
 using Alex.Gui;
 using Alex.Gui.Elements;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Input;
 using NLog;
 
 namespace Alex.Gamestates.MainMenu.Options

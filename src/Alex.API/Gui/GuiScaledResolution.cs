@@ -36,8 +36,9 @@ namespace Alex.API.Gui
 		public Matrix TransformMatrix { get; private set; } = Matrix.Identity;
 		public Matrix InverseTransformMatrix { get; private set; } = Matrix.Identity;
 
-		private int _targetWidth = 320;
-
+		//private int _targetWidth = 320;
+		private int _targetWidth = 480;
+		
 		public int TargetWidth
 		{
 			get => _targetWidth;
@@ -48,8 +49,8 @@ namespace Alex.API.Gui
 			}
 		}
 
-		private int _targetHeight = 240;
-
+		//private int _targetHeight = 240;
+		private int _targetHeight = 320;
 		public int TargetHeight
 		{
 			get => _targetHeight;
@@ -94,8 +95,8 @@ namespace Alex.API.Gui
 
 		public void Update()
 		{
-			var viewportWidth  = Graphics.Viewport.Width;
-			var viewportHeight = Graphics.Viewport.Height;
+			var viewportWidth  = Viewport.Width;
+			var viewportHeight = Viewport.Height;
 
 			CalculateScale(viewportWidth, viewportHeight, GuiScale, TargetWidth, TargetHeight, out var scaleFactor, out var scaledWidthD, out var scaledHeightD);
 
@@ -126,7 +127,7 @@ namespace Alex.API.Gui
 
 		private void CalculateScale(int viewportWidth, int viewportHeight, int guiScale, int targetWidth, int targetHeight, out int scaleFactor, out double scaledWidthD, out double scaledHeightD)
 		{
-			var isUnicode      = true;
+			const bool isUnicode      = false;
 			scaleFactor    = 1;
 
 			if (guiScale == 0)

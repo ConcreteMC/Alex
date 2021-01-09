@@ -188,7 +188,8 @@ namespace Alex.Gamestates.InGame
 				var pos = World.Player.Velocity;
 				return $"Velocity: (X={pos.X:F2}, Y={pos.Y:F2}, Z={pos.Z:F2}) ({World.Player.CurrentSpeed:F3} m/s)";// / Target Speed: {(World.Player.CalculateMovementSpeed() * 20f):F3} m/s";
 			});
-			_debugInfo.AddDebugLeft(() => $"Vertices: {World.Vertices:N0} ({GetBytesReadable((long)(World.Vertices * BlockShaderVertex.VertexDeclaration.VertexStride))})", TimeSpan.FromMilliseconds(500));
+
+			_debugInfo.AddDebugLeft(() => $"Vertices: {Alex.Metrics.PrimitiveCount:N0} Drawcount: {Alex.Metrics.DrawCount}", TimeSpan.FromMilliseconds(500));
 		//	_debugInfo.AddDebugLeft(() => $"IndexBuffer Elements: {World.IndexBufferSize:N0} ({GetBytesReadable(World.IndexBufferSize * 4)})");
 			_debugInfo.AddDebugLeft(() => $"Chunks: {World.ChunkCount}, {World.ChunkManager.RenderedChunks}", TimeSpan.FromMilliseconds(500));
 			_debugInfo.AddDebugLeft(() => $"Entities: {World.EntityManager.EntityCount}, {World.EntityManager.EntitiesRendered}", TimeSpan.FromMilliseconds(500));
@@ -198,6 +199,30 @@ namespace Alex.Gamestates.InGame
 			}, TimeSpan.FromMilliseconds(500));
 			//_debugInfo.AddDebugLeft(() => { return $"Do DaylightCycle: {World.DoDaylightcycle}"; });
 
+			_debugInfo.AddDebugLeft(
+				() =>
+				{
+					return $"Exhaustion: {World.Player.HealthManager.Exhaustion:F1}/{World.Player.HealthManager.MaxExhaustion}";
+				}, TimeSpan.FromMilliseconds(250));
+			
+			_debugInfo.AddDebugLeft(
+				() =>
+				{
+					return $"Saturation: {World.Player.HealthManager.Saturation:F1}/{World.Player.HealthManager.MaxSaturation}";
+				}, TimeSpan.FromMilliseconds(250));
+			
+			_debugInfo.AddDebugLeft(
+				() =>
+				{
+					return $"Health: {World.Player.HealthManager.Health:F1}/{World.Player.HealthManager.MaxHealth}";
+				}, TimeSpan.FromMilliseconds(250));
+			
+			_debugInfo.AddDebugLeft(
+				() =>
+				{
+					return $"Gamemode: {World.Player.Gamemode}";
+				}, TimeSpan.FromSeconds(5));
+			
 			_debugInfo.AddDebugRight(Alex.OperatingSystem);
 			_debugInfo.AddDebugRight(Alex.Gpu);
 			_debugInfo.AddDebugRight($"{Alex.DotnetRuntime}\n");
@@ -432,7 +457,7 @@ namespace Alex.Gamestates.InGame
 				{
 					var               player   = World?.Player;
 					var               block    = player.SelBlock;
-					var               blockPos = player.RaytracedBlock;
+					//var               blockPos = player.RaytracedBlock;
 					var boxes    = player.RaytraceBoundingBoxes;
 					
 					if (boxes != null && boxes.Length >0)
@@ -482,17 +507,20 @@ namespace Alex.Gamestates.InGame
 								World.Camera.ProjectionMatrix, entity == hitEntity ? Color.Red : Color.Yellow);
 						}
 					}
-					
+
 					if (World?.Player != null)
-						args.SpriteBatch.RenderBoundingBox(World.Player.GetBoundingBox(), World.Camera.ViewMatrix,
-							World.Camera.ProjectionMatrix, Color.Red);
-
-					var hit = World.Player.Movement.LastCollision;
-
-					foreach (var bb in hit)
 					{
 						args.SpriteBatch.RenderBoundingBox(
-							bb, World.Camera.ViewMatrix, World.Camera.ProjectionMatrix, Color.YellowGreen, true);
+							World.Player.GetBoundingBox(), World.Camera.ViewMatrix, World.Camera.ProjectionMatrix,
+							Color.Red);
+
+						var hit = World.Player.Movement.LastCollision;
+
+						foreach (var bb in hit)
+						{
+							args.SpriteBatch.RenderBoundingBox(
+								bb.Box, World.Camera.ViewMatrix, World.Camera.ProjectionMatrix, bb.Color, true);
+						}
 					}
 				}
 			}
@@ -501,7 +529,7 @@ namespace Alex.Gamestates.InGame
 				args.SpriteBatch.End();
 			}
 			
-			World.Render2D(args);
+			World?.Render2D(args);
 		}
 
 		public static string GetCardinalDirection(PlayerLocation cam)

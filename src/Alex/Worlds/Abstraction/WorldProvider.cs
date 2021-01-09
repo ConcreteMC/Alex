@@ -1,6 +1,5 @@
 using System;
 using System.Threading.Tasks;
-using Alex.API.Entities;
 using Alex.API.Gui.Elements;
 using Alex.API.World;
 using Alex.Gui.Elements;

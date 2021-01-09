@@ -1,6 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using Alex.API.Blocks;
 using Alex.API.Graphics;
@@ -10,18 +12,34 @@ using Alex.Blocks.Minecraft;
 using Alex.Blocks.State;
 using Alex.Items;
 using Alex.Net;
+using Alex.ResourcePackLib.Json;
+using Alex.ResourcePackLib.Json.Models.Entities;
+using Alex.Utils;
 using Alex.Utils.Inventories;
 using Alex.Worlds;
 using Alex.Worlds.Multiplayer.Bedrock;
+using LibNoise.Combiner;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using MiNET.LevelDB;
 using MiNET.Net;
+using MiNET.Utils.Skins;
+using MiNET.Worlds;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Serialization;
 using NLog;
 using NLog.Fluent;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats.Png;
+using SixLabors.ImageSharp.PixelFormats;
 using BlockCoordinates = Alex.API.Utils.BlockCoordinates;
 using BoundingBox = Microsoft.Xna.Framework.BoundingBox;
 using ContainmentType = Microsoft.Xna.Framework.ContainmentType;
+using GeometryIdentifier = Alex.Worlds.Multiplayer.Bedrock.GeometryIdentifier;
+using GeometryModel = Alex.Worlds.Multiplayer.Bedrock.GeometryModel;
 using Skin = Alex.API.Utils.Skin;
+using SkinResourcePatch = Alex.Worlds.Multiplayer.Bedrock.SkinResourcePatch;
 
 namespace Alex.Entities
 {
@@ -184,9 +202,12 @@ namespace Alex.Entities
 	    {
 		    _skipUpdate = true;
 	    }
-	    
+
 	    public override void Update(IUpdateArgs args)
 	    {
+		    bool hasActiveDialog = Alex.Instance.GuiManager.ActiveDialog != null;
+		    Controller.CheckMovementInput = !hasActiveDialog;
+		    
 		    if (WaitingOnChunk && Age % 4 == 0)
 		    {
 			    NoAi = true;
@@ -195,6 +216,12 @@ namespace Alex.Entities
 			    {
 				    WaitingOnChunk = false;
 			    }
+		    }
+
+		    if (!IsSpawned)
+		    {
+			    base.Update(args);
+			    return;
 		    }
 
 		    bool sprint = IsSprinting;
@@ -207,7 +234,7 @@ namespace Alex.Entities
 		    {
 			    IsSprinting = false;
 		    }
-
+		    
 		    Controller.Update(args.GameTime);
 		    //KnownPosition.HeadYaw = KnownPosition.Yaw;
 
@@ -244,7 +271,7 @@ namespace Alex.Entities
 		    {
 			    _skipUpdate = false;
 		    }
-		    else if ((Controller.CheckInput && Controller.CheckMovementInput && Alex.Instance.GuiManager.ActiveDialog == null))
+		    else if ((Controller.CheckInput && Controller.CheckMovementInput && !hasActiveDialog))
 		    {
 
 			    UpdateBlockRayTracer();
@@ -295,7 +322,7 @@ namespace Alex.Entities
 				    {
 					    StopBreakingBlock(true, true);
 
-					    if (Gamemode != Gamemode.Creative)
+					    if (Gamemode != GameMode.Creative)
 					    {
 						    //	StartBreakingBlock();
 					    }
@@ -343,6 +370,9 @@ namespace Alex.Entities
 			    PreviousSlot = slot;
 		    }
 
+		    if (hasActiveDialog)
+			    _skipUpdate = true;
+		    
 		    base.Update(args);
 
 	    }
@@ -363,9 +393,9 @@ namespace Alex.Entities
 			    canAttack = !IsNoPvM;
 		    }
 
-		    if (entity is RemotePlayer rp && IsSneaking)
+		    if (IsSneaking)
 		    {
-			    if (rp.Skin != null)
+			    /*if (rp.Skin != null)
 			    {
 				    if (!Directory.Exists("skins"))
 					    Directory.CreateDirectory("skins");
@@ -384,23 +414,10 @@ namespace Alex.Entities
 				    var oldSkin = Skin;
 				    Skin = rp.Skin;
 
-				    if (Network is BedrockClient bc)
-				    {
-					    var packet = McpePlayerSkin.CreateObject();
-					    packet.skin = rp.Skin;
-					    packet.skin.GeometryData = rp.Skin.GeometryData;
-					    packet.skin.GeometryName = rp.Skin.GeometryName;
-					    
-					    packet.uuid = UUID;
-					    packet.isVerified = true;
-					    packet.skinName = rp.Skin.SkinId;
-					    packet.oldSkinName = "";
-					    
-					    bc.SendPacket(packet);
-
-					    Log.Info($"Stole skin from {rp.NameTag}");
-				    }
-			    }
+				   
+			    }*/
+			    
+			    SteelSkin(entity);
 			    return;
 		    }
 
@@ -417,6 +434,59 @@ namespace Alex.Entities
 		    }
 	    }
 
+	    private void SteelSkin(Entity sourceEntity)
+	    {
+		    if (Network is BedrockClient bc)
+		    {
+			    MiNET.Utils.Skins.Skin skin = null;
+			    
+			    if (sourceEntity is RemotePlayer player)
+			    {
+				    if (player.Skin != null)
+					    skin = player.Skin;
+			    }
+			    else
+			    {
+				    if (sourceEntity?.ModelRenderer?.Model == null)
+					    return;
+				    
+				    var model   = sourceEntity.ModelRenderer.Model;
+				    skin = model.ToSkin();
+			    }
+
+			    if (skin == null)
+				    return;
+
+			    var texture = sourceEntity.ModelRenderer.Texture;
+
+			    if (skin.Data == null || skin.Data.Length == 0)
+			    {
+				    skin = skin.UpdateTexture(texture);
+			    }
+
+			    var packet = McpePlayerSkin.CreateObject();
+			    packet.skin = skin;
+
+			    packet.uuid = UUID;
+			    packet.isVerified = true;
+			    packet.skinName = skin.SkinId;
+			    packet.oldSkinName = "";
+
+			    bc.SendPacket(packet);
+
+			    Skin = skin;
+			    Log.Info($"Stole skin from {sourceEntity.NameTag}");
+			    
+			   /* File.WriteAllText(Path.Combine("skins", skin.SkinId + ".json"), skin.GeometryData);
+
+			    if (skin.TryGetBitmap(out var bmp))
+			    {
+				    bmp.SaveAsPng(Path.Combine("skins", skin.SkinId + ".png"));
+			    }*/
+		    }
+		    
+	    }
+	    
 	    public Entity HitEntity { get; private set; } = null;
 	    public Entity[] EntitiesInRange { get; private set; } = null;
 
@@ -462,28 +532,21 @@ namespace Alex.Entities
 		    var camPos     = Level.Camera.Position;
 		    var lookVector = Level.Camera.Direction;
 
-		    List<BoundingBox> boundingBoxes = new List<BoundingBox>();
-		    for (float x = 0.5f; x < 8f; x += 0.1f)
+		    //List<BoundingBox> boundingBoxes = new List<BoundingBox>();
+		   // var               ray           = new Ray(camPos, lookVector * 8f);
+		    
+		    for (float x = (float) (Width * Scale); x < 8f; x += 0.01f)
 		    {
 			    Vector3 targetPoint  = camPos + (lookVector * x);
-			    
 			    var     flooredBlock = Vector3.Floor(targetPoint);
 			    var     block        = Level.GetBlockState(targetPoint);
 
 			    if (block != null && block.Block.HasHitbox)
 			    {
-				    boundingBoxes.Clear();
-				    
-				    if (block.Model != null)
-				    {
-					    boundingBoxes.AddRange(block.Model.GetBoundingBoxes(flooredBlock));
-				    }
-				    
-				    if (Level.EntityManager.TryGetBlockEntity(flooredBlock, out var blockEntity))
-				    {
-					   boundingBoxes.Add( blockEntity.GetBoundingBox(flooredBlock));
-				    }
-				    
+				    //boundingBoxes.Clear();
+
+				    var boundingBoxes = block.Block.GetBoundingBoxes(flooredBlock).ToArray();
+
 				    foreach (var bbox in boundingBoxes)
 				    {
 					    if (bbox.Contains(targetPoint) == ContainmentType.Contains)
@@ -496,13 +559,14 @@ namespace Alex.Entities
 
 						    Raytraced = targetPoint;
 						    HasRaytraceResult = true;
-						    _boundingBoxes.Add(bbox);
+						    _boundingBoxes.AddRange(boundingBoxes);
 
 						    if (SetPlayerAdjacentSelectedBlock(Level, x, camPos, lookVector, out Vector3 rawAdjacent))
 						    {
 							    AdjacentRaytraceBlock = Vector3.Floor(rawAdjacent);
 							    AdjacentRaytrace = rawAdjacent;
 						    }
+						    
 						    return;
 					    }
 				    }
@@ -519,9 +583,9 @@ namespace Alex.Entities
 		    for (float x = xStart; x > 0.7f; x -= 0.1f)
 		    {
 			    Vector3 targetPoint = camPos + (lookVector * x);
-			    var     block       = world.GetBlock(targetPoint);
+			    var     blockState  = world.GetBlockState(targetPoint);
 
-			    if (block != null && (!block.Solid))
+			    if (blockState != null && (!blockState.Block.Solid))
 			    {
 				    rawAdjacent = targetPoint;
 				    return true;
@@ -532,6 +596,18 @@ namespace Alex.Entities
 		    return false;
 	    }
 
+	    public void DropHeldItem()
+	    {
+		    var floored = new BlockCoordinates(Vector3.Floor(Raytraced));
+		    var face    = GetTargetFace();
+		    
+		    var adjacent = AdjacentRaytrace;
+		    var flooredAdj = Vector3.Floor(adjacent);
+		    var remainder = new Vector3(adjacent.X - flooredAdj.X, adjacent.Y - flooredAdj.Y, adjacent.Z - flooredAdj.Z);
+		    
+		    Network?.PlayerDigging(DiggingStatus.DropItem, floored, face, remainder);
+	    }
+	    
 	    private void BlockBreakTick()
 	    {
 		    var tick =  Interlocked.Increment(ref _destroyingTick);
@@ -553,7 +629,8 @@ namespace Alex.Entities
 			var floored  = new BlockCoordinates(Vector3.Floor(Raytraced));
 			var adjacent = AdjacentRaytrace;
 			
-		    var block    = Level.GetBlock(floored);
+		    var blockState = Level.GetBlockState(floored);
+		    var block      = blockState.Block;
 		    if (!block.HasHitbox)
 		    {
 			    return;
@@ -592,7 +669,7 @@ namespace Alex.Entities
                 return;
 		    }
 
-		    if ((Gamemode == Gamemode.Creative  || ticks >= _destroyTimeNeeded) && !forceCanceled)
+		    if ((Gamemode == GameMode.Creative  || ticks >= _destroyTimeNeeded) && !forceCanceled)
 		    {
                 Network?.PlayerDigging(DiggingStatus.Finished, _destroyingTarget, _destroyingFace, remainder);
 			    Log.Debug($"Stopped breaking block. Ticks passed: {ticks}");
@@ -644,8 +721,9 @@ namespace Alex.Entities
 			    //IBlock block = null;
 			    if (/*!IsWorldImmutable &&*/ HasRaytraceResult)
 			    {
-				    var existingBlock = Level.GetBlock(coordR);
-				    bool isBlockItem = slot is ItemBlock;
+				    var  existingBlockState = Level.GetBlockState(coordR);
+				    var  existingBlock      = existingBlockState.Block;
+				    bool isBlockItem        = slot is ItemBlock;
 				    
 				    if (existingBlock.CanInteract && (!isBlockItem || IsSneaking))
 				    {
@@ -809,5 +887,30 @@ namespace Alex.Entities
 			
 			base.OnTick();
 		}
-	}
+
+	    public void LookAt(Vector3 targetPosition, bool aimWithHead)
+	    {
+		    var    view        = targetPosition - KnownPosition.ToVector3();
+		    var    dz          = view.Z;
+		    var    dx          = view.X;
+		    
+		    float tanOutput   = 90f - MathUtils.RadianToDegree(MathF.Atan(dx / (dz)));
+		    float thetaOffset = 270f;
+		    if (dz < 0)
+		    {
+			    thetaOffset = 90;
+		    }
+		    var yaw = thetaOffset + tanOutput;
+
+		    if (aimWithHead)
+		    {
+			    var bDiff = MathF.Sqrt((dx * dx) + (dz * dz));
+			    var dy    = (KnownPosition.Y + Height) - (targetPosition.Y);
+			    KnownPosition.Pitch = MathUtils.RadianToDegree(MathF.Atan(dy / (bDiff)));
+		    }
+
+		    KnownPosition.Yaw = yaw;
+		    KnownPosition.HeadYaw = yaw;
+	    }
+    }
 }

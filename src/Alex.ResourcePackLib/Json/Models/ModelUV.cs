@@ -21,5 +21,9 @@ namespace Alex.ResourcePackLib.Json.Models
 			Y2 = y2;
 		}
 
+		public ModelUV Clone()
+		{
+			return new ModelUV(X1, Y1, X2, Y2);
+		}
 	}
 }

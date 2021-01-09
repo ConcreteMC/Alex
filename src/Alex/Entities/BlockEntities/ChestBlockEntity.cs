@@ -20,8 +20,8 @@ namespace Alex.Entities.BlockEntities
 		/// <inheritdoc />
 		public ChestBlockEntity(Block block, World level, PooledTexture2D texture) : base(level, block)
 		{
-			Width = 16;
-			Height = 16;
+			Width = 1f;
+			Height = 1f;
 			
 			ModelRenderer = new EntityModelRenderer(new ChestEntityModel(), texture);
 		}

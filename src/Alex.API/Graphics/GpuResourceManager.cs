@@ -273,9 +273,10 @@ namespace Alex.API.Graphics
             return buffer;
         }
 
+        public static bool ReportIncorrectlyDisposedBuffers = true;
         public void Disposed(PooledVertexBuffer buffer)
         {
-            if (!buffer.MarkedForDisposal)
+            if (!buffer.MarkedForDisposal && ReportIncorrectlyDisposedBuffers)
                 Log.Debug($"Incorrectly disposing of buffer {buffer.PoolId}, lifetime: {DateTime.UtcNow - buffer.CreatedTime} Creator: {buffer.Owner ?? "N/A"} Memory usage: {Extensions.GetBytesReadable(buffer.MemoryUsage)}");
 
             //Interlocked.Add(ref _estMemoryUsage, -size);
@@ -287,7 +288,7 @@ namespace Alex.API.Graphics
         
         public void Disposed(PooledTexture2D buffer)
         {
-            if (!buffer.MarkedForDisposal)
+            if (!buffer.MarkedForDisposal && ReportIncorrectlyDisposedBuffers)
                 Log.Debug($"Incorrectly disposing of texture {buffer.PoolId}, lifetime: {DateTime.UtcNow - buffer.CreatedTime} Creator: {buffer.Owner ?? "N/A"} Memory usage: {Extensions.GetBytesReadable(buffer.MemoryUsage)}");
 
             //Interlocked.Add(ref _estMemoryUsage, -size);
@@ -299,7 +300,7 @@ namespace Alex.API.Graphics
 
         public void Disposed(PooledIndexBuffer buffer)
         {
-            if (!buffer.MarkedForDisposal)
+            if (!buffer.MarkedForDisposal && ReportIncorrectlyDisposedBuffers)
                 Log.Debug($"Incorrectly disposing of indexbuffer {buffer.PoolId}, lifetime: {DateTime.UtcNow - buffer.CreatedTime} Creator: {buffer.Owner ?? "N/A"} Memory usage: {Extensions.GetBytesReadable(buffer.MemoryUsage)}");
 
             //Interlocked.Add(ref _estMemoryUsage, -size);

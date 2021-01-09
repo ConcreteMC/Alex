@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Alex.API;
 using Alex.API.Data.Servers;
-using Alex.API.Entities;
 using Alex.API.Graphics;
 using Alex.API.Graphics.Typography;
 using Alex.API.Network;
@@ -13,6 +12,7 @@ using Alex.API.Resources;
 using Alex.API.Utils;
 using Alex.Blocks.Minecraft;
 using Alex.Entities.Effects;
+using Alex.Entities.Meta;
 using Alex.Entities.Properties;
 using Alex.Gamestates;
 using Alex.Graphics.Models.Entity;
@@ -42,7 +42,7 @@ using UUID = Alex.API.Utils.UUID;
 
 namespace Alex.Entities
 {
-	public class Entity : IEntity, IPhysicsEntity
+	public class Entity
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(Entity));
 
@@ -104,29 +104,9 @@ namespace Alex.Entities
 			}
 		}
 
-		public  Vector3      Velocity      { get; set; } = Vector3.Zero;
-
-		/// <inheritdoc />
-		public PhysicsState PreviousState { get; set; } = new PhysicsState(Vector3.Zero, new PlayerLocation());
+		public float   Slipperines { get; set; } = 0.6f;
+		public Vector3 Velocity    { get; set; } = Vector3.Zero;
 		
-		private float        _posOffset    = 0;
-		private bool         _posOffsetSet = false;
-
-		public float PositionOffset
-		{
-			get
-			{
-				if (!_posOffsetSet)
-					return (float) Height;
-				return _posOffset;
-			}
-			set
-			{
-				_posOffsetSet = true;
-				_posOffset = value;
-			}
-		}
-
 		//public HealthManager HealthManager { get; set; }
 		public string NameTag { get; set; }
 
@@ -327,7 +307,10 @@ namespace Alex.Entities
 					IsFlying ? Networking.Java.Packets.Play.EntityProperties.FlyingSpeed :
 						Networking.Java.Packets.Play.EntityProperties.MovementSpeed]).Calculate();
 
-			return (modifier)- 0.00475f;
+			if (IsSneaking)
+				modifier *= 0.29997683577f;
+			
+			return (modifier);
 		}
 
 		private bool _skipRendering = false;
@@ -374,12 +357,7 @@ namespace Alex.Entities
 
             if ((inHand == null || inHand.Count == 0 || inHand.Id <= 0) && ItemRenderer != null && ModelRenderer != null)
             {
-                if (ModelRenderer.GetBone("rightItem", out EntityModelRenderer.ModelBone bone))
-                {
-	                bone.Remove(ItemRenderer);
-                }
-
-                ItemRenderer = null;
+	            ItemRenderer = null;
                 return;
             }
 
@@ -689,9 +667,9 @@ namespace Alex.Entities
 			var  renderer = ModelRenderer;
 			long rendered = 0;
 
-			if (((RenderEntity && !IsInvisible) || ShowItemInHand) && renderer != null && !_skipRendering)
+			if (!IsInvisible && RenderEntity && renderer != null)
 			{
-				renderer.Render(renderArgs, IsInvisible || !RenderEntity);
+				renderer.Render(renderArgs);
 
 				if (renderer.Valid)
 				{
@@ -747,7 +725,7 @@ namespace Alex.Entities
 
 	            if (arm != null)
 	            {
-		            Vector3 pivot;
+		            Vector3? pivot;
 
 		            if (_rightItemModel != null)
 		            {
@@ -758,15 +736,17 @@ namespace Alex.Entities
 			            pivot = arm.Definition.Pivot;
 		            }
 
+		            pivot ??= Vector3.Zero;
+		            
 		            if ((ItemRenderer.DisplayPosition & DisplayPosition.ThirdPerson) != 0)
-			            scaleMatrix = Matrix.CreateTranslation(-pivot)
+			            scaleMatrix = Matrix.CreateTranslation(-pivot.Value)
 			                          * Matrix.CreateRotationX(
 				                          MathUtils.ToRadians((1f / 16f) * arm.Rotation.X))
 			                          * Matrix.CreateRotationY(
 				                          MathUtils.ToRadians((1f / 16f) * arm.Rotation.Y))
 			                          * Matrix.CreateRotationZ(
 				                          MathUtils.ToRadians((1f / 16f) * arm.Rotation.Z))
-			                          * Matrix.CreateTranslation(pivot);
+			                          * Matrix.CreateTranslation(pivot.Value);
 	            }
             }
 
@@ -782,11 +762,6 @@ namespace Alex.Entities
 					
             ItemRenderer?.Update(args.GraphicsDevice, args.Camera);
 		}
-
-        public void UpdateHeadYaw(float rotation)
-        {
-            KnownPosition.HeadYaw = rotation;
-        }
 
 		private long _hitAnimationEnd = 0;
 		private bool _isHit = false;
@@ -1047,11 +1022,13 @@ namespace Alex.Entities
 		}
 		
 			var blockBelowFeet = Level?.GetBlockStates(knownDown.X, knownDown.Y, knownDown.Z);
-			var feetBlock = Level?.GetBlockStates(knownPos.X, knownPos.Y, knownPos.Z).ToArray();
-			var headBlock = Level?.GetBlock(KnownPosition.GetCoordinates3D() + new BlockCoordinates(0, 1, 0));
+			var feetBlock      = Level?.GetBlockStates(knownPos.X, knownPos.Y, knownPos.Z).ToArray();
+			var headBlockState = Level?.GetBlockState(KnownPosition.GetCoordinates3D() + new BlockCoordinates(0, 1, 0));
 
-			if (headBlock != null)
+			if (headBlockState != null)
 			{
+				var headBlock = headBlockState.Block;
+				
 				if (headBlock.Solid)
 				{
 					HeadInBlock = true;
@@ -1232,21 +1209,47 @@ namespace Alex.Entities
 			//var pos = KnownPosition;
 			//return GetBoundingBox(pos);
 		}
-		
+
 		public virtual BoundingBox GetBoundingBox(Vector3 pos)
 		{
-			double halfWidth = (Width * Scale) / 2D;
-			double halfDepth = (Width * Scale) / 2D;
+			var    width     = Width;
+			var    height    = Height;
 			
-			return new BoundingBox(new Vector3((float)(pos.X - halfWidth), pos.Y, (float)(pos.Z - halfDepth)), new Vector3((float)(pos.X + halfWidth), (float)(pos.Y + (Height * Scale)), (float)(pos.Z + halfDepth)));
+			double halfWidth = (width * Scale) / 2D;
+			double halfDepth = (width * Scale) / 2D;
+
+			return new BoundingBox(
+				new Vector3((float) (pos.X - halfWidth), pos.Y, (float) (pos.Z - halfDepth)),
+				new Vector3(
+					(float) (pos.X + halfWidth), (float) (pos.Y + (height * Scale)), (float) (pos.Z + halfDepth)));
 		}
-		
-		public bool IsColliding(IEntity other)
+
+		public virtual BoundingBox GetVisibilityBoundingBox(Vector3 pos)
+		{
+			var width  = Width;
+			var height = Height;
+
+			if (ModelRenderer?.Model != null)
+			{
+				width = ModelRenderer.Model.Description.VisibleBoundsWidth;
+				height = ModelRenderer.Model.Description.VisibleBoundsHeight;
+			}
+
+			double halfWidth = (width * Scale) / 2D;
+			double halfDepth = (width * Scale) / 2D;
+
+			return new BoundingBox(
+				new Vector3((float) (pos.X - halfWidth), pos.Y, (float) (pos.Z - halfDepth)),
+				new Vector3(
+					(float) (pos.X + halfWidth), (float) (pos.Y + (height * Scale)), (float) (pos.Z + halfDepth)));
+		}
+
+		public bool IsColliding(Entity other)
 		{
 			return IsColliding(GetBoundingBox(), other);
 		}
 
-		public bool IsColliding(BoundingBox bbox, IEntity other)
+		public bool IsColliding(BoundingBox bbox, Entity other)
 		{
 			//if (!Compare((int) KnownPosition.X, (int) other.KnownPosition.X, 5)) return false;
 			//if (!Compare((int) KnownPosition.Z, (int) other.KnownPosition.Z, 5)) return false;

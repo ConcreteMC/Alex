@@ -20,7 +20,6 @@ using Alex.Worlds.Chunks;
 using Alex.Worlds.Singleplayer;
 using Microsoft.Xna.Framework;
 using NLog;
-using MathF = Alex.API.Utils.MathF;
 using Matrix = System.Drawing.Drawing2D.Matrix;
 
 namespace Alex.Graphics.Models.Blocks
@@ -69,30 +68,28 @@ namespace Alex.Graphics.Models.Blocks
 			
 			Boxes = CalculateBoundingBoxes(Models);
 
-			/*for (int i = 0; i < Boxes.Length; i++)
+			for (int i = 0; i < Boxes.Length; i++)
 			{
-				var box         = Boxes[i];
-				
-				/*var yDifference = box.Max.Y - box.Min.Y;
-				if (yDifference < 0.01f)
+				var box        = Boxes[i];
+				var dimensions = box.GetDimensions();
+
+				if (dimensions.X < 0.01f)
 				{
-					box.Max.Y += (0.01f - yDifference);
+					box.Inflate(new Vector3(0.01f - dimensions.X, 0f, 0f));
+				}
+				
+				if (dimensions.Y < 0.01f)
+				{
+					box.Inflate(new Vector3(0f, 0.01f - dimensions.Y, 0f));
+				}
+				
+				if (dimensions.Z < 0.01f)
+				{
+					box.Inflate(new Vector3(0f, 0f, 0.01f - dimensions.Z));
 				}
 
-				var xDifference = box.Max.X - box.Min.X;
-				if (xDifference < 0.01f)
-				{
-					box.Max.X += (0.01f - xDifference);
-				}
-				
-				var zDifference = box.Max.Z - box.Min.Z;
-				if (zDifference < 0.01f)
-				{
-					box.Max.Z += (0.01f - zDifference);
-				}*
-				
 				Boxes[i] = box;
-			}*/
+			}
 		}
 
 		/// <inheritdoc />
@@ -490,6 +487,7 @@ namespace Alex.Graphics.Models.Blocks
 			ResourcePackModelBase model,
 			Biome biome)
 		{
+			var positionOffset = baseBlock.GetOffset(NoiseGenerator, position);
 			//bsModel.Y = Math.Abs(180 - bsModel.Y);
 
 			//if (Resources.BlockModelRegistry.TryGet(blockStateModel.ModelName, out var registryEntry))
@@ -505,7 +503,8 @@ namespace Alex.Graphics.Models.Blocks
 
 					element.From *= Scale;
 
-					foreach (var face in element.Faces)
+					var faces = element.Faces.ToArray();
+					foreach (var face in faces)
 					{
 						var facing   = face.Key;
 						var cullFace = face.Value.CullFace ?? face.Key;
@@ -526,8 +525,6 @@ namespace Alex.Graphics.Models.Blocks
 
 						if (!ShouldRenderFace(world, facing, position, baseBlock))
 							continue;
-
-						var positionOffset = baseBlock.GetOffset(NoiseGenerator, position);
 
 						var   uv = face.Value.UV;
 						float x1 = 0, x2 = 0, y1 = 0, y2 = 0;
@@ -608,7 +605,7 @@ namespace Alex.Graphics.Models.Blocks
 									else
 									{
 
-										faceColor = Resources.ResourcePack.GetGrassColor(
+										faceColor = Resources.GetGrassColor(
 											biome.Temperature, biome.Downfall, (int) position.Y);
 									}
 
@@ -617,7 +614,7 @@ namespace Alex.Graphics.Models.Blocks
 								case TintType.Foliage:
 									if (face.Value.TintIndex.HasValue && face.Value.TintIndex == 0)
 									{
-										faceColor = Resources.ResourcePack.GetFoliageColor(
+										faceColor = Resources.GetFoliageColor(
 											biome.Temperature, biome.Downfall, (int) position.Y);
 									}
 
@@ -630,9 +627,9 @@ namespace Alex.Graphics.Models.Blocks
 
 						faceColor = AdjustColor(faceColor, facing, element.Shade);
 
-						var uvMap = GetTextureUVMap(
-							Resources, ResolveTexture(model, face.Value.Texture), x1, x2, y1, y2, face.Value.Rotation, faceColor);
-
+						BlockTextureData uvMap = GetTextureUVMap(
+								Resources, face.Value.Texture, x1, x2, y1, y2, face.Value.Rotation, faceColor);
+						
 						var vertices = GetFaceVertices(face.Key, element.From, element.To, uvMap);
 
 						vertices = ProcessVertices(vertices, blockStateModel, element, uvMap, facing, face.Value);
@@ -690,7 +687,7 @@ namespace Alex.Graphics.Models.Blocks
 		private Color GetGrassBiomeColor(IBlockAccess access, int x, int y, int z)
 		{
 			var biome = access.GetBiome(new BlockCoordinates(x, y, z));
-			return Resources.ResourcePack.GetGrassColor(
+			return Resources.GetGrassColor(
 				biome.Temperature, biome.Downfall, y);
 		}
 

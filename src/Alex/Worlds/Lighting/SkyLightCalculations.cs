@@ -6,6 +6,7 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Alex.Blocks.Minecraft;
 using Alex.Worlds.Chunks;
@@ -20,14 +21,15 @@ using IBlockAccess = Alex.Worlds.Abstraction.IBlockAccess;
 
 namespace Alex.Worlds.Lighting
 {
-	public class SkyLightCalculations
+	public class SkyLightCalculations : IDisposable
 	{
 		private static readonly ILogger Log = LogManager.GetCurrentClassLogger(typeof(SkyLightCalculations));
 		
-		public bool DoLogging { get; set; } = false;
-		public SkyLightCalculations()
+		public  bool              DoLogging         { get; set; } = false;
+		private CancellationToken CancellationToken { get; }
+		public SkyLightCalculations(CancellationToken cancellationToken)
 		{
-
+			CancellationToken = cancellationToken;
 		}
 
 		public bool RecalcSkyLight(ChunkColumn chunk, IBlockAccess level)
@@ -176,7 +178,7 @@ namespace Alex.Worlds.Lighting
 				//	Log.Error($"Block at {block.Coordinates} had unexpected light level. Expected 15 but was {block.SkyLight}");
 				//}
 
-				while (lightBfQueue.Count > 0)
+				while (lightBfQueue.Count > 0 && !CancellationToken.IsCancellationRequested)
 				{
 					var coordinates = lightBfQueue.Dequeue();
 					lightBfSet.Remove(coordinates);
@@ -212,7 +214,7 @@ namespace Alex.Worlds.Lighting
 			}
 			catch (Exception e)
 			{
-				Log.Error("Calculation", e);
+				Log.Error(e, "Calculation");
 			}
 		}
 
@@ -451,6 +453,9 @@ namespace Alex.Worlds.Lighting
 
 			return h;
 		}
+
+		/// <inheritdoc />
+		public void Dispose() { }
 	}
 
 }

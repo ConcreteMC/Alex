@@ -3,7 +3,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using Alex.API.Entities;
 using Alex.API.Graphics;
 using Alex.API.Network;
 using Alex.API.Utils;
@@ -63,10 +62,7 @@ namespace Alex.Worlds
 				_sw.Restart();
 				
 				entity.OnTick();
-				
-				var tickTime = _sw.ElapsedMilliseconds;
-				
-				
+
 				if (Math.Abs(new ChunkCoordinates(entity.KnownPosition).DistanceTo(cameraChunkPosition))
 				    > World.ChunkManager.RenderDistance)
 				{
@@ -75,7 +71,7 @@ namespace Alex.Worlds
 					continue;
 				}
 
-				var entityBox = entity.GetBoundingBox();
+				var entityBox = entity.GetVisibilityBoundingBox(entity.RenderLocation);
 
 				if (World.Camera.BoundingFrustum.Contains(
 					new Microsoft.Xna.Framework.BoundingBox(entityBox.Min, entityBox.Max)) != ContainmentType.Disjoint)
@@ -240,7 +236,7 @@ namespace Alex.Worlds
 		public bool AddBlockEntity(BlockCoordinates coordinates, BlockEntity entity)
 		{
 			entity.KnownPosition = coordinates;
-			entity.Block = World.GetBlock(coordinates);
+			entity.Block = World.GetBlockState(coordinates).Block;
 			return BlockEntities.TryAdd(coordinates, entity);
 		}
 
@@ -279,7 +275,7 @@ namespace Alex.Worlds
 
 	    public IEnumerable<Entity> GetEntities(Vector3 camPos, int radius)
 	    {
-		    return Entities.Values.ToArray().Where(x => x.IsRendered && Math.Abs(x.KnownPosition.DistanceTo(new PlayerLocation(camPos))) < radius).ToArray();
+		    return Entities.Values.ToArray().Where(x => x.IsRendered && Math.Abs(Vector3.DistanceSquared(x.KnownPosition.ToVector3(), camPos)) < radius).ToArray();
 	    }
 
 	    public void ClearEntities()

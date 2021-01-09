@@ -5,6 +5,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Threading;
+using Alex.API.Utils;
 using Alex.Net.Bedrock;
 using MiNET;
 using MiNET.Net;
@@ -66,7 +67,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					var wrapper = McpeWrapper.CreateObject();
 					wrapper.ReliabilityHeader.Reliability = Reliability.ReliableOrdered;
 					wrapper.ForceClear = true;
-					wrapper.payload = Compression.CompressPacketsForWrapper(new List<Packet> {packet});
+					wrapper.payload = Compress(new List<Packet>(){packet});
 					wrapper.Encode(); // prepare
 					packet.PutPool();
 					sendList.Add(wrapper);
@@ -96,13 +97,49 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			{
 				var batch = McpeWrapper.CreateObject();
 				batch.ReliabilityHeader.Reliability = Reliability.ReliableOrdered;
-				batch.payload = Compression.CompressPacketsForWrapper(sendInBatch);
+				batch.payload = Compress(sendInBatch);
 				batch.Encode(); // prepare
 				sendList.Add(batch);
 			}
 
 			return sendList;
 		}
+
+        private byte[] Compress(ICollection<Packet> packets)
+        {
+	        long length = 0;
+	        foreach (Packet packet in packets) length += packet.Encode().Length;
+
+	        var compressionLevel = _session.CompressionThreshold > -1 && length >= _session.CompressionThreshold ?
+		        System.IO.Compression.CompressionLevel.Fastest : System.IO.Compression.CompressionLevel.NoCompression;
+
+	        using (MemoryStream stream = MiNetServer.MemoryStreamManager.GetStream())
+	        {
+		        int checksum;
+
+		        using (var compressStream = new DeflateStream(stream, compressionLevel, true))
+		        {
+			        foreach (Packet packet in packets)
+			        {
+				        byte[] bs = packet.Encode();
+
+				        if (bs != null && bs.Length > 0)
+				        {
+					        BatchUtils.WriteLength(compressStream, bs.Length);
+					        compressStream.Write(bs, 0, bs.Length);
+				        }
+
+				        packet.PutPool();
+			        }
+
+			        compressStream.Flush();
+		        }
+
+		        byte[] bytes = stream.ToArray();
+
+		        return bytes;
+	        }
+        }
 
         public AutoResetEvent FirstEncryptedPacketWaitHandle = new AutoResetEvent(false);
 		public Packet HandleOrderedSend(Packet packet)
@@ -119,13 +156,15 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 			return packet;
 		}
-
-		private bool _hasEncrypted = false;
+		
 		public void HandlePacket(Packet message)
 		{
+			if (_session.Evicted)
+				return;
+			
 			if (message is McpeWrapper wrapper)
 			{
-				var messages = new LinkedList<Packet>();
+				var messages = new List<Packet>();
 
 				// Get bytes to process
 				var payload = wrapper.payload.ToArray();
@@ -135,60 +174,58 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 				if (CryptoContext != null && CryptoContext.UseEncryption)
 				{
-					FirstEncryptedPacketWaitHandle.Set();
-
 					payload = CryptoUtils.Decrypt(payload, CryptoContext);
-
-					_hasEncrypted = true;
 				}
 
-				//var stream = new MemoryStreamReader(payload);
-				using (var deflateStream = new DeflateStream(new MemoryStream(payload), System.IO.Compression.CompressionMode.Decompress, false))
+				using (var stream = new MemoryStream(payload))
 				{
-					using var s = new MemoryStream();
-					deflateStream.CopyTo(s);
-					s.Position = 0;
-
-					int count = 0;
-					// Get actual packet out of bytes
-					while (s.Position < s.Length)
+					using (var deflateStream = new DeflateStream(stream, System.IO.Compression.CompressionMode.Decompress, true))
 					{
-						count++;
-
-						uint len = VarInt.ReadUInt32(s);
-						long pos = s.Position;
-						ReadOnlyMemory<byte> internalBuffer = s.GetBuffer().AsMemory((int) s.Position, (int) len);
-						int id = VarInt.ReadInt32(s);
-
-						Packet packet = null;
-						try
+						using (var s = new MemoryStream())
 						{
-							packet = PacketFactory.Create((byte) id, internalBuffer, "mcpe")
-							             ?? new UnknownPacket((byte) id, internalBuffer);
+							deflateStream.CopyTo(s);
 
-							//Hack for some servers that screw up the order.
-						//	if (packet is McpePlayerList)
-						//	{
-								//		messages.AddFirst(packet);
-						//	}
-						//	else
+							s.Position = 0;
+
+							int count = 0;
+
+							// Get actual packet out of bytes
+							while (s.Position < s.Length)
 							{
-								messages.AddLast(packet);
+								count++;
+
+								uint                 len            = VarInt.ReadUInt32(s);
+								long                 pos            = s.Position;
+								ReadOnlyMemory<byte> internalBuffer = s.ReadToMemory(len);
+								s.Position = pos;
+								int                  id             = VarInt.ReadInt32(s);
+
+								Packet packet = null;
+
+								try
+								{
+									packet = PacketFactory.Create((byte) id, internalBuffer, "mcpe")
+									         ?? new UnknownPacket((byte) id, internalBuffer);
+
+									messages.Add(packet);
+								}
+								catch (Exception e)
+								{
+									Log.Warn(
+										e, $"Error parsing bedrock message #{count} id={id} (Buffer size={internalBuffer.Length})");
+
+									
+									//throw;
+									return; // Exit, but don't crash.
+								}
+
+								s.Position = pos + len;
 							}
 
-							//var a = 0x91;
+							if (s.Length > s.Position) throw new Exception("Have more data");
 						}
-						catch (Exception e)
-						{
-							Log.Warn(e, $"Error parsing bedrock message #{count} id={id}\n{Packet.HexDump(internalBuffer)}");
-							//throw;
-							return; // Exit, but don't crash.
-						}
-
-						s.Position = pos + len;
+						//deflated = deflateStream.ReadAllBytes();
 					}
-
-					if (s.Length > s.Position) throw new Exception("Have more data");
 				}
 
 				//var msgs = messages.ToArray();
@@ -220,7 +257,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			}
 			else if (message is UnknownPacket unknownPacket)
 			{
-				if (Log.IsDebugEnabled) Log.Warn($"Received unknown packet 0x{unknownPacket.Id:X2}\n{Packet.HexDump(unknownPacket.Message)}");
+				Log.Warn($"Received unknown packet 0x{unknownPacket.Id:X2}\n{Packet.HexDump(unknownPacket.Message)}");
 
 				unknownPacket.PutPool();
 			}
@@ -237,31 +274,38 @@ namespace Alex.Worlds.Multiplayer.Bedrock
             return message;
         }
 
-        private void HandleGamePacket(Packet message)
-        {
-	        _lastPacketReceived = DateTime.UtcNow;
-            Stopwatch sw = Stopwatch.StartNew();
+		private void HandleGamePacket(Packet message)
+		{
+			_lastPacketReceived = DateTime.UtcNow;
+			Stopwatch sw = Stopwatch.StartNew();
 
-            try
-            {
-	       //     Log.Info($"Got packet: {message}");
-                _messageDispatcher.HandlePacket(message);
-            }
-            catch (Exception ex)
-            {
-               // if (message.Id == 39)
-               //     return;
-                Log.Warn(ex, $"Packet handling error: {message} - {ex.ToString()}");
-            }
-            finally
-            {
-                sw.Stop();
+			try
+			{
+				//     Log.Info($"Got packet: {message}");
+				if (!_messageDispatcher.HandlePacket(message))
+				{
+					if (message is UnknownPacket unknownPacket)
+					{
+						Log.Warn($"Received unknown packet 0x{unknownPacket.Id:X2}\n{Packet.HexDump(unknownPacket.Message)}");
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				// if (message.Id == 39)
+				//     return;
+				Log.Warn(ex, $"Packet handling error: {message} - {ex.ToString()}");
+			}
+			finally
+			{
+				sw.Stop();
 
-                if (sw.ElapsedMilliseconds > 250)
-                {
-                    Log.Warn($"Packet handling took longer than expected! Time elapsed: {sw.ElapsedMilliseconds}ms (Packet={message})");
-                }
-            }
-        }
+				if (sw.ElapsedMilliseconds > 250)
+				{
+					Log.Warn(
+						$"Packet handling took longer than expected! Time elapsed: {sw.ElapsedMilliseconds}ms (Packet={message})");
+				}
+			}
+		}
     }
 }

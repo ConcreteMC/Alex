@@ -73,8 +73,7 @@ namespace Alex.ResourcePackLib
 		public IReadOnlyDictionary<ResourceLocation, Lazy<Image<Rgba32>>>          Textures          => _bitmapCache;
 		public IReadOnlyDictionary<string, LanguageResource>   Languages		 => _languageCache;
 		
-		public new ResourcePackInfo Info { get; private set; }
-		public ResourcePackManifest Manifest { get; set; } = null;
+		//public new ResourcePackInfo Info { get; private set; }
 
 		//public IFont Font { get; private set; }
 		
@@ -97,13 +96,12 @@ namespace Alex.ResourcePackLib
 
 		private PngDecoder                           PngDecoder       { get; }
 		public  IDictionary<string, SoundDefinition> SoundDefinitions { get; private set; }
-		public McResourcePack(byte[] resourcePackData) : this(new ZipFileSystem(new MemoryStream(resourcePackData)), null)
-		{
-
-		}
-
+		
+		private IFilesystem Filesystem  { get; set; }
+		public  bool        Asynchronous => Filesystem.CanReadAsync;
 		public McResourcePack(IFilesystem archive, McResourcePackPreloadCallback preloadCallback, LoadProgress progressReporter = null)
 		{
+			Filesystem = archive;
 			ProgressReporter = progressReporter;
 			
 			PngDecoder = new PngDecoder()
@@ -146,9 +144,12 @@ namespace Alex.ResourcePackLib
 			}
 
 			if (IsLoaded) return;
-			
-			Manifest = GetManifest(archive, ResourcePackType.Java);
-			
+
+			//if (Info == null)
+			//{
+			//	Info = GetManifest(archive, ResourcePackType.Java);
+			//}
+
 			Dictionary<ResourceLocation, ResourcePackModelBase> models = new Dictionary<ResourceLocation, ResourcePackModelBase>();
 
 			var total = archive.Entries.Count;
@@ -235,6 +236,37 @@ namespace Alex.ResourcePackLib
 				count++;
 			}
 
+			foreach (var m in models.Where(x => x.Value.Type == ModelType.Block)
+			   .OrderByDescending(x => !string.IsNullOrWhiteSpace(x.Value.ParentName)))
+			{
+				var model = m.Value;
+
+				if (model.Elements != null)
+				{
+					for (var index = 0; index < model.Elements.Length; index++)
+					{
+						var element = model.Elements[index];
+
+						if (element.Faces != null)
+						{
+							foreach (var face in element.Faces.ToArray())
+							{
+								if (face.Value != null && !string.IsNullOrWhiteSpace(face.Value.Texture))
+								{
+									var result = ResolveTexture(model, face.Value.Texture);
+
+									if (!string.IsNullOrWhiteSpace(result))
+									{
+										model.Elements[index].Faces[face.Key].Texture = result;
+									}
+								}
+
+								//face.Value.Texture
+							}
+						}
+					}
+				}
+			}
 			/*var blockStates = _blockStates.ToArray();
 			total = blockStates.Length;
 			count = 0;
@@ -256,7 +288,8 @@ namespace Alex.ResourcePackLib
 
 		private void LoadMeta(IFilesystem archive)
 		{
-			ResourcePackInfo info;
+			Info = GetManifest(archive);
+			/*ResourcePackInfo info;
 
 			var entry = archive.GetEntry("pack.mcmeta");
 			if (entry == null)
@@ -274,7 +307,7 @@ namespace Alex.ResourcePackLib
 				}
 			}
 
-			Info = info;
+			Info = info;*/
 		}
 
 		private void LoadTextureMeta(IFile entry, Match match)
@@ -459,7 +492,7 @@ namespace Alex.ResourcePackLib
 		{
 			if (_bitmapCache.TryGetValue(textureName, out var val))
 			{
-				bitmap = val.Value;
+				bitmap = val.Value.Clone();
 				return true;
 			}
 
@@ -556,7 +589,7 @@ namespace Alex.ResourcePackLib
 			}
 			catch (Exception ex)
 			{
-				Log.Error(ex, $"Error loading model.");
+				Log.Error(ex, $"Error loading model: ({location})");
 
 				return null;
 			}
@@ -566,7 +599,7 @@ namespace Alex.ResourcePackLib
 		{
 			if (_models.TryGetValue(resourceLocation, out var existingModel))
 				return existingModel;
-			
+
 			if (!string.IsNullOrWhiteSpace(model.ParentName) && !model.ParentName.Equals(resourceLocation.Path, StringComparison.OrdinalIgnoreCase))
 			{
 				ResourceLocation parentKey = new ResourceLocation(model.ParentName);
@@ -582,12 +615,35 @@ namespace Alex.ResourcePackLib
 
 				if (parent != null)
 				{
-					model.Parent = parent;
+					model.UpdateValuesFromParent(parent);
+					//model.Parent = parent;
 				}
 			}
-			
+
 			_models.Add(resourceLocation, model);
 			return model;
+		}
+		
+		private static string ResolveTexture(ResourcePackModelBase var, string texture)
+		{
+			if (texture[0] != '#')
+				return texture;
+
+			var original = texture;
+			var modified = texture.Substring(1);
+			if (var.Textures.TryGetValue(modified, out texture))
+			{
+				if (texture[0] == '#')
+				{
+					if (!var.Textures.TryGetValue(texture.Substring(1), out texture))
+					{
+						//texture = "no_texture";
+						return original;
+					}
+				}
+			}
+
+			return texture;
 		}
 		
 		public bool TryGetBlockModel(ResourceLocation modelName, out ResourcePackModelBase model)
@@ -648,9 +704,10 @@ namespace Alex.ResourcePackLib
 
 		#endregion
 		
-		public Color GetGrassColor(float temp, float rain, int elevation)
+		public bool TryGetGrassColor(float temp, float rain, int elevation, out Color color)
 		{
-			if (GrassColors == null) return new Color(94, 157, 52);
+			color = new Color(94, 157, 52);
+			if (GrassColors == null) return false;
 
 			temp = MathHelper.Clamp(temp - elevation * 0.00166667f, 0f, 1f);
 			rain = MathHelper.Clamp(rain, 0f, 1f) * temp;
@@ -665,12 +722,15 @@ namespace Alex.ResourcePackLib
 			
 			var result = GrassColors[indx];
 
-			return new Color(result.R, result.G, result.B);
+			color = new Color(result.R, result.G, result.B);
+			
+			return true;
 		}
 
-		public Color GetFoliageColor(float temp, float rain, int elevation)
+		public bool TryGetFoliageColor(float temp, float rain, int elevation, out Color color)
 		{
-			if (FoliageColors == null) return new Color(94, 157, 52);
+			color = new Color(94, 157, 52);
+			if (FoliageColors == null) return false;
 			temp = MathHelper.Clamp(temp - elevation * 0.00166667f, 0f, 1f);
 			rain = MathHelper.Clamp(rain, 0f, 1f) * temp;
 
@@ -684,12 +744,15 @@ namespace Alex.ResourcePackLib
 
 			var result = FoliageColors[indx];
 
-			return new Color(result.R, result.G, result.B);
+			color = new Color(result.R, result.G, result.B);
+			return true;
 		}
 
 
 		public void Dispose()
 		{
+			Filesystem?.Dispose();
+			Filesystem = null;
 			//_archive?.Dispose();
 		}
 	}

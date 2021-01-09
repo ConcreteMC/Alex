@@ -1,17 +1,26 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Threading;
 using Alex.API.Graphics;
 using Alex.Blocks.Minecraft;
+using Alex.Net.Bedrock.Types;
+using Alex.ResourcePackLib.Json.Models.Entities;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MiNET.Utils.Skins;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Serialization;
 using NLog;
 using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
+using Image = SixLabors.ImageSharp.Image;
 using Point = System.Drawing.Point;
 using Rectangle = SixLabors.ImageSharp.Rectangle;
 
@@ -202,9 +211,9 @@ namespace Alex.Utils
 			return output;
 		}
 		
-		public static bool TryGetSkin(string json, GraphicsDevice graphics, out PooledTexture2D texture, out bool isSlim)
+		public static void TryGetSkin(string json, GraphicsDevice graphics, Action<PooledTexture2D, bool> onComplete)
 		{
-			isSlim = false;
+			//isSlim = false;
 			try
 			{
 				TexturesResponse r = JsonConvert.DeserializeObject<TexturesResponse>(json);
@@ -219,8 +228,6 @@ namespace Alex.Utils
 							data = wc.DownloadData(url);
 						}
 
-						ManualResetEvent resetEvent = new ManualResetEvent(false);
-
 						PooledTexture2D text = null;
 						Alex.Instance.UIThreadQueue.Enqueue(
 							() =>
@@ -231,15 +238,16 @@ namespace Alex.Utils
 										"SkinUtils", graphics, ms); // Texture2D.FromStream(graphics, ms);
 								}
 
-								resetEvent.Set();
+								onComplete?.Invoke(text, r.textures.SKIN.metadata?.model == "slim");
+								//resetEvent.Set();
 							});
 						
-						resetEvent.WaitOne();
+						//resetEvent.WaitOne();
 
-						texture = text;
-						isSlim = (r.textures.SKIN.metadata?.model == "slim");
+						//texture = text;
+						//isSlim = (r.textures.SKIN.metadata?.model == "slim");
 
-						return true;
+						//return true;
 					}
 				}
 			}
@@ -248,8 +256,8 @@ namespace Alex.Utils
 				Log.Warn(ex, $"Could not retrieve skin: {ex.ToString()}");
 			}
 
-			texture = null;
-			return false;
+			//texture = null;
+			//return false;
 		}
 		
 		public static bool TryGetSkin(Uri skinUri, GraphicsDevice graphics, out PooledTexture2D texture)
@@ -332,6 +340,196 @@ namespace Alex.Utils
 			}
 		}
 
+		public static MiNET.Utils.Skins.Skin ToSkin(this EntityModel model)
+		{
+			var settings = new JsonSerializerSettings();
+			settings.NullValueHandling = NullValueHandling.Ignore;
+			settings.DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate;
+			settings.MissingMemberHandling = MissingMemberHandling.Ignore;
+			//settings.Formatting = Formatting.Indented;
+			settings.ContractResolver = new CamelCasePropertyNamesContractResolver();
+			settings.Converters.Add(new StringEnumConverter {NamingStrategy = new CamelCaseNamingStrategy()});
+
+			MiNET.Utils.Skins.Skin skin     = null;
+			Geometry               geometry = new Geometry();
+
+			geometry.Bones = new List<Bone>();
+
+			foreach (var bone in model.Bones)
+			{
+				var a = new Bone();
+
+				if (Enum.TryParse<BoneName>(bone.Name, true, out var boneName))
+				{
+					a.Name = boneName;
+				}
+				else
+				{
+					a.Name = BoneName.Unknown;
+				}
+
+				if (!string.IsNullOrWhiteSpace(bone.Parent))
+				{
+					if (Enum.TryParse<BoneName>(bone.Parent, true, out var parentName))
+					{
+						if (parentName != a.Name)
+						{
+							a.Parent = parentName;
+						}
+					}
+				}
+
+				if (bone.NeverRender)
+					a.NeverRender = true;
+
+				if (bone.Pivot.HasValue)
+				{
+					a.Pivot = new float[] {bone.Pivot.Value.X, bone.Pivot.Value.Y, bone.Pivot.Value.Z};
+				}
+
+				if (bone.Rotation.HasValue)
+				{
+					a.Rotation = new float[] {bone.Rotation.Value.X, bone.Rotation.Value.Y, bone.Rotation.Value.Z};
+				}
+
+				if (bone.BindPoseRotation.HasValue)
+				{
+					if (a.Rotation == null || a.Rotation.Length == 0)
+						a.Rotation = new float[3];
+
+					a.Rotation[0] += bone.BindPoseRotation.Value.X;
+					a.Rotation[1] += bone.BindPoseRotation.Value.Y;
+					a.Rotation[2] += bone.BindPoseRotation.Value.Z;
+				}
+				
+				if (bone.Cubes != null)
+				{
+					a.Cubes = new List<Cube>();
+
+					foreach (var c in bone.Cubes)
+					{
+						var newCube = new ExtendedCube()
+						{
+							Inflate = (float) (c.Inflate.HasValue ? c.Inflate.Value : 0f),
+							Origin = new float[] {c.Origin.X, c.Origin.Y, c.Origin.Z},
+							Size = new float[] {c.Size.X, c.Size.Y, c.Size.Z},
+							Uv = new float[] {c.Uv.South.Origin.X, c.Uv.South.Origin.Y}
+						};
+
+						if (c.Mirror.HasValue)
+							newCube.Mirror = c.Mirror.Value;
+
+						if (c.Rotation.HasValue)
+							newCube.Rotation = new float[] {c.Rotation.Value.X, c.Rotation.Value.Y, c.Rotation.Value.Z};
+
+						if (c.Pivot.HasValue)
+							newCube.Pivot = new float[] {c.Pivot.Value.X, c.Pivot.Value.Y, c.Pivot.Value.Z};
+
+						a.Cubes.Add(newCube);
+					}
+				}
+
+				geometry.Bones.Add(a);
+			}
+
+			// geometry.Bones = model.Bones.Select(x => ).ToList();
+
+			//   geometry.Name = model.Description.Identifier;
+			//geometry.TextureHeight = (int) model.Description.TextureHeight;
+			// geometry.TextureWidth = (int) model.Description.TextureWidth;
+
+			geometry.Description = new Description()
+			{
+				Identifier = $"geometry.humanoid.customSlim",
+				TextureHeight = (int) model.Description.TextureHeight,
+				TextureWidth = (int) model.Description.TextureWidth,
+				VisibleBoundsHeight = (int) model.Description.VisibleBoundsHeight,
+				VisibleBoundsWidth = (int) model.Description.VisibleBoundsWidth,
+				VisibleBoundsOffset = new int[]
+				{
+					(int) model.Description.VisibleBoundsOffset.X,
+					(int) model.Description.VisibleBoundsOffset.Y, (int) model.Description.VisibleBoundsOffset.Z
+				}
+			};
+
+			//geometry.Subdivide(true, true, true, false);
+
+			skin = new MiNET.Utils.Skins.Skin()
+			{
+				SkinId = $"{Guid.NewGuid().ToString()}.steve",
+				SkinResourcePatch =
+					new MiNET.Utils.Skins.SkinResourcePatch()
+					{
+						Geometry = new MiNET.Utils.Skins.GeometryIdentifier()
+						{
+							Default = geometry.Description.Identifier
+						}
+					},
+				GeometryData = JsonConvert.SerializeObject(
+					new Dictionary<string, object>()
+					{
+						{"format_version", "1.12.0"}, {"minecraft:geometry", new[] {geometry}},
+					}, Formatting.None, settings),
+				SkinColor = "#0",
+				ArmSize = "slim",
+				Data = null
+			};
+
+			return skin;
+		}
+
+		public static MiNET.Utils.Skins.Skin UpdateTexture(this MiNET.Utils.Skins.Skin skin, PooledTexture2D texture)
+		{
+			Image<Rgba32> skinTexture;
+
+			using (MemoryStream ms = new MemoryStream())
+			{
+				texture.SaveAsPng(ms, texture.Width, texture.Height);
+				ms.Position = 0;
+
+				skinTexture = Image.Load(ms, new PngDecoder()).CloneAs<Rgba32>();
+			}
+			    
+			byte[] skinData;
+			using (MemoryStream ms = new MemoryStream())
+			{
+				if (skinTexture.TryGetSinglePixelSpan(out var span))
+				{
+					foreach (var value in span)
+					{
+						ms.WriteByte(value.R);
+						ms.WriteByte(value.G);
+						ms.WriteByte(value.B);
+						ms.WriteByte(value.A);
+					}
+				}
+
+				skinData = ms.ToArray();
+			}
+
+			skin.Width = skinTexture.Width;
+			skin.Height = skinTexture.Height;
+			skin.Data = skinData;
+
+			return skin;
+		}
+
+		public class ExtendedCube : MiNET.Utils.Skins.Cube
+		{
+			/// <summary>
+			/// If this field is specified, rotation of this cube occurs around this point, otherwise its rotation is around the center of the box.
+			/// Note that in 1.12 this is flipped upside-down, but is fixed in 1.14.
+			/// </summary>
+			[JsonProperty("pivot", NullValueHandling = NullValueHandling.Ignore)]
+			public float[] Pivot { get; set; } = null;
+			
+			/// <summary>
+			/// The cube is rotated by this amount (in degrees, x-then-y-then-z order) around the pivot.
+			/// </summary>
+			[JsonProperty("rotation", NullValueHandling = NullValueHandling.Ignore)]
+			public float[] Rotation { get; set; } = null;
+		}
+		
 		public class SkinMetadata
 		{
 			public string model { get; set; }

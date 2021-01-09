@@ -11,6 +11,7 @@ using System.Text;
 using System.Threading;
 using Alex.API;
 using Alex.API.Data.Servers;
+using Alex.API.Graphics;
 using Alex.API.Graphics.Typography;
 using Alex.API.Gui;
 using Alex.API.Input;
@@ -27,6 +28,7 @@ using Alex.Gamestates.InGame;
 using Alex.Gamestates.Login;
 using Alex.Graphics.Models.Blocks;
 using Alex.Gui;
+using Alex.Gui.Elements;
 using Alex.Net;
 using Alex.Networking.Java.Packets;
 using Alex.Networking.Java.Packets.Play;
@@ -61,7 +63,7 @@ namespace Alex
 {
 	public class Alex : Microsoft.Xna.Framework.Game
 	{
-		public const  int  MipMapLevel = 8;
+		public static int  MipMapLevel = 8;
 		public static bool InGame { get; set; } = false;
 
 		public static EntityModel   PlayerModel   { get; set; }
@@ -235,6 +237,13 @@ namespace Alex
 
 			TextureUtils.RenderThread = Thread.CurrentThread;
 			TextureUtils.QueueOnRenderThread = action => UIThreadQueue.Enqueue(action);
+		}
+
+		/// <inheritdoc />
+		protected override void OnExiting(object sender, EventArgs args)
+		{
+			GpuResourceManager.ReportIncorrectlyDisposedBuffers = false;
+			base.OnExiting(sender, args);
 		}
 
 		private void KeyboardInputCreated(object sender, KeyboardInputListener e)
@@ -566,12 +575,17 @@ namespace Alex
 
 		protected override void Draw(GameTime gameTime)
 		{
+			GraphicsDevice.Present();
 			FpsMonitor.Update();
 			GraphicsDevice.RasterizerState = RasterizerState.CullClockwise;
 
 			GameStateManager.Draw(gameTime);
 			GuiManager.Draw(gameTime);
+
+			this.Metrics = GraphicsDevice.Metrics;
 		}
+
+		public GraphicsMetrics Metrics { get; set; } = new GraphicsMetrics();
 
 		private void InitializeGame(IProgressReceiver progressReceiver)
 		{
@@ -686,7 +700,7 @@ namespace Alex
 			}
 			else
 			{
-				if (Resources.ResourcePack.TryGetBitmap("entity/alex", out var img))
+				if (Resources.TryGetBitmap("entity/alex", out var img))
 				{
 					PlayerTexture = img;
 				}
@@ -751,11 +765,17 @@ namespace Alex
 			if (parentState is PlayingState)
 				parentState = null;
 			
-			LoadingWorldState loadingScreen = new LoadingWorldState(parentState);
+			LoadingWorldScreen loadingScreen = new LoadingWorldScreen();
 			loadingScreen.ConnectingToServer = isServer;
-			
-			GameStateManager.AddState("loading", loadingScreen);
-			GameStateManager.SetActiveState("loading");
+			loadingScreen.CancelAction = () =>
+			{
+				GuiManager.RemoveScreen(loadingScreen);
+				worldProvider?.Dispose();
+			};
+
+			GuiManager.AddScreen(loadingScreen);
+			//GameStateManager.AddState("loading", loadingScreen);
+			//GameStateManager.SetActiveState("loading");
 
 			ThreadPool.QueueUserWorkItem(
 				o =>
@@ -776,17 +796,21 @@ namespace Alex
 
 						if (result != LoadResult.Aborted)
 						{
-							var s = new DisconnectedScreen();
-							s.DisconnectedTextElement.TranslationKey = "multiplayer.status.cannot_connect";
-							s.ParentState = parentState;
-							GameStateManager.SetActiveState(s, false);
+							if (!(GameStateManager.GetActiveState() is DisconnectedScreen))
+							{
+								var s = new DisconnectedScreen();
+								s.DisconnectedTextElement.TranslationKey = "multiplayer.status.cannot_connect";
+								s.ParentState = parentState;
+								GameStateManager.SetActiveState(s, false);
 
-							worldProvider.Dispose();
+								worldProvider.Dispose();
+							}
 						}
 					}
 					finally
 					{
-						GameStateManager.RemoveState("loading");
+						GuiManager.RemoveScreen(loadingScreen);
+						//GameStateManager.RemoveState("loading");
 					}
 				});
 		}

@@ -31,13 +31,13 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		protected BedrockClient Client { get; }
 		public BedrockFormManager FormManager { get; }
 		
-		public BedrockWorldProvider(Alex alex, IPEndPoint endPoint, PlayerProfile profile, DedicatedThreadPool threadPool,
+		public BedrockWorldProvider(Alex alex, IPEndPoint endPoint, PlayerProfile profile,
 			out NetworkProvider networkProvider)
 		{
 			Alex = alex;
 			
 			//Client = new ExperimentalBedrockClient(alex, alex.Services, this, endPoint);
-			Client = new BedrockClient(alex, endPoint, profile, threadPool, this);
+			Client = new BedrockClient(alex, endPoint, profile, this);
 			networkProvider = Client;
 
 			var guiManager = Alex.GuiManager;
@@ -156,7 +156,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 						continue;
 				}
 				
-				if (distance > Alex.Options.AlexOptions.VideoOptions.RenderDistance.Value)
+				if (distance > maxViewDistance)
 				{
 					//_chunkCache.TryRemove(chunkColumn.Key, out var waste);
 					UnloadChunk(chunk.Key);
@@ -229,7 +229,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			bool         outOfOrder   = false;
 			LoadingState state        = LoadingState.ConnectingToServer;
 			string       subTitle     = "";
-			while (true)
+			while (Client.IsConnected)
 			{
 				if (Client.Connection.IsNetworkOutOfOrder && !outOfOrder)
 				{
@@ -245,7 +245,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				
 				if (!outOfOrder && sw.ElapsedMilliseconds >= 500)
 				{
-					subTitle = "Slow network, please wait...";
+					//subTitle = "Slow network, please wait...";
 				}
 				
 				double radiusSquared = Math.Pow(Client.ChunkRadius, 2);
@@ -256,13 +256,15 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				
 				if (((percentage >= 50 && hasSpawnChunk)))
 				{
-					if (Client.GameStarted && statusChanged && !Client.Connection.IsNetworkOutOfOrder)
+					if (statusChanged && Client.GameStarted && !Client.Connection.IsNetworkOutOfOrder)
 					{
 						break;
 					}
 
-					subTitle = "Waiting on spawn confirmation...";
+					subTitle = Client.Connection.IsNetworkOutOfOrder ? "Waiting for the network to catch up..." : "Waiting on spawn confirmation...";
 					state = LoadingState.Spawning;
+					
+					//Log.Warn($"Status: {statusChanged} | Gamestarted: {Client.GameStarted} | OutOfOrder: {Client.Connection.IsNetworkOutOfOrder}");
 				}
 				else if (percentage > 0)
 				{
@@ -288,8 +290,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 				if (!statusChanged)
 				{
-					if (Client.PlayerStatusChanged.WaitOne(50) || Client.CanSpawn
-					    || Client.ChangeDimensionResetEvent.WaitOne(5))
+					if (Client.PlayerStatusChanged.WaitOne(50)
+					    || Client.PlayerStatus == 3)
 					{
 						statusChanged = true;
 					}
@@ -312,6 +314,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				new MiNET.Utils.PlayerLocation(p.X, p.Y, p.Z, p.HeadYaw, p.Yaw, p.Pitch),
 				World.Player.KnownPosition.OnGround);
 
+			Client.MarkAsInitialized();
+			
 			//SkyLightCalculations.Calculate(WorldReceiver as World);
 
 			//Client.IsEmulator = false;

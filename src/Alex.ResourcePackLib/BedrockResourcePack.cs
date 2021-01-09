@@ -25,7 +25,7 @@ using Image = SixLabors.ImageSharp.Image;
 
 namespace Alex.ResourcePackLib
 {
-	public class BedrockResourcePack : IDisposable
+	public class BedrockResourcePack : ResourcePack, IDisposable
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(BedrockResourcePack));
 
@@ -40,6 +40,7 @@ namespace Alex.ResourcePackLib
 		{
 			_archive = archive;
 
+			Info = GetManifest(archive);
 			Load(progressReporter);
 		}
 

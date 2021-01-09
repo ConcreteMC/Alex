@@ -27,6 +27,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
@@ -52,7 +53,6 @@ namespace Alex.Net.Bedrock
 		private HighPrecisionTimer _tickerHighPrecisionTimer;
 
 		private Thread _readingThread;
-		//public readonly ConcurrentDictionary<IPEndPoint, RaknetSession> RakSessions = new ConcurrentDictionary<IPEndPoint, RaknetSession>();
 
 		public          RaknetSession  Session { get; set; } = null;
 		public readonly RaknetHandler  RaknetHandler;
@@ -74,7 +74,7 @@ namespace Alex.Net.Bedrock
 		public string RemoteServerName { get; set; }
 
 		public Func<RaknetSession, ICustomMessageHandler> CustomMessageHandlerFactory { get; set; }
-		
+
 		public RaknetConnection()
 		{
 			_endpoint = new IPEndPoint(IPAddress.Any, 0);
@@ -89,11 +89,9 @@ namespace Alex.Net.Bedrock
 			if (_listener != null) return;
 
 			_readingThread = new Thread(ReceiveCallback);
-
-			Log.Debug($"Creating listener for packets on {_endpoint}");
+			
 			_listener = CreateListener(_endpoint);
 			_readingThread.Start();
-		//	_listener.BeginReceive(ReceiveCallback, _listener);
 
 			_tickerHighPrecisionTimer = new HighPrecisionTimer(10, SendTick, true);
 		}
@@ -101,11 +99,22 @@ namespace Alex.Net.Bedrock
 		public bool TryConnect(IPEndPoint targetEndPoint, int numberOfAttempts = int.MaxValue, short mtuSize = 1500)
 		{
 			Start(); // Make sure we have started the listener
-			
+
+			bool connecting = false;
 			do
 			{
-				RaknetHandler.SendOpenConnectionRequest1(targetEndPoint, mtuSize);
-				Task.Delay(300).Wait();
+				if (!connecting)
+					RaknetHandler.SendOpenConnectionRequest1(targetEndPoint, mtuSize);
+
+				if (!RaknetHandler.ConnectionResetEvent.WaitOne(500))
+				{
+					mtuSize -= 10;
+				}
+				else
+				{
+					connecting = true;
+				}
+				
 			} while (Session == null && numberOfAttempts-- > 0);
 
 			if (Session == null) return false;
@@ -117,31 +126,30 @@ namespace Alex.Net.Bedrock
 
 			return Session.State == ConnectionState.Connected;
 		}
-
-		private void SendUnconnectedPingInternal(IPEndPoint targetEndPoint)
+		
+		public void SendUnconnectedPingInternal(IPEndPoint targetEndPoint)
 		{
-			var packet = new UnconnectedPing
+			byte[] data = new UnconnectedPing()
 			{
-				pingId = Stopwatch.GetTimestamp() /*incoming.pingId*/,
+				pingId = Stopwatch.GetTimestamp(),
 				guid = RaknetHandler.ClientGuid
-			};
-
-			var data = packet.Encode();
-
+			}.Encode();
+			
 			if (targetEndPoint != null)
-			{
 				SendData(data, targetEndPoint);
-			}
 			else
-			{
 				SendData(data, new IPEndPoint(IPAddress.Broadcast, 19132));
-			}
 		}
 
+		private bool _stopped = false;
 		public void Stop()
 		{
 			try
 			{
+				if (_stopped)
+					return;
+
+				_stopped = true;
 				//Log.Info("Shutting down...");
 				Session?.Close();
 
@@ -174,7 +182,7 @@ namespace Alex.Net.Bedrock
 				listener.Client.SendBufferSize = int.MaxValue;
 			}
 
-			listener.DontFragment = true;
+			//listener.DontFragment = true;
 			listener.EnableBroadcast = false;
 
 			if (Environment.OSVersion.Platform != PlatformID.Unix && Environment.OSVersion.Platform != PlatformID.MacOSX)
@@ -638,10 +646,14 @@ namespace Alex.Net.Bedrock
 
 		public async Task SendPacketAsync(RaknetSession session, List<Packet> messages)
 		{
-			foreach (Datagram datagram in Datagram.CreateDatagrams(messages, session.MtuSize, session))
-			{
-				await SendDatagramAsync(session, datagram);
-			}
+			await Task.WhenAll(
+				Datagram.CreateDatagrams(messages, session.MtuSize, session)
+				   .Select(async x => await SendDatagramAsync(session, x)));
+			
+			//foreach (Datagram datagram in Datagram.CreateDatagrams(messages, session.MtuSize, session))
+			//{
+			//	await SendDatagramAsync(session, datagram);
+			//}
 
 			foreach (Packet message in messages)
 			{
@@ -652,6 +664,9 @@ namespace Alex.Net.Bedrock
 		
 		public void SendDatagram(RaknetSession session, Datagram datagram)
 		{
+			SendDatagramAsync(session, datagram).Wait();
+
+			return;
 			if (datagram.MessageParts.Count == 0)
 			{
 				Log.Warn($"Failed to send #{datagram.Header.DatagramSequenceNumber.IntValue()}");
@@ -737,6 +752,9 @@ namespace Alex.Net.Bedrock
 
 		public void SendData(byte[] data, IPEndPoint targetEndPoint)
 		{
+			SendDataAsync(data, targetEndPoint).Wait();
+
+			return;
 			try
 			{
 				_listener.Send(data, data.Length, targetEndPoint); // Less thread-issues it seems

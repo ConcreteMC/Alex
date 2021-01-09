@@ -11,23 +11,6 @@ namespace Alex.ResourcePackLib.Json.BlockStates
     {
 	    [JsonIgnore]
 	    public Dictionary<string, string> KeyValues = new Dictionary<string, string>();
-	    /* [JsonConverter(typeof(StringBooleanConverter))]
-	     public string North = "";
-	     
-	     [JsonConverter(typeof(StringBooleanConverter))]
-	     public string South = "";
-	     
-	     [JsonConverter(typeof(StringBooleanConverter))]
-	     public string East = "";
-	     
-	     [JsonConverter(typeof(StringBooleanConverter))]
-	     public string West = "";
-	     
-	     [JsonConverter(typeof(StringBooleanConverter))]
-	     public string Up = "";
-	     
-	     [JsonConverter(typeof(StringBooleanConverter))]
-	     public string Down = "";*/
 
 	    [JsonConverter(typeof(SingleOrArrayConverter<MultiPartRule>))]
 	    public MultiPartRule[] Or = null;

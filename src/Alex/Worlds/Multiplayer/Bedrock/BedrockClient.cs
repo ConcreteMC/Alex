@@ -51,6 +51,7 @@ using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Advanced;
 using SixLabors.ImageSharp.Formats.Png;
 using BlockCoordinates = Alex.API.Utils.BlockCoordinates;
+using BlockFace = Alex.API.Blocks.BlockFace;
 using ConnectionInfo = Alex.API.Network.ConnectionInfo;
 using CryptoContext = Alex.Net.Bedrock.CryptoContext;
 using DedicatedThreadPool = MiNET.Utils.DedicatedThreadPool;
@@ -104,7 +105,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
         private ChunkProcessor             ChunkProcessor      { get; }
         private BedrockClientPacketHandler PacketHandler       { get; set; }
 
-        public BedrockClient(Alex alex, IPEndPoint endpoint, PlayerProfile playerProfile, DedicatedThreadPool threadPool, BedrockWorldProvider wp)
+        private readonly List<IDisposable> _disposables = new List<IDisposable>();
+        public BedrockClient(Alex alex, IPEndPoint endpoint, PlayerProfile playerProfile, BedrockWorldProvider wp)
 		{
 			PacketFactory.CustomPacketFactory = new AlexPacketFactory();
 			
@@ -118,18 +120,24 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			
 			ChunkRadius = Options.VideoOptions.RenderDistance;
 			
-			Options.VideoOptions.RenderDistance.Bind(RenderDistanceChanged);
-			Options.VideoOptions.ClientSideLighting.Bind(ClientSideLightingChanged);
+			_disposables.Add(Options.VideoOptions.RenderDistance.Bind(RenderDistanceChanged));
+			_disposables.Add(Options.VideoOptions.ClientSideLighting.Bind(ClientSideLightingChanged));
 		//WorkerThreadPool = threadPool;
 			//ReflectionHelper.SetPrivateStaticFieldValue();
 			//MiNetServer.FastThreadPool = threadPool;
 
-			ChunkProcessor = new ChunkProcessor(this, 
-				alex.Services.GetRequiredService<IOptionsProvider>().AlexOptions.MiscelaneousOptions.ServerSideLighting,
-				CancellationTokenSource.Token, Alex.Services.GetRequiredService<BlobCache>());
+			if (wp != null)
+			{
+				ChunkProcessor = new ChunkProcessor(
+					this,
+					alex.Services.GetRequiredService<IOptionsProvider>().AlexOptions.MiscelaneousOptions
+					   .ServerSideLighting, CancellationTokenSource.Token,
+					Alex.Services.GetRequiredService<BlobCache>());
 
-			ChunkProcessor.ClientSideLighting = Options.VideoOptions.ClientSideLighting;
-			
+				ChunkProcessor.ClientSideLighting = Options.VideoOptions.ClientSideLighting;
+				//ChunkProcessor.Instance = ChunkProcessor;
+			}
+
 			Connection = new RaknetConnection();
 			ServerEndpoint = endpoint;
 			Connection.ConnectionInfo.DisableAck = false;
@@ -163,7 +171,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					handler.DisconnectedAction = (reason, sendDisconnect) =>
 					{
 						Log.Warn($"Got disconnected from server: {reason}");
-						ShowDisconnect(reason, false, false);
+						ShowDisconnect(reason, false, false, DisconnectReason.Unknown);
 					};
 					
 					MessageHandler = handler;
@@ -217,10 +225,10 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					Connection.ConnectionInfo.ThroughPut = new Timer(
 						state =>
 						{
-							if (CustomConnectedPong.CanPing)
-							{
-								World.Player.Latency = (int) CustomConnectedPong.Latency;
-							}
+							//if (CustomConnectedPong.CanPing)
+							//{
+							//	World.Player.Latency = (int) CustomConnectedPong.Latency;
+							//}
 
 							var nakSent = Connection.ConnectionInfo.NumberOfPlayers;
 							Connection.ConnectionInfo.NumberOfPlayers = 0;
@@ -256,7 +264,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 							if (Connection.IsNetworkOutOfOrder)
 							{
 								networkState = ConnectionInfo.NetworkState.OutOfOrder;
-							}else if (MessageHandler.TimeSinceLastPacket.TotalMilliseconds >= 250)
+							}
+							else if (MessageHandler != null && MessageHandler.TimeSinceLastPacket.TotalMilliseconds >= 250)
 							{
 								networkState = ConnectionInfo.NetworkState.Slow;
 							}
@@ -437,7 +446,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		{
 			if (Transfered)
 				return;
-			if (Alex.GameStateManager.GetActiveState() is DisconnectedScreen s && overrideActive)
+		
+			if (_disconnectShown && overrideActive && Alex.GameStateManager.GetActiveState() is DisconnectedScreen s)
 			{
 				if (useTranslation)
 				{
@@ -618,29 +628,35 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		public void InitiateEncryption(byte[] serverKey, byte[] randomKeyToken)
 		{
+
 			try
 			{
-				ECPublicKeyParameters remotePublicKey = (ECPublicKeyParameters)
-					PublicKeyFactory.CreateKey(serverKey);
+				ECPublicKeyParameters remotePublicKey = (ECPublicKeyParameters) PublicKeyFactory.CreateKey(serverKey);
 
 				var handler = MessageHandler;
-				
+
 				ECDHBasicAgreement agreement = new ECDHBasicAgreement();
 				agreement.Init(handler.CryptoContext.ClientKey.Private);
 				byte[] secret;
+
 				using (var sha = SHA256.Create())
 				{
-					secret = sha.ComputeHash(randomKeyToken.Concat(agreement.CalculateAgreement(remotePublicKey).ToByteArrayUnsigned()).ToArray());
+					secret = sha.ComputeHash(
+						randomKeyToken.Concat(agreement.CalculateAgreement(remotePublicKey).ToByteArrayUnsigned())
+						   .ToArray());
 				}
-		        
+
 				// Create a decrytor to perform the stream transform.
-				
+
 				IBufferedCipher decryptor = CipherUtilities.GetCipher("AES/CFB8/NoPadding");
+
 				decryptor.Init(false, new ParametersWithIV(new KeyParameter(secret), secret.Take(16).ToArray()));
 
 				IBufferedCipher encryptor = CipherUtilities.GetCipher("AES/CFB8/NoPadding");
 				encryptor.Init(true, new ParametersWithIV(new KeyParameter(secret), secret.Take(16).ToArray()));
 
+				Thread.Sleep(1250);
+				
 				handler.CryptoContext = new MiNET.Utils.CryptoContext
 				{
 					Decryptor = decryptor,
@@ -649,8 +665,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					Key = secret,
 					ClientKey = handler.CryptoContext.ClientKey
 				};
-				
-				Thread.Sleep(1250);
+				//Thread.Sleep(1250);
 
 				McpeClientToServerHandshake magic = McpeClientToServerHandshake.CreateObject();
 				Session.SendPacket(magic);
@@ -664,7 +679,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			}
 		}
 
-        private static ECDsa ConvertToSingKeyFormat(AsymmetricCipherKeyPair key)
+		private static ECDsa ConvertToSingKeyFormat(AsymmetricCipherKeyPair key)
         {
             ECPublicKeyParameters pubAsyKey = (ECPublicKeyParameters)key.Public;
             ECPrivateKeyParameters privAsyKey = (ECPrivateKeyParameters)key.Private;
@@ -742,12 +757,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			        }
 			        skinData = ms.ToArray();
 		        }
-
-		       //var modelName = model.Name ?? model.Description.Identifier;
-
-		        //abc.geometry["default"] = model.Name;
-
-		        //var           newModel = new EntityModel() {Bones = model.Bones, Description = model.Description};
+		        
 		        GeometryModel mm       = new GeometryModel();
 		        mm.Geometry.Add(model.Description.Identifier, model);
 
@@ -951,7 +961,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
                        // TransactionType = McpeInventoryTransaction.TransactionType.ItemUse,
                        // EntityId = NetworkEntityId,
                         Position = new MiNET.Utils.BlockCoordinates(position.X, position.Y, position.Z),
-                        Face = (int) face,
+                        Face = (int) ConvertBlockFace(face),
                         Slot = player.Inventory.SelectedSlot,
                         //Item = item.
                         Item = MiNET.Items.ItemFactory.GetItem(item.Id, item.Meta, item.Count)
@@ -963,6 +973,10 @@ namespace Alex.Worlds.Multiplayer.Bedrock
                 else if (status == DiggingStatus.Cancelled)
                 {
                     SendPlayerAction(PlayerAction.AbortBreak, position, (int) face);
+                }
+                else if (status == DiggingStatus.DropItem)
+                {
+	                SendPlayerAction(PlayerAction.DropItem, position, (int) face);
                 }
             }
         }
@@ -988,6 +1002,44 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		    return minetItem;
 	    }
 
+	    private MiNET.BlockFace ConvertBlockFace(API.Blocks.BlockFace face)
+	    {
+		    MiNET.BlockFace updatedFace =MiNET.BlockFace.None;
+
+		    switch (face)
+		    {
+			    case BlockFace.Down:
+				    updatedFace = MiNET.BlockFace.Down;
+				    break;
+
+			    case BlockFace.Up:
+				    updatedFace = MiNET.BlockFace.Up;
+				    break;
+
+			    case BlockFace.East:
+				    updatedFace = MiNET.BlockFace.East;
+				    break;
+
+			    case BlockFace.West:
+				    updatedFace = MiNET.BlockFace.West;
+				    break;
+
+			    case BlockFace.North:
+				    updatedFace = MiNET.BlockFace.North;
+				    break;
+
+			    case BlockFace.South:
+				    updatedFace = MiNET.BlockFace.Down;
+				    break;
+
+			    case BlockFace.None:
+				    updatedFace = MiNET.BlockFace.None;
+				    break;
+		    }
+
+		    return updatedFace;
+	    }
+	    
 	    public override void BlockPlaced(BlockCoordinates position, API.Blocks.BlockFace face, int hand, int slot, Vector3 cursorPosition, Entity entity)
 	    {
 		    if (entity is Player p)
@@ -996,7 +1048,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			    var minetItem = GetMiNETItem(itemInHand);
 			    
 			    Log.Info($"Placing block, slot={slot} InHand={itemInHand.ToString()} face={face} pos={position}");
-			    
+
 			    var packet = McpeInventoryTransaction.CreateObject();
 			    packet.transaction = new ItemUseTransaction()
 			    {
@@ -1006,7 +1058,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				    //TransactionType = McpeInventoryTransaction.TransactionType.ItemUse,
 				    // = NetworkEntityId,
 				    Position = new MiNET.Utils.BlockCoordinates(position.X, position.Y, position.Z),
-				    Face = (int) face,
+				    Face = (int) ConvertBlockFace(face),
 				    TransactionRecords = new List<TransactionRecord>()
 				    {
 						new WorldInteractionTransactionRecord()
@@ -1113,7 +1165,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			  //  TransactionType = McpeInventoryTransaction.TransactionType.ItemUse,
 			   // EntityId = NetworkEntityId,
 			    Position = new MiNET.Utils.BlockCoordinates(position.X, position.Y, position.Z),
-			    Face = (int)face,
+			    Face = (int) ConvertBlockFace(face),
 			    Item = minetItem,
 			    Slot = slot,
 			    FromPosition = new System.Numerics.Vector3(entity.KnownPosition.X, entity.KnownPosition.Y, entity.KnownPosition.Z),
@@ -1169,7 +1221,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			    //  TransactionType = McpeInventoryTransaction.TransactionType.ItemUse,
 			    // EntityId = NetworkEntityId,
 			    Position = new MiNET.Utils.BlockCoordinates(position.X, position.Y, position.Z),
-			    Face = (int)face,
+			    Face = (int) ConvertBlockFace(face),
 			    Item = minetItem,
 			    Slot = World.Player.Inventory.SelectedSlot,
 			    FromPosition = new System.Numerics.Vector3(World.Player.KnownPosition.X, World.Player.KnownPosition.Y, World.Player.KnownPosition.Z),
@@ -1306,7 +1358,14 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		public void Dispose()
 		{
+			foreach (var disposable in _disposables.ToArray())
+			{
+				disposable.Dispose();
+			}
 			
+			_disposables.Clear();
+			
+			//ChunkProcessor.Instance = null;
 			Close();
 			//WorkerThreadPool.Dispose();
 			//_threadPool.WaitForThreadsExit();

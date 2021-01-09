@@ -21,13 +21,13 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MiNET;
+using MiNET.Worlds;
 using Newtonsoft.Json;
 using NLog;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 using LogManager = NLog.LogManager;
-using MathF = Alex.API.Utils.MathF;
 using Point = System.Drawing.Point;
 using Skin = MiNET.Utils.Skins.Skin;
 
@@ -36,7 +36,7 @@ namespace Alex.Entities
 	public class RemotePlayer : LivingEntity
 	{
 		private static readonly Logger   Log = LogManager.GetCurrentClassLogger(typeof(RemotePlayer));
-		public                  Gamemode Gamemode { get; private set; }
+		public  GameMode Gamemode { get; private set; }
 
 		private EntityModel _model;
 
@@ -76,7 +76,6 @@ namespace Alex.Entities
 			//NoAi = true;
 			
 			Velocity = Vector3.Zero;
-			PositionOffset = 1.62f;
 
 			GeometryName = geometry;
 
@@ -147,30 +146,33 @@ namespace Alex.Entities
 			}
 		}
 
+		private int _skinQueuedCount = 0;
 		private void QueueSkinProcessing()
 		{
-			Action action = () =>
+			if (Interlocked.CompareExchange(ref _skinQueuedCount, 1, 0) == 0)
 			{
-				if (_skin == null)
+				if (Level?.BackgroundWorker == null)
 				{
-					UpdateSkin(_texture);
+					ProcessSkin();
 				}
 				else
 				{
-					LoadSkin(_skin);
+					Level.BackgroundWorker.Enqueue(ProcessSkin);
 				}
+			}
+		}
 
-				_skinDirty = false;
-			};
-			
-			if (Level?.BackgroundWorker == null)
+		private void ProcessSkin()
+		{
+			_skinQueuedCount = 0;
+			_skinDirty = false;
+			if (_skin == null)
 			{
-				action();
+				UpdateSkin(_texture);
 			}
 			else
 			{
-				Level.BackgroundWorker.Enqueue(
-					action);
+				LoadSkin(_skin);
 			}
 		}
 
@@ -187,7 +189,7 @@ namespace Alex.Entities
 				{
 					Log.Warn($"No custom skin data for player {Name}");
 
-					if (Alex.Instance.Resources.ResourcePack.TryGetBitmap("entity/alex", out var rawTexture))
+					if (Alex.Instance.Resources.TryGetBitmap("entity/alex", out var rawTexture))
 					{
 						skinBitmap = rawTexture;
 					}
@@ -198,7 +200,7 @@ namespace Alex.Entities
 				if (!skin.IsPersonaSkin)
 				{
 					if (!string.IsNullOrWhiteSpace(skin.GeometryData) && !skin.GeometryData.Equals(
-						"null", StringComparison.OrdinalIgnoreCase))
+						"null", StringComparison.InvariantCultureIgnoreCase))
 					{
 						try
 						{
@@ -259,7 +261,7 @@ namespace Alex.Entities
 					}
 					else
 					{
-						Log.Debug($"Geometry data null for player {Name}");
+						//Log.Debug($"Geometry data null for player {Name}");
 					}
 				}
 
@@ -364,7 +366,7 @@ namespace Alex.Entities
 			}
 		}
 
-		public void UpdateGamemode(Gamemode gamemode)
+		public void UpdateGamemode(GameMode gamemode)
 		{
 			Gamemode = gamemode;
 		}
@@ -419,7 +421,7 @@ namespace Alex.Entities
 
 				if (skinTexture == null)
 				{
-					if (Alex.Instance.Resources.ResourcePack.TryGetBitmap(skinVariant, out var rawTexture))
+					if (Alex.Instance.Resources.TryGetBitmap(skinVariant, out var rawTexture))
 					{
 						skinTexture = TextureUtils.BitmapToTexture2D(Alex.Instance.GraphicsDevice, rawTexture);
 

@@ -9,6 +9,7 @@ using System.Net;
 using System.Reflection;
 using System.Text;
 using Alex.API.Data.Options;
+using Alex.API.Graphics;
 using Alex.API.Resources;
 using Alex.API.Services;
 using Alex.API.Utils;
@@ -29,8 +30,10 @@ using Alex.ResourcePackLib;
 using Alex.ResourcePackLib.Generic;
 using Alex.ResourcePackLib.IO;
 using Alex.ResourcePackLib.IO.Abstract;
+using Alex.ResourcePackLib.Json.BlockStates;
 using Alex.ResourcePackLib.Json.Models;
 using Alex.ResourcePackLib.Json.Models.Blocks;
+using Alex.ResourcePackLib.Json.Models.Entities;
 using Alex.Utils;
 using Alex.Utils.Assets;
 using JetBrains.Profiler.Api;
@@ -39,7 +42,10 @@ using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Newtonsoft.Json;
 using NLog;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
 using DateTime = System.DateTime;
+using ResourceLocation = Alex.API.Resources.ResourceLocation;
 using Task = System.Threading.Tasks.Task;
 
 namespace Alex
@@ -49,10 +55,10 @@ namespace Alex
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ResourceManager));
 
 		private LinkedList<McResourcePack> ActiveResourcePacks { get; } = new LinkedList<McResourcePack>();
-		public McResourcePack ResourcePack => ActiveResourcePacks.First?.Value;
-		public BedrockResourcePack BedrockResourcePack { get; private set; }
-		public Registries Registries { get; private set; }
-		public AtlasGenerator Atlas { get; private set; }
+		private LinkedList<BedrockResourcePack> ActiveBedrockResourcePacks { get; } = new LinkedList<BedrockResourcePack>();
+		public BedrockResourcePack BedrockResourcePack => ActiveBedrockResourcePacks.First?.Value;
+		public  Registries                 Registries          { get; private set; }
+		public  AtlasGenerator             Atlas               { get; private set; }
 
 		private IStorageSystem Storage { get; }
 		private IOptionsProvider Options { get; }
@@ -67,8 +73,11 @@ namespace Alex
 		public static Effect BlockEffect { get; set; }
 		public static Effect LightingEffect { get; set; }
 		
-		public List<MCPack>       Packs              { get; } = new List<MCPack>();
-		public BlockModelRegistry BlockModelRegistry { get; private set; }
+		public List<MCPack>        Packs               { get; } = new List<MCPack>();
+		public BlockModelRegistry  BlockModelRegistry  { get; private set; }
+		public EntityModelRegistry EntityModelRegistry { get; private set; }
+		
+		public static PooledTexture2D NethergamesLogo { get; private set; }
 		public ResourceManager(IServiceProvider serviceProvider)
 		{
 			Atlas = new AtlasGenerator();
@@ -104,42 +113,67 @@ namespace Alex
 			{
 				return false;
 			}
-
-			ResourcePackLib.ResourcePack info;
+			
 			using(FileStream stream = File.OpenRead(file))
-			using (var archive = new ZipFileSystem(stream))
-				info = ResourcePackLib.ResourcePack.LoadFromArchive(archive);
+			using (var archive = new ZipFileSystem(stream, Path.GetFileNameWithoutExtension(file)))
+			{
+				manifest = ResourcePackLib.ResourcePack.GetManifest(archive);
 
-			if (info == null || info == default)
+				if (manifest != null)
+					manifest.Name = archive.Name;
+			}
+
+			if (manifest == null)
 			{
 				return false;
 			}
 
-			manifest = info.Info;
 			return true;
 		}
 
-		private McResourcePack LoadResourcePack(IProgressReceiver progressReceiver, IFilesystem fs, McResourcePack.McResourcePackPreloadCallback preloadCallback = null)
+		private ResourcePack LoadResourcePack(IProgressReceiver progressReceiver, IFilesystem fs, McResourcePack.McResourcePackPreloadCallback preloadCallback = null)
 		{
 			Stopwatch sw = Stopwatch.StartNew();
 			
-			Log.Info($"Loading resource pack...");
-			
-			McResourcePack resourcePack = null;
-			
-			resourcePack = new McResourcePack(
-				fs, preloadCallback, (percentage, file) =>
+			Log.Info($"Loading resource pack ({fs.Name})...");
+
+			try
+			{
+				var manifest = ResourcePackLib.ResourcePack.GetManifest(fs);
+
+				if (manifest == null || manifest.Type == ResourcePackType.Java)
 				{
-					progressReceiver?.UpdateProgress(percentage, null, file);
-				});
-
-			sw.Stop();
+					McResourcePack resourcePack = new McResourcePack(
+						fs, preloadCallback, (percentage, file) =>
+						{
+							progressReceiver?.UpdateProgress(percentage, null, file);
+						});
+					
+					sw.Stop();
 			
-			Log.Info($"Loaded {resourcePack.BlockModels.Count} block models from resourcepack");
-			Log.Info($"Loaded {resourcePack.ItemModels.Count} item models from resourcepack");
-			Log.Info($"Loading resourcepack took: {sw.ElapsedMilliseconds}ms");
+					Log.Info($"Loaded {resourcePack.BlockModels.Count} block models from resourcepack");
+					Log.Info($"Loaded {resourcePack.ItemModels.Count} item models from resourcepack");
+					Log.Info($"Loading resourcepack took: {sw.ElapsedMilliseconds}ms");
 
-			return resourcePack;
+					return resourcePack;
+				}
+				else if (manifest.Type == ResourcePackType.Bedrock)
+				{
+					BedrockResourcePack brp = new BedrockResourcePack(
+						fs, (percentage, file) =>
+						{
+							progressReceiver?.UpdateProgress(percentage, null, file);
+						});
+
+					return brp;
+				}
+			}
+			catch (Exception ex)
+			{
+				Log.Warn(ex, $"Failed to load.");
+			}
+
+			return null;
 		}
 
 		private void LoadModels(IProgressReceiver progressReceiver, McResourcePack resourcePack, bool replaceModels,
@@ -151,46 +185,14 @@ namespace Alex
             int imported = 0;
             if (modelRegistry is BlockModelRegistry bmr)
             {
-	            imported = bmr.LoadResourcePack(progressReceiver, resourcePack);
+	            imported = bmr.LoadResourcePack(progressReceiver, resourcePack, replaceModels);
             }
 
             Log.Info($"Imported {imported} block models from resourcepack in {sw.ElapsedMilliseconds}ms!");
             
-            sw.Restart();
-            
-            MeasureProfiler.StartCollectingData();
-            imported = BlockFactory.LoadBlockstates(RegistryManager, this, resourcePack, replaceModels, reportMissingModels, progressReceiver);
-            MeasureProfiler.SaveData();
-            
-            MeasureProfiler.StopCollectingData();
-            
-            Log.Info($"Imported {imported} blockstates from resourcepack in {sw.ElapsedMilliseconds}ms!");
+            sw.Stop();
         }
-
-        private void LoadTextures(GraphicsDevice device, IProgressReceiver progressReceiver,
-            McResourcePack resourcePack, bool isFirst)
-        {
-	        progressReceiver.UpdateProgress(0, $"Loading textures: {resourcePack.Manifest?.Name ?? "Unknown"}");
-	        
-            if (!isFirst)
-            {
-	            Atlas.LoadResourcePackOnTop(device,
-		            ActiveResourcePacks.First(),
-		            resourcePack,
-		            progressReceiver);
-            }
-            else
-            {
-                Atlas.LoadResourcePack(device, resourcePack, progressReceiver);
-            }
-
-          //  if (!isFirst)
-            {
-	            progressReceiver.UpdateProgress(0, $"Loading UI textures: {resourcePack.Manifest?.Name ?? "Unknown"}");
-	            Alex.GuiRenderer.LoadResourcePackTextures(resourcePack, progressReceiver);
-            }
-        }
-
+		
         private bool CheckBedrockAssets(IProgressReceiver progressReceiver, out string bedrockResources)
         {
 	        bedrockResources = null;
@@ -290,25 +292,14 @@ namespace Alex
         public string DeviceID { get; private set; } = null;
         private void LoadHWID()
         {
-	        string hwid = "";
-	        string path = "hwid.txt";
-
-	        if (Storage.TryReadString(path, out hwid))
-	        {
-		        DeviceID = hwid;
-
-		        return;
-	        }
-
-	        hwid = Guid.NewGuid().ToString();
-	        Storage.TryWriteString(path, hwid);
-
-	        DeviceID = hwid;
+	        DeviceID = Guid.NewGuid().ToString();
         }
         
-        public DirectoryInfo SkinPackDirectory { get; private set; } = null;
-        public DirectoryInfo ResourcePackDirectory { get; private set; } = null;
-        private  McResourcePack.McResourcePackPreloadCallback PreloadCallback { get; set; }
+        public  DirectoryInfo                                SkinPackDirectory     { get; private set; } = null;
+        public  DirectoryInfo                                ResourcePackDirectory { get; private set; } = null;
+        private McResourcePack.McResourcePackPreloadCallback PreloadCallback       { get; set; }
+        public  bool Asynchronous => true;//ActiveResourcePacks.All(x => x.Asynchronous);
+
         public bool CheckResources(GraphicsDevice device, IProgressReceiver progressReceiver, McResourcePack.McResourcePackPreloadCallback preloadCallback)
         {
 	        LoadHWID();
@@ -335,41 +326,35 @@ namespace Alex
 
 			progressReceiver?.UpdateProgress(0, "Loading vanilla resources...");
 			
-	        var vanilla = LoadResourcePack(progressReceiver, new RealFileSystem(defaultResources), preloadCallback);
-	        vanilla.Manifest.Name = "Vanilla";
+	        var vanilla = LoadResourcePack(progressReceiver, new DiskFileSystem(defaultResources), preloadCallback);
+	        if (vanilla.Info != null)
+				vanilla.Info.Name = "Vanilla";
 				
-	        ActiveResourcePacks.AddFirst(vanilla);
+	        ActiveResourcePacks.AddFirst((McResourcePack)vanilla);
 
-	        Alex.AudioEngine.Initialize(vanilla);
+	        Alex.AudioEngine.Initialize((McResourcePack)vanilla);
 
 	       // Log.Info($"Loading bedrock resources...");
 			
 			progressReceiver?.UpdateProgress(0, "Loading bedrock resources...");
-			
-			using (RealFileSystem fileSystem = new RealFileSystem(defaultBedrock))
-			{
-				BedrockResourcePack = new BedrockResourcePack(
-					fileSystem, (percentage, file) => { progressReceiver?.UpdateProgress(percentage, null, file); });
-				
-				int modelCount = EntityFactory.LoadModels(BedrockResourcePack, device, true, progressReceiver);
 
-				Log.Info($"Imported {modelCount} entity models...");
-			}
-
+			var vanillaBedrock = LoadResourcePack(progressReceiver, new DiskFileSystem(defaultBedrock));
+			ActiveBedrockResourcePacks.AddFirst((BedrockResourcePack) vanillaBedrock);
 			//Log.Info($"Loading known entity data...");
-			EntityFactory.Load(this, progressReceiver);
 
-            Storage.TryGetDirectory(Path.Combine("assets", "resourcepacks"), out DirectoryInfo root);
+			Storage.TryGetDirectory(Path.Combine("assets", "resourcepacks"), out DirectoryInfo root);
             ResourcePackDirectory = root;
 
             LoadRegistries(progressReceiver);
             
 	        LoadResourcePacks(
 		        device, progressReceiver, Options.AlexOptions.ResourceOptions.LoadedResourcesPacks.Value);
+	        
+	        EntityFactory.Load(this, progressReceiver);
 
-	        ItemFactory.Init(RegistryManager, this, ResourcePack, progressReceiver);
+	        ItemFactory.Init(RegistryManager, this, progressReceiver);
 			
-	        BlockEntityFactory.LoadResources(device, ResourcePack);
+	        BlockEntityFactory.LoadResources(device, this);
             
             if (Storage.TryGetDirectory(Path.Combine("assets", "bedrockpacks"), out DirectoryInfo info))
             {
@@ -392,6 +377,9 @@ namespace Alex
             Options.AlexOptions.ResourceOptions.LoadedResourcesPacks.Bind(ResourcePacksChanged);
             _hasInit = true;
             
+            var data = ReadResource("Alex.Resources.nethergames.png");
+            NethergamesLogo = TextureUtils.BitmapToTexture2D(Alex.GraphicsDevice, Image.Load(data));
+	            
             return true;
 		}
 
@@ -408,7 +396,7 @@ namespace Alex
 
 		        try
 		        {
-			        using (var archive = new ZipArchive(file.Open(FileMode.Open, FileAccess.Read), ZipArchiveMode.Read))
+			        using (var archive = new ZipFileSystem(file.Open(FileMode.Open, FileAccess.Read), file.Name))
 			        {
 				        MCPack pack = new MCPack(archive);
 				        Packs.Add(pack);
@@ -426,7 +414,14 @@ namespace Alex
         {
 	        var countBefore = ActiveResourcePacks.Count;
 	        
-	        var first = ActiveResourcePacks.First.Value;
+	        var first  = ActiveResourcePacks.First.Value;
+	        var before = ActiveResourcePacks.ToArray();
+
+	        foreach (var item in before.Skip(1))
+	        {
+		        item.Dispose();
+	        }
+	        
 	        ActiveResourcePacks.Clear();
 
 	        ActiveResourcePacks.AddFirst(first);
@@ -444,20 +439,27 @@ namespace Alex
 			        string resourcePackPath = Path.Combine(ResourcePackDirectory.FullName, file);
 			        if (File.Exists(resourcePackPath))
 			        {
-				        Log.Info($"Loading resourcepack {file}...");
+				        //Log.Info($"Loading resourcepack {file}...");
 
-				        using (FileStream stream = new FileStream(resourcePackPath, FileMode.Open))
+				        //using (FileStream stream = new FileStream(resourcePackPath, FileMode.Open))
 				        {
-					        using (ZipFileSystem zipFileSystem = new ZipFileSystem(stream))
+					       // using (ZipFileSystem zipFileSystem = )
 					        {
-						        var pack = LoadResourcePack(progress, zipFileSystem, null);
+						        var pack = LoadResourcePack(progress, new ZipFileSystem(new FileStream(resourcePackPath, FileMode.Open), Path.GetFileNameWithoutExtension(resourcePackPath)), null);
 
-						        if (pack.Manifest != null && string.IsNullOrWhiteSpace(pack.Manifest.Name))
+						        if (pack is McResourcePack javaPack)
 						        {
-							        pack.Manifest.Name = Path.GetFileNameWithoutExtension(file);
-						        }
+							        if (pack.Info != null && string.IsNullOrWhiteSpace(pack.Info.Name))
+							        {
+								        pack.Info.Name = Path.GetFileNameWithoutExtension(file);
+							        }
 
-						        ActiveResourcePacks.AddLast(pack);
+							        ActiveResourcePacks.AddLast(javaPack);
+						        }
+						        else if (pack is BedrockResourcePack bedrockPack)
+						        {
+							        ActiveBedrockResourcePacks.AddLast(bedrockPack);
+						        }
 					        }
 				        }
 			        }
@@ -467,30 +469,54 @@ namespace Alex
 			        Log.Warn(e, $"Could not load resourcepack {file}: {e.ToString()}");
 		        }
 	        }
-	        
-	        bool isFirst = true;
 
-	        isFirst = true;
-	        foreach (var resourcePack in ActiveResourcePacks)
+	        var  active  = ActiveResourcePacks.ToArray();
+	        bool isFirst = true;
+	        foreach (var resourcePack in active)
 	        {
+		        Alex.GuiRenderer.LoadLanguages(resourcePack, progress);
+		        
 		        LoadModels(progress, resourcePack, !isFirst, isFirst);
 		        if (isFirst)
 		        { //Only load models for vanilla until above we fix blockstate replacement issues.
 			        isFirst = false;
-			        break;
+			       // break;
 		        }
 	        }
+	        
+	        Stopwatch sw = Stopwatch.StartNew();
+	        MeasureProfiler.StartCollectingData();
+	        var imported = BlockFactory.LoadBlockstates(RegistryManager, this, false, false, progress);
+	        MeasureProfiler.SaveData();
+            
+	        MeasureProfiler.StopCollectingData();
+            
+	        Log.Info($"Imported {imported} blockstates from resourcepack in {sw.ElapsedMilliseconds}ms!");
 
-	        isFirst = true;
-	        foreach (var resourcePack in ActiveResourcePacks)
+	        var textures = new Dictionary<ResourceLocation, AtlasGenerator.ImageEntry>();
+	        for (var index = 0; index < active.Length; index++)
 	        {
-		        Alex.GuiRenderer.LoadLanguages(resourcePack, progress);
+		        var resourcePack = active[index];
 		        
-		        LoadTextures(device, progress, resourcePack, isFirst);
-
-		        if (isFirst)
-			        isFirst = false;
+		        progress?.UpdateProgress(0, $"Loading textures: {resourcePack.Info?.Name ?? "Unknown"}");
+	        
+		        Atlas.LoadResourcePackOnTop(device,
+			        textures,
+			        resourcePack,
+			        progress, index == active.Length - 1);
+		        //LoadTextures(device, progress, resourcePack, ref textures, index == active.Length - 1);
 	        }
+
+	        foreach (var resourcePack in ActiveBedrockResourcePacks)
+	        {
+		        LoadEntityModels(resourcePack, progress);
+		        int modelCount = EntityFactory.LoadModels(resourcePack, device, true, progress);
+
+		        Log.Info($"Imported {modelCount} entity models...");
+	        }
+
+	        progress?.UpdateProgress(0, $"Loading UI textures...");
+	        Alex.GuiRenderer.LoadResourcePackTextures(this, progress);
 
 	        progress?.UpdateProgress(50, "Loading language...");
 	        if (!Alex.GuiRenderer.SetLanguage(Options.AlexOptions.MiscelaneousOptions.Language.Value))
@@ -506,11 +532,27 @@ namespace Alex
 		        PreloadCallback?.Invoke(f.FontBitmap, McResourcePack.BitmapFontCharacters.ToList());
 	        }
         }
+
+        private void LoadEntityModels(BedrockResourcePack resourcePack, IProgressReceiver progressReceiver = null)
+        {
+	        Stopwatch sw            = Stopwatch.StartNew();
+	        var       modelRegistry = EntityModelRegistry;
+
+	        int imported = 0;
+	        imported = modelRegistry.LoadResourcePack(progressReceiver, resourcePack, true);
+
+	        Log.Info($"Imported {imported} block models from resourcepack in {sw.ElapsedMilliseconds}ms!");
+            
+	        sw.Stop();
+        }
         
         private void LoadRegistries(IProgressReceiver progress)
         {
 	        progress.UpdateProgress(0, "Loading block model registry...");
 	        RegistryManager.AddRegistry<BlockModelEntry, ResourcePackModelBase>(BlockModelRegistry = new BlockModelRegistry());
+	        
+	        progress.UpdateProgress(0, "Loading entity model registry...");
+	        RegistryManager.AddRegistry<EntityModelEntry, EntityModel>(EntityModelRegistry = new EntityModelRegistry());
 	        
 	        progress.UpdateProgress(0, "Loading blockstate registry...");
 	        RegistryManager.AddRegistry(new RegistryBase<BlockState>("blockstate"));
@@ -545,6 +587,89 @@ namespace Alex
 			}
 
 			//return fontStream.ReadAllBytes();
+		}
+
+		public bool TryGetBitmap(ResourceLocation location, out Image<Rgba32> bitmap)
+		{
+			bitmap = null;
+			foreach (var resourcePack in ActiveResourcePacks.Reverse())
+			{
+				if (resourcePack.TryGetBitmap(location, out var f))
+				{
+					bitmap = f;
+					return true;
+				}
+			}
+
+			return false;
+		}
+
+		public bool TryGetBlockState(string location, out BlockStateResource resource)
+		{
+			resource = null;
+			foreach (var resourcePack in ActiveResourcePacks.Reverse())
+			{
+				if (resourcePack.TryGetBlockState(location, out resource))
+				{
+					return true;
+				}
+			}
+
+			return false;
+		}
+
+		public Microsoft.Xna.Framework.Color GetGrassColor(float temp, float rain, int elevation)
+		{
+			foreach (var resourcePack in ActiveResourcePacks.Reverse())
+			{
+				if (resourcePack.TryGetGrassColor(temp, rain, elevation, out var color))
+				{
+					return color;
+				}
+			}
+
+			return new Microsoft.Xna.Framework.Color(94, 157, 52);
+		}
+		
+		public Microsoft.Xna.Framework.Color GetFoliageColor(float temp, float rain, int elevation)
+		{
+			foreach (var resourcePack in ActiveResourcePacks.Reverse())
+			{
+				if (resourcePack.TryGetFoliageColor(temp, rain, elevation, out var color))
+				{
+					return color;
+				}
+			}
+			
+			return new Microsoft.Xna.Framework.Color(94, 157, 52);
+		}
+
+		public bool TryGetItemModel(ResourceLocation key, out ResourcePackModelBase model)
+		{
+			model = null;
+			foreach (var resourcePack in ActiveResourcePacks.Reverse())
+			{
+				if (resourcePack.ItemModels.TryGetValue(key, out model))
+				{
+					return true;
+				}
+			}
+
+			return false;
+		}
+
+		public bool TryGetBlockModel(ResourceLocation key, out ResourcePackModelBase model)
+		{
+			model = null;
+			foreach (var resourcePack in ActiveResourcePacks.Reverse())
+			{
+				if (resourcePack.BlockModels.TryGetValue(key, out model))
+				{
+					return true;
+				}
+			}
+
+			return false;
 		}
 	}
 

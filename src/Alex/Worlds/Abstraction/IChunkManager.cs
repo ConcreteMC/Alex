@@ -3,17 +3,16 @@ using Alex.API.Utils;
 using Alex.Worlds.Chunks;
 using Microsoft.Xna.Framework;
 
-namespace Alex.Worlds
+namespace Alex.Worlds.Abstraction
 {
 	public interface IChunkManager
 	{
-		int     ChunkCount         { get; }
-		long    Vertices           { get; }
-		int     RenderedChunks     { get; }
-		bool    FogEnabled         { get; set; }
-		Vector3 FogColor           { get; set; }
-		float   FogDistance        { get; set; }
-		Vector3 AmbientLightColor  { get; set; }
+		int     ChunkCount        { get; }
+		int     RenderedChunks    { get; }
+		bool    FogEnabled        { get; set; }
+		Vector3 FogColor          { get; set; }
+		float   FogDistance       { get; set; }
+		Vector3 AmbientLightColor { get; set; }
 	//	float   BrightnessModifier { get; set; }
 
 		void Start();

@@ -69,9 +69,8 @@ namespace Alex.Gamestates.InGame
 			if (!_didInitialization)
 			{
 				_didInitialization = true;
-				//var previousState = Alex.GameStateManager.GetPreviousState();
-				if (Alex.GameStateManager.TryGetState("play", out PlayingState s))
-					//if (previousState is PlayingState s)
+
+				if ( Alex.GameStateManager.TryGetState("play", out PlayingState s))
 				{
 					PlayerListItem[] players = s.World.PlayerList.Entries.Values.ToArray();
 
@@ -80,14 +79,6 @@ namespace Alex.Gamestates.InGame
 						var p           = players[index];
 						var displayName = p.Username;
 						
-						if (!p.IsJavaPlayer)
-						{
-							//if (s.World.EntityManager.TryGet(p.UUID, out var entity))
-							//{
-							//	displayName = entity.NameTag;
-							//}
-						}
-
 						_playerList.AddChild(
 							new PlayerListItemElement(displayName, p.IsJavaPlayer ? p.Ping : (int?)null)
 							{
@@ -113,8 +104,8 @@ namespace Alex.Gamestates.InGame
         {
 	        if (Alex.GameStateManager.TryGetState("options", out OptionsState state))
 	        {
-		        Alex.GameStateManager.SetActiveState("options");
 		        state.ParentState = ParentState;
+		        Alex.GameStateManager.SetActiveState("options");
 	        }
         }
 

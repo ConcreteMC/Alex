@@ -52,14 +52,16 @@ namespace Alex.Gamestates
 
 		private void MenuButtonClicked()
 		{
-			if (ParentState != null)
-			{
-				Alex.GameStateManager.SetActiveState(ParentState);
-			}
-			else
-			{
-				Alex.GameStateManager.SetActiveState<TitleState>("title");
-			}
+			//if (ParentState != null)
+			//{
+			//	Alex.GameStateManager.SetActiveState(ParentState);
+			//}
+			//else
+			//{
+			Alex.GameStateManager.RemoveState("play");
+			Alex.GameStateManager.SetActiveState<TitleState>("title");
+			Alex.GameStateManager.RemoveState(this);
+			//}
 
 			Alex.IsMouseVisible = true;
 		}

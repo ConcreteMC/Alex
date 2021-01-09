@@ -57,7 +57,7 @@ namespace Alex.Gamestates.MainMenu.Options
                     {
                         Text = ic.ToString().SplitPascalCase()
                     }, textInput);
-                    row.Margin = new Thickness(5, 5);
+                   // row.Margin = new Thickness(5, 5);
 
                     textInput.ValueChanged += (sender, newValue) =>
                     {

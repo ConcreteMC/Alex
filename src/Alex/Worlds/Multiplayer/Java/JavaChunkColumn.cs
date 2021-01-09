@@ -11,7 +11,7 @@ namespace Alex.Worlds.Multiplayer.Java
 
 		protected override ChunkSection CreateSection(bool storeSkylight, int sections)
 		{
-			return new JavaChunkSection(this, storeSkylight, sections);
+			return new JavaChunkSection(storeSkylight, sections);
 		}
 
 		public void Read(MinecraftStream ms, int availableSections, bool groundUp, bool readSkylight)
@@ -28,7 +28,7 @@ namespace Alex.Worlds.Multiplayer.Java
 					{
 						if (storage == null)
 						{
-							storage = new JavaChunkSection(this, readSkylight);
+							storage = new JavaChunkSection(readSkylight);
 						}
 
 						storage.Read(ms);

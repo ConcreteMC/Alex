@@ -11,7 +11,6 @@ using Alex.Worlds;
 using fNbt;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using MathF = Alex.API.Utils.MathF;
 
 namespace Alex.Entities.BlockEntities
 {
@@ -24,8 +23,8 @@ namespace Alex.Entities.BlockEntities
 		{
 			//ModelRenderer = new EntityModelRenderer(new StandingSignEntityModel(), texture);
 			
-			Width = 16;
-			Height = 16;
+			Width = 1f;
+			Height = 1f;
 			
 				//	Offset = Vector3.Zero;
 		}

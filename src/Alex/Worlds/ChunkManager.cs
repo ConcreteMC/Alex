@@ -12,6 +12,7 @@ using Alex.API.World;
 using Alex.Blocks.Minecraft;
 using Alex.Gamestates;
 using Alex.Utils.Queue;
+using Alex.Worlds.Abstraction;
 using Alex.Worlds.Chunks;
 using Alex.Worlds.Lighting;
 using Microsoft.Extensions.DependencyInjection;
@@ -32,10 +33,10 @@ namespace Alex.Worlds
 		private AlexOptions                                         Options        { get; }
 		private ConcurrentDictionary<ChunkCoordinates, ChunkColumn> Chunks         { get; }
 		
-		public  RenderingShaders        Shaders         { get; set; }
+		public  RenderingShaders        Shaders                { get; set; }
 		private CancellationTokenSource CancellationToken      { get; }
-		private BlockLightCalculations  BlockLightCalculations { get; }
-		private SkyLightCalculations    SkyLightCalculator     { get; }
+		private BlockLightCalculations  BlockLightCalculations { get; set; }
+		public  SkyLightCalculations    SkyLightCalculator     { get; private set; }
 
 		private FancyQueue<ChunkCoordinates> FastUpdateQueue   { get; }
 		private FancyQueue<ChunkCoordinates> UpdateQueue       { get; }
@@ -55,6 +56,8 @@ namespace Alex.Worlds
 			Shaders.SetTextures(stillAtlas);
 			Shaders.SetAnimatedTextures(Resources.Atlas.GetAtlas(0));
 			
+			_renderSampler.MaxMipLevel = stillAtlas.LevelCount;
+			
 			RenderDistance = Options.VideoOptions.RenderDistance;
 
 			Options.VideoOptions.RenderDistance.Bind(
@@ -66,23 +69,8 @@ namespace Alex.Worlds
 			Chunks = new ConcurrentDictionary<ChunkCoordinates, ChunkColumn>();
 			CancellationToken = new CancellationTokenSource();
 			
-			BlockLightCalculations = new BlockLightCalculations((World) world);
-			SkyLightCalculator = new SkyLightCalculations();
-			
-			Func<ChunkCoordinates, ChunkCoordinates, int> orderingTool = (a, b) =>
-			{
-				var pos       = new ChunkCoordinates(World.Camera.Position);
-				var aDistance = a.DistanceTo(pos);
-				var bDistance = b.DistanceTo(pos);
-
-				if (aDistance < bDistance)
-					return -1;
-
-				if (bDistance > aDistance)
-					return 1;
-
-				return 0;
-			};
+			BlockLightCalculations = new BlockLightCalculations(world, CancellationToken.Token);
+			SkyLightCalculator = new SkyLightCalculations(CancellationToken.Token);
 			
 			UpdateQueue = new FancyQueue<ChunkCoordinates>();
 			UpdateBorderQueue = new FancyQueue<ChunkCoordinates>();
@@ -99,9 +87,6 @@ namespace Alex.Worlds
 		
 		/// <inheritdoc />
 		public int ChunkCount => Chunks.Count;
-
-		/// <inheritdoc />
-		public long Vertices { get; private set; }
 
 		/// <inheritdoc />
 		public int RenderedChunks { get; private set; }
@@ -175,7 +160,7 @@ namespace Alex.Worlds
 		private ChunkData[] _renderedChunks = new ChunkData[0];
 		private ChunkCoordinates[] UpdateRenderedChunks()
 		{
-			List<ChunkCoordinates> chunks   = new List<ChunkCoordinates>();
+			//List<ChunkCoordinates> chunks   = new List<ChunkCoordinates>();
 			List<ChunkData>        rendered = new List<ChunkData>();
 			foreach (var chunk in Chunks)
 			{
@@ -188,13 +173,13 @@ namespace Alex.Worlds
 				if (IsWithinView(chunk.Key, World.Camera))
 				{
 					rendered.Add(chunk.Value.ChunkData);
-					chunks.Add(chunk.Key);
+					//chunks.Add(chunk.Key);
 				}
 			}
 
 			_renderedChunks = rendered.ToArray();
 
-			return chunks.ToArray();
+			return rendered.Select(x => x.Coordinates).ToArray();
 		}
 		
 		private bool ProcessQueue()
@@ -224,10 +209,7 @@ namespace Alex.Worlds
 				{
 					try
 					{
-						while (queue.TryDequeue(out var chunkCoordinates, cc =>
-						{
-							return IsWithinView(cc, World.Camera);
-						}))
+						while (!CancellationToken.IsCancellationRequested && queue.TryDequeue(out var chunkCoordinates, cc => IsWithinView(cc, World.Camera)))
 						{
 							if (TryGetChunk(chunkCoordinates, out var chunk))
 							{
@@ -236,21 +218,27 @@ namespace Alex.Worlds
 
 								try
 								{
-									if (BlockLightCalculations.HasEnqueued(chunkCoordinates))
+									if (BlockLightCalculations != null)
 									{
-										BlockLightCalculations.Process(chunkCoordinates);
+										if (BlockLightCalculations.HasEnqueued(chunkCoordinates))
+										{
+											BlockLightCalculations.Process(chunkCoordinates);
+										}
 									}
 
 									//SkyLightCalculator.TryProcess(chunkCoordinates);
 
 									bool newChunk      = chunk.IsNew;
 
-									if (newChunk)
+									if (SkyLightCalculator != null)
 									{
-										SkyLightCalculator.RecalcSkyLight(chunk, World);
+										if (newChunk)
+										{
+											SkyLightCalculator.RecalcSkyLight(chunk, World);
+										}
 									}
-									
-									chunk.UpdateBuffer(Graphics, World, chunkCoordinates.DistanceTo(new ChunkCoordinates(World.Camera.Position)) <= RenderDistance / 2);
+
+									chunk.UpdateBuffer(Graphics, World, chunkCoordinates.DistanceTo(new ChunkCoordinates(World.Camera.Position)) <= RenderDistance / 2f);
 
 									if (newChunk)
 									{
@@ -325,6 +313,8 @@ namespace Alex.Worlds
 		/// <inheritdoc />
 		public void AddChunk(ChunkColumn chunk, ChunkCoordinates position, bool doUpdates = false)
 		{
+			if (CancellationToken.IsCancellationRequested)
+				return;
 			//chunk.CalculateHeight();
 			
 			Chunks.AddOrUpdate(
@@ -402,6 +392,7 @@ namespace Alex.Worlds
 			var chunks = Chunks.ToArray();
 			Chunks.Clear();
 
+			_renderedChunks = new ChunkData[0];
 			foreach (var chunk in chunks)
 			{
 				chunk.Value.Dispose();
@@ -440,7 +431,7 @@ namespace Alex.Worlds
 
 		public bool UseWireFrames { get; set; } = false;
 
-		private static readonly SamplerState RenderSampler = new SamplerState()
+		private readonly SamplerState _renderSampler = new SamplerState()
 		{
 			Filter = TextureFilter.PointMipLinear	,
 			AddressU = TextureAddressMode.Wrap,
@@ -456,14 +447,14 @@ namespace Alex.Worlds
 			// ComparisonFunction = 
 		};
 
-		private static DepthStencilState DepthStencilState { get; } = new DepthStencilState()
+		private DepthStencilState DepthStencilState { get; } = new DepthStencilState()
 		{
 			DepthBufferEnable = true,
 			DepthBufferFunction = CompareFunction.Less,
 			DepthBufferWriteEnable = true
 		};
 
-		private static RasterizerState RasterizerState = new RasterizerState()
+		private readonly RasterizerState _rasterizerState = new RasterizerState()
 		{
 			//DepthBias = 0.0001f,
 			CullMode = CullMode.CullClockwiseFace,
@@ -472,7 +463,7 @@ namespace Alex.Worlds
 			//ScissorTestEnable = true
 		};
 
-		private static BlendState TranslucentBlendState { get; } = new BlendState()
+		private BlendState TranslucentBlendState { get; } = new BlendState()
 		{
 			AlphaSourceBlend = Microsoft.Xna.Framework.Graphics.Blend.SourceAlpha,
 			AlphaDestinationBlend = Microsoft.Xna.Framework.Graphics.Blend.InverseSourceAlpha,
@@ -490,10 +481,10 @@ namespace Alex.Worlds
 
 			var originalSamplerState = device.SamplerStates[0];
 
-			device.SamplerStates[0] = RenderSampler;
+			device.SamplerStates[0] = _renderSampler;
 
 			RasterizerState originalState = device.RasterizerState;
-			args.GraphicsDevice.RasterizerState = RasterizerState;
+			args.GraphicsDevice.RasterizerState = _rasterizerState;
 
 			bool usingWireFrames = UseWireFrames;
 
@@ -516,7 +507,7 @@ namespace Alex.Worlds
 				args, out int chunksRendered, out int verticesRendered, null,
 				stages.Length > 0 ? stages : RenderStages);
 
-			Vertices = verticesRendered;
+			//Vertices = verticesRendered;
 			RenderedChunks = chunksRendered;
 
 			device.RasterizerState = originalState;
@@ -557,6 +548,13 @@ namespace Alex.Worlds
 			//{
 			//	transparentEffect = shaders.OpaqueEffect;
 			//}
+			
+			if (CancellationToken.IsCancellationRequested || chunks == null)
+			{
+				drawnVertices = 0;
+				chunksRendered = 0;
+				return;
+			}
 			
 			foreach (var stage in stages)
 			{
@@ -639,28 +637,6 @@ namespace Alex.Worlds
 		
 		#endregion
 
-		/// <inheritdoc />
-		public void Dispose()
-		{
-			//Graphics?.Dispose();
-			CancellationToken.Cancel();
-			UpdateQueue.Clear();
-			FastUpdateQueue.Clear();
-			UpdateBorderQueue.Clear();
-
-			foreach (var chunk in Chunks)
-			{
-				chunk.Value.Dispose();
-			}
-			
-			Chunks.Clear();
-			
-			foreach(var rendered in _renderedChunks)
-				rendered.Dispose();
-
-			_renderedChunks = null;
-		}
-
 		int   _currentFrame = 0;
 		int   _framerate    = 12;     // Animate at 12 frames per second
 		float _timer        = 0.0f;
@@ -685,6 +661,46 @@ namespace Alex.Worlds
 			{
 				if (chunk.Value.BlockLightDirty || chunk.Value.SkyLightDirty)
 					ScheduleChunkUpdate(chunk.Key, ScheduleType.Lighting);
+			}
+		}
+
+		private bool _disposed = false;
+		/// <inheritdoc />
+		public void Dispose()
+		{
+			if (_disposed)
+				return;
+
+			try
+			{
+				//Graphics?.Dispose();
+				BlockLightCalculations?.Dispose();
+				BlockLightCalculations = null;
+				
+				SkyLightCalculator?.Dispose();
+				SkyLightCalculator = null;
+				
+				_renderSampler.Dispose();
+				CancellationToken.Cancel();
+				UpdateQueue.Clear();
+				FastUpdateQueue.Clear();
+				UpdateBorderQueue.Clear();
+
+				foreach (var chunk in Chunks)
+				{
+					chunk.Value.Dispose();
+				}
+
+				Chunks.Clear();
+
+				foreach (var rendered in _renderedChunks)
+					rendered.Dispose();
+
+				_renderedChunks = null;
+			}
+			finally
+			{
+				_disposed = true;
 			}
 		}
 	}

@@ -16,18 +16,24 @@ namespace Alex.Blocks.State
 		
         public bool TryResolve(BlockState source, string property, string value, bool prioritize, out BlockState result, params string[] requiredMatches)
         {
-          //  property = property.ToLowerInvariant();
+            //  property = property.ToLowerInvariant();
             value = value.ToLowerInvariant();
 
             int highestMatch = 0;
             BlockState highest = null;
 
-            var matching = Variants.Where(x => x[property].Equals(value, StringComparison.OrdinalIgnoreCase)).ToArray();
+            var matching = Variants.Where(x => x.Contains(property) && x[property].Equals(value, StringComparison.OrdinalIgnoreCase)).ToArray();
 
             if (matching.Length == 1)
             {
                 result = matching.FirstOrDefault();
                 return true;
+            }
+            else if (matching.Length == 0)
+            {
+                result = source;
+
+                return false;
             }
             
             var copiedProperties = new Dictionary<string, string>(source, StringComparer.OrdinalIgnoreCase);

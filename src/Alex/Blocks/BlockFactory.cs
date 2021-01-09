@@ -74,7 +74,7 @@ namespace Alex.Blocks
 		}
 		
 
-		internal static int LoadBlockstates(IRegistryManager registryManager, ResourceManager resources, McResourcePack resourcePack, bool replace,
+		internal static int LoadBlockstates(IRegistryManager registryManager, ResourceManager resources, bool replace,
 			bool reportMissing = false, IProgressReceiver progressReceiver = null)
 		{
 			//RuntimeIdTable = TableEntry.FromJson(raw);
@@ -83,7 +83,7 @@ namespace Alex.Blocks
 
 			RegisterBuiltinBlocks();
 
-			return LoadModels(registryManager, resources, resourcePack, replace, reportMissing, progressReceiver);
+			return LoadModels(registryManager, resources, replace, reportMissing, progressReceiver);
 		}
 		
 		//public static BlockModel UnknownBlockModel { get; set; }
@@ -91,7 +91,6 @@ namespace Alex.Blocks
 		private static readonly Regex _blockMappingRegex = new Regex(@"(?'key'[\:a-zA-Z_\d][^\[]*)(\[(?'data'.*)\])?", RegexOptions.Compiled);
 		private static int LoadModels(IRegistryManager registryManager,
 			ResourceManager resources,
-			McResourcePack resourcePack,
 			bool replace,
 			bool reportMissing,
 			IProgressReceiver progressReceiver)
@@ -110,128 +109,134 @@ namespace Alex.Blocks
 			int importCounter = 0;
 			int multipartBased = 0;
 
-			Parallel.ForEach(
-				data, entry =>
+			void LoadEntry(KeyValuePair<string, BlockData> entry)
+			{
+				done++;
+				if (!resources.TryGetBlockState(entry.Key, out var blockStateResource))
 				{
-					//double percentage = 100D * ((double) done / (double) total);blockstate variants
-					progressReceiver.UpdateProgress(done, total, $"Importing block models...", entry.Key);
-
-					done++;
-					if (!resourcePack.TryGetBlockState(entry.Key, out var blockStateResource))
-					{
+					if (reportMissing)
 						Log.Warn($"Could not find blockstate with key: {entry.Key}");
 
-						return;
+					return;
+				}
+				
+				//double percentage = 100D * ((double) done / (double) total);blockstate variants
+				progressReceiver.UpdateProgress(done, total, $"Importing block models...", entry.Key);
+
+				var location     = new ResourceLocation(entry.Key);
+				var variantMap   = new BlockStateVariantMapper();
+				var defaultState = new BlockState {Name = entry.Key, VariantMapper = variantMap};
+				defaultState = defaultState.WithLocation(location).Value;
+
+				if (entry.Value.Properties != null)
+				{
+					foreach (var property in entry.Value.Properties)
+					{
+						defaultState = (BlockState) defaultState.WithPropertyNoResolve(property.Key, property.Value.FirstOrDefault(), false);
+					}
+				}
+
+				foreach (var s in entry.Value.States)
+				{
+					if (!replace && RegisteredBlockStates.TryGetValue(s.ID, out BlockState st))
+					{
+						Log.Warn($"Duplicate blockstate id (Existing: {st.Name}[{st.ToString()}]) ");
+
+						continue;
 					}
 
-					var location     = new ResourceLocation(entry.Key);
-					var variantMap   = new BlockStateVariantMapper();
-					var defaultState = new BlockState {Name = entry.Key, VariantMapper = variantMap};
-					defaultState = defaultState.WithLocation(location).Value;
-					
-					if (entry.Value.Properties != null)
+					BlockState variantState = (BlockState) (defaultState).CloneSilent();
+					variantState.ID = s.ID;
+					variantState.Name = entry.Key;
+
+					if (s.Properties != null)
 					{
-						foreach (var property in entry.Value.Properties)
+						foreach (var property in s.Properties)
 						{
-							defaultState = (BlockState) defaultState.WithPropertyNoResolve(
-								property.Key, property.Value.FirstOrDefault(), false);
+							//if (property.Key.ToLower() == "waterlogged")continue;
+							variantState = (Blocks.State.BlockState) variantState.WithPropertyNoResolve(property.Key, property.Value, false);
 						}
 					}
 
-					foreach (var s in entry.Value.States)
+					IRegistryEntry<Block> registryEntry;
+
+					if (!blockRegistry.TryGet(location, out registryEntry))
 					{
-						if (!replace && RegisteredBlockStates.TryGetValue(s.ID, out BlockState st))
-						{
-							Log.Warn(
-								$"Duplicate blockstate id (Existing: {st.Name}[{st.ToString()}]) ");
+						registryEntry = new UnknownBlock();
+						registryEntry = registryEntry.WithLocation(location); // = entry.Key;
+					}
+					else
+					{
+						registryEntry = registryEntry.WithLocation(location);
+					}
 
-							continue;
-						}
-						
-						BlockState variantState = (BlockState) (defaultState).CloneSilent();
-						variantState.ID = s.ID;
-						variantState.Name = entry.Key;
+					var block = registryEntry.Value;
 
-						if (s.Properties != null)
+					if (string.IsNullOrWhiteSpace(block.DisplayName)) block.DisplayName = entry.Key;
+
+					variantState.Block = block.Value;
+					block.BlockState = variantState;
+
+					variantState.Model = ResolveModel(resources, blockStateResource, variantState);
+
+					if (variantState.Model == null)
+					{
+						Log.Warn($"No model found for {entry.Key}[{variantState.ToString()}]");
+					}
+
+					if (variantState.IsMultiPart) multipartBased++;
+
+					variantState.Default = s.Default;
+
+					if (variantMap.TryAdd(variantState))
+					{
+						if (!RegisteredBlockStates.TryAdd(variantState.ID, variantState))
 						{
-							foreach (var property in s.Properties)
+							if (replace)
 							{
-								//if (property.Key.ToLower() == "waterlogged")continue;
-								variantState = (Blocks.State.BlockState) variantState.WithPropertyNoResolve(
-									property.Key, property.Value, false);
-							}
-						}
-
-						IRegistryEntry<Block> registryEntry;
-
-						if (!blockRegistry.TryGet(location, out registryEntry))
-						{
-							registryEntry = new UnknownBlock();
-							registryEntry = registryEntry.WithLocation(location); // = entry.Key;
-						}
-						else
-						{
-							registryEntry = registryEntry.WithLocation(location);
-						}
-
-						var block = registryEntry.Value;
-
-						if (string.IsNullOrWhiteSpace(block.DisplayName))
-							block.DisplayName = entry.Key;
-
-						variantState.Block = block.Value;
-						block.BlockState = variantState;
-
-						variantState.Model = ResolveModel(resources, blockStateResource, variantState);
-
-						if (variantState.Model == null)
-						{
-							Log.Warn($"No model found for {entry.Key}[{variantState.ToString()}]");
-						}
-
-						if (variantState.IsMultiPart) multipartBased++;
-
-						variantState.Default = s.Default;
-
-						if (variantMap.TryAdd(variantState))
-						{
-							if (!RegisteredBlockStates.TryAdd(variantState.ID, variantState))
-							{
-								if (replace)
-								{
-									RegisteredBlockStates[variantState.ID] = variantState;
-									importCounter++;
-								}
-								else
-								{
-									Log.Warn(
-										$"Failed to add blockstate (variant), key already exists! ({variantState.ID} - {variantState.Name})");
-								}
+								RegisteredBlockStates[variantState.ID] = variantState;
+								importCounter++;
 							}
 							else
 							{
-								importCounter++;
+								Log.Warn($"Failed to add blockstate (variant), key already exists! ({variantState.ID} - {variantState.Name})");
 							}
 						}
 						else
 						{
-							Log.Warn(
-								$"Could not add variant to variant map: {variantState.Name}[{variantState.ToString()}]");
+							importCounter++;
 						}
 					}
-
-					if (!BlockStateByName.TryAdd(location, variantMap))
+					else
 					{
-						if (replace)
-						{
-							BlockStateByName[location] = variantMap;
-						}
-						else
-						{
-							Log.Warn($"Failed to add blockstate, key already exists! ({defaultState.Name})");
-						}
+						Log.Warn($"Could not add variant to variant map: {variantState.Name}[{variantState.ToString()}]");
 					}
-				});
+				}
+
+				if (!BlockStateByName.TryAdd(location, variantMap))
+				{
+					if (replace)
+					{
+						BlockStateByName[location] = variantMap;
+					}
+					else
+					{
+						Log.Warn($"Failed to add blockstate, key already exists! ({defaultState.Name})");
+					}
+				}
+			}
+
+			if (resources.Asynchronous)
+			{
+				Parallel.ForEach(data, LoadEntry);
+			}
+			else
+			{
+				foreach (var entry in data)
+				{
+					LoadEntry(entry);
+				}
+			}
 
 			var blockStateTime = sw.Elapsed;
 			

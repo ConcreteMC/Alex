@@ -29,7 +29,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
     public class ChunkProcessor : IDisposable
     {
 	    private static readonly Logger         Log = LogManager.GetCurrentClassLogger(typeof(ChunkProcessor));
-	    public static           ChunkProcessor Instance { get; set; }
+	    public static           ChunkProcessor Instance { get; private set; }
 	    static ChunkProcessor()
 	    {
 		    
@@ -42,13 +42,14 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 	    public static Itemstates Itemstates { get; set; } = new Itemstates();
 	    
-	    private readonly ConcurrentDictionary<uint, BlockState> _convertedStates = new ConcurrentDictionary<uint, BlockState>();
+	    private readonly ConcurrentDictionary<uint, uint> _convertedStates = new ConcurrentDictionary<uint, uint>();
 	    
 	    private CancellationToken CancellationToken  { get; }
 	    public  bool              ClientSideLighting { get; set; } = true;
 
-	    private BedrockClient        Client  { get; }
-	    private BlobCache            Cache   { get; }
+	    private BedrockClient    Client           { get; }
+	    private BlobCache        Cache            { get; }
+
 	    public ChunkProcessor(BedrockClient client, bool useAlexChunks, CancellationToken cancellationToken, BlobCache blobCache)
         {
 	        Client = client;
@@ -59,6 +60,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	        Instance = this;
         }
 
+	    private ConcurrentQueue<Action> _actionQueue = new ConcurrentQueue<Action>();
         public void HandleChunkData(bool cacheEnabled,
 	        ulong[] blobs,
 	        uint subChunkCount,
@@ -70,63 +72,121 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	        if (CancellationToken.IsCancellationRequested)
 		        return;
 	        
-	        ThreadPool.QueueUserWorkItem(
-		        (o) =>
+	        _actionQueue.Enqueue(() =>
 		        {
 			        if (CancellationToken.IsCancellationRequested)
 				        return;
 			        
 			        HandleChunk(cacheEnabled, blobs, subChunkCount, chunkData, cx, cz, callback);
 		        });
+
+	        _resetEvent.Set();
+	        
+	        CheckThreads();
+        }
+
+        private Thread           _workerThread = null;
+        private object           _syncObj      = new object();
+        private object           _threadSync   = new object();
+        private ManualResetEvent _resetEvent   = new ManualResetEvent(false);
+        private long             _threadHelper = 0;
+        private void CheckThreads()
+        {
+	        if (!Monitor.TryEnter(_syncObj, 5))
+		        return;
+
+	        try
+	        {
+		        if (_workerThread == null && Interlocked.CompareExchange(ref _threadHelper, 1, 0) == 0)
+		        {
+			        ThreadPool.QueueUserWorkItem(
+				        o =>
+				        {
+					        lock (_threadSync)
+					        {
+						        _workerThread = Thread.CurrentThread;
+
+						        while (true)
+						        {
+							        if (_actionQueue.TryDequeue(out var chunk))
+							        {
+								        chunk?.Invoke();
+							        }
+							        else
+							        {
+								        _resetEvent.Reset();
+								        
+								        if (!_resetEvent.WaitOne(50))
+											break;
+							        }
+						        }
+
+						        _threadHelper = 0;
+						        _workerThread = null;
+					        }
+				        });
+		        }
+	        }
+	        finally
+	        {
+		        Monitor.Exit(_syncObj);
+	        }
         }
 
         private List<string> Failed { get; set; } = new List<string>();
         public BlockState GetBlockState(uint p)
         {
-	        return _convertedStates.GetOrAdd(p,
-		        (u, palleteId) =>
+	        if (_convertedStates.TryGetValue(p, out var existing))
+	        {
+		        return BlockFactory.GetBlockState(existing);
+	        }
+	        
+	        if (!BlockStateMap.TryGetValue(p, out var bs))
+	        {
+		        var a = MiNET.Blocks.BlockFactory.BlockPalette.FirstOrDefault(x => x.RuntimeId == p);
+		        bs = a;
+	        }
+
+	        if (bs != null)
+	        {
+		        var copy = new BlockStateContainer()
 		        {
-			        if (!BlockStateMap.TryGetValue(palleteId, out var bs))
-			        {
-				        var a = MiNET.Blocks.BlockFactory.BlockPalette.FirstOrDefault(x => x.RuntimeId == palleteId);
-				        bs = a;
-			        }
-
-			        if (bs != null)
-			        {
-				        var copy = new BlockStateContainer()
-				        {
-					        Data = bs.Data,
-					        Id = bs.Id,
-					        Name = bs.Name,
-					        States = bs.States,
-					        RuntimeId = bs.RuntimeId
-				        };
+			        Data = bs.Data,
+			        Id = bs.Id,
+			        Name = bs.Name,
+			        States = bs.States,
+			        RuntimeId = bs.RuntimeId
+		        };
 				        
-				        if (TryConvertBlockState(copy, out var convertedState))
-				        {
-					        return convertedState;
-				        }
-
-				        var t = TranslateBlockState(
-					        BlockFactory.GetBlockState(copy.Name),
-					        -1, copy.Data);
-
-				        if (t.Name == "Unknown" && !Failed.Contains(copy.Name))
-				        {
-					        Failed.Add(copy.Name);
-
-					        return t;
-					        //  File.WriteAllText(Path.Combine("failed", bs.Name + ".json"), JsonConvert.SerializeObject(bs, Formatting.Indented));
-				        }
-				        else
-				        {
-					        return t;
-				        }
+		        if (TryConvertBlockState(copy, out var convertedState))
+		        {
+			        if (convertedState != null)
+			        {
+				        _convertedStates.TryAdd(p, convertedState.ID);
 			        }
 
-			        return null;
-		        }, p);
+			        return convertedState;
+		        }
+
+		        var t = TranslateBlockState(
+			        BlockFactory.GetBlockState(copy.Name),
+			        -1, copy.Data);
+
+		        if (t.Name == "Unknown" && !Failed.Contains(copy.Name))
+		        {
+			        Failed.Add(copy.Name);
+
+			        return t;
+			        //  File.WriteAllText(Path.Combine("failed", bs.Name + ".json"), JsonConvert.SerializeObject(bs, Formatting.Indented));
+		        }
+		        else
+		        {
+			        _convertedStates.TryAdd(p, t.ID);
+			        return t;
+		        }
+	        }
+
+	        return null;
         }
 
         private class BlobData
@@ -231,7 +291,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	        {
 		        using (MemoryStream stream = new MemoryStream(chunkData))
 		        {
-			        NbtBinaryReader defStream = new NbtBinaryReader(stream, true);
+			        using NbtBinaryReader defStream = new NbtBinaryReader(stream, true);
 
 			        for (int s = 0; s < subChunkCount; s++)
 			        {
@@ -244,7 +304,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					        int storageSize = version == 1 ? 1 : defStream.ReadByte();
 					        
 					        if (section == null) 
-						        section = new ChunkSection(chunkColumn, true, storageSize);
+						        section = new ChunkSection(true, storageSize);
 
 					        for (int storage = 0; storage < storageSize; storage++)
 					        {
@@ -271,16 +331,16 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 							        wordCount++;
 						        }
 						        
-						        uint[] words = new uint[wordCount];
+						        int[] words = new int[wordCount];
 
 						        Span<byte> blockData = new Span<byte>(new byte[wordCount * 4]);
 						        defStream.Read(blockData);
 
 						        for (int w = 0; w < wordCount; w++)
 						        {
-							        words[w] = ((uint) blockData[w * 4]) | ((uint) blockData[w * 4 + 1]) << 8
-							                                             | ((uint) blockData[w * 4 + 2]) << 16
-							                                             | ((uint) blockData[w * 4 + 3]) << 24;
+							        words[w] = ((int) blockData[w * 4]) | ((int) blockData[w * 4 + 1]) << 8
+							                                             | ((int) blockData[w * 4 + 2]) << 16
+							                                             | ((int) blockData[w * 4 + 3]) << 24;
 						        }
 
 						        int[] pallete;// = new int[0];
@@ -306,10 +366,10 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 						        int position = 0;
 						        for (int w = 0; w < wordCount; w++)
 						        {
-							        uint word = words[w];
+							        int word = words[w];
 							        for (int block = 0; block < blocksPerWord; block++)
 							        {
-								        //if (position >= 4096) break; // padding bytes
+								        if (position >= 4096) break; // padding bytes
 
 								        uint state =
 									        (uint) ((word >> ((position % blocksPerWord) * blockSize)) &
@@ -341,7 +401,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				        else if (version == 0)
 				        {
 					        if (section == null) 
-						        section = new ChunkSection(chunkColumn, true, 1);
+						        section = new ChunkSection(true, 1);
 					        
 					        #region OldFormat 
 
@@ -365,8 +425,11 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 								        
 								        BlockState result = null;
 
-								        if (!_convertedStates.TryGetValue(
-									        ruid, out result))
+								        if (_convertedStates.TryGetValue(ruid, out var resultingId))
+								        {
+									        result = BlockFactory.GetBlockState(resultingId);
+								        }
+								        else 
 								        {
 									        if (id == 124 || id == 123)
 									        {
@@ -438,7 +501,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 									        
 									        if (result != null)
 									        {
-										        _convertedStates.TryAdd(ruid, result);
+										        _convertedStates.TryAdd(ruid, result.ID);
 									        }
 								        }
 
@@ -721,7 +784,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
         {
 	        if (_convertedStates.TryGetValue((uint) record.RuntimeId, out var alreadyConverted))
 	        {
-		        result = alreadyConverted;
+		        result = BlockFactory.GetBlockState(alreadyConverted);
 		        return true;
 	        }
 
@@ -1495,7 +1558,11 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		public void Dispose()
 		{
-			
+			if (Instance != this)
+			{
+				//BackgroundWorker?.Dispose();
+				//BackgroundWorker = null;
+			}
 		}
     }
 }

@@ -6,6 +6,7 @@ using Alex.API.Graphics.Textures;
 using Alex.API.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using MiNET.Worlds;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using Color = Microsoft.Xna.Framework.Color;
@@ -28,9 +29,7 @@ namespace Alex.API.Graphics.Typography
 
         public Glyph DefaultGlyph { get; private set; }
         //public Glyph[] Glyphs { get; private set; }
-        private Dictionary<char, Glyph> Glyphs { get; }
-
-        private List<char> _characters;
+        private Glyph[] Glyphs { get; } // Dictionary<char, Glyph> Glyphs { get; }
 
         private bool _isInitialised = false;
 
@@ -58,13 +57,13 @@ namespace Alex.API.Graphics.Typography
 
         private BitmapFont(int gridWidth, int gridHeight, List<char> characters)
         {
-            GridWidth   = gridWidth;
+	        GridWidth   = gridWidth;
             GridHeight  = gridHeight;
-            _characters = characters;
-            Characters = _characters.ToArray();
+            Characters = characters.ToArray();
 
             DefaultGlyph = new Glyph('\x0000', null, 0, 8);
-            Glyphs = new Dictionary<char, Glyph>(characters.Count); //new Glyph[characters.Count];
+            Glyphs = ArrayOf<Glyph>.Create((int) characters.Max(x => (int) x), DefaultGlyph);
+            //Glyphs = new Dictionary<char, Glyph>(characters.Count); //new Glyph[characters.Count];
         }
 
         public Vector2 MeasureString(string text, float scale = 1.0f)
@@ -120,7 +119,7 @@ namespace Alex.API.Graphics.Typography
                     if(i + 1 >= text.Length) continue;
 
                     i++;
-                    var formatChar = text.ToLower()[i];
+                    var formatChar = text[i];
                     if (formatChar == 'k')
                     {
                         styleRandom = true;
@@ -162,8 +161,8 @@ namespace Alex.API.Graphics.Typography
  
                     offset.X += (glyph.Width) + (styleBold ? 1 : 0) + CharacterSpacing;
 
-                    finalLineHeight = Math.Max(finalLineHeight, glyph.Height);
-                    width           = Math.Max(width, offset.X);
+                    finalLineHeight = MathF.Max(finalLineHeight, glyph.Height);
+                    width           = MathF.Max(width, offset.X);
                 }
             }
 
@@ -188,10 +187,11 @@ namespace Alex.API.Graphics.Typography
 			
 			originVal *= scaleVal;
 
-			var flipAdjustment = Vector2.Zero;
-
-			var flippedVert = (effects & SpriteEffects.FlipVertically) == SpriteEffects.FlipVertically;
-			var flippedHorz = (effects & SpriteEffects.FlipHorizontally) == SpriteEffects.FlipHorizontally;
+			var flipAdjustmentX = 0f;
+			var flipAdjustmentY = 0f;
+			
+			var flippedVert     = (effects & SpriteEffects.FlipVertically) == SpriteEffects.FlipVertically;
+			var flippedHorz     = (effects & SpriteEffects.FlipHorizontally) == SpriteEffects.FlipHorizontally;
 			
 			if (flippedVert || flippedHorz)
 			{
@@ -202,38 +202,42 @@ namespace Alex.API.Graphics.Typography
 				if (flippedHorz)
 				{
 					originVal.X         *= -1;
-					flipAdjustment.X =  -size.X;
+					flipAdjustmentX =  -size.X;
 				}
 
 				if (flippedVert)
 				{
 					originVal.Y         *= -1;
-					flipAdjustment.Y =  LineSpacing - size.Y;
+					flipAdjustmentY =  LineSpacing - size.Y;
 				}
 			}
 
-			Matrix transformation = Matrix.Identity;
-			float  cos            = 0, sin = 0;
+			var    adjustedOriginX = flipAdjustmentX - originVal.X;
+			var    adjustedOriginY = flipAdjustmentY - originVal.Y;
+			
+			Matrix transformation  = Matrix.Identity;
+			float  cos             = 0, sin = 0;
 			if (rotation == 0)
 			{
 				transformation.M11 = (flippedHorz ? -scaleVal.X : scaleVal.X);
 				transformation.M22 = (flippedVert ? -scaleVal.Y : scaleVal.Y);
-				transformation.M41 = ((flipAdjustment.X - originVal.X) * transformation.M11) + position.X;
-				transformation.M42 = ((flipAdjustment.Y - originVal.Y) * transformation.M22) + position.Y;
+				transformation.M41 = (adjustedOriginX * transformation.M11) + position.X;
+				transformation.M42 = (adjustedOriginY * transformation.M22) + position.Y;
 			}
 			else
 			{
-				cos                = (float)Math.Cos(rotation);
-				sin                = (float)Math.Sin(rotation);
+				cos                = MathF.Cos(rotation);
+				sin                = MathF.Sin(rotation);
 				transformation.M11 = (flippedHorz ? -scaleVal.X : scaleVal.X) * cos;
 				transformation.M12 = (flippedHorz ? -scaleVal.X : scaleVal.X) * sin;
 				transformation.M21 = (flippedVert ? -scaleVal.Y : scaleVal.Y) * (-sin);
 				transformation.M22 = (flippedVert ? -scaleVal.Y : scaleVal.Y) * cos;
-				transformation.M41 = (((flipAdjustment.X - originVal.X) * transformation.M11) + (flipAdjustment.Y - originVal.Y) * transformation.M21) + position.X;
-				transformation.M42 = (((flipAdjustment.X - originVal.X) * transformation.M12) + (flipAdjustment.Y - originVal.Y) * transformation.M22) + position.Y; 
+				transformation.M41 = ((adjustedOriginX * transformation.M11) + adjustedOriginY * transformation.M21) + position.X;
+				transformation.M42 = ((adjustedOriginX * transformation.M12) + adjustedOriginY * transformation.M22) + position.Y; 
 			}
 
-			var offset           = Vector2.Zero;
+			var offsetX          = 0f;
+			var offsetY          = 0f;
 			var firstGlyphOfLine = true;
 
 			TextColor styleColor = color;
@@ -248,6 +252,7 @@ namespace Alex.API.Graphics.Typography
 			var blendFactor = sb.GraphicsDevice.BlendFactor;
 			sb.GraphicsDevice.BlendFactor = Color.White * opacity;
 			
+			var p = new Vector2(offsetX, offsetY);
 			for (int i = 0; i < text.Length; i++)
 			{
 				char c = text[i];
@@ -256,8 +261,8 @@ namespace Alex.API.Graphics.Typography
 				
 				if (c == '\n')
 				{
-					offset.X =  0.0f;
-					offset.Y += LineSpacing;
+					offsetX =  0.0f;
+					offsetY += LineSpacing;
 
 					firstGlyphOfLine = true;
 
@@ -276,12 +281,9 @@ namespace Alex.API.Graphics.Typography
 					if(i + 1 >= text.Length) continue;
 					
 					i++;
-					var formatChar = text.ToLower()[i];
-					if ("0123456789abcdef".IndexOf(formatChar) > 0)
-					{
-						styleColor = TextColor.GetColor(formatChar);
-					}
-					else if (formatChar == 'k')
+					var formatChar = text[i];
+					
+					if (formatChar == 'k')
 					{
 						styleRandom = true;
 					}
@@ -310,11 +312,14 @@ namespace Alex.API.Graphics.Typography
 						styleItalic = false;
 						styleColor = color;
 					}
+					else if ("0123456789abcdef".IndexOf(formatChar, StringComparison.Ordinal) > 0)
+					{
+						styleColor = TextColor.GetColor(formatChar);
+					}
 				}
 				else
 				{
 					var glyph = GetGlyphOrDefault(c);
-
 
 					if (firstGlyphOfLine)
 					{
@@ -327,43 +332,59 @@ namespace Alex.API.Graphics.Typography
 					//	c = 
 					//}
 
-					var p = offset;
-					var width = glyph.Width + (styleBold ? 1 : 0) + CharacterSpacing;
+					p.X = offsetX;
+					p.Y = offsetY;
+					//var p = new Vector2(offsetX, offsetY);
+					//var px    = offsetX;
+					//var py    = offsetY;
+					var width = glyph.Width + (styleBold ? 1f : 0f) + CharacterSpacing;
 
-					if (dropShadow)
+					if (glyph.Texture != null)
 					{
-						var shadowP = p + Vector2.One;
-						
+						if (dropShadow)
+						{
+							var shadowP  = p + Vector2.One;
+
+							if (styleBold)
+							{
+								var boldShadowP = Vector2.Transform(shadowP + Vector2.UnitX, transformation);
+
+								sb.Draw(
+									glyph.Texture, boldShadowP, styleColor.BackgroundColor * opacity, rotation,
+									originVal, scaleVal * Scale, effects, layerDepth);
+							}
+
+							shadowP = Vector2.Transform(shadowP, transformation);
+
+							sb.Draw(
+								glyph.Texture, shadowP, styleColor.BackgroundColor * opacity, rotation, originVal,
+								scaleVal * Scale, effects, layerDepth);
+						}
+
 						if (styleBold)
 						{
-							var boldShadowP = Vector2.Transform(shadowP + Vector2.UnitX, transformation);
+							var boldP = Vector2.Transform(p + Vector2.UnitX, transformation);
 
-							sb.Draw(glyph.Texture, boldShadowP, styleColor.BackgroundColor * opacity, rotation, originVal, scaleVal * Scale, effects, layerDepth);
+							sb.Draw(
+								glyph.Texture, boldP, styleColor.ForegroundColor * opacity, rotation, originVal,
+								scaleVal * Scale, effects, layerDepth);
 						}
-						
-						shadowP = Vector2.Transform(shadowP, transformation);
 
-						sb.Draw(glyph.Texture, shadowP, styleColor.BackgroundColor * opacity, rotation, originVal, scaleVal * Scale, effects, layerDepth);
+						/*	if (styleUnderline)
+							{
+								var lineStart = Vector2.Transform(p + new Vector2(0, 8), transformation);
+								
+								sb.DrawLine(2, lineStart, new Vector2(lineStart.X + width, lineStart.Y), styleColor.ForegroundColor * opacity, scaleVal * Scale, layerDepth);
+							}*/
+
+						p = Vector2.Transform(p, transformation);
+
+						sb.Draw(
+							glyph.Texture, p, styleColor.ForegroundColor * opacity, rotation, originVal,
+							scaleVal * Scale, effects, layerDepth);
 					}
 
-					if (styleBold)
-					{
-						var boldP = Vector2.Transform(p + Vector2.UnitX, transformation);
-						sb.Draw(glyph.Texture, boldP, styleColor.ForegroundColor * opacity, rotation, originVal, scaleVal * Scale, effects, layerDepth);
-					}
-
-				/*	if (styleUnderline)
-					{
-						var lineStart = Vector2.Transform(p + new Vector2(0, 8), transformation);
-						
-						sb.DrawLine(2, lineStart, new Vector2(lineStart.X + width, lineStart.Y), styleColor.ForegroundColor * opacity, scaleVal * Scale, layerDepth);
-					}*/
-
-					p = Vector2.Transform(p, transformation);
-
-					sb.Draw(glyph.Texture, p, styleColor.ForegroundColor * opacity, rotation, originVal, scaleVal * Scale, effects, layerDepth);
-
-					offset.X += width;
+					offsetX += width;
 				}
 			}
 
@@ -372,12 +393,17 @@ namespace Alex.API.Graphics.Typography
 
         public IFontGlyph GetGlyphOrDefault(char character)
         {
-	        if (Glyphs.TryGetValue(character, out var glyph))
-	        {
-		        return glyph;
-	        }
+	        var index = (int) character;
 
-	        return DefaultGlyph;/*
+	        if (index > Glyphs.Length - 1)
+		        return DefaultGlyph;
+	        
+	        //if (Glyphs.TryGetValue(character, out var glyph))
+	        //{
+		    //    return glyph;
+	       // }
+
+	        return Glyphs[index];/*
             for (int i = 0; i < Glyphs.Length; i++)
             {
                 if(Glyphs[i].Character == character) return Glyphs[i];
@@ -385,23 +411,24 @@ namespace Alex.API.Graphics.Typography
 
             return DefaultGlyph;*/
         }
-        
+
         private void LoadGlyphs(Image<Rgba32> bitmap, List<char> characters)
         {
             if (_isInitialised) return;
+          //  Glyphs = new Glyph[(int) characters.Max(x => (int) x)];
 
            /* var lockedBitmap = new LockBitmap(bitmap);
             lockedBitmap.LockBits();
             Color[] textureData = lockedBitmap.GetColorArray();
             lockedBitmap.UnlockBits();*/
 
-           var rgba = bitmap;
-            
+           //var rgba = bitmap.TryGetSinglePixelSpan();
+			bitmap.TryGetSinglePixelSpan(out var rgba);
             var textureWidth = bitmap.Width;
             var textureHeight = bitmap.Height;
 
-            var cellWidth = (int)(textureWidth / (float)GridWidth);
-            var cellHeight = (int)(textureHeight / (float)GridHeight);
+            var cellWidth = (textureWidth / GridWidth);
+            var cellHeight = (textureHeight / GridHeight);
 
             var charactersCount = characters.Count;
 
@@ -409,6 +436,9 @@ namespace Alex.API.Graphics.Typography
 
             for (int i = 0; i < charactersCount; i++)
             {
+	            var character = characters[i];
+	            if (character > Glyphs.Length -1) continue;
+	            
                 int row = i / GridWidth;
                 int col = i % GridWidth;
                 
@@ -418,15 +448,16 @@ namespace Alex.API.Graphics.Typography
                 int height = 0;
                 
                 bool columnIsEmpty = true;
-                for (int x = cellWidth-1; x >= 0; x--)
+                for (var x = cellWidth-1; x >= 0; x--)
                 {
                     columnIsEmpty = true;
 
-                    for (int y = cellHeight-1; y >= 0; y--)
+                    for (var y = cellHeight-1; y >= 0; y--)
                     {
                         // width * y + x
                         //if (textureData[(textureWidth * (row * cellHeight + y)) + (col * cellWidth + x)].A != 0)
-                        if (rgba[(col * cellWidth) + x, (row * cellHeight) + y].A != 0)
+                   //     if (rgba[(col * cellWidth) + x, (row * cellHeight) + y].A != 0)
+						if (rgba[(textureWidth * (row * cellHeight + y)) + (col * cellWidth + x)].A != 0)
                         {
                             columnIsEmpty = false;
                             if (y > height)
@@ -443,8 +474,8 @@ namespace Alex.API.Graphics.Typography
                 }
                 
                 
-                var charWidth = (int) (0.5d + (width * (8.0f / cellWidth)) + 1);
-                var charHeight = (int) (0.5d + (height * (8.0f / cellHeight)) + 1);
+                var charWidth =  (0.5f + (width * (8.0f / cellWidth)) + 1f);
+                var charHeight = (0.5f + (height * (8.0f / cellHeight)) + 1f);
                 
                 ++width;
                 ++height;
@@ -452,9 +483,7 @@ namespace Alex.API.Graphics.Typography
                 var bounds = new Rectangle(col * cellWidth, row * cellHeight, width, cellHeight);
                 var textureSlice = Texture.Slice(bounds);
 
-                var character = characters[i];
-
-	            if (character == ' ')
+                if (character == ' ')
 	            {
 		            charWidth = 4;
 	            }
@@ -462,7 +491,8 @@ namespace Alex.API.Graphics.Typography
 				var glyph = new Glyph(character, textureSlice, charWidth, charHeight);
 
                 Debug.WriteLine($"BitmapFont Glyph Loaded: {glyph}");
-                Glyphs[character] = glyph;
+                
+                Glyphs[(int)character] = glyph;
                 //glyphs[i] = glyph;
             }
 
