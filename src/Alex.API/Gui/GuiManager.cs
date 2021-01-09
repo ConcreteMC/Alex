@@ -313,9 +313,16 @@ namespace Alex.API.Gui
                     }
                     GuiSpriteBatch.Effect.Projection = proj;
                     GuiSpriteBatch.Effect.View = view;
-                    GuiSpriteBatch.Effect.World = Matrix.CreateScale(3f / Math.Min(ScaledResolution.ViewportSize.Width, ScaledResolution.ViewportSize.Height)) //* Matrix.CreateWorld(Vector3.Zero, Vector3.Forward, Vector3.Down)
+//                    var scale = 3f / Math.Min(ScaledResolution.TargetWidth, ScaledResolution.TargetHeight);
+                    var halfHeight = (ScaledResolution.ScaledHeight) * 0.5f;
+                    GuiSpriteBatch.Effect.World = Matrix.Identity
+                                                  * Matrix.CreateTranslation(0f,(float)(-1f *  ScaledResolution.ScaledHeightD), 0f)
+                                                  * Matrix.CreateScale(1f / 1000f, -1f / 1000f, 1f / 1000f);
+                                                        //* Matrix.CreateWorld(Vector3.Zero, Vector3.Forward, Vector3.Down)
                                                 //* Matrix.CreateFromYawPitchRoll(MathHelper.Pi, MathHelper.Pi, 0.0f)
-                                                * Matrix.CreateTranslation(Vector3.Zero)
+                        //* Matrix.CreateTranslation(0f, -halfHeight, 0f)
+                        //                        * Matrix.CreateFromYawPitchRoll(0f, MathF.PI, 0f)
+                        //                        * Matrix.CreateTranslation(0f, halfHeight, 0f)
 // * Matrix.CreateTranslation(0, 0f, 0f) 
                                                  // * Matrix.CreateRotationZ(MathHelper.PiOver2)
                         ;

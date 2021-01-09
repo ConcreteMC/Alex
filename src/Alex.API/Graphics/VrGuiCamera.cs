@@ -53,14 +53,14 @@ namespace Alex.API.Graphics
 
             _vrOffsetPosition = translation;
             //Target = Position + Vector3.Transform(Vector3.Backward, rotation);
-            Forward = Vector3.Normalize(Target - Position);
+            Forward = Vector3.Normalize(Target - _basePosition);
             //rotation.Conjugate();
-            var rot = Matrix.CreateFromQuaternion(rotation);
-            var t = Position + Forward;//Vector3.TransformNormal(Vector3.Forward,  rot);
-            var u = Vector3.TransformNormal(Vector3.Up, rot);
+            // var rot = Matrix.CreateFromQuaternion(rotation);
+            // var t = Position + Forward;//Vector3.TransformNormal(Vector3.Forward,  rot);
+            // var u = Vector3.TransformNormal(Vector3.Up, rot);
             ProjectionMatrix = Matrix.CreatePerspectiveFieldOfView(FOV, AspectRatio, 0.1f, 1000.0f);
             //ViewMatrix = Matrix.CreateScale(scale) * Matrix.CreateFromQuaternion(rotation) * Matrix.CreateTranslation(Position);
-            ViewMatrix = Matrix.CreateLookAt(Position, Position + Vector3.Backward, Vector3.Up)
+            ViewMatrix = Matrix.CreateLookAt(_basePosition, _basePosition + Vector3.Forward, Vector3.Up)
                 ;
             // var scaleStr = $"Scale: {scale.X:F2}, {scale.Y:F2}, {scale.Z:F2}";
             // var rotationStr = $"Rotation: {rotation.X:F2}, {rotation.Y:F2}, {rotation.Z:F2}";
