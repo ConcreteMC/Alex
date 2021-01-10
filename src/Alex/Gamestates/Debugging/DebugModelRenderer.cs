@@ -1,5 +1,6 @@
 using System;
 using System.Numerics;
+using Alex.Api;
 using Alex.API.Graphics;
 using Alex.API.Gui;
 using Alex.API.Gui.Elements;
@@ -213,7 +214,7 @@ namespace Alex.Gamestates.Debugging
                 var pos = Position + Vector3.Transform(Offset, Matrix.CreateRotationY(-Rotation.Y));
 	        
                 Target = pos + lookAtOffset;
-                ViewMatrix = Matrix.CreateLookAt(pos, Target, Vector3.Up);
+                ViewMatrix = MCMatrix.CreateLookAt(pos, Target, Vector3.Up);
 
                 //    Matrix rotationMatrix = (Matrix.CreateRotationX(Rotation.X) *
                 //                            Matrix.CreateRotationY(Rotation.Y));
@@ -230,7 +231,7 @@ namespace Alex.Gamestates.Debugging
 
             public override void UpdateProjectionMatrix()
             {
-                ProjectionMatrix = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(FOV), Viewport.AspectRatio,
+                ProjectionMatrix = MCMatrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(FOV), Viewport.AspectRatio,
                                                                        Viewport.MinDepth, Viewport.MaxDepth);
             }
 

@@ -1,3 +1,4 @@
+using Alex.Api;
 using Alex.API.Graphics;
 using Alex.API.Utils;
 using Alex.ResourcePackLib;
@@ -17,10 +18,8 @@ namespace Alex.Graphics.Models.Items
         Vector3         Scale             { get; set; }
         DisplayPosition DisplayPosition   { get; set; }
         DisplayElement  ActiveDisplayItem { get; set; }
-        Color           DiffuseColor      { get; set; }
 
-        void Update(GraphicsDevice device, ICamera camera);
-        void Update(IUpdateArgs args, Matrix characterMatrix, Vector3 diffuseColor, PlayerLocation modelLocation);
+        void Update(IUpdateArgs args, MCMatrix characterMatrix, Vector3 diffuseColor);
 
         void Render(IRenderArgs args, bool mock, out int vertices);
 

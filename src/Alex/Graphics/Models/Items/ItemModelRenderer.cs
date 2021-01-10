@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using Alex.Api;
 using Alex.API.Blocks;
 using Alex.API.Graphics;
 using Alex.API.Utils;
@@ -29,35 +30,41 @@ namespace Alex.Graphics.Models.Items
            
         }
 
+        private bool _cached = false;
         public override bool Cache(ResourceManager pack)
         {
-            if (!Model.Textures.TryGetValue("layer0", out var t))
+            if (_cached)
+                return true;
+
+            _cached = true;
+            
+            if (!Model.Textures.TryGetValue("layer0", out var texture))
             {
-                t = Model.Textures.FirstOrDefault(x => x.Value != null).Value;
+                texture = Model.Textures.FirstOrDefault(x => x.Value != null).Value;
             }
 
-            if (t == null)
+            if (texture == null)
             {
                 return false;
             }
 
             List<VertexPositionColor> vertices = new List<VertexPositionColor>();
          
-            if (pack.TryGetBitmap(t, out var texture))
+            if (pack.TryGetBitmap(texture, out var bitmap))
             {
                 try
                 {
                     //  var texture = rawTexture.CloneAs<Rgba32>();
 
-                    float toolPosX = 0.0f;
-                    float toolPosY = 1.0f;
-                    float toolPosZ = (1f / 16f) * 7.5f;
+                   // float toolPosX = 0.0f;
+                  //  float toolPosY = 0f; //1.0f;
+                   // float toolPosZ = 0f;//(1f / 16f) * 7.5f;
 
-                    for (int y = 0; y < texture.Height; y++)
+                    for (int y = 0; y < bitmap.Height; y++)
                     {
-                        for (int x = 0; x < texture.Width; x++)
+                        for (int x = 0; x < bitmap.Width; x++)
                         {
-                            var pixel = texture[x, y];
+                            var pixel = bitmap[x, y];
 
                             if (pixel.A == 0)
                             {
@@ -66,10 +73,9 @@ namespace Alex.Graphics.Models.Items
 
                             Color color = new Color(pixel.R, pixel.G, pixel.B, pixel.A);
                             var origin = new Vector3(
-                                (toolPosX + (1f / texture.Width) * x), toolPosY - (1f / texture.Height) * y, toolPosZ);
+                                (x), (bitmap.Height - y), 0f);
                             
-                            ItemModelCube built = new ItemModelCube(
-                                new Vector3(1f / texture.Width, 1f / texture.Height, 1f / 16f), Vector3.Zero);
+                            ItemModelCube built = new ItemModelCube(new Vector3(bitmap.Width / 16f, bitmap.Height / 16f, 1f));
 
                             built.BuildCube(color);
 
@@ -85,10 +91,12 @@ namespace Alex.Graphics.Models.Items
                            // vertices.AddRange(built.Right);
                         }
                     }
+
+                    this.Size = new Vector3(bitmap.Width, bitmap.Height, 1f);
                 }
                 finally
                 {
-                    texture.Dispose();
+                    bitmap.Dispose();
                 }
             }
 
@@ -113,6 +121,7 @@ namespace Alex.Graphics.Models.Items
             return new ItemModelRenderer(Model)
             {
                 Vertices = Vertices != null ? Vertices.Clone() as VertexPositionColor[] : null,
+                Size = Size
            //     Indexes = Indexes.ToArray()
             };
         }
@@ -120,9 +129,11 @@ namespace Alex.Graphics.Models.Items
 
     public class ItemModelRenderer<TVertice> : Model, IItemRenderer where TVertice : struct, IVertexType
     {
+        public Vector3               Size  { get; set; } = Vector3.One;
+        
         public ResourcePackModelBase Model { get; }
 
-        private DisplayPosition _displayPosition;// = DisplayPosition.Ground;
+        private DisplayPosition _displayPosition = DisplayPosition.Undefined;
 
         public DisplayPosition DisplayPosition
         {
@@ -132,7 +143,7 @@ namespace Alex.Graphics.Models.Items
                 var oldDisplayPosition = _displayPosition;
                 _displayPosition = value;
 
-                if (oldDisplayPosition != _displayPosition)
+                //if (oldDisplayPosition != _displayPosition)
                 {
                     UpdateDisplay();
                 }
@@ -157,7 +168,7 @@ namespace Alex.Graphics.Models.Items
                 
             }
             
-            ActiveDisplayItem = DisplayElement.Default;
+            //ActiveDisplayItem = DisplayElement.Default;
         }
 
         protected TVertice[]  Vertices { get; set; } = null;
@@ -170,22 +181,59 @@ namespace Alex.Graphics.Models.Items
         private          VertexBuffer      Buffer { get; set; } = null;
         private readonly VertexDeclaration _declaration;
 
-        protected Vector3 Offset { get; set; } = Vector3.Zero;
-        
-        public Color DiffuseColor { get; set; } = Color.White;
-        
         public ItemModelRenderer(ResourcePackModelBase model, VertexDeclaration declaration)
         {
             Model = model;
             _declaration = declaration;
         }
 
-        private Matrix _parentMatrix = Matrix.Identity;
-        public void Update(IUpdateArgs args, Matrix characterMatrix, Vector3 diffuseColor, PlayerLocation modelLocation)
+        //private Matrix _parentMatrix = Matrix.Identity;
+        public void Update(IUpdateArgs args, MCMatrix characterMatrix, Vector3 diffuseColor)
         {
-            _parentMatrix = characterMatrix;
+            // _parentMatrix = characterMatrix;
             
-            Translation = modelLocation.ToVector3();
+            if (Effect == null)
+            {
+                var effect = new BasicEffect(args.GraphicsDevice);
+                InitEffect(effect);
+                Effect = effect;
+            }
+
+            Effect.Projection = args.Camera.ProjectionMatrix;
+            Effect.View = args.Camera.ViewMatrix;
+
+            var activeDisplayItem = ActiveDisplayItem;
+
+            var halfSize = Size / 2f;
+            // var forward = 
+
+            Effect.World = MCMatrix.CreateTranslation(-halfSize)
+                           * MCMatrix.CreateRotationDegrees(activeDisplayItem.Rotation)
+                           * MCMatrix.CreateTranslation(halfSize) 
+                           * MCMatrix.CreateScale(activeDisplayItem.Scale)
+                           * MCMatrix.CreateRotationDegrees(activeDisplayItem.Translation)
+                           * characterMatrix;
+            
+            Effect.DiffuseColor = diffuseColor;
+            
+            if (Buffer == null && Vertices != null)
+            {
+                var vertices = Vertices;
+               
+                if (vertices.Length == 0)
+                {
+                   // _canInit = false;
+                }
+                else
+                {
+                    var buffer = GpuResourceManager.GetBuffer(this, args.GraphicsDevice, _declaration,
+                        Vertices.Length, BufferUsage.WriteOnly);
+
+                    buffer.SetData(vertices);
+
+                    Buffer = buffer;
+                }
+            }
          //   Rotation = knownPosition.ToRotationVector3();
         }
 
@@ -201,90 +249,6 @@ namespace Alex.Graphics.Models.Items
             effect.VertexColorEnabled = true;
         }
 
-        public virtual void Update(GraphicsDevice device, ICamera camera)
-        {
-            if (Effect == null)
-            {
-                var effect = new BasicEffect(device);
-                InitEffect(effect);
-                Effect = effect;
-            }
-
-            Effect.Projection = camera.ProjectionMatrix;
-            Effect.View = camera.ViewMatrix;
-
-            var activeDisplayItem = ActiveDisplayItem;
-
-            var world = Matrix.Identity;
-            
-            if (activeDisplayItem != null)
-            {
-                var a = new Vector3(0.5f, 0.5f, 0.5f);
-                
-                var displayTrans = new Vector3(activeDisplayItem.Translation.X,
-                    activeDisplayItem.Translation.Y,
-                    activeDisplayItem.Translation.Z) * (1f / 16f);
-                
-                world *= 
-                    Matrix.CreateTranslation(-a) * 
-                    Matrix.CreateScale(activeDisplayItem.Scale)
-                    * Matrix.CreateFromAxisAngle(Vector3.Right, MathUtils.ToRadians(activeDisplayItem.Rotation.X))
-                    * Matrix.CreateFromAxisAngle(Vector3.Backward, MathUtils.ToRadians(activeDisplayItem.Rotation.Z))
-                    * Matrix.CreateFromAxisAngle(Vector3.Up, MathUtils.ToRadians(activeDisplayItem.Rotation.Y))
-                    * Matrix.CreateTranslation(a)
-                    * Matrix.CreateTranslation(displayTrans.X, displayTrans.Y, displayTrans.Z);
-            }
-            else
-            {
-                world *= Matrix.CreateScale(1f)
-                         * Matrix.CreateFromAxisAngle(Vector3.Forward, MathHelper.TwoPi);
-            }
-
-            var offset = Offset;
-            if ((_displayPosition & DisplayPosition.Gui) != 0)
-            {
-                offset = Vector3.Zero;
-            }
-            else if ((_displayPosition & ResourcePackLib.Json.Models.Items.DisplayPosition.FirstPerson) != 0)
-            {
-                offset += new Vector3(-2f / 16f, 0.5f, -6f / 16f);
-                world *= Matrix.CreateRotationX(-MathF.PI / 5f);
-            }
-            else if ((_displayPosition & ResourcePackLib.Json.Models.Items.DisplayPosition.ThirdPerson) != 0)
-            {
-                offset += new Vector3(-2f / 16f, 0f, -2f / 16f);
-                world *= Matrix.CreateRotationX(-MathF.PI / 4f);
-            }
-
-            if (offset != Vector3.Zero)
-            {
-                world *= Matrix.CreateTranslation(offset);
-            }
-
-            Effect.World = world * _parentMatrix;
-            Effect.DiffuseColor = DiffuseColor.ToVector3();
-            
-            if (Buffer == null && Vertices != null)
-            {
-                var vertices = Vertices;
-               
-                if (vertices.Length == 0)
-                {
-                   // _canInit = false;
-                }
-                else
-                {
-                    var buffer = GpuResourceManager.GetBuffer(this, device, _declaration,
-                        Vertices.Length, BufferUsage.WriteOnly);
-
-                    buffer.SetData(vertices);
-
-                    Buffer = buffer;
-                }
-            }
-        }
-
-
         private void DrawLine(GraphicsDevice device, Vector3 start, Vector3 end, Color color)
         {
             var vertices = new[] {new VertexPositionColor(start, color), new VertexPositionColor(end, color)};
@@ -296,21 +260,31 @@ namespace Alex.Graphics.Models.Items
             if (Effect == null || Buffer == null || Buffer.VertexCount == 0)
                 return;
 
-            var count = Vertices.Length;
-            device.SetVertexBuffer(Buffer);
+            var original = device.RasterizerState;
 
-            count = Math.Min(count, Buffer.VertexCount);
-            
-            foreach (var a in Effect.CurrentTechnique.Passes)
+            try
             {
-                a.Apply();
+               // device.RasterizerState = RasterizerState.CullCounterClockwise;
+                var count = Vertices.Length;
+                device.SetVertexBuffer(Buffer);
 
-                //DrawLine(device, Vector3.Zero, Vector3.Up, Color.Green);
-                //	DrawLine(device, Vector3.Zero, Vector3.Forward, Color.Blue);
-                //	DrawLine(device, Vector3.Zero, Vector3.Right, Color.Red);
-                
-                device.DrawPrimitives(PrimitiveType.TriangleList, 0, count / 3);
-                //device.DrawUserIndexedPrimitives(PrimitiveType.TriangleList, Vertices, 0, Vertices.Length, Indexes, 0, Indexes.Length / 3);
+                count = Math.Min(count, Buffer.VertexCount);
+
+                foreach (var a in Effect.CurrentTechnique.Passes)
+                {
+                    a.Apply();
+
+                    DrawLine(device, Vector3.Zero, Vector3.UnitY * 16f, Color.Green);
+                    DrawLine(device, Vector3.Zero, Vector3.UnitZ * 16f, Color.Blue);
+                    DrawLine(device, Vector3.Zero, Vector3.UnitX * 16f, Color.Red);
+
+                    device.DrawPrimitives(PrimitiveType.TriangleList, 0, count / 3);
+                    //device.DrawUserIndexedPrimitives(PrimitiveType.TriangleList, Vertices, 0, Vertices.Length, Indexes, 0, Indexes.Length / 3);
+                }
+            }
+            finally
+            {
+                device.RasterizerState = original;
             }
         }
 
@@ -322,7 +296,10 @@ namespace Alex.Graphics.Models.Items
 
         public virtual IItemRenderer Clone()
         {
-            return new ItemModelRenderer<TVertice>(Model, _declaration);
+            return new ItemModelRenderer<TVertice>(Model, _declaration)
+            {
+                Size = this.Size
+            };
         }
 
         public string Name => "Item-Renderer";

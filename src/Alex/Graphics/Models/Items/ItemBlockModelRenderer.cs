@@ -27,7 +27,7 @@ namespace Alex.Graphics.Models.Items
             _resource = resourceManager;
             _animated = _block.Block.Animated;
             
-            Offset = new Vector3(0f, -0.5f, 0f);
+            //Offset = new Vector3(0f, -0.5f, 0f);
             //  Translation = -Vector3.Forward * 8f;
         }
 
@@ -35,7 +35,7 @@ namespace Alex.Graphics.Models.Items
         {
             _animated = animated;
             _resource = resourceManager;
-            Offset = new Vector3(0f, -0.5f, 0f);
+            //Offset = new Vector3(0f, -0.5f, 0f);
         }
         
         public override bool Cache(ResourceManager pack)

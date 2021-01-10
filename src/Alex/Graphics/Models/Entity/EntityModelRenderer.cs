@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Alex.Api;
 using Alex.API.Graphics;
 using Alex.API.Utils;
 using Alex.ResourcePackLib.Json.Models.Entities;
@@ -147,25 +148,16 @@ namespace Alex.Graphics.Models.Entity
 
 			elementCount = vertices.Count - startIndex;
 
-			var pivot      = bone.Pivot ?? Vector3.Zero;
-			var boneMatrix = Matrix.Identity;
-
-			if (bone.BindPoseRotation.HasValue)
-			{
-				var rotation = bone.BindPoseRotation.Value;
-
-				boneMatrix = Matrix.CreateTranslation(-pivot)
-				             * Matrix.CreateRotationX(MathUtils.ToRadians(-rotation.X))
-				             * Matrix.CreateRotationY(MathUtils.ToRadians(rotation.Y))
-				             * Matrix.CreateRotationZ(MathUtils.ToRadians(rotation.Z))
-				             * Matrix.CreateTranslation(pivot);
-			}
-
-			modelBone = new ModelBone(bone, boneMatrix, startIndex, elementCount);
+			modelBone = new ModelBone(bone, startIndex, elementCount);
 
 			if (bone.Rotation.HasValue)
 			{
 				var r = bone.Rotation.Value;
+				modelBone.Rotation = new Vector3(r.X, r.Y, r.Z);
+			}
+			else if (bone.BindPoseRotation.HasValue)
+			{
+				var r = bone.BindPoseRotation.Value;
 				modelBone.Rotation = new Vector3(r.X, r.Y, r.Z);
 			}
 
@@ -205,7 +197,7 @@ namespace Alex.Graphics.Models.Entity
 		private static RasterizerState RasterizerState = new RasterizerState()
 		{
 			DepthBias = 0f,
-			CullMode = CullMode.CullCounterClockwiseFace,
+			CullMode = CullMode.CullClockwiseFace,
 			FillMode = FillMode.Solid
 		};
 		
@@ -279,16 +271,14 @@ namespace Alex.Graphics.Models.Entity
 			Effect.View = args.Camera.ViewMatrix;
 			Effect.Projection = args.Camera.ProjectionMatrix;
 			Effect.DiffuseColor = EntityColor * DiffuseColor;
-			
-			var matrix =Matrix.CreateScale(Scale / 16f) * Matrix.CreateRotationY(MathUtils.ToRadians(180f))
-			                                                               * Matrix.CreateRotationY(
-				                                                               MathUtils.ToRadians(-(position.Yaw)))
-			                                                               * Matrix.CreateTranslation(position);
-			
+
+			var matrix =  MCMatrix.CreateScale(Scale / 16f) * position.CalculateWorldMatrix(); /*MCMatrix.CreateScale(Scale / 16f)
+			             * MCMatrix.CreateRotation(MathUtils.ToRadians(position.Yaw), Vector3.Down)
+			             * MCMatrix.CreateTranslation(position);*/
+
 			foreach (var bone in Bones.Where(x => x.Value.Parent == null))
 			{
-				bone.Value.Update(
-					args, matrix, position);
+				bone.Value.Update(args, matrix);
 			}
 		}
 		public bool GetBone(string name, out ModelBone bone)

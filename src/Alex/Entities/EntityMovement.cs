@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Alex.Api;
+using Alex.API;
 using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Worlds;
@@ -8,9 +10,6 @@ using Microsoft.Xna.Framework;
 
 namespace Alex.Entities
 {
-	/// <summary>
-	/// 	TODO: Implement interpolated movement by seperating KnownPosition from RenderPosition
-	/// </summary>
 	public class EntityMovement : ITicked
 	{
 		public Entity  Entity  { get; }
@@ -28,7 +27,7 @@ namespace Alex.Entities
 		{
 			lock (_headingLock)
 			{
-				Heading = Vector3.Transform(heading, Matrix.CreateRotationY(-MathHelper.ToRadians(Entity.KnownPosition.HeadYaw)));;
+				Heading = heading.Transform(Entity.KnownPosition.GetDirectionMatrix(false, true));
 			}
 		}
 		

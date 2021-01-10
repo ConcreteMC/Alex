@@ -1,18 +1,60 @@
 ﻿using System;
+using Alex.Api;
 using Microsoft.Xna.Framework;
 
 namespace Alex.API.Utils
 {
 	public class PlayerLocation : ICloneable
 	{
-		public float X { get; set; }
-		public float Y { get; set; }
-		public float Z { get; set; }
+		private float _headYaw;
+		private float _yaw;
+		private float _pitch;
+		
+		public  float X { get; set; }
+		public  float Y { get; set; }
+		public  float Z { get; set; }
 
-		public float Yaw { get; set; }
-		public float Pitch { get; set; }
-		public float HeadYaw { get; set; }
-		public bool OnGround { get; set; }
+		public float Yaw
+		{
+			get => _yaw;
+			set
+			{
+				_yaw = FixValue(value);
+			}
+		}
+
+		public float Pitch
+		{
+			get => _pitch;
+			set
+			{
+				var pitch = FixValue(value);
+				_pitch = pitch;
+			}
+		}
+
+		public float HeadYaw
+		{
+			get => _headYaw;
+			set
+			{
+				_headYaw = FixValue(value);
+			}
+		}
+
+		float FixValue(float value)
+		{
+			var val = value;
+
+			if (val < 0f)
+				val = 360f - (MathF.Abs(val) % 360f);
+			else if (val > 360f)
+				val = val % 360f;
+
+			return val;
+		}
+		
+		public   bool OnGround { get; set; }
 
 		public PlayerLocation()
 		{
@@ -36,6 +78,29 @@ namespace Alex.API.Utils
 		{
 		}
 
+		public void SetPitchBounded(float pitch)
+		{
+			pitch = FixValue(pitch);
+
+			if (pitch < 269.99f && pitch > 89.99f)
+			{
+				var max = MathF.Abs(270f - pitch);
+
+				var min = MathF.Abs(90f - pitch);
+
+				if (max < min)
+				{
+					pitch = 269.99f;
+				}
+				else if (min < max)
+				{
+					pitch = 89.99f;
+				}
+			}
+
+			_pitch = pitch;
+		}
+		
 		/*public PlayerLocation(MiNET.Utils.PlayerLocation p)
 		{
 			if (p == null) return;
@@ -74,38 +139,29 @@ namespace Alex.API.Utils
 		{
 			return new Vector3(X, Y, Z);
 		}
-		/*
-		public Vector3 ToRotationVector3(bool withPitch = false)
+
+		public Vector3 GetDirection(bool includePitch = false, bool useHeadYaw = false)
 		{
-			return new Vector3(withPitch ? Pitch : 0f, HeadYaw, 0f);
-		}
-
-		public Vector3 GetDirection()
-		{
-			Vector3 vector = new Vector3();
-
-			double pitch = Pitch.ToRadians();
-			double yaw = Yaw.ToRadians();
-			vector.X = (float)(-Math.Sin(yaw) * Math.Cos(pitch));
-			vector.Y = (float)-Math.Sin(pitch);
-			vector.Z = (float)(Math.Cos(yaw) * Math.Cos(pitch));
-
+			Vector3 vector = Vector3.Backward;
+			vector = Vector3.Transform(vector, GetDirectionMatrix(includePitch, useHeadYaw));
+			
 			return vector;
+			
+		//	vector.X = (-MathF.Sin(yaw) * MathF.Cos(pitch));
+			//vector.Y = -MathF.Sin(pitch);
+		//	vector.Z = (MathF.Cos(yaw) * MathF.Cos(pitch));
+
+		//	return vector;
 		}
 
-		public Vector3 GetHeadDirection()
+		public MCMatrix GetDirectionMatrix(bool includePitch = false, bool useHeadYaw = false)
 		{
-			Vector3 vector = new Vector3();
+			float pitch = (includePitch ? Pitch : 0f).ToRadians();
+			float yaw   = ((useHeadYaw ? HeadYaw : Yaw)).ToRadians();
 
-			double pitch = Pitch.ToRadians();
-			double yaw = HeadYaw.ToRadians();
-			vector.X = (float)(-Math.Sin(yaw) * Math.Cos(pitch));
-			vector.Y = (float)-Math.Sin(pitch);
-			vector.Z = (float)(Math.Cos(yaw) * Math.Cos(pitch));
-
-			return vector;
+			return MCMatrix.CreateRotationX(pitch) * MCMatrix.CreateRotationY(yaw);
 		}
-*/
+		
 		public static PlayerLocation operator *(PlayerLocation a, float b)
 		{
 			return new PlayerLocation(
@@ -153,29 +209,15 @@ namespace Alex.API.Utils
 			return MemberwiseClone();
 		}
 
+		public MCMatrix CalculateWorldMatrix()
+		{
+			var dir = GetDirection(false);
+			return MCMatrix.CreateWorld(ToVector3(), dir, Vector3.Up);
+		}
+
 		public override string ToString()
 		{
 			return $"X={X}, Y={Y}, Z={Z}, HeadYaw={HeadYaw}, Yaw={Yaw}, Pitch={Pitch}";
 		}
-
-		//public PlayerLocation Clone()
-	//	{
-			
-		//}
-		
-	/*	public Vector3 PreviewMove(Vector3 moveVector)
-		{
-			return ToVector3() + moveVector; Vector3.Transform(moveVector,
-				       Matrix.CreateRotationY(-MathHelper.ToRadians(HeadYaw)));
-		}
-
-		public void Move(Vector3 moveVector)
-		{
-			//var headDirection = GetHeadDirection();
-			var preview = PreviewMove(moveVector);
-			X = preview.X;
-			Y = preview.Y;
-			Z = preview.Z;
-		}*/
 	}
 }

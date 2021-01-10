@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Linq;
+using Alex.Api;
 using Alex.API.Blocks;
 using Alex.API.Utils;
 using Alex.ResourcePackLib.Json;
 using Alex.ResourcePackLib.Json.Models.Entities;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-
+using Alex.Api;
 namespace Alex.Graphics.Models
 {
     public abstract class Model
@@ -175,39 +176,7 @@ namespace Alex.Graphics.Models
 			private readonly EntityModel _model;
 			private readonly Vector3     _pivot;
 			private readonly bool        _mirror = false;
-			
-			private static Vector3 FlipZ(Vector3 origin, Vector3 size)
-			{
-				//return origin;
-				var newOrigin = new Vector3(origin.X, origin.Y, origin.Z);
-				if (newOrigin.Z >= 0)
-				{
-					newOrigin.Z = -(((MathF.Abs(origin.Z) / size.Z) + 1f) * size.Z);
-				}
-				else
-				{
-					newOrigin.Z = ((MathF.Abs(origin.Z) / size.Z) - 1f) * size.Z;
-				}
 
-				return newOrigin;
-			}
-			
-			private static Vector3 FlipX(Vector3 origin, Vector3 size)
-			{
-				//return origin;
-				var newOrigin = new Vector3(origin.X, origin.Y, origin.Z);
-				if (newOrigin.X >= 0)
-				{
-					newOrigin.X = -(((MathF.Abs(origin.X) / size.X) + 1f) * size.X);
-				}
-				else
-				{
-					newOrigin.X = ((MathF.Abs(origin.X) / size.X) - 1f) * size.X;
-				}
-
-				return newOrigin;
-			}
-			
 			public Cube(EntityModel model, EntityModelCube cube, Vector2 textureSize, bool mirrored, float inflation)
 			{
 				_model = model;
@@ -264,22 +233,22 @@ namespace Alex.Graphics.Models
 			private (VertexPositionColorTexture[] vertices, short[] indexes) Modify(EntityModelCube cube,
 				(VertexPositionColorTexture[] vertices, short[] indexes) data)
 			{
-				Matrix cubeMatrix = Matrix.Identity;
+				MCMatrix cubeMatrix = MCMatrix.Identity;
 				if (cube.Rotation.HasValue)
 				{
 					var rotation = cube.Rotation.Value;
 
-					cubeMatrix = Matrix.CreateTranslation(-_pivot)
-					             * Matrix.CreateRotationX(MathUtils.ToRadians(rotation.X))
-					             * Matrix.CreateRotationY(MathUtils.ToRadians(rotation.Y))
-					             * Matrix.CreateRotationZ(MathUtils.ToRadians(rotation.Z))
-					             * Matrix.CreateTranslation(_pivot);
+					cubeMatrix = MCMatrix.CreateTranslation(-_pivot)
+					             * MCMatrix.CreateRotationX(MathUtils.ToRadians(rotation.X))
+					             * MCMatrix.CreateRotationY(MathUtils.ToRadians(rotation.Y))
+					             * MCMatrix.CreateRotationZ(MathUtils.ToRadians(rotation.Z))
+					             * MCMatrix.CreateTranslation(_pivot);
 				}
 
 				return (data.vertices.Select(
 					x =>
 					{
-						x.Position = Vector3.Transform(x.Position, cubeMatrix);
+						x.Position = x.Position.Transform(cubeMatrix);
 
 						return x;
 					}).ToArray(), data.indexes);

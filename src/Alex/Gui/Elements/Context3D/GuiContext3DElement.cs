@@ -1,4 +1,5 @@
-﻿using Alex.API.Gui.Elements;
+﻿using Alex.Api;
+using Alex.API.Gui.Elements;
 using Alex.API.Gui.Graphics;
 using Alex.API.Utils;
 using Alex.Gamestates;
@@ -172,8 +173,8 @@ namespace Alex.Gui.Elements.Context3D
 
             protected override void UpdateViewMatrix()
             {
-                Matrix rotationMatrix = (Matrix.CreateRotationX(Rotation.X) *
-                                         Matrix.CreateRotationY(Rotation.Y));
+                MCMatrix rotationMatrix = (MCMatrix.CreateRotationX(Rotation.X) *
+                                           MCMatrix.CreateRotationY(Rotation.Y));
 
                 Vector3 lookAtOffset = Vector3.Transform(CameraPositionOffset, rotationMatrix);
 
@@ -181,14 +182,14 @@ namespace Alex.Gui.Elements.Context3D
 
                 Direction = Vector3.Transform(Vector3.Forward, rotationMatrix);
 
-                ViewMatrix = Matrix.CreateLookAt(Target + lookAtOffset, Target + TargetPositionOffset, Vector3.Up);
+                ViewMatrix = MCMatrix.CreateLookAt(Target + lookAtOffset, Target + TargetPositionOffset, Vector3.Up);
             }
 
             public override void UpdateProjectionMatrix()
             {
                 //ProjectionMatrix = Matrix.CreatePerspectiveOffCenter(Viewport.RenderBounds, NearDistance, FarDistance);
                 ProjectionMatrix =
-                    Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(FOV), Viewport.AspectRatio,
+                    MCMatrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(FOV), Viewport.AspectRatio,
                         NearDistance, FarDistance);
             }
 

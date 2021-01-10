@@ -1,3 +1,4 @@
+using Alex.Api;
 using Alex.API.Graphics;
 using Alex.API.Utils;
 using Alex.Entities;
@@ -60,7 +61,7 @@ namespace Alex.Graphics.Camera
 			switch (_mode)
 			{
 				case EntityCameraMode.FirstPerson:
-					base.UpdateViewMatrix();
+					UpdateViewMatrixFirstPerson();
 					break;
 				case EntityCameraMode.ThirdPersonFront:
 					UpdateThirdPerson(true);
@@ -70,28 +71,48 @@ namespace Alex.Graphics.Camera
 					break;
 			}
 		}
+
+		private void UpdateViewMatrixFirstPerson()
+		{
+			var position = Position;
+			
+			var direction = new Vector3(Rotation.X, Rotation.Y, Rotation.Z);
+			direction.Normalize();
+			
+			//var target = position
+			
+			Target = position + direction;
+			Direction = direction;
+
+			ViewMatrix = MCMatrix.CreateLookAt(position, Target, Vector3.Up);
+			
+			Frustum = new BoundingFrustum(ViewMatrix * ProjectionMatrix);
+		}
 		
 		private static readonly Vector3 ThirdPersonOffset =  new Vector3(0, 2.5f, 3.5f);
 
 		private void UpdateThirdPerson(bool frontSideView)
 		{
-			Matrix rotationMatrix = Matrix.CreateRotationX(Rotation.Z) * //Pitch
-			                        Matrix.CreateRotationY(-Rotation.Y); //Yaw
-
-			Vector3 lookAtOffset = Vector3.Transform(
-				new Vector3(
-					ThirdPersonOffset.X, ThirdPersonOffset.Y,
-					frontSideView ? ThirdPersonOffset.Z : -ThirdPersonOffset.Z), rotationMatrix);
-
-			Target = Position;
-
-			Direction = Vector3.Transform(Vector3.Backward, rotationMatrix);
-
-
-			var heightOffset = new Vector3(0, (float) TrackingEntity.Height, 0);
-			ViewMatrix = Matrix.CreateLookAt(Position + lookAtOffset, Target + heightOffset, Vector3.Up);
+			var position = Position;
 			
-			_frustum = new BoundingFrustum(ViewMatrix * ProjectionMatrix);
+			var direction = new Vector3(Rotation.X, Rotation.Y, frontSideView ? Rotation.Z : -Rotation.Z);
+			direction.Normalize();
+
+			var offset = Rotation * (direction * 3.5f);
+			offset.Y = 2.5f;
+			//offset *= direction;
+			//offset.Normalize();
+			
+			Direction = direction;
+
+			Vector3 lookAtOffset = new Vector3(
+				position.X + offset.X, position.Y + offset.Y,  position.Z + offset.Z);
+
+			Target = position;
+
+			ViewMatrix = MCMatrix.CreateLookAt(lookAtOffset, position , Vector3.Up);
+			
+			Frustum = new BoundingFrustum(ViewMatrix * ProjectionMatrix);
 		}
 
 		public override void Update(IUpdateArgs args)
@@ -103,15 +124,12 @@ namespace Alex.Graphics.Camera
 			{
 				MoveTo(
 					entityLocation + new Vector3(0, (float) (TrackingEntity.Height - 0.175f), 0),
-					new Vector3(
-						MathHelper.ToRadians(entityPhysicalLocation.HeadYaw),
-						MathHelper.ToRadians(entityPhysicalLocation.HeadYaw),
-						MathHelper.ToRadians(entityPhysicalLocation.Pitch)));
+						entityPhysicalLocation.GetDirection(true, true));
 			}
 			else
 			{
 				MoveTo(entityLocation, 
-					new Vector3(MathHelper.ToRadians(entityPhysicalLocation.HeadYaw), MathHelper.ToRadians(entityPhysicalLocation.HeadYaw), MathHelper.ToRadians(entityPhysicalLocation.Pitch)));
+					entityPhysicalLocation.GetDirection(true, true));
 			}
 		}
 	}

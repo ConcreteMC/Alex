@@ -357,8 +357,8 @@ namespace Alex.Entities
 
 						Player.KnownPosition.HeadYaw -= look.X;
 						Player.KnownPosition.Pitch -= look.Y;
-						Player.KnownPosition.HeadYaw = MathUtils.NormDeg(Player.KnownPosition.HeadYaw);
-						Player.KnownPosition.Pitch = MathHelper.Clamp(Player.KnownPosition.Pitch, -89.9f, 89.9f);
+						//Player.KnownPosition.HeadYaw = MathUtils.NormDeg(Player.KnownPosition.HeadYaw);
+						//Player.KnownPosition.Pitch = MathHelper.Clamp(Player.KnownPosition.Pitch, -89.9f, 89.9f);
 					}
 				}
 
@@ -380,12 +380,15 @@ namespace Alex.Entities
 
 						var look = (new Vector2((-mouseDelta.X), (mouseDelta.Y)) * (float) CursorSensitivity) * (float) (gt.ElapsedGameTime.TotalSeconds);
 
-						look = -look;
-
 						Player.KnownPosition.HeadYaw -= look.X;
-						Player.KnownPosition.Pitch -= look.Y;
-						Player.KnownPosition.HeadYaw = MathUtils.NormDeg(Player.KnownPosition.HeadYaw);
-						Player.KnownPosition.Pitch = MathHelper.Clamp(Player.KnownPosition.Pitch, -89.9f, 89.9f);
+
+						Player.KnownPosition.SetPitchBounded(Player.KnownPosition.Pitch - look.Y);
+						//Player.KnownPosition.Pitch -= look.Y; 
+						
+						// MathHelper.Clamp(Player.KnownPosition.Pitch - look.Y, 0f, 180f);
+						//Player.KnownPosition.Pitch = MathHelper.Clamp(Player.KnownPosition.Pitch, -89.9f, 89.9f);
+						//Player.KnownPosition.HeadYaw = MathUtils.NormDeg(Player.KnownPosition.HeadYaw);
+						//Player.KnownPosition.Pitch = MathHelper.Clamp(Player.KnownPosition.Pitch, -89.9f, 89.9f);
 
 						//Player.KnownPosition.Pitch = MathHelper.Clamp(Player.KnownPosition.Pitch + look.Y, -89.9f, 89.9f);
 						// Player.KnownPosition.Yaw = (Player.KnownPosition.Yaw + look.X) % 360f;

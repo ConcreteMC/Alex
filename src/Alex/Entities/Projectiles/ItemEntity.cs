@@ -1,3 +1,4 @@
+using Alex.Api;
 using Alex.API.Graphics;
 using Alex.API.Utils;
 using Alex.Graphics.Models.Items;
@@ -40,20 +41,18 @@ namespace Alex.Entities.Projectiles
                 {
                     //var offset = new Vector3((float) Width, (float) Height, (float) Width) / 2f;
                     var offset = new Vector3(0.5f, 0f, 0.5f);
-                    ItemRenderer.Update(args, Matrix.CreateScale(Scale)
-                                              * Matrix.CreateTranslation(-offset)
-                                              * Matrix.CreateRotationY(MathHelper.ToRadians(_rotation)) 
-                                              * Matrix.CreateTranslation(offset)
-                                              * Matrix.CreateTranslation((knownPos - offset)), Color.White.ToVector3(), KnownPosition);
+                    ItemRenderer.Update(args, MCMatrix.CreateScale(Scale)
+                                              * MCMatrix.CreateTranslation(-offset)
+                                              * MCMatrix.CreateRotationY(MathHelper.ToRadians(_rotation)) 
+                                              * MCMatrix.CreateTranslation(offset)
+                                              * MCMatrix.CreateTranslation((knownPos - offset)), Color.White.ToVector3());
                 }
                 else
                 {
-                    ItemRenderer.Update(args,  Matrix.CreateScale(Scale)
-                                                              * Matrix.CreateRotationY(MathHelper.ToRadians(KnownPosition.Yaw))
-                                                              * Matrix.CreateTranslation(knownPos), Color.White.ToVector3(), KnownPosition);
+                    ItemRenderer.Update(args,  MCMatrix.CreateScale(Scale)
+                                               * MCMatrix.CreateRotationY(MathHelper.ToRadians(KnownPosition.Yaw))
+                                               * MCMatrix.CreateTranslation(knownPos), Color.White.ToVector3());
                 }
-
-                ItemRenderer?.Update(args.GraphicsDevice, args.Camera);
             }
 
             if (DoRotation)

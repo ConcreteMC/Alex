@@ -1,3 +1,4 @@
+using Alex.Api;
 using Alex.API.Graphics;
 using Alex.Graphics.Models.Items;
 using Alex.Items;
@@ -54,16 +55,13 @@ namespace Alex.Entities
 		{
 			if (CanRender)
 			{
-				ItemRenderer.Update(args, Matrix.Identity * Matrix.CreateScale(Scale)
-				                                           * Matrix.CreateRotationY(MathHelper.ToRadians(KnownPosition.Yaw))
-				                                           * Matrix.CreateTranslation(KnownPosition.ToVector3()), Color.White.ToVector3(), KnownPosition);
-				
-				//ItemRenderer?.Update(
-				//	Matrix.Identity * Matrix.CreateScale(Scale)
-				//	                * Matrix.CreateRotationY(MathHelper.ToRadians(KnownPosition.Yaw))
-				//	                * Matrix.CreateTranslation(KnownPosition.ToVector3()), KnownPosition);
-
-				ItemRenderer?.Update(args.GraphicsDevice, args.Camera);
+				ItemRenderer.Update(
+					args,
+					MCMatrix.Identity * MCMatrix.CreateScale(Scale)
+					                  * MCMatrix.CreateRotationY(MathHelper.ToRadians(KnownPosition.Yaw))
+					                  * MCMatrix.CreateTranslation(KnownPosition.ToVector3()),
+					((new Color(245, 245, 225) * ((1f / 16f) * SurroundingLightValue)) * Level.BrightnessModifier)
+				   .ToVector3());
 			}
 		}
 		
@@ -73,21 +71,6 @@ namespace Alex.Entities
 				return;
             
 			ItemRenderer?.Render(renderArgs, false, out _);
-		}
-
-		/// <inheritdoc />
-		public override void OnTick()
-		{
-			base.OnTick();
-
-			var itemRenderer = ItemRenderer;
-
-			if (itemRenderer != null)
-			{
-				itemRenderer.DiffuseColor =
-					(new Color(245, 245, 225) *  ((1f / 16f) * SurroundingLightValue))
-					* Level.BrightnessModifier;
-			}
 		}
 	}
 }

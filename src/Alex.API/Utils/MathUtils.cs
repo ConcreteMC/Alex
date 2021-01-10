@@ -33,12 +33,12 @@ namespace Alex.API.Utils
 
 		public static float ToRadians(float deg)
 		{
-			return (float)(Math.PI* deg) / 180F;
+			return deg * (MathF.PI / 180f);
 		}
 
 		public static float RadianToDegree(float angle)
 		{
-			return (float)(angle * (180.0f / Math.PI));
+			return angle * (180.0f / MathF.PI);
 		}
 
 		public static float AngleToDegree(sbyte angle)

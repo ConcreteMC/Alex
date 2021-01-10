@@ -166,7 +166,7 @@ namespace Alex.API.Graphics
             vertexBuffer = null;
             return false;
         }
-        
+
         public PooledVertexBuffer CreateBuffer(object caller, GraphicsDevice device, VertexDeclaration vertexDeclaration,
             int vertexCount, BufferUsage bufferUsage)
         {
@@ -375,8 +375,28 @@ namespace Alex.API.Graphics
         {
             get { return VertexDeclaration.VertexStride * VertexCount; }
         }
+
+        public PooledVertexBuffer(GpuResourceManager parent,
+            long id,
+            object owner,
+            GraphicsDevice graphicsDevice,
+            VertexDeclaration vertexDeclaration,
+            int vertexCount,
+            BufferUsage bufferUsage) : base(graphicsDevice, vertexDeclaration, vertexCount, bufferUsage)
+        {
+            Parent = parent;
+            PoolId = id;
+            CreatedTime = DateTime.UtcNow;
+            Owner = owner;
+        }
         
-        public PooledVertexBuffer(GpuResourceManager parent, long id, object owner, GraphicsDevice graphicsDevice, VertexDeclaration vertexDeclaration, int vertexCount, BufferUsage bufferUsage) : base(graphicsDevice, vertexDeclaration, vertexCount, bufferUsage)
+        public PooledVertexBuffer(GpuResourceManager parent,
+            long id,
+            object owner,
+            GraphicsDevice graphicsDevice,
+            Type vertexType,
+            int vertexCount,
+            BufferUsage bufferUsage) : base(graphicsDevice, vertexType, vertexCount, bufferUsage)
         {
             Parent = parent;
             PoolId = id;

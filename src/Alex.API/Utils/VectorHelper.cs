@@ -15,10 +15,10 @@ namespace Alex.API.Utils
 			var distance = Math.Sqrt((vector.X * vector.X) + (vector.Z * vector.Z));
 			return ToDegrees(Math.Atan2(vector.Y, distance));
 		}
-
-		public static double ToRadians(this float angle)
+		
+		public static float ToRadians(this float angle)
 		{
-			return (Math.PI / 180.0D) * angle;
+			return (MathF.PI / 180.0F) * angle;
 		}
 
 		public static double ToRadians(this double angle)

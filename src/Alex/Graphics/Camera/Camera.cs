@@ -1,4 +1,5 @@
 ﻿using System;
+using Alex.Api;
 using Alex.API.Graphics;
 using Alex.API.Utils;
 using Microsoft.Xna.Framework;
@@ -8,8 +9,8 @@ namespace Alex.Graphics.Camera
 {
     public class Camera : ICamera
     {
-	    protected BoundingFrustum _frustum = new BoundingFrustum(Matrix.Identity);
-	    public    BoundingFrustum BoundingFrustum => _frustum;// new BoundingFrustum(ViewMatrix * ProjectionMatrix);
+	    protected BoundingFrustum Frustum = new BoundingFrustum(Matrix.Identity);
+	    public    BoundingFrustum BoundingFrustum => Frustum;// new BoundingFrustum(ViewMatrix * ProjectionMatrix);
 
 	    /// <summary>
 	    /// The nearest distance the camera will use
@@ -42,20 +43,20 @@ namespace Alex.Graphics.Camera
 		{
 			FarDistance = renderDistance * 16 * 16;// MathF.Pow(renderDistance, 2f);
 			
-			ProjectionMatrix = Matrix.CreatePerspectiveFieldOfView(
+			ProjectionMatrix = MCMatrix.CreatePerspectiveFieldOfView(
 				MathHelper.ToRadians(FOV + FOVModifier),
-				1.333333F,
+				AspectRatio,
 				NearDistance,
 				FarDistance);
 		}
 		
 		public Vector3 Offset { get; private set; } = Vector3.Zero;
 
-		private Matrix _projectionMatrix;
+		private MCMatrix _projectionMatrix;
         /// <summary>
         /// 
         /// </summary>
-        public Matrix ProjectionMatrix 
+        public MCMatrix ProjectionMatrix 
         {
 	        get
 	        {
@@ -68,12 +69,12 @@ namespace Alex.Graphics.Camera
 	        }
         }
 
-        private Matrix _viewMatrix;
+        private MCMatrix _viewMatrix;
 
         /// <summary>
         /// 
         /// </summary>
-        public Matrix ViewMatrix
+        public MCMatrix ViewMatrix
         {
 	        get
 	        {
@@ -132,18 +133,17 @@ namespace Alex.Graphics.Camera
         /// </summary>
         protected virtual void UpdateViewMatrix()
         {
-			Matrix rotationMatrix = Matrix.CreateRotationX(-Rotation.Z) * //Pitch
-			                        Matrix.CreateRotationY(-Rotation.Y); //Yaw
+	        MCMatrix rotationMatrix = MCMatrix.CreateRotation(Rotation); 
 
-	        Vector3 lookAtOffset = Vector3.Transform(Vector3.Backward, rotationMatrix);
+	        Vector3 lookAtOffset = Vector3.Backward.Transform(rotationMatrix);
 	        Direction = lookAtOffset;
 
-	        var pos = Position + Vector3.Transform(Offset, Matrix.CreateRotationY(-Rotation.Y));
+	        var pos = Position;
 	        
 			Target = pos + lookAtOffset;
-	        _viewMatrix = Matrix.CreateLookAt(pos, Target, Vector3.Up);
+	        _viewMatrix = MCMatrix.CreateLookAt(pos, Target, Vector3.Up);
 	        
-	        _frustum = new BoundingFrustum(_viewMatrix * _projectionMatrix);
+	        Frustum = new BoundingFrustum(_viewMatrix * _projectionMatrix);
 		}
 
 	    public virtual void UpdateAspectRatio(float aspectRatio)
@@ -158,14 +158,14 @@ namespace Alex.Graphics.Camera
 
 	    public virtual void UpdateProjectionMatrix()
 		{
-			_projectionMatrix = Matrix.CreatePerspectiveFieldOfView(
+			_projectionMatrix = MCMatrix.CreatePerspectiveFieldOfView(
 				MathHelper.ToRadians(FOV + FOVModifier),
 				AspectRatio,
 				NearDistance,
 				FarDistance);
 			
 			
-			_frustum = new BoundingFrustum(_viewMatrix * _projectionMatrix);
+			Frustum = new BoundingFrustum(_viewMatrix * _projectionMatrix);
 		}
 
 	    public virtual void MoveTo(Vector3 position, Vector3 rotation)
@@ -174,28 +174,9 @@ namespace Alex.Graphics.Camera
 		    Rotation = rotation;
 	    }
 
-	    public virtual Vector3 PreviewMove(Vector3 amount)
-	    {
-		    Matrix rotate = Matrix.CreateRotationY(Rotation.Y);
-		    Vector3 movement = new Vector3(amount.X, amount.Y, amount.Z);
-		    movement = Vector3.Transform(movement, rotate);
-		    return Position + movement;
-	    }
-
-	    public virtual void Move(Vector3 scale)
-	    {
-		    MoveTo(PreviewMove(scale), Rotation);
-	    }
-
-		public virtual void Update(IUpdateArgs args)
+	    public virtual void Update(IUpdateArgs args)
 		{
 			//Update(args, entity.KnownPosition);
 		}
-
-	    /*public virtual void Update(IUpdateArgs args, PlayerLocation entityLocation)
-	    {
-		    MoveTo(entityLocation.ToVector3(), 
-				new Vector3(MathHelper.ToRadians(entityLocation.HeadYaw), MathHelper.ToRadians(entityLocation.HeadYaw), MathHelper.ToRadians(entityLocation.Pitch)));
-	    }*/
-	}
+    }
 }

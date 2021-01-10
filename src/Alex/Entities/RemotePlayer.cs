@@ -14,6 +14,7 @@ using Alex.ResourcePackLib;
 using Alex.ResourcePackLib.Json;
 using Alex.ResourcePackLib.Json.Converters;
 using Alex.ResourcePackLib.Json.Models.Entities;
+using Alex.ResourcePackLib.Json.Models.Items;
 using Alex.Utils;
 using Alex.Worlds;
 using Alex.Worlds.Multiplayer.Bedrock;
@@ -338,6 +339,55 @@ namespace Alex.Entities
 		}
 
 		/// <inheritdoc />
+		protected override void UpdateItemPosition()
+		{
+			var renderer = ItemRenderer;
+
+			if (renderer == null)
+				return;
+			
+			var pos = renderer.DisplayPosition;
+			//if (pos.HasFlag(DisplayPosition.FirstPerson) || pos.HasFlag(DisplayPosition.ThirdPerson))
+			{
+				if (IsLeftHanded)
+				{
+					if (!pos.HasFlag(DisplayPosition.LeftHand))
+					{
+						pos = (pos & ~(DisplayPosition.LeftHand | DisplayPosition.RightHand));
+						pos |= DisplayPosition.LeftHand;
+					}
+				}
+				else
+				{
+					if (!pos.HasFlag(DisplayPosition.RightHand))
+					{
+						pos = (pos & ~(DisplayPosition.LeftHand | DisplayPosition.RightHand));
+						pos |= DisplayPosition.RightHand;
+					}
+				}
+
+				if (IsFirstPersonMode)
+				{
+					if (!pos.HasFlag(DisplayPosition.FirstPerson))
+					{
+						pos = (pos & ~(DisplayPosition.FirstPerson | DisplayPosition.ThirdPerson));
+						pos |= DisplayPosition.FirstPerson;
+					}
+				}
+				else
+				{
+					if (!pos.HasFlag(DisplayPosition.ThirdPerson))
+					{
+						pos = (pos & ~(DisplayPosition.FirstPerson | DisplayPosition.ThirdPerson));
+						pos |= DisplayPosition.ThirdPerson;
+					}
+				}
+
+				renderer.DisplayPosition = pos;
+			}
+		}
+
+		/// <inheritdoc />
 		protected override void HandleJavaMeta(MetaDataEntry entry)
 		{
 			base.HandleJavaMeta(entry);
@@ -369,12 +419,6 @@ namespace Alex.Entities
 		public void UpdateGamemode(GameMode gamemode)
 		{
 			Gamemode = gamemode;
-		}
-
-		public override void Update(IUpdateArgs args)
-		{
-			base.Update(args);
-			//	DistanceMoved = 0f;
 		}
 
 		/// <inheritdoc />
