@@ -157,7 +157,6 @@ namespace Alex.Graphics.Models.Entity
 			}
 
 			public string        Name   => Definition.Name;
-			public List<Vector3> Pivots { get; set; } = null;
 		}
 	}
 }

@@ -117,11 +117,6 @@ namespace Alex.Graphics.Models.Entity
 		{
 			ModelBone modelBone;
 
-				//List<short> indices = new List<short>();
-
-			//bone.Pivot *= new Vector3(-1f, 1f, 1f);
-
-			List<Vector3> pivotPoints  = new List<Vector3>();
 			int           startIndex   = vertices.Count;
 			int           elementCount = 0;
 			if (bone.Cubes != null)
@@ -138,10 +133,8 @@ namespace Alex.Graphics.Models.Entity
 					var inflation = (float) (cube.Inflate ?? bone.Inflate);
 					var mirror    = cube.Mirror ?? bone.Mirror;
 
-					var     origin   = cube.InflatedOrigin(inflation);
-					//origin.X
-					//Vector3 rotation = new Vector3(0f, 0f, 0f);
-
+					var      origin = cube.InflatedOrigin(inflation);
+					
 					MCMatrix matrix = MCMatrix.CreateTranslation(origin);
 					if (cube.Rotation.HasValue)
 					{
@@ -160,10 +153,7 @@ namespace Alex.Graphics.Models.Entity
 						         * MCMatrix.CreateRotationDegrees(rotation)
 						         * MCMatrix.CreateTranslation(pivot);
 					}
-
-				//	matrix *= MCMatrix.CreateTranslation(origin);
 					
-					//pivot += origin;
 					Cube built = new Cube(source, cube, textureSize, mirror, inflation);
 					ModifyCubeIndexes(ref vertices, built.Front, origin, matrix);
 					ModifyCubeIndexes(ref vertices, built.Back, origin, matrix);
@@ -171,15 +161,12 @@ namespace Alex.Graphics.Models.Entity
 					ModifyCubeIndexes(ref vertices, built.Bottom, origin, matrix);
 					ModifyCubeIndexes(ref vertices, built.Left, origin, matrix);
 					ModifyCubeIndexes(ref vertices, built.Right, origin, matrix);
-					
-					//pivotPoints.Add(pivot + origin);
 				}
 			}
 
 			elementCount = vertices.Count - startIndex;
 
 			modelBone = new ModelBone(bone, startIndex, elementCount);
-			modelBone.Pivots = pivotPoints;
 
 			if (bone.Rotation.HasValue)
 			{
@@ -282,16 +269,6 @@ namespace Alex.Graphics.Models.Entity
 				foreach (var pass in Effect.CurrentTechnique.Passes)
 				{
 					pass?.Apply();
-					
-					if (bone.Pivots != null)
-					{
-						foreach (var pivot in bone.Pivots)
-						{
-							ItemModelRenderer.DrawLine(args.GraphicsDevice, pivot, pivot + Vector3.UnitY * 16f, Color.Green);
-							ItemModelRenderer.DrawLine(args.GraphicsDevice, pivot , pivot + Vector3.UnitZ * 16f, Color.Blue);
-							ItemModelRenderer.DrawLine(args.GraphicsDevice, pivot, pivot + Vector3.UnitX * 16f, Color.Red);
-						}
-					}
 
 					args.GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, bone.StartIndex, count / 3);
 				}
