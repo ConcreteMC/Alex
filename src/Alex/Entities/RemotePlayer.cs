@@ -213,12 +213,7 @@ namespace Alex.Entities
 							{
 								var resourcePatch = JsonConvert.DeserializeObject<SkinResourcePatch>(
 									skin.ResourcePatch, GeometrySerializationSettings);
-
-								//if (!Directory.Exists("skins"))
-								//	Directory.CreateDirectory("skins");
-
-								//File.WriteAllText(Path.Combine("skins", $"{Environment.TickCount64}.json"), skin.GeometryData);
-
+								
 								Dictionary<string, EntityModel> models = new Dictionary<string, EntityModel>();
 								BedrockResourcePack.LoadEntityModel(skin.GeometryData, models);
 
@@ -246,6 +241,16 @@ namespace Alex.Entities
 											Log.Debug(
 												$"Invalid geometry: {resourcePatch.Geometry.Default} for player {Name}");
 										}
+										else
+										{
+										/*	if (!Directory.Exists("skins"))
+												Directory.CreateDirectory("skins");
+
+											File.WriteAllText(
+												Path.Combine("skins", $"{model.Description.Identifier}-{Environment.TickCount64}.json"),
+												skin.GeometryData);*/
+										}
+
 									}
 									else
 									{

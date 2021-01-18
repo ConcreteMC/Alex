@@ -8,6 +8,7 @@ using Alex.API.Graphics;
 using Alex.API.Gui;
 using Alex.API.Gui.Elements.Controls;
 using Alex.API.Gui.Elements.Layout;
+using Alex.API.Gui.Graphics;
 using Alex.API.Resources;
 using Alex.API.Utils;
 using Alex.Blocks;
@@ -44,7 +45,7 @@ namespace Alex.Gamestates.Debugging
 		private          long         _ramUsage = 0;
 		private          long         _threadsUsed, _maxThreads, _complPortUsed, _maxComplPorts;
 
-		private DebugModelRenderer _modelRenderer;
+		//private DebugModelRenderer _modelRenderer;
 
 		public ModelDebugState()
 		{
@@ -56,15 +57,8 @@ namespace Alex.Gamestates.Debugging
 			EntityModelExplorer = new EntityModelExplorer(Alex.Instance, null);
 
 			ModelExplorer = BlockModelExplorer;
-
-			//AddChild(_wrap = new GuiStackContainer()
-			//{
-			//	Orientation = Orientation.Horizontal,
-			//	Anchor = Alignment.Fill,
-			//	ChildAnchor = Alignment.FillY
-			//});
-
-			AddChild(_modelExplorerView = new GuiModelExplorerView(ModelExplorer, new Vector3(0f, 1.85f, 6f), new Vector3(0.5f, 0.5f, 0.5f))
+			
+			AddChild(_modelExplorerView = new GuiModelExplorerView(ModelExplorer, new Vector3(0f, 0f, -6f), new Vector3(0f, 1.8f, 0f))
 			{
 				Anchor = Alignment.Fill,
 				Background = Color.TransparentBlack,
@@ -75,7 +69,7 @@ namespace Alex.Gamestates.Debugging
 				Width  = 92,
 				Height = 128,
 
-				AutoSizeMode = AutoSizeMode.None,
+				AutoSizeMode = AutoSizeMode.GrowAndShrink,
 
 				//Anchor = Alignment.BottomRight,
 
@@ -214,8 +208,8 @@ namespace Alex.Gamestates.Debugging
 				} //);
 			}
 
-
-			var location = _modelExplorerView.EntityPosition;
+/*
+	//		var location = _modelExplorerView.EntityPosition;
 			var keyState = Keyboard.GetState();
 
 			// if (keyState != _keyState)
@@ -288,7 +282,7 @@ namespace Alex.Gamestates.Debugging
 
 			//_modelRenderer.EntityPosition = location; // new PlayerLocation(Math.Cos(_i) * 6, 0, Math.Sin(_i) * 6);
 
-			_keyState = keyState;
+			_keyState = keyState;*/
 
 		}
 	}
@@ -397,48 +391,17 @@ namespace Alex.Gamestates.Debugging
 			}
 		}
 
-		private PlayerLocation Location { get; set; } = new PlayerLocation(Vector3.Zero);
+		//private PlayerLocation Location { get; set; } = new PlayerLocation(Vector3.Zero);
 
 		public override void SetLocation(PlayerLocation location)
 		{
-			Location = location;
+			//Location = location;
 
 			//  Location.Yaw = Location.HeadYaw = MathUtils.RadianToDegree(rotation.Y);
 			//  Location.Pitch = MathUtils.RadianToDegree(rotation.Z);
 		}
 
-		public override void Render(GraphicsContext context, RenderArgs renderArgs)
-		{
-			var renderer = _currentRenderer;
-			if (renderer == null)
-				return;
-			
-			var blendState       = context.GraphicsDevice.BlendState;
-			var depthPencilState = context.GraphicsDevice.DepthStencilState;
-			var samplerState     = context.GraphicsDevice.SamplerStates[0];
-
-			try
-			{
-				context.GraphicsDevice.BlendState = BlendState.AlphaBlend;
-				context.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
-				context.GraphicsDevice.SamplerStates[0] = SamplerState.PointWrap;
-
-				renderer?.Render(renderArgs);
-			}
-			finally
-			{
-				context.GraphicsDevice.BlendState = blendState;
-				context.GraphicsDevice.DepthStencilState = depthPencilState;
-				context.GraphicsDevice.SamplerStates[0] = samplerState;
-			}
-		}
-
 		private int _previousIndex = -1;
-
-		public override void Update(UpdateArgs args)
-		{
-			_currentRenderer?.Update(args, new PlayerLocation(Vector3.Zero));
-		}
 
 		public override string GetDebugInfo()
 		{
@@ -448,6 +411,18 @@ namespace Alex.Gamestates.Debugging
 			sb.AppendLine($"{block.Key}");
 
 			return sb.ToString();
+		}
+
+		/// <inheritdoc />
+		public override void UpdateContext3D(IUpdateArgs args, IGuiRenderer guiRenderer)
+		{
+			_currentRenderer?.Update(args, new PlayerLocation());
+		}
+
+		/// <inheritdoc />
+		public override void DrawContext3D(IRenderArgs args, IGuiRenderer guiRenderer)
+		{
+			_currentRenderer?.Render(args);
 		}
 	}
 
@@ -537,26 +512,6 @@ namespace Alex.Gamestates.Debugging
 			}
 		}
 
-		public override void Render(GraphicsContext context, RenderArgs renderArgs)
-		{
-			if (_data == null)
-				return;
-
-			var data = _data;
-			if (_currentEffect != null)
-			{
-				//context.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
-				//context.GraphicsDevice.SamplerStates[0] = SamplerState.PointWrap;
-				
-				data.Draw(context.GraphicsDevice, RenderStage.OpaqueFullCube, _currentEffect, out _);
-				data.Draw(context.GraphicsDevice, RenderStage.Opaque, _currentEffect, out _);
-				data.Draw(context.GraphicsDevice, RenderStage.Transparent, _currentEffect, out _);
-				data.Draw(context.GraphicsDevice, RenderStage.Translucent, _currentEffect, out _);
-				data.Draw(context.GraphicsDevice, RenderStage.Animated, _currentEffect, out _);
-				data.Draw(context.GraphicsDevice, RenderStage.Liquid, _currentEffect, out _);
-			}
-		}
-
 		public override void SetLocation(PlayerLocation location)
 		{
 			// _rotation.Y = MathUtils.RadianToDegree(rotation.Y);
@@ -565,18 +520,9 @@ namespace Alex.Gamestates.Debugging
 			_location = location;
 		}
 
-		private static Vector3        _rotationCenter = Vector3.One / 2f;
-		private        PlayerLocation _location       = new PlayerLocation(Vector3.Zero);
-		private        int            _previousIndex  = -1;
-
-		public override void Update(UpdateArgs args)
+		/// <inheritdoc />
+		public override void UpdateContext3D(IUpdateArgs args, IGuiRenderer guiRenderer)
 		{
-			var world = Matrix.CreateTranslation(-_rotationCenter) *
-						(Matrix.CreateRotationX(MathHelper.ToRadians(_location.Pitch)) *
-						 Matrix.CreateRotationY(MathHelper.ToRadians(_location.Yaw)) *
-						 Matrix.CreateRotationZ(MathHelper.ToRadians(_location.Pitch))) *
-						Matrix.CreateTranslation(_rotationCenter);
-
 			if (_basicEffect == null)
 			{
 				_basicEffect                    = new BasicEffect(Alex.GraphicsDevice);
@@ -592,7 +538,7 @@ namespace Alex.Gamestates.Debugging
 
 			_alphaEffect.Projection = _basicEffect.Projection = args.Camera.ProjectionMatrix;
 			_alphaEffect.View       = _basicEffect.View       = args.Camera.ViewMatrix;
-			  _alphaEffect.World  = _basicEffect.World = Matrix.CreateScale(1f/16f);
+			_alphaEffect.World  = _basicEffect.World = Matrix.CreateScale(1f/16f);
 
 			var block = _blockStates[_index];
 
@@ -614,6 +560,32 @@ namespace Alex.Gamestates.Debugging
 
 			_currentEffect = (block.Block.Transparent || block.Block.Animated) ? (Effect) _alphaEffect : _basicEffect;
 		}
+
+		/// <inheritdoc />
+		public override void DrawContext3D(IRenderArgs args, IGuiRenderer guiRenderer)
+		{
+			if (_data == null)
+				return;
+
+			var data = _data;
+
+			if (_currentEffect != null)
+			{
+				//context.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
+				//context.GraphicsDevice.SamplerStates[0] = SamplerState.PointWrap;
+
+				data.Draw(args.GraphicsDevice, RenderStage.OpaqueFullCube, _currentEffect, out _);
+				data.Draw(args.GraphicsDevice, RenderStage.Opaque, _currentEffect, out _);
+				data.Draw(args.GraphicsDevice, RenderStage.Transparent, _currentEffect, out _);
+				data.Draw(args.GraphicsDevice, RenderStage.Translucent, _currentEffect, out _);
+				data.Draw(args.GraphicsDevice, RenderStage.Animated, _currentEffect, out _);
+				data.Draw(args.GraphicsDevice, RenderStage.Liquid, _currentEffect, out _);
+			}
+		}
+
+		private static Vector3        _rotationCenter = Vector3.One / 2f;
+		private        PlayerLocation _location       = new PlayerLocation(Vector3.Zero);
+		private        int            _previousIndex  = -1;
 
 		public override string GetDebugInfo()
 		{
@@ -641,17 +613,23 @@ namespace Alex.Gamestates.Debugging
 		}
 	}
 
-	public abstract class ModelExplorer
+	public abstract class ModelExplorer : IGuiContext3DDrawable
 	{
 		public abstract void   Next();
 		public abstract void   Previous();
 		public abstract void   Skip();
-		public abstract void   Render(GraphicsContext context, RenderArgs renderArgs);
-		public abstract void   Update(UpdateArgs      args);
+		//public abstract void   Render(GraphicsContext context, RenderArgs renderArgs);
+	//	public abstract void   Update(UpdateArgs      args);
 		public abstract string GetDebugInfo();
 
 		public virtual void SetLocation(PlayerLocation location)
 		{
 		}
+
+		/// <inheritdoc />
+		public abstract void UpdateContext3D(IUpdateArgs args, IGuiRenderer guiRenderer);
+
+		/// <inheritdoc />
+		public abstract void DrawContext3D(IRenderArgs args, IGuiRenderer guiRenderer);
 	}
 }

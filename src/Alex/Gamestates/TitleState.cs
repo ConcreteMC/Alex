@@ -332,9 +332,9 @@ namespace Alex.Gamestates
 			var pitch = (float)mouseDelta.GetPitch();
 			var yaw = (float)headYaw;
 
-			_playerView.SetEntityRotation(-yaw, pitch, -headYaw);
-			_playerView.Entity.RenderLocation.Yaw = -yaw;
-			_playerView.Entity.RenderLocation.HeadYaw = -headYaw;
+			_playerView.SetEntityRotation(yaw, pitch, headYaw);
+			_playerView.Entity.RenderLocation.Yaw = yaw;
+			_playerView.Entity.RenderLocation.HeadYaw = headYaw;
 			_playerView.Entity.RenderLocation.Pitch = pitch;
 			KeyboardState s = Keyboard.GetState();
 			if (_prevKeyboardState.IsKeyDown(Keys.M) && s.IsKeyUp(Keys.M))

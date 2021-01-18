@@ -4,6 +4,7 @@ using System.Linq;
 using Alex.Api;
 using Alex.API.Graphics;
 using Alex.API.Utils;
+using Alex.Graphics.Models.Items;
 using Alex.ResourcePackLib.Json.Models.Entities;
 using Alex.Utils;
 using Microsoft.Xna.Framework;
@@ -120,8 +121,9 @@ namespace Alex.Graphics.Models.Entity
 
 			//bone.Pivot *= new Vector3(-1f, 1f, 1f);
 
-			int startIndex   = vertices.Count;
-			int elementCount = 0;
+			List<Vector3> pivotPoints  = new List<Vector3>();
+			int           startIndex   = vertices.Count;
+			int           elementCount = 0;
 			if (bone.Cubes != null)
 			{
 				foreach (var cube in bone.Cubes)
@@ -133,33 +135,62 @@ namespace Alex.Graphics.Models.Entity
 						continue;
 					}
 
-					var  inflation = (float) (cube.Inflate ?? bone.Inflate);
-					var  mirror    = cube.Mirror ?? bone.Mirror;
+					var inflation = (float) (cube.Inflate ?? bone.Inflate);
+					var mirror    = cube.Mirror ?? bone.Mirror;
+
+					var     origin   = cube.InflatedOrigin(inflation);
+					//origin.X
+					//Vector3 rotation = new Vector3(0f, 0f, 0f);
+
+					MCMatrix matrix = MCMatrix.CreateTranslation(origin);
+					if (cube.Rotation.HasValue)
+					{
+						var rotation = cube.Rotation.Value;
+						
+						Vector3 pivot = origin + (cube.InflatedSize(inflation) / 2f);
+
+						if (cube.Pivot.HasValue)
+						{
+							pivot = cube.InflatedPivot(inflation);// cube.Pivot.Value;
+						}
+						
+						matrix =
+							    MCMatrix.CreateTranslation(origin)
+								* MCMatrix.CreateTranslation((-pivot)) 
+						         * MCMatrix.CreateRotationDegrees(rotation)
+						         * MCMatrix.CreateTranslation(pivot);
+					}
+
+				//	matrix *= MCMatrix.CreateTranslation(origin);
 					
-					Cube built     = new Cube(source, cube, textureSize, mirror, inflation);
-					ModifyCubeIndexes(ref vertices, built.Front);
-					ModifyCubeIndexes(ref vertices, built.Back);
-					ModifyCubeIndexes(ref vertices, built.Top);
-					ModifyCubeIndexes(ref vertices, built.Bottom);
-					ModifyCubeIndexes(ref vertices, built.Left);
-					ModifyCubeIndexes(ref vertices, built.Right);
+					//pivot += origin;
+					Cube built = new Cube(source, cube, textureSize, mirror, inflation);
+					ModifyCubeIndexes(ref vertices, built.Front, origin, matrix);
+					ModifyCubeIndexes(ref vertices, built.Back, origin, matrix);
+					ModifyCubeIndexes(ref vertices, built.Top, origin, matrix);
+					ModifyCubeIndexes(ref vertices, built.Bottom, origin, matrix);
+					ModifyCubeIndexes(ref vertices, built.Left, origin, matrix);
+					ModifyCubeIndexes(ref vertices, built.Right, origin, matrix);
+					
+					//pivotPoints.Add(pivot + origin);
 				}
 			}
 
 			elementCount = vertices.Count - startIndex;
 
 			modelBone = new ModelBone(bone, startIndex, elementCount);
+			modelBone.Pivots = pivotPoints;
 
 			if (bone.Rotation.HasValue)
 			{
 				var r = bone.Rotation.Value;
-				modelBone.Rotation = new Vector3(r.X, r.Y, r.Z);
+				modelBone.BindingRotation = new Vector3(r.X, r.Y, r.Z);
 			}
-			else if (bone.BindPoseRotation.HasValue)
+			/*else if (bone.BindPoseRotation.HasValue)
 			{
 				var r = bone.BindPoseRotation.Value;
 				modelBone.Rotation = new Vector3(r.X, r.Y, r.Z);
-			}
+			}*/
 
 			foreach (var childBone in source.Bones.Where(
 				x => x.Parent != null && string.Equals(x.Parent, bone.Name, StringComparison.OrdinalIgnoreCase)))
@@ -186,11 +217,14 @@ namespace Alex.Graphics.Models.Entity
 		}
 
 		private void ModifyCubeIndexes(ref List<VertexPositionColorTexture> vertices,
-			(VertexPositionColorTexture[] vertices, short[] indexes) data)
+			(VertexPositionColorTexture[] vertices, short[] indexes) data, Vector3 origin, MCMatrix transformation)
 		{
 			for (int i = 0; i < data.indexes.Length; i++)
 			{
-				vertices.Add(data.vertices[data.indexes[i]]);
+				var vertex = data.vertices[data.indexes[i]];
+				var position = Vector3.Transform(vertex.Position, transformation);
+				
+				vertices.Add(new VertexPositionColorTexture(position, vertex.Color, vertex.TextureCoordinate));
 			}
 		}
 		
@@ -248,6 +282,16 @@ namespace Alex.Graphics.Models.Entity
 				foreach (var pass in Effect.CurrentTechnique.Passes)
 				{
 					pass?.Apply();
+					
+					if (bone.Pivots != null)
+					{
+						foreach (var pivot in bone.Pivots)
+						{
+							ItemModelRenderer.DrawLine(args.GraphicsDevice, pivot, pivot + Vector3.UnitY * 16f, Color.Green);
+							ItemModelRenderer.DrawLine(args.GraphicsDevice, pivot , pivot + Vector3.UnitZ * 16f, Color.Blue);
+							ItemModelRenderer.DrawLine(args.GraphicsDevice, pivot, pivot + Vector3.UnitX * 16f, Color.Red);
+						}
+					}
 
 					args.GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, bone.StartIndex, count / 3);
 				}
@@ -272,9 +316,12 @@ namespace Alex.Graphics.Models.Entity
 			Effect.Projection = args.Camera.ProjectionMatrix;
 			Effect.DiffuseColor = EntityColor * DiffuseColor;
 
-			var matrix =  MCMatrix.CreateScale(Scale / 16f) * position.CalculateWorldMatrix(); /*MCMatrix.CreateScale(Scale / 16f)
-			             * MCMatrix.CreateRotation(MathUtils.ToRadians(position.Yaw), Vector3.Down)
-			             * MCMatrix.CreateTranslation(position);*/
+			//var rot = position.GetDirectionMatrix(false);
+
+			var matrix = MCMatrix.CreateScale(Scale / 16f) * position.CalculateWorldMatrix();
+			//var matrix =  MCMatrix.CreateScale(Scale / 16f) * position.GetDirectionMatrix(false) * MCMatrix.CreateTranslation(position.ToVector3()); /*MCMatrix.CreateScale(Scale / 16f)
+			    //         * MCMatrix.CreateRotation(MathUtils.ToRadians(position.Yaw), Vector3.Down)
+			  //           * MCMatrix.CreateTranslation(position);*/
 
 			foreach (var bone in Bones.Where(x => x.Value.Parent == null))
 			{

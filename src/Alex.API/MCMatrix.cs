@@ -1143,6 +1143,10 @@ namespace Alex.Api
 
         public static MCMatrix CreateRotation(Vector3 input)
         {
+	        return CreateRotationX(input.X) 
+		        * CreateRotationY(input.Y)
+		        * CreateRotationZ(input.Z);
+	        
 	        MCMatrix result = Rotate(input.X, Vector3.UnitX, MCMatrix.Identity);
 	        result = Rotate(input.Y, Vector3.UnitY, result);
 	        return Rotate(input.Z, Vector3.UnitZ, result);
@@ -1150,11 +1154,9 @@ namespace Alex.Api
 
         public static MCMatrix CreateRotationDegrees(Vector3 input)
         {
-	        return CreateRotation(
-		        new Vector3(
-			        MathUtils.ToRadians(input.X), 
-			        MathUtils.ToRadians(input.Y),
-			        MathUtils.ToRadians(input.Z)));
+	        return CreateRotationX(input.X.ToRadians()) 
+	               * CreateRotationY(input.Y.ToRadians())
+	               * CreateRotationZ(input.Z.ToRadians());
         }
 
         public MCMatrix Rotate(float radians, Vector3 axis)

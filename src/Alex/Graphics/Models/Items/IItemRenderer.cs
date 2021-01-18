@@ -13,9 +13,9 @@ namespace Alex.Graphics.Models.Items
     {
         ResourcePackModelBase Model { get; }
 
-        Vector3         Rotation          { get; set; }
-        Vector3         Translation       { get; set; }
-        Vector3         Scale             { get; set; }
+     //   Vector3         Rotation          { get; set; }
+      //  Vector3         Translation       { get; set; }
+      //  Vector3         Scale             { get; set; }
         DisplayPosition DisplayPosition   { get; set; }
         DisplayElement  ActiveDisplayItem { get; set; }
 

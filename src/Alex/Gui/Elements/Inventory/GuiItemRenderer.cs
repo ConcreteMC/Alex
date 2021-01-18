@@ -53,9 +53,9 @@ namespace Alex.Gui.Elements.Inventory
                
             }
             
-            _item.Renderer.Rotation =  new Vector3(0, -90f, 25f);
-            _item.Renderer.Translation = new Vector3(1.13f, 3.2f, 1.13f);
-            _item.Renderer.Scale = new Vector3(0.5f);
+            //_item.Renderer.Rotation =  new Vector3(0, -90f, 25f);
+            //_item.Renderer.Translation = new Vector3(1.13f, 3.2f, 1.13f);
+            //_item.Renderer.Scale = new Vector3(0.5f);
 
             var itemModel = renderer.Model;
            /* if (itemModel.Display.TryGetValue("firstperson_righthand", out var value))

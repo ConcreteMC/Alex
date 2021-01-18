@@ -76,34 +76,52 @@ namespace Alex.ResourcePackLib.Json.Models.Entities
 	//  [JsonIgnore]
 	  public Vector3 InflatedOrigin(float amount)
 	  {
-		  //  var s         = InflatedSize(amount);
-		  var inflation      = (amount / 2f);
-
-		  if (amount > 0f)
-			  inflation = -inflation;
-		  
-		  var origin         = new Vector3(Origin.X + inflation, Origin.Y + inflation, Origin.Z + inflation);
-
-		  return origin;
+		  var origin = Origin;
 		  if (amount == 0f)
 			  return origin;
 		  
-		  if (origin.X < 0)
+		//  return Origin;
+		 // var origin = Origin;// * new Vector3(1f, 1f, -1f);
+		  //  var s         = InflatedSize(amount);
+		  var inflation = (amount / 2f);
+
+		  if (amount > 0f)
+		  {
 			  origin.X -= inflation;
+
+			  origin.Y -= inflation;
+
+			  origin.Z -= inflation;
+		  }
 		  else
+		  {
 			  origin.X += inflation;
 
-		  if (origin.Y < 0)
-			  origin.Y -= inflation;
-		  else
 			  origin.Y += inflation;
 
-		  if (origin.Z < 0)
-			  origin.Z -= inflation;
-		  else
 			  origin.Z += inflation;
+		  }
 
-		  return origin;
+		  // var origin         = new Vector3(Origin.X + inflation, Origin.Y + inflation, Origin.Z + inflation);
+		  
+		 // return origin;
+
+		 return origin;
+	  }
+	  
+	  public Vector3 InflatedPivot(float amount)
+	  {
+		  // var origin = Origin;// * new Vector3(1f, 1f, -1f);
+		  //  var s         = InflatedSize(amount);
+		  var inflation = (amount / 2f);
+
+		  //  if (amount > 0f)
+		  //	  inflation = -inflation;
+
+		  var p     = Pivot.Value;
+		  var pivot = new Vector3(p.X - inflation, p.Y - inflation, p.Z - inflation);
+
+		  return pivot;
 	  }
 
 	  public EntityModelCube Clone()

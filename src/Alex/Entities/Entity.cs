@@ -667,24 +667,27 @@ namespace Alex.Entities
 			var itemRenderer = ItemRenderer;
             if (itemRenderer != null)
             {
-	            var scaleMatrix = MCMatrix.CreateScale(Scale / 16f)
-	                              * MCMatrix.CreateRotationY(MathUtils.ToRadians(RenderLocation.Yaw))
-	                              * MCMatrix.CreateTranslation(RenderLocation);
+	            MCMatrix scaleMatrix = MCMatrix.Identity;
+	         //   var scaleMatrix = MCMatrix.CreateScale(Scale / 16f)
+	          //                    * MCMatrix.CreateRotationY(MathUtils.ToRadians(RenderLocation.Yaw))
+	          //                    * MCMatrix.CreateTranslation(RenderLocation);
 	            
 	            EntityModelRenderer.ModelBone arm = null;
-
+	            
 	            if (_rightItemModel != null)
 	            {
 		            arm = _rightItemModel;
 	            }
-	            if (_rightArmModel != null)
+	            else if (_rightArmModel != null)
+	            {
 		            arm = _rightArmModel;
-	            else if (_leftArmModel != null)
-		            arm = _leftArmModel;
+	            }
+	            //else if (_leftArmModel != null)
+		        //    arm = _leftArmModel;
 
 	            if (arm != null)
 	            {
-		            if ((ItemRenderer.DisplayPosition & DisplayPosition.ThirdPerson) != 0)
+		           // if ((ItemRenderer.DisplayPosition & DisplayPosition.ThirdPerson) != 0)
 			            scaleMatrix =  arm.WorldMatrix;
 	            }
 	            
@@ -895,7 +898,7 @@ namespace Alex.Entities
 				ModelRenderer.EntityColor = Color.White.ToVector3();
 			}
 
-			if (DoRotationCalculations)
+			if (DoRotationCalculations && !IsNoAi)
 			{
 				UpdateRotations();
 			}

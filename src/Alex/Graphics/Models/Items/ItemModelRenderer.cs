@@ -174,9 +174,9 @@ namespace Alex.Graphics.Models.Items
         protected TVertice[]  Vertices { get; set; } = null;
         private   BasicEffect Effect   { get; set; } = null;
         
-        public Vector3 Rotation { get; set; } = Vector3.Zero;
-        public Vector3 Translation { get; set; } = Vector3.Zero;
-        public Vector3 Scale { get; set; } = Vector3.One;
+        //public Vector3 Rotation { get; set; } = Vector3.Zero;
+        //public Vector3 Translation { get; set; } = Vector3.Zero;
+        //public Vector3 Scale { get; set; } = Vector3.One;
 
         private          VertexBuffer      Buffer { get; set; } = null;
         private readonly VertexDeclaration _declaration;
@@ -204,16 +204,16 @@ namespace Alex.Graphics.Models.Items
 
             var activeDisplayItem = ActiveDisplayItem;
 
-            var halfSize = Size / 2f;
-            // var forward = 
+            var world =
+                        MCMatrix.CreateRotationY(MathUtils.ToRadians(180f))
+                        * MCMatrix.CreateScale(activeDisplayItem.Scale)
+                        * MCMatrix.CreateRotationDegrees(activeDisplayItem.Rotation)
+                        * MCMatrix.CreateTranslation(activeDisplayItem.Translation);
 
-            Effect.World = MCMatrix.CreateTranslation(-halfSize)
-                           * MCMatrix.CreateRotationDegrees(activeDisplayItem.Rotation)
-                           * MCMatrix.CreateTranslation(halfSize) 
-                           * MCMatrix.CreateScale(activeDisplayItem.Scale)
-                           * MCMatrix.CreateRotationDegrees(activeDisplayItem.Translation)
-                           * characterMatrix;
+            //   world.Right = -world.Right;
             
+            Effect.World = world * characterMatrix;
+
             Effect.DiffuseColor = diffuseColor;
             
             if (Buffer == null && Vertices != null)
@@ -249,7 +249,7 @@ namespace Alex.Graphics.Models.Items
             effect.VertexColorEnabled = true;
         }
 
-        private void DrawLine(GraphicsDevice device, Vector3 start, Vector3 end, Color color)
+        public static void DrawLine(GraphicsDevice device, Vector3 start, Vector3 end, Color color)
         {
             var vertices = new[] {new VertexPositionColor(start, color), new VertexPositionColor(end, color)};
             device.DrawUserPrimitives(PrimitiveType.LineList, vertices, 0, 1);

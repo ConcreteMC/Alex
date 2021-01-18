@@ -7,7 +7,7 @@ namespace Alex.ResourcePackLib.Json.Models.Entities
 	using R = Newtonsoft.Json.Required;
 	using N = Newtonsoft.Json.NullValueHandling;
 
-    public sealed class EntityModelBone
+    public class EntityModelBone
 	{
 		/// <summary>
 		/// Animation files refer to this bone via this identifier.
@@ -42,13 +42,7 @@ namespace Alex.ResourcePackLib.Json.Models.Entities
         [J("rotation", NullValueHandling = N.Ignore)]
         public Vector3? Rotation { get; set; } = null;
 
-        /// <summary>
-        ///		The rotation for the bone (1.8.0 geometry only)
-        /// </summary>
-        [J("bind_pose_rotation", NullValueHandling = N.Ignore)]
-        public Vector3? BindPoseRotation { get; set; } = null;
-        
-		public bool NeverRender { get; set; } = false;
+        public bool NeverRender { get; set; } = false;
 		
 		/// <summary>
 		/// Mirrors the UV's of the unrotated cubes along the x axis, also causes the east/west faces to get flipped.
@@ -75,10 +69,28 @@ namespace Alex.ResourcePackLib.Json.Models.Entities
 				Name = Name,
 				Parent = Parent,
 				Reset = Reset,
-				NeverRender = NeverRender,
-				BindPoseRotation = BindPoseRotation
+				NeverRender = NeverRender
 			};
 		}
+    }
+
+    public class EntityModelBoneV18 : EntityModelBone
+    {
+	    /// <summary>
+	    ///		The rotation for the bone (1.8.0 geometry only)
+	    /// </summary>
+	    [J("bind_pose_rotation", NullValueHandling = N.Ignore)]
+	    public Vector3? BindPoseRotation
+	    {
+		    get
+		    {
+			    return base.Rotation;
+		    }
+		    set
+		    {
+			    base.Rotation = value;
+		    }
+	    }
     }
 
 	public sealed class EntityModelLocators

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Alex.ResourcePackLib.Json.Models.Entities;
 using Microsoft.Xna.Framework;
 using Newtonsoft.Json;
@@ -13,6 +14,15 @@ namespace Alex.ResourcePackLib.Json.Converters
 	{
 		
 	}
+
+	public enum FormatVersion
+	{
+		V1_8_0,
+		V1_10_0,
+		V1_12_0,
+		V1_14_0,
+		V1_16_0
+	}
 	
 	internal class MobsModelConverter : JsonConverter
 	{
@@ -24,7 +34,7 @@ namespace Alex.ResourcePackLib.Json.Converters
 			throw new NotImplementedException();
 		}
 
-		private EntityModel DecodeSingle(JObject jObject, JsonSerializer serializer)
+		private EntityModel DecodeSingle(JObject jObject, JsonSerializer serializer, FormatVersion version)
 		{
 			EntityModel model = new EntityModel();
 			model.Description = new ModelDescription();
@@ -65,7 +75,20 @@ namespace Alex.ResourcePackLib.Json.Converters
 
 						case "bones":
 						{
-							model.Bones = property.ToObject<EntityModelBone[]>(serializer);
+							if (version == FormatVersion.V1_8_0)
+							{
+								var bones = property.ToObject<EntityModelBoneV18[]>(serializer);
+
+								if (bones != null)
+								{
+									model.Bones = bones.Select(x => x.Clone()).ToArray();
+								}
+							}
+							else
+							{
+								model.Bones = property.ToObject<EntityModelBone[]>(serializer);
+							}
+
 							break;
 						}
 					}
@@ -80,44 +103,47 @@ namespace Alex.ResourcePackLib.Json.Converters
 					}
 				}
 			}
+			
+			if (model.Bones != null)
+			{
+				foreach (var bone in model.Bones)
+				{
+					if (bone.Pivot.HasValue)
+					{
+						bone.Pivot *= new Vector3(-1f, 1f, 1f);
+					}
+								
+					//bone.BindPoseRotation
+					if (bone.Rotation.HasValue)
+					{
+						bone.Rotation *= new Vector3(-1f, -1f, 1f);
+					}
+								
+					if (bone.Cubes != null)
+					{
+						foreach (var cube in bone.Cubes)
+						{
+							var original = cube.Origin;
+							
+							cube.Origin = new Vector3(-(original.X + cube.Size.X), original.Y, original.Z);
+							if (cube.Pivot.HasValue)
+							{
+								cube.Pivot *= new Vector3(-1f, 1f, 1f);
+							}
+
+							if (cube.Rotation.HasValue)
+							{
+								cube.Rotation *= new Vector3(-1f, -1f, 1f);
+							}
+						}
+					}
+				}
+			}
 
 			return model;
 		}
 
-		private IEnumerable<EntityModel> Decode1100(JObject jObject, JsonSerializer serializer)
-		{
-			foreach (var prop in jObject)
-			{
-				if (prop.Key.Equals("format_version"))
-					continue;
-
-				var property = prop.Value;
-
-				if (property == null)
-					continue;
-
-
-				if (property.Type == JTokenType.Array)
-				{
-					foreach (var geo in ((JArray) property).AsJEnumerable())
-					{
-						if (geo.Type == JTokenType.Object)
-						{
-							yield return DecodeSingle((JObject) geo, serializer);
-						}
-					}
-				}
-				else if (property.Type == JTokenType.Object)
-				{
-					var item = DecodeSingle((JObject) property, serializer);
-					item.Description.Identifier = prop.Key;
-					
-					yield return item;
-				}
-			}
-		}
-		
-		private IEnumerable<EntityModel> Decode1120(JObject jObject, JsonSerializer serializer)
+		private IEnumerable<EntityModel> DecodeGeneric(JObject jObject, JsonSerializer serializer, FormatVersion formatVersion)
 		{
 			//EntityModel model = new EntityModel();
 			//model.Description = new ModelDescription();
@@ -138,46 +164,13 @@ namespace Alex.ResourcePackLib.Json.Converters
 						{
 							if (geo.Type == JTokenType.Object)
 							{
-								yield return DecodeSingle((JObject) geo, serializer);
+								yield return DecodeSingle((JObject) geo, serializer, formatVersion);
 							}
 						}
 					}
 					else if (property.Type == JTokenType.Object)
 					{
-						yield return DecodeSingle((JObject) property, serializer);
-					}
-				}
-			}
-		}
-		
-		private IEnumerable<EntityModel> Decode1140(JObject jObject, JsonSerializer serializer)
-		{
-			//EntityModel model = new EntityModel();
-			//model.Description = new ModelDescription();
-			foreach (var prop in jObject)
-			{
-				if (prop.Key.Equals("format_version"))
-					continue;
-
-				var property = prop.Value;
-				if (property == null)
-					continue;
-
-				if (prop.Key.Equals("minecraft:geometry"))
-				{
-					if (property.Type == JTokenType.Array)
-					{
-						foreach (var geo in ((JArray)property).AsJEnumerable())
-						{
-							if (geo.Type == JTokenType.Object)
-							{
-								yield return DecodeSingle((JObject) geo, serializer);
-							}
-						}
-					}
-					else if (property.Type == JTokenType.Object)
-					{
-						yield return DecodeSingle((JObject) property, serializer);
+						yield return DecodeSingle((JObject) property, serializer, formatVersion);
 					}
 				}
 			}
@@ -204,7 +197,7 @@ namespace Alex.ResourcePackLib.Json.Converters
 					{
 						if (geo.Type == JTokenType.Object)
 						{
-							var singleDecode = DecodeSingle((JObject) geo, serializer);
+							var singleDecode = DecodeSingle((JObject) geo, serializer, FormatVersion.V1_8_0);
 
 							if (singleDecode != null)
 							{
@@ -217,7 +210,7 @@ namespace Alex.ResourcePackLib.Json.Converters
 				}
 				else if (property.Type == JTokenType.Object)
 				{
-					var singleDecode = DecodeSingle((JObject) property, serializer);
+					var singleDecode = DecodeSingle((JObject) property, serializer, FormatVersion.V1_8_0);
 
 					if (singleDecode != null)
 					{
@@ -277,7 +270,7 @@ namespace Alex.ResourcePackLib.Json.Converters
 
 				case "1.10.0":
 				{
-					foreach (var model in Decode1100(jObject, serializer))
+					foreach (var model in DecodeGeneric(jObject, serializer, FormatVersion.V1_10_0))
 					{
 						result.TryAdd(model.Description.Identifier, model);
 					}
@@ -285,22 +278,10 @@ namespace Alex.ResourcePackLib.Json.Converters
 					break;
 				}
 
-				//case "1.10.0":
 				case "1.12.0":
 				{
-					foreach (var model in Decode1120(jObject, serializer))
+					foreach (var model in DecodeGeneric(jObject, serializer,  FormatVersion.V1_12_0))
 					{
-						/*if (model.Bones != null)
-						{
-							foreach (var bone in model.Bones)
-							{
-								foreach (var cube in bone.Cubes)
-								{
-									
-								}
-							}
-						}*/
-							
 						//TODO: Fix cube pivot Note that in 1.12 this is flipped upside-down, but is fixed in 1.14.
 
 						result.TryAdd(model.Description.Identifier, model);
@@ -309,15 +290,24 @@ namespace Alex.ResourcePackLib.Json.Converters
 					break;
 				}
 
-				case "1.16.0":
 				case "1.14.0":
 				{
-					foreach (var model in Decode1140(jObject, serializer))
+					foreach (var model in DecodeGeneric(jObject, serializer, FormatVersion.V1_14_0))
 					{
 						result.TryAdd(model.Description.Identifier, model);
 					}
 					break;
 				}
+				
+				case "1.16.0":
+				{
+					foreach (var model in DecodeGeneric(jObject, serializer, FormatVersion.V1_16_0))
+					{
+						result.TryAdd(model.Description.Identifier, model);
+					}
+					break;
+				}
+				
 				default:
 					Log.Warn($"Invalid format_version: {formatVersion})");
 					break;

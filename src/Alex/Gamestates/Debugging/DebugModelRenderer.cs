@@ -8,6 +8,7 @@ using Alex.API.Gui.Graphics;
 using Alex.API.Services;
 using Alex.API.Utils;
 using Alex.Graphics.Camera;
+using Alex.Gui.Elements.Context3D;
 using Alex.Worlds;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -15,11 +16,10 @@ using Vector3 = Microsoft.Xna.Framework.Vector3;
 
 namespace Alex.Gamestates.Debugging
 {
-    public class DebugModelRenderer : GuiElement
+    /*public class DebugModelRenderer : GuiContext3DElement
     {
-        public ModelExplorer ModelExplorer { get; set; }
-        private DebugModelRendererCamera Camera { get; }// = new FirstPersonCamera(16, Vector3.Zero, Vector3.Zero);
-       // private World World { get; }
+        //public ModelExplorer ModelExplorer { get; set; }
+        // private World World { get; }
         private BlockModelExplorer BlockModelExplorer { get; }
         private EntityModelExplorer EntityModelExplorer { get; }
 
@@ -30,8 +30,7 @@ namespace Alex.Gamestates.Debugging
             Anchor = Alignment.Fill;
             ClipToBounds = false;
 
-            EntityPosition = new PlayerLocation(Vector3.Zero);
-            Camera = new DebugModelRendererCamera(this);
+            //Position = new PlayerLocation(Vector3.Zero);
 
             // World = new World(alex, alex.GraphicsDevice, alex.Services.GetService<IOptionsProvider>().AlexOptions,
            //     new FirstPersonCamera(16, Vector3.Zero, Vector3.Zero), new DebugNetworkProvider());
@@ -39,22 +38,23 @@ namespace Alex.Gamestates.Debugging
             BlockModelExplorer = new BlockModelExplorer(alex, null);
             EntityModelExplorer = new EntityModelExplorer(alex, null);
 
-            ModelExplorer = BlockModelExplorer;
+            Drawable = BlockModelExplorer;
+            
         }
 
         public void SwitchModelExplorers()
         {
-            if (ModelExplorer == BlockModelExplorer)
+            if (Drawable == BlockModelExplorer)
             {
-                ModelExplorer = EntityModelExplorer;
+                Drawable = EntityModelExplorer;
             }
-            else if (ModelExplorer == EntityModelExplorer)
+            else if (Drawable == EntityModelExplorer)
             {
-                ModelExplorer = BlockModelExplorer;
+                Drawable = BlockModelExplorer;
             }
         }
         
-        private Rectangle _previousBounds;
+        /*private Rectangle _previousBounds;
         protected override void OnUpdate(GameTime gameTime)
         {
             base.OnUpdate(gameTime);
@@ -98,13 +98,13 @@ namespace Alex.Gamestates.Debugging
 
             ModelExplorer.SetLocation(EntityPosition);
             ModelExplorer?.Update(updateArgs);
-            Camera.Update(updateArgs, EntityPosition);
+            Camera.Update(updateArgs);
 
             //Entity.Update(updateArgs);
             //EntityModelRenderer?.Update(updateArgs, EntityPosition);
-        }
+        }*/
 
-        protected override void OnDraw(GuiSpriteBatch graphics, GameTime gameTime)
+        /*protected override void OnDraw(GuiSpriteBatch graphics, GameTime gameTime)
         {
             base.OnDraw(graphics, gameTime);
 
@@ -167,12 +167,12 @@ namespace Alex.Gamestates.Debugging
                 //   graphics.End();
             }
             //graphics.Begin();
-        }
+        }*/
         
-        public PlayerLocation EntityPosition { get; set; } = new PlayerLocation(Vector3.Zero);
-        public Vector3 CameraRotation { get; set; } = Vector3.Zero;
+  //      public PlayerLocation EntityPosition { get; set; } = new PlayerLocation(Vector3.Zero);
+   //     public Vector3 CameraRotation { get; set; } = Vector3.Zero;
 
-        class DebugModelRendererCamera : Camera
+        /*class DebugModelRendererCamera : Camera
         {
             private readonly DebugModelRenderer _modelView;
             private Viewport _viewport;
@@ -203,18 +203,18 @@ namespace Alex.Gamestates.Debugging
 
             protected override void UpdateViewMatrix()
             {
-                //ViewMatrix = Matrix.CreateLookAt(Position + EntityPositionOffset, Position, Vector3.Up);
+                ViewMatrix = MCMatrix.CreateLookAt(Position + EntityPositionOffset, Position, Vector3.Up);
                 
-                Matrix rotationMatrix = Matrix.CreateRotationX(-Rotation.Z) * //Pitch
-                                        Matrix.CreateRotationY(-Rotation.Y); //Yaw
+              //  Matrix rotationMatrix = Matrix.CreateRotationX(-Rotation.Z) * //Pitch
+              //                          Matrix.CreateRotationY(-Rotation.Y); //Yaw
 
-                Vector3 lookAtOffset = Vector3.Transform(Vector3.Backward, rotationMatrix);
-                Direction = lookAtOffset;
+              //  Vector3 lookAtOffset = Vector3.Transform(Vector3.Backward, rotationMatrix);
+              //  Direction = lookAtOffset;
 
-                var pos = Position + Vector3.Transform(Offset, Matrix.CreateRotationY(-Rotation.Y));
+            //    var pos = Position + Vector3.Transform(Offset, Matrix.CreateRotationY(-Rotation.Y));
 	        
-                Target = pos + lookAtOffset;
-                ViewMatrix = MCMatrix.CreateLookAt(pos, Target, Vector3.Up);
+             //   Target = pos + lookAtOffset;
+              //  ViewMatrix = MCMatrix.CreateLookAt(Position, Target, Vector3.Up);
 
                 //    Matrix rotationMatrix = (Matrix.CreateRotationX(Rotation.X) *
                 //                            Matrix.CreateRotationY(Rotation.Y));
@@ -229,20 +229,12 @@ namespace Alex.Gamestates.Debugging
             }
 
 
-            public override void UpdateProjectionMatrix()
-            {
-                ProjectionMatrix = MCMatrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(FOV), Viewport.AspectRatio,
-                                                                       Viewport.MinDepth, Viewport.MaxDepth);
-            }
+           // public override void UpdateProjectionMatrix()
+            //{
+            //    ProjectionMatrix = MCMatrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(FOV), Viewport.AspectRatio,
+            //                                                           Viewport.MinDepth, Viewport.MaxDepth);
+          //  }
 
-            public void Update(IUpdateArgs args, PlayerLocation entityLocation)
-            {
-                MoveTo(entityLocation.ToVector3(), 
-                    new Vector3(MathHelper.ToRadians(entityLocation.HeadYaw), MathHelper.ToRadians(entityLocation.HeadYaw), MathHelper.ToRadians(entityLocation.Pitch)));
-                
-                base.Update(args);
-            }
-            
             //public override void UpdateProjectionMatrix()
             //{
             //    var bounds = _modelView.RenderBounds;
@@ -251,6 +243,6 @@ namespace Alex.Gamestates.Debugging
             //    //ProjectionMatrix = Matrix.CreateOrthographicOffCenter(Viewport.RenderBounds, NearDistance, FarDistance);// * Matrix.CreateTranslation(new Vector3(bounds.Location.ToVector2(), -1f));
             //    //ProjectionMatrix = Matrix.CreatePerspectiveOffCenter(_modelView.RenderBounds, NearDistance, FarDistance);
             //}
-        }
-    }
+        }*
+    }*/
 }

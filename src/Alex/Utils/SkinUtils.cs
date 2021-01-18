@@ -392,7 +392,7 @@ namespace Alex.Utils
 					a.Rotation = new float[] {bone.Rotation.Value.X, bone.Rotation.Value.Y, bone.Rotation.Value.Z};
 				}
 
-				if (bone.BindPoseRotation.HasValue)
+				/*if (bone.BindPoseRotation.HasValue)
 				{
 					if (a.Rotation == null || a.Rotation.Length == 0)
 						a.Rotation = new float[3];
@@ -400,7 +400,7 @@ namespace Alex.Utils
 					a.Rotation[0] += bone.BindPoseRotation.Value.X;
 					a.Rotation[1] += bone.BindPoseRotation.Value.Y;
 					a.Rotation[2] += bone.BindPoseRotation.Value.Z;
-				}
+				}*/
 				
 				if (bone.Cubes != null)
 				{
