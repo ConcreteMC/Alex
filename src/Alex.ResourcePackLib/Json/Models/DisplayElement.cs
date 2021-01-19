@@ -5,9 +5,9 @@ namespace Alex.ResourcePackLib.Json.Models
 {
     public class DisplayElement : ITransformation
     {
-	    public Vector3 Rotation { get; set; }
-	    public Vector3 Translation { get; set; }
-	    public Vector3 Scale { get; set; }
+	    public Vector3 Rotation    { get; set; } = Vector3.Zero;
+	    public Vector3 Translation { get; set; } = Vector3.Zero;
+	    public Vector3 Scale       { get; set; } = Vector3.One;
 
 	    public DisplayElement()
 	    {

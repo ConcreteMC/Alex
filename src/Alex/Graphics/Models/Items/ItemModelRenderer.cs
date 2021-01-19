@@ -202,17 +202,32 @@ namespace Alex.Graphics.Models.Items
             Effect.Projection = args.Camera.ProjectionMatrix;
             Effect.View = args.Camera.ViewMatrix;
 
+            var halfSize          = Size / 2f;
+           // halfSize.Z = 0f;
+           // halfSize.Y = 8f;
             var activeDisplayItem = ActiveDisplayItem;
-
-            var world =
-                        MCMatrix.CreateRotationY(MathUtils.ToRadians(180f))
-                        * MCMatrix.CreateScale(activeDisplayItem.Scale)
-                        * MCMatrix.CreateRotationDegrees(activeDisplayItem.Rotation)
-                        * MCMatrix.CreateTranslation(activeDisplayItem.Translation);
-
             //   world.Right = -world.Right;
-            
-            Effect.World = world * characterMatrix;
+
+            if (DisplayPosition.HasFlag(DisplayPosition.ThirdPerson))
+            {
+                var r = activeDisplayItem.Rotation;
+                Effect.World = MCMatrix.CreateScale(activeDisplayItem.Scale)
+                               * MCMatrix.CreateRotationY(MathUtils.ToRadians(180f))
+                               * MCMatrix.CreateRotationDegrees(
+                                   new Vector3(67.5f + r.X, r.Y, -r.Z))
+                               * MCMatrix.CreateTranslation(halfSize)
+                               * MCMatrix.CreateTranslation(activeDisplayItem.Translation * new Vector3(1f, 1f, -1f))
+                               * characterMatrix;
+            }
+            else  if (DisplayPosition.HasFlag(DisplayPosition.FirstPerson))
+            {
+                Effect.World = MCMatrix.CreateScale(activeDisplayItem.Scale)
+                               * MCMatrix.CreateRotationY(MathUtils.ToRadians(180f))
+                               * MCMatrix.CreateRotationDegrees(activeDisplayItem.Rotation)
+                               * MCMatrix.CreateTranslation(halfSize)
+                               * MCMatrix.CreateTranslation(activeDisplayItem.Translation * new Vector3(1f, 1f, -1f))
+                               * characterMatrix;
+            }
 
             Effect.DiffuseColor = diffuseColor;
             

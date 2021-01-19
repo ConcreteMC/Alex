@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Alex.ResourcePackLib.Json.Models.Blocks;
 using Alex.ResourcePackLib.Json.Models.Items;
+using Microsoft.Xna.Framework;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
@@ -84,7 +85,11 @@ namespace Alex.ResourcePackLib.Json.Models
         /// </summary>
         public Dictionary<string, string> Textures { get; set; } = new Dictionary<string, string>();
         
-        public Dictionary<string, DisplayElement> Display { get; set; } = new Dictionary<string, DisplayElement>();
+        public Dictionary<string, DisplayElement> Display { get; set; } = new Dictionary<string, DisplayElement>()
+        {
+            {"gui", new DisplayElement(new Vector3(30, 255, 0), new Vector3(0,0,0), new Vector3(0.625f, 0.625f, 0.625f))},
+          //  {"gui", new DisplayElement(new Vector3(30, 255, 0), new Vector3(0,0,0), new Vector3(0.625f, 0.625f, 0.625f))}
+        };
         
         /// <summary>
         /// Whether to use ambient occlusion (true - default), or not (false).

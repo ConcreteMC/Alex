@@ -26,7 +26,7 @@ namespace Alex.Graphics.Models.Items
             _block = block;
             _resource = resourceManager;
             _animated = _block.Block.Animated;
-            
+          //  Size = new Vector3(16f, 16f, 16f);
             //Offset = new Vector3(0f, -0.5f, 0f);
             //  Translation = -Vector3.Forward * 8f;
         }
@@ -45,7 +45,7 @@ namespace Alex.Graphics.Models.Items
             
             ChunkData chunkData = new ChunkData(ChunkCoordinates.Zero);
             _block.Model.GetVertices(new ItemRenderingWorld(_block.Block), chunkData, BlockCoordinates.Zero, Vector3.Zero, _block.Block);
-            
+           // var max         = _block.Model.GetBoundingBoxes(Vector3.Zero).Max(x => x.Max - x.Min);
             var rawVertices = chunkData.Vertices;
             int count       = rawVertices.Length;
 
@@ -81,7 +81,8 @@ namespace Alex.Graphics.Models.Items
         {
             return new ItemBlockModelRenderer(_block, Model, _resource)
             {
-                Vertices = (VertexPositionColorTexture[]) Vertices.Clone()
+                Vertices = (VertexPositionColorTexture[]) Vertices.Clone(),
+                Size = Size
             };
         }
     }
