@@ -18,7 +18,7 @@ namespace Alex.Graphics.Models.Items
       //  Vector3         Translation       { get; set; }
       //  Vector3         Scale             { get; set; }
         DisplayPosition DisplayPosition   { get; set; }
-        DisplayElement  ActiveDisplayItem { get; set; }
+       // DisplayElement  ActiveDisplayItem { get; set; }
 
         //void Update(IUpdateArgs args, MCMatrix characterMatrix);
 

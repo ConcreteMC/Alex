@@ -16,7 +16,7 @@ namespace Alex.Graphics.Models.Entity
 	{
 		public class ModelBone : IAttached, IDisposable
 		{
-			internal List<IAttached> Children { get; set; } = new List<IAttached>();
+			internal ThreadSafeList<IAttached> Children { get; set; } = new ThreadSafeList<IAttached>();
 			
 			private Vector3 _rotation = Vector3.Zero;
 
@@ -160,10 +160,10 @@ namespace Alex.Graphics.Models.Entity
 
 			public void AddChild(IAttached modelBone)
 			{
-				if (!Children.Contains(modelBone) && modelBone.Parent == null)
+				if (modelBone.Parent == null && Children.TryAdd(modelBone))
 				{
 					modelBone.Parent = this;
-					Children.Add(modelBone);
+					//Children.Add(modelBone);
 				}
 				else
 				{
@@ -173,12 +173,12 @@ namespace Alex.Graphics.Models.Entity
 
 			public void Remove(IAttached modelBone)
 			{
-				if (Children.Contains(modelBone))
+				if (Children.Remove(modelBone))
 				{
 					if (modelBone.Parent == this)
 						modelBone.Parent = null;
 					
-					Children.Remove(modelBone);
+					//Children.Remove(modelBone);
 				}
 			}
 

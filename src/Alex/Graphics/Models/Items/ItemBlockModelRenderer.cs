@@ -23,6 +23,7 @@ namespace Alex.Graphics.Models.Items
         {
             _blockState = block;
             _texture = texture;
+            Scale = new Vector3(8f, 8f, 8f);
           //  Size = new Vector3(16f, 16f, 16f);
             //Offset = new Vector3(0f, -0.5f, 0f);
             //  Translation = -Vector3.Forward * 8f;

@@ -174,7 +174,7 @@ namespace Alex.Graphics.Models.Items
         
         //public Vector3 Rotation { get; set; } = Vector3.Zero;
         //public Vector3 Translation { get; set; } = Vector3.Zero;
-        //public Vector3 Scale { get; set; } = Vector3.One;
+        public Vector3 Scale { get; set; } = Vector3.One;
 
         private          VertexBuffer      Buffer { get; set; } = null;
         private readonly VertexDeclaration _declaration;
@@ -215,7 +215,7 @@ namespace Alex.Graphics.Models.Items
                 {
                     r.Y += 12.5f;
                     r.Z -= 67.5f;
-                    Effect.World = MCMatrix.CreateScale(activeDisplayItem.Scale)
+                    Effect.World = MCMatrix.CreateScale(Scale * activeDisplayItem.Scale)
                                    * MCMatrix.CreateTranslation(-halfSize)
                                    * MCMatrix.CreateRotationZ(MathUtils.ToRadians(-22.5f))
                                    * MCMatrix.CreateTranslation(halfSize)
@@ -228,7 +228,7 @@ namespace Alex.Graphics.Models.Items
                 else
                 {
                     Effect.World =  
-                        MCMatrix.CreateScale(activeDisplayItem.Scale)
+                        MCMatrix.CreateScale(Scale * activeDisplayItem.Scale)
                         * MCMatrix.CreateRotationDegrees(new Vector3(-67.5f, 0f, 0f))
                         * MCMatrix.CreateTranslation(
                            new Vector3(t.X + 2f, Size.Y - t.Y, t.Z))
@@ -237,7 +237,7 @@ namespace Alex.Graphics.Models.Items
             }
             else  if (DisplayPosition.HasFlag(DisplayPosition.FirstPerson))
             {
-                Effect.World = MCMatrix.CreateScale(activeDisplayItem.Scale)
+                Effect.World = MCMatrix.CreateScale(Scale * activeDisplayItem.Scale)
                                * MCMatrix.CreateRotationY(MathUtils.ToRadians(180f))
                                * MCMatrix.CreateRotationDegrees(activeDisplayItem.Rotation)
                                * MCMatrix.CreateTranslation(halfSize)
@@ -290,9 +290,9 @@ namespace Alex.Graphics.Models.Items
                 {
                     a.Apply();
 
-                    DrawLine(args.GraphicsDevice, Vector3.Zero, Vector3.UnitY * 16f, Color.Green);
+                  /*  DrawLine(args.GraphicsDevice, Vector3.Zero, Vector3.UnitY * 16f, Color.Green);
                     DrawLine(args.GraphicsDevice, Vector3.Zero, Vector3.UnitZ * 16f, Color.Blue);
-                    DrawLine(args.GraphicsDevice, Vector3.Zero, Vector3.UnitX * 16f, Color.Red);
+                    DrawLine(args.GraphicsDevice, Vector3.Zero, Vector3.UnitX * 16f, Color.Red);*/
 
                     args.GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, count / 3);
                     //device.DrawUserIndexedPrimitives(PrimitiveType.TriangleList, Vertices, 0, Vertices.Length, Indexes, 0, Indexes.Length / 3);
