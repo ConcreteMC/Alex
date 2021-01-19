@@ -12,7 +12,7 @@ namespace Alex.Entities.Hostile
 			Width = 0.6;
 		}
 		
-		protected override void Animate(float distSQ, float dt, float mvSpeed)
+		protected override void Animate(float dt, float mvSpeed)
 		{
 			if (_leftArmModel != null && _rightArmModel != null)
 			{

@@ -172,7 +172,7 @@ namespace Alex.Items
 
 			           ResourcePackModelBase model = null;
 
-			           if (!(ResourceManager.TryGetBlockModel(key, out model)) && !(ResourceManager.TryGetItemModel(key, out model)))
+			           if (!(ResourceManager.TryGetBlockModel(key, out model)))
 			           {
 				           /*foreach (var it in ResourcePack.ItemModels)
 				           {
@@ -192,8 +192,8 @@ namespace Alex.Items
 			           }
 			           else
 			           {
-
-				           item.Renderer = new ItemBlockModelRenderer(bs, model, resources);
+				           
+				           item.Renderer = new ItemBlockModelRenderer(bs, model, bs.Block.Animated ? resources.Atlas.GetAtlas(0) : resources.Atlas.GetStillAtlas());
 				           item.Renderer.Cache(resources);
 
 

@@ -30,7 +30,6 @@ namespace Alex.Worlds
 
 		public  int             EntityCount      => Entities.Count + BlockEntities.Count;
 		public  int             EntitiesRendered { get; private set; } = 0;
-		public  long            VertexCount      { get; private set; }
 		private World           World            { get; }
 		private NetworkProvider Network          { get; }
 
@@ -116,26 +115,20 @@ namespace Alex.Worlds
 				var blendState = args.GraphicsDevice.BlendState;
 
 				args.GraphicsDevice.BlendState = BlendState.AlphaBlend;
-
-				long vertexCount = 0;
-				int  renderCount = 0;
-
-
-				var entities = _rendered.ToArray();
+				
+				int renderCount = 0;
+				var entities    = _rendered.ToArray();
 
 				foreach (var entity in entities)
 				{
 					// entity.IsRendered = true;
 
 					entity.Render(args);
-					vertexCount += entity.RenderedVertices;
 
 					renderCount++;
 				}
 
 				EntitiesRendered = renderCount;
-				VertexCount = vertexCount;
-
 				args.GraphicsDevice.BlendState = blendState;
 			}
 		}

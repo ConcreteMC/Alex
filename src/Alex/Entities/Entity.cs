@@ -200,6 +200,8 @@ namespace Alex.Entities
 
 				if (value != null)
 				{
+					UpdateItemPosition();
+					
 					EntityModelRenderer.ModelBone arm = null;
 
 					if (_rightItemModel != null)
@@ -267,13 +269,11 @@ namespace Alex.Entities
             Level = level;
             KnownPosition = new PlayerLocation();
             RenderLocation = new PlayerLocation();
-            Inventory = new Inventory(46);
+            //Inventory = new Inventory(46);
+            SetInventory(new Inventory(46));
             //	HealthManager = new HealthManager(this);
 
-            Inventory.SlotChanged += OnInventorySlotChanged;
-            Inventory.SelectedHotbarSlotChanged += InventoryOnSelectedHotbarSlotChanged;
-
-			HideNameTag = false;
+            HideNameTag = false;
 			ServerEntity = true;
 			IsAffectedByGravity = true;
 			
@@ -381,6 +381,8 @@ namespace Alex.Entities
 			Inventory.SelectedHotbarSlotChanged += InventoryOnSelectedHotbarSlotChanged;
 
 			OnInventoryChanged?.Invoke(this, inventory);
+			
+			CheckHeldItem();
 		}
 
         private void CheckHeldItem()
@@ -410,8 +412,6 @@ namespace Alex.Entities
 			            
 			            ItemRenderer = renderer;
 		            }
-
-		            UpdateItemPosition();
 	            }
             }
             else
@@ -642,35 +642,19 @@ namespace Alex.Entities
 			IsWallClimbing = (data & ((int) MiNET.Entities.Entity.DataFlags.WallClimbing)) != 0;
 			IsResting = (data & ((int) MiNET.Entities.Entity.DataFlags.Resting)) != 0;
 		}
-		
-		/// <inheritdoc />
-		public long RenderedVertices { get; private set; }
 
 		public virtual void Render(IRenderArgs renderArgs)
 		{
 			var  renderer = ModelRenderer;
-			long rendered = 0;
 
 			if (!IsInvisible && RenderEntity && renderer != null)
 			{
 				renderer.Render(renderArgs);
-
-				if (renderer.Valid)
-				{
-					rendered += renderer.Vertices;
-				}
 			}
-			
-			if (ShowItemInHand && ItemRenderer != null && !_skipRendering)
+			else if (ShowItemInHand && ItemRenderer != null && !_skipRendering)
 			{
-				//ItemRenderer.
-				//ItemRenderer.Render(renderArgs, false, out int itemVertices);
-				//rendered += itemVertices;
-
-				//rendered += ItemRenderer.VertexCount;
+				ItemRenderer?.Render(renderArgs, null);
 			}
-
-			RenderedVertices = rendered;
 		}
 
 		public virtual void Update(IUpdateArgs args)
@@ -694,40 +678,7 @@ namespace Alex.Entities
 
 			renderer.Update(args, RenderLocation);
 
-			if (!ShowItemInHand || _skipRendering || ItemRenderer == null) return;
-
-			var itemRenderer = ItemRenderer;
-            if (itemRenderer != null)
-            {
-	            MCMatrix scaleMatrix = MCMatrix.Identity;
-	         //   var scaleMatrix = MCMatrix.CreateScale(Scale / 16f)
-	          //                    * MCMatrix.CreateRotationY(MathUtils.ToRadians(RenderLocation.Yaw))
-	          //                    * MCMatrix.CreateTranslation(RenderLocation);
-	            
-	            EntityModelRenderer.ModelBone arm = null;
-	            
-	            if (_rightItemModel != null)
-	            {
-		            arm = _rightItemModel;
-	            }
-	            else if (_rightArmModel != null)
-	            {
-		            arm = _rightArmModel;
-	            }
-	            //else if (_leftArmModel != null)
-		        //    arm = _leftArmModel;
-
-	            if (arm != null)
-	            {
-		           // if ((ItemRenderer.DisplayPosition & DisplayPosition.ThirdPerson) != 0)
-			            scaleMatrix =  arm.WorldMatrix;
-	            }
-	            
-	            //itemRenderer.Update(
-		        //    args,
-		        //    scaleMatrix,
-		         //   Color.White.ToVector3());
-            }
+			//if (!ShowItemInHand || _skipRendering || ItemRenderer == null) return;
 		}
 
 		private long _hitAnimationEnd = 0;
@@ -744,7 +695,6 @@ namespace Alex.Entities
 		
 		protected bool DoRotationCalculations = true;
 
-		private  Vector3 _prevUpdatePosition = Vector3.Zero;
 		private  float   _armRotation        = 0f;
 		private  float   _legRotation        = 0f;
 		
@@ -790,40 +740,21 @@ namespace Alex.Entities
 		private void CalculateLegMovement(IUpdateArgs args)
 		{
 			var   pos    = KnownPosition.ToVector3();
-			float distSQ = Vector3.DistanceSquared(_prevUpdatePosition, pos);
 
-			var distance = DistanceMoved;
-			distSQ = distance;
+			var dt       = (float) args.GameTime.ElapsedGameTime.TotalSeconds;
 
-			if (!IsMoving)
-			{
-				//DistanceMoved = 0f;
-			}
-
-			var dt = (float) args.GameTime.ElapsedGameTime.TotalSeconds;
-
-			/*if (!ServerEntity)
-			{
-				var distanceMoved = DistanceMoved;
-				DistanceMoved = 0;
-
-				_mvSpeed = (float) (distanceMoved * (TimeSpan.FromSeconds(1) / args.GameTime.ElapsedGameTime));
-			}*/
-
-			AnimateLegs(distSQ, dt);
-			Animate(distSQ, dt, _mvSpeed);
-			
-			_prevUpdatePosition = pos;
+			AnimateLegs(dt, _mvSpeed);
+			Animate(dt, _mvSpeed);
 		}
 
-		protected virtual void AnimateLegs(float distSQ, float dt)
+		protected virtual void AnimateLegs(float dt, float mvSpeed)
 		{
 			if (_leftLegModel != null && _rightLegModel != null)
 			{
 				Vector3 lLegRot = Vector3.Zero;
 				Vector3 rLegRot = Vector3.Zero;
 
-				if (distSQ > 0f)
+				if (mvSpeed > 0f)
 				{
 					_legRotation += (float) (_mvSpeed) * dt;
 					
@@ -843,7 +774,7 @@ namespace Alex.Entities
 			}
 		}
 		
-		protected virtual void Animate(float distSQ, float dt, float mvSpeed)
+		protected virtual void Animate(float dt, float mvSpeed)
 		{
 			if (IsSneaking && _body != null)
 			{
@@ -877,7 +808,8 @@ namespace Alex.Entities
 			if (!IsSneaking && _leftArmModel != null && _rightArmModel != null)
 			{
 				Vector3 rArmRot;
-
+				Vector3 lArmRot;
+				
 				if (_mvSpeed > 0f)
 				{
 					if (!IsMoving)
@@ -888,7 +820,8 @@ namespace Alex.Entities
 
 					_armRotation += (float) (_mvSpeed) * dt;
 					//rArmRot = new Vector3(tcos0, 0, 0);
-					rArmRot = new Vector3((0.5f + MathF.Cos(_armRotation)) * 24.5f, 0, 0);
+					rArmRot = new Vector3(MathF.Cos(_armRotation) * 24.5f, 0, 0);
+					lArmRot = new Vector3(-MathF.Cos(_armRotation) * 24.5f, 0, 0);
 				}
 				else
 				{
@@ -896,32 +829,35 @@ namespace Alex.Entities
 					_armRotation += dt;
 
 					rArmRot = new Vector3(
-						(0.5f + MathF.Cos(_armRotation)) * 7.5f, 0f, 0.1f + (MathF.Sin(_armRotation) * -1.5f));
+						MathF.Cos(_armRotation) * 7.5f, 0f, 0.1f + (MathF.Sin(_armRotation) * -1.5f));
+						
+					lArmRot = new Vector3(
+						-MathF.Cos(_armRotation) * 7.5f, 0f, 0.1f + (MathF.Sin(_armRotation) * -1.5f));
 				}
 
 
 				if (!_leftArmModel.IsAnimating)
 				{
-					_leftArmModel.Rotation = rArmRot;
+					_leftArmModel.Rotation = lArmRot;
 				}
 
 				if (!_rightArmModel.IsAnimating)
 				{
-					_rightArmModel.Rotation = -rArmRot;
+					_rightArmModel.Rotation = rArmRot;
 				}
 			}
 		}
 
-		private   DateTime _nextUpdate     = DateTime.MinValue;
-		private   DateTime _previousUpdate = DateTime.MinValue;
-		protected int      SurroundingLightValue { get; private set; } = 15;
-		public    float    CurrentSpeed          => _mvSpeed;
-		public virtual void OnTick() 
+		private DateTime _nextUpdate     = DateTime.MinValue;
+		private DateTime _previousUpdate = DateTime.MinValue;
+		public  float    CurrentSpeed => _mvSpeed;
+
+		public virtual void OnTick()
 		{
 			Age++;
 
 			Movement?.OnTick();
-			
+
 			HealthManager.OnTick();
 
 			if (_isHit && Age > _hitAnimationEnd)
@@ -948,23 +884,9 @@ namespace Alex.Entities
 
 				//PreviousUpdate
 				_mvSpeed = (float) (distanceMoved * (TimeSpan.FromSeconds(1) / (DateTime.UtcNow - _previousUpdate)));
-				
+
 				_previousUpdate = DateTime.UtcNow;
 				_nextUpdate = DateTime.UtcNow + TimeSpan.FromMilliseconds(500);
-			}
-
-			if (IsRendered || !ServerEntity)
-			{
-				SurroundingLightValue = 15; /*Math.Min(
-					Level.GetSkyLight(KnownPosition) + Level.GetBlockLight(KnownPosition), 15);
-
-				var heldItemRenderer = ItemRenderer;
-
-				if (heldItemRenderer != null)
-				{
-					heldItemRenderer.DiffuseColor =  (new Color(245, 245, 225) *  ((1f / 16f) * SurroundingLightValue))
-					                                * Level.BrightnessModifier;
-				}*/
 			}
 
 			foreach (var effect in _effects.Values.ToArray())
@@ -973,16 +895,16 @@ namespace Alex.Entities
 			}
 
 			if (IsNoAi) return;
-		//	IsMoving = Velocity.LengthSquared() > 0f;
+			//	IsMoving = Velocity.LengthSquared() > 0f;
 
-		var knownPos = new BlockCoordinates(new Vector3(KnownPosition.X, KnownPosition.Y, KnownPosition.Z));
-		var knownDown = KnownPosition.GetCoordinates3D();
+			var knownPos  = new BlockCoordinates(new Vector3(KnownPosition.X, KnownPosition.Y, KnownPosition.Z));
+			var knownDown = KnownPosition.GetCoordinates3D();
 
-	//	if (Alex.ServerType == ServerType.Bedrock)
-		{
-			knownDown = knownDown.BlockDown();
-		}
-		
+			//	if (Alex.ServerType == ServerType.Bedrock)
+			{
+				knownDown = knownDown.BlockDown();
+			}
+
 			var blockBelowFeet = Level?.GetBlockStates(knownDown.X, knownDown.Y, knownDown.Z);
 			var feetBlock      = Level?.GetBlockStates(knownPos.X, knownPos.Y, knownPos.Z).ToArray();
 			var headBlockState = Level?.GetBlockState(KnownPosition.GetCoordinates3D() + new BlockCoordinates(0, 1, 0));
@@ -990,7 +912,7 @@ namespace Alex.Entities
 			if (headBlockState != null)
 			{
 				var headBlock = headBlockState.Block;
-				
+
 				if (headBlock.Solid)
 				{
 					HeadInBlock = true;

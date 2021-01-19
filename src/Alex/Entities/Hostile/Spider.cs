@@ -71,9 +71,9 @@ namespace Alex.Entities.Hostile
 		private bool _wasMoving = false;
 		private Stopwatch _timeSinceStartMoving = new Stopwatch();
 		/// <inheritdoc />
-		protected override void Animate(float distSQ, float dt, float mvSpeed)
+		protected override void Animate(float dt, float mvSpeed)
 		{
-			bool moving = distSQ > 0f;
+			bool moving = mvSpeed > 0f;
 
 			if (moving != _wasMoving)
 			{

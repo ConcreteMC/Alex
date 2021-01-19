@@ -61,6 +61,7 @@ namespace Alex.Graphics.Models.Items
                   //  float toolPosY = 0f; //1.0f;
                    // float toolPosZ = 0f;//(1f / 16f) * 7.5f;
 
+                   var pixelSize = new Vector3(bitmap.Width / 16f, bitmap.Height / 16f, 1f);
                     for (int y = 0; y < bitmap.Height; y++)
                     {
                         for (int x = 0; x < bitmap.Width; x++)
@@ -76,7 +77,7 @@ namespace Alex.Graphics.Models.Items
                             var origin = new Vector3(
                                 (x), (bitmap.Height - y), 0f);
                             
-                            ItemModelCube built = new ItemModelCube(new Vector3(bitmap.Width / 16f, bitmap.Height / 16f, 1f), color);
+                            ItemModelCube built = new ItemModelCube(pixelSize, color);
 
                             vertices.AddRange(
                                 Modify(
@@ -92,7 +93,7 @@ namespace Alex.Graphics.Models.Items
                         }
                     }
 
-                    this.Size = new Vector3(bitmap.Width, bitmap.Height, 1f);
+                    this.Size = new Vector3(pixelSize.X * bitmap.Width, pixelSize.Z * bitmap.Height, 1f);
                 }
                 finally
                 {
@@ -210,14 +211,27 @@ namespace Alex.Graphics.Models.Items
 
             if (DisplayPosition.HasFlag(DisplayPosition.ThirdPerson))
             {
+                var t = activeDisplayItem.Translation;
                 var r = activeDisplayItem.Rotation;
-                Effect.World = MCMatrix.CreateScale(activeDisplayItem.Scale)
-                               * MCMatrix.CreateRotationY(MathUtils.ToRadians(180f))
-                               * MCMatrix.CreateRotationDegrees(
-                                   new Vector3(67.5f + r.X, r.Y, -r.Z))
-                               * MCMatrix.CreateTranslation(halfSize)
-                               * MCMatrix.CreateTranslation(activeDisplayItem.Translation * new Vector3(1f, 1f, -1f))
-                               * characterMatrix;
+
+                if (r != Vector3.Zero)
+                {
+                    Effect.World = MCMatrix.CreateScale(activeDisplayItem.Scale)
+                                   * MCMatrix.CreateRotationDegrees(new Vector3(-67.5f, 180f, 0f))
+                                   * MCMatrix.CreateRotationDegrees(r * new Vector3(1f, 1f, -1f))
+                                   * MCMatrix.CreateTranslation(
+                                       new Vector3(t.X + 6f, Size.Y - t.Y,  t.Z))
+                                   * characterMatrix;
+                }
+                else
+                {
+                    Effect.World =  
+                        MCMatrix.CreateScale(activeDisplayItem.Scale)
+                        * MCMatrix.CreateRotationDegrees(new Vector3(-67.5f, 0f, 0f))
+                        * MCMatrix.CreateTranslation(
+                           new Vector3(t.X + 2f, Size.Y - t.Y, t.Z))
+                        * characterMatrix;
+                }
             }
             else  if (DisplayPosition.HasFlag(DisplayPosition.FirstPerson))
             {

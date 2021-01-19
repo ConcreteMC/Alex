@@ -15,36 +15,28 @@ namespace Alex.Graphics.Models.Items
 {
     public class ItemBlockModelRenderer : ItemModelRenderer<VertexPositionColorTexture>
     {
-        private bool            _animated = false;
-        private BlockState      _block;
-        private ResourceManager _resource;
+        private BlockState _blockState;
+        private Texture2D  _texture;
 
-        public ItemBlockModelRenderer(BlockState block, ResourcePackModelBase model,
-            ResourceManager resourceManager) : base(model,
+        public ItemBlockModelRenderer(BlockState block, ResourcePackModelBase model, Texture2D texture) : base(model,
             VertexPositionColorTexture.VertexDeclaration)
         {
-            _block = block;
-            _resource = resourceManager;
-            _animated = _block.Block.Animated;
+            _blockState = block;
+            _texture = texture;
           //  Size = new Vector3(16f, 16f, 16f);
             //Offset = new Vector3(0f, -0.5f, 0f);
             //  Translation = -Vector3.Forward * 8f;
         }
 
-        private ItemBlockModelRenderer(bool animated, ResourcePackModelBase model, ResourceManager resourceManager) : base(model, VertexPositionColorTexture.VertexDeclaration)
-        {
-            _animated = animated;
-            _resource = resourceManager;
-            //Offset = new Vector3(0f, -0.5f, 0f);
-        }
-        
         public override bool Cache(ResourceManager pack)
         {
             if (Vertices != null)
                 return true;
             
             ChunkData chunkData = new ChunkData(ChunkCoordinates.Zero);
-            _block.Model.GetVertices(new ItemRenderingWorld(_block.Block), chunkData, BlockCoordinates.Zero, Vector3.Zero, _block.Block);
+            
+            _blockState.Model.GetVertices(new ItemRenderingWorld(_blockState.Block), chunkData, BlockCoordinates.Zero, Vector3.Zero, _blockState.Block);
+
            // var max         = _block.Model.GetBoundingBoxes(Vector3.Zero).Max(x => x.Max - x.Min);
             var rawVertices = chunkData.Vertices;
             int count       = rawVertices.Length;
@@ -67,19 +59,19 @@ namespace Alex.Graphics.Models.Items
             base.InitEffect(effect);
             effect.TextureEnabled = true;
 
-            if (_animated)
+           // if (_animated)
             {
-                effect.Texture = _resource.Atlas.GetAtlas(0);
+                effect.Texture = _texture;// _resource.Atlas.GetAtlas(0);
             }
-            else
+            //else
             {
-                effect.Texture = _resource.Atlas.GetStillAtlas();
+                //effect.Texture = _resource.Atlas.GetStillAtlas();
             }
         }
 
         public override IItemRenderer Clone()
         {
-            return new ItemBlockModelRenderer(_block, Model, _resource)
+            return new ItemBlockModelRenderer(_blockState, Model, _texture)
             {
                 Vertices = (VertexPositionColorTexture[]) Vertices.Clone(),
                 Size = Size
