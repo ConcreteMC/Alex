@@ -311,6 +311,7 @@ namespace Alex.Entities
 				{
 					if (Player.Velocity.Y <= 0.00001f && Player.Velocity.Y >= -0.00001f
 					    && Math.Abs(LastVelocity.Y - Player.Velocity.Y) < 0.0001f)
+					//if (Player.Velocity.Y <= 0f)
 					{
 						//	moveVector.Y += 42f;
 						//	Player.Velocity += new Vector3(0f, 4.65f, 0f); // //, 0);

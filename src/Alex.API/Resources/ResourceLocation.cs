@@ -35,8 +35,9 @@ namespace Alex.API.Resources
         
         public static bool operator ==(ResourceLocation a, ResourceLocation b)
         {
-            if (a == null || b == null)
-                return false;
+            return a is not null && a.Equals(b);
+            if (ReferenceEquals(null, a)) return false;
+            if (ReferenceEquals(null, b)) return false;
             
             return a._hash == b._hash;
         }

@@ -92,56 +92,7 @@ namespace Alex.Worlds
 		{
 			return;
 		}
-
-		//private void Apply
-
-		private Vector3 ConvertMovementIntoVelocity(Entity entity, out float slipperiness)
-		{
-			slipperiness = 0.6f;
-			
-			var movement = entity.Movement.Heading * 0.98F;
-			//movement.Y = 0f;
-
-			float mag = movement.LengthSquared();//movement.X * movement.X + movement.Z * movement.Z;
-			// don't do insignificant movement
-			if (mag < 0.01f) {
-				return Vector3.Zero;
-			}
-
-			//movement.X /= mag;
-			//movement.Z /= mag;
-
-			//mag *=  (float)entity.CalculateMovementSpeed();
-			//movement *=mag;
-			
-			if (!entity.KnownPosition.OnGround || entity.IsInWater)
-			{
-				movement *= 0.02f;
-			}
-			else
-			{
-				var blockcoords = entity.KnownPosition.GetCoordinates3D();
-
-				//if (entity.KnownPosition.Y % 1 <= 0.01f)
-				//{
-				//	blockcoords = blockcoords.BlockDown();
-			//	}
-			
-				if (entity.BoundingBox.Min.Y % 1 < 0.05f)
-				{
-					blockcoords.Y -= 1;
-				}
-				
-				var block = World.GetBlockState(blockcoords.X, blockcoords.Y, blockcoords.Z);
-				slipperiness = (float) block.Block.BlockMaterial.Slipperiness;
-					
-				//movement *= (float)entity.CalculateMovementSpeed() * (0.1627714f / (slipperiness * slipperiness * slipperiness));
-				movement *= (float) entity.CalculateMovementSpeed() * (0.1627714f / (slipperiness * slipperiness * slipperiness));
-			}
-
-			return movement;
-		}
-
+		
 		private float GetSlipperiness(Entity entity)
 		{
 			var blockcoords = entity.KnownPosition.GetCoordinates3D();
@@ -187,87 +138,45 @@ namespace Alex.Worlds
 		{
 			if (!e.IsSpawned)
 				return;
-			//var velocityBeforeAdjustment = new Vector3(e.Velocity.X, e.Velocity.Y, e.Velocity.Z);
 
-			var slipperiness = GetSlipperiness(e);
-			slipperiness *= 0.91f;
-
-			//var mod = 1f;
-
-			//if (e.IsSprinting)
-			//	mod = 1.3f;
-			//else if (e.IsSneaking)
-			//	mod = 0.3f;
-
-			//var movementSpeed = (float)( e.IsFlying ? e.FlyingSpeed : e.MovementSpeed);
+			var onGround       = e.KnownPosition.OnGround;
 			
-			var multiplier = (float)e.CalculateMovementSpeed() * (0.1627714f / (slipperiness * slipperiness * slipperiness));
-			
-			e.Velocity += ConvertHeading(e, e.KnownPosition.OnGround ? multiplier : 0.02f);
-			//var momentum     = e.Velocity * e.Slipperines * 0.91f;
-			//var acceleration = (ConvertMovementIntoVelocity(e, out var slipperiness));
-			e.Slipperines = slipperiness;
-			
-			//e.Velocity = new Vector3(momentum.X, e.Velocity.Y, momentum.Z) + acceleration;
-			//if (e.HasCollision)
+			var slipperiness   = 0.91f;
+			var movementFactor = (float) e.CalculateMovementSpeed();
+
+			if (onGround)
 			{
-				//e.Velocity = TruncateVelocity(e.Velocity);
+				slipperiness *= GetSlipperiness(e);
+				e.Slipperines = slipperiness;
 				
+				var acceleration = 0.1627714f / (slipperiness * slipperiness * slipperiness);
+				movementFactor *= acceleration;
+			}
+			else
+			{
+				if (!e.IsFlying)
+				{
+					movementFactor = 0.02f;
+				}
 			}
 			
-			e.Velocity = TruncateVelocity(e.Velocity);
-			
-			//TestTerrainCollisionCylinder(e, out var collision);
-			//	aabbEntity.TerrainCollision(collision, before);
+			e.Velocity += ConvertHeading(e, movementFactor);
+			//var momentum     = e.Velocity * e.Slipperines * 0.91f;
+			//var acceleration = (ConvertMovementIntoVelocity(e, out var slipperiness));
 
 			e.Movement.Move(e.Velocity);
-			//e.Movement.MoveTo(e.KnownPosition + e.Velocity);
-			
-			//e.KnownPosition.OnGround = DetectOnGround(e);
 
 			if (e.IsNoAi)
 				return;
 
-			var gravity = e.Gravity;
-
-			if (!e.IsAffectedByGravity)
-				gravity = 0;
-
-			if (e.IsFlying && e is Player)
-			{
-				e.Velocity *= new Vector3(0.9f, 0.9f, 0.9f);
-			}
-			else
-			{
-				if (e.IsInWater)
-				{
-					e.Velocity = new Vector3(
-						e.Velocity.X * 0.8f, (float) (e.Velocity.Y - gravity), e.Velocity.Z * 0.8f); //Liquid Drag
-				}
-				else if (e.IsInLava)
-				{
-					e.Velocity = new Vector3(
-						e.Velocity.X * 0.5f, (float) (e.Velocity.Y - gravity), e.Velocity.Z * 0.5f); //Liquid Drag
-				}
-				else
-				{
-					if (e.KnownPosition.OnGround)
-					{
-						e.Velocity *= new Vector3(slipperiness, 1f, slipperiness);
-					}
-					else
-					{
-						if (e.IsAffectedByGravity && !e.IsFlying)
-						{
-							e.Velocity -= new Vector3(0f, (float) (gravity), 0f);
-						}
-
-						e.Velocity *= new Vector3(0.91f, 0.98f, 0.91f);
-					}
-				}
+			
+			if (e.IsAffectedByGravity && !e.IsFlying && !e.KnownPosition.OnGround)
+			{ 
+				e.Velocity -= new Vector3(0f, (float) (e.Gravity), 0f);
 			}
 
-			//e.Velocity = TruncateVelocity(e.Velocity);
+				//e.Velocity -= new Vector3(0f, (float) gravity, 0f);
+			e.Velocity *= new Vector3(slipperiness, 0.98f, slipperiness);
 		}
 
 		public bool AddTickable(Entity entity)

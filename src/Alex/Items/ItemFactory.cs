@@ -120,7 +120,7 @@ namespace Alex.Items
 	                   }*/
 			           var bs = BlockFactory.GetBlockState(entry.Key);
 
-			           if (!(bs.Block is Air))
+			           if (!(bs.Block is Air) && bs != null)
 			           {
 				           item = new ItemBlock(bs);
 				           //  Log.Info($"Registered block item: {entry.Key}");
@@ -130,7 +130,7 @@ namespace Alex.Items
 				           return;
 			           }
 
-			           var minetItem = MiNET.Items.ItemFactory.GetItem(entry.Key.Replace("minecraft:", ""));
+			           /*var minetItem = MiNET.Items.ItemFactory.GetItem(entry.Key.Replace("minecraft:", ""));
 
 			           if (minetItem != null)
 			           {
@@ -144,7 +144,7 @@ namespace Alex.Items
 
 				           item.Meta = minetItem.Metadata;
 				           item.Id = minetItem.Id;
-			           }
+			           }*/
 
 			           item.Name = entry.Key;
 			           item.DisplayName = entry.Key;
@@ -158,21 +158,23 @@ namespace Alex.Items
 				           item.DisplayName = data.displayName;
 			           }
 
-			           string ns   = ResourceLocation.DefaultNamespace;
-			           string path = entry.Key;
+			          
+				          string ns   = ResourceLocation.DefaultNamespace;
+				          string path = entry.Key;
 
-			           if (entry.Key.Contains(':'))
-			           {
-				           var index = entry.Key.IndexOf(':');
-				           ns = entry.Key.Substring(0, index);
-				           path = entry.Key.Substring(index + 1);
-			           }
+				          if (entry.Key.Contains(':'))
+				          {
+					          var index = entry.Key.IndexOf(':');
+					          ns = entry.Key.Substring(0, index);
+					          path = entry.Key.Substring(index + 1);
+				          }
 
-			           var key = new ResourceLocation(ns, $"block/{path}");
+				          
+				         var resourceLocation = new ResourceLocation(ns, $"block/{path}");
 
-			           ResourcePackModelBase model = null;
+				          ResourcePackModelBase model            = null;
 
-			           if (!(ResourceManager.TryGetBlockModel(key, out model)))
+			           if (!ResourceManager.TryGetBlockModel(resourceLocation, out model))
 			           {
 				           /*foreach (var it in ResourcePack.ItemModels)
 				           {

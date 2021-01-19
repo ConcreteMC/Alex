@@ -737,7 +737,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
         {
 	        string type = "oak";
 	        bool stripped = false;
-	        string axis = "y";
+	       // string axis = "y";
 	        
 	        foreach (var state in record.States)
 	        {
@@ -745,13 +745,16 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		        {
 			        case "wood_type":
 				        type = state.Value();
+				        record.States.Remove(state);
 				        break;
 			        case "stripped_bit":
 				        stripped = state.Value() == "1";
+				        record.States.Remove(state);
 				        break;
-			        case "pillar_axis":
-				        axis = state.Value();
-				        break;
+			        //case "pillar_axis":
+				     //   axis = state.Value();
+				     //   record.States.Remove(state);
+				     //   break;
 		        }
 	        }
 
@@ -798,6 +801,9 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			        {
 				        foreach (var prop in record.States)
 				        {
+					        if (!defaultState.Contains(prop.Name))
+						        continue;
+					        
 					        defaultState = defaultState.WithProperty(
 						        prop.Name, prop.Value());
 				        }
@@ -806,6 +812,12 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			        if (defaultState is PeBlockState pebs)
 			        {
 				        result = pebs.Original;
+				        return true;
+			        }
+			        else
+			        {
+				        result = defaultState;
+
 				        return true;
 			        }
 			        //result = defaultState.Block.BlockState.CloneSilent();
@@ -956,6 +968,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					        //       break;
 				        }
 
+				        record.States.Remove(state);
 				        break;
 			        case "sapling_type":
 				        //case "old_log_type":
@@ -1043,42 +1056,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	        {
 		        r = BlockFactory.GetBlockState(searchName);
 	        }
-	        
-	        /*if (r == null || r.Name == "Unknown")
-	        {
-		        var mapResult =
-			        BlockFactory.RuntimeIdTable.FirstOrDefault(xx =>
-				        xx.Name == searchName);
-
-		        if (mapResult != null && mapResult.Id >= 0)
-		        {
-			        var reverseMap = MiNET.Worlds.AnvilWorldProvider.Convert.FirstOrDefault(map =>
-				        map.Value.Item1 == mapResult.Id);
-
-			        var id = mapResult.Id;
-			        if (reverseMap.Value != null)
-			        {
-				        id = reverseMap.Key;
-			        }
-													        
-			        var res = BlockFactory.GetBlockStateID(
-				        (int) id,
-				        (byte) record.Data);
-
-			        if (AnvilWorldProvider.BlockStateMapper.TryGetValue(
-				        res,
-				        out var res2))
-			        {
-				        r = BlockFactory.GetBlockState(res2);
-			        }
-			        else
-			        {
-				        Log.Info(
-					        $"Did not find anvil statemap: {result.Name}");
-				        r = BlockFactory.GetBlockState(mapResult.Name);
-			        }
-		        }
-	        }*/
 
 	        if (r == null || r.Name == "Unknown")
 	        {
@@ -1092,15 +1069,19 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		        {
 			        case "ground_sign_direction":
 				        r = r.WithProperty("rotation", state.Value());
+				        record.States.Remove(state);
 				        break;
 			        case "disarmed_bit":
 				        r = r.WithProperty("disarmed", state.Value() == "1" ? "true" : "false");
+				        record.States.Remove(state);
 				        break;
 			        case "powered_bit":
 				        r = r.WithProperty("powered", state.Value() == "1" ? "true" : "false");
+				        record.States.Remove(state);
 				        break;
 			        case "attached_bit":
 				        r = r.WithProperty("attached", state.Value() == "1" ? "true" : "false");
+				        record.States.Remove(state);
 				        break;
 			        case "direction":
 			        case "weirdo_direction":
@@ -1126,19 +1107,23 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				        {
 					        r = FixFacing(r, int.Parse(state.Value()));
 				        }
-
+				        record.States.Remove(state);
 				        break;
 			        case "upside_down_bit":
 				        r = (r).WithProperty("half", state.Value() == "1" ? "top" : "bottom");
+				        record.States.Remove(state);
 				        break;
 			        case "door_hinge_bit":
 				        r = r.WithProperty("hinge", (state.Value() == "0") ? "left" : "right");
+				        record.States.Remove(state);
 				        break;
 					case "open_bit":
 						r = r.WithProperty("open", (state.Value() == "1") ? "true" : "false");
+						record.States.Remove(state);
 						break;
 					case "upper_block_bit":
 						r = r.WithProperty("half", (state.Value() == "1") ? "upper" : "lower");
+						record.States.Remove(state);
 						break;
 					case "torch_facing_direction":
 						string facingValue = state.Value();
@@ -1158,18 +1143,23 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 								break;
 						}
 						r = r.WithProperty("facing", facingValue);
+						record.States.Remove(state);
 						break;
 					case "liquid_depth":
 						r = r.WithProperty("level", state.Value());
+						record.States.Remove(state);
 						break;
 					case "height":
 						r = r.WithProperty("layers", state.Value());
+						record.States.Remove(state);
 						break;
 					case "growth":
 						r = r.WithProperty("age", state.Value());
+						record.States.Remove(state);
 						break;
 					case "button_pressed_bit":
 						r = r.WithProperty("powered", state.Value() == "1" ? "true" : "false");
+						record.States.Remove(state);
 						break;
 					case "facing_direction":
 						switch (int.Parse(state.Value()))
@@ -1191,21 +1181,27 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 								r = r.WithProperty(facing, "south");
 								break;
 						}
+						record.States.Remove(state);
 						break;
 					case "head_piece_bit":
 						r = r.WithProperty("part", state.Value() == "1" ? "head" : "foot");
+						record.States.Remove(state);
 						break;
 					case "pillar_axis":
 						r = r.WithProperty("axis", state.Value());
+						record.States.Remove(state);
 						break;
 					case "top_slot_bit":
 						r = r.WithProperty("type", state.Value() == "1" ? "top" : "bottom", true);
+						record.States.Remove(state);
 						break;
 					case "moisturized_amount":
 						r = r.WithProperty("moisture", state.Value());
+						record.States.Remove(state);
 						break;
 					case "age":
 						r = r.WithProperty("age", state.Value());
+						record.States.Remove(state);
 						break;
 			        default:
 			//	        Log.Info($"Unknown property for {record.Name}: {state.Name} - {state.Value()}");
@@ -1223,15 +1219,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	        
 	        return true;
         }
-        
-        private uint SwapBytes(uint x)
-        {
-	        // swap adjacent 16-bit blocks
-	        x = (x >> 16) | (x << 16);
-	        // swap adjacent 8-bit blocks
-	        return ((x & 0xFF00FF00) >> 8) | ((x & 0x00FF00FF) << 8);
-        }
-        
+
         const string facing = "facing";
 		private BlockState FixFacing(BlockState state, int meta)
 		{
@@ -1282,45 +1270,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 			return state;
 		}
-		
-		private static string[] _slabs = new string[]
-		{
-			"minecraft:stone_slab",
-			"minecraft:smooth_stone_slab",
-			"minecraft:stone_brick_slab",
-			"minecraft:sandstone_slab",
-			"minecraft:acacia_slab",
-			"minecraft:birch_slab",
-			"minecraft:dark_oak_slab",
-			"minecraft:jungle_slab",
-			"minecraft:oak_slab",
-			"minecraft:spruce_slab",
-			"minecraft:purpur_slab",
-			"minecraft:quartz_slab",
-			"minecraft:red_sandstone_slab",
-			"minecraft:brick_slab",
-			"minecraft:cobblestone_slab",
-			"minecraft:nether_brick_slab",
-			"minecraft:petrified_oak_slab",
-			"minecraft:prismarine_slab",
-			"minecraft:prismarine_brick_slab",
-			"minecraft:dark_prismarine_slab",
-			"minecraft:polished_granite_slab",
-			"minecraft:smooth_red_sandstone_slab",
-			"minecraft:mossy_stone_brick_slab",
-			"minecraft:polished_diorite_slab",
-			"minecraft:mossy_cobblestone_slab",
-			"minecraft:end_stone_brick_slab",
-			"minecraft:smooth_sandstone_slab",
-			"minecraft:smooth_quartz_slab",
-			"minecraft:granite_slab",
-			"minecraft:andesite_slab",
-			"minecraft:red_nether_brick_slab",
-			"minecraft:polished_andesite_slab",
-			"minecraft:diorite_slab",
-			"minecraft:cut_sandstone_slab",
-			"minecraft:cut_red_sandstone_slab"
-		};
 
 		internal BlockState TranslateBlockState(BlockState state, long bid, int meta)
 		{
