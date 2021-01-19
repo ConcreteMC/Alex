@@ -6,25 +6,26 @@ namespace Alex.Graphics.Models.Items
 {
     public sealed class ItemModelCube : Model
     {
-        public Vector3 Size;
-
-        public bool Mirrored { get; set; } = false;
-
-        public ItemModelCube(Vector3 size)
+        public ItemModelCube(Vector3 size, Color color)
         {
-            this.Size = size;
-
             //front verts with position and texture stuff
-            _topLeftFront = new Vector3(0f, 1.0f, 0f) * Size;
-            _topLeftBack = new Vector3(0f, 1.0f, 1.0f) * Size;
-            _topRightFront = new Vector3( 1.0f, 1.0f,0f) * Size;
-            _topRightBack = new Vector3(1.0f,  1.0f,  1.0f) * Size;
+            _topLeftFront = new Vector3(0f, 1.0f, 0f) * size;
+            _topLeftBack = new Vector3(0f, 1.0f, 1.0f) * size;
+            _topRightFront = new Vector3( 1.0f, 1.0f,0f) * size;
+            _topRightBack = new Vector3(1.0f,  1.0f,  1.0f) * size;
 
             // Calculate the position of the vertices on the bottom face.
-            _btmLeftFront = new Vector3(0f, 0f, 0f ) * Size;
-            _btmLeftBack = new Vector3(0f, 0f, 1.0f) * Size;
-            _btmRightFront = new Vector3(1.0f, 0f, 0f) * Size;
-            _btmRightBack = new Vector3(1.0f,0f, 1.0f) * Size;
+            _btmLeftFront = new Vector3(0f, 0f, 0f ) * size;
+            _btmLeftBack = new Vector3(0f, 0f, 1.0f) * size;
+            _btmRightFront = new Vector3(1.0f, 0f, 0f) * size;
+            _btmRightBack = new Vector3(1.0f,0f, 1.0f) * size;
+            
+            Front = GetFrontVertex(AdjustColor(color, BlockFace.North));
+            Back = GetBackVertex(AdjustColor(color, BlockFace.South));
+            Left = GetLeftVertex(AdjustColor(color, BlockFace.West));
+            Right = GetRightVertex(AdjustColor(color, BlockFace.East));
+            Top = GetTopVertex(AdjustColor(color, BlockFace.Up));
+            Bottom = GetBottomVertex(AdjustColor(color, BlockFace.Down));
         }
 
         public VertexPositionColor[] Front, Back, Left, Right, Top, Bottom;
@@ -38,16 +39,6 @@ namespace Alex.Graphics.Models.Items
         private readonly Vector3 _btmRightFront;
         private readonly Vector3 _btmRightBack;
 
-        public void BuildCube(Color color)
-        {
-            Front = GetFrontVertex(AdjustColor(color, BlockFace.North));
-            Back = GetBackVertex(AdjustColor(color, BlockFace.South));
-            Left = GetLeftVertex(AdjustColor(color, BlockFace.West));
-            Right = GetRightVertex(AdjustColor(color, BlockFace.East));
-            Top = GetTopVertex(AdjustColor(color, BlockFace.Up));
-            Bottom = GetBottomVertex(AdjustColor(color, BlockFace.Down));
-        }
-	    
         private VertexPositionColor[] GetLeftVertex(Color color)
         {
             // Add the vertices for the RIGHT face. 

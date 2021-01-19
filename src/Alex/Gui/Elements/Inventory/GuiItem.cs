@@ -50,12 +50,12 @@ namespace Alex.Gui.Elements.Inventory
 
             Camera.MoveTo(new Vector3(0f, 0f, 2f), new Vector3(0f, 0f, 0f));
 
-            _itemRenderer.Update(args, MCMatrix.Identity, Color.White.ToVector3());
+            _itemRenderer.Update(args, MCMatrix.Identity);
         }
 
         public void DrawContext3D(IRenderArgs args, IGuiRenderer guiRenderer)
         {
-            _itemRenderer.Render(args, false, out _);
+            _itemRenderer.Render(args, null);
         }
 
 

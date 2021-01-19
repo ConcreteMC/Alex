@@ -184,8 +184,38 @@ namespace Alex.Entities
 
 		public NetworkProvider Network { get; set; }
 		public Inventory Inventory { get; protected set; }
-		public IItemRenderer ItemRenderer { get; private set; } = null;
-		
+
+		public IItemRenderer ItemRenderer
+		{
+			get => _itemRenderer;
+			private set
+			{
+				var oldValue = _itemRenderer;
+				_itemRenderer = value;
+
+				if (oldValue != null)
+				{
+					oldValue.Parent?.Remove(oldValue);
+				}
+
+				if (value != null)
+				{
+					EntityModelRenderer.ModelBone arm = null;
+
+					if (_rightItemModel != null)
+					{
+						arm = _rightItemModel;
+					}
+					else if (_rightArmModel != null)
+					{
+						arm = _rightArmModel;
+					}
+
+					arm?.AddChild(value);
+				}
+			}
+		}
+
 		protected EntityModelRenderer.ModelBone _leftArmModel;
 		protected EntityModelRenderer.ModelBone _leftItemModel;
 		protected EntityModelRenderer.ModelBone _rightArmModel;
@@ -377,7 +407,7 @@ namespace Alex.Entities
 		            if (renderer != ItemRenderer)
 		            {
 			            renderer = renderer.Clone();
-
+			            
 			            ItemRenderer = renderer;
 		            }
 
@@ -388,6 +418,8 @@ namespace Alex.Entities
             {
                 if (ItemRenderer != null)
                 {
+	               // ItemRenderer?.Parent?.Remove(ItemRenderer);
+	                
 	                ItemRenderer = null;
                 }
             }
@@ -632,8 +664,8 @@ namespace Alex.Entities
 			if (ShowItemInHand && ItemRenderer != null && !_skipRendering)
 			{
 				//ItemRenderer.
-				ItemRenderer.Render(renderArgs, false, out int itemVertices);
-				rendered += itemVertices;
+				//ItemRenderer.Render(renderArgs, false, out int itemVertices);
+				//rendered += itemVertices;
 
 				//rendered += ItemRenderer.VertexCount;
 			}
@@ -691,10 +723,10 @@ namespace Alex.Entities
 			            scaleMatrix =  arm.WorldMatrix;
 	            }
 	            
-	            itemRenderer.Update(
-		            args,
-		            scaleMatrix,
-		            Color.White.ToVector3());
+	            //itemRenderer.Update(
+		        //    args,
+		        //    scaleMatrix,
+		         //   Color.White.ToVector3());
             }
 		}
 
@@ -1340,7 +1372,8 @@ namespace Alex.Entities
 		}
 
 		private ConcurrentDictionary<EffectType, Effect> _effects = new ConcurrentDictionary<EffectType, Effect>();
-		
+		private IItemRenderer                            _itemRenderer    = null;
+
 		public const float   JumpVelocity = 0.42f;
 		public void Jump()
 		{

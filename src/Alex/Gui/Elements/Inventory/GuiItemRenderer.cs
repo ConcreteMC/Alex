@@ -106,7 +106,7 @@ namespace Alex.Gui.Elements.Inventory
             Camera.Update(args);
             Camera.UpdateProjectionMatrix();
             
-            item.Renderer.Update(args, MCMatrix.CreateTranslation(new Vector3(0,0,0)), Color.White.ToVector3());
+            item.Renderer.Update(args, MCMatrix.CreateTranslation(new Vector3(0,0,0)));
         }
 
         protected override void OnDraw(GuiSpriteBatch graphics, GameTime gameTime)
@@ -158,7 +158,7 @@ namespace Alex.Gui.Elements.Inventory
 
                     graphics.Begin();
 
-                    Item.Renderer.Render(renderArgs, false, out _);
+                    Item.Renderer.Render(renderArgs, null);
                    // Entity.Render(renderArgs);
                     //  EntityModelRenderer?.Render(renderArgs, EntityPosition);
 

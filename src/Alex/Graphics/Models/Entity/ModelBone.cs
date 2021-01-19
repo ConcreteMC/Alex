@@ -14,9 +14,9 @@ namespace Alex.Graphics.Models.Entity
 {
 	public partial class EntityModelRenderer
 	{
-		public class ModelBone : IDisposable
+		public class ModelBone : IAttached, IDisposable
 		{
-			internal List<ModelBone> Children { get; set; } = new List<ModelBone>();
+			internal List<IAttached> Children { get; set; } = new List<IAttached>();
 			
 			private Vector3 _rotation = Vector3.Zero;
 
@@ -36,7 +36,7 @@ namespace Alex.Graphics.Models.Entity
 
 			public bool Rendered { get; set; } = true;
 
-			public ModelBone Parent { get; set; } = null;
+			public IAttached Parent { get; set; } = null;
 			
 			public Queue<ModelBoneAnimation> Animations { get; }
 			private ModelBoneAnimation CurrentAnim { get; set; } = null;
@@ -130,16 +130,39 @@ namespace Alex.Graphics.Models.Entity
 				}
 			}
 
+			public void Render(IRenderArgs args, Microsoft.Xna.Framework.Graphics.Effect effect)
+			{
+				var count = ElementCount;
+
+				if (!Definition.NeverRender && Rendered && count > 0)
+				{
+					((IEffectMatrices)effect).World = WorldMatrix;
+
+					foreach (var pass in effect.CurrentTechnique.Passes)
+					{
+						pass?.Apply();
+
+						args.GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, StartIndex, count / 3);
+					}
+				}
+			
+				foreach (var child in Children)
+				{
+					child.Render(args, effect);
+				}
+			}
+			
 			private bool _disposed = false;
 			public void Dispose()
 			{
 				_disposed = true;
 			}
 
-			public void AddChild(ModelBone modelBone)
+			public void AddChild(IAttached modelBone)
 			{
-				if (!Children.Contains(modelBone))
+				if (!Children.Contains(modelBone) && modelBone.Parent == null)
 				{
+					modelBone.Parent = this;
 					Children.Add(modelBone);
 				}
 				else
@@ -148,10 +171,13 @@ namespace Alex.Graphics.Models.Entity
 				}
 			}
 
-			public void Remove(ModelBone modelBone)
+			public void Remove(IAttached modelBone)
 			{
 				if (Children.Contains(modelBone))
 				{
+					if (modelBone.Parent == this)
+						modelBone.Parent = null;
+					
 					Children.Remove(modelBone);
 				}
 			}

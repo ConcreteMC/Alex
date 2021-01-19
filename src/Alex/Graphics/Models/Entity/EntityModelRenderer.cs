@@ -154,7 +154,7 @@ namespace Alex.Graphics.Models.Entity
 						         * MCMatrix.CreateTranslation(pivot);
 					}
 					
-					Cube built = new Cube(source, cube, textureSize, mirror, inflation);
+					Cube built = new Cube(cube, textureSize, mirror, inflation);
 					ModifyCubeIndexes(ref vertices, built.Front, origin, matrix);
 					ModifyCubeIndexes(ref vertices, built.Back, origin, matrix);
 					ModifyCubeIndexes(ref vertices, built.Top, origin, matrix);
@@ -189,7 +189,7 @@ namespace Alex.Graphics.Models.Entity
 					childBone.Name = Guid.NewGuid().ToString();
 				
 				var child = ProcessBone(source, childBone, ref vertices, textureSize, modelBones);
-				child.Parent = modelBone;
+				//child.Parent = modelBone;
 
 				modelBone.AddChild(child);
 				
@@ -246,9 +246,19 @@ namespace Alex.Graphics.Models.Entity
 
 				args.GraphicsDevice.SetVertexBuffer(VertexBuffer);
 
+				var newArgs = new AttachedRenderArgs()
+				{
+					Buffer = VertexBuffer,
+					Camera = args.Camera,
+					GameTime = args.GameTime,
+					GraphicsDevice = args.GraphicsDevice,
+					SpriteBatch = args.SpriteBatch
+				};
+				
 				foreach (var bone in Bones.Where(x => x.Value.Parent == null))
 				{
-					RenderBone(args, bone.Value);
+					bone.Value.Render(newArgs, Effect);
+					//RenderBone(args, bone.Value);
 				}
 			}
 			finally
@@ -258,28 +268,6 @@ namespace Alex.Graphics.Models.Entity
 			}
 		}
 
-		private void RenderBone(IRenderArgs args, ModelBone bone)
-		{
-			var count = bone.ElementCount;
-
-			if (!bone.Definition.NeverRender && bone.Rendered && count > 0)
-			{
-				Effect.World = bone.WorldMatrix;
-
-				foreach (var pass in Effect.CurrentTechnique.Passes)
-				{
-					pass?.Apply();
-
-					args.GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, bone.StartIndex, count / 3);
-				}
-			}
-			
-			foreach (var child in bone.Children)
-			{
-				RenderBone(args, child);
-			}
-		}
-		
 		public Vector3 EntityColor { get; set; } = Color.White.ToVector3();
 		public Vector3 DiffuseColor { get; set; } = Color.White.ToVector3();
 

@@ -45,13 +45,13 @@ namespace Alex.Entities.Projectiles
                                               * MCMatrix.CreateTranslation(-offset)
                                               * MCMatrix.CreateRotationY(MathHelper.ToRadians(_rotation)) 
                                               * MCMatrix.CreateTranslation(offset)
-                                              * MCMatrix.CreateTranslation((knownPos - offset)), Color.White.ToVector3());
+                                              * MCMatrix.CreateTranslation((knownPos - offset)));
                 }
                 else
                 {
                     ItemRenderer.Update(args,  MCMatrix.CreateScale(Scale)
                                                * MCMatrix.CreateRotationY(MathHelper.ToRadians(KnownPosition.Yaw))
-                                               * MCMatrix.CreateTranslation(knownPos), Color.White.ToVector3());
+                                               * MCMatrix.CreateTranslation(knownPos));
                 }
             }
 
@@ -66,7 +66,7 @@ namespace Alex.Entities.Projectiles
             if (!CanRender)
                 return;
             
-            ItemRenderer?.Render(renderArgs, false, out _);
+            ItemRenderer?.Render(renderArgs, null);
         }
     }
 }

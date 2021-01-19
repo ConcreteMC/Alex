@@ -1,13 +1,6 @@
-﻿using System;
-using System.Linq;
-using Alex.Api;
-using Alex.API.Blocks;
-using Alex.API.Utils;
-using Alex.ResourcePackLib.Json;
-using Alex.ResourcePackLib.Json.Models.Entities;
+﻿using Alex.API.Blocks;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using Alex.Api;
+
 namespace Alex.Graphics.Models
 {
     public abstract class Model
@@ -58,11 +51,7 @@ namespace Alex.Graphics.Models
 					    break;
 			    }
 		    }
-
-		   // var cubeBrightness = ((1f / 16f) * lighting);
 		    
-		    //var lightColor = LightColor;
-		 //   var light = lightColor.ToVector3() * cubeBrightness;//CubeBrightness[lighting];
 		    return new Color(brightness * color.ToVector3());
 	    }
     }

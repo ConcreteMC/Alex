@@ -8,6 +8,7 @@ using Alex.API.Graphics;
 using Alex.API.Utils;
 using Alex.Blocks.Minecraft;
 using Alex.Entities;
+using Alex.Graphics.Models.Entity;
 using Alex.ResourcePackLib;
 using Alex.ResourcePackLib.Json;
 using Alex.ResourcePackLib.Json.Models;
@@ -75,20 +76,19 @@ namespace Alex.Graphics.Models.Items
                             var origin = new Vector3(
                                 (x), (bitmap.Height - y), 0f);
                             
-                            ItemModelCube built = new ItemModelCube(new Vector3(bitmap.Width / 16f, bitmap.Height / 16f, 1f));
-
-                            built.BuildCube(color);
+                            ItemModelCube built = new ItemModelCube(new Vector3(bitmap.Width / 16f, bitmap.Height / 16f, 1f), color);
 
                             vertices.AddRange(
                                 Modify(
                                     built.Front.Concat(built.Bottom).Concat(built.Back).Concat(built.Top)
                                        .Concat(built.Left).Concat(built.Right), origin));
+
                             //vertices.AddRange(built.Front);
-                           // vertices.AddRange(built.Bottom);
-                           // vertices.AddRange(built.Back);
+                            // vertices.AddRange(built.Bottom);
+                            // vertices.AddRange(built.Back);
                             //vertices.AddRange(built.Top);
-                           // vertices.AddRange(built.Left);
-                           // vertices.AddRange(built.Right);
+                            // vertices.AddRange(built.Left);
+                            // vertices.AddRange(built.Right);
                         }
                     }
 
@@ -188,7 +188,7 @@ namespace Alex.Graphics.Models.Items
         }
 
         //private Matrix _parentMatrix = Matrix.Identity;
-        public void Update(IUpdateArgs args, MCMatrix characterMatrix, Vector3 diffuseColor)
+        public void Update(IUpdateArgs args, MCMatrix characterMatrix)
         {
             // _parentMatrix = characterMatrix;
             
@@ -229,7 +229,7 @@ namespace Alex.Graphics.Models.Items
                                * characterMatrix;
             }
 
-            Effect.DiffuseColor = diffuseColor;
+            //Effect.DiffuseColor = diffuseColor;
             
             if (Buffer == null && Vertices != null)
             {
@@ -252,11 +252,45 @@ namespace Alex.Graphics.Models.Items
          //   Rotation = knownPosition.ToRotationVector3();
         }
 
-        public void Render(IRenderArgs args, bool mock, out int vertices)
-        {
-            Render(args.GraphicsDevice);
+        /// <inheritdoc />
+        public IAttached Parent { get; set; } = null;
 
-            vertices = 0;
+        public void Render(IRenderArgs args, Microsoft.Xna.Framework.Graphics.Effect effect)
+        {
+            if (Effect == null || Buffer == null || Buffer.VertexCount == 0)
+                return;
+
+            var original = args.GraphicsDevice.RasterizerState;
+
+            try
+            {
+                // device.RasterizerState = RasterizerState.CullCounterClockwise;
+                var count = Vertices.Length;
+                args.GraphicsDevice.SetVertexBuffer(Buffer);
+
+                count = Math.Min(count, Buffer.VertexCount);
+
+                foreach (var a in Effect.CurrentTechnique.Passes)
+                {
+                    a.Apply();
+
+                    DrawLine(args.GraphicsDevice, Vector3.Zero, Vector3.UnitY * 16f, Color.Green);
+                    DrawLine(args.GraphicsDevice, Vector3.Zero, Vector3.UnitZ * 16f, Color.Blue);
+                    DrawLine(args.GraphicsDevice, Vector3.Zero, Vector3.UnitX * 16f, Color.Red);
+
+                    args.GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, count / 3);
+                    //device.DrawUserIndexedPrimitives(PrimitiveType.TriangleList, Vertices, 0, Vertices.Length, Indexes, 0, Indexes.Length / 3);
+                }
+            }
+            finally
+            {
+                args.GraphicsDevice.RasterizerState = original;
+
+                if (args is AttachedRenderArgs at)
+                {
+                    args.GraphicsDevice.SetVertexBuffer(at.Buffer);
+                }
+            }
         }
 
         protected virtual void InitEffect(BasicEffect effect)
@@ -269,40 +303,7 @@ namespace Alex.Graphics.Models.Items
             var vertices = new[] {new VertexPositionColor(start, color), new VertexPositionColor(end, color)};
             device.DrawUserPrimitives(PrimitiveType.LineList, vertices, 0, 1);
         }
-
-        private void Render(GraphicsDevice device)
-        {
-            if (Effect == null || Buffer == null || Buffer.VertexCount == 0)
-                return;
-
-            var original = device.RasterizerState;
-
-            try
-            {
-               // device.RasterizerState = RasterizerState.CullCounterClockwise;
-                var count = Vertices.Length;
-                device.SetVertexBuffer(Buffer);
-
-                count = Math.Min(count, Buffer.VertexCount);
-
-                foreach (var a in Effect.CurrentTechnique.Passes)
-                {
-                    a.Apply();
-
-                    DrawLine(device, Vector3.Zero, Vector3.UnitY * 16f, Color.Green);
-                    DrawLine(device, Vector3.Zero, Vector3.UnitZ * 16f, Color.Blue);
-                    DrawLine(device, Vector3.Zero, Vector3.UnitX * 16f, Color.Red);
-
-                    device.DrawPrimitives(PrimitiveType.TriangleList, 0, count / 3);
-                    //device.DrawUserIndexedPrimitives(PrimitiveType.TriangleList, Vertices, 0, Vertices.Length, Indexes, 0, Indexes.Length / 3);
-                }
-            }
-            finally
-            {
-                device.RasterizerState = original;
-            }
-        }
-
+        
         public virtual bool Cache(ResourceManager pack)
         {
             return false;
@@ -318,5 +319,17 @@ namespace Alex.Graphics.Models.Items
         }
 
         public string Name => "Item-Renderer";
+
+        /// <inheritdoc />
+        public void AddChild(IAttached modelBone)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <inheritdoc />
+        public void Remove(IAttached modelBone)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

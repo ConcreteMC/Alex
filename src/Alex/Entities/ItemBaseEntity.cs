@@ -59,9 +59,7 @@ namespace Alex.Entities
 					args,
 					MCMatrix.Identity * MCMatrix.CreateScale(Scale)
 					                  * MCMatrix.CreateRotationY(MathHelper.ToRadians(KnownPosition.Yaw))
-					                  * MCMatrix.CreateTranslation(KnownPosition.ToVector3()),
-					((new Color(245, 245, 225) * ((1f / 16f) * SurroundingLightValue)) * Level.BrightnessModifier)
-				   .ToVector3());
+					                  * MCMatrix.CreateTranslation(KnownPosition.ToVector3()));
 			}
 		}
 		
@@ -70,7 +68,7 @@ namespace Alex.Entities
 			if (!CanRender)
 				return;
             
-			ItemRenderer?.Render(renderArgs, false, out _);
+			ItemRenderer?.Render(renderArgs, null);
 		}
 	}
 }
