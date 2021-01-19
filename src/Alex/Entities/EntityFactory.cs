@@ -135,7 +135,7 @@ namespace Alex.Entities
 			return null;
 		}
 		
-		public static int LoadModels(BedrockResourcePack resourcePack, GraphicsDevice graphics, bool replaceModels, IProgressReceiver progressReceiver = null)
+		public static int LoadModels(BedrockResourcePack resourcePack, ResourceManager resources, GraphicsDevice graphics, bool replaceModels, IProgressReceiver progressReceiver = null)
 		{
 			var entityDefinitions = resourcePack.EntityDefinitions;
 			int done              = 0;
@@ -161,16 +161,12 @@ namespace Alex.Entities
 					}
 
 					EntityModel model;
-					if (ModelFactory.TryGetModel(modelKey + ".v1.8", out model) && model != null)
+					if ((ModelFactory.TryGetModel(modelKey, out model) || ModelFactory.TryGetModel(modelKey + ".v1.8", out model)) && model != null)
 					{
-						Add(resourcePack, graphics, def.Value, model, def.Value.Identifier);
-						Add(resourcePack, graphics, def.Value, model, def.Key.ToString());
+						Add(resources, graphics, def.Value, model, def.Value.Identifier);
+						Add(resources, graphics, def.Value, model, def.Key.ToString());
 					}
-				    else if (ModelFactory.TryGetModel(modelKey, out model) && model != null)
-				    {
-				        Add(resourcePack, graphics, def.Value, model, def.Value.Identifier);
-				        Add(resourcePack, graphics, def.Value, model, def.Key.ToString());
-                    }
+					//else 
 				}
 				catch (Exception ex)
 				{
@@ -190,7 +186,7 @@ namespace Alex.Entities
 		   return _registeredRenderers.Count;
 		}
 
-		private static void Add(BedrockResourcePack resourcepack, GraphicsDevice graphics, EntityDescription def, EntityModel model, ResourceLocation name)
+		private static void Add(ResourceManager resources, GraphicsDevice graphics, EntityDescription def, EntityModel model, ResourceLocation name)
 		{
 			_registeredRenderers.AddOrUpdate(name,
 				(t) =>
@@ -204,10 +200,10 @@ namespace Alex.Entities
 							texture = textures.FirstOrDefault().Value;
 						}
 
-						if (resourcepack.Textures.TryGetValue(texture,
+						if (resources.TryGetBedrockBitmap(texture,
 							out var bmp))
 						{
-							t = TextureUtils.BitmapToTexture2D(graphics, bmp.Value);
+							t = TextureUtils.BitmapToTexture2D(graphics, bmp);
 						}
 					}
 
@@ -224,10 +220,10 @@ namespace Alex.Entities
 							texture = textures.FirstOrDefault().Value;
 						}
 
-						if (resourcepack.Textures.TryGetValue(texture,
+						if (resources.TryGetBedrockBitmap(texture,
 							out var bmp))
 						{
-							t = TextureUtils.BitmapToTexture2D(graphics, bmp.Value);
+							t = TextureUtils.BitmapToTexture2D(graphics, bmp);
 						}
 
 						return new EntityModelRenderer(model, t);

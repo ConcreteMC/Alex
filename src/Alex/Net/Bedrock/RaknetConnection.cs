@@ -232,6 +232,9 @@ namespace Alex.Net.Bedrock
 
 			ackQueue.Clear();
 			splits.Clear();
+			
+			_tickerHighPrecisionTimer?.Dispose();
+			_tickerHighPrecisionTimer = null;
 		}
 
 		private async void ReceiveCallback(object o)
@@ -552,6 +555,9 @@ namespace Alex.Net.Bedrock
 
 		private async void SendTick(object obj)
 		{
+			if (_stopped || _listener == null)
+				return;
+			
 			if (Session != null)
 				await Session.SendTickAsync(this);
 		}
@@ -780,6 +786,11 @@ namespace Alex.Net.Bedrock
 		{
 			try
 			{
+				if (_listener == null)
+				{
+					return;
+				}
+				
 				await _listener.SendAsync(data, length, targetEndPoint);
 				//_listener.Send(data, length, targetEndPoint);
 

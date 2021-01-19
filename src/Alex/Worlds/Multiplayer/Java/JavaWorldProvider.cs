@@ -1689,7 +1689,7 @@ namespace Alex.Worlds.Multiplayer.Java
 					packet.EntityId,
 					new PlayerLocation(
 						MathUtils.FromFixedPoint(packet.DeltaX), MathUtils.FromFixedPoint(packet.DeltaY),
-						MathUtils.FromFixedPoint(packet.DeltaZ), yaw, yaw,
+						MathUtils.FromFixedPoint(packet.DeltaZ), -yaw, -yaw,
 						-MathUtils.AngleToNotchianDegree(packet.Pitch)) {OnGround = packet.OnGround}, true, true, true);
 			}
 		}
@@ -1732,7 +1732,7 @@ namespace Alex.Worlds.Multiplayer.Java
 			
 			if (World.TryGetEntity(packet.EntityId, out var entity))
 			{
-				entity.KnownPosition.HeadYaw = MathUtils.AngleToNotchianDegree(packet.HeadYaw);
+				entity.KnownPosition.HeadYaw = -MathUtils.AngleToNotchianDegree(packet.HeadYaw);
 				//entity.UpdateHeadYaw(MathUtils.AngleToNotchianDegree(packet.HeadYaw));
 			}
 		}
@@ -1742,7 +1742,7 @@ namespace Alex.Worlds.Multiplayer.Java
 			if (packet.EntityId == World.Player.EntityId)
 				return;
 			
-			World.UpdateEntityLook(packet.EntityId, MathUtils.AngleToNotchianDegree(packet.Yaw), -MathUtils.AngleToNotchianDegree(packet.Pitch), packet.OnGround);
+			World.UpdateEntityLook(packet.EntityId, -MathUtils.AngleToNotchianDegree(packet.Yaw), -MathUtils.AngleToNotchianDegree(packet.Pitch), packet.OnGround);
 		}
 
 		private void HandleEntityTeleport(EntityTeleport packet)
@@ -1751,7 +1751,7 @@ namespace Alex.Worlds.Multiplayer.Java
 				return;
 			
 			float yaw = MathUtils.AngleToNotchianDegree(packet.Yaw);
-			World.UpdateEntityPosition(packet.EntityID, new PlayerLocation(packet.X, packet.Y, packet.Z, yaw, yaw, -MathUtils.AngleToNotchianDegree(packet.Pitch))
+			World.UpdateEntityPosition(packet.EntityID, new PlayerLocation(packet.X, packet.Y, packet.Z, -yaw, -yaw, -MathUtils.AngleToNotchianDegree(packet.Pitch))
 			{
 				OnGround = packet.OnGround
 			}, updateLook: true, updatePitch:true, relative:false, teleport:true);
@@ -2177,7 +2177,7 @@ namespace Alex.Worlds.Multiplayer.Java
 
 					var mob = SpawnMob(
 						packet.EntityId, packet.Uuid, (EntityType) packet.Type, new PlayerLocation(
-							packet.X, packet.Y, packet.Z, packet.Yaw, packet.Yaw, packet.Pitch)
+							packet.X, packet.Y, packet.Z, -packet.Yaw, -packet.Yaw, packet.Pitch)
 						{
 							//	OnGround = packet.SpawnMob
 						}, velocity);
@@ -2204,7 +2204,7 @@ namespace Alex.Worlds.Multiplayer.Java
 				{*/
 					SpawnMob(
 						packet.EntityId, packet.Uuid, (EntityType) packet.Type, new PlayerLocation(
-							packet.X, packet.Y, packet.Z, packet.Yaw, packet.Yaw, packet.Pitch)
+							packet.X, packet.Y, packet.Z, -packet.Yaw, -packet.Yaw, packet.Pitch)
 						{
 							//	OnGround = packet.SpawnMob
 						}, ModifyVelocity(new Vector3(packet.VelocityX, packet.VelocityY, packet.VelocityZ)));

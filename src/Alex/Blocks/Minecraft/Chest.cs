@@ -1,8 +1,10 @@
+using System.Collections.Generic;
 using Alex.API.Utils;
 using Alex.Blocks.State;
 using Alex.Entities.BlockEntities;
 using Alex.Worlds;
 using Alex.Worlds.Abstraction;
+using Microsoft.Xna.Framework;
 
 namespace Alex.Blocks.Minecraft
 {
@@ -22,6 +24,12 @@ namespace Alex.Blocks.Minecraft
 		}
 
 		/// <inheritdoc />
+		public override IEnumerable<BoundingBox> GetBoundingBoxes(Vector3 blockPos)
+		{
+			yield return new BoundingBox(blockPos, blockPos + Vector3.One);
+		}
+
+		/// <inheritdoc />
 		public override BlockState BlockPlaced(IBlockAccess world, BlockState state, BlockCoordinates position)
 		{
 			if (world is World w)
@@ -34,7 +42,7 @@ namespace Alex.Blocks.Minecraft
 				if (entity is ChestBlockEntity) 
 					return base.BlockPlaced(world, state, position);
 
-				var ent = new ChestBlockEntity(this, w, BlockEntityFactory.ChestTexture)
+				var ent = new ChestBlockEntity(this, w)
 				{
 					X = position.X & 0xf, Y = position.Y & 0xff, Z = position.Z & 0xf
 				};

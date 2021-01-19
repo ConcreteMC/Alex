@@ -75,7 +75,7 @@ namespace Alex.ResourcePackLib.Json.Converters
 
 						case "bones":
 						{
-							if (version == FormatVersion.V1_8_0)
+							/*if (version == FormatVersion.V1_8_0)
 							{
 								var bones = property.ToObject<EntityModelBoneV18[]>(serializer);
 
@@ -85,9 +85,9 @@ namespace Alex.ResourcePackLib.Json.Converters
 								}
 							}
 							else
-							{
+							{*/
 								model.Bones = property.ToObject<EntityModelBone[]>(serializer);
-							}
+							//}
 
 							break;
 						}
@@ -117,6 +117,11 @@ namespace Alex.ResourcePackLib.Json.Converters
 					if (bone.Rotation.HasValue)
 					{
 						bone.Rotation *= new Vector3(-1f, -1f, 1f);
+					}
+					
+					if (bone.BindPoseRotation.HasValue)
+					{
+						bone.BindPoseRotation *= new Vector3(-1f, -1f, 1f);
 					}
 								
 					if (bone.Cubes != null)
@@ -224,6 +229,54 @@ namespace Alex.ResourcePackLib.Json.Converters
 			//return model;
 		}
 		
+		private IEnumerable<EntityModel> Decode1100(JObject jObject, JsonSerializer serializer)
+		{
+			//EntityModel model = new EntityModel();
+			//model.Description = new ModelDescription();
+			foreach (var prop in jObject)
+			{
+				if (prop.Key.Equals("format_version"))
+					continue;
+
+				var property = prop.Value;
+
+				if (property == null)
+					continue;
+
+
+				if (property.Type == JTokenType.Array)
+				{
+					foreach (var geo in property.Values())
+					{
+						if (geo.Type == JTokenType.Object)
+						{
+							var singleDecode = DecodeSingle((JObject) geo, serializer, FormatVersion.V1_10_0);
+
+							if (singleDecode != null)
+							{
+								singleDecode.Description.Identifier = prop.Key;
+
+								yield return singleDecode;
+							}
+						}
+					}
+				}
+				else if (property.Type == JTokenType.Object)
+				{
+					var singleDecode = DecodeSingle((JObject) property, serializer, FormatVersion.V1_10_0);
+
+					if (singleDecode != null)
+					{
+						singleDecode.Description.Identifier = prop.Key;
+
+						yield return singleDecode;
+					}
+				}
+			}
+
+			//return model;
+		}
+		
 		/// <inheritdoc />
 		public override object? ReadJson(JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer)
 		{
@@ -270,7 +323,7 @@ namespace Alex.ResourcePackLib.Json.Converters
 
 				case "1.10.0":
 				{
-					foreach (var model in DecodeGeneric(jObject, serializer, FormatVersion.V1_10_0))
+					foreach (var model in Decode1100(jObject, serializer))
 					{
 						result.TryAdd(model.Description.Identifier, model);
 					}

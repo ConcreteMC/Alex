@@ -13,10 +13,11 @@ namespace Alex.Entities.BlockEntities
 	public class BlockEntityFactory
 	{
 		private static readonly Logger          Log = LogManager.GetCurrentClassLogger(typeof(BlockEntityFactory));
+		internal static         PooledTexture2D DoubleChestTexture      { get; set; }
 		internal static         PooledTexture2D ChestTexture      { get; set; }
 		internal static         PooledTexture2D EnderChestTexture { get; set; }
 		internal static         PooledTexture2D SkullTexture      { get; set; }
-		internal static         PooledTexture2D SignTexture      { get; set; }
+		internal static         PooledTexture2D SignTexture       { get; set; }
 		
 		public static void LoadResources(GraphicsDevice graphicsDevice, ResourceManager resources)
 		{
@@ -27,6 +28,15 @@ namespace Alex.Entities.BlockEntities
 			else
 			{
 				Log.Warn($"Could not load chest texture.");
+			}
+			
+			if (resources.TryGetBedrockBitmap("minecraft:textures/entity/chest/double_normal", out var doubleBmp))
+			{
+				DoubleChestTexture = TextureUtils.BitmapToTexture2D(graphicsDevice, doubleBmp);
+			}
+			else
+			{
+				Log.Warn($"Could not load double chest texture.");
 			}
 			
 			if (resources.TryGetBitmap("minecraft:entity/chest/ender", out var enderBmp))
@@ -70,13 +80,13 @@ namespace Alex.Entities.BlockEntities
 				{
 					case "minecraft:chest":
 					case "chest":
-						blockEntity = new ChestBlockEntity(block, world, ChestTexture);
+						blockEntity = new ChestBlockEntity(block, world);
 
 						break;
 					case "minecraft:ender_chest":
 					case "ender_chest":
 					case "enderchest":
-						blockEntity = new EnderChestBlockEntity(block, world, EnderChestTexture);
+						blockEntity = new EnderChestBlockEntity(block, world);
 						break;
 
 					case "minecraft:sign":

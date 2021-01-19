@@ -15,9 +15,9 @@ namespace Alex.Entities.BlockEntities
 	public class EnderChestBlockEntity : ChestBlockEntity
 	{
 		/// <inheritdoc />
-		public EnderChestBlockEntity(Block block, World level, PooledTexture2D texture) : base(block, level, texture)
+		public EnderChestBlockEntity(Block block, World level) : base(block, level)
 		{
-			
+			ModelRenderer = new EntityModelRenderer(new ChestEntityModel(), BlockEntityFactory.EnderChestTexture);
 		}
 	}
 }

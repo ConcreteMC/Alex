@@ -510,7 +510,7 @@ namespace Alex
 	        foreach (var resourcePack in ActiveBedrockResourcePacks)
 	        {
 		        LoadEntityModels(resourcePack, progress);
-		        int modelCount = EntityFactory.LoadModels(resourcePack, device, true, progress);
+		        int modelCount = EntityFactory.LoadModels(resourcePack, this, device, true, progress);
 
 		        Log.Info($"Imported {modelCount} entity models...");
 	        }
@@ -595,6 +595,21 @@ namespace Alex
 			foreach (var resourcePack in ActiveResourcePacks.Reverse())
 			{
 				if (resourcePack.TryGetBitmap(location, out var f))
+				{
+					bitmap = f;
+					return true;
+				}
+			}
+
+			return false;
+		}
+		
+		public bool TryGetBedrockBitmap(ResourceLocation location, out Image<Rgba32> bitmap)
+		{
+			bitmap = null;
+			foreach (var resourcePack in ActiveBedrockResourcePacks.Reverse())
+			{
+				if (resourcePack.TryGetTexture(location, out var f))
 				{
 					bitmap = f;
 					return true;

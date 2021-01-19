@@ -173,11 +173,12 @@ namespace Alex.Graphics.Models.Entity
 				var r = bone.Rotation.Value;
 				modelBone.BindingRotation = new Vector3(r.X, r.Y, r.Z);
 			}
-			/*else if (bone.BindPoseRotation.HasValue)
+			
+			if (bone.BindPoseRotation.HasValue)
 			{
 				var r = bone.BindPoseRotation.Value;
-				modelBone.Rotation = new Vector3(r.X, r.Y, r.Z);
-			}*/
+				modelBone.BindingRotation += new Vector3(r.X, r.Y, r.Z);
+			}
 
 			foreach (var childBone in source.Bones.Where(
 				x => x.Parent != null && string.Equals(x.Parent, bone.Name, StringComparison.OrdinalIgnoreCase)))

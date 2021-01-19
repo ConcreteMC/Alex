@@ -18,12 +18,10 @@ namespace Alex.Entities.BlockEntities
 		private EntityModelRenderer.ModelBone Body     { get; set; }
 		
 		/// <inheritdoc />
-		public ChestBlockEntity(Block block, World level, PooledTexture2D texture) : base(level, block)
+		public ChestBlockEntity(Block block, World level) : base(level, block)
 		{
 			Width = 1f;
 			Height = 1f;
-			
-			ModelRenderer = new EntityModelRenderer(new ChestEntityModel(), texture);
 		}
 
 		/// <inheritdoc />
@@ -127,6 +125,15 @@ namespace Alex.Entities.BlockEntities
 			set
 			{
 				_isDoubleChest = value;
+
+				if (value)
+				{
+					ModelRenderer = new EntityModelRenderer(new DoubleChestEntityModel(), BlockEntityFactory.DoubleChestTexture);
+				}
+				else
+				{
+					ModelRenderer = new EntityModelRenderer(new ChestEntityModel(), BlockEntityFactory.ChestTexture);
+				}
 			}
 		}
 
@@ -135,7 +142,7 @@ namespace Alex.Entities.BlockEntities
 		{
 			if (actionId == 1)
 			{
-				_viewers = parameter;
+				Viewers = parameter;
 			}
 		}
 
@@ -152,6 +159,22 @@ namespace Alex.Entities.BlockEntities
 				if (Enum.TryParse<BlockFace>(value, true, out var val))
 				{
 					Rotation = (BlockFace) val;
+				}
+			}
+
+			if (newBlock.BlockState.TryGetValue("type", out string type))
+			{
+				switch (type)
+				{
+					case "single":
+						IsDoubleChest = false;
+						break;
+					case "left":
+						IsDoubleChest = true;
+						break;
+					case "right":
+						IsDoubleChest = true;
+						break;
 				}
 			}
 		}

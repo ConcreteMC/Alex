@@ -221,7 +221,7 @@ namespace Alex.Entities
 
 								if (processedModels == null || processedModels.Count == 0)
 								{
-									Log.Warn($"!! Model count was 0 for player {Name} !!");
+									Log.Warn($"!! Model count was 0 for player {NameTag} !!");
 
 									if (!Directory.Exists("failed"))
 										Directory.CreateDirectory("failed");

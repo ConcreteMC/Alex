@@ -56,9 +56,9 @@ namespace Alex.ResourcePackLib
 			return entry.Open();
 		}
 		
-		public bool TryGetTexture(string name, out Image<Rgba32> texture)
+		public bool TryGetTexture(ResourceLocation name, out Image<Rgba32> texture)
 		{
-			if (Textures.TryGetValue(NormalisePath(name), out var t))
+			if (Textures.TryGetValue(NormalisePath(name.Path), out var t))
 
 			{
 				texture = t.Value;
@@ -385,22 +385,7 @@ namespace Alex.ResourcePackLib
 										continue;
 									}
 
-									if (_archive.GetEntry(texture.Value + ".tga") != null)
-									{
-										_bitmaps.TryAdd(texture.Value, new Lazy<Image<Rgba32>>(
-											() =>
-											{
-												return TryLoad(texture.Value + ".tga");
-											}));
-									}
-									else if (_archive.GetEntry(texture.Value + ".png") != null)
-									{
-										_bitmaps.TryAdd(texture.Value, new Lazy<Image<Rgba32>>(
-											() =>
-											{
-												return TryLoad(texture.Value + ".png");
-											}));
-									}
+									TryAddBitmap(texture.Value);
 								}
 							}
 							catch (Exception ex)
@@ -417,6 +402,30 @@ namespace Alex.ResourcePackLib
 					}
 				}
 			}
+			
+			TryAddBitmap("textures/entity/chest/double_normal");
+		}
+
+		private bool TryAddBitmap(string path)
+		{
+			if (_archive.GetEntry(path + ".tga") != null)
+			{
+				return _bitmaps.TryAdd(path, new Lazy<Image<Rgba32>>(
+					() =>
+					{
+						return TryLoad(path + ".tga");
+					}));
+			}
+			else if (_archive.GetEntry(path + ".png") != null)
+			{
+				return _bitmaps.TryAdd(path, new Lazy<Image<Rgba32>>(
+					() =>
+					{
+						return TryLoad(path + ".png");
+					}));
+			}
+
+			return false;
 		}
 		
 		private Image<Rgba32> TryLoad(string file)
