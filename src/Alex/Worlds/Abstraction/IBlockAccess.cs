@@ -12,6 +12,7 @@ namespace Alex.Worlds.Abstraction
         void SetSkyLight(BlockCoordinates coordinates, byte skyLight);
         byte GetSkyLight(BlockCoordinates coordinates);
         byte GetBlockLight(BlockCoordinates coordinates);
+        void SetBlockLight(BlockCoordinates coordinates, byte blockLight);
         
         int GetHeight(BlockCoordinates coordinates);
         //Block GetBlock(BlockCoordinates coord, ChunkColumn tryChunk = null);

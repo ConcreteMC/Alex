@@ -368,14 +368,42 @@ namespace Alex.Worlds
 	        {
 		        if (chunk.SetSkyLight(coordinates.X & 0xf, coordinates.Y & 0xff, coordinates.Z & 0xf, p1))
 		        {
-			       // if ((chunk.Scheduled & ScheduleType.Lighting) != ScheduleType.Lighting)
-			        {
-				       // ChunkManager.ScheduleChunkUpdate(chunkCoords, ScheduleType.Lighting);
-			        }
-			       // else
-			        {
-				       // chunk.Scheduled = chunk.Scheduled | ScheduleType.Lighting;
-			        }
+			        var x = coordinates.X;
+			        var y = coordinates.Y;
+			        var z = coordinates.Z;
+			        
+			        ScheduleLightingUpdate(new BlockCoordinates(x + 1, y, z));
+			        ScheduleLightingUpdate(new BlockCoordinates(x - 1, y, z));
+			        
+			        ScheduleLightingUpdate(new BlockCoordinates(x, y, z + 1));
+			        ScheduleLightingUpdate(new BlockCoordinates(x, y, z - 1));
+			        
+			        ScheduleLightingUpdate(new BlockCoordinates(x, y + 1, z));
+			        ScheduleLightingUpdate(new BlockCoordinates(x, y - 1, z));
+		        }
+	        }
+        }
+        
+        public void SetBlockLight(BlockCoordinates coordinates, byte p1)
+        {
+	        var         chunkCoords = new ChunkCoordinates(coordinates);
+	        ChunkColumn chunk;
+	        if (ChunkManager.TryGetChunk(chunkCoords, out chunk))
+	        {
+		        if (chunk.SetBlocklight(coordinates.X & 0xf, coordinates.Y & 0xff, coordinates.Z & 0xf, p1))
+		        {
+			        var x = coordinates.X;
+			        var y = coordinates.Y;
+			        var z = coordinates.Z;
+			        
+			        ScheduleLightingUpdate(new BlockCoordinates(x + 1, y, z), true);
+			        ScheduleLightingUpdate(new BlockCoordinates(x - 1, y, z), true);
+			        
+			        ScheduleLightingUpdate(new BlockCoordinates(x, y, z + 1), true);
+			        ScheduleLightingUpdate(new BlockCoordinates(x, y, z - 1), true);
+			        
+			        ScheduleLightingUpdate(new BlockCoordinates(x, y + 1, z), true);
+			        ScheduleLightingUpdate(new BlockCoordinates(x, y - 1, z), true);
 		        }
 	        }
         }
@@ -385,6 +413,21 @@ namespace Alex.Worlds
 	        return GetSkyLight(position.X, position.Y, position.Z);
         }
 
+        public bool TryGetBlockLight(BlockCoordinates coordinates, out byte blockLight)
+        {
+	        blockLight = 0;
+	        if (coordinates.Y < 0 || coordinates.Y > ChunkColumn.ChunkHeight) return false;
+
+	        ChunkColumn chunk;
+	        if (ChunkManager.TryGetChunk(new ChunkCoordinates(coordinates), out chunk))
+	        {
+		        blockLight = chunk.GetBlocklight(coordinates.X & 0xf, coordinates.Y & 0xff, coordinates.Z & 0xf);
+		        return true;
+	        }
+	        
+	        return false;
+        }
+        
         public byte GetBlockLight(BlockCoordinates coordinates)
         {
 	        return GetBlockLight(coordinates.X, coordinates.Y, coordinates.Z);
@@ -467,6 +510,7 @@ namespace Alex.Worlds
 				var cy = y & 0xff;
 				var cz = z & 0xf;
 
+				//var previousBlock = chunk.GetBlockState(cx, cy, cz, storage);
 				chunk.SetBlockState(cx, cy, cz, block, storage);
 
 				EntityManager.RemoveBlockEntity(new BlockCoordinates(x, y, z));
@@ -476,7 +520,6 @@ namespace Alex.Worlds
 				if ((priority & BlockUpdatePriority.Neighbors) != 0)
 				{
 					UpdateNeighbors(x, y, z);
-					CheckForUpdate(chunkCoords, cx, cz);
 				}
 
 				if ((priority & BlockUpdatePriority.NoGraphic) != 0)
@@ -484,9 +527,21 @@ namespace Alex.Worlds
 					type |= ScheduleType.LowPriority;
 				}
 
+				var blockCoords = new BlockCoordinates(x, y, z);
+				/*if (block.Block.BlockMaterial.BlocksLight)
+				{
+					SetBlockLight(blockCoords, 0);
+				}
+				*/
+				ChunkManager.SkyLightCalculator.Calculate(this, blockCoords);
+
+				ChunkManager.BlockLightCalculations.Enqueue(blockCoords);
+				
 				//chunk.SetDirty();
 				//chunk.IsDirty = true;
 				ChunkManager.ScheduleChunkUpdate(chunkCoords, type, (priority & BlockUpdatePriority.Priority) != 0);
+				
+				CheckForUpdate(chunkCoords, cx, cz);
 			}
 		}
 
@@ -529,6 +584,28 @@ namespace Alex.Worlds
 
 			ScheduleBlockUpdate(source, new BlockCoordinates(x, y + 1, z));
 			ScheduleBlockUpdate(source, new BlockCoordinates(x, y - 1, z));
+		}
+		
+		private void ScheduleLightingUpdate(BlockCoordinates coordinates, bool blockLight = false)
+		{
+			var chunkCoords = new ChunkCoordinates(coordinates.X >> 4, coordinates.Z >> 4);
+			
+			ChunkColumn chunk;
+			if (ChunkManager.TryGetChunk(chunkCoords, out chunk))
+			{
+				var cx = coordinates.X & 0xf;
+				var cy = coordinates.Y & 0xff;
+				var cz = coordinates.Z & 0xf;
+
+				if (blockLight)
+				{
+					chunk.ScheduleBlocklightUpdate(cx, cy, cz);
+				}
+				else
+				{
+					chunk.ScheduleSkylightUpdate(cx, cy, cz);
+				}
+			}
 		}
 
 		public void ScheduleBlockUpdate(BlockCoordinates coordinates)

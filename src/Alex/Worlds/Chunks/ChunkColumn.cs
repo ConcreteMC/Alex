@@ -227,7 +227,7 @@ namespace Alex.Worlds.Chunks
 				
 				foreach (var ls in section.LightSources.ToArray())
 				{
-					yield return new BlockCoordinates(ls.X, (i * 16) + ls.Y, ls.Z);
+					yield return new BlockCoordinates(ls.X, (i << 4) + ls.Y, ls.Z);
 				}
 			}
 		}
@@ -439,12 +439,12 @@ namespace Alex.Worlds.Chunks
 			return (byte) section.GetBlocklight(bx, by - 16 * (by >> 4), bz);
 		}
 
-		public void SetBlocklight(int bx, int by, int bz, byte data)
+		public bool SetBlocklight(int bx, int by, int bz, byte data)
 		{
 			if ((bx < 0 || bx > ChunkWidth) || (by < 0 || by > ChunkHeight) || (bz < 0 || bz > ChunkDepth))
-				return;
+				return false;
 			
-			GetSection(by).SetBlocklight(bx, by - 16 * (by >> 4), bz, data);
+			return GetSection(by).SetBlocklight(bx, by - 16 * (by >> 4), bz, data);
 		}
 
 		public byte GetSkylight(int bx, int by, int bz)
@@ -474,6 +474,26 @@ namespace Alex.Worlds.Chunks
 			var section = Sections[y >> 4];
 			if (section == null) return;
 			section.SetScheduled(x, y - 16 * (y >> 4), z, true);
+		}
+		
+		public void ScheduleBlocklightUpdate(int x, int y, int z)
+		{
+			if ((x < 0 || x > ChunkWidth) || (y < 0 || y > ChunkHeight) || (z < 0 || z > ChunkDepth))
+				return;
+
+			var section = Sections[y >> 4];
+			if (section == null) return;
+			section.SetBlockLightScheduled(x, y - 16 * (y >> 4), z, true);
+		}
+		
+		public void ScheduleSkylightUpdate(int x, int y, int z)
+		{
+			if ((x < 0 || x > ChunkWidth) || (y < 0 || y > ChunkHeight) || (z < 0 || z > ChunkDepth))
+				return;
+
+			var section = Sections[y >> 4];
+			if (section == null) return;
+			section.SetSkyLightUpdateScheduled(x, y - 16 * (y >> 4), z, true);
 		}
 
 		public bool IsScheduled(int bx, int @by, int bz)

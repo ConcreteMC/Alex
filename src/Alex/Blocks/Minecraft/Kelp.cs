@@ -4,7 +4,6 @@
     {
 	    public Kelp() : base()
 	    {
-		    IsSourceBlock = true;
 		    IsWater = true;
 
 		    Transparent = true;

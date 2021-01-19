@@ -1,3 +1,6 @@
+using System.Collections.Generic;
+using Microsoft.Xna.Framework;
+
 namespace Alex.Blocks.Minecraft
 {
 	public class Skull : Block
@@ -12,6 +15,12 @@ namespace Alex.Blocks.Minecraft
 			Solid = true;
 			Transparent = true;
 			IsReplacible = false;
+		}
+
+		/// <inheritdoc />
+		public override IEnumerable<BoundingBox> GetBoundingBoxes(Vector3 blockPos)
+		{
+			yield return new BoundingBox(blockPos, blockPos + Vector3.One);
 		}
 	}
 

@@ -18,7 +18,6 @@ namespace Alex.Worlds.Chunks
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ChunkSection));
 
 		protected int BlockRefCount;
-		protected int TickRefCount;
 
 		public int Blocks => BlockRefCount;
 
@@ -191,12 +190,15 @@ namespace Alex.Worlds.Chunks
 					}
 
 					SetBlocklight(x,y,z, (byte) state.Block.LightValue);
-					SetBlockLightScheduled(x,y,z, true);
+					//SetBlockLightScheduled(x,y,z, true);
 				}
 				else
 				{
 					if (LightSources.Contains(blockCoordinates))
+					{
 						LightSources.Remove(blockCoordinates);
+						SetBlocklight(x, y, z, 0);
+					}
 				}
 				
 				BlockState iblockstate = this.Get(x, y, z, storage);
@@ -207,11 +209,6 @@ namespace Alex.Worlds.Chunks
 					if (!(block is Air))
 					{
 						--this.BlockRefCount;
-
-						if (block.RandomTicked)
-						{
-							--this.TickRefCount;
-						}
 					}
 				}
 
@@ -224,11 +221,6 @@ namespace Alex.Worlds.Chunks
 	            if (!(block1 is Air))
 	            {
 		            ++this.BlockRefCount;
-
-		            if (block1.RandomTicked)
-		            {
-			            ++this.TickRefCount;
-		            }
 	            }
             }
 
@@ -249,11 +241,6 @@ namespace Alex.Worlds.Chunks
 		public bool IsEmpty()
 		{
 			return this.BlockRefCount == 0;
-		}
-        
-		public bool NeedsRandomTick()
-		{
-			return this.TickRefCount > 0;
 		}
 
 		public bool SetSkylight(int x, int y, int z, int value)
@@ -301,7 +288,6 @@ namespace Alex.Worlds.Chunks
 		public virtual void RemoveInvalidBlocks()
 		{
 			this.BlockRefCount = 0;
-			this.TickRefCount = 0;
 
 			for (int x = 0; x < 16; x++)
 			{
@@ -314,11 +300,6 @@ namespace Alex.Worlds.Chunks
 						if (!(block is Air))
 						{
 							++this.BlockRefCount;
-
-							if (block.RandomTicked)
-							{
-								++this.TickRefCount;
-							}
 						}
 					}
 				}

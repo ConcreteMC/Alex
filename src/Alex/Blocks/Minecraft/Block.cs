@@ -41,7 +41,6 @@ namespace Alex.Blocks.Minecraft
 		public virtual bool IsFullCube { get; set; } = true;
 		public bool IsFullBlock { get; set; } = true;
 
-		public bool RandomTicked { get; set; } = false;
 		public bool IsReplacible { get; set; } = false;
 		public bool RequiresUpdate { get; set; } = false;
 		public bool CanInteract { get; set; } = false;
@@ -51,8 +50,7 @@ namespace Alex.Blocks.Minecraft
 	    
 		public BlockState BlockState { get; set; }
 		public bool IsWater { get; set; } = false;
-		public bool IsSourceBlock { get; set; } = false;
-		
+
 		private float _hardness = -1f;
 
 		public float Hardness

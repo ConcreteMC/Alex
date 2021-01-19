@@ -35,7 +35,7 @@ namespace Alex.Worlds
 		
 		public  RenderingShaders        Shaders                { get; set; }
 		private CancellationTokenSource CancellationToken      { get; }
-		private BlockLightCalculations  BlockLightCalculations { get; set; }
+		public BlockLightCalculations  BlockLightCalculations { get; set; }
 		public  SkyLightCalculations    SkyLightCalculator     { get; private set; }
 
 		private FancyQueue<ChunkCoordinates> FastUpdateQueue   { get; }
@@ -286,14 +286,22 @@ namespace Alex.Worlds
 		{
 			bool processed = false;
 
-			if (BlockLightCalculations.TryProcess(
+			foreach (var rendered in renderedChunks)
+			{
+				if (BlockLightCalculations.HasEnqueued(rendered))
+				{
+					processed = BlockLightCalculations.Process(rendered) || processed;
+				}
+			}
+
+			/*if (BlockLightCalculations.TryProcess(
 				blockCoordinates => { return Chunks.ContainsKey((ChunkCoordinates) blockCoordinates); },
 				out BlockCoordinates coordinates))
 			{
 				if (coordinates.Y < 0 || coordinates.Y >= 256)
 					return false;
 				
-				ChunkCoordinates cc = (ChunkCoordinates) coordinates;
+				/*ChunkCoordinates cc = (ChunkCoordinates) coordinates;
 
 				if (TryGetChunk(cc, out var c))
 				{
@@ -301,12 +309,14 @@ namespace Alex.Worlds
 						coordinates.X & 0x0f, coordinates.Y - 16 * (coordinates.Y >> 4), coordinates.Z & 0x0f, true);
 
 					//ScheduleChunkUpdate(cc, ScheduleType.Lighting);
-				}
+				}*
+				
+				//World.SetBlockLight();
 
 				return true;
-			}
+			}*/
 
-			return false;
+			return processed;
 		}
 
 

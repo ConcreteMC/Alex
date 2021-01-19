@@ -202,6 +202,12 @@ namespace Alex.Worlds
             return 0;
         }
 
+        /// <inheritdoc />
+        public void SetBlockLight(BlockCoordinates coordinates, byte blockLight)
+        {
+            throw new System.NotImplementedException();
+        }
+
         public int GetHeight(BlockCoordinates coordinates)
         {
             throw new System.NotImplementedException();

@@ -17,7 +17,6 @@ namespace Alex.Worlds.Multiplayer.Java
         public override void RemoveInvalidBlocks()
         {
             this.BlockRefCount = 0;
-            this.TickRefCount = 0;
 
             for (int x = 0; x < 16; x++)
             {
@@ -39,11 +38,6 @@ namespace Alex.Worlds.Multiplayer.Java
                         {
                             ++this.BlockRefCount;
 
-                            if (block.RandomTicked)
-                            {
-                                ++this.TickRefCount;
-                            }
-
                             if (block.BlockMaterial.IsWatterLoggable)
                             {
                                 Set(1, x, y, z, BlockFactory.GetBlockState("minecraft:water"));
@@ -62,7 +56,7 @@ namespace Alex.Worlds.Multiplayer.Java
                             if (GetBlocklight(x, y, z) != block.LightValue)
                             {
                                 SetBlocklight(x, y, z, (byte) block.LightValue);
-                                SetBlockLightScheduled(x, y, z, true);
+                                //SetBlockLightScheduled(x, y, z, true);
                             }
                         }
 

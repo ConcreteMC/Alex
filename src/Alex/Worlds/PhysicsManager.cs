@@ -154,7 +154,11 @@ namespace Alex.Worlds
 			}
 			else
 			{
-				if (!e.IsFlying)
+				if (e.IsFlying)
+				{
+					movementFactor *= 0.1627714f / (slipperiness * slipperiness * slipperiness);
+				}
+				else
 				{
 					movementFactor = 0.02f;
 				}
@@ -175,8 +179,17 @@ namespace Alex.Worlds
 				e.Velocity -= new Vector3(0f, (float) (e.Gravity), 0f);
 			}
 
+			if (e.IsFlying)
+			{
+				e.Velocity *= new Vector3(slipperiness, slipperiness, slipperiness);
+			}
+			else
+			{
 				//e.Velocity -= new Vector3(0f, (float) gravity, 0f);
-			e.Velocity *= new Vector3(slipperiness, 0.98f, slipperiness);
+				e.Velocity *= new Vector3(slipperiness, 0.98f, slipperiness);
+			}
+
+			e.Velocity = TruncateVelocity(e.Velocity);
 		}
 
 		public bool AddTickable(Entity entity)

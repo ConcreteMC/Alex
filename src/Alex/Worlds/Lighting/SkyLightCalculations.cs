@@ -298,7 +298,7 @@ namespace Alex.Worlds.Lighting
 			{
 				if (GetSkyLight(coordinates, subChunk) != 15)
 				{
-					SetSkyLight(level, coordinates, 15, chunk);
+					SetSkyLight(level, coordinates, 15);
 
 					if (!lightBfSet.Contains(coordinates))
 					{
@@ -321,7 +321,7 @@ namespace Alex.Worlds.Lighting
 				{
 					if (skyLight != 15)
 					{
-						SetSkyLight(level, coordinates, 15, chunk);
+						SetSkyLight(level, coordinates, 15);
 					}
 
 					if (!lightBfSet.Contains(coordinates))
@@ -340,7 +340,7 @@ namespace Alex.Worlds.Lighting
 				if (skyLight + 1 + diffuseLevel <= lightLevel)
 				{
 					byte newLevel = (byte) (lightLevel - diffuseLevel);
-					SetSkyLight(level, coordinates, newLevel, chunk);
+					SetSkyLight(level, coordinates, newLevel);
 
 					if (!lightBfSet.Contains(coordinates))
 					{
@@ -355,9 +355,10 @@ namespace Alex.Worlds.Lighting
 			return skyLight;
 		}
 
-		private static void SetSkyLight(IBlockAccess world, BlockCoordinates coordinates, byte skyLight, ChunkColumn chunk)
+		private static void SetSkyLight(IBlockAccess world, BlockCoordinates coordinates, byte skyLight)
 		{
-			chunk?.SetSkyLight(coordinates.X & 0x0f, coordinates.Y & 0xff, coordinates.Z & 0x0f, skyLight);
+			world?.SetSkyLight(coordinates, skyLight);
+			//chunk?.SetSkyLight(coordinates.X & 0x0f, coordinates.Y & 0xff, coordinates.Z & 0x0f, skyLight);
 		}
 
 		private static bool IsNotBlockingSkylight(BlockCoordinates blockCoordinates, ChunkColumn chunk)

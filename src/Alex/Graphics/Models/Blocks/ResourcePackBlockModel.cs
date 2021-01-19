@@ -73,19 +73,28 @@ namespace Alex.Graphics.Models.Blocks
 				var box        = Boxes[i];
 				var dimensions = box.GetDimensions();
 
-				if (dimensions.X < 0.01f)
+				if (dimensions.X < 0.015f)
 				{
-					box.Inflate(new Vector3(0.01f - dimensions.X, 0f, 0f));
+					var diff = (0.015f - dimensions.X) / 2f;
+					box.Min.X -= diff;
+					box.Max.X += diff;
+					//box.Inflate(new Vector3(0.015f - dimensions.X, 0f, 0f));
 				}
 				
-				if (dimensions.Y < 0.01f)
+				if (dimensions.Y < 0.015f)
 				{
-					box.Inflate(new Vector3(0f, 0.01f - dimensions.Y, 0f));
+					var diff = (0.015f - dimensions.Y) / 2f;
+					box.Min.Y -= diff;
+					box.Max.Y += diff;
+					//box.Inflate(new Vector3(0f, 0.015f - dimensions.Y, 0f));
 				}
 				
-				if (dimensions.Z < 0.01f)
+				if (dimensions.Z < 0.015f)
 				{
-					box.Inflate(new Vector3(0f, 0f, 0.01f - dimensions.Z));
+					var diff = (0.015f - dimensions.Z) / 2f;
+					box.Min.Z -= diff;
+					box.Max.Z += diff;
+					//box.Inflate(new Vector3(0f, 0f, 0.015f - dimensions.Z));
 				}
 
 				Boxes[i] = box;

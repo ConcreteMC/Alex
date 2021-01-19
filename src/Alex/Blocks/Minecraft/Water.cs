@@ -17,7 +17,6 @@ namespace Alex.Blocks.Minecraft
 			//BlockModel = BlockFactory.StationairyWaterModel;
 
 			IsWater = true;
-			IsSourceBlock = true;
 			Animated = true;
 			BlockMaterial = Material.Water;
 
