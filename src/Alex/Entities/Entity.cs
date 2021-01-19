@@ -57,9 +57,12 @@ namespace Alex.Entities
 			}
 			set
 			{
+				ItemRenderer = null;
 				_modelRenderer = value;
+				
 				UpdateModelParts();
 				OnModelUpdated();
+				CheckHeldItem();
 			}
 		}
 		
@@ -191,17 +194,16 @@ namespace Alex.Entities
 			private set
 			{
 				var oldValue = _itemRenderer;
-				_itemRenderer = value;
+				var newValue = value;
+				//_itemRenderer = value;
 
 				if (oldValue != null)
 				{
 					oldValue.Parent?.Remove(oldValue);
 				}
 
-				if (value != null)
+				if (newValue != null)
 				{
-					UpdateItemPosition();
-					
 					EntityModelRenderer.ModelBone arm = null;
 
 					if (_rightItemModel != null)
@@ -215,6 +217,10 @@ namespace Alex.Entities
 
 					arm?.AddChild(value);
 				}
+
+				_itemRenderer = newValue;
+				
+				UpdateItemPosition();
 			}
 		}
 
@@ -397,7 +403,7 @@ namespace Alex.Entities
 
             if (inHand != null)
             {
-	            if (!string.IsNullOrWhiteSpace(inHand.Name))
+	            //if (!string.IsNullOrWhiteSpace(inHand.Name))
 	            {
 		            var renderer = inHand?.Renderer;
 		            if (renderer == null)

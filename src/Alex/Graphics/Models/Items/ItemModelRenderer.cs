@@ -18,6 +18,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Newtonsoft.Json;
 using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Processing;
 using Color = Microsoft.Xna.Framework.Color;
 using MathF = System.MathF;
 
@@ -50,50 +51,46 @@ namespace Alex.Graphics.Models.Items
             }
 
             List<VertexPositionColor> vertices = new List<VertexPositionColor>();
-         
+
             if (pack.TryGetBitmap(texture, out var bitmap))
             {
+                bitmap.Mutate(
+                    x =>
+                    {
+                        x.Flip(FlipMode.Horizontal);
+                        x.Rotate(RotateMode.Rotate90);
+                    });
                 try
                 {
-                    //  var texture = rawTexture.CloneAs<Rgba32>();
-
-                   // float toolPosX = 0.0f;
-                  //  float toolPosY = 0f; //1.0f;
-                   // float toolPosZ = 0f;//(1f / 16f) * 7.5f;
-
-                   var pixelSize = new Vector3(bitmap.Width / 16f, bitmap.Height / 16f, 1f);
-                    for (int y = 0; y < bitmap.Height; y++)
+                    if (bitmap.TryGetSinglePixelSpan(out var pixels))
                     {
-                        for (int x = 0; x < bitmap.Width; x++)
+                        var pixelSize = new Vector3(bitmap.Width / 16f, bitmap.Height / 16f, 1f);
+
+                        for (int y = 0; y < bitmap.Height; y++)
                         {
-                            var pixel = bitmap[x, y];
-
-                            if (pixel.A == 0)
+                            for (int x = 0; x < bitmap.Width; x++)
                             {
-                                continue;
+                                var pixel = pixels[(bitmap.Width * (bitmap.Height - 1 - y)) + (x)];
+
+                                if (pixel.A == 0)
+                                {
+                                    continue;
+                                }
+
+                                Color color  = new Color(pixel.R, pixel.G, pixel.B, pixel.A);
+                                var   origin = new Vector3((x), y, 0f);
+
+                                ItemModelCube built = new ItemModelCube(pixelSize, color);
+
+                                vertices.AddRange(
+                                    Modify(
+                                        built.Front.Concat(built.Bottom).Concat(built.Back).Concat(built.Top)
+                                           .Concat(built.Left).Concat(built.Right), origin));
                             }
-
-                            Color color = new Color(pixel.R, pixel.G, pixel.B, pixel.A);
-                            var origin = new Vector3(
-                                (x), (bitmap.Height - y), 0f);
-                            
-                            ItemModelCube built = new ItemModelCube(pixelSize, color);
-
-                            vertices.AddRange(
-                                Modify(
-                                    built.Front.Concat(built.Bottom).Concat(built.Back).Concat(built.Top)
-                                       .Concat(built.Left).Concat(built.Right), origin));
-
-                            //vertices.AddRange(built.Front);
-                            // vertices.AddRange(built.Bottom);
-                            // vertices.AddRange(built.Back);
-                            //vertices.AddRange(built.Top);
-                            // vertices.AddRange(built.Left);
-                            // vertices.AddRange(built.Right);
                         }
-                    }
 
-                    this.Size = new Vector3(pixelSize.X * bitmap.Width, pixelSize.Z * bitmap.Height, 1f);
+                        this.Size = new Vector3(pixelSize.X * bitmap.Width, pixelSize.Z * bitmap.Height, 1f);
+                    }
                 }
                 finally
                 {
@@ -216,11 +213,16 @@ namespace Alex.Graphics.Models.Items
 
                 if (r != Vector3.Zero)
                 {
+                    r.Y += 12.5f;
+                    r.Z -= 67.5f;
                     Effect.World = MCMatrix.CreateScale(activeDisplayItem.Scale)
-                                   * MCMatrix.CreateRotationDegrees(new Vector3(-67.5f, 180f, 0f))
-                                   * MCMatrix.CreateRotationDegrees(r * new Vector3(1f, 1f, -1f))
+                                   * MCMatrix.CreateTranslation(-halfSize)
+                                   * MCMatrix.CreateRotationZ(MathUtils.ToRadians(-22.5f))
+                                   * MCMatrix.CreateTranslation(halfSize)
+                                   //* MCMatrix.CreateRotationDegrees(new Vector3(-67.5f, 180f, 0f))
+                                   * MCMatrix.CreateRotationDegrees(r * new Vector3(1f, -1f, -1f))
                                    * MCMatrix.CreateTranslation(
-                                       new Vector3(t.X + 6f, Size.Y - t.Y,  t.Z))
+                                       new Vector3(t.X + 6f, t.Y + 4f,  t.Z))
                                    * characterMatrix;
                 }
                 else
