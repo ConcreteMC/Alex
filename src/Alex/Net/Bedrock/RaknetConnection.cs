@@ -81,7 +81,6 @@ namespace Alex.Net.Bedrock
 		public bool AutoConnect { get; set; } = true;
 
 		public  long             ClientGuid { get; }
-		private BackgroundWorker _backgroundWorker;
 		public RaknetConnection()
 		{
 			_endpoint = new IPEndPoint(IPAddress.Any, 0);
@@ -171,9 +170,6 @@ namespace Alex.Net.Bedrock
 				var listener = _listener;
 				if (listener == null) return;
 
-				_backgroundWorker?.Dispose();
-				_backgroundWorker = null;
-				
 				_listener = null;
 				listener.Close();
 			}
@@ -285,8 +281,8 @@ namespace Alex.Net.Bedrock
 							//ThreadPool.QueueUserWorkItem(
 							//	(o) =>
 							//{
-							Action action =
-								() => {
+							//Action action =
+							//	() => {
 									try
 									{
 										ReceiveDatagram(receiveBytes, senderEndpoint);
@@ -296,15 +292,15 @@ namespace Alex.Net.Bedrock
 										Log.Warn(e, $"Process message error from: {senderEndpoint.Address}");
 									}
 
-								};
+							//	};
 
-							if (_backgroundWorker != null)
+							//if (_backgroundWorker != null)
 							{
-								_backgroundWorker.Enqueue(action);
+							//	_backgroundWorker.Enqueue(action);
 							}
-							else
+							//else
 							{
-								action();
+							//	action();
 							}
 
 							//} );
@@ -747,9 +743,9 @@ namespace Alex.Net.Bedrock
 		}
 
 		private object _sendSync = new object();
-		public async Task SendDataAsync(byte[] data, int length, IPEndPoint targetEndPoint)
+		public Task SendDataAsync(byte[] data, int length, IPEndPoint targetEndPoint)
 		{
-			Monitor.Enter(_sendSync);
+			//Monitor.Enter(_sendSync);
 
 			try
 			{
@@ -757,11 +753,11 @@ namespace Alex.Net.Bedrock
 				{
 					if (_listener == null)
 					{
-						return;
+						return Task.CompletedTask;
 					}
 
-					await _listener.SendAsync(data, length, targetEndPoint);
-					//_listener.Send(data, length, targetEndPoint);
+				//	await _listener.SendAsync(data, length, targetEndPoint);
+					_listener.Send(data, length, targetEndPoint);
 
 					Interlocked.Increment(ref ConnectionInfo.PacketsOut);
 					Interlocked.Add(ref ConnectionInfo.BytesOut, length);
@@ -778,8 +774,10 @@ namespace Alex.Net.Bedrock
 			}
 			finally
 			{
-				Monitor.Exit(_sendSync);
+				//Monitor.Exit(_sendSync);
 			}
+
+			return Task.CompletedTask;
 		}
 		
 		
@@ -948,9 +946,6 @@ namespace Alex.Net.Bedrock
 					return;
 				}
 				
-				if (_backgroundWorker == null)
-					_backgroundWorker = new BackgroundWorker(1);
-
 				session = new RaknetSession(ConnectionInfo, this, targetEndPoint, mtuSize)
 				{
 					State = ConnectionState.Connecting,
