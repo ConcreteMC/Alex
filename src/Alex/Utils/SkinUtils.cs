@@ -300,7 +300,7 @@ namespace Alex.Utils
 			
 		}
 
-		public static bool TryGetBitmap(this Skin skin, out Image<Rgba32> result)
+		public static bool TryGetBitmap(this Skin skin, EntityModel model, out Image<Rgba32> result)
 		{
 			try
 			{
@@ -311,6 +311,15 @@ namespace Alex.Utils
 				int width = skin.Width;
 				int height = skin.Height;
 
+				if (bytes.Length != width * height * 4)
+				{
+					if (model.Description.TextureWidth * model.Description.TextureHeight * 4 == bytes.Length)
+					{
+						width = (int) model.Description.TextureWidth;
+						height = (int) model.Description.TextureHeight;
+					}
+				}
+				
 				Image<Rgba32> bitmap = new Image<Rgba32>(width, height);
 
 				int i = 0;

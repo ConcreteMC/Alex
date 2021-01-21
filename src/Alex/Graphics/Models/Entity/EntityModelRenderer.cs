@@ -43,9 +43,7 @@ namespace Alex.Graphics.Models.Entity
 		private AlphaTestEffect    Effect       { get; set; }
 		private PooledVertexBuffer VertexBuffer { get; set; }
 		public  bool               Valid        { get; private set; }
-		private bool               CanRender    { get; set; } = true;
 
-		public long        Vertices => CanRender && VertexBuffer != null ? VertexBuffer.VertexCount : 0;
 		public EntityModel Model    { get; }
 		public EntityModelRenderer(EntityModel model, PooledTexture2D texture)
 		{
@@ -92,7 +90,6 @@ namespace Alex.Graphics.Models.Entity
 			if (vertices.Count == 0)
 			{
 				Valid = true;
-				CanRender = false;
 				return;
 			}
 			
@@ -225,12 +222,6 @@ namespace Alex.Graphics.Models.Entity
 		
 		public virtual void Render(IRenderArgs args)
 		{
-			if (!CanRender)
-			{
-				//Log.Warn($"Cannot render model...");
-				return;
-			}
-			
 			if (Bones == null)
 			{
 				Log.Warn($"No bones found for model...");

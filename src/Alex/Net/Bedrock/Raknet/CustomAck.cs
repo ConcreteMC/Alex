@@ -8,8 +8,8 @@ namespace Alex.Net.Bedrock.Raknet
 {
 	public class CustomNak : Packet<CustomNak>
 	{
-		public List<Tuple<int, int>> ranges = new List<Tuple<int, int>>();
-		public List<int>             naks   = new List<int>();
+		public readonly List<Tuple<int, int>> Ranges = new List<Tuple<int, int>>();
+		public           List<int>             Naks    = new List<int>();
 		public CustomNak()
 		{
 			Id = 0xa0;
@@ -20,7 +20,7 @@ namespace Alex.Net.Bedrock.Raknet
 			base.DecodePacket();
 
 			if (Id != 0xa0) throw new Exception("Not NAK");
-			ranges.Clear();
+			Ranges.Clear();
 
 			short count = ReadShort(true);
 			for (int i = 0; i < count; i++)
@@ -33,13 +33,13 @@ namespace Alex.Net.Bedrock.Raknet
 					if (end - start > 512) end = start + 512;
 
 					var range = new Tuple<int, int>(start, end);
-					ranges.Add(range);
+					Ranges.Add(range);
 				}
 				else
 				{
 					int seqNo = ReadLittle().IntValue();
 					var range = new Tuple<int, int>(seqNo, seqNo);
-					ranges.Add(range);
+					Ranges.Add(range);
 				}
 			}
 		}
@@ -49,11 +49,8 @@ namespace Alex.Net.Bedrock.Raknet
 		{
 			base.EncodePacket();
 
-			if (ranges.Count == 0 && naks.Count > 0)
-			{
-				ranges = Acks.Slize(naks);
-			}
-			
+			List<Tuple<int, int>> ranges = Acks.Slize(Naks);
+
 			Write((short) ranges.Count, true);
 
 			foreach (var range in ranges)
@@ -70,6 +67,16 @@ namespace Alex.Net.Bedrock.Raknet
 					Write(new Int24(range.Item2));
 				}
 			}
+		}
+
+		/// <inheritdoc />
+		/// <inheritdoc />
+		protected override void ResetPacket()
+		{
+			base.ResetPacket();
+			
+			Ranges.Clear();
+			Naks.Clear();
 		}
 	}
 }

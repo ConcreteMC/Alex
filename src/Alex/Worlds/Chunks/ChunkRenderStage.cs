@@ -217,8 +217,8 @@ namespace Alex.Worlds.Chunks
 					callSetData = true;
 				}
 
-				//  if (callSetData)
-				buffer.SetData(realVertices, 0, realVertices.Length);
+				//if (callSetData)
+					buffer.SetData(realVertices, 0, realVertices.Length);
 
 				Buffer = buffer;
 				oldBuffer?.MarkForDisposal();
@@ -228,10 +228,11 @@ namespace Alex.Worlds.Chunks
 			}
 		}
         
-		public virtual int Render(GraphicsDevice device, Effect effect)
+		public virtual void Render(GraphicsDevice device, Effect effect)
 		{
 			var primitives = _renderableVerticeCount;
-			if (Buffer == null || primitives == 0) return 0;
+
+			if (Buffer == null || primitives == 0) return;
             
 			device.SetVertexBuffer(Buffer);
 			foreach (var pass in effect.CurrentTechnique.Passes)
@@ -239,8 +240,6 @@ namespace Alex.Worlds.Chunks
 				pass.Apply();
 				device.DrawPrimitives(PrimitiveType.TriangleList, 0, primitives / 3);
 			}
-
-			return Buffer.VertexCount;
 		}
 
 		public void Dispose()

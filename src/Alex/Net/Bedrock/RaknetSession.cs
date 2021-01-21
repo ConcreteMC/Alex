@@ -592,11 +592,13 @@ namespace Alex.Net.Bedrock
 						ConnectedPing connectedPing = ConnectedPing.CreateObject();
 						connectedPing.sendpingtime = now;
 						//connectedPing.ReliabilityHeader.Reliability = Reliability.Unreliable;
+						
+						if (_pings.TryAdd(connectedPing.sendpingtime))
+						{
+							SendPacket(connectedPing);
 
-						SendPacket(connectedPing);
-
-						_pings.TryAdd(connectedPing.sendpingtime);
-						_lastPingTIme = DateTime.UtcNow;
+							_lastPingTIme = DateTime.UtcNow;
+						}
 					}
 				}
 			}
@@ -606,6 +608,7 @@ namespace Alex.Net.Bedrock
 			}
 		}
 
+		private ThreadSafeList<int> _nacked = new ThreadSafeList<int>();
 		private async Task SendNackQueueAsync()
 		{
 			var           queue      = OutgoingNackQueue;
@@ -613,22 +616,22 @@ namespace Alex.Net.Bedrock
 
 			if (queueCount == 0) return;
 
-			var acks = new CustomNak();
+			var acks = CustomNak.CreateObject();
 			for (int i = 0; i < queueCount; i++)
 			{
 				if (!queue.TryDequeue(out int ack)) break;
-
-				Interlocked.Increment(ref ConnectionInfo.NakSent);
-				acks.naks.Add(ack);
+				
+				acks.Naks.Add(ack);
 			}
 
-			if (acks.naks.Count > 0)
+			if (acks.Naks.Count > 0)
 			{
 				byte[] data = acks.Encode();
 				await _packetSender.SendDataAsync(data, EndPoint);
 				
+				Interlocked.Increment(ref ConnectionInfo.NakSent);
 			}
-			//acks.PutPool();
+			acks.PutPool();
 		}
 		
 		private async Task SendAckQueueAsync()
@@ -642,8 +645,7 @@ namespace Alex.Net.Bedrock
 			for (int i = 0; i < queueCount; i++)
 			{
 				if (!queue.TryDequeue(out int ack)) break;
-
-				Interlocked.Increment(ref ConnectionInfo.AckSent);
+				_nacked.Remove(ack);
 				acks.acks.Add(ack);
 			}
 
@@ -651,7 +653,9 @@ namespace Alex.Net.Bedrock
 			{
 				byte[] data = acks.Encode();
 				await _packetSender.SendDataAsync(data, EndPoint);
+				Interlocked.Increment(ref ConnectionInfo.AckSent);
 			}
+			
 			acks.PutPool();
 		}
 
@@ -783,12 +787,14 @@ namespace Alex.Net.Bedrock
 		
 		private long   _lastDatagramSequenceNumber = -1;
 		private object _ackLock                    = new object();
+
 		public bool Acknowledge(Int24 datagramSequenceNumber)
 		{
 			var sequence = datagramSequenceNumber.IntValue();
 			OutgoingAckQueue.Enqueue(sequence);
 
 			var lastDatagram = Interlocked.Read(ref _lastDatagramSequenceNumber);
+
 			if (sequence > lastDatagram)
 			{
 				var last    = Interlocked.CompareExchange(ref _lastDatagramSequenceNumber, sequence, lastDatagram);
@@ -798,7 +804,10 @@ namespace Alex.Net.Bedrock
 				{
 					for (long i = last; i < sequence; i++)
 					{
-						OutgoingNackQueue.Enqueue((int) i);
+						if (_nacked.TryAdd((int) i))
+						{
+							OutgoingNackQueue.Enqueue((int) i);
+						}
 					}
 				}
 

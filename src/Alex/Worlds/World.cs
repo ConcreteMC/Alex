@@ -549,20 +549,20 @@ namespace Alex.Worlds
 		{
 			if (cx == 0)
 			{
-				ChunkManager.ScheduleChunkUpdate(chunkCoords - new ChunkCoordinates(1, 0), ScheduleType.Border | ScheduleType.Lighting, true);
+				ChunkManager.ScheduleChunkUpdate(chunkCoords - new ChunkCoordinates(1, 0), ScheduleType.Border | ScheduleType.Lighting, false);
 			}
 			else if (cx == 0xf)
 			{
-				ChunkManager.ScheduleChunkUpdate(chunkCoords + new ChunkCoordinates(1, 0), ScheduleType.Border | ScheduleType.Lighting, true);
+				ChunkManager.ScheduleChunkUpdate(chunkCoords + new ChunkCoordinates(1, 0), ScheduleType.Border | ScheduleType.Lighting, false);
 			}
 
 			if (cz == 0)
 			{
-				ChunkManager.ScheduleChunkUpdate(chunkCoords - new ChunkCoordinates(0, 1), ScheduleType.Border | ScheduleType.Lighting, true);
+				ChunkManager.ScheduleChunkUpdate(chunkCoords - new ChunkCoordinates(0, 1), ScheduleType.Border | ScheduleType.Lighting, false);
 			}
 			else if (cz == 0xf)
 			{
-				ChunkManager.ScheduleChunkUpdate(chunkCoords + new ChunkCoordinates(0, 1), ScheduleType.Border | ScheduleType.Lighting, true);
+				ChunkManager.ScheduleChunkUpdate(chunkCoords + new ChunkCoordinates(0, 1), ScheduleType.Border | ScheduleType.Lighting, false);
 			}
         }
 
@@ -572,7 +572,7 @@ namespace Alex.Worlds
 
 			if (Options.VideoOptions.ClientSideLighting && Dimension == Dimension.Overworld)
 			{
-				ChunkManager.SkyLightCalculator.Calculate(this, source);
+				//ChunkManager.SkyLightCalculator.Calculate(this, source);
 				//new SkyLightCalculations().Calculate(this, source);
 			}
 

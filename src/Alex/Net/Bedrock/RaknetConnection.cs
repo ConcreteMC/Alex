@@ -379,7 +379,7 @@ namespace Alex.Net.Bedrock
 			
 			if (header.IsNak)
 			{
-				var nak = Nak.CreateObject();
+				var nak = CustomNak.CreateObject();
 				nak.Decode(receivedBytes);
 
 				HandleNak(rakSession, nak);
@@ -540,11 +540,11 @@ namespace Alex.Net.Bedrock
 			session.WaitForAck = false;
 		}
 
-		internal void HandleNak(RaknetSession session, Nak nak)
+		internal void HandleNak(RaknetSession session, CustomNak nak)
 		{
 			var queue = session.WaitingForAckQueue;
 
-			foreach (Tuple<int, int> range in nak.ranges)
+			foreach (Tuple<int, int> range in nak.Ranges)
 			{
 				int start = range.Item1;
 				int end = range.Item2;
@@ -641,7 +641,7 @@ namespace Alex.Net.Bedrock
 
 					if (datagram.RetransmitImmediate || elapsedTime >= datagramTimeout)
 					{
-						if (!session.Evicted && session.WaitingForAckQueue.TryRemove(datagram.Header.DatagramSequenceNumber, out _))
+						if (!session.Evicted && session.WaitingForAckQueue.TryRemove(datagram.Header.DatagramSequenceNumber, out datagram))
 						{
 							session.ErrorCount++;
 							session.ResendCount++;

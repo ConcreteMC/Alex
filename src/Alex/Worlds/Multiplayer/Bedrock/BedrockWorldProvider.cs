@@ -148,18 +148,17 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			//Client.ChunkRadius
 			foreach (var chunk in World.ChunkManager.GetAllChunks())
 			{
-				var distance = chunk.Key.DistanceTo(center);
-				
 				if (chunkPublisher != null)
 				{
 					if (chunk.Key.DistanceTo(publisherCenter) < (chunkPublisher.radius / 16f))
 						continue;
 				}
 				
+				var distance = chunk.Key.DistanceTo(center);
 				if (distance > maxViewDistance)
 				{
 					//_chunkCache.TryRemove(chunkColumn.Key, out var waste);
-					UnloadChunk(chunk.Key);
+					World.UnloadChunk(chunk.Key);
 				}
 			}
 			//Parallel.ForEach(_loadedChunks.ToArray(), (chunkColumn) =>
@@ -173,11 +172,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				
 				
 		//	});
-		}
-
-		public void UnloadChunk(ChunkCoordinates coordinates)
-		{
-			World.UnloadChunk(coordinates);
 		}
 
 		protected override void Initiate()
@@ -332,6 +326,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		public override void Dispose()
 		{
+			World?.Ticker?.UnregisterTicked(this);
+			
 			base.Dispose();
 			Client.Dispose();
 		}

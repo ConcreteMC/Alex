@@ -184,18 +184,6 @@ namespace Alex.Entities
 				if (skin == null)
 					return;
 
-				Image<Rgba32> skinBitmap = null;
-
-				if (!skin.TryGetBitmap(out skinBitmap))
-				{
-					Log.Warn($"No custom skin data for player {Name}");
-
-					if (Alex.Instance.Resources.TryGetBitmap("entity/alex", out var rawTexture))
-					{
-						skinBitmap = rawTexture;
-					}
-				}
-
 				EntityModel model = null;
 
 				if (!skin.IsPersonaSkin)
@@ -243,12 +231,7 @@ namespace Alex.Entities
 										}
 										else
 										{
-										/*	if (!Directory.Exists("skins"))
-												Directory.CreateDirectory("skins");
-
-											File.WriteAllText(
-												Path.Combine("skins", $"{model.Description.Identifier}-{Environment.TickCount64}.json"),
-												skin.GeometryData);*/
+											
 										}
 
 									}
@@ -282,6 +265,25 @@ namespace Alex.Entities
 
 				if (model != null && ValidateModel(model, Name))
 				{
+					Image<Rgba32> skinBitmap = null;
+
+					if (!skin.TryGetBitmap(model, out skinBitmap))
+					{
+						Log.Warn($"No custom skin data for player {Name}");
+
+						if (Alex.Instance.Resources.TryGetBitmap("entity/alex", out var rawTexture))
+						{
+							skinBitmap = rawTexture;
+						}
+					}
+					
+					//if (!Directory.Exists("skins"))
+					//	Directory.CreateDirectory("skins");
+
+					//var path = Path.Combine("skins", $"{model.Description.Identifier}-{Environment.TickCount64}");
+					//File.WriteAllText($"{path}.json", skin.GeometryData);
+					//skinBitmap.SaveAsPng($"{path}.png");
+					
 					var modelTextureSize = new Point(
 						(int) model.Description.TextureWidth, (int) model.Description.TextureHeight);
 

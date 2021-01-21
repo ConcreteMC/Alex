@@ -417,7 +417,7 @@ namespace Alex.Entities
 				   
 			    }*/
 			    
-			    SteelSkin(entity);
+			    StealSkin(entity);
 			    return;
 		    }
 
@@ -434,7 +434,7 @@ namespace Alex.Entities
 		    }
 	    }
 
-	    private void SteelSkin(Entity sourceEntity)
+	    private void StealSkin(Entity sourceEntity)
 	    {
 		    if (Network is BedrockClient bc)
 		    {
@@ -477,11 +477,11 @@ namespace Alex.Entities
 			    Skin = skin;
 			    Log.Info($"Stole skin from {sourceEntity.NameTag}");
 			    
-			   /* File.WriteAllText(Path.Combine("skins", skin.SkinId + ".json"), skin.GeometryData);
+			   /* File.WriteAllText(Path.Combine("skins", skin.GeometryName + ".json"), skin.GeometryData);
 
 			    if (skin.TryGetBitmap(out var bmp))
 			    {
-				    bmp.SaveAsPng(Path.Combine("skins", skin.SkinId + ".png"));
+				    bmp.SaveAsPng(Path.Combine("skins", skin.GeometryName + ".png"));
 			    }*/
 		    }
 		    

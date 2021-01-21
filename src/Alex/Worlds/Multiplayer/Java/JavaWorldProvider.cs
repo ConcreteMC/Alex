@@ -2427,6 +2427,8 @@ namespace Alex.Worlds.Multiplayer.Java
 
 		public override void Dispose()
 		{
+			World?.Ticker?.UnregisterTicked(this);
+			
 			base.Dispose();
 
 			foreach (var disposable in _disposables.ToArray())

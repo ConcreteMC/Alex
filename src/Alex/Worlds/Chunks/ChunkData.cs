@@ -27,11 +27,10 @@ namespace Alex.Worlds.Chunks
             Interlocked.Increment(ref _instances);
         }
 
-        public bool Draw(GraphicsDevice device, RenderStage stage, Effect effect, out int vertexCount)
+        public bool Draw(GraphicsDevice device, RenderStage stage, Effect effect)
         {
             if (Disposed)
             {
-                vertexCount = 0;
                 return false;
             }
 
@@ -39,11 +38,10 @@ namespace Alex.Worlds.Chunks
 
             if (rStage == null)
             {
-                vertexCount = 0;
                 return false;
             }
 
-            vertexCount = rStage.Render(device, effect);
+            rStage.Render(device, effect);
 
             return true;
         }

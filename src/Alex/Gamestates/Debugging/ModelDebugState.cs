@@ -574,12 +574,12 @@ namespace Alex.Gamestates.Debugging
 				//context.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
 				//context.GraphicsDevice.SamplerStates[0] = SamplerState.PointWrap;
 
-				data.Draw(args.GraphicsDevice, RenderStage.OpaqueFullCube, _currentEffect, out _);
-				data.Draw(args.GraphicsDevice, RenderStage.Opaque, _currentEffect, out _);
-				data.Draw(args.GraphicsDevice, RenderStage.Transparent, _currentEffect, out _);
-				data.Draw(args.GraphicsDevice, RenderStage.Translucent, _currentEffect, out _);
-				data.Draw(args.GraphicsDevice, RenderStage.Animated, _currentEffect, out _);
-				data.Draw(args.GraphicsDevice, RenderStage.Liquid, _currentEffect, out _);
+				data.Draw(args.GraphicsDevice, RenderStage.OpaqueFullCube, _currentEffect);
+				data.Draw(args.GraphicsDevice, RenderStage.Opaque, _currentEffect);
+				data.Draw(args.GraphicsDevice, RenderStage.Transparent, _currentEffect);
+				data.Draw(args.GraphicsDevice, RenderStage.Translucent, _currentEffect);
+				data.Draw(args.GraphicsDevice, RenderStage.Animated, _currentEffect);
+				data.Draw(args.GraphicsDevice, RenderStage.Liquid, _currentEffect);
 			}
 		}
 
