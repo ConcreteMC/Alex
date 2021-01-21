@@ -145,12 +145,7 @@ namespace Alex.Services
 			connection.RemoteEndpoint = null;
 			connection.AutoConnect = false;
 			connection.Start();
-			
-			try
-			{
-				connection.ConnectionInfo.ThroughPut.Change(Timeout.Infinite, Timeout.Infinite);
-			}catch{}
-			
+
 			while (!connection.FoundServer)
 			{
 				if ((!sw.IsRunning || sw.ElapsedMilliseconds > 100))

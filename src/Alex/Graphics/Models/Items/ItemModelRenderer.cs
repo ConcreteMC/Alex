@@ -64,7 +64,7 @@ namespace Alex.Graphics.Models.Items
                 {
                     if (bitmap.TryGetSinglePixelSpan(out var pixels))
                     {
-                        var pixelSize = new Vector3(bitmap.Width / 16f, bitmap.Height / 16f, 1f);
+                        var pixelSize = new Vector3( 16f / bitmap.Width, 16f / bitmap.Height, 1f);
 
                         for (int y = 0; y < bitmap.Height; y++)
                         {
@@ -78,7 +78,7 @@ namespace Alex.Graphics.Models.Items
                                 }
 
                                 Color color  = new Color(pixel.R, pixel.G, pixel.B, pixel.A);
-                                var   origin = new Vector3((x), y, 0f);
+                                var   origin = new Vector3((x * pixelSize.X), y * pixelSize.Y, 0f);
 
                                 ItemModelCube built = new ItemModelCube(pixelSize, color);
 
@@ -89,7 +89,7 @@ namespace Alex.Graphics.Models.Items
                             }
                         }
 
-                        this.Size = new Vector3(pixelSize.X * bitmap.Width, pixelSize.Z * bitmap.Height, 1f);
+                        this.Size = new Vector3(16f, 16f, 1f);
                     }
                 }
                 finally
@@ -206,7 +206,7 @@ namespace Alex.Graphics.Models.Items
             var activeDisplayItem = ActiveDisplayItem;
             //   world.Right = -world.Right;
 
-            if (DisplayPosition.HasFlag(DisplayPosition.ThirdPerson))
+           if (DisplayPosition.HasFlag(DisplayPosition.ThirdPerson))
             {
                 var t = activeDisplayItem.Translation;
                 var r = activeDisplayItem.Rotation;
@@ -217,7 +217,7 @@ namespace Alex.Graphics.Models.Items
                     r.Z -= 67.5f;
                     Effect.World = MCMatrix.CreateScale(Scale * activeDisplayItem.Scale)
                                    * MCMatrix.CreateTranslation(-halfSize)
-                                   * MCMatrix.CreateRotationZ(MathUtils.ToRadians(-22.5f))
+                                   * MCMatrix.CreateRotationZ(MathUtils.ToRadians(-45f))
                                    * MCMatrix.CreateTranslation(halfSize)
                                    //* MCMatrix.CreateRotationDegrees(new Vector3(-67.5f, 180f, 0f))
                                    * MCMatrix.CreateRotationDegrees(r * new Vector3(1f, -1f, -1f))

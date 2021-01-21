@@ -209,30 +209,26 @@ namespace Alex.Gamestates.Multiplayer
 		
 	    private void OnDeleteItemButtonPressed()
 	    {
-		    _toDelete = SelectedItem;
+		    var toDelete = SelectedItem;
 		    Alex.GameStateManager.SetActiveState(new GuiConfirmState(new GuiConfirmState.GuiConfirmStateOptions()
 		    {
 				MessageTranslationKey = "selectServer.deleteQuestion",
 				ConfirmTranslationKey = "selectServer.deleteButton"
-		    }, DeleteServerCallbackAction));
-	    }
-
-	    private GuiServerListEntryElement _toDelete;
-	    private void DeleteServerCallbackAction(bool confirm)
-	    {
-		    Alex.UIThreadQueue.Enqueue(() =>
+		    }, confirm =>
 		    {
 			    if (confirm)
 			    {
-				    RemoveItem(_toDelete);
+				    RemoveItem(toDelete);
 
-				    _listProvider.RemoveEntry(_toDelete.SavedServerEntry);
-				    //Load();
+				    _listProvider.RemoveEntry(toDelete.SavedServerEntry);
+				    _listProvider.Save(_listProvider.Data);
+				    
+					Reload();
 			    }
-		    });
+		    }));
 	    }
 
-		private FastRandom Rnd = new FastRandom();
+	    private FastRandom Rnd = new FastRandom();
 
 		private async void OnJoinServerButtonPressed()
 		{

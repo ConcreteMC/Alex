@@ -7,7 +7,6 @@ using System.Net;
 using System.Threading;
 using Alex.API.Graphics;
 using Alex.Blocks.Minecraft;
-using Alex.Net.Bedrock.Types;
 using Alex.ResourcePackLib.Json.Models.Entities;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;

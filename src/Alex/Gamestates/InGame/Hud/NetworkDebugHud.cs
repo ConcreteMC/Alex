@@ -69,14 +69,16 @@ namespace Alex.Gamestates.InGame.Hud
         {
             var info = NetworkProvider.GetConnectionInfo();
 
-            double dataOut = (double) (info.BytesOut * 8L) / 1000000.0;
-            double dataIn  = (double) (info.BytesIn * 8L) / 1000000.0;
-
-            StringBuilder sb = new StringBuilder();
+            //double dataOut = (double) (info.BytesOut * 8L) / 1000000.0;
+            //double dataIn  = (double) (info.BytesIn * 8L) / 1000000.0;
+            double        dataOut = (double) (info.BytesOut) / 1000.0;
+            double        dataIn  = (double) (info.BytesIn) / 1000.0;
+            
+            StringBuilder sb      = new StringBuilder();
             sb.Append($"Latency: {info.Latency}ms");
             sb.Append($" | Pkt in/out(#/s): {info.PacketsIn}/{info.PacketsOut}");
 
-            if (info.Ack.HasValue && info.AckSent.HasValue)
+         //   if (info.Ack.HasValue && info.AckSent.HasValue)
             {
                 sb.Append($" | Ack in/out(#/s): {info.Ack}/{info.AckSent}");
             }
@@ -84,7 +86,7 @@ namespace Alex.Gamestates.InGame.Hud
             /* sb.Append($" | NACK's: {info.Nack}");
              sb.Append($" | Resends: {info.Resends}");
              sb.Append($" | Fails: {info.Fails}");*/
-            sb.Append($" | THR in/out(Mbps): {dataIn:F}/{dataOut:F}");
+            sb.Append($" | THR in/out(Kbps): {dataIn:F2}/{dataOut:F2}");
 
             // WarningElement.IsVisible = info.State != ConnectionInfo.NetworkState.Ok;
 

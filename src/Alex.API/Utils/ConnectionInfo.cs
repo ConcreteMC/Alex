@@ -5,25 +5,29 @@ namespace Alex.API.Network
     public class ConnectionInfo
     {
         public DateTime ConnectionOpenedTime { get; }
-        public long Latency { get; set; }
-        public long? Nack { get; set; }
-        public long? Ack { get; set; }
-        public long? AckSent { get; set; }
-        public long? Fails { get; set; }
-        public long? Resends { get; set; }
+        public long     Latency;
         
-        public long BytesIn { get; set; }
-        public long BytesOut { get; set; }
+        public long Nak;
+        public long NakSent;
         
-        public long PacketsIn  { get; set; }
-        public long PacketsOut { get; set; }
+        public long Ack;
+        public long AckSent;
+        
+        public long    Fails;
+        public long    Resends;
+
+        public long BytesIn;
+        public long BytesOut;
+
+        public long PacketsIn;
+        public long PacketsOut;
         
         public NetworkState State { get; }
-        public ConnectionInfo(DateTime connectionOpenedTime, long latency, long? nack, long? ack, long? acksSent, long? fails, long? resends, long bytesIn, long bytesOut, long packetsIn, long packetsOut, NetworkState state = NetworkState.Ok)
+        public ConnectionInfo(DateTime connectionOpenedTime, long latency, long nack, long ack, long acksSent, long fails, long resends, long bytesIn, long bytesOut, long packetsIn, long packetsOut, NetworkState state = NetworkState.Ok)
         {
             ConnectionOpenedTime = connectionOpenedTime;
             Latency = latency;
-            Nack = nack;
+            Nak = nack;
             Ack = ack;
             AckSent = acksSent;
             Fails = fails;

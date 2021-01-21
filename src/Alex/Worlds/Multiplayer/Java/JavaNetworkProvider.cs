@@ -33,7 +33,7 @@ namespace Alex.Worlds.Multiplayer.Java
 							long   packetCountIn = Interlocked.Exchange(ref Client.PacketsIn, 0L);
 
 							_connectionInfo = new ConnectionInfo(
-								Client.StartTime, Client.Latency, null, null, null, null, null,
+								Client.StartTime, Client.Latency, 0, 0, 0, 0, 0,
 								packetSizeIn, packetSizeOut, packetCountIn, packetCountOut);
 						}, null, 1000L, 1000L);
 		}

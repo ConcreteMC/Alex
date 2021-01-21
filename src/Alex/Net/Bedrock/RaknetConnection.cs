@@ -24,6 +24,7 @@
 #endregion
 
 using System;
+using System.Buffers;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -34,6 +35,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Alex.Net.Bedrock.Raknet;
+using Alex.Utils;
 using MiNET;
 using MiNET.Net;
 using MiNET.Net.RakNet;
@@ -54,17 +56,15 @@ namespace Alex.Net.Bedrock
 
 		private Thread _readingThread;
 
-		public          RaknetSession  Session { get; set; } = null;
-		public readonly RaknetHandler  RaknetHandler;
-		public   ConnectionInfo ConnectionInfo { get; }
+		public const int UdpHeaderSize = 28;
 
-		public bool FoundServer => RaknetHandler.HaveServer;
+		public          short          MtuSize    { get; set; } = 1500;
+		public          short          MaxMtuSize { get; }      = 1500;
+		
+		public RaknetSession              Session        { get; set; } = null;
+		public API.Network.ConnectionInfo ConnectionInfo { get; }
 
-		public bool AutoConnect
-		{
-			get => RaknetHandler.AutoConnect;
-			set => RaknetHandler.AutoConnect = value;
-		}
+		public bool FoundServer => HaveServer;
 
 		public bool IsNetworkOutOfOrder => Session?.IsOutOfOrder ?? false;
 
@@ -75,13 +75,22 @@ namespace Alex.Net.Bedrock
 
 		public Func<RaknetSession, ICustomMessageHandler> CustomMessageHandlerFactory { get; set; }
 
+		// RakNet found a remote server using Ping.
+		public bool HaveServer { get; set; }
+		// Tell RakNet to automatically connect to any found server.
+		public bool AutoConnect { get; set; } = true;
+
+		public  long             ClientGuid { get; }
+		private BackgroundWorker _backgroundWorker;
 		public RaknetConnection()
 		{
 			_endpoint = new IPEndPoint(IPAddress.Any, 0);
 
-			ConnectionInfo = new ConnectionInfo(new ConcurrentDictionary<IPEndPoint, MiNET.Net.RakNet.RakSession>());
-
-			RaknetHandler = new RaknetHandler(this, ConnectionInfo);
+			ConnectionInfo = new API.Network.ConnectionInfo();
+			
+			byte[] buffer = new byte[8];
+			new Random().NextBytes(buffer);
+			ClientGuid = BitConverter.ToInt64(buffer, 0);
 		}
 
 		public void Start()
@@ -94,6 +103,7 @@ namespace Alex.Net.Bedrock
 			_readingThread.Start();
 
 			_tickerHighPrecisionTimer = new HighPrecisionTimer(10, SendTick, true);
+			
 		}
 
 		public bool TryConnect(IPEndPoint targetEndPoint, int numberOfAttempts = int.MaxValue, short mtuSize = 1500)
@@ -104,9 +114,9 @@ namespace Alex.Net.Bedrock
 			do
 			{
 				if (!connecting)
-					RaknetHandler.SendOpenConnectionRequest1(targetEndPoint, mtuSize);
+					SendOpenConnectionRequest1(targetEndPoint, mtuSize);
 
-				if (!RaknetHandler.ConnectionResetEvent.WaitOne(500))
+				if (!ConnectionResetEvent.WaitOne(500))
 				{
 					mtuSize -= 10;
 				}
@@ -132,7 +142,7 @@ namespace Alex.Net.Bedrock
 			byte[] data = new UnconnectedPing()
 			{
 				pingId = Stopwatch.GetTimestamp(),
-				guid = RaknetHandler.ClientGuid
+				guid = ClientGuid
 			}.Encode();
 			
 			if (targetEndPoint != null)
@@ -150,6 +160,7 @@ namespace Alex.Net.Bedrock
 					return;
 
 				_stopped = true;
+
 				//Log.Info("Shutting down...");
 				Session?.Close();
 
@@ -160,6 +171,9 @@ namespace Alex.Net.Bedrock
 				var listener = _listener;
 				if (listener == null) return;
 
+				_backgroundWorker?.Dispose();
+				_backgroundWorker = null;
+				
 				_listener = null;
 				listener.Close();
 			}
@@ -181,8 +195,7 @@ namespace Alex.Net.Bedrock
 				//_listener.Client.SendBufferSize = 1600*40000;
 				listener.Client.SendBufferSize = int.MaxValue;
 			}
-
-			//listener.DontFragment = true;
+			
 			listener.EnableBroadcast = false;
 
 			if (Environment.OSVersion.Platform != PlatformID.Unix && Environment.OSVersion.Platform != PlatformID.MacOSX)
@@ -237,67 +250,86 @@ namespace Alex.Net.Bedrock
 			_tickerHighPrecisionTimer = null;
 		}
 
+
 		private async void ReceiveCallback(object o)
 		{
-			while (_listener != null)
+			//using (var stream = new NetworkStream(_listener.Client))
 			{
-				var listener = _listener;
-
-				// Check if we already closed the server
-				if (listener?.Client == null) return;
-
-				// WSAECONNRESET:
-				// The virtual circuit was reset by the remote side executing a hard or abortive close. 
-				// The application should close the socket; it is no longer usable. On a UDP-datagram socket 
-				// this error indicates a previous send operation resulted in an ICMP Port Unreachable message.
-				// Note the spocket settings on creation of the server. It makes us ignore these resets.
-				IPEndPoint senderEndpoint = null;
-
-				try
+				while (_listener != null)
 				{
-					var receive      = await listener.ReceiveAsync();
-					var receiveBytes = receive.Buffer;
-					senderEndpoint = receive.RemoteEndPoint;
-					
-					Interlocked.Increment(ref ConnectionInfo.NumberOfPacketsInPerSecond);
-					Interlocked.Add(ref ConnectionInfo.TotalPacketSizeInPerSecond, receiveBytes.Length);
+					var listener = _listener;
 
-					if (receiveBytes.Length != 0)
+					// Check if we already closed the server
+					if (listener?.Client == null) return;
+
+					// WSAECONNRESET:
+					// The virtual circuit was reset by the remote side executing a hard or abortive close. 
+					// The application should close the socket; it is no longer usable. On a UDP-datagram socket 
+					// this error indicates a previous send operation resulted in an ICMP Port Unreachable message.
+					// Note the spocket settings on creation of the server. It makes us ignore these resets.
+					IPEndPoint senderEndpoint = null;
+
+					try
 					{
-						//Log.Info($"Buffer size: {receiveBytes.Length}");
-						//ThreadPool.QueueUserWorkItem(
-						//	(o) =>
-						//{
-							try
+						
+						var receive      = await listener.ReceiveAsync();
+						var receiveBytes = receive.Buffer;
+						senderEndpoint = receive.RemoteEndPoint;
+
+						Interlocked.Increment(ref ConnectionInfo.PacketsIn);
+						Interlocked.Add(ref ConnectionInfo.BytesIn, receiveBytes.Length);
+
+						if (receiveBytes.Length != 0)
+						{
+							//Log.Info($"Buffer size: {receiveBytes.Length}");
+							//ThreadPool.QueueUserWorkItem(
+							//	(o) =>
+							//{
+							Action action =
+								() => {
+									try
+									{
+										ReceiveDatagram(receiveBytes, senderEndpoint);
+									}
+									catch (Exception e)
+									{
+										Log.Warn(e, $"Process message error from: {senderEndpoint.Address}");
+									}
+
+								};
+
+							if (_backgroundWorker != null)
 							{
-								ReceiveDatagram(receiveBytes, senderEndpoint);
+								_backgroundWorker.Enqueue(action);
 							}
-							catch (Exception e)
+							else
 							{
-								Log.Warn(e, $"Process message error from: {senderEndpoint.Address}");
+								action();
 							}
-						//} );
+
+							//} );
+						}
+						else
+						{
+							Log.Warn("Unexpected end of transmission?");
+						}
+
+						//listener.BeginReceive(ReceiveCallback, listener);
 					}
-					else
+					catch (ObjectDisposedException e) { }
+					catch (SocketException e)
 					{
-						Log.Warn("Unexpected end of transmission?");
+						// 10058 (just regular disconnect while listening)
+						if (e.ErrorCode == 10058) return;
+						if (e.ErrorCode == 10038) return;
+						if (e.ErrorCode == 10004) return;
+
+						if (Log.IsDebugEnabled) Log.Error("Unexpected end of receive", e);
 					}
-
-					//listener.BeginReceive(ReceiveCallback, listener);
-				}
-				catch (ObjectDisposedException e) { }
-				catch (SocketException e)
-				{
-					// 10058 (just regular disconnect while listening)
-					if (e.ErrorCode == 10058) return;
-					if (e.ErrorCode == 10038) return;
-					if (e.ErrorCode == 10004) return;
-
-					if (Log.IsDebugEnabled) Log.Error("Unexpected end of receive", e);
-				}
-				catch (NullReferenceException ex)
-				{
-					Log.Warn(ex, $"Unexpected end of transmission");
+					catch (NullReferenceException ex)
+					{
+						Log.Warn(ex, $"Unexpected end of transmission");
+					}
 				}
 			}
 		}
@@ -314,7 +346,7 @@ namespace Alex.Net.Bedrock
 
 				if (messageId <= (byte) DefaultMessageIdTypes.ID_USER_PACKET_ENUM)
 				{
-					RaknetHandler.HandleOfflineRakMessage(receivedBytes, clientEndpoint);
+					HandleOfflineRakMessage(receivedBytes, clientEndpoint);
 				}
 				else
 				{
@@ -340,19 +372,22 @@ namespace Alex.Net.Bedrock
 			
 			if (header.IsAck)
 			{
-				var ack = new Ack();
+				var ack = Ack.CreateObject();
 				ack.Decode(receivedBytes);
 
-				HandleAck(rakSession, ack, ConnectionInfo);
+				HandleAck(rakSession, ack);
+				
+				ack.PutPool();
 				return;
 			}
 			
 			if (header.IsNak)
 			{
-				var nak = new Nak();
+				var nak = Nak.CreateObject();
 				nak.Decode(receivedBytes);
 
-				HandleNak(rakSession, nak, ConnectionInfo);
+				HandleNak(rakSession, nak);
+				nak.PutPool();
 				return;
 			}
 
@@ -371,25 +406,29 @@ namespace Alex.Net.Bedrock
 
 			if (Log.IsTraceEnabled) Log.Trace($"Receive datagram #{datagram.Header.DatagramSequenceNumber} for {_endpoint}");
 
-			EnqueueAck(rakSession, datagram.Header.DatagramSequenceNumber);
-			
 			HandleDatagram(rakSession, datagram);
+			
 			datagram.PutPool();
 		}
 
 		private void HandleDatagram(RaknetSession session, Datagram datagram)
 		{
-			foreach (Packet packet in datagram.Messages)
+			if (Session.Acknowledge(datagram.Header.DatagramSequenceNumber))
 			{
-				Packet message = packet;
-				if (message is SplitPartPacket splitPartPacket)
+				foreach (Packet packet in datagram.Messages)
 				{
-					message = HandleSplitMessage(session, splitPartPacket);
-					if (message == null) continue;
-				}
+					Packet message = packet;
 
-				message.Timer.Restart();
-				session.HandleRakMessage(datagram, message);
+					if (message is SplitPartPacket splitPartPacket)
+					{
+						message = HandleSplitMessage(session, splitPartPacket);
+
+						if (message == null) continue;
+					}
+
+					message.Timer.Restart();
+					session.HandleRakMessage(message);
+				}
 			}
 		}
 
@@ -475,23 +514,18 @@ namespace Alex.Net.Bedrock
 
 			return null;
 		}
+		
 
-
-		private void EnqueueAck(RaknetSession session, Int24 datagramSequenceNumber)
-		{
-			session.Acknowledge(datagramSequenceNumber);
-		}
-
-		private void HandleAck(RaknetSession session, Ack ack, ConnectionInfo connectionInfo)
+		private void HandleAck(RaknetSession session, Ack ack)
 		{
 			var queue = session.WaitingForAckQueue;
 
 			foreach ((int start, int end) range in ack.ranges)
 			{
-				Interlocked.Increment(ref connectionInfo.NumberOfAckReceive);
-
 				for (int i = range.start; i <= range.end; i++)
 				{
+					Interlocked.Increment(ref ConnectionInfo.Ack);
+					
 					if (queue.TryRemove(i, out Datagram datagram))
 					{
 						CalculateRto(session, datagram);
@@ -500,7 +534,8 @@ namespace Alex.Net.Bedrock
 					}
 					else
 					{
-						if (Log.IsDebugEnabled) Log.Warn($"ACK, Failed to remove datagram #{i} for {session.Username}. Queue size={queue.Count}");
+						//if (Log.IsDebugEnabled) 
+							Log.Warn($"ACK, Failed to remove datagram #{i}");
 					}
 				}
 			}
@@ -509,19 +544,19 @@ namespace Alex.Net.Bedrock
 			session.WaitForAck = false;
 		}
 
-		internal void HandleNak(RaknetSession session, Nak nak, ConnectionInfo connectionInfo)
+		internal void HandleNak(RaknetSession session, Nak nak)
 		{
 			var queue = session.WaitingForAckQueue;
 
 			foreach (Tuple<int, int> range in nak.ranges)
 			{
-				Interlocked.Increment(ref connectionInfo.NumberOfNakReceive);
-
 				int start = range.Item1;
 				int end = range.Item2;
 
 				for (int i = start; i <= end; i++)
 				{
+					Interlocked.Increment(ref ConnectionInfo.Nak);
+					
 					if (queue.TryGetValue(i, out var datagram))
 					{
 						CalculateRto(session, datagram);
@@ -530,8 +565,8 @@ namespace Alex.Net.Bedrock
 					}
 					else
 					{
-						if (Log.IsDebugEnabled)
-							Log.Warn($"NAK, no datagram #{i} for {session.Username}");
+					//	if (Log.IsDebugEnabled)
+							Log.Warn($"NAK, no datagram #{i}");
 					}
 				}
 			}
@@ -601,7 +636,7 @@ namespace Alex.Net.Bedrock
 						continue;
 					}
 
-					if (session.Rtt == -1) return;
+					//if (session.Rtt == -1) return;
 
 					long elapsedTime = datagram.Timer.ElapsedMilliseconds;
 					long datagramTimeout = rto * (datagram.TransmissionCount + session.ResendCount + 1);
@@ -615,10 +650,10 @@ namespace Alex.Net.Bedrock
 							session.ErrorCount++;
 							session.ResendCount++;
 
-							if (Log.IsDebugEnabled) 
-								Log.Warn($"{(datagram.RetransmitImmediate ? "NAK RSND" : "TIMEOUT")}, Resent #{datagram.Header.DatagramSequenceNumber.IntValue()} Type: {datagram.FirstMessageId} (0x{datagram.FirstMessageId:x2}) for {session.Username} ({elapsedTime} > {datagramTimeout}) RTO {session.Rto}");
+							//if (Log.IsDebugEnabled) 
+								Log.Warn($"{(datagram.RetransmitImmediate ? "NAK RSND" : "TIMEOUT")}, Resent #{datagram.Header.DatagramSequenceNumber.IntValue()} Type: {datagram.FirstMessageId} (0x{datagram.FirstMessageId:x2}) ({elapsedTime} > {datagramTimeout}) RTO {session.Rto}");
 
-							Interlocked.Increment(ref ConnectionInfo.NumberOfResends);
+							Interlocked.Increment(ref ConnectionInfo.Resends);
 							await SendDatagramAsync(session, datagram);
 						}
 					}
@@ -639,27 +674,12 @@ namespace Alex.Net.Bedrock
 
 			message.PutPool();
 		}
-		
-		public async Task SendPacketAsync(RaknetSession session, Packet message)
-		{
-			foreach (Datagram datagram in Datagram.CreateDatagrams(message, session.MtuSize, session))
-			{
-				await SendDatagramAsync(session, datagram);
-			}
-
-			message.PutPool();
-		}
 
 		public async Task SendPacketAsync(RaknetSession session, List<Packet> messages)
 		{
 			await Task.WhenAll(
 				Datagram.CreateDatagrams(messages, session.MtuSize, session)
 				   .Select(async x => await SendDatagramAsync(session, x)));
-			
-			//foreach (Datagram datagram in Datagram.CreateDatagrams(messages, session.MtuSize, session))
-			//{
-			//	await SendDatagramAsync(session, datagram);
-			//}
 
 			foreach (Packet message in messages)
 			{
@@ -668,49 +688,9 @@ namespace Alex.Net.Bedrock
 		}
 
 		
-		public void SendDatagram(RaknetSession session, Datagram datagram)
+		public async void SendDatagram(RaknetSession session, Datagram datagram)
 		{
-			SendDatagramAsync(session, datagram).Wait();
-
-			return;
-			if (datagram.MessageParts.Count == 0)
-			{
-				Log.Warn($"Failed to send #{datagram.Header.DatagramSequenceNumber.IntValue()}");
-				datagram.PutPool();
-				return;
-			}
-
-			if (datagram.TransmissionCount > 10)
-			{
-				if (Log.IsDebugEnabled) Log.Warn($"Retransmission count exceeded. No more resend of #{datagram.Header.DatagramSequenceNumber.IntValue()} Type: {datagram.FirstMessageId} (0x{datagram.FirstMessageId:x2}) for {session.Username}");
-
-				datagram.PutPool();
-
-				Interlocked.Increment(ref ConnectionInfo.NumberOfFails);
-				//TODO: Disconnect! Because of encryption, this connection can't be used after this point
-				return;
-			}
-
-			datagram.Header.DatagramSequenceNumber = Interlocked.Increment(ref session.DatagramSequenceNumber);
-			datagram.TransmissionCount++;
-			datagram.RetransmitImmediate = false;
-
-			//Memory<byte> buffer = new byte[1600];;// ArrayPool<byte>.Shared.Rent(1600);
-			//int      length = (int) datagram.GetEncoded(ref buffer);
-
-			datagram.Timer.Restart();
-
-			if (!ConnectionInfo.DisableAck && !ConnectionInfo.IsEmulator && !session.WaitingForAckQueue.TryAdd(datagram.Header.DatagramSequenceNumber.IntValue(), datagram))
-			{
-				Log.Warn($"Datagram sequence unexpectedly existed in the ACK/NAK queue already {datagram.Header.DatagramSequenceNumber.IntValue()}");
-				datagram.PutPool();
-			}
-
-			//lock (session.SyncRoot)
-			{
-				SendData(datagram.Encode(), session.EndPoint);
-				//ArrayPool<byte>.Shared.Return(buffer);
-			}
+			await SendDatagramAsync(session, datagram);
 		}
 
 		public async Task SendDatagramAsync(RaknetSession session, Datagram datagram)
@@ -724,11 +704,11 @@ namespace Alex.Net.Bedrock
 
 			if (datagram.TransmissionCount > 10)
 			{
-				if (Log.IsDebugEnabled) Log.Warn($"Retransmission count exceeded. No more resend of #{datagram.Header.DatagramSequenceNumber.IntValue()} Type: {datagram.FirstMessageId} (0x{datagram.FirstMessageId:x2}) for {session.Username}");
+				if (Log.IsDebugEnabled) Log.Warn($"Retransmission count exceeded. No more resend of #{datagram.Header.DatagramSequenceNumber.IntValue()} Type: {datagram.FirstMessageId} (0x{datagram.FirstMessageId:x2})");
 
 				datagram.PutPool();
 
-				Interlocked.Increment(ref ConnectionInfo.NumberOfFails);
+				Interlocked.Increment(ref ConnectionInfo.Fails);
 				//TODO: Disconnect! Because of encryption, this connection can't be used after this point
 				return;
 			}
@@ -737,44 +717,28 @@ namespace Alex.Net.Bedrock
 			datagram.TransmissionCount++;
 			datagram.RetransmitImmediate = false;
 
-			byte[] buffer = new byte[1600];;// ArrayPool<byte>.Shared.Rent(1600);
-			int length = (int) datagram.GetEncoded(ref buffer);
+			byte[] buffer = ArrayPool<byte>.Shared.Rent(1600);
+			int    length = (int) datagram.GetEncoded(ref buffer);
 
 			datagram.Timer.Restart();
 
-			if (!ConnectionInfo.DisableAck && !ConnectionInfo.IsEmulator && !session.WaitingForAckQueue.TryAdd(datagram.Header.DatagramSequenceNumber.IntValue(), datagram))
+			if (!session.WaitingForAckQueue.TryAdd(datagram.Header.DatagramSequenceNumber.IntValue(), datagram))
 			{
 				Log.Warn($"Datagram sequence unexpectedly existed in the ACK/NAK queue already {datagram.Header.DatagramSequenceNumber.IntValue()}");
 				datagram.PutPool();
 			}
 
-			//lock (session.SyncRoot)
+			//lock (session.)
 			{
 				await SendDataAsync(buffer, length, session.EndPoint);
-				//ArrayPool<byte>.Shared.Return(buffer);
+				ArrayPool<byte>.Shared.Return(buffer);
 			}
 		}
 
 
-		public void SendData(byte[] data, IPEndPoint targetEndPoint)
+		public async void SendData(byte[] data, IPEndPoint targetEndPoint)
 		{
-			SendDataAsync(data, targetEndPoint).Wait();
-
-			return;
-			try
-			{
-				_listener.Send(data, data.Length, targetEndPoint); // Less thread-issues it seems
-
-				Interlocked.Increment(ref ConnectionInfo.NumberOfPacketsOutPerSecond);
-				Interlocked.Add(ref ConnectionInfo.TotalPacketSizeOutPerSecond, data.Length);
-			}
-			catch (ObjectDisposedException e)
-			{
-			}
-			catch (Exception e)
-			{
-				//if (_listener == null || _listener.Client != null) Log.Error(string.Format("Send data lenght: {0}", data.Length), e);
-			}
+			await SendDataAsync(data, targetEndPoint);
 		}
 
 		public async Task SendDataAsync(byte[] data, IPEndPoint targetEndPoint)
@@ -782,30 +746,234 @@ namespace Alex.Net.Bedrock
 			await SendDataAsync(data, data.Length, targetEndPoint);
 		}
 
+		private object _sendSync = new object();
 		public async Task SendDataAsync(byte[] data, int length, IPEndPoint targetEndPoint)
 		{
+			Monitor.Enter(_sendSync);
+
 			try
 			{
-				if (_listener == null)
+				try
 				{
+					if (_listener == null)
+					{
+						return;
+					}
+
+					await _listener.SendAsync(data, length, targetEndPoint);
+					//_listener.Send(data, length, targetEndPoint);
+
+					Interlocked.Increment(ref ConnectionInfo.PacketsOut);
+					Interlocked.Add(ref ConnectionInfo.BytesOut, length);
+				}
+				catch (ObjectDisposedException e)
+				{
+					Log.Warn(e);
+				}
+				catch (Exception e)
+				{
+					Log.Warn(e);
+					//if(_listener == null || _listener.Client != null) Log.Error(string.Format("Send data lenght: {0}", data.Length), e);
+				}
+			}
+			finally
+			{
+				Monitor.Exit(_sendSync);
+			}
+		}
+		
+		
+		internal void HandleOfflineRakMessage(ReadOnlyMemory<byte> receiveBytes, IPEndPoint senderEndpoint)
+		{
+			byte messageId = receiveBytes.Span[0];
+			var messageType = (DefaultMessageIdTypes) messageId;
+
+			// Increase fast, decrease slow on 1s ticks.
+			//if (_connectionInfo.NumberOfPlayers < _connectionInfo.RakSessions.Count) _connectionInfo.NumberOfPlayers = _connectionInfo.RakSessions.Count;
+
+			Packet message = null;
+			try
+			{
+				try
+				{
+					message = PacketFactory.Create(messageId, receiveBytes, "raknet");
+				}
+				catch (Exception)
+				{
+					message = null;
+				}
+
+				if (message == null)
+				{
+					Log.Error($"Receive bad packet with ID: {messageId} (0x{messageId:x2}) {messageType} from {senderEndpoint.Address}");
+
+					return;
+				}
+
+			//	TraceReceive(Log, message);
+
+				switch (messageType)
+				{
+					case DefaultMessageIdTypes.ID_NO_FREE_INCOMING_CONNECTIONS:
+						// Stop this client connection
+						Stop();
+						break;
+					case DefaultMessageIdTypes.ID_UNCONNECTED_PING:
+					case DefaultMessageIdTypes.ID_UNCONNECTED_PING_OPEN_CONNECTIONS:
+						//HandleRakNetMessage(senderEndpoint, (UnconnectedPing) message);
+						break;
+					case DefaultMessageIdTypes.ID_UNCONNECTED_PONG:
+						HandleRakNetMessage(senderEndpoint, (UnconnectedPong) message);
+						break;
+					case DefaultMessageIdTypes.ID_OPEN_CONNECTION_REQUEST_1:
+						//HandleRakNetMessage(senderEndpoint, (OpenConnectionRequest1) message);
+						break;
+					case DefaultMessageIdTypes.ID_OPEN_CONNECTION_REPLY_1:
+						HandleRakNetMessage(senderEndpoint, (OpenConnectionReply1) message);
+						break;
+					case DefaultMessageIdTypes.ID_OPEN_CONNECTION_REQUEST_2:
+						//HandleRakNetMessage(senderEndpoint, (OpenConnectionRequest2) message);
+						break;
+					case DefaultMessageIdTypes.ID_OPEN_CONNECTION_REPLY_2:
+						HandleRakNetMessage(senderEndpoint, (OpenConnectionReply2) message);
+						break;
+					default:
+						if (Log.IsInfoEnabled) Log.Error($"Receive unexpected packet with ID: {messageId} (0x{messageId:x2}) {messageType} from {senderEndpoint.Address}");
+						break;
+				}
+			}
+			finally
+			{
+				message?.PutPool();
+			}
+		}
+
+		private void HandleRakNetMessage(IPEndPoint senderEndpoint, UnconnectedPong message)
+		{
+			//Log.Warn($"Found server at {senderEndpoint}");
+			//Log.Warn($"MOTD: {message.serverName}");
+
+			if (!HaveServer)
+			{
+				string[] motdParts = message.serverName.Split(';');
+				if (motdParts.Length >= 11)
+				{
+					senderEndpoint.Port = int.Parse(motdParts[10]);
+				}
+
+				if (AutoConnect)
+				{
+				//	Log.Warn($"Connecting to {senderEndpoint}");
+					HaveServer = true;
+					SendOpenConnectionRequest1(senderEndpoint, MtuSize);
+				}
+				else
+				{
+				//	Log.Warn($"Connect to server using actual endpoint={senderEndpoint}");
+					RemoteEndpoint = senderEndpoint;
+					RemoteServerName = message.serverName;
+					HaveServer = true;
+				}
+			}
+		}
+
+		public ManualResetEvent ConnectionResetEvent = new ManualResetEvent(false);
+		public void SendOpenConnectionRequest1(IPEndPoint targetEndPoint, short mtuSize)
+		{
+			MtuSize = (short) (mtuSize); // This is what we will use from connections this point forward
+
+			var packet = OpenConnectionRequest1.CreateObject();
+			packet.raknetProtocolVersion = 10;
+			packet.mtuSize = (short) (mtuSize + 28);
+
+			byte[] data = packet.Encode();
+
+			//TraceSend(packet);
+
+		//	Log.Warn($"Sending MTU size={mtuSize}, data length={data.Length}");
+			SendData(data, targetEndPoint);
+		}
+
+		private void HandleRakNetMessage(IPEndPoint senderEndpoint, OpenConnectionReply1 message)
+		{
+			if (message.mtuSize != MtuSize)
+			{
+				Log.Warn($"Error, mtu differ from what we sent. Received {message.mtuSize}, expected {MtuSize}");
+
+				//return;
+			}
+
+			ConnectionResetEvent.Set();
+
+			SendOpenConnectionRequest2(senderEndpoint, message.mtuSize);
+		}
+
+		public void SendOpenConnectionRequest2(IPEndPoint targetEndPoint, short mtuSize)
+		{
+			var packet = OpenConnectionRequest2.CreateObject();
+			packet.remoteBindingAddress = targetEndPoint;
+			packet.mtuSize = mtuSize;
+			packet.clientGuid = ClientGuid;
+
+			byte[] data = packet.Encode();
+
+			//TraceSend(packet);
+
+			SendData(data, targetEndPoint);
+		}
+		
+		private void HandleRakNetMessage(IPEndPoint senderEndpoint, OpenConnectionReply2 message)
+		{
+			if (HaveServer)
+				return;
+
+			MtuSize = message.mtuSize;
+			Log.Warn("MTU Size: " + message.mtuSize);
+		//	Log.Warn("Client Endpoint: " + message.clientEndpoint);
+
+			HaveServer = true;
+
+			SendConnectionRequest(senderEndpoint, message.mtuSize);
+		}
+		
+		//public ConcurrentDictionary<IPEndPoint, RakSession> _sessions = new ConcurrentDictionary<IPEndPoint, RakSession>();
+		private void SendConnectionRequest(IPEndPoint targetEndPoint, short mtuSize)
+		{
+			RaknetSession session = Session;
+		//	lock (session)
+			{
+				if (session != null)
+				{
+					Log.Warn($"Session already exist, ignoring");
 					return;
 				}
 				
-				await _listener.SendAsync(data, length, targetEndPoint);
-				//_listener.Send(data, length, targetEndPoint);
+				if (_backgroundWorker == null)
+					_backgroundWorker = new BackgroundWorker(1);
 
-				Interlocked.Increment(ref ConnectionInfo.NumberOfPacketsOutPerSecond);
-				Interlocked.Add(ref ConnectionInfo.TotalPacketSizeOutPerSecond, length);
+				session = new RaknetSession(ConnectionInfo, this, targetEndPoint, mtuSize)
+				{
+					State = ConnectionState.Connecting,
+					LastUpdatedTime = DateTime.UtcNow,
+					NetworkIdentifier = ClientGuid,
+				};
+
+				session.CustomMessageHandler = CustomMessageHandlerFactory?.Invoke(session);
+
+				Session = session;
+				/*if (!sessions.TryAdd(targetEndPoint, session))
+				{
+					Log.Warn($"Session already exist, ignoring");
+					return;
+				}*/
 			}
-			catch (ObjectDisposedException e)
-			{
-				Log.Warn(e);
-			}
-			catch (Exception e)
-			{
-				Log.Warn(e);
-				//if (_listener == null || _listener.Client != null) Log.Error(string.Format("Send data lenght: {0}", data.Length), e);
-			}
+
+			var packet = ConnectionRequest.CreateObject();
+			packet.clientGuid = ClientGuid;
+			packet.timestamp = DateTime.UtcNow.Ticks;
+			packet.doSecurity = 0;
+
+			session.SendPacket(packet);
 		}
 	}
 }

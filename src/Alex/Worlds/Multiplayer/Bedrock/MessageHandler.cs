@@ -90,7 +90,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 				packet.ReliabilityHeader.Reliability = Reliability.ReliableOrdered;
 
-				sendInBatch.Add(OnSendCustomPacket(packet));
+				sendInBatch.Add(packet);
 			}
 
 			if (sendInBatch.Count > 0)
@@ -141,11 +141,18 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	        }
         }
 
-        public AutoResetEvent FirstEncryptedPacketWaitHandle = new AutoResetEvent(false);
+        public  ManualResetEvent FirstEncryptedPacketWaitHandle = new ManualResetEvent(false);
+        private bool             _encrypted                     = false;
 		public Packet HandleOrderedSend(Packet packet)
 		{
 			if (!packet.ForceClear && CryptoContext != null && CryptoContext.UseEncryption && packet is McpeWrapper wrapper)
 			{
+				if (!_encrypted)
+				{
+					FirstEncryptedPacketWaitHandle?.Set();
+					_encrypted = true;
+				}
+				
 				var encryptedWrapper = McpeWrapper.CreateObject();
 				encryptedWrapper.ReliabilityHeader.Reliability = Reliability.ReliableOrdered;
 				encryptedWrapper.payload = CryptoUtils.Encrypt(wrapper.payload, CryptoContext);
@@ -174,6 +181,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 				if (CryptoContext != null && CryptoContext.UseEncryption)
 				{
+					FirstEncryptedPacketWaitHandle.WaitOne();
+					
 					payload = CryptoUtils.Decrypt(payload, CryptoContext);
 				}
 
@@ -216,7 +225,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 									
 									//throw;
-									return; // Exit, but don't crash.
+									//return; // Exit, but don't crash.
 								}
 
 								s.Position = pos + len;
@@ -263,16 +272,10 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			}
 			else
 			{
-				Log.Error($"Unhandled packet: {message.GetType().Name} 0x{message.Id:X2} for user: {_session.Username}, IP {_session.EndPoint.Address}");
+				Log.Error($"Unhandled packet: {message.GetType().Name} 0x{message.Id:X2}, IP {_session.EndPoint.Address}");
 				if (Log.IsDebugEnabled) Log.Warn($"Unknown packet 0x{message.Id:X2}\n{Packet.HexDump(message.Bytes)}");
 			}
 		}
-
-		private Packet OnSendCustomPacket(Packet message)
-        {
-	     //   Log.Info($"Sent: {message}");
-            return message;
-        }
 
 		private void HandleGamePacket(Packet message)
 		{

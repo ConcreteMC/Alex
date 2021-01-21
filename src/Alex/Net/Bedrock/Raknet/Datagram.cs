@@ -189,7 +189,7 @@ namespace Alex.Net.Bedrock.Raknet
 		public bool TryAddMessagePart(MessagePart messagePart, int mtuSize)
 		{
 			byte[] bytes = messagePart.Encode();
-			if (_currentSize + bytes.Length > (mtuSize - RaknetHandler.UdpHeaderSize)) return false;
+			if (_currentSize + bytes.Length > (mtuSize - RaknetConnection.UdpHeaderSize)) return false;
 
 			if (messagePart.ReliabilityHeader.PartCount > 0 && messagePart.ReliabilityHeader.PartIndex > 0) Header.IsContinuousSend = true;
 
@@ -270,10 +270,10 @@ namespace Alex.Net.Bedrock.Raknet
 
 			if (message.IsMcpe) Log.Error($"Got bedrock message in unexpected place {message.GetType().Name}");
 
-			int maxPayloadSizeNoSplit = mtuSize - RaknetHandler.UdpHeaderSize - 4 - GetHeaderSize(message.ReliabilityHeader, false);
+			int maxPayloadSizeNoSplit = mtuSize - RaknetConnection.UdpHeaderSize - 4 - GetHeaderSize(message.ReliabilityHeader, false);
 			bool split = encodedMessage.Length >= maxPayloadSizeNoSplit;
 
-			List<(int @from, int length)> splits = ArraySplit(encodedMessage.Length, mtuSize - RaknetHandler.UdpHeaderSize - 4 /*datagram header*/ - GetHeaderSize(message.ReliabilityHeader, split));
+			List<(int @from, int length)> splits = ArraySplit(encodedMessage.Length, mtuSize - RaknetConnection.UdpHeaderSize - 4 /*datagram header*/ - GetHeaderSize(message.ReliabilityHeader, split));
 			int count = splits.Count;
 			if (count == 0) Log.Warn("Got zero parts back from split");
 			if (count <= 1)
@@ -281,10 +281,10 @@ namespace Alex.Net.Bedrock.Raknet
 				var messagePart = MessagePart.CreateObject();
 				messagePart.ReliabilityHeader.Reliability = message.ReliabilityHeader.Reliability;
 				messagePart.ReliabilityHeader.ReliableMessageNumber = Interlocked.Increment(ref session.ReliableMessageNumber);
-				messagePart.ReliabilityHeader.OrderingChannel = 0;
+				messagePart.ReliabilityHeader.OrderingChannel = message.ReliabilityHeader.OrderingChannel;
 				messagePart.ReliabilityHeader.OrderingIndex = message.ReliabilityHeader.OrderingIndex;
 				messagePart.ReliabilityHeader.HasSplit = false;
-				//messagePart.ReliabilityHeader.SequencingIndex = 
+				messagePart.ReliabilityHeader.SequencingIndex = message.ReliabilityHeader.SequencingIndex;
 				messagePart.Buffer = encodedMessage;
 
 				return new List<MessagePart>(1) {messagePart};
@@ -303,12 +303,14 @@ namespace Alex.Net.Bedrock.Raknet
 				var messagePart = MessagePart.CreateObject();
 				messagePart.ReliabilityHeader.Reliability = message.ReliabilityHeader.Reliability;
 				messagePart.ReliabilityHeader.ReliableMessageNumber = Interlocked.Increment(ref session.ReliableMessageNumber);
-				messagePart.ReliabilityHeader.OrderingChannel = 0;
+				messagePart.ReliabilityHeader.OrderingChannel = message.ReliabilityHeader.OrderingChannel;
 				messagePart.ReliabilityHeader.OrderingIndex = message.ReliabilityHeader.OrderingIndex;
 				messagePart.ReliabilityHeader.HasSplit = count > 1;
 				messagePart.ReliabilityHeader.PartCount = count;
 				messagePart.ReliabilityHeader.PartId = splitId;
 				messagePart.ReliabilityHeader.PartIndex = index++;
+				messagePart.ReliabilityHeader.SequencingIndex = message.ReliabilityHeader.SequencingIndex;
+				
 				messagePart.Buffer = encodedMessage.Slice(span.@from, span.length);
 
 				messageParts.Add(messagePart);

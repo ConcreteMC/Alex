@@ -140,9 +140,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 			Connection = new RaknetConnection();
 			ServerEndpoint = endpoint;
-			Connection.ConnectionInfo.DisableAck = false;
-			Connection.ConnectionInfo.IsEmulator = false;
-			
+
 			Connection.CustomMessageHandlerFactory = session =>
 			{
 				//Log.Info($"Requesting sessions...  {Connection.ConnectionInfo.RakSessions.Count}");
@@ -158,9 +156,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				if (Session == null)
 				{
 					Session = session;
-					
-					session.Username = playerProfile.Username;
-					session.ConnectionInfo.RakSessions.Clear();
 					
 					handler.ConnectionAction = () =>
 					{
@@ -187,8 +182,9 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			ChunkProcessor.ClientSideLighting = newvalue;
 		}
 
-		private bool Starting { get; set; } = false;
-		private DateTime StartTime { get; set; }
+		private bool     Starting    { get; set; } = false;
+		private DateTime StartTime   { get; set; }
+		private Timer    ThroughPut { get; set; }
 		public void Start(ManualResetEventSlim resetEvent)
 		{
 			if (Starting)
@@ -208,7 +204,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			{
 				if (!Connection.AutoConnect)
 				{
-					Connection.ConnectionInfo.ThroughPut.Change(Timeout.Infinite, Timeout.Infinite);
+					//Connection.ConnectionInfo.ThroughPut.Change(Timeout.Infinite, Timeout.Infinite);
 
 					if (TryLocate(ServerEndpoint, out var serverInfo, 3))
 					{
@@ -222,7 +218,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				}
 				else
 				{
-					Connection.ConnectionInfo.ThroughPut = new Timer(
+					ThroughPut = new Timer(
 						state =>
 						{
 							//if (CustomConnectedPong.CanPing)
@@ -230,38 +226,38 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 							//	World.Player.Latency = (int) CustomConnectedPong.Latency;
 							//}
 
-							var nakSent = Connection.ConnectionInfo.NumberOfPlayers;
-							Connection.ConnectionInfo.NumberOfPlayers = 0;
-						//	Connection.ConnectionInfo.NumberOfPlayers = Connection.ConnectionInfo.RakSessions.Count;
-							Interlocked.Exchange(ref Connection.ConnectionInfo.NumberOfDeniedConnectionRequestsPerSecond, 0);
-							long   packetSizeOut = Interlocked.Exchange(ref Connection.ConnectionInfo.TotalPacketSizeOutPerSecond, 0L);
-							long   packetSizeIn = Interlocked.Exchange(ref Connection.ConnectionInfo.TotalPacketSizeInPerSecond, 0L);
-				//			double throughtPutOut = (double) (packetSizeOut * 8L) / 1000000.0;
-						//	double throughPutIn = (double) (packetSizeIn * 8L) / 1000000.0;
-							long   packetCountOut = Interlocked.Exchange(ref Connection.ConnectionInfo.NumberOfPacketsOutPerSecond, 0L);
-							long   packetCountIn = Interlocked.Exchange(ref Connection.ConnectionInfo.NumberOfPacketsInPerSecond, 0L);
+							long   packetSizeOut = Interlocked.Exchange(ref Connection.ConnectionInfo.BytesOut, 0L);
+							long   packetSizeIn = Interlocked.Exchange(ref Connection.ConnectionInfo.BytesIn, 0L);
 							
-							long ackReceived  = Interlocked.Exchange(ref Connection.ConnectionInfo.NumberOfAckReceive, 0L);
-							long ackSent  = Interlocked.Exchange(ref Connection.ConnectionInfo.NumberOfAckSent, 0L);
-							long nakReceive  = Interlocked.Exchange(ref Connection.ConnectionInfo.NumberOfNakReceive, 0L);
-							long resends = Interlocked.Exchange(ref Connection.ConnectionInfo.NumberOfResends, 0L);
-							long fails = Interlocked.Exchange(ref Connection.ConnectionInfo.NumberOfFails, 0L);
+							double throughtPutOut = (double) (packetSizeOut) / 1000.0;
+							double throughPutIn = (double) (packetSizeIn) / 1000.0;
+							
+							long   packetCountOut = Interlocked.Exchange(ref Connection.ConnectionInfo.PacketsOut, 0L);
+							long   packetCountIn = Interlocked.Exchange(ref Connection.ConnectionInfo.PacketsIn, 0L);
+							
+							long ackReceived  = Interlocked.Exchange(ref Connection.ConnectionInfo.Ack, 0L);
+							long ackSent  = Interlocked.Exchange(ref Connection.ConnectionInfo.AckSent, 0L);
+							long nakReceive  = Interlocked.Exchange(ref Connection.ConnectionInfo.Nak, 0L);
+							var nakSent = Interlocked.Exchange(ref Connection.ConnectionInfo.NakSent, 0);
+							
+							long resends = Interlocked.Exchange(ref Connection.ConnectionInfo.Resends, 0L);
+							long fails = Interlocked.Exchange(ref Connection.ConnectionInfo.Fails, 0L);
 
-							string str = string.Format("Pkt in/out(#/s) {0}/{1}, ", packetCountIn, packetCountOut)
-							             + string.Format(
-								             "ACK(in-out)/NAK/RSND/FTO(#/s) ({0}-{1})/({2}-{3})/{4}/{5}, ",ackReceived,
-								             ackSent, nakReceive, nakSent, resends, fails)
-							             + string.Format(
-								             "PktSz Total in/out(B/s){0}/{1}, ", packetSizeIn, packetSizeOut);
+							string str =
+								$"Pkt in/out(#/s) {packetCountIn}/{packetCountOut}, ACK in/out(#/s) {ackReceived}/{ackSent}, NAK in/out(#/s) {nakReceive}/{nakSent}, THR in/out(Kbps){throughPutIn:F2}/{throughtPutOut:F2}";
 
 							//if (Config.GetProperty("ServerInfoInTitle", false))
 							//	Console.Title = str;
 							//else
-							//	Log.Info(str);
+								Log.Info(str);
 
 							ConnectionInfo.NetworkState networkState = ConnectionInfo.NetworkState.Ok;
 
-							if (Connection.IsNetworkOutOfOrder)
+							if (nakSent > 0)
+							{
+								networkState = ConnectionInfo.NetworkState.PacketLoss;
+							}
+							else if (Connection.IsNetworkOutOfOrder)
 							{
 								networkState = ConnectionInfo.NetworkState.OutOfOrder;
 							}
@@ -277,7 +273,10 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 							_connectionInfo = new ConnectionInfo(
 								StartTime, Connection.ConnectionInfo.Latency, nakReceive, ackReceived, ackSent, fails, resends,
 								packetSizeIn, packetSizeOut, packetCountIn, packetCountOut,
-								networkState);
+								networkState)
+							{
+								NakSent = nakSent
+							};
 						}, null, 1000, 1000);
 					
 					Connection.Start();
@@ -328,7 +327,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			byte[] data = new UnconnectedPing()
 			{
 				pingId = Stopwatch.GetTimestamp(),
-				guid = this.Connection.RaknetHandler.ClientGuid
+				guid = this.Connection.ClientGuid
 			}.Encode();
 			
 			if (targetEndPoint != null)
@@ -655,7 +654,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				IBufferedCipher encryptor = CipherUtilities.GetCipher("AES/CFB8/NoPadding");
 				encryptor.Init(true, new ParametersWithIV(new KeyParameter(secret), secret.Take(16).ToArray()));
 
-				Thread.Sleep(1250);
+				//Thread.Sleep(1250);
 				
 				handler.CryptoContext = new MiNET.Utils.CryptoContext
 				{
@@ -1277,7 +1276,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				}
 				finally
 				{
-					Connection.ConnectionInfo.ThroughPut.Change(Timeout.Infinite, Timeout.Infinite);
+					ThroughPut?.Change(Timeout.Infinite, Timeout.Infinite);
+					//Connection.ConnectionInfo.ThroughPut.Change(Timeout.Infinite, Timeout.Infinite);
 				}
 			});
 
