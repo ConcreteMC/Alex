@@ -23,6 +23,7 @@ using Alex.ResourcePackLib.Json.Models.Blocks;
 using Alex.ResourcePackLib.Json.Models.Items;
 using Alex.ResourcePackLib.Json.Sound;
 using Alex.ResourcePackLib.Json.Textures;
+using Microsoft.Xna.Framework;
 using NLog;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Advanced;
@@ -68,7 +69,8 @@ namespace Alex.ResourcePackLib
 			_models.Where(x => x.Value.Type == ModelType.Block)
 			   .ToDictionary(x => x.Key, x => x.Value);
 		
-		public IReadOnlyDictionary<ResourceLocation, ResourcePackModelBase>   ItemModels        => _models;
+		public IReadOnlyDictionary<ResourceLocation, ResourcePackModelBase>   ItemModels        => _models.Where(x => x.Value.Type == ModelType.Item)
+		   .ToDictionary(x => x.Key, x => x.Value);
 		public IReadOnlyDictionary<ResourceLocation, TextureMeta> TextureMetas => _textureMetaCache;
 		public IReadOnlyDictionary<ResourceLocation, Lazy<Image<Rgba32>>>          Textures          => _bitmapCache;
 		public IReadOnlyDictionary<string, LanguageResource>   Languages		 => _languageCache;
@@ -594,7 +596,7 @@ namespace Alex.ResourcePackLib
 				return null;
 			}
 		}
-
+		
 		private ResourcePackModelBase ProcessModel(ResourceLocation resourceLocation, ResourcePackModelBase model, ref Dictionary<ResourceLocation, ResourcePackModelBase> models)
 		{
 			if (_models.TryGetValue(resourceLocation, out var existingModel))
@@ -604,6 +606,20 @@ namespace Alex.ResourcePackLib
 			{
 				ResourceLocation parentKey = new ResourceLocation(model.ParentName);
 
+			/*	if (model.ParentName.Equals("builtin/generated"))
+				{
+					model.Display = new Dictionary<string, DisplayElement>()
+					{
+						{"gui", new DisplayElement(new Vector3(30, 225, 0), new Vector3(0,0,0), new Vector3(0.625f, 0.625f, 0.625f))},
+						{"ground", new DisplayElement(new Vector3(0, 0, 0), new Vector3(0,3,0), new Vector3(0.25f, 0.25f, 0.25f))},
+						{"fixed", new DisplayElement(new Vector3(0, 0, 0), new Vector3(0,0,0), new Vector3(0.5f, 0.5f, 0.5f))},
+						{"thirdperson_righthand", new DisplayElement(new Vector3(75, 45, 0), new Vector3(0,2.5f,0), new Vector3(0.375f, 0.375f, 0.375f))},
+						{"firstperson_righthand", new DisplayElement(new Vector3(0, 45, 0), new Vector3(0,0,0), new Vector3(0.4f, 0.4f, 0.4f))},
+						{"firstperson_lefthand", new DisplayElement(new Vector3(0, 225, 0), new Vector3(0,0,0), new Vector3(0.4f, 0.4f, 0.4f))}
+						//  {"gui", new DisplayElement(new Vector3(30, 255, 0), new Vector3(0,0,0), new Vector3(0.625f, 0.625f, 0.625f))}
+					};
+				}*/
+				
 				ResourcePackModelBase parent;
 				if (!_models.TryGetValue(parentKey, out parent))
 				{

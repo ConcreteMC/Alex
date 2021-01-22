@@ -87,7 +87,8 @@ namespace Alex.ResourcePackLib.Json.Models
         
         public Dictionary<string, DisplayElement> Display { get; set; } = new Dictionary<string, DisplayElement>()
         {
-            {"gui", new DisplayElement(new Vector3(30, 255, 0), new Vector3(0,0,0), new Vector3(0.625f, 0.625f, 0.625f))},
+            {"gui", new DisplayElement(new Vector3(30, 225, 0), new Vector3(0,0,0), new Vector3(0.625f, 0.625f, 0.625f))},
+            //{"gui", new DisplayElement(new Vector3(30, 255, 0), new Vector3(0,0,0), new Vector3(0.625f, 0.625f, 0.625f))},
           //  {"gui", new DisplayElement(new Vector3(30, 255, 0), new Vector3(0,0,0), new Vector3(0.625f, 0.625f, 0.625f))}
         };
         

@@ -206,7 +206,21 @@ namespace Alex.Graphics.Models.Items
             var activeDisplayItem = ActiveDisplayItem;
             //   world.Right = -world.Right;
 
-           if (DisplayPosition.HasFlag(DisplayPosition.ThirdPerson))
+            if (DisplayPosition.HasFlag(DisplayPosition.Gui))
+            {
+                if (this is ItemBlockModelRenderer)
+                {
+                    Effect.World = MCMatrix.CreateScale(activeDisplayItem.Scale)
+                                   * MCMatrix.CreateRotationDegrees(new Vector3(25f, 45f, 0f))
+                                   * MCMatrix.CreateTranslation(activeDisplayItem.Translation)
+                                   * MCMatrix.CreateTranslation(new Vector3(0f, 0.25f, 0f)) * characterMatrix;
+                }
+                else
+                {
+                    Effect.World = MCMatrix.CreateScale(1f/16f) * characterMatrix;
+                }
+            }
+            else if (DisplayPosition.HasFlag(DisplayPosition.ThirdPerson))
             {
                 var t = activeDisplayItem.Translation;
                 var r = activeDisplayItem.Rotation;
