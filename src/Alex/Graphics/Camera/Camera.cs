@@ -15,7 +15,7 @@ namespace Alex.Graphics.Camera
 	    /// <summary>
 	    /// The nearest distance the camera will use
 	    /// </summary>
-	    public const float NearDistance = 0.15f;
+	    public const float NearDistance = 0.015f;
 
 	    /// <summary>
 	    /// The furthest the camera can see

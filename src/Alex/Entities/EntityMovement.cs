@@ -434,7 +434,10 @@ namespace Alex.Entities
 						continue;
 
 					if (box.Contains(corner) == ContainmentType.Contains)
-						foundGround = true;
+					{
+						return true;
+					}
+
 					//return true;
 				}
 			}

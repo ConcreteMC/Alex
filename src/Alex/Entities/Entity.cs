@@ -732,7 +732,7 @@ namespace Alex.Entities
 		{
 			EntityModelRenderer.ModelBone bone = leftHanded ? _leftArmModel : _rightArmModel;
 
-			if (bone != null)
+			if (bone != null && (!bone.IsAnimating || bone.Animations.Count <= 1))
 			{
 				bone.Animations.Enqueue(new SwingAnimation(bone, TimeSpan.FromMilliseconds(200)));
 			}

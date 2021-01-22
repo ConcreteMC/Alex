@@ -57,8 +57,12 @@ namespace Alex.Net.Bedrock.Packets
             {
                 switch (messageId)
                 {
-                    case 55:
+                    case 0x37:
                         packet = new AdventureSettings();
+                        break;
+                    case 0x55:
+                        packet = McpeTransfer.CreateObject();
+                        //packet = new AdventureSettings();
 
                         break;
                     case 0x0b:

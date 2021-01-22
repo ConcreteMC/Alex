@@ -54,12 +54,16 @@ namespace Alex.Graphics.Models.Items
 
             if (pack.TryGetBitmap(texture, out var bitmap))
             {
-                bitmap.Mutate(
-                    x =>
-                    {
-                        x.Flip(FlipMode.Horizontal);
-                        x.Rotate(RotateMode.Rotate90);
-                    });
+                if (Model.ParentName.Contains("handheld", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    bitmap.Mutate(
+                        x =>
+                        {
+                            x.Flip(FlipMode.Horizontal);
+                            x.Rotate(RotateMode.Rotate90);
+                        });
+                }
+
                 try
                 {
                     if (bitmap.TryGetSinglePixelSpan(out var pixels))
@@ -236,7 +240,7 @@ namespace Alex.Graphics.Models.Items
                                    //* MCMatrix.CreateRotationDegrees(new Vector3(-67.5f, 180f, 0f))
                                    * MCMatrix.CreateRotationDegrees(r * new Vector3(1f, -1f, -1f))
                                    * MCMatrix.CreateTranslation(
-                                       new Vector3(t.X + 6f, t.Y + 4f,  t.Z))
+                                       new Vector3(t.X + 6f, t.Y + 3f,  t.Z))
                                    * characterMatrix;
                 }
                 else

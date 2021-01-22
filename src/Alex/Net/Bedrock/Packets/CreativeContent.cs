@@ -10,10 +10,10 @@ namespace Alex.Net.Bedrock.Packets
 		/// <inheritdoc />
 		protected override void DecodePacket()
 		{
-			//base.DecodePacket();
-			Id = IsMcpe ? (byte) ReadVarInt() : ReadByte();
+			base.DecodePacket();
+			//Id = IsMcpe ? (byte) ReadVarInt() : ReadByte();
 
-			this.input = ReadItemStacks();
+			//this.input = ReadItemStacks();
 		}
 	}
 }

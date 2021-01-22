@@ -18,6 +18,10 @@ namespace Alex.Worlds.Multiplayer.Bedrock
         public string ServerAddress { get; set; }
         public string LanguageCode { get; set; }
 
+        public string PlatformOfflineId { get; set; } = "";
+        public string PlatformOnlineId { get; set; } = "";
+        
+        [JsonProperty("SelfSignedId")]
         public string SelfSignedID { get; set; } = Guid.NewGuid().ToString();
         public string DeviceId     { get; set; } = Guid.NewGuid().ToString();
         public string DeviceModel  { get; set; } = "(Standard system devices) System devices";
