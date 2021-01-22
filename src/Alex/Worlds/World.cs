@@ -384,26 +384,26 @@ namespace Alex.Worlds
 	        }
         }
         
-        public void SetBlockLight(BlockCoordinates coordinates, byte p1)
+        public void SetBlockLight(BlockCoordinates coordinates, byte value)
         {
 	        var         chunkCoords = new ChunkCoordinates(coordinates);
 	        ChunkColumn chunk;
 	        if (ChunkManager.TryGetChunk(chunkCoords, out chunk))
 	        {
-		        if (chunk.SetBlocklight(coordinates.X & 0xf, coordinates.Y & 0xff, coordinates.Z & 0xf, p1))
+		        if (chunk.SetBlocklight(coordinates.X & 0xf, coordinates.Y & 0xff, coordinates.Z & 0xf, value))
 		        {
 			        var x = coordinates.X;
 			        var y = coordinates.Y;
 			        var z = coordinates.Z;
-			        
+
 			        ScheduleLightingUpdate(new BlockCoordinates(x + 1, y, z), true);
-			        ScheduleLightingUpdate(new BlockCoordinates(x - 1, y, z), true);
-			        
+			        ScheduleLightingUpdate(new BlockCoordinates(x + -1, y, z), true);
+
 			        ScheduleLightingUpdate(new BlockCoordinates(x, y, z + 1), true);
-			        ScheduleLightingUpdate(new BlockCoordinates(x, y, z - 1), true);
-			        
+			        ScheduleLightingUpdate(new BlockCoordinates(x, y, z + -1), true);
+
 			        ScheduleLightingUpdate(new BlockCoordinates(x, y + 1, z), true);
-			        ScheduleLightingUpdate(new BlockCoordinates(x, y - 1, z), true);
+			        ScheduleLightingUpdate(new BlockCoordinates(x, y + -1, z), true);
 		        }
 	        }
         }

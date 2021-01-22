@@ -34,8 +34,14 @@ namespace Alex.Worlds.Chunks
 		public int Z { get; set; }
 
 		public           bool           IsNew           { get; set; } = true;
-		public           bool           SkyLightDirty   => Sections != null && Sections.Sum(x => x.SkyLightUpdates) > 0; 
-		public           bool           BlockLightDirty => Sections != null && Sections.Sum(x => x.BlockLightUpdates) > 0; 
+		
+		public           bool           SkyLightDirty   => Sections != null && Sections.Where(x => x != null).Sum(x => x.SkyLightUpdates) > 0; 
+		public           bool           BlockLightDirty => Sections != null && Sections.Where(x => x != null).Sum(x => x.BlockLightUpdates) > 0;
+
+		public ulong ScheduledLightUpdates => (ulong) (Sections.Where(x => x != null).Sum(x => x.SkyLightUpdates)
+		                                               + Sections.Where(x => x != null).Sum(x => x.BlockLightUpdates));
+		
+		
 		private readonly  Stopwatch      _lightUpdateWatch = new Stopwatch();
 		public           ChunkSection[] Sections { get; set; } = new ChunkSection[16];
 		private readonly int[]          _biomeId = ArrayOf<int>.Create(16 * 16 * 256, 1);
@@ -104,13 +110,12 @@ namespace Alex.Worlds.Chunks
 				}
 			}
 		}
-
-		private bool _previousKeepInMemory = false;
-		public void UpdateBuffer(GraphicsDevice device, IBlockAccess world, bool keepInMemory)
+		
+		public void UpdateBuffer(GraphicsDevice device, IBlockAccess world)
 		{
 			if (!Monitor.TryEnter(_dataLock, 0))
 				return;
-			
+
 			try
 			{
 				//var chunkData     = ChunkData;
@@ -212,7 +217,7 @@ namespace Alex.Worlds.Chunks
 			}
 			finally
 			{
-				_previousKeepInMemory = keepInMemory;
+				//_previousKeepInMemory = keepInMemory;
 				Monitor.Exit(_dataLock);
 			}
 		}

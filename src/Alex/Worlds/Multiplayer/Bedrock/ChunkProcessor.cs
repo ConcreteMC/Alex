@@ -745,15 +745,15 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		        {
 			        case "wood_type":
 				        type = state.Value();
-				        record.States.Remove(state);
+				        //record.States.Remove(state);
 				        break;
 			        case "stripped_bit":
 				        stripped = state.Value() == "1";
-				        record.States.Remove(state);
+				        //record.States.Remove(state);
 				        break;
 			        //case "pillar_axis":
 				     //   axis = state.Value();
-				     //   record.States.Remove(state);
+				     //   //record.States.Remove(state);
 				     //   break;
 		        }
 	        }
@@ -968,7 +968,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					        //       break;
 				        }
 
-				        record.States.Remove(state);
+				        //record.States.Remove(state);
 				        break;
 			        case "sapling_type":
 				        //case "old_log_type":
@@ -1043,7 +1043,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 						        break;
 				        }
 
-				        record.States.Remove(state);
+				        //record.States.Remove(state);
 				        break;
 		        }
 	        }
@@ -1069,19 +1069,19 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		        {
 			        case "ground_sign_direction":
 				        r = r.WithProperty("rotation", state.Value());
-				        record.States.Remove(state);
+				        //record.States.Remove(state);
 				        break;
 			        case "disarmed_bit":
 				        r = r.WithProperty("disarmed", state.Value() == "1" ? "true" : "false");
-				        record.States.Remove(state);
+				        //record.States.Remove(state);
 				        break;
 			        case "powered_bit":
 				        r = r.WithProperty("powered", state.Value() == "1" ? "true" : "false");
-				        record.States.Remove(state);
+				        //record.States.Remove(state);
 				        break;
 			        case "attached_bit":
 				        r = r.WithProperty("attached", state.Value() == "1" ? "true" : "false");
-				        record.States.Remove(state);
+				        //record.States.Remove(state);
 				        break;
 			        case "direction":
 			        case "weirdo_direction":
@@ -1107,23 +1107,23 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				        {
 					        r = FixFacing(r, int.Parse(state.Value()));
 				        }
-				        record.States.Remove(state);
+				        //record.States.Remove(state);
 				        break;
 			        case "upside_down_bit":
 				        r = (r).WithProperty("half", state.Value() == "1" ? "top" : "bottom");
-				        record.States.Remove(state);
+				        //record.States.Remove(state);
 				        break;
 			        case "door_hinge_bit":
 				        r = r.WithProperty("hinge", (state.Value() == "0") ? "left" : "right");
-				        record.States.Remove(state);
+				        //record.States.Remove(state);
 				        break;
 					case "open_bit":
 						r = r.WithProperty("open", (state.Value() == "1") ? "true" : "false");
-						record.States.Remove(state);
+						//record.States.Remove(state);
 						break;
 					case "upper_block_bit":
 						r = r.WithProperty("half", (state.Value() == "1") ? "upper" : "lower");
-						record.States.Remove(state);
+						//record.States.Remove(state);
 						break;
 					case "torch_facing_direction":
 						string facingValue = state.Value();
@@ -1143,23 +1143,23 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 								break;
 						}
 						r = r.WithProperty("facing", facingValue);
-						record.States.Remove(state);
+						//record.States.Remove(state);
 						break;
 					case "liquid_depth":
 						r = r.WithProperty("level", state.Value());
-						record.States.Remove(state);
+						//record.States.Remove(state);
 						break;
 					case "height":
 						r = r.WithProperty("layers", state.Value());
-						record.States.Remove(state);
+						//record.States.Remove(state);
 						break;
 					case "growth":
 						r = r.WithProperty("age", state.Value());
-						record.States.Remove(state);
+						//record.States.Remove(state);
 						break;
 					case "button_pressed_bit":
 						r = r.WithProperty("powered", state.Value() == "1" ? "true" : "false");
-						record.States.Remove(state);
+						//record.States.Remove(state);
 						break;
 					case "facing_direction":
 						switch (int.Parse(state.Value()))
@@ -1181,27 +1181,27 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 								r = r.WithProperty(facing, "south");
 								break;
 						}
-						record.States.Remove(state);
+						//record.States.Remove(state);
 						break;
 					case "head_piece_bit":
 						r = r.WithProperty("part", state.Value() == "1" ? "head" : "foot");
-						record.States.Remove(state);
+						//record.States.Remove(state);
 						break;
 					case "pillar_axis":
 						r = r.WithProperty("axis", state.Value());
-						record.States.Remove(state);
+						//record.States.Remove(state);
 						break;
 					case "top_slot_bit":
 						r = r.WithProperty("type", state.Value() == "1" ? "top" : "bottom", true);
-						record.States.Remove(state);
+						//record.States.Remove(state);
 						break;
 					case "moisturized_amount":
 						r = r.WithProperty("moisture", state.Value());
-						record.States.Remove(state);
+						//record.States.Remove(state);
 						break;
 					case "age":
 						r = r.WithProperty("age", state.Value());
-						record.States.Remove(state);
+						//record.States.Remove(state);
 						break;
 			        default:
 			//	        Log.Info($"Unknown property for {record.Name}: {state.Name} - {state.Value()}");

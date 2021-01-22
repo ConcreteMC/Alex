@@ -326,7 +326,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		public override void Dispose()
 		{
-			World?.Ticker?.UnregisterTicked(this);
+			//World?.Ticker?.UnregisterTicked(this);
 			
 			base.Dispose();
 			Client.Dispose();

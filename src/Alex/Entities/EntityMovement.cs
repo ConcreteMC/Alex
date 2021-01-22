@@ -250,6 +250,7 @@ namespace Alex.Entities
 
 		public void Velocity(Vector3 velocity)
 		{
+			//velocity = velocity.Transform(Entity.KnownPosition.GetDirectionMatrix(false, true));
 			var oldLength = (Entity.Velocity).Length();
 			if (oldLength < velocity.Length())
 			{

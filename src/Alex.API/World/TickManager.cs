@@ -60,8 +60,15 @@ namespace Alex.API.World
 
 			    var tickedItems = _tickedItems.ToArray();
 			    foreach (var ticked in tickedItems)
-			    {
-				    ticked.OnTick();
+			    {  
+					try
+				    {
+				    	ticked.OnTick();
+				    }
+				    catch (Exception ex)
+				    {
+					    Log.Error(ex, $"An exception occureced while executing a scheduled tick!");
+				    }
 			    }
 
 			    var endTime = _sw.ElapsedMilliseconds;

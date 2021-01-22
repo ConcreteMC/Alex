@@ -13,8 +13,7 @@ namespace Alex.Worlds.Lighting
     public class BlockLightCalculations : IDisposable
     {
         private static readonly ILogger Log = LogManager.GetCurrentClassLogger(typeof(BlockLightCalculations));
-        //private static ConcurrentQueue<(BlockCoordinates coords, Func<bool> action)> Queue { get; } = new ConcurrentQueue<(BlockCoordinates coords, Func<bool> action)>();
-		private static ConcurrentDictionary<ChunkCoordinates, ConcurrentQueue<BlockCoordinates>> ChunkQueues { get; } = new ConcurrentDictionary<ChunkCoordinates, ConcurrentQueue<BlockCoordinates>>();
+        private static ConcurrentDictionary<ChunkCoordinates, ConcurrentQueue<BlockCoordinates>> ChunkQueues { get; } = new ConcurrentDictionary<ChunkCoordinates, ConcurrentQueue<BlockCoordinates>>();
 		
         private World             World             { get; }
         private CancellationToken CancellationToken { get; }
@@ -44,11 +43,11 @@ namespace Alex.Worlds.Lighting
 
 	        return false;
         }
-
+        
         public void Recalculate(ChunkColumn chunk)
         {
 	        ChunkQueues.TryRemove(new ChunkCoordinates(chunk.X, chunk.Z), out _);
-	      //  var lightSources = chunk.GetLightSources().ToArray();
+	        //  var lightSources = chunk.GetLightSources().ToArray();
 
 	        foreach (var section in chunk.Sections)
 	        {
@@ -57,7 +56,7 @@ namespace Alex.Worlds.Lighting
 	        }
 	        
 	        var chunkpos = new BlockCoordinates(chunk.X << 4, 0, chunk.Z << 4);
-	        foreach (var lightsource in chunk.GetLightSources())
+	        foreach (var lightsource in chunk.GetLightSources().OrderByDescending(x => x.Y))
 	        {
 		        Enqueue(chunkpos + lightsource);
 	        }
@@ -109,97 +108,18 @@ namespace Alex.Worlds.Lighting
 			        });
 	       // }
         }
-        
-       /* public bool TryProcess(Func<BlockCoordinates, bool> canProcess, out BlockCoordinates processedCoordinates)
-        {
-	        processedCoordinates = default;
-	        if (Queue.TryDequeue(out var queued))
-	        {
-		        processedCoordinates = queued.coords;
-		        if (canProcess.Invoke(processedCoordinates))
-		        {
-			        var result = queued.action?.Invoke();
-			        if (result.HasValue && !result.Value)
-			        {
-				        Queue.Enqueue(queued);
-				        return false;
-			        }
 
-			        if (!result.HasValue)
-				        return false;
-
-			        return true;
-		        }
-
-		        /*if (ChunkQueues.TryGetValue((ChunkCoordinates) coordinates, out var chunkQueue))
-		        {
-			        ProcessNode(World, coordinates, chunkQueue);
-		        }*
-
-		        //return true;
-	        }
-
-	        return false;
-        }*/
-       private bool GetHeighestNeighbor(World level,
-	       BlockCoordinates block,
-	       out BlockCoordinates position,
-	       out byte lightLevel)
-       {
-	       lightLevel = 0;
-
-	       byte             lvl    = 0;
-	       BlockCoordinates result = block;
-	       
-	       void test(BlockCoordinates p, ref BlockCoordinates r, ref byte l)
-	       {
-		       if (level.TryGetBlockLight(p, out var up) && up >= l)
-		       {
-			       l = up;
-			       r = p;
-		       }
-	       }
-	       
-	       test(block.BlockUp(), ref result, ref lvl);
-	       test(block.BlockDown(), ref result, ref lvl);
-	       test(block.BlockWest(), ref result, ref lvl);
-	       test(block.BlockEast(), ref result, ref lvl);
-	       test(block.BlockSouth(), ref result, ref lvl);
-	       test(block.BlockNorth(), ref result, ref lvl);
-	       
-	       position = result;
-	       lightLevel = lvl;
-
-	       return result != block;
-       }
-       
         private void ProcessNode(World level, BlockCoordinates coord, ConcurrentQueue<BlockCoordinates> lightBfsQueue)
 		{
 			if (level.TryGetBlockLight(coord, out var lightLevel))
 			{
-				//if (lightLevel )
-				/*var neighboringBlock = level.GetBlockState(neighbor);
-				var isLightSource    = neighboringBlock.Block.LightValue > 0;
+				Test(level, coord, coord + BlockCoordinates.Up, lightBfsQueue, lightLevel);
+				Test(level, coord, coord + BlockCoordinates.Left, lightBfsQueue, lightLevel);
+				Test(level, coord, coord + BlockCoordinates.Right, lightBfsQueue, lightLevel);
+				Test(level, coord, coord + BlockCoordinates.Forwards, lightBfsQueue, lightLevel);
+				Test(level, coord, coord + BlockCoordinates.Backwards, lightBfsQueue, lightLevel);
+				Test(level, coord, coord + BlockCoordinates.Down, lightBfsQueue, lightLevel);
 				
-				if (neighborLight + 1 < lightLevel) //Neighbor is darker than we are.
-				{
-					if (self.Block.LightValue == 0)
-					{
-						
-					}
-				}
-				else if (lightLevel + 1 < neighborLight) //Neighbor is brighter than we are
-				{
-					Enqueue(neighbor);
-				}*/
-
-				Test(level, coord, coord.BlockUp(), lightBfsQueue, lightLevel);
-				Test(level, coord, coord.BlockDown(), lightBfsQueue, lightLevel);
-				Test(level, coord, coord.BlockWest(), lightBfsQueue, lightLevel);
-				Test(level, coord, coord.BlockEast(), lightBfsQueue, lightLevel);
-				Test(level, coord, coord.BlockSouth(), lightBfsQueue, lightLevel);
-				Test(level, coord, coord.BlockNorth(), lightBfsQueue, lightLevel);
-
 				//SetLightLevel(level, lightBfsQueue, level.GetBlockId(coord + BlockCoordinates.Down, chunk), lightLevel);
 				//SetLightLevel(level, lightBfsQueue, level.GetBlockId(coord + BlockCoordinates.West, chunk), lightLevel);
 				//SetLightLevel(level, lightBfsQueue, level.GetBlockId(coord + BlockCoordinates.East, chunk), lightLevel);
@@ -229,18 +149,9 @@ namespace Alex.Worlds.Lighting
 				isOtherChunk = true;
 			}
 
-			if (isOtherChunk)
+			if (isOtherChunk && !World.TryGetBlockLight(target, out _))
 			{
-				if (!World.TryGetBlockLight(target, out _))
-				{
-					Enqueue(target);
-
-					return;
-				}
-				else
-				{
-					
-				}
+				lightBfsQueue.Enqueue(target);
 				/*Queue.Enqueue((newCoord, () =>
 				{
 					if (ChunkQueues.TryGetValue((ChunkCoordinates) newCoord, out var queue))
@@ -252,48 +163,19 @@ namespace Alex.Worlds.Lighting
 						//var cc = GetChunk(level, newCoord);
 						//if (cc == null)
 						//	return false;
-
 						//var ll = level.GetBlockLight(coord);
 						
 						DoPass(level, newCoord, queue, ll);
 						
 						Enqueue(coord);
 						Enqueue(newCoord);
-
 						return true;
 					}
-
 					return false;
 				}));*/
 				
-				//return;
+				return;
 			}
-			
-			/*if (lightLevel > 0)
-			{
-				GetHeighestNeighbor(level, sourceBlock, out var neighbor, out var neighborLight);
-				
-				//if (neighbor != coord)
-				{
-					if (neighborLight <= lightLevel)
-					{
-						var self              = level.GetBlockState(sourceBlock);
-						var selfIsLightSource = self.Block.LightValue > 0;
-
-						if (!selfIsLightSource)
-						{
-							World.SetBlockLight(sourceBlock, (byte) Math.Max(neighborLight - 1, 0));
-
-							if (neighbor != sourceBlock && neighborLight - 1 > 0)
-							{
-								Enqueue(neighbor);
-							}
-
-							return;
-						}
-					}
-				}
-			}*/
 
 			DoPass(level, target, lightBfsQueue, lightLevel);
 		}
@@ -319,13 +201,13 @@ namespace Alex.Worlds.Lighting
 			//var source = new BlockCoordinates(x, y, z);
 
 			world.ScheduleBlockUpdate(new BlockCoordinates(coordinates.X + 1, coordinates.Y, coordinates.Z));
-			world.ScheduleBlockUpdate(new BlockCoordinates(coordinates.X - 1, coordinates.Y, coordinates.Z));
+			world.ScheduleBlockUpdate(new BlockCoordinates(coordinates.X + -1, coordinates.Y, coordinates.Z));
 
 			world.ScheduleBlockUpdate(new BlockCoordinates(coordinates.X, coordinates.Y, coordinates.Z + 1));
-			world.ScheduleBlockUpdate(new BlockCoordinates(coordinates.X, coordinates.Y, coordinates.Z - 1));
+			world.ScheduleBlockUpdate(new BlockCoordinates(coordinates.X, coordinates.Y, coordinates.Z + -1));
 
 			world.ScheduleBlockUpdate(new BlockCoordinates(coordinates.X, coordinates.Y + 1, coordinates.Z));
-			world.ScheduleBlockUpdate(new BlockCoordinates(coordinates.X, coordinates.Y - 1, coordinates.Z));
+			world.ScheduleBlockUpdate(new BlockCoordinates(coordinates.X, coordinates.Y + -1, coordinates.Z));
 		}
 		
 		private void SetLightLevel(World world, ConcurrentQueue<BlockCoordinates> lightBfsQueue, BlockCoordinates coordinates, int currentLightLevel, Block block, int lightLevel)
@@ -339,7 +221,7 @@ namespace Alex.Worlds.Lighting
 				
 				world.SetBlockLight(coordinates, (byte) Math.Max(currentLightLevel, lightLevel - 1));
 				
-				UpdateNeighbors(world, coordinates);
+				//UpdateNeighbors(world, coordinates);
 				
 				return;
 			}
@@ -348,9 +230,8 @@ namespace Alex.Worlds.Lighting
 			{
 				world.SetBlockLight(coordinates,  (byte) (lightLevel - 1));
 				
-				UpdateNeighbors(world, coordinates);
+				//UpdateNeighbors(world, coordinates);
 				
-				//Enqueue(coordinates);
 				if (!lightBfsQueue.Contains(coordinates))
 				{
 					lightBfsQueue.Enqueue(coordinates);
@@ -360,21 +241,13 @@ namespace Alex.Worlds.Lighting
 
 		private void SetLightLevel(ConcurrentQueue<BlockCoordinates> lightBfsQueue, BlockCoordinates coord, int lightLevel)
 		{
-			var val = World.GetBlockLight(coord);
-			if (val + 2 <= lightLevel)
+			if (World.GetBlockLight(coord) + 2 <= lightLevel)
 			{
 				//chunk.SetBlocklight(coord.X & 0x0f, coord.Y & 0xff, coord.Z & 0x0f, (byte) (lightLevel - 1));
 				World.SetBlockLight(coord, (byte) (lightLevel - 1));
 				
-				UpdateNeighbors(World, coord);
+			//	UpdateNeighbors(World, coord);
 				
-				//Enqueue(coord);
-				if (!lightBfsQueue.Contains(coord))
-				{
-					lightBfsQueue.Enqueue(coord);
-				}
-			}else if (lightLevel < val)
-			{
 				if (!lightBfsQueue.Contains(coord))
 				{
 					lightBfsQueue.Enqueue(coord);
