@@ -10,8 +10,10 @@ namespace Alex.Worlds
 {
 	public class Biome
 	{
-		private static readonly Color  WaterColor = ColorHelper.HexToColor("#44AFF5");
-		
+		private static readonly Color DefaultWaterColor    = ColorHelper.HexToColor("#44AFF5");
+		private static readonly Color DefaultWaterFogColor = ColorHelper.HexToColor("#44AFF5");
+		private static readonly Color DefaultFogColor = ColorHelper.HexToColor("#ABD2FF");
+
 		public                  int    Id;
 		public                  string Name;
 		public                  float  Temperature;
@@ -20,7 +22,12 @@ namespace Alex.Worlds
 		public float  MinHeight = 0.1f;
 		public float  MaxHeight = 0.3f;
 
-		public Color Water { get; set; } = WaterColor;
+		public Color FogColor                 { get; set; } = DefaultFogColor;
+		public Color Water                    { get; set; } = DefaultWaterColor;
+		public Color WaterFogColor            { get; set; } = DefaultWaterFogColor;
+		public float WaterFogDistance         { get; set; } = 15f;
+		public float WaterSurfaceTransparency { get; set; } = 0.65f;
+
 		//public float HeightScale = 100;
 	}
 
@@ -68,7 +75,8 @@ namespace Alex.Worlds
 				Temperature = 0.2f,
 				Downfall = 0.3f,
 				MinHeight = 0.2f,
-				MaxHeight = 1f
+				MaxHeight = 1f,
+				Water = ColorHelper.HexToColor("#007BF7")
 			},
 			new Biome
 			{
@@ -118,6 +126,7 @@ namespace Alex.Worlds
 				Downfall = 0.0f,
 				MinHeight = 0.1f,
 				MaxHeight = 0.2f, //TODO!
+				Water = ColorHelper.HexToColor("#905957")
 			},
 			new Biome
 			{
@@ -156,7 +165,8 @@ namespace Alex.Worlds
 				Temperature = 0.0f,
 				Downfall = 0.5f,
 				MinHeight = 0.125f,
-				MaxHeight = 0.5f //TODO
+				MaxHeight = 0.5f, //TODO
+				Water = ColorHelper.HexToColor("#14559b")
 			},
 			new Biome
 			{
@@ -165,7 +175,8 @@ namespace Alex.Worlds
 				Temperature = 0.0f,
 				Downfall = 0.5f,
 				MinHeight = 0.2f,
-				MaxHeight = 1.2f
+				MaxHeight = 1.2f,
+				Water = ColorHelper.HexToColor("#1156a7")
 			},
 			new Biome
 			{
@@ -174,7 +185,8 @@ namespace Alex.Worlds
 				Temperature = 0.9f,
 				Downfall = 1.0f,
 				MinHeight = 0.2f,
-				MaxHeight = 1f
+				MaxHeight = 1f,
+				Water = ColorHelper.HexToColor("#8a8997")
 			},
 			new Biome
 			{
@@ -183,7 +195,8 @@ namespace Alex.Worlds
 				Temperature = 0.9f,
 				Downfall = 1.0f,
 				MinHeight = -1f,
-				MaxHeight = 0.1f
+				MaxHeight = 0.1f,
+				Water = ColorHelper.HexToColor("#818193")
 			},
 			new Biome
 			{
@@ -212,7 +225,8 @@ namespace Alex.Worlds
 				Temperature = 0.7f,
 				Downfall = 0.8f,
 				MinHeight = 0.2f,
-				MaxHeight = 0.6f
+				MaxHeight = 0.6f,
+				Water = ColorHelper.HexToColor("#056bd1")
 			},
 			new Biome
 			{
@@ -231,7 +245,8 @@ namespace Alex.Worlds
 				Temperature = 0.2f,
 				Downfall = 0.3f,
 				MinHeight = 0.2f,
-				MaxHeight = 0.8f
+				MaxHeight = 0.8f,
+				Water = ColorHelper.HexToColor("#045cd5")
 			},
 			new Biome
 			{
@@ -342,7 +357,8 @@ namespace Alex.Worlds
 				Temperature = -0.5f,
 				Downfall = 0.4f,
 				MinHeight = 0.3f,
-				MaxHeight = 0.45f
+				MaxHeight = 0.45f,
+				Water = ColorHelper.HexToColor("#245b78")
 			},
 			new Biome
 			{
@@ -351,7 +367,8 @@ namespace Alex.Worlds
 				Temperature = 0.3f,
 				Downfall = 0.8f,
 				MinHeight = 0.2f,
-				MaxHeight = 0.2f
+				MaxHeight = 0.2f,
+				Water = ColorHelper.HexToColor("#2d6d77")
 			},
 			new Biome
 			{
@@ -360,7 +377,8 @@ namespace Alex.Worlds
 				Temperature = 0.3f,
 				Downfall = 0.8f,
 				MinHeight = 0.3f,
-				MaxHeight = 0.45f
+				MaxHeight = 0.45f,
+				Water = ColorHelper.HexToColor("#286378")
 			},
 			new Biome
 			{
@@ -369,7 +387,8 @@ namespace Alex.Worlds
 				Temperature = 0.2f,
 				Downfall = 0.3f,
 				MinHeight = 0.5f,
-				MaxHeight = 1f
+				MaxHeight = 1f,
+				Water = ColorHelper.HexToColor("#0E63AB")
 			},
 			new Biome
 			{

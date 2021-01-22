@@ -58,7 +58,7 @@ namespace Alex.Gamestates.Debugging
 
 			ModelExplorer = BlockModelExplorer;
 			
-			AddChild(_modelExplorerView = new GuiModelExplorerView(ModelExplorer, new Vector3(0f, 0f, -6f), new Vector3(0f, 1.8f, 0f))
+			AddChild(_modelExplorerView = new GuiModelExplorerView(ModelExplorer, new Vector3(8f, 0f, 8f), new Vector3(0f, 1.8f, 0f))
 			{
 				Anchor = Alignment.Fill,
 				Background = Color.TransparentBlack,
@@ -338,6 +338,7 @@ namespace Alex.Gamestates.Debugging
 						PooledTexture2D t = TextureUtils.BitmapToTexture2D(Alex.GraphicsDevice, bmp.Value);
 
 						renderer = new EntityModelRenderer(model, t);
+						renderer.Scale = 1f / 16f;
 					}
 				}
 			}
@@ -412,11 +413,13 @@ namespace Alex.Gamestates.Debugging
 
 			return sb.ToString();
 		}
-
+		
+		private float _rot = 0f;
 		/// <inheritdoc />
 		public override void UpdateContext3D(IUpdateArgs args, IGuiRenderer guiRenderer)
 		{
-			_currentRenderer?.Update(args, new PlayerLocation());
+			_rot += (float)args.GameTime.ElapsedGameTime.TotalSeconds;
+			_currentRenderer?.Update(args, new PlayerLocation(args.Camera.Position, 16f * _rot % 360f, 16f * _rot % 360f, 8f * _rot % 360f));
 		}
 
 		/// <inheritdoc />
@@ -444,7 +447,7 @@ namespace Alex.Gamestates.Debugging
 			_blockStates = BlockFactory.AllBlockstates.Values.ToArray();
 		}
 
-		private AlphaTestEffect _alphaEffect = null;
+		//private AlphaTestEffect _alphaEffect = null;
 		private BasicEffect     _basicEffect = null;
 		private Effect          _currentEffect;
 
@@ -520,25 +523,28 @@ namespace Alex.Gamestates.Debugging
 			_location = location;
 		}
 
+		private float _rot = 0f;
 		/// <inheritdoc />
 		public override void UpdateContext3D(IUpdateArgs args, IGuiRenderer guiRenderer)
 		{
+			_rot += (float)args.GameTime.ElapsedGameTime.TotalSeconds;
+			
 			if (_basicEffect == null)
 			{
 				_basicEffect                    = new BasicEffect(Alex.GraphicsDevice);
 				_basicEffect.VertexColorEnabled = true;
 				_basicEffect.TextureEnabled     = true;
+				_basicEffect.LightingEnabled = false;
+				_basicEffect.FogEnabled = false;
 			}
 
-			if (_alphaEffect == null)
-			{
-				_alphaEffect                    = new AlphaTestEffect(Alex.GraphicsDevice);
-				_alphaEffect.VertexColorEnabled = true;
-			}
+			var offset = new Vector3(0.5f, 0.5f, 0.5f);
+		 _basicEffect.Projection = args.Camera.ProjectionMatrix;
+			 _basicEffect.View       = args.Camera.ViewMatrix;
 
-			_alphaEffect.Projection = _basicEffect.Projection = args.Camera.ProjectionMatrix;
-			_alphaEffect.View       = _basicEffect.View       = args.Camera.ViewMatrix;
-			_alphaEffect.World  = _basicEffect.World = Matrix.CreateScale(1f/16f);
+			 _basicEffect.World = Matrix.CreateScale(1f / 16f)
+			                                          * Matrix.CreateRotationY(MathUtils.ToRadians(18f * _rot % 360f))
+			                                          * Matrix.CreateRotationX(MathUtils.ToRadians(8f * _rot % 360f));
 
 			var block = _blockStates[_index];
 
@@ -546,19 +552,19 @@ namespace Alex.Gamestates.Debugging
 			{
 				if (block.Block.Animated)
 				{
-					_alphaEffect.Texture = Alex.Resources.Atlas.GetAtlas(0);
+				//	_alphaEffect.Texture = Alex.Resources.Atlas.GetAtlas(0);
 					_basicEffect.Texture = Alex.Resources.Atlas.GetAtlas(0);
 				}
 				else
 				{
-					_alphaEffect.Texture = Alex.Resources.Atlas.GetStillAtlas();
+				//	_alphaEffect.Texture = Alex.Resources.Atlas.GetStillAtlas();
 					_basicEffect.Texture = Alex.Resources.Atlas.GetStillAtlas();
 				}
 
 				_previousIndex = _index;
 			}
 
-			_currentEffect = (block.Block.Transparent || block.Block.Animated) ? (Effect) _alphaEffect : _basicEffect;
+			_currentEffect =  _basicEffect;
 		}
 
 		/// <inheritdoc />

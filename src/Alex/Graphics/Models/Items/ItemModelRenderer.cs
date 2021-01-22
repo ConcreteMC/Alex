@@ -231,11 +231,11 @@ namespace Alex.Graphics.Models.Items
 
                 if (r != Vector3.Zero)
                 {
-                    r.Y += 12.5f;
+                    //r.Y += 12.5f;
                     r.Z -= 67.5f;
                     Effect.World = MCMatrix.CreateScale(Scale * activeDisplayItem.Scale)
                                    * MCMatrix.CreateTranslation(-halfSize)
-                                   * MCMatrix.CreateRotationZ(MathUtils.ToRadians(-45f))
+                                   * MCMatrix.CreateRotationZ(MathUtils.ToRadians(-32.5f))
                                    * MCMatrix.CreateTranslation(halfSize)
                                    //* MCMatrix.CreateRotationDegrees(new Vector3(-67.5f, 180f, 0f))
                                    * MCMatrix.CreateRotationDegrees(r * new Vector3(1f, -1f, -1f))
@@ -261,6 +261,12 @@ namespace Alex.Graphics.Models.Items
                                * MCMatrix.CreateTranslation(halfSize)
                                * MCMatrix.CreateTranslation(activeDisplayItem.Translation * new Vector3(1f, 1f, -1f))
                                * characterMatrix;
+            }
+            else 
+            {
+                
+                    Effect.World = characterMatrix;
+                
             }
 
             //Effect.DiffuseColor = diffuseColor;

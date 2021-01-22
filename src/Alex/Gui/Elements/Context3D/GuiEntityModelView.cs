@@ -43,7 +43,7 @@ namespace Alex.Gui.Elements.Context3D
         {
             Background = GuiTextures.PanelGeneric;
             Entity = entity;
-            Camera.CameraPositionOffset = new Vector3(0f, 0f, -6f);
+            Camera.CameraPositionOffset = new Vector3(0f, 1.62f, -2f);
             Camera.TargetPositionOffset = new Vector3(0f, 1.8f, 0f);
         }
 

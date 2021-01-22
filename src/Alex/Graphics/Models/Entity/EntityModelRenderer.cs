@@ -217,7 +217,8 @@ namespace Alex.Graphics.Models.Entity
 		{
 			DepthBias = 0f,
 			CullMode = CullMode.CullClockwiseFace,
-			FillMode = FillMode.Solid
+			FillMode = FillMode.Solid,
+			ScissorTestEnable = true
 		};
 		
 		public virtual void Render(IRenderArgs args)

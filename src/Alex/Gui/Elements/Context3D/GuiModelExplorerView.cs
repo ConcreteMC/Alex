@@ -55,7 +55,7 @@ namespace Alex.Gui.Elements.Context3D
 
             //Camera = new GuiEntityModelViewCamera(this);
           //  Camera = new GuiContext3DElement.GuiContext3DCamera(EntityPosition);
-          Camera.SetRenderDistance(16);
+          Camera.SetRenderDistance(128);
          // Camera.CameraPositionOffset = new Vector3(0f, 0f, -6f);
          // Camera.TargetPositionOffset = new Vector3(0f, 1.8f, 0f);
         }

@@ -61,30 +61,34 @@ namespace Alex.Gui.Elements.Context3D
                 //args.Graphics.Viewport = new Viewport(RenderBounds);
                 //graphics.End();
 
-                using (var context = graphics.BranchContext(BlendState.AlphaBlend, DepthStencilState.Default,
+
+                using (var context = graphics.BranchContext(BlendState.Opaque, DepthStencilState.Default,
                     RasterizerState.CullClockwise, SamplerState.PointWrap))
                 {
                     var bounds = RenderBounds;
 
                     bounds.Inflate(-3, -3);
 
-                    var p = graphics.Project(bounds.Location.ToVector2());
+                    var p  = graphics.Project(bounds.Location.ToVector2());
                     var p2 = graphics.Project(bounds.Location.ToVector2() + bounds.Size.ToVector2());
 
                     var newViewport = Camera.Viewport;
-                    newViewport.X = (int) p.X;
-                    newViewport.Y = (int) p.Y;
-                    newViewport.Width = (int) (p2.X - p.X);
+                    newViewport.X      = (int) p.X;
+                    newViewport.Y      = (int) p.Y;
+                    newViewport.Width  = (int) (p2.X - p.X);
                     newViewport.Height = (int) (p2.Y - p.Y);
+                    newViewport.MaxDepth = 128f;
+                    newViewport.MinDepth = 0.01f;
+                    //newViewport.
 
                     Camera.Viewport = newViewport;
-                    Camera.UpdateProjectionMatrix();
 
                     context.Viewport = Camera.Viewport;
 
                     graphics.Begin();
 
                     Drawable?.DrawContext3D(renderArgs, GuiRenderer);
+                    // Entity.Render(renderArgs);
                     //  EntityModelRenderer?.Render(renderArgs, EntityPosition);
 
                     graphics.End();
@@ -106,7 +110,7 @@ namespace Alex.Gui.Elements.Context3D
                     //Camera.RenderPosition = new Vector3(c.X, c.Y, 0.0f);
                     //Camera.UpdateProjectionMatrix();
                     //Camera.UpdateAspectRatio((float) bounds.Width / (float) bounds.Height);
-                    Camera.UpdateAspectRatio(bounds.Width / (float) bounds.Height);
+                    //Camera.UpdateAspectRatio(bounds.Width / (float) bounds.Height);
                     _previousBounds = bounds;
                 }
 
@@ -117,7 +121,7 @@ namespace Alex.Gui.Elements.Context3D
                     Camera = Camera
                 };
 
-                Camera.MoveTo(TargetPosition, Vector3.Zero);
+                //Camera.MoveTo(TargetPosition, Vector3.Zero);
 
                 Drawable.UpdateContext3D(updateArgs, GuiRenderer);
                 //EntityModelRenderer?.Update(updateArgs, EntityPosition);
@@ -163,26 +167,24 @@ namespace Alex.Gui.Elements.Context3D
 
             public GuiContext3DCamera(Vector3 basePosition) : base()
             {
-                Viewport = new Viewport(256, 128, 128, 256, 0.01f, 16.0f);
+                Viewport = new Viewport(256, 128, 128, 256, 0.01f, 128f);
                 Position = basePosition;
                 Rotation = Vector3.Zero;
-                FOV = 25.0f;
+                FOV = 75.0f;
                 
-                SetRenderDistance(1);
+                SetRenderDistance(128);
             }
 
             protected override void UpdateViewMatrix()
             {
                 MCMatrix rotationMatrix = (MCMatrix.CreateRotationX(Rotation.X) *
                                            MCMatrix.CreateRotationY(Rotation.Y));
-
-                Vector3 lookAtOffset = Vector3.Transform(CameraPositionOffset, rotationMatrix);
-
+                
                 Target = Position;
 
                 Direction = Vector3.Transform(Vector3.Forward, rotationMatrix);
 
-                ViewMatrix = MCMatrix.CreateLookAt(Target + lookAtOffset, Target + TargetPositionOffset, Vector3.Up);
+                ViewMatrix = MCMatrix.CreateLookAt(Target + CameraPositionOffset, Target + TargetPositionOffset, Vector3.Up);
             }
 
             public override void UpdateProjectionMatrix()
