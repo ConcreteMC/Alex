@@ -49,17 +49,26 @@ namespace Alex.Worlds.Chunks
 	        }
 	        
 	        this.BlockLight = new NibbleArray(new byte[2048]);
-	        MiNET.Worlds.ChunkColumn.Fill<byte>(BlockLight.Data, 0);
-	        
-		//	if (storeSkylight)
+
+	        //	if (storeSkylight)
 			{
-				this.SkyLight = new NibbleArray(new byte[2048]);	
-				MiNET.Worlds.ChunkColumn.Fill<byte>(SkyLight.Data, 0x00);
+				this.SkyLight = new NibbleArray(new byte[2048]);
 			}
 
+			ResetLight(true, true);
+			
 		    _scheduledUpdates = new System.Collections.BitArray(new byte[(16 * 16 * 16) / 8 ]);
 		    _scheduledSkylightUpdates = new System.Collections.BitArray(new byte[(16 * 16 * 16) / 8 ]);
 		    _scheduledBlocklightUpdates = new System.Collections.BitArray(new byte[(16 * 16 * 16) / 8 ]);
+        }
+
+        internal void ResetLight(bool blockLight, bool skyLight)
+        {
+	        if (blockLight)
+				MiNET.Worlds.ChunkColumn.Fill<byte>(BlockLight.Data, 0);
+	        
+	        if (skyLight)
+		        MiNET.Worlds.ChunkColumn.Fill<byte>(SkyLight.Data, 0x00);
         }
 
         protected static int GetCoordinateIndex(int x, int y, int z)
@@ -189,7 +198,11 @@ namespace Alex.Worlds.Chunks
 						LightSources.Add(blockCoordinates);
 					}
 
-					SetBlocklight(x,y,z, (byte) state.Block.LightValue);
+					if (state.Block.LightValue > GetBlocklight(x, y, z))
+					{
+						SetBlocklight(x, y, z, (byte) state.Block.LightValue);
+					}
+
 					//SetBlockLightScheduled(x,y,z, true);
 				}
 				else
@@ -197,6 +210,10 @@ namespace Alex.Worlds.Chunks
 					if (LightSources.Contains(blockCoordinates))
 					{
 						LightSources.Remove(blockCoordinates);
+					}
+
+					if (GetBlocklight(x, y, z) > 0)
+					{
 						SetBlocklight(x, y, z, 0);
 					}
 				}
@@ -300,6 +317,23 @@ namespace Alex.Worlds.Chunks
 						if (!(block is Air))
 						{
 							++this.BlockRefCount;
+						}
+						
+						
+						if (block.LightValue > 0)
+						{
+							var coords = new BlockCoordinates(x, y, z);
+
+							if (!LightSources.Contains(coords))
+							{
+								LightSources.Add(coords);
+							}
+
+							if (GetBlocklight(x, y, z) < block.LightValue)
+							{
+								SetBlocklight(x, y, z, (byte) block.LightValue);
+								//SetBlockLightScheduled(x, y, z, true);
+							}
 						}
 					}
 				}

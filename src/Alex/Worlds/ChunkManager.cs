@@ -333,6 +333,22 @@ namespace Alex.Worlds
 				return;
 			//chunk.CalculateHeight();
 			
+			if (chunk.IsNew)
+			{
+				BlockLightCalculations.Recalculate(chunk);
+
+				//SkyLightCalculations s = new SkyLightCalculations();
+				
+				//SkyLightCalculator.Calculate(chunk, position);
+			}
+			
+			foreach (var blockEntity in chunk.GetBlockEntities)
+			{
+				var coordinates = new BlockCoordinates(blockEntity.X, blockEntity.Y, blockEntity.Z);
+				//World.SetBlockEntity(coordinates.X, coordinates.Y, coordinates.Z, blockEntity);
+				World.EntityManager.AddBlockEntity(coordinates, blockEntity);
+			}
+			
 			Chunks.AddOrUpdate(
 				position, coordinates => chunk, (coordinates, column) =>
 				{
@@ -343,27 +359,6 @@ namespace Alex.Worlds
 
 					return chunk;
 				});
-			
-			if (chunk.IsNew)
-			{
-				var chunkpos = new BlockCoordinates(position.X << 4, 0, position.Z << 4);
-
-				foreach (var ls in chunk.GetLightSources())
-				{
-					BlockLightCalculations.Enqueue(chunkpos + ls);
-				}
-			    
-				//SkyLightCalculations s = new SkyLightCalculations();
-				
-				//SkyLightCalculator.Calculate(chunk, position);
-			}
-			
-			foreach (var blockEntity in chunk.GetBlockEntities)
-			{
-				var coordinates = new BlockCoordinates(blockEntity.X, blockEntity.Y, blockEntity.Z);
-	            //World.SetBlockEntity(coordinates.X, coordinates.Y, coordinates.Z, blockEntity);
-				World.EntityManager.AddBlockEntity(coordinates, blockEntity);
-			}
 
 			ScheduleChunkUpdate(position, ScheduleType.Full);
 			//UpdateQueue.Enqueue(position);
@@ -545,7 +540,7 @@ namespace Alex.Worlds
 		private bool IsWithinView(ChunkCoordinates chunk, ICamera camera)
 		{
 			var frustum  = camera.BoundingFrustum;
-			var chunkPos = new Vector3(chunk.X * ChunkColumn.ChunkWidth, 0, chunk.Z * ChunkColumn.ChunkDepth);
+			var chunkPos = new Vector3(chunk.X << 4, 0, chunk.Z << 4);
 
 			if (chunk.DistanceTo(new ChunkCoordinates(camera.Position)) > RenderDistance)
 				return false;
@@ -641,9 +636,10 @@ namespace Alex.Worlds
 		
 		#endregion
 
-		int   _currentFrame = 0;
-		int   _framerate    = 12;     // Animate at 12 frames per second
-		float _timer        = 0.0f;
+		int                      _currentFrame = 0;
+		int                      _framerate    = 12;     // Animate at 12 frames per second
+		float                    _timer        = 0.0f;
+		private ChunkCoordinates CameraPosition { get; }
 		public void Update(IUpdateArgs args)
 		{
 			Shaders.Update(args.Camera);
@@ -665,7 +661,7 @@ namespace Alex.Worlds
 			foreach (var chunk in Chunks)
 			{
 				bool inView = IsWithinView(chunk.Key, World.Camera);
-				if (chunk.Value.ChunkData != null && inView)
+				if (inView)
 				{
 					renderList.Add(chunk.Value.ChunkData);
 				}

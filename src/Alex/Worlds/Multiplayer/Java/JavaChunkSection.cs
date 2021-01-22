@@ -53,7 +53,7 @@ namespace Alex.Worlds.Multiplayer.Java
                                 LightSources.Add(coords);
                             }
 
-                            if (GetBlocklight(x, y, z) != block.LightValue)
+                            if (GetBlocklight(x, y, z) < block.LightValue)
                             {
                                 SetBlocklight(x, y, z, (byte) block.LightValue);
                                 //SetBlockLightScheduled(x, y, z, true);
