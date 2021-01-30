@@ -2,7 +2,7 @@
 {
 	public class OakFence : Fence
     {
-	    public OakFence() : base(3401)
+	    public OakFence() : base()
 	    {
 	    }
     }

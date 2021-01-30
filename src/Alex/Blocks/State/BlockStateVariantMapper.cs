@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Alex.Graphics.Models.Blocks;
 
 namespace Alex.Blocks.State
 {
@@ -8,7 +9,22 @@ namespace Alex.Blocks.State
     {
         private static NLog.Logger Log = NLog.LogManager.GetCurrentClassLogger(typeof(BlockStateVariantMapper));
         private IList<BlockState> Variants { get; } = new List<BlockState>();
-
+        
+        public  bool       IsMultiPart { get; set; } = false;
+        
+        private BlockModel _model = null;
+        public BlockModel Model
+        {
+            get
+            {
+                return _model ?? new MissingBlockModel();
+            }
+            set
+            {
+                _model = value;
+            }
+        }
+        
         public BlockStateVariantMapper()
         {
 

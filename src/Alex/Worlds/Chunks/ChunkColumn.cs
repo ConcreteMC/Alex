@@ -156,12 +156,12 @@ namespace Alex.Worlds.Chunks
 									foreach (var state in section.GetAll(x, y, z))
 									{
 										var blockState = state.State;
-										if (blockState == null || blockState.Model == null || blockState.Block == null || !blockState.Block.Renderable)
+										if (blockState == null || blockState?.VariantMapper?.Model == null || blockState.Block == null || !blockState.Block.Renderable)
 											continue;
 										
-										var model = blockState.Model;
+										var model = blockState.VariantMapper.Model;
 
-										if (blockState.Block.RequiresUpdate || blockState.IsMultiPart)
+										if (IsNew && (blockState.Block.RequiresUpdate || blockState.VariantMapper.IsMultiPart))
 										{
 											var newblockState = blockState.Block.BlockPlaced(
 												world, blockState, blockPosition);
@@ -171,10 +171,10 @@ namespace Alex.Worlds.Chunks
 												blockState = newblockState;
 
 												section.Set(state.Storage, x, y, z, blockState);
-												model = blockState.Model;
+												model = blockState?.VariantMapper?.Model;
 											}
 										}
-
+										
 										/*if (blockState.IsMultiPart)
 										{
 											var newBlockState = MultiPartModelHelper.GetBlockState(
@@ -192,7 +192,7 @@ namespace Alex.Worlds.Chunks
 										if (model != null)
 										{
 											model.GetVertices(
-												world, ChunkData, blockPosition, blockPosition, blockState.Block);
+												world, ChunkData, blockPosition, blockPosition, blockState);
 										}
 									}
 								}
@@ -272,7 +272,6 @@ namespace Alex.Worlds.Chunks
 		{
 			if ((x < 0 || x > ChunkWidth) || (y < 0 || y > ChunkHeight) || (z < 0 || z > ChunkDepth))
 				return;
-
 
 			var section  = GetSection(y);
 			section.Set(storage, x, y - 16 * (y >> 4), z, state);

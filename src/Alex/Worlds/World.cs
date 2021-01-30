@@ -507,6 +507,11 @@ namespace Alex.Worlds
 				var cz = z & 0xf;
 
 				//var previousBlock = chunk.GetBlockState(cx, cy, cz, storage);
+				//if (block.Block.RequiresUpdate)
+				{
+					//block = block.Block.BlockPlaced(this, block, new BlockCoordinates(x,y,z));
+				}
+				
 				chunk.SetBlockState(cx, cy, cz, block, storage);
 
 				EntityManager.RemoveBlockEntity(new BlockCoordinates(x, y, z));

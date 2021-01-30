@@ -794,10 +794,7 @@ namespace Alex.Entities
 
 	    private bool CanPlaceBlock(BlockCoordinates coordinates, Block block)
 	    {
-		    if (block.BlockState?.Model == null)
-			    return true;
-		    
-		    var bb = block.BlockState.Model.GetBoundingBoxes(coordinates);
+		    var bb = block.GetBoundingBoxes(coordinates);
 		    var playerBb = BoundingBox;
 
 		    foreach (var boundingBox in bb)

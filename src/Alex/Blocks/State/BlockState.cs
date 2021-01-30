@@ -29,22 +29,13 @@ namespace Alex.Blocks.State
 		public string Name { get; set; }
 		public uint ID { get; set; }
 
-		private  BlockModel       _model = null;
-		public BlockModel Model
+		public BlockStateVariant ModelData { get; set; } = new BlockStateVariant()
 		{
-			get
-			{
-				return _model ?? new MissingBlockModel();
-			}
-			set
-			{
-				_model = value;
-			}
-		}
-
-		public   Block            Block        { get; set; } = new Air();
-		public   bool             IsMultiPart  { get; set; } = false;
-		public   bool             Default      { get; set; } = false;
+			new BlockStateModel()
+		};
+		
+		public Block Block       { get; set; } = new Air();
+		public bool  Default     { get; set; } = false;
 
 		//public string[] AppliedModels { get; set; } = new string[0];
 		
@@ -198,11 +189,11 @@ namespace Alex.Blocks.State
 				Block = Block,
 				VariantMapper = VariantMapper,
 		//		ResolveModel = ResolveModel,
-				Model = Model,
-				Default = Default,
+		Default = Default,
+		ModelData = ModelData,
 			//	Location = Location == null ? null : new ResourceLocation(Location.Namespace, Location.Path),
 		//		AppliedModels = AppliedModels,
-				IsMultiPart = IsMultiPart,
+		//IsMultiPart = IsMultiPart,
 				//	MultiPartHelper = MultiPartHelper
 			};
 			return bs;

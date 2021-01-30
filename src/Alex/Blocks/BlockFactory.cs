@@ -107,7 +107,6 @@ namespace Alex.Blocks
 			int total = data.Count;
 			int done = 0;
 			int importCounter = 0;
-			int multipartBased = 0;
 
 			void LoadEntry(KeyValuePair<string, BlockData> entry)
 			{
@@ -135,6 +134,16 @@ namespace Alex.Blocks
 						defaultState = (BlockState) defaultState.WithPropertyNoResolve(property.Key, property.Value.FirstOrDefault(), false);
 					}
 				}
+				
+				defaultState.ModelData = ResolveVariant(blockStateResource, defaultState);
+				
+				variantMap.Model = ResolveModel(resources, blockStateResource, out bool isMultipartModel);
+				variantMap.IsMultiPart = isMultipartModel;
+				
+				if (variantMap.Model == null)
+				{
+					Log.Warn($"No model found for {entry.Key}[{variantMap.ToString()}]");
+				}
 
 				foreach (var s in entry.Value.States)
 				{
@@ -148,7 +157,7 @@ namespace Alex.Blocks
 					BlockState variantState = (BlockState) (defaultState).CloneSilent();
 					variantState.ID = s.ID;
 					variantState.Name = entry.Key;
-
+					
 					if (s.Properties != null)
 					{
 						foreach (var property in s.Properties)
@@ -174,17 +183,12 @@ namespace Alex.Blocks
 
 					if (string.IsNullOrWhiteSpace(block.DisplayName)) block.DisplayName = entry.Key;
 
+					variantState.ModelData = ResolveVariant(blockStateResource, variantState);
+					
 					variantState.Block = block.Value;
 					block.BlockState = variantState;
 
-					variantState.Model = ResolveModel(resources, blockStateResource, variantState);
-
-					if (variantState.Model == null)
-					{
-						Log.Warn($"No model found for {entry.Key}[{variantState.ToString()}]");
-					}
-
-					if (variantState.IsMultiPart) multipartBased++;
+				//	if (variantState.IsMultiPart) multipartBased++;
 
 					variantState.Default = s.Default;
 
@@ -306,10 +310,10 @@ namespace Alex.Blocks
 						bedrockState.Name = state.Value.BedrockIdentifier;
 						bedrockState.VariantMapper = mapper;
 						//bedrockState.AppliedModels = pcVariant.AppliedModels;
-						bedrockState.IsMultiPart = pcVariant.IsMultiPart;
+					//	bedrockState.IsMultiPart = pcVariant.IsMultiPart;
 					//	bedrockState.MultiPartHelper = pcVariant.MultiPartHelper;
 					//	bedrockState.ResolveModel = pcVariant.ResolveModel;
-						bedrockState.Model = pcVariant.Model;
+						//bedrockState.Model = pcVariant.Model;
 						bedrockState.Block = pcVariant.Block;
 						bedrockState.ID = (uint) Interlocked.Increment(ref counter);
 						bedrockState.Default = first;
@@ -340,10 +344,10 @@ namespace Alex.Blocks
 		}
 
 		private static BlockModel ResolveModel(ResourceManager resources,
-			BlockStateResource blockStateResource,
-			BlockState state)
+			BlockStateResource blockStateResource, out bool isMultipartModel)
 		{
-			string name = state.Name;
+			isMultipartModel = blockStateResource.Parts.Any(x => x.When != null && x.When.Length > 0);
+			string name = blockStateResource.Name;
 
 			if (string.IsNullOrWhiteSpace(name))
 			{
@@ -368,7 +372,9 @@ namespace Alex.Blocks
 				};
 			}
 
-			if (blockStateResource != null && blockStateResource.Parts != null && blockStateResource.Parts.Length > 0)
+		//	isMultipartModel = blockStateResource.Parts.Length > 0;
+			
+			/*if (blockStateResource != null && blockStateResource.Parts != null && blockStateResource.Parts.Length > 0)
 			{
 				var                      models        = MultiPartModelHelper.GetModels(state, blockStateResource);
 				BlockStateModelWrapper[] modelWrappers = new BlockStateModelWrapper[models.Length];
@@ -384,16 +390,16 @@ namespace Alex.Blocks
 				}
 
 				//	state.MultiPartHelper = blockStateResource;
-				state.IsMultiPart = blockStateResource.Parts.Any(x => x.When != null && x.When.Length > 0);
+				isMultipartModel = blockStateResource.Parts.Any(x => x.When != null && x.When.Length > 0);
 				//state.AppliedModels = models.Select(x => x.ModelName).ToArray();
 
 				return new ResourcePackBlockModel(resources, modelWrappers);
 			}
-
-			if (blockStateResource?.Variants == null || blockStateResource.Variants.Count == 0)
-			{
-				return null;
-			}
+*/
+			//if (blockStateResource?.Variants == null || blockStateResource.Variants.Count == 0)
+			//{
+			//	return null;
+			//}
 
 			/*if (blockStateResource.Variants.Count == 1)
 			{
@@ -415,11 +421,12 @@ namespace Alex.Blocks
 				return new ResourcePackBlockModel(resources, models.ToArray(), v.Value.ToArray().Length > 1);
 			}*/
 
-			BlockStateVariant blockStateVariant = null;
+			//BlockStateVariant blockStateVariant = null;
 
 			//var data = state.ToDictionary();
 
-			int                                     closestMatch = 0;
+			/*
+			 int                                     closestMatch = 0;
 			KeyValuePair<string, BlockStateVariant> closest      = default(KeyValuePair<string, BlockStateVariant>);
 
 			foreach (var v in blockStateResource.Variants)
@@ -455,8 +462,8 @@ namespace Alex.Blocks
 						break;
 				}
 			}
-
-			blockStateVariant = closest.Value;
+*/
+			/*blockStateVariant = closest.Value;
 
 			if (blockStateVariant == null)
 			{
@@ -464,16 +471,16 @@ namespace Alex.Blocks
 				blockStateVariant = a.Value;
 			}
 
-			var asArray = blockStateVariant.ToArray();
+			/*var asArray = blockStateVariant.ToArray();
 
 			if (asArray.Length == 0)
 			{
 				Log.Info($"No elements");
 
 				return null;
-			}
+			}*/
 			
-			BlockStateModelWrapper[] wrappers = new BlockStateModelWrapper[asArray.Length];
+			/*BlockStateModelWrapper[] wrappers = new BlockStateModelWrapper[asArray.Length];
 
 			for (var index = 0; index < asArray.Length; index++)
 			{
@@ -483,9 +490,56 @@ namespace Alex.Blocks
 				{
 					wrappers[index] = new BlockStateModelWrapper(model, registryEntry.Value);
 				}
+			}*/
+			
+			return new ResourcePackBlockModel(resources, blockStateResource);
+		}
+
+		private static BlockStateVariant ResolveVariant(BlockStateResource blockStateResource, BlockState state)
+		{
+			if (state.VariantMapper.IsMultiPart)
+			{
+				return new BlockStateVariant(MultiPartModelHelper.GetModels(state, blockStateResource));
 			}
 			
-			return new ResourcePackBlockModel(resources, wrappers, wrappers.Length > 1);
+			int                                     closestMatch = -1;
+			KeyValuePair<string, BlockStateVariant> closest      = default(KeyValuePair<string, BlockStateVariant>);
+
+			foreach (var v in blockStateResource.Variants)
+			{
+				int matches = 0;
+				//var variantBlockState = Blocks.State.BlockState.FromString(v.Key);
+				var variant = Blocks.State.BlockState.ParseData(v.Key);
+				foreach (var kv in state)
+				{
+					if (variant.TryGetValue(kv.Key, out string vValue))
+					{
+						if (vValue.Equals(kv.Value, StringComparison.OrdinalIgnoreCase))
+						{
+							matches++;
+						}
+						else
+						{
+							break;
+						}
+					}
+					else
+					{
+						break;
+					}
+				}
+
+				if (matches > closestMatch)
+				{
+					closestMatch = matches;
+					closest = v;
+
+					if (matches == state.Count)
+						break;
+				}
+			}
+
+			return closest.Value;
 		}
 
 		private static readonly BlockState AirState = new BlockState(){Name = "Unknown"};

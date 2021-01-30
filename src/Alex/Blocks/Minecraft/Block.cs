@@ -91,9 +91,9 @@ namespace Alex.Blocks.Minecraft
 
 		public virtual IEnumerable<BoundingBox> GetBoundingBoxes(Vector3 blockPos)
 		{
-			if (BlockState?.Model != null)
+			if (BlockState?.VariantMapper?.Model != null)
 			{
-				foreach (var bb in BlockState.Model.GetBoundingBoxes(blockPos))
+				foreach (var bb in BlockState.VariantMapper.Model.GetBoundingBoxes(blockPos))
 					yield return bb;
 			}
 			else
@@ -116,7 +116,7 @@ namespace Alex.Blocks.Minecraft
 		{
 			//return state;
 
-			if (state.IsMultiPart)
+			if (state.VariantMapper.IsMultiPart)
 			{
 				BlockStateResource blockStateResource;
 
@@ -131,7 +131,17 @@ namespace Alex.Blocks.Minecraft
 
 		public virtual void BlockUpdate(World world, BlockCoordinates position, BlockCoordinates updatedBlock)
 		{
-			
+			if (BlockState.VariantMapper.IsMultiPart)
+			{
+				BlockStateResource blockStateResource;
+
+				if (Alex.Instance.Resources.TryGetBlockState(BlockState.Name, out blockStateResource))
+				{
+					var state = MultiPartModelHelper.GetBlockState(world, position, BlockState, blockStateResource);
+					if (state != BlockState)
+						world.SetBlockState(position, state);
+				}
+			}
 		}
 
 		public virtual Item[] GetDrops(Item tool)

@@ -53,7 +53,7 @@ namespace Alex.Graphics.Models.Blocks
 			return true;
 		}
 
-		public override void GetVertices(IBlockAccess blockAccess, ChunkData chunkBuilder, BlockCoordinates blockCoordinates, Vector3 vectorPos, Block baseBlock)
+		public override void GetVertices(IBlockAccess blockAccess, ChunkData chunkBuilder, BlockCoordinates blockCoordinates, Vector3 vectorPos, BlockState baseBlock)
 		{
 			var position = new BlockCoordinates(vectorPos);
 			var blocksUp = blockAccess.GetBlockStates(position.X, position.Y + 1, position.Z).ToArray();//.GetType();
@@ -63,7 +63,7 @@ namespace Alex.Graphics.Models.Blocks
 					x => x.State.Block.Renderable && (x.State.Block.BlockMaterial == Material.Water || x.State.Block.BlockMaterial == Material.WaterPlant))) || (IsLava
 					&& blocksUp.Any(x => x.State.Block.Renderable && x.State.Block.BlockMaterial == Material.Lava));
 			 */
-			bool aboveIsLiquid = blocksUp.Any(x => x.State.Model is LiquidBlockModel);
+			bool aboveIsLiquid = blocksUp.Any(x => x.State?.VariantMapper.Model is LiquidBlockModel);
 
 			List<BlockFace> renderedFaces = new List<BlockFace>(6);
 			foreach (var face in Faces)
@@ -78,7 +78,7 @@ namespace Alex.Graphics.Models.Blocks
 					
 					var neighbor = blockState.State.Block;
 					
-					shouldRenderFace = baseBlock.ShouldRenderFace(face, neighbor);
+					shouldRenderFace = baseBlock.Block.ShouldRenderFace(face, neighbor);
 				}
 				
 				if (shouldRenderFace)
@@ -272,7 +272,7 @@ namespace Alex.Graphics.Models.Blocks
 					}
 					else
 					{
-						vert.BlockLight = baseBlock.LightValue;
+						vert.BlockLight = baseBlock.Block.LightValue;
 						vert.Face = face;
 					}
 					
@@ -304,7 +304,7 @@ namespace Alex.Graphics.Models.Blocks
 					if (world.GetBlockStates(position.X + xx, position.Y + 1, position.Z + zz).Any(
 						x =>
 						{
-							if (x.State.Model is LiquidBlockModel)
+							if (x.State?.VariantMapper.Model is LiquidBlockModel)
 								return true;
 
 							return false;
@@ -317,7 +317,7 @@ namespace Alex.Graphics.Models.Blocks
 					{
 						var b = bs.State;
 						
-						if (!b.Block.Renderable || !(b.Model is LiquidBlockModel l))
+						if (!b.Block.Renderable || !(b?.VariantMapper.Model is LiquidBlockModel l))
 							continue;
 
 						if (l.IsLava != IsLava) continue;

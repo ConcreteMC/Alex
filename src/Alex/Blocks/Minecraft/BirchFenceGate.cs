@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class BirchFenceGate : FenceGate
 	{
-		public BirchFenceGate() : base(7306)
+		public BirchFenceGate() : base()
 		{
 			Solid = true;
 			Transparent = true;
@@ -12,7 +12,7 @@ namespace Alex.Blocks.Minecraft
 
 	public class BirchFence : Fence
 	{
-		public BirchFence() : base(7490)
+		public BirchFence() : base()
 		{
 		}
 	}

@@ -32,7 +32,7 @@ namespace Alex.Blocks
 			int total = data.Count;
 			int done = 0;
 			int importCounter = 0;
-			int multipartBased = 0;
+			//int multipartBased = 0;
 
 			uint c = 0;
 			foreach (var entry in data)
@@ -100,7 +100,7 @@ namespace Alex.Blocks
 					}
 
 					{
-						if (variantState.IsMultiPart) multipartBased++;
+						//if (variantState.IsMultiPart) multipartBased++;
 
 						variantState.Default = s.Default;
 						if (!variantMap.TryAdd(variantState))
@@ -153,7 +153,7 @@ namespace Alex.Blocks
 				done++;
 			}
 
-			Log.Info($"Got {multipartBased} multi-part blockstate variants!");
+			//Log.Info($"Got {multipartBased} multi-part blockstate variants!");
         }
     }
 }

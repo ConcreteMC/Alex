@@ -459,8 +459,7 @@ namespace Alex.Gamestates.Debugging
 				
 			var       old       = _data;
 			ChunkData chunkData = new ChunkData(ChunkCoordinates.Zero);
-			b.Model
-							.GetVertices(world, chunkData, _location.GetCoordinates3D(), _location, b.Block);
+			b.VariantMapper.Model.GetVertices(world, chunkData, _location.GetCoordinates3D(), _location, b);
 
 			_data = chunkData;
 			_data.ApplyChanges(Alex.GraphicsDevice, true);
@@ -602,12 +601,7 @@ namespace Alex.Gamestates.Debugging
 			if (block != null)
 			{
 				sb.AppendLine($"{block.Name}");
-
-				if (block is BlockState s && s.IsMultiPart)
-				{
-					sb.AppendLine($"MultiPart=true");
-				}
-
+				
 				var dict = block.ToDictionary();
 				foreach (var kv in dict)
 				{

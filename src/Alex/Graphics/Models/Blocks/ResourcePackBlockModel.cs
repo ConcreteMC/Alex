@@ -9,6 +9,7 @@ using Alex.API.Utils;
 using Alex.API.Utils.Noise;
 using Alex.API.World;
 using Alex.Blocks.Minecraft;
+using Alex.Blocks.State;
 using Alex.ResourcePackLib.Json;
 using Alex.ResourcePackLib.Json.BlockStates;
 using Alex.ResourcePackLib.Json.Models;
@@ -47,27 +48,28 @@ namespace Alex.Graphics.Models.Blocks
 		
 		public static           bool       SmoothLighting { get; set; } = true;
 		
-		private BlockStateModelWrapper[] Models    { get; set; }
-		private ResourceManager          Resources { get; }
+		//private BlockStateModelWrapper[] Models    { get; set; }
+		private BlockStateResource BlockStateResource { get; }
+		private ResourceManager    Resources          { get; }
 
 		private Vector3 _min = new Vector3(float.MaxValue);
 		private Vector3 _max = new Vector3(float.MinValue);
 
 		private  BoundingBox[] Boxes         { get; set; }
-		private bool          UseRandomizer { get; set; }
-		private int           WeightSum     { get; }
-		public ResourcePackBlockModel(ResourceManager resources, BlockStateModelWrapper[] models, bool useRandomizer = false)
+		//private bool          UseRandomizer { get; set; }
+		//private int           WeightSum     { get; }
+		public ResourcePackBlockModel(ResourceManager resources, BlockStateResource blockStateResource)
 		{
 			Resources = resources;
 
-			Models = models.Where(x => x != null).ToArray();
+			//Models = models.Where(x => x != null).ToArray();
 			
 			//Models = models;
-			UseRandomizer = useRandomizer;
-			WeightSum = Models.Sum(x => x.BlockStateModel.Weight);
+		//	UseRandomizer = useRandomizer;
+			//WeightSum = Models.Sum(x => x.BlockStateModel.Weight);
 			
-			Boxes = CalculateBoundingBoxes(Models);
-
+			//Boxes = CalculateBoundingBoxes(Models);
+			Boxes = new BoundingBox[] {new BoundingBox(new Vector3(0f), new Vector3(1f))};
 			for (int i = 0; i < Boxes.Length; i++)
 			{
 				var box        = Boxes[i];
@@ -700,43 +702,85 @@ namespace Alex.Graphics.Models.Blocks
 				biome.Temperature, biome.Downfall, y);
 		}
 
-		public override void GetVertices(IBlockAccess world, ChunkData chunkBuilder, BlockCoordinates blockCoordinates, Vector3 position, Block baseBlock)
+		public override void GetVertices(IBlockAccess world,
+			ChunkData chunkBuilder,
+			BlockCoordinates blockCoordinates,
+			Vector3 position,
+			BlockState baseBlock)
 		{
 			var biome = world == null ? BiomeUtils.GetBiomeById(0) : world.GetBiome(position);
-
-			if (UseRandomizer)
+			
+			
+			if (baseBlock.ModelData == null)
+				return;
+			
+			if (baseBlock.VariantMapper.IsMultiPart)
 			{
-				BlockStateModelWrapper selectedModel = null;
-
-				var rnd = MathF.Abs(NoiseGenerator.GetValue(position.X * position.Y, position.Z * position.X))
-				          * WeightSum;
-
-				for (var index = 0; index < Models.Length; index++)
+				foreach (var model in baseBlock.ModelData)
 				{
-					var model = Models[index];
-					rnd -= model.BlockStateModel.Weight;
-
-					if (rnd < 0)
+					if (Resources.BlockModelRegistry.TryGet(model.ModelName, out var registryEntry))
 					{
-						selectedModel = model;
-
-						break;
+						CalculateModel(
+							world, blockCoordinates, chunkBuilder, position, baseBlock.Block, model,
+							registryEntry.Value, biome);
 					}
 				}
 
-				CalculateModel(world, blockCoordinates, chunkBuilder, position, baseBlock, selectedModel.BlockStateModel, selectedModel.BlockModel, biome);
+				return;
 			}
-			else
+			
+		//	if (UseRandomizer)
 			{
-				for (var bsModelIndex = 0; bsModelIndex < Models.Length; bsModelIndex++)
+				BlockStateModel selectedModel = null;
+
+				if (baseBlock.ModelData.Count > 1)
 				{
-					var bsModel = Models[bsModelIndex];
+					var weightSum = baseBlock.ModelData.Sum(x => x.Weight);
 
-				//	if (string.IsNullOrWhiteSpace(bsModel.ModelName)) continue;
+					var rnd = ((baseBlock.ModelData.Count == 1) ? 1f : MathF.Abs(
+						NoiseGenerator.GetValue(position.X * position.Y, position.Z * position.X))) * weightSum;
 
-					CalculateModel(world, blockCoordinates, chunkBuilder, position, baseBlock, bsModel.BlockStateModel, bsModel.BlockModel, biome);
+					//for (var index = 0; index < Models.Length; index++)
+					foreach (var model in baseBlock.ModelData)
+					{
+						//	var model = Models[index];
+						rnd -= model.Weight;
+
+						if (rnd < 0)
+						{
+							selectedModel = model;
+
+							break;
+						}
+					}
 				}
+				else
+				{
+					selectedModel = baseBlock.ModelData.FirstOrDefault();
+				}
+
+				if (selectedModel == null)
+					return;
+
+				if (Resources.BlockModelRegistry.TryGet(selectedModel.ModelName, out var registryEntry))
+				{
+					CalculateModel(
+						world, blockCoordinates, chunkBuilder, position, baseBlock.Block, selectedModel,
+						registryEntry.Value, biome);
+				}
+
+				//	CalculateModel(world, blockCoordinates, chunkBuilder, position, baseBlock, selectedModel.BlockStateModel, selectedModel.BlockModel, biome);
 			}
+			//else
+			//{
+			//for (var bsModelIndex = 0; bsModelIndex < Models.Length; bsModelIndex++)
+			//{
+			//var bsModel = Models[bsModelIndex];
+
+			//	if (string.IsNullOrWhiteSpace(bsModel.ModelName)) continue;
+
+			//}
+			//}
 		}
 	}
 }
