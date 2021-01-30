@@ -1,3 +1,4 @@
+using Alex.API.Graphics;
 using Alex.API.Utils;
 using Alex.Blocks.Minecraft;
 using Alex.Net;
@@ -83,6 +84,8 @@ namespace Alex.Entities.BlockEntities
 				//base.RenderLocation = value;
 			}
 		}
+
+		public virtual void Render2D(IRenderArgs args){}
 
 		internal override PlayerLocation RenderLocation
 		{

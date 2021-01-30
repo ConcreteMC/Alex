@@ -421,7 +421,17 @@ namespace Alex.Worlds
 
 		#region  Drawing
 
-		public bool UseWireFrames { get; set; } = false;
+		public bool UseWireFrames
+		{
+			get
+			{
+				return _rasterizerState.FillMode == FillMode.WireFrame;
+			}
+			set
+			{
+				_rasterizerState.FillMode = value ? FillMode.WireFrame : FillMode.Solid;
+			}
+		}
 
 		private readonly SamplerState _renderSampler = new SamplerState()
 		{
@@ -469,39 +479,12 @@ namespace Alex.Worlds
 		
 		public void Draw(IRenderArgs args, params RenderStage[] stages)
 		{
-			var device = args.GraphicsDevice;
-
-			var originalSamplerState = device.SamplerStates[0];
-
-			device.SamplerStates[0] = _renderSampler;
-
-			RasterizerState originalState = device.RasterizerState;
-			args.GraphicsDevice.RasterizerState = _rasterizerState;
-
-			bool usingWireFrames = UseWireFrames;
-
-			if (usingWireFrames)
+			using (GraphicsContext gc = GraphicsContext.CreateContext(
+				args.GraphicsDevice, Block.FancyGraphics ? BlendState.AlphaBlend : BlendState.Opaque, DepthStencilState, _rasterizerState,
+				_renderSampler))
 			{
-				originalState = device.RasterizerState;
-				RasterizerState rasterizerState = originalState.Copy();
-				rasterizerState.FillMode = FillMode.WireFrame;
-				device.RasterizerState = rasterizerState;
+				DrawStaged(args, null, stages.Length > 0 ? stages : RenderStages);
 			}
-
-			device.DepthStencilState = DepthStencilState;
-			
-			if (Block.FancyGraphics)
-				device.BlendState = BlendState.AlphaBlend;
-			else
-				device.BlendState = BlendState.Opaque;
-
-			DrawStaged(
-				args, null,
-				stages.Length > 0 ? stages : RenderStages);
-
-			device.RasterizerState = originalState;
-
-			device.SamplerStates[0] = originalSamplerState;
 		}
 		
 		private bool IsWithinView(ChunkCoordinates chunk, ICamera camera)
@@ -521,8 +504,6 @@ namespace Alex.Worlds
 		private void DrawStaged(IRenderArgs args,
 			Effect forceEffect = null, params RenderStage[] stages)
 		{
-			var originalBlendState = args.GraphicsDevice.BlendState;
-
 			if (stages == null || stages.Length == 0)
 				stages = RenderStages;
 
@@ -536,8 +517,6 @@ namespace Alex.Worlds
 			RenderingShaders shaders = Shaders;
 			foreach (var stage in stages)
 			{
-				args.GraphicsDevice.BlendState = originalBlendState;
-				
 				Effect effect   = forceEffect;
 				if (forceEffect == null)
 				{
@@ -586,8 +565,6 @@ namespace Alex.Worlds
 				
 				DrawChunks(args.GraphicsDevice, chunks, effect, stage);
 			}
-
-			args.GraphicsDevice.BlendState = originalBlendState;
 		}
 		
 		private void DrawChunks(GraphicsDevice device, ChunkData[] chunks, Effect effect, RenderStage stage)

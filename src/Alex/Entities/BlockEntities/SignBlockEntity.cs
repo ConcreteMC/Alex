@@ -239,28 +239,29 @@ namespace Alex.Entities.BlockEntities
 		}
 
 		private BasicEffect _basicEffect = null;
+
 		/// <inheritdoc />
-		public override void RenderNametag(IRenderArgs renderArgs)
+		public override void Render2D(IRenderArgs args)
 		{
-			var sb = renderArgs.SpriteBatch;
+			var sb = args.SpriteBatch;
 
 			if (_basicEffect == null)
 			{
-				_basicEffect = new BasicEffect(renderArgs.GraphicsDevice);
+				_basicEffect = new BasicEffect(args.GraphicsDevice);
 				_basicEffect.FogEnabled = false;
 				_basicEffect.LightingEnabled = false;
 				_basicEffect.VertexColorEnabled = true;
 				_basicEffect.TextureEnabled = true;
 			}
 			
-			_basicEffect.Projection = renderArgs.Camera.ProjectionMatrix;
-			_basicEffect.View = renderArgs.Camera.ViewMatrix;
+			_basicEffect.Projection = args.Camera.ProjectionMatrix;
+			_basicEffect.View = args.Camera.ViewMatrix;
 
 			string clean = NameTag;
 			if (string.IsNullOrWhiteSpace(clean))
 				return;
 			
-			var maxDistance = (renderArgs.Camera.FarDistance) / (64f);
+			var maxDistance = (args.Camera.FarDistance) / (64f);
 			
 			Vector3 lookAtOffset = Vector3.Transform(Vector3.Forward, Matrix.CreateRotationY(MathUtils.ToRadians(_yRotation)));
 			lookAtOffset *= TextOffset;
@@ -274,7 +275,7 @@ namespace Alex.Entities.BlockEntities
 
 			_basicEffect.World = world;
 		
-			var distance = Vector3.Distance(pos, renderArgs.Camera.Position);
+			var distance = Vector3.Distance(pos, args.Camera.Position);
 			if (distance >= maxDistance)
 			{
 				return;

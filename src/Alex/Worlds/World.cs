@@ -59,16 +59,14 @@ namespace Alex.Worlds
 	
 	public class World : IBlockAccess, ITicked
 	{
-		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(World));
-
-		private GraphicsDevice Graphics { get; }
-		public EntityCamera Camera { get; }
+		private static readonly Logger       Log = LogManager.GetCurrentClassLogger(typeof(World));
+		public                  EntityCamera Camera { get; }
 
 		public Player Player { get; set; }
 		private AlexOptions Options { get; }
 		
 		public InventoryManager InventoryManager { get; }
-		private SkyBox SkyRenderer { get; }
+		private SkyBox SkyBox { get; }
 
 		public long Time      { get; set; } = 1;
 		public long TimeOfDay { get; set; } = 1;
@@ -114,7 +112,6 @@ namespace Alex.Worlds
 		public World(IServiceProvider serviceProvider, GraphicsDevice graphics, AlexOptions options,
 			NetworkProvider networkProvider)
 		{
-			Graphics = graphics;
 			Options = options;
 
 			PhysicsEngine = new PhysicsManager(this);
@@ -183,7 +180,7 @@ namespace Alex.Worlds
 			var guiManager = serviceProvider.GetRequiredService<GuiManager>();
 			InventoryManager = new InventoryManager(guiManager);
 				
-			SkyRenderer = new SkyBox(serviceProvider, graphics, this);
+			SkyBox = new SkyBox(serviceProvider, graphics, this);
 
 			_disposables.Add(
 				options.VideoOptions.RenderDistance.Bind(
@@ -235,10 +232,10 @@ namespace Alex.Worlds
 	        if (_destroyed)
 		        return;
 	        
-	        Graphics.DepthStencilState = DepthStencilState.Default;
-	        Graphics.SamplerStates[0] = SamplerState.PointWrap;
+	        args.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
+	        args.GraphicsDevice.SamplerStates[0] = SamplerState.PointWrap;
 
-            SkyRenderer.Draw(args);
+            SkyBox.Draw(args);
             
             ChunkManager.Draw(args,
 	            RenderStage.OpaqueFullCube,
@@ -250,7 +247,6 @@ namespace Alex.Worlds
 	            RenderStage.Transparent,
 	            RenderStage.Translucent,
 	            RenderStage.Animated,
-	        //    RenderStage.AnimatedTranslucent,
 	            RenderStage.Liquid);
 
 	        Player.Render(args);
@@ -286,22 +282,22 @@ namespace Alex.Worlds
 
 			//_brightnessMod = SkyRenderer.BrightnessModifier;
 			
-			SkyRenderer.Update(args);
+			SkyBox.Update(args);
 			ChunkManager.Update(args);
 			
 			EntityManager.Update(args);
 			PhysicsEngine.Update(args.GameTime);
 
-			if (Math.Abs(_brightnessMod - SkyRenderer.BrightnessModifier) > 0f)
+			if (Math.Abs(_brightnessMod - SkyBox.BrightnessModifier) > 0f)
 			{
-				_brightnessMod = SkyRenderer.BrightnessModifier;
+				_brightnessMod = SkyBox.BrightnessModifier;
 				
-				var diffuseColor = Color.White.ToVector3() * SkyRenderer.BrightnessModifier;
+				var diffuseColor = Color.White.ToVector3() * SkyBox.BrightnessModifier;
 				ChunkManager.AmbientLightColor = diffuseColor;
 
-				if (Math.Abs(ChunkManager.Shaders.BrightnessModifier - SkyRenderer.BrightnessModifier) > 0f)
+				if (Math.Abs(ChunkManager.Shaders.BrightnessModifier - SkyBox.BrightnessModifier) > 0f)
 				{
-					ChunkManager.Shaders.BrightnessModifier = SkyRenderer.BrightnessModifier;
+					ChunkManager.Shaders.BrightnessModifier = SkyBox.BrightnessModifier;
 				}
 				
 				var modelRenderer = Player?.ModelRenderer;
@@ -312,7 +308,7 @@ namespace Alex.Worlds
 				}
 			}
 
-			Player.Update(args);
+			Player?.Update(args);
 		}
 
 		public void OnTick()

@@ -34,8 +34,7 @@ namespace Alex.Net.Bedrock.Packets
 
     protected override void DecodePacket()
     {
-      //base.DecodePacket();
-      this.Id = this.ReadByte();
+      this.Id = this.IsMcpe ? (byte) this.ReadVarInt() : this.ReadByte();
       this.runtimeEntityId = this.ReadUnsignedVarLong();
       this.flags = this.ReadUshort(false);
       this.AfterDecode();

@@ -3,7 +3,9 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using Alex.API;
 using Alex.API.Graphics;
+using Alex.API.Graphics.Typography;
 using Alex.API.Network;
 using Alex.API.Utils;
 using Alex.API.World;
@@ -112,24 +114,24 @@ namespace Alex.Worlds
 		{
 			if (_rendered != null)
 			{
-				var blendState = args.GraphicsDevice.BlendState;
-
-				args.GraphicsDevice.BlendState = BlendState.AlphaBlend;
-				
-				int renderCount = 0;
-				var entities    = _rendered.ToArray();
-
-				foreach (var entity in entities)
+				using (GraphicsContext gc = GraphicsContext.CreateContext(
+					args.GraphicsDevice, BlendState.AlphaBlend, DepthStencilState.DepthRead,
+					RasterizerState.CullClockwise, SamplerState.PointWrap))
 				{
-					// entity.IsRendered = true;
+					int renderCount = 0;
+					var entities    = _rendered.ToArray();
 
-					entity.Render(args);
+					foreach (var entity in entities)
+					{
+						// entity.IsRendered = true;
 
-					renderCount++;
+						entity.Render(args);
+
+						renderCount++;
+					}
+
+					EntitiesRendered = renderCount;
 				}
-
-				EntitiesRendered = renderCount;
-				args.GraphicsDevice.BlendState = blendState;
 			}
 		}
 
@@ -158,13 +160,90 @@ namespace Alex.Worlds
 					foreach (var entity in entities)
 					{
 						if (!entity.HideNameTag)
-							entity.RenderNametag(args);
+							RenderNametag(args, entity);
+						
+						if (entity is BlockEntity be)
+							be.Render2D(args);
 					}
 				}
 				finally
 				{
 					args.SpriteBatch.End();
 				}
+			}
+		}
+
+		private void RenderNametag(IRenderArgs args, Entity entity)
+		{
+			string clean = entity.NameTag;
+
+			if (string.IsNullOrWhiteSpace(clean))
+				return;
+			
+			//var halfWidth = (float)(Width * _scale);
+			
+			var maxDistance = (args.Camera.FarDistance) / (64f);
+			
+			//pos.Y = 0;
+			
+			var distance = Vector3.Distance(entity.KnownPosition, args.Camera.Position);
+			if (distance >= maxDistance)
+			{
+				return;
+			}
+			
+			try
+			{
+				Vector3 posOffset = new Vector3(0, 0.25f, 0);
+
+				if (entity.RenderEntity && !entity.IsInvisible)
+				{
+					posOffset.Y += (float) (entity.Height * entity.Scale);
+				}
+
+				var cameraPosition = new Vector3(args.Camera.Position.X, 0, args.Camera.Position.Z);
+
+				var rotation = cameraPosition - new Vector3(entity.RenderLocation.X, 0, entity.RenderLocation.Z);
+				rotation.Normalize();
+
+				var halfWidth = (float) (entity.Width * entity.Scale);
+				var pos       = entity.RenderLocation + posOffset + (rotation * halfWidth);
+
+				Vector2 textPosition;
+
+				var screenSpace = args.GraphicsDevice.Viewport.Project(
+					pos, args.Camera.ProjectionMatrix, args.Camera.ViewMatrix, Matrix.Identity);
+
+				textPosition.X = screenSpace.X;
+				textPosition.Y = screenSpace.Y;
+
+				Vector2 renderPosition = textPosition;
+
+				foreach (var str in clean.Split('\n').Reverse())
+				{
+					var line = str.Trim();
+
+					if (line.Length == 0 || string.IsNullOrWhiteSpace(line))
+						continue;
+
+					var stringSize = Alex.Font.MeasureString(line);
+					var c          = new Point((int) stringSize.X, (int) stringSize.Y);
+
+					renderPosition.X = (int) (textPosition.X - (c.X / 2d));
+					renderPosition.Y -= (c.Y);
+					//renderPosition.Y = (int) ((textPosition.Y + yOffset));
+
+					args.SpriteBatch.FillRectangle(
+						new Rectangle(renderPosition.ToPoint(), c), new Color(Color.Black, 128), screenSpace.Z);
+
+					Alex.Font.DrawString(
+						args.SpriteBatch, line, renderPosition, TextColor.White, FontStyle.None,
+						layerDepth: screenSpace.Z - 0.0001f);
+				}
+			}
+			finally
+			{
+				
 			}
 		}
 
