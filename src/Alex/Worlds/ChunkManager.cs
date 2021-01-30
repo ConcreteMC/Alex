@@ -504,6 +504,8 @@ namespace Alex.Worlds
 		private void DrawStaged(IRenderArgs args,
 			Effect forceEffect = null, params RenderStage[] stages)
 		{
+			var originalBlendState = args.GraphicsDevice.BlendState;
+
 			if (stages == null || stages.Length == 0)
 				stages = RenderStages;
 
@@ -517,6 +519,8 @@ namespace Alex.Worlds
 			RenderingShaders shaders = Shaders;
 			foreach (var stage in stages)
 			{
+				args.GraphicsDevice.BlendState = originalBlendState;
+				
 				Effect effect   = forceEffect;
 				if (forceEffect == null)
 				{
@@ -565,6 +569,8 @@ namespace Alex.Worlds
 				
 				DrawChunks(args.GraphicsDevice, chunks, effect, stage);
 			}
+
+			args.GraphicsDevice.BlendState = originalBlendState;
 		}
 		
 		private void DrawChunks(GraphicsDevice device, ChunkData[] chunks, Effect effect, RenderStage stage)

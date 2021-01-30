@@ -114,24 +114,24 @@ namespace Alex.Worlds
 		{
 			if (_rendered != null)
 			{
-				using (GraphicsContext gc = GraphicsContext.CreateContext(
-					args.GraphicsDevice, BlendState.AlphaBlend, DepthStencilState.DepthRead,
-					RasterizerState.CullClockwise, SamplerState.PointWrap))
+				var blendState = args.GraphicsDevice.BlendState;
+
+				args.GraphicsDevice.BlendState = BlendState.AlphaBlend;
+				
+				int renderCount = 0;
+				var entities    = _rendered.ToArray();
+
+				foreach (var entity in entities)
 				{
-					int renderCount = 0;
-					var entities    = _rendered.ToArray();
+					// entity.IsRendered = true;
 
-					foreach (var entity in entities)
-					{
-						// entity.IsRendered = true;
+					entity.Render(args);
 
-						entity.Render(args);
-
-						renderCount++;
-					}
-
-					EntitiesRendered = renderCount;
+					renderCount++;
 				}
+
+				EntitiesRendered = renderCount;
+				args.GraphicsDevice.BlendState = blendState;
 			}
 		}
 
