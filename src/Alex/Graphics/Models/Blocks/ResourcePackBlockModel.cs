@@ -49,13 +49,13 @@ namespace Alex.Graphics.Models.Blocks
 		public static           bool       SmoothLighting { get; set; } = true;
 		
 		//private BlockStateModelWrapper[] Models    { get; set; }
-		private BlockStateResource BlockStateResource { get; }
+		//private BlockStateResource BlockStateResource { get; }
 		private ResourceManager    Resources          { get; }
 
 		private Vector3 _min = new Vector3(float.MaxValue);
 		private Vector3 _max = new Vector3(float.MinValue);
 
-		private  BoundingBox[] Boxes         { get; set; }
+		//private  BoundingBox[] Boxes         { get; set; }
 		//private bool          UseRandomizer { get; set; }
 		//private int           WeightSum     { get; }
 		public ResourcePackBlockModel(ResourceManager resources, BlockStateResource blockStateResource)
@@ -69,6 +69,7 @@ namespace Alex.Graphics.Models.Blocks
 			//WeightSum = Models.Sum(x => x.BlockStateModel.Weight);
 			
 			//Boxes = CalculateBoundingBoxes(Models);
+			/*
 			Boxes = new BoundingBox[] {new BoundingBox(new Vector3(0f), new Vector3(1f))};
 			for (int i = 0; i < Boxes.Length; i++)
 			{
@@ -101,12 +102,42 @@ namespace Alex.Graphics.Models.Blocks
 
 				Boxes[i] = box;
 			}
+			*/
 		}
 
 		/// <inheritdoc />
-		public override IEnumerable<BoundingBox> GetBoundingBoxes(Vector3 blockPos)
+		public override IEnumerable<BoundingBox> GetBoundingBoxes(BlockState blockState, Vector3 blockPos)
 		{
-			return Boxes.Select(x => x.OffsetBy(blockPos));
+			return CalculateBoundingBoxes(GetAppliedModels(blockState).ToArray()).Select(x =>
+			{
+				var dimensions = x.GetDimensions();
+
+				if (dimensions.X < 0.015f)
+				{
+					var diff = (0.015f - dimensions.X) / 2f;
+					x.Min.X -= diff;
+					x.Max.X += diff;
+					//box.Inflate(new Vector3(0.015f - dimensions.X, 0f, 0f));
+				}
+				
+				if (dimensions.Y < 0.015f)
+				{
+					var diff = (0.015f - dimensions.Y) / 2f;
+					x.Min.Y -= diff;
+					x.Max.Y += diff;
+					//box.Inflate(new Vector3(0f, 0.015f - dimensions.Y, 0f));
+				}
+				
+				if (dimensions.Z < 0.015f)
+				{
+					var diff = (0.015f - dimensions.Z) / 2f;
+					x.Min.Z -= diff;
+					x.Max.Z += diff;
+					//box.Inflate(new Vector3(0f, 0f, 0.015f - dimensions.Z));
+				}
+				
+				return x.OffsetBy(blockPos);
+			});
 		}
 
 		protected virtual bool ShouldRenderFace(IBlockAccess world, BlockFace face, BlockCoordinates position, Block me)
@@ -140,15 +171,19 @@ namespace Alex.Graphics.Models.Blocks
 		protected BoundingBox[] CalculateBoundingBoxes(BlockStateModelWrapper[] models)
 		{
 			List<BoundingBox> boundingBoxes = new List<BoundingBox>();
+
+
 			for (var index = 0; index < models.Length; index++)
 			{
 				var model = models[index];
 
 				//if (Resources.BlockModelRegistry.TryGet(model.ModelName, out var registryEntry))
 				{
-					var boxes = GenerateBoundingBoxes(model.BlockStateModel, model.BlockModel, out Vector3 min, out Vector3 max);
+					var boxes = GenerateBoundingBoxes(
+						model.BlockStateModel, model.BlockModel, out Vector3 min, out Vector3 max);
+
 					boundingBoxes.AddRange(boxes);
-					
+
 					if (max.X > _max.X)
 						_max.X = max.X;
 
@@ -534,6 +569,11 @@ namespace Alex.Graphics.Models.Blocks
 							facing = RotateDirection(facing, offset, FACE_ROTATION, INVALID_FACE_ROTATION);
 						}
 
+						float minX = float.MaxValue, minY = float.MaxValue, minZ = float.MaxValue;
+						float maxX = float.MinValue, maxY = float.MinValue, maxZ = float.MinValue;
+
+						
+						
 						if (!ShouldRenderFace(world, facing, position, baseBlock))
 							continue;
 
@@ -702,6 +742,66 @@ namespace Alex.Graphics.Models.Blocks
 				biome.Temperature, biome.Downfall, y);
 		}
 
+		private IEnumerable<BlockStateModelWrapper> GetAppliedModels(BlockState baseBlock)
+		{
+			if (baseBlock.ModelData == null)
+				yield break;
+			
+			if (baseBlock.VariantMapper.IsMultiPart)
+			{
+				foreach (var model in baseBlock.ModelData)
+				{
+					if (Resources.BlockModelRegistry.TryGet(model.ModelName, out var registryEntry))
+					{
+						yield return new BlockStateModelWrapper(model, registryEntry.Value);
+					}
+				}
+
+				yield break;
+
+			}
+			
+			//	if (UseRandomizer)
+			{
+				BlockStateModel selectedModel = null;
+
+				if (baseBlock.ModelData.Count > 1)
+				{
+					var weightSum = baseBlock.ModelData.Sum(x => x.Weight);
+
+					var rnd = weightSum;
+
+					//for (var index = 0; index < Models.Length; index++)
+					foreach (var model in baseBlock.ModelData)
+					{
+						//	var model = Models[index];
+						rnd -= model.Weight;
+
+						if (rnd < 0)
+						{
+							selectedModel = model;
+
+							break;
+						}
+					}
+				}
+				else
+				{
+					selectedModel = baseBlock.ModelData.FirstOrDefault();
+				}
+
+				if (selectedModel == null)
+					yield break;
+
+				if (Resources.BlockModelRegistry.TryGet(selectedModel.ModelName, out var registryEntry))
+				{
+					yield return new BlockStateModelWrapper(selectedModel, registryEntry.Value);
+				}
+
+				//	CalculateModel(world, blockCoordinates, chunkBuilder, position, baseBlock, selectedModel.BlockStateModel, selectedModel.BlockModel, biome);
+			}
+		}
+		
 		public override void GetVertices(IBlockAccess world,
 			ChunkData chunkBuilder,
 			BlockCoordinates blockCoordinates,

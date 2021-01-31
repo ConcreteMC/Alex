@@ -22,7 +22,7 @@ namespace Alex.Graphics.Models.Blocks
 			
         }
 
-		public virtual IEnumerable<BoundingBox> GetBoundingBoxes(Vector3 blockPos)
+		public virtual IEnumerable<BoundingBox> GetBoundingBoxes(BlockState blockState, Vector3 blockPos)
 	    {
 		    yield return new BoundingBox(blockPos, blockPos + Vector3.One);
 	    }

@@ -65,6 +65,20 @@ namespace Alex.Worlds.Chunks
             }
         }
 
+        private List<BoundingBox> _boxes = new List<BoundingBox>();
+        public BoundingBox[] BoundingBoxes
+        {
+            get
+            {
+                return _boxes.ToArray();
+            }
+        }
+
+        public void AddBoundingBox(BoundingBox box)
+        {
+            _boxes.Add(box);
+        }
+        
         public void AddVertex(BlockCoordinates blockCoordinates,
             Vector3 position,
             Vector2 textureCoordinates,

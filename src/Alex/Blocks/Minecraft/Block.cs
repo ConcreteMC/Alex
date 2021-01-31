@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Alex.API.Blocks;
 using Alex.API.Resources;
 using Alex.API.Utils;
@@ -93,7 +94,12 @@ namespace Alex.Blocks.Minecraft
 		{
 			if (BlockState?.VariantMapper?.Model != null)
 			{
-				foreach (var bb in BlockState.VariantMapper.Model.GetBoundingBoxes(blockPos))
+				var boundingBoxes = BlockState.VariantMapper.Model.GetBoundingBoxes(BlockState, blockPos).ToArray();
+
+				if (boundingBoxes.Length == 0)
+					yield return new BoundingBox(blockPos, blockPos + Vector3.One);
+				
+				foreach (var bb in boundingBoxes)
 					yield return bb;
 			}
 			else

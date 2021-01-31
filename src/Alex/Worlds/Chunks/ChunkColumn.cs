@@ -54,7 +54,7 @@ namespace Alex.Worlds.Chunks
 		internal ChunkData ChunkData { get; private set; }
 		private object _dataLock = new object();
 		
-		//private ChunkOctree _octree;
+		private ChunkOctree _octree;
 		public ChunkColumn(int x, int z)
 		{
 			X = x;
@@ -70,7 +70,7 @@ namespace Alex.Worlds.Chunks
 			
 			ChunkData = new ChunkData(new ChunkCoordinates(x, z));
 			
-			/*var index = new Vector3(x << 4, 0, z << 4);
+			var index = new Vector3(x << 4, 0, z << 4);
 			var sizeOffs = 16 * 0.5f - 0.5f;
 			Vector3 boundsMin = new Vector3(
 				index.X - sizeOffs,
@@ -83,7 +83,7 @@ namespace Alex.Worlds.Chunks
 				index.Z + sizeOffs
 			);
 			var bounds = new BoundingBox( boundsMin, boundsMax );
-			_octree = new ChunkOctree( bounds );*/
+			_octree = new ChunkOctree( bounds );
 		}
 
 		public void ScheduleBorder()
@@ -213,6 +213,15 @@ namespace Alex.Worlds.Chunks
 				}
 				
 				ChunkData?.ApplyChanges(device, true);
+				/*var a = new ChunkOctree(_octree.Bounds);
+
+				foreach (var box in ChunkData.BoundingBoxes)
+				{
+					a.Add(box);
+				}
+				
+				_octree = a;*/
+				
 				IsNew = false;
 			}
 			finally

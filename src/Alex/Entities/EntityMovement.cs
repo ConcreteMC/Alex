@@ -574,6 +574,8 @@ namespace Alex.Entities
 						if (!blockState.Block.Solid)
 							continue;
 
+						var chunk = Entity.Level.GetChunk(new BlockCoordinates(x,y,z));
+
 						var coords = new Vector3(x, y, z);
 						
 						foreach (var box in blockState.Block.GetBoundingBoxes(coords))
