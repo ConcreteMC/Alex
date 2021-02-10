@@ -10,7 +10,7 @@ namespace Alex.Utils.Inventories
 	{
 		public int InventoryId { get; set; } = 0;
 		
-		protected Item[] Slots     { get; }
+		protected virtual Item[] Slots     { get; }
 		public    int    SlotCount => Slots.Length;
 
 		public InventoryBase(int slotCount)

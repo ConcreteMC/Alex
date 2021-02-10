@@ -43,8 +43,8 @@ namespace Alex.Utils.Auth
 
 		//private const string ClientId = "0000000048183522";
 		private const string ClientId = "00000000441cc96b";
-		
-		private const string AuthorizationUri = "https://login.live.com/oauth20_authorize.srf";  // Authorization code endpoint
+
+		public const string AuthorizationUri = "https://login.live.com/oauth20_authorize.srf";  // Authorization code endpoint
 		private const string RedirectUri = "https://login.live.com/oauth20_desktop.srf";  // Callback endpoint
 		private const string RefreshUri = "https://login.live.com/oauth20_token.srf";  // Get tokens endpoint
 		private string X { get; set; }
@@ -119,6 +119,9 @@ namespace Alex.Utils.Auth
 
 		public static void OpenBrowser(string url)
 		{
+			
+
+			//	return;
 			try
 			{
 				Process.Start(url);

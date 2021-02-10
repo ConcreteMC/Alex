@@ -365,12 +365,16 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		}
 
 		private ConcurrentDictionary<MiNET.Utils.UUID, RemotePlayer> _players = new ConcurrentDictionary<MiNET.Utils.UUID, RemotePlayer>();
-
+		private ThreadSafeList<long> _runtimeFuckUps = new ThreadSafeList<long>();
 		public void HandleMcpeAddPlayer(McpeAddPlayer message)
 		{
 			if (_players.TryGetValue(message.uuid, out RemotePlayer mob))
 			{
-				mob.EntityId = message.runtimeEntityId;
+			//	Client.World?.AddPlayerListItem(new PlayerListItem(message.uuid, message.username, 0, 0, false));
+			//	mob = new RemotePlayer():
+			
+
+			mob.EntityId = message.runtimeEntityId;
 
 				mob.KnownPosition = new PlayerLocation(
 					message.x, message.y, message.z, -message.headYaw, -message.yaw, -message.pitch)
@@ -406,9 +410,9 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				{
 					identifier = message.username.Replace("\n", "");
 				}
-
+				_runtimeFuckUps.Add(message.runtimeEntityId);
 				Log.Warn(
-					$"({message.ReliabilityHeader.ReliableMessageNumber}) Tried spawning invalid player: {identifier} (UUID: {message.uuid}))");
+					$"({message.ReliabilityHeader.ReliableMessageNumber} | {message.ReliabilityHeader.OrderingIndex} | {message.ReliabilityHeader.SequencingIndex}) Tried spawning invalid player: {identifier} (UUID: {message.uuid}))");
 			}
 		}
 
@@ -423,6 +427,13 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 						continue;
 					}
 
+
+					if (_runtimeFuckUps.Contains(r.EntityId))
+					{
+						Log.Warn(
+							$"({message.ReliabilityHeader.ReliableMessageNumber} | {message.ReliabilityHeader.OrderingIndex} | {message.ReliabilityHeader.SequencingIndex}) Fucked up: {r.EntityId}");
+					}
+					
 					Client.World?.AddPlayerListItem(new PlayerListItem(r.ClientUuid, r.DisplayName, (GameMode)((int)r.GameMode), 0, false));
 
 					RemotePlayer m = new RemotePlayer(r.DisplayName, Client.World, Client, null);
@@ -441,9 +452,9 @@ namespace Alex.Worlds.Multiplayer.Bedrock
             {
 	            foreach (var r in removeRecords)
 	            {
-		            if (_players.TryRemove(r.ClientUuid, out var player))
+		            //if (_players.TryRemove(r.ClientUuid, out var player))
 		            {
-			            Client.World?.RemovePlayerListItem(player.UUID);
+			            Client.World?.RemovePlayerListItem(r.ClientUuid);
 		            }
 	            }
             }

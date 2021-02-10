@@ -40,16 +40,16 @@ namespace Alex.Entities.Projectiles
                 if (DoRotation)
                 {
                     //var offset = new Vector3((float) Width, (float) Height, (float) Width) / 2f;
-                    var offset = new Vector3(0.5f, 0f, 0.5f);
-                    ItemRenderer.Update(args, MCMatrix.CreateScale(0.25f)
-                                              * MCMatrix.CreateTranslation(-offset)
+                    var offset = new Vector3((float) Width, 0f, (float) Width);
+                    ItemRenderer.Update(args, MCMatrix.CreateScale(1f / 32f)
+                                             // * MCMatrix.CreateTranslation(-offset)
                                               * MCMatrix.CreateRotationY(MathHelper.ToRadians(_rotation)) 
-                                              * MCMatrix.CreateTranslation(offset)
+                                            //  * MCMatrix.CreateTranslation(offset)
                                               * MCMatrix.CreateTranslation(knownPos));
                 }
                 else
                 {
-                    ItemRenderer.Update(args,  MCMatrix.CreateScale(0.25f)
+                    ItemRenderer.Update(args,  MCMatrix.CreateScale(1f / 32f)
                                                * MCMatrix.CreateRotationY(MathHelper.ToRadians(KnownPosition.Yaw))
                                                * MCMatrix.CreateTranslation(knownPos));
                 }

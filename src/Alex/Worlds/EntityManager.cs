@@ -159,7 +159,7 @@ namespace Alex.Worlds
 				{
 					foreach (var entity in entities)
 					{
-						if (!entity.HideNameTag)
+						if (entity.IsShowName)
 							RenderNametag(args, entity);
 						
 						if (entity is BlockEntity be)

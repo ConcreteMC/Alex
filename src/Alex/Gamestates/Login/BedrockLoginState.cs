@@ -182,6 +182,7 @@ namespace Alex.Gamestates.Login
 	        LoginButton.Enabled = false;
 
 	        var profileManager = GetService<ProfileManager>();
+
 	        XboxAuthService.OpenBrowser(ConnectResponse.verification_uri);
 
 	        if (Clipboard.IsClipboardAvailable())

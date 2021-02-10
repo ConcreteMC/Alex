@@ -333,7 +333,7 @@ namespace Alex.Entities
 				    bool handledClick = false;
 				    var  item = IsLeftHanded ? Inventory.OffHand : Inventory.MainHand; // [Inventory.SelectedSlot];
 
-				    // Log.Debug($"Right click!");
+				    Log.Info($"Right click!");
 				    if (item != null)
 				    {
 					    handledClick = HandleClick(

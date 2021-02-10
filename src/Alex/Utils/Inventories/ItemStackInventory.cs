@@ -14,35 +14,23 @@ namespace Alex.Utils.Inventories
 	public class ItemStackInventory : BedrockInventory
 	{
 		private BedrockClient Client { get; }
-		private readonly ItemWrapper[] _slots;
-		
+		//private readonly ItemWrapper[] _slots;
+
 		/// <inheritdoc />
 		public ItemStackInventory(BedrockClient bedrockClient) : base(46)
 		{
 			Client = bedrockClient;
-			_slots = new ItemWrapper[46];
-
-			for (int i = 0; i < _slots.Length; i++)
-			{
-				_slots[i] = new ItemWrapper(new MiNET.Items.ItemAir()
-				{
-					Count = 0
-				}, new ItemAir()
-				{
-					Count = 0
-				});
-			}
 		}
 
-		public MiNET.Items.Item GetOriginal(int slot)
-		{
-			return _slots[slot].MiNETItem;
-		}
+		//public MiNET.Items.Item GetOriginal(int slot)
+		//{
+		//	return Slots[slot];
+		//}
 		
 		/// <inheritdoc />
 		protected override Item Get(int index)
 		{
-			return _slots[index].Item;
+			return Slots[index];
 		}
 
 		/// <inheritdoc />
@@ -53,10 +41,10 @@ namespace Alex.Utils.Inventories
 
 		private void Set(int index, ItemWrapper wrapper)
 		{
-			var oldValue = _slots[index];
-			_slots[index] = wrapper;
+			var oldValue = Slots[index];
+			Slots[index] = wrapper.Item;
 			
-			InvokeSlotChanged(new SlotChangedEventArgs(InventoryId, index, wrapper.Item, oldValue.Item, true));
+			InvokeSlotChanged(new SlotChangedEventArgs(InventoryId, index, wrapper.Item, oldValue, true));
 		}
 		
 		public void HandleInventoryContent(uint inventoryId, ItemStacks stacks)
