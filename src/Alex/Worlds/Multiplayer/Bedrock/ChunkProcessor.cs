@@ -60,7 +60,10 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	        Instance = this;
         }
 
-	    private ConcurrentQueue<Action> _actionQueue = new ConcurrentQueue<Action>();
+	    private ConcurrentQueue<ChunkCoordinates> _actionQueue = new ConcurrentQueue<ChunkCoordinates>();
+
+	    private ConcurrentDictionary<ChunkCoordinates, Action> _actions =
+		    new ConcurrentDictionary<ChunkCoordinates, Action>();
         public void HandleChunkData(bool cacheEnabled,
 	        ulong[] blobs,
 	        uint subChunkCount,
@@ -71,14 +74,23 @@ namespace Alex.Worlds.Multiplayer.Bedrock
         {
 	        if (CancellationToken.IsCancellationRequested)
 		        return;
-	        
-	        _actionQueue.Enqueue(() =>
-		        {
-			        if (CancellationToken.IsCancellationRequested)
-				        return;
-			        
-			        HandleChunk(cacheEnabled, blobs, subChunkCount, chunkData, cx, cz, callback);
-		        });
+
+	        var coords = new ChunkCoordinates(cx, cz);
+	        Action action = () =>
+	        {
+		        if (CancellationToken.IsCancellationRequested)
+			        return;
+
+		        HandleChunk(cacheEnabled, blobs, subChunkCount, chunkData, cx, cz, callback);
+	        };
+
+	        if (_actions.TryRemove(coords, out _))
+	        {
+		        
+	        }
+
+	        _actions.TryAdd(coords, action);
+	        _actionQueue.Enqueue(coords);
 
 	        _resetEvent.Set();
 	        
@@ -108,9 +120,12 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 						        while (true)
 						        {
-							        if (_actionQueue.TryDequeue(out var chunk))
+							        if (_actionQueue.TryDequeue(out var chunkCoordinates))
 							        {
-								        chunk?.Invoke();
+								        if (_actions.TryRemove(chunkCoordinates, out var chunk))
+								        {
+									        chunk?.Invoke();
+								        }
 							        }
 							        else
 							        {
