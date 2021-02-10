@@ -1261,8 +1261,7 @@ namespace Alex.Worlds.Multiplayer.Java
 			HandleDimension(packet.Dimension);
 			
 			World.Player.UpdateGamemode(packet.Gamemode);
-			World.ChunkManager.ClearChunks();
-			World.EntityManager.ClearEntities();
+			World.ClearChunksAndEntities();
 			SendPlayerPostionAndLook(World.Player.KnownPosition);
 			
 			//player.

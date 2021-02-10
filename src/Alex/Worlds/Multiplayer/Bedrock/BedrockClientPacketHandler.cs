@@ -1233,6 +1233,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		public void HandleMcpeRespawn(McpeRespawn message)
 		{
+			Log.Info($"Respawn state {message.state} | Runtime entity id: {message.runtimeEntityId}");
 			//if (message.state == 1)
 			{
 				Client.World.UpdatePlayerPosition(new PlayerLocation(message.x, message.y, message.z));
@@ -1556,53 +1557,51 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					//	new ChunkReceivedEvent(new ChunkCoordinates(column.X, column.Z), column));
 				});
 		}
-		
+
 		public void HandleMcpeChangeDimension(McpeChangeDimension message)
 		{
 			//base.HandleMcpeChangeDimension(message);
-			if (WorldProvider is BedrockWorldProvider provider)
-			{
-				var chunkCoords =
-					new ChunkCoordinates(new PlayerLocation(Client.World.SpawnPoint.X, Client.World.SpawnPoint.Y,
-						Client.World.SpawnPoint.Z));
 
-				Client.World.Player.IsSpawned = false;
-				LoadingWorldScreen loadingWorldScreen = new LoadingWorldScreen()
-				{
-					ConnectingToServer = true
-				};
+			var chunkCoords = new ChunkCoordinates(
+				new PlayerLocation(Client.World.SpawnPoint.X, Client.World.SpawnPoint.Y, Client.World.SpawnPoint.Z));
 
-				AlexInstance.GuiManager.AddScreen(loadingWorldScreen);
+			Client.World.Player.IsSpawned = false;
+			LoadingWorldScreen loadingWorldScreen = new LoadingWorldScreen() {ConnectingToServer = true};
+
+			AlexInstance.GuiManager.AddScreen(loadingWorldScreen);
 			//	AlexInstance.GameStateManager.SetActiveState(loadingWorldState, true);
-				loadingWorldScreen.UpdateProgress(LoadingState.LoadingChunks, 0);
+			loadingWorldScreen.UpdateProgress(LoadingState.LoadingChunks, 0);
 
-				ThreadPool.QueueUserWorkItem((o) =>
+			ThreadPool.QueueUserWorkItem(
+				(o) =>
 				{
 					World world = Client.World;
 
 					world.ClearChunksAndEntities();
-					
-					
+
+
 					//world.ChunkManager.ClearChunks();
-					world.UpdatePlayerPosition(new PlayerLocation(message.position.X, message.position.Y, message.position.Z));
-					
-				
+					world.UpdatePlayerPosition(
+						new PlayerLocation(message.position.X, message.position.Y, message.position.Z));
+
+
 					//foreach (var loadedChunk in provider.LoadedChunks)
 					//{
 					//	provider.UnloadChunk(loadedChunk);
 					//}
-					
-					int percentage = 0;
-					bool ready = false;
-					int previousPercentage = 0;
-					bool spawnChunkLoaded = false;
-					
+
+					int  percentage         = 0;
+					bool ready              = false;
+					int  previousPercentage = 0;
+					bool spawnChunkLoaded   = false;
+
 					do
 					{
-						chunkCoords =
-							new ChunkCoordinates(new PlayerLocation(Client.World.Player.KnownPosition.X, Client.World.Player.KnownPosition.Y,
+						chunkCoords = new ChunkCoordinates(
+							new PlayerLocation(
+								Client.World.Player.KnownPosition.X, Client.World.Player.KnownPosition.Y,
 								Client.World.Player.KnownPosition.Z));
-						
+
 						if (!spawnChunkLoaded && percentage >= 100)
 						{
 							loadingWorldScreen.UpdateProgress(LoadingState.Spawning, 99, "Waiting for spawn chunk...");
@@ -1610,14 +1609,13 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 						else
 						{
 							double radiusSquared = Math.Pow(Client.ChunkRadius, 2);
-							var target = radiusSquared;
+							var    target        = radiusSquared;
 
 							percentage = (int) ((100 / target) * world.ChunkManager.ChunkCount);
 
 							if (percentage != previousPercentage)
 							{
-								loadingWorldScreen.UpdateProgress(LoadingState.LoadingChunks,
-									percentage);
+								loadingWorldScreen.UpdateProgress(LoadingState.LoadingChunks, percentage);
 								previousPercentage = percentage;
 
 								//Log.Info($"Progress: {percentage} ({ChunksReceived} of {target})");
@@ -1658,12 +1656,12 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 						//	await Task.Delay(50);
 						//}
 					} while (true);
-					
+
 					McpePlayerAction action = McpePlayerAction.CreateObject();
 					action.runtimeEntityId = Client.EntityId;
 					action.actionId = (int) PlayerAction.DimensionChangeAck;
 					Client.SendPacket(action);
-					
+
 					AlexInstance.GuiManager.RemoveScreen(loadingWorldScreen);
 					//AlexInstance.GameStateManager.Back();
 
@@ -1676,9 +1674,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 					Client.World.Player.IsSpawned = true;
 				});
-			}
 		}
-		
+
 		public void HandleMcpeSetCommandsEnabled(McpeSetCommandsEnabled message)
 		{
 			UnhandledPackage(message);

@@ -1,14 +1,43 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using Alex.API.Input;
 using Alex.Items;
+using log4net;
 
 namespace Alex.Utils.Inventories
 {
+	public class CursorInventory
+	{
+		private static readonly ILog Log = LogManager.GetLogger(typeof(CursorInventory));
+
+		public List<Item> Slots { get; } = Enumerable.Repeat((Item) new ItemAir(), 51).ToList();
+
+		public Item Cursor
+		{
+			get => Slots[0];
+			set => Slots[0] = value;
+		}
+
+		public CursorInventory()
+		{
+		}
+
+		public void Clear()
+		{
+			for (int i = 0; i < Slots.Count; i++)
+			{
+				if (Slots[i] == null || Slots[i].Id != 0) Slots[i] = new ItemAir();
+			}
+		}
+	}
+	
     public class Inventory : InventoryBase
     {
-	    private   InventoryBase CraftingInventory { get; } = new InventoryBase(5);
+	    private   InventoryBase   CraftingInventory { get; }      = new InventoryBase(5);
+	    public    CursorInventory UiInventory       { get; set; } = new CursorInventory();
 	    
-	    protected byte          _selectedSlot = 0;
+	    protected byte            _selectedSlot = 0;
 
 	    public virtual int SelectedSlot
 	    {

@@ -58,8 +58,7 @@ namespace Alex.Net.Bedrock
 
 		public const int UdpHeaderSize = 28;
 
-		public          short          MtuSize    { get; set; } = 1500;
-		public          short          MaxMtuSize { get; }      = 1500;
+		public          short          MtuSize    { get; set; } = 1400;
 		
 		public RaknetSession              Session        { get; set; } = null;
 		public API.Network.ConnectionInfo ConnectionInfo { get; }
@@ -105,7 +104,7 @@ namespace Alex.Net.Bedrock
 			
 		}
 
-		public bool TryConnect(IPEndPoint targetEndPoint, int numberOfAttempts = int.MaxValue, short mtuSize = 1500)
+		public bool TryConnect(IPEndPoint targetEndPoint, int numberOfAttempts = int.MaxValue, short mtuSize = 1400)
 		{
 			Start(); // Make sure we have started the listener
 
@@ -117,7 +116,7 @@ namespace Alex.Net.Bedrock
 
 				if (!ConnectionResetEvent.WaitOne(500))
 				{
-					mtuSize -= 10;
+					mtuSize -= UdpHeaderSize;
 				}
 				else
 				{
@@ -599,6 +598,8 @@ namespace Alex.Net.Bedrock
 
 			try
 			{
+				await session._updateSync.WaitAsync();
+				
 				long now = DateTime.UtcNow.Ticks / TimeSpan.TicksPerMillisecond;
 				long lastUpdate = session.LastUpdatedTime.Ticks / TimeSpan.TicksPerMillisecond;
 				
@@ -657,7 +658,7 @@ namespace Alex.Net.Bedrock
 			}
 			finally
 			{
-				//session._updateSync.Release();
+				session._updateSync.Release();
 			}
 		}
 

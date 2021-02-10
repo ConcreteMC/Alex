@@ -39,12 +39,12 @@ namespace Alex.Utils.Inventories
 			
 		}
 
-		private void Set(int index, ItemWrapper wrapper)
+		private void Set(int index, Item wrapper)
 		{
 			var oldValue = Slots[index];
-			Slots[index] = wrapper.Item;
+			Slots[index] = wrapper;
 			
-			InvokeSlotChanged(new SlotChangedEventArgs(InventoryId, index, wrapper.Item, oldValue, true));
+			InvokeSlotChanged(new SlotChangedEventArgs(InventoryId, index, wrapper, oldValue, true));
 		}
 		
 		public void HandleInventoryContent(uint inventoryId, ItemStacks stacks)
@@ -54,7 +54,7 @@ namespace Alex.Utils.Inventories
 				for (var index = 0; index < stacks.Count; index++)
 				{
 					var itemStack = stacks[index];
-					Set( index, new ItemWrapper(itemStack, itemStack.ToAlexItem()));
+					Set( index, itemStack.ToAlexItem());
 					//base.SetSlot();
 				}
 			}
@@ -66,11 +66,9 @@ namespace Alex.Utils.Inventories
 
 		public void HandleSetSlot(McpeInventorySlot packet)
 		{
-			var wrapper = new ItemWrapper(packet.item, packet.item.ToAlexItem());
-
 			if (packet.inventoryId == 0x00)
 			{
-				Set((int) packet.slot, wrapper);
+				Set((int) packet.slot, packet.item.ToAlexItem());
 				//_slots[packet.slot] = wrapper;
 				return;
 			}
@@ -123,18 +121,6 @@ namespace Alex.Utils.Inventories
 				default:
 			//		Log.Warn($"Unknown containerId: {containerId}");
 					break;
-			}
-		}
-
-		public class ItemWrapper
-		{
-			public MiNET.Items.Item MiNETItem { get; set; }
-			public Item             Item      { get; set; }
-
-			public ItemWrapper(MiNET.Items.Item miNetItem, Item item)
-			{
-				MiNETItem = miNetItem;
-				Item = item;
 			}
 		}
 	}

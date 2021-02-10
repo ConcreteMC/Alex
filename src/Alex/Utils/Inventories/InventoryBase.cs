@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Alex.API.Input;
 using Alex.Items;
 using Alex.Networking.Java.Packets.Play;
+using MiNET.Utils;
 
 namespace Alex.Utils.Inventories
 {
@@ -93,7 +94,7 @@ namespace Alex.Utils.Inventories
 		{
 			var oldValue = _cursor;
 			Cursor = item;
-
+			
 			CursorChanged?.Invoke(this, new CursorChangedEventArgs(InventoryId, index, item, oldValue, isServerTransaction, button));
 		}
 		

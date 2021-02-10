@@ -27,7 +27,7 @@ namespace Alex.Blocks.Minecraft
 			{
 				if (Enum.TryParse<BlockFace>(val, true, out var facing))
 				{
-					return facing.Opposite() == face;
+					return facing == face;
 				}
 			}
 

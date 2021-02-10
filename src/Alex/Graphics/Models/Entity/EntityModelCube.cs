@@ -237,7 +237,7 @@ namespace Alex.Graphics.Models.Entity
 				var y1 = texelHeight * (textureOffset.Y);
 				var y2 = y1 + (height * texelHeight);
 
-				if (mirrored)
+				if (!mirrored)
 				{
 					TopLeft = new Vector2(x2, y1);
 					TopRight = new Vector2(x1, y1);

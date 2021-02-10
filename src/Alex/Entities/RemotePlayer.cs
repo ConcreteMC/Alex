@@ -277,6 +277,8 @@ namespace Alex.Entities
 						}
 					}
 					
+				//	skinBitmap.Mutate(x => x.RotateFlip(RotateMode.Rotate180, FlipMode.Horizontal));
+					
 					//if (!Directory.Exists("skins"))
 					//	Directory.CreateDirectory("skins");
 

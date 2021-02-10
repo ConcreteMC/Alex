@@ -12,6 +12,7 @@ using Alex.Items;
 using Alex.Utils;
 using Alex.Utils.Inventories;
 using Microsoft.Xna.Framework;
+using MiNET.Utils;
 using GuiCursorEventArgs = Alex.API.Gui.Events.GuiCursorEventArgs;
 using GuiCursorMoveEventArgs = Alex.API.Gui.Events.GuiCursorMoveEventArgs;
 
@@ -465,7 +466,7 @@ namespace Alex.Gui.Dialogs.Containers
 		{
 			if (isServerTransaction)
 				return;
-			
+
 			Inventory.SetCursor(item, false, slot.InventoryIndex, button);
 		}
 	}

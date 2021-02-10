@@ -547,7 +547,7 @@ namespace Alex.Net.Bedrock
 
 
 		//private object _updateSync = new object();
-		private SemaphoreSlim _updateSync = new SemaphoreSlim(1, 1);
+		internal SemaphoreSlim _updateSync = new SemaphoreSlim(1, 1);
 
 		private async Task UpdateAsync()
 		{
