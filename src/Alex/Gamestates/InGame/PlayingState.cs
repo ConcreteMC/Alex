@@ -319,7 +319,7 @@ namespace Alex.Gamestates.InGame
 				if (player == null || player.HitEntity == null) return string.Empty;
 
 				var entity = player.HitEntity;
-				return $"Hit entity: {entity.EntityId} / {entity.ToString()}";
+				return $"Hit entity: {entity.EntityId} / {entity.ToString()}\n{entity.NameTag} (Shown: {!entity.HideNameTag})";
 			}, TimeSpan.FromMilliseconds(500));
 		}
 

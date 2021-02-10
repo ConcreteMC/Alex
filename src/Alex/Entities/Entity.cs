@@ -580,7 +580,7 @@ namespace Alex.Entities
 					{
 						if (meta.Value is MiNET.Utils.MetadataByte hideNameTag)
 						{
-							HideNameTag = hideNameTag.Value == 1;
+							//HideNameTag = hideNameTag.Value == 1;
 						}
 						break;
 					}

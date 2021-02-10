@@ -365,7 +365,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		}
 
 		private ConcurrentDictionary<MiNET.Utils.UUID, RemotePlayer> _players = new ConcurrentDictionary<MiNET.Utils.UUID, RemotePlayer>();
-		private ThreadSafeList<long> _runtimeFuckUps = new ThreadSafeList<long>();
 		public void HandleMcpeAddPlayer(McpeAddPlayer message)
 		{
 			if (_players.TryGetValue(message.uuid, out RemotePlayer mob))
@@ -410,7 +409,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				{
 					identifier = message.username.Replace("\n", "");
 				}
-				_runtimeFuckUps.Add(message.runtimeEntityId);
+				
 				Log.Warn(
 					$"({message.ReliabilityHeader.ReliableMessageNumber} | {message.ReliabilityHeader.OrderingIndex} | {message.ReliabilityHeader.SequencingIndex}) Tried spawning invalid player: {identifier} (UUID: {message.uuid}))");
 			}
@@ -427,13 +426,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 						continue;
 					}
 
-
-					if (_runtimeFuckUps.Contains(r.EntityId))
-					{
-						Log.Warn(
-							$"({message.ReliabilityHeader.ReliableMessageNumber} | {message.ReliabilityHeader.OrderingIndex} | {message.ReliabilityHeader.SequencingIndex}) Fucked up: {r.EntityId}");
-					}
-					
 					Client.World?.AddPlayerListItem(new PlayerListItem(r.ClientUuid, r.DisplayName, (GameMode)((int)r.GameMode), 0, false));
 
 					RemotePlayer m = new RemotePlayer(r.DisplayName, Client.World, Client, null);
@@ -542,6 +534,11 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		{
 			if (_entityMapping.TryRemove(message.entityIdSelf, out var entityId))
 			{
+				if (Client.World.TryGetEntity(entityId, out var entity))
+				{
+					if (entity is RemotePlayer player)
+						_players.TryRemove(player.UUID, out _);
+				}
 				Client.World.DespawnEntity(entityId);
 			}
 		}
@@ -613,7 +610,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		public void HandleMcpeMoveEntity(McpeMoveEntity message)
 		{
 			var location = new PlayerLocation(
-				message.position.X, message.position.Y, message.position.Z, -message.position.HeadYaw,
+				message.position.X, message.position.Y - Player.EyeLevel, message.position.Z, -message.position.HeadYaw,
 				-message.position.Yaw, -message.position.Pitch);
 
 			if (message.runtimeEntityId != Client.EntityId)

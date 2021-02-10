@@ -332,8 +332,7 @@ namespace Alex.Entities
 			    {
 				    bool handledClick = false;
 				    var  item = IsLeftHanded ? Inventory.OffHand : Inventory.MainHand; // [Inventory.SelectedSlot];
-
-				    Log.Info($"Right click!");
+				    
 				    if (item != null)
 				    {
 					    handledClick = HandleClick(
@@ -728,7 +727,7 @@ namespace Alex.Entities
 				    if (existingBlock.CanInteract && (!isBlockItem || IsSneaking))
 				    {
 					    Network?.WorldInteraction(this, coordR, face, hand, inventorySlot, remainder);
-						Log.Info($"World interaction.");
+					//	Log.Info($"World interaction.");
 					    return true;
 				    }
 				    

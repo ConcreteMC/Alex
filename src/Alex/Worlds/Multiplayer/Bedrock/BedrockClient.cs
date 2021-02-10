@@ -1195,7 +1195,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			    minetItem = GetMiNETItem(item);
 		    }*/
 
-		    Log.Info($"Use Item: {item} ({minetItem}) hand: {hand} Action: {action}");
+		   // Log.Info($"Use Item: {item} ({minetItem}) hand: {hand} Action: {action}");
 		    
 		    McpeInventoryTransaction.ItemUseAction useAction = McpeInventoryTransaction.ItemUseAction.Use;
 		    switch (action)
