@@ -47,9 +47,9 @@ namespace Alex.Worlds.Chunks
 		private readonly int[]          _biomeId = ArrayOf<int>.Create(16 * 16 * 256, 1);
 		private readonly  short[]        _height  = new short[256];
 		
-		public  object                                              UpdateLock { get; set; } = new object();
-		private ConcurrentDictionary<BlockCoordinates, BlockEntity> BlockEntities { get; }
-		public  BlockEntity[]                                       GetBlockEntities => BlockEntities.Values.ToArray();
+		public  object                                              UpdateLock       { get; set; } = new object();
+		public ConcurrentDictionary<BlockCoordinates, NbtCompound> BlockEntities    { get; }
+		//public  NbtCompound[]                                       GetBlockEntities => BlockEntities.ToArray();
 		
 		internal ChunkData ChunkData { get; private set; }
 		private object _dataLock = new object();
@@ -65,7 +65,7 @@ namespace Alex.Worlds.Chunks
 				Sections[i] = null;
 			}
 			
-			BlockEntities = new ConcurrentDictionary<BlockCoordinates, BlockEntity>();
+			BlockEntities = new ConcurrentDictionary<BlockCoordinates, NbtCompound>();
 			_lightUpdateWatch.Start();
 			
 			ChunkData = new ChunkData(new ChunkCoordinates(x, z));
@@ -520,13 +520,13 @@ namespace Alex.Worlds.Chunks
 			return section.IsScheduled(bx, @by & 0xf, bz);
 		}
 		
-		public bool AddBlockEntity(BlockCoordinates coordinates, BlockEntity entity)
+		public bool AddBlockEntity(BlockCoordinates coordinates, NbtCompound entity)
 		{
 			//entity.Block = GetBlockState(coordinates.X & 0x0f, coordinates.Y & 0xf, coordinates.Z & 0x0f).Block;
 			return BlockEntities.TryAdd(coordinates, entity);
 		}
 
-		public bool TryGetBlockEntity(BlockCoordinates coordinates, out BlockEntity entity)
+		public bool TryGetBlockEntity(BlockCoordinates coordinates, out NbtCompound entity)
 		{
 			return BlockEntities.TryGetValue(coordinates, out entity);
 		}

@@ -482,10 +482,10 @@ namespace Alex.Worlds
 				//if (blockAtPos.Block.BlockMaterial == Material.Air)
 				//	return;
 				
-				chunk.RemoveBlockEntity(chunkPos);
+			//	chunk.RemoveBlockEntity(chunkPos);
 				EntityManager.RemoveBlockEntity(coords);
 				
-				chunk.AddBlockEntity(chunkPos, blockEntity);
+				//chunk.AddBlockEntity(chunkPos, blockEntity);
 				EntityManager.AddBlockEntity(coords, blockEntity);
 			}
 		}

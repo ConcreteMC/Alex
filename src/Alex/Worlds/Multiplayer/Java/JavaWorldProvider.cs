@@ -1989,7 +1989,7 @@ namespace Alex.Worlds.Multiplayer.Java
 						        if (blockEntity != null)
 						        {
 							        result.AddBlockEntity(
-								        new BlockCoordinates(blockEntity.X, blockEntity.Y, blockEntity.Z), blockEntity);
+								        new BlockCoordinates(blockEntity.X, blockEntity.Y, blockEntity.Z), tag);
 						        }
 						        else
 						        {

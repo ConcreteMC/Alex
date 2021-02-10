@@ -268,7 +268,7 @@ namespace Alex.Graphics.Models.Entity
 
 		public virtual void Update(IUpdateArgs args, PlayerLocation position)
 		{
-			if (Bones == null) return;
+			if (Bones == null || Effect == null) return;
 
 			Effect.View = args.Camera.ViewMatrix;
 			Effect.Projection = args.Camera.ProjectionMatrix;

@@ -311,114 +311,101 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			        for (int s = 0; s < subChunkCount; s++)
 			        {
 				        var section = chunkColumn.Sections[s] as ChunkSection;
-				        
+
 				        int version = defStream.ReadByte();
-						
+
 				        if (version == 1 || version == 8)
 				        {
 					        int storageSize = version == 1 ? 1 : defStream.ReadByte();
-					        
-					        if (section == null) 
+
+					        if (section == null)
 						        section = new ChunkSection(true, storageSize);
 
 					        for (int storage = 0; storage < storageSize; storage++)
 					        {
-						        int  blockSize = defStream.ReadByte();
-						       // bool isRuntime      = (blockSize & 1) != 0;
-						        blockSize >>= 1;
-						        
-						       // int  bitsPerBlock   = paletteAndFlag >> 1;
-						        int blocksPerWord = 32 / blockSize;
-						        int wordCount     = 0;
-						        
-						        if (blocksPerWord == 0)
-						        {
-							        //Log.Warn($"Invalid section, blocksPerWord={blocksPerWord}");
-							        continue;
-						        }
-						        else if (blocksPerWord > 0)
-						        {
-							        wordCount     = 4096 / blocksPerWord;
-						        }
+						        int  flags         = stream.ReadByte();
+						        bool isRuntime     = (flags & 1) != 0;
+						        int  bitsPerBlock  = flags >> 1;
+						        int  blocksPerWord = (int) Math.Floor(32f / bitsPerBlock);
+						        int  wordsPerChunk = (int) Math.Ceiling(4096f / blocksPerWord);
 
-						        if (blockSize == 3 || blockSize == 5 || blockSize == 6)
+						        long jumpPos = stream.Position;
+						        stream.Seek(wordsPerChunk * 4, SeekOrigin.Current);
+
+						        int paletteCount = VarInt.ReadSInt32(stream);
+						        var palette      = new int[paletteCount];
+						        for (int j = 0; j < paletteCount; j++)
 						        {
-							        wordCount++;
-						        }
-						        
-						        int[] words = new int[wordCount];
-
-						        Span<byte> blockData = new Span<byte>(new byte[wordCount * 4]);
-						        defStream.Read(blockData);
-
-						        for (int w = 0; w < wordCount; w++)
-						        {
-							        words[w] = ((int) blockData[w * 4]) | ((int) blockData[w * 4 + 1]) << 8
-							                                             | ((int) blockData[w * 4 + 2]) << 16
-							                                             | ((int) blockData[w * 4 + 3]) << 24;
-						        }
-
-						        int[] pallete;// = new int[0];
-
-						        //if (isRuntime)
-						        {
-							        int palleteSize = defStream.ReadVarInt();// VarInt.ReadSInt32(stream);
-							        if (palleteSize <= 0)
+							        if (!isRuntime)
 							        {
-								        Log.Warn($"Pallete size is <= 0 ({palleteSize})");
-								        continue;
+								        var file = new NbtFile
+								        {
+									        BigEndian = false,
+									        UseVarInt = true
+								        };
+								        file.LoadFromStream(stream, NbtCompression.None);
+								        var tag = (NbtCompound) file.RootTag;
+
+								        var block =
+									        MiNET.Blocks.BlockFactory.GetBlockByName(tag["name"].StringValue);
+								        
+								        if (block != null && block.GetType() != typeof(Block) && !(block is Air))
+								        {
+									        List<IBlockState> blockState = ReadBlockState(tag);
+									        block.SetState(blockState);
+								        }
+								        else
+								        {
+									        block = new MiNET.Blocks.Air();
+								        }
+
+								        palette[j] = block.GetRuntimeId();
 							        }
-							        
-							        pallete = new int[palleteSize];
-
-							        for (int pi = 0; pi < pallete.Length; pi++)
+							        else
 							        {
-								        var ui = defStream.ReadVarInt(); //VarInt.ReadSInt32(stream);
-								        pallete[pi] = ui;
+								        int runtimeId = VarInt.ReadSInt32(stream);
+								        palette[j] = runtimeId;
+								        //if (bedrockPalette == null || internalBlockPallet == null) continue;
+
+								        // palette[j] = GetServerRuntimeId(bedrockPalette, internalBlockPallet, runtimeId);
 							        }
 						        }
 
+						        long afterPos = stream.Position;
+						        stream.Position = jumpPos;
 						        int position = 0;
-						        for (int w = 0; w < wordCount; w++)
+						        for (int w = 0; w < wordsPerChunk; w++)
 						        {
-							        int word = words[w];
-							        for (int block = 0; block < blocksPerWord; block++)
+							        uint word = defStream.ReadUInt32();
+							        for (uint block = 0; block < blocksPerWord; block++)
 							        {
-								        if (position >= 4096) break; // padding bytes
+								        if (position >= 4096)
+									        continue;
 
-								        uint state =
-									        (uint) ((word >> ((position % blocksPerWord) * blockSize)) &
-									                ((1 << blockSize) - 1));
+								        uint state = (uint) ((word >> ((position % blocksPerWord) * bitsPerBlock)) & ((1 << bitsPerBlock) - 1));
 
-									    int x = (position >> 8) & 0xF;
+								        int x = (position >> 8) & 0xF;
 								        int y = position & 0xF;
 								        int z = (position >> 4) & 0xF;
 
-								        if (state >= pallete.Length)
-								        {
-									        continue;
-								        }
+								        int runtimeId = palette[state];
 
-								        BlockState translated = GetBlockState((uint)pallete[state]);
-
-								        if (translated != null)
-								        {
-									        section.Set(storage, x, y, z, translated);
-								        }
+								        var blockState = GetBlockState((uint) runtimeId);
+								        if (blockState != null)
+											section.Set(storage, x, y, z, blockState);
 
 								        position++;
 							        }
-
-							        //if (position >= 4096) break;
 						        }
+						        stream.Position = afterPos;
 					        }
 				        }
 				        else if (version == 0)
 				        {
-					        if (section == null) 
+					        if (section == null)
 						        section = new ChunkSection(true, 1);
-					        
-					        #region OldFormat 
+
+					        #region OldFormat
 
 					        byte[] blockIds = new byte[4096];
 					        defStream.Read(blockIds, 0, blockIds.Length);
@@ -436,89 +423,10 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 								        var id   = blockIds[idx];
 								        var meta = data[idx];
 
-								        var ruid = BlockFactory.GetBlockStateID(id, meta);
-								        
-								        BlockState result = null;
+								        //var ruid = BlockFactory.GetBlockStateID(id, meta);
 
-								        if (_convertedStates.TryGetValue(ruid, out var resultingId))
-								        {
-									        result = BlockFactory.GetBlockState(resultingId);
-								        }
-								        else 
-								        {
-									        if (id == 124 || id == 123)
-									        {
-										        result = BlockFactory.GetBlockState("minecraft:redstone_lamp");
-
-										        if (id == 124)
-										        {
-											        result = result.WithProperty("lit", "true");
-										        }
-									        }
-									        else if (id > 0 && result == null)
-									        {
-										        var reverseMap =
-											        MiNET.Worlds.AnvilWorldProvider.Convert.FirstOrDefault(
-												        map => map.Value.Item1 == id);
-
-										        if (reverseMap.Value != null)
-										        {
-											        id = (byte) reverseMap.Key;
-										        }
-
-										        var res = BlockFactory.GetBlockStateID(id, meta);
-
-										        if (AnvilWorldProvider.BlockStateMapper.TryGetValue(res, out var res2))
-										        {
-											        var t = BlockFactory.GetBlockState(res2);
-											        t = TranslateBlockState(t, id, meta);
-
-											        result = t;
-										        }
-										        else
-										        {
-											        Log.Info($"Did not find anvil statemap: {result.Name}");
-
-											        result = TranslateBlockState(
-												        BlockFactory.GetBlockState(res), id, meta);
-										        }
-									        }
-
-									        if (result == null)
-									        {
-										        var results =
-											        MiNET.Blocks.BlockFactory.BlockStates.Where(xx => xx.RuntimeId == id).ToArray();// BlockFactory.RuntimeIdTable.Where(xx => xx.Id == id)
-											       //.ToArray();
-
-										        if (results.Length > 0)
-										        {
-											        var first = results.FirstOrDefault(xx => xx.Data == meta);
-
-											        if (first == default)
-												        first = results[0];
-
-											        result = TranslateBlockState(
-												        BlockFactory.GetBlockState((uint) first.RuntimeId), id, meta);
-										        }
-									        }
-
-									        /*if (result == null)
-									        {
-										        result = new BlockState()
-										        {
-											        Name = $"{id}:{meta.ToString()}",
-											        Model = BlockFactory.UnknownBlockModel,
-											        Block = new UnknownBlock(0)
-										        };
-										        
-										        Log.Info($"Unknown block: {id}:{meta}");
-									        }*/
-									        
-									        if (result != null)
-									        {
-										        _convertedStates.TryAdd(ruid, result.ID);
-									        }
-								        }
+								        BlockState result = GetBlockState(
+									        MiNET.Blocks.BlockFactory.GetRuntimeId(id, meta));
 
 								        if (result != null)
 								        {
@@ -542,45 +450,15 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 				        if (section != null)
 				        {
-
-					        if (UseAlexChunks)
-					        {
-						        //  Log.Info($"Alex chunk!");
-
-						        var rawSky = new API.Utils.NibbleArray(4096);
-						        defStream.Read(rawSky.Data, 0, rawSky.Data.Length);
-
-						        var rawBlock = new API.Utils.NibbleArray(4096);
-						        defStream.Read(rawBlock.Data, 0, rawBlock.Data.Length);
-
-						        for (int x = 0; x < 16; x++)
-						        for (int y = 0; y < 16; y++)
-						        for (int z = 0; z < 16; z++)
-						        {
-							        var peIndex = (x * 256) + (z * 16) + y;
-							        var sky     = rawSky[peIndex];
-							        var block   = rawBlock[peIndex];
-
-							        var idx = y << 8 | z << 4 | x;
-
-							        section.SkyLight[idx] = sky;
-							        section.BlockLight[idx] = block;
-						        }
-					        }
-
-					        section.RemoveInvalidBlocks();
-					        // section.IsDirty = true;
-
-					        //Make sure the section is saved.
 					        chunkColumn.Sections[s] = section;
 				        }
 			        }
 
 
-			       /* byte[] ba = new byte[512];
-			        if (defStream.Read(ba, 0, 256 * 2) != 256 * 2) Log.Error($"Out of data height");
-
-			        Buffer.BlockCopy(ba, 0, chunkColumn.Height, 0, 512);*/
+			        /* byte[] ba = new byte[512];
+			         if (defStream.Read(ba, 0, 256 * 2) != 256 * 2) Log.Error($"Out of data height");
+ 
+			         Buffer.BlockCopy(ba, 0, chunkColumn.Height, 0, 512);*/
 
 			        int[] biomeIds = new int[256];
 			        for (int i = 0; i < biomeIds.Length; i++)
@@ -611,123 +489,39 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				        return;
 			        }
 
-			        int borderBlock = defStream.ReadByte();// defStream.ReadVarInt(); //VarInt.ReadSInt32(stream);
-			        if (borderBlock > 0)
+			        int borderBlock = VarInt.ReadSInt32(stream);// defStream.ReadByte();// defStream.ReadVarInt(); //VarInt.ReadSInt32(stream);
+			        if (borderBlock != 0)
 			        {
-				        byte[] buf = new byte[borderBlock];
-				        int len = defStream.Read(buf, 0, borderBlock);
+				        int len   = (int) (stream.Length - stream.Position);
+				        var bytes = new byte[len];
+				        stream.Read(bytes, 0, len);
 			        }
-
 
 			        if (stream.Position < stream.Length - 1)
 			        {
-				        int loop = 0;
-				        while (stream.Position < stream.Length - 1)
+				        while (stream.Position < stream.Length)
 				        {
-					        try
-					        {
-						        NbtFile file = new NbtFile()
-						        {
-							        BigEndian = false,
-							        UseVarInt = true
-						        };
+					        NbtFile file = new NbtFile() {BigEndian = false, UseVarInt = true};
 
-						        file.LoadFromStream(stream, NbtCompression.None);
+					        file.LoadFromStream(stream, NbtCompression.None);
+					        var blockEntityTag = file.RootTag;
 
-						        if (file.RootTag.Name == "alex")
-						        {
-							        NbtCompound alexCompound = (NbtCompound) file.RootTag;
+					        int x = blockEntityTag["x"].IntValue;
+					        int y = blockEntityTag["y"].IntValue;
+					        int z = blockEntityTag["z"].IntValue;
 
-							        for (int ci = 0; ci < subChunkCount; ci++)
-							        {
-								        var section = (ChunkSection) chunkColumn.Sections[ci];
+					        chunkColumn.AddBlockEntity(new BlockCoordinates(x, y, z), (NbtCompound) file.RootTag);
 
-								        var rawSky = new API.Utils.NibbleArray(4096);
-								        if (alexCompound.TryGet($"skylight-{ci}", out NbtByteArray skyData))
-								        {
-									        rawSky.Data = skyData.Value;
-								        }
-								        //defStream.Read(rawSky.Data, 0, rawSky.Data.Length);
-
-								        var rawBlock = new API.Utils.NibbleArray(4096);
-								        if (alexCompound.TryGet($"blocklight-{ci}", out NbtByteArray blockData))
-								        {
-									        rawBlock.Data = blockData.Value;
-								        }
-
-								        for (int x = 0; x < 16; x++)
-								        for (int y = 0; y < 16; y++)
-								        for (int z = 0; z < 16; z++)
-								        {
-									        var peIndex = (x * 256) + (z * 16) + y;
-									        var sky = rawSky[peIndex];
-									        var block = rawBlock[peIndex];
-
-									        var idx = y << 8 | z << 4 | x;
-
-									        section.SkyLight[idx] = sky;
-									        section.BlockLight[idx] = block;
-								        }
-
-								        chunkColumn.Sections[ci] = section;
-							        }
-						        }
-						        else
-						        {
-							        try
-							        {
-								        if (file.RootTag.TagType != NbtTagType.Compound)
-								        {
-									        Log.Warn($"Got non-compound block entity! Got: {file.RootTag.TagType}\n{file.RootTag}");
-								        }
-								        else
-								        {
-									        NbtCompound compound = (NbtCompound) file.RootTag;
-									        var blockEntity = BlockEntityFactory.ReadFrom(compound, Client.World, null);
-
-									        if (blockEntity != null)
-									        {
-										        //if (blockEntity.X )
-										        var block = chunkColumn.GetBlockState(
-												        blockEntity.X & 0xf, blockEntity.Y & 0xff, blockEntity.Z & 0xf)
-											       .Block;
-
-										        if (block.BlockMaterial != Material.Air)
-										        {
-											        blockEntity.Block = block;
-
-											        chunkColumn.AddBlockEntity(
-												        new BlockCoordinates(
-													        blockEntity.X & 0xf, blockEntity.Y & 0xff,
-													        blockEntity.Z & 0xf), blockEntity);
-										        }
-									        }
-								        }
-							        }
-							        catch (Exception ex)
-							        {
-								        Log.Warn(ex, $"Could not read block entity from extra data!");
-							        }
-						        }
-
-						        if (stream.Position < stream.Length - 1)
-						        {
-							     //   pre = stream.ReadByte();
-						        }
-					        }
-					        catch (Exception ex)
-					        {
-						       // Log.Warn(ex, $"Reading chunk extra data (Loop={loop})");
-					        }
-
-					        loop++;
+					        // if (Log.IsTraceEnabled()) Log.Trace($"Blockentity:\n{file.RootTag}");
 				        }
 			        }
 
 			        if (stream.Position < stream.Length - 1)
 			        {
-				        Log.Warn(
-					        $"Still have data to read\n{Packet.HexDump(defStream.ReadBytes((int) (stream.Length - stream.Position)))}");
+				        int len   = (int) (stream.Length - stream.Position);
+				        var bytes = new byte[len];
+				        stream.Read(bytes, 0, len);
+				        Log.Warn($"Still have data to read\n{Packet.HexDump(new ReadOnlyMemory<byte>(bytes))}");
 			        }
 
 			        chunkColumn.CalculateHeight();
@@ -746,6 +540,54 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	        {
 
 	        }
+        }
+        
+        private static List<IBlockState> ReadBlockState(NbtCompound tag)
+        {
+	        //Log.Debug($"Palette nbt:\n{tag}");
+
+	        var states    = new List<IBlockState>();
+	        var nbtStates = (NbtCompound) tag["states"];
+	        foreach (NbtTag stateTag in nbtStates)
+	        {
+		        IBlockState state = stateTag.TagType switch
+		        {
+			        NbtTagType.Byte => (IBlockState) new BlockStateByte()
+			        {
+				        Name = stateTag.Name,
+				        Value = stateTag.ByteValue
+			        },
+			        NbtTagType.Int => new BlockStateInt()
+			        {
+				        Name = stateTag.Name,
+				        Value = stateTag.IntValue
+			        },
+			        NbtTagType.String => new BlockStateString()
+			        {
+				        Name = stateTag.Name,
+				        Value = stateTag.StringValue
+			        },
+			        _ => throw new ArgumentOutOfRangeException()
+		        };
+		        states.Add(state);
+	        }
+
+	        return states;
+        }
+
+        private static int GetServerRuntimeId(BlockPalette bedrockPalette, HashSet<BlockStateContainer> internalBlockPallet, int runtimeId)
+        {
+	        if (runtimeId < 0 || runtimeId >= bedrockPalette.Count) Log.Error($"RuntimeId = {runtimeId}");
+
+	        var record = bedrockPalette[runtimeId];
+
+	        if (!internalBlockPallet.TryGetValue(record, out BlockStateContainer internalRecord))
+	        {
+		        Log.Error($"Did not find {record.Id}");
+		        return 0; // air
+	        }
+
+	        return internalRecord.RuntimeId;
         }
 
         private string GetWoodBlock(BlockStateContainer record)

@@ -10,6 +10,7 @@ using Alex.API.Services;
 using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Blocks.Minecraft;
+using Alex.Entities.BlockEntities;
 using Alex.Gamestates;
 using Alex.Utils.Queue;
 using Alex.Worlds.Abstraction;
@@ -309,11 +310,14 @@ namespace Alex.Worlds
 				BlockLightCalculations.Recalculate(chunk);
 			}
 
-			foreach (var blockEntity in chunk.GetBlockEntities)
+			foreach (var blockEntity in chunk.BlockEntities)
 			{
-				var coordinates = new BlockCoordinates(blockEntity.X, blockEntity.Y, blockEntity.Z);
+				//var coordinates = new BlockCoordinates(blockEntity.X, blockEntity.Y, blockEntity.Z);
 				//World.SetBlockEntity(coordinates.X, coordinates.Y, coordinates.Z, blockEntity);
-				World.EntityManager.AddBlockEntity(coordinates, blockEntity);
+				var entity = BlockEntityFactory.ReadFrom(blockEntity.Value, World, 
+					chunk.GetBlockState(blockEntity.Key.X & 0xf, blockEntity.Key.Y & 0xff, blockEntity.Key.Z & 0xf).Block);
+				if (entity != null)
+					World.EntityManager.AddBlockEntity(blockEntity.Key, entity);
 			}
 			
 			Chunks.AddOrUpdate(
@@ -342,10 +346,10 @@ namespace Alex.Worlds
 
 			if (Chunks.TryRemove(position, out var column))
 			{
-				foreach (var blockEntity in column.GetBlockEntities)
+				//foreach (var blockEntity in column.GetBlockEntities)
 				{
-					World.EntityManager.RemoveBlockEntity(
-						new BlockCoordinates((column.X << 4) + blockEntity.X, blockEntity.Y, (column.Z << 4) + blockEntity.Z));
+				//	World.EntityManager.RemoveBlockEntity(
+				//		new BlockCoordinates((column.X << 4) + blockEntity.X, blockEntity.Y, (column.Z << 4) + blockEntity.Z));
 				}
 				
 				if (dispose)
