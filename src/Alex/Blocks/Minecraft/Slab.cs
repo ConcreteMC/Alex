@@ -5,7 +5,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class WoodenSlab : Slab
 	{
-		protected WoodenSlab(uint blockStateId) : base(blockStateId)
+		protected WoodenSlab() : base()
 		{
 			BlockMaterial = Material.Wood;
 		}
@@ -13,7 +13,7 @@ namespace Alex.Blocks.Minecraft
 	
     public class Slab : Block
     {
-	    public Slab(uint blockStateId) : base()
+	    public Slab() : base()
 	    {
 		    Solid = true;
 		    Transparent = true;

@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class StoneSlab : Slab
 	{
-		public StoneSlab() : base(7206)
+		public StoneSlab() : base()
 		{
 			Solid = true;
 			Transparent = true;

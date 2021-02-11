@@ -892,9 +892,9 @@ namespace Alex.Worlds
 			EntityManager.UnloadEntities(coordinates);
 		}
 
-		public bool SpawnEntity(long entityId, Entity entity)
+		public bool SpawnEntity(Entity entity)
 		{
-			if (EntityManager.AddEntity(entityId, entity))
+			if (EntityManager.AddEntity(entity) || (EntityManager.TryGet(entity.EntityId, out var entity2) && entity2 == entity))
 			{
 				//entity.RenderLocation = entity.KnownPosition;
 				if (entity.HasPhysics)

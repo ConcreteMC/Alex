@@ -8,7 +8,7 @@ namespace Alex.Entities.Effects
 	{
 		private double _multiplier = 0.02;
 
-		private UUID _uuid = new UUID("91AEAA56-376B-4498-935B-2F7F68070635");
+		private MiNET.Utils.UUID _uuid = new MiNET.Utils.UUID("91AEAA56-376B-4498-935B-2F7F68070635");
 		public SpeedEffect() : base(EffectType.Speed)
 		{
 			Particles = false;

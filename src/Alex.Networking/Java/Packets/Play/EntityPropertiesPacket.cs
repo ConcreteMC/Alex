@@ -29,7 +29,7 @@ namespace Alex.Networking.Java.Packets.Play
 
 				for (int y = 0; y < modifiers.Length; y++)
 				{
-					UUID         uuid   = new UUID(stream.ReadUuid().ToByteArray());
+					var         uuid   = stream.ReadUuid();
 					double       amount = stream.ReadDouble();
 					ModifierMode op     = (ModifierMode) stream.ReadByte();
 
@@ -55,7 +55,7 @@ namespace Alex.Networking.Java.Packets.Play
 			return new EntityProperty(key, value, modifiers);
 		}
 
-		public virtual Modifier CreateModifier(UUID uuid, double amount, ModifierMode modifierMode)
+		public virtual Modifier CreateModifier(MiNET.Utils.UUID uuid, double amount, ModifierMode modifierMode)
 		{
 			return new Modifier(uuid, amount, modifierMode);
 		}
@@ -74,13 +74,13 @@ namespace Alex.Networking.Java.Packets.Play
 
 		public string                  Key       { get; }
 		public double                  Value     { get; set; }
-		public ConcurrentDictionary<UUID, Modifier> Modifiers { get; }
+		public ConcurrentDictionary<MiNET.Utils.UUID, Modifier> Modifiers { get; }
 
 		public EntityProperty(string key, double value, Modifier[] modifiers)
 		{
 			Key = key;
 			Value = value;
-			Modifiers = new ConcurrentDictionary<UUID, Modifier>();
+			Modifiers = new ConcurrentDictionary<MiNET.Utils.UUID, Modifier>();
 
 			if (modifiers != null)
 			{
@@ -105,7 +105,7 @@ namespace Alex.Networking.Java.Packets.Play
 			}
 		}
 
-		public void RemoveModifier(UUID key)
+		public void RemoveModifier(MiNET.Utils.UUID key)
 		{
 			Modifiers.TryRemove(key, out _);
 		}
@@ -143,13 +143,13 @@ namespace Alex.Networking.Java.Packets.Play
 
 	public class Modifier
 	{
-		public UUID         Uuid;
+		public MiNET.Utils.UUID         Uuid;
 		public double       Amount;
 		public ModifierMode Operation;
 
 		public Modifier() { }
 
-		public Modifier(UUID uuid, double amount, ModifierMode mode)
+		public Modifier(MiNET.Utils.UUID uuid, double amount, ModifierMode mode)
 		{
 			Uuid = uuid;
 			Amount = amount;

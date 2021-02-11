@@ -108,22 +108,29 @@ namespace Alex.Net.Bedrock
 		{
 			Start(); // Make sure we have started the listener
 
-			bool connecting = false;
 			do
 			{
-				if (!connecting)
+				if (Session == null && !HaveServer)
+				{
 					SendOpenConnectionRequest1(targetEndPoint, mtuSize);
+					numberOfAttempts--;
+					
+					if (!ConnectionResetEvent.Wait(500))
+					{
+						if (numberOfAttempts % 4 == 0)
+						{
+							mtuSize -= UdpHeaderSize;
+						}
+					}
+				}
 
-				if (!ConnectionResetEvent.WaitOne(500))
-				{
-					mtuSize -= UdpHeaderSize;
-				}
-				else
-				{
-					connecting = true;
-				}
 				
-			} while (Session == null && numberOfAttempts-- > 0);
+				if (Session != null)
+				{
+					break;
+				}
+
+			} while (Session == null && numberOfAttempts > 0 && mtuSize >= UdpHeaderSize);
 
 			if (Session == null) return false;
 
@@ -876,25 +883,28 @@ namespace Alex.Net.Bedrock
 			}
 		}
 
-		public ManualResetEvent ConnectionResetEvent = new ManualResetEvent(false);
+		public ManualResetEventSlim ConnectionResetEvent = new ManualResetEventSlim(false);
 		public void SendOpenConnectionRequest1(IPEndPoint targetEndPoint, short mtuSize)
 		{
+			if (ConnectionResetEvent.IsSet) return;
 			MtuSize = (short) (mtuSize); // This is what we will use from connections this point forward
 
 			var packet = OpenConnectionRequest1.CreateObject();
 			packet.raknetProtocolVersion = 10;
 			packet.mtuSize = (short) (mtuSize + 28);
-
+			
 			byte[] data = packet.Encode();
 
 			//TraceSend(packet);
-
-		//	Log.Warn($"Sending MTU size={mtuSize}, data length={data.Length}");
+			
 			SendData(data, targetEndPoint);
 		}
 
 		private void HandleRakNetMessage(IPEndPoint senderEndpoint, OpenConnectionReply1 message)
 		{
+			if (HaveServer)
+				return;
+			
 			if (message.mtuSize != MtuSize)
 			{
 				Log.Warn($"Error, mtu differ from what we sent. Received {message.mtuSize}, expected {MtuSize}");

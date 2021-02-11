@@ -26,7 +26,7 @@ namespace Alex.Services
 			PingServerDelegate pingCallback,
 			ServerStatusDelegate statusCallBack)
 		{
-			ManualResetEventSlim ar       = new ManualResetEventSlim(false);
+		//	ManualResetEventSlim ar       = new ManualResetEventSlim(false);
 			Stopwatch            sw       = new Stopwatch();
 			long                 pingTime = 0;
 
@@ -56,16 +56,13 @@ namespace Alex.Services
 				{
 					motd = m;
 					pingTime = m.Latency;
-					ar.Set();
+					//ar.Set();
 
 					pingCallback.Invoke(new ServerPingResponse(true, pingTime));
 				};
-
-				client.Start(ar);
-
+				
 				sw.Restart();
-
-				if (await WaitHandleHelpers.FromWaitHandle(ar.WaitHandle, TimeSpan.FromMilliseconds(2500)))
+				if (client.Start(TimeSpan.FromSeconds(30)))
 				{
 					client.Close();
 

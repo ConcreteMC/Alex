@@ -223,6 +223,7 @@ namespace Alex.Blocks
 		    this.Register("minecraft:quartz_slab", () => new QuartzSlab());
 		    this.Register("minecraft:red_sandstone_slab", () => new RedSandstoneSlab());
 		    this.Register("minecraft:purpur_slab", () => new PurpurSlab());
+		    this.Register("minecraft:polished_andesite_slab", () => new PolishedAndesiteSlab());
 		    
 		    //Leaves
 		    this.Register("minecraft:oak_leaves", () => new OakLeaves());
@@ -279,6 +280,7 @@ namespace Alex.Blocks
 		    this.Register("minecraft:jungle_stairs", () => new JungleStairs());
 		    this.Register("minecraft:oak_stairs", () => new OakStairs());
 		    this.Register("minecraft:crimson_stairs", () => new CrimsonStairs());
+		    this.Register("minecraft:polished_andesite_stairs", () => new PolisedAndesiteStairs());
 		    
 		    this.Register("minecraft:water", () => new Water());
 		    this.Register("minecraft:lava", () => new Lava());

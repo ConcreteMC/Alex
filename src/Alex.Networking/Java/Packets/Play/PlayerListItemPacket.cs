@@ -1,5 +1,6 @@
 ﻿using System;
 using Alex.Networking.Java.Util;
+using MiNET.Utils;
 
 namespace Alex.Networking.Java.Packets.Play
 {
@@ -181,7 +182,7 @@ namespace Alex.Networking.Java.Packets.Play
 
 		public class PlayerEntry
 		{
-			public Guid UUID;
+			public UUID UUID;
 		}
 		
 		public class UpdateDisplayNameEntry : PlayerEntry

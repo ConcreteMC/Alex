@@ -190,22 +190,17 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			
 			Stopwatch timer = Stopwatch.StartNew();
 			progressReport(LoadingState.ConnectingToServer, 25);
-
-			var resetEvent = new ManualResetEventSlim(false);
-
-			Client.Start(resetEvent);
+			
 			progressReport(LoadingState.ConnectingToServer, 50, "Establishing a connection...");
 
-			//	Client.HaveServer = true;
-
-			//Client.SendOpenConnectionRequest1();
-			if (!resetEvent.Wait(TimeSpan.FromSeconds(5)))
+			if (!Client.Start(TimeSpan.FromSeconds(30)))
 			{
-				//Client.ShowDisconnect("Could not connect to server!");
 				Log.Warn($"Failed to connect to server, resetevent not triggered.");
 				
 				return LoadResult.Timeout;
 			}
+
+			//	Client.HaveServer = true;
 
 			progressReport(LoadingState.ConnectingToServer, 98, "Waiting on server confirmation...");
 

@@ -494,9 +494,9 @@ namespace Alex.Networking.Java.Util
 			Write(HostToNetworkOrderLong(data));
 		}
 
-        public void WriteUuid(Guid uuid)
+        public void WriteUuid(MiNET.Utils.UUID uuid)
 		{
-			var guid = uuid.ToByteArray();
+			var guid = uuid.GetBytes();
 			var long1 = new byte[8];
 			var long2 = new byte[8];
 			Array.Copy(guid, 0, long1, 0, 8);
@@ -505,12 +505,12 @@ namespace Alex.Networking.Java.Util
 			Write(long2);
 		}
 
-		public Guid ReadUuid()
+		public MiNET.Utils.UUID ReadUuid()
 		{
 			var long1 = Read(8);
 			var long2 = Read(8);
 
-			return new Guid(long1.Concat(long2).ToArray());
+			return new MiNET.Utils.UUID(long1.Concat(long2).ToArray());
 		}
 
 

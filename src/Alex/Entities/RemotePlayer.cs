@@ -52,7 +52,7 @@ namespace Alex.Entities
 		private PooledTexture2D _texture;
 		public RemotePlayer(string name, World level, NetworkProvider network, PooledTexture2D skinTexture, string geometry = "geometry.humanoid.customSlim") : base(63, level, network)
 		{
-			_texture = skinTexture;
+			_texture = skinTexture ?? _alex;
 			
 			SkinFlags = new PlayerSkinFlags()
 			{

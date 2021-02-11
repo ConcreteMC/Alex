@@ -185,10 +185,10 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		private bool     Starting    { get; set; } = false;
 		private DateTime StartTime   { get; set; }
 		private Timer    ThroughPut { get; set; }
-		public void Start(ManualResetEventSlim resetEvent)
+		public bool Start(TimeSpan timeout)
 		{
 			if (Starting)
-				return;
+				return false;
 
 			Starting = true;
 
@@ -198,9 +198,9 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			//player.Inventory.CursorChanged += InventoryOnCursorChanged;
 		//	player.Inventory.SlotChanged += InventoryOnSlotChanged;
 
-			ConnectionAcceptedWaitHandle = resetEvent;
+			//ConnectionAcceptedWaitHandle = resetEvent;
 			
-			ThreadPool.QueueUserWorkItem(o =>
+			//return Task.Run((Func<bool>)(() =>
 			{
 				if (!Connection.AutoConnect)
 				{
@@ -213,19 +213,20 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 							ServerEndpoint = serverInfo.serverEndPoint,
 							Latency = serverInfo.ping
 						});
-						resetEvent.Set();
+						//resetEvent.Set();
+
+						return true;
 					}
 				}
 				else
 				{
-					ThroughPut = new Timer(
+					Connection.Start();
+					
+					if (Connection.TryConnect(ServerEndpoint))
+					{
+						ThroughPut = new Timer(
 						state =>
 						{
-							//if (CustomConnectedPong.CanPing)
-							//{
-							//	World.Player.Latency = (int) CustomConnectedPong.Latency;
-							//}
-
 							long   packetSizeOut = Interlocked.Exchange(ref Connection.ConnectionInfo.BytesOut, 0L);
 							long   packetSizeIn = Interlocked.Exchange(ref Connection.ConnectionInfo.BytesIn, 0L);
 							
@@ -278,15 +279,13 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 								NakSent = nakSent
 							};
 						}, null, 1000, 1000);
-					
-					Connection.Start();
-					
-					if (Connection.TryConnect(ServerEndpoint))
-					{
-						resetEvent.Set();
+						//resetEvent.Set();
+						return true;
 					}
 				}
-			});
+
+				return false;
+			}//));
 		}
 
 		private System.Timers.Timer _timer;

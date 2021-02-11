@@ -60,7 +60,9 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	        Instance = this;
         }
 
-	    private ConcurrentQueue<ChunkCoordinates> _actionQueue = new ConcurrentQueue<ChunkCoordinates>();
+	    private ConcurrentQueue<KeyValuePair<ulong, byte[]>> _blobQueue =
+		    new ConcurrentQueue<KeyValuePair<ulong, byte[]>>();
+	    private ConcurrentQueue<ChunkCoordinates>            _actionQueue = new ConcurrentQueue<ChunkCoordinates>();
 
 	    private ConcurrentDictionary<ChunkCoordinates, Action> _actions =
 		    new ConcurrentDictionary<ChunkCoordinates, Action>();
@@ -96,6 +98,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	        
 	        CheckThreads();
         }
+        
+        //public void AddAction(ChunkCoordinates co)
 
         private Thread           _workerThread = null;
         private object           _syncObj      = new object();
@@ -120,14 +124,76 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 						        while (true)
 						        {
+							        bool handled = false;
 							        if (_actionQueue.TryDequeue(out var chunkCoordinates))
 							        {
 								        if (_actions.TryRemove(chunkCoordinates, out var chunk))
 								        {
 									        chunk?.Invoke();
 								        }
+
+								        handled = true;
 							        }
-							        else
+							        
+							        if (_blobQueue.TryDequeue(out var kv))
+							        {
+								        ulong  hash = kv.Key;
+								        byte[] data = kv.Value;
+
+								        if (!Cache.Contains(hash))
+											Cache.TryStore(hash, data);
+								        // _blobs.TryAdd(hash, data);
+
+								        var chunks = _futureChunks.Where(c => c.SubChunks.Contains(hash) || c.Biome == hash);
+								        foreach (CachedChunk chunk in chunks)
+								        {
+									        //CachedChunk chunk = kvp.Key;
+
+									        if (chunk.Biome == hash)
+									        {
+										        if (data.Length >= 256)
+										        {
+											        for (int x = 0; x < 16; x++)
+											        {
+												        for (int z = 0; z < 16; z++)
+												        {
+													        var biomeId = data[(z << 4) + (x)];
+
+													        for (int y = 0; y < 255; y++)
+													        {
+														        chunk.Chunk.SetBiome(x, y, z, biomeId);
+													        }
+												        }
+											        }
+
+											        //  chunk.Chunk.biomeId = data;
+											        chunk.Biome = 0;
+										        }
+									        }
+									        else
+									        {
+										        for (int i = 0; i < chunk.SubChunks.Length; i++)
+										        {
+											        ulong subChunkHash = chunk.SubChunks[i];
+											        if (subChunkHash == hash)
+											        {
+												        // parse data
+												        chunk.Sections[i] = data;
+												        // chunk.Chunk.Sections[i] = HandleChunk(1, data, chunk.X, chunk.Z).Sections[0];//ClientUtils.DecodeChunkColumn(1, data, BlockPalette, _internalStates).Sections[0];
+												        //chunk.SubChunks[i] = 0;
+												        chunk.SubChunkCount--;
+											        }
+										        }
+									        }
+			        
+									        //TRYBUILD
+									        chunk.TryBuild(this);
+								        }
+
+								        handled = true;
+							        }
+							        
+							        if (!handled)
 							        {
 								        _resetEvent.Reset();
 								        
@@ -204,66 +270,88 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	        return null;
         }
 
-        private class BlobData
+        public class CachedChunk
         {
-	        private ulong[]              Hashes        { get; set; }
-	        private uint                SubChunkCount { get; set; }
-	        private int                 X             { get; set; }
-	        private int                 Z             { get; set; }
-	        private byte[]              Data          { get; set; }
-	        private Action<ChunkColumn> Callback      { get; set; }
-	        
-	        private BlobCache   BlobCache { get; }
-	        private List<ulong> _missingHashes = new List<ulong>();
-	        private List<ulong> _availableHashes = new List<ulong>();
-	        public BlobData(BlobCache blobCache, ulong[] blobHashes, uint subChunkCount, int x, int z, byte[] data, Action<ChunkColumn> callback)
+	        public int      X         { get; set; }
+	        public int      Z         { get; set; }
+	        public ulong[]  SubChunks { get; set; } = new ulong[16];
+	        public byte[][] Sections  { get; set; } = new byte[16][];
+	        public ulong    Biome     { get; set; }
+
+	        public ChunkColumn         Chunk    { get; set; } = new ChunkColumn(0,0);
+	        public Action<ChunkColumn> Callback { get; set; }
+	        public uint               SubChunkCount = 0;
+
+	        public bool TryBuild(ChunkProcessor processor)
 	        {
-		        BlobCache = blobCache;
-		        Hashes = blobHashes;
-		        SubChunkCount = subChunkCount;
-		        X = x;
-		        Z = z;
-		        Data = data;
-		        Callback = callback;
-		        
-		        foreach (var blob in blobHashes)
+		        if (SubChunkCount <= 0 && processor.Cache.TryGet(Biome, out var biomeIds))
 		        {
-			        if (BlobCache.Contains(blob))
-			        {
-				        _availableHashes.Add(blob);
+			        if (biomeIds.Length >= 256){
+				        for (int x = 0; x < 16; x++)
+				        {
+					        for (int z = 0; z < 16; z++)
+					        {
+						        var biomeId = biomeIds[(z << 4) + (x)];
+
+						        for (int y = 0; y < 255; y++)
+						        {
+							        Chunk.SetBiome(x, y, z, biomeId);
+						        }
+					        }
+				        }
 			        }
-			        else
+
+			        processor._futureChunks.Remove(this);
+			        
+			        var coordinates = new ChunkCoordinates(Chunk.X, Chunk.Z);
+
+			        foreach (KeyValuePair<BlockCoordinates, NbtCompound> bePair in processor._futureBlockEntities.Where(
+				        be => (ChunkCoordinates) be.Key == coordinates))
 			        {
-				        _missingHashes.Add(blob);
+				        Chunk.BlockEntities.TryAdd(bePair.Key, bePair.Value);
+				        processor._futureBlockEntities.TryRemove(bePair.Key, out _);
 			        }
-		        }
-	        }
 
-	        public bool IsComplete => _missingHashes.Count == 0;
-
-	        public ulong[] Missing   => _missingHashes.ToArray();
-	        public ulong[] Available => _availableHashes.ToArray();
-	        
-	        public bool TryBuild()
-	        {
-		        if (!IsComplete)
-			        return false;
-
-		        foreach (var blob in Hashes)
-		        {
-			        if (BlobCache.TryGet(blob, out var blobData))
+			        for (int i = 0; i < 16; i++)
 			        {
+				        var sectionData = Sections[i];
+
+				        if (sectionData == null)
+				        {
+					        processor.Cache.TryGet(SubChunks[i], out sectionData);
+				        }
 				        
+				        if (sectionData != null && sectionData.Length > 0)
+				        {
+					        Chunk.Sections[i] = processor.HandleChunk(1, sectionData, coordinates.X, coordinates.Z).Sections[0];
+				        }
 			        }
+
+			        Chunk.CalculateHeight();
+			        Callback?.Invoke(Chunk);
+			        //Client.Chunks[coordinates] = chunk.Chunk;
+
+			        return true;
 		        }
 
-		        return true;
+		        return false;
 	        }
         }
 
-        private ConcurrentDictionary<ChunkCoordinates, BlobData> _blobs =
-	        new ConcurrentDictionary<ChunkCoordinates, BlobData>();
-
+        public ThreadSafeList<CachedChunk>                 _futureChunks        = new ThreadSafeList<CachedChunk>();
+        public ConcurrentDictionary<BlockCoordinates, NbtCompound> _futureBlockEntities = new ConcurrentDictionary<BlockCoordinates, NbtCompound>();
+        public void HandleClientCacheMissResponse(McpeClientCacheMissResponse message)
+        {
+	        foreach (KeyValuePair<ulong, byte[]> kv in message.blobs)
+	        {
+		        _blobQueue.Enqueue(kv);
+	        }
+	        
+	        _resetEvent.Set();
+	        
+	        CheckThreads();
+        }
+        
         private void HandleChunkCachePacket(ulong[] blobs,
 	        uint subChunkCount,
 	        byte[] chunkData,
@@ -271,33 +359,68 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	        int cz,
 	        Action<ChunkColumn> callback)
         {
-	        var blobData = _blobs.GetOrAdd(
-		        new ChunkCoordinates(cx, cz), (c) =>
+	        var chunk = new CachedChunk
+	        {
+		        X = cx,
+		        Z = cz,
+		        Callback = callback
+	        };
+	        chunk.Chunk.X = chunk.X;
+	        chunk.Chunk.Z = chunk.Z;
+	        chunk.SubChunkCount = subChunkCount;
+
+	        var hits   = new List<ulong>();
+	        var misses = new List<ulong>();
+
+	        ulong biomeHash = blobs.Last();
+	        chunk.Biome = biomeHash;
+	        if (Cache.Contains(biomeHash))
+	        { 
+		        hits.Add(biomeHash);
+	        }
+	        else
+	        {
+		        misses.Add(biomeHash);
+	        }
+
+	        for (int i = 0; i < subChunkCount; i++)
+	        {
+		        ulong hash = blobs[i];
+		        chunk.SubChunks[i] = hash;
+		        
+		        if (Cache.Contains(hash))
 		        {
-			        return new BlobData(Cache, blobs, subChunkCount, cx, cz, chunkData, callback);
-		        });
+			        hits.Add(hash);
+			        chunk.SubChunkCount--;
+		        }
+		        else
+		        {
+			        misses.Add(hash);
+		        }
+	        }
+	        
+	        if (misses.Count > 0)
+		        _futureChunks.TryAdd(chunk);
+	        
+	        var status = McpeClientCacheBlobStatus.CreateObject();
+	        status.hashHits = hits.ToArray();
+	        status.hashMisses = misses.ToArray();
+	        Client.SendPacket(status);
 
-	        Client.SendPacket(
-		        new McpeClientCacheBlobStatus() {hashHits = blobData.Available, hashMisses = blobData.Missing});
+	        using (MemoryStream ms = new MemoryStream(chunkData))
+	        {
+		        ReadExtra(chunk.Chunk, ms);
+	        }
+
+	        if (chunk.SubChunkCount <= 0)
+	        {
+		        chunk.TryBuild(this);
+	        }
         }
-
-        private void HandleChunk(bool cacheEnabled, ulong[] blobs, uint subChunkCount, byte[] chunkData, int cx, int cz, Action<ChunkColumn> callback)
+        
+        private ChunkColumn HandleChunk(uint subChunkCount, byte[] chunkData, int cx, int cz)
         {
-	        if (cacheEnabled)
-	        {
-		        Log.Warn($"Unsupported cache enabled!");
-				HandleChunkCachePacket(blobs, subChunkCount, chunkData, cx, cz, callback);
-
-				return;
-	        }
-	        
-	        if (subChunkCount < 1)
-	        {
-		        Log.Warn("Nothing to read");
-		        return;
-	        }
-	        
-	        ChunkColumn chunkColumn = new ChunkColumn(cx, cz);
+	         ChunkColumn chunkColumn = new ChunkColumn(cx, cz);
 	      //  chunkColumn.IsDirty = true;
 	       // chunkColumn.X = cx;
 	      //  chunkColumn.Z = cz;
@@ -455,16 +578,17 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			        }
 
 
-			        /* byte[] ba = new byte[512];
-			         if (defStream.Read(ba, 0, 256 * 2) != 256 * 2) Log.Error($"Out of data height");
- 
-			         Buffer.BlockCopy(ba, 0, chunkColumn.Height, 0, 512);*/
+			         byte[] biomeIds = new byte[256];
 
-			        int[] biomeIds = new int[256];
-			        for (int i = 0; i < biomeIds.Length; i++)
-			        {
-				        biomeIds[i] = defStream.ReadByte();
-			        }
+			         if (defStream.Read(biomeIds, 0, 256) != 256) return chunkColumn;
+ 
+			       //  Buffer.BlockCopy(ba, 0, chunkColumn.Height, 0, 512);*/
+
+			      //  int[] biomeIds = new int[256];
+			       // for (int i = 0; i < biomeIds.Length; i++)
+			       // {
+				   //     biomeIds[i] = defStream.ReadByte();
+			       // }
 
 			        for (int x = 0; x < 16; x++)
 			        {
@@ -485,61 +609,85 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			        if (stream.Position >= stream.Length - 1)
 			        {
 				        chunkColumn.CalculateHeight();
-				        callback?.Invoke(chunkColumn);
-				        return;
+				       // callback?.Invoke(chunkColumn);
+				       return chunkColumn;
 			        }
 
-			        int borderBlock = VarInt.ReadSInt32(stream);// defStream.ReadByte();// defStream.ReadVarInt(); //VarInt.ReadSInt32(stream);
-			        if (borderBlock != 0)
-			        {
-				        int len   = (int) (stream.Length - stream.Position);
-				        var bytes = new byte[len];
-				        stream.Read(bytes, 0, len);
-			        }
-
-			        if (stream.Position < stream.Length - 1)
-			        {
-				        while (stream.Position < stream.Length)
-				        {
-					        NbtFile file = new NbtFile() {BigEndian = false, UseVarInt = true};
-
-					        file.LoadFromStream(stream, NbtCompression.None);
-					        var blockEntityTag = file.RootTag;
-
-					        int x = blockEntityTag["x"].IntValue;
-					        int y = blockEntityTag["y"].IntValue;
-					        int z = blockEntityTag["z"].IntValue;
-
-					        chunkColumn.AddBlockEntity(new BlockCoordinates(x, y, z), (NbtCompound) file.RootTag);
-
-					        // if (Log.IsTraceEnabled()) Log.Trace($"Blockentity:\n{file.RootTag}");
-				        }
-			        }
-
-			        if (stream.Position < stream.Length - 1)
-			        {
-				        int len   = (int) (stream.Length - stream.Position);
-				        var bytes = new byte[len];
-				        stream.Read(bytes, 0, len);
-				        Log.Warn($"Still have data to read\n{Packet.HexDump(new ReadOnlyMemory<byte>(bytes))}");
-			        }
+			        ReadExtra(chunkColumn, stream);
 
 			        chunkColumn.CalculateHeight();
 			        
 			        //Done processing this chunk, send to world
-			        callback?.Invoke(chunkColumn);
+			        //callback?.Invoke(chunkColumn);
+			        return chunkColumn;
 		        }
 
 	        }
 	        catch (Exception ex)
 	        {
 		        Log.Error($"Exception in chunk loading: {ex.ToString()}");
-		        callback?.Invoke(chunkColumn);
+
+		        return chunkColumn;
 	        }
 	        finally
 	        {
 
 	        }
+        }
+
+        private void ReadExtra(ChunkColumn chunkColumn, MemoryStream stream)
+        {
+	        int borderBlock = VarInt.ReadSInt32(stream);// defStream.ReadByte();// defStream.ReadVarInt(); //VarInt.ReadSInt32(stream);
+	        if (borderBlock != 0)
+	        {
+		        int len   = (int) (stream.Length - stream.Position);
+		        var bytes = new byte[len];
+		        stream.Read(bytes, 0, len);
+	        }
+
+	        if (stream.Position < stream.Length - 1)
+	        {
+		        while (stream.Position < stream.Length - 1)
+		        {
+			        NbtFile file = new NbtFile() {BigEndian = false, UseVarInt = true};
+
+			        file.LoadFromStream(stream, NbtCompression.None);
+			        var blockEntityTag = file.RootTag;
+
+			        int x = blockEntityTag["x"].IntValue;
+			        int y = blockEntityTag["y"].IntValue;
+			        int z = blockEntityTag["z"].IntValue;
+
+			        chunkColumn.AddBlockEntity(new BlockCoordinates(x, y, z), (NbtCompound) file.RootTag);
+
+			        // if (Log.IsTraceEnabled()) Log.Trace($"Blockentity:\n{file.RootTag}");
+		        }
+	        }
+
+	        if (stream.Position < stream.Length - 1)
+	        {
+		        int len   = (int) (stream.Length - stream.Position);
+		        var bytes = new byte[len];
+		        stream.Read(bytes, 0, len);
+		        Log.Warn($"Still have data to read\n{Packet.HexDump(new ReadOnlyMemory<byte>(bytes))}");
+	        }
+        }
+        
+        private void HandleChunk(bool cacheEnabled, ulong[] blobs, uint subChunkCount, byte[] chunkData, int cx, int cz, Action<ChunkColumn> callback)
+        {
+	        if (cacheEnabled)
+	        {
+		        HandleChunkCachePacket(blobs, subChunkCount, chunkData, cx, cz, callback);
+		        return;
+	        }
+	        
+	        if (subChunkCount < 1)
+	        {
+		        Log.Warn("Nothing to read");
+		        return;
+	        }
+	        
+			callback?.Invoke(HandleChunk(subChunkCount, chunkData, cx, cz));
         }
         
         private static List<IBlockState> ReadBlockState(NbtCompound tag)

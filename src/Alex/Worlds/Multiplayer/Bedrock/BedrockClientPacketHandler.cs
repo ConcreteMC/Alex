@@ -173,7 +173,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				Log.Info($"Received Play Status packet: Login success");
 				
 				McpeClientCacheStatus status = McpeClientCacheStatus.CreateObject();
-				status.enabled = false;
+				status.enabled = true;
 				Client.SendPacket(status);
 			}
 			else
@@ -334,7 +334,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				Client.World.SetGameRule(gr);
 			}
 
-			_entityMapping.TryAdd(message.entityIdSelf, message.runtimeEntityId);
+		//	_entityMapping.TryAdd(message.entityIdSelf, message.runtimeEntityId);
 		}
 
 		public void HandleMcpeMovePlayer(McpeMovePlayer message)
@@ -364,44 +364,25 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			Client.World.Player.HasCollision = (message.flags & 0x80) != 0x80;
 		}
 
-		private ConcurrentDictionary<MiNET.Utils.UUID, RemotePlayer> _players = new ConcurrentDictionary<MiNET.Utils.UUID, RemotePlayer>();
 		public void HandleMcpeAddPlayer(McpeAddPlayer message)
 		{
-			if (_players.TryGetValue(message.uuid, out RemotePlayer mob))
+			if (!Client.World.EntityManager.TryGet(message.uuid, out var entity))
 			{
-			//	Client.World?.AddPlayerListItem(new PlayerListItem(message.uuid, message.username, 0, 0, false));
-			//	mob = new RemotePlayer():
-			
+				RemotePlayer player = new RemotePlayer(message.username, Client.World, Client, null);
+				player.EntityId = message.runtimeEntityId;
+				player.UUID = message.uuid;
 
-			mob.EntityId = message.runtimeEntityId;
+				entity = player;
+				//	Client.World?.AddPlayerListItem(new PlayerListItem(message.uuid, message.username, 0, 0, false));
+				//	mob = new RemotePlayer():
 
-				mob.KnownPosition = new PlayerLocation(
-					message.x, message.y, message.z, -message.headYaw, -message.yaw, -message.pitch)
-				{
-					OnGround = true
-				};
 
-				mob.Velocity = new Microsoft.Xna.Framework.Vector3(message.speedX, message.speedY, message.speedZ);
+				//mob.EntityId = message.runtimeEntityId;
 
-				if (message.item != null)
-				{
-					mob.Inventory.MainHand = message.item.ToAlexItem();
-				}
 
-				if (message.metadata != null)
-				{
-					mob.HandleMetadata(message.metadata);
-				}
-				
-				//mob.HandleMetadata();
-					//	message.flags
-
-			//	mob.IsSpawned = true;
-
-				_entityMapping.TryAdd(message.entityIdSelf, message.runtimeEntityId);
-				Client.World.SpawnEntity(mob.EntityId, mob);
 			}
-			else
+
+			if (entity == null)
 			{
 				var identifier = "";
 
@@ -409,10 +390,35 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				{
 					identifier = message.username.Replace("\n", "");
 				}
-				
+
 				Log.Warn(
-					$"({message.ReliabilityHeader.ReliableMessageNumber} | {message.ReliabilityHeader.OrderingIndex} | {message.ReliabilityHeader.SequencingIndex}) Tried spawning invalid player: {identifier} (UUID: {message.uuid}))");
+					$"({message.ReliabilityHeader.ReliableMessageNumber} | {message.ReliabilityHeader.OrderingIndex} | {message.ReliabilityHeader.SequencingIndex}) Tried spawning invalid player: {identifier} (UUID: {message.uuid} EntityID: {message.runtimeEntityId}))");
+				
+				return;
 			}
+
+			entity.KnownPosition = new PlayerLocation(
+				message.x, message.y, message.z, -message.headYaw, -message.yaw, -message.pitch) {OnGround = true};
+
+			entity.Velocity = new Microsoft.Xna.Framework.Vector3(message.speedX, message.speedY, message.speedZ);
+
+			if (message.item != null)
+			{
+				entity.Inventory.MainHand = message.item.ToAlexItem();
+			}
+
+			if (message.metadata != null)
+			{
+				entity.HandleMetadata(message.metadata);
+			}
+
+			//mob.HandleMetadata();
+			//	message.flags
+
+			//	mob.IsSpawned = true;
+
+			//	_entityMapping.TryAdd(message.entityIdSelf, message.runtimeEntityId);
+			Client.World.SpawnEntity(entity);
 		}
 
 		public void HandleMcpePlayerList(McpePlayerList message)
@@ -421,22 +427,29 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			{
 				foreach (var r in addRecords)
 				{
-					if (_players.ContainsKey(r.ClientUuid))
+					Client.World.AddPlayerListItem(new PlayerListItem(r.ClientUuid, r.DisplayName, (GameMode)((int)r.GameMode), 0, false));
+
+					bool         isNewEntity = true;
+					RemotePlayer m           = null;
+					if (Client.World.EntityManager.TryGet(r.ClientUuid, out var entity) && entity is RemotePlayer rp)
 					{
-						continue;
+						m = rp;
+						isNewEntity = false;
+						//Client.World.EntityManager.UpdateEntityId(entity, r.EntityId);
 					}
-
-					Client.World?.AddPlayerListItem(new PlayerListItem(r.ClientUuid, r.DisplayName, (GameMode)((int)r.GameMode), 0, false));
-
-					RemotePlayer m = new RemotePlayer(r.DisplayName, Client.World, Client, null);
-					m.UUID = r.ClientUuid;
-					m.EntityId = r.EntityId;
-					m.SetInventory(new BedrockInventory(46));
-					m.Skin = r.Skin;
-					
-					if (!_players.TryAdd(r.ClientUuid, m))
+					else
 					{
-						Log.Warn($"Duplicate player record! {r.ClientUuid}");
+						m = new RemotePlayer(r.DisplayName, Client.World, Client, null);
+						m.EntityId = r.EntityId;
+					}
+					
+					m.UUID = r.ClientUuid;
+					m.Skin = r.Skin;
+
+					if (isNewEntity)
+					{
+						m.SetInventory(new BedrockInventory(46));
+						Client.World.EntityManager.AddEntity(m);
 					}
 				}
 			}
@@ -444,16 +457,12 @@ namespace Alex.Worlds.Multiplayer.Bedrock
             {
 	            foreach (var r in removeRecords)
 	            {
-		            //if (_players.TryRemove(r.ClientUuid, out var player))
-		            {
-			            Client.World?.RemovePlayerListItem(r.ClientUuid);
-		            }
+		            Client.World.RemovePlayerListItem(r.ClientUuid);
 	            }
             }
 		}
 
 		public bool SpawnMob(long entityId,
-			Guid uuid,
 			EntityType type,
 			PlayerLocation position,
 			Microsoft.Xna.Framework.Vector3 velocity, EntityAttributes attributes, MetadataDictionary metadata)
@@ -496,17 +505,18 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				entity.ModelRenderer = renderer;
 			}
 
+			var uuid = MiNETExtensions.FromEntityId(entityId);
 			entity.KnownPosition = position;
 			entity.Velocity = velocity;
 			entity.EntityId = entityId;
-			entity.UUID = new MiNET.Utils.UUID(uuid.ToByteArray());
+			entity.UUID = uuid;
 			entity.SetInventory(new BedrockInventory(46));
 			
 			if (metadata != null)
 				entity.HandleMetadata(metadata);
 			//entity.ad
 			
-			Client.World.SpawnEntity(entityId, entity);
+			Client.World.SpawnEntity(entity);
 
 			return true;
 		}
@@ -517,11 +527,11 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			var type = message.entityType.Replace("minecraft:", "").Replace("_", "");
 			if (Enum.TryParse(typeof(EntityType), type, true, out object res))
 			{
-				SpawnMob(message.runtimeEntityId, Guid.NewGuid(), (EntityType) res,
+				SpawnMob(message.runtimeEntityId, (EntityType) res,
 					new PlayerLocation(message.x, message.y, message.z, -message.headYaw, -message.yaw, -message.pitch),
 					new Microsoft.Xna.Framework.Vector3(message.speedX, message.speedY, message.speedZ),
 					message.attributes, message.metadata);
-				_entityMapping.TryAdd(message.entityIdSelf, message.runtimeEntityId);
+			//	_entityMapping.TryAdd(message.entityIdSelf, message.runtimeEntityId);
 			}
 			else
             {
@@ -529,17 +539,12 @@ namespace Alex.Worlds.Multiplayer.Bedrock
             }
         }
 
-		private ConcurrentDictionary<long, long> _entityMapping = new ConcurrentDictionary<long, long>();
+		//private ConcurrentDictionary<long, long> _entityMapping = new ConcurrentDictionary<long, long>();
 		public void HandleMcpeRemoveEntity(McpeRemoveEntity message)
 		{
-			if (_entityMapping.TryRemove(message.entityIdSelf, out var entityId))
+			//if (_entityMapping.TryRemove(message.entityIdSelf, out var entityId))
 			{
-				if (Client.World.TryGetEntity(entityId, out var entity))
-				{
-					if (entity is RemotePlayer player)
-						_players.TryRemove(player.UUID, out _);
-				}
-				Client.World.DespawnEntity(entityId);
+				Client.World.DespawnEntity(message.entityIdSelf);
 			}
 		}
 
@@ -561,9 +566,9 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 			itemEntity.SetItem(itemClone);
 
-			if (Client.World.SpawnEntity(message.runtimeEntityId, itemEntity))
+			if (Client.World.SpawnEntity(itemEntity))
 			{
-				_entityMapping.TryAdd(message.entityIdSelf, message.runtimeEntityId);
+			//	_entityMapping.TryAdd(message.entityIdSelf, message.runtimeEntityId);
 			}
 			else
 			{
@@ -906,7 +911,9 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		public void HandleMcpeClientCacheMissResponse(McpeClientCacheMissResponse message)
 		{
-			UnhandledPackage(message);
+			//UnhandledPackage(message);
+			
+			ChunkProcessor.HandleClientCacheMissResponse(message);
 		}
 
 		public void HandleMcpeLevelEvent(McpeLevelEvent message)
@@ -964,7 +971,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 			if (entity == null)
 			{
-				Log.Warn($"Could not find entity targeted in McpeMobEffect.");
+				//Log.Warn($"Could not find entity targeted in McpeMobEffect.");
 				return;
 			}
 
@@ -1859,12 +1866,9 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		public void HandleMcpePlayerSkin(McpePlayerSkin message)
 		{
-			//UnhandledPackage(message);
-
-			if (_players.TryGetValue(message.uuid, out var player))
+			if (Client.World.EntityManager.TryGet(message.uuid, out var entity) && entity is RemotePlayer player)
 			{
 				player.Skin = message.skin;
-				//ThreadPool.QueueUserWorkItem((o) => { player.LoadSkin(message.skin); });
 			}
 		}
 
@@ -2007,23 +2011,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		
 		public void HandleMcpeNetworkStackLatency(McpeNetworkStackLatency message)
 		{
-			var unixTime = (ulong) DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-			if (message.timestamp == Client.ExpectedLatency)
-			{
-				//CustomConnectedPong.CanPing = false;
-				//CustomConnectedPong.Latency = Client.World.Player.Latency = (int) Client.Latency;
-				/*if (!CustomConnectedPong.CanPing)
-				{
-					
-				}*/
-			} 
-			else
-			{
-				//CustomConnectedPong.Latency = Client.World.Player.Latency = (int) (unixTime - Client.LastSentPing);
-				//Client.ExpectedLatency = message.timestamp;
-			}
-
-			//Log.Info($"Stack latency: {message.timestamp} | {message.unknownFlag}");
 			if (message.unknownFlag == 1)
 			{
 				var response = McpeNetworkStackLatency.CreateObject();
@@ -2031,10 +2018,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				response.unknownFlag = 0;
 				
 				Client.SendPacket(response);
-			}
-			else
-			{
-				
 			}
 		}
 

@@ -70,7 +70,7 @@ namespace Alex.Entities
 
 		public World Level { get; set; }
 		
-		public long EntityId  { get; set; }
+		public long EntityId  { get; internal set; }
 		public bool IsSpawned { get; set; } = false;
 
 		private        PlayerLocation _knownPosition = new PlayerLocation();
@@ -157,7 +157,7 @@ namespace Alex.Entities
 		
 		public float TerminalVelocity { get; set; } = 78.4f;
 		
-		public MiNET.Utils.UUID UUID { get; set; } = new MiNET.Utils.UUID(Guid.Empty.ToByteArray());
+		public MiNET.Utils.UUID UUID { get; set; }
 
 		public bool CanFly { get; set; } = false;
 		public bool IsFlying { get; set; } = false;

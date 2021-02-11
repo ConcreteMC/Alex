@@ -1,5 +1,6 @@
 ﻿using System;
 using Alex.Networking.Java.Util;
+using MiNET.Utils;
 
 namespace Alex.Networking.Java.Packets.Play
 {
@@ -17,7 +18,7 @@ namespace Alex.Networking.Java.Packets.Play
 
 		public string Message;
 		public byte Position = Chat;
-		public Guid UUID = Guid.Empty;
+		public MiNET.Utils.UUID UUID = new UUID(Guid.NewGuid().ToByteArray());
 
 		public override void Decode(MinecraftStream stream)
 		{

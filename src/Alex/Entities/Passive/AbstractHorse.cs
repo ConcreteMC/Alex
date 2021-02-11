@@ -16,7 +16,7 @@ namespace Alex.Entities.Passive
 			"SaddleMouthLineR",
 			"HeadSaddle"
 		};
-		public UUID Owner { get; set; }
+		public MiNET.Utils.UUID Owner { get; set; }
 		
 		public bool HasBred { get; set; }
 		public bool IsEating { get; set; }

@@ -448,7 +448,7 @@ namespace Alex.Worlds.Multiplayer.Java
 		}
 		
 
-		public Entity SpawnMob(int entityId, Guid uuid, EntityType type, PlayerLocation position, Vector3 velocity)
+		public Entity SpawnMob(int entityId, MiNET.Utils.UUID uuid, EntityType type, PlayerLocation position, Vector3 velocity)
 		{
 			if ((int) type == 37) //Item
 			{
@@ -459,7 +459,7 @@ namespace Alex.Worlds.Multiplayer.Java
 				
 				//itemEntity.SetItem(itemClone);
 
-				if (World.SpawnEntity(entityId, itemEntity))
+				if (World.SpawnEntity(itemEntity))
 				{
 					return itemEntity;
 				}
@@ -479,7 +479,7 @@ namespace Alex.Worlds.Multiplayer.Java
 				
 				//itemEntity.SetItem(itemClone);
 
-				if (World.SpawnEntity(entityId, itemEntity))
+				if (World.SpawnEntity(itemEntity))
 				{
 					return itemEntity;
 				}
@@ -589,7 +589,7 @@ namespace Alex.Worlds.Multiplayer.Java
 			entity.KnownPosition = position;
 			entity.Velocity = velocity;
 			entity.EntityId = entityId;
-			entity.UUID = new MiNET.Utils.UUID(uuid.ToByteArray());
+			entity.UUID = uuid;
 
 		//	if (!_initiated)
 		//	{
@@ -597,7 +597,7 @@ namespace Alex.Worlds.Multiplayer.Java
 		//	}
 		//	else
 			{
-				World.SpawnEntity(entityId, entity);
+				World.SpawnEntity(entity);
 			}
 
 			return entity;
@@ -1538,13 +1538,13 @@ namespace Alex.Worlds.Multiplayer.Java
 
 		private void HandleSpawnPlayerPacket(SpawnPlayerPacket packet)
 		{
-			if (_players.TryGetValue(new MiNET.Utils.UUID(packet.Uuid.ToByteArray()), out RemotePlayer mob))
+			if (_players.TryGetValue(packet.Uuid, out RemotePlayer mob))
 			{
 				float yaw = MathUtils.AngleToNotchianDegree(packet.Yaw);
 				mob.KnownPosition = new PlayerLocation(packet.X, packet.Y, packet.Z, yaw, yaw, -MathUtils.AngleToNotchianDegree(packet.Pitch));
 				mob.EntityId = packet.EntityId;
-
-				World.SpawnEntity(packet.EntityId, mob);
+					//mob.UUID = packet.Uuid;
+				World.SpawnEntity(mob);
 			}
 		}
 
@@ -1556,7 +1556,7 @@ namespace Alex.Worlds.Multiplayer.Java
 			{
 				foreach (var entry in packet.AddPlayerEntries)
 				{
-					var uuid = new MiNET.Utils.UUID(entry.UUID.ToByteArray());
+					var uuid = entry.UUID;
 					if (_players.ContainsKey(uuid))
 						continue;
 					
@@ -1613,7 +1613,7 @@ namespace Alex.Worlds.Multiplayer.Java
 			{
 				foreach (var entry in packet.UpdateLatencyEntries)
 				{
-					var uuid = new MiNET.Utils.UUID(entry.UUID.ToByteArray());
+					var uuid = entry.UUID;
 					
 					World?.UpdatePlayerLatency(uuid, entry.Ping);
 				}
@@ -1622,7 +1622,7 @@ namespace Alex.Worlds.Multiplayer.Java
 			{
 				foreach (var entry in packet.UpdateDisplayNameEntries)
 				{
-					var uuid = new MiNET.Utils.UUID(entry.UUID.ToByteArray());
+					var uuid = entry.UUID;
 
 					if (_players.TryGetValue(uuid, out RemotePlayer entity))
 					{
@@ -1651,7 +1651,7 @@ namespace Alex.Worlds.Multiplayer.Java
 			{
 				foreach (var remove in packet.RemovePlayerEntries)
 				{
-					var uuid = new MiNET.Utils.UUID(remove.UUID.ToByteArray());
+					var uuid = remove.UUID;
 					World?.RemovePlayerListItem(uuid);
 				}
 			}

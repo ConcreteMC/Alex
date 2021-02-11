@@ -101,7 +101,7 @@ namespace Alex.Networking.Java.Packets.Play
 					    case MetadataType.OptUUID:
 					    {
 						    var hasUUID = stream.ReadBool();
-						    meta = new MetadataOptUUID(index, hasUUID, hasUUID ? new UUID(stream.ReadUuid().ToByteArray()) : null);// stream.ReadUuid();
+						    meta = new MetadataOptUUID(index, hasUUID, hasUUID ? stream.ReadUuid() : null);// stream.ReadUuid();
 					    }
 						    break;
 
@@ -295,10 +295,10 @@ namespace Alex.Networking.Java.Packets.Play
     public class MetadataOptUUID : MetaDataEntry
     {
 	    public bool HasValue { get; set; }
-	    public UUID Value { get; set; }
+	    public MiNET.Utils.UUID Value { get; set; }
 	    
 	    /// <inheritdoc />
-	    public MetadataOptUUID(byte index, bool hasValue, UUID uuid) : base(index, MetadataType.OptUUID)
+	    public MetadataOptUUID(byte index, bool hasValue, MiNET.Utils.UUID uuid) : base(index, MetadataType.OptUUID)
 	    {
 		    HasValue = hasValue;
 		    Value = uuid;

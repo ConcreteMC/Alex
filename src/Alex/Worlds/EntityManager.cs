@@ -281,7 +281,7 @@ namespace Alex.Worlds
 			}
 		}
 
-		public bool AddEntity(long id, Entity entity)
+		public bool AddEntity(Entity entity)
 		{
 			entity.Network = Network;
 			entity.Level = World;
@@ -292,11 +292,14 @@ namespace Alex.Worlds
 				// entity.NameTag = $"Entity_{id}";
 				//entity.HideNameTag = false;
 
-				if (!Entities.TryAdd(id, entity))
+				if (entity.EntityId != -1 && !Entities.TryAdd(entity.EntityId, entity))
 				{
 					EntityByUUID.TryRemove(entity.UUID, out Entity _);
 
 					return false;
+				}else if (entity.EntityId == -1)
+				{
+					Log.Warn($"Tried adding entity with invalid entity id: {entity.NameTag} | {entity.UUID.ToString()}");
 				}
 
 				return true;
