@@ -125,7 +125,8 @@ namespace Alex.API.Services
         /// <inheritdoc />
         public bool TryWriteString(string key, string value, Encoding encoding)
         {
-            var fileName = Path.Combine(DataDirectory, key);
+            var fileName = GetFileName(key);
+          //  var fileName = Path.Combine(DataDirectory, key);
 
             try
             {
@@ -141,7 +142,7 @@ namespace Alex.API.Services
 
         public bool TryReadString(string key, Encoding encoding, out string value)
         {
-            var fileName = Path.Combine(DataDirectory, key);
+            var fileName = GetFileName(key);
 
             if (!File.Exists(fileName))
             {
@@ -168,7 +169,7 @@ namespace Alex.API.Services
 
         public bool TryReadString(string key, out string value, Encoding encoding)
         {
-            var fileName = Path.Combine(DataDirectory, key);
+            var fileName = GetFileName(key);
 
             if (!File.Exists(fileName))
             {
@@ -238,7 +239,7 @@ namespace Alex.API.Services
 
             if (Directory.Exists(path))
             {
-                Directory.Delete(path);
+                Directory.Delete(path, true);
 
                 return true;
             }

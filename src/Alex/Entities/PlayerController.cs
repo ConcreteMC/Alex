@@ -112,7 +112,7 @@ namespace Alex.Entities
 		public void Update(GameTime gameTime)
 		{
 			UpdatePlayerInput(gameTime);
-	    }
+		}
 
 		private bool _previousAllowMovementInput = true;
 	    private void UpdatePlayerInput(GameTime gt)

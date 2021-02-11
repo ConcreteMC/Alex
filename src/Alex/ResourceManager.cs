@@ -332,14 +332,13 @@ namespace Alex
 				
 	        ActiveResourcePacks.AddFirst((McResourcePack)vanilla);
 
-	        Alex.AudioEngine.Initialize((McResourcePack)vanilla);
-
-	       // Log.Info($"Loading bedrock resources...");
+	        // Log.Info($"Loading bedrock resources...");
 			
 			progressReceiver?.UpdateProgress(0, "Loading bedrock resources...");
 
 			var vanillaBedrock = LoadResourcePack(progressReceiver, new DiskFileSystem(defaultBedrock));
 			ActiveBedrockResourcePacks.AddFirst((BedrockResourcePack) vanillaBedrock);
+			Alex.AudioEngine.Initialize((BedrockResourcePack) vanillaBedrock);
 			//Log.Info($"Loading known entity data...");
 
 			Storage.TryGetDirectory(Path.Combine("assets", "resourcepacks"), out DirectoryInfo root);

@@ -125,6 +125,7 @@
     <PackageReference Include="CommandLineParser" Version="2.8.0" />
     <PackageReference Include="DiscordRichPresence" Version="1.0.169" />
     <PackageReference Include="EasyPipes" Version="1.2.0" />
+    <PackageReference Include="FmodAudio" Version="2.0.1" />
     <PackageReference Include="Hawezo.MojangSharp" Version="0.5.1" />
     <PackageReference Include="JetBrains.Profiler.Api" Version="1.1.7" />
     <PackageReference Include="JKang.IpcServiceFramework.Server" Version="2.3.1" />

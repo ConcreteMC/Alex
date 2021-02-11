@@ -1806,7 +1806,13 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		public void HandleMcpePlaySound(McpePlaySound message)
 		{
-			UnhandledPackage(message);
+			var coords = message.coordinates;
+
+			if (!AlexInstance.AudioEngine.PlaySound(
+				message.name, new Microsoft.Xna.Framework.Vector3(coords.X, coords.Y, coords.Z), message.pitch, message.volume))
+			{
+				Log.Warn($"Sound not found: {message.name}");
+			}
 		}
 
 		public void HandleMcpeStopSound(McpeStopSound message)

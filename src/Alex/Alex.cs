@@ -571,6 +571,7 @@ namespace Alex
 			GuiManager.Update(gt);
 			GameStateManager.Update(gt);
 			GuiDebugHelper.Update(gt);
+			//AudioEngine?.Update(gt, Vector3.Zero);
 		}
 
 		protected override void Draw(GameTime gameTime)

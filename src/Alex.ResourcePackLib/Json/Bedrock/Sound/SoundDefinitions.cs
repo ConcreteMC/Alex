@@ -42,16 +42,16 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Sound
         public bool? UseLegacyMaxDistance { get; set; }
 
         [JsonProperty("min_distance", NullValueHandling = NullValueHandling.Ignore)]
-        public long? MinDistance { get; set; }
+        public float? MinDistance { get; set; }
 
         [JsonProperty("max_distance", NullValueHandling = NullValueHandling.Ignore)]
-        public long? MaxDistance { get; set; }
+        public float? MaxDistance { get; set; }
 
         [JsonProperty("subtitle", NullValueHandling = NullValueHandling.Ignore)]
         public string Subtitle { get; set; }
 
         [JsonProperty("pitch", NullValueHandling = NullValueHandling.Ignore)]
-        public double? Pitch { get; set; }
+        public float? Pitch { get; set; }
     }
 
     public class SoundClass
@@ -63,10 +63,10 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Sound
         public string Name { get; set; }
 
         [JsonProperty("volume", NullValueHandling = NullValueHandling.Ignore)]
-        public double? Volume { get; set; }
+        public float? Volume { get; set; }
 
         [JsonProperty("pitch", NullValueHandling = NullValueHandling.Ignore)]
-        public double? Pitch { get; set; }
+        public float? Pitch { get; set; }
 
         [JsonProperty("stream", NullValueHandling = NullValueHandling.Ignore)]
         public bool? Stream { get; set; }

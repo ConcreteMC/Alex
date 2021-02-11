@@ -382,6 +382,13 @@ namespace Alex.Gamestates.InGame
 				_currentBiome = biome;
 			}
 
+			var dir = World.Camera.Position - World.Camera.Target;
+			dir.Normalize();
+			dir = new Vector3(MathF.Round(dir.X), MathF.Round(dir.Y), MathF.Round(dir.Z));
+
+			//dir.Normalize();
+			Alex.AudioEngine.Update(gameTime, World.Camera.Position, dir);
+			
 			base.OnUpdate(gameTime);
 		}
 
