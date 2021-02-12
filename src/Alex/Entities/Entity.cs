@@ -668,7 +668,9 @@ namespace Alex.Entities
 			Movement?.Update(args.GameTime);
 			
 			var renderer = ModelRenderer;
-			
+
+			if (((!RenderEntity || IsInvisible) && !ShowItemInHand) || renderer == null || _skipRendering) return;
+
 			if (_head != null)
 			{
 				var headYaw = (RenderLocation.HeadYaw - RenderLocation.Yaw);
@@ -680,8 +682,6 @@ namespace Alex.Entities
 			
 			CalculateLegMovement(args);
 			
-			if (((!RenderEntity || IsInvisible) && !ShowItemInHand) || renderer == null || _skipRendering) return;
-
 			renderer.Update(args, RenderLocation);
 
 			//if (!ShowItemInHand || _skipRendering || ItemRenderer == null) return;

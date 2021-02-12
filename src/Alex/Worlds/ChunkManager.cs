@@ -326,7 +326,7 @@ namespace Alex.Worlds
 				var entity = BlockEntityFactory.ReadFrom(blockEntity.Value, World, 
 					chunk.GetBlockState(blockEntity.Key.X & 0xf, blockEntity.Key.Y & 0xff, blockEntity.Key.Z & 0xf).Block);
 				if (entity != null)
-					World.EntityManager.AddBlockEntity(blockEntity.Key, entity);
+					World?.EntityManager?.AddBlockEntity(blockEntity.Key, entity);
 			}
 			
 			Chunks.AddOrUpdate(

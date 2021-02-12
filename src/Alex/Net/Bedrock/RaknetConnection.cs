@@ -325,6 +325,8 @@ namespace Alex.Net.Bedrock
 					}
 				}
 			}
+
+			_readingThread = null;
 		}
 
 		private void ReceiveDatagram(ReadOnlyMemory<byte> receivedBytes, IPEndPoint clientEndpoint)
@@ -408,21 +410,24 @@ namespace Alex.Net.Bedrock
 		{
 			if (Session.Acknowledge(datagram.Header.DatagramSequenceNumber))
 			{
-				foreach (Packet packet in datagram.Messages)
+				foreach (var packet in datagram.Messages)
 				{
-					Packet message = packet;
-
-					if (message is SplitPartPacket splitPartPacket)
-					{
-						message = HandleSplitMessage(session, splitPartPacket);
-
-						if (message == null) continue;
-					}
-
-					message.Timer.Restart();
-					session.HandleRakMessage(message);
+					Handle(session, packet);
 				}
 			}
+		}
+
+		private void Handle(RaknetSession session, Packet message)
+		{
+			if (message is SplitPartPacket splitPartPacket)
+			{
+				message = HandleSplitMessage(session, splitPartPacket);
+
+				if (message == null) return;
+			}
+
+			message.Timer.Restart();
+			session.HandleRakMessage(message);
 		}
 
 		private Packet HandleSplitMessage(RaknetSession session, SplitPartPacket splitPart)

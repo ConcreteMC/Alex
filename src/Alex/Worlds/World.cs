@@ -948,7 +948,7 @@ namespace Alex.Worlds
 
 		public void UpdateEntityPosition(long entityId, PlayerLocation position, bool relative = false, bool updateLook = false, bool updatePitch = false, bool teleport = false)
 		{
-			if (EntityManager.TryGet(entityId, out Entity entity))
+			if (EntityManager != null && EntityManager.TryGet(entityId, out Entity entity))
 			{
 				entity.KnownPosition.OnGround = position.OnGround;
 				
@@ -980,7 +980,7 @@ namespace Alex.Worlds
 
 		public void UpdateEntityLook(long entityId, float yaw, float pitch, bool onGround)
 		{
-			if (EntityManager.TryGet(entityId, out Entity entity))
+			if (EntityManager != null &&  EntityManager.TryGet(entityId, out Entity entity))
 			{
 				entity.KnownPosition.OnGround = onGround;
 				entity.KnownPosition.Pitch = pitch;

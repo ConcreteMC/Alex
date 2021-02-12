@@ -7,6 +7,7 @@ using System.Linq;
 using System.Threading;
 using Alex.API.Utils;
 using Alex.Net.Bedrock;
+using Microsoft.IO;
 using MiNET;
 using MiNET.Net;
 using MiNET.Net.RakNet;
@@ -171,7 +172,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			
 			if (message is McpeWrapper wrapper)
 			{
-				var messages = new List<Packet>();
+				//var messages = new List<Packet>();
 
 				// Get bytes to process
 				var payload = wrapper.payload.ToArray();
@@ -190,78 +191,70 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				{
 					using (var deflateStream = new DeflateStream(stream, System.IO.Compression.CompressionMode.Decompress, true))
 					{
-						using (var s = new MemoryStream())
+						payload = deflateStream.ReadAllBytes();
+					}
+				}
+
+				using (MemoryStream ms = new MemoryStream(payload))
+				{
+					int count = 0;
+
+					// Get actual packet out of bytes
+					while (ms.Position < ms.Length - 1)
+					{
+						uint   len  = VarInt.ReadUInt32(ms);
+						long   pos  = ms.Position;
+						byte[] data = new byte[len];
+						if (ms.Read(data, 0, data.Length) != len)
+							Log.Warn(
+								$"Did not read enough data.");
+								
+						ms.Position = pos;
+						int id = VarInt.ReadInt32(ms);
+
+						Packet packet = null;
+
+						try
 						{
-							deflateStream.CopyTo(s);
+							packet = PacketFactory.Create((byte) id, data, "mcpe")
+							         ?? new UnknownPacket((byte) id, data);
 
-							s.Position = 0;
+							packet.ReliabilityHeader = wrapper.ReliabilityHeader;
 
-							int count = 0;
-
-							// Get actual packet out of bytes
-							while (s.Position < s.Length)
-							{
-								count++;
-
-								uint                 len            = VarInt.ReadUInt32(s);
-								long                 pos            = s.Position;
-								ReadOnlyMemory<byte> internalBuffer = s.ReadToMemory(len);
-								s.Position = pos;
-								int                  id             = VarInt.ReadInt32(s);
-
-								Packet packet = null;
-
-								try
-								{
-									packet = PacketFactory.Create((byte) id, internalBuffer, "mcpe")
-									         ?? new UnknownPacket((byte) id, internalBuffer);
-
-									messages.Add(packet);
-								}
-								catch (Exception e)
-								{
-									Log.Warn(
-										e, $"Error parsing bedrock message #{count} id={id} (Buffer size={internalBuffer.Length})");
+							//messages.Add(packet);
+							count++;
+						}
+						catch (Exception e)
+						{
+							Log.Warn(
+								e, $"Error parsing bedrock message #{count} id={id} (Buffer size={data.Length} Packet size={len})");
 
 									
-									//throw;
-									//return; // Exit, but don't crash.
-								}
-
-								s.Position = pos + len;
-							}
-
-							if (s.Length > s.Position) throw new Exception("Have more data");
+							//throw;
+							//return; // Exit, but don't crash.
 						}
-						//deflated = deflateStream.ReadAllBytes();
+
+
+						if (packet != null)
+						{
+							try
+							{
+								HandleGamePacket(packet);
+							}
+							catch (Exception e)
+							{
+								Log.Warn(e, $"Error handling game packet #{count} id={id}");
+							}
+							
+							packet.PutPool();
+						}
+
+						ms.Position = pos + len;
 					}
 				}
 
 				//var msgs = messages.ToArray();
 				//messages.Clear();
-				
-
-				foreach (Packet msg in messages)
-				{
-					msg.ReliabilityHeader = new ReliabilityHeader()
-					{
-						Reliability = wrapper.ReliabilityHeader.Reliability,
-						ReliableMessageNumber = wrapper.ReliabilityHeader.ReliableMessageNumber,
-						OrderingChannel = wrapper.ReliabilityHeader.OrderingChannel,
-						OrderingIndex = wrapper.ReliabilityHeader.OrderingIndex,
-						SequencingIndex = wrapper.ReliabilityHeader.SequencingIndex
-					};
-
-					try
-					{
-						HandleGamePacket(msg);
-					}
-					catch (Exception e)
-					{
-						Log.Warn(e,$"Bedrock message handler error");
-					}
-				}
-
 				wrapper.PutPool();
 			}
 			else if (message is UnknownPacket unknownPacket)
@@ -279,6 +272,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		private void HandleGamePacket(Packet message)
 		{
+			if (_session.Evicted)
+				return;
 			_lastPacketReceived = DateTime.UtcNow;
 			Stopwatch sw = Stopwatch.StartNew();
 

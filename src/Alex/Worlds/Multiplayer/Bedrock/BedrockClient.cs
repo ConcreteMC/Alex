@@ -300,8 +300,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			Stopwatch sw = new Stopwatch();
 			this.Connection.Start();
 
-			bool autoConnect = this.Connection.AutoConnect;
-			this.Connection.AutoConnect = false;
+			
 			while (!this.Connection.FoundServer)
 			{
 				if ((!sw.IsRunning || sw.ElapsedMilliseconds > 100) && numberOfAttempts-- > 0)
@@ -319,7 +318,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			sw.Stop();
 			
 			serverInfo = (this.Connection.RemoteEndpoint, this.Connection.RemoteServerName, sw.ElapsedMilliseconds);
-			this.Connection.AutoConnect = autoConnect;
+			
 			return this.Connection.FoundServer;
 		}
 		
