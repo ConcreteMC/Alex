@@ -104,15 +104,12 @@ namespace Alex.Net.Bedrock
 			
 		}
 
-		public bool TryConnect(IPEndPoint targetEndPoint, int numberOfAttempts = int.MaxValue, short mtuSize = 1400, CancellationToken cancellationToken = default)
+		public bool TryConnect(IPEndPoint targetEndPoint, int numberOfAttempts = int.MaxValue, short mtuSize = 1382, CancellationToken cancellationToken = default)
 		{
 			Start(); // Make sure we have started the listener
 
 			while (Session == null && numberOfAttempts > 0 && mtuSize >= UdpHeaderSize && !cancellationToken.IsCancellationRequested)
 			{
-				SendOpenConnectionRequest1(targetEndPoint, mtuSize);
-				numberOfAttempts--;
-					
 				if (!ConnectionResetEvent.Wait(500, cancellationToken))
 				{
 					if (numberOfAttempts % 4 == 0)
@@ -120,6 +117,9 @@ namespace Alex.Net.Bedrock
 						mtuSize -= UdpHeaderSize;
 						Log.Info($"Adjusted mtu size: {mtuSize}");
 					}
+					
+					SendOpenConnectionRequest1(targetEndPoint, mtuSize);
+					numberOfAttempts--;
 				}
 			}
 
@@ -422,10 +422,10 @@ namespace Alex.Net.Bedrock
 			if (message is SplitPartPacket splitPartPacket)
 			{
 				message = HandleSplitMessage(session, splitPartPacket);
-
-				if (message == null) return;
 			}
-
+			
+			if (message == null) return;
+			
 			message.Timer.Restart();
 			session.HandleRakMessage(message);
 		}

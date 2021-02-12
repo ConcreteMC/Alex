@@ -127,8 +127,9 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		private void SendLocation(PlayerLocation location)
 		{
 			Client.SendMcpeMovePlayer(new MiNET.Utils.PlayerLocation(location.X,
-				location.Y + Player.EyeLevel, location.Z, location.HeadYaw,
-				location.Yaw, location.Pitch), location.OnGround);
+				location.Y + Player.EyeLevel, location.Z, -location.HeadYaw,
+				
+				- location.Yaw, location.Pitch), location.OnGround);
 		}
 
 		//private ThreadSafeList<ChunkCoordinates> _loadedChunks = new ThreadSafeList<ChunkCoordinates>();
