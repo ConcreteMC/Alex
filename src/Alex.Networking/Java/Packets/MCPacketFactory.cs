@@ -310,6 +310,9 @@ namespace Alex.Networking.Java.Packets
 			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x4E, () => new TimeUpdatePacket());
 			
 			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x4F, () => new TitlePacket());
+			
+			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x51, () => new SoundEffectPacket());
+			
 			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x56, () => new EntityTeleport());
 			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x58, () => new EntityPropertiesPacket());
 

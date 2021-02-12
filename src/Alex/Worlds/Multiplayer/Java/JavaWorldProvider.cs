@@ -814,6 +814,10 @@ namespace Alex.Worlds.Multiplayer.Java
 			{
 				HandleTeamsPacket(teamsPacket);
 			}
+			else if (packet is SoundEffectPacket soundEffectPacket)
+			{
+				HandleSoundEffectPacket(soundEffectPacket);
+			}
 			else
 			{
 				if (UnhandledPackets.TryAdd(packet.PacketId, packet.GetType()))
@@ -823,6 +827,32 @@ namespace Alex.Worlds.Multiplayer.Java
 			}
 		}
 
+		private ThreadSafeList<string> _missingSounds = new ThreadSafeList<string>();
+		
+		private void HandleSoundEffectPacket(SoundEffectPacket packet)
+		{
+			var soundEffect =
+				Alex.Resources.Registries.Sounds.Entries.FirstOrDefault(x => x.Value.ProtocolId == packet.SoundId).Key;
+
+			if (string.IsNullOrWhiteSpace(soundEffect))
+				return;
+
+			soundEffect = soundEffect.Replace("minecraft:", "");
+
+			switch (soundEffect)
+			{
+				case "block.anvil.hit":
+					soundEffect = "random.anvil.use";
+					break;
+			}
+			
+			if (!Alex.AudioEngine.PlaySound(soundEffect, packet.Position, packet.Pitch, packet.Volume))
+			{
+				if (_missingSounds.TryAdd(soundEffect))
+					Log.Warn($"Missing sound: {soundEffect}");
+			}
+		}
+		
 		private TeamsManager TeamsManager { get; } = new TeamsManager();
 		private void HandleTeamsPacket(TeamsPacket packet)
 		{
@@ -2427,7 +2457,10 @@ namespace Alex.Worlds.Multiplayer.Java
 		public override void Dispose()
 		{
 			//World?.Ticker?.UnregisterTicked(this);
-			
+
+			var missingSounds = _missingSounds.ToArray();
+			_missingSounds.Clear();
+
 			base.Dispose();
 
 			foreach (var disposable in _disposables.ToArray())

@@ -293,12 +293,17 @@ namespace Alex.Worlds
 
 		private bool ProcessLighting()
 		{
-			var target = Chunks?.FirstOrDefault(x => BlockLightCalculations?.HasEnqueued(x.Key) ?? false).Key;
+			var blockLightCalc = BlockLightCalculations;
 
-			if (target == null)
+			if (blockLightCalc == null)
 				return false;
 			
-			return BlockLightCalculations.Process(target.Value);
+			var target         = Chunks?.FirstOrDefault(x => blockLightCalc?.HasEnqueued(x.Key) ?? false).Key;
+
+			if (!target.HasValue)
+				return false;
+			
+			return blockLightCalc.Process(target.Value);
 		}
 
 

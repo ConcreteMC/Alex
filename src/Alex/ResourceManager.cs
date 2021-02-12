@@ -700,6 +700,9 @@ namespace Alex
 
 		[JsonProperty("minecraft:entity_type")]
 		public RegistryBase Entities { get; set; }
+		
+		[JsonProperty("minecraft:sound_event")]
+		public RegistryBase Sounds { get; set; }
 
         public class RegistryBase
 		{
