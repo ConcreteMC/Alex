@@ -185,6 +185,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		private bool     Starting    { get; set; } = false;
 		private DateTime StartTime   { get; set; }
 		private Timer    ThroughPut { get; set; }
+
 		public bool Start(TimeSpan timeout)
 		{
 			if (Starting)
@@ -193,13 +194,14 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			Starting = true;
 
 			StartTime = DateTime.UtcNow;
-		//	var player = WorldReceiver.Player;
-			
+			var cancellationToken = new CancellationTokenSource();
+			//	var player = WorldReceiver.Player;
+
 			//player.Inventory.CursorChanged += InventoryOnCursorChanged;
-		//	player.Inventory.SlotChanged += InventoryOnSlotChanged;
+			//	player.Inventory.SlotChanged += InventoryOnSlotChanged;
 
 			//ConnectionAcceptedWaitHandle = resetEvent;
-			
+
 			//return Task.Run((Func<bool>)(() =>
 			{
 				if (!Connection.AutoConnect)
@@ -208,11 +210,12 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 					if (TryLocate(ServerEndpoint, out var serverInfo, 3))
 					{
-						OnMotdReceivedHandler?.Invoke(this, new BedrockMotd(serverInfo.serverName)
-						{
-							ServerEndpoint = serverInfo.serverEndPoint,
-							Latency = serverInfo.ping
-						});
+						OnMotdReceivedHandler?.Invoke(
+							this,
+							new BedrockMotd(serverInfo.serverName)
+							{
+								ServerEndpoint = serverInfo.serverEndPoint, Latency = serverInfo.ping
+							});
 						//resetEvent.Set();
 
 						return true;
@@ -222,74 +225,73 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				{
 					Connection.Start();
 					
-					if (Connection.TryConnect(ServerEndpoint))
+					cancellationToken.CancelAfter(timeout);
+					if (Connection.TryConnect(ServerEndpoint, cancellationToken: cancellationToken.Token))
 					{
-						ThroughPut = new Timer(
-						state =>
-						{
-							long   packetSizeOut = Interlocked.Exchange(ref Connection.ConnectionInfo.BytesOut, 0L);
-							long   packetSizeIn = Interlocked.Exchange(ref Connection.ConnectionInfo.BytesIn, 0L);
-							
-							double throughtPutOut = (double) (packetSizeOut) / 1000.0;
-							double throughPutIn = (double) (packetSizeIn) / 1000.0;
-							
-							long   packetCountOut = Interlocked.Exchange(ref Connection.ConnectionInfo.PacketsOut, 0L);
-							long   packetCountIn = Interlocked.Exchange(ref Connection.ConnectionInfo.PacketsIn, 0L);
-							
-							long ackReceived  = Interlocked.Exchange(ref Connection.ConnectionInfo.Ack, 0L);
-							long ackSent  = Interlocked.Exchange(ref Connection.ConnectionInfo.AckSent, 0L);
-							long nakReceive  = Interlocked.Exchange(ref Connection.ConnectionInfo.Nak, 0L);
-							var nakSent = Interlocked.Exchange(ref Connection.ConnectionInfo.NakSent, 0);
-							
-							long resends = Interlocked.Exchange(ref Connection.ConnectionInfo.Resends, 0L);
-							long fails = Interlocked.Exchange(ref Connection.ConnectionInfo.Fails, 0L);
+						ThroughPut = new Timer(state => { UpdateConnectionInfo();}, null, 1000, 1000);
 
-							string str =
-								$"Pkt in/out(#/s) {packetCountIn}/{packetCountOut}, ACK in/out(#/s) {ackReceived}/{ackSent}, NAK in/out(#/s) {nakReceive}/{nakSent}, THR in/out(Kbps){throughPutIn:F2}/{throughtPutOut:F2}";
-
-							//if (Config.GetProperty("ServerInfoInTitle", false))
-							//	Console.Title = str;
-							//else
-								Log.Info(str);
-
-							ConnectionInfo.NetworkState networkState = ConnectionInfo.NetworkState.Ok;
-
-							if (nakSent > 0)
-							{
-								networkState = ConnectionInfo.NetworkState.PacketLoss;
-							}
-							else if (Connection.IsNetworkOutOfOrder)
-							{
-								networkState = ConnectionInfo.NetworkState.OutOfOrder;
-							}
-							else if (MessageHandler != null && MessageHandler.TimeSinceLastPacket.TotalMilliseconds >= 250)
-							{
-								networkState = ConnectionInfo.NetworkState.Slow;
-							}
-							else if (Connection.ConnectionInfo.Latency > 250)
-							{
-								networkState = ConnectionInfo.NetworkState.HighPing;
-							}
-							
-							_connectionInfo = new ConnectionInfo(
-								StartTime, Connection.ConnectionInfo.Latency, nakReceive, ackReceived, ackSent, fails, resends,
-								packetSizeIn, packetSizeOut, packetCountIn, packetCountOut,
-								networkState)
-							{
-								NakSent = nakSent
-							};
-						}, null, 1000, 1000);
 						//resetEvent.Set();
 						return true;
 					}
 				}
 
 				return false;
-			}//));
+			} //));
 		}
 
 		private System.Timers.Timer _timer;
-		
+
+		private void UpdateConnectionInfo()
+		{
+			long packetSizeOut = Interlocked.Exchange(ref Connection.ConnectionInfo.BytesOut, 0L);
+			long packetSizeIn  = Interlocked.Exchange(ref Connection.ConnectionInfo.BytesIn, 0L);
+
+			double throughtPutOut = (double) (packetSizeOut) / 1000.0;
+			double throughPutIn   = (double) (packetSizeIn) / 1000.0;
+
+			long packetCountOut = Interlocked.Exchange(ref Connection.ConnectionInfo.PacketsOut, 0L);
+			long packetCountIn  = Interlocked.Exchange(ref Connection.ConnectionInfo.PacketsIn, 0L);
+
+			long ackReceived = Interlocked.Exchange(ref Connection.ConnectionInfo.Ack, 0L);
+			long ackSent     = Interlocked.Exchange(ref Connection.ConnectionInfo.AckSent, 0L);
+			long nakReceive  = Interlocked.Exchange(ref Connection.ConnectionInfo.Nak, 0L);
+			var  nakSent     = Interlocked.Exchange(ref Connection.ConnectionInfo.NakSent, 0);
+
+			long resends = Interlocked.Exchange(ref Connection.ConnectionInfo.Resends, 0L);
+			long fails   = Interlocked.Exchange(ref Connection.ConnectionInfo.Fails, 0L);
+
+			string str =
+				$"Pkt in/out(#/s) {packetCountIn}/{packetCountOut}, ACK in/out(#/s) {ackReceived}/{ackSent}, NAK in/out(#/s) {nakReceive}/{nakSent}, THR in/out(Kbps){throughPutIn:F2}/{throughtPutOut:F2}";
+
+			//if (Config.GetProperty("ServerInfoInTitle", false))
+			//	Console.Title = str;
+			//else
+			Log.Info(str);
+
+			ConnectionInfo.NetworkState networkState = ConnectionInfo.NetworkState.Ok;
+
+			if (nakSent > 0)
+			{
+				networkState = ConnectionInfo.NetworkState.PacketLoss;
+			}
+			else if (Connection.IsNetworkOutOfOrder)
+			{
+				networkState = ConnectionInfo.NetworkState.OutOfOrder;
+			}
+			else if (MessageHandler != null && MessageHandler.TimeSinceLastPacket.TotalMilliseconds >= 250)
+			{
+				networkState = ConnectionInfo.NetworkState.Slow;
+			}
+			else if (Connection.ConnectionInfo.Latency > 250)
+			{
+				networkState = ConnectionInfo.NetworkState.HighPing;
+			}
+
+			_connectionInfo = new ConnectionInfo(
+				StartTime, Connection.ConnectionInfo.Latency, nakReceive, ackReceived, ackSent, fails, resends,
+				packetSizeIn, packetSizeOut, packetCountIn, packetCountOut, networkState) {NakSent = nakSent};
+		}
+
 		public bool TryLocate(
 			IPEndPoint targetEndPoint,
 			out (IPEndPoint serverEndPoint, string serverName, long ping) serverInfo,

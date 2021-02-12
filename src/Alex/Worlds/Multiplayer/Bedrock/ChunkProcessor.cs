@@ -48,7 +48,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	    public  bool              ClientSideLighting { get; set; } = true;
 
 	    private BedrockClient    Client           { get; }
-	    private BlobCache        Cache            { get; }
+	    public BlobCache        Cache            { get; }
 
 	    public ChunkProcessor(BedrockClient client, bool useAlexChunks, CancellationToken cancellationToken, BlobCache blobCache)
         {
@@ -64,8 +64,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		    new ConcurrentQueue<KeyValuePair<ulong, byte[]>>();
 	    private ConcurrentQueue<ChunkCoordinates>            _actionQueue = new ConcurrentQueue<ChunkCoordinates>();
 
-	    private ConcurrentDictionary<ChunkCoordinates, Action> _actions =
-		    new ConcurrentDictionary<ChunkCoordinates, Action>();
+	    private ConcurrentDictionary<ChunkCoordinates, ChunkData> _actions =
+		    new ConcurrentDictionary<ChunkCoordinates, ChunkData>();
         public void HandleChunkData(bool cacheEnabled,
 	        ulong[] blobs,
 	        uint subChunkCount,
@@ -74,25 +74,23 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	        int cz,
 	        Action<ChunkColumn> callback)
         {
-	        if (CancellationToken.IsCancellationRequested)
+	        if (CancellationToken.IsCancellationRequested || subChunkCount < 1)
 		        return;
 
 	        var coords = new ChunkCoordinates(cx, cz);
-	        Action action = () =>
+
+	        var value = new ChunkData(cacheEnabled, blobs, subChunkCount, chunkData, cx, cz, callback);
+	        
+	        bool updated = false;
+	        _actions.AddOrUpdate(coords, value, (coordinates, action1) =>
 	        {
-		        if (CancellationToken.IsCancellationRequested)
-			        return;
+		        updated = true;
+		        return value;
+	        });
 
-		        HandleChunk(cacheEnabled, blobs, subChunkCount, chunkData, cx, cz, callback);
-	        };
-
-	        if (_actions.TryRemove(coords, out _))
-	        {
-		        
-	        }
-
-	        _actions.TryAdd(coords, action);
-	        _actionQueue.Enqueue(coords);
+	        // _actions.TryAdd(coords, );
+	        if (!updated)
+				_actionQueue.Enqueue(coords);
 
 	        _resetEvent.Set();
 	        
@@ -111,6 +109,9 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	        if (!Monitor.TryEnter(_syncObj, 5))
 		        return;
 
+	        if (_actionQueue.IsEmpty && _blobQueue.IsEmpty)
+		        return;
+	        
 	        try
 	        {
 		        if (_workerThread == null && Interlocked.CompareExchange(ref _threadHelper, 1, 0) == 0)
@@ -122,14 +123,21 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					        {
 						        _workerThread = Thread.CurrentThread;
 
-						        while (true)
+						        while (!CancellationToken.IsCancellationRequested)
 						        {
 							        bool handled = false;
 							        if (_actionQueue.TryDequeue(out var chunkCoordinates))
 							        {
 								        if (_actions.TryRemove(chunkCoordinates, out var chunk))
 								        {
-									        chunk?.Invoke();
+									        if (chunk.CacheEnabled)
+									        {
+										        HandleChunkCachePacket(chunk.Blobs, chunk.SubChunkCount, chunk.Data, chunk.X, chunk.Z, chunk.Callback);
+										        return;
+									        }
+
+									        chunk.Callback?.Invoke(HandleChunk(chunk.SubChunkCount, chunk.Data, chunk.X, chunk.Z));
+									        //chunk?.Invoke();
 								        }
 
 								        handled = true;
@@ -214,7 +222,9 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	        }
         }
 
-        private List<string> Failed { get; set; } = new List<string>();
+        private List<string> Failed     { get; set; } = new List<string>();
+        public  bool         UseCaching { get; set; }
+
         public BlockState GetBlockState(uint p)
         {
 	        if (_convertedStates.TryGetValue(p, out var existing))
@@ -649,16 +659,19 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	        {
 		        while (stream.Position < stream.Length - 1)
 		        {
-			        NbtFile file = new NbtFile() {BigEndian = false, UseVarInt = true};
+			        try
+			        {
+				        NbtFile file = new NbtFile() {BigEndian = false, UseVarInt = true};
 
-			        file.LoadFromStream(stream, NbtCompression.None);
-			        var blockEntityTag = file.RootTag;
+				        file.LoadFromStream(stream, NbtCompression.None);
+				        var blockEntityTag = file.RootTag;
 
-			        int x = blockEntityTag["x"].IntValue;
-			        int y = blockEntityTag["y"].IntValue;
-			        int z = blockEntityTag["z"].IntValue;
+				        int x = blockEntityTag["x"].IntValue;
+				        int y = blockEntityTag["y"].IntValue;
+				        int z = blockEntityTag["z"].IntValue;
 
-			        chunkColumn.AddBlockEntity(new BlockCoordinates(x, y, z), (NbtCompound) file.RootTag);
+				        chunkColumn.AddBlockEntity(new BlockCoordinates(x, y, z), (NbtCompound) file.RootTag);
+			        }catch(EndOfStreamException){}
 
 			        // if (Log.IsTraceEnabled()) Log.Trace($"Blockentity:\n{file.RootTag}");
 		        }
@@ -672,24 +685,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		        Log.Warn($"Still have data to read\n{Packet.HexDump(new ReadOnlyMemory<byte>(bytes))}");
 	        }
         }
-        
-        private void HandleChunk(bool cacheEnabled, ulong[] blobs, uint subChunkCount, byte[] chunkData, int cx, int cz, Action<ChunkColumn> callback)
-        {
-	        if (cacheEnabled)
-	        {
-		        HandleChunkCachePacket(blobs, subChunkCount, chunkData, cx, cz, callback);
-		        return;
-	        }
-	        
-	        if (subChunkCount < 1)
-	        {
-		        Log.Warn("Nothing to read");
-		        return;
-	        }
-	        
-			callback?.Invoke(HandleChunk(subChunkCount, chunkData, cx, cz));
-        }
-        
+
         private static List<IBlockState> ReadBlockState(NbtCompound tag)
         {
 	        //Log.Debug($"Palette nbt:\n{tag}");
@@ -828,7 +824,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			        //result = defaultState.Block.BlockState.CloneSilent();
 		        }
 	        }
-
+	        
 	        var originalRecord = BlockStateToString(record);
 	        
 	        result = null;
@@ -1516,6 +1512,34 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			{
 				//BackgroundWorker?.Dispose();
 				//BackgroundWorker = null;
+			}
+		}
+
+		private class ChunkData
+		{
+			public readonly bool                CacheEnabled;
+			public readonly ulong[]             Blobs;
+			public readonly uint                SubChunkCount;
+			public readonly byte[]              Data;
+			public readonly int                 X;
+			public readonly int                 Z;
+			public readonly Action<ChunkColumn> Callback;
+
+			public ChunkData(bool cacheEnabled,
+				ulong[] blobs,
+				uint subChunkCount,
+				byte[] chunkData,
+				int cx,
+				int cz,
+				Action<ChunkColumn> callback)
+			{
+				CacheEnabled = cacheEnabled;
+				Blobs = blobs;
+				SubChunkCount = subChunkCount;
+				Data = chunkData;
+				X = cx;
+				Z = cz;
+				Callback = callback;
 			}
 		}
     }

@@ -173,7 +173,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				Log.Info($"Received Play Status packet: Login success");
 				
 				McpeClientCacheStatus status = McpeClientCacheStatus.CreateObject();
-				status.enabled = true;
+				status.enabled = ChunkProcessor.Cache.Enabled;
 				Client.SendPacket(status);
 			}
 			else

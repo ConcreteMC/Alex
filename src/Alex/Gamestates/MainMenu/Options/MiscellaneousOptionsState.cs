@@ -10,15 +10,16 @@ using Microsoft.Xna.Framework;
 
 namespace Alex.Gamestates.MainMenu.Options
 {
-    public class NetworkOptionsState : OptionsStateBase
+    public class MiscellaneousOptionsState : OptionsStateBase
     {
-        private GuiSlider ProcessingThreads { get; set; }
-        private GuiTextElement Description { get; set; }
-        private Dictionary<IGuiControl, string> Descriptions { get; } = new Dictionary<IGuiControl, string>();
+        private GuiSlider                       ProcessingThreads { get; set; }
+        private GuiToggleButton                 ChunkCaching { get; set; }
+        private GuiTextElement                  Description       { get; set; }
+        private Dictionary<IGuiControl, string> Descriptions      { get; } = new Dictionary<IGuiControl, string>();
         
-        public NetworkOptionsState(GuiPanoramaSkyBox skyBox) : base(skyBox)
+        public MiscellaneousOptionsState(GuiPanoramaSkyBox skyBox) : base(skyBox)
         {
-            Title = "Networking";
+            Title = "Miscellaneous";
             Header.AddChild(new GuiTextElement()
             {
                 Anchor = Alignment.BottomCenter,
@@ -31,22 +32,28 @@ namespace Alex.Gamestates.MainMenu.Options
         protected override void OnInit(IGuiRenderer renderer)
         {
             AddGuiRow(
-                ProcessingThreads = CreateSlider("Processing Threads: {0}", o => Options.NetworkOptions.NetworkThreads,
-                    1,
-                    Environment.ProcessorCount, 1));
+                ProcessingThreads = CreateSlider(
+                    "Network Threads: {0}", o => Options.NetworkOptions.NetworkThreads, 1, Environment.ProcessorCount,
+                    1), ChunkCaching = CreateToggle("Chunk Caching: {0}", o => o.MiscelaneousOptions.UseChunkCache));
 
-            AddDescription(ProcessingThreads, "Processing Threads", "The amount of threads that get assigned to datagram processing", "Note: A restart is required for this setting to take affect.");
+            AddDescription(
+                ProcessingThreads, "Processing Threads",
+                "The amount of threads that get assigned to datagram processing",
+                "Note: A restart is required for this setting to take affect.");
             
+            AddDescription(
+                ChunkCaching, "Chunk Caching (Bedrock Only)",
+                "When enabled, caches chunk sections on disk.",
+                "This reduces network traffic but increases disk I/O");
+
             Description = new GuiTextElement()
             {
-                Anchor = Alignment.MiddleLeft,
-                Margin = new Thickness(5, 15, 5, 5),
-                MinHeight = 80
+                Anchor = Alignment.MiddleLeft, Margin = new Thickness(5, 15, 5, 5), MinHeight = 80
             };
 
             var row = AddGuiRow(Description);
             row.ChildAnchor = Alignment.MiddleLeft;
-            
+
             base.OnInit(renderer);
         }
 

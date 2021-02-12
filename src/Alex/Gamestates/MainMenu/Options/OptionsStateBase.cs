@@ -110,7 +110,7 @@ namespace Alex.Gamestates.MainMenu.Options
             return state;
         }
 
-        protected GuiButton CreateLinkButton<TGameState>(string translationKey) where TGameState : class, IGameState
+        protected GuiButton CreateLinkButton<TGameState>(string translationKey, string fallback = null) where TGameState : class, IGameState
         {
             var state = Construct<TGameState>();
             
@@ -123,6 +123,7 @@ namespace Alex.Gamestates.MainMenu.Options
                 state.ParentState = ParentState;
             })
             {
+                Text = fallback ?? translationKey,
                 TranslationKey = translationKey,
 	            Modern = false
             };

@@ -7,8 +7,9 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	public class BlobCache
 	{
 		private IStorageSystem Storage  { get; }
-		private string        BasePath { get; }
-		public BlobCache(IStorageSystem storage)
+		private string         BasePath { get; }
+		public  bool           Enabled  { get; set; } = false;
+		public BlobCache(IStorageSystem storage, IOptionsProvider optionsProvider)
 		{
 			Storage = storage;
 			BasePath = "blobs";
@@ -17,6 +18,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			{
 				Storage.TryCreateDirectory(BasePath);
 			}
+
+			Enabled = optionsProvider.AlexOptions.MiscelaneousOptions.UseChunkCache.Value;
 		}
 
 		private string GetPath(ulong hash)

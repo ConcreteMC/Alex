@@ -17,6 +17,9 @@ namespace Alex.API.Data.Options
         
         [DataMember]
         public OptionsProperty<bool> ObjectPools { get; set; }
+        
+        [DataMember]
+        public OptionsProperty<bool> UseChunkCache { get; set; }
 
         public MiscelaneousOptions()
         {
@@ -24,6 +27,7 @@ namespace Alex.API.Data.Options
             Language = new OptionsProperty<string>(CultureInfo.InstalledUICulture.Name);
             MeshInRam = new OptionsProperty<bool>(true);
             ObjectPools = new OptionsProperty<bool>(true);
+            UseChunkCache = new OptionsProperty<bool>(false);
         }
     }
 }
