@@ -30,7 +30,11 @@ namespace Alex.Audio
 		private   ConcurrentDictionary<string, SoundInfo> _sounds = new ConcurrentDictionary<string, SoundInfo>();
 		protected FmodSystem                              FmodSystem;
 		private   bool                                    Supported { get; }
-		public AudioEngine(IStorageSystem storageSystem)
+
+		private double GlobalVolume  { get; set; } = 1f;
+		private double MusicVolume   { get; set; } = 1f;
+		private double SoundFxVolume { get; set; } = 1f;
+		public AudioEngine(IStorageSystem storageSystem, IOptionsProvider optionsProvider)
 		{
 			StorageSystem = storageSystem;
 			StoragePath = Path.Combine("assets", "bedrock");
@@ -49,6 +53,27 @@ namespace Alex.Audio
 				Log.Warn(ex, $"Failed to init audio engine. FMod is required.");
 				Supported = false;
 			}
+
+			GlobalVolume = optionsProvider.AlexOptions.SoundOptions.GlobalVolume;
+			optionsProvider.AlexOptions.SoundOptions.GlobalVolume.Bind(
+				(value, newValue) =>
+				{
+					GlobalVolume = newValue;
+				});
+			
+			MusicVolume = optionsProvider.AlexOptions.SoundOptions.MusicVolume;
+			optionsProvider.AlexOptions.SoundOptions.MusicVolume.Bind(
+				(value, newValue) =>
+				{
+					MusicVolume = newValue;
+				});
+			
+			SoundFxVolume = optionsProvider.AlexOptions.SoundOptions.SoundEffectsVolume;
+			optionsProvider.AlexOptions.SoundOptions.SoundEffectsVolume.Bind(
+				(value, newValue) =>
+				{
+					SoundFxVolume = newValue;
+				});
 		}
 
 		public void Initialize(BedrockResourcePack resourcePack)
@@ -108,7 +133,7 @@ namespace Alex.Audio
 							if (!File.Exists(filePath))
 								Log.Warn($"Invalid path: {filePath}");
 							
-							Sound s = FmodSystem.CreateSound(filePath, Mode.CreateStream );
+							Sound s = FmodSystem.CreateSound(filePath, Mode.CreateStream | Mode._3D | Mode._3D_HeadRelative);
 
 							if (s.SubSoundCount > 0)
 							{
@@ -159,7 +184,7 @@ namespace Alex.Audio
 
 				if (values.Count > 0)
 				{
-					_sounds.TryAdd(sound.Key, new SoundInfo(sound.Key, values.ToArray()));
+					_sounds.TryAdd(sound.Key, new SoundInfo(sound.Key, SoundCategory.Effects, values.ToArray()));
 				}
 			}
 		}
@@ -219,7 +244,19 @@ namespace Alex.Audio
 				
 		//		instance.Set3DMinMaxDistance(min, max * selected.Volume);
 				
-				instance.Volume = volume;
+				//instance.Volume = volume;
+
+				if (soundInfo.Category == SoundCategory.Effects)
+				{
+					instance.Volume *= (float)SoundFxVolume;
+				}
+				else if (soundInfo.Category == SoundCategory.Music)
+				{
+					instance.Volume *= (float)MusicVolume;
+				}
+				
+				instance.Volume *= (float)GlobalVolume;
+				
 				instance.Pitch = pitch;
 				instance.Paused = false;
 			}
@@ -232,9 +269,9 @@ namespace Alex.Audio
 
 	public class SoundInfo
 	{
-		private static FastRandom _fastRandom = new FastRandom();
-		public         string     Name { get; set; }
-
+		private static FastRandom    _fastRandom = new FastRandom();
+		public         string        Name     { get; set; }
+		public         SoundCategory Category { get; set; }
 		public WrappedSound Sound
 		{
 			get
@@ -247,9 +284,10 @@ namespace Alex.Audio
 		}
 		
 		private WrappedSound[] _sounds;
-		public SoundInfo(string name, WrappedSound[] sounds)
+		public SoundInfo(string name, SoundCategory category, WrappedSound[] sounds)
 		{
 			Name = name;
+			Category = category;
 			_sounds = sounds;
 		}
 	}
@@ -265,6 +303,12 @@ namespace Alex.Audio
 			Pitch = pitch;
 			Volume = volume;
 		}
+	}
+
+	public enum SoundCategory
+	{
+		Music,
+		Effects
 	}
 	
 	public enum Sounds

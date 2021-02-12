@@ -209,7 +209,7 @@ namespace Alex
 
 			InitiatePluginSystem(serviceCollection);
 			
-			AudioEngine = new AudioEngine(Storage);
+			AudioEngine = new AudioEngine(Storage, Options);
 
 			ConfigureServices(serviceCollection);
 
