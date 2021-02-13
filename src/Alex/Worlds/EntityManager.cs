@@ -203,11 +203,11 @@ namespace Alex.Worlds
 
 				var cameraPosition = new Vector3(args.Camera.Position.X, 0, args.Camera.Position.Z);
 
-				var rotation = cameraPosition - new Vector3(entity.RenderLocation.X, 0, entity.RenderLocation.Z);
+				var rotation = new Vector3(entity.RenderLocation.X, 0, entity.RenderLocation.Z) - cameraPosition;
 				rotation.Normalize();
 
 				var halfWidth = (float) (entity.Width * entity.Scale);
-				var pos       = entity.RenderLocation + posOffset + (rotation * halfWidth);
+				var pos       = entity.RenderLocation + posOffset + (-(rotation * (float)entity.Width));
 
 				Vector2 textPosition;
 

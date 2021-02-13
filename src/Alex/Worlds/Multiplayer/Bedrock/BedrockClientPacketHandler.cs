@@ -342,7 +342,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			if (message.runtimeEntityId != Client.EntityId)
 			{
 				Client.World.UpdateEntityPosition(message.runtimeEntityId, 
-					new PlayerLocation(message.x, message.y - Player.EyeLevel, message.z, -message.headYaw, -message.yaw, -message.pitch));
+					new PlayerLocation(message.x, message.y, message.z, -message.headYaw, -message.yaw, -message.pitch), adjustForEntityHeight:true);
 				return;
 			}
 			
@@ -412,7 +412,9 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				entity.HandleMetadata(message.metadata);
 			}
 
-			//mob.HandleMetadata();
+			
+		//	entity.KnownPosition.Y -= Pl (float) (entity.BoundingBox.GetHeight() - 0.175f);
+				//mob.HandleMetadata();
 			//	message.flags
 
 			//	mob.IsSpawned = true;
@@ -615,16 +617,17 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		public void HandleMcpeMoveEntity(McpeMoveEntity message)
 		{
 			var location = new PlayerLocation(
-				message.position.X, message.position.Y - Player.EyeLevel, message.position.Z, -message.position.HeadYaw,
+				message.position.X, message.position.Y, message.position.Z, -message.position.HeadYaw,
 				-message.position.Yaw, -message.position.Pitch);
 
 			if (message.runtimeEntityId != Client.EntityId)
 			{
-				Client.World.UpdateEntityPosition(message.runtimeEntityId, location, false, true, true);
+				Client.World.UpdateEntityPosition(message.runtimeEntityId, location, false, true, true, false, true);
 
 				return;
 			}
 
+			location.Y -= Player.EyeLevel;
 			Client.World.UpdatePlayerPosition(location);
 		}
 

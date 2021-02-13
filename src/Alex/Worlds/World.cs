@@ -946,24 +946,30 @@ namespace Alex.Worlds
 			//Player.DistanceMoved += MathF.Abs(Vector3.Distance(oldPosition, location));
 		}
 
-		public void UpdateEntityPosition(long entityId, PlayerLocation position, bool relative = false, bool updateLook = false, bool updatePitch = false, bool teleport = false)
+		public void UpdateEntityPosition(long entityId,
+			PlayerLocation position,
+			bool relative = false,
+			bool updateLook = false,
+			bool updatePitch = false,
+			bool teleport = false,
+			bool adjustForEntityHeight = false)
 		{
 			if (EntityManager != null && EntityManager.TryGet(entityId, out Entity entity))
 			{
 				entity.KnownPosition.OnGround = position.OnGround;
-				
+
 				if (updateLook)
 				{
 					if (updatePitch)
 					{
 						entity.KnownPosition.Pitch = position.Pitch;
 					}
-						
+
 					entity.KnownPosition.Yaw = position.Yaw;
 					entity.KnownPosition.HeadYaw = position.HeadYaw;
 					//	entity.UpdateHeadYaw(position.HeadYaw);
 				}
-				
+
 				if (relative)
 				{
 					//var adjusted = entity 
@@ -971,9 +977,21 @@ namespace Alex.Worlds
 				}
 				else
 				{
+					if (adjustForEntityHeight)
+					{
+						if (entity is RemotePlayer)
+						{
+							position.Y -= Player.EyeLevel;
+						}
+						else
+						{
+						//	position.Y -= (float) (entity.BoundingBox.GetHeight());
+						}
+					}
+
 					entity.Movement.MoveTo(position, false);
 				}
-				
+
 				entity.Velocity = Vector3.Zero;
 			}
 		}
