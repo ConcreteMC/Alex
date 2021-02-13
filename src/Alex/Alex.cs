@@ -759,9 +759,8 @@ namespace Alex
 
 		public void LoadWorld(WorldProvider worldProvider, NetworkProvider networkProvider, bool isServer = false)
 		{
-			PlayingState playState = new PlayingState(this, GraphicsDevice, worldProvider, networkProvider);
-
-			var               parentState   = GameStateManager.GetActiveState();
+			var state       = new PlayingState(this, GraphicsDevice, worldProvider, networkProvider);
+			var parentState = GameStateManager.GetActiveState();
 
 			if (parentState is PlayingState)
 				parentState = null;
@@ -771,7 +770,9 @@ namespace Alex
 			loadingScreen.CancelAction = () =>
 			{
 				GuiManager.RemoveScreen(loadingScreen);
+				//playState?.Unload();
 				worldProvider?.Dispose();
+				state?.Unload();
 			};
 
 			GuiManager.AddScreen(loadingScreen);
@@ -781,37 +782,43 @@ namespace Alex
 			ThreadPool.QueueUserWorkItem(
 				o =>
 				{
+					LoadResult result = LoadResult.Timeout;
 					try
 					{
 						GameStateManager.RemoveState("play");
 						
-						var result = worldProvider.Load(loadingScreen.UpdateProgress);
+						result = worldProvider.Load(loadingScreen.UpdateProgress);
 
 						if (networkProvider.IsConnected && result == LoadResult.Done)
 						{
-							GameStateManager.AddState("play", playState);
+							GameStateManager.AddState("play", state);
 							GameStateManager.SetActiveState("play");
 							
 							return;
-						}
-
-						if (result != LoadResult.Aborted)
-						{
-							if (!(GameStateManager.GetActiveState() is DisconnectedScreen))
-							{
-								var s = new DisconnectedScreen();
-								s.DisconnectedTextElement.TranslationKey = "multiplayer.status.cannot_connect";
-								s.ParentState = parentState;
-								GameStateManager.SetActiveState(s, false);
-
-								worldProvider.Dispose();
-							}
 						}
 					}
 					finally
 					{
 						GuiManager.RemoveScreen(loadingScreen);
 						//GameStateManager.RemoveState("loading");
+						
+						if (result != LoadResult.Done)
+						{
+							if (result != LoadResult.Aborted && !(GameStateManager.GetActiveState() is DisconnectedScreen))
+							{
+								var s = new DisconnectedScreen();
+								s.DisconnectedTextElement.TranslationKey = "multiplayer.status.cannot_connect";
+								s.ParentState = parentState;
+								GameStateManager.SetActiveState(s, false);
+								
+								//playState?.Unload();
+								//worldProvider?.Dispose();
+								//state?.Unload();
+							}
+							
+							worldProvider?.Dispose();
+							state?.Unload();
+						}
 					}
 				});
 		}

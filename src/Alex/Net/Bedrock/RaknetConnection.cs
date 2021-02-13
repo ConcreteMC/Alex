@@ -104,22 +104,32 @@ namespace Alex.Net.Bedrock
 			
 		}
 
-		public bool TryConnect(IPEndPoint targetEndPoint, int numberOfAttempts = int.MaxValue, short mtuSize = 1382, CancellationToken cancellationToken = default)
+		public bool TryConnect(IPEndPoint targetEndPoint, int numberOfAttempts = int.MaxValue, short mtuSize = 1400, CancellationToken cancellationToken = default)
 		{
 			Start(); // Make sure we have started the listener
 
 			while (Session == null && numberOfAttempts > 0 && mtuSize >= UdpHeaderSize && !cancellationToken.IsCancellationRequested)
 			{
-				if (!ConnectionResetEvent.Wait(500, cancellationToken))
+				try
 				{
-					if (numberOfAttempts % 4 == 0)
+					if (!HaveServer)
 					{
-						mtuSize -= UdpHeaderSize;
-						Log.Info($"Adjusted mtu size: {mtuSize}");
+						if (!ConnectionResetEvent.Wait(500, cancellationToken))
+						{
+							if (numberOfAttempts % 4 == 0)
+							{
+								mtuSize -= UdpHeaderSize;
+								//	Log.Info($"Adjusted mtu size: {mtuSize}");
+							}
+
+							SendOpenConnectionRequest1(targetEndPoint, mtuSize);
+							numberOfAttempts--;
+						}
 					}
-					
-					SendOpenConnectionRequest1(targetEndPoint, mtuSize);
-					numberOfAttempts--;
+				}
+				catch (OperationCanceledException)
+				{
+					break;
 				}
 			}
 
@@ -183,10 +193,11 @@ namespace Alex.Net.Bedrock
 
 			if (Environment.OSVersion.Platform != PlatformID.MacOSX)
 			{
-				//_listener.Client.ReceiveBufferSize = 1600*40000;
-				listener.Client.ReceiveBufferSize = int.MaxValue;
-				//_listener.Client.SendBufferSize = 1600*40000;
-				listener.Client.SendBufferSize = int.MaxValue;
+				listener.Client.ReceiveBufferSize = 1600*40000;
+				//listener.Client.ReceiveBufferSize = int.MaxValue;
+				//listener.Ttl = Int16.MaxValue;
+				listener.Client.SendBufferSize = 1600*40000;
+				//listener.Client.SendBufferSize = int.MaxValue;
 			}
 			
 			listener.EnableBroadcast = false;
@@ -244,7 +255,7 @@ namespace Alex.Net.Bedrock
 		}
 
 
-		private async void ReceiveCallback(object o)
+		private void ReceiveCallback(object o)
 		{
 			//using (var stream = new NetworkStream(_listener.Client))
 			{
@@ -265,9 +276,9 @@ namespace Alex.Net.Bedrock
 					try
 					{
 						
-						var receive      = await listener.ReceiveAsync();
-						var receiveBytes = receive.Buffer;
-						senderEndpoint = receive.RemoteEndPoint;
+						var receiveBytes = listener.Receive(ref senderEndpoint);
+						//var receiveBytes = receive.Buffer;
+						//senderEndpoint = receive.RemoteEndPoint;
 
 						Interlocked.Increment(ref ConnectionInfo.PacketsIn);
 						Interlocked.Add(ref ConnectionInfo.BytesIn, receiveBytes.Length);
@@ -867,7 +878,7 @@ namespace Alex.Net.Bedrock
 				{
 				//	Log.Warn($"Connecting to {senderEndpoint}");
 					HaveServer = true;
-					SendOpenConnectionRequest1(senderEndpoint, MtuSize);
+					//SendOpenConnectionRequest1(senderEndpoint, MtuSize);
 				}
 				else
 				{
@@ -882,30 +893,34 @@ namespace Alex.Net.Bedrock
 		public ManualResetEventSlim ConnectionResetEvent = new ManualResetEventSlim(false);
 		public void SendOpenConnectionRequest1(IPEndPoint targetEndPoint, short mtuSize)
 		{
-			if (ConnectionResetEvent.IsSet) return;
-			MtuSize = (short) (mtuSize); // This is what we will use from connections this point forward
+			//if (ConnectionResetEvent.IsSet) return;
 
 			var packet = OpenConnectionRequest1.CreateObject();
 			packet.raknetProtocolVersion = 10;
-			packet.mtuSize = (short) (mtuSize + 28);
+			packet.mtuSize = (short) (mtuSize);
 			
 			byte[] data = packet.Encode();
 
+			MtuSize = mtuSize;// (short) (mtuSize + (data.Length - mtuSize)); // This is what we will use from connections this point forward
+			
 			//TraceSend(packet);
 			
 			SendData(data, targetEndPoint);
+			
+			//packet.PutPool();
 		}
 
 		private void HandleRakNetMessage(IPEndPoint senderEndpoint, OpenConnectionReply1 message)
 		{
-			if (HaveServer)
-				return;
+			//if (HaveServer)
+			//	return;
 			
 			if (message.mtuSize != MtuSize)
 			{
 				Log.Warn($"Error, mtu differ from what we sent. Received {message.mtuSize}, expected {MtuSize}");
 
-				//return;
+				if (message.mtuSize > MtuSize + 10)
+					return;
 			}
 
 			ConnectionResetEvent.Set();
@@ -925,15 +940,15 @@ namespace Alex.Net.Bedrock
 			//TraceSend(packet);
 
 			SendData(data, targetEndPoint);
+			
+			//packet.PutPool();
 		}
 		
 		private void HandleRakNetMessage(IPEndPoint senderEndpoint, OpenConnectionReply2 message)
 		{
-			if (HaveServer)
-				return;
-
-			MtuSize = message.mtuSize;
-			Log.Warn("MTU Size: " + message.mtuSize);
+			//if (HaveServer)
+			//	return;
+			
 		//	Log.Warn("Client Endpoint: " + message.clientEndpoint);
 
 			HaveServer = true;
@@ -952,6 +967,9 @@ namespace Alex.Net.Bedrock
 					Log.Warn($"Session already exist, ignoring");
 					return;
 				}
+				
+				MtuSize = mtuSize;
+				Log.Warn("MTU Size: " + mtuSize);
 				
 				session = new RaknetSession(ConnectionInfo, this, targetEndPoint, mtuSize)
 				{

@@ -1787,24 +1787,31 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		{
 			UnhandledPackage(message);
 		}
-		
+
 		public void HandleMcpeTransfer(McpeTransfer message)
 		{
 			Client.Transfered = true;
-			 Client.SendDisconnectionNotification();
-			 WorldProvider.Dispose();
-			 
-			 ThreadPool.QueueUserWorkItem(o =>
-			 {
+			Client.SendDisconnectionNotification();
+			WorldProvider.Dispose();
 
-				 IPHostEntry hostEntry = Dns.GetHostEntry(message.serverAddress);
+			string serverAddress = message.serverAddress;
+			ushort port          = message.port;
+			
+			ThreadPool.QueueUserWorkItem(
+				o =>
+				{
 
-				 if (hostEntry.AddressList.Length > 0)
-				 {
-					 var ip = hostEntry.AddressList[0];
-					 AlexInstance.ConnectToServer(new BedrockServerType(AlexInstance, AlexInstance.Services.GetService<XboxAuthService>()), new ServerConnectionDetails(new IPEndPoint(ip, message.port)), PlayerProfile);
-				 }
-			 });
+					IPHostEntry hostEntry = Dns.GetHostEntry(serverAddress);
+
+					if (hostEntry.AddressList.Length > 0)
+					{
+						var ip = hostEntry.AddressList[0];
+
+						AlexInstance.ConnectToServer(
+							new BedrockServerType(AlexInstance, AlexInstance.Services.GetService<XboxAuthService>()),
+							new ServerConnectionDetails(new IPEndPoint(ip, port)), PlayerProfile);
+					}
+				});
 		}
 
 		public void HandleMcpePlaySound(McpePlaySound message)

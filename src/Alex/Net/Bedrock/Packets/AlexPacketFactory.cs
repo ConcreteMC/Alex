@@ -61,11 +61,11 @@ namespace Alex.Net.Bedrock.Packets
                     case 0x37:
                         packet = new AdventureSettings();
                         break;
-                    case 0x55:
-                        packet = McpeTransfer.CreateObject();
+                  //  case 0x55:
+                   //     packet = McpeTransfer.CreateObject();
                         //packet = new AdventureSettings();
 
-                        break;
+                   //     break;
                     case 0x0b:
                         packet = new StartGame();
                         break;

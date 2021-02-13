@@ -202,7 +202,7 @@ namespace Alex.Worlds
 		//public long WorldTime { get; private set; } = 6000;
 
 		public PlayerList     PlayerList    { get; }
-		public TickManager    Ticker        { get; }
+		public TickManager    Ticker        { get; private set; }
 		public EntityManager  EntityManager { get; set; }
 		public ChunkManager   ChunkManager  { get; private set; }
 		public PhysicsManager PhysicsEngine { get; set; }
@@ -864,6 +864,8 @@ namespace Alex.Worlds
 
 			Player.Dispose();
 			Ticker.Dispose();
+			Ticker = null;
+			Player = null;
 		}
 
 		#region IWorldReceiver (Handle WorldProvider callbacks)

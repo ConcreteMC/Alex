@@ -219,7 +219,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			bool         outOfOrder   = false;
 			LoadingState state        = LoadingState.ConnectingToServer;
 			string       subTitle     = "";
-			while (Client.IsConnected)
+			while (Client.IsConnected && Client.DisconnectReason != DisconnectReason.Unknown)
 			{
 				if (Client.Connection.IsNetworkOutOfOrder && !outOfOrder)
 				{
@@ -323,6 +323,9 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					}
 				}
 			}
+
+			if (!Client.IsConnected)
+				return LoadResult.Timeout;
 
 			var p = World.Player.KnownPosition;
 

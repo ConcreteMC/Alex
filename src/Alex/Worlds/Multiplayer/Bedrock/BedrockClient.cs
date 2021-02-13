@@ -194,7 +194,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			Starting = true;
 
 			StartTime = DateTime.UtcNow;
-			var cancellationToken = new CancellationTokenSource();
+			var cancellationToken = CancellationTokenSource.CreateLinkedTokenSource(CancellationTokenSource.Token);
 			//	var player = WorldReceiver.Player;
 
 			//player.Inventory.CursorChanged += InventoryOnCursorChanged;

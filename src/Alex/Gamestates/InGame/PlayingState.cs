@@ -671,24 +671,18 @@ namespace Alex.Gamestates.InGame
 		{
 			Alex.InGame = false;
 
-			new Thread(
+			ThreadPool.QueueUserWorkItem(
 				o =>
 				{
-					NetworkProvider.Close();
-					
-					World.Destroy();
-					WorldProvider.Dispose();
+					NetworkProvider?.Close();
 
-					_playingHud.Unload();
+					World?.Destroy();
+					WorldProvider?.Dispose();
 
-					//var threadPool =
-					//	ReflectionHelper.GetPrivateStaticPropertyValue<MiNET.Utils.DedicatedThreadPool>(
-					//		typeof(MiNetServer), "FastThreadPool");
-					//threadPool?.Dispose();
-					//ReflectionHelper.SetPrivateStaticPropertyValue<MiNET.Utils.DedicatedThreadPool>(typeof(MiNetServer), "FastThreadPool", null);
-					
+					_playingHud?.Unload();
+
 					RichPresenceProvider.ClearPresence();
-				}).Start();
+				});
 
 			//GetService<IEventDispatcher>().UnregisterEvents(_playingHud.Chat);
 			//_playingHud.Chat = 

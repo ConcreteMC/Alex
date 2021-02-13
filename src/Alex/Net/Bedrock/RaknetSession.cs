@@ -184,8 +184,6 @@ namespace Alex.Net.Bedrock
 
 					if (_orderingBufferQueue.Count == 0 && isMatch)
 					{
-						IsOutOfOrder = false;
-
 						Interlocked.Exchange(ref _lastOrderingIndex, current);
 
 						HandlePacket(message);
@@ -213,8 +211,8 @@ namespace Alex.Net.Bedrock
 								//_orderingStart = DateTime.UtcNow;
 
 								//if (Log.IsDebugEnabled)
-									Log.Warn(
-										$"Datagram out of order. Expected {Interlocked.Read(ref _lastOrderingIndex) + 1}, but was {message.ReliabilityHeader.OrderingIndex}.");
+								Log.Warn(
+									$"Datagram out of order. Expected {Interlocked.Read(ref _lastOrderingIndex) + 1}, but was {message.ReliabilityHeader.OrderingIndex}.");
 							}
 						}
 					}
@@ -265,7 +263,10 @@ namespace Alex.Net.Bedrock
 							if (lastOrderingIndex + 1 == pair.Key)
 							{
 								IsOutOfOrder = false;
-
+								
+								//Log.Info(
+								//	$"Datagram order restored, resuming normal behavior. Current: {pair.Key}");
+								
 								if (_orderingBufferQueue.TryDequeue(out pair))
 								{
 									Interlocked.Exchange(ref _lastOrderingIndex, pair.Key);
@@ -622,14 +623,13 @@ namespace Alex.Net.Bedrock
 				if (!queue.TryDequeue(out int ack)) break;
 				
 				acks.Naks.Add(ack);
+				Interlocked.Increment(ref ConnectionInfo.NakSent);
 			}
 
 			if (acks.Naks.Count > 0)
 			{
 				byte[] data = acks.Encode();
 				await _packetSender.SendDataAsync(data, EndPoint);
-				
-				Interlocked.Increment(ref ConnectionInfo.NakSent);
 			}
 			acks.PutPool();
 		}
@@ -647,13 +647,13 @@ namespace Alex.Net.Bedrock
 				if (!queue.TryDequeue(out int ack)) break;
 				_nacked.Remove(ack);
 				acks.acks.Add(ack);
+				Interlocked.Increment(ref ConnectionInfo.AckSent);
 			}
 
 			if (acks.acks.Count > 0)
 			{
 				byte[] data = acks.Encode();
 				await _packetSender.SendDataAsync(data, EndPoint);
-				Interlocked.Increment(ref ConnectionInfo.AckSent);
 			}
 			
 			acks.PutPool();

@@ -27,7 +27,7 @@ namespace Alex.API.World
 	    {
 		    _scheduledTicks = new ConcurrentDictionary<Action, long>();
 		    _tickedItems = new LinkedList<ITicked>();
-		    TickTimer = new HighPrecisionTimer(50, DoTick);
+		    TickTimer = new HighPrecisionTimer(50, DoTick, false, false);
 		}
 
 		private Stopwatch _sw = Stopwatch.StartNew();
@@ -77,7 +77,7 @@ namespace Alex.API.World
 
 			    if (elapsedTickTime > 50)
 			    {
-				    Log.Warn($"Ticking running slow! Tick took: {elapsedTickTime}ms of which {scheduledTicksTime} were spent on scheduled ticks. (ScheduledTicks={ticks.Length} TickedItems={tickedItems.Length})");
+				//    Log.Warn($"Ticking running slow! Tick took: {elapsedTickTime}ms of which {scheduledTicksTime} were spent on scheduled ticks. (ScheduledTicks={ticks.Length} TickedItems={tickedItems.Length})");
 			    }
 			    
 			    _tick++;
@@ -88,6 +88,20 @@ namespace Alex.API.World
 				    _sw.Restart();
 
 				    TicksPerSecond = 20d / elapsed.TotalSeconds;
+
+				    if (elapsed.TotalMilliseconds <= 950)
+				    {
+					    Log.Warn($"Running ahead! TPS: {TicksPerSecond}");
+				    }
+				    else if (elapsed.TotalMilliseconds >= 1050)
+				    {
+					    Log.Warn($"Running behind! TPS: {TicksPerSecond}");
+				    }
+				    
+				    if (Math.Ceiling(TicksPerSecond) < 20)
+				    {
+					 //   Log.Warn($"Running behind! TPS: {TicksPerSecond}");
+				    }
 			    }
 		    }
 	    }
@@ -119,6 +133,9 @@ namespace Alex.API.World
 		/// <inheritdoc />
 		public void Dispose()
 		{
+			_scheduledTicks?.Clear();
+			_tickedItems?.Clear();
+			
 			try
 			{
 				TickTimer?.Dispose();
