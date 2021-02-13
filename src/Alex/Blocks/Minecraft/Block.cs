@@ -58,7 +58,7 @@ namespace Alex.Blocks.Minecraft
 		{
 			get
 			{
-				if (_hardness >= 0f)
+				if (_hardness > 0f)
 					return _hardness;
 
 				return BlockMaterial.Hardness;
@@ -161,13 +161,27 @@ namespace Alex.Blocks.Minecraft
 		}
 
         public double GetBreakTime(Item miningTool)
-		{
-			double secondsForBreak = Hardness;
-			bool isHarvestable = GetDrops(miningTool)?.Length > 0;
+        {
+	        ItemType     toolItemType     = ItemType.Hand;
+	        ItemMaterial toolItemMaterial = ItemMaterial.None;
+
+	        if (miningTool.Count > 0 && !(miningTool is ItemAir))
+	        {
+		        toolItemType = miningTool.ItemType;
+		        toolItemMaterial = miningTool.Material;
+	        }
+	        
+			double       secondsForBreak  = Hardness;
+			bool         isHarvestable    = true;
 			
 			if (BlockMaterial.IsToolRequired)
 			{
-				isHarvestable = BlockMaterial.CanUseTool(miningTool.ItemType, miningTool.Material);
+				isHarvestable = BlockMaterial.CanUseTool(toolItemType, toolItemMaterial);
+			}
+			
+			if (secondsForBreak <= 0)
+			{
+				secondsForBreak = 0.5f;
 			}
 			
 			if (isHarvestable)
@@ -178,13 +192,9 @@ namespace Alex.Blocks.Minecraft
 			{
 				secondsForBreak *= 5;
 			}
-			if (secondsForBreak == 0D)
-			{
-				secondsForBreak = 0.05;
-			}
 
 			int tierMultiplier = 1;
-			if (BlockMaterial.CanUseTool(miningTool.ItemType, miningTool.Material))
+			if (BlockMaterial.CanUseTool(toolItemType, toolItemMaterial))
 			{
 				switch (miningTool.Material)
 				{
@@ -226,15 +236,15 @@ namespace Alex.Blocks.Minecraft
 							return secondsForBreak / 15;
 						}
 						return secondsForBreak / 1.5;
-					case ItemType.Shovel:
+					/*case ItemType.Shovel:
 					case ItemType.Axe:
 					case ItemType.PickAxe:
 					case ItemType.Hoe:
-						return secondsForBreak / tierMultiplier;
+						return secondsForBreak / tierMultiplier;*/
 				}
 			}
 
-			return secondsForBreak;
+			return secondsForBreak / tierMultiplier;
 		}
 
         public virtual bool ShouldRenderFace(BlockFace face, Block neighbor)

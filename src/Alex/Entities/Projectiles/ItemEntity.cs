@@ -27,21 +27,21 @@ namespace Alex.Entities.Projectiles
             Drag = 0.02;
         }
 
-        private float _rotation = 0;
-        protected bool DoRotation { get; set; } = true;
+        private   float _rotation = 0;
+        protected bool  DoRotation { get; set; } = true;
+        private   bool  IsBlock    { get; set; } = false;
         public override void Update(IUpdateArgs args)
         {
             if (CanRender)
             {
                 var knownPos = KnownPosition.ToVector3();
-            //    var bb       = base.BoundingBox;
-               // var knownPos = bb.GetCenter();
-                
+                // var knownPos = bb.GetCenter();
+               float scale = (float) (IsBlock ? (1f / (1f / Width)) : (1f / 32f));
                 if (DoRotation)
                 {
                     //var offset = new Vector3((float) Width, (float) Height, (float) Width) / 2f;
                     var offset = new Vector3((float) Width, 0f, (float) Width);
-                    ItemRenderer.Update(args, MCMatrix.CreateScale(1f / 32f)
+                    ItemRenderer.Update(args, MCMatrix.CreateScale(scale)
                                              // * MCMatrix.CreateTranslation(-offset)
                                               * MCMatrix.CreateRotationY(MathHelper.ToRadians(_rotation)) 
                                             //  * MCMatrix.CreateTranslation(offset)
@@ -49,7 +49,7 @@ namespace Alex.Entities.Projectiles
                 }
                 else
                 {
-                    ItemRenderer.Update(args,  MCMatrix.CreateScale(1f / 32f)
+                    ItemRenderer.Update(args,  MCMatrix.CreateScale(scale)
                                                * MCMatrix.CreateRotationY(MathHelper.ToRadians(KnownPosition.Yaw))
                                                * MCMatrix.CreateTranslation(knownPos));
                 }
@@ -59,6 +59,16 @@ namespace Alex.Entities.Projectiles
             {
                 _rotation += 45f * (float) args.GameTime.ElapsedGameTime.TotalSeconds;
             }
+        }
+
+
+        /// <inheritdoc />
+        public override void SetItem(Item item)
+        {
+            base.SetItem(item);
+
+            if (item is ItemBlock)
+                IsBlock = true;
         }
 
         public override void Render(IRenderArgs renderArgs)

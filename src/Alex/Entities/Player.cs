@@ -643,7 +643,7 @@ namespace Alex.Entities
 		    
 		    Interlocked.Exchange(ref _destroyingTick, 0);
 		    
-		    _destroyTimeNeeded = block.GetBreakTime(Inventory.MainHand ?? new ItemAir());
+		    _destroyTimeNeeded = block.GetBreakTime(Inventory.MainHand ?? new ItemAir()) * 20f;
 
 		    Log.Debug($"Start break block ({_destroyingTarget}, {_destroyTimeNeeded} ticks.)");
 
