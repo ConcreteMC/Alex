@@ -182,7 +182,7 @@ namespace Alex.Graphics
 
 		    _atlasLocations = stillFrameInfo;
 
-		    var stillFrame = GetMipMappedTexture2D(device, stillAtlas);
+		    var stillFrame = GetMipMappedTexture2D(device, stillAtlas, "static", true);
 		    totalSize += stillFrame.MemoryUsage;
 		    _stillFrame = stillFrame;
 			    
@@ -347,18 +347,20 @@ namespace Alex.Graphics
 		    return frames.Select(
 			    (x, index) =>
 			    {
-				    var a = GetMipMappedTexture2D(device, x);
+				    var a = GetMipMappedTexture2D(device, x, $"frame-{index}");
 				    //totalSize += a.MemoryUsage;
 
 				    return a;
 			    }).ToArray();
 	    }
 
-	    private PooledTexture2D GetMipMappedTexture2D(GraphicsDevice device, Image<Rgba32> image)
+	    private PooledTexture2D GetMipMappedTexture2D(GraphicsDevice device, Image<Rgba32> image, string name, bool save = false)
 	    {
 		    //device.VertexSamplerStates.
 		    PooledTexture2D texture = GpuResourceManager.GetTexture2D(this, device, image.Width, image.Height, true, SurfaceFormat.Color);
 
+		 //   if (!Directory.Exists("atlas"))
+		//	    Directory.CreateDirectory("atlas");
 		    // Directory.CreateDirectory(name);
 		    // var resampler = new BicubicResampler();
 		    // var encoder = new PngEncoder();
@@ -367,9 +369,9 @@ namespace Alex.Graphics
 			    int mipWidth  = (int) System.Math.Max(1, image.Width >> level);
 			    int mipHeight = (int) System.Math.Max(1, image.Height >> level);
 
-			    if (mipWidth == 1 && mipHeight == 1)
+			    if (mipWidth < TextureWidth || mipHeight < TextureHeight)
 			    {
-				    Alex.MipMapLevel = level;
+				    Alex.MipMapLevel = level - 1;
 				    break;
 			    }
 			    
@@ -393,6 +395,9 @@ namespace Alex.Graphics
 				    //TODO: Resample per texture instead of whole texture map.
 
 				    texture.SetData(level, null, colorData, 0, colorData.Length);
+				  //  if (save)
+					//	bmp.SaveAsPng(Path.Combine("atlas", $"{name}-{level}.png"));
+
 			    }
 			    finally
 			    {
@@ -402,14 +407,16 @@ namespace Alex.Graphics
 
 		    return texture;
 	    }
-	    
+
+	    private const int Spacing     = 0;
+	    private       int _spacingHalf = Spacing > 0 ? Spacing / 2 : 0;
 	    private void GenerateAtlasInternal(KeyValuePair<ResourceLocation, Image<Rgba32>>[] regular, IProgressReceiver progressReceiver, Dictionary<ResourceLocation, TextureInfo> atlasLocations, bool animated, out Image<Rgba32> result)
         {
 	        int total = regular.Length;
 	        var a = (int)Math.Ceiling(regular.Length / 32D);
 
-	        int height = a * TextureHeight;
-	        var width  = Math.Min(32, total) * TextureWidth;
+	        int height = a * (TextureHeight + Spacing);
+	        var width  = Math.Min(32, total) * (TextureWidth + Spacing);
 
 	        if (height == 0 || width == 0)
 	        {
@@ -427,6 +434,9 @@ namespace Alex.Graphics
 
 	    private int Process(ref Image<Rgba32> target, KeyValuePair<ResourceLocation, Image<Rgba32>>[] data, ref int xi, ref int yi, ref int xOffset, ref int yRemaining, int total, int processed, IDictionary<ResourceLocation, TextureInfo> locations, IProgressReceiver progressReceiver, bool animated)
 	    {
+		    xi += _spacingHalf;
+		    yi += _spacingHalf;
+		    
 		    int done = processed;
 			var count = 0;
 
@@ -453,13 +463,13 @@ namespace Alex.Graphics
 				    xOffset = xi;
 				    yRemaining = bm.Value.Height;
 			    }
-			    xi += bm.Value.Width;
+			    xi += bm.Value.Width + Spacing;
 
-			    if (count == target.Width / TextureWidth)
+			    if (count == 32)
 			    {
-				    yi += TextureHeight;
-				    xi = 0;
-				    yRemaining -= TextureHeight;
+				    yi += TextureHeight + Spacing;
+				    xi = _spacingHalf;
+				    yRemaining -= TextureHeight + Spacing;
 
 				    count = 0;
 			    }

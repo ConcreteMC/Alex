@@ -434,6 +434,7 @@ namespace Alex.Worlds
 
 		#region  Drawing
 
+		private bool _useWireFrame = false;
 		public bool UseWireFrames
 		{
 			get
@@ -442,7 +443,16 @@ namespace Alex.Worlds
 			}
 			set
 			{
-				_rasterizerState.FillMode = value ? FillMode.WireFrame : FillMode.Solid;
+				if (value && _rasterizerState.FillMode != FillMode.WireFrame)
+				{
+					_rasterizerState = _rasterizerState.Copy();
+					_rasterizerState.FillMode = FillMode.WireFrame;
+				}
+				else if (!value && _rasterizerState.FillMode == FillMode.WireFrame)
+				{
+					_rasterizerState = _rasterizerState.Copy();
+					_rasterizerState.FillMode = FillMode.Solid;
+				}
 			}
 		}
 
@@ -451,13 +461,16 @@ namespace Alex.Worlds
 			Filter = TextureFilter.PointMipLinear	,
 			AddressU = TextureAddressMode.Wrap,
 			AddressV = TextureAddressMode.Wrap,
-			MipMapLevelOfDetailBias = -1f,
+			//MipMapLevelOfDetailBias = -1f,
+			MipMapLevelOfDetailBias = -3f,
 			MaxMipLevel = Alex.MipMapLevel,
 			//ComparisonFunction = 
 			// MaxMipLevel = 0,
 			FilterMode = TextureFilterMode.Default,
 			AddressW = TextureAddressMode.Wrap,
+			ComparisonFunction = CompareFunction.Never,
 			MaxAnisotropy = 16,
+			BorderColor = Color.Black,
 			//ComparisonFunction = CompareFunction.Greater
 			// ComparisonFunction = 
 		};
@@ -469,7 +482,7 @@ namespace Alex.Worlds
 			DepthBufferWriteEnable = true
 		};
 
-		private readonly RasterizerState _rasterizerState = new RasterizerState()
+		private RasterizerState _rasterizerState = new RasterizerState()
 		{
 			//DepthBias = 0.0001f,
 			CullMode = CullMode.CullClockwiseFace,

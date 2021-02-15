@@ -347,7 +347,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			}
 			
 			Client.World.UpdatePlayerPosition(new 
-				PlayerLocation(message.x, message.y, message.z));
+				PlayerLocation(message.x, message.y, message.z, message.headYaw, message.yaw, message.pitch), message.mode == 2);
 
 			Client.SendMcpeMovePlayer(new MiNET.Utils.PlayerLocation(message.x, message.y, message.z), Client.World.Player.KnownPosition.OnGround);
 		}
@@ -1244,7 +1244,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		public void HandleMcpeRespawn(McpeRespawn message)
 		{
 			Log.Info($"Respawn state {message.state} | Runtime entity id: {message.runtimeEntityId}");
-			//if (message.state == 1)
+			if (message.state == 1)
 			{
 				Client.World.UpdatePlayerPosition(new PlayerLocation(message.x, message.y, message.z));
 

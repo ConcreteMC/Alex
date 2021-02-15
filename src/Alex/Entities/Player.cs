@@ -61,7 +61,25 @@ namespace Alex.Entities
         public bool IsWorldImmutable { get; set; } = false;
         public bool IsNoPvP { get; set; } = true;
         public bool IsNoPvM { get; set; } = true;
-        
+
+        /// <inheritdoc />
+        public override PlayerLocation KnownPosition
+        {
+	        get
+	        {
+		        return base.KnownPosition;
+	        }
+	        set
+	        {
+		        if (Level != null && !Level.ChunkManager.TryGetChunk(new ChunkCoordinates(value), out _))
+		        {
+			        WaitingOnChunk = true;
+		        }
+		        
+		        base.KnownPosition = value;
+	        }
+        }
+
         //public Camera Camera { get; internal set; }
         public Player(GraphicsDevice graphics, InputManager inputManager, string name, World world, Skin skin, NetworkProvider networkProvider, PlayerIndex playerIndex) : base(name, world, networkProvider, skin.Texture)
         {

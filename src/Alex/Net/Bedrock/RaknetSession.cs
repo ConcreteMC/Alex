@@ -184,6 +184,7 @@ namespace Alex.Net.Bedrock
 
 					if (_orderingBufferQueue.Count == 0 && isMatch)
 					{
+						IsOutOfOrder = false;
 						Interlocked.Exchange(ref _lastOrderingIndex, current);
 
 						HandlePacket(message);
@@ -212,7 +213,7 @@ namespace Alex.Net.Bedrock
 
 								//if (Log.IsDebugEnabled)
 								Log.Warn(
-									$"Datagram out of order. Expected {Interlocked.Read(ref _lastOrderingIndex) + 1}, but was {message.ReliabilityHeader.OrderingIndex}.");
+									$"Datagram out of order. Expected {last + 1}, but was {current}.");
 							}
 						}
 					}
@@ -262,8 +263,6 @@ namespace Alex.Net.Bedrock
 
 							if (lastOrderingIndex + 1 == pair.Key)
 							{
-								IsOutOfOrder = false;
-								
 								//Log.Info(
 								//	$"Datagram order restored, resuming normal behavior. Current: {pair.Key}");
 								
@@ -272,6 +271,7 @@ namespace Alex.Net.Bedrock
 									Interlocked.Exchange(ref _lastOrderingIndex, pair.Key);
 
 									HandlePacket(pair.Value);
+									IsOutOfOrder = false;
 								}
 							}
 							else if (pair.Key <= lastOrderingIndex)
@@ -289,7 +289,7 @@ namespace Alex.Net.Bedrock
 					}
 
 					if (!_orderingResetEvent.WaitOne(500)) //Keep the thread alive for longer.
-						return;
+						break;
 				}
 
 				_orderingResetEvent?.Reset();

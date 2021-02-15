@@ -138,7 +138,10 @@ namespace Alex.Worlds
 		{
 			if (!e.IsSpawned)
 				return;
-
+			
+			if (e.IsNoAi)
+				return;
+			
 			var onGround       = e.KnownPosition.OnGround;
 			
 			var slipperiness   = 0.91f;
@@ -170,10 +173,7 @@ namespace Alex.Worlds
 
 			e.Movement.Move(e.Velocity);
 
-			if (e.IsNoAi)
-				return;
 
-			
 			if (e.IsAffectedByGravity && !e.IsFlying && !e.KnownPosition.OnGround)
 			{ 
 				e.Velocity -= new Vector3(0f, (float) (e.Gravity), 0f);

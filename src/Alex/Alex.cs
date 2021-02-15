@@ -143,9 +143,11 @@ namespace Alex
 
 			DeviceManager = new GraphicsDeviceManager(this)
 			{
-				PreferMultiSampling = false,
+				PreferMultiSampling = true,
 				SynchronizeWithVerticalRetrace = false,
 				GraphicsProfile = GraphicsProfile.Reach,
+				PreferHalfPixelOffset = false,
+				PreferredDepthStencilFormat = DepthFormat.Depth24Stencil8
 			};
 
 			DeviceManager.PreparingDeviceSettings += (sender, args) =>

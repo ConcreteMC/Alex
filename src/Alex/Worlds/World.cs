@@ -933,15 +933,9 @@ namespace Alex.Worlds
 			//	Log.Info($"Despawned entity {entityId}");
 		}
 
-		public void UpdatePlayerPosition(PlayerLocation location)
+		public void UpdatePlayerPosition(PlayerLocation location, bool teleport = false)
 		{
 		//	var oldPosition = Player.KnownPosition;
-			
-			if (!ChunkManager.TryGetChunk(new ChunkCoordinates(location), out _))
-			{
-				Player.WaitingOnChunk = true;
-			}
-
 			Player.Movement.MoveTo(location);
 			//Player.KnownPosition = location;
 			

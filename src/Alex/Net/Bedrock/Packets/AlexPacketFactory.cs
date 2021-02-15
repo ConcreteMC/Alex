@@ -116,7 +116,7 @@ namespace Alex.Net.Bedrock.Packets
             {
               //  if (messageId != 0x31)
                 {
-                      Log.Error(ex, $"Processing error: {ex.ToString()}");
+                      Log.Error(ex, $"Processing error.");
                 }
             }
 
