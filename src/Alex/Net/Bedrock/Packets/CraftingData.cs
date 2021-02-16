@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using Alex.Worlds.Multiplayer.Bedrock;
 using MiNET.Blocks;
 using MiNET.Crafting;
 using MiNET.Items;
@@ -67,6 +69,9 @@ namespace Alex.Net.Bedrock.Packets
 					case Multi:
 						result.Add(ReadMultiRecipe());
 						break;
+					default:
+						throw new NotSupportedException($"Unsupported recipe type: {recipeType}");
+						break;
 				}
 			}
 
@@ -114,10 +119,10 @@ namespace Alex.Net.Bedrock.Packets
 
 			for (int i = 0; i < inputCount; i++)
 			{
-				inputs.Add(ReadRecipeIngredient());
+				inputs.Add(ReadRecipeIngredient2());
 			}
 
-			var  count = ReadVarInt();
+			var  count = ReadUnsignedVarInt();
 
 			for (int i = 0; i < count; i++)
 			{
@@ -136,6 +141,28 @@ namespace Alex.Net.Bedrock.Packets
 				Block = craftingTag
 			};
 		}
+
+		private MiNET.Items.Item ReadRecipeIngredient2()
+		{
+			var id    = ReadVarInt();
+
+			if (id == 0)
+			{
+				return new ItemAir();
+			}
+			
+			var meta      = ReadVarInt();
+			var count     = ReadVarInt();
+			
+			var itemState = ChunkProcessor.Itemstates.FirstOrDefault(x => x.Id == id);
+			if (itemState == null)
+				itemState = MiNET.Items.ItemFactory.Itemstates.FirstOrDefault(x => x.Id == id);
+
+			if (itemState == null)
+				return new ItemAir();
+			
+			return MiNET.Items.ItemFactory.GetItem(itemState.Name,(short)meta, count);
+		}
 		
 		private ShapelessRecipe ReadShapelessRecipe()
 		{
@@ -143,14 +170,23 @@ namespace Alex.Net.Bedrock.Packets
 			List<MiNET.Items.Item> inputs   = new List<MiNET.Items.Item>();
 			List<MiNET.Items.Item> outputs  = new List<MiNET.Items.Item>();
 
-			int count = ReadVarInt();
+			var count = ReadUnsignedVarInt();
 
 			for (int i = 0; i < count; i++)
 			{
-				inputs.Add(ReadRecipeIngredient());
+				try
+				{
+					inputs.Add(ReadRecipeIngredient2());
+				}
+				catch (Exception ex)
+				{
+					Log.Info(ex, $"Error ({i} / {count}) Recipe ID={recipeId}");
+
+					throw;
+				}
 			}
 
-			count = ReadVarInt();
+			count = ReadUnsignedVarInt();
 
 			for (int i = 0; i < count; i++)
 			{

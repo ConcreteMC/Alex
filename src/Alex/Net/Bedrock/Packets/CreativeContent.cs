@@ -74,12 +74,11 @@ namespace Alex.Net.Bedrock.Packets
 			else if (nbtLen > 0)
 			{
 				var nbtData = packet.ReadBytes(nbtLen);
-
 				
-					using (MemoryStream ms = new MemoryStream(nbtData))
-					{
-						stack.ExtraData = (NbtCompound) ReadLegacyNbtCompound(ms);
-					}
+				using (MemoryStream ms = new MemoryStream(nbtData))
+				{
+					stack.ExtraData = (NbtCompound) ReadLegacyNbtCompound(ms);
+				}
 			}
 
 			var canPlace = packet.ReadVarInt();

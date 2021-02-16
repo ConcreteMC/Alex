@@ -45,10 +45,10 @@ namespace Alex.Gui.Dialogs.Containers
             {
                 var modelRenderer = player.ModelRenderer;
 
-                var mob = new RemotePlayer(player.Name, player.Level, player.Network, player.ModelRenderer.Texture)
-                {
-                    ModelRenderer = modelRenderer,
-                };
+                var mob = new RemotePlayer(player.Name, player.Level, player.Network, player.ModelRenderer.Texture);
+                mob.ModelRenderer = new EntityModelRenderer(modelRenderer.Model, modelRenderer.Texture);
+
+                mob.KnownPosition = new PlayerLocation(0, 0, 0, 0f, 0f, 0f);
 
                 ContentContainer.AddChild(
                     _playerEntityModelView = new GuiEntityModelView(mob)
@@ -151,7 +151,7 @@ namespace Alex.Gui.Dialogs.Containers
                 var pitch   = (float) mouseDelta.GetPitch();
                 var yaw     = (float) headYaw;
 
-                _playerEntityModelView.SetEntityRotation(-yaw, pitch, -headYaw);
+                _playerEntityModelView.SetEntityRotation(yaw, pitch, headYaw);
 
                 if (Inventory != null && Inventory is Inventory inv)
                 {
@@ -161,6 +161,8 @@ namespace Alex.Gui.Dialogs.Containers
                     _playerEntityModelView.Entity.Inventory.MainHand = inv.MainHand;
                     _playerEntityModelView.Entity.Inventory.SelectedSlot = inv.SelectedSlot;
                 }
+                
+                
             }
         }
         
