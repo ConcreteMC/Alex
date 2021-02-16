@@ -1,9 +1,12 @@
 using System;
+using System.Collections.Generic;
+using MiNET.Blocks;
 using MiNET.Crafting;
 using MiNET.Items;
 using MiNET.Net;
 using MiNET.Utils;
 using NLog;
+using Item = Alex.Items.Item;
 
 namespace Alex.Net.Bedrock.Packets
 {
@@ -13,11 +16,9 @@ namespace Alex.Net.Bedrock.Packets
 		
 		protected override void DecodePacket()
 		{
-			//base.DecodePacket();
-			Id = IsMcpe ? (byte) ReadVarInt() : ReadByte();
+			Id = (byte) ReadVarInt();
 			
-			//ReadNewRecipes();
-			recipes = ReadRecipes();
+			recipes = ReadNewRecipes();
 			potionTypeRecipes = ReadPotionTypeRecipes();
 			potionContainerRecipes = ReadPotionContainerChangeRecipes();
 			isClean = ReadBool();
@@ -32,184 +33,142 @@ namespace Alex.Net.Bedrock.Packets
 		const byte ShapelessChemistry = 6;
 		const byte ShapedChemistry    = 7;
 		
-		private void ReadNewRecipes()
+		private Recipes ReadNewRecipes()
 		{
-			recipes = new Recipes();
+			var result = new Recipes();
 
 			var count = ReadUnsignedVarInt();
-			Log.Trace($"Reading {count} recipes");
 
 			for (int i = 0; i < count; i++)
 			{
-				int recipeType = ReadSignedVarInt();
-
-				Log.Trace($"Read recipe no={i} type={recipeType}");
-
-				if (recipeType < 0 /*|| len == 0*/)
-				{
-					Log.Error("Read void recipe");
-					break;
-				}
+				var recipeType = ReadVarInt();
 
 				switch (recipeType)
 				{
-					case ShapelessChemistry:
 					case Shapeless:
+					case ShapelessChemistry:
 					case ShulkerBox:
-					{
-						var recipe = new ShapelessRecipe();
-						ReadString(); // some unique id
-						int ingrediensCount = ReadVarInt(); // 
-						for (int j = 0; j < ingrediensCount; j++)
-						{
-							recipe.Input.Add(ReadRecipeIngredient());
-						}
-						int resultCount = ReadVarInt(); // 1?
-						for (int j = 0; j < resultCount; j++)
-						{
-							recipe.Result.Add(this.ReadItem2(false));
-						}
-						recipe.Id = ReadUUID(); // Id
-						recipe.Block = ReadString(); // block?
-						ReadSignedVarInt(); // priority
-						recipe.UniqueId = ReadVarInt(); // unique id
-						recipes.Add(recipe);
-						//Log.Error("Read shapeless recipe");
+						result.Add(ReadShapelessRecipe());
 						break;
-					}
-					case ShapedChemistry:
+					
 					case Shaped:
-					{
-						ReadString(); // some unique id
-						int width = ReadVarInt(); // Width
-						int height = ReadVarInt(); // Height
-						
-						var recipe = new ShapedRecipe(width, height);
-
-						if (width > 3 || height > 3)
-						{
-						//	throw new Exception("Wrong number of ingredience. Width=" + width + ", height=" + height);
-						}
-						
-						for (int w = 0; w < width; w++)
-						{
-							for (int h = 0; h < height; h++)
-							{
-								recipe.Input[(h * width) + w] = ReadRecipeIngredient();
-							}
-						}
-
-						int resultCount = ReadVarInt(); // 1?
-						for (int j = 0; j < resultCount; j++)
-						{
-							recipe.Result.Add(this.ReadItem2(false));
-						}
-						recipe.Id = ReadUUID(); // Id
-						recipe.Block = ReadString(); // block?
-						ReadSignedVarInt(); // priority
-						recipe.UniqueId = ReadVarInt(); // unique id
-						recipes.Add(recipe);
-						//Log.Error("Read shaped recipe");
+					case ShapedChemistry:
+						result.Add(ReadShapedRecipe());
 						break;
-					}
-					case FurnaceData:
+					
 					case Furnace:
-					{
-						var recipe = new SmeltingRecipe();
-						short id = (short) ReadSignedVarInt(); // input (with metadata) 
-						Item result = this.ReadItem2(false); // Result
-						recipe.Block = ReadString(); // block?
-						recipe.Input = ItemFactory.GetItem(id, 0);
-						recipe.Result = result;
-						recipes.Add(recipe);
-						//Log.Error("Read furnace recipe");
-						//Log.Error($"Input={id}, meta={""} Item={result.Id}, Meta={result.Metadata}");
+						result.Add(ReadSmeltingRecipe());
 						break;
-					}
-					/*case FurnaceData:
-					{
-						//const ENTRY_FURNACE_DATA = 3;
-						var recipe = new SmeltingRecipe();
-						short id = (short) ReadSignedVarInt(); // input (with metadata) 
-						short meta = (short) ReadSignedVarInt(); // input (with metadata) 
-						Item result = ReadItem(); // Result
-						recipe.Block = ReadString(); // block?
-						recipe.Input = ItemFactory.GetItem(id, meta);
-						recipe.Result = result;
-						recipes.Add(recipe);
-						//Log.Error("Read smelting recipe");
-						//Log.Error($"Input={id}, meta={meta} Item={result.Id}, Meta={result.Metadata}");
+					
+					case FurnaceData:
+						result.Add(ReadSmeltingRecipeData());
 						break;
-					}*/
+					
 					case Multi:
-					{
-						//Log.Error("Reading MULTI");
-
-						var recipe = new MultiRecipe();
-						recipe.Id = ReadUUID();
-						recipe.UniqueId = ReadVarInt(); // unique id
-						recipes.Add(recipe);
-						break;
-					}
-					/*case ShapelessChemistry:
-					{
-						var recipe = new ShapelessRecipe();
-						ReadString(); // some unique id
-						int ingrediensCount = ReadVarInt(); // 
-						for (int j = 0; j < ingrediensCount; j++)
-						{
-							recipe.Input.Add(ReadRecipeIngredient());
-						}
-						int resultCount = ReadVarInt(); // 1?
-						for (int j = 0; j < resultCount; j++)
-						{
-							recipe.Result.Add(ReadItem());
-						}
-						recipe.Id = ReadUUID(); // Id
-						recipe.Block = ReadString(); // block?
-						ReadSignedVarInt(); // priority
-						recipe.UniqueId = ReadVarInt(); // unique id
-						//recipes.Add(recipe);
-						//Log.Error("Read shapeless recipe");
-						break;
-					}*/
-					/*case ShapedChemistry:
-					{
-						ReadString(); // some unique id
-						int width = ReadSignedVarInt(); // Width
-						int height = ReadSignedVarInt(); // Height
-						var recipe = new ShapedRecipe(width, height);
-						if (width > 3 || height > 3) throw new Exception("Wrong number of ingredience. Width=" + width + ", height=" + height);
-						for (int w = 0; w < width; w++)
-						{
-							for (int h = 0; h < height; h++)
-							{
-								recipe.Input[(h * width) + w] = ReadRecipeIngredient();
-							}
-						}
-
-						int resultCount = ReadVarInt(); // 1?
-						for (int j = 0; j < resultCount; j++)
-						{
-							recipe.Result.Add(ReadItem());
-						}
-						recipe.Id = ReadUUID(); // Id
-						recipe.Block = ReadString(); // block?
-						ReadSignedVarInt(); // priority
-						recipe.UniqueId = ReadVarInt(); // unique id
-						//recipes.Add(recipe);
-						//Log.Error("Read shaped recipe");
-						break;
-					}
-				*/
-					default:
-						Log.Error($"Read unknown recipe type: {recipeType}");
-						//ReadBytes(len);
+						result.Add(ReadMultiRecipe());
 						break;
 				}
 			}
 
 			Log.Trace($"Done reading {count} recipes");
+
+			return result;
 		}
+
+		private MultiRecipe ReadMultiRecipe()
+		{
+			var uuid      = ReadUUID();
+			var networkId = ReadUnsignedVarInt();
+
+			return new MultiRecipe() {Id = uuid, UniqueId = (int) networkId};
+		}
+		
+		private SmeltingRecipe ReadSmeltingRecipeData()
+		{
+			var inputId     = ReadVarInt();
+			var meta        = ReadVarInt();
+			var output      = CreativeContent.ReadItem2(this);
+			var craftingTag = ReadString();
+
+			return new SmeltingRecipe(output, ItemFactory.GetItem((short) inputId, (short)meta), craftingTag);
+		}
+
+		private SmeltingRecipe ReadSmeltingRecipe()
+		{
+			var inputId     = ReadVarInt();
+			var output      = CreativeContent.ReadItem2(this);
+			var craftingTag = ReadString();
+
+			return new SmeltingRecipe(output, ItemFactory.GetItem((short) inputId), craftingTag);
+		}
+		
+		private ShapedRecipe ReadShapedRecipe()
+		{
+			var                    recipeId   = ReadString();
+			int                    width      = ReadVarInt();
+			int                    height     = ReadVarInt();
+			var                    inputCount = width * height;
+			
+			List<MiNET.Items.Item> inputs  = new List<MiNET.Items.Item>(inputCount);
+			List<MiNET.Items.Item> outputs = new List<MiNET.Items.Item>();
+
+			for (int i = 0; i < inputCount; i++)
+			{
+				inputs.Add(ReadRecipeIngredient());
+			}
+
+			var  count = ReadVarInt();
+
+			for (int i = 0; i < count; i++)
+			{
+				outputs.Add(CreativeContent.ReadItem2(this));
+			}
+
+			var uuid        = ReadUUID();
+			var craftingTag = ReadString();
+			var priority    = ReadVarInt();
+			var networkId   = ReadUnsignedVarInt();
+			
+			return  new ShapedRecipe( width, height, outputs, inputs.ToArray())
+			{
+				Id = uuid,
+				UniqueId = (int) networkId,
+				Block = craftingTag
+			};
+		}
+		
+		private ShapelessRecipe ReadShapelessRecipe()
+		{
+			var                    recipeId = ReadString();
+			List<MiNET.Items.Item> inputs   = new List<MiNET.Items.Item>();
+			List<MiNET.Items.Item> outputs  = new List<MiNET.Items.Item>();
+
+			int count = ReadVarInt();
+
+			for (int i = 0; i < count; i++)
+			{
+				inputs.Add(ReadRecipeIngredient());
+			}
+
+			count = ReadVarInt();
+
+			for (int i = 0; i < count; i++)
+			{
+				outputs.Add(CreativeContent.ReadItem2(this));
+			}
+
+			var uuid        = ReadUUID();
+			var craftingTag = ReadString();
+			var priority    = ReadVarInt();
+			var networkId   = ReadUnsignedVarInt();
+			
+			return  new ShapelessRecipe(outputs, inputs)
+			{
+				Id = uuid,
+				UniqueId = (int) networkId,
+				Block = craftingTag
+			};
+		}
+
 	}
 }

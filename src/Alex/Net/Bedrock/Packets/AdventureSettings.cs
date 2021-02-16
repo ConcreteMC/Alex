@@ -7,7 +7,8 @@ namespace Alex.Net.Bedrock.Packets
 		/// <inheritdoc />
 		protected override void DecodePacket()
 		{
-			this.Id = this.IsMcpe ? (byte) this.ReadVarInt() : this.ReadByte();
+			this.Id = (byte) this.ReadVarInt();
+			
 			this.flags = this.ReadUnsignedVarInt();
 			this.commandPermission = this.ReadUnsignedVarInt();
 			this.actionPermissions = this.ReadUnsignedVarInt();
