@@ -40,6 +40,7 @@ using fNbt;
 using Jose;
 using Microsoft.Extensions.DependencyInjection;
 using MiNET;
+using MiNET.Entities;
 using MiNET.Net;
 using MiNET.UI;
 using MiNET.Utils;
@@ -54,6 +55,7 @@ using SixLabors.ImageSharp.PixelFormats;
 using AnvilWorldProvider = Alex.Worlds.Singleplayer.AnvilWorldProvider;
 using BlockCoordinates = Alex.API.Utils.BlockCoordinates;
 using ChunkCoordinates = Alex.API.Utils.ChunkCoordinates;
+using Entity = Alex.Entities.Entity;
 using MathF = System.MathF;
 using MessageType = Alex.API.Data.MessageType;
 using Player = Alex.Entities.Player;
@@ -469,6 +471,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			PlayerLocation position,
 			Microsoft.Xna.Framework.Vector3 velocity, EntityAttributes attributes, MetadataDictionary metadata)
 		{
+			
 			Entity entity = null;
 
 			if (type == EntityType.FallingBlock)
@@ -526,19 +529,20 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		public void HandleMcpeAddEntity(McpeAddEntity message)
 		{
-			var type = message.entityType.Replace("minecraft:", "").Replace("_", "");
-			if (Enum.TryParse(typeof(EntityType), type, true, out object res))
+			MiNET.Entities.EntityType entityType;
+			if (_entityIdentifiers.TryGetValue(message.entityType, out var realId))
 			{
-				SpawnMob(message.runtimeEntityId, (EntityType) res,
-					new PlayerLocation(message.x, message.y, message.z, -message.headYaw, -message.yaw, -message.pitch),
-					new Microsoft.Xna.Framework.Vector3(message.speedX, message.speedY, message.speedZ),
-					message.attributes, message.metadata);
-			//	_entityMapping.TryAdd(message.entityIdSelf, message.runtimeEntityId);
+				entityType = (MiNET.Entities.EntityType) realId;
 			}
 			else
-            {
-	            Log.Warn($"Unknown mob: {type}");
-            }
+			{
+				entityType = MiNET.Entities.EntityHelpers.ToEntityType(message.entityType);
+			}
+
+			SpawnMob(message.runtimeEntityId,entityType,
+				new PlayerLocation(message.x, message.y, message.z, -message.headYaw, -message.yaw, -message.pitch),
+				new Microsoft.Xna.Framework.Vector3(message.speedX, message.speedY, message.speedZ),
+				message.attributes, message.metadata);
         }
 
 		//private ConcurrentDictionary<long, long> _entityMapping = new ConcurrentDictionary<long, long>();
@@ -651,7 +655,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 						known = new PlayerLocation(known.X, known.Y, known.Z, known.HeadYaw, known.Yaw, known.Pitch);
 						
 						var endPosition = ed.GetCurrentPosition(known);
-
+/*
 						if (!ed.HasX)
 						{
 							endPosition.X = known.X;
@@ -677,7 +681,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 						else
 						{
 							endPosition.Z = float.IsNaN(endPosition.Z) ? known.Z : endPosition.Z;
-						}
+						}*/
 
 						endPosition.Yaw = ed.HasYaw ? -endPosition.Yaw : known.Yaw;
 						endPosition.HeadYaw = ed.HasHeadYaw ? -endPosition.HeadYaw : known.HeadYaw;
@@ -740,9 +744,23 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			UnhandledPackage(message);
         }
 
+		private ConcurrentDictionary<string, int> _entityIdentifiers = new ConcurrentDictionary<string, int>();
 		public void HandleMcpeAvailableEntityIdentifiers(McpeAvailableEntityIdentifiers message)
 		{
-			UnhandledPackage(message);
+			var idList = message.namedtag.NbtFile?.RootTag?["idlist"];
+
+			if (idList != null && idList is NbtList ids)
+			{
+				foreach (NbtCompound tag in ids.ToArray<NbtCompound>())
+				{
+					if (tag.TryGet("id", out NbtString id)
+					&& tag.TryGet("rid", out NbtInt realId))
+					{
+						_entityIdentifiers[id.Value] = realId.Value;
+					}
+				}
+			}
+			//UnhandledPackage(message);
         }
 
 		public void HandleMcpeLevelSoundEventV2(McpeLevelSoundEventV2 message)

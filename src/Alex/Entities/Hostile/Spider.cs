@@ -5,6 +5,7 @@ using Alex.Graphics.Models.Entity;
 using Alex.Networking.Java.Packets.Play;
 using Alex.Worlds;
 using Microsoft.Xna.Framework;
+using MiNET.Entities;
 
 namespace Alex.Entities.Hostile
 {

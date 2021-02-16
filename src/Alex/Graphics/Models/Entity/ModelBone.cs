@@ -98,20 +98,21 @@ namespace Alex.Graphics.Models.Entity
 							CurrentAnim = null;
 						}
 					}
-					
 
+					MCMatrix matrix;
+					
 					if (Definition.Pivot.HasValue)
 					{
 						var pivot = (Definition.Pivot ?? Vector3.Zero);
-						WorldMatrix = MCMatrix.CreateTranslation(-pivot) 
-						              * MCMatrix.CreateRotationDegrees(BindingRotation + Rotation)
-						              * MCMatrix.CreateTranslation(pivot)
-						              * characterMatrix;
+						matrix = MCMatrix.CreateTranslation(-pivot) 
+						         * MCMatrix.CreateRotationDegrees(Rotation)
+						         * MCMatrix.CreateTranslation(pivot)
+						         * characterMatrix;
 					}
 					else
 					{
-						WorldMatrix = MCMatrix.CreateRotationDegrees(BindingRotation + Rotation)
-						              * characterMatrix;
+						matrix = MCMatrix.CreateRotationDegrees(Rotation)
+						         * characterMatrix;
 					}
 
 					var children = Children.ToArray();
@@ -120,8 +121,22 @@ namespace Alex.Graphics.Models.Entity
 					{
 						foreach (var child in children)
 						{
-							child.Update(args, WorldMatrix);
+							child.Update(args, matrix);
 						}
+					}
+
+					if (Definition.Pivot.HasValue)
+					{
+						var pivot = (Definition.Pivot ?? Vector3.Zero);
+						WorldMatrix = MCMatrix.CreateTranslation(-pivot) 
+						              * MCMatrix.CreateRotationDegrees(BindingRotation)
+						              * MCMatrix.CreateTranslation(pivot)
+						              * matrix;
+					}
+					else
+					{
+						WorldMatrix = MCMatrix.CreateRotationDegrees(BindingRotation)
+						              * matrix;
 					}
 				}
 				finally

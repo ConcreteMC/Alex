@@ -248,7 +248,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				{
 					if (hasSpawnChunk)
 					{
-						if (statusChanged && Client.GameStarted && !Client.Connection.IsNetworkOutOfOrder)
+						if (statusChanged && Client.GameStarted)
 						{
 							break;
 						}
@@ -292,7 +292,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					}
 				}
 
-				if ((!Client.GameStarted || percentage == 0) && sw.ElapsedMilliseconds >= 15000 && !Client.Connection.IsNetworkOutOfOrder && !outOfOrder)
+				if ((!Client.GameStarted || percentage == 0) && sw.ElapsedMilliseconds >= 15000)
 				{
 					if (Client.DisconnectReason == DisconnectReason.Kicked)
 					{

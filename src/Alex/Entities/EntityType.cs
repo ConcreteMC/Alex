@@ -95,7 +95,7 @@
 		Camera = 62,
 		Chalkboard = 78
 	}*/
-	public enum EntityType : int
+	/*public enum EntityType : int
 	{
 		None = 0,
 		Item = 1,
@@ -223,5 +223,5 @@
 		FishingBobber
 		//Player,
 		
-	}
+	}*/
 }

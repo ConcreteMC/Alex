@@ -3,6 +3,7 @@ using System.Runtime.Serialization;
 using Alex.API.Resources;
 using Alex.Networking.Java.Packets.Play;
 using Alex.Worlds;
+using MiNET.Entities;
 
 namespace Alex.Entities.Passive
 {

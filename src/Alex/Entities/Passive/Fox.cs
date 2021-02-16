@@ -1,12 +1,13 @@
 using Alex.Networking.Java.Packets.Play;
 using Alex.Worlds;
+using MiNET.Entities;
 
 namespace Alex.Entities.Passive
 {
 	public class Fox : PassiveMob
 	{
 		/// <inheritdoc />
-		public Fox(World level) : base(EntityType.Fox, level)
+		public Fox(World level) : base((EntityType)121, level)
 		{
 			Width = 0.6;
 			Height = 0.7;

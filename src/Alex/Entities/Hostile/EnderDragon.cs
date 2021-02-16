@@ -1,10 +1,11 @@
 using Alex.Worlds;
+using MiNET.Entities;
 
 namespace Alex.Entities.Hostile
 {
 	public class EnderDragon : HostileMob
 	{
-		public EnderDragon(World level) : base(EntityType.EnderDragon, level)
+		public EnderDragon(World level) : base(EntityType.Dragon, level)
 		{
 			Height = 8;
 			Width = 16;

@@ -1,6 +1,7 @@
 using Alex.Entities.Passive;
 using Alex.Networking.Java.Packets.Play;
 using Alex.Worlds;
+using MiNET.Entities;
 
 namespace Alex.Entities
 {

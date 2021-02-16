@@ -45,19 +45,22 @@ namespace Alex.Net.Bedrock.Packets
       Current = new PlayerLocation();
       if (((int) this.flags & 1) != 0)
       {
-        this._dX = this.ReadSignedVarInt();
+        //this._dX = this.ReadSignedVarInt();
+        Current.X = this.ReadFloat();
         HasX = true;
       }
 
       if (((int) this.flags & 2) != 0)
       {
-        this._dY = this.ReadSignedVarInt();
+        // this._dY = this.ReadSignedVarInt();
+        Current.Y = this.ReadFloat();
         HasY = true;
       }
 
       if (((int) this.flags & 4) != 0)
       {
-        this._dZ = this.ReadSignedVarInt();
+        //this._dZ = this.ReadSignedVarInt();
+        Current.Z = this.ReadFloat();
         HasZ = true;
       }
 
@@ -105,14 +108,18 @@ namespace Alex.Net.Bedrock.Packets
 
     public PlayerLocation GetCurrentPosition(PlayerLocation previousPosition)
     {
-      if (((int) this.flags & 1) != 0)
+      Current.X = HasX ? Current.X : previousPosition.X;
+      Current.Y = HasY ? Current.Y : previousPosition.Y;
+      Current.Z = HasZ ? Current.Z : previousPosition.Z;
+      
+    /*  if (((int) this.flags & 1) != 0)
         Current.X = FromIntDelta(previousPosition.X, this._dX);
       
       if (((int) this.flags & 2) != 0)
         Current.Y = FromIntDelta(previousPosition.Y, this._dY);
       
       if (((int) this.flags & 4) != 0)
-        Current.Z = FromIntDelta(previousPosition.Z, this._dZ);
+        Current.Z = FromIntDelta(previousPosition.Z, this._dZ);*/
       
       return Current;
     }

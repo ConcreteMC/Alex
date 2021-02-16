@@ -46,6 +46,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MiNET;
+using MiNET.Entities;
 using MiNET.Utils;
 using MiNET.Worlds;
 using Newtonsoft.Json;
@@ -55,6 +56,7 @@ using ChunkColumn = Alex.Worlds.Chunks.ChunkColumn;
 using ChunkCoordinates = Alex.API.Utils.ChunkCoordinates;
 using ConnectionState = Alex.Networking.Java.ConnectionState;
 using DedicatedThreadPool = Alex.API.Utils.DedicatedThreadPool;
+using Entity = Alex.Entities.Entity;
 using MessageType = Alex.API.Data.MessageType;
 using MetadataByte = Alex.Networking.Java.Packets.Play.MetadataByte;
 using MetadataSlot = Alex.Networking.Java.Packets.Play.MetadataSlot;
@@ -494,15 +496,10 @@ namespace Alex.Worlds.Multiplayer.Java
 			Entity entity = null;
 			if (EntityFactory.ModelByNetworkId((long) type, out var renderer, out EntityData knownData))
 			{
-				if (Enum.TryParse<EntityType>(knownData.Name, true, out var realType))
-				{
-					type = realType;
-					entity = EntityFactory.Create(realType, null);
-				}
-				else
-				{
-					Log.Warn($"Entity not registered: {knownData.Name}");
-				}
+				type = MiNET.Entities.EntityHelpers.ToEntityType($"minecraft:{knownData.Name}");
+				
+				entity = EntityFactory.Create(type, null);
+			
 
 				if (entity == null)
 				{

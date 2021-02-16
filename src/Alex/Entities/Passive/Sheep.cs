@@ -1,7 +1,7 @@
 using Alex.API.Utils;
 using Alex.Networking.Java.Packets.Play;
 using Alex.Worlds;
-
+using MiNET.Entities;
 using NLog;
 
 namespace Alex.Entities.Passive

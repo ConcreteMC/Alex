@@ -19,6 +19,7 @@ using Alex.Utils;
 using Alex.Worlds;
 using fNbt;
 using Microsoft.Xna.Framework.Graphics;
+using MiNET.Entities;
 using Newtonsoft.Json;
 using NLog;
 using PlayerLocation = Alex.API.Utils.PlayerLocation;
@@ -31,8 +32,8 @@ namespace Alex.Entities
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(EntityFactory));
 
-		private static ConcurrentDictionary<ResourceLocation, Func<PooledTexture2D, EntityModelRenderer>> _registeredRenderers =
-			new ConcurrentDictionary<ResourceLocation, Func<PooledTexture2D, EntityModelRenderer>>();
+		private static ConcurrentDictionary<string, Func<PooledTexture2D, EntityModelRenderer>> _registeredRenderers =
+			new ConcurrentDictionary<string, Func<PooledTexture2D, EntityModelRenderer>>();
 
 		private static IReadOnlyDictionary<long, EntityData> _idToData;
 		public static void Load(ResourceManager resourceManager, IProgressReceiver progressReceiver)
@@ -48,7 +49,7 @@ namespace Alex.Entities
                 EntityData p = entityObjects[i];
                 var originalName = p.Name;
                 p.OriginalName = originalName;
-                p.Name = p.Name.Replace("_", "");
+                //p.Name = p.Name.Replace("_", "");
                 
                 long id = 0;
 				progressReceiver?.UpdateProgress(i, entityObjects.Length, "Loading entity data...", p.Name);
@@ -104,8 +105,8 @@ namespace Alex.Entities
 			}
 			else
 			{
-				var f = _registeredRenderers.Where(x => x.Key.Path.Length >= data.OriginalName.Length)
-				   .OrderBy(x => (x.Key.Path.Length - data.OriginalName.Length)).FirstOrDefault(
+				var f = _registeredRenderers.Where(x => x.Key.Length >= data.OriginalName.Length)
+				   .OrderBy(x => (x.Key.Length - data.OriginalName.Length)).FirstOrDefault(
 						x => x.Key.ToString().ToLowerInvariant().Contains(data.OriginalName.ToLowerInvariant())).Value;
 
 				if (f != null)
@@ -141,7 +142,7 @@ namespace Alex.Entities
 			int done              = 0;
 			int total             = entityDefinitions.Count;
 
-			foreach (var def in entityDefinitions)
+			foreach (var def in entityDefinitions.OrderByDescending(x => !string.IsNullOrWhiteSpace(x.Value.MinEngineVersion)))
 			{
 			//	double percentage = 100D * ((double)done / (double)total);
 				progressReceiver?.UpdateProgress(done, total, $"Importing entity definitions...", def.Key.ToString());
@@ -154,6 +155,12 @@ namespace Alex.Entities
 					if (def.Value.Geometry.Count == 0) continue;
 
 					var geometry = def.Value.Geometry;
+
+					if (_registeredRenderers.TryGetValue(def.Value.Identifier, out _))
+					{
+						continue;
+					}
+
 					string modelKey;
 					if (!geometry.TryGetValue("default", out modelKey) && !geometry.TryGetValue(new ResourceLocation(def.Value.Identifier).Path, out modelKey))
 					{
@@ -161,10 +168,10 @@ namespace Alex.Entities
 					}
 
 					EntityModel model;
-					if ((ModelFactory.TryGetModel(modelKey, out model) || ModelFactory.TryGetModel(modelKey + ".v1.8", out model)) && model != null)
+					if (ModelFactory.TryGetModel(modelKey, out model) && model != null)
 					{
 						Add(resources, graphics, def.Value, model, def.Value.Identifier);
-						Add(resources, graphics, def.Value, model, def.Key.ToString());
+						//Add(resources, graphics, def.Value, model, def.Key.ToString());
 					}
 					//else 
 				}
@@ -186,7 +193,7 @@ namespace Alex.Entities
 		   return _registeredRenderers.Count;
 		}
 
-		private static void Add(ResourceManager resources, GraphicsDevice graphics, EntityDescription def, EntityModel model, ResourceLocation name)
+		private static void Add(ResourceManager resources, GraphicsDevice graphics, EntityDescription def, EntityModel model, string name)
 		{
 			_registeredRenderers.AddOrUpdate(name,
 				(t) =>
@@ -195,7 +202,7 @@ namespace Alex.Entities
 					{
 						var textures = def.Textures;
 						string texture;
-						if (!textures.TryGetValue("default", out texture) && !textures.TryGetValue(name.Path, out texture))
+						if (!textures.TryGetValue("default", out texture) && !textures.TryGetValue(name, out texture))
 						{
 							texture = textures.FirstOrDefault().Value;
 						}
@@ -212,85 +219,86 @@ namespace Alex.Entities
 				(s, func) =>
 				{
 					return (t) =>
-					{
-						var textures = def.Textures;
-						string texture;
-						if (!(textures.TryGetValue("default", out texture) || textures.TryGetValue(name.Path, out texture)))
 						{
-							texture = textures.FirstOrDefault().Value;
-						}
+							var    textures = def.Textures;
+							string texture;
 
-						if (resources.TryGetBedrockBitmap(texture,
-							out var bmp))
-						{
-							t = TextureUtils.BitmapToTexture2D(graphics, bmp);
-						}
+							if (!(textures.TryGetValue("default", out texture)
+							      || textures.TryGetValue(name, out texture)))
+							{
+								texture = textures.FirstOrDefault().Value;
+							}
 
-						return new EntityModelRenderer(model, t);
-					};
+							if (resources.TryGetBedrockBitmap(texture, out var bmp))
+							{
+								t = TextureUtils.BitmapToTexture2D(graphics, bmp);
+							}
+
+							return new EntityModelRenderer(model, t);
+						};
 				});
 		}
 		
-		public static Entity Create(EntityType entityType, World world)
+		public static Entity Create(MiNET.Entities.EntityType entityType, World world)
 		{
 			Entity entity = null;
 
 			switch (entityType)
 			{
-				case EntityType.None:
+				case MiNET.Entities.EntityType.None:
 					return null;
-				case EntityType.Chicken:
+				case MiNET.Entities.EntityType.Chicken:
 					entity = new Chicken(world);
 					break;
-				case EntityType.Cow:
+				case MiNET.Entities.EntityType.Cow:
 					entity = new Cow(world);
 					break;
-				case EntityType.Pig:
+				case MiNET.Entities.EntityType.Pig:
 					entity = new Pig(world);
 					break;
-				case EntityType.Sheep:
+				case MiNET.Entities.EntityType.Sheep:
 					entity = new Sheep(world);
 					break;
-				case EntityType.Wolf:
+				case MiNET.Entities.EntityType.Wolf:
 					entity = new Wolf(world);
 					break;
-				case EntityType.Villager:
+				case MiNET.Entities.EntityType.Villager:
 					entity = new Villager(world);
 					break;
-				case EntityType.MushroomCow:
+				case MiNET.Entities.EntityType.MushroomCow:
 					entity = new Mooshroom(world);
 					break;
-				case EntityType.Squid:
+				case MiNET.Entities.EntityType.Squid:
 					entity = new Squid(world);
 					break;
-				case EntityType.Rabbit:
+				case MiNET.Entities.EntityType.Rabbit:
 					entity = new Rabbit(world);
 					break;
-				case EntityType.Bat:
+				case MiNET.Entities.EntityType.Bat:
 					entity = new Bat(world);
 					break;
-				case EntityType.IronGolem:
+				case MiNET.Entities.EntityType.IronGolem:
 					entity = new VillagerGolem(world);
 					break;
-				case EntityType.SnowGolem:
+				case MiNET.Entities.EntityType.SnowGolem:
 					entity = new Snowman(world);
 					break;
-				case EntityType.Ocelot:
+				case MiNET.Entities.EntityType.Ocelot:
 					entity = new Ocelot(world);
 					break;
-				case EntityType.Zombie:
+				case MiNET.Entities.EntityType.Zombie:
 					entity = new Zombie(world);
 					break;
-				case EntityType.Creeper:
+				case MiNET.Entities.EntityType.Creeper:
 					entity = new Creeper(world);
 					break;
-				case EntityType.Skeleton:
+				case MiNET.Entities.EntityType.Skeleton:
 					entity = new Skeleton(world);
 					break;
 				case EntityType.Spider:
 					entity = new Spider(world);
 					break;
-				case EntityType.ZombiePigman:
+				case MiNET.Entities.EntityType.ZombiePigman:
 					entity = new ZombiePigman(world);
 					break;
 				case EntityType.Slime:
@@ -350,7 +358,7 @@ namespace Alex.Entities
 				case EntityType.Shulker:
 					entity = new Shulker(world);
 					break;
-				case EntityType.EnderDragon:
+				case EntityType.Dragon:
 					entity = new EnderDragon(world);
 					break;
 				case EntityType.SkeletonHorse:
@@ -374,16 +382,13 @@ namespace Alex.Entities
 				case EntityType.ArmorStand:
 					entity = new EntityArmorStand(world, null);
 					break;
-				case EntityType.Arrow:
+				case EntityType.ShotArrow:
 					entity = new ArrowEntity(world, null);
 					break;
-				case EntityType.Item:
+				case EntityType.DroppedItem:
 					entity = new ItemEntity(world);
 					break;
-				case EntityType.Mooshroom:
-					entity = new Mooshroom(world);
-					break;
-				case EntityType.Snowball:
+				case EntityType.ThrownSnowball:
 					entity = new SnowballEntity(world, null);
 					break;
 				case EntityType.ThrownEgg:
@@ -399,8 +404,11 @@ namespace Alex.Entities
 				case EntityType.Mule:
 					entity = new Mule(world);
 					break;
-				case EntityType.Fox:
+				case (EntityType)121: //Fox
 					entity = new Fox(world);
+					break;
+				case (EntityType)122:
+					entity = new Bee(world);
 					break;
 				case EntityType.Parrot:
 					entity = new Parrot(world);
@@ -408,28 +416,25 @@ namespace Alex.Entities
 				case EntityType.Phantom:
 					entity = new Phantom(world);
 					break;
-				case EntityType.Bee:
-					entity = new Bee(world);
-					break;
 				case EntityType.LlamaSpit:
 					entity = new LlamaSpit(world);
 					break;
 				case EntityType.Cat:
 					entity = new Cat(world);
 					break;
-				case EntityType.SmallFireball:
+				case EntityType.BlazeFireball:
 					entity = new SmallFireball(world);
 					break;
-				case EntityType.Fireball:
+				case EntityType.GhastFireball:
 					entity = new Fireball(world);
 					break;
 				case EntityType.Dolphin:
 					entity = new Dolphin(world);
 					break;
-				case EntityType.Cod:
+				case (EntityType)112:
 					entity = new Cod(world);
 					break;
-				case EntityType.PufferFish:
+				case EntityType.Pufferfish:
 					entity = new PufferFish(world);
 					break;
 				case EntityType.Salmon:
@@ -439,7 +444,7 @@ namespace Alex.Entities
 					entity = new TropicalFish(world);
 					break;
 				
-				case EntityType.FireworkRocket:
+				case EntityType.FireworksRocket:
 					entity = new FireworkRocket(world, null);
 					break;
 				

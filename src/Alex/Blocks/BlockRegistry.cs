@@ -212,6 +212,7 @@ namespace Alex.Blocks
 		    this.Register("minecraft:smooth_stone_slab", () => new StoneSlab());
 		    this.Register("minecraft:prismarine_slab", () => new PrismarineSlab());
 		    this.Register("minecraft:prismarine_bricks_slab", () => new PrismarineBricksSlab());
+		    this.Register("minecraft:prismarine_brick_slab", () => new PrismarineBricksSlab());
 		    this.Register("minecraft:dark_prismarine_slab", () => new DarkPrismarineSlab());
 		    this.Register("minecraft:sandstone_slab", () => new SandstoneSlab());
 		    this.Register("minecraft:petrified_oak_slab", () => new PetrifiedOakSlab());
@@ -220,7 +221,9 @@ namespace Alex.Blocks
 		    this.Register("minecraft:stone_brick_slab", () => new StoneBrickSlab());
 		    this.Register("minecraft:mossy_stone_brick_slab", () => new StoneBrickSlab());
 		    this.Register("minecraft:nether_brick_slab", () => new NetherBrickSlab());
+		    this.Register("minecraft:red_nether_brick_slab", () => new NetherBrickSlab());
 		    this.Register("minecraft:quartz_slab", () => new QuartzSlab());
+		    this.Register("minecraft:smooth_quartz_slab", () => new QuartzSlab());
 		    this.Register("minecraft:red_sandstone_slab", () => new RedSandstoneSlab());
 		    this.Register("minecraft:purpur_slab", () => new PurpurSlab());
 		    this.Register("minecraft:polished_andesite_slab", () => new PolishedAndesiteSlab());
@@ -266,6 +269,7 @@ namespace Alex.Blocks
 		    this.Register("minecraft:purpur_stairs", () => new PurpurStairs());
 		    this.Register("minecraft:cobblestone_stairs", () => new CobblestoneStairs());
 		    this.Register("minecraft:quartz_stairs", () => new QuartzStairs());
+		    this.Register("minecraft:smooth_quartz_stairs", () => new QuartzStairs());
 		    this.Register("minecraft:red_sandstone_stairs", () => new RedSandstoneStairs());
 		    this.Register("minecraft:sandstone_stairs", () => new SandstoneStairs());
 		    this.Register("minecraft:brick_stairs", () => new BrickStairs());
@@ -281,6 +285,8 @@ namespace Alex.Blocks
 		    this.Register("minecraft:oak_stairs", () => new OakStairs());
 		    this.Register("minecraft:crimson_stairs", () => new CrimsonStairs());
 		    this.Register("minecraft:polished_andesite_stairs", () => new PolisedAndesiteStairs());
+		    this.Register("minecraft:prismarine_stairs", () => new PrismarineStairs());
+		    this.Register("minecraft:dark_prismarine_stairs", () => new PrismarineStairs());
 		    
 		    this.Register("minecraft:water", () => new Water());
 		    this.Register("minecraft:lava", () => new Lava());

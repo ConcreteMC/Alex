@@ -164,71 +164,52 @@ namespace Alex.Net.Bedrock
 			}
 		}
 
-		private ManualResetEvent _orderingResetEvent = new ManualResetEvent(false);
+		private AutoResetEvent _orderingResetEvent = new AutoResetEvent(false);
 		private void AddToOrderedChannel(Packet message)
 		{
 			try
 			{
 				if (_cancellationToken.Token.IsCancellationRequested) return;
-
+				
 				lock (_eventSync)
 				{
-					var current = message.ReliabilityHeader.OrderingIndex.IntValue();
-					var last    = Interlocked.Read(ref _lastOrderingIndex);
-					if (current <= last)
+					var current  = message.ReliabilityHeader.OrderingIndex.IntValue();
+					var last     = Interlocked.Read(ref _lastOrderingIndex);
+					var expected = last + 1;
+					
+					if (current < expected)
 					{
 						return;
 					}
 
-					bool isMatch = current == last + 1;
-
-					if (_orderingBufferQueue.Count == 0 && isMatch)
+					if (_isOutOfOrder)
 					{
-						IsOutOfOrder = false;
-						Interlocked.Exchange(ref _lastOrderingIndex, current);
+						_orderingBufferQueue.Enqueue(message, current);
 
-						HandlePacket(message);
-
-						return;
-					}
-					
-				//	if (IsOutOfOrder)
-					{
-						/*if (message.ReliabilityHeader.OrderingIndex - lastOrderingIndex > 1000) //200 packets behind should be ok
+						if (current == expected)
 						{
-							Log.Warn($"Discarded ordered packet! Index: {lastOrderingIndex + 1}");
-							Interlocked.Exchange(ref _lastOrderingIndex, lastOrderingIndex + 1);
-							doOrdering = true;
-							IsOutOfOrder = false;
-						}*/
-					}
-					//else
-					{
-						if (!isMatch)
-						{
-							if (!IsOutOfOrder)
-							{
-								IsOutOfOrder = true;
-								//_orderingStart = DateTime.UtcNow;
-
-								//if (Log.IsDebugEnabled)
-								Log.Warn(
-									$"Datagram out of order. Expected {last + 1}, but was {current}.");
-							}
-						}
-					}
-					
-					_orderingBufferQueue.Enqueue(message, current);
-
-					if (isMatch)
-					{
-						_orderingResetEvent.Set();
-						
-						if (_orderedQueueProcessingThread == null)
 							StartOrderingThread();
+						}
+
+						return;
 					}
 					
-					
+					if (current == expected)
+					{
+						Interlocked.Increment(ref _lastOrderingIndex);
+						HandlePacket(message);
+					}
+					else
+					{
+						if (!IsOutOfOrder)
+						{
+							IsOutOfOrder = true;
+							Log.Warn($"Datagram out of order. Expected {expected}, but was {current}.");
+						}
+
+						_orderingBufferQueue.Enqueue(message, current);
+						_orderingResetEvent.Set();
+					}
 				}
 			}
 			catch (Exception e)
@@ -239,6 +220,10 @@ namespace Alex.Net.Bedrock
 
 		private void StartOrderingThread()
 		{
+			_orderingResetEvent.Set();
+			if (_orderedQueueProcessingThread != null)
+				return;
+			
 			_orderedQueueProcessingThread = new Thread(ProcessOrderedQueue)
 			{
 				IsBackground = true,
@@ -247,15 +232,26 @@ namespace Alex.Net.Bedrock
 			_orderedQueueProcessingThread.Start();
 			if (Log.IsDebugEnabled) Log.Warn($"Started network ordering thread.");
 		}
-		
-		public bool             IsOutOfOrder          { get; private set; } = false;
+
+		public bool IsOutOfOrder
+		{
+			get => _isOutOfOrder;
+			private set
+			{
+				_isOutOfOrder = value;
+			}
+		}
+
 		private void ProcessOrderedQueue()
 		{
+			Log.Info($"Ordering start");
 			try
 			{
 				while (!_cancellationToken.IsCancellationRequested)
 				{
-					while (_orderingBufferQueue.TryPeek(out KeyValuePair<int, Packet> pair) && !_cancellationToken.IsCancellationRequested)
+
+					while (_orderingBufferQueue.TryPeek(out KeyValuePair<int, Packet> pair)
+					       && !_cancellationToken.IsCancellationRequested)
 					{
 						lock (_eventSync)
 						{
@@ -265,20 +261,31 @@ namespace Alex.Net.Bedrock
 							{
 								//Log.Info(
 								//	$"Datagram order restored, resuming normal behavior. Current: {pair.Key}");
-								
+
 								if (_orderingBufferQueue.TryDequeue(out pair))
 								{
-									Interlocked.Exchange(ref _lastOrderingIndex, pair.Key);
+									if (pair.Key == lastOrderingIndex + 1)
+									{
+										Interlocked.Increment(ref _lastOrderingIndex);
+										//Interlocked.Exchange(ref _lastOrderingIndex, pair.Key);
 
-									HandlePacket(pair.Value);
-									IsOutOfOrder = false;
+										HandlePacket(pair.Value);
+
+										if (_orderingBufferQueue.Count == 0)
+										{
+											IsOutOfOrder = false;
+										}
+									}
+									else
+									{
+										_orderingBufferQueue.Enqueue(pair.Value, pair.Key);
+									}
 								}
 							}
 							else if (pair.Key <= lastOrderingIndex)
 							{
 								//if (Log.IsDebugEnabled)
-									Log.Debug(
-										$"Datagram resent. Expected {lastOrderingIndex + 1}, but was {pair.Key}.");
+								Log.Debug($"Datagram resent. Expected {lastOrderingIndex + 1}, but was {pair.Key}.");
 
 								if (_orderingBufferQueue.TryDequeue(out pair))
 								{
@@ -291,8 +298,6 @@ namespace Alex.Net.Bedrock
 					if (!_orderingResetEvent.WaitOne(500)) //Keep the thread alive for longer.
 						break;
 				}
-
-				_orderingResetEvent?.Reset();
 			}
 			catch (ObjectDisposedException)
 			{
@@ -302,8 +307,12 @@ namespace Alex.Net.Bedrock
 			{
 				Log.Error(e, $"Exit receive handler task for player");
 			}
-
-			_orderedQueueProcessingThread = null;
+			finally
+			{
+				_orderingResetEvent?.Reset();
+				_orderedQueueProcessingThread = null;
+				Log.Info($"Ordering stop");
+			}
 		}
 
 		private void HandlePacket(Packet message)
@@ -548,7 +557,7 @@ namespace Alex.Net.Bedrock
 
 
 		//private object _updateSync = new object();
-		internal SemaphoreSlim _updateSync = new SemaphoreSlim(1, 1);
+		internal SemaphoreSlim UpdateSync = new SemaphoreSlim(1, 1);
 
 		private async Task UpdateAsync()
 		{
@@ -556,7 +565,7 @@ namespace Alex.Net.Bedrock
 
 			//if (MiNetServer.FastThreadPool == null) return;
 
-			if (!await _updateSync.WaitAsync(0)) return;
+			if (!await UpdateSync.WaitAsync(0)) return;
 
 			try
 			{
@@ -605,7 +614,7 @@ namespace Alex.Net.Bedrock
 			}
 			finally
 			{
-				_updateSync.Release();
+				UpdateSync.Release();
 			}
 		}
 
@@ -787,6 +796,7 @@ namespace Alex.Net.Bedrock
 		
 		private long   _lastDatagramSequenceNumber = -1;
 		private object _ackLock                    = new object();
+		private bool   _isOutOfOrder                       = false;
 
 		public bool Acknowledge(Int24 datagramSequenceNumber)
 		{

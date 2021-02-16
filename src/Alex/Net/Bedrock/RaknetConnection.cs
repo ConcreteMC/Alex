@@ -612,7 +612,7 @@ namespace Alex.Net.Bedrock
 
 			try
 			{
-				await session._updateSync.WaitAsync();
+				await session.UpdateSync.WaitAsync();
 				
 				long now = DateTime.UtcNow.Ticks / TimeSpan.TicksPerMillisecond;
 				long lastUpdate = session.LastUpdatedTime.Ticks / TimeSpan.TicksPerMillisecond;
@@ -672,7 +672,7 @@ namespace Alex.Net.Bedrock
 			}
 			finally
 			{
-				session._updateSync.Release();
+				session.UpdateSync.Release();
 			}
 		}
 
