@@ -42,9 +42,6 @@ namespace Alex.ResourcePackLib.IO
 		}
 
 		/// <inheritdoc />
-		public bool CanReadAsync => false;
-
-		/// <inheritdoc />
 		public IFile GetEntry(string name)
 		{
 			return _entries.FirstOrDefault(x => x.Name == name);

@@ -7,7 +7,6 @@ namespace Alex.ResourcePackLib.IO.Abstract
 	{
 		string                     Name         { get; }
 		IReadOnlyCollection<IFile> Entries      { get; }
-		bool                       CanReadAsync { get; }
 
 		IFile GetEntry(string name);
 	}

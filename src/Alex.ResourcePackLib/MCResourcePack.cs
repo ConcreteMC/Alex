@@ -100,7 +100,6 @@ namespace Alex.ResourcePackLib
 		public  IDictionary<string, SoundDefinition> SoundDefinitions { get; private set; }
 		
 		private IFilesystem Filesystem  { get; set; }
-		public  bool        Asynchronous => Filesystem.CanReadAsync;
 		public McResourcePack(IFilesystem archive, McResourcePackPreloadCallback preloadCallback, LoadProgress progressReporter = null)
 		{
 			Filesystem = archive;

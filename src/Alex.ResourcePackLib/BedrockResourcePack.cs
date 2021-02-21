@@ -80,6 +80,7 @@ namespace Alex.ResourcePackLib
 		private static readonly Regex IsEntityDefinition     = new Regex(@"^entity[\\\/](?'filename'.*)\.json$", RegexOpts);
 		private static readonly Regex IsEntityModel    = new Regex(@"^models[\\\/]entity[\\\/](?'filename'.*)\.json$", RegexOpts);
 		private static readonly Regex IsSoundDefinition    = new Regex(@"^sounds[\\\/]sound_definitions\.json$", RegexOpts);
+		private static readonly Regex IsFontFile    = new Regex(@"^font[\\\/](?'filename'.*)\.png$", RegexOpts);
 		private void Load(ResourcePack.LoadProgress progressReporter)
 		{
 			Dictionary<ResourceLocation, EntityDescription> entityDefinitions = new Dictionary<ResourceLocation, EntityDescription>();
@@ -114,6 +115,12 @@ namespace Alex.ResourcePackLib
 				if (IsSoundDefinition.IsMatch(entry.FullName))
 				{
 					ProcessSounds(progressReporter, entry);
+					continue;
+				}
+
+				if (IsFontFile.IsMatch(entry.FullName))
+				{
+					ProcessFontFile(progressReporter, entry);
 					continue;
 				}
 			}
@@ -404,6 +411,18 @@ namespace Alex.ResourcePackLib
 			}
 			
 			TryAddBitmap("textures/entity/chest/double_normal");
+		}
+
+		private void ProcessFontFile(ResourcePack.LoadProgress progress, IFile entry)
+		{
+			//TODO: Process server sent custom font glyph files (glyph_E1 starts at E100 in unicode, so \uE100)
+			return;
+			var image = TryLoad(entry.FullName);
+
+			if (image != null)
+			{
+				
+			}
 		}
 
 		private bool TryAddBitmap(string path)

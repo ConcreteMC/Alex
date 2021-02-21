@@ -259,13 +259,13 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 						}
 						else
 						{
-							if (!statusChanged)
-							{
-								subTitle = "Waiting on status change...";
-							}
-							else if (!Client.GameStarted)
+							if (!Client.GameStarted)
 							{
 								subTitle = "Waiting on game start...";
+							}
+							else if (!statusChanged)
+							{
+								subTitle = "Waiting for player spawn packet.... (Play status 3)";
 							}
 							else
 							{
@@ -333,7 +333,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				new MiNET.Utils.PlayerLocation(p.X, p.Y, p.Z, p.HeadYaw, p.Yaw, p.Pitch),
 				World.Player.KnownPosition.OnGround);
 
-			Client.MarkAsInitialized();
+			//Client.MarkAsInitialized();
 			
 			//SkyLightCalculations.Calculate(WorldReceiver as World);
 

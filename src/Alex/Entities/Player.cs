@@ -306,47 +306,58 @@ namespace Alex.Entities
 
 			    var hitEntity = HitEntity;
 
-			    if (hitEntity != null && didLeftClick && hitEntity is LivingEntity)
+			    if (hitEntity != null)
 			    {
-				    if (_destroyingBlock)
-					    StopBreakingBlock(forceCanceled: true);
-
-				    InteractWithEntity(hitEntity, true, IsLeftHanded ? 1 : 0);
-			    }
-			    else if (hitEntity != null && didRightClick && hitEntity is LivingEntity)
-			    {
-				    if (_destroyingBlock)
-					    StopBreakingBlock(forceCanceled: true);
-
-				    InteractWithEntity(hitEntity, false, IsLeftHanded ? 1 : 0);
-			    }
-			    else if (hitEntity == null && !_destroyingBlock && didLeftClick && !HasRaytraceResult)
-			    {
-				    HandleLeftClick(IsLeftHanded ? Inventory.OffHand : Inventory.MainHand, IsLeftHanded ? 1 : 0);
-			    }
-			    else if (hitEntity == null && !_destroyingBlock
-			                               && Controller.InputManager.IsBeginPress(InputCommand.LeftClick)
-			                               && !IsWorldImmutable && HasRaytraceResult) //Destroying block.
-			    {
-				    StartBreakingBlock();
-			    }
-			    else if (_destroyingBlock)
-			    {
-				    if (!leftMouseBtnDown)
+				    if (hitEntity is LivingEntity)
 				    {
-					    StopBreakingBlock();
-				    }
-				    else if (_destroyingTarget != new BlockCoordinates(Vector3.Floor(Raytraced)))
-				    {
-					    StopBreakingBlock(true, true);
-
-					    if (Gamemode != GameMode.Creative)
+					    if (didLeftClick || didRightClick)
 					    {
-						    //	StartBreakingBlock();
+						    if (_destroyingBlock)
+							    StopBreakingBlock(forceCanceled: true);
+						    
+						    InteractWithEntity(hitEntity, didLeftClick, IsLeftHanded ? 1 : 0);
 					    }
 				    }
 			    }
-			    else if (didRightClick)
+			    else
+			    {
+				    if (!_destroyingBlock)
+				    {
+					    if (HasRaytraceResult)
+					    {
+						    if (Controller.InputManager.IsBeginPress(InputCommand.LeftClick) && !IsWorldImmutable)
+						    {
+							    StartBreakingBlock();
+						    }
+					    }
+					    else
+					    {
+						    if (didLeftClick)
+						    {
+							    HandleLeftClick(IsLeftHanded ? Inventory.OffHand : Inventory.MainHand, IsLeftHanded ? 1 : 0);
+						    }
+					    }
+				    }
+				    else
+				    {
+					    if (!leftMouseBtnDown)
+					    {
+						    StopBreakingBlock();
+					    }
+					    else if (_destroyingTarget != new BlockCoordinates(Vector3.Floor(Raytraced)))
+					    {
+						    StopBreakingBlock(true, true);
+
+						    if (Gamemode != GameMode.Creative)
+						    {
+							    //	StartBreakingBlock();
+						    }
+					    }
+				    }
+				   
+			    }
+			    
+			    if (didRightClick)
 			    {
 				    bool handledClick = false;
 				    var  item = IsLeftHanded ? Inventory.OffHand : Inventory.MainHand; // [Inventory.SelectedSlot];
@@ -361,15 +372,6 @@ namespace Alex.Entities
 				    {
 					    handledClick = HandleRightClick(Inventory.OffHand, 1);
 				    }*/
-			    }
-
-			    if (hitEntity != null && HasCollision)
-			    {
-				    if (IsColliding(hitEntity))
-				    {
-					    //var distance = DistanceToHorizontal(hitEntity);
-					    //	Velocity += (KnownPosition.ToVector3() - hitEntity.KnownPosition.ToVector3());
-				    }
 			    }
 		    }
 		    else

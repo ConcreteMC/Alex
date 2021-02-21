@@ -559,7 +559,7 @@ namespace Alex.Entities
 						}
 					} break;
 					
-					case (int) MiNET.Entities.Entity.MetadataFlags.EntityFlags2:
+					//case (int) MiNET.Entities.Entity.MetadataFlags.EntityFlags2:
 					case (int) MiNET.Entities.Entity.MetadataFlags.EntityFlags:
 					{
 						if (meta.Value is MetadataLong lng)

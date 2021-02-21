@@ -73,9 +73,9 @@ namespace Alex.Blocks.State
 			return cloned;
 		}
 
-		public BlockState WithProperty(string property, string value, bool prioritize, params string[] requiredMatches)
+		public BlockState WithProperty(string property, string value, params string[] requiredMatches)
 		{
-			if (VariantMapper.TryResolve(this, property, value, prioritize, out BlockState result, requiredMatches))
+			if (VariantMapper.TryResolve(this, property, value, out BlockState result, requiredMatches))
 			{
 				return result;
 			}
@@ -84,10 +84,10 @@ namespace Alex.Blocks.State
 			return this;
 		}
 		
-		public BlockState WithProperty(string property, string value)
-		{
-			return WithProperty(property, value, true);
-		}
+		//public BlockState WithProperty(string property, string value)
+		//{
+		//	return WithProperty(property, value);
+		//}
 
 		public bool Contains(string property)
 		{

@@ -14,14 +14,11 @@ namespace Alex.ResourcePackLib.IO
 		/// <inheritdoc />
 		public IReadOnlyCollection<IFile> Entries { get; }
 
-		/// <inheritdoc />
-		public bool CanReadAsync => true;
-
 		private string Root { get; }
 		public DiskFileSystem(string path)
 		{
 			Root = path;
-			Name = Path.GetDirectoryName(path);
+			Name = path;// Path.GetDirectoryName(path);
 			
 			List<IFile> entries = new List<IFile>();
 			foreach (var file in Directory.EnumerateFiles(Root, "*", SearchOption.AllDirectories))

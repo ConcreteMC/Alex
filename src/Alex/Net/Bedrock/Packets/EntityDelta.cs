@@ -94,8 +94,24 @@ namespace Alex.Net.Bedrock.Packets
       base.ResetPacket();
       this.runtimeEntityId = 0L;
       this.flags = (ushort) 0;
+
+      _dX = 0;
+      _dY = 0;
+      _dZ = 0;
+      _dPitch = 0;
+      _dYaw = 0;
+      _dHeadYaw = 0;
+
+      HasX = false;
+      HasY = false;
+      HasZ = false;
+
+      HasPitch = false;
+      HasYaw = false;
+      HasHeadYaw = false;
+      this.isOnGround = false;
     }
-    
+
     public static int ToIntDelta(float current, float prev)
     {
       return BitConverter.SingleToInt32Bits(current) - BitConverter.SingleToInt32Bits(prev);
@@ -108,10 +124,17 @@ namespace Alex.Net.Bedrock.Packets
 
     public PlayerLocation GetCurrentPosition(PlayerLocation previousPosition)
     {
-      Current.X = HasX ? Current.X : previousPosition.X;
-      Current.Y = HasY ? Current.Y : previousPosition.Y;
-      Current.Z = HasZ ? Current.Z : previousPosition.Z;
+      var pos = previousPosition;
+      pos.X = HasX ? Current.X : previousPosition.X;
+      pos.Y = HasY ? Current.Y : previousPosition.Y;
+      pos.Z = HasZ ? Current.Z : previousPosition.Z;
       
+      pos.HeadYaw = HasHeadYaw ? -Current.HeadYaw : previousPosition.HeadYaw;
+      pos.Yaw = HasYaw ? -Current.Yaw : previousPosition.Yaw;
+      pos.Pitch = HasPitch ? -Current.Pitch : previousPosition.Pitch;
+
+      pos.OnGround = this.isOnGround;
+
     /*  if (((int) this.flags & 1) != 0)
         Current.X = FromIntDelta(previousPosition.X, this._dX);
       
@@ -121,7 +144,7 @@ namespace Alex.Net.Bedrock.Packets
       if (((int) this.flags & 4) != 0)
         Current.Z = FromIntDelta(previousPosition.Z, this._dZ);*/
       
-      return Current;
+      return pos;
     }
   }
 }

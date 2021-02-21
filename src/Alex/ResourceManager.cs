@@ -151,9 +151,9 @@ namespace Alex
 					
 					sw.Stop();
 			
-					Log.Info($"Loaded {resourcePack.BlockModels.Count} block models from resourcepack");
-					Log.Info($"Loaded {resourcePack.ItemModels.Count} item models from resourcepack");
-					Log.Info($"Loading resourcepack took: {sw.ElapsedMilliseconds}ms");
+					Log.Debug($"Loaded {resourcePack.BlockModels.Count} block models from resourcepack");
+					Log.Debug($"Loaded {resourcePack.ItemModels.Count} item models from resourcepack");
+					Log.Debug($"Loading resourcepack took: {sw.ElapsedMilliseconds}ms");
 
 					return resourcePack;
 				}
@@ -164,13 +164,18 @@ namespace Alex
 						{
 							progressReceiver?.UpdateProgress(percentage, null, file);
 						});
+					
+					sw.Stop();
+					
+					Log.Debug($"Loaded {brp.EntityModels.Count} entity models from resourcepack");
+					Log.Debug($"Loading resourcepack took: {sw.ElapsedMilliseconds}ms");
 
 					return brp;
 				}
 			}
 			catch (Exception ex)
 			{
-				Log.Warn(ex, $"Failed to load.");
+				Log.Warn(ex, $"Failed to load resourcepack ({fs.Name})");
 			}
 
 			return null;
@@ -188,7 +193,7 @@ namespace Alex
 	            imported = bmr.LoadResourcePack(progressReceiver, resourcePack, replaceModels);
             }
 
-            Log.Info($"Imported {imported} block models from resourcepack in {sw.ElapsedMilliseconds}ms!");
+            Log.Debug($"Imported {imported} block models from resourcepack in {sw.ElapsedMilliseconds}ms!");
             
             sw.Stop();
         }
@@ -298,7 +303,6 @@ namespace Alex
         public  DirectoryInfo                                SkinPackDirectory     { get; private set; } = null;
         public  DirectoryInfo                                ResourcePackDirectory { get; private set; } = null;
         private McResourcePack.McResourcePackPreloadCallback PreloadCallback       { get; set; }
-        public  bool Asynchronous => true;//ActiveResourcePacks.All(x => x.Asynchronous);
 
         public bool CheckResources(GraphicsDevice device, IProgressReceiver progressReceiver, McResourcePack.McResourcePackPreloadCallback preloadCallback)
         {
@@ -508,10 +512,10 @@ namespace Alex
 
 	        foreach (var resourcePack in ActiveBedrockResourcePacks)
 	        {
-		        LoadEntityModels(resourcePack, progress);
+		        //LoadEntityModels(resourcePack, progress);
 		        int modelCount = EntityFactory.LoadModels(resourcePack, this, device, true, progress);
 
-		        Log.Info($"Imported {modelCount} entity models...");
+		        Log.Debug($"Imported {modelCount} entity models...");
 	        }
 	        
 	        progress?.UpdateProgress(0, $"Loading UI textures...");
@@ -540,7 +544,7 @@ namespace Alex
 	        int imported = 0;
 	        imported = modelRegistry.LoadResourcePack(progressReceiver, resourcePack, true);
 
-	        Log.Info($"Imported {imported} block models from resourcepack in {sw.ElapsedMilliseconds}ms!");
+	        Log.Info($"Registered {imported} entity models from resourcepack in {sw.ElapsedMilliseconds}ms!");
             
 	        sw.Stop();
         }

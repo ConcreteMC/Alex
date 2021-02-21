@@ -71,10 +71,11 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		public EventHandler<BedrockMotd> OnMotdReceivedHandler;
 		//public BedrockMotd KnownMotd = new BedrockMotd(string.Empty);
 
-        private Alex Alex { get; }
-        private IOptionsProvider OptionsProvider { get; }
-        private XboxAuthService XboxAuthService { get; }
-        private AlexOptions Options => OptionsProvider.AlexOptions;
+        private Alex                Alex                { get; }
+        public  ResourcePackManager ResourcePackManager { get; set; }
+        private IOptionsProvider    OptionsProvider     { get; }
+        private XboxAuthService     XboxAuthService     { get; }
+        private AlexOptions         Options             => OptionsProvider.AlexOptions;
 
         public PlayerProfile PlayerProfile { get; }
         private CancellationTokenSource CancellationTokenSource { get; }
@@ -125,6 +126,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		//WorkerThreadPool = threadPool;
 			//ReflectionHelper.SetPrivateStaticFieldValue();
 			//MiNetServer.FastThreadPool = threadPool;
+
+			ResourcePackManager = new ResourcePackManager(this);
 
 			if (wp != null)
 			{
@@ -1262,6 +1265,9 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		public override void Close()
 		{
+			ResourcePackManager?.Dispose();
+			ResourcePackManager = null;
+			
 			if (PacketHandler != null)
 				PacketHandler.ReportPackets();
 			

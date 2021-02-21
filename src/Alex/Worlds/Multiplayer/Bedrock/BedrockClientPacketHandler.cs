@@ -160,11 +160,11 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 				//Client.World.Player.EntityId = Client.EntityId;
 
-				if (!_markedAsInitalized)
-				{
-					//Client.MarkAsInitialized();
-					//_markedAsInitalized = true;
-				}
+			//	if (!_markedAsInitalized)
+			//	{
+					Client.MarkAsInitialized();
+			//		_markedAsInitalized = true;
+			//	}
 
 				Client.RequestChunkRadius(AlexInstance.Options.AlexOptions.VideoOptions.RenderDistance.Value);
 				//	_markedAsInitalized = true;
@@ -193,69 +193,53 @@ namespace Alex.Worlds.Multiplayer.Bedrock
            // Client.
            // base.HandleMcpeDisconnect(message);
         }
-
+        
         public void HandleMcpeResourcePackDataInfo(McpeResourcePackDataInfo message)
         {
-	        Log.Info($"Received McpeResourcePackDataInfo....");
-	        
-	      //  Log.Info($"Got ResourcePackDataInfo: {message}");
-	        McpeResourcePackClientResponse response = new McpeResourcePackClientResponse();
-	        response.responseStatus = (byte) McpeResourcePackClientResponse.ResponseStatus.Completed;
-	        Client.SendPacket(response);
+	        Client.ResourcePackManager.HandleMcpeResourcePackDataInfo(message);
         }
 
         public void HandleMcpeResourcePackChunkData(McpeResourcePackChunkData message)
         {
-			Log.Info($"Received McpeResourcePackChunkData....");
+	        Client.ResourcePackManager.HandleMcpeResourcePackChunkData(message);
         }
 
         private ResourcePackIds _resourcePackIds;
         public void HandleMcpeResourcePacksInfo(McpeResourcePacksInfo message)
         {
-	        Log.Info($"Got ResourcePackDataInfo. (ForcedToAccept={message.mustAccept} Scripting={message.hasScripts} Behavior Packs={message.behahaviorpackinfos.Count} ResourcePacks={message.texturepacks.Count})");
-	        
-	        McpeResourcePackClientResponse response        = new McpeResourcePackClientResponse();
-	        ResourcePackIds                resourcePackIds = new ResourcePackIds();
-	        foreach (var packInfo in message.texturepacks)
-	        {
-		        resourcePackIds.Add($"{packInfo.UUID}_{packInfo.Version}");
-	        }
-
-	        foreach (var packInfo in message.behahaviorpackinfos)
-	        {
-		        resourcePackIds.Add($"{packInfo.PackIdVersion.Id}_{packInfo.PackIdVersion.Version}");
-	        }
-
-	        _resourcePackIds = resourcePackIds;
-	        
-	        if (resourcePackIds.Count > 0)
-	        {
-		        response.responseStatus = (byte) McpeResourcePackClientResponse.ResponseStatus.HaveAllPacks;
-		        response.resourcepackids = resourcePackIds;
-	        }
-	        else
-	        {
-		        response.responseStatus = (byte) McpeResourcePackClientResponse.ResponseStatus.HaveAllPacks;
-		        response.resourcepackids = _resourcePackIds;
-	        }
-
-	        Client.SendPacket(response);
+	        Client.ResourcePackManager.HandleMcpeResourcePacksInfo(message);
         }
 
         public void HandleMcpeResourcePackStack(McpeResourcePackStack message)
         {
-	        Log.Info(
-		        $"Received ResourcePackStack, sending final response. (ForcedToAccept={message.mustAccept} Gameversion={message.gameVersion} Behaviorpacks={message.behaviorpackidversions.Count} Resourcepacks={message.resourcepackidversions.Count})");
-
-	        McpeResourcePackClientResponse response = new McpeResourcePackClientResponse();
-	        response.responseStatus = (byte) McpeResourcePackClientResponse.ResponseStatus.Completed;
-	        response.resourcepackids = _resourcePackIds;
-	        Client.SendPacket(response);
+	        Client.ResourcePackManager.HandleMcpeResourcePackStack(message);
         }
 
         public void HandleMcpeText(McpeText message)
-		{
-			WorldProvider?.ChatRecipient?.AddMessage(new ChatObject(message.message), (MessageType) message.type);
+        {
+	        string rawMessage = message.message;
+			switch (message.type)
+			{
+				case 0: //Raw
+					break;
+				case 2: //Translation
+					break;
+				
+				case 1: //Chat
+					if (!string.IsNullOrWhiteSpace(message.source))
+					{
+						rawMessage = $"<{message.source}{ChatFormatting.Reset}>: {rawMessage}";
+					}
+
+					break;
+				case 7: //Whisper
+					rawMessage = $"<{message.source}{ChatFormatting.Reset} whispered>: {rawMessage}";
+					break;
+				case 8: //Announcement
+					rawMessage = $"[{message.source}{ChatFormatting.Reset}]: {rawMessage}";
+					break;
+			}
+			WorldProvider?.ChatRecipient?.AddMessage(new ChatObject(rawMessage), (MessageType) message.type);
 		//	EventDispatcher.DispatchEvent(new ChatMessageReceivedEvent(new ChatObject(message.message), (MessageType) message.type));
 		}
 
@@ -269,74 +253,85 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		public void HandleMcpeStartGame(McpeStartGame message)
 		{
 			Log.Info($"Start game.");
-			Client.GameStarted = true;
-			
-			Client.EntityId = message.runtimeEntityId;
-			Client.NetworkEntityId = message.entityIdSelf;
-			Client.SpawnPoint = new Vector3(message.spawn.X, message.spawn.Y - Player.EyeLevel, message.spawn.Z); //message.spawn;
-			//Client.CurrentLocation = new MiNET.Utils.PlayerLocation(Client.SpawnPoint, message.spawn.X, message.spawn.X, message.spawn.Y);
-			Client.World.Dimension = (Dimension) message.dimension;
-			Client.World?.UpdatePlayerPosition(
-				new API.Utils.PlayerLocation(
-					new Microsoft.Xna.Framework.Vector3(Client.SpawnPoint.X, Client.SpawnPoint.Y, Client.SpawnPoint.Z),
-					message.spawn.X, message.spawn.X, message.spawn.Y));
 
-			if (message.enableNewInventorySystem)
+			try
 			{
-				Log.Info($"Using new transaction based inventory.");
-				Client.World.Player.SetInventory(new ItemStackInventory(Client));
-			}
-			else
-			{
-				Client.World.Player.SetInventory(new BedrockInventory(46));
-			}
-			
-			//message.itemstates[0].
+				Client.EntityId = message.runtimeEntityId;
+				Client.NetworkEntityId = message.entityIdSelf;
 
-			ChunkProcessor.Itemstates = message.itemstates;
-			
-			Dictionary<uint, BlockStateContainer> ourStates = new Dictionary<uint, BlockStateContainer>();
+				Client.SpawnPoint = new Vector3(
+					message.spawn.X, message.spawn.Y - Player.EyeLevel, message.spawn.Z); //message.spawn;
 
-			foreach (var bs in message.blockPalette)
-			{
-				foreach (var blockstate in bs.States)
+				//Client.CurrentLocation = new MiNET.Utils.PlayerLocation(Client.SpawnPoint, message.spawn.X, message.spawn.X, message.spawn.Y);
+				Client.World.Dimension = (Dimension) message.dimension;
+
+				Client.World?.UpdatePlayerPosition(
+					new API.Utils.PlayerLocation(
+						new Microsoft.Xna.Framework.Vector3(
+							Client.SpawnPoint.X, Client.SpawnPoint.Y, Client.SpawnPoint.Z), message.spawn.X,
+						message.spawn.X, message.spawn.Y));
+
+				if (message.enableNewInventorySystem)
 				{
-					var name = blockstate.Name;
+					Log.Info($"Using new transaction based inventory.");
+					Client.World.Player.SetInventory(new ItemStackInventory(Client));
+				}
+				else
+				{
+					Client.World.Player.SetInventory(new BedrockInventory(46));
+				}
 
-					if (name != null)
+				//message.itemstates[0].
+
+				ChunkProcessor.Itemstates = message.itemstates;
+
+				Dictionary<uint, BlockStateContainer> ourStates = new Dictionary<uint, BlockStateContainer>();
+
+				foreach (var bs in message.blockPalette)
+				{
+					foreach (var blockstate in bs.States)
 					{
-						if (name.Equals("minecraft:grass", StringComparison.InvariantCultureIgnoreCase))
-							name = "minecraft:grass_block";
+						var name = blockstate.Name;
 
-						blockstate.Name = name;
+						if (name != null)
+						{
+							if (name.Equals("minecraft:grass", StringComparison.InvariantCultureIgnoreCase))
+								name = "minecraft:grass_block";
+
+							blockstate.Name = name;
+						}
 					}
+
+					var name2 = bs.Name;
+
+					if (name2 != null)
+					{
+						if (name2.Equals("minecraft:grass", StringComparison.InvariantCultureIgnoreCase))
+							name2 = "minecraft:grass_block";
+
+						bs.Name = name2;
+					}
+
+					ourStates.TryAdd((uint) bs.RuntimeId, bs);
 				}
 
-				var name2 = bs.Name;
+				ChunkProcessor.BlockStateMap = ourStates;
+				Client.RequestChunkRadius(Client.ChunkRadius);
 
-				if (name2 != null)
+				Client.World.Player.EntityId = message.runtimeEntityId;
+				Client.World.Player.UpdateGamemode((GameMode) message.playerGamemode);
+
+				foreach (var gr in message.gamerules)
 				{
-					if (name2.Equals("minecraft:grass", StringComparison.InvariantCultureIgnoreCase))
-						name2 = "minecraft:grass_block";
-
-					bs.Name = name2;
+					Client.World.SetGameRule(gr);
 				}
-
-				ourStates.TryAdd((uint) bs.RuntimeId, bs);
 			}
-
-			ChunkProcessor.BlockStateMap = ourStates;
-			Client.RequestChunkRadius(Client.ChunkRadius);
-			
-			Client.World.Player.EntityId = message.runtimeEntityId;
-			Client.World.Player.UpdateGamemode((GameMode) message.playerGamemode);
-
-			foreach (var gr in message.gamerules)
+			finally
 			{
-				Client.World.SetGameRule(gr);
+				Client.GameStarted = true;
 			}
 
-		//	_entityMapping.TryAdd(message.entityIdSelf, message.runtimeEntityId);
+			//	_entityMapping.TryAdd(message.entityIdSelf, message.runtimeEntityId);
 		}
 
 		public void HandleMcpeMovePlayer(McpeMovePlayer message)
@@ -612,8 +607,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				var direction = (itemEntity.KnownPosition.ToVector3() - new Microsoft.Xna.Framework.Vector3(
 					target.KnownPosition.X, targetBoundingBox.Max.Y, target.KnownPosition.Z));
 
-				direction.Normalize();
-				
 				itemEntity.Velocity = direction / 20f;
 			}
 		}
@@ -639,58 +632,12 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		{
 			if (message.runtimeEntityId != Client.EntityId)
 			{
-				bool updatePitch = (message.flags & McpeMoveEntityDelta.HasRotX) != 0;
-				bool updateYaw = (message.flags & McpeMoveEntityDelta.HasY) != 0;
-				bool updateHeadYaw = (message.flags & McpeMoveEntityDelta.HasZ) != 0;
-				
-				bool updateLook = (updateHeadYaw || updateYaw || updatePitch);
-
 				if (message is EntityDelta ed)
 				{
-
 					if (Client.World.TryGetEntity(message.runtimeEntityId, out var entity))
 					{
-						var before = entity.KnownPosition;
-						var known = entity.KnownPosition;
-						known = new PlayerLocation(known.X, known.Y, known.Z, known.HeadYaw, known.Yaw, known.Pitch);
-						
-						var endPosition = ed.GetCurrentPosition(known);
-/*
-						if (!ed.HasX)
-						{
-							endPosition.X = known.X;
-						}
-						else
-						{
-							endPosition.X = float.IsNaN(endPosition.X) ? known.X : endPosition.X;
-						}
-
-						if (!ed.HasY)
-						{
-							endPosition.Y = known.Y;
-						}
-						else
-						{
-							endPosition.Y = float.IsNaN(endPosition.Y) ? known.Y : endPosition.Y;
-						}
-
-						if (!ed.HasZ)
-						{
-							endPosition.Z = known.Z;
-						}
-						else
-						{
-							endPosition.Z = float.IsNaN(endPosition.Z) ? known.Z : endPosition.Z;
-						}*/
-
-						endPosition.Yaw = ed.HasYaw ? -endPosition.Yaw : known.Yaw;
-						endPosition.HeadYaw = ed.HasHeadYaw ? -endPosition.HeadYaw : known.HeadYaw;
-						endPosition.Pitch = ed.HasPitch ? -endPosition.Pitch : known.Pitch;
-
-						//entity.KnownPosition = endPosition;
-						entity.Movement.MoveTo(endPosition);
-						
-						//entity.DistanceMoved += MathF.Abs(Microsoft.Xna.Framework.Vector3.Distance(before.ToVector3(), endPosition.ToVector3()));
+						var known = ed.GetCurrentPosition(entity.KnownPosition);
+						entity.Movement.MoveTo(known);
 					}
 				}
 			}
@@ -996,9 +943,9 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				return;
 			}
 
-			Effect effect = null;
-
-			switch ((EffectType)message.effectId)
+			Effect     effect     = null;
+			EffectType effectType = (EffectType) message.effectId;
+			switch (effectType)
 			{
 				case EffectType.Speed:
 					effect = new SpeedEffect();
@@ -1019,18 +966,25 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 			switch (message.eventId)
 			{
-				case 1:
+				case 1: //Add
 					effect.Duration = message.duration;
 					effect.Level = message.amplifier;
 					effect.Particles = message.particles;
 					entity.AddOrUpdateEffect(effect);
 					break;
 				
-				case 2:
-					
+				case 2: //Modify
+					if (entity.TryGetEffect(effectType, out effect))
+					{
+						effect.Duration = message.duration;
+						effect.Particles = message.particles;
+						effect.Level = message.amplifier;
+						
+						entity.AddOrUpdateEffect(effect);
+					}
 					break;
 
-				case 3:
+				case 3: //Remove
 					entity.RemoveEffect(effect.EffectId);
 					break;
 			}
@@ -1262,7 +1216,19 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		public void HandleMcpeRespawn(McpeRespawn message)
 		{
 			Log.Info($"Respawn state {message.state} | Runtime entity id: {message.runtimeEntityId}");
-			if (message.state == 1)
+
+			if (message.state == 0)
+			{
+				var response = McpeRespawn.CreateObject();
+				response.runtimeEntityId = message.runtimeEntityId;
+				response.x = message.x;
+				response.y = message.y;
+				response.z = message.z;
+				response.state = 2;
+				
+				Client.SendPacket(response);
+			}
+			else if (message.state == 1)
 			{
 				Client.World.UpdatePlayerPosition(new PlayerLocation(message.x, message.y, message.z));
 
@@ -1289,7 +1255,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		{
 			if (e.IsServerTransaction)
 				return;
-			
+
+			TakeAction a = new TakeAction();
 			
 		}
 		

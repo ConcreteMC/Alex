@@ -58,7 +58,7 @@ namespace Alex.Gamestates.Debugging
 
 			ModelExplorer = BlockModelExplorer;
 			
-			AddChild(_modelExplorerView = new GuiModelExplorerView(ModelExplorer, new Vector3(8f, 0f, 8f), new Vector3(0f, 1.8f, 0f))
+			AddChild(_modelExplorerView = new GuiModelExplorerView(ModelExplorer, new Vector3(8f, 0f, 8f), new Vector3(0f, 0f, 0f))
 			{
 				Anchor = Alignment.Fill,
 				Background = Color.TransparentBlack,

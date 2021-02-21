@@ -58,20 +58,20 @@ namespace Alex.Blocks.Minecraft
 			{
 				if (updatedBlock.TryGetValue("hinge", out var hingeValue))
 				{
-					blockState = blockState.WithProperty("hinge", hingeValue, false, "half", "open", "facing");
+					blockState = blockState.WithProperty("hinge", hingeValue, "half", "open", "facing");
 				}
 			}
 			else if (updated == coordinates + BlockCoordinates.Down && isUpper)
 			{
 				if (updatedBlock.TryGetValue("open", out string open))
 				{
-					blockState = blockState.WithProperty("open", open, false, "half", "hinge");
+					blockState = blockState.WithProperty("open", open, "half", "hinge");
 				}
 
 				if (updatedBlock.TryGetValue("facing", out var facing))
 				{
 					blockState = blockState.WithProperty("facing",
-						facing, false, "half", "hinge", "open");
+						facing, "half", "hinge", "open");
 				}
 			}
 

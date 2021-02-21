@@ -1193,7 +1193,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 						//record.States.Remove(state);
 						break;
 					case "top_slot_bit":
-						r = r.WithProperty("type", state.Value() == "1" ? "top" : "bottom", true);
+						r = r.WithProperty("type", state.Value() == "1" ? "top" : "bottom");
 						//record.States.Remove(state);
 						break;
 					case "moisturized_amount":
@@ -1289,7 +1289,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			else if (bid == 44 || bid == 182 || bid == 126 /*|| _slabs.Any(x => x.Equals(state.Name, StringComparison.InvariantCultureIgnoreCase))*/) //Slabs
 			{
 				var isUpper = (meta & 0x08) == 0x08;
-				state = state.WithProperty("type", isUpper ? "top" : "bottom", true);
+				state = state.WithProperty("type", isUpper ? "top" : "bottom");
 				
 			} 
 			else if (bid == 77 || bid == 143) //Buttons

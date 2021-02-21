@@ -71,7 +71,7 @@ namespace Alex.Graphics.Models.Blocks
 						{
 							foreach (var kv in result.KeyValues)
 							{
-								blockStateCopy = blockStateCopy.WithProperty(kv.Key, kv.Value, false);
+								blockStateCopy = blockStateCopy.WithProperty(kv.Key, kv.Value);
 							}
 						}
 

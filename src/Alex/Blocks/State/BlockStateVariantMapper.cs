@@ -30,7 +30,7 @@ namespace Alex.Blocks.State
 
         }
 		
-        public bool TryResolve(BlockState source, string property, string value, bool prioritize, out BlockState result, params string[] requiredMatches)
+        public bool TryResolve(BlockState source, string property, string value, out BlockState result, params string[] requiredMatches)
         {
             //  property = property.ToLowerInvariant();
             value = value.ToLowerInvariant();

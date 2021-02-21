@@ -229,18 +229,8 @@ namespace Alex.Blocks
 					}
 				}
 			}
-
-			if (resources.Asynchronous)
-			{
-				Parallel.ForEach(data, LoadEntry);
-			}
-			else
-			{
-				foreach (var entry in data)
-				{
-					LoadEntry(entry);
-				}
-			}
+			
+			Parallel.ForEach(data, LoadEntry);
 
 			var blockStateTime = sw.Elapsed;
 			
@@ -338,7 +328,7 @@ namespace Alex.Blocks
 				});
 
 			//Log.Info($"Loaded {multipartBased} multi-part blockstates!");
-			Log.Info($"Loaded {BedrockStates.Count} mappings in {sw.ElapsedMilliseconds}ms...");
+			Log.Debug($"Loaded {BedrockStates.Count} MC:Java -> MC:Bedrock mappings in {sw.ElapsedMilliseconds}ms...");
 
 			return importCounter;
 		}
