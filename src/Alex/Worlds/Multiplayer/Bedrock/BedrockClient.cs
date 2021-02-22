@@ -838,7 +838,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			        ServerAddress = $"{ServerEndpoint.Address.ToString()}:{ServerEndpoint.Port.ToString()}",
 			        ThirdPartyName = username,
 			        DeviceId = Alex.Resources.DeviceID,
-			        GameVersion = McpeProtocolInfo.GameVersion
+			        GameVersion = McpeProtocolInfo.GameVersion,
+			        
 		        },
 		        new JsonSerializerSettings()
 		        {

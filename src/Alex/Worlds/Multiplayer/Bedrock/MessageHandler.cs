@@ -274,6 +274,9 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		{
 			if (_session.Evicted)
 				return;
+			
+			RaknetSession.TraceReceive(message);
+			
 			_lastPacketReceived = DateTime.UtcNow;
 			Stopwatch sw = Stopwatch.StartNew();
 

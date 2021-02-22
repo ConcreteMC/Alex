@@ -410,7 +410,7 @@ namespace Alex.Net.Bedrock
 				return;
 			}
 
-			if (Log.IsTraceEnabled) Log.Trace($"Receive datagram #{datagram.Header.DatagramSequenceNumber} for {_endpoint}");
+			//if (Log.IsTraceEnabled) Log.Trace($"Receive datagram #{datagram.Header.DatagramSequenceNumber} for {_endpoint}");
 
 			HandleDatagram(rakSession, datagram);
 			
@@ -470,7 +470,7 @@ namespace Alex.Net.Bedrock
 
 			if (!haveAllParts) return null;
 
-			if (Log.IsTraceEnabled) Log.Trace($"Got all {spCount} split packets for split ID: {spId}");
+			//if (Log.IsTraceEnabled) Log.Trace($"Got all {spCount} split packets for split ID: {spId}");
 
 			session.Splits.TryRemove(spId, out SplitPartPacket[] _);
 
@@ -510,7 +510,7 @@ namespace Alex.Net.Bedrock
 					SequencingIndex = headerSequencingIndex
 				};
 
-				if (Log.IsTraceEnabled) Log.Trace($"Assembled split packet {fullMessage.ReliabilityHeader.Reliability} message #{fullMessage.ReliabilityHeader.ReliableMessageNumber}, OrdIdx: #{fullMessage.ReliabilityHeader.OrderingIndex}");
+			//	if (Log.IsTraceEnabled) Log.Trace($"Assembled split packet {fullMessage.ReliabilityHeader.Reliability} message #{fullMessage.ReliabilityHeader.ReliableMessageNumber}, OrdIdx: #{fullMessage.ReliabilityHeader.OrderingIndex}");
 
 				return fullMessage;
 			}

@@ -253,7 +253,11 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		public void HandleMcpeStartGame(McpeStartGame message)
 		{
 			Log.Info($"Start game.");
-
+			
+			McpeClientCacheStatus status = McpeClientCacheStatus.CreateObject();
+			status.enabled = ChunkProcessor.Cache.Enabled;
+			Client.SendPacket(status);
+			
 			try
 			{
 				Client.EntityId = message.runtimeEntityId;

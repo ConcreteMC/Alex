@@ -72,26 +72,50 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		public void HandleMcpeResourcePackDataInfo(McpeResourcePackDataInfo message)
 		{
+			
 			if (!_resourcePackEntries.TryGetValue(message.packageId, out var packEntry))
 			{
+				McpeResourcePackClientResponse response = new McpeResourcePackClientResponse();
+				response.responseStatus = (byte) McpeResourcePackClientResponse.ResponseStatus.Completed; 
+				_client.SendPacket(response);
+				
 				return;
 			}
 			
 			packEntry.SetDataInfo(message.chunkCount, message.maxChunkSize, message.compressedPackageSize);
+			CheckCompletion(packEntry);
+			//McpeResourcePackClientResponse response = new McpeResourcePackClientResponse();
+		//	response.responseStatus = (byte) McpeResourcePackClientResponse.ResponseStatus.Completed;
+			//_client.SendPacket(response);
+		}
 
-			foreach (var missing in packEntry.GetMissingChunks())
+		private void CheckCompletion(ResourcePackEntry entry)
+		{
+			if (entry.IsComplete)
+			{
+				McpeResourcePackClientResponse response = new McpeResourcePackClientResponse();
+				response.responseStatus = (byte) McpeResourcePackClientResponse.ResponseStatus.Completed;
+				response.resourcepackids = new ResourcePackIds() {{$"{entry.Identifier}_{entry.Version}"}};
+				_client.SendPacket(response);
+				
+				//_client.WorldProvider.Alex.Resources.
+				Log.Info($"Completed pack: {entry.Identifier}");
+				
+				//TODO: Load the newly received resourcepack iinto the resourcemanager.
+				
+				return;
+			}
+
+			foreach (var missing in entry.GetMissingChunks())
 			{
 				McpeResourcePackChunkRequest request = McpeResourcePackChunkRequest.CreateObject();
 				request.chunkIndex = missing;
-				request.packageId = packEntry.Identifier;
+				request.packageId = entry.Identifier;
 					
 				_client.SendPacket(request);
 
 				break;
 			}
-			//McpeResourcePackClientResponse response = new McpeResourcePackClientResponse();
-		//	response.responseStatus = (byte) McpeResourcePackClientResponse.ResponseStatus.Completed;
-			//_client.SendPacket(response);
 		}
 
 		public void HandleMcpeResourcePackChunkData(McpeResourcePackChunkData message)
@@ -103,29 +127,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			
 			packEntry.SetChunkData(message.chunkIndex, message.payload);
 			
-			foreach (var missing in packEntry.GetMissingChunks())
-			{
-				McpeResourcePackChunkRequest request = McpeResourcePackChunkRequest.CreateObject();
-				request.chunkIndex = missing;
-				request.packageId = packEntry.Identifier;
-					
-				_client.SendPacket(request);
-
-				break;
-			}
-
-			if (packEntry.IsComplete)
-			{
-				McpeResourcePackClientResponse response = new McpeResourcePackClientResponse();
-				response.responseStatus = (byte) McpeResourcePackClientResponse.ResponseStatus.Completed;
-				response.resourcepackids = new ResourcePackIds() {{$"{packEntry.Identifier}_{packEntry.Version}"}};
-				_client.SendPacket(response);
-				
-				//_client.WorldProvider.Alex.Resources.
-				Log.Info($"Completed pack: {packEntry.Identifier}");
-				
-				//TODO: Load the newly received resourcepack iinto the resourcemanager.
-			}
+			CheckCompletion(packEntry);
 		}
 
 		/// <inheritdoc />
@@ -169,7 +171,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		{
 			_chunks[chunkIndex] = chunkData;
 
-			if (_chunks.All(x => x != null))
+			if (IsComplete)
 			{
 				using (MemoryStream ms = new MemoryStream())
 				{
@@ -187,7 +189,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		
 		protected virtual void OnComplete(byte[] data){}
 
-		public bool IsComplete => _completedData != null;
+		public bool IsComplete => _chunks.All(x => x != null);
 		
 		public IEnumerable<uint> GetMissingChunks()
 		{

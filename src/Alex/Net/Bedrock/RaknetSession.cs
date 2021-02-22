@@ -29,17 +29,22 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Alex.API.Utils;
 using Alex.Net.Bedrock.Raknet;
 using Alex.Utils;
+using log4net;
 using MiNET;
 using MiNET.Net;
 using MiNET.Net.RakNet;
 using MiNET.Utils;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using NLog;
 using Datagram = Alex.Net.Bedrock.Raknet.Datagram;
+using LogManager = NLog.LogManager;
 
 namespace Alex.Net.Bedrock
 {
@@ -329,8 +334,8 @@ namespace Alex.Net.Bedrock
 			try
 			{
 			//	RakOfflineHandler.TraceReceive(Log, message);
-
-				if (message.Id < (int) DefaultMessageIdTypes.ID_USER_PACKET_ENUM)
+			TraceReceive(message);
+			if (message.Id < (int) DefaultMessageIdTypes.ID_USER_PACKET_ENUM)
 				{
 					// Standard RakNet online message handlers
 					switch (message)
@@ -525,11 +530,134 @@ namespace Alex.Net.Bedrock
 				return;
 			}
 
-		//	RakOfflineHandler.TraceSend(packet);
+			TraceSend(packet);
 
 			//lock (_queueSync)
 			{
 				_sendQueue.Enqueue(packet);
+			}
+		}
+
+		internal static void TraceReceive(Packet message)
+		{
+			if (!Log.IsTraceEnabled)
+				return;
+
+			try
+			{
+				string name      = message.GetType().Name;
+				string property1 = Config.GetProperty("TracePackets.Include", ".*");
+				string property2 = Config.GetProperty("TracePackets.Exclude", (string) null);
+				int    property3 = Config.GetProperty("TracePackets.Verbosity", 0);
+				int    property4 = Config.GetProperty("TracePackets.Verbosity." + name, property3);
+
+				if (!Regex.IsMatch(name, property1)
+				    || !string.IsNullOrWhiteSpace(property2) && Regex.IsMatch(name, property2))
+					return;
+
+				if (property4 == 0)
+					Log.Trace(
+						string.Format(
+							"> Receive: {0} (0x{1:x2}): {2}", (object) message.Id, (object) message.Id,
+							(object) message.GetType().Name));
+				else if (property4 == 1 || property4 == 3)
+				{
+					JsonSerializerSettings settings = new JsonSerializerSettings()
+					{
+						PreserveReferencesHandling = PreserveReferencesHandling.Arrays,
+						TypeNameHandling = TypeNameHandling.Auto,
+						Formatting = Formatting.Indented,
+						ReferenceLoopHandling = ReferenceLoopHandling.Ignore
+					};
+
+					settings.Converters.Add((JsonConverter) new StringEnumConverter());
+					settings.Converters.Add((JsonConverter) new NbtIntConverter());
+					settings.Converters.Add((JsonConverter) new NbtStringConverter());
+					settings.Converters.Add((JsonConverter) new IPAddressConverter());
+					settings.Converters.Add((JsonConverter) new IPEndPointConverter());
+					string str = JsonConvert.SerializeObject((object) message, settings);
+
+					Log.Trace(
+						string.Format(
+							"> Receive: {0} (0x{1:x2}): {2}\n{3}", (object) message.Id, (object) message.Id,
+							(object) message.GetType().Name, (object) str));
+				}
+				else
+				{
+					if (property4 != 2)
+						return;
+
+					Log.Trace(
+						string.Format(
+							"> Receive: {0} (0x{1:x2}): {2}\n{3}", (object) message.Id, (object) message.Id,
+							(object) message.GetType().Name, (object) Packet.HexDump(message.Bytes)));
+				}
+			}
+			catch (Exception ex)
+			{
+				Log.Error(ex, "Error when printing trace");
+			}
+		}
+
+		internal static void TraceSend(Packet message)
+		{
+			if (!Log.IsTraceEnabled)
+				return;
+
+			try
+			{
+				string name      = message.GetType().Name;
+				string property1 = Config.GetProperty("TracePackets.Include", ".*");
+				string property2 = Config.GetProperty("TracePackets.Exclude", (string) null);
+				int    property3 = Config.GetProperty("TracePackets.Verbosity", 0);
+				int    property4 = Config.GetProperty("TracePackets.Verbosity." + name, property3);
+
+				if (!Regex.IsMatch(name, property1)
+				    || !string.IsNullOrWhiteSpace(property2) && Regex.IsMatch(name, property2))
+					return;
+
+				if (property4 == 0)
+					Log.Trace(
+						string.Format(
+							"<    Send: {0} (0x{1:x2}): {2}", (object) message.Id, (object) message.Id,
+							(object) message.GetType().Name));
+				else if (property4 == 1 || property4 == 3)
+				{
+					JsonSerializerSettings settings = new JsonSerializerSettings()
+					{
+						PreserveReferencesHandling = PreserveReferencesHandling.Arrays,
+						TypeNameHandling = TypeNameHandling.Auto,
+						Formatting = Formatting.Indented,
+						DefaultValueHandling = DefaultValueHandling.Include,
+						ReferenceLoopHandling = ReferenceLoopHandling.Ignore
+					};
+
+					settings.Converters.Add((JsonConverter) new StringEnumConverter());
+					settings.Converters.Add((JsonConverter) new NbtIntConverter());
+					settings.Converters.Add((JsonConverter) new NbtStringConverter());
+					settings.Converters.Add((JsonConverter) new IPAddressConverter());
+					settings.Converters.Add((JsonConverter) new IPEndPointConverter());
+					string str = JsonConvert.SerializeObject((object) message, settings);
+
+					Log.Trace(
+						string.Format(
+							"<    Send: {0} (0x{1:x2}): {2}\n{3}", (object) message.Id, (object) message.Id,
+							(object) message.GetType().Name, (object) str));
+				}
+				else
+				{
+					if (property4 != 2 && property4 != 3)
+						return;
+
+					Log.Trace(
+						string.Format(
+							"<    Send: {0} (0x{1:x2}): {2}\n{3}", (object) message.Id, (object) message.Id,
+							(object) message.GetType().Name, (object) Packet.HexDump(message.Bytes)));
+				}
+			}
+			catch (Exception ex)
+			{
+				Log.Error(ex, "Error when printing trace");
 			}
 		}
 
