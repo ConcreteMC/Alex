@@ -598,15 +598,15 @@ namespace Alex.Networking.Java.Util
 			//WriteByte(0);
 		}
 
-		public ChatObject ReadChatObject()
+		public string ReadChatObject()
 		{
 			string raw = ReadString();
-			if (ChatObject.TryParse(raw, out ChatObject result))
+			if (ChatObject.TryParse(raw, out string result))
 			{
 				return result;
 			}
 
-			return new ChatObject(raw);
+			return raw;// new ChatObject(raw);
 		}
 	}
 }

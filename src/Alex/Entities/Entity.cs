@@ -57,12 +57,16 @@ namespace Alex.Entities
 			}
 			set
 			{
+				var oldValue = _modelRenderer;
+				
 				ItemRenderer = null;
 				_modelRenderer = value;
 				
 				UpdateModelParts();
 				OnModelUpdated();
 				CheckHeldItem();
+				
+				oldValue?.Dispose();
 			}
 		}
 		
@@ -506,7 +510,7 @@ namespace Alex.Entities
 			{
 				if (customName.HasValue)
 				{
-					NameTag = customName.Value.RawMessage;
+					NameTag = customName.Value;
 				}
 			}
 			else if (entry.Index == 3 && entry is MetadataBool showNametag)

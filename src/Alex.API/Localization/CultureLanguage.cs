@@ -40,7 +40,7 @@ namespace Alex.API.Localization
                 return value;
             }
 
-            return $"[Translation={key}]";
+            return key;//$"[Translation={key}]";
         }
 
         private string _displayName = null;

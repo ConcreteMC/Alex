@@ -49,10 +49,10 @@ namespace Alex.Entities
 		public int Score   { get; set; } = 0;
 		public int Latency { get; set; } = 0;
 
-		private PooledTexture2D _texture;
+		//private PooledTexture2D _texture;
 		public RemotePlayer(string name, World level, NetworkProvider network, PooledTexture2D skinTexture, string geometry = "geometry.humanoid.customSlim") : base(63, level, network)
 		{
-			_texture = skinTexture ?? _alex;
+		//	_texture = skinTexture ?? _alex;
 			
 			SkinFlags = new PlayerSkinFlags()
 			{
@@ -165,15 +165,33 @@ namespace Alex.Entities
 
 		private void ProcessSkin()
 		{
-			_skinQueuedCount = 0;
-			_skinDirty = false;
-			if (_skin == null)
+			try
 			{
-				UpdateSkin(_texture);
+				if (_skin == null)
+				{
+					if (ModelFactory.TryGetModel(GeometryName, out var entityModel))
+					{
+						var skin = entityModel.ToSkin();
+						//	PooledTexture2D texture2D = skinTexture ?? _alex;
+						//if (texture2D != null)
+						//	skin.UpdateTexture(texture2D);
+				
+						_skin = skin;
+					}
+				}
+			//	if (_skin == null)
+			//	{
+				//	UpdateSkin(_texture);
+			//	}
+			//	else
+			//	{
+					LoadSkin(_skin);
+			//	}
 			}
-			else
+			finally
 			{
-				LoadSkin(_skin);
+				_skinQueuedCount = 0;
+				_skinDirty = false;
 			}
 		}
 
@@ -271,9 +289,14 @@ namespace Alex.Entities
 					{
 						Log.Warn($"No custom skin data for player {Name}");
 
-						if (Alex.Instance.Resources.TryGetBitmap("entity/alex", out var rawTexture))
+						if (_steve == null && Alex.Instance.Resources.TryGetBitmap("entity/alex", out var rawTexture))
 						{
+							_steve = rawTexture.Clone();
 							skinBitmap = rawTexture;
+						}
+						else
+						{
+							skinBitmap = _steve.Clone();
 						}
 					}
 					
@@ -440,18 +463,13 @@ namespace Alex.Entities
 				SkinFlags.ApplyTo(modelRenderer);
 		}
 
-		private        bool                ValidModel { get; set; }
-		private static PooledTexture2D     _steve;
-		private static PooledTexture2D     _alex;
+		private        bool            ValidModel { get; set; }
+		private static Image<Rgba32>         _steve;
+		private static PooledTexture2D _alex;
 
-		internal void UpdateSkin(PooledTexture2D skinTexture)
+		/*private void UpdateSkin(PooledTexture2D skinTexture)
 		{
-			if (skinTexture != null && ModelRenderer != null)
-			{
-				ModelRenderer.Texture = skinTexture;
 
-				return;
-			}
 
 			string geometry = "geometry.humanoid.customSlim";
 
@@ -469,7 +487,7 @@ namespace Alex.Entities
 					skinVariant = "entity/steve";
 					geometry = "geometry.humanoid.custom";
 
-					skinTexture = _steve;
+					//skinTexture = _steve;
 				}
 
 				if (skinTexture == null)
@@ -478,10 +496,10 @@ namespace Alex.Entities
 					{
 						skinTexture = TextureUtils.BitmapToTexture2D(Alex.Instance.GraphicsDevice, rawTexture);
 
-						if (isSteve)
-							_steve = skinTexture;
-						else
-							_alex = skinTexture;
+						//if (isSteve)
+						//	_steve = skinTexture;
+						//else
+							//_alex = skinTexture;
 
 						//skinBitmap = rawTexture;
 					}
@@ -500,9 +518,9 @@ namespace Alex.Entities
 				ValidModel = true;
 				ModelRenderer = new EntityModelRenderer(_model, skinTexture);
 
-				_texture = skinTexture;
+				//_texture = skinTexture;
 				//UpdateModelParts();
 			}
-		}
+		}*/
 	}
 }

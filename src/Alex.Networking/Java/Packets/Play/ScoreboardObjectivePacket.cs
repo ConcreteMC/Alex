@@ -7,7 +7,7 @@ namespace Alex.Networking.Java.Packets.Play
 	{
 		public string ObjectiveName { get; set; }
 		public ObjectiveMode Mode { get; set; }
-		public ChatObject Value { get; set; }
+		public string Value { get; set; }
 		public ObjectiveType Type { get; set; }
 		
 		

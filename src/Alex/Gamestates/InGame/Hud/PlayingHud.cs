@@ -188,7 +188,7 @@ namespace Alex.Gamestates.InGame.Hud
         }
 
         /// <inheritdoc />
-        public void AddMessage(ChatObject message, MessageType type)
+        public void AddMessage(string message, MessageType type)
         {
 	        if (type == MessageType.Raw || type == MessageType.Chat || type == MessageType.Whisper
 	            || type == MessageType.Announcement || type == MessageType.System)

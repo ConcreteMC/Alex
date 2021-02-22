@@ -412,19 +412,20 @@ namespace Alex.API.Utils
         }
 		*/
 
-        public static bool TryParse(string json, out ChatObject result)
+        public static bool TryParse(string json, out string rawText)
         {
             try
             {
-                List<string> links      = new List<string>();
-                string       parsedChat = ChatParser.ParseText(json, links);
-                result = new ChatObject(parsedChat);
+                string       parsedChat = ChatParser.ParseText(json);
+                rawText = parsedChat;
+               // result = new ChatObject(parsedChat);
                 return true;
             }
             catch (Exception ex)
             {
                 Log.Error(ex, $"Could not parse chat: {ex}");
-                result = null;
+             //   result = null;
+                rawText = json;
                 return false;
             }
         }

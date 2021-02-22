@@ -66,18 +66,18 @@ namespace Alex.Gui.Elements.Hud
         }
 
         /// <inheritdoc />
-        public void AddMessage(ChatObject message, MessageType messageType)
+        public void AddMessage(string message, MessageType messageType)
         {
             switch (messageType)
             {
                 case MessageType.Popup:
-                    Popup.Text = message.RawMessage;
+                    Popup.Text = message;
                     PopupHideTime = DateTime.UtcNow + TimeSpan.FromSeconds(3);
                     Popup.IsVisible = true;
                     
                     break;
                 case MessageType.Tip:
-                    Tip.Text = message.RawMessage;
+                    Tip.Text = message;
                     TipHideTime = DateTime.UtcNow + TimeSpan.FromSeconds(3);
                     Tip.IsVisible = true;
                     

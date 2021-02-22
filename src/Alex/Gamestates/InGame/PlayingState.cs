@@ -146,11 +146,14 @@ namespace Alex.Gamestates.InGame
 			if (RenderDebug)
 				Alex.GuiManager.AddScreen(_debugInfo);
 			
+			World.Ticker.RegisterTicked(_playingHud.Title);
 			_playingHud.Title.Ready();
 		}
 
 		protected override void OnHide()
 		{
+			World.Ticker.UnregisterTicked(_playingHud.Title);
+			
 			Alex.GuiManager.RemoveScreen(_debugInfo);
 			Alex.GuiManager.RemoveScreen(_playingHud);
 			Alex.GuiManager.RemoveScreen(_networkDebugHud);
@@ -182,20 +185,20 @@ namespace Alex.Gamestates.InGame
 			
 			_debugInfo.AddDebugLeft(() =>
 			{
-				var pos = World.Player.KnownPosition;
+				var pos = World?.Player?.KnownPosition ?? new PlayerLocation();
 				var blockPos = pos.GetCoordinates3D();
 				return $"Position: (X={pos.X:F2}, Y={pos.Y:F2}, Z={pos.Z:F2}, OnGround={pos.OnGround}) / Block: ({blockPos.X:D}, {blockPos.Y:D}, {blockPos.Z:D})";
 			});
 			
 			_debugInfo.AddDebugLeft(() =>
 			{
-				var pos = World.Player.KnownPosition;
+				var pos =  World?.Player?.KnownPosition ?? new PlayerLocation();
 				return  $"Facing: {GetCardinalDirection(pos)} (HeadYaw={pos.HeadYaw:F2}, Yaw={pos.Yaw:F2}, Pitch={pos.Pitch:F2})";
 			});
 			
 			_debugInfo.AddDebugLeft(() =>
 			{
-				var pos = World.Player.Velocity;
+				var pos = World?.Player?.Velocity ?? Vector3.Zero;
 				return $"Velocity: (X={pos.X:F2}, Y={pos.Y:F2}, Z={pos.Z:F2}) ({World.Player.CurrentSpeed:F3} m/s)";// / Target Speed: {(World.Player.CalculateMovementSpeed() * 20f):F3} m/s";
 			});
 

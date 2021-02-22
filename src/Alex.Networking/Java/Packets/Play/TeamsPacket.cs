@@ -69,13 +69,13 @@ namespace Alex.Networking.Java.Packets.Play
 
 		public class TeamInfo : TeamsMode
 		{
-			public ChatObject TeamDisplayName   { get; set; }
-			public byte       Flags             { get; set; }
-			public string     NameTagVisibility { get; set; }
-			public string     CollisionRule     { get; set; }
-			public TeamColor  TeamColor         { get; set; }
-			public ChatObject TeamPrefix        { get; set; }
-			public ChatObject TeamSuffix        { get; set; }
+			public string    TeamDisplayName   { get; set; }
+			public byte      Flags             { get; set; }
+			public string    NameTagVisibility { get; set; }
+			public string    CollisionRule     { get; set; }
+			public TeamColor TeamColor         { get; set; }
+			public string    TeamPrefix        { get; set; }
+			public string    TeamSuffix        { get; set; }
 
 			public virtual void Read(MinecraftStream stream)
 			{

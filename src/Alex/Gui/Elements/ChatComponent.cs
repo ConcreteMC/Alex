@@ -401,7 +401,7 @@ namespace Alex.Gui.Elements
 				}
 				else
 				{
-					Receive(new ChatObject(TextBuilder.Text));
+					Receive(TextBuilder.Text);
 				}
 
 				_submittedMessages.AddLast(TextBuilder.Text);
@@ -411,9 +411,9 @@ namespace Alex.Gui.Elements
 			Dismiss();
 		}
 
-		private void Receive(ChatObject message)
+		private void Receive(string message)
 		{
-			string msg = message.RawMessage;
+			string msg = message;
 
 			TextColor lastColor = TextColor.White;
 
@@ -475,7 +475,7 @@ namespace Alex.Gui.Elements
 		}
 
 		/// <inheritdoc />
-		public void AddMessage(ChatObject message, MessageType messageType)
+		public void AddMessage(string message, MessageType messageType)
 		{
 			Receive(message);
 		}
@@ -483,7 +483,7 @@ namespace Alex.Gui.Elements
 
 	public interface IChatRecipient
 	{
-		void AddMessage(ChatObject message, MessageType messageType);
+		void AddMessage(string message, MessageType messageType);
 	}
 }
 

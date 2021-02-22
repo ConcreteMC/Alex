@@ -273,9 +273,9 @@ namespace Alex.Networking.Java.Packets.Play
     public class MetadataOptChat : MetaDataEntry
     {
 	    public bool HasValue { get; set; }
-	    public ChatObject Value { get; set; }
+	    public string Value { get; set; }
 	    
-	    public MetadataOptChat(byte index, bool hasValue, ChatObject value) : base(index, MetadataType.OptChat)
+	    public MetadataOptChat(byte index, bool hasValue, string value) : base(index, MetadataType.OptChat)
 	    {
 		    HasValue = hasValue;
 		    Value = value;
@@ -284,9 +284,9 @@ namespace Alex.Networking.Java.Packets.Play
     
     public class MetadataChat : MetaDataEntry
     {
-	    public ChatObject Value { get; set; }
+	    public string Value { get; set; }
 	    
-	    public MetadataChat(byte index, ChatObject value) : base(index, MetadataType.OptChat)
+	    public MetadataChat(byte index, string value) : base(index, MetadataType.Chat)
 	    {
 		    Value = value;
 	    }

@@ -239,7 +239,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					rawMessage = $"[{message.source}{ChatFormatting.Reset}]: {rawMessage}";
 					break;
 			}
-			WorldProvider?.ChatRecipient?.AddMessage(new ChatObject(rawMessage), (MessageType) message.type);
+			WorldProvider?.ChatRecipient?.AddMessage(rawMessage, (MessageType) message.type);
 		//	EventDispatcher.DispatchEvent(new ChatMessageReceivedEvent(new ChatObject(message.message), (MessageType) message.type));
 		}
 
@@ -1835,19 +1835,21 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					break;
 				case TitleType.Title:
 					titleComponent.SetTimes(message.fadeInTime, message.stayTime, message.fadeOutTime);
-					titleComponent.SetTitle(new ChatObject(message.text));
+					titleComponent.SetTitle(message.text);
 					titleComponent.Show();
+					//titleComponent.Show();
 					break;
 				case TitleType.SubTitle:
 					titleComponent.SetTimes(message.fadeInTime, message.stayTime, message.fadeOutTime);
-					titleComponent.SetSubtitle(new ChatObject(message.text));
-					titleComponent.Show();
+					titleComponent.SetSubtitle(message.text);
+					//titleComponent.Show();
 					break;
 				case TitleType.ActionBar:
 					
 					break;
 				case TitleType.AnimationTimes:
 					titleComponent.SetTimes(message.fadeInTime, message.stayTime, message.fadeOutTime);
+					titleComponent.Show();
 					break;
 			}
 	

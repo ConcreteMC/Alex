@@ -861,8 +861,8 @@ namespace Alex.Worlds.Multiplayer.Java
 						TeamsManager.AddOrUpdateTeam(
 							packet.TeamName,
 							new Team(
-								packet.TeamName, ct.TeamDisplayName.RawMessage, ct.TeamColor, ct.TeamPrefix.RawMessage,
-								ct.TeamSuffix.RawMessage));
+								packet.TeamName, ct.TeamDisplayName, ct.TeamColor, ct.TeamPrefix,
+								ct.TeamSuffix));
 					}
 
 					break;
@@ -876,10 +876,10 @@ namespace Alex.Worlds.Multiplayer.Java
 					{
 						if (TeamsManager.TryGet(packet.TeamName, out var team))
 						{
-							team.DisplayName = ut.TeamDisplayName.RawMessage;
+							team.DisplayName = ut.TeamDisplayName;
 							team.Color = ut.TeamColor;
-							team.TeamPrefix = ut.TeamPrefix.RawMessage;
-							team.TeamSuffix = ut.TeamSuffix.RawMessage;
+							team.TeamPrefix = ut.TeamPrefix;
+							team.TeamSuffix = ut.TeamSuffix;
 							
 							TeamsManager.AddOrUpdateTeam(packet.TeamName, team);
 						}
@@ -951,7 +951,7 @@ namespace Alex.Worlds.Multiplayer.Java
 			{
 				case ScoreboardObjectivePacket.ObjectiveMode.Create:
 					//packet.Type
-					scoreboard.AddObjective(new ScoreboardObjective(packet.ObjectiveName, packet.Value.RawMessage, 1, "dummy"));
+					scoreboard.AddObjective(new ScoreboardObjective(packet.ObjectiveName, packet.Value, 1, "dummy"));
 					break;
 
 				case ScoreboardObjectivePacket.ObjectiveMode.Remove:
@@ -961,7 +961,7 @@ namespace Alex.Worlds.Multiplayer.Java
 				case ScoreboardObjectivePacket.ObjectiveMode.UpdateText:
 					if (scoreboard.TryGetObjective(packet.ObjectiveName, out var objective))
 					{
-						objective.DisplayName = packet.Value.RawMessage;
+						objective.DisplayName = packet.Value;
 					}
 					break;
 			}
@@ -1218,6 +1218,7 @@ namespace Alex.Worlds.Multiplayer.Java
 					break;
 				case TitlePacket.ActionEnum.SetTimesAndDisplay:
 					TitleComponent.SetTimes(packet.FadeIn, packet.Stay, packet.FadeOut);
+					TitleComponent.Show();
 					break;
 				case TitlePacket.ActionEnum.Hide:
 					TitleComponent.Hide();
@@ -1604,9 +1605,9 @@ namespace Alex.Worlds.Multiplayer.Java
 							{
 								if (entry.HasDisplayName)
 								{
-									if (ChatObject.TryParse(entry.DisplayName, out ChatObject chat))
+									if (ChatObject.TryParse(entry.DisplayName, out string chat))
 									{
-										entity.NameTag = chat.RawMessage;
+										entity.NameTag = chat;
 									}
 									else
 									{
@@ -1655,9 +1656,9 @@ namespace Alex.Worlds.Multiplayer.Java
 					{
 						if (entry.HasDisplayName && !string.IsNullOrWhiteSpace(entry.DisplayName))
 						{
-							if (ChatObject.TryParse(entry.DisplayName, out ChatObject chat))
+							if (ChatObject.TryParse(entry.DisplayName, out string chat))
 							{
-								entity.NameTag = chat.RawMessage;
+								entity.NameTag = chat;
 							}
 							else
 							{
@@ -1689,12 +1690,19 @@ namespace Alex.Worlds.Multiplayer.Java
 			World.BackgroundWorker.Enqueue(
 				() =>
 				{
-					SkinUtils.TryGetSkin(skinJson, Alex.GraphicsDevice, (skin, slim) =>
+					SkinUtils.TryGetSkin(skinJson, Alex.GraphicsDevice, (texture, slim) =>
 					{
-						if (skin != null)
+						if (texture != null)
 						{
 							entity.GeometryName = slim ? "geometry.humanoid.customSlim" : "geometry.humanoid.custom";
-							entity.UpdateSkin(skin);
+
+							if (ModelFactory.TryGetModel(entity.GeometryName, out var entityModel))
+							{
+								var skin = entityModel.ToSkin();
+								skin.UpdateTexture(texture);
+								entity.Skin = skin;
+							}
+							//entity.UpdateSkin(skin);
 						}
 					});
 				});
@@ -1870,7 +1878,7 @@ namespace Alex.Worlds.Multiplayer.Java
 
 		private void HandleChatMessagePacket(ChatMessagePacket packet)
 		{
-			if (ChatObject.TryParse(packet.Message, out ChatObject chat))
+			if (ChatObject.TryParse(packet.Message, out string chat))
 			{
 				MessageType msgType = MessageType.Chat;
 				switch (packet.Position)
@@ -2239,9 +2247,9 @@ namespace Alex.Worlds.Multiplayer.Java
 
 		private void HandleDisconnectPacket(DisconnectPacket packet)
 		{
-			if (ChatObject.TryParse(packet.Message, out ChatObject o))
+			if (ChatObject.TryParse(packet.Message, out string o))
 			{
-				ShowDisconnect(o.RawMessage, force:true);
+				ShowDisconnect(o, force:true);
 			}
 			else
 			{

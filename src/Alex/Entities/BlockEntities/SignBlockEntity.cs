@@ -53,7 +53,7 @@ namespace Alex.Entities.BlockEntities
 			{
 				if (ChatObject.TryParse(value, out var t1))
 				{
-					value = t1.RawMessage;
+					value = t1;
 				}
 				
 				_lines[0] = value;
@@ -68,7 +68,7 @@ namespace Alex.Entities.BlockEntities
 			{
 				if (ChatObject.TryParse(value, out var t1))
 				{
-					value = t1.RawMessage;
+					value = t1;
 				}
 				
 				_lines[1] = value;
@@ -82,7 +82,7 @@ namespace Alex.Entities.BlockEntities
 			{
 				if (ChatObject.TryParse(value, out var t1))
 				{
-					value = t1.RawMessage;
+					value = t1;
 				}
 				
 				_lines[2] = value;
@@ -97,7 +97,7 @@ namespace Alex.Entities.BlockEntities
 			{
 				if (ChatObject.TryParse(value, out var t1))
 				{
-					value = t1.RawMessage;
+					value = t1;
 				}
 				
 				_lines[3] = value;

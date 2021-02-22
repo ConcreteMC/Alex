@@ -6,11 +6,12 @@ using Alex.API.Gui.Elements;
 using Alex.API.Gui.Elements.Layout;
 using Alex.API.Gui.Graphics;
 using Alex.API.Utils;
+using Alex.API.World;
 using Microsoft.Xna.Framework;
 
 namespace Alex.Gui.Elements
 {
-    public class TitleComponent : GuiStackContainer, ITitleComponent
+    public class TitleComponent : GuiStackContainer, ITitleComponent, ITicked
     {
 	    private float _fadeValue = 1.0f;
 	    private GuiTextElement _title;
@@ -46,41 +47,43 @@ namespace Alex.Gui.Elements
         }	
 
 	    #region Titles
-
-	    private ManualResetEventSlim TitleResetEvent = new ManualResetEventSlim(false);
 	    
+	    private int _fadeInTicks = 0, _fadeOutTicks = 0, _displayTicks = 20;
 	    public void Show()
 	    {
+		   // _fadeInTicks = _fadeIn;
+		  //  _fadeOutTicks = _fadeOut;
+		  //  _displayTicks = _displayTime;
+
+		    _fadeIn = 0;
+		    _fadeOut = 0;
+		    _displayTime = 0;
+		    
 		    _hidden = false;
-		    _hideTime = DateTime.UtcNow + TimeSpan.FromMilliseconds((_fadeIn + _fadeOut + _stay) * 50);
+		    //_hideTime = DateTime.UtcNow + TimeSpan.FromMilliseconds((_fadeIn + _fadeOut + _stay) * 50);
 		    
 		    AddChild(_title);
 		    AddChild(_subTitle);
 	    }
 	    
-	    public void SetTitle(ChatObject value)
+	    public void SetTitle(string value)
 	    {
-		    _title.Text = value.RawMessage;
+		    _title.Text = value;
 	    }
 
-	    public void SetSubtitle(ChatObject value)
+	    public void SetSubtitle(string value)
 	    {
-		    _subTitle.Text = value.RawMessage;
+		    _subTitle.Text = value;
         }
 
 	    private bool _hidden = true;
-		private DateTime _hideTime = DateTime.MinValue;
 
-	    private int _fadeIn = 0, _fadeOut = 0, _stay = 20;
+	    private int _fadeIn = 0, _fadeOut = 0, _displayTime = 20;
 	    public void SetTimes(int fadeIn, int stay, int fadeOut)
 	    {
-		    _fadeIn = fadeIn;
-		    _fadeOut = fadeOut;
-		    _stay = stay;
-			
-		    Show();
-		    
-		    TitleResetEvent.Reset();
+		    _fadeInTicks = fadeIn >= 0 ? fadeIn : 0;
+		    _fadeOutTicks = fadeOut >= 0 ? fadeOut : 0;
+		    _displayTicks = stay;
 	    }
 
 	    public void Hide()
@@ -94,7 +97,13 @@ namespace Alex.Gui.Elements
 	    {
 		    _title.Text = string.Empty;
 		    _subTitle.Text = string.Empty;
-		    TitleResetEvent.Set();
+		    
+		    _fadeInTicks = 0; 
+		    _fadeOutTicks = 0;
+		    _displayTicks = 20;
+		    _fadeIn = 0;
+		    _fadeOut = 0;
+		    _displayTime = 0;
 	    }
 
 	    #endregion
@@ -102,20 +111,48 @@ namespace Alex.Gui.Elements
 	    protected override void OnDraw(GuiSpriteBatch graphics, GameTime gameTime)
 	    {
             if (_hidden) return;
+
+            if (_fadeIn < _fadeInTicks)
+            {
+	            var progress = (1f / _fadeInTicks) * _fadeIn;
+	            _title.TextOpacity = _subTitle.TextOpacity = progress;
+            }
+            else if (_fadeOut < _fadeOutTicks && _displayTime >= _displayTicks)
+            {
+	            var progress = 1f - (1f / _fadeOutTicks) * _fadeOut;
+	            _title.TextOpacity = _subTitle.TextOpacity = progress;
+            }
+            else
+            {
+	            _title.TextOpacity = _subTitle.TextOpacity = 1f;
+            }
 		    base.OnDraw(graphics, gameTime);
 	    }
 
-	    protected override void OnUpdate(GameTime gameTime)
+	    /// <inheritdoc />
+	    public void OnTick()
 	    {
-			base.OnUpdate(gameTime);
+		    if (_hidden)
+			    return;
 
-		    if (!_hidden)
+		    if (_fadeIn < _fadeInTicks)
 		    {
-			    if (DateTime.UtcNow >= _hideTime)
+			    _fadeIn++;
+		    }
+		    else if (_fadeIn >= _fadeInTicks)
+		    {
+			    if (_displayTime < _displayTicks)
 			    {
-				    Hide();
+				    _displayTime++;
+			    }
+			    else if (_fadeOut < _fadeOutTicks)
+			    {
+				    _fadeOut++;
 			    }
 		    }
+		    
+		    if (Math.Abs(_fadeIn + _fadeOut + _displayTime) == Math.Abs(_fadeInTicks + _fadeOutTicks + _displayTicks))
+			    Hide();
 	    }
     }
 }

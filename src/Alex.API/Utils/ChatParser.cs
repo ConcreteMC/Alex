@@ -13,9 +13,9 @@ namespace Alex.API.Utils
 		/// <param name="json">JSON serialized text</param>
 		/// <param name="links">Optional container for links from JSON serialized text</param>
 		/// <returns>Returns the translated text</returns>
-		public static string ParseText(string json, List<string> links = null)
+		public static string ParseText(string json)
 		{
-			return JSONData2String(Utils.Json.ParseJson(json), "", links);
+			return JSONData2String(Utils.Json.ParseJson(json));
 		}
 
 		/// <summary>
@@ -25,7 +25,7 @@ namespace Alex.API.Utils
 		/// <param name="rulename">Name of the rule, chosen by the server</param>
 		/// <param name="using_data">Data to be used in the rule</param>
 		/// <returns>Returns the formatted text according to the given data</returns>
-		public static string TranslateString(string rulename, List<string> using_data)
+		private static string TranslateString(string rulename, List<string> using_data)
 		{
 		//	if (!RulesInitialized) { InitRules(); RulesInitialized = true; }
 			//if (TranslationRules.ContainsKey(rulename))
@@ -78,7 +78,7 @@ namespace Alex.API.Utils
 		/// <param name="colorcode">Allow parent color code to affect child elements (set to "" for function init)</param>
 		/// <param name="links">Container for links from JSON serialized text</param>
 		/// <returns>returns the Minecraft-formatted string</returns>
-		private static string JSONData2String(Utils.Json.JSONData data, string colorcode, List<string> links)
+		private static string JSONData2String(Utils.Json.JSONData data, string colorcode = "")
 		{
 			string extra_result = "";
 			switch (data.Type)
@@ -86,9 +86,9 @@ namespace Alex.API.Utils
 				case Utils.Json.JSONData.DataType.Object:
 					if (data.Properties.ContainsKey("color"))
 					{
-						colorcode = TextColor.Color2tag(JSONData2String(data.Properties["color"], "", links));
+						colorcode = TextColor.Color2tag(JSONData2String(data.Properties["color"], ""));
 					}
-					if (data.Properties.ContainsKey("clickEvent") && links != null)
+					/*if (data.Properties.ContainsKey("clickEvent"))
 					{
 						Utils.Json.JSONData clickEvent = data.Properties["clickEvent"];
 						if (clickEvent.Properties.ContainsKey("action")
@@ -98,20 +98,20 @@ namespace Alex.API.Utils
 						{
 							links.Add(clickEvent.Properties["value"].StringValue);
 						}
-					}
+					}*/
 					if (data.Properties.ContainsKey("extra"))
 					{
 						Utils.Json.JSONData[] extras = data.Properties["extra"].DataArray.ToArray();
 						foreach (Utils.Json.JSONData item in extras)
-							extra_result = extra_result + JSONData2String(item, colorcode, links) + "§r";
+							extra_result = extra_result + JSONData2String(item, colorcode) + "§r";
 					}
 					if (data.Properties.ContainsKey("text"))
 					{
-						return colorcode + JSONData2String(data.Properties["text"], colorcode, links) + extra_result;
+						return colorcode + JSONData2String(data.Properties["text"], colorcode) + extra_result;
 					}
 					else if (data.Properties.ContainsKey("translate"))
 					{
-						List<string> using_data = new List<string>();
+						List<string> usingData = new List<string>();
 						if (data.Properties.ContainsKey("using") && !data.Properties.ContainsKey("with"))
 							data.Properties["with"] = data.Properties["using"];
 						if (data.Properties.ContainsKey("with"))
@@ -119,10 +119,10 @@ namespace Alex.API.Utils
 							Utils.Json.JSONData[] array = data.Properties["with"].DataArray.ToArray();
 							for (int i = 0; i < array.Length; i++)
 							{
-								using_data.Add(JSONData2String(array[i], colorcode, links));
+								usingData.Add(JSONData2String(array[i], colorcode));
 							}
 						}
-						return colorcode + TranslateString(JSONData2String(data.Properties["translate"], "", links), using_data) + extra_result;
+						return colorcode + TranslateString(JSONData2String(data.Properties["translate"]), usingData) + extra_result;
 					}
 					else return extra_result;
 
@@ -130,7 +130,7 @@ namespace Alex.API.Utils
 					string result = "";
 					foreach (Utils.Json.JSONData item in data.DataArray)
 					{
-						result += JSONData2String(item, colorcode, links);
+						result += JSONData2String(item, colorcode);
 					}
 					return result;
 

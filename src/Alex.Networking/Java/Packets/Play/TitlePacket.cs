@@ -17,10 +17,10 @@ namespace Alex.Networking.Java.Packets.Play
 		}
 
 		public ActionEnum Action;
-		public ChatObject TitleText;
-		public ChatObject SubtitleText;
-		public ChatObject ActionBarText;
-		public int FadeIn, Stay, FadeOut;
+		public string     TitleText;
+		public string     SubtitleText;
+		public string     ActionBarText;
+		public int        FadeIn, Stay, FadeOut;
 
 		public override void Decode(MinecraftStream stream)
 		{

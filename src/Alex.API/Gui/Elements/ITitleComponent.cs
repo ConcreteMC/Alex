@@ -7,8 +7,8 @@ namespace Alex.API.Gui.Elements
         void Show();
         void Hide();
         void Reset();
-        void SetSubtitle(ChatObject value);
+        void SetSubtitle(string value);
         void SetTimes(int fadeIn, int stay, int fadeOut);
-        void SetTitle(ChatObject value);
+        void SetTitle(string value);
     }
 }
