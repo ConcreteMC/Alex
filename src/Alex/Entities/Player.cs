@@ -81,7 +81,7 @@ namespace Alex.Entities
         }
 
         //public Camera Camera { get; internal set; }
-        public Player(GraphicsDevice graphics, InputManager inputManager, string name, World world, Skin skin, NetworkProvider networkProvider, PlayerIndex playerIndex) : base(name, world, networkProvider, skin.Texture)
+        public Player(GraphicsDevice graphics, InputManager inputManager, string name, World world, Skin skin, NetworkProvider networkProvider, PlayerIndex playerIndex) : base(name, world, networkProvider)
         {
 	        //IsSpawned = true;
 		//	DoRotationCalculations = false;

@@ -1589,7 +1589,7 @@ namespace Alex.Worlds.Multiplayer.Java
 						continue;
 					
 					RemotePlayer entity = new RemotePlayer(
-						entry.Name, (World) World, NetworkProvider, _alexSkin,
+						entry.Name, (World) World, NetworkProvider,
 						"geometry.humanoid.custom");
 
 					entity.UpdateGamemode((GameMode) entry.Gamemode);
@@ -2211,7 +2211,7 @@ namespace Alex.Worlds.Multiplayer.Java
 
 					var mob = SpawnMob(
 						packet.EntityId, packet.Uuid, (EntityType) packet.Type, new PlayerLocation(
-							packet.X, packet.Y, packet.Z, -packet.Yaw, -packet.Yaw, packet.Pitch)
+							packet.X, packet.Y, packet.Z, packet.Yaw, packet.Yaw, packet.Pitch)
 						{
 							//	OnGround = packet.SpawnMob
 						}, velocity);
@@ -2238,7 +2238,7 @@ namespace Alex.Worlds.Multiplayer.Java
 				{*/
 					SpawnMob(
 						packet.EntityId, packet.Uuid, (EntityType) packet.Type, new PlayerLocation(
-							packet.X, packet.Y, packet.Z, -packet.Yaw, -packet.Yaw, packet.Pitch)
+							packet.X, packet.Y, packet.Z, packet.Yaw, packet.Yaw, packet.Pitch)
 						{
 							//	OnGround = packet.SpawnMob
 						}, ModifyVelocity(new Vector3(packet.VelocityX, packet.VelocityY, packet.VelocityZ)));

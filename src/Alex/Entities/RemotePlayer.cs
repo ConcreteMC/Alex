@@ -50,7 +50,7 @@ namespace Alex.Entities
 		public int Latency { get; set; } = 0;
 
 		//private PooledTexture2D _texture;
-		public RemotePlayer(string name, World level, NetworkProvider network, PooledTexture2D skinTexture, string geometry = "geometry.humanoid.customSlim") : base(63, level, network)
+		public RemotePlayer(string name, World level, NetworkProvider network, string geometry = "geometry.humanoid.customSlim") : base(63, level, network)
 		{
 		//	_texture = skinTexture ?? _alex;
 			
@@ -289,14 +289,31 @@ namespace Alex.Entities
 					{
 						Log.Warn($"No custom skin data for player {Name}");
 
-						if (_steve == null && Alex.Instance.Resources.TryGetBitmap("entity/alex", out var rawTexture))
+						if (skin.Slim)
 						{
-							_steve = rawTexture.Clone();
-							skinBitmap = rawTexture;
+							if (_alex == null && Alex.Instance.Resources.TryGetBitmap(
+								"entity/alex", out var rawTexture))
+							{
+								_alex = rawTexture.Clone();
+								skinBitmap = rawTexture;
+							}
+							else
+							{
+								skinBitmap = _alex.Clone();
+							}
 						}
 						else
 						{
-							skinBitmap = _steve.Clone();
+							if (_steve == null && Alex.Instance.Resources.TryGetBitmap(
+								"entity/steve", out var rawTexture))
+							{
+								_steve = rawTexture.Clone();
+								skinBitmap = rawTexture;
+							}
+							else
+							{
+								skinBitmap = _steve.Clone();
+							}
 						}
 					}
 					
@@ -463,9 +480,9 @@ namespace Alex.Entities
 				SkinFlags.ApplyTo(modelRenderer);
 		}
 
-		private        bool            ValidModel { get; set; }
-		private static Image<Rgba32>         _steve;
-		private static PooledTexture2D _alex;
+		private        bool          ValidModel { get; set; }
+		private static Image<Rgba32> _steve;
+		private static Image<Rgba32> _alex;
 
 		/*private void UpdateSkin(PooledTexture2D skinTexture)
 		{

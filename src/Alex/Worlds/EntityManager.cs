@@ -242,11 +242,11 @@ namespace Alex.Worlds
 					//renderPosition.Y = (int) ((textPosition.Y + yOffset));
 
 					args.SpriteBatch.FillRectangle(
-						new Rectangle(renderPosition.ToPoint(), c), new Color(Color.Black, 128), screenSpace.Z);
+						new Rectangle(renderPosition.ToPoint(), c), new Color(Color.Black, 128), screenSpace.Z + 0.0000001f);
 
 					Alex.Font.DrawString(
 						args.SpriteBatch, line, renderPosition, TextColor.White, FontStyle.None,
-						layerDepth: screenSpace.Z - 0.0001f, scale: new Vector2((float) scale));
+						layerDepth: screenSpace.Z, scale: new Vector2((float) scale));
 				}
 			}
 			finally

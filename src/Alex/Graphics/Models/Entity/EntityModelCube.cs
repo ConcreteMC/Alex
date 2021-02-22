@@ -48,12 +48,12 @@ namespace Alex.Graphics.Models.Entity
 			Left =
 				GetLeftVertex(
 					uv.West.WithSize(size.Z, size.Y),
-					uv.West.Size.HasValue ? Vector2.Zero : new Vector2(0, cube.Size.Z));
+					uv.West.Size.HasValue ? Vector2.Zero : new Vector2(cube.Size.Z + cube.Size.X, cube.Size.Z));
 
 			Right = 
 				GetRightVertex(
 					uv.East.WithSize(size.Z, size.Y),
-					uv.East.Size.HasValue ? Vector2.Zero : new Vector2(cube.Size.Z + cube.Size.X, cube.Size.Z));
+					uv.East.Size.HasValue ? Vector2.Zero : new Vector2(0, cube.Size.Z));
 
 			Top = 
 				GetTopVertex(
@@ -88,10 +88,10 @@ namespace Alex.Graphics.Models.Entity
 			// Add the vertices for the RIGHT face. 
 			return (new VertexPositionColorTexture[]
 			{
-				new VertexPositionColorTexture(_topLeftFront, normal, map.TopRight),
-				new VertexPositionColorTexture(_btmLeftFront, normal, map.BotRight),
-				new VertexPositionColorTexture(_btmLeftBack, normal, map.BotLeft),
-				new VertexPositionColorTexture(_topLeftBack, normal, map.TopLeft),
+				new VertexPositionColorTexture(_topLeftFront, normal, map.TopLeft),
+				new VertexPositionColorTexture(_btmLeftFront, normal, map.BotLeft),
+				new VertexPositionColorTexture(_btmLeftBack, normal, map.BotRight),
+				new VertexPositionColorTexture(_topLeftBack, normal, map.TopRight),
 				//new VertexPositionNormalTexture(_topLeftFront , normal, map.TopLeft),
 				//new VertexPositionNormalTexture(_btmLeftBack, normal, map.BotRight),
 			}, new short[]
@@ -113,10 +113,10 @@ namespace Alex.Graphics.Models.Entity
 			// Add the vertices for the RIGHT face. 
 			return (new VertexPositionColorTexture[]
 			{
-				new VertexPositionColorTexture(_topRightFront, normal, map.TopLeft),
-				new VertexPositionColorTexture(_btmRightBack, normal, map.BotRight),
-				new VertexPositionColorTexture(_btmRightFront, normal, map.BotLeft),
-				new VertexPositionColorTexture(_topRightBack, normal, map.TopRight),
+				new VertexPositionColorTexture(_topRightFront, normal, map.TopRight),
+				new VertexPositionColorTexture(_btmRightBack, normal, map.BotLeft),
+				new VertexPositionColorTexture(_btmRightFront, normal, map.BotRight),
+				new VertexPositionColorTexture(_topRightBack, normal, map.TopLeft),
 				//new VertexPositionNormalTexture(_btmRightBack , normal, map.BotLeft),
 				//new VertexPositionNormalTexture(_topRightFront, normal, map.TopRight),
 			}, new short[] {0, 1, 2, 3, 1, 0});
@@ -133,12 +133,12 @@ namespace Alex.Graphics.Models.Entity
 			// Add the vertices for the RIGHT face. 
 			return (new VertexPositionColorTexture[]
 			{
-				new VertexPositionColorTexture(_topLeftFront, normal, map.TopLeft),
-				new VertexPositionColorTexture(_topRightFront, normal, map.TopRight),
-				new VertexPositionColorTexture(_btmLeftFront, normal, map.BotLeft),
+				new VertexPositionColorTexture(_topLeftFront, normal, map.TopRight),
+				new VertexPositionColorTexture(_topRightFront, normal, map.TopLeft),
+				new VertexPositionColorTexture(_btmLeftFront, normal, map.BotRight),
 				//new VertexPositionNormalTexture(_btmLeftFront , normal, map.BotLeft),
 				//new VertexPositionNormalTexture(_topRightFront, normal, map.TopRight),
-				new VertexPositionColorTexture(_btmRightFront, normal, map.BotRight),
+				new VertexPositionColorTexture(_btmRightFront, normal, map.BotLeft),
 			}, new short[]
 			{
 				0, 1, 2, 2, 1, 3
@@ -157,11 +157,11 @@ namespace Alex.Graphics.Models.Entity
 			// Add the vertices for the RIGHT face. 
 			return (new VertexPositionColorTexture[]
 			{
-				new VertexPositionColorTexture(_topLeftBack, normal, map.TopRight),
-				new VertexPositionColorTexture(_btmLeftBack, normal, map.BotRight),
-				new VertexPositionColorTexture(_topRightBack, normal, map.TopLeft),
+				new VertexPositionColorTexture(_topLeftBack, normal, map.TopLeft),
+				new VertexPositionColorTexture(_btmLeftBack, normal, map.BotLeft),
+				new VertexPositionColorTexture(_topRightBack, normal, map.TopRight),
 				//new VertexPositionNormalTexture(_btmLeftBack , normal, map.BotRight),
-				new VertexPositionColorTexture(_btmRightBack, normal, map.BotLeft),
+				new VertexPositionColorTexture(_btmRightBack, normal, map.BotRight),
 				//new VertexPositionNormalTexture(_topRightBack, normal, map.TopLeft),
 			}, new short[]
 			{
