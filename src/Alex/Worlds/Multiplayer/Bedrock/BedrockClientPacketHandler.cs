@@ -254,9 +254,9 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		{
 			Log.Info($"Start game.");
 			
-			McpeClientCacheStatus status = McpeClientCacheStatus.CreateObject();
-			status.enabled = ChunkProcessor.Cache.Enabled;
-			Client.SendPacket(status);
+			//McpeClientCacheStatus status = McpeClientCacheStatus.CreateObject();
+		//	status.enabled = ChunkProcessor.Cache.Enabled;
+			//Client.SendPacket(status);
 			
 			try
 			{
@@ -321,6 +321,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 				ChunkProcessor.BlockStateMap = ourStates;
 				Client.RequestChunkRadius(Client.ChunkRadius);
+				
 
 				Client.World.Player.EntityId = message.runtimeEntityId;
 				Client.World.Player.UpdateGamemode((GameMode) message.playerGamemode);

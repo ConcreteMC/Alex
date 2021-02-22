@@ -208,7 +208,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			//progressReport(LoadingState.LoadingChunks, 0);
 
 			var  percentage         = 0;
-			var  statusChanged      = false;
 			var  done               = false;
 			int  previousPercentage = 0;
 			bool hasSpawnChunk      = true;
@@ -219,6 +218,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			bool         outOfOrder   = false;
 			LoadingState state        = LoadingState.ConnectingToServer;
 			string       subTitle     = "";
+
 			while (Client.IsConnected && Client.DisconnectReason != DisconnectReason.Unknown)
 			{
 				if (Client.Connection.IsNetworkOutOfOrder && !outOfOrder)
@@ -232,65 +232,43 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					outOfOrder = false;
 					sw.Restart();
 				}
-				
+
 				if (!outOfOrder && sw.ElapsedMilliseconds >= 500)
 				{
 					//subTitle = "Slow network, please wait...";
 				}
-				
+
 				double radiusSquared = Math.Pow(Client.ChunkRadius, 2);
 				var    target        = radiusSquared;
 
 				percentage = (int) ((100 / target) * World.ChunkManager.ChunkCount);
 				progressReport(state, percentage, subTitle);
-				
-				if (((percentage >= 50)))
+
+				if (hasSpawnChunk && Client.PlayerStatus == 3 && Client.GameStarted)
 				{
-					if (hasSpawnChunk)
+					break;
+				}
+
+				if (Client.Connection.IsNetworkOutOfOrder)
+				{
+					subTitle = "Waiting for the network to catch up...";
+				}
+				else
+				{
+					if (!Client.GameStarted)
 					{
-						if (statusChanged && Client.GameStarted)
-						{
-							break;
-						}
-
-						if (Client.Connection.IsNetworkOutOfOrder)
-						{
-							subTitle = "Waiting for the network to catch up...";
-						}
-						else
-						{
-							if (!Client.GameStarted)
-							{
-								subTitle = "Waiting on game start...";
-							}
-							else if (!statusChanged)
-							{
-								subTitle = "Waiting for player spawn packet.... (Play status 3)";
-							}
-							else
-							{
-								subTitle = "Waiting on spawn confirmation...";
-							}
-						}
-
-						state = LoadingState.Spawning;
+						subTitle = "Waiting on game start...";
 					}
 					else
 					{
-						subTitle = "Waiting on spawn chunk...";
+						subTitle = "Waiting on spawn confirmation...";
 					}
+				}
 
-					//Log.Warn($"Status: {statusChanged} | Gamestarted: {Client.GameStarted} | OutOfOrder: {Client.Connection.IsNetworkOutOfOrder}");
-				}
-				else if (percentage > 0)
-				{
-					state = LoadingState.LoadingChunks;
-					if (percentage != previousPercentage)
-					{
-						previousPercentage = percentage;
-						sw.Restart();
-					}
-				}
+				state = percentage >= 100 ? LoadingState.Spawning : LoadingState.LoadingChunks;
+
+				//Log.Warn($"Status: {statusChanged} | Gamestarted: {Client.GameStarted} | OutOfOrder: {Client.Connection.IsNetworkOutOfOrder}");
+
 
 				if ((!Client.GameStarted || percentage == 0) && sw.ElapsedMilliseconds >= 15000)
 				{
@@ -298,19 +276,10 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					{
 						return LoadResult.Aborted;
 					}
-					
-					Log.Warn($"Failed to connect to server, timed-out.");
-				
-					return LoadResult.Timeout;
-				}
 
-				if (!statusChanged)
-				{
-					if (Client.PlayerStatusChanged.WaitOne(50)
-					    || Client.PlayerStatus == 3)
-					{
-						statusChanged = true;
-					}
+					Log.Warn($"Failed to connect to server, timed-out.");
+
+					return LoadResult.Timeout;
 				}
 
 				if (!hasSpawnChunk)

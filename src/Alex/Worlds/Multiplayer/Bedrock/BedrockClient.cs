@@ -1319,6 +1319,9 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			packet.chunkRadius = radius;
 
 			Session?.SendPacket(packet);
+			
+			if (PlayerStatus != 3)
+				MarkAsInitialized();
 		}
 
 		public void SendDisconnectionNotification()
