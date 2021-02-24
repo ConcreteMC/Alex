@@ -59,7 +59,7 @@ namespace Alex.Net.Bedrock
 	//	private AutoResetEvent _packetHandledWaitEvent = new AutoResetEvent(false);
 		private object _eventSync    = new object();
 
-		private readonly Utils.Queue.ConcurrentPriorityQueue<Packet, int> _orderingBufferQueue = new Utils.Queue.ConcurrentPriorityQueue<Packet, int>();
+		private readonly ConcurrentPriorityQueue<int, Packet> _orderingBufferQueue = new ConcurrentPriorityQueue<int, Packet>();
 		private          CancellationTokenSource                          _cancellationToken;
 		private          Thread                                           _orderedQueueProcessingThread;
 
@@ -152,6 +152,7 @@ namespace Alex.Net.Bedrock
 					break;
 				case Reliability.UnreliableSequenced:
 				case Reliability.ReliableSequenced:
+					Log.Warn($"Sequenced: {message.ReliabilityHeader.SequencingIndex} | OrderIndex: {message.ReliabilityHeader.OrderingIndex}");
 					AddToOrderedChannel(message);
 					break;
 				case Reliability.Unreliable:
@@ -176,44 +177,27 @@ namespace Alex.Net.Bedrock
 			{
 				if (_cancellationToken.Token.IsCancellationRequested) return;
 				
-				lock (_eventSync)
+				var current  = message.ReliabilityHeader.OrderingIndex.IntValue();
+
+				var last = Interlocked.CompareExchange(ref _lastOrderingIndex, current, current - 1);
+				if (last == current - 1)
 				{
-					var current  = message.ReliabilityHeader.OrderingIndex.IntValue();
-					var last     = Interlocked.Read(ref _lastOrderingIndex);
-					var expected = last + 1;
+					HandlePacket(message);
 					
-					if (current < expected)
-					{
+					if (_orderingBufferQueue.Count > 0)
+						StartOrderingThread();
+				}
+				else
+				{
+					if (current <= last)
 						return;
-					}
-
-					if (_isOutOfOrder)
-					{
-						_orderingBufferQueue.Enqueue(message, current);
-
-						if (current == expected)
-						{
-							StartOrderingThread();
-						}
-
-						return;
-					}
 					
-					if (current == expected)
+					_orderingBufferQueue.Enqueue(current, message);
+					
+					if (!IsOutOfOrder)
 					{
-						Interlocked.Increment(ref _lastOrderingIndex);
-						HandlePacket(message);
-					}
-					else
-					{
-						if (!IsOutOfOrder)
-						{
-							IsOutOfOrder = true;
-							Log.Warn($"Datagram out of order. Expected {expected}, but was {current}.");
-						}
-
-						_orderingBufferQueue.Enqueue(message, current);
-						_orderingResetEvent.Set();
+						IsOutOfOrder = true;
+						Log.Warn($"Datagram out of order. Expected {last + 1}, but was {current}.");
 					}
 				}
 			}
@@ -255,48 +239,24 @@ namespace Alex.Net.Bedrock
 				while (!_cancellationToken.IsCancellationRequested)
 				{
 
-					while (_orderingBufferQueue.TryPeek(out KeyValuePair<int, Packet> pair)
+					while (_orderingBufferQueue.TryDequeue(out KeyValuePair<int, Packet> pair)
 					       && !_cancellationToken.IsCancellationRequested)
 					{
-						lock (_eventSync)
+						var last = Interlocked.CompareExchange(ref _lastOrderingIndex, pair.Key, pair.Key - 1);
+						if (last == pair.Key - 1)
 						{
-							var lastOrderingIndex = Interlocked.Read(ref _lastOrderingIndex);
-
-							if (lastOrderingIndex + 1 == pair.Key)
-							{
-								//Log.Info(
-								//	$"Datagram order restored, resuming normal behavior. Current: {pair.Key}");
-
-								if (_orderingBufferQueue.TryDequeue(out pair))
-								{
-									if (pair.Key == lastOrderingIndex + 1)
-									{
-										Interlocked.Increment(ref _lastOrderingIndex);
-										//Interlocked.Exchange(ref _lastOrderingIndex, pair.Key);
-
-										HandlePacket(pair.Value);
-
-										if (_orderingBufferQueue.Count == 0)
-										{
-											IsOutOfOrder = false;
-										}
-									}
-									else
-									{
-										_orderingBufferQueue.Enqueue(pair.Value, pair.Key);
-									}
-								}
-							}
-							else if (pair.Key <= lastOrderingIndex)
-							{
-								//if (Log.IsDebugEnabled)
-								Log.Debug($"Datagram resent. Expected {lastOrderingIndex + 1}, but was {pair.Key}.");
-
-								if (_orderingBufferQueue.TryDequeue(out pair))
-								{
-									pair.Value.PutPool();
-								}
-							}
+							//_orderingBufferQueue.TryDequeue(out _);
+							
+							HandlePacket(pair.Value);
+						}
+						else if (pair.Key < last)
+						{
+							//_orderingBufferQueue.TryDequeue(out _);
+							pair.Value.PutPool();
+						}
+						else if (pair.Key > last)
+						{
+							_orderingBufferQueue.Enqueue(pair.Key, pair.Value);
 						}
 					}
 
@@ -316,90 +276,118 @@ namespace Alex.Net.Bedrock
 			{
 				_orderingResetEvent?.Reset();
 				_orderedQueueProcessingThread = null;
+				
+				if (_orderingBufferQueue.IsEmpty)
+					IsOutOfOrder = false;
+				
 				Log.Info($"Ordering stop");
 			}
 		}
 
 		private void HandlePacket(Packet message)
 		{
-			if (message == null) return;
-			
-			/*if ((message.ReliabilityHeader.Reliability == Reliability.ReliableSequenced 
-			     || message.ReliabilityHeader.Reliability == Reliability.UnreliableSequenced)
-			    && message.ReliabilityHeader.SequencingIndex < Interlocked.Read(ref _lastSequencingIndex))
+			lock (_eventSync)
 			{
-				return;
-			}
-			*/
-			try
-			{
-			//	RakOfflineHandler.TraceReceive(Log, message);
-			TraceReceive(message);
-			if (message.Id < (int) DefaultMessageIdTypes.ID_USER_PACKET_ENUM)
-				{
-					// Standard RakNet online message handlers
-					switch (message)
-					{
-						case ConnectedPing connectedPing:
-							HandleConnectedPing(connectedPing);
-							break;
-						case ConnectedPong connectedPong:
-							HandleConnectedPong(connectedPong);
-							break;
-						case DetectLostConnections _:
-							break;
-						case ConnectionRequest connectionRequest:
-							HandleConnectionRequest(connectionRequest);
-							break;
-						case ConnectionRequestAccepted connectionRequestAccepted:
-							HandleConnectionRequestAccepted(connectionRequestAccepted);
-							break;
-						case NewIncomingConnection newIncomingConnection:
-							HandleNewIncomingConnection(newIncomingConnection);
-							break;
-						case DisconnectionNotification _:
-							HandleDisconnectionNotification();
-							break;
-						default:
-							Log.Error($"Unhandled packet: {message.GetType().Name} 0x{message.Id:X2} IP {EndPoint.Address}");
-							if (Log.IsDebugEnabled) Log.Warn($"Unknown packet 0x{message.Id:X2}\n{Packet.HexDump(message.Bytes)}");
-							break;
-					}
-				}
-				else
-				{
-					try
-					{
-						CustomMessageHandler.HandlePacket(message);
-					}
-					catch (Exception e)
-					{
-						// ignore
-						Log.Warn(e, $"Custom message handler error");
-					}
-				}
+				if (message == null) return;
 
-				if (message.Timer.IsRunning)
+				/*if ((message.ReliabilityHeader.Reliability == Reliability.ReliableSequenced 
+				     || message.ReliabilityHeader.Reliability == Reliability.UnreliableSequenced)
+				    && message.ReliabilityHeader.SequencingIndex < Interlocked.Read(ref _lastSequencingIndex))
 				{
-					long elapsedMilliseconds = message.Timer.ElapsedMilliseconds;
-					if (elapsedMilliseconds > 1000)
+					return;
+				}
+				*/
+				try
+				{
+					//	RakOfflineHandler.TraceReceive(Log, message);
+					TraceReceive(message);
+
+					if (message.Id < (int) DefaultMessageIdTypes.ID_USER_PACKET_ENUM)
 					{
-						Log.Warn($"Packet (0x{message.Id:x2}) handling too long {elapsedMilliseconds}ms ({message.ToString()})");
+						// Standard RakNet online message handlers
+						switch (message)
+						{
+							case ConnectedPing connectedPing:
+								HandleConnectedPing(connectedPing);
+
+								break;
+
+							case ConnectedPong connectedPong:
+								HandleConnectedPong(connectedPong);
+
+								break;
+
+							case DetectLostConnections _:
+								break;
+
+							case ConnectionRequest connectionRequest:
+								HandleConnectionRequest(connectionRequest);
+
+								break;
+
+							case ConnectionRequestAccepted connectionRequestAccepted:
+								HandleConnectionRequestAccepted(connectionRequestAccepted);
+
+								break;
+
+							case NewIncomingConnection newIncomingConnection:
+								HandleNewIncomingConnection(newIncomingConnection);
+
+								break;
+
+							case DisconnectionNotification _:
+								HandleDisconnectionNotification();
+
+								break;
+
+							default:
+								Log.Error(
+									$"Unhandled packet: {message.GetType().Name} 0x{message.Id:X2} IP {EndPoint.Address}");
+
+								if (Log.IsDebugEnabled)
+									Log.Warn($"Unknown packet 0x{message.Id:X2}\n{Packet.HexDump(message.Bytes)}");
+
+								break;
+						}
+					}
+					else
+					{
+						try
+						{
+							CustomMessageHandler.HandlePacket(message);
+						}
+						catch (Exception e)
+						{
+							// ignore
+							Log.Warn(e, $"Custom message handler error");
+						}
+					}
+
+					if (message.Timer.IsRunning)
+					{
+						long elapsedMilliseconds = message.Timer.ElapsedMilliseconds;
+
+						if (elapsedMilliseconds > 1000)
+						{
+							Log.Warn(
+								$"Packet (0x{message.Id:x2}) handling too long {elapsedMilliseconds}ms ({message.ToString()})");
+						}
+					}
+					else
+					{
+						Log.Warn("Packet (0x{0:x2}) timer not started.", message.Id);
 					}
 				}
-				else
+				catch (Exception e)
 				{
-					Log.Warn("Packet (0x{0:x2}) timer not started.", message.Id);
+					Log.Error(e, "Packet handling");
+
+					throw;
 				}
-			}
-			catch (Exception e)
-			{
-				Log.Error(e,"Packet handling");
-				throw;
-			}
-			finally
-			{
-				message?.PutPool();
+				finally
+				{
+					message?.PutPool();
+				}
 			}
 		}
 
@@ -836,14 +824,15 @@ namespace Alex.Net.Bedrock
 				var preppedSendList = new List<Packet>();
 				foreach (Packet packet in prepareSend)
 				{
-					Packet message = packet;
-
-					if (CustomMessageHandler != null) message = CustomMessageHandler.HandleOrderedSend(message);
-
+					Packet      message     = packet;
+					
 					Reliability reliability = message.ReliabilityHeader.Reliability;
-					if (reliability == Reliability.Undefined) reliability = Reliability.Reliable; // Questionable practice
+					
+					if (reliability == Reliability.Undefined) 
+						reliability = Reliability.Reliable; // Questionable practice
 
-					if (reliability == Reliability.ReliableOrdered) message.ReliabilityHeader.OrderingIndex = Interlocked.Increment(ref OrderingIndex);
+					if (reliability == Reliability.ReliableOrdered || reliability == Reliability.ReliableOrderedWithAckReceipt)
+						message.ReliabilityHeader.OrderingIndex = Interlocked.Increment(ref OrderingIndex);
 
 					preppedSendList.Add(message);
 					//await _packetSender.SendPacketAsync(this, message);

@@ -14,7 +14,7 @@ About
 
 This is a hobby project i work on from time to time, the end goal being it able to connect to a MC:Bedrock & MC:Java server & be feature compatible with most features required for the typical minigame server.
 
-As of now, it is able to connect to java 1.15.2 & bedrock 1.14.1 servers.
+As of now, it is able to connect to java 1.16 & bedrock 1.16 servers.
 
 Screenshots
 -----------
@@ -48,12 +48,14 @@ I'm looking for people that want to help me continue development on Alex.  C# ex
 Awesome repositories
 ---------------------
 
-These repositories really helped me create Alex, thanks!
+These repositories were super helpfull while i was building Alex! You should check them out :)
 
 * [MiNET](https://github.com/NiclasOlofsson/MiNET) - A Minecraft Bedrock Edition server written in C#
 * [TrueCraft](https://github.com/SirCmpwn/TrueCraft) - A Minecraft beta 1.7.3 client written in C#
+* [MoLang](https://github.com/bedrockk/MoLang) - A MoLang implementation for Java
 
 Other resources
 ---------------
 
-* [Wiki.vg](https://wiki.vg/Main_Page) - A website with documentation on various Minecraft things such as the protocol.
+* [Wiki.vg](https://wiki.vg/Main_Page) - Provides documentation on various Minecraft things such as the java protocol.
+* [Bedrock.dev](https://bedrock.dev/) - Provides documentation on everything related to MC:Bedrock.

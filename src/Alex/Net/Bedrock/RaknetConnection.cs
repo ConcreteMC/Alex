@@ -106,12 +106,14 @@ namespace Alex.Net.Bedrock
 
 		public bool TryConnect(IPEndPoint targetEndPoint, int numberOfAttempts = int.MaxValue, short mtuSize = 1400, CancellationToken cancellationToken = default)
 		{
-			Start(); // Make sure we have started the listener
-
-			while (Session == null && numberOfAttempts > 0 && mtuSize >= UdpHeaderSize && !cancellationToken.IsCancellationRequested)
+			try
 			{
-				try
+				Start(); // Make sure we have started the listener
+
+				while (Session == null && numberOfAttempts > 0 && mtuSize >= UdpHeaderSize
+				       && !cancellationToken.IsCancellationRequested)
 				{
+
 					if (!HaveServer)
 					{
 						if (!ConnectionResetEvent.Wait(500, cancellationToken))
@@ -126,18 +128,19 @@ namespace Alex.Net.Bedrock
 							numberOfAttempts--;
 						}
 					}
+
 				}
-				catch (OperationCanceledException)
+
+				if (Session == null) return false;
+
+				while (Session.State != ConnectionState.Connected && numberOfAttempts-- > 0)
 				{
-					break;
+					Task.Delay(100, cancellationToken).Wait(cancellationToken);
 				}
 			}
-
-			if (Session == null) return false;
-
-			while (Session.State != ConnectionState.Connected && numberOfAttempts-- > 0)
+			catch (OperationCanceledException)
 			{
-				Task.Delay(100, cancellationToken).Wait(cancellationToken);
+				return false;
 			}
 
 			return Session.State == ConnectionState.Connected;
@@ -688,10 +691,15 @@ namespace Alex.Net.Bedrock
 
 		public async Task SendPacketAsync(RaknetSession session, List<Packet> messages)
 		{
-			await Task.WhenAll(
-				Datagram.CreateDatagrams(messages, session.MtuSize, session)
-				   .Select(async x => await SendDatagramAsync(session, x)));
+		//	await Task.WhenAll(
+		//		Datagram.CreateDatagrams(messages, session.MtuSize, session)
+			//	   .Select(async x => await SendDatagramAsync(session, x)));
 
+			foreach (Datagram datagram in Datagram.CreateDatagrams(messages, session.MtuSize, session))
+			{
+				await SendDatagramAsync(session, datagram);
+			}
+			
 			foreach (Packet message in messages)
 			{
 				message.PutPool();

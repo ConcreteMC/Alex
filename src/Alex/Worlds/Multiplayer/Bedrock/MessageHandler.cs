@@ -98,7 +98,16 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			{
 				var batch = McpeWrapper.CreateObject();
 				batch.ReliabilityHeader.Reliability = Reliability.ReliableOrdered;
-				batch.payload = Compress(sendInBatch);
+
+				if (CryptoContext != null && CryptoContext.UseEncryption)
+				{
+					batch.payload = CryptoUtils.Encrypt(Compress(sendInBatch), CryptoContext);
+				}
+				else
+				{
+					batch.payload = Compress(sendInBatch);
+				}
+
 				batch.Encode(); // prepare
 				sendList.Add(batch);
 			}
@@ -141,19 +150,11 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		        return bytes;
 	        }
         }
-
-        public  ManualResetEvent FirstEncryptedPacketWaitHandle = new ManualResetEvent(false);
-        private bool             _encrypted                     = false;
+        
 		public Packet HandleOrderedSend(Packet packet)
 		{
 			if (!packet.ForceClear && CryptoContext != null && CryptoContext.UseEncryption && packet is McpeWrapper wrapper)
 			{
-				if (!_encrypted)
-				{
-					FirstEncryptedPacketWaitHandle?.Set();
-					_encrypted = true;
-				}
-				
 				var encryptedWrapper = McpeWrapper.CreateObject();
 				encryptedWrapper.ReliabilityHeader.Reliability = Reliability.ReliableOrdered;
 				encryptedWrapper.payload = CryptoUtils.Encrypt(wrapper.payload, CryptoContext);
@@ -182,7 +183,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 				if (CryptoContext != null && CryptoContext.UseEncryption)
 				{
-					FirstEncryptedPacketWaitHandle.WaitOne();
+					//FirstEncryptedPacketWaitHandle.WaitOne();
 					
 					payload = CryptoUtils.Decrypt(payload, CryptoContext);
 				}
@@ -255,13 +256,13 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 				//var msgs = messages.ToArray();
 				//messages.Clear();
-				wrapper.PutPool();
+				//wrapper.PutPool();
 			}
 			else if (message is UnknownPacket unknownPacket)
 			{
 				Log.Warn($"Received unknown packet 0x{unknownPacket.Id:X2}\n{Packet.HexDump(unknownPacket.Message)}");
 
-				unknownPacket.PutPool();
+			//	unknownPacket.PutPool();
 			}
 			else
 			{

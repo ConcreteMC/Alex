@@ -32,6 +32,7 @@ using Alex.Net.Bedrock.Raknet;
 using Alex.ResourcePackLib.Json;
 using Alex.ResourcePackLib.Json.Converters;
 using Alex.ResourcePackLib.Json.Models.Entities;
+using Alex.Services;
 using Alex.Utils;
 using Alex.Utils.Auth;
 using Alex.Utils.Inventories;
@@ -156,19 +157,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 			if (Client.PlayerStatus == 3)
 			{
-				Client.PlayerStatusChanged.Set();
-
-				//Client.World.Player.EntityId = Client.EntityId;
-
-			//	if (!_markedAsInitalized)
-			//	{
-					Client.MarkAsInitialized();
-			//		_markedAsInitalized = true;
-			//	}
-
-				Client.RequestChunkRadius(AlexInstance.Options.AlexOptions.VideoOptions.RenderDistance.Value);
-				//	_markedAsInitalized = true;
-				//}
+				Client.MarkAsInitialized();
 			}
 			else if (Client.PlayerStatus == 0)
 			{
@@ -260,7 +249,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			
 			try
 			{
-				Client.EntityId = message.runtimeEntityId;
+				Client.World.Player.EntityId = Client.EntityId = message.runtimeEntityId;
 				Client.NetworkEntityId = message.entityIdSelf;
 
 				Client.SpawnPoint = new Vector3(
@@ -285,6 +274,13 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					Client.World.Player.SetInventory(new BedrockInventory(46));
 				}
 
+				Client.World.Player.UpdateGamemode((GameMode) message.playerGamemode);
+
+				foreach (var gr in message.gamerules)
+				{
+					Client.World.SetGameRule(gr);
+				}
+				
 				//message.itemstates[0].
 
 				ChunkProcessor.Itemstates = message.itemstates;
@@ -320,20 +316,12 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				}
 
 				ChunkProcessor.BlockStateMap = ourStates;
-				Client.RequestChunkRadius(Client.ChunkRadius);
-				
-
-				Client.World.Player.EntityId = message.runtimeEntityId;
-				Client.World.Player.UpdateGamemode((GameMode) message.playerGamemode);
-
-				foreach (var gr in message.gamerules)
-				{
-					Client.World.SetGameRule(gr);
-				}
 			}
 			finally
 			{
 				Client.GameStarted = true;
+				
+				Client.RequestChunkRadius(Client.ChunkRadius);
 			}
 
 			//	_entityMapping.TryAdd(message.entityIdSelf, message.runtimeEntityId);
@@ -1237,7 +1225,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			{
 				Client.World.UpdatePlayerPosition(new PlayerLocation(message.x, message.y, message.z));
 
-				if (Client.PlayerStatus == 3)
+				if (Client.CanSpawn)
 				{
 					Client.SendMcpeMovePlayer(new MiNET.Utils.PlayerLocation(message.x, message.y, message.z), false);
 				}
@@ -1593,7 +1581,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					int  percentage         = 0;
 					bool ready              = false;
 					int  previousPercentage = 0;
-					bool spawnChunkLoaded   = false;
 
 					do
 					{
@@ -1602,24 +1589,18 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 								Client.World.Player.KnownPosition.X, Client.World.Player.KnownPosition.Y,
 								Client.World.Player.KnownPosition.Z));
 
-						if (!spawnChunkLoaded && percentage >= 100)
+
+						double radiusSquared = Math.Pow(Client.ChunkRadius, 2);
+						var    target        = radiusSquared;
+
+						percentage = (int) ((100 / target) * world.ChunkManager.ChunkCount);
+
+						if (percentage != previousPercentage)
 						{
-							loadingWorldScreen.UpdateProgress(LoadingState.Spawning, 99, "Waiting for spawn chunk...");
-						}
-						else
-						{
-							double radiusSquared = Math.Pow(Client.ChunkRadius, 2);
-							var    target        = radiusSquared;
+							loadingWorldScreen.UpdateProgress(LoadingState.LoadingChunks, percentage);
+							previousPercentage = percentage;
 
-							percentage = (int) ((100 / target) * world.ChunkManager.ChunkCount);
-
-							if (percentage != previousPercentage)
-							{
-								loadingWorldScreen.UpdateProgress(LoadingState.LoadingChunks, percentage);
-								previousPercentage = percentage;
-
-								//Log.Info($"Progress: {percentage} ({ChunksReceived} of {target})");
-							}
+							//Log.Info($"Progress: {percentage} ({ChunksReceived} of {target})");
 						}
 
 						//if (!ready)
@@ -1632,20 +1613,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 							}
 						}
 
-						//if (!spawnChunkLoaded)
-						{
-							if (world.ChunkManager.TryGetChunk(chunkCoords, out _))
-							{
-								spawnChunkLoaded = true;
-							}
-							else
-							{
-								spawnChunkLoaded = false;
-							}
-						}
 
-
-						if (percentage >= 100 && spawnChunkLoaded)
+						if (percentage >= 100)
 						{
 							break;
 						}
@@ -1718,12 +1687,15 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		public void HandleMcpeRequestChunkRadius(McpeRequestChunkRadius message)
 		{
-			 Client.RequestChunkRadius(Client.ChunkRadius);
+			Log.Info($"Illegal chunkradius request: {message.chunkRadius}");
+		//	 Client.RequestChunkRadius(Client.ChunkRadius);
 		}
 
 		public void HandleMcpeChunkRadiusUpdate(McpeChunkRadiusUpdate message)
 		{
 			Client.ChunkRadius = message.chunkRadius;
+			//if (!Client.CanSpawn && Client.GameStarted)
+			//	Client.MarkAsInitialized();
 			//UnhandledPackage(message);
 		}
 
@@ -1788,19 +1760,19 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			ushort port          = message.port;
 			
 			ThreadPool.QueueUserWorkItem(
-				o =>
+				async o =>
 				{
+					var resolved = await JavaServerQueryProvider.ResolveHostnameAsync(serverAddress);
 
-					IPHostEntry hostEntry = Dns.GetHostEntry(serverAddress);
-
-					if (hostEntry.AddressList.Length > 0)
+					if (!resolved.Success)
 					{
-						var ip = hostEntry.AddressList[0];
-
-						AlexInstance.ConnectToServer(
-							new BedrockServerType(AlexInstance, AlexInstance.Services.GetService<XboxAuthService>()),
-							new ServerConnectionDetails(new IPEndPoint(ip, port)), PlayerProfile);
+						Log.Warn($"could not resolve hostname: {serverAddress}");
+						return;
 					}
+
+					AlexInstance.ConnectToServer(
+						new BedrockServerType(AlexInstance, AlexInstance.Services.GetService<XboxAuthService>()),
+						new ServerConnectionDetails(new IPEndPoint(resolved.Result, port)), PlayerProfile);
 				});
 		}
 

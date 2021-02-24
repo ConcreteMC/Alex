@@ -91,21 +91,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		private void CheckCompletion(ResourcePackEntry entry)
 		{
-			if (entry.IsComplete)
-			{
-				McpeResourcePackClientResponse response = new McpeResourcePackClientResponse();
-				response.responseStatus = (byte) McpeResourcePackClientResponse.ResponseStatus.Completed;
-				response.resourcepackids = new ResourcePackIds() {{$"{entry.Identifier}_{entry.Version}"}};
-				_client.SendPacket(response);
-				
-				//_client.WorldProvider.Alex.Resources.
-				Log.Info($"Completed pack: {entry.Identifier}");
-				
-				//TODO: Load the newly received resourcepack iinto the resourcemanager.
-				
-				return;
-			}
-
 			foreach (var missing in entry.GetMissingChunks())
 			{
 				McpeResourcePackChunkRequest request = McpeResourcePackChunkRequest.CreateObject();
@@ -115,6 +100,20 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				_client.SendPacket(request);
 
 				break;
+			}
+			if (entry.IsComplete)
+			{
+				McpeResourcePackClientResponse response = new McpeResourcePackClientResponse();
+				response.responseStatus = (byte) McpeResourcePackClientResponse.ResponseStatus.Completed;
+				response.resourcepackids = new ResourcePackIds() {{$"{entry.Identifier}_{entry.Version}"}};
+				_client.SendPacket(response);
+				
+				//_client.WorldProvider.Alex.Resources.
+				Log.Info($"Completed pack: {entry.Identifier} (Size: {entry.GetData().Length})");
+				
+				//TODO: Load the newly received resourcepack iinto the resourcemanager.
+				
+				return;
 			}
 		}
 
@@ -171,7 +170,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		{
 			_chunks[chunkIndex] = chunkData;
 
-			if (IsComplete)
+			if (_chunks.All(x => x != null))
 			{
 				using (MemoryStream ms = new MemoryStream())
 				{
@@ -184,12 +183,14 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 					OnComplete(_completedData);
 				}
+
+				IsComplete = true;
 			}
 		}
 		
 		protected virtual void OnComplete(byte[] data){}
 
-		public bool IsComplete => _chunks.All(x => x != null);
+		public bool IsComplete { get; private set; } = false;
 		
 		public IEnumerable<uint> GetMissingChunks()
 		{

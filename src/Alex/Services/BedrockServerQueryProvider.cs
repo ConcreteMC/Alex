@@ -22,7 +22,7 @@ namespace Alex.Services
 		}
 
 		/// <inheritdoc />
-		public async Task QueryServerAsync(ServerConnectionDetails connectionDetails,
+		public Task QueryServerAsync(ServerConnectionDetails connectionDetails,
 			PingServerDelegate pingCallback,
 			ServerStatusDelegate statusCallBack)
 		{
@@ -127,6 +127,8 @@ namespace Alex.Services
 				client?.Close();
 				client?.Dispose();
 			}
+
+			return Task.CompletedTask;
 		}
 
 		/// <inheritdoc />

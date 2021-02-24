@@ -110,12 +110,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 						_lastPrioritization = _tickTime;
 					}
-					
-					
-					if (_tickTime % 20 == 0 && World.Player.IsSpawned)
-					{
-						Client.SendPing();
-					}
 				}
 
 				//World.Player.OnTick();
@@ -208,13 +202,9 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			//progressReport(LoadingState.LoadingChunks, 0);
 
 			var  percentage         = 0;
-			var  done               = false;
-			int  previousPercentage = 0;
-			bool hasSpawnChunk      = true;
-			
-			Stopwatch sw = Stopwatch.StartNew();
 
-			bool         slowNotified = false;
+			Stopwatch sw = Stopwatch.StartNew();
+			
 			bool         outOfOrder   = false;
 			LoadingState state        = LoadingState.ConnectingToServer;
 			string       subTitle     = "";
@@ -233,18 +223,13 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					sw.Restart();
 				}
 
-				if (!outOfOrder && sw.ElapsedMilliseconds >= 500)
-				{
-					//subTitle = "Slow network, please wait...";
-				}
-
 				double radiusSquared = Math.Pow(Client.ChunkRadius, 2);
 				var    target        = radiusSquared;
 
 				percentage = (int) ((100 / target) * World.ChunkManager.ChunkCount);
 				progressReport(state, percentage, subTitle);
 
-				if (hasSpawnChunk && Client.PlayerStatus == 3 && Client.GameStarted)
+				if (Client.CanSpawn && Client.GameStarted)
 				{
 					break;
 				}
@@ -281,16 +266,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 					return LoadResult.Timeout;
 				}
-
-				if (!hasSpawnChunk)
-				{
-					if (World.ChunkManager.TryGetChunk(
-						new ChunkCoordinates(
-							new PlayerLocation(Client.SpawnPoint.X, Client.SpawnPoint.Y, Client.SpawnPoint.Z)), out _))
-					{
-						hasSpawnChunk = true;
-					}
-				}
 			}
 
 			if (!Client.IsConnected)
@@ -302,17 +277,11 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				new MiNET.Utils.PlayerLocation(p.X, p.Y, p.Z, p.HeadYaw, p.Yaw, p.Pitch),
 				World.Player.KnownPosition.OnGround);
 
-			//Client.MarkAsInitialized();
-			
-			//SkyLightCalculations.Calculate(WorldReceiver as World);
-
-			//Client.IsEmulator = false;
-			//progressReport(LoadingState.Spawning, 99);
 			timer.Stop();
 
 			World.Player.IsSpawned = true;
 			_gameStarted = true;
-			//TODO: Check if spawn position is safe.
+			
 			return LoadResult.Done;
 		}
 

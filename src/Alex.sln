@@ -27,6 +27,10 @@ ProjectSection(SolutionItems) = preProject
 	..\Directory.Build.props = ..\Directory.Build.props
 EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Alex.MoLang", "Alex.MoLang\Alex.MoLang.csproj", "{FA5FD4BC-2B57-4E70-9C4E-93A91ED49F3D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Alex.MoLang.TestApp", "Alex.MoLang.TestApp\Alex.MoLang.TestApp.csproj", "{3D35E8BD-5900-406F-ACE8-4B385351295D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Appveyor|Any CPU = Appveyor|Any CPU
@@ -101,6 +105,34 @@ Global
 		{A5C2A962-01D1-42E1-9451-27F3E13DBD26}.Release|x64.Build.0 = Release|Any CPU
 		{A5C2A962-01D1-42E1-9451-27F3E13DBD26}.DirectX|x64.ActiveCfg = DirectX|x64
 		{A5C2A962-01D1-42E1-9451-27F3E13DBD26}.DirectX|x64.Build.0 = DirectX|x64
+		{FA5FD4BC-2B57-4E70-9C4E-93A91ED49F3D}.Appveyor|Any CPU.ActiveCfg = Debug|Any CPU
+		{FA5FD4BC-2B57-4E70-9C4E-93A91ED49F3D}.Appveyor|Any CPU.Build.0 = Debug|Any CPU
+		{FA5FD4BC-2B57-4E70-9C4E-93A91ED49F3D}.Appveyor|x64.ActiveCfg = Debug|Any CPU
+		{FA5FD4BC-2B57-4E70-9C4E-93A91ED49F3D}.Appveyor|x64.Build.0 = Debug|Any CPU
+		{FA5FD4BC-2B57-4E70-9C4E-93A91ED49F3D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FA5FD4BC-2B57-4E70-9C4E-93A91ED49F3D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FA5FD4BC-2B57-4E70-9C4E-93A91ED49F3D}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{FA5FD4BC-2B57-4E70-9C4E-93A91ED49F3D}.Debug|x64.Build.0 = Debug|Any CPU
+		{FA5FD4BC-2B57-4E70-9C4E-93A91ED49F3D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FA5FD4BC-2B57-4E70-9C4E-93A91ED49F3D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FA5FD4BC-2B57-4E70-9C4E-93A91ED49F3D}.Release|x64.ActiveCfg = Release|Any CPU
+		{FA5FD4BC-2B57-4E70-9C4E-93A91ED49F3D}.Release|x64.Build.0 = Release|Any CPU
+		{FA5FD4BC-2B57-4E70-9C4E-93A91ED49F3D}.DirectX|x64.ActiveCfg = Debug|Any CPU
+		{FA5FD4BC-2B57-4E70-9C4E-93A91ED49F3D}.DirectX|x64.Build.0 = Debug|Any CPU
+		{3D35E8BD-5900-406F-ACE8-4B385351295D}.Appveyor|Any CPU.ActiveCfg = Debug|Any CPU
+		{3D35E8BD-5900-406F-ACE8-4B385351295D}.Appveyor|Any CPU.Build.0 = Debug|Any CPU
+		{3D35E8BD-5900-406F-ACE8-4B385351295D}.Appveyor|x64.ActiveCfg = Debug|Any CPU
+		{3D35E8BD-5900-406F-ACE8-4B385351295D}.Appveyor|x64.Build.0 = Debug|Any CPU
+		{3D35E8BD-5900-406F-ACE8-4B385351295D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3D35E8BD-5900-406F-ACE8-4B385351295D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3D35E8BD-5900-406F-ACE8-4B385351295D}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{3D35E8BD-5900-406F-ACE8-4B385351295D}.Debug|x64.Build.0 = Debug|Any CPU
+		{3D35E8BD-5900-406F-ACE8-4B385351295D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3D35E8BD-5900-406F-ACE8-4B385351295D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3D35E8BD-5900-406F-ACE8-4B385351295D}.Release|x64.ActiveCfg = Release|Any CPU
+		{3D35E8BD-5900-406F-ACE8-4B385351295D}.Release|x64.Build.0 = Release|Any CPU
+		{3D35E8BD-5900-406F-ACE8-4B385351295D}.DirectX|x64.ActiveCfg = Debug|Any CPU
+		{3D35E8BD-5900-406F-ACE8-4B385351295D}.DirectX|x64.Build.0 = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

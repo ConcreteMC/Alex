@@ -15,6 +15,7 @@ using Alex.Gamestates.Common;
 using Alex.Gamestates.Login;
 using Alex.Gui;
 using Alex.Gui.Elements;
+using Alex.Services;
 using Alex.Utils;
 using Alex.Worlds.Multiplayer.Bedrock;
 using Microsoft.Xna.Framework;
@@ -238,12 +239,14 @@ namespace Alex.Gamestates.Multiplayer
 			try
 			{
 				var       entry = SelectedItem.SavedServerEntry;
-				var       ips   = Dns.GetHostAddresses(entry.Host).ToArray();
-				IPAddress ip    = ips[Rnd.Next(0, ips.Length - 1)];
+				//var ips = await JavaServerQueryProvider.ResolveHostnameAsync(entry.Host);// Dns.GetHostAddresses(entry.Host).ToArray();
 
-				if (ip == null) return;
+				//IPAddress ip = ips.Result;
 
-				IPEndPoint target = new IPEndPoint(ip, entry.Port);
+			//	if (ip == null) return;
+
+				//IPEndPoint target = new IPEndPoint(ip, entry.Port);
+				var target = SelectedItem.ConnectionEndpoint;
 
 				var           authenticationService = GetService<IPlayerProfileService>();
 				//var currentProfile        = authenticationService.CurrentProfile;

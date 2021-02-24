@@ -76,13 +76,12 @@ namespace Alex.Worlds.Multiplayer.Bedrock
         private IOptionsProvider    OptionsProvider     { get; }
         private XboxAuthService     XboxAuthService     { get; }
         private AlexOptions         Options             => OptionsProvider.AlexOptions;
-
-        public PlayerProfile PlayerProfile { get; }
+        
         private CancellationTokenSource CancellationTokenSource { get; }
         
         public McpeNetworkChunkPublisherUpdate LastChunkPublish { get; set; }
         public bool CanSpawn => PlayerStatus == 3;
-        public AutoResetEvent PlayerStatusChanged { get; set; } = new AutoResetEvent(false);
+
         public AutoResetEvent ChangeDimensionResetEvent { get; } = new AutoResetEvent(false);
         public RaknetConnection Connection { get; }
         private MessageHandler MessageHandler { get; set; }
@@ -110,8 +109,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
         public BedrockClient(Alex alex, IPEndPoint endpoint, PlayerProfile playerProfile, BedrockWorldProvider wp)
 		{
 			PacketFactory.CustomPacketFactory = new AlexPacketFactory();
-			
-			PlayerProfile = playerProfile;
 			CancellationTokenSource = new CancellationTokenSource();
 			
             Alex = alex;
@@ -127,7 +124,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			//ReflectionHelper.SetPrivateStaticFieldValue();
 			//MiNetServer.FastThreadPool = threadPool;
 
-			ResourcePackManager = new ResourcePackManager(this);
+			_disposables.Add(ResourcePackManager = new ResourcePackManager(this));
 
 			if (wp != null)
 			{
@@ -415,16 +412,33 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		public void SendPacket(Packet packet)
 		{
+			if (Session == null)
+			{
+				return;
+			}
 		//	Log.Info($"Sent: {packet}");
 			Session.SendPacket(packet);
 		}
 
+		private bool _markedAsInitialized = false;
 		public void MarkAsInitialized()
 		{
+			if (_markedAsInitialized)
+			{
+				Log.Warn($"Tried sending initialize more than once");
+
+				return;
+			}
+			
+			Log.Info($"Sent LocalPlayerInitialized");
 			var packet = McpeSetLocalPlayerAsInitialized.CreateObject();
 			packet.runtimeEntityId = EntityId;
-
+			packet.ReliabilityHeader.Reliability = Reliability.Reliable;
+			
+			//Connection.Session.SendDirectPacket(packet);
 			SendPacket(packet);
+
+			_markedAsInitialized = true;
 
 			//_isInitialized = true;
 		}
@@ -670,7 +684,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				//Thread.Sleep(1250);
 
 				McpeClientToServerHandshake magic = McpeClientToServerHandshake.CreateObject();
-				Session.SendPacket(magic);
+				SendPacket(magic);
 
 				//Session.FirstEncryptedMessage = Connection.Session.ReliableMessageNumber;
 				Log.Info($"Encryption initiated!");
@@ -924,7 +938,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			text.message = message;
 			text.type = (byte) MessageType.Chat;
 			
-			Session.SendPacket(text);
+			SendPacket(text);
 		}
 
 		public void SendPlayerAction(PlayerAction action, BlockCoordinates? coordinates, int? blockFace )
@@ -939,7 +953,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			if (blockFace.HasValue)
 				packet.face = blockFace.Value;
 			
-			Session.SendPacket(packet);
+			SendPacket(packet);
 		}
 		
 	    public override void PlayerDigging(DiggingStatus status, BlockCoordinates position, API.Blocks.BlockFace face, Vector3 cursorPosition)
@@ -971,7 +985,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
                         
                     };
 
-                   Session.SendPacket(packet);
+                   SendPacket(packet);
                 }
                 else if (status == DiggingStatus.Cancelled)
                 {
@@ -1076,7 +1090,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				    //BlockRuntimeId = 
 			    };
 
-			    Session.SendPacket(packet);
+			    SendPacket(packet);
 		    }
 	    }
 
@@ -1126,7 +1140,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					   FromPosition = new System.Numerics.Vector3(p.KnownPosition.X, p.KnownPosition.Y, p.KnownPosition.Z)
 				   };
 
-				   Session.SendPacket(packet);
+				   SendPacket(packet);
 			   }
 			   else
 			   {
@@ -1141,7 +1155,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					   FromPosition = new System.Numerics.Vector3(p.KnownPosition.X, p.KnownPosition.Y, p.KnownPosition.Z)
 				   };
 
-				   Session.SendPacket(packet);
+				   SendPacket(packet);
 			   }
 		    }
 	    }
@@ -1183,7 +1197,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			  //  BlockRuntimeId = 
 		    };
 
-		  Session.SendPacket(packet);
+		  SendPacket(packet);
 	    }
 
 	    public override void UseItem(Item item, int hand, ItemUseAction action, BlockCoordinates position, API.Blocks.BlockFace face, Vector3 cursorPosition)
@@ -1236,7 +1250,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			   // Slot = World.Player.Inventory.SelectedSlot
 		    };
 
-		    Session.SendPacket(packet);
+		    SendPacket(packet);
 		    
 			//Log.Warn("TODO: Implement UseItem");
 		}
@@ -1259,7 +1273,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			}*/
 			packet.item = GetMiNETItem(item);
 
-			Session.SendPacket(packet);
+			SendPacket(packet);
 			
 			//Log.Warn($"Held item slot changed: {slot} | Inventor: ");
 		}
@@ -1305,7 +1319,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				McpeCommandRequest commandRequest = McpeCommandRequest.CreateObject();
 				commandRequest.command = message;
 				commandRequest.unknownUuid = new MiNET.Utils.UUID(Guid.NewGuid().ToString());
-				Session.SendPacket(commandRequest);
+				SendPacket(commandRequest);
 			}
 			else
 			{
@@ -1318,58 +1332,16 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			var packet = McpeRequestChunkRadius.CreateObject();
 			packet.chunkRadius = radius;
 
-			Session?.SendPacket(packet);
+			SendPacket(packet);
 			
-			if (PlayerStatus != 3)
-				MarkAsInitialized();
+			//if (PlayerStatus != 3 && GameStarted)
+				//MarkAsInitialized();
 		}
 
 		public void SendDisconnectionNotification()
 		{
-			Session?.SendPacket(new DisconnectionNotification());
+			SendPacket(new DisconnectionNotification());
 		}
-
-		private ulong _expectedLatency = 0;
-		public ulong ExpectedLatency
-		{
-			get => _expectedLatency;
-			set
-			{
-				_expectedLatency = value;
-				_latencySw.Restart();
-			}
-		}
-
-		public long Latency => _latencySw.ElapsedMilliseconds;
-		
-		private Stopwatch _latencySw = new Stopwatch();
-		public  ulong     LastSentPing { get; private set; }
-		public void SendPing()
-		{
-			//return;
-			/*if (CustomConnectedPong.CanPing)
-			{
-				ConnectedPing cp = ConnectedPing.CreateObject();
-				cp.sendpingtime = DateTimeOffset.UtcNow.Ticks / TimeSpan.TicksPerMillisecond;
-
-				CustomConnectedPong.LastSentPing = DateTimeOffset.UtcNow.Ticks / TimeSpan.TicksPerMillisecond;
-
-				Session?.SendPacket(cp);
-			}
-			else
-			{
-				//ExpectedLatency = 0;
-				McpeNetworkStackLatency nsl = McpeNetworkStackLatency.CreateObject();
-				nsl.timestamp = (ulong) DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-				nsl.unknownFlag = 1;
-				
-				Session?.SendPacket(nsl);
-				LastSentPing = nsl.timestamp;
-				
-				_latencySw.Restart();
-			}*/
-		}
-
 
 		public void Dispose()
 		{
