@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Alex.ResourcePackLib.Json.Bedrock.Entity;
 using Alex.ResourcePackLib.Json.BlockStates;
 using Alex.ResourcePackLib.Json.Converters;
@@ -51,6 +52,21 @@ namespace Alex.ResourcePackLib.Json
 		public static T DeserializeObject<T>(string json)
 		{
 			return JsonConvert.DeserializeObject<T>(json, DefaultSettings);
+		}
+		
+		public static T DeserializeObject<T>(string json, params JsonConverter[] converters)
+		{
+			var cv = new List<JsonConverter>();
+			cv.AddRange(DefaultSettings.Converters);
+			cv.AddRange(converters);
+			
+			return JsonConvert.DeserializeObject<T>(json, new JsonSerializerSettings()
+			{
+				Converters = cv,
+				ContractResolver = DefaultSettings.ContractResolver,
+				NullValueHandling = DefaultSettings.NullValueHandling,
+				PreserveReferencesHandling = DefaultSettings.PreserveReferencesHandling
+			});
 		}
 
 		public static object DeserializeObject(string json)

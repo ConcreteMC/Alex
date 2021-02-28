@@ -1,7 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
+using System.Reflection;
 using Alex.ResourcePackLib.Json.Models.Entities;
+using Alex.ResourcePackLib.Json.Models.Items;
 using Microsoft.Xna.Framework;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -17,11 +20,41 @@ namespace Alex.ResourcePackLib.Json.Converters
 
 	public enum FormatVersion
 	{
-		V1_8_0,
-		V1_10_0,
-		V1_12_0,
-		V1_14_0,
-		V1_16_0
+		[JsonEnumValue("1.8.0")] V1_8_0,
+		[JsonEnumValue("1.10.0")] V1_10_0,
+		[JsonEnumValue("1.12.0")] V1_12_0,
+		[JsonEnumValue("1.14.0")] V1_14_0,
+		[JsonEnumValue("1.16.0")] V1_16_0,
+		Unknown
+	}
+
+	public static class FormatVersionHelpers
+	{
+		private static IReadOnlyDictionary<string, FormatVersion> _helper;
+		static FormatVersionHelpers()
+		{
+			Dictionary<string, FormatVersion> versions = new Dictionary<string, FormatVersion>();
+
+			foreach (FieldInfo fi in typeof(FormatVersion).GetFields())
+			{
+				JsonEnumValueAttribute valueAttribute = fi.GetCustomAttribute<JsonEnumValueAttribute>();
+
+				if (valueAttribute != null)
+				{
+					versions.Add(valueAttribute.Value, (FormatVersion)fi.GetValue(null));
+				}
+			}
+			
+			_helper = versions;
+		}
+		
+		public static FormatVersion FromString(string value)
+		{
+			if (_helper.TryGetValue(value, out FormatVersion v))
+				return v;
+			
+			return FormatVersion.Unknown;
+		}
 	}
 	
 	internal class MobsModelConverter : JsonConverter

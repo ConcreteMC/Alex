@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Alex.MoLang.Parser;
+using Alex.MoLang.Parser.Expressions;
 using Alex.MoLang.Parser.Tokenizer;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -31,7 +32,23 @@ namespace Alex.ResourcePackLib.Json.Converters.MoLang
 				TokenIterator tokenIterator = new TokenIterator(molang);
 				MoLangParser  parser        = new MoLangParser(tokenIterator);
 
-				return parser.Parse();
+				var res = parser.Parse();
+
+				return res;
+			}
+			else if (token.Type == JTokenType.Float)
+			{
+				return new List<IExpression>()
+				{
+					new NumberExpression(token.Value<double>())
+				};
+			}
+			else if (token.Type == JTokenType.Boolean)
+			{
+				return new List<IExpression>()
+				{
+					new BooleanExpression(token.Value<bool>())
+				};
 			}
 
 			return null;

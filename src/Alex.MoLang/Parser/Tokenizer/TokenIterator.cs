@@ -1,3 +1,6 @@
+using System;
+using Alex.MoLang.Parser.Exceptions;
+
 namespace Alex.MoLang.Parser.Tokenizer
 {
     public class TokenIterator
@@ -35,7 +38,7 @@ namespace Alex.MoLang.Parser.Tokenizer
                     }
                 }
 
-                var    expr      = GetStringAt(_index);
+                var    expr      = GetCharacterAt(_index);
                 TokenType tokenType = TokenType.BySymbol(expr);
 
                 if (tokenType != null)
@@ -44,12 +47,12 @@ namespace Alex.MoLang.Parser.Tokenizer
 
                     return new Token(tokenType, GetPosition());
                 }
-                else if (expr.Equals("'"))
+                else if (expr.Equals('\''))
                 {
-                    int stringStart  = _index;
-                    int stringLength = 1;
+                    int stringStart  = _index + 1;
+                    int stringLength = 0;
 
-                    while (stringStart + stringLength < _code.Length && !GetStringAt(stringStart + stringLength).Equals("'"))
+                    while (stringStart + stringLength < _code.Length && !GetCharacterAt(stringStart + stringLength).Equals('\''))
                     {
                         stringLength++;
                     }
@@ -58,16 +61,16 @@ namespace Alex.MoLang.Parser.Tokenizer
                     _index = stringStart + stringLength;
 
                     return new Token(
-                        TokenType.String, _code.Substring(stringStart + 1, stringLength), GetPosition());
+                        TokenType.String, _code.Substring(stringStart, stringLength), GetPosition());
                 }
-                else if (char.IsLetter(expr[0]))
+                else if (char.IsLetter(expr))
                 {
                     var nameStart  = _index;
                     int nameLength = 1;
 
-                    while (nameStart + nameLength < _code.Length && (char.IsLetterOrDigit(GetStringAt(nameStart + nameLength)[0])
-                                                                     || GetStringAt(nameStart + nameLength).Equals("_")
-                                                                     || GetStringAt(nameStart + nameLength).Equals(".")))
+                    while (nameStart + nameLength < _code.Length && (char.IsLetterOrDigit(GetCharacterAt(nameStart + nameLength))
+                                                                     || GetCharacterAt(nameStart + nameLength).Equals('_')
+                                                                     || GetCharacterAt(nameStart + nameLength).Equals('.')))
                     {
                         nameLength++;
                     }
@@ -84,28 +87,49 @@ namespace Alex.MoLang.Parser.Tokenizer
 
                     return new Token(token, value, GetPosition());
                 }
-                else if (char.IsDigit(expr[0]))
+                else if (char.IsDigit(expr))
                 {
                     int     numStart   = _index;
                     int     numLength  = 1;
                     bool hasDecimal = false;
+                    bool isFloat = false;
 
-                    while (numStart + numLength < _code.Length && (char.IsDigit(GetStringAt(numStart + numLength)[0])
-                                                         || (GetStringAt(numStart + numLength).Equals(".") && !hasDecimal)))
+
+                    while (numStart + numLength < _code.Length)
                     {
-                        if (GetStringAt(numStart + numLength).Equals("."))
+                        var character = GetCharacterAt(numStart + numLength);
+
+                        if (!char.IsDigit(character))
                         {
-                            hasDecimal = true;
+                            if (character == 'f' && !isFloat)
+                            {
+                                isFloat = true;
+                            }
+                            else if (character == '.' && !hasDecimal)
+                            {
+                                hasDecimal = true;
+                            }
+                            else
+                            {
+                                break;
+                            }
                         }
 
                         numLength++;
+
+                        if (isFloat)
+                            break;
                     }
 
                     _index = numStart + numLength;
 
+                    if (isFloat)
+                        return new Token(
+                            TokenType.FloatingPointNumber, _code.Substring(numStart, numLength - 1), GetPosition());
+                    
                     return new Token(TokenType.Number, _code.Substring(numStart, numLength), GetPosition());
                 }
-                else if (expr.Equals("\n") || expr.Equals("\r"))
+                else if (expr.Equals('\n') || expr.Equals('\r'))
                 {
                     _currentLine++;
                 }
@@ -127,14 +151,17 @@ namespace Alex.MoLang.Parser.Tokenizer
             return new TokenPosition(_lastStepLine, _currentLine, _lastStep, _index);
         }
 
-        public string GetStringAt(string str, int i)
+        public string GetCharacterAt(string str, int i)
         {
             return str.Substring(i, 1);
         }
 
-        public string GetStringAt(int i)
+        public char GetCharacterAt(int index)
         {
-            return _code.Substring(i, 1);
+             if (index > _code.Length - 1)
+                throw new MoLangParserException($"Value '{index + 1}' is outside of range Min: 0, Max:{_code.Length - 1}", new IndexOutOfRangeException(nameof(index)));
+            
+            return _code[index];//.Substring(index, 1)[0];
         }
     }
 }

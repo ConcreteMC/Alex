@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Alex.MoLang.Parser.Exceptions;
 using Alex.MoLang.Parser.Parselet;
 using Alex.MoLang.Parser.Tokenizer;
 
@@ -21,6 +22,7 @@ namespace Alex.MoLang.Parser
 			PrefixParselets.Add(TokenType.Name, new NameParselet());
 			PrefixParselets.Add(TokenType.String, new StringParselet());
 			PrefixParselets.Add(TokenType.Number, new NumberParselet());
+			PrefixParselets.Add(TokenType.FloatingPointNumber, new FloatParselet());
 			PrefixParselets.Add(TokenType.True, new BooleanParselet());
 			PrefixParselets.Add(TokenType.False, new BooleanParselet());
 			PrefixParselets.Add(TokenType.Return, new ReturnParselet());
@@ -213,8 +215,8 @@ namespace Alex.MoLang.Parser
 			{
 				if (!token.Type.Equals(expectedType))
 				{
-					throw new Exception(
-						"Expected token " + expectedType.GetType().Name + " and " + token.Type.GetType().Name + " given");
+					throw new MoLangParserException(
+						$"Expected token of type '{expectedType.TypeName}' but found '{token.Type.TypeName}' at line {token.Position.LineNumber}:{token.Position.Index}");
 				}
 			}
 

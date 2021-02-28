@@ -9,8 +9,10 @@ using System.Text;
 using System.Text.RegularExpressions;
 using Alex.API.Resources;
 using Alex.API.Utils;
+using Alex.MoLang.Parser.Exceptions;
 using Alex.ResourcePackLib.IO.Abstract;
 using Alex.ResourcePackLib.Json;
+using Alex.ResourcePackLib.Json.Bedrock;
 using Alex.ResourcePackLib.Json.Bedrock.Entity;
 using Alex.ResourcePackLib.Json.Bedrock.Sound;
 using Alex.ResourcePackLib.Json.Converters;
@@ -32,6 +34,10 @@ namespace Alex.ResourcePackLib
 		private ConcurrentDictionary<string,Lazy<Image<Rgba32>>> _bitmaps = new ConcurrentDictionary<string, Lazy<Image<Rgba32>>>();
         public IReadOnlyDictionary<string, Lazy<Image<Rgba32>>> Textures => _bitmaps;
 		public IReadOnlyDictionary<ResourceLocation, EntityDescription> EntityDefinitions { get; private set; } = new ConcurrentDictionary<ResourceLocation, EntityDescription>();
+		public IReadOnlyDictionary<string, RenderController> RenderControllers { get; private set; } = new ConcurrentDictionary<string, RenderController>();
+		public IReadOnlyDictionary<string, AnimationController> AnimationControllers { get; private set; } = new ConcurrentDictionary<string, AnimationController>();
+		public IReadOnlyDictionary<string, Animation> Animations { get; private set; } = new ConcurrentDictionary<string, Animation>();
+		
 		public SoundDefinitionFormat SoundDefinitions { get; private set; } = null;
 		
 		private readonly IFilesystem _archive;
@@ -79,13 +85,23 @@ namespace Alex.ResourcePackLib
 		private const RegexOptions RegexOpts = RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase;
 		private static readonly Regex IsEntityDefinition     = new Regex(@"^entity[\\\/](?'filename'.*)\.json$", RegexOpts);
 		private static readonly Regex IsEntityModel    = new Regex(@"^models[\\\/]entity[\\\/](?'filename'.*)\.json$", RegexOpts);
+		private static readonly Regex IsRenderController     = new Regex(@"^render_controllers[\\\/](?'filename'.*)\.json$", RegexOpts);
+		private static readonly Regex IsAnimationController     = new Regex(@"^animation_controllers[\\\/](?'filename'.*)\.json$", RegexOpts);
+		private static readonly Regex IsAnimation = new Regex(@"^animations[\\\/](?'filename'.*)\.json$", RegexOpts);
 		private static readonly Regex IsSoundDefinition    = new Regex(@"^sounds[\\\/]sound_definitions\.json$", RegexOpts);
 		private static readonly Regex IsFontFile    = new Regex(@"^font[\\\/](?'filename'.*)\.png$", RegexOpts);
 		private void Load(ResourcePack.LoadProgress progressReporter)
 		{
 			Dictionary<ResourceLocation, EntityDescription> entityDefinitions = new Dictionary<ResourceLocation, EntityDescription>();
 			Dictionary<string, EntityModel> entityModels = new Dictionary<string, EntityModel>();
+			Dictionary<string, RenderController> renderControllers = new Dictionary<string, RenderController>();
 
+			Dictionary<string, AnimationController>
+				animationControllers = new Dictionary<string, AnimationController>();
+			
+			Dictionary<string, Animation>
+				animations = new Dictionary<string, Animation>();
+			
 			if (TryLoadMobModels(entityModels))
 			{
 				//Log.Info($"Loaded mobs.json: {entityModels.Count}");
@@ -123,14 +139,94 @@ namespace Alex.ResourcePackLib
 					ProcessFontFile(progressReporter, entry);
 					continue;
 				}
+
+				if (IsRenderController.IsMatch(entry.FullName))
+				{
+					ProcessRenderController(entry, renderControllers);
+					continue;
+				}
+
+				if (IsAnimationController.IsMatch(entry.FullName))
+				{
+					ProcessAnimationController(entry, animationControllers);
+					continue;
+				}
+				
+				if (IsAnimation.IsMatch(entry.FullName))
+				{
+					ProcessAnimation(entry, animations);
+					continue;
+				}
 			}
 			EntityModels = ProcessEntityModels(entityModels);
 
 			//Log.Info($"Processed {EntityModels.Count} entity models");
 		
 			EntityDefinitions = entityDefinitions;
-           // Log.Info($"Processed {EntityDefinitions.Count} entity definitions");
-        }
+			RenderControllers = renderControllers;
+			AnimationControllers = animationControllers;
+			Animations = animations;
+			// Log.Info($"Processed {EntityDefinitions.Count} entity definitions");
+		}
+
+		private void ProcessAnimation(IFile entry, Dictionary<string, Animation> renderControllers)
+		{
+			try
+			{
+				string json;
+
+				using (var stream = entry.Open())
+				{
+					json = Encoding.UTF8.GetString(stream.ReadToEnd());
+				}
+
+				var versionedResource = MCJsonConvert.DeserializeObject<VersionedResource<Animation>>(
+					json, new VersionedResourceConverter<Animation>("animations"));
+
+				foreach (var controller in versionedResource.Values)
+				{
+					renderControllers.TryAdd(controller.Key, controller.Value);
+				}
+			}
+			catch (MoLangParserException ex)
+			{
+				Log.Warn(ex, $"Failed to load animation from file \"{entry.FullName}\"");
+			}
+		}
+		
+		private void ProcessAnimationController(IFile entry, Dictionary<string, AnimationController> renderControllers)
+		{
+			string json;
+			using (var stream = entry.Open())
+			{
+				json = Encoding.UTF8.GetString(stream.ReadToEnd());
+			}
+
+			var versionedResource = MCJsonConvert.DeserializeObject<VersionedResource<AnimationController>>(
+				json, new VersionedResourceConverter<AnimationController>("animation_controllers"));
+
+			foreach (var controller in versionedResource.Values)
+			{
+				renderControllers.TryAdd(controller.Key, controller.Value);
+			}
+		}
+		
+		private void ProcessRenderController(IFile entry, Dictionary<string, RenderController> renderControllers)
+		{
+			string json;
+			using (var stream = entry.Open())
+			{
+				json = Encoding.UTF8.GetString(stream.ReadToEnd());
+			}
+
+			var versionedResource = MCJsonConvert.DeserializeObject<VersionedResource<RenderController>>(
+				json, new VersionedResourceConverter<RenderController>("render_controllers"));
+
+			foreach (var controller in versionedResource.Values)
+			{
+				renderControllers.TryAdd(controller.Key, controller.Value);
+			}
+		}
 
 		public IReadOnlyDictionary<string, EntityModel> EntityModels { get; private set; }
 		public static Dictionary<string, EntityModel> ProcessEntityModels(Dictionary<string, EntityModel> models, Func<string, EntityModel> lookup = null)
