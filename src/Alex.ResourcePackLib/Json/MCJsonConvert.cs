@@ -1,6 +1,8 @@
 ﻿using System;
+using Alex.ResourcePackLib.Json.Bedrock.Entity;
 using Alex.ResourcePackLib.Json.BlockStates;
 using Alex.ResourcePackLib.Json.Converters;
+using Alex.ResourcePackLib.Json.Converters.MoLang;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 
@@ -36,6 +38,8 @@ namespace Alex.ResourcePackLib.Json
 			DefaultSettings.Converters.Add(new MobsModelConverter());
 			DefaultSettings.Converters.Add(new UvConverter());
 			DefaultSettings.Converters.Add(new FontDefinitionConverter());
+			DefaultSettings.Converters.Add(new MoLangExpressionConverter());
+			DefaultSettings.Converters.Add(new AnimateElementConverter());
 			Serializer = JsonSerializer.Create(DefaultSettings);
 		}
 

@@ -25,7 +25,15 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Entity
 
         [JsonProperty("geometry")]
         public Dictionary<string, string> Geometry { get; set; }
+        
+        [JsonProperty("scripts")]
+        public EntityScripts Scripts { get; set; }
+        
+        [JsonProperty("animations")]
+        public Dictionary<string, string> Animations { get; set; }
 
+        [JsonProperty("render_controllers")] 
+        public AnnoyingMolangElement[] RenderControllers { get; set; } = new AnnoyingMolangElement[0];
        // [JsonProperty("render_controllers")]
        // public string[] RenderControllers { get; set; }
     }

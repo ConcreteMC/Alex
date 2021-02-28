@@ -353,7 +353,7 @@ namespace Alex.ResourcePackLib
 						{
 							if (descriptionToken.Type == JTokenType.Object)
 							{
-								desc = descriptionToken.ToObject<EntityDescription>();
+								desc = descriptionToken.ToObject<EntityDescription>(MCJsonConvert.Serializer);
 							}
 						}
 						
