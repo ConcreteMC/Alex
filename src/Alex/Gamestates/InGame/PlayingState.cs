@@ -28,8 +28,10 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using MiNET;
 using MiNET.Utils;
+using RocketUI;
 using BoundingBox = Microsoft.Xna.Framework.BoundingBox;
 using DedicatedThreadPoolSettings = MiNET.Utils.DedicatedThreadPoolSettings;
+using GpuResourceManager = Alex.API.Graphics.GpuResourceManager;
 using PlayerLocation = Alex.API.Utils.PlayerLocation;
 
 namespace Alex.Gamestates.InGame

@@ -3,12 +3,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using Alex.API.Graphics;
-using Alex.API.Graphics.Textures;
 using Alex.API.Gui;
 using Alex.API.Gui.Elements;
 using Alex.API.Gui.Elements.Controls;
 using Alex.API.Gui.Elements.Layout;
-using Alex.API.Gui.Graphics;
 using Alex.API.Services;
 using Alex.API.Utils;
 using Alex.Entities;
@@ -31,7 +29,11 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using NLog;
+using RocketUI;
 using Color = Microsoft.Xna.Framework.Color;
+using GpuResourceManager = Alex.API.Graphics.GpuResourceManager;
+using GuiTextures = Alex.API.Gui.Graphics.GuiTextures;
+using TextureSlice2D = Alex.API.Graphics.Textures.TextureSlice2D;
 
 namespace Alex.Gamestates
 {
@@ -39,9 +41,9 @@ namespace Alex.Gamestates
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(TitleState));
 
-		private readonly GuiStackMenu _mainMenu;
+		private readonly StackMenu _mainMenu;
 
-		private readonly GuiTextElement _splashText;
+		private readonly TextElement _splashText;
 
 		private readonly GuiPanoramaSkyBox _backgroundSkyBox;
 		private GuiEntityModelView _playerView;
@@ -127,7 +129,7 @@ namespace Alex.Gamestates
 
 			#region Create MainMenu
 
-			_mainMenu = new GuiStackMenu()
+			_mainMenu = new StackMenu()
 			{
 				Margin = new Thickness(15, 0, 15, 0),
 				Padding = new Thickness(0, 50, 0, 0),
@@ -144,13 +146,13 @@ namespace Alex.Gamestates
 			
 			#endregion
 
-			AddChild(new GuiImage(GuiTextures.AlexLogo)
+			AddChild(new Image(GuiTextures.AlexLogo)
 			{
 				Margin = new Thickness(95, 25, 0, 0),
 				Anchor = Alignment.TopCenter
 			});
 
-			AddChild(_splashText = new GuiTextElement()
+			AddChild(_splashText = new TextElement()
 			{
 				TextColor = TextColor.Yellow,
 				Rotation = 17.5f,
@@ -161,7 +163,7 @@ namespace Alex.Gamestates
 				Text = "Who liek minecwaf?!",
 			});
 			
-			var guiItemStack = new GuiStackContainer()
+			var guiItemStack = new StackContainer()
 			{
 				Anchor = Alignment.CenterX | Alignment.CenterY,
 				Orientation = Orientation.Vertical
@@ -169,7 +171,7 @@ namespace Alex.Gamestates
 			
 			AddChild(guiItemStack);
 			
-			var row = new GuiStackContainer() {
+			var row = new StackContainer() {
 				Orientation = Orientation.Horizontal,
 				Anchor = Alignment.TopFill,
 				ChildAnchor = Alignment.FillCenter,
@@ -265,7 +267,7 @@ namespace Alex.Gamestates
 						Anchor = Alignment.BottomRight,
 					});
 
-			AddChild(new GuiButton("Change Skin", ChangeSKinBtnPressed)
+			AddChild(new Button("Change Skin", ChangeSKinBtnPressed)
 			{
 				Anchor = Alignment.BottomRight,
 				Modern = false,

@@ -1,22 +1,23 @@
 ﻿using Alex.API.Gui;
 using Alex.API.Gui.Elements;
 using Alex.API.Gui.Elements.Layout;
-using Alex.API.Gui.Graphics;
 using Alex.API.Utils;
 using Alex.Gamestates.Common;
 using Alex.Gui.Elements;
 using Microsoft.Xna.Framework;
+using RocketUI;
+using GuiTextures = Alex.API.Gui.Graphics.GuiTextures;
 
 namespace Alex.Gamestates
 {
 	public class SplashScreen : GuiGameStateBase, IProgressReceiver
 	{
-		private readonly GuiContainer _progressBarContainer;
+		private readonly Container _progressBarContainer;
 
-		private readonly GuiProgressBar _progressBar;
-		private readonly GuiTextElement _textDisplay;
-		private readonly GuiTextElement _subTextDisplay;
-        private readonly GuiTextElement _percentageDisplay;
+		private readonly ProgressBar _progressBar;
+		private readonly TextElement _textDisplay;
+		private readonly TextElement _subTextDisplay;
+        private readonly TextElement _percentageDisplay;
 		
 		public string Text
 		{
@@ -42,7 +43,7 @@ namespace Alex.Gamestates
 			Background.TextureResource = GuiTextures.SplashBackground;
 			Background.RepeatMode = TextureRepeatMode.ScaleToFit;
 
-			AddChild(_progressBarContainer = new GuiContainer()
+			AddChild(_progressBarContainer = new Container()
 			{
 				Width  = 300,
 				Height = 35,
@@ -51,7 +52,7 @@ namespace Alex.Gamestates
 				Anchor = Alignment.BottomCenter,
 			});
 
-			_progressBarContainer.AddChild(_textDisplay = new GuiTextElement()
+			_progressBarContainer.AddChild(_textDisplay = new TextElement()
 			{
 				Text      = Text,
 				TextColor = TextColor.Black,
@@ -60,7 +61,7 @@ namespace Alex.Gamestates
 				HasShadow = false
 			});
 
-			_progressBarContainer.AddChild(_percentageDisplay = new GuiTextElement()
+			_progressBarContainer.AddChild(_percentageDisplay = new TextElement()
 			{
 				Text      = Text,
 				TextColor = TextColor.Black,
@@ -69,7 +70,7 @@ namespace Alex.Gamestates
 				HasShadow = false
 			});
 
-			_progressBarContainer.AddChild(_progressBar = new GuiProgressBar()
+			_progressBarContainer.AddChild(_progressBar = new ProgressBar()
 			{
 				Width  = 300,
 				Height = 9,
@@ -77,7 +78,7 @@ namespace Alex.Gamestates
 				Anchor = Alignment.MiddleCenter,
 			});
 
-			_progressBarContainer.AddChild(_subTextDisplay = new GuiTextElement()
+			_progressBarContainer.AddChild(_subTextDisplay = new TextElement()
 			{
 				Text = Text,
 				TextColor = TextColor.Black,

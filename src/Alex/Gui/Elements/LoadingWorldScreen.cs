@@ -8,18 +8,19 @@ using Alex.API.Utils;
 using Alex.API.World;
 using Microsoft.Xna.Framework;
 using NLog;
+using RocketUI;
 
 namespace Alex.Gui.Elements
 {
-    public class LoadingWorldScreen : GuiScreen
+    public class LoadingWorldScreen : Screen
     {
 	    private static readonly Logger    Log = LogManager.GetCurrentClassLogger(typeof(LoadingWorldScreen));
 	    
-	    private readonly GuiProgressBar _progressBar;
-	    private readonly GuiTextElement _textDisplay;
-	    private readonly GuiTextElement _subTextDisplay;
-	    private readonly GuiTextElement _percentageDisplay;
-	    private readonly GuiButton      _cancelButton;
+	    private readonly ProgressBar _progressBar;
+	    private readonly TextElement _textDisplay;
+	    private readonly TextElement _subTextDisplay;
+	    private readonly TextElement _percentageDisplay;
+	    private readonly Button      _cancelButton;
 	    public string Text
 	    {
 		    get { return _textDisplay?.Text ?? string.Empty; }
@@ -56,9 +57,9 @@ namespace Alex.Gui.Elements
 
 	    public LoadingWorldScreen()
 		{
-			GuiStackContainer progressBarContainer;
+			StackContainer progressBarContainer;
 
-			AddChild(progressBarContainer = new GuiStackContainer()
+			AddChild(progressBarContainer = new StackContainer()
 			{
 				//Width  = 300,
 				//Height = 35,
@@ -89,7 +90,7 @@ namespace Alex.Gui.Elements
 				HeaderTitle.IsVisible = false;
 			}*/
 			
-			progressBarContainer.AddChild(_textDisplay = new GuiTextElement()
+			progressBarContainer.AddChild(_textDisplay = new TextElement()
 			{
 				Text      = Text,
 				TextColor = TextColor.White,
@@ -99,16 +100,16 @@ namespace Alex.Gui.Elements
 				Scale = 1.5f
 			});
 
-			GuiElement element;
+			RocketElement element;
 
-			progressBarContainer.AddChild(element = new GuiElement()
+			progressBarContainer.AddChild(element = new RocketElement()
 			{
 				Width  = 300,
 				Height = 35,
 				Margin = new Thickness(12),
 			});
 			
-			element.AddChild(_percentageDisplay = new GuiTextElement()
+			element.AddChild(_percentageDisplay = new TextElement()
 			{
 				Text      = Text,
 				TextColor = TextColor.White,
@@ -117,7 +118,7 @@ namespace Alex.Gui.Elements
 				HasShadow = false
 			});
 
-			element.AddChild(_progressBar = new GuiProgressBar()
+			element.AddChild(_progressBar = new ProgressBar()
 			{
 				Width  = 300,
 				Height = 9,
@@ -126,12 +127,12 @@ namespace Alex.Gui.Elements
 			});
 
 			progressBarContainer.AddChild(
-				_subTextDisplay = new GuiTextElement()
+				_subTextDisplay = new TextElement()
 				{
 					Text = Text, TextColor = TextColor.White, Anchor = Alignment.BottomLeft, HasShadow = false
 				});
 
-			AddChild(_cancelButton = new GuiButton("Cancel", Cancel)
+			AddChild(_cancelButton = new Button("Cancel", Cancel)
 			{
 				Anchor = Alignment.TopLeft
 			});

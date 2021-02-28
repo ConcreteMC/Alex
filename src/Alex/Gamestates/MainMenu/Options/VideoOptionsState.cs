@@ -8,29 +8,30 @@ using Alex.API.Gui.Graphics;
 using Alex.API.Utils;
 using Alex.Gui;
 using Microsoft.Xna.Framework;
+using RocketUI;
 
 namespace Alex.Gamestates.MainMenu.Options
 {
     public class VideoOptionsState : OptionsStateBase
     {
-        private GuiSlider       GuiScaleGlider     { get; set; }
-        private GuiSlider       FpsSlider          { get; set; }
-        private GuiToggleButton FrameRateLimiter   { get; set; }
-        private GuiTextElement  Description        { get; set; }
-        private GuiSlider       RenderDistance     { get; set; }
-        private GuiSlider       ProcessingThreads  { get; set; }
-        private GuiSlider       Brightness         { get; set; }
-        private GuiToggleButton VSync              { get; set; }
-        private GuiToggleButton Fullscreen         { get; set; }
-        private GuiToggleButton Depthmap           { get; set; }
-        private GuiToggleButton Minimap            { get; set; }
-        private GuiToggleButton Skybox             { get; set; }
-        private GuiSlider       Antialiasing       { get; set; }
-        private GuiToggleButton CustomSkins        { get; set; }
-        private GuiToggleButton ClientSideLighting { get; set; }
-        private GuiToggleButton ChunkMeshInRam     { get; set; }
-        private GuiToggleButton SmoothLighting     { get; set; }
-        private GuiToggleButton GraphicsMode       { get; set; }
+        private Slider       GuiScaleGlider     { get; set; }
+        private Slider       FpsSlider          { get; set; }
+        private ToggleButton FrameRateLimiter   { get; set; }
+        private TextElement  Description        { get; set; }
+        private Slider       RenderDistance     { get; set; }
+        private Slider       ProcessingThreads  { get; set; }
+        private Slider       Brightness         { get; set; }
+        private ToggleButton VSync              { get; set; }
+        private ToggleButton Fullscreen         { get; set; }
+        private ToggleButton Depthmap           { get; set; }
+        private ToggleButton Minimap            { get; set; }
+        private ToggleButton Skybox             { get; set; }
+        private Slider       Antialiasing       { get; set; }
+        private ToggleButton CustomSkins        { get; set; }
+        private ToggleButton ClientSideLighting { get; set; }
+        private ToggleButton ChunkMeshInRam     { get; set; }
+        private ToggleButton SmoothLighting     { get; set; }
+        private ToggleButton GraphicsMode       { get; set; }
         
         private Dictionary<IGuiControl, string> Descriptions { get; } = new Dictionary<IGuiControl, string>();
         public VideoOptionsState(GuiPanoramaSkyBox skyBox) : base(skyBox)
@@ -84,7 +85,7 @@ namespace Alex.Gamestates.MainMenu.Options
            /* AddGuiRow(
                 ChunkMeshInRam = CreateToggle("Meshes in RAM: {0}", options => options.MiscelaneousOptions.MeshInRam));*/
             
-            Description = new GuiTextElement()
+            Description = new TextElement()
             {
                 Anchor = Alignment.MiddleLeft,
                 Margin = new Thickness(5, 15, 5, 5),

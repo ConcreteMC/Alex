@@ -3,7 +3,6 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using Alex.API.Graphics;
-using Alex.API.Graphics.Typography;
 using Alex.API.Gui;
 using Alex.API.Gui.Elements;
 using Alex.API.Gui.Elements.Controls;
@@ -19,6 +18,8 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using Newtonsoft.Json;
 using NLog;
+using RocketUI;
+using FontStyle = Alex.API.Graphics.Typography.FontStyle;
 
 namespace Alex.Gamestates.Login
 {
@@ -29,7 +30,7 @@ namespace Alex.Gamestates.Login
 	    private readonly GuiPanoramaSkyBox            _backgroundSkyBox;
 		private          XboxAuthService              AuthenticationService { get; }
 		private          IPlayerProfileService        _playerProfileService;
-        protected        GuiButton                    LoginButton;
+        protected        Button                    LoginButton;
 		private          Action<PlayerProfile>        Ready             { get; }
 
 		private MsaDeviceAuthConnectResponse _connectResponse;
@@ -54,7 +55,7 @@ namespace Alex.Gamestates.Login
 		private CancellationTokenSource      CancellationToken { get; }      = new CancellationTokenSource();
 		private bool                         CanUseClipboard   { get; }
 
-		private GuiTextElement _authCodeElement;
+		private TextElement _authCodeElement;
         public BedrockLoginState(GuiPanoramaSkyBox skyBox, Action<PlayerProfile> readyAction, XboxAuthService xboxAuthService)
         {
             Title = "Bedrock Login";
@@ -64,7 +65,7 @@ namespace Alex.Gamestates.Login
             BackgroundOverlay = Color.Transparent;
             Ready = readyAction;
 
-            _authCodeElement = new GuiTextElement()
+            _authCodeElement = new TextElement()
             {
 	            TextColor = TextColor.Cyan,
 	            Text = "Please wait...\nStarting authentication process...",
@@ -85,8 +86,8 @@ namespace Alex.Gamestates.Login
             base.HeaderTitle.Anchor = Alignment.MiddleCenter;
             base.HeaderTitle.FontStyle = FontStyle.Bold | FontStyle.DropShadow;
             Footer.ChildAnchor = Alignment.MiddleCenter;
-            GuiTextElement t;
-            Footer.AddChild(t = new GuiTextElement()
+            TextElement t;
+            Footer.AddChild(t = new TextElement()
             {
                 Text = "We are NOT in anyway or form affiliated with Mojang/Minecraft or Microsoft!",
                 TextColor = TextColor.Yellow,
@@ -96,8 +97,8 @@ namespace Alex.Gamestates.Login
                 Anchor = Alignment.MiddleCenter
             });
 
-            GuiTextElement info;
-            Footer.AddChild(info = new GuiTextElement()
+            TextElement info;
+            Footer.AddChild(info = new TextElement()
             {
                 Text = "We will never collect/store or do anything with your data.",
 
@@ -117,13 +118,13 @@ namespace Alex.Gamestates.Login
 
 			if (CanUseClipboard)
 			{
-				AddGuiElement(new GuiTextElement()
+				AddRocketElement(new TextElement()
 				{
 					Text = $"If you click Sign-In, the above auth code will be copied to your clipboard!"
 				});
 			}
 
-			var buttonRow = AddGuiRow(LoginButton = new GuiButton(OnLoginButtonPressed)
+			var buttonRow = AddGuiRow(LoginButton = new Button(OnLoginButtonPressed)
             {
 	            AccessKey = Keys.Enter,
 
@@ -132,7 +133,7 @@ namespace Alex.Gamestates.Login
 	            Modern = false,
 	            Width = 100,
 	            Enabled = ConnectResponse != null
-            }, new GuiButton(OnCancelButtonPressed)
+            }, new Button(OnCancelButtonPressed)
             {
 	            AccessKey = Keys.Escape,
 

@@ -10,6 +10,7 @@ using Alex.ResourcePackLib;
 using Alex.ResourcePackLib.Generic;
 using Microsoft.Xna.Framework;
 using NLog;
+using RocketUI;
 
 namespace Alex.Gamestates.MainMenu.Options
 {
@@ -22,9 +23,9 @@ namespace Alex.Gamestates.MainMenu.Options
 
         protected ResourcePackEntry SelectedItem => ListContainer.SelectedItem as ResourcePackEntry;
         
-        protected readonly GuiSelectionList ListContainer;
+        protected readonly SelectionList ListContainer;
 
-        private GuiButton _loadBtn;
+        private Button _loadBtn;
         public ResourcePackOptionsState(GuiPanoramaSkyBox skyBox) : base(skyBox)
         {
             TitleTranslationKey = "resourcePack.title";
@@ -32,7 +33,7 @@ namespace Alex.Gamestates.MainMenu.Options
             Body.BackgroundOverlay = new Color(Color.Black, 0.35f);
             Body.ChildAnchor = Alignment.FillCenter;
             
-            AddGuiElement(ListContainer = new GuiSelectionList()
+            AddRocketElement(ListContainer = new SelectionList()
             {
                 Anchor = Alignment.Fill,
                 ChildAnchor = Alignment.TopFill,
@@ -47,14 +48,14 @@ namespace Alex.Gamestates.MainMenu.Options
 
             Footer.AddRow(row =>
             {
-                row.AddChild(_loadBtn = new GuiButton(LoadBtnClicked)
+                row.AddChild(_loadBtn = new Button(LoadBtnClicked)
                 {
                     Text = "Load Resource pack",
                     Modern = false,
                     Enabled = false
                 });
                 
-                row.AddChild(new GuiButton(BackButtonPressed)
+                row.AddChild(new Button(BackButtonPressed)
                 {
                     TranslationKey = "gui.done",
                     Modern = false
@@ -64,7 +65,7 @@ namespace Alex.Gamestates.MainMenu.Options
             Footer.AddRow(row =>
             {
                 row.ChildAnchor = Alignment.BottomCenter;
-                row.AddChild(new GuiButton("resourcePack.openFolder", OpenResourcePackFolderClicked, true)
+                row.AddChild(new Button("resourcePack.openFolder", OpenResourcePackFolderClicked, true)
                 {
                     Modern = false
                 });
@@ -131,7 +132,7 @@ namespace Alex.Gamestates.MainMenu.Options
             }
         }
 
-        private void HandleSelectedItemChanged(object sender, GuiSelectionListItem item)
+        private void HandleSelectedItemChanged(object sender, SelectionListItem item)
         {
             if (item != null && item.Enabled)
             {

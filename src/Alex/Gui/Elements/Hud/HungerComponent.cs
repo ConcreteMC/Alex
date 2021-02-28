@@ -3,13 +3,14 @@ using Alex.API.Gui;
 using Alex.API.Gui.Elements;
 using Alex.API.Gui.Elements.Controls;
 using Alex.API.Gui.Elements.Layout;
-using Alex.API.Gui.Graphics;
 using Alex.Entities;
 using Microsoft.Xna.Framework;
+using RocketUI;
+using GuiTextures = Alex.API.Gui.Graphics.GuiTextures;
 
 namespace Alex.Gui.Elements.Hud
 {
-    public class HungerComponent : GuiStackContainer
+    public class HungerComponent : StackContainer
     {
         private Player Player { get; }
         private HungerTexture[] Hungers { get; }
@@ -74,7 +75,7 @@ namespace Alex.Gui.Elements.Hud
         
         public class HungerTexture : GuiControl
         {
-            private GuiTextureElement Texture { get; set; }
+            private TextureElement Texture { get; set; }
 
             //private 
             public HungerTexture()
@@ -82,7 +83,7 @@ namespace Alex.Gui.Elements.Hud
                 Width = 9;
                 Height = 9;
             
-                AddChild(Texture = new GuiTextureElement()
+                AddChild(Texture = new TextureElement()
                 {
                     Anchor = Alignment.TopRight,
 

@@ -1,8 +1,9 @@
 ﻿using Alex.API.Gui.Elements;
+using RocketUI;
 
 namespace Alex.Gui.Elements
 {
-    public class GuiOverlayText : GuiElement
+    public class GuiOverlayText : RocketElement
     {
     }
 }

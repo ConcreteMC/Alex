@@ -1,10 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Alex.API.Graphics.Typography;
 using Alex.API.Gui;
 using Alex.API.Gui.Elements;
-using Alex.API.Gui.Graphics;
 using Alex.API.Input;
 using Alex.API.Utils;
 using Alex.Gui.Elements.Inventory;
@@ -13,16 +11,19 @@ using Alex.Utils;
 using Alex.Utils.Inventories;
 using Microsoft.Xna.Framework;
 using MiNET.Utils;
+using RocketUI;
+using FontStyle = Alex.API.Graphics.Typography.FontStyle;
 using GuiCursorEventArgs = Alex.API.Gui.Events.GuiCursorEventArgs;
 using GuiCursorMoveEventArgs = Alex.API.Gui.Events.GuiCursorMoveEventArgs;
+using GuiTextures = Alex.API.Gui.Graphics.GuiTextures;
 
 namespace Alex.Gui.Dialogs.Containers
 {
-	public class GuiInventoryBase : GuiDialogBase
+	public class GuiInventoryBase : DialogBase
 	{
 		public EventHandler OnContainerClose;
 		
-		private GuiTextElement TextOverlay { get; }
+		private TextElement TextOverlay { get; }
 
 		private GuiItem CursorItemRenderer { get; }
 		public InventoryBase Inventory { get; }
@@ -41,7 +42,7 @@ namespace Alex.Gui.Dialogs.Containers
 			ContentContainer.AutoSizeMode = AutoSizeMode.None;
 			
 			AddChild(
-				TextOverlay = new GuiTextElement(true)
+				TextOverlay = new TextElement(true)
 				{
 					HasShadow = true,
 					Background = new Color(Color.Black, 0.35f),

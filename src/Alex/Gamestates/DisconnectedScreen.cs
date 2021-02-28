@@ -4,6 +4,7 @@ using Alex.API.Gui.Elements;
 using Alex.API.Gui.Elements.Controls;
 using Alex.API.Utils;
 using Alex.Gamestates.Common;
+using RocketUI;
 
 namespace Alex.Gamestates
 {
@@ -29,20 +30,20 @@ namespace Alex.Gamestates
 
 	    private static DisconnectedScreen _activeScreen = null;
 	    public         string             Reason                  { get; set; } = "disconnect.lost";
-	    public         GuiTextElement     DisconnectedTextElement { get; private set; }
+	    public         TextElement     DisconnectedTextElement { get; private set; }
 	    public DisconnectedScreen()
 		{
 			TitleTranslationKey = "multiplayer.disconnect.generic";
 
 			Body.ChildAnchor = Alignment.MiddleCenter;
-			Body.AddChild(DisconnectedTextElement = new GuiTextElement()
+			Body.AddChild(DisconnectedTextElement = new TextElement()
 			{
 				Text = Reason,
 				TextColor = TextColor.Red,
 				Anchor = Alignment.MiddleCenter
 			});
 
-			Footer.AddChild(new GuiButton(MenuButtonClicked)
+			Footer.AddChild(new Button(MenuButtonClicked)
 			{
 				TranslationKey = "gui.toTitle",
 				Anchor = Alignment.MiddleCenter,

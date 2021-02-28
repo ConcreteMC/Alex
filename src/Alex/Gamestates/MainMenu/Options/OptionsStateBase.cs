@@ -12,6 +12,7 @@ using Alex.Gui.Elements;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using NLog;
+using RocketUI;
 
 namespace Alex.Gamestates.MainMenu.Options
 {
@@ -110,14 +111,14 @@ namespace Alex.Gamestates.MainMenu.Options
             return state;
         }
 
-        protected GuiButton CreateLinkButton<TGameState>(string translationKey, string fallback = null) where TGameState : class, IGameState
+        protected Button CreateLinkButton<TGameState>(string translationKey, string fallback = null) where TGameState : class, IGameState
         {
             var state = Construct<TGameState>();
             
             if (state == null)
                 throw new Exception($"Can not create linkbutton with type {typeof(TGameState)}");
             
-            return new GuiButton(() =>
+            return new Button(() =>
             {
                 Alex.GameStateManager.SetActiveState(state);
                 state.ParentState = ParentState;
@@ -129,17 +130,17 @@ namespace Alex.Gamestates.MainMenu.Options
             };
         }
 
-        protected GuiSlider CreateSlider(Func<double, string> formatter, Func<AlexOptions, OptionsProperty<int>> optionsAccessor,
+        protected Slider CreateSlider(Func<double, string> formatter, Func<AlexOptions, OptionsProperty<int>> optionsAccessor,
             int? minValue = null, int? maxValue = null, int? stepInterval = null)
             => CreateSlider(new ValueFormatter<double>(formatter), optionsAccessor, minValue, maxValue, stepInterval);
 
-        protected GuiSlider CreateSlider(string label, Func<AlexOptions, OptionsProperty<int>> optionsAccessor,
+        protected Slider CreateSlider(string label, Func<AlexOptions, OptionsProperty<int>> optionsAccessor,
             int? minValue = null, int? maxValue = null, int? stepInterval = null)
             => CreateSlider(new ValueFormatter<double>(label), optionsAccessor, minValue, maxValue, stepInterval);
         
-        protected GuiSlider CreateSlider(ValueFormatter<double> label, Func<AlexOptions, OptionsProperty<int>> optionsAccessor, int? minValue = null, int? maxValue = null, int? stepInterval = null)
+        protected Slider CreateSlider(ValueFormatter<double> label, Func<AlexOptions, OptionsProperty<int>> optionsAccessor, int? minValue = null, int? maxValue = null, int? stepInterval = null)
         {
-            var slider = CreateValuedControl<GuiSlider, double, int>(label, optionsAccessor);
+            var slider = CreateValuedControl<Slider, double, int>(label, optionsAccessor);
             
             if (minValue.HasValue)
             {
@@ -159,18 +160,18 @@ namespace Alex.Gamestates.MainMenu.Options
             return slider;
         }
 
-        protected GuiSlider CreateSlider(Func<double, string> formatter, Func<AlexOptions, OptionsProperty<double>> optionsAccessor,
+        protected Slider CreateSlider(Func<double, string> formatter, Func<AlexOptions, OptionsProperty<double>> optionsAccessor,
             double? minValue = null, double? maxValue = null, double? stepInterval = null)
             => CreateSlider(new ValueFormatter<double>(formatter), optionsAccessor, minValue, maxValue, stepInterval);
 
 
-        protected GuiSlider CreateSlider(string label, Func<AlexOptions, OptionsProperty<double>> optionsAccessor,
+        protected Slider CreateSlider(string label, Func<AlexOptions, OptionsProperty<double>> optionsAccessor,
             double? minValue = null, double? maxValue = null, double? stepInterval = null)
             => CreateSlider(new ValueFormatter<double>(label), optionsAccessor, minValue, maxValue, stepInterval);
         
-        protected GuiSlider CreateSlider(ValueFormatter<double> valueFormatter, Func<AlexOptions, OptionsProperty<double>> optionsAccessor, double? minValue = null, double? maxValue = null, double? stepInterval = null)
+        protected Slider CreateSlider(ValueFormatter<double> valueFormatter, Func<AlexOptions, OptionsProperty<double>> optionsAccessor, double? minValue = null, double? maxValue = null, double? stepInterval = null)
         {
-            var slider = CreateValuedControl<GuiSlider, double>(valueFormatter, optionsAccessor);
+            var slider = CreateValuedControl<Slider, double>(valueFormatter, optionsAccessor);
             
             if (minValue.HasValue)
             {
@@ -190,17 +191,17 @@ namespace Alex.Gamestates.MainMenu.Options
             return slider;
         }
 
-        protected GuiEnumSwitchButton<TEnum> CreateSwitch<TEnum>(string displayFormat, Func<AlexOptions, OptionsProperty<TEnum>> optionsAccessor) where TEnum : Enum
+        protected EnumSwitchButton<TEnum> CreateSwitch<TEnum>(string displayFormat, Func<AlexOptions, OptionsProperty<TEnum>> optionsAccessor) where TEnum : Enum
         {
-            var @switch = CreateValuedControl<GuiEnumSwitchButton<TEnum>, TEnum>(displayFormat, optionsAccessor);// {Modern = false, DisplayFormat = displayFormat};
+            var @switch = CreateValuedControl<EnumSwitchButton<TEnum>, TEnum>(displayFormat, optionsAccessor);// {Modern = false, DisplayFormat = displayFormat};
             @switch.Modern = false;
             return @switch;
         }
 
-        protected GuiToggleButton CreateToggle(string displayFormat,
+        protected ToggleButton CreateToggle(string displayFormat,
             Func<AlexOptions, OptionsProperty<bool>> optionsAccessor)
         {
-            var sw = CreateValuedControl<GuiToggleButton, bool>(displayFormat, optionsAccessor);
+            var sw = CreateValuedControl<ToggleButton, bool>(displayFormat, optionsAccessor);
             sw.Modern = false;
             
             return sw;

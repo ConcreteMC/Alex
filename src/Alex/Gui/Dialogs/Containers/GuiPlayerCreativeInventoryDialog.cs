@@ -1,10 +1,11 @@
 using Alex.API.Gui;
 using Alex.API.Gui.Elements.Layout;
-using Alex.API.Gui.Graphics;
 using Alex.Gui.Elements.Inventory;
 using Alex.Items;
 using Alex.Utils.Inventories;
 using Microsoft.Xna.Framework;
+using RocketUI;
+using GuiTextures = Alex.API.Gui.Graphics.GuiTextures;
 
 namespace Alex.Gui.Dialogs.Containers
 {
@@ -27,7 +28,7 @@ namespace Alex.Gui.Dialogs.Containers
 			
 			ContentContainer.AddChild(MultiStackContainer);
 			
-			GuiStackContainer stackContainer = MultiStackContainer.AddRow(RowBuilder);
+			StackContainer stackContainer = MultiStackContainer.AddRow(RowBuilder);
 			int itemsX = 0;
 			for (int i = 0; i < items.Length; i++)
 			{
@@ -46,7 +47,7 @@ namespace Alex.Gui.Dialogs.Containers
 			}
 		}
 
-		private void RowBuilder(GuiStackContainer obj)
+		private void RowBuilder(StackContainer obj)
 		{
 			obj.Orientation = Orientation.Horizontal;
 		}

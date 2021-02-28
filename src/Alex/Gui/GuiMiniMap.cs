@@ -1,5 +1,4 @@
 ﻿using Alex.API.Graphics;
-using Alex.API.Graphics.Textures;
 using Alex.API.Gui;
 using Alex.API.Gui.Elements;
 using Alex.API.Gui.Graphics;
@@ -9,10 +8,12 @@ using Alex.Graphics.Camera;
 using Alex.Worlds;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using RocketUI;
+using TextureSlice2D = Alex.API.Graphics.Textures.TextureSlice2D;
 
 namespace Alex.Gui
 {
-    public class GuiMiniMap : GuiElement
+    public class GuiMiniMap : RocketElement
     {
         public Camera Camera { get; }
         public PlayerLocation PlayerLocation { get; set; } = new PlayerLocation();

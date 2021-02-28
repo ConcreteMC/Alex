@@ -6,10 +6,11 @@ using Alex.Gamestates;
 using Alex.Graphics.Camera;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using RocketUI;
 
 namespace Alex.Gui.Elements.Context3D
 {
-    public abstract class GuiContext3DElement : GuiElement
+    public abstract class GuiContext3DElement : RocketElement
     {
         public GuiContext3DCamera Camera { get; protected set; }
 

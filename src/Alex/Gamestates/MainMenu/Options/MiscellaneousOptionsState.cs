@@ -7,20 +7,21 @@ using Alex.API.Gui.Graphics;
 using Alex.API.Utils;
 using Alex.Gui;
 using Microsoft.Xna.Framework;
+using RocketUI;
 
 namespace Alex.Gamestates.MainMenu.Options
 {
     public class MiscellaneousOptionsState : OptionsStateBase
     {
-        private GuiSlider                       ProcessingThreads { get; set; }
-        private GuiToggleButton                 ChunkCaching { get; set; }
-        private GuiTextElement                  Description       { get; set; }
+        private Slider                       ProcessingThreads { get; set; }
+        private ToggleButton                 ChunkCaching { get; set; }
+        private TextElement                  Description       { get; set; }
         private Dictionary<IGuiControl, string> Descriptions      { get; } = new Dictionary<IGuiControl, string>();
         
         public MiscellaneousOptionsState(GuiPanoramaSkyBox skyBox) : base(skyBox)
         {
             Title = "Miscellaneous";
-            Header.AddChild(new GuiTextElement()
+            Header.AddChild(new TextElement()
             {
                 Anchor = Alignment.BottomCenter,
                 Text = "WARNING: These settings might break your game!",
@@ -46,7 +47,7 @@ namespace Alex.Gamestates.MainMenu.Options
                 "When enabled, caches chunk sections on disk.",
                 "This reduces network traffic but increases disk I/O");
 
-            Description = new GuiTextElement()
+            Description = new TextElement()
             {
                 Anchor = Alignment.MiddleLeft, Margin = new Thickness(5, 15, 5, 5), MinHeight = 80
             };

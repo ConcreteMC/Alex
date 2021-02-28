@@ -1,5 +1,4 @@
 ﻿using System;
-using Alex.API.Gui.Elements.Controls;
 using Alex.API.Input;
 using Alex.API.Input.Listeners;
 using Alex.API.Services;
@@ -13,6 +12,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using NLog;
+using RocketUI;
 using MathF = System.MathF;
 
 namespace Alex.Entities
@@ -184,7 +184,7 @@ namespace Alex.Entities
 		    }
 			else if (InputManager.IsPressed(InputCommand.ToggleInventory))
 			{
-				if (!(Alex.Instance.GuiManager.FocusManager.FocusedElement is GuiTextInput))
+				if (!(Alex.Instance.GuiManager.FocusManager.FocusedElement is TextInput))
 				{
 					if (_guiPlayerInventoryDialog == null)
 					{

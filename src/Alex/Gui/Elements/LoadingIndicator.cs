@@ -2,10 +2,11 @@ using System;
 using Alex.API.Gui.Elements;
 using Alex.API.Gui.Graphics;
 using Microsoft.Xna.Framework;
+using RocketUI;
 
 namespace Alex.Gui.Elements
 {
-	public class LoadingIndicator : GuiElement
+	public class LoadingIndicator : RocketElement
 	{
 		public Color ForegroundColor { get; set; } = Color.Black;
 		public Color BackgroundColor { get; set; } = Color.White;

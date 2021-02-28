@@ -1,9 +1,11 @@
 ﻿using System;
 using Alex.API.Graphics;
-using Alex.API.Graphics.Textures;
-using Alex.API.Gui.Graphics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using RocketUI;
+using GraphicsContext = Alex.API.Graphics.GraphicsContext;
+using GuiTextures = Alex.API.Gui.Graphics.GuiTextures;
+using ITexture2D = Alex.API.Graphics.Textures.ITexture2D;
 
 namespace Alex.Gui
 {

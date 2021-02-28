@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using Alex.API.Graphics.Typography;
 using Alex.API.Gui;
 using Alex.API.Gui.Elements;
 using Alex.API.Gui.Elements.Controls;
@@ -10,20 +9,23 @@ using Microsoft.Xna.Framework;
 using MiNET.Net;
 using MiNET.UI;
 using Newtonsoft.Json;
+using RocketUI;
+using FontStyle = Alex.API.Graphics.Typography.FontStyle;
+using Slider = MiNET.UI.Slider;
 
 namespace Alex.Gui.Forms
 {
     public class CustomFormDialog : FormBase
     {
         //private Dictionary<>
-        private GuiStackContainer Header       { get; }
+        private StackContainer Header       { get; }
         private CustomForm        Form         { get; }
-        private GuiButton         SubmitButton { get; }
+        private Button         SubmitButton { get; }
         public CustomFormDialog(uint formId, BedrockFormManager parent, CustomForm form, InputManager inputManager) : base(formId, parent, inputManager)
         {
             Form = form;
             
-            GuiScrollableStackContainer stackContainer = new GuiScrollableStackContainer();
+            ScrollableStackContainer stackContainer = new ScrollableStackContainer();
             stackContainer.Orientation = Orientation.Vertical;
             stackContainer.Anchor = Alignment.Fill;
             stackContainer.ChildAnchor = Alignment.MiddleFill;
@@ -36,7 +38,7 @@ namespace Alex.Gui.Forms
                 {
                     case Label label:
                     {
-                        stackContainer.AddChild(new GuiTextElement()
+                        stackContainer.AddChild(new TextElement()
                         {
                             Text = label.Text,
                             Margin = margin
@@ -46,7 +48,7 @@ namespace Alex.Gui.Forms
                     
                     case Input input:
                     {
-                        GuiTextInput guiInput = new GuiTextInput()
+                        TextInput guiInput = new TextInput()
                         {
                             Value = input.Value,
                             PlaceHolder = !string.IsNullOrWhiteSpace(input.Placeholder) ? input.Placeholder : input.Text,
@@ -60,8 +62,8 @@ namespace Alex.Gui.Forms
                         break;
                     case Toggle toggle:
                     {
-                        GuiToggleButton guiToggle;
-                        stackContainer.AddChild(guiToggle = new GuiToggleButton(toggle.Text)
+                        ToggleButton guiToggle;
+                        stackContainer.AddChild(guiToggle = new ToggleButton(toggle.Text)
                         {
                             Margin = margin,
                             Value = !toggle.Value
@@ -79,8 +81,8 @@ namespace Alex.Gui.Forms
                         break;
                     case Slider slider:
                     {
-                        GuiSlider guiSlider;
-                        stackContainer.AddChild(guiSlider = new GuiSlider()
+                        Slider Slider;
+                        stackContainer.AddChild(Slider = new Slider()
                         {
                             Label = { Text = slider.Text},
                             Value = slider.Value,
@@ -90,12 +92,12 @@ namespace Alex.Gui.Forms
                             Margin = margin
                         });
 
-                        guiSlider.ValueChanged += (sender, d) => { slider.Value = (float) d; };
+                        Slider.ValueChanged += (sender, d) => { slider.Value = (float) d; };
                     }
                         break;
                     case StepSlider stepSlider:
                     {
-                        stackContainer.AddChild(new GuiTextElement()
+                        stackContainer.AddChild(new TextElement()
                         {
                             Text = "Unsupported stepslider",
                             TextColor = TextColor.Red,
@@ -105,7 +107,7 @@ namespace Alex.Gui.Forms
                         break;
                     case Dropdown dropdown:
                     {
-                        stackContainer.AddChild(new GuiTextElement()
+                        stackContainer.AddChild(new TextElement()
                         {
                             Text = "Unsupported dropdown",
                             TextColor = TextColor.Red,
@@ -116,7 +118,7 @@ namespace Alex.Gui.Forms
                 }
             }
 
-            SubmitButton = new GuiButton("Submit", SubmitPressed);
+            SubmitButton = new Button("Submit", SubmitPressed);
 
             stackContainer.AddChild(SubmitButton);
             
@@ -134,14 +136,14 @@ namespace Alex.Gui.Forms
 			
             Container.Anchor = Alignment.MiddleCenter;
 
-            var bodyWrapper = new GuiContainer();
+            var bodyWrapper = new Container();
             bodyWrapper.Anchor = Alignment.Fill;
             bodyWrapper.Padding = new Thickness(5, 0);
             bodyWrapper.AddChild(stackContainer);
             
             Container.AddChild(bodyWrapper);
             
-            Container.AddChild(Header = new GuiStackContainer()
+            Container.AddChild(Header = new StackContainer()
             {
                 Anchor = Alignment.TopFill,
                 ChildAnchor = Alignment.BottomCenter,
@@ -150,7 +152,7 @@ namespace Alex.Gui.Forms
                 Background = Color.Black * 0.5f
             });
             
-            Header.AddChild(new GuiTextElement()
+            Header.AddChild(new TextElement()
             {
                 Text      = FixContrast(form.Title),
                 TextColor = TextColor.White,

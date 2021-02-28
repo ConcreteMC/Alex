@@ -3,7 +3,7 @@ using Microsoft.Xna.Framework;
 
 namespace Alex.API.Gui.Elements
 {
-    public class GuiFadingTextElement : GuiTextElement
+    public class FadingTextElement : TextElement
     {
         private TimeSpan _displayTime = TimeSpan.FromSeconds(5);
 
@@ -19,7 +19,7 @@ namespace Alex.API.Gui.Elements
             }
         }
 
-        public GuiFadingTextElement()
+        public FadingTextElement()
         {
             
         }

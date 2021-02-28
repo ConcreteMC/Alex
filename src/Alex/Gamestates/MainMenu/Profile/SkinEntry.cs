@@ -12,10 +12,11 @@ using Alex.Gui.Elements;
 using Alex.Gui.Elements.Context3D;
 using Alex.ResourcePackLib;
 using Microsoft.Xna.Framework;
+using RocketUI;
 
 namespace Alex.Gamestates.MainMenu.Profile
 {
-	public class SkinEntry : GuiSelectionListItem
+	public class SkinEntry : SelectionListItem
     {
         public GuiEntityModelView ModelView { get; }
         public LoadedSkin Skin { get; }
@@ -34,7 +35,7 @@ namespace Alex.Gamestates.MainMenu.Profile
             // AutoSizeMode = AutoSizeMode.GrowOnly;
 
             AddChild(
-                new GuiTextElement()
+                new TextElement()
                 {
                     Text = skin.Name, Margin = Thickness.Zero, Anchor = Alignment.TopCenter, //Enabled = false
                 });

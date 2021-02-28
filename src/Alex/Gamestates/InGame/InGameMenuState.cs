@@ -1,5 +1,4 @@
 ﻿using System.Linq;
-using Alex.API.Graphics.Typography;
 using Alex.API.Gui;
 using Alex.API.Gui.Elements.Controls;
 using Alex.API.Gui.Elements.Layout;
@@ -8,6 +7,8 @@ using Alex.Gamestates.Common;
 using Alex.Gamestates.MainMenu;
 using Microsoft.Xna.Framework;
 using NLog;
+using RocketUI;
+using FontStyle = Alex.API.Graphics.Typography.FontStyle;
 
 namespace Alex.Gamestates.InGame
 {
@@ -15,8 +16,8 @@ namespace Alex.Gamestates.InGame
     {
 	    private static Logger Log = LogManager.GetCurrentClassLogger();
 	    
-	    private readonly GuiStackMenu _mainMenu;
-	    private readonly GuiStackContainer _playerList;
+	    private readonly StackMenu _mainMenu;
+	    private readonly StackContainer _playerList;
 		public InGameMenuState()
         {
 	        HeaderTitle.TranslationKey = "menu.game";
@@ -24,7 +25,7 @@ namespace Alex.Gamestates.InGame
 	        HeaderTitle.Scale = 2f;
 	        HeaderTitle.FontStyle = FontStyle.DropShadow;
 
-			_mainMenu = new GuiStackMenu()
+			_mainMenu = new StackMenu()
 			{
 				Margin = new Thickness(15, 0, 15, 0),
 				Padding = new Thickness(0, 50, 0, 0),
@@ -35,7 +36,7 @@ namespace Alex.Gamestates.InGame
 				BackgroundOverlay = new Color(Color.Black, 0.35f)
 			};
 
-	        _playerList = new GuiScrollableStackContainer()
+	        _playerList = new ScrollableStackContainer()
 	        {
 		        Margin = new Thickness(15, 0, 15, 0),
 		        Padding = new Thickness(0, 0, 0, 0),
@@ -47,7 +48,7 @@ namespace Alex.Gamestates.InGame
 			};
 	        _playerList.Orientation = Orientation.Vertical;
 	        
-		/*	AddChild(new GuiTextElement()
+		/*	AddChild(new TextElement()
 			{
 				TranslationKey = "menu.game",
 				Anchor = Alignment.TopCenter,

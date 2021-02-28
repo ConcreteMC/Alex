@@ -2,18 +2,21 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using Alex.API.Graphics;
-using Alex.API.Graphics.Textures;
-using Alex.API.Graphics.Typography;
 using Alex.API.Gui;
-using Alex.API.Gui.Graphics;
 using Alex.API.Localization;
 using Alex.API.Utils;
 using Alex.ResourcePackLib;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using RocketUI;
+using GpuResourceManager = Alex.API.Graphics.GpuResourceManager;
+using GuiTextures = Alex.API.Gui.Graphics.GuiTextures;
+using IFont = Alex.API.Graphics.Typography.IFont;
+using NinePatchTexture2D = Alex.API.Graphics.Textures.NinePatchTexture2D;
 using Size = System.Drawing.Size;
+using Texture2DExtensions = Alex.API.Graphics.Textures.Texture2DExtensions;
+using TextureSlice2D = Alex.API.Graphics.Textures.TextureSlice2D;
 
 namespace Alex.Gui
 {
@@ -403,7 +406,7 @@ namespace Alex.Gui
 			var widthScaler = spriteSheet.Width / originalSize.Width;
 			var heightScaler = spriteSheet.Height / originalSize.Height;
 			
-			_textureCache[guiTexture] = new NinePatchTexture2D(spriteSheet.Slice(new Rectangle(sliceRectangle.X * widthScaler,
+			_textureCache[guiTexture] = new NinePatchTexture2D(Texture2DExtensions.Slice(spriteSheet, new Rectangle(sliceRectangle.X * widthScaler,
 				sliceRectangle.Y * heightScaler, sliceRectangle.Width * widthScaler,
 				sliceRectangle.Height * heightScaler)), ninePatchThickness);
 		}
@@ -413,7 +416,7 @@ namespace Alex.Gui
 			var widthScaler = spriteSheet.Width / originalSize.Width;
 			var heightScaler = spriteSheet.Height / originalSize.Height;
 
-			_textureCache[guiTexture] = spriteSheet.Slice(new Rectangle(sliceRectangle.X * widthScaler,
+			_textureCache[guiTexture] = Texture2DExtensions.Slice(spriteSheet, new Rectangle(sliceRectangle.X * widthScaler,
 				sliceRectangle.Y * heightScaler, sliceRectangle.Width * widthScaler,
 				sliceRectangle.Height * heightScaler));
 		}

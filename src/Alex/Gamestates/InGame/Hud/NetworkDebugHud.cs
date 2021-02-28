@@ -1,20 +1,21 @@
 using System;
 using System.Text;
-using Alex.API.Graphics.Typography;
 using Alex.API.Gui;
 using Alex.API.Gui.Elements;
 using Alex.API.Network;
 using Alex.API.Utils;
 using Alex.Net;
 using Microsoft.Xna.Framework;
+using RocketUI;
+using FontStyle = Alex.API.Graphics.Typography.FontStyle;
 
 namespace Alex.Gamestates.InGame.Hud
 {
-    public class NetworkDebugHud : GuiScreen
+    public class NetworkDebugHud : Screen
     {
         private NetworkProvider            NetworkProvider    { get; }
-        private GuiAutoUpdatingTextElement NetworkInfoElement { get; }
-        private GuiTextElement             WarningElement     { get; }
+        private AutoUpdatingTextElement NetworkInfoElement { get; }
+        private TextElement             WarningElement     { get; }
 
         private bool _advanced = true;
 
@@ -36,7 +37,7 @@ namespace Alex.Gamestates.InGame.Hud
             NetworkProvider = networkProvider;
             Anchor = Alignment.Fill;
             
-            WarningElement = new GuiTextElement
+            WarningElement = new TextElement
             {
                 IsVisible = false,
                 TextColor = TextColor.Red,
@@ -49,7 +50,7 @@ namespace Alex.Gamestates.InGame.Hud
 
             AddChild(WarningElement);
             
-            NetworkInfoElement = new GuiAutoUpdatingTextElement(GetNetworkInfo, true);
+            NetworkInfoElement = new AutoUpdatingTextElement(GetNetworkInfo, true);
             NetworkInfoElement.Interval = TimeSpan.FromMilliseconds(500);
             
             NetworkInfoElement.BackgroundOverlay = Color.Black * 0.5f;
