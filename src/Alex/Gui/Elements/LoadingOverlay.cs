@@ -2,23 +2,24 @@ using Alex.API.Gui;
 using Alex.API.Gui.Elements;
 using Alex.API.Gui.Elements.Layout;
 using Microsoft.Xna.Framework;
+using RocketUI;
 
 namespace Alex.Gui.Elements
 {
-	public class LoadingOverlay : GuiScreen
+	public class LoadingOverlay : Screen
 	{
 		public LoadingOverlay()
 		{
 			Anchor = Alignment.Fill;
 			BackgroundOverlay = Color.Black * 0.5f;
 
-			var container = new GuiStackContainer()
+			var container = new StackContainer()
 			{
 				Anchor = Alignment.MiddleCenter,
 				Orientation = Orientation.Vertical
 			};
 			
-			container.AddChild(new GuiTextElement("Authenticating...")
+			container.AddChild(new TextElement("Authenticating...")
 			{
 				Anchor = Alignment.MiddleCenter
 			});

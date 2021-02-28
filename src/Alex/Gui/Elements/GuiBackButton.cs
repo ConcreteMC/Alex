@@ -1,8 +1,8 @@
-﻿using Alex.API.Gui.Elements.Controls;
+﻿using RocketUI;
 
 namespace Alex.Gui.Elements
 {
-    public class GuiBackButton : GuiButton
+    public class GuiBackButton : Button
     {
         public GuiBackButton() : base("Back", () => Alex.Instance.GameStateManager.Back())
         {

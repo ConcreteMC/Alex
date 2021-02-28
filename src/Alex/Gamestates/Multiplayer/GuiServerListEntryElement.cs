@@ -6,13 +6,11 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Alex.API.Data.Servers;
-using Alex.API.Graphics;
 using Alex.API.Gui;
 using Alex.API.Gui.Elements;
 using Alex.API.Gui.Elements.Controls;
 using Alex.API.Gui.Elements.Icons;
 using Alex.API.Gui.Elements.Layout;
-using Alex.API.Gui.Graphics;
 using Alex.API.Services;
 using Alex.API.Utils;
 using Alex.Networking.Java;
@@ -22,10 +20,13 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MiNET.Net;
 using MiNET.Utils;
+using RocketUI;
+using GpuResourceManager = Alex.API.Graphics.GpuResourceManager;
+using GuiTextures = Alex.API.Gui.Graphics.GuiTextures;
 
 namespace Alex.Gamestates.Multiplayer
 {
-	public class GuiServerListEntryElement : GuiSelectionListItem
+	public class GuiServerListEntryElement : SelectionListItem
 	{
 		private const int ServerIconSize = 32;
 
@@ -36,12 +37,12 @@ namespace Alex.Gamestates.Multiplayer
 
 		public Texture2D ServerIcon { get; private set; }
 		
-		private readonly GuiTextureElement     _serverIcon;
-		private readonly GuiStackContainer     _textWrapper;
+		private readonly TextureElement     _serverIcon;
+		private readonly StackContainer     _textWrapper;
 		private readonly GuiConnectionPingIcon _pingStatus;
         
-		private          GuiTextElement _serverName;
-		private readonly GuiTextElement _serverMotd;
+		private          TextElement _serverName;
+		private readonly TextElement _serverMotd;
 
 		internal SavedServerEntry SavedServerEntry;
 		internal Guid             InternalIdentifier = Guid.NewGuid();
@@ -70,7 +71,7 @@ namespace Alex.Gamestates.Multiplayer
 			Padding = Thickness.One;
 			Anchor = Alignment.TopFill;
 
-			AddChild( _serverIcon = new GuiTextureElement()
+			AddChild( _serverIcon = new TextureElement()
 			{
 				Width = ServerIconSize,
 				Height = ServerIconSize,
@@ -85,7 +86,7 @@ namespace Alex.Gamestates.Multiplayer
 				Anchor = Alignment.TopRight,
 			});
 
-			AddChild( _textWrapper = new GuiStackContainer()
+			AddChild( _textWrapper = new StackContainer()
 			{
 				ChildAnchor = Alignment.TopFill,
 				Anchor = Alignment.TopLeft
@@ -93,13 +94,13 @@ namespace Alex.Gamestates.Multiplayer
 			_textWrapper.Padding = new Thickness(0,0);
 			_textWrapper.Margin = new Thickness(ServerIconSize + 5, 0, 0, 0);
 
-			_textWrapper.AddChild(_serverName = new GuiTextElement()
+			_textWrapper.AddChild(_serverName = new TextElement()
 			{
 				Text = ServerName,
 				Margin = Thickness.Zero
 			});
 
-			_textWrapper.AddChild(_serverMotd = new GuiTextElement()
+			_textWrapper.AddChild(_serverMotd = new TextElement()
 			{
 				TranslationKey = "multiplayer.status.pinging",
 				Margin = new Thickness(0, 0, 5, 0),

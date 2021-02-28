@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Alex.API.Gui;
 using Alex.API.Gui.Elements.Controls;
+using RocketUI;
 
 namespace Alex
 {
@@ -49,9 +50,9 @@ namespace Alex
 			Children = new List<MenuItem>();
 		}
 
-		internal IGuiElement[] BuildMenu(IMenuHolder menuHolder, BuildMode buildMode)
+		internal IRocketElement[] BuildMenu(IMenuHolder menuHolder, BuildMode buildMode)
 		{
-			List<IGuiElement> elements = new List<IGuiElement>();
+			List<IRocketElement> elements = new List<IRocketElement>();
 
 			if (buildMode == BuildMode.Children || Type == MenuType.Menu)
 			{
@@ -67,7 +68,7 @@ namespace Alex
 			{
 				if (Type == MenuType.SubMenu || Type == MenuType.Button)
 				{
-					GuiStackMenuItem me = new GuiStackMenuItem();
+					StackMenuItem me = new StackMenuItem();
 					me.Text = Title;
 
 					if (IsTranslatable)

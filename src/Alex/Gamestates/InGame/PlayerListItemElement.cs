@@ -3,16 +3,17 @@ using Alex.API.Gui.Elements;
 using Alex.API.Gui.Elements.Controls;
 using Alex.API.Gui.Elements.Icons;
 using Alex.API.Gui.Graphics;
+using RocketUI;
 
 namespace Alex.Gamestates.InGame
 {
-    public class PlayerListItemElement : GuiControl
+    public class PlayerListItemElement : RocketControl
     {
         private GuiConnectionPingIcon _pingElement = null;
         private int                   _ping        = 0;
         public PlayerListItemElement(string username, int? ping)
         {
-            AddChild(new GuiTextElement()
+            AddChild(new TextElement()
             {
                 Text = username.Replace("\n", "").Trim(),
                 Margin = new Thickness(2),

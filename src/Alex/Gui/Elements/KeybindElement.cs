@@ -6,6 +6,7 @@ using Alex.API.Gui.Graphics;
 using Alex.API.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
+using RocketUI;
 
 namespace Alex.Gui.Elements
 {
@@ -13,7 +14,7 @@ namespace Alex.Gui.Elements
     {
         public static readonly Keys Unbound = (Keys) int.MaxValue;
         
-        private GuiTextElement TextElement { get; }
+        private TextElement TextElement { get; }
         
         public Color BorderColor { get; set; } = Color.LightGray;
         public Thickness BorderThickness { get; set; } = Thickness.One;
@@ -24,7 +25,7 @@ namespace Alex.Gui.Elements
             
             BackgroundOverlay = Color.Black;
             
-            TextElement = new GuiTextElement();
+            TextElement = new TextElement();
             TextElement.Anchor = Alignment.MiddleCenter;
             
             AddChild(TextElement);

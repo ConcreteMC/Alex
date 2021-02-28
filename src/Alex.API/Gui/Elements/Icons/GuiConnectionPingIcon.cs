@@ -1,14 +1,15 @@
 ﻿using System;
-using Alex.API.Graphics.Textures;
-using Alex.API.Graphics.Typography;
-using Alex.API.Gui.Graphics;
 using Alex.API.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
+using RocketUI;
+using FontStyle = Alex.API.Graphics.Typography.FontStyle;
+using GuiTextures = Alex.API.Gui.Graphics.GuiTextures;
+using TextureSlice2D = Alex.API.Graphics.Textures.TextureSlice2D;
 
 namespace Alex.API.Gui.Elements.Icons
 {
-	public class GuiConnectionPingIcon : GuiElement
+	public class GuiConnectionPingIcon : RocketElement
 	{
 		private const GuiTextures OfflineState = GuiTextures.ServerPing0;
 
@@ -29,7 +30,7 @@ namespace Alex.API.Gui.Elements.Icons
 		private TextureSlice2D   _offlineTexture;
 		private TextureSlice2D[] _qualityStateTextures    = new TextureSlice2D[5];
 		private TextureSlice2D[] _connectingStateTextures = new TextureSlice2D[5];
-		private GuiTextElement   _playerCountElement;
+		private TextElement   _playerCountElement;
 
 		private bool   _isPending;
 		private int    _animationFrame;
@@ -66,7 +67,7 @@ namespace Alex.API.Gui.Elements.Icons
 		    Background = GuiTextures.ServerPing0;
             SetFixedSize(10, 8);
             
-            _playerCountElement = new GuiTextElement(false)
+            _playerCountElement = new TextElement(false)
             {
 	            //Font = renderer.Font,
 	            Text = string.Empty,

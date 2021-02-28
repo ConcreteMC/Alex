@@ -3,15 +3,16 @@ using Alex.API.Gui.Elements.Layout;
 using Alex.API.Input;
 using Alex.API.Utils;
 using Microsoft.Xna.Framework;
+using RocketUI;
 
 namespace Alex.Gui.Forms
 {
-    public class FormBase : GuiDialogBase
+    public class FormBase : DialogBase
     {
         public    uint               FormId       { get; set; }
         protected BedrockFormManager Parent       { get; }
         protected InputManager       InputManager { get; }
-        protected GuiContainer       Container    => ContentContainer;
+        protected Container       Container    => ContentContainer;
         public FormBase(uint formId, BedrockFormManager parent, InputManager inputManager)
         {
             FormId = formId;
@@ -22,7 +23,7 @@ namespace Alex.Gui.Forms
             Container.Anchor = Alignment.FillCenter;
             Container.MinWidth = 356;
             Container.Width = 356;
-            //   Container = new GuiContainer();
+            //   Container = new Container();
             //   Container.Anchor = Alignment.FillCenter;
 
             //    AddChild(Container);

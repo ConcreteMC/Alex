@@ -1,4 +1,3 @@
-using Alex.API.Graphics.Typography;
 using Alex.API.Gui;
 using Alex.API.Gui.Elements;
 using Alex.API.Gui.Elements.Controls;
@@ -9,6 +8,8 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using NLog;
+using RocketUI;
+using FontStyle = Alex.API.Graphics.Typography.FontStyle;
 
 namespace Alex.Gui.Elements.Inventory
 {
@@ -19,18 +20,18 @@ namespace Alex.Gui.Elements.Inventory
         private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(InventoryContainerItem));
         
         //private Item _item;
-       // protected GuiTextureElement TextureElement { get; }
+       // protected TextureElement TextureElement { get; }
        private GuiItem GuiItem        { get; }
         public int     InventoryIndex { get; set; } = 0;
         public int     InventoryId    { get; set; } = 0;
         
-        private GuiTextElement _counTextElement;
+        private TextElement _counTextElement;
         public InventoryContainerItem()
         {
             SetFixedSize(16, 16);
             Padding = new Thickness(0);
 
-           // AddChild(TextureElement = new GuiTextureElement()
+           // AddChild(TextureElement = new TextureElement()
           //  {
           //      Anchor = Alignment.Fill
           //  });
@@ -42,7 +43,7 @@ namespace Alex.Gui.Elements.Inventory
               Width = 18,
           });
             
-           /* AddChild(_counTextElement = new GuiTextElement()
+           /* AddChild(_counTextElement = new TextElement()
             {
                 TextColor = TextColor.White,
                 Anchor = Alignment.BottomRight,
@@ -53,7 +54,7 @@ namespace Alex.Gui.Elements.Inventory
                 CanHighlight = false,
                 CanFocus = false
             });*/
-           GuiItem.AddChild(_counTextElement = new GuiTextElement()
+           GuiItem.AddChild(_counTextElement = new TextElement()
            {
                TextColor = TextColor.White,
                Anchor = Alignment.BottomRight,

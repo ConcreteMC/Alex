@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Text;
-using Alex.API.Graphics.Typography;
 using Alex.API.Gui;
 using Alex.API.Gui.Elements;
 using Alex.API.Gui.Elements.Layout;
@@ -9,6 +8,8 @@ using Alex.API.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using NLog;
+using RocketUI;
+using FontStyle = Alex.API.Graphics.Typography.FontStyle;
 using Keyboard = Microsoft.Xna.Framework.Input.Keyboard;
 using Keys = Microsoft.Xna.Framework.Input.Keys;
 using Mouse = Microsoft.Xna.Framework.Input.Mouse;
@@ -44,10 +45,10 @@ namespace Alex.Gui
 		private MouseState _previousMouse, _currentMouse;
 
 		private Vector2 CursorPosition;
-		private GuiElement _topMostHighlighted;
-		private GuiElement TopMostFocused;
+		private RocketElement _topMostHighlighted;
+		private RocketElement TopMostFocused;
 
-		public IGuiElement HighlightedElement;
+		public IRocketElement HighlightedElement;
 
 		internal GuiDebugHelper(GuiManager manager)
 		{
@@ -57,7 +58,7 @@ namespace Alex.Gui
 			GuiManager.DrawScreen += GuiManagerOnDrawScreen;
 		}
 
-        public GuiElement TopMostHighlighted
+        public RocketElement TopMostHighlighted
         {
             get { return _topMostHighlighted; }
         }
@@ -102,10 +103,10 @@ namespace Alex.Gui
 				CursorPosition = Renderer.Unproject(_currentMouse.Position.ToVector2());
 			}
 
-			if (GuiManager.FocusManager.TryGetElementAt(CursorPosition, e => e is GuiElement c,
+			if (GuiManager.FocusManager.TryGetElementAt(CursorPosition, e => e is RocketElement c,
 														out var controlMatchingPosition))
 			{
-				_topMostHighlighted = controlMatchingPosition as GuiElement;
+				_topMostHighlighted = controlMatchingPosition as RocketElement;
 			}
 			else
 			{
@@ -114,7 +115,7 @@ namespace Alex.Gui
 
 		}
 
-		public void DrawScreen(IGuiScreen screen)
+		public void DrawScreen(IScreen screen)
 		{
 			if (!Enabled) return;
 
@@ -141,7 +142,7 @@ namespace Alex.Gui
                 	var e = TopMostFocused ?? TopMostHighlighted;
                 	if (e != null)
                 	{
-                		var p = e.ParentElement as GuiElement;
+                		var p = e.ParentElement as RocketElement;
 
                 		var info = GetElementInfo(e);
 
@@ -157,9 +158,9 @@ namespace Alex.Gui
             }
         }
 
-		private string GetElementInfo(GuiElement e)
+		private string GetElementInfo(RocketElement e)
 		{
-			var p = e.ParentElement as GuiElement;
+			var p = e.ParentElement as RocketElement;
 
 			var info = new StringBuilder();
 
@@ -181,14 +182,14 @@ namespace Alex.Gui
 			//info.AppendLine($"Siblings: ({p?.ChildCount - 1 ?? 0}) {{{string.Join(", ", p?.AllChildren.Where(c => c != e).Select(c => c.GetType().Name) ?? new string[0])}}}");
 			//info.AppendLine($"Children: ({e.ChildCount}) {{{string.Join(", ", e.AllChildren.Select(c => c.GetType().Name))}}}");
 
-			if (e is GuiStackContainer eStack)
+			if (e is StackContainer eStack)
 			{
 				info.AppendLine();
 				info.AppendLine($"Stack - Orientation: {eStack.Orientation.ToString()}");
 				info.AppendLine($"Stack - ChildAnchor: {eStack.ChildAnchor.ToString()} - {eStack.ChildAnchor.ToFullString()}");
 
 				info.AppendLine();
-				var childAlign = GuiStackContainer.NormalizeAlignmentForArrange(eStack.Orientation, eStack.ChildAnchor);
+				var childAlign = StackContainer.NormalizeAlignmentForArrange(eStack.Orientation, eStack.ChildAnchor);
 				info.AppendLine($"Stack - Child Alignment: {childAlign.ToString()} - {childAlign.ToFullString()}");
 
 			}
@@ -196,14 +197,14 @@ namespace Alex.Gui
 			return info.ToString();
 		}
 
-		private void DrawElementRecursive(IGuiElement element)
+		private void DrawElementRecursive(IRocketElement element)
 		{
 			DrawDebug(element);
 
 			element.ForEachChild(c => DrawElementRecursive(c));
 		}
 
-		private void DrawDebug(IGuiElement element)
+		private void DrawDebug(IRocketElement element)
 		{
             if (element == null) return;
 			if (!Enabled) return;
@@ -372,10 +373,10 @@ namespace Alex.Gui
 
 		}
 
-		//public void HighlightGuiElement(Guid id)
+		//public void HighlightRocketElement(Guid id)
 		//{
-		//	Log.Info($"IGuiDebuggerService.HighlightGuiElement(id: {id.ToString()})");
-		//	var element = FindGuiElementById(id);
+		//	Log.Info($"IGuiDebuggerService.HighlightRocketElement(id: {id.ToString()})");
+		//	var element = FindRocketElementById(id);
 		//	HighlightedElement = element;
 
 		//}
@@ -386,26 +387,26 @@ namespace Alex.Gui
 		//	HighlightedElement = null;
 		//}
 
-		//public GuiElementInfo[] GetAllGuiElementInfos()
+		//public RocketElementInfo[] GetAllRocketElementInfos()
 		//{
-		//	Log.Info("IGuiDebuggerService.GetAllGuiElementInfos()");
-		//	return GuiManager.Screens.Select(BuildGuiElementInfo).ToArray();
+		//	Log.Info("IGuiDebuggerService.GetAllRocketElementInfos()");
+		//	return GuiManager.Screens.Select(BuildRocketElementInfo).ToArray();
 		//}
 
-		//public GuiElementPropertyInfo[] GetElementPropertyInfos(Guid id)
+		//public RocketElementPropertyInfo[] GetElementPropertyInfos(Guid id)
 		//{
 		//	Log.Info($"IGuiDebuggerService.GetElementPropertyInfos(id: {id.ToString()})");
-		//	var element = FindGuiElementById(id);
-		//	if(element == null) return new GuiElementPropertyInfo[0];
+		//	var element = FindRocketElementById(id);
+		//	if(element == null) return new RocketElementPropertyInfo[0];
 
-		//	var infos = BuildGuiElementPropertyInfos(element);
+		//	var infos = BuildRocketElementPropertyInfos(element);
 		//	return infos;
 		//}
 
 		//public bool SetElementPropertyValue(Guid id, string propertyName, string propertyValue)
 		//{
 		//	Log.Info($"IGuiDebuggerService.SetElementPropertyValue(id: {id.ToString()}, propertyName: {propertyName}, propertyValue: {propertyValue})");
-		//	var element = FindGuiElementById(id);
+		//	var element = FindRocketElementById(id);
 		//	if (element == null) return false;
 
 		//	var property = element.GetType().GetProperty(propertyName);
@@ -465,11 +466,11 @@ namespace Alex.Gui
 		//	return Convert.ChangeType(value, targetType);
 		//}
 
-		//private IGuiElement FindGuiElementById(Guid id)
+		//private IRocketElement FindRocketElementById(Guid id)
 		//{
 		//	foreach (var screen in GuiManager.Screens.ToArray())
 		//	{
-		//		if (screen.TryFindDeepestChild(e => e.Id.Equals(id), out IGuiElement foundElement))
+		//		if (screen.TryFindDeepestChild(e => e.Id.Equals(id), out IRocketElement foundElement))
 		//		{
 		//			return foundElement;
 		//		}
@@ -478,33 +479,33 @@ namespace Alex.Gui
 		//	return null;
 		//}
 
-		//private GuiElementInfo BuildGuiElementInfo(IGuiElement guiElement)
+		//private RocketElementInfo BuildRocketElementInfo(IRocketElement RocketElement)
 		//{
-		//	var info = new GuiElementInfo();
-		//	info.Id = guiElement.Id;
-		//	info.ElementType = guiElement.GetType().Name;
+		//	var info = new RocketElementInfo();
+		//	info.Id = RocketElement.Id;
+		//	info.ElementType = RocketElement.GetType().Name;
 
-		//	info.ChildElements = guiElement.ChildElements.Select(BuildGuiElementInfo).ToArray();
+		//	info.ChildElements = RocketElement.ChildElements.Select(BuildRocketElementInfo).ToArray();
 		//	return info;
 		//}
 
-		//private GuiElementPropertyInfo[] BuildGuiElementPropertyInfos(IGuiElement guiElement)
+		//private RocketElementPropertyInfo[] BuildRocketElementPropertyInfos(IRocketElement RocketElement)
 		//{
-		//	var properties = guiElement.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public);
+		//	var properties = RocketElement.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public);
 
-		//	var infos = new List<GuiElementPropertyInfo>();
+		//	var infos = new List<RocketElementPropertyInfo>();
 		//	foreach (var prop in properties)
 		//	{
 		//		var attr = prop.GetCustomAttribute<DebuggerVisibleAttribute>(true);
 		//		if (attr == null) continue;
 		//		if (!attr.Visible) continue;
 
-		//		if(typeof(IGuiElement).IsAssignableFrom(prop.PropertyType)) continue;
+		//		if(typeof(IRocketElement).IsAssignableFrom(prop.PropertyType)) continue;
 
 		//		object val = null;
 		//		try
 		//		{
-		//			val = prop.GetValue(guiElement);
+		//			val = prop.GetValue(RocketElement);
 					
 		//		}
 		//		catch(Exception ex)
@@ -512,7 +513,7 @@ namespace Alex.Gui
 		//			val = "Exception - " + ex.Message;
 		//		}
 
-		//		infos.Add(new GuiElementPropertyInfo()
+		//		infos.Add(new RocketElementPropertyInfo()
 		//		{
 		//			Name        = prop.Name,
 		//			Type = prop.PropertyType,

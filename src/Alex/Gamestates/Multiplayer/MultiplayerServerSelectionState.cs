@@ -22,6 +22,7 @@ using Alex.Worlds.Multiplayer.Bedrock;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using NLog;
+using RocketUI;
 
 namespace Alex.Gamestates.Multiplayer
 {
@@ -29,11 +30,11 @@ namespace Alex.Gamestates.Multiplayer
     {
 	    private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(MultiplayerServerSelectionState));
 	    
-	    private GuiButton DirectConnectButton;
-	    private GuiButton JoinServerButton;
-	    private GuiButton AddServerButton;
-	    private GuiButton EditServerButton;
-	    private GuiButton DeleteServerButton;
+	    private Button DirectConnectButton;
+	    private Button JoinServerButton;
+	    private Button AddServerButton;
+	    private Button EditServerButton;
+	    private Button DeleteServerButton;
 
 	    private readonly IListStorageProvider<SavedServerEntry> _listProvider;
 
@@ -100,19 +101,19 @@ namespace Alex.Gamestates.Multiplayer
 			Footer.AddRow(row =>
 		    {
 
-			    row.AddChild(JoinServerButton = new GuiButton("Join Server",
+			    row.AddChild(JoinServerButton = new Button("Join Server",
 				    OnJoinServerButtonPressed)
 			    {
 				    TranslationKey = "selectServer.select",
 				    Enabled = false
 			    });
-			    row.AddChild(DirectConnectButton = new GuiButton("Direct Connect",
+			    row.AddChild(DirectConnectButton = new Button("Direct Connect",
 				    () => Alex.GameStateManager.SetActiveState<MultiplayerConnectState>())
 			    {
 				    TranslationKey = "selectServer.direct",
 				    Enabled = false
 			    });
-			    row.AddChild(AddServerButton = new GuiButton("Add Server",
+			    row.AddChild(AddServerButton = new Button("Add Server",
 				    OnAddItemButtonPressed)
 			    {
 				    TranslationKey = "selectServer.add"
@@ -120,17 +121,17 @@ namespace Alex.Gamestates.Multiplayer
 		    });
 		    Footer.AddRow(row =>
 		    {
-			    row.AddChild(EditServerButton = new GuiButton("Edit", OnEditItemButtonPressed)
+			    row.AddChild(EditServerButton = new Button("Edit", OnEditItemButtonPressed)
 			    {
 				    TranslationKey = "selectServer.edit",
 				    Enabled = false
 			    });
-			    row.AddChild(DeleteServerButton = new GuiButton("Delete", OnDeleteItemButtonPressed)
+			    row.AddChild(DeleteServerButton = new Button("Delete", OnDeleteItemButtonPressed)
 			    {
 				    TranslationKey = "selectServer.delete",
 				    Enabled = false
 			    });
-			    row.AddChild(new GuiButton("Refresh", OnRefreshButtonPressed)
+			    row.AddChild(new Button("Refresh", OnRefreshButtonPressed)
 			    {
 				    TranslationKey = "selectServer.refresh"
 			    });

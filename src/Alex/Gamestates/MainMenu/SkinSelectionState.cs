@@ -12,6 +12,7 @@ using Alex.Gui;
 using Alex.ResourcePackLib;
 using Microsoft.Xna.Framework;
 using NLog;
+using RocketUI;
 using SixLabors.ImageSharp.Formats.Png;
 
 namespace Alex.Gamestates.MainMenu
@@ -24,7 +25,7 @@ namespace Alex.Gamestates.MainMenu
         private IStorageSystem Storage { get; } 
         private Alex Alex { get; }
 
-        private GuiButton _cancelBtn, _selectBtn;
+        private Button _cancelBtn, _selectBtn;
         public SkinSelectionState(GuiPanoramaSkyBox skyBox, Alex alex)
         {
             Alex = alex;
@@ -41,12 +42,12 @@ namespace Alex.Gamestates.MainMenu
             Footer.AddRow(row =>
             {
              //   row.ChildAnchor = Alignment.CenterX;
-             row.AddChild(_selectBtn = new GuiButton("Select Skin", OnSkinSelect)
+             row.AddChild(_selectBtn = new Button("Select Skin", OnSkinSelect)
              {
                  Enabled = false
              });
              
-                row.AddChild(_cancelBtn = new GuiButton("Cancel", OnCancelButtonPressed)
+                row.AddChild(_cancelBtn = new Button("Cancel", OnCancelButtonPressed)
                 {
                 });
                 
@@ -55,7 +56,7 @@ namespace Alex.Gamestates.MainMenu
             Footer.AddRow(row =>
             {
                 row.ChildAnchor = Alignment.BottomCenter;
-                row.AddChild(new GuiButton("Open SkinPack folder", OpenSkinPackFOlder, false)
+                row.AddChild(new Button("Open SkinPack folder", OpenSkinPackFOlder, false)
                 {
                     Modern = true
                 });

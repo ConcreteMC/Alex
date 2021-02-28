@@ -1,18 +1,19 @@
 ﻿using Alex.API.Gui.Elements.Layout;
+using RocketUI;
 
 namespace Alex.API.Gui
 {
-    public abstract class GuiDialogBase : GuiScreen
+    public abstract class DialogBase : Screen
     {
 
         public bool ShowBackdrop { get; set; }
 
-        protected GuiContainer ContentContainer;
+        protected Container ContentContainer;
 
 
-        protected GuiDialogBase()
+        protected DialogBase()
         {
-            AddChild(ContentContainer = new GuiContainer()
+            AddChild(ContentContainer = new Container()
             {
                 Anchor = Alignment.MiddleCenter
             });

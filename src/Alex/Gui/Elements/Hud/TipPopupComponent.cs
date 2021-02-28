@@ -6,13 +6,14 @@ using Alex.API.Gui.Elements.Layout;
 using Alex.API.Gui.Graphics;
 using Alex.API.Utils;
 using Microsoft.Xna.Framework;
+using RocketUI;
 
 namespace Alex.Gui.Elements.Hud
 {
-    public class TipPopupComponent : GuiContainer, IChatRecipient
+    public class TipPopupComponent : Container, IChatRecipient
     {
-        private GuiTextElement Tip { get; set; }
-        private GuiTextElement Popup { get; set; }
+        private TextElement Tip { get; set; }
+        private TextElement Popup { get; set; }
         
         private DateTime TipHideTime { get; set; } = DateTime.UtcNow;
         private DateTime PopupHideTime { get; set; } = DateTime.UtcNow;
@@ -21,13 +22,13 @@ namespace Alex.Gui.Elements.Hud
 
         public TipPopupComponent()
         {
-            Tip = new GuiTextElement()
+            Tip = new TextElement()
             {
                 Anchor = Alignment.BottomCenter,
                 Margin = new Thickness(0, 0, 0, 5)
             };
             
-            Popup = new GuiTextElement()
+            Popup = new TextElement()
             {
                 Anchor = Alignment.BottomCenter
             };

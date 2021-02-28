@@ -35,7 +35,7 @@ namespace Alex.API.Input
             PlayerIndex = playerIndex;
             InputType = inputType;
             
-            AddListener(new GamePadInputListener(playerIndex));
+            AddListener(new GamePadInputListener(playerIndex)); 
         }
 
         public void AddListener(IInputListener listener)

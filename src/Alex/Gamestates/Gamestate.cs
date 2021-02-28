@@ -11,7 +11,7 @@ namespace Alex.Gamestates
 {
 	public class GameState : IGameState
 	{
-		public GuiScreen Gui { get; protected set; }
+		public Screen Gui { get; protected set; }
 
 		protected GraphicsDevice Graphics { get; }
 

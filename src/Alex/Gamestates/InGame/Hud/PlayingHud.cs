@@ -14,19 +14,20 @@ using Alex.Utils.Inventories;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using MiNET.Worlds;
+using RocketUI;
 
 namespace Alex.Gamestates.InGame.Hud
 {
-    public class PlayingHud : GuiScreen, IChatRecipient
+    public class PlayingHud : Screen, IChatRecipient
     {
         private readonly GuiItemHotbar _hotbar;
         private readonly PlayerController _playerController;
         private readonly HealthComponent _healthComponent;
         private readonly HungerComponent _hungerComponent;
-        private readonly GuiContainer _healthContainer;
-        private readonly GuiMultiStackContainer _bottomContainer;
+        private readonly Container _healthContainer;
+        private readonly MultiStackContainer _bottomContainer;
         private readonly TipPopupComponent _tipPopupComponent;
-        private readonly GuiStackContainer _healthAndHotbar;
+        private readonly StackContainer _healthAndHotbar;
         
 	    public readonly ChatComponent Chat;
 	    public readonly TitleComponent Title;
@@ -50,13 +51,13 @@ namespace Alex.Gamestates.InGame.Hud
             _playerController = player.Controller;
 			InputManager.AddListener(new MouseInputListener(InputManager.PlayerIndex));
 
-			_healthAndHotbar = new GuiStackContainer()
+			_healthAndHotbar = new StackContainer()
 			{
 				Orientation = Orientation.Vertical,
 				ChildAnchor = Alignment.Fill
 			};
 			
-			_bottomContainer = new GuiMultiStackContainer();
+			_bottomContainer = new MultiStackContainer();
 			_bottomContainer.ChildAnchor = Alignment.BottomFill;
 			_bottomContainer.Anchor = Alignment.BottomCenter;
 			_bottomContainer.AutoSizeMode = AutoSizeMode.GrowAndShrink;
@@ -72,7 +73,7 @@ namespace Alex.Gamestates.InGame.Hud
 	        Chat.Enabled = false;
 	        Chat.Anchor = Alignment.BottomLeft;
 
-	        _healthContainer = new GuiContainer();
+	        _healthContainer = new Container();
 	        _healthContainer.Anchor = Alignment.Fill;
 
 	        _healthContainer.Margin = new Thickness(0, 0, 0, 1);

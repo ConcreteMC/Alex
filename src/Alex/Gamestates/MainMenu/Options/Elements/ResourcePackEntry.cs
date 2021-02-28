@@ -2,19 +2,20 @@ using Alex.API.Gui;
 using Alex.API.Gui.Elements;
 using Alex.API.Gui.Elements.Controls;
 using Alex.API.Gui.Elements.Layout;
-using Alex.API.Gui.Graphics;
 using Alex.API.Utils;
 using Alex.ResourcePackLib.Generic;
+using RocketUI;
+using GuiTextures = Alex.API.Gui.Graphics.GuiTextures;
 
 namespace Alex.Gamestates.MainMenu.Options.Elements
 {
-    public class ResourcePackEntry : GuiSelectionListItem
+    public class ResourcePackEntry : SelectionListItem
     {
         public string Path { get; private set; }
         public ResourcePackManifest Manifest { get; private set; }
         
-        private readonly GuiTextureElement _icon;
-        private readonly GuiStackContainer _textWrapper;
+        private readonly TextureElement _icon;
+        private readonly StackContainer _textWrapper;
         private readonly LoadIcon _loadedIcon;
         public ResourcePackEntry(ResourcePackManifest manifest, string path) : this(path, manifest.Name, manifest.Description)
         {
@@ -35,7 +36,7 @@ namespace Alex.Gamestates.MainMenu.Options.Elements
             Padding = Thickness.One;
             Anchor = Alignment.TopFill;
             
-            AddChild( _icon = new GuiTextureElement()
+            AddChild( _icon = new TextureElement()
             {
                 Width = 32,
                 Height = 32,
@@ -47,7 +48,7 @@ namespace Alex.Gamestates.MainMenu.Options.Elements
                 RepeatMode = TextureRepeatMode.NoRepeat
             });
 
-            AddChild( _textWrapper = new GuiStackContainer()
+            AddChild( _textWrapper = new StackContainer()
             {
                 ChildAnchor = Alignment.TopFill,
                 Anchor = Alignment.TopLeft
@@ -55,13 +56,13 @@ namespace Alex.Gamestates.MainMenu.Options.Elements
             _textWrapper.Padding = new Thickness(0,0);
             _textWrapper.Margin = new Thickness(37, 0, 0, 0);
 
-            _textWrapper.AddChild(new GuiTextElement()
+            _textWrapper.AddChild(new TextElement()
             {
                 Text = name,
                 Margin = Thickness.Zero
             });
 
-            _textWrapper.AddChild(new GuiTextElement()
+            _textWrapper.AddChild(new TextElement()
             {
                 Text = description,
                 Margin = new Thickness(0, 0, 5, 0),
@@ -82,7 +83,7 @@ namespace Alex.Gamestates.MainMenu.Options.Elements
             _loadedIcon.SetLoaded(isLoaded);
         }
 
-        private class LoadIcon : GuiImage
+        private class LoadIcon : Image
         {
             public bool Loaded { get; private set; }
             public LoadIcon() : base(GuiTextures.GreyCheckMark, TextureRepeatMode.NoRepeat)

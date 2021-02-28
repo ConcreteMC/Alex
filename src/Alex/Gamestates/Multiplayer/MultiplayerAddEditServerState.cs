@@ -1,7 +1,6 @@
 ﻿using System;
 using Alex.API.Data.Servers;
 using Alex.API.Graphics;
-using Alex.API.Graphics.Typography;
 using Alex.API.Gui;
 using Alex.API.Gui.Elements;
 using Alex.API.Gui.Elements.Controls;
@@ -14,6 +13,8 @@ using Alex.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using NLog;
+using RocketUI;
+using FontStyle = Alex.API.Graphics.Typography.FontStyle;
 
 namespace Alex.Gamestates.Multiplayer
 {
@@ -23,15 +24,15 @@ namespace Alex.Gamestates.Multiplayer
 
 		#region Gui Elements
 
-		private readonly GuiTextInput    _nameInput;
-		private readonly GuiTextInput    _hostnameInput;
-		private readonly GuiTextInput    _portInput;
-		private readonly GuiTextElement  _errorMessage;
-		private readonly GuiButton       _saveButton;
-	//	private readonly GuiToggleButton _javaEditionButton;
-		//private readonly GuiToggleButton _bedrockEditionButton;
-		private readonly GuiTextElement  _serverTypeLabel;
-		private readonly GuiButtonGroup  _serverTypeGroup;
+		private readonly TextInput    _nameInput;
+		private readonly TextInput    _hostnameInput;
+		private readonly TextInput    _portInput;
+		private readonly TextElement  _errorMessage;
+		private readonly Button       _saveButton;
+	//	private readonly ToggleButton _javaEditionButton;
+		//private readonly ToggleButton _bedrockEditionButton;
+		private readonly TextElement  _serverTypeLabel;
+		private readonly ButtonGroup  _serverTypeGroup;
 		
 		#endregion
 
@@ -63,12 +64,12 @@ namespace Alex.Gamestates.Multiplayer
 
 			Body.ChildAnchor = Alignment.MiddleCenter;
 
-			var usernameRow = AddGuiRow(new GuiTextElement()
+			var usernameRow = AddGuiRow(new TextElement()
 			{
 				Text   = "Server Name:",
 				TranslationKey = "addServer.enterName",
 				Margin = new Thickness(0, 0, 5, 0)
-			}, _nameInput = new GuiTextInput()
+			}, _nameInput = new TextInput()
 			{
 				TabIndex = 1,
 
@@ -80,12 +81,12 @@ namespace Alex.Gamestates.Multiplayer
 			usernameRow.ChildAnchor = Alignment.MiddleCenter;
 			usernameRow.Orientation = Orientation.Horizontal;
 
-			var hostnameRow = AddGuiRow(new GuiTextElement()
+			var hostnameRow = AddGuiRow(new TextElement()
 			{
 				Text   = "Server Address:",
 				TranslationKey = "addServer.enterIp",
 				Margin = new Thickness(0, 0, 5, 0)
-			}, _hostnameInput = new GuiTextInput()
+			}, _hostnameInput = new TextInput()
 			{
 				TabIndex = 2,
 
@@ -97,7 +98,7 @@ namespace Alex.Gamestates.Multiplayer
 			hostnameRow.ChildAnchor = Alignment.MiddleCenter;
 			hostnameRow.Orientation = Orientation.Horizontal;
 
-			var typeLabelRow = AddGuiRow(_serverTypeLabel = new GuiTextElement()
+			var typeLabelRow = AddGuiRow(_serverTypeLabel = new TextElement()
 			{
 				Text   = "Server Type:",
 				Margin = new Thickness(0, 0, 5, 0)
@@ -105,7 +106,7 @@ namespace Alex.Gamestates.Multiplayer
 			typeLabelRow.ChildAnchor = Alignment.MiddleCenter;
 			typeLabelRow.Orientation = Orientation.Horizontal;
 
-			AddGuiRow(_serverTypeGroup = new GuiButtonGroup()
+			AddGuiRow(_serverTypeGroup = new ButtonGroup()
 			{
 				Orientation = Orientation.Horizontal,
 				ChildAnchor = Alignment.MiddleCenter
@@ -117,9 +118,9 @@ namespace Alex.Gamestates.Multiplayer
 				if (_selectedImplementation == null)
 					_selectedImplementation = type;
 
-				GuiToggleButton element;
+				ToggleButton element;
 				_serverTypeGroup.AddChild(
-					element = new GuiToggleButton(type.DisplayName)
+					element = new ToggleButton(type.DisplayName)
 					{
 						Margin = new Thickness(5),
 						Modern = true,
@@ -139,7 +140,7 @@ namespace Alex.Gamestates.Multiplayer
 				};
 			}
 
-			var buttonRow = AddGuiRow(_saveButton = new GuiButton(OnSaveButtonPressed)
+			var buttonRow = AddGuiRow(_saveButton = new Button(OnSaveButtonPressed)
 			{
 				AccessKey = Keys.Enter,
 
@@ -148,7 +149,7 @@ namespace Alex.Gamestates.Multiplayer
 				Modern         = false,
 				Width          = 100,
 				TabIndex = 5
-			}, new GuiButton(OnCancelButtonPressed)
+			}, new Button(OnCancelButtonPressed)
 			{
 				AccessKey = Keys.Escape,
 
@@ -161,7 +162,7 @@ namespace Alex.Gamestates.Multiplayer
 			buttonRow.ChildAnchor = Alignment.MiddleCenter;
 
 
-			AddGuiElement(_errorMessage = new GuiTextElement()
+			AddRocketElement(_errorMessage = new TextElement()
 			{
 				TextColor = TextColor.Red
 			});

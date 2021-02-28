@@ -1,14 +1,13 @@
 ﻿using Alex.API.GameStates;
 using Alex.API.Graphics;
-using Alex.API.Gui;
-using Alex.API.Gui.Elements;
 using Alex.API.Utils;
 using Microsoft.Extensions.DependencyInjection;
 using NLog;
+using RocketUI;
 
 namespace Alex.Gamestates.Common
 {
-    public class GuiGameStateBase : GuiScreen, IGameState
+    public class GuiGameStateBase : Screen, IGameState
     {
 	    private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(GuiGameStateBase));
 	    
@@ -22,8 +21,8 @@ namespace Alex.Gamestates.Common
 
         public GuiGameStateBase()
         {
-	        GuiTextElement cc;
-	        AddChild(cc = new GuiTextElement()
+	        TextElement cc;
+	        AddChild(cc = new TextElement()
 	        {
 		        Anchor = Alignment.BottomLeft,
 		        Text = "github.com/kennyvv/Alex",
@@ -32,7 +31,7 @@ namespace Alex.Gamestates.Common
 		        Scale = 0.5f,
 		        Margin = new Thickness(5, 0, 0, 5)
 	        });
-	        AddChild(new GuiTextElement()
+	        AddChild(new TextElement()
 	        {
 		        Anchor = Alignment.BottomRight,
 		        Text = "Not affiliated with Mojang/Minecraft",

@@ -5,13 +5,14 @@ using Alex.API.Gui.Elements.Controls;
 using Alex.API.Gui.Graphics;
 using Alex.API.Localization;
 using Alex.Gui;
+using RocketUI;
 
 namespace Alex.Gamestates.MainMenu.Options
 {
     public class LanguageOptionsState : OptionsStateBase
     {
-        private Dictionary<CultureLanguage, GuiButton> _languageButtons = new Dictionary<CultureLanguage, GuiButton>();
-        private (GuiButton button, CultureLanguage culture) _activeBtn;
+        private Dictionary<CultureLanguage, Button> _languageButtons = new Dictionary<CultureLanguage, Button>();
+        private (Button button, CultureLanguage culture) _activeBtn;
         public LanguageOptionsState(GuiPanoramaSkyBox skyBox) : base(skyBox)
         {
             TitleTranslationKey = "options.language";
@@ -44,7 +45,7 @@ namespace Alex.Gamestates.MainMenu.Options
                 _activeBtn.button.Text = GetButtonText(_activeBtn.culture, false);
             }
 
-            if (_languageButtons.TryGetValue(culture, out GuiButton btn))
+            if (_languageButtons.TryGetValue(culture, out Button btn))
             {
                 btn.Text = GetButtonText(culture, true);
                 //Alex.GuiManager.FocusManager.FocusedElement = btn;
@@ -67,7 +68,7 @@ namespace Alex.Gamestates.MainMenu.Options
                 
                 bool active = lng.Value.Code.Equals(activeLang.Code);
                 
-                GuiButton btn = new GuiButton(GetButtonText(lng.Value, active), () =>
+                Button btn = new Button(GetButtonText(lng.Value, active), () =>
                 {
                     SetLanguage(lng.Value);
                 })

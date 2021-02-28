@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using Alex.API.Data;
-using Alex.API.Graphics.Typography;
 using Alex.API.Gui;
 using Alex.API.Gui.Elements.Controls;
 using Alex.API.Gui.Graphics;
@@ -14,11 +13,14 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using MiNET;
 using NLog;
+using RocketUI;
+using SixLabors.ImageSharp.Drawing;
+using IFont = Alex.API.Graphics.Typography.IFont;
 using MessageType = Alex.API.Data.MessageType;
 
 namespace Alex.Gui.Elements
 {
-	public class ChatComponent : GuiTextInput, IChatRecipient
+	public class ChatComponent : TextInput, IChatRecipient
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ChatComponent));
 		

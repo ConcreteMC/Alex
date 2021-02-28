@@ -1,21 +1,22 @@
 ﻿using System;
 using System.Linq;
-using Alex.API.Graphics.Typography;
 using Alex.API.Gui;
 using Alex.API.Gui.Elements;
 using Alex.API.Gui.Elements.Layout;
 using Alex.API.Utils;
 using Microsoft.Xna.Framework;
+using RocketUI;
+using FontStyle = Alex.API.Graphics.Typography.FontStyle;
 
 namespace Alex.Gui.Elements
 {
-    public class GuiDebugInfo : GuiScreen
+    public class GuiDebugInfo : Screen
     {
-        private GuiContainer _leftContainer, _rightContainer;
+        private Container _leftContainer, _rightContainer;
 
         public GuiDebugInfo() : base()
         {
-            AddChild(_leftContainer = new GuiStackContainer()
+            AddChild(_leftContainer = new StackContainer()
             {
                 Orientation = Orientation.Vertical,
 
@@ -23,7 +24,7 @@ namespace Alex.Gui.Elements
                 ChildAnchor = Alignment.TopLeft,
             });
             
-            AddChild(_rightContainer = new GuiStackContainer()
+            AddChild(_rightContainer = new StackContainer()
             {
                 Orientation = Orientation.Vertical,
 
@@ -34,7 +35,7 @@ namespace Alex.Gui.Elements
 
         public void AddDebugLeft(string text, bool hasBackground = true)
         {
-            _leftContainer.AddChild(new GuiTextElement(text, hasBackground)
+            _leftContainer.AddChild(new TextElement(text, hasBackground)
             {
                 TextColor = TextColor.White,
                 FontStyle = FontStyle.DropShadow,
@@ -46,7 +47,7 @@ namespace Alex.Gui.Elements
 
         public void AddDebugLeft(Func<string> getDebugString, TimeSpan interval = new TimeSpan(), bool hasBackground = true)
         {
-            _leftContainer.AddChild(new GuiAutoUpdatingTextElement(getDebugString, hasBackground)
+            _leftContainer.AddChild(new AutoUpdatingTextElement(getDebugString, hasBackground)
             {
                 TextColor = TextColor.White,
                 FontStyle = FontStyle.DropShadow,
@@ -59,7 +60,7 @@ namespace Alex.Gui.Elements
 
         public void AddDebugRight(string text, bool hasBackground = true)
         {
-            _rightContainer.AddChild(new GuiTextElement(text, hasBackground)
+            _rightContainer.AddChild(new TextElement(text, hasBackground)
             {
                 TextColor = TextColor.White,
                 FontStyle = FontStyle.DropShadow,
@@ -71,7 +72,7 @@ namespace Alex.Gui.Elements
 
         public void AddDebugRight(Func<string> getDebugString, TimeSpan interval = new TimeSpan(), bool hasBackground = true)
         {
-            _rightContainer.AddChild(new GuiAutoUpdatingTextElement(getDebugString, hasBackground)
+            _rightContainer.AddChild(new AutoUpdatingTextElement(getDebugString, hasBackground)
             {
                 TextColor = TextColor.White,
                 FontStyle = FontStyle.DropShadow,

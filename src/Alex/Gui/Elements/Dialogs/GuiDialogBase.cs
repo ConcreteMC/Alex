@@ -1,6 +1,6 @@
 ﻿namespace Alex.Gui.Elements.Dialogs
 {
-    class GuiDialogBase
+    class DialogBase
     {
     }
 }

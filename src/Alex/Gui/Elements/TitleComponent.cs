@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Threading;
-using Alex.API.Graphics.Typography;
 using Alex.API.Gui;
 using Alex.API.Gui.Elements;
 using Alex.API.Gui.Elements.Layout;
@@ -8,21 +7,23 @@ using Alex.API.Gui.Graphics;
 using Alex.API.Utils;
 using Alex.API.World;
 using Microsoft.Xna.Framework;
+using RocketUI;
+using FontStyle = Alex.API.Graphics.Typography.FontStyle;
 
 namespace Alex.Gui.Elements
 {
-    public class TitleComponent : GuiStackContainer, ITitleComponent, ITicked
+    public class TitleComponent : StackContainer, ITitleComponent, ITicked
     {
 	    private float _fadeValue = 1.0f;
-	    private GuiTextElement _title;
-	    private GuiTextElement _subTitle;
+	    private TextElement _title;
+	    private TextElement _subTitle;
 
 	    public TitleComponent()
 	    {
 		    Anchor = Alignment.MiddleFill;
 		    Orientation = Orientation.Vertical;
 
-		    _title = new GuiTextElement()
+		    _title = new TextElement()
 		    {
 			    //Anchor = Alignment.TopCenter,
 			    TextColor = TextColor.White,
@@ -31,7 +32,7 @@ namespace Alex.Gui.Elements
 			    Text = ""
 		    };
 
-			_subTitle = new GuiTextElement()
+			_subTitle = new TextElement()
 			{
 				//Anchor = Alignment.MiddleCenter,
 				TextColor = TextColor.White,

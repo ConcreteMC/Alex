@@ -12,6 +12,7 @@ using Alex.Gamestates.MainMenu.Profile;
 using Alex.Gui;
 using Microsoft.Xna.Framework;
 using NLog;
+using RocketUI;
 
 namespace Alex.Gamestates.MainMenu
 {
@@ -23,7 +24,7 @@ namespace Alex.Gamestates.MainMenu
         private IPlayerProfileService ProfileService { get; } 
         private Alex Alex { get; }
 
-        private GuiButton _addBtn, _editBtn, _deleteBtn, _cancelBtn, _selectBtn;
+        private Button _addBtn, _editBtn, _deleteBtn, _cancelBtn, _selectBtn;
         public ProfileSelectionState(GuiPanoramaSkyBox skyBox, Alex alex)
         {
             Alex = alex;
@@ -39,15 +40,15 @@ namespace Alex.Gamestates.MainMenu
             
             Footer.AddRow(row =>
             {
-                row.AddChild(_addBtn = new GuiButton("Add", AddClicked)
+                row.AddChild(_addBtn = new Button("Add", AddClicked)
                 {
                     
                 });
-                row.AddChild(_editBtn = new GuiButton("Edit", EditClicked)
+                row.AddChild(_editBtn = new Button("Edit", EditClicked)
                 {
                     Enabled = false
                 });
-                row.AddChild(_deleteBtn = new GuiButton("Delete", DeleteClicked)
+                row.AddChild(_deleteBtn = new Button("Delete", DeleteClicked)
                 {
                     Enabled = false
                 });
@@ -56,12 +57,12 @@ namespace Alex.Gamestates.MainMenu
             Footer.AddRow(row =>
             {
              //   row.ChildAnchor = Alignment.CenterX;
-             row.AddChild(_selectBtn = new GuiButton("Select Profile", OnProfileSelect)
+             row.AddChild(_selectBtn = new Button("Select Profile", OnProfileSelect)
              {
                  Enabled = false
              });
              
-                row.AddChild(_cancelBtn = new GuiButton("Cancel", OnCancelButtonPressed)
+                row.AddChild(_cancelBtn = new Button("Cancel", OnCancelButtonPressed)
                 {
                 });
                 

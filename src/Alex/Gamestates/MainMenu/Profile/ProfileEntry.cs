@@ -11,11 +11,12 @@ using Alex.Entities;
 using Alex.Gui.Elements;
 using Alex.Gui.Elements.Context3D;
 using Microsoft.Xna.Framework;
+using RocketUI;
 using Color = Microsoft.Xna.Framework.Color;
 
 namespace Alex.Gamestates.MainMenu.Profile
 {
-    public class ProfileEntry : GuiSelectionListItem
+    public class ProfileEntry : SelectionListItem
     {
         public GuiEntityModelView ModelView { get; }
         public PlayerProfile Profile { get; }
@@ -32,7 +33,7 @@ namespace Alex.Gamestates.MainMenu.Profile
             
            // AutoSizeMode = AutoSizeMode.GrowOnly;
             
-            AddChild(new GuiTextElement()
+            AddChild(new TextElement()
             {
                 Text = profile.Username,
                 Margin = Thickness.Zero,
@@ -60,7 +61,7 @@ namespace Alex.Gamestates.MainMenu.Profile
             
             AddChild(ModelView);
 
-            AddChild(new GuiTextElement()
+            AddChild(new TextElement()
             {
                 Text = profile.Username, //PROFILE TYPE!!!
                 Margin = Thickness.Zero,

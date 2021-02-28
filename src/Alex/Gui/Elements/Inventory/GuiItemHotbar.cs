@@ -1,19 +1,20 @@
 ﻿using System.Linq;
-using Alex.API.Graphics.Typography;
 using Alex.API.Gui;
 using Alex.API.Gui.Elements;
 using Alex.API.Gui.Elements.Layout;
-using Alex.API.Gui.Graphics;
 using Alex.API.Utils;
 using Alex.Items;
 using Alex.Utils;
 using Alex.Utils.Inventories;
 using Microsoft.Xna.Framework;
 using NLog;
+using RocketUI;
+using FontStyle = Alex.API.Graphics.Typography.FontStyle;
+using GuiTextures = Alex.API.Gui.Graphics.GuiTextures;
 
 namespace Alex.Gui.Elements.Inventory
 {
-    public class GuiItemHotbar : GuiContainer
+    public class GuiItemHotbar : Container
     {
 	    private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(GuiItemHotbar));
 
@@ -73,8 +74,8 @@ namespace Alex.Gui.Elements.Inventory
 	        }
         }
 
-        private GuiContainer _hotbar;
-	    private GuiFadingTextElement _itemNameTextElement;
+        private Container _hotbar;
+	    private FadingTextElement _itemNameTextElement;
 	    private GuiInventoryItem[] _hotbarItems;
         public GuiItemHotbar(Utils.Inventories.Inventory inventory)
         {
@@ -111,7 +112,7 @@ namespace Alex.Gui.Elements.Inventory
 
             AutoSizeMode = AutoSizeMode.None;
 
-            _itemNameTextElement = new GuiFadingTextElement()
+            _itemNameTextElement = new FadingTextElement()
 	        {
 		        Anchor = Alignment.TopCenter,
 		        TextColor = TextColor.White,

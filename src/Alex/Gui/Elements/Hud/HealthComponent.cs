@@ -3,9 +3,10 @@ using Alex.API.Gui;
 using Alex.API.Gui.Elements;
 using Alex.API.Gui.Elements.Controls;
 using Alex.API.Gui.Elements.Layout;
-using Alex.API.Gui.Graphics;
 using Alex.Entities;
 using Microsoft.Xna.Framework;
+using RocketUI;
+using GuiTextures = Alex.API.Gui.Graphics.GuiTextures;
 
 namespace Alex.Gui.Elements.Hud
 {
@@ -16,7 +17,7 @@ namespace Alex.Gui.Elements.Hud
         None
     }
     
-    public class HealthComponent : GuiContainer
+    public class HealthComponent : Container
     {
         private Player Player { get; }
         private HealthBarHeart[] Hearts { get; }
@@ -71,7 +72,7 @@ namespace Alex.Gui.Elements.Hud
         
         public class HealthBarHeart : GuiControl
         {
-            private GuiTextureElement Texture { get; set; }
+            private TextureElement Texture { get; set; }
 
             //private 
             public HealthBarHeart()
@@ -79,7 +80,7 @@ namespace Alex.Gui.Elements.Hud
                 Width = 9;
                 Height = 9;
             
-                AddChild(Texture = new GuiTextureElement()
+                AddChild(Texture = new TextureElement()
                 {
                     Anchor = Alignment.TopLeft,
 

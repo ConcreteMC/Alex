@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Alex.API.Gui;
-using Alex.API.Gui.Elements;
+using RocketUI;
 using Alex.API.Input;
 using Alex.API.Input.Listeners;
 using Alex.Gui;
@@ -53,7 +53,7 @@ namespace Alex.Gamestates.MainMenu.Options
 
                     KeybindElement textInput = new KeybindElement(value);
 
-                    var row = AddGuiRow(new GuiTextElement()
+                    var row = AddGuiRow(new TextElement()
                     {
                         Text = ic.ToString().SplitPascalCase()
                     }, textInput);

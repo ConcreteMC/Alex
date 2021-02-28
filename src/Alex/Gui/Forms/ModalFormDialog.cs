@@ -1,4 +1,3 @@
-using Alex.API.Graphics.Typography;
 using Alex.API.Gui;
 using Alex.API.Gui.Elements;
 using Alex.API.Gui.Elements.Controls;
@@ -9,14 +8,16 @@ using Alex.Gamestates.Multiplayer;
 using Microsoft.Xna.Framework;
 using MiNET.Net;
 using MiNET.UI;
+using RocketUI;
+using FontStyle = Alex.API.Graphics.Typography.FontStyle;
 
 namespace Alex.Gui.Forms
 {
 	public class ModalFormDialog : FormBase
 	{
-		private GuiStackContainer      Header { get; }
-		public  GuiStackContainer      Body   { get; }
-		public  GuiMultiStackContainer Footer { get; }
+		private StackContainer      Header { get; }
+		public  StackContainer      Body   { get; }
+		public  MultiStackContainer Footer { get; }
 		
 		/// <inheritdoc />
 		public ModalFormDialog(uint formId, BedrockFormManager parent, ModalForm form, InputManager inputManager) : base(
@@ -36,7 +37,7 @@ namespace Alex.Gui.Forms
 			
 			Container.Anchor = Alignment.MiddleCenter;
 
-			Container.AddChild(Footer = new GuiMultiStackContainer(row =>
+			Container.AddChild(Footer = new MultiStackContainer(row =>
 			{
 				row.Anchor = Alignment.BottomFill;
 				//row.Orientation = Orientation.Horizontal;
@@ -56,7 +57,7 @@ namespace Alex.Gui.Forms
 			
 			Footer.AddRow(row =>
 			{
-				row.AddChild(new GuiButton(form.Button1, () =>
+				row.AddChild(new Button(form.Button1, () =>
 				{
 					var packet = McpeModalFormResponse.CreateObject();
 					packet.formId = formId;
@@ -70,7 +71,7 @@ namespace Alex.Gui.Forms
 					Enabled = true,
 					
 				});
-				row.AddChild(new GuiButton(form.Button2, () =>
+				row.AddChild(new Button(form.Button2, () =>
 				{
 					var packet = McpeModalFormResponse.CreateObject();
 					packet.formId = formId;
@@ -85,7 +86,7 @@ namespace Alex.Gui.Forms
 				});
 			});
 			
-			Container.AddChild(Body = new GuiStackContainer()
+			Container.AddChild(Body = new StackContainer()
 			{
 				//Margin = new Thickness(0, Header.Height, 0, Footer.Height),
 				//AutoSizeMode = AutoSizeMode.None,
@@ -111,8 +112,8 @@ namespace Alex.Gui.Forms
 				{
 					//newString += "\n";
 					
-							Body.AddChild(new GuiTextElement(newString));
-							/*row.AddChild(new GuiTextElement(form.Content)
+							Body.AddChild(new TextElement(newString));
+							/*row.AddChild(new TextElement(form.Content)
 							{
 								Wrap = true,
 								MaxWidth = 320
@@ -127,9 +128,9 @@ namespace Alex.Gui.Forms
 			}
 			
 			if (newString.Length > 0)
-				Body.AddChild(new GuiTextElement(newString));
+				Body.AddChild(new TextElement(newString));
 
-			Container.AddChild(Header = new GuiStackContainer()
+			Container.AddChild(Header = new StackContainer()
 			{
 				Anchor = Alignment.TopFill,
 				ChildAnchor = Alignment.BottomCenter,
@@ -138,7 +139,7 @@ namespace Alex.Gui.Forms
 				Background = Color.Black * 0.5f
 			});
 			
-			Header.AddChild(new GuiTextElement()
+			Header.AddChild(new TextElement()
 			{
 				Text      = FixContrast(form.Title),
 				TextColor = TextColor.White,

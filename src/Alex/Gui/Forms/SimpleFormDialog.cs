@@ -1,5 +1,4 @@
 using System;
-using Alex.API.Graphics.Typography;
 using Alex.API.Gui;
 using Alex.API.Gui.Elements;
 using Alex.API.Gui.Elements.Controls;
@@ -9,18 +8,20 @@ using Alex.API.Utils;
 using Microsoft.Xna.Framework;
 using MiNET.Net;
 using MiNET.UI;
+using RocketUI;
+using FontStyle = Alex.API.Graphics.Typography.FontStyle;
 
 namespace Alex.Gui.Forms
 {
     public class SimpleFormDialog : FormBase
     {
-        private GuiStackContainer      Header { get; }
-        //public  GuiMultiStackContainer Footer { get; }
+        private StackContainer      Header { get; }
+        //public  MultiStackContainer Footer { get; }
         
-        private GuiStackMenu           StackMenu { get; }
+        private StackMenu           StackMenu { get; }
         public SimpleFormDialog(uint formId, BedrockFormManager parent, SimpleForm form, InputManager inputManager) : base(formId, parent, inputManager)
         {
-            StackMenu = new GuiStackMenu();
+            StackMenu = new StackMenu();
             StackMenu.Anchor = Alignment.Fill;
             StackMenu.ChildAnchor = Alignment.MiddleCenter;
             StackMenu.Background = Color.Black * 0.35f;
@@ -78,14 +79,14 @@ namespace Alex.Gui.Forms
 			
             Container.Anchor = Alignment.MiddleCenter;
 
-            var bodyWrapper = new GuiContainer();
+            var bodyWrapper = new Container();
             bodyWrapper.Anchor = Alignment.Fill;
             bodyWrapper.Padding = new Thickness(5, 0);
             bodyWrapper.AddChild(StackMenu);
             
             Container.AddChild(bodyWrapper);
             
-            Container.AddChild(Header = new GuiStackContainer()
+            Container.AddChild(Header = new StackContainer()
             {
                 Anchor = Alignment.TopFill,
                 ChildAnchor = Alignment.BottomCenter,
@@ -94,7 +95,7 @@ namespace Alex.Gui.Forms
                 Background = Color.Black * 0.5f
             });
             
-            Header.AddChild(new GuiTextElement()
+            Header.AddChild(new TextElement()
             {
                 Text      = FixContrast(form.Title),
                 TextColor = TextColor.White,

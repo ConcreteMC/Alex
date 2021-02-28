@@ -3,7 +3,6 @@ using System.Linq;
 using Alex.API.Graphics.Typography;
 using Alex.API.Gui;
 using Alex.API.Gui.Elements;
-using Alex.API.Gui.Graphics;
 using Alex.API.Input;
 using Alex.API.Utils;
 using Alex.API.Utils.Vectors;
@@ -18,7 +17,9 @@ using Alex.Utils.Inventories;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using NLog;
+using RocketUI;
 using GuiCursorEventArgs = Alex.API.Gui.Events.GuiCursorEventArgs;
+using GuiTextures = Alex.API.Gui.Graphics.GuiTextures;
 
 namespace Alex.Gui.Dialogs.Containers
 {
@@ -31,7 +32,7 @@ namespace Alex.Gui.Dialogs.Containers
 
         private GuiEntityModelView _playerEntityModelView;
 
-        private GuiAutoUpdatingTextElement _debug;
+        private AutoUpdatingTextElement _debug;
 
         private const int ItemSize = 16;
         
