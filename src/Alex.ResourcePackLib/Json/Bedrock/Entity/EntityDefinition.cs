@@ -3,13 +3,7 @@ using Newtonsoft.Json;
 
 namespace Alex.ResourcePackLib.Json.Bedrock.Entity
 {
-    public class EntityDescriptionWrapper
-    {
-        [JsonProperty("description")]
-        public EntityDescription Description { get; set; }
-    }
-
-    public class EntityDescription
+	public class EntityDescription
     {
         [JsonProperty("identifier")]
         public string Identifier { get; set; }

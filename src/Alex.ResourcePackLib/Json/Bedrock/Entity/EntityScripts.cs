@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using Alex.MoLang.Parser;
+using Alex.MoLang.Parser.Expressions;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace Alex.ResourcePackLib.Json.Bedrock.Entity
 {
@@ -29,18 +31,30 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Entity
 		public List<IExpression> ShouldUpdateEffectsOffscreen { get; set; } = null;
 	}
 	
-	public struct AnnoyingMolangElement
+	public class AnnoyingMolangElement
 	{
 		public Dictionary<string, List<IExpression>> Expressions;
 		public string                                StringValue;
-		
-		public static implicit operator AnnoyingMolangElement(Dictionary<string, List<IExpression>> dictionary) => new AnnoyingMolangElement { Expressions = dictionary };
-		public static implicit operator AnnoyingMolangElement(string stringValue) => new AnnoyingMolangElement { StringValue = stringValue };
+
+		public AnnoyingMolangElement(Dictionary<string, List<IExpression>> expressions)
+		{
+			Expressions = expressions;
+			StringValue = null;
+		}
+
+		public AnnoyingMolangElement(string stringValue)
+		{
+			StringValue = stringValue;
+			Expressions = null;
+		}
+
+		//	public static implicit operator AnnoyingMolangElement(Dictionary<string, List<IExpression>> dictionary) => new AnnoyingMolangElement { Expressions = dictionary };
+	//	public static implicit operator AnnoyingMolangElement(string stringValue) => new AnnoyingMolangElement { StringValue = stringValue };
 	}
 
 	internal class AnimateElementConverter : JsonConverter
 	{
-		public override bool CanConvert(Type t) => t == typeof(AnnoyingMolangElement) || t == typeof(AnnoyingMolangElement?);
+		public override bool CanConvert(Type t) => t == typeof(AnnoyingMolangElement);
 
 		public override object ReadJson(JsonReader reader, Type t, object existingValue, JsonSerializer serializer)
 		{
@@ -50,15 +64,56 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Entity
 				case JsonToken.Date:
 					var stringValue = serializer.Deserialize<string>(reader);
 
-					return new AnnoyingMolangElement {StringValue = stringValue};
+					return new AnnoyingMolangElement(stringValue);
 
 				case JsonToken.StartObject:
 					var objectValue = serializer.Deserialize<Dictionary<string, List<IExpression>>>(reader);
 
-					return new AnnoyingMolangElement {Expressions = objectValue};
+					return new AnnoyingMolangElement(objectValue);
 			}
 
 			throw new Exception("Cannot unmarshal type AnimateElement");
+			JToken token = JToken.Load(reader);
+			
+			switch (token.Type)
+			{
+				case JTokenType.String:
+				case JTokenType.Date:
+					var stringValue = token.Value<string>();
+
+					return new AnnoyingMolangElement(stringValue);
+
+				case JTokenType.Object:
+					Dictionary<string, List<IExpression>> props = new Dictionary<string, List<IExpression>>();
+					foreach (var property in (JObject) token)
+					{
+						var expressions = property.Value.ToObject<List<IExpression>>(serializer);
+
+						if (expressions == null)
+						{
+							var a = "b";
+						}
+						props.Add(property.Key, expressions);
+						
+						/*if (property.Value.Type == JTokenType.String)
+						{
+							props.Add(property.Key, new List<IExpression>()
+							{
+								property.Value.ToObject<IExpression>(serializer)
+							});
+						}
+						else if (property.Value.Type == JTokenType.Array)
+						{
+							props.Add(property.Key, property.Value.ToObject<List<IExpression>>(serializer));
+						}*/
+					}
+
+					return new AnnoyingMolangElement(props);
+					break;
+					//var objectValue = serializer.Deserialize<Dictionary<string, List<IExpression>>>(reader);
+			}
+
+			throw new Exception($"Cannot unmarshal type MolangElement (Type={token.Type})");
 		}
 
 		public override void WriteJson(JsonWriter writer, object untypedValue, JsonSerializer serializer)
