@@ -64,7 +64,7 @@ namespace Alex.MoLang.Runtime.Struct
 			if (Map.TryGetValue(key, out var v))
 				return v;
 
-			return null;
+			return DoubleValue.Zero;
 			return Map[key];
 		}
 

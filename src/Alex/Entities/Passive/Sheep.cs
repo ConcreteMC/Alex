@@ -1,7 +1,6 @@
 using Alex.API.Utils;
 using Alex.Networking.Java.Packets.Play;
 using Alex.Worlds;
-using MiNET.Entities;
 using NLog;
 
 namespace Alex.Entities.Passive
@@ -43,7 +42,7 @@ namespace Alex.Entities.Passive
 			}
 		}
 
-		public Sheep(World level) : base((EntityType)13, level)
+		public Sheep(World level) : base(level)
 		{
 			Height = 1.3;
 			Width = 0.9;
@@ -73,7 +72,7 @@ namespace Alex.Entities.Passive
 
 		public void SetSheared(bool value)
 		{
-			TryUpdateGeometry("minecraft:sheep", value ? "sheared" : "default");
+			//TryUpdateGeometry("minecraft:sheep", value ? "sheared" : "default");
 			IsSheared = value;
 		}
 	}

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Alex.MoLang.Runtime.Exceptions;
 using Alex.MoLang.Runtime.Value;
 
 namespace Alex.MoLang.Runtime.Struct
@@ -30,12 +31,19 @@ namespace Alex.MoLang.Runtime.Struct
 		/// <inheritdoc />
 		public IMoValue Get(string key, MoParams parameters)
 		{
-			if (_funcs.TryGetValue(key, out var func))
+			try
 			{
-				return MoValue.FromObject(func(parameters));
-			}
+				if (_funcs.TryGetValue(key, out var func))
+				{
+					return MoValue.FromObject(func(parameters));
+				}
 
-			return null;
+				return DoubleValue.Zero;
+			}
+			catch (Exception exception)
+			{
+				throw new MoLangRuntimeException($"Query request failed for requested key \'{key}\'", exception);
+			}
 		}
 
 		/// <inheritdoc />

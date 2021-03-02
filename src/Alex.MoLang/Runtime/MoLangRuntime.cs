@@ -1,7 +1,9 @@
+using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using Alex.MoLang.Parser;
 using Alex.MoLang.Parser.Visitors;
+using Alex.MoLang.Runtime.Exceptions;
 using Alex.MoLang.Runtime.Struct;
 using Alex.MoLang.Runtime.Value;
 
@@ -31,25 +33,38 @@ namespace Alex.MoLang.Runtime
 		}
 
 		public IMoValue Execute(List<IExpression> expressions, Dictionary<string, IMoValue> context) {
-			ExprTraverser traverser = new ExprTraverser();
-			traverser.Visitors.Add(new ExprConnectingVisitor());
-			traverser.Traverse(expressions);
+			//try
+			//{
+				ExprTraverser traverser = new ExprTraverser();
+				traverser.Visitors.Add(new ExprConnectingVisitor());
+				traverser.Traverse(expressions);
 
-			Environment.Structs["context"] = new ContextStruct(context);// .put("context", new ContextStruct(context));
+				Environment.Structs["context"] =
+					new ContextStruct(context); // .put("context", new ContextStruct(context));
 
-			IMoValue result = new DoubleValue(0.0);
-			MoScope scope  = new MoScope();
-			foreach (IExpression expression in new List<IExpression>(expressions)) {
-				if (scope.ReturnValue != null) {
-					break;
+				IMoValue result = new DoubleValue(0.0);
+				MoScope scope = new MoScope();
+
+				foreach (IExpression expression in new List<IExpression>(expressions))
+				{
+					if (scope.ReturnValue != null)
+					{
+						break;
+					}
+
+					result = expression.Evaluate(scope, Environment);
 				}
-				result = expression.Evaluate(scope, Environment);
-			}
 
-			Environment.Structs["temp"].Clear();;// .getStructs().get("temp").clear();
-			Environment.Structs.TryRemove("context", out _);//["context"].getStructs().remove("context");
+				Environment.Structs["temp"].Clear();
+				; // .getStructs().get("temp").clear();
+				Environment.Structs.TryRemove("context", out _); //["context"].getStructs().remove("context");
 
-			return scope.ReturnValue != null ? scope.ReturnValue : result;
+				return scope.ReturnValue != null ? scope.ReturnValue : result;
+		//	}
+			//catch (Exception ex)
+			//{
+			//	throw new MoLangRuntimeException("An unexpected error occured.", ex);
+			//}
 		}
 	}
 }

@@ -358,7 +358,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		{
 			if (!Client.World.EntityManager.TryGet(message.uuid, out var entity))
 			{
-				RemotePlayer player = new RemotePlayer(message.username, Client.World, Client);
+				RemotePlayer player = new RemotePlayer(Client.World);
+				player.NameTag = message.username;
 				player.EntityId = message.runtimeEntityId;
 				player.UUID = message.uuid;
 
@@ -431,8 +432,9 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					}
 					else
 					{
-						m = new RemotePlayer(r.DisplayName, Client.World, Client);
+						m = new RemotePlayer(Client.World);
 						m.EntityId = r.EntityId;
+						m.NameTag = r.DisplayName;
 					}
 					
 					m.UUID = r.ClientUuid;
@@ -478,7 +480,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 				if (entity == null)
 				{
-					entity = new Entity(null, Client);
+					entity = new Entity(null);
 				}
 
 				if (renderer == null)

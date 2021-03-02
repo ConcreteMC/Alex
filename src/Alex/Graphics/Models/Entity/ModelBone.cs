@@ -17,7 +17,13 @@ namespace Alex.Graphics.Models.Entity
 		public class ModelBone : IAttached, IDisposable
 		{
 			internal ThreadSafeList<IAttached> Children { get; set; } = new ThreadSafeList<IAttached>();
-			
+
+			public Vector3 Position
+			{
+				get => _position;
+				set => _position = value;
+			}
+
 			private Vector3 _rotation = Vector3.Zero;
 
 			public Vector3 Rotation
@@ -107,11 +113,13 @@ namespace Alex.Graphics.Models.Entity
 						matrix = MCMatrix.CreateTranslation(-pivot) 
 						         * MCMatrix.CreateRotationDegrees(Rotation)
 						         * MCMatrix.CreateTranslation(pivot)
+						         * MCMatrix.CreateTranslation(_position)
 						         * characterMatrix;
 					}
 					else
 					{
 						matrix = MCMatrix.CreateRotationDegrees(Rotation)
+						         * MCMatrix.CreateTranslation(_position)
 						         * characterMatrix;
 					}
 
@@ -168,6 +176,8 @@ namespace Alex.Graphics.Models.Entity
 			}
 			
 			private bool _disposed = false;
+			private Vector3 _position;
+
 			public void Dispose()
 			{
 				_disposed = true;

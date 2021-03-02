@@ -1,6 +1,5 @@
 using Alex.Networking.Java.Packets.Play;
 using Alex.Worlds;
-using MiNET.Entities;
 
 namespace Alex.Entities.Passive
 {
@@ -27,7 +26,7 @@ namespace Alex.Entities.Passive
 			}
 		}
 
-		public Pig(World level) : base((EntityType)12, level)
+		public Pig(World level) : base(level)
 		{
 			Height = 0.9;
 			Width = 0.9;

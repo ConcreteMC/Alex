@@ -12,8 +12,8 @@ namespace Alex.Entities
 		public bool IsLeftHanded { get; set; } = false;
 		
 		/// <inheritdoc />
-		public LivingEntity(int entityTypeId, World level, NetworkProvider network) : base(
-			level, network)
+		public LivingEntity(World level) : base(
+			level)
 		{
 			
 		}

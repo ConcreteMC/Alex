@@ -36,7 +36,7 @@ namespace Alex.Entities.Passive
 					stringType = $"{stringType}_tame";
 				}
 
-				TryUpdateTexture("minecraft:cat", stringType);
+				//TryUpdateTexture("minecraft:cat", stringType);
 			}
 		}
 		/// <inheritdoc />

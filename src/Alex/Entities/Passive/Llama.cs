@@ -35,7 +35,7 @@ namespace Alex.Entities.Passive
 					return;
 			}
 
-			TryUpdateTexture("minecraft::llama", texture);
+			//TryUpdateTexture("minecraft:llama", texture);
 		}
 		
 		/// <inheritdoc />

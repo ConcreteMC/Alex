@@ -40,8 +40,6 @@ namespace Alex.Entities
 		public  GameMode Gamemode { get; private set; }
 
 		private EntityModel _model;
-
-		public string Name { get; }
 		public string GeometryName { get; set; }
 		
 		public PlayerSkinFlags SkinFlags { get; }
@@ -50,7 +48,7 @@ namespace Alex.Entities
 		public int Latency { get; set; } = 0;
 
 		//private PooledTexture2D _texture;
-		public RemotePlayer(string name, World level, NetworkProvider network, string geometry = "geometry.humanoid.customSlim") : base(63, level, network)
+		public RemotePlayer(World level, string geometry = "geometry.humanoid.customSlim") : base(level)
 		{
 		//	_texture = skinTexture ?? _alex;
 			
@@ -59,7 +57,7 @@ namespace Alex.Entities
 				Value = 0xff
 			};
 			
-			Name = name;
+			//Name = name;
 
 			Width = 0.6;
 			//Length = 0.6;
@@ -67,7 +65,7 @@ namespace Alex.Entities
 
 			IsSpawned = false;
 
-			NameTag = name;
+			//NameTag = name;
 
 			HideNameTag = false;
 			IsAlwaysShowName = true;
@@ -88,8 +86,14 @@ namespace Alex.Entities
 			//	MovementSpeed = 0.1f;
 			//		FlyingSpeed = 0.4f;
 
-			IsAffectedByGravity = false;
-			HasPhysics = false;
+			IsAffectedByGravity = true;
+			HasPhysics = true;
+
+			if (Alex.Instance.Resources.BedrockResourcePack.EntityDefinitions.TryGetValue(
+				"minecraft:player", out var description))
+			{
+				AnimationController.UpdateEntityDefinition(description);
+			}
 		}
 
 		/// <inheritdoc />
@@ -213,7 +217,7 @@ namespace Alex.Entities
 						{
 							if (string.IsNullOrWhiteSpace(skin.ResourcePatch) || skin.ResourcePatch == "null")
 							{
-								Log.Debug($"Resourcepatch null for player {Name}");
+								Log.Debug($"Resourcepatch null for player {NameTag}");
 							}
 							else
 							{
@@ -245,7 +249,7 @@ namespace Alex.Entities
 										if (!processedModels.TryGetValue(resourcePatch.Geometry.Default, out model))
 										{
 											Log.Debug(
-												$"Invalid geometry: {resourcePatch.Geometry.Default} for player {Name}");
+												$"Invalid geometry: {resourcePatch.Geometry.Default} for player {NameTag}");
 										}
 										else
 										{
@@ -255,7 +259,7 @@ namespace Alex.Entities
 									}
 									else
 									{
-										Log.Debug($"Resourcepatch geometry was null for player {Name}");
+										Log.Debug($"Resourcepatch geometry was null for player {NameTag}");
 									}
 								}
 							}
@@ -263,7 +267,7 @@ namespace Alex.Entities
 						catch (Exception ex)
 						{
 							string name = "N/A";
-							Log.Debug(ex, $"Could not create geometry ({name}): {ex.ToString()} for player {Name}");
+							Log.Debug(ex, $"Could not create geometry ({name}): {ex.ToString()} for player {NameTag}");
 						}
 					}
 					else
@@ -281,13 +285,13 @@ namespace Alex.Entities
 						(EntityModel) new HumanoidModel();*/ // new Models.HumanoidCustomGeometryHumanoidModel();
 				}
 
-				if (model != null && ValidateModel(model, Name))
+				if (model != null)
 				{
 					Image<Rgba32> skinBitmap = null;
 
 					if (!skin.TryGetBitmap(model, out skinBitmap))
 					{
-						Log.Warn($"No custom skin data for player {Name}");
+						Log.Warn($"No custom skin data for player {NameTag}");
 
 						if (skin.Slim)
 						{
@@ -349,9 +353,7 @@ namespace Alex.Entities
 					}
 
 					GeometryName = model.Description.Identifier;
-
-					var modelRenderer = new EntityModelRenderer(
-						model, TextureUtils.BitmapToTexture2D(Alex.Instance.GraphicsDevice, skinBitmap));
+					var modelRenderer = new EntityModelRenderer(model, TextureUtils.BitmapToTexture2D(Alex.Instance.GraphicsDevice, skinBitmap));
 
 					if (modelRenderer.Valid)
 					{
@@ -360,31 +362,18 @@ namespace Alex.Entities
 					else
 					{
 						modelRenderer.Dispose();
-						Log.Debug($"Invalid model: for player {Name} (Disposing)");
+						Log.Debug($"Invalid model: for player {NameTag} (Disposing)");
 					}
 				}
 				else
 				{
-					Log.Debug($"Invalid model for player {Name}");
+					Log.Debug($"Invalid model for player {NameTag}");
 				}
 			}
 			catch (Exception ex)
 			{
 				Log.Warn(ex, $"Error while handling player skin.");
 			}
-		}
-		
-		private bool ValidateModel(EntityModel model, string playername)
-		{
-			bool valid = true;
-
-			if (model.Bones == null || model.Bones.Length == 0)
-			{
-				valid = false;
-				Log.Debug($"Missing bones for player model for player: {playername}");
-			}
-
-			return valid;
 		}
 
 		/// <inheritdoc />

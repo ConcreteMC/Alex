@@ -1,12 +1,11 @@
 using Alex.Networking.Java.Packets.Play;
 using Alex.Worlds;
-using MiNET.Entities;
 
 namespace Alex.Entities.Passive
 {
 	public class Villager : PassiveMob
 	{
-		public Villager(World level) : base((EntityType)15, level)
+		public Villager(World level) : base(level)
 		{
 			Height = 1.95;
 			Width = 0.6;
@@ -20,7 +19,7 @@ namespace Alex.Entities.Passive
 			if (entry.Index == 17 && entry is MetadataVillagerData villagerData)
 			{
 				string texture = villagerData.Profession.ToString().ToLower();
-				TryUpdateTexture("minecraft:villager", texture);
+				//TryUpdateTexture("minecraft:villager", texture);
 			}
 		}
 	}

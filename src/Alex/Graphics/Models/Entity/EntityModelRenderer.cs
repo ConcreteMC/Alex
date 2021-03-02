@@ -5,6 +5,8 @@ using Alex.Api;
 using Alex.API.Graphics;
 using Alex.API.Utils;
 using Alex.Graphics.Models.Items;
+using Alex.ResourcePackLib;
+using Alex.ResourcePackLib.Json.Bedrock.Entity;
 using Alex.ResourcePackLib.Json.Models.Entities;
 using Alex.Utils;
 using Microsoft.Xna.Framework;
@@ -45,7 +47,8 @@ namespace Alex.Graphics.Models.Entity
 		public  bool               Valid        { get; private set; }
 
 		public EntityModel Model    { get; }
-		public EntityModelRenderer(EntityModel model, PooledTexture2D texture)
+		public EntityModelRenderer(
+			EntityModel model, PooledTexture2D texture)
 		{
 			Model = model;
 			//	Model = model;
@@ -294,6 +297,16 @@ namespace Alex.Graphics.Models.Entity
 				return false;
 			}
 
+			foreach (var b in Bones)
+			{
+				if (b.Key.Equals(name, StringComparison.InvariantCultureIgnoreCase))
+				{
+					bone = b.Value;
+
+					return true;
+				}
+			}
+			
 			return Bones.TryGetValue(name, out bone);
 		}
 		

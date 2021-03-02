@@ -8,7 +8,7 @@ namespace Alex.Entities
 	public class TameableMob : PassiveMob
 	{
 		/// <inheritdoc />
-		protected TameableMob(EntityType type, World level) : base(type, level)
+		protected TameableMob(EntityType type, World level) : base(level)
 		{
 			
 		}

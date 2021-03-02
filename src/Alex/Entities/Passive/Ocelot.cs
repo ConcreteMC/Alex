@@ -1,12 +1,11 @@
 using Alex.Networking.Java.Packets.Play;
 using Alex.Worlds;
-using MiNET.Entities;
 
 namespace Alex.Entities.Passive
 {
 	public class Ocelot : PassiveMob
 	{
-		public Ocelot(World level) : base((EntityType)22, level)
+		public Ocelot(World level) : base(level)
 		{
 			Height = 0.7;
 			Width = 0.6;

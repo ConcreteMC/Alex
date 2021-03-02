@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using Alex.Api;
 using Alex.API;
@@ -134,7 +135,7 @@ namespace Alex.Entities
 		public bool IsOutOfWater => !IsInWater;
 		public bool Invulnerable { get; set; } = false;
 
-		public long Age { get; set; }
+		//public long Age { get; set; }
 
 		private float _scale = 1f;
 
@@ -188,8 +189,7 @@ namespace Alex.Entities
 				}
 			}
 		}
-
-		public NetworkProvider Network { get; set; }
+		
 		public Inventory Inventory { get; protected set; }
 
 		public IItemRenderer ItemRenderer
@@ -271,11 +271,14 @@ namespace Alex.Entities
 			//set => _entityProperties = value;
 		}
 		
-		public Entity(World level, NetworkProvider network)
+		public AnimationController AnimationController { get; }
+		public TimeSpan LifeTime => _lifeTime.Elapsed;
+		private Stopwatch _lifeTime;
+		public Entity(World level)
 		{
-			Network = network;
-
-            EntityId = -1;
+			_lifeTime = Stopwatch.StartNew();
+			
+			EntityId = -1;
             Level = level;
             KnownPosition = new PlayerLocation();
             RenderLocation = new PlayerLocation();
@@ -284,7 +287,7 @@ namespace Alex.Entities
             //	HealthManager = new HealthManager(this);
 
             HideNameTag = false;
-			ServerEntity = true;
+			//ServerEntity = true;
 			IsAffectedByGravity = true;
 			
 			HealthManager = new HealthManager(this);
@@ -296,6 +299,7 @@ namespace Alex.Entities
 			AddOrUpdateProperty(new MovementSpeedProperty(this));
 			
 			Movement = new EntityMovement(this);
+			AnimationController = new AnimationController(this);
 		}
 
 		public double FlyingSpeed
@@ -684,22 +688,24 @@ namespace Alex.Entities
 				_head.Rotation = new Vector3(pitch, headYaw, 0f);
 			}
 			
-			CalculateLegMovement(args);
+		//	CalculateLegMovement(args);
 			
+			AnimationController?.Update(args.GameTime);
+		
 			renderer.Update(args, RenderLocation);
 
 			//if (!ShowItemInHand || _skipRendering || ItemRenderer == null) return;
 		}
 
-		private long _hitAnimationEnd = 0;
-		private bool _isHit = false;
+		//private long _hitAnimationEnd = 0;
+	//	private bool _isHit = false;
 		public void EntityHurt()
 		{
 			if (ModelRenderer == null)
 				return;
 
-			_isHit = true;
-			_hitAnimationEnd = Age + 5;
+			//_isHit = true;
+		//	_hitAnimationEnd = Age + 5;
 			ModelRenderer.EntityColor = Color.Red.ToVector3();
 		}
 		
@@ -708,10 +714,10 @@ namespace Alex.Entities
 		private  float   _armRotation        = 0f;
 		private  float   _legRotation        = 0f;
 		
-		public  float DistanceMoved { get; set; } = 0;
+		//public  float DistanceMoved { get; set; } = 0;
 		private float _mvSpeed = 0f;
 
-		public bool ServerEntity { get; protected set; } = true;
+		//public bool ServerEntity { get; protected set; } = true;
 
 		public void SwingArm(bool broadcast = false)
 		{
@@ -732,18 +738,13 @@ namespace Alex.Entities
 			SwingArm(broadcast, isLeftHand);
 		}
 		
-		public void SwingArm(bool broadcast, bool leftHanded)
+		public virtual void SwingArm(bool broadcast, bool leftHanded)
 		{
 			EntityModelRenderer.ModelBone bone = leftHanded ? _leftArmModel : _rightArmModel;
 
 			if (bone != null && (!bone.IsAnimating || bone.Animations.Count <= 1))
 			{
 				bone.Animations.Enqueue(new SwingAnimation(bone, TimeSpan.FromMilliseconds(200)));
-			}
-
-			if (broadcast)
-			{
-				Network.PlayerAnimate(leftHanded ? PlayerAnimations.SwingLeftArm : PlayerAnimations.SwingRightArm);
 			}
 		}
 		
@@ -858,23 +859,27 @@ namespace Alex.Entities
 			}
 		}
 
-		private DateTime _nextUpdate     = DateTime.MinValue;
-		private DateTime _previousUpdate = DateTime.MinValue;
-		public  float    CurrentSpeed => _mvSpeed;
-
+	//	private DateTime _nextUpdate     = DateTime.MinValue;
+	//	private DateTime _previousUpdate = DateTime.MinValue;
+		//public  float    CurrentSpeed => _mvSpeed;
+		//public float Speed { get; private set; } = 0f;
+		//public float Delta { get; private set; } = 0f;
+		//private float _previousDistanceMoved = 0;
 		public virtual void OnTick()
 		{
-			Age++;
+			//Age++;
 
 			Movement?.OnTick();
 
 			HealthManager.OnTick();
+			
+			AnimationController?.OnTick();
 
-			if (_isHit && Age > _hitAnimationEnd)
+			/*if (_isHit && Age > _hitAnimationEnd)
 			{
 				_isHit = false;
 				ModelRenderer.EntityColor = Color.White.ToVector3();
-			}
+			}*/
 
 			if (DoRotationCalculations && !IsNoAi)
 			{
@@ -886,18 +891,6 @@ namespace Alex.Entities
 			}
 
 			_previousPosition = KnownPosition;
-
-			if (DateTime.UtcNow >= _nextUpdate)
-			{
-				var distanceMoved = DistanceMoved;
-				DistanceMoved = 0;
-
-				//PreviousUpdate
-				_mvSpeed = (float) (distanceMoved * (TimeSpan.FromSeconds(1) / (DateTime.UtcNow - _previousUpdate)));
-
-				_previousUpdate = DateTime.UtcNow;
-				_nextUpdate = DateTime.UtcNow + TimeSpan.FromMilliseconds(500);
-			}
 
 			foreach (var effect in _effects.Values.ToArray())
 			{
@@ -1164,7 +1157,7 @@ namespace Alex.Entities
 			}
 		}
 
-		protected bool TryUpdateGeometry(ResourceLocation location, string geometry, string texture = "default")
+		/*protected bool TryUpdateGeometry(ResourceLocation location, string geometry, string texture = "default")
 		{
 			if (Alex.Instance.Resources.BedrockResourcePack.EntityDefinitions.TryGetValue(
 				location, out var entityDescription))
@@ -1191,9 +1184,9 @@ namespace Alex.Entities
 
 
 			return false;
-		}
+		}*/
 
-		protected bool TryUpdateTexture(ResourceLocation location, string texture)
+		/*protected bool TryUpdateTexture(ResourceLocation location, string texture)
 		{
 			if (Alex.Instance.Resources.BedrockResourcePack.EntityDefinitions.TryGetValue(
 				location, out var entityDescription))
@@ -1209,7 +1202,7 @@ namespace Alex.Entities
 			}
 
 			return false;
-		}
+		}*/
 		
 		protected void ToggleCubes(EntityModelRenderer.ModelBone bone, bool isInvisible)
 		{
@@ -1233,7 +1226,7 @@ namespace Alex.Entities
 		private IItemRenderer                            _itemRenderer    = null;
 
 		public const float   JumpVelocity = 0.42f;
-		public void Jump()
+		public virtual void Jump()
 		{
 			HealthManager.Exhaust(IsSprinting ? 0.2f : 0.05f);
 			var jumpVelocity = JumpVelocity;
@@ -1267,7 +1260,7 @@ namespace Alex.Entities
 			//Movement.Move(new Vector3(0f, jumpVelocity, 0f));
 			Velocity += new Vector3(0f, jumpVelocity, 0f);
 			//Velocity += new Vector3(0f, MathF.Sqrt(2f * (float) (Gravity * 20f) * 1.2f), 0f);
-			Network?.EntityAction((int) EntityId, EntityAction.Jump);
+			//	Network?.EntityAction((int) EntityId, EntityAction.Jump);
 		}
 		
 		public void AddOrUpdateEffect(Effect effect)

@@ -1,11 +1,10 @@
 using Alex.Worlds;
-using MiNET.Entities;
 
 namespace Alex.Entities.Passive
 {
 	public class PolarBear : PassiveMob
 	{
-		public PolarBear(World level) : base((EntityType)28, level)
+		public PolarBear(World level) : base(level)
 		{
 			Height = 1.4;
 			Width = 1.3;

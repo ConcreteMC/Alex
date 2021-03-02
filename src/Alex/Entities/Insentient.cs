@@ -9,7 +9,7 @@ namespace Alex.Entities
 	public abstract class Insentient : LivingEntity
 	{
 		/// <inheritdoc />
-		protected Insentient(int entityTypeId, World level, NetworkProvider network) : base(entityTypeId, level, network) { }
+		protected Insentient(World level) : base(level) { }
 
 		/// <inheritdoc />
 		protected override void HandleJavaMeta(MetaDataEntry entry)

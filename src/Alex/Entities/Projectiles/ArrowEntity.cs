@@ -7,7 +7,7 @@ namespace Alex.Entities.Projectiles
 	public class ArrowEntity : ThrowableEntity
 	{
 		/// <inheritdoc />
-		public ArrowEntity(World level, NetworkProvider network) : base(level, network)
+		public ArrowEntity(World level) : base(level)
 		{
 			Width = 0.15;
 			//Length = 0.15;
