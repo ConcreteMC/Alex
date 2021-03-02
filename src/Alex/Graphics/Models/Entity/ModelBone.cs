@@ -73,12 +73,49 @@ namespace Alex.Graphics.Models.Entity
 			}
 			
 			public  MCMatrix WorldMatrix   { get; set; } = MCMatrix.Identity;
-
+			public Vector3 TargetRotation => _targetRotation;
+			public Vector3 TargetPosition => _targetPosition;
+			
+			private Vector3 _startRotation = Vector3.Zero;
+			private Vector3 _targetRotation = Vector3.Zero;
+			
+			private Vector3 _startPosition = Vector3.Zero;
+			private Vector3 _targetPosition = Vector3.Zero;
+			
+			private double _accumulator = 1d;
+			private double _target = 1d;
+			public void MoveOverTime(Vector3 targetPosition, Vector3 targetRotation, TimeSpan time)
+			{
+				_startPosition = _position;
+				_targetPosition = targetPosition;
+				
+				_startRotation = _rotation;
+				_targetRotation = targetRotation;
+				
+				_accumulator = _target = time.TotalSeconds;
+				_accumulator = 0d;
+			}
+			
 			public void Update(IUpdateArgs args,
 				MCMatrix characterMatrix)
 			{
 				if (_disposed) return;
 
+				if (_accumulator < _target)
+				{
+					_accumulator += args.GameTime.ElapsedGameTime.TotalSeconds;
+					float progress = (float) ((1f / _target) * _accumulator);
+					
+					var targetRotation = _targetRotation;
+					var startRotation = _startRotation;
+					
+					var targetPosition = _targetPosition;
+					var startPosition = _startPosition;
+					
+					//var rotationDifference = targetRotation - startRotation;
+					_rotation = startRotation + ((targetRotation - startRotation) * progress);
+					_position = startPosition + ((targetPosition - startPosition) * progress);
+				}
 				//if (!Monitor.TryEnter(_disposeLock, 0))
 				//	return;
 
@@ -111,14 +148,14 @@ namespace Alex.Graphics.Models.Entity
 					{
 						var pivot = (Definition.Pivot ?? Vector3.Zero);
 						matrix = MCMatrix.CreateTranslation(-pivot) 
-						         * MCMatrix.CreateRotationDegrees(Rotation)
+						         * MCMatrix.CreateRotationDegrees(_rotation)
 						         * MCMatrix.CreateTranslation(pivot)
 						         * MCMatrix.CreateTranslation(_position)
 						         * characterMatrix;
 					}
 					else
 					{
-						matrix = MCMatrix.CreateRotationDegrees(Rotation)
+						matrix = MCMatrix.CreateRotationDegrees(_rotation)
 						         * MCMatrix.CreateTranslation(_position)
 						         * characterMatrix;
 					}

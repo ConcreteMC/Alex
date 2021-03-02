@@ -295,22 +295,7 @@ namespace Alex.Entities
 		{
 			var frameTime = (float) gt.ElapsedGameTime.TotalSeconds; // / 50;
 			var entity    = Entity;
-			_speedAccumulator += frameTime;
 			
-			var mvt = DistanceMoved;
-			var distanceMoved = mvt - _previousDistanceMoved;
-			RawSpeed = (float) (distanceMoved);
-			if (_speedAccumulator >= TargetTime)
-			{
-				_previousDistanceMoved = mvt;
-				//DistanceMoved = 0;
-
-				BlocksPerTick = distanceMoved * (_speedAccumulator / TargetTime);
-				MetersPerSecond = (float) (distanceMoved * (1f / _speedAccumulator));
-				//PreviousUpdate
-				//CurrentSpeed = (float) (distanceMoved * (TimeSpan.FromSeconds(1) / (DateTime.UtcNow - _previousUpdate)));
-				_speedAccumulator = 0f;
-			}
 			
 			/*try
 			{
@@ -384,10 +369,29 @@ namespace Alex.Entities
 
 			entity.RenderLocation = renderLocation;
 		}
-		
+
+		private DateTime _previousUpdate = DateTime.UtcNow;
 		/// <inheritdoc />
 		public void OnTick()
 		{
+			//_speedAccumulator += frameTime;
+			
+			var mvt = DistanceMoved;
+			var distanceMoved = mvt - _previousDistanceMoved;
+			RawSpeed = (float) (distanceMoved);
+			//if (_speedAccumulator >= TargetTime)
+			{
+				_previousDistanceMoved = mvt;
+				//DistanceMoved = 0;
+
+				var difference = (DateTime.UtcNow - _previousUpdate);
+				BlocksPerTick = (float) (distanceMoved * (TimeSpan.FromMilliseconds(50) / difference));// * (_speedAccumulator / TargetTime);
+				MetersPerSecond = (float) (distanceMoved * (TimeSpan.FromSeconds(1) / difference));
+				_previousUpdate = DateTime.UtcNow;
+				//PreviousUpdate
+				//CurrentSpeed = (float) (distanceMoved * (TimeSpan.FromSeconds(1) / (DateTime.UtcNow - _previousUpdate)));
+				
+			}
 			//UpdateTarget();
 		}
 
