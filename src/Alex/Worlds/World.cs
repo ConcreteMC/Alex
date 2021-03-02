@@ -129,7 +129,6 @@ namespace Alex.Worlds
 			var profileService = serviceProvider.GetRequiredService<IPlayerProfileService>();
 			var resources = serviceProvider.GetRequiredService<ResourceManager>();
 			
-			string username = string.Empty;
 			PooledTexture2D texture;
 			
 			if (Alex.PlayerTexture != null)
@@ -152,12 +151,7 @@ namespace Alex.Worlds
 				};
 			}
 
-			if (!string.IsNullOrWhiteSpace(profileService?.CurrentProfile?.Username))
-			{
-				username = profileService.CurrentProfile.Username;
-			}
-
-			Player = new Player(graphics, serviceProvider.GetRequiredService<Alex>().InputManager, username, this, skin, networkProvider, PlayerIndex.One);
+			Player = new Player(graphics, serviceProvider.GetRequiredService<Alex>().InputManager, this, skin, networkProvider, PlayerIndex.One);
 			Camera = new EntityCamera(Player);
 			
 			if (Alex.PlayerModel != null)

@@ -1,12 +1,11 @@
 using Alex.Networking.Java.Packets.Play;
 using Alex.Worlds;
-using MiNET.Entities;
 
 namespace Alex.Entities.Passive
 {
 	public class Mooshroom : PassiveMob
 	{
-		public Mooshroom(World level) : base(EntityType.MushroomCow, level)
+		public Mooshroom(World level) : base(level)
 		{
 			Height = 1.4;
 			Width = 0.9;
@@ -18,7 +17,7 @@ namespace Alex.Entities.Passive
 
 			if (entry.Index == 16 && entry is MetadataString variant)
 			{
-				TryUpdateTexture("minecraft:mooshroom", variant.Value == "red" ? "default" : "brown");
+				//TryUpdateTexture("minecraft:mooshroom", variant.Value == "red" ? "default" : "brown");
 			}
 		}
 	}

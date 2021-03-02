@@ -170,7 +170,7 @@ namespace Alex.Entities
 					EntityModel model;
 					if (ModelFactory.TryGetModel(modelKey, out model) && model != null)
 					{
-						Add(resources, graphics, def.Value, model, def.Value.Identifier);
+						Add(resources, graphics, def.Value, model);
 						//Add(resources, graphics, def.Value, model, def.Key.ToString());
 					}
 					//else 
@@ -193,16 +193,16 @@ namespace Alex.Entities
 		   return _registeredRenderers.Count;
 		}
 
-		private static void Add(ResourceManager resources, GraphicsDevice graphics, EntityDescription def, EntityModel model, string name)
+		private static void Add(ResourceManager resources, GraphicsDevice graphics, EntityDescription entityDefinition, EntityModel model)
 		{
-			_registeredRenderers.AddOrUpdate(name,
+			_registeredRenderers.AddOrUpdate(entityDefinition.Identifier,
 				(t) =>
 				{
 					if (t == null)
 					{
-						var textures = def.Textures;
+						var textures = entityDefinition.Textures;
 						string texture;
-						if (!textures.TryGetValue("default", out texture) && !textures.TryGetValue(name, out texture))
+						if (!textures.TryGetValue("default", out texture) && !textures.TryGetValue(entityDefinition.Identifier, out texture))
 						{
 							texture = textures.FirstOrDefault().Value;
 						}
@@ -220,11 +220,11 @@ namespace Alex.Entities
 				{
 					return (t) =>
 						{
-							var    textures = def.Textures;
+							var    textures = entityDefinition.Textures;
 							string texture;
 
 							if (!(textures.TryGetValue("default", out texture)
-							      || textures.TryGetValue(name, out texture)))
+							      || textures.TryGetValue(entityDefinition.Identifier, out texture)))
 							{
 								texture = textures.FirstOrDefault().Value;
 							}
@@ -380,19 +380,19 @@ namespace Alex.Entities
 					entity = new EntityFallingBlock(world);
 					break;
 				case EntityType.ArmorStand:
-					entity = new EntityArmorStand(world, null);
+					entity = new EntityArmorStand(world);
 					break;
 				case EntityType.ShotArrow:
-					entity = new ArrowEntity(world, null);
+					entity = new ArrowEntity(world);
 					break;
 				case EntityType.DroppedItem:
 					entity = new ItemEntity(world);
 					break;
 				case EntityType.ThrownSnowball:
-					entity = new SnowballEntity(world, null);
+					entity = new SnowballEntity(world);
 					break;
 				case EntityType.ThrownEgg:
-					entity = new EggEntity(world, null);
+					entity = new EggEntity(world);
 
 					break;
 				case EntityType.Donkey:
@@ -445,9 +445,13 @@ namespace Alex.Entities
 					break;
 				
 				case EntityType.FireworksRocket:
-					entity = new FireworkRocket(world, null);
+					entity = new FireworkRocket(world);
 					break;
 				
+				case EntityType.Player:
+					entity = new RemotePlayer(world);
+					break;
+
 				//case EntityType.Human:
 					//entity = new PlayerMob("test", world, );
 				//	break;

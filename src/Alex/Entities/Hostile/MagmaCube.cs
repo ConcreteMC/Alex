@@ -28,7 +28,7 @@ namespace Alex.Entities.Hostile
 			}
 		}
 		
-		public MagmaCube(World level) : base((EntityType)42, level)
+		public MagmaCube(World level) : base(level)
 		{
 			Height = 0.51000005;
 			Width = 0.51000005;

@@ -1,11 +1,10 @@
 using Alex.Worlds;
-using MiNET.Entities;
 
 namespace Alex.Entities.Passive
 {
 	public class Chicken : PassiveMob
 	{
-		public Chicken(World level) : base((EntityType)10, level)
+		public Chicken(World level) : base(level)
 		{
 			Height = 0.7;
 			Width = 0.4;

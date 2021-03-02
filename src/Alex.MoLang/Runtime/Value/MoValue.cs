@@ -14,6 +14,7 @@ namespace Alex.MoLang.Runtime.Value
 		string AsString() => Value.ToString();
 
 		double AsDouble() => Value is double ? (double)Value : 1.0d;
+		float AsFloat() => Value is float ? (float)Value : (float)AsDouble();
 	}
 
 	public static class MoValue
@@ -22,7 +23,7 @@ namespace Alex.MoLang.Runtime.Value
 		{
 			if (value is IMoValue) {
 				return (IMoValue) value;
-			} 
+			}
 			
 			return new DoubleValue((double) value);
 		}

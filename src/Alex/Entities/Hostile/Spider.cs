@@ -34,7 +34,7 @@ namespace Alex.Entities.Hostile
 		private EntityModelRenderer.ModelBone Leg6;
 		private EntityModelRenderer.ModelBone Leg7;
 		
-		public Spider(World level) : base((EntityType)35, level)
+		public Spider(World level) : base( level)
 		{
 			Height = 0.9;
 			Width = 1.4;

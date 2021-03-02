@@ -8,8 +8,9 @@ namespace Alex.MoLang.Runtime
 {
 	public class MoLangEnvironment : IMoValue
 	{
+		private static readonly NLog.Logger Log = NLog.LogManager.GetCurrentClassLogger(typeof(MoLangEnvironment));
 		/// <inheritdoc />
-		public object Value => this;
+		public object Value => Structs;
 		
 		public ConcurrentDictionary<string, IMoStruct> Structs { get; } = new ConcurrentDictionary<string, IMoStruct>();
 
@@ -25,6 +26,7 @@ namespace Alex.MoLang.Runtime
 				return Structs[main].Get(string.Join(".", segments), param);
 			}
 
+			Log.Info($"Got new variable: {name}");
 			return new DoubleValue(0.0);
 		}
 

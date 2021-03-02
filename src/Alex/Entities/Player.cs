@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using Alex.API;
 using Alex.API.Blocks;
 using Alex.API.Graphics;
 using Alex.API.Input;
@@ -50,11 +51,11 @@ namespace Alex.Entities
         public static readonly float EyeLevel = 1.625F;
         public static readonly float Height = 1.8F;
 
-		public PlayerIndex PlayerIndex { get; }
+		//public PlayerIndex PlayerIndex { get; }
 
 		public PlayerController Controller { get; }
-        public Vector3 Raytraced = Vector3.Zero;
-        public Vector3 AdjacentRaytrace = Vector3.Zero;
+		private Vector3 _raytraced = Vector3.Zero;
+		private Vector3 _adjacentRaytrace = Vector3.Zero;
 
         public bool HasRaytraceResult = false;
 
@@ -79,13 +80,16 @@ namespace Alex.Entities
 		        base.KnownPosition = value;
 	        }
         }
+        
+        public NetworkProvider Network { get; set; }
 
         //public Camera Camera { get; internal set; }
-        public Player(GraphicsDevice graphics, InputManager inputManager, string name, World world, Skin skin, NetworkProvider networkProvider, PlayerIndex playerIndex) : base(name, world, networkProvider)
+        public Player(GraphicsDevice graphics, InputManager inputManager, World world, Skin skin, NetworkProvider networkProvider, PlayerIndex playerIndex) : base(world)
         {
+	        Network = networkProvider;
 	        //IsSpawned = true;
 		//	DoRotationCalculations = false;
-			PlayerIndex = playerIndex;
+			//PlayerIndex = playerIndex;
 		    Controller = new PlayerController(graphics, world, inputManager, this, playerIndex);
 		   // Camera = camera;
 		   // NoAi = false;
@@ -104,7 +108,7 @@ namespace Alex.Entities
 			RenderEntity = true;
 			ShowItemInHand = true;
 
-			ServerEntity = false;
+		//	ServerEntity = false;
 			RequiresRealTimeTick = true;
 			AlwaysTick = true;
 			
@@ -226,7 +230,7 @@ namespace Alex.Entities
 		    bool hasActiveDialog = Alex.Instance.GuiManager.ActiveDialog != null;
 		    Controller.CheckMovementInput = !hasActiveDialog;
 		    
-		    if (WaitingOnChunk && Age % 4 == 0)
+		    if (WaitingOnChunk)
 		    {
 			    NoAi = true;
 
@@ -344,7 +348,7 @@ namespace Alex.Entities
 					    {
 						    StopBreakingBlock();
 					    }
-					    else if (_destroyingTarget != new BlockCoordinates(Vector3.Floor(Raytraced)))
+					    else if (_destroyingTarget != new BlockCoordinates(Vector3.Floor(_raytraced)))
 					    {
 						    StopBreakingBlock(true, true);
 
@@ -576,14 +580,14 @@ namespace Alex.Entities
 						    SelBlock = block.Block;
 						    //  RayTraceBoundingBox = bbox;
 
-						    Raytraced = targetPoint;
+						    _raytraced = targetPoint;
 						    HasRaytraceResult = true;
 						    _boundingBoxes.AddRange(boundingBoxes);
 
 						    if (SetPlayerAdjacentSelectedBlock(Level, x, camPos, lookVector, out Vector3 rawAdjacent))
 						    {
 							    AdjacentRaytraceBlock = Vector3.Floor(rawAdjacent);
-							    AdjacentRaytrace = rawAdjacent;
+							    _adjacentRaytrace = rawAdjacent;
 						    }
 						    
 						    return;
@@ -617,10 +621,10 @@ namespace Alex.Entities
 
 	    public void DropHeldItem()
 	    {
-		    var floored = new BlockCoordinates(Vector3.Floor(Raytraced));
+		    var floored = new BlockCoordinates(Vector3.Floor(_raytraced));
 		    var face    = GetTargetFace();
 		    
-		    var adjacent = AdjacentRaytrace;
+		    var adjacent = _adjacentRaytrace;
 		    var flooredAdj = Vector3.Floor(adjacent);
 		    var remainder = new Vector3(adjacent.X - flooredAdj.X, adjacent.Y - flooredAdj.Y, adjacent.Z - flooredAdj.Z);
 		    
@@ -645,8 +649,8 @@ namespace Alex.Entities
 	    {
 		    SwingArm(true);
 		    
-			var floored  = new BlockCoordinates(Vector3.Floor(Raytraced));
-			var adjacent = AdjacentRaytrace;
+			var floored  = new BlockCoordinates(Vector3.Floor(_raytraced));
+			var adjacent = _adjacentRaytrace;
 			
 		    var blockState = Level.GetBlockState(floored);
 		    var block      = blockState.Block;
@@ -679,8 +683,8 @@ namespace Alex.Entities
 		    
             var ticks = Interlocked.Exchange(ref _destroyingTick, 0);// = 0;
 
-            var flooredAdj = Vector3.Floor(AdjacentRaytrace);
-            var remainder = new Vector3(AdjacentRaytrace.X - flooredAdj.X, AdjacentRaytrace.Y - flooredAdj.Y, AdjacentRaytrace.Z - flooredAdj.Z);
+            var flooredAdj = Vector3.Floor(_adjacentRaytrace);
+            var remainder = new Vector3(_adjacentRaytrace.X - flooredAdj.X, _adjacentRaytrace.Y - flooredAdj.Y, _adjacentRaytrace.Z - flooredAdj.Z);
 
             if (!sendToServer)
 		    {
@@ -704,8 +708,8 @@ namespace Alex.Entities
 
 	    private BlockFace GetTargetFace()
 	    {
-		    var flooredAdj =  Vector3.Floor(AdjacentRaytrace);
-		    var raytraceFloored  = Vector3.Floor(Raytraced);
+		    var flooredAdj =  Vector3.Floor(_adjacentRaytrace);
+		    var raytraceFloored  = Vector3.Floor(_raytraced);
 
 		    var adj = flooredAdj - raytraceFloored;
 		    adj.Normalize();
@@ -724,16 +728,16 @@ namespace Alex.Entities
 		    SwingArm(true);
 		    //if (ItemFactory.ResolveItemName(slot.ItemID, out string itemName))
 		    {
-			    var flooredAdj = Vector3.Floor(AdjacentRaytrace);
-			    var raytraceFloored = Vector3.Floor(Raytraced);
+			    var flooredAdj = Vector3.Floor(_adjacentRaytrace);
+			    var raytraceFloored = Vector3.Floor(_raytraced);
 
 			    var adj = flooredAdj - raytraceFloored;
 			    adj.Normalize();
 
 			    var face = adj.GetBlockFace();
 
-			    var remainder = new Vector3(AdjacentRaytrace.X - flooredAdj.X,
-				    AdjacentRaytrace.Y - flooredAdj.Y, AdjacentRaytrace.Z - flooredAdj.Z);
+			    var remainder = new Vector3(_adjacentRaytrace.X - flooredAdj.X,
+				    _adjacentRaytrace.Y - flooredAdj.Y, _adjacentRaytrace.Z - flooredAdj.Z);
 
 			    var coordR = new BlockCoordinates(raytraceFloored);
 			    
@@ -927,6 +931,24 @@ namespace Alex.Entities
 
 		    KnownPosition.Yaw = yaw;
 		    KnownPosition.HeadYaw = yaw;
+	    }
+
+	    /// <inheritdoc />
+	    public override void Jump()
+	    {
+		    base.Jump();
+		    Network?.EntityAction((int) EntityId, EntityAction.Jump);
+	    }
+
+	    /// <inheritdoc />
+	    public override void SwingArm(bool broadcast, bool leftHanded)
+	    {
+		    base.SwingArm(broadcast, leftHanded);
+		    
+		    if (broadcast)
+		    {
+			    Network?.PlayerAnimate(leftHanded ? PlayerAnimations.SwingLeftArm : PlayerAnimations.SwingRightArm);
+		    }
 	    }
     }
 }

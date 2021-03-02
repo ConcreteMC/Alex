@@ -25,7 +25,7 @@ namespace Alex.Entities.Passive
 				else if (_variant == ParrotType.YellowBlue)
 					texture = "yellow_blue";
 
-				TryUpdateTexture("minecraft:parrot", texture);
+				//TryUpdateTexture("minecraft:parrot", texture);
 			}
 		}
 

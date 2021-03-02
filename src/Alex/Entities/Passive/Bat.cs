@@ -1,6 +1,5 @@
 using Alex.Networking.Java.Packets.Play;
 using Alex.Worlds;
-using MiNET.Entities;
 
 namespace Alex.Entities.Passive
 {
@@ -25,7 +24,7 @@ namespace Alex.Entities.Passive
 				}
 			}
 		}
-		public Bat(World level) : base(EntityType.Bat, level)
+		public Bat(World level) : base(level)
 		{
 			Height = 0.9;
 			Width = 0.5;

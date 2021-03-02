@@ -5,7 +5,7 @@ namespace Alex.Entities.Hostile
 {
 	public class Endermite : HostileMob
 	{
-		public Endermite(World level) : base((EntityType)55, level)
+		public Endermite(World level) : base(level)
 		{
 			Height = 0.3;
 			Width = 0.4;

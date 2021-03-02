@@ -44,7 +44,7 @@ namespace Alex.Gamestates.MainMenu.Profile
            // AutoSizeMode = AutoSizeMode.GrowAndShrink;
            // BackgroundOverlay = new GuiTexture2D(GuiTextures.OptionsBackground);
 
-            ModelView = new GuiEntityModelView(new RemotePlayer(profile.Username, null, null, (profile.Skin?.Slim ?? defaultSelection.Slim) ? "geometry.humanoid.customSlim" : "geometry.humanoid.custom")) /*"geometry.humanoid.customSlim"*/
+            ModelView = new GuiEntityModelView(new RemotePlayer(null, (profile.Skin?.Slim ?? defaultSelection.Slim) ? "geometry.humanoid.customSlim" : "geometry.humanoid.custom")) /*"geometry.humanoid.customSlim"*/
             {
                 BackgroundOverlay = new Color(Color.Black, 0.15f),
                 Background = null,

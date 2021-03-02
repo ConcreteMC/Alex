@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Alex.MoLang.Runtime.Exceptions;
 using Alex.MoLang.Runtime.Struct;
 using Alex.MoLang.Runtime.Value;
 
@@ -18,11 +19,14 @@ namespace Alex.MoLang.Runtime
 		
 		public T Get<T>(int index) {
 			IMoValue obj = _parameters[index];
-
-			if (obj.GetType() == typeof(T)) {
+			
+			if (obj == null)
+				throw new MoLangRuntimeException($"MoParams: Expected parameter type of {typeof(T).Name} got null", null);
+			
+			if (obj?.GetType() == typeof(T)) {
 				return (T) obj;
 			} else {
-				throw new Exception("MoParams: Expected parameter type of " + typeof(T).Name + ", " + obj.GetType().Name + " given.");
+				throw new MoLangRuntimeException("MoParams: Expected parameter type of " + typeof(T).Name + ", " + obj.GetType().Name + " given.", null);
 			}
 		}
 

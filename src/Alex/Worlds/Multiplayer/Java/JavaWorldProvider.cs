@@ -504,7 +504,7 @@ namespace Alex.Worlds.Multiplayer.Java
 				if (entity == null)
 				{
 					Log.Warn($"Could not map entity: {knownData.Name}");
-					entity = new Entity(null, NetworkProvider);
+					entity = new Entity(null);
 				}
 
 				//if (knownData.Height)
@@ -1589,8 +1589,9 @@ namespace Alex.Worlds.Multiplayer.Java
 						continue;
 					
 					RemotePlayer entity = new RemotePlayer(
-						entry.Name, (World) World, NetworkProvider,
-						"geometry.humanoid.custom");
+						World, "geometry.humanoid.custom");
+
+					entity.NameTag = entry.Name;
 
 					entity.UpdateGamemode((GameMode) entry.Gamemode);
 					entity.UUID = uuid;
@@ -1667,7 +1668,7 @@ namespace Alex.Worlds.Multiplayer.Java
 						}
 						else
 						{
-							entity.NameTag = entity.Name;
+							//entity.NameTag = entity.Name;
 						}
 						
 						World?.UpdatePlayerListDisplayName(uuid, entity.NameTag);

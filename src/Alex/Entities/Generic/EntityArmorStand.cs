@@ -9,8 +9,8 @@ namespace Alex.Entities.Generic
 	public class EntityArmorStand : LivingEntity
 	{
 		/// <inheritdoc />
-		public EntityArmorStand(World level, NetworkProvider network) : base(
-			(int) EntityType.ArmorStand, level, network)
+		public EntityArmorStand(World level) : base(
+			level)
 		{
 			//HealthManager.Invulnerable = true;
 			IsAffectedByGravity = false;

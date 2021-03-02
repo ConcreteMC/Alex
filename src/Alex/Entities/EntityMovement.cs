@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using Alex.Api;
 using Alex.API;
@@ -14,13 +15,14 @@ namespace Alex.Entities
 	{
 		public Entity  Entity  { get; }
 		public Vector3 Heading { get; private set; }
-
-		public bool InterpolatedMovement { get; set; } = true;
+		
 		public EntityMovement(Entity entity)
 		{
 			Entity = entity;
 			Heading = Vector3.Zero;
 		}
+
+		public float DistanceMoved { get; set; } = 0f;
 
 		private object _headingLock = new object();
 		public void UpdateHeading(Vector3 heading)
@@ -55,7 +57,7 @@ namespace Alex.Entities
 			
 			UpdateTarget();
 
-			Entity.DistanceMoved += MathF.Abs(distance);
+			DistanceMoved += MathF.Abs(distance);
 		}
 
 		public Vector3 Move(Vector3 amount)
@@ -146,7 +148,7 @@ namespace Alex.Entities
 			
 			UpdateTarget();
 			
-			Entity.DistanceMoved +=
+			DistanceMoved +=
 				MathF.Abs(Microsoft.Xna.Framework.Vector3.Distance(oldPosition , Entity.KnownPosition.ToVector3()));
 
 			return amount;
@@ -221,26 +223,26 @@ namespace Alex.Entities
 		{
 			var target = Entity.KnownPosition;
 
-			if (!InterpolatedMovement)
-			{
-				Entity.RenderLocation = target;
-				return;
-			}
+			//if (!InterpolatedMovement)
+			//{
+			//	Entity.RenderLocation = target;
+			//	return;
+			//}
 			
 			var distance = Microsoft.Xna.Framework.Vector3.DistanceSquared(
 				Entity.RenderLocation.ToVector3() * new Vector3(1f, 0f, 1f), target.ToVector3() * new Vector3(1f, 0f, 1f));
 
-			if (distance >= 16f)
+			/*if (distance >= 16f)
 			{
 				Entity.RenderLocation = target;
 				_frameAccumulator = TargetTime;
 			}
 			else
-			{
+			{*/
 				_frameAccumulator = 0;
 				_from = (PlayerLocation) Entity.RenderLocation.Clone();
 				_target = (PlayerLocation) target.Clone();
-			}
+			//}
 		}
 
 		public void Push(Vector3 velocity)
@@ -279,10 +281,54 @@ namespace Alex.Entities
 
 		private       float _frameAccumulator = 0f;
 		private const float TargetTime        = 1f / 20f;
+
+		private float _speedAccumulator = 0f;
+		private float _previousDistanceMoved = 0f;
+
+
+		public float MetersPerSecond { get; private set; } = 0f;
+		public float BlocksPerTick { get; private set; } = 0f;
+
+		public float RawSpeed { get; private set; } = 0f;
+		//public float Speed { get; private set; } = 0f;
 		public void Update(GameTime gt)
 		{
+			var frameTime = (float) gt.ElapsedGameTime.TotalSeconds; // / 50;
 			var entity    = Entity;
+			_speedAccumulator += frameTime;
+			
+			var mvt = DistanceMoved;
+			var distanceMoved = mvt - _previousDistanceMoved;
+			RawSpeed = (float) (distanceMoved);
+			if (_speedAccumulator >= TargetTime)
+			{
+				_previousDistanceMoved = mvt;
+				//DistanceMoved = 0;
 
+				BlocksPerTick = distanceMoved * (_speedAccumulator / TargetTime);
+				MetersPerSecond = (float) (distanceMoved * (1f / _speedAccumulator));
+				//PreviousUpdate
+				//CurrentSpeed = (float) (distanceMoved * (TimeSpan.FromSeconds(1) / (DateTime.UtcNow - _previousUpdate)));
+				_speedAccumulator = 0f;
+			}
+			
+			/*try
+			{
+				var dvm = DistanceMoved;
+
+				var distanceMoved = MathF.Abs(dvm - _previousDistanceMoved);
+				HorizontalMovementSpeed = MovementSpeed = (float) (distanceMoved * (TimeSpan.FromMilliseconds(1000) / (gt.ElapsedGameTime)));
+				
+				_previousDistanceMoved = dvm;
+			//	HorizontalMovementSpeed = horizontalDistance * (float) (1f / _mvSpeedWatch.Elapsed.TotalSeconds);
+			//	MovementSpeed = distance* (float) (1f / _mvSpeedWatch.Elapsed.TotalSeconds);
+				//DistanceMoved = distance;//* (float) (1f / _mvSpeedWatch.Elapsed.TotalSeconds);
+			}
+			finally
+			{
+				_mvSpeedWatch.Restart();
+			}*/
+			
 			if ((_target == null || _from == null))
 			{
 				UpdateTarget();
@@ -291,8 +337,7 @@ namespace Alex.Entities
 
 			if (_frameAccumulator >= TargetTime)
 				return;
-
-			var frameTime = (float) gt.ElapsedGameTime.TotalSeconds; // / 50;
+			
 			_frameAccumulator += frameTime;
 
 			var alpha                 = (float) (_frameAccumulator / TargetTime);
@@ -339,7 +384,7 @@ namespace Alex.Entities
 
 			entity.RenderLocation = renderLocation;
 		}
-
+		
 		/// <inheritdoc />
 		public void OnTick()
 		{

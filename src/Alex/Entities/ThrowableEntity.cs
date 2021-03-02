@@ -10,8 +10,8 @@ namespace Alex.Entities
 		public bool DespawnOnImpact { get; set; } = false;
 		
 		/// <inheritdoc />
-		public ThrowableEntity(World level, NetworkProvider network) : base(
-			level, network)
+		public ThrowableEntity(World level) : base(
+			level)
 		{
 			
 		}

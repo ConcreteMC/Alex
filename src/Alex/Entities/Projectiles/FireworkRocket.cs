@@ -6,7 +6,7 @@ namespace Alex.Entities.Projectiles
 	public class FireworkRocket : ThrowableEntity
 	{
 		/// <inheritdoc />
-		public FireworkRocket(World level, NetworkProvider network) : base(level, network)
+		public FireworkRocket(World level) : base(level)
 		{
 			Width = 0.25;
 			Height = 0.25;

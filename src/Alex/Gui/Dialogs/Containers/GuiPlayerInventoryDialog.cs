@@ -45,7 +45,7 @@ namespace Alex.Gui.Dialogs.Containers
             {
                 var modelRenderer = player.ModelRenderer;
 
-                var mob = new RemotePlayer(player.Name, player.Level, player.Network);
+                var mob = new RemotePlayer(player.Level);
                 mob.ModelRenderer = new EntityModelRenderer(modelRenderer.Model, modelRenderer.Texture);
 
                 mob.KnownPosition = new PlayerLocation(0, 0, 0, 0f, 0f, 0f);

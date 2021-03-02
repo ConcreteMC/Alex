@@ -291,7 +291,6 @@ namespace Alex.Worlds
 
 		public bool AddEntity(Entity entity)
 		{
-			entity.Network = Network;
 			entity.Level = World;
 
 			if (EntityByUUID.TryAdd(entity.UUID, entity))

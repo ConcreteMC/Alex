@@ -33,13 +33,13 @@ namespace Alex.Entities.BlockEntities
 		}
 		
 		/// <inheritdoc />
-		public BlockEntity(World level, Block block) : base(level, null)
+		public BlockEntity(World level, Block block) : base(level)
 		{
 			HasPhysics = false;
 			IsAffectedByGravity = false;
 			Block = block;
 
-			base.Movement.InterpolatedMovement = false;
+			//base.Movement.InterpolatedMovement = false;
 		}
 
 		/// <inheritdoc />

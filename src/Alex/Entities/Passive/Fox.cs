@@ -1,13 +1,12 @@
 using Alex.Networking.Java.Packets.Play;
 using Alex.Worlds;
-using MiNET.Entities;
 
 namespace Alex.Entities.Passive
 {
 	public class Fox : PassiveMob
 	{
 		/// <inheritdoc />
-		public Fox(World level) : base((EntityType)121, level)
+		public Fox(World level) : base(level)
 		{
 			Width = 0.6;
 			Height = 0.7;
@@ -20,7 +19,7 @@ namespace Alex.Entities.Passive
 
 			if (entry.Index == 16 && entry is MetadataVarInt variant)
 			{
-				TryUpdateTexture("minecraft:fox", variant.Value == 0 ? "red" : "arctic");
+				//TryUpdateTexture("minecraft:fox", variant.Value == 0 ? "red" : "arctic");
 			}
 		}
 	}

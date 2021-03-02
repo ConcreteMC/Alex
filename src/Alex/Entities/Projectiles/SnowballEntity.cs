@@ -6,7 +6,7 @@ namespace Alex.Entities.Projectiles
 	public class SnowballEntity : ThrowableEntity
 	{
 		/// <inheritdoc />
-		public SnowballEntity(World level, NetworkProvider network) : base(level, network)
+		public SnowballEntity(World level) : base(level)
 		{
 			Width = 0.25;
 		//	Length = 0.25;

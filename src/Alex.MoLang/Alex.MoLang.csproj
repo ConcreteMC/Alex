@@ -4,4 +4,8 @@
         <TargetFramework>net5.0</TargetFramework>
     </PropertyGroup>
 
+    <ItemGroup>
+      <PackageReference Include="NLog" Version="4.7.8" />
+    </ItemGroup>
+
 </Project>
