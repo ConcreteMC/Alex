@@ -9,14 +9,14 @@ namespace Alex.MoLang.Runtime
         public static QueryStruct Library = new QueryStruct(new Dictionary<string, Func<MoParams, object>>() {
             {"abs",  param => Math.Abs(param.GetDouble(0))},
                 {"acos",  param =>Math.Acos(param.GetDouble(0))},
-                {"sin",  param =>Math.Sin(param.GetDouble(0))},
+                {"sin",  param =>Math.Sin(param.GetDouble(0) * (Math.PI / 180d))},
                 {"asin",  param =>Math.Asin(param.GetDouble(0))},
                 {"atan",  param =>Math.Atan(param.GetDouble(0))},
                 {"atan2",  param =>Math.Atan2(param.GetDouble(0), param.GetDouble(1))},
                 {"ceil",  param =>Math.Ceiling(param.GetDouble(0))},
                 {"clamp",  param =>Math.Min(param.GetDouble(1), Math.Max(param.GetDouble(0), param.GetDouble(2)))
                     },
-                {"cos",  param =>Math.Cos(param.GetDouble(0))},
+                {"cos",  param =>Math.Cos(param.GetDouble(0) * (Math.PI / 180d))},
                 {"die_roll",  param =>DieRoll(param.GetDouble(0), param.GetDouble(1), param.GetDouble(2))},
                 {"die_roll_integer",  param =>DieRollInt(param.GetInt(0), param.GetInt(1), param.GetInt(2))},
                 {"exp",  param =>Math.Exp(param.GetDouble(0))},

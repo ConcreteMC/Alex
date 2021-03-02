@@ -122,7 +122,7 @@ namespace Alex.Graphics.Models.Entity.Animations
 			{
 			//	Console.WriteLine($"Movement: {Entity.MovementSpeed:F3} | Current: {Entity.CurrentSpeed:F3}");
 			//	Console.WriteLine(Entity.CurrentSpeed);
-				return new DoubleValue(Entity.Movement.RawSpeed);
+				return new DoubleValue((1f / (Entity.CalculateMovementSpeed() * 43f)) * (Entity.Movement.MetersPerSecond));
 			});
 			
 			q.Add("delta_time", mo =>
@@ -166,7 +166,7 @@ namespace Alex.Graphics.Models.Entity.Animations
 				if (animations == null)
 					return;
 				
-				runtime.Environment.SetValue("variable.gliding_speed_value", new DoubleValue((Entity.CalculateMovementSpeed() * 43f) / 20f));
+				runtime.Environment.SetValue("variable.gliding_speed_value", new DoubleValue(1d));
 				
 				if (_preRenderExpressions != null)
 					runtime.Execute(_preRenderExpressions);
