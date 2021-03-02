@@ -16,21 +16,7 @@ namespace Alex.MoLang.TestApp
 	{
 		static void Main(string[] args)
 		{
-			TokenIterator tokenIterator = new TokenIterator(@"t.a = 213 + 2 / 0.5 + 5 + 2 * 3;
-
-array.test.0 = 100;
-array.test[1] = 200;
-array.test[2] = 10.5;
-
-for_each(v.r, array.test, {
-  t.a = t.a + v.r;
-});
-
-loop(10, {
-  t.a = (this->t.a * query.life_time + math.cos(270));
-});
-
-return t.a + 100;");
+			TokenIterator tokenIterator = new TokenIterator(@"return 3 * (2 + 2);");
 			MoLangParser  parser        = new MoLangParser(tokenIterator);
 			var           expressions   = parser.Parse();
 

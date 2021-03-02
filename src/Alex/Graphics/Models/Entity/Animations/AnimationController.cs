@@ -122,7 +122,7 @@ namespace Alex.Graphics.Models.Entity.Animations
 			{
 			//	Console.WriteLine($"Movement: {Entity.MovementSpeed:F3} | Current: {Entity.CurrentSpeed:F3}");
 			//	Console.WriteLine(Entity.CurrentSpeed);
-				return new DoubleValue(Entity.Movement.BlocksPerTick);
+				return new DoubleValue(Entity.Movement.RawSpeed);
 			});
 			
 			q.Add("delta_time", mo =>
@@ -141,8 +141,7 @@ namespace Alex.Graphics.Models.Entity.Animations
 		private Stopwatch _deltaTimeStopwatch = new Stopwatch();
 		public void Update(GameTime gameTime)
 		{
-			DoImportant();
-			_deltaTimeStopwatch.Restart();
+			
 		}
 
 		private void DoImportant()
@@ -167,7 +166,7 @@ namespace Alex.Graphics.Models.Entity.Animations
 				if (animations == null)
 					return;
 				
-				runtime.Environment.SetValue("variable.gliding_speed_value", new DoubleValue(1d));
+				runtime.Environment.SetValue("variable.gliding_speed_value", new DoubleValue((Entity.CalculateMovementSpeed() * 43f) / 20f));
 				
 				if (_preRenderExpressions != null)
 					runtime.Execute(_preRenderExpressions);
@@ -201,10 +200,14 @@ namespace Alex.Graphics.Models.Entity.Animations
 						var value = bone.Value;
 						
 						var rotationOutput = ConditionalExecute(runtime, value.Rotation).ToArray();
-						modelBone.Rotation = GetVector3(modelBone.Rotation, rotationOutput);
-
 						var positionOutputs = ConditionalExecute(runtime, value.Position).ToArray();
-						modelBone.Position = GetVector3(modelBone.Position, positionOutputs);
+						
+						var targetRotation = GetVector3(modelBone.TargetRotation, rotationOutput);
+						var targetPosition = GetVector3(modelBone.TargetPosition, positionOutputs);
+						modelBone.MoveOverTime(targetPosition, targetRotation, _deltaTimeStopwatch.Elapsed);
+						
+					//	modelBone.Rotation = GetVector3(modelBone.Rotation, rotationOutput);
+					//modelBone.Position = GetVector3(modelBone.Position, positionOutputs);
 					}
 				}
 			}
@@ -224,12 +227,13 @@ namespace Alex.Graphics.Models.Entity.Animations
 				x = y = z = values[0].AsFloat();
 			}
 
-			return new Vector3(x, y, z);
+			return new Vector3(float.IsNaN(x) ? 0 : x, float.IsNaN(y) ? 0 : y, float.IsNaN(z) ? 0 : z);
 		}
 		
 		public void OnTick()
 		{
-			
+			DoImportant();
+			_deltaTimeStopwatch.Restart();
 		}
 	}
 }
