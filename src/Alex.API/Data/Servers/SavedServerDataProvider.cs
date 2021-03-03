@@ -70,11 +70,17 @@ namespace Alex.API.Data.Servers
             Save();
         }
 
-        public void RemoveEntry(SavedServerEntry entry)
+        public bool RemoveEntry(SavedServerEntry entry)
         {
-            _data.Remove(entry);
+            var newEntry = _data.FirstOrDefault(x => x.InternalIdentifier.Equals(entry.InternalIdentifier));
+            if (newEntry == null || !_data.Remove(newEntry))
+                return false;
+            
+            UpdateIndexes();
             
             Save();
+
+            return true;
         }
     }
 }
