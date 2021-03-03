@@ -8,6 +8,7 @@ using Alex.API.Data.Servers;
 using Alex.API.Graphics;
 using Alex.API.Gui;
 using Alex.API.Gui.Elements.Controls;
+using Alex.API.Gui.Elements.Layout;
 using Alex.API.Gui.Graphics;
 using Alex.API.Services;
 using Alex.API.Utils;
@@ -39,6 +40,9 @@ namespace Alex.Gamestates.Multiplayer
 
 	    private GuiPanoramaSkyBox       _skyBox;
 	    private CancellationTokenSource CancellationTokenSource { get; }
+	    private GuiStackContainer _tabItemContainer { get; }
+	    
+	    private string _filterValue = "java";
 		public MultiplayerServerSelectionState(GuiPanoramaSkyBox skyBox) : base()
 		{
 			_skyBox = skyBox;
@@ -48,6 +52,51 @@ namespace Alex.Gamestates.Multiplayer
 
 		    Title = "Multiplayer";
 		    TitleTranslationKey = "multiplayer.title";
+
+		    Header.Height = 44;
+		    Header.Padding = new Thickness(3, 3, 3, 0);
+		    Header.Margin = new Thickness(3, 3, 3, 0);
+
+		    GuiStackContainer stackedStack = new GuiStackContainer()
+		    {
+			    Orientation = Orientation.Horizontal, 
+			    ChildAnchor = Alignment.BottomLeft,
+			    MinWidth = BodyMinWidth,
+			    Width = BodyMinWidth,
+			    
+		    };
+		    
+		    stackedStack.AddChild(_tabItemContainer = new GuiStackContainer()
+		    {
+			    Orientation = Orientation.Horizontal,
+			    ChildAnchor = Alignment.BottomLeft,
+			    BackgroundOverlay = new Color(Color.Black, 0.20f)
+		    });
+		    
+		    Header.AddChild(stackedStack);
+		    
+		    ActiveTabBtn = AddTabButton("Java", () =>
+		    {
+			    _filterValue = "java";
+			    this.Reload();
+		    });
+		    
+		    AddTabButton("Bedrock", () =>
+		    {
+			    _filterValue = "bedrock";
+			    this.Reload();
+		    });
+
+		    //_tabItemContainer.MinWidth = _tabItemContainer.Width = BodyMinWidth;
+		    /*_tabItemContainer.AddChild(new GuiButton("Java")
+		    {
+			    BackgroundOverlay = new Color(Color.Black, 0.25f),
+			    Margin = Thickness.Zero
+		    });
+		    _tabItemContainer.AddChild(new GuiButton("Bedrock")
+		    {
+			    Margin = Thickness.Zero
+		    });*/
 		    
 			Footer.AddRow(row =>
 		    {
@@ -93,8 +142,54 @@ namespace Alex.Gamestates.Multiplayer
 		    });
 
 		    Background = new GuiTexture2D(_skyBox, TextureRepeatMode.Stretch);
+		    
+		    Body.Margin = new Thickness(0, Header.Height, 0, Footer.Height);
 		}
 
+		private GuiButton _activeTabBtn;
+		private GuiButton ActiveTabBtn
+		{
+			get => _activeTabBtn;
+			set
+			{
+				var oldValue = _activeTabBtn;
+
+				if (oldValue != null)
+				{
+					oldValue.BackgroundOverlay = Color.Transparent;
+					oldValue.EnabledTextColor = TextColor.DarkGray;
+					
+					oldValue.Enabled = false;
+					oldValue.Enabled = true;
+				}
+
+				value.BackgroundOverlay = new Color(Color.Black, 0.25f);
+				value.EnabledTextColor = TextColor.White;
+				_activeTabBtn = value;
+			}
+		}
+
+		private GuiButton AddTabButton(string text, Action action)
+		{
+			GuiButton button = new GuiButton(
+				text)
+			{
+				Margin = Thickness.Zero,
+				BackgroundOverlay = Color.Transparent,
+				EnabledTextColor = TextColor.DarkGray
+			};
+
+			button.Action = () =>
+			{
+				ActiveTabBtn = button;
+				action?.Invoke();
+			};
+			
+			_tabItemContainer.AddChild(button);
+
+			return button;
+		}
+		
 	    protected override void OnShow()
 	    {
 		    base.OnShow();
@@ -144,7 +239,7 @@ namespace Alex.Gamestates.Multiplayer
 	    {
 		    ClearItems();
 
-		    if (Alex.ServerTypeManager.TryGet("bedrock", out ServerTypeImplementation serverTypeImplementation))
+		    if (_filterValue == "bedrock" && Alex.ServerTypeManager.TryGet("bedrock", out ServerTypeImplementation serverTypeImplementation))
 		    {
 			    var item = new GuiServerListEntryElement(
 				    serverTypeImplementation,
@@ -164,7 +259,7 @@ namespace Alex.Gamestates.Multiplayer
 		    }
 		    
 		    Task previousTask = null;
-		    foreach (var entry in _listProvider.Data.ToArray())
+		    foreach (var entry in _listProvider.Data.Where(x => x.ServerType.Equals(_filterValue)).ToArray())
 		    {
 			    if (Alex.ServerTypeManager.TryGet(entry.ServerType, out var typeImplementation))
 			    {
