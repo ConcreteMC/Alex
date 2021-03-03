@@ -32,7 +32,7 @@ namespace Alex.MoLang.Runtime
 			return Execute(expressions, new Dictionary<string, IMoValue>());
 		}
 
-		public IMoValue Execute(List<IExpression> expressions, Dictionary<string, IMoValue> context) {
+		public IMoValue Execute(List<IExpression> expressions, IDictionary<string, IMoValue> context) {
 			//try
 			//{
 				ExprTraverser traverser = new ExprTraverser();

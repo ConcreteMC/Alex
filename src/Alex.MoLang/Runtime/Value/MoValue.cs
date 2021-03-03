@@ -22,9 +22,14 @@ namespace Alex.MoLang.Runtime.Value
 	{
 		public static IMoValue FromObject(object value)
 		{
-			if (value is IMoValue) {
-				return (IMoValue) value;
-			}
+			if (value is IMoValue moValue) {
+				return moValue;
+			} 
+			
+			//if (value is string str)
+			//{
+			//	return new StringValue(str);
+			//}
 			
 			return new DoubleValue(value);
 		}
