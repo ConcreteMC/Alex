@@ -219,12 +219,20 @@ namespace Alex.Gamestates.Multiplayer
 		    {
 			    if (confirm)
 			    {
+				    Log.Info($"Removing item: {toDelete.SavedServerEntry.Name}");
 				    RemoveItem(toDelete);
 
-				    _listProvider.RemoveEntry(toDelete.SavedServerEntry);
-				    _listProvider.Save(_listProvider.Data);
-				    
-					Reload();
+				    if (_listProvider.RemoveEntry(toDelete.SavedServerEntry))
+				    {
+					    //_listProvider.Save(_listProvider.Data);
+
+					    Log.Info($"Reloading: {toDelete.SavedServerEntry.Name}");
+					    Reload();
+				    }
+				    else
+				    {
+					    Log.Warn($"Failed to remove item.");
+				    }
 			    }
 		    }));
 	    }

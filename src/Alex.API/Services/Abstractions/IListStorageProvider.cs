@@ -6,6 +6,6 @@ namespace Alex.API.Services
     {
         void MoveEntry(int index, TEntryType entry);
         void AddEntry(TEntryType entry);
-        void RemoveEntry(TEntryType entry);
+        bool RemoveEntry(TEntryType entry);
     }
 }
