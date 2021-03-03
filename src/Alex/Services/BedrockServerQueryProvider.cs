@@ -62,7 +62,7 @@ namespace Alex.Services
 				};
 				
 				sw.Restart();
-				if (client.Start(TimeSpan.FromSeconds(30)))
+				if (client.Start(TimeSpan.FromSeconds(10)))
 				{
 					client.Close();
 

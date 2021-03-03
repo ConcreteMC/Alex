@@ -208,7 +208,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				{
 					//Connection.ConnectionInfo.ThroughPut.Change(Timeout.Infinite, Timeout.Infinite);
 
-					if (TryLocate(ServerEndpoint, out var serverInfo, 3))
+					cancellationToken.CancelAfter(timeout);
+					if (TryLocate(ServerEndpoint, out var serverInfo, cancellationToken.Token))
 					{
 						OnMotdReceivedHandler?.Invoke(
 							this,
@@ -294,7 +295,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		public bool TryLocate(
 			IPEndPoint targetEndPoint,
-			out (IPEndPoint serverEndPoint, string serverName, long ping) serverInfo,
+			out (IPEndPoint serverEndPoint, string serverName, long ping) serverInfo, 
+			CancellationToken cancellationToken,
 			int numberOfAttempts = 2147483647)
 		{
 			Stopwatch sw = new Stopwatch();
@@ -309,7 +311,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					this.SendUnconnectedPingInternal(targetEndPoint);
 				}
 
-				if (numberOfAttempts <= 0)
+				if (numberOfAttempts <= 0 || cancellationToken.IsCancellationRequested)
 					break;
 
 				//Task.Delay(100).Wait();

@@ -34,12 +34,13 @@ namespace Alex.Services
 	    public class ResolveResult
 	    {
 		    public bool Success;
-		    public IPAddress Result;
+		    public IPAddress[] Results;
 
-		    public ResolveResult(bool success, IPAddress result)
+		    public IPAddress Result => Results.Length == 0 ? null : Results[Rnd.Next() % Results.Length];
+		    public ResolveResult(bool success, params IPAddress[] results)
 		    {
 			    Success = success;
-			    Result = result;
+			    Results = results;
 		    }
 	    }
 
@@ -51,7 +52,7 @@ namespace Alex.Services
 			    return new ResolveResult(false, default(IPAddress));
 		    }
 
-		    return new ResolveResult(true, ipAddresses[Rnd.Next(0, ipAddresses.Length - 1)]);
+		    return new ResolveResult(true, ipAddresses);
 	    }
 
 	    public async Task QueryServerAsync(ServerConnectionDetails connectionDetails, PingServerDelegate pingCallback, ServerStatusDelegate statusCallBack)
