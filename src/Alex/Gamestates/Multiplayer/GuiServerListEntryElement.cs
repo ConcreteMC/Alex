@@ -220,8 +220,14 @@ namespace Alex.Gamestates.Multiplayer
 					Port = port
 				}));
 			}
-			
-			await QueryProvider.QueryServerAsync(new ServerConnectionDetails(new IPEndPoint(resolved.Result, port), address), PingCallback, QueryCompleted);
+			else
+			{
+				var endPoint = new IPEndPoint(resolved.Result, port);
+				
+				await QueryProvider.QueryServerAsync(
+					new ServerConnectionDetails(endPoint, address), PingCallback,
+					QueryCompleted);
+			}
 			//}
 
 			//QueryCompleted(result);

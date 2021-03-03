@@ -269,7 +269,7 @@ namespace Alex.Blocks
 							{
 								var properties = BlockState.ParseData(dataMatch.Value);
 
-								var p = properties.ToArray();
+								var p = properties.Where(x => x.Key != "waterlogged" || (x.Key == "waterlogged" && x.Value == "false")).ToArray();
 
 								for (var i = 0; i < p.Length; i++)
 								{
@@ -281,7 +281,7 @@ namespace Alex.Blocks
 									}
 									else
 									{
-										pcVariant = pcVariant.WithPropertyNoResolve(prop.Key, prop.Value, false);
+										pcVariant = pcVariant.WithProperty(prop.Key, prop.Value);
 									}
 								}
 							}

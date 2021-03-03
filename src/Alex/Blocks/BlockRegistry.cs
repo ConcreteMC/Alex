@@ -138,6 +138,7 @@ namespace Alex.Blocks
 		    this.Register("minecraft:wall_torch", () => new Torch(true));
 		    this.Register("minecraft:redstone_torch", () => new RedstoneTorch());
 		    this.Register("minecraft:redstone_wall_torch", () => new RedstoneTorch(true));
+		    this.Register("minecraft:repeater", () => new Repeater());
 		    
 		    //Pressure plates
 		    this.Register("minecraft:light_weighted_pressure_plate", () => new LightWeightedPressurePlate());
