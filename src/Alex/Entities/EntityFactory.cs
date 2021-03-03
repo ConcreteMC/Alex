@@ -239,7 +239,7 @@ namespace Alex.Entities
 				});
 		}
 		
-		public static Entity Create(MiNET.Entities.EntityType entityType, World world)
+		public static Entity Create(MiNET.Entities.EntityType entityType, World world, bool initRenderController = true)
 		{
 			Entity entity = null;
 
@@ -463,7 +463,11 @@ namespace Alex.Entities
 			if (Alex.Instance.Resources.BedrockResourcePack.EntityDefinitions.TryGetValue(
 				stringId, out var description))
 			{
-				entity.AnimationController.UpdateEntityDefinition(description);
+				if (initRenderController)
+				{
+					entity.AnimationController.UpdateEntityDefinition(description);
+				}
+
 				entity.ModelRenderer = EntityFactory.GetEntityRenderer(
 					stringId, null);
 			}

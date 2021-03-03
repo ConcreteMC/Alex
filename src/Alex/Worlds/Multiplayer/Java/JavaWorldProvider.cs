@@ -498,7 +498,7 @@ namespace Alex.Worlds.Multiplayer.Java
 			{
 				type = MiNET.Entities.EntityHelpers.ToEntityType($"minecraft:{knownData.Name}");
 				
-				entity = EntityFactory.Create(type, null);
+				entity = EntityFactory.Create(type, null, type != EntityType.ArmorStand);
 			
 
 				if (entity == null)
