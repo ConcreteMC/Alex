@@ -257,7 +257,7 @@ namespace Alex.Worlds.Multiplayer.Java
 				{
 					PlayerLookPacket playerLook = new PlayerLookPacket();
 					playerLook.Pitch = -pos.Pitch;
-					playerLook.Yaw = pos.HeadYaw;
+					playerLook.Yaw = -pos.HeadYaw;
 					playerLook.OnGround = pos.OnGround;
 
 					SendPacket(playerLook);
@@ -292,7 +292,7 @@ namespace Alex.Worlds.Multiplayer.Java
 		private void SendPlayerPostionAndLook(PlayerLocation pos)
 		{
 			PlayerPositionAndLookPacketServerBound packet = new PlayerPositionAndLookPacketServerBound();
-			packet.Yaw = pos.HeadYaw;
+			packet.Yaw = -pos.HeadYaw;
 			packet.Pitch = -pos.Pitch;
 			packet.X = pos.X;
 			packet.Y = pos.Y;

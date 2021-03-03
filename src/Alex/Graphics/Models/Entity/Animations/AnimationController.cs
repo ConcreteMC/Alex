@@ -186,6 +186,13 @@ namespace Alex.Graphics.Models.Entity.Animations
 
 				if (def.Scripts != null)
 				{
+					if (def.Scripts.ShouldUpdateBonesAndEffectsOffscreen != null)
+					{
+						if (!Entity.IsRendered && !runtime.Execute(
+							def.Scripts.ShouldUpdateBonesAndEffectsOffscreen, _context).AsBool())
+							return;
+					}
+					
 					foreach (var key in def.Scripts.Animate)
 					{
 						HandleAnnoyingMolangElement(runtime, key, _context);
@@ -240,6 +247,35 @@ namespace Alex.Graphics.Models.Entity.Animations
 
 					if (controller.States.TryGetValue(state, out var animationState))
 					{
+						if (animationState.Variables != null)
+						{
+							foreach (var anim in animationState.Variables)
+							{
+								if (anim.Value.Input != null)
+								{
+									double input = runtime.Execute(anim.Value.Input, _context).AsDouble();
+									/*double start = 0d;
+									double end = 1d;
+									if (anim.Value.RemapCurve != null)
+									{
+										for (int i = 0; i < anim.Value.RemapCurve.Count - 1; i += 2)
+										{
+											//var s = anim.Value.RemapCurve.
+											if (input >= map.Key)
+											{
+												
+											}
+										}
+										//start = anim.Value.RemapCurve.
+									}*/
+									
+									runtime.Environment.Structs["variable"].Set(
+										anim.Key, new DoubleValue(input));
+								}
+								//HandleAnnoyingMolangElement(runtime, anim, context);
+							}
+						}
+						
 						if (animationState.Animations != null)
 						{
 							foreach (var anim in animationState.Animations)
@@ -298,7 +334,8 @@ namespace Alex.Graphics.Models.Entity.Animations
 
 							modelBone.MoveOverTime(
 								targetPosition, targetRotation * new Vector3(-1f, 1f, 1f), targetScale,
-								_deltaTimeStopwatch.Elapsed, anim.OverridePreviousAnimation);
+								_deltaTimeStopwatch.Elapsed, anim.OverridePreviousAnimation,
+								anim.BlendWeight != null ? runtime.Execute(anim.BlendWeight).AsFloat() : 1f);
 
 							//	modelBone.Rotation = GetVector3(modelBone.Rotation, rotationOutput);
 							//modelBone.Position = GetVector3(modelBone.Position, positionOutputs);
@@ -310,27 +347,6 @@ namespace Alex.Graphics.Models.Entity.Animations
 			{
 				Log.Warn($"Missing animation: {name}");
 			}
-		}
-
-		private Vector3 GetVector3(Vector3 currentValue, IMoValue[] values)
-		{
-			if (values.Length == 0)
-				return currentValue;
-			
-			float x = currentValue.X, y = currentValue.Y, z = currentValue.Z;
-							
-			if (values.Length == 3)
-			{
-				x += values[0].AsFloat();
-				y += values[1].AsFloat();
-				z += values[2].AsFloat();
-			}else if (values.Length == 1)
-			{
-				x += y += values[0].AsFloat();
-				z += values[0].AsFloat();
-			}
-
-			return new Vector3(float.IsNaN(x) ? 0 : x, float.IsNaN(y) ? 0 : y, float.IsNaN(z) ? 0 : z);
 		}
 
 		public void OnTick()

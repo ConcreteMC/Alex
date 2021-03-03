@@ -125,7 +125,7 @@ namespace Alex.Graphics.Models.Entity
 				//Console.WriteLine($"{Definition.Name}.Rotation = {_targetRotation}");
 			}
 			
-			public void MoveOverTime(Vector3 targetPosition, Vector3 targetRotation, Vector3 targetScale, TimeSpan time, bool overrideOthers = false)
+			public void MoveOverTime(Vector3 targetPosition, Vector3 targetRotation, Vector3 targetScale, TimeSpan time, bool overrideOthers = false, float blendWeight = 1f)
 			{
 				if (overrideOthers)
 				{
@@ -241,17 +241,18 @@ namespace Alex.Graphics.Models.Entity
 						}
 					}
 
+					var bindingRotation = _bindingRotation;
 					if (Definition.Pivot.HasValue)
 					{
 						var pivot = (Definition.Pivot ?? Vector3.Zero);
 						WorldMatrix =  MCMatrix.CreateScale(_scale) * MCMatrix.CreateTranslation(-pivot) 
-						              * MCMatrix.CreateRotationDegrees(BindingRotation)
+						              * MCMatrix.CreateRotationDegrees(bindingRotation)
 						              * MCMatrix.CreateTranslation(pivot)
 						              * matrix;
 					}
 					else
 					{
-						WorldMatrix = MCMatrix.CreateScale(_scale) * MCMatrix.CreateRotationDegrees(BindingRotation)
+						WorldMatrix = MCMatrix.CreateScale(_scale) * MCMatrix.CreateRotationDegrees(bindingRotation)
 						                                           * matrix;
 					}
 				}
