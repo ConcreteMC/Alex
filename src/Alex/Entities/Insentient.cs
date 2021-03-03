@@ -15,20 +15,6 @@ namespace Alex.Entities
 		protected override void HandleJavaMeta(MetaDataEntry entry)
 		{
 			base.HandleJavaMeta(entry);
-
-			if (entry.Index == 14 && entry is MetadataByte bitMask)
-			{
-				//NoAi = ((bitMask.Value & 0x01) != 0);
-
-				if ((bitMask.Value & 0x02) != 0) //Left Handed
-				{
-					IsLeftHanded = true;
-				}
-				else
-				{
-					IsLeftHanded = false;
-				}
-			}
 		}
 	}
 }

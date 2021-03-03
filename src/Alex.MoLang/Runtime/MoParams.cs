@@ -15,7 +15,12 @@ namespace Alex.MoLang.Runtime
 		public MoParams(List<IMoValue> param)
 		{
 			this._parameters = param;
-		} 
+		}
+
+		public IMoValue Get(int index)
+		{
+			return _parameters[index];
+		}
 		
 		public T Get<T>(int index) {
 			IMoValue obj = _parameters[index];

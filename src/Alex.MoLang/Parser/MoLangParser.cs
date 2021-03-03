@@ -100,7 +100,7 @@ namespace Alex.MoLang.Parser
 
 			if (parselet == null)
 			{
-				throw new Exception("Cannot parse " + token.Type.GetType().Name + " expression");
+				throw new MoLangParserException("Cannot parse " + token.Type.GetType().Name + " expression");
 			}
 
 			IExpression expr = parselet.Parse(this, token);
@@ -134,11 +134,17 @@ namespace Alex.MoLang.Parser
 
 			if (token != null)
 			{
+				//if (token.Type == TokenType.Eof)
+				//	return Precedence.Product;
 			//	InfixParselet parselet = InfixParselets[token.Type];
 
 				if ( InfixParselets.TryGetValue(token.Type, out var parselet))
 				{
 					return parselet.Precedence;
+				}
+				else
+				{ 
+					//throw new MoLangParserException($"Invalid precedence token of type '{token.Type.TypeName}' and text '{token.Text}' at {token.Position.LineNumber}:{token.Position.Index}");
 				}
 			}
 

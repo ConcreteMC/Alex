@@ -35,7 +35,7 @@ namespace Alex.Graphics.Models.Entity
 			{
 				_texture = value;
 
-				if (Effect != null)
+				if (Effect != null && value != null)
 				{
 					Effect.Texture = value;
 				}
@@ -335,6 +335,14 @@ namespace Alex.Graphics.Models.Entity
 			Effect = null;
 			VertexBuffer = null;
 			Texture = null;
+		}
+
+		public void ApplyPending()
+		{
+			foreach (var b in Bones)
+			{
+				b.Value?.ApplyMovement();
+			}
 		}
 	}
 }

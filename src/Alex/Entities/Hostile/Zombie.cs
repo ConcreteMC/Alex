@@ -12,36 +12,5 @@ namespace Alex.Entities.Hostile
 			Height = 1.95;
 			Width = 0.6;
 		}
-		
-		protected override void Animate(float dt, float mvSpeed)
-		{
-			if (_leftArmModel != null && _rightArmModel != null)
-			{
-				Vector3 rArmRot;
-
-				if (mvSpeed > 0f)
-				{
-					rArmRot = new Vector3(85f, 0, 0);
-				}
-				else
-				{
-					IsMoving = false;
-
-					rArmRot = new Vector3(
-						85f, 0f, 0f);
-				}
-
-
-				if (!_leftArmModel.IsAnimating)
-				{
-					_leftArmModel.Rotation = rArmRot;
-				}
-
-				if (!_rightArmModel.IsAnimating)
-				{
-					_rightArmModel.Rotation = rArmRot;
-				}
-			}
-		}
 	}
 }

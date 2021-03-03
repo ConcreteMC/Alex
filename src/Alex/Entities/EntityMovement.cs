@@ -21,7 +21,9 @@ namespace Alex.Entities
 			Entity = entity;
 			Heading = Vector3.Zero;
 		}
-
+		
+		private Stopwatch _previousUpdate = new Stopwatch();
+		private float _distanceMoved = 0f;
 		public float DistanceMoved
 		{
 			get => _distanceMoved;
@@ -52,6 +54,29 @@ namespace Alex.Entities
 			}
 		}
 
+		private Stopwatch _previousVerticalUpdate = new Stopwatch();
+		private float _verticalDistanceMoved = 0f;
+		public float VerticalDistanceMoved
+		{
+			get => _verticalDistanceMoved;
+			set
+			{
+				var mvt = value;
+				var previousValue = _verticalDistanceMoved;
+
+				_verticalDistanceMoved = value;
+
+				//_speedAccumulator += frameTime;
+				var distanceMoved = mvt - previousValue;
+
+				var difference = _previousVerticalUpdate.Elapsed;
+				VerticalSpeed = (float) (distanceMoved * (TimeSpan.FromSeconds(1) / difference));
+				_previousVerticalUpdate.Restart();
+			}
+		}
+
+		public float VerticalSpeed { get; private set; } = 0f;
+		
 		private object _headingLock = new object();
 		public void UpdateHeading(Vector3 heading)
 		{
@@ -86,6 +111,8 @@ namespace Alex.Entities
 			UpdateTarget();
 
 			DistanceMoved += MathF.Abs(distance);
+			VerticalDistanceMoved += MathF.Abs(Microsoft.Xna.Framework.Vector3.Distance(
+				Entity.KnownPosition.ToVector3() * new Vector3(0f, 1f, 0f), location.ToVector3() * new Vector3(0f, 1f, 0f)));
 		}
 
 		public Vector3 Move(Vector3 amount)
@@ -177,7 +204,12 @@ namespace Alex.Entities
 			UpdateTarget();
 			
 			DistanceMoved +=
-				MathF.Abs(Microsoft.Xna.Framework.Vector3.Distance(oldPosition , Entity.KnownPosition.ToVector3()));
+				MathF.Abs(Microsoft.Xna.Framework.Vector3.Distance(oldPosition * new Vector3(1f, 0f, 1f),
+					Entity.KnownPosition.ToVector3() * new Vector3(1f, 0f, 1f)));
+			
+			VerticalDistanceMoved +=
+				MathF.Abs(Microsoft.Xna.Framework.Vector3.Distance(oldPosition * new Vector3(0f, 1f, 0f),
+					Entity.KnownPosition.ToVector3() * new Vector3(0f, 1f, 0f)));
 
 			return amount;
 		}
@@ -257,8 +289,8 @@ namespace Alex.Entities
 			//	return;
 			//}
 			
-			var distance = Microsoft.Xna.Framework.Vector3.DistanceSquared(
-				Entity.RenderLocation.ToVector3() * new Vector3(1f, 0f, 1f), target.ToVector3() * new Vector3(1f, 0f, 1f));
+			//var distance = Microsoft.Xna.Framework.Vector3.DistanceSquared(
+			//	Entity.RenderLocation.ToVector3() * new Vector3(1f, 0f, 1f), target.ToVector3() * new Vector3(1f, 0f, 1f));
 
 			/*if (distance >= 16f)
 			{
@@ -373,9 +405,6 @@ namespace Alex.Entities
 
 			entity.RenderLocation = renderLocation;
 		}
-
-		private Stopwatch _previousUpdate = new Stopwatch();
-		private float _distanceMoved = 0f;
 
 		/// <inheritdoc />
 		public void OnTick()
