@@ -458,11 +458,14 @@ namespace Alex.Entities
 				default:
 					return null;
 			}
-			
+
+			var stringId = entityType.ToStringId();
 			if (Alex.Instance.Resources.BedrockResourcePack.EntityDefinitions.TryGetValue(
-				entityType.ToStringId(), out var description))
+				stringId, out var description))
 			{
 				entity.AnimationController.UpdateEntityDefinition(description);
+				entity.ModelRenderer = EntityFactory.GetEntityRenderer(
+					stringId, null);
 			}
 
 			return entity;

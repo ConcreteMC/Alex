@@ -153,17 +153,7 @@ namespace Alex.Worlds
 
 			Player = new Player(graphics, serviceProvider.GetRequiredService<Alex>().InputManager, this, skin, networkProvider, PlayerIndex.One);
 			Camera = new EntityCamera(Player);
-			
-			if (Alex.PlayerModel != null)
-			{
-				EntityModelRenderer modelRenderer = new EntityModelRenderer(Alex.PlayerModel, texture);
 
-				if (modelRenderer.Valid)
-				{
-					Player.ModelRenderer = modelRenderer;
-				}
-			}
-			
 			Player.KnownPosition = new PlayerLocation(GetSpawnPoint());
 			_disposables.Add(options.FieldOfVision.Bind(FieldOfVisionOnValueChanged));
 			//Options.FieldOfVision.ValueChanged += FieldOfVisionOnValueChanged;
@@ -186,6 +176,8 @@ namespace Alex.Worlds
 			Camera.SetRenderDistance(options.VideoOptions.RenderDistance);
 
 			BackgroundWorker = new BackgroundWorker();
+			
+			Player?.OnSpawn();
 		}
 
 		private void FieldOfVisionOnValueChanged(int oldvalue, int newvalue)

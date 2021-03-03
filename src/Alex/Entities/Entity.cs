@@ -121,8 +121,7 @@ namespace Alex.Entities
 
 		public virtual bool NoAi { get; set; } = false;
 		public bool HideNameTag { get; set; } = false;
-		public bool Silent { get; set; }
-
+		
 		public bool HeadInBlock  { get; set; } = false;
 		public bool AboveWater   { get; set; } = false;
 		public bool HeadInWater  { get; set; } = false;
@@ -236,7 +235,7 @@ namespace Alex.Entities
 		protected EntityModelRenderer.ModelBone _leftLegModel;
 		protected EntityModelRenderer.ModelBone _rightLegModel;
 
-		protected EntityModelRenderer.ModelBone _body;
+		protected EntityModelRenderer.ModelBone  _body;
 		protected EntityModelRenderer.ModelBone _head;
 		
 		public  HealthManager HealthManager { get; }
@@ -289,6 +288,7 @@ namespace Alex.Entities
             HideNameTag = false;
 			//ServerEntity = true;
 			IsAffectedByGravity = true;
+			HasPhysics = true;
 			
 			HealthManager = new HealthManager(this);
 			UUID = new MiNET.Utils.UUID(Guid.NewGuid().ToByteArray());
@@ -633,14 +633,14 @@ namespace Alex.Entities
 						}
 					} break;
 
-					case (int) MiNET.Entities.Entity.MetadataFlags.HideNameTag:
+					/*case (int) MiNET.Entities.Entity.MetadataFlags.HideNameTag:
 					{
 						if (meta.Value is MiNET.Utils.MetadataByte hideNameTag)
 						{
-							//HideNameTag = hideNameTag.Value == 1;
+							HideNameTag = hideNameTag.Value == 0;
 						}
 						break;
-					}
+					}*/
 
 					case (int) MiNET.Entities.Entity.MetadataFlags.MaxAir:
 					{
@@ -683,11 +683,12 @@ namespace Alex.Entities
 			IsSneaking = (data & ((int) MiNET.Entities.Entity.DataFlags.Sneaking)) != 0;
 			IsOnFire = (data & ((int) MiNET.Entities.Entity.DataFlags.OnFire)) != 0;
 			IsSprinting = (data & ((int) MiNET.Entities.Entity.DataFlags.Sprinting)) != 0;
-			
+
 			NoAi = (data & ((int) MiNET.Entities.Entity.DataFlags.NoAi)) != 0;
 			IsAffectedByGravity = (data & ((int) MiNET.Entities.Entity.DataFlags.AffectedByGravity)) != 0;
 			//HasCollision = (data & ((int) MiNET.Entities.Entity.DataFlags.HasCollision)) != 0;
 			
+			HideNameTag = (data & ((int) MiNET.Entities.Entity.DataFlags.ShowName)) != 0;
 			IsAlwaysShowName = (data & ((int) MiNET.Entities.Entity.DataFlags.AlwaysShowName)) != 0;
 			IsBaby = (data & ((int) MiNET.Entities.Entity.DataFlags.Baby)) != 0;
 			IsUsingItem = (data & ((int) MiNET.Entities.Entity.DataFlags.UsingItem)) != 0;
@@ -706,6 +707,9 @@ namespace Alex.Entities
 			IsResting = (data & ((int) MiNET.Entities.Entity.DataFlags.Resting)) != 0;
 			IsMoving = (data & ((int) MiNET.Entities.Entity.DataFlags.Moving)) != 0;
 			IsElder = (data & ((int) MiNET.Entities.Entity.DataFlags.Elder)) != 0;
+			//IsEating = (data & (62)) != 0;
+			//IsBlocking = (data & 71) != 0;
+			//IsSleeping = (data & (75)) != 0;
 		}
 
 		public virtual void Render(IRenderArgs renderArgs)
@@ -725,10 +729,12 @@ namespace Alex.Entities
 		public virtual void Update(IUpdateArgs args)
 		{
 			Movement?.Update(args.GameTime);
-			
+
 			var renderer = ModelRenderer;
 
-			if (((!RenderEntity || IsInvisible) && !ShowItemInHand) || renderer == null || _skipRendering) return;
+			if (renderer == null || _skipRendering)
+				return;
+			//if (((!RenderEntity || IsInvisible) && !ShowItemInHand) || renderer == null || _skipRendering) return;
 
 			if (_head != null)
 			{
@@ -739,10 +745,6 @@ namespace Alex.Entities
 				_head.Rotation = new Vector3(pitch, headYaw, 0f);
 			}
 			
-		//	CalculateLegMovement(args);
-			
-			AnimationController?.Update(args.GameTime);
-		
 			renderer.Update(args, RenderLocation);
 
 			//if (!ShowItemInHand || _skipRendering || ItemRenderer == null) return;
@@ -761,14 +763,6 @@ namespace Alex.Entities
 		}
 		
 		protected bool DoRotationCalculations = true;
-
-		private  float   _armRotation        = 0f;
-		private  float   _legRotation        = 0f;
-		
-		//public  float DistanceMoved { get; set; } = 0;
-		private float _mvSpeed = 0f;
-
-		//public bool ServerEntity { get; protected set; } = true;
 
 		public void SwingArm(bool broadcast = false)
 		{

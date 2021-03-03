@@ -1590,11 +1590,28 @@ namespace Alex.Worlds.Multiplayer.Java
 					
 					RemotePlayer entity = new RemotePlayer(
 						World, "geometry.humanoid.custom");
-
-					entity.NameTag = entry.Name;
-
+					
 					entity.UpdateGamemode((GameMode) entry.Gamemode);
 					entity.UUID = uuid;
+					
+					if (entry.HasDisplayName)
+					{
+						if (ChatObject.TryParse(entry.DisplayName, out string chat))
+						{
+							entity.NameTag = chat;
+						}
+						else
+						{
+							entity.NameTag = entry.DisplayName;
+						}
+					}
+					else
+					{
+						entity.NameTag = entry.Name;
+					}
+
+					entity.HideNameTag = false;
+					entity.IsAlwaysShowName = true;
 					
 					World.AddPlayerListItem(
 						new PlayerListItem(entity.UUID, entry.Name, (GameMode) entry.Gamemode, entry.Ping, true));
@@ -1604,25 +1621,6 @@ namespace Alex.Worlds.Multiplayer.Java
 						World.BackgroundWorker.Enqueue(
 							() =>
 							{
-								if (entry.HasDisplayName)
-								{
-									if (ChatObject.TryParse(entry.DisplayName, out string chat))
-									{
-										entity.NameTag = chat;
-									}
-									else
-									{
-										entity.NameTag = entry.DisplayName;
-									}
-								}
-								else
-								{
-									entity.NameTag = entry.Name;
-								}
-
-								entity.HideNameTag = false;
-								entity.IsAlwaysShowName = true;
-
 								string skinJson = null;
 
 								foreach (var property in entry.Properties)

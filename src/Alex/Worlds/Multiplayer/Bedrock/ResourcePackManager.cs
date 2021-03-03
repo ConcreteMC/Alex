@@ -179,7 +179,13 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 						ms.Write(_chunks[i]);
 					}
 
-					_completedData = ms.ToArray();
+					ms.Position = 0;
+					
+					byte[] buffer = new byte[_compressedPackageSize];
+					ms.Read(buffer, 0, buffer.Length);
+					_completedData = buffer;
+					//_completedData = ms.
+					//_completedData = ms.Read().ToArray();
 
 					OnComplete(_completedData);
 				}
@@ -229,7 +235,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					ResourcePack = brp;
 				}
 			}*/
-			File.WriteAllBytes($"Texture-{Info.UUID}.zip", data);
+			//File.WriteAllBytes($"Texture-{Info.UUID}.zip", data);
 		}
 	}
 	
@@ -245,7 +251,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		protected override void OnComplete(byte[] data)
 		{
 			base.OnComplete(data);
-			File.WriteAllBytes($"Behavior-{Info.PackIdVersion.Id}.zip", data);
+			//File.WriteAllBytes($"Behavior-{Info.PackIdVersion.Id}.zip", data);
 		}
 	}
 }

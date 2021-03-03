@@ -289,20 +289,20 @@ namespace Alex.Entities
 			//	return;
 			//}
 			
-			//var distance = Microsoft.Xna.Framework.Vector3.DistanceSquared(
-			//	Entity.RenderLocation.ToVector3() * new Vector3(1f, 0f, 1f), target.ToVector3() * new Vector3(1f, 0f, 1f));
+			var distance = Microsoft.Xna.Framework.Vector3.DistanceSquared(
+				Entity.RenderLocation.ToVector3(), target.ToVector3());
 
-			/*if (distance >= 16f)
+			if (distance >= 16f)
 			{
 				Entity.RenderLocation = target;
 				_frameAccumulator = TargetTime;
 			}
 			else
-			{*/
+			{
 				_frameAccumulator = 0;
 				_from = (PlayerLocation) Entity.RenderLocation.Clone();
 				_target = (PlayerLocation) target.Clone();
-			//}
+			}
 		}
 
 		public void Push(Vector3 velocity)
