@@ -19,5 +19,8 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Entity
 		
 		[JsonProperty("transitions")]
 		public AnnoyingMolangElement[] Transitions { get; set; }
+		
+		[JsonProperty("remap_curve")]
+		public Dictionary<string, ControllerVariable> Variables { get; set; }
 	}
 }
