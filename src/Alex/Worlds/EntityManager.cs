@@ -63,7 +63,7 @@ namespace Alex.Worlds
 				_sw.Restart();
 				rendered.Add(entity);
 				
-				entity.OnTick();
+				//entity.OnTick();
 
 				//if (!entity.IsSpawned)
 				//	continue;
@@ -75,12 +75,13 @@ namespace Alex.Worlds
 					continue;
 				}*/
 
-				var entityBox = entity.GetVisibilityBoundingBox(entity.KnownPosition);
+				var entityBox = entity.GetVisibilityBoundingBox(entity.RenderLocation);
 
-				if (World.Camera.BoundingFrustum.Contains(
-					new Microsoft.Xna.Framework.BoundingBox(entityBox.Min, entityBox.Max)) != ContainmentType.Disjoint)
+				if (World.Camera.BoundingFrustum.Intersects(
+					new Microsoft.Xna.Framework.BoundingBox(entityBox.Min, entityBox.Max)))
 				{
 					entity.IsRendered = true;
+					entity.OnTick();
 				}
 				else
 				{

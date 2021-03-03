@@ -497,7 +497,7 @@ namespace Alex.Entities
 		public bool IsBlocking { get; set; }
 		public bool HasCollision { get; set; } = true;
 		public bool IsAffectedByGravity { get; set; } = true;
-		public bool IsSwimming { get; set; }
+		public virtual bool IsSwimming { get; set; }
 		public bool IsSleeping { get; set; }
 		public bool IsStanding { get; set; } = true;
 		
@@ -680,7 +680,7 @@ namespace Alex.Entities
 				return;
 			
 			IsInvisible = (data & ((int) MiNET.Entities.Entity.DataFlags.Invisible)) != 0;
-			IsSneaking = (data & ((int) MiNET.Entities.Entity.DataFlags.Sneaking)) != 0;
+			IsSneaking = (data & ((int) MiNET.Entities.Entity.DataFlags.Sitting)) != 0;
 			IsOnFire = (data & ((int) MiNET.Entities.Entity.DataFlags.OnFire)) != 0;
 			IsSprinting = (data & ((int) MiNET.Entities.Entity.DataFlags.Sprinting)) != 0;
 
@@ -702,7 +702,7 @@ namespace Alex.Entities
 			IsChested = (data & ((int) MiNET.Entities.Entity.DataFlags.Chested)) != 0;
 			IsFlagAllFlying = (data & ((int) MiNET.Entities.Entity.DataFlags.FlagAllFlying)) != 0;
 			IsSilent = (data & ((int) MiNET.Entities.Entity.DataFlags.Silent)) != 0;
-			IsSitting = (data & ((int) MiNET.Entities.Entity.DataFlags.Sitting)) != 0;
+			IsSitting = (data & ((int) MiNET.Entities.Entity.DataFlags.Sneaking)) != 0;
 			IsWallClimbing = (data & ((int) MiNET.Entities.Entity.DataFlags.WallClimbing)) != 0;
 			IsResting = (data & ((int) MiNET.Entities.Entity.DataFlags.Resting)) != 0;
 			IsMoving = (data & ((int) MiNET.Entities.Entity.DataFlags.Moving)) != 0;

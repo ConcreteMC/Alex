@@ -11,10 +11,10 @@ namespace Alex.MoLang.Runtime.Value
 		public double Value { get; }
 
 		public DoubleValue(object value) {
-			if (value is bool) {
-				Value = (bool) value ? 1.0 : 0.0;
-			} else if (value is double) {
-				Value = (double) value;
+			if (value is bool boolean) {
+				Value = boolean ? 1.0 : 0.0;
+			} else if (value is double dbl) {
+				Value = dbl;
 			} else if (value is float flt){
 				Value = flt;
 			}

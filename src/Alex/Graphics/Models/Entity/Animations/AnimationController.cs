@@ -38,6 +38,8 @@ namespace Alex.Graphics.Models.Entity.Animations
 
 		private AnimationState _animationState = null;
 		private static readonly Regex ControllerRegex = new Regex("", RegexOptions.Compiled);
+
+		private EntityQueryStruct _queryStruct = null;
 		public void UpdateEntityDefinition(EntityDescription definition)
 		{
 			//Monitor.Enter(_lock);
@@ -47,12 +49,13 @@ namespace Alex.Graphics.Models.Entity.Animations
 				List<IExpression> preRender = new List<IExpression>();
 				
 				MoLangRuntime runtime = new MoLangRuntime();
+				_context.Clear();
 				//SetEnvironment(runtime.Environment);
-				runtime.Environment.Structs.TryAdd("query", InitQueryStruct());
+				runtime.Environment.Structs.TryAdd("query", _queryStruct = new EntityQueryStruct(Entity));
 
 				if (definition.Scripts != null)
 				{
-					foreach (var init in ConditionalExecute(runtime, definition.Scripts.Initialize)) { }
+					foreach (var init in ConditionalExecute(runtime, definition.Scripts.Initialize, _context)) { }
 
 					foreach (var list in definition.Scripts.PreAnimation)
 					{
@@ -121,7 +124,7 @@ namespace Alex.Graphics.Models.Entity.Animations
 			}
 		}
 
-		private IEnumerable<IMoValue> ConditionalExecute(MoLangRuntime runtime, List<IExpression>[] expressions)
+		private IEnumerable<IMoValue> ConditionalExecute(MoLangRuntime runtime, List<IExpression>[] expressions, IDictionary<string, IMoValue> context)
 		{
 			if (expressions == null)
 				yield break;
@@ -131,176 +134,19 @@ namespace Alex.Graphics.Models.Entity.Animations
 				if (expressionList == null || expressionList.Count == 0)
 					continue;
 				
-				yield return runtime.Execute(expressionList);
+				yield return runtime.Execute(expressionList, context);
 			}
-		}
-
-		private QueryStruct InitQueryStruct()
-		{
-			Dictionary<string, Func<MoParams, object>> q = new Dictionary<string, Func<MoParams, object>>();
-			q.Add("life_time", mo => new DoubleValue(Entity.LifeTime.TotalSeconds));
-			q.Add("position_delta", mo =>
-			{
-				var delta = Entity.KnownPosition;
-				double amount = 0d;
-				switch (mo.GetInt(0))
-				{
-					case 0: //X-Axis
-						
-						break;
-					case 1: //Y-Axis
-						
-						break;
-					case 2: //Z-Axis
-						
-						break;
-				}
-				
-				return new DoubleValue(amount);
-			});
-			q.Add("position", mo =>
-			{
-				double amount = 0d;
-				switch (mo.GetInt(0))
-				{
-					case 0: //X-Axis
-						amount = Entity.KnownPosition.X;
-						break;
-					case 1: //Y-Axis
-						amount = Entity.KnownPosition.Y;
-						break;
-					case 2: //Z-Axis
-						amount = Entity.KnownPosition.Z;
-						break;
-				}
-				
-				return new DoubleValue(amount);
-			});
-			
-			q.Add("main_hand_item_use_duration", NoOp);
-			q.Add("main_hand_item_max_duration", NoOp);
-			
-			q.Add("modified_distance_moved", mo =>
-			{
-				return new DoubleValue(Entity.Movement.DistanceMoved);
-			});
-			
-			q.Add("modified_move_speed", mo =>
-			{
-			//	Console.WriteLine($"Movement: {Entity.MovementSpeed:F3} | Current: {Entity.CurrentSpeed:F3}");
-			//	Console.WriteLine(Entity.CurrentSpeed);
-				return new DoubleValue((1f / (Entity.CalculateMovementSpeed() * 43f)) * (Entity.Movement.MetersPerSecond));
-			});
-			
-			q.Add("delta_time", mo =>
-			{
-				return new DoubleValue(_deltaTimeStopwatch.Elapsed.TotalSeconds);
-			});
-			
-			q.Add("get_equipped_item_name", mo =>
-			{
-				bool isOffHand = false;
-				if (mo.Contains(0))
-				{
-					var firstArgument = mo.Get(0);
-
-					if (firstArgument is StringValue sv)
-					{
-						if (!sv.Value.Equals("main_hand"))
-							isOffHand = true;
-					}
-					else if (firstArgument is DoubleValue dv)
-					{
-						if (dv.Value > 0)
-							isOffHand = true;
-					}
-				}
-				
-				if (mo.Contains(1))
-				{
-					
-				}
-
-				Item item = null;
-				if (!isOffHand)
-					item = Entity.Inventory.MainHand;
-				else
-					item = Entity.Inventory.OffHand;
-
-				if (item?.Name == null)
-					return new StringValue("air");
-				
-				return new StringValue(item.Name.Replace("minecraft:", ""));
-			});
-			
-			q.Add("ground_speed", mo =>
-			{
-				return new DoubleValue(Entity.Movement.MetersPerSecond);
-			});
-			
-			q.Add("log", mo =>
-			{
-				Log.Debug($"Animation Debug: {string.Join(", ", mo.GetParams().Select(x => x.AsString()))}");
-				return null;
-			});
-			
-			q.Add("vertical_speed", mo => new DoubleValue(Entity.Movement.VerticalSpeed));
-			q.Add("time_of_day", mo => new DoubleValue((1f / 24000f) * Entity.Level.TimeOfDay));
-
-			q.Add("is_alive", mo => Entity.HealthManager.Health > 0 ? DoubleValue.One : DoubleValue.Zero);
-			q.Add("is_on_ground", mo => Entity.KnownPosition.OnGround ? DoubleValue.One : DoubleValue.Zero);
-			q.Add("is_riding", mo => Entity.IsRiding ? DoubleValue.One : DoubleValue.Zero);
-			q.Add("is_sneaking", mo => Entity.IsSneaking ? DoubleValue.One : DoubleValue.Zero);
-			q.Add("is_charging", mo => Entity.IsAngry ? DoubleValue.One : DoubleValue.Zero);
-			q.Add("is_tamed", mo => Entity.IsTamed ? DoubleValue.One : DoubleValue.Zero);
-			q.Add("is_using_item", mo => Entity.IsUsingItem ? DoubleValue.One : DoubleValue.Zero);
-			q.Add("is_wall_climbing", mo => Entity.IsWallClimbing ? DoubleValue.One : DoubleValue.Zero);
-			q.Add("is_onfire", mo => Entity.IsOnFire ? DoubleValue.One : DoubleValue.Zero);
-			q.Add("is_on_fire", mo => Entity.IsOnFire ? DoubleValue.One : DoubleValue.Zero);
-			q.Add("is_sprinting", mo => Entity.IsSprinting ? DoubleValue.One : DoubleValue.Zero);
-			q.Add("is_on_screen", mo => Entity.IsRendered ? DoubleValue.One : DoubleValue.Zero);
-			q.Add("is_moving", mo => Entity.IsMoving ? DoubleValue.One : DoubleValue.Zero);
-			q.Add("is_leashed", mo => Entity.IsLeashed ? DoubleValue.One : DoubleValue.Zero);
-			q.Add("is_interested", mo => Entity.IsInterested ? DoubleValue.One : DoubleValue.Zero);
-			q.Add("is_in_love", mo => Entity.IsInLove ? DoubleValue.One : DoubleValue.Zero);
-			q.Add("is_ignited", mo => Entity.IsIgnited ? DoubleValue.One : DoubleValue.Zero);
-			q.Add("is_eating", mo => Entity.IsEating ? DoubleValue.One : DoubleValue.Zero);
-			q.Add("is_chested", mo => Entity.IsChested ? DoubleValue.One : DoubleValue.Zero);
-			q.Add("is_breathing", mo => Entity.IsBreathing ? DoubleValue.One : DoubleValue.Zero);
-			q.Add("is_baby", mo => Entity.IsBaby ? DoubleValue.One : DoubleValue.Zero);
-			q.Add("is_stackable", mo => Entity.IsStackable ? DoubleValue.One : DoubleValue.Zero);
-			q.Add("is_in_water", mo => Entity.IsInWater ? DoubleValue.One : DoubleValue.Zero);
-			q.Add("is_in_water_or_rain", mo => (Entity.IsInWater || Entity.Level.Raining) ? DoubleValue.One : DoubleValue.Zero);
-			q.Add("is_sheared", mo => Entity.IsSheared ? DoubleValue.One : DoubleValue.Zero);
-			q.Add("is_silent", mo => Entity.IsSilent ? DoubleValue.One : DoubleValue.Zero);
-			q.Add("is_powered", mo => Entity.IsPowered ? DoubleValue.One : DoubleValue.Zero);
-			q.Add("is_elder", mo => Entity.IsElder ? DoubleValue.One : DoubleValue.Zero);
-			q.Add("is_resting", mo => Entity.IsResting ? DoubleValue.One : DoubleValue.Zero);
-			q.Add("is_tempted", mo => Entity.IsTempted ? DoubleValue.One : DoubleValue.Zero);
-			q.Add("is_critical", mo => Entity.IsCritical ? DoubleValue.One : DoubleValue.Zero);
-			q.Add("is_converting", mo => Entity.IsConverting ? DoubleValue.One : DoubleValue.Zero);
-			q.Add("is_standing", mo => (Entity.IsStanding) ? DoubleValue.One : DoubleValue.Zero);
-			q.Add("is_sleeping", mo => Entity.IsSleeping ? DoubleValue.One : DoubleValue.Zero);
-			q.Add("is_swimming", mo => Entity.IsSwimming ? DoubleValue.One : DoubleValue.Zero);
-			q.Add("is_sitting", mo => Entity.IsSitting ? DoubleValue.One : DoubleValue.Zero);
-			q.Add("has_gravity", mo => Entity.IsAffectedByGravity ? DoubleValue.One : DoubleValue.Zero);
-			q.Add("has_collision", mo => Entity.HasCollision ? DoubleValue.One : DoubleValue.Zero);
-			q.Add("can_fly", mo => Entity.CanFly ? DoubleValue.One : DoubleValue.Zero);
-
-			return new QueryStruct(q);
-		}
-
-		private IMoValue NoOp(MoParams mo)
-		{
-			return new DoubleValue(0);
 		}
 
 		private Stopwatch _deltaTimeStopwatch = new Stopwatch();
 		private bool _didInit = false;
+
+		private IDictionary<string, IMoValue> _context = new Dictionary<string, IMoValue>();
 		private void DoImportant()
 		{
 			if (!_didInit)
 				return;
+			
 			//if (!Monitor.TryEnter(_lock, 0))
 			//	return;
 
@@ -331,16 +177,18 @@ namespace Alex.Graphics.Models.Entity.Animations
 				runtime.Environment.SetValue("variable.attack_time", new DoubleValue(Entity.AttackTime));
 				runtime.Environment.SetValue("variable.is_using_vr", new DoubleValue(0d));
 				runtime.Environment.SetValue("variable.is_paperdoll", new DoubleValue(0d));
-				runtime.Environment.SetValue("variable.swim_amount", new DoubleValue(0d));
+				runtime.Environment.SetValue("variable.swim_amount", Entity.IsSwimming ? new DoubleValue(1d) : new DoubleValue(0d));
+				
+				_context.Clear();
 				
 				if (_preRenderExpressions != null)
-					runtime.Execute(_preRenderExpressions);
+					runtime.Execute(_preRenderExpressions, _context);
 
 				if (def.Scripts != null)
 				{
 					foreach (var key in def.Scripts.Animate)
 					{
-						HandleAnnoyingMolangElement(runtime, key);
+						HandleAnnoyingMolangElement(runtime, key, _context);
 					}
 				}
 
@@ -352,25 +200,25 @@ namespace Alex.Graphics.Models.Entity.Animations
 			}
 		}
 
-		private void HandleAnnoyingMolangElement(MoLangRuntime runtime, AnnoyingMolangElement key)
+		private void HandleAnnoyingMolangElement(MoLangRuntime runtime, AnnoyingMolangElement key, IDictionary<string, IMoValue> context)
 		{
 			if (key.IsString)
 			{
-				TryAnimate(runtime, key.StringValue);
+				TryAnimate(runtime, key.StringValue, context);
 			}
 			else
 			{
 				foreach (var expression in key.Expressions)
 				{
-					if (runtime.Execute(expression.Value).AsDouble() > 0)
+					if (runtime.Execute(expression.Value, context).AsBool())
 					{
-						TryAnimate(runtime, expression.Key);
+						TryAnimate(runtime, expression.Key, context);
 					}
 				}
 			}
 		}
 		
-		private void TryAnimate(MoLangRuntime runtime, string name)
+		private void TryAnimate(MoLangRuntime runtime, string name, IDictionary<string, IMoValue> context)
 		{
 			var renderer = Entity.ModelRenderer;
 
@@ -396,7 +244,7 @@ namespace Alex.Graphics.Models.Entity.Animations
 						{
 							foreach (var anim in animationState.Animations)
 							{
-								HandleAnnoyingMolangElement(runtime, anim);
+								HandleAnnoyingMolangElement(runtime, anim, context);
 							}
 						}
 
@@ -408,7 +256,7 @@ namespace Alex.Graphics.Models.Entity.Animations
 							{
 								foreach (var expression in transition.Expressions)
 								{
-									var result = runtime.Execute(expression.Value);
+									var result = runtime.Execute(expression.Value, context);
 									if (result.AsBool())
 									{
 									//	Console.WriteLine($"Old={oldState} New={expression.Key} (Cause: {result.Value})");	
@@ -440,15 +288,18 @@ namespace Alex.Graphics.Models.Entity.Animations
 						{
 							var value = bone.Value;
 						
-							var rotationOutput = ConditionalExecute(runtime, value.Rotation).ToArray();
-							var positionOutputs = ConditionalExecute(runtime, value.Position).ToArray();
-							var scaleOutputs = ConditionalExecute(runtime, value.Scale).ToArray();
+							//var rotationOutput = ConditionalExecute(runtime, value.Rotation, context).ToArray();
+							//var positionOutputs = ConditionalExecute(runtime, value.Position, context).ToArray();
+							//var scaleOutputs = ConditionalExecute(runtime, value.Scale, context).ToArray();
 							
-							var targetRotation = GetVector3(Vector3.Zero, rotationOutput);
-							var targetPosition = GetVector3(Vector3.Zero, positionOutputs);
-							var targetScale = GetVector3(Vector3.Zero, scaleOutputs);
-							
-							modelBone.MoveOverTime(targetPosition, targetRotation * new Vector3(-1f, 1f, 1f), targetScale, _deltaTimeStopwatch.Elapsed);
+							var targetRotation = value.Rotation?.Evaluate(runtime) ?? Vector3.Zero;
+							var targetPosition = value.Position?.Evaluate(runtime) ?? Vector3.Zero;// GetVector3(Vector3.Zero, positionOutputs);
+							var targetScale = value.Scale?.Evaluate(runtime) ?? Vector3.Zero;//GetVector3(Vector3.Zero, scaleOutputs);
+
+							modelBone.MoveOverTime(
+								targetPosition, targetRotation * new Vector3(-1f, 1f, 1f), targetScale,
+								_deltaTimeStopwatch.Elapsed, anim.OverridePreviousAnimation);
+
 							//	modelBone.Rotation = GetVector3(modelBone.Rotation, rotationOutput);
 							//modelBone.Position = GetVector3(modelBone.Position, positionOutputs);
 						}
@@ -481,11 +332,14 @@ namespace Alex.Graphics.Models.Entity.Animations
 
 			return new Vector3(float.IsNaN(x) ? 0 : x, float.IsNaN(y) ? 0 : y, float.IsNaN(z) ? 0 : z);
 		}
-		
+
 		public void OnTick()
 		{
 			_deltaTimeStopwatch.Stop();
+			
+			_queryStruct?.Tick(_deltaTimeStopwatch.Elapsed);
 			DoImportant();
+			
 			_deltaTimeStopwatch.Restart();
 		}
 	}

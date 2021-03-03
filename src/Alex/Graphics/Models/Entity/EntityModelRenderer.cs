@@ -328,7 +328,7 @@ namespace Alex.Graphics.Models.Entity
 				}
 			}
 
-			Texture?.MarkForDisposal();
+			//Texture?.MarkForDisposal();
 			VertexBuffer?.MarkForDisposal();
 			Effect?.Dispose();
 

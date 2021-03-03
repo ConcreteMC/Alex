@@ -7,7 +7,7 @@ namespace Alex.MoLang.Runtime.Struct
 {
 	public class QueryStruct : IMoStruct
 	{
-		private Dictionary<string, Func<MoParams, object>> _funcs = new Dictionary<string, Func<MoParams, object>>();
+		protected IDictionary<string, Func<MoParams, object>> Functions = new Dictionary<string, Func<MoParams, object>>();
 
 		/// <inheritdoc />
 		public object Value => this;
@@ -19,7 +19,7 @@ namespace Alex.MoLang.Runtime.Struct
 
 		public QueryStruct(IEnumerable<KeyValuePair<string, Func<MoParams, object>>> parameters)
 		{
-			_funcs = new Dictionary<string, Func<MoParams, object>>(parameters);
+			Functions = new Dictionary<string, Func<MoParams, object>>(parameters);
 		}
 
 		/// <inheritdoc />
@@ -33,7 +33,7 @@ namespace Alex.MoLang.Runtime.Struct
 		{
 			try
 			{
-				if (_funcs.TryGetValue(key, out var func))
+				if (Functions.TryGetValue(key, out var func))
 				{
 					return MoValue.FromObject(func(parameters));
 				}
@@ -49,7 +49,7 @@ namespace Alex.MoLang.Runtime.Struct
 		/// <inheritdoc />
 		public void Clear()
 		{
-			_funcs.Clear();
+			Functions.Clear();
 		}
 	}
 }
