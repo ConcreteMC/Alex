@@ -2059,8 +2059,8 @@ namespace Alex.Worlds.Multiplayer.Java
 
 			        if (World.EntityManager.TryGetBlockEntity(packet.Location, out var entity))
 			        {
-				        var block = World.GetBlockState(packet.Location);
-				        entity.Block = block.Block;
+				       // var block = World.GetBlockState(packet.Location);
+				       // entity.Block = block.Block;
 
 				        entity.SetData(packet.Action, packet.Compound);
 			        }

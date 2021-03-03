@@ -154,14 +154,6 @@ namespace Alex.Entities.BlockEntities
 			if (newBlock == null || !(newBlock is Chest))
 				return;
 
-			if (newBlock.BlockState.TryGetValue("facing", out string value))
-			{
-				if (Enum.TryParse<BlockFace>(value, true, out var val))
-				{
-					Rotation = (BlockFace) val;
-				}
-			}
-
 			if (newBlock.BlockState.TryGetValue("type", out string type))
 			{
 				switch (type)
@@ -175,6 +167,14 @@ namespace Alex.Entities.BlockEntities
 					case "right":
 						IsDoubleChest = true;
 						break;
+				}
+			}
+			
+			if (newBlock.BlockState.TryGetValue("facing", out string value))
+			{
+				if (Enum.TryParse<BlockFace>(value, true, out var val))
+				{
+					Rotation = (BlockFace) val;
 				}
 			}
 		}

@@ -38,8 +38,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		
 		public void HandleMcpeResourcePacksInfo(McpeResourcePacksInfo message)
 		{
-			//Log.Info($"Got McpeResourcePacksInfo. (ForcedToAccept={message.mustAccept} Scripting={message.hasScripts} Behavior Packs={message.behahaviorpackinfos.Count} ResourcePacks={message.texturepacks.Count})");
-	        
 			McpeResourcePackClientResponse response        = new McpeResourcePackClientResponse();
 			ResourcePackIds                resourcePackIds = new ResourcePackIds();
 			foreach (var packInfo in message.texturepacks)
@@ -60,11 +58,16 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			{
 				response.responseStatus = (byte) McpeResourcePackClientResponse.ResponseStatus.SendPacks;
 				response.resourcepackids = resourcePackIds;
+				
+				Log.Info($"Received resourcepack info, requesting data.");
 			}
 			else
 			{
 				response.responseStatus = (byte) McpeResourcePackClientResponse.ResponseStatus.HaveAllPacks;
 				response.resourcepackids = resourcePackIds;
+				
+				
+				Log.Info($"Received resourcepack info, marking as HaveAllPacks");
 			}
 
 			_client.SendPacket(response);
@@ -72,9 +75,11 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		public void HandleMcpeResourcePackDataInfo(McpeResourcePackDataInfo message)
 		{
-			
-			if (!_resourcePackEntries.TryGetValue(message.packageId, out var packEntry))
+			var split = message.packageId.Split('_');
+			if (!_resourcePackEntries.TryGetValue(split[0], out var packEntry))
 			{
+				Log.Warn($"Unknown resourcepack download: {split[0]}");
+				
 				McpeResourcePackClientResponse response = new McpeResourcePackClientResponse();
 				response.responseStatus = (byte) McpeResourcePackClientResponse.ResponseStatus.Completed; 
 				_client.SendPacket(response);
@@ -91,16 +96,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		private void CheckCompletion(ResourcePackEntry entry)
 		{
-			foreach (var missing in entry.GetMissingChunks())
-			{
-				McpeResourcePackChunkRequest request = McpeResourcePackChunkRequest.CreateObject();
-				request.chunkIndex = missing;
-				request.packageId = entry.Identifier;
-					
-				_client.SendPacket(request);
-
-				break;
-			}
 			if (entry.IsComplete)
 			{
 				McpeResourcePackClientResponse response = new McpeResourcePackClientResponse();
@@ -112,19 +107,32 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				Log.Info($"Completed pack: {entry.Identifier} (Size: {entry.GetData().Length})");
 				
 				//TODO: Load the newly received resourcepack iinto the resourcemanager.
-				
-				return;
+			}
+			else
+			{
+				McpeResourcePackChunkRequest request = McpeResourcePackChunkRequest.CreateObject();
+				request.chunkIndex = entry.ExpectedIndex;
+				request.packageId = entry.Identifier;
+					
+				_client.SendPacket(request);
 			}
 		}
 
 		public void HandleMcpeResourcePackChunkData(McpeResourcePackChunkData message)
 		{
-			if (!_resourcePackEntries.TryGetValue(message.packageId, out var packEntry))
+			var split = message.packageId.Split('_');
+			if (!_resourcePackEntries.TryGetValue(split[0], out var packEntry))
 			{
+				Log.Warn($"Unknown pack: {message.packageId}");
 				return;
 			}
 			
-			packEntry.SetChunkData(message.chunkIndex, message.payload);
+			if (packEntry.SetChunkData(message.chunkIndex, message.payload))
+			{
+				
+			}
+			
+			Log.Info($"Received resourcepack chunk {message.chunkIndex + 1}/{packEntry.ChunkCount}");
 			
 			CheckCompletion(packEntry);
 		}
@@ -138,6 +146,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 	public class ResourcePackEntry
 	{
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ResourcePackEntry));
+		 
 		public string Identifier;
 		public string Version;
 		public ResourcePackEntry(string packUuid, string version) {
@@ -154,9 +164,18 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		private byte[][] _chunks;
 		private uint     _maxChunkSize;
 		private ulong    _compressedPackageSize;
+
+		public ulong ChunkCount { get; private set; } = 0;
 		public void SetDataInfo(uint messageChunkCount, uint messageMaxChunkSize, ulong messageCompressedPackageSize)
 		{
-			_chunks = new byte[messageChunkCount][];
+			var chunkCount = messageCompressedPackageSize / messageMaxChunkSize;
+
+			if (messageCompressedPackageSize % messageMaxChunkSize != 0)
+				chunkCount++;
+
+			ChunkCount = chunkCount;
+			
+			_chunks = new byte[chunkCount][];
 			_maxChunkSize = messageMaxChunkSize;
 			_compressedPackageSize = messageCompressedPackageSize;
 
@@ -164,10 +183,20 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			{
 				_chunks[i] = null;
 			}
+
+			ExpectedIndex = 0;
 		}
 
-		public void SetChunkData(uint chunkIndex, byte[] chunkData)
+		public uint ExpectedIndex { get; set; } = 0;
+		public bool SetChunkData(uint chunkIndex, byte[] chunkData)
 		{
+			if (chunkIndex != ExpectedIndex)
+			{
+				Log.Warn($"Received wrong chunk index, expected={ExpectedIndex} received={chunkIndex}");
+				return false;
+			}
+
+			ExpectedIndex++;
 			_chunks[chunkIndex] = chunkData;
 
 			if (_chunks.All(x => x != null))
@@ -192,6 +221,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 				IsComplete = true;
 			}
+
+			return true;
 		}
 		
 		protected virtual void OnComplete(byte[] data){}

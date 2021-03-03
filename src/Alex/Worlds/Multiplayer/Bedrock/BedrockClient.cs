@@ -433,7 +433,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			Log.Info($"Sent LocalPlayerInitialized");
 			var packet = McpeSetLocalPlayerAsInitialized.CreateObject();
 			packet.runtimeEntityId = EntityId;
-			packet.ReliabilityHeader.Reliability = Reliability.Reliable;
+			//packet.ReliabilityHeader.Reliability = Reliability.Reliable;
 			
 			//Connection.Session.SendDirectPacket(packet);
 			SendPacket(packet);
@@ -1149,10 +1149,12 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				   packet.transaction = new ItemUseOnEntityTransaction()
 				   {
 					   ActionType = realAction,
+					   //Item = GetMiNETItem(p.Inventory[hand == 1 ? p.Inventory.OffHandSlot : (p.Inventory.HotbarOffset + p.Inventory.SelectedSlot)]),
 					   Item = GetMiNETItem(p.Inventory[slot]),
 					   EntityId = target.EntityId,
 					   Slot = slot,
-					   FromPosition = new System.Numerics.Vector3(p.KnownPosition.X, p.KnownPosition.Y, p.KnownPosition.Z)
+					   FromPosition = new System.Numerics.Vector3(p.KnownPosition.X, p.KnownPosition.Y, p.KnownPosition.Z),
+					   ClickPosition = new System.Numerics.Vector3(0.5f)
 				   };
 
 				   SendPacket(packet);
@@ -1329,6 +1331,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		public void RequestChunkRadius(int radius)
 		{
+			Log.Info($"Requesting chunk radius: {radius}");
 			var packet = McpeRequestChunkRadius.CreateObject();
 			packet.chunkRadius = radius;
 
