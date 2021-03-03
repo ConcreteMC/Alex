@@ -459,6 +459,7 @@ namespace Alex.Entities
 			CheckHeldItem();
 		}
 
+		public double AttackTime { get; set; } = -1d;
 		public bool IsOnFire { get; set; } = false;
 		public bool IsSneaking { get; set; }
 		public bool IsRiding { get; set; }
@@ -492,8 +493,15 @@ namespace Alex.Entities
 		public bool IsBreathing => !IsInWater;
 		public virtual bool IsChested { get; set; }
 		public bool IsStackable { get; set; }
+		public bool IsEating { get; set; }
+		public bool IsBlocking { get; set; }
 		public bool HasCollision { get; set; } = true;
 		public bool IsAffectedByGravity { get; set; } = true;
+		public bool IsSwimming { get; set; }
+		public bool IsSleeping { get; set; }
+		public bool IsStanding { get; set; } = true;
+		
+		public Pose Pose { get; set; } = Pose.Standing;
 		
 		public bool RenderEntity { get; set; } = true;
 		public bool ShowItemInHand { get; set; } = false;
@@ -521,9 +529,50 @@ namespace Alex.Entities
 			{
 				HideNameTag = !showNametag.Value;
 			}
+			else if (entry.Index == 4 && entry is MetadataBool sil)
+			{
+				IsSilent = sil.Value;
+			}
 			else if (entry.Index == 5 && entry is MetadataBool noGravity)
 			{
 				IsAffectedByGravity = !noGravity.Value;
+			}
+			else if (entry.Index == 6 && entry is MetadataPose pose)
+			{
+				Pose = pose.Value;
+
+				switch (Pose)
+				{
+					case Pose.Standing:
+						IsStanding = true;
+						IsSleeping = false;
+						IsSwimming = false;
+						break;
+					
+					case Pose.Sleeping:
+						IsStanding = false;
+						IsSleeping = true;
+						IsSwimming = false;
+						break;
+
+					case Pose.Swimming:
+						IsStanding = false;
+						IsSleeping = false;
+						IsSwimming = true;
+						break;
+
+					case Pose.SpinAttack:
+						break;
+
+					case Pose.Sneaking:
+						break;
+
+					case Pose.Dying:
+						break;
+					
+					case Pose.FallFlying:
+						break;
+				}
 			}
 			else
 			{
@@ -655,6 +704,8 @@ namespace Alex.Entities
 			IsSitting = (data & ((int) MiNET.Entities.Entity.DataFlags.Sitting)) != 0;
 			IsWallClimbing = (data & ((int) MiNET.Entities.Entity.DataFlags.WallClimbing)) != 0;
 			IsResting = (data & ((int) MiNET.Entities.Entity.DataFlags.Resting)) != 0;
+			IsMoving = (data & ((int) MiNET.Entities.Entity.DataFlags.Moving)) != 0;
+			IsElder = (data & ((int) MiNET.Entities.Entity.DataFlags.Elder)) != 0;
 		}
 
 		public virtual void Render(IRenderArgs renderArgs)
@@ -747,124 +798,7 @@ namespace Alex.Entities
 				bone.Animations.Enqueue(new SwingAnimation(bone, TimeSpan.FromMilliseconds(200)));
 			}
 		}
-		
-		private void CalculateLegMovement(IUpdateArgs args)
-		{
-			var   pos    = KnownPosition.ToVector3();
 
-			var dt       = (float) args.GameTime.ElapsedGameTime.TotalSeconds;
-
-			AnimateLegs(dt, _mvSpeed);
-			Animate(dt, _mvSpeed);
-		}
-
-		protected virtual void AnimateLegs(float dt, float mvSpeed)
-		{
-			if (_leftLegModel != null && _rightLegModel != null)
-			{
-				Vector3 lLegRot = Vector3.Zero;
-				Vector3 rLegRot = Vector3.Zero;
-
-				if (mvSpeed > 0f)
-				{
-					_legRotation += (float) (_mvSpeed) * dt;
-					
-					lLegRot = new Vector3(MathF.Sin(_legRotation) * 34.5f, 0f, 0f);
-					rLegRot = new Vector3(-MathF.Sin(_legRotation) * 34.5f, 0f, 0f);
-				}
-				else
-				{
-					_legRotation = 0f;
-				}
-
-				if (!_leftLegModel.IsAnimating)
-					_leftLegModel.Rotation = lLegRot;
-				
-				if (!_rightLegModel.IsAnimating)
-					_rightLegModel.Rotation = rLegRot;
-			}
-		}
-		
-		protected virtual void Animate(float dt, float mvSpeed)
-		{
-			if (IsSneaking && _body != null)
-			{
-				if (!_body.IsAnimating)
-				{
-					_body.Rotation = new Vector3(-25f, _body.Rotation.Y, _body.Rotation.Z);
-				}
-				
-				if (_rightArmModel != null && _leftArmModel != null)
-				{
-					if (!_leftArmModel.IsAnimating)
-					{
-						_leftArmModel.Rotation = new Vector3(20f, 0f, 0f);
-					}
-
-					if (!_rightArmModel.IsAnimating)
-					{
-						_rightArmModel.Rotation = new Vector3(20f, 0f, 0f);
-					}
-				}
-			}
-			else if (_body != null && !IsSneaking)
-			{
-				if (!_body.IsAnimating)
-				{
-					_body.Rotation = new Vector3(0f);
-				}
-			}
-			
-			// Test arm rotations
-			if (!IsSneaking && _leftArmModel != null && _rightArmModel != null)
-			{
-				Vector3 rArmRot;
-				Vector3 lArmRot;
-				
-				if (_mvSpeed > 0f)
-				{
-					if (!IsMoving)
-					{
-						_armRotation = 0f;
-						IsMoving = true;
-					}
-
-					_armRotation += (float) (_mvSpeed) * dt;
-					//rArmRot = new Vector3(tcos0, 0, 0);
-					rArmRot = new Vector3(MathF.Cos(_armRotation) * 24.5f, 0, 0);
-					lArmRot = new Vector3(-MathF.Cos(_armRotation) * 24.5f, 0, 0);
-				}
-				else
-				{
-					IsMoving = false;
-					_armRotation += dt;
-
-					rArmRot = new Vector3(
-						MathF.Cos(_armRotation) * 7.5f, 0f, 0.1f + (MathF.Sin(_armRotation) * -1.5f));
-						
-					lArmRot = new Vector3(
-						-MathF.Cos(_armRotation) * 7.5f, 0f, 0.1f + (MathF.Sin(_armRotation) * -1.5f));
-				}
-
-
-				if (!_leftArmModel.IsAnimating)
-				{
-					_leftArmModel.Rotation = lArmRot;
-				}
-
-				if (!_rightArmModel.IsAnimating)
-				{
-					_rightArmModel.Rotation = rArmRot;
-				}
-			}
-		}
-
-	//	private DateTime _nextUpdate     = DateTime.MinValue;
-	//	private DateTime _previousUpdate = DateTime.MinValue;
-		//public  float    CurrentSpeed => _mvSpeed;
-		//public float Speed { get; private set; } = 0f;
-		//public float Delta { get; private set; } = 0f;
-		//private float _previousDistanceMoved = 0;
 		public virtual void OnTick()
 		{
 			//Age++;
@@ -1157,53 +1091,6 @@ namespace Alex.Entities
 			}
 		}
 
-		/*protected bool TryUpdateGeometry(ResourceLocation location, string geometry, string texture = "default")
-		{
-			if (Alex.Instance.Resources.BedrockResourcePack.EntityDefinitions.TryGetValue(
-				location, out var entityDescription))
-			{
-				if (entityDescription.Textures.TryGetValue(texture, out texture)
-				    && entityDescription.Geometry.TryGetValue(geometry, out var geometryName))
-				{
-					if (ModelFactory.TryGetModel(geometryName, out var newModel))
-					{
-
-						if (Alex.Instance.Resources.BedrockResourcePack.TryGetTexture(texture, out var newTexture))
-						{
-							ModelRenderer = new EntityModelRenderer(
-								newModel, TextureUtils.BitmapToTexture2D(Alex.Instance.GraphicsDevice, newTexture));
-
-							//ModelRenderer?.Texture = TextureUtils.BitmapToTexture2D(
-							//	Alex.Instance.GraphicsDevice, newTexture);
-						}
-					}
-
-					return true;
-				}
-			}
-
-
-			return false;
-		}*/
-
-		/*protected bool TryUpdateTexture(ResourceLocation location, string texture)
-		{
-			if (Alex.Instance.Resources.BedrockResourcePack.EntityDefinitions.TryGetValue(
-				location, out var entityDescription))
-			{
-				if (entityDescription.Textures.TryGetValue(texture, out texture))
-				{
-					if (Alex.Instance.Resources.BedrockResourcePack.TryGetTexture(texture, out var newTexture))
-					{
-						ModelRenderer.Texture = TextureUtils.BitmapToTexture2D(Alex.Instance.GraphicsDevice, newTexture);
-						return true;
-					}
-				}
-			}
-
-			return false;
-		}*/
-		
 		protected void ToggleCubes(EntityModelRenderer.ModelBone bone, bool isInvisible)
 		{
 			bone.Rendered = !isInvisible;

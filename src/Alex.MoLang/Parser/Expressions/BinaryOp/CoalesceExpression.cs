@@ -14,7 +14,7 @@ namespace Alex.MoLang.Parser.Expressions.BinaryOp
 			IMoValue evalLeft = Left.Evaluate(scope, environment);
 			IMoValue value    = environment.GetValue(evalLeft.AsString());
 
-			if (value == null || value.Equals(DoubleValue.Zero)) {
+			if (value == null || !value.AsBool()) {
 				return Right.Evaluate(scope, environment);
 			} else {
 				return evalLeft;

@@ -6,7 +6,7 @@ namespace Alex.MoLang.Runtime
 {
     public class MoLangMath
     {
-        public static QueryStruct Library = new QueryStruct(new Dictionary<string, Func<MoParams, object>>() {
+        public static readonly QueryStruct Library = new QueryStruct(new Dictionary<string, Func<MoParams, object>>() {
             {"abs",  param => Math.Abs(param.GetDouble(0))},
                 {"acos",  param =>Math.Acos(param.GetDouble(0))},
                 {"sin",  param =>Math.Sin(param.GetDouble(0) * (Math.PI / 180d))},

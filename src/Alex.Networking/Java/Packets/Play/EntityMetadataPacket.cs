@@ -121,7 +121,7 @@ namespace Alex.Networking.Java.Packets.Play
 						    stream.ReadVarInt();
 						    break;
 					    case MetadataType.Pose:
-						    stream.ReadVarInt();
+						    meta = new MetadataPose(index, (Pose) stream.ReadVarInt());
 						    break;
 				    }
 
@@ -167,6 +167,26 @@ namespace Alex.Networking.Java.Packets.Play
 	    {
 		    Index = index;
 		    Type = type;
+	    }
+    }
+
+    public enum Pose
+    {
+	    Standing = 0,
+	    FallFlying = 1,
+	    Sleeping = 2,
+	    Swimming = 3,
+	    SpinAttack = 4,
+	    Sneaking = 5,
+	    Dying = 6
+    }
+    
+    public class MetadataPose : MetaDataEntry
+    {
+	    public Pose Value { get; set; }
+	    public MetadataPose(byte index, Pose value) : base(index, MetadataType.Pose)
+	    {
+		    Value = value;
 	    }
     }
 

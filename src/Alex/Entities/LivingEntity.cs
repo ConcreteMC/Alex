@@ -30,7 +30,7 @@ namespace Alex.Entities
 		{
 			base.HandleJavaMeta(entry);
 
-			/*if (entry.Index == 7 && entry is MetadataByte data)
+			if (entry.Index == 7 && entry is MetadataByte data)
 			{
 				bool handActive = (data.Value & 0x01) != 0;
 
@@ -43,11 +43,11 @@ namespace Alex.Entities
 					{
 						if (item is ItemEdible) //Food or drink
 						{
-							
+							IsEating = true;
 						}
 						else if (item.ItemType == ItemType.Sword || item.ItemType == ItemType.Shield)
 						{
-							
+							IsBlocking = true;
 						} 
 						else if (item.ItemType == ItemType.AnyTool)
 						{
@@ -55,8 +55,13 @@ namespace Alex.Entities
 						}
 					}
 				}
+				else
+				{
+					IsBlocking = false;
+					IsEating = false;
+				}
 			}
-			else*/ if (entry.Index == 8 && entry is MetadataFloat flt)
+			else if (entry.Index == 8 && entry is MetadataFloat flt)
 			{
 				HealthManager.Health = flt.Value;
 			}

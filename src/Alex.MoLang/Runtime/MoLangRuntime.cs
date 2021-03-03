@@ -47,19 +47,19 @@ namespace Alex.MoLang.Runtime
 
 				foreach (IExpression expression in new List<IExpression>(expressions))
 				{
+					result = expression.Evaluate(scope, Environment);
 					if (scope.ReturnValue != null)
 					{
+						result = scope.ReturnValue;
 						break;
 					}
-
-					result = expression.Evaluate(scope, Environment);
 				}
 
 				Environment.Structs["temp"].Clear();
 				; // .getStructs().get("temp").clear();
 				Environment.Structs.TryRemove("context", out _); //["context"].getStructs().remove("context");
 
-				return scope.ReturnValue != null ? scope.ReturnValue : result;
+				return result;
 		//	}
 			//catch (Exception ex)
 			//{

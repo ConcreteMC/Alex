@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using Alex.MoLang.Runtime.Exceptions;
 using Alex.MoLang.Runtime.Struct;
 using Alex.MoLang.Runtime.Value;
 
@@ -22,21 +23,23 @@ namespace Alex.MoLang.Runtime
 			Queue<string> segments = new Queue<string>(name.Split("."));
 			string        main     = segments.Dequeue();
 
-			if (Structs.ContainsKey(main)) {
-				return Structs[main].Get(string.Join(".", segments), param);
+			if (!Structs.ContainsKey(main))
+			{
+				throw new MoLangRuntimeException($"Cannot retrieve struct: {name}", null);
 			}
-
-			Log.Info($"Got new variable: {name}");
-			return new DoubleValue(0.0);
+	
+			return Structs[main].Get(string.Join(".", segments), param);
 		}
 
 		public void SetValue(String name, IMoValue value) {
 			Queue<string> segments = new Queue<string>(name.Split("."));
 			string        main     = segments.Dequeue();
 
-			if (Structs.ContainsKey(main)) {
-				Structs[main].Set(string.Join(".", segments), value);
+			if (!Structs.ContainsKey(main)) {
+				throw new MoLangRuntimeException($"Cannot set value on struct: {name}", null);
 			}
+			
+			Structs[main].Set(string.Join(".", segments), value);
 		}
 	}
 }

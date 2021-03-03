@@ -13,7 +13,7 @@ namespace Alex.MoLang.Parser.Expressions
 		/// <inheritdoc />
 		public override IMoValue Evaluate(MoScope scope, MoLangEnvironment environment)
 		{
-			return new DoubleValue(Value ? 1d : 0d);
+			return Value ? DoubleValue.One : DoubleValue.Zero;
 		}
 	}
 
@@ -27,7 +27,7 @@ namespace Alex.MoLang.Parser.Expressions
 		/// <inheritdoc />
 		public override IMoValue Evaluate(MoScope scope, MoLangEnvironment environment)
 		{
-			return Value.Evaluate(scope, environment).Equals(DoubleValue.One) ? DoubleValue.Zero : DoubleValue.One;
+			return Value.Evaluate(scope, environment).AsBool() ? DoubleValue.Zero : DoubleValue.One;// .Equals(DoubleValue.One) ? DoubleValue.Zero : DoubleValue.One;
 		}
 	}
 }

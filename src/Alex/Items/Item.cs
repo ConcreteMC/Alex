@@ -22,6 +22,11 @@ namespace Alex.Items
 		public IItemRenderer Renderer     { get; set; }
 
 		public int StackID { get; set; } = -1;
+
+		public Item()
+		{
+			Name = GetType().Name;
+		}
 		
 		public virtual Item Clone()
 		{

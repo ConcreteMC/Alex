@@ -23,5 +23,8 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Entity
 		
 		[JsonProperty("rotation"), JsonConverter(typeof(SingleOrArrayConverter<List<IExpression>>))]
 		public List<IExpression>[] Rotation { get; set; }
+		
+		[JsonProperty("scale"), JsonConverter(typeof(SingleOrArrayConverter<List<IExpression>>))]
+		public List<IExpression>[] Scale { get; set; }
 	}
 }

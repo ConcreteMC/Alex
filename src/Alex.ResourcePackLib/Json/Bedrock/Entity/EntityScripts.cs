@@ -40,13 +40,19 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Entity
 		{
 			Expressions = expressions;
 			StringValue = null;
+
+			IsString = false;
 		}
 
 		public AnnoyingMolangElement(string stringValue)
 		{
 			StringValue = stringValue;
 			Expressions = null;
+
+			IsString = true;
 		}
+		
+		public bool IsString { get; }
 
 		//	public static implicit operator AnnoyingMolangElement(Dictionary<string, List<IExpression>> dictionary) => new AnnoyingMolangElement { Expressions = dictionary };
 	//	public static implicit operator AnnoyingMolangElement(string stringValue) => new AnnoyingMolangElement { StringValue = stringValue };

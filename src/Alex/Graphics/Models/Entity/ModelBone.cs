@@ -21,7 +21,7 @@ namespace Alex.Graphics.Models.Entity
 			public Vector3 Position
 			{
 				get => _position;
-				set => _position = value;
+				set => _targetPosition = _position = value;
 			}
 
 			private Vector3 _rotation = Vector3.Zero;
@@ -29,9 +29,17 @@ namespace Alex.Graphics.Models.Entity
 			public Vector3 Rotation
 			{
 				get { return _rotation; }
-				set { _rotation = value; }
+				set { _targetRotation = _rotation = value; }
 			}
 			
+			private Vector3 _scale = Vector3.One;
+
+			public Vector3 Scale
+			{
+				get { return _scale; }
+				set { _targetScale = _scale = value; }
+			}
+
 			private Vector3 _bindingRotation = Vector3.Zero;
 
 			public Vector3 BindingRotation
@@ -75,25 +83,75 @@ namespace Alex.Graphics.Models.Entity
 			public  MCMatrix WorldMatrix   { get; set; } = MCMatrix.Identity;
 			public Vector3 TargetRotation => _targetRotation;
 			public Vector3 TargetPosition => _targetPosition;
+			public Vector3 TargetScale => _targetScale;
 			
 			private Vector3 _startRotation = Vector3.Zero;
 			private Vector3 _targetRotation = Vector3.Zero;
 			
+			//private Vector3 _tempStartRotation = Vector3.Zero;
+			private Vector3 _tempTargetRotation = Vector3.Zero;
+			
 			private Vector3 _startPosition = Vector3.Zero;
 			private Vector3 _targetPosition = Vector3.Zero;
 			
+			//private Vector3 _tempStartPosition = Vector3.Zero;
+			private Vector3 _tempTargetPosition = Vector3.Zero;
+
+			private Vector3 _startScale = Vector3.One;
+			private Vector3 _targetScale = Vector3.One;
+			
+			//private Vector3 _tempStartScale = Vector3.Zero;
+			private Vector3 _tempTargetScale = Vector3.Zero;
+
 			private double _accumulator = 1d;
 			private double _target = 1d;
-			public void MoveOverTime(Vector3 targetPosition, Vector3 targetRotation, TimeSpan time)
+			
+			private double _tempAccumulator = 1d;
+			private double _tempTarget = 1d;
+
+			public void ApplyMovement()
 			{
 				_startPosition = _position;
-				_targetPosition = targetPosition;
-				
+				_targetPosition = _tempTargetPosition;
+				_tempTargetPosition = Vector3.Zero;
+
 				_startRotation = _rotation;
-				_targetRotation = targetRotation;
+				_targetRotation = _tempTargetRotation;
+				_tempTargetRotation = Vector3.Zero;
+
+				_startScale = _scale;
+				_targetScale = _tempTargetScale;
+				_tempTargetScale = Vector3.Zero;
 				
-				_accumulator = _target = time.TotalSeconds;
-				_accumulator = 0d;
+				_accumulator = _tempAccumulator;
+				_target = _tempTarget;
+				
+				//Console.WriteLine($"{Definition.Name}.Rotation = {_targetRotation}");
+			}
+			
+			public void MoveOverTime(Vector3 targetPosition, Vector3 targetRotation, Vector3 targetScale, TimeSpan time)
+			{
+				//_startPosition = _position;
+				_tempTargetPosition += targetPosition;// - _tempTargetPosition;
+
+				//_startRotation = _rotation;
+				_tempTargetRotation += targetRotation;// - _targetRotation;
+
+				//_startScale = _scale;
+				_tempTargetScale += targetScale;// - _targetScale;
+				
+				_tempTarget = time.TotalSeconds;
+				_tempAccumulator = 0d;
+			}
+
+			public void MoveOverTime(Vector3 targetPosition, Vector3 targetRotation, TimeSpan time)
+			{
+				MoveOverTime(targetPosition, targetRotation, _targetScale, time);
+			}
+			
+			public void MoveOverTime(Vector3 targetPosition, TimeSpan time)
+			{
+				MoveOverTime(targetPosition, _targetRotation, _targetScale, time);
 			}
 			
 			public void Update(IUpdateArgs args,
@@ -112,9 +170,13 @@ namespace Alex.Graphics.Models.Entity
 					var targetPosition = _targetPosition;
 					var startPosition = _startPosition;
 					
+					var targetScale = _targetScale;
+					var startScale = _startScale;
+					
 					//var rotationDifference = targetRotation - startRotation;
 					_rotation = startRotation + ((targetRotation - startRotation) * progress);
 					_position = startPosition + ((targetPosition - startPosition) * progress);
+					_scale = startScale + ((targetScale - startScale) * progress);
 				}
 				//if (!Monitor.TryEnter(_disposeLock, 0))
 				//	return;

@@ -36,6 +36,13 @@ namespace Alex.ResourcePackLib.Json.Converters.MoLang
 
 				return res;
 			}
+			else if (token.Type == JTokenType.Integer)
+			{
+				return new List<IExpression>()
+				{
+					new NumberExpression(token.Value<double>())
+				};
+			}
 			else if (token.Type == JTokenType.Float)
 			{
 				return new List<IExpression>()

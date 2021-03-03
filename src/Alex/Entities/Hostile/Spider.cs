@@ -11,29 +11,6 @@ namespace Alex.Entities.Hostile
 {
 	public class Spider : HostileMob
 	{
-		/// <inheritdoc />
-		public override bool IsWallClimbing
-		{
-			get
-			{
-				return base.IsWallClimbing;
-			}
-			set
-			{
-				base.IsWallClimbing = value;
-				//ModelRenderer.Scale
-			}
-		}
-
-		private EntityModelRenderer.ModelBone Leg0;
-		private EntityModelRenderer.ModelBone Leg1;
-		private EntityModelRenderer.ModelBone Leg2;
-		private EntityModelRenderer.ModelBone Leg3;
-		private EntityModelRenderer.ModelBone Leg4;
-		private EntityModelRenderer.ModelBone Leg5;
-		private EntityModelRenderer.ModelBone Leg6;
-		private EntityModelRenderer.ModelBone Leg7;
-		
 		public Spider(World level) : base( level)
 		{
 			Height = 0.9;
@@ -51,28 +28,10 @@ namespace Alex.Entities.Hostile
 			}
 		}
 
-		/// <inheritdoc />
-		protected override void UpdateModelParts()
-		{
-			if (ModelRenderer == null)
-				return;
-
-			var renderer = ModelRenderer;
-			
-			renderer.GetBone("leg0", out Leg0);
-			renderer.GetBone("leg1", out Leg1);
-			renderer.GetBone("leg2", out Leg2);
-			renderer.GetBone("leg3", out Leg3);
-			renderer.GetBone("leg4", out Leg4);
-			renderer.GetBone("leg5", out Leg5);
-			renderer.GetBone("leg6", out Leg6);
-			renderer.GetBone("leg7", out Leg7);
-		}
-
 		private bool _wasMoving = false;
 		private Stopwatch _timeSinceStartMoving = new Stopwatch();
 		/// <inheritdoc />
-		protected override void Animate(float dt, float mvSpeed)
+		/*protected override void Animate(float dt, float mvSpeed)
 		{
 			bool moving = mvSpeed > 0f;
 
@@ -115,6 +74,6 @@ namespace Alex.Entities.Hostile
 			Leg5.Rotation = new Vector3(0f, MathF.Abs(MathF.Cos(animTime * 76.34f * 2f) * 22.92f), -MathF.Abs(MathF.Sin(animTime * 38.17f * 2f) * 22.92f));
 			Leg6.Rotation = new Vector3(0f, -MathF.Abs(MathF.Cos(animTime * 76.34f * 3f) * 22.92f), MathF.Abs(MathF.Sin(animTime * 38.17f * 3f) * 22.92f));
 			Leg7.Rotation = new Vector3(0f, MathF.Abs(MathF.Cos(animTime * 76.34f * 3f) * 22.92f), -MathF.Abs(MathF.Sin(animTime * 38.17f * 3f) * 22.92f));
-		}
+		}*/
 	}
 }

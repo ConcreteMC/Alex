@@ -3,7 +3,7 @@ namespace Alex.MoLang.Runtime.Value
 {
 	public interface IMoValue<T> : IMoValue
 	{
-		T Value { get; }
+		new T Value { get; }
 	}
 
 	public interface IMoValue
@@ -13,8 +13,9 @@ namespace Alex.MoLang.Runtime.Value
 
 		string AsString() => Value.ToString();
 
-		double AsDouble() => Value is double ? (double)Value : 1.0d;
-		float AsFloat() => Value is float ? (float)Value : (float)AsDouble();
+		double AsDouble() => Value is double db ? db : 0d;
+		float AsFloat() => Value is float flt ? flt : (float)AsDouble();
+		bool AsBool() => Value is bool b ? b : AsDouble() > 0;
 	}
 
 	public static class MoValue
@@ -25,7 +26,7 @@ namespace Alex.MoLang.Runtime.Value
 				return (IMoValue) value;
 			}
 			
-			return new DoubleValue((double) value);
+			return new DoubleValue(value);
 		}
 	}
 }

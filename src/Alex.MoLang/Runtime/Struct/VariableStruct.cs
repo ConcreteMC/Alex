@@ -1,12 +1,15 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using Alex.MoLang.Runtime.Exceptions;
 using Alex.MoLang.Runtime.Value;
+using NLog;
 
 namespace Alex.MoLang.Runtime.Struct
 {
 	public class VariableStruct : IMoStruct
 	{
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(VariableStruct));
 		public readonly Dictionary<string, IMoValue> Map = new Dictionary<string, IMoValue>();
 
 		/// <inheritdoc />
@@ -29,15 +32,25 @@ namespace Alex.MoLang.Runtime.Struct
 			string        main     = segments.Dequeue();
 
 			if (segments.Count > 0 && main != null) {
-				object vstruct = Get(main, MoParams.Empty);
+				//object vstruct = Get(main, MoParams.Empty);
 
-				if (!(vstruct is IMoStruct)) {
-					vstruct = new VariableStruct();
+				if (!Map.TryGetValue(main, out var container)) {
+					Map.TryAdd(main, container = new VariableStruct());
+					//	throw new MoLangRuntimeException($"Variable was not a struct: {key}", null);
 				}
 				
-				((IMoStruct) vstruct).Set(segments.Dequeue(), value);
+				if (container is IMoStruct moStruct)
+				{
+					moStruct.Set(string.Join(".", segments), value);
+				}
+				else
+				{
+					throw new MoLangRuntimeException($"Variable was not a struct: {key}", null);
+				}
+				
+				//((IMoStruct) vstruct).Set(string.Join(".", segments), value);
 
-				Map[main] = (IMoStruct)vstruct;//.Add(main, (IMoStruct) vstruct);
+				//Map[main] = (IMoStruct)vstruct;//.Add(main, (IMoStruct) vstruct);
 			} else
 			{
 				Map[key] = value;
@@ -53,17 +66,20 @@ namespace Alex.MoLang.Runtime.Struct
 			
 			if (segments.Count > 0 && main != null)
 			{
-				var vstruct = Map[main];
+				IMoValue value = null;//Map[main];
+				if (!Map.TryGetValue(main, out value))
+					return DoubleValue.Zero;
 
-				if (vstruct is IMoStruct)
+				if (value is IMoStruct moStruct)
 				{
-					return ((IMoStruct) vstruct).Get(segments.Dequeue(), MoParams.Empty);
+					return moStruct.Get(string.Join(".", segments), parameters);
 				}
 			}
 
 			if (Map.TryGetValue(key, out var v))
 				return v;
 
+			//Log.Info($"Unknown variable: {key}");
 			return DoubleValue.Zero;
 			return Map[key];
 		}
