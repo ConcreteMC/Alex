@@ -1554,11 +1554,11 @@ namespace Alex.Worlds.Multiplayer.Java
 		{
 			foreach(var id in packet.EntityIds)
 			{
-				var p = _players.ToArray().FirstOrDefault(x => x.Value.EntityId == id);
+				/*var p = _players.ToArray().FirstOrDefault(x => x.Value.EntityId == id);
 				if (p.Key != null)
 				{
 					_players.TryRemove(p.Key, out _);
-				}
+				}*/
 
 				World.DespawnEntity(id);
 			}
@@ -1566,17 +1566,58 @@ namespace Alex.Worlds.Multiplayer.Java
 
 		private void HandleSpawnPlayerPacket(SpawnPlayerPacket packet)
 		{
-			if (_players.TryGetValue(packet.Uuid, out RemotePlayer mob))
+			if (_players.TryGetValue(packet.Uuid, out var entry))
 			{
+				RemotePlayer entity = new RemotePlayer(
+					World, "geometry.humanoid.custom");
+					
+				entity.UpdateGamemode((GameMode) entry.Gamemode);
+				entity.UUID = packet.Uuid;
+					
+				if (entry.HasDisplayName)
+				{
+					if (ChatObject.TryParse(entry.DisplayName, out string chat))
+					{
+						entity.NameTag = chat;
+					}
+					else
+					{
+						entity.NameTag = entry.DisplayName;
+					}
+				}
+				else
+				{
+					entity.NameTag = entry.Name;
+				}
+
+				entity.HideNameTag = false;
+				entity.IsAlwaysShowName = true;
 				float yaw = MathUtils.AngleToNotchianDegree(packet.Yaw);
-				mob.KnownPosition = new PlayerLocation(packet.X, packet.Y, packet.Z, yaw, yaw, -MathUtils.AngleToNotchianDegree(packet.Pitch));
-				mob.EntityId = packet.EntityId;
-					//mob.UUID = packet.Uuid;
-				World.SpawnEntity(mob);
+				entity.KnownPosition = new PlayerLocation(packet.X, packet.Y, packet.Z, yaw, yaw, -MathUtils.AngleToNotchianDegree(packet.Pitch));
+				entity.EntityId = packet.EntityId;
+
+				if (World.SpawnEntity(entity))
+				{
+					World.BackgroundWorker.Enqueue(
+						() =>
+						{
+							string skinJson = null;
+
+							foreach (var property in entry.Properties)
+							{
+								if (property.Name == "textures")
+								{
+									skinJson = Encoding.UTF8.GetString(Convert.FromBase64String(property.Value));
+								}
+							}
+
+							ProcessSkin(entity, skinJson);
+						});
+				}
 			}
 		}
 
-		private ConcurrentDictionary<MiNET.Utils.UUID, RemotePlayer> _players = new ConcurrentDictionary<MiNET.Utils.UUID, RemotePlayer>();
+		private ConcurrentDictionary<MiNET.Utils.UUID, PlayerListItemPacket.AddPlayerEntry> _players = new ConcurrentDictionary<MiNET.Utils.UUID, PlayerListItemPacket.AddPlayerEntry>();
 		private void HandlePlayerListItemPacket(PlayerListItemPacket packet)
 		{
 			List<Action> actions = new List<Action>();
@@ -1585,54 +1626,11 @@ namespace Alex.Worlds.Multiplayer.Java
 				foreach (var entry in packet.AddPlayerEntries)
 				{
 					var uuid = entry.UUID;
-					if (_players.ContainsKey(uuid))
-						continue;
-					
-					RemotePlayer entity = new RemotePlayer(
-						World, "geometry.humanoid.custom");
-					
-					entity.UpdateGamemode((GameMode) entry.Gamemode);
-					entity.UUID = uuid;
-					
-					if (entry.HasDisplayName)
+
+					if (_players.TryAdd(uuid, entry))
 					{
-						if (ChatObject.TryParse(entry.DisplayName, out string chat))
-						{
-							entity.NameTag = chat;
-						}
-						else
-						{
-							entity.NameTag = entry.DisplayName;
-						}
-					}
-					else
-					{
-						entity.NameTag = entry.Name;
-					}
-
-					entity.HideNameTag = false;
-					entity.IsAlwaysShowName = true;
-					
-					World.AddPlayerListItem(
-						new PlayerListItem(entity.UUID, entry.Name, (GameMode) entry.Gamemode, entry.Ping, true));
-
-					if (_players.TryAdd(entity.UUID, entity))
-					{
-						World.BackgroundWorker.Enqueue(
-							() =>
-							{
-								string skinJson = null;
-
-								foreach (var property in entry.Properties)
-								{
-									if (property.Name == "textures")
-									{
-										skinJson = Encoding.UTF8.GetString(Convert.FromBase64String(property.Value));
-									}
-								}
-
-								ProcessSkin(entity, skinJson);
-							});
+						World.AddPlayerListItem(
+							new PlayerListItem(uuid, entry.Name, (GameMode) entry.Gamemode, entry.Ping, true));
 					}
 				}
 			}
@@ -1651,7 +1649,7 @@ namespace Alex.Worlds.Multiplayer.Java
 				{
 					var uuid = entry.UUID;
 
-					if (_players.TryGetValue(uuid, out RemotePlayer entity))
+					if (World.EntityManager.TryGet(uuid, out var entity))
 					{
 						if (entry.HasDisplayName && !string.IsNullOrWhiteSpace(entry.DisplayName))
 						{
@@ -1680,6 +1678,7 @@ namespace Alex.Worlds.Multiplayer.Java
 				{
 					var uuid = remove.UUID;
 					World?.RemovePlayerListItem(uuid);
+					_players.TryRemove(uuid, out _);
 				}
 			}
 		}

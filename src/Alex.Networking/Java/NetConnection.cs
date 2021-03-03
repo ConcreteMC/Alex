@@ -396,22 +396,32 @@ namespace Alex.Networking.Java
 
 					    Interlocked.Increment(ref PacketsOut);
 					    Interlocked.Add(ref PacketSizeOut, data.Length);
-					    
+
 					    mc.WriteVarInt(data.Length);
 					    mc.Write(data);
 				    }
 				    else
 				    {
-					 //   Log.Warn($"No data sent in the last 3.5 seconds... :/");
+					    //   Log.Warn($"No data sent in the last 3.5 seconds... :/");
 				    }
+
 				    //  EnqueuedPacket packet = PacketWriteQueue.Take(CancellationToken.Token);
 			    }
-			    catch (EndOfStreamException) { }
+			    catch (EndOfStreamException)
+			    {
+				    break;
+			    }
+			    catch (SocketException)
+			    {
+				    break;
+			    }
 			    catch (OperationCanceledException)
 			    {
 				    break;
 			    }
 		    }
+		    
+			Stop();
 	    }
 
 	    private byte[] EncodePacket(EnqueuedPacket enqueued)
