@@ -746,9 +746,12 @@ namespace Alex.Net.Bedrock
 			for (int i = 0; i < queueCount; i++)
 			{
 				if (!queue.TryDequeue(out int ack)) break;
-				
-				acks.Naks.Add(ack);
-				Interlocked.Increment(ref ConnectionInfo.NakSent);
+
+				if (!acks.Naks.Contains(ack) && _nacked.Contains(ack))
+				{
+					acks.Naks.Add(ack);
+					Interlocked.Increment(ref ConnectionInfo.NakSent);
+				}
 			}
 
 			if (acks.Naks.Count > 0)

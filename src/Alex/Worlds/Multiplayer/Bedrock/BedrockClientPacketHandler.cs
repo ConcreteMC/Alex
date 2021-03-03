@@ -359,10 +359,9 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			if (!Client.World.EntityManager.TryGet(message.uuid, out var entity))
 			{
 				RemotePlayer player = new RemotePlayer(Client.World);
-				player.NameTag = message.username;
 				player.EntityId = message.runtimeEntityId;
 				player.UUID = message.uuid;
-
+				player.NameTag = message.username;
 				entity = player;
 				//	Client.World?.AddPlayerListItem(new PlayerListItem(message.uuid, message.username, 0, 0, false));
 				//	mob = new RemotePlayer():
@@ -387,8 +386,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				
 				return;
 			}
-
-			entity.KnownPosition = new PlayerLocation(
+			
+			entity.RenderLocation = entity.KnownPosition = new PlayerLocation(
 				message.x, message.y, message.z, -message.headYaw, -message.yaw, -message.pitch) {OnGround = true};
 
 			entity.Velocity = new Microsoft.Xna.Framework.Vector3(message.speedX, message.speedY, message.speedZ);
@@ -402,7 +401,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			{
 				entity.HandleMetadata(message.metadata);
 			}
-
 			
 		//	entity.KnownPosition.Y -= Pl (float) (entity.BoundingBox.GetHeight() - 0.175f);
 				//mob.HandleMetadata();
@@ -412,6 +410,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 			//	_entityMapping.TryAdd(message.entityIdSelf, message.runtimeEntityId);
 			Client.World.SpawnEntity(entity);
+			//entity.Movement.MoveTo();
 		}
 
 		public void HandleMcpePlayerList(McpePlayerList message)
@@ -427,18 +426,20 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					if (Client.World.EntityManager.TryGet(r.ClientUuid, out var entity) && entity is RemotePlayer rp)
 					{
 						m = rp;
+						m.Skin = r.Skin;
+						
 						isNewEntity = false;
 						//Client.World.EntityManager.UpdateEntityId(entity, r.EntityId);
 					}
 					else
 					{
-						m = new RemotePlayer(Client.World);
+						m = new RemotePlayer(Client.World, skin: r.Skin);
 						m.EntityId = r.EntityId;
-						m.NameTag = r.DisplayName;
 					}
 					
+					m.NameTag = r.DisplayName;
 					m.UUID = r.ClientUuid;
-					m.Skin = r.Skin;
+					//m.Skin = r.Skin;
 
 					if (isNewEntity)
 					{
@@ -470,18 +471,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			}
 			else
 			{
-				EntityModelRenderer renderer = EntityFactory.GetEntityRenderer(
-					$"minecraft:{type.ToString().ToLower()}", null);
-
-				if (renderer != null)
-				{
-					entity = EntityFactory.Create(type, null);
-				}
-
-				if (entity == null)
-				{
-					entity = new Entity(null);
-				}
+				/*EntityModelRenderer renderer = EntityFactory.GetEntityRenderer(
+					type.ToStringId(), null);
 
 				if (renderer == null)
 				{
@@ -495,9 +486,21 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					Log.Debug($"Missing texture for entity: {type.ToString()} ({(int) type})");
 
 					return false;
-				}
+				}*/
+				
+				entity = EntityFactory.Create(type, null);
 
-				entity.ModelRenderer = renderer;
+				//if (entity == null)
+				//{
+				//	entity = new Entity(null);
+				//}
+				
+				//entity.ModelRenderer = renderer;
+			}
+
+			if (entity == null)
+			{
+				return false;
 			}
 
 			var uuid = MiNETExtensions.FromEntityId(entityId);
@@ -519,21 +522,28 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		public void HandleMcpeAddEntity(McpeAddEntity message)
 		{
-			MiNET.Entities.EntityType entityType;
+			MiNET.Entities.EntityType entityType = MiNET.Entities.EntityHelpers.ToEntityType(message.entityType);
 			if (_entityIdentifiers.TryGetValue(message.entityType, out var realId))
 			{
-				entityType = (MiNET.Entities.EntityType) realId;
-			}
-			else
-			{
-				entityType = MiNET.Entities.EntityHelpers.ToEntityType(message.entityType);
-			}
+				var t = (MiNET.Entities.EntityType) realId;
 
-			SpawnMob(message.runtimeEntityId,entityType,
+				if (t != EntityType.None)
+					entityType = t;
+			}
+			//else
+			//{
+			//	entityType = MiNET.Entities.EntityHelpers.ToEntityType(message.entityType);
+			//}
+
+			if (!SpawnMob(
+				message.runtimeEntityId, entityType,
 				new PlayerLocation(message.x, message.y, message.z, -message.headYaw, -message.yaw, -message.pitch),
-				new Microsoft.Xna.Framework.Vector3(message.speedX, message.speedY, message.speedZ),
-				message.attributes, message.metadata);
-        }
+				new Microsoft.Xna.Framework.Vector3(message.speedX, message.speedY, message.speedZ), message.attributes,
+				message.metadata))
+			{
+				Log.Warn($"Unknown entity type: {message.entityType}");
+			}
+		}
 
 		//private ConcurrentDictionary<long, long> _entityMapping = new ConcurrentDictionary<long, long>();
 		public void HandleMcpeRemoveEntity(McpeRemoveEntity message)

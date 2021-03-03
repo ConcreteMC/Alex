@@ -19,7 +19,8 @@ namespace Alex.Graphics.Models.Entity.Animations
 	public class AnimationController
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(AnimationController));
-		
+
+		public bool Initialized => _didInit;
 		private Queue<ModelBoneAnimation> AnimationQueue { get; }
 		private Entities.Entity Entity { get; }
 		private MoLangRuntime Runtime { get; set; }
@@ -39,7 +40,7 @@ namespace Alex.Graphics.Models.Entity.Animations
 		private static readonly Regex ControllerRegex = new Regex("", RegexOptions.Compiled);
 		public void UpdateEntityDefinition(EntityDescription definition)
 		{
-			Monitor.Enter(_lock);
+			//Monitor.Enter(_lock);
 
 			try
 			{
@@ -89,10 +90,12 @@ namespace Alex.Graphics.Models.Entity.Animations
 				_entityDefinition = definition;
 				_preRenderExpressions = preRender;
 				Runtime = runtime;
+
+				_didInit = true;
 			}
 			finally
 			{
-				Monitor.Exit(_lock);
+			//	Monitor.Exit(_lock);
 			}
 		}
 
@@ -293,15 +296,13 @@ namespace Alex.Graphics.Models.Entity.Animations
 		}
 
 		private Stopwatch _deltaTimeStopwatch = new Stopwatch();
-		public void Update(GameTime gameTime)
-		{
-			
-		}
-
+		private bool _didInit = false;
 		private void DoImportant()
 		{
-			if (!Monitor.TryEnter(_lock, 0))
+			if (!_didInit)
 				return;
+			//if (!Monitor.TryEnter(_lock, 0))
+			//	return;
 
 			var renderer = Entity?.ModelRenderer;
 
@@ -344,17 +345,10 @@ namespace Alex.Graphics.Models.Entity.Animations
 				}
 
 				renderer.ApplyPending();
-
-				//	TryAnimate(runtime, animations, "humanoid_base_pose", gameTime);
-				//TryAnimate(runtime, animations, "move.arms");
-				//TryAnimate(runtime, animations, "move.legs");
-				//TryAnimate(runtime, animations, "cape");
-				//TryAnimate(runtime, animations, "move.arms", gameTime);
-				//TryAnimate(runtime, animations, "animation.humanoid.move", gameTime);
 			}
 			finally
 			{
-				Monitor.Exit(_lock);
+			//	Monitor.Exit(_lock);
 			}
 		}
 
@@ -378,6 +372,11 @@ namespace Alex.Graphics.Models.Entity.Animations
 		
 		private void TryAnimate(MoLangRuntime runtime, string name)
 		{
+			var renderer = Entity.ModelRenderer;
+
+			if (renderer == null)
+				return;
+			
 			if (_animations.TryGetValue(name, out var animation))
 			{
 				if (animation == null)
@@ -437,7 +436,7 @@ namespace Alex.Graphics.Models.Entity.Animations
 					{
 						if (bone.Value == null) continue;
 
-						if (Entity?.ModelRenderer != null && Entity.ModelRenderer.GetBone(bone.Key, out var modelBone))
+						if (renderer.GetBone(bone.Key, out var modelBone))
 						{
 							var value = bone.Value;
 						

@@ -48,10 +48,8 @@ namespace Alex.Entities
 		public int Latency { get; set; } = 0;
 
 		//private PooledTexture2D _texture;
-		public RemotePlayer(World level, string geometry = "geometry.humanoid.customSlim") : base(level)
+		public RemotePlayer(World level, string geometry = "geometry.humanoid.customSlim", Skin skin = null) : base(level)
 		{
-		//	_texture = skinTexture ?? _alex;
-			
 			SkinFlags = new PlayerSkinFlags()
 			{
 				Value = 0xff
@@ -60,39 +58,24 @@ namespace Alex.Entities
 			//Name = name;
 
 			Width = 0.6;
-			//Length = 0.6;
 			Height = 1.80;
-
-			IsSpawned = false;
-
-			//NameTag = name;
-
-			HideNameTag = false;
-			IsAlwaysShowName = true;
 			ShowItemInHand = true;
-			
 			IsInWater = false;
-			//NoAi = true;
-			
+
 			Velocity = Vector3.Zero;
 
 			GeometryName = geometry;
-
-			_skinDirty = true;
-			//UpdateSkin(skinTexture);
-
+			
 			MovementSpeed = 0.1f;//0000000149011612f;//0000000149011612f;
 			FlyingSpeed = 0.4f;
-			//	MovementSpeed = 0.1f;
-			//		FlyingSpeed = 0.4f;
-
-			IsAffectedByGravity = true;
-			HasPhysics = true;
-
-			if (Alex.Instance.Resources.BedrockResourcePack.EntityDefinitions.TryGetValue(
-				"minecraft:player", out var description))
+			
+			if (skin != null)
 			{
-				AnimationController.UpdateEntityDefinition(description);
+				Skin = skin;
+			}
+			else
+			{
+				_skinDirty = true;
 			}
 		}
 
@@ -154,7 +137,7 @@ namespace Alex.Entities
 		private int _skinQueuedCount = 0;
 		private void QueueSkinProcessing()
 		{
-			if (Interlocked.CompareExchange(ref _skinQueuedCount, 1, 0) == 0)
+			//if (Interlocked.CompareExchange(ref _skinQueuedCount, 1, 0) == 0)
 			{
 				if (Level?.BackgroundWorker == null)
 				{
@@ -175,22 +158,26 @@ namespace Alex.Entities
 				{
 					if (ModelFactory.TryGetModel(GeometryName, out var entityModel))
 					{
-						var skin = entityModel.ToSkin();
+						//var skin = entityModel.ToSkin();
 						//	PooledTexture2D texture2D = skinTexture ?? _alex;
 						//if (texture2D != null)
 						//	skin.UpdateTexture(texture2D);
 				
-						_skin = skin;
+						//_skin = skin;
+						LoadSkin(null, entityModel);
 					}
 				}
-			//	if (_skin == null)
-			//	{
-				//	UpdateSkin(_texture);
-			//	}
-			//	else
-			//	{
+				else
+				{
 					LoadSkin(_skin);
-			//	}
+				}
+				
+				if (!AnimationController.Initialized &&
+				    Alex.Instance.Resources.BedrockResourcePack.EntityDefinitions.TryGetValue(
+					"minecraft:player", out var description))
+				{
+					AnimationController.UpdateEntityDefinition(description);
+				}
 			}
 			finally
 			{
@@ -199,16 +186,13 @@ namespace Alex.Entities
 			}
 		}
 
-		private void LoadSkin(Skin skin)
+		private void LoadSkin(Skin skin, EntityModel model = null)
 		{
 			try
 			{
-				if (skin == null)
-					return;
-
-				EntityModel model = null;
-
-				if (!skin.IsPersonaSkin)
+//				EntityModel model = null;
+				bool slim = skin?.Slim ?? false;
+				if (skin != null && model == null)
 				{
 					if (!string.IsNullOrWhiteSpace(skin.GeometryData) && !skin.GeometryData.Equals(
 						"null", StringComparison.InvariantCultureIgnoreCase))
@@ -231,16 +215,16 @@ namespace Alex.Entities
 
 								if (processedModels == null || processedModels.Count == 0)
 								{
-									Log.Warn($"!! Model count was 0 for player {NameTag} !!");
-
-									if (!Directory.Exists("failed"))
-										Directory.CreateDirectory("failed");
-
-									File.WriteAllText(
-										Path.Combine(
-											"failed",
-											$"{Environment.TickCount64}-{resourcePatch.Geometry.Default}.json"),
-										skin.GeometryData);
+									//		Log.Warn($"!! Model count was 0 for player {NameTag} !!");
+									/*
+																		if (!Directory.Exists("failed"))
+																			Directory.CreateDirectory("failed");
+									
+																		File.WriteAllText(
+																			Path.Combine(
+																				"failed",
+																				$"{Environment.TickCount64}-{resourcePatch.Geometry.Default}.json"),
+																			skin.GeometryData);*/
 								}
 								else
 								{
@@ -250,10 +234,6 @@ namespace Alex.Entities
 										{
 											Log.Debug(
 												$"Invalid geometry: {resourcePatch.Geometry.Default} for player {NameTag}");
-										}
-										else
-										{
-											
 										}
 
 									}
@@ -276,6 +256,11 @@ namespace Alex.Entities
 					}
 				}
 
+				//if (!skin.IsPersonaSkin)
+				//{
+					
+				//}
+
 				if (model == null)
 				{
 					ModelFactory.TryGetModel(
@@ -291,9 +276,9 @@ namespace Alex.Entities
 
 					if (!skin.TryGetBitmap(model, out skinBitmap))
 					{
-						Log.Warn($"No custom skin data for player {NameTag}");
+						//Log.Warn($"No custom skin data for player {NameTag}");
 
-						if (skin.Slim)
+						if (slim)
 						{
 							if (_alex == null && Alex.Instance.Resources.TryGetBitmap(
 								"entity/alex", out var rawTexture))
@@ -320,16 +305,7 @@ namespace Alex.Entities
 							}
 						}
 					}
-					
-				//	skinBitmap.Mutate(x => x.RotateFlip(RotateMode.Rotate180, FlipMode.Horizontal));
-					
-					//if (!Directory.Exists("skins"))
-					//	Directory.CreateDirectory("skins");
 
-					//var path = Path.Combine("skins", $"{model.Description.Identifier}-{Environment.TickCount64}");
-					//File.WriteAllText($"{path}.json", skin.GeometryData);
-					//skinBitmap.SaveAsPng($"{path}.png");
-					
 					var modelTextureSize = new Point(
 						(int) model.Description.TextureWidth, (int) model.Description.TextureHeight);
 
@@ -468,65 +444,8 @@ namespace Alex.Entities
 			if (modelRenderer != null && SkinFlags != null)
 				SkinFlags.ApplyTo(modelRenderer);
 		}
-
-		private        bool          ValidModel { get; set; }
+		
 		private static Image<Rgba32> _steve;
 		private static Image<Rgba32> _alex;
-
-		/*private void UpdateSkin(PooledTexture2D skinTexture)
-		{
-
-
-			string geometry = "geometry.humanoid.customSlim";
-
-			if (skinTexture == null)
-			{
-				string skinVariant = "entity/alex";
-				skinTexture = _alex;
-
-				var uuid = UUID.GetBytes();
-
-				bool isSteve = (uuid[3] ^ uuid[7] ^ uuid[11] ^ uuid[15]) % 2 == 0;
-
-				if (isSteve)
-				{
-					skinVariant = "entity/steve";
-					geometry = "geometry.humanoid.custom";
-
-					//skinTexture = _steve;
-				}
-
-				if (skinTexture == null)
-				{
-					if (Alex.Instance.Resources.TryGetBitmap(skinVariant, out var rawTexture))
-					{
-						skinTexture = TextureUtils.BitmapToTexture2D(Alex.Instance.GraphicsDevice, rawTexture);
-
-						//if (isSteve)
-						//	_steve = skinTexture;
-						//else
-							//_alex = skinTexture;
-
-						//skinBitmap = rawTexture;
-					}
-				}
-
-				if (skinTexture == null)
-				{
-					skinTexture = TextureUtils.BitmapToTexture2D(Alex.Instance.GraphicsDevice, Alex.PlayerTexture);
-				}
-			}
-
-
-			if (ModelFactory.TryGetModel(geometry, out var m))
-			{
-				_model = m;
-				ValidModel = true;
-				ModelRenderer = new EntityModelRenderer(_model, skinTexture);
-
-				//_texture = skinTexture;
-				//UpdateModelParts();
-			}
-		}*/
 	}
 }

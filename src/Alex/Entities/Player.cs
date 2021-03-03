@@ -87,21 +87,10 @@ namespace Alex.Entities
         public Player(GraphicsDevice graphics, InputManager inputManager, World world, Skin skin, NetworkProvider networkProvider, PlayerIndex playerIndex) : base(world)
         {
 	        Network = networkProvider;
-	        //IsSpawned = true;
-		//	DoRotationCalculations = false;
-			//PlayerIndex = playerIndex;
-		    Controller = new PlayerController(graphics, world, inputManager, this, playerIndex);
-		   // Camera = camera;
-		   // NoAi = false;
 
-			//Inventory = new Inventory(46);
-			//Inventory.SelectedHotbarSlotChanged += SelectedHotbarSlotChanged;
-			//base.Inventory.IsPeInventory = true;
-			//MovementSpeed = 0.1f;
-		//	BaseMovementSpeed = 0.21585;//4.317;
-		//	FlyingSpeed = 0.5f; //10.89f;
-			
-			SnapHeadYawRotationOnMovement = false;
+		    Controller = new PlayerController(graphics, world, inputManager, this, playerIndex);
+
+		    SnapHeadYawRotationOnMovement = false;
 			SnapYawRotationOnMovement = true;
 			DoRotationCalculations = false;
 			
@@ -237,6 +226,7 @@ namespace Alex.Entities
 			    if (Level.GetChunk(KnownPosition.GetCoordinates3D(), true) != null)
 			    {
 				    WaitingOnChunk = false;
+				    NoAi = false;
 			    }
 		    }
 

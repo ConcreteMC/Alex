@@ -61,23 +61,25 @@ namespace Alex.Worlds
 			foreach (var entity in entities.Concat(blockEntities))
 			{
 				_sw.Restart();
+				rendered.Add(entity);
 				
 				entity.OnTick();
 
-				if (Math.Abs(new ChunkCoordinates(entity.KnownPosition).DistanceTo(cameraChunkPosition))
+				//if (!entity.IsSpawned)
+				//	continue;
+				/*if (Math.Abs(new ChunkCoordinates(entity.KnownPosition).DistanceTo(cameraChunkPosition))
 				    > World.ChunkManager.RenderDistance)
 				{
 					entity.IsRendered = false;
 
 					continue;
-				}
+				}*/
 
-				var entityBox = entity.GetVisibilityBoundingBox(entity.RenderLocation);
+				var entityBox = entity.GetVisibilityBoundingBox(entity.KnownPosition);
 
 				if (World.Camera.BoundingFrustum.Contains(
 					new Microsoft.Xna.Framework.BoundingBox(entityBox.Min, entityBox.Max)) != ContainmentType.Disjoint)
 				{
-					rendered.Add(entity);
 					entity.IsRendered = true;
 				}
 				else
@@ -119,15 +121,17 @@ namespace Alex.Worlds
 				args.GraphicsDevice.BlendState = BlendState.AlphaBlend;
 				
 				int renderCount = 0;
-				var entities    = _rendered.ToArray();
+				//var entities    = _rendered.ToArray();
 
-				foreach (var entity in entities)
+				foreach (var entity in _rendered)
 				{
 					// entity.IsRendered = true;
+					if (entity.IsRendered)
+					{
+						entity.Render(args);
 
-					entity.Render(args);
-
-					renderCount++;
+						renderCount++;
+					}
 				}
 
 				EntitiesRendered = renderCount;
@@ -163,6 +167,9 @@ namespace Alex.Worlds
 				{
 					foreach (var entity in entities)
 					{
+						if (!entity.IsRendered)
+							continue;
+						
 						if (!entity.HideNameTag || entity.IsAlwaysShowName)
 							RenderNametag(args, entity);
 						
@@ -204,7 +211,7 @@ namespace Alex.Worlds
 			{
 				Vector3 posOffset = new Vector3(0, 0f, 0);
 
-				if (entity.RenderEntity && !entity.IsInvisible)
+				if (!entity.IsInvisible)
 				{
 					posOffset.Y += (float) (entity.Height * entity.Scale);
 				}

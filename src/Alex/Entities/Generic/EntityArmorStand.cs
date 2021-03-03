@@ -79,6 +79,7 @@ namespace Alex.Entities.Generic
 		{
 			if (ModelRenderer.GetBone("head", out var head))
 			{
+				//rotation.Y = 180f - rotation.Y;
 				head.Rotation = rotation;
 			}
 		}
@@ -87,6 +88,7 @@ namespace Alex.Entities.Generic
 		{
 			if (ModelRenderer.GetBone("body", out var head))
 			{
+				rotation.Y = 180f - rotation.Y;
 				head.Rotation = rotation;
 			}
 		}
@@ -103,6 +105,7 @@ namespace Alex.Entities.Generic
 		{
 			if (ModelRenderer.GetBone(isLeftLeg ? "leftleg" : "rightleg", out var head))
 			{
+				//rotation.Y = 180f - rotation.Y;
 				head.Rotation = rotation;
 			}
 		}

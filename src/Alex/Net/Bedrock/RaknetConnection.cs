@@ -400,7 +400,7 @@ namespace Alex.Net.Bedrock
 				return;
 			}
 
-			var datagram = Datagram.CreateObject();
+			var datagram = new Datagram();
 			try
 			{
 				datagram.Decode(receivedBytes);

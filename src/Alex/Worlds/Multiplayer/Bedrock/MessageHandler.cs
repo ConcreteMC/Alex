@@ -176,7 +176,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				//var messages = new List<Packet>();
 
 				// Get bytes to process
-				var payload = wrapper.payload.ToArray();
+				var payload = wrapper.payload;
 
 				// Decrypt bytes
 
@@ -188,15 +188,16 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					payload = CryptoUtils.Decrypt(payload, CryptoContext);
 				}
 
-				using (var stream = new MemoryStream(payload))
+				try
 				{
-					using (var deflateStream = new DeflateStream(stream, System.IO.Compression.CompressionMode.Decompress, true))
+					using (var deflateStream = new DeflateStream(
+						new MemoryStreamReader(payload), System.IO.Compression.CompressionMode.Decompress, false))
 					{
 						payload = deflateStream.ReadAllBytes();
 					}
-				}
+				}catch(InvalidDataException){}
 
-				using (MemoryStream ms = new MemoryStream(payload))
+				using (var ms = new MemoryStreamReader(payload))
 				{
 					int count = 0;
 
