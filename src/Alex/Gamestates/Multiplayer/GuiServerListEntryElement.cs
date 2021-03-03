@@ -50,7 +50,7 @@ namespace Alex.Gamestates.Multiplayer
 		public ServerTypeImplementation ServerTypeImplementation { get; }
 		public GuiServerListEntryElement(ServerTypeImplementation serverTypeImplementation, SavedServerEntry entry) : this(
 			serverTypeImplementation.QueryProvider,
-			$"§o[{entry.ServerType}]§r - {entry.Name}",
+			$"{entry.Name}",
 			entry.Host + ":" + entry.Port)
 		{
 			ServerTypeImplementation = serverTypeImplementation;

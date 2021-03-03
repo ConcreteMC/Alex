@@ -62,7 +62,7 @@ namespace Alex.Gui
 		    _skyBoxEffect = new AlphaTestEffect(device)
 		    {
 			    View = Matrix.Identity,
-			    Projection = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(120.0f), 1.0f, 0.05f, 10.0f)
+			    Projection = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(120.0f), device.Viewport.AspectRatio, 0.05f, 10.0f)
 		    };
 
 		    _skyboxBuilder = new BufferBuilder<VertexPositionColorTexture>(device, 64 * 6);
@@ -71,16 +71,20 @@ namespace Alex.Gui
 	    }
 
 	    private Matrix _rotationMatrix;
+
 	    private void RotateSkyBox()
 	    {
 		    var xRot = (float) Math.Sin(_rotation / 400.0f) * 25.0f;
 
-		    _rotationMatrix = Matrix.CreateRotationX(MathHelper.ToRadians(xRot))
-		                  * Matrix.CreateRotationY(MathHelper.ToRadians(_rotation * 0.1f));
+		    _rotationMatrix = Matrix.CreateRotationY(MathHelper.ToRadians(_rotation * 0.1f));
+
+		    if (_skyBoxEffect != null)
+				_skyBoxEffect.Projection = Matrix.CreatePerspectiveFieldOfView(
+				    MathHelper.ToRadians(120.0f), _skyBoxEffect.GraphicsDevice.Viewport.AspectRatio, 0.05f, 10.0f);
 	    }
 
 
-		private BufferBuilder<VertexPositionColorTexture> _skyboxBuilder;
+	    private BufferBuilder<VertexPositionColorTexture> _skyboxBuilder;
 	    private void UpdateSkyBoxCube()
 	    {
 		    for (int j = 0; j < 64; ++j)

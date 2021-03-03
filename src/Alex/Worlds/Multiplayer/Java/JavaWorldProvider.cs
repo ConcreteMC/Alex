@@ -1805,7 +1805,7 @@ namespace Alex.Worlds.Multiplayer.Java
 			}
 			else if (!World.EntityManager.TryGet(packet.EntityId, out entity))
 			{
-				Log.Warn($"Unkown entity in EntityVelocity: {packet.EntityId}");
+				//Log.Warn($"Unkown entity in EntityVelocity: {packet.EntityId}");
 
 				return;
 			}
