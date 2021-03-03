@@ -435,16 +435,20 @@ namespace Alex.Entities
 		    }
 
 		  //  Log.Info($"Interacting with entity. Attack: {attack} - CanAttack: {canAttack} - PVM: {IsNoPvM} - PVP: {IsNoPvP}");
-		    
+		  var slot = hand == 1 ? Inventory.OffHandSlot : Inventory.SelectedSlot;
+		  var interaction = ItemUseOnEntityAction.ItemInteract;
+		  
 		    if (attack)
 		    {
-			   // entity.EntityHurt();
-			    Network?.EntityInteraction(this, entity, ItemUseOnEntityAction.Attack, hand, hand == 1 ? Inventory.OffHandSlot : Inventory.SelectedSlot);
+			    interaction = ItemUseOnEntityAction.Attack;
 		    }
 		    else
 		    {
-			    Network?.EntityInteraction(this, entity, ItemUseOnEntityAction.Interact, hand, hand == 1 ? Inventory.OffHandSlot : Inventory.SelectedSlot);
+			    interaction = ItemUseOnEntityAction.Interact;
+			    //Network?.EntityInteraction(this, entity, ItemUseOnEntityAction.Interact, hand, slot);
 		    }
+		    
+		    Network?.EntityInteraction(this, entity, interaction, hand, slot);
 	    }
 
 	    private void StealSkin(Entity sourceEntity)

@@ -162,7 +162,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			else if (Client.PlayerStatus == 0)
 			{
 				Log.Info($"Received Play Status packet: Login success");
-				
+
 				McpeClientCacheStatus status = McpeClientCacheStatus.CreateObject();
 				status.enabled = ChunkProcessor.Cache.Enabled;
 				Client.SendPacket(status);
@@ -1705,7 +1705,10 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		public void HandleMcpeChunkRadiusUpdate(McpeChunkRadiusUpdate message)
 		{
+			Log.Info($"Received chunkradius. Requested={Client.ChunkRadius} Received={message.chunkRadius}");
 			Client.ChunkRadius = message.chunkRadius;
+
+			//Client.SendMcpeMovePlayer(new MiNET.Utils.PlayerLocation(Client.SpawnPoint), false);
 			//if (!Client.CanSpawn && Client.GameStarted)
 			//	Client.MarkAsInitialized();
 			//UnhandledPackage(message);
