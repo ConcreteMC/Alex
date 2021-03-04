@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Alex.MoLang.Runtime.Exceptions;
 using Alex.MoLang.Runtime.Struct;
 using Alex.MoLang.Runtime.Value;
@@ -8,13 +9,16 @@ namespace Alex.MoLang.Runtime
 {
 	public class MoParams
 	{
-		public static readonly MoParams Empty = new MoParams(new List<IMoValue>());
+		public static readonly MoParams Empty = new MoParams(new IMoValue[0]);
 		
-		private readonly List<IMoValue> _parameters;
+		private readonly IMoValue[] _parameters;
 
-		public MoParams(List<IMoValue> param)
+		public MoParams(IEnumerable<IMoValue> param)
 		{
-			this._parameters = param;
+			if (param is IMoValue[] array)
+				_parameters = array;
+			else
+				_parameters = param.ToArray();
 		}
 
 		public IMoValue Get(int index)
@@ -36,7 +40,7 @@ namespace Alex.MoLang.Runtime
 		}
 
 		public bool Contains(int index) {
-			return _parameters.Count >= index + 1;
+			return _parameters.Length >= index + 1;
 		}
 
 		public int GetInt(int index) {
@@ -59,7 +63,7 @@ namespace Alex.MoLang.Runtime
 			return Get<MoLangEnvironment>(index);
 		}
 
-		public List<IMoValue> GetParams() {
+		public IMoValue[] GetParams() {
 			return _parameters;
 		}
 	}

@@ -1,11 +1,11 @@
 namespace Alex.MoLang.Parser.Expressions
 {
-	public abstract class BinaryOpExpression : Expression<IExpression>
+	public abstract class BinaryOpExpression : Expression
 	{
-		protected IExpression Left;
-		protected IExpression Right;
+		public IExpression Left { get; set; }
+		public IExpression Right { get; set; }
 
-		protected BinaryOpExpression(IExpression l, IExpression r) : base(null)
+		protected BinaryOpExpression(IExpression l, IExpression r)
 		{
 			Left = l;
 			Right = r;

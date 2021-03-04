@@ -24,14 +24,14 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Entity
 		///		NOT CURRENTLY IMPLEMENTED
 		/// </summary>
 		[JsonProperty("anim_time_update")]
-		public List<IExpression> AnimationTimeUpdate { get; set; } = null;
+		public IExpression[] AnimationTimeUpdate { get; set; } = null;
 
 		/// <summary>
 		///		How much should this animation be blended in with the others?
 		///		0.0 = off.  1.0 = fully apply all transforms.
 		/// </summary>
 		[JsonProperty("blend_weight")]
-		public List<IExpression> BlendWeight { get; set; } = new List<IExpression>
+		public IExpression[] BlendWeight { get; set; } = new IExpression[]
 		{
 			new NumberExpression(1d)
 		};

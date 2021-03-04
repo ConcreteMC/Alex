@@ -1,13 +1,16 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using Alex.MoLang.Parser.Visitors;
+using Alex.MoLang.Runtime.Exceptions;
 
 namespace Alex.MoLang.Parser
 {
     public static class ExprFinder
     {
-        public static List<IExpression> Find(List<IExpression> expressions, Predicate<IExpression> predicate) {
+        public static List<IExpression> Find(Predicate<IExpression> predicate, params IExpression[] expressions) {
             ExprTraverser  traverser = new ExprTraverser();
             FindingVisitor visitor   = new FindingVisitor(predicate);
 
@@ -17,7 +20,7 @@ namespace Alex.MoLang.Parser
             return visitor.FoundExpressions;
         }
 
-        public static IExpression FindFirst(List<IExpression> expressions, Predicate<IExpression> predicate) {
+        public static IExpression FindFirst(Predicate<IExpression> predicate, params IExpression[] expressions) {
             ExprTraverser       traverser = new ExprTraverser();
             FirstFindingVisitor visitor   = new FirstFindingVisitor(predicate);
 
@@ -33,36 +36,49 @@ namespace Alex.MoLang.Parser
 
         public readonly List<IExprVisitor> Visitors = new List<IExprVisitor>();
 
-        public void Traverse(List<IExpression> expressions)
+        public IEnumerable<IExpression> Traverse(IExpression[] expressions)
         {
             foreach (IExprVisitor visitor in Visitors) {
                 visitor.BeforeTraverse(expressions);
             }
 
             _stopTraversal = false;
-            TraverseArray(expressions);
+
+            foreach (var expression in TraverseArray(expressions))
+            {
+                yield return expression;
+            }
+            //TraverseArray(expressions);
 
             foreach (IExprVisitor visitor in Visitors) {
                 visitor.AfterTraverse(expressions);
             }
+
+           // return expressions;
         }
 
-        private void TraverseArray(List<IExpression> expressions)
+        private IEnumerable<IExpression> TraverseArray(IExpression[] expressions)
         {
-            var list = new List<IExpression>(expressions);
+            //var list = expressions.ToList();
 
-            for (var i = 0; i < list.Count; i++)
+            //for (var i = 0; i < list.Count; i++)
+            for (var index = 0; index < expressions.Length; index++)
             {
-                var expression = list[i];
+                IExpression expression = expressions[index];
+                
+                if (expression == null)
+                    throw new MoLangRuntimeException("Expression was null", null);
 
-                var removeCurrent    = false;
+                var removeCurrent = false;
                 var traverseChildren = true;
-                var traverseCurrent  = true;
+                var traverseCurrent = true;
 
-                foreach (var visitor in Visitors) {
+                foreach (var visitor in Visitors)
+                {
                     var result = visitor.OnVisit(expression);
 
-                    if (result is ActionType at) {
+                    if (result is ActionType at)
+                    {
                         switch (at)
                         {
                             case ActionType.RemoveCurrent:
@@ -86,8 +102,10 @@ namespace Alex.MoLang.Parser
 
                                 break;
                         }
-                    } else if (result is IExpression) {
-                        expression = (IExpression) result;
+                    }
+                    else if (result is IExpression result1)
+                    {
+                        expression = result1;
                     }
                 }
 
@@ -95,22 +113,28 @@ namespace Alex.MoLang.Parser
                 {
                     break;
                 }
-                else if (traverseChildren && !removeCurrent)
+
+                if (traverseChildren && !removeCurrent)
                 {
-                    TraverseExpr(expression);
+                    expression = TraverseExpr(expression);
                 }
 
-                foreach (IExprVisitor visitor in Visitors) {
+                foreach (IExprVisitor visitor in Visitors)
+                {
                     visitor.OnLeave(expression);
                 }
 
                 if (removeCurrent)
                 {
-                    expressions.Remove(expression);
+                    //list.Remove(expression);
+                    expressions[index] = null;//.Remove(expression);
                 }
                 else
                 {
-                    expressions[i] = expression;//.set(i, expression);
+                    expressions[index] = expression;
+
+                    yield return expression;
+                    //expressions[i] = expression;//.set(i, expression);
                 }
 
                 if (_stopTraversal)
@@ -118,31 +142,33 @@ namespace Alex.MoLang.Parser
                     break;
                 }
             }
+
+            //return expressions.Where(x => x != null).ToArray();
         }
 
-        private void TraverseExpr(IExpression expression)
+        private IExpression TraverseExpr(IExpression expression)
         {
-            foreach (var field in GetAllFields(expression.GetType())) {
+            foreach (var field in GetAllProperties(expression.GetType()))
+            {
                 //field.setAccessible(true);
                 var fieldValue = GetFieldValue(field, expression);
 
-                if (fieldValue is IExpression) {
-                    var subExpr = (IExpression) fieldValue;
-
+                if (fieldValue is IExpression subExpr)
+                {
                     var removeCurrent    = false;
                     var traverseChildren = true;
-                    var traverseCurrent  = true;
+                    var traverseCurrent = true;
 
-                    foreach (var visitor in
-                    Visitors) {
+                    foreach (var visitor in Visitors)
+                    {
                         var result = visitor.OnVisit(subExpr);
 
-                        if (result is ActionType at) {
+                        if (result is ActionType at)
+                        {
                             switch (at)
-                            {
-                                case ActionType.RemoveCurrent:
-                                    removeCurrent = true;
-
+                            { 
+                                case ActionType.RemoveCurrent: 
+                                    removeCurrent = true; 
                                     break;
 
                                 case ActionType.StopTraversal:
@@ -161,9 +187,10 @@ namespace Alex.MoLang.Parser
 
                                     break;
                             }
-                        } else if (result is IExpression)
+                        }
+                        else if (result is IExpression result1)
                         {
-                            subExpr = (IExpression) result;
+                            subExpr = result1;
                         }
                     }
 
@@ -171,12 +198,14 @@ namespace Alex.MoLang.Parser
                     {
                         break;
                     }
-                    else if (traverseChildren && !removeCurrent)
+
+                    if (traverseChildren && !removeCurrent)
                     {
-                        TraverseExpr(subExpr);
+                        subExpr = TraverseExpr(subExpr);
                     }
 
-                    foreach (var visitor in Visitors) {
+                    foreach (var visitor in Visitors)
+                    {
                         visitor.OnLeave(subExpr);
                     }
 
@@ -193,38 +222,33 @@ namespace Alex.MoLang.Parser
                     {
                         break;
                     }
-                } else if (fieldValue != null && fieldValue.GetType().IsArray)
+                }
+                else if (fieldValue != null && fieldValue.GetType().IsArray)
                 {
-                    var         array = (object[]) fieldValue;
-                    var exprs = new List<IExpression>();
+                    var array = (object[]) fieldValue;
+                    var exprs = array.Where(x => x is IExpression).Cast<IExpression>().ToArray();
 
-                    foreach (var i in array) {
-                        if (i is IExpression) {
-                            exprs.Add((IExpression) i);
-                        }
-                    }
+                    exprs = TraverseArray(exprs).ToArray();
 
-                    TraverseArray(exprs);
-
-                    SetFieldValue(field, expression, exprs.ToArray());
+                    SetFieldValue(field, expression, exprs);
                 }
             }
+
+            return expression;
         }
 
-        public static List<FieldInfo> GetAllFields(Type type)
+        private static ConcurrentDictionary<Type, PropertyInfo[]> _cachedProperties =
+            new ConcurrentDictionary<Type, PropertyInfo[]>();
+        private static PropertyInfo[] GetAllProperties(Type type)
         {
-            var fields = new List<FieldInfo>();
-
-            foreach (var field in type.GetFields())
-            {
-                fields.Add(field);
-            }
-
-            return fields;
+            return _cachedProperties.GetOrAdd(
+                type, t => t.GetProperties(BindingFlags.Public | BindingFlags.Instance).ToArray());
+          //  return type.GetProperties(BindingFlags.Public | BindingFlags.Instance).ToList();
         }
 
-        private Object GetFieldValue(FieldInfo field, object obj)
+        private object GetFieldValue(PropertyInfo field, object obj)
         {
+            return field.GetValue(obj);
             try
             {
                 return field.GetValue(obj);//.get(obj);
@@ -237,14 +261,18 @@ namespace Alex.MoLang.Parser
             return null;
         }
 
-        private void SetFieldValue(FieldInfo field, object obj, object value)
+        private void SetFieldValue(PropertyInfo field, object obj, object value)
         {
+            field.SetValue(obj, value);
+
+            return;
             try
             {
-                field.SetValue(obj, value);
+                
             }
             catch (Exception throwable)
             {
+                
                 // noop
             }
         }

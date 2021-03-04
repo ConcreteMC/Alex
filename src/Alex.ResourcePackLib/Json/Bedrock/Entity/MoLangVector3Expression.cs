@@ -15,9 +15,9 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Entity
 	[JsonConverter(typeof(MoVec3Converter))]
 	public class MoLangVector3Expression
 	{
-		private List<IExpression> _x, _y, _z;
+		private IExpression[] _x, _y, _z;
 		
-		public MoLangVector3Expression(List<IExpression>[] values)
+		public MoLangVector3Expression(IExpression[][] values)
 		{
 			if (values.Length == 3)
 			{
@@ -47,7 +47,7 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Entity
 			_keyFrames = newKeyFrames;
 		}
 
-		private Vector3 Evaluate(MoLangRuntime runtime, List<IExpression> xExpressions, List<IExpression> yExpressions, List<IExpression> zExpressions)
+		private Vector3 Evaluate(MoLangRuntime runtime, IExpression[] xExpressions, IExpression[] yExpressions, IExpression[] zExpressions)
 		{
 			IMoValue x = runtime.Execute(xExpressions);
 			IMoValue y = runtime.Execute(yExpressions);
@@ -56,7 +56,7 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Entity
 			return new Vector3(x.AsFloat(), y.AsFloat(), z.AsFloat());
 		}
 
-		private Vector3 Evaluate(MoLangRuntime runtime, List<IExpression>[] expressions)
+		private Vector3 Evaluate(MoLangRuntime runtime, IExpression[][] expressions)
 		{
 			if (expressions.Length == 3)
 			{

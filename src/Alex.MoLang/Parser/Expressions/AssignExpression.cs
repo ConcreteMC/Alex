@@ -4,21 +4,21 @@ using Alex.MoLang.Runtime.Value;
 
 namespace Alex.MoLang.Parser.Expressions
 {
-	public class AssignExpression : Expression<IExpression>
+	public class AssignExpression : Expression
 	{
-		private IExpression _variable;
-		private IExpression _expr;
+		public IExpression Variable { get; set; }
+		public IExpression Expression { get; set; }
 
-		public AssignExpression(IExpression variable, IExpression expr) : base(null)
+		public AssignExpression(IExpression variable, IExpression expr)
 		{
-			_variable = variable;
-			_expr = expr;
+			Variable = variable;
+			Expression = expr;
 		}
 		
 		/// <inheritdoc />
 		public override IMoValue Evaluate(MoScope scope, MoLangEnvironment environment)
 		{
-			_variable.Assign(scope, environment, _expr.Evaluate(scope, environment));
+			Variable.Assign(scope, environment, Expression.Evaluate(scope, environment));
 
 			return DoubleValue.Zero;
 		}

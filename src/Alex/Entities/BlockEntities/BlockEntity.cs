@@ -38,6 +38,7 @@ namespace Alex.Entities.BlockEntities
 			HasPhysics = false;
 			IsAffectedByGravity = false;
 			Block = block;
+			DoRotationCalculations = false;
 
 			//base.Movement.InterpolatedMovement = false;
 		}

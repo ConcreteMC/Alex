@@ -495,6 +495,7 @@ namespace Alex.Entities
 		public bool IsStackable { get; set; }
 		public bool IsEating { get; set; }
 		public bool IsBlocking { get; set; }
+		public bool IsSpinAttacking { get; set; }
 		public bool HasCollision { get; set; } = true;
 		public bool IsAffectedByGravity { get; set; } = true;
 		public virtual bool IsSwimming { get; set; }
@@ -505,7 +506,10 @@ namespace Alex.Entities
 		
 		public bool RenderEntity { get; set; } = true;
 		public bool ShowItemInHand { get; set; } = false;
-
+		public long TargetEntityId { get; set; } = -1;
+		public long OwnerEntityId { get; set; } = -1;
+		public Vector2 TargetRotation { get; private set; } = Vector2.Zero;
+		
 		internal bool RequiresRealTimeTick { get; set; } = true;
 
 		internal bool HasPhysics { get; set; } = true;
@@ -544,27 +548,43 @@ namespace Alex.Entities
 				switch (Pose)
 				{
 					case Pose.Standing:
+						IsSneaking = false;
 						IsStanding = true;
 						IsSleeping = false;
 						IsSwimming = false;
+						IsSpinAttacking = false;
 						break;
 					
 					case Pose.Sleeping:
+						IsSneaking = false;
 						IsStanding = false;
 						IsSleeping = true;
 						IsSwimming = false;
+						IsSpinAttacking = false;
 						break;
 
 					case Pose.Swimming:
+						IsSneaking = false;
 						IsStanding = false;
 						IsSleeping = false;
 						IsSwimming = true;
+						IsSpinAttacking = false;
 						break;
 
 					case Pose.SpinAttack:
+						IsSneaking = false;
+						IsStanding = false;
+						IsSleeping = false;
+						IsSwimming = false;
+						IsSpinAttacking = true;
 						break;
 
 					case Pose.Sneaking:
+						IsSneaking = true;
+						IsStanding = false;
+						IsSleeping = false;
+						IsSwimming = false;
+						IsSpinAttacking = false;
 						break;
 
 					case Pose.Dying:
@@ -617,11 +637,21 @@ namespace Alex.Entities
 					} break;
 					
 					//case (int) MiNET.Entities.Entity.MetadataFlags.EntityFlags2:
+					case (int) MiNET.Entities.Entity.MetadataFlags.EntityFlags2:
+					{
+						if (meta.Value is MetadataLong lng)
+						{
+							_extendedData = lng.Value;
+							HandleEntityFlags(_data, _extendedData);
+						}
+					} break;
+					
 					case (int) MiNET.Entities.Entity.MetadataFlags.EntityFlags:
 					{
 						if (meta.Value is MetadataLong lng)
 						{
-							HandleEntityFlags(lng.Value);
+							_data = lng.Value;
+							HandleEntityFlags(_data, _extendedData);
 						}
 					} break;
 					
@@ -658,6 +688,22 @@ namespace Alex.Entities
 						}
 					} break;
 
+					case 5: //Owner Entity ID
+					{
+						if (meta.Value is MiNET.Utils.MetadataLong targetTag)
+						{
+							OwnerEntityId = targetTag.Value;
+						}
+					} break;
+					
+					case 6: //Target Entity ID
+					{
+						if (meta.Value is MiNET.Utils.MetadataLong targetTag)
+						{
+							TargetEntityId = targetTag.Value;
+						}
+					} break;
+
 					default:
 						if (!HandleMetadata((MiNET.Entities.Entity.MetadataFlags) meta.Key, meta.Value))
 						{
@@ -674,16 +720,55 @@ namespace Alex.Entities
 			return false;
 		}
 
-		private void HandleEntityFlags(long data)
+		private long _extendedData = 0;
+		private long _data = 0;
+		
+		private void HandleEntityFlags(long rawData, long extendedData)
 		{
 			if ((this is Player))
 				return;
-			
-			IsInvisible = (data & ((int) MiNET.Entities.Entity.DataFlags.Invisible)) != 0;
-			IsSneaking = (data & ((int) MiNET.Entities.Entity.DataFlags.Sitting)) != 0;
-			IsOnFire = (data & ((int) MiNET.Entities.Entity.DataFlags.OnFire)) != 0;
-			IsSprinting = (data & ((int) MiNET.Entities.Entity.DataFlags.Sprinting)) != 0;
 
+			BitArray data = new BitArray(
+				BitConverter.GetBytes(rawData).Concat(BitConverter.GetBytes(extendedData)).ToArray());
+
+			IsInvisible = data[(int) MiNET.Entities.Entity.DataFlags.Invisible];// (data & ((int) MiNET.Entities.Entity.DataFlags.Invisible)) != 0;
+			IsSneaking = data[(int) MiNET.Entities.Entity.DataFlags.Sneaking];
+			IsSitting = data[(int) MiNET.Entities.Entity.DataFlags.Sitting];
+			
+			IsOnFire = data[(int) MiNET.Entities.Entity.DataFlags.OnFire];
+			IsSprinting = data[(int) MiNET.Entities.Entity.DataFlags.Sprinting];
+			
+			NoAi = data[(int) MiNET.Entities.Entity.DataFlags.NoAi];
+			IsAffectedByGravity = data[(int) MiNET.Entities.Entity.DataFlags.AffectedByGravity];
+			//HasCollision = (data & ((int) MiNET.Entities.Entity.DataFlags.HasCollision)) != 0;
+			
+			HideNameTag = data[(int) MiNET.Entities.Entity.DataFlags.ShowName];
+			IsAlwaysShowName = data[(int) MiNET.Entities.Entity.DataFlags.AlwaysShowName];
+			IsBaby = data[(int) MiNET.Entities.Entity.DataFlags.Baby];
+			IsUsingItem = data[(int) MiNET.Entities.Entity.DataFlags.UsingItem];
+			IsAngry = data[(int) MiNET.Entities.Entity.DataFlags.Angry];
+			IsInLove = data[(int) MiNET.Entities.Entity.DataFlags.InLove];
+			IsRiding = data[(int) MiNET.Entities.Entity.DataFlags.Riding];
+			IsTempted = data[(int) MiNET.Entities.Entity.DataFlags.Tempted];
+			IsTamed = data[(int) MiNET.Entities.Entity.DataFlags.Tamed];
+			IsLeashed = data[(int) MiNET.Entities.Entity.DataFlags.Leashed];
+			IsSheared = data[(int) MiNET.Entities.Entity.DataFlags.Sheared];
+			IsChested = data[(int) MiNET.Entities.Entity.DataFlags.Chested];
+			IsFlagAllFlying = data[(int) MiNET.Entities.Entity.DataFlags.FlagAllFlying];
+			IsSilent = data[(int) MiNET.Entities.Entity.DataFlags.Silent];
+			IsWallClimbing = data[(int) MiNET.Entities.Entity.DataFlags.WallClimbing];
+			IsResting = data[(int) MiNET.Entities.Entity.DataFlags.Resting];
+			IsMoving = data[(int) MiNET.Entities.Entity.DataFlags.Moving];
+			IsElder = data[(int) MiNET.Entities.Entity.DataFlags.Elder];
+			IsEating = data[62];
+			IsSleeping = data[75];
+			IsBlocking = data[71];
+			IsSpinAttacking = data[55];
+			IsSwimming = data[56];
+			/*IsOnFire = (data & ((int) MiNET.Entities.Entity.DataFlags.OnFire)) != 0;
+			IsSprinting = (data & ((int) MiNET.Entities.Entity.DataFlags.Sprinting)) != 0;
+			//IsSitting = (data & ((int) MiNET.Entities.Entity.DataFlags.Sneaking)) != 0;
+			
 			NoAi = (data & ((int) MiNET.Entities.Entity.DataFlags.NoAi)) != 0;
 			IsAffectedByGravity = (data & ((int) MiNET.Entities.Entity.DataFlags.AffectedByGravity)) != 0;
 			//HasCollision = (data & ((int) MiNET.Entities.Entity.DataFlags.HasCollision)) != 0;
@@ -702,11 +787,10 @@ namespace Alex.Entities
 			IsChested = (data & ((int) MiNET.Entities.Entity.DataFlags.Chested)) != 0;
 			IsFlagAllFlying = (data & ((int) MiNET.Entities.Entity.DataFlags.FlagAllFlying)) != 0;
 			IsSilent = (data & ((int) MiNET.Entities.Entity.DataFlags.Silent)) != 0;
-			IsSitting = (data & ((int) MiNET.Entities.Entity.DataFlags.Sneaking)) != 0;
 			IsWallClimbing = (data & ((int) MiNET.Entities.Entity.DataFlags.WallClimbing)) != 0;
 			IsResting = (data & ((int) MiNET.Entities.Entity.DataFlags.Resting)) != 0;
 			IsMoving = (data & ((int) MiNET.Entities.Entity.DataFlags.Moving)) != 0;
-			IsElder = (data & ((int) MiNET.Entities.Entity.DataFlags.Elder)) != 0;
+			IsElder = (data & ((int) MiNET.Entities.Entity.DataFlags.Elder)) != 0;*/
 			//IsEating = (data & (62)) != 0;
 			//IsBlocking = (data & 71) != 0;
 			//IsSleeping = (data & (75)) != 0;
@@ -738,9 +822,9 @@ namespace Alex.Entities
 
 			if (_head != null)
 			{
-				var headYaw = (RenderLocation.HeadYaw - RenderLocation.Yaw);
+				var headYaw = (KnownPosition.HeadYaw - KnownPosition.Yaw);
 
-				var pitch = RenderLocation.Pitch;
+				var pitch = KnownPosition.Pitch;
 
 				_head.Rotation = new Vector3(pitch, headYaw, 0f);
 			}
@@ -796,6 +880,15 @@ namespace Alex.Entities
 		public virtual void OnTick()
 		{
 			//Age++;
+			if (TargetEntityId != -1)
+			{
+				if (Level.TryGetEntity(TargetEntityId, out var entity))
+				{
+					var rotationVector = GetTargetRotationVector(entity);
+
+					TargetRotation = rotationVector;
+				}
+			}
 
 			Movement?.OnTick();
 
@@ -809,7 +902,7 @@ namespace Alex.Entities
 				ModelRenderer.EntityColor = Color.White.ToVector3();
 			}*/
 
-			if (DoRotationCalculations && !IsNoAi)
+			if (DoRotationCalculations)
 			{
 				UpdateRotations();
 			}
@@ -817,8 +910,6 @@ namespace Alex.Entities
 			{
 				KnownPosition.Yaw = KnownPosition.HeadYaw;
 			}
-
-			_previousPosition = KnownPosition;
 
 			foreach (var effect in _effects.Values.ToArray())
 			{
@@ -923,11 +1014,12 @@ namespace Alex.Entities
 		
 		private void UpdateRotations()
 		{
-			double deltaX = KnownPosition.X - _previousPosition.X;
-			double deltaZ = KnownPosition.Z - _previousPosition.Z;
+			var known = KnownPosition.ToVector3();
+			double deltaX = known.X - _previousPosition.X;
+			double deltaZ = known.Z - _previousPosition.Z;
 			double distSQ = deltaX * deltaX + deltaZ * deltaZ;
 
-			IsMoving = distSQ > 0f || Velocity.LengthSquared() > 0f;
+			//IsMoving = distSQ > 0f || Velocity.LengthSquared() > 0f;
 
 			float maximumHeadBodyAngleDifference = 75f;
 			const float movementThresholdSq = 2.5f;
@@ -942,7 +1034,7 @@ namespace Alex.Entities
 				
 				if (SnapHeadYawRotationOnMovement)
 				{
-					KnownPosition.HeadYaw = newRotationYawHead;
+					//KnownPosition.HeadYaw = newRotationYawHead;
 				}
 				
 				if (SnapYawRotationOnMovement)
@@ -967,7 +1059,7 @@ namespace Alex.Entities
 					if (_turnTicks > turnTicksLimit)
 					{
 						maximumHeadBodyAngleDifference =
-							Math.Max(1f - (float) ((float)(_turnTicks - turnTicksLimit) / turnTicksLimit), 0f) *
+							Math.Max(1f - ((float)(_turnTicks - turnTicksLimit) / (float)turnTicksLimit), 0f) *
 							maximumHeadBodyAngleDifference;
 					}
 				}
@@ -975,6 +1067,9 @@ namespace Alex.Entities
 				KnownPosition.Yaw = MathUtils.ConstrainAngle(KnownPosition.Yaw, KnownPosition.HeadYaw,
 					maximumHeadBodyAngleDifference);
 			}
+			Movement?.UpdateTarget();
+			
+			_previousPosition = known;
 		}
 
 		protected virtual void UpdateModelParts()
@@ -1197,6 +1292,56 @@ namespace Alex.Entities
 		public virtual void OnDespawn()
 		{
 			IsSpawned = false;
+		}
+		
+		public void LookAt(Vector3 targetPosition, bool aimWithHead)
+		{
+			var    view        = targetPosition - KnownPosition.ToVector3();
+			var    dz          = view.Z;
+			var    dx          = view.X;
+		    
+			float tanOutput   = 90f - MathUtils.RadianToDegree(MathF.Atan(dx / (dz)));
+			float thetaOffset = 270f;
+			if (dz < 0)
+			{
+				thetaOffset = 90;
+			}
+			var yaw = thetaOffset + tanOutput;
+
+			if (aimWithHead)
+			{
+				var bDiff = MathF.Sqrt((dx * dx) + (dz * dz));
+				var dy    = (KnownPosition.Y + (float)Height) - (targetPosition.Y);
+				KnownPosition.Pitch = MathUtils.RadianToDegree(MathF.Atan(dy / (bDiff)));
+			}
+
+			KnownPosition.Yaw = yaw;
+			KnownPosition.HeadYaw = yaw;
+		}
+
+		public Vector2 GetTargetRotationVector(Entity target)
+		{
+			var targetPosition = target.KnownPosition.ToVector3();
+			var view = targetPosition - KnownPosition.ToVector3();
+			var dz = view.Z;
+			var dx = view.X;
+
+			float tanOutput = 90f - MathUtils.RadianToDegree(MathF.Atan(dx / (dz)));
+			float thetaOffset = 270f;
+
+			if (dz < 0)
+			{
+				thetaOffset = 90;
+			}
+
+			var yaw = thetaOffset + tanOutput;
+
+
+			var bDiff = MathF.Sqrt((dx * dx) + (dz * dz));
+			var dy = (float)(KnownPosition.Y + Height) - (targetPosition.Y);
+			var pitch = MathUtils.RadianToDegree(MathF.Atan(dy / (bDiff)));
+
+			return new Vector2(pitch, yaw);
 		}
 	}
 }

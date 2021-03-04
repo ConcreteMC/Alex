@@ -7,7 +7,7 @@ namespace Alex.API.Utils
 	{
 		public static float ConstrainAngle(float targetAngle, float centreAngle, float maximumDifference)
 		{
-			return centreAngle + Clamp(NormDeg(targetAngle - centreAngle), -maximumDifference, maximumDifference);
+			return centreAngle + Clamp(targetAngle - centreAngle, -maximumDifference, maximumDifference);
 		}
 
 		// normalizes a double degrees angle to between +180 and -180

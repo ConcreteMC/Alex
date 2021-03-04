@@ -13,31 +13,34 @@ namespace Alex.MoLang.Runtime
 	{
 		public MoLangEnvironment Environment { get; } = new MoLangEnvironment();
 
+		private ExprTraverser _exprTraverser;
 		public MoLangRuntime()
 		{
 			Environment.Structs.TryAdd("math", MoLangMath.Library);
 			Environment.Structs.TryAdd("temp", new VariableStruct());
 			Environment.Structs.TryAdd("variable", new VariableStruct());
 			Environment.Structs.TryAdd("array", new ArrayStruct());
+			
+			_exprTraverser = new ExprTraverser();
+			_exprTraverser.Visitors.Add(new ExprConnectingVisitor());
 		}
 		
-		public IMoValue Execute(IExpression expression) {
+		/*public IMoValue Execute(IExpression expression) {
 			return Execute(new List<IExpression>()
 			{
 				expression
 			});
-		}
+		}*/
 
-		public IMoValue Execute(List<IExpression> expressions) {
+		public IMoValue Execute(params IExpression[] expressions) {
 			return Execute(expressions, new Dictionary<string, IMoValue>());
 		}
 
-		public IMoValue Execute(List<IExpression> expressions, IDictionary<string, IMoValue> context) {
+		public IMoValue Execute(IExpression[] expressions, IDictionary<string, IMoValue> context) {
 			//try
 			//{
-				ExprTraverser traverser = new ExprTraverser();
-				traverser.Visitors.Add(new ExprConnectingVisitor());
-				traverser.Traverse(expressions);
+				
+				//expressions = _exprTraverser.Traverse(expressions);
 
 				Environment.Structs["context"] =
 					new ContextStruct(context); // .put("context", new ContextStruct(context));
@@ -45,12 +48,14 @@ namespace Alex.MoLang.Runtime
 				IMoValue result = new DoubleValue(0.0);
 				MoScope scope = new MoScope();
 
-				foreach (IExpression expression in new List<IExpression>(expressions))
+				foreach (IExpression expression in _exprTraverser.Traverse(expressions))
 				{
 					result = expression.Evaluate(scope, Environment);
+
 					if (scope.ReturnValue != null)
 					{
 						result = scope.ReturnValue;
+
 						break;
 					}
 				}

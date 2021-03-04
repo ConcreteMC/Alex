@@ -31,7 +31,7 @@ namespace Alex.Graphics.Models.Entity.Animations
 			Runtime = new MoLangRuntime();
 		}
 
-		private List<IExpression> _preRenderExpressions = null;
+		private IExpression[] _preRenderExpressions = null;
 		private EntityDescription _entityDefinition = null;
 		private IReadOnlyDictionary<string, AnimationEntry> _animations = null;
 		private object _lock = new object();
@@ -91,7 +91,7 @@ namespace Alex.Graphics.Models.Entity.Animations
 
 				_animations = animations;
 				_entityDefinition = definition;
-				_preRenderExpressions = preRender;
+				_preRenderExpressions = preRender.ToArray();
 				Runtime = runtime;
 
 				_didInit = true;
@@ -124,14 +124,14 @@ namespace Alex.Graphics.Models.Entity.Animations
 			}
 		}
 
-		private IEnumerable<IMoValue> ConditionalExecute(MoLangRuntime runtime, List<IExpression>[] expressions, IDictionary<string, IMoValue> context)
+		private IEnumerable<IMoValue> ConditionalExecute(MoLangRuntime runtime, IExpression[][] expressions, IDictionary<string, IMoValue> context)
 		{
 			if (expressions == null)
 				yield break;
 			
 			foreach (var expressionList in expressions)
 			{
-				if (expressionList == null || expressionList.Count == 0)
+				if (expressionList == null || expressionList.Length == 0)
 					continue;
 				
 				yield return runtime.Execute(expressionList, context);

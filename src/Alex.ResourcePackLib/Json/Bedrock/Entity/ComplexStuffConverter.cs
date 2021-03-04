@@ -17,7 +17,7 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Entity
 			switch (obj.Type)
 			{
 				case JTokenType.Array:
-					var expressions = obj.ToObject<List<IExpression>[]>(serializer);// serializer.Deserialize<List<IExpression>[]>(reader);
+					var expressions = obj.ToObject<IExpression[][]>(serializer);// serializer.Deserialize<List<IExpression>[]>(reader);
 
 					return new ComplexStuff()
 					{

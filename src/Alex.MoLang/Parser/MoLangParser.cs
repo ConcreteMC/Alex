@@ -8,10 +8,10 @@ namespace Alex.MoLang.Parser
 {
 	public class MoLangParser
 	{
-		private readonly static Dictionary<TokenType, PrefixParselet> PrefixParselets =
+		private static readonly Dictionary<TokenType, PrefixParselet> PrefixParselets =
 			new Dictionary<TokenType, PrefixParselet>();
 
-		private readonly static Dictionary<TokenType, InfixParselet> InfixParselets =
+		private static readonly Dictionary<TokenType, InfixParselet> InfixParselets =
 			new Dictionary<TokenType, InfixParselet>();
 
 		private readonly TokenIterator _tokenIterator;
@@ -61,7 +61,7 @@ namespace Alex.MoLang.Parser
 			_tokenIterator = iterator;
 		}
 
-		public List<IExpression> Parse()
+		public IExpression[] Parse()
 		{
 			List<IExpression> exprs = new List<IExpression>();
 
@@ -79,7 +79,7 @@ namespace Alex.MoLang.Parser
 				}
 			} while (MatchToken(TokenType.Semicolon));
 
-			return exprs;
+			return exprs.ToArray();
 		}
 
 		public IExpression ParseExpression()
@@ -125,7 +125,8 @@ namespace Alex.MoLang.Parser
 
 		private void InitExpr(IExpression expression, Token token)
 		{
-			expression.Attributes["position"] = token.Position; //.put("position", token.getPosition());
+			expression.Meta.Token = token;
+			//expression.Attributes["position"] = token.Position; //.put("position", token.getPosition());
 		}
 
 		private Precedence GetPrecedence()

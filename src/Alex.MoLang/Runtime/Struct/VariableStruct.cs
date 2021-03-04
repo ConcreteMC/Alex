@@ -28,10 +28,10 @@ namespace Alex.MoLang.Runtime.Struct
 		/// <inheritdoc />
 		public virtual void Set(string key, IMoValue value)
 		{
-			Queue<string> segments = new Queue<string>(key.Split("."));
-			string        main     = segments.Dequeue();
+			string[] segments = key.Split(".");
+			string        main     = segments[0];
 
-			if (segments.Count > 0 && main != null) {
+			if (segments.Length > 0 && !string.IsNullOrWhiteSpace(main)) {
 				//object vstruct = Get(main, MoParams.Empty);
 
 				if (!Map.TryGetValue(main, out var container)) {
@@ -41,7 +41,7 @@ namespace Alex.MoLang.Runtime.Struct
 				
 				if (container is IMoStruct moStruct)
 				{
-					moStruct.Set(string.Join(".", segments), value);
+					moStruct.Set(string.Join(".", segments.Skip(1)), value);
 				}
 				else
 				{
@@ -61,10 +61,10 @@ namespace Alex.MoLang.Runtime.Struct
 		/// <inheritdoc />
 		public virtual IMoValue Get(string key, MoParams parameters)
 		{
-			Queue<string> segments = new Queue<string>(key.Split("."));
-			var           main     = segments.Dequeue();
-			
-			if (segments.Count > 0 && main != null)
+			string[] segments = key.Split(".");
+			string        main     = segments[0];
+		
+			if (segments.Length > 0 && !string.IsNullOrWhiteSpace(main))
 			{
 				IMoValue value = null;//Map[main];
 				if (!Map.TryGetValue(main, out value))
@@ -72,7 +72,7 @@ namespace Alex.MoLang.Runtime.Struct
 
 				if (value is IMoStruct moStruct)
 				{
-					return moStruct.Get(string.Join(".", segments), parameters);
+					return moStruct.Get(string.Join(".", segments.Skip(1)), parameters);
 				}
 			}
 
