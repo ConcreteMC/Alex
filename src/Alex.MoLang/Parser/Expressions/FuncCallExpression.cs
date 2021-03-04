@@ -6,12 +6,12 @@ using Alex.MoLang.Runtime.Value;
 
 namespace Alex.MoLang.Parser.Expressions
 {
-	public class FuncCallExpression : Expression<IExpression>
+	public class FuncCallExpression : Expression
 	{
-		public IExpression   Name;
-		public IExpression[] Args;
+		public IExpression   Name { get; set; }
+		public IExpression[] Args { get; set; }
 
-		public FuncCallExpression(IExpression name, IExpression[] args) : base(null)
+		public FuncCallExpression(IExpression name, IExpression[] args)
 		{
 			Name = name;
 			Args = args;
@@ -20,11 +20,11 @@ namespace Alex.MoLang.Parser.Expressions
 		/// <inheritdoc />
 		public override IMoValue Evaluate(MoScope scope, MoLangEnvironment environment)
 		{
-			List<IExpression> p = Args.ToList();
-			string name = Name is NameExpression ? ((NameExpression) Name).Value : Name.Evaluate(scope, environment).ToString();
+			//List<IExpression> p = Args.ToList();
+			string name = Name is NameExpression expression ? expression.Name : Name.Evaluate(scope, environment).ToString();
 
 			return environment.GetValue(name, new MoParams(
-				p.Select(x => x.Evaluate(scope, environment)).ToList()
+				Args.Select(x => x.Evaluate(scope, environment))
 			));
 		}
 	}

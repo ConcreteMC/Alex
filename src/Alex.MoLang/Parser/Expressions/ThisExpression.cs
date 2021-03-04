@@ -3,7 +3,7 @@ using Alex.MoLang.Runtime.Value;
 
 namespace Alex.MoLang.Parser.Expressions
 {
-	public class ThisExpression : Expression<IExpression>
+	public class ThisExpression : Expression
 	{
 		/// <inheritdoc />
 		public override IMoValue Evaluate(MoScope scope, MoLangEnvironment environment)
@@ -12,6 +12,6 @@ namespace Alex.MoLang.Parser.Expressions
 		}
 
 		/// <inheritdoc />
-		public ThisExpression() : base(null) { }
+		public ThisExpression() { }
 	}
 }

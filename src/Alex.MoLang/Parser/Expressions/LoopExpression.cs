@@ -3,12 +3,12 @@ using Alex.MoLang.Runtime.Value;
 
 namespace Alex.MoLang.Parser.Expressions
 {
-	public class LoopExpression : Expression<IExpression>
+	public class LoopExpression : Expression
 	{
-		public IExpression Count;
-		public IExpression Body;
+		public IExpression Count { get; set; }
+		public IExpression Body { get; set; }
 
-		public LoopExpression(IExpression count, IExpression body) : base(null)
+		public LoopExpression(IExpression count, IExpression body)
 		{
 			Count = count;
 			Body = body;

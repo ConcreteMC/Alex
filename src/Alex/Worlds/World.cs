@@ -940,7 +940,7 @@ namespace Alex.Worlds
 			{
 				entity.KnownPosition.OnGround = position.OnGround;
 
-				if (updateLook)
+				/*if (updateLook)
 				{
 					if (updatePitch)
 					{
@@ -951,6 +951,12 @@ namespace Alex.Worlds
 					entity.KnownPosition.HeadYaw = position.HeadYaw;
 					//	entity.UpdateHeadYaw(position.HeadYaw);
 				}
+				else
+				{
+					position.Pitch = entity.KnownPosition.Pitch;
+					position.Yaw = entity.KnownPosition.Yaw;
+					position.HeadYaw = entity.KnownPosition.HeadYaw;
+				}*/
 
 				if (relative)
 				{
@@ -971,7 +977,7 @@ namespace Alex.Worlds
 						}
 					}
 
-					entity.Movement.MoveTo(position, false);
+					entity.Movement.MoveTo(position, updateLook);
 				}
 
 				entity.Velocity = Vector3.Zero;

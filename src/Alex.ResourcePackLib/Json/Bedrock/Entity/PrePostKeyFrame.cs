@@ -7,9 +7,9 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Entity
 	public class PrePostKeyFrame
 	{
 		[JsonProperty("pre")]
-		public List<IExpression>[] Pre { get; set; }
+		public IExpression[][] Pre { get; set; }
 		
 		[JsonProperty("post")]
-		public List<IExpression>[] Post { get; set; }
+		public IExpression[][] Post { get; set; }
 	}
 }

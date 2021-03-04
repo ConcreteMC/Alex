@@ -5,11 +5,11 @@ namespace Alex.MoLang.Parser.Visitors
 {
 	public class ExprConnectingVisitor : ExprVisitor
 	{
-		public readonly LinkedList<IExpression> Stack = new LinkedList<IExpression>();
-		public          IExpression             Previous;
+		private LinkedList<IExpression> Stack { get; set; } = new LinkedList<IExpression>();
+		private IExpression Previous { get; set; }
 
 		/// <inheritdoc />
-		public override void BeforeTraverse(List<IExpression> expressions)
+		public override void BeforeTraverse(IExpression[] expressions)
 		{
 			Stack.Clear();
 			Previous = null;
@@ -19,20 +19,20 @@ namespace Alex.MoLang.Parser.Visitors
 		public override object OnVisit(IExpression expression)
 		{
 			if (Stack.Count > 0) {
-				expression.Attributes["parent"] = Stack.Last;
+				expression.Meta.Parent = Stack.Last.Value;// .Attributes["parent"] = Stack.Last;
 			}
 
-			if (Previous != null && expression.Attributes.TryGetValue("parent", out var eParent)
-			                     && Previous.Attributes.TryGetValue("parent", out var prevParent)
-			                     && eParent == prevParent)
+			if (Previous != null && expression.Meta.Parent != null
+			                     && Previous.Meta.Parent != null
+			                     && expression.Meta.Parent == Previous.Meta.Parent)
 			{
-				expression.Attributes["previous"] = Previous;
-				expression.Attributes["next"] = expression;
+				expression.Meta.Previous = Previous;// .Attributes["previous"] = Previous;
+				Previous.Meta.Next = expression;// .Attributes["next"] = expression;
 			}
 
 			Stack.AddLast(expression);
 
-			return null;
+			return expression;
 		}
 
 		/// <inheritdoc />

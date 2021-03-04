@@ -38,21 +38,21 @@ namespace Alex.ResourcePackLib.Json.Converters.MoLang
 			}
 			else if (token.Type == JTokenType.Integer)
 			{
-				return new List<IExpression>()
+				return new IExpression[]
 				{
 					new NumberExpression(token.Value<double>())
 				};
 			}
 			else if (token.Type == JTokenType.Float)
 			{
-				return new List<IExpression>()
+				return new IExpression[]
 				{
 					new NumberExpression(token.Value<double>())
 				};
 			}
 			else if (token.Type == JTokenType.Boolean)
 			{
-				return new List<IExpression>()
+				return new IExpression[]
 				{
 					new BooleanExpression(token.Value<bool>())
 				};
@@ -64,7 +64,7 @@ namespace Alex.ResourcePackLib.Json.Converters.MoLang
 		/// <inheritdoc />
 		public override bool CanConvert(Type objectType)
 		{
-			return typeof(List<IExpression>).IsAssignableFrom(objectType);
+			return typeof(IExpression[]).IsAssignableFrom(objectType);
 		}
 
 

@@ -15,17 +15,17 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Entity
 		[JsonProperty("part_visibility")]
 		public AnnoyingMolangElement[] PartVisibility { get; set; } = new AnnoyingMolangElement[]
 		{
-			new AnnoyingMolangElement(new Dictionary<string, List<IExpression>>()
+			new AnnoyingMolangElement(new Dictionary<string, IExpression[]>()
 			{
-				{"*", new List<IExpression>() {new BooleanExpression(true)}}
+				{"*", new IExpression[] {new BooleanExpression(true)}}
 			})
 		};
 
 		[JsonProperty("materials")] public AnnoyingMolangElement[] Materials { get; set; } = new AnnoyingMolangElement[]
 		{
-			new AnnoyingMolangElement(new Dictionary<string, List<IExpression>>()
+			new AnnoyingMolangElement(new Dictionary<string, IExpression[]>()
 			{
-				{"*", new List<IExpression>()
+				{"*", new IExpression[]
 				{
 					new StringExpression("Material.default")
 				}}

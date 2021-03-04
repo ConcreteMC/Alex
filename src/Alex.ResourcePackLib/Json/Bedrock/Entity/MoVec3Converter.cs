@@ -32,7 +32,7 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Entity
 				case JTokenType.Array:
 					if (obj is JArray jArray)
 					{
-						List<IExpression>[] values = jArray.ToObject<List<IExpression>[]>(MCJsonConvert.Serializer);
+						IExpression[][] values = jArray.ToObject<IExpression[][]>(MCJsonConvert.Serializer);
 
 						return new MoLangVector3Expression(values);
 					}
@@ -50,9 +50,9 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Entity
 					break;
 			}
 			
-			List<IExpression> raw = obj.ToObject<List<IExpression>>(MCJsonConvert.Serializer);
+			var raw = obj.ToObject<IExpression[]>(MCJsonConvert.Serializer);
 
-			return new MoLangVector3Expression(new List<IExpression>[1]
+			return new MoLangVector3Expression(new IExpression[][]
 			{
 				raw
 			});

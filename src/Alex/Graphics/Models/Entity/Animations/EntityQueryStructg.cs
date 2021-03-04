@@ -50,9 +50,6 @@ namespace Alex.Graphics.Models.Entity.Animations
 			Functions.Add("modified_move_speed", mo => (1f / (Entity.CalculateMovementSpeed() * 43f)) * (Entity.Movement.MetersPerSecond));
 			
 			Functions.Add("delta_time", mo => _deltaTime.TotalSeconds);
-			
-			Functions.Add("get_equipped_item_name", GetEquippedItemName);
-			
 			Functions.Add("ground_speed", mo => Entity.Movement.MetersPerSecond);
 
 			Functions.Add("vertical_speed", mo => Entity.Movement.VerticalSpeed);
@@ -94,9 +91,63 @@ namespace Alex.Graphics.Models.Entity.Animations
 			Functions.Add("is_sleeping", mo => Entity.IsSleeping);
 			Functions.Add("is_swimming", mo => Entity.IsSwimming);
 			Functions.Add("is_sitting", mo => Entity.IsSitting);
+			Functions.Add("is_blocking", mo => Entity.IsBlocking);
+			Functions.Add("blocking", mo => Entity.IsBlocking);
 			Functions.Add("has_gravity", mo => Entity.IsAffectedByGravity);
 			Functions.Add("has_collision", mo => Entity.HasCollision);
 			Functions.Add("can_fly", mo => Entity.CanFly);
+			
+			Functions.Add("has_target", mo => Entity.TargetEntityId != -1);
+			Functions.Add("has_owner", mo => Entity.OwnerEntityId != -1);
+			Functions.Add("target_x_rotation", GetTargetXRotation);
+			Functions.Add("target_y_rotation", GetTargetYRotation);
+			Functions.Add("is_selected_item", mo => (Entity.Inventory.MainHand.Count > 0));
+			Functions.Add("is_item_equipped", IsItemEquipped);
+			Functions.Add("get_equipped_item_name", GetEquippedItemName);
+			Functions.Add("actor_count", mo => Entity.Level.EntityManager.EntitiesRendered);
+				//Functions.Add("body_x_rotation", );
+		}
+
+		private object IsItemEquipped(MoParams mo)
+		{
+			bool isMainHand = true;
+
+			if (mo.Contains(0))
+			{
+				var val = mo.Get(0);
+
+				if (val is StringValue sv)
+				{
+					if (sv.Value == "off_hand")
+						isMainHand = false;
+				}
+				else if (val is DoubleValue dv)
+				{
+					if (dv.Value > 0)
+						isMainHand = false;
+				}
+			}
+			Item item = isMainHand ? Entity.Inventory.MainHand : Entity.Inventory.OffHand;
+
+			return item.Count > 0;
+		}
+
+		private object GetTargetYRotation(MoParams mo)
+		{
+			var targetId = Entity.TargetEntityId;
+			if (targetId == -1)
+				return 0d;
+
+			return Entity.TargetRotation.Y;
+		}
+		
+		private object GetTargetXRotation(MoParams mo)
+		{
+			var targetId = Entity.TargetEntityId;
+			if (targetId == -1)
+				return 0d;
+
+			return Entity.TargetRotation.X;
 		}
 
 		private object GetPosition(MoParams mo)

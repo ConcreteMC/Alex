@@ -108,21 +108,30 @@ namespace Alex.Graphics.Models.Entity
 			public void ApplyMovement()
 			{
 				_startPosition = _position;
-				_targetPosition = _tempTargetPosition;
+				_targetPosition = FixInvalidVector(_tempTargetPosition);
 				_tempTargetPosition = Vector3.Zero;
 
 				_startRotation = _rotation;
-				_targetRotation = _tempTargetRotation;
+				_targetRotation = FixInvalidVector(_tempTargetRotation);
 				_tempTargetRotation = Vector3.Zero;
 
 				_startScale = _scale;
-				_targetScale = _tempTargetScale;
+				_targetScale = FixInvalidVector(_tempTargetScale);
 				_tempTargetScale = Vector3.One;
 				
 				_accumulator = 0;
 				_target = _tempTarget;
 				
 				//Console.WriteLine($"{Definition.Name}.Rotation = {_targetRotation}");
+			}
+
+			private Vector3 FixInvalidVector(Vector3 vector)
+			{
+				vector.X = float.IsNaN(vector.X) ? 0f : vector.X;
+				vector.Y = float.IsNaN(vector.Y) ? 0f : vector.Y;
+				vector.Z = float.IsNaN(vector.Z) ? 0f : vector.Z;
+
+				return vector;
 			}
 			
 			public void MoveOverTime(Vector3 targetPosition, Vector3 targetRotation, Vector3 targetScale, TimeSpan time, bool overrideOthers = false, float blendWeight = 1f)
@@ -141,13 +150,13 @@ namespace Alex.Graphics.Models.Entity
 				else
 				{
 					//_startPosition = _position;
-					_tempTargetPosition += targetPosition; // - _tempTargetPosition;
+					_tempTargetPosition += FixInvalidVector(targetPosition); // - _tempTargetPosition;
 
 					//_startRotation = _rotation;
-					_tempTargetRotation += targetRotation; // - _targetRotation;
+					_tempTargetRotation += FixInvalidVector(targetRotation); // - _targetRotation;
 
 					//_startScale = _scale;
-					_tempTargetScale += targetScale; // - _targetScale;
+					_tempTargetScale += FixInvalidVector(targetScale); // - _targetScale;
 				}
 
 				_tempTarget = time.TotalSeconds;
@@ -218,17 +227,17 @@ namespace Alex.Graphics.Models.Entity
 					if (Definition.Pivot.HasValue)
 					{
 						var pivot = (Definition.Pivot ?? Vector3.Zero);
-						matrix =MCMatrix.CreateTranslation(-pivot) 
-						         * MCMatrix.CreateRotationDegrees(_rotation)
-						         * MCMatrix.CreateTranslation(pivot)
-						         * MCMatrix.CreateTranslation(_position)
-						         * characterMatrix;
+						matrix = MCMatrix.CreateScale(_scale) * MCMatrix.CreateTranslation(-pivot) 
+						                                      * MCMatrix.CreateRotationDegrees(_rotation)
+						                                      * MCMatrix.CreateTranslation(pivot)
+						                                      * MCMatrix.CreateTranslation(_position)
+						                                      * characterMatrix;
 					}
 					else
 					{
-						matrix =  MCMatrix.CreateRotationDegrees(_rotation)
-						         * MCMatrix.CreateTranslation(_position)
-						         * characterMatrix;
+						matrix = MCMatrix.CreateScale(_scale) *  MCMatrix.CreateRotationDegrees(_rotation)
+						                                      * MCMatrix.CreateTranslation(_position)
+						                                      * characterMatrix;
 					}
 
 					var children = Children.ToArray();
@@ -245,14 +254,14 @@ namespace Alex.Graphics.Models.Entity
 					if (Definition.Pivot.HasValue)
 					{
 						var pivot = (Definition.Pivot ?? Vector3.Zero);
-						WorldMatrix =  MCMatrix.CreateScale(_scale) * MCMatrix.CreateTranslation(-pivot) 
+						WorldMatrix =  MCMatrix.CreateTranslation(-pivot) 
 						              * MCMatrix.CreateRotationDegrees(bindingRotation)
 						              * MCMatrix.CreateTranslation(pivot)
 						              * matrix;
 					}
 					else
 					{
-						WorldMatrix = MCMatrix.CreateScale(_scale) * MCMatrix.CreateRotationDegrees(bindingRotation)
+						WorldMatrix = MCMatrix.CreateRotationDegrees(bindingRotation)
 						                                           * matrix;
 					}
 				}

@@ -3,13 +3,13 @@ using Alex.MoLang.Runtime.Value;
 
 namespace Alex.MoLang.Parser.Expressions
 {
-	public class TernaryExpression : Expression<IExpression>
+	public class TernaryExpression : Expression
 	{
-		public IExpression Condition;
-		public IExpression ThenExpr;
-		public IExpression ElseExpr;
+		public IExpression Condition { get; set; }
+		public IExpression ThenExpr { get; set; }
+		public IExpression ElseExpr { get; set; }
 
-		public TernaryExpression(IExpression condition, IExpression thenExpr, IExpression elseExpr) : base(null)
+		public TernaryExpression(IExpression condition, IExpression thenExpr, IExpression elseExpr)
 		{
 			Condition = condition;
 			ThenExpr = thenExpr;

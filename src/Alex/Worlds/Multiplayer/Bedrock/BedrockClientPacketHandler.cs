@@ -332,7 +332,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			if (message.runtimeEntityId != Client.EntityId)
 			{
 				Client.World.UpdateEntityPosition(message.runtimeEntityId, 
-					new PlayerLocation(message.x, message.y, message.z, -message.headYaw, -message.yaw, -message.pitch), adjustForEntityHeight:true);
+					new PlayerLocation(message.x, message.y, message.z, -message.headYaw, -message.yaw, -message.pitch), false, true, true, adjustForEntityHeight:true);
 				return;
 			}
 			

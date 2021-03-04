@@ -4,17 +4,17 @@ namespace Alex.MoLang.Parser
 {
 	public interface IExprVisitor
 	{
-		void BeforeTraverse(List<IExpression> expressions);
+		void BeforeTraverse(IExpression[] expressions);
 		object OnVisit(IExpression expression);
 
 		void OnLeave(IExpression expression);
-		void AfterTraverse(List<IExpression> expressions);
+		void AfterTraverse(IExpression[] expressions);
 	}
 
 	public abstract class ExprVisitor : IExprVisitor
 	{
 		/// <inheritdoc />
-		public virtual void BeforeTraverse(List<IExpression> expressions)
+		public virtual void BeforeTraverse(IExpression[] expressions)
 		{
 			
 		}
@@ -29,7 +29,7 @@ namespace Alex.MoLang.Parser
 		}
 
 		/// <inheritdoc />
-		public virtual void AfterTraverse(List<IExpression> expressions)
+		public virtual void AfterTraverse(IExpression[] expressions)
 		{
 			
 		}

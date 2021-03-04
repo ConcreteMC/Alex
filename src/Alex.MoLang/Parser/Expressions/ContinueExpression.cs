@@ -3,7 +3,7 @@ using Alex.MoLang.Runtime.Value;
 
 namespace Alex.MoLang.Parser.Expressions
 {
-	public class ContinueExpression : Expression<IExpression>
+	public class ContinueExpression : Expression
 	{
 		/// <inheritdoc />
 		public override IMoValue Evaluate(MoScope scope, MoLangEnvironment environment)
@@ -11,8 +11,5 @@ namespace Alex.MoLang.Parser.Expressions
 			scope.IsContinue = true;
 			return DoubleValue.Zero;
 		}
-
-		/// <inheritdoc />
-		public ContinueExpression() : base(null) { }
 	}
 }

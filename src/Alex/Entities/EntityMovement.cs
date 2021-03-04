@@ -88,31 +88,25 @@ namespace Alex.Entities
 		
 		public void MoveTo(PlayerLocation location, bool updateLook = true)
 		{
-			var distance = Microsoft.Xna.Framework.Vector3.Distance(
-				Entity.KnownPosition.ToVector3() * new Vector3(1f, 0f, 1f), location.ToVector3() * new Vector3(1f, 0f, 1f));
-
+			DistanceMoved += MathF.Abs(Microsoft.Xna.Framework.Vector3.Distance(
+				Entity.KnownPosition.ToVector3() * new Vector3(1f, 0f, 1f), location.ToVector3() * new Vector3(1f, 0f, 1f)));
+			
+			VerticalDistanceMoved += MathF.Abs(Microsoft.Xna.Framework.Vector3.Distance(
+				Entity.KnownPosition.ToVector3() * new Vector3(0f, 1f, 0f), location.ToVector3() * new Vector3(0f, 1f, 0f)));
+			
 			//var difference = Entity.KnownPosition.ToVector3() - location.ToVector3();
 			//Move(difference);
+
+			if (!updateLook)
+			{
+				location.Yaw = Entity.KnownPosition.Yaw;
+				location.HeadYaw = Entity.KnownPosition.HeadYaw;
+				location.Pitch = Entity.KnownPosition.Pitch;
+			}
 			
 			Entity.KnownPosition = location;
 
-			//Entity.KnownPosition.X = location.X;
-			//Entity.KnownPosition.Y = location.Y;
-			//Entity.KnownPosition.Z = location.Z;
-			//Entity.KnownPosition.OnGround = location.OnGround;
-
-			if (updateLook)
-			{
-				//Entity.KnownPosition.Yaw = location.Yaw;
-				//Entity.KnownPosition.HeadYaw = location.HeadYaw;
-				//Entity.KnownPosition.Pitch = location.Pitch;
-			}
-			
 			UpdateTarget();
-
-			DistanceMoved += MathF.Abs(distance);
-			VerticalDistanceMoved += MathF.Abs(Microsoft.Xna.Framework.Vector3.Distance(
-				Entity.KnownPosition.ToVector3() * new Vector3(0f, 1f, 0f), location.ToVector3() * new Vector3(0f, 1f, 0f)));
 		}
 
 		public Vector3 Move(Vector3 amount)
@@ -279,7 +273,7 @@ namespace Alex.Entities
 		
 		private PlayerLocation _from;
 		private PlayerLocation _target;
-		private void UpdateTarget()
+		public void UpdateTarget()
 		{
 			var target = Entity.KnownPosition;
 
