@@ -59,7 +59,7 @@ namespace Alex.Entities
 					args,
 					MCMatrix.Identity * MCMatrix.CreateScale(Scale)
 					                  * MCMatrix.CreateRotationY(MathHelper.ToRadians(KnownPosition.Yaw))
-					                  * MCMatrix.CreateTranslation(KnownPosition.ToVector3()));
+					                  * MCMatrix.CreateTranslation(KnownPosition.ToVector3()), new Vector3(Scale));
 			}
 		}
 		

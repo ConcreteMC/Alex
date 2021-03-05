@@ -279,14 +279,14 @@ namespace Alex.Graphics.Models.Entity
 
 			//var rot = position.GetDirectionMatrix(false);
 
-			var matrix = MCMatrix.CreateScale(Scale / 16f) * position.CalculateWorldMatrix();
+			var matrix =  MCMatrix.CreateScale(Scale / 16f) * position.CalculateWorldMatrix();
 			//var matrix =  MCMatrix.CreateScale(Scale / 16f) * position.GetDirectionMatrix(false) * MCMatrix.CreateTranslation(position.ToVector3()); /*MCMatrix.CreateScale(Scale / 16f)
 			    //         * MCMatrix.CreateRotation(MathUtils.ToRadians(position.Yaw), Vector3.Down)
 			  //           * MCMatrix.CreateTranslation(position);*/
 
 			foreach (var bone in Bones.Where(x => x.Value.Parent == null))
 			{
-				bone.Value.Update(args, matrix);
+				bone.Value.Update(args, matrix, Vector3.One * Scale);
 			}
 		}
 		public bool GetBone(string name, out ModelBone bone)

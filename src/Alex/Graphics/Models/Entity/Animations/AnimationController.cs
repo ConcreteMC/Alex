@@ -328,9 +328,9 @@ namespace Alex.Graphics.Models.Entity.Animations
 							//var positionOutputs = ConditionalExecute(runtime, value.Position, context).ToArray();
 							//var scaleOutputs = ConditionalExecute(runtime, value.Scale, context).ToArray();
 							
-							var targetRotation = value.Rotation?.Evaluate(runtime) ?? Vector3.Zero;
-							var targetPosition = value.Position?.Evaluate(runtime) ?? Vector3.Zero;// GetVector3(Vector3.Zero, positionOutputs);
-							var targetScale = value.Scale?.Evaluate(runtime) ?? Vector3.Zero;//GetVector3(Vector3.Zero, scaleOutputs);
+							var targetRotation = value.Rotation?.Evaluate(runtime, Vector3.Zero) ?? Vector3.Zero;
+							var targetPosition = value.Position?.Evaluate(runtime, modelBone.Position) ?? Vector3.Zero;// GetVector3(Vector3.Zero, positionOutputs);
+							var targetScale = value.Scale?.Evaluate(runtime, modelBone.Scale) ?? Vector3.Zero;//GetVector3(Vector3.Zero, scaleOutputs);
 
 							modelBone.MoveOverTime(
 								targetPosition, targetRotation * new Vector3(-1f, 1f, 1f), targetScale,

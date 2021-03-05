@@ -190,7 +190,7 @@ namespace Alex.Graphics.Models.Items
         }
 
         //private Matrix _parentMatrix = Matrix.Identity;
-        public void Update(IUpdateArgs args, MCMatrix characterMatrix)
+        public void Update(IUpdateArgs args, MCMatrix characterMatrix, Vector3 parentScale)
         {
             // _parentMatrix = characterMatrix;
             

@@ -8,7 +8,7 @@ namespace Alex.MoLang.Parser.Expressions
 		/// <inheritdoc />
 		public override IMoValue Evaluate(MoScope scope, MoLangEnvironment environment)
 		{
-			return environment;
+			return environment.GetValue("context.this");
 		}
 
 		/// <inheritdoc />

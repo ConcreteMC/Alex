@@ -14,7 +14,6 @@ using Alex.API.Resources;
 using Alex.API.Utils;
 using Alex.Blocks.Minecraft;
 using Alex.Entities.Effects;
-using Alex.Entities.Meta;
 using Alex.Entities.Properties;
 using Alex.Gamestates;
 using Alex.Graphics.Models.Entity;
@@ -30,11 +29,14 @@ using Alex.Worlds;
 using Alex.Worlds.Multiplayer.Java;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using MiNET;
 using MiNET.Utils;
 using NLog;
 using BlockCoordinates = Alex.API.Utils.BlockCoordinates;
 using BoundingBox = Microsoft.Xna.Framework.BoundingBox;
 using Effect = Alex.Entities.Effects.Effect;
+using HealthManager = Alex.Entities.Meta.HealthManager;
+using Inventory = Alex.Utils.Inventories.Inventory;
 using MathF = System.MathF;
 using MetadataByte = Alex.Networking.Java.Packets.Play.MetadataByte;
 using MetadataFloat = MiNET.Utils.MetadataFloat;
@@ -171,6 +173,9 @@ namespace Alex.Entities
 
 		private bool _isRendered = false;
 
+		public bool IsWorldImmutable { get; set; } = false;
+		public bool IsNoPvP { get; set; } = true;
+		public bool IsNoPvM { get; set; } = true;
 		public bool IsRendered
 		{
 			get
@@ -476,7 +481,6 @@ namespace Alex.Entities
 		public bool IsCritical { get; set; }
 		public bool IsShowName => !HideNameTag;
 		public bool IsAlwaysShowName { get; set; }
-		public bool IsNoAi => NoAi;
 		public bool IsSilent { get; set; }
 		public virtual bool IsWallClimbing { get; set; }
 		public bool IsResting { get; set; }
@@ -740,9 +744,9 @@ namespace Alex.Entities
 			
 			NoAi = data[(int) MiNET.Entities.Entity.DataFlags.NoAi];
 			IsAffectedByGravity = data[(int) MiNET.Entities.Entity.DataFlags.AffectedByGravity];
-			//HasCollision = (data & ((int) MiNET.Entities.Entity.DataFlags.HasCollision)) != 0;
+			HasCollision = data[(int) MiNET.Entities.Entity.DataFlags.HasCollision];
 			
-			HideNameTag = data[(int) MiNET.Entities.Entity.DataFlags.ShowName];
+			//HideNameTag = !data[(int) MiNET.Entities.Entity.DataFlags.ShowName];
 			IsAlwaysShowName = data[(int) MiNET.Entities.Entity.DataFlags.AlwaysShowName];
 			IsBaby = data[(int) MiNET.Entities.Entity.DataFlags.Baby];
 			IsUsingItem = data[(int) MiNET.Entities.Entity.DataFlags.UsingItem];
@@ -765,35 +769,7 @@ namespace Alex.Entities
 			IsBlocking = data[71];
 			IsSpinAttacking = data[55];
 			IsSwimming = data[56];
-			/*IsOnFire = (data & ((int) MiNET.Entities.Entity.DataFlags.OnFire)) != 0;
-			IsSprinting = (data & ((int) MiNET.Entities.Entity.DataFlags.Sprinting)) != 0;
-			//IsSitting = (data & ((int) MiNET.Entities.Entity.DataFlags.Sneaking)) != 0;
-			
-			NoAi = (data & ((int) MiNET.Entities.Entity.DataFlags.NoAi)) != 0;
-			IsAffectedByGravity = (data & ((int) MiNET.Entities.Entity.DataFlags.AffectedByGravity)) != 0;
-			//HasCollision = (data & ((int) MiNET.Entities.Entity.DataFlags.HasCollision)) != 0;
-			
-			HideNameTag = (data & ((int) MiNET.Entities.Entity.DataFlags.ShowName)) != 0;
-			IsAlwaysShowName = (data & ((int) MiNET.Entities.Entity.DataFlags.AlwaysShowName)) != 0;
-			IsBaby = (data & ((int) MiNET.Entities.Entity.DataFlags.Baby)) != 0;
-			IsUsingItem = (data & ((int) MiNET.Entities.Entity.DataFlags.UsingItem)) != 0;
-			IsAngry = (data & ((int) MiNET.Entities.Entity.DataFlags.Angry)) != 0;
-			IsInLove = (data & ((int) MiNET.Entities.Entity.DataFlags.InLove)) != 0;
-			IsRiding = (data & ((int) MiNET.Entities.Entity.DataFlags.Riding)) != 0;
-			IsTempted = (data & ((int) MiNET.Entities.Entity.DataFlags.Tempted)) != 0;
-			IsTamed = (data & ((int) MiNET.Entities.Entity.DataFlags.Tamed)) != 0;
-			IsLeashed = (data & ((int) MiNET.Entities.Entity.DataFlags.Leashed)) != 0;
-			IsSheared = (data & ((int) MiNET.Entities.Entity.DataFlags.Sheared)) != 0;
-			IsChested = (data & ((int) MiNET.Entities.Entity.DataFlags.Chested)) != 0;
-			IsFlagAllFlying = (data & ((int) MiNET.Entities.Entity.DataFlags.FlagAllFlying)) != 0;
-			IsSilent = (data & ((int) MiNET.Entities.Entity.DataFlags.Silent)) != 0;
-			IsWallClimbing = (data & ((int) MiNET.Entities.Entity.DataFlags.WallClimbing)) != 0;
-			IsResting = (data & ((int) MiNET.Entities.Entity.DataFlags.Resting)) != 0;
-			IsMoving = (data & ((int) MiNET.Entities.Entity.DataFlags.Moving)) != 0;
-			IsElder = (data & ((int) MiNET.Entities.Entity.DataFlags.Elder)) != 0;*/
-			//IsEating = (data & (62)) != 0;
-			//IsBlocking = (data & 71) != 0;
-			//IsSleeping = (data & (75)) != 0;
+			//IsFlying = data[(int) MiNET.Entities.Entity.DataFlags.fl]
 		}
 
 		public virtual void Render(IRenderArgs renderArgs)
@@ -916,7 +892,7 @@ namespace Alex.Entities
 				effect.OnTick(this);
 			}
 
-			if (IsNoAi) return;
+			if (NoAi) return;
 			//	IsMoving = Velocity.LengthSquared() > 0f;
 
 			var knownPos  = new BlockCoordinates(new Vector3(KnownPosition.X, KnownPosition.Y, KnownPosition.Z));
@@ -1342,6 +1318,32 @@ namespace Alex.Entities
 			var pitch = MathUtils.RadianToDegree(MathF.Atan(dy / (bDiff)));
 
 			return new Vector2(pitch, yaw);
+		}
+
+		public void UpdateAttributes(EntityAttributes attributes)
+		{
+			foreach (var attribute in attributes)
+			{
+				switch (attribute.Key)
+				{
+					case "minecraft:movement":
+						MovementSpeed = attribute.Value.Value;
+						break;
+					case "minecraft:health":
+						HealthManager.Health = attribute.Value.Value;
+						HealthManager.MaxHealth = attribute.Value.MaxValue;
+						break;
+					default:
+						if (!TryUpdateAttribute(attribute.Value))
+							Log.Debug($"Unknown attribute: {attribute.Key} (Value={attribute.Value.Value} Min={attribute.Value.MinValue} Max={attribute.Value.MaxValue})");
+						break;
+				}
+			}
+		}
+
+		protected virtual bool TryUpdateAttribute(EntityAttribute attribute)
+		{
+			return false;
 		}
 	}
 }

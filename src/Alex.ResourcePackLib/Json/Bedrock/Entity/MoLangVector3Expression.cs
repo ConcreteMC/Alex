@@ -47,28 +47,38 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Entity
 			_keyFrames = newKeyFrames;
 		}
 
-		private Vector3 Evaluate(MoLangRuntime runtime, IExpression[] xExpressions, IExpression[] yExpressions, IExpression[] zExpressions)
+		private Vector3 Evaluate(MoLangRuntime runtime, IExpression[] xExpressions, IExpression[] yExpressions, IExpression[] zExpressions, Vector3 currentValue)
 		{
-			IMoValue x = runtime.Execute(xExpressions);
-			IMoValue y = runtime.Execute(yExpressions);
-			IMoValue z = runtime.Execute(zExpressions);
+			IMoValue x = runtime.Execute(xExpressions, new Dictionary<string, IMoValue>()
+			{
+				{"this", new DoubleValue(currentValue.X)}
+			});
+			IMoValue y = runtime.Execute(yExpressions, new Dictionary<string, IMoValue>()
+			{
+				{"this", new DoubleValue(currentValue.Y)}
+			});
+			IMoValue z = runtime.Execute(zExpressions, new Dictionary<string, IMoValue>()
+			{
+				{"this", new DoubleValue(currentValue.Z)}
+			});
 
 			return new Vector3(x.AsFloat(), y.AsFloat(), z.AsFloat());
 		}
 
-		private Vector3 Evaluate(MoLangRuntime runtime, IExpression[][] expressions)
+		private Vector3 Evaluate(MoLangRuntime runtime, IExpression[][] expressions, Vector3 currentValue)
 		{
 			if (expressions.Length == 3)
 			{
-				return Evaluate(runtime, expressions[0], expressions[1], expressions[2]);
+				return Evaluate(runtime, expressions[0], expressions[1], expressions[2], currentValue);
 			}
 
-			var val = runtime.Execute(expressions[0]);
+			return Evaluate(runtime, expressions[0], expressions[0], expressions[0], currentValue);
+		//	var val = runtime.Execute(expressions[0]);
 
-			return new Vector3(val.AsFloat());
+		//	return new Vector3(val.AsFloat());
 		}
 		
-		private Vector3 Evaluate(MoLangRuntime runtime, ComplexStuff complex, bool lookAHead)
+		private Vector3 Evaluate(MoLangRuntime runtime, ComplexStuff complex, bool lookAHead, Vector3 currentValue)
 		{
 			if (complex == null)
 				return Vector3.Zero;
@@ -77,13 +87,13 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Entity
 			if (complex.Expressions != null)
 			{
 				var expressions = complex.Expressions;
-				return Evaluate(runtime, expressions);// new Vector3(val.AsFloat());
+				return Evaluate(runtime, expressions, currentValue);// new Vector3(val.AsFloat());
 			}
 
 			if (lookAHead)
-				return Evaluate(runtime, complex.Frame.Pre);
+				return Evaluate(runtime, complex.Frame.Pre, currentValue);
 			
-			return Evaluate(runtime, complex.Frame.Post);
+			return Evaluate(runtime, complex.Frame.Post, currentValue);
 			//if (complex.Frame.)
 			//IMoValue x = runtime.Execute(xExpressions);
 			//IMoValue y = runtime.Execute(yExpressions);
@@ -92,7 +102,7 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Entity
 			//return new Vector3(x.AsFloat(), y.AsFloat(), z.AsFloat());
 		}
 
-		public Vector3 Evaluate(MoLangRuntime runtime)
+		public Vector3 Evaluate(MoLangRuntime runtime, Vector3 currentValue)
 		{
 			if (_keyFrames != null)
 			{
@@ -120,13 +130,13 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Entity
 
 				var timeBetweenFrames = (nextKey - previousKey);
 				var accumulator = elapsedTime - previousKey;
-				Vector3 previousVector = Evaluate(runtime, previous, false);
-				Vector3 nextVector = Evaluate(runtime, next, true);
+				Vector3 previousVector = Evaluate(runtime, previous, false, currentValue);
+				Vector3 nextVector = Evaluate(runtime, next, true, currentValue);
 
 				return Vector3.Lerp(previousVector, nextVector, (float) ((1f / timeBetweenFrames) * accumulator));
 			}
 
-			return Evaluate(runtime, _x, _y, _z);
+			return Evaluate(runtime, _x, _y, _z, currentValue);
 		}
 	}
 }

@@ -8,7 +8,16 @@ namespace Alex.MoLang.Runtime.Value
 		object IMoValue.Value => Value;
 
 		/// <inheritdoc />
-		public double Value { get; }
+		public bool Equals(IMoValue b)
+		{
+			if (Value == b.AsDouble())
+				return true;
+
+			return false;
+		}
+
+		/// <inheritdoc />
+		public double Value { get; set; }
 
 		public DoubleValue(object value) {
 			if (value is bool boolean) {

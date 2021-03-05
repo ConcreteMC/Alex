@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,7 +11,7 @@ namespace Alex.MoLang.Runtime.Struct
 	public class VariableStruct : IMoStruct
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(VariableStruct));
-		public readonly Dictionary<string, IMoValue> Map = new Dictionary<string, IMoValue>();
+		public readonly Dictionary<string, IMoValue> Map = new Dictionary<string, IMoValue>(StringComparer.InvariantCultureIgnoreCase);
 
 		/// <inheritdoc />
 		public object Value => Map;
@@ -22,7 +23,7 @@ namespace Alex.MoLang.Runtime.Struct
 
 		public VariableStruct(IEnumerable<KeyValuePair<string, IMoValue>> values)
 		{
-			Map = new Dictionary<string, IMoValue>(values);
+			Map = new Dictionary<string, IMoValue>(values, StringComparer.InvariantCultureIgnoreCase);
 		}
 
 		/// <inheritdoc />

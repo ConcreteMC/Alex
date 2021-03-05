@@ -59,10 +59,6 @@ namespace Alex.Entities
 
         public bool HasRaytraceResult = false;
 
-        public bool IsWorldImmutable { get; set; } = false;
-        public bool IsNoPvP { get; set; } = true;
-        public bool IsNoPvM { get; set; } = true;
-
         /// <inheritdoc />
         public override PlayerLocation KnownPosition
         {
@@ -103,10 +99,8 @@ namespace Alex.Entities
 			
 			IsAffectedByGravity = true;
 			HasPhysics = true;
+			NoAi = false;
         }
-
-        /// <inheritdoc />
-        public override bool NoAi { get; set; } = false;
 
         protected override void OnInventorySlotChanged(object sender, SlotChangedEventArgs e)
         {
