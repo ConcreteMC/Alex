@@ -89,20 +89,20 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 					var pos = (PlayerLocation) World.Player.KnownPosition.Clone();
 
-					if (pos.DistanceTo(_lastSentLocation) > 0.0f
+					/*if (pos.DistanceTo(_lastSentLocation) > 0.0f
 					    || MathF.Abs(pos.HeadYaw - _lastSentLocation.HeadYaw) > 0.0f
 					    || MathF.Abs(pos.Pitch - _lastSentLocation.Pitch) > 0.0f)
 					{
-						SendLocation(pos);
+						//
 						_lastSentLocation = pos;
-					}
+					}*/
 
 					if ((pos.DistanceTo(_lastLocation) > 16f || MathF.Abs(pos.HeadYaw - _lastLocation.HeadYaw) >= 5.0f)
 					    && (_tickTime - _lastPrioritization >= 10))
 					{
 					//	World.ChunkManager.FlagPrioritization();
 
-						SendLocation(pos);
+						//SendLocation(pos);
 
 						_lastLocation = pos;
 						
@@ -110,6 +110,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 						_lastPrioritization = _tickTime;
 					}
+					
+					SendLocation(World.Player.KnownPosition);
 				}
 
 				//World.Player.OnTick();
@@ -120,7 +122,10 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		private void SendLocation(PlayerLocation location)
 		{
-			Client.SendMcpeMovePlayer(location, location.OnGround);
+			Client.SendMcpeMovePlayer(new PlayerLocation(location.X, location.Y + Player.EyeLevel, location.Z, -location.HeadYaw,-location.Yaw, -location.Pitch)
+			{
+				OnGround = location.OnGround
+			}, 1);
 		}
 
 		//private ThreadSafeList<ChunkCoordinates> _loadedChunks = new ThreadSafeList<ChunkCoordinates>();
@@ -270,9 +275,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 			var p = World.Player.KnownPosition;
 
-			Client.SendMcpeMovePlayer(
-				p,
-				p.OnGround);
+			//Client.SendMcpeMovePlayer(
+			//	p, 1);
 
 			timer.Stop();
 

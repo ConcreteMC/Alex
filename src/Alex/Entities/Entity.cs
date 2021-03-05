@@ -866,7 +866,7 @@ namespace Alex.Entities
 				}
 			}
 
-			Movement?.OnTick();
+			//Movement?.OnTick();
 
 			HealthManager.OnTick();
 			

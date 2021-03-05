@@ -628,19 +628,20 @@ namespace Alex.Worlds.Multiplayer.Bedrock
         //    Session.CryptoContext.UseEncryption = true;
         }
 
-		public void SendMcpeMovePlayer(PlayerLocation location, bool onGround)
+		public void SendMcpeMovePlayer(PlayerLocation location, byte mode = 0)
 		{
 			var movePlayerPacket = McpeMovePlayer.CreateObject();
 			movePlayerPacket.runtimeEntityId = EntityId;
-			movePlayerPacket.otherRuntimeEntityId = NetworkEntityId;
+			//movePlayerPacket.otherRuntimeEntityId = NetworkEntityId;
 			movePlayerPacket.x = location.X;
 			movePlayerPacket.y = location.Y;
 			movePlayerPacket.z = location.Z;
 			movePlayerPacket.yaw = location.Yaw;
 			movePlayerPacket.pitch = location.Pitch;
 			movePlayerPacket.headYaw = location.HeadYaw;
-			movePlayerPacket.mode = 0;
-			movePlayerPacket.onGround = onGround;
+			movePlayerPacket.mode = mode;
+			movePlayerPacket.onGround = location.OnGround;
+			//movePlayerPacket.tick = 
 
 			SendPacket(movePlayerPacket);
 		}

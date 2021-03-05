@@ -11,7 +11,7 @@ using Microsoft.Xna.Framework;
 
 namespace Alex.Entities
 {
-	public class EntityMovement : ITicked
+	public class EntityMovement
 	{
 		public Entity  Entity  { get; }
 		public Vector3 Heading { get; private set; }
@@ -22,8 +22,8 @@ namespace Alex.Entities
 			Heading = Vector3.Zero;
 		}
 		
-		private Stopwatch _previousUpdate = new Stopwatch();
-		private float _distanceMoved = 0f;
+		private Stopwatch _previousUpdate = Stopwatch.StartNew();
+		private float _distanceMoved = 0f, _lastDistanceMoved = 0f;
 		public float DistanceMoved
 		{
 			get => _distanceMoved;
@@ -32,22 +32,23 @@ namespace Alex.Entities
 				if (float.IsNaN(value) || float.IsInfinity(value))
 					return;
 				var mvt = value;
-				var previousValue = _distanceMoved;
-				
+
 				_distanceMoved = value;
 				
 				//_speedAccumulator += frameTime;
-				var distanceMoved = mvt - previousValue;
-
-				if (MathF.Abs(distanceMoved) < 0.0005f)
+				var distanceMoved = mvt - _lastDistanceMoved;
+				
+				if (distanceMoved <= 0.0005f && _previousUpdate.ElapsedMilliseconds < 50)
 					return;
+				
+				_lastDistanceMoved = _distanceMoved;
 				//RawSpeed = (float) (distanceMoved);
 				//if (_speedAccumulator >= TargetTime)
 				{
 					//DistanceMoved = 0;
 
 					var difference = _previousUpdate.Elapsed;
-					BlocksPerTick = (float) (distanceMoved * (TimeSpan.FromMilliseconds(50) / difference));// * (_speedAccumulator / TargetTime);
+					//BlocksPerTick = (float) (distanceMoved * (TimeSpan.FromMilliseconds(50) / difference));// * (_speedAccumulator / TargetTime);
 					MetersPerSecond = (float) (distanceMoved * (TimeSpan.FromSeconds(1) / difference));
 				
 					_previousUpdate.Restart();
@@ -59,8 +60,8 @@ namespace Alex.Entities
 			}
 		}
 
-		private Stopwatch _previousVerticalUpdate = new Stopwatch();
-		private float _verticalDistanceMoved = 0f;
+		private Stopwatch _previousVerticalUpdate = Stopwatch.StartNew();
+		private float _verticalDistanceMoved = 0f, _lastVerticalDistanceMoved = 0f;
 		public float VerticalDistanceMoved
 		{
 			get => _verticalDistanceMoved;
@@ -70,16 +71,15 @@ namespace Alex.Entities
 					return;
 				
 				var mvt = value;
-				var previousValue = _verticalDistanceMoved;
-
 				_verticalDistanceMoved = value;
 
 				//_speedAccumulator += frameTime;
-				var distanceMoved = mvt - previousValue;
-				if (MathF.Abs(distanceMoved) < 0.0005f)
+				var distanceMoved = mvt - _lastVerticalDistanceMoved;
+				var difference = _previousVerticalUpdate.Elapsed;
+				if (distanceMoved <= 0.0005f && _previousVerticalUpdate.ElapsedMilliseconds < 50)
 					return;
 				
-				var difference = _previousVerticalUpdate.Elapsed;
+				_lastVerticalDistanceMoved = _verticalDistanceMoved;
 				VerticalSpeed = (float) (distanceMoved * (TimeSpan.FromSeconds(1) / difference));
 				_previousVerticalUpdate.Restart();
 			}
@@ -347,7 +347,7 @@ namespace Alex.Entities
 		private const float TargetTime        = 1f / 20f;
 		
 		public float MetersPerSecond { get; private set; } = 0f;
-		public float BlocksPerTick { get; private set; } = 0f;
+		//public float BlocksPerTick { get; private set; } = 0f;
 		//public float Speed { get; private set; } = 0f;
 		public void Update(GameTime gt)
 		{
@@ -408,12 +408,6 @@ namespace Alex.Entities
 			renderLocation.OnGround = targetPosition.OnGround;
 
 			entity.RenderLocation = renderLocation;
-		}
-
-		/// <inheritdoc />
-		public void OnTick()
-		{
-			//UpdateTarget();
 		}
 
 		private bool CheckJump(ref Vector3 amount)
