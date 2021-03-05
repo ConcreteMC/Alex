@@ -76,9 +76,6 @@ namespace Alex.Blocks
 		    this.Register("minecraft:tripwire_hook", () => new TripwireHook());
 		    this.Register("minecraft:tripwire", () => new Tripwire());
 		    this.Register("minecraft:beacon", () => new Beacon());
-		    this.Register("minecraft:cobblestone_wall", () => new CobblestoneWall());
-		    this.Register("minecraft:andesite_wall", () => new AndesiteWall());
-		    this.Register("minecraft:flower_pot", () => new FlowerPot());
 		    this.Register("minecraft:carrots", () => new Carrots());
 		    this.Register("minecraft:potatoes", () => new Potatoes());
 		    this.Register("minecraft:anvil", () => new Anvil());
@@ -113,6 +110,7 @@ namespace Alex.Blocks
 		    this.Register("minecraft:nether_wart_block", () => new NetherWartBlock());
 		    this.Register("minecraft:jukebox", () => new Jukebox());
 		    this.Register("minecraft:stone_bricks", () => new StoneBricks());
+		    this.Register("minecraft:flower_pot", () => new FlowerPot());
 		    
 		    this.Register("minecraft:command_block", () => new CommandBlock());
 		    this.Register("minecraft:nether_quartz_ore", () => new NetherQuartzOre());
@@ -125,6 +123,11 @@ namespace Alex.Blocks
 		    this.Register("minecraft:bone_block", () => new BoneBlock());
 		    this.Register("minecraft:structure_block", () => new StructureBlock());
 		    
+		    //Walls
+		    this.Register("minecraft:cobblestone_wall", () => new CobblestoneWall());
+		    this.Register("minecraft:andesite_wall", () => new AndesiteWall());
+		    this.Register("minecraft:stone_brick_wall", () => new StoneBrickWall());
+
 		    //Redstone
 		    this.Register("minecraft:lever", () => new Lever());
 		    this.Register("minecraft:redstone_wire", () => new RedstoneWire());
