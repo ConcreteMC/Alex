@@ -121,7 +121,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Chromely" Version="5.1.86" />
     <PackageReference Include="CommandLineParser" Version="2.8.0" />
     <PackageReference Include="DiscordRichPresence" Version="1.0.169" />
     <PackageReference Include="EasyPipes" Version="1.2.0" />
