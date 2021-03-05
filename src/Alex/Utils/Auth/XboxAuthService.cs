@@ -50,14 +50,20 @@ namespace Alex.Utils.Auth
 		private string X { get; set; }
 		private string Y { get; set; }
 		
-		private  ECDsa   EcDsa  { get; }
+		//private  ECDsa   EcDsa  { get; }
 
 		private CookieContainer   _cookieContainer;
 		private HttpClientHandler _clienthandler;
 		private readonly HttpClient        _httpClient;
+		private AsymmetricCipherKeyPair _authKeyPair;
 		public XboxAuthService()
 		{
-			EcDsa = ConvertToSingKeyFormat(GenerateKeys());
+			_authKeyPair = GenerateKeys();
+			
+			ECPublicKeyParameters  pubAsyKey  = (ECPublicKeyParameters)_authKeyPair.Public;
+			X = UrlSafe(pubAsyKey.Q.AffineXCoord.GetEncoded());
+			Y = UrlSafe(pubAsyKey.Q.AffineYCoord.GetEncoded());
+			//EcDsa = ConvertToSingKeyFormat(GenerateKeys());
 			
 			_cookieContainer = new CookieContainer();
 			
@@ -71,7 +77,7 @@ namespace Alex.Utils.Auth
 			_httpClient.DefaultRequestHeaders.Add("Cache-Control", "no-cache");
 			_httpClient.DefaultRequestHeaders.Add("x-xbl-contract-version", "1");
 		}
-
+		
 		private static AsymmetricCipherKeyPair GenerateKeys()
 		{
 			var  curve        = NistNamedCurves.GetByName("P-256");
@@ -84,30 +90,6 @@ namespace Alex.Utils.Auth
 			generator.Init(keyParams);
 			
 			return generator.GenerateKeyPair();
-		}
-		
-		private ECDsa ConvertToSingKeyFormat(AsymmetricCipherKeyPair key)
-		{
-			ECPublicKeyParameters  pubAsyKey  = (ECPublicKeyParameters)key.Public;
-			ECPrivateKeyParameters privAsyKey = (ECPrivateKeyParameters)key.Private;
-
-			var signParam = new ECParameters
-			{
-				Curve = ECCurve.NamedCurves.nistP256,
-				Q =
-				{
-					X = pubAsyKey.Q.AffineXCoord.GetEncoded(),
-					Y = pubAsyKey.Q.AffineYCoord.GetEncoded()
-				}
-			};
-
-			signParam.D = CryptoUtils.FixDSize(privAsyKey.D.ToByteArrayUnsigned(), signParam.Q.X.Length);
-			signParam.Validate();
-
-			X = UrlSafe(pubAsyKey.Q.AffineXCoord.GetEncoded());
-			Y = UrlSafe(pubAsyKey.Q.AffineYCoord.GetEncoded());
-
-			return ECDsa.Create(signParam);
 		}
 
 		static readonly char[] padding = { '=' };
@@ -433,7 +415,7 @@ namespace Alex.Utils.Auth
 
         private void Sign(HttpRequestMessage request, byte[] body)
 		{
-			var hash = SHA256.Create();
+			//var hash = SHA256.Create();
 
 			var    time = TimeStamp();
 			byte[] p    = new byte[8];
@@ -479,7 +461,8 @@ namespace Alex.Utils.Auth
 				}
 
 				byte[] input = buffer.ToArray();
-				signed = EcDsa.SignHash(hash.ComputeHash(input));
+				signed = SignData(input, _authKeyPair.Private);
+				//signed = EcDsa.SignHash(hash.ComputeHash(input));
 			}
 
 			byte[] final;
@@ -504,7 +487,17 @@ namespace Alex.Utils.Auth
 			request.Headers.Add("Signature", Convert.ToBase64String(final));
 		}
 
-		private long TimeStamp()
+        private byte[] SignData(byte[] data, AsymmetricKeyParameter privateKey)
+        {
+	        var signer = SignerUtilities.GetSigner("SHA-256withPLAIN-ECDSA");
+
+	        signer.Init(true, privateKey);
+	        signer.BlockUpdate(data, 0, data.Length);
+
+	        return signer.GenerateSignature();
+        }
+
+        private long TimeStamp()
 		{
 			//return DateTime.UtcNow.ToFileTime();
 			long unixTimestamp = (long)(DateTime.UtcNow.Subtract(new DateTime(1601, 1, 1))).TotalSeconds;
