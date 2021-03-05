@@ -467,6 +467,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 						        int paletteCount = VarInt.ReadSInt32(stream);
 						        var palette      = new int[paletteCount];
+						        bool allZero = true;
 						        for (int j = 0; j < paletteCount; j++)
 						        {
 							        if (!isRuntime)
@@ -502,35 +503,49 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 								        // palette[j] = GetServerRuntimeId(bedrockPalette, internalBlockPallet, runtimeId);
 							        }
+
+							        if (palette[j] != 0)
+								        allZero = false;
 						        }
 
-						        long afterPos = stream.Position;
-						        stream.Position = jumpPos;
-						        int position = 0;
-						        for (int w = 0; w < wordsPerChunk; w++)
+						        if (!allZero)
 						        {
-							        uint word = defStream.ReadUInt32();
-							        for (uint block = 0; block < blocksPerWord; block++)
+							        long afterPos = stream.Position;
+							        stream.Position = jumpPos;
+							        int position = 0;
+
+							        for (int w = 0; w < wordsPerChunk; w++)
 							        {
-								        if (position >= 4096)
-									        continue;
+								        uint word = defStream.ReadUInt32();
 
-								        uint state = (uint) ((word >> ((position % blocksPerWord) * bitsPerBlock)) & ((1 << bitsPerBlock) - 1));
+								        for (uint block = 0; block < blocksPerWord; block++)
+								        {
+									        if (position >= 4096)
+										        continue;
 
-								        int x = (position >> 8) & 0xF;
-								        int y = position & 0xF;
-								        int z = (position >> 4) & 0xF;
+									        uint state = (uint) ((word >> ((position % blocksPerWord) * bitsPerBlock))
+									                             & ((1 << bitsPerBlock) - 1));
 
-								        int runtimeId = palette[state];
+									        int x = (position >> 8) & 0xF;
+									        int y = position & 0xF;
+									        int z = (position >> 4) & 0xF;
 
-								        var blockState = GetBlockState((uint) runtimeId);
-								        if (blockState != null)
-											section.Set(storage, x, y, z, blockState);
+									        int runtimeId = palette[state];
 
-								        position++;
+									        if (runtimeId != 0)
+									        {
+										        var blockState = GetBlockState((uint) runtimeId);
+
+										        if (blockState != null)
+											        section.Set(storage, x, y, z, blockState);
+									        }
+
+									        position++;
+								        }
 							        }
+							        
+							        stream.Position = afterPos;
 						        }
-						        stream.Position = afterPos;
 					        }
 				        }
 				        else if (version == 0)

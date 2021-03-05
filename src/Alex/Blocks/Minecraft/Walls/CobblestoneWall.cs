@@ -1,6 +1,6 @@
 namespace Alex.Blocks.Minecraft
 {
-	public class CobblestoneWall : Block
+	public class CobblestoneWall : AbstractWall
 	{
 		public CobblestoneWall() : base()
 		{
