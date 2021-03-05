@@ -51,45 +51,59 @@ namespace Alex.Worlds
 		private Stopwatch _sw = new Stopwatch();
 		public void OnTick()
 		{
-			List<Entity> rendered = new List<Entity>(_rendered.Length);
+			_sw.Restart();
 
-			var entities      = Entities.Values.ToArray();
-			var blockEntities = BlockEntities.Values.ToArray();
-
-			var cameraChunkPosition = new ChunkCoordinates(World.Camera.Position);
-			
-			foreach (var entity in entities.Concat(blockEntities))
+			int ticked = 0;
+			int entityCount = 0;
+			try
 			{
-				_sw.Restart();
-				rendered.Add(entity);
-				
-				//entity.OnTick();
+				List<Entity> rendered = new List<Entity>(_rendered.Length);
 
-				//if (!entity.IsSpawned)
-				//	continue;
-				/*if (Math.Abs(new ChunkCoordinates(entity.KnownPosition).DistanceTo(cameraChunkPosition))
-				    > World.ChunkManager.RenderDistance)
+				var entities = Entities.Values.ToArray();
+				var blockEntities = BlockEntities.Values.ToArray();
+
+				var cameraChunkPosition = new ChunkCoordinates(World.Camera.Position);
+
+				foreach (var entity in entities.Concat(blockEntities))
 				{
-					entity.IsRendered = false;
+					entityCount++;
+					rendered.Add(entity);
 
-					continue;
-				}*/
+					//entity.OnTick();
 
-				var entityBox = entity.GetVisibilityBoundingBox(entity.RenderLocation);
+					//if (!entity.IsSpawned)
+					//	continue;
+					/*if (Math.Abs(new ChunkCoordinates(entity.KnownPosition).DistanceTo(cameraChunkPosition))
+					    > World.ChunkManager.RenderDistance)
+					{
+						entity.IsRendered = false;
+	
+						continue;
+					}*/
 
-				if (World.Camera.BoundingFrustum.Intersects(
-					new Microsoft.Xna.Framework.BoundingBox(entityBox.Min, entityBox.Max)))
-				{
-					entity.IsRendered = true;
-					entity.OnTick();
+					var entityBox = entity.GetVisibilityBoundingBox(entity.RenderLocation);
+
+					if (World.Camera.BoundingFrustum.Intersects(
+						new Microsoft.Xna.Framework.BoundingBox(entityBox.Min, entityBox.Max)))
+					{
+						entity.IsRendered = true;
+						entity.OnTick();
+
+						ticked++;
+					}
+					else
+					{
+						entity.IsRendered = false;
+					}
 				}
-				else
+
+				_rendered = rendered.ToArray();
+			}finally{
+				if (_sw.Elapsed.TotalMilliseconds >= 50)
 				{
-					entity.IsRendered = false;
+					Log.Warn($"Tick took {_sw.ElapsedMilliseconds}ms for {entityCount} entities of which {ticked} were ticked!");
 				}
 			}
-
-			_rendered = rendered.ToArray();
 		}
 
 		private Stopwatch _updateWatch = new Stopwatch();

@@ -33,7 +33,7 @@ namespace Alex.MoLang.Runtime
 		}*/
 
 		public IMoValue Execute(params IExpression[] expressions) {
-			return Execute(expressions, new Dictionary<string, IMoValue>());
+			return Execute(expressions, null);
 		}
 
 		public IMoValue Execute(IExpression[] expressions, IDictionary<string, IMoValue> context) {
@@ -48,7 +48,7 @@ namespace Alex.MoLang.Runtime
 				IMoValue result = new DoubleValue(0.0);
 				MoScope scope = new MoScope();
 
-				foreach (IExpression expression in _exprTraverser.Traverse(expressions))
+				foreach (IExpression expression in expressions)
 				{
 					result = expression.Evaluate(scope, Environment);
 
@@ -62,7 +62,7 @@ namespace Alex.MoLang.Runtime
 
 				Environment.Structs["temp"].Clear();
 				; // .getStructs().get("temp").clear();
-				Environment.Structs.TryRemove("context", out _); //["context"].getStructs().remove("context");
+				Environment.Structs.Remove("context", out _); //["context"].getStructs().remove("context");
 
 				return result;
 		//	}

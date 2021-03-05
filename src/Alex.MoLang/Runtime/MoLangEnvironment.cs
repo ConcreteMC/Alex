@@ -14,34 +14,48 @@ namespace Alex.MoLang.Runtime
 		/// <inheritdoc />
 		public object Value => Structs;
 
-		public ConcurrentDictionary<string, IMoStruct> Structs { get; } = new ConcurrentDictionary<string, IMoStruct>(StringComparer.InvariantCultureIgnoreCase);
+		public Dictionary<string, IMoStruct> Structs { get; } = new(StringComparer.OrdinalIgnoreCase);
 
 		public IMoValue GetValue(string name) {
 			return GetValue(name, MoParams.Empty);
 		}
 
 		public IMoValue GetValue(string name, MoParams param) {
-			string[] segments = name.Split(".");
-			string        main     = segments[0];//.Dequeue();
-
-			if (!Structs.ContainsKey(main))
+			try
 			{
-				throw new MoLangRuntimeException($"Cannot retrieve struct: {name}", null);
+				string[] segments = name.Split(".");
+				string main = segments[0]; //.Dequeue();
+
+				//if (!Structs.ContainsKey(main))
+				//{
+				//	throw new MoLangRuntimeException($"Cannot retrieve struct: {name}", null);
+				//}
+
+				return Structs[main].Get(string.Join(".", segments.Skip(1)), param);
 			}
-	
-			return Structs[main].Get(string.Join(".", segments.Skip(1)), param);
+			catch (Exception ex)
+			{
+				throw new MoLangRuntimeException($"Cannot retrieve struct: {name}", ex);
+			}
 		}
 
 		public void SetValue(String name, IMoValue value)
 		{
-			string[] segments = name.Split(".");
-			string        main     = segments[0];//.Dequeue();
+			try
+			{
+				string[] segments = name.Split(".");
+				string main = segments[0]; //.Dequeue();
 
-			if (!Structs.ContainsKey(main)) {
-				throw new MoLangRuntimeException($"Cannot set value on struct: {name}", null);
+				//if (!Structs.ContainsKey(main)) {
+				//	throw new MoLangRuntimeException($"Cannot set value on struct: {name}", null);
+				//}
+
+				Structs[main].Set(string.Join(".", segments.Skip(1)), value);
 			}
-			
-			Structs[main].Set(string.Join(".", segments.Skip(1)), value);
+			catch (Exception ex)
+			{
+				throw new MoLangRuntimeException($"Cannot set value on struct: {name}", ex);
+			}
 		}
 		
 		/// <inheritdoc />

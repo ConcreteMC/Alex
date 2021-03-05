@@ -11,7 +11,7 @@ namespace Alex.MoLang.Runtime.Struct
 	public class VariableStruct : IMoStruct
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(VariableStruct));
-		public readonly Dictionary<string, IMoValue> Map = new Dictionary<string, IMoValue>(StringComparer.InvariantCultureIgnoreCase);
+		public readonly Dictionary<string, IMoValue> Map = new(StringComparer.OrdinalIgnoreCase);
 
 		/// <inheritdoc />
 		public object Value => Map;
@@ -23,7 +23,8 @@ namespace Alex.MoLang.Runtime.Struct
 
 		public VariableStruct(IEnumerable<KeyValuePair<string, IMoValue>> values)
 		{
-			Map = new Dictionary<string, IMoValue>(values, StringComparer.InvariantCultureIgnoreCase);
+			if (values != null)
+				Map = new Dictionary<string, IMoValue>(values, StringComparer.OrdinalIgnoreCase);
 		}
 
 		/// <inheritdoc />
