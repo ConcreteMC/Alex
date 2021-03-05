@@ -53,6 +53,7 @@ namespace Alex.Net.Bedrock.Raknet
 
 			Write((short) ranges.Count, true);
 
+			
 			foreach (var range in ranges)
 			{
 				if (range.Item1 == range.Item2)

@@ -196,10 +196,10 @@ namespace Alex.Net.Bedrock
 
 			if (Environment.OSVersion.Platform != PlatformID.MacOSX)
 			{
-				listener.Client.ReceiveBufferSize = 1600*40000;
+				//listener.Client.ReceiveBufferSize = 1600;
 				//listener.Client.ReceiveBufferSize = int.MaxValue;
 				//listener.Ttl = Int16.MaxValue;
-				listener.Client.SendBufferSize = 1600*40000;
+				//listener.Client.SendBufferSize = 1600;
 				//listener.Client.SendBufferSize = int.MaxValue;
 			}
 			
@@ -283,7 +283,7 @@ namespace Alex.Net.Bedrock
 						//var receiveBytes = receive.Buffer;
 						//senderEndpoint = receive.RemoteEndPoint;
 
-						Interlocked.Increment(ref ConnectionInfo.PacketsIn);
+						//Interlocked.Increment(ref ConnectionInfo.PacketsIn);
 						Interlocked.Add(ref ConnectionInfo.BytesIn, receiveBytes.Length);
 
 						if (receiveBytes.Length != 0)
@@ -412,9 +412,8 @@ namespace Alex.Net.Bedrock
 				Log.Warn(e, $"Bad packet {receivedBytes.Span[0]}\n{Packet.HexDump(receivedBytes)}");
 				return;
 			}
-
+			Interlocked.Increment(ref ConnectionInfo.PacketsIn);
 			//if (Log.IsTraceEnabled) Log.Trace($"Receive datagram #{datagram.Header.DatagramSequenceNumber} for {_endpoint}");
-
 			HandleDatagram(rakSession, datagram);
 			
 			datagram.PutPool();
@@ -747,6 +746,8 @@ namespace Alex.Net.Bedrock
 				datagram.PutPool();
 			}
 
+			Interlocked.Increment(ref ConnectionInfo.PacketsOut);
+			
 			//lock (session.)
 			{
 				await SendDataAsync(buffer, length, session.EndPoint);
@@ -766,9 +767,9 @@ namespace Alex.Net.Bedrock
 		}
 
 		private object _sendSync = new object();
-		public Task SendDataAsync(byte[] data, int length, IPEndPoint targetEndPoint)
+		public async Task SendDataAsync(byte[] data, int length, IPEndPoint targetEndPoint)
 		{
-			//Monitor.Enter(_sendSync);
+			Monitor.Enter(_sendSync);
 
 			try
 			{
@@ -776,13 +777,13 @@ namespace Alex.Net.Bedrock
 				{
 					if (_listener == null)
 					{
-						return Task.CompletedTask;
+						return;
 					}
 
-				//	await _listener.SendAsync(data, length, targetEndPoint);
-					_listener.Send(data, length, targetEndPoint);
+					await _listener.SendAsync(data, length, targetEndPoint);
+					//_listener.Send(data, length, targetEndPoint);
 
-					Interlocked.Increment(ref ConnectionInfo.PacketsOut);
+					//Interlocked.Increment(ref ConnectionInfo.PacketsOut);
 					Interlocked.Add(ref ConnectionInfo.BytesOut, length);
 				}
 				catch (ObjectDisposedException e)
@@ -797,10 +798,8 @@ namespace Alex.Net.Bedrock
 			}
 			finally
 			{
-				//Monitor.Exit(_sendSync);
+				Monitor.Exit(_sendSync);
 			}
-
-			return Task.CompletedTask;
 		}
 		
 		

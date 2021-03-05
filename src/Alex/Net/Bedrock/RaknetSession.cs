@@ -743,7 +743,7 @@ namespace Alex.Net.Bedrock
 			if (queueCount == 0) return;
 
 			var acks = CustomNak.CreateObject();
-			for (int i = 0; i < queueCount; i++)
+			for (int i = 0; i < Math.Min(10, queueCount); i++)
 			{
 				if (!queue.TryDequeue(out int ack)) break;
 
@@ -770,21 +770,87 @@ namespace Alex.Net.Bedrock
 			if (queueCount == 0) return;
 
 			var acks = Acks.CreateObject();
-			for (int i = 0; i < queueCount; i++)
+			for (int i = 0; i < Math.Min(10, queueCount); i++)
 			{
 				if (!queue.TryDequeue(out int ack)) break;
 				_nacked.Remove(ack);
-				acks.acks.Add(ack);
-				Interlocked.Increment(ref ConnectionInfo.AckSent);
+
+				if (!acks.acks.Contains(ack))
+				{
+					acks.acks.Add(ack);
+					Interlocked.Increment(ref ConnectionInfo.AckSent);
+				}
 			}
 
 			if (acks.acks.Count > 0)
 			{
 				byte[] data = acks.Encode();
+				
 				await _packetSender.SendDataAsync(data, EndPoint);
 			}
 			
 			acks.PutPool();
+		}
+		
+		public static List<Tuple<int, int>> Slize(List<int> acks)
+		{
+			List<Tuple<int, int>> ranges = new List<Tuple<int, int>>();
+
+			if (acks.Count == 0) return ranges;
+
+			int start = acks[0];
+			int prev = start;
+
+			if (acks.Count == 1)
+			{
+				ranges.Add(new Tuple<int, int>(start, start));
+				return ranges;
+			}
+
+			acks.Sort();
+
+
+			for (int i = 1; i < acks.Count; i++)
+			{
+				bool isLast = i + 1 == acks.Count;
+				int current = acks[i];
+
+				if (current - prev == 1 && !isLast)
+				{
+					prev = current;
+					continue;
+				}
+
+				if (current - prev > 1 && !isLast)
+				{
+					ranges.Add(new Tuple<int, int>(start, prev));
+
+					start = current;
+					prev = current;
+					continue;
+				}
+
+				if (current - prev == 1 && isLast)
+				{
+					ranges.Add(new Tuple<int, int>(start, current));
+				}
+
+				if (current - prev > 1 && isLast)
+				{
+					if (prev == start)
+					{
+						ranges.Add(new Tuple<int, int>(start, current));
+					}
+
+					if (prev != start)
+					{
+						ranges.Add(new Tuple<int, int>(start, prev));
+						ranges.Add(new Tuple<int, int>(current, current));
+					}
+				}
+			}
+
+			return ranges;
 		}
 
 		private SemaphoreSlim _syncHack = new SemaphoreSlim(1, 1);
