@@ -15,8 +15,8 @@ namespace Alex.API.World
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(TickManager));
 		
 		private object _tickLock = new object();
-		private ConcurrentDictionary<Action, long> _scheduledTicks { get; }
-		private LinkedList<ITicked>                _tickedItems    { get; }
+		private ConcurrentDictionary<TickedItem, long> _scheduledTicks { get; }
+		private LinkedList<TickedEntry>                _tickedItems    { get; }
 		private long                               _tick = 0;
 		public  long                               CurrentTick => _tick;
 
@@ -25,18 +25,21 @@ namespace Alex.API.World
 
 		public TickManager()
 	    {
-		    _scheduledTicks = new ConcurrentDictionary<Action, long>();
-		    _tickedItems = new LinkedList<ITicked>();
-		    TickTimer = new HighPrecisionTimer(50, DoTick, false, false);
+		    _scheduledTicks = new ConcurrentDictionary<TickedItem, long>();
+		    _tickedItems = new LinkedList<TickedEntry>();
+		    TickTimer = new HighPrecisionTimer(50, DoTick);
 		}
 
 		private Stopwatch _sw = Stopwatch.StartNew();
 	    private void DoTick(object state)
 	    {
-		    lock (_tickLock)
+		   // if (!Monitor.TryEnter(_tickLock, 0))
+			//    return;
+
+		    try
 		    {
 			    var startTime = _sw.ElapsedMilliseconds;
-			    var ticks     = _scheduledTicks.Where(x => x.Value <= _tick).ToArray();
+			    var ticks = _scheduledTicks.Where(x => x.Value <= _tick).ToArray();
 
 			    foreach (var tick in ticks)
 			    {
@@ -58,12 +61,25 @@ namespace Alex.API.World
 
 			    var scheduledTicksTime = _sw.ElapsedMilliseconds - startTime;
 
-			    var tickedItems = _tickedItems.ToArray();
+			    TickedEntry[] tickedItems;
+			    lock (_tickLock)
+			    {
+				    tickedItems = _tickedItems.ToArray();
+			    }
+
 			    foreach (var ticked in tickedItems)
-			    {  
-					try
+			    {
+				    try
 				    {
-				    	ticked.OnTick();
+					    if (!ticked.Run())
+					    {
+						    Log.Warn($"Failed to tick item.");
+
+						    lock (_tickLock)
+						    {
+							    _tickedItems.Remove(ticked);
+						    }
+					    }
 				    }
 				    catch (Exception ex)
 				    {
@@ -77,9 +93,9 @@ namespace Alex.API.World
 
 			    if (elapsedTickTime > 50)
 			    {
-				//    Log.Warn($"Ticking running slow! Tick took: {elapsedTickTime}ms of which {scheduledTicksTime} were spent on scheduled ticks. (ScheduledTicks={ticks.Length} TickedItems={tickedItems.Length})");
+				    //    Log.Warn($"Ticking running slow! Tick took: {elapsedTickTime}ms of which {scheduledTicksTime} were spent on scheduled ticks. (ScheduledTicks={ticks.Length} TickedItems={tickedItems.Length})");
 			    }
-			    
+
 			    _tick++;
 
 			    if (_tick % 20 == 0)
@@ -97,12 +113,16 @@ namespace Alex.API.World
 				    {
 					    Log.Warn($"Running behind! TPS: {TicksPerSecond}");
 				    }
-				    
+
 				    if (Math.Ceiling(TicksPerSecond) < 20)
 				    {
-					 //   Log.Warn($"Running behind! TPS: {TicksPerSecond}");
+					    //   Log.Warn($"Running behind! TPS: {TicksPerSecond}");
 				    }
 			    }
+		    }
+		    finally
+		    {
+			    //Monitor.Exit(_tickLock);
 		    }
 	    }
 
@@ -110,7 +130,7 @@ namespace Alex.API.World
 	    {
 		    lock (_tickLock)
 		    {
-			    _tickedItems.AddLast(ticked);
+			    _tickedItems.AddLast(new TickedEntry(ticked));
 		    }
 	    }
 
@@ -118,13 +138,15 @@ namespace Alex.API.World
 	    {
 		    lock (_tickLock)
 		    {
-			    _tickedItems.Remove(ticked);
+			    var item = _tickedItems.FirstOrDefault(x => x.Equals(ticked));
+			    if (item != null)
+					_tickedItems.Remove(item);
 		    }
 	    }
 	    
-	    public void ScheduleTick(Action action, long ticksFromNow)
+	    public void ScheduleTick(Action action, long ticksFromNow, CancellationToken cancellationToken)
 		{
-			if (!_scheduledTicks.TryAdd(action, _tick + ticksFromNow))
+			if (!_scheduledTicks.TryAdd(new TickedItem(action, cancellationToken), _tick + ticksFromNow))
 			{
 				Log.Warn($"Could not schedule tick!");
 			}
@@ -141,6 +163,64 @@ namespace Alex.API.World
 				TickTimer?.Dispose();
 				TickTimer = null;
 			}catch(ObjectDisposedException){}
+		}
+
+		private class TickedItem
+		{
+			private Action _action;
+			private CancellationToken _cancellationToken;
+			public TickedItem(Action action, CancellationToken cancellationToken)
+			{
+				_action = action;
+				_cancellationToken = cancellationToken;
+			}
+
+			public void Invoke()
+			{
+				if (!_cancellationToken.IsCancellationRequested)
+					_action?.Invoke();
+			}
+		}
+		
+		private class TickedEntry
+		{
+			private WeakReference<ITicked> _ticked;
+
+			private Stopwatch _stopwatch = Stopwatch.StartNew();
+			public TickedEntry(ITicked ticked) {
+				_ticked = new WeakReference<ITicked>(ticked);
+			}
+
+			public TimeSpan ProcessingTime { get; private set; } = TimeSpan.Zero;
+			public bool Run()
+			{
+				_stopwatch.Restart();
+				try
+				{
+					if (_ticked.TryGetTarget(out var target))
+					{
+						target?.OnTick();
+
+						return true;
+					}
+
+					return false;
+				}
+				finally
+				{
+					ProcessingTime = _stopwatch.Elapsed;
+				}
+			}
+
+			public bool Equals(ITicked ticked)
+			{
+				if (_ticked.TryGetTarget(out var target))
+				{
+					return target == ticked;
+				}
+
+				return false;
+			}
 		}
 	}
 

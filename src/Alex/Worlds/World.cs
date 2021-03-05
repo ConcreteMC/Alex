@@ -109,6 +109,7 @@ namespace Alex.Worlds
 
 		public  BackgroundWorker  BackgroundWorker { get; }
 		private List<IDisposable> _disposables = new List<IDisposable>();
+		private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 		public World(IServiceProvider serviceProvider, GraphicsDevice graphics, AlexOptions options,
 			NetworkProvider networkProvider)
 		{
@@ -617,7 +618,7 @@ namespace Alex.Worlds
 			{
 				GetBlockState(block).Block.BlockUpdate(this, block, updatedBlock);
 				//GetBlock(block).BlockUpdate(this, block, updatedBlock);
-			}, 1);
+			}, 1, _cancellationTokenSource.Token);
 		}
 
 		public IEnumerable<ChunkSection.BlockEntry> GetBlockStates(int x, int y, int z)
@@ -828,6 +829,8 @@ namespace Alex.Worlds
 		{
 			if (_destroyed) return;
 			_destroyed = true;
+			
+			_cancellationTokenSource?.Cancel();
 
 			foreach (var disposable in _disposables)
 			{
