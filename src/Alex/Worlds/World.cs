@@ -936,7 +936,16 @@ namespace Alex.Worlds
 			bool teleport = false,
 			bool adjustForEntityHeight = false)
 		{
-			if (EntityManager != null && EntityManager.TryGet(entityId, out Entity entity))
+			Entity entity = null;
+
+			if (entityId == Player.EntityId)
+				entity = Player;
+			else
+			{
+				EntityManager.TryGet(entityId, out entity);
+			}
+			
+			if (entity != null)
 			{
 				entity.KnownPosition.OnGround = position.OnGround;
 
@@ -996,6 +1005,12 @@ namespace Alex.Worlds
 
 		public bool TryGetEntity(long entityId, out Entity entity)
 		{
+			if (entityId == Player.EntityId)
+			{
+				entity = Player;
+				return true;
+			}
+
 			return EntityManager.TryGet(entityId, out entity);
 		}
 

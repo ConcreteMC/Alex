@@ -261,8 +261,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				Client.World?.UpdatePlayerPosition(
 					new API.Utils.PlayerLocation(
 						new Microsoft.Xna.Framework.Vector3(
-							Client.SpawnPoint.X, Client.SpawnPoint.Y, Client.SpawnPoint.Z), message.spawn.X,
-						message.spawn.X, message.spawn.Y));
+							message.spawn.X, message.spawn.Y, message.spawn.Z), message.rotation.Y,
+						message.rotation.Y, message.rotation.X));
 
 				if (message.enableNewInventorySystem)
 				{
@@ -329,20 +329,32 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		public void HandleMcpeMovePlayer(McpeMovePlayer message)
 		{
-			if (message.runtimeEntityId != Client.EntityId)
+			var pos = new PlayerLocation(
+				message.x, message.y, message.z, -message.headYaw, -message.yaw, -message.pitch)
 			{
-				Client.World.UpdateEntityPosition(message.runtimeEntityId, 
-					new PlayerLocation(message.x, message.y, message.z, -message.headYaw, -message.yaw, -message.pitch)
-					{
-						OnGround = message.onGround
-					}, false, true, true, adjustForEntityHeight:true, teleport:message.mode == 2);
+				OnGround = message.onGround
+			};
+
+			Client.World.UpdateEntityPosition(message.runtimeEntityId, pos, false, true, true, adjustForEntityHeight:true, teleport:message.mode == 2);
+
+			if (message.runtimeEntityId == Client.EntityId)
+			{
+				Client.SendMcpeMovePlayer(
+					new PlayerLocation(message.x, message.y, message.z), 1);
+			}
+			/*if (message.runtimeEntityId != Client.EntityId)
+			{
+				pos.Yaw = -pos.Yaw;
+				pos.HeadYaw = -pos.HeadYaw;
+				pos.Pitch = -pos.Pitch;
+				Client.World.UpdateEntityPosition(message.runtimeEntityId, pos, false, true, true, adjustForEntityHeight:true, teleport:message.mode == 2);
 				return;
 			}
 			
-			Client.World.UpdatePlayerPosition(new 
-				PlayerLocation(message.x, message.y, message.z, message.headYaw, message.yaw, message.pitch), message.mode == 2);
+			Client.World.UpdatePlayerPosition(pos, message.mode == 2);
 
-			//Client.SendMcpeMovePlayer(Client.World.Player.KnownPosition, Client.World.Player.KnownPosition.OnGround);
+			Client.SendMcpeMovePlayer(
+				new PlayerLocation(message.x, message.y, message.z), Client.World.Player.KnownPosition.OnGround, 1);*/
 		}
 
 		private void UpdateEntityAdventureFlags(Entity entity, uint flags)
@@ -372,13 +384,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				player.UUID = message.uuid;
 				player.NameTag = message.username;
 				entity = player;
-				//	Client.World?.AddPlayerListItem(new PlayerListItem(message.uuid, message.username, 0, 0, false));
-				//	mob = new RemotePlayer():
-
-
-				//mob.EntityId = message.runtimeEntityId;
-
-
 			}
 
 			if (entity == null)
@@ -412,16 +417,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			}
 
 			UpdateEntityAdventureFlags(entity, message.flags);
-			//entity.
-		//	entity.KnownPosition.Y -= Pl (float) (entity.BoundingBox.GetHeight() - 0.175f);
-				//mob.HandleMetadata();
-			//	message.flags
 
-			//	mob.IsSpawned = true;
-
-			//	_entityMapping.TryAdd(message.entityIdSelf, message.runtimeEntityId);
 			Client.World.SpawnEntity(entity);
-			//entity.Movement.MoveTo();
 		}
 
 		public void HandleMcpePlayerList(McpePlayerList message)
@@ -482,31 +479,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			}
 			else
 			{
-				/*EntityModelRenderer renderer = EntityFactory.GetEntityRenderer(
-					type.ToStringId(), null);
-
-				if (renderer == null)
-				{
-					Log.Debug($"Missing renderer for entity: {type.ToString()} ({(int) type})");
-
-					return false;
-				}
-
-				if (renderer.Texture == null)
-				{
-					Log.Debug($"Missing texture for entity: {type.ToString()} ({(int) type})");
-
-					return false;
-				}*/
-				
 				entity = EntityFactory.Create(type, null);
-
-				//if (entity == null)
-				//{
-				//	entity = new Entity(null);
-				//}
-				
-				//entity.ModelRenderer = renderer;
 			}
 
 			if (entity == null)
@@ -676,11 +649,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			{
 				BlockUpdatePriority priority = (BlockUpdatePriority) message.blockPriority;
 
-				if ((priority & BlockUpdatePriority.NoGraphic) != 0)
-				{
-					
-				}
-				
 				Client.World?.SetBlockState(
 					new BlockCoordinates(message.coordinates.X, message.coordinates.Y, message.coordinates.Z), 
 					converted, (int) message.storage, priority);
@@ -951,111 +919,96 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		{
 			Entity entity;
 
-			if (!Client.World.EntityManager.TryGet(message.runtimeEntityId, out entity))
+			if (Client.World.EntityManager.TryGet(message.runtimeEntityId, out entity))
 			{
-				if (Client.World.Player.EntityId == message.runtimeEntityId)
-					entity = Client.World.Player;
-			}
+				Effect     effect     = null;
+				EffectType effectType = (EffectType) message.effectId;
+				switch (effectType)
+				{
+					case EffectType.Speed:
+						effect = new SpeedEffect();
+						break;
 
-			if (entity == null)
-			{
-				//Log.Warn($"Could not find entity targeted in McpeMobEffect.");
-				return;
-			}
-
-			Effect     effect     = null;
-			EffectType effectType = (EffectType) message.effectId;
-			switch (effectType)
-			{
-				case EffectType.Speed:
-					effect = new SpeedEffect();
-					break;
-
-				case EffectType.JumpBoost:
-					effect = new JumpBoostEffect();
-					break;
+					case EffectType.JumpBoost:
+						effect = new JumpBoostEffect();
+						break;
 				
-				case EffectType.NightVision:
-					effect = new NightVisionEffect();
-					break;
+					case EffectType.NightVision:
+						effect = new NightVisionEffect();
+						break;
 				
-				default:
-					Log.Warn($"Missing effect implementation: {(EffectType) message.effectId}");
-					return;
-			}
+					default:
+						Log.Warn($"Missing effect implementation: {(EffectType) message.effectId}");
+						return;
+				}
 
-			switch (message.eventId)
-			{
-				case 1: //Add
-					effect.Duration = message.duration;
-					effect.Level = message.amplifier;
-					effect.Particles = message.particles;
-					entity.AddOrUpdateEffect(effect);
-					break;
-				
-				case 2: //Modify
-					if (entity.TryGetEffect(effectType, out effect))
-					{
+				switch (message.eventId)
+				{
+					case 1: //Add
 						effect.Duration = message.duration;
-						effect.Particles = message.particles;
 						effect.Level = message.amplifier;
-						
+						effect.Particles = message.particles;
 						entity.AddOrUpdateEffect(effect);
-					}
-					break;
+						break;
+				
+					case 2: //Modify
+						if (entity.TryGetEffect(effectType, out effect))
+						{
+							effect.Duration = message.duration;
+							effect.Particles = message.particles;
+							effect.Level = message.amplifier;
+						
+							entity.AddOrUpdateEffect(effect);
+						}
+						break;
 
-				case 3: //Remove
-					entity.RemoveEffect(effect.EffectId);
-					break;
+					case 3: //Remove
+						entity.RemoveEffect(effect.EffectId);
+						break;
+				}
 			}
-			//UnhandledPackage(message);
-
 		}
 
 		public void HandleMcpeUpdateAttributes(McpeUpdateAttributes message)
 		{
 			Entity entity = null;
 
-			if (message.runtimeEntityId == Client.World.Player.EntityId)
-			{
-				entity = Client.World.Player;
-			}
-			else
-			{
-				Client.World.TryGetEntity(message.runtimeEntityId, out entity);
-			}
 
-			//if (entity != null)
-			//	entity.UpdateAttributes(message.attributes);
+			if (Client.World.TryGetEntity(message.runtimeEntityId, out entity))
+			{
+
+				//if (entity != null)
+				//	entity.UpdateAttributes(message.attributes);
 
 
-			if (message.attributes.TryGetValue("minecraft:health", out var value))
-			{
-				entity.HealthManager.MaxHealth = (int) value.MaxValue;
-				entity.HealthManager.Health = (int) value.Value;
-			}
+				if (message.attributes.TryGetValue("minecraft:health", out var value))
+				{
+					entity.HealthManager.MaxHealth = (int) value.MaxValue;
+					entity.HealthManager.Health = (int) value.Value;
+				}
 
-			if (message.attributes.TryGetValue("minecraft:movement", out var movement))
-			{
-				entity.MovementSpeed = movement.Value;
-			}
+				if (message.attributes.TryGetValue("minecraft:movement", out var movement))
+				{
+					entity.MovementSpeed = movement.Value;
+				}
 
-			if (message.attributes.TryGetValue("minecraft:player.hunger", out var hunger))
-			{
-				entity.HealthManager.Hunger = (int) hunger.Value;
-				entity.HealthManager.MaxHunger = (int) hunger.MaxValue;
-			}
+				if (message.attributes.TryGetValue("minecraft:player.hunger", out var hunger))
+				{
+					entity.HealthManager.Hunger = (int) hunger.Value;
+					entity.HealthManager.MaxHunger = (int) hunger.MaxValue;
+				}
 
-			if (message.attributes.TryGetValue("minecraft:player.exhaustion", out var exhaustion))
-			{
-				entity.HealthManager.Exhaustion = (int) exhaustion.Value;
-				entity.HealthManager.MaxExhaustion = (int) exhaustion.MaxValue;
-			}
+				if (message.attributes.TryGetValue("minecraft:player.exhaustion", out var exhaustion))
+				{
+					entity.HealthManager.Exhaustion = (int) exhaustion.Value;
+					entity.HealthManager.MaxExhaustion = (int) exhaustion.MaxValue;
+				}
 
-			if (message.attributes.TryGetValue("minecraft:player.saturation", out var saturation))
-			{
-				entity.HealthManager.Saturation = (int) saturation.Value;
-				entity.HealthManager.MaxSaturation = (int) saturation.MaxValue;
+				if (message.attributes.TryGetValue("minecraft:player.saturation", out var saturation))
+				{
+					entity.HealthManager.Saturation = (int) saturation.Value;
+					entity.HealthManager.MaxSaturation = (int) saturation.MaxValue;
+				}
 			}
 		}
 
@@ -1146,36 +1099,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			if (entity == null)
 				return;
 
-			/*if (entity is EntityFallingBlock fallingBlock)
-			{
-				foreach (var meta in message.metadata._entries.ToArray())
-				{
-					switch ((MiNET.Entities.Entity.MetadataFlags) meta.Key)
-					{
-						case MiNET.Entities.Entity.MetadataFlags.Variant:
-							message.metadata._entries.Remove(meta.Key);
-
-							if (meta.Value is MetadataInt metaInt)
-							{
-								var blockState = ChunkProcessor.GetBlockState((uint) metaInt.Value);
-
-								if (ItemFactory.TryGetItem(blockState.Name, out var item))
-								{
-									fallingBlock.SetItem(item);
-								}
-								else
-								{
-									Log.Info($"Could not get item: {blockState.Name}");
-								}
-							}
-
-							break;
-					}
-				}
-			}*/
-
 			entity.HandleMetadata(message.metadata);
-			//UnhandledPackage(message);
 		}
 
 		public void HandleMcpeSetEntityMotion(McpeSetEntityMotion message)
@@ -1184,6 +1108,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			var velocity = new Microsoft.Xna.Framework.Vector3(v.X, v.Y, v.Z);
 
 			Entity entity = null;
+			//Client.World.TryGetEntity(message.runtimeEntityId, out entity);
 			if (!Client.World.TryGetEntity(message.runtimeEntityId, out entity))
 			{
 				if (Client.World.Player.EntityId == message.runtimeEntityId)
@@ -1191,7 +1116,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					entity = Client.World.Player;
 				}
 			}
-
+			
 			if (entity == null)
 				return;
 			
@@ -1265,7 +1190,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 				if (Client.CanSpawn)
 				{
-					Client.SendMcpeMovePlayer(Client.World.Player.KnownPosition, Client.World.Player.KnownPosition.OnGround);
+					Client.SendMcpeMovePlayer(new PlayerLocation(message.x, message.y, message.z), 1);
 				}
 
 				Client.RequestChunkRadius(Client.ChunkRadius);
@@ -1619,7 +1544,12 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					int  percentage         = 0;
 					bool ready              = false;
 					int  previousPercentage = 0;
-
+					
+					McpePlayerAction action = McpePlayerAction.CreateObject();
+					action.runtimeEntityId = Client.EntityId;
+					action.actionId = (int) PlayerAction.DimensionChangeAck;
+					Client.SendPacket(action);
+					
 					do
 					{
 						chunkCoords = new ChunkCoordinates(
@@ -1664,19 +1594,12 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 						//}
 					} while (true);
 
-					McpePlayerAction action = McpePlayerAction.CreateObject();
-					action.runtimeEntityId = Client.EntityId;
-					action.actionId = (int) PlayerAction.DimensionChangeAck;
-					Client.SendPacket(action);
-
 					AlexInstance.GuiManager.RemoveScreen(loadingWorldScreen);
 					//AlexInstance.GameStateManager.Back();
 
 					var p = Client.World.Player.KnownPosition;
 
-					Client.SendMcpeMovePlayer(
-						Client.World.Player.KnownPosition,
-						Client.World.Player.KnownPosition.OnGround);
+					//Client.SendMcpeMovePlayer(p, 1);
 					//Client.SendMcpeMovePlayer(new MiNET.Utils.PlayerLocation(Client.World.Player.KnownPosition.X, Client.World.Player.KnownPosition.Y, Client.World.Player.KnownPosition.Z), false);
 
 					Client.World.Player.IsSpawned = true;

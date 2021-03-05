@@ -199,7 +199,7 @@ namespace Alex.Gamestates.InGame
 			_debugInfo.AddDebugLeft(() =>
 			{
 				var pos = World?.Player?.Velocity ?? Vector3.Zero;
-				return $"Velocity: (X={pos.X:F2}, Y={pos.Y:F2}, Z={pos.Z:F2}) ({World.Player.Movement.MetersPerSecond:F3} m/s) ({World.Player.Movement.BlocksPerTick:F3} m/t)";// / Target Speed: {(World.Player.CalculateMovementSpeed() * 20f):F3} m/s";
+				return $"Velocity: (X={pos.X:F2}, Y={pos.Y:F2}, Z={pos.Z:F2}) ({World.Player.Movement.MetersPerSecond:F3} m/s)";// / Target Speed: {(World.Player.CalculateMovementSpeed() * 20f):F3} m/s";
 			});
 
 			_debugInfo.AddDebugLeft(() => $"Primitives: {Alex.Metrics.PrimitiveCount:N0} Draw count: {Alex.Metrics.DrawCount}", TimeSpan.FromMilliseconds(500));
