@@ -139,7 +139,7 @@ namespace Alex.Worlds
 			if (!e.IsSpawned)
 				return;
 			
-			if (e.IsNoAi)
+			if (e.NoAi)
 				return;
 			
 			var onGround       = e.KnownPosition.OnGround;

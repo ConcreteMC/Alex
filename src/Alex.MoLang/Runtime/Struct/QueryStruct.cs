@@ -12,7 +12,7 @@ namespace Alex.MoLang.Runtime.Struct
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(QueryStruct));
 		protected IDictionary<string, Func<MoParams, object>> Functions = new Dictionary<string, Func<MoParams, object>>();
 		
-		private static ConcurrentDictionary<string, int> _missingQueries = new ConcurrentDictionary<string, int>();
+		private static ConcurrentDictionary<string, int> _missingQueries = new ConcurrentDictionary<string, int>(StringComparer.InvariantCultureIgnoreCase);
 		/// <inheritdoc />
 		public object Value => this;
 

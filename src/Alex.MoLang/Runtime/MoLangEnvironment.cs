@@ -13,8 +13,8 @@ namespace Alex.MoLang.Runtime
 		private static readonly NLog.Logger Log = NLog.LogManager.GetCurrentClassLogger(typeof(MoLangEnvironment));
 		/// <inheritdoc />
 		public object Value => Structs;
-		
-		public ConcurrentDictionary<string, IMoStruct> Structs { get; } = new ConcurrentDictionary<string, IMoStruct>();
+
+		public ConcurrentDictionary<string, IMoStruct> Structs { get; } = new ConcurrentDictionary<string, IMoStruct>(StringComparer.InvariantCultureIgnoreCase);
 
 		public IMoValue GetValue(string name) {
 			return GetValue(name, MoParams.Empty);
@@ -42,6 +42,12 @@ namespace Alex.MoLang.Runtime
 			}
 			
 			Structs[main].Set(string.Join(".", segments.Skip(1)), value);
+		}
+		
+		/// <inheritdoc />
+		public bool Equals(IMoValue b)
+		{
+			return Equals((object)b);
 		}
 	}
 }

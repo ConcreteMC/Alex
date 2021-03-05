@@ -59,6 +59,7 @@ using Description = MiNET.Utils.Skins.Description;
 using Item = Alex.Items.Item;
 using LevelInfo = MiNET.Worlds.LevelInfo;
 using Player = Alex.Entities.Player;
+using PlayerLocation = Alex.API.Utils.PlayerLocation;
 
 namespace Alex.Worlds.Multiplayer.Bedrock
 {
@@ -627,7 +628,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
         //    Session.CryptoContext.UseEncryption = true;
         }
 
-		public void SendMcpeMovePlayer(MiNET.Utils.PlayerLocation location, bool onGround)
+		public void SendMcpeMovePlayer(PlayerLocation location, bool onGround)
 		{
 			var movePlayerPacket = McpeMovePlayer.CreateObject();
 			movePlayerPacket.runtimeEntityId = EntityId;
@@ -638,7 +639,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			movePlayerPacket.yaw = location.Yaw;
 			movePlayerPacket.pitch = location.Pitch;
 			movePlayerPacket.headYaw = location.HeadYaw;
-			movePlayerPacket.mode = 1;
+			movePlayerPacket.mode = 0;
 			movePlayerPacket.onGround = onGround;
 
 			SendPacket(movePlayerPacket);

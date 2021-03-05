@@ -84,6 +84,7 @@ namespace Alex.Graphics.Models.Entity
 
 			private Vector3 _startRotation = Vector3.Zero;
 			private Vector3 _targetRotation = Vector3.Zero;
+			public Vector3 TargetRotation => _targetRotation;
 			
 			//private Vector3 _tempStartRotation = Vector3.Zero;
 			private Vector3 _tempTargetRotation = Vector3.Zero;
@@ -173,7 +174,7 @@ namespace Alex.Graphics.Models.Entity
 			}
 			
 			public void Update(IUpdateArgs args,
-				MCMatrix characterMatrix)
+				MCMatrix characterMatrix, Vector3 parentScale)
 			{
 				if (_disposed) return;
 
@@ -222,22 +223,35 @@ namespace Alex.Graphics.Models.Entity
 						}
 					}
 
+					var scale = parentScale * _scale;// (parentScale / _scale) * (_scale * parentScale);
+					var rotation = _rotation;
+					var translation = _position;
+					
+					/*if (characterMatrix.Decompose(
+						out var parentScale, out var parentRotation, out var parentTranslation))
+					{
+						if (parentScale.X != 0.0 && parentScale.Y != 0.0 & parentScale.Z != 0.0)
+						{
+							scale = scale * (16f * parentScale);
+						}
+					}*/
+					
 					MCMatrix matrix;
 					
 					if (Definition.Pivot.HasValue)
 					{
 						var pivot = (Definition.Pivot ?? Vector3.Zero);
-						matrix = MCMatrix.CreateScale(_scale) * MCMatrix.CreateTranslation(-pivot) 
-						                                      * MCMatrix.CreateRotationDegrees(_rotation)
-						                                      * MCMatrix.CreateTranslation(pivot)
-						                                      * MCMatrix.CreateTranslation(_position)
-						                                      * characterMatrix;
+						matrix = MCMatrix.CreateTranslation(-pivot) 
+						                                     * MCMatrix.CreateRotationDegrees(rotation)
+						                                     * MCMatrix.CreateTranslation(pivot)
+						                                     * MCMatrix.CreateTranslation(translation)
+							                                     * characterMatrix;
 					}
 					else
 					{
-						matrix = MCMatrix.CreateScale(_scale) *  MCMatrix.CreateRotationDegrees(_rotation)
-						                                      * MCMatrix.CreateTranslation(_position)
-						                                      * characterMatrix;
+						matrix =MCMatrix.CreateRotationDegrees(rotation)
+						                                     * MCMatrix.CreateTranslation(translation)
+						                                     * characterMatrix;
 					}
 
 					var children = Children.ToArray();
@@ -246,7 +260,7 @@ namespace Alex.Graphics.Models.Entity
 					{
 						foreach (var child in children)
 						{
-							child.Update(args, matrix);
+							child.Update(args, matrix, parentScale * _scale);
 						}
 					}
 
@@ -254,15 +268,14 @@ namespace Alex.Graphics.Models.Entity
 					if (Definition.Pivot.HasValue)
 					{
 						var pivot = (Definition.Pivot ?? Vector3.Zero);
-						WorldMatrix =  MCMatrix.CreateTranslation(-pivot) 
-						              * MCMatrix.CreateRotationDegrees(bindingRotation)
-						              * MCMatrix.CreateTranslation(pivot)
-						              * matrix;
+						WorldMatrix = MCMatrix.CreateTranslation(-pivot) 
+						                                          * MCMatrix.CreateRotationDegrees(bindingRotation)
+						                                          * MCMatrix.CreateTranslation(pivot)
+						                                          * matrix;
 					}
 					else
 					{
-						WorldMatrix = MCMatrix.CreateRotationDegrees(bindingRotation)
-						                                           * matrix;
+						WorldMatrix = MCMatrix.CreateRotationDegrees(bindingRotation)  * matrix;
 					}
 				}
 				finally

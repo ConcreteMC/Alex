@@ -77,20 +77,10 @@ namespace Alex.Entities
 			{
 				_skinDirty = true;
 			}
+
+			NoAi = true;
 		}
 
-		/// <inheritdoc />
-		public override bool NoAi {
-			get
-			{
-				return true;
-			}
-			set
-			{
-				
-			} 
-		}
-		
 		private static JsonSerializerSettings GeometrySerializationSettings = new JsonSerializerSettings()
 		{
 			Converters = new List<JsonConverter>()

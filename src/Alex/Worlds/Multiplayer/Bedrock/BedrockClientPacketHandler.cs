@@ -332,26 +332,35 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			if (message.runtimeEntityId != Client.EntityId)
 			{
 				Client.World.UpdateEntityPosition(message.runtimeEntityId, 
-					new PlayerLocation(message.x, message.y, message.z, -message.headYaw, -message.yaw, -message.pitch), false, true, true, adjustForEntityHeight:true);
+					new PlayerLocation(message.x, message.y, message.z, -message.headYaw, -message.yaw, -message.pitch)
+					{
+						OnGround = message.onGround
+					}, false, true, true, adjustForEntityHeight:true, teleport:message.mode == 2);
 				return;
 			}
 			
 			Client.World.UpdatePlayerPosition(new 
 				PlayerLocation(message.x, message.y, message.z, message.headYaw, message.yaw, message.pitch), message.mode == 2);
 
-			Client.SendMcpeMovePlayer(new MiNET.Utils.PlayerLocation(message.x, message.y, message.z), Client.World.Player.KnownPosition.OnGround);
+			//Client.SendMcpeMovePlayer(Client.World.Player.KnownPosition, Client.World.Player.KnownPosition.OnGround);
 		}
 
+		private void UpdateEntityAdventureFlags(Entity entity, uint flags)
+		{
+			if (entity == null)
+				return;
+			
+			entity.CanFly = ((flags & 0x40) == 0x40);
+			entity.IsFlying = ((flags & 0x200) == 0x200);
+			entity.IsWorldImmutable = ((flags & 0x01) == 0x01);
+			entity.IsNoPvP = (flags & 0x02) == 0x02;
+			entity.IsNoPvM = (flags & 0x04) == 0x04;
+			entity.HasCollision = (flags & 0x80) != 0x80;
+		}
 
 		public void HandleMcpeAdventureSettings(McpeAdventureSettings message)
 		{
-			//Client.UserPermission = (CommandPermission) message.commandPermission;
-			Client.World.Player.CanFly = ((message.flags & 0x40) == 0x40);
-			Client.World.Player.IsFlying = ((message.flags & 0x200) == 0x200);
-			Client.World.Player.IsWorldImmutable = ((message.flags & 0x01) == 0x01);
-			Client.World.Player.IsNoPvP = (message.flags & 0x02) == 0x02;
-			Client.World.Player.IsNoPvM = (message.flags & 0x04) == 0x04;
-			Client.World.Player.HasCollision = (message.flags & 0x80) != 0x80;
+			UpdateEntityAdventureFlags(Client.World.Player, message.flags);
 		}
 
 		public void HandleMcpeAddPlayer(McpeAddPlayer message)
@@ -401,7 +410,9 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			{
 				entity.HandleMetadata(message.metadata);
 			}
-			
+
+			UpdateEntityAdventureFlags(entity, message.flags);
+			//entity.
 		//	entity.KnownPosition.Y -= Pl (float) (entity.BoundingBox.GetHeight() - 0.175f);
 				//mob.HandleMetadata();
 			//	message.flags
@@ -510,8 +521,12 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			entity.UUID = uuid;
 			entity.SetInventory(new BedrockInventory(46));
 			
+			
 			if (metadata != null)
 				entity.HandleMetadata(metadata);
+
+			if (attributes != null)
+				entity.UpdateAttributes(attributes);
 			//entity.ad
 			
 			Client.World.SpawnEntity(entity);
@@ -999,37 +1014,48 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		public void HandleMcpeUpdateAttributes(McpeUpdateAttributes message)
 		{
-			var player = Client.World.Player;
-			if (player.EntityId == message.runtimeEntityId)
+			Entity entity = null;
+
+			if (message.runtimeEntityId == Client.World.Player.EntityId)
 			{
-				if (message.attributes.TryGetValue("minecraft:health", out var value))
-				{
-					player.HealthManager.MaxHealth = (int) value.MaxValue;
-					player.HealthManager.Health = (int) value.Value;
-				}
+				entity = Client.World.Player;
+			}
+			else
+			{
+				Client.World.TryGetEntity(message.runtimeEntityId, out entity);
+			}
 
-				if (message.attributes.TryGetValue("minecraft:movement", out var movement))
-				{
-					player.MovementSpeed = movement.Value;
-				}
+			//if (entity != null)
+			//	entity.UpdateAttributes(message.attributes);
 
-				if (message.attributes.TryGetValue("minecraft:player.hunger", out var hunger))
-				{
-					player.HealthManager.Hunger = (int) hunger.Value;
-					player.HealthManager.MaxHunger = (int) hunger.MaxValue;
-				}
-				
-				if (message.attributes.TryGetValue("minecraft:player.exhaustion", out var exhaustion))
-				{
-					player.HealthManager.Exhaustion = (int) exhaustion.Value;
-					player.HealthManager.MaxExhaustion = (int) exhaustion.MaxValue;
-				}
-				
-				if (message.attributes.TryGetValue("minecraft:player.saturation", out var saturation))
-				{
-					player.HealthManager.Saturation = (int) saturation.Value;
-					player.HealthManager.MaxSaturation = (int) saturation.MaxValue;
-				}
+
+			if (message.attributes.TryGetValue("minecraft:health", out var value))
+			{
+				entity.HealthManager.MaxHealth = (int) value.MaxValue;
+				entity.HealthManager.Health = (int) value.Value;
+			}
+
+			if (message.attributes.TryGetValue("minecraft:movement", out var movement))
+			{
+				entity.MovementSpeed = movement.Value;
+			}
+
+			if (message.attributes.TryGetValue("minecraft:player.hunger", out var hunger))
+			{
+				entity.HealthManager.Hunger = (int) hunger.Value;
+				entity.HealthManager.MaxHunger = (int) hunger.MaxValue;
+			}
+
+			if (message.attributes.TryGetValue("minecraft:player.exhaustion", out var exhaustion))
+			{
+				entity.HealthManager.Exhaustion = (int) exhaustion.Value;
+				entity.HealthManager.MaxExhaustion = (int) exhaustion.MaxValue;
+			}
+
+			if (message.attributes.TryGetValue("minecraft:player.saturation", out var saturation))
+			{
+				entity.HealthManager.Saturation = (int) saturation.Value;
+				entity.HealthManager.MaxSaturation = (int) saturation.MaxValue;
 			}
 		}
 
@@ -1239,7 +1265,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 				if (Client.CanSpawn)
 				{
-					Client.SendMcpeMovePlayer(new MiNET.Utils.PlayerLocation(message.x, message.y, message.z), false);
+					Client.SendMcpeMovePlayer(Client.World.Player.KnownPosition, Client.World.Player.KnownPosition.OnGround);
 				}
 
 				Client.RequestChunkRadius(Client.ChunkRadius);
@@ -1649,7 +1675,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					var p = Client.World.Player.KnownPosition;
 
 					Client.SendMcpeMovePlayer(
-						new MiNET.Utils.PlayerLocation(p.X, p.Y, p.Z, p.HeadYaw, p.Yaw, p.Pitch),
+						Client.World.Player.KnownPosition,
 						Client.World.Player.KnownPosition.OnGround);
 					//Client.SendMcpeMovePlayer(new MiNET.Utils.PlayerLocation(Client.World.Player.KnownPosition.X, Client.World.Player.KnownPosition.Y, Client.World.Player.KnownPosition.Z), false);
 

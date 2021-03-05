@@ -5,6 +5,7 @@ using Alex.Items;
 using Alex.MoLang.Runtime;
 using Alex.MoLang.Runtime.Struct;
 using Alex.MoLang.Runtime.Value;
+using Microsoft.Xna.Framework;
 
 namespace Alex.Graphics.Models.Entity.Animations
 {
@@ -23,18 +24,17 @@ namespace Alex.Graphics.Models.Entity.Animations
 			Functions.Add("life_time", mo => Entity.LifeTime.TotalSeconds);
 			Functions.Add("position_delta", mo =>
 			{
-				var delta = Entity.KnownPosition;
 				double amount = 0d;
 				switch (mo.GetInt(0))
 				{
 					case 0: //X-Axis
-						
+						amount = _delta.X;
 						break;
 					case 1: //Y-Axis
-						
+						amount = _delta.Y;
 						break;
 					case 2: //Z-Axis
-						
+						amount = _delta.Z;
 						break;
 				}
 				
@@ -51,6 +51,7 @@ namespace Alex.Graphics.Models.Entity.Animations
 			
 			Functions.Add("delta_time", mo => _deltaTime.TotalSeconds);
 			Functions.Add("ground_speed", mo => Entity.Movement.MetersPerSecond);
+			Functions.Add("walk_distance", mo => Entity.Movement.DistanceMoved);
 
 			Functions.Add("vertical_speed", mo => Entity.Movement.VerticalSpeed);
 			Functions.Add("time_of_day", mo => ((1f / 24000f) * Entity.Level.TimeOfDay));
@@ -206,9 +207,15 @@ namespace Alex.Graphics.Models.Entity.Animations
 		}
 
 		private TimeSpan _deltaTime = TimeSpan.Zero;
+		private Vector3 _previousPosition = Vector3.Zero;
+		private Vector3 _delta = Vector3.Zero;
 		public void Tick(TimeSpan deltaTime)
 		{
 			_deltaTime = deltaTime;
+			
+			var pos = Entity.RenderLocation.ToVector3();
+			_delta = pos - _previousPosition;
+			_previousPosition = pos;
 		}
 	}
 }

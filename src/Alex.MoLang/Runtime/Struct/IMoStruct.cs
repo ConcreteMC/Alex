@@ -9,5 +9,11 @@ namespace Alex.MoLang.Runtime.Struct
 		IMoValue Get(string key, MoParams parameters);
 
 		void Clear();
+
+		/// <inheritdoc />
+		bool IMoValue.Equals(IMoValue b)
+		{
+			return this.Equals((object)b);
+		}
 	}
 }

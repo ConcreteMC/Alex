@@ -10,7 +10,8 @@ namespace Alex.MoLang.Runtime.Value
 	{
 		object Value { get; }
 
-
+		bool Equals(IMoValue b);
+		
 		string AsString() => Value.ToString();
 
 		double AsDouble() => Value is double db ? db : 0d;

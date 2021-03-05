@@ -120,10 +120,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		private void SendLocation(PlayerLocation location)
 		{
-			Client.SendMcpeMovePlayer(new MiNET.Utils.PlayerLocation(location.X,
-				location.Y + Player.EyeLevel, location.Z, -location.HeadYaw,
-				
-				- location.Yaw, location.Pitch), location.OnGround);
+			Client.SendMcpeMovePlayer(location, location.OnGround);
 		}
 
 		//private ThreadSafeList<ChunkCoordinates> _loadedChunks = new ThreadSafeList<ChunkCoordinates>();
@@ -274,8 +271,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			var p = World.Player.KnownPosition;
 
 			Client.SendMcpeMovePlayer(
-				new MiNET.Utils.PlayerLocation(p.X, p.Y, p.Z, p.HeadYaw, p.Yaw, p.Pitch),
-				World.Player.KnownPosition.OnGround);
+				p,
+				p.OnGround);
 
 			timer.Stop();
 

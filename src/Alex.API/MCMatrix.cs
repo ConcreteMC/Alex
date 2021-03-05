@@ -1539,9 +1539,9 @@ namespace Alex.Api
             translation.Y = this.M42;
             translation.Z = this.M43;
 
-            float xs = (Math.Sign(M11 * M12 * M13 * M14) < 0) ? -1 : 1;
-            float ys = (Math.Sign(M21 * M22 * M23 * M24) < 0) ? -1 : 1;
-            float zs = (Math.Sign(M31 * M32 * M33 * M34) < 0) ? -1 : 1;
+            float xs = (MathF.Sign(M11 * M12 * M13 * M14) < 0f) ? -1f : 1f;
+            float ys = (MathF.Sign(M21 * M22 * M23 * M24) < 0f) ? -1f : 1f;
+            float zs = (MathF.Sign(M31 * M32 * M33 * M34) < 0f) ? -1f : 1f;
 
             scale.X = xs * MathF.Sqrt(this.M11 * this.M11 + this.M12 * this.M12 + this.M13 * this.M13);
             scale.Y = ys * MathF.Sqrt(this.M21 * this.M21 + this.M22 * this.M22 + this.M23 * this.M23);
