@@ -40,7 +40,7 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Entity
 			{
 				if (double.TryParse(keyframe.Key, out double time))
 				{
-					newKeyFrames.Add(time, keyframe.Value);
+					newKeyFrames.TryAdd(time, keyframe.Value);
 				}
 			}
 			
