@@ -1,7 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net5.0</TargetFramework>
+        <Description>A library implementing Minecrafts MoLang language</Description>
+        <PackageProjectUrl>https://github.com/kennyvv/Alex</PackageProjectUrl>
+        <PackageLicenseUrl>https://github.com/kennyvv/Alex/blob/master/LICENSE</PackageLicenseUrl>
+        <RepositoryUrl>https://github.com/kennyvv/Alex</RepositoryUrl>
+        <Configurations>Debug;Release;DirectX</Configurations>
+        <Platforms>AnyCPU;x64</Platforms>
     </PropertyGroup>
 
     <ItemGroup>
