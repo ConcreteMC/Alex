@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -95,7 +96,7 @@ namespace Alex.Worlds.Chunks
 				}
 				else
 				{
-					BlockIndices.Add(blockCoordinates, new List<VertexData>()
+					BlockIndices.Add(blockCoordinates, new List<VertexData>(6)
 					{
 						vertexData
 					});
@@ -133,13 +134,36 @@ namespace Alex.Worlds.Chunks
 			}
 		}
 
-		internal MinifiedBlockShaderVertex[] BuildVertices()
+		
+		internal MinifiedBlockShaderVertex[] BuildVertices(out int length)
 		{
 			lock (_writeLock)
 			{
-				var realVertices = new List<MinifiedBlockShaderVertex>((int) _vertexCount);
+				var blockIndices = BlockIndices;
+				var size = blockIndices.Sum(x => x.Value.Count);
+				length = size;
+				
+				var vertices = ArrayPool<MinifiedBlockShaderVertex>.Shared.Rent(size);
+				//var vertices = new MinifiedBlockShaderVertex[];
 
-				foreach (var block in BlockIndices)
+				int index = 0;
+				foreach (var block in blockIndices)
+				{
+					foreach (var vertex in block.Value)
+					{
+						vertices[index] = new MinifiedBlockShaderVertex(
+							vertex.Position, TextureStorage[vertex.TexCoords], new Color(vertex.Color))
+						{
+							SkyLight = vertex.SkyLight, BlockLight = vertex.BlockLight
+						};
+						index++;
+					}
+				}
+				
+				return vertices;
+				//var realVertices = new List<MinifiedBlockShaderVertex>((int) _vertexCount);
+
+				/*foreach (var block in BlockIndices)
 				{
 					foreach (var vertex in block.Value)
 					{
@@ -152,7 +176,7 @@ namespace Alex.Worlds.Chunks
 					}
 				}
 
-				return realVertices.ToArray();
+				return realVertices.ToArray();*/
 			}
 		}
 
@@ -175,57 +199,67 @@ namespace Alex.Worlds.Chunks
 
 				_previousKeepInMemory = keepInMemory;
 
-				var realVertices = BuildVertices();
+				var realVertices = BuildVertices(out int size);
 
-				if (realVertices.Length == 0)
+				try
 				{
-					_renderableVerticeCount = 0;
-					return;
-				}
+					if (realVertices.Length == 0)
+					{
+						_renderableVerticeCount = 0;
 
-				var verticeCount = realVertices.Length;
-				while (verticeCount % 3 != 0) //Make sure we have a valid triangle list.
-				{
-					verticeCount--;
-				}
-				
-				_renderableVerticeCount = verticeCount;
+						return;
+					}
 
-				bool               callSetData = HasResized;
-				PooledVertexBuffer oldBuffer   = null;
-				PooledVertexBuffer buffer      = Buffer;
+					var verticeCount = realVertices.Length;
 
-				if (buffer != null && buffer.VertexCount - realVertices.Length >= 256)
-				{
-					if (GpuResourceManager.TryGetRecycledBuffer(
-						this, device, MinifiedBlockShaderVertex.VertexDeclaration, realVertices.Length,
-						BufferUsage.WriteOnly, out var b))
+					while (verticeCount % 3 != 0) //Make sure we have a valid triangle list.
+					{
+						verticeCount--;
+					}
+
+					_renderableVerticeCount = verticeCount;
+
+					bool callSetData = HasResized;
+					PooledVertexBuffer oldBuffer = null;
+					PooledVertexBuffer buffer = Buffer;
+
+					if (buffer != null && buffer.VertexCount - size >= 256)
+					{
+						if (GpuResourceManager.TryGetRecycledBuffer(
+							this, device, MinifiedBlockShaderVertex.VertexDeclaration, size,
+							BufferUsage.WriteOnly, out var b))
+						{
+							oldBuffer = buffer;
+							buffer = b;
+
+							callSetData = true;
+						}
+					}
+
+					if (buffer == null || buffer.VertexCount < size)
 					{
 						oldBuffer = buffer;
-						buffer = b;
+
+						buffer = GpuResourceManager.GetBuffer(
+							this, device, MinifiedBlockShaderVertex.VertexDeclaration, size,
+							BufferUsage.WriteOnly);
 
 						callSetData = true;
 					}
+
+					//if (callSetData)
+					buffer.SetData(realVertices, 0, size);
+
+					Buffer = buffer;
+					oldBuffer?.MarkForDisposal();
+
+					HasResized = false;
+					HasChanges = false;
 				}
-				
-				if (buffer == null || buffer.VertexCount < realVertices.Length)
+				finally
 				{
-					oldBuffer = buffer;
-
-					buffer = GpuResourceManager.GetBuffer(
-						this, device, MinifiedBlockShaderVertex.VertexDeclaration, realVertices.Length, BufferUsage.WriteOnly);
-
-					callSetData = true;
+					ArrayPool<MinifiedBlockShaderVertex>.Shared.Return(realVertices, true);
 				}
-
-				//if (callSetData)
-					buffer.SetData(realVertices, 0, realVertices.Length);
-
-				Buffer = buffer;
-				oldBuffer?.MarkForDisposal();
-            
-				HasResized = false;
-				HasChanges = false;
 			}
 		}
         

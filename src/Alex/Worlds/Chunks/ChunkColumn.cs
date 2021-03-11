@@ -154,9 +154,9 @@ namespace Alex.Worlds.Chunks
 										(int) (chunkPosition.X + x), y + (sectionIndex << 4), (int) (chunkPosition.Z + z));
 									ChunkData?.Remove(device, blockPosition);
 									
-									foreach (var state in section.GetAll(x, y, z))
+									for(int storage = 0; storage < section.StorageCount; storage++)
 									{
-										var blockState = state.State;
+										var blockState = section.Get(x, y, z, storage);
 										if (blockState == null || blockState?.VariantMapper?.Model == null || blockState.Block == null || !blockState.Block.Renderable)
 											continue;
 										
@@ -171,7 +171,7 @@ namespace Alex.Worlds.Chunks
 											{
 												blockState = newblockState;
 
-												section.Set(state.Storage, x, y, z, blockState);
+												section.Set(storage, x, y, z, blockState);
 												model = blockState?.VariantMapper?.Model;
 											}
 										}

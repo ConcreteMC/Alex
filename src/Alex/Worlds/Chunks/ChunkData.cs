@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -59,7 +60,15 @@ namespace Alex.Worlds.Chunks
 
                     if (stage == null) continue;
 
-                    vertices.AddRange(stage.BuildVertices());
+                    var range = stage.BuildVertices(out int size);
+                    try
+                    {
+                        vertices.AddRange(range.Take(size));
+                    }
+                    finally
+                    {
+                        ArrayPool<MinifiedBlockShaderVertex>.Shared.Return(range, true);
+                    }
                 }
 
                 return vertices.ToArray();
