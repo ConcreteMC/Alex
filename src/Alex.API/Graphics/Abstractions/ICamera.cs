@@ -1,5 +1,4 @@
-﻿using Alex.Api;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 
 namespace Alex.API.Graphics
 {
@@ -10,10 +9,10 @@ namespace Alex.API.Graphics
 		float           FOV              { get; set; }
 		float           AspectRatio      { get;  }
 		Vector3         Position         { get; set; }
-		MCMatrix        ProjectionMatrix { get; set; }
+		Matrix        ProjectionMatrix { get; set; }
 		Vector3         Rotation         { get; set; }
 		Vector3         Target           { get; }
-		MCMatrix        ViewMatrix       { get; set; }
+		Matrix        ViewMatrix       { get; set; }
 		
 		void MoveTo(Vector3 position, Vector3 rotation);
 		void Update(IUpdateArgs args);

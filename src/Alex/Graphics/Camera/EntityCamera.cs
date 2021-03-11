@@ -1,4 +1,4 @@
-using Alex.Api;
+
 using Alex.API.Graphics;
 using Alex.API.Utils;
 using Alex.Entities;
@@ -84,7 +84,7 @@ namespace Alex.Graphics.Camera
 			Target = position + direction;
 			Direction = direction;
 
-			ViewMatrix = MCMatrix.CreateLookAt(position, Target, Vector3.Up);
+			ViewMatrix = Matrix.CreateLookAt(position, Target, Vector3.Up);
 			
 			Frustum = new BoundingFrustum(ViewMatrix * ProjectionMatrix);
 		}
@@ -110,7 +110,7 @@ namespace Alex.Graphics.Camera
 
 			Target = position;
 
-			ViewMatrix = MCMatrix.CreateLookAt(lookAtOffset, position , Vector3.Up);
+			ViewMatrix = Matrix.CreateLookAt(lookAtOffset, position , Vector3.Up);
 			
 			Frustum = new BoundingFrustum(ViewMatrix * ProjectionMatrix);
 		}

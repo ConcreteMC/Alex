@@ -1,4 +1,4 @@
-using Alex.Api;
+
 using Alex.API.Gui.Elements.Controls;
 using Alex.API.Gui.Graphics;
 using Alex.API.Utils;
@@ -107,7 +107,7 @@ namespace Alex.Gui.Elements.Inventory
             Camera.Update(args);
             Camera.UpdateProjectionMatrix();
             
-            item.Renderer.Update(args, MCMatrix.CreateTranslation(new Vector3(0,0,0)), Vector3.One);
+            item.Renderer.Update(args, Matrix.CreateTranslation(new Vector3(0,0,0)), Vector3.One);
         }
 
         protected override void OnDraw(GuiSpriteBatch graphics, GameTime gameTime)

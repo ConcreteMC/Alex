@@ -1,5 +1,4 @@
-﻿using Alex.Api;
-using Alex.API.Gui.Elements;
+﻿using Alex.API.Gui.Elements;
 using Alex.API.Gui.Graphics;
 using Alex.API.Utils;
 using Alex.API.Utils.Vectors;
@@ -178,21 +177,21 @@ namespace Alex.Gui.Elements.Context3D
 
             protected override void UpdateViewMatrix()
             {
-                MCMatrix rotationMatrix = (MCMatrix.CreateRotationX(Rotation.X) *
-                                           MCMatrix.CreateRotationY(Rotation.Y));
+                Matrix rotationMatrix = (Matrix.CreateRotationX(Rotation.X) *
+                                           Matrix.CreateRotationY(Rotation.Y));
                 
                 Target = Position;
 
                 Direction = Vector3.Transform(Vector3.Forward, rotationMatrix);
 
-                ViewMatrix = MCMatrix.CreateLookAt(Target + CameraPositionOffset, Target + TargetPositionOffset, Vector3.Up);
+                ViewMatrix = Matrix.CreateLookAt(Target + CameraPositionOffset, Target + TargetPositionOffset, Vector3.Up);
             }
 
             public override void UpdateProjectionMatrix()
             {
                 //ProjectionMatrix = Matrix.CreatePerspectiveOffCenter(Viewport.RenderBounds, NearDistance, FarDistance);
                 ProjectionMatrix =
-                    MCMatrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(FOV), Viewport.AspectRatio,
+                    Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(FOV), Viewport.AspectRatio,
                         NearDistance, FarDistance);
             }
 

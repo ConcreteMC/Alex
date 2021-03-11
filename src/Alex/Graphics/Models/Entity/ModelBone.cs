@@ -2,8 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using Alex.Api;
-using Alex.API;
+
 using Alex.API.Graphics;
 using Alex.API.Utils;
 using Alex.API.Utils.Collections;
@@ -81,7 +80,7 @@ namespace Alex.Graphics.Models.Entity
 				}
 			}
 
-			private MCMatrix WorldMatrix   { get; set; } = MCMatrix.Identity;
+			private Matrix WorldMatrix   { get; set; } = Matrix.Identity;
 
 			private Vector3 _startRotation = Vector3.Zero;
 			private Vector3 _targetRotation = Vector3.Zero;
@@ -175,7 +174,7 @@ namespace Alex.Graphics.Models.Entity
 			}
 			
 			public void Update(IUpdateArgs args,
-				MCMatrix characterMatrix, Vector3 parentScale)
+				Matrix characterMatrix, Vector3 parentScale)
 			{
 				if (_disposed) return;
 
@@ -237,21 +236,21 @@ namespace Alex.Graphics.Models.Entity
 						}
 					}*/
 					
-					MCMatrix matrix;
+					Matrix matrix;
 					
 					if (Definition.Pivot.HasValue)
 					{
 						var pivot = (Definition.Pivot ?? Vector3.Zero);
-						matrix = MCMatrix.CreateTranslation(-pivot) 
-						                                     * MCMatrix.CreateRotationDegrees(rotation)
-						                                     * MCMatrix.CreateTranslation(pivot)
-						                                     * MCMatrix.CreateTranslation(translation)
+						matrix = Matrix.CreateTranslation(-pivot) 
+						                                     * MatrixHelper.CreateRotationDegrees(rotation)
+						                                     * Matrix.CreateTranslation(pivot)
+						                                     * Matrix.CreateTranslation(translation)
 							                                     * characterMatrix;
 					}
 					else
 					{
-						matrix =MCMatrix.CreateRotationDegrees(rotation)
-						                                     * MCMatrix.CreateTranslation(translation)
+						matrix = MatrixHelper.CreateRotationDegrees(rotation)
+						                                     * Matrix.CreateTranslation(translation)
 						                                     * characterMatrix;
 					}
 
@@ -269,14 +268,14 @@ namespace Alex.Graphics.Models.Entity
 					if (Definition.Pivot.HasValue)
 					{
 						var pivot = (Definition.Pivot ?? Vector3.Zero);
-						WorldMatrix = MCMatrix.CreateTranslation(-pivot) 
-						                                          * MCMatrix.CreateRotationDegrees(bindingRotation)
-						                                          * MCMatrix.CreateTranslation(pivot)
+						WorldMatrix = Matrix.CreateTranslation(-pivot) 
+						                                          * MatrixHelper.CreateRotationDegrees(bindingRotation)
+						                                          * Matrix.CreateTranslation(pivot)
 						                                          * matrix;
 					}
 					else
 					{
-						WorldMatrix = MCMatrix.CreateRotationDegrees(bindingRotation)  * matrix;
+						WorldMatrix = MatrixHelper.CreateRotationDegrees(bindingRotation)  * matrix;
 					}
 				}
 				finally

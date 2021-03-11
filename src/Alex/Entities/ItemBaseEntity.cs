@@ -1,4 +1,4 @@
-using Alex.Api;
+
 using Alex.API.Graphics;
 using Alex.Graphics.Models.Items;
 using Alex.Items;
@@ -57,9 +57,9 @@ namespace Alex.Entities
 			{
 				ItemRenderer.Update(
 					args,
-					MCMatrix.Identity * MCMatrix.CreateScale(Scale)
-					                  * MCMatrix.CreateRotationY(MathHelper.ToRadians(KnownPosition.Yaw))
-					                  * MCMatrix.CreateTranslation(KnownPosition.ToVector3()), new Vector3(Scale));
+					Matrix.Identity * Matrix.CreateScale(Scale)
+					                  * Matrix.CreateRotationY(MathHelper.ToRadians(KnownPosition.Yaw))
+					                  * Matrix.CreateTranslation(KnownPosition.ToVector3()), new Vector3(Scale));
 			}
 		}
 		

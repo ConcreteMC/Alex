@@ -6,7 +6,6 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
-using Alex.Api;
 using Alex.API.Blocks;
 using Alex.API.Graphics;
 using Microsoft.Xna.Framework;
@@ -28,11 +27,11 @@ namespace Alex
 		/// <param name="position">Source <see cref="T:Microsoft.Xna.Framework.Vector3" />.</param>
 		/// <param name="matrix">The transformation <see cref="T:Microsoft.Xna.Framework.Matrix" />.</param>
 		/// <returns>Transformed <see cref="T:Microsoft.Xna.Framework.Vector3" />.</returns>
-		public static Vector3 Transform(this Vector3 position, MCMatrix matrix)
+		public static Vector3 Transform(this Vector3 position, Matrix matrix)
 		{
 			return Vector3.Transform(position, matrix);
-			Transform(ref position, ref matrix, out position);
-			return position;
+			//Transform(ref position, ref matrix, out position);
+			//return position;
 		}
 
 		/// <summary>
@@ -41,7 +40,7 @@ namespace Alex
 		/// <param name="position">Source <see cref="T:Microsoft.Xna.Framework.Vector3" />.</param>
 		/// <param name="matrix">The transformation <see cref="T:Microsoft.Xna.Framework.Matrix" />.</param>
 		/// <param name="result">Transformed <see cref="T:Microsoft.Xna.Framework.Vector3" /> as an output parameter.</param>
-		public static void Transform(ref Vector3 position, ref MCMatrix matrix, out Vector3 result)
+		public static void Transform(ref Vector3 position, ref Matrix matrix, out Vector3 result)
 		{
 			result.X =  position.X * matrix.M11 +  position.Y *  matrix.M21 +  position.Z *  matrix.M31 + matrix.M41;
 			result.Y =  position.X * matrix.M12 +  position.Y *  matrix.M22 +  position.Z *  matrix.M32 + matrix.M42;

@@ -1,4 +1,4 @@
-using Alex.Api;
+
 using Alex.API.Graphics;
 using Alex.API.Utils;
 using Alex.Graphics.Models.Items;
@@ -41,17 +41,17 @@ namespace Alex.Entities.Projectiles
                 {
                     //var offset = new Vector3((float) Width, (float) Height, (float) Width) / 2f;
                     var offset = new Vector3((float) Width, 0f, (float) Width);
-                    ItemRenderer.Update(args, MCMatrix.CreateScale(scale)
+                    ItemRenderer.Update(args, Matrix.CreateScale(scale)
                                              // * MCMatrix.CreateTranslation(-offset)
-                                              * MCMatrix.CreateRotationY(MathHelper.ToRadians(_rotation)) 
+                                              * Matrix.CreateRotationY(MathHelper.ToRadians(_rotation)) 
                                             //  * MCMatrix.CreateTranslation(offset)
-                                              * MCMatrix.CreateTranslation(knownPos), new Vector3(scale));
+                                              * Matrix.CreateTranslation(knownPos), new Vector3(scale));
                 }
                 else
                 {
-                    ItemRenderer.Update(args,  MCMatrix.CreateScale(scale)
-                                               * MCMatrix.CreateRotationY(MathHelper.ToRadians(KnownPosition.Yaw))
-                                               * MCMatrix.CreateTranslation(knownPos), new Vector3(scale));
+                    ItemRenderer.Update(args,  Matrix.CreateScale(scale)
+                                               * Matrix.CreateRotationY(MathHelper.ToRadians(KnownPosition.Yaw))
+                                               * Matrix.CreateTranslation(knownPos), new Vector3(scale));
                 }
             }
 

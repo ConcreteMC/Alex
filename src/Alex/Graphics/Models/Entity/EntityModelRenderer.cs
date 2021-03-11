@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Alex.Api;
+
 using Alex.API.Graphics;
 using Alex.API.Utils;
 using Alex.API.Utils.Vectors;
@@ -136,7 +136,7 @@ namespace Alex.Graphics.Models.Entity
 
 					var      origin = cube.InflatedOrigin(inflation);
 					
-					MCMatrix matrix = MCMatrix.CreateTranslation(origin);
+					Matrix matrix = Matrix.CreateTranslation(origin);
 					if (cube.Rotation.HasValue)
 					{
 						var rotation = cube.Rotation.Value;
@@ -149,10 +149,10 @@ namespace Alex.Graphics.Models.Entity
 						}
 						
 						matrix =
-							    MCMatrix.CreateTranslation(origin)
-								* MCMatrix.CreateTranslation((-pivot)) 
-						         * MCMatrix.CreateRotationDegrees(rotation)
-						         * MCMatrix.CreateTranslation(pivot);
+							    Matrix.CreateTranslation(origin)
+								* Matrix.CreateTranslation((-pivot)) 
+						         * MatrixHelper.CreateRotationDegrees(rotation)
+						         * Matrix.CreateTranslation(pivot);
 					}
 					
 					Cube built = new Cube(cube, textureSize, mirror, inflation);
@@ -206,7 +206,7 @@ namespace Alex.Graphics.Models.Entity
 		}
 
 		private void ModifyCubeIndexes(ref List<VertexPositionColorTexture> vertices,
-			(VertexPositionColorTexture[] vertices, short[] indexes) data, Vector3 origin, MCMatrix transformation)
+			(VertexPositionColorTexture[] vertices, short[] indexes) data, Vector3 origin, Matrix transformation)
 		{
 			for (int i = 0; i < data.indexes.Length; i++)
 			{
@@ -280,7 +280,7 @@ namespace Alex.Graphics.Models.Entity
 
 			//var rot = position.GetDirectionMatrix(false);
 
-			var matrix =  MCMatrix.CreateScale(Scale / 16f) * position.CalculateWorldMatrix();
+			var matrix =  Matrix.CreateScale(Scale / 16f) * position.CalculateWorldMatrix();
 			//var matrix =  MCMatrix.CreateScale(Scale / 16f) * position.GetDirectionMatrix(false) * MCMatrix.CreateTranslation(position.ToVector3()); /*MCMatrix.CreateScale(Scale / 16f)
 			    //         * MCMatrix.CreateRotation(MathUtils.ToRadians(position.Yaw), Vector3.Down)
 			  //           * MCMatrix.CreateTranslation(position);*/

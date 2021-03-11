@@ -1,5 +1,5 @@
 ﻿using System;
-using Alex.Api;
+
 using Alex.API.Graphics;
 using Alex.API.Utils;
 using Microsoft.Xna.Framework;
@@ -43,7 +43,7 @@ namespace Alex.Graphics.Camera
 		{
 			FarDistance = renderDistance * 16 * 16;// MathF.Pow(renderDistance, 2f);
 			
-			ProjectionMatrix = MCMatrix.CreatePerspectiveFieldOfView(
+			ProjectionMatrix = Matrix.CreatePerspectiveFieldOfView(
 				MathHelper.ToRadians(FOV + FOVModifier),
 				AspectRatio,
 				NearDistance,
@@ -52,11 +52,11 @@ namespace Alex.Graphics.Camera
 		
 		public Vector3 Offset { get; private set; } = Vector3.Zero;
 
-		private MCMatrix _projectionMatrix;
+		private Matrix _projectionMatrix;
         /// <summary>
         /// 
         /// </summary>
-        public MCMatrix ProjectionMatrix 
+        public Matrix ProjectionMatrix 
         {
 	        get
 	        {
@@ -69,12 +69,12 @@ namespace Alex.Graphics.Camera
 	        }
         }
 
-        private MCMatrix _viewMatrix;
+        private Matrix _viewMatrix;
 
         /// <summary>
         /// 
         /// </summary>
-        public MCMatrix ViewMatrix
+        public Matrix ViewMatrix
         {
 	        get
 	        {
@@ -133,7 +133,7 @@ namespace Alex.Graphics.Camera
         /// </summary>
         protected virtual void UpdateViewMatrix()
         {
-	        MCMatrix rotationMatrix = MCMatrix.CreateRotation(Rotation); 
+	        Matrix rotationMatrix = MatrixHelper.CreateRotation(Rotation); 
 
 	        Vector3 lookAtOffset = Vector3.Backward.Transform(rotationMatrix);
 	        Direction = lookAtOffset;
@@ -141,7 +141,7 @@ namespace Alex.Graphics.Camera
 	        var pos = Position;
 	        
 			Target = pos + lookAtOffset;
-	        _viewMatrix = MCMatrix.CreateLookAt(pos, Target, Vector3.Up);
+	        _viewMatrix = Matrix.CreateLookAt(pos, Target, Vector3.Up);
 	        
 	        Frustum = new BoundingFrustum(_viewMatrix * _projectionMatrix);
 		}
@@ -158,7 +158,7 @@ namespace Alex.Graphics.Camera
 
 	    public virtual void UpdateProjectionMatrix()
 		{
-			_projectionMatrix = MCMatrix.CreatePerspectiveFieldOfView(
+			_projectionMatrix = Matrix.CreatePerspectiveFieldOfView(
 				MathHelper.ToRadians(FOV + FOVModifier),
 				AspectRatio,
 				NearDistance,

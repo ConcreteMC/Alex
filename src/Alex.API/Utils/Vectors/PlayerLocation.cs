@@ -1,5 +1,4 @@
 ﻿using System;
-using Alex.Api;
 using Microsoft.Xna.Framework;
 
 namespace Alex.API.Utils.Vectors
@@ -154,12 +153,12 @@ namespace Alex.API.Utils.Vectors
 		//	return vector;
 		}
 
-		public MCMatrix GetDirectionMatrix(bool includePitch = false, bool useHeadYaw = false)
+		public Matrix GetDirectionMatrix(bool includePitch = false, bool useHeadYaw = false)
 		{
 			float pitch = (includePitch ? Pitch : 0f).ToRadians();
 			float yaw   = ((useHeadYaw ? HeadYaw : Yaw)).ToRadians();
 
-			return MCMatrix.CreateRotationX(pitch) * MCMatrix.CreateRotationY(yaw);
+			return Matrix.CreateRotationX(pitch) * Matrix.CreateRotationY(yaw);
 		}
 		
 		public static PlayerLocation operator *(PlayerLocation a, float b)
@@ -209,10 +208,10 @@ namespace Alex.API.Utils.Vectors
 			return MemberwiseClone();
 		}
 
-		public MCMatrix CalculateWorldMatrix()
+		public Matrix CalculateWorldMatrix()
 		{
 			var dir = GetDirection(false);
-			return MCMatrix.CreateWorld(ToVector3(), dir, Vector3.Up);
+			return Matrix.CreateWorld(ToVector3(), dir, Vector3.Up);
 		}
 
 		public override string ToString()
