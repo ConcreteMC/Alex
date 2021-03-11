@@ -69,6 +69,7 @@ namespace Alex.Gamestates
 					{
 						Title = "Debugging",
 						IsTranslatable = false,
+						Visible = !VersionUtils.IsReleaseBuild,
 						Children =
 						{
 							new MenuItem()
@@ -85,14 +86,6 @@ namespace Alex.Gamestates
 								OnClick = (sender, args) =>
 								{
 									Debug(new FlatlandGenerator());
-								}
-							},
-							new MenuItem()
-							{
-								Title = "Chunk Debug",
-								OnClick = (sender, args) =>
-								{
-									Debug(new ChunkDebugWorldGenerator());
 								}
 							}
 						}

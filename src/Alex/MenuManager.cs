@@ -41,6 +41,7 @@ namespace Alex
 		public EventHandler<MenuItemClickedEventArgs> OnClick;
 		
 		public MenuType Type { get; }
+		public bool Visible { get; set; } = true;
 		public MenuItem(MenuType type = MenuType.Button)
 		{
 			Type = type;
@@ -86,7 +87,8 @@ namespace Alex
 						}
 					};
 
-					elements.Add(me);
+					if (Visible)
+						elements.Add(me);
 				}
 			}
 
