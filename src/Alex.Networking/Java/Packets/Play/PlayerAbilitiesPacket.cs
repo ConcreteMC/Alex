@@ -32,5 +32,12 @@ namespace Alex.Networking.Java.Packets.Play
 			//	stream.WriteFloat(WalkingSpeed);
 		    }
 	    }
+
+	    /// <inheritdoc />
+	    protected override void ResetPacket()
+	    {
+		    base.ResetPacket();
+		    ServerBound = false;
+	    }
     }
 }

@@ -195,13 +195,23 @@ namespace Alex.Worlds
 		}
 
 		public bool AddTickable(Entity entity)
-	    {
-		    return PhysicsEntities.TryAdd(entity);
+		{
+			var collection = PhysicsEntities;
+
+			if (collection == null)
+				return false;
+			
+		    return collection.TryAdd(entity);
 	    }
 
 	    public bool Remove(Entity entity)
 	    {
-		    return PhysicsEntities.Remove(entity);
+		    var collection = PhysicsEntities;
+
+		    if (collection == null)
+			    return false;
+		    
+		    return collection.Remove(entity);
 	    }
 
 

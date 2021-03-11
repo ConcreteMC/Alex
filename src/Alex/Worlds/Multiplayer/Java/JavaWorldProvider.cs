@@ -7,6 +7,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using Alex.API.Data;
 using Alex.API.Data.Options;
@@ -811,7 +812,8 @@ namespace Alex.Worlds.Multiplayer.Java
 		}
 
 		private ThreadSafeList<string> _missingSounds = new ThreadSafeList<string>();
-		
+
+		private static readonly Regex _blockRegex = new Regex("block\\.(?<name>.*)\\.(?<action>.*)", RegexOptions.Compiled);
 		private void HandleSoundEffectPacket(SoundEffectPacket packet)
 		{
 			var soundEffect =
@@ -822,13 +824,46 @@ namespace Alex.Worlds.Multiplayer.Java
 
 			soundEffect = soundEffect.Replace("minecraft:", "");
 
-			switch (soundEffect)
+			var match = _blockRegex.Match(soundEffect);
+		
+			if (match.Success)
 			{
-				case "block.anvil.hit":
-					soundEffect = "random.anvil.use";
-					break;
+				string action = match.Groups["action"].Value;
+				switch(action)
+				{
+					case "break":
+						action = "dig";
+						break;
+				}
+				soundEffect = $"{action}.{match.Groups["name"].Value}";
 			}
-			
+			else
+			{
+				/*match = _blockBreakRegex.Match(soundEffect);
+
+				if (match.Success)
+				{
+					soundEffect = $"dig.{match.Groups["name"].Value}";
+				}
+				else
+				{
+					match = _blockStepRegex.Match(soundEffect);
+
+					if (match.Success)
+					{
+						
+					}
+				}*/
+				
+				switch (soundEffect)
+				{
+					case "block.anvil.hit":
+						soundEffect = "random.anvil.use";
+
+						break;
+				}
+			}
+
 			if (!Alex.AudioEngine.PlaySound(soundEffect, packet.Position, packet.Pitch, packet.Volume))
 			{
 				if (_missingSounds.TryAdd(soundEffect))

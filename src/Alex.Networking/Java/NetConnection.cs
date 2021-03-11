@@ -83,20 +83,32 @@ namespace Alex.Networking.Java
 			StartTime = DateTime.UtcNow;
 		}
 
+		private bool _stopped = false;
 		public void Stop()
-        {
-            if (CancellationToken.IsCancellationRequested) return;
-            CancellationToken.Cancel();
+		{
+			if (_stopped)
+				return;
 
-            if (SocketConnected(Socket))
-            {
-                //TODO
-                Disconnected(true);
-            }
-            else
-            {
-                Disconnected(false);
-            }
+			try
+			{
+				if (CancellationToken.IsCancellationRequested) return;
+				CancellationToken.Cancel();
+
+				if (SocketConnected(Socket))
+				{
+					//TODO
+					Disconnected(true);
+				}
+				else
+				{
+					Disconnected(false);
+				}
+			}
+			catch (SocketException) { }
+			finally
+			{
+				_stopped = true;
+			}
         }
 
         private object _disconnectSync = false;
@@ -415,6 +427,10 @@ namespace Alex.Networking.Java
 						    break;
 					    }
 					    catch (SocketException)
+					    {
+						    break;
+					    }
+					    catch (IOException)
 					    {
 						    break;
 					    }
