@@ -2330,7 +2330,7 @@ namespace Alex.Worlds.Multiplayer.Java
 				return;
 			}
 
-			var cryptoProvider = AsnKeyBuilder.DecodePublicKey(packet.PublicKey);
+			var cryptoProvider = RsaHelper.DecodePublicKey(packet.PublicKey);
 			//Log.Info($"Crypto: {cryptoProvider == null} Pub: {packet.PublicKey} Shared: {SharedSecret}");
 			var encrypted = cryptoProvider.Encrypt(SharedSecret, RSAEncryptionPadding.Pkcs1);
 

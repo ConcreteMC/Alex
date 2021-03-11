@@ -139,8 +139,8 @@ namespace Alex.Networking.Java
 	    public void InitEncryption(byte[] sharedKey)
 	    {
 		    SharedSecret = sharedKey;
-			_readerStream.InitEncryption(SharedSecret, false);
-			_sendStream.InitEncryption(SharedSecret, true);
+			_readerStream.InitEncryption(SharedSecret);
+			_sendStream.InitEncryption(SharedSecret);
 		    EncryptionInitiated = true;
 	    }
 
