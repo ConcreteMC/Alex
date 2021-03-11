@@ -243,7 +243,7 @@ namespace Alex.Worlds.Multiplayer.Java
 				else if (Math.Abs(pos.Pitch - _lastSentLocation.Pitch) > 0f || Math.Abs(pos.HeadYaw - _lastSentLocation.Yaw) > 0f)
 				{
 					PlayerLookPacket playerLook = PlayerLookPacket.CreateObject();
-					playerLook.Pitch = -pos.Pitch;
+					playerLook.Pitch = FixPitch(pos.Pitch);
 					playerLook.Yaw = -pos.HeadYaw;
 					playerLook.OnGround = pos.OnGround;
 
@@ -276,11 +276,21 @@ namespace Alex.Worlds.Multiplayer.Java
 			}
 		}
 
+		private float FixPitch(float pitch)
+		{
+			if (pitch >= 270f && pitch <= 360f)
+			{
+				return -(360f - pitch);
+			}
+
+			return pitch;
+		}
+
 		private void SendPlayerPostionAndLook(PlayerLocation pos)
 		{
 			PlayerPositionAndLookPacketServerBound packet = PlayerPositionAndLookPacketServerBound.CreateObject();
 			packet.Yaw = -pos.HeadYaw;
-			packet.Pitch = -pos.Pitch;
+			packet.Pitch = FixPitch(pos.Pitch);
 			packet.X = pos.X;
 			packet.Y = pos.Y;
 			packet.Z = pos.Z;
@@ -1591,7 +1601,7 @@ namespace Alex.Worlds.Multiplayer.Java
 			{
 				RemotePlayer entity = new RemotePlayer(
 					World, "geometry.humanoid.custom");
-					
+				
 				entity.UpdateGamemode((GameMode) entry.Gamemode);
 				entity.UUID = packet.Uuid;
 					

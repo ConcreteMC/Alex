@@ -89,7 +89,7 @@ namespace Alex.API.Utils.Vectors
 
 				if (max < min)
 				{
-					pitch = 269.99f;
+					pitch = 270.99f;
 				}
 				else if (min < max)
 				{

@@ -246,6 +246,8 @@ namespace Alex.Services
 						}
 						else
 						{
+							conn?.Stop();
+							//conn = null;
 							statusCallBack?.Invoke(new ServerQueryResponse(false, "multiplayer.status.cannot_connect",
 								new ServerQueryStatus()
 								{
