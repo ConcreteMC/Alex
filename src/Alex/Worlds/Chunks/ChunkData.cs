@@ -133,11 +133,11 @@ namespace Alex.Worlds.Chunks
            {
                try
                {
-                   Disposed = true;
-
-                   foreach (var stage in _stages.Where(x => x != null))
+                   for (var index = 0; index < _stages.Length; index++)
                    {
-                       stage.Dispose();
+                       var stage = _stages[index];
+                       stage?.Dispose();
+                       _stages[index] = null;
                    }
                }
                finally
@@ -146,6 +146,7 @@ namespace Alex.Worlds.Chunks
 
                    //  Disposed = true;
                    Interlocked.Decrement(ref _instances);
+                   Disposed = true;
                }
            }
         }

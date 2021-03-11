@@ -675,12 +675,7 @@ namespace Alex.Worlds
 				FastUpdateQueue.Clear();
 				UpdateBorderQueue.Clear();
 
-				foreach (var chunk in Chunks)
-				{
-					chunk.Value.Dispose();
-				}
-
-				Chunks.Clear();
+				ClearChunks();
 
 				foreach (var rendered in _renderedChunks)
 					rendered.Dispose();

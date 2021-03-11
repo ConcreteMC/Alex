@@ -275,10 +275,9 @@ namespace Alex.Worlds.Chunks
 
 				BlockIndices.Clear();
 
+				Buffer?.MarkForDisposal();
 				Buffer = null;
 				BlockIndices = null;
-
-				Buffer?.MarkForDisposal();
 			}
 			finally
 			{
