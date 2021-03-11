@@ -153,30 +153,36 @@ namespace Alex.Blocks.State
 		private static readonly Regex VariantParser = new Regex("(?'property'[^=,]*?)=(?'value'[^,]*)", RegexOptions.Compiled);
 		public static Dictionary<string, string> ParseData(string variant)
 		{
-			var match = VariantParser.Match(variant);
+			var matches = VariantParser.Matches(variant);
 
-			Dictionary<string, string> values  = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-
-			if (match.Success)
+			if (matches.Count > 0)
 			{
-				Match lastMatch = null;
+				Dictionary<string, string> values  = new Dictionary<string, string>(matches.Count, StringComparer.OrdinalIgnoreCase);
+				
+				foreach (Match match in matches)
+				{
+					values.Add(match.Groups["property"].Value, match.Groups["value"].Value);
+				}
 
-				do
+				return values;
+				//Match lastMatch = null;
+
+				/*do
 				{
 					//	var match = matches[i];
-					values.Add(match.Groups["property"].Value, match.Groups["value"].Value);
+				
 
 					lastMatch = match;
 					match = match.NextMatch();
 
 					if (!match.Success)
 						break;
-				} while (match != lastMatch);
+				} while (match != lastMatch);*/
 			}
 
 			//values[match.Groups["property"].Value] = match.Groups["value"].Value;
 
-			return values;
+			return null;
 		}
 
 		public BlockState CloneSilent()
