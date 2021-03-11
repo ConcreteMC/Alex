@@ -541,11 +541,14 @@ namespace Alex.Worlds.Chunks
 		{
 			lock (_dataLock)
 			{
-				foreach (var chunksSection in Sections)
+				for (var index = 0; index < Sections.Length; index++)
 				{
+					var chunksSection = Sections[index];
 					chunksSection?.Dispose();
+					Sections[index] = null;
 				}
 
+				//Sections = null;
 				ChunkData?.Dispose();
 				ChunkData = null;
 			}

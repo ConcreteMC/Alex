@@ -27,14 +27,14 @@ namespace Alex.Worlds.Chunks
 		public             NibbleArray    BlockLight;
 		public             NibbleArray    SkyLight;
 
-		private readonly System.Collections.BitArray _scheduledUpdates;
-        private readonly System.Collections.BitArray _scheduledSkylightUpdates;
-        private readonly System.Collections.BitArray _scheduledBlocklightUpdates;
+		private System.Collections.BitArray _scheduledUpdates;
+        private System.Collections.BitArray _scheduledSkylightUpdates;
+        private System.Collections.BitArray _scheduledBlocklightUpdates;
         
         public int SkyLightUpdates { get; private set; } = 0;
         public int BlockLightUpdates { get; private set; } = 0;
         
-        public List<BlockCoordinates> LightSources { get; } = new List<BlockCoordinates>();
+        public List<BlockCoordinates> LightSources { get; private set; } = new List<BlockCoordinates>();
         
 		public bool IsAllAir => BlockRefCount == 0;
 
@@ -347,7 +347,18 @@ namespace Alex.Worlds.Chunks
 		    for (int i = 0; i < BlockStorages.Length; i++)
 		    {
 			    BlockStorages[i]?.Dispose();
+			    BlockStorages[i] = null;
 		    }
+		    
+		    LightSources.Clear();
+		    LightSources = null;
+
+		    BlockLight = null;
+		    SkyLight = null;
+		    
+		    _scheduledUpdates = null;
+		    _scheduledBlocklightUpdates = null;
+		    _scheduledSkylightUpdates = null;
 	    }
 
 	    public class BlockEntry

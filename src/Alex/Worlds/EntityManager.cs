@@ -277,18 +277,28 @@ namespace Alex.Worlds
 			}
 		}
 
-		public void Dispose()
+		private void Clear()
 		{
+			var blockEntities = BlockEntities.ToArray();
+			BlockEntities.Clear();
+			
+			foreach (var blockEntity in blockEntities)
+			{
+				BlockEntities.TryRemove(blockEntity.Key, out _);
+				blockEntity.Value?.Dispose();
+			}
+			
 			var entities = Entities.ToArray();
 			Entities.Clear();
 			EntityByUUID.Clear();
 
 			foreach (var entity in entities)
 			{
-				entity.Deconstruct(out _, out _);
+				entity.Deconstruct(out _, out var e);
+				e?.Dispose();
 			}
 		}
-
+		
 		public void UnloadEntities(ChunkCoordinates coordinates)
 		{
 			foreach (var entity in Entities.ToArray())
@@ -306,8 +316,13 @@ namespace Alex.Worlds
 			{
 				if (removeId)
 				{
-					Entities.TryRemove(e.EntityId, out e);
+					if (Entities.TryRemove(e.EntityId, out e))
+					{
+						
+					}
 				}
+				
+				e?.Dispose();
 			}
 		}
 
@@ -359,7 +374,7 @@ namespace Alex.Worlds
 			if (Entities.TryRemove(id, out Entity entity))
 			{
 				Remove(entity.UUID, false);
-				entity.Dispose();
+				entity?.Dispose();
 
 				return true;
 			}
@@ -384,15 +399,12 @@ namespace Alex.Worlds
 
 	    public void ClearEntities()
 	    {
-		    foreach(var entity in Entities.ToArray())
-		    {
-			    Remove(entity.Key);
-		    }
-
-		    foreach (var blockEntity in BlockEntities.ToArray())
-		    {
-			    BlockEntities.TryRemove(blockEntity.Key, out _);
-		    }
+		    Clear();
+	    }
+	    
+	    public void Dispose()
+	    {
+		    Clear();
 	    }
 	}
 }

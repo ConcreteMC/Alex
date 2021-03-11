@@ -34,11 +34,22 @@ namespace Alex.Graphics.Models.Entity
 			}
 			set
 			{
-				_texture = value;
+				var oldValue = _texture;
 
-				if (Effect != null && value != null)
+				try
 				{
-					Effect.Texture = value;
+					_texture = value;
+					value?.Use();
+					
+					if (Effect != null && value != null)
+					{
+						Effect.Texture = value;
+					}
+				}
+				finally
+				{
+					oldValue?.Release();
+					oldValue?.MarkForDisposal();
 				}
 			}
 		}
@@ -106,7 +117,7 @@ namespace Alex.Graphics.Models.Entity
 			Effect.VertexColorEnabled = true;
 			
 			Valid = true;
-			_texture = texture;
+			Texture = texture;
 		}
 
 		private ModelBone ProcessBone(
@@ -329,13 +340,15 @@ namespace Alex.Graphics.Models.Entity
 				}
 			}
 
-			//Texture?.MarkForDisposal();
+			var texture = Texture;
+			texture?.Release();
+			texture?.MarkForDisposal();
 			VertexBuffer?.MarkForDisposal();
 			Effect?.Dispose();
 
 			Effect = null;
 			VertexBuffer = null;
-			Texture = null;
+			texture = null;
 		}
 
 		public void ApplyPending()

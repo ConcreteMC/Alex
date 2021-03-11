@@ -431,6 +431,7 @@ namespace Alex.API.Graphics
 
     public class PooledTexture2D : Texture2D, IGpuResource
     {
+        private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(PooledTexture2D));
         public GpuResourceManager Parent             { get; }
         public long               PoolId             { get; }
         public object             Owner              { get; private set; }
@@ -441,6 +442,8 @@ namespace Alex.API.Graphics
         {
             get { return GetFormatSize(Format) * Width * Height * LevelCount; }
         }
+
+        private long _references = 0;
         
         public PooledTexture2D(GpuResourceManager parent, long id, object owner, GraphicsDevice graphicsDevice, int width, int height) : base(graphicsDevice, width, height)
         {
@@ -502,6 +505,16 @@ namespace Alex.API.Graphics
             }
         }
 
+        public void Use()
+        {
+            Interlocked.Increment(ref _references);
+        }
+
+        public void Release()
+        {
+            Interlocked.Decrement(ref _references);
+        }
+        
         /*public PooledTexture2D(GpuResourceManager parent, long id, GraphicsDevice graphicsDevice, int width, int height, bool mipmap, SurfaceFormat format, SurfaceType type, bool shared, int arraySize) : base(graphicsDevice, width, height, mipmap, format, type, shared, arraySize)
         {
             Parent = parent;
@@ -512,6 +525,11 @@ namespace Alex.API.Graphics
         public bool MarkedForDisposal { get; private set; }
         public void MarkForDisposal()
         {
+            if (Interlocked.Read(ref _references) > 0)
+            {
+                Log.Warn($"Cannot mark texture for disposal, has uncleared references. Owner: {Owner.GetType().Name} Id: {PoolId} References: {_references}");
+                return;
+            }
             if (!MarkedForDisposal)
             {
                 MarkedForDisposal = true;

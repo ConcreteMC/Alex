@@ -60,15 +60,23 @@ namespace Alex.Entities
 			set
 			{
 				var oldValue = _modelRenderer;
-				
-				ItemRenderer = null;
-				_modelRenderer = value;
-				
-				UpdateModelParts();
-				OnModelUpdated();
-				CheckHeldItem();
-				
-				oldValue?.Dispose();
+
+				try
+				{
+					ItemRenderer = null;
+					_modelRenderer = value;
+
+					if (value != null)
+					{
+						UpdateModelParts();
+						OnModelUpdated();
+						CheckHeldItem();
+					}
+				}
+				finally
+				{
+					oldValue?.Dispose();
+				}
 			}
 		}
 		
@@ -1160,13 +1168,31 @@ namespace Alex.Entities
 			bone.Rendered = !isInvisible;
 		}
 
+		private bool _disposed = false;
 		public void Dispose()
 		{
-			var model = ModelRenderer;
-			ModelRenderer = null;
-			model?.Dispose();
+			if (_disposed)
+				return;
+
+			try
+			{
+				var model = ModelRenderer;
+				ModelRenderer = null;
+				model?.Dispose();
+				
+				OnDispose();
+			}
+			finally
+			{
+				_disposed = true;
+			}
 		}
 
+		protected virtual void OnDispose()
+		{
+			
+		}
+		
 		/// <inheritdoc />
 		public override string ToString()
 		{

@@ -13,27 +13,6 @@ using NLog;
 
 namespace Alex.Worlds.Chunks
 {
-	public struct VertexData
-	{
-		public Vector3 Position;
-
-		public ushort TexCoords;
-
-		public uint Color;
-
-		public byte BlockLight;
-
-		public byte SkyLight;
-
-		public VertexData(Vector3 position, ushort textureCoordinates, uint color, byte blockLight, byte skyLight)
-		{
-			Position = position;
-			TexCoords = textureCoordinates;
-			Color = color;
-			BlockLight = blockLight;
-			SkyLight = skyLight;
-		}
-	}
 	public class ChunkRenderStage : IDisposable
 	{
 		private static ILogger Log         = LogManager.GetCurrentClassLogger();
@@ -41,15 +20,9 @@ namespace Alex.Worlds.Chunks
 		private const  int     DefaultSize = 64;
 
 		private static SmartStorage<Vector2>                      TextureStorage { get; } = new SmartStorage<Vector2>();
-		//private static SmartStorage<Color>                        ColorStorage { get; } = new SmartStorage<Color>();
-		
-		//private List<(ushort, ushort)>                         AvailableIndices { get; }
 		private Dictionary<BlockCoordinates, List<VertexData>> BlockIndices     { get; set; }
 		private PooledVertexBuffer                             Buffer           { get; set; }
-		//private VertexData?[]                                  Vertices         { get; set; }
-
-		//private List<Vector3> Positions          { get; set; } = new List<Vector3>();
-
+		
 		private bool                  HasChanges     { get; set; }
 		private bool                  HasResized     { get; set; } = false;
 
@@ -283,10 +256,34 @@ namespace Alex.Worlds.Chunks
 			}
 		}
 
+		private bool _disposed = false;
 		public void Dispose()
 		{
-			Buffer?.MarkForDisposal();
-			BlockIndices.Clear();
+			if (_disposed)
+				return;
+
+			try
+			{
+				//Buffer?.MarkForDisposal();
+				var keys = BlockIndices.Keys.ToArray();
+
+				foreach (var key in keys)
+				{
+					Remove(key);
+					//indices.Value.Clear();
+				}
+
+				BlockIndices.Clear();
+
+				Buffer = null;
+				BlockIndices = null;
+
+				Buffer?.MarkForDisposal();
+			}
+			finally
+			{
+				_disposed = true;
+			}
 		}
 	}
 }
