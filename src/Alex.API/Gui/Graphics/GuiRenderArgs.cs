@@ -59,7 +59,7 @@ namespace Alex.API.Gui.Graphics
 
         public void DrawRectangle(Rectangle bounds, Color color, int thicknessLeft, int thicknessTop, int thicknessRight, int thicknessBottom)
         {
-            var texture = API.Graphics.GpuResourceManager.GetTexture2D(this, Graphics, 1, 1, false, SurfaceFormat.Color);
+            var texture = RocketUI.GpuResourceManager.CreateTexture2D(1, 1, false, SurfaceFormat.Color);
             texture.SetData(new Color[] {color});
 
             // MinY

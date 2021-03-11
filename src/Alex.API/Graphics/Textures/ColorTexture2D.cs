@@ -31,8 +31,8 @@ namespace Alex.API.Graphics.Textures
 
         private Texture2D CreateTexture(GraphicsDevice graphics, Rectangle bounds, Color color)
         {
-            var texture = GpuResourceManager.GetTexture2D(this, graphics, bounds.Width, bounds.Height, false, SurfaceFormat.Color);
-            var data = new Color[bounds.Width * bounds.Height];
+            var texture = RocketUI.GpuResourceManager.CreateTexture2D(bounds.Width, bounds.Height, false, SurfaceFormat.Color);
+            var data    = new Color[bounds.Width * bounds.Height];
 
             for (var i = 0; i < data.Length; i++)
             {

@@ -5,8 +5,6 @@ using System.Threading;
 using Alex.API.Graphics;
 using Alex.API.Gui;
 using Alex.API.Gui.Elements;
-
-
 using Alex.API.Gui.Graphics;
 using Alex.API.Services;
 using Alex.API.Utils;
@@ -33,397 +31,377 @@ using Microsoft.Xna.Framework.Input;
 using NLog;
 using RocketUI;
 using Color = Microsoft.Xna.Framework.Color;
-using GpuResourceManager = Alex.API.Graphics.GpuResourceManager;
 
 
 namespace Alex.Gamestates
 {
-	public class TitleState : GuiGameStateBase, IMenuHolder
-	{
-		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(TitleState));
+    public class TitleState : GuiGameStateBase, IMenuHolder
+    {
+        private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(TitleState));
 
-		private readonly StackMenu _mainMenu;
+        private readonly StackMenu _mainMenu;
 
-		private readonly TextElement _splashText;
+        private readonly TextElement _splashText;
 
-		private readonly GuiPanoramaSkyBox _backgroundSkyBox;
-		private GuiEntityModelView _playerView;
-		private IPlayerProfileService _playerProfileService;
+        private readonly GuiPanoramaSkyBox     _backgroundSkyBox;
+        private          GuiEntityModelView    _playerView;
+        private          IPlayerProfileService _playerProfileService;
 
-		public TitleState()
-		{
-			_backgroundSkyBox = new GuiPanoramaSkyBox(Alex);
+        public TitleState()
+        {
+            _backgroundSkyBox = new GuiPanoramaSkyBox(Alex);
 
-			Background.Texture = _backgroundSkyBox;
-			Background.RepeatMode = TextureRepeatMode.Stretch;
+            Background.Texture = _backgroundSkyBox;
+            Background.RepeatMode = TextureRepeatMode.Stretch;
 
-			MenuItem baseMenu = new MenuItem(MenuType.Menu)
-			{
-				Children =
-				{
-					new MenuItem()
-					{
-						Title = "menu.multiplayer",
-						OnClick = MultiplayerButtonPressed,
-						IsTranslatable = true
-					},
-					new MenuItem(MenuType.SubMenu)
-					{
-						Title = "Debugging",
-						IsTranslatable = false,
+            MenuItem baseMenu = new MenuItem(MenuType.Menu)
+            {
+                Children =
+                {
+                    new MenuItem()
+                    {
+                        Title = "menu.multiplayer",
+                        OnClick = MultiplayerButtonPressed,
+                        IsTranslatable = true
+                    },
+                    new MenuItem(MenuType.SubMenu)
+                    {
+                        Title = "Debugging",
+                        IsTranslatable = false,
 						Visible = !VersionUtils.IsReleaseBuild,
-						Children =
-						{
-							new MenuItem()
-							{
-								Title = "Blockstates",
-								OnClick = (sender, args) =>
-								{
-									Debug(new DebugWorldGenerator());
-								}
-							},
-							new MenuItem()
-							{
-								Title = "Flatland",
+                        Children =
+                        {
+                            new MenuItem()
+                            {
+                                Title = "Blockstates",
+                                OnClick = (sender, args) => { Debug(new DebugWorldGenerator()); }
+                            },
+                            new MenuItem()
+                            {
+                                Title = "Flatland",
 								OnClick = (sender, args) =>
 								{
 									Debug(new FlatlandGenerator());
 								}
-							}
-						}
-					},
-					new MenuItem()
-					{
-						Title = "menu.options",
-						OnClick = (sender, args) =>
-						{
-							Alex.GameStateManager.SetActiveState("options");
-						},
-						IsTranslatable = true
-					},
-					new MenuItem()
-					{
-						Title = "menu.quit",
-						OnClick = (sender, args) =>
-						{
-							Alex.Exit();
-						},
-						IsTranslatable = true
-					},
-				}
-			};
+                            }
+                        }
+                    },
+                    new MenuItem()
+                    {
+                        Title = "menu.options",
+                        OnClick = (sender, args) => { Alex.GameStateManager.SetActiveState("options"); },
+                        IsTranslatable = true
+                    },
+                    new MenuItem()
+                    {
+                        Title = "menu.quit",
+                        OnClick = (sender, args) => { Alex.Exit(); },
+                        IsTranslatable = true
+                    },
+                }
+            };
 
-			#region Create MainMenu
+            #region Create MainMenu
 
-			_mainMenu = new StackMenu()
-			{
-				Margin = new Thickness(15, 0, 15, 0),
-				Padding = new Thickness(0, 50, 0, 0),
-				Width = 125,
-				Anchor = Alignment.FillY | Alignment.MinX,
+            _mainMenu = new StackMenu()
+            {
+                Margin = new Thickness(15, 0, 15, 0),
+                Padding = new Thickness(0, 50, 0, 0),
+                Width = 125,
+                Anchor = Alignment.FillY | Alignment.MinX,
 
-				ChildAnchor = Alignment.CenterY | Alignment.FillX,
-				BackgroundOverlay = new Color(Color.Black, 0.35f)
-			};
+                ChildAnchor = Alignment.CenterY | Alignment.FillX,
+                BackgroundOverlay = new Color(Color.Black, 0.35f)
+            };
 
-			ShowMenu(baseMenu);
-			
-			AddChild(_mainMenu);
-			
-			#endregion
+            ShowMenu(baseMenu);
 
-			AddChild(new Image(AlexGuiTextures.AlexLogo)
-			{
-				Margin = new Thickness(95, 25, 0, 0),
-				Anchor = Alignment.TopCenter
-			});
+            AddChild(_mainMenu);
 
-			AddChild(_splashText = new TextElement()
-			{
-				TextColor = (Color) TextColor.Yellow,
-				Rotation = 17.5f,
+            #endregion
 
-				Margin = new Thickness(240, 15, 0, 0),
-				Anchor = Alignment.TopCenter,
+            AddChild(new Image(AlexGuiTextures.AlexLogo)
+            {
+                Margin = new Thickness(95, 25, 0, 0),
+                Anchor = Alignment.TopCenter
+            });
 
-				Text = "Who liek minecwaf?!",
-			});
-			
-			var guiItemStack = new StackContainer()
-			{
-				Anchor = Alignment.CenterX | Alignment.CenterY,
-				Orientation = Orientation.Vertical
-			};
-			
-			AddChild(guiItemStack);
-			
-			var row = new StackContainer() {
-				Orientation = Orientation.Horizontal,
-				Anchor = Alignment.TopFill,
-				ChildAnchor = Alignment.FillCenter,
-				Margin = Thickness.One
-			};
-			guiItemStack.AddChild(row);
+            AddChild(_splashText = new TextElement()
+            {
+                TextColor = (Color) TextColor.Yellow,
+                Rotation = 17.5f,
 
-			_playerProfileService = Alex.Services.GetService<IPlayerProfileService>();
-			_playerProfileService.ProfileChanged += PlayerProfileServiceOnProfileChanged;
-			
-			/*ScoreboardView scoreboardView;
-			AddChild(scoreboardView = new ScoreboardView());
-			scoreboardView.Anchor = Alignment.MiddleRight;
-			
-			scoreboardView.AddString("Title");
-			scoreboardView.AddRow("Key", "200");
-			scoreboardView.AddRow("Key 2", "200");*/
-		}
+                Margin = new Thickness(240, 15, 0, 0),
+                Anchor = Alignment.TopCenter,
 
-		private void MultiplayerButtonPressed(object sender, MenuItemClickedEventArgs e)
-		{
-			MultiplayerButtonPressed();
-		}
+                Text = "Who liek minecwaf?!",
+            });
 
-		#region ProtocolMenu
-		
-		private void MultiplayerButtonPressed()
-		{
-			Alex.GameStateManager.SetActiveState(new MultiplayerServerSelectionState(_backgroundSkyBox)
-			{
-				BackgroundOverlay = BackgroundOverlay
-			}, true);
-		}
+            var guiItemStack = new StackContainer()
+            {
+                Anchor = Alignment.CenterX | Alignment.CenterY,
+                Orientation = Orientation.Vertical
+            };
 
-		#endregion
+            AddChild(guiItemStack);
 
-		private void ApplyModel(Entity entity)
-		{
-			if (Alex.PlayerModel != null && Alex.PlayerTexture != null)
-			{
-				var texture = TextureUtils.BitmapToTexture2D(Alex.GraphicsDevice, Alex.PlayerTexture);
-				entity.ModelRenderer = new EntityModelRenderer(Alex.PlayerModel, texture);
-			}
-		}
+            var row = new StackContainer()
+            {
+                Orientation = Orientation.Horizontal,
+                Anchor = Alignment.TopFill,
+                ChildAnchor = Alignment.FillCenter,
+                Margin = Thickness.One
+            };
+            guiItemStack.AddChild(row);
 
-		private void PlayerProfileServiceOnProfileChanged(object sender, PlayerProfileChangedEventArgs e)
-		{
-			if (e.Profile?.Skin?.Texture != null)
-			{
-				_playerView.Entity = new RemotePlayer(null, 
-					e.Profile.Skin.Slim ? "geometry.humanoid.customSlim" : "geometry.humanoid.custom" );
-				_playerView.Entity.SetInventory(new BedrockInventory(46));
-				
-				_playerView.Entity.ShowItemInHand = true;
+            _playerProfileService = Alex.Services.GetService<IPlayerProfileService>();
+            _playerProfileService.ProfileChanged += PlayerProfileServiceOnProfileChanged;
 
-				if (ItemFactory.TryGetItem("minecraft:diamond_sword", out var sword))
-				{
-					_playerView.Entity.Inventory.MainHand = sword;
-					_playerView.Entity.Inventory[_playerView.Entity.Inventory.SelectedSlot] = sword;
-				}
+            /*ScoreboardView scoreboardView;
+            AddChild(scoreboardView = new ScoreboardView());
+            scoreboardView.Anchor = Alignment.MiddleRight;
+            
+            scoreboardView.AddString("Title");
+            scoreboardView.AddRow("Key", "200");
+            scoreboardView.AddRow("Key 2", "200");*/
+        }
 
-				ApplyModel(_playerView.Entity);
-			}
-		}
+        private void MultiplayerButtonPressed(object sender, MenuItemClickedEventArgs e)
+        {
+            MultiplayerButtonPressed();
+        }
 
-		protected override void OnLoad(IRenderArgs args)
-		{
-			Skin skin = _playerProfileService?.CurrentProfile?.Skin;
-			if (skin == null)
-			{
-				Alex.Resources.TryGetBitmap("entity/alex", out var rawTexture);
-				skin = new Skin()
-				{
-					Slim = true,
-					Texture = TextureUtils.BitmapToTexture2D(Alex.GraphicsDevice, rawTexture)
-				};
-			}
+        #region ProtocolMenu
 
-			var entity = new RemotePlayer(null);
-			entity.RenderLocation = new PlayerLocation(Vector3.Zero, 180f, 180f);
-			
-			AddChild(_playerView =
-				new GuiEntityModelView(
-						entity)
-					{
-						BackgroundOverlay = new Color(Color.Black, 0.15f),
+        private void MultiplayerButtonPressed()
+        {
+            Alex.GameStateManager.SetActiveState(new MultiplayerServerSelectionState(_backgroundSkyBox)
+            {
+                BackgroundOverlay = BackgroundOverlay
+            }, true);
+        }
 
-						Margin = new Thickness(15, 15, 5, 40),
+        #endregion
 
-						Width = 92,
-						Height = 128,
+        private void ApplyModel(Entity entity)
+        {
+            if (Alex.PlayerModel != null && Alex.PlayerTexture != null)
+            {
+                var texture = TextureUtils.BitmapToTexture2D(Alex.GraphicsDevice, Alex.PlayerTexture);
+                entity.ModelRenderer = new EntityModelRenderer(Alex.PlayerModel, texture);
+            }
+        }
 
-						Anchor = Alignment.BottomRight,
-					});
+        private void PlayerProfileServiceOnProfileChanged(object sender, PlayerProfileChangedEventArgs e)
+        {
+            if (e.Profile?.Skin?.Texture != null)
+            {
+                _playerView.Entity = new RemotePlayer(null,
+                    e.Profile.Skin.Slim ? "geometry.humanoid.customSlim" : "geometry.humanoid.custom");
+                _playerView.Entity.SetInventory(new BedrockInventory(46));
 
-			AddChild(new Button("Change Skin", ChangeSKinBtnPressed)
-			{
-				Anchor = Alignment.BottomRight,
-				TranslationKey = "",
-				Margin = new Thickness(15, 15, 6, 15),
-				Width = 90,
-				//Enabled = false
-			}.ApplyModernStyle(false));
+                _playerView.Entity.ShowItemInHand = true;
 
-			Alex.UIThreadQueue.Enqueue(
-				() =>
-				{
-					using (MemoryStream ms = new MemoryStream(
-						ResourceManager.ReadResource("Alex.Resources.GradientBlur.png")))
-					{
-						BackgroundOverlay =
-							(TextureSlice2D) GpuResourceManager.GetTexture2D(this, args.GraphicsDevice, ms);
-					}
+                if (ItemFactory.TryGetItem("minecraft:diamond_sword", out var sword))
+                {
+                    _playerView.Entity.Inventory.MainHand = sword;
+                    _playerView.Entity.Inventory[_playerView.Entity.Inventory.SelectedSlot] = sword;
+                }
 
-					BackgroundOverlay.RepeatMode = TextureRepeatMode.Stretch;
+                ApplyModel(_playerView.Entity);
+            }
+        }
 
-					BackgroundOverlay.Mask = new Color(Color.White, 0.5f);
-				});
+        protected override void OnLoad(IRenderArgs args)
+        {
+            Skin skin = _playerProfileService?.CurrentProfile?.Skin;
+            if (skin == null)
+            {
+                Alex.Resources.TryGetBitmap("entity/alex", out var rawTexture);
+                skin = new Skin()
+                {
+                    Slim = true,
+                    Texture = TextureUtils.BitmapToTexture2D(Alex.GraphicsDevice, rawTexture)
+                };
+            }
 
-			_splashText.Text = SplashTexts.GetSplashText();
-			Alex.IsMouseVisible = true;
+            var entity = new RemotePlayer(null);
+            entity.RenderLocation = new PlayerLocation(Vector3.Zero, 180f, 180f);
 
-			Alex.GameStateManager.AddState("serverlist", new MultiplayerServerSelectionState(_backgroundSkyBox));
-			//Alex.GameStateManager.AddState("profileSelection", new ProfileSelectionState(_backgroundSkyBox));
-			
-			//ApplyModel(_playerView.Entity);
-		}
+            AddChild(_playerView =
+                new GuiEntityModelView(
+                    entity)
+                {
+                    BackgroundOverlay = new Color(Color.Black, 0.15f),
 
-		private void ChangeSKinBtnPressed()
-		{
-			Alex.GameStateManager.SetActiveState(new SkinSelectionState(_backgroundSkyBox, Alex), true);
-			//Alex.GameStateManager.SetActiveState(new ProfileSelectionState(_backgroundSkyBox, Alex), true);
-		}
+                    Margin = new Thickness(15, 15, 5, 40),
 
-		private float _rotation;
+                    Width = 92,
+                    Height = 128,
 
-		private readonly float _playerViewDepth = -512.0f;
+                    Anchor = Alignment.BottomRight,
+                });
 
-		private KeyboardState _prevKeyboardState = new KeyboardState();
-		protected override void OnUpdate(GameTime gameTime)
-		{
-			base.OnUpdate(gameTime);
+            AddChild(new Button("Change Skin", ChangeSKinBtnPressed)
+            {
+                Anchor = Alignment.BottomRight,
+                TranslationKey = "",
+                Margin = new Thickness(15, 15, 6, 15),
+                Width = 90,
+                //Enabled = false
+            }.ApplyModernStyle(false));
 
-			_backgroundSkyBox.Update(gameTime);
+            BackgroundOverlay.TextureResource = AlexGuiTextures.GradientBlur;
+            BackgroundOverlay.RepeatMode = TextureRepeatMode.Stretch;
+            BackgroundOverlay.Mask = new Color(Color.White, 0.5f);
 
-			_rotation += (float)gameTime.ElapsedGameTime.TotalMilliseconds / (1000.0f / 20.0f);
+            _splashText.Text = SplashTexts.GetSplashText();
+            Alex.IsMouseVisible = true;
 
-			_splashText.Scale = 0.65f + (float)Math.Abs(Math.Sin(MathHelper.ToRadians(_rotation * 10.0f))) * 0.5f;
+            Alex.GameStateManager.AddState("serverlist", new MultiplayerServerSelectionState(_backgroundSkyBox));
+            //Alex.GameStateManager.AddState("profileSelection", new ProfileSelectionState(_backgroundSkyBox));
 
-			var mousePos = Alex.GuiManager.FocusManager.CursorPosition;
+            //ApplyModel(_playerView.Entity);
+        }
 
-			mousePos = GuiRenderer.Unproject(mousePos);
-			var playerPos = _playerView.RenderBounds.Center.ToVector2();
+        private void ChangeSKinBtnPressed()
+        {
+            Alex.GameStateManager.SetActiveState(new SkinSelectionState(_backgroundSkyBox, Alex), true);
+            //Alex.GameStateManager.SetActiveState(new ProfileSelectionState(_backgroundSkyBox, Alex), true);
+        }
 
-			var mouseDelta = (new Vector3(playerPos.X, playerPos.Y, _playerViewDepth) - new Vector3(mousePos.X, mousePos.Y, 0.0f));
-			mouseDelta.Normalize();
+        private float _rotation;
 
-			var headYaw = (float)mouseDelta.GetYaw();
-			var pitch = (float)mouseDelta.GetPitch();
-			var yaw = (float)headYaw;
+        private readonly float _playerViewDepth = -512.0f;
 
-			_playerView.SetEntityRotation(yaw, pitch, headYaw);
-			_playerView.Entity.RenderLocation.Yaw = yaw;
-			_playerView.Entity.RenderLocation.HeadYaw = headYaw;
-			_playerView.Entity.RenderLocation.Pitch = pitch;
-			KeyboardState s = Keyboard.GetState();
-			
-			// if (_prevKeyboardState.IsKeyDown(Keys.M) && s.IsKeyUp(Keys.M))
-			// {
-			// 	_mainMenu.ModernStyle = !_mainMenu.ModernStyle;
-			// }
+        private KeyboardState _prevKeyboardState = new KeyboardState();
 
-			_prevKeyboardState = s;
-		}
+        protected override void OnUpdate(GameTime gameTime)
+        {
+            base.OnUpdate(gameTime);
 
-		protected override void OnDraw(IRenderArgs args)
-		{
-			if (!_backgroundSkyBox.Loaded)
-			{
-				_backgroundSkyBox.Load(Alex.GuiRenderer);
-			}
+            _backgroundSkyBox.Update(gameTime);
 
-			_backgroundSkyBox.Draw(args);
+            _rotation += (float) gameTime.ElapsedGameTime.TotalMilliseconds / (1000.0f / 20.0f);
 
-			base.OnDraw(args);
-		}
+            _splashText.Scale = 0.65f + (float) Math.Abs(Math.Sin(MathHelper.ToRadians(_rotation * 10.0f))) * 0.5f;
 
-		protected override void OnShow()
-		{
-			if (Alex.GameStateManager.TryGetState<OptionsState>("options", out _))
-			{
-				Alex.GameStateManager.RemoveState("options");
-			}
-			
-			Alex.GameStateManager.AddState("options", new OptionsState(_backgroundSkyBox));
-			
-			_playerView.Entity.SetInventory(new BedrockInventory(46));
-				
-			_playerView.Entity.ShowItemInHand = true;
-			
-			if (ItemFactory.TryGetItem("minecraft:diamond_sword", out var sword))
-			{
-				_playerView.Entity.Inventory.MainHand = sword;
-				_playerView.Entity.Inventory[_playerView.Entity.Inventory.SelectedSlot] = sword;
-			}
-			
-			
-			ApplyModel(_playerView.Entity);
-			base.OnShow();
-		}
+            var mousePos = Alex.GuiManager.FocusManager.CursorPosition;
 
-		protected override void OnHide()
-		{
-			base.OnHide();
-		}
+            mousePos = GuiRenderer.Unproject(mousePos);
+            var playerPos = _playerView.RenderBounds.Center.ToVector2();
 
-		private void Debug(IWorldGenerator generator)
-		{
-			Alex.IsMultiplayer = false;
+            var mouseDelta = (new Vector3(playerPos.X, playerPos.Y, _playerViewDepth) -
+                              new Vector3(mousePos.X, mousePos.Y, 0.0f));
+            mouseDelta.Normalize();
 
-			Alex.IsMouseVisible = false;
+            var headYaw = (float) mouseDelta.GetYaw();
+            var pitch   = (float) mouseDelta.GetPitch();
+            var yaw     = (float) headYaw;
 
-			generator.Initialize();
-			var debugProvider = new SPWorldProvider(Alex, generator);
-			Alex.LoadWorld(debugProvider, debugProvider.Network);
-		}
+            _playerView.SetEntityRotation(yaw, pitch, headYaw);
+            _playerView.Entity.RenderLocation.Yaw = yaw;
+            _playerView.Entity.RenderLocation.HeadYaw = headYaw;
+            _playerView.Entity.RenderLocation.Pitch = pitch;
+            KeyboardState s = Keyboard.GetState();
 
-		private LinkedList<MenuItem> _menu = new LinkedList<MenuItem>();
-		/// <inheritdoc />
-		public void ShowMenu(MenuItem menu)
-		{
-			bool isFirst = (_menu.Count == 0 || _menu.First.Value == menu);
-			
-			if (!_menu.Contains(menu))
-			{
-				_menu.AddLast(menu);
-			}
+            // if (_prevKeyboardState.IsKeyDown(Keys.M) && s.IsKeyUp(Keys.M))
+            // {
+            // 	_mainMenu.ModernStyle = !_mainMenu.ModernStyle;
+            // }
 
-			_mainMenu.ClearChildren();
+            _prevKeyboardState = s;
+        }
 
-			foreach (var menuItem in menu.BuildMenu(this, BuildMode.Children))
-			{
-				_mainMenu.AddChild(menuItem);
-			}
+        protected override void OnDraw(IRenderArgs args)
+        {
+            if (!_backgroundSkyBox.Loaded)
+            {
+                _backgroundSkyBox.Load(Alex.GuiRenderer);
+            }
 
-			if (!isFirst)
-			{
-				_mainMenu.AddMenuItem("Back", () =>
-				{
-					GoBack();
-				});
-			}
-		}
+            _backgroundSkyBox.Draw(args);
 
-		/// <inheritdoc />
-		public bool GoBack()
-		{
-			if (_menu.Count > 1)
-			{
-				_menu.RemoveLast();
-				ShowMenu(_menu.Last.Value);
+            base.OnDraw(args);
+        }
 
-				return true;
-			}
+        protected override void OnShow()
+        {
+            if (Alex.GameStateManager.TryGetState<OptionsState>("options", out _))
+            {
+                Alex.GameStateManager.RemoveState("options");
+            }
 
-			return false;
-		}
-	}
+            Alex.GameStateManager.AddState("options", new OptionsState(_backgroundSkyBox));
+
+            _playerView.Entity.SetInventory(new BedrockInventory(46));
+
+            _playerView.Entity.ShowItemInHand = true;
+
+            if (ItemFactory.TryGetItem("minecraft:diamond_sword", out var sword))
+            {
+                _playerView.Entity.Inventory.MainHand = sword;
+                _playerView.Entity.Inventory[_playerView.Entity.Inventory.SelectedSlot] = sword;
+            }
+
+
+            ApplyModel(_playerView.Entity);
+            base.OnShow();
+        }
+
+        protected override void OnHide()
+        {
+            base.OnHide();
+        }
+
+        private void Debug(IWorldGenerator generator)
+        {
+            Alex.IsMultiplayer = false;
+
+            Alex.IsMouseVisible = false;
+
+            generator.Initialize();
+            var debugProvider = new SPWorldProvider(Alex, generator);
+            Alex.LoadWorld(debugProvider, debugProvider.Network);
+        }
+
+        private LinkedList<MenuItem> _menu = new LinkedList<MenuItem>();
+
+        /// <inheritdoc />
+        public void ShowMenu(MenuItem menu)
+        {
+            bool isFirst = (_menu.Count == 0 || _menu.First.Value == menu);
+
+            if (!_menu.Contains(menu))
+            {
+                _menu.AddLast(menu);
+            }
+
+            _mainMenu.ClearChildren();
+
+            foreach (var menuItem in menu.BuildMenu(this, BuildMode.Children))
+            {
+                _mainMenu.AddChild(menuItem);
+            }
+
+            if (!isFirst)
+            {
+                _mainMenu.AddMenuItem("Back", () => { GoBack(); });
+            }
+        }
+
+        /// <inheritdoc />
+        public bool GoBack()
+        {
+            if (_menu.Count > 1)
+            {
+                _menu.RemoveLast();
+                ShowMenu(_menu.Last.Value);
+
+                return true;
+            }
+
+            return false;
+        }
+    }
 }

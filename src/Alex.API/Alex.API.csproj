@@ -14,7 +14,7 @@
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1-beta1" />
     <PackageReference Include="NLog" Version="4.7.8" />
     <PackageReference Include="Portable.BouncyCastle" Version="1.8.8" />
-    <PackageReference Include="RocketUI" Version="1.0.21" />
+    <PackageReference Include="RocketUI" Version="1.0.23" />
     <PackageReference Include="SharpAvi" Version="2.1.2" />
     <PackageReference Include="SixLabors.ImageSharp" Version="1.0.2" />
     <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="1.0.0-beta11" />
