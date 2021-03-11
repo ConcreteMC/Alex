@@ -9,6 +9,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using Alex.API;
 using Alex.API.Data.Servers;
 using Alex.API.Graphics.Typography;
@@ -44,6 +45,7 @@ using Alex.Worlds.Multiplayer.Java;
 using Alex.Worlds.Singleplayer;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
@@ -51,6 +53,7 @@ using Microsoft.Xna.Framework.Input;
 using Newtonsoft.Json;
 using NLog;
 using RocketUI;
+using RocketUI.Debugger;
 using RocketUI.Input;
 using RocketUI.Input.Listeners;
 using RocketUI.Utilities.Extensions;
@@ -208,12 +211,22 @@ namespace Alex
 
             IServiceCollection serviceCollection = new ServiceCollection();
             serviceCollection.AddSingleton<Alex>(this);
+            serviceCollection.AddSingleton<Game>(sp => sp.GetRequiredService<Alex>());
             serviceCollection.AddSingleton<ContentManager>(Content);
             serviceCollection.AddSingleton<IStorageSystem>(Storage);
             serviceCollection.AddSingleton<IOptionsProvider>(Options);
+            
+            // RocketUI
             serviceCollection.TryAddEnumerable(ServiceDescriptor.Singleton<IInputListenerFactory, AlexKeyboardInputListenerFactory>());
             serviceCollection.TryAddEnumerable(ServiceDescriptor.Singleton<IInputListenerFactory, AlexMouseInputListenerFactory>());
             serviceCollection.TryAddEnumerable(ServiceDescriptor.Singleton<IInputListenerFactory, AlexGamePadInputListenerFactory>());
+            serviceCollection.AddSingleton<InputManager>();
+            serviceCollection.AddSingleton<GuiRenderer>();
+            serviceCollection.AddSingleton<IGuiRenderer, GuiRenderer>(sp => sp.GetRequiredService<GuiRenderer>());
+            serviceCollection.AddSingleton<GuiManager>();
+            serviceCollection.AddSingleton<RocketDebugSocketServer>();
+            serviceCollection.AddHostedService<RocketDebugSocketServer>(sp => sp.GetRequiredService<RocketDebugSocketServer>());
+
 
             InitiatePluginSystem(serviceCollection);
 
@@ -286,8 +299,12 @@ namespace Alex
 
             DeviceManager.ApplyChanges();
 
+            InputManager = Services.GetRequiredService<InputManager>();
+            Components.Add(InputManager);       
+            
             base.Initialize();
 
+            
             RichPresenceProvider.Initialize();
         }
 
@@ -295,6 +312,8 @@ namespace Alex
         {
             Stopwatch loadingStopwatch = Stopwatch.StartNew();
 
+            RocketUI.GpuResourceManager.Init(GraphicsDevice);
+            
             var builtInFont = ResourceManager.ReadResource("Alex.Resources.default_font.png");
 
             var image = Image.Load<Rgba32>(builtInFont);
@@ -316,13 +335,16 @@ namespace Alex
             //	ResourceManager.BlockEffect.GraphicsDevice = GraphicsDevice;
 
             _spriteBatch = new SpriteBatch(GraphicsDevice);
-            InputManager = new InputManager(this, Services);
 
-            GuiRenderer = new GuiRenderer();
+            InputManager.GetOrAddPlayerManager(PlayerIndex.One); // Init player1's playermanager
+
+            GuiRenderer = Services.GetRequiredService<GuiRenderer>();
             //GuiRenderer.Init(GraphicsDevice);
 
-            GuiManager = new GuiManager(this, Services, InputManager, GuiRenderer);
-            GuiManager.Init();
+            GuiManager = Services.GetRequiredService<GuiManager>();
+            Components.Add(GuiManager);
+            GuiManager.DrawOrder = 100;
+            
 
             options.AlexOptions.VideoOptions.FancyGraphics.Bind(
                 (value, newValue) => { Block.FancyGraphics = newValue; });
@@ -343,14 +365,12 @@ namespace Alex
                 SetFullscreen(true);
             }
 
-            options.AlexOptions.VideoOptions.LimitFramerate.Bind(
-                (value, newValue) =>
+            options.AlexOptions.VideoOptions.LimitFramerate.Bind((value, newValue) =>
                 {
                     SetFrameRateLimiter(newValue, options.AlexOptions.VideoOptions.MaxFramerate.Value);
                 });
 
-            options.AlexOptions.VideoOptions.MaxFramerate.Bind(
-                (value, newValue) =>
+            options.AlexOptions.VideoOptions.MaxFramerate.Bind((value, newValue) =>
                 {
                     SetFrameRateLimiter(options.AlexOptions.VideoOptions.LimitFramerate.Value, newValue);
                 });
@@ -360,26 +380,23 @@ namespace Alex
                 SetFrameRateLimiter(true, options.AlexOptions.VideoOptions.MaxFramerate.Value);
             }
 
-            options.AlexOptions.VideoOptions.Antialiasing.Bind(
-                (value, newValue) => { SetAntiAliasing(newValue > 0, newValue); });
+            options.AlexOptions.VideoOptions.Antialiasing.Bind((value, newValue) => { SetAntiAliasing(newValue > 0, newValue); });
 
-            options.AlexOptions.MiscelaneousOptions.Language.Bind(
-                (value, newValue) => { GuiRenderer.SetLanguage(newValue); });
+            options.AlexOptions.MiscelaneousOptions.Language.Bind((value, newValue) => { GuiRenderer.SetLanguage(newValue); });
 
             if (!GuiRenderer.SetLanguage(options.AlexOptions.MiscelaneousOptions.Language))
             {
                 GuiRenderer.SetLanguage(CultureInfo.InstalledUICulture.Name);
             }
 
-            options.AlexOptions.VideoOptions.SmoothLighting.Bind(
-                (value, newValue) => { ResourcePackBlockModel.SmoothLighting = newValue; });
+            options.AlexOptions.VideoOptions.SmoothLighting.Bind((value, newValue) => { ResourcePackBlockModel.SmoothLighting = newValue; });
 
             ResourcePackBlockModel.SmoothLighting = options.AlexOptions.VideoOptions.SmoothLighting.Value;
 
-            SetAntiAliasing(
-                options.AlexOptions.VideoOptions.Antialiasing > 0, options.AlexOptions.VideoOptions.Antialiasing.Value);
+            SetAntiAliasing(options.AlexOptions.VideoOptions.Antialiasing > 0, options.AlexOptions.VideoOptions.Antialiasing.Value);
 
             GuiDebugHelper = new GuiDebugHelper(this, GuiManager);
+            Components.Add(GuiDebugHelper);
 
             OnCharacterInput += GuiManager.FocusManager.OnTextInput;
 
@@ -390,13 +407,19 @@ namespace Alex
             GameStateManager.SetActiveState("splash");
 
             WindowSize = this.Window.ClientBounds.Size;
+            
+            GuiManager.Init();
+            
+            DeviceManager.GraphicsDevice.Viewport = new Viewport(Window.ClientBounds);
 
             //	Log.Info($"Initializing Alex...");
             ThreadPool.QueueUserWorkItem(
-                (o) =>
+                async (o) =>
                 {
                     try
                     {
+                        await Task.WhenAll(Services.GetServices<IHostedService>().Select(s => s.StartAsync(CancellationToken.None)));
+                        
                         InitializeGame(splash);
                     }
                     catch (Exception ex)
@@ -522,7 +545,6 @@ namespace Alex
             services.TryAddSingleton<IRegistryManager, RegistryManager>();
 
             services.TryAddSingleton<ResourceManager>();
-            services.TryAddSingleton<GuiManager>((o) => this.GuiManager);
             services.TryAddSingleton<ServerTypeManager>(ServerTypeManager);
             services.TryAddSingleton<XboxAuthService>();
 
@@ -543,7 +565,10 @@ namespace Alex
 
         protected override void Update(GameTime gt)
         {
-            if (!UIThreadQueue.IsEmpty && UIThreadQueue.TryDequeue(out Action a))
+            if(GraphicsDevice == null) return;
+            base.Update(gt);
+            
+            while (!UIThreadQueue.IsEmpty && UIThreadQueue.TryDequeue(out Action a))
             {
                 try
                 {
@@ -555,11 +580,7 @@ namespace Alex
                 }
             }
 
-            InputManager.Update(gt);
-
-            GuiManager.Update(gt);
             GameStateManager.Update(gt);
-            GuiDebugHelper.Update(gt);
             //AudioEngine?.Update(gt, Vector3.Zero);
         }
 
@@ -570,7 +591,7 @@ namespace Alex
             GraphicsDevice.RasterizerState = RasterizerState.CullClockwise;
 
             GameStateManager.Draw(gameTime);
-            GuiManager.Draw(gameTime);
+            base.Draw(gameTime);
 
             this.Metrics = GraphicsDevice.Metrics;
         }

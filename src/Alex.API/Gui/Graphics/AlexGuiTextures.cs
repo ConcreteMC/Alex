@@ -63,5 +63,6 @@ namespace Alex.API.Gui.Graphics
         public static readonly GuiTextures HungerPlaceholder                    = new(AlexNamespace, nameof(HungerPlaceholder));
         public static readonly GuiTextures HungerFull                           = new(AlexNamespace, nameof(HungerFull));
         public static readonly GuiTextures HungerHalf                           = new(AlexNamespace, nameof(HungerHalf));
+        public static readonly GuiTextures GradientBlur = new(AlexNamespace, nameof(GradientBlur));
     }
 }

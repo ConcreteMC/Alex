@@ -12,7 +12,6 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
 using RocketUI;
-using GpuResourceManager = Alex.API.Graphics.GpuResourceManager;
 
 namespace Alex.Gui
 {
@@ -38,9 +37,9 @@ namespace Alex.Gui
 		private GraphicsDevice  _graphicsDevice;
 		private ResourceManager _resourceManager;
 
-		private Dictionary<GuiTextures, TextureSlice2D> _textureCache = new Dictionary<GuiTextures, TextureSlice2D>();
-		private Dictionary<string, TextureSlice2D> _pathedTextureCache = new Dictionary<string, TextureSlice2D>();
-		private Dictionary<GuiSoundEffects, SoundEffect> _soundEffectCache = new Dictionary<GuiSoundEffects, SoundEffect>();
+		private readonly Dictionary<GuiTextures, TextureSlice2D>  _textureCache       = new Dictionary<GuiTextures, TextureSlice2D>();
+		private readonly Dictionary<string, TextureSlice2D>       _pathedTextureCache = new Dictionary<string, TextureSlice2D>();
+		private readonly Dictionary<GuiSoundEffects, SoundEffect> _soundEffectCache   = new Dictionary<GuiSoundEffects, SoundEffect>();
 
 		private Texture2D _widgets;
 		private Texture2D _icons;
@@ -194,8 +193,8 @@ namespace Alex.Gui
 			return false;
 		}
 
-		private Dictionary<string, CultureLanguage> _languages = new Dictionary<string, CultureLanguage>();
-		public IReadOnlyDictionary<string, CultureLanguage> Languages => _languages;
+		private readonly Dictionary<string, CultureLanguage>          _languages = new Dictionary<string, CultureLanguage>();
+		public           IReadOnlyDictionary<string, CultureLanguage> Languages => _languages;
 		
 		public void LoadLanguages(McResourcePack resourcePack, IProgressReceiver progressReceiver)
 		{
@@ -240,15 +239,12 @@ namespace Alex.Gui
 
 		private void LoadEmbeddedTextures()
 		{
-			LoadTextureFromEmbeddedResource(AlexGuiTextures.AlexLogo,
-											ResourceManager.ReadResource("Alex.Resources.logo2.png"));
-			LoadTextureFromEmbeddedResource(AlexGuiTextures.ProgressBar,
-											ResourceManager.ReadResource("Alex.Resources.ProgressBar.png"));
-			LoadTextureFromEmbeddedResource(AlexGuiTextures.SplashBackground,
-											ResourceManager.ReadResource("Alex.Resources.Splash.png"));
+			LoadTextureFromEmbeddedResource(AlexGuiTextures.AlexLogo, ResourceManager.ReadResource("Alex.Resources.logo2.png"));
+			LoadTextureFromEmbeddedResource(AlexGuiTextures.ProgressBar, ResourceManager.ReadResource("Alex.Resources.ProgressBar.png"));
+			LoadTextureFromEmbeddedResource(AlexGuiTextures.SplashBackground, ResourceManager.ReadResource("Alex.Resources.Splash.png"));
+			LoadTextureFromEmbeddedResource(AlexGuiTextures.GradientBlur, ResourceManager.ReadResource("Alex.Resources.GradientBlur.png"));							
 		}
-
-
+		
 		public void LoadResourcePackTextures(ResourceManager resourceManager, IProgressReceiver progressReceiver)
 		{
 			//progressReceiver?.UpdateProgress(0, null, "gui/widgets");
@@ -440,7 +436,7 @@ namespace Alex.Gui
 				return texture;
 			}
 
-			return (TextureSlice2D) GpuResourceManager.GetTexture2D(this, _graphicsDevice, 1, 1);
+			return (TextureSlice2D) RocketUI.GpuResourceManager.CreateTexture2D( 1, 1);
 		}
 
 		public TextureSlice2D GetTexture(string texturePath)
@@ -474,6 +470,11 @@ namespace Alex.Gui
 		public Vector2 Unproject(Vector2 screen)
 		{
 			return Vector2.Transform(screen, ScaledResolution.InverseTransformMatrix);
+		}
+
+		public GraphicsContext CreateGuiSpriteBatchContext(GraphicsDevice graphics)
+		{
+			return GraphicsContext.CreateContext(graphics, BlendState.NonPremultiplied, DepthStencilState.None, RasterizerState.CullNone, SamplerState.PointClamp);
 		}
 	}
 }
