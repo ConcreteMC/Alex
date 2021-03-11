@@ -14,7 +14,7 @@ namespace Alex.Worlds.Multiplayer.Java
 
 		private IJavaProvider WorldReceiver { get; }
 		private JavaWorldProvider JavaWorld { get; }
-		public JavaClient(JavaWorldProvider javaWorldProvider, Socket socket) : base(PacketDirection.ClientBound, socket, null)
+		public JavaClient(JavaWorldProvider javaWorldProvider, Socket socket) : base(socket)
 		{
 			MCPacketFactory.Load();
 			JavaWorld = javaWorldProvider;

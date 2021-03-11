@@ -2,7 +2,7 @@ using Alex.Networking.Java.Util;
 
 namespace Alex.Networking.Java.Packets.Play
 {
-	public class AnimationPacket : Packet
+	public class AnimationPacket : Packet<AnimationPacket>
 	{
 		public AnimationPacket()
 		{

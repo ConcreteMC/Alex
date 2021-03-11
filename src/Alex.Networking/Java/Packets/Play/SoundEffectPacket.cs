@@ -3,7 +3,7 @@ using Microsoft.Xna.Framework;
 
 namespace Alex.Networking.Java.Packets.Play
 {
-	public class SoundEffectPacket : Packet
+	public class SoundEffectPacket : Packet<SoundEffectPacket>
 	{
 		public int           SoundId  { get; set; }
 		public SoundCategory Category { get; set; }

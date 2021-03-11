@@ -21,8 +21,6 @@ namespace Alex.Networking.Java.Packets.Play
 		{
 			PacketId = 0x22;
 			TileEntities = new List<NbtCompound>();
-			Log = true;
-			//HeightMaps = new NbtCompound();
 		}
 
 	

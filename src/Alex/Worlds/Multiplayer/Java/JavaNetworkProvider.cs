@@ -52,11 +52,11 @@ namespace Alex.Worlds.Multiplayer.Java
 		{
 			if (Client.ConnectionState != ConnectionState.Play)
 				return;
+
+			PlayerMovementPacket packet = PlayerMovementPacket.CreateObject();
+			packet.OnGround = onGround;
 			
-			Client.SendPacket(new PlayerMovementPacket()
-			{
-				OnGround = onGround
-			});
+			Client.SendPacket(packet);
 		}
 
 		/// <inheritdoc />
@@ -69,8 +69,9 @@ namespace Alex.Worlds.Multiplayer.Java
 		{
 			if (action == API.Utils.EntityAction.Jump)
 				return;
+
+			EntityActionPacket packet = EntityActionPacket.CreateObject();
 			
-			EntityActionPacket packet = new EntityActionPacket();
 			packet.EntityId = entityId;
 			packet.Action = action;
 			packet.JumpBoost = 0;
@@ -80,7 +81,7 @@ namespace Alex.Worlds.Multiplayer.Java
 		/// <inheritdoc />
 		public override void PlayerAnimate(PlayerAnimations animation)
 		{
-			AnimationPacket packet = new AnimationPacket();
+			var packet = AnimationPacket.CreateObject();
 			switch (animation)
 			{
 				case PlayerAnimations.SwingLeftArm:
@@ -97,35 +98,33 @@ namespace Alex.Worlds.Multiplayer.Java
 
 		public void SendChatMessage(string message)
 		{
-			Client.SendPacket(new ChatMessagePacket()
-			{
-				Position = ChatMessagePacket.Chat,
-				Message = message,
-				ServerBound = true
-			});
+			var packet = ChatMessagePacket.CreateObject();
+			packet.Position = ChatMessagePacket.Chat;
+			packet.Message = message;
+			packet.ServerBound = true;
+			
+			Client.SendPacket(packet);
 		}
 
 	    public override void BlockPlaced(BlockCoordinates position, API.Blocks.BlockFace face, int hand, int slot, Vector3 cursorPosition, Entity p)
 	    {
-		    Client.SendPacket(new PlayerBlockPlacementPacket()
-	        {
-                CursorPosition = cursorPosition,
-                Location = position,
-                Face = face,
-                Hand = hand,
-                InsideBlock = p.HeadInBlock
-	        });
-
-        }
+		    var packet = PlayerBlockPlacementPacket.CreateObject();
+		    packet.CursorPosition = cursorPosition;
+		    packet.Location = position;
+		    packet.Face = face;
+		    packet.Hand = hand;
+		    packet.InsideBlock = p.HeadInBlock;
+		    
+		    Client.SendPacket(packet);
+	    }
 
 		public override void PlayerDigging(DiggingStatus status, BlockCoordinates position, API.Blocks.BlockFace face, Vector3 cursorPosition)
 		{
-			Client.SendPacket(new PlayerDiggingPacket()
-			{
-				Face = face,
-				Location = position,
-				Status = status
-			});
+			var packet = PlayerDiggingPacket.CreateObject();
+			packet.Face = face;
+			packet.Location = position;
+			packet.Status = status;
+			Client.SendPacket(packet);
 		}
 
 		public override void EntityInteraction(Entity player, Entity target, ItemUseOnEntityAction action, int hand, int slot)
@@ -135,7 +134,7 @@ namespace Alex.Worlds.Multiplayer.Java
 			{
 				case ItemUseOnEntityAction.Interact:
 				{
-					var packet = new InteractEntityPacket();
+					var packet = InteractEntityPacket.CreateObject();
 					packet.EntityId = (int) target.EntityId;
 					packet.Type = 0;
 					packet.Hand = hand;
@@ -146,7 +145,7 @@ namespace Alex.Worlds.Multiplayer.Java
 					break;
 				case ItemUseOnEntityAction.Attack:
 				{
-					var packet = new InteractEntityPacket();
+					var packet = InteractEntityPacket.CreateObject();
 					packet.EntityId = (int) target.EntityId;
 					packet.Type = 1;
 					packet.Hand = hand;
@@ -162,31 +161,30 @@ namespace Alex.Worlds.Multiplayer.Java
 
 		public override void WorldInteraction(Entity entity, BlockCoordinates position, API.Blocks.BlockFace face, int hand, int slot, Vector3 cursorPosition)
 		{
-			Client.SendPacket(new PlayerBlockPlacementPacket()
-			{
-				Location = position,
-				Face = face,
-				Hand = hand,
-				CursorPosition = cursorPosition,
-				InsideBlock = entity.HeadInBlock
-			});
+			var packet = PlayerBlockPlacementPacket.CreateObject();
+			packet.Location = position;
+			packet.Face = face;
+			packet.Hand = hand;
+			packet.CursorPosition = cursorPosition;
+			packet.InsideBlock = entity.HeadInBlock;
+			
+			Client.SendPacket(packet);
 		}
 
 		public override void UseItem(Item item, int hand, ItemUseAction action, BlockCoordinates position, API.Blocks.BlockFace face, Vector3 cursorPosition)
 		{
 			//if (!(action == ))
-			Client.SendPacket(new UseItemPacket()
-			{
-				Hand = hand
-			});
+			var packet = UseItemPacket.CreateObject();
+			packet.Hand = hand;
+			Client.SendPacket(packet);
 		}
 
 		public override void HeldItemChanged(Item item, short slot)
 		{
-			Client.SendPacket(new HeldItemChangePacket()
-			{
-				Slot = slot
-			});
+			var packet = HeldItemChangePacket.CreateObject();
+			packet.Slot = slot;
+			
+			Client.SendPacket(packet);
 		}
 
 		public override void Close()

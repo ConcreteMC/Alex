@@ -84,7 +84,7 @@ namespace Alex.Services
 				{
 					//conn = new NetConnection(Direction.ClientBound, client.Client);
 					//conn.LogExceptions = false;
-					using (var conn = new NetConnection(PacketDirection.ClientBound, client.Client)
+					using (var conn = new NetConnection(client.Client)
 					{
 						LogExceptions = true
 					})
@@ -102,10 +102,9 @@ namespace Alex.Services
 							        
 								if (pingCallback != null)
 								{
-									conn.SendPacket(new PingPacket()
-									{
-										Payload = pingId,
-									});
+									var ping = PingPacket.CreateObject();
+									ping.Payload = pingId;
+									conn.SendPacket(ping);
 
 									sw.Restart();
 								}
@@ -142,17 +141,17 @@ namespace Alex.Services
 
 						conn.Initialize();
 
-						conn.SendPacket(new HandshakePacket()
-						{
-							NextState = ConnectionState.Status,
-							ServerAddress = connectionDetails.Hostname,
-							ServerPort = (ushort) connectionDetails.EndPoint.Port,
-							ProtocolVersion = JavaProtocol.ProtocolVersion
-						});
+						var handshake = HandshakePacket.CreateObject();
+						handshake.NextState = ConnectionState.Status;
+						handshake.ServerAddress = connectionDetails.Hostname;
+						handshake.ServerPort = (ushort) connectionDetails.EndPoint.Port;
+						handshake.ProtocolVersion = JavaProtocol.ProtocolVersion;
+						
+						conn.SendPacket(handshake);
 
 						conn.ConnectionState = ConnectionState.Status;
 
-						conn.SendPacket(new RequestPacket());
+						conn.SendPacket(RequestPacket.CreateObject());
 
 						if (await WaitHandleHelpers.FromWaitHandle(ar, TimeSpan.FromMilliseconds(10000), cts.Token) &&
 						    !connectionClosed && jsonResponse != null)

@@ -174,7 +174,7 @@ namespace Alex.Worlds.Multiplayer.Java
 
 		public void SendSettings()
 		{
-			ClientSettingsPacket settings = new ClientSettingsPacket();
+			ClientSettingsPacket settings = ClientSettingsPacket.CreateObject();
 			settings.ChatColors = true;
 			settings.ChatMode = 0;
 			settings.ViewDistance = (byte) World.ChunkManager.RenderDistance;
@@ -199,7 +199,7 @@ namespace Alex.Worlds.Multiplayer.Java
 				flags |= 0x03 << flags;
 			}
 
-			PlayerAbilitiesPacket abilitiesPacket = new PlayerAbilitiesPacket();
+			PlayerAbilitiesPacket abilitiesPacket = PlayerAbilitiesPacket.CreateObject();
 			abilitiesPacket.ServerBound = true;
 
 			abilitiesPacket.Flags = (byte) flags;
@@ -246,7 +246,7 @@ namespace Alex.Worlds.Multiplayer.Java
 				}
 				else if (Math.Abs(pos.Pitch - _lastSentLocation.Pitch) > 0f || Math.Abs(pos.HeadYaw - _lastSentLocation.Yaw) > 0f)
 				{
-					PlayerLookPacket playerLook = new PlayerLookPacket();
+					PlayerLookPacket playerLook = PlayerLookPacket.CreateObject();
 					playerLook.Pitch = -pos.Pitch;
 					playerLook.Yaw = -pos.HeadYaw;
 					playerLook.OnGround = pos.OnGround;
@@ -262,7 +262,7 @@ namespace Alex.Worlds.Multiplayer.Java
 				}
 				else if (_tickSinceLastPositionUpdate >= 20)
 				{
-					PlayerPosition packet = new PlayerPosition();
+					PlayerPosition packet = PlayerPosition.CreateObject();
 					packet.FeetY = pos.Y;
 					packet.X = pos.X;
 					packet.Z = pos.Z;
@@ -282,7 +282,7 @@ namespace Alex.Worlds.Multiplayer.Java
 
 		private void SendPlayerPostionAndLook(PlayerLocation pos)
 		{
-			PlayerPositionAndLookPacketServerBound packet = new PlayerPositionAndLookPacketServerBound();
+			PlayerPositionAndLookPacketServerBound packet = PlayerPositionAndLookPacketServerBound.CreateObject();
 			packet.Yaw = -pos.HeadYaw;
 			packet.Pitch = -pos.Pitch;
 			packet.X = pos.X;
@@ -1033,7 +1033,7 @@ namespace Alex.Worlds.Multiplayer.Java
 
 				short actionNumber = (short) inv.ActionNumber++;
 
-				ClickWindowPacket packet = new ClickWindowPacket();
+				ClickWindowPacket packet = ClickWindowPacket.CreateObject();
 				packet.Mode = mode;
 				packet.Button = button;
 				packet.Action = actionNumber;
@@ -1080,7 +1080,7 @@ namespace Alex.Worlds.Multiplayer.Java
 			{
 			//	Log.Warn($"Inventory / window transaction has been denied! (Action: {packet.ActionNumber})");
 				
-				WindowConfirmationPacket response = new WindowConfirmationPacket();
+				WindowConfirmationPacket response = WindowConfirmationPacket.CreateObject();
 				response.Accepted = false;
 				response.ActionNumber = packet.ActionNumber;
 				response.WindowId = packet.WindowId;
@@ -1150,7 +1150,7 @@ namespace Alex.Worlds.Multiplayer.Java
 
 		private void ClosedContainer(byte containerId)
 		{
-			CloseWindowPacket packet = new CloseWindowPacket();
+			CloseWindowPacket packet = CloseWindowPacket.CreateObject();
 			packet.WindowId = containerId;
 			Client.SendPacket(packet);
 		}
@@ -1397,7 +1397,7 @@ namespace Alex.Worlds.Multiplayer.Java
 			if (packet.Event == CombatEventPacket.CombatEvent.EntityDead)
 			{
 				Log.Warn($"Status packet: Entity={packet.EntityId} Player={packet.PlayerId} Message={packet.Message}");
-				ClientStatusPacket statusPacket = new ClientStatusPacket();
+				ClientStatusPacket statusPacket = ClientStatusPacket.CreateObject();
 				statusPacket.ActionID = ClientStatusPacket.Action.PerformRespawnOrConfirmLogin;
 				SendPacket(statusPacket);
 			}
@@ -2079,7 +2079,7 @@ namespace Alex.Worlds.Multiplayer.Java
 
         private void HandleKeepAlivePacket(KeepAlivePacket packet)
 		{
-			KeepAlivePacket response = new KeepAlivePacket();
+			KeepAlivePacket response = KeepAlivePacket.CreateObject();
 			response.KeepAliveid = packet.KeepAliveid;
 			//response.PacketId = 0x0E;
 
@@ -2136,7 +2136,7 @@ namespace Alex.Worlds.Multiplayer.Java
 
 			 if ((!World.Player.IsSpawned && ReadyToSpawn) || World.Player.IsSpawned)
 			{
-				TeleportConfirm confirmation = new TeleportConfirm();
+				TeleportConfirm confirmation = TeleportConfirm.CreateObject();
 				confirmation.TeleportId = packet.TeleportId;
 				SendPacket(confirmation);
 			}
@@ -2148,7 +2148,7 @@ namespace Alex.Worlds.Multiplayer.Java
 			{
 				SendPlayerPostionAndLook(World.Player.KnownPosition);
 				
-				ClientStatusPacket clientStatus = new ClientStatusPacket();
+				ClientStatusPacket clientStatus = ClientStatusPacket.CreateObject();
 				clientStatus.ActionID = ClientStatusPacket.Action.PerformRespawnOrConfirmLogin;
 				SendPacket(clientStatus);
 				
@@ -2334,7 +2334,7 @@ namespace Alex.Worlds.Multiplayer.Java
 			//Log.Info($"Crypto: {cryptoProvider == null} Pub: {packet.PublicKey} Shared: {SharedSecret}");
 			var encrypted = cryptoProvider.Encrypt(SharedSecret, RSAEncryptionPadding.Pkcs1);
 
-			EncryptionResponsePacket response = new EncryptionResponsePacket();
+			EncryptionResponsePacket response = EncryptionResponsePacket.CreateObject();
 			response.SharedSecret = encrypted;
 			response.VerifyToken = cryptoProvider.Encrypt(packet.VerifyToken, RSAEncryptionPadding.Pkcs1);
 			SendPacket(response);
@@ -2371,7 +2371,7 @@ namespace Alex.Worlds.Multiplayer.Java
 				//	ServerBound.InitEncryption();
 				Client.Initialize();
 
-				HandshakePacket handshake = new HandshakePacket();
+				HandshakePacket handshake = HandshakePacket.CreateObject();
 				handshake.NextState = ConnectionState.Login;
 				handshake.ServerAddress = Hostname;
 				handshake.ServerPort = (ushort) Endpoint.Port;
@@ -2380,7 +2380,7 @@ namespace Alex.Worlds.Multiplayer.Java
 
 				Client.ConnectionState = ConnectionState.Login;
 
-				LoginStartPacket loginStart = new LoginStartPacket();
+				LoginStartPacket loginStart = LoginStartPacket.CreateObject();
 				loginStart.Username = _username;
 				SendPacket(loginStart);
 			}

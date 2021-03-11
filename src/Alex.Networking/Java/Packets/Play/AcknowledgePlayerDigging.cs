@@ -4,7 +4,7 @@ using Alex.Networking.Java.Util;
 
 namespace Alex.Networking.Java.Packets.Play
 {
-	public class AcknowledgePlayerDiggingPacket : Packet
+	public class AcknowledgePlayerDiggingPacket : Packet<AcknowledgePlayerDiggingPacket>
 	{
 		public BlockCoordinates Position   { get; set; }
 		public int              Block      { get; set; }

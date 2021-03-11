@@ -2,7 +2,7 @@ using Alex.Networking.Java.Util;
 
 namespace Alex.Networking.Java.Packets.Play
 {
-	public class PlayerMovementPacket : Packet
+	public class PlayerMovementPacket : Packet<PlayerMovementPacket>
 	{
 		public bool OnGround { get; set; }
 		public PlayerMovementPacket()

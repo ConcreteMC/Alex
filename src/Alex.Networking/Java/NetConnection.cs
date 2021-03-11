@@ -27,17 +27,12 @@ namespace Alex.Networking.Java
         private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(NetConnection));
         
         private CancellationTokenSource CancellationToken { get; }
-        protected ConnectionConfirmed ConnectionConfirmed { get; }
-        private PacketDirection PacketDirection { get; }
         private Socket Socket { get; }
         
-		public NetConnection(PacketDirection packetDirection, Socket socket, ConnectionConfirmed confirmdAction = null)
+		public NetConnection(Socket socket)
         {
-            PacketDirection = packetDirection;
-            Socket = socket;
+	        Socket = socket;
             RemoteEndPoint = Socket.RemoteEndPoint;
-
-            ConnectionConfirmed = confirmdAction;
 
             CancellationToken = new CancellationTokenSource();
 
@@ -56,8 +51,7 @@ namespace Alex.Networking.Java
 		public bool CompressionEnabled { get; set; }
 		public int CompressionThreshold = 256;
 
-	    public bool EncryptionInitiated { get; private set; } = false;
-		protected byte[] SharedSecret { get; private set; }
+		private byte[] SharedSecret { get; set; }
 
 		public bool IsConnected { get; private set; }
 
@@ -141,7 +135,6 @@ namespace Alex.Networking.Java
 		    SharedSecret = sharedKey;
 			_readerStream.InitEncryption(SharedSecret);
 			_sendStream.InitEncryption(SharedSecret);
-		    EncryptionInitiated = true;
 	    }
 
 	    //public static RecyclableMemoryStreamManager StreamManager { get; }= new RecyclableMemoryStreamManager();
@@ -267,50 +260,50 @@ namespace Alex.Networking.Java
 			    }
 		    }
 
-		    packet = MCPacketFactory.GetPacket(PacketDirection, ConnectionState, packetId);
-		    
-		    Interlocked.Increment(ref PacketsIn);
-		    Interlocked.Add(ref PacketSizeIn, packetData.Length);
-		    
-		    if (packet == null)
+		    packet = MCPacketFactory.GetPacket(ConnectionState, packetId);
+
+		    try
 		    {
-			    if (UnhandledPacketsFilter[ConnectionState].TryAdd(packetId, 1))
+			    Interlocked.Increment(ref PacketsIn);
+			    Interlocked.Add(ref PacketSizeIn, packetData.Length);
+
+			    if (packet == null)
 			    {
-				    Log.Debug(
-					    $"Unhandled packet in {ConnectionState}! 0x{packetId.ToString("x2")} = {(ConnectionState == ConnectionState.Play ? MCPacketFactory.GetPlayPacketName(packetId) : "Unknown")}");
+				    if (UnhandledPacketsFilter[ConnectionState].TryAdd(packetId, 1))
+				    {
+					    Log.Debug(
+						    $"Unhandled packet in {ConnectionState}! 0x{packetId.ToString("x2")} = {(ConnectionState == ConnectionState.Play ? MCPacketFactory.GetPlayPacketName(packetId) : "Unknown")}");
+				    }
+				    else
+				    {
+					    UnhandledPacketsFilter[ConnectionState][packetId] =
+						    UnhandledPacketsFilter[ConnectionState][packetId] + 1;
+				    }
+
+				    return false;
+			    }
+
+			    //    Log.Info($"Received: {packet}");
+
+			    if (ConnectionState == ConnectionState.Play)
+			    {
+				    if (ShouldAddToProcessing(packet))
+				    {
+					    ProcessPacket(packet, packetData);
+
+					    return true;
+				    }
 			    }
 			    else
 			    {
-				    UnhandledPacketsFilter[ConnectionState][packetId] =
-					    UnhandledPacketsFilter[ConnectionState][packetId] + 1;
-			    }
-
-			    return false;
-		    }
-		    
-		//    Log.Info($"Received: {packet}");
-
-		    if (ConnectionState == ConnectionState.Play)
-		    {
-			    if (ShouldAddToProcessing(packet))
-			    {
-				   // Interlocked.Increment(ref _queued);
-
-				   // ThreadPool.QueueUserWorkItem(
-				//	    () =>
-				//	    {
-						    ProcessPacket(packet, packetData);
-						 //   Interlocked.Decrement(ref _queued);
-				//	    });
+				    ProcessPacket(packet, packetData);
 
 				    return true;
 			    }
 		    }
-		    else
+		    finally
 		    {
-			    ProcessPacket(packet, packetData);
-
-			    return true;
+			    packet?.PutPool();
 		    }
 
 		    return false;
@@ -391,14 +384,33 @@ namespace Alex.Networking.Java
 			    {
 				    if (PacketWriteQueue.TryTake(out var packet, 3500))
 				    {
-					    //    Log.Info($"Sent: {packet.Packet}");
-					    var data = EncodePacket(packet);
+					    try
+					    {
+						    //    Log.Info($"Sent: {packet.Packet}");
+						    var data = EncodePacket(packet);
 
-					    Interlocked.Increment(ref PacketsOut);
-					    Interlocked.Add(ref PacketSizeOut, data.Length);
+						    Interlocked.Increment(ref PacketsOut);
+						    Interlocked.Add(ref PacketSizeOut, data.Length);
 
-					    mc.WriteVarInt(data.Length);
-					    mc.Write(data);
+						    mc.WriteVarInt(data.Length);
+						    mc.Write(data);
+					    }
+					    catch (EndOfStreamException)
+					    {
+						    break;
+					    }
+					    catch (SocketException)
+					    {
+						    break;
+					    }
+					    catch (OperationCanceledException)
+					    {
+						    break;
+					    }
+					    finally
+					    {
+						    packet.Packet.PutPool();
+					    }
 				    }
 				    else
 				    {
