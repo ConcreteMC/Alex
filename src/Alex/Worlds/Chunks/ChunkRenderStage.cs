@@ -96,7 +96,7 @@ namespace Alex.Worlds.Chunks
 				}
 				else
 				{
-					BlockIndices.Add(blockCoordinates, new List<VertexData>(6)
+					BlockIndices.Add(blockCoordinates, new List<VertexData>(6 * 6)
 					{
 						vertexData
 					});
