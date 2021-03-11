@@ -1,9 +1,9 @@
 ﻿
+using Alex.API.Gui.Graphics;
 using Alex.API.Utils;
 using Microsoft.Xna.Framework;
 using RocketUI;
-using FontStyle = Alex.API.Graphics.Typography.FontStyle;
-using GuiTextures = Alex.API.Gui.Graphics.GuiTextures;
+
 
 namespace Alex.Gamestates.Common
 {
@@ -45,7 +45,7 @@ namespace Alex.Gamestates.Common
         {
             Background = new GuiTexture2D
             { 
-                TextureResource = GuiTextures.OptionsBackground, 
+                TextureResource = AlexGuiTextures.OptionsBackground, 
                 RepeatMode = TextureRepeatMode.Tile,
                 Scale =  new Vector2(2f, 2f),
             };
@@ -65,7 +65,7 @@ namespace Alex.Gamestates.Common
             Header.AddChild(HeaderTitle = new TextElement()
             {
                 Text      = Title,
-                TextColor = TextColor.White,
+                TextColor = (Color) TextColor.White,
                 Scale     = 1f,
                 FontStyle = FontStyle.DropShadow | FontStyle.Bold,
                 

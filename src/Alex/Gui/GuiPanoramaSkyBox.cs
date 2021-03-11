@@ -1,11 +1,9 @@
 ﻿using System;
 using Alex.API.Graphics;
+using Alex.API.Gui.Graphics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using RocketUI;
-using GraphicsContext = Alex.API.Graphics.GraphicsContext;
-using GuiTextures = Alex.API.Gui.Graphics.GuiTextures;
-using ITexture2D = Alex.API.Graphics.Textures.ITexture2D;
 
 namespace Alex.Gui
 {
@@ -42,12 +40,12 @@ namespace Alex.Gui
         {
 	        _textures = new Texture2D[]
 	        {
-		        renderer.GetTexture2D(GuiTextures.Panorama0),
-		        renderer.GetTexture2D(GuiTextures.Panorama1),
-		        renderer.GetTexture2D(GuiTextures.Panorama2),
-		        renderer.GetTexture2D(GuiTextures.Panorama3),
-		        renderer.GetTexture2D(GuiTextures.Panorama4),
-		        renderer.GetTexture2D(GuiTextures.Panorama5),
+		        renderer.GetTexture2D(AlexGuiTextures.Panorama0),
+		        renderer.GetTexture2D(AlexGuiTextures.Panorama1),
+		        renderer.GetTexture2D(AlexGuiTextures.Panorama2),
+		        renderer.GetTexture2D(AlexGuiTextures.Panorama3),
+		        renderer.GetTexture2D(AlexGuiTextures.Panorama4),
+		        renderer.GetTexture2D(AlexGuiTextures.Panorama5),
 	        };
 
 			CreateSkybox(Game.GraphicsDevice);

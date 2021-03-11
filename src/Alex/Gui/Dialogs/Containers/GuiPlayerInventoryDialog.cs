@@ -3,6 +3,7 @@ using System.Linq;
 using Alex.API.Graphics.Typography;
 using Alex.API.Gui;
 using Alex.API.Gui.Elements;
+using Alex.API.Gui.Graphics;
 using Alex.API.Input;
 using Alex.API.Utils;
 using Alex.API.Utils.Vectors;
@@ -18,8 +19,6 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using NLog;
 using RocketUI;
-using GuiCursorEventArgs = Alex.API.Gui.Events.GuiCursorEventArgs;
-using GuiTextures = Alex.API.Gui.Graphics.GuiTextures;
 
 namespace Alex.Gui.Dialogs.Containers
 {
@@ -37,7 +36,7 @@ namespace Alex.Gui.Dialogs.Containers
         private const int ItemSize = 16;
         
         private InventoryContainerItem CraftingOutput { get; }
-        public GuiPlayerInventoryDialog(Player player, Inventory inventory) : base(inventory, GuiTextures.InventoryPlayerBackground, 176, 166)
+        public GuiPlayerInventoryDialog(Player player, Inventory inventory) : base(inventory, AlexGuiTextures.InventoryPlayerBackground, 176, 166)
         {
             Player = player;
 
@@ -141,7 +140,7 @@ namespace Alex.Gui.Dialogs.Containers
 
             if (_playerEntityModelView?.Entity != null)
             {
-                var mousePos  = Alex.Instance.InputManager.CursorInputListener.GetCursorPosition();
+                var mousePos  = Alex.Instance.GuiManager.FocusManager.CursorPosition;
                 var playerPos = _playerEntityModelView.RenderBounds.Center.ToVector2();
 
                 var mouseDelta = (new Vector3(playerPos.X, playerPos.Y, _playerViewDepth)

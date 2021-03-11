@@ -2,6 +2,7 @@
 using Alex.API.Graphics;
 using Alex.API.Utils;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Xna.Framework;
 using NLog;
 using RocketUI;
 
@@ -26,7 +27,7 @@ namespace Alex.Gamestates.Common
 	        {
 		        Anchor = Alignment.BottomLeft,
 		        Text = "github.com/kennyvv/Alex",
-		        TextColor = TextColor.White,
+		        TextColor = (Color) TextColor.White,
 		        TextOpacity = 0.5f,
 		        Scale = 0.5f,
 		        Margin = new Thickness(5, 0, 0, 5)
@@ -35,7 +36,7 @@ namespace Alex.Gamestates.Common
 	        {
 		        Anchor = Alignment.BottomRight,
 		        Text = "Not affiliated with Mojang/Minecraft",
-		        TextColor = TextColor.White,
+		        TextColor = (Color) TextColor.White,
 		        TextOpacity = 0.5f,
 		        Scale = 0.5f,
 		        Margin = new Thickness(0, 0, 5, 5)

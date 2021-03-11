@@ -103,7 +103,7 @@ namespace Alex.Gui.Elements.Context3D
 
             if (_canRender)
             {
-                var bounds = Screen.RenderBounds;
+                var bounds = RootScreen.RenderBounds;
 
                 if (bounds != _previousBounds)
                 {

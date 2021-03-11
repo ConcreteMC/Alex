@@ -8,9 +8,10 @@ using System.Threading.Tasks;
 using Alex.API.Data.Servers;
 using Alex.API.Gui;
 using Alex.API.Gui.Elements;
-using Alex.API.Gui.Elements.Controls;
+
 using Alex.API.Gui.Elements.Icons;
-using Alex.API.Gui.Elements.Layout;
+
+using Alex.API.Gui.Graphics;
 using Alex.API.Services;
 using Alex.API.Utils;
 using Alex.Networking.Java;
@@ -22,7 +23,6 @@ using MiNET.Net;
 using MiNET.Utils;
 using RocketUI;
 using GpuResourceManager = Alex.API.Graphics.GpuResourceManager;
-using GuiTextures = Alex.API.Gui.Graphics.GuiTextures;
 
 namespace Alex.Gamestates.Multiplayer
 {
@@ -78,7 +78,7 @@ namespace Alex.Gamestates.Multiplayer
                 
 				Anchor = Alignment.TopLeft,
 
-				Background = GuiTextures.DefaultServerIcon,
+				Background = AlexGuiTextures.DefaultServerIcon,
 			});
 
 			AddChild(_pingStatus = new GuiConnectionPingIcon()
@@ -185,11 +185,11 @@ namespace Alex.Gamestates.Multiplayer
 			{
 				_serverMotd.Text = error;
 				_serverMotd.TranslationKey = error;
-				_serverMotd.TextColor = TextColor.Red;
+				_serverMotd.TextColor = (Color) TextColor.Red;
 			}
 			else
 			{
-				_serverMotd.TextColor = TextColor.White;
+				_serverMotd.TextColor = (Color) TextColor.White;
 			}
 			_pingStatus.SetOffline();
 		}

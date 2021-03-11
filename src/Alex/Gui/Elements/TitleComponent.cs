@@ -2,13 +2,13 @@
 using System.Threading;
 using Alex.API.Gui;
 using Alex.API.Gui.Elements;
-using Alex.API.Gui.Elements.Layout;
+
 using Alex.API.Gui.Graphics;
 using Alex.API.Utils;
 using Alex.API.World;
 using Microsoft.Xna.Framework;
 using RocketUI;
-using FontStyle = Alex.API.Graphics.Typography.FontStyle;
+
 
 namespace Alex.Gui.Elements
 {
@@ -26,7 +26,7 @@ namespace Alex.Gui.Elements
 		    _title = new TextElement()
 		    {
 			    //Anchor = Alignment.TopCenter,
-			    TextColor = TextColor.White,
+			    TextColor = (Color) TextColor.White,
 			    FontStyle = FontStyle.DropShadow,
 			    Scale = 2f,
 			    Text = ""
@@ -35,7 +35,7 @@ namespace Alex.Gui.Elements
 			_subTitle = new TextElement()
 			{
 				//Anchor = Alignment.MiddleCenter,
-				TextColor = TextColor.White,
+				TextColor = (Color) TextColor.White,
 				FontStyle = FontStyle.None,
 				Scale = 1f,
 				Text =	""

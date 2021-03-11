@@ -1,20 +1,20 @@
 using Alex.API.Gui;
-using Alex.API.Gui.Elements.Layout;
+
+using Alex.API.Gui.Graphics;
 using Alex.Gui.Elements.Inventory;
 using Alex.Items;
 using Alex.Utils.Inventories;
 using Microsoft.Xna.Framework;
 using RocketUI;
-using GuiTextures = Alex.API.Gui.Graphics.GuiTextures;
 
 namespace Alex.Gui.Dialogs.Containers
 {
 	public class GuiPlayerCreativeInventoryDialog : GuiInventoryBase
 	{
-		private GuiScrollableMultiStackContainer MultiStackContainer { get; set; }
-		public GuiPlayerCreativeInventoryDialog(Item[] items) : base(new InventoryBase(items.Length), GuiTextures.InventoryCreativeItemSearch, 194, 135)
+		private ScrollableMultiStackContainer MultiStackContainer { get; set; }
+		public GuiPlayerCreativeInventoryDialog(Item[] items) : base(new InventoryBase(items.Length), AlexGuiTextures.InventoryCreativeItemSearch, 194, 135)
 		{
-			MultiStackContainer = new GuiScrollableMultiStackContainer()
+			MultiStackContainer = new ScrollableMultiStackContainer()
 			{
 				Anchor = Alignment.Fill,
 				Orientation = Orientation.Vertical,

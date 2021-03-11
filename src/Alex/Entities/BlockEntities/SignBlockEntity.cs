@@ -11,6 +11,7 @@ using Alex.Worlds;
 using fNbt;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using RocketUI;
 
 namespace Alex.Entities.BlockEntities
 {
@@ -305,7 +306,7 @@ namespace Alex.Entities.BlockEntities
 					//renderArgs.SpriteBatch.FillRectangle(
 					//	new Rectangle(renderPosition.ToPoint(), c), new Color(Color.Black, 128), screenSpace.Z);
 
-					Alex.Font.DrawString(sb, line, renderPosition, TextColor.Black, FontStyle.None, Vector2.One);
+					Alex.Font.DrawString(sb, line, renderPosition, (Color) TextColor.Black, FontStyle.None, Vector2.One);
 
 					yOffset += c.Y;
 				}

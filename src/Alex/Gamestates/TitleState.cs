@@ -5,8 +5,9 @@ using System.Threading;
 using Alex.API.Graphics;
 using Alex.API.Gui;
 using Alex.API.Gui.Elements;
-using Alex.API.Gui.Elements.Controls;
-using Alex.API.Gui.Elements.Layout;
+
+
+using Alex.API.Gui.Graphics;
 using Alex.API.Services;
 using Alex.API.Utils;
 using Alex.API.Utils.Vectors;
@@ -33,8 +34,7 @@ using NLog;
 using RocketUI;
 using Color = Microsoft.Xna.Framework.Color;
 using GpuResourceManager = Alex.API.Graphics.GpuResourceManager;
-using GuiTextures = Alex.API.Gui.Graphics.GuiTextures;
-using TextureSlice2D = Alex.API.Graphics.Textures.TextureSlice2D;
+
 
 namespace Alex.Gamestates
 {
@@ -132,7 +132,7 @@ namespace Alex.Gamestates
 			
 			#endregion
 
-			AddChild(new Image(GuiTextures.AlexLogo)
+			AddChild(new Image(AlexGuiTextures.AlexLogo)
 			{
 				Margin = new Thickness(95, 25, 0, 0),
 				Anchor = Alignment.TopCenter
@@ -140,7 +140,7 @@ namespace Alex.Gamestates
 
 			AddChild(_splashText = new TextElement()
 			{
-				TextColor = TextColor.Yellow,
+				TextColor = (Color) TextColor.Yellow,
 				Rotation = 17.5f,
 
 				Margin = new Thickness(240, 15, 0, 0),
@@ -256,12 +256,11 @@ namespace Alex.Gamestates
 			AddChild(new Button("Change Skin", ChangeSKinBtnPressed)
 			{
 				Anchor = Alignment.BottomRight,
-				Modern = false,
 				TranslationKey = "",
 				Margin = new Thickness(15, 15, 6, 15),
 				Width = 90,
 				//Enabled = false
-			});
+			}.ApplyModernStyle(false));
 
 			Alex.UIThreadQueue.Enqueue(
 				() =>
@@ -308,9 +307,9 @@ namespace Alex.Gamestates
 
 			_splashText.Scale = 0.65f + (float)Math.Abs(Math.Sin(MathHelper.ToRadians(_rotation * 10.0f))) * 0.5f;
 
-			var mousePos = Alex.InputManager.CursorInputListener.GetCursorPosition();
+			var mousePos = Alex.GuiManager.FocusManager.CursorPosition;
 
-			mousePos = Vector2.Transform(mousePos, Alex.GuiManager.ScaledResolution.InverseTransformMatrix);
+			mousePos = GuiRenderer.Unproject(mousePos);
 			var playerPos = _playerView.RenderBounds.Center.ToVector2();
 
 			var mouseDelta = (new Vector3(playerPos.X, playerPos.Y, _playerViewDepth) - new Vector3(mousePos.X, mousePos.Y, 0.0f));
@@ -325,10 +324,11 @@ namespace Alex.Gamestates
 			_playerView.Entity.RenderLocation.HeadYaw = headYaw;
 			_playerView.Entity.RenderLocation.Pitch = pitch;
 			KeyboardState s = Keyboard.GetState();
-			if (_prevKeyboardState.IsKeyDown(Keys.M) && s.IsKeyUp(Keys.M))
-			{
-				_mainMenu.ModernStyle = !_mainMenu.ModernStyle;
-			}
+			
+			// if (_prevKeyboardState.IsKeyDown(Keys.M) && s.IsKeyUp(Keys.M))
+			// {
+			// 	_mainMenu.ModernStyle = !_mainMenu.ModernStyle;
+			// }
 
 			_prevKeyboardState = s;
 		}

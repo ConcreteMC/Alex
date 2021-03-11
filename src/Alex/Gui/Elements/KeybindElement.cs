@@ -1,7 +1,7 @@
 using System;
 using Alex.API.Gui;
 using Alex.API.Gui.Elements;
-using Alex.API.Gui.Elements.Controls;
+
 using Alex.API.Gui.Graphics;
 using Alex.API.Utils;
 using Microsoft.Xna.Framework;
@@ -10,7 +10,7 @@ using RocketUI;
 
 namespace Alex.Gui.Elements
 {
-    public class KeybindElement : GuiControl, IValuedControl<Keys>
+    public class KeybindElement : RocketControl, IValuedControl<Keys>
     {
         public static readonly Keys Unbound = (Keys) int.MaxValue;
         

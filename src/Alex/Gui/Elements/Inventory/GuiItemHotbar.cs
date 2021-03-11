@@ -1,7 +1,8 @@
 ﻿using System.Linq;
 using Alex.API.Gui;
 using Alex.API.Gui.Elements;
-using Alex.API.Gui.Elements.Layout;
+
+using Alex.API.Gui.Graphics;
 using Alex.API.Utils;
 using Alex.Items;
 using Alex.Utils;
@@ -9,8 +10,7 @@ using Alex.Utils.Inventories;
 using Microsoft.Xna.Framework;
 using NLog;
 using RocketUI;
-using FontStyle = Alex.API.Graphics.Typography.FontStyle;
-using GuiTextures = Alex.API.Gui.Graphics.GuiTextures;
+
 
 namespace Alex.Gui.Elements.Inventory
 {
@@ -80,7 +80,7 @@ namespace Alex.Gui.Elements.Inventory
         public GuiItemHotbar(Utils.Inventories.Inventory inventory)
         {
 	        _hotbarItems = new GuiInventoryItem[9];
-	        _hotbar = new GuiContainer()
+	        _hotbar = new Container()
 	        {
 		        Anchor = Alignment.Fill,
 		        //Padding = new Thickness(4,4)
@@ -95,7 +95,7 @@ namespace Alex.Gui.Elements.Inventory
 			        Height = ItemWidth + 4,
 			        //Padding = new Thickness(2, 2),
 			        Margin = new Thickness( (i * (ItemWidth + 4)), 0, 4, 0),
-			        HighlightedBackground = GuiTextures.Inventory_HotBar_SelectedItemOverlay,
+			        HighlightedBackground = AlexGuiTextures.Inventory_HotBar_SelectedItemOverlay,
 			        IsSelected = i == SelectedIndex,
 			        Anchor = Alignment.TopLeft,
 			        //  Item = hotbarItems[i],
@@ -115,7 +115,7 @@ namespace Alex.Gui.Elements.Inventory
             _itemNameTextElement = new FadingTextElement()
 	        {
 		        Anchor = Alignment.TopCenter,
-		        TextColor = TextColor.White,
+		        TextColor = (Color) TextColor.White,
 		        Text = "",
 		        Margin = new Thickness(0, -5, 0, 5),
 				FontStyle = FontStyle.DropShadow,
@@ -232,7 +232,7 @@ namespace Alex.Gui.Elements.Inventory
 
 	    protected override void OnInit(IGuiRenderer renderer)
         {
-            _hotbar.Background = renderer.GetTexture(GuiTextures.Inventory_HotBar);
+            _hotbar.Background = renderer.GetTexture(AlexGuiTextures.Inventory_HotBar);
 	       
         }
 

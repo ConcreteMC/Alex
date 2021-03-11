@@ -1,14 +1,14 @@
 ﻿using System;
 using Alex.API.Gui;
 using Alex.API.Gui.Elements;
-using Alex.API.Gui.Elements.Controls;
+
+using Alex.API.Gui.Graphics;
 using Alex.API.Utils;
 using Alex.Items;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using RocketUI;
-using GuiTextures = Alex.API.Gui.Graphics.GuiTextures;
-using TextureSlice2D = Alex.API.Graphics.Textures.TextureSlice2D;
+
 
 namespace Alex.Gui.Elements.Inventory
 {
@@ -32,7 +32,7 @@ namespace Alex.Gui.Elements.Inventory
 
 		protected override void OnInit(IGuiRenderer renderer)
 		{
-			SelectedBackground = renderer.GetTexture(GuiTextures.Inventory_HotBar_SelectedItemOverlay);
+			SelectedBackground = renderer.GetTexture(AlexGuiTextures.Inventory_HotBar_SelectedItemOverlay);
 			//_counTextElement.Font = renderer.Font;
 			base.OnInit(renderer);
 		}

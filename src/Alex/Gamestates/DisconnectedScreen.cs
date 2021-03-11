@@ -1,9 +1,11 @@
 ﻿using Alex.API.GameStates;
 using Alex.API.Gui;
 using Alex.API.Gui.Elements;
-using Alex.API.Gui.Elements.Controls;
+
 using Alex.API.Utils;
 using Alex.Gamestates.Common;
+using Alex.Gui;
+using Microsoft.Xna.Framework;
 using RocketUI;
 
 namespace Alex.Gamestates
@@ -39,7 +41,7 @@ namespace Alex.Gamestates
 			Body.AddChild(DisconnectedTextElement = new TextElement()
 			{
 				Text = Reason,
-				TextColor = TextColor.Red,
+				TextColor = (Color) TextColor.Red,
 				Anchor = Alignment.MiddleCenter
 			});
 
@@ -47,8 +49,7 @@ namespace Alex.Gamestates
 			{
 				TranslationKey = "gui.toTitle",
 				Anchor = Alignment.MiddleCenter,
-				Modern = false
-			});
+			}.ApplyModernStyle(false));
 		}
 
 		private void MenuButtonClicked()

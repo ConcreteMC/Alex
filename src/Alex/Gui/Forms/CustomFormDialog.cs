@@ -1,8 +1,6 @@
 using System.Collections.Generic;
 using Alex.API.Gui;
 using Alex.API.Gui.Elements;
-using Alex.API.Gui.Elements.Controls;
-using Alex.API.Gui.Elements.Layout;
 using Alex.API.Input;
 using Alex.API.Utils;
 using Microsoft.Xna.Framework;
@@ -10,7 +8,8 @@ using MiNET.Net;
 using MiNET.UI;
 using Newtonsoft.Json;
 using RocketUI;
-using FontStyle = Alex.API.Graphics.Typography.FontStyle;
+using RocketUI.Input;
+using Button = RocketUI.Button;
 using Slider = MiNET.UI.Slider;
 
 namespace Alex.Gui.Forms
@@ -81,8 +80,8 @@ namespace Alex.Gui.Forms
                         break;
                     case Slider slider:
                     {
-                        Slider Slider;
-                        stackContainer.AddChild(Slider = new Slider()
+                        RocketUI.Slider Slider;
+                        stackContainer.AddChild(Slider = new RocketUI.Slider()
                         {
                             Label = { Text = slider.Text},
                             Value = slider.Value,
@@ -100,7 +99,7 @@ namespace Alex.Gui.Forms
                         stackContainer.AddChild(new TextElement()
                         {
                             Text = "Unsupported stepslider",
-                            TextColor = TextColor.Red,
+                            TextColor = (Color) TextColor.Red,
                             Margin = margin
                         });
                     }
@@ -110,7 +109,7 @@ namespace Alex.Gui.Forms
                         stackContainer.AddChild(new TextElement()
                         {
                             Text = "Unsupported dropdown",
-                            TextColor = TextColor.Red,
+                            TextColor = (Color) TextColor.Red,
                             Margin = margin
                         });
                     }
@@ -155,7 +154,7 @@ namespace Alex.Gui.Forms
             Header.AddChild(new TextElement()
             {
                 Text      = FixContrast(form.Title),
-                TextColor = TextColor.White,
+                TextColor = (Color) TextColor.White,
                 Scale     = 2f,
                 FontStyle = FontStyle.DropShadow,
                 

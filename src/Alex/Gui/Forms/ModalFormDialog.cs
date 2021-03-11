@@ -1,7 +1,7 @@
 using Alex.API.Gui;
 using Alex.API.Gui.Elements;
-using Alex.API.Gui.Elements.Controls;
-using Alex.API.Gui.Elements.Layout;
+
+
 using Alex.API.Input;
 using Alex.API.Utils;
 using Alex.Gamestates.Multiplayer;
@@ -9,7 +9,9 @@ using Microsoft.Xna.Framework;
 using MiNET.Net;
 using MiNET.UI;
 using RocketUI;
-using FontStyle = Alex.API.Graphics.Typography.FontStyle;
+using RocketUI.Input;
+using Button = RocketUI.Button;
+
 
 namespace Alex.Gui.Forms
 {
@@ -142,7 +144,7 @@ namespace Alex.Gui.Forms
 			Header.AddChild(new TextElement()
 			{
 				Text      = FixContrast(form.Title),
-				TextColor = TextColor.White,
+				TextColor = (Color) TextColor.White,
 				Scale     = 2f,
 				FontStyle = FontStyle.DropShadow,
                 

@@ -6,6 +6,7 @@ using MiNET.Net;
 using MiNET.UI;
 using NLog;
 using RocketUI;
+using RocketUI.Input;
 
 namespace Alex.Gui.Forms
 {

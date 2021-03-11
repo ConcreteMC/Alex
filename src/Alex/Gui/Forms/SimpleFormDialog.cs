@@ -1,15 +1,16 @@
 using System;
 using Alex.API.Gui;
 using Alex.API.Gui.Elements;
-using Alex.API.Gui.Elements.Controls;
-using Alex.API.Gui.Elements.Layout;
+
+
 using Alex.API.Input;
 using Alex.API.Utils;
 using Microsoft.Xna.Framework;
 using MiNET.Net;
 using MiNET.UI;
 using RocketUI;
-using FontStyle = Alex.API.Graphics.Typography.FontStyle;
+using RocketUI.Input;
+
 
 namespace Alex.Gui.Forms
 {
@@ -28,7 +29,7 @@ namespace Alex.Gui.Forms
 
             if (!string.IsNullOrWhiteSpace(form.Content))
             {
-                StackMenu.AddLabel(FixContrast(form.Content));
+                StackMenu.AddChild(new GuiStackMenuLabel(FixContrast(form.Content)));
                 StackMenu.AddSpacer();
             }
 
@@ -62,7 +63,7 @@ namespace Alex.Gui.Forms
                     }
                 }
                 
-                var item = StackMenu.AddMenuItem(button.Text, submitAction);
+                StackMenu.AddMenuItem(button.Text, submitAction);
             }
             
             Background = Color.Transparent;
@@ -98,7 +99,7 @@ namespace Alex.Gui.Forms
             Header.AddChild(new TextElement()
             {
                 Text      = FixContrast(form.Title),
-                TextColor = TextColor.White,
+                TextColor = Color.White,
                 Scale     = 2f,
                 FontStyle = FontStyle.DropShadow,
                 

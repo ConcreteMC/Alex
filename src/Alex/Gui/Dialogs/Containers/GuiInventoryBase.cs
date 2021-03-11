@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Alex.API.Gui;
 using Alex.API.Gui.Elements;
+using Alex.API.Gui.Graphics;
 using Alex.API.Input;
 using Alex.API.Utils;
 using Alex.Gui.Elements.Inventory;
@@ -12,10 +13,8 @@ using Alex.Utils.Inventories;
 using Microsoft.Xna.Framework;
 using MiNET.Utils;
 using RocketUI;
-using FontStyle = Alex.API.Graphics.Typography.FontStyle;
-using GuiCursorEventArgs = Alex.API.Gui.Events.GuiCursorEventArgs;
-using GuiCursorMoveEventArgs = Alex.API.Gui.Events.GuiCursorMoveEventArgs;
-using GuiTextures = Alex.API.Gui.Graphics.GuiTextures;
+using RocketUI.Events;
+using RocketUI.Input;
 
 namespace Alex.Gui.Dialogs.Containers
 {
@@ -48,7 +47,7 @@ namespace Alex.Gui.Dialogs.Containers
 					Background = new Color(Color.Black, 0.35f),
 		//			Enabled = false,
 					FontStyle = FontStyle.DropShadow,
-					TextColor = TextColor.Yellow,
+					TextColor = (Color) TextColor.Yellow,
 					ClipToBounds = false,
 					Anchor = Alignment.TopLeft
 					//BackgroundOverlay = new Color(Color.Black, 0.35f),
@@ -414,11 +413,8 @@ namespace Alex.Gui.Dialogs.Containers
 		/// <inheritdoc />
 		protected override void OnUpdate(GameTime gameTime)
 		{
-			var cursorListener = Alex.Instance.InputManager.CursorInputListener;
-			
-			var mousePos = cursorListener.GetCursorPosition();
-
-			mousePos = Vector2.Transform(mousePos, Alex.Instance.GuiManager.ScaledResolution.InverseTransformMatrix);
+			var mousePos = Alex.Instance.GuiManager.FocusManager.CursorPosition;
+			mousePos = GuiRenderer.Unproject(mousePos);
 
 			//TextOverlay.RenderPosition = mousePos;
 

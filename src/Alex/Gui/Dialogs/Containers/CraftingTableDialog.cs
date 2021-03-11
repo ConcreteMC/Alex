@@ -8,7 +8,7 @@ namespace Alex.Gui.Dialogs.Containers
 	{
 		/// <inheritdoc />
 		public CraftingTableDialog(InventoryBase inventory, Inventory playerInventory) : base(
-			inventory, GuiTextures.InventoryCraftingTable, 175, 165)
+			inventory, AlexGuiTextures.InventoryCraftingTable, 175, 165)
 		{
 			//7, 17
 			

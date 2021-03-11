@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using Microsoft.Xna.Framework;
 using NLog;
@@ -28,20 +29,21 @@ namespace Alex.API.Utils
         public const char Prefix = '§';
         
         // @formatter:off — disable formatter after this line
+        // BG = Math.Floor(FG/4f);
         public static readonly TextColor Black       = new TextColor('0',   0,   0,   0,   0,   0,   0, "black");
         public static readonly TextColor DarkBlue    = new TextColor('1',   0,   0, 170,   0,   0,  42, "dark_blue");
         public static readonly TextColor DarkGreen   = new TextColor('2',   0, 170,   0,  42,  42,   0, "dark_green");
-        public static readonly TextColor DarkCyan    = new TextColor('3',   0, 170, 170,  42,  42,  42, "dark_aqua");
+        public static readonly TextColor DarkCyan    = new TextColor('3',   0, 170, 170,  42,  42,  42, "dark_aqua") { AltNames = new []{"dark_cyan"}};
         public static readonly TextColor DarkRed     = new TextColor('4', 170,   0,   0,   0,   0,   0, "dark_red");
-        public static readonly TextColor Purple      = new TextColor('5', 170,   0, 170,   0,   0,  42, "dark_purple");
-        public static readonly TextColor Gold        = new TextColor('6', 255, 170,   0,  42,  42,   0, "gold");
+        public static readonly TextColor Purple      = new TextColor('5', 170,   0, 170,   0,   0,  42, "dark_purple") { AltNames = new []{"dark_magenta"}};
+        public static readonly TextColor Gold        = new TextColor('6', 255, 170,   0,  42,  42,   0, "gold") { AltNames = new []{"dark_yellow"}};
         public static readonly TextColor Gray        = new TextColor('7', 170, 170, 170,  42,  42,  42, "gray");
         public static readonly TextColor DarkGray    = new TextColor('8',  85,  85,  85,  21,  21,  21, "dark_gray");
         public static readonly TextColor Blue        = new TextColor('9',  85,  85, 255,  21,  21,  63, "blue");
         public static readonly TextColor BrightGreen = new TextColor('a',  85, 255, 85,  21,  63,  21, "green");
-        public static readonly TextColor Cyan        = new TextColor('b',  85, 255, 255,  21,  63,  63, "aqua");
+        public static readonly TextColor Cyan        = new TextColor('b',  85, 255, 255,  21,  63,  63, "aqua") { AltNames = new []{"cyan"}};
         public static readonly TextColor Red         = new TextColor('c', 255,  85,  85,  63,  21,  21, "red");
-        public static readonly TextColor Pink        = new TextColor('d', 255,  85, 255,  63,  21,  62, "light_purple");
+        public static readonly TextColor Pink        = new TextColor('d', 255,  85, 255,  63,  21,  62, "light_purple") { AltNames = new []{"magenta"}};
         public static readonly TextColor Yellow      = new TextColor('e', 255, 255,  85,  63,  63,  21, "yellow");
         public static readonly TextColor White       = new TextColor('f', 255, 255, 255,  63,  63,  63, "white");
 
@@ -53,25 +55,77 @@ namespace Alex.API.Utils
 		public static readonly TextColor Reset = new TextColor('r', "reset");
 		// @formatter:on — enable formatter after this line
 
-		public string Name;
-        public Color  ForegroundColor;
-        public Color  BackgroundColor;
-        public char   Code;
+        private static readonly TextColor[] Colors = new[]
+        {
+            Black,
+            DarkBlue,
+            DarkGreen,
+            DarkCyan,
+            DarkRed,
+            Purple,
+            Gold,
+            Gray,
+            DarkGray,
+            Blue,
+            BrightGreen,
+            Cyan,
+            Red,
+            Pink,
+            Yellow,
+            White,
+        };
+        
+        private static readonly TextColor[] Formatters = new[]
+        {
+            Obfuscated,
+            Bold,
+            Strikethrough,
+            Underline,
+            Italic,
+            Reset
+        };
 
-	    public TextColor(char code, string name)
+        public string Name
+        {
+            get => _name;
+            set
+            {
+                _name = value;
+                UpdateAliases();
+            }
+        }
+
+        public string[] AltNames
+        {
+            get => _altNames;
+            set
+            {
+                _altNames = value;
+                UpdateAliases();
+            }
+        }
+
+        public string[] Aliases  { get; private set; }
+        
+        public  Color    ForegroundColor;
+        public  Color    BackgroundColor;
+        public  char     Code;
+        private string[] _altNames;
+        private string   _name;
+
+        public TextColor(char code, string name, params string[] altNames)
 	    {
 		    Name = name;
 		    Code = code;
-	    }
-
-        public TextColor(char code, int r, int g, int b, int br, int bg, int bb, string name)
+            AltNames = altNames;
+        }
+        
+        public TextColor(char code, int r, int g, int b, int br, int bg, int bb, string name, params string[] altNames) : this(code, name, altNames)
         {
             try
             {
-                this.Name = name;
-                this.Code = code;
-                this.ForegroundColor = new Color(r, g, b);
-                this.BackgroundColor = new Color(br, bg, bb);
+                ForegroundColor = new Color(r, g, b);
+                BackgroundColor = new Color(br, bg, bb);
             }
             catch (Exception ex)
             {
@@ -79,12 +133,106 @@ namespace Alex.API.Utils
             }
         }
 
-	    public TextColor(Color c)
-	    {
-			ForegroundColor = c;
-            BackgroundColor = Color.TransparentBlack;
-	    }
+        public TextColor(Color c, bool lookupColor = true)
+        {
+            ForegroundColor = c;
+            
+            if (lookupColor && TryMatchColorByForegroundColor(c, out TextColor match))
+            {
+                BackgroundColor = match.BackgroundColor;
+                Code = match.Code;
+                Name = match.Name;
+                AltNames = match.AltNames;
+            }
+            else
+            {
+                BackgroundColor = new Color(ToBackgroundColor(c.R), ToBackgroundColor(c.G), ToBackgroundColor(c.B));
+            }
+        }
 
+        private void UpdateAliases()
+        {            
+
+            if (AltNames == null || AltNames.Length == 0)
+            {
+                Aliases =  new[] { Name };
+                return;
+            }
+            
+            var list = new List<string>();
+            list.AddRange(AltNames);
+            list.Add(Name);
+            Aliases = list.ToArray();
+        }
+        
+        public static bool TryMatchColorByForegroundColor(Color color, out TextColor textColor)
+        {
+            foreach (var allColor in Colors)
+            {
+                if (allColor.ForegroundColor == color)
+                {
+                    textColor = allColor;
+                    return true;
+                }
+            }
+
+            textColor = default;
+            return false;
+        }
+        public static bool TryMatchColorByName(string name, out TextColor textColor)
+        {
+            foreach (var allColor in Colors)
+            {
+                if (allColor.Aliases.Any(alias => string.Equals(name, alias, StringComparison.InvariantCultureIgnoreCase)))
+                {
+                    textColor = allColor;
+                    return true;
+                }
+            }
+            
+            foreach (var allColor in Formatters)
+            {
+                if (allColor.Aliases.Any(alias => string.Equals(name, alias, StringComparison.InvariantCultureIgnoreCase)))
+                {
+                    textColor = allColor;
+                    return true;
+                }
+            }
+
+            textColor = default;
+            return false;
+        }
+        public static bool TryMatchColorByCode(char code, out TextColor textColor)
+        {
+            foreach (var allColor in Colors)
+            {
+                if (string.Equals(code.ToString(), allColor.Code.ToString(), StringComparison.InvariantCultureIgnoreCase))
+                {
+                    textColor = allColor;
+                    return true;
+                }
+            }
+            
+            foreach (var allColor in Formatters)
+            {
+                if (string.Equals(code.ToString(), allColor.Code.ToString(), StringComparison.InvariantCultureIgnoreCase))
+                {
+                    textColor = allColor;
+                    return true;
+                }
+            }
+
+            textColor = default;
+            return false;
+        }
+                
+        private static int ToBackgroundColor(int foreground)
+        {
+            if (foreground <= 0)
+                return 0;
+            return (int) Math.Floor(foreground / 4f);
+        }
+        
 	    public override string ToString()
 	    {
 		    return $"§{Code}";
@@ -92,176 +240,29 @@ namespace Alex.API.Utils
 
 	    public static string Color2tag(string colorname)
         {
-            switch (colorname.ToLower())
+            if (TryMatchColorByName(colorname, out var textColor))
             {
-                case "black": /*  Blank if same  */
-                    return "§0";
-                case "dark_blue":
-                    return "§1";
-                case "dark_green":
-                    return "§2";
-                case "dark_aqua":
-                case "dark_cyan":
-                    return "§3";
-                case "dark_red":
-                    return "§4";
-                case "dark_purple":
-                case "dark_magenta":
-                    return "§5";
-                case "gold":
-                case "dark_yellow":
-                    return "§6";
-                case "gray":
-                    return "§7";
-                case "dark_gray":
-                    return "§8";
-                case "blue":
-                    return "§9";
-                case "green":
-                    return "§a";
-                case "aqua":
-                case "cyan":
-                    return "§b";
-                case "red":
-                    return "§c";
-                case "light_purple":
-                case "magenta":
-                    return "§d";
-                case "yellow":
-                    return "§e";
-                case "white":
-                    return "§f";
-
-	            case "obfuscated":
-		            return Obfuscated.ToString();
-				case "bold":
-		            return Bold.ToString();
-	            case "strikethrough":
-		            return Strikethrough.ToString();
-	            case "underline":
-		            return Underline.ToString();
-	            case "italic":
-		            return Italic.ToString();
-	            case "reset":
-		            return Reset.ToString();
-
-				default:
-                    return "";
+                return textColor.ToString();
             }
+            
+            return string.Empty;
         }
 
         public static TextColor GetColor(char col)
         {
-            switch (col)
-            {
-                case '0':
-                    return Black;
-                case '1':
-                    return DarkBlue;
-                case '2':
-                    return DarkGreen;
-                case '3':
-                    return DarkCyan;
-                case '4':
-                    return DarkRed;
-                case '5':
-                    return Purple;
-                case '6':
-                    return Gold;
-                case '7':
-                    return Gray;
-                case '8':
-                    return DarkGray;
-                case '9':
-                    return Blue;
-                case 'a':
-                    return BrightGreen;
-                case 'b':
-                    return Cyan;
-				case 'c':
-					return Red;
-                case 'd':
-                    return Pink;
-                case 'e':
-                    return Yellow;
-                case 'f':
-                    return White;
-
-				case 'k':
-					return Obfuscated;
-				case 'l':
-					return Bold;
-				case 'm':
-					return Strikethrough;
-				case 'n':
-					return Underline;
-				case 'o':
-					return Italic;
-				case 'r':
-					return Reset;
-
-                default:
-                    return White;
-            }
+            if (TryMatchColorByCode(col, out var textColor))
+                return textColor;
+            return White;
         }
 
         public static TextColor GetColor(string colorname)
         {
-            switch (colorname.ToLower())
+            if (TryMatchColorByName(colorname, out var textColor))
             {
-                case "black":
-                    return Black;
-                case "dark_blue":
-                    return DarkBlue;
-                case "dark_green":
-                    return DarkGreen;
-                case "dark_aqua":
-                case "dark_cyan":
-                    return DarkCyan;
-                case "dark_red":
-                    return DarkRed;
-                case "dark_purple":
-                case "dark_magenta":
-                    return Purple;
-                case "gold":
-                case "dark_yellow":
-                    return Gold;
-                case "gray":
-                    return Gray;
-                case "dark_gray":
-                    return DarkGray;
-                case "blue":
-                    return Blue;
-                case "green":
-                    return BrightGreen;
-                case "aqua":
-                case "cyan":
-                    return Cyan;
-                case "red":
-                    return Red;
-                case "light_purple":
-                case "magenta":
-                    return Pink;
-                case "yellow":
-                    return Yellow;
-                case "white":
-                    return White;
-
-	            case "obfuscated":
-		            return Obfuscated;
-	            case "bold":
-		            return Bold;
-	            case "strikethrough":
-		            return Strikethrough;
-	            case "underline":
-		            return Underline;
-	            case "italic":
-		            return Italic;
-	            case "reset":
-		            return Reset;
-
-				default: return White;
+                return textColor;
             }
+
+            return White;
         }
 
         private static readonly TextColor[] RainbowColors = new TextColor[]
@@ -305,7 +306,9 @@ namespace Alex.API.Utils
 
         public static explicit operator TextColor(Color color)
         {
-            return new TextColor(color);
+            if (TryMatchColorByForegroundColor(color, out var textColor))
+                return textColor;
+            return new TextColor(color, false);
         }
     }
 

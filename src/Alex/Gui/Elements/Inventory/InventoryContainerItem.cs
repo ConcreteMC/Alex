@@ -1,6 +1,6 @@
 using Alex.API.Gui;
 using Alex.API.Gui.Elements;
-using Alex.API.Gui.Elements.Controls;
+
 using Alex.API.Gui.Graphics;
 using Alex.API.Utils;
 using Alex.Items;
@@ -9,11 +9,11 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using NLog;
 using RocketUI;
-using FontStyle = Alex.API.Graphics.Typography.FontStyle;
+
 
 namespace Alex.Gui.Elements.Inventory
 {
-    public class InventoryContainerItem : GuiControl
+    public class InventoryContainerItem : RocketControl
     {
         public const int ItemWidth = 18;
         
@@ -45,7 +45,7 @@ namespace Alex.Gui.Elements.Inventory
             
            /* AddChild(_counTextElement = new TextElement()
             {
-                TextColor = TextColor.White,
+                TextColor = (Color) TextColor.White,
                 Anchor = Alignment.BottomRight,
                 Text = "",
                 Scale = 0.75f,
@@ -56,7 +56,7 @@ namespace Alex.Gui.Elements.Inventory
             });*/
            GuiItem.AddChild(_counTextElement = new TextElement()
            {
-               TextColor = TextColor.White,
+               TextColor = (Color) TextColor.White,
                Anchor = Alignment.BottomRight,
                Text = "",
                Scale = 0.75f,

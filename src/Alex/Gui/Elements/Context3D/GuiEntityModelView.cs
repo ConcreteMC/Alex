@@ -1,10 +1,10 @@
 ﻿using Alex.API.Graphics;
+using Alex.API.Gui.Graphics;
 using Alex.API.Utils;
 using Alex.API.Utils.Vectors;
 using Alex.Entities;
 using Microsoft.Xna.Framework;
 using RocketUI;
-using GuiTextures = Alex.API.Gui.Graphics.GuiTextures;
 
 namespace Alex.Gui.Elements.Context3D
 {
@@ -43,7 +43,7 @@ namespace Alex.Gui.Elements.Context3D
 
         public GuiEntityModelView(Entity entity)
         {
-            Background = GuiTextures.PanelGeneric;
+            Background = AlexGuiTextures.PanelGeneric;
             Entity = entity;
             Camera.CameraPositionOffset = new Vector3(0f, 1.62f, -2f);
             Camera.TargetPositionOffset = new Vector3(0f, 1.8f, 0f);
