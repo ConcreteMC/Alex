@@ -208,9 +208,9 @@ namespace Alex.API.Utils.Vectors
 			return MemberwiseClone();
 		}
 
-		public Matrix CalculateWorldMatrix()
+		public Matrix CalculateWorldMatrix(bool includePitch = false)
 		{
-			var dir = GetDirection(false);
+			var dir = GetDirection(includePitch);
 			return Matrix.CreateWorld(ToVector3(), dir, Vector3.Up);
 		}
 
