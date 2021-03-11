@@ -6,6 +6,7 @@ using Alex.API.Utils.Vectors;
 using Alex.Entities;
 using Alex.Items;
 using Alex.Net;
+using Alex.Networking.Java;
 using Alex.Networking.Java.Packets.Play;
 using Microsoft.Xna.Framework;
 using MiNET;
@@ -17,9 +18,9 @@ namespace Alex.Worlds.Multiplayer.Java
 {
 	public class JavaNetworkProvider : NetworkProvider
 	{
-		private JavaClient Client            { get; }
+		private NetConnection Client            { get; }
 		private Timer      NetworkReportTimer { get; }
-		public JavaNetworkProvider(JavaClient client)
+		public JavaNetworkProvider(NetConnection client)
 		{
 			Client = client;
 			

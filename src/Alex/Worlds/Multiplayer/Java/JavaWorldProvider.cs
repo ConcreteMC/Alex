@@ -29,6 +29,7 @@ using Alex.Items;
 using Alex.Net;
 using Alex.Networking.Java;
 using Alex.Networking.Java.Events;
+using Alex.Networking.Java.Packets;
 using Alex.Networking.Java.Packets.Handshake;
 using Alex.Networking.Java.Packets.Login;
 using Alex.Networking.Java.Packets.Play;
@@ -59,19 +60,12 @@ using PlayerLocation = Alex.API.Utils.Vectors.PlayerLocation;
 
 namespace Alex.Worlds.Multiplayer.Java
 {
-	internal interface IJavaProvider
-	{
-		void HandleHandshake(Packet packet);
-		void HandleStatus(Packet packet);
-		void HandleLogin(Packet packet);
-		void HandlePlay(Packet packet);
-	}
-	public class JavaWorldProvider : WorldProvider, IJavaProvider, ITicked
+	public class JavaWorldProvider : WorldProvider, IPacketHandler, ITicked
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger();
 
 		private Alex Alex { get; }
-		private JavaClient Client { get; }
+		private NetConnection Client { get; }
 		private PlayerProfile Profile { get; }
 		
 		private IOptionsProvider OptionsProvider { get; }
@@ -97,8 +91,9 @@ namespace Alex.Worlds.Multiplayer.Java
 		//	ThreadPool = new DedicatedThreadPool(new DedicatedThreadPoolSettings(Environment.ProcessorCount));
 
 			TcpClient = new TcpClient();
-			Client = new JavaClient(this, TcpClient.Client);
+			Client = new NetConnection(TcpClient.Client);
 			Client.OnConnectionClosed += OnConnectionClosed;
+			Client.PacketHandler = this;
 			
 			NetworkProvider = new JavaNetworkProvider(Client);;
 			networkProvider = NetworkProvider;
@@ -596,7 +591,7 @@ namespace Alex.Worlds.Multiplayer.Java
 			Client.SendPacket(packet);
 		}
 
-		void IJavaProvider.HandlePlay(Packet packet)
+		void IPacketHandler.HandlePlay(Packet packet)
 		{
 			if (packet is KeepAlivePacket keepAlive)
 			{
@@ -2156,17 +2151,17 @@ namespace Alex.Worlds.Multiplayer.Java
 			}
 		}
 
-		void IJavaProvider.HandleHandshake(Packet packet)
+		void IPacketHandler.HandleHandshake(Packet packet)
 		{
 
 		}
 
-		void IJavaProvider.HandleStatus(Packet packet)
+		void IPacketHandler.HandleStatus(Packet packet)
 		{
 
 		}
 
-		void IJavaProvider.HandleLogin(Packet packet)
+		void IPacketHandler.HandleLogin(Packet packet)
 		{
 			if (packet is DisconnectPacket disconnect)
 			{

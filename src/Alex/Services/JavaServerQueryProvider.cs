@@ -66,6 +66,80 @@ namespace Alex.Services
 		    return Task.CompletedTask;
 	    }
 
+	    private class QueryPacketHandler : IPacketHandler
+	    {
+		    private EventWaitHandle _waitHandle;
+		    private PingServerDelegate _callBack;
+		    private NetConnection _connection;
+		    private Action<string> _jsonCallback;
+
+		    public QueryPacketHandler(NetConnection connection, EventWaitHandle eventWaitHandle, PingServerDelegate @delegate, Action<string> jsonCallback)
+		    {
+			    _connection = connection;
+			    _waitHandle = eventWaitHandle;
+			    _callBack = @delegate;
+			    _jsonCallback = jsonCallback;
+		    }
+
+		    public long PingId { get; set; }
+
+		    /// <inheritdoc />
+		    public void HandleHandshake(Packet packet)
+		    {
+			    throw new NotImplementedException();
+		    }
+
+		    private Stopwatch _sw = new Stopwatch();
+		    /// <inheritdoc />
+		    public void HandleStatus(Packet packet)
+		    {
+			    if (packet is ResponsePacket responsePacket)
+			    {
+				    var jsonResponse = responsePacket.ResponseMsg;
+				    _jsonCallback?.Invoke(jsonResponse);
+				    
+				    if (_callBack != null)
+				    {
+					    var ping = PingPacket.CreateObject();
+					    ping.Payload = PingId;
+					    _connection.SendPacket(ping);
+
+					    _sw.Restart();
+				    }
+							        
+				    _waitHandle.Set();
+			    }
+			    else if (packet is PingPacket pong)
+			    {
+				    var pingResult = _sw.ElapsedMilliseconds;
+				    if (pong.Payload == PingId)
+				    {
+					    //waitingOnPing = false;
+					    _callBack?.Invoke(new ServerPingResponse(true, _sw.ElapsedMilliseconds));
+				    }
+				    else
+				    {
+					    //waitingOnPing = false;
+					    _callBack?.Invoke(new ServerPingResponse(true, _sw.ElapsedMilliseconds));
+				    }
+
+				    _waitHandle.Set();
+			    }
+		    }
+
+		    /// <inheritdoc />
+		    public void HandleLogin(Packet packet)
+		    {
+			    throw new NotImplementedException();
+		    }
+
+		    /// <inheritdoc />
+		    public void HandlePlay(Packet packet)
+		    {
+			    throw new NotImplementedException();
+		    }
+	    }
+
 	    private static async Task QueryJavaServerAsync(ServerConnectionDetails connectionDetails, PingServerDelegate pingCallback, ServerStatusDelegate statusCallBack)
         {
 	        CancellationTokenSource cts = new CancellationTokenSource(10000);
@@ -93,42 +167,20 @@ namespace Alex.Services
 						long pingResult = 0;
 
 						EventWaitHandle ar = new EventWaitHandle(false, EventResetMode.AutoReset);
-
-						conn.OnPacketReceived += (sender, args) =>
+						QueryPacketHandler handler;
+						handler = new QueryPacketHandler(conn, ar, response =>
 						{
-							if (args.Packet is ResponsePacket responsePacket)
-							{
-								jsonResponse = responsePacket.ResponseMsg;
-							        
-								if (pingCallback != null)
-								{
-									var ping = PingPacket.CreateObject();
-									ping.Payload = pingId;
-									conn.SendPacket(ping);
+							waitingOnPing = false;
+							pingCallback?.Invoke(response);
+						}, (json) =>
+						{
+						
+							jsonResponse = json;
+						});
 
-									sw.Restart();
-								}
-							        
-								ar.Set();
-							}
-							else if (args.Packet is PingPacket pong)
-							{
-								pingResult = sw.ElapsedMilliseconds;
-								if (pong.Payload == pingId)
-								{
-									waitingOnPing = false;
-									pingCallback?.Invoke(new ServerPingResponse(true, sw.ElapsedMilliseconds));
-								}
-								else
-								{
-									waitingOnPing = false;
-									pingCallback?.Invoke(new ServerPingResponse(true, sw.ElapsedMilliseconds));
-								}
-
-								ar.Set();
-							}
-						};
-
+						conn.PacketHandler = handler;
+						handler.PingId = pingId;
+						
 						bool connectionClosed = false;
 						conn.OnConnectionClosed += (sender, args) =>
 						{

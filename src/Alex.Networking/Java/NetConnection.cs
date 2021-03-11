@@ -28,7 +28,7 @@ namespace Alex.Networking.Java
         
         private CancellationTokenSource CancellationToken { get; }
         private Socket Socket { get; }
-        
+        public IPacketHandler PacketHandler { get; set; } = new DefaultPacketHandler();
 		public NetConnection(Socket socket)
         {
 	        Socket = socket;
@@ -42,8 +42,7 @@ namespace Alex.Networking.Java
 			PacketWriteQueue = new BlockingCollection<EnqueuedPacket>();
 			//HandlePacketQueue = new BlockingCollection<TemporaryPacketData>();
         }
-
-        public EventHandler<PacketReceivedEventArgs> OnPacketReceived;
+		
         public EventHandler<ConnectionClosedEventArgs> OnConnectionClosed;
 
         public EndPoint RemoteEndPoint { get; private set; }
@@ -351,8 +350,24 @@ namespace Alex.Networking.Java
 
 		protected virtual void HandlePacket(Packets.Packet packet)
 	    {
-			PacketReceivedEventArgs args = new PacketReceivedEventArgs(packet);
-		    OnPacketReceived?.Invoke(this, args);
+		    switch (ConnectionState)
+		    {
+			    case ConnectionState.Handshake:
+				    PacketHandler.HandleHandshake(packet);
+				    break;
+
+			    case ConnectionState.Status:
+				    PacketHandler.HandleStatus(packet);
+				    break;
+
+			    case ConnectionState.Login:
+				    PacketHandler.HandleLogin(packet);
+				    break;
+
+			    case ConnectionState.Play:
+				    PacketHandler.HandlePlay(packet);
+				    break;
+		    }
 	    }
 
 		public void SendPacket(Packet packet)
