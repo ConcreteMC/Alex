@@ -31,7 +31,27 @@ namespace Alex.Graphics.Models.Items
            
         }
 
+        /// <inheritdoc />
+        protected override VertexPositionColor[] Vertices
+        {
+            get
+            {
+                if (_vertices == null)
+                {
+                    if (!_cached)
+                    {
+                        Cache(Alex.Instance.Resources);
+                    }
+                }
+
+                return _vertices;
+            }
+            set => _vertices = value;
+        }
+
         private bool _cached = false;
+        private VertexPositionColor[] _vertices;
+
         public override bool Cache(ResourceManager pack)
         {
             if (_cached)
@@ -172,7 +192,7 @@ namespace Alex.Graphics.Models.Items
             //ActiveDisplayItem = DisplayElement.Default;
         }
 
-        protected TVertice[]  Vertices { get; set; } = null;
+        protected virtual TVertice[]  Vertices { get; set; } = null;
         private   BasicEffect Effect   { get; set; } = null;
         
         //public Vector3 Rotation { get; set; } = Vector3.Zero;

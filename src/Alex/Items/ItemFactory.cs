@@ -196,7 +196,7 @@ namespace Alex.Items
 			           {
 				           
 				           item.Renderer = new ItemBlockModelRenderer(bs, model, bs.Block.Animated ? resources.Atlas.GetAtlas(0) : resources.Atlas.GetStillAtlas());
-				           item.Renderer.Cache(resources);
+				           //item.Renderer.Cache(resources);
 
 
 				           if (!items.TryAdd(entry.Key, () => { return item.Clone(); }))
@@ -272,7 +272,7 @@ namespace Alex.Items
 			           if (ResourceManager.TryGetItemModel(resourceLocation, out var model))
 			           {
 				           renderer = new ItemModelRenderer(model);
-				           renderer.Cache(ResourceManager);
+				           //renderer.Cache(ResourceManager);
 
 				           ItemRenderers.TryAdd(resourceLocation, renderer);
 			           }

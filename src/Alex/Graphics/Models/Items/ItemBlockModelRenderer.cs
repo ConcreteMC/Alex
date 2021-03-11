@@ -30,10 +30,34 @@ namespace Alex.Graphics.Models.Items
             //  Translation = -Vector3.Forward * 8f;
         }
 
+        
+        /// <inheritdoc />
+        protected override VertexPositionColorTexture[] Vertices
+        {
+            get
+            {
+                if (_vertices == null)
+                {
+                    if (!_cached)
+                    {
+                        Cache(Alex.Instance.Resources);
+                    }
+                }
+
+                return _vertices;
+            }
+            set => _vertices = value;
+        }
+
+        private bool _cached = false;
+        private VertexPositionColorTexture[] _vertices;
+        
         public override bool Cache(ResourceManager pack)
         {
-            if (Vertices != null)
+            if (_cached)
                 return true;
+
+            _cached = true;
             
             ChunkData chunkData = new ChunkData(ChunkCoordinates.Zero);
             
