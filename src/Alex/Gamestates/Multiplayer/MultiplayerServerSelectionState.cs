@@ -7,8 +7,8 @@ using System.Threading.Tasks;
 using Alex.API.Data.Servers;
 using Alex.API.Graphics;
 using Alex.API.Gui;
-using Alex.API.Gui.Elements.Controls;
-using Alex.API.Gui.Elements.Layout;
+
+
 using Alex.API.Gui.Graphics;
 using Alex.API.Services;
 using Alex.API.Utils;
@@ -40,7 +40,7 @@ namespace Alex.Gamestates.Multiplayer
 
 	    private GuiPanoramaSkyBox       _skyBox;
 	    private CancellationTokenSource CancellationTokenSource { get; }
-	    private GuiStackContainer _tabItemContainer { get; }
+	    private StackContainer _tabItemContainer { get; }
 	    
 	    private string _filterValue = "java";
 		public MultiplayerServerSelectionState(GuiPanoramaSkyBox skyBox) : base()
@@ -57,7 +57,7 @@ namespace Alex.Gamestates.Multiplayer
 		    Header.Padding = new Thickness(3, 3, 3, 0);
 		    Header.Margin = new Thickness(3, 3, 3, 0);
 
-		    GuiStackContainer stackedStack = new GuiStackContainer()
+		    StackContainer stackedStack = new StackContainer()
 		    {
 			    Orientation = Orientation.Horizontal, 
 			    ChildAnchor = Alignment.BottomLeft,
@@ -66,7 +66,7 @@ namespace Alex.Gamestates.Multiplayer
 			    
 		    };
 		    
-		    stackedStack.AddChild(_tabItemContainer = new GuiStackContainer()
+		    stackedStack.AddChild(_tabItemContainer = new StackContainer()
 		    {
 			    Orientation = Orientation.Horizontal,
 			    ChildAnchor = Alignment.BottomLeft,
@@ -88,12 +88,12 @@ namespace Alex.Gamestates.Multiplayer
 		    });
 
 		    //_tabItemContainer.MinWidth = _tabItemContainer.Width = BodyMinWidth;
-		    /*_tabItemContainer.AddChild(new GuiButton("Java")
+		    /*_tabItemContainer.AddChild(new Button("Java")
 		    {
 			    BackgroundOverlay = new Color(Color.Black, 0.25f),
 			    Margin = Thickness.Zero
 		    });
-		    _tabItemContainer.AddChild(new GuiButton("Bedrock")
+		    _tabItemContainer.AddChild(new Button("Bedrock")
 		    {
 			    Margin = Thickness.Zero
 		    });*/
@@ -146,8 +146,8 @@ namespace Alex.Gamestates.Multiplayer
 		    Body.Margin = new Thickness(0, Header.Height, 0, Footer.Height);
 		}
 
-		private GuiButton _activeTabBtn;
-		private GuiButton ActiveTabBtn
+		private Button _activeTabBtn;
+		private Button ActiveTabBtn
 		{
 			get => _activeTabBtn;
 			set
@@ -157,26 +157,26 @@ namespace Alex.Gamestates.Multiplayer
 				if (oldValue != null)
 				{
 					oldValue.BackgroundOverlay = Color.Transparent;
-					oldValue.EnabledTextColor = TextColor.DarkGray;
+					oldValue.DefaultColor = (Color) TextColor.DarkGray;
 					
 					oldValue.Enabled = false;
 					oldValue.Enabled = true;
 				}
 
 				value.BackgroundOverlay = new Color(Color.Black, 0.25f);
-				value.EnabledTextColor = TextColor.White;
+				value.DefaultColor = (Color) TextColor.White;
 				_activeTabBtn = value;
 			}
 		}
 
-		private GuiButton AddTabButton(string text, Action action)
+		private Button AddTabButton(string text, Action action)
 		{
-			GuiButton button = new GuiButton(
+			Button button = new Button(
 				text)
 			{
 				Margin = Thickness.Zero,
 				BackgroundOverlay = Color.Transparent,
-				EnabledTextColor = TextColor.DarkGray
+				DefaultColor = (Color) TextColor.DarkGray
 			};
 
 			button.Action = () =>

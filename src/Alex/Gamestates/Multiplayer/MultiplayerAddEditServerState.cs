@@ -3,7 +3,7 @@ using Alex.API.Data.Servers;
 using Alex.API.Graphics;
 using Alex.API.Gui;
 using Alex.API.Gui.Elements;
-using Alex.API.Gui.Elements.Controls;
+
 using Alex.API.Gui.Graphics;
 using Alex.API.Services;
 using Alex.API.Utils;
@@ -14,7 +14,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using NLog;
 using RocketUI;
-using FontStyle = Alex.API.Graphics.Typography.FontStyle;
+
 
 namespace Alex.Gamestates.Multiplayer
 {
@@ -123,13 +123,12 @@ namespace Alex.Gamestates.Multiplayer
 					element = new ToggleButton(type.DisplayName)
 					{
 						Margin = new Thickness(5),
-						Modern = true,
 						Width = 50,
 						Checked = serverType == type.Id,
 						CheckedOutlineThickness = new Thickness(1),
 						DisplayFormat = new ValueFormatter<bool>((val) => $"{type.DisplayName} {(val ? "[Active]" : "")}"),
 						TabIndex = tabIndex++
-					});
+					}.ApplyModernStyle());
 
 				element.ValueChanged += (sender, value) =>
 				{
@@ -146,25 +145,23 @@ namespace Alex.Gamestates.Multiplayer
 
 				TranslationKey = "addServer.add",
 				Margin         = new Thickness(5),
-				Modern         = false,
 				Width          = 100,
 				TabIndex = 5
-			}, new Button(OnCancelButtonPressed)
+			}.ApplyModernStyle(false), new Button(OnCancelButtonPressed)
 			{
 				AccessKey = Keys.Escape,
 
 				TranslationKey = "gui.cancel",
 				Margin         = new Thickness(5),
-				Modern         = false,
 				Width          = 100,
 				TabIndex = 6
-			});
+			}.ApplyModernStyle(false));
 			buttonRow.ChildAnchor = Alignment.MiddleCenter;
 
 
 			AddRocketElement(_errorMessage = new TextElement()
 			{
-				TextColor = TextColor.Red
+				TextColor = (Color) TextColor.Red
 			});
 
 			if (!string.IsNullOrWhiteSpace(name))

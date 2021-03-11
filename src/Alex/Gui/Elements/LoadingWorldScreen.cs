@@ -1,8 +1,8 @@
 ﻿using System;
 using Alex.API.Gui;
 using Alex.API.Gui.Elements;
-using Alex.API.Gui.Elements.Controls;
-using Alex.API.Gui.Elements.Layout;
+
+
 using Alex.API.Gui.Graphics;
 using Alex.API.Utils;
 using Alex.API.World;
@@ -93,7 +93,7 @@ namespace Alex.Gui.Elements
 			progressBarContainer.AddChild(_textDisplay = new TextElement()
 			{
 				Text      = Text,
-				TextColor = TextColor.White,
+				TextColor = (Color) TextColor.White,
 				
 				Anchor    = Alignment.TopCenter,
 				HasShadow = false,
@@ -112,7 +112,7 @@ namespace Alex.Gui.Elements
 			element.AddChild(_percentageDisplay = new TextElement()
 			{
 				Text      = Text,
-				TextColor = TextColor.White,
+				TextColor = (Color) TextColor.White,
 				
 				Anchor    = Alignment.TopRight,
 				HasShadow = false
@@ -129,7 +129,7 @@ namespace Alex.Gui.Elements
 			progressBarContainer.AddChild(
 				_subTextDisplay = new TextElement()
 				{
-					Text = Text, TextColor = TextColor.White, Anchor = Alignment.BottomLeft, HasShadow = false
+					Text = Text, TextColor = (Color) TextColor.White, Anchor = Alignment.BottomLeft, HasShadow = false
 				});
 
 			AddChild(_cancelButton = new Button("Cancel", Cancel)

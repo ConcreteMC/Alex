@@ -1,6 +1,4 @@
 using Alex.Api;
-using Alex.API.Gui.Elements.Controls;
-using Alex.API.Gui.Graphics;
 using Alex.API.Utils;
 using Alex.Gamestates;
 using Alex.Gui.Elements.Context3D;
@@ -12,7 +10,7 @@ using RocketUI;
 
 namespace Alex.Gui.Elements.Inventory
 {
-    public class GuiItemRenderer : GuiControl
+    public class GuiItemRenderer : RocketControl
     {
         private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(GuiItemRenderer));
         
@@ -86,7 +84,7 @@ namespace Alex.Gui.Elements.Inventory
             if (item == null || item.Renderer == null)
                 return;
             
-            var bounds = Screen.RenderBounds;
+            var bounds = RootScreen.RenderBounds;
 
             if (bounds != _previousBounds)
             {

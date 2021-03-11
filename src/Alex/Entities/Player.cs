@@ -31,6 +31,7 @@ using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 using NLog;
 using NLog.Fluent;
+using RocketUI.Input;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
@@ -288,9 +289,9 @@ namespace Alex.Entities
 			    //	SwingArm(true);
 			    //}
 
-			    bool didLeftClick     = Controller.InputManager.IsPressed(InputCommand.LeftClick);
-			    bool didRightClick    = Controller.InputManager.IsPressed(InputCommand.RightClick);
-			    bool leftMouseBtnDown = Controller.InputManager.IsDown(InputCommand.LeftClick);
+			    bool didLeftClick     = Controller.InputManager.IsPressed(AlexInputCommand.LeftClick);
+			    bool didRightClick    = Controller.InputManager.IsPressed(AlexInputCommand.RightClick);
+			    bool leftMouseBtnDown = Controller.InputManager.IsDown(AlexInputCommand.LeftClick);
 
 			    var hitEntity = HitEntity;
 
@@ -313,7 +314,7 @@ namespace Alex.Entities
 				    {
 					    if (HasRaytraceResult)
 					    {
-						    if (Controller.InputManager.IsBeginPress(InputCommand.LeftClick) && !IsWorldImmutable)
+						    if (Controller.InputManager.IsBeginPress(AlexInputCommand.LeftClick) && !IsWorldImmutable)
 						    {
 							    StartBreakingBlock();
 						    }

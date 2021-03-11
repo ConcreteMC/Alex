@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using Alex.API.Gui.Elements.Controls;
+
 using Alex.API.Gui.Graphics;
 using Alex.API.Localization;
 using Alex.Gui;
@@ -71,10 +71,7 @@ namespace Alex.Gamestates.MainMenu.Options
                 Button btn = new Button(GetButtonText(lng.Value, active), () =>
                 {
                     SetLanguage(lng.Value);
-                })
-                {
-                    Modern = false
-                };
+                }).ApplyModernStyle(false);
                 
                 _languageButtons.Add(lng.Value, btn);
                 

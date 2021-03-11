@@ -2,7 +2,7 @@ using System;
 using System.Diagnostics;
 using Alex.API.Gui;
 using Alex.API.Gui.Elements;
-using Alex.API.Gui.Elements.Controls;
+
 using Alex.API.Input;
 using Alex.API.Services;
 using Alex.API.Utils;
@@ -11,6 +11,7 @@ using Alex.Gui.Elements;
 using Alex.Gui.Elements.Context3D;
 using Microsoft.Xna.Framework;
 using RocketUI;
+using RocketUI.Input;
 using Color = Microsoft.Xna.Framework.Color;
 
 namespace Alex.Gamestates.MainMenu.Profile
@@ -76,9 +77,9 @@ namespace Alex.Gamestates.MainMenu.Profile
         {
             base.OnUpdate(gameTime);
             
-            var mousePos = Alex.Instance.InputManager.CursorInputListener.GetCursorPosition();
-
-            mousePos = Vector2.Transform(mousePos, Alex.Instance.GuiManager.ScaledResolution.InverseTransformMatrix);
+            var mousePos = Alex.Instance.GuiManager.FocusManager.CursorPosition;
+            mousePos = GuiRenderer.Unproject(mousePos);
+            
             var playerPos = ModelView.RenderBounds.Center.ToVector2();
 
             var mouseDelta = (new Vector3(playerPos.X, playerPos.Y, _playerViewDepth) - new Vector3(mousePos.X, mousePos.Y, 0.0f));

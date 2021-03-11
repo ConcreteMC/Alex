@@ -1,30 +1,29 @@
 ﻿using System;
+using Alex.API.Gui.Graphics;
+using Alex.API.Graphics.Typography;
 using Alex.API.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using RocketUI;
-using FontStyle = Alex.API.Graphics.Typography.FontStyle;
-using GuiTextures = Alex.API.Gui.Graphics.GuiTextures;
-using TextureSlice2D = Alex.API.Graphics.Textures.TextureSlice2D;
 
 namespace Alex.API.Gui.Elements.Icons
 {
 	public class GuiConnectionPingIcon : RocketElement
 	{
-		private const GuiTextures OfflineState = GuiTextures.ServerPing0;
+		private static readonly GuiTextures OfflineState = AlexGuiTextures.ServerPing0;
 
 		private static readonly long[] QualityThresholds = new long[] {50, 150, 250, 500, 1000};
 
 		private static readonly GuiTextures[] QualityStates = new[]
 		{
-			GuiTextures.ServerPing1, GuiTextures.ServerPing2, GuiTextures.ServerPing3, GuiTextures.ServerPing4,
-			GuiTextures.ServerPing5,
+			AlexGuiTextures.ServerPing1, AlexGuiTextures.ServerPing2, AlexGuiTextures.ServerPing3, AlexGuiTextures.ServerPing4,
+			AlexGuiTextures.ServerPing5,
 		};
 
 		private static readonly GuiTextures[] ConnectingStates = new[]
 		{
-			GuiTextures.ServerPingPending1, GuiTextures.ServerPingPending2, GuiTextures.ServerPingPending3,
-			GuiTextures.ServerPingPending4, GuiTextures.ServerPingPending5,
+			AlexGuiTextures.ServerPingPending1, AlexGuiTextures.ServerPingPending2, AlexGuiTextures.ServerPingPending3,
+			AlexGuiTextures.ServerPingPending4, AlexGuiTextures.ServerPingPending5,
 		};
 
 		private TextureSlice2D   _offlineTexture;
@@ -64,7 +63,7 @@ namespace Alex.API.Gui.Elements.Icons
 
 		public GuiConnectionPingIcon() : base()
 	    {
-		    Background = GuiTextures.ServerPing0;
+		    Background = AlexGuiTextures.ServerPing0;
             SetFixedSize(10, 8);
             
             _playerCountElement = new TextElement(false)
@@ -102,7 +101,7 @@ namespace Alex.API.Gui.Elements.Icons
         public void SetPending()
         {
             _isPending = true;
-            Background = _connectingStateTextures[0];
+            Background.Texture = _connectingStateTextures[0];
         }
 
         public void SetVersion(string version)
@@ -124,7 +123,7 @@ namespace Alex.API.Gui.Elements.Icons
 			        if (ms > QualityThresholds[i]) break;
 		        }
 
-		        GuiTexture2D bg = _qualityStateTextures[_qualityStateTextures.Length - index];
+		        GuiTexture2D bg = new GuiTexture2D(_qualityStateTextures[_qualityStateTextures.Length - index]);
 
 		        if (!bg.HasValue && GuiRenderer != null)
 		        {
@@ -213,7 +212,7 @@ namespace Alex.API.Gui.Elements.Icons
 		            var position = _cursorPosition + new Point(5, 5);
 		            
 		            graphics.SpriteBatch.FillRectangle(new Rectangle(position, size.ToPoint()), Color.Black * 0.5f);
-		            graphics.DrawString(position.ToVector2(), text, TextColor.White, FontStyle.None, 1f);
+		            graphics.DrawString(graphics.Font, text, position.ToVector2(), TextColor.White, FontStyle.None, 1f);
 	            }
             }
         }

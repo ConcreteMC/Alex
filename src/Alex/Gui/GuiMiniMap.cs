@@ -9,7 +9,7 @@ using Alex.Worlds;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using RocketUI;
-using TextureSlice2D = Alex.API.Graphics.Textures.TextureSlice2D;
+
 
 namespace Alex.Gui
 {

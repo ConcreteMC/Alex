@@ -16,6 +16,7 @@ using Alex.Net;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using NLog;
+using RocketUI;
 using ContainmentType = Microsoft.Xna.Framework.ContainmentType;
 using UUID = MiNET.Utils.UUID;
 
@@ -267,7 +268,7 @@ namespace Alex.Worlds
 						new Rectangle(renderPosition.ToPoint(), c), new Color(Color.Black, 128), screenSpace.Z + 0.0000001f);
 
 					Alex.Font.DrawString(
-						args.SpriteBatch, line, renderPosition, TextColor.White, FontStyle.None,
+						args.SpriteBatch, line, renderPosition, (Color)TextColor.White, FontStyle.None,
 						layerDepth: screenSpace.Z, scale: new Vector2((float) scale));
 				}
 			}

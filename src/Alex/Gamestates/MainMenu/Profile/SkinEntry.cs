@@ -3,7 +3,7 @@ using System.Diagnostics;
 using Alex.API.Graphics;
 using Alex.API.Gui;
 using Alex.API.Gui.Elements;
-using Alex.API.Gui.Elements.Controls;
+
 using Alex.API.Input;
 using Alex.API.Utils;
 using Alex.Entities;
@@ -13,6 +13,7 @@ using Alex.Gui.Elements.Context3D;
 using Alex.ResourcePackLib;
 using Microsoft.Xna.Framework;
 using RocketUI;
+using RocketUI.Input;
 
 namespace Alex.Gamestates.MainMenu.Profile
 {
@@ -67,7 +68,7 @@ namespace Alex.Gamestates.MainMenu.Profile
         {
             base.OnUpdate(gameTime);
             
-            var mousePos = Alex.Instance.InputManager.CursorInputListener.GetCursorPosition();
+            var mousePos = Alex.Instance.GuiManager.FocusManager.CursorPosition;
 
             mousePos = Vector2.Transform(mousePos, Alex.Instance.GuiManager.ScaledResolution.InverseTransformMatrix);
             var playerPos = ModelView.RenderBounds.Center.ToVector2();

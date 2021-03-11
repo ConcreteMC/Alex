@@ -1,12 +1,12 @@
 using System;
 using Alex.API.Gui;
 using Alex.API.Gui.Elements;
-using Alex.API.Gui.Elements.Controls;
-using Alex.API.Gui.Elements.Layout;
+
+
+using Alex.API.Gui.Graphics;
 using Alex.Entities;
 using Microsoft.Xna.Framework;
 using RocketUI;
-using GuiTextures = Alex.API.Gui.Graphics.GuiTextures;
 
 namespace Alex.Gui.Elements.Hud
 {
@@ -70,7 +70,7 @@ namespace Alex.Gui.Elements.Hud
             base.OnUpdate(gameTime);
         }
         
-        public class HealthBarHeart : GuiControl
+        public class HealthBarHeart : RocketControl
         {
             private TextureElement Texture { get; set; }
 
@@ -92,8 +92,8 @@ namespace Alex.Gui.Elements.Hud
         
             protected override void OnInit(IGuiRenderer renderer)
             {
-                Background = renderer.GetTexture(GuiTextures.HealthPlaceholder);
-                Texture.Texture = renderer.GetTexture(GuiTextures.HealthHeart);
+                Background = renderer.GetTexture(AlexGuiTextures.HealthPlaceholder);
+                Texture.Texture = renderer.GetTexture(AlexGuiTextures.HealthHeart);
             }
 
             public void Set(HeartValue value)
@@ -103,10 +103,10 @@ namespace Alex.Gui.Elements.Hud
                 switch (value)
                 {
                     case HeartValue.Full:
-                        Texture.Texture = GuiRenderer.GetTexture(GuiTextures.HealthHeart);
+                        Texture.Texture = GuiRenderer.GetTexture(AlexGuiTextures.HealthHeart);
                         break;
                     case HeartValue.Half:
-                        Texture.Texture = GuiRenderer.GetTexture(GuiTextures.HealthHalfHeart);
+                        Texture.Texture = GuiRenderer.GetTexture(AlexGuiTextures.HealthHalfHeart);
                         break;
                     case HeartValue.None:
                         Texture.IsVisible = false;

@@ -10,7 +10,7 @@ using SixLabors.ImageSharp.PixelFormats;
 
 namespace Alex.Gui.Forms
 {
-    public class FormImage : GuiControl
+    public class FormImage : RocketControl
     {
         //TODO: Get rid of static cache instance.
         private static ConcurrentDictionary<string, byte[]> _cache = new ConcurrentDictionary<string, byte[]>();

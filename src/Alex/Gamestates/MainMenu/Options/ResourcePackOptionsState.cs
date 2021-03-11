@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Alex.API.Gui;
-using Alex.API.Gui.Elements.Controls;
+
 using Alex.API.Utils;
 using Alex.Gamestates.MainMenu.Options.Elements;
 using Alex.Gui;
@@ -51,24 +51,19 @@ namespace Alex.Gamestates.MainMenu.Options
                 row.AddChild(_loadBtn = new Button(LoadBtnClicked)
                 {
                     Text = "Load Resource pack",
-                    Modern = false,
                     Enabled = false
-                });
+                }.ApplyModernStyle(false));
                 
                 row.AddChild(new Button(BackButtonPressed)
                 {
                     TranslationKey = "gui.done",
-                    Modern = false
-                });
+                }.ApplyModernStyle(false));
             });
 
             Footer.AddRow(row =>
             {
                 row.ChildAnchor = Alignment.BottomCenter;
-                row.AddChild(new Button("resourcePack.openFolder", OpenResourcePackFolderClicked, true)
-                {
-                    Modern = false
-                });
+                row.AddChild(new Button("resourcePack.openFolder", OpenResourcePackFolderClicked, true).ApplyModernStyle(false));
             });
 
             Reload();

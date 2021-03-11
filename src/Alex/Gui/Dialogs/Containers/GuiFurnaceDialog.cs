@@ -8,7 +8,7 @@ namespace Alex.Gui.Dialogs.Containers
 	{
 		private Inventory PlayerInventory { get; set; }
 		/// <inheritdoc />
-		public GuiFurnaceDialog(Inventory playerInventory, InventoryBase inventory) : base(inventory, GuiTextures.InventoryFurnace, 175, 165)
+		public GuiFurnaceDialog(Inventory playerInventory, InventoryBase inventory) : base(inventory, AlexGuiTextures.InventoryFurnace, 175, 165)
 		{
 			PlayerInventory = playerInventory;
 

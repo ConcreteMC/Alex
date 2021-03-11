@@ -1,11 +1,11 @@
 using Alex.API.Gui;
 using Alex.API.Gui.Elements;
-using Alex.API.Gui.Elements.Controls;
-using Alex.API.Gui.Elements.Layout;
+
+
+using Alex.API.Gui.Graphics;
 using Alex.API.Utils;
 using Alex.ResourcePackLib.Generic;
 using RocketUI;
-using GuiTextures = Alex.API.Gui.Graphics.GuiTextures;
 
 namespace Alex.Gamestates.MainMenu.Options.Elements
 {
@@ -43,7 +43,7 @@ namespace Alex.Gamestates.MainMenu.Options.Elements
                 
                 Anchor = Alignment.TopLeft,
 
-                Background = GuiTextures.DefaultServerIcon,
+                Background = AlexGuiTextures.DefaultServerIcon,
                 AutoSizeMode = AutoSizeMode.None,
                 RepeatMode = TextureRepeatMode.NoRepeat
             });
@@ -86,7 +86,7 @@ namespace Alex.Gamestates.MainMenu.Options.Elements
         private class LoadIcon : Image
         {
             public bool Loaded { get; private set; }
-            public LoadIcon() : base(GuiTextures.GreyCheckMark, TextureRepeatMode.NoRepeat)
+            public LoadIcon() : base(AlexGuiTextures.GreyCheckMark, TextureRepeatMode.NoRepeat)
             {
                 SetFixedSize(15, 15);
             }
@@ -96,12 +96,12 @@ namespace Alex.Gamestates.MainMenu.Options.Elements
                 if (isLoaded)
                 {
                     Loaded = true;
-                    Background = GuiTextures.GreenCheckMark;
+                    Background = AlexGuiTextures.GreenCheckMark;
                 }
                 else
                 {
                     Loaded = false;
-                    Background = GuiTextures.GreyCheckMark;
+                    Background = AlexGuiTextures.GreyCheckMark;
                 }
             }
         }

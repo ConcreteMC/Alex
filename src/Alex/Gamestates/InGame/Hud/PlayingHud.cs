@@ -1,10 +1,9 @@
 ﻿using Alex.API.Data;
 using Alex.API.Gui;
 using Alex.API.Gui.Elements;
-using Alex.API.Gui.Elements.Layout;
+
 using Alex.API.Gui.Graphics;
 using Alex.API.Input;
-using Alex.API.Input.Listeners;
 using Alex.API.Utils;
 using Alex.Entities;
 using Alex.Gui.Elements;
@@ -15,6 +14,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using MiNET.Worlds;
 using RocketUI;
+using RocketUI.Input;
+using RocketUI.Input.Listeners;
 
 namespace Alex.Gamestates.InGame.Hud
 {
@@ -124,7 +125,7 @@ namespace Alex.Gamestates.InGame.Hud
 	        AddChild(Chat);
 
 	        //AddChild(_hotbar);
-	        AddChild(new GuiCrosshair());
+	        AddChild(new Crosshair());
 	        AddChild(Title);
 	        
 	        AddChild(Scoreboard);
@@ -139,14 +140,14 @@ namespace Alex.Gamestates.InGame.Hud
 				{
 					Chat.Enabled = false;
 
-					if (InputManager.IsPressed(InputCommand.ToggleChat))
+					if (InputManager.IsPressed(AlexInputCommand.ToggleChat))
 					{
 						Chat.Dismiss();
 						Chat.Enabled = true;
 						Alex.GuiManager.FocusManager.FocusedElement = Chat;
 					}
 
-					if (InputManager.IsPressed(InputCommand.Exit) && CheckInput)
+					if (InputManager.IsPressed(AlexInputCommand.Exit) && CheckInput)
 					{
 						//Player.Controller.CheckMovementInput = false;
 						Alex.GameStateManager.SetActiveState<InGameMenuState>("ingamemenu");
@@ -154,17 +155,17 @@ namespace Alex.Gamestates.InGame.Hud
 				}
 				else if (CheckInput)
 				{
-					if (InputManager.IsPressed(InputCommand.Exit))
+					if (InputManager.IsPressed(AlexInputCommand.Exit))
 					{
 						Chat.Dismiss();
 						Alex.GuiManager.FocusManager.FocusedElement = null;
 					}
 
-					if (InputManager.IsPressed(InputCommand.Left))
+					if (InputManager.IsPressed(AlexInputCommand.Left))
 					{
 						Chat.MoveCursor(false);
 					}
-					else if (InputManager.IsPressed(InputCommand.Right))
+					else if (InputManager.IsPressed(AlexInputCommand.Right))
 					{
 						Chat.MoveCursor(true);
 					}

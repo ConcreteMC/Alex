@@ -7,6 +7,7 @@ using Alex.API.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MiNET.Worlds;
+using RocketUI;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using Color = Microsoft.Xna.Framework.Color;
@@ -16,8 +17,9 @@ namespace Alex.API.Graphics.Typography
 {
     public class BitmapFont : IFont
     {
-
-        public IReadOnlyCollection<char> Characters { get; }
+	    #region Properties
+	    
+	    public IReadOnlyCollection<char> Characters { get; }
 
         public int GridWidth  { get; }
         public int GridHeight { get; }
@@ -30,14 +32,17 @@ namespace Alex.API.Graphics.Typography
         public Glyph DefaultGlyph { get; private set; }
         //public Glyph[] Glyphs { get; private set; }
         private Glyph[] Glyphs { get; } // Dictionary<char, Glyph> Glyphs { get; }
+        private Vector2 Scale  { get; set; } = Vector2.One;
 
         private bool _isInitialised = false;
 
+        #endregion
+        
+        #region Constructors
+        
         public BitmapFont(GraphicsDevice graphics, Image<Rgba32> bitmap, int gridSize, List<char> characters) :
             this(graphics, bitmap, gridSize, gridSize, characters)
-        {
-
-        }
+        { }
         public BitmapFont(GraphicsDevice graphics, Image<Rgba32> bitmap, int gridWidth, int gridHeight, List<char> characters) :
             this(TextureUtils.BitmapToTexture2D(graphics, bitmap), gridWidth, gridHeight, characters)
         {
@@ -45,10 +50,7 @@ namespace Alex.API.Graphics.Typography
             LoadGlyphs(bitmap, characters);
         }
 
-        public BitmapFont(Texture2D texture, int gridSize, List<char> characters) : this(texture, gridSize, gridSize, characters)
-        {
-
-        }
+        public BitmapFont(Texture2D texture, int gridSize, List<char> characters) : this(texture, gridSize, gridSize, characters) { }
 
         public BitmapFont(Texture2D texture, int gridWidth, int gridHeight, List<char> characters) : this(gridWidth, gridHeight, characters)
         {
@@ -65,6 +67,8 @@ namespace Alex.API.Graphics.Typography
             Glyphs = ArrayOf<Glyph>.Create((int) characters.Max(x => (int) x), DefaultGlyph);
             //Glyphs = new Dictionary<char, Glyph>(characters.Count); //new Glyph[characters.Count];
         }
+        
+        #endregion
 
         public Vector2 MeasureString(string text, float scale = 1.0f)
         {
@@ -170,12 +174,25 @@ namespace Alex.API.Graphics.Typography
             size.Y = offset.Y + finalLineHeight;
         }
 
-        private Vector2 Scale { get; set; } = Vector2.One;
+
+        public void DrawString(SpriteBatch sb, string text, Vector2 position,
+	        Color                          color,
+	        FontStyle                      style      = FontStyle.None,
+	        Vector2?                       scale      = null,
+	        float                          opacity    = 1f,
+	        float                          rotation   = 0f,
+	        Vector2?                       origin     = null,
+	        SpriteEffects                  effects    = SpriteEffects.None,
+	        float                          layerDepth = 0f)
+	        => DrawString(sb, text, position, (TextColor) color, style, scale, opacity, rotation, origin, effects, layerDepth);
+        
         public void DrawString(SpriteBatch   sb, string text, Vector2 position,
                                TextColor     color,
-                               FontStyle     style      = FontStyle.None, Vector2? scale = null,
+                               FontStyle     style      = FontStyle.None, 
+                               Vector2? scale = null,
                                float         opacity    = 1f,
-                               float         rotation   = 0f, Vector2? origin = null,
+                               float         rotation   = 0f, 
+                               Vector2? origin = null,
                                SpriteEffects effects    = SpriteEffects.None,
                                float         layerDepth = 0f)
 		{

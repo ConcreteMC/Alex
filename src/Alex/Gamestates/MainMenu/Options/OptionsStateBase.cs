@@ -3,7 +3,7 @@ using Alex.API.Data.Options;
 using Alex.API.GameStates;
 using Alex.API.Graphics;
 using Alex.API.Gui;
-using Alex.API.Gui.Elements.Controls;
+
 using Alex.API.Gui.Graphics;
 using Alex.API.Services;
 using Alex.Gamestates.Common;
@@ -35,8 +35,7 @@ namespace Alex.Gamestates.MainMenu.Options
             {
                 TranslationKey = "gui.done",
                 Anchor = Alignment.TopFill,
-				Modern = false
-            });
+            }.ApplyModernStyle(false));
 
             Footer.ChildAnchor = Alignment.MiddleCenter;
 
@@ -126,8 +125,7 @@ namespace Alex.Gamestates.MainMenu.Options
             {
                 Text = fallback ?? translationKey,
                 TranslationKey = translationKey,
-	            Modern = false
-            };
+            }.ApplyModernStyle(false);
         }
 
         protected Slider CreateSlider(Func<double, string> formatter, Func<AlexOptions, OptionsProperty<int>> optionsAccessor,
@@ -194,7 +192,7 @@ namespace Alex.Gamestates.MainMenu.Options
         protected EnumSwitchButton<TEnum> CreateSwitch<TEnum>(string displayFormat, Func<AlexOptions, OptionsProperty<TEnum>> optionsAccessor) where TEnum : Enum
         {
             var @switch = CreateValuedControl<EnumSwitchButton<TEnum>, TEnum>(displayFormat, optionsAccessor);// {Modern = false, DisplayFormat = displayFormat};
-            @switch.Modern = false;
+            @switch.ApplyModernStyle(false);
             return @switch;
         }
 
@@ -202,7 +200,7 @@ namespace Alex.Gamestates.MainMenu.Options
             Func<AlexOptions, OptionsProperty<bool>> optionsAccessor)
         {
             var sw = CreateValuedControl<ToggleButton, bool>(displayFormat, optionsAccessor);
-            sw.Modern = false;
+            sw.ApplyModernStyle(false);
             
             return sw;
         }

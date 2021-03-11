@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Alex.API.Gui;
-using Alex.API.Gui.Elements.Controls;
+
 using RocketUI;
 
 namespace Alex
@@ -49,9 +49,9 @@ namespace Alex
 			Children = new List<MenuItem>();
 		}
 
-		internal IRocketElement[] BuildMenu(IMenuHolder menuHolder, BuildMode buildMode)
+		internal RocketElement[] BuildMenu(IMenuHolder menuHolder, BuildMode buildMode)
 		{
-			List<IRocketElement> elements = new List<IRocketElement>();
+			List<RocketElement> elements = new List<RocketElement>();
 
 			if (buildMode == BuildMode.Children || Type == MenuType.Menu)
 			{

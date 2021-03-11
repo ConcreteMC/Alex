@@ -8,7 +8,7 @@ namespace Alex.Gui.Dialogs.Containers
 {
 	public class GuiChestDialog : GuiInventoryBase
 	{
-		public GuiChestDialog(InventoryBase inventory, Inventory playerInventory) : base(inventory, GuiTextures.InventoryChestBackground, 175, 221)
+		public GuiChestDialog(InventoryBase inventory, Inventory playerInventory) : base(inventory, AlexGuiTextures.InventoryChestBackground, 175, 221)
 		{
 			//7, 17
 			

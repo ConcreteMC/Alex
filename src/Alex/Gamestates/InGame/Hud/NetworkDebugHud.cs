@@ -7,7 +7,7 @@ using Alex.API.Utils;
 using Alex.Net;
 using Microsoft.Xna.Framework;
 using RocketUI;
-using FontStyle = Alex.API.Graphics.Typography.FontStyle;
+
 
 namespace Alex.Gamestates.InGame.Hud
 {
@@ -40,7 +40,7 @@ namespace Alex.Gamestates.InGame.Hud
             WarningElement = new TextElement
             {
                 IsVisible = false,
-                TextColor = TextColor.Red,
+                TextColor = (Color) TextColor.Red,
                 Text = "",
                 Anchor = Alignment.TopCenter,
                 Scale = 1f,
@@ -57,7 +57,7 @@ namespace Alex.Gamestates.InGame.Hud
             
             NetworkInfoElement.Anchor = Alignment.BottomRight;
             NetworkInfoElement.TextOpacity = 0.75f;
-            NetworkInfoElement.TextColor = TextColor.Red;
+            NetworkInfoElement.TextColor = (Color) TextColor.Red;
             NetworkInfoElement.Scale = 1f;
             AddChild(NetworkInfoElement);
         }
@@ -120,11 +120,11 @@ namespace Alex.Gamestates.InGame.Hud
 
                 if (_state)
                 {
-                    WarningElement.TextColor = TextColor.Yellow;
+                    WarningElement.TextColor = (Color) TextColor.Yellow;
                 }
                 else
                 {
-                    WarningElement.TextColor = TextColor.Red;
+                    WarningElement.TextColor = (Color) TextColor.Red;
                 }
 
                 _state = !_state;

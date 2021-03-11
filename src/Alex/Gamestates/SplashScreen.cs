@@ -1,12 +1,12 @@
 ﻿using Alex.API.Gui;
 using Alex.API.Gui.Elements;
-using Alex.API.Gui.Elements.Layout;
+
+using Alex.API.Gui.Graphics;
 using Alex.API.Utils;
 using Alex.Gamestates.Common;
 using Alex.Gui.Elements;
 using Microsoft.Xna.Framework;
 using RocketUI;
-using GuiTextures = Alex.API.Gui.Graphics.GuiTextures;
 
 namespace Alex.Gamestates
 {
@@ -40,7 +40,7 @@ namespace Alex.Gamestates
         public SplashScreen()
 		{
 			Background = Color.White;
-			Background.TextureResource = GuiTextures.SplashBackground;
+			Background.TextureResource = AlexGuiTextures.SplashBackground;
 			Background.RepeatMode = TextureRepeatMode.ScaleToFit;
 
 			AddChild(_progressBarContainer = new Container()
@@ -55,7 +55,7 @@ namespace Alex.Gamestates
 			_progressBarContainer.AddChild(_textDisplay = new TextElement()
 			{
 				Text      = Text,
-				TextColor = TextColor.Black,
+				TextColor = (Color) TextColor.Black,
 				
 				Anchor    = Alignment.TopLeft,
 				HasShadow = false
@@ -64,7 +64,7 @@ namespace Alex.Gamestates
 			_progressBarContainer.AddChild(_percentageDisplay = new TextElement()
 			{
 				Text      = Text,
-				TextColor = TextColor.Black,
+				TextColor = (Color) TextColor.Black,
 				
 				Anchor    = Alignment.TopRight,
 				HasShadow = false
@@ -81,7 +81,7 @@ namespace Alex.Gamestates
 			_progressBarContainer.AddChild(_subTextDisplay = new TextElement()
 			{
 				Text = Text,
-				TextColor = TextColor.Black,
+				TextColor = (Color) TextColor.Black,
 
 				Anchor = Alignment.BottomLeft,
 				HasShadow = false

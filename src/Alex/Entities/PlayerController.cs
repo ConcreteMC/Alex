@@ -1,6 +1,5 @@
 ﻿using System;
 using Alex.API.Input;
-using Alex.API.Input.Listeners;
 using Alex.API.Services;
 using Alex.API.Utils;
 using Alex.Graphics.Camera;
@@ -13,6 +12,8 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using NLog;
 using RocketUI;
+using RocketUI.Input;
+using RocketUI.Input.Listeners;
 using MathF = System.MathF;
 
 namespace Alex.Entities
@@ -137,39 +138,39 @@ namespace Alex.Entities
 
 		    if (_allowMovementInput)
 		    {
-			    if (InputManager.IsPressed(InputCommand.HotBarSelectPrevious)
+			    if (InputManager.IsPressed(AlexInputCommand.HotBarSelectPrevious)
 			        || MouseInputListener.IsButtonDown(MouseButton.ScrollUp))
 			    {
 				    Player.Inventory.SelectedSlot--;
 			    }
-			    else if (InputManager.IsPressed(InputCommand.HotBarSelectNext)
+			    else if (InputManager.IsPressed(AlexInputCommand.HotBarSelectNext)
 			             || MouseInputListener.IsButtonDown(MouseButton.ScrollDown))
 			    {
 				    Player.Inventory.SelectedSlot++;
 			    }
 
-			    if (InputManager.IsPressed(InputCommand.HotBarSelect1)) Player.Inventory.SelectedSlot = 0;
-			    if (InputManager.IsPressed(InputCommand.HotBarSelect2)) Player.Inventory.SelectedSlot = 1;
-			    if (InputManager.IsPressed(InputCommand.HotBarSelect3)) Player.Inventory.SelectedSlot = 2;
-			    if (InputManager.IsPressed(InputCommand.HotBarSelect4)) Player.Inventory.SelectedSlot = 3;
-			    if (InputManager.IsPressed(InputCommand.HotBarSelect5)) Player.Inventory.SelectedSlot = 4;
-			    if (InputManager.IsPressed(InputCommand.HotBarSelect6)) Player.Inventory.SelectedSlot = 5;
-			    if (InputManager.IsPressed(InputCommand.HotBarSelect7)) Player.Inventory.SelectedSlot = 6;
-			    if (InputManager.IsPressed(InputCommand.HotBarSelect8)) Player.Inventory.SelectedSlot = 7;
-			    if (InputManager.IsPressed(InputCommand.HotBarSelect9)) Player.Inventory.SelectedSlot = 8;
+			    if (InputManager.IsPressed(AlexInputCommand.HotBarSelect1)) Player.Inventory.SelectedSlot = 0;
+			    if (InputManager.IsPressed(AlexInputCommand.HotBarSelect2)) Player.Inventory.SelectedSlot = 1;
+			    if (InputManager.IsPressed(AlexInputCommand.HotBarSelect3)) Player.Inventory.SelectedSlot = 2;
+			    if (InputManager.IsPressed(AlexInputCommand.HotBarSelect4)) Player.Inventory.SelectedSlot = 3;
+			    if (InputManager.IsPressed(AlexInputCommand.HotBarSelect5)) Player.Inventory.SelectedSlot = 4;
+			    if (InputManager.IsPressed(AlexInputCommand.HotBarSelect6)) Player.Inventory.SelectedSlot = 5;
+			    if (InputManager.IsPressed(AlexInputCommand.HotBarSelect7)) Player.Inventory.SelectedSlot = 6;
+			    if (InputManager.IsPressed(AlexInputCommand.HotBarSelect8)) Player.Inventory.SelectedSlot = 7;
+			    if (InputManager.IsPressed(AlexInputCommand.HotBarSelect9)) Player.Inventory.SelectedSlot = 8;
 
-			    if (InputManager.IsPressed(InputCommand.ToggleCamera))
+			    if (InputManager.IsPressed(AlexInputCommand.ToggleCamera))
 			    {
 				    World.Camera.ToggleMode();
 			    }
 
-				if (InputManager.IsPressed(InputCommand.DropItem))
+				if (InputManager.IsPressed(AlexInputCommand.DropItem))
 				{
 					Player.DropHeldItem();
 				}
 		    }
 
-		    if (InputManager.IsPressed(InputCommand.Exit))
+		    if (InputManager.IsPressed(AlexInputCommand.Exit))
 		    {
 			    var activeDialog = Alex.Instance.GuiManager.ActiveDialog;
 
@@ -182,7 +183,7 @@ namespace Alex.Entities
 			    if (activeDialog is GuiPlayerInventoryDialog)
 				    _guiPlayerInventoryDialog = null;
 		    }
-			else if (InputManager.IsPressed(InputCommand.ToggleInventory))
+			else if (InputManager.IsPressed(AlexInputCommand.ToggleInventory))
 			{
 				if (!(Alex.Instance.GuiManager.FocusManager.FocusedElement is TextInput))
 				{
@@ -234,13 +235,13 @@ namespace Alex.Entities
 
 			if (Player.CanFly)
 			{
-			    if (InputManager.IsPressed(InputCommand.ToggleCameraFree))
+			    if (InputManager.IsPressed(AlexInputCommand.ToggleCameraFree))
 			    {
 				    Player.IsFlying = !Player.IsFlying;
 			    }
-			    else if (InputManager.IsDown(InputCommand.MoveUp) || InputManager.IsDown(InputCommand.Jump))
+			    else if (InputManager.IsDown(AlexInputCommand.MoveUp) || InputManager.IsDown(AlexInputCommand.Jump))
 			    {
-				    if ((InputManager.IsBeginPress(InputCommand.MoveUp) || InputManager.IsBeginPress(InputCommand.Jump)) &&
+				    if ((InputManager.IsBeginPress(AlexInputCommand.MoveUp) || InputManager.IsBeginPress(AlexInputCommand.Jump)) &&
 				        now.Subtract(_lastUp).TotalMilliseconds <= 125)
 				    {
 					    Player.IsFlying = !Player.IsFlying;
@@ -252,12 +253,12 @@ namespace Alex.Entities
 
 		    //float speedFactor = (float)Player.CalculateMovementSpeed();
 
-		    if (InputManager.IsDown(InputCommand.MoveForwards))
+		    if (InputManager.IsDown(AlexInputCommand.MoveForwards))
 			{
 				moveVector.Z += 1;
 				if (!Player.IsSprinting && Player.CanSprint)
 				{
-					if (InputManager.IsBeginPress(InputCommand.MoveForwards) &&
+					if (InputManager.IsBeginPress(AlexInputCommand.MoveForwards) &&
 						now.Subtract(_lastForward).TotalMilliseconds <= 125)
 					{
 						Player.IsSprinting = true;
@@ -274,13 +275,13 @@ namespace Alex.Entities
 				}
 			}
 
-			if (InputManager.IsDown(InputCommand.MoveBackwards))
+			if (InputManager.IsDown(AlexInputCommand.MoveBackwards))
 				moveVector.Z -= 1;
 
-			if (InputManager.IsDown(InputCommand.MoveLeft))
+			if (InputManager.IsDown(AlexInputCommand.MoveLeft))
 				moveVector.X += 1;
 
-			if (InputManager.IsDown(InputCommand.MoveRight))
+			if (InputManager.IsDown(AlexInputCommand.MoveRight))
 				moveVector.X -= 1;
 
 			if (Player.IsFlying)
@@ -288,10 +289,10 @@ namespace Alex.Entities
 				//speedFactor *= 1f + (float)Player.FlyingSpeed;
 				//speedFactor *= 2.5f;
 
-				if (InputManager.IsDown(InputCommand.MoveUp))
+				if (InputManager.IsDown(AlexInputCommand.MoveUp))
 					moveVector.Y += 1;
 
-				if (InputManager.IsDown(InputCommand.MoveDown))
+				if (InputManager.IsDown(AlexInputCommand.MoveDown))
 				{
 					moveVector.Y -= 1;
 					Player.IsSneaking = true;
@@ -303,11 +304,11 @@ namespace Alex.Entities
 			}
 			else
 			{
-				if (Player.FeetInWater && InputManager.IsDown(InputCommand.MoveUp))
+				if (Player.FeetInWater && InputManager.IsDown(AlexInputCommand.MoveUp))
 				{
 					Player.Velocity = new Vector3(Player.Velocity.X, 1f, Player.Velocity.Z);
 				}
-				else if (!Player.IsInWater && Player.KnownPosition.OnGround && (InputManager.IsDown(InputCommand.Jump) || InputManager.IsDown(InputCommand.MoveUp)))
+				else if (!Player.IsInWater && Player.KnownPosition.OnGround && (InputManager.IsDown(AlexInputCommand.Jump) || InputManager.IsDown(AlexInputCommand.MoveUp)))
 				{
 					if (Player.Velocity.Y <= 0.00001f && Player.Velocity.Y >= -0.00001f
 					    && Math.Abs(LastVelocity.Y - Player.Velocity.Y) < 0.0001f)
@@ -321,7 +322,7 @@ namespace Alex.Entities
 
 				if (!Player.IsInWater) //Sneaking in water is not a thing.
 				{
-					if (InputManager.IsDown(InputCommand.MoveDown) || InputManager.IsDown(InputCommand.Sneak))
+					if (InputManager.IsDown(AlexInputCommand.MoveDown) || InputManager.IsDown(AlexInputCommand.Sneak))
 					{
 						Player.IsSneaking = true;
 					}

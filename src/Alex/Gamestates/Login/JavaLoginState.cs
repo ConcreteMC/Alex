@@ -2,6 +2,7 @@
 using Alex.API.Services;
 using Alex.API.Utils;
 using Alex.Gui;
+using Microsoft.Xna.Framework;
 using MojangSharp.Api;
 
 namespace Alex.Gamestates.Login
@@ -59,7 +60,7 @@ namespace Alex.Gamestates.Login
 			else
 			{
 				ErrorMessage.Text      = "Could not login: " + e.ErrorMessage;
-				ErrorMessage.TextColor = TextColor.Red;
+				ErrorMessage.TextColor = (Color) TextColor.Red;
 
 				EnableInput();
 			}

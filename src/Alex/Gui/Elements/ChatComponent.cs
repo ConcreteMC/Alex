@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Alex.API.Data;
 using Alex.API.Gui;
-using Alex.API.Gui.Elements.Controls;
+
 using Alex.API.Gui.Graphics;
 using Alex.API.Utils;
 using Alex.Net;
@@ -15,7 +15,7 @@ using MiNET;
 using NLog;
 using RocketUI;
 using SixLabors.ImageSharp.Drawing;
-using IFont = Alex.API.Graphics.Typography.IFont;
+
 using MessageType = Alex.API.Data.MessageType;
 
 namespace Alex.Gui.Elements
@@ -206,18 +206,18 @@ namespace Alex.Gui.Elements
 			graphics.FillRectangle(new Rectangle(renderPos.ToPoint(), new Point(Width, (int) Math.Ceiling(size.Y + 2))),
 				new Color(Color.Black, alpha * 0.5f));
 
-			Font.DrawString(graphics.SpriteBatch, text, renderPos + new Vector2(0, 2), TextColor.White, opacity: alpha);
+			Font.DrawString(graphics.SpriteBatch, text, renderPos + new Vector2(0, 2), (Color) API.Utils.TextColor.White, opacity: alpha);
 			offset.Y += (size.Y + 2);
 		}
 
 		public static TextColor FindLastColor(string message)
 		{
-			TextColor last = TextColor.White;
+			TextColor last = API.Utils.TextColor.White;
 			for (int i = 0; i < message.Length - 1; i++)
 			{
 				if (message[i] == '§')
 				{
-					last = TextColor.GetColor(message[i + 1]);
+					last = API.Utils.TextColor.GetColor(message[i + 1]);
 					i++;
 				}
 			}
@@ -417,14 +417,14 @@ namespace Alex.Gui.Elements
 		{
 			string msg = message;
 
-			TextColor lastColor = TextColor.White;
+			TextColor lastColor = API.Utils.TextColor.White;
 
 			foreach (var split in msg.Split('\n'))
 			{
 				foreach (var line in CalculateLines(split).Reverse())
 				{
 					var t = line;
-					if (lastColor != TextColor.White)
+					if (lastColor != API.Utils.TextColor.White)
 					{
 						t = $"§{lastColor.Code}{t}";
 					}

@@ -132,9 +132,9 @@
     <PackageReference Include="Microsoft.Identity.Client" Version="4.24.0" />
     <PackageReference Include="MiNET.fnbt" Version="1.0.22" />
     <PackageReference Include="Mono.Cecil" Version="0.11.3" />
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
-    <PackageReference Include="RocketUI" Version="1.0.1" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1-beta1" />
     <PackageReference Include="NLog" Version="4.7.8" />
+    <PackageReference Include="RocketUI" Version="1.0.21" />
     <PackageReference Include="System.Globalization" Version="4.3.0" />
     <PackageReference Include="System.Reactive.Core" Version="5.0.0" />
     <PackageReference Include="System.Reactive.Interfaces" Version="5.0.0" />
@@ -187,6 +187,7 @@
 
   <ItemGroup>
     <Folder Include="Audio\Models" />
+    <Folder Include="Gui\Elements\Dialogs" />
     <Folder Include="Gui\Elements\Web" />
   </ItemGroup>
 

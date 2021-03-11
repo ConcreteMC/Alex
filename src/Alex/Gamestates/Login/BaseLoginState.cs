@@ -1,7 +1,7 @@
 ﻿using Alex.API.Graphics;
 using Alex.API.Gui;
 using Alex.API.Gui.Elements;
-using Alex.API.Gui.Elements.Controls;
+
 using Alex.API.Gui.Graphics;
 using Alex.API.Utils;
 using Alex.Gamestates.Common;
@@ -9,7 +9,7 @@ using Alex.Gui;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using RocketUI;
-using FontStyle = Alex.API.Graphics.Typography.FontStyle;
+
 
 namespace Alex.Gamestates.Login
 {
@@ -41,7 +41,7 @@ namespace Alex.Gamestates.Login
 			Footer.AddChild(t = new TextElement()
 			{
 				Text = "We are NOT in anyway or form affiliated with Mojang/Minecraft or Microsoft!",
-				TextColor = TextColor.Yellow,
+				TextColor = (Color) TextColor.Yellow,
 				Scale = 1f,
 				FontStyle = FontStyle.DropShadow,
 
@@ -53,7 +53,7 @@ namespace Alex.Gamestates.Login
 			{
 				Text = "We will never collect/store or do anything with your data.",
 
-				TextColor = TextColor.Yellow,
+				TextColor = (Color) TextColor.Yellow,
 				Scale = 0.8f,
 				FontStyle = FontStyle.DropShadow,
 
@@ -105,24 +105,22 @@ namespace Alex.Gamestates.Login
 
 				Text = "Login",
 				Margin = new Thickness(5),
-				Modern = false,
 				Width = 100,
 				TabIndex = 3
-			}, new Button(OnCancelButtonPressed)
+			}.ApplyModernStyle(false), new Button(OnCancelButtonPressed)
 			{
 				AccessKey = Keys.Escape,
 
 				TranslationKey = "gui.cancel",
 				Margin = new Thickness(5),
-				Modern = false,
 				Width = 100,
 				TabIndex = 4
-			});
+			}.ApplyModernStyle(false));
 			buttonRow.ChildAnchor = Alignment.MiddleCenter;
 
 			AddRocketElement(ErrorMessage = new TextElement()
 			{
-				TextColor = TextColor.Yellow
+				TextColor = (Color) TextColor.Yellow
 			});
 
 			Initialized();

@@ -1,9 +1,10 @@
 using Alex.API.Gui;
-using Alex.API.Gui.Elements.Layout;
 using Alex.API.Input;
 using Alex.API.Utils;
 using Microsoft.Xna.Framework;
 using RocketUI;
+using RocketUI.Input;
+using DialogBase = RocketUI.DialogBase;
 
 namespace Alex.Gui.Forms
 {
@@ -41,7 +42,7 @@ namespace Alex.Gui.Forms
         {
             base.OnUpdate(gameTime);
 
-            if (InputManager.Any(x => x.IsPressed(InputCommand.Exit)))
+            if (InputManager.Any(x => x.IsPressed(AlexInputCommand.Exit)))
             {
                 Parent.Hide(FormId);
             }

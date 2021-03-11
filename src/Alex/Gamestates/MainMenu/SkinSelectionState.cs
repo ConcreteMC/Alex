@@ -2,7 +2,7 @@ using System.IO;
 using System.Linq;
 using Alex.API.Graphics;
 using Alex.API.Gui;
-using Alex.API.Gui.Elements.Controls;
+
 using Alex.API.Gui.Graphics;
 using Alex.API.Services;
 using Alex.API.Utils;
@@ -56,10 +56,7 @@ namespace Alex.Gamestates.MainMenu
             Footer.AddRow(row =>
             {
                 row.ChildAnchor = Alignment.BottomCenter;
-                row.AddChild(new Button("Open SkinPack folder", OpenSkinPackFOlder, false)
-                {
-                    Modern = true
-                });
+                row.AddChild(new Button("Open SkinPack folder", OpenSkinPackFOlder, false).ApplyModernStyle());
             });
 
             Reload();

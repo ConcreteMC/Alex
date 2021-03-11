@@ -2,11 +2,11 @@
 using System.Linq;
 using Alex.API.Gui;
 using Alex.API.Gui.Elements;
-using Alex.API.Gui.Elements.Layout;
+
 using Alex.API.Utils;
 using Microsoft.Xna.Framework;
 using RocketUI;
-using FontStyle = Alex.API.Graphics.Typography.FontStyle;
+
 
 namespace Alex.Gui.Elements
 {
@@ -37,11 +37,11 @@ namespace Alex.Gui.Elements
         {
             _leftContainer.AddChild(new TextElement(text, hasBackground)
             {
-                TextColor = TextColor.White,
+                TextColor = (Color) TextColor.White,
                 FontStyle = FontStyle.DropShadow,
                 Scale = 1f,
                 BackgroundOverlay = Color.Black * 0.25f,
-                TextAlignment = TextAlignment.Left
+                TextAlignment = TextAlignment.Left,
             });
         }
 
@@ -49,7 +49,7 @@ namespace Alex.Gui.Elements
         {
             _leftContainer.AddChild(new AutoUpdatingTextElement(getDebugString, hasBackground)
             {
-                TextColor = TextColor.White,
+                TextColor = (Color) TextColor.White,
                 FontStyle = FontStyle.DropShadow,
                 Scale = 1f,
                 BackgroundOverlay = Color.Black * 0.25f,
@@ -62,7 +62,7 @@ namespace Alex.Gui.Elements
         {
             _rightContainer.AddChild(new TextElement(text, hasBackground)
             {
-                TextColor = TextColor.White,
+                TextColor = (Color) TextColor.White,
                 FontStyle = FontStyle.DropShadow,
                 Scale = 1f,
                 BackgroundOverlay = Color.Black * 0.25f,
@@ -74,7 +74,7 @@ namespace Alex.Gui.Elements
         {
             _rightContainer.AddChild(new AutoUpdatingTextElement(getDebugString, hasBackground)
             {
-                TextColor = TextColor.White,
+                TextColor = (Color) TextColor.White,
                 FontStyle = FontStyle.DropShadow,
                 Scale = 1f,
                 BackgroundOverlay = Color.Black * 0.25f,

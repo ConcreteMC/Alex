@@ -5,12 +5,6 @@ using Alex.API.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using RocketUI;
-using FontStyle = Alex.API.Graphics.Typography.FontStyle;
-using GpuResourceManager = Alex.API.Graphics.GpuResourceManager;
-using GraphicsContext = Alex.API.Graphics.GraphicsContext;
-using IFont = Alex.API.Graphics.Typography.IFont;
-using NinePatchTexture2D = Alex.API.Graphics.Textures.NinePatchTexture2D;
-using TextureSlice2D = Alex.API.Graphics.Textures.TextureSlice2D;
 
 namespace Alex.API.Gui.Graphics
 {
@@ -65,7 +59,7 @@ namespace Alex.API.Gui.Graphics
 
         public void DrawRectangle(Rectangle bounds, Color color, int thicknessLeft, int thicknessTop, int thicknessRight, int thicknessBottom)
         {
-            var texture = GpuResourceManager.GetTexture2D(this, Graphics, 1, 1, false, SurfaceFormat.Color);
+            var texture = API.Graphics.GpuResourceManager.GetTexture2D(this, Graphics, 1, 1, false, SurfaceFormat.Color);
             texture.SetData(new Color[] {color});
 
             // MinY
@@ -99,7 +93,7 @@ namespace Alex.API.Gui.Graphics
 
         public void FillRectangle(Rectangle bounds, Color color)
         {
-            var texture = GpuResourceManager.GetTexture2D(this, Graphics, 1, 1, false, SurfaceFormat.Color);
+            var texture = API.Graphics.GpuResourceManager.GetTexture2D(this, Graphics, 1, 1, false, SurfaceFormat.Color);
             texture.SetData(new Color[] {color});
 
             SpriteBatch.Draw(texture, bounds, Color.White);
@@ -250,12 +244,12 @@ namespace Alex.API.Gui.Graphics
                                float     opacity    = 1f, SpriteEffects effects = SpriteEffects.None,
                                float     layerDepth = 0f)
         {
-            font.DrawString(SpriteBatch, text, position, color, style, scale: new Vector2(scale), rotation: rotation, origin: origin ?? Vector2.Zero, opacity: opacity, effects: effects, layerDepth: layerDepth);
+            font.DrawString(SpriteBatch, text, position, (Color)color, style, scale: new Vector2(scale), rotation: rotation, origin: origin ?? Vector2.Zero, opacity: opacity, effects: effects, layerDepth: layerDepth);
         }
 
         public void DrawString(IFont font, string text, Vector2 position, TextColor color, Vector2? scale = null, FontStyle style = FontStyle.None, float rotation = 0f, Vector2? origin = null, float opacity = 1f, SpriteEffects effects = SpriteEffects.None, float layerDepth = 0f)
         {
-            font.DrawString(SpriteBatch, text, position, color, style, scale: scale ?? Vector2.One, rotation: rotation, origin: origin ?? Vector2.Zero, opacity: opacity, effects: effects, layerDepth: layerDepth);
+            font.DrawString(SpriteBatch, text, position, (Color)color, style, scale: scale ?? Vector2.One, rotation: rotation, origin: origin ?? Vector2.Zero, opacity: opacity, effects: effects, layerDepth: layerDepth);
         }
 
         #endregion

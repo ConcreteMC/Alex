@@ -179,10 +179,10 @@ namespace Alex.Gamestates.Debugging
 
 		protected override void OnUpdate(GameTime gameTime)
 		{
-			if (_modelExplorerView.Width != Screen.Width || _modelExplorerView.Height != Screen.Height)
+			if (_modelExplorerView.Width != RootScreen.Width || _modelExplorerView.Height != RootScreen.Height)
 			{
-				_modelExplorerView.Width  = Screen.Width;
-				_modelExplorerView.Height = Screen.Height;
+				_modelExplorerView.Width  = RootScreen.Width;
+				_modelExplorerView.Height = RootScreen.Height;
 			}
 
 			base.OnUpdate(gameTime);

@@ -4,18 +4,19 @@ using System.Linq;
 using Alex.API.Gui;
 using RocketUI;
 using Alex.API.Input;
-using Alex.API.Input.Listeners;
 using Alex.Gui;
 using Alex.Gui.Elements;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
+using RocketUI.Input;
+using RocketUI.Input.Listeners;
 
 namespace Alex.Gamestates.MainMenu.Options
 {
     public class ControlOptionsState : OptionsStateBase
     {
         private KeyboardInputListener InputListener { get; set; }
-        private Dictionary<InputCommand, KeybindElement> Inputs { get; } = new Dictionary<InputCommand, KeybindElement>();
+        private Dictionary<string, KeybindElement> Inputs { get; } = new Dictionary<string, KeybindElement>();
 
         public ControlOptionsState(GuiPanoramaSkyBox skyBox) : base(skyBox)
         {
@@ -28,7 +29,7 @@ namespace Alex.Gamestates.MainMenu.Options
         {
             base.OnHide();
 
-            Alex.Storage.TryWriteJson("controls", InputListener.ToDictionary(x => x.Key, x => x.Value));
+            Alex.Storage.TryWriteJson("controls", InputListener.ButtonMap);
         }
 
         protected override void OnShow()
@@ -39,19 +40,19 @@ namespace Alex.Gamestates.MainMenu.Options
             if (inputManager.TryGetListener(out KeyboardInputListener inputListener))
             {
                 InputListener = inputListener;
-                var inputs = InputListener.ToDictionary(x => x.Key, x => x.Value);
+                var inputs = InputListener.ButtonMap;
 
-                foreach (InputCommand ic in Enum.GetValues(typeof(InputCommand)))
+                foreach (InputCommand ic in AlexInputCommand.GetAll())
                 {
                     InputCommand inputCommand = ic;
 
-                    Keys value = KeybindElement.Unbound;
-                    if (inputs.TryGetValue(ic, out Keys key))
+                    List<Keys> value = new List<Keys>();
+                    if (inputs.TryGetValue(ic, out var keys))
                     {
-                        value = key;
+                        value = keys;
                     }
 
-                    KeybindElement textInput = new KeybindElement(value);
+                    KeybindElement textInput = new KeybindElement(value.Count > 0 ? value[0] : KeybindElement.Unbound);
 
                     var row = AddGuiRow(new TextElement()
                     {
@@ -78,7 +79,10 @@ namespace Alex.Gamestates.MainMenu.Options
                         base.Alex.GuiManager.FocusManager.FocusedElement = null;
                         
                         textInput.ClearFocus();
-                        value = newValue;
+                        value = new List<Keys>()
+                        {
+                            newValue
+                        };
                     };
                     
                     Inputs.TryAdd(ic, textInput);
