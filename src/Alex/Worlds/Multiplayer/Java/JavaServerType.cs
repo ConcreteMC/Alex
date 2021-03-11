@@ -59,26 +59,44 @@ namespace Alex.Worlds.Multiplayer.Java
 		/// <inheritdoc />
 		public override async Task<bool> VerifyAuthentication(PlayerProfile currentProfile)
 		{
-			if (currentProfile == null  || !currentProfile.Authenticated)
+			var authenticationService = Alex.Services.GetService<IPlayerProfileService>();
+			
+			if (currentProfile != null)
 			{
-				var authenticationService = Alex.Services.GetService<IPlayerProfileService>();
+				if (await TryAuthenticate(authenticationService, currentProfile))
+				{
+					currentProfile.Authenticated= true;
+
+					return true;
+				}
+			}
+			else
+			{
 				foreach (var profile in authenticationService.GetProfiles(ProfileType))
 				{
-					//profile.Type = "java";
-
-					Requester.ClientToken = profile.ClientToken;
-
-					if (await Validate(profile.AccessToken))
+					if (await TryAuthenticate(authenticationService, profile))
 					{
-						profile.Authenticated = true;
-						authenticationService.Force(profile);
-
-						//CurrentProfile = profile;
 						return true;
 					}
 				}
 			}
-		
+
+			return false;
+		}
+
+		private async Task<bool> TryAuthenticate(IPlayerProfileService authenticationService, PlayerProfile profile)
+		{
+			Requester.ClientToken = profile.ClientToken;
+
+			if (await Validate(profile.AccessToken))
+			{
+				profile.Authenticated = true;
+				authenticationService.Force(profile);
+
+				//CurrentProfile = profile;
+				return true;
+			}
+
 			return false;
 		}
 		
