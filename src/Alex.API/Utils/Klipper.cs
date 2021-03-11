@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using Tmds.DBus;
 
 [assembly: InternalsVisibleTo(Tmds.DBus.Connection.DynamicAssemblyName)]
-namespace Klipper.DBus
+namespace Alex.API.Utils
 {
     [DBusInterface("org.kde.JobViewServer")]
     interface IJobViewServer : IDBusObject

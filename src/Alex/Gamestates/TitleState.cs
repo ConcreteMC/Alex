@@ -11,6 +11,7 @@ using Alex.API.Gui.Elements.Layout;
 using Alex.API.Gui.Graphics;
 using Alex.API.Services;
 using Alex.API.Utils;
+using Alex.API.Utils.Vectors;
 using Alex.Entities;
 using Alex.Gamestates.Common;
 using Alex.Gamestates.Login;
@@ -76,14 +77,6 @@ namespace Alex.Gamestates
 								OnClick = (sender, args) =>
 								{
 									Debug(new DebugWorldGenerator());
-								}
-							},
-							new MenuItem()
-							{
-								Title = "Demo",
-								OnClick = (sender, args) =>
-								{
-									Debug(new DemoGenerator());
 								}
 							},
 							new MenuItem()

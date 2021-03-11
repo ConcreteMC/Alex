@@ -5,6 +5,7 @@ using System.Linq;
 using Alex.Api;
 using Alex.API;
 using Alex.API.Utils;
+using Alex.API.Utils.Vectors;
 using Alex.API.World;
 using Alex.Worlds;
 using Microsoft.Xna.Framework;

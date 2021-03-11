@@ -6,6 +6,7 @@ using Alex.Api;
 using Alex.API;
 using Alex.API.Graphics;
 using Alex.API.Utils;
+using Alex.API.Utils.Collections;
 using Alex.ResourcePackLib.Json.Models.Entities;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;

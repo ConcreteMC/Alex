@@ -1,4 +1,5 @@
 using Alex.API.Utils;
+using Alex.API.Utils.Vectors;
 using Microsoft.Xna.Framework;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;

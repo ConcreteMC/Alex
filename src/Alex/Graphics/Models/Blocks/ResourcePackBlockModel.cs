@@ -7,6 +7,7 @@ using Alex.API.Graphics;
 using Alex.API.Resources;
 using Alex.API.Utils;
 using Alex.API.Utils.Noise;
+using Alex.API.Utils.Vectors;
 using Alex.API.World;
 using Alex.Blocks.Minecraft;
 using Alex.Blocks.State;

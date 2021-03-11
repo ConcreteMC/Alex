@@ -1,6 +1,7 @@
 ﻿using System;
 using Alex.API.Blocks;
 using Alex.API.Utils;
+using Alex.API.Utils.Vectors;
 using Alex.Networking.Java.Util;
 
 namespace Alex.Networking.Java.Packets.Play

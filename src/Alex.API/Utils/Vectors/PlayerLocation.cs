@@ -2,7 +2,7 @@
 using Alex.Api;
 using Microsoft.Xna.Framework;
 
-namespace Alex.API.Utils
+namespace Alex.API.Utils.Vectors
 {
 	public class PlayerLocation : ICloneable
 	{

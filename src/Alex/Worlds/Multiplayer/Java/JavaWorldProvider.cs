@@ -8,22 +8,20 @@ using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using Alex.API.Data;
 using Alex.API.Data.Options;
 using Alex.API.Graphics;
 using Alex.API.Input;
 using Alex.API.Services;
 using Alex.API.Utils;
+using Alex.API.Utils.Collections;
 using Alex.API.World;
 using Alex.Blocks;
 using Alex.Entities;
 using Alex.Entities.BlockEntities;
-using Alex.Entities.Effects;
 using Alex.Entities.Generic;
 using Alex.Entities.Projectiles;
 using Alex.Gamestates;
-using Alex.Gamestates.InGame;
 using Alex.Graphics.Models.Entity;
 using Alex.Gui.Dialogs.Containers;
 using Alex.Gui.Elements;
@@ -40,31 +38,24 @@ using Alex.ResourcePackLib.Json.Models.Entities;
 using Alex.Utils;
 using Alex.Utils.Inventories;
 using Alex.Worlds.Abstraction;
-using Alex.Worlds.Lighting;
 using fNbt;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using MiNET;
 using MiNET.Entities;
-using MiNET.Utils;
 using MiNET.Worlds;
 using Newtonsoft.Json;
 using NLog;
-using BlockCoordinates = Alex.API.Utils.BlockCoordinates;
+using BlockCoordinates = Alex.API.Utils.Vectors.BlockCoordinates;
 using ChunkColumn = Alex.Worlds.Chunks.ChunkColumn;
-using ChunkCoordinates = Alex.API.Utils.ChunkCoordinates;
+using ChunkCoordinates = Alex.API.Utils.Vectors.ChunkCoordinates;
 using ConnectionState = Alex.Networking.Java.ConnectionState;
-using DedicatedThreadPool = Alex.API.Utils.DedicatedThreadPool;
 using Entity = Alex.Entities.Entity;
 using MessageType = Alex.API.Data.MessageType;
-using MetadataByte = Alex.Networking.Java.Packets.Play.MetadataByte;
-using MetadataSlot = Alex.Networking.Java.Packets.Play.MetadataSlot;
 using NibbleArray = Alex.API.Utils.NibbleArray;
 using Packet = Alex.Networking.Java.Packets.Packet;
 using Player = Alex.Entities.Player;
-using PlayerLocation = Alex.API.Utils.PlayerLocation;
-using UUID = Alex.API.Utils.UUID;
+using PlayerLocation = Alex.API.Utils.Vectors.PlayerLocation;
 
 namespace Alex.Worlds.Multiplayer.Java
 {
@@ -2278,8 +2269,7 @@ namespace Alex.Worlds.Multiplayer.Java
 		private byte[] SharedSecret = new byte[16];
 		private void HandleEncryptionRequest(EncryptionRequestPacket packet)
 		{
-			Random random = new Random();
-			random.NextBytes(SharedSecret);
+			FastRandom.Instance.NextBytes(SharedSecret);
 
 			string serverHash;
 			using (MemoryStream ms = new MemoryStream())

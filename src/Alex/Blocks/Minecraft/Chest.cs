@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Alex.API.Utils;
+using Alex.API.Utils.Vectors;
 using Alex.Blocks.State;
 using Alex.Entities.BlockEntities;
 using Alex.Worlds;

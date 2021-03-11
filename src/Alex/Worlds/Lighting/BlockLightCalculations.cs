@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Alex.API.Utils;
+using Alex.API.Utils.Vectors;
 using Alex.Blocks.Minecraft;
 using Alex.Worlds.Chunks;
 using NLog;

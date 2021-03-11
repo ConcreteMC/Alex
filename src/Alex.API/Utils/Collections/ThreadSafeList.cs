@@ -6,7 +6,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Alex.API.Utils
+namespace Alex.API.Utils.Collections
 {
 	#region License & Information
 

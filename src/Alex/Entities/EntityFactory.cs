@@ -22,7 +22,7 @@ using Microsoft.Xna.Framework.Graphics;
 using MiNET.Entities;
 using Newtonsoft.Json;
 using NLog;
-using PlayerLocation = Alex.API.Utils.PlayerLocation;
+using PlayerLocation = Alex.API.Utils.Vectors.PlayerLocation;
 using ResourceLocation = Alex.API.Resources.ResourceLocation;
 using UUID = Alex.API.Utils.UUID;
 

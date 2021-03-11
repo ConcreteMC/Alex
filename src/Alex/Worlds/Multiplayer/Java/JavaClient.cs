@@ -2,11 +2,8 @@
 using System.Net.Sockets;
 using Alex.Networking.Java;
 using Alex.Networking.Java.Packets;
-using Alex.Networking.Java.Packets.Play;
-using MiNET.Utils;
 using NLog;
 using ConnectionState = Alex.Networking.Java.ConnectionState;
-using DedicatedThreadPool = Alex.API.Utils.DedicatedThreadPool;
 using Packet = Alex.Networking.Java.Packets.Packet;
 
 namespace Alex.Worlds.Multiplayer.Java

@@ -41,6 +41,7 @@ using MiNET.Net;
 using MiNET.Net.RakNet;
 using MiNET.Utils;
 using NLog;
+using ConnectionInfo = Alex.API.Utils.ConnectionInfo;
 using Datagram = Alex.Net.Bedrock.Raknet.Datagram;
 
 namespace Alex.Net.Bedrock
@@ -61,7 +62,7 @@ namespace Alex.Net.Bedrock
 		public          short          MtuSize    { get; set; } = 1400;
 		
 		public RaknetSession              Session        { get; set; } = null;
-		public API.Network.ConnectionInfo ConnectionInfo { get; }
+		public ConnectionInfo ConnectionInfo { get; }
 
 		public bool FoundServer => HaveServer;
 
@@ -84,7 +85,7 @@ namespace Alex.Net.Bedrock
 		{
 			_endpoint = new IPEndPoint(IPAddress.Any, 0);
 
-			ConnectionInfo = new API.Network.ConnectionInfo();
+			ConnectionInfo = new ConnectionInfo();
 			
 			byte[] buffer = new byte[8];
 			new Random().NextBytes(buffer);

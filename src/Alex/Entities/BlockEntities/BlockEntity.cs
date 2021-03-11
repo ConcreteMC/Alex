@@ -1,5 +1,6 @@
 using Alex.API.Graphics;
 using Alex.API.Utils;
+using Alex.API.Utils.Vectors;
 using Alex.Blocks.Minecraft;
 using Alex.Net;
 using Alex.Worlds;

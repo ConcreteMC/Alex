@@ -6,7 +6,6 @@ using System.Threading;
 using Alex.API;
 using Alex.API.Graphics;
 using Alex.API.Gui;
-using Alex.API.Network;
 using Alex.API.Services;
 using Alex.API.Utils;
 using Alex.Blocks.Minecraft;
@@ -30,7 +29,7 @@ using MiNET;
 using MiNET.Utils;
 using BoundingBox = Microsoft.Xna.Framework.BoundingBox;
 using DedicatedThreadPoolSettings = MiNET.Utils.DedicatedThreadPoolSettings;
-using PlayerLocation = Alex.API.Utils.PlayerLocation;
+using PlayerLocation = Alex.API.Utils.Vectors.PlayerLocation;
 
 namespace Alex.Gamestates.InGame
 {

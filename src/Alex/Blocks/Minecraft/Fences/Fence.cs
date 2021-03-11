@@ -1,5 +1,6 @@
 using Alex.API.Blocks;
 using Alex.API.Utils;
+using Alex.API.Utils.Vectors;
 using Alex.API.World;
 using Alex.Blocks.State;
 using Alex.Worlds;

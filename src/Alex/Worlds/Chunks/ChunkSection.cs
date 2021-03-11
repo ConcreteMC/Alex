@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Alex.API.Data.Servers;
 using Alex.API.Graphics;
 using Alex.API.Utils;
+using Alex.API.Utils.Vectors;
 using Alex.Blocks;
 using Alex.Blocks.Minecraft;
 using Alex.Blocks.State;

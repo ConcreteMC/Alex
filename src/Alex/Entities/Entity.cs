@@ -9,7 +9,6 @@ using Alex.API;
 using Alex.API.Data.Servers;
 using Alex.API.Graphics;
 using Alex.API.Graphics.Typography;
-using Alex.API.Network;
 using Alex.API.Resources;
 using Alex.API.Utils;
 using Alex.Blocks.Minecraft;
@@ -32,7 +31,7 @@ using Microsoft.Xna.Framework.Graphics;
 using MiNET;
 using MiNET.Utils;
 using NLog;
-using BlockCoordinates = Alex.API.Utils.BlockCoordinates;
+using BlockCoordinates = Alex.API.Utils.Vectors.BlockCoordinates;
 using BoundingBox = Microsoft.Xna.Framework.BoundingBox;
 using Effect = Alex.Entities.Effects.Effect;
 using HealthManager = Alex.Entities.Meta.HealthManager;
@@ -41,7 +40,7 @@ using MathF = System.MathF;
 using MetadataByte = Alex.Networking.Java.Packets.Play.MetadataByte;
 using MetadataFloat = MiNET.Utils.MetadataFloat;
 using MetadataString = MiNET.Utils.MetadataString;
-using PlayerLocation = Alex.API.Utils.PlayerLocation;
+using PlayerLocation = Alex.API.Utils.Vectors.PlayerLocation;
 using UUID = Alex.API.Utils.UUID;
 
 namespace Alex.Entities

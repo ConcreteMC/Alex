@@ -1,4 +1,5 @@
 using Alex.API.Utils;
+using Alex.API.Utils.Vectors;
 using Alex.Blocks;
 using Alex.Blocks.Minecraft;
 using Alex.Blocks.State;

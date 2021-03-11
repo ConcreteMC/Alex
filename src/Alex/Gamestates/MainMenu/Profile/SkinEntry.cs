@@ -6,6 +6,7 @@ using Alex.API.Gui.Elements;
 using Alex.API.Gui.Elements.Controls;
 using Alex.API.Input;
 using Alex.API.Utils;
+using Alex.API.Utils.Vectors;
 using Alex.Entities;
 using Alex.Graphics.Models.Entity;
 using Alex.Gui.Elements;

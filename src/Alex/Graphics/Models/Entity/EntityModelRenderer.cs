@@ -4,6 +4,7 @@ using System.Linq;
 using Alex.Api;
 using Alex.API.Graphics;
 using Alex.API.Utils;
+using Alex.API.Utils.Vectors;
 using Alex.Graphics.Models.Items;
 using Alex.ResourcePackLib;
 using Alex.ResourcePackLib.Json.Bedrock.Entity;

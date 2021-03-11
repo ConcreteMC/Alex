@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.Numerics;
 using System.Runtime.Serialization;
 using Alex.API.Utils;
+using Alex.API.Utils.Vectors;
 using Microsoft.Xna.Framework;
 using Plane = Microsoft.Xna.Framework.Plane;
 using Quaternion = Microsoft.Xna.Framework.Quaternion;
