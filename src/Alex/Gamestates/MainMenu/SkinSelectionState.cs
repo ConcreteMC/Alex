@@ -93,6 +93,20 @@ namespace Alex.Gamestates.MainMenu
         {
             ClearItems();
 
+            if (Alex.PlayerModel != null && Alex.PlayerTexture != null)
+            {
+                Alex.UIThreadQueue.Enqueue(
+                    () =>
+                    {
+                        var texture = TextureUtils.BitmapToTexture2D(Alex.GraphicsDevice, Alex.PlayerTexture);
+                        
+                        SkinEntry entry = new SkinEntry(
+                            new LoadedSkin("Default", Alex.PlayerModel, Alex.PlayerTexture), texture, OnDoubleClick);
+                        
+                        AddItem(entry);
+                    });
+            }
+
             foreach (var skinPack in Alex.Resources.Packs)
             {
                 foreach (var module in skinPack.Modules.Where(x => x is MCSkinPack).Cast<MCSkinPack>())

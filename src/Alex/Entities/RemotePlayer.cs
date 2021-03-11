@@ -74,7 +74,8 @@ namespace Alex.Entities
 			}
 			else
 			{
-				_skinDirty = true;
+				if (geometry != null)
+					_skinDirty = true;
 			}
 
 			NoAi = true;
