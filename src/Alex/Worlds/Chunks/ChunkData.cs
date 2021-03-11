@@ -67,7 +67,7 @@ namespace Alex.Worlds.Chunks
                     }
                     finally
                     {
-                        ArrayPool<MinifiedBlockShaderVertex>.Shared.Return(range, true);
+                        ChunkRenderStage.Pool.Return(range, true);
                     }
                 }
 

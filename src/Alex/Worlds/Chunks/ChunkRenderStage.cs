@@ -134,7 +134,9 @@ namespace Alex.Worlds.Chunks
 			}
 		}
 
-		
+		private const int MaxArraySize = 16 * 16 * 256 * (6 * 6);
+		public static ArrayPool<MinifiedBlockShaderVertex> Pool { get; } =
+			ArrayPool<MinifiedBlockShaderVertex>.Create(MaxArraySize, 16);
 		internal MinifiedBlockShaderVertex[] BuildVertices(out int length)
 		{
 			lock (_writeLock)
@@ -142,8 +144,12 @@ namespace Alex.Worlds.Chunks
 				var blockIndices = BlockIndices;
 				var size = blockIndices.Sum(x => x.Value.Count);
 				length = size;
-				
-				var vertices = ArrayPool<MinifiedBlockShaderVertex>.Shared.Rent(size);
+
+				if (size > MaxArraySize)
+				{
+					Log.Warn($"Array size exceeded max pool size. Found {size}, limit: {MaxArraySize}");
+				}
+				var vertices = Pool.Rent(size);
 				//var vertices = new MinifiedBlockShaderVertex[];
 
 				int index = 0;
@@ -258,7 +264,7 @@ namespace Alex.Worlds.Chunks
 				}
 				finally
 				{
-					ArrayPool<MinifiedBlockShaderVertex>.Shared.Return(realVertices, true);
+					Pool.Return(realVertices, true);
 				}
 			}
 		}
