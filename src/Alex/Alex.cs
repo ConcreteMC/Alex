@@ -63,6 +63,7 @@ using SixLabors.ImageSharp.PixelFormats;
 using GpuResourceManager = Alex.API.Graphics.GpuResourceManager;
 using Image = SixLabors.ImageSharp.Image;
 using Point = Microsoft.Xna.Framework.Point;
+using Size = RocketUI.Size;
 using SpriteBatchExtensions = RocketUI.Utilities.Extensions.SpriteBatchExtensions;
 using TextInputEventArgs = Microsoft.Xna.Framework.TextInputEventArgs;
 
@@ -126,6 +127,8 @@ namespace Alex
 
         public Alex(LaunchSettings launchSettings)
         {
+            WindowSize = new Point(1280, 750);
+            
             EntityProperty.Factory = new AlexPropertyFactory();
             /*MiNET.Utils.DedicatedThreadPool fastThreadPool =
                 ReflectionHelper.GetPrivateStaticPropertyValue<MiNET.Utils.DedicatedThreadPool>(
@@ -162,6 +165,9 @@ namespace Alex
                 Gpu = args.GraphicsDeviceInformation.Adapter.Description;
                 args.GraphicsDeviceInformation.PresentationParameters.DepthStencilFormat = DepthFormat.Depth24Stencil8;
                 DeviceManager.PreferMultiSampling = true;
+                
+                DeviceManager.PreferredBackBufferWidth = WindowSize.X;
+                DeviceManager.PreferredBackBufferHeight = WindowSize.Y;
             };
 
             Content = new StreamingContentManager(base.Services, "assets");
@@ -170,10 +176,9 @@ namespace Alex
             IsFixedTimeStep = false;
             // graphics.ToggleFullScreen();
 
-            
             this.Window.AllowUserResizing = true;
 
-            this.Window.ClientSizeChanged += (sender, args) =>
+            /*this.Window.ClientSizeChanged += (sender, args) =>
             {
                 if (DeviceManager.PreferredBackBufferWidth != Window.ClientBounds.Width
                     || DeviceManager.PreferredBackBufferHeight != Window.ClientBounds.Height)
@@ -193,10 +198,8 @@ namespace Alex
                     }
 
                     DeviceManager.ApplyChanges();
-
-                    //CefWindow.Size = new System.Drawing.Size(Window.ClientBounds.Width, Window.ClientBounds.Height);
                 }
-            };
+            };*/
 
 
             JsonConvert.DefaultSettings = () => new JsonSerializerSettings()
@@ -312,8 +315,6 @@ namespace Alex
 
         protected override void LoadContent()
         {
-            WindowSize = new Point(720, 480);
-            
             Stopwatch loadingStopwatch = Stopwatch.StartNew();
 
             RocketUI.GpuResourceManager.Init(GraphicsDevice);
@@ -412,7 +413,7 @@ namespace Alex
 
             GuiManager.Init();
 
-            GuiManager.ScaledResolution.TargetWidth = 427;
+            GuiManager.ScaledResolution.TargetWidth = 320;
             GuiManager.ScaledResolution.TargetHeight = 240;
             GuiManager.ScaledResolution.GuiScale = Options.AlexOptions.VideoOptions.GuiScale.Value;
             Options.AlexOptions.VideoOptions.GuiScale.Bind(GuiScaleChanged);
