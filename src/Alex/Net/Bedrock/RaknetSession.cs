@@ -29,6 +29,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net;
+using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -87,27 +88,7 @@ namespace Alex.Net.Bedrock
 		public bool WaitForAck { get; set; }
 		public int ResendCount { get; set; }
 
-		/// <summary>
-		/// </summary>
-		public long Syn { get; set; } = 300;
-
-		/// <summary>
-		///     Round Trip Time.
-		///     <code>RTT = RTT * 0.875 + rtt * 0.125</code>
-		/// </summary>
-		public long Rtt { get; set; } = 300;
-
-		/// <summary>
-		///     Round Trip Time Variance.
-		///     <code>RTTVar = RTTVar * 0.875 + abs(RTT - rtt)) * 0.125</code>
-		/// </summary>
-		public long RttVar { get; set; }
-
-		/// <summary>
-		///     Retransmission Time Out.
-		///     <code>RTO = RTT + 4 * RTTVar</code>
-		/// </summary>
-		public long Rto { get; set; }
+		public SlidingWindow SlidingWindow { get; }
 
 		public long InactivityTimeout { get; }
 		public int ResendThreshold { get; }
@@ -130,6 +111,8 @@ namespace Alex.Net.Bedrock
 			ResendThreshold = 10;
 
 			_cancellationToken = new CancellationTokenSource();
+
+			SlidingWindow = new SlidingWindow(mtuSize);
 		}
 
 		/// <summary>
@@ -736,7 +719,7 @@ namespace Alex.Net.Bedrock
 			}
 		}
 
-		private ThreadSafeList<int> _nacked = new ThreadSafeList<int>();
+		//private ThreadSafeList<int> _nacked = new ThreadSafeList<int>();
 		private async Task SendNackQueueAsync()
 		{
 			var           queue      = OutgoingNackQueue;
@@ -745,11 +728,11 @@ namespace Alex.Net.Bedrock
 			if (queueCount == 0) return;
 
 			var acks = CustomNak.CreateObject();
-			for (int i = 0; i < Math.Min(10, queueCount); i++)
+			for (int i = 0; i < queueCount; i++)
 			{
 				if (!queue.TryDequeue(out int ack)) break;
 
-				if (!acks.Naks.Contains(ack) && _nacked.Contains(ack))
+				if (!acks.Naks.Contains(ack))
 				{
 					acks.Naks.Add(ack);
 					Interlocked.Increment(ref ConnectionInfo.NakSent);
@@ -766,16 +749,18 @@ namespace Alex.Net.Bedrock
 		
 		private async Task SendAckQueueAsync()
 		{
+			if (!SlidingWindow.ShouldSendAcks(CurrentTimeMillis()))
+				return;
 			var           queue      = OutgoingAckQueue;
 			int           queueCount = queue.Count;
 
 			if (queueCount == 0) return;
 
 			var acks = Acks.CreateObject();
-			for (int i = 0; i < Math.Min(10, queueCount); i++)
+			for (int i = 0; i < queueCount; i++)
 			{
 				if (!queue.TryDequeue(out int ack)) break;
-				_nacked.Remove(ack);
+	//			_nacked.Remove(ack);
 
 				if (!acks.acks.Contains(ack))
 				{
@@ -789,70 +774,11 @@ namespace Alex.Net.Bedrock
 				byte[] data = acks.Encode();
 				
 				await _packetSender.SendDataAsync(data, EndPoint);
+
+				this.SlidingWindow.OnSendAck();
 			}
 			
 			acks.PutPool();
-		}
-		
-		public static List<Tuple<int, int>> Slize(List<int> acks)
-		{
-			List<Tuple<int, int>> ranges = new List<Tuple<int, int>>();
-
-			if (acks.Count == 0) return ranges;
-
-			int start = acks[0];
-			int prev = start;
-
-			if (acks.Count == 1)
-			{
-				ranges.Add(new Tuple<int, int>(start, start));
-				return ranges;
-			}
-
-			acks.Sort();
-
-
-			for (int i = 1; i < acks.Count; i++)
-			{
-				bool isLast = i + 1 == acks.Count;
-				int current = acks[i];
-
-				if (current - prev == 1 && !isLast)
-				{
-					prev = current;
-					continue;
-				}
-
-				if (current - prev > 1 && !isLast)
-				{
-					ranges.Add(new Tuple<int, int>(start, prev));
-
-					start = current;
-					prev = current;
-					continue;
-				}
-
-				if (current - prev == 1 && isLast)
-				{
-					ranges.Add(new Tuple<int, int>(start, current));
-				}
-
-				if (current - prev > 1 && isLast)
-				{
-					if (prev == start)
-					{
-						ranges.Add(new Tuple<int, int>(start, current));
-					}
-
-					if (prev != start)
-					{
-						ranges.Add(new Tuple<int, int>(start, prev));
-						ranges.Add(new Tuple<int, int>(current, current));
-					}
-				}
-			}
-
-			return ranges;
 		}
 
 		private SemaphoreSlim _syncHack = new SemaphoreSlim(1, 1);
@@ -868,6 +794,9 @@ namespace Alex.Net.Bedrock
 
 			try
 			{
+				int transmissionBandwidth;
+				transmissionBandwidth = this.SlidingWindow.GetTransmissionBandwidth(this.UnackedBytes);
+
 				var sendList = new List<Packet>();
 				//Queue<Packet> queue = _sendQueueNotConcurrent;
 				int length = _sendQueue.Count;
@@ -986,8 +915,100 @@ namespace Alex.Net.Bedrock
 		private object _ackLock                    = new object();
 		private bool   _isOutOfOrder                       = false;
 
-		public bool Acknowledge(Int24 datagramSequenceNumber)
+		private static readonly DateTime Jan1st1970 = new DateTime
+			(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+		
+		public static long CurrentTimeMillis()
 		{
+			return (long) (DateTime.UtcNow - Jan1st1970).TotalMilliseconds;
+		}
+
+		public int UnackedBytes = 0;
+		internal void HandleAck(Ack ack)
+		{
+			var queue = WaitingForAckQueue;
+
+			foreach ((int start, int end) range in ack.ranges)
+			{
+				for (int i = range.start; i <= range.end; i++)
+				{
+					Interlocked.Increment(ref ConnectionInfo.Ack);
+					
+					if (queue.TryRemove(i, out Datagram datagram))
+					{
+						//_nacked.Remove(i);
+						UnackedBytes -= datagram.Bytes.Length;
+						//CalculateRto(datagram);
+						SlidingWindow.OnAck(datagram.Timer.ElapsedMilliseconds, datagram.Header.DatagramSequenceNumber.IntValue(), _lastDatagramSequenceNumber);
+						datagram.PutPool();
+					}
+					else
+					{
+						//if (Log.IsDebugEnabled) 
+						Log.Warn($"ACK, Failed to remove datagram #{i}");
+					}
+				}
+			}
+
+			ResendCount = 0;
+			WaitForAck = false;
+		}
+
+		internal void HandleNak(CustomNak nak)
+		{
+			SlidingWindow.OnNak();
+			var queue = WaitingForAckQueue;
+
+			foreach (Tuple<int, int> range in nak.Ranges)
+			{
+				int start = range.Item1;
+				int end = range.Item2;
+
+				for (int i = start; i <= end; i++)
+				{
+					Interlocked.Increment(ref ConnectionInfo.Nak);
+					
+					if (queue.TryGetValue(i, out var datagram))
+					{
+						//CalculateRto(datagram);
+
+						datagram.RetransmitImmediate = true;
+					}
+					else
+					{
+						//	if (Log.IsDebugEnabled)
+						Log.Warn($"NAK, no datagram #{i}");
+					}
+				}
+			}
+		}
+
+		public void Acknowledge(Datagram datagram)
+		{
+			var sequenceIndex = datagram.Header.DatagramSequenceNumber.IntValue();
+			SlidingWindow.OnPacketReceived(CurrentTimeMillis());
+			var previous = Interlocked.Read(ref _lastDatagramSequenceNumber);
+
+			if (previous < sequenceIndex)
+			{
+				Interlocked.Exchange(ref _lastDatagramSequenceNumber, sequenceIndex);
+			}
+			
+			var missedDatagrams = sequenceIndex - previous - 1;
+
+			if (missedDatagrams > 0)
+			{
+				for (long i = sequenceIndex - missedDatagrams; i < sequenceIndex; i++)
+				{
+					//if (_nacked.TryAdd((int) i))
+					//{
+						OutgoingNackQueue.Enqueue((int) i);
+					//}
+				}
+			}
+			
+			OutgoingAckQueue.Enqueue(sequenceIndex);
+			/*
 			var sequence = datagramSequenceNumber.IntValue();
 			OutgoingAckQueue.Enqueue(sequence);
 
@@ -1012,7 +1033,7 @@ namespace Alex.Net.Bedrock
 				return true;
 			}
 
-			return false;
+			return false;*/
 		}
 	}
 }

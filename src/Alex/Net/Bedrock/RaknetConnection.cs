@@ -385,7 +385,7 @@ namespace Alex.Net.Bedrock
 				var ack = Ack.CreateObject();
 				ack.Decode(receivedBytes);
 
-				HandleAck(rakSession, ack);
+				rakSession.HandleAck(ack);
 				
 				ack.PutPool();
 				return;
@@ -396,7 +396,7 @@ namespace Alex.Net.Bedrock
 				var nak = CustomNak.CreateObject();
 				nak.Decode(receivedBytes);
 
-				HandleNak(rakSession, nak);
+				rakSession.HandleNak(nak);
 				nak.PutPool();
 				return;
 			}
@@ -422,7 +422,8 @@ namespace Alex.Net.Bedrock
 
 		private void HandleDatagram(RaknetSession session, Datagram datagram)
 		{
-			if (Session.Acknowledge(datagram.Header.DatagramSequenceNumber))
+			Session.Acknowledge(datagram);
+			
 			{
 				foreach (var packet in datagram.Messages)
 				{
@@ -526,79 +527,6 @@ namespace Alex.Net.Bedrock
 
 			return null;
 		}
-		
-
-		private void HandleAck(RaknetSession session, Ack ack)
-		{
-			var queue = session.WaitingForAckQueue;
-
-			foreach ((int start, int end) range in ack.ranges)
-			{
-				for (int i = range.start; i <= range.end; i++)
-				{
-					Interlocked.Increment(ref ConnectionInfo.Ack);
-					
-					if (queue.TryRemove(i, out Datagram datagram))
-					{
-						CalculateRto(session, datagram);
-
-						datagram.PutPool();
-					}
-					else
-					{
-						//if (Log.IsDebugEnabled) 
-							Log.Warn($"ACK, Failed to remove datagram #{i}");
-					}
-				}
-			}
-
-			session.ResendCount = 0;
-			session.WaitForAck = false;
-		}
-
-		internal void HandleNak(RaknetSession session, CustomNak nak)
-		{
-			var queue = session.WaitingForAckQueue;
-
-			foreach (Tuple<int, int> range in nak.Ranges)
-			{
-				int start = range.Item1;
-				int end = range.Item2;
-
-				for (int i = start; i <= end; i++)
-				{
-					Interlocked.Increment(ref ConnectionInfo.Nak);
-					
-					if (queue.TryGetValue(i, out var datagram))
-					{
-						CalculateRto(session, datagram);
-
-						datagram.RetransmitImmediate = true;
-					}
-					else
-					{
-					//	if (Log.IsDebugEnabled)
-							Log.Warn($"NAK, no datagram #{i}");
-					}
-				}
-			}
-		}
-
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private void CalculateRto(RaknetSession session, Datagram datagram)
-		{
-			// RTT = RTT * 0.875 + rtt * 0.125
-			// RTTVar = RTTVar * 0.875 + abs(RTT - rtt)) * 0.125
-			// RTO = RTT + 4 * RTTVar
-			long rtt = datagram.Timer.ElapsedMilliseconds;
-			long RTT = session.Rtt;
-			long RTTVar = session.RttVar;
-
-			session.Rtt = (long) (RTT * 0.875 + rtt * 0.125);
-			session.RttVar = (long) (RTTVar * 0.875 + Math.Abs(RTT - rtt) * 0.125);
-			session.Rto = session.Rtt + 4 * session.RttVar + 100; // SYNC time in the end
-		}
 
 		private async void SendTick(object obj)
 		{
@@ -632,9 +560,11 @@ namespace Alex.Net.Bedrock
 
 				if (session.WaitForAck) return;
 
-				if (session.Rto == 0) return;
+				if (session.SlidingWindow.GetRtoForRetransmission() == 0) return;
 
-				long rto = Math.Max(100, session.Rto);
+				long rto = Math.Max(100, session.SlidingWindow.GetRtoForRetransmission());
+				int transmissionBandwith = session.SlidingWindow.GetRetransmissionBandwidth(session.UnackedBytes);
+				
 				var queue = session.WaitingForAckQueue;
 
 				foreach (KeyValuePair<int, Datagram> datagramPair in queue)
@@ -642,7 +572,7 @@ namespace Alex.Net.Bedrock
 					if (session.Evicted) return;
 
 					Datagram datagram = datagramPair.Value;
-
+					
 					if (!datagram.Timer.IsRunning)
 					{
 						Log.Error($"Timer not running for #{datagram.Header.DatagramSequenceNumber}");
@@ -659,16 +589,23 @@ namespace Alex.Net.Bedrock
 
 					if (datagram.RetransmitImmediate || elapsedTime >= datagramTimeout)
 					{
+						if (transmissionBandwith < datagram.Bytes.Length)
+							break;
+						
+						transmissionBandwith -= datagram.Bytes.Length;
+						
 						if (!session.Evicted && session.WaitingForAckQueue.TryRemove(datagram.Header.DatagramSequenceNumber, out datagram))
 						{
 							session.ErrorCount++;
 							session.ResendCount++;
 
 							//if (Log.IsDebugEnabled) 
-								Log.Warn($"{(datagram.RetransmitImmediate ? "NAK RSND" : "TIMEOUT")}, Resent #{datagram.Header.DatagramSequenceNumber.IntValue()} Type: {datagram.FirstMessageId} (0x{datagram.FirstMessageId:x2}) ({elapsedTime} > {datagramTimeout}) RTO {session.Rto}");
+								Log.Warn($"{(datagram.RetransmitImmediate ? "NAK RSND" : "TIMEOUT")}, Resent #{datagram.Header.DatagramSequenceNumber.IntValue()} Type: {datagram.FirstMessageId} (0x{datagram.FirstMessageId:x2}) ({elapsedTime} > {datagramTimeout}) RTO {rto}");
 
 							Interlocked.Increment(ref ConnectionInfo.Resends);
 							await SendDatagramAsync(session, datagram);
+							
+							session.SlidingWindow.OnResend(datagram.Header.DatagramSequenceNumber.IntValue());
 						}
 					}
 				}
@@ -747,6 +684,7 @@ namespace Alex.Net.Bedrock
 				datagram.PutPool();
 			}
 
+			session.UnackedBytes += length;
 			Interlocked.Increment(ref ConnectionInfo.PacketsOut);
 			
 			//lock (session.)
