@@ -205,7 +205,7 @@ namespace Alex.Services
 
 						conn.SendPacket(RequestPacket.CreateObject());
 
-						if (await WaitHandleHelpers.FromWaitHandle(ar, TimeSpan.FromMilliseconds(10000), cts.Token) &&
+						if (await WaitHandleHelpers.FromWaitHandle(ar, TimeSpan.FromMilliseconds(1000), cts.Token) &&
 						    !connectionClosed && jsonResponse != null)
 						{
 
@@ -246,7 +246,6 @@ namespace Alex.Services
 						}
 						else
 						{
-							conn?.Stop();
 							//conn = null;
 							statusCallBack?.Invoke(new ServerQueryResponse(false, "multiplayer.status.cannot_connect",
 								new ServerQueryStatus()

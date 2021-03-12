@@ -7,54 +7,13 @@ using Alex.API.Gui.Elements;
 using Alex.API.Gui.Elements.Layout;
 using Alex.API.Gui.Graphics;
 using Microsoft.Xna.Framework;
+using NLog;
 
 namespace Alex.Gui.Elements
 {
-	public class ScoreboardElement : GuiContainer
-	{
-		private GuiTextElement Left { get; }
-		private GuiContainer Right { get; }
-		
-		public ScoreboardElement(string left, uint value)
-		{
-			//Orientation = Orientation.Horizontal;
-			//ChildAnchor = Alignment.FillCenter;
-
-			Left = new GuiTextElement()
-			{
-				Text = left,
-				Anchor = Alignment.TopLeft,
-			//	Margin = new Thickness(0, 0, 2, 0),
-				//ParentElement = this
-			};
-			
-			Right = new GuiContainer()
-			{
-				Padding = new Thickness(2, 0, 0, 0),
-				Anchor = Alignment.TopRight
-			};
-			
-			Right.AddChild(new GuiTextElement()
-			{
-				Anchor = Alignment.TopRight,
-				Text = $"  {value.ToString()}",
-				//ParentElement = this
-			});
-			
-			AddChild(Left);
-			AddChild(Right);
-		}
-
-		/*	protected override void GetPreferredSize(out Size size, out Size minSize, out Size maxSize)
-		{
-			base.GetPreferredSize(out size, out minSize, out maxSize);
-			
-			size = new Size(Left.Width + Right.Width, Math.Max(Left.Height, Right.Height));
-		}*/
-	}
-
 	public class ScoreboardObjective : GuiStackContainer
 	{
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ScoreboardObjective));
 		private ConcurrentDictionary<string, ScoreboardEntry> Entries      { get; }
 		public  string                                      Name         { get; set; }
 
@@ -72,11 +31,14 @@ namespace Alex.Gui.Elements
 
 		public  int                                         SortOrder    { get; set; }
 		public  string                                      CriteriaName { get; set; }
+
+		public EventHandler<string> OnEntryAdded;
+		public EventHandler<string> OnEntryRemoved;
 		public ScoreboardObjective(string name, string displayName, int sortOrder, string criteriaName)
 		{
 			_displayNameElement = new GuiTextElement(displayName) {Anchor = Alignment.CenterX};
 			
-			Entries = new ConcurrentDictionary<string, ScoreboardEntry>();
+			Entries = new ConcurrentDictionary<string, ScoreboardEntry>(StringComparer.InvariantCulture);
 			Name = name;
 			DisplayName = displayName;
 			SortOrder = sortOrder;
@@ -110,7 +72,10 @@ namespace Alex.Gui.Elements
 			}
 			else
 			{
-				Entries.TryAdd(id, entry);
+				if (Entries.TryAdd(id, entry))
+				{
+					OnEntryAdded?.Invoke(this, id);
+				}
 				rebuild = true;
 			}
 
@@ -125,8 +90,14 @@ namespace Alex.Gui.Elements
 		{
 			if (Entries.TryRemove(id, out var old))
 			{
+				OnEntryRemoved?.Invoke(this, id);
+
 				RemoveChild(old);
-				//Rebuild();
+				Rebuild();
+			}
+			else
+			{
+				Log.Warn($"Could not find entry with id: {id}");
 			}
 		}
 
@@ -275,6 +246,10 @@ namespace Alex.Gui.Elements
 	{
 		//private ConcurrentDictionary<string, EntryData> Rows { get; set; } = new ConcurrentDictionary<string, EntryData>();
 		private ConcurrentDictionary<string, ScoreboardObjective> Objectives { get; set; } = new ConcurrentDictionary<string, ScoreboardObjective>();
+
+		private ConcurrentDictionary<string, string> EntityObjectives { get; set; } =
+			new ConcurrentDictionary<string, string>();
+
 		public ScoreboardView() : base()
 		{
 			BackgroundOverlay = new Color(Color.Black, 0.5f);
@@ -285,6 +260,8 @@ namespace Alex.Gui.Elements
 		{
 			if (Objectives.TryRemove(name, out var objective))
 			{
+				objective.OnEntryAdded -= OnEntryAdded;
+				objective.OnEntryRemoved -= OnEntryRemoved;
 				RemoveChild(objective);
 			}
 		}
@@ -293,10 +270,39 @@ namespace Alex.Gui.Elements
 		{
 			if (Objectives.TryAdd(objective.Name, objective))
 			{
+				objective.OnEntryAdded += OnEntryAdded;
+				objective.OnEntryRemoved += OnEntryRemoved;
 				AddChild(objective);
 			}
 		}
 
+		private void OnEntryRemoved(object sender, string id)
+		{
+			if (sender is ScoreboardObjective objective)
+			{
+				EntityObjectives.TryRemove(id, out _);
+			}
+		}
+
+		private void OnEntryAdded(object sender, string id)
+		{
+			if (sender is ScoreboardObjective objective)
+			{
+				EntityObjectives.AddOrUpdate(id, s => objective.Name, (s, s1) => objective.Name);
+			}
+		}
+
+		public bool TryGetEntityScoreboard(string id, out ScoreboardObjective objective)
+		{
+			if (EntityObjectives.TryGetValue(id, out string obj) && Objectives.TryGetValue(obj, out objective))
+			{
+				return true;
+			}
+
+			objective = null;
+			return false;
+		}
+		
 		public bool TryGetObjective(string name, out ScoreboardObjective objective)
 		{
 			return Objectives.TryGetValue(name, out objective);

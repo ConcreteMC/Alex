@@ -882,6 +882,20 @@ namespace Alex.Worlds.Multiplayer.Java
 		}
 		
 		private TeamsManager TeamsManager { get; } = new TeamsManager();
+
+		private void UpdateTeamEntry(Team team)
+		{
+			foreach (var entity in team.Entities)
+			{
+				if (ScoreboardView.TryGetEntityScoreboard(entity, out var objective))
+				{
+					if (objective.TryGet(entity, out var scoreboardEntry))
+					{
+						scoreboardEntry.DisplayName = $"{team.TeamPrefix}{entity}{team.TeamSuffix}";
+					}
+				}
+			}
+		}
 		private void HandleTeamsPacket(TeamsPacket packet)
 		{
 			switch (packet.PacketMode)
@@ -889,22 +903,34 @@ namespace Alex.Worlds.Multiplayer.Java
 				case TeamsPacket.Mode.CreateTeam:
 					if (packet.Payload is TeamsPacket.CreateTeam ct)
 					{
+					//	Log.Info($"Create team! Name: {packet.TeamName} Displayname: {ct.TeamDisplayName} Prefix: {ct.TeamPrefix} Suffix: {ct.TeamSuffix} Entities: {string.Join(',', ct.Entities)}");
+						
+						Team team = new Team(
+							packet.TeamName, ct.TeamDisplayName, ct.TeamColor, ct.TeamPrefix, ct.TeamSuffix);
+						
+						foreach (var entity in ct.Entities)
+						{
+							team.AddEntity(entity);
+						}
+						
 						TeamsManager.AddOrUpdateTeam(
 							packet.TeamName,
-							new Team(
-								packet.TeamName, ct.TeamDisplayName, ct.TeamColor, ct.TeamPrefix,
-								ct.TeamSuffix));
+							team);
+						
+						UpdateTeamEntry(team);
 					}
 
 					break;
 
 				case TeamsPacket.Mode.RemoveTeam:
+				//	Log.Info($"Remove team: {packet.TeamName}");
 					TeamsManager.RemoveTeam(packet.TeamName);
 					break;
 
 				case TeamsPacket.Mode.UpdateTeam:
 					if (packet.Payload is TeamsPacket.UpdateTeam ut)
 					{
+					//	Log.Info($"Update team! Name: {packet.TeamName} Displayname: {ut.TeamDisplayName} Prefix: {ut.TeamPrefix} Suffix: {ut.TeamSuffix}");
 						if (TeamsManager.TryGet(packet.TeamName, out var team))
 						{
 							team.DisplayName = ut.TeamDisplayName;
@@ -913,15 +939,40 @@ namespace Alex.Worlds.Multiplayer.Java
 							team.TeamSuffix = ut.TeamSuffix;
 							
 							TeamsManager.AddOrUpdateTeam(packet.TeamName, team);
+							UpdateTeamEntry(team);
 						}
 					}
 
 					break;
 
 				case TeamsPacket.Mode.AddPlayer:
+					if (packet.Payload is TeamsPacket.AddPlayers addPlayers)
+					{
+						if (TeamsManager.TryGet(packet.TeamName, out var team))
+						{
+						//	Log.Info($"Add entities to team: Name={packet.TeamName} Entities: {string.Join(',', addPlayers.Entities)}");
+							foreach (var entity in addPlayers.Entities)
+							{
+								team.AddEntity(entity);
+							}
+							
+							UpdateTeamEntry(team);
+						}
+					}
 					break;
 
 				case TeamsPacket.Mode.RemovePlayer:
+					if (packet.Payload is TeamsPacket.RemovePlayers removePlayers)
+					{
+						if (TeamsManager.TryGet(packet.TeamName, out var team))
+						{
+						//	Log.Info($"Remove entities from team: Name={packet.TeamName} Entities: {string.Join(',', removePlayers.Entities)}");
+							foreach (var entity in removePlayers.Entities)
+							{
+								team.RemoveEntity(entity);
+							}
+						}
+					}
 					break;
 
 				default:
@@ -931,38 +982,47 @@ namespace Alex.Worlds.Multiplayer.Java
 		
 		private void HandleUpdateScorePacket(UpdateScorePacket packet)
 		{
+			//Log.Info($"Update score, action={packet.Action} value={packet.Value} entityname={packet.EntityName} objectiveName={packet.ObjectiveName}");
 			var scoreboard = ScoreboardView;
 			if (scoreboard == null)
 				return;
 
-			if (scoreboard.TryGetObjective(packet.ObjectiveName, out var obj))
+			if (scoreboard.TryGetObjective(packet.ObjectiveName, out var obj) || scoreboard.TryGetEntityScoreboard(packet.EntityName, out obj))
 			{
 				if (packet.Action == UpdateScorePacket.UpdateScoreAction.CreateOrUpdate)
 				{
 					string displayName = packet.EntityName;
+					ScoreboardEntry entry = null;
 
+					obj.AddOrUpdate(packet.EntityName, new ScoreboardEntry(packet.EntityName, (uint) packet.Value, displayName));
+
+					if (TeamsManager.TryGetEntityTeam(packet.EntityName, out var entityTeam))
+					{
+						UpdateTeamEntry(entityTeam);
+					}
 				//	Log.Info($"Entity: {packet.EntityName} | {packet.ObjectiveName}");
 					
-					if (packet.EntityName.Length == 36 && World.EntityManager.TryGet(
+					/*if (packet.EntityName.Length == 36 && World.EntityManager.TryGet(
 						new MiNET.Utils.UUID(packet.EntityName), out var ent))
 					{
 						displayName = ent.NameTag;
 					}
-					else if (TeamsManager.TryGet(packet.EntityName, out var team))
-					{
-						displayName = team.DisplayName;
-					}
-
-					//Log.Info(packet.EntityName);
-					if (obj.TryGet(packet.EntityName, out var entry) || obj.TryGetByScore((uint) packet.Value, out entry))
-					{
-						entry.Score = (uint) packet.Value;
-						entry.DisplayName = displayName;
-					}
 					else
 					{
-						obj.AddOrUpdate(packet.EntityName, new ScoreboardEntry(packet.EntityName, (uint) packet.Value, displayName));
-					}
+						
+					}*/
+					/*else if (TeamsManager.TryGetEntityTeam(packet.EntityName, out var entityTeam) || TeamsManager.TryGet(packet.EntityName, out entityTeam))
+					{
+						entityTeam.ScoreboardEntry = new WeakReference<ScoreboardEntry>(entry);
+						displayName = $"{entityTeam.TeamPrefix}{entityTeam.TeamSuffix}";
+						//displayName = entityTeam.DisplayName;
+					}*/
+					//else if (TeamsManager.TryGet(packet.EntityName, out var team))
+					//{
+					//	displayName = team.DisplayName;
+					//}
+
+					//Log.Info(packet.EntityName);
 				}
 				else if (packet.Action == UpdateScorePacket.UpdateScoreAction.Remove)
 				{
@@ -970,10 +1030,15 @@ namespace Alex.Worlds.Multiplayer.Java
 					obj.Remove(packet.EntityName);
 				}
 			}
+			else
+			{
+				Log.Warn($"Unknown objective: {packet.ObjectiveName}");
+			}
 		}
 
 		private void HandleScoreboardObjectivePacket(ScoreboardObjectivePacket packet)
 		{
+		//	Log.Info($"Scoreboard objective, mode={packet.Mode} Name={packet.ObjectiveName} Value={packet.Value ?? "N/A"} Type={packet.Type}");
 			var scoreboard = ScoreboardView;
 			if (scoreboard == null)
 				return;
@@ -1001,6 +1066,7 @@ namespace Alex.Worlds.Multiplayer.Java
 
 		private void HandleDisplayScoreboardPacket(DisplayScoreboardPacket packet)
 		{
+		//	Log.Info($"Display scoreboard: {packet.ScoreName} Position: {packet.Position}");
 			if (packet.Position == DisplayScoreboardPacket.ScoreboardPosition.Sidebar)
 			{
 				var scoreboard = ScoreboardView;
@@ -2057,7 +2123,7 @@ namespace Alex.Worlds.Multiplayer.Java
 						        }
 						        else
 						        {
-							        Log.Warn($"Got null block entity: {tag}");
+							        Log.Debug($"Got null block entity: {tag}");
 						        }
 
 					        }
