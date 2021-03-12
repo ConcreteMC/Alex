@@ -212,6 +212,7 @@ namespace Alex.Gui.Elements
 		private TextElement RightText { get; }
 		public ScoreboardEntry(string entryId, uint score, string displayName = "")
 		{
+			Padding = Thickness.One;
 			EntryId = entryId;
 
 			Left = new TextElement()
