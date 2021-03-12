@@ -55,9 +55,9 @@ namespace Alex.Services
 		    return new ResolveResult(true, ipAddresses);
 	    }
 
-	    public async Task QueryServerAsync(ServerConnectionDetails connectionDetails, PingServerDelegate pingCallback, ServerStatusDelegate statusCallBack)
+	    public Task QueryServerAsync(ServerConnectionDetails connectionDetails, PingServerDelegate pingCallback, ServerStatusDelegate statusCallBack)
         {
-			await QueryJavaServerAsync(connectionDetails, pingCallback, statusCallBack);
+			return QueryJavaServerAsync(connectionDetails, pingCallback, statusCallBack);
         }
 
 	    /// <inheritdoc />
@@ -142,7 +142,7 @@ namespace Alex.Services
 
 	    private static async Task QueryJavaServerAsync(ServerConnectionDetails connectionDetails, PingServerDelegate pingCallback, ServerStatusDelegate statusCallBack)
         {
-	        CancellationTokenSource cts = new CancellationTokenSource(10000);
+	        CancellationTokenSource cts = new CancellationTokenSource(2500);
 	        using TcpClient client       = new TcpClient();
 	        
 			IPEndPoint      endPoint     = null;
@@ -242,7 +242,7 @@ namespace Alex.Services
 							statusCallBack?.Invoke(new ServerQueryResponse(true, r));
 
 							if (waitingOnPing && pingCallback != null)
-								await WaitHandleHelpers.FromWaitHandle(ar, TimeSpan.FromSeconds(1000));
+								await WaitHandleHelpers.FromWaitHandle(ar, TimeSpan.FromSeconds(1000), cts.Token);
 						}
 						else
 						{
@@ -364,93 +364,6 @@ namespace Alex.Services
 		        }
 	        }
 		}
-
-        private async Task<ServerQueryResponse> QueryLegacyServerAsync(string hostname, ushort port)
-        {
-            var sw = Stopwatch.StartNew();
-            IPEndPoint endPoint = null;
-            try
-            {
-                byte[] buffer = new byte[1024];
-
-                using (var client = new TcpClient())
-                {
-
-                    await client.ConnectAsync(hostname, port);
-                    sw.Stop();
-
-                    endPoint = client.Client.RemoteEndPoint as IPEndPoint;
-                    
-                    using (var ns = client.GetStream())
-                    {
-                        var payload = new byte[] {0xFE, 0x01};
-                        await ns.WriteAsync(payload, 0, payload.Length);
-
-
-                        await ns.ReadAsync(buffer, 0, buffer.Length);
-                    }
-
-                    client.Close();
-
-                    var serverData = Encoding.Unicode.GetString(buffer).Split("\u0000\u0000\u0000".ToCharArray());
-                    if (serverData.Length >= 6)
-                    {
-                        var status = new ServerQueryStatus()
-                        {
-                            Delay   = sw.ElapsedMilliseconds,
-                            Success = true,
-
-							Query = new ServerQuery()
-							{
-								Version = new API.Services.Version()
-								{
-									Name = serverData[2]
-								},
-								Players = new Players() { Online = int.Parse(serverData[4]), Max = int.Parse(serverData[5]) },
-								Description = new Description()
-								{
-									Text = serverData[3]
-								}
-							},
-
-                            EndPoint = endPoint,
-                            Address  = hostname,
-                            Port     = port
-                        };
-
-                        return new ServerQueryResponse(true, status);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                if(sw.IsRunning)
-                    sw.Stop();
-
-                return new ServerQueryResponse(false, ex.Message, new ServerQueryStatus()
-                {
-                    Delay = sw.ElapsedMilliseconds,
-                    Success = false,
-
-                    EndPoint = endPoint,
-                    Address = hostname,
-                    Port = port
-                });
-            }
-            
-            if(sw.IsRunning)
-                sw.Stop();
-
-            return new ServerQueryResponse(false, "Unknown Error", new ServerQueryStatus()
-            {
-                Delay   = sw.ElapsedMilliseconds,
-                Success = false,
-                
-                EndPoint = endPoint,
-                Address  = hostname,
-                Port     = port
-            });
-        }
     }
 
 	public static class WaitHandleHelpers{

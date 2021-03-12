@@ -544,8 +544,9 @@ namespace Alex.Worlds.Chunks
 				for (var index = 0; index < Sections.Length; index++)
 				{
 					var chunksSection = Sections[index];
-					chunksSection?.Dispose();
 					Sections[index] = null;
+					
+					chunksSection?.Dispose();
 				}
 
 				//Sections = null;

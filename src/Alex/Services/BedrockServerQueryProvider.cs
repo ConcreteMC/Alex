@@ -26,109 +26,114 @@ namespace Alex.Services
 			PingServerDelegate pingCallback,
 			ServerStatusDelegate statusCallBack)
 		{
-		//	ManualResetEventSlim ar       = new ManualResetEventSlim(false);
-			Stopwatch            sw       = new Stopwatch();
-			long                 pingTime = 0;
-
-			BedrockClient client = null;
-
-			try
-			{
-				IPEndPoint serverEndpoint = new IPEndPoint(
-					connectionDetails.EndPoint.Address, (int) connectionDetails.EndPoint.Port);
-
-				client = new BedrockClient(
-					Game, serverEndpoint,
-					new PlayerProfile(
-						string.Empty, $"Pinger{serverEndpoint.ToString()}", $"Pinger{serverEndpoint.ToString()}", null,
-						null, null), null)
+			return Task.Run(
+				() =>
 				{
+					//	ManualResetEventSlim ar       = new ManualResetEventSlim(false);
+					Stopwatch sw = new Stopwatch();
+					long pingTime = 0;
 
-					//IgnoreUnConnectedPong = true
-				};
+					BedrockClient client = null;
 
-				client.Connection.AutoConnect = false;
-
-
-				BedrockMotd motd = new BedrockMotd(string.Empty);
-
-				client.OnMotdReceivedHandler += (sender, m) =>
-				{
-					motd = m;
-					pingTime = m.Latency;
-					//ar.Set();
-
-					pingCallback.Invoke(new ServerPingResponse(true, pingTime));
-				};
-				
-				sw.Restart();
-				if (client.Start(TimeSpan.FromSeconds(10)))
-				{
-					client.Close();
-
-					var compatability = CompatibilityResult.Unknown;
-
-					if (motd.ProtocolVersion == McpeProtocolInfo.ProtocolVersion)
+					try
 					{
-						compatability = CompatibilityResult.Compatible;
-					}
+						IPEndPoint serverEndpoint = new IPEndPoint(
+							connectionDetails.EndPoint.Address, (int) connectionDetails.EndPoint.Port);
 
-					statusCallBack?.Invoke(
-						new ServerQueryResponse(
-							true,
-							new ServerQueryStatus()
+						client = new BedrockClient(
+							Game, serverEndpoint,
+							new PlayerProfile(
+								string.Empty, $"Pinger{serverEndpoint.ToString()}",
+								$"Pinger{serverEndpoint.ToString()}", null, null, null), null)
+						{
+
+							//IgnoreUnConnectedPong = true
+						};
+
+						client.Connection.AutoConnect = false;
+
+
+						BedrockMotd motd = new BedrockMotd(string.Empty);
+
+						client.OnMotdReceivedHandler += (sender, m) =>
+						{
+							motd = m;
+							pingTime = m.Latency;
+							//ar.Set();
+
+							pingCallback.Invoke(new ServerPingResponse(true, pingTime));
+						};
+
+						sw.Restart();
+
+						if (client.Start(TimeSpan.FromSeconds(10)))
+						{
+							client.Close();
+
+							var compatability = CompatibilityResult.Unknown;
+
+							if (motd.ProtocolVersion == McpeProtocolInfo.ProtocolVersion)
 							{
-								EndPoint = motd.ServerEndpoint,
-								Delay = pingTime,
-								Success = true,
-								Address = connectionDetails.Hostname,
-								Port = (ushort) connectionDetails.EndPoint.Port,
-								WaitingOnPing = false,
-								Query = new ServerQuery()
-								{
-									Players = new Players() {Max = motd.MaxPlayers, Online = motd.Players},
-									Version = new API.Services.Version()
+								compatability = CompatibilityResult.Compatible;
+							}
+
+							statusCallBack?.Invoke(
+								new ServerQueryResponse(
+									true,
+									new ServerQueryStatus()
 									{
-										Protocol = motd.ProtocolVersion,
-										Name = motd.ClientVersion,
-										Compatibility = compatability
-									},
-									Description = new Description() {Text = motd.MOTD},
-									Modinfo = null,
-									Favicon = null
-								}
-							}));
-				}
-				else
-				{
-					statusCallBack?.Invoke(
-						new ServerQueryResponse(
-							false, "multiplayer.status.cannot_connect",
-							new ServerQueryStatus()
-							{
-								EndPoint = serverEndpoint,
-								Delay = sw.ElapsedMilliseconds,
-								Success = false,
-								Address = connectionDetails.Hostname,
-								Port = (ushort) connectionDetails.EndPoint.Port,
-								WaitingOnPing = false
-							}));
-				}
-			}
-			catch (Exception e)
-			{
-				Log.Error($"Could not get bedrock query: {e.ToString()}");
+										EndPoint = motd.ServerEndpoint,
+										Delay = pingTime,
+										Success = true,
+										Address = connectionDetails.Hostname,
+										Port = (ushort) connectionDetails.EndPoint.Port,
+										WaitingOnPing = false,
+										Query = new ServerQuery()
+										{
+											Players =
+												new Players() {Max = motd.MaxPlayers, Online = motd.Players},
+											Version = new API.Services.Version()
+											{
+												Protocol = motd.ProtocolVersion,
+												Name = motd.ClientVersion,
+												Compatibility = compatability
+											},
+											Description = new Description() {Text = motd.MOTD},
+											Modinfo = null,
+											Favicon = null
+										}
+									}));
+						}
+						else
+						{
+							statusCallBack?.Invoke(
+								new ServerQueryResponse(
+									false, "multiplayer.status.cannot_connect",
+									new ServerQueryStatus()
+									{
+										EndPoint = serverEndpoint,
+										Delay = sw.ElapsedMilliseconds,
+										Success = false,
+										Address = connectionDetails.Hostname,
+										Port = (ushort) connectionDetails.EndPoint.Port,
+										WaitingOnPing = false
+									}));
+						}
+					}
+					catch (Exception e)
+					{
+						Log.Error($"Could not get bedrock query: {e.ToString()}");
 
-				statusCallBack?.Invoke(
-					new ServerQueryResponse(false, "Failed to connect...", new ServerQueryStatus() {Success = false}));
-			}
-			finally
-			{
-				client?.Close();
-				client?.Dispose();
-			}
-
-			return Task.CompletedTask;
+						statusCallBack?.Invoke(
+							new ServerQueryResponse(
+								false, "Failed to connect...", new ServerQueryStatus() {Success = false}));
+					}
+					finally
+					{
+						client?.Close();
+						client?.Dispose();
+					}
+				});
 		}
 
 		/// <inheritdoc />

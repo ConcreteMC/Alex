@@ -67,35 +67,30 @@ namespace Alex.Worlds
 
 				foreach (var entity in entities.Concat(blockEntities))
 				{
-					entityCount++;
-					rendered.Add(entity);
-
 					//entity.OnTick();
 
 					//if (!entity.IsSpawned)
 					//	continue;
-					/*if (Math.Abs(new ChunkCoordinates(entity.KnownPosition).DistanceTo(cameraChunkPosition))
-					    > World.ChunkManager.RenderDistance)
+					if (Math.Abs(new ChunkCoordinates(entity.KnownPosition).DistanceTo(cameraChunkPosition))
+					    <= World.ChunkManager.RenderDistance)
 					{
-						entity.IsRendered = false;
-	
-						continue;
-					}*/
+						entityCount++;
+						rendered.Add(entity);
+						
+						var entityBox = entity.GetVisibilityBoundingBox(entity.RenderLocation);
 
-					var entityBox = entity.GetVisibilityBoundingBox(entity.RenderLocation);
+						if (World.Camera.BoundingFrustum.Intersects(
+							new Microsoft.Xna.Framework.BoundingBox(entityBox.Min, entityBox.Max)))
+						{
+							entity.IsRendered = true;
+							entity.OnTick();
 
-					if (World.Camera.BoundingFrustum.Intersects(
-						new Microsoft.Xna.Framework.BoundingBox(entityBox.Min, entityBox.Max)))
-					{
-						entity.IsRendered = true;
-						entity.OnTick();
-
-						ticked++;
+							ticked++;
+							continue;
+						}
 					}
-					else
-					{
-						entity.IsRendered = false;
-					}
+					
+					entity.IsRendered = false;
 				}
 
 				_rendered = rendered.ToArray();
@@ -112,13 +107,20 @@ namespace Alex.Worlds
 		{
 			//var entities      = Entities.Values.ToArray();
 			//var blockEntities = BlockEntities.Values.ToArray();
-
+			
+			var maxDistance = (World.ChunkManager.RenderDistance * 16f);
 			foreach (var entity in _rendered)
 			{
 				_updateWatch.Restart();
 				//if (entity.IsRendered)
-					entity.Update(args);
 
+				//pos.Y = 0;
+			
+				if (!entity.IsRendered)
+					continue;
+				
+				entity.Update(args);
+				
 				var elapsed = _updateWatch.ElapsedMilliseconds;
 
 				if (elapsed > 13)
@@ -142,7 +144,7 @@ namespace Alex.Worlds
 				foreach (var entity in _rendered)
 				{
 					// entity.IsRendered = true;
-					if (entity.IsRendered)
+					if (entity.IsRendered && !entity.IsInvisible && entity.Scale > 0f)
 					{
 						entity.Render(args);
 
@@ -200,17 +202,17 @@ namespace Alex.Worlds
 			}
 		}
 
+		private static Color _backgroundColor = new Color(Color.Black, 128);
 		private void RenderNametag(IRenderArgs args, Entity entity)
 		{
+			var maxDistance = (World.ChunkManager.RenderDistance * 16f);
 			string clean = entity.NameTag;
 
 			if (string.IsNullOrWhiteSpace(clean))
 				return;
 			
 			//var halfWidth = (float)(Width * _scale);
-			
-			var maxDistance = (World.ChunkManager.RenderDistance * 16f);
-			
+
 			//pos.Y = 0;
 			
 			var distance = MathF.Abs(Vector3.Distance(entity.KnownPosition, args.Camera.Position));
@@ -249,6 +251,7 @@ namespace Alex.Worlds
 				textPosition.Y = screenSpace.Y;
 
 				Vector2 renderPosition = textPosition;
+				var s = new Vector2((float) scale);
 				
 				foreach (var str in clean.Split('\n').Reverse())
 				{
@@ -265,11 +268,11 @@ namespace Alex.Worlds
 					//renderPosition.Y = (int) ((textPosition.Y + yOffset));
 
 					args.SpriteBatch.FillRectangle(
-						new Rectangle(renderPosition.ToPoint(), c), new Color(Color.Black, 128), screenSpace.Z + 0.0000001f);
+						new Rectangle(renderPosition.ToPoint(), c), _backgroundColor, screenSpace.Z + 0.0000001f);
 
 					Alex.Font.DrawString(
 						args.SpriteBatch, line, renderPosition, (Color)TextColor.White, FontStyle.None,
-						layerDepth: screenSpace.Z, scale: new Vector2((float) scale));
+						layerDepth: screenSpace.Z, scale: s);
 				}
 			}
 			finally

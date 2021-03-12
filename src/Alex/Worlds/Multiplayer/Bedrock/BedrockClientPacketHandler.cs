@@ -324,7 +324,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				Client.RequestChunkRadius(Client.ChunkRadius);
 			}
 
-			//	_entityMapping.TryAdd(message.entityIdSelf, message.runtimeEntityId);
+			_entityMapping.TryAdd(message.entityIdSelf, message.runtimeEntityId);
 		}
 
 		public void HandleMcpeMovePlayer(McpeMovePlayer message)
@@ -419,6 +419,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			UpdateEntityAdventureFlags(entity, message.flags);
 
 			Client.World.SpawnEntity(entity);
+
+			_entityMapping.TryAdd(message.entityIdSelf, message.runtimeEntityId);
 		}
 
 		public void HandleMcpePlayerList(McpePlayerList message)
@@ -531,14 +533,18 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			{
 				Log.Warn($"Unknown entity type: {message.entityType}");
 			}
+			else
+			{
+				_entityMapping.TryAdd(message.entityIdSelf, message.runtimeEntityId);
+			}
 		}
 
-		//private ConcurrentDictionary<long, long> _entityMapping = new ConcurrentDictionary<long, long>();
+		private ConcurrentDictionary<long, long> _entityMapping = new ConcurrentDictionary<long, long>();
 		public void HandleMcpeRemoveEntity(McpeRemoveEntity message)
 		{
-			//if (_entityMapping.TryRemove(message.entityIdSelf, out var entityId))
+			if (_entityMapping.TryRemove(message.entityIdSelf, out var entityId))
 			{
-				Client.World.DespawnEntity(message.entityIdSelf);
+				Client.World.DespawnEntity(entityId);
 			}
 		}
 
@@ -562,7 +568,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 			if (Client.World.SpawnEntity(itemEntity))
 			{
-			//	_entityMapping.TryAdd(message.entityIdSelf, message.runtimeEntityId);
+				_entityMapping.TryAdd(message.entityIdSelf, message.runtimeEntityId);
 			}
 			else
 			{
@@ -1528,6 +1534,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				{
 					World world = Client.World;
 
+					_entityMapping.Clear();
 					world.ClearChunksAndEntities();
 
 

@@ -188,17 +188,53 @@ namespace Alex.Gamestates.Multiplayer
 
 			return button;
 		}
-		
+
+		private bool _isShown = false;
 	    protected override void OnShow()
 	    {
 		    base.OnShow();
 
-		    CancellationTokenSource
-			    cts = CancellationTokenSource.CreateLinkedTokenSource(CancellationTokenSource.Token);
-		    
-		    foreach (var serverType in Alex.ServerTypeManager.GetAll())
+		    if (_isShown)
+			    return;
+
+		    _isShown = true;
+
+		    //  var queryProvider = GetService<IServerQueryProvider>();
+
+			_listProvider.Load();
+
+		    Reload();
+	    }
+
+	    private CancellationTokenSource _cancellationTokenSource;
+	    private void Reload()
+	    {
+		    _cancellationTokenSource?.Cancel();
+		    _cancellationTokenSource = new CancellationTokenSource();
+		    ClearItems();
+
+		    if (_filterValue == "bedrock" && Alex.ServerTypeManager.TryGet("bedrock", out ServerTypeImplementation serverTypeImplementation))
 		    {
-			    serverType.QueryProvider.StartLanDiscovery(cts.Token, async r =>
+			    var item = new GuiServerListEntryElement(
+				    serverTypeImplementation,
+				    new SavedServerEntry()
+				    {
+					    CachedIcon = ResourceManager.NethergamesLogo,
+					    Host = "play.nethergames.org",
+					    Name = "NetherGames",
+					    Port = 19132,
+					    ServerType = serverTypeImplementation.Id
+				    });
+
+			    item.SaveEntry = false;
+			    item.PingAsync(true);
+
+			    AddItem(item);	  
+		    }
+
+		    if (Alex.ServerTypeManager.TryGet(_filterValue, out var serverType))
+		    {
+			    serverType.QueryProvider.StartLanDiscovery(_cancellationTokenSource.Token, async r =>
 			    {
 				    if (r.QueryResponse.Success)
 				    {
@@ -225,38 +261,6 @@ namespace Alex.Gamestates.Multiplayer
 			    });
 		    }
 		    
-		    cts.CancelAfter(30000);
-		    
-		  //  var queryProvider = GetService<IServerQueryProvider>();
-
-		  _listProvider.Load();
-
-		    Reload();
-	    }
-
-	    private void Reload()
-	    {
-		    ClearItems();
-
-		    if (_filterValue == "bedrock" && Alex.ServerTypeManager.TryGet("bedrock", out ServerTypeImplementation serverTypeImplementation))
-		    {
-			    var item = new GuiServerListEntryElement(
-				    serverTypeImplementation,
-				    new SavedServerEntry()
-				    {
-					    CachedIcon = ResourceManager.NethergamesLogo,
-					    Host = "play.nethergames.org",
-					    Name = "NetherGames",
-					    Port = 19132,
-					    ServerType = serverTypeImplementation.Id
-				    });
-
-			    item.SaveEntry = false;
-			    item.PingAsync(true);
-
-			    AddItem(item);	  
-		    }
-		    
 		    Task previousTask = null;
 		    foreach (var entry in _listProvider.Data.Where(x => x.ServerType.Equals(_filterValue)).ToArray())
 		    {
@@ -267,7 +271,7 @@ namespace Alex.Gamestates.Multiplayer
 
 				    if (previousTask != null)
 				    {
-					    previousTask = previousTask.ContinueWith(r => element.PingAsync(false));
+					    previousTask = previousTask.ContinueWith(async r => await element.PingAsync(false), _cancellationTokenSource.Token);
 				    }
 				    else
 				    {

@@ -194,9 +194,8 @@ namespace Alex.Blocks.Storage
 		/// <inheritdoc />
 		public void Dispose()
 		{
-			_values = null;
-			_byId = null;
-			
+		//	_values = null;
+		//	_byId = null;
 		}
 	}
 }
