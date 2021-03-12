@@ -414,7 +414,7 @@ namespace Alex.Gui.Dialogs.Containers
 		protected override void OnUpdate(GameTime gameTime)
 		{
 			var mousePos = Alex.Instance.GuiManager.FocusManager.CursorPosition;
-			mousePos = GuiRenderer.Unproject(mousePos);
+			//mousePos = GuiRenderer.Unproject(mousePos);
 
 			//TextOverlay.RenderPosition = mousePos;
 
