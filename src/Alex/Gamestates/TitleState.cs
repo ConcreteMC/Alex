@@ -283,9 +283,9 @@ namespace Alex.Gamestates
 
             _backgroundSkyBox.Update(gameTime);
 
-            _rotation += (float) gameTime.ElapsedGameTime.TotalMilliseconds / (1000.0f / 20.0f);
+            _rotation += (float) gameTime.ElapsedGameTime.TotalSeconds;
 
-            _splashText.Scale = 0.65f + (float) Math.Abs(Math.Sin(MathHelper.ToRadians(_rotation * 10.0f))) * 0.5f;
+            _splashText.Scale = 0.65f + (float) Math.Abs(Math.Sin(MathHelper.ToRadians(_rotation * 60.0f))) * 0.5f;
 
             var mousePos = Alex.GuiManager.FocusManager.CursorPosition;
 
