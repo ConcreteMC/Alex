@@ -226,7 +226,7 @@ namespace Alex.Worlds
 			{
 				Vector3 posOffset = new Vector3(0, 0f, 0);
 
-				if (!entity.IsInvisible)
+				//if (!entity.IsInvisible)
 				{
 					posOffset.Y += (float) (entity.Height * entity.Scale);
 				}

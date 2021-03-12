@@ -21,6 +21,7 @@ using Alex.Blocks;
 using Alex.Entities;
 using Alex.Entities.BlockEntities;
 using Alex.Entities.Generic;
+using Alex.Entities.Passive;
 using Alex.Entities.Projectiles;
 using Alex.Gamestates;
 using Alex.Graphics.Models.Entity;
@@ -494,8 +495,13 @@ namespace Alex.Worlds.Multiplayer.Java
 			if (EntityFactory.ModelByNetworkId((long) type, out var renderer, out EntityData knownData))
 			{
 				type = MiNET.Entities.EntityHelpers.ToEntityType($"minecraft:{knownData.Name}");
+
+				if (knownData.Name.Equals("bee"))
+					type = (EntityType)122;
+				else if (knownData.Name.Equals("fox"))
+					type = (EntityType) 121;
 				
-				entity = EntityFactory.Create(type, null, type != EntityType.ArmorStand);
+				entity = EntityFactory.Create(type, null, type != EntityType.ArmorStand && type != EntityType.PrimedTnt);
 			
 
 				if (entity == null)
@@ -585,6 +591,11 @@ namespace Alex.Worlds.Multiplayer.Java
 			entity.EntityId = entityId;
 			entity.UUID = uuid;
 
+			if (entity is EntityArmorStand armorStand)
+			{
+				armorStand.IsAffectedByGravity = false;
+				armorStand.NoAi = true;
+			}
 		//	if (!_initiated)
 		//	{
 		//		_entitySpawnQueue.Enqueue(entity);
@@ -869,7 +880,10 @@ namespace Alex.Worlds.Multiplayer.Java
 				{
 					case "block.anvil.hit":
 						soundEffect = "random.anvil.use";
-
+						break;
+						
+					case "entity.tnt.primed":
+						soundEffect = "random.fuse";
 						break;
 				}
 			}
@@ -1000,29 +1014,6 @@ namespace Alex.Worlds.Multiplayer.Java
 					{
 						UpdateTeamEntry(entityTeam);
 					}
-				//	Log.Info($"Entity: {packet.EntityName} | {packet.ObjectiveName}");
-					
-					/*if (packet.EntityName.Length == 36 && World.EntityManager.TryGet(
-						new MiNET.Utils.UUID(packet.EntityName), out var ent))
-					{
-						displayName = ent.NameTag;
-					}
-					else
-					{
-						
-					}*/
-					/*else if (TeamsManager.TryGetEntityTeam(packet.EntityName, out var entityTeam) || TeamsManager.TryGet(packet.EntityName, out entityTeam))
-					{
-						entityTeam.ScoreboardEntry = new WeakReference<ScoreboardEntry>(entry);
-						displayName = $"{entityTeam.TeamPrefix}{entityTeam.TeamSuffix}";
-						//displayName = entityTeam.DisplayName;
-					}*/
-					//else if (TeamsManager.TryGet(packet.EntityName, out var team))
-					//{
-					//	displayName = team.DisplayName;
-					//}
-
-					//Log.Info(packet.EntityName);
 				}
 				else if (packet.Action == UpdateScorePacket.UpdateScoreAction.Remove)
 				{
@@ -2311,6 +2302,7 @@ namespace Alex.Worlds.Multiplayer.Java
 							//	OnGround = packet.SpawnMob
 						}, velocity);
 
+					
 					if (mob is EntityFallingBlock efb)
 					{
 						//32

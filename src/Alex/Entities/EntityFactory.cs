@@ -452,6 +452,9 @@ namespace Alex.Entities
 					entity = new RemotePlayer(world);
 					break;
 
+				case EntityType.PrimedTnt:
+					entity = new PrimedTntEntity(world);
+					break;
 				//case EntityType.Human:
 					//entity = new PlayerMob("test", world, );
 				//	break;

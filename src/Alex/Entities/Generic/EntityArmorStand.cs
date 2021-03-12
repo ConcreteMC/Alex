@@ -36,7 +36,7 @@ namespace Alex.Entities.Generic
 				if (setMarker)
 				{
 					Width = 0f;
-					Height = 0f;
+					//Height = 0f;
 					NoAi = true;
 				}
 				//IsInvisible = setMarker;
