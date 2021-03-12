@@ -66,7 +66,7 @@ namespace Alex.Gui.Forms
                         {
                             Margin = margin,
                             Value = !toggle.Value
-                        });
+                        }.ApplyModernStyle(true));
                         
                         guiToggle.DisplayFormat = new ValueFormatter<bool>((val) =>
                         {
@@ -89,7 +89,7 @@ namespace Alex.Gui.Forms
                             MinValue = slider.Min,
                             StepInterval = slider.Step,
                             Margin = margin
-                        });
+                        }.ApplyStyle());
 
                         Slider.ValueChanged += (sender, d) => { slider.Value = (float) d; };
                     }

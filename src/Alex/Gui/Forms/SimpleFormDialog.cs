@@ -63,7 +63,11 @@ namespace Alex.Gui.Forms
                     }
                 }
                 
-                StackMenu.AddMenuItem(button.Text, submitAction);
+                StackMenu.AddChild(new StackMenuItem(button.Text, submitAction)
+                {
+                    Enabled = true
+                }.ApplyModernStyle(true));
+               // StackMenu.AddMenuItem(button.Text, submitAction);
             }
             
             Background = Color.Transparent;

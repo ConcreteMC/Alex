@@ -27,7 +27,7 @@ namespace Alex.Gui.Forms
             Image.Height = 16;
            // Image.Margin = new Thickness(0, 0, 5, 0);
 
-            Button = new StackMenuItem(text, action, isTranslationKey);
+            Button = new StackMenuItem(text, action, isTranslationKey).ApplyModernStyle(true);
             Button.Anchor = Alignment.MiddleFill;
             
          //   RocketControl contr = new RocketControl();
