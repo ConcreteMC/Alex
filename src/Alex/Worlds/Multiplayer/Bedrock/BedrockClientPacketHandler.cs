@@ -321,7 +321,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			{
 				Client.GameStarted = true;
 				
-				Client.RequestChunkRadius(Client.ChunkRadius);
+				Client.RequestChunkRadius(AlexInstance.Options.AlexOptions.VideoOptions.RenderDistance.Value);
 			}
 
 			_entityMapping.TryAdd(message.entityIdSelf, message.runtimeEntityId);
@@ -1199,7 +1199,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					Client.SendMcpeMovePlayer(new PlayerLocation(message.x, message.y, message.z), 1);
 				}
 
-				Client.RequestChunkRadius(Client.ChunkRadius);
+				Client.RequestChunkRadius(AlexInstance.Options.AlexOptions.VideoOptions.RenderDistance.Value);
 
 				Client.ChangeDimensionResetEvent.Set();
 			}
@@ -1661,8 +1661,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		public void HandleMcpeChunkRadiusUpdate(McpeChunkRadiusUpdate message)
 		{
-			Log.Info($"Received chunkradius. Requested={Client.ChunkRadius} Received={message.chunkRadius}");
-			Client.ChunkRadius = message.chunkRadius;
+			//Log.Info($"Received chunkradius. Requested={Client.ChunkRadius} Received={message.chunkRadius}");
+			Client.ChunkRadius = Math.Min(message.chunkRadius, AlexInstance.Options.AlexOptions.VideoOptions.RenderDistance.Value);
 
 			//Client.SendMcpeMovePlayer(new MiNET.Utils.PlayerLocation(Client.SpawnPoint), false);
 			//if (!Client.CanSpawn && Client.GameStarted)
