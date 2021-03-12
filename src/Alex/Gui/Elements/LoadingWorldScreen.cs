@@ -16,7 +16,7 @@ namespace Alex.Gui.Elements
     {
 	    private static readonly Logger    Log = LogManager.GetCurrentClassLogger(typeof(LoadingWorldScreen));
 	    
-	    private readonly ProgressBar _progressBar;
+	    private readonly SimpleProgressBar _progressBar;
 	    private readonly TextElement _textDisplay;
 	    private readonly TextElement _subTextDisplay;
 	    private readonly TextElement _percentageDisplay;
@@ -118,7 +118,7 @@ namespace Alex.Gui.Elements
 				HasShadow = false
 			});
 
-			element.AddChild(_progressBar = new ProgressBar()
+			element.AddChild(_progressBar = new SimpleProgressBar()
 			{
 				Width  = 300,
 				Height = 9,
@@ -132,7 +132,7 @@ namespace Alex.Gui.Elements
 					Text = Text, TextColor = (Color) TextColor.White, Anchor = Alignment.BottomLeft, HasShadow = false
 				});
 
-			AddChild(_cancelButton = new Button("Cancel", Cancel)
+			AddChild(_cancelButton = new AlexButton("Cancel", Cancel)
 			{
 				Anchor = Alignment.TopLeft
 			});

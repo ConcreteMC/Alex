@@ -2,7 +2,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Net;
 using System.Threading;
-using Alex.API.Graphics.Textures;
 using RocketUI;
 using Alex.API.Utils;
 using NLog;

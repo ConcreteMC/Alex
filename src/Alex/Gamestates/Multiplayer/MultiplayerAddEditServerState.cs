@@ -139,7 +139,7 @@ namespace Alex.Gamestates.Multiplayer
 				};
 			}
 
-			var buttonRow = AddGuiRow(_saveButton = new Button(OnSaveButtonPressed)
+			var buttonRow = AddGuiRow(_saveButton = new AlexButton(OnSaveButtonPressed)
 			{
 				AccessKey = Keys.Enter,
 
@@ -147,7 +147,7 @@ namespace Alex.Gamestates.Multiplayer
 				Margin         = new Thickness(5),
 				Width          = 100,
 				TabIndex = 5
-			}.ApplyModernStyle(false), new Button(OnCancelButtonPressed)
+			}.ApplyModernStyle(false), new AlexButton(OnCancelButtonPressed)
 			{
 				AccessKey = Keys.Escape,
 

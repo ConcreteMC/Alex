@@ -63,6 +63,7 @@ using SixLabors.ImageSharp.PixelFormats;
 using GpuResourceManager = Alex.API.Graphics.GpuResourceManager;
 using Image = SixLabors.ImageSharp.Image;
 using Point = Microsoft.Xna.Framework.Point;
+using SpriteBatchExtensions = RocketUI.Utilities.Extensions.SpriteBatchExtensions;
 using TextInputEventArgs = Microsoft.Xna.Framework.TextInputEventArgs;
 
 namespace Alex
@@ -169,6 +170,7 @@ namespace Alex
             IsFixedTimeStep = false;
             // graphics.ToggleFullScreen();
 
+            
             this.Window.AllowUserResizing = true;
 
             this.Window.ClientSizeChanged += (sender, args) =>
@@ -310,6 +312,8 @@ namespace Alex
 
         protected override void LoadContent()
         {
+            WindowSize = new Point(720, 480);
+            
             Stopwatch loadingStopwatch = Stopwatch.StartNew();
 
             RocketUI.GpuResourceManager.Init(GraphicsDevice);
@@ -406,12 +410,13 @@ namespace Alex
             GameStateManager.AddState("splash", splash);
             GameStateManager.SetActiveState("splash");
 
-            WindowSize = this.Window.ClientBounds.Size;
-            
             GuiManager.Init();
-            
-            DeviceManager.GraphicsDevice.Viewport = new Viewport(Window.ClientBounds);
 
+            GuiManager.ScaledResolution.TargetWidth = 427;
+            GuiManager.ScaledResolution.TargetHeight = 240;
+            GuiManager.ScaledResolution.GuiScale = Options.AlexOptions.VideoOptions.GuiScale.Value;
+            Options.AlexOptions.VideoOptions.GuiScale.Bind(GuiScaleChanged);
+            
             //	Log.Info($"Initializing Alex...");
             ThreadPool.QueueUserWorkItem(
                 async (o) =>
@@ -432,6 +437,11 @@ namespace Alex
                         Log.Info($"Startup time: {loadingStopwatch.Elapsed}");
                     }
                 });
+        }
+
+        private void GuiScaleChanged(int oldvalue, int newvalue)
+        {
+            GuiManager.ScaledResolution.GuiScale = newvalue;
         }
 
         private void InitiatePluginSystem(IServiceCollection serviceCollection)
@@ -603,6 +613,7 @@ namespace Alex
         {
             progressReceiver.UpdateProgress(0, "Initializing...");
 
+            SpriteBatchExtensions.Init(GraphicsDevice);
             API.Extensions.Init(GraphicsDevice);
             MCPacketFactory.Load();
             //ConfigureServices();

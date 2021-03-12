@@ -2,7 +2,7 @@ using System.IO;
 using System.Linq;
 using Alex.API.Graphics;
 using Alex.API.Gui;
-
+using Alex.API.Gui.Elements;
 using Alex.API.Gui.Graphics;
 using Alex.API.Services;
 using Alex.API.Utils;
@@ -42,12 +42,12 @@ namespace Alex.Gamestates.MainMenu
             Footer.AddRow(row =>
             {
              //   row.ChildAnchor = Alignment.CenterX;
-             row.AddChild(_selectBtn = new Button("Select Skin", OnSkinSelect)
+             row.AddChild(_selectBtn = new AlexButton("Select Skin", OnSkinSelect)
              {
                  Enabled = false
              });
              
-                row.AddChild(_cancelBtn = new Button("Cancel", OnCancelButtonPressed)
+                row.AddChild(_cancelBtn = new AlexButton("Cancel", OnCancelButtonPressed)
                 {
                 });
                 
@@ -56,7 +56,7 @@ namespace Alex.Gamestates.MainMenu
             Footer.AddRow(row =>
             {
                 row.ChildAnchor = Alignment.BottomCenter;
-                row.AddChild(new Button("Open SkinPack folder", OpenSkinPackFOlder, false).ApplyModernStyle());
+                row.AddChild(new AlexButton("Open SkinPack folder", OpenSkinPackFOlder, false).ApplyModernStyle());
             });
 
             Reload();

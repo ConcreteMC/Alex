@@ -42,6 +42,7 @@ namespace Alex.Gui.Elements
                 Scale = 1f,
                 BackgroundOverlay = Color.Black * 0.25f,
                 TextAlignment = TextAlignment.Left,
+                Background = null
             });
         }
 
@@ -54,7 +55,8 @@ namespace Alex.Gui.Elements
                 Scale = 1f,
                 BackgroundOverlay = Color.Black * 0.25f,
                 Interval = interval,
-                TextAlignment = TextAlignment.Left
+                TextAlignment = TextAlignment.Left,
+                Background = null
             });
         }
 
@@ -66,7 +68,8 @@ namespace Alex.Gui.Elements
                 FontStyle = FontStyle.DropShadow,
                 Scale = 1f,
                 BackgroundOverlay = Color.Black * 0.25f,
-                TextAlignment = TextAlignment.Right
+                TextAlignment = TextAlignment.Right,
+                Background = null
             });
         }
 
@@ -79,7 +82,8 @@ namespace Alex.Gui.Elements
                 Scale = 1f,
                 BackgroundOverlay = Color.Black * 0.25f,
                 Interval = interval,
-                TextAlignment = TextAlignment.Right
+                TextAlignment = TextAlignment.Right,
+                Background = null
 			});
         }
 

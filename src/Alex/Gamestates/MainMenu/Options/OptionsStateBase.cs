@@ -3,7 +3,7 @@ using Alex.API.Data.Options;
 using Alex.API.GameStates;
 using Alex.API.Graphics;
 using Alex.API.Gui;
-
+using Alex.API.Gui.Elements;
 using Alex.API.Gui.Graphics;
 using Alex.API.Services;
 using Alex.Gamestates.Common;
@@ -117,7 +117,7 @@ namespace Alex.Gamestates.MainMenu.Options
             if (state == null)
                 throw new Exception($"Can not create linkbutton with type {typeof(TGameState)}");
             
-            return new Button(() =>
+            return new AlexButton(() =>
             {
                 Alex.GameStateManager.SetActiveState(state);
                 state.ParentState = ParentState;
@@ -139,7 +139,7 @@ namespace Alex.Gamestates.MainMenu.Options
         protected Slider CreateSlider(ValueFormatter<double> label, Func<AlexOptions, OptionsProperty<int>> optionsAccessor, int? minValue = null, int? maxValue = null, int? stepInterval = null)
         {
             var slider = CreateValuedControl<Slider, double, int>(label, optionsAccessor);
-            
+            slider.ApplyStyle();
             if (minValue.HasValue)
             {
                 slider.MinValue = minValue.Value;
@@ -170,6 +170,7 @@ namespace Alex.Gamestates.MainMenu.Options
         protected Slider CreateSlider(ValueFormatter<double> valueFormatter, Func<AlexOptions, OptionsProperty<double>> optionsAccessor, double? minValue = null, double? maxValue = null, double? stepInterval = null)
         {
             var slider = CreateValuedControl<Slider, double>(valueFormatter, optionsAccessor);
+            slider.ApplyStyle();
             
             if (minValue.HasValue)
             {

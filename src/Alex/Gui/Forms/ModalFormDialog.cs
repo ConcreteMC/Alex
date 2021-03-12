@@ -59,7 +59,7 @@ namespace Alex.Gui.Forms
 			
 			Footer.AddRow(row =>
 			{
-				row.AddChild(new Button(form.Button1, () =>
+				row.AddChild(new AlexButton(form.Button1, () =>
 				{
 					var packet = McpeModalFormResponse.CreateObject();
 					packet.formId = formId;
@@ -73,7 +73,7 @@ namespace Alex.Gui.Forms
 					Enabled = true,
 					
 				});
-				row.AddChild(new Button(form.Button2, () =>
+				row.AddChild(new AlexButton(form.Button2, () =>
 				{
 					var packet = McpeModalFormResponse.CreateObject();
 					packet.formId = formId;

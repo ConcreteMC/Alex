@@ -29,7 +29,7 @@ namespace Alex.Gamestates.Multiplayer
                 Anchor = Alignment.MiddleCenter,
 				PlaceHolder = "Server Address..."
             });
-            AddRocketElement( _connectButton = new Button("Join Server", OnConnectButtonPressed)
+            AddRocketElement( _connectButton = new AlexButton("Join Server", OnConnectButtonPressed)
             {
 				Margin = new Thickness(5)
             });

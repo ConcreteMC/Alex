@@ -2,7 +2,7 @@ using System;
 using System.Linq;
 using Alex.API.Graphics;
 using Alex.API.Gui;
-
+using Alex.API.Gui.Elements;
 using Alex.API.Gui.Graphics;
 using Alex.API.Services;
 using Alex.API.Utils;
@@ -40,15 +40,15 @@ namespace Alex.Gamestates.MainMenu
             
             Footer.AddRow(row =>
             {
-                row.AddChild(_addBtn = new Button("Add", AddClicked)
+                row.AddChild(_addBtn = new AlexButton("Add", AddClicked)
                 {
                     
                 });
-                row.AddChild(_editBtn = new Button("Edit", EditClicked)
+                row.AddChild(_editBtn = new AlexButton("Edit", EditClicked)
                 {
                     Enabled = false
                 });
-                row.AddChild(_deleteBtn = new Button("Delete", DeleteClicked)
+                row.AddChild(_deleteBtn = new AlexButton("Delete", DeleteClicked)
                 {
                     Enabled = false
                 });
@@ -57,12 +57,12 @@ namespace Alex.Gamestates.MainMenu
             Footer.AddRow(row =>
             {
              //   row.ChildAnchor = Alignment.CenterX;
-             row.AddChild(_selectBtn = new Button("Select Profile", OnProfileSelect)
+             row.AddChild(_selectBtn = new AlexButton("Select Profile", OnProfileSelect)
              {
                  Enabled = false
              });
              
-                row.AddChild(_cancelBtn = new Button("Cancel", OnCancelButtonPressed)
+                row.AddChild(_cancelBtn = new AlexButton("Cancel", OnCancelButtonPressed)
                 {
                 });
                 

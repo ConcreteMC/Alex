@@ -45,7 +45,7 @@ namespace Alex.Gamestates
 				Anchor = Alignment.MiddleCenter
 			});
 
-			Footer.AddChild(new Button(MenuButtonClicked)
+			Footer.AddChild(new AlexButton(MenuButtonClicked)
 			{
 				TranslationKey = "gui.toTitle",
 				Anchor = Alignment.MiddleCenter,

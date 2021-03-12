@@ -242,7 +242,7 @@ namespace Alex.Gamestates
                     Anchor = Alignment.BottomRight,
                 });
 
-            AddChild(new Button("Change Skin", ChangeSKinBtnPressed)
+            AddChild(new AlexButton("Change Skin", ChangeSKinBtnPressed)
             {
                 Anchor = Alignment.BottomRight,
                 TranslationKey = "",

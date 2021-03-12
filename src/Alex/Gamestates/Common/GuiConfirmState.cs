@@ -1,4 +1,5 @@
 ﻿using System;
+using Alex.API.Gui.Elements;
 using RocketUI;
 
 namespace Alex.Gamestates.Common
@@ -40,12 +41,12 @@ namespace Alex.Gamestates.Common
                 Text = options.MessageText,
                 TranslationKey = options.MessageTranslationKey
             });
-            AddRocketElement(new Button("Confirm", OnConfirmButtonPressed)
+            AddRocketElement(new AlexButton("Confirm", OnConfirmButtonPressed)
             {
                 Text           = options.ConfirmText,
                 TranslationKey = options.ConfirmTranslationKey
             });
-            AddRocketElement(new Button("Cancel", OnCancelButtonPressed)
+            AddRocketElement(new AlexButton("Cancel", OnCancelButtonPressed)
             {
                 Text           = options.CancelText,
                 TranslationKey = options.CancelTranslationKey

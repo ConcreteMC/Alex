@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-
+using Alex.API.Gui.Elements;
 using Alex.API.Gui.Graphics;
 using Alex.API.Localization;
 using Alex.Gui;
@@ -58,32 +58,37 @@ namespace Alex.Gamestates.MainMenu.Options
             //Alex.GuiRenderer.SetLanguage(culture.CultureInfo.Name);
         }
         
+        private bool _didInit = false;
         protected override void OnInit(IGuiRenderer renderer)
         {
-            var activeLang = Alex.GuiRenderer.Language;
-            foreach (var lng in Alex.GuiRenderer.Languages.OrderBy(x => x.Key))
+            if (!_didInit)
             {
-                if (System.Text.Encoding.UTF8.GetByteCount(lng.Value.DisplayName) != lng.Value.DisplayName.Length)//Filter-out non-ascii languages
-                    continue;
-                
-                bool active = lng.Value.Code.Equals(activeLang.Code);
-                
-                Button btn = new Button(GetButtonText(lng.Value, active), () =>
-                {
-                    SetLanguage(lng.Value);
-                }).ApplyModernStyle(false);
-                
-                _languageButtons.Add(lng.Value, btn);
-                
-                AddGuiRow(btn);
+                _didInit = true;
+                var activeLang = Alex.GuiRenderer.Language;
 
-                if (active)
+                foreach (var lng in Alex.GuiRenderer.Languages.OrderBy(x => x.Key))
                 {
-                    Alex.GuiManager.FocusManager.FocusedElement = btn;
-                    _activeBtn = (btn, lng.Value);
+                    if (System.Text.Encoding.UTF8.GetByteCount(lng.Value.DisplayName) != lng.Value.DisplayName.Length
+                    ) //Filter-out non-ascii languages
+                        continue;
+
+                    bool active = lng.Value.Code.Equals(activeLang.Code);
+
+                    Button btn = new AlexButton(GetButtonText(lng.Value, active), () => { SetLanguage(lng.Value); })
+                       .ApplyModernStyle(false);
+
+                    _languageButtons.Add(lng.Value, btn);
+
+                    AddGuiRow(btn);
+
+                    if (active)
+                    {
+                        Alex.GuiManager.FocusManager.FocusedElement = btn;
+                        _activeBtn = (btn, lng.Value);
+                    }
                 }
             }
-            
+
             base.OnInit(renderer);
         }
 

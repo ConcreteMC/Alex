@@ -99,7 +99,7 @@ namespace Alex.Gamestates.Login
 			});
 			passwordRow.ChildAnchor = Alignment.MiddleCenter;
 
-			var buttonRow = AddGuiRow(LoginButton = new Button(OnLoginButtonPressed)
+			var buttonRow = AddGuiRow(LoginButton = new AlexButton(OnLoginButtonPressed)
 			{
 				AccessKey = Keys.Enter,
 
@@ -107,7 +107,7 @@ namespace Alex.Gamestates.Login
 				Margin = new Thickness(5),
 				Width = 100,
 				TabIndex = 3
-			}.ApplyModernStyle(false), new Button(OnCancelButtonPressed)
+			}.ApplyModernStyle(false), new AlexButton(OnCancelButtonPressed)
 			{
 				AccessKey = Keys.Escape,
 

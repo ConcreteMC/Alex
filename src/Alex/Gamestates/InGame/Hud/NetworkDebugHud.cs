@@ -44,12 +44,14 @@ namespace Alex.Gamestates.InGame.Hud
                 Anchor = Alignment.TopCenter,
                 Scale = 1f,
                 FontStyle = FontStyle.DropShadow,
-                BackgroundOverlay = Color.Black * 0.5f
+                BackgroundOverlay = Color.Black * 0.5f,
+                Background = Color.Transparent
             };
 
             AddChild(WarningElement);
             
             NetworkInfoElement = new AutoUpdatingTextElement(GetNetworkInfo, true);
+            NetworkInfoElement.Background = Color.Transparent;
             NetworkInfoElement.Interval = TimeSpan.FromMilliseconds(500);
             
             NetworkInfoElement.BackgroundOverlay = Color.Black * 0.5f;

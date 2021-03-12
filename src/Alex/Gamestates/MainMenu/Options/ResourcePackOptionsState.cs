@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Alex.API.Gui;
-
+using Alex.API.Gui.Elements;
 using Alex.API.Utils;
 using Alex.Gamestates.MainMenu.Options.Elements;
 using Alex.Gui;
@@ -48,13 +48,13 @@ namespace Alex.Gamestates.MainMenu.Options
 
             Footer.AddRow(row =>
             {
-                row.AddChild(_loadBtn = new Button(LoadBtnClicked)
+                row.AddChild(_loadBtn = new AlexButton(LoadBtnClicked)
                 {
                     Text = "Load Resource pack",
                     Enabled = false
                 }.ApplyModernStyle(false));
                 
-                row.AddChild(new Button(BackButtonPressed)
+                row.AddChild(new AlexButton(BackButtonPressed)
                 {
                     TranslationKey = "gui.done",
                 }.ApplyModernStyle(false));
@@ -63,7 +63,7 @@ namespace Alex.Gamestates.MainMenu.Options
             Footer.AddRow(row =>
             {
                 row.ChildAnchor = Alignment.BottomCenter;
-                row.AddChild(new Button("resourcePack.openFolder", OpenResourcePackFolderClicked, true).ApplyModernStyle(false));
+                row.AddChild(new AlexButton("resourcePack.openFolder", OpenResourcePackFolderClicked, true).ApplyModernStyle(false));
             });
 
             Reload();

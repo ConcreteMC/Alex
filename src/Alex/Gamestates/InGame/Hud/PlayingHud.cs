@@ -125,7 +125,7 @@ namespace Alex.Gamestates.InGame.Hud
 	        AddChild(Chat);
 
 	        //AddChild(_hotbar);
-	        AddChild(new Crosshair());
+	        AddChild(new AlexCrosshair());
 	        AddChild(Title);
 	        
 	        AddChild(Scoreboard);

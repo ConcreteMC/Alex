@@ -1,6 +1,4 @@
-﻿using Alex.API.Utils;
-
-namespace Alex.API.Gui.Elements
+﻿namespace Alex.API.Gui.Elements
 {
     public interface ITitleComponent
     {

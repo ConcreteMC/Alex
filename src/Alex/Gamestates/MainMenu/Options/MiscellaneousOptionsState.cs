@@ -30,30 +30,35 @@ namespace Alex.Gamestates.MainMenu.Options
             // TitleTranslationKey = "options.videoTitle";
         }
 
+        private bool _didInit = false;
         protected override void OnInit(IGuiRenderer renderer)
         {
-            AddGuiRow(
-                ProcessingThreads = CreateSlider(
-                    "Network Threads: {0}", o => Options.NetworkOptions.NetworkThreads, 1, Environment.ProcessorCount,
-                    1), ChunkCaching = CreateToggle("Chunk Caching: {0}", o => o.MiscelaneousOptions.UseChunkCache));
-
-            AddDescription(
-                ProcessingThreads, "Processing Threads",
-                "The amount of threads that get assigned to datagram processing",
-                "Note: A restart is required for this setting to take affect.");
-            
-            AddDescription(
-                ChunkCaching, "Chunk Caching (Bedrock Only)",
-                "When enabled, caches chunk sections on disk.",
-                "This reduces network traffic but increases disk I/O");
-
-            Description = new TextElement()
+            if (!_didInit)
             {
-                Anchor = Alignment.MiddleLeft, Margin = new Thickness(5, 15, 5, 5), MinHeight = 80
-            };
+                _didInit = true;
+                AddGuiRow(
+                    ProcessingThreads = CreateSlider(
+                        "Network Threads: {0}", o => Options.NetworkOptions.NetworkThreads, 1,
+                        Environment.ProcessorCount, 1),
+                    ChunkCaching = CreateToggle("Chunk Caching: {0}", o => o.MiscelaneousOptions.UseChunkCache));
 
-            var row = AddGuiRow(Description);
-            row.ChildAnchor = Alignment.MiddleLeft;
+                AddDescription(
+                    ProcessingThreads, "Processing Threads",
+                    "The amount of threads that get assigned to datagram processing",
+                    "Note: A restart is required for this setting to take affect.");
+
+                AddDescription(
+                    ChunkCaching, "Chunk Caching (Bedrock Only)", "When enabled, caches chunk sections on disk.",
+                    "This reduces network traffic but increases disk I/O");
+
+                Description = new TextElement()
+                {
+                    Anchor = Alignment.MiddleLeft, Margin = new Thickness(5, 15, 5, 5), MinHeight = 80
+                };
+
+                var row = AddGuiRow(Description);
+                row.ChildAnchor = Alignment.MiddleLeft;
+            }
 
             base.OnInit(renderer);
         }

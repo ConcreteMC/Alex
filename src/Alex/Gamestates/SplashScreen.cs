@@ -14,7 +14,7 @@ namespace Alex.Gamestates
 	{
 		private readonly Container _progressBarContainer;
 
-		private readonly ProgressBar _progressBar;
+		private readonly SimpleProgressBar _progressBar;
 		private readonly TextElement _textDisplay;
 		private readonly TextElement _subTextDisplay;
         private readonly TextElement _percentageDisplay;
@@ -70,12 +70,12 @@ namespace Alex.Gamestates
 				HasShadow = false
 			});
 
-			_progressBarContainer.AddChild(_progressBar = new ProgressBar()
+			_progressBarContainer.AddChild(_progressBar = new SimpleProgressBar()
 			{
 				Width  = 300,
 				Height = 9,
 				
-				Anchor = Alignment.MiddleCenter,
+				Anchor = Alignment.MiddleCenter
 			});
 
 			_progressBarContainer.AddChild(_subTextDisplay = new TextElement()

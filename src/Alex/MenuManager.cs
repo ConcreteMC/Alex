@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Alex.API.Gui;
-
+using Alex.Gui;
 using RocketUI;
 
 namespace Alex
@@ -69,6 +69,8 @@ namespace Alex
 				if (Type == MenuType.SubMenu || Type == MenuType.Button)
 				{
 					StackMenuItem me = new StackMenuItem();
+					me.ApplyModernStyle(true);
+					
 					me.Text = Title;
 
 					if (IsTranslatable)

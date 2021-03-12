@@ -117,7 +117,7 @@ namespace Alex.Gui.Forms
                 }
             }
 
-            SubmitButton = new Button("Submit", SubmitPressed);
+            SubmitButton = new AlexButton("Submit", SubmitPressed);
 
             stackContainer.AddChild(SubmitButton);
             

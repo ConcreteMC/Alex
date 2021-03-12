@@ -7,8 +7,7 @@ using System.Threading.Tasks;
 using Alex.API.Data.Servers;
 using Alex.API.Graphics;
 using Alex.API.Gui;
-
-
+using Alex.API.Gui.Elements;
 using Alex.API.Gui.Graphics;
 using Alex.API.Services;
 using Alex.API.Utils;
@@ -88,12 +87,12 @@ namespace Alex.Gamestates.Multiplayer
 		    });
 
 		    //_tabItemContainer.MinWidth = _tabItemContainer.Width = BodyMinWidth;
-		    /*_tabItemContainer.AddChild(new Button("Java")
+		    /*_tabItemContainer.AddChild(new AlexButton("Java")
 		    {
 			    BackgroundOverlay = new Color(Color.Black, 0.25f),
 			    Margin = Thickness.Zero
 		    });
-		    _tabItemContainer.AddChild(new Button("Bedrock")
+		    _tabItemContainer.AddChild(new AlexButton("Bedrock")
 		    {
 			    Margin = Thickness.Zero
 		    });*/
@@ -101,19 +100,19 @@ namespace Alex.Gamestates.Multiplayer
 			Footer.AddRow(row =>
 		    {
 
-			    row.AddChild(JoinServerButton = new Button("Join Server",
+			    row.AddChild(JoinServerButton = new AlexButton("Join Server",
 				    OnJoinServerButtonPressed)
 			    {
 				    TranslationKey = "selectServer.select",
 				    Enabled = false
 			    });
-			    row.AddChild(DirectConnectButton = new Button("Direct Connect",
+			    row.AddChild(DirectConnectButton = new AlexButton("Direct Connect",
 				    () => Alex.GameStateManager.SetActiveState<MultiplayerConnectState>())
 			    {
 				    TranslationKey = "selectServer.direct",
 				    Enabled = false
 			    });
-			    row.AddChild(AddServerButton = new Button("Add Server",
+			    row.AddChild(AddServerButton = new AlexButton("Add Server",
 				    OnAddItemButtonPressed)
 			    {
 				    TranslationKey = "selectServer.add"
@@ -121,17 +120,17 @@ namespace Alex.Gamestates.Multiplayer
 		    });
 		    Footer.AddRow(row =>
 		    {
-			    row.AddChild(EditServerButton = new Button("Edit", OnEditItemButtonPressed)
+			    row.AddChild(EditServerButton = new AlexButton("Edit", OnEditItemButtonPressed)
 			    {
 				    TranslationKey = "selectServer.edit",
 				    Enabled = false
 			    });
-			    row.AddChild(DeleteServerButton = new Button("Delete", OnDeleteItemButtonPressed)
+			    row.AddChild(DeleteServerButton = new AlexButton("Delete", OnDeleteItemButtonPressed)
 			    {
 				    TranslationKey = "selectServer.delete",
 				    Enabled = false
 			    });
-			    row.AddChild(new Button("Refresh", OnRefreshButtonPressed)
+			    row.AddChild(new AlexButton("Refresh", OnRefreshButtonPressed)
 			    {
 				    TranslationKey = "selectServer.refresh"
 			    });
@@ -171,7 +170,7 @@ namespace Alex.Gamestates.Multiplayer
 
 		private Button AddTabButton(string text, Action action)
 		{
-			Button button = new Button(
+			Button button = new AlexButton(
 				text)
 			{
 				Margin = Thickness.Zero,
