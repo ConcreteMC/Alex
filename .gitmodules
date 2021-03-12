@@ -1,0 +1,3 @@
+[submodule "src/Submodules/RocketUI"]
+	path = src/Submodules/RocketUI
+	url = git@github.com:TruDan/RocketUI.git
