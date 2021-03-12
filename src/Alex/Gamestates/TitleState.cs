@@ -282,6 +282,7 @@ namespace Alex.Gamestates
         private KeyboardState _prevKeyboardState = new KeyboardState();
 
         protected override void OnUpdate(GameTime gameTime)
+        
         {
             base.OnUpdate(gameTime);
 

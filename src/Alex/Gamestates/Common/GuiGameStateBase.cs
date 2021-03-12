@@ -19,9 +19,12 @@ namespace Alex.Gamestates.Common
 		public bool IsShown  { get; private set; }
 
 		public IGameState ParentState { get; set; }
+		
 
         public GuiGameStateBase()
         {
+	        IsSelfManaged = true;
+	        
 	        TextElement cc;
 	        AddChild(cc = new TextElement()
 	        {

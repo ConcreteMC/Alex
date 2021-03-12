@@ -476,5 +476,10 @@ namespace Alex.Gui
 		{
 			return GraphicsContext.CreateContext(graphics, BlendState.NonPremultiplied, DepthStencilState.None, RasterizerState.CullNone, SamplerState.PointClamp);
 		}
+		
+		public IStyle[] ResolveStyles(Type elementType, string[] classNames)
+		{
+			return null;
+		}
 	}
 }
