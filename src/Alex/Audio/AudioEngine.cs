@@ -43,6 +43,7 @@ namespace Alex.Audio
 			{
 				FmodSystem = Fmod.CreateSystem();// new FmodSystem();
 				
+				FmodSystem.Output = OutputType.Autodetect;
 				FmodSystem.Init(32, InitFlags._3D_RightHanded);
 				FmodSystem.Set3DSettings(1f, 1f, 1f);
 				
@@ -133,7 +134,7 @@ namespace Alex.Audio
 							if (!File.Exists(filePath))
 								Log.Warn($"Invalid path: {filePath}");
 							
-							Sound s = FmodSystem.CreateSound(filePath, Mode.CreateStream | Mode._3D | Mode._3D_HeadRelative);
+							Sound s = FmodSystem.CreateSound(filePath, Mode.CreateStream | Mode._3D);
 
 							if (s.SubSoundCount > 0)
 							{
@@ -142,7 +143,7 @@ namespace Alex.Audio
 								//Log.Info($"S: {s.Value.Name}");
 							}
 							
-							s.Mode = Mode.CreateStream | Mode._3D | Mode._3D_HeadRelative;
+							s.Mode = Mode.CreateStream | Mode._3D;
 	
 							float volume = 1f;
 							float pitch  = 1f;
@@ -243,9 +244,11 @@ namespace Alex.Audio
 		//		selected.Value.Get3DMinMaxDistance(out float min, out float max);
 				
 		//		instance.Set3DMinMaxDistance(min, max * selected.Volume);
-				
-				//instance.Volume = volume;
 
+		//instance.Volume = 1f;//MathF.Min(1f, MathF.Max(volume, 0f));
+
+			//	instance.Set3DMinMaxDistance(0f, 16f * volume);
+				instance.Volume = MathHelper.Clamp(volume, 0f, 1f) * selected.Volume;
 				if (soundInfo.Category == SoundCategory.Effects)
 				{
 					instance.Volume *= (float)SoundFxVolume;
