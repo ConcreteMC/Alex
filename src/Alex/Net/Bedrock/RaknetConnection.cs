@@ -197,10 +197,10 @@ namespace Alex.Net.Bedrock
 
 			if (Environment.OSVersion.Platform != PlatformID.MacOSX)
 			{
-				//listener.Client.ReceiveBufferSize = 1600;
+				listener.Client.ReceiveBufferSize = 1600*64;
 				//listener.Client.ReceiveBufferSize = int.MaxValue;
 				//listener.Ttl = Int16.MaxValue;
-				//listener.Client.SendBufferSize = 1600;
+				listener.Client.SendBufferSize = 1600*64;
 				//listener.Client.SendBufferSize = int.MaxValue;
 			}
 
@@ -681,8 +681,6 @@ namespace Alex.Net.Bedrock
 			{
 				int length = (int) datagram.GetEncoded(ref buffer);
 
-				datagram.Timer.Restart();
-
 				if (!session.WaitingForAckQueue.TryAdd(datagram.Header.DatagramSequenceNumber.IntValue(), datagram))
 				{
 					Log.Warn(
@@ -692,6 +690,7 @@ namespace Alex.Net.Bedrock
 				}
 
 				session.UnackedBytes += length;
+				datagram.Timer.Restart();
 				Interlocked.Increment(ref ConnectionInfo.PacketsOut);
 				
 				await SendDataAsync(buffer, length, session.EndPoint);

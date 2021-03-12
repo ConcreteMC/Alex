@@ -97,7 +97,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 						_lastSentLocation = pos;
 					}*/
 
-					if ((pos.DistanceTo(_lastLocation) > 16f || MathF.Abs(pos.HeadYaw - _lastLocation.HeadYaw) >= 5.0f)
+					if ((pos.DistanceTo(_lastLocation) >= 16f)
 					    && (_tickTime - _lastPrioritization >= 10))
 					{
 					//	World.ChunkManager.FlagPrioritization();
@@ -106,7 +106,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 						_lastLocation = pos;
 						
-						UnloadChunks(new ChunkCoordinates(pos), Client.ChunkRadius + 3);
+						UnloadChunks(new ChunkCoordinates(pos), Alex.Options.AlexOptions.VideoOptions.RenderDistance.Value + 2);
 
 						_lastPrioritization = _tickTime;
 					}
@@ -147,7 +147,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			{
 				if (chunkPublisher != null)
 				{
-					if (chunk.Key.DistanceTo(publisherCenter) < (chunkPublisher.radius / 16f))
+					if (chunk.Key.DistanceTo(publisherCenter) <= (chunkPublisher.radius / 16f))
 						continue;
 				}
 				

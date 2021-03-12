@@ -80,7 +80,7 @@ namespace Alex.Net.Bedrock
         {
             LastRtt = rtt;
 
-            if (EstimatedRtt == -1)
+            if (EstimatedRtt < 0d)
             {
                 EstimatedRtt = rtt;
                 DeviationRtt = rtt;
@@ -127,7 +127,7 @@ namespace Alex.Net.Bedrock
 
         public long GetRtoForRetransmission()
         {
-            if (EstimatedRtt == -1)
+            if (EstimatedRtt < 0d)
             {
                 return CcMaximumThreshold;
             }
@@ -146,12 +146,12 @@ namespace Alex.Net.Bedrock
         {
             long rto = GetSenderRtoForAck();
 
-            return rto == -1 || curTime >= OldestUnsentAck + CcSyn;
+            return rto == -1 || curTime >= OldestUnsentAck;
         }
 
         public long GetSenderRtoForAck()
         {
-            if (LastRtt == -1)
+            if (LastRtt < 0d)
             {
                 return -1;
             }

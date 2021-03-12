@@ -298,7 +298,7 @@ namespace Alex.Net.Bedrock
 								break;
 
 							case ConnectedPong connectedPong:
-								HandleConnectedPong(connectedPong);
+							//	HandleConnectedPong(connectedPong);
 
 								break;
 
@@ -376,7 +376,7 @@ namespace Alex.Net.Bedrock
 			}
 		}
 
-		private long _pongsReceived    = 0;
+		/*private long _pongsReceived    = 0;
 		private long _totalLatency = 0;
 		private void HandleConnectedPong(ConnectedPong connectedPong)
 		{
@@ -397,7 +397,7 @@ namespace Alex.Net.Bedrock
 				if (responseTime > 2500)
 					_pings.Remove(ping);
 			}
-		}
+		}*/
 
 		protected virtual void HandleConnectedPing(ConnectedPing message)
 		{
@@ -469,8 +469,8 @@ namespace Alex.Net.Bedrock
 		}
 
 		private DateTime             _lastDetectionSendTime = DateTime.UtcNow;
-		private DateTime             _lastPingTIme          = DateTime.UtcNow;
-		private ThreadSafeList<long> _pings                 = new ThreadSafeList<long>();
+	//	private DateTime             _lastPingTIme          = DateTime.UtcNow;
+	//	private ThreadSafeList<long> _pings                 = new ThreadSafeList<long>();
 		public void DetectLostConnection()
 		{
 			long now        = DateTime.UtcNow.Ticks / TimeSpan.TicksPerMillisecond;
@@ -672,6 +672,7 @@ namespace Alex.Net.Bedrock
 			{
 				if (Evicted) return;
 
+				ConnectionInfo.Latency = (long)SlidingWindow.GetRtt();
 				long now = DateTime.UtcNow.Ticks / TimeSpan.TicksPerMillisecond;
 				long lastUpdate = LastUpdatedTime.Ticks / TimeSpan.TicksPerMillisecond;
 
@@ -694,7 +695,7 @@ namespace Alex.Net.Bedrock
 					return;
 				}
 
-				if (State == ConnectionState.Connected)
+				/*if (State == ConnectionState.Connected)
 				{
 					lastUpdate = _lastPingTIme.Ticks / TimeSpan.TicksPerMillisecond;
 
@@ -711,7 +712,7 @@ namespace Alex.Net.Bedrock
 							_lastPingTIme = DateTime.UtcNow;
 						}
 					}
-				}
+				}*/
 			}
 			finally
 			{
@@ -814,7 +815,7 @@ namespace Alex.Net.Bedrock
 						packet.PutPool();
 						continue;
 					}
-
+					
 					sendList.Add(packet);
 				}
 
@@ -939,7 +940,7 @@ namespace Alex.Net.Bedrock
 						//_nacked.Remove(i);
 						UnackedBytes -= datagram.Bytes.Length;
 						//CalculateRto(datagram);
-						SlidingWindow.OnAck(datagram.Timer.ElapsedMilliseconds, datagram.Header.DatagramSequenceNumber.IntValue(), _lastDatagramSequenceNumber);
+						SlidingWindow.OnAck(datagram.Timer.ElapsedMilliseconds, i, _lastDatagramSequenceNumber);
 						datagram.PutPool();
 					}
 					else
