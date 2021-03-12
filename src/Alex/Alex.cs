@@ -591,6 +591,7 @@ namespace Alex
             GraphicsDevice.RasterizerState = RasterizerState.CullClockwise;
 
             GameStateManager.Draw(gameTime);
+            
             base.Draw(gameTime);
 
             this.Metrics = GraphicsDevice.Metrics;

@@ -23,7 +23,7 @@ namespace Alex.Gamestates.Common
 
         public GuiGameStateBase()
         {
-	        IsSelfManaged = true;
+	        //IsSelfManaged = true;
 	        
 	        TextElement cc;
 	        AddChild(cc = new TextElement()

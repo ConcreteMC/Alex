@@ -134,7 +134,7 @@
     <PackageReference Include="Mono.Cecil" Version="0.11.3" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1-beta1" />
     <PackageReference Include="NLog" Version="4.7.8" />
-    <PackageReference Include="RocketUI" Version="1.0.27" />
+    <PackageReference Include="RocketUI" Version="1.0.29" />
     <PackageReference Include="System.Globalization" Version="4.3.0" />
     <PackageReference Include="System.Reactive.Core" Version="5.0.0" />
     <PackageReference Include="System.Reactive.Interfaces" Version="5.0.0" />
