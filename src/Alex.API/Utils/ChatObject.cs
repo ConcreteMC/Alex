@@ -320,8 +320,6 @@ namespace Alex.API.Utils
 
         public string RawMessage { get; set; }
 
-        private static Random _rnd = new Random();
-
         /*
         public Vector2 Render(SpriteBatch sb, SpriteFont font, Vector2 position)
         {

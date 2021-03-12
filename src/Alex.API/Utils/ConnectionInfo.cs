@@ -1,6 +1,6 @@
 using System;
 
-namespace Alex.API.Network
+namespace Alex.API.Utils
 {
     public class ConnectionInfo
     {

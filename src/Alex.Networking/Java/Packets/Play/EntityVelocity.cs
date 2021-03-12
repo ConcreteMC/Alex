@@ -7,7 +7,6 @@ namespace Alex.Networking.Java.Packets.Play
 		public EntityVelocity()
 		{
 			PacketId = 0x40;
-			Category = PacketCategory.EntityMovement;
 		}
 
 		public int EntityId { get; set; }

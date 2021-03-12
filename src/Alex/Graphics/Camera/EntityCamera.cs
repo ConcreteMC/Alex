@@ -1,6 +1,7 @@
-using Alex.Api;
+
 using Alex.API.Graphics;
 using Alex.API.Utils;
+using Alex.API.Utils.Vectors;
 using Alex.Entities;
 using Microsoft.Xna.Framework;
 
@@ -84,7 +85,7 @@ namespace Alex.Graphics.Camera
 			Target = position + direction;
 			Direction = direction;
 
-			ViewMatrix = MCMatrix.CreateLookAt(position, Target, Vector3.Up);
+			ViewMatrix = Matrix.CreateLookAt(position, Target, Vector3.Up);
 			
 			Frustum = new BoundingFrustum(ViewMatrix * ProjectionMatrix);
 		}
@@ -95,22 +96,34 @@ namespace Alex.Graphics.Camera
 		{
 			var position = Position;
 			
-			var direction = new Vector3(Rotation.X, Rotation.Y, frontSideView ? Rotation.Z : -Rotation.Z);
+			var direction = new Vector3(Rotation.X, Rotation.Y, Rotation.Z);
 			direction.Normalize();
-
-			var offset = Rotation * (direction * 3.5f);
-			offset.Y = 2.5f;
-			//offset *= direction;
-			//offset.Normalize();
 			
+			//var target = position
+			
+			Target = position + direction;
 			Direction = direction;
 
-			Vector3 lookAtOffset = new Vector3(
-				position.X + offset.X, position.Y + offset.Y,  position.Z + offset.Z);
+			//var offset = ThirdPersonOffset;
+			//offset = Vector3.Transform(offset, MatrixHelper.CreateRotationDegrees(Rotation));
 
-			Target = position;
+			var renderLocation = TrackingEntity.RenderLocation;
+			
+			var target = Position;
+			target.Y += (float)(TrackingEntity.Height * TrackingEntity.Scale);
+			
+			float pitch = (-renderLocation.Pitch).ToRadians();
+			float yaw   = ((renderLocation.Yaw)).ToRadians();
 
-			ViewMatrix = MCMatrix.CreateLookAt(lookAtOffset, position , Vector3.Up);
+			var directionMatrix = Matrix.CreateRotationX(pitch) * Matrix.CreateRotationY(yaw);
+			
+			Vector3 dir = frontSideView ? Vector3.Forward : Vector3.Backward;
+			dir = Vector3.Transform(dir, directionMatrix);
+
+			var cameraPosition = new Vector3(target.X, target.Y, target.Z);
+			cameraPosition += (dir * ThirdPersonOffset.Z);
+
+			ViewMatrix = Matrix.CreateLookAt(cameraPosition, target, Vector3.Up);
 			
 			Frustum = new BoundingFrustum(ViewMatrix * ProjectionMatrix);
 		}

@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using Alex.API.Utils;
+using Alex.API.Utils.Vectors;
 using Alex.API.World;
 using Alex.Blocks;
 using Alex.Blocks.State;

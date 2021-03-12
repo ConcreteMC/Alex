@@ -5,13 +5,13 @@ namespace Alex.Networking.Java.Packets.Play
 	public class DisplayScoreboardPacket : Packet<DisplayScoreboardPacket>
 	{
 		public ScoreboardPosition Position { get; set; }
-		public string Name { get; set; }
+		public string ScoreName { get; set; }
 		
 		/// <inheritdoc />
 		public override void Decode(MinecraftStream stream)
 		{
 			Position = (ScoreboardPosition) stream.ReadByte();
-			Name = stream.ReadString();
+			ScoreName = stream.ReadString();
 		}
 
 		/// <inheritdoc />
@@ -35,7 +35,13 @@ namespace Alex.Networking.Java.Packets.Play
 			TeamGray = 10,
 			TeamDarkGray = 11,
 			TeamBlue = 12,
-			TeamOther
+			
+			TeamOther13 = 13,
+			TeamOther14 = 14,
+			TeamOther15 = 15,
+			TeamOther16 = 16,
+			TeamOther17 = 17,
+			TeamOther18 = 18,
 		}
 	}
 }

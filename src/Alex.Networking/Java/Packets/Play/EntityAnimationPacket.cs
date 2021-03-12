@@ -2,12 +2,10 @@ using Alex.Networking.Java.Util;
 
 namespace Alex.Networking.Java.Packets.Play
 {
-	public class EntityAnimationPacket : Packet
+	public class EntityAnimationPacket : Packet<EntityAnimationPacket>
 	{
 		public EntityAnimationPacket()
-		{
-			Category = PacketCategory.EntityMovement;
-		}
+		{ }
 		
 		public int EntityId { get; set; }
 		public Animations Animation { get; set; }

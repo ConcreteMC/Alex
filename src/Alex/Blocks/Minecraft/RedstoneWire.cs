@@ -2,6 +2,7 @@ using System;
 using Alex.API.Blocks;
 using Alex.API.Blocks.Properties;
 using Alex.API.Utils;
+using Alex.API.Utils.Vectors;
 using Alex.Blocks.State;
 using Alex.Graphics.Models.Blocks;
 using Alex.Worlds;

@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Alex.Api;
+
 using Alex.API.Graphics;
 using Alex.API.Utils;
+using Alex.API.Utils.Vectors;
 using Alex.Graphics.Models.Items;
 using Alex.ResourcePackLib;
 using Alex.ResourcePackLib.Json.Bedrock.Entity;
@@ -33,11 +34,22 @@ namespace Alex.Graphics.Models.Entity
 			}
 			set
 			{
-				_texture = value;
+				var oldValue = _texture;
 
-				if (Effect != null && value != null)
+				try
 				{
-					Effect.Texture = value;
+					_texture = value;
+					value?.Use();
+					
+					if (Effect != null && value != null)
+					{
+						Effect.Texture = value;
+					}
+				}
+				finally
+				{
+					oldValue?.Release();
+					oldValue?.MarkForDisposal();
 				}
 			}
 		}
@@ -105,7 +117,7 @@ namespace Alex.Graphics.Models.Entity
 			Effect.VertexColorEnabled = true;
 			
 			Valid = true;
-			_texture = texture;
+			Texture = texture;
 		}
 
 		private ModelBone ProcessBone(
@@ -135,7 +147,7 @@ namespace Alex.Graphics.Models.Entity
 
 					var      origin = cube.InflatedOrigin(inflation);
 					
-					MCMatrix matrix = MCMatrix.CreateTranslation(origin);
+					Matrix matrix = Matrix.CreateTranslation(origin);
 					if (cube.Rotation.HasValue)
 					{
 						var rotation = cube.Rotation.Value;
@@ -148,10 +160,10 @@ namespace Alex.Graphics.Models.Entity
 						}
 						
 						matrix =
-							    MCMatrix.CreateTranslation(origin)
-								* MCMatrix.CreateTranslation((-pivot)) 
-						         * MCMatrix.CreateRotationDegrees(rotation)
-						         * MCMatrix.CreateTranslation(pivot);
+							    Matrix.CreateTranslation(origin)
+								* Matrix.CreateTranslation((-pivot)) 
+						         * MatrixHelper.CreateRotationDegrees(rotation)
+						         * Matrix.CreateTranslation(pivot);
 					}
 					
 					Cube built = new Cube(cube, textureSize, mirror, inflation);
@@ -205,7 +217,7 @@ namespace Alex.Graphics.Models.Entity
 		}
 
 		private void ModifyCubeIndexes(ref List<VertexPositionColorTexture> vertices,
-			(VertexPositionColorTexture[] vertices, short[] indexes) data, Vector3 origin, MCMatrix transformation)
+			(VertexPositionColorTexture[] vertices, short[] indexes) data, Vector3 origin, Matrix transformation)
 		{
 			for (int i = 0; i < data.indexes.Length; i++)
 			{
@@ -279,7 +291,7 @@ namespace Alex.Graphics.Models.Entity
 
 			//var rot = position.GetDirectionMatrix(false);
 
-			var matrix =  MCMatrix.CreateScale(Scale / 16f) * position.CalculateWorldMatrix();
+			var matrix =  Matrix.CreateScale(Scale / 16f) * position.CalculateWorldMatrix();
 			//var matrix =  MCMatrix.CreateScale(Scale / 16f) * position.GetDirectionMatrix(false) * MCMatrix.CreateTranslation(position.ToVector3()); /*MCMatrix.CreateScale(Scale / 16f)
 			    //         * MCMatrix.CreateRotation(MathUtils.ToRadians(position.Yaw), Vector3.Down)
 			  //           * MCMatrix.CreateTranslation(position);*/
@@ -328,13 +340,15 @@ namespace Alex.Graphics.Models.Entity
 				}
 			}
 
-			//Texture?.MarkForDisposal();
+			var texture = Texture;
+			texture?.Release();
+			texture?.MarkForDisposal();
 			VertexBuffer?.MarkForDisposal();
 			Effect?.Dispose();
 
 			Effect = null;
 			VertexBuffer = null;
-			Texture = null;
+			texture = null;
 		}
 
 		public void ApplyPending()

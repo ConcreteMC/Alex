@@ -33,6 +33,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Alex.API.Utils;
+using Alex.API.Utils.Collections;
 using Alex.Net.Bedrock.Raknet;
 using Alex.Utils;
 using log4net;
@@ -43,6 +44,7 @@ using MiNET.Utils;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using NLog;
+using ConnectionInfo = Alex.API.Utils.ConnectionInfo;
 using Datagram = Alex.Net.Bedrock.Raknet.Datagram;
 using LogManager = NLog.LogManager;
 
@@ -63,7 +65,7 @@ namespace Alex.Net.Bedrock
 		private          CancellationTokenSource                          _cancellationToken;
 		private          Thread                                           _orderedQueueProcessingThread;
 
-		public API.Network.ConnectionInfo ConnectionInfo { get; }
+		public ConnectionInfo ConnectionInfo { get; }
 
 		public ICustomMessageHandler CustomMessageHandler { get; set; }
 		
@@ -116,7 +118,7 @@ namespace Alex.Net.Bedrock
 		public ConcurrentDictionary<int, Datagram> WaitingForAckQueue { get; } = new ConcurrentDictionary<int, Datagram>();
 
 		public short CompressionThreshold { get; set; } = -1;
-		public RaknetSession(API.Network.ConnectionInfo connectionInfo, RaknetConnection packetSender, IPEndPoint endPoint, short mtuSize, ICustomMessageHandler messageHandler = null)
+		public RaknetSession(ConnectionInfo connectionInfo, RaknetConnection packetSender, IPEndPoint endPoint, short mtuSize, ICustomMessageHandler messageHandler = null)
 		{
 			_packetSender = packetSender;
 			ConnectionInfo = connectionInfo;

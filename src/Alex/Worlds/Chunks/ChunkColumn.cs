@@ -4,9 +4,10 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
-using Alex.API;
+
 using Alex.API.Blocks;
 using Alex.API.Utils;
+using Alex.API.Utils.Vectors;
 using Alex.API.World;
 using Alex.Blocks;
 using Alex.Blocks.State;
@@ -153,9 +154,9 @@ namespace Alex.Worlds.Chunks
 										(int) (chunkPosition.X + x), y + (sectionIndex << 4), (int) (chunkPosition.Z + z));
 									ChunkData?.Remove(device, blockPosition);
 									
-									foreach (var state in section.GetAll(x, y, z))
+									for(int storage = 0; storage < section.StorageCount; storage++)
 									{
-										var blockState = state.State;
+										var blockState = section.Get(x, y, z, storage);
 										if (blockState == null || blockState?.VariantMapper?.Model == null || blockState.Block == null || !blockState.Block.Renderable)
 											continue;
 										
@@ -170,7 +171,7 @@ namespace Alex.Worlds.Chunks
 											{
 												blockState = newblockState;
 
-												section.Set(state.Storage, x, y, z, blockState);
+												section.Set(storage, x, y, z, blockState);
 												model = blockState?.VariantMapper?.Model;
 											}
 										}
@@ -406,7 +407,7 @@ namespace Alex.Worlds.Chunks
 			var chunk = Sections[by >> 4];
 			if (chunk == null) return Air;
 
-			return chunk.Get(bx, by - 16 * (by >> 4), bz, storage);
+			return chunk.Get(bx, by - 16 * (by >> 4), bz, storage) ?? Air;
 		}
 
 		public void SetHeight(int bx, int bz, short h)
@@ -540,11 +541,14 @@ namespace Alex.Worlds.Chunks
 		{
 			lock (_dataLock)
 			{
-				foreach (var chunksSection in Sections)
+				for (var index = 0; index < Sections.Length; index++)
 				{
+					var chunksSection = Sections[index];
 					chunksSection?.Dispose();
+					Sections[index] = null;
 				}
 
+				//Sections = null;
 				ChunkData?.Dispose();
 				ChunkData = null;
 			}

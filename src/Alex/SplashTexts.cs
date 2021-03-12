@@ -24,12 +24,10 @@ namespace Alex
 			$"Powered by {TextColor.Rainbow("MiNET")}",
 			$"Wow... This logo {TextColor.Bold}SUCKS{TextColor.Reset} :O"
 		};
-
-		private static readonly Random Random = new Random();
-
+		
 		public static string GetSplashText()
 		{
-			return Texts[Random.Next(Texts.Length - 1)].Replace("%RANDOM%", Random.Next().ToString());
+			return Texts[FastRandom.Instance.Next(Texts.Length - 1)].Replace("%RANDOM%", FastRandom.Instance.Next().ToString());
 		}
 	}
 }

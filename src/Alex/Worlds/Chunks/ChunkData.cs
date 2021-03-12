@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,6 +8,7 @@ using Alex.API;
 using Alex.API.Blocks;
 using Alex.API.Graphics;
 using Alex.API.Utils;
+using Alex.API.Utils.Vectors;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -58,27 +60,21 @@ namespace Alex.Worlds.Chunks
 
                     if (stage == null) continue;
 
-                    vertices.AddRange(stage.BuildVertices());
+                    var range = stage.BuildVertices(out int size);
+                    try
+                    {
+                        vertices.AddRange(range.Take(size));
+                    }
+                    finally
+                    {
+                        ChunkRenderStage.Pool.Return(range, true);
+                    }
                 }
 
                 return vertices.ToArray();
             }
         }
 
-        private List<BoundingBox> _boxes = new List<BoundingBox>();
-        public BoundingBox[] BoundingBoxes
-        {
-            get
-            {
-                return _boxes.ToArray();
-            }
-        }
-
-        public void AddBoundingBox(BoundingBox box)
-        {
-            _boxes.Add(box);
-        }
-        
         public void AddVertex(BlockCoordinates blockCoordinates,
             Vector3 position,
             Vector2 textureCoordinates,
@@ -137,11 +133,11 @@ namespace Alex.Worlds.Chunks
            {
                try
                {
-                   Disposed = true;
-
-                   foreach (var stage in _stages.Where(x => x != null))
+                   for (var index = 0; index < _stages.Length; index++)
                    {
-                       stage.Dispose();
+                       var stage = _stages[index];
+                       stage?.Dispose();
+                       _stages[index] = null;
                    }
                }
                finally
@@ -150,6 +146,7 @@ namespace Alex.Worlds.Chunks
 
                    //  Disposed = true;
                    Interlocked.Decrement(ref _instances);
+                   Disposed = true;
                }
            }
         }

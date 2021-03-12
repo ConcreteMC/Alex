@@ -14,7 +14,7 @@ using Org.BouncyCastle.Crypto.Engines;
 using Org.BouncyCastle.Crypto.IO;
 using Org.BouncyCastle.Crypto.Modes;
 using Org.BouncyCastle.Crypto.Parameters;
-using BlockCoordinates = Alex.API.Utils.BlockCoordinates;
+using BlockCoordinates = Alex.API.Utils.Vectors.BlockCoordinates;
 
 namespace Alex.Networking.Java.Util
 {
@@ -22,11 +22,9 @@ namespace Alex.Networking.Java.Util
 	{
 		private BufferedBlockCipher EncryptCipher { get; set; }
 		private BufferedBlockCipher DecryptCipher { get; set; }
-		//private byte[] Key { get; set; }
-		//private bool EncryptionInitiated { get; set; } = false;
 
 		private CancellationTokenSource CancelationToken { get; }
-		public Stream BaseStream { get; private set; }
+		private Stream BaseStream { get; set; }
 		public MinecraftStream(Stream baseStream)
 		{
 			BaseStream = baseStream;
@@ -38,7 +36,7 @@ namespace Alex.Networking.Java.Util
 			
 		}
 
-		public void InitEncryption(byte[] key, bool write)
+		public void InitEncryption(byte[] key)
 		{
 			EncryptCipher = new BufferedBlockCipher(new CfbBlockCipher(new AesEngine(), 8));
 			EncryptCipher.Init(true, new ParametersWithIV(

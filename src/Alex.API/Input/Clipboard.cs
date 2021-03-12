@@ -4,6 +4,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
+using Alex.API.Utils;
 
 namespace Alex.API.Input
 {
@@ -269,7 +270,7 @@ Error: {errorBuilder}";
             {
                 connection.ConnectAsync().Wait();
 
-                Klipper.DBus.IKlipper klipper = connection.CreateProxy<Klipper.DBus.IKlipper>(service, objectPath);
+                IKlipper klipper = connection.CreateProxy<IKlipper>(service, objectPath);
                 klipper.setClipboardContentsAsync(value).Wait();
             }
         }
@@ -285,7 +286,7 @@ Error: {errorBuilder}";
             {
                 connection.ConnectAsync().Wait();
 
-                Klipper.DBus.IKlipper klipper = connection.CreateProxy<Klipper.DBus.IKlipper>(service, objectPath);
+                IKlipper klipper = connection.CreateProxy<IKlipper>(service, objectPath);
 
                 clipboardContents = klipper.getClipboardContentsAsync().Result;
             } // End Using connection 

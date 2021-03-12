@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Alex.API.Data.Servers;
 using Alex.API.Graphics;
 using Alex.API.Utils;
+using Alex.API.Utils.Vectors;
 using Alex.Blocks;
 using Alex.Blocks.Minecraft;
 using Alex.Blocks.State;
@@ -20,19 +21,20 @@ namespace Alex.Worlds.Chunks
 		protected int BlockRefCount;
 
 		public int Blocks => BlockRefCount;
-
+		public int StorageCount => BlockStorages.Length;
+		
 		protected readonly BlockStorage[] BlockStorages;
 		public             NibbleArray    BlockLight;
 		public             NibbleArray    SkyLight;
 
-		private readonly System.Collections.BitArray _scheduledUpdates;
-        private readonly System.Collections.BitArray _scheduledSkylightUpdates;
-        private readonly System.Collections.BitArray _scheduledBlocklightUpdates;
+		private System.Collections.BitArray _scheduledUpdates;
+        private System.Collections.BitArray _scheduledSkylightUpdates;
+        private System.Collections.BitArray _scheduledBlocklightUpdates;
         
         public int SkyLightUpdates { get; private set; } = 0;
         public int BlockLightUpdates { get; private set; } = 0;
         
-        public List<BlockCoordinates> LightSources { get; } = new List<BlockCoordinates>();
+        public List<BlockCoordinates> LightSources { get; private set; } = new List<BlockCoordinates>();
         
 		public bool IsAllAir => BlockRefCount == 0;
 
@@ -162,12 +164,12 @@ namespace Alex.Worlds.Chunks
 	        }
         }
 
-        public BlockState Get(int x, int y, int z, int section)
+        public BlockState Get(int x, int y, int z, int storage)
         {
-	        if (section > BlockStorages.Length)
-		        throw new IndexOutOfRangeException($"The storage id {section} does not exist!");
+	        if (storage > BlockStorages.Length)
+		        throw new IndexOutOfRangeException($"The storage id {storage} does not exist!");
 
-	        return BlockStorages[section].Get(x, y, z);
+	        return BlockStorages[storage]?.Get(x, y, z) ?? BlockFactory.GetBlockState("minecraft:air");
         }
 
         public void Set(int x, int y, int z, BlockState state)
@@ -345,7 +347,18 @@ namespace Alex.Worlds.Chunks
 		    for (int i = 0; i < BlockStorages.Length; i++)
 		    {
 			    BlockStorages[i]?.Dispose();
+			    BlockStorages[i] = null;
 		    }
+		    
+		    LightSources.Clear();
+		    LightSources = null;
+
+		    BlockLight = null;
+		    SkyLight = null;
+		    
+		    _scheduledUpdates = null;
+		    _scheduledBlocklightUpdates = null;
+		    _scheduledSkylightUpdates = null;
 	    }
 
 	    public class BlockEntry

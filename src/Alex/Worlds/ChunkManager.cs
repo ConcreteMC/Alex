@@ -8,6 +8,8 @@ using Alex.API.Data.Options;
 using Alex.API.Graphics;
 using Alex.API.Services;
 using Alex.API.Utils;
+using Alex.API.Utils.Collections;
+using Alex.API.Utils.Vectors;
 using Alex.API.World;
 using Alex.Blocks.Minecraft;
 using Alex.Entities.BlockEntities;
@@ -673,12 +675,7 @@ namespace Alex.Worlds
 				FastUpdateQueue.Clear();
 				UpdateBorderQueue.Clear();
 
-				foreach (var chunk in Chunks)
-				{
-					chunk.Value.Dispose();
-				}
-
-				Chunks.Clear();
+				ClearChunks();
 
 				foreach (var rendered in _renderedChunks)
 					rendered.Dispose();

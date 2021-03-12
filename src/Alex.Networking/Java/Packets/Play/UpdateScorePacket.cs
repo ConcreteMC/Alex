@@ -2,7 +2,7 @@ using Alex.Networking.Java.Util;
 
 namespace Alex.Networking.Java.Packets.Play
 {
-	public class UpdateScorePacket : Packet
+	public class UpdateScorePacket : Packet<UpdateScorePacket>
 	{
 		public string            EntityName    { get; set; }
 		public UpdateScoreAction Action        { get; set; }

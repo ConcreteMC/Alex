@@ -9,7 +9,6 @@ using Alex.API.Data.Options;
 using Alex.API.Data.Servers;
 using Alex.API.Graphics;
 using Alex.API.Gui;
-using Alex.API.Network;
 using Alex.API.Services;
 using Alex.API.Utils;
 using Alex.API.World;
@@ -35,13 +34,13 @@ using Microsoft.Xna.Framework.Graphics;
 using MiNET;
 using MiNET.Utils;
 using NLog;
-using BlockCoordinates = Alex.API.Utils.BlockCoordinates;
-using ChunkCoordinates = Alex.API.Utils.ChunkCoordinates;
+using BlockCoordinates = Alex.API.Utils.Vectors.BlockCoordinates;
+using ChunkCoordinates = Alex.API.Utils.Vectors.ChunkCoordinates;
 using Color = Microsoft.Xna.Framework.Color;
 using Inventory = MiNET.Inventory;
 using MathF = System.MathF;
 using Player = Alex.Entities.Player;
-using PlayerLocation = Alex.API.Utils.PlayerLocation;
+using PlayerLocation = Alex.API.Utils.Vectors.PlayerLocation;
 using Rectangle = Microsoft.Xna.Framework.Rectangle;
 using Skin = Alex.API.Utils.Skin;
 using UUID = Alex.API.Utils.UUID;
@@ -57,7 +56,7 @@ namespace Alex.Worlds
 		TheEnd,
 	}
 	
-	public class World : IBlockAccess, ITicked
+	public class World : IBlockAccess, ITicked, IDisposable
 	{
 		private static readonly Logger       Log = LogManager.GetCurrentClassLogger(typeof(World));
 		public                  EntityCamera Camera { get; }
@@ -179,6 +178,12 @@ namespace Alex.Worlds
 			BackgroundWorker = new BackgroundWorker();
 			
 			Player?.OnSpawn();
+			
+			_disposables.Add(Ticker);
+			_disposables.Add(EntityManager);
+			_disposables.Add(PhysicsEngine);
+			_disposables.Add(ChunkManager);
+			_disposables.Add(BackgroundWorker);
 		}
 
 		private void FieldOfVisionOnValueChanged(int oldvalue, int newvalue)
@@ -192,7 +197,7 @@ namespace Alex.Worlds
 		public TickManager    Ticker        { get; private set; }
 		public EntityManager  EntityManager { get; set; }
 		public ChunkManager   ChunkManager  { get; private set; }
-		public PhysicsManager PhysicsEngine { get; set; }
+		private PhysicsManager PhysicsEngine { get; set; }
 		
 		public int ChunkCount
         {
@@ -825,7 +830,7 @@ namespace Alex.Worlds
 		}
         
         private bool _destroyed = false;
-		public void Destroy()
+		public void Dispose()
 		{
 			if (_destroyed) return;
 			_destroyed = true;
@@ -842,17 +847,12 @@ namespace Alex.Worlds
 			Ticker.UnregisterTicked(EntityManager);
 			Ticker.UnregisterTicked(PhysicsEngine);
 			Ticker.UnregisterTicked(ChunkManager);
-
-			BackgroundWorker?.Dispose();
-
-			EntityManager.Dispose();
-			EntityManager = null;
 			
-			ChunkManager.Dispose();
+			EntityManager = null;
 			ChunkManager = null;
 
-			Player.Dispose();
-			Ticker.Dispose();
+			//Player.Dispose();
+			//Ticker.Dispose();
 			Ticker = null;
 			Player = null;
 		}

@@ -23,5 +23,8 @@ namespace Alex.Blocks.Storage
         {
             
         }
+
+        /// <inheritdoc />
+        public void Dispose() { }
     }
 }

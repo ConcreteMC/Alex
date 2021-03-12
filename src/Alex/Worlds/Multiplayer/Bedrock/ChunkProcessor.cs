@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Channels;
 using Alex.API.Utils;
+using Alex.API.Utils.Collections;
 using Alex.Blocks;
 using Alex.Blocks.Mapping;
 using Alex.Blocks.Minecraft;
@@ -19,9 +20,9 @@ using MiNET;
 using MiNET.Net;
 using MiNET.Utils;
 using NLog;
-using BlockCoordinates = Alex.API.Utils.BlockCoordinates;
+using BlockCoordinates = Alex.API.Utils.Vectors.BlockCoordinates;
 using BlockState = Alex.Blocks.State.BlockState;
-using ChunkCoordinates = Alex.API.Utils.ChunkCoordinates;
+using ChunkCoordinates = Alex.API.Utils.Vectors.ChunkCoordinates;
 using NibbleArray = MiNET.Utils.NibbleArray;
 
 namespace Alex.Worlds.Multiplayer.Bedrock

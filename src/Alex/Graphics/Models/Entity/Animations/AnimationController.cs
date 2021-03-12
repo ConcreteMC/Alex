@@ -345,7 +345,7 @@ namespace Alex.Graphics.Models.Entity.Animations
 			}
 			else
 			{
-				Log.Warn($"Missing animation: {name}");
+				Log.Debug($"Missing animation: {name}");
 			}
 		}
 

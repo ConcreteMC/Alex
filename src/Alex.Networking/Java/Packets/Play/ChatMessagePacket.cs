@@ -39,5 +39,14 @@ namespace Alex.Networking.Java.Packets.Play
 				stream.WriteUuid(UUID);
 			}
 		}
+
+		/// <inheritdoc />
+		protected override void ResetPacket()
+		{
+			base.ResetPacket();
+			
+			ServerBound = false;
+			Position = Chat;
+		}
 	}
 }

@@ -4,6 +4,8 @@ using System.Diagnostics;
 using System.Linq;
 using Alex.API.Data.Servers;
 using Alex.API.Utils;
+using Alex.API.Utils.Collections;
+using Alex.API.Utils.Vectors;
 using Alex.API.World;
 using Alex.Blocks.Minecraft;
 using Alex.Blocks.State;
@@ -20,7 +22,7 @@ namespace Alex.Worlds
 	///		Handles entity physics
 	///		Collision detection heavily based on https://github.com/ddevault/TrueCraft/blob/master/TrueCraft.Core/Physics/PhysicsEngine.cs
 	/// </summary>
-    public class PhysicsManager : ITicked
+    public class PhysicsManager : ITicked, IDisposable
     {
 	    private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(PhysicsManager));
 	    private World World { get; }
@@ -30,7 +32,7 @@ namespace Alex.Worlds
 		    World = world;
 	    }
 	    
-		private ThreadSafeList<Entity> PhysicsEntities { get; } = new ThreadSafeList<Entity>();
+		private ThreadSafeList<Entity> PhysicsEntities { get; set; } = new ThreadSafeList<Entity>();
 		
 		private Vector3 TruncateVelocity(Vector3 velocity)
 		{
@@ -193,13 +195,23 @@ namespace Alex.Worlds
 		}
 
 		public bool AddTickable(Entity entity)
-	    {
-		    return PhysicsEntities.TryAdd(entity);
+		{
+			var collection = PhysicsEntities;
+
+			if (collection == null)
+				return false;
+			
+		    return collection.TryAdd(entity);
 	    }
 
 	    public bool Remove(Entity entity)
 	    {
-		    return PhysicsEntities.Remove(entity);
+		    var collection = PhysicsEntities;
+
+		    if (collection == null)
+			    return false;
+		    
+		    return collection.Remove(entity);
 	    }
 
 
@@ -239,6 +251,13 @@ namespace Alex.Worlds
 				    }
 			    }
 		    }
+	    }
+
+	    /// <inheritdoc />
+	    public void Dispose()
+	    {
+		    var entities = PhysicsEntities.TakeAndClear();
+		    PhysicsEntities = null;
 	    }
     }
 }

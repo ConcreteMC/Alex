@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -206,10 +207,13 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					{
 						uint   len  = VarInt.ReadUInt32(ms);
 						long   pos  = ms.Position;
-						byte[] data = new byte[len];
-						if (ms.Read(data, 0, data.Length) != len)
-							Log.Warn(
-								$"Did not read enough data.");
+						//byte[] data = new byte[len];
+
+						var data = ms.Read(len);
+					//	var data = MemoryPool<byte>.Shared.Rent((int) len);
+					//	if (ms.Read(data.Memory, 0, len) != len)
+						//	Log.Warn(
+						//		$"Did not read enough data.");
 								
 						ms.Position = pos;
 						int id = VarInt.ReadInt32(ms);

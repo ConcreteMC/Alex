@@ -54,13 +54,13 @@ using Org.BouncyCastle.Security;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using AnvilWorldProvider = Alex.Worlds.Singleplayer.AnvilWorldProvider;
-using BlockCoordinates = Alex.API.Utils.BlockCoordinates;
-using ChunkCoordinates = Alex.API.Utils.ChunkCoordinates;
+using BlockCoordinates = Alex.API.Utils.Vectors.BlockCoordinates;
+using ChunkCoordinates = Alex.API.Utils.Vectors.ChunkCoordinates;
 using Entity = Alex.Entities.Entity;
 using MathF = System.MathF;
 using MessageType = Alex.API.Data.MessageType;
 using Player = Alex.Entities.Player;
-using PlayerLocation = Alex.API.Utils.PlayerLocation;
+using PlayerLocation = Alex.API.Utils.Vectors.PlayerLocation;
 using UUID = Alex.API.Utils.UUID;
 
 namespace Alex.Worlds.Multiplayer.Bedrock
@@ -259,7 +259,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				Client.World.Dimension = (Dimension) message.dimension;
 
 				Client.World?.UpdatePlayerPosition(
-					new API.Utils.PlayerLocation(
+					new PlayerLocation(
 						new Microsoft.Xna.Framework.Vector3(
 							message.spawn.X, message.spawn.Y, message.spawn.Z), message.rotation.Y,
 						message.rotation.Y, message.rotation.X));

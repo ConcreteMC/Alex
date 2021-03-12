@@ -16,10 +16,10 @@ using MiNET;
 using MiNET.Net;
 using MiNET.Utils;
 using NLog;
-using ChunkCoordinates = Alex.API.Utils.ChunkCoordinates;
+using ChunkCoordinates = Alex.API.Utils.Vectors.ChunkCoordinates;
 using MathF = System.MathF;
 using Player = Alex.Entities.Player;
-using PlayerLocation = Alex.API.Utils.PlayerLocation;
+using PlayerLocation = Alex.API.Utils.Vectors.PlayerLocation;
 
 namespace Alex.Worlds.Multiplayer.Bedrock
 {

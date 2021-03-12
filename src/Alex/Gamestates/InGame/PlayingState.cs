@@ -6,7 +6,6 @@ using System.Threading;
 using Alex.API;
 using Alex.API.Graphics;
 using Alex.API.Gui;
-using Alex.API.Network;
 using Alex.API.Services;
 using Alex.API.Utils;
 using Alex.Blocks.Minecraft;
@@ -28,18 +27,21 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using MiNET;
 using MiNET.Utils;
+using NLog;
 using BoundingBox = Microsoft.Xna.Framework.BoundingBox;
 using DedicatedThreadPoolSettings = MiNET.Utils.DedicatedThreadPoolSettings;
-using PlayerLocation = Alex.API.Utils.PlayerLocation;
+using PlayerLocation = Alex.API.Utils.Vectors.PlayerLocation;
 
 namespace Alex.Gamestates.InGame
 {
 	public class PlayingState : GameState
 	{
-		public World World { get; }
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(PlayingState));
+		
+		public World World { get; private set; }
 
-        private WorldProvider WorldProvider { get; }
-		public NetworkProvider NetworkProvider { get; }
+        private WorldProvider WorldProvider { get; set; }
+		public NetworkProvider NetworkProvider { get; private set; }
 
 		private readonly PlayingHud _playingHud;
 		private readonly GuiDebugInfo _debugInfo;
@@ -674,19 +676,24 @@ namespace Alex.Gamestates.InGame
 		{
 			Alex.InGame = false;
 
-			ThreadPool.QueueUserWorkItem(
-				o =>
-				{
+			//ThreadPool.QueueUserWorkItem(
+			//	o =>
+			//	{
 					NetworkProvider?.Close();
-
-					World?.Destroy();
+					NetworkProvider = null;
+					
+					World?.Dispose();
+					World = null;
+					
 					WorldProvider?.Dispose();
+					WorldProvider = null;
 
 					_playingHud?.Unload();
 
 					RichPresenceProvider.ClearPresence();
-				});
+			//	});
 
+			GC.Collect();
 			//GetService<IEventDispatcher>().UnregisterEvents(_playingHud.Chat);
 			//_playingHud.Chat = 
 		}

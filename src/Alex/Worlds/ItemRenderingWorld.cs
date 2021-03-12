@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Alex.API.Graphics;
 using Alex.API.Utils;
+using Alex.API.Utils.Vectors;
 using Alex.API.World;
 using Alex.Blocks;
 using Alex.Blocks.Minecraft;

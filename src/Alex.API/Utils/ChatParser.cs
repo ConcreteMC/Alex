@@ -15,7 +15,7 @@ namespace Alex.API.Utils
 		/// <returns>Returns the translated text</returns>
 		public static string ParseText(string json)
 		{
-			return JSONData2String(Utils.Json.ParseJson(json));
+			return JSONData2String(Json.ParseJson(json));
 		}
 
 		/// <summary>
@@ -78,12 +78,12 @@ namespace Alex.API.Utils
 		/// <param name="colorcode">Allow parent color code to affect child elements (set to "" for function init)</param>
 		/// <param name="links">Container for links from JSON serialized text</param>
 		/// <returns>returns the Minecraft-formatted string</returns>
-		private static string JSONData2String(Utils.Json.JSONData data, string colorcode = "")
+		private static string JSONData2String(Json.JSONData data, string colorcode = "")
 		{
 			string extra_result = "";
 			switch (data.Type)
 			{
-				case Utils.Json.JSONData.DataType.Object:
+				case Json.JSONData.DataType.Object:
 					if (data.Properties.ContainsKey("color"))
 					{
 						colorcode = TextColor.Color2tag(JSONData2String(data.Properties["color"], ""));
@@ -101,8 +101,8 @@ namespace Alex.API.Utils
 					}*/
 					if (data.Properties.ContainsKey("extra"))
 					{
-						Utils.Json.JSONData[] extras = data.Properties["extra"].DataArray.ToArray();
-						foreach (Utils.Json.JSONData item in extras)
+						Json.JSONData[] extras = data.Properties["extra"].DataArray.ToArray();
+						foreach (Json.JSONData item in extras)
 							extra_result = extra_result + JSONData2String(item, colorcode) + "§r";
 					}
 					if (data.Properties.ContainsKey("text"))
@@ -116,7 +116,7 @@ namespace Alex.API.Utils
 							data.Properties["with"] = data.Properties["using"];
 						if (data.Properties.ContainsKey("with"))
 						{
-							Utils.Json.JSONData[] array = data.Properties["with"].DataArray.ToArray();
+							Json.JSONData[] array = data.Properties["with"].DataArray.ToArray();
 							for (int i = 0; i < array.Length; i++)
 							{
 								usingData.Add(JSONData2String(array[i], colorcode));
@@ -126,15 +126,15 @@ namespace Alex.API.Utils
 					}
 					else return extra_result;
 
-				case Utils.Json.JSONData.DataType.Array:
+				case Json.JSONData.DataType.Array:
 					string result = "";
-					foreach (Utils.Json.JSONData item in data.DataArray)
+					foreach (Json.JSONData item in data.DataArray)
 					{
 						result += JSONData2String(item, colorcode);
 					}
 					return result;
 
-				case Utils.Json.JSONData.DataType.String:
+				case Json.JSONData.DataType.String:
 					return colorcode + data.StringValue;
 			}
 

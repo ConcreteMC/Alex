@@ -3,7 +3,6 @@ using System.Text;
 using Alex.API.Graphics.Typography;
 using Alex.API.Gui;
 using Alex.API.Gui.Elements;
-using Alex.API.Network;
 using Alex.API.Utils;
 using Alex.Net;
 using Microsoft.Xna.Framework;

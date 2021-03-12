@@ -50,6 +50,7 @@ namespace Alex.API.Utils
 
 		#region Constructors
 
+		public static readonly FastRandom Instance = new FastRandom(Environment.TickCount);
 		/// <summary>
 		/// Initialises a new instance using time dependent seed.
 		/// </summary>

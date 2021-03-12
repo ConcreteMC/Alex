@@ -17,70 +17,49 @@ namespace Alex.Networking.Java.Packets
 		private static PacketFactory<int, MinecraftStream, Packet> LoginFactory { get; }
 		private static PacketFactory<int, MinecraftStream, Packet> PlayFactory { get; }
 
-		private static PacketFactory<int, MinecraftStream, Packet> ServerHandshakeFactory { get; }
-		private static PacketFactory<int, MinecraftStream, Packet> ServerStatusFactory { get; }
-		private static PacketFactory<int, MinecraftStream, Packet> ServerLoginFactory { get; }
-		private static PacketFactory<int, MinecraftStream, Packet> ServerPlayFactory { get; }
-
 		static MCPacketFactory()
 		{
 			HandshakeFactory = new PacketFactory<int, MinecraftStream, Packet>();
 			StatusFactory = new PacketFactory<int, MinecraftStream, Packet>();
 			LoginFactory = new PacketFactory<int, MinecraftStream, Packet>();
 			PlayFactory = new PacketFactory<int, MinecraftStream, Packet>();
-
-			ServerHandshakeFactory = new PacketFactory<int, MinecraftStream, Packet>();
-			ServerStatusFactory = new PacketFactory<int, MinecraftStream, Packet>();
-			ServerLoginFactory = new PacketFactory<int, MinecraftStream, Packet>();
-			ServerPlayFactory = new PacketFactory<int, MinecraftStream, Packet>();
 		}
 
-		internal static void Register<TPacket>(PacketDirection packetDirection, ConnectionState state, int packetId) where TPacket : Packet, new()
+		internal static void Register<TPacket>(ConnectionState state, int packetId) where TPacket : Packet, new()
 		{
-			Register(packetDirection, state, packetId, () => new TPacket());
+			Register(state, packetId, () => new TPacket());
 		}
 
-		internal static void Register<TPacket>(PacketDirection packetDirection, ConnectionState state, int packetId, Func<TPacket> createFunc) where TPacket : Packet
+		internal static void Register<TPacket>(
+			ConnectionState state,
+			int packetId,
+			Func<TPacket> createFunc) where TPacket : Packet
 		{
-			if (packetDirection == PacketDirection.ServerBound)
+
+			switch (state)
 			{
-				switch (state)
-				{
-					case ConnectionState.Handshake:
-						HandshakeFactory.Register(packetId, createFunc);
-						break;
-					case ConnectionState.Status:
-						StatusFactory.Register(packetId, createFunc);
-						break;
-					case ConnectionState.Login:
-						LoginFactory.Register(packetId, createFunc);
-						break;
-					case ConnectionState.Play:
-						PlayFactory.Register(packetId, createFunc);
-						break;
-					default:
-						throw new ArgumentOutOfRangeException(nameof(state), state, null);
-				}
-			}
-			else
-			{
-				switch (state)
-				{
-					case ConnectionState.Handshake:
-						ServerHandshakeFactory.Register(packetId, createFunc);
-						break;
-					case ConnectionState.Status:
-						ServerStatusFactory.Register(packetId, createFunc);
-						break;
-					case ConnectionState.Login:
-						ServerLoginFactory.Register(packetId, createFunc);
-						break;
-					case ConnectionState.Play:
-						ServerPlayFactory.Register(packetId, createFunc);
-						break;
-					default:
-						throw new ArgumentOutOfRangeException(nameof(state), state, null);
-				}
+				case ConnectionState.Handshake:
+					HandshakeFactory.Register(packetId, createFunc);
+
+					break;
+
+				case ConnectionState.Status:
+					StatusFactory.Register(packetId, createFunc);
+
+					break;
+
+				case ConnectionState.Login:
+					LoginFactory.Register(packetId, createFunc);
+
+					break;
+
+				case ConnectionState.Play:
+					PlayFactory.Register(packetId, createFunc);
+
+					break;
+
+				default:
+					throw new ArgumentOutOfRangeException(nameof(state), state, null);
 			}
 		}
 
@@ -101,91 +80,64 @@ namespace Alex.Networking.Java.Packets
 			return null;
 		}
 
-		public static TPacket CreatePacket<TPacket>(PacketDirection packetDirection, ConnectionState state) where TPacket : Packet
+		public static TPacket CreatePacket<TPacket>(ConnectionState state)
+			where TPacket : Packet
 		{
-			if (packetDirection == PacketDirection.ServerBound)
+			Type type = typeof(TPacket);
+
+			switch (state)
 			{
-				Type type = typeof(TPacket);
-				switch (state)
-				{
-					case ConnectionState.Handshake:
-						return CreatePacket<TPacket>(type, HandshakeFactory);
-					case ConnectionState.Status:
-						return CreatePacket<TPacket>(type, StatusFactory);
-					case ConnectionState.Login:
-						return CreatePacket<TPacket>(type, LoginFactory);
-					case ConnectionState.Play:
-						return CreatePacket<TPacket>(type, PlayFactory);
-					default:
-						throw new ArgumentOutOfRangeException(nameof(state), state, null);
-				}
-			}
-			else
-			{
-				Type type = typeof(TPacket);
-				switch (state)
-				{
-					case ConnectionState.Handshake:
-						return CreatePacket<TPacket>(type, ServerHandshakeFactory);
-					case ConnectionState.Status:
-						return CreatePacket<TPacket>(type, ServerStatusFactory);
-					case ConnectionState.Login:
-						return CreatePacket<TPacket>(type, ServerLoginFactory);
-					case ConnectionState.Play:
-						return CreatePacket<TPacket>(type, ServerPlayFactory);
-					default:
-						throw new ArgumentOutOfRangeException(nameof(state), state, null);
-				}
+				case ConnectionState.Handshake:
+					return CreatePacket<TPacket>(type, HandshakeFactory);
+
+				case ConnectionState.Status:
+					return CreatePacket<TPacket>(type, StatusFactory);
+
+				case ConnectionState.Login:
+					return CreatePacket<TPacket>(type, LoginFactory);
+
+				case ConnectionState.Play:
+					return CreatePacket<TPacket>(type, PlayFactory);
+
+				default:
+					throw new ArgumentOutOfRangeException(nameof(state), state, null);
 			}
 		}
 
-		public static Packet GetPacket(PacketDirection packetDirection, ConnectionState state, int packetId)
+		public static Packet GetPacket(ConnectionState state, int packetId)
 		{
 			bool success;
 			Packet outPacket;
-			if (packetDirection == PacketDirection.ServerBound)
+
+			switch (state)
 			{
-				switch (state)
-				{
-					case ConnectionState.Handshake:
-						success = HandshakeFactory.TryGetPacket(packetId, out outPacket);
-						break;
-					case ConnectionState.Status:
-						success = StatusFactory.TryGetPacket(packetId, out outPacket);
-						break;
-					case ConnectionState.Login:
-						success = LoginFactory.TryGetPacket(packetId, out outPacket);
-						break;
-					case ConnectionState.Play:
-						success = PlayFactory.TryGetPacket(packetId, out outPacket);
-						break;
-					default:
-						throw new ArgumentOutOfRangeException(nameof(state), state, null);
-				}
-			}
-			else
-			{
-				switch (state)
-				{
-					case ConnectionState.Handshake:
-						success = ServerHandshakeFactory.TryGetPacket(packetId, out outPacket);
-						break;
-					case ConnectionState.Status:
-						success = ServerStatusFactory.TryGetPacket(packetId, out outPacket);
-						break;
-					case ConnectionState.Login:
-						success = ServerLoginFactory.TryGetPacket(packetId, out outPacket);
-						break;
-					case ConnectionState.Play:
-						success = ServerPlayFactory.TryGetPacket(packetId, out outPacket);
-						break;
-					default:
-						throw new ArgumentOutOfRangeException(nameof(state), state, null);
-				}
+				case ConnectionState.Handshake:
+					success = HandshakeFactory.TryGetPacket(packetId, out outPacket);
+
+					break;
+
+				case ConnectionState.Status:
+					success = StatusFactory.TryGetPacket(packetId, out outPacket);
+
+					break;
+
+				case ConnectionState.Login:
+					success = LoginFactory.TryGetPacket(packetId, out outPacket);
+
+					break;
+
+				case ConnectionState.Play:
+					success = PlayFactory.TryGetPacket(packetId, out outPacket);
+
+					break;
+
+				default:
+					throw new ArgumentOutOfRangeException(nameof(state), state, null);
 			}
 
 			if (!success) return null;
 			outPacket.PacketId = packetId;
+
 			return outPacket;
 		}
 
@@ -204,157 +156,109 @@ namespace Alex.Networking.Java.Packets
 
 		private static void RegisterHandshake()
 		{
-			Register(PacketDirection.ServerBound, ConnectionState.Handshake, 0x00, () => new HandshakePacket());
+			
 		}
 
 		private static void RegisterStatus()
 		{
-			Register(PacketDirection.ServerBound, ConnectionState.Status, 0x00, () => new RequestPacket());
-			Register(PacketDirection.ClientBound, ConnectionState.Status, 0x00, () => new ResponsePacket());
-
-			Register(PacketDirection.ServerBound, ConnectionState.Status, 0x01, () => new PingPacket());
-			Register(PacketDirection.ClientBound, ConnectionState.Status, 0x01, () => new PingPacket());
+			Register(ConnectionState.Status, 0x00, () => ResponsePacket.CreateObject());
+			Register(ConnectionState.Status, 0x01, () => PingPacket.CreateObject());
 		}
 
 		private static void RegisterLogin()
 		{
-			//Register(Direction.ServerBound, ConnectionState.Login, 0x00, () => new LoginPluginMessagePacket());
-			Register(PacketDirection.ServerBound, ConnectionState.Login, 0x00, () => new LoginStartPacket());
-			Register(PacketDirection.ServerBound, ConnectionState.Login, 0x01, () => new EncryptionResponsePacket());
-			Register(PacketDirection.ServerBound, ConnectionState.Login, 0x02, () => new LoginPluginResponsePacket());
-
-			//Register(Direction.ClientBound, ConnectionState.Login, 0x00, () => new LoginPluginMessagePacket());
-			Register(PacketDirection.ClientBound, ConnectionState.Login, 0x00, () => new DisconnectPacket());
-			Register(PacketDirection.ClientBound, ConnectionState.Login, 0x01, () => new EncryptionRequestPacket());
-			Register(PacketDirection.ClientBound, ConnectionState.Login, 0x02, () => new LoginSuccessPacket());
-			Register(PacketDirection.ClientBound, ConnectionState.Login, 0x03, () => new SetCompressionPacket());
-			Register(PacketDirection.ClientBound, ConnectionState.Login, 0x04, () => new LoginPluginRequestPacket());
+			Register(ConnectionState.Login, 0x00, () => DisconnectPacket.CreateObject());
+			Register(ConnectionState.Login, 0x01, () => EncryptionRequestPacket.CreateObject());
+			Register(ConnectionState.Login, 0x02, () => LoginSuccessPacket.CreateObject());
+			Register(ConnectionState.Login, 0x03, () => SetCompressionPacket.CreateObject());
+			Register(ConnectionState.Login, 0x04, () => LoginPluginRequestPacket.CreateObject());
 		}
 
 		private static void RegisterPlay()
 		{
-			Register(PacketDirection.ServerBound, ConnectionState.Play, 0x0C, () => new KeepAlivePacket()
+			Register(ConnectionState.Play, 0x00, () => SpawnEntity.CreateObject());
+			Register(ConnectionState.Play, 0x02, () => SpawnLivingEntity.CreateObject());
+			Register(ConnectionState.Play, 0x04, () => SpawnPlayerPacket.CreateObject());
+			Register(ConnectionState.Play, 0x05, () => EntityAnimationPacket.CreateObject());
+			Register(ConnectionState.Play, 0x07, () => AcknowledgePlayerDiggingPacket.CreateObject());
+			Register(ConnectionState.Play, 0x09, () => BlockEntityDataPacket.CreateObject());
+			
+			Register(ConnectionState.Play, 0x0A, () => BlockActionPacket.CreateObject());
+			Register(ConnectionState.Play, 0x0B, () => BlockChangePacket.CreateObject());
+			Register(ConnectionState.Play, 0x0D, () => ServerDifficultyPacket.CreateObject());
+			Register(ConnectionState.Play, 0x0E, () =>
 			{
-				PacketId = 0x0B
+				var packet = ChatMessagePacket.CreateObject();
+				packet.ServerBound = false;
+
+				return packet;
 			});
-			Register<ClientSettingsPacket>(PacketDirection.ServerBound, ConnectionState.Play, 0x03);
-			Register<ClientStatusPacket>(PacketDirection.ServerBound, ConnectionState.Play, 0x02);
-			Register<ChatMessagePacket>(PacketDirection.ServerBound, ConnectionState.Play, 0x01);
-
-		//	Register(Direction.ClientBound, ConnectionState.Play, 0x03, () => new SpawnMob());
-			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x00, () => new SpawnEntity());
-			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x02, () => new SpawnLivingEntity());
-			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x04, () => new SpawnPlayerPacket());
-			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x05, () => new EntityAnimationPacket());
-			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x07, () => new AcknowledgePlayerDiggingPacket());
-			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x09, () => new BlockEntityDataPacket());
+			//{
+			//	ServerBound = false
+			//});
+		//	Register(ConnectionState.Play, 0x0F, () => MultiBlockChange.CreateObject());
 			
-			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x0A, () => new BlockActionPacket());
-			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x0B, () => new BlockChangePacket());
-			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x0D, () => new ServerDifficultyPacket());
-			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x0E, () => new ChatMessagePacket()
-			{
-				ServerBound = false
-			});
-		//	Register(PacketDirection.ClientBound, ConnectionState.Play, 0x0F, () => new MultiBlockChange());
+			Register(ConnectionState.Play, 0xF, () => TabCompleteClientBound.CreateObject());
+			Register(ConnectionState.Play, 0x11, () => WindowConfirmationPacket.CreateObject());
+			Register(ConnectionState.Play, 0x12, () => CloseWindowPacket.CreateObject());
+			Register(ConnectionState.Play, 0x13, () => WindowItems.CreateObject());
+			Register(ConnectionState.Play, 0x15, () => SetSlot.CreateObject());
+			Register(ConnectionState.Play, 0x17, () => PluginMessagePacket.CreateObject());
 			
-			Register(PacketDirection.ClientBound, ConnectionState.Play, 0xF, () => new TabCompleteClientBound());
-			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x11, () => new WindowConfirmationPacket());
-			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x12, () => new CloseWindowPacket());
-			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x13, () => new WindowItems());
-			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x15, () => new SetSlot());
-			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x17, () => new PluginMessagePacket());
+			Register(ConnectionState.Play, 0x19, () => DisconnectPacket.CreateObject());
+			Register(ConnectionState.Play, 0x1A, () => EntityStatusPacket.CreateObject());
+			Register(ConnectionState.Play, 0x1C, () => UnloadChunk.CreateObject());
+			Register(ConnectionState.Play, 0x1D, () => ChangeGameStatePacket.CreateObject());
+			Register(ConnectionState.Play, 0x1F, () => KeepAlivePacket.CreateObject());
 			
-			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x19, () => new DisconnectPacket());
-			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x1A, () => new EntityStatusPacket());
-			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x1C, () => new UnloadChunk());
-			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x1D, () => new ChangeGameStatePacket());
-			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x1F, () => new KeepAlivePacket());
+			Register(ConnectionState.Play, 0x20, () => ChunkDataPacket.CreateObject());
+			Register(ConnectionState.Play, 0x22, () => ParticlePacket.CreateObject());
+			Register(ConnectionState.Play, 0x23, () => UpdateLightPacket.CreateObject());
+			Register(ConnectionState.Play, 0x24, () => JoinGamePacket.CreateObject());
+			Register(ConnectionState.Play, 0x27, () => EntityRelativeMove.CreateObject());
+			Register(ConnectionState.Play, 0x28, () => EntityLookAndRelativeMove.CreateObject());
+			Register(ConnectionState.Play, 0x29, () => EntityLook.CreateObject());
 			
-			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x20, () => new ChunkDataPacket());
-			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x22, () => new ParticlePacket());
-			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x23, () => new UpdateLightPacket());
-			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x24, () => new JoinGamePacket());
-			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x27, () => new EntityRelativeMove());
-			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x28, () => new EntityLookAndRelativeMove());
-			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x29, () => new EntityLook());
+			Register(ConnectionState.Play, 0x2D, () => OpenWindowPacket.CreateObject());
 			
-			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x2D, () => new OpenWindowPacket());
+			Register(ConnectionState.Play, 0x30, () => PlayerAbilitiesPacket.CreateObject());
+			Register(ConnectionState.Play, 0x31, () => CombatEventPacket.CreateObject());
+			Register(ConnectionState.Play, 0x32, () => PlayerListItemPacket.CreateObject()); //< -----
+			Register(ConnectionState.Play, 0x33, () => FacePlayerPacket.CreateObject());
+			Register(ConnectionState.Play, 0x34, () => PlayerPositionAndLookPacket.CreateObject());
+			Register(ConnectionState.Play, 0x36, () => DestroyEntitiesPacket.CreateObject());
+			Register(ConnectionState.Play, 0x39, () => RespawnPacket.CreateObject());
 			
-			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x30, () => new PlayerAbilitiesPacket());
-			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x31, () => new CombatEventPacket());
-			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x32, () => new PlayerListItemPacket()); //< -----
-			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x33, () => new FacePlayerPacket());
-			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x34, () => new PlayerPositionAndLookPacket());
-			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x36, () => new DestroyEntitiesPacket());
-			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x39, () => new RespawnPacket());
+			Register(ConnectionState.Play, 0x3A, () => EntityHeadLook.CreateObject());
+			Register(ConnectionState.Play, 0x3B, () => MultiBlockChange.CreateObject());
 			
-			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x3A, () => new EntityHeadLook());
-			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x3B, () => new MultiBlockChange());
+			Register(ConnectionState.Play, 0x3F, () => HeldItemChangePacket.CreateObject());
 			
-			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x3F, () => new HeldItemChangePacket());
+			Register(ConnectionState.Play, 0x40, () => UpdateViewPositionPacket.CreateObject());
+			Register(ConnectionState.Play, 0x41, () => UpdateViewDistancePacket.CreateObject());
+			Register(ConnectionState.Play, 0x42, () => SpawnPositionPacket.CreateObject());
+			Register(ConnectionState.Play, 0x43, () => DisplayScoreboardPacket.CreateObject());
+			Register(ConnectionState.Play, 0x44, () => EntityMetadataPacket.CreateObject());
+			Register(ConnectionState.Play, 0x46, () => EntityVelocity.CreateObject());
+			Register(ConnectionState.Play, 0x47, () => EntityEquipmentPacket.CreateObject());
+			Register(ConnectionState.Play, 0x48, () => SetExperiencePacket.CreateObject());
+			Register(ConnectionState.Play, 0x49, () => UpdateHealthPacket.CreateObject());
 			
-			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x40, () => new UpdateViewPositionPacket());
-			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x41, () => new UpdateViewDistancePacket());
-			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x42, () => new SpawnPositionPacket());
-			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x43, () => new DisplayScoreboardPacket());
-			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x44, () => new EntityMetadataPacket());
-			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x46, () => new EntityVelocity());
-			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x47, () => new EntityEquipmentPacket());
-			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x48, () => new SetExperiencePacket());
-			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x49, () => new UpdateHealthPacket());
+			Register(ConnectionState.Play, 0x4A, () => ScoreboardObjectivePacket.CreateObject());
+			Register(ConnectionState.Play, 0x4c, () => TeamsPacket.CreateObject());
+			Register(ConnectionState.Play, 0x4D, () => UpdateScorePacket.CreateObject());
+			Register(ConnectionState.Play, 0x4E, () => TimeUpdatePacket.CreateObject());
 			
-			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x4A, () => new ScoreboardObjectivePacket());
-			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x4c, () => new TeamsPacket());
-			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x4D, () => new UpdateScorePacket());
-			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x4E, () => new TimeUpdatePacket());
+			Register(ConnectionState.Play, 0x4F, () => TitlePacket.CreateObject());
 			
-			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x4F, () => new TitlePacket());
+			Register(ConnectionState.Play, 0x51, () => SoundEffectPacket.CreateObject());
 			
-			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x51, () => new SoundEffectPacket());
-			
-			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x56, () => new EntityTeleport());
-			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x58, () => new EntityPropertiesPacket());
-
-
-
-
-
-			/*var deserial = JsonConvert.DeserializeObject<Dictionary<string, string>>(Resources.PlayPacketID);
-			foreach (var d in deserial)
-			{
-				try
-				{
-					int result = int.Parse(d.Key.Substring(2), NumberStyles.HexNumber);
-					{
-						_playPacketNames.Add(result, d.Value);
-						if (!ServerPlayFactory.TryGetPacket(result, out Packet p))
-						{
-							Log.Info($"Unimplemented clientbound packet: 0x{result:X2} : {d.Value}");
-						}
-					}
-				}
-				catch (Exception ex)
-				{
-					Log.Warn($"Failed to parse hex number...");
-				}
-			}*/
+			Register(ConnectionState.Play, 0x56, () => EntityTeleport.CreateObject());
+			Register(ConnectionState.Play, 0x58, () => EntityPropertiesPacket.CreateObject());
 		}
-
-		private static Dictionary<int, string> _playPacketNames = new Dictionary<int, string>();
-
+		
 		public static string GetPlayPacketName(int id)
 		{
-			if (PlayFactory.TryGetPacket(id, out var p))
-			{
-				return p.GetType().Name.Replace("Packet", "");
-			}
-
-			if (_playPacketNames.TryGetValue(id, out string result))
-			{
-				return result;
-			}
-
 			return "Unknown";
 		}
 	}

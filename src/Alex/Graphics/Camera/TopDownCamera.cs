@@ -1,4 +1,4 @@
-﻿using Alex.Api;
+﻿
 using Microsoft.Xna.Framework;
 
 namespace Alex.Graphics.Camera
@@ -11,7 +11,7 @@ namespace Alex.Graphics.Camera
 
         public override void UpdateProjectionMatrix()
         {
-            ProjectionMatrix = MCMatrix.CreateOrthographic(256, 256, 0.05f, 256f);
+            ProjectionMatrix = Matrix.CreateOrthographic(256, 256, 0.05f, 256f);
         }
 
         protected override void UpdateViewMatrix()
@@ -19,7 +19,7 @@ namespace Alex.Graphics.Camera
             var normalPosition = new Vector3(Position.X, 256, Position.Z);
             var targetPosition = new Vector3(normalPosition.X, 0, normalPosition.Z);
 
-            ViewMatrix = MCMatrix.CreateLookAt(normalPosition, targetPosition, Vector3.Forward);
+            ViewMatrix = Matrix.CreateLookAt(normalPosition, targetPosition, Vector3.Forward);
         }
     }
 }

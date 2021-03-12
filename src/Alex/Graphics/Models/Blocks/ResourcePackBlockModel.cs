@@ -7,6 +7,7 @@ using Alex.API.Graphics;
 using Alex.API.Resources;
 using Alex.API.Utils;
 using Alex.API.Utils.Noise;
+using Alex.API.Utils.Vectors;
 using Alex.API.World;
 using Alex.Blocks.Minecraft;
 using Alex.Blocks.State;
@@ -549,23 +550,23 @@ namespace Alex.Graphics.Models.Blocks
 
 					element.From *= Scale;
 
-					var faces = element.Faces.ToArray();
-					foreach (var face in faces)
+					//var faces = element.Faces.ToArray();
+					foreach (var face in element.Faces)
 					{
 						var facing   = face.Key;
-						var cullFace = face.Value.CullFace ?? face.Key;
+						//var cullFace = face.Value.CullFace ?? face.Key;
 
 						if (blockStateModel.X > 0f)
 						{
 							var offset = blockStateModel.X / 90;
-							cullFace = RotateDirection(cullFace, offset, FACE_ROTATION_X, INVALID_FACE_ROTATION_X);
+							//cullFace = RotateDirection(cullFace, offset, FACE_ROTATION_X, INVALID_FACE_ROTATION_X);
 							facing = RotateDirection(facing, offset, FACE_ROTATION_X, INVALID_FACE_ROTATION_X);
 						}
 
 						if (blockStateModel.Y > 0f)
 						{
 							var offset = blockStateModel.Y / 90;
-							cullFace = RotateDirection(cullFace, offset, FACE_ROTATION, INVALID_FACE_ROTATION);
+							//cullFace = RotateDirection(cullFace, offset, FACE_ROTATION, INVALID_FACE_ROTATION);
 							facing = RotateDirection(facing, offset, FACE_ROTATION, INVALID_FACE_ROTATION);
 						}
 

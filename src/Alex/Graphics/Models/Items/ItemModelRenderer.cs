@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using Alex.Api;
 using Alex.API.Blocks;
 using Alex.API.Graphics;
 using Alex.API.Utils;
@@ -32,7 +31,27 @@ namespace Alex.Graphics.Models.Items
            
         }
 
+        /// <inheritdoc />
+        protected override VertexPositionColor[] Vertices
+        {
+            get
+            {
+                if (_vertices == null)
+                {
+                    if (!_cached)
+                    {
+                        Cache(Alex.Instance.Resources);
+                    }
+                }
+
+                return _vertices;
+            }
+            set => _vertices = value;
+        }
+
         private bool _cached = false;
+        private VertexPositionColor[] _vertices;
+
         public override bool Cache(ResourceManager pack)
         {
             if (_cached)
@@ -173,7 +192,7 @@ namespace Alex.Graphics.Models.Items
             //ActiveDisplayItem = DisplayElement.Default;
         }
 
-        protected TVertice[]  Vertices { get; set; } = null;
+        protected virtual TVertice[]  Vertices { get; set; } = null;
         private   BasicEffect Effect   { get; set; } = null;
         
         //public Vector3 Rotation { get; set; } = Vector3.Zero;
@@ -190,7 +209,7 @@ namespace Alex.Graphics.Models.Items
         }
 
         //private Matrix _parentMatrix = Matrix.Identity;
-        public void Update(IUpdateArgs args, MCMatrix characterMatrix, Vector3 parentScale)
+        public void Update(IUpdateArgs args, Matrix characterMatrix, Vector3 parentScale)
         {
             // _parentMatrix = characterMatrix;
             
@@ -214,14 +233,14 @@ namespace Alex.Graphics.Models.Items
             {
                 if (this is ItemBlockModelRenderer)
                 {
-                    Effect.World = MCMatrix.CreateScale(activeDisplayItem.Scale)
-                                   * MCMatrix.CreateRotationDegrees(new Vector3(25f, 45f, 0f))
-                                   * MCMatrix.CreateTranslation(activeDisplayItem.Translation)
-                                   * MCMatrix.CreateTranslation(new Vector3(0f, 0.25f, 0f)) * characterMatrix;
+                    Effect.World = Matrix.CreateScale(activeDisplayItem.Scale)
+                                   * MatrixHelper.CreateRotationDegrees(new Vector3(25f, 45f, 0f))
+                                   * Matrix.CreateTranslation(activeDisplayItem.Translation)
+                                   * Matrix.CreateTranslation(new Vector3(0f, 0.25f, 0f)) * characterMatrix;
                 }
                 else
                 {
-                    Effect.World = MCMatrix.CreateScale(1f/16f) * characterMatrix;
+                    Effect.World = Matrix.CreateScale(1f/16f) * characterMatrix;
                 }
             }
             else if (DisplayPosition.HasFlag(DisplayPosition.ThirdPerson))
@@ -233,33 +252,33 @@ namespace Alex.Graphics.Models.Items
                 {
                     //r.Y += 12.5f;
                     r.Z -= 67.5f;
-                    Effect.World = MCMatrix.CreateScale(Scale * activeDisplayItem.Scale)
-                                   * MCMatrix.CreateTranslation(-halfSize)
-                                   * MCMatrix.CreateRotationZ(MathUtils.ToRadians(-32.5f))
-                                   * MCMatrix.CreateTranslation(halfSize)
+                    Effect.World = Matrix.CreateScale(Scale * activeDisplayItem.Scale)
+                                   * Matrix.CreateTranslation(-halfSize)
+                                   * Matrix.CreateRotationZ(MathUtils.ToRadians(-32.5f))
+                                   * Matrix.CreateTranslation(halfSize)
                                    //* MCMatrix.CreateRotationDegrees(new Vector3(-67.5f, 180f, 0f))
-                                   * MCMatrix.CreateRotationDegrees(r * new Vector3(1f, -1f, -1f))
-                                   * MCMatrix.CreateTranslation(
+                                   * MatrixHelper.CreateRotationDegrees(r * new Vector3(1f, -1f, -1f))
+                                   * Matrix.CreateTranslation(
                                        new Vector3(t.X + 6f, t.Y + 3f,  t.Z))
                                    * characterMatrix;
                 }
                 else
                 {
                     Effect.World =  
-                        MCMatrix.CreateScale(Scale * activeDisplayItem.Scale)
-                        * MCMatrix.CreateRotationDegrees(new Vector3(-67.5f, 0f, 0f))
-                        * MCMatrix.CreateTranslation(
+                        Matrix.CreateScale(Scale * activeDisplayItem.Scale)
+                        * MatrixHelper.CreateRotationDegrees(new Vector3(-67.5f, 0f, 0f))
+                        * Matrix.CreateTranslation(
                            new Vector3(t.X + 2f, Size.Y - t.Y, t.Z))
                         * characterMatrix;
                 }
             }
             else  if (DisplayPosition.HasFlag(DisplayPosition.FirstPerson))
             {
-                Effect.World = MCMatrix.CreateScale(Scale * activeDisplayItem.Scale)
-                               * MCMatrix.CreateRotationY(MathUtils.ToRadians(180f))
-                               * MCMatrix.CreateRotationDegrees(activeDisplayItem.Rotation)
-                               * MCMatrix.CreateTranslation(halfSize)
-                               * MCMatrix.CreateTranslation(activeDisplayItem.Translation * new Vector3(1f, 1f, -1f))
+                Effect.World = Matrix.CreateScale(Scale * activeDisplayItem.Scale)
+                               * Matrix.CreateRotationY(MathUtils.ToRadians(180f))
+                               * MatrixHelper.CreateRotationDegrees(activeDisplayItem.Rotation)
+                               * Matrix.CreateTranslation(halfSize)
+                               * Matrix.CreateTranslation(activeDisplayItem.Translation * new Vector3(1f, 1f, -1f))
                                * characterMatrix;
             }
             else 

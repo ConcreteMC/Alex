@@ -5,7 +5,6 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using Alex.API.Graphics;
-using Alex.API.Network;
 using Alex.API.Utils;
 using Alex.Graphics.Models.Entity;
 using Alex.Net;
@@ -39,7 +38,6 @@ namespace Alex.Entities
 		private static readonly Logger   Log = LogManager.GetCurrentClassLogger(typeof(RemotePlayer));
 		public  GameMode Gamemode { get; private set; }
 
-		private EntityModel _model;
 		public string GeometryName { get; set; }
 		
 		public PlayerSkinFlags SkinFlags { get; }
@@ -75,7 +73,8 @@ namespace Alex.Entities
 			}
 			else
 			{
-				_skinDirty = true;
+				if (geometry != null)
+					_skinDirty = true;
 			}
 
 			NoAi = true;
@@ -122,6 +121,12 @@ namespace Alex.Entities
 			{
 				QueueSkinProcessing();
 			}
+		}
+
+		/// <inheritdoc />
+		public override void OnDespawn()
+		{
+			base.OnDespawn();
 		}
 
 		private int _skinQueuedCount = 0;
@@ -264,71 +269,80 @@ namespace Alex.Entities
 				{
 					Image<Rgba32> skinBitmap = null;
 
-					if (!skin.TryGetBitmap(model, out skinBitmap))
+					try
 					{
-						//Log.Warn($"No custom skin data for player {NameTag}");
-
-						if (slim)
+						if (!skin.TryGetBitmap(model, out skinBitmap))
 						{
-							if (_alex == null && Alex.Instance.Resources.TryGetBitmap(
-								"entity/alex", out var rawTexture))
+							//Log.Warn($"No custom skin data for player {NameTag}");
+
+							if (slim)
 							{
-								_alex = rawTexture.Clone();
-								skinBitmap = rawTexture;
+								if (_alex == null && Alex.Instance.Resources.TryGetBitmap(
+									"entity/alex", out var rawTexture))
+								{
+									_alex = rawTexture.Clone();
+									skinBitmap = rawTexture;
+								}
+								else
+								{
+									skinBitmap = _alex.Clone();
+								}
 							}
 							else
 							{
-								skinBitmap = _alex.Clone();
+								if (_steve == null && Alex.Instance.Resources.TryGetBitmap(
+									"entity/steve", out var rawTexture))
+								{
+									_steve = rawTexture.Clone();
+									skinBitmap = rawTexture;
+								}
+								else
+								{
+									skinBitmap = _steve.Clone();
+								}
 							}
+						}
+
+						var modelTextureSize = new Point(
+							(int) model.Description.TextureWidth, (int) model.Description.TextureHeight);
+
+						var textureSize = new Point(skinBitmap.Width, skinBitmap.Height);
+
+						if (modelTextureSize != textureSize)
+						{
+							if (modelTextureSize.Y > textureSize.Y)
+							{
+								skinBitmap = SkinUtils.ConvertSkin(skinBitmap, modelTextureSize.X, modelTextureSize.Y);
+							}
+
+							/*var bitmap = skinBitmap;
+							bitmap.Mutate<Rgba32>(xx =>
+							{
+								xx.Resize(modelTextureSize.X, modelTextureSize.Y);
+							//	xx.Flip(FlipMode.Horizontal);
+							});
+		
+							skinBitmap = bitmap;*/
+						}
+
+						GeometryName = model.Description.Identifier;
+
+						var modelRenderer = new EntityModelRenderer(
+							model, TextureUtils.BitmapToTexture2D(this, Alex.Instance.GraphicsDevice, skinBitmap));
+
+						if (modelRenderer.Valid)
+						{
+							ModelRenderer = modelRenderer;
 						}
 						else
 						{
-							if (_steve == null && Alex.Instance.Resources.TryGetBitmap(
-								"entity/steve", out var rawTexture))
-							{
-								_steve = rawTexture.Clone();
-								skinBitmap = rawTexture;
-							}
-							else
-							{
-								skinBitmap = _steve.Clone();
-							}
+							modelRenderer.Dispose();
+							Log.Debug($"Invalid model: for player {NameTag} (Disposing)");
 						}
 					}
-
-					var modelTextureSize = new Point(
-						(int) model.Description.TextureWidth, (int) model.Description.TextureHeight);
-
-					var textureSize = new Point(skinBitmap.Width, skinBitmap.Height);
-
-					if (modelTextureSize != textureSize)
+					finally
 					{
-						if (modelTextureSize.Y > textureSize.Y)
-						{
-							skinBitmap = SkinUtils.ConvertSkin(skinBitmap, modelTextureSize.X, modelTextureSize.Y);
-						}
-
-						/*var bitmap = skinBitmap;
-						bitmap.Mutate<Rgba32>(xx =>
-						{
-							xx.Resize(modelTextureSize.X, modelTextureSize.Y);
-						//	xx.Flip(FlipMode.Horizontal);
-						});
-	
-						skinBitmap = bitmap;*/
-					}
-
-					GeometryName = model.Description.Identifier;
-					var modelRenderer = new EntityModelRenderer(model, TextureUtils.BitmapToTexture2D(Alex.Instance.GraphicsDevice, skinBitmap));
-
-					if (modelRenderer.Valid)
-					{
-						ModelRenderer = modelRenderer;
-					}
-					else
-					{
-						modelRenderer.Dispose();
-						Log.Debug($"Invalid model: for player {NameTag} (Disposing)");
+						skinBitmap?.Dispose();
 					}
 				}
 				else
@@ -434,7 +448,14 @@ namespace Alex.Entities
 			if (modelRenderer != null && SkinFlags != null)
 				SkinFlags.ApplyTo(modelRenderer);
 		}
-		
+
+		/// <inheritdoc />
+		protected override void OnDispose()
+		{
+			base.OnDispose();
+			_skin = null;
+		}
+
 		private static Image<Rgba32> _steve;
 		private static Image<Rgba32> _alex;
 	}

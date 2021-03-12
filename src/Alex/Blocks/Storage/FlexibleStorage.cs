@@ -5,18 +5,18 @@ namespace Alex.Blocks.Storage
 {
 	public class FlexibleStorage : IStorage
 	{
-		public long[] _data;
+		private long[] _data;
 		private int _bitsPerEntry;
 		private int _size;
 		private long _maxEntryValue;
 
 		public FlexibleStorage(int bitsPerEntry, int size) : this(
-			bitsPerEntry, new long[RoundUp(size * bitsPerEntry, 64) / 64])
+			bitsPerEntry, ArrayPool<long>.Shared.Rent(RoundUp(size * bitsPerEntry, 64) / 64))
 		{
 			
 		}
 
-		public FlexibleStorage(int bitsPerEntry, long[] data)
+		private FlexibleStorage(int bitsPerEntry, long[] data)
 		{
 			if (bitsPerEntry < 1 || bitsPerEntry > 32)
 			{
@@ -100,6 +100,13 @@ namespace Alex.Blocks.Storage
 				int remainder = value % roundTo;
 				return remainder == 0 ? value : value + roundTo - remainder;
 			}
+		}
+
+		/// <inheritdoc />
+		public void Dispose()
+		{
+			ArrayPool<long>.Shared.Return(_data);
+			_data = null;
 		}
 	}
 }

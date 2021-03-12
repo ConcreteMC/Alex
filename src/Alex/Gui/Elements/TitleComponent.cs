@@ -88,6 +88,7 @@ namespace Alex.Gui.Elements
 
 	    public void Hide()
 	    {
+		    Reset();
 		    _hidden = true;
 			RemoveChild(_title);
 			RemoveChild(_subTitle);

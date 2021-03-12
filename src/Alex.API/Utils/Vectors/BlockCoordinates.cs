@@ -1,7 +1,7 @@
 ﻿using System;
 using Microsoft.Xna.Framework;
 
-namespace Alex.API.Utils
+namespace Alex.API.Utils.Vectors
 {
 	public struct BlockCoordinates : IEquatable<BlockCoordinates>
 	{

@@ -7,23 +7,23 @@ using System.Net;
 using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
-using System.Threading.Tasks;
 using Alex.API.Data;
 using Alex.API.Data.Options;
 using Alex.API.Graphics;
 using Alex.API.Input;
 using Alex.API.Services;
 using Alex.API.Utils;
+using Alex.API.Utils.Collections;
 using Alex.API.World;
 using Alex.Blocks;
 using Alex.Entities;
 using Alex.Entities.BlockEntities;
-using Alex.Entities.Effects;
 using Alex.Entities.Generic;
+using Alex.Entities.Passive;
 using Alex.Entities.Projectiles;
 using Alex.Gamestates;
-using Alex.Gamestates.InGame;
 using Alex.Graphics.Models.Entity;
 using Alex.Gui.Dialogs.Containers;
 using Alex.Gui.Elements;
@@ -31,6 +31,7 @@ using Alex.Items;
 using Alex.Net;
 using Alex.Networking.Java;
 using Alex.Networking.Java.Events;
+using Alex.Networking.Java.Packets;
 using Alex.Networking.Java.Packets.Handshake;
 using Alex.Networking.Java.Packets.Login;
 using Alex.Networking.Java.Packets.Play;
@@ -40,47 +41,33 @@ using Alex.ResourcePackLib.Json.Models.Entities;
 using Alex.Utils;
 using Alex.Utils.Inventories;
 using Alex.Worlds.Abstraction;
-using Alex.Worlds.Lighting;
 using fNbt;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using MiNET;
 using MiNET.Entities;
-using MiNET.Utils;
 using MiNET.Worlds;
 using Newtonsoft.Json;
 using NLog;
-using BlockCoordinates = Alex.API.Utils.BlockCoordinates;
+using BlockCoordinates = Alex.API.Utils.Vectors.BlockCoordinates;
 using ChunkColumn = Alex.Worlds.Chunks.ChunkColumn;
-using ChunkCoordinates = Alex.API.Utils.ChunkCoordinates;
+using ChunkCoordinates = Alex.API.Utils.Vectors.ChunkCoordinates;
 using ConnectionState = Alex.Networking.Java.ConnectionState;
-using DedicatedThreadPool = Alex.API.Utils.DedicatedThreadPool;
 using Entity = Alex.Entities.Entity;
 using MessageType = Alex.API.Data.MessageType;
-using MetadataByte = Alex.Networking.Java.Packets.Play.MetadataByte;
-using MetadataSlot = Alex.Networking.Java.Packets.Play.MetadataSlot;
 using NibbleArray = Alex.API.Utils.NibbleArray;
 using Packet = Alex.Networking.Java.Packets.Packet;
 using Player = Alex.Entities.Player;
-using PlayerLocation = Alex.API.Utils.PlayerLocation;
-using UUID = Alex.API.Utils.UUID;
+using PlayerLocation = Alex.API.Utils.Vectors.PlayerLocation;
 
 namespace Alex.Worlds.Multiplayer.Java
 {
-	internal interface IJavaProvider
-	{
-		void HandleHandshake(Packet packet);
-		void HandleStatus(Packet packet);
-		void HandleLogin(Packet packet);
-		void HandlePlay(Packet packet);
-	}
-	public class JavaWorldProvider : WorldProvider, IJavaProvider, ITicked
+	public class JavaWorldProvider : WorldProvider, IPacketHandler, ITicked
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger();
 
 		private Alex Alex { get; }
-		private JavaClient Client { get; }
+		private NetConnection Client { get; }
 		private PlayerProfile Profile { get; }
 		
 		private IOptionsProvider OptionsProvider { get; }
@@ -106,8 +93,9 @@ namespace Alex.Worlds.Multiplayer.Java
 		//	ThreadPool = new DedicatedThreadPool(new DedicatedThreadPoolSettings(Environment.ProcessorCount));
 
 			TcpClient = new TcpClient();
-			Client = new JavaClient(this, TcpClient.Client);
+			Client = new NetConnection(TcpClient.Client);
 			Client.OnConnectionClosed += OnConnectionClosed;
+			Client.PacketHandler = this;
 			
 			NetworkProvider = new JavaNetworkProvider(Client);;
 			networkProvider = NetworkProvider;
@@ -183,7 +171,7 @@ namespace Alex.Worlds.Multiplayer.Java
 
 		public void SendSettings()
 		{
-			ClientSettingsPacket settings = new ClientSettingsPacket();
+			ClientSettingsPacket settings = ClientSettingsPacket.CreateObject();
 			settings.ChatColors = true;
 			settings.ChatMode = 0;
 			settings.ViewDistance = (byte) World.ChunkManager.RenderDistance;
@@ -208,7 +196,7 @@ namespace Alex.Worlds.Multiplayer.Java
 				flags |= 0x03 << flags;
 			}
 
-			PlayerAbilitiesPacket abilitiesPacket = new PlayerAbilitiesPacket();
+			PlayerAbilitiesPacket abilitiesPacket = PlayerAbilitiesPacket.CreateObject();
 			abilitiesPacket.ServerBound = true;
 
 			abilitiesPacket.Flags = (byte) flags;
@@ -255,8 +243,8 @@ namespace Alex.Worlds.Multiplayer.Java
 				}
 				else if (Math.Abs(pos.Pitch - _lastSentLocation.Pitch) > 0f || Math.Abs(pos.HeadYaw - _lastSentLocation.Yaw) > 0f)
 				{
-					PlayerLookPacket playerLook = new PlayerLookPacket();
-					playerLook.Pitch = -pos.Pitch;
+					PlayerLookPacket playerLook = PlayerLookPacket.CreateObject();
+					playerLook.Pitch = FixPitch(pos.Pitch);
 					playerLook.Yaw = -pos.HeadYaw;
 					playerLook.OnGround = pos.OnGround;
 
@@ -271,7 +259,7 @@ namespace Alex.Worlds.Multiplayer.Java
 				}
 				else if (_tickSinceLastPositionUpdate >= 20)
 				{
-					PlayerPosition packet = new PlayerPosition();
+					PlayerPosition packet = PlayerPosition.CreateObject();
 					packet.FeetY = pos.Y;
 					packet.X = pos.X;
 					packet.Z = pos.Z;
@@ -289,11 +277,21 @@ namespace Alex.Worlds.Multiplayer.Java
 			}
 		}
 
+		private float FixPitch(float pitch)
+		{
+			if (pitch >= 270f && pitch <= 360f)
+			{
+				return -(360f - pitch);
+			}
+
+			return pitch;
+		}
+
 		private void SendPlayerPostionAndLook(PlayerLocation pos)
 		{
-			PlayerPositionAndLookPacketServerBound packet = new PlayerPositionAndLookPacketServerBound();
+			PlayerPositionAndLookPacketServerBound packet = PlayerPositionAndLookPacketServerBound.CreateObject();
 			packet.Yaw = -pos.HeadYaw;
-			packet.Pitch = -pos.Pitch;
+			packet.Pitch = FixPitch(pos.Pitch);
 			packet.X = pos.X;
 			packet.Y = pos.Y;
 			packet.Z = pos.Z;
@@ -497,8 +495,13 @@ namespace Alex.Worlds.Multiplayer.Java
 			if (EntityFactory.ModelByNetworkId((long) type, out var renderer, out EntityData knownData))
 			{
 				type = MiNET.Entities.EntityHelpers.ToEntityType($"minecraft:{knownData.Name}");
+
+				if (knownData.Name.Equals("bee"))
+					type = (EntityType)122;
+				else if (knownData.Name.Equals("fox"))
+					type = (EntityType) 121;
 				
-				entity = EntityFactory.Create(type, null, type != EntityType.ArmorStand);
+				entity = EntityFactory.Create(type, null, type != EntityType.ArmorStand && type != EntityType.PrimedTnt);
 			
 
 				if (entity == null)
@@ -588,6 +591,11 @@ namespace Alex.Worlds.Multiplayer.Java
 			entity.EntityId = entityId;
 			entity.UUID = uuid;
 
+			if (entity is EntityArmorStand armorStand)
+			{
+				armorStand.IsAffectedByGravity = false;
+				armorStand.NoAi = true;
+			}
 		//	if (!_initiated)
 		//	{
 		//		_entitySpawnQueue.Enqueue(entity);
@@ -605,7 +613,7 @@ namespace Alex.Worlds.Multiplayer.Java
 			Client.SendPacket(packet);
 		}
 
-		void IJavaProvider.HandlePlay(Packet packet)
+		void IPacketHandler.HandlePlay(Packet packet)
 		{
 			if (packet is KeepAlivePacket keepAlive)
 			{
@@ -825,7 +833,8 @@ namespace Alex.Worlds.Multiplayer.Java
 		}
 
 		private ThreadSafeList<string> _missingSounds = new ThreadSafeList<string>();
-		
+
+		private static readonly Regex _blockRegex = new Regex("block\\.(?<name>.*)\\.(?<action>.*)", RegexOptions.Compiled);
 		private void HandleSoundEffectPacket(SoundEffectPacket packet)
 		{
 			var soundEffect =
@@ -836,13 +845,49 @@ namespace Alex.Worlds.Multiplayer.Java
 
 			soundEffect = soundEffect.Replace("minecraft:", "");
 
-			switch (soundEffect)
+			var match = _blockRegex.Match(soundEffect);
+		
+			if (match.Success)
 			{
-				case "block.anvil.hit":
-					soundEffect = "random.anvil.use";
-					break;
+				string action = match.Groups["action"].Value;
+				switch(action)
+				{
+					case "break":
+						action = "dig";
+						break;
+				}
+				soundEffect = $"{action}.{match.Groups["name"].Value}";
 			}
-			
+			else
+			{
+				/*match = _blockBreakRegex.Match(soundEffect);
+
+				if (match.Success)
+				{
+					soundEffect = $"dig.{match.Groups["name"].Value}";
+				}
+				else
+				{
+					match = _blockStepRegex.Match(soundEffect);
+
+					if (match.Success)
+					{
+						
+					}
+				}*/
+				
+				switch (soundEffect)
+				{
+					case "block.anvil.hit":
+						soundEffect = "random.anvil.use";
+						break;
+						
+					case "entity.tnt.primed":
+						soundEffect = "random.fuse";
+						break;
+				}
+			}
+
 			if (!Alex.AudioEngine.PlaySound(soundEffect, packet.Position, packet.Pitch, packet.Volume))
 			{
 				if (_missingSounds.TryAdd(soundEffect))
@@ -851,6 +896,20 @@ namespace Alex.Worlds.Multiplayer.Java
 		}
 		
 		private TeamsManager TeamsManager { get; } = new TeamsManager();
+
+		private void UpdateTeamEntry(Team team)
+		{
+			foreach (var entity in team.Entities)
+			{
+				if (ScoreboardView.TryGetEntityScoreboard(entity, out var objective))
+				{
+					if (objective.TryGet(entity, out var scoreboardEntry))
+					{
+						scoreboardEntry.DisplayName = $"{team.TeamPrefix}{entity}{team.TeamSuffix}";
+					}
+				}
+			}
+		}
 		private void HandleTeamsPacket(TeamsPacket packet)
 		{
 			switch (packet.PacketMode)
@@ -858,22 +917,34 @@ namespace Alex.Worlds.Multiplayer.Java
 				case TeamsPacket.Mode.CreateTeam:
 					if (packet.Payload is TeamsPacket.CreateTeam ct)
 					{
+					//	Log.Info($"Create team! Name: {packet.TeamName} Displayname: {ct.TeamDisplayName} Prefix: {ct.TeamPrefix} Suffix: {ct.TeamSuffix} Entities: {string.Join(',', ct.Entities)}");
+						
+						Team team = new Team(
+							packet.TeamName, ct.TeamDisplayName, ct.TeamColor, ct.TeamPrefix, ct.TeamSuffix);
+						
+						foreach (var entity in ct.Entities)
+						{
+							team.AddEntity(entity);
+						}
+						
 						TeamsManager.AddOrUpdateTeam(
 							packet.TeamName,
-							new Team(
-								packet.TeamName, ct.TeamDisplayName, ct.TeamColor, ct.TeamPrefix,
-								ct.TeamSuffix));
+							team);
+						
+						UpdateTeamEntry(team);
 					}
 
 					break;
 
 				case TeamsPacket.Mode.RemoveTeam:
+				//	Log.Info($"Remove team: {packet.TeamName}");
 					TeamsManager.RemoveTeam(packet.TeamName);
 					break;
 
 				case TeamsPacket.Mode.UpdateTeam:
 					if (packet.Payload is TeamsPacket.UpdateTeam ut)
 					{
+					//	Log.Info($"Update team! Name: {packet.TeamName} Displayname: {ut.TeamDisplayName} Prefix: {ut.TeamPrefix} Suffix: {ut.TeamSuffix}");
 						if (TeamsManager.TryGet(packet.TeamName, out var team))
 						{
 							team.DisplayName = ut.TeamDisplayName;
@@ -882,15 +953,40 @@ namespace Alex.Worlds.Multiplayer.Java
 							team.TeamSuffix = ut.TeamSuffix;
 							
 							TeamsManager.AddOrUpdateTeam(packet.TeamName, team);
+							UpdateTeamEntry(team);
 						}
 					}
 
 					break;
 
 				case TeamsPacket.Mode.AddPlayer:
+					if (packet.Payload is TeamsPacket.AddPlayers addPlayers)
+					{
+						if (TeamsManager.TryGet(packet.TeamName, out var team))
+						{
+						//	Log.Info($"Add entities to team: Name={packet.TeamName} Entities: {string.Join(',', addPlayers.Entities)}");
+							foreach (var entity in addPlayers.Entities)
+							{
+								team.AddEntity(entity);
+							}
+							
+							UpdateTeamEntry(team);
+						}
+					}
 					break;
 
 				case TeamsPacket.Mode.RemovePlayer:
+					if (packet.Payload is TeamsPacket.RemovePlayers removePlayers)
+					{
+						if (TeamsManager.TryGet(packet.TeamName, out var team))
+						{
+						//	Log.Info($"Remove entities from team: Name={packet.TeamName} Entities: {string.Join(',', removePlayers.Entities)}");
+							foreach (var entity in removePlayers.Entities)
+							{
+								team.RemoveEntity(entity);
+							}
+						}
+					}
 					break;
 
 				default:
@@ -900,37 +996,23 @@ namespace Alex.Worlds.Multiplayer.Java
 		
 		private void HandleUpdateScorePacket(UpdateScorePacket packet)
 		{
+			//Log.Info($"Update score, action={packet.Action} value={packet.Value} entityname={packet.EntityName} objectiveName={packet.ObjectiveName}");
 			var scoreboard = ScoreboardView;
 			if (scoreboard == null)
 				return;
 
-			if (scoreboard.TryGetObjective(packet.ObjectiveName, out var obj))
+			if (scoreboard.TryGetObjective(packet.ObjectiveName, out var obj) || scoreboard.TryGetEntityScoreboard(packet.EntityName, out obj))
 			{
 				if (packet.Action == UpdateScorePacket.UpdateScoreAction.CreateOrUpdate)
 				{
 					string displayName = packet.EntityName;
+					ScoreboardEntry entry = null;
 
-				//	Log.Info($"Entity: {packet.EntityName} | {packet.ObjectiveName}");
-					
-					if (packet.EntityName.Length == 36 && World.EntityManager.TryGet(
-						new MiNET.Utils.UUID(packet.EntityName), out var ent))
-					{
-						displayName = ent.NameTag;
-					}
-					else if (TeamsManager.TryGet(packet.EntityName, out var team))
-					{
-						displayName = team.DisplayName;
-					}
+					obj.AddOrUpdate(packet.EntityName, new ScoreboardEntry(packet.EntityName, (uint) packet.Value, displayName));
 
-					//Log.Info(packet.EntityName);
-					if (obj.TryGet(packet.EntityName, out var entry) || obj.TryGetByScore((uint) packet.Value, out entry))
+					if (TeamsManager.TryGetEntityTeam(packet.EntityName, out var entityTeam))
 					{
-						entry.Score = (uint) packet.Value;
-						entry.DisplayName = displayName;
-					}
-					else
-					{
-						obj.AddOrUpdate(packet.EntityName, new ScoreboardEntry(packet.EntityName, (uint) packet.Value, displayName));
+						UpdateTeamEntry(entityTeam);
 					}
 				}
 				else if (packet.Action == UpdateScorePacket.UpdateScoreAction.Remove)
@@ -939,10 +1021,15 @@ namespace Alex.Worlds.Multiplayer.Java
 					obj.Remove(packet.EntityName);
 				}
 			}
+			else
+			{
+				Log.Warn($"Unknown objective: {packet.ObjectiveName}");
+			}
 		}
 
 		private void HandleScoreboardObjectivePacket(ScoreboardObjectivePacket packet)
 		{
+		//	Log.Info($"Scoreboard objective, mode={packet.Mode} Name={packet.ObjectiveName} Value={packet.Value ?? "N/A"} Type={packet.Type}");
 			var scoreboard = ScoreboardView;
 			if (scoreboard == null)
 				return;
@@ -970,6 +1057,7 @@ namespace Alex.Worlds.Multiplayer.Java
 
 		private void HandleDisplayScoreboardPacket(DisplayScoreboardPacket packet)
 		{
+		//	Log.Info($"Display scoreboard: {packet.ScoreName} Position: {packet.Position}");
 			if (packet.Position == DisplayScoreboardPacket.ScoreboardPosition.Sidebar)
 			{
 				var scoreboard = ScoreboardView;
@@ -1042,7 +1130,7 @@ namespace Alex.Worlds.Multiplayer.Java
 
 				short actionNumber = (short) inv.ActionNumber++;
 
-				ClickWindowPacket packet = new ClickWindowPacket();
+				ClickWindowPacket packet = ClickWindowPacket.CreateObject();
 				packet.Mode = mode;
 				packet.Button = button;
 				packet.Action = actionNumber;
@@ -1089,7 +1177,7 @@ namespace Alex.Worlds.Multiplayer.Java
 			{
 			//	Log.Warn($"Inventory / window transaction has been denied! (Action: {packet.ActionNumber})");
 				
-				WindowConfirmationPacket response = new WindowConfirmationPacket();
+				WindowConfirmationPacket response = WindowConfirmationPacket.CreateObject();
 				response.Accepted = false;
 				response.ActionNumber = packet.ActionNumber;
 				response.WindowId = packet.WindowId;
@@ -1159,7 +1247,7 @@ namespace Alex.Worlds.Multiplayer.Java
 
 		private void ClosedContainer(byte containerId)
 		{
-			CloseWindowPacket packet = new CloseWindowPacket();
+			CloseWindowPacket packet = CloseWindowPacket.CreateObject();
 			packet.WindowId = containerId;
 			Client.SendPacket(packet);
 		}
@@ -1406,7 +1494,7 @@ namespace Alex.Worlds.Multiplayer.Java
 			if (packet.Event == CombatEventPacket.CombatEvent.EntityDead)
 			{
 				Log.Warn($"Status packet: Entity={packet.EntityId} Player={packet.PlayerId} Message={packet.Message}");
-				ClientStatusPacket statusPacket = new ClientStatusPacket();
+				ClientStatusPacket statusPacket = ClientStatusPacket.CreateObject();
 				statusPacket.ActionID = ClientStatusPacket.Action.PerformRespawnOrConfirmLogin;
 				SendPacket(statusPacket);
 			}
@@ -1570,7 +1658,7 @@ namespace Alex.Worlds.Multiplayer.Java
 			{
 				RemotePlayer entity = new RemotePlayer(
 					World, "geometry.humanoid.custom");
-					
+				
 				entity.UpdateGamemode((GameMode) entry.Gamemode);
 				entity.UUID = packet.Uuid;
 					
@@ -2026,7 +2114,7 @@ namespace Alex.Worlds.Multiplayer.Java
 						        }
 						        else
 						        {
-							        Log.Warn($"Got null block entity: {tag}");
+							        Log.Debug($"Got null block entity: {tag}");
 						        }
 
 					        }
@@ -2088,7 +2176,7 @@ namespace Alex.Worlds.Multiplayer.Java
 
         private void HandleKeepAlivePacket(KeepAlivePacket packet)
 		{
-			KeepAlivePacket response = new KeepAlivePacket();
+			KeepAlivePacket response = KeepAlivePacket.CreateObject();
 			response.KeepAliveid = packet.KeepAliveid;
 			//response.PacketId = 0x0E;
 
@@ -2145,7 +2233,7 @@ namespace Alex.Worlds.Multiplayer.Java
 
 			 if ((!World.Player.IsSpawned && ReadyToSpawn) || World.Player.IsSpawned)
 			{
-				TeleportConfirm confirmation = new TeleportConfirm();
+				TeleportConfirm confirmation = TeleportConfirm.CreateObject();
 				confirmation.TeleportId = packet.TeleportId;
 				SendPacket(confirmation);
 			}
@@ -2157,7 +2245,7 @@ namespace Alex.Worlds.Multiplayer.Java
 			{
 				SendPlayerPostionAndLook(World.Player.KnownPosition);
 				
-				ClientStatusPacket clientStatus = new ClientStatusPacket();
+				ClientStatusPacket clientStatus = ClientStatusPacket.CreateObject();
 				clientStatus.ActionID = ClientStatusPacket.Action.PerformRespawnOrConfirmLogin;
 				SendPacket(clientStatus);
 				
@@ -2165,17 +2253,17 @@ namespace Alex.Worlds.Multiplayer.Java
 			}
 		}
 
-		void IJavaProvider.HandleHandshake(Packet packet)
+		void IPacketHandler.HandleHandshake(Packet packet)
 		{
 
 		}
 
-		void IJavaProvider.HandleStatus(Packet packet)
+		void IPacketHandler.HandleStatus(Packet packet)
 		{
 
 		}
 
-		void IJavaProvider.HandleLogin(Packet packet)
+		void IPacketHandler.HandleLogin(Packet packet)
 		{
 			if (packet is DisconnectPacket disconnect)
 			{
@@ -2214,6 +2302,7 @@ namespace Alex.Worlds.Multiplayer.Java
 							//	OnGround = packet.SpawnMob
 						}, velocity);
 
+					
 					if (mob is EntityFallingBlock efb)
 					{
 						//32
@@ -2278,8 +2367,7 @@ namespace Alex.Worlds.Multiplayer.Java
 		private byte[] SharedSecret = new byte[16];
 		private void HandleEncryptionRequest(EncryptionRequestPacket packet)
 		{
-			Random random = new Random();
-			random.NextBytes(SharedSecret);
+			FastRandom.Instance.NextBytes(SharedSecret);
 
 			string serverHash;
 			using (MemoryStream ms = new MemoryStream())
@@ -2340,11 +2428,11 @@ namespace Alex.Worlds.Multiplayer.Java
 				return;
 			}
 
-			var cryptoProvider = AsnKeyBuilder.DecodePublicKey(packet.PublicKey);
+			var cryptoProvider = RsaHelper.DecodePublicKey(packet.PublicKey);
 			//Log.Info($"Crypto: {cryptoProvider == null} Pub: {packet.PublicKey} Shared: {SharedSecret}");
 			var encrypted = cryptoProvider.Encrypt(SharedSecret, RSAEncryptionPadding.Pkcs1);
 
-			EncryptionResponsePacket response = new EncryptionResponsePacket();
+			EncryptionResponsePacket response = EncryptionResponsePacket.CreateObject();
 			response.SharedSecret = encrypted;
 			response.VerifyToken = cryptoProvider.Encrypt(packet.VerifyToken, RSAEncryptionPadding.Pkcs1);
 			SendPacket(response);
@@ -2381,7 +2469,7 @@ namespace Alex.Worlds.Multiplayer.Java
 				//	ServerBound.InitEncryption();
 				Client.Initialize();
 
-				HandshakePacket handshake = new HandshakePacket();
+				HandshakePacket handshake = HandshakePacket.CreateObject();
 				handshake.NextState = ConnectionState.Login;
 				handshake.ServerAddress = Hostname;
 				handshake.ServerPort = (ushort) Endpoint.Port;
@@ -2390,7 +2478,7 @@ namespace Alex.Worlds.Multiplayer.Java
 
 				Client.ConnectionState = ConnectionState.Login;
 
-				LoginStartPacket loginStart = new LoginStartPacket();
+				LoginStartPacket loginStart = LoginStartPacket.CreateObject();
 				loginStart.Username = _username;
 				SendPacket(loginStart);
 			}

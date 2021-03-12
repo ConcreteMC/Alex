@@ -1,8 +1,7 @@
 ﻿using System;
-using Alex.Api;
 using Microsoft.Xna.Framework;
 
-namespace Alex.API.Utils
+namespace Alex.API.Utils.Vectors
 {
 	public class PlayerLocation : ICloneable
 	{
@@ -90,7 +89,7 @@ namespace Alex.API.Utils
 
 				if (max < min)
 				{
-					pitch = 269.99f;
+					pitch = 270.99f;
 				}
 				else if (min < max)
 				{
@@ -154,12 +153,12 @@ namespace Alex.API.Utils
 		//	return vector;
 		}
 
-		public MCMatrix GetDirectionMatrix(bool includePitch = false, bool useHeadYaw = false)
+		public Matrix GetDirectionMatrix(bool includePitch = false, bool useHeadYaw = false)
 		{
 			float pitch = (includePitch ? Pitch : 0f).ToRadians();
 			float yaw   = ((useHeadYaw ? HeadYaw : Yaw)).ToRadians();
 
-			return MCMatrix.CreateRotationX(pitch) * MCMatrix.CreateRotationY(yaw);
+			return Matrix.CreateRotationX(pitch) * Matrix.CreateRotationY(yaw);
 		}
 		
 		public static PlayerLocation operator *(PlayerLocation a, float b)
@@ -209,10 +208,10 @@ namespace Alex.API.Utils
 			return MemberwiseClone();
 		}
 
-		public MCMatrix CalculateWorldMatrix()
+		public Matrix CalculateWorldMatrix(bool includePitch = false)
 		{
-			var dir = GetDirection(false);
-			return MCMatrix.CreateWorld(ToVector3(), dir, Vector3.Up);
+			var dir = GetDirection(includePitch);
+			return Matrix.CreateWorld(ToVector3(), dir, Vector3.Up);
 		}
 
 		public override string ToString()

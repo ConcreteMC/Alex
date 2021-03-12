@@ -22,7 +22,7 @@ using Microsoft.Xna.Framework.Graphics;
 using MiNET.Entities;
 using Newtonsoft.Json;
 using NLog;
-using PlayerLocation = Alex.API.Utils.PlayerLocation;
+using PlayerLocation = Alex.API.Utils.Vectors.PlayerLocation;
 using ResourceLocation = Alex.API.Resources.ResourceLocation;
 using UUID = Alex.API.Utils.UUID;
 
@@ -452,6 +452,9 @@ namespace Alex.Entities
 					entity = new RemotePlayer(world);
 					break;
 
+				case EntityType.PrimedTnt:
+					entity = new PrimedTntEntity(world);
+					break;
 				//case EntityType.Human:
 					//entity = new PlayerMob("test", world, );
 				//	break;

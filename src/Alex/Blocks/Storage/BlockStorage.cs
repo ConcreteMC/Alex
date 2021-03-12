@@ -51,10 +51,19 @@ namespace Alex.Blocks.Storage
                     if (newBits < 8)
                     {
                         var old = Storage;
-                        Storage = new FlexibleStorage(newBits, 4096);
-                        for (int s = 0; s < 4096; s++)
+
+                        try
                         {
-                            Storage[s] = old[s];
+                            Storage = new FlexibleStorage(newBits, 4096);
+
+                            for (int s = 0; s < 4096; s++)
+                            {
+                                Storage[s] = old[s];
+                            }
+                        }
+                        finally
+                        {
+                            old?.Dispose();
                         }
                     }
                     else
@@ -62,14 +71,24 @@ namespace Alex.Blocks.Storage
                         var bits = (int) Math.Ceiling(Math.Log2(BlockFactory.AllBlockstates.Count));
                         var oldPalette = Pallette;
                         var oldStorage = Storage;
-                        Pallette = new DirectPallete();
-                        Storage = new FlexibleStorage(bits, 4096);
-                        for (int s = 0; s < 4096; s++)
+
+                        try
                         {
-                            var oldValue = oldStorage[s];
-                            var newValue = oldPalette.GetId(oldPalette.Get(oldValue));
-                            Storage[s] = newValue;
-                            //data.set(i, newValue);
+                            Pallette = new DirectPallete();
+                            Storage = new FlexibleStorage(bits, 4096);
+
+                            for (int s = 0; s < 4096; s++)
+                            {
+                                var oldValue = oldStorage[s];
+                                var newValue = oldPalette.GetId(oldPalette.Get(oldValue));
+                                Storage[s] = newValue;
+                                //data.set(i, newValue);
+                            }
+                        }
+                        finally
+                        {
+                            oldPalette?.Dispose();
+                            oldStorage?.Dispose();
                         }
 
                         return Pallette.GetId(state);
@@ -112,26 +131,34 @@ namespace Alex.Blocks.Storage
             if (bitsPerBlock <= 4)
                 bitsPerBlock = 4;
             
-            if (bitsPerBlock <= 8)
+            var oldPalette = Pallette;
+            try
             {
-                _bits = bitsPerBlock;
-                
-                palleteLength = ms.ReadVarInt();
-                
-                Pallette = new IntIdentityHashBiMap(palleteLength);
-                Pallette.Add(Air);
-
-                for (int id = 0; id < palleteLength; id++)
+                if (bitsPerBlock <= 8)
                 {
-                    uint stateId = (uint) ms.ReadVarInt();
-                    BlockState state = BlockFactory.GetBlockState(stateId);
-                    Pallette.Put(state, (uint) id);
+                    _bits = bitsPerBlock;
+
+                    palleteLength = ms.ReadVarInt();
+
+                    Pallette = new IntIdentityHashBiMap(palleteLength);
+                    Pallette.Add(Air);
+
+                    for (int id = 0; id < palleteLength; id++)
+                    {
+                        uint stateId = (uint) ms.ReadVarInt();
+                        BlockState state = BlockFactory.GetBlockState(stateId);
+                        Pallette.Put(state, (uint) id);
+                    }
+                }
+                else
+                {
+                    _bits = (int) Math.Ceiling(Math.Log2(BlockFactory.AllBlockstates.Count));
+                    Pallette = new DirectPallete();
                 }
             }
-            else
+            finally
             {
-                _bits = (int) Math.Ceiling(Math.Log2(BlockFactory.AllBlockstates.Count));
-                Pallette = new DirectPallete();
+                oldPalette?.Dispose();
             }
 
             int length = ms.ReadVarInt();
@@ -141,22 +168,33 @@ namespace Alex.Blocks.Storage
                 dataArray[i] = ms.ReadLong();
             }
 
-            Storage = new FlexibleStorage(_bits, 4096);
-            var valueMask = (uint) ((1L << _bits) - 1);
-            for(int index = 0; index < 4096; index++)
+            var oldStorage = Storage;
+
+            try
             {
-                var state = index / (64 / _bits);
-                var data = dataArray[state];
+                Storage = new FlexibleStorage(_bits, 4096);
+                var valueMask = (uint) ((1L << _bits) - 1);
 
-                var shiftedData = data >> (index % (64 / _bits) * _bits);
+                for (int index = 0; index < 4096; index++)
+                {
+                    var state = index / (64 / _bits);
+                    var data = dataArray[state];
 
-                Storage[index] = (uint) (shiftedData & valueMask);
+                    var shiftedData = data >> (index % (64 / _bits) * _bits);
+
+                    Storage[index] = (uint) (shiftedData & valueMask);
+                }
+            }
+            finally
+            {
+                oldStorage?.Dispose();
             }
         }
 
         public void Dispose()
         {
-            
+            Storage?.Dispose();
+            Pallette?.Dispose();
         }
     }
 }

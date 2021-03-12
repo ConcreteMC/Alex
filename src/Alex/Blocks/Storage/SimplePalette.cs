@@ -5,21 +5,21 @@ namespace Alex.Blocks.Storage
 {
     public class SimplePalette : IPallete
     {
-        private Dictionary<uint, BlockState> IdToState { get; }
-        private Dictionary<BlockState, uint> StateToId { get; }
+        private Dictionary<uint, BlockState> _idToState;
+        private Dictionary<BlockState, uint> _stateToId;
        
 
         private uint _available = 0;
         
         public SimplePalette(int size)
         {
-            IdToState = new Dictionary<uint, BlockState>();
-            StateToId = new Dictionary<BlockState, uint>();
+            _idToState = new Dictionary<uint, BlockState>();
+            _stateToId = new Dictionary<BlockState, uint>();
         }
 
         public uint GetId(BlockState state)
         {
-            if (StateToId.TryGetValue(state, out var index))
+            if (_stateToId.TryGetValue(state, out var index))
             {
                 return index;
             }
@@ -29,19 +29,19 @@ namespace Alex.Blocks.Storage
 
         public uint Add(BlockState state)
         {
-            if (StateToId.TryGetValue(state, out var id))
+            if (_stateToId.TryGetValue(state, out var id))
                 return id;
 
             uint newIndex = _available++;
-            StateToId.TryAdd(state, newIndex);
-            IdToState.TryAdd(newIndex, state);
+            _stateToId.TryAdd(state, newIndex);
+            _idToState.TryAdd(newIndex, state);
 
             return newIndex;
         }
 
         public BlockState Get(uint id)
         {
-            if (IdToState.TryGetValue(id, out BlockState state))
+            if (_idToState.TryGetValue(id, out BlockState state))
                 return state;
 
             return null;
@@ -49,8 +49,18 @@ namespace Alex.Blocks.Storage
 
         public void Put(BlockState state, uint key)
         {
-            IdToState[key] = state;
-            StateToId[state] = key;
+            _idToState[key] = state;
+            _stateToId[state] = key;
+        }
+
+        /// <inheritdoc />
+        public void Dispose()
+        {
+            _idToState?.Clear();
+            _idToState = null;
+
+            _stateToId?.Clear();
+            _stateToId = null;
         }
     }
 }

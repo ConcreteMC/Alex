@@ -36,36 +36,40 @@ namespace Alex.MoLang.Runtime
 			return Execute(expressions, null);
 		}
 
-		public IMoValue Execute(IExpression[] expressions, IDictionary<string, IMoValue> context) {
+		public IMoValue Execute(IExpression[] expressions, IDictionary<string, IMoValue> context)
+		{
+			if (expressions == null)
+				return DoubleValue.Zero;
 			//try
 			//{
-				
-				//expressions = _exprTraverser.Traverse(expressions);
 
-				Environment.Structs["context"] =
-					new ContextStruct(context); // .put("context", new ContextStruct(context));
+			//expressions = _exprTraverser.Traverse(expressions);
 
-				IMoValue result = new DoubleValue(0.0);
-				MoScope scope = new MoScope();
+			Environment.Structs["context"] = new ContextStruct(context); // .put("context", new ContextStruct(context));
 
-				foreach (IExpression expression in expressions)
+			IMoValue result = new DoubleValue(0.0);
+			MoScope scope = new MoScope();
+
+			foreach (IExpression expression in expressions)
+			{
+				if (expression == null)
+					continue;
+				result = expression.Evaluate(scope, Environment);
+
+				if (scope.ReturnValue != null)
 				{
-					result = expression.Evaluate(scope, Environment);
+					result = scope.ReturnValue;
 
-					if (scope.ReturnValue != null)
-					{
-						result = scope.ReturnValue;
-
-						break;
-					}
+					break;
 				}
+			}
 
-				Environment.Structs["temp"].Clear();
-				; // .getStructs().get("temp").clear();
-				Environment.Structs.Remove("context", out _); //["context"].getStructs().remove("context");
+			Environment.Structs["temp"].Clear();
+			; // .getStructs().get("temp").clear();
+			Environment.Structs.Remove("context", out _); //["context"].getStructs().remove("context");
 
-				return result;
-		//	}
+			return result;
+			//	}
 			//catch (Exception ex)
 			//{
 			//	throw new MoLangRuntimeException("An unexpected error occured.", ex);

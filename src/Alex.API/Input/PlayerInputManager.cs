@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Alex.API.Input.Listeners;
 using Alex.API.Utils;
+using Alex.API.Utils.Collections;
 using Microsoft.Xna.Framework;
 
 namespace Alex.API.Input

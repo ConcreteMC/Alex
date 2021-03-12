@@ -5,6 +5,16 @@ namespace Alex.Utils
 {
 	internal static class VersionUtils
 	{
+		#if RELEASE || DirectX
+		
+		public const bool IsReleaseBuild = true;
+		
+		#else
+		
+		public const bool IsReleaseBuild = false;
+		
+		#endif
+		
 		public static string GetVersion()
 		{
 			try

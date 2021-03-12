@@ -26,11 +26,16 @@ namespace Alex.API.Utils
 		public static Action<Action> QueueOnRenderThread { get; set; }
 		
 		public static PooledTexture2D BitmapToTexture2D(GraphicsDevice device, Image<Rgba32> bmp)
+		{
+			return BitmapToTexture2D("Image Converter", device, bmp, out _);
+		}
+		
+		public static PooledTexture2D BitmapToTexture2D(object owner, GraphicsDevice device, Image<Rgba32> bmp)
         {
-	        return BitmapToTexture2D(device, bmp, out _);
+	        return BitmapToTexture2D(owner, device, bmp, out _);
         }
         
-        public static PooledTexture2D BitmapToTexture2D(GraphicsDevice device, Image<Rgba32> image, out long byteSize)
+        public static PooledTexture2D BitmapToTexture2D(object owner, GraphicsDevice device, Image<Rgba32> image, out long byteSize)
         {
 	        var bmp = image;//.CloneAs<Rgba32>();
 	        uint[] colorData;
@@ -51,7 +56,7 @@ namespace Alex.API.Utils
 		       QueueOnRenderThread(
 			       () =>
 			       {
-				       result = GpuResourceManager.GetTexture2D("Image converter", device, image.Width, image.Height);
+				       result = GpuResourceManager.GetTexture2D(owner, device, image.Width, image.Height);
 				       result.SetData(colorData);
 
 				       resetEvent.Set();

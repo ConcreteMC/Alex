@@ -50,16 +50,16 @@ using Org.BouncyCastle.X509;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Advanced;
 using SixLabors.ImageSharp.Formats.Png;
-using BlockCoordinates = Alex.API.Utils.BlockCoordinates;
+using BlockCoordinates = Alex.API.Utils.Vectors.BlockCoordinates;
 using BlockFace = Alex.API.Blocks.BlockFace;
-using ConnectionInfo = Alex.API.Network.ConnectionInfo;
+using ConnectionInfo = Alex.API.Utils.ConnectionInfo;
 using CryptoContext = Alex.Net.Bedrock.CryptoContext;
 using DedicatedThreadPool = MiNET.Utils.DedicatedThreadPool;
 using Description = MiNET.Utils.Skins.Description;
 using Item = Alex.Items.Item;
 using LevelInfo = MiNET.Worlds.LevelInfo;
 using Player = Alex.Entities.Player;
-using PlayerLocation = Alex.API.Utils.PlayerLocation;
+using PlayerLocation = Alex.API.Utils.Vectors.PlayerLocation;
 
 namespace Alex.Worlds.Multiplayer.Bedrock
 {

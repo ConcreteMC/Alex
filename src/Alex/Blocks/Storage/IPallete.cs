@@ -1,8 +1,9 @@
+using System;
 using Alex.Blocks.State;
 
 namespace Alex.Blocks.Storage
 {
-    public interface IPallete
+    public interface IPallete : IDisposable
     {
         uint GetId(BlockState state);
 

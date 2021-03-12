@@ -1,8 +1,8 @@
 ﻿using System;
-using Alex.Api;
 using Alex.API.Graphics;
 using Alex.API.Gui.Graphics;
 using Alex.API.Utils;
+using Alex.API.Utils.Vectors;
 using Alex.Graphics.Models.Items;
 using Alex.Gui.Elements.Context3D;
 using Alex.Items;
@@ -50,7 +50,7 @@ namespace Alex.Gui.Elements.Inventory
 
             Camera.MoveTo(new Vector3(0f, 0f, 2f), new Vector3(0f, 0f, 0f));
 
-            _itemRenderer.Update(args, MCMatrix.Identity, Vector3.One);
+            _itemRenderer.Update(args, Matrix.Identity, Vector3.One);
         }
 
         public void DrawContext3D(IRenderArgs args, IGuiRenderer guiRenderer)
@@ -73,7 +73,7 @@ namespace Alex.Gui.Elements.Inventory
                 Target = Vector3.Zero;
                 Direction = Vector3.Forward;
                 
-                ViewMatrix = MCMatrix.CreateLookAt(Position, Target, Vector3.Up);
+                ViewMatrix = Matrix.CreateLookAt(Position, Target, Vector3.Up);
                 //ViewMatrix = Matrix.CreateLookAt(Position + CameraPositionOffset, Target, Vector3.Up);
             }
 
@@ -81,7 +81,7 @@ namespace Alex.Gui.Elements.Inventory
             {
                 //ProjectionMatrix = Matrix.CreateOrthographic(2f, 2f, float.Epsilon, 16f);
                 //ProjectionMatrix = Matrix.CreateOrthographic(1.5f, 1.5f, NearDistance, FarDistance);
-                ProjectionMatrix = MCMatrix.CreateOrthographicOffCenter(0f, 1f, 0f, 1f, NearDistance, FarDistance);
+                ProjectionMatrix = Matrix.CreateOrthographicOffCenter(0f, 1f, 0f, 1f, NearDistance, FarDistance);
             }
         }
     }

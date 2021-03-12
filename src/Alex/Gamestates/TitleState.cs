@@ -11,6 +11,7 @@ using Alex.API.Gui.Elements.Layout;
 using Alex.API.Gui.Graphics;
 using Alex.API.Services;
 using Alex.API.Utils;
+using Alex.API.Utils.Vectors;
 using Alex.Entities;
 using Alex.Gamestates.Common;
 using Alex.Gamestates.Login;
@@ -68,6 +69,7 @@ namespace Alex.Gamestates
 					{
 						Title = "Debugging",
 						IsTranslatable = false,
+						Visible = !VersionUtils.IsReleaseBuild,
 						Children =
 						{
 							new MenuItem()
@@ -80,26 +82,10 @@ namespace Alex.Gamestates
 							},
 							new MenuItem()
 							{
-								Title = "Demo",
-								OnClick = (sender, args) =>
-								{
-									Debug(new DemoGenerator());
-								}
-							},
-							new MenuItem()
-							{
 								Title = "Flatland",
 								OnClick = (sender, args) =>
 								{
 									Debug(new FlatlandGenerator());
-								}
-							},
-							new MenuItem()
-							{
-								Title = "Chunk Debug",
-								OnClick = (sender, args) =>
-								{
-									Debug(new ChunkDebugWorldGenerator());
 								}
 							}
 						}

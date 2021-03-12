@@ -269,19 +269,25 @@ namespace Alex.Blocks
 							{
 								var properties = BlockState.ParseData(dataMatch.Value);
 
-								var p = properties.Where(x => x.Key != "waterlogged" || (x.Key == "waterlogged" && x.Value == "false")).ToArray();
-
-								for (var i = 0; i < p.Length; i++)
+								if (properties != null)
 								{
-									var prop = p[i];
+									var p = properties.Where(
+											x => x.Key != "waterlogged"
+											     || (x.Key == "waterlogged" && x.Value == "false"))
+									   .ToArray();
 
-									if (i == p.Length - 1)
+									for (var i = 0; i < p.Length; i++)
 									{
-										pcVariant = pcVariant.WithProperty(prop.Key, prop.Value);
-									}
-									else
-									{
-										pcVariant = pcVariant.WithProperty(prop.Key, prop.Value);
+										var prop = p[i];
+
+										if (i == p.Length - 1)
+										{
+											pcVariant = pcVariant.WithProperty(prop.Key, prop.Value);
+										}
+										else
+										{
+											pcVariant = pcVariant.WithProperty(prop.Key, prop.Value);
+										}
 									}
 								}
 							}
@@ -500,22 +506,26 @@ namespace Alex.Blocks
 				int matches = 0;
 				//var variantBlockState = Blocks.State.BlockState.FromString(v.Key);
 				var variant = Blocks.State.BlockState.ParseData(v.Key);
-				foreach (var kv in state)
+
+				if (variant != null)
 				{
-					if (variant.TryGetValue(kv.Key, out string vValue))
+					foreach (var kv in state)
 					{
-						if (vValue.Equals(kv.Value, StringComparison.OrdinalIgnoreCase))
+						if (variant.TryGetValue(kv.Key, out string vValue))
 						{
-							matches++;
+							if (vValue.Equals(kv.Value, StringComparison.OrdinalIgnoreCase))
+							{
+								matches++;
+							}
+							else
+							{
+								break;
+							}
 						}
 						else
 						{
 							break;
 						}
-					}
-					else
-					{
-						break;
 					}
 				}
 
@@ -527,6 +537,7 @@ namespace Alex.Blocks
 					if (matches == state.Count)
 						break;
 				}
+
 			}
 
 			return closest.Value;

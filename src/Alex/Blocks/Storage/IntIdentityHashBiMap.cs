@@ -190,5 +190,13 @@ namespace Alex.Blocks.Storage
 		{
 			return GetEnumerator();
 		}
+
+		/// <inheritdoc />
+		public void Dispose()
+		{
+			_values = null;
+			_byId = null;
+			
+		}
 	}
 }
