@@ -407,7 +407,7 @@ namespace Alex.Worlds.Chunks
 			var chunk = Sections[by >> 4];
 			if (chunk == null) return Air;
 
-			return chunk.Get(bx, by - 16 * (by >> 4), bz, storage);
+			return chunk.Get(bx, by - 16 * (by >> 4), bz, storage) ?? Air;
 		}
 
 		public void SetHeight(int bx, int bz, short h)
