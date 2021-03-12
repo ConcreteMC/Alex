@@ -98,37 +98,43 @@ namespace Alex.Gamestates.InGame.Hud
 	        _hotbar.Inventory = e;
         }
 
+        private bool _didInit = false;
         protected override void OnInit(IGuiRenderer renderer)
         {
-	        _bottomContainer.AddChild(_tipPopupComponent);
+	        if (!_didInit)
+	        {
+		        _bottomContainer.AddChild(_tipPopupComponent);
 
-	        _healthContainer.AddChild(_healthComponent);
-	        _healthContainer.AddChild(_hungerComponent);
+		        _healthContainer.AddChild(_healthComponent);
+		        _healthContainer.AddChild(_hungerComponent);
 
-	        _healthAndHotbar.AddChild(_healthContainer);
+		        _healthAndHotbar.AddChild(_healthContainer);
 
-	        _healthAndHotbar.AddChild(_hotbar);
+		        _healthAndHotbar.AddChild(_hotbar);
 
-	        _bottomContainer.AddRow(
-		        container =>
-		        {
-			        //		        container.AutoSizeMode = AutoSizeMode.GrowAndShrink;
-			        container.Anchor = Alignment.BottomCenter;
-			        container.ChildAnchor = Alignment.FillCenter;
+		        _bottomContainer.AddRow(
+			        container =>
+			        {
+				        //		        container.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+				        container.Anchor = Alignment.BottomCenter;
+				        container.ChildAnchor = Alignment.FillCenter;
 
-			        container.AddChild(_healthAndHotbar);
-			        //container.AddChild(_hotbar);
-		        });
+				        container.AddChild(_healthAndHotbar);
+				        //container.AddChild(_hotbar);
+			        });
 
-	        AddChild(_bottomContainer);
+		        AddChild(_bottomContainer);
 
-	        AddChild(Chat);
+		        AddChild(Chat);
 
-	        //AddChild(_hotbar);
-	        AddChild(new AlexCrosshair());
-	        AddChild(Title);
-	        
-	        AddChild(Scoreboard);
+		        //AddChild(_hotbar);
+		        AddChild(new AlexCrosshair());
+		        AddChild(Title);
+
+		        AddChild(Scoreboard);
+
+		        _didInit = true;
+	        }
         }
 
         public bool CheckInput { get; set; } = true;

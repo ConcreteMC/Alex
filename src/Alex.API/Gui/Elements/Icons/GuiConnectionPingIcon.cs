@@ -212,7 +212,7 @@ namespace Alex.API.Gui.Elements.Icons
 		            var position = _cursorPosition + new Point(5, 5);
 		            
 		            graphics.SpriteBatch.FillRectangle(new Rectangle(position, size.ToPoint()), Color.Black * 0.5f);
-		            graphics.DrawString(graphics.Font, text, position.ToVector2(), TextColor.White, FontStyle.None, 1f);
+		            graphics.DrawString(graphics.Font, text, position.ToVector2(), TextColor.White, FontStyle.None);
 	            }
             }
         }

@@ -178,7 +178,7 @@ namespace Alex
 
             this.Window.AllowUserResizing = true;
 
-            /*this.Window.ClientSizeChanged += (sender, args) =>
+            this.Window.ClientSizeChanged += (sender, args) =>
             {
                 if (DeviceManager.PreferredBackBufferWidth != Window.ClientBounds.Width
                     || DeviceManager.PreferredBackBufferHeight != Window.ClientBounds.Height)
@@ -199,7 +199,7 @@ namespace Alex
 
                     DeviceManager.ApplyChanges();
                 }
-            };*/
+            };
 
 
             JsonConvert.DefaultSettings = () => new JsonSerializerSettings()
