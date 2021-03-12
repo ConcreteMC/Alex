@@ -203,7 +203,9 @@ namespace Alex.Net.Bedrock
 				//listener.Client.SendBufferSize = 1600;
 				//listener.Client.SendBufferSize = int.MaxValue;
 			}
-			
+
+			listener.Client.Blocking = true;
+			listener.DontFragment = true;
 			listener.EnableBroadcast = false;
 
 			if (Environment.OSVersion.Platform != PlatformID.Unix && Environment.OSVersion.Platform != PlatformID.MacOSX)
@@ -674,22 +676,28 @@ namespace Alex.Net.Bedrock
 			datagram.RetransmitImmediate = false;
 
 			byte[] buffer = ArrayPool<byte>.Shared.Rent(1600);
-			int    length = (int) datagram.GetEncoded(ref buffer);
 
-			datagram.Timer.Restart();
-
-			if (!session.WaitingForAckQueue.TryAdd(datagram.Header.DatagramSequenceNumber.IntValue(), datagram))
+			try
 			{
-				Log.Warn($"Datagram sequence unexpectedly existed in the ACK/NAK queue already {datagram.Header.DatagramSequenceNumber.IntValue()}");
-				datagram.PutPool();
-			}
+				int length = (int) datagram.GetEncoded(ref buffer);
 
-			session.UnackedBytes += length;
-			Interlocked.Increment(ref ConnectionInfo.PacketsOut);
-			
-			//lock (session.)
-			{
+				datagram.Timer.Restart();
+
+				if (!session.WaitingForAckQueue.TryAdd(datagram.Header.DatagramSequenceNumber.IntValue(), datagram))
+				{
+					Log.Warn(
+						$"Datagram sequence unexpectedly existed in the ACK/NAK queue already {datagram.Header.DatagramSequenceNumber.IntValue()}");
+
+					datagram.PutPool();
+				}
+
+				session.UnackedBytes += length;
+				Interlocked.Increment(ref ConnectionInfo.PacketsOut);
+				
 				await SendDataAsync(buffer, length, session.EndPoint);
+			}
+			finally
+			{
 				ArrayPool<byte>.Shared.Return(buffer);
 			}
 		}

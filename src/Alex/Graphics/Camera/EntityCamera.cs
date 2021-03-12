@@ -86,7 +86,6 @@ namespace Alex.Graphics.Camera
 			Direction = direction;
 
 			ViewMatrix = Matrix.CreateLookAt(position, Target, Vector3.Up);
-			
 			Frustum = new BoundingFrustum(ViewMatrix * ProjectionMatrix);
 		}
 		
@@ -94,15 +93,13 @@ namespace Alex.Graphics.Camera
 
 		private void UpdateThirdPerson(bool frontSideView)
 		{
-			var position = Position;
-			
-			var direction = new Vector3(Rotation.X, Rotation.Y, Rotation.Z);
-			direction.Normalize();
+			//var direction = new Vector3(Rotation.X, Rotation.Y, Rotation.Z);
+			//direction.Normalize();
 			
 			//var target = position
 			
-			Target = position + direction;
-			Direction = direction;
+			//Target = position + direction;
+			//Direction = direction;
 
 			//var offset = ThirdPersonOffset;
 			//offset = Vector3.Transform(offset, MatrixHelper.CreateRotationDegrees(Rotation));
@@ -120,11 +117,13 @@ namespace Alex.Graphics.Camera
 			Vector3 dir = frontSideView ? Vector3.Forward : Vector3.Backward;
 			dir = Vector3.Transform(dir, directionMatrix);
 
+			Direction = dir;
+
 			var cameraPosition = new Vector3(target.X, target.Y, target.Z);
 			cameraPosition += (dir * ThirdPersonOffset.Z);
 
+			Target = target;
 			ViewMatrix = Matrix.CreateLookAt(cameraPosition, target, Vector3.Up);
-			
 			Frustum = new BoundingFrustum(ViewMatrix * ProjectionMatrix);
 		}
 

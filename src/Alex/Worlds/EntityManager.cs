@@ -63,7 +63,7 @@ namespace Alex.Worlds
 				var entities = Entities.Values.ToArray();
 				var blockEntities = BlockEntities.Values.ToArray();
 
-				var cameraChunkPosition = new ChunkCoordinates(World.Camera.Position);
+				var cameraChunkPosition = World.Camera.Position;
 
 				foreach (var entity in entities.Concat(blockEntities))
 				{
@@ -71,16 +71,15 @@ namespace Alex.Worlds
 
 					//if (!entity.IsSpawned)
 					//	continue;
-					if (Math.Abs(new ChunkCoordinates(entity.KnownPosition).DistanceTo(cameraChunkPosition))
-					    <= World.ChunkManager.RenderDistance)
+					var entityPos = entity.KnownPosition.ToVector3();
+					if (Math.Abs(Vector3.Distance(entityPos, cameraChunkPosition)) <= World.ChunkManager.RenderDistance * 16f)
 					{
 						entityCount++;
 						rendered.Add(entity);
 						
-						var entityBox = entity.GetVisibilityBoundingBox(entity.RenderLocation);
+						var entityBox = entity.GetVisibilityBoundingBox(entityPos);
 
-						if (World.Camera.BoundingFrustum.Intersects(
-							new Microsoft.Xna.Framework.BoundingBox(entityBox.Min, entityBox.Max)))
+						if (World.Camera.BoundingFrustum.Contains(entityBox) != ContainmentType.Disjoint)
 						{
 							entity.IsRendered = true;
 							entity.OnTick();
