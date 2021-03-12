@@ -49,6 +49,8 @@ namespace Alex.Graphics.Models.Entity.Animations
 			
 			Functions.Add("modified_move_speed", mo => (1f / (Entity.CalculateMovementSpeed() * 43f)) * (Entity.Movement.MetersPerSecond));
 			
+			Functions.Add("time_stamp", mo => Entity.Level.Time);
+			Functions.Add("frame_alpha", mo => (1f / 50f) * _deltaTime.TotalMilliseconds);
 			Functions.Add("delta_time", mo => _deltaTime.TotalSeconds);
 			Functions.Add("ground_speed", mo => Entity.Movement.MetersPerSecond);
 			Functions.Add("walk_distance", mo => Entity.Movement.DistanceMoved);
@@ -56,6 +58,9 @@ namespace Alex.Graphics.Models.Entity.Animations
 			Functions.Add("vertical_speed", mo => Entity.Movement.VerticalSpeed);
 			Functions.Add("time_of_day", mo => ((1f / 24000f) * Entity.Level.TimeOfDay));
 
+			Functions.Add("is_emoting", mo => Entity.IsEmoting);
+			Functions.Add("is_gliding", mo => Entity.IsGliding);
+			Functions.Add("is_levitating", mo => Entity.IsLevitating);
 			Functions.Add("is_alive", mo => Entity.HealthManager.Health > 0);
 			Functions.Add("is_on_ground", mo => Entity.KnownPosition.OnGround);
 			Functions.Add("is_riding", mo => Entity.IsRiding);

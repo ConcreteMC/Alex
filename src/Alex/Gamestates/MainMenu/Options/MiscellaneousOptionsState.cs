@@ -48,8 +48,8 @@ namespace Alex.Gamestates.MainMenu.Options
                     "Note: A restart is required for this setting to take affect.");
 
                 AddDescription(
-                    ChunkCaching, "Chunk Caching (Bedrock Only)", "When enabled, caches chunk sections on disk.",
-                    "This reduces network traffic but increases disk I/O");
+                    ChunkCaching, "Chunk Caching (Bedrock Only)", "Reduced network traffic but increased disk I/O usage.",
+                    $"{TextColor.Prefix}{TextColor.Red.Code}Unstable feature, doesn't work reliably.");
 
                 Description = new TextElement()
                 {

@@ -16,6 +16,7 @@ using Alex.Gamestates.MainMenu;
 using Alex.Gamestates.Multiplayer;
 using Alex.Graphics.Models.Entity;
 using Alex.Gui;
+using Alex.Gui.Dialogs.Containers;
 using Alex.Gui.Elements;
 using Alex.Gui.Elements.Context3D;
 using Alex.Items;

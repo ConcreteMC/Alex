@@ -512,6 +512,9 @@ namespace Alex.Entities
 		public virtual bool IsSwimming { get; set; }
 		public bool IsSleeping { get; set; }
 		public bool IsStanding { get; set; } = true;
+		public bool IsEmoting { get; set; } = false;
+		public bool IsGliding { get; set; } = false;
+		public bool IsLevitating { get; set; } = false;
 		
 		public Pose Pose { get; set; } = Pose.Standing;
 		
@@ -1081,7 +1084,8 @@ namespace Alex.Entities
 		}
 
 		private BoundingBox _boundingBox = new BoundingBox();
-		public  BoundingBox BoundingBox => _boundingBox;
+		public BoundingBox BoundingBox => _boundingBox;
+
 		public virtual BoundingBox GetBoundingBox()
 		{
 			return _boundingBox;

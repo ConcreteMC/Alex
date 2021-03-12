@@ -24,6 +24,11 @@ namespace Alex.Entities.Generic
 			
 			Gravity = 0.04;
 			Drag = 0.02;
+			
+			HasPhysics = true;
+			IsAffectedByGravity = true;
+			HasCollision = true;
+			NoAi = false;
 		}
 
 		/// <inheritdoc />

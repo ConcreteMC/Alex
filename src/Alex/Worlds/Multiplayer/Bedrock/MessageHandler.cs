@@ -37,10 +37,12 @@ namespace Alex.Worlds.Multiplayer.Bedrock
         private DateTime _lastPacketReceived;
         public  TimeSpan TimeSinceLastPacket => DateTime.UtcNow - _lastPacketReceived;
         
-        public MessageHandler(RaknetSession session, IMcpeClientMessageHandler handler) : base()
+		private BedrockClientPacketHandler PacketHandler { get; }
+        public MessageHandler(RaknetSession session, BedrockClientPacketHandler handler) : base()
         {
 	        _session = session;
             _messageDispatcher = new McpeClientMessageDispatcher(handler);
+            PacketHandler = handler;
         }
 
         public void Connected()
@@ -291,9 +293,13 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				//     Log.Info($"Got packet: {message}");
 				if (!_messageDispatcher.HandlePacket(message))
 				{
-					if (message is UnknownPacket unknownPacket)
+					if (!PacketHandler.HandleOtherPackets(message))
 					{
-						Log.Warn($"Received unknown packet 0x{unknownPacket.Id:X2}\n{Packet.HexDump(unknownPacket.Message)}");
+						if (message is UnknownPacket unknownPacket)
+						{
+							Log.Warn(
+								$"Received unknown packet 0x{unknownPacket.Id:X2}\n{Packet.HexDump(unknownPacket.Message)}");
+						}
 					}
 				}
 			}

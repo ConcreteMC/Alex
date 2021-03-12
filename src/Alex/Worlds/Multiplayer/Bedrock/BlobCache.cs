@@ -1,14 +1,17 @@
+using System;
 using System.Diagnostics;
 using System.IO;
 using Alex.API.Services;
 
 namespace Alex.Worlds.Multiplayer.Bedrock
 {
-	public class BlobCache
+	public class BlobCache : IDisposable
 	{
 		private IStorageSystem Storage  { get; }
 		private string         BasePath { get; }
 		public  bool           Enabled  { get; set; } = false;
+
+		private IDisposable _useChunkCacheOptionsAccessor;
 		public BlobCache(IStorageSystem storage, IOptionsProvider optionsProvider)
 		{
 			Storage = storage;
@@ -20,6 +23,12 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			}
 
 			Enabled = optionsProvider.AlexOptions.MiscelaneousOptions.UseChunkCache.Value;
+			_useChunkCacheOptionsAccessor = optionsProvider.AlexOptions.MiscelaneousOptions.UseChunkCache.Bind(CacheStatusChanges);
+		}
+
+		private void CacheStatusChanges(bool oldvalue, bool newvalue)
+		{
+			Enabled = newvalue;
 		}
 
 		private string GetPath(ulong hash)
@@ -40,6 +49,12 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		public bool TryStore(ulong hash, byte[] data)
 		{
 			return Storage.TryWriteBytes(GetPath(hash), data);
+		}
+
+		/// <inheritdoc />
+		public void Dispose()
+		{
+			_useChunkCacheOptionsAccessor.Dispose();
 		}
 	}
 }

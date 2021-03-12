@@ -49,6 +49,9 @@ namespace Alex.Gui.Dialogs.Containers
 
 		private void RowBuilder(StackContainer obj)
 		{
+			obj.Margin = Thickness.Zero;
+			obj.Padding = Thickness.Zero;
+			
 			obj.Orientation = Orientation.Horizontal;
 		}
 	}

@@ -4,6 +4,7 @@ using Alex.Items;
 using Alex.Networking.Java.Packets.Play;
 using Alex.Worlds;
 using Microsoft.Xna.Framework;
+using MiNET.Utils;
 
 namespace Alex.Entities.Projectiles
 {
@@ -14,7 +15,16 @@ namespace Alex.Entities.Projectiles
 		/// <inheritdoc />
 		public PrimedTntEntity(World level) : base(level)
 		{
-			
+			Width = 0.98f;
+			Height = 0.98f;
+			Gravity = 0.04f;
+			Drag = 0.02f;
+
+			HasPhysics = true;
+			IsAffectedByGravity = true;
+			HasCollision = true;
+			NoAi = false;
+			IsIgnited = true;
 		}
 
 		private int Fuse
@@ -68,6 +78,17 @@ namespace Alex.Entities.Projectiles
 		}
 
 		/// <inheritdoc />
+		protected override bool HandleMetadata(MiNET.Entities.Entity.MetadataFlags flag, MetadataEntry entry)
+		{
+			if (flag == MiNET.Entities.Entity.MetadataFlags.DataFuseLength && entry is MetadataInt fuseData)
+			{
+				Fuse = fuseData.Value;
+				return true;
+			}
+			return base.HandleMetadata(flag, entry);
+		}
+
+		/// <inheritdoc />
 		public override void OnTick()
 		{
 			if (!IsSpawned)
@@ -81,6 +102,8 @@ namespace Alex.Entities.Projectiles
 
 				if (Fuse == 0)
 				{
+					Alex.Instance.AudioEngine.PlaySound("random.explode", KnownPosition.ToVector3(), 1f, 1f);
+					//Level.
 					//Explode!
 				}
 			}

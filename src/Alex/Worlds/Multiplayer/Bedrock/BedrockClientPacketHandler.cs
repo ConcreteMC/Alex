@@ -161,8 +161,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			}
 			else if (Client.PlayerStatus == 0)
 			{
-				Log.Info($"Received Play Status packet: Login success");
-
+				Log.Info($"Play Status: Login success, reporting cache status as {(ChunkProcessor.Cache.Enabled ? "Enabled" : "Disabled")}");
+				
 				McpeClientCacheStatus status = McpeClientCacheStatus.CreateObject();
 				status.enabled = ChunkProcessor.Cache.Enabled;
 				Client.SendPacket(status);
@@ -217,12 +217,12 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				case 1: //Chat
 					if (!string.IsNullOrWhiteSpace(message.source))
 					{
-						rawMessage = $"<{message.source}{ChatFormatting.Reset}>: {rawMessage}";
+						rawMessage = $"{message.source}{ChatFormatting.Reset} {rawMessage}";
 					}
 
 					break;
 				case 7: //Whisper
-					rawMessage = $"<{message.source}{ChatFormatting.Reset} whispered>: {rawMessage}";
+					rawMessage = $"{ChatFormatting.Italic}{message.source}{ChatFormatting.Reset}{ChatFormatting.Italic} whispered{ChatFormatting.Reset}: {rawMessage}";
 					break;
 				case 8: //Announcement
 					rawMessage = $"[{message.source}{ChatFormatting.Reset}]: {rawMessage}";
@@ -2000,6 +2000,43 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		public void HandleFtlCreatePlayer(FtlCreatePlayer message)
 		{
 			UnhandledPackage(message);
+		}
+
+		private void HandleMcpeEmote(McpeEmote message)
+		{
+			/*if (Client.World.EntityManager.TryGet(message.RuntimeEntityId, out var entity))
+			{
+				if (entity.AnimationController.)
+			}*/
+			UnhandledPackage(message);
+		}
+
+		private void HandleMcpeAnimateEntity(McpeAnimateEntity message)
+		{
+			/*if (Client.World.EntityManager.TryGet(message.Controller, out var entity))
+			{
+				if (entity.AnimationController.)
+			}*/
+			UnhandledPackage(message);
+		}
+		
+		public bool HandleOtherPackets(Packet message)
+		{
+			switch (message)
+			{
+				case McpeEmote emote:
+				{
+					HandleMcpeEmote(emote); 
+				} return true;
+				
+				case McpeAnimateEntity emote:
+				{
+					HandleMcpeAnimateEntity(emote); 
+				} return true;
+			}
+			
+			UnhandledPackage(message);
+			return false;
 		}
 		
 		/// <inheritdoc />

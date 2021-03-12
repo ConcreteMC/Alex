@@ -455,6 +455,12 @@ namespace Alex.Entities
 				case EntityType.PrimedTnt:
 					entity = new PrimedTntEntity(world);
 					break;
+				case EntityType.ThrownEnderPerl:
+					entity = new ThrownEnderPearlEntity(world);
+					break;
+				case EntityType.EnderEye:
+					entity = new ThrownEyeOfEnderEntity(world);
+					break;
 				//case EntityType.Human:
 					//entity = new PlayerMob("test", world, );
 				//	break;

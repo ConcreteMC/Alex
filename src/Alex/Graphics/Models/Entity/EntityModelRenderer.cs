@@ -348,7 +348,7 @@ namespace Alex.Graphics.Models.Entity
 
 			Effect = null;
 			VertexBuffer = null;
-			texture = null;
+			Texture = null;
 		}
 
 		public void ApplyPending()

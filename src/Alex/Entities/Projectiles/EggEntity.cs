@@ -3,10 +3,10 @@ using Alex.Worlds;
 
 namespace Alex.Entities.Projectiles
 {
-	public class EggEntity : ThrowableEntity
+	public class EggEntity : ThrowableItemEntity
 	{
 		/// <inheritdoc />
-		public EggEntity(World level) : base(level)
+		public EggEntity(World level) : base(level, "minecraft:egg")
 		{
 			Width = 0.25;
 			//Length = 0.25;

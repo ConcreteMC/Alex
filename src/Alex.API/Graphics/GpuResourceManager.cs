@@ -527,7 +527,7 @@ namespace Alex.API.Graphics
         {
             if (Interlocked.Read(ref _references) > 0)
             {
-                Log.Warn($"Cannot mark texture for disposal, has uncleared references. Owner: {Owner.GetType().Name} Id: {PoolId} References: {_references}");
+                Log.Debug($"Cannot mark texture for disposal, has uncleared references. Owner: {Owner.ToString()} Id: {PoolId} References: {_references}");
                 return;
             }
             if (!MarkedForDisposal)

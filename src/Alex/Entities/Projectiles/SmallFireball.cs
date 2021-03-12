@@ -3,27 +3,15 @@ using Microsoft.Xna.Framework;
 
 namespace Alex.Entities.Projectiles
 {
-	public sealed class SmallFireball : ItemBaseEntity
+	public sealed class SmallFireball : ThrowableItemEntity
 	{
 		/// <inheritdoc />
-		public SmallFireball(Worlds.World level) : base(level)
+		public SmallFireball(Worlds.World level) : base(level, "minecraft:fire_charge")
 		{
 			Width = 0.3125;
 			Height = 0.3125;
 			Gravity = 0;
-
-			if (ItemFactory.TryGetItem("minecraft:fire_charge", out var item))
-			{
-				SetItem(item);
-			}
-		}
-
-		/// <inheritdoc />
-		public override void CollidedWithWorld(Vector3 direction, Vector3 position, float impactVelocity)
-		{
-			base.CollidedWithWorld(direction, position, impactVelocity);
-			Velocity = Vector3.Zero;
-			NoAi = true;
+			DespawnOnImpact = true;
 		}
 	}
 }
