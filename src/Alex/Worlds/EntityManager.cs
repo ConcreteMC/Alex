@@ -161,9 +161,9 @@ namespace Alex.Worlds
 			//DepthBias = -0.0015f,
 			CullMode = CullMode.None, 
 			FillMode = FillMode.Solid, 
-			DepthClipEnable = false, 
+			DepthClipEnable = true, 
 			ScissorTestEnable = true,
-			MultiSampleAntiAlias = true
+			MultiSampleAntiAlias = true,
 		};
 
 		public void Render2D(IRenderArgs args)
@@ -177,8 +177,8 @@ namespace Alex.Worlds
 				
 				
 				args.SpriteBatch.Begin(
-					SpriteSortMode.BackToFront, BlendState.NonPremultiplied, SamplerState.PointWrap,
-					DepthStencilState.Default, RasterizerState);
+					SpriteSortMode.BackToFront, BlendState.NonPremultiplied, SamplerState.PointClamp,
+					DepthStencilState.DepthRead, RasterizerState);
 
 				try
 				{
@@ -215,13 +215,15 @@ namespace Alex.Worlds
 			//pos.Y = 0;
 			
 			var distance = MathF.Abs(Vector3.Distance(entity.KnownPosition, args.Camera.Position));
-			if (distance >= (maxDistance))
+			if (distance >= (maxDistance * 0.8f))
 			{
 				return;
 			}
 
+			//var opacity = 1f - ((1f / maxDistance) * distance);
+
 			distance *= (distance / (maxDistance / 2f));
-			var scale = MathF.Max(MathF.Min(1f - (distance / (maxDistance)), 1f), 0f);
+			var opacity = MathF.Max(MathF.Min(1f - (distance / (maxDistance)), 1f), 0f);
 			//distance -= ((maxDistance) / distance);
 
 			try
@@ -233,13 +235,13 @@ namespace Alex.Worlds
 					posOffset.Y += (float) (entity.Height * entity.Scale);
 				}
 
-				var cameraPosition = new Vector3(args.Camera.Position.X, 0, args.Camera.Position.Z);
+				var cameraPosition = new Vector3(args.Camera.Position.X, args.Camera.Position.Y, args.Camera.Position.Z);
 
-				var rotation = new Vector3(entity.RenderLocation.X, 0, entity.RenderLocation.Z) - cameraPosition;
+				var rotation = new Vector3(entity.RenderLocation.X, entity.RenderLocation.Y + posOffset.Y, entity.RenderLocation.Z) - cameraPosition;
 				rotation.Normalize();
 
 				var halfWidth = (float) (entity.Width * entity.Scale);
-				var pos       = entity.RenderLocation + posOffset + (-(rotation * (float)entity.Width));
+				var pos       = entity.RenderLocation + posOffset + (-(rotation * (float)halfWidth));
 
 				Vector2 textPosition;
 				
@@ -250,7 +252,7 @@ namespace Alex.Worlds
 				textPosition.Y = screenSpace.Y;
 
 				Vector2 renderPosition = textPosition;
-				var s = new Vector2((float) scale);
+				//var s = new Vector2((float) scale);
 				
 				foreach (var str in clean.Split('\n').Reverse())
 				{
@@ -259,7 +261,7 @@ namespace Alex.Worlds
 					if (line.Length == 0 || string.IsNullOrWhiteSpace(line))
 						continue;
 
-					var stringSize = Alex.Font.MeasureString(line, (float) scale);
+					var stringSize = Alex.Font.MeasureString(line);
 					var c          = new Point((int) stringSize.X, (int) stringSize.Y);
 
 					renderPosition.X = (int) (textPosition.X - (c.X / 2d));
@@ -267,11 +269,11 @@ namespace Alex.Worlds
 					//renderPosition.Y = (int) ((textPosition.Y + yOffset));
 
 					args.SpriteBatch.FillRectangle(
-						new Rectangle(renderPosition.ToPoint(), c), _backgroundColor, screenSpace.Z + 0.0000001f);
+						new Rectangle(renderPosition.ToPoint(), c), _backgroundColor * opacity, screenSpace.Z + 0.0000001f);
 
 					Alex.Font.DrawString(
 						args.SpriteBatch, line, renderPosition, (Color)TextColor.White, FontStyle.None,
-						layerDepth: screenSpace.Z, scale: s);
+						layerDepth: screenSpace.Z, opacity: opacity);
 				}
 			}
 			finally
