@@ -30,7 +30,7 @@ namespace Alex.API.Gui.Elements
 				{
 					Background = Color.Transparent;
 					DisabledBackground = Color.Transparent;
-					FocusedBackground = Color.TransparentBlack;
+					FocusedBackground = Color.Transparent;
 					HighlightedBackground = new Color(Color.Black * 0.8f, 0.5f);
 					HighlightColor = (Color) TextColor.Cyan;
 					DefaultColor = (Color) TextColor.White;

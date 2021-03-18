@@ -388,7 +388,10 @@ namespace Alex.Gamestates
 
             if (!isFirst)
             {
-                _mainMenu.AddMenuItem("Back", () => { GoBack(); });
+                _mainMenu.AddChild(new AlexButton("Back", () =>
+                {
+                    GoBack();
+                }));
             }
         }
 

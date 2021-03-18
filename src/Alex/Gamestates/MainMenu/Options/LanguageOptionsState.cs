@@ -49,7 +49,7 @@ namespace Alex.Gamestates.MainMenu.Options
             {
                 btn.Text = GetButtonText(culture, true);
                 //Alex.GuiManager.FocusManager.FocusedElement = btn;
-                FocusContext?.Focus(_activeBtn.button);
+                //FocusContext?.Focus(_activeBtn.button);
                 
                 _activeBtn = (btn, culture);
             }
