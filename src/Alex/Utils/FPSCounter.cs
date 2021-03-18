@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Diagnostics;
+using Microsoft.Xna.Framework;
 
 namespace Alex.Utils
 {
-	public class FpsMonitor
+	public class FpsMonitor : DrawableGameComponent
 	{
 		public float    Value            { get; private set; }
 		public TimeSpan AverageFrameTime { get; private set; }
@@ -14,7 +15,7 @@ namespace Alex.Utils
 		private          int       _frames;
 
 		private Stopwatch _frameSw;
-		public FpsMonitor()
+		public FpsMonitor(Game game) : base(game)
 		{
 			this.Sample = TimeSpan.FromSeconds(1);
 			this.Value = 0;
@@ -23,9 +24,11 @@ namespace Alex.Utils
 			this._frameSw = Stopwatch.StartNew();
 		}
 
-		public void Update()
+		/// <inheritdoc />
+		public override void Draw(GameTime gameTime)
 		{
-            this._frames++;
+			base.Draw(gameTime);
+			this._frames++;
             if (_sw.Elapsed > Sample)
 			{
 				this.Value = (float)(_frames / _sw.Elapsed.TotalSeconds);

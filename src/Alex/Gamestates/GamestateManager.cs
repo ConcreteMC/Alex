@@ -11,7 +11,7 @@ using RocketUI;
 
 namespace Alex.Gamestates
 {
-    public class GameStateManager
+    public class GameStateManager : DrawableGameComponent
     {
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(GameStateManager));
 
@@ -26,7 +26,7 @@ namespace Alex.Gamestates
         private SpriteBatch SpriteBatch { get; }
 		
 	    public GuiManager GuiManager { get; private set; }
-        public GameStateManager(GraphicsDevice graphics, SpriteBatch spriteBatch, GuiManager guiManager)
+        public GameStateManager(Game game, GraphicsDevice graphics, SpriteBatch spriteBatch, GuiManager guiManager) : base(game)
         { 
             Graphics = graphics;
             SpriteBatch = spriteBatch;
@@ -204,7 +204,8 @@ namespace Alex.Gamestates
 
 	    private IGameState _activeStateDoubleBuffer = null;
 
-	    public void Draw(GameTime gameTime)
+	    
+	    public override void Draw(GameTime gameTime)
 	    {
 		    IGameState activeState = _activeStateDoubleBuffer;
 
@@ -227,7 +228,7 @@ namespace Alex.Gamestates
 		    }
 	    }
 
-	    public void Update(GameTime gameTime)
+	    public override void Update(GameTime gameTime)
 	    {
 		    IGameState activeState = _activeStateDoubleBuffer;
 

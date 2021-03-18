@@ -127,25 +127,13 @@ namespace Alex
         public ServerTypeManager ServerTypeManager { get; private set; }
         public OptionsProvider   Options           { get; private set; }
 
+        private Point       WindowSize  { get; set; }
+        public  AudioEngine AudioEngine { get; set; }
         public Alex(LaunchSettings launchSettings)
         {
             WindowSize = new Point(1280, 750);
             
             EntityProperty.Factory = new AlexPropertyFactory();
-            /*MiNET.Utils.DedicatedThreadPool fastThreadPool =
-                ReflectionHelper.GetPrivateStaticPropertyValue<MiNET.Utils.DedicatedThreadPool>(
-                    typeof(MiNetServer), "FastThreadPool");
-
-            fastThreadPool?.Dispose();
-            fastThreadPool?.WaitForThreadsExit();
-            
-            ReflectionHelper.SetPrivateStaticPropertyValue<MiNET.Utils.DedicatedThreadPool>(
-                typeof(MiNetServer), "FastThreadPool",
-                new MiNET.Utils.DedicatedThreadPool(
-                    new MiNET.Utils.DedicatedThreadPoolSettings(8, "MiNETServer Fast")));*/
-
-            ThreadPool.GetMaxThreads(out _, out var completionPortThreads);
-            //ThreadPool.SetMaxThreads(Environment.ProcessorCount, completionPortThreads);
 
             Instance = this;
             LaunchSettings = launchSettings;
@@ -234,7 +222,6 @@ namespace Alex
             serviceCollection.AddSingleton<RocketDebugSocketServer>();
             serviceCollection.AddHostedService<RocketDebugSocketServer>(sp => sp.GetRequiredService<RocketDebugSocketServer>());
 
-
             InitiatePluginSystem(serviceCollection);
 
             AudioEngine = new AudioEngine(Storage, Options);
@@ -254,7 +241,9 @@ namespace Alex
 
             UIThreadQueue = new ConcurrentQueue<Action>();
 
-            FpsMonitor = new FpsMonitor();
+            FpsMonitor = new FpsMonitor(this);
+            FpsMonitor.UpdateOrder = 0;
+            Components.Add(FpsMonitor);
 
             Resources = Services.GetRequiredService<ResourceManager>();
 
@@ -329,9 +318,6 @@ namespace Alex
             var options = Services.GetService<IOptionsProvider>();
             options.Load();
 
-            //	DebugFont = (WrappedSpriteFont) Content.Load<SpriteFont>("Alex.Resources.DebugFont.xnb");
-
-            //	ResourceManager.EntityEffect = Content.Load<Effect>("Alex.Resources.Entityshader.xnb").Clone();
 #if DIRECTX
 			ResourceManager.BlockEffect = Content.Load<Effect>("Alex.Resources.Blockshader_dx.xnb").Clone();
 			ResourceManager.LightingEffect = Content.Load<Effect>("Alex.Resources.Lightmap_dx.xnb").Clone();
@@ -407,8 +393,11 @@ namespace Alex
 
             OnCharacterInput += GuiManager.FocusManager.OnTextInput;
 
-            GameStateManager = new GameStateManager(GraphicsDevice, _spriteBatch, GuiManager);
-
+            GameStateManager = new GameStateManager(this, GraphicsDevice, _spriteBatch, GuiManager);
+            GameStateManager.DrawOrder = 0;
+            GameStateManager.UpdateOrder = 0;
+            Components.Add(GameStateManager);
+            
             var splash = new SplashScreen();
             GameStateManager.AddState("splash", splash);
             GameStateManager.SetActiveState("splash");
@@ -519,9 +508,6 @@ namespace Alex
                 });
         }
 
-        private Point       WindowSize  { get; set; }
-        public  AudioEngine AudioEngine { get; set; }
-
         private void SetFullscreen(bool enabled)
         {
             UIThreadQueue.Enqueue(
@@ -568,8 +554,7 @@ namespace Alex
         protected override void UnloadContent()
         {
             //ProfileManager.SaveProfiles();
-
-            Services.GetService<IOptionsProvider>().Save();
+            Options.Save();
 
             GuiDebugHelper.Dispose();
 
@@ -593,24 +578,9 @@ namespace Alex
                 }
             }
 
-            GameStateManager.Update(gt);
+           // GameStateManager.Update(gt);
             //AudioEngine?.Update(gt, Vector3.Zero);
         }
-
-        protected override void Draw(GameTime gameTime)
-        {
-            //GraphicsDevice.Present();
-            FpsMonitor.Update();
-            GraphicsDevice.RasterizerState = RasterizerState.CullClockwise;
-
-            GameStateManager.Draw(gameTime);
-            
-            base.Draw(gameTime);
-
-            this.Metrics = GraphicsDevice.Metrics;
-        }
-
-        public GraphicsMetrics Metrics { get; set; } = new GraphicsMetrics();
 
         private void InitializeGame(IProgressReceiver progressReceiver)
         {
@@ -678,10 +648,6 @@ namespace Alex
             {
                 using (var skinImage = Image.Load<Rgba32>(skinBytes))
                 {
-                    //var modelTextureSize = PlayerModel.Description != null ?
-                    //	new Point((int) PlayerModel.Description.TextureWidth, (int) PlayerModel.Description.TextureHeight) :
-                    //	new Point((int) PlayerModel.Texturewidth, (int) PlayerModel.Textureheight);
-
                     var modelTextureSize = new Point(0, 0);
 
                     if (PlayerModel.Description != null)
@@ -698,30 +664,6 @@ namespace Alex
                     {
                         PlayerTexture = skinImage.Clone(); //.Clone<Rgba32>();
                     }
-
-                    /*
-                    var textureSize = new Point(skinImage.Width, skinImage.Height);
-
-                    if (modelTextureSize != textureSize)
-                    {
-                        int newHeight = modelTextureSize.Y > textureSize.Y ? textureSize.Y : modelTextureSize.Y;
-                        int newWidth  = modelTextureSize.X > textureSize.X ? textureSize.X: modelTextureSize.X;
-                    
-                        //skinImage.Mutate<Rgba32>(x => x.Resize(newWidth, newHeight));
-                    
-                        Image<Rgba32> skinTexture = new Image<Rgba32>(Math.Max(modelTextureSize.X, skinImage.Width), Math.Max(modelTextureSize.Y, skinImage.Height));
-                        skinTexture.Mutate<Rgba32>(
-                            c =>
-                            {
-                                c.DrawImage(skinImage, new SixLabors.ImageSharp.Point(0, 0), 1f);
-                            });
-                    
-                        PlayerTexture = skinTexture;
-                    }
-                    else
-                    {
-                        PlayerTexture = skinImage.Clone<Rgba32>();
-                    }*/
                 }
             }
             else
