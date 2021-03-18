@@ -23,11 +23,21 @@ namespace Alex.API.Input
         {
             l.ClearMap();
 
-            if (_storage.TryReadJson($"controls", out Dictionary<string, Keys> loadedBindings))
+            if (_storage.TryReadJson($"controls", out Dictionary<string, Keys[]> loadedBindings))
             {
                 foreach (var binding in loadedBindings)
                 {
-                    l.RegisterMap(InputCommand.Parse(binding.Key), binding.Value);
+                    string key = binding.Key;
+                    if (!key.Contains(':'))
+                    {
+                        key = $"{AlexInputCommand.AlexNamespace}:{key}";
+                    }
+
+                    var cmd = InputCommand.Parse(key);
+                    foreach (var k in binding.Value)
+                    {
+                        l.RegisterMap(cmd, k);
+                    }
                 }
             }
             else

@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Linq;
+using System.Reflection;
 using Alex.API.Gui;
 using Alex.API.Gui.Graphics;
 using Alex.API.Localization;
@@ -479,6 +481,23 @@ namespace Alex.Gui
 		
 		public IStyle[] ResolveStyles(Type elementType, string[] classNames)
 		{
+			if (elementType.IsAssignableFrom(typeof(Button)))
+			{
+				return new[]
+				{
+					new Style()
+					{
+						Name = nameof(Button),
+						TargetType = typeof(Button),
+						Setters = new ObservableCollection<Setter>()
+						{
+							new Setter(
+								nameof(Button.Background),
+								new GuiTexture2D() {TextureResource = AlexGuiTextures.ButtonDefault})
+						}
+					}
+				};
+			}
 			return null;
 		}
 	}

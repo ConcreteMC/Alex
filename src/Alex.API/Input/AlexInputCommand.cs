@@ -65,12 +65,11 @@ namespace Alex.API.Input
 
         public static InputCommand[] GetAll()
         {
-            var props = typeof(AlexInputCommand).GetProperties(BindingFlags.Public | BindingFlags.Static)
-                .Where(p => p.PropertyType == typeof(InputCommand))
+            var props = typeof(AlexInputCommand).GetFields(BindingFlags.Public | BindingFlags.Static)
+                .Where(p => p.FieldType == typeof(InputCommand))
                 .ToArray();
             return props
                 .Select(prop => prop.GetValue(null) is InputCommand ic ? ic : default)
-                .Where(v => v != default)
                 .ToArray();
         }
     }
