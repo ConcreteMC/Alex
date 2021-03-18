@@ -53,6 +53,7 @@ These repositories were super helpfull while i was building Alex! You should che
 * [MiNET](https://github.com/NiclasOlofsson/MiNET) - A Minecraft Bedrock Edition server written in C#
 * [TrueCraft](https://github.com/SirCmpwn/TrueCraft) - A Minecraft beta 1.7.3 client written in C#
 * [MoLang](https://github.com/bedrockk/MoLang) - A MoLang implementation for Java
+* [RocketUI](https://github.com/TruDan/RocketUI) - The GUI library used in Alex
 
 Other resources
 ---------------

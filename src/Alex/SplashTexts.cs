@@ -22,7 +22,8 @@ namespace Alex
 			$"Thanks {TextColor.Cyan}TruDan!",
 			"3D Transformations are hard...",
 			$"Powered by {TextColor.Rainbow("MiNET")}",
-			$"Wow... This logo {TextColor.Bold}SUCKS{TextColor.Reset} :O"
+			$"Wow... This logo {TextColor.Bold}SUCKS{TextColor.Reset} :O",
+			$"GUI powered by {TextColor.Gold}https://github.com/TruDan/RocketUI"
 		};
 		
 		public static string GetSplashText()
