@@ -261,7 +261,7 @@ namespace Alex.Net.Bedrock
 		}
 
 
-		private void ReceiveCallback(object o)
+		private async void ReceiveCallback(object o)
 		{
 			//using (var stream = new NetworkStream(_listener.Client))
 			{
@@ -281,10 +281,10 @@ namespace Alex.Net.Bedrock
 
 					try
 					{
-						
-						var receiveBytes = listener.Receive(ref senderEndpoint);
-						//var receiveBytes = receive.Buffer;
-						//senderEndpoint = receive.RemoteEndPoint;
+						var receive = await listener.ReceiveAsync();
+						//var receiveBytes = listener.Receive(ref senderEndpoint);
+						var receiveBytes = receive.Buffer;
+						senderEndpoint = receive.RemoteEndPoint;
 
 						//Interlocked.Increment(ref ConnectionInfo.PacketsIn);
 						Interlocked.Add(ref ConnectionInfo.BytesIn, receiveBytes.Length);
@@ -715,6 +715,8 @@ namespace Alex.Net.Bedrock
 		private object _sendSync = new object();
 		public async Task SendDataAsync(byte[] data, int length, IPEndPoint targetEndPoint)
 		{
+			if (length <= 0)
+				return;
 			Monitor.Enter(_sendSync);
 
 			try
@@ -738,7 +740,7 @@ namespace Alex.Net.Bedrock
 				}
 				catch (Exception e)
 				{
-					Log.Warn(e);
+					Log.Warn(e, "Error. Data length={data.Length} Length={length} Target={targetEndPoint}");
 					//if(_listener == null || _listener.Client != null) Log.Error(string.Format("Send data lenght: {0}", data.Length), e);
 				}
 			}
@@ -922,7 +924,7 @@ namespace Alex.Net.Bedrock
 				}
 				
 				MtuSize = mtuSize;
-				Log.Warn("MTU Size: " + mtuSize);
+				Log.Warn($"MTU Size: {mtuSize} Endpoint: {targetEndPoint}");
 				
 				session = new RaknetSession(ConnectionInfo, this, targetEndPoint, mtuSize)
 				{

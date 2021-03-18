@@ -70,8 +70,8 @@ namespace Alex.Net.Bedrock
 
 		public ICustomMessageHandler CustomMessageHandler { get; set; }
 		
-		public IPEndPoint EndPoint { get; private set; }
-		public short MtuSize { get; set; }
+		public IPEndPoint EndPoint { get; }
+		public short MtuSize { get; }
 		public long NetworkIdentifier { get; set; }
 
 		public int DatagramSequenceNumber = -1;
