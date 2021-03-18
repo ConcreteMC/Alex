@@ -32,7 +32,7 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Sound
 	public class SoundDefinition
     {
         [JsonProperty("category", NullValueHandling = NullValueHandling.Ignore)]
-        public string Category { get; set; }
+        public SoundCategory Category { get; set; }
 
         [JsonProperty("sounds")]
         public SoundElement[] Sounds { get; set; }
@@ -70,6 +70,12 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Sound
 
         [JsonProperty("stream", NullValueHandling = NullValueHandling.Ignore)]
         public bool? Stream { get; set; }
+
+        [JsonProperty("is3D", NullValueHandling = NullValueHandling.Ignore)]
+        public bool? Is3D { get; set; } = true;
+
+        [JsonProperty("weight", NullValueHandling = NullValueHandling.Ignore)]
+        public int? Weight { get; set; } = 1;
     }
 
     public struct SoundElement

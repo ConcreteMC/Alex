@@ -73,7 +73,7 @@ namespace Alex.Gamestates.MainMenu.Options
                         "Limit Framerate: {0}", options => options.VideoOptions.LimitFramerate),
                     FpsSlider = CreateSlider(
                         $"{GuiRenderer.GetTranslation("options.framerateLimit")}: {{0}} fps",
-                        o => Options.VideoOptions.MaxFramerate, 1, 120, 1));
+                        o => Options.VideoOptions.MaxFramerate, 30, 120, 1));
 
                 AddGuiRow(
                     VSync = CreateToggle(

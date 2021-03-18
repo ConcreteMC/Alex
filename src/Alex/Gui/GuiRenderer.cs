@@ -8,12 +8,15 @@ using Alex.API.Gui;
 using Alex.API.Gui.Graphics;
 using Alex.API.Localization;
 using Alex.API.Utils;
+using Alex.Audio;
 using Alex.ResourcePackLib;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
 using RocketUI;
+using RocketUI.Audio;
+using AudioEngine = Alex.Audio.AudioEngine;
 
 namespace Alex.Gui
 {
@@ -41,7 +44,7 @@ namespace Alex.Gui
 
 		private readonly Dictionary<GuiTextures, TextureSlice2D>  _textureCache       = new Dictionary<GuiTextures, TextureSlice2D>();
 		private readonly Dictionary<string, TextureSlice2D>       _pathedTextureCache = new Dictionary<string, TextureSlice2D>();
-		private readonly Dictionary<GuiSoundEffects, SoundEffect> _soundEffectCache   = new Dictionary<GuiSoundEffects, SoundEffect>();
+		private readonly Dictionary<GuiSoundEffects, ISoundEffect> _soundEffectCache   = new Dictionary<GuiSoundEffects, ISoundEffect>();
 
 		private Texture2D _widgets;
 		private Texture2D _icons;
@@ -116,11 +119,9 @@ namespace Alex.Gui
 		#endregion
 
 		#endregion
-
-
+		
 		public GuiRenderer()
 		{
-			
 		}
 
 
@@ -128,18 +129,25 @@ namespace Alex.Gui
 		{
 			_graphicsDevice  = graphics;
 			_resourceManager = serviceProvider.GetRequiredService<ResourceManager>();
+			
 			LoadEmbeddedTextures();
+			LoadSoundEffects(serviceProvider.GetRequiredService<AudioEngine>());
 		}
 
-		private void LoadSoundEffect(GuiSoundEffects guiSoundEffects, SoundEffect soundEffect)
+		private void LoadSoundEffects(AudioEngine audioEngine)
+		{
+			LoadSoundEffect(GuiSoundEffects.ButtonClick, new RocketSoundEffect(audioEngine, "random.click"));
+		}
+
+		private void LoadSoundEffect(GuiSoundEffects guiSoundEffects, ISoundEffect soundEffect)
 		{
 			_soundEffectCache[guiSoundEffects] = soundEffect;
 		}
-		public SoundEffectInstance GetSoundEffect(GuiSoundEffects soundEffects)
+		public ISoundEffect GetSoundEffect(GuiSoundEffects soundEffects)
 		{
 			if (_soundEffectCache.TryGetValue(soundEffects, out var soundEffect))
 			{
-				return soundEffect.CreateInstance();
+				return soundEffect;//.CreateInstance();
 			}
 
 			return null;
@@ -481,7 +489,39 @@ namespace Alex.Gui
 		
 		public IStyle[] ResolveStyles(Type elementType, string[] classNames)
 		{
-			if (elementType.IsAssignableFrom(typeof(Button)))
+			if (elementType.IsAssignableFrom(typeof(StackMenuItem)))
+			{
+				return new[]
+				{
+					new Style()
+					{
+						Name = nameof(StackMenuItem),
+						TargetType = typeof(StackMenuItem),
+						Setters = new ObservableCollection<Setter>()
+						{
+							new Setter(
+								nameof(Button.Background), 
+								new GuiTexture2D() {Color = Color.Transparent}),
+							new Setter(
+								nameof(Button.DisabledBackground),
+								new GuiTexture2D() {Color = Color.Transparent}),
+							new Setter(
+								nameof(Button.FocusedBackground),
+								new GuiTexture2D() {Color = Color.Transparent}),
+							new Setter(
+								nameof(Button.HighlightedBackground),
+								new GuiTexture2D() {Color = new Color(Color.Black * 0.8f, 0.5f)}),
+							new Setter(
+								nameof(Button.HighlightColor),
+								new GuiTexture2D() {Color = (Color) TextColor.Cyan}),
+							new Setter(
+								nameof(Button.DefaultColor),
+								new GuiTexture2D() {Color = (Color) TextColor.White})
+						},
+					}
+				};
+			}
+			else if (elementType.IsAssignableFrom(typeof(Button)))
 			{
 				return new[]
 				{

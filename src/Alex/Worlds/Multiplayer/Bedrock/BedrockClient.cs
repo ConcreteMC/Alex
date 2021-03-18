@@ -125,7 +125,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			//ReflectionHelper.SetPrivateStaticFieldValue();
 			//MiNetServer.FastThreadPool = threadPool;
 
-			_disposables.Add(ResourcePackManager = new ResourcePackManager(this));
+			_disposables.Add(ResourcePackManager = new ResourcePackManager(this, Alex.Resources));
 
 			if (wp != null)
 			{

@@ -18,10 +18,12 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		
 		private BedrockClient                                   _client;
 		private ConcurrentDictionary<string, ResourcePackEntry> _resourcePackEntries;
-		public ResourcePackManager(BedrockClient client)
+		private ResourceManager _resourceManager;
+		public ResourcePackManager(BedrockClient client, ResourceManager resourceManager)
 		{
 			_client = client;
 			_resourcePackEntries = new ConcurrentDictionary<string, ResourcePackEntry>();
+			_resourceManager = resourceManager;
 		}
 
 		private ResourcePackIds _resourcePackIds;

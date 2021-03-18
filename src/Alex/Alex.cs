@@ -210,6 +210,8 @@ namespace Alex
             serviceCollection.AddSingleton<ContentManager>(Content);
             serviceCollection.AddSingleton<IStorageSystem>(Storage);
             serviceCollection.AddSingleton<IOptionsProvider>(Options);
+            AudioEngine = new AudioEngine(Storage, Options);
+            serviceCollection.AddSingleton<Audio.AudioEngine>(AudioEngine);
             
             // RocketUI
             serviceCollection.TryAddEnumerable(ServiceDescriptor.Singleton<IInputListenerFactory, AlexKeyboardInputListenerFactory>());
@@ -223,8 +225,6 @@ namespace Alex
             serviceCollection.AddHostedService<RocketDebugSocketServer>(sp => sp.GetRequiredService<RocketDebugSocketServer>());
 
             InitiatePluginSystem(serviceCollection);
-
-            AudioEngine = new AudioEngine(Storage, Options);
 
             ConfigureServices(serviceCollection);
 
