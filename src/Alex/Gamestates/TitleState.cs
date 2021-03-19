@@ -90,7 +90,7 @@ namespace Alex.Gamestates
                     new MenuItem()
                     {
                         Title = "menu.options",
-                        OnClick = (sender, args) => { Alex.GameStateManager.SetActiveState("options"); },
+                        OnClick = (sender, args) => { Alex.GameStateManager.SetActiveState(new OptionsState(_backgroundSkyBox)); },
                         IsTranslatable = true
                     },
                     new MenuItem()
@@ -329,12 +329,12 @@ namespace Alex.Gamestates
 
         protected override void OnShow()
         {
-            if (Alex.GameStateManager.TryGetState<OptionsState>("options", out _))
+            /*if (Alex.GameStateManager.TryGetState<OptionsState>("options", out _))
             {
                 Alex.GameStateManager.RemoveState("options");
             }
 
-            Alex.GameStateManager.AddState("options", new OptionsState(_backgroundSkyBox));
+            Alex.GameStateManager.AddState("options", new OptionsState(_backgroundSkyBox));*/
 
             _playerView.Entity.SetInventory(new BedrockInventory(46));
 

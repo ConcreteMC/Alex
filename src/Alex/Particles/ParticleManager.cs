@@ -102,7 +102,7 @@ namespace Alex.Particles
 			int count = 0;
 			_spriteBatch.Begin(
 				SpriteSortMode.BackToFront, BlendState.NonPremultiplied, SamplerState.PointWrap, DepthStencilState.DepthRead,
-				RasterizerState.CullNone);
+				RasterizerState.CullCounterClockwise);
 
 			try
 			{

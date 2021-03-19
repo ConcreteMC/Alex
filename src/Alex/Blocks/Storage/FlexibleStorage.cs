@@ -11,7 +11,7 @@ namespace Alex.Blocks.Storage
 		private long _maxEntryValue;
 
 		public FlexibleStorage(int bitsPerEntry, int size) : this(
-			bitsPerEntry, ArrayPool<long>.Shared.Rent(RoundUp(size * bitsPerEntry, 64) / 64))
+			bitsPerEntry, new long[RoundUp(size * bitsPerEntry, 64) / 64])
 		{
 			
 		}
@@ -105,8 +105,8 @@ namespace Alex.Blocks.Storage
 		/// <inheritdoc />
 		public void Dispose()
 		{
-			ArrayPool<long>.Shared.Return(_data);
-			_data = null;
+		//	ArrayPool<long>.Shared.Return(_data, true);
+	//		_data = null;
 		}
 	}
 }

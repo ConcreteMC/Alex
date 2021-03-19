@@ -32,17 +32,6 @@ namespace Alex.Gamestates
 			OptionsProvider = GetService<IOptionsProvider>();
 		}
 
-		public Viewport Viewport => Graphics.Viewport;
-
-		public Vector2 CenterScreen
-		{
-			get
-			{
-				return new Vector2((Graphics.Viewport.Width / 2f),
-					(Graphics.Viewport.Height / 2f));
-			}
-		}
-
 		public void Load(IRenderArgs args)
 		{
 			if(IsLoaded) return;

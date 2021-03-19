@@ -14,6 +14,7 @@ namespace Alex.Blocks.Storage
         private IPallete Pallette { get; set; }
 
         private static BlockState Air = BlockFactory.GetBlockState("minecraft:air");
+        private object _lock = new object();
         public BlockStorage()
         {
             _bits = 8;
@@ -32,9 +33,12 @@ namespace Alex.Blocks.Storage
 
         private void Set(int idx, BlockState state)
         {
-            uint i = IdFor(state); //BlockFactory.GetBlockStateId(state);
+            lock (_lock)
+            {
+                uint i = IdFor(state); //BlockFactory.GetBlockStateId(state);
 
-            Storage[idx] = i;
+                Storage[idx] = i;
+            }
         }
 
         private uint IdFor(BlockState state)
@@ -107,11 +111,15 @@ namespace Alex.Blocks.Storage
 
         private BlockState Get(int index)
         {
-            var result = Pallette.Get(Storage[index]);
-            if (result == null)
-                return Air;
+            lock (_lock)
+            {
+                var result = Pallette.Get(Storage[index]);
 
-            return result;
+                if (result == null)
+                    return Air;
+
+                return result;
+            }
         }
 
         private static int GetIndex(int x, int y, int z)

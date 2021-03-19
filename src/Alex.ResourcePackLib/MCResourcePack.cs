@@ -268,6 +268,7 @@ namespace Alex.ResourcePackLib
 					}
 				}
 			}
+
 			/*var blockStates = _blockStates.ToArray();
 			total = blockStates.Length;
 			count = 0;

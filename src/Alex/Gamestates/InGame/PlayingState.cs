@@ -59,27 +59,6 @@ namespace Alex.Gamestates.InGame
 			World.Player.IsFirstPersonMode = true;
 			
 			WorldProvider = worldProvider;
-			if (worldProvider is SPWorldProvider)
-			{
-				World.DoDaylightcycle = false;
-				//World.Player.SetInventory(new BedrockInventory(46));
-				if (ItemFactory.TryGetItem("minecraft:diamond_sword", out var sword))
-				{
-					World.Player.Inventory.MainHand = sword;
-					World.Player.Inventory[World.Player.Inventory.HotbarOffset] = sword;
-				}
-				
-				if (ItemFactory.TryGetItem("minecraft:dirt", out var dirt))
-				{
-					World.Player.Inventory[World.Player.Inventory.HotbarOffset + 1] = dirt;
-				}
-				
-				if (ItemFactory.TryGetItem("minecraft:diamond", out var compass))
-				{
-					World.Player.Inventory[World.Player.Inventory.HotbarOffset + 2] = compass;
-				}
-			}
-			
 			var title = new TitleComponent();
 
 			WorldProvider = worldProvider;

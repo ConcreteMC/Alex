@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Alex.ResourcePackLib.Json.Models.Blocks;
@@ -83,9 +84,9 @@ namespace Alex.ResourcePackLib.Json.Models
         /// <summary>
         /// Holds the textures of the model. Each texture starts in assets/minecraft/textures or can be another texture variable.
         /// </summary>
-        public Dictionary<string, string> Textures { get; set; } = new Dictionary<string, string>();
+        public Dictionary<string, string> Textures { get; set; } = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         
-        public Dictionary<string, DisplayElement> Display { get; set; } = new Dictionary<string, DisplayElement>()
+        public Dictionary<string, DisplayElement> Display { get; } = new Dictionary<string, DisplayElement>(StringComparer.OrdinalIgnoreCase)
         {
             {"gui", new DisplayElement(new Vector3(30, 225, 0), new Vector3(0,0,0), new Vector3(0.625f, 0.625f, 0.625f))},
             //{"gui", new DisplayElement(new Vector3(30, 255, 0), new Vector3(0,0,0), new Vector3(0.625f, 0.625f, 0.625f))},

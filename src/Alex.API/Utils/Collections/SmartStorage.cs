@@ -2,7 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 
-namespace Alex.Worlds.Chunks
+namespace Alex.API.Utils.Collections
 {
 	public class SmartStorage<T>
 	{
