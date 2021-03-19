@@ -64,6 +64,9 @@ namespace Alex.ResourcePackLib.Json.Converters.Particles
 						
 						components.Add(kvp.Key, kvp.Value.ToObject<InitialSpeedComponent>(s));
 						break;
+					case ParticleInitComponent.ComponentName:
+						components.Add(kvp.Key, kvp.Value.ToObject<ParticleInitComponent>(serializer));
+						break;
 				}
 			}
 			

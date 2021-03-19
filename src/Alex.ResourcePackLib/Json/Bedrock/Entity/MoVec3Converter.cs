@@ -60,4 +60,58 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Entity
 			throw new Exception("No.");
 		}
 	}
+	
+	public class MoVec4Converter : JsonConverter<MoLangVector4Expression>
+	{
+		/// <inheritdoc />
+		public override bool CanWrite => false;
+
+		/// <inheritdoc />
+		public override void WriteJson(JsonWriter writer, MoLangVector4Expression value, JsonSerializer serializer)
+		{
+			throw new NotImplementedException();
+		}
+
+		/// <inheritdoc />
+		public override MoLangVector4Expression ReadJson(JsonReader reader,
+			Type objectType,
+			MoLangVector4Expression existingValue,
+			bool hasExistingValue,
+			JsonSerializer serializer)
+		{
+			var obj = JToken.Load(reader);
+
+			switch (obj.Type)
+			{
+				case JTokenType.Array:
+					if (obj is JArray jArray)
+					{
+						IExpression[][] values = jArray.ToObject<IExpression[][]>(MCJsonConvert.Serializer);
+
+						return new MoLangVector4Expression(values);
+					}
+					break;
+				case JTokenType.Object:
+					if (obj is JObject jObject)
+					{
+						return new MoLangVector4Expression(
+							jObject.ToObject<Dictionary<string, ComplexStuff>>(
+								new JsonSerializer()
+								{
+									Converters = { new MoLangExpressionConverter()}
+								}));
+					}
+					break;
+			}
+			
+			var raw = obj.ToObject<IExpression[]>(MCJsonConvert.Serializer);
+
+			return new MoLangVector4Expression(new IExpression[][]
+			{
+				raw
+			});
+			
+			throw new Exception("No.");
+		}
+	}
 }

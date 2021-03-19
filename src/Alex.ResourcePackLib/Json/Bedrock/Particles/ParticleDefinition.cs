@@ -25,7 +25,7 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Particles
 					return erc.MaxParticles;
 				}
 
-				return 50;
+				return 500;
 			}
 		}
 

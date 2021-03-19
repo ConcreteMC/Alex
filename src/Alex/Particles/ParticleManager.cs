@@ -29,6 +29,9 @@ namespace Alex.Particles
 
 		public bool Enabled { get; set; } = true;
 		public int ParticleCount { get; private set; }
+
+		private ConcurrentDictionary<string, PooledTexture2D> _sharedTextures =
+			new ConcurrentDictionary<string, PooledTexture2D>();
 		public ParticleManager(GraphicsDevice device) : base()
 		{
 			_spriteBatch = new SpriteBatch(device);
@@ -45,15 +48,30 @@ namespace Alex.Particles
 				if (_particles.ContainsKey(particle.Value.Description.Identifier))
 					continue;
 
-				if (resourcePack.TryGetTexture(
-					particle.Value.Description.BasicRenderParameters.Texture, out var texture))
+				var texturePath = particle.Value.Description.BasicRenderParameters.Texture;
+
+				PooledTexture2D texture2d = null;
+
+				if (!_sharedTextures.TryGetValue(texturePath
+					, out texture2d))
 				{
-					var pooled = TextureUtils.BitmapToTexture2D(this, _graphics, texture);
+					if (resourcePack.TryGetTexture(
+						texturePath, out var img))
+					{
+						var pooled = TextureUtils.BitmapToTexture2D(this, _graphics, img);
+						texture2d = pooled;
 
-					Particle p = new Particle(pooled, particle.Value);
+						_sharedTextures.TryAdd(texturePath, texture2d);
+					}
+				}
+				
+				if (texture2d != null)
+				{
+					Particle p = new Particle(texture2d, particle.Value);
+					texture2d.Use();
 
-					if (particle.Value.Components.ContainsKey("minecraft:particle_appearance_tinting"))
-						p.HasColor = true;
+					//if (particle.Value.Components.ContainsKey("minecraft:particle_appearance_tinting"))
+					//	p.HasColor = true;
 					
 					if (!_particles.TryAdd(particle.Value.Description.Identifier, p))
 					{
@@ -108,6 +126,11 @@ namespace Alex.Particles
 			if (!Enabled)
 				return;
 			
+			foreach (var particle in _particles)
+			{
+				particle.Value.Update(gameTime);
+			}
+			
 			/*_accumulator += gameTime.ElapsedGameTime.TotalMilliseconds;
 
 			while (_accumulator >= 50d)
@@ -126,8 +149,9 @@ namespace Alex.Particles
 			}
 		}
 
-		private bool TryConvert(ParticleType type, out string value)
+		private bool TryConvert(ParticleType type, out string value, out ParticleDataMode dataMode)
 		{
+			dataMode = ParticleDataMode.None;
 			switch (type)
 			{
 				case ParticleType.Bubble:
@@ -136,6 +160,7 @@ namespace Alex.Particles
 
 				case ParticleType.Critical:
 					value = "minecraft:critical_hit_emitter";
+					dataMode = ParticleDataMode.Scale;
 					return true;
 
 				case ParticleType.BlockForceField:
@@ -172,7 +197,9 @@ namespace Alex.Particles
 					break;
 
 				case ParticleType.ItemBreak:
-					break;
+					dataMode = ParticleDataMode.Item;
+					value = "minecraft:breaking_item_icon";
+					return true;
 
 				case ParticleType.SnowballPoof:
 					break;
@@ -192,14 +219,15 @@ namespace Alex.Particles
 ;					return true;
 
 				case ParticleType.Terrain:
-					break;
+					dataMode = ParticleDataMode.BlockRuntimeId;
+					value = "minecraft:breaking_item_terrain";
+					return true;
 
 				case ParticleType.TownAura:
 					break;
 
 				case ParticleType.Portal:
 					value = "minecraft:mob_portal";
-
 					return true;
 
 				case ParticleType.WaterSplash:
@@ -208,7 +236,7 @@ namespace Alex.Particles
 
 				case ParticleType.WaterWake:
 					value = "minecraft:water_wake_particle";
-					break;
+					return true;
 
 				case ParticleType.DripWater:
 					value = "minecraft:water_drip_particle";
@@ -220,10 +248,12 @@ namespace Alex.Particles
 					return true;
 
 				case ParticleType.DripHoney:
-					break;
+					value = "minecraft:honey_drip_particle";
+					return true;
 
 				case ParticleType.Dust:
 					value = "minecraft:redstone_wire_dust_particle";
+					dataMode = ParticleDataMode.Color;
 					return true;
 
 				case ParticleType.MobSpell:
@@ -238,14 +268,13 @@ namespace Alex.Particles
 
 				case ParticleType.Ink:
 					value = "minecraft:ink_emitter";
-					break;
+					return true;
 
 				case ParticleType.Slime:
 					break;
 
 				case ParticleType.RainSplash:
 					value = "minecraft:rain_splash_particle";
-
 					return true;
 
 				case ParticleType.VillagerAngry:
@@ -265,7 +294,6 @@ namespace Alex.Particles
 
 				case ParticleType.Note:
 					value = "minecraft:note_particle";
-
 					return true;
 
 				case ParticleType.WitchSpell:
@@ -285,7 +313,6 @@ namespace Alex.Particles
 
 				case ParticleType.Spit:
 					value = "minecraft:llama_spit_smoke";
-
 					return true;
 
 				case ParticleType.Totem:
@@ -312,22 +339,18 @@ namespace Alex.Particles
 
 				case ParticleType.Sparkler:
 					value = "minecraft:sparkler_emitter";
-
 					return true;
 
 				case ParticleType.Conduit:
 					value = "minecraft:conduit_particle";
-
 					return true;
 
 				case ParticleType.BubbleColumnUp:
 					value = "minecraft:bubble_column_up_particle";
-
 					return true;
 
 				case ParticleType.BubbleColumnDown:
 					value = "minecraft:bubble_column_down_particle";
-
 					return true;
 
 				case ParticleType.Sneeze:
@@ -342,26 +365,35 @@ namespace Alex.Particles
 			if (!Enabled)
 				return true;
 			
-			if (TryConvert(type, out var str))
+			if (TryConvert(type, out var str, out ParticleDataMode dataMode))
 			{
-				return SpawnParticle(str, position, data);
+				return SpawnParticle(str, position, data, dataMode);
 			}
 
 			return false;
 		}
 		
-		public bool SpawnParticle(string name, Vector3 position, int data = 0)
+		public bool SpawnParticle(string name, Vector3 position, int data = 0, ParticleDataMode dataMode = ParticleDataMode.None)
 		{
 			if (!Enabled)
 				return true;
 			
 			if (_particles.TryGetValue(name, out var p))
 			{
-				p.Spawn(position, data);
+				p.Spawn(position, data, dataMode);
 				return true;
 			}
 
 			return false;
 		}
+	}
+
+	public enum ParticleDataMode
+	{
+		None,
+		Color,
+		Scale,
+		BlockRuntimeId,
+		Item
 	}
 }
