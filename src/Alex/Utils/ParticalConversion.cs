@@ -9,9 +9,11 @@ namespace Alex.Utils
 		{
 			switch (java)
 			{
+				case "minecraft:smoke":                 return "minecraft:basic_smoke_particle";
+				case "minecraft:dust":                  return "minecraft:redstone_wire_dust_particle";
 				case "minecraft:ambient_entity_effect": return "minecraft:mobspell_emitter";
 				case "minecraft:angry_villager":        return "minecraft:villager_angry";
-				case "minecraft:bubble":                return "basic_bubble_particle_manual";
+				case "minecraft:bubble":                return "minecraft:basic_bubble_particle_manual";
 				case "minecraft:bubble_column_up":      return "minecraft:bubble_column_up_particle";
 				case "minecraft:bubble_pop":            return "minecraft:bubble_column_particle";
 				case "minecraft:campfire_cosy_smoke":   return "minecraft:campfire_smoke_particle";
@@ -31,7 +33,7 @@ namespace Alex.Utils
 				case "minecraft:explosion":             return "minecraft:large_explosion";
 				case "minecraft:explosion_emitter":     return "minecraft:huge_explosion_emitter";
 				case "minecraft:falling_lava":          return "minecraft:lava_drip_particle";
-				case "minecraft:falling_water":         return "water_splash_particle";
+				case "minecraft:falling_water":         return "minecraft:water_splash_particle";
 				case "minecraft:firework":              return "minecraft:sparkler_emitter";
 				case "minecraft:fishing":               return "minecraft:water_wake_particle";
 				case "minecraft:flame":                 return "minecraft:basic_flame_particle";
@@ -44,7 +46,7 @@ namespace Alex.Utils
 				case "minecraft:mycelium":              return "minecraft:mycelium_dust_particle";
 				case "minecraft:nautilus":              return "minecraft:nautilus";
 				case "minecraft:note":                  return "minecraft:note_particle";
-				case "minecraft:poof":                  return "explode";
+				case "minecraft:poof":                  return "minecraft:explode";
 				case "minecraft:portal":                return "minecraft:mob_portal";
 				case "minecraft:squid_ink":             return "minecraft:ink";
 				case "minecraft:splash":                return "minecraft:water_splash_particle_manual";

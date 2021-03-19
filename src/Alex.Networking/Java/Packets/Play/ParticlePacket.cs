@@ -7,9 +7,9 @@ namespace Alex.Networking.Java.Packets.Play
 	{
 		public int ParticleId;
 		public bool LongDistance;
-		public float X;
-		public float Y;
-		public float Z;
+		public double X;
+		public double Y;
+		public double Z;
 		public float OffsetX;
 		public float OffsetY;
 		public float OffsetZ;
@@ -20,9 +20,9 @@ namespace Alex.Networking.Java.Packets.Play
 		{
 			ParticleId = stream.ReadInt();
 			LongDistance = stream.ReadBool();
-			X = stream.ReadFloat();
-			Y = stream.ReadFloat();
-			Z = stream.ReadFloat();
+			X = stream.ReadDouble();
+			Y = stream.ReadDouble();
+			Z = stream.ReadDouble();
 			OffsetX = stream.ReadFloat();
 			OffsetY = stream.ReadFloat();
 			OffsetZ = stream.ReadFloat();

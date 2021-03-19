@@ -837,6 +837,11 @@ namespace Alex.Worlds.Multiplayer.Java
 			}
 		}
 
+		private float RandomParticleOffset()
+		{
+			return 1f - (FastRandom.Instance.NextFloat() * 2f);
+		}
+
 		private void HandleParticlePacket(ParticlePacket packet)
 		{
 			var particleType =
@@ -846,9 +851,21 @@ namespace Alex.Worlds.Multiplayer.Java
 			if (particleType.Key != null)
 			{
 				var type = ParticleConversion.ConvertToBedrock(particleType.Key);
-				if (!Alex.ParticleManager.SpawnParticle(type, new Vector3(packet.X, packet.Y, packet.Z)))
+
+				for (int i = 0; i < packet.ParticleCount; i++)
 				{
-					Log.Warn($"Could not spawn particle with type: {packet.ParticleId} (Java: {particleType.Key} | Bedrock: {type})");
+					if (!Alex.ParticleManager.SpawnParticle(
+						type,
+						new Vector3(
+							(float) ((float) packet.X + (packet.OffsetX * RandomParticleOffset())),
+							(float) ((float) packet.Y + (packet.OffsetY * RandomParticleOffset())),
+							(float) ((float) packet.Z + (packet.OffsetZ * RandomParticleOffset())))))
+					{
+						Log.Warn(
+							$"Could not spawn particle with type: {packet.ParticleId} (Java: {particleType.Key} | Bedrock: {type})");
+
+						break;
+					}
 				}
 			}
 			else

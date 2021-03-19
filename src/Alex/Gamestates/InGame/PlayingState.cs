@@ -84,6 +84,8 @@ namespace Alex.Gamestates.InGame
 
 			WorldProvider = worldProvider;
 			WorldProvider.Init(World);
+			
+			Alex.ParticleManager.Reset();
 
 			WorldProvider.TitleComponent = title;
 
