@@ -160,16 +160,22 @@ namespace Alex.Particles
 				if (count >= MaxParticles)
 					continue;
 
-				count++;
-
 				var pos = instance.Position;
 
-				var scale = 1f - (Vector3.DistanceSquared(camera.Position, pos) / camera.FarDistance);
-				if (scale <= 0f)
-					continue;
+				//var scale = 1f - (Vector3.DistanceSquared(camera.Position, pos) / camera.FarDistance);
+				//if (scale <= 0f)
+				//	continue;
 				
 				var screenSpace = spriteBatch.GraphicsDevice.Viewport.Project(
 					pos, camera.ProjectionMatrix, camera.ViewMatrix, Matrix.Identity);
+				
+				bool isOnScreen = spriteBatch.GraphicsDevice.Viewport.Bounds.Contains((int) screenSpace.X, (int) screenSpace.Y);
+
+				if (!isOnScreen) continue;
+				
+				count++;
+				float depth = screenSpace.Z;
+				float scale =  1f - (Vector3.DistanceSquared(camera.Position, pos) / camera.FarDistance);// 1.0f / depth;
 				
 				Vector2 textPosition;
 				textPosition.X = screenSpace.X;
@@ -182,7 +188,7 @@ namespace Alex.Particles
 					Texture, textPosition, new Rectangle(textureLocation.ToPoint(), textureSize.ToPoint()),
 					instance.Color, 0f, Vector2.Zero,
 					new Vector2( scale * instance.Scale * instance.Size.X, scale * instance.Scale * instance.Size.Y),
-					SpriteEffects.None, screenSpace.Z);
+					SpriteEffects.None, depth);
 			}
 
 			return count;

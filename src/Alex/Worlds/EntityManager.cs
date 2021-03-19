@@ -202,6 +202,7 @@ namespace Alex.Worlds
 		}
 
 		private static Color _backgroundColor = new Color(Color.Black, 128);
+
 		private void RenderNametag(IRenderArgs args, Entity entity)
 		{
 			var maxDistance = (World.ChunkManager.RenderDistance * 16f);
@@ -209,76 +210,81 @@ namespace Alex.Worlds
 
 			if (string.IsNullOrWhiteSpace(clean))
 				return;
-			
+
 			//var halfWidth = (float)(Width * _scale);
 
 			//pos.Y = 0;
-			
+
 			var distance = MathF.Abs(Vector3.Distance(entity.KnownPosition, args.Camera.Position));
-			if (distance >= (maxDistance * 0.8f))
-			{
+			if (distance >= (maxDistance * 0.8f)) 
+			{ 
 				return;
 			}
 
 			//var opacity = 1f - ((1f / maxDistance) * distance);
 
-			distance *= (distance / (maxDistance / 2f));
+			distance *= (distance / (maxDistance / 1.5f));
 			var opacity = MathF.Max(MathF.Min(1f - (distance / (maxDistance)), 1f), 0f);
 			//distance -= ((maxDistance) / distance);
 
-			try
+
+			Vector3 posOffset = new Vector3(0, 0f, 0);
+
+			//if (!entity.IsInvisible)
 			{
-				Vector3 posOffset = new Vector3(0, 0f, 0);
-
-				//if (!entity.IsInvisible)
-				{
-					posOffset.Y += (float) (entity.Height * entity.Scale);
-				}
-
-				var cameraPosition = new Vector3(args.Camera.Position.X, args.Camera.Position.Y, args.Camera.Position.Z);
-
-				var rotation = new Vector3(entity.RenderLocation.X, entity.RenderLocation.Y + posOffset.Y, entity.RenderLocation.Z) - cameraPosition;
-				rotation.Normalize();
-
-				var halfWidth = (float) (entity.Width * entity.Scale);
-				var pos       = entity.RenderLocation + posOffset + (-(rotation * (float)halfWidth));
-
-				Vector2 textPosition;
-				
-				var screenSpace = args.GraphicsDevice.Viewport.Project(
-					pos, args.Camera.ProjectionMatrix, args.Camera.ViewMatrix, Matrix.Identity);
-
-				textPosition.X = screenSpace.X;
-				textPosition.Y = screenSpace.Y;
-
-				Vector2 renderPosition = textPosition;
-				//var s = new Vector2((float) scale);
-				
-				foreach (var str in clean.Split('\n').Reverse())
-				{
-					var line = str.Trim();
-
-					if (line.Length == 0 || string.IsNullOrWhiteSpace(line))
-						continue;
-
-					var stringSize = Alex.Font.MeasureString(line);
-					var c          = new Point((int) stringSize.X, (int) stringSize.Y);
-
-					renderPosition.X = (int) (textPosition.X - (c.X / 2d));
-					renderPosition.Y -= (c.Y);
-					//renderPosition.Y = (int) ((textPosition.Y + yOffset));
-
-					args.SpriteBatch.FillRectangle(
-						new Rectangle(renderPosition.ToPoint(), c), _backgroundColor * opacity, screenSpace.Z + 0.0000001f);
-
-					Alex.Font.DrawString(
-						args.SpriteBatch, line, renderPosition, (Color)TextColor.White, FontStyle.None,
-						layerDepth: screenSpace.Z, opacity: opacity);
-				}
+				posOffset.Y += (float) (entity.Height * entity.Scale);
 			}
-			finally
+
+			var cameraPosition = new Vector3(args.Camera.Position.X, args.Camera.Position.Y, args.Camera.Position.Z);
+
+			var rotation = new Vector3(
+				               entity.RenderLocation.X, entity.RenderLocation.Y + posOffset.Y, entity.RenderLocation.Z)
+			               - cameraPosition;
+
+			rotation.Normalize();
+
+			var halfWidth = (float) (entity.Width * entity.Scale);
+			var pos = entity.RenderLocation + posOffset + (-(rotation * (float) halfWidth));
+
+			Vector2 textPosition;
+
+			var screenSpace = args.GraphicsDevice.Viewport.Project(
+				pos, args.Camera.ProjectionMatrix, args.Camera.ViewMatrix, Matrix.Identity);
+
+			bool isOnScreen = args.GraphicsDevice.Viewport.Bounds.Contains((int) screenSpace.X, (int) screenSpace.Y);
+
+			if (!isOnScreen) return;
+
+			textPosition.X = screenSpace.X;
+			textPosition.Y = screenSpace.Y;
+
+			Vector2 renderPosition = textPosition;
+			//var s = new Vector2((float) scale);
+
+			// Compute the depth and scale of the object.
+			float depth = screenSpace.Z;
+			float scale = 1.0f / depth;
+
+			foreach (var str in clean.Split('\n').Reverse())
 			{
-				
+				var line = str.Trim();
+
+				if (line.Length == 0 || string.IsNullOrWhiteSpace(line))
+					continue;
+
+				var stringSize = Alex.Font.MeasureString(line, scale);
+				var c = new Point((int) stringSize.X, (int) stringSize.Y);
+
+				renderPosition.X = (int) (textPosition.X - (c.X / 2d));
+				renderPosition.Y -= (c.Y);
+				//renderPosition.Y = (int) ((textPosition.Y + yOffset));
+
+				args.SpriteBatch.FillRectangle(
+					new Rectangle(renderPosition.ToPoint(), c), _backgroundColor * opacity, depth + 0.0000001f);
+
+				Alex.Font.DrawString(
+					args.SpriteBatch, line, renderPosition, (Color) TextColor.White, FontStyle.None, layerDepth: depth,
+					scale: new Vector2(scale, scale), opacity:opacity);
 			}
 		}
 
