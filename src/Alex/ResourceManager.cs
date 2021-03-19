@@ -516,6 +516,8 @@ namespace Alex
 		        int modelCount = EntityFactory.LoadModels(resourcePack, this, device, true, progress);
 
 		        Log.Debug($"Imported {modelCount} entity models...");
+		        
+		        Alex.ParticleManager.Load(resourcePack);
 	        }
 	        
 	        progress?.UpdateProgress(0, $"Loading UI textures...");

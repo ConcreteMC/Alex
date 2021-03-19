@@ -32,6 +32,7 @@ namespace Alex.Gamestates.MainMenu.Options
         private ToggleButton ChunkMeshInRam     { get; set; }
         private ToggleButton SmoothLighting     { get; set; }
         private ToggleButton GraphicsMode       { get; set; }
+        private ToggleButton ParticleToggle { get; set; }
         
         private Dictionary<IGuiControl, string> Descriptions { get; } = new Dictionary<IGuiControl, string>();
         public VideoOptionsState(GuiPanoramaSkyBox skyBox) : base(skyBox)
@@ -89,6 +90,10 @@ namespace Alex.Gamestates.MainMenu.Options
                     Skybox = CreateToggle("Render Skybox: {0}", options => options.VideoOptions.Skybox),
                     CustomSkins = CreateToggle(
                         "Custom entity models: {0}", options => options.VideoOptions.CustomSkins));
+
+                AddGuiRow(
+                    ParticleToggle = CreateToggle("Render Particles: {0}", options => options.VideoOptions.Particles),
+                    new RocketElement());
 
                 /*  AddGuiRow(
                       /ClientSideLighting = CreateToggle(
@@ -153,6 +158,8 @@ namespace Alex.Gamestates.MainMenu.Options
                 Descriptions.Add(
                     GraphicsMode,
                     $"{TextColor.Bold}Fancy graphics:{TextColor.Reset}\nEnabled: Use alpha blending for rendering.\nDisabled: May improve performance, no alpha blending.");
+                
+                Descriptions.Add(ParticleToggle, $"{TextColor.Bold}Render Particles:{TextColor.Reset}\nEnabled: Looks cooler, but may impact performance.\nDisabled: Hides all particles, may improve performance.");
             }
 
             base.OnInit(renderer);

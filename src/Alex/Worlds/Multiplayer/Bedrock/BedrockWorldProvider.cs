@@ -173,6 +173,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		protected override void Initiate()
 		{
+			Alex.ParticleManager.Reset();
 			_initiated = true;
 			Client.World = World;
 			//World.Player.SetInventory(new BedrockInventory(46));

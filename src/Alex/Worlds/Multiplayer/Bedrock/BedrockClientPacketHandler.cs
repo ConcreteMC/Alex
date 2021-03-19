@@ -43,6 +43,7 @@ using Microsoft.Extensions.DependencyInjection;
 using MiNET;
 using MiNET.Entities;
 using MiNET.Net;
+using MiNET.Particles;
 using MiNET.UI;
 using MiNET.Utils;
 using MiNET.Worlds;
@@ -549,7 +550,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				new Microsoft.Xna.Framework.Vector3(message.speedX, message.speedY, message.speedZ), message.attributes,
 				message.metadata))
 			{
-				Log.Warn($"Unknown entity type: {message.entityType}");
+				Log.Warn($"Unknown entity type: {message.entityType} (MiNET.EntityType: {entityType})");
 			}
 			else
 			{
@@ -700,7 +701,13 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		public void HandleMcpeSpawnParticleEffect(McpeSpawnParticleEffect message)
 		{
-			UnhandledPackage(message);
+			if (!AlexInstance.ParticleManager.SpawnParticle(
+				message.particleName,
+				new Microsoft.Xna.Framework.Vector3(message.position.X, message.position.Y, message.position.Z)))
+			{
+				Log.Warn($"Unknonw particle: {message.particleName}");
+			}
+			//UnhandledPackage(message);
         }
 
 		private ConcurrentDictionary<string, int> _entityIdentifiers = new ConcurrentDictionary<string, int>();
@@ -898,6 +905,22 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		public void HandleMcpeLevelEvent(McpeLevelEvent message)
 		{
+			var msgId = message.eventId;
+
+			if (msgId >= 0x4000 && msgId <= (0x4000 | (int) ParticleType.Sneeze)) //Got particle :)
+			{
+				var particleType = ((ParticleType) msgId -  0x4000);
+
+				if (!AlexInstance.ParticleManager.SpawnParticle(
+					particleType,
+					new Microsoft.Xna.Framework.Vector3(message.position.X, message.position.Y, message.position.Z), message.data))
+				{
+					Log.Warn($"Unknown particle type: {particleType}");
+				}
+
+				return;
+			}
+			
 			if (!Client.World.Player.IsBreakingBlock)
 				return;
 

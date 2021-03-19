@@ -14,6 +14,7 @@ using Alex.ResourcePackLib.IO.Abstract;
 using Alex.ResourcePackLib.Json;
 using Alex.ResourcePackLib.Json.Bedrock;
 using Alex.ResourcePackLib.Json.Bedrock.Entity;
+using Alex.ResourcePackLib.Json.Bedrock.Particles;
 using Alex.ResourcePackLib.Json.Bedrock.Sound;
 using Alex.ResourcePackLib.Json.Converters;
 using Alex.ResourcePackLib.Json.Models.Entities;
@@ -37,6 +38,9 @@ namespace Alex.ResourcePackLib
 		public IReadOnlyDictionary<string, RenderController> RenderControllers { get; private set; } = new ConcurrentDictionary<string, RenderController>();
 		public IReadOnlyDictionary<string, AnimationController> AnimationControllers { get; private set; } = new ConcurrentDictionary<string, AnimationController>();
 		public IReadOnlyDictionary<string, Animation> Animations { get; private set; } = new ConcurrentDictionary<string, Animation>();
+
+		public IReadOnlyDictionary<string, ParticleDefinition> Particles { get; private set; } =
+			new ConcurrentDictionary<string, ParticleDefinition>();
 		
 		public SoundDefinitionFormat SoundDefinitions { get; private set; } = null;
 		
@@ -90,6 +94,7 @@ namespace Alex.ResourcePackLib
 		private static readonly Regex IsAnimation = new Regex(@"^animations[\\\/](?'filename'.*)\.json$", RegexOpts);
 		private static readonly Regex IsSoundDefinition    = new Regex(@"^sounds[\\\/]sound_definitions\.json$", RegexOpts);
 		private static readonly Regex IsFontFile    = new Regex(@"^font[\\\/](?'filename'.*)\.png$", RegexOpts);
+		private static readonly Regex IsParticleFile    = new Regex(@"^particles[\\\/](?'filename'.*)\.json$", RegexOpts);
 		private void Load(ResourcePack.LoadProgress progressReporter)
 		{
 			Dictionary<ResourceLocation, EntityDescription> entityDefinitions = new Dictionary<ResourceLocation, EntityDescription>();
@@ -98,6 +103,8 @@ namespace Alex.ResourcePackLib
 
 			Dictionary<string, AnimationController>
 				animationControllers = new Dictionary<string, AnimationController>();
+
+			Dictionary<string, ParticleDefinition> particleDefinitions = new Dictionary<string, ParticleDefinition>();
 			
 			Dictionary<string, Animation>
 				animations = new Dictionary<string, Animation>();
@@ -157,6 +164,12 @@ namespace Alex.ResourcePackLib
 					ProcessAnimation(entry, animations);
 					continue;
 				}
+
+				if (IsParticleFile.IsMatch(entry.FullName))
+				{
+					ProcessParticle(entry, particleDefinitions);
+					continue;
+				}
 			}
 			EntityModels = ProcessEntityModels(entityModels);
 
@@ -166,9 +179,43 @@ namespace Alex.ResourcePackLib
 			RenderControllers = renderControllers;
 			AnimationControllers = animationControllers;
 			Animations = animations;
+			Particles = particleDefinitions;
 			// Log.Info($"Processed {EntityDefinitions.Count} entity definitions");
 		}
 
+		private void ProcessParticle(IFile entry, Dictionary<string, ParticleDefinition> particleDefinitions)
+		{
+			try
+			{
+				string json;
+
+				using (var stream = entry.Open())
+				{
+					json = Encoding.UTF8.GetString(stream.ReadToEnd());
+				}
+
+				var versionedResource = MCJsonConvert.DeserializeObject<VersionedResource<ParticleDefinition>>(
+					json, new VersionedResourceConverter<ParticleDefinition>("particle_effect", true, (def) => def.Description.Identifier));
+
+				foreach (var controller in versionedResource.Values)
+				{
+					if (particleDefinitions.TryAdd(controller.Key, controller.Value))
+					{
+						string texture = controller.Value?.Description?.BasicRenderParameters?.Texture;
+
+						if (texture != null && !_bitmaps.ContainsKey(controller.Value.Description.BasicRenderParameters.Texture))
+						{
+							TryAddBitmap(texture);
+						}
+					};
+				}
+			}
+			catch (MoLangParserException ex)
+			{
+				Log.Warn(ex, $"Failed to load particle from file \"{entry.FullName}\"");
+			}
+		}
+		
 		private void ProcessAnimation(IFile entry, Dictionary<string, Animation> renderControllers)
 		{
 			try

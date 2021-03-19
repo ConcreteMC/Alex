@@ -55,6 +55,8 @@ namespace Alex.API.Data.Options
         [DataMember]
         public OptionsProperty<bool> FancyGraphics { get; set; }
         
+        [DataMember]
+        public OptionsProperty<bool> Particles { get; set; }
         public VideoOptions()
         {
             RenderDistance = DefineRangedProperty(6, 2, 32);
@@ -77,6 +79,7 @@ namespace Alex.API.Data.Options
 
             SmoothLighting = DefineProperty(true);
             FancyGraphics = DefineProperty(true);
+            Particles = DefineProperty(true);
         }
     }
 }

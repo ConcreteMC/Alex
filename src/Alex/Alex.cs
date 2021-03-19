@@ -33,6 +33,7 @@ using Alex.Items;
 using Alex.Net;
 using Alex.Networking.Java.Packets;
 using Alex.Networking.Java.Packets.Play;
+using Alex.Particles;
 using Alex.Plugins;
 using Alex.ResourcePackLib;
 using Alex.ResourcePackLib.Json;
@@ -110,6 +111,7 @@ namespace Alex
         public GuiRenderer    GuiRenderer    { get; private set; }
         public GuiManager     GuiManager     { get; private set; }
         public GuiDebugHelper GuiDebugHelper { get; private set; }
+        public ParticleManager ParticleManager { get; private set; }
 
         public GraphicsDeviceManager DeviceManager { get; }
 
@@ -288,7 +290,6 @@ namespace Alex
                     }
                 }
             }
-
             base.InactiveSleepTime = TimeSpan.Zero;
 
             GraphicsDevice.PresentationParameters.MultiSampleCount = 8;
@@ -408,6 +409,15 @@ namespace Alex
             GuiManager.ScaledResolution.TargetHeight = 240;
             GuiManager.ScaledResolution.GuiScale = Options.AlexOptions.VideoOptions.GuiScale.Value;
             Options.AlexOptions.VideoOptions.GuiScale.Bind(GuiScaleChanged);
+            
+            ParticleManager = new ParticleManager(GraphicsDevice);
+            ParticleManager.Enabled = Options.AlexOptions.VideoOptions.Particles.Value;
+
+            Options.AlexOptions.VideoOptions.Particles.Bind(
+                (old, newValue) =>
+                {
+                    ParticleManager.Enabled = newValue;
+                });
             
             //	Log.Info($"Initializing Alex...");
             ThreadPool.QueueUserWorkItem(

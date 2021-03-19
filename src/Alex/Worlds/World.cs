@@ -307,6 +307,7 @@ namespace Alex.Worlds
 		public void OnTick()
 		{
 			Player?.OnTick();
+			Alex.Instance.ParticleManager.OnTick();
 
 			Time++;
 			

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Alex.ResourcePackLib.Json.Converters;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -11,9 +12,14 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Entity
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(VersionedResourceConverter<T>));
 		
 		private string ValuesProperty { get; }
-		public VersionedResourceConverter(string valuesProperty)
+		private bool IsSingle { get; }
+		private Func<T, string> KeySelector { get; }
+
+		public VersionedResourceConverter(string valuesProperty, bool isSingle = false, Func<T, string> keySelector = null)
 		{
 			ValuesProperty = valuesProperty;
+			IsSingle = isSingle;
+			KeySelector = keySelector;
 		}
 
 		/// <inheritdoc />
@@ -48,13 +54,28 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Entity
 			
 			if (jObject.TryGetValue(ValuesProperty, out var values))
 			{
-				if (values.Type == JTokenType.Object)
+				if (IsSingle)
 				{
-					foreach (var property in (JObject)values)
+					var v = values.ToObject<T>(serializer);
+
+					if (KeySelector != null)
 					{
-						if (!result.TryAdd(property.Key, property.Value.ToObject<T>(serializer)))
+						var key = KeySelector(v);
+						result.Values.Add(key, v);
+
+						return result;
+					}
+				}
+				else
+				{
+					if (values.Type == JTokenType.Object)
+					{
+						foreach (var property in (JObject) values)
 						{
-							Log.Warn($"Duplicate key: {property.Key}");
+							if (!result.TryAdd(property.Key, property.Value.ToObject<T>(serializer)))
+							{
+								Log.Warn($"Duplicate key: {property.Key}");
+							}
 						}
 					}
 				}

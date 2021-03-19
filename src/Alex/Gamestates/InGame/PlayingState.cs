@@ -396,6 +396,8 @@ namespace Alex.Gamestates.InGame
 			//dir.Normalize();
 			Alex.AudioEngine.Update(gameTime, World.Camera.Position, dir);
 			
+			Alex.ParticleManager.Update(gameTime);
+			
 			base.OnUpdate(gameTime);
 		}
 
@@ -554,6 +556,8 @@ namespace Alex.Gamestates.InGame
 			}
 			
 			World?.Render2D(args);
+			
+			Alex.ParticleManager.Draw(args.GameTime, World.Camera);
 		}
 
 		public static string GetCardinalDirection(PlayerLocation cam)
