@@ -455,7 +455,7 @@ namespace Alex.Graphics
 
 			    if (!locations.ContainsKey(key)) 
 			    {
-				    locations.Add(key, new TextureInfo(new Vector2(target.Width, target.Height),  new Vector2(xi, yi), bm.Value.Width / 16, bm.Value.Height / 16, animated, true));
+				    locations.Add(key, new TextureInfo(new Vector2(target.Width, target.Height),  new Vector2(xi, yi), bm.Value.Width / 16, bm.Value.Height / 16, animated));
 			    }
 
 			    if (bm.Value.Height > TextureHeight)

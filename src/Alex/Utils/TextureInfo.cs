@@ -2,24 +2,22 @@
 
 namespace Alex.Utils
 {
-	public class TextureInfo
+	public struct TextureInfo
 	{
-		public int Width { get; } = 16;
-		public int Height { get; } = 16;
+		public readonly int Width;
+		public readonly int Height;
 
-		public Vector2 AtlasSize            { get; } = Vector2.Zero;
-		public Vector2 Position             { get; } = Vector2.Zero;
-		public bool    Animated             { get; }
-		public bool    ResolvedSuccessFully { get; }
+		public readonly Vector2 AtlasSize;
+		public readonly Vector2 Position;
+		public readonly bool Animated;
 		
-		public TextureInfo(Vector2 atlasSize, Vector2 position, int width, int height, bool animated, bool success)
+		public TextureInfo(Vector2 atlasSize, Vector2 position, int width, int height, bool animated)
 		{
 			AtlasSize = atlasSize;
 			Position = position;
 			Width = width;
 			Height = height;
 			Animated = animated;
-			ResolvedSuccessFully = success;
 		}
 	}
 }

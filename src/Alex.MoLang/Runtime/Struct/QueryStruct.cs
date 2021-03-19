@@ -40,7 +40,7 @@ namespace Alex.MoLang.Runtime.Struct
 				return MoValue.FromObject(func(parameters));
 			}
 
-			//throw new MoLangRuntimeException($"Missing method: \'{key}\'", null);
+			//throw new MissingQueryMethodException($"Missing method: \'{key}\'", null);
 			if (_missingQueries.TryAdd(key, 0))
 			{
 				Log.Warn($"Unknown query: query.{key}");

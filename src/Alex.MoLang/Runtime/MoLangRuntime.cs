@@ -13,16 +13,13 @@ namespace Alex.MoLang.Runtime
 	{
 		public MoLangEnvironment Environment { get; } = new MoLangEnvironment();
 
-		private ExprTraverser _exprTraverser;
+
 		public MoLangRuntime()
 		{
 			Environment.Structs.TryAdd("math", MoLangMath.Library);
 			Environment.Structs.TryAdd("temp", new VariableStruct());
 			Environment.Structs.TryAdd("variable", new VariableStruct());
 			Environment.Structs.TryAdd("array", new ArrayStruct());
-			
-			_exprTraverser = new ExprTraverser();
-			_exprTraverser.Visitors.Add(new ExprConnectingVisitor());
 		}
 		
 		/*public IMoValue Execute(IExpression expression) {

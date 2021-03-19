@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Alex.MoLang.Parser.Exceptions;
 using Alex.MoLang.Parser.Parselet;
 using Alex.MoLang.Parser.Tokenizer;
+using Alex.MoLang.Parser.Visitors;
 
 namespace Alex.MoLang.Parser
 {
@@ -16,7 +18,7 @@ namespace Alex.MoLang.Parser
 
 		private readonly TokenIterator _tokenIterator;
 		private readonly List<Token>   _readTokens = new List<Token>();
-
+		private static ExprTraverser _exprTraverser;
 		static MoLangParser()
 		{
 			PrefixParselets.Add(TokenType.Name, new NameParselet());
@@ -54,6 +56,9 @@ namespace Alex.MoLang.Parser
 			InfixParselets.Add(TokenType.Coalesce, new GenericBinaryOpParselet(Precedence.Coalesce));
 			InfixParselets.Add(TokenType.Arrow, new GenericBinaryOpParselet(Precedence.Arrow));
 			InfixParselets.Add(TokenType.Assign, new AssignParselet());
+			
+			_exprTraverser = new ExprTraverser();
+			_exprTraverser.Visitors.Add(new ExprConnectingVisitor());
 		}
 
 		public MoLangParser(TokenIterator iterator)
@@ -79,7 +84,7 @@ namespace Alex.MoLang.Parser
 				}
 			} while (MatchToken(TokenType.Semicolon));
 
-			return exprs.ToArray();
+			return _exprTraverser.Traverse(exprs.ToArray()).ToArray();
 		}
 
 		public IExpression ParseExpression()

@@ -680,7 +680,7 @@ namespace Alex.Graphics.Models.Blocks
 						faceColor = AdjustColor(faceColor, facing, element.Shade);
 
 						BlockTextureData uvMap = GetTextureUVMap(
-								Resources, face.Value.Texture, x1, x2, y1, y2, face.Value.Rotation, faceColor);
+								Resources, face.Value.Texture, x1, x2, y1, y2, face.Value.Rotation, faceColor, null);
 						
 						var vertices = GetFaceVertices(face.Key, element.From, element.To, uvMap);
 
