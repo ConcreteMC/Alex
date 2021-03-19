@@ -125,7 +125,7 @@ namespace Alex.Particles
 					
 					if (AppearanceComponent != null)
 					{ //instance.UvBasePosition = AppearanceComponent.UV.GetUv(instance.Runtime);
-						instance.Size = AppearanceComponent.Size.Evaluate(instance.Runtime, instance.Size) * 10f;
+						instance.Size = AppearanceComponent.Size.Evaluate(instance.Runtime, instance.Size) * 16f;
 						
 						var flipbook = AppearanceComponent.UV?.Flipbook;
 
@@ -164,11 +164,14 @@ namespace Alex.Particles
 
 				var pos = instance.Position;
 
-				Vector2 textPosition;
-
+				var scale = 1f - (Vector3.DistanceSquared(camera.Position, pos) / camera.FarDistance);
+				if (scale <= 0f)
+					continue;
+				
 				var screenSpace = spriteBatch.GraphicsDevice.Viewport.Project(
 					pos, camera.ProjectionMatrix, camera.ViewMatrix, Matrix.Identity);
-
+				
+				Vector2 textPosition;
 				textPosition.X = screenSpace.X;
 				textPosition.Y = screenSpace.Y;
 
@@ -178,7 +181,7 @@ namespace Alex.Particles
 				spriteBatch.Draw(
 					Texture, textPosition, new Rectangle(textureLocation.ToPoint(), textureSize.ToPoint()),
 					instance.Color, 0f, Vector2.Zero,
-					new Vector2(instance.Scale * instance.Size.X, instance.Scale * instance.Size.Y),
+					new Vector2( scale * instance.Scale * instance.Size.X, scale * instance.Scale * instance.Size.Y),
 					SpriteEffects.None, screenSpace.Z);
 			}
 
@@ -207,7 +210,7 @@ namespace Alex.Particles
 		public Vector2 UvPosition { get; set; } = Vector2.Zero;
 		public Vector2 UvSize { get; set; } = Vector2.One;
 		public Vector2 Size { get; set; } = Vector2.One;
-		public int Scale { get; private set; } = 2;
+		public int Scale { get; private set; } = 1;
 		public Color Color { get; set; } = Color.White;
 		public MoLangRuntime Runtime { get; set; }
 

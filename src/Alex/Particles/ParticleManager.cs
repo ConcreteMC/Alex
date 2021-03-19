@@ -168,6 +168,7 @@ namespace Alex.Particles
 
 				case ParticleType.Smoke:
 					value = "minecraft:basic_smoke_particle";
+					dataMode = ParticleDataMode.Scale;
 					return true;
 
 				case ParticleType.Explode:
@@ -268,6 +269,7 @@ namespace Alex.Particles
 
 				case ParticleType.Ink:
 					value = "minecraft:ink_emitter";
+					dataMode = ParticleDataMode.Scale;
 					return true;
 
 				case ParticleType.Slime:

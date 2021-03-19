@@ -82,9 +82,9 @@ namespace Alex.Gui.Elements
 	    private int _fadeIn = 0, _fadeOut = 0, _displayTime = 20;
 	    public void SetTimes(int fadeIn, int stay, int fadeOut)
 	    {
+		    _displayTicks = Math.Min(stay, 200); //10 Seconds max
 		    _fadeInTicks = fadeIn >= 0 ? fadeIn : 0;
 		    _fadeOutTicks = fadeOut >= 0 ? fadeOut : 0;
-		    _displayTicks = stay;
 	    }
 
 	    public void Hide()
@@ -153,7 +153,7 @@ namespace Alex.Gui.Elements
 			    }
 		    }
 		    
-		    if (Math.Abs(_fadeIn + _fadeOut + _displayTime) == Math.Abs(_fadeInTicks + _fadeOutTicks + _displayTicks))
+		    if (Math.Abs(_fadeIn + _fadeOut + _displayTime) >= Math.Abs(_fadeInTicks + _fadeOutTicks + _displayTicks))
 			    Hide();
 	    }
     }
