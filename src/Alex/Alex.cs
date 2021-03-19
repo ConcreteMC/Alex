@@ -592,6 +592,15 @@ namespace Alex
             //AudioEngine?.Update(gt, Vector3.Zero);
         }
 
+        /// <inheritdoc />
+        protected override void EndDraw()
+        {
+            Metrics = GraphicsDevice.Metrics;
+            base.EndDraw();
+        }
+        
+        public GraphicsMetrics Metrics { get; private set; }
+
         private void InitializeGame(IProgressReceiver progressReceiver)
         {
             progressReceiver.UpdateProgress(0, "Initializing...");
