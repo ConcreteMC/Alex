@@ -45,19 +45,7 @@ namespace Alex
 			//launchSettings = ParseArguments(args);
 
 		}
-
-		private static async void Test()
-		{
-			XboxAuthService authService = new XboxAuthService();
-			var             authConnect = await authService.StartDeviceAuthConnect();
-			
-			Console.WriteLine($"Code: {authConnect.user_code}");
-			
-			XboxAuthService.OpenBrowser(authConnect.verification_uri);
-			
-			await authService.DoDeviceCodeLogin(Guid.NewGuid().ToString(), authConnect.device_code, CancellationToken.None);
-		}
-
+		
 		private static void LaunchGame(LaunchSettings launchSettings)
 		{
 			if (!Directory.Exists(launchSettings.WorkDir))

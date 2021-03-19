@@ -67,6 +67,7 @@ namespace Alex.Particles
 				Runtime = runtime
 			};
 
+			runtime.Environment.Structs.TryAdd("query", instance);
 			instance.SetData(data, dataMode);
 			
 			if (AppearanceComponent != null)
@@ -93,8 +94,6 @@ namespace Alex.Particles
 					instance.Color = atc.Color.GetValue(runtime);
 				}
 			}
-			
-			runtime.Environment.Structs.TryAdd("query", instance);
 
 			_instances.Add(instance);
 
@@ -202,6 +201,13 @@ namespace Alex.Particles
 		{
 			_parent = parent;
 			Functions.Add("frame_alpha", mo => _deltaTime.TotalMilliseconds);
+			Functions.Add("spellcolor", mo => new QueryStruct(new []
+			{
+				new KeyValuePair<string, Func<MoParams, object>>("r", mo2 => (int)Color.R),
+				new KeyValuePair<string, Func<MoParams, object>>("g", mo2 => (int)Color.G),
+				new KeyValuePair<string, Func<MoParams, object>>("b", mo2 => (int)Color.B),
+				new KeyValuePair<string, Func<MoParams, object>>("a", mo2 => (int)Color.A)
+			}));
 		}
 
 		public double Lifetime { get; set; } = 0d;

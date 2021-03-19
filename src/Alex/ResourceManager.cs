@@ -709,7 +709,10 @@ namespace Alex
 		
 		[JsonProperty("minecraft:sound_event")]
 		public RegistryBase Sounds { get; set; }
-
+		
+		[JsonProperty("minecraft:particle_type")]
+		public RegistryBase Particles { get; set; }
+		
         public class RegistryBase
 		{
 			[JsonProperty("default")]

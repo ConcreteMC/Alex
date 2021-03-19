@@ -824,6 +824,10 @@ namespace Alex.Worlds.Multiplayer.Java
 			{
 				HandleSoundEffectPacket(soundEffectPacket);
 			}
+			else if (packet is ParticlePacket particlePacket)
+			{
+				HandleParticlePacket(particlePacket);
+			}
 			else
 			{
 				if (UnhandledPackets.TryAdd(packet.PacketId, packet.GetType()))
@@ -833,6 +837,26 @@ namespace Alex.Worlds.Multiplayer.Java
 			}
 		}
 
+		private void HandleParticlePacket(ParticlePacket packet)
+		{
+			var particleType =
+				Alex.Resources.Registries.Particles.Entries.FirstOrDefault(
+					x => x.Value.ProtocolId == packet.ParticleId);
+
+			if (particleType.Key != null)
+			{
+				var type = ParticleConversion.ConvertToBedrock(particleType.Key);
+				if (!Alex.ParticleManager.SpawnParticle(type, new Vector3(packet.X, packet.Y, packet.Z)))
+				{
+					Log.Warn($"Could not spawn particle with type: {packet.ParticleId} (Java: {particleType.Key} | Bedrock: {type})");
+				}
+			}
+			else
+			{
+				Log.Warn($"Could not find particle with protocolid: {packet.ParticleId}");
+			}
+		}
+		
 		private ThreadSafeList<string> _missingSounds = new ThreadSafeList<string>();
 
 		private static readonly Regex _blockRegex = new Regex("block\\.(?<name>.*)\\.(?<action>.*)", RegexOptions.Compiled);
