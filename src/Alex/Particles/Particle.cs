@@ -5,6 +5,7 @@ using System.Diagnostics;
 using Alex.API.Graphics;
 using Alex.API.Utils.Collections;
 using Alex.MoLang.Runtime;
+using Alex.MoLang.Runtime.Value;
 using Alex.ResourcePackLib.Json.Bedrock.Particles;
 using Alex.ResourcePackLib.Json.Bedrock.Particles.Components;
 using Microsoft.Xna.Framework;
@@ -59,6 +60,7 @@ namespace Alex.Particles
 				Position = position,
 				//Lifetime = 10,
 				Data = data,
+				Velocity = Definition.GetInitialSpeed(runtime),
 				MaxLifetime = Definition.GetMaxLifetime(runtime),
 				Acceleration = Definition.GetLinearAcceleration(runtime),
 				DragCoEfficient = Definition.GetLinearDragCoEfficient(runtime),
@@ -68,7 +70,7 @@ namespace Alex.Particles
 			if (AppearanceComponent != null)
 			{
 				instance.UvBasePosition = AppearanceComponent.UV.GetUv(runtime);
-				instance.UvSize = AppearanceComponent.UV.GetSize(instance.Runtime);
+				instance.UvSize = AppearanceComponent.UV.GetSize(runtime);
 				
 				var flipbook = AppearanceComponent.UV?.Flipbook;
 
@@ -95,14 +97,25 @@ namespace Alex.Particles
 			foreach (var instance in _instances)
 			{
 				if (instance.Lifetime >= instance.MaxLifetime)
+				{
 					toRemove.Add(instance);
+				}
+				else
+				{
+					instance.Runtime.Environment.SetValue("variable.particle_age", new DoubleValue(instance.Lifetime));
+
+					if (AppearanceComponent != null)
+					{ //instance.UvBasePosition = AppearanceComponent.UV.GetUv(instance.Runtime);
+						instance.Size = AppearanceComponent.Size.Evaluate(instance.Runtime, instance.Size) * 10f;
+					}
+				}
 			}
 
 			foreach (var removed in toRemove)
 				_instances.Remove(removed);
 		}
 
-		public void Draw(GameTime gameTime, SpriteBatch spriteBatch, ICamera camera)
+		public int Draw(GameTime gameTime, SpriteBatch spriteBatch, ICamera camera)
 		{
 			float dt = (float) gameTime.ElapsedGameTime.TotalSeconds;
 
@@ -111,13 +124,14 @@ namespace Alex.Particles
 			foreach (var instance in _instances)
 			{
 				instance.Lifetime += dt;
+				//instance.Acceleration = -instance.DragCoEfficient * instance.Velocity;
 
-				instance.Velocity += instance.Acceleration * dt;
 				instance.Position += instance.Velocity * dt;
+				instance.Velocity += instance.Acceleration * dt;
 
 				if (count >= MaxParticles)
 					continue;
-				
+
 				count++;
 
 				var pos = instance.Position;
@@ -147,8 +161,12 @@ namespace Alex.Particles
 
 				spriteBatch.Draw(
 					Texture, textPosition, new Rectangle(textureLocation.ToPoint(), textureSize.ToPoint()),
-					instance.Color, 0f, Vector2.Zero, 16f / textureSize.X, SpriteEffects.None, screenSpace.Z);
+					instance.Color, 0f, Vector2.Zero,
+					new Vector2((16f / textureSize.X) * instance.Size.X, (16f / textureSize.Y) * instance.Size.Y),
+					SpriteEffects.None, screenSpace.Z);
 			}
+
+			return count;
 		}
 
 		public bool HasColor { get; set; } = false;
@@ -174,7 +192,7 @@ namespace Alex.Particles
 		
 		public Vector2 UvBasePosition { get; set; } = Vector2.Zero;
 		public Vector2 UvSize { get; set; } = Vector2.One;
-		
+		public Vector2 Size { get; set; } = Vector2.One;
 		public int Data
 		{
 			get => _data;

@@ -210,6 +210,7 @@ namespace Alex.Gamestates.InGame
 		//	_debugInfo.AddDebugLeft(() => $"IndexBuffer Elements: {World.IndexBufferSize:N0} ({GetBytesReadable(World.IndexBufferSize * 4)})");
 			_debugInfo.AddDebugLeft(() => $"Chunks: {World.ChunkCount}, {World.ChunkManager.RenderedChunks}", TimeSpan.FromMilliseconds(500));
 			_debugInfo.AddDebugLeft(() => $"Entities: {World.EntityManager.EntityCount}, {World.EntityManager.EntitiesRendered}", TimeSpan.FromMilliseconds(500));
+			_debugInfo.AddDebugLeft(() => $"Particles: {Alex.ParticleManager.ParticleCount}", TimeSpan.FromMilliseconds(500));
 			_debugInfo.AddDebugLeft(() =>
 			{
 				return $"Biome: {_currentBiome.Name} ({_currentBiomeId})";

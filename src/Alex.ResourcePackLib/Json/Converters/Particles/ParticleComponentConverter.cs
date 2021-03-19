@@ -1,6 +1,10 @@
 using System;
 using System.Collections.Generic;
+using Alex.MoLang.Parser;
+using Alex.MoLang.Parser.Expressions;
+using Alex.ResourcePackLib.Json.Bedrock.Entity;
 using Alex.ResourcePackLib.Json.Bedrock.Particles.Components;
+using Alex.ResourcePackLib.Json.Converters.MoLang;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -47,6 +51,19 @@ namespace Alex.ResourcePackLib.Json.Converters.Particles
 					case "minecraft:particle_lifetime_expression":
 						components.Add(kvp.Key, kvp.Value.ToObject<LifetimeExpressionComponent>(serializer));
 						break;
+					case "minecraft:particle_appearance_tinting":
+						components.Add(kvp.Key, kvp.Value.ToObject<AppearanceTintingComponent>(serializer));
+						break;
+					case "minecraft:particle_initial_speed":
+						var s = new JsonSerializer();
+						foreach (var serializerConverter in serializer.Converters)
+						{
+							s.Converters.Add(serializerConverter);
+						}
+						s.Converters.Add(new InitialSpeedConverter());
+						
+						components.Add(kvp.Key, kvp.Value.ToObject<InitialSpeedComponent>(s));
+						break;
 				}
 			}
 			
@@ -57,6 +74,77 @@ namespace Alex.ResourcePackLib.Json.Converters.Particles
 		public override bool CanConvert(Type objectType)
 		{
 			return typeof(Dictionary<string,ParticleComponent>).IsAssignableFrom(objectType);
+		}
+	}
+
+	public class InitialSpeedConverter : JsonConverter<InitialSpeedComponent>
+	{
+		/// <inheritdoc />
+		public override bool CanWrite => false;
+		
+		/// <inheritdoc />
+		public override void WriteJson(JsonWriter writer, InitialSpeedComponent value, JsonSerializer serializer)
+		{
+			throw new NotImplementedException();
+		}
+
+		/// <inheritdoc />
+		public override InitialSpeedComponent ReadJson(JsonReader reader,
+			Type objectType,
+			InitialSpeedComponent existingValue,
+			bool hasExistingValue,
+			JsonSerializer serializer)
+		{
+			var token = JToken.Load(reader);
+
+			switch (token.Type)
+			{
+				case JTokenType.Array:
+				{
+					if (token is JArray jArray)
+					{
+						IExpression[][] values = jArray.ToObject<IExpression[][]>(MCJsonConvert.Serializer);
+
+						return new InitialSpeedComponent() {Value = new MoLangVector3Expression(values)};
+					}	
+				} break;
+				case JTokenType.Object:
+					if (token is JObject jObject)
+					{
+						return new InitialSpeedComponent()
+						{
+							Value = new MoLangVector3Expression(
+								jObject.ToObject<Dictionary<string, ComplexStuff>>(
+									new JsonSerializer() {Converters = {new MoLangExpressionConverter()}}))
+						};
+					}
+					break;
+				case JTokenType.Integer:
+					return new InitialSpeedComponent() {Value = new MoLangVector3Expression(new IExpression[][]
+					{
+						new IExpression[]
+						{
+							new NumberExpression(token.Value<int>())
+						}
+					})};
+
+				case JTokenType.Float:
+					return new InitialSpeedComponent() {Value = new MoLangVector3Expression(new IExpression[][]
+					{
+						new IExpression[]
+						{
+							new NumberExpression(token.Value<float>())
+						}
+					})};
+			}
+			
+			return new InitialSpeedComponent() {Value = new MoLangVector3Expression(new IExpression[][]
+			{
+				new IExpression[]
+				{
+					new NumberExpression(0d)
+				}
+			})};
 		}
 	}
 }

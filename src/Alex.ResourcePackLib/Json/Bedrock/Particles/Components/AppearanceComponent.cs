@@ -9,7 +9,7 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Particles.Components
 	public class AppearanceComponent : ParticleComponent
 	{
 		[JsonProperty("size")]
-		public Vector2 Size { get; set; }
+		public MoLangVector2Expression Size { get; set; }
 		
 		[JsonProperty("facing_camera_mode")]
 		public string FacingCameraMode { get; set; }

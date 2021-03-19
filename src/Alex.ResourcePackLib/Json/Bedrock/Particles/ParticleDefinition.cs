@@ -29,6 +29,16 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Particles
 			}
 		}
 
+		public Vector3 GetInitialSpeed(MoLangRuntime runtime)
+		{
+			if (Components.TryGetValue("minecraft:particle_initial_speed", out var c) && c is InitialSpeedComponent es)
+			{
+				return es.Value.Evaluate(runtime, Vector3.Zero);
+			}
+
+			return Vector3.Zero;
+		}
+
 		public double GetMaxLifetime(MoLangRuntime runtime)
 		{
 			if (Components.TryGetValue("minecraft:particle_lifetime_expression", out var lft)

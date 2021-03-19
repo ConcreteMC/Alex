@@ -28,6 +28,7 @@ namespace Alex.Particles
 		private GraphicsDevice _graphics;
 
 		public bool Enabled { get; set; } = true;
+		public int ParticleCount { get; private set; }
 		public ParticleManager(GraphicsDevice device) : base()
 		{
 			_spriteBatch = new SpriteBatch(device);
@@ -51,7 +52,7 @@ namespace Alex.Particles
 
 					Particle p = new Particle(pooled, particle.Value);
 
-					if (particle.Key == "minecraft:falling_dust" || particle.Key == "minecraft:redstone_wire_dust_particle")
+					if (particle.Value.Components.ContainsKey("minecraft:particle_appearance_tinting"))
 						p.HasColor = true;
 					
 					if (!_particles.TryAdd(particle.Value.Description.Identifier, p))
@@ -79,22 +80,25 @@ namespace Alex.Particles
 		{
 			if (!Enabled)
 				return;
-			
+
+			int count = 0;
 			_spriteBatch.Begin(
-				SpriteSortMode.BackToFront, BlendState.AlphaBlend, SamplerState.PointWrap, DepthStencilState.DepthRead,
+				SpriteSortMode.BackToFront, BlendState.NonPremultiplied, SamplerState.PointWrap, DepthStencilState.DepthRead,
 				RasterizerState.CullNone);
 
 			try
 			{
 				foreach (var particle in _particles)
 				{
-					particle.Value.Draw(gameTime, _spriteBatch, camera);
+					count += particle.Value.Draw(gameTime, _spriteBatch, camera);
 				}
 			}
 			finally
 			{
 				_spriteBatch.End();
 			}
+
+			ParticleCount = count;
 		}
 
 		//private double _accumulator = 0d;

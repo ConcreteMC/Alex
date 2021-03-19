@@ -49,7 +49,7 @@ namespace Alex.Graphics.Models.Entity.Animations
 			
 			Functions.Add("modified_move_speed", mo => (1f / (Entity.CalculateMovementSpeed() * 43f)) * (Entity.Movement.MetersPerSecond));
 			
-			Functions.Add("time_stamp", mo => Entity.Level.Time);
+			Functions.Add("time_stamp", mo => (double)Entity.Level.Time);
 			Functions.Add("frame_alpha", mo => (1f / 50f) * _deltaTime.TotalMilliseconds);
 			Functions.Add("delta_time", mo => _deltaTime.TotalSeconds);
 			Functions.Add("ground_speed", mo => Entity.Movement.MetersPerSecond);
