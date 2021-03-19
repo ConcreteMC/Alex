@@ -1,7 +1,6 @@
 ﻿using System.Linq;
 using Alex.API.Gui;
-
-
+using Alex.API.Gui.Elements;
 using Alex.API.Utils;
 using Alex.Gamestates.Common;
 using Alex.Gamestates.MainMenu;
@@ -56,9 +55,9 @@ namespace Alex.Gamestates.InGame
 				FontStyle = FontStyle.DropShadow
 			});*/
 
-			_mainMenu.AddMenuItem("menu.returnToGame", OnReturnToGameButtonPressed, isTranslationKey: true);
-	        _mainMenu.AddMenuItem("menu.options", OnOptionsButtonPressed, isTranslationKey: true);
-			_mainMenu.AddMenuItem("menu.returnToMenu", OnQuitButtonPressed, isTranslationKey: true);
+			_mainMenu.AddChild(new AlexButton("menu.returnToGame", OnReturnToGameButtonPressed, true));
+			_mainMenu.AddChild(new AlexButton("menu.options", OnOptionsButtonPressed, true));
+			_mainMenu.AddChild(new AlexButton("menu.returnToMenu", OnQuitButtonPressed, true));
 
 			AddChild(_mainMenu);
 			AddChild(_playerList);
