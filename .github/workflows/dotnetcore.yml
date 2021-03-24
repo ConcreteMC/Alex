@@ -16,7 +16,7 @@ jobs:
     - name: Publish NuGet
       uses: brandedoutcast/publish-nuget@v2.5.5
       with:
-        PROJECT_FILE_PATH: /home/kenny/Desktop/git/Alex/src/Alex.MoLang/Alex.MoLang.csproj
+        PROJECT_FILE_PATH: src/Alex.MoLang/Alex.MoLang.csproj
         PACKAGE_NAME: Alex.MoLang
         NUGET_KEY: ${{secrets.NUGET_PUBLISH_KEY}}
         
