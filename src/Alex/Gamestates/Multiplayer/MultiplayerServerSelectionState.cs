@@ -259,14 +259,11 @@ namespace Alex.Gamestates.Multiplayer
 					    await entry.PingAsync(false);
 				    }
 			    });
-		    }
-		    
-		    Task previousTask = null;
-		    foreach (var entry in _listProvider.Data.Where(x => x.ServerType.Equals(_filterValue)).ToArray())
-		    {
-			    if (Alex.ServerTypeManager.TryGet(entry.ServerType, out var typeImplementation))
+
+			    Task previousTask = null;
+			    foreach (var entry in _listProvider.Data.Where(x => x.ServerType.Equals(_filterValue)).ToArray())
 			    {
-				    var element = new GuiServerListEntryElement(typeImplementation, entry);
+				    var element = new GuiServerListEntryElement(serverType, entry);
 				    AddItem(element);
 
 				    if (previousTask != null)

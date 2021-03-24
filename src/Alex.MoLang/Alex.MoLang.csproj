@@ -7,6 +7,7 @@
         <RepositoryUrl>https://github.com/kennyvv/Alex</RepositoryUrl>
         <Configurations>Debug;Release;DirectX</Configurations>
         <Platforms>AnyCPU;x64</Platforms>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     </PropertyGroup>
 
     <ItemGroup>
