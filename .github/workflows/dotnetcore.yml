@@ -19,6 +19,7 @@ jobs:
         PROJECT_FILE_PATH: src/Alex.MoLang/Alex.MoLang.csproj
         PACKAGE_NAME: Alex.MoLang
         NUGET_KEY: ${{secrets.NUGET_PUBLISH_KEY}}
+        VERSION_REGEX: '^\s*<PackageVersion>(.*)<\/PackageVersion>\s*$'
         
   linux:
     name: Build Linux
