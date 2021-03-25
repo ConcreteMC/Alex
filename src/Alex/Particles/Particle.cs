@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using Alex.API.Graphics;
 using Alex.API.Utils.Collections;
+using Alex.MoLang.Parser;
 using Alex.MoLang.Runtime;
 using Alex.MoLang.Runtime.Struct;
 using Alex.MoLang.Runtime.Value;
@@ -95,6 +96,11 @@ namespace Alex.Particles
 				}
 			}
 
+			foreach (var component in Definition.Components)
+			{
+				component.Value?.OnCreate(runtime);
+			}
+
 			_instances.Add(instance);
 
 			return true;
@@ -116,6 +122,7 @@ namespace Alex.Particles
 				{
 					foreach (var component in Definition.Components)
 					{
+						component.Value.Update(instance.Runtime);
 						component.Value.PreRender(instance.Runtime);
 					}
 					
@@ -227,8 +234,7 @@ namespace Alex.Particles
 		public int Scale { get; private set; } = 1;
 		public Color Color { get; set; } = Color.White;
 		public MoLangRuntime Runtime { get; set; }
-
-				
+		
 		private TimeSpan _deltaTime = TimeSpan.Zero;
 
 		public void Update(GameTime gameTime)
@@ -249,6 +255,8 @@ namespace Alex.Particles
 					
 			variableStruct.Set("particle_age", new DoubleValue(Lifetime));
 			variableStruct.Set("particle_lifetime", new DoubleValue(MaxLifetime));
+			
+			
 		}
 		
 		public void SetData(int data, ParticleDataMode dataMode)

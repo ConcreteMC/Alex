@@ -67,6 +67,9 @@ namespace Alex.ResourcePackLib.Json.Converters.Particles
 					case ParticleInitComponent.ComponentName:
 						components.Add(kvp.Key, kvp.Value.ToObject<ParticleInitComponent>(serializer));
 						break;
+					case EmitterInitComponent.ComponentName:
+						components.Add(kvp.Key, kvp.Value.ToObject<EmitterInitComponent>(serializer));
+						break;
 				}
 			}
 			
