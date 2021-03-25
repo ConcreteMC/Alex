@@ -672,7 +672,7 @@ namespace Alex.Net.Bedrock
 			}
 			
 			long rto = session.SlidingWindow.GetRtoForRetransmission();
-			datagram.RetransmissionTimeOut = rto * (datagram.TransmissionCount + session.ResendCount + 1);
+			datagram.RetransmissionTimeOut = (rto * (datagram.TransmissionCount + session.ResendCount + 1)) * 2;
 			datagram.Header.DatagramSequenceNumber = Interlocked.Increment(ref session.DatagramSequenceNumber);
 			datagram.TransmissionCount++;
 			datagram.RetransmitImmediate = false;
