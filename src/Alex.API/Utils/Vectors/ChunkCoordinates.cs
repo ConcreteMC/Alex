@@ -206,21 +206,24 @@ namespace Alex.API.Utils.Vectors
 
 		public bool Equals(ChunkCoordinates other)
 		{
-			return X == other.X && Z == other.Z;
+			return X.Equals(other.X)&& Z.Equals(other.Z);
 		}
 
 		public override bool Equals(object obj)
 		{
 			if (ReferenceEquals(null, obj)) return false;
 			
-			return obj is ChunkCoordinates && Equals((ChunkCoordinates)obj);
+			return obj is ChunkCoordinates coordinates && Equals(coordinates);
 		}
 
 		public override int GetHashCode()
 		{
 			unchecked
 			{
-				return (X * 397) ^ Z;
+				// https://stackoverflow.com/questions/1835976/what-is-a-sensible-prime-for-hashcode-calculation
+				int hash = this.X.GetHashCode() * 486187739;
+				hash = HashHelper.Combine(hash * 486187739, this.Z.GetHashCode());
+				return hash;
 			}
 		}
 	}

@@ -1,11 +1,14 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using Microsoft.Xna.Framework;
 
 namespace Alex.API.Utils.Vectors
 {
 	public struct BlockCoordinates : IEquatable<BlockCoordinates>
 	{
-		public int X, Y, Z;
+		public readonly int X;
+		public readonly int Y;
+		public readonly int Z;
 
 		public BlockCoordinates(int value)
 		{
@@ -69,6 +72,7 @@ namespace Alex.API.Utils.Vectors
 			get { return DistanceTo(Zero); }
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static BlockCoordinates Min(BlockCoordinates value1, BlockCoordinates value2)
 		{
 			return new BlockCoordinates(
@@ -78,6 +82,7 @@ namespace Alex.API.Utils.Vectors
 				);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static BlockCoordinates Max(BlockCoordinates value1, BlockCoordinates value2)
 		{
 			return new BlockCoordinates(
@@ -87,11 +92,13 @@ namespace Alex.API.Utils.Vectors
 				);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool operator !=(BlockCoordinates a, BlockCoordinates b)
 		{
 			return !a.Equals(b);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool operator ==(BlockCoordinates a, BlockCoordinates b)
 		{
 			return a.Equals(b);
@@ -101,77 +108,92 @@ namespace Alex.API.Utils.Vectors
 		{
 			return new BlockCoordinates(a.X + b.X, a.Y + b.Y, a.Z + b.Z);
 		}
-
+		
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static BlockCoordinates operator -(BlockCoordinates a, BlockCoordinates b)
 		{
 			return new BlockCoordinates(a.X - b.X, a.Y - b.Y, a.Z - b.Z);
 		}
-
+		
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static BlockCoordinates operator -(BlockCoordinates a)
 		{
 			return new BlockCoordinates(-a.X, -a.Y, -a.Z);
 		}
-
+		
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static BlockCoordinates operator *(BlockCoordinates a, BlockCoordinates b)
 		{
 			return new BlockCoordinates(a.X * b.X, a.Y * b.Y, a.Z * b.Z);
 		}
-
+		
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static BlockCoordinates operator /(BlockCoordinates a, BlockCoordinates b)
 		{
 			return new BlockCoordinates(a.X / b.X, a.Y / b.Y, a.Z / b.Z);
 		}
-
+		
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static BlockCoordinates operator %(BlockCoordinates a, BlockCoordinates b)
 		{
 			return new BlockCoordinates(a.X % b.X, a.Y % b.Y, a.Z % b.Z);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static BlockCoordinates operator +(BlockCoordinates a, int b)
 		{
 			return new BlockCoordinates(a.X + b, a.Y + b, a.Z + b);
 		}
-
+		
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static BlockCoordinates operator -(BlockCoordinates a, int b)
 		{
 			return new BlockCoordinates(a.X - b, a.Y - b, a.Z - b);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static BlockCoordinates operator *(BlockCoordinates a, int b)
 		{
 			return new BlockCoordinates(a.X * b, a.Y * b, a.Z * b);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static BlockCoordinates operator /(BlockCoordinates a, int b)
 		{
 			return new BlockCoordinates(a.X / b, a.Y / b, a.Z / b);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static BlockCoordinates operator %(BlockCoordinates a, int b)
 		{
 			return new BlockCoordinates(a.X % b, a.Y % b, a.Z % b);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static BlockCoordinates operator +(int a, BlockCoordinates b)
 		{
 			return new BlockCoordinates(a + b.X, a + b.Y, a + b.Z);
 		}
-
+		
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static BlockCoordinates operator -(int a, BlockCoordinates b)
 		{
 			return new BlockCoordinates(a - b.X, a - b.Y, a - b.Z);
 		}
-
+		
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static BlockCoordinates operator *(int a, BlockCoordinates b)
 		{
 			return new BlockCoordinates(a * b.X, a * b.Y, a * b.Z);
 		}
-
+		
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static BlockCoordinates operator /(int a, BlockCoordinates b)
 		{
 			return new BlockCoordinates(a / b.X, a / b.Y, a / b.Z);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static BlockCoordinates operator %(int a, BlockCoordinates b)
 		{
 			return new BlockCoordinates(a % b.X, a % b.Y, a % b.Z);
@@ -213,20 +235,29 @@ namespace Alex.API.Utils.Vectors
 		public static readonly BlockCoordinates North = new BlockCoordinates(0, 0, -1);
 		public static readonly BlockCoordinates South = new BlockCoordinates(0, 0, 1);
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Equals(BlockCoordinates other)
 		{
-			return X == other.X && Y == other.Y && Z == other.Z;
+			return X.Equals(other.X)&& Y.Equals(other.Y) & Z.Equals(other.Z);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override bool Equals(object obj)
 		{
 			if (ReferenceEquals(null, obj)) return false;
-			return obj is BlockCoordinates && Equals((BlockCoordinates)obj);
+			return obj is BlockCoordinates coordinates && Equals(coordinates);
 		}
+		
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 
 		public override int GetHashCode()
 		{
-			return HashCode.Combine<int, int, int>(this.X, this.Y, this.Z);
+			unchecked
+			{
+				var yHash = Y.GetHashCode();
+				var zHash = Z.GetHashCode();
+				return X.GetHashCode() ^ (yHash << 4) ^ (yHash >> 28) ^ (zHash >> 4) ^ (zHash << 28);
+			}
 		}
 
 		public override string ToString()

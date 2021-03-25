@@ -106,7 +106,7 @@ namespace Alex.Worlds
 			
 			if (entity.BoundingBox.Min.Y % 1 < 0.05f)
 			{
-				blockcoords.Y -= 1;
+				blockcoords -= new BlockCoordinates(0, 1, 0);
 			}
 				
 			var block = World.GetBlockState(blockcoords.X, blockcoords.Y, blockcoords.Z);

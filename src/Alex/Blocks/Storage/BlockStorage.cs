@@ -33,7 +33,7 @@ namespace Alex.Blocks.Storage
 
         private void Set(int idx, BlockState state)
         {
-            lock (_lock)
+          //  lock (_lock)
             {
                 uint i = IdFor(state); //BlockFactory.GetBlockStateId(state);
 
@@ -111,7 +111,7 @@ namespace Alex.Blocks.Storage
 
         private BlockState Get(int index)
         {
-            lock (_lock)
+           // lock (_lock)
             {
                 var result = Pallette.Get(Storage[index]);
 
