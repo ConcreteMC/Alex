@@ -60,15 +60,23 @@ namespace Alex.Networking.Java
 
 		public async Task<bool> Initialize(CancellationToken cancellationToken)
 		{
-			if (Client != null)
-				return false;
+			try
+			{
+				if (Client != null)
+					return false;
 
-			Client = new TcpClient();
-			await Client.ConnectAsync(TargetEndpoint.Address, TargetEndpoint.Port, cancellationToken);
+				Client = new TcpClient();
+				await Client.ConnectAsync(TargetEndpoint.Address, TargetEndpoint.Port, cancellationToken);
 
-			if (!Client.Connected)
-				return false;
-			
+				if (!Client.Connected)
+					return false;
+			}
+			catch (SocketException exception)
+			{
+				if (exception.SocketErrorCode == SocketError.ConnectionRefused)
+					return false;
+			}
+
 			ThreadPool.QueueUserWorkItem(
 				o =>
 				{

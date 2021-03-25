@@ -111,6 +111,7 @@ namespace Alex.Net.Bedrock
 			{
 				Start(); // Make sure we have started the listener
 
+				SpinWait sw = new SpinWait();
 				while (Session == null && numberOfAttempts > 0 && mtuSize >= UdpHeaderSize
 				       && !cancellationToken.IsCancellationRequested)
 				{
@@ -129,7 +130,8 @@ namespace Alex.Net.Bedrock
 							numberOfAttempts--;
 						}
 					}
-
+					
+					sw.SpinOnce();
 				}
 
 				if (Session == null) return false;
@@ -281,43 +283,24 @@ namespace Alex.Net.Bedrock
 
 					try
 					{
-						var receive = await listener.ReceiveAsync();
-						//var receiveBytes = listener.Receive(ref senderEndpoint);
-						var receiveBytes = receive.Buffer;
-						senderEndpoint = receive.RemoteEndPoint;
+						//var receive = await listener.ReceiveAsync();
+						var receiveBytes = listener.Receive(ref senderEndpoint);
+					//	var receiveBytes = receive.Buffer;
+						//senderEndpoint = receive.RemoteEndPoint;
 
 						//Interlocked.Increment(ref ConnectionInfo.PacketsIn);
 						Interlocked.Add(ref ConnectionInfo.BytesIn, receiveBytes.Length);
 
 						if (receiveBytes.Length != 0)
 						{
-							//Log.Info($"Buffer size: {receiveBytes.Length}");
-							//ThreadPool.QueueUserWorkItem(
-							//	(o) =>
-							//{
-							//Action action =
-							//	() => {
-									try
-									{
-										ReceiveDatagram(receiveBytes, senderEndpoint);
-									}
-									catch (Exception e)
-									{
-										Log.Warn(e, $"Process message error from: {senderEndpoint.Address}");
-									}
-
-							//	};
-
-							//if (_backgroundWorker != null)
+							try
 							{
-							//	_backgroundWorker.Enqueue(action);
+								ReceiveDatagram(receiveBytes, senderEndpoint);
 							}
-							//else
+							catch (Exception e)
 							{
-							//	action();
+								Log.Warn(e, $"Process message error from: {senderEndpoint.Address}");
 							}
-
-							//} );
 						}
 						else
 						{

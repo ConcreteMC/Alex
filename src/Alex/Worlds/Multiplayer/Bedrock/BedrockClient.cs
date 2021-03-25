@@ -302,26 +302,39 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			Stopwatch sw = new Stopwatch();
 			this.Connection.Start();
 
-			
-			while (!this.Connection.FoundServer)
+			try
 			{
-				if ((!sw.IsRunning || sw.ElapsedMilliseconds > 100) && numberOfAttempts-- > 0)
+				DateTime nextPingAttempt = DateTime.UtcNow;
+				SpinWait spinWait = new SpinWait();
+
+				while (!this.Connection.FoundServer)
 				{
-					sw.Restart();
-					this.SendUnconnectedPingInternal(targetEndPoint);
+					if (!cancellationToken.IsCancellationRequested && DateTime.UtcNow >= nextPingAttempt
+					                                               && numberOfAttempts-- > 0)
+					{
+						this.SendUnconnectedPingInternal(targetEndPoint);
+
+						nextPingAttempt = DateTime.UtcNow.Add(TimeSpan.FromMilliseconds(500));
+					}
+
+					if (numberOfAttempts <= 0 || cancellationToken.IsCancellationRequested)
+						break;
+
+					//Task.Delay(100).Wait();
+
+					spinWait.SpinOnce();
 				}
 
-				if (numberOfAttempts <= 0 || cancellationToken.IsCancellationRequested)
-					break;
+				sw.Stop();
 
-				//Task.Delay(100).Wait();
+				serverInfo = (this.Connection.RemoteEndpoint, this.Connection.RemoteServerName, sw.ElapsedMilliseconds);
+
+				return this.Connection.FoundServer;
 			}
-
-			sw.Stop();
-			
-			serverInfo = (this.Connection.RemoteEndpoint, this.Connection.RemoteServerName, sw.ElapsedMilliseconds);
-			
-			return this.Connection.FoundServer;
+			finally
+			{
+				this.Connection?.Stop();
+			}
 		}
 		
 		private void SendUnconnectedPingInternal(IPEndPoint targetEndPoint)

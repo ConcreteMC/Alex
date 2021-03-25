@@ -50,6 +50,8 @@ namespace Alex.Gui.Elements
 			_container.AddChild(_displayNameElement);
 			
 			AddChild(_container);
+
+			_spacer = new StackMenuSpacer();
 		}
 
 		/// <inheritdoc />
@@ -125,7 +127,7 @@ namespace Alex.Gui.Elements
 
 		private TextElement _displayNameElement;
 		private Container   _container;
-
+		private StackMenuSpacer _spacer;
 		internal void Rebuild()
 		{
 			var                 entries = Entries.ToArray();
@@ -146,6 +148,8 @@ namespace Alex.Gui.Elements
 			//_container.AddChild(_displayNameElement);
 			//AddChild(_container);
 			
+			RemoveChild(_spacer);
+			
 			foreach (var entry in entries)
 			{
 				if (CriteriaName == "dummy")
@@ -154,6 +158,8 @@ namespace Alex.Gui.Elements
 				RemoveChild(entry.Value);
 				AddChild(entry.Value);
 			}
+			
+			AddChild(_spacer);
 		}
 	}
 
