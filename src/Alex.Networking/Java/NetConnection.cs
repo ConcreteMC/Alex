@@ -32,7 +32,6 @@ namespace Alex.Networking.Java
 		public NetConnection(Socket socket, CancellationToken cancellationToken)
         {
 	        Socket = socket;
-            RemoteEndPoint = Socket.RemoteEndPoint;
 
             CancellationToken = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 
@@ -40,44 +39,28 @@ namespace Alex.Networking.Java
 	        IsConnected = true;
 
 			PacketWriteQueue = new BlockingCollection<EnqueuedPacket>();
-			//HandlePacketQueue = new BlockingCollection<TemporaryPacketData>();
         }
 		
         public EventHandler<ConnectionClosedEventArgs> OnConnectionClosed;
-
-        public EndPoint RemoteEndPoint { get; private set; }
+        
 		public ConnectionState ConnectionState { get; set; }
 		public bool CompressionEnabled { get; set; }
 		public int CompressionThreshold = 256;
-
-		private byte[] SharedSecret { get; set; }
 
 		public bool IsConnected { get; private set; }
 
 		private BlockingCollection<EnqueuedPacket> PacketWriteQueue { get; }
 		public bool LogExceptions { get; set; } = true;
 
-	  //  private Thread NetworkProcessing { get; set; }
-	//	private Thread NetworkWriting { get; set; }
-	
 		public DateTime StartTime { get; private set; } = DateTime.UtcNow;
 		public long     Latency   { get; set; }         = 0;
 		public void Initialize()
 		{
-			Socket.Blocking = true;
-
 			ThreadPool.QueueUserWorkItem(
 				o =>
 				{
-					Thread.CurrentThread.Name = "MC:Java - In";
+					Thread.CurrentThread.Name = "MC:Java Network Thread";
 					ProcessNetwork();
-				});
-
-			ThreadPool.QueueUserWorkItem(
-				o =>
-				{
-					Thread.CurrentThread.Name = "MC:Java - Out";
-					SendQueue();
 				});
 
 			StartTime = DateTime.UtcNow;
@@ -143,48 +126,39 @@ namespace Alex.Networking.Java
 
 	    public void InitEncryption(byte[] sharedKey)
 	    {
-		    SharedSecret = sharedKey;
-			_readerStream.InitEncryption(SharedSecret);
-			_sendStream.InitEncryption(SharedSecret);
+			_readerStream.InitEncryption(sharedKey);
+			_sendStream.InitEncryption(sharedKey);
 	    }
 
 	    //public static RecyclableMemoryStreamManager StreamManager { get; }= new RecyclableMemoryStreamManager();
 	    private MinecraftStream _readerStream;
 
+	    private int _lastReceivedPacketId;
 	    private void ProcessNetwork()
 	    {
 		    Stopwatch time           = Stopwatch.StartNew();
-		    int       lastPacketId = 0;
+		   
 		    try
 		    {
 			    NetworkStream ns = new NetworkStream(Socket);
 
 			    using (ns)
 			    {
-				    using (MinecraftStream mc = new MinecraftStream(ns))
+				    using (MinecraftStream writeStream = new MinecraftStream(ns, CancellationToken.Token))
+				    using (MinecraftStream readStream = new MinecraftStream(ns, CancellationToken.Token))
 				    {
 					    SpinWait sw = new SpinWait();
-					    _readerStream = mc;
+					    _readerStream = readStream;
+					    _sendStream = writeStream;
+					    
 					    while (!CancellationToken.IsCancellationRequested)
 					    {
-						    if (time.ElapsedMilliseconds > 5000)
-						    {
-							    Log.Info($"No messages received. Stopping?");
-							    time.Restart();
-						    }
-						    /*SpinWait.SpinUntil(() => ns.DataAvailable || CancellationToken.IsCancellationRequested);*/
-
 						    if (CancellationToken.IsCancellationRequested)
 							    break;
-
-						    if (!ns.DataAvailable)
-						    {
+						    
+						    if (!Read(readStream) && !Write(writeStream))
 							    sw.SpinOnce();
-							    continue;
-						    }
-
-						    if (TryReadPacket(mc, out lastPacketId))
-							    time.Restart();
+						    //Write(mc);
 					    }
 				    }
 			    }
@@ -197,7 +171,7 @@ namespace Alex.Networking.Java
 
 			    if (LogExceptions)
 				    Log.Warn(
-					    $"Failed to process network (Last packet: 0x{lastPacketId:X2} State: {ConnectionState}): " +
+					    $"Failed to process network (Last packet: 0x{_lastReceivedPacketId:X2} State: {ConnectionState}): " +
 					    ex);
 		    }
 		    finally
@@ -206,6 +180,46 @@ namespace Alex.Networking.Java
 		    }
 	    }
 
+	    private bool Read(MinecraftStream stream)
+	    {
+		    if (!stream.DataAvailable)
+			    return false;
+
+		    if (TryReadPacket(stream, out var lastPacketId))
+		    {
+			    _lastReceivedPacketId = lastPacketId;
+			    return true;
+		    }
+
+
+		    return false;
+	    }
+
+	    private bool Write(MinecraftStream stream)
+	    {
+		    if (PacketWriteQueue.TryTake(out var packet, 0))
+		    {
+			    try
+			    {
+				    var data = EncodePacket(packet);
+
+				    Interlocked.Increment(ref PacketsOut);
+				    Interlocked.Add(ref PacketSizeOut, data.Length);
+
+				    stream.WriteVarInt(data.Length);
+				    stream.Write(data);
+			    }
+			    finally
+			    {
+				    packet.Packet.PutPool();
+			    }
+
+			    return true;
+		    }
+
+		    return false;
+	    }
+	    
 	    public long PacketsIn;
 	    public long PacketsOut;
 	    public long PacketSizeIn;
@@ -252,7 +266,7 @@ namespace Alex.Networking.Java
 			    {
 				    var data = stream.ReadToSpan(packetLength - br);
 
-				    using (MinecraftStream a = new MinecraftStream())
+				    using (MinecraftStream a = new MinecraftStream(CancellationToken.Token))
 				    {
 					    using (ZlibStream outZStream = new ZlibStream(
 						    a, CompressionMode.Decompress, CompressionLevel.Default, true))
@@ -296,21 +310,8 @@ namespace Alex.Networking.Java
 
 			    //    Log.Info($"Received: {packet}");
 
-			    if (ConnectionState == ConnectionState.Play)
-			    {
-				    if (ShouldAddToProcessing(packet))
-				    {
-					    ProcessPacket(packet, packetData);
-
-					    return true;
-				    }
-			    }
-			    else
-			    {
-				    ProcessPacket(packet, packetData);
-
-				    return true;
-			    }
+			    ProcessPacket(packet, packetData);
+			    return true;
 		    }
 		    finally
 		    {
@@ -319,22 +320,14 @@ namespace Alex.Networking.Java
 
 		    return false;
 	    }
-
-	    protected virtual bool ShouldAddToProcessing(Packet packet)
-	    {
-		    return true;
-	    }
 	    
-	//    private long _queued = 0;
-
 	    private void ProcessPacket(Packet packet, byte[] data)
 		{
-			//	if (packet.Log)
-				packet.Stopwatch.Start();
+			packet.Stopwatch.Start();
 			
-			using (var memoryStream = new MemoryStream(data.ToArray()))
+			using (var memoryStream = new MemoryStream(data))
 			{
-				using (MinecraftStream minecraftStream = new MinecraftStream(memoryStream))
+				using (MinecraftStream minecraftStream = new MinecraftStream(memoryStream, CancellationToken.Token))
 				{
 					packet.Decode(minecraftStream);
 				}
@@ -386,86 +379,15 @@ namespace Alex.Networking.Java
 	    {
 		    if (PacketWriteQueue.IsAddingCompleted)
 		    {
-			   // Log.Warn($"Tried to write packet after WriteQueue has been marked as complete!");
 			    return;
 		    }
 		    
 			if (packet.PacketId == -1) throw new Exception();
-
-			//if (packet.Log)
-			//	Log.Info($"Sending packet ({CompressionEnabled}:{EncryptionInitiated}): {packet} 0x{packet.PacketId:X2}");
-//if (packet.PacketId == 14) Log.Debug($"PACKET = {packet.ToString()}");
+			
 			PacketWriteQueue.Add(new EnqueuedPacket(packet, CompressionEnabled));
 	    }
 
-	    private MinecraftStream _sendStream;
-	    private void SendQueue()
-	    {
-		    using NetworkStream   ms = new NetworkStream(Socket);
-		    using MinecraftStream mc = new MinecraftStream(ms);
-
-		    _sendStream = mc;
-		    while (!CancellationToken.IsCancellationRequested)
-		    {
-			    try
-			    {
-				    if (PacketWriteQueue.TryTake(out var packet, 3500))
-				    {
-					    try
-					    {
-						    //    Log.Info($"Sent: {packet.Packet}");
-						    var data = EncodePacket(packet);
-
-						    Interlocked.Increment(ref PacketsOut);
-						    Interlocked.Add(ref PacketSizeOut, data.Length);
-
-						    mc.WriteVarInt(data.Length);
-						    mc.Write(data);
-					    }
-					    catch (EndOfStreamException)
-					    {
-						    break;
-					    }
-					    catch (SocketException)
-					    {
-						    break;
-					    }
-					    catch (IOException)
-					    {
-						    break;
-					    }
-					    catch (OperationCanceledException)
-					    {
-						    break;
-					    }
-					    finally
-					    {
-						    packet.Packet.PutPool();
-					    }
-				    }
-				    else
-				    {
-					    //   Log.Warn($"No data sent in the last 3.5 seconds... :/");
-				    }
-
-				    //  EnqueuedPacket packet = PacketWriteQueue.Take(CancellationToken.Token);
-			    }
-			    catch (EndOfStreamException)
-			    {
-				    break;
-			    }
-			    catch (SocketException)
-			    {
-				    break;
-			    }
-			    catch (OperationCanceledException)
-			    {
-				    break;
-			    }
-		    }
-		    
-			Stop();
-	    }
+		private MinecraftStream _sendStream;
 
 	    private byte[] EncodePacket(EnqueuedPacket enqueued)
 	    {
@@ -473,7 +395,7 @@ namespace Alex.Networking.Java
 		    byte[] encodedPacket;
 		    using (MemoryStream ms = new MemoryStream())
 		    {
-			    using (MinecraftStream mc = new MinecraftStream(ms))
+			    using (MinecraftStream mc = new MinecraftStream(ms, CancellationToken.Token))
 			    {
 				    mc.WriteVarInt(packet.PacketId);
 				    packet.Encode(mc);

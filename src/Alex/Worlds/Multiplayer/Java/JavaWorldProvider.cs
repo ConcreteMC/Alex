@@ -5,10 +5,12 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Numerics;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Threading.Tasks;
 using Alex.API.Data;
 using Alex.API.Data.Options;
 using Alex.API.Graphics;
@@ -43,7 +45,6 @@ using Alex.Utils.Inventories;
 using Alex.Worlds.Abstraction;
 using fNbt;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Xna.Framework;
 using MiNET;
 using MiNET.Entities;
 using MiNET.Worlds;
@@ -60,6 +61,7 @@ using NibbleArray = Alex.API.Utils.NibbleArray;
 using Packet = Alex.Networking.Java.Packets.Packet;
 using Player = Alex.Entities.Player;
 using PlayerLocation = Alex.API.Utils.Vectors.PlayerLocation;
+using Vector3 = Microsoft.Xna.Framework.Vector3;
 
 namespace Alex.Worlds.Multiplayer.Java
 {
@@ -2403,6 +2405,49 @@ namespace Alex.Worlds.Multiplayer.Java
 			Client.CompressionEnabled = true;
 		}
 
+		private async Task<bool> VerifySession(string serverHash)
+		{
+			if (string.IsNullOrWhiteSpace(_accesToken))
+			{
+				return false;
+			}
+			
+			try
+			{	
+				var baseAddress = "https://sessionserver.mojang.com/session/minecraft/join";
+
+				var http = (HttpWebRequest) WebRequest.Create(new Uri(baseAddress));
+				http.Accept = "application/json";
+				http.ContentType = "application/json";
+				http.Method = "POST";
+
+				var bytes = Encoding.ASCII.GetBytes(JsonConvert.SerializeObject(new JoinRequest()
+				{
+					ServerId = serverHash,
+					SelectedProfile = _uuid,
+					AccessToken = _accesToken
+				}));
+
+				using (Stream newStream = http.GetRequestStream())
+				{
+					await newStream.WriteAsync(bytes, 0, bytes.Length);
+				}
+
+				await http.GetResponseAsync();
+
+				return true;
+				/*using (var stream = r.GetResponseStream())
+				using (var sr = new StreamReader(stream))
+				{
+					var content = await sr.ReadToEndAsync();
+				}*/
+			}
+			catch
+			{
+				return false;
+			}
+		}
+		
 		private string _accesToken = "";
 		private string _uuid = "";
 		private string _username = "";
@@ -2412,6 +2457,7 @@ namespace Alex.Worlds.Multiplayer.Java
 			FastRandom.Instance.NextBytes(SharedSecret);
 
 			string serverHash;
+
 			using (MemoryStream ms = new MemoryStream())
 			{
 				byte[] ascii = Encoding.ASCII.GetBytes(packet.ServerId);
@@ -2421,65 +2467,29 @@ namespace Alex.Worlds.Multiplayer.Java
 
 				serverHash = JavaHexDigest(ms.ToArray());
 			}
-
-			bool authenticated = true;
-			if (!string.IsNullOrWhiteSpace(_accesToken))
-			{
-				try
-				{	
-					var baseAddress = "https://sessionserver.mojang.com/session/minecraft/join";
-
-					var http = (HttpWebRequest) WebRequest.Create(new Uri(baseAddress));
-					http.Accept = "application/json";
-					http.ContentType = "application/json";
-					http.Method = "POST";
-
-					var bytes = Encoding.ASCII.GetBytes(JsonConvert.SerializeObject(new JoinRequest()
-					{
-						ServerId = serverHash,
-						SelectedProfile = _uuid,
-						AccessToken = _accesToken
-					}));
-
-					using (Stream newStream = http.GetRequestStream())
-					{
-						newStream.Write(bytes, 0, bytes.Length);
-					}
-
-					var r = http.GetResponse();
-
-					using (var stream = r.GetResponseStream())
-					using (var sr = new StreamReader(stream))
-					{
-						var content = sr.ReadToEnd();
-					}
-				}
-				catch
+			
+			VerifySession(serverHash).ContinueWith(
+				x =>
 				{
-					authenticated = false;
-				}
-			}
-			else
-			{
-				authenticated = false;
-			}
+					var authenticated = x.Result;
 
-			if (!authenticated)
-			{
-				ShowDisconnect("disconnect.loginFailedInfo.invalidSession", true);
-				return;
-			}
+					if (!authenticated)
+					{
+						ShowDisconnect("disconnect.loginFailedInfo.invalidSession", true);
+						return;
+					}
+					
+					var cryptoProvider = RsaHelper.DecodePublicKey(packet.PublicKey);
+					//Log.Info($"Crypto: {cryptoProvider == null} Pub: {packet.PublicKey} Shared: {SharedSecret}");
+					var encrypted = cryptoProvider.Encrypt(SharedSecret, RSAEncryptionPadding.Pkcs1);
 
-			var cryptoProvider = RsaHelper.DecodePublicKey(packet.PublicKey);
-			//Log.Info($"Crypto: {cryptoProvider == null} Pub: {packet.PublicKey} Shared: {SharedSecret}");
-			var encrypted = cryptoProvider.Encrypt(SharedSecret, RSAEncryptionPadding.Pkcs1);
+					EncryptionResponsePacket response = EncryptionResponsePacket.CreateObject();
+					response.SharedSecret = encrypted;
+					response.VerifyToken = cryptoProvider.Encrypt(packet.VerifyToken, RSAEncryptionPadding.Pkcs1);
+					SendPacket(response);
 
-			EncryptionResponsePacket response = EncryptionResponsePacket.CreateObject();
-			response.SharedSecret = encrypted;
-			response.VerifyToken = cryptoProvider.Encrypt(packet.VerifyToken, RSAEncryptionPadding.Pkcs1);
-			SendPacket(response);
-
-			Client.InitEncryption(SharedSecret);
+					Client.InitEncryption(SharedSecret);
+				});
 		}
 
 		private bool Login(string username, string uuid, string accessToken)
@@ -2551,6 +2561,20 @@ namespace Alex.Worlds.Multiplayer.Java
 
 		private static string JavaHexDigest(byte[] input)
 		{
+			var hash = new SHA1Managed().ComputeHash(input);
+			// Reverse the bytes since BigInteger uses little endian
+			Array.Reverse(hash);
+        
+			BigInteger b = new BigInteger(hash);
+			if (b < 0)
+			{
+				return "-" + (-b).ToString("x").TrimStart('0');
+			}
+			else
+			{
+				return b.ToString("x").TrimStart('0');
+			}
+			/*
 			var sha1 = SHA1.Create();
 			byte[] hash = sha1.ComputeHash(input);
 			bool negative = (hash[0] & 0x80) == 0x80;
@@ -2560,10 +2584,10 @@ namespace Alex.Worlds.Multiplayer.Java
 			string digest = GetHexString(hash).TrimStart('0');
 			if (negative)
 				digest = "-" + digest;
-			return digest;
+			return digest;*/
 		}
 
-		private static string GetHexString(byte[] p)
+		/*private static string GetHexString(byte[] p)
 		{
 			string result = string.Empty;
 			for (int i = 0; i < p.Length; i++)
@@ -2585,7 +2609,7 @@ namespace Alex.Worlds.Multiplayer.Java
 				}
 			}
 			return p;
-		}
+		}*/
 
 		public override void Dispose()
 		{

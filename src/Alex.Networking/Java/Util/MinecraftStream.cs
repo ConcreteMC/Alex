@@ -25,13 +25,29 @@ namespace Alex.Networking.Java.Util
 
 		private CancellationTokenSource CancelationToken { get; }
 		private Stream BaseStream { get; set; }
-		public MinecraftStream(Stream baseStream)
+
+		public bool DataAvailable
 		{
-			BaseStream = baseStream;
-			CancelationToken = new CancellationTokenSource();
+			get
+			{
+				if (_originalBaseStream is NetworkStream ns)
+				{
+					return ns.DataAvailable;
+				}
+
+				return _originalBaseStream.Position < _originalBaseStream.Length;
+			}
 		}
 
-		public MinecraftStream() : this(new MemoryStream())
+		private Stream _originalBaseStream;
+		public MinecraftStream(Stream baseStream, CancellationToken cancellationToken = default)
+		{
+			_originalBaseStream = baseStream;
+			BaseStream = baseStream;
+			CancelationToken = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+		}
+
+		public MinecraftStream(CancellationToken cancellationToken = default) : this(new MemoryStream(), cancellationToken)
 		{
 			
 		}
