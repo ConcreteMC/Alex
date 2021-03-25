@@ -369,7 +369,6 @@ namespace Alex.Gamestates.Multiplayer
 			//	if (ip == null) return;
 
 				//IPEndPoint target = new IPEndPoint(ip, entry.Port);
-				var target = SelectedItem.ConnectionEndpoint;
 
 				var           authenticationService = GetService<IPlayerProfileService>();
 				//var currentProfile        = authenticationService.CurrentProfile;
@@ -386,6 +385,14 @@ namespace Alex.Gamestates.Multiplayer
 					
 					void Connect(PlayerProfile profile)
 					{
+						var target = SelectedItem.ConnectionEndpoint;
+						if (target == null)
+						{
+							Alex.GuiManager.RemoveScreen(overlay);
+							overlay = null;
+							return;
+						}
+						
 						Alex.ConnectToServer(
 							typeImplementation, new ServerConnectionDetails(target, entry.Host),
 							profile);

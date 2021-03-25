@@ -9,6 +9,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
+using System.Threading.Tasks;
 using Alex.API.Utils;
 using Alex.Networking.Java.Events;
 using Alex.Networking.Java.Packets;
@@ -27,11 +28,13 @@ namespace Alex.Networking.Java
         private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(NetConnection));
         
         private CancellationTokenSource CancellationToken { get; }
-        private Socket Socket { get; }
+        private TcpClient Client { get; set; }
         public IPacketHandler PacketHandler { get; set; } = new DefaultPacketHandler();
-		public NetConnection(Socket socket, CancellationToken cancellationToken)
-        {
-	        Socket = socket;
+        private IPEndPoint TargetEndpoint { get; }
+		public NetConnection(IPEndPoint targetEndpoint, CancellationToken cancellationToken)
+		{
+			TargetEndpoint = targetEndpoint;
+	      //  Socket = socket;
 
             CancellationToken = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 
@@ -54,8 +57,18 @@ namespace Alex.Networking.Java
 
 		public DateTime StartTime { get; private set; } = DateTime.UtcNow;
 		public long     Latency   { get; set; }         = 0;
-		public void Initialize()
+
+		public async Task<bool> Initialize(CancellationToken cancellationToken)
 		{
+			if (Client != null)
+				return false;
+
+			Client = new TcpClient();
+			await Client.ConnectAsync(TargetEndpoint.Address, TargetEndpoint.Port, cancellationToken);
+
+			if (!Client.Connected)
+				return false;
+			
 			ThreadPool.QueueUserWorkItem(
 				o =>
 				{
@@ -64,6 +77,8 @@ namespace Alex.Networking.Java
 				});
 
 			StartTime = DateTime.UtcNow;
+
+			return true;
 		}
 
 		private bool _stopped = false;
@@ -77,7 +92,7 @@ namespace Alex.Networking.Java
 				if (CancellationToken.IsCancellationRequested) return;
 				CancellationToken.Cancel();
 
-				if (SocketConnected(Socket))
+				if (SocketConnected(Client.Client))
 				{
 					//TODO
 					Disconnected(true);
@@ -111,8 +126,8 @@ namespace Alex.Networking.Java
 			        CancellationToken.Cancel();
 		        }
 
-		        Socket.Shutdown(SocketShutdown.Both);
-		        Socket.Close();
+		       // Client.Client.Shutdown(SocketShutdown.Both);
+		        Client?.Close();
 
 		        OnConnectionClosed?.Invoke(this, new ConnectionClosedEventArgs(this, notified));
 
@@ -140,9 +155,7 @@ namespace Alex.Networking.Java
 		   
 		    try
 		    {
-			    NetworkStream ns = new NetworkStream(Socket);
-
-			    using (ns)
+			    using (NetworkStream ns = Client.GetStream())
 			    {
 				    using (MinecraftStream writeStream = new MinecraftStream(ns, CancellationToken.Token))
 				    using (MinecraftStream readStream = new MinecraftStream(ns, CancellationToken.Token))
@@ -476,7 +489,7 @@ namespace Alex.Networking.Java
 
 		    _readerStream?.Dispose();
 		    _sendStream?.Dispose();
-		    Socket?.Dispose();
+		    Client?.Dispose();
 
 			foreach (var state in UnhandledPacketsFilter.ToArray())
 		    {

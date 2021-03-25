@@ -33,7 +33,23 @@ namespace Alex.Gamestates.Multiplayer
 		public string ServerName    { get; set; }
 		public string ServerAddress { get; set; }
 
-		public IPEndPoint ConnectionEndpoint { get; set; } = null;
+		private IPEndPoint _connectionEndPoint = null;
+		public IPEndPoint ConnectionEndpoint
+		{
+			get
+			{
+				if (_connectionEndPoint != null)
+					return _connectionEndPoint;
+				
+				var resolved = JavaServerQueryProvider.ResolveHostnameAsync(SavedServerEntry.Host).Result;
+
+				return new IPEndPoint(resolved.Result, SavedServerEntry.Port);
+			}
+			set
+			{
+				_connectionEndPoint = value;
+			}
+		}
 
 		public Texture2D ServerIcon { get; private set; }
 		
@@ -56,13 +72,6 @@ namespace Alex.Gamestates.Multiplayer
 		{
 			ServerTypeImplementation = serverTypeImplementation;
 			SavedServerEntry = entry;
-
-			JavaServerQueryProvider.ResolveHostnameAsync(entry.Host).ContinueWith(
-				x =>
-				{
-					var result = x.Result;
-					ConnectionEndpoint = new IPEndPoint(result.Result, entry.Port);
-				}).Wait();
 		}
 
 		private IServerQueryProvider QueryProvider { get; }

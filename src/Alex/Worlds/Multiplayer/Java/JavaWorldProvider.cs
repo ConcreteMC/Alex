@@ -78,7 +78,6 @@ namespace Alex.Worlds.Multiplayer.Java
 
 		private IPEndPoint Endpoint;
 		private ManualResetEvent _loginCompleteEvent = new ManualResetEvent(false);
-		private TcpClient TcpClient;
 
 		//private DedicatedThreadPool ThreadPool;
 		public string Hostname { get; set; }
@@ -94,9 +93,8 @@ namespace Alex.Worlds.Multiplayer.Java
 			OptionsProvider = alex.Services.GetRequiredService<IOptionsProvider>();
 			
 		//	ThreadPool = new DedicatedThreadPool(new DedicatedThreadPoolSettings(Environment.ProcessorCount));
-
-			TcpClient = new TcpClient();
-			Client = new NetConnection(TcpClient.Client, CancellationToken.None);
+		
+			Client = new NetConnection(endPoint, CancellationToken.None);
 			Client.OnConnectionClosed += OnConnectionClosed;
 			Client.PacketHandler = this;
 			
@@ -341,6 +339,9 @@ namespace Alex.Worlds.Multiplayer.Java
 
 		public override LoadResult Load(ProgressReport progressReport)
 		{
+			if (!Client.Initialize(CancellationToken.None).GetAwaiter().GetResult())
+				return LoadResult.Failed;
+			
 			progressReport(LoadingState.ConnectingToServer, 0);
 
 			if (!Login(Profile.PlayerName, Profile.Uuid, Profile.AccessToken))
@@ -2502,24 +2503,9 @@ namespace Alex.Worlds.Multiplayer.Java
 				_accesToken = accessToken;
 
 			//	TcpClient.Connect(Endpoint);
-				
-					var ar = TcpClient.BeginConnect(Endpoint.Address, Endpoint.Port, null, null);
-
-					using (ar.AsyncWaitHandle)
-					{
-						if (!ar.AsyncWaitHandle.WaitOne(TimeSpan.FromSeconds(5), false))
-						{
-							Log.Warn($"Connection failed.");
-							TcpClient.Close();
-							return false;
-						}
-
-						TcpClient.EndConnect(ar);
-					}
-
+			
 					//TcpClient.Connect(Endpoint);
 				//	ServerBound.InitEncryption();
-				Client.Initialize();
 
 				HandshakePacket handshake = HandshakePacket.CreateObject();
 				handshake.NextState = ConnectionState.Login;
@@ -2628,7 +2614,6 @@ namespace Alex.Worlds.Multiplayer.Java
 			_disposables.Clear();
 
 			Client.Stop();
-			TcpClient.Dispose();
 
 			Client.Dispose();
 			
