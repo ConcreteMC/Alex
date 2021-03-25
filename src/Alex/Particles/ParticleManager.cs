@@ -332,10 +332,12 @@ namespace Alex.Particles
 					break;
 
 				case ParticleType.FireworksStarter:
+					value = "minecraft:sparkler_emitter";
 					break;
 
 				case ParticleType.FireworksSpark:
-					break;
+					value = "minecraft:sparkler_emitter";
+					return true;
 
 				case ParticleType.FireworksOverlay:
 					break;

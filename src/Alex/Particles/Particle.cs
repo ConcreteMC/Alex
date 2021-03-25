@@ -114,9 +114,6 @@ namespace Alex.Particles
 				}
 				else
 				{
-					instance.Runtime.Environment.SetValue("variable.particle_age", new DoubleValue(instance.Lifetime));
-					instance.Runtime.Environment.SetValue("variable.particle_lifetime", new DoubleValue(instance.MaxLifetime));
-					
 					foreach (var component in Definition.Components)
 					{
 						component.Value.PreRender(instance.Runtime);
@@ -135,6 +132,8 @@ namespace Alex.Particles
 							instance.UvPosition = AppearanceComponent.UV.GetUv(instance.Runtime) + flipbook.Step * frame;
 						}
 					}
+					
+					instance?.OnTick();
 				}
 			}
 
@@ -175,6 +174,8 @@ namespace Alex.Particles
 				count++;
 				float depth = screenSpace.Z;
 				float scale =  1f - (Vector3.DistanceSquared(camera.Position, pos) / camera.FarDistance);// 1.0f / depth;
+				if (scale <= 0f)
+					continue;
 				
 				Vector2 textPosition;
 				textPosition.X = screenSpace.X;
@@ -200,6 +201,7 @@ namespace Alex.Particles
 		public ParticleInstance(Particle parent)
 		{
 			_parent = parent;
+			
 			Functions.Add("frame_alpha", mo => _deltaTime.TotalMilliseconds);
 			Functions.Add("spellcolor", mo => new QueryStruct(new []
 			{
@@ -239,6 +241,14 @@ namespace Alex.Particles
 			Position += Velocity * dt;
 			Velocity += Acceleration * dt;
 			Acceleration = -DragCoEfficient * Velocity;
+		}
+
+		public void OnTick()
+		{
+			var variableStruct = Runtime.Environment.Structs["variable"];
+					
+			variableStruct.Set("particle_age", new DoubleValue(Lifetime));
+			variableStruct.Set("particle_lifetime", new DoubleValue(MaxLifetime));
 		}
 		
 		public void SetData(int data, ParticleDataMode dataMode)
