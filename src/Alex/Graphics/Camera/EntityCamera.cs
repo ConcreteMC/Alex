@@ -76,6 +76,11 @@ namespace Alex.Graphics.Camera
 		private void UpdateViewMatrixFirstPerson()
 		{
 			var position = Position;
+
+			if (TrackingEntity.IsSneaking)
+			{
+				position.Y -= 0.18f;
+			}
 			
 			var direction = new Vector3(Rotation.X, Rotation.Y, Rotation.Z);
 			direction.Normalize();

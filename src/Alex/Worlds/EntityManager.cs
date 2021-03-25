@@ -343,7 +343,7 @@ namespace Alex.Worlds
 
 			if (EntityByUUID.TryAdd(entity.UUID, entity))
 			{
-				entity.IsAlwaysShowName = false;
+				//entity.IsAlwaysShowName = false;
 				// entity.NameTag = $"Entity_{id}";
 				//entity.HideNameTag = false;
 

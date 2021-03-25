@@ -378,26 +378,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		public void HandleMcpeAddPlayer(McpeAddPlayer message)
 		{
-			if (!_playerListPlayers.TryGetValue(message.uuid, out var entity))
-			{
-				var identifier = "";
-
-				if (!string.IsNullOrWhiteSpace(message.username))
-				{
-					identifier = message.username.Replace("\n", "");
-				}
-
-				Log.Warn(
-					$"({message.ReliabilityHeader.ReliableMessageNumber} | {message.ReliabilityHeader.OrderingIndex} | {message.ReliabilityHeader.SequencingIndex}) Tried spawning invalid player: {identifier} (UUID: {message.uuid} EntityID: {message.runtimeEntityId}))");
-				
-				return;
-				RemotePlayer player = new RemotePlayer(Client.World);
-				player.EntityId = message.runtimeEntityId;
-				player.UUID = message.uuid;
-				player.NameTag = message.username;
-				entity = player;
-			}
-			else
+			if (_playerListPlayers.TryGetValue(message.uuid, out var entity))
 			{
 				entity.EntityId = message.runtimeEntityId;
 				entity.RenderLocation = entity.KnownPosition = new PlayerLocation(
@@ -418,11 +399,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				UpdateEntityAdventureFlags(entity, message.flags);
 
 				Client.World.SpawnEntity(entity);
-
-				//_entityMapping.TryAdd(message.entityIdSelf, message.runtimeEntityId);
 			}
-
-			/*if (entity == null)
+			else
 			{
 				var identifier = "";
 
@@ -433,9 +411,10 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 				Log.Warn(
 					$"({message.ReliabilityHeader.ReliableMessageNumber} | {message.ReliabilityHeader.OrderingIndex} | {message.ReliabilityHeader.SequencingIndex}) Tried spawning invalid player: {identifier} (UUID: {message.uuid} EntityID: {message.runtimeEntityId}))");
-				
-				return;
-			}*/
+
+
+				//_entityMapping.TryAdd(message.entityIdSelf, message.runtimeEntityId);
+			}
 		}
 
 		private ConcurrentDictionary<MiNET.Utils.UUID, RemotePlayer> _playerListPlayers =
@@ -626,15 +605,14 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				message.position.X, message.position.Y, message.position.Z, -message.position.HeadYaw,
 				-message.position.Yaw, -message.position.Pitch);
 
-			if (message.runtimeEntityId != Client.EntityId)
+			if (message.runtimeEntityId == Client.EntityId)
 			{
-				Client.World.UpdateEntityPosition(message.runtimeEntityId, location, false, true, true, false, true);
-
+				location.Y -= Player.EyeLevel;
+				Client.World.UpdatePlayerPosition(location);
 				return;
 			}
-
-			location.Y -= Player.EyeLevel;
-			Client.World.UpdatePlayerPosition(location);
+			
+			Client.World.UpdateEntityPosition(message.runtimeEntityId, location, false, true, true, false, true);
 		}
 
 		public void HandleMcpeMoveEntityDelta(McpeMoveEntityDelta message)
@@ -646,7 +624,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					if (Client.World.TryGetEntity(message.runtimeEntityId, out var entity))
 					{
 						var known = ed.GetCurrentPosition(entity.KnownPosition);
-						entity.Movement.MoveTo(known);
+						
+						Client.World.UpdateEntityPosition(message.runtimeEntityId, known, false, true, true, false, true);
 					}
 				}
 			}

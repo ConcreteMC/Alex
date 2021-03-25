@@ -42,6 +42,20 @@ namespace Alex.Graphics.Models.Entity.Animations
 			});
 			Functions.Add("position", GetPosition);
 			
+			Functions.Add("camera_rotation", mo =>
+			{
+				if (mo.GetInt(0) == 1)
+				{
+					return new DoubleValue(Entity.Level.Camera.Rotation.Y);
+					//Y Axis
+				}
+				else
+				{
+					//X Axis
+					return new DoubleValue(Entity.Level.Camera.Rotation.X);
+				}
+			});
+			
 			Functions.Add("main_hand_item_use_duration", mo => DoubleValue.Zero);
 			Functions.Add("main_hand_item_max_duration", mo => DoubleValue.Zero);
 			

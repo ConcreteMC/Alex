@@ -905,9 +905,9 @@ namespace Alex.Worlds
 
 		public void DespawnEntity(long entityId)
 		{
-			BackgroundWorker.Enqueue(
-				() =>
-				{
+			//BackgroundWorker.Enqueue(
+			//	() =>
+			//	{
 					if (EntityManager.TryGet(entityId, out Entity entity))
 					{
 						if (entity.HasPhysics)
@@ -920,8 +920,8 @@ namespace Alex.Worlds
 						entity.OnDespawn();
 						//entity.Dispose();
 					}
-				});
-			//	Log.Info($"Despawned entity {entityId}");
+			//	});
+			///	Log.Info($"Despawned entity {entityId}");
 		}
 
 		public void UpdatePlayerPosition(PlayerLocation location, bool teleport = false)
@@ -1010,11 +1010,11 @@ namespace Alex.Worlds
 
 		public bool TryGetEntity(long entityId, out Entity entity)
 		{
-			if (entityId == Player.EntityId)
-			{
-				entity = Player;
-				return true;
-			}
+		//	if (entityId == Player.EntityId)
+		//	{
+		//		entity = Player;
+		//		return true;
+		//	}
 
 			return EntityManager.TryGet(entityId, out entity);
 		}

@@ -67,6 +67,9 @@ namespace Alex.Worlds
 			{
 				foreach (var entity in entities)
 				{
+					if (!entity.HasChunk)
+						continue;
+					
 					try
 					{
 						UpdatePhysics(entity);

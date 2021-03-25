@@ -38,11 +38,7 @@ namespace Alex.Net.Bedrock.Packets
       this.Id = this.IsMcpe ? (byte) this.ReadVarInt() : this.ReadByte();
       this.runtimeEntityId = this.ReadUnsignedVarLong();
       this.flags = this.ReadUshort(false);
-      this.AfterDecode();
-    }
-
-    private void AfterDecode()
-    {
+      
       Current = new PlayerLocation();
       if (((int) this.flags & 1) != 0)
       {
@@ -121,6 +117,19 @@ namespace Alex.Net.Bedrock.Packets
     public static float FromIntDelta(float prev, int delta)
     {
       return BitConverter.Int32BitsToSingle(BitConverter.SingleToInt32Bits(prev) + delta);
+    }
+
+    /// <inheritdoc />
+    public override void Reset()
+    {
+      base.Reset();
+      
+      HasZ = false;
+      HasX = false;
+      HasY = false;
+      HasYaw = false;
+      HasHeadYaw = false;
+      HasPitch = false;
     }
 
     public PlayerLocation GetCurrentPosition(PlayerLocation previousPosition)

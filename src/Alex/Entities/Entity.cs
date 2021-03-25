@@ -83,8 +83,8 @@ namespace Alex.Entities
 		public EntityMovement Movement { get; }
 
 		public World Level { get; set; }
-		
-		public long EntityId  { get; internal set; }
+
+		public long EntityId { get; internal set; } = -1;
 		public bool IsSpawned { get; set; } = false;
 
 		private        PlayerLocation _knownPosition = new PlayerLocation();
@@ -862,9 +862,25 @@ namespace Alex.Entities
 				bone.Animations.Enqueue(new SwingAnimation(bone, TimeSpan.FromMilliseconds(200)));
 			}
 		}
+		
+		private bool _waitingOnChunk = true;
+		public bool HasChunk => !_waitingOnChunk;
 
+		protected virtual void CheckForChunk()
+		{
+			if (_waitingOnChunk)
+			{
+				if (Level.GetChunk(KnownPosition.GetCoordinates3D(), true) != null)
+				{
+					_waitingOnChunk = false;
+				}
+			}
+		}
+		
 		public virtual void OnTick()
 		{
+			CheckForChunk();
+			
 			//Age++;
 			if (TargetEntityId != -1)
 			{
