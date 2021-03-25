@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Text;
 using Alex.MoLang.Runtime.Exceptions;
 using Alex.MoLang.Runtime.Value;
 using NLog;
@@ -24,6 +25,17 @@ namespace Alex.MoLang.Runtime.Struct
 		public QueryStruct(IEnumerable<KeyValuePair<string, Func<MoParams, object>>> parameters)
 		{
 			Functions = new Dictionary<string, Func<MoParams, object>>(parameters);
+			Functions.Add("debug_output", mo =>
+			{
+				StringBuilder sb = new StringBuilder();
+
+				foreach (var param in mo.GetParams())
+				{
+					sb.Append($"{param.AsString()} ");
+				}
+				Console.WriteLine(sb.ToString());
+				return DoubleValue.Zero;
+			});
 		}
 
 		/// <inheritdoc />

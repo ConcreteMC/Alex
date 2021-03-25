@@ -76,12 +76,16 @@ namespace Alex.MoLang.Runtime.Struct
 				{
 					return moStruct.Get(string.Join(".", segments.Skip(1)), parameters);
 				}
+
+				return value;
 			}
 
 			if (Map.TryGetValue(key, out var v))
 				return v;
 
-			//Log.Info($"Unknown variable: {key}");
+			return this;
+			//
+			Console.WriteLine($"Unknown variable: {key}");
 			return DoubleValue.Zero;
 			return Map[key];
 		}

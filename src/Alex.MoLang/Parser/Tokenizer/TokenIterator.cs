@@ -61,7 +61,7 @@ namespace Alex.MoLang.Parser.Tokenizer
                     _index = stringStart + stringLength;
 
                     return new Token(
-                        TokenType.String, _code.Substring(stringStart, stringLength), GetPosition());
+                        TokenType.String, _code.Substring(stringStart, stringLength - 1), GetPosition());
                 }
                 else if (char.IsLetter(expr))
                 {

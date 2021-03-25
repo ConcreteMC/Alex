@@ -1,3 +1,4 @@
+using System.Linq;
 using Alex.MoLang.Runtime;
 using Alex.MoLang.Runtime.Struct;
 using Alex.MoLang.Runtime.Value;
@@ -26,7 +27,7 @@ namespace Alex.MoLang.Parser.Expressions
 				MoScope scope2 = new MoScope();
 
 				foreach (IMoValue value in vs.Map.Values) {
-					Variable.Assign(scope2, environment, value);
+					Variable.Assign(scope2, environment, value is VariableStruct vss ? vss.Map.FirstOrDefault().Value : value);
 					Body.Evaluate(scope2, environment);
 
 					if (scope2.ReturnValue != null) {

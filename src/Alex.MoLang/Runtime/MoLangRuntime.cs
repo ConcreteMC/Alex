@@ -1,16 +1,19 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq.Expressions;
 using Alex.MoLang.Parser;
 using Alex.MoLang.Parser.Visitors;
 using Alex.MoLang.Runtime.Exceptions;
 using Alex.MoLang.Runtime.Struct;
 using Alex.MoLang.Runtime.Value;
+using NLog;
 
 namespace Alex.MoLang.Runtime
 {
 	public class MoLangRuntime
 	{
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(MoLangRuntime));
 		public MoLangEnvironment Environment { get; } = new MoLangEnvironment();
 
 
@@ -51,12 +54,22 @@ namespace Alex.MoLang.Runtime
 			{
 				if (expression == null)
 					continue;
-				result = expression.Evaluate(scope, Environment);
 
-				if (scope.ReturnValue != null)
+				try
 				{
-					result = scope.ReturnValue;
+					result = expression.Evaluate(scope, Environment);
 
+					if (scope.ReturnValue != null)
+					{
+						result = scope.ReturnValue;
+
+						break;
+					}
+				}
+				catch (Exception ex)
+				{
+					throw new MoLangRuntimeException(
+						expression, "An error occured while evaluating the expression", ex);
 					break;
 				}
 			}

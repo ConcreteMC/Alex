@@ -6,6 +6,6 @@ namespace Alex.MoLang.Runtime
 	{
 		public bool     IsBreak     { get; set; } = false;
 		public bool     IsContinue  { get; set; } = false;
-		public IMoValue ReturnValue { get; set; }
+		public IMoValue ReturnValue { get; set; } = null;
 	}
 }
