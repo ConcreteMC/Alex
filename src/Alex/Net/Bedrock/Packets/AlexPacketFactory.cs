@@ -66,9 +66,9 @@ namespace Alex.Net.Bedrock.Packets
                         //packet = new AdventureSettings();
 
                    //     break;
-                //    case 0x0b:
-               //         packet = new StartGame();
-                //        break;
+                    case 0x0b:
+                        packet = new StartGame();
+                        break;
                //     case 0x34:
                 //        packet = new CraftingData();
                //         break;

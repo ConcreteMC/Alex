@@ -801,6 +801,13 @@ namespace Alex.Net.Bedrock
 				var sendList = new List<Packet>();
 				//Queue<Packet> queue = _sendQueueNotConcurrent;
 				int length = _sendQueue.Count;
+
+				if (transmissionBandwidth > 0)
+				{
+					length = Math.Min(length, transmissionBandwidth / MtuSize);
+					//Log.Warn($"Bandwidth: {transmissionBandwidth} | Packets: {length}");
+				}
+				//int length = Math.Min(_sendQueue.Count, transmissionBandwidth / MtuSize);
 				for (int i = 0; i < length; i++)
 				{
 					Packet packet;
@@ -940,7 +947,7 @@ namespace Alex.Net.Bedrock
 						//_nacked.Remove(i);
 						UnackedBytes -= datagram.Bytes.Length;
 						//CalculateRto(datagram);
-						SlidingWindow.OnAck(datagram.Timer.ElapsedMilliseconds, i, _lastDatagramSequenceNumber);
+						SlidingWindow.OnAck(datagram.Timer.ElapsedMilliseconds, datagram.Header.DatagramSequenceNumber.IntValue(), _lastDatagramSequenceNumber);
 						datagram.PutPool();
 					}
 					else

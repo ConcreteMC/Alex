@@ -564,7 +564,7 @@ namespace Alex.Net.Bedrock
 
 				if (session.SlidingWindow.GetRtoForRetransmission() == 0) return;
 
-				long rto = Math.Max(100, session.SlidingWindow.GetRtoForRetransmission());
+				long rto = session.SlidingWindow.GetRtoForRetransmission();
 				int transmissionBandwith = session.SlidingWindow.GetRetransmissionBandwidth(session.UnackedBytes);
 				
 				var queue = session.WaitingForAckQueue;
@@ -585,7 +585,7 @@ namespace Alex.Net.Bedrock
 					//if (session.Rtt == -1) return;
 
 					long elapsedTime = datagram.Timer.ElapsedMilliseconds;
-					long datagramTimeout = rto * (datagram.TransmissionCount + session.ResendCount + 1);
+					long datagramTimeout = datagram.RetransmissionTimeOut;
 					datagramTimeout = Math.Min(datagramTimeout, 3000);
 					datagramTimeout = Math.Max(datagramTimeout, 100);
 
@@ -670,7 +670,9 @@ namespace Alex.Net.Bedrock
 				//TODO: Disconnect! Because of encryption, this connection can't be used after this point
 				return;
 			}
-
+			
+			long rto = session.SlidingWindow.GetRtoForRetransmission();
+			datagram.RetransmissionTimeOut = rto * (datagram.TransmissionCount + session.ResendCount + 1);
 			datagram.Header.DatagramSequenceNumber = Interlocked.Increment(ref session.DatagramSequenceNumber);
 			datagram.TransmissionCount++;
 			datagram.RetransmitImmediate = false;
@@ -689,7 +691,11 @@ namespace Alex.Net.Bedrock
 					datagram.PutPool();
 				}
 
-				session.UnackedBytes += length;
+				if (datagram.TransmissionCount == 1)
+				{
+					session.UnackedBytes += length;
+				}
+
 				datagram.Timer.Restart();
 				Interlocked.Increment(ref ConnectionInfo.PacketsOut);
 				
@@ -717,6 +723,7 @@ namespace Alex.Net.Bedrock
 		{
 			if (length <= 0)
 				return;
+			
 			Monitor.Enter(_sendSync);
 
 			try
@@ -728,7 +735,7 @@ namespace Alex.Net.Bedrock
 						return;
 					}
 
-					await _listener.SendAsync(data, length, targetEndPoint);
+					_listener.Send(data, length, targetEndPoint);
 					//_listener.Send(data, length, targetEndPoint);
 
 					//Interlocked.Increment(ref ConnectionInfo.PacketsOut);

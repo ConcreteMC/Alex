@@ -127,6 +127,10 @@ namespace Alex.Net.Bedrock.Packets
 			premiumWorldTemplateId = ReadString();
 			isTrial = ReadBool();
 			movementType = ReadSignedVarInt();
+			
+			this.movementRewindHistorySize = this.ReadSignedVarInt();
+			this.enableNewBlockBreakSystem = this.ReadBool();
+			
 			currentTick = ReadLong();
 			enchantmentSeed = ReadSignedVarInt();
 			
