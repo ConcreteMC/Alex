@@ -676,10 +676,13 @@ namespace Alex.Net.Bedrock
 			var sequenceNumber = (int)session.SlidingWindow.GetAndIncrementNextDatagramSequenceNumber();// Interlocked.Increment(ref session.DatagramSequenceNumber);
 			
 			long rto = session.SlidingWindow.GetRtoForRetransmission();
-			datagram.RetransmissionTimeOut = (rto * (datagram.TransmissionCount + session.ResendCount + 1)) * 2;
+			datagram.RetransmissionTimeOut = 3000 - ((rto * (datagram.TransmissionCount + session.ResendCount + 1)) * 2);
 			datagram.Header.DatagramSequenceNumber = sequenceNumber;
 			datagram.TransmissionCount++;
 			datagram.RetransmitImmediate = false;
+			//datagram.Header.NeedsBAndAs = session.SlidingWindow.IsInSlowStart();
+			//datagram.Header.IsContinuousSend = session.SlidingWindow.IsContinuousSend;
+			//datagram.Header.IsContinuousSend = session.SlidingWindow.
 
 			byte[] buffer = ArrayPool<byte>.Shared.Rent(1600);
 			try
@@ -701,9 +704,10 @@ namespace Alex.Net.Bedrock
 					session.UnackedBytes += datagram.Size;	
 				}
 				
-				datagram.Timer.Restart();
 				Interlocked.Increment(ref ConnectionInfo.PacketsOut);
 				await SendDataAsync(buffer, length, session.EndPoint);
+				
+				datagram.Timer.Restart();
 			}
 			finally
 			{

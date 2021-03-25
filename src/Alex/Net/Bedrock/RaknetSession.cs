@@ -783,7 +783,7 @@ namespace Alex.Net.Bedrock
 		}
 
 		private SemaphoreSlim _syncHack = new SemaphoreSlim(1, 1);
-		private bool _bandwidthExceededStatistic = false;
+		public bool _bandwidthExceededStatistic = false;
 
 		[SuppressMessage("ReSharper", "InconsistentlySynchronizedField")]
 		private async Task SendQueueAsync(int millisecondsWait = 0)
@@ -802,13 +802,13 @@ namespace Alex.Net.Bedrock
 				var sendList = new List<Packet>();
 				//Queue<Packet> queue = _sendQueueNotConcurrent;
 				int length = _sendQueue.Count;
-			//	Log.Warn($"Bandwidth: {transmissionBandwidth} | Packets: {length} | UnackedBytes: {this.UnackedBytes}");
-				/*if (transmissionBandwidth > 0)
-				{
-					length = Math.Max(Math.Min(length, transmissionBandwidth / MtuSize), 0);
+				//Log.Warn($"Bandwidth: {transmissionBandwidth} | Packets: {length} | UnackedBytes: {this.UnackedBytes}");
+				//if (transmissionBandwidth > 0)
+				//{
+				//	length = Math.Max(Math.Min(length, transmissionBandwidth / MtuSize), 0);
 					//if (length <= 0)
-					Log.Warn($"Bandwidth: {transmissionBandwidth} | Packets: {length}");
-				}*/
+				//	Log.Warn($"Bandwidth: {transmissionBandwidth} | Packets: {length}");
+				//}
 				//int length = Math.Min(_sendQueue.Count, transmissionBandwidth / MtuSize);
 				int totalSize = 0;
 				for (int i = 0; i < length; i++)
@@ -1017,7 +1017,7 @@ namespace Alex.Net.Bedrock
 			{
 				OutgoingAckQueue.Enqueue(sequenceIndex);
 				
-				for (long i = 0; i < skippedMessageCount; i++)
+				for (long i = skippedMessageCount; i > 0; i--)
 				{
 					OutgoingNackQueue.Enqueue((int) (sequenceIndex- i));
 				}

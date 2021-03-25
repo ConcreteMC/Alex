@@ -142,6 +142,7 @@ namespace Alex.Net.Bedrock.Raknet
 					buf.Write(bytes, 0, bytes.Length);
 				}
 
+				Size = (int) buf.Length;
 				return buf.ToArray();
 			}
 		}

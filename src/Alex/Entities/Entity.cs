@@ -128,7 +128,18 @@ namespace Alex.Entities
 		//public HealthManager HealthManager { get; set; }
 		public string NameTag { get; set; }
 
-		public virtual bool NoAi { get; set; } = false;
+		public virtual bool NoAi
+		{
+			get => _noAi;
+			set
+			{
+				_noAi = value;
+				
+				if (_noAi)
+					Velocity = Vector3.Zero;
+			}
+		}
+
 		public bool HideNameTag { get; set; } = false;
 		
 		public bool HeadInBlock  { get; set; } = false;
@@ -526,7 +537,18 @@ namespace Alex.Entities
 		
 		internal bool RequiresRealTimeTick { get; set; } = true;
 
-		internal bool HasPhysics { get; set; } = true;
+		internal bool HasPhysics
+		{
+			get => _hasPhysics;
+			set
+			{
+				_hasPhysics = value;
+				
+				if (!value)
+					Velocity = Vector3.Zero;
+			}
+		}
+
 		public void HandleJavaMetadata(MetaDataEntry entry)
 		{
 			if (entry.Index == 0 && entry is MetadataByte flags)
@@ -918,7 +940,7 @@ namespace Alex.Entities
 				effect.OnTick(this);
 			}
 
-			if (NoAi) return;
+			if (NoAi || _waitingOnChunk) return;
 			//	IsMoving = Velocity.LengthSquared() > 0f;
 
 			var knownPos  = new BlockCoordinates(new Vector3(KnownPosition.X, KnownPosition.Y, KnownPosition.Z));
@@ -1221,6 +1243,8 @@ namespace Alex.Entities
 
 		private ConcurrentDictionary<EffectType, Effect> _effects = new ConcurrentDictionary<EffectType, Effect>();
 		private IItemRenderer                            _itemRenderer    = null;
+		private bool _noAi = false;
+		private bool _hasPhysics = true;
 
 		public const float   JumpVelocity = 0.42f;
 		public virtual void Jump()

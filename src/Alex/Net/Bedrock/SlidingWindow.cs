@@ -16,20 +16,32 @@ namespace Alex.Net.Bedrock
         ///      Max bytes on wire
         /// </summary>
         public double Cwnd { get; set; }
-        
+
         /// <summary>
         ///      Threshold between slow start and congestion avoidance
         /// </summary>
-        public double SsThresh { get; set; }
+        public double SsThresh { get; set; } = 0;
+        
+        /// <summary>
+        ///     The estimated Round Trip Time
+        /// </summary>
         public double EstimatedRtt { get; set; } = -1;
+        
+        /// <summary>
+        ///     The last known Round Trip Time
+        /// </summary>
         public double LastRtt { get; set; } = -1;
+        
+        /// <summary>
+        ///     The amount the Round Trip Time is allowed to deviate
+        /// </summary>
         public double DeviationRtt { get; set; } = -1;
 
         /// <summary>
         /// When we get an ack, if oldestUnsentAck==0, set it to the current time
         /// When we send out acks, set oldestUnsentAck to 0
         /// </summary>
-        public long OldestUnsentAck { get; set; }
+        public long OldestUnsentAck { get; set; } = 0;
 
         /// <summary>
         ///     Every outgoing datagram is assigned a sequence number, which increments by 1 every assignment
@@ -73,11 +85,6 @@ namespace Alex.Net.Bedrock
 
         public bool OnPacketReceived(long currentTime, long datagramSequenceNumber, int sizeInBytes, out long skippedMessageCount)
         {
-            if (OldestUnsentAck == 0)
-            {
-                OldestUnsentAck = currentTime;
-            }
-            
             if (datagramSequenceNumber == _expectedNextSequenceNumber)
             {
                 skippedMessageCount=0;
@@ -107,7 +114,7 @@ namespace Alex.Net.Bedrock
 
         public void OnResend(long currentTime, long nextActionTime)
         {
-            if (IsContinuousSend && !BackoffThisBlock && Cwnd > MtuSize * 2)
+            if (!BackoffThisBlock && Cwnd > MtuSize * 2)
             {
                 SsThresh = Cwnd / 2;
 
@@ -129,7 +136,7 @@ namespace Alex.Net.Bedrock
         /// </summary>
         public void OnNak(long currentTime, long nakSequenceNumber)
         {
-            if (IsContinuousSend && !BackoffThisBlock)
+            if (!BackoffThisBlock)
             {
                 SsThresh = Cwnd / 2D;
             }
@@ -150,6 +157,11 @@ namespace Alex.Net.Bedrock
         /// <param name="sequenceIndex"></param>
         public void OnAck(long currentTime, long rtt, long sequenceIndex, bool isContinuousSend)
         {
+            if (OldestUnsentAck == 0)
+            {
+                OldestUnsentAck = currentTime;
+            }
+            
             LastRtt = rtt;
 
             if (EstimatedRtt < 0d)
@@ -166,8 +178,8 @@ namespace Alex.Net.Bedrock
 
             IsContinuousSend = isContinuousSend;
             
-            if (!IsContinuousSend)
-                return;
+           // if (!IsContinuousSend)
+           //     return;
             
             bool isNewCongestionControlPeriod = sequenceIndex > NextCongestionControlBlock;
 
@@ -229,7 +241,7 @@ namespace Alex.Net.Bedrock
         /// <returns></returns>
         public long GetRtoForRetransmission()
         {
-            if (EstimatedRtt == UNSET_TIME_US)
+            if (EstimatedRtt < 0d)
             {
                 return CcMaximumThreshold;
             }
@@ -256,12 +268,12 @@ namespace Alex.Net.Bedrock
         {
             long rto = GetSenderRtoForAck();
 
-            return rto == UNSET_TIME_US || curTime >= OldestUnsentAck + CcSyn;
+            return rto < 0d || curTime >= OldestUnsentAck + CcSyn;
         }
 
         public long GetSenderRtoForAck()
         {
-            if (LastRtt == UNSET_TIME_US)
+            if (LastRtt < 0d)
             {
                 return UNSET_TIME_US;
             }

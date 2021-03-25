@@ -67,9 +67,6 @@ namespace Alex.Worlds
 			{
 				foreach (var entity in entities)
 				{
-					if (!entity.HasChunk)
-						continue;
-					
 					try
 					{
 						UpdatePhysics(entity);
@@ -141,12 +138,9 @@ namespace Alex.Worlds
 		
 		private void UpdatePhysics(Entity e)
 		{
-			if (!e.IsSpawned)
+			if (!e.IsSpawned || !e.HasChunk || e.NoAi || !e.HasPhysics)
 				return;
-			
-			if (e.NoAi)
-				return;
-			
+
 			var onGround       = e.KnownPosition.OnGround;
 			
 			var slipperiness   = 0.91f;
