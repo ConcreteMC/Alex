@@ -172,11 +172,13 @@ namespace Alex.Particles
 					return true;
 
 				case ParticleType.Explode:
-					value = "minecraft:explode";
+					value = "minecraft:explosion_particle";
 					return true;
 
 				case ParticleType.WhiteSmoke:
-					break;
+					value = "minecraft:campfire_smoke_particle";
+
+					return true;
 
 				case ParticleType.Flame:
 					value = "minecraft:basic_flame_particle";
@@ -206,10 +208,12 @@ namespace Alex.Particles
 					break;
 
 				case ParticleType.LargeExplode:
-					break;
+					value = "minecraft:large_explosion";
+					return true;
 
 				case ParticleType.HugeExplode:
-					break;
+					value = "minecraft:huge_explosion_emitter";
+					return true;
 
 				case ParticleType.MobFlame:
 					value = "minecraft:mobflame_single";
@@ -299,7 +303,8 @@ namespace Alex.Particles
 					return true;
 
 				case ParticleType.WitchSpell:
-					break;
+					value = "minecraft:splash_spell_emitter";
+					return true;
 
 				case ParticleType.Carrot:
 					break;
@@ -308,7 +313,9 @@ namespace Alex.Particles
 					break;
 
 				case ParticleType.EndRod:
-					break;
+					value = "minecraft:endrod";
+
+					return true;
 
 				case ParticleType.DragonsBreath:
 					break;
@@ -334,10 +341,13 @@ namespace Alex.Particles
 					break;
 
 				case ParticleType.BalloonGas:
-					break;
+					value = "minecraft:balloon_gas_particle";
+					return true;
 
 				case ParticleType.ColoredFlame:
-					break;
+					value = "minecraft:colored_flame_particle";
+
+					return true;
 
 				case ParticleType.Sparkler:
 					value = "minecraft:sparkler_emitter";

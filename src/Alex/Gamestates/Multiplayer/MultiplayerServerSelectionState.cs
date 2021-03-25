@@ -34,6 +34,7 @@ namespace Alex.Gamestates.Multiplayer
 	    private Button AddServerButton;
 	    private Button EditServerButton;
 	    private Button DeleteServerButton;
+	    private Button RefreshButton;
 
 	    private readonly IListStorageProvider<SavedServerEntry> _listProvider;
 
@@ -130,7 +131,7 @@ namespace Alex.Gamestates.Multiplayer
 				    TranslationKey = "selectServer.delete",
 				    Enabled = false
 			    });
-			    row.AddChild(new AlexButton("Refresh", OnRefreshButtonPressed)
+			    row.AddChild(RefreshButton = new AlexButton("Refresh", OnRefreshButtonPressed)
 			    {
 				    TranslationKey = "selectServer.refresh"
 			    });
@@ -207,74 +208,91 @@ namespace Alex.Gamestates.Multiplayer
 	    }
 
 	    private CancellationTokenSource _cancellationTokenSource;
+
 	    private void Reload()
 	    {
-		    _cancellationTokenSource?.Cancel();
-		    _cancellationTokenSource = new CancellationTokenSource();
-		    ClearItems();
-
-		    if (_filterValue == "bedrock" && Alex.ServerTypeManager.TryGet("bedrock", out ServerTypeImplementation serverTypeImplementation))
+		    try
 		    {
-			    var item = new GuiServerListEntryElement(
-				    serverTypeImplementation,
-				    new SavedServerEntry()
-				    {
-					    CachedIcon = ResourceManager.NethergamesLogo,
-					    Host = "play.nethergames.org",
-					    Name = "NetherGames",
-					    Port = 19132,
-					    ServerType = serverTypeImplementation.Id
-				    });
+			    _cancellationTokenSource?.Cancel();
+			    _cancellationTokenSource = new CancellationTokenSource();
 
-			    item.SaveEntry = false;
-			    item.PingAsync(true);
+			    var source = _cancellationTokenSource;
+			    var token = source.Token;
+			    source.CancelAfter(TimeSpan.FromSeconds(10));
 
-			    AddItem(item);	  
-		    }
+			    ClearItems();
 
-		    if (Alex.ServerTypeManager.TryGet(_filterValue, out var serverType))
-		    {
-			    serverType.QueryProvider.StartLanDiscovery(_cancellationTokenSource.Token, async r =>
+			    if (_filterValue == "bedrock" && Alex.ServerTypeManager.TryGet(
+				    "bedrock", out ServerTypeImplementation serverTypeImplementation))
 			    {
-				    if (r.QueryResponse.Success)
-				    {
-					    GuiServerListEntryElement entry = new GuiServerListEntryElement(
-						    serverType,
-						    new SavedServerEntry()
+				    var item = new GuiServerListEntryElement(
+					    serverTypeImplementation,
+					    new SavedServerEntry()
+					    {
+						    CachedIcon = ResourceManager.NethergamesLogo,
+						    Host = "play.nethergames.org",
+						    Name = "NetherGames",
+						    Port = 19132,
+						    ServerType = serverTypeImplementation.Id
+					    });
+
+				    item.SaveEntry = false;
+				    item.PingAsync(true, token);
+
+				    AddItem(item);
+			    }
+
+			    if (Alex.ServerTypeManager.TryGet(_filterValue, out var serverType))
+			    {
+				    serverType.QueryProvider.StartLanDiscovery(
+					    token, async r =>
+					    {
+						    if (r.QueryResponse.Success)
 						    {
-							    ServerType = serverType.Id,
-							    Host = r.QueryResponse.Status.Address,
-							    Port = r.QueryResponse.Status.Port,
-							    Name = r.QueryResponse.Status.EndPoint.ToString(),
-							    InternalIdentifier = Guid.NewGuid()
-						    });
+							    GuiServerListEntryElement entry = new GuiServerListEntryElement(
+								    serverType,
+								    new SavedServerEntry()
+								    {
+									    ServerType = serverType.Id,
+									    Host = r.QueryResponse.Status.Address,
+									    Port = r.QueryResponse.Status.Port,
+									    Name = r.QueryResponse.Status.EndPoint.ToString(),
+									    InternalIdentifier = Guid.NewGuid()
+								    });
 
-					    entry.SaveEntry = false;
-					    
-					    entry.ConnectionEndpoint = r.EndPoint;
-					    entry.ServerName = $"[LAN] {r.QueryResponse.Status.Query.Description.Text}";
-					    
-					    AddItem(entry);
+							    entry.SaveEntry = false;
 
-					    await entry.PingAsync(false);
-				    }
-			    });
+							    entry.ConnectionEndpoint = r.EndPoint;
+							    entry.ServerName = $"[LAN] {r.QueryResponse.Status.Query.Description.Text}";
 
-			    Task previousTask = null;
-			    foreach (var entry in _listProvider.Data.Where(x => x.ServerType.Equals(_filterValue)).ToArray())
-			    {
-				    var element = new GuiServerListEntryElement(serverType, entry);
-				    AddItem(element);
+							    AddItem(entry);
 
-				    if (previousTask != null)
+							    await entry.PingAsync(false, token);
+						    }
+					    });
+
+				    Task previousTask = null;
+
+				    foreach (var entry in _listProvider.Data.Where(x => x.ServerType.Equals(_filterValue)).ToArray())
 				    {
-					    previousTask = previousTask.ContinueWith(async r => await element.PingAsync(false), _cancellationTokenSource.Token);
-				    }
-				    else
-				    {
-					    previousTask = element.PingAsync(false);
+					    var element = new GuiServerListEntryElement(serverType, entry);
+					    AddItem(element);
+
+					    if (previousTask != null)
+					    {
+						    previousTask = previousTask.ContinueWith(
+							    async r => await element.PingAsync(false, token), token);
+					    }
+					    else
+					    {
+						    previousTask = element.PingAsync(false, token);
+					    }
 				    }
 			    }
+		    }
+		    finally
+		    {
+			    
 		    }
 	    }
 
@@ -337,6 +355,7 @@ namespace Alex.Gamestates.Multiplayer
 
 		private async void OnJoinServerButtonPressed()
 		{
+			CancellationTokenSource?.Cancel();
 			var overlay = new LoadingOverlay();
 			Alex.GuiManager.AddScreen(overlay);
 
@@ -406,17 +425,7 @@ namespace Alex.Gamestates.Multiplayer
 
 	    private void OnRefreshButtonPressed()
 	    {
-		    Task previousTask = null;
-		    foreach (var item in Items)
-		    {
-			    var i = item;
-			   if (previousTask == null)
-				   previousTask =  i.PingAsync(true);
-			   else
-			   {
-				   previousTask = previousTask.ContinueWith(x => i.PingAsync(true));
-			   }
-		    }
+		    Reload();
 	    }
 
 	    private void SaveAll()
@@ -461,7 +470,7 @@ namespace Alex.Gamestates.Multiplayer
 
 					    Items[index] = newEntry;
 
-					    newEntry.PingAsync(false);
+					    newEntry.PingAsync(false, CancellationToken.None);
 
 					    _listProvider.RemoveEntry(entry.SavedServerEntry);
 					    _listProvider.AddEntry(obj.Entry);

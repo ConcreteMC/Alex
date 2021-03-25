@@ -24,7 +24,7 @@ namespace Alex.Services
 		/// <inheritdoc />
 		public Task QueryServerAsync(ServerConnectionDetails connectionDetails,
 			PingServerDelegate pingCallback,
-			ServerStatusDelegate statusCallBack)
+			ServerStatusDelegate statusCallBack, CancellationToken cancellationToken)
 		{
 			return Task.Run(
 				() =>
@@ -66,7 +66,7 @@ namespace Alex.Services
 
 						sw.Restart();
 
-						if (client.Start(TimeSpan.FromSeconds(10)))
+						if (client.Start(cancellationToken))
 						{
 							client.Close();
 

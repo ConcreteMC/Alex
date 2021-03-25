@@ -190,7 +190,9 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			
 			progressReport(LoadingState.ConnectingToServer, 50, "Establishing a connection...");
 
-			if (!Client.Start(TimeSpan.FromSeconds(30)))
+			CancellationTokenSource cts = new CancellationTokenSource();
+			cts.CancelAfter(TimeSpan.FromSeconds(30));
+			if (!Client.Start(cts.Token))
 			{
 				Log.Warn($"Failed to connect to server, resetevent not triggered.");
 				

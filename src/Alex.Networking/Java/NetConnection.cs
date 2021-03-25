@@ -29,12 +29,12 @@ namespace Alex.Networking.Java
         private CancellationTokenSource CancellationToken { get; }
         private Socket Socket { get; }
         public IPacketHandler PacketHandler { get; set; } = new DefaultPacketHandler();
-		public NetConnection(Socket socket)
+		public NetConnection(Socket socket, CancellationToken cancellationToken)
         {
 	        Socket = socket;
             RemoteEndPoint = Socket.RemoteEndPoint;
 
-            CancellationToken = new CancellationTokenSource();
+            CancellationToken = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 
 			ConnectionState = ConnectionState.Handshake;
 	        IsConnected = true;

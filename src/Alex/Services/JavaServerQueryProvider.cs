@@ -55,9 +55,9 @@ namespace Alex.Services
 		    return new ResolveResult(true, ipAddresses);
 	    }
 
-	    public Task QueryServerAsync(ServerConnectionDetails connectionDetails, PingServerDelegate pingCallback, ServerStatusDelegate statusCallBack)
+	    public Task QueryServerAsync(ServerConnectionDetails connectionDetails, PingServerDelegate pingCallback, ServerStatusDelegate statusCallBack, CancellationToken cancellationToken)
         {
-			return QueryJavaServerAsync(connectionDetails, pingCallback, statusCallBack);
+			return QueryJavaServerAsync(connectionDetails, pingCallback, statusCallBack, cancellationToken);
         }
 
 	    /// <inheritdoc />
@@ -140,9 +140,9 @@ namespace Alex.Services
 		    }
 	    }
 
-	    private static async Task QueryJavaServerAsync(ServerConnectionDetails connectionDetails, PingServerDelegate pingCallback, ServerStatusDelegate statusCallBack)
+	    private static async Task QueryJavaServerAsync(ServerConnectionDetails connectionDetails, PingServerDelegate pingCallback, ServerStatusDelegate statusCallBack, CancellationToken cancellationToken)
         {
-	        CancellationTokenSource cts = new CancellationTokenSource(2500);
+	      //  CancellationTokenSource cts = new CancellationTokenSource(2500);
 	        using TcpClient client       = new TcpClient();
 	        
 			IPEndPoint      endPoint     = null;
@@ -151,14 +151,14 @@ namespace Alex.Services
 			try
 			{
 				bool            waitingOnPing = true;
-				await client.ConnectAsync(connectionDetails.EndPoint.Address, connectionDetails.EndPoint.Port);
+				await client.ConnectAsync(connectionDetails.EndPoint.Address, connectionDetails.EndPoint.Port, cancellationToken);
 				endPoint = client.Client.RemoteEndPoint as IPEndPoint;
 
 				if (client.Connected)
 				{
 					//conn = new NetConnection(Direction.ClientBound, client.Client);
 					//conn.LogExceptions = false;
-					using (var conn = new NetConnection(client.Client)
+					using (var conn = new NetConnection(client.Client, cancellationToken)
 					{
 						LogExceptions = true
 					})
@@ -184,8 +184,8 @@ namespace Alex.Services
 						bool connectionClosed = false;
 						conn.OnConnectionClosed += (sender, args) =>
 						{
-							if (!cts.IsCancellationRequested)
-								cts.Cancel();
+							//if (!cancellationToken.IsCancellationRequested)
+							//	cancellationToken.Cancel();
 							
 							connectionClosed = true;
 							ar.Set();
@@ -205,7 +205,7 @@ namespace Alex.Services
 
 						conn.SendPacket(RequestPacket.CreateObject());
 
-						if (await WaitHandleHelpers.FromWaitHandle(ar, TimeSpan.FromMilliseconds(1000), cts.Token) &&
+						if (await WaitHandleHelpers.FromWaitHandle(ar, TimeSpan.FromMilliseconds(1000), cancellationToken) &&
 						    !connectionClosed && jsonResponse != null)
 						{
 
@@ -242,7 +242,7 @@ namespace Alex.Services
 							statusCallBack?.Invoke(new ServerQueryResponse(true, r));
 
 							if (waitingOnPing && pingCallback != null)
-								await WaitHandleHelpers.FromWaitHandle(ar, TimeSpan.FromSeconds(1000), cts.Token);
+								await WaitHandleHelpers.FromWaitHandle(ar, TimeSpan.FromSeconds(1000), cancellationToken);
 						}
 						else
 						{
@@ -270,15 +270,13 @@ namespace Alex.Services
 			}
 	        catch (Exception ex)
 	        {
-		        cts.Cancel();
-		        
 		        if (sw.IsRunning)
 			        sw.Stop();
 
 		       // client?.Dispose();
 
 		       string msg = ex.Message;
-		        if (ex is SocketException)
+		        if (ex is SocketException || ex is OperationCanceledException)
 		        {
 			        msg = $"multiplayer.status.cannot_connect";
 		        }

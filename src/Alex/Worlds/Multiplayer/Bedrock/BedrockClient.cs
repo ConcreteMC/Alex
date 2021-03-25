@@ -187,7 +187,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		private DateTime StartTime   { get; set; }
 		private Timer    ThroughPut { get; set; }
 
-		public bool Start(TimeSpan timeout)
+		public bool Start(CancellationToken cancellationToken)
 		{
 			if (Starting)
 				return false;
@@ -195,7 +195,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			Starting = true;
 
 			StartTime = DateTime.UtcNow;
-			var cancellationToken = CancellationTokenSource.CreateLinkedTokenSource(CancellationTokenSource.Token);
+			//var cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(CancellationTokenSource.Token, cancellationToken);
 			//	var player = WorldReceiver.Player;
 
 			//player.Inventory.CursorChanged += InventoryOnCursorChanged;
@@ -208,9 +208,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				if (!Connection.AutoConnect)
 				{
 					//Connection.ConnectionInfo.ThroughPut.Change(Timeout.Infinite, Timeout.Infinite);
-
-					cancellationToken.CancelAfter(timeout);
-					if (TryLocate(ServerEndpoint, out var serverInfo, cancellationToken.Token))
+					
+					if (TryLocate(ServerEndpoint, out var serverInfo, cancellationToken))
 					{
 						OnMotdReceivedHandler?.Invoke(
 							this,
@@ -227,8 +226,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				{
 					Connection.Start();
 					
-					cancellationToken.CancelAfter(timeout);
-					if (Connection.TryConnect(ServerEndpoint, cancellationToken: cancellationToken.Token))
+					//cancellationToken.CancelAfter(timeout);
+					if (Connection.TryConnect(ServerEndpoint, cancellationToken: cancellationToken))
 					{
 						ThroughPut = new Timer(state => { UpdateConnectionInfo();}, null, 1000, 1000);
 

@@ -18,7 +18,7 @@ namespace Alex.API.Services
     public interface IServerQueryProvider
     {
 	  //  Task QueryBedrockServerAsync(string hostname, ushort port, PingServerDelegate pingCallback = null, ServerStatusDelegate statusCallBack = null);
-		Task QueryServerAsync(ServerConnectionDetails connectionDetails, PingServerDelegate pingCallback = null, ServerStatusDelegate statusCallBack = null);
+		Task QueryServerAsync(ServerConnectionDetails connectionDetails, PingServerDelegate pingCallback = null, ServerStatusDelegate statusCallBack = null, CancellationToken cancellationToken = default);
 
 		Task StartLanDiscovery(CancellationToken cancellationToken, LandDiscoveryDelegate callback = null);
     }

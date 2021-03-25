@@ -56,9 +56,17 @@ namespace Alex.Gamestates.Multiplayer
 		{
 			ServerTypeImplementation = serverTypeImplementation;
 			SavedServerEntry = entry;
+
+			JavaServerQueryProvider.ResolveHostnameAsync(entry.Host).ContinueWith(
+				x =>
+				{
+					var result = x.Result;
+					ConnectionEndpoint = new IPEndPoint(result.Result, entry.Port);
+				}).Wait();
 		}
 
 		private IServerQueryProvider QueryProvider { get; }
+	//	private CancellationTokenSource _cancellationTokenSource;
 		private GuiServerListEntryElement(IServerQueryProvider queryProvider, string serverName, string serverAddress)
 		{
 			QueryProvider = queryProvider;
@@ -132,7 +140,7 @@ namespace Alex.Gamestates.Multiplayer
 		}
 
 		private bool _pingComplete = false;
-		public async Task PingAsync(bool force)
+		public async Task PingAsync(bool force, CancellationToken cancellationToken)
 		{
 			if (PingCompleted && !force) return;
 			PingCompleted = true;
@@ -146,7 +154,7 @@ namespace Alex.Gamestates.Multiplayer
 			{
 				if (ushort.TryParse(split[1], out port))
 				{
-					await QueryServer(split[0], port);
+					await QueryServer(split[0], port, cancellationToken);
 				}
 				else
 				{
@@ -155,7 +163,7 @@ namespace Alex.Gamestates.Multiplayer
 			}
 			else if (split.Length == 1)
 			{
-				await QueryServer(split[0], port);
+				await QueryServer(split[0], port, cancellationToken);
 			}
 			else
 			{
@@ -194,7 +202,7 @@ namespace Alex.Gamestates.Multiplayer
 			_pingStatus.SetOffline();
 		}
 
-		private async Task QueryServer(string address, ushort port)
+		private async Task QueryServer(string address, ushort port, CancellationToken cancellationToken)
 		{
 			SetErrorMessage(null);
 			SetConnectingState(true);
@@ -227,7 +235,7 @@ namespace Alex.Gamestates.Multiplayer
 				
 				await QueryProvider.QueryServerAsync(
 					new ServerConnectionDetails(endPoint, address), PingCallback,
-					QueryCompleted);
+					QueryCompleted, cancellationToken);
 			}
 			//}
 

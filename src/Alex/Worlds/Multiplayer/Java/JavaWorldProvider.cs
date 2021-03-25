@@ -94,7 +94,7 @@ namespace Alex.Worlds.Multiplayer.Java
 		//	ThreadPool = new DedicatedThreadPool(new DedicatedThreadPoolSettings(Environment.ProcessorCount));
 
 			TcpClient = new TcpClient();
-			Client = new NetConnection(TcpClient.Client);
+			Client = new NetConnection(TcpClient.Client, CancellationToken.None);
 			Client.OnConnectionClosed += OnConnectionClosed;
 			Client.PacketHandler = this;
 			
