@@ -52,6 +52,7 @@ namespace Alex.Utils
 				case "minecraft:splash":                return "minecraft:water_splash_particle_manual";
 				case "minecraft:spit":                  return "minecraft:llama_spit_smoke";
 				case "minecraft:totem_of_undying":      return "minecraft:totem_particle";
+				case "minecraft:witch":                 return "minecraft:mobspell_emitter";
 			}
 
 			return java;

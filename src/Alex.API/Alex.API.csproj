@@ -28,4 +28,8 @@
     <Compile Remove="Events\Event.cs" />
     <Compile Remove="Events\DuplicateTypeException.cs" />
   </ItemGroup>
+  
+  <ItemGroup>
+    <Folder Include="Entities" />
+  </ItemGroup>
 </Project>

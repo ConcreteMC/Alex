@@ -115,7 +115,6 @@ namespace Alex.Worlds
 		{
 			Options = options;
 
-			PhysicsEngine = new PhysicsManager(this);
 			ChunkManager = new ChunkManager(serviceProvider, graphics, this);
 			EntityManager = new EntityManager(graphics, this, networkProvider);
 			Ticker = new TickManager();
@@ -123,7 +122,6 @@ namespace Alex.Worlds
 
 			Ticker.RegisterTicked(this);
 			Ticker.RegisterTicked(EntityManager);
-			Ticker.RegisterTicked(PhysicsEngine);
 			Ticker.RegisterTicked(ChunkManager);
 			
 			ChunkManager.Start();
@@ -160,7 +158,7 @@ namespace Alex.Worlds
 			//Options.FieldOfVision.ValueChanged += FieldOfVisionOnValueChanged;
 			Camera.FOV = Options.FieldOfVision.Value;
 
-			PhysicsEngine.AddTickable(Player);
+			//PhysicsEngine.AddTickable(Player);
 
 			var guiManager = serviceProvider.GetRequiredService<GuiManager>();
 			InventoryManager = new InventoryManager(guiManager);
@@ -182,7 +180,6 @@ namespace Alex.Worlds
 			
 			_disposables.Add(Ticker);
 			_disposables.Add(EntityManager);
-			_disposables.Add(PhysicsEngine);
 			_disposables.Add(ChunkManager);
 			_disposables.Add(BackgroundWorker);
 		}
@@ -198,8 +195,7 @@ namespace Alex.Worlds
 		public TickManager    Ticker        { get; private set; }
 		public EntityManager  EntityManager { get; set; }
 		public ChunkManager   ChunkManager  { get; private set; }
-		private PhysicsManager PhysicsEngine { get; set; }
-		
+
 		public int ChunkCount
         {
             get { return ChunkManager.ChunkCount; }
@@ -279,7 +275,7 @@ namespace Alex.Worlds
 			ChunkManager.Update(args);
 			
 			EntityManager.Update(args);
-			PhysicsEngine.Update(args.GameTime);
+				///PhysicsEngine.Update(args.GameTime);
 
 			if (Math.Abs(_brightnessMod - SkyBox.BrightnessModifier) > 0f)
 			{
@@ -847,7 +843,6 @@ namespace Alex.Worlds
 			
 			Ticker.UnregisterTicked(this);
 			Ticker.UnregisterTicked(EntityManager);
-			Ticker.UnregisterTicked(PhysicsEngine);
 			Ticker.UnregisterTicked(ChunkManager);
 			
 			EntityManager = null;
@@ -892,7 +887,7 @@ namespace Alex.Worlds
 				//entity.RenderLocation = entity.KnownPosition;
 				if (entity.HasPhysics)
 				{
-					PhysicsEngine.AddTickable(entity);
+					//PhysicsEngine.AddTickable(entity);
 				}
 
 				entity.OnSpawn();
@@ -912,7 +907,7 @@ namespace Alex.Worlds
 					{
 						if (entity.HasPhysics)
 						{
-							PhysicsEngine.Remove(entity);
+							//PhysicsEngine.Remove(entity);
 						}
 
 						EntityManager.Remove(entityId);

@@ -4,7 +4,9 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
+using Alex.API.World;
 using Alex.Entities;
+using Alex.Entities.Components;
 using Alex.Items;
 using Alex.MoLang.Parser;
 using Alex.MoLang.Runtime;
@@ -16,15 +18,18 @@ using NLog;
 
 namespace Alex.Graphics.Models.Entity.Animations
 {
-	public class AnimationController
+	public class AnimationController : ITickedEntityComponent
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(AnimationController));
 
 		public bool Initialized => _didInit;
+		
+		public bool Enabled { get; set; } = true;
 		private Queue<ModelBoneAnimation> AnimationQueue { get; }
-		private Entities.Entity Entity { get; }
+
 		private MoLangRuntime Runtime { get; set; }
-		public AnimationController(Entities.Entity entity)
+		private Entities.Entity Entity { get; }
+		public AnimationController(Entities.Entity entity) : base()
 		{
 			Entity = entity;
 			AnimationQueue = new Queue<ModelBoneAnimation>();
@@ -35,8 +40,7 @@ namespace Alex.Graphics.Models.Entity.Animations
 		private EntityDescription _entityDefinition = null;
 		private IReadOnlyDictionary<string, AnimationEntry> _animations = null;
 		private object _lock = new object();
-
-		private AnimationState _animationState = null;
+		
 		private static readonly Regex ControllerRegex = new Regex("", RegexOptions.Compiled);
 
 		private EntityQueryStruct _queryStruct = null;
@@ -349,8 +353,19 @@ namespace Alex.Graphics.Models.Entity.Animations
 			}
 		}
 
-		public void OnTick()
+		/// <inheritdoc />
+		public void Update(GameTime gameTime)
 		{
+			if (!Enabled)
+				return;
+		}
+
+		/// <inheritdoc />
+		void ITicked.OnTick()
+		{
+			if (!Enabled)
+				return;
+			
 			_deltaTimeStopwatch.Stop();
 			
 			_queryStruct?.Tick(_deltaTimeStopwatch.Elapsed);

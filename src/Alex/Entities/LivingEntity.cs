@@ -10,11 +10,12 @@ namespace Alex.Entities
 	{
 		public bool IsLeftHanded { get; set; } = false;
 		
+		private PhysicsComponent PhysicsComponent { get; }
 		/// <inheritdoc />
 		public LivingEntity(World level) : base(
 			level)
 		{
-			
+			EntityComponents.Push(PhysicsComponent = new PhysicsComponent(this));
 		}
 
 		public Item GetItemInHand(bool mainHand)

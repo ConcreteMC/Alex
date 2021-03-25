@@ -419,7 +419,7 @@ namespace Alex.Entities
 			{
 				canJump = true;
 				var adjusted     = Entity.GetBoundingBox(Entity.KnownPosition + amount);
-				var intersecting = PhysicsManager.GetIntersecting(Entity.Level, adjusted);
+				var intersecting = GetIntersecting(Entity.Level, adjusted);
 				var targetY      = 0f;
 
 				//if (!PhysicsManager.GetIntersecting(Entity.Level, adjusted).Any(bb => bb.Max.Y >= adjusted.Min.Y && bb.Min.Y <= adjusted.Max.Y))
@@ -445,7 +445,7 @@ namespace Alex.Entities
 					//var a = intersecting.
 					adjusted     = Entity.GetBoundingBox(Entity.KnownPosition + new Vector3(amount.X, targetY, amount.Z));
 
-					if (PhysicsManager.GetIntersecting(Entity.Level, adjusted).Any(
+					if (GetIntersecting(Entity.Level, adjusted).Any(
 						bb => bb.Max.Y > adjusted.Min.Y && bb.Min.Y <= adjusted.Max.Y))
 					{
 						canJump = false;
@@ -858,6 +858,44 @@ namespace Alex.Entities
 			}
 
 			return false;
+		}
+		
+		private static IEnumerable<BoundingBox> GetIntersecting(World world, BoundingBox box)
+		{
+			var min = box.Min;
+			var max = box.Max;
+
+			var minX = (int) MathF.Floor(min.X);
+			var maxX = (int) MathF.Ceiling(max.X);
+
+			var minZ = (int) MathF.Floor(min.Z);
+			var maxZ = (int) MathF.Ceiling(max.Z);
+
+			var minY = (int) MathF.Floor(min.Y);
+			var maxY = (int) MathF.Ceiling(max.Y);
+
+			for (int x = minX; x < maxX; x++)
+			for (int y = minY; y < maxY; y++)
+			for (int z = minZ; z < maxZ; z++)
+			{
+				var coords = new BlockCoordinates(new Vector3(x, y, z));
+
+				var block = world.GetBlockState(coords);
+
+				if (block == null)
+					continue;
+
+				if (!block.Block.Solid)
+					continue;
+
+				foreach (var blockBox in block.Block.GetBoundingBoxes(coords))
+				{
+					if (box.Intersects(blockBox))
+					{
+						yield return blockBox;
+					}
+				}
+			}
 		}
 
 		private const float MaxJumpHeight = 0.55f;

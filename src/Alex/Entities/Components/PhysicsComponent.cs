@@ -10,6 +10,7 @@ using Alex.API.World;
 using Alex.Blocks.Minecraft;
 using Alex.Blocks.State;
 using Alex.Entities;
+using Alex.Entities.Components;
 using Alex.Graphics.Models.Blocks;
 using Alex.Utils;
 using Microsoft.Xna.Framework;
@@ -22,17 +23,15 @@ namespace Alex.Worlds
 	///		Handles entity physics
 	///		Collision detection heavily based on https://github.com/ddevault/TrueCraft/blob/master/TrueCraft.Core/Physics/PhysicsEngine.cs
 	/// </summary>
-    public class PhysicsManager : ITicked, IDisposable
+    public class PhysicsComponent : FixedRateEntityComponent
     {
-	    private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(PhysicsManager));
-	    private World World { get; }
-
-	    public PhysicsManager(World world)
+	    private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(PhysicsComponent));
+	    public PhysicsComponent(Entity entity) : base(entity, 20)
 	    {
-		    World = world;
+		    
 	    }
 	    
-		private ThreadSafeList<Entity> PhysicsEntities { get; set; } = new ThreadSafeList<Entity>();
+		//private ThreadSafeList<Entity> PhysicsEntities { get; set; } = new ThreadSafeList<Entity>();
 		
 		private Vector3 TruncateVelocity(Vector3 velocity)
 		{
@@ -47,97 +46,11 @@ namespace Alex.Worlds
 
 			return velocity;
 		}
-		
-		private       float _frameAccumulator = 0f;
-		private const float TargetTime        = 1f / 20f;
-		public void Update(GameTime elapsed)
-		{
-			var frameTime = (float) elapsed.ElapsedGameTime.TotalSeconds; // / 50;
-			_frameAccumulator += frameTime;
 
-		//	if (_frameAccumulator >= (TargetTime * 1.3))
-		//	{
-			//	Log.Warn($"Physics running slow! Running {(_frameAccumulator / TargetTime)} ticks behind... (DeltaTime={_frameAccumulator}s Target={TargetTime}s)");
-		//	}
-
-			var entities = PhysicsEntities.ToArray();
-			//var realTime = entities.Where(x => (x.RequiresRealTimeTick || (x.IsRendered && x.ServerEntity))).ToArray();
-			
-			while (_frameAccumulator >= TargetTime)
-			{
-				foreach (var entity in entities)
-				{
-					try
-					{
-						UpdatePhysics(entity);
-					}
-					catch (Exception ex)
-					{
-						Log.Warn(ex, $"Entity tick threw exception: {ex.ToString()}");
-					}
-				}
-				
-				_frameAccumulator -= TargetTime;
-			}
-
-			/*var alpha = (float) (_frameAccumulator / TargetTime);
-
-			foreach (var entity in entities)
-			{
-				UpdateEntityLocation(entity, alpha);
-			}*/
-		}
-		
-		
 		/// <inheritdoc />
-		public void OnTick()
+		protected override void OnUpdate(float deltaTime)
 		{
-			return;
-		}
-		
-		private float GetSlipperiness(Entity entity)
-		{
-			var blockcoords = entity.KnownPosition.GetCoordinates3D();
-
-			//if (entity.KnownPosition.Y % 1 <= 0.01f)
-			//{
-			//	blockcoords = blockcoords.BlockDown();
-			//	}
-			
-			if (entity.BoundingBox.Min.Y % 1 < 0.05f)
-			{
-				blockcoords -= new BlockCoordinates(0, 1, 0);
-			}
-				
-			var block = World.GetBlockState(blockcoords.X, blockcoords.Y, blockcoords.Z);
-			var slipperiness = (float) block.Block.BlockMaterial.Slipperiness;
-
-			return slipperiness;
-		}
-
-		private Vector3 ConvertHeading(Entity entity, float multiplier)
-		{
-			var heading  = entity.Movement.Heading;
-			var strafe   = heading.X;
-			var forward  = heading.Z;
-			var vertical = entity.IsFlying ? heading.Y : 0f;
-			
-			var speed    = MathF.Sqrt(strafe * strafe + forward * forward + vertical * vertical);
-			if (speed < 0.01f)
-				return Vector3.Zero;
-
-			speed = multiplier / MathF.Max(speed, 1f);
-
-			strafe *= speed;
-			forward *= speed;
-			vertical *= speed;
-			
-
-			return new Vector3(strafe, vertical, forward);
-		}
-		
-		private void UpdatePhysics(Entity e)
-		{
+			var e = Entity;
 			if (!e.IsSpawned || !e.HasChunk || e.NoAi || !e.HasPhysics)
 				return;
 
@@ -191,7 +104,85 @@ namespace Alex.Worlds
 			e.Velocity = TruncateVelocity(e.Velocity);
 		}
 
-		public bool AddTickable(Entity entity)
+		/*public void Update(GameTime elapsed)
+		{
+			var frameTime = (float) elapsed.ElapsedGameTime.TotalSeconds; // / 50;
+			_frameAccumulator += frameTime;
+
+		//	if (_frameAccumulator >= (TargetTime * 1.3))
+		//	{
+			//	Log.Warn($"Physics running slow! Running {(_frameAccumulator / TargetTime)} ticks behind... (DeltaTime={_frameAccumulator}s Target={TargetTime}s)");
+		//	}
+
+			var entities = PhysicsEntities.ToArray();
+			//var realTime = entities.Where(x => (x.RequiresRealTimeTick || (x.IsRendered && x.ServerEntity))).ToArray();
+			
+			while (_frameAccumulator >= TargetTime)
+			{
+				foreach (var entity in entities)
+				{
+					try
+					{
+						UpdatePhysics(entity);
+					}
+					catch (Exception ex)
+					{
+						Log.Warn(ex, $"Entity tick threw exception: {ex.ToString()}");
+					}
+				}
+				
+				_frameAccumulator -= TargetTime;
+			}
+
+			/*var alpha = (float) (_frameAccumulator / TargetTime);
+
+			foreach (var entity in entities)
+			{
+				UpdateEntityLocation(entity, alpha);
+			}*
+		}*/
+
+		private float GetSlipperiness(Entity entity)
+		{
+			var blockcoords = entity.KnownPosition.GetCoordinates3D();
+
+			//if (entity.KnownPosition.Y % 1 <= 0.01f)
+			//{
+			//	blockcoords = blockcoords.BlockDown();
+			//	}
+			
+			if (entity.BoundingBox.Min.Y % 1 < 0.05f)
+			{
+				blockcoords -= new BlockCoordinates(0, 1, 0);
+			}
+				
+			var block = Entity?.Level?.GetBlockState(blockcoords.X, blockcoords.Y, blockcoords.Z);
+			var slipperiness = (float) block.Block.BlockMaterial.Slipperiness;
+
+			return slipperiness;
+		}
+
+		private Vector3 ConvertHeading(Entity entity, float multiplier)
+		{
+			var heading  = entity.Movement.Heading;
+			var strafe   = heading.X;
+			var forward  = heading.Z;
+			var vertical = entity.IsFlying ? heading.Y : 0f;
+			
+			var speed    = MathF.Sqrt(strafe * strafe + forward * forward + vertical * vertical);
+			if (speed < 0.01f)
+				return Vector3.Zero;
+
+			speed = multiplier / MathF.Max(speed, 1f);
+
+			strafe *= speed;
+			forward *= speed;
+			vertical *= speed;
+			
+
+			return new Vector3(strafe, vertical, forward);
+		}
+		/*public bool AddTickable(Entity entity)
 		{
 			var collection = PhysicsEntities;
 
@@ -209,52 +200,13 @@ namespace Alex.Worlds
 			    return false;
 		    
 		    return collection.Remove(entity);
-	    }
+	    }*/
 
-
-	    public static IEnumerable<BoundingBox> GetIntersecting(World world, BoundingBox box)
-	    {
-		    var min = box.Min;
-		    var max = box.Max;
-
-		    var minX = (int) MathF.Floor(min.X);
-		    var maxX = (int) MathF.Ceiling(max.X);
-
-		    var minZ = (int) MathF.Floor(min.Z);
-		    var maxZ = (int) MathF.Ceiling(max.Z);
-
-		    var minY = (int) MathF.Floor(min.Y);
-		    var maxY = (int) MathF.Ceiling(max.Y);
-
-		    for (int x = minX; x < maxX; x++)
-		    for (int y = minY; y < maxY; y++)
-		    for (int z = minZ; z < maxZ; z++)
-		    {
-			    var coords = new BlockCoordinates(new Vector3(x, y, z));
-
-			    var block = world.GetBlockState(coords);
-
-			    if (block == null)
-				    continue;
-
-			    if (!block.Block.Solid)
-				    continue;
-
-			    foreach (var blockBox in block.Block.GetBoundingBoxes(coords))
-			    {
-				    if (box.Intersects(blockBox))
-				    {
-					    yield return blockBox;
-				    }
-			    }
-		    }
-	    }
-
-	    /// <inheritdoc />
+		/// <inheritdoc />
 	    public void Dispose()
 	    {
-		    var entities = PhysicsEntities.TakeAndClear();
-		    PhysicsEntities = null;
+		   // var entities = PhysicsEntities.TakeAndClear();
+		   // PhysicsEntities = null;
 	    }
     }
 }

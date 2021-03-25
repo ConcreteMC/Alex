@@ -11,7 +11,10 @@ using Alex.API.Graphics;
 using Alex.API.Graphics.Typography;
 using Alex.API.Resources;
 using Alex.API.Utils;
+using Alex.API.Utils.Collections;
+using Alex.API.World;
 using Alex.Blocks.Minecraft;
+using Alex.Entities.Components;
 using Alex.Entities.Effects;
 using Alex.Entities.Properties;
 using Alex.Gamestates;
@@ -30,6 +33,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MiNET;
 using MiNET.Utils;
+using Mono.Collections.Generic;
 using NLog;
 using BlockCoordinates = Alex.API.Utils.Vectors.BlockCoordinates;
 using BoundingBox = Microsoft.Xna.Framework.BoundingBox;
@@ -72,6 +76,8 @@ namespace Alex.Entities
 						OnModelUpdated();
 						CheckHeldItem();
 					}
+
+					AnimationController.Enabled = value != null;
 				}
 				finally
 				{
@@ -296,8 +302,11 @@ namespace Alex.Entities
 		public AnimationController AnimationController { get; }
 		public TimeSpan LifeTime => _lifeTime.Elapsed;
 		private Stopwatch _lifeTime;
+		protected ConcurrentStack<IEntityComponent> EntityComponents { get; }
 		public Entity(World level)
 		{
+			EntityComponents = new ConcurrentStack<IEntityComponent>();
+			
 			_lifeTime = Stopwatch.StartNew();
 			
 			EntityId = -1;
@@ -320,9 +329,10 @@ namespace Alex.Entities
 			
 			AddOrUpdateProperty(new FlyingSpeedProperty(this));
 			AddOrUpdateProperty(new MovementSpeedProperty(this));
-			
 			Movement = new EntityMovement(this);
-			AnimationController = new AnimationController(this);
+				
+			//EntityComponents.Push(Movement = new EntityMovement(this));
+			EntityComponents.Push(AnimationController = new AnimationController(this));
 		}
 
 		public double FlyingSpeed
@@ -820,6 +830,11 @@ namespace Alex.Entities
 
 		public virtual void Update(IUpdateArgs args)
 		{
+			foreach (var entityComponent in EntityComponents)
+			{
+				entityComponent.Update(args.GameTime);
+			}
+
 			Movement?.Update(args.GameTime);
 
 			var renderer = ModelRenderer;
@@ -913,12 +928,18 @@ namespace Alex.Entities
 					TargetRotation = rotationVector;
 				}
 			}
+			
+			foreach (var entityComponent in EntityComponents)
+			{
+				if (entityComponent is ITicked ticked)
+					ticked.OnTick();
+			}
 
 			//Movement?.OnTick();
 
 			HealthManager.OnTick();
 			
-			AnimationController?.OnTick();
+			//AnimationController?.OnTick();
 
 			/*if (_isHit && Age > _hitAnimationEnd)
 			{
