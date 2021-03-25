@@ -58,26 +58,26 @@ namespace Alex.Net.Bedrock.Packets
             {
                 switch (messageId)
                 {
-                    case 0x37:
-                        packet = new AdventureSettings();
-                        break;
+                 //   case 0x37:
+                 ////       packet = new AdventureSettings();
+                 //       break;
                   //  case 0x55:
                    //     packet = McpeTransfer.CreateObject();
                         //packet = new AdventureSettings();
 
                    //     break;
-                    case 0x0b:
-                        packet = new StartGame();
-                        break;
-                    case 0x34:
-                        packet = new CraftingData();
-                        break;
+                //    case 0x0b:
+               //         packet = new StartGame();
+                //        break;
+               //     case 0x34:
+                //        packet = new CraftingData();
+               //         break;
                     case 0x8a:
                         packet = McpeEmote.CreateObject();
                         break;
-                    case 0x91:
-                        packet = new CreativeContent();
-                        break;
+               //     case 0x91:
+               //         packet = new CreativeContent();
+                //        break;
                     case 0x9e:
                         packet = McpeAnimateEntity.CreateObject();
                         break;
