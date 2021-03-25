@@ -440,50 +440,44 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		private ConcurrentDictionary<MiNET.Utils.UUID, RemotePlayer> _playerListPlayers =
 			new ConcurrentDictionary<MiNET.Utils.UUID, RemotePlayer>();
+
 		public void HandleMcpePlayerList(McpePlayerList message)
 		{
 			if (message.records is PlayerAddRecords addRecords)
 			{
 				foreach (var r in addRecords)
 				{
-					Client.World.AddPlayerListItem(new PlayerListItem(r.ClientUuid, r.DisplayName, (GameMode)((int)r.GameMode), 0, false));
+					if (_playerListPlayers.ContainsKey(r.ClientUuid))
+						continue;
 
-				//	bool         isNewEntity = true;
-					RemotePlayer m           = null;
-					/*if (Client.World.EntityManager.TryGet(r.ClientUuid, out var entity) && entity is RemotePlayer rp)
-					{
-						m = rp;
-						m.Skin = r.Skin;
-						
-						isNewEntity = false;
-						//Client.World.EntityManager.UpdateEntityId(entity, r.EntityId);
-					}
-					else
-					{*/
-						m = new RemotePlayer(Client.World, skin: r.Skin);
-						m.EntityId = r.EntityId;
-					//}
-					
-					m.NameTag = r.DisplayName;
-					m.UUID = r.ClientUuid;
+					RemotePlayer remotePlayer = new RemotePlayer(Client.World, skin: r.Skin);
+					remotePlayer.EntityId = r.EntityId;
+
+					remotePlayer.NameTag = r.DisplayName;
+					remotePlayer.UUID = r.ClientUuid;
 					//m.Skin = r.Skin;
 
 					//if (isNewEntity)
 					{
-						m.SetInventory(new BedrockInventory(46));
-						_playerListPlayers.TryAdd(m.UUID, m);
+						remotePlayer.SetInventory(new BedrockInventory(46));
+
+						if (_playerListPlayers.TryAdd(remotePlayer.UUID, remotePlayer))
+						{
+							Client.World.AddPlayerListItem(
+								new PlayerListItem(r.ClientUuid, r.DisplayName, (GameMode) ((int) r.GameMode), 0, false));
+						}
 						//Client.World.EntityManager.AddEntity(m);
 					}
 				}
 			}
-            else if (message.records is PlayerRemoveRecords removeRecords)
-            {
-	            foreach (var r in removeRecords)
-	            {
-		            _playerListPlayers.TryRemove(r.ClientUuid, out _);
-		            Client.World.RemovePlayerListItem(r.ClientUuid);
-	            }
-            }
+			else if (message.records is PlayerRemoveRecords removeRecords)
+			{
+				foreach (var r in removeRecords)
+				{
+					_playerListPlayers.TryRemove(r.ClientUuid, out _);
+					Client.World.RemovePlayerListItem(r.ClientUuid);
+				}
+			}
 		}
 
 		public bool SpawnMob(long entityId,
@@ -561,10 +555,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		//private ConcurrentDictionary<long, long> _entityMapping = new ConcurrentDictionary<long, long>();
 		public void HandleMcpeRemoveEntity(McpeRemoveEntity message)
 		{
-		//	if (_entityMapping.TryRemove(message.entityIdSelf, out var entityId))
-			{
-				Client.World.DespawnEntity(message.entityIdSelf);
-			}
+			Client.World.DespawnEntity(message.entityIdSelf);
 		}
 
 		public void HandleMcpeAddItemEntity(McpeAddItemEntity message)

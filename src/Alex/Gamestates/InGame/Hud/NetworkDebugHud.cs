@@ -99,7 +99,7 @@ namespace Alex.Gamestates.InGame.Hud
                 switch (info.State)
                 {
                     case ConnectionInfo.NetworkState.OutOfOrder:
-                        WarningElement.Text = "Warning: Datagram out of order!";
+                        WarningElement.Text = "Warning: Network out of order!";
 
                         break;
 

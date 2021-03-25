@@ -27,6 +27,7 @@ namespace Alex.Net.Bedrock.Raknet
 		// From decoding
 		public List<Packet> Messages { get; set; } = new List<Packet>();
 
+		public int Size { get; set; } = 0;
 		public Datagram()
 		{
 			MessageParts = new List<MessagePart>(50);
@@ -144,7 +145,7 @@ namespace Alex.Net.Bedrock.Raknet
 				return buf.ToArray();
 			}
 		}
-
+		
 		public long GetEncoded(ref byte[] buffer)
 		{
 			using var buf = new MemoryStream(buffer);
@@ -164,6 +165,7 @@ namespace Alex.Net.Bedrock.Raknet
 				}
 			}
 
+			Size = (int) buf.Position;
 			return buf.Position;
 		}
 
@@ -177,6 +179,7 @@ namespace Alex.Net.Bedrock.Raknet
 			TransmissionCount = 0;
 			_currentSize = 4;
 			FirstMessageId = 0;
+			Size = 0;
 
 			foreach (MessagePart part in MessageParts)
 			{

@@ -74,7 +74,7 @@ namespace Alex.Net.Bedrock
 		public short MtuSize { get; }
 		public long NetworkIdentifier { get; set; }
 
-		public int DatagramSequenceNumber = -1;
+		//public int DatagramSequenceNumber = -1;
 		public int ReliableMessageNumber = -1;
 		public int SplitPartId = 0;
 		public int OrderingIndex = -1;
@@ -182,7 +182,7 @@ namespace Alex.Net.Bedrock
 					if (!IsOutOfOrder)
 					{
 						IsOutOfOrder = true;
-						Log.Warn($"Datagram out of order. Expected {last + 1}, but was {current}.");
+						Log.Warn($"Network channel out of order. Expected {last + 1}, but was {current}.");
 					}
 				}
 			}
@@ -672,7 +672,7 @@ namespace Alex.Net.Bedrock
 			{
 				if (Evicted) return;
 
-				ConnectionInfo.Latency = (long)SlidingWindow.GetRtt();
+				ConnectionInfo.Latency = (long)SlidingWindow.GetRtt(); 
 				long now = DateTime.UtcNow.Ticks / TimeSpan.TicksPerMillisecond;
 				long lastUpdate = LastUpdatedTime.Ticks / TimeSpan.TicksPerMillisecond;
 
@@ -783,6 +783,7 @@ namespace Alex.Net.Bedrock
 		}
 
 		private SemaphoreSlim _syncHack = new SemaphoreSlim(1, 1);
+		private bool _bandwidthExceededStatistic = false;
 
 		[SuppressMessage("ReSharper", "InconsistentlySynchronizedField")]
 		private async Task SendQueueAsync(int millisecondsWait = 0)
@@ -796,20 +797,25 @@ namespace Alex.Net.Bedrock
 			try
 			{
 				int transmissionBandwidth;
-				transmissionBandwidth = this.SlidingWindow.GetTransmissionBandwidth(this.UnackedBytes);
+				transmissionBandwidth = this.SlidingWindow.GetTransmissionBandwidth(this.UnackedBytes, _bandwidthExceededStatistic);
 
 				var sendList = new List<Packet>();
 				//Queue<Packet> queue = _sendQueueNotConcurrent;
 				int length = _sendQueue.Count;
-
-				if (transmissionBandwidth > 0)
+			//	Log.Warn($"Bandwidth: {transmissionBandwidth} | Packets: {length} | UnackedBytes: {this.UnackedBytes}");
+				/*if (transmissionBandwidth > 0)
 				{
-					length = Math.Min(length, transmissionBandwidth / MtuSize);
-					//Log.Warn($"Bandwidth: {transmissionBandwidth} | Packets: {length}");
-				}
+					length = Math.Max(Math.Min(length, transmissionBandwidth / MtuSize), 0);
+					//if (length <= 0)
+					Log.Warn($"Bandwidth: {transmissionBandwidth} | Packets: {length}");
+				}*/
 				//int length = Math.Min(_sendQueue.Count, transmissionBandwidth / MtuSize);
+				int totalSize = 0;
 				for (int i = 0; i < length; i++)
 				{
+					if (transmissionBandwidth <= 0)
+						break;
+					
 					Packet packet;
 
 					if (!_sendQueue.TryDequeue(out packet))
@@ -822,8 +828,16 @@ namespace Alex.Net.Bedrock
 						packet.PutPool();
 						continue;
 					}
-					
-					sendList.Add(packet);
+
+					var packetSize = packet.Encode().Length;
+
+					//if (packetSize < transmissionBandwidth)
+					{
+						transmissionBandwidth -= packetSize;
+						totalSize += packetSize;
+						
+						sendList.Add(packet);
+					}
 				}
 
 				if (sendList.Count == 0) return;
@@ -847,6 +861,8 @@ namespace Alex.Net.Bedrock
 				}
 
 				await _packetSender.SendPacketAsync(this, preppedSendList);
+				
+				_bandwidthExceededStatistic = _sendQueue.Count > 0;
 			}
 			catch (Exception e)
 			{
@@ -919,7 +935,7 @@ namespace Alex.Net.Bedrock
 			if (Log.IsDebugEnabled) Log.Info($"Closed network session");
 		}
 		
-		private long   _lastDatagramSequenceNumber = -1;
+		//private long   _lastDatagramSequenceNumber = -1;
 		private object _ackLock                    = new object();
 		private bool   _isOutOfOrder                       = false;
 
@@ -945,9 +961,10 @@ namespace Alex.Net.Bedrock
 					if (queue.TryRemove(i, out Datagram datagram))
 					{
 						//_nacked.Remove(i);
-						UnackedBytes -= datagram.Bytes.Length;
+						
+						UnackedBytes -= datagram.Size;
 						//CalculateRto(datagram);
-						SlidingWindow.OnAck(datagram.Timer.ElapsedMilliseconds, datagram.Header.DatagramSequenceNumber.IntValue(), _lastDatagramSequenceNumber);
+						SlidingWindow.OnAck(CurrentTimeMillis(), datagram.Timer.ElapsedMilliseconds,i, _bandwidthExceededStatistic);
 						datagram.PutPool();
 					}
 					else
@@ -964,7 +981,6 @@ namespace Alex.Net.Bedrock
 
 		internal void HandleNak(CustomNak nak)
 		{
-			SlidingWindow.OnNak();
 			var queue = WaitingForAckQueue;
 
 			foreach (Tuple<int, int> range in nak.Ranges)
@@ -978,6 +994,7 @@ namespace Alex.Net.Bedrock
 					
 					if (queue.TryGetValue(i, out var datagram))
 					{
+						SlidingWindow.OnNak(CurrentTimeMillis(), i);
 						//CalculateRto(datagram);
 
 						datagram.RetransmitImmediate = true;
@@ -994,54 +1011,17 @@ namespace Alex.Net.Bedrock
 		public void Acknowledge(Datagram datagram)
 		{
 			var sequenceIndex = datagram.Header.DatagramSequenceNumber.IntValue();
-			SlidingWindow.OnPacketReceived(CurrentTimeMillis());
-			var previous = Interlocked.Read(ref _lastDatagramSequenceNumber);
 
-			if (previous < sequenceIndex)
+			if (SlidingWindow.OnPacketReceived(
+				CurrentTimeMillis(),  sequenceIndex, datagram.Size, out var skippedMessageCount))
 			{
-				Interlocked.Exchange(ref _lastDatagramSequenceNumber, sequenceIndex);
-			}
-			
-			var missedDatagrams = sequenceIndex - previous - 1;
-
-			if (missedDatagrams > 0)
-			{
-				for (long i = sequenceIndex - missedDatagrams; i < sequenceIndex; i++)
+				OutgoingAckQueue.Enqueue(sequenceIndex);
+				
+				for (long i = 0; i < skippedMessageCount; i++)
 				{
-					//if (_nacked.TryAdd((int) i))
-					//{
-						OutgoingNackQueue.Enqueue((int) i);
-					//}
+					OutgoingNackQueue.Enqueue((int) (sequenceIndex- i));
 				}
 			}
-			
-			OutgoingAckQueue.Enqueue(sequenceIndex);
-			/*
-			var sequence = datagramSequenceNumber.IntValue();
-			OutgoingAckQueue.Enqueue(sequence);
-
-			var lastDatagram = Interlocked.Read(ref _lastDatagramSequenceNumber);
-
-			if (sequence > lastDatagram)
-			{
-				var last    = Interlocked.CompareExchange(ref _lastDatagramSequenceNumber, sequence, lastDatagram);
-				var skipped = sequence - last - 1;
-
-				if (skipped > 0)
-				{
-					for (long i = last; i < sequence; i++)
-					{
-						if (_nacked.TryAdd((int) i))
-						{
-							OutgoingNackQueue.Enqueue((int) i);
-						}
-					}
-				}
-
-				return true;
-			}
-
-			return false;*/
 		}
 	}
 }

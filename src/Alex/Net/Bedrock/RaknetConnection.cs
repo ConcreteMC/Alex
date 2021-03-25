@@ -415,6 +415,9 @@ namespace Alex.Net.Bedrock
 				Log.Warn(e, $"Bad packet {receivedBytes.Span[0]}\n{Packet.HexDump(receivedBytes)}");
 				return;
 			}
+			
+			Session.Acknowledge(datagram);
+			
 			Interlocked.Increment(ref ConnectionInfo.PacketsIn);
 			//if (Log.IsTraceEnabled) Log.Trace($"Receive datagram #{datagram.Header.DatagramSequenceNumber} for {_endpoint}");
 			HandleDatagram(rakSession, datagram);
@@ -424,13 +427,9 @@ namespace Alex.Net.Bedrock
 
 		private void HandleDatagram(RaknetSession session, Datagram datagram)
 		{
-			Session.Acknowledge(datagram);
-			
+			foreach (var packet in datagram.Messages)
 			{
-				foreach (var packet in datagram.Messages)
-				{
-					Handle(session, packet);
-				}
+				Handle(session, packet);
 			}
 		}
 
@@ -550,21 +549,22 @@ namespace Alex.Net.Bedrock
 				long now = DateTime.UtcNow.Ticks / TimeSpan.TicksPerMillisecond;
 				long lastUpdate = session.LastUpdatedTime.Ticks / TimeSpan.TicksPerMillisecond;
 				
-				if (!session.WaitForAck && (session.ResendCount > session.ResendThreshold || lastUpdate + session.InactivityTimeout < now))
-				{
+			//	if (!session.WaitForAck && (session.ResendCount > session.ResendThreshold || lastUpdate + session.InactivityTimeout < now))
+			//	{
 					//TODO: Seems to have lost code here. This should actually count the resends too.
 					// Spam is a bit too much. The Russians have trouble with bad connections.
-					Session.DetectLostConnection();
-					session.WaitForAck = true;
-				}
+			//		Session.DetectLostConnection();
+			//		session.WaitForAck = true;
+			//	}
 
 				if (session.WaitingForAckQueue.Count == 0) return;
 
-				if (session.WaitForAck) return;
+			//	if (session.WaitForAck) return;
 
-				if (session.SlidingWindow.GetRtoForRetransmission() == 0) return;
-
+				
 				long rto = session.SlidingWindow.GetRtoForRetransmission();
+				if (rto == 0) return;
+
 				int transmissionBandwith = session.SlidingWindow.GetRetransmissionBandwidth(session.UnackedBytes);
 				
 				var queue = session.WaitingForAckQueue;
@@ -596,8 +596,10 @@ namespace Alex.Net.Bedrock
 						
 						transmissionBandwith -= datagram.Bytes.Length;
 						
-						if (!session.Evicted && session.WaitingForAckQueue.TryRemove(datagram.Header.DatagramSequenceNumber, out datagram))
+						if (!session.Evicted && session.WaitingForAckQueue.TryRemove(datagramPair.Key, out datagram))
 						{
+							session.UnackedBytes -= datagram.Bytes.Length;
+							
 							session.ErrorCount++;
 							session.ResendCount++;
 
@@ -607,7 +609,7 @@ namespace Alex.Net.Bedrock
 							Interlocked.Increment(ref ConnectionInfo.Resends);
 							await SendDatagramAsync(session, datagram);
 							
-							session.SlidingWindow.OnResend(datagram.Header.DatagramSequenceNumber.IntValue());
+							session.SlidingWindow.OnResend(RaknetSession.CurrentTimeMillis(), datagramPair.Key);
 						}
 					}
 				}
@@ -670,35 +672,37 @@ namespace Alex.Net.Bedrock
 				//TODO: Disconnect! Because of encryption, this connection can't be used after this point
 				return;
 			}
+
+			var sequenceNumber = (int)session.SlidingWindow.GetAndIncrementNextDatagramSequenceNumber();// Interlocked.Increment(ref session.DatagramSequenceNumber);
 			
 			long rto = session.SlidingWindow.GetRtoForRetransmission();
 			datagram.RetransmissionTimeOut = (rto * (datagram.TransmissionCount + session.ResendCount + 1)) * 2;
-			datagram.Header.DatagramSequenceNumber = Interlocked.Increment(ref session.DatagramSequenceNumber);
+			datagram.Header.DatagramSequenceNumber = sequenceNumber;
 			datagram.TransmissionCount++;
 			datagram.RetransmitImmediate = false;
 
 			byte[] buffer = ArrayPool<byte>.Shared.Rent(1600);
-
 			try
 			{
 				int length = (int) datagram.GetEncoded(ref buffer);
 
-				if (!session.WaitingForAckQueue.TryAdd(datagram.Header.DatagramSequenceNumber.IntValue(), datagram))
+				if (!session.WaitingForAckQueue.TryAdd(sequenceNumber, datagram))
 				{
 					Log.Warn(
 						$"Datagram sequence unexpectedly existed in the ACK/NAK queue already {datagram.Header.DatagramSequenceNumber.IntValue()}");
 
 					datagram.PutPool();
+
+					return;
 				}
 
-				if (datagram.TransmissionCount == 1)
+				if (datagram.TransmissionCount == 1) //First send.
 				{
-					session.UnackedBytes += length;
+					session.UnackedBytes += datagram.Size;	
 				}
-
+				
 				datagram.Timer.Restart();
 				Interlocked.Increment(ref ConnectionInfo.PacketsOut);
-				
 				await SendDataAsync(buffer, length, session.EndPoint);
 			}
 			finally
@@ -719,7 +723,7 @@ namespace Alex.Net.Bedrock
 		}
 
 		private object _sendSync = new object();
-		public async Task SendDataAsync(byte[] data, int length, IPEndPoint targetEndPoint)
+		private async Task SendDataAsync(byte[] data, int length, IPEndPoint targetEndPoint)
 		{
 			if (length <= 0)
 				return;
