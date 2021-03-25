@@ -8,6 +8,7 @@ using Alex.API.Utils;
 using Alex.API.World;
 using Microsoft.Xna.Framework;
 using RocketUI;
+using RocketUI.Attributes;
 
 
 namespace Alex.Gui.Elements
@@ -40,6 +41,9 @@ namespace Alex.Gui.Elements
 				Scale = 1f,
 				Text =	""
             };
+			
+			AddChild(_title);
+			AddChild(_subTitle);
 	    }
 
 		public void Ready()
@@ -60,11 +64,11 @@ namespace Alex.Gui.Elements
 		    _fadeOut = 0;
 		    _displayTime = 0;
 		    
-		    _hidden = false;
+		    IsVisible = true;
 		    //_hideTime = DateTime.UtcNow + TimeSpan.FromMilliseconds((_fadeIn + _fadeOut + _stay) * 50);
 		    
-		    AddChild(_title);
-		    AddChild(_subTitle);
+		    //AddChild(_title);
+		   // AddChild(_subTitle);
 	    }
 	    
 	    public void SetTitle(string value)
@@ -77,12 +81,11 @@ namespace Alex.Gui.Elements
 		    _subTitle.Text = value;
         }
 
-	    private bool _hidden = true;
 
 	    private int _fadeIn = 0, _fadeOut = 0, _displayTime = 20;
 	    public void SetTimes(int fadeIn, int stay, int fadeOut)
 	    {
-		    _displayTicks = Math.Min(stay, 200); //10 Seconds max
+		    _displayTicks = Math.Max(Math.Min(stay, 200), 20); //10 Seconds max
 		    _fadeInTicks = fadeIn >= 0 ? fadeIn : 0;
 		    _fadeOutTicks = fadeOut >= 0 ? fadeOut : 0;
 	    }
@@ -90,9 +93,11 @@ namespace Alex.Gui.Elements
 	    public void Hide()
 	    {
 		    Reset();
-		    _hidden = true;
-			RemoveChild(_title);
-			RemoveChild(_subTitle);
+
+		    IsVisible = false;
+		  
+			//RemoveChild(_title);
+			//RemoveChild(_subTitle);
 	    }
 
 	    public void Reset()
@@ -100,9 +105,9 @@ namespace Alex.Gui.Elements
 		    _title.Text = string.Empty;
 		    _subTitle.Text = string.Empty;
 		    
-		    _fadeInTicks = 0; 
-		    _fadeOutTicks = 0;
-		    _displayTicks = 20;
+		    //_fadeInTicks = 0; 
+		   // _fadeOutTicks = 0;
+		  //  _displayTicks = 20;
 		    _fadeIn = 0;
 		    _fadeOut = 0;
 		    _displayTime = 0;
@@ -112,7 +117,7 @@ namespace Alex.Gui.Elements
 
 	    protected override void OnDraw(GuiSpriteBatch graphics, GameTime gameTime)
 	    {
-            if (_hidden) return;
+            if (!IsVisible) return;
 
             if (_fadeIn < _fadeInTicks)
             {
@@ -134,9 +139,7 @@ namespace Alex.Gui.Elements
 	    /// <inheritdoc />
 	    public void OnTick()
 	    {
-		    if (_hidden)
-			    return;
-
+		    if (!IsVisible) return;
 		    if (_fadeIn < _fadeInTicks)
 		    {
 			    _fadeIn++;
@@ -153,8 +156,13 @@ namespace Alex.Gui.Elements
 			    }
 		    }
 		    
-		    if (Math.Abs(_fadeIn + _fadeOut + _displayTime) >= Math.Abs(_fadeInTicks + _fadeOutTicks + _displayTicks))
+		    if (ElapsedTicks >= TargetTicks -1)
 			    Hide();
 	    }
+
+	    [DebuggerVisible]
+	    public int ElapsedTicks => Math.Abs(_fadeIn + _fadeOut + _displayTime);
+	    [DebuggerVisible]
+	    public int TargetTicks => Math.Abs(_fadeInTicks + _fadeOutTicks + _displayTicks);
     }
 }
