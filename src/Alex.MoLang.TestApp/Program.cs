@@ -58,6 +58,7 @@ return t.a;");
 			catch (MoLangRuntimeException runtimeException)
 			{
 				Console.WriteLine($"Runtime exception: {runtimeException.MolangTrace}");
+				Console.WriteLine(runtimeException.InnerException.ToString());
 			}
 			/*int _frames = 0;
 			while (sw.Elapsed < TimeSpan.FromSeconds(10))

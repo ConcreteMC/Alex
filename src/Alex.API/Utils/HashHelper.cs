@@ -11,8 +11,8 @@ namespace Alex.API.Utils
 			{
 				// RyuJIT optimizes this to use the ROL instruction
 				// Related GitHub pull request: dotnet/coreclr#1830
-				uint rol5 = ((uint)h1 << 5) | ((uint)h1 >> 27);
-				return ((int)rol5 + h1) ^ h2;
+				int rol5 = (h1 << 5) | (h1 >> 27);
+				return (rol5 + h1) ^ h2;
 			}
 		}
 	}

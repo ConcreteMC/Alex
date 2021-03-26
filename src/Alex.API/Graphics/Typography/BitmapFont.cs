@@ -30,7 +30,7 @@ namespace Alex.API.Graphics.Typography
 
         public Glyph DefaultGlyph { get; private set; }
         //public Glyph[] Glyphs { get; private set; }
-        private Glyph[] Glyphs { get; } // Dictionary<char, Glyph> Glyphs { get; }
+        private IFontGlyph[] Glyphs { get; } // Dictionary<char, Glyph> Glyphs { get; }
         private Vector2 Scale  { get; set; } = Vector2.One;
 
         private bool _isInitialised = false;
@@ -63,7 +63,10 @@ namespace Alex.API.Graphics.Typography
             Characters = characters.ToArray();
 
             DefaultGlyph = new Glyph('\x0000', null, 0, 8);
-            Glyphs = ArrayOf<Glyph>.Create((int) characters.Max(x => (int) x), DefaultGlyph);
+
+            Glyphs = ArrayOf<Glyph>.Create((int) characters.Max(x => (int) x), DefaultGlyph).Cast<IFontGlyph>()
+	           .ToArray();
+
             //Glyphs = new Dictionary<char, Glyph>(characters.Count); //new Glyph[characters.Count];
         }
         
@@ -409,23 +412,12 @@ namespace Alex.API.Graphics.Typography
 
         public IFontGlyph GetGlyphOrDefault(char character)
         {
-	        var index = (int) character;
+	        var index = character;
 
 	        if (index > Glyphs.Length - 1)
 		        return DefaultGlyph;
 	        
-	        //if (Glyphs.TryGetValue(character, out var glyph))
-	        //{
-		    //    return glyph;
-	       // }
-
-	        return Glyphs[index];/*
-            for (int i = 0; i < Glyphs.Length; i++)
-            {
-                if(Glyphs[i].Character == character) return Glyphs[i];
-            }
-
-            return DefaultGlyph;*/
+	        return Glyphs[index];
         }
 
         private void LoadGlyphs(Image<Rgba32> bitmap, List<char> characters)

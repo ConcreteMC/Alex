@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Alex.MoLang.Parser;
 using Alex.MoLang.Runtime.Exceptions;
 using Alex.MoLang.Runtime.Struct;
 using Alex.MoLang.Runtime.Value;
@@ -12,7 +13,6 @@ namespace Alex.MoLang.Runtime
 		public static readonly MoParams Empty = new MoParams(new IMoValue[0]);
 		
 		private readonly IMoValue[] _parameters;
-
 		public MoParams(params IMoValue[] param)
 		{
 			_parameters = param;
@@ -25,7 +25,7 @@ namespace Alex.MoLang.Runtime
 		
 		public T Get<T>(int index) {
 			IMoValue obj = _parameters[index];
-			
+
 			if (obj == null)
 				throw new MoLangRuntimeException($"MoParams: Expected parameter type of {typeof(T).Name} got null", null);
 			

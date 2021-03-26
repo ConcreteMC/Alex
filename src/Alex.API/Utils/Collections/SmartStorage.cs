@@ -31,7 +31,8 @@ namespace Alex.API.Utils.Collections
 		{
 			if (Indexer.TryGetValue(data.GetHashCode(), out var index))
 				return index;
-			
+
+			return -1;
 			lock (_writeLock)
 			{
 				for (int i = 0; i < Data.Length; i++)

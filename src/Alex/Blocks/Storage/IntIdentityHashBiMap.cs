@@ -16,7 +16,7 @@ namespace Alex.Blocks.Storage
 		private uint[] _keys;
 		private BlockState[] _byId;
 		private uint _nextFreeIndex;
-		private int _mapSize;
+		private uint _mapSize;
 
 		public IntIdentityHashBiMap(int initialCapacity)
 		{
@@ -33,7 +33,7 @@ namespace Alex.Blocks.Storage
 
 		public BlockState Get(uint idIn)
 		{
-			return idIn >= 0 && idIn < _byId.Length ? _byId[idIn] : null;
+			return idIn < _byId.Length ? _byId[idIn] : null;
 		}
 
 		private uint GetValue(uint index)
@@ -82,7 +82,7 @@ namespace Alex.Blocks.Storage
 		
 		public void Put(BlockState objectIn, uint intKey)
 		{
-			uint i = (uint)Math.Max(intKey, _mapSize + 1);
+			uint i = Math.Max(intKey, _mapSize + 1);
 
 			if (i >= _values.Length * 0.8F)
 			{
@@ -109,7 +109,7 @@ namespace Alex.Blocks.Storage
 
 		private uint HashObject(BlockState obectIn)
 		{
-			return (uint)((uint)(RuntimeHelpers.GetHashCode(obectIn) & uint.MaxValue) % _values.Length);
+			return (uint) ((RuntimeHelpers.GetHashCode(obectIn) & uint.MaxValue) % _values.Length);
 		}
 
 		private uint GetIndex(BlockState objectIn, uint index)
@@ -173,7 +173,7 @@ namespace Alex.Blocks.Storage
 			_mapSize = 0;
 		}
 
-		public int Size()
+		public uint Size()
 		{
 			return _mapSize;
 		}

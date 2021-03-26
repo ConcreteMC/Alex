@@ -2057,128 +2057,105 @@ namespace Alex.Worlds.Multiplayer.Java
 		private void HandleUpdateLightPacket(UpdateLightPacket packet)
 		{
 			return;
-			if (World.GetChunkColumn(packet.ChunkX, packet.ChunkZ) is ChunkColumn c)
-			{
-				for (int i = 0; i < packet.SkyLightArrays.Length; i++)
-				{
-					byte[] data = packet.SkyLightArrays[i];
-					if (data == null || c.Sections[i] == null) continue;
-
-					NibbleArray n = new NibbleArray();
-					n.Data = data;
-
-					c.Sections[i].SkyLight = n;
-				}
-
-				for (int i = 0; i < packet.BlockLightArrays.Length; i++)
-				{
-					byte[] data = packet.BlockLightArrays[i];
-					if (data == null || c.Sections[i] == null) continue;
-
-					NibbleArray n = new NibbleArray();
-					n.Data = data;
-
-					c.Sections[i].BlockLight = n;
-				}
-
-				World.ChunkManager.ScheduleChunkUpdate(new ChunkCoordinates(packet.ChunkX, packet.ChunkZ), ScheduleType.Full, false);//.ChunkUpdate(c, ScheduleType.Full);
-            }
+			
         }
 
         //private BlockingCollection<ChunkDataPacket> _chunkQueue = new BlockingCollection<ChunkDataPacket>();
         private void HandleChunkData(ChunkDataPacket chunk)
         {
-	        ThreadPool.QueueUserWorkItem(
-		        (o) =>
+	      World.BackgroundWorker.Enqueue(() =>
 		        {
-			        _loginCompleteEvent?.Set();
-
-			        //_chunkQueue.Add(chunk);
-			        //	ThreadPool.QueueUserWorkItem(() =>
-			        //using (var memoryStream = new UnmanagedMemoryStream(
-				     //   (byte*) chunk.Buffer.Pin().Pointer, chunk.Buffer.Length))
-				     using(var memoryStream = new MemoryStream(chunk.Buffer.ToArray()))
-			        using (var stream = new MinecraftStream(memoryStream))
+			        unsafe
 			        {
-				        JavaChunkColumn result = null; // = new ChunkColumn();
+				        _loginCompleteEvent?.Set();
 
-				        if (chunk.GroundUp)
+				        //_chunkQueue.Add(chunk);
+				        //	ThreadPool.QueueUserWorkItem(() =>
+				        using (var memoryStream = new UnmanagedMemoryStream(
+						        (byte*) chunk.Buffer.Pin().Pointer, chunk.Buffer.Length))
+					        // using(var memoryStream = new MemoryStream(chunk.Buffer))
+				        using (var stream = new MinecraftStream(memoryStream))
 				        {
-					        result = new JavaChunkColumn(chunk.ChunkX, chunk.ChunkZ);
-				        }
-				        else
-				        {
-					        if (World.GetChunkColumn(chunk.ChunkX, chunk.ChunkZ) is JavaChunkColumn c)
-					        {
-						        result = c;
-					        }
-					        else
+					        JavaChunkColumn result = null; // = new ChunkColumn();
+
+					        if (chunk.GroundUp)
 					        {
 						        result = new JavaChunkColumn(chunk.ChunkX, chunk.ChunkZ);
 					        }
-				        }
-
-				       // result.X = chunk.ChunkX;
-				       // result.Z = chunk.ChunkZ;
-				   //     result.IsDirty = true;
-
-				        result.Read(stream, chunk.PrimaryBitmask, chunk.GroundUp, World.Dimension == Dimension.Overworld);
-
-				        if (chunk.GroundUp)
-				        {
-					        /*for (int i = 0; i < chunk.Biomes.Length; i++)
+					        else
 					        {
-						        result.BiomeId[i] = chunk.Biomes[i];
-					        }*/
-					        for (int x = 0; x < 16; x++)
-					        {
-						        for (int z = 0; z < 16; z++)
+						        if (World.GetChunkColumn(chunk.ChunkX, chunk.ChunkZ) is JavaChunkColumn c)
 						        {
-							        for (int y = 0; y < 256; y++)
-							        {
-								        result.SetBiome(x, y, z, chunk.Biomes[((y >> 2) & 63) << 4 | ((z >> 2) & 3) << 2 | ((x >> 2) & 3)]);
-							        }
-						        }
-					        }
-				        }
-
-
-				        foreach (var tag in chunk.TileEntities)
-				        {
-					        if (tag == null || !(tag.Contains("id")))
-						        continue;
-					        
-					        try
-					        {
-						        var blockEntity = BlockEntityFactory.ReadFrom(tag, World, null);
-
-						        if (blockEntity != null)
-						        {
-							        result.AddBlockEntity(
-								        new BlockCoordinates(blockEntity.X, blockEntity.Y, blockEntity.Z), tag);
+							        result = c;
 						        }
 						        else
 						        {
-							        Log.Debug($"Got null block entity: {tag}");
+							        result = new JavaChunkColumn(chunk.ChunkX, chunk.ChunkZ);
 						        }
-
 					        }
-					        catch (Exception ex)
+
+					        // result.X = chunk.ChunkX;
+					        // result.Z = chunk.ChunkZ;
+					        //     result.IsDirty = true;
+
+					        result.Read(stream, chunk.PrimaryBitmask, chunk.GroundUp, World.Dimension == Dimension.Overworld);
+
+					        if (chunk.GroundUp)
 					        {
-						        Log.Warn(ex, "Could not add block entity!");
+						        /*for (int i = 0; i < chunk.Biomes.Length; i++)
+					        {
+						        result.BiomeId[i] = chunk.Biomes[i];
+					        }*/
+						        for (int x = 0; x < 16; x++)
+						        {
+							        for (int z = 0; z < 16; z++)
+							        {
+								        for (int y = 0; y < 256; y++)
+								        {
+									        result.SetBiome(x, y, z, chunk.Biomes[((y >> 2) & 63) << 4 | ((z >> 2) & 3) << 2 | ((x >> 2) & 3)]);
+								        }
+							        }
+						        }
 					        }
-				        }
 
-				        if (!_generatingHelper.IsAddingCompleted)
-				        {
-					        _generatingHelper.Add(result);
-					        _chunksReceived++;
 
-					        return;
-				        }
+					        foreach (var tag in chunk.TileEntities)
+					        {
+						        if (tag == null || !(tag.Contains("id")))
+							        continue;
+					        
+						        try
+						        {
+							        var blockEntity = BlockEntityFactory.ReadFrom(tag, World, null);
 
-				        World.ChunkManager.AddChunk(result, new ChunkCoordinates(result.X, result.Z), true);
-			        } //);
+							        if (blockEntity != null)
+							        {
+								        result.AddBlockEntity(
+									        new BlockCoordinates(blockEntity.X, blockEntity.Y, blockEntity.Z), tag);
+							        }
+							        else
+							        {
+								        Log.Debug($"Got null block entity: {tag}");
+							        }
+
+						        }
+						        catch (Exception ex)
+						        {
+							        Log.Warn(ex, "Could not add block entity!");
+						        }
+					        }
+
+					        if (!_generatingHelper.IsAddingCompleted)
+					        {
+						        _generatingHelper.Add(result);
+						        _chunksReceived++;
+
+						        return;
+					        }
+
+					        World.ChunkManager.AddChunk(result, new ChunkCoordinates(result.X, result.Z), true);
+				        } //);
+			        }
 		        });
         }
 

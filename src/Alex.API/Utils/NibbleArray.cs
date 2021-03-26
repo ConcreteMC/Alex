@@ -4,7 +4,7 @@ namespace Alex.API.Utils
 {
 	public class NibbleArray : ICloneable
 	{
-		public byte[] Data { get; set; }
+		public readonly byte[] Data;
 
 		public NibbleArray()
 		{
@@ -43,9 +43,7 @@ namespace Alex.API.Utils
 
 		public object Clone()
 		{
-			NibbleArray nibbleArray = (NibbleArray)MemberwiseClone();
-			nibbleArray.Data = (byte[])Data.Clone();
-			return nibbleArray;
+			return new NibbleArray((byte[]) Data.Clone());
 		}
 	}
 }

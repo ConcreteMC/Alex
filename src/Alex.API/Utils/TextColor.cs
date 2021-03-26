@@ -38,6 +38,9 @@ namespace Alex.API.Utils
 		public static readonly TextColor Underline = new TextColor('n', "underline");
 		public static readonly TextColor Italic = new TextColor('o', "italic");
 		public static readonly TextColor Reset = new TextColor('r', "reset");
+		
+		
+		
 		// @formatter:on — enable formatter after this line
 
 		private static readonly TextColor[] Colors = new[]
@@ -189,7 +192,78 @@ namespace Alex.API.Utils
 		}
 		public static bool TryMatchColorByCode(char code, out TextColor textColor)
 		{
-			foreach (var allColor in Colors)
+			switch (code)
+			{
+				case '0':
+					textColor = Black;
+					return true;
+				case '1':
+					textColor = DarkBlue;
+					return true;
+				case '2':
+					textColor = DarkGreen;
+					return true;
+				case '3':
+					textColor = DarkCyan;
+					return true;
+				case '4':
+					textColor = DarkRed;
+					return true;
+				case '5':
+					textColor = Purple;
+					return true;
+				case '6':
+					textColor = Gold;
+					return true;
+				case '7':
+					textColor = Gray;
+					return true;
+				case '8':
+					textColor = DarkGray;
+					return true;
+				case '9':
+					textColor = Blue;
+					return true;
+				
+				case 'a':
+					textColor = BrightGreen;
+					return true;
+				case 'b':
+					textColor = Cyan;
+					return true;
+				case 'c':
+					textColor = Red;
+					return true;
+				case 'd':
+					textColor = Pink;
+					return true;
+				case 'e':
+					textColor = Yellow;
+					return true;
+				case 'f':
+					textColor = White;
+					return true;
+				
+				case 'k':
+					textColor = Obfuscated;
+					return true;
+				case 'l':
+					textColor = Bold;
+					return true;
+				case 'm':
+					textColor = Strikethrough;
+					return true;
+				case 'n':
+					textColor = Underline;
+					return true;
+				case 'o':
+					textColor = Italic;
+					return true;
+				case 'r':
+					textColor = Reset;
+					return true;
+			}
+			/*foreach (var allColor in Colors)
 			{
 				if (string.Equals(code.ToString(), allColor.Code.ToString(), StringComparison.InvariantCultureIgnoreCase))
 				{
@@ -205,7 +279,7 @@ namespace Alex.API.Utils
 					textColor = allColor;
 					return true;
 				}
-			}
+			}*/
 
 			textColor = default;
 			return false;
