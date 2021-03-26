@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using Alex.API;
@@ -52,10 +53,7 @@ namespace Alex.Graphics.Models.Blocks
 		//private BlockStateModelWrapper[] Models    { get; set; }
 		//private BlockStateResource BlockStateResource { get; }
 		private ResourceManager    Resources          { get; }
-
-		private Vector3 _min = new Vector3(float.MaxValue);
-		private Vector3 _max = new Vector3(float.MinValue);
-
+		
 		//private  BoundingBox[] Boxes         { get; set; }
 		//private bool          UseRandomizer { get; set; }
 		//private int           WeightSum     { get; }
@@ -105,12 +103,25 @@ namespace Alex.Graphics.Models.Blocks
 			}
 			*/
 		}
-
+		
 		/// <inheritdoc />
 		public override IEnumerable<BoundingBox> GetBoundingBoxes(BlockState blockState, Vector3 blockPos)
 		{
-			return CalculateBoundingBoxes(GetAppliedModels(blockState).ToArray()).Select(x =>
+			if (blockState.BoundingBoxes == null)
 			{
+				List<BoundingBox> boxes = new List<BoundingBox>();
+				foreach (var model in GetAppliedModels(blockState))
+				{
+					boxes.AddRange(GenerateBoundingBoxes(model.BlockStateModel, model.BlockModel));
+				}
+
+				blockState.BoundingBoxes = boxes.ToArray();
+			}
+
+
+			foreach (var box in blockState.BoundingBoxes)
+			{
+				var x = box;
 				var dimensions = x.GetDimensions();
 
 				if (dimensions.X < 0.015f)
@@ -120,7 +131,7 @@ namespace Alex.Graphics.Models.Blocks
 					x.Max.X += diff;
 					//box.Inflate(new Vector3(0.015f - dimensions.X, 0f, 0f));
 				}
-				
+
 				if (dimensions.Y < 0.015f)
 				{
 					var diff = (0.015f - dimensions.Y) / 2f;
@@ -128,7 +139,7 @@ namespace Alex.Graphics.Models.Blocks
 					x.Max.Y += diff;
 					//box.Inflate(new Vector3(0f, 0.015f - dimensions.Y, 0f));
 				}
-				
+
 				if (dimensions.Z < 0.015f)
 				{
 					var diff = (0.015f - dimensions.Z) / 2f;
@@ -136,9 +147,10 @@ namespace Alex.Graphics.Models.Blocks
 					x.Max.Z += diff;
 					//box.Inflate(new Vector3(0f, 0f, 0.015f - dimensions.Z));
 				}
-				
-				return x.OffsetBy(blockPos);
-			});
+
+				yield return x.OffsetBy(blockPos);
+				//yield return box;
+			}
 		}
 
 		protected virtual bool ShouldRenderFace(IBlockAccess world, BlockFace face, BlockCoordinates position, Block me)
@@ -168,53 +180,14 @@ namespace Alex.Graphics.Models.Blocks
 			
 			return me.ShouldRenderFace(face, theBlock);
 		}
-		
-		protected BoundingBox[] CalculateBoundingBoxes(BlockStateModelWrapper[] models)
+
+
+		private IEnumerable<BoundingBox> GenerateBoundingBoxes(BlockStateModel stateModel, ResourcePackLib.Json.Models.ResourcePackModelBase model)
 		{
-			List<BoundingBox> boundingBoxes = new List<BoundingBox>();
+			//float facesMinX = float.MaxValue, facesMinY = float.MaxValue, facesMinZ = float.MaxValue;
+		//	float facesMaxX = float.MinValue, facesMaxY = float.MinValue, facesMaxZ = float.MinValue;
 
-
-			for (var index = 0; index < models.Length; index++)
-			{
-				var model = models[index];
-
-				//if (Resources.BlockModelRegistry.TryGet(model.ModelName, out var registryEntry))
-				{
-					var boxes = GenerateBoundingBoxes(
-						model.BlockStateModel, model.BlockModel, out Vector3 min, out Vector3 max);
-
-					boundingBoxes.AddRange(boxes);
-
-					if (max.X > _max.X)
-						_max.X = max.X;
-
-					if (max.Y > _max.Y)
-						_max.Y = max.Y;
-
-					if (max.Z > _max.Z)
-						_max.Z = max.Z;
-
-					if (min.X < _min.X)
-						_min.X = min.X;
-
-					if (min.Y < _min.Y)
-						_min.Y = min.Y;
-
-					if (min.Z < _min.Z)
-						_min.Z = min.Z;
-				}
-			}
-
-			return boundingBoxes.ToArray();
-		}
-
-		
-		private BoundingBox[] GenerateBoundingBoxes(BlockStateModel stateModel, ResourcePackLib.Json.Models.ResourcePackModelBase model, out Vector3 min, out Vector3 max)
-		{
-			float facesMinX = float.MaxValue, facesMinY = float.MaxValue, facesMinZ = float.MaxValue;
-			float facesMaxX = float.MinValue, facesMaxY = float.MinValue, facesMaxZ = float.MinValue;
-
-			List<BoundingBox> boxes = new List<BoundingBox>();
+			//List<BoundingBox> boxes = new List<BoundingBox>();
 			for (var index = 0; index < model.Elements.Length; index++)
 			{
 				var eMinX   = float.MaxValue;
@@ -314,7 +287,7 @@ namespace Alex.Graphics.Models.Blocks
 						verts[i] = v;
 					}
 
-					if (minX < facesMinX)
+					/*if (minX < facesMinX)
 					{
 						facesMinX = minX;
 					}
@@ -339,16 +312,12 @@ namespace Alex.Graphics.Models.Blocks
 					else if (maxZ > facesMaxZ)
 					{
 						facesMaxZ = maxZ;
-					}
+					}*/
 				}
-				
-				boxes.Add(new BoundingBox(new Vector3(eMinX, eMinY, eMinZ), new Vector3(eMaxX, eMaxY, eMaxZ)));
+
+				yield return new BoundingBox(new Vector3(eMinX, eMinY, eMinZ), new Vector3(eMaxX, eMaxY, eMaxZ));
 			}
-
-			min = new Vector3(facesMinX, facesMinY, facesMinZ);
-			max = new Vector3(facesMaxX, facesMaxY, facesMaxZ);
-
-			return boxes.ToArray();
+			//return boxes.ToArray();
 		}
 
 		private Vector3 FixRotation(

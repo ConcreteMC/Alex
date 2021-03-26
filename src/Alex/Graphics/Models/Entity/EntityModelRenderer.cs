@@ -72,7 +72,7 @@ namespace Alex.Graphics.Models.Entity
 
 			if (model != null)
 			{
-				var bones = new Dictionary<string, ModelBone>();
+				var bones = new Dictionary<string, ModelBone>(StringComparer.OrdinalIgnoreCase);
 				BuildModel(texture, model, bones);
 
 				Bones = bones;
@@ -308,6 +308,8 @@ namespace Alex.Graphics.Models.Entity
 				bone = null;
 				return false;
 			}
+			return Bones.TryGetValue(name, out bone);
+			
 
 			foreach (var b in Bones)
 			{

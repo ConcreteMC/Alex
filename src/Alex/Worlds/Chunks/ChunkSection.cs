@@ -4,12 +4,14 @@ using System.Collections.Generic;
 using Alex.API.Data.Servers;
 using Alex.API.Graphics;
 using Alex.API.Utils;
+using Alex.API.Utils.Collections;
 using Alex.API.Utils.Vectors;
 using Alex.Blocks;
 using Alex.Blocks.Minecraft;
 using Alex.Blocks.State;
 using Alex.Blocks.Storage;
 using Alex.Networking.Java.Util;
+using Microsoft.Xna.Framework;
 using NLog;
 
 namespace Alex.Worlds.Chunks
@@ -37,9 +39,10 @@ namespace Alex.Worlds.Chunks
         public List<BlockCoordinates> LightSources { get; private set; } = new List<BlockCoordinates>();
         
 		public bool IsAllAir => BlockRefCount == 0;
-
+		
         public ChunkSection(bool storeSkylight, int sections = 2)
         {
+	        //_octree.
 	        if (sections <= 0)
 		        sections = 1;
 
@@ -254,7 +257,7 @@ namespace Alex.Worlds.Chunks
 
 		protected virtual void OnBlockSet(int x, int y, int z, BlockState newState, BlockState oldState)
 		{
-			
+
 		}
 
 		public bool IsEmpty()

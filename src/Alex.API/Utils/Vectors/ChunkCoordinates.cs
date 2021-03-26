@@ -1,4 +1,5 @@
 ﻿using System;
+using Microsoft.Xna.Framework;
 
 namespace Alex.API.Utils.Vectors
 {
@@ -27,6 +28,14 @@ namespace Alex.API.Utils.Vectors
 		{
 			X = coordinates.X >> 4;
 			Z = coordinates.Z >> 4;
+		}
+		
+		public ChunkCoordinates(Vector3 location)
+		{
+			X = ((int)Math.Floor(location.X)) >> 4;
+			Z = ((int)Math.Floor(location.Z)) >> 4;
+			//X = coordinates.X >> 4;
+			//Z = coordinates.Z >> 4;
 		}
 
 		public ChunkCoordinates(PlayerLocation location)

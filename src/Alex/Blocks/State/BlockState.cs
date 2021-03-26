@@ -11,6 +11,7 @@ using Alex.API.World;
 using Alex.Blocks.Minecraft;
 using Alex.Graphics.Models.Blocks;
 using Alex.ResourcePackLib.Json.BlockStates;
+using Microsoft.Xna.Framework;
 using NLog;
 
 namespace Alex.Blocks.State
@@ -44,6 +45,7 @@ namespace Alex.Blocks.State
 		
 		public BlockStateVariantMapper VariantMapper { get; set; }
 
+		internal BoundingBox[] BoundingBoxes { get; set; } = null;
 		public T GetTypedValue<T>(IStateProperty<T> property)
 		{
 			if (Values.TryGetValue(property.Name, out var value))

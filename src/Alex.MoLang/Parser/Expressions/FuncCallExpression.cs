@@ -24,7 +24,7 @@ namespace Alex.MoLang.Parser.Expressions
 			string name = Name is NameExpression expression ? expression.Name : Name.Evaluate(scope, environment).ToString();
 
 			return environment.GetValue(name, new MoParams(
-				Args.Select(x => x.Evaluate(scope, environment))
+				Args.Select(x => x.Evaluate(scope, environment)).ToArray()
 			));
 		}
 	}

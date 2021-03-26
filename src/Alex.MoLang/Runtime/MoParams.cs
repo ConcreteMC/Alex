@@ -13,12 +13,9 @@ namespace Alex.MoLang.Runtime
 		
 		private readonly IMoValue[] _parameters;
 
-		public MoParams(IEnumerable<IMoValue> param)
+		public MoParams(params IMoValue[] param)
 		{
-			if (param is IMoValue[] array)
-				_parameters = array;
-			else
-				_parameters = param.ToArray();
+			_parameters = param;
 		}
 
 		public IMoValue Get(int index)

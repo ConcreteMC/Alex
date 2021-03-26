@@ -162,10 +162,10 @@ namespace Alex.API.Utils
         public bool Collides( BoundingBox box )
         {
             // make sure we at least contain the given bounding box.
-            //if ( !Contains( box ) )
-            //{
-            //    return false;
-            //}
+            if ( !Contains( box ) )
+            {
+                return false;
+            }
 
             // check children
             if ( HasDivided )
@@ -200,8 +200,6 @@ namespace Alex.API.Utils
         /// <returns></returns>
         public bool Collides( BoundingBox box, ref List<BoundingBox> collisions )
         {
-            collisions.Clear();
-
             // make sure we at least contain the given bounding box.
             if ( !Contains( box ) )
             {

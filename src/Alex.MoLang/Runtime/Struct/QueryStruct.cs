@@ -11,9 +11,9 @@ namespace Alex.MoLang.Runtime.Struct
 	public class QueryStruct : IMoStruct
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(QueryStruct));
-		protected IDictionary<string, Func<MoParams, object>> Functions = new Dictionary<string, Func<MoParams, object>>();
+		protected IDictionary<string, Func<MoParams, object>> Functions = new Dictionary<string, Func<MoParams, object>>(StringComparer.OrdinalIgnoreCase);
 		
-		private static ConcurrentDictionary<string, int> _missingQueries = new ConcurrentDictionary<string, int>(StringComparer.InvariantCultureIgnoreCase);
+		private static ConcurrentDictionary<string, int> _missingQueries = new ConcurrentDictionary<string, int>(StringComparer.OrdinalIgnoreCase);
 		/// <inheritdoc />
 		public object Value => this;
 
@@ -33,7 +33,7 @@ namespace Alex.MoLang.Runtime.Struct
 				{
 					sb.Append($"{param.AsString()} ");
 				}
-				Console.WriteLine(sb.ToString());
+				Log.Debug(sb.ToString());
 				return DoubleValue.Zero;
 			});
 		}

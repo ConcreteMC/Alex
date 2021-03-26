@@ -93,15 +93,17 @@ namespace Alex.Blocks.Minecraft
 
 		public virtual IEnumerable<BoundingBox> GetBoundingBoxes(Vector3 blockPos)
 		{
+			bool didReturn = false;
 			if (BlockState?.VariantMapper?.Model != null)
 			{
-				var boundingBoxes = BlockState.VariantMapper.Model.GetBoundingBoxes(BlockState, blockPos).ToArray();
-
-				if (boundingBoxes.Length == 0)
-					yield return new BoundingBox(blockPos, blockPos + Vector3.One);
-				
-				foreach (var bb in boundingBoxes)
+				foreach (var bb in BlockState.VariantMapper.Model.GetBoundingBoxes(BlockState, blockPos))
+				{
+					didReturn = true;
 					yield return bb;
+				}
+				
+				if (!didReturn)
+					yield return new BoundingBox(blockPos, blockPos + Vector3.One);
 			}
 			else
 			{
