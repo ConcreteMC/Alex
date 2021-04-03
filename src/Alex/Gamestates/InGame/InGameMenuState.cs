@@ -102,11 +102,10 @@ namespace Alex.Gamestates.InGame
 
         private void OnOptionsButtonPressed()
         {
-	        if (Alex.GameStateManager.TryGetState("options", out OptionsState state))
-	        {
-		        state.ParentState = ParentState;
-		        Alex.GameStateManager.SetActiveState("options");
-	        }
+	        OptionsState state = new OptionsState(null);
+	        state.ParentState = ParentState;
+	        
+	        Alex.GameStateManager.SetActiveState(state);
         }
 
         private void OnQuitButtonPressed()

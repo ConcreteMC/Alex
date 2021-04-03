@@ -120,9 +120,9 @@ namespace Alex.Worlds.Chunks
 
 			try
 			{
-				//var chunkData     = ChunkData;
+				var chunkData     = ChunkData;
 
-				if (ChunkData == null)
+				if (chunkData == null)
 					return;
 				
 				var chunkPosition = new Vector3(X << 4, 0, Z << 4);
@@ -153,7 +153,7 @@ namespace Alex.Worlds.Chunks
 								{
 									var blockPosition = new BlockCoordinates(
 										(int) (chunkPosition.X + x), y + (sectionIndex << 4), (int) (chunkPosition.Z + z));
-									ChunkData?.Remove(device, blockPosition);
+									chunkData?.Remove(device, blockPosition);
 									
 									for(int storage = 0; storage < section.StorageCount; storage++)
 									{
@@ -214,7 +214,7 @@ namespace Alex.Worlds.Chunks
 					}
 				}
 				
-				ChunkData?.ApplyChanges(device, true);
+				chunkData?.ApplyChanges(device, true);
 				/*var a = new ChunkOctree(_octree.Bounds);
 
 				foreach (var box in ChunkData.BoundingBoxes)

@@ -217,7 +217,7 @@ namespace Alex.Worlds
 				{
 					try
 					{
-						while (!CancellationToken.IsCancellationRequested && queue.TryDequeue(out var chunkCoordinates, cc => IsWithinView(cc, World.Camera)))
+						while (!CancellationToken.IsCancellationRequested && queue.TryDequeue(out var chunkCoordinates))
 						{
 							if (TryGetChunk(chunkCoordinates, out var chunk))
 							{

@@ -142,7 +142,7 @@ namespace Alex.Worlds.Chunks
 		{
 			//lock (_writeLock)
 			{
-				if (!HasChanges && _previousKeepInMemory)
+				if (!HasChanges)
 					return;
 
 				_previousKeepInMemory = keepInMemory;
@@ -199,7 +199,7 @@ namespace Alex.Worlds.Chunks
 						callSetData = true;
 					}
 
-					if (callSetData)
+					//if (callSetData)
 						buffer.SetData(realVertices, 0, size);
 
 					Buffer = buffer;

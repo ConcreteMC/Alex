@@ -272,7 +272,7 @@ namespace Alex.Worlds
 			float depth = screenSpace.Z;
 			float scale = 1.0f / depth;
 
-			foreach (var str in clean.Split('\n').Reverse())
+			foreach (var str in entity.NameTagLines)
 			{
 				var line = str.Trim();
 

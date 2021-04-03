@@ -130,9 +130,29 @@ namespace Alex.Entities
 
 		public float   Slipperines { get; set; } = 0.6f;
 		public Vector3 Velocity    { get; set; } = Vector3.Zero;
-		
+
 		//public HealthManager HealthManager { get; set; }
-		public string NameTag { get; set; }
+		public string NameTag
+		{
+			get => _nameTag;
+			set
+			{
+				_nameTag = value;
+				_nameTagLines = null;
+			}
+		}
+
+		private string[] _nameTagLines = null;
+		internal string[] NameTagLines
+		{
+			get
+			{
+				if (_nameTagLines == null)
+					_nameTagLines = _nameTag.Split('\n').Reverse().ToArray();
+
+				return _nameTagLines;
+			}
+		}
 
 		public virtual bool NoAi
 		{
@@ -1276,6 +1296,7 @@ namespace Alex.Entities
 		private IItemRenderer                            _itemRenderer    = null;
 		private bool _noAi = false;
 		private bool _hasPhysics = true;
+		private string _nameTag;
 
 		public const float   JumpVelocity = 0.42f;
 		public virtual void Jump()

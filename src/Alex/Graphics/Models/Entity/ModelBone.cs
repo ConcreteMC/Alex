@@ -297,7 +297,7 @@ namespace Alex.Graphics.Models.Entity
 					{
 						pass?.Apply();
 
-						args.GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, StartIndex, count / 3);
+						args.GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, StartIndex, count);
 						renderCount++;
 					}
 				}

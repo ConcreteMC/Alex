@@ -178,7 +178,7 @@ namespace Alex.Graphics.Models.Entity
 
 			elementCount = vertices.Count - startIndex;
 
-			modelBone = new ModelBone(bone, startIndex, elementCount);
+			modelBone = new ModelBone(bone, startIndex, elementCount / 3);
 
 			if (bone.Rotation.HasValue)
 			{

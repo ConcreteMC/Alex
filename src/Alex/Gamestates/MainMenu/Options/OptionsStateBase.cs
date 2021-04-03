@@ -41,7 +41,8 @@ namespace Alex.Gamestates.MainMenu.Options
 
             Body.ChildAnchor = Alignment.MiddleCenter;
             
-            Background = new GuiTexture2D(_skyBox, TextureRepeatMode.Stretch);
+            if (_skyBox != null)
+                Background = new GuiTexture2D(_skyBox, TextureRepeatMode.Stretch);
         }
 
         protected override void OnShow()
@@ -240,7 +241,7 @@ namespace Alex.Gamestates.MainMenu.Options
         protected override void OnUpdate(GameTime gameTime)
         {
             base.OnUpdate(gameTime);
-            _skyBox.Update(gameTime);
+            _skyBox?.Update(gameTime);
         }
 
         protected override void OnDraw(IRenderArgs args)
