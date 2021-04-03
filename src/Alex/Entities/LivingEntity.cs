@@ -1,14 +1,50 @@
-﻿using Alex.API.Utils;
+﻿using System.Linq;
+using Alex.API.Utils;
+using Alex.API.Utils.Vectors;
+using Alex.Blocks.Minecraft;
 using Alex.Items;
 using Alex.Net;
 using Alex.Networking.Java.Packets.Play;
 using Alex.Worlds;
+using Microsoft.Xna.Framework;
 
 namespace Alex.Entities
 {
 	public class LivingEntity : Entity
 	{
 		public bool IsLeftHanded { get; set; } = false;
+		private bool _hasPhysics = true;
+		internal bool HasPhysics
+		{
+			get => _hasPhysics;
+			set
+			{
+				PhysicsComponent.Enabled = value;
+				_hasPhysics = value;
+				
+				if (!value)
+					Velocity = Vector3.Zero;
+			}
+		}
+		
+		internal override PlayerLocation RenderLocation
+		{
+			get
+			{
+				return HasPhysics ? base.RenderLocation : KnownPosition;
+			}
+			set
+			{
+				if (HasPhysics)
+				{
+					base.RenderLocation = value;
+				}
+				else
+				{
+					KnownPosition = value;
+				}
+			}
+		}
 		
 		private PhysicsComponent PhysicsComponent { get; }
 		/// <inheritdoc />
@@ -17,7 +53,7 @@ namespace Alex.Entities
 		{
 			EntityComponents.Push(PhysicsComponent = new PhysicsComponent(this));
 		}
-
+		
 		public Item GetItemInHand(bool mainHand)
 		{
 			return mainHand ? Inventory.MainHand : Inventory.OffHand;
@@ -65,6 +101,110 @@ namespace Alex.Entities
 			{
 				HealthManager.Health = flt.Value;
 			}
+		}
+		
+		private bool _waitingOnChunk = true;
+		public bool HasChunk => !_waitingOnChunk;
+		
+		/// <inheritdoc />
+		public override void OnTick()
+		{
+			if (_waitingOnChunk)
+			{
+				if (Level.GetChunk(KnownPosition.GetCoordinates3D(), true) != null)
+				{
+					_waitingOnChunk = false;
+				}
+			}
+			
+			base.OnTick();
+			
+			if (NoAi || _waitingOnChunk) return;
+			//	IsMoving = Velocity.LengthSquared() > 0f;
+
+			var knownPos  = new BlockCoordinates(new Vector3(KnownPosition.X, KnownPosition.Y, KnownPosition.Z));
+			var knownDown = KnownPosition.GetCoordinates3D();
+
+			//	if (Alex.ServerType == ServerType.Bedrock)
+			{
+				knownDown = knownDown.BlockDown();
+			}
+
+			var blockBelowFeet = Level?.GetBlockStates(knownDown.X, knownDown.Y, knownDown.Z);
+			var feetBlock      = Level?.GetBlockStates(knownPos.X, knownPos.Y, knownPos.Z).ToArray();
+			var headBlockState = Level?.GetBlockState(KnownPosition.GetCoordinates3D() + new BlockCoordinates(0, 1, 0));
+
+			if (headBlockState != null)
+			{
+				var headBlock = headBlockState.Block;
+
+				if (headBlock.Solid)
+				{
+					HeadInBlock = true;
+				}
+				else
+				{
+					HeadInBlock = false;
+				}
+
+				if (headBlock.BlockMaterial == Material.Water || headBlock.IsWater)
+				{
+					HeadInWater = true;
+				}
+				else
+				{
+					HeadInWater = false;
+				}
+
+				if (headBlock.BlockMaterial == Material.Lava || headBlock is Lava || headBlock is FlowingLava)
+				{
+					HeadInLava = true;
+				}
+				else
+				{
+					HeadInLava = false;
+				}
+			}
+
+			if (blockBelowFeet != null)
+			{
+				if (blockBelowFeet.Any(b => b.State.Block.BlockMaterial == Material.Water || b.State.Block.IsWater))
+				{
+					AboveWater = true;
+				}
+				else
+				{
+					AboveWater = false;
+				}
+			}
+			else
+			{
+				AboveWater = false;
+			}
+
+			if (feetBlock != null)
+			{
+				if (feetBlock.Any(b => b.State.Block.BlockMaterial == Material.Water || b.State.Block.IsWater))
+				{
+					FeetInWater = true;
+				}
+				else
+				{
+					FeetInWater = false;
+				}
+
+				if (feetBlock.Any(b => b.State.Block.BlockMaterial == Material.Lava))
+				{
+					FeetInLava = true;
+				}
+				else
+				{
+					FeetInLava = false;
+				}
+			}
+
+			IsInWater = FeetInWater || HeadInWater;
+			IsInLava = FeetInLava || HeadInLava;
 		}
 	}
 }

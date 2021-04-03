@@ -6,7 +6,7 @@ using Microsoft.Xna.Framework;
 
 namespace Alex.Entities
 {
-	public class ThrowableEntity : Entity
+	public class ThrowableEntity : LivingEntity
 	{
 		public bool StopOnImpact { get; set; } = false;
 		public bool DespawnOnImpact { get; set; } = false;

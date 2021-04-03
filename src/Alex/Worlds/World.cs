@@ -884,12 +884,6 @@ namespace Alex.Worlds
 		{
 			if (EntityManager.AddEntity(entity) || (EntityManager.TryGet(entity.EntityId, out var entity2) && entity2 == entity))
 			{
-				//entity.RenderLocation = entity.KnownPosition;
-				if (entity.HasPhysics)
-				{
-					//PhysicsEngine.AddTickable(entity);
-				}
-
 				entity.OnSpawn();
 				return true;
 			}
@@ -905,11 +899,6 @@ namespace Alex.Worlds
 			//	{
 					if (EntityManager.TryGet(entityId, out Entity entity))
 					{
-						if (entity.HasPhysics)
-						{
-							//PhysicsEngine.Remove(entity);
-						}
-
 						EntityManager.Remove(entityId);
 
 						entity.OnDespawn();

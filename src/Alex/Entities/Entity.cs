@@ -110,22 +110,16 @@ namespace Alex.Entities
 		}
 
 		private PlayerLocation _renderLocation;
+
 		internal virtual PlayerLocation RenderLocation
 		{
 			get
 			{
-				return HasPhysics ? _renderLocation : KnownPosition;
+				return _renderLocation;
 			}
 			set
 			{
-				if (HasPhysics)
-				{
-					_renderLocation = value;
-				}
-				else
-				{
-					KnownPosition = value;
-				}
+				_renderLocation = value;
 			}
 		}
 
@@ -345,7 +339,7 @@ namespace Alex.Entities
             HideNameTag = false;
 			//ServerEntity = true;
 			IsAffectedByGravity = true;
-			HasPhysics = true;
+			//HasPhysics = true;
 			
 			HealthManager = new HealthManager(this);
 			UUID = new MiNET.Utils.UUID(Guid.NewGuid().ToByteArray());
@@ -571,18 +565,6 @@ namespace Alex.Entities
 		public Vector2 TargetRotation { get; private set; } = Vector2.Zero;
 		
 		internal bool RequiresRealTimeTick { get; set; } = true;
-
-		internal bool HasPhysics
-		{
-			get => _hasPhysics;
-			set
-			{
-				_hasPhysics = value;
-				
-				if (!value)
-					Velocity = Vector3.Zero;
-			}
-		}
 
 		public void HandleJavaMetadata(MetaDataEntry entry)
 		{
@@ -932,25 +914,9 @@ namespace Alex.Entities
 				bone.Animations.Enqueue(new SwingAnimation(bone, TimeSpan.FromMilliseconds(200)));
 			}
 		}
-		
-		private bool _waitingOnChunk = true;
-		public bool HasChunk => !_waitingOnChunk;
 
-		protected virtual void CheckForChunk()
-		{
-			if (_waitingOnChunk)
-			{
-				if (Level.GetChunk(KnownPosition.GetCoordinates3D(), true) != null)
-				{
-					_waitingOnChunk = false;
-				}
-			}
-		}
-		
 		public virtual void OnTick()
 		{
-			CheckForChunk();
-			
 			//Age++;
 			if (TargetEntityId != -1)
 			{
@@ -993,93 +959,6 @@ namespace Alex.Entities
 			{
 				effect.OnTick(this);
 			}
-
-			if (NoAi || _waitingOnChunk) return;
-			//	IsMoving = Velocity.LengthSquared() > 0f;
-
-			var knownPos  = new BlockCoordinates(new Vector3(KnownPosition.X, KnownPosition.Y, KnownPosition.Z));
-			var knownDown = KnownPosition.GetCoordinates3D();
-
-			//	if (Alex.ServerType == ServerType.Bedrock)
-			{
-				knownDown = knownDown.BlockDown();
-			}
-
-			var blockBelowFeet = Level?.GetBlockStates(knownDown.X, knownDown.Y, knownDown.Z);
-			var feetBlock      = Level?.GetBlockStates(knownPos.X, knownPos.Y, knownPos.Z).ToArray();
-			var headBlockState = Level?.GetBlockState(KnownPosition.GetCoordinates3D() + new BlockCoordinates(0, 1, 0));
-
-			if (headBlockState != null)
-			{
-				var headBlock = headBlockState.Block;
-
-				if (headBlock.Solid)
-				{
-					HeadInBlock = true;
-				}
-				else
-				{
-					HeadInBlock = false;
-				}
-
-				if (headBlock.BlockMaterial == Material.Water || headBlock.IsWater)
-				{
-					HeadInWater = true;
-				}
-				else
-				{
-					HeadInWater = false;
-				}
-
-				if (headBlock.BlockMaterial == Material.Lava || headBlock is Lava || headBlock is FlowingLava)
-				{
-					HeadInLava = true;
-				}
-				else
-				{
-					HeadInLava = false;
-				}
-			}
-
-			if (blockBelowFeet != null)
-			{
-				if (blockBelowFeet.Any(b => b.State.Block.BlockMaterial == Material.Water || b.State.Block.IsWater))
-				{
-					AboveWater = true;
-				}
-				else
-				{
-					AboveWater = false;
-				}
-			}
-			else
-			{
-				AboveWater = false;
-			}
-
-			if (feetBlock != null)
-			{
-				if (feetBlock.Any(b => b.State.Block.BlockMaterial == Material.Water || b.State.Block.IsWater))
-				{
-					FeetInWater = true;
-				}
-				else
-				{
-					FeetInWater = false;
-				}
-
-				if (feetBlock.Any(b => b.State.Block.BlockMaterial == Material.Lava))
-				{
-					FeetInLava = true;
-				}
-				else
-				{
-					FeetInLava = false;
-				}
-			}
-
-			IsInWater = FeetInWater || HeadInWater;
-			IsInLava = FeetInLava || HeadInLava;
 			//HealthManager.OnTick();
 		}
 
@@ -1298,7 +1177,6 @@ namespace Alex.Entities
 		private ConcurrentDictionary<EffectType, Effect> _effects = new ConcurrentDictionary<EffectType, Effect>();
 		private IItemRenderer                            _itemRenderer    = null;
 		private bool _noAi = false;
-		private bool _hasPhysics = true;
 		private string _nameTag;
 
 		public const float   JumpVelocity = 0.42f;

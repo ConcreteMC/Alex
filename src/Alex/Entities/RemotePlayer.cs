@@ -77,7 +77,7 @@ namespace Alex.Entities
 					_skinDirty = true;
 			}
 
-			NoAi = true;
+			base.NoAi = true;
 		}
 
 		private static JsonSerializerSettings GeometrySerializationSettings = new JsonSerializerSettings()
