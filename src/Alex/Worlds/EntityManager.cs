@@ -212,7 +212,7 @@ namespace Alex.Worlds
 
 		private void RenderNametag(IRenderArgs args, Entity entity)
 		{
-			var maxDistance = (World.ChunkManager.RenderDistance * 16f);
+			//var maxDistance = (World.ChunkManager.RenderDistance * 16f);
 			var lines = entity.NameTagLines;
 		//	string clean = entity.NameTag;
 
@@ -223,7 +223,7 @@ namespace Alex.Worlds
 
 			//pos.Y = 0;
 
-			var distance = MathF.Abs(Vector3.Distance(entity.KnownPosition, args.Camera.Position));
+			/*var distance = MathF.Abs(Vector3.Distance(entity.KnownPosition, args.Camera.Position));
 			if (distance >= (maxDistance * 0.8f)) 
 			{ 
 				return;
@@ -232,7 +232,7 @@ namespace Alex.Worlds
 			//var opacity = 1f - ((1f / maxDistance) * distance);
 
 			distance *= (distance / (maxDistance / 1.5f));
-			var opacity = MathF.Max(MathF.Min(1f - (distance / (maxDistance)), 1f), 0f);
+			var opacity = MathF.Max(MathF.Min(1f - (distance / (maxDistance)), 1f), 0f);*/
 			//distance -= ((maxDistance) / distance);
 
 
@@ -289,10 +289,10 @@ namespace Alex.Worlds
 				//renderPosition.Y = (int) ((textPosition.Y + yOffset));
 
 				args.SpriteBatch.FillRectangle(
-					new Rectangle(renderPosition.ToPoint(), c), _backgroundColor * opacity, depth + 0.0000001f);
+					new Rectangle(renderPosition.ToPoint(), c), _backgroundColor * 1f, depth + 0.0000001f);
 
 				args.SpriteBatch.DrawString(
-					Alex.Font, line, renderPosition, TextColor.White, FontStyle.None, 0f, Vector2.Zero, s, opacity,
+					Alex.Font, line, renderPosition, TextColor.White, FontStyle.None, 0f, Vector2.Zero, s, 1f,
 					SpriteEffects.None, depth);
 
 				//Alex.Font.DrawString(

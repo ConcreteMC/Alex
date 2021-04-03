@@ -1,4 +1,5 @@
 using MiNET.Utils;
+using MiNET.Utils.Nbt;
 
 namespace Alex.Utils.Inventories.Models
 {

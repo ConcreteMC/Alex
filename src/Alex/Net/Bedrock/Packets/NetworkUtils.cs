@@ -6,6 +6,8 @@ using fNbt.Tags;
 using MiNET.Items;
 using MiNET.Net;
 using MiNET.Utils;
+using MiNET.Utils.Metadata;
+using MiNET.Utils.Nbt;
 using NLog;
 
 namespace Alex.Net.Bedrock.Packets

@@ -37,6 +37,7 @@ using MiNET.Net;
 using MiNET.Net.RakNet;
 using MiNET.Plugins;
 using MiNET.Utils;
+using MiNET.Utils.Cryptography;
 using MiNET.Utils.Skins;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -54,7 +55,6 @@ using BlockCoordinates = Alex.API.Utils.Vectors.BlockCoordinates;
 using BlockFace = Alex.API.Blocks.BlockFace;
 using ConnectionInfo = Alex.API.Utils.ConnectionInfo;
 using CryptoContext = Alex.Net.Bedrock.CryptoContext;
-using DedicatedThreadPool = MiNET.Utils.DedicatedThreadPool;
 using Description = MiNET.Utils.Skins.Description;
 using Item = Alex.Items.Item;
 using LevelInfo = MiNET.Worlds.LevelInfo;
@@ -628,7 +628,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
                 payload = data
             };
 
-            MessageHandler.CryptoContext = new MiNET.Utils.CryptoContext() {ClientKey = clientKey, UseEncryption = false,};
+            MessageHandler.CryptoContext =  new MiNET.Utils.Cryptography.CryptoContext() {ClientKey = clientKey, UseEncryption = false,};
 
             SendPacket(loginPacket);
 
@@ -689,7 +689,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 				//Thread.Sleep(1250);
 				
-				handler.CryptoContext = new MiNET.Utils.CryptoContext
+				handler.CryptoContext = new MiNET.Utils.Cryptography.CryptoContext
 				{
 					Decryptor = decryptor,
 					Encryptor = encryptor,
@@ -963,7 +963,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			packet.actionId = (int) action;
 			
 			if (coordinates.HasValue)
-				packet.coordinates = new MiNET.Utils.BlockCoordinates(coordinates.Value.X, 
+				packet.coordinates = new MiNET.Utils.Vectors.BlockCoordinates(coordinates.Value.X, 
 					coordinates.Value.Y, coordinates.Value.Z);
 
 			if (blockFace.HasValue)
@@ -993,7 +993,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
                             new System.Numerics.Vector3(cursorPosition.X, cursorPosition.Y, cursorPosition.Z),
                        // TransactionType = McpeInventoryTransaction.TransactionType.ItemUse,
                        // EntityId = NetworkEntityId,
-                        Position = new MiNET.Utils.BlockCoordinates(position.X, position.Y, position.Z),
+                        Position = new MiNET.Utils.Vectors.BlockCoordinates(position.X, position.Y, position.Z),
                         Face = (int) ConvertBlockFace(face),
                         Slot = player.Inventory.SelectedSlot,
                         //Item = item.
@@ -1090,7 +1090,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					    new System.Numerics.Vector3(cursorPosition.X, cursorPosition.Y, cursorPosition.Z),
 				    //TransactionType = McpeInventoryTransaction.TransactionType.ItemUse,
 				    // = NetworkEntityId,
-				    Position = new MiNET.Utils.BlockCoordinates(position.X, position.Y, position.Z),
+				    Position = new MiNET.Utils.Vectors.BlockCoordinates(position.X, position.Y, position.Z),
 				    Face = (int) ConvertBlockFace(face),
 				    TransactionRecords = new List<TransactionRecord>()
 				    {
@@ -1201,7 +1201,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				    new System.Numerics.Vector3(cursorPosition.X, cursorPosition.Y, cursorPosition.Z),
 			  //  TransactionType = McpeInventoryTransaction.TransactionType.ItemUse,
 			   // EntityId = NetworkEntityId,
-			    Position = new MiNET.Utils.BlockCoordinates(position.X, position.Y, position.Z),
+			    Position = new MiNET.Utils.Vectors.BlockCoordinates(position.X, position.Y, position.Z),
 			    Face = (int) ConvertBlockFace(face),
 			    Item = minetItem,
 			    Slot = slot,
@@ -1259,7 +1259,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				    new System.Numerics.Vector3(cursorPosition.X, cursorPosition.Y, cursorPosition.Z),
 			    //  TransactionType = McpeInventoryTransaction.TransactionType.ItemUse,
 			    // EntityId = NetworkEntityId,
-			    Position = new MiNET.Utils.BlockCoordinates(position.X, position.Y, position.Z),
+			    Position = new MiNET.Utils.Vectors.BlockCoordinates(position.X, position.Y, position.Z),
 			    Face = (int) ConvertBlockFace(face),
 			    Item = minetItem,
 			    Slot = World.Player.Inventory.SelectedSlot,

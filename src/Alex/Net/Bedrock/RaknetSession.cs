@@ -42,6 +42,8 @@ using MiNET;
 using MiNET.Net;
 using MiNET.Net.RakNet;
 using MiNET.Utils;
+using MiNET.Utils.Collections;
+using MiNET.Utils.Nbt;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using NLog;

@@ -46,6 +46,7 @@ using MiNET.Net;
 using MiNET.Particles;
 using MiNET.UI;
 using MiNET.Utils;
+using MiNET.Utils.Metadata;
 using MiNET.Worlds;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;

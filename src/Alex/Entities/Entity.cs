@@ -33,6 +33,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MiNET;
 using MiNET.Utils;
+using MiNET.Utils.Metadata;
 using Mono.Collections.Generic;
 using NLog;
 using BlockCoordinates = Alex.API.Utils.Vectors.BlockCoordinates;
@@ -42,8 +43,8 @@ using HealthManager = Alex.Entities.Meta.HealthManager;
 using Inventory = Alex.Utils.Inventories.Inventory;
 using MathF = System.MathF;
 using MetadataByte = Alex.Networking.Java.Packets.Play.MetadataByte;
-using MetadataFloat = MiNET.Utils.MetadataFloat;
-using MetadataString = MiNET.Utils.MetadataString;
+using MetadataFloat = Alex.Networking.Java.Packets.Play.MetadataFloat;
+using MetadataString = Alex.Networking.Java.Packets.Play.MetadataString;
 using PlayerLocation = Alex.API.Utils.Vectors.PlayerLocation;
 using UUID = Alex.API.Utils.UUID;
 
@@ -683,7 +684,7 @@ namespace Alex.Entities
 				{
 					case (int) MiNET.Entities.Entity.MetadataFlags.CollisionBoxHeight:
 					{
-						if (meta.Value is MetadataFloat flt)
+						if (meta.Value is MiNET.Utils.Metadata.MetadataFloat flt)
 						{
 							Height = flt.Value;
 						}
@@ -691,7 +692,7 @@ namespace Alex.Entities
 					
 					case (int) MiNET.Entities.Entity.MetadataFlags.CollisionBoxWidth:
 					{
-						if (meta.Value is MetadataFloat fltw)
+						if (meta.Value is MiNET.Utils.Metadata.MetadataFloat fltw)
 						{
 							Width = fltw.Value;
 						//	Length = fltw.Value;
@@ -700,7 +701,7 @@ namespace Alex.Entities
 					
 					case (int) MiNET.Entities.Entity.MetadataFlags.Scale:
 					{
-						if (meta.Value is MetadataFloat flt)
+						if (meta.Value is MiNET.Utils.Metadata.MetadataFloat flt)
 						{
 							Scale = flt.Value;
 						}
@@ -709,7 +710,7 @@ namespace Alex.Entities
 					//case (int) MiNET.Entities.Entity.MetadataFlags.EntityFlags2:
 					case (int) MiNET.Entities.Entity.MetadataFlags.EntityFlags2:
 					{
-						if (meta.Value is MetadataLong lng)
+						if (meta.Value is MiNET.Utils.Metadata.MetadataLong lng)
 						{
 							_extendedData = lng.Value;
 							HandleEntityFlags(_data, _extendedData);
@@ -718,7 +719,7 @@ namespace Alex.Entities
 					
 					case (int) MiNET.Entities.Entity.MetadataFlags.EntityFlags:
 					{
-						if (meta.Value is MetadataLong lng)
+						if (meta.Value is MiNET.Utils.Metadata.MetadataLong lng)
 						{
 							_data = lng.Value;
 							HandleEntityFlags(_data, _extendedData);
@@ -727,7 +728,7 @@ namespace Alex.Entities
 					
 					case (int) MiNET.Entities.Entity.MetadataFlags.NameTag:
 					{
-						if (meta.Value is MetadataString nametag)
+						if (meta.Value is MiNET.Utils.Metadata.MetadataString nametag)
 						{
 							NameTag = nametag.Value;
 						}
@@ -744,7 +745,7 @@ namespace Alex.Entities
 
 					case (int) MiNET.Entities.Entity.MetadataFlags.MaxAir:
 					{
-						if (meta.Value is MiNET.Utils.MetadataShort airTag)
+						if (meta.Value is MiNET.Utils.Metadata.MetadataShort airTag)
 						{
 							HealthManager.MaxAir = airTag.Value;
 						}
@@ -752,7 +753,7 @@ namespace Alex.Entities
 					
 					case (int) MiNET.Entities.Entity.MetadataFlags.AvailableAir:
 					{
-						if (meta.Value is MiNET.Utils.MetadataShort airTag)
+						if (meta.Value is MiNET.Utils.Metadata.MetadataShort airTag)
 						{
 							HealthManager.AvailableAir = airTag.Value;
 						}
@@ -760,7 +761,7 @@ namespace Alex.Entities
 
 					case 5: //Owner Entity ID
 					{
-						if (meta.Value is MiNET.Utils.MetadataLong targetTag)
+						if (meta.Value is MiNET.Utils.Metadata.MetadataLong targetTag)
 						{
 							OwnerEntityId = targetTag.Value;
 						}
@@ -768,7 +769,7 @@ namespace Alex.Entities
 					
 					case 6: //Target Entity ID
 					{
-						if (meta.Value is MiNET.Utils.MetadataLong targetTag)
+						if (meta.Value is MiNET.Utils.Metadata.MetadataLong targetTag)
 						{
 							TargetEntityId = targetTag.Value;
 						}

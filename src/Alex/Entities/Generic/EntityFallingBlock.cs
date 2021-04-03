@@ -7,6 +7,7 @@ using Alex.Worlds.Multiplayer.Bedrock;
 using Microsoft.Xna.Framework;
 using MiNET.Blocks;
 using MiNET.Utils;
+using MiNET.Utils.Metadata;
 using NLog;
 
 namespace Alex.Entities.Generic

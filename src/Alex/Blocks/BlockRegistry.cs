@@ -222,6 +222,7 @@ namespace Alex.Blocks
 		    this.Register("minecraft:smooth_sandstone_slab", () => new SandstoneSlab());
 		    this.Register("minecraft:petrified_oak_slab", () => new PetrifiedOakSlab());
 		    this.Register("minecraft:cobblestone_slab", () => new CobblestoneSlab());
+		    this.Register("minecraft:mossy_cobblestone_slab", () => new CobblestoneSlab());
 		    this.Register("minecraft:brick_slab", () => new BrickSlab());
 		    this.Register("minecraft:stone_brick_slab", () => new StoneBrickSlab());
 		    this.Register("minecraft:mossy_stone_brick_slab", () => new StoneBrickSlab());

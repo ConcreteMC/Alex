@@ -1,23 +1,17 @@
 using System;
-using System.Buffers;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
-using System.Linq;
-using System.Threading;
-using Alex.API.Utils;
 using Alex.Net.Bedrock;
-using Microsoft.IO;
 using MiNET;
 using MiNET.Net;
 using MiNET.Net.RakNet;
 using MiNET.Utils;
+using MiNET.Utils.Cryptography;
+using MiNET.Utils.IO;
 using NLog;
-using Org.BouncyCastle.Utilities.Zlib;
-using CompressionLevel = MonoGame.Framework.Utilities.Deflate.CompressionLevel;
-using CompressionMode = MonoGame.Framework.Utilities.Deflate.CompressionMode;
-using CryptoContext = MiNET.Utils.CryptoContext;
+using CryptoContext = Alex.Net.Bedrock.CryptoContext;
 
 namespace Alex.Worlds.Multiplayer.Bedrock
 {
@@ -32,7 +26,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
         
         private readonly RaknetSession           _session;
 
-        public CryptoContext CryptoContext { get; set; }
+        public MiNET.Utils.Cryptography.CryptoContext CryptoContext { get; set; }
 
         private DateTime _lastPacketReceived;
         public  TimeSpan TimeSinceLastPacket => DateTime.UtcNow - _lastPacketReceived;
@@ -187,7 +181,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				if (CryptoContext != null && CryptoContext.UseEncryption)
 				{
 					//FirstEncryptedPacketWaitHandle.WaitOne();
-					
+
 					payload = CryptoUtils.Decrypt(payload, CryptoContext);
 				}
 

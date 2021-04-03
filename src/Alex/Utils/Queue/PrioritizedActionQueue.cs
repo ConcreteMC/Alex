@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using MiNET.Utils;
+using MiNET.Utils.IO;
 
 namespace Alex.Utils.Queue
 {

@@ -15,6 +15,7 @@ using Jose;
 using MiNET;
 using MiNET.Net;
 using MiNET.Utils;
+using MiNET.Utils.Cryptography;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NLog;
@@ -58,6 +59,7 @@ namespace Alex.Utils.Auth
 		private AsymmetricCipherKeyPair _authKeyPair;
 		public XboxAuthService()
 		{
+			MinecraftKeyPair = CryptoUtils.GenerateClientKey();
 			_authKeyPair = GenerateKeys();
 			
 			ECPublicKeyParameters  pubAsyKey  = (ECPublicKeyParameters)_authKeyPair.Public;
@@ -146,7 +148,7 @@ namespace Alex.Utils.Auth
 		public byte[] MinecraftChain { get; private set; } = null;
 		public ChainData DecodedChain { get; private set; } = null;
 
-		public AsymmetricCipherKeyPair MinecraftKeyPair { get; private set; } = CryptoUtils.GenerateClientKey();
+		public AsymmetricCipherKeyPair MinecraftKeyPair { get; private set; }// = CryptoUtils.GenerateClientKey();
 
 		public async Task<bool> RequestMinecraftChain(HttpClient client, AuthResponse<XuiDisplayClaims<XstsXui>> token)
 		{

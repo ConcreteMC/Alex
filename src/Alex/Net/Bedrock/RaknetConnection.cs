@@ -40,6 +40,7 @@ using MiNET;
 using MiNET.Net;
 using MiNET.Net.RakNet;
 using MiNET.Utils;
+using MiNET.Utils.IO;
 using NLog;
 using ConnectionInfo = Alex.API.Utils.ConnectionInfo;
 using Datagram = Alex.Net.Bedrock.Raknet.Datagram;
