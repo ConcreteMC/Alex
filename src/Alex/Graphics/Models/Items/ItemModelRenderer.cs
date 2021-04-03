@@ -314,11 +314,12 @@ namespace Alex.Graphics.Models.Items
         /// <inheritdoc />
         public IAttached Parent { get; set; } = null;
 
-        public void Render(IRenderArgs args, Microsoft.Xna.Framework.Graphics.Effect effect)
+        public int Render(IRenderArgs args, Microsoft.Xna.Framework.Graphics.Effect effect)
         {
             if (Effect == null || Buffer == null || Buffer.VertexCount == 0)
-                return;
+                return 0;
 
+            int drawCount = 0;
             var original = args.GraphicsDevice.RasterizerState;
 
             try
@@ -338,6 +339,7 @@ namespace Alex.Graphics.Models.Items
                     DrawLine(args.GraphicsDevice, Vector3.Zero, Vector3.UnitX * 16f, Color.Red);*/
 
                     args.GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, count / 3);
+                    drawCount++;
                     //device.DrawUserIndexedPrimitives(PrimitiveType.TriangleList, Vertices, 0, Vertices.Length, Indexes, 0, Indexes.Length / 3);
                 }
             }
@@ -350,6 +352,8 @@ namespace Alex.Graphics.Models.Items
                     args.GraphicsDevice.SetVertexBuffer(at.Buffer);
                 }
             }
+
+            return drawCount;
         }
 
         protected virtual void InitEffect(BasicEffect effect)

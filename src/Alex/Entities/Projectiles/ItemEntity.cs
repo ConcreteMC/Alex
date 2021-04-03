@@ -71,12 +71,17 @@ namespace Alex.Entities.Projectiles
                 IsBlock = true;
         }
 
-        public override void Render(IRenderArgs renderArgs)
+        public override int Render(IRenderArgs renderArgs)
         {
             if (!CanRender)
-                return;
+                return 0;
+
+            var itemRenderer = ItemRenderer;
+
+            if (itemRenderer == null)
+                return 0;
             
-            ItemRenderer?.Render(renderArgs, null);
+            return itemRenderer.Render(renderArgs, null);
         }
     }
 }

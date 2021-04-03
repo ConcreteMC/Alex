@@ -2,6 +2,7 @@
 using Alex.API.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Graphics.PackedVector;
 
 namespace Alex.API.Graphics
 {
@@ -24,9 +25,7 @@ namespace Alex.API.Graphics
         /// </summary>
         public Color Color;
 
-        public float BlockLight;
-
-        public float SkyLight;
+        public Short2 Lighting;
         
         /// <summary>
         ///     Creates a new MinifiedBlockShaderVertex
@@ -34,13 +33,10 @@ namespace Alex.API.Graphics
         /// <param name="position">The position in space for this vertex</param>
         /// <param name="normal">The nomal for this vector</param>
         /// <param name="texCoords">The UV co-ords for this vertex</param>
-        public MinifiedBlockShaderVertex(Vector3 position, Vector2 texCoords)
+        public MinifiedBlockShaderVertex(Vector3 position, Vector2 texCoords) : this(position, texCoords, Color.White, 0, 15)
         {
-            Position = position;
-            TexCoords = texCoords;
-            Color = Color.White;
-            BlockLight = 0f;
-            SkyLight = 15f;
+	        //BlockLight = 0;
+            //SkyLight = 15;
         }
 
         /// <summary>
@@ -49,13 +45,23 @@ namespace Alex.API.Graphics
         /// <param name="position">The position in space for this vertex</param>
         /// <param name="texCoords">The UV co-ords for this vertex</param>
         /// <param name="color">The color of this vertex</param>
-        public MinifiedBlockShaderVertex(Vector3 position, Vector2 texCoords, Color color)
+        public MinifiedBlockShaderVertex(Vector3 position, Vector2 texCoords, Color color) : this(position, texCoords, color, 0, 15)
         {
-            Position = position;
-            TexCoords = texCoords;
-            Color = color;
-            BlockLight = 0f;
-            SkyLight = 15f;
+           
+        }
+        
+        /// <summary>
+        ///     Creates a new MinifiedBlockShaderVertex
+        /// </summary>
+        /// <param name="position">The position in space for this vertex</param>
+        /// <param name="texCoords">The UV co-ords for this vertex</param>
+        /// <param name="color">The color of this vertex</param>
+        public MinifiedBlockShaderVertex(Vector3 position, Vector2 texCoords, Color color, byte blockLight, byte skyLight)
+        {
+	        Position = position;
+	        TexCoords = texCoords;
+	        Color = color;
+	        Lighting = new Short2(skyLight, blockLight);
         }
 
         /// <summary>
@@ -63,18 +69,11 @@ namespace Alex.API.Graphics
         /// </summary>
         public static VertexDeclaration VertexDeclaration { get; } = new VertexDeclaration
         (
-	        new VertexElement(0, VertexElementFormat.Vector3,
-		        VertexElementUsage.Position, 0),
-	        new VertexElement(3 * sizeof(float), VertexElementFormat.Vector2,
-		        VertexElementUsage.TextureCoordinate, 0),
-	        new VertexElement(5 * sizeof(float), VertexElementFormat.Color,
-		        VertexElementUsage.Color, 0),
-	        new VertexElement((5 * sizeof(float)) + 4 * sizeof(byte), VertexElementFormat.Single, VertexElementUsage.TextureCoordinate, 1),
-	        new VertexElement((6 * sizeof(float)) + 4 * sizeof(byte), VertexElementFormat.Single, VertexElementUsage.TextureCoordinate, 2)
+	        new VertexElement(0, VertexElementFormat.Vector3,VertexElementUsage.Position, 0),
+	        new VertexElement(3 * sizeof(float), VertexElementFormat.Vector2, VertexElementUsage.TextureCoordinate, 0),
+	        new VertexElement((5 * sizeof(float)), VertexElementFormat.Color, VertexElementUsage.Color, 0),
+	        new VertexElement((5 * sizeof(float)) + (4 * sizeof(byte)), VertexElementFormat.Short2, VertexElementUsage.TextureCoordinate, 1)
         );
-
-        public static int             BlockLightOffset = (5 * sizeof(float)) + 4 * sizeof(byte);
-        public static int             SkyLightOffset = (6 * sizeof(float)) + 4 * sizeof(byte);
         
         VertexDeclaration IVertexType.VertexDeclaration => VertexDeclaration;
     }
@@ -98,10 +97,12 @@ namespace Alex.API.Graphics
         /// </summary>
         public Color Color;
 
-        public float BlockLight;
+        
+        //public short BlockLight;
 
-        public float SkyLight;
-
+        //public short SkyLight;
+        public Short2 Lighting;
+        
         public BlockFace Face;
         
         /// <summary>
@@ -110,14 +111,9 @@ namespace Alex.API.Graphics
         /// <param name="position">The position in space for this vertex</param>
         /// <param name="normal">The nomal for this vector</param>
         /// <param name="texCoords">The UV co-ords for this vertex</param>
-        public BlockShaderVertex(Vector3 position, Vector3 normal, Vector2 texCoords)
+        public BlockShaderVertex(Vector3 position, Vector3 normal, Vector2 texCoords) : this(position, normal, texCoords, Microsoft.Xna.Framework.Color.White)
         {
-            Position = position;
-            TexCoords = texCoords;
-            Color = Color.White;
-            BlockLight = 0f;
-            SkyLight = 15f;
-			Face = BlockFace.None;
+            
         }
 
         //public Vector3 Normal;
@@ -129,17 +125,28 @@ namespace Alex.API.Graphics
         /// <param name="normal">The nomal for this vector</param>
         /// <param name="texCoords">The UV co-ords for this vertex</param>
         /// <param name="color">The color of this vertex</param>
-        public BlockShaderVertex(Vector3 position, Vector3 normal, Vector2 texCoords, Color color)
+        public BlockShaderVertex(Vector3 position, Vector3 normal, Vector2 texCoords, Color color) : this(position, normal, texCoords, color, 0, 15)
         {
-            Position = position;
-            //Normal = normal;
-            TexCoords = texCoords;
-            Color = color;
-            BlockLight = 0f;
-            SkyLight = 15f;
-            Face = BlockFace.None;
+            
         }
 
+        /// <summary>
+        ///     Creates a new VertexPositionNormalTextureColor
+        /// </summary>
+        /// <param name="position">The position in space for this vertex</param>
+        /// <param name="normal">The nomal for this vector</param>
+        /// <param name="texCoords">The UV co-ords for this vertex</param>
+        /// <param name="color">The color of this vertex</param>
+        public BlockShaderVertex(Vector3 position, Vector3 normal, Vector2 texCoords, Color color, byte blockLight, byte skyLight)
+        {
+	        Position = position;
+	        //Normal = normal;
+	        TexCoords = texCoords;
+	        Color = color;
+	        Lighting = new Short2(skyLight, blockLight);
+	        Face = BlockFace.None;
+        }
+        
         /// <summary>
         ///     The vertex declaration for this vertex type
         /// </summary>
@@ -147,18 +154,14 @@ namespace Alex.API.Graphics
         (
 	        new VertexElement(0, VertexElementFormat.Vector3,
 		        VertexElementUsage.Position, 0),
-	        new VertexElement(3 * sizeof(float), VertexElementFormat.Vector2,
+	        new VertexElement((3 * sizeof(float)), VertexElementFormat.Vector2,
 		        VertexElementUsage.TextureCoordinate, 0),
-	        new VertexElement(5 * sizeof(float), VertexElementFormat.Color,
+	        new VertexElement((5 * sizeof(float)), VertexElementFormat.Color,
 		        VertexElementUsage.Color, 0),
-	        new VertexElement((5 * sizeof(float)) + 4 * sizeof(byte), VertexElementFormat.Single, VertexElementUsage.TextureCoordinate, 1),
-	        new VertexElement((6 * sizeof(float)) + 4 * sizeof(byte), VertexElementFormat.Single, VertexElementUsage.TextureCoordinate, 2),
-	        new VertexElement((7 * sizeof(float)) + 4 * sizeof(byte), VertexElementFormat.Single, VertexElementUsage.Position,1)
+	        new VertexElement((5 * sizeof(float)) + (4 * sizeof(byte)), VertexElementFormat.Short2, VertexElementUsage.TextureCoordinate, 1),
+	        new VertexElement((5 * sizeof(float)) + (4 * sizeof(byte)) + (2 * sizeof(short)), VertexElementFormat.Single, VertexElementUsage.Position,1)
         );
 
-        public static int             BlockLightOffset = (5 * sizeof(float)) + 4 * sizeof(byte);
-        public static int             SkyLightOffset = (6 * sizeof(float)) + 4 * sizeof(byte);
-        
         VertexDeclaration IVertexType.VertexDeclaration => VertexDeclaration;
     }
 }

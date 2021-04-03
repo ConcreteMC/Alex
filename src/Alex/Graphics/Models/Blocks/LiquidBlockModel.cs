@@ -16,6 +16,7 @@ using Alex.Worlds;
 using Alex.Worlds.Abstraction;
 using Alex.Worlds.Chunks;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics.PackedVector;
 
 namespace Alex.Graphics.Models.Blocks
 {
@@ -263,8 +264,9 @@ namespace Alex.Graphics.Models.Blocks
 					vert.Position.X += position.X;
 					vert.Position.Z += position.Z;
 
-					vert.SkyLight = skyLight;
-					vert.BlockLight = blockLight;
+					//vert.Lighting = new Short2(skyLight, blockLight);
+					//vert.SkyLight = skyLight;
+					//vert.BlockLight = blockLight;
 					
 					if (IsWater)
 					{
@@ -273,10 +275,14 @@ namespace Alex.Graphics.Models.Blocks
 					}
 					else
 					{
-						vert.BlockLight = baseBlock.Block.LightValue;
+						//vert.Lighting = new Short2(skyLight, baseBlock.Block.LightValue);
+						
+						blockLight = baseBlock.Block.LightValue;
 						vert.Face = face;
 					}
-					
+
+					//var textureCoordinates = map.TextureInfo.Position * (Vector2.One / map.TextureInfo.AtlasSize);
+					//vert.TexCoords = new Short2(textureCoordinates);
 					vert.TexCoords += map.TextureInfo.Position;
 					vert.TexCoords *= (Vector2.One / map.TextureInfo.AtlasSize);
 

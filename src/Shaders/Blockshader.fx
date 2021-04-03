@@ -13,9 +13,6 @@ float4 DiffuseColor;
 float4 AlphaTest;
 float4 LightOffset;
 
-float3 LightSource1;
-float LightSource1Strength;
-
 float FogEnabled;
 float FogStart;
 float FogEnd;
@@ -29,7 +26,7 @@ sampler2D textureSampler: register(s0) = sampler_state {
 
 struct VertexToPixel  {
     float4 Position     : POSITION;
-    float4 TexCoords    : TEXCOORD0;
+    float2 TexCoords    : TEXCOORD0;
     float4 Lighting   : TEXCOORD01;
     float4 Color        : COLOR0;
     float FogFactor    : COLOR1;
@@ -44,18 +41,18 @@ float ComputeFogFactor(float d)
     return saturate((d - FogStart) / (FogEnd - FogStart)) * FogEnabled;
 }
 
-VertexToPixel VertexShaderFunction(float4 inPosition : POSITION, float4 inTexCoords : TEXCOORD0, float4 inColor : COLOR0, float4 blockLight : TEXCOORD01, float4 skyLight : TEXCOORD02)  {
+VertexToPixel VertexShaderFunction(float4 inPosition : POSITION, float2 inTexCoords : TEXCOORD0, float4 inColor : COLOR0, float2 lightValues : TEXCOORD01)  {
     VertexToPixel Output = (VertexToPixel)0;
 
     float4 worldPos = mul(inPosition, World);
     float4 viewPos = mul(worldPos, View);
 
-    float4 lighting = clamp(skyLight * LightOffset, 0, 15);
+    float4 lighting = clamp(lightValues.x * LightOffset, 0, 15);
 
     Output.Position = mul(viewPos, Projection);
 
     Output.TexCoords = inTexCoords;
-    Output.Lighting = max(lighting, blockLight);
+    Output.Lighting = max(lighting, lightValues.y);
     Output.Color = inColor;
     Output.FogFactor = ComputeFogFactor(distance(inPosition.xy, viewPos.xy)) * FogEnabled;
 

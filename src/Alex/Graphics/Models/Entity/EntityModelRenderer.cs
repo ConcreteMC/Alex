@@ -236,17 +236,23 @@ namespace Alex.Graphics.Models.Entity
 			ScissorTestEnable = true
 		};
 		
-		public virtual void Render(IRenderArgs args)
+		/// <summary>
+		///		Renders the entity model
+		/// </summary>
+		/// <param name="args"></param>
+		/// <returns>The amount of GraphicsDevice.Draw calls made</returns>
+		public virtual int Render(IRenderArgs args)
 		{
 			if (Bones == null)
 			{
 				Log.Warn($"No bones found for model...");
-				return;
+				return 0;
 			}
 
 			var originalRaster = args.GraphicsDevice.RasterizerState;
 			var blendState = args.GraphicsDevice.BlendState;
 
+			int counter = 0;
 			try
 			{
 				args.GraphicsDevice.BlendState = BlendState.Opaque;
@@ -265,7 +271,7 @@ namespace Alex.Graphics.Models.Entity
 				
 				foreach (var bone in Bones.Where(x => x.Value.Parent == null))
 				{
-					bone.Value.Render(newArgs, Effect);
+					counter += bone.Value.Render(newArgs, Effect);
 					//RenderBone(args, bone.Value);
 				}
 			}
@@ -274,6 +280,8 @@ namespace Alex.Graphics.Models.Entity
 				args.GraphicsDevice.RasterizerState = originalRaster;
 				args.GraphicsDevice.BlendState = blendState;
 			}
+
+			return counter;
 		}
 
 		public Vector3 EntityColor { get; set; } = Color.White.ToVector3();

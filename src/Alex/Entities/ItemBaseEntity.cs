@@ -63,12 +63,17 @@ namespace Alex.Entities
 			}
 		}
 		
-		public override void Render(IRenderArgs renderArgs)
+		public override int Render(IRenderArgs renderArgs)
 		{
 			if (!CanRender)
-				return;
-            
-			ItemRenderer?.Render(renderArgs, null);
+				return 0;
+
+			var itemRenderer = ItemRenderer;
+
+			if (itemRenderer == null)
+				return 0;
+			
+			return itemRenderer.Render(renderArgs, null);
 		}
 	}
 }

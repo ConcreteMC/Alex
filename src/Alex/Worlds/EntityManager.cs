@@ -33,6 +33,11 @@ namespace Alex.Worlds
 
 		public  int             EntityCount      => Entities.Count + BlockEntities.Count;
 		public  int             EntitiesRendered { get; private set; } = 0;
+		
+		/// <summary>
+		///		The amount of calls made to DrawPrimitives in the last render call
+		/// </summary>
+		public int DrawCount { get; private set; } = 0;
 		private World           World            { get; }
 		private NetworkProvider Network          { get; }
 
@@ -138,6 +143,7 @@ namespace Alex.Worlds
 				args.GraphicsDevice.BlendState = BlendState.AlphaBlend;
 				
 				int renderCount = 0;
+				int drawCount = 0;
 				//var entities    = _rendered.ToArray();
 
 				foreach (var entity in _rendered)
@@ -145,12 +151,13 @@ namespace Alex.Worlds
 					// entity.IsRendered = true;
 					if (entity.IsRendered && !entity.IsInvisible && entity.Scale > 0f)
 					{
-						entity.Render(args);
+						drawCount += entity.Render(args);
 
 						renderCount++;
 					}
 				}
 
+				DrawCount = drawCount;
 				EntitiesRendered = renderCount;
 				args.GraphicsDevice.BlendState = blendState;
 			}

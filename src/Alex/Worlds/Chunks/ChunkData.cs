@@ -11,6 +11,7 @@ using Alex.API.Utils;
 using Alex.API.Utils.Vectors;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Graphics.PackedVector;
 
 namespace Alex.Worlds.Chunks
 {
@@ -43,35 +44,14 @@ namespace Alex.Worlds.Chunks
                 return false;
             }
 
-            rStage.Render(device, effect);
-
-            return true;
+            return rStage.Render(device, effect);
         }
 
         public MinifiedBlockShaderVertex[] Vertices
         {
             get
             {
-                List<MinifiedBlockShaderVertex> vertices = new List<MinifiedBlockShaderVertex>();
-
-                for (var index = 0; index < _stages.Length; index++)
-                {
-                    var stage = _stages[index];
-
-                    if (stage == null) continue;
-
-                    var range = stage.BuildVertices(out int size);
-                    try
-                    {
-                        vertices.AddRange(range.Take(size));
-                    }
-                    finally
-                    {
-                        ChunkRenderStage.Pool.Return(range, true);
-                    }
-                }
-
-                return vertices.ToArray();
+                return _stages.Where(x => x != null).SelectMany(x => x.BuildVertices()).ToArray();
             }
         }
 

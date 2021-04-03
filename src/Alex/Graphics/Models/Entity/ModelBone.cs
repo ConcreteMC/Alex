@@ -284,8 +284,9 @@ namespace Alex.Graphics.Models.Entity
 				}
 			}
 
-			public void Render(IRenderArgs args, Microsoft.Xna.Framework.Graphics.Effect effect)
+			public int Render(IRenderArgs args, Microsoft.Xna.Framework.Graphics.Effect effect)
 			{
+				var renderCount = 0;
 				var count = ElementCount;
 
 				if (!Definition.NeverRender && Rendered && count > 0)
@@ -297,13 +298,16 @@ namespace Alex.Graphics.Models.Entity
 						pass?.Apply();
 
 						args.GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, StartIndex, count / 3);
+						renderCount++;
 					}
 				}
 			
 				foreach (var child in Children)
 				{
-					child.Render(args, effect);
+					renderCount += child.Render(args, effect);
 				}
+
+				return renderCount;
 			}
 			
 			private bool _disposed = false;

@@ -55,7 +55,7 @@ namespace Alex.Worlds.Chunks
 		internal ChunkData ChunkData { get; private set; }
 		private object _dataLock = new object();
 		
-		private ChunkOctree _octree;
+		//private ChunkOctree _octree;
 		public ChunkColumn(int x, int z)
 		{
 			X = x;
@@ -84,7 +84,7 @@ namespace Alex.Worlds.Chunks
 				index.Z + sizeOffs
 			);
 			var bounds = new BoundingBox( boundsMin, boundsMax );
-			_octree = new ChunkOctree( bounds );
+		//	_octree = new ChunkOctree( bounds );
 		}
 
 		public void ScheduleBorder()
@@ -114,8 +114,9 @@ namespace Alex.Worlds.Chunks
 		
 		public void UpdateBuffer(GraphicsDevice device, IBlockAccess world)
 		{
-			if (!Monitor.TryEnter(_dataLock, 0))
-				return;
+			Monitor.Enter(_dataLock);
+			//if (!Monitor.TryEnter(_dataLock, 0))
+			//	return;
 
 			try
 			{
@@ -510,17 +511,6 @@ namespace Alex.Worlds.Chunks
 			section.SetSkyLightUpdateScheduled(x, y - 16 * (y >> 4), z, true);
 		}
 
-		public bool IsScheduled(int bx, int @by, int bz)
-		{
-			if ((bx < 0 || bx > ChunkWidth) || (by < 0 || by > ChunkHeight) || (bz < 0 || bz > ChunkDepth))
-				return false;
-
-			var section = Sections[@by >> 4];
-			if (section == null) return false;
-
-			return section.IsScheduled(bx, @by & 0xf, bz);
-		}
-		
 		public bool AddBlockEntity(BlockCoordinates coordinates, NbtCompound entity)
 		{
 			//entity.Block = GetBlockState(coordinates.X & 0x0f, coordinates.Y & 0xf, coordinates.Z & 0x0f).Block;

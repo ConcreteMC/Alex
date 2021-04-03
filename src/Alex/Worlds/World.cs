@@ -358,14 +358,14 @@ namespace Alex.Worlds
 			        var y = coordinates.Y;
 			        var z = coordinates.Z;
 			        
-			        ScheduleLightingUpdate(new BlockCoordinates(x + 1, y, z));
+			        /*ScheduleLightingUpdate(new BlockCoordinates(x + 1, y, z));
 			        ScheduleLightingUpdate(new BlockCoordinates(x - 1, y, z));
 			        
 			        ScheduleLightingUpdate(new BlockCoordinates(x, y, z + 1));
 			        ScheduleLightingUpdate(new BlockCoordinates(x, y, z - 1));
 			        
 			        ScheduleLightingUpdate(new BlockCoordinates(x, y + 1, z));
-			        ScheduleLightingUpdate(new BlockCoordinates(x, y - 1, z));
+			        ScheduleLightingUpdate(new BlockCoordinates(x, y - 1, z));*/
 		        }
 	        }
         }
@@ -382,14 +382,14 @@ namespace Alex.Worlds
 			        var y = coordinates.Y;
 			        var z = coordinates.Z;
 
-			        ScheduleLightingUpdate(new BlockCoordinates(x + 1, y, z), true);
+			       /* ScheduleLightingUpdate(new BlockCoordinates(x + 1, y, z), true);
 			        ScheduleLightingUpdate(new BlockCoordinates(x + -1, y, z), true);
 
 			        ScheduleLightingUpdate(new BlockCoordinates(x, y, z + 1), true);
 			        ScheduleLightingUpdate(new BlockCoordinates(x, y, z + -1), true);
 
 			        ScheduleLightingUpdate(new BlockCoordinates(x, y + 1, z), true);
-			        ScheduleLightingUpdate(new BlockCoordinates(x, y + -1, z), true);
+			        ScheduleLightingUpdate(new BlockCoordinates(x, y + -1, z), true);*/
 		        }
 	        }
         }

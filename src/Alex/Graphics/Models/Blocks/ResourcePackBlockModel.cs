@@ -22,6 +22,7 @@ using Alex.Worlds.Abstraction;
 using Alex.Worlds.Chunks;
 using Alex.Worlds.Singleplayer;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics.PackedVector;
 using NLog;
 using Matrix = System.Drawing.Drawing2D.Matrix;
 
@@ -409,6 +410,8 @@ namespace Alex.Graphics.Models.Blocks
 			for (int i = 0; i < vertices.Length; i++)
 			{
 				var v = vertices[i];
+
+				var textureCoordinates = v.TexCoords;
 				
 				v.Position /= 16f;
 				v.Position = FixRotation(v.Position, element);
@@ -449,11 +452,12 @@ namespace Alex.Graphics.Models.Blocks
 						var rotY = rot * (MathHelper.Pi / 180f);
 						var c    = MathF.Cos(rotY);
 						var s    = MathF.Sin(rotY);
-						var x    = v.TexCoords.X - 8f * tw;
-						var y    = v.TexCoords.Y - 8f * th;
+						
+						var x    = textureCoordinates.X - 8f * tw;
+						var y    = textureCoordinates.Y - 8f * th;
 
-						v.TexCoords.X = 8f * tw + (x * c - y * s);
-						v.TexCoords.Y = 8f * th + (y * c + x * s);
+						textureCoordinates.X = 8f * tw + (x * c - y * s);
+						textureCoordinates.Y = 8f * th + (y * c + x * s);
 					}
 					
 					if (bsModel.Uvlock)
@@ -463,11 +467,11 @@ namespace Alex.Graphics.Models.Blocks
 							var rotY = bsModel.Y * (MathHelper.Pi / 180f);
 							var c    = MathF.Cos(rotY);
 							var s    = MathF.Sin(rotY);
-							var x    = v.TexCoords.X - 8f * tw;
-							var y    = v.TexCoords.Y - 8f * th;
+							var x    = textureCoordinates.X - 8f * tw;
+							var y    = textureCoordinates.Y - 8f * th;
 
-							v.TexCoords.X = 8f * tw + (x * c - y * s);
-							v.TexCoords.Y = 8f * th + (y * c + x * s);
+							textureCoordinates.X = 8f * tw + (x * c - y * s);
+							textureCoordinates.Y = 8f * th + (y * c + x * s);
 						}
 
 						if (bsModel.X > 0 && (blockFace != BlockFace.Up && blockFace != BlockFace.Down))
@@ -475,18 +479,20 @@ namespace Alex.Graphics.Models.Blocks
 							var rotX = bsModel.X * (MathHelper.Pi / 180f);
 							var c    = MathF.Cos(rotX);
 							var s    = MathF.Sin(rotX);
-							var x    = v.TexCoords.X - 8f * tw;
-							var y    = v.TexCoords.Y - 8f * th;
+							var x    = textureCoordinates.X - 8f * tw;
+							var y    = textureCoordinates.Y - 8f * th;
 
-							v.TexCoords.X = 8f * tw + (x * c - y * s);
-							v.TexCoords.Y = 8f * th + (y * c + x * s);
+							textureCoordinates.X = 8f * tw + (x * c - y * s);
+							textureCoordinates.Y = 8f * th + (y * c + x * s);
 						}
 					}
 					
-					v.TexCoords += uvMap.Value.TextureInfo.Position;
-					v.TexCoords *= (Vector2.One / uvMap.Value.TextureInfo.AtlasSize);
+					
+					textureCoordinates += uvMap.Value.TextureInfo.Position;
+					textureCoordinates *= (Vector2.One / uvMap.Value.TextureInfo.AtlasSize);
 				}
 
+				v.TexCoords = textureCoordinates;
 				v.Face = blockFace;
 				vertices[i] = v;
 			}
@@ -655,7 +661,7 @@ namespace Alex.Graphics.Models.Blocks
 
 						vertices = ProcessVertices(vertices, blockStateModel, element, uvMap, facing, face.Value);
 
-						RenderStage targetState = RenderStage.OpaqueFullCube;
+						RenderStage targetState = RenderStage.Opaque;
 
 						if (baseBlock.BlockMaterial.IsLiquid)
 						{
@@ -671,7 +677,7 @@ namespace Alex.Graphics.Models.Blocks
 							{
 								if (!Block.FancyGraphics && baseBlock.IsFullCube)
 								{
-									targetState = RenderStage.OpaqueFullCube;
+									targetState = RenderStage.Opaque;
 								}
 								else
 								{

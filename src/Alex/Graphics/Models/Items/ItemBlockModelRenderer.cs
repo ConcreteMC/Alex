@@ -65,14 +65,13 @@ namespace Alex.Graphics.Models.Items
 
            // var max         = _block.Model.GetBoundingBoxes(Vector3.Zero).Max(x => x.Max - x.Min);
             var rawVertices = chunkData.Vertices;
-            int count       = rawVertices.Length;
 
-            while (count > 0 && count % 3 != 0)
-            {
-                count--;
-            }
+          //  while (count > 0 && count % 3 != 0)
+           // {
+          //      count--;
+           // }
             
-            Vertices = rawVertices.Take(count).Select(
+            Vertices = rawVertices.Select(
                 x => new VertexPositionColorTexture(x.Position, x.Color, x.TexCoords)).ToArray();
 
             chunkData.Dispose();

@@ -512,7 +512,7 @@ namespace Alex.Worlds
 				args.GraphicsDevice, Block.FancyGraphics ? BlendState.AlphaBlend : BlendState.Opaque, DepthStencilState, _rasterizerState,
 				_renderSampler))
 			{
-				DrawStaged(args, null, stages.Length > 0 ? stages : RenderStages);
+				DrawCount = DrawStaged(args, null, stages.Length > 0 ? stages : RenderStages);
 			}
 		}
 		
@@ -530,9 +530,10 @@ namespace Alex.Worlds
 
 		}
 		
-		private void DrawStaged(IRenderArgs args,
+		private int DrawStaged(IRenderArgs args,
 			Effect forceEffect = null, params RenderStage[] stages)
 		{
+			int drawCount = 0;
 			var originalBlendState = args.GraphicsDevice.BlendState;
 
 			if (stages == null || stages.Length == 0)
@@ -542,7 +543,7 @@ namespace Alex.Worlds
 
 			if (CancellationToken.IsCancellationRequested || chunks == null)
 			{
-				return;
+				return drawCount;
 			}
 			
 			RenderingShaders shaders = Shaders;
@@ -595,22 +596,34 @@ namespace Alex.Worlds
 							throw new ArgumentOutOfRangeException();
 					}
 				}
-				
-				DrawChunks(args.GraphicsDevice, chunks, effect, stage);
+
+				drawCount += DrawChunks(args.GraphicsDevice, chunks, effect, stage);
 			}
 
 			args.GraphicsDevice.BlendState = originalBlendState;
+
+			return drawCount;
 		}
-		
-		private void DrawChunks(GraphicsDevice device, ChunkData[] chunks, Effect effect, RenderStage stage)
+
+		/// <summary>
+		///		The amount of calls made to DrawPrimitives in the last render call
+		/// </summary>
+		public int DrawCount { get; set; } = 0;
+		private int DrawChunks(GraphicsDevice device, ChunkData[] chunks, Effect effect, RenderStage stage)
 		{
+			int drawn = 0;
 			for (var index = 0; index < chunks.Length; index++)
 			{
 				var chunk = chunks[index];
 				if (chunk == null) continue;
 
-				chunk.Draw(device, stage, effect);
+				if (chunk.Draw(device, stage, effect))
+				{
+					drawn++;
+				}
 			}
+
+			return drawn;
 		}
 		
 		#endregion
@@ -632,6 +645,7 @@ namespace Alex.Worlds
 			}
 		}
 
+		private int _tickCounter = 0;
 		/// <inheritdoc />
 		public void OnTick()
 		{

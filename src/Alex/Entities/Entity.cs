@@ -300,11 +300,13 @@ namespace Alex.Entities
 		}
 		
 		public AnimationController AnimationController { get; }
-		public TimeSpan LifeTime => _lifeTime.Elapsed;
+		public TimeSpan LifeTime => DateTime.UtcNow - TimeOfCreation;
+		private readonly DateTime TimeOfCreation;
 		private Stopwatch _lifeTime;
 		protected ConcurrentStack<IEntityComponent> EntityComponents { get; }
 		public Entity(World level)
 		{
+			TimeOfCreation = DateTime.UtcNow;
 			EntityComponents = new ConcurrentStack<IEntityComponent>();
 			
 			_lifeTime = Stopwatch.StartNew();
@@ -814,18 +816,26 @@ namespace Alex.Entities
 			//IsFlying = data[(int) MiNET.Entities.Entity.DataFlags.fl]
 		}
 
-		public virtual void Render(IRenderArgs renderArgs)
+		/// <summary>
+		///		Renders the entity
+		/// </summary>
+		/// <param name="renderArgs"></param>
+		/// <returns>The amount of draw calls made</returns>
+		public virtual int Render(IRenderArgs renderArgs)
 		{
+			int renderCount = 0;
 			var  renderer = ModelRenderer;
 
 			if (!IsInvisible && RenderEntity && renderer != null)
 			{
-				renderer.Render(renderArgs);
+				renderCount += renderer.Render(renderArgs);
 			}
 			else if (ShowItemInHand && ItemRenderer != null && !_skipRendering)
 			{
-				ItemRenderer?.Render(renderArgs, null);
+				renderCount += ItemRenderer.Render(renderArgs, null);
 			}
+
+			return renderCount;
 		}
 
 		public virtual void Update(IUpdateArgs args)
