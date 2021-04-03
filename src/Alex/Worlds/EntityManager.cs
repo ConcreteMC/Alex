@@ -213,9 +213,10 @@ namespace Alex.Worlds
 		private void RenderNametag(IRenderArgs args, Entity entity)
 		{
 			var maxDistance = (World.ChunkManager.RenderDistance * 16f);
-			string clean = entity.NameTag;
+			var lines = entity.NameTagLines;
+		//	string clean = entity.NameTag;
 
-			if (string.IsNullOrWhiteSpace(clean))
+			if (lines == null || lines.Length == 0)
 				return;
 
 			//var halfWidth = (float)(Width * _scale);
@@ -235,11 +236,11 @@ namespace Alex.Worlds
 			//distance -= ((maxDistance) / distance);
 
 
-			Vector3 posOffset = new Vector3(0, 0f, 0);
+			Vector3 posOffset = new Vector3(0,  0.2f, 0);
 
 			//if (!entity.IsInvisible)
 			{
-				posOffset.Y += (float) (entity.Height * entity.Scale);
+				posOffset.Y += (float) ((entity.Height) * entity.Scale);
 			}
 
 			var cameraPosition = new Vector3(args.Camera.Position.X, args.Camera.Position.Y, args.Camera.Position.Z);
@@ -271,10 +272,11 @@ namespace Alex.Worlds
 			// Compute the depth and scale of the object.
 			float depth = screenSpace.Z;
 			float scale = 1.0f / depth;
-
-			foreach (var str in entity.NameTagLines)
+			var s = new Vector2(scale, scale);
+			
+			foreach (var str in lines)
 			{
-				var line = str.Trim();
+				var line = str;
 
 				if (line.Length == 0 || string.IsNullOrWhiteSpace(line))
 					continue;
@@ -289,9 +291,13 @@ namespace Alex.Worlds
 				args.SpriteBatch.FillRectangle(
 					new Rectangle(renderPosition.ToPoint(), c), _backgroundColor * opacity, depth + 0.0000001f);
 
-				Alex.Font.DrawString(
-					args.SpriteBatch, line, renderPosition, (Color) TextColor.White, FontStyle.None, layerDepth: depth,
-					scale: new Vector2(scale, scale), opacity:opacity);
+				args.SpriteBatch.DrawString(
+					Alex.Font, line, renderPosition, TextColor.White, FontStyle.None, 0f, Vector2.Zero, s, opacity,
+					SpriteEffects.None, depth);
+
+				//Alex.Font.DrawString(
+				//	args.SpriteBatch, line, renderPosition, (Color) TextColor.White, FontStyle.None, layerDepth: depth,
+				///	scale: new Vector2(scale, scale), opacity:opacity);
 			}
 		}
 

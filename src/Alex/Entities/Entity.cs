@@ -147,8 +147,10 @@ namespace Alex.Entities
 		{
 			get
 			{
-				if (_nameTagLines == null)
-					_nameTagLines = _nameTag.Split('\n').Reverse().ToArray();
+				if (_nameTagLines == null && _nameTag != null)
+				{
+					_nameTagLines = _nameTag.Split('\n').Where(x => !string.IsNullOrWhiteSpace(x)).Reverse().Select(x => x.Trim()).ToArray();
+				}
 
 				return _nameTagLines;
 			}
