@@ -78,7 +78,7 @@ namespace Alex.Gui.Elements.Context3D
 
             public void DrawContext3D(IRenderArgs args, IGuiRenderer guiRenderer)
             {
-                Entity?.Render(args);
+                Entity?.Render(args, false);
             }
         }
     }

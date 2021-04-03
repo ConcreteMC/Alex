@@ -844,14 +844,14 @@ namespace Alex.Entities
 		/// </summary>
 		/// <param name="renderArgs"></param>
 		/// <returns>The amount of draw calls made</returns>
-		public virtual int Render(IRenderArgs renderArgs)
+		public virtual int Render(IRenderArgs renderArgs, bool useCulling)
 		{
 			int renderCount = 0;
 			var  renderer = ModelRenderer;
 
 			if (!IsInvisible && RenderEntity && renderer != null)
 			{
-				renderCount += renderer.Render(renderArgs);
+				renderCount += renderer.Render(renderArgs, useCulling);
 			}
 			else if (ShowItemInHand && ItemRenderer != null && !_skipRendering)
 			{

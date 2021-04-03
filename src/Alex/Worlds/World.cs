@@ -116,7 +116,7 @@ namespace Alex.Worlds
 			Options = options;
 
 			ChunkManager = new ChunkManager(serviceProvider, graphics, this);
-			EntityManager = new EntityManager(graphics, this, networkProvider);
+			EntityManager = new EntityManager(serviceProvider, graphics, this, networkProvider);
 			Ticker = new TickManager();
 			PlayerList = new PlayerList();
 
@@ -238,7 +238,7 @@ namespace Alex.Worlds
 	            RenderStage.Animated,
 	            RenderStage.Liquid);
 
-	        Player.Render(args);
+	        Player.Render(args, Options.VideoOptions.EntityCulling.Value);
         }
 
         public void Render2D(IRenderArgs args)

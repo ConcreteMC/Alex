@@ -98,10 +98,9 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	        ChunkProcessor = chunkProcessor;
 
 	        var options = alex.Services.GetRequiredService<IOptionsProvider>().AlexOptions;
+	        
 	        options.VideoOptions.CustomSkins.Bind((value, newValue) => UseCustomEntityModels = newValue);
 	        UseCustomEntityModels = options.VideoOptions.CustomSkins.Value;
-	        
-	        
         }
 
         public  bool                  ReportUnhandled { get; set; } = true;

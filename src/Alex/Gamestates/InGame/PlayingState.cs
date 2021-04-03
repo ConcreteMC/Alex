@@ -56,7 +56,7 @@ namespace Alex.Gamestates.InGame
 			WorldProvider = worldProvider;
 			WorldProvider.Init(World);
 			
-			Alex.ParticleManager.Reset();
+			Alex.ParticleManager.Initialize(World.Camera);
 
 			WorldProvider.TitleComponent = title;
 
@@ -370,7 +370,7 @@ namespace Alex.Gamestates.InGame
 			//dir.Normalize();
 			Alex.AudioEngine.Update(gameTime, World.Camera.Position, dir);
 			
-			Alex.ParticleManager.Update(gameTime);
+			//Alex.ParticleManager.Update(gameTime);
 			
 			base.OnUpdate(gameTime);
 		}
@@ -531,7 +531,7 @@ namespace Alex.Gamestates.InGame
 			
 			World?.Render2D(args);
 			
-			Alex.ParticleManager.Draw(args.GameTime, World.Camera);
+			//Alex.ParticleManager.Draw(args.GameTime, World.Camera);
 		}
 
 		public static string GetCardinalDirection(PlayerLocation cam)
@@ -655,7 +655,7 @@ namespace Alex.Gamestates.InGame
 		protected override void OnUnload()
 		{
 			Alex.InGame = false;
-
+			Alex.ParticleManager.Hide();
 			//ThreadPool.QueueUserWorkItem(
 			//	o =>
 			//	{

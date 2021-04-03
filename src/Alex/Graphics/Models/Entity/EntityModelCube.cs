@@ -17,6 +17,7 @@ namespace Alex.Graphics.Models.Entity
 			_mirror = mirrored;
 
 			var uv     = cube.Uv ?? new EntityModelUV();
+			var rawSize = cube.Size;
 			var size   = cube.InflatedSize(inflation);
 			
 			this._textureSize = textureSize;
@@ -36,32 +37,32 @@ namespace Alex.Graphics.Models.Entity
 
 			Front =
 				GetFrontVertex(
-					uv.South.WithSize(size.X, size.Y),
+					uv.North.WithOptionalSize(rawSize.X, rawSize.Y),
 					uv.South.Size.HasValue ? Vector2.Zero : new Vector2(cube.Size.Z, cube.Size.Z));
 
 			Back = 
 				GetBackVertex(
-					uv.North.WithSize(size.X, size.Y),
+					uv.South.WithOptionalSize(rawSize.X, rawSize.Y),
 					uv.North.Size.HasValue ? Vector2.Zero : new Vector2(
 						cube.Size.Z + cube.Size.Z + cube.Size.X, cube.Size.Z));
 
 			Left =
 				GetLeftVertex(
-					uv.West.WithSize(size.Z, size.Y),
+					uv.West.WithOptionalSize(rawSize.Z, rawSize.Y),
 					uv.West.Size.HasValue ? Vector2.Zero : new Vector2(cube.Size.Z + cube.Size.X, cube.Size.Z));
 
 			Right = 
 				GetRightVertex(
-					uv.East.WithSize(size.Z, size.Y),
+					uv.East.WithOptionalSize(rawSize.Z, rawSize.Y),
 					uv.East.Size.HasValue ? Vector2.Zero : new Vector2(0, cube.Size.Z));
 
 			Top = 
 				GetTopVertex(
-					uv.Up.WithSize(size.X, size.Z), uv.Up.Size.HasValue ? Vector2.Zero : new Vector2(cube.Size.Z, 0));
+					uv.Up.WithOptionalSize(size.X, size.Z), uv.Up.Size.HasValue ? Vector2.Zero : new Vector2(cube.Size.Z, 0));
 
 			Bottom = 
 				GetBottomVertex(
-					uv.Down.WithSize(size.X, size.Z),
+					uv.Down.WithOptionalSize(rawSize.X, rawSize.Z),
 					uv.Down.Size.HasValue ? Vector2.Zero : new Vector2(cube.Size.Z + cube.Size.X, 0));
 		}
 

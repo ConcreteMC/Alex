@@ -6,6 +6,7 @@ using Alex.API.Graphics;
 using Alex.API.Resources;
 using Alex.API.Utils;
 using Alex.API.World;
+using Alex.Graphics.Camera;
 using Alex.MoLang.Runtime;
 using Alex.ResourcePackLib;
 using Microsoft.Xna.Framework;
@@ -18,7 +19,7 @@ namespace Alex.Particles
 	/// <summary>
 	///		Placeholder for particle system.
 	/// </summary>
-	public class ParticleManager : ITicked
+	public class ParticleManager : DrawableGameComponent, ITicked
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ParticleManager));
 		private ConcurrentDictionary<string, Particle> _particles =
@@ -27,15 +28,17 @@ namespace Alex.Particles
 		private SpriteBatch _spriteBatch;
 		private GraphicsDevice _graphics;
 
-		public bool Enabled { get; set; } = true;
 		public int ParticleCount { get; private set; }
 
 		private ConcurrentDictionary<string, PooledTexture2D> _sharedTextures =
 			new ConcurrentDictionary<string, PooledTexture2D>();
-		public ParticleManager(GraphicsDevice device) : base()
+		public ParticleManager(Game game, GraphicsDevice device) : base(game)
 		{
 			_spriteBatch = new SpriteBatch(device);
 			_graphics = device;
+
+			_camera = new Camera();
+			Visible = false;
 		}
 
 		public void Load(BedrockResourcePack resourcePack)
@@ -85,18 +88,27 @@ namespace Alex.Particles
 			}
 		}
 
-		public void Reset()
+		private ICamera _camera;
+		public void Initialize(ICamera camera)
 		{
+			Visible = true;
+			
+			_camera = camera;
 			foreach (var particle in _particles)
 			{
 				particle.Value.Reset();
 			}
 		}
 
-		/// <inheritdoc />
-		public void Draw(GameTime gameTime, ICamera camera)
+		public void Hide()
 		{
-			if (!Enabled)
+			Visible = false;
+		}
+
+		/// <inheritdoc />
+		public override void Draw(GameTime gameTime)
+		{
+			if (!Enabled || !Visible)
 				return;
 
 			int count = 0;
@@ -108,7 +120,7 @@ namespace Alex.Particles
 			{
 				foreach (var particle in _particles)
 				{
-					count += particle.Value.Draw(gameTime, _spriteBatch, camera);
+					count += particle.Value.Draw(gameTime, _spriteBatch, _camera);
 				}
 			}
 			finally
@@ -121,7 +133,7 @@ namespace Alex.Particles
 
 		//private double _accumulator = 0d;
 		/// <inheritdoc />
-		public void Update(GameTime gameTime)
+		public override void Update(GameTime gameTime)
 		{
 			if (!Enabled)
 				return;

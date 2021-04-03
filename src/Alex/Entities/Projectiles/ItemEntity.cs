@@ -71,7 +71,7 @@ namespace Alex.Entities.Projectiles
                 IsBlock = true;
         }
 
-        public override int Render(IRenderArgs renderArgs)
+        public override int Render(IRenderArgs renderArgs, bool useCulling)
         {
             if (!CanRender)
                 return 0;

@@ -47,6 +47,9 @@ namespace Alex.API.Data.Options
         public OptionsProperty<bool> CustomSkins { get; set; }
         
         [DataMember]
+        public OptionsProperty<bool> EntityCulling { get; set; }
+        
+        [DataMember]
         public OptionsProperty<bool> ClientSideLighting { get; set; }
         
         [DataMember]
@@ -80,6 +83,8 @@ namespace Alex.API.Data.Options
             SmoothLighting = DefineProperty(true);
             FancyGraphics = DefineProperty(true);
             Particles = DefineProperty(true);
+
+            EntityCulling = DefineProperty(false);
         }
     }
 }

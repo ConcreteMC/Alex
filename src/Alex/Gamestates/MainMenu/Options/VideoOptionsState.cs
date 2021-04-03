@@ -33,6 +33,7 @@ namespace Alex.Gamestates.MainMenu.Options
         private ToggleButton SmoothLighting     { get; set; }
         private ToggleButton GraphicsMode       { get; set; }
         private ToggleButton ParticleToggle { get; set; }
+        private ToggleButton EntityCulling { get; set; }
         
         private Dictionary<IGuiControl, string> Descriptions { get; } = new Dictionary<IGuiControl, string>();
         public VideoOptionsState(GuiPanoramaSkyBox skyBox) : base(skyBox)
@@ -93,7 +94,7 @@ namespace Alex.Gamestates.MainMenu.Options
 
                 AddGuiRow(
                     ParticleToggle = CreateToggle("Render Particles: {0}", options => options.VideoOptions.Particles),
-                    new RocketElement());
+                    EntityCulling = CreateToggle("Entity Culling: {0}", options => options.VideoOptions.EntityCulling));
 
                 /*  AddGuiRow(
                       /ClientSideLighting = CreateToggle(
@@ -160,6 +161,8 @@ namespace Alex.Gamestates.MainMenu.Options
                     $"{TextColor.Bold}Fancy graphics:{TextColor.Reset}\nEnabled: Use alpha blending for rendering.\nDisabled: May improve performance, no alpha blending.");
                 
                 Descriptions.Add(ParticleToggle, $"{TextColor.Bold}Render Particles:{TextColor.Reset}\nEnabled: Looks cooler, but may impact performance.\nDisabled: Hides all particles, may improve performance.");
+                Descriptions.Add(EntityCulling, $"{TextColor.Bold}Entity Culling:{TextColor.Reset}\nEnabled: Culls entity models, may improve performance.\nDisabled: Do not cull entities, heavily impacts performance.");
+                
             }
 
             base.OnInit(renderer);

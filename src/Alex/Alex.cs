@@ -110,7 +110,6 @@ namespace Alex
         public InputManager   InputManager   { get; private set; }
         public GuiRenderer    GuiRenderer    { get; private set; }
         public GuiManager     GuiManager     { get; private set; }
-        public GuiDebugHelper GuiDebugHelper { get; private set; }
         public ParticleManager ParticleManager { get; private set; }
 
         public GraphicsDeviceManager DeviceManager { get; }
@@ -228,7 +227,20 @@ namespace Alex
 
             InitiatePluginSystem(serviceCollection);
 
-            ConfigureServices(serviceCollection);
+            serviceCollection.TryAddSingleton<ProfileManager>();
+
+            serviceCollection.TryAddSingleton<IListStorageProvider<SavedServerEntry>, SavedServerDataProvider>();
+
+            serviceCollection.TryAddSingleton<IServerQueryProvider>(new JavaServerQueryProvider(this));
+            serviceCollection.TryAddSingleton<IPlayerProfileService, PlayerProfileService>();
+
+            serviceCollection.TryAddSingleton<IRegistryManager, RegistryManager>();
+
+            serviceCollection.TryAddSingleton<ResourceManager>();
+            serviceCollection.TryAddSingleton<ServerTypeManager>(ServerTypeManager);
+            serviceCollection.TryAddSingleton<XboxAuthService>();
+
+            serviceCollection.TryAddSingleton<BlobCache>();
 
             Services = serviceCollection.BuildServiceProvider();
 
@@ -262,13 +274,10 @@ namespace Alex
             GpuResourceManager.ReportIncorrectlyDisposedBuffers = false;
             base.OnExiting(sender, args);
         }
-
-
-        public static EventHandler<TextInputEventArgs> OnCharacterInput;
-
+        
         private void Window_TextInput(object sender, TextInputEventArgs e)
         {
-            OnCharacterInput?.Invoke(this, e);
+            GuiManager.FocusManager.OnTextInput(this, e);
         }
 
         protected override void Initialize()
@@ -290,8 +299,9 @@ namespace Alex
                     }
                 }
             }
-            base.InactiveSleepTime = TimeSpan.Zero;
-
+            //base.InactiveSleepTime = TimeSpan.Zero;
+            base.InactiveSleepTime = TimeSpan.FromSeconds(1d / 30d); //Limit framerate to 30fps when window inactive
+            
             GraphicsDevice.PresentationParameters.MultiSampleCount = 8;
 
             DeviceManager.ApplyChanges();
@@ -389,10 +399,7 @@ namespace Alex
 
             SetAntiAliasing(options.AlexOptions.VideoOptions.Antialiasing > 0, options.AlexOptions.VideoOptions.Antialiasing.Value);
 
-            GuiDebugHelper = new GuiDebugHelper(this, GuiManager);
-            Components.Add(GuiDebugHelper);
-
-            OnCharacterInput += GuiManager.FocusManager.OnTextInput;
+            Components.Add(new GuiDebugHelper(this, GuiManager));
 
             GameStateManager = new GameStateManager(this, GraphicsDevice, _spriteBatch, GuiManager);
             GameStateManager.DrawOrder = 0;
@@ -410,7 +417,7 @@ namespace Alex
             GuiManager.ScaledResolution.GuiScale = Options.AlexOptions.VideoOptions.GuiScale.Value;
             Options.AlexOptions.VideoOptions.GuiScale.Bind(GuiScaleChanged);
             
-            ParticleManager = new ParticleManager(GraphicsDevice);
+            ParticleManager = new ParticleManager(this, GraphicsDevice);
             ParticleManager.Enabled = Options.AlexOptions.VideoOptions.Particles.Value;
 
             Options.AlexOptions.VideoOptions.Particles.Bind(
@@ -418,6 +425,8 @@ namespace Alex
                 {
                     ParticleManager.Enabled = newValue;
                 });
+            
+            Components.Add(ParticleManager);
             
             //	Log.Info($"Initializing Alex...");
             ThreadPool.QueueUserWorkItem(
@@ -541,32 +550,14 @@ namespace Alex
                     }
                 });
         }
-
-        private void ConfigureServices(IServiceCollection services)
-        {
-            services.TryAddSingleton<ProfileManager>();
-
-            services.TryAddSingleton<IListStorageProvider<SavedServerEntry>, SavedServerDataProvider>();
-
-            services.TryAddSingleton<IServerQueryProvider>(new JavaServerQueryProvider(this));
-            services.TryAddSingleton<IPlayerProfileService, PlayerProfileService>();
-
-            services.TryAddSingleton<IRegistryManager, RegistryManager>();
-
-            services.TryAddSingleton<ResourceManager>();
-            services.TryAddSingleton<ServerTypeManager>(ServerTypeManager);
-            services.TryAddSingleton<XboxAuthService>();
-
-            services.TryAddSingleton<BlobCache>();
-            ; //Storage = storage;
-        }
-
+        
         protected override void UnloadContent()
         {
+            base.UnloadContent();
             //ProfileManager.SaveProfiles();
             Options.Save();
 
-            GuiDebugHelper.Dispose();
+           // GuiDebugHelper.Dispose();
 
             PluginManager.UnloadAll();
         }

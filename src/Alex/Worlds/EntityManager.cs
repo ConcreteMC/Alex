@@ -6,6 +6,7 @@ using System.Linq;
 using Alex.API;
 using Alex.API.Graphics;
 using Alex.API.Graphics.Typography;
+using Alex.API.Services;
 using Alex.API.Utils;
 using Alex.API.Utils.Vectors;
 using Alex.API.World;
@@ -13,6 +14,7 @@ using Alex.Entities;
 using Alex.Entities.BlockEntities;
 using Alex.Graphics.Models;
 using Alex.Net;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using NLog;
@@ -42,8 +44,9 @@ namespace Alex.Worlds
 		private NetworkProvider Network          { get; }
 
 		private Entity[] _rendered;
-
-		public EntityManager(GraphicsDevice device, World world, NetworkProvider networkProvider)
+		
+		private IOptionsProvider OptionsProvider { get; }
+		public EntityManager(IServiceProvider serviceProvider, GraphicsDevice device, World world, NetworkProvider networkProvider)
 		{
 			Network = networkProvider;
 			World = world;
@@ -52,6 +55,8 @@ namespace Alex.Worlds
 			EntityByUUID = new ConcurrentDictionary<MiNET.Utils.UUID, Entity>();
 			BlockEntities = new ConcurrentDictionary<BlockCoordinates, BlockEntity>();
 			_rendered = new Entity[0];
+			
+			OptionsProvider = serviceProvider.GetService<IOptionsProvider>();//.AlexOptions.VideoOptions.
 		}
 
 		private Stopwatch _sw = new Stopwatch();
@@ -151,7 +156,7 @@ namespace Alex.Worlds
 					// entity.IsRendered = true;
 					if (entity.IsRendered && !entity.IsInvisible && entity.Scale > 0f)
 					{
-						drawCount += entity.Render(args);
+						drawCount += entity.Render(args, OptionsProvider.AlexOptions.VideoOptions.EntityCulling);
 
 						renderCount++;
 					}

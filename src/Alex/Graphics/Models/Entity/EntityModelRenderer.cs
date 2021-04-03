@@ -228,7 +228,15 @@ namespace Alex.Graphics.Models.Entity
 			}
 		}
 		
-		private static RasterizerState RasterizerState = new RasterizerState()
+		private static readonly RasterizerState _rasterizerState = new RasterizerState()
+		{
+			DepthBias = 0f,
+			CullMode = CullMode.None,
+			FillMode = FillMode.Solid,
+			ScissorTestEnable = true
+		};
+		
+		private static readonly RasterizerState _rasterizerStateCulled = new RasterizerState()
 		{
 			DepthBias = 0f,
 			CullMode = CullMode.CullClockwiseFace,
@@ -241,7 +249,7 @@ namespace Alex.Graphics.Models.Entity
 		/// </summary>
 		/// <param name="args"></param>
 		/// <returns>The amount of GraphicsDevice.Draw calls made</returns>
-		public virtual int Render(IRenderArgs args)
+		public virtual int Render(IRenderArgs args, bool useCulling)
 		{
 			if (Bones == null)
 			{
@@ -256,7 +264,7 @@ namespace Alex.Graphics.Models.Entity
 			try
 			{
 				args.GraphicsDevice.BlendState = BlendState.Opaque;
-				args.GraphicsDevice.RasterizerState = RasterizerState;
+				args.GraphicsDevice.RasterizerState = useCulling ? _rasterizerStateCulled : _rasterizerState;
 
 				args.GraphicsDevice.SetVertexBuffer(VertexBuffer);
 

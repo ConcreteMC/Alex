@@ -424,7 +424,7 @@ namespace Alex.Gamestates.Debugging
 		/// <inheritdoc />
 		public override void DrawContext3D(IRenderArgs args, IGuiRenderer guiRenderer)
 		{
-			_currentRenderer?.Render(args);
+			_currentRenderer?.Render(args, false);
 		}
 	}
 

@@ -107,7 +107,7 @@ namespace Alex.ResourcePackLib.Json.Models.Entities
 		/// <summary>
 		/// The face maps this many texels from the uv origin. If not specified, the box dimensions are used instead.
 		/// </summary>
-		[JsonProperty("uv_size"), JsonConverter(typeof(Vector2NullableConverter))]
+		[JsonProperty("uv_size")]
 		public Vector2? Size { get; set; } = null;
 
 		public EntityModelUVData Offset(Vector2 amount)
@@ -123,6 +123,15 @@ namespace Alex.ResourcePackLib.Json.Models.Entities
 		public EntityModelUVData WithSize(float x, float y)
 		{
 			return new EntityModelUVData() {Origin = Origin, Size = new Vector2(x, y)};
+		}
+		
+		public EntityModelUVData WithOptionalSize(float x, float y)
+		{
+			return new EntityModelUVData()
+			{
+				Origin = Origin, 
+				Size = Size.GetValueOrDefault(new Vector2(x, y))
+			};
 		}
 	}
 }
