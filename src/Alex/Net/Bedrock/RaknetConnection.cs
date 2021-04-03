@@ -200,11 +200,11 @@ namespace Alex.Net.Bedrock
 
 			if (Environment.OSVersion.Platform != PlatformID.MacOSX)
 			{
-				listener.Client.ReceiveBufferSize = 1600*64;
-				//listener.Client.ReceiveBufferSize = int.MaxValue;
+				//listener.Client.ReceiveBufferSize = 1600*64;
+				listener.Client.ReceiveBufferSize = int.MaxValue;
 				//listener.Ttl = Int16.MaxValue;
-				listener.Client.SendBufferSize = 1600*64;
-				//listener.Client.SendBufferSize = int.MaxValue;
+				//listener.Client.SendBufferSize = 1600*64;
+				listener.Client.SendBufferSize = int.MaxValue;
 			}
 
 			listener.Client.Blocking = true;
@@ -264,7 +264,7 @@ namespace Alex.Net.Bedrock
 		}
 
 
-		private async void ReceiveCallback(object o)
+		private void ReceiveCallback(object o)
 		{
 			//using (var stream = new NetworkStream(_listener.Client))
 			{

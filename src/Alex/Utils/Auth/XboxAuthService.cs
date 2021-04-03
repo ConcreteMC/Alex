@@ -53,10 +53,8 @@ namespace Alex.Utils.Auth
 		
 		//private  ECDsa   EcDsa  { get; }
 
-		private CookieContainer   _cookieContainer;
-		private HttpClientHandler _clienthandler;
 		private readonly HttpClient        _httpClient;
-		private AsymmetricCipherKeyPair _authKeyPair;
+		private readonly AsymmetricCipherKeyPair _authKeyPair;
 		public XboxAuthService()
 		{
 			MinecraftKeyPair = CryptoUtils.GenerateClientKey();
@@ -67,15 +65,15 @@ namespace Alex.Utils.Auth
 			Y = UrlSafe(pubAsyKey.Q.AffineYCoord.GetEncoded());
 			//EcDsa = ConvertToSingKeyFormat(GenerateKeys());
 			
-			_cookieContainer = new CookieContainer();
+			var cookieContainer = new CookieContainer();
 			
-			_clienthandler = new HttpClientHandler
+			var clienthandler = new HttpClientHandler
 			{
 				AllowAutoRedirect = true, 
 				UseCookies = true, 
-				CookieContainer = _cookieContainer
+				CookieContainer = cookieContainer
 			};
-			_httpClient = new HttpClient(_clienthandler);
+			_httpClient = new HttpClient(clienthandler);
 			_httpClient.DefaultRequestHeaders.Add("Cache-Control", "no-cache");
 			_httpClient.DefaultRequestHeaders.Add("x-xbl-contract-version", "1");
 		}
