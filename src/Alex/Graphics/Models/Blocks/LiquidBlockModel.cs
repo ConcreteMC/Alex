@@ -234,7 +234,8 @@ namespace Alex.Graphics.Models.Blocks
 				for (var index = 0; index < vertices.Length; index++)
 				{
 					var vert = vertices[index];
-
+					vert.TexCoords /= 16f;
+					
 					if (vert.Position.Y > start.Y)
 					{
 						const float modifier = 2f;
@@ -293,8 +294,8 @@ namespace Alex.Graphics.Models.Blocks
 						blockCoordinates, vert.Position, vert.Face,
 						new Vector4(
 							vert.TexCoords.X, vert.TexCoords.Y, 
-							map.TextureInfo.Animated ? map.TextureInfo.Width : 1,
-							map.TextureInfo.Animated ?  map.TextureInfo.Height: 1), vert.Color, blockLight, skyLight,
+							 map.TextureInfo.Width,
+							map.TextureInfo.Height), vert.Color, blockLight, skyLight,
 						RenderStage.Liquid);
 				}
 			}

@@ -115,11 +115,6 @@ namespace Alex.Worlds
 			TranslucentEffect.Texture = TransparentEffect.Texture = OpaqueEffect.Texture = texture;
 		}
 
-		public void SetAnimatedTextures(Texture2D texture)
-		{
-			AnimatedTranslucentEffect.Texture = AnimatedEffect.Texture = texture;
-		}
-
 		public void NextFrame()
 		{
 			AnimatedEffect.Frame++;

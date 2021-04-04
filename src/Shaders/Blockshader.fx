@@ -67,11 +67,14 @@ VertexToPixel VertexShaderFunction(float4 inPosition : POSITION, float4 inNormal
     Output.Color = inColor;
     Output.WorldPos = worldPos;
 
-    float totalFrames = inTexCoords.w / inTexCoords.z;
-    float index = ElapsedTime % totalFrames;
+    float totalFrames = floor(inTexCoords.w / inTexCoords.z);
+    float index = floor(ElapsedTime % totalFrames);
 
     Output.TexCoords = float2(inTexCoords.x, inTexCoords.y);
-    Output.TexCoords += float2(0, (inTexCoords.w / totalFrames) * index);
+    if (ElapsedTime > 0 && totalFrames > 1){
+        Output.TexCoords += float2(0, inTexCoords.z * index);
+    }
+
     Output.TexCoords *= UvScale;
     //if (Output.TexCoords.y >= inTexCoords.w){
         

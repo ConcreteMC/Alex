@@ -37,13 +37,9 @@ namespace Alex.Graphics
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(SPWorldProvider));
 
 	    private Dictionary<ResourceLocation,  Utils.TextureInfo> _atlasLocations = new Dictionary<ResourceLocation,  Utils.TextureInfo>();
-	    private Dictionary<ResourceLocation,  Utils.TextureInfo> _animatedAtlasLocations = new Dictionary<ResourceLocation,  Utils.TextureInfo>();
-	    
-	    private PooledTexture2D[] _frames;
 	    private Texture2D _stillFrame;
+	    
         public Vector2 AtlasSize { get; private set; }
-        public Vector2 AnimatedAtlasSize { get; private set; }
-        
         public AtlasGenerator()
 	    {
 
@@ -52,10 +48,8 @@ namespace Alex.Graphics
 	    public void Reset()
 	    {
 		    _atlasLocations = new Dictionary<ResourceLocation,  Utils.TextureInfo>();
-		    _animatedAtlasLocations = new Dictionary<ResourceLocation,  Utils.TextureInfo>();
 
 		    AtlasSize = default;
-		    _frames = default;
 		    _stillFrame = default;
 	    }
 
@@ -63,17 +57,6 @@ namespace Alex.Graphics
 		    Dictionary<ResourceLocation, ImageEntry> textures,
 		    IProgressReceiver progressReceiver)
 	    {
-		    /*List<ResourceLocation> texturePaths = new List<ResourceLocation>();
-		    foreach (var model in resourcePack.BlockModels)
-		    {
-			    foreach (var texture in model.Value.Textures)
-			    {
-				    if (!texturePaths.Contains(texture.Value))
-					    texturePaths.Add(texture.Value);
-			    }
-			   // model.Value.Textures
-		    }*/
-
 		    int done  = 0;
 		//    var items = resourcePack.Textures.Where(x => texturePaths.Contains(x.Key)).ToArray();
 		var texturePaths = resourcePack.Textures.Where(x => x.Key.Path.Contains("block/")).ToArray();
@@ -202,8 +185,8 @@ namespace Alex.Graphics
 					    new Utils.TextureInfo(
 						    new Vector2(img.Width, img.Height),
 						    new Vector2(node.Bounds.Location.X, node.Bounds.Location.Y),
-						    node.Bounds.Size.Width / 16, 
-						    node.Bounds.Size.Height / 16, 
+						    node.Bounds.Size.Width, 
+						    node.Bounds.Size.Height, 
 						    node.Bounds.Size.Height != node.Bounds.Size.Width,
 						    node.Bounds.Width / TextureWidth,
 						    node.Bounds.Height / TextureHeight));
@@ -227,14 +210,8 @@ namespace Alex.Graphics
 
 	    private PooledTexture2D GetMipMappedTexture2D(GraphicsDevice device, Image<Rgba32> image, string name, bool save = false)
 	    {
-		    //device.VertexSamplerStates.
 		    PooledTexture2D texture = GpuResourceManager.GetTexture2D(this, device, image.Width, image.Height, true, SurfaceFormat.Color);
 
-		 //   if (!Directory.Exists("atlas"))
-		//	    Directory.CreateDirectory("atlas");
-		    // Directory.CreateDirectory(name);
-		    // var resampler = new BicubicResampler();
-		    // var encoder = new PngEncoder();
 		    for (int level = 0; level < Alex.MipMapLevel; level++)
 		    {
 			    int mipWidth  = (int) System.Math.Max(1, image.Width >> level);
@@ -278,10 +255,7 @@ namespace Alex.Graphics
 
 		    return texture;
 	    }
-
-	    private const int Spacing     = 0;
-	    private       int _spacingHalf = Spacing > 0 ? Spacing / 2 : 0;
-
+	    
 	    public int TextureWidth { get; private set; } = 16;
 	    public int TextureHeight { get; private set; }= 16;
 
@@ -312,23 +286,12 @@ namespace Alex.Graphics
             if (build) GenerateAtlas(device, loadedTextures, progressReceiver);
 		}
 
-
-		public int GetFrameCount()
-		{
-			return _frames.Length;
-		}
-
-		public Texture2D GetStillAtlas()
+        public Texture2D GetStillAtlas()
 		{
 			return _stillFrame;
 		}
-		
-		public Texture2D GetAtlas(int frame)
-		{
-			return _stillFrame;// _frames[frame % _frames.Length];
-        }
 
-		public  Utils.TextureInfo GetAtlasLocation(
+        public  Utils.TextureInfo GetAtlasLocation(
 			ResourceLocation file)
 		{
 			if (_atlasLocations.TryGetValue(file, out var atlasInfo))

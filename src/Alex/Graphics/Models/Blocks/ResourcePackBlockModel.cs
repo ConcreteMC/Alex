@@ -411,7 +411,7 @@ namespace Alex.Graphics.Models.Blocks
 			{
 				var v = vertices[i];
 
-				var textureCoordinates = v.TexCoords;
+				var textureCoordinates = v.TexCoords / 16f;
 				
 				v.Position /= 16f;
 				v.Position = FixRotation(v.Position, element);
@@ -487,11 +487,10 @@ namespace Alex.Graphics.Models.Blocks
 						}
 					}
 					
-					
 					textureCoordinates += uvMap.Value.TextureInfo.Position;
 				//	textureCoordinates *= (Vector2.One / uvMap.Value.TextureInfo.AtlasSize);
 				}
-
+				
 				v.TexCoords = textureCoordinates;
 				v.Face = blockFace;
 				vertices[i] = v;
@@ -706,8 +705,8 @@ namespace Alex.Graphics.Models.Blocks
 								blockCoordinates, vertex.Position + position + positionOffset, vertex.Face,
 								new Vector4(
 									vertex.TexCoords.X, vertex.TexCoords.Y,
-									uvMap.TextureInfo.Animated ? uvMap.TextureInfo.Width : 1,
-									uvMap.TextureInfo.Animated ? uvMap.TextureInfo.Height: 1), vertex.Color, blockLight, skyLight,
+									 uvMap.TextureInfo.Width,
+									uvMap.TextureInfo.Height), vertex.Color, blockLight, skyLight,
 								targetState);
 						}
 					}
