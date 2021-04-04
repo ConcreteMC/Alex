@@ -255,6 +255,7 @@ namespace Alex.Networking.Java.Packets
 			
 			Register(ConnectionState.Play, 0x56, () => EntityTeleport.CreateObject());
 			Register(ConnectionState.Play, 0x58, () => EntityPropertiesPacket.CreateObject());
+			Register(ConnectionState.Play, 0x59, () => EntityEffectPacket.CreateObject());
 		}
 		
 		public static string GetPlayPacketName(int id)

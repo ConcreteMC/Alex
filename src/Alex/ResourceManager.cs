@@ -26,6 +26,7 @@ using Alex.Graphics.Models.Blocks;
 using Alex.Gui;
 using Alex.Items;
 using Alex.Networking.Java;
+using Alex.Networking.Java.Packets.Play;
 using Alex.ResourcePackLib;
 using Alex.ResourcePackLib.Generic;
 using Alex.ResourcePackLib.IO;
@@ -313,6 +314,10 @@ namespace Alex
 	        Log.Info($"Loading registries...");
 	        progressReceiver?.UpdateProgress(0, "Loading registries...");
 	        Registries = JsonConvert.DeserializeObject<Registries>(ReadStringResource("Alex.Resources.registries.json"));
+	        ParticlePacket.RegistryLookup = particleId =>
+		      Registries.Particles.Entries.FirstOrDefault(
+			        x => x.Value.ProtocolId == particleId).Key; 
+	        
 	        progressReceiver?.UpdateProgress(100, "Loading registries...");
 	        
 			string defaultResources;

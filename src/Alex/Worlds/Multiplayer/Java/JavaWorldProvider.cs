@@ -22,6 +22,7 @@ using Alex.API.World;
 using Alex.Blocks;
 using Alex.Entities;
 using Alex.Entities.BlockEntities;
+using Alex.Entities.Effects;
 using Alex.Entities.Generic;
 using Alex.Entities.Passive;
 using Alex.Entities.Projectiles;
@@ -619,227 +620,326 @@ namespace Alex.Worlds.Multiplayer.Java
 
 		void IPacketHandler.HandlePlay(Packet packet)
 		{
-			if (packet is KeepAlivePacket keepAlive)
+			switch (packet)
 			{
-				HandleKeepAlivePacket(keepAlive);
-			}
-			else if (packet is PlayerPositionAndLookPacket playerPos)
-			{
-				HandlePlayerPositionAndLookPacket(playerPos);
-			}
-			else if (packet is ChunkDataPacket chunk)
-			{
-				HandleChunkData(chunk);
-			}
-			else if (packet is UpdateLightPacket updateLight)
-			{
-				HandleUpdateLightPacket(updateLight);
-			}
-			else if (packet is JoinGamePacket joinGame)
-			{
-				HandleJoinGamePacket(joinGame);
-			}
-			else if (packet is UnloadChunk unloadChunk)
-			{
-				HandleUnloadChunk(unloadChunk);
-			}
-			else if (packet is ChatMessagePacket chatMessage)
-			{
-				HandleChatMessagePacket(chatMessage);
-			}
-			else if (packet is TimeUpdatePacket timeUpdate)
-			{
-				HandleTimeUpdatePacket(timeUpdate);
-			}
-			else if (packet is PlayerAbilitiesPacket abilitiesPacket)
-			{
-				HandlePlayerAbilitiesPacket(abilitiesPacket);
-			}
-			else if (packet is EntityPropertiesPacket entityProperties)
-			{
-				HandleEntityPropertiesPacket(entityProperties);
-			}
-			else if (packet is EntityTeleport teleport)
-			{
-				HandleEntityTeleport(teleport);
-			}
-			else if (packet is SpawnLivingEntity spawnMob)
-			{
-				HandleSpawnMob(spawnMob);
-			}
-			else if (packet is SpawnEntity spawnEntity)
-			{
-				HandleSpawnEntity(spawnEntity);
-			}
-			else if (packet is EntityLook look)
-			{
-				HandleEntityLook(look);
-			}
-			else if (packet is EntityRelativeMove relative)
-			{
-				HandleEntityRelativeMove(relative);
-			}
-			else if (packet is EntityLookAndRelativeMove relativeLookAndMove)
-			{
-				HandleEntityLookAndRelativeMove(relativeLookAndMove);
-			}
-			else if (packet is PlayerListItemPacket playerList)
-			{
-				HandlePlayerListItemPacket(playerList);
-			}
-			else if (packet is SpawnPlayerPacket spawnPlayerPacket)
-			{
-				HandleSpawnPlayerPacket(spawnPlayerPacket);
-			}
-			else if (packet is DestroyEntitiesPacket destroy)
-			{
-				HandleDestroyEntitiesPacket(destroy);
-			}
-			else if (packet is EntityHeadLook headlook)
-			{
-				HandleEntityHeadLook(headlook);
-			}
-			else if (packet is FacePlayerPacket facePlayerPacket)
-			{
-				HandleFacePlayer(facePlayerPacket);
-			}
-			else if (packet is EntityVelocity velocity)
-			{
-				HandleEntityVelocity(velocity);
-			}
-			else if (packet is WindowItems itemsPacket)
-			{
-				HandleWindowItems(itemsPacket);
-			}
-			else if (packet is SetSlot setSlotPacket)
-			{
-				HandleSetSlot(setSlotPacket);
-			}
-			else if (packet is HeldItemChangePacket pack)
-			{
-				HandleHeldItemChangePacket(pack);
-			}
-			else if (packet is EntityStatusPacket entityStatusPacket)
-			{
-				HandleEntityStatusPacket(entityStatusPacket);
-			}
-			else if (packet is BlockChangePacket blockChangePacket)
-			{
-				HandleBlockChangePacket(blockChangePacket);
-			}
-			else if (packet is MultiBlockChange multiBlock)
-			{
-				HandleMultiBlockChange(multiBlock);
-			}
-			else if (packet is TabCompleteClientBound tabComplete)
-			{
-				HandleTabCompleteClientBound(tabComplete);
-			}
-			else if (packet is ChangeGameStatePacket p)
-			{
-				HandleChangeGameStatePacket(p);
-			}
-			else if (packet is EntityMetadataPacket entityMetadata)
-			{
-				HandleEntityMetadataPacket(entityMetadata);
-			}
-			else if (packet is CombatEventPacket combatEventPacket)
-			{
-				HandleCombatEventPacket(combatEventPacket);
-			}
-			else if (packet is EntityEquipmentPacket entityEquipmentPacket)
-			{
-				HandleEntityEquipmentPacket(entityEquipmentPacket);
-			}
-			else if (packet is RespawnPacket respawnPacket)
-			{
-				HandleRespawnPacket(respawnPacket);
-			}
-			else if (packet is TitlePacket titlePacket)
-			{
-				HandleTitlePacket(titlePacket);
-			}
-			else if (packet is UpdateHealthPacket healthPacket)
-			{
-				HandleUpdateHealthPacket(healthPacket);
-			}
-			else if (packet is DisconnectPacket disconnectPacket)
-			{
-				HandleDisconnectPacket(disconnectPacket);
-			}
-			else if (packet is EntityAnimationPacket animationPacket)
-			{
-				HandleAnimationPacket(animationPacket);
-			}
-			else if (packet is OpenWindowPacket openWindowPacket)
-			{
-				HandleOpenWindowPacket(openWindowPacket);
-			}
-			else if (packet is CloseWindowPacket closeWindowPacket)
-			{
-				HandleCloseWindowPacket(closeWindowPacket);
-			}
-			else if (packet is WindowConfirmationPacket confirmationPacket)
-			{
-				HandleWindowConfirmationPacket(confirmationPacket);
-			}
-			else if (packet is SpawnPositionPacket spawnPositionPacket)
-			{
-				HandleSpawnPositionPacket(spawnPositionPacket);
-			}
-			else if (packet is UpdateViewPositionPacket updateViewPositionPacket)
-			{
-				HandleUpdateViewPositionPacket(updateViewPositionPacket);
-			}
-			else if (packet is UpdateViewDistancePacket viewDistancePacket)
-			{
-				HandleUpdateViewDistancePacket(viewDistancePacket);
-			}
-			else if (packet is BlockEntityDataPacket blockEntityDataPacket)
-			{
-				HandleBlockEntityData(blockEntityDataPacket);
-			}
-			else if (packet is BlockActionPacket blockActionPacket)
-			{
-				HandleBlockAction(blockActionPacket);
-			}
-			else if (packet is AcknowledgePlayerDiggingPacket diggingPacket)
-			{
-				HandleAcknowledgePlayerDiggingPacket(diggingPacket);
-			}
-			else if (packet is DisplayScoreboardPacket displayScoreboardPacket)
-			{
-				HandleDisplayScoreboardPacket(displayScoreboardPacket);
-			}
-			else if (packet is ScoreboardObjectivePacket scoreboardObjectivePacket)
-			{
-				HandleScoreboardObjectivePacket(scoreboardObjectivePacket);
-			}
-			else if (packet is UpdateScorePacket updateScorePacket)
-			{
-				HandleUpdateScorePacket(updateScorePacket);
-			}
-			else if (packet is TeamsPacket teamsPacket)
-			{
-				HandleTeamsPacket(teamsPacket);
-			}
-			else if (packet is SoundEffectPacket soundEffectPacket)
-			{
-				HandleSoundEffectPacket(soundEffectPacket);
-			}
-			else if (packet is ParticlePacket particlePacket)
-			{
-				HandleParticlePacket(particlePacket);
-			}
-			else
-			{
-				if (UnhandledPackets.TryAdd(packet.PacketId, packet.GetType()))
+				case KeepAlivePacket keepAlive:
+					HandleKeepAlivePacket(keepAlive);
+
+					break;
+
+				case PlayerPositionAndLookPacket playerPos:
+					HandlePlayerPositionAndLookPacket(playerPos);
+
+					break;
+
+				case ChunkDataPacket chunk:
+					HandleChunkData(chunk);
+
+					break;
+
+				case UpdateLightPacket updateLight:
+					HandleUpdateLightPacket(updateLight);
+
+					break;
+
+				case JoinGamePacket joinGame:
+					HandleJoinGamePacket(joinGame);
+
+					break;
+
+				case UnloadChunk unloadChunk:
+					HandleUnloadChunk(unloadChunk);
+
+					break;
+
+				case ChatMessagePacket chatMessage:
+					HandleChatMessagePacket(chatMessage);
+
+					break;
+
+				case TimeUpdatePacket timeUpdate:
+					HandleTimeUpdatePacket(timeUpdate);
+
+					break;
+
+				case PlayerAbilitiesPacket abilitiesPacket:
+					HandlePlayerAbilitiesPacket(abilitiesPacket);
+
+					break;
+
+				case EntityPropertiesPacket entityProperties:
+					HandleEntityPropertiesPacket(entityProperties);
+
+					break;
+
+				case EntityTeleport teleport:
+					HandleEntityTeleport(teleport);
+
+					break;
+
+				case SpawnLivingEntity spawnMob:
+					HandleSpawnMob(spawnMob);
+
+					break;
+
+				case SpawnEntity spawnEntity:
+					HandleSpawnEntity(spawnEntity);
+
+					break;
+
+				case EntityLook look:
+					HandleEntityLook(look);
+
+					break;
+
+				case EntityRelativeMove relative:
+					HandleEntityRelativeMove(relative);
+
+					break;
+
+				case EntityLookAndRelativeMove relativeLookAndMove:
+					HandleEntityLookAndRelativeMove(relativeLookAndMove);
+
+					break;
+
+				case PlayerListItemPacket playerList:
+					HandlePlayerListItemPacket(playerList);
+
+					break;
+
+				case SpawnPlayerPacket spawnPlayerPacket:
+					HandleSpawnPlayerPacket(spawnPlayerPacket);
+
+					break;
+
+				case DestroyEntitiesPacket destroy:
+					HandleDestroyEntitiesPacket(destroy);
+
+					break;
+
+				case EntityHeadLook headlook:
+					HandleEntityHeadLook(headlook);
+
+					break;
+
+				case FacePlayerPacket facePlayerPacket:
+					HandleFacePlayer(facePlayerPacket);
+
+					break;
+
+				case EntityVelocity velocity:
+					HandleEntityVelocity(velocity);
+
+					break;
+
+				case WindowItems itemsPacket:
+					HandleWindowItems(itemsPacket);
+
+					break;
+
+				case SetSlot setSlotPacket:
+					HandleSetSlot(setSlotPacket);
+
+					break;
+
+				case HeldItemChangePacket pack:
+					HandleHeldItemChangePacket(pack);
+
+					break;
+
+				case EntityStatusPacket entityStatusPacket:
+					HandleEntityStatusPacket(entityStatusPacket);
+
+					break;
+
+				case BlockChangePacket blockChangePacket:
+					HandleBlockChangePacket(blockChangePacket);
+
+					break;
+
+				case MultiBlockChange multiBlock:
+					HandleMultiBlockChange(multiBlock);
+
+					break;
+
+				case TabCompleteClientBound tabComplete:
+					HandleTabCompleteClientBound(tabComplete);
+
+					break;
+
+				case ChangeGameStatePacket p:
+					HandleChangeGameStatePacket(p);
+
+					break;
+
+				case EntityMetadataPacket entityMetadata:
+					HandleEntityMetadataPacket(entityMetadata);
+
+					break;
+
+				case CombatEventPacket combatEventPacket:
+					HandleCombatEventPacket(combatEventPacket);
+
+					break;
+
+				case EntityEquipmentPacket entityEquipmentPacket:
+					HandleEntityEquipmentPacket(entityEquipmentPacket);
+
+					break;
+
+				case RespawnPacket respawnPacket:
+					HandleRespawnPacket(respawnPacket);
+
+					break;
+
+				case TitlePacket titlePacket:
+					HandleTitlePacket(titlePacket);
+
+					break;
+
+				case UpdateHealthPacket healthPacket:
+					HandleUpdateHealthPacket(healthPacket);
+
+					break;
+
+				case DisconnectPacket disconnectPacket:
+					HandleDisconnectPacket(disconnectPacket);
+
+					break;
+
+				case EntityAnimationPacket animationPacket:
+					HandleAnimationPacket(animationPacket);
+
+					break;
+
+				case OpenWindowPacket openWindowPacket:
+					HandleOpenWindowPacket(openWindowPacket);
+
+					break;
+
+				case CloseWindowPacket closeWindowPacket:
+					HandleCloseWindowPacket(closeWindowPacket);
+
+					break;
+
+				case WindowConfirmationPacket confirmationPacket:
+					HandleWindowConfirmationPacket(confirmationPacket);
+
+					break;
+
+				case SpawnPositionPacket spawnPositionPacket:
+					HandleSpawnPositionPacket(spawnPositionPacket);
+
+					break;
+
+				case UpdateViewPositionPacket updateViewPositionPacket:
+					HandleUpdateViewPositionPacket(updateViewPositionPacket);
+
+					break;
+
+				case UpdateViewDistancePacket viewDistancePacket:
+					HandleUpdateViewDistancePacket(viewDistancePacket);
+
+					break;
+
+				case BlockEntityDataPacket blockEntityDataPacket:
+					HandleBlockEntityData(blockEntityDataPacket);
+
+					break;
+
+				case BlockActionPacket blockActionPacket:
+					HandleBlockAction(blockActionPacket);
+
+					break;
+
+				case AcknowledgePlayerDiggingPacket diggingPacket:
+					HandleAcknowledgePlayerDiggingPacket(diggingPacket);
+
+					break;
+
+				case DisplayScoreboardPacket displayScoreboardPacket:
+					HandleDisplayScoreboardPacket(displayScoreboardPacket);
+
+					break;
+
+				case ScoreboardObjectivePacket scoreboardObjectivePacket:
+					HandleScoreboardObjectivePacket(scoreboardObjectivePacket);
+
+					break;
+
+				case UpdateScorePacket updateScorePacket:
+					HandleUpdateScorePacket(updateScorePacket);
+
+					break;
+
+				case TeamsPacket teamsPacket:
+					HandleTeamsPacket(teamsPacket);
+
+					break;
+
+				case SoundEffectPacket soundEffectPacket:
+					HandleSoundEffectPacket(soundEffectPacket);
+
+					break;
+
+				case ParticlePacket particlePacket:
+					HandleParticlePacket(particlePacket);
+
+					break;
+
+				case EntityEffectPacket effectPacket:
+					HandleEntityEffectPacket(effectPacket);
+
+					break;
+
+				default:
 				{
-					Log.Warn($"Unhandled packet: 0x{packet.PacketId:x2} - {packet.ToString()}");
+					if (UnhandledPackets.TryAdd(packet.PacketId, packet.GetType()))
+					{
+						Log.Warn($"Unhandled packet: 0x{packet.PacketId:x2} - {packet.ToString()}");
+					}
+
+					break;
 				}
 			}
 		}
 
+		private void HandleEntityEffectPacket(EntityEffectPacket packet)
+		{
+			if (World.TryGetEntity(packet.EntityId, out var entity))
+			{
+				Effect effect = null;
+
+				switch (packet.EffectId)
+				{
+					case 1:
+						effect = new SpeedEffect();
+						break;
+					//case 2:
+						//effect = new 
+					//	break;
+					case 8:
+						effect = new JumpBoostEffect();
+						break;
+					case 16:
+						effect = new NightVisionEffect();
+						break;
+					default:
+						Log.Warn($"Missing effect implementation: {packet.EffectId}");
+						break;
+				}
+
+				if (effect != null)
+				{
+					effect.Duration = packet.Duration;
+					effect.Level = packet.Amplifier;
+					effect.Particles = (packet.Flags & 0x02) != 0;
+					
+					entity.AddOrUpdateEffect(effect);
+				}
+			}
+		}
+		
 		private float RandomParticleOffset()
 		{
 			return 1f - (FastRandom.Instance.NextFloat() * 2f);
@@ -854,15 +954,35 @@ namespace Alex.Worlds.Multiplayer.Java
 			if (particleType.Key != null)
 			{
 				var type = ParticleConversion.ConvertToBedrock(particleType.Key);
+				/*int data = 0;
 
+				if (packet.Color.HasValue)
+				{
+					var color = packet.Color.Value;
+					byte r = color.R;
+					byte g = color.G;
+					byte b = color.B;
+					byte a = color.A;
+					data = ((a & 0xff) << 24) | ((r & 0xff) << 16) | ((g & 0xff) << 8) | (b & 0xff);
+				}*/
+				
 				for (int i = 0; i < packet.ParticleCount; i++)
 				{
-					if (!Alex.ParticleManager.SpawnParticle(
+					if (Alex.ParticleManager.SpawnParticle(
 						type,
 						new Vector3(
 							(float) ((float) packet.X + (packet.OffsetX * RandomParticleOffset())),
 							(float) ((float) packet.Y + (packet.OffsetY * RandomParticleOffset())),
-							(float) ((float) packet.Z + (packet.OffsetZ * RandomParticleOffset())))))
+							(float) ((float) packet.Z + (packet.OffsetZ * RandomParticleOffset()))), out var particleInstance))
+					{
+						if (packet.Color.HasValue)
+						{
+							particleInstance.Color = packet.Color.Value;
+						}
+
+						particleInstance.Scale = packet.Scale;
+					}
+					else
 					{
 						Log.Warn(
 							$"Could not spawn particle with type: {packet.ParticleId} (Java: {particleType.Key} | Bedrock: {type})");

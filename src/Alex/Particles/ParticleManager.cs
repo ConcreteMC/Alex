@@ -401,13 +401,20 @@ namespace Alex.Particles
 		
 		public bool SpawnParticle(string name, Vector3 position, int data = 0, ParticleDataMode dataMode = ParticleDataMode.None)
 		{
+			return SpawnParticle(name, position, out _, data, dataMode);
+		}
+		
+		public bool SpawnParticle(string name, Vector3 position, out ParticleInstance instance, int data = 0, ParticleDataMode dataMode = ParticleDataMode.None)
+		{
+			instance = null;
+			
 			if (!Enabled)
 				return true;
 			
 			if (_particles.TryGetValue(name, out var p))
 			{
-				p.Spawn(position, data, dataMode);
-				return true;
+				return p.Spawn(position, data, dataMode, out instance);
+				//return true;
 			}
 
 			return false;

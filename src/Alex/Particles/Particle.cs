@@ -48,16 +48,17 @@ namespace Alex.Particles
 			_instances.Clear();
 		}
 
-		public bool Spawn(Vector3 position, int data, ParticleDataMode dataMode)
+		public bool Spawn(Vector3 position, int data, ParticleDataMode dataMode, out ParticleInstance instance)
 		{
 			if (AppearanceComponent == null)
 			{
+				instance = null;
 				return false;
 			}
 
 			MoLangRuntime runtime = new MoLangRuntime();
 
-			ParticleInstance instance = new ParticleInstance(this)
+			instance = new ParticleInstance(this)
 			{
 				Position = position,
 				//Lifetime = 10,
@@ -183,6 +184,9 @@ namespace Alex.Particles
 				float scale =  1f - (Vector3.Distance(camera.Position, pos) / camera.FarDistance);// 1.0f / depth;
 				if (scale <= 0f)
 					continue;
+
+				if (scale > 1f)
+					scale = 1f;
 				
 				Vector2 textPosition;
 				textPosition.X = screenSpace.X;
@@ -231,7 +235,7 @@ namespace Alex.Particles
 		public Vector2 UvPosition { get; set; } = Vector2.Zero;
 		public Vector2 UvSize { get; set; } = Vector2.One;
 		public Vector2 Size { get; set; } = Vector2.One;
-		public int Scale { get; private set; } = 1;
+		public float Scale { get; set; } = 1f;
 		public Color Color { get; set; } = Color.White;
 		public MoLangRuntime Runtime { get; set; }
 		
