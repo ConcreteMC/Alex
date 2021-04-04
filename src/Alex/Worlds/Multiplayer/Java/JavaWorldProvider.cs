@@ -985,7 +985,7 @@ namespace Alex.Worlds.Multiplayer.Java
 					}
 					else
 					{
-						Log.Warn(
+						Log.Debug(
 							$"Could not spawn particle with type: {packet.ParticleId} (Java: {particleType.Key} | Bedrock: {type})");
 
 						break;
@@ -994,7 +994,7 @@ namespace Alex.Worlds.Multiplayer.Java
 			}
 			else
 			{
-				Log.Warn($"Could not find particle with protocolid: {packet.ParticleId}");
+				Log.Debug($"Could not find particle with protocolid: {packet.ParticleId}");
 			}
 		}
 		
@@ -1710,14 +1710,15 @@ namespace Alex.Worlds.Multiplayer.Java
 				World?.SetBlockState(
 					new BlockCoordinates(blockUpdate.X, blockUpdate.Y, blockUpdate.Z), 
 					BlockFactory.GetBlockState(blockUpdate.BlockId),
-					BlockUpdatePriority.High | BlockUpdatePriority.Network);
+					BlockUpdatePriority.High | BlockUpdatePriority.Network  | BlockUpdatePriority.Neighbors);
 			}
 		}
 
 		private void HandleBlockChangePacket(BlockChangePacket packet)
 		{
 			//throw new NotImplementedException();
-			World?.SetBlockState(packet.Location, BlockFactory.GetBlockState(packet.PalleteId));
+			World?.SetBlockState(packet.Location, BlockFactory.GetBlockState(packet.PalleteId), 
+				BlockUpdatePriority.High | BlockUpdatePriority.Network | BlockUpdatePriority.Neighbors);
 		}
 
 		private void HandleHeldItemChangePacket(HeldItemChangePacket packet)

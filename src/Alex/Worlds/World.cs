@@ -526,9 +526,9 @@ namespace Alex.Worlds
 					SetBlockLight(blockCoords, 0);
 				}
 				*/
-				ChunkManager.SkyLightCalculator.Calculate(this, blockCoords);
+				//ChunkManager.SkyLightCalculator.Calculate(this, blockCoords);
 
-				ChunkManager.BlockLightCalculations.Enqueue(blockCoords);
+				//ChunkManager.BlockLightCalculations.Enqueue(blockCoords);
 				
 				//chunk.SetDirty();
 				//chunk.IsDirty = true;

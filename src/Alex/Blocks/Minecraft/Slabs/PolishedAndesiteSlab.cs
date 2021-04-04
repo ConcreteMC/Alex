@@ -8,4 +8,13 @@ namespace Alex.Blocks.Minecraft
 			
 		}
 	}
+
+	public class AndesiteSlab : Slab
+	{
+		/// <inheritdoc />
+		public AndesiteSlab() : base()
+		{
+			
+		}
+	}
 }
