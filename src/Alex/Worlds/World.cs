@@ -226,13 +226,13 @@ namespace Alex.Worlds
 
             SkyBox.Draw(args);
             
-            ChunkManager.Draw(args,
+            ChunkManager.Draw(args, null,
 	            RenderStage.OpaqueFullCube,
 	            RenderStage.Opaque);
             
             EntityManager.Render(args);
             
-            ChunkManager.Draw(args, 
+            ChunkManager.Draw(args, null,
 	            RenderStage.Transparent,
 	            RenderStage.Translucent,
 	            RenderStage.Animated,
@@ -284,7 +284,8 @@ namespace Alex.Worlds
 				var diffuseColor = Color.White.ToVector3() * SkyBox.BrightnessModifier;
 				ChunkManager.AmbientLightColor = diffuseColor;
 				ChunkManager.FogColor = SkyBox.WorldFogColor.ToVector3();
-
+				ChunkManager.FogDistance = args.Camera.FarDistance;
+				
 				if (Math.Abs(ChunkManager.Shaders.BrightnessModifier - SkyBox.BrightnessModifier) > 0f)
 				{
 					ChunkManager.Shaders.BrightnessModifier = SkyBox.BrightnessModifier;

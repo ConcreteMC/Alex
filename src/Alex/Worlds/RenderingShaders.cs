@@ -30,7 +30,7 @@ namespace Alex.Worlds
 				AlphaFunction = CompareFunction.Greater,
 				ReferenceAlpha = 32,
 				FogStart = fogStart,
-				FogEnabled = false,
+				FogEnabled = true,
 				
 				AmbientLightColor = Color.White,
 				AmbientLightDirection = new Vector3(0f, -0.25f, -1f),
@@ -46,7 +46,7 @@ namespace Alex.Worlds
 				AlphaFunction = CompareFunction.Greater,
 				ReferenceAlpha = 32,
 				FogStart = fogStart,
-				FogEnabled = false,
+				FogEnabled = true,
 				
 				AmbientLightColor = Color.White,
 				AmbientLightDirection = new Vector3(0f, -0.25f, -1f),
@@ -62,7 +62,7 @@ namespace Alex.Worlds
 				AlphaFunction = CompareFunction.Greater,
 				ReferenceAlpha = 32,
 				FogStart = fogStart,
-				FogEnabled = false,
+				FogEnabled = true,
 				
 				AmbientLightColor = Color.White,
 				AmbientLightDirection = new Vector3(0f, -0.25f, -1f),
@@ -77,7 +77,7 @@ namespace Alex.Worlds
 				AlphaFunction = CompareFunction.Greater,
 				ReferenceAlpha = 127,
 				FogStart = fogStart,
-				FogEnabled = false,
+				FogEnabled = true,
 				Alpha = 0.5f,
 				
 				AmbientLightColor = Color.White,
@@ -91,7 +91,7 @@ namespace Alex.Worlds
 				FogStart = fogStart,
 				VertexColorEnabled = true,
 				//  LightingEnabled = true,
-				FogEnabled = false,
+				FogEnabled = true,
 				ReferenceAlpha = 249,
 				AlphaFunction = CompareFunction.Always,
 				
@@ -125,7 +125,7 @@ namespace Alex.Worlds
 			var projection = camera.ProjectionMatrix;
 			var cameraPosition = camera.Position;
 
-			var lightPosition = Vector3.Transform(
+		/*	var lightPosition = Vector3.Transform(
 				cameraPosition,
 				Matrix.CreateTranslation(0, 100, 0) * Matrix.CreateRotationX(MathHelper.TwoPi * skyBox.CelestialAngle));
 
@@ -136,39 +136,39 @@ namespace Alex.Worlds
 				Vector3.Up);
 
 			Matrix  lightProjection = Matrix.CreateOrthographic(100, 100, 0f, camera.FarDistance * 16f);
-			
+			*/
 			TransparentEffect.View = view;
 			TransparentEffect.Projection = projection;
-			TransparentEffect.LightView = lightView;
-			TransparentEffect.LightProjection = lightProjection;
+		//	TransparentEffect.LightView = lightView;
+		//	TransparentEffect.LightProjection = lightProjection;
 			TransparentEffect.CameraPosition = cameraPosition;
 			TransparentEffect.CameraFarDistance = camera.FarDistance;
 			
 			AnimatedEffect.View = view;
 			AnimatedEffect.Projection = projection;
-			AnimatedEffect.LightView = lightView;
-			AnimatedEffect.LightProjection = lightProjection;
+		//	AnimatedEffect.LightView = lightView;
+		//	AnimatedEffect.LightProjection = lightProjection;
 			AnimatedEffect.CameraPosition = cameraPosition;
 			AnimatedEffect.CameraFarDistance = camera.FarDistance;
 
 			OpaqueEffect.View = view;
 			OpaqueEffect.Projection = projection;
-			OpaqueEffect.LightView = lightView;
-			OpaqueEffect.LightProjection = lightProjection;
+		//	OpaqueEffect.LightView = lightView;
+		//	OpaqueEffect.LightProjection = lightProjection;
 			OpaqueEffect.CameraPosition = cameraPosition;
 			OpaqueEffect.CameraFarDistance = camera.FarDistance;
 			
 			TranslucentEffect.View = view;
 			TranslucentEffect.Projection = projection;
-			TranslucentEffect.LightView = lightView;
-			TranslucentEffect.LightProjection = lightProjection;
+		//	TranslucentEffect.LightView = lightView;
+		//	TranslucentEffect.LightProjection = lightProjection;
 			TranslucentEffect.CameraPosition = cameraPosition;
 			TranslucentEffect.CameraFarDistance = camera.FarDistance;
 			
 			AnimatedTranslucentEffect.View = view;
 			AnimatedTranslucentEffect.Projection = projection;
-			AnimatedTranslucentEffect.LightView = lightView;
-			AnimatedTranslucentEffect.LightProjection = lightProjection;
+		//	AnimatedTranslucentEffect.LightView = lightView;
+	//		AnimatedTranslucentEffect.LightProjection = lightProjection;
 			AnimatedTranslucentEffect.CameraPosition = cameraPosition;
 			AnimatedTranslucentEffect.CameraFarDistance = camera.FarDistance;
 			
@@ -208,7 +208,7 @@ namespace Alex.Worlds
 			get { return TransparentEffect.FogEnd; }
 			set
 			{
-				var fogStart = value - (value / 4);
+				var fogStart = value - (value / 2);
 				TransparentEffect.FogStart = fogStart;
 				OpaqueEffect.FogStart = fogStart;
 				AnimatedEffect.FogStart = fogStart;

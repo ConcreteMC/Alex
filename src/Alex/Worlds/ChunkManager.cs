@@ -161,30 +161,6 @@ namespace Alex.Worlds
 		}
 		
 		private ChunkData[] _renderedChunks = new ChunkData[0];
-		private ChunkCoordinates[] UpdateRenderedChunks()
-		{
-			//List<ChunkCoordinates> chunks   = new List<ChunkCoordinates>();
-			List<ChunkData>        rendered = new List<ChunkData>();
-			foreach (var chunk in Chunks)
-			{
-				if (chunk.Value.ChunkData == null)
-					continue;
-				
-				//if (!chunk.Value.ChunkData.Ready)
-				//	continue;
-				
-				if (IsWithinView(chunk.Key, World.Camera))
-				{
-					rendered.Add(chunk.Value.ChunkData);
-					//chunks.Add(chunk.Key);
-				}
-			}
-
-			_renderedChunks = rendered.ToArray();
-
-			return rendered.Select(x => x.Coordinates).ToArray();
-		}
-		
 		private bool ProcessQueue()
 		{
 			var maxThreads = Options.VideoOptions.ChunkThreads.Value;
@@ -506,13 +482,13 @@ namespace Alex.Worlds
 			// ColorBlendFunction = BlendFunction.Add
 		};
 		
-		public void Draw(IRenderArgs args, params RenderStage[] stages)
+		public void Draw(IRenderArgs args, Effect forceEffect = null, params RenderStage[] stages)
 		{
 			using (GraphicsContext gc = GraphicsContext.CreateContext(
 				args.GraphicsDevice, Block.FancyGraphics ? BlendState.AlphaBlend : BlendState.Opaque, DepthStencilState, _rasterizerState,
 				_renderSampler))
 			{
-				DrawCount = DrawStaged(args, null, stages.Length > 0 ? stages : RenderStages);
+				DrawCount = DrawStaged(args, forceEffect, stages.Length > 0 ? stages : RenderStages);
 			}
 		}
 		
