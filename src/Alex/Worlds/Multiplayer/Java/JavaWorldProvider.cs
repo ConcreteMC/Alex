@@ -340,7 +340,7 @@ namespace Alex.Worlds.Multiplayer.Java
 
 		public override LoadResult Load(ProgressReport progressReport)
 		{
-			if (!Client.Initialize(CancellationToken.None).GetAwaiter().GetResult())
+			if (!Client.Initialize(CancellationToken.None))
 				return LoadResult.Failed;
 			
 			progressReport(LoadingState.ConnectingToServer, 0);
@@ -349,16 +349,17 @@ namespace Alex.Worlds.Multiplayer.Java
 			{
 				_disconnected = true;
 
-				return LoadResult.Failed;
+				return LoadResult.LoginFailed;
 			}
 
-			if (_disconnected) return LoadResult.Failed;
+			if (_disconnected) return LoadResult.ConnectionLost;
 
 			progressReport(LoadingState.ConnectingToServer, 99);
 
-			_loginCompleteEvent.WaitOne();
+			if (!_loginCompleteEvent.WaitOne(5000))
+				return LoadResult.Timeout;
 
-			if (_disconnected) return LoadResult.Failed;
+			if (_disconnected) return LoadResult.ConnectionLost;
 
 			progressReport(LoadingState.LoadingChunks, 0);
 
@@ -2552,6 +2553,7 @@ namespace Alex.Worlds.Multiplayer.Java
 		private byte[] SharedSecret = new byte[16];
 		private void HandleEncryptionRequest(EncryptionRequestPacket packet)
 		{
+			Log.Info($"Received encryption request.");
 			FastRandom.Instance.NextBytes(SharedSecret);
 
 			string serverHash;
@@ -2584,10 +2586,10 @@ namespace Alex.Worlds.Multiplayer.Java
 					EncryptionResponsePacket response = EncryptionResponsePacket.CreateObject();
 					response.SharedSecret = encrypted;
 					response.VerifyToken = cryptoProvider.Encrypt(packet.VerifyToken, RSAEncryptionPadding.Pkcs1);
-					SendPacket(response);
-
+					Client.SendPacketDirect(response);// SendPacket(response);
+					
 					Client.InitEncryption(SharedSecret);
-				});
+				}).Wait();
 		}
 
 		private bool Login(string username, string uuid, string accessToken)

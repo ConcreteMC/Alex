@@ -15,8 +15,7 @@ namespace Alex.Worlds.Abstraction
 		float   FogDistance       { get; set; }
 		Vector3 AmbientLightColor { get; set; }
 	//	float   BrightnessModifier { get; set; }
-
-		void Start();
+	
 
 		void AddChunk(ChunkColumn chunk, ChunkCoordinates position, bool doUpdates = false);
 

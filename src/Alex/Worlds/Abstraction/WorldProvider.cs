@@ -44,6 +44,8 @@ namespace Alex.Worlds.Abstraction
 	{
 		Done,
 		Failed,
+		ConnectionLost,
+		LoginFailed,
 		Timeout,
 		Aborted
 	}

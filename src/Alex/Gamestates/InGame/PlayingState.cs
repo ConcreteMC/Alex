@@ -657,9 +657,9 @@ namespace Alex.Gamestates.InGame
 		{
 			Alex.InGame = false;
 			Alex.ParticleManager.Hide();
-			//ThreadPool.QueueUserWorkItem(
-			//	o =>
-			//	{
+			ThreadPool.QueueUserWorkItem(
+				o =>
+				{
 					NetworkProvider?.Close();
 					NetworkProvider = null;
 					
@@ -672,9 +672,10 @@ namespace Alex.Gamestates.InGame
 					_playingHud?.Unload();
 
 					RichPresenceProvider.ClearPresence();
-			//	});
+					GC.Collect();
+				});
 
-			GC.Collect();
+			
 			//GetService<IEventDispatcher>().UnregisterEvents(_playingHud.Chat);
 			//_playingHud.Chat = 
 		}

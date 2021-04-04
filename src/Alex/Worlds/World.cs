@@ -115,7 +115,7 @@ namespace Alex.Worlds
 		{
 			Options = options;
 
-			ChunkManager = new ChunkManager(serviceProvider, graphics, this);
+			ChunkManager = new ChunkManager(serviceProvider, graphics, this, _cancellationTokenSource.Token);
 			EntityManager = new EntityManager(serviceProvider, graphics, this, networkProvider);
 			Ticker = new TickManager();
 			PlayerList = new PlayerList();
@@ -124,7 +124,7 @@ namespace Alex.Worlds
 			Ticker.RegisterTicked(EntityManager);
 			Ticker.RegisterTicked(ChunkManager);
 			
-			ChunkManager.Start();
+			//ChunkManager.Start();
 			var profileService = serviceProvider.GetRequiredService<IPlayerProfileService>();
 			var resources = serviceProvider.GetRequiredService<ResourceManager>();
 			
@@ -174,7 +174,7 @@ namespace Alex.Worlds
 			
 			Camera.SetRenderDistance(options.VideoOptions.RenderDistance);
 
-			BackgroundWorker = new BackgroundWorker();
+			BackgroundWorker = new BackgroundWorker(_cancellationTokenSource.Token);
 			
 			Player?.OnSpawn();
 			

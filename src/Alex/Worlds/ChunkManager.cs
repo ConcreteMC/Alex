@@ -46,7 +46,8 @@ namespace Alex.Worlds
 		private FancyQueue<ChunkCoordinates>     UpdateQueue       { get; }
 		private FancyQueue<ChunkCoordinates>     UpdateBorderQueue { get; }
 		private ThreadSafeList<ChunkCoordinates> Scheduled         { get; } = new ThreadSafeList<ChunkCoordinates>();
-		public ChunkManager(IServiceProvider serviceProvider, GraphicsDevice graphics, World world)
+		
+		public ChunkManager(IServiceProvider serviceProvider, GraphicsDevice graphics, World world, CancellationToken cancellationToken)
 		{
 			Graphics = graphics;
 			World = world;
@@ -72,7 +73,7 @@ namespace Alex.Worlds
 				});
 			
 			Chunks = new ConcurrentDictionary<ChunkCoordinates, ChunkColumn>();
-			CancellationToken = new CancellationTokenSource();
+			CancellationToken = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 			
 			BlockLightCalculations = new BlockLightCalculations(world, CancellationToken.Token);
 			SkyLightCalculator = new SkyLightCalculations(CancellationToken.Token);
@@ -133,13 +134,18 @@ namespace Alex.Worlds
 				Shaders.AmbientLightColor = value;
 			}
 		}
-
+		
+		private Thread _processingThread = null;
 		/// <inheritdoc />
-		public void Start()
+		public void EnsureStarted()
 		{
+			if (_processingThread != null)
+				return;
+
 			ThreadPool.QueueUserWorkItem(
 				o =>
 				{
+					_processingThread = Thread.CurrentThread;
 					Thread.CurrentThread.Name = "Chunk Management";
 
 					SpinWait sw = new SpinWait();
@@ -151,12 +157,17 @@ namespace Alex.Worlds
 							continue;
 						}
 
+						if (CancellationToken.IsCancellationRequested)
+							break;
+						
 						bool processedLighting = ProcessLighting();
 						bool processedQueue    = ProcessQueue();
 
 						if (!processedQueue && !processedLighting)
 							sw.SpinOnce();
 					}
+
+					_processingThread = null;
 				});
 		}
 		
@@ -320,6 +331,8 @@ namespace Alex.Worlds
 				});
 
 			ScheduleChunkUpdate(position, ScheduleType.Full);
+
+			EnsureStarted();
 			//UpdateQueue.Enqueue(position);
 		}
 

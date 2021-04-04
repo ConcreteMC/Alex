@@ -58,7 +58,7 @@ namespace Alex.Networking.Java
 		public DateTime StartTime { get; private set; } = DateTime.UtcNow;
 		public long     Latency   { get; set; }         = 0;
 
-		public async Task<bool> Initialize(CancellationToken cancellationToken)
+		public bool Initialize(CancellationToken cancellationToken)
 		{
 			try
 			{
@@ -66,10 +66,13 @@ namespace Alex.Networking.Java
 					return false;
 
 				Client = new TcpClient();
-				await Client.ConnectAsync(TargetEndpoint.Address, TargetEndpoint.Port, cancellationToken);
+				Client.ReceiveBufferSize = int.MaxValue;
+				Client.SendBufferSize = int.MaxValue;
+				
+				Client.Connect(TargetEndpoint.Address, TargetEndpoint.Port);
 
-				if (!Client.Connected)
-					return false;
+				//if (!Client.Connected)
+				//	return false;
 			}
 			catch (SocketException exception)
 			{
@@ -81,7 +84,7 @@ namespace Alex.Networking.Java
 				o =>
 				{
 					Thread.CurrentThread.Name = "MC:Java Network Thread";
-					ProcessNetwork();
+					ProcessNetwork(Client, cancellationToken);
 				});
 
 			StartTime = DateTime.UtcNow;
@@ -157,27 +160,29 @@ namespace Alex.Networking.Java
 	    private MinecraftStream _readerStream;
 
 	    private int _lastReceivedPacketId;
-	    private void ProcessNetwork()
+	    private void ProcessNetwork(TcpClient client, CancellationToken cancellationToken)
 	    {
 		    Stopwatch time           = Stopwatch.StartNew();
-		   
+		    
+		    var cancelSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, CancellationToken.Token);
+		    
 		    try
 		    {
-			    using (NetworkStream ns = Client.GetStream())
+			    using (NetworkStream ns = client.GetStream())
 			    {
-				    using (MinecraftStream writeStream = new MinecraftStream(ns, CancellationToken.Token))
-				    using (MinecraftStream readStream = new MinecraftStream(ns, CancellationToken.Token))
+				    using (MinecraftStream writeStream = new MinecraftStream(ns, cancelSource.Token))
+				    using (MinecraftStream readStream = new MinecraftStream(ns, cancelSource.Token))
 				    {
 					    SpinWait sw = new SpinWait();
 					    _readerStream = readStream;
 					    _sendStream = writeStream;
 					    
-					    while (!CancellationToken.IsCancellationRequested)
+					    while (!cancelSource.IsCancellationRequested)
 					    {
-						    if (CancellationToken.IsCancellationRequested)
+						    if (cancelSource.IsCancellationRequested)
 							    break;
 						    
-						    if (!Read(readStream) && !Write(writeStream))
+						    if (!Write(readStream) && !Read(writeStream))
 							    sw.SpinOnce();
 						    //Write(mc);
 					    }
@@ -216,9 +221,17 @@ namespace Alex.Networking.Java
 		    return false;
 	    }
 
-	    private bool Write(MinecraftStream stream)
+	    public bool SendPacketDirect(Packet packet)
 	    {
-		    if (PacketWriteQueue.TryTake(out var packet, 0))
+		    Send(new EnqueuedPacket(packet, false), _sendStream);
+
+		    return true;
+	    }
+
+	    private object _sendLock = new object();
+	    private void Send(EnqueuedPacket packet, MinecraftStream stream)
+	    {
+		    lock (_sendLock)
 		    {
 			    try
 			    {
@@ -229,11 +242,20 @@ namespace Alex.Networking.Java
 
 				    stream.WriteVarInt(data.Length);
 				    stream.Write(data);
+				    stream.Flush();
 			    }
 			    finally
 			    {
 				    packet.Packet.PutPool();
 			    }
+		    }
+	    }
+	    
+	    private bool Write(MinecraftStream stream)
+	    {
+		    if (PacketWriteQueue.TryTake(out var packet, 0))
+		    {
+			    Send(packet, stream);
 
 			    return true;
 		    }

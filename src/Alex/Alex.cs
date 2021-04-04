@@ -748,6 +748,8 @@ namespace Alex
                 GuiManager.RemoveScreen(loadingScreen);
                 //playState?.Unload();
                 worldProvider?.Dispose();
+                
+                GameStateManager.RemoveState("play");
                 state?.Unload();
             };
 
@@ -764,10 +766,10 @@ namespace Alex
                         GameStateManager.RemoveState("play");
 
                         result = worldProvider.Load(loadingScreen.UpdateProgress);
-
+                        GameStateManager.AddState("play", state);
+                        
                         if (networkProvider.IsConnected && result == LoadResult.Done)
                         {
-                            GameStateManager.AddState("play", state);
                             GameStateManager.SetActiveState("play");
 
                             return;
@@ -794,7 +796,8 @@ namespace Alex
                             }
 
                             worldProvider?.Dispose();
-                            state?.Unload();
+                            GameStateManager.RemoveState("play");
+                            // state?.Unload();
                         }
                     }
                 });

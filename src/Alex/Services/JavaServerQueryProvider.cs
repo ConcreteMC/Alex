@@ -188,7 +188,7 @@ namespace Alex.Services
 					    ar.Set();
 				    };
 
-				    bool connected = await conn.Initialize(cancellationToken);
+				    bool connected = conn.Initialize(cancellationToken);
 
 				    if (connected)
 				    {

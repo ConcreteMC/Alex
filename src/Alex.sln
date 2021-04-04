@@ -31,6 +31,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Alex.MoLang", "Alex.MoLang\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Alex.MoLang.TestApp", "Alex.MoLang.TestApp\Alex.MoLang.TestApp.csproj", "{3D35E8BD-5900-406F-ACE8-4B385351295D}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Submodules", "Submodules", "{66F9179F-DEB1-45B9-B067-D613A2857D5C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Appveyor|Any CPU = Appveyor|Any CPU

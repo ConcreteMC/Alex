@@ -11,6 +11,7 @@ namespace Alex.Networking.Java.Packets
 {
 	public abstract class Packet : IPacket<MinecraftStream>
 	{
+		public bool ForceUnencrypted { get; set; } = false;
 		public Stopwatch Stopwatch { get; } = new Stopwatch();
 
 		public int PacketId { get; set; } = -1;

@@ -6,36 +6,38 @@ namespace Alex.Utils
 {
 	public class BackgroundWorker : IDisposable
 	{
-		private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+		private CancellationTokenSource _cancellationTokenSource;
 		private ConcurrentQueue<Action> _workerQueue             = new ConcurrentQueue<Action>();
 		private ManualResetEvent        _manualResetEvent        = new ManualResetEvent(false);
 
 		private Thread _workerThread;
-		public BackgroundWorker(int threads = 1)
+		public BackgroundWorker(CancellationToken cancellationToken, int threads = 1)
 		{
+			_cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 			ThreadPool.QueueUserWorkItem((o) =>
 			{
 				_workerThread = Thread.CurrentThread;
 
 				while (!_cancellationTokenSource.IsCancellationRequested)
 				{
-					_manualResetEvent.WaitOne();
-
-					if (_cancellationTokenSource.IsCancellationRequested)
-						break;
-					
-					while (_workerQueue.TryDequeue(out var action))
+					if (_manualResetEvent.WaitOne(50))
 					{
-						action?.Invoke();
-
 						if (_cancellationTokenSource.IsCancellationRequested)
 							break;
-					}
 
+						while (_workerQueue.TryDequeue(out var action))
+						{
+							action?.Invoke();
+
+							if (_cancellationTokenSource.IsCancellationRequested)
+								break;
+						}
+
+						_manualResetEvent.Reset();
+					}
+					
 					if (_cancellationTokenSource.IsCancellationRequested)
 						break;
-					
-					_manualResetEvent.Reset();
 				}
 			});
 		}
