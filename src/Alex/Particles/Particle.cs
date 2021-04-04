@@ -180,7 +180,7 @@ namespace Alex.Particles
 				
 				count++;
 				float depth = screenSpace.Z;
-				float scale =  1f - (Vector3.DistanceSquared(camera.Position, pos) / camera.FarDistance);// 1.0f / depth;
+				float scale =  1f - (Vector3.Distance(camera.Position, pos) / camera.FarDistance);// 1.0f / depth;
 				if (scale <= 0f)
 					continue;
 				

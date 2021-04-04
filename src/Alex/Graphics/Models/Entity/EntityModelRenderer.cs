@@ -296,7 +296,7 @@ namespace Alex.Graphics.Models.Entity
 		public Vector3 DiffuseColor { get; set; } = Color.White.ToVector3();
 
 		public float Scale { get; set; } = 1f;
-
+		
 		public virtual void Update(IUpdateArgs args, PlayerLocation position)
 		{
 			if (Bones == null || Effect == null) return;

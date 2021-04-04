@@ -41,7 +41,7 @@ namespace Alex.Graphics.Camera
 
 		public void SetRenderDistance(int renderDistance)
 		{
-			FarDistance = renderDistance * 16 * 16;// MathF.Pow(renderDistance, 2f);
+			FarDistance = renderDistance * 16;// MathF.Pow(renderDistance, 2f);
 			
 			ProjectionMatrix = Matrix.CreatePerspectiveFieldOfView(
 				MathHelper.ToRadians(FOV + FOVModifier),

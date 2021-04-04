@@ -276,7 +276,14 @@ namespace Alex.Worlds
 
 			// Compute the depth and scale of the object.
 			float depth = screenSpace.Z;
-			float scale = 1.0f / depth;
+			
+			//Log.Info($"Depth: {depth}");
+			//float scale = 1.0f / depth;
+			
+			float scale =  1f - (Vector3.Distance(args.Camera.Position, pos) / args.Camera.FarDistance);// 1.0f / depth;
+			if (scale <= 0f)
+				return;
+			
 			var s = new Vector2(scale, scale);
 			
 			foreach (var str in lines)

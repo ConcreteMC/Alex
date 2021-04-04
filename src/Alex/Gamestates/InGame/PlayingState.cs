@@ -301,7 +301,7 @@ namespace Alex.Gamestates.InGame
 				if (player == null || player.HitEntity == null) return string.Empty;
 
 				var entity = player.HitEntity;
-				return $"Hit entity: {entity.EntityId} / {entity.ToString()}\n{entity.NameTag}\n{ChatFormatting.Reset}Shown: {!entity.HideNameTag}\nNoAI: {entity.NoAi}\nGravity: {entity.IsAffectedByGravity}\nFlying: {entity.IsFlying}\nAllFlying: {entity.IsFlagAllFlying}\nOn Ground: {entity.KnownPosition.OnGround}";
+				return $"Hit entity: {entity.EntityId} / {entity.ToString()}\n{entity.NameTag}\n{ChatFormatting.Reset}Shown: {!entity.HideNameTag}\nNoAI: {entity.NoAi}\nGravity: {entity.IsAffectedByGravity}\nFlying: {entity.IsFlying}\nAllFlying: {entity.IsFlagAllFlying}\nOn Ground: {entity.KnownPosition.OnGround}\nHas Collisions: {entity.HasCollision}";
 			}, TimeSpan.FromMilliseconds(500));
 		}
 
