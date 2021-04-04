@@ -195,7 +195,7 @@ namespace Alex.Items
 			           else
 			           {
 				           
-				           item.Renderer = new ItemBlockModelRenderer(bs, model, bs.Block.Animated ? resources.Atlas.GetAtlas(0) : resources.Atlas.GetStillAtlas());
+				           item.Renderer = new ItemBlockModelRenderer(bs, model, resources.Atlas.GetStillAtlas());
 				           //item.Renderer.Cache(resources);
 
 

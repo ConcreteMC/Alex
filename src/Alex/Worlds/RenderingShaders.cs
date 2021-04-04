@@ -111,6 +111,7 @@ namespace Alex.Worlds
 
 		public void SetTextures(Texture2D texture)
 		{
+			AnimatedTranslucentEffect.Texture = AnimatedEffect.Texture = texture;
 			TranslucentEffect.Texture = TransparentEffect.Texture = OpaqueEffect.Texture = texture;
 		}
 
@@ -119,8 +120,17 @@ namespace Alex.Worlds
 			AnimatedTranslucentEffect.Texture = AnimatedEffect.Texture = texture;
 		}
 
-		public void Update(SkyBox skyBox, ICamera camera /*Matrix view, Matrix projection*/)
+		public void NextFrame()
 		{
+			AnimatedEffect.Frame++;
+			AnimatedTranslucentEffect.Frame++;
+		}
+
+		public void Update(float dt, SkyBox skyBox, ICamera camera /*Matrix view, Matrix projection*/)
+		{
+			//AnimatedEffect.Frame += dt;
+			//AnimatedTranslucentEffect.Frame += dt;
+			
 			var view       = camera.ViewMatrix;
 			var projection = camera.ProjectionMatrix;
 			var cameraPosition = camera.Position;

@@ -72,7 +72,7 @@ namespace Alex.Graphics.Models.Items
            // }
             
             Vertices = rawVertices.Select(
-                x => new VertexPositionColorTexture(x.Position, x.Color, x.TexCoords)).ToArray();
+                x => new VertexPositionColorTexture(x.Position, x.Color, new Vector2(x.TexCoords.X, x.TexCoords.Y))).ToArray();
 
             chunkData.Dispose();
 

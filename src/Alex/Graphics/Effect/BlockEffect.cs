@@ -21,6 +21,7 @@ namespace Alex.Graphics.Effect
         CameraPosition = 2048,
         CameraFarDistance = 4096,
         LightViewProjection = 8192,
+        Frame = 16384,
        // LightSource1  = 512,
         All           = -1, // 0xFFFFFFFF
     }
@@ -30,6 +31,8 @@ namespace Alex.Graphics.Effect
         #region Effect Parameters
 
         private EffectParameter _textureParam;
+
+        private EffectParameter _textureScaleParam;
        // EffectParameter diffuseColorParam;
         private EffectParameter _alphaTestParam;
         private EffectParameter _fogColorParam;
@@ -57,6 +60,8 @@ namespace Alex.Graphics.Effect
         
         private EffectParameter _lightViewParam;
         private EffectParameter _lightProjectionParam;
+
+        private EffectParameter _frameParam;
         //EffectParameter worldViewProjParam;
 
         #endregion
@@ -93,10 +98,25 @@ namespace Alex.Graphics.Effect
         
         private Vector3 _cameraPosition =  Vector3.Zero;
         private float _cameraFarDistance = 0;
+
+        private float _frame = 0;
         #endregion
 
         #region Public Properties
 
+        public float Frame
+        {
+            get
+            {
+                return _frame;
+            }
+            set
+            {
+                _frame = value;
+                _dirtyFlags |= EffectDirtyFlags.Frame;
+            }
+        }
+        
         public float CameraFarDistance
         {
             get
@@ -331,7 +351,11 @@ namespace Alex.Graphics.Effect
         public Texture2D Texture
         {
             get { return _textureParam.GetValueTexture2D(); }
-            set { _textureParam.SetValue(value); }
+            set
+            {
+                _textureParam.SetValue(value);
+                _textureScaleParam.SetValue(Vector2.One / value.Bounds.Size.ToVector2());
+            }
         }
 
 
@@ -473,6 +497,8 @@ namespace Alex.Graphics.Effect
 
             _lightViewParam = Parameters["LightView"];
             _lightProjectionParam = Parameters["LightProjection"];
+            _frameParam = Parameters["ElapsedTime"];
+            _textureScaleParam = Parameters["UvScale"];
             //  worldViewProjParam = Parameters["WorldViewProj"];
         }
         
@@ -701,6 +727,12 @@ namespace Alex.Graphics.Effect
                 }
             }
 
+            if ((_dirtyFlags & EffectDirtyFlags.Frame) != 0)
+            {
+                _frameParam.SetValue(_frame);
+                _dirtyFlags &= ~EffectDirtyFlags.Frame;
+            }
+            
             // Recompute the shader index?
             if ((_dirtyFlags & EffectDirtyFlags.ShaderIndex) != 0)
             {

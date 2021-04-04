@@ -60,7 +60,7 @@ namespace Alex.Worlds
 			var fogStart = 0;
 			Shaders = new RenderingShaders(Graphics);
 			Shaders.SetTextures(stillAtlas);
-			Shaders.SetAnimatedTextures(Resources.Atlas.GetAtlas(0));
+			//Shaders.SetAnimatedTextures(Resources.Atlas.GetAtlas(0));
 			
 			_renderSampler.MaxMipLevel = stillAtlas.LevelCount;
 			
@@ -622,15 +622,17 @@ namespace Alex.Worlds
 		float                    _timer        = 0.0f;
 		public void Update(IUpdateArgs args)
 		{
-			Shaders.Update(World.SkyBox, args.Camera);
+			Shaders.Update((float)args.GameTime.ElapsedGameTime.TotalSeconds, World.SkyBox, args.Camera);
 
 			_timer += (float)args.GameTime.ElapsedGameTime.TotalSeconds;
 			if (_timer >= (1.0f / _framerate ))
 			{
 				_timer -= 1.0f / _framerate ;
-				_currentFrame = (_currentFrame + 1) % Resources.Atlas.GetFrameCount();
+				Shaders.NextFrame();
+				//Shaders.NextFrame();
+				//_currentFrame = (_currentFrame + 1) % Resources.Atlas.GetFrameCount();
 				
-				Shaders.SetAnimatedTextures(Resources.Atlas.GetAtlas(_currentFrame));
+				//Shaders.SetAnimatedTextures(Resources.Atlas.GetAtlas(_currentFrame));
 			}
 		}
 

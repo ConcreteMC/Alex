@@ -28,6 +28,9 @@ float FogStart;
 float FogEnd;
 float3 FogColor;
 
+float ElapsedTime;
+float2 UvScale;
+
 Texture Texture;
 //: register(s0);
 sampler2D textureSampler: register(s0) = sampler_state {
@@ -53,7 +56,7 @@ float ComputeFogFactor(float d)
     return saturate((d - FogStart) / (FogEnd - FogStart)) * FogEnabled;
 }
 
-VertexToPixel VertexShaderFunction(float4 inPosition : POSITION, float4 inNormal : NORMAL, float2 inTexCoords : TEXCOORD0, float4 inColor : COLOR0, float2 lightValues : TEXCOORD01)  {
+VertexToPixel VertexShaderFunction(float4 inPosition : POSITION, float4 inNormal : NORMAL, float4 inTexCoords : TEXCOORD0, float4 inColor : COLOR0, float2 lightValues : TEXCOORD01)  {
     VertexToPixel Output = (VertexToPixel)0;
 
     float4 worldPos = mul(inPosition, World);
@@ -63,7 +66,17 @@ VertexToPixel VertexShaderFunction(float4 inPosition : POSITION, float4 inNormal
     Output.Lighting = max(clamp(lightValues.x * LightOffset, 0, 15), lightValues.y);
     Output.Color = inColor;
     Output.WorldPos = worldPos;
-    Output.TexCoords = inTexCoords;
+
+    float totalFrames = inTexCoords.w / inTexCoords.z;
+    float index = ElapsedTime % totalFrames;
+
+    Output.TexCoords = float2(inTexCoords.x, inTexCoords.y);
+    Output.TexCoords += float2(0, (inTexCoords.w / totalFrames) * index);
+    Output.TexCoords *= UvScale;
+    //if (Output.TexCoords.y >= inTexCoords.w){
+        
+    //}
+    //Output.TexCoords *= scale;
 
     Output.FogFactor = ComputeFogFactor(distance(CameraPosition, worldPos));
     Output.Normal = inNormal;

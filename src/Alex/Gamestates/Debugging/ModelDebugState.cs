@@ -548,16 +548,16 @@ namespace Alex.Gamestates.Debugging
 
 			if (_index != _previousIndex)
 			{
-				if (block.Block.Animated)
-				{
+				//if (block.Block.Animated)
+				//{
 				//	_alphaEffect.Texture = Alex.Resources.Atlas.GetAtlas(0);
-					_basicEffect.Texture = Alex.Resources.Atlas.GetAtlas(0);
-				}
-				else
-				{
+					//_basicEffect.Texture = Alex.Resources.Atlas.GetAtlas(0);
+				//}
+				//else
+				//{
 				//	_alphaEffect.Texture = Alex.Resources.Atlas.GetStillAtlas();
 					_basicEffect.Texture = Alex.Resources.Atlas.GetStillAtlas();
-				}
+				//}
 
 				_previousIndex = _index;
 			}

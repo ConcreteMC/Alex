@@ -230,12 +230,15 @@ namespace Alex.Graphics.Models.Blocks
 				var   blockLight = blockAccess.GetBlockLight(position + face.GetBlockCoordinates());
 				
 				float height   = 0;
+
 				for (var index = 0; index < vertices.Length; index++)
 				{
 					var vert = vertices[index];
+
 					if (vert.Position.Y > start.Y)
 					{
 						const float modifier = 2f;
+
 						if (vert.Position.X < end.X && vert.Position.Z < end.Z)
 						{
 							height = (modifier * (tl));
@@ -267,7 +270,7 @@ namespace Alex.Graphics.Models.Blocks
 					//vert.Lighting = new Short2(skyLight, blockLight);
 					//vert.SkyLight = skyLight;
 					//vert.BlockLight = blockLight;
-					
+
 					if (IsWater)
 					{
 						vert.Color = vertColor;
@@ -276,7 +279,7 @@ namespace Alex.Graphics.Models.Blocks
 					else
 					{
 						//vert.Lighting = new Short2(skyLight, baseBlock.Block.LightValue);
-						
+
 						blockLight = baseBlock.Block.LightValue;
 						vert.Face = face;
 					}
@@ -284,9 +287,15 @@ namespace Alex.Graphics.Models.Blocks
 					//var textureCoordinates = map.TextureInfo.Position * (Vector2.One / map.TextureInfo.AtlasSize);
 					//vert.TexCoords = new Short2(textureCoordinates);
 					vert.TexCoords += map.TextureInfo.Position;
-					vert.TexCoords *= (Vector2.One / map.TextureInfo.AtlasSize);
+				//	vert.TexCoords *= (Vector2.One / map.TextureInfo.AtlasSize);
 
-					chunkBuilder.AddVertex(blockCoordinates, vert.Position, vert.Face, vert.TexCoords, vert.Color, blockLight, skyLight, RenderStage.Liquid);
+					chunkBuilder.AddVertex(
+						blockCoordinates, vert.Position, vert.Face,
+						new Vector4(
+							vert.TexCoords.X, vert.TexCoords.Y, 
+							map.TextureInfo.Animated ? map.TextureInfo.Width : 1,
+							map.TextureInfo.Animated ?  map.TextureInfo.Height: 1), vert.Color, blockLight, skyLight,
+						RenderStage.Liquid);
 				}
 			}
 

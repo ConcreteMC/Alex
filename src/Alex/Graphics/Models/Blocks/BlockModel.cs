@@ -238,7 +238,7 @@ namespace Alex.Graphics.Models.Blocks
 			float y2,
 			int rot,
 			Color color,
-			TextureInfo? ti)
+			Utils.TextureInfo? ti)
 		{
 			if (resources == null)
 			{
@@ -247,7 +247,7 @@ namespace Alex.Graphics.Models.Blocks
 				y1 = 0;
 				y2 = 1 / 32f;
 
-				return new BlockTextureData(new TextureInfo(new Vector2(), Vector2.Zero, 16, 16, false), 
+				return new BlockTextureData(new  Utils.TextureInfo(new Vector2(), Vector2.Zero, 16, 16, false, 1, 1), 
 					new Microsoft.Xna.Framework.Vector2(x1, y1), new Microsoft.Xna.Framework.Vector2(x2, y1),
 					new Microsoft.Xna.Framework.Vector2(x1, y2), new Microsoft.Xna.Framework.Vector2(x2, y2), color,
 					color, color);
@@ -260,8 +260,14 @@ namespace Alex.Graphics.Models.Blocks
 
 			var textureInfo = ti.Value;
 
-			var tw = textureInfo.Width;
-			var th = textureInfo.Height;
+			var tw = textureInfo.Width / textureInfo.XFrames;
+
+			//if (textureInfo.Animated)
+			//	tw /= 32;
+			
+			var th = textureInfo.Height / textureInfo.YFrames;
+			//if (textureInfo.Animated)
+			//	th /= 32;
 
 			x1 = (x1 * (tw));
 			x2 = (x2 * (tw ));

@@ -22,7 +22,7 @@ namespace Alex.Worlds.Chunks
 		
 		private const  int     DefaultSize = 64;
 
-		private static SmartStorage<Vector2>                      TextureStorage { get; } = new SmartStorage<Vector2>();
+		private static SmartStorage<Vector4>                      TextureStorage { get; } = new SmartStorage<Vector4>();
 		private ConcurrentDictionary<BlockCoordinates, List<VertexData>> BlockIndices     { get; set; }
 		private PooledVertexBuffer                             Buffer           { get; set; }
 		
@@ -44,7 +44,7 @@ namespace Alex.Worlds.Chunks
 		public void AddVertex(BlockCoordinates blockCoordinates, 
 			Vector3 position,
 			BlockFace face,
-			Vector2 textureCoordinates,
+			Vector4 textureCoordinates,
 			Color color,
 			byte blockLight,
 			byte skyLight)

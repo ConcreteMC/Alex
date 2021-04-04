@@ -58,7 +58,7 @@ namespace Alex.Worlds.Chunks
         public void AddVertex(BlockCoordinates blockCoordinates,
             Vector3 position,
             BlockFace face,
-            Vector2 textureCoordinates,
+            Vector4 textureCoordinates,
             Color color,
             byte blockLight,
             byte skyLight,
