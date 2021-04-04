@@ -57,6 +57,7 @@ namespace Alex.Worlds.Chunks
 
         public void AddVertex(BlockCoordinates blockCoordinates,
             Vector3 position,
+            BlockFace face,
             Vector2 textureCoordinates,
             Color color,
             byte blockLight,
@@ -71,7 +72,7 @@ namespace Alex.Worlds.Chunks
                 _stages[(int) stage] = rStage;
             }
            
-            rStage.AddVertex(blockCoordinates, position, textureCoordinates, color, blockLight, skyLight);
+            rStage.AddVertex(blockCoordinates, position, face, textureCoordinates, color, blockLight, skyLight);
         }
 
         private ChunkRenderStage CreateRenderStage(RenderStage arg)

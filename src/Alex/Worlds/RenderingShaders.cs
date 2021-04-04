@@ -2,6 +2,7 @@ using Alex.API.Graphics;
 using Alex.Entities.Effects;
 using Alex.Graphics.Camera;
 using Alex.Graphics.Effect;
+using Alex.Graphics.Models;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -30,6 +31,10 @@ namespace Alex.Worlds
 				ReferenceAlpha = 32,
 				FogStart = fogStart,
 				FogEnabled = false,
+				
+				AmbientLightColor = Color.White,
+				AmbientLightDirection = new Vector3(0f, -0.25f, -1f),
+				
 				// TextureEnabled = true
 			};
 
@@ -42,6 +47,9 @@ namespace Alex.Worlds
 				ReferenceAlpha = 32,
 				FogStart = fogStart,
 				FogEnabled = false,
+				
+				AmbientLightColor = Color.White,
+				AmbientLightDirection = new Vector3(0f, -0.25f, -1f),
 
 				//Alpha = 0.5f
 			};
@@ -55,6 +63,9 @@ namespace Alex.Worlds
 				ReferenceAlpha = 32,
 				FogStart = fogStart,
 				FogEnabled = false,
+				
+				AmbientLightColor = Color.White,
+				AmbientLightDirection = new Vector3(0f, -0.25f, -1f),
 				// TextureEnabled = true
 			};
 
@@ -67,7 +78,10 @@ namespace Alex.Worlds
 				ReferenceAlpha = 127,
 				FogStart = fogStart,
 				FogEnabled = false,
-				Alpha = 0.5f
+				Alpha = 0.5f,
+				
+				AmbientLightColor = Color.White,
+				AmbientLightDirection = new Vector3(0f, -0.25f, -1f),
 			};
 
 			OpaqueEffect = new BlockEffect()
@@ -79,7 +93,10 @@ namespace Alex.Worlds
 				//  LightingEnabled = true,
 				FogEnabled = false,
 				ReferenceAlpha = 249,
-				AlphaFunction = CompareFunction.Always
+				AlphaFunction = CompareFunction.Always,
+				
+				AmbientLightColor = Color.White,
+				AmbientLightDirection = new Vector3(0f, -0.25f, -1f),
 				//    AlphaFunction = CompareFunction.Greater,
 				//    ReferenceAlpha = 127
 
@@ -102,28 +119,62 @@ namespace Alex.Worlds
 			AnimatedTranslucentEffect.Texture = AnimatedEffect.Texture = texture;
 		}
 
-		public void Update(ICamera camera /*Matrix view, Matrix projection*/)
+		public void Update(SkyBox skyBox, ICamera camera /*Matrix view, Matrix projection*/)
 		{
 			var view       = camera.ViewMatrix;
 			var projection = camera.ProjectionMatrix;
+			var cameraPosition = camera.Position;
+
+			var lightPosition = Vector3.Transform(
+				cameraPosition,
+				Matrix.CreateTranslation(0, 100, 0) * Matrix.CreateRotationX(MathHelper.TwoPi * skyBox.CelestialAngle));
+
+			var lightDirection = lightPosition - cameraPosition;
+			
+			Matrix lightView = Matrix.CreateLookAt(lightPosition,
+				cameraPosition,
+				Vector3.Up);
+
+			Matrix  lightProjection = Matrix.CreateOrthographic(100, 100, 0f, camera.FarDistance * 16f);
 			
 			TransparentEffect.View = view;
 			TransparentEffect.Projection = projection;
-		    
+			TransparentEffect.LightView = lightView;
+			TransparentEffect.LightProjection = lightProjection;
+			TransparentEffect.CameraPosition = cameraPosition;
+			TransparentEffect.CameraFarDistance = camera.FarDistance;
+			
 			AnimatedEffect.View = view;
 			AnimatedEffect.Projection = projection;
+			AnimatedEffect.LightView = lightView;
+			AnimatedEffect.LightProjection = lightProjection;
+			AnimatedEffect.CameraPosition = cameraPosition;
+			AnimatedEffect.CameraFarDistance = camera.FarDistance;
 
 			OpaqueEffect.View = view;
 			OpaqueEffect.Projection = projection;
-
+			OpaqueEffect.LightView = lightView;
+			OpaqueEffect.LightProjection = lightProjection;
+			OpaqueEffect.CameraPosition = cameraPosition;
+			OpaqueEffect.CameraFarDistance = camera.FarDistance;
+			
 			TranslucentEffect.View = view;
 			TranslucentEffect.Projection = projection;
-
+			TranslucentEffect.LightView = lightView;
+			TranslucentEffect.LightProjection = lightProjection;
+			TranslucentEffect.CameraPosition = cameraPosition;
+			TranslucentEffect.CameraFarDistance = camera.FarDistance;
+			
 			AnimatedTranslucentEffect.View = view;
 			AnimatedTranslucentEffect.Projection = projection;
-
+			AnimatedTranslucentEffect.LightView = lightView;
+			AnimatedTranslucentEffect.LightProjection = lightProjection;
+			AnimatedTranslucentEffect.CameraPosition = cameraPosition;
+			AnimatedTranslucentEffect.CameraFarDistance = camera.FarDistance;
+			
 			LightingEffect.View = view;
 			LightingEffect.Projection = projection;
+			//LightingEffect.CameraPosition = cameraPosition;
 		}
 		
 		public bool FogEnabled

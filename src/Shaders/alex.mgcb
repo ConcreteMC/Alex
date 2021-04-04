@@ -1,7 +1,7 @@
 
 #----------------------------- Global Properties ----------------------------#
 
-/outputDir:bin
+/outputDir:../Alex/Resources
 /intermediateDir:obj
 /platform:DesktopGL
 /config:

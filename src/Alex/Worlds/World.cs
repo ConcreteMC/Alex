@@ -66,7 +66,7 @@ namespace Alex.Worlds
 		private AlexOptions Options { get; }
 		
 		public InventoryManager InventoryManager { get; }
-		private SkyBox SkyBox { get; }
+		public SkyBox SkyBox { get; }
 
 		public long Time      { get; set; } = 1;
 		public long TimeOfDay { get; set; } = 1;
@@ -283,6 +283,7 @@ namespace Alex.Worlds
 				
 				var diffuseColor = Color.White.ToVector3() * SkyBox.BrightnessModifier;
 				ChunkManager.AmbientLightColor = diffuseColor;
+				ChunkManager.FogColor = SkyBox.WorldFogColor.ToVector3();
 
 				if (Math.Abs(ChunkManager.Shaders.BrightnessModifier - SkyBox.BrightnessModifier) > 0f)
 				{

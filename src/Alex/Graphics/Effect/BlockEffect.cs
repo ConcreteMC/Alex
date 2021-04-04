@@ -16,6 +16,11 @@ namespace Alex.Graphics.Effect
         AlphaTest     = 64, // 0x00000040
         ShaderIndex   = 128, // 0x00000080
         LightOffset   = 256,
+        AmbientColor  = 512,
+        LightDirection = 1024,
+        CameraPosition = 2048,
+        CameraFarDistance = 4096,
+        LightViewProjection = 8192,
        // LightSource1  = 512,
         All           = -1, // 0xFFFFFFFF
     }
@@ -41,38 +46,83 @@ namespace Alex.Graphics.Effect
         private EffectParameter _viewParam;
 
         private EffectParameter _lightOffsetParam;
+
+        private EffectParameter _ambientColorParam;
+
+        private EffectParameter _lightDirectionParam;
+
+        private EffectParameter _cameraPositionParam;
+
+        private EffectParameter _cameraFarDistanceParam;
+        
+        private EffectParameter _lightViewParam;
+        private EffectParameter _lightProjectionParam;
         //EffectParameter worldViewProjParam;
 
         #endregion
 
         #region Fields
 
-        bool _fogEnabled;
-        bool _vertexColorEnabled;
+        private bool _fogEnabled;
+        private bool _vertexColorEnabled;
 
-        Matrix _world      = Matrix.Identity;
-        Matrix _view       = Matrix.Identity;
-        Matrix _projection = Matrix.Identity;
+        private Matrix _world      = Matrix.Identity;
+        private Matrix _view       = Matrix.Identity;
+        private Matrix _projection = Matrix.Identity;
 
-        Matrix _worldView;
+        private Matrix _lightView       = Matrix.Identity;
+        private Matrix _lightProjection = Matrix.Identity;
+        
+        private Matrix _worldView;
 
-        Vector3 _diffuseColor = Vector3.One;
+        private Vector3 _diffuseColor = Vector3.One;
 
-        float _alpha = 1;
+        private float _alpha = 1;
 
-        float _fogStart = 0;
-        float _fogEnd   = 1;
+        private float _fogStart = 0;
+        private float _fogEnd   = 1;
 
-        CompareFunction _alphaFunction = CompareFunction.Greater;
-        int             _referenceAlpha;
-        bool            _isEqNe;
+        private CompareFunction _alphaFunction = CompareFunction.Greater;
+        private int             _referenceAlpha;
+        private bool            _isEqNe;
 
-        EffectDirtyFlags _dirtyFlags = EffectDirtyFlags.All;
+        private EffectDirtyFlags _dirtyFlags = EffectDirtyFlags.All;
 
+        private Color _ambientColor = Color.White;
+        private Vector3 _lightDirection = Vector3.Forward;
+        
+        private Vector3 _cameraPosition =  Vector3.Zero;
+        private float _cameraFarDistance = 0;
         #endregion
 
         #region Public Properties
+
+        public float CameraFarDistance
+        {
+            get
+            {
+                return _cameraFarDistance;
+            }
+            set
+            {
+                _cameraFarDistance = value;
+                _dirtyFlags |= EffectDirtyFlags.CameraFarDistance;
+            }
+        }
         
+        public Vector3 CameraPosition
+        {
+            get
+            {
+                return _cameraPosition;
+            }
+            set
+            {
+                _cameraPosition = value;
+                _dirtyFlags |= EffectDirtyFlags.CameraPosition;
+            }
+        }
+
         /// <summary>
         /// Gets or sets the world matrix.
         /// </summary>
@@ -116,7 +166,32 @@ namespace Alex.Graphics.Effect
                 _dirtyFlags |= EffectDirtyFlags.WorldViewProj;
             }
         }
+        
+        /// <summary>
+        /// Gets or sets the projection matrix.
+        /// </summary>
+        public Matrix LightProjection
+        {
+            get { return _lightProjection; }
 
+            set
+            {
+                _lightProjection = value;
+                _dirtyFlags |= EffectDirtyFlags.LightViewProjection;
+            }
+        }
+
+        
+        public Matrix LightView
+        {
+            get { return _lightView; }
+
+            set
+            {
+                _lightView = value;
+                _dirtyFlags |= EffectDirtyFlags.LightViewProjection;
+            }
+        }
 
         /// <summary>
         /// Gets or sets the material diffuse color (range 0 to 1).
@@ -210,6 +285,34 @@ namespace Alex.Graphics.Effect
         }
 
 
+        /// <summary>
+        /// Gets or sets the ambient light color
+        /// </summary>
+        public Color AmbientLightColor
+        {
+            get { return _ambientColor; }
+
+            set
+            {
+                _ambientColor = value;
+                _dirtyFlags |= EffectDirtyFlags.AmbientColor;
+            }
+        }
+        
+        /// <summary>
+        /// Gets or sets the ambient light color
+        /// </summary>
+        public Vector3 AmbientLightDirection
+        {
+            get { return _lightDirection; }
+
+            set
+            {
+                _lightDirection = value;
+                _dirtyFlags |= EffectDirtyFlags.LightDirection;
+            }
+        }
+        
         /// <summary>
         /// Gets or sets the fog color.
         /// </summary>
@@ -322,9 +425,16 @@ namespace Alex.Graphics.Effect
             _referenceAlpha = cloneSource._referenceAlpha;
 
             _lightOffset = cloneSource._lightOffset;
-            
-          //  _lightSource1 = cloneSource._lightSource1;
-           // _lightSource1Strength = cloneSource._lightSource1Strength;
+
+            _lightDirection = cloneSource._lightDirection;
+            _ambientColor = cloneSource._ambientColor;
+            _cameraPosition = cloneSource._cameraPosition;
+            _cameraFarDistance = cloneSource._cameraFarDistance;
+
+            _lightView = cloneSource._lightView;
+            _lightProjection = cloneSource._lightProjection;
+            //  _lightSource1 = cloneSource._lightSource1;
+            // _lightSource1Strength = cloneSource._lightSource1Strength;
         }
 
         /// <summary>
@@ -356,6 +466,13 @@ namespace Alex.Graphics.Effect
             _viewParam = Parameters["View"];
 
             _lightOffsetParam = Parameters["LightOffset"];
+            _ambientColorParam = Parameters["AmbientColor"];
+            _lightDirectionParam = Parameters["LightDirection"];
+            _cameraPositionParam = Parameters["CameraPosition"];
+            _cameraFarDistanceParam = Parameters["CameraFarDistance"];
+
+            _lightViewParam = Parameters["LightView"];
+            _lightProjectionParam = Parameters["LightProjection"];
             //  worldViewProjParam = Parameters["WorldViewProj"];
         }
         
@@ -442,6 +559,39 @@ namespace Alex.Graphics.Effect
                 _dirtyFlags, ref _world, ref _view, ref _projection, ref _worldView, _fogEnabled, _fogStart, _fogEnd,
                 _worldParam, _viewParam, _projParam, _fogStartParam, _fogEndParam, _fogEnabledParam, _fogColorParam, FogColor);
 
+                        
+            if ((_dirtyFlags & EffectDirtyFlags.LightViewProjection) != 0)
+            {
+                _lightViewParam.SetValue(_lightView);
+                //_lightProjectionParam.SetValue(_lightProjection);
+                _dirtyFlags &= ~EffectDirtyFlags.LightViewProjection;
+            }
+            
+            
+            if ((_dirtyFlags & EffectDirtyFlags.CameraFarDistance) != 0)
+            {
+                _cameraFarDistanceParam.SetValue(_cameraFarDistance);
+                _dirtyFlags &= ~EffectDirtyFlags.CameraFarDistance;
+            }
+            
+            if ((_dirtyFlags & EffectDirtyFlags.CameraPosition) != 0)
+            {
+                _cameraPositionParam.SetValue(_cameraPosition);
+                _dirtyFlags &= ~EffectDirtyFlags.CameraPosition;
+            }
+            
+            if ((_dirtyFlags & EffectDirtyFlags.LightDirection) != 0)
+            {
+            //  _lightDirectionParam.SetValue(_lightDirection);
+                _dirtyFlags &= ~EffectDirtyFlags.LightDirection;
+            }
+            
+            if ((_dirtyFlags & EffectDirtyFlags.AmbientColor) != 0)
+            {
+               // _ambientColorParam.SetValue(_ambientColor.ToVector3());
+                _dirtyFlags &= ~EffectDirtyFlags.AmbientColor;
+            }
+            
             if ((_dirtyFlags & EffectDirtyFlags.LightOffset) != 0)
             {
                 _lightOffsetParam.SetValue((float)_lightOffset);

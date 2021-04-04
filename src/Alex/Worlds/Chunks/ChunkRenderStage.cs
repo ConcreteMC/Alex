@@ -4,6 +4,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using Alex.API.Blocks;
 using Alex.API.Graphics;
 using Alex.API.Utils;
 using Alex.API.Utils.Collections;
@@ -42,6 +43,7 @@ namespace Alex.Worlds.Chunks
 
 		public void AddVertex(BlockCoordinates blockCoordinates, 
 			Vector3 position,
+			BlockFace face,
 			Vector2 textureCoordinates,
 			Color color,
 			byte blockLight,
@@ -60,7 +62,7 @@ namespace Alex.Worlds.Chunks
 				TextureStorage.IncreaseUsage(textureIndex);
 
 				var vertexData = new VertexData(
-					position, (ushort) textureIndex, color.PackedValue, (byte) blockLight,
+					position, face, (ushort) textureIndex, color.PackedValue, (byte) blockLight,
 					skyLight);
 				
 				Interlocked.Increment(ref _vertexCount);
@@ -125,7 +127,7 @@ namespace Alex.Worlds.Chunks
 					foreach (var vertex in block.Value)
 					{
 						vertices[index] = new MinifiedBlockShaderVertex(
-							vertex.Position, TextureStorage[vertex.TexCoords], new Color(vertex.Color),
+							vertex.Position, vertex.Face.GetVector3(), TextureStorage[vertex.TexCoords], new Color(vertex.Color),
 							vertex.BlockLight, vertex.SkyLight);
 						
 						index++;

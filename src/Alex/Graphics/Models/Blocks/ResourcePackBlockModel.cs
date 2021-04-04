@@ -703,7 +703,7 @@ namespace Alex.Graphics.Models.Blocks
 								out var skyLight, true);
 
 							chunkBuilder.AddVertex(
-								blockCoordinates, vertex.Position + position + positionOffset, vertex.TexCoords,
+								blockCoordinates, vertex.Position + position + positionOffset, vertex.Face, vertex.TexCoords,
 								vertex.Color, blockLight, skyLight, targetState);
 						}
 					}

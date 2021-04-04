@@ -286,7 +286,7 @@ namespace Alex.Graphics.Models.Blocks
 					vert.TexCoords += map.TextureInfo.Position;
 					vert.TexCoords *= (Vector2.One / map.TextureInfo.AtlasSize);
 
-					chunkBuilder.AddVertex(blockCoordinates, vert.Position, vert.TexCoords, vert.Color, blockLight, skyLight, RenderStage.Liquid);
+					chunkBuilder.AddVertex(blockCoordinates, vert.Position, vert.Face, vert.TexCoords, vert.Color, blockLight, skyLight, RenderStage.Liquid);
 				}
 			}
 

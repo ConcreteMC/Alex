@@ -183,7 +183,7 @@ namespace Alex.Graphics.Models
 			CloudsPlane.SetData<VertexPositionTexture>(cloudVertices);
         }
 
-		private float CelestialAngle
+		public float CelestialAngle
 		{
 			get
 			{

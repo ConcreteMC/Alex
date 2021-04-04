@@ -633,7 +633,7 @@ namespace Alex.Worlds
 		float                    _timer        = 0.0f;
 		public void Update(IUpdateArgs args)
 		{
-			Shaders.Update(args.Camera);
+			Shaders.Update(World.SkyBox, args.Camera);
 
 			_timer += (float)args.GameTime.ElapsedGameTime.TotalSeconds;
 			if (_timer >= (1.0f / _framerate ))
