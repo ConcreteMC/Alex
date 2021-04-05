@@ -261,10 +261,8 @@ namespace Alex.Graphics.Models.Blocks
 			var textureInfo = ti.Value;
 
 			var tw = textureInfo.Width / textureInfo.XFrames;
-
 			//if (textureInfo.Animated)
 			//	tw /= 32;
-			
 			var th = textureInfo.Height / textureInfo.YFrames;
 			//if (textureInfo.Animated)
 			//	th /= 32;
@@ -273,12 +271,13 @@ namespace Alex.Graphics.Models.Blocks
 			x2 = (x2 * (tw ));
 			y1 = (y1 * (th));
 			y2 = (y2 * (th));
-
+			
 			var map = new BlockTextureData(textureInfo,
 				new Microsoft.Xna.Framework.Vector2(x1, y1), new Microsoft.Xna.Framework.Vector2(x2, y1),
 				new Microsoft.Xna.Framework.Vector2(x1, y2), new Microsoft.Xna.Framework.Vector2(x2, y2), color, color,
 				color, textureInfo.Animated);
 
+			//map.Rotate(rot);
 			return map;
 		}
 

@@ -11,12 +11,11 @@ namespace Alex.Worlds
 	public class RenderingShaders
 	{
 		public BlockEffect AnimatedEffect            { get; }
-		public BlockEffect AnimatedTranslucentEffect { get; }
+
 		public BlockEffect TransparentEffect         { get; }
 		public BlockEffect TranslucentEffect         { get; }
 		public BlockEffect OpaqueEffect              { get; }
-
-		public LightingEffect LightingEffect { get; }
+		
 		
 		public RenderingShaders(GraphicsDevice device)
 		{
@@ -66,28 +65,12 @@ namespace Alex.Worlds
 				
 				AmbientLightColor = Color.White,
 				AmbientLightDirection = new Vector3(0f, -0.25f, -1f),
+				ApplyAnimations = true
 				// TextureEnabled = true
-			};
-
-			AnimatedTranslucentEffect = new BlockEffect()
-			{
-				//Texture = Resources.Atlas.GetAtlas(0),
-				VertexColorEnabled = true,
-				World = Matrix.Identity,
-				AlphaFunction = CompareFunction.Greater,
-				ReferenceAlpha = 127,
-				FogStart = fogStart,
-				FogEnabled = true,
-				Alpha = 0.5f,
-				
-				AmbientLightColor = Color.White,
-				AmbientLightDirection = new Vector3(0f, -0.25f, -1f),
 			};
 
 			OpaqueEffect = new BlockEffect()
 			{
-				//  TextureEnabled = true,
-				//	Texture = stillAtlas,
 				FogStart = fogStart,
 				VertexColorEnabled = true,
 				//  LightingEnabled = true,
@@ -97,28 +80,18 @@ namespace Alex.Worlds
 				
 				AmbientLightColor = Color.White,
 				AmbientLightDirection = new Vector3(0f, -0.25f, -1f),
-				//    AlphaFunction = CompareFunction.Greater,
-				//    ReferenceAlpha = 127
-
-				//  PreferPerPixelLighting = false
-			};
-			
-			LightingEffect = new LightingEffect(device)
-			{
-				
 			};
 		}
 
 		public void SetTextures(Texture2D texture)
 		{
-			AnimatedTranslucentEffect.Texture = AnimatedEffect.Texture = texture;
+			AnimatedEffect.Texture = texture;
 			TranslucentEffect.Texture = TransparentEffect.Texture = OpaqueEffect.Texture = texture;
 		}
 
 		public void NextFrame()
 		{
 			AnimatedEffect.Frame++;
-			AnimatedTranslucentEffect.Frame++;
 		}
 
 		public void Update(float dt, SkyBox skyBox, ICamera camera /*Matrix view, Matrix projection*/)
@@ -169,17 +142,6 @@ namespace Alex.Worlds
 		//	TranslucentEffect.LightProjection = lightProjection;
 			TranslucentEffect.CameraPosition = cameraPosition;
 			TranslucentEffect.CameraFarDistance = camera.FarDistance;
-			
-			AnimatedTranslucentEffect.View = view;
-			AnimatedTranslucentEffect.Projection = projection;
-		//	AnimatedTranslucentEffect.LightView = lightView;
-	//		AnimatedTranslucentEffect.LightProjection = lightProjection;
-			AnimatedTranslucentEffect.CameraPosition = cameraPosition;
-			AnimatedTranslucentEffect.CameraFarDistance = camera.FarDistance;
-			
-			LightingEffect.View = view;
-			LightingEffect.Projection = projection;
-			//LightingEffect.CameraPosition = cameraPosition;
 		}
 		
 		public bool FogEnabled
@@ -190,7 +152,6 @@ namespace Alex.Worlds
 				TransparentEffect.FogEnabled = value;
 				TranslucentEffect.FogEnabled = value;
 				AnimatedEffect.FogEnabled = value;
-				AnimatedTranslucentEffect.FogEnabled = value;
 				OpaqueEffect.FogEnabled = value;
 			}
 		}
@@ -204,7 +165,6 @@ namespace Alex.Worlds
 				OpaqueEffect.FogColor = value;
 				AnimatedEffect.FogColor = value;
 				TranslucentEffect.FogColor = value;
-				AnimatedTranslucentEffect.FogColor = value;
 			}
 		}
 
@@ -218,13 +178,11 @@ namespace Alex.Worlds
 				OpaqueEffect.FogStart = fogStart;
 				AnimatedEffect.FogStart = fogStart;
 				TranslucentEffect.FogStart = fogStart;
-				AnimatedTranslucentEffect.FogStart = fogStart;
 				
 				TransparentEffect.FogEnd = value;
 				OpaqueEffect.FogEnd = value;
 				AnimatedEffect.FogEnd = value;
 				TranslucentEffect.FogEnd = value;
-				AnimatedTranslucentEffect.FogEnd = value;
 			}
 		}
 
@@ -239,7 +197,6 @@ namespace Alex.Worlds
 				OpaqueEffect.DiffuseColor = value;
 				// OpaqueEffect.DiffuseColor = value;
 				AnimatedEffect.DiffuseColor = value;
-				AnimatedTranslucentEffect.DiffuseColor = value;
 			}
 		}
 
@@ -255,10 +212,7 @@ namespace Alex.Worlds
 				TranslucentEffect.LightOffset = value;
 
 				OpaqueEffect.LightOffset = value;
-				// OpaqueEffect.DiffuseColor = value;
 				AnimatedEffect.LightOffset = value;
-				AnimatedTranslucentEffect.LightOffset = value;
-				LightingEffect.LightOffset = value;
 			}
 		}
 	}

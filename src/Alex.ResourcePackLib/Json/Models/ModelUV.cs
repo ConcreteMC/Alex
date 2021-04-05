@@ -7,13 +7,13 @@ namespace Alex.ResourcePackLib.Json.Models
 	public class ModelUV
 	{
 
-		public int X1 { get; set; } = 0;
-		public int Y1 { get; set; } = 0;
-		public int X2 { get; set; } = 16;
-		public int Y2 { get; set; } = 16;
+		public float X1 { get; set; } = 0;
+		public float Y1 { get; set; } = 0;
+		public float X2 { get; set; } = 16;
+		public float Y2 { get; set; } = 16;
 
 		public ModelUV() { }
-		public ModelUV(int x1, int y1, int x2, int y2)
+		public ModelUV(float x1, float y1, float x2, float y2)
 		{
 			X1 = x1;
 			Y1 = y1;

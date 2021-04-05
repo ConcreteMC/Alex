@@ -5,6 +5,8 @@ using System.Linq;
 using Alex.API.Resources;
 using Alex.API.Utils;
 using Alex.ResourcePackLib.Json.Textures;
+using NLog;
+using SixLabors.Fonts;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Drawing.Processing;
 using SixLabors.ImageSharp.PixelFormats;
@@ -118,15 +120,7 @@ namespace Alex.Graphics
     /// </summary>
     public class Packer
     {
-        /// <summary>
-        /// Stream that recieves all the info logged
-        /// </summary>
-        public StringWriter Log;
-
-        /// <summary>
-        /// Stream that recieves all the error info
-        /// </summary>
-        public StringWriter Error;
+        private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(Packer));
         
         /// <summary>
         /// Number of pixels that separate textures in the atlas
@@ -155,9 +149,6 @@ namespace Alex.Graphics
 
         public Packer()
         {
-          //  SourceTextures = new List<TextureInfo>();
-            Log = new StringWriter();
-            Error = new StringWriter();
         }
 
         /// <summary>
@@ -190,8 +181,7 @@ namespace Alex.Graphics
         public void Process(List<TextureInfo> sourceTextures, int atlasSize, int padding, bool debugMode)
         {
             Padding = padding;
-          //  var width = GuessOutputWidth(sourceTextures) * 2;
-         //   atlasSize = width;
+            
             AtlasSize = atlasSize;
             DebugMode = debugMode;
             
@@ -224,49 +214,6 @@ namespace Alex.Graphics
 
                 sourceTextures = leftovers;
             }
-        }
-
-        public void SaveAtlasses(string destination)
-        {
-            int atlasCount = 0;
-            string prefix = destination.Replace(Path.GetExtension(destination), "");
-
-            string descFile = destination;
-            StreamWriter tw = new StreamWriter(destination);
-            tw.WriteLine("source_tex, atlas_tex, u, v, scale_u, scale_v");
-
-            foreach (Atlas atlas in Atlasses)
-            {
-                string atlasName = String.Format(prefix + "{0:000}" + ".png", atlasCount);
-
-                //1: Save images
-                var img = CreateAtlasImage(atlas);
-                img.Save(atlasName);
-
-                //2: save description in file
-                foreach (Node n in atlas.Nodes)
-                {
-                    if (n.Texture != null)
-                    {
-                        tw.Write(n.Texture.Source + ", ");
-                        tw.Write(atlasName + ", ");
-                        tw.Write(((float)n.Bounds.X / atlas.Width).ToString() + ", ");
-                        tw.Write(((float)n.Bounds.Y / atlas.Height).ToString() + ", ");
-                        tw.Write(((float)n.Bounds.Width / atlas.Width).ToString() + ", ");
-                        tw.WriteLine(((float)n.Bounds.Height / atlas.Height).ToString());
-                    }
-                }
-
-                ++atlasCount;
-            }
-            tw.Close();
-
-            tw = new StreamWriter(prefix + ".log");
-            tw.WriteLine("--- LOG -------------------------------------------");
-            tw.WriteLine(Log.ToString());
-            tw.WriteLine("--- ERROR -----------------------------------------");
-            tw.WriteLine(Error.ToString());
-            tw.Close();
         }
 
         private void HorizontalSplit(Node toSplit, int width, int height, List<Node> list)
@@ -404,10 +351,18 @@ namespace Alex.Graphics
 
         public Image<Rgba32> CreateAtlasImage(Atlas atlas)
         {
+         //   var fo = SystemFonts.Find("Roboto");
+         //   var font = new Font(fo, 16, FontStyle.Regular);
+            
             Image<Rgba32> img = new Image<Rgba32>(atlas.Width, atlas.Height);
 
             if (DebugMode)
             {
+                img.Mutate(x =>
+                {
+                    x.Fill(Color.Green,
+                        new Rectangle(0, 0, atlas.Width, atlas.Height));
+                });
               //  g.FillRectangle(Brushes.Green, new Rectangle(0, 0, atlas.Width, atlas.Height));
             }
 
@@ -423,32 +378,48 @@ namespace Alex.Graphics
                     
                    // g.DrawImage(sourceImg, n.Bounds);
 
-                 /*   if (DebugMode)
+                   /* if (DebugMode)
                     {
-                        string label = Path.GetFileNameWithoutExtension(n.Texture.Source);
-                        SizeF labelBox = g.MeasureString(label, SystemFonts.MenuFont, new SizeF(n.Bounds.Size));
-                        RectangleF rectBounds = new Rectangle(n.Bounds.Location, new Size((int)labelBox.Width, (int)labelBox.Height));
-                        g.FillRectangle(Brushes.Black, rectBounds);
-                        g.DrawString(label, SystemFonts.MenuFont, Brushes.White, rectBounds);
+                        string label = Path.GetFileNameWithoutExtension(n.Texture.ResourceLocation.ToString());
+                        
+                        img.Mutate(x =>
+                        {
+                            var labelBox = TextMeasurer.Measure(label, new RendererOptions(font));
+                            
+                            RectangleF rectBounds = new Rectangle(n.Bounds.Location,
+                                new Size((int)labelBox.Width, (int)labelBox.Height));
+                            
+                            x.Fill(Color.Black, rectBounds);
+
+                            x.DrawText(label, font, Color.White, rectBounds.Location);
+                        });
                     }*/
                 }
                 else
                 {
-                    /*img.Mutate(x =>
+                    img.Mutate(x =>
                     {
                         x.Fill(Color.DarkMagenta,
                                     new Rectangle(
                                         n.Bounds.Location.X, n.Bounds.Location.Y, n.Bounds.Width, n.Bounds.Height));
-                    });*/
+                    });
                     //g.FillRectangle(Brushes.DarkMagenta, n.Bounds);
 
-                   /* if (DebugMode)
+                    /*if (DebugMode)
                     {
                         string label = n.Bounds.Width.ToString() + "x" + n.Bounds.Height.ToString();
-                        SizeF labelBox = g.MeasureString(label, SystemFonts.MenuFont, new SizeF(n.Bounds.Size));
-                        RectangleF rectBounds = new Rectangle(n.Bounds.Location, new Size((int)labelBox.Width, (int)labelBox.Height));
-                        g.FillRectangle(Brushes.Black, rectBounds);
-                        g.DrawString(label, SystemFonts.MenuFont, Brushes.White, rectBounds);
+                        
+                        img.Mutate(x =>
+                        {
+                            var labelBox = TextMeasurer.Measure(label, new RendererOptions(font));
+                            
+                            RectangleF rectBounds = new Rectangle(n.Bounds.Location,
+                                new Size((int)labelBox.Width, (int)labelBox.Height));
+                            
+                            x.Fill(Color.Black, rectBounds);
+
+                            x.DrawText(label, font, Color.White, rectBounds.Location);
+                        });
                     }*/
                 }
             }

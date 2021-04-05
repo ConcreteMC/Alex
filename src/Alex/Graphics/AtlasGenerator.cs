@@ -165,8 +165,8 @@ namespace Alex.Graphics
 		   var size = textures.Max(x => Math.Max(x.Width, x.Height));
 		   
 		    Packer p = new Packer();
-		    p.FitHeuristic = BestFitHeuristic.Area;
-		    p.Process(textures, size, 1, false);
+		    p.FitHeuristic = BestFitHeuristic.MaxOneAxis;
+		    p.Process(textures, size, 4, false);
 
 		    //packedTexture.SaveAsPng("/home/kenny/atlas.png");
 		    Dictionary<ResourceLocation, Utils.TextureInfo> textureInfos = new Dictionary<ResourceLocation, Utils.TextureInfo>();
@@ -184,7 +184,7 @@ namespace Alex.Graphics
 					    node.Texture.ResourceLocation,
 					    new Utils.TextureInfo(
 						    new Vector2(img.Width, img.Height),
-						    new Vector2(node.Bounds.Location.X, node.Bounds.Location.Y),
+						    new Vector2(node.Bounds.Location.X, node.Bounds.Location.Y) ,
 						    node.Bounds.Size.Width, 
 						    node.Bounds.Size.Height, 
 						    node.Bounds.Size.Height != node.Bounds.Size.Width,
@@ -192,10 +192,10 @@ namespace Alex.Graphics
 						    node.Bounds.Height / TextureHeight));
 			    }
 
-			    _stillFrame = GetMipMappedTexture2D(device, img, "atlas", false);
+			    _stillFrame = GetMipMappedTexture2D(device, img);
 			    _atlasLocations = textureInfos;
 
-			   // img.SaveAsPng("/home/kenny/atlas.png");
+			    img.SaveAsPng("/home/kenny/atlas.png");
 			    break;
 			    // img.SaveAsPng("/home/kenny/atlas.png");
 		    }
@@ -208,7 +208,7 @@ namespace Alex.Graphics
 			    $"TextureAtlas's generated in {sw.ElapsedMilliseconds}ms! ({PlayingState.GetBytesReadable(totalSize, 2)})");
 	    }
 
-	    private PooledTexture2D GetMipMappedTexture2D(GraphicsDevice device, Image<Rgba32> image, string name, bool save = false)
+	    private PooledTexture2D GetMipMappedTexture2D(GraphicsDevice device, Image<Rgba32> image)
 	    {
 		    PooledTexture2D texture = GpuResourceManager.GetTexture2D(this, device, image.Width, image.Height, true, SurfaceFormat.Color);
 

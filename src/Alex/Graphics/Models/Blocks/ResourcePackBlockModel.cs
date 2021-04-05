@@ -338,9 +338,9 @@ namespace Alex.Graphics.Models.Blocks
 				var c = MathF.Cos(angle);
 				var s = MathF.Sin(angle);
 
-				v.X -= (origin.X / 16.0f);
-				v.Y -= (origin.Y / 16.0f);
-				v.Z -= (origin.Z / 16.0f);
+				v.X -= (origin.X );
+				v.Y -= (origin.Y );
+				v.Z -= (origin.Z );
 				
 				switch (r.Axis)
 				{
@@ -392,9 +392,9 @@ namespace Alex.Graphics.Models.Blocks
 						break;
 				}
 				
-				v.X += (origin.X / 16.0f);
-				v.Y += (origin.Y / 16.0f);
-				v.Z += (origin.Z / 16.0f);
+				v.X += (origin.X );
+				v.Y += (origin.Y );
+				v.Z += (origin.Z );
 			}
 
 			return v;
@@ -411,9 +411,6 @@ namespace Alex.Graphics.Models.Blocks
 			{
 				var v = vertices[i];
 
-				var textureCoordinates = v.TexCoords / 16f;
-				
-				v.Position /= 16f;
 				v.Position = FixRotation(v.Position, element);
 
 				if (bsModel.X > 0)
@@ -421,11 +418,11 @@ namespace Alex.Graphics.Models.Blocks
 					var rotX = bsModel.X * (MathHelper.Pi / 180f);
 					var c    = MathF.Cos(rotX);
 					var s    = MathF.Sin(rotX);
-					var z    = v.Position.Z - 0.5f;
-					var y    = v.Position.Y - 0.5f;
+					var z    = v.Position.Z - 8f;
+					var y    = v.Position.Y - 8f;
 
-					v.Position.Z = 0.5f + (z * c - y * s);
-					v.Position.Y = 0.5f + (y * c + z * s);
+					v.Position.Z = 8f + (z * c - y * s);
+					v.Position.Y = 8f + (y * c + z * s);
 				}
 
 				if (bsModel.Y > 0)
@@ -433,11 +430,11 @@ namespace Alex.Graphics.Models.Blocks
 					var rotY = bsModel.Y * (MathHelper.Pi / 180f);
 					var c    = MathF.Cos(rotY);
 					var s    = MathF.Sin(rotY);
-					var x    = v.Position.X - 0.5f;
-					var z    = v.Position.Z - 0.5f;
+					var x    = v.Position.X - 8f;
+					var z    = v.Position.Z - 8f;
 
-					v.Position.X = 0.5f + (x * c - z * s);
-					v.Position.Z = 0.5f + (z * c + x * s);
+					v.Position.X = 8f + (x * c - z * s);
+					v.Position.Z = 8f + (z * c + x * s);
 				}
 
 				if (uvMap.HasValue)
@@ -447,17 +444,17 @@ namespace Alex.Graphics.Models.Blocks
 
 					var rot = face.Rotation;
 
-					if (rot > 0)
+					/*if (rot > 0)
 					{
 						var rotY = rot * (MathHelper.Pi / 180f);
 						var c    = MathF.Cos(rotY);
 						var s    = MathF.Sin(rotY);
 						
-						var x    = textureCoordinates.X - 8f * tw;
-						var y    = textureCoordinates.Y - 8f * th;
+						var x    = v.TexCoords.X - 8f * tw;
+						var y    = v.TexCoords.Y - 8f * th;
 
-						textureCoordinates.X = 8f * tw + (x * c - y * s);
-						textureCoordinates.Y = 8f * th + (y * c + x * s);
+						v.TexCoords.X = 8f * tw + (x * c - y * s);
+						v.TexCoords.Y = 8f * th + (y * c + x * s);
 					}
 					
 					if (bsModel.Uvlock)
@@ -467,11 +464,11 @@ namespace Alex.Graphics.Models.Blocks
 							var rotY = bsModel.Y * (MathHelper.Pi / 180f);
 							var c    = MathF.Cos(rotY);
 							var s    = MathF.Sin(rotY);
-							var x    = textureCoordinates.X - 8f * tw;
-							var y    = textureCoordinates.Y - 8f * th;
+							var x    = v.TexCoords.X - 8f * tw;
+							var y    = v.TexCoords.Y - 8f * th;
 
-							textureCoordinates.X = 8f * tw + (x * c - y * s);
-							textureCoordinates.Y = 8f * th + (y * c + x * s);
+							v.TexCoords.X = 8f * tw + (x * c - y * s);
+							v.TexCoords.Y = 8f * th + (y * c + x * s);
 						}
 
 						if (bsModel.X > 0 && (blockFace != BlockFace.Up && blockFace != BlockFace.Down))
@@ -479,19 +476,21 @@ namespace Alex.Graphics.Models.Blocks
 							var rotX = bsModel.X * (MathHelper.Pi / 180f);
 							var c    = MathF.Cos(rotX);
 							var s    = MathF.Sin(rotX);
-							var x    = textureCoordinates.X - 8f * tw;
-							var y    = textureCoordinates.Y - 8f * th;
+							var x    = v.TexCoords.X - 8f * tw;
+							var y    = v.TexCoords.Y - 8f * th;
 
-							textureCoordinates.X = 8f * tw + (x * c - y * s);
-							textureCoordinates.Y = 8f * th + (y * c + x * s);
+							v.TexCoords.X = 8f * tw + (x * c - y * s);
+							v.TexCoords.Y = 8f * th + (y * c + x * s);
 						}
-					}
+					}*/
 					
-					textureCoordinates += uvMap.Value.TextureInfo.Position;
+					//textureCoordinates += uvMap.Value.TextureInfo.Position;
 				//	textureCoordinates *= (Vector2.One / uvMap.Value.TextureInfo.AtlasSize);
 				}
-				
-				v.TexCoords = textureCoordinates;
+
+				v.TexCoords = (v.TexCoords / 16f);
+				v.Position /= 16f;
+				//v.TexCoords = textureCoordinates;
 				v.Face = blockFace;
 				vertices[i] = v;
 			}
@@ -508,7 +507,7 @@ namespace Alex.Graphics.Models.Blocks
 			ResourcePackModelBase model,
 			Biome biome)
 		{
-			var positionOffset = baseBlock.GetOffset(NoiseGenerator, position);
+			//var positionOffset = baseBlock.GetOffset(NoiseGenerator, position);
 			//bsModel.Y = Math.Abs(180 - bsModel.Y);
 
 			//if (Resources.BlockModelRegistry.TryGet(blockStateModel.ModelName, out var registryEntry))
@@ -521,7 +520,6 @@ namespace Alex.Graphics.Models.Blocks
 				{
 					var element = model.Elements[index];
 					element.To *= Scale;
-
 					element.From *= Scale;
 
 					//var faces = element.Faces.ToArray();
@@ -590,8 +588,8 @@ namespace Alex.Graphics.Models.Blocks
 						else
 						{
 							x1 = uv.X1;
-							x2 = uv.X2;
 							y1 = uv.Y1;
+							x2 = uv.X2;
 							y2 = uv.Y2;
 						}
 
@@ -655,6 +653,7 @@ namespace Alex.Graphics.Models.Blocks
 
 						BlockTextureData uvMap = GetTextureUVMap(
 								Resources, face.Value.Texture, x1, x2, y1, y2, face.Value.Rotation, faceColor, null);
+						//uvMap.Rotate(face.Value.Rotation);
 						
 						var vertices = GetFaceVertices(face.Key, element.From, element.To, uvMap);
 
@@ -696,18 +695,21 @@ namespace Alex.Graphics.Models.Blocks
 						for (int i = 0; i < vertices.Length; i++)
 						{
 							var vertex = vertices[i];
-
+							var vertexPosition = (vertex.Position) + position;
+							var textureCoordinates = (vertex.TexCoords) + uvMap.TextureInfo.Position;
+							
 							BlockModel.GetLight(
-								world, vertex.Position + position + vertex.Face.GetVector3(), out var blockLight,
+								world, vertexPosition, out var blockLight,
 								out var skyLight, true);
-
+							
 							chunkBuilder.AddVertex(
-								blockCoordinates, vertex.Position + position + positionOffset, vertex.Face,
+								blockCoordinates, vertexPosition, vertex.Face,
 								new Vector4(
-									vertex.TexCoords.X, vertex.TexCoords.Y,
+									textureCoordinates.X, textureCoordinates.Y,
 									 uvMap.TextureInfo.Width,
 									uvMap.TextureInfo.Height), vertex.Color, blockLight, skyLight,
 								targetState);
+							
 						}
 					}
 				}

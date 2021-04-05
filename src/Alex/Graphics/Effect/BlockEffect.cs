@@ -32,6 +32,7 @@ namespace Alex.Graphics.Effect
 
         private EffectParameter _textureParam;
 
+        private EffectParameter _applyAnimationsParameter;
         private EffectParameter _textureScaleParam;
        // EffectParameter diffuseColorParam;
         private EffectParameter _alphaTestParam;
@@ -100,9 +101,23 @@ namespace Alex.Graphics.Effect
         private float _cameraFarDistance = 0;
 
         private float _frame = 0;
+        private bool _applyAnimations = false;
         #endregion
 
         #region Public Properties
+
+        public bool ApplyAnimations
+        {
+            get
+            {
+                return _applyAnimations;
+            }
+            set
+            {
+                _applyAnimations = value;
+                _dirtyFlags |= EffectDirtyFlags.Frame;
+            }
+        }
 
         public float Frame
         {
@@ -457,6 +472,8 @@ namespace Alex.Graphics.Effect
 
             _lightView = cloneSource._lightView;
             _lightProjection = cloneSource._lightProjection;
+
+            _applyAnimations = cloneSource._applyAnimations;
             //  _lightSource1 = cloneSource._lightSource1;
             // _lightSource1Strength = cloneSource._lightSource1Strength;
         }
@@ -499,32 +516,10 @@ namespace Alex.Graphics.Effect
             _lightProjectionParam = Parameters["LightProjection"];
             _frameParam = Parameters["ElapsedTime"];
             _textureScaleParam = Parameters["UvScale"];
+            _applyAnimationsParameter = Parameters["ApplyAnimations"];
             //  worldViewProjParam = Parameters["WorldViewProj"];
         }
-        
-        private static void SetFogVector(
-            ref Matrix worldView,
-            float fogStart,
-            float fogEnd,
-            EffectParameter fogVectorParam)
-        {
-            if ((double) fogStart == (double) fogEnd)
-            {
-                fogVectorParam.SetValue(new Vector4(0.0f, 0.0f, 0.0f, 1f));
-            }
-            else
-            {
-                float num = (float) (1.0 / ((double) fogStart - (double) fogEnd));
-                fogVectorParam.SetValue(new Vector4()
-                {
-                    X = worldView.M13 * num,
-                    Y = worldView.M23 * num,
-                    Z = worldView.M33 * num,
-                    W = (worldView.M43 + fogStart) * num
-                });
-            }
-        }
-        
+
         internal static EffectDirtyFlags SetWorldViewProjAndFog(
             EffectDirtyFlags dirtyFlags,
             ref Matrix world,
@@ -545,10 +540,6 @@ namespace Alex.Graphics.Effect
         {
             if ((dirtyFlags & EffectDirtyFlags.WorldViewProj) != ~EffectDirtyFlags.All)
             {
-             //   Matrix.Multiply(ref world, ref view, out worldView);
-            //    Matrix result;
-             //   Matrix.Multiply(ref worldView, ref projection, out result);
-               // worldViewProjParam.SetValue(result);
                 worldParam.SetValue(world);
                 viewParam.SetValue(view);
                 projectionParam.SetValue(projection);
@@ -558,7 +549,6 @@ namespace Alex.Graphics.Effect
             {
                 if ((dirtyFlags & (EffectDirtyFlags.Fog | EffectDirtyFlags.FogEnable)) != ~EffectDirtyFlags.All)
                 {
-                   // SetFogVector(ref worldView, fogStart, fogEnd, fogVectorParam);
                    fogStartParam.SetValue(fogStart);
                    fogEndParam.SetValue(fogEnd);
                    fogEnabledParam.SetValue(1f);
@@ -569,7 +559,6 @@ namespace Alex.Graphics.Effect
             else if ((dirtyFlags & EffectDirtyFlags.FogEnable) != ~EffectDirtyFlags.All)
             {
                 fogEnabledParam.SetValue(0f);
-                //fogVectorParam.SetValue(Vector4.Zero);
                 dirtyFlags &= ~EffectDirtyFlags.FogEnable;
             }
             return dirtyFlags;
@@ -723,12 +712,13 @@ namespace Alex.Graphics.Effect
                 if (_isEqNe != eqNe)
                 {
                     _isEqNe = eqNe;
-                    _dirtyFlags |= EffectDirtyFlags.ShaderIndex;
+                    _dirtyFlags &= ~EffectDirtyFlags.ShaderIndex;
                 }
             }
 
             if ((_dirtyFlags & EffectDirtyFlags.Frame) != 0)
             {
+                _applyAnimationsParameter.SetValue(_applyAnimations ? 1f : 0f);
                 _frameParam.SetValue(_frame);
                 _dirtyFlags &= ~EffectDirtyFlags.Frame;
             }

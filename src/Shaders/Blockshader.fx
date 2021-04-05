@@ -30,6 +30,7 @@ float3 FogColor;
 
 float ElapsedTime;
 float2 UvScale;
+float ApplyAnimations = 0;
 
 Texture Texture;
 //: register(s0);
@@ -56,6 +57,17 @@ float ComputeFogFactor(float d)
     return saturate((d - FogStart) / (FogEnd - FogStart)) * FogEnabled;
 }
 
+float2 ApplyFrameOffset(float4 inTexCoords, float2 uv){
+    if (inTexCoords.z % inTexCoords.w != 0){
+        float totalFrames = floor(inTexCoords.w / inTexCoords.z);
+        float index = floor(ElapsedTime % totalFrames);
+
+        uv += float2(0, inTexCoords.z * index);
+    }
+
+    return uv;
+}
+
 VertexToPixel VertexShaderFunction(float4 inPosition : POSITION, float4 inNormal : NORMAL, float4 inTexCoords : TEXCOORD0, float4 inColor : COLOR0, float2 lightValues : TEXCOORD01)  {
     VertexToPixel Output = (VertexToPixel)0;
 
@@ -67,20 +79,14 @@ VertexToPixel VertexShaderFunction(float4 inPosition : POSITION, float4 inNormal
     Output.Color = inColor;
     Output.WorldPos = worldPos;
 
-    float totalFrames = floor(inTexCoords.w / inTexCoords.z);
-    float index = floor(ElapsedTime % totalFrames);
+    float2 uv = float2(inTexCoords.x, inTexCoords.y);
 
-    Output.TexCoords = float2(inTexCoords.x, inTexCoords.y);
-    if (ElapsedTime > 0 && totalFrames > 1){
-        Output.TexCoords += float2(0, inTexCoords.z * index);
-    }
+    if (ApplyAnimations > 0.0f)
+        uv = ApplyFrameOffset(inTexCoords, uv);
 
-    Output.TexCoords *= UvScale;
-    //if (Output.TexCoords.y >= inTexCoords.w){
-        
-    //}
-    //Output.TexCoords *= scale;
-
+    uv *= UvScale;
+    
+    Output.TexCoords = uv;
     Output.FogFactor = ComputeFogFactor(distance(CameraPosition, worldPos));
     Output.Normal = inNormal;
 
