@@ -69,7 +69,7 @@ namespace Alex.Worlds.Chunks
 			BlockEntities = new ConcurrentDictionary<BlockCoordinates, NbtCompound>();
 			_lightUpdateWatch.Start();
 			
-			ChunkData = new ChunkData(new ChunkCoordinates(x, z));
+			ChunkData = new ChunkData(this, new ChunkCoordinates(x, z));
 			
 			var index = new Vector3(x << 4, 0, z << 4);
 			var sizeOffs = 16 * 0.5f - 0.5f;
@@ -124,7 +124,8 @@ namespace Alex.Worlds.Chunks
 
 				if (chunkData == null)
 					return;
-				
+
+				bool forceUpdate = false;
 				var chunkPosition = new Vector3(X << 4, 0, Z << 4);
 				for (int sectionIndex = 0; sectionIndex < 16; sectionIndex++)
 				{
@@ -145,12 +146,17 @@ namespace Alex.Worlds.Chunks
 								bool blockLightUpdate = section.IsBlockLightScheduled(x, y, z);
 								bool skyLightUpdate   = section.IsSkylightUpdateScheduled(x, y, z);
 
-							
-								if ((!IsNew && !scheduled && !blockLightUpdate && !skyLightUpdate))
-									continue;
+								if ((skyLightUpdate || blockLightUpdate) && !scheduled)
+								{
+									forceUpdate = true;
+								}
 
 								try
 								{
+									if ((!IsNew && !scheduled))
+										continue;
+
+								
 									var blockPosition = new BlockCoordinates(
 										(int) (chunkPosition.X + x), y + (sectionIndex << 4), (int) (chunkPosition.Z + z));
 									chunkData?.Remove(device, blockPosition);
@@ -214,7 +220,7 @@ namespace Alex.Worlds.Chunks
 					}
 				}
 				
-				chunkData?.ApplyChanges(device, true);
+				chunkData?.ApplyChanges(device, true, forceUpdate);
 				/*var a = new ChunkOctree(_octree.Bounds);
 
 				foreach (var box in ChunkData.BoundingBoxes)

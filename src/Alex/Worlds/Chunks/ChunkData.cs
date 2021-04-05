@@ -20,14 +20,32 @@ namespace Alex.Worlds.Chunks
         private        ChunkRenderStage[] _stages;
         private static long               _instances = 0;
         public         ChunkCoordinates   Coordinates { get; }
-        public ChunkData(ChunkCoordinates coordinates)
+        private ChunkColumn _chunkColumn;
+        public ChunkData(ChunkColumn chunk, ChunkCoordinates coordinates)
         {
+            _chunkColumn = chunk;
             Coordinates = coordinates;
             var availableStages = Enum.GetValues(typeof(RenderStage));
             _stages = new ChunkRenderStage[availableStages.Length];
             
             
             Interlocked.Increment(ref _instances);
+        }
+
+        public byte GetBlockLight(BlockCoordinates coordinates)
+        {
+            if (Coordinates != new ChunkCoordinates(coordinates))
+                return 0;
+            
+            return (_chunkColumn?.GetBlocklight(coordinates.X & 0xf, coordinates.Y & 0xff, coordinates.Z & 0xf) ?? 0);
+        }
+        
+        public byte GetSkyLight(BlockCoordinates coordinates)
+        {
+            if (Coordinates != new ChunkCoordinates(coordinates))
+                return 15;
+            
+            return (_chunkColumn?.GetSkylight(coordinates.X & 0xf, coordinates.Y & 0xff, coordinates.Z & 0xf) ?? 15);
         }
 
         public bool Draw(GraphicsDevice device, RenderStage stage, Effect effect)
@@ -60,8 +78,6 @@ namespace Alex.Worlds.Chunks
             BlockFace face,
             Vector4 textureCoordinates,
             Color color,
-            byte blockLight,
-            byte skyLight,
             RenderStage stage)
         {
             var rStage = _stages[(int) stage];
@@ -72,7 +88,7 @@ namespace Alex.Worlds.Chunks
                 _stages[(int) stage] = rStage;
             }
            
-            rStage.AddVertex(blockCoordinates, position, face, textureCoordinates, color, blockLight, skyLight);
+            rStage.AddVertex(blockCoordinates, position, face, textureCoordinates, color);
         }
 
         private ChunkRenderStage CreateRenderStage(RenderStage arg)
@@ -95,12 +111,12 @@ namespace Alex.Worlds.Chunks
             return _stages.Where(x => x != null).Any(x => x.Contains(coordinates));
         }
 
-        public void ApplyChanges(GraphicsDevice device, bool keepInMemory)
+        public void ApplyChanges(GraphicsDevice device, bool keepInMemory, bool forceUpdate = false)
         {
             for (var index = 0; index < _stages.Length; index++)
             {
                 var stage = _stages[index];
-                stage?.Apply(device, keepInMemory);
+                stage?.Apply(device, keepInMemory, forceUpdate);
             }
         }
 

@@ -40,14 +40,12 @@ namespace Alex.Worlds.Chunks
 			BlockIndices = new ConcurrentDictionary<BlockCoordinates, List<VertexData>>();
 			//AvailableIndices = new List<(ushort, ushort)>();// new LinkedList<KeyValuePair<int, int>>();
 		}
-
+		
 		public void AddVertex(BlockCoordinates blockCoordinates, 
 			Vector3 position,
 			BlockFace face,
 			Vector4 textureCoordinates,
-			Color color,
-			byte blockLight,
-			byte skyLight)
+			Color color)
 		{
 			//lock (_writeLock)
 			{
@@ -62,8 +60,7 @@ namespace Alex.Worlds.Chunks
 				TextureStorage.IncreaseUsage(textureIndex);*/
 
 				var vertexData = new VertexData(
-					position, face, textureCoordinates, color.PackedValue, (byte) blockLight,
-					skyLight);
+					position, face, textureCoordinates, color.PackedValue);
 				
 				Interlocked.Increment(ref _vertexCount);
 
@@ -126,9 +123,11 @@ namespace Alex.Worlds.Chunks
 				{
 					foreach (var vertex in block.Value)
 					{
+						var p = vertex.Position + vertex.Face.GetVector3();
+						
 						vertices[index] = new MinifiedBlockShaderVertex(
 							vertex.Position, vertex.Face.GetVector3(), vertex.TexCoords, new Color(vertex.Color),
-							vertex.BlockLight, vertex.SkyLight);
+							Parent.GetBlockLight(p), Parent.GetSkyLight(p));
 						
 						index++;
 					}
@@ -140,7 +139,7 @@ namespace Alex.Worlds.Chunks
 
 		private bool _previousKeepInMemory     = false;
 		private int  _primitiveCount = 0;
-		public void Apply(GraphicsDevice device = null, bool keepInMemory = true)
+		public void Apply(GraphicsDevice device = null, bool keepInMemory = true, bool force = false)
 		{
 			//lock (_writeLock)
 			{

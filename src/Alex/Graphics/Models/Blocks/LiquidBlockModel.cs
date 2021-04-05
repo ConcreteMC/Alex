@@ -225,8 +225,8 @@ namespace Alex.Graphics.Models.Blocks
 					vertColor = GetBiomeColor(blockAccess, bx, y, bz);
 				}
 
-				var   skyLight = blockAccess.GetSkyLight(position + face.GetBlockCoordinates());
-				var   blockLight = blockAccess.GetBlockLight(position + face.GetBlockCoordinates());
+			//	var   skyLight = blockAccess.GetSkyLight(position + face.GetBlockCoordinates());
+			//	var   blockLight = blockAccess.GetBlockLight(position + face.GetBlockCoordinates());
 				
 				float height   = 0;
 
@@ -279,7 +279,7 @@ namespace Alex.Graphics.Models.Blocks
 					{
 						//vert.Lighting = new Short2(skyLight, baseBlock.Block.LightValue);
 
-						blockLight = baseBlock.Block.LightValue;
+					//	blockLight = baseBlock.Block.LightValue;
 						vert.Face = face;
 					}
 
@@ -295,7 +295,7 @@ namespace Alex.Graphics.Models.Blocks
 						new Vector4(
 							vert.TexCoords.X, vert.TexCoords.Y, 
 							 map.TextureInfo.Width,
-							map.TextureInfo.Height), vert.Color, blockLight, skyLight,
+							map.TextureInfo.Height), vert.Color,
 						RenderStage.Liquid);
 				}
 			}

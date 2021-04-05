@@ -241,10 +241,10 @@ namespace Alex.Worlds
 
 									if (newChunk)
 									{
-										ScheduleChunkUpdate(new ChunkCoordinates(chunk.X + 1, chunk.Z), ScheduleType.Border | ScheduleType.Full);
-										ScheduleChunkUpdate(new ChunkCoordinates(chunk.X - 1, chunk.Z), ScheduleType.Border | ScheduleType.Full);
-										ScheduleChunkUpdate(new ChunkCoordinates(chunk.X, chunk.Z + 1), ScheduleType.Border| ScheduleType.Full);
-										ScheduleChunkUpdate(new ChunkCoordinates(chunk.X, chunk.Z - 1), ScheduleType.Border| ScheduleType.Full);
+										ScheduleChunkUpdate(new ChunkCoordinates(chunk.X + 1, chunk.Z), ScheduleType.Border);
+										ScheduleChunkUpdate(new ChunkCoordinates(chunk.X - 1, chunk.Z), ScheduleType.Border );
+										ScheduleChunkUpdate(new ChunkCoordinates(chunk.X, chunk.Z + 1), ScheduleType.Border);
+										ScheduleChunkUpdate(new ChunkCoordinates(chunk.X, chunk.Z - 1), ScheduleType.Border);
 									}
 								}
 								finally

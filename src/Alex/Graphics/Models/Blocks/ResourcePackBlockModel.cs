@@ -748,16 +748,16 @@ namespace Alex.Graphics.Models.Blocks
 							var vertexPosition = (vertex.Position) + position;
 							var textureCoordinates = (vertex.TexCoords) + uvMap.TextureInfo.Position;
 							
-							BlockModel.GetLight(
+							/*BlockModel.GetLight(
 								world, vertexPosition + facing.GetVector3(), out var blockLight,
-								out var skyLight, true);
+								out var skyLight, true);*/
 							
 							chunkBuilder.AddVertex(
-								blockCoordinates, vertexPosition, vertex.Face,
+								blockCoordinates, vertexPosition, facing,
 								new Vector4(
 									textureCoordinates.X, textureCoordinates.Y,
 									 uvMap.TextureInfo.Width,
-									uvMap.TextureInfo.Height), vertex.Color, blockLight, skyLight,
+									uvMap.TextureInfo.Height), vertex.Color,
 								targetState);
 							
 						}

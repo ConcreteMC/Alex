@@ -56,6 +56,7 @@ namespace Alex.Gamestates.Login
 		private bool                         CanUseClipboard   { get; }
 
 		private TextElement _authCodeElement;
+		private TextElement _subTextElement;
         public BedrockLoginState(GuiPanoramaSkyBox skyBox, Action<PlayerProfile> readyAction, XboxAuthService xboxAuthService)
         {
             Title = "Bedrock Login";
@@ -71,6 +72,11 @@ namespace Alex.Gamestates.Login
 	            Text = "Please wait...\nStarting authentication process...",
 	            FontStyle = FontStyle.Italic,
 	            Scale = 1.1f
+            };
+
+            _subTextElement = new TextElement()
+            {
+	            Text = $"If you click Sign-In, the above auth code will be copied to your clipboard!"
             };
             
             CanUseClipboard = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
@@ -116,12 +122,10 @@ namespace Alex.Gamestates.Login
 			Body.AddChild(_authCodeElement);
 			//ShowCode();
 
-			if (CanUseClipboard)
+			_subTextElement.IsVisible = CanUseClipboard;
+			//if (CanUseClipboard)
 			{
-				AddRocketElement(new TextElement()
-				{
-					Text = $"If you click Sign-In, the above auth code will be copied to your clipboard!"
-				});
+				AddRocketElement(_subTextElement);
 			}
 
 			var buttonRow = AddGuiRow(LoginButton = new AlexButton(OnLoginButtonPressed)
@@ -226,13 +230,25 @@ namespace Alex.Gamestates.Login
 				        else
 				        {
 					        //Log.Info($"Continuewith fail!");
+					        ShowAuthenticationError();
 				        }
 			        }
 			        catch (Exception ex)
 			        {
-				        Log.Warn($"Authentication issue: {ex.ToString()}");
+				        Log.Warn(ex, $"Authentication issue.");
+				        ShowAuthenticationError();
 			        }
 		        });
+        }
+
+        private void ShowAuthenticationError()
+        {
+	        _authCodeElement.TextColor = (Color) TextColor.Red;
+	        _authCodeElement.FontStyle = FontStyle.Bold;
+	        _authCodeElement.Scale = 2f;
+	        _authCodeElement.Text = $"Authentication failed.";
+	        _subTextElement.Text = $"Check the logs for more information.";
+	        _subTextElement.IsVisible = true;
         }
 
         private void OnCancelButtonPressed()

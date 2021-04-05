@@ -12,18 +12,12 @@ namespace Alex.Worlds.Chunks
 
 		public uint Color;
 
-		public byte BlockLight;
-
-		public byte SkyLight;
-
-		public VertexData(Vector3 position, BlockFace face, Vector4 textureCoordinates, uint color, byte blockLight, byte skyLight)
+		public VertexData(Vector3 position, BlockFace face, Vector4 textureCoordinates, uint color)
 		{
 			Position = position;
 			Face = face;
 			TexCoords = textureCoordinates;
 			Color = color;
-			BlockLight = blockLight;
-			SkyLight = skyLight;
 		}
 	}
 }

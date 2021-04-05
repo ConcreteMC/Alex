@@ -59,7 +59,7 @@ namespace Alex.Graphics.Models.Items
 
             _cached = true;
             
-            ChunkData chunkData = new ChunkData(ChunkCoordinates.Zero);
+            ChunkData chunkData = new ChunkData(null,ChunkCoordinates.Zero);
             
             _blockState?.VariantMapper.Model.GetVertices(new ItemRenderingWorld(_blockState.Block), chunkData, BlockCoordinates.Zero, Vector3.Zero, _blockState);
 
