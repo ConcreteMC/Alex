@@ -9,6 +9,7 @@ using Alex.API.Graphics;
 using Alex.API.Utils;
 using Alex.API.Utils.Collections;
 using Alex.API.Utils.Vectors;
+using Alex.Worlds.Abstraction;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Graphics.PackedVector;
@@ -103,7 +104,7 @@ namespace Alex.Worlds.Chunks
 		private const int MaxArraySize = 16 * 16 * 256 * (6 * 6);
 		//public static ArrayPool<MinifiedBlockShaderVertex> Pool { get; } =
 		//	ArrayPool<MinifiedBlockShaderVertex>.Create(MaxArraySize, 16);
-		internal MinifiedBlockShaderVertex[] BuildVertices()
+		internal MinifiedBlockShaderVertex[] BuildVertices(IBlockAccess world)
 		{
 			//lock (_writeLock)
 			{
@@ -127,7 +128,7 @@ namespace Alex.Worlds.Chunks
 						
 						vertices[index] = new MinifiedBlockShaderVertex(
 							vertex.Position, vertex.Face.GetVector3(), vertex.TexCoords, new Color(vertex.Color),
-							Parent.GetBlockLight(p), Parent.GetSkyLight(p));
+							world?.GetBlockLight(p) ?? 0, world?.GetSkyLight(p) ?? 15);
 						
 						index++;
 					}
@@ -139,16 +140,16 @@ namespace Alex.Worlds.Chunks
 
 		private bool _previousKeepInMemory     = false;
 		private int  _primitiveCount = 0;
-		public void Apply(GraphicsDevice device = null, bool keepInMemory = true, bool force = false)
+		public void Apply(IBlockAccess world, GraphicsDevice device = null, bool keepInMemory = true, bool force = false)
 		{
 			//lock (_writeLock)
 			{
-				if (!HasChanges)
+				if (!HasChanges && !force)
 					return;
 
 				_previousKeepInMemory = keepInMemory;
 
-				var realVertices = BuildVertices();
+				var realVertices = BuildVertices(world);
 				HasResized = false;
 				HasChanges = false;
 				

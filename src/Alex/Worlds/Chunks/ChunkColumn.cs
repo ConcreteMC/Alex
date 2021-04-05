@@ -56,6 +56,7 @@ namespace Alex.Worlds.Chunks
 		private object _dataLock = new object();
 		
 		//private ChunkOctree _octree;
+		private DateTime _lastUpdate = DateTime.UtcNow;
 		public ChunkColumn(int x, int z)
 		{
 			X = x;
@@ -126,6 +127,7 @@ namespace Alex.Worlds.Chunks
 					return;
 
 				bool forceUpdate = false;
+				bool changed = false;
 				var chunkPosition = new Vector3(X << 4, 0, Z << 4);
 				for (int sectionIndex = 0; sectionIndex < 16; sectionIndex++)
 				{
@@ -156,6 +158,7 @@ namespace Alex.Worlds.Chunks
 									if ((!IsNew && !scheduled))
 										continue;
 
+									changed = true;
 								
 									var blockPosition = new BlockCoordinates(
 										(int) (chunkPosition.X + x), y + (sectionIndex << 4), (int) (chunkPosition.Z + z));
@@ -220,7 +223,7 @@ namespace Alex.Worlds.Chunks
 					}
 				}
 				
-				chunkData?.ApplyChanges(device, true, forceUpdate);
+				chunkData?.ApplyChanges(world, device, true);
 				/*var a = new ChunkOctree(_octree.Bounds);
 
 				foreach (var box in ChunkData.BoundingBoxes)

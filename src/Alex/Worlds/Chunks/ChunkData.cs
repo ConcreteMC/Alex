@@ -9,6 +9,7 @@ using Alex.API.Blocks;
 using Alex.API.Graphics;
 using Alex.API.Utils;
 using Alex.API.Utils.Vectors;
+using Alex.Worlds.Abstraction;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Graphics.PackedVector;
@@ -69,7 +70,7 @@ namespace Alex.Worlds.Chunks
         {
             get
             {
-                return _stages.Where(x => x != null).SelectMany(x => x.BuildVertices()).ToArray();
+                return _stages.Where(x => x != null).SelectMany(x => x.BuildVertices(null)).ToArray();
             }
         }
 
@@ -111,12 +112,12 @@ namespace Alex.Worlds.Chunks
             return _stages.Where(x => x != null).Any(x => x.Contains(coordinates));
         }
 
-        public void ApplyChanges(GraphicsDevice device, bool keepInMemory, bool forceUpdate = false)
+        public void ApplyChanges(IBlockAccess world, GraphicsDevice device, bool keepInMemory, bool forceUpdate = false)
         {
             for (var index = 0; index < _stages.Length; index++)
             {
                 var stage = _stages[index];
-                stage?.Apply(device, keepInMemory, forceUpdate);
+                stage?.Apply(world, device, keepInMemory, forceUpdate);
             }
         }
 
