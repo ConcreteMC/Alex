@@ -242,8 +242,12 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		
 		public void HandleMcpeStartGame(McpeStartGame message)
 		{
-			Log.Info($"Start game.");
-			
+			Log.Info($"Start game, movement type: {message.movementType}");
+
+			if (message.movementType != 0)
+			{
+				Log.Warn($"!!! Server uses server-authoritive movement, only client-auth is currently supported.");
+			}
 			//McpeClientCacheStatus status = McpeClientCacheStatus.CreateObject();
 		//	status.enabled = ChunkProcessor.Cache.Enabled;
 			//Client.SendPacket(status);
