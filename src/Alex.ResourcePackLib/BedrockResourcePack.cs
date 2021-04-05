@@ -120,55 +120,70 @@ namespace Alex.ResourcePackLib
 			
 			foreach (var entry in entries)
 			{
-				count++;
-				progressReporter?.Invoke((int)(((double)count / (double)total) * 100D), entry.FullName);
-				
-				if (IsEntityDefinition.IsMatch(entry.FullName))
+				try
 				{
-					LoadEntityDefinition(entry, entityDefinitions);
-					continue;
-				}
+					count++;
+					progressReporter?.Invoke((int) (((double) count / (double) total) * 100D), entry.FullName);
 
-				if (IsEntityModel.IsMatch(entry.FullName))
-				{
-					LoadEntityModel(entry, entityModels);
-					continue;
-				}
+					if (IsEntityDefinition.IsMatch(entry.FullName))
+					{
+						LoadEntityDefinition(entry, entityDefinitions);
 
-				if (IsSoundDefinition.IsMatch(entry.FullName))
-				{
-					ProcessSounds(progressReporter, entry);
-					continue;
-				}
+						continue;
+					}
 
-				if (IsFontFile.IsMatch(entry.FullName))
-				{
-					ProcessFontFile(progressReporter, entry);
-					continue;
-				}
+					if (IsEntityModel.IsMatch(entry.FullName))
+					{
+						LoadEntityModel(entry, entityModels);
 
-				if (IsRenderController.IsMatch(entry.FullName))
-				{
-					ProcessRenderController(entry, renderControllers);
-					continue;
-				}
+						continue;
+					}
 
-				if (IsAnimationController.IsMatch(entry.FullName))
-				{
-					ProcessAnimationController(entry, animationControllers);
-					continue;
-				}
-				
-				if (IsAnimation.IsMatch(entry.FullName))
-				{
-					ProcessAnimation(entry, animations);
-					continue;
-				}
+					if (IsSoundDefinition.IsMatch(entry.FullName))
+					{
+						ProcessSounds(progressReporter, entry);
 
-				if (IsParticleFile.IsMatch(entry.FullName))
+						continue;
+					}
+
+					if (IsFontFile.IsMatch(entry.FullName))
+					{
+						ProcessFontFile(progressReporter, entry);
+
+						continue;
+					}
+
+					if (IsRenderController.IsMatch(entry.FullName))
+					{
+						ProcessRenderController(entry, renderControllers);
+
+						continue;
+					}
+
+					if (IsAnimationController.IsMatch(entry.FullName))
+					{
+						ProcessAnimationController(entry, animationControllers);
+
+						continue;
+					}
+
+					if (IsAnimation.IsMatch(entry.FullName))
+					{
+						ProcessAnimation(entry, animations);
+
+						continue;
+					}
+
+					if (IsParticleFile.IsMatch(entry.FullName))
+					{
+						ProcessParticle(entry, particleDefinitions);
+
+						continue;
+					}
+				}
+				catch (Exception ex)
 				{
-					ProcessParticle(entry, particleDefinitions);
-					continue;
+					Log.Warn(ex, $"Could not process file in resource pack: '{entry.FullName}' continuing anyways...");
 				}
 			}
 			EntityModels = ProcessEntityModels(entityModels);
@@ -389,42 +404,52 @@ namespace Alex.ResourcePackLib
 
 			return final;
 		}
-		
+
 		private static void LoadEntityModel(IFile entry, Dictionary<string, EntityModel> models)
 		{
-			string json;
-			using (var stream = entry.Open())
+			try
 			{
-				json = Encoding.UTF8.GetString(stream.ReadToEnd());
-			}
+				string json;
 
-			LoadEntityModel(json, models);
+				using (var stream = entry.Open())
+				{
+					json = Encoding.UTF8.GetString(stream.ReadToEnd());
+				}
+
+				LoadEntityModel(json, models);
+			}
+			catch (Exception ex)
+			{
+				Log.Warn(ex, $"Failed to load entity model from file: {entry.FullName}");
+			}
 		}
-		
+
 		public static void LoadEntityModel(string json, Dictionary<string, EntityModel> models)
 		{
-			var d = MCJsonConvert.DeserializeObject<MobsModelDefinition>(json);
-			//if (decoded == null)
-			if (d != null)
-			{
-				foreach (var item in d)
+			
+				var d = MCJsonConvert.DeserializeObject<MobsModelDefinition>(json);
+
+				//if (decoded == null)
+				if (d != null)
 				{
-					if (item.Value.Description?.Identifier == null)
+					foreach (var item in d)
 					{
-						Log.Warn($"Missing identifier for {item.Key}");
+						if (item.Value.Description?.Identifier == null)
+						{
+							Log.Warn($"Missing identifier for {item.Key}");
 
-						//return;
-					}
+							//return;
+						}
 
-					if (!models.TryAdd(item.Key, item.Value))
-					{
-						Log.Warn($"Duplicate geometry model: {item.Key}");
+						if (!models.TryAdd(item.Key, item.Value))
+						{
+							Log.Warn($"Duplicate geometry model: {item.Key}");
 
-					//	return;
+							//	return;
+						}
 					}
 				}
 			}
-		}
 		
 		private bool TryLoadMobModels(Dictionary<string, EntityModel> models)
 		{

@@ -133,7 +133,7 @@ namespace Alex.Worlds.Chunks
 				{
 					var section = Sections[sectionIndex];
 
-					if (section == null)
+					if (section == null || (section.PendingUpdates == 0 || section.PendingLightingUpdates == 0))
 						continue;
 
 					//var sectionY = (sectionIndex << 4);

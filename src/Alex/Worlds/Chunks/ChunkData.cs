@@ -33,22 +33,6 @@ namespace Alex.Worlds.Chunks
             Interlocked.Increment(ref _instances);
         }
 
-        public byte GetBlockLight(BlockCoordinates coordinates)
-        {
-            if (Coordinates != new ChunkCoordinates(coordinates))
-                return 0;
-            
-            return (_chunkColumn?.GetBlocklight(coordinates.X & 0xf, coordinates.Y & 0xff, coordinates.Z & 0xf) ?? 0);
-        }
-        
-        public byte GetSkyLight(BlockCoordinates coordinates)
-        {
-            if (Coordinates != new ChunkCoordinates(coordinates))
-                return 15;
-            
-            return (_chunkColumn?.GetSkylight(coordinates.X & 0xf, coordinates.Y & 0xff, coordinates.Z & 0xf) ?? 15);
-        }
-
         public bool Draw(GraphicsDevice device, RenderStage stage, Effect effect)
         {
             if (Disposed)

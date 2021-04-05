@@ -179,12 +179,12 @@ namespace Alex.Worlds.Chunks
 
 					if (buffer != null && buffer.VertexCount - size >= 256)
 					{
-						if (GpuResourceManager.TryGetRecycledBuffer(
-							this, device, MinifiedBlockShaderVertex.VertexDeclaration, size,
-							BufferUsage.WriteOnly, out var b))
+						oldBuffer = buffer;
+						
+						buffer = GpuResourceManager.GetBuffer(
+							this, device, MinifiedBlockShaderVertex.VertexDeclaration, size, BufferUsage.WriteOnly);
 						{
-							oldBuffer = buffer;
-							buffer = b;
+							
 
 							callSetData = true;
 						}

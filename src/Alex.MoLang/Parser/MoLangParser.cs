@@ -68,23 +68,30 @@ namespace Alex.MoLang.Parser
 
 		public IExpression[] Parse()
 		{
-			List<IExpression> exprs = new List<IExpression>();
-
-			do
+			try
 			{
-				IExpression expr = ParseExpression();
+				List<IExpression> exprs = new List<IExpression>();
 
-				if (expr != null)
+				do
 				{
-					exprs.Add(expr);
-				}
-				else
-				{
-					break;
-				}
-			} while (MatchToken(TokenType.Semicolon));
+					IExpression expr = ParseExpression();
 
-			return _exprTraverser.Traverse(exprs.ToArray()).ToArray();
+					if (expr != null)
+					{
+						exprs.Add(expr);
+					}
+					else
+					{
+						break;
+					}
+				} while (MatchToken(TokenType.Semicolon));
+
+				return _exprTraverser.Traverse(exprs.ToArray()).ToArray();
+			}
+			catch (Exception ex)
+			{
+				throw new MoLangParserException($"Failed to parse expression", ex);
+			}
 		}
 
 		public IExpression ParseExpression()

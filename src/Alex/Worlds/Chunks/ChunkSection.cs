@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Buffers;
 using System.Collections.Generic;
+using System.Threading;
 using Alex.API.Data.Servers;
 using Alex.API.Graphics;
 using Alex.API.Utils;
@@ -32,9 +33,13 @@ namespace Alex.Worlds.Chunks
 		private System.Collections.BitArray _scheduledUpdates;
         private System.Collections.BitArray _scheduledSkylightUpdates;
         private System.Collections.BitArray _scheduledBlocklightUpdates;
-        
+
+        private int _pendingUpdates = 0;
         public int SkyLightUpdates { get; private set; } = 0;
         public int BlockLightUpdates { get; private set; } = 0;
+
+        public int PendingUpdates => _pendingUpdates;
+        public int PendingLightingUpdates => SkyLightUpdates + BlockLightUpdates;
         
         public List<BlockCoordinates> LightSources { get; private set; } = new List<BlockCoordinates>();
         
@@ -94,10 +99,12 @@ namespace Alex.Worlds.Chunks
 
 			if (oldValue && !value)
 			{
+				Interlocked.Decrement(ref _pendingUpdates);
 				//ScheduledUpdatesCount--;
 			}
 			else if (!oldValue && value)
 			{
+				Interlocked.Increment(ref _pendingUpdates);
 				//ScheduledUpdatesCount++;
 			}
 			
