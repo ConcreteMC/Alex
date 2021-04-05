@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Alex.API.Blocks;
 using Alex.API.Graphics;
@@ -230,7 +231,8 @@ namespace Alex.Graphics.Models.Blocks
 		    //(byte)Math.Min(Math.Max(0, blockLight + skyLight), 15);
 	    }
 
-	    protected BlockTextureData GetTextureUVMap(ResourceManager resources,
+	    protected BlockTextureData GetTextureUVMap(
+		    ResourceManager resources,
 			ResourceLocation texture,
 			float x1,
 			float x2,
@@ -260,21 +262,49 @@ namespace Alex.Graphics.Models.Blocks
 
 			var textureInfo = ti.Value;
 
-			var tw = textureInfo.Width / textureInfo.XFrames;
-			//if (textureInfo.Animated)
-			//	tw /= 32;
-			var th = textureInfo.Height / textureInfo.YFrames;
-			//if (textureInfo.Animated)
-			//	th /= 32;
+			var tw = textureInfo.FrameWidth;
+			var th = textureInfo.FrameHeight;
 
 			x1 = (x1 * (tw));
 			x2 = (x2 * (tw ));
 			y1 = (y1 * (th));
 			y2 = (y2 * (th));
 			
+			var ox1 = x1;
+			var ox2 = x2;
+			var oy1 = y1;
+			var oy2 = y2;
+			switch (rot)
+			{
+				case 270:
+					y1 = tw * 16 - ox2;
+					y2 = tw * 16 - ox1;
+					x1 = oy1;
+					x2 = oy2;
+					break;
+				case 180:
+					y1 = th * 16 - oy2;
+					y2 = th * 16 - oy1;
+					x1 = tw * 16 - ox2;
+					x2 = tw * 16 - ox1;
+					break;
+				case 90:
+					y1 = ox1;
+					y2 = ox2;
+					x1 = th * 16 - oy2;
+					x2 = th * 16 - oy1;
+					break;
+			}
+
+			var topLeft = new Microsoft.Xna.Framework.Vector2(x1, y1);
+			var topRight = new Microsoft.Xna.Framework.Vector2(x2, y1);
+			var bottomLeft = new Microsoft.Xna.Framework.Vector2(x1, y2);
+			var bottomRight = new Microsoft.Xna.Framework.Vector2(x2, y2);
+			
 			var map = new BlockTextureData(textureInfo,
-				new Microsoft.Xna.Framework.Vector2(x1, y1), new Microsoft.Xna.Framework.Vector2(x2, y1),
-				new Microsoft.Xna.Framework.Vector2(x1, y2), new Microsoft.Xna.Framework.Vector2(x2, y2), color, color,
+				topLeft, topRight,
+				bottomLeft, bottomRight,
+				color, color,
 				color, textureInfo.Animated);
 
 			//map.Rotate(rot);

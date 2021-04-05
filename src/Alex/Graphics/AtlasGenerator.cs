@@ -12,6 +12,7 @@ using Alex.Blocks.Minecraft;
 using Alex.Blocks.State;
 using Alex.Gamestates.InGame;
 using Alex.Graphics.Models.Blocks;
+using Alex.Graphics.Textures;
 using Alex.ResourcePackLib;
 using Alex.ResourcePackLib.Json.BlockStates;
 using Alex.ResourcePackLib.Json.Textures;
@@ -29,6 +30,7 @@ using SixLabors.ImageSharp.Processing.Processors.Transforms;
 using Color = SixLabors.ImageSharp.Color;
 using Point = SixLabors.ImageSharp.Point;
 using Rectangle = SixLabors.ImageSharp.Rectangle;
+using TextureInfo = Alex.Graphics.Textures.TextureInfo;
 
 namespace Alex.Graphics
 {
@@ -37,7 +39,7 @@ namespace Alex.Graphics
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(SPWorldProvider));
 
 	    private Dictionary<ResourceLocation,  Utils.TextureInfo> _atlasLocations = new Dictionary<ResourceLocation,  Utils.TextureInfo>();
-	    private Texture2D _stillFrame;
+	    private PooledTexture2D _stillFrame;
 	    
         public Vector2 AtlasSize { get; private set; }
         public AtlasGenerator()
@@ -144,7 +146,7 @@ namespace Alex.Graphics
 			    Width = no.Width,
 			    ResourceLocation = new ResourceLocation("minecraft", "no_texture")
 		    });
-		    //Dictionary<ResourceLocation, int> indexes = new Dictionary<ResourceLocation, int>();
+		    
 		    foreach (var texture in blockTextures)
 		    {
 			    textures.Add(new TextureInfo()
@@ -155,25 +157,18 @@ namespace Alex.Graphics
 				    Source = texture.Value.Image,
 				    Meta = texture.Value.Meta
 			    });
-			 //   textures.Add(texture.Value.Image);
-			    
-			//    indexes.Add(texture.Key, textures.IndexOf(texture.Value.Image));
 		    }
-		    
-		   // var packedTexture = TexturePacker.PackSprites(device, textures, spriteRects);
 
-		   var size = textures.Max(x => Math.Max(x.Width, x.Height));
+		    var size = textures.Max(x => Math.Max(x.Width, x.Height));
 		   
 		    Packer p = new Packer();
 		    p.FitHeuristic = BestFitHeuristic.MaxOneAxis;
-		    p.Process(textures, size, 4, false);
-
-		    //packedTexture.SaveAsPng("/home/kenny/atlas.png");
+		    
 		    Dictionary<ResourceLocation, Utils.TextureInfo> textureInfos = new Dictionary<ResourceLocation, Utils.TextureInfo>();
 
-		    foreach (var atlas in p.Atlasses)
+		    foreach (var atlas in p.Process(textures, size, 4))
 		    {
-			    var img = p.CreateAtlasImage(atlas);
+			    var img = atlas.GenerateTexture(false);// p.CreateAtlasImage(atlas);
 
 			    foreach (var node in atlas.Nodes)
 			    {
@@ -194,14 +189,11 @@ namespace Alex.Graphics
 
 			    _stillFrame = GetMipMappedTexture2D(device, img);
 			    _atlasLocations = textureInfos;
-
-			    img.SaveAsPng("/home/kenny/atlas.png");
 			    break;
-			    // img.SaveAsPng("/home/kenny/atlas.png");
 		    }
 		    
 		    AtlasSize = new Vector2(_stillFrame.Width, _stillFrame.Height);
-
+		    totalSize += _stillFrame.MemoryUsage;
 		    sw.Stop();
 		    
 		    Log.Info(

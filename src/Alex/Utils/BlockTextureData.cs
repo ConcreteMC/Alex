@@ -50,7 +50,7 @@ namespace Alex.Utils
         {
             if (rot > 0)
             {
-                var tw = TextureInfo.Width;
+               /* var tw = TextureInfo.Width;
                 var th = TextureInfo.Height;
 
                 var x1 = TopLeft.X;
@@ -92,7 +92,7 @@ namespace Alex.Utils
                 TopLeft = new Microsoft.Xna.Framework.Vector2(x1, y1);
                 TopRight = new Microsoft.Xna.Framework.Vector2(x2, y1);
                 BottomLeft = new Microsoft.Xna.Framework.Vector2(x1, y2);
-                BottomRight = new Microsoft.Xna.Framework.Vector2(x2, y2);
+                BottomRight = new Microsoft.Xna.Framework.Vector2(x2, y2);*/
             }
         }
     }

@@ -189,10 +189,9 @@ namespace Alex.Graphics.Models.Blocks
 				texture += "_still";
 			}
 
-			BlockTextureData map = GetTextureUVMap(Alex.Instance.Resources, texture, 0, 16, 0, 16, 0, Color.White, null);
+			BlockTextureData map = GetTextureUVMap(Alex.Instance.Resources, texture, 0, 16, 0, 16, rot, Color.White, null);
 
 			var originalMap = new BlockTextureData(map.TextureInfo, map.TopLeft, map.TopRight, map.BottomLeft, map.BottomRight, map.ColorLeft, map.ColorTop, map.ColorBottom);
-			map.Rotate(rot);
 
 			foreach (var face in renderedFaces)
 			{

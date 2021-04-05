@@ -17,6 +17,9 @@ namespace Alex.Utils
 		public readonly int XFrames;
 		//public readonly vecto
 		
+		public int FrameWidth => Animated ? Width / XFrames : Width;
+		public int FrameHeight => Animated ? Height / YFrames : Height;
+		
 		public TextureInfo(Vector2 atlasSize, Vector2 position, int width, int height, bool animated, int framesInWidth, int framesInHeight)
 		{
 			AtlasSize = atlasSize;
