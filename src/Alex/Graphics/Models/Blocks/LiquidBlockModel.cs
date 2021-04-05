@@ -191,7 +191,7 @@ namespace Alex.Graphics.Models.Blocks
 
 			BlockTextureData map = GetTextureUVMap(Alex.Instance.Resources, texture, 0, 16, 0, 16, rot, Color.White, null);
 
-			var originalMap = new BlockTextureData(map.TextureInfo, map.TopLeft, map.TopRight, map.BottomLeft, map.BottomRight, map.ColorLeft, map.ColorTop, map.ColorBottom);
+			//var originalMap = new BlockTextureData(map.TextureInfo, map.TopLeft, map.TopRight, map.BottomLeft, map.BottomRight, map.ColorLeft, map.ColorTop, map.ColorBottom);
 
 			foreach (var face in renderedFaces)
 			{
@@ -203,7 +203,7 @@ namespace Alex.Graphics.Models.Blocks
 
 				if (face != BlockFace.Up)
 				{
-					faceMap = originalMap;
+					//faceMap = originalMap;
 				}
 
 				var   vertices  = GetFaceVertices(face, start, end, faceMap);
@@ -233,8 +233,7 @@ namespace Alex.Graphics.Models.Blocks
 				for (var index = 0; index < vertices.Length; index++)
 				{
 					var vert = vertices[index];
-					vert.TexCoords /= 16f;
-					
+
 					if (vert.Position.Y > start.Y)
 					{
 						const float modifier = 2f;
@@ -286,6 +285,8 @@ namespace Alex.Graphics.Models.Blocks
 
 					//var textureCoordinates = map.TextureInfo.Position * (Vector2.One / map.TextureInfo.AtlasSize);
 					//vert.TexCoords = new Short2(textureCoordinates);
+					
+					//vert.TexCoords /= 16f;
 					vert.TexCoords += map.TextureInfo.Position;
 				//	vert.TexCoords *= (Vector2.One / map.TextureInfo.AtlasSize);
 

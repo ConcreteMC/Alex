@@ -22,7 +22,7 @@ namespace Alex.Worlds.Chunks
 		
 		private const  int     DefaultSize = 64;
 
-		private static SmartStorage<Vector4>                      TextureStorage { get; } = new SmartStorage<Vector4>();
+		//private static SmartStorage<Vector4>                      TextureStorage { get; } = new SmartStorage<Vector4>();
 		private ConcurrentDictionary<BlockCoordinates, List<VertexData>> BlockIndices     { get; set; }
 		private PooledVertexBuffer                             Buffer           { get; set; }
 		
@@ -52,17 +52,17 @@ namespace Alex.Worlds.Chunks
 			//lock (_writeLock)
 			{
 				//Add(blockCoordinates, position, textureCoordinates, color, blockLight, skyLight);
-				var textureIndex = TextureStorage.GetIndex(textureCoordinates);
+				/*var textureIndex = TextureStorage.GetIndex(textureCoordinates);
 
 				if (textureIndex == -1)
 				{
 					textureIndex = TextureStorage.Add(textureCoordinates);
 				}
 
-				TextureStorage.IncreaseUsage(textureIndex);
+				TextureStorage.IncreaseUsage(textureIndex);*/
 
 				var vertexData = new VertexData(
-					position, face, (ushort) textureIndex, color.PackedValue, (byte) blockLight,
+					position, face, textureCoordinates, color.PackedValue, (byte) blockLight,
 					skyLight);
 				
 				Interlocked.Increment(ref _vertexCount);
@@ -83,7 +83,7 @@ namespace Alex.Worlds.Chunks
 				{
 					foreach (var vertex in indices)
 					{
-						TextureStorage.DecrementUsage(vertex.TexCoords);
+					//	TextureStorage.DecrementUsage(vertex.TexCoords);
 						Interlocked.Decrement(ref _vertexCount);
 						//FreeIndex(index);
 					}
@@ -127,7 +127,7 @@ namespace Alex.Worlds.Chunks
 					foreach (var vertex in block.Value)
 					{
 						vertices[index] = new MinifiedBlockShaderVertex(
-							vertex.Position, vertex.Face.GetVector3(), TextureStorage[vertex.TexCoords], new Color(vertex.Color),
+							vertex.Position, vertex.Face.GetVector3(), vertex.TexCoords, new Color(vertex.Color),
 							vertex.BlockLight, vertex.SkyLight);
 						
 						index++;

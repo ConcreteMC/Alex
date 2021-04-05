@@ -87,13 +87,11 @@ namespace Alex.Net.Bedrock
 		public ConnectionState State { get; set; } = ConnectionState.Unconnected;
 
 		public DateTime LastUpdatedTime { get; set; }
-		public bool WaitForAck { get; set; }
 		public int ResendCount { get; set; }
 
 		public SlidingWindow SlidingWindow { get; }
 
 		public long InactivityTimeout { get; }
-		public int ResendThreshold { get; }
 
 		public ConcurrentDictionary<int, SplitPartPacket[]> Splits { get; } = new ConcurrentDictionary<int, SplitPartPacket[]>();
 		private ConcurrentQueue<int> OutgoingAckQueue { get; } = new ConcurrentQueue<int>();
@@ -110,7 +108,6 @@ namespace Alex.Net.Bedrock
 			MtuSize = mtuSize;
 
 			InactivityTimeout = 30000;
-			ResendThreshold = 10;
 
 			_cancellationToken = new CancellationTokenSource();
 
@@ -978,7 +975,6 @@ namespace Alex.Net.Bedrock
 			}
 
 			ResendCount = 0;
-			WaitForAck = false;
 		}
 
 		internal void HandleNak(CustomNak nak)

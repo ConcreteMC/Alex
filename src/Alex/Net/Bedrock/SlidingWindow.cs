@@ -46,7 +46,7 @@ namespace Alex.Net.Bedrock
         /// <summary>
         ///     Every outgoing datagram is assigned a sequence number, which increments by 1 every assignment
         /// </summary>
-        private long  _nextDatagramSequenceNumber = 0;
+        private long  _nextDatagramSequenceNumber = -1;
 
         /// <summary>
         /// Track which datagram sequence numbers have arrived.

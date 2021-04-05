@@ -410,7 +410,8 @@ namespace Alex.Graphics.Models.Blocks
 			for (int i = 0; i < vertices.Length; i++)
 			{
 				var v = vertices[i];
-
+			
+				
 				v.Position = FixRotation(v.Position, element);
 
 				if (bsModel.X > 0)
@@ -439,22 +440,22 @@ namespace Alex.Graphics.Models.Blocks
 
 				if (uvMap.HasValue)
 				{
-					var tw = uvMap.Value.TextureInfo.Width;
-					var th = uvMap.Value.TextureInfo.Height;
+					var tw = uvMap.Value.TextureInfo.FrameWidth;
+					var th = uvMap.Value.TextureInfo.FrameHeight;
 
 					var rot = face.Rotation;
 
-					/*if (rot > 0)
+					if (rot > 0)
 					{
 						var rotY = rot * (MathHelper.Pi / 180f);
 						var c    = MathF.Cos(rotY);
 						var s    = MathF.Sin(rotY);
 						
-						var x    = v.TexCoords.X - 8f * tw;
-						var y    = v.TexCoords.Y - 8f * th;
+						var x    = v.TexCoords.X - 0.5f * tw;
+						var y    = v.TexCoords.Y - 0.5f * th;
 
-						v.TexCoords.X = 8f * tw + (x * c - y * s);
-						v.TexCoords.Y = 8f * th + (y * c + x * s);
+						v.TexCoords.X = 0.5f * tw + (x * c - y * s);
+						v.TexCoords.Y = 0.5f * th + (y * c + x * s);
 					}
 					
 					if (bsModel.Uvlock)
@@ -464,11 +465,11 @@ namespace Alex.Graphics.Models.Blocks
 							var rotY = bsModel.Y * (MathHelper.Pi / 180f);
 							var c    = MathF.Cos(rotY);
 							var s    = MathF.Sin(rotY);
-							var x    = v.TexCoords.X - 8f * tw;
-							var y    = v.TexCoords.Y - 8f * th;
+							var x    = v.TexCoords.X - 0.5f * tw;
+							var y    = v.TexCoords.Y - 0.5f * th;
 
-							v.TexCoords.X = 8f * tw + (x * c - y * s);
-							v.TexCoords.Y = 8f * th + (y * c + x * s);
+							v.TexCoords.X = 0.5f * tw + (x * c - y * s);
+							v.TexCoords.Y = 0.5f * th + (y * c + x * s);
 						}
 
 						if (bsModel.X > 0 && (blockFace != BlockFace.Up && blockFace != BlockFace.Down))
@@ -476,21 +477,22 @@ namespace Alex.Graphics.Models.Blocks
 							var rotX = bsModel.X * (MathHelper.Pi / 180f);
 							var c    = MathF.Cos(rotX);
 							var s    = MathF.Sin(rotX);
-							var x    = v.TexCoords.X - 8f * tw;
-							var y    = v.TexCoords.Y - 8f * th;
+							var x    = v.TexCoords.X - 0.5f * tw;
+							var y    = v.TexCoords.Y - 0.5f * th;
 
-							v.TexCoords.X = 8f * tw + (x * c - y * s);
-							v.TexCoords.Y = 8f * th + (y * c + x * s);
+							v.TexCoords.X = 0.5f * tw + (x * c - y * s);
+							v.TexCoords.Y = 0.5f * th + (y * c + x * s);
 						}
-					}*/
+					}
 					
-					//textureCoordinates += uvMap.Value.TextureInfo.Position;
+					//v.TexCoords += uvMap.Value.TextureInfo.Position;
 				//	textureCoordinates *= (Vector2.One / uvMap.Value.TextureInfo.AtlasSize);
 				}
-
-				v.TexCoords = (v.TexCoords / 16f);
-				v.Position /= 16f;
+				
 				//v.TexCoords = textureCoordinates;
+				
+			//	v.TexCoords = (v.TexCoords / 16f);
+				v.Position /= 16f;
 				v.Face = blockFace;
 				vertices[i] = v;
 			}
@@ -550,11 +552,59 @@ namespace Alex.Graphics.Models.Blocks
 						if (!ShouldRenderFace(world, facing, position, baseBlock))
 							continue;
 
-						var   uv = face.Value.UV;
+						var   uv = face.Value.Uv;
 						float x1 = 0, x2 = 0, y1 = 0, y2 = 0;
 
 						if (uv == null)
 						{
+							var from = element.From;
+							var to = element.To;
+
+							/*switch (face.Key)
+							{
+								case BlockFace.North:
+									x1 = from.X;
+									y1 = 16f - to.Y;
+									x2 = to.X;
+									y2 = 16f - from.Y;
+									break;
+								
+								case BlockFace.East:
+									x1 = from.Z;
+									y1 = 16f - to.Y;
+									x2 = to.Z;
+									y2 = 16f - from.Y;
+									break;
+								
+								case BlockFace.South:
+									x1 = to.X;
+									y1 = 16f - to.Y;
+									x2 = from.X;
+									y2 = 16f - from.Y;
+									break;
+								
+								case BlockFace.West:
+									x1 = from.Z;
+									y1 = 16f - to.Y;
+									x2 = to.Z;
+									y2 = 16f - from.Y;
+									break;
+								
+								case BlockFace.Up:
+									x1 = from.X;
+									y1 = from.Z;
+									x2 = to.X;
+									y2 = to.Z;
+									break;
+								
+								case BlockFace.Down:
+									x1 = to.X;
+									y1 = from.Z;
+									x2 = from.X;
+									y2 = to.Z;
+									break;
+							}*/
+							
 							switch (face.Key)
 							{
 								case BlockFace.North:
@@ -699,7 +749,7 @@ namespace Alex.Graphics.Models.Blocks
 							var textureCoordinates = (vertex.TexCoords) + uvMap.TextureInfo.Position;
 							
 							BlockModel.GetLight(
-								world, vertexPosition + face.Key.GetVector3(), out var blockLight,
+								world, vertexPosition + facing.GetVector3(), out var blockLight,
 								out var skyLight, true);
 							
 							chunkBuilder.AddVertex(

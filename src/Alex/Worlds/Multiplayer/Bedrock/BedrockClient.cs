@@ -869,7 +869,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			        ThirdPartyName = username,
 			        DeviceId = Alex.Resources.DeviceID,
 			        GameVersion = McpeProtocolInfo.GameVersion,
-			        
+			        PlayFabID = "uhhh"
 		        },
 		        new JsonSerializerSettings()
 		        {

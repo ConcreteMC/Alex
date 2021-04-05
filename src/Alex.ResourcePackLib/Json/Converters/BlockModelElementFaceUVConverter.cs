@@ -13,7 +13,7 @@ namespace Alex.ResourcePackLib.Json.Converters
 		{
 			var uv = value as ModelUV;
 
-			serializer.Serialize(writer, new float[]
+			serializer.Serialize(writer, new int[]
 			{
 				uv.X1,
 				uv.Y1,
@@ -39,16 +39,6 @@ namespace Alex.ResourcePackLib.Json.Converters
 							Y1 = arr[1].Value<int>(),
 							X2 = arr[2].Value<int>(),
 							Y2 = arr[3].Value<int>()
-						};
-					}
-					else if (arr.All(token => token.Type == JTokenType.Float))
-					{
-						return new ModelUV()
-						{
-							X1 = arr[0].Value<float>(),
-							Y1 = arr[1].Value<float>(),
-							X2 = arr[2].Value<float>(),
-							Y2 = arr[3].Value<float>()
 						};
 					}
 				}

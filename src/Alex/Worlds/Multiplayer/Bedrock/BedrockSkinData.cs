@@ -12,27 +12,29 @@ namespace Alex.Worlds.Multiplayer.Bedrock
     {
         public bool ThirdPartyNameOnly { get; set; } = false;
         public string ThirdPartyName { get; set; }
-        
-        
+
+
         public int ClientRandomId { get; set; }
         public string ServerAddress { get; set; }
         public string LanguageCode { get; set; }
 
         public string PlatformOfflineId { get; set; } = "";
         public string PlatformOnlineId { get; set; } = "";
-        
-        [JsonProperty("SelfSignedId")]
-        public string SelfSignedID { get; set; } = Guid.NewGuid().ToString();
-        public string DeviceId     { get; set; } = Guid.NewGuid().ToString();
-        public string DeviceModel  { get; set; } = "(Standard system devices) System devices";
-        public int    DeviceOS     { get; set; } = 1;
+
+        [JsonProperty("SelfSignedId")] public string SelfSignedID { get; set; } = Guid.NewGuid().ToString();
+        public string DeviceId { get; set; } = Guid.NewGuid().ToString();
+        public string DeviceModel { get; set; } = "(Standard system devices) System devices";
+        public int DeviceOS { get; set; } = 1;
 
         public int UIProfile { get; set; } = 0;
         public int GuiScale { get; set; } = 0;
 
         public int DefaultInputMode { get; set; } = 1;
         public int CurrentInputMode { get; set; } = 1;
-        
+
+        [JsonProperty("PlayFabId")]
+        public string PlayFabID { get; set; } = "";
+
         public string GameVersion { get; set; } = McpeProtocolInfo.GameVersion;
         public string SkinResourcePatch { get; set; } = "";
 

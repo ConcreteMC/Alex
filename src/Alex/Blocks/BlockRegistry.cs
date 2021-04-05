@@ -225,6 +225,7 @@ namespace Alex.Blocks
 		    this.Register("minecraft:mossy_cobblestone_slab", () => new CobblestoneSlab());
 		    this.Register("minecraft:brick_slab", () => new BrickSlab());
 		    this.Register("minecraft:stone_brick_slab", () => new StoneBrickSlab());
+		    this.Register("minecraft:end_stone_brick_slab", () => new StoneBrickSlab());
 		    this.Register("minecraft:mossy_stone_brick_slab", () => new StoneBrickSlab());
 		    this.Register("minecraft:nether_brick_slab", () => new NetherBrickSlab());
 		    this.Register("minecraft:red_nether_brick_slab", () => new NetherBrickSlab());

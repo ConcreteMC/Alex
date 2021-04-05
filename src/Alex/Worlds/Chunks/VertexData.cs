@@ -8,7 +8,7 @@ namespace Alex.Worlds.Chunks
 		public Vector3 Position;
 		public BlockFace Face;
 
-		public ushort TexCoords;
+		public Vector4 TexCoords;
 
 		public uint Color;
 
@@ -16,7 +16,7 @@ namespace Alex.Worlds.Chunks
 
 		public byte SkyLight;
 
-		public VertexData(Vector3 position, BlockFace face, ushort textureCoordinates, uint color, byte blockLight, byte skyLight)
+		public VertexData(Vector3 position, BlockFace face, Vector4 textureCoordinates, uint color, byte blockLight, byte skyLight)
 		{
 			Position = position;
 			Face = face;
