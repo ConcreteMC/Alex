@@ -239,13 +239,13 @@ namespace Alex.Worlds
 
 									chunk.UpdateBuffer(Graphics, World);
 
-								/*	if (newChunk)
+									if (newChunk)
 									{
-										ScheduleChunkUpdate(new ChunkCoordinates(chunk.X + 1, chunk.Z), ScheduleType.Border);
-										ScheduleChunkUpdate(new ChunkCoordinates(chunk.X - 1, chunk.Z), ScheduleType.Border);
-										ScheduleChunkUpdate(new ChunkCoordinates(chunk.X, chunk.Z + 1), ScheduleType.Border);
-										ScheduleChunkUpdate(new ChunkCoordinates(chunk.X, chunk.Z - 1), ScheduleType.Border);
-									}*/
+										ScheduleChunkUpdate(new ChunkCoordinates(chunk.X + 1, chunk.Z), ScheduleType.Border | ScheduleType.Full);
+										ScheduleChunkUpdate(new ChunkCoordinates(chunk.X - 1, chunk.Z), ScheduleType.Border | ScheduleType.Full);
+										ScheduleChunkUpdate(new ChunkCoordinates(chunk.X, chunk.Z + 1), ScheduleType.Border| ScheduleType.Full);
+										ScheduleChunkUpdate(new ChunkCoordinates(chunk.X, chunk.Z - 1), ScheduleType.Border| ScheduleType.Full);
+									}
 								}
 								finally
 								{
@@ -400,6 +400,9 @@ namespace Alex.Worlds
 				
 				if ((type & ScheduleType.Border) != 0)
 				{
+					
+						cc.ScheduleBorder();
+					
 					queue = UpdateBorderQueue;
 				}
 
@@ -413,9 +416,6 @@ namespace Alex.Worlds
 
 				if (Scheduled.TryAdd(position))
 				{
-					if ((type & ScheduleType.Border) != 0)
-						cc.ScheduleBorder();
-					
 					queue.Enqueue(position);
 				}
 

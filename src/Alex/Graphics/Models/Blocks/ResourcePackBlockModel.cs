@@ -699,7 +699,7 @@ namespace Alex.Graphics.Models.Blocks
 							var textureCoordinates = (vertex.TexCoords) + uvMap.TextureInfo.Position;
 							
 							BlockModel.GetLight(
-								world, vertexPosition, out var blockLight,
+								world, vertexPosition + face.Key.GetVector3(), out var blockLight,
 								out var skyLight, true);
 							
 							chunkBuilder.AddVertex(
