@@ -1,0 +1,6 @@
+[submodule "src/submodules/RocketUI"]
+	path = src/submodules/RocketUI
+	url = https://github.com/TruDan/RocketUI.git
+[submodule "src/submodules/MiNET"]
+	path = src/submodules/MiNET
+	url = https://github.com/NiclasOlofsson/MiNET.git
