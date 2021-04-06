@@ -95,7 +95,7 @@ namespace Alex.Gamestates.Multiplayer
                 
 				Anchor = Alignment.TopLeft,
 
-				Background = AlexGuiTextures.DefaultServerIcon,
+//				Background = AlexGuiTextures.DefaultServerIcon,
 			});
 
 			AddChild(_pingStatus = new GuiConnectionPingIcon()
@@ -136,6 +136,10 @@ namespace Alex.Gamestates.Multiplayer
 				ServerIcon = SavedServerEntry.CachedIcon;
 				_serverIcon.Texture = ServerIcon;
 
+			}
+			else
+			{
+				_serverIcon.Texture = renderer.GetTexture(AlexGuiTextures.DefaultServerIcon);
 			}
 			//   PingAsync();
 		}

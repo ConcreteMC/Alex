@@ -955,10 +955,9 @@ namespace Alex.Net.Bedrock
 			{
 				for (int i = range.start; i <= range.end; i++)
 				{
-					Interlocked.Increment(ref ConnectionInfo.Ack);
-					
 					if (queue.TryRemove(i, out Datagram datagram))
 					{
+						Interlocked.Increment(ref ConnectionInfo.Ack);
 						//_nacked.Remove(i);
 						
 						UnackedBytes -= datagram.Size;
@@ -977,49 +976,63 @@ namespace Alex.Net.Bedrock
 			ResendCount = 0;
 		}
 
+		private void DoNak(int sequenceNumber)
+		{
+			if (WaitingForAckQueue.TryGetValue(sequenceNumber, out var datagram))
+			{
+				Interlocked.Increment(ref ConnectionInfo.Nak);
+				SlidingWindow.OnNak(CurrentTimeMillis(), sequenceNumber);
+				//CalculateRto(datagram);
+
+				datagram.RetransmitImmediate = true;
+			}
+			else
+			{
+				//	if (Log.IsDebugEnabled)
+				//Log.Warn($"NAK, no datagram #{sequenceNumber}");
+			}
+		}
+		
 		internal void HandleNak(CustomNak nak)
 		{
-			var queue = WaitingForAckQueue;
-
 			foreach (Tuple<int, int> range in nak.Ranges)
 			{
 				int start = range.Item1;
 				int end = range.Item2;
 
+				if (start == end)
+				{
+					DoNak(start);
+					continue;
+				}
+
 				for (int i = start; i <= end; i++)
 				{
-					Interlocked.Increment(ref ConnectionInfo.Nak);
-					
-					if (queue.TryGetValue(i, out var datagram))
-					{
-						SlidingWindow.OnNak(CurrentTimeMillis(), i);
-						//CalculateRto(datagram);
-
-						datagram.RetransmitImmediate = true;
-					}
-					else
-					{
-						//	if (Log.IsDebugEnabled)
-						Log.Warn($"NAK, no datagram #{i}");
-					}
+					DoNak(i);
 				}
 			}
 		}
 
-		public void Acknowledge(Datagram datagram)
+		public bool Acknowledge(Datagram datagram)
 		{
 			var sequenceIndex = datagram.Header.DatagramSequenceNumber.IntValue();
 
 			if (SlidingWindow.OnPacketReceived(
 				CurrentTimeMillis(),  sequenceIndex, datagram.Size, out var skippedMessageCount))
 			{
+				if (skippedMessageCount > 0)
+					Log.Info($"Skipped {skippedMessageCount}");
 				OutgoingAckQueue.Enqueue(sequenceIndex);
 				
 				for (long i = skippedMessageCount; i > 0; i--)
 				{
 					OutgoingNackQueue.Enqueue((int) (sequenceIndex- i));
 				}
+
+				return true;
 			}
+
+			return false;
 		}
 	}
 }

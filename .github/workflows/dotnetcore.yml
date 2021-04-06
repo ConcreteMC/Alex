@@ -87,36 +87,36 @@ jobs:
         # Directory containing files to upload
         path: /build-win
 
-  directx:
-    name: Build Windows (DirectX)
+  #directx:
+  #  name: Build Windows (DirectX)
 
-    runs-on: [windows-latest]
+  #  runs-on: [windows-latest]
 
-    steps:
-    - uses: actions/checkout@v2
-      with:
-        submodules: 'recursive'
+  #  steps:
+  #  - uses: actions/checkout@v2
+  #    with:
+  #      submodules: 'recursive'
       
-    - name: Setup .NET Core
-      uses: actions/setup-dotnet@v1.7.2
-      with:
-        dotnet-version: 5.0.100
+  #  - name: Setup .NET Core
+  #    uses: actions/setup-dotnet@v1.7.2
+  #    with:
+  #      dotnet-version: 5.0.100
     
-    - name: Get short SHA
-      id: vars
-      run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
+  #  - name: Get short SHA
+  #    id: vars
+  #    run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
       
-    - name: Build
-      run: dotnet publish --configuration DirectX -o /build-win --version-suffix ${{steps.vars.outputs.sha_short}} -r win10-x64 /p:DefineConstants=DIRECTX /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true /p:IncludeAllContentForselfExtract=true /p:PublishReadyToRun=true
-      working-directory: src/Alex
+  #  - name: Build
+  #    run: dotnet publish --configuration DirectX -o /build-win --version-suffix ${{steps.vars.outputs.sha_short}} -r win10-x64 /p:DefineConstants=DIRECTX /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true /p:IncludeAllContentForselfExtract=true /p:PublishReadyToRun=true
+  #    working-directory: src/Alex
 
-    - name: Upload artifact
-      uses: actions/upload-artifact@v1.0.0
-      with:
-        # Artifact name
-        name: Windows DirectX
-        # Directory containing files to upload
-        path: /build-win
+  #  - name: Upload artifact
+  #    uses: actions/upload-artifact@v1.0.0
+  #    with:
+  #      # Artifact name
+  #      name: Windows DirectX
+  #      # Directory containing files to upload
+  #      path: /build-win
 
   osx:
     name: Build MacOS

@@ -46,13 +46,13 @@ namespace Alex.Net.Bedrock
         /// <summary>
         ///     Every outgoing datagram is assigned a sequence number, which increments by 1 every assignment
         /// </summary>
-        private long  _nextDatagramSequenceNumber = -1;
+        private long  _sentDatagramSequenceNumber = 0;
 
         /// <summary>
         /// Track which datagram sequence numbers have arrived.
         /// If a sequence number is skipped, send a NAK for all skipped messages
         /// </summary>
-        private long _expectedNextSequenceNumber;
+        private long _lastReceivedSequenceNumber = 0;
         
         public long NextCongestionControlBlock { get; set; }
         public bool BackoffThisBlock { get; set; }
@@ -85,31 +85,49 @@ namespace Alex.Net.Bedrock
 
         public bool OnPacketReceived(long currentTime, long datagramSequenceNumber, int sizeInBytes, out long skippedMessageCount)
         {
-            if (datagramSequenceNumber == _expectedNextSequenceNumber)
+            skippedMessageCount = 0;
+            var last = Interlocked.CompareExchange(ref _lastReceivedSequenceNumber, datagramSequenceNumber, datagramSequenceNumber - 1);
+
+            if (last == datagramSequenceNumber - 1)
             {
-                skippedMessageCount=0;
-                _expectedNextSequenceNumber=datagramSequenceNumber+1;
+                return true;
             }
-            else if (datagramSequenceNumber > _expectedNextSequenceNumber)
+
+            if (datagramSequenceNumber > last)
+                Interlocked.Exchange(ref _lastReceivedSequenceNumber, datagramSequenceNumber);
+
+            if (datagramSequenceNumber <= last)
             {
-                skippedMessageCount = datagramSequenceNumber - _expectedNextSequenceNumber;
-                // Sanity check, just use timeout resend if this was really valid
-                if (skippedMessageCount > 1000)
-                {
-                    // During testing, the nat punchthrough server got 51200 on the first packet. I have no idea where this comes from, but has happened twice
-                    if (skippedMessageCount > 50000)
-                        return false;
-                    
-                    skippedMessageCount=1000;
-                }
-                _expectedNextSequenceNumber = datagramSequenceNumber + 1;
-            }
-            else
-            {
-                skippedMessageCount = 0;
+                skippedMessageCount = datagramSequenceNumber - last;
             }
 
             return true;
+
+            /* if (datagramSequenceNumber == _expectedNextSequenceNumber)
+             {
+                 skippedMessageCount=0;
+                 _expectedNextSequenceNumber=datagramSequenceNumber+1;
+             }
+             else if (datagramSequenceNumber > _expectedNextSequenceNumber)
+             {
+                 skippedMessageCount = datagramSequenceNumber - _expectedNextSequenceNumber;
+                 // Sanity check, just use timeout resend if this was really valid
+                 if (skippedMessageCount > 1000)
+                 {
+                     // During testing, the nat punchthrough server got 51200 on the first packet. I have no idea where this comes from, but has happened twice
+                     if (skippedMessageCount > 50000)
+                         return false;
+                     
+                     skippedMessageCount=1000;
+                 }
+                 _expectedNextSequenceNumber = datagramSequenceNumber + 1;
+             }
+             else
+             {
+                 skippedMessageCount = 0;
+             }
+ 
+             return true;*/
         }
 
         public void OnResend(long currentTime, long nextActionTime)
@@ -125,7 +143,7 @@ namespace Alex.Net.Bedrock
 
                 Cwnd = MtuSize;
 
-                NextCongestionControlBlock = Interlocked.Read(ref _nextDatagramSequenceNumber);
+                NextCongestionControlBlock = Interlocked.Read(ref _sentDatagramSequenceNumber);
                 BackoffThisBlock = true;
             }
         }
@@ -144,7 +162,7 @@ namespace Alex.Net.Bedrock
 
         public long GetAndIncrementNextDatagramSequenceNumber()
         {
-            return Interlocked.Increment(ref _nextDatagramSequenceNumber);
+            return Interlocked.Increment(ref _sentDatagramSequenceNumber);
         }
 
         /// <summary>
@@ -187,7 +205,7 @@ namespace Alex.Net.Bedrock
             {
                 BackoffThisBlock = false;
               //  speedUpThisBlock = false;
-                NextCongestionControlBlock = Interlocked.Read(ref _nextDatagramSequenceNumber);
+                NextCongestionControlBlock = Interlocked.Read(ref _sentDatagramSequenceNumber);
             }
 
             if (IsInSlowStart())

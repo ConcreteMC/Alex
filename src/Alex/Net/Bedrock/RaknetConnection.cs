@@ -399,13 +399,14 @@ namespace Alex.Net.Bedrock
 				Log.Warn(e, $"Bad packet {receivedBytes.Span[0]}\n{Packet.HexDump(receivedBytes)}");
 				return;
 			}
-			
-			Session.Acknowledge(datagram);
-			
-			Interlocked.Increment(ref ConnectionInfo.PacketsIn);
-			//if (Log.IsTraceEnabled) Log.Trace($"Receive datagram #{datagram.Header.DatagramSequenceNumber} for {_endpoint}");
-			HandleDatagram(rakSession, datagram);
-			
+
+			if (Session.Acknowledge(datagram))
+			{
+				Interlocked.Increment(ref ConnectionInfo.PacketsIn);
+				//if (Log.IsTraceEnabled) Log.Trace($"Receive datagram #{datagram.Header.DatagramSequenceNumber} for {_endpoint}");
+				HandleDatagram(rakSession, datagram);
+			}
+
 			datagram.PutPool();
 		}
 
