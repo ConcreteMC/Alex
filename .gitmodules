@@ -1,6 +1,8 @@
 [submodule "src/submodules/RocketUI"]
 	path = submodules/RocketUI
 	url = https://github.com/TruDan/RocketUI.git
+	update = rebase
 [submodule "src/submodules/MiNET"]
 	path = submodules/MiNET
 	url = https://github.com/NiclasOlofsson/MiNET.git
+	update = rebase
