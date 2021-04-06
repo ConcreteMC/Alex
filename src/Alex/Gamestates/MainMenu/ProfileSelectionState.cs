@@ -35,8 +35,8 @@ namespace Alex.Gamestates.MainMenu
             
             Background = new GuiTexture2D(_skyBox, TextureRepeatMode.Stretch);
 
-            base.ListContainer.ChildAnchor = Alignment.MiddleCenter;
-            base.ListContainer.Orientation = Orientation.Horizontal;
+            //base.ListContainer.ChildAnchor = Alignment.MiddleCenter;
+            //base.ListContainer.Orientation = Orientation.Horizontal;
             
             Footer.AddRow(row =>
             {

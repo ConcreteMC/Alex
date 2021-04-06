@@ -207,7 +207,7 @@ namespace Alex.Net.Bedrock
 				listener.Client.SendBufferSize = int.MaxValue;
 			}
 
-			listener.Client.Blocking = true;
+			//listener.Client.Blocking = true;
 			listener.DontFragment = true;
 			listener.EnableBroadcast = false;
 
@@ -591,9 +591,8 @@ namespace Alex.Net.Bedrock
 								Log.Warn($"{(datagram.RetransmitImmediate ? "NAK RSND" : "TIMEOUT")}, Resent #{datagram.Header.DatagramSequenceNumber.IntValue()} Type: {datagram.FirstMessageId} (0x{datagram.FirstMessageId:x2}) ({elapsedTime} > {datagramTimeout}) RTO {rto}");
 
 							Interlocked.Increment(ref ConnectionInfo.Resends);
-							await SendDatagramAsync(session, datagram);
-							
 							session.SlidingWindow.OnResend(RaknetSession.CurrentTimeMillis(), datagramPair.Key);
+							await SendDatagramAsync(session, datagram);
 						}
 					}
 				}

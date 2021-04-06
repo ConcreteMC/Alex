@@ -86,7 +86,7 @@ namespace Alex.Gamestates.Common
                 //MaxHeight = 100,
 				Orientation = Orientation.Vertical,
 				Anchor = Alignment.Fill,
-				ChildAnchor = Alignment.FillCenter,
+				ChildAnchor = Alignment.TopCenter,
 			});
 
 			AddChild(Footer = new MultiStackContainer(row =>

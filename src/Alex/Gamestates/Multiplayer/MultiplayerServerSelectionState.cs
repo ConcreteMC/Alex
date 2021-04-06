@@ -467,24 +467,16 @@ namespace Alex.Gamestates.Multiplayer
 
 		    if (!obj.IsNew)
 		    {
-			    for (var index = 0; index < Items.Length; index++)
+			    var entry = Items.FirstOrDefault(
+				    x => x.SavedServerEntry.InternalIdentifier.Equals(obj.Entry.InternalIdentifier));
+
+			    if (entry != null)
 			    {
-				    var entry = Items[index];
+				    _listProvider.RemoveEntry(entry.SavedServerEntry);
+				    entry.SavedServerEntry = obj.Entry;
+				    _listProvider.AddEntry(entry.SavedServerEntry);
 
-				    if (entry.SavedServerEntry.InternalIdentifier.Equals(obj.Entry.InternalIdentifier))
-				    {
-					    var newEntry = new GuiServerListEntryElement(entry.ServerTypeImplementation, obj.Entry);
-
-					    Items[index] = newEntry;
-
-					    newEntry.PingAsync(false, CancellationToken.None);
-
-					    _listProvider.RemoveEntry(entry.SavedServerEntry);
-					    _listProvider.AddEntry(obj.Entry);
-					    _listProvider.MoveEntry(entry.SavedServerEntry.ListIndex, obj.Entry);
-					    
-					    break;
-				    }
+				    entry.PingAsync(false, CancellationToken.None);
 			    }
 		    }
 		    else
