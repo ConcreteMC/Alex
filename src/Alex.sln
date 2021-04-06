@@ -33,9 +33,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Alex.MoLang.TestApp", "Alex
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Submodules", "Submodules", "{66F9179F-DEB1-45B9-B067-D613A2857D5C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MiNET", "submodules\MiNET\src\MiNET\MiNET\MiNET.csproj", "{54F2318F-B85F-4DC3-AA05-C70990618516}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MiNET", "..\submodules\MiNET\src\MiNET\MiNET\MiNET.csproj", "{54F2318F-B85F-4DC3-AA05-C70990618516}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RocketUI", "submodules\RocketUI\src\RocketUI\RocketUI.csproj", "{C19D7D7A-C720-4D4C-9CF6-EAD3653DD782}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RocketUI", "..\submodules\RocketUI\src\RocketUI\RocketUI.csproj", "{C19D7D7A-C720-4D4C-9CF6-EAD3653DD782}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

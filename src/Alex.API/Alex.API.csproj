@@ -32,7 +32,7 @@
   </ItemGroup>
   
   <ItemGroup>
-    <ProjectReference Include="..\submodules\MiNET\src\MiNET\MiNET\MiNET.csproj" />
-    <ProjectReference Include="..\submodules\RocketUI\src\RocketUI\RocketUI.csproj" />
+    <ProjectReference Include="..\..\submodules\MiNET\src\MiNET\MiNET\MiNET.csproj" />
+    <ProjectReference Include="..\..\submodules\RocketUI\src\RocketUI\RocketUI.csproj" />
   </ItemGroup>
 </Project>
