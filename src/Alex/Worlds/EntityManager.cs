@@ -174,7 +174,7 @@ namespace Alex.Worlds
 			CullMode = CullMode.None, 
 			FillMode = FillMode.Solid, 
 			DepthClipEnable = true, 
-			ScissorTestEnable = true,
+			ScissorTestEnable = false,
 			MultiSampleAntiAlias = true,
 		};
 

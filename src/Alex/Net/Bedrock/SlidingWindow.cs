@@ -96,7 +96,7 @@ namespace Alex.Net.Bedrock
             if (datagramSequenceNumber > last)
                 Interlocked.Exchange(ref _lastReceivedSequenceNumber, datagramSequenceNumber);
 
-            if (datagramSequenceNumber <= last)
+         //   if (datagramSequenceNumber <= last)
             {
                 skippedMessageCount = datagramSequenceNumber - last;
             }
