@@ -47,6 +47,18 @@ namespace Alex.MoLang.Runtime.Value
 			return (obj is DoubleValue dv && dv.Value == Value);
 			// ...the rest of the equality implementation
 		}
+		
+		/// <inheritdoc />
+		public double AsDouble()
+		{
+			return Value;
+		}
+
+		/// <inheritdoc />
+		public float AsFloat()
+		{
+			return (float)Value;
+		}
 
 		public static DoubleValue Zero => new DoubleValue(0d);
 		public static DoubleValue One => new DoubleValue(1d);

@@ -14,9 +14,9 @@ namespace Alex.MoLang.Runtime.Value
 		
 		string AsString() => Value.ToString();
 
-		double AsDouble() => Value is double db ? db : 0d;
-		float AsFloat() => Value is float flt ? flt : (float)AsDouble();
-		bool AsBool() => Value is bool b ? b : AsDouble() > 0;
+		virtual double AsDouble() => Value is double db ? db : 0d;
+		virtual float AsFloat() => Value is float flt ? flt : (float)AsDouble();
+		virtual bool AsBool() => Value is bool b ? b : AsDouble() > 0;
 	}
 
 	public static class MoValue

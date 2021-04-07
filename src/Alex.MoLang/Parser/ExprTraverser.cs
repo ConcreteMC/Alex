@@ -215,7 +215,8 @@ namespace Alex.MoLang.Parser
                     }
                     else
                     {
-                        SetFieldValue(field, expression, subExpr);
+                        if (subExpr != fieldValue) 
+                            SetFieldValue(field, expression, subExpr);
                     }
 
                     if (_stopTraversal)
@@ -229,7 +230,7 @@ namespace Alex.MoLang.Parser
                     var exprs = array.Where(x => x is IExpression).Cast<IExpression>().ToArray();
 
                     exprs = TraverseArray(exprs).ToArray();
-
+                    
                     SetFieldValue(field, expression, exprs);
                 }
             }

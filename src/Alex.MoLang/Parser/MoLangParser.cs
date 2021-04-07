@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using Alex.MoLang.Parser.Exceptions;
 using Alex.MoLang.Parser.Parselet;
@@ -18,7 +19,7 @@ namespace Alex.MoLang.Parser
 
 		private readonly TokenIterator _tokenIterator;
 		private readonly List<Token>   _readTokens = new List<Token>();
-		private static ExprTraverser _exprTraverser;
+		private static readonly ExprTraverser _exprTraverser;
 		static MoLangParser()
 		{
 			PrefixParselets.Add(TokenType.Name, new NameParselet());

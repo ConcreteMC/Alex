@@ -62,19 +62,37 @@ return t.a;");
 				});
 
 			queryStruct.UseNLog = false;
-			queryStruct.EnableDebugOutput = true;
+			queryStruct.EnableDebugOutput = false;
 			
 			runtime.Environment.Structs.TryAdd("query", queryStruct);
 			
 			try
 			{
-				sw.Restart();
+				const int runs = 100000;
+				double totalTicks = 0;
 				
-				var result = runtime.Execute(expressions).AsDouble();
+				double longest = 0;
+				double shortest =long.MaxValue;
 				
+				IMoValue value;
+				for (int i = 0; i < runs; i++)
+				{
+					sw.Restart();
+					value = runtime.Execute(expressions);
+					
+					var elapsed = sw.Elapsed.TotalMilliseconds;
+
+					if (elapsed > longest)
+						longest = elapsed;
+					else if (elapsed < shortest)
+						shortest = elapsed;
+					
+					totalTicks += elapsed;
+				}
+
 				var timeElapsedOnExecution = sw.Elapsed;
 				
-				Console.WriteLine($"Execution took {timeElapsedOnExecution.TotalMilliseconds}ms");
+				Console.WriteLine($"Execution: Avg={((double)totalTicks) / (double)runs}ms Max={(longest)}ms Min={(shortest)}ms");
 			}
 			catch (MoLangRuntimeException runtimeException)
 			{
