@@ -33,6 +33,7 @@ namespace Alex.Gamestates.InGame.Hud
 	    public readonly ChatComponent Chat;
 	    public readonly TitleComponent Title;
 	    public readonly ScoreboardView Scoreboard;
+	    public readonly BossBarContainer BossBar;
         private PlayerInputManager InputManager => _playerController.InputManager;
 
 		private Alex Alex { get; }
@@ -88,7 +89,9 @@ namespace Alex.Gamestates.InGame.Hud
 	        _tipPopupComponent = new TipPopupComponent();
 	        _tipPopupComponent.Anchor = Alignment.BottomCenter;
 	        _tipPopupComponent.AutoSizeMode = AutoSizeMode.GrowAndShrink;
-	        
+
+	        BossBar = new BossBarContainer();
+
 	        Scoreboard = new ScoreboardView();
 	        Scoreboard.Anchor = Alignment.MiddleRight;
         }
@@ -132,6 +135,8 @@ namespace Alex.Gamestates.InGame.Hud
 		        AddChild(Title);
 
 		        AddChild(Scoreboard);
+		        
+		        AddChild(BossBar);
 
 		        _didInit = true;
 	        }

@@ -4,6 +4,7 @@ using Alex.API.Gui.Elements;
 using RocketUI;
 using Alex.API.World;
 using Alex.Gui.Elements;
+using Alex.Gui.Elements.Hud;
 using Microsoft.Xna.Framework;
 
 namespace Alex.Worlds.Abstraction
@@ -16,6 +17,7 @@ namespace Alex.Worlds.Abstraction
 		public    ITitleComponent TitleComponent { get; set; }
 		public    IChatRecipient  ChatRecipient  { get; set; }
 		public    ScoreboardView  ScoreboardView { get; set; }
+		public    BossBarContainer  BossBarContainer { get; set; }
 		protected WorldProvider()
 		{
 			

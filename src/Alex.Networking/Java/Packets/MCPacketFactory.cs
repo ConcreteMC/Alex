@@ -185,6 +185,7 @@ namespace Alex.Networking.Java.Packets
 			
 			Register(ConnectionState.Play, 0x0A, () => BlockActionPacket.CreateObject());
 			Register(ConnectionState.Play, 0x0B, () => BlockChangePacket.CreateObject());
+			Register(ConnectionState.Play, 0x0C, () => BossBarPacket.CreateObject());
 			Register(ConnectionState.Play, 0x0D, () => ServerDifficultyPacket.CreateObject());
 			Register(ConnectionState.Play, 0x0E, () =>
 			{

@@ -66,6 +66,7 @@ namespace Alex.Gamestates.InGame
 			
 			WorldProvider.ScoreboardView = _playingHud.Scoreboard;
 			WorldProvider.ChatRecipient = _playingHud;
+			WorldProvider.BossBarContainer = _playingHud.BossBar;
 			//WorldProvider.ScoreboardView
 			
 			_debugInfo = new GuiDebugInfo();

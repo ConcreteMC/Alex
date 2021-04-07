@@ -29,6 +29,7 @@ using Alex.Items;
 using Alex.Net.Bedrock;
 using Alex.Net.Bedrock.Packets;
 using Alex.Net.Bedrock.Raknet;
+using Alex.Networking.Java.Packets.Play;
 using Alex.ResourcePackLib.Json;
 using Alex.ResourcePackLib.Json.Converters;
 using Alex.ResourcePackLib.Json.Models.Entities;
@@ -1706,9 +1707,90 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			UnhandledPackage(message);
 		}
 
+		private ConcurrentDictionary<long, MiNET.Utils.UUID> _bossBarMapping = new ConcurrentDictionary<long, MiNET.Utils.UUID>();
 		public void HandleMcpeBossEvent(McpeBossEvent message)
 		{
-			UnhandledPackage(message);
+			var container = WorldProvider.BossBarContainer;
+
+			if (container == null)
+				return;
+
+			switch ((McpeBossEvent.Type) message.eventType)
+			{
+				case McpeBossEvent.Type.AddBoss:
+
+					_bossBarMapping.GetOrAdd(message.bossEntityId, l =>
+					{
+						MiNET.Utils.UUID uuid;
+
+						var text = message.title;
+						var health = message.healthPercent;
+						
+						if (Client.World.TryGetEntity(message.bossEntityId, out var entity))
+						{
+							if (string.IsNullOrWhiteSpace(text))
+								text = entity.NameTag;
+							//uuid = entity.UUID;
+						//	health = entity.HealthManager.Health;
+						}
+						//else
+						//{
+							uuid = new MiNET.Utils.UUID(Guid.NewGuid().ToByteArray());
+						//}
+
+						/*if (string.IsNullOrWhiteSpace(text))
+						{
+							if (Client.World.TryGetEntity(message.bossEntityId, out var entity))
+							{
+								text = entity.NameTag;
+							}
+						}*/
+						
+						container.Add(
+							uuid, text, health, BossBarPacket.BossBarColor.Pink,
+							BossBarPacket.BossBarDivisions.None, 0);
+						
+						return uuid;
+					});
+					//var uuid = new MiNET.Utils.UUID(Guid.NewGuid().ToByteArray());
+					
+					break;
+
+				case McpeBossEvent.Type.AddPlayer:
+					break;
+
+				case McpeBossEvent.Type.RemoveBoss:
+				{
+					if (_bossBarMapping.TryRemove(message.bossEntityId, out var uuid))
+					{
+						container.Remove(uuid);
+					}
+				}
+					break;
+
+				case McpeBossEvent.Type.RemovePlayer:
+					break;
+
+				case McpeBossEvent.Type.UpdateProgress:
+				{
+					if (_bossBarMapping.TryGetValue(message.bossEntityId, out var uuid))
+						container.UpdateHealth(uuid, message.healthPercent);
+				}
+					break;
+
+				case McpeBossEvent.Type.UpdateName:
+				{
+					if (_bossBarMapping.TryGetValue(message.bossEntityId, out var uuid))
+						container.UpdateTitle(uuid, message.title);
+				}
+					break;
+
+				case McpeBossEvent.Type.UpdateOptions:
+					break;
+
+				case McpeBossEvent.Type.UpdateStyle:
+					break;
+			}
 		}
 
 		public void HandleMcpeShowCredits(McpeShowCredits message)

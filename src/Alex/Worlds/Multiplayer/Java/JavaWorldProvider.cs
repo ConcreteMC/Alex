@@ -48,9 +48,11 @@ using fNbt;
 using Microsoft.Extensions.DependencyInjection;
 using MiNET;
 using MiNET.Entities;
+using MiNET.Plugins;
 using MiNET.Worlds;
 using Newtonsoft.Json;
 using NLog;
+using Org.BouncyCastle.Utilities.Encoders;
 using RocketUI.Input;
 using BlockCoordinates = Alex.API.Utils.Vectors.BlockCoordinates;
 using ChunkColumn = Alex.Worlds.Chunks.ChunkColumn;
@@ -893,6 +895,14 @@ namespace Alex.Worlds.Multiplayer.Java
 
 					break;
 
+				case PluginMessagePacket pluginMessagePacket:
+					HandlePluginMessagePacket(pluginMessagePacket);
+					break;
+				
+				case BossBarPacket bossBarPacket:
+					HandleBossBarPacket(bossBarPacket);
+					break;
+				
 				default:
 				{
 					if (UnhandledPackets.TryAdd(packet.PacketId, packet.GetType()))
@@ -905,6 +915,49 @@ namespace Alex.Worlds.Multiplayer.Java
 			}
 		}
 
+		private void HandleBossBarPacket(BossBarPacket packet)
+		{
+			var container = BossBarContainer;
+
+			if (container == null)
+				return;
+
+			switch (packet.Action)
+			{
+				case BossBarPacket.BossBarAction.Add:
+					container.Add(
+						packet.Uuid, packet.Title, packet.Health, packet.Color, packet.Divisions, packet.Flags);
+					break;
+
+				case BossBarPacket.BossBarAction.Remove:
+					container.Remove(packet.Uuid);
+					break;
+
+				case BossBarPacket.BossBarAction.UpdateHealth:
+					container.UpdateHealth(packet.Uuid, packet.Health);
+					break;
+
+				case BossBarPacket.BossBarAction.UpdateTitle:
+					container.UpdateTitle(packet.Uuid, packet.Title);
+					break;
+
+				case BossBarPacket.BossBarAction.UpdateStyle:
+					container.UpdateStyle(packet.Uuid, packet.Color, packet.Divisions);
+					break;
+
+				case BossBarPacket.BossBarAction.UpdateFlags:
+					break;
+
+				default:
+					throw new ArgumentOutOfRangeException();
+			}
+		}
+
+		private void HandlePluginMessagePacket(PluginMessagePacket packet)
+		{
+			Log.Info($"Received plugin message. Channel={packet.Channel} Data={Encoding.UTF8.GetString(packet.Data)}");
+		}
+		
 		private void HandleEntityEffectPacket(EntityEffectPacket packet)
 		{
 			if (World.TryGetEntity(packet.EntityId, out var entity))

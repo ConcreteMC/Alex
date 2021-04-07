@@ -16,7 +16,7 @@ namespace Alex.Gamestates.InGame.Hud
         private AutoUpdatingTextElement NetworkInfoElement { get; }
         private TextElement             WarningElement     { get; }
 
-        private bool _advanced = true;
+        private bool _advanced = false;
 
         public bool Advanced
         {
@@ -41,7 +41,7 @@ namespace Alex.Gamestates.InGame.Hud
                 IsVisible = false,
                 TextColor = (Color) TextColor.Red,
                 Text = "",
-                Anchor = Alignment.TopCenter,
+                Anchor = Alignment.TopLeft,
                 Scale = 1f,
                 FontStyle = FontStyle.DropShadow,
                 BackgroundOverlay = Color.Black * 0.5f,
@@ -60,6 +60,8 @@ namespace Alex.Gamestates.InGame.Hud
             NetworkInfoElement.TextOpacity = 0.75f;
             NetworkInfoElement.TextColor = (Color) TextColor.Red;
             NetworkInfoElement.Scale = 1f;
+            NetworkInfoElement.IsVisible = false;
+            
             AddChild(NetworkInfoElement);
         }
         

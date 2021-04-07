@@ -63,6 +63,33 @@ namespace Alex.API.Gui.Graphics
         public static readonly GuiTextures HungerPlaceholder                    = new(AlexNamespace, nameof(HungerPlaceholder));
         public static readonly GuiTextures HungerFull                           = new(AlexNamespace, nameof(HungerFull));
         public static readonly GuiTextures HungerHalf                           = new(AlexNamespace, nameof(HungerHalf));
+        
+        public static readonly GuiTextures BossbarBackgroundPink                    = new(AlexNamespace, nameof(BossbarBackgroundPink));
+        public static readonly GuiTextures BossbarProgressPink                    = new(AlexNamespace, nameof(BossbarProgressPink));
+        
+        public static readonly GuiTextures BossbarBackgroundBlue                    = new(AlexNamespace, nameof(BossbarBackgroundBlue));
+        public static readonly GuiTextures BossbarProgressBlue                    = new(AlexNamespace, nameof(BossbarProgressBlue));
+        
+        public static readonly GuiTextures BossbarBackgroundRed                    = new(AlexNamespace, nameof(BossbarBackgroundRed));
+        public static readonly GuiTextures BossbarProgressRed                    = new(AlexNamespace, nameof(BossbarProgressRed));
+        
+        public static readonly GuiTextures BossbarBackgroundGreen                    = new(AlexNamespace, nameof(BossbarBackgroundGreen));
+        public static readonly GuiTextures BossbarProgressGreen                    = new(AlexNamespace, nameof(BossbarProgressGreen));
+        
+        public static readonly GuiTextures BossbarBackgroundYellow                    = new(AlexNamespace, nameof(BossbarBackgroundYellow));
+        public static readonly GuiTextures BossbarProgressYellow                    = new(AlexNamespace, nameof(BossbarProgressYellow));
+        
+        public static readonly GuiTextures BossbarBackgroundPurple                    = new(AlexNamespace, nameof(BossbarBackgroundPurple));
+        public static readonly GuiTextures BossbarProgressPurple                    = new(AlexNamespace, nameof(BossbarProgressPurple));
+        
+        public static readonly GuiTextures BossbarBackgroundWhite                    = new(AlexNamespace, nameof(BossbarBackgroundWhite));
+        public static readonly GuiTextures BossbarProgressWhite                    = new(AlexNamespace, nameof(BossbarProgressWhite));
+        
+        public static readonly GuiTextures BossbarDivider6                    = new(AlexNamespace, nameof(BossbarDivider6));
+        public static readonly GuiTextures BossbarDivider10                    = new(AlexNamespace, nameof(BossbarDivider10));
+        public static readonly GuiTextures BossbarDivider12                    = new(AlexNamespace, nameof(BossbarDivider12));
+        public static readonly GuiTextures BossbarDivider20                    = new(AlexNamespace, nameof(BossbarDivider20));
+        
         public static readonly GuiTextures GradientBlur = new(AlexNamespace, nameof(GradientBlur));
     }
 }

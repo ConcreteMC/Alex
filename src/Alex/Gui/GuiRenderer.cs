@@ -48,6 +48,7 @@ namespace Alex.Gui
 
 		private Texture2D _widgets;
 		private Texture2D _icons;
+		private Texture2D _bars;
 		private Texture2D _scrollbar;
 		private Texture2D _inventory;
 		private Texture2D _chestInventory;
@@ -264,15 +265,21 @@ namespace Alex.Gui
 			progressReceiver?.UpdateProgress(0, null, "gui/widgets");
 			if (resourceManager.TryGetBitmap("gui/widgets", out var widgetsBmp))
 			{
-				_widgets = TextureUtils.BitmapToTexture2D(_graphicsDevice, widgetsBmp);
+				_widgets = TextureUtils.BitmapToTexture2D(this, _graphicsDevice, widgetsBmp);
 				LoadWidgets(_widgets);
 			}
 
 			progressReceiver?.UpdateProgress(25, null, "gui/icons");
 			if (resourceManager.TryGetBitmap("gui/icons", out var icons))
 			{
-				_icons = TextureUtils.BitmapToTexture2D(_graphicsDevice, icons);
+				_icons = TextureUtils.BitmapToTexture2D(this, _graphicsDevice, icons);
 				LoadIcons(_icons);
+			}
+			
+			if (resourceManager.TryGetBitmap("gui/bars", out var bars))
+			{
+				_bars = TextureUtils.BitmapToTexture2D(this, _graphicsDevice, bars);
+				LoadBars(_bars);
 			}
 
 			if (_scrollbar == null)
@@ -292,31 +299,31 @@ namespace Alex.Gui
 				
 				if (resourceManager.TryGetBitmap("gui/container/inventory", out var bmp))
 				{
-					_inventory = TextureUtils.BitmapToTexture2D(_graphicsDevice, bmp);
+					_inventory = TextureUtils.BitmapToTexture2D(this, _graphicsDevice, bmp);
 					LoadTextureFromSpriteSheet(AlexGuiTextures.InventoryPlayerBackground, _inventory, new Rectangle(0, 0, 176, 166), IconSize);
 				}
 
 				if (resourceManager.TryGetBitmap("gui/container/generic_54", out var genericInvBmp))
 				{
-					_chestInventory = TextureUtils.BitmapToTexture2D(_graphicsDevice, genericInvBmp);
+					_chestInventory = TextureUtils.BitmapToTexture2D(this, _graphicsDevice, genericInvBmp);
 					LoadTextureFromSpriteSheet(AlexGuiTextures.InventoryChestBackground, _chestInventory, new Rectangle(0, 0, 175, 221), IconSize);
 				}
 
 				if (resourceManager.TryGetBitmap("gui/container/crafting_table", out var craftingTable))
 				{
-					_craftingTable = TextureUtils.BitmapToTexture2D(_graphicsDevice, craftingTable);
+					_craftingTable = TextureUtils.BitmapToTexture2D(this, _graphicsDevice, craftingTable);
 					LoadTextureFromSpriteSheet(AlexGuiTextures.InventoryCraftingTable, _craftingTable, new Rectangle(0, 0, 175, 165), IconSize);
 				}
 				
 				if (resourceManager.TryGetBitmap("gui/container/furnace", out var furnace))
 				{
-					_furnace = TextureUtils.BitmapToTexture2D(_graphicsDevice, furnace);
+					_furnace = TextureUtils.BitmapToTexture2D(this, _graphicsDevice, furnace);
 					LoadTextureFromSpriteSheet(AlexGuiTextures.InventoryFurnace, _furnace, new Rectangle(0, 0, 175, 165), IconSize);
 				}
 
 				if (resourceManager.TryGetBitmap("gui/container/creative_inventory/tab_item_search", out var tabImage))
 				{
-					_tabItemSearch = TextureUtils.BitmapToTexture2D(_graphicsDevice, tabImage);
+					_tabItemSearch = TextureUtils.BitmapToTexture2D(this, _graphicsDevice, tabImage);
 					LoadTextureFromSpriteSheet(AlexGuiTextures.InventoryCreativeItemSearch, _tabItemSearch, new Rectangle(0, 0, 194, 135), IconSize);
 				}
 				//LoadTextureFromSpriteSheet(GuiTextures.InventoryChestBackground, _inventory, new Rectangle(0, 0, 175, 221), IconSize);
@@ -379,6 +386,36 @@ namespace Alex.Gui
 			LoadTextureFromSpriteSheet(AlexGuiTextures.HungerPlaceholder, spriteSheet, new Rectangle(16, 27, 9, 9), IconSize);
 			LoadTextureFromSpriteSheet(AlexGuiTextures.HungerFull, spriteSheet, new Rectangle(52, 27, 9, 9), IconSize);
 			LoadTextureFromSpriteSheet(AlexGuiTextures.HungerHalf, spriteSheet, new Rectangle(61, 27, 9, 9), IconSize);
+		}
+		
+		private Size BarsSize { get; } = new Size(256, 256);
+		private void LoadBars(Texture2D spriteSheet)
+		{
+			LoadTextureFromSpriteSheet(AlexGuiTextures.BossbarBackgroundPink, spriteSheet, new Rectangle(0, 0, 182, 5), BarsSize);
+			LoadTextureFromSpriteSheet(AlexGuiTextures.BossbarProgressPink, spriteSheet, new Rectangle(0, 5, 182, 5), BarsSize);
+			
+			LoadTextureFromSpriteSheet(AlexGuiTextures.BossbarBackgroundBlue, spriteSheet, new Rectangle(0, 10, 182, 5), BarsSize);
+			LoadTextureFromSpriteSheet(AlexGuiTextures.BossbarProgressBlue, spriteSheet, new Rectangle(0, 15, 182, 5), BarsSize);
+			
+			LoadTextureFromSpriteSheet(AlexGuiTextures.BossbarBackgroundRed, spriteSheet, new Rectangle(0, 20, 182, 5), BarsSize);
+			LoadTextureFromSpriteSheet(AlexGuiTextures.BossbarProgressRed, spriteSheet, new Rectangle(0, 25, 182, 5), BarsSize);
+			
+			LoadTextureFromSpriteSheet(AlexGuiTextures.BossbarBackgroundGreen, spriteSheet, new Rectangle(0, 30, 182, 5), BarsSize);
+			LoadTextureFromSpriteSheet(AlexGuiTextures.BossbarProgressGreen, spriteSheet, new Rectangle(0, 35, 182, 5), BarsSize);
+			
+			LoadTextureFromSpriteSheet(AlexGuiTextures.BossbarBackgroundYellow, spriteSheet, new Rectangle(0, 40, 182, 5), BarsSize);
+			LoadTextureFromSpriteSheet(AlexGuiTextures.BossbarProgressYellow, spriteSheet, new Rectangle(0, 45, 182, 5), BarsSize);
+			
+			LoadTextureFromSpriteSheet(AlexGuiTextures.BossbarBackgroundPurple, spriteSheet, new Rectangle(0, 50, 182, 5), BarsSize);
+			LoadTextureFromSpriteSheet(AlexGuiTextures.BossbarProgressPurple, spriteSheet, new Rectangle(0, 55, 182, 5), BarsSize);
+			
+			LoadTextureFromSpriteSheet(AlexGuiTextures.BossbarBackgroundWhite, spriteSheet, new Rectangle(0, 60, 182, 5), BarsSize);
+			LoadTextureFromSpriteSheet(AlexGuiTextures.BossbarProgressWhite, spriteSheet, new Rectangle(0, 65, 182, 5), BarsSize);
+			
+			LoadTextureFromSpriteSheet(AlexGuiTextures.BossbarDivider6, spriteSheet, new Rectangle(0, 80, 182, 5), BarsSize);
+			LoadTextureFromSpriteSheet(AlexGuiTextures.BossbarDivider10, spriteSheet, new Rectangle(0, 90, 182, 5), BarsSize);
+			LoadTextureFromSpriteSheet(AlexGuiTextures.BossbarDivider12, spriteSheet, new Rectangle(0, 100, 182, 5), BarsSize);
+			LoadTextureFromSpriteSheet(AlexGuiTextures.BossbarDivider20, spriteSheet, new Rectangle(0, 110, 182, 5), BarsSize);
 		}
 
 		private Size ScrollbarSize { get; } = new Size(40,40);
