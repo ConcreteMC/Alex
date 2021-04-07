@@ -30,7 +30,7 @@ namespace Alex.Net.Bedrock
         /// <summary>
         ///     The last known Round Trip Time
         /// </summary>
-        public double LastRtt { get; set; } = -1;
+        public long LastRtt { get; set; } = -1;
         
         /// <summary>
         ///     The amount the Round Trip Time is allowed to deviate
@@ -46,7 +46,7 @@ namespace Alex.Net.Bedrock
         /// <summary>
         ///     Every outgoing datagram is assigned a sequence number, which increments by 1 every assignment
         /// </summary>
-        private long  _sentDatagramSequenceNumber = 0;
+        private long  _nextDatagramSequenceNumber = 0;
 
         /// <summary>
         /// Track which datagram sequence numbers have arrived.
@@ -132,7 +132,7 @@ namespace Alex.Net.Bedrock
 
         public void OnResend(long currentTime, long nextActionTime)
         {
-            if (!BackoffThisBlock && Cwnd > MtuSize * 2)
+            if (IsContinuousSend && !BackoffThisBlock && Cwnd > MtuSize * 2)
             {
                 SsThresh = Cwnd / 2;
 
@@ -143,7 +143,7 @@ namespace Alex.Net.Bedrock
 
                 Cwnd = MtuSize;
 
-                NextCongestionControlBlock = Interlocked.Read(ref _sentDatagramSequenceNumber);
+                NextCongestionControlBlock = Interlocked.Read(ref _nextDatagramSequenceNumber);
                 BackoffThisBlock = true;
             }
         }
@@ -154,7 +154,7 @@ namespace Alex.Net.Bedrock
         /// </summary>
         public void OnNak(long currentTime, long nakSequenceNumber)
         {
-            if (!BackoffThisBlock)
+            if (IsContinuousSend && !BackoffThisBlock)
             {
                 SsThresh = Cwnd / 2D;
             }
@@ -162,7 +162,7 @@ namespace Alex.Net.Bedrock
 
         public long GetAndIncrementNextDatagramSequenceNumber()
         {
-            return Interlocked.Increment(ref _sentDatagramSequenceNumber);
+            return Interlocked.Increment(ref _nextDatagramSequenceNumber);
         }
 
         /// <summary>
@@ -196,8 +196,8 @@ namespace Alex.Net.Bedrock
 
             IsContinuousSend = isContinuousSend;
             
-           // if (!IsContinuousSend)
-           //     return;
+           if (!isContinuousSend)
+                return;
             
             bool isNewCongestionControlPeriod = sequenceIndex > NextCongestionControlBlock;
 
@@ -205,7 +205,7 @@ namespace Alex.Net.Bedrock
             {
                 BackoffThisBlock = false;
               //  speedUpThisBlock = false;
-                NextCongestionControlBlock = Interlocked.Read(ref _sentDatagramSequenceNumber);
+                NextCongestionControlBlock = Interlocked.Read(ref _nextDatagramSequenceNumber);
             }
 
             if (IsInSlowStart())
@@ -257,7 +257,7 @@ namespace Alex.Net.Bedrock
         /// Minimum value is 100 milliseconds
         /// </summary>
         /// <returns></returns>
-        public long GetRtoForRetransmission()
+        public long GetRtoForRetransmission(int transmissionCount)
         {
             if (EstimatedRtt < 0d)
             {
@@ -271,6 +271,10 @@ namespace Alex.Net.Bedrock
 
         public double GetRtt()
         {
+            if (LastRtt == UNSET_TIME_US)
+                return 0;
+
+            return LastRtt;
             return EstimatedRtt;
         }
 
@@ -286,12 +290,15 @@ namespace Alex.Net.Bedrock
         {
             long rto = GetSenderRtoForAck();
 
-            return rto < 0d || curTime >= OldestUnsentAck + CcSyn;
+            if (rto == UNSET_TIME_US)
+                return true;
+            
+            return curTime >= OldestUnsentAck + CcSyn;
         }
 
         public long GetSenderRtoForAck()
         {
-            if (LastRtt < 0d)
+            if (LastRtt == UNSET_TIME_US)
             {
                 return UNSET_TIME_US;
             }

@@ -514,43 +514,29 @@ namespace Alex.Net.Bedrock
 			return null;
 		}
 
-		private async void SendTick(object obj)
+		private void SendTick(object obj)
 		{
 			if (_stopped || _listener == null)
 				return;
 			
 			if (Session != null)
-				await Session.SendTickAsync(this);
+				Session.SendTick(this);
 		}
 
-		internal async Task UpdateAsync(RaknetSession session)
+		internal void Update(RaknetSession session)
 		{
 			if (session.Evicted) return;
 
 			try
 			{
-				await session.UpdateSync.WaitAsync();
-				
-				long now = DateTime.UtcNow.Ticks / TimeSpan.TicksPerMillisecond;
-				long lastUpdate = session.LastUpdatedTime.Ticks / TimeSpan.TicksPerMillisecond;
-				
-			//	if (!session.WaitForAck && (session.ResendCount > session.ResendThreshold || lastUpdate + session.InactivityTimeout < now))
-			//	{
-					//TODO: Seems to have lost code here. This should actually count the resends too.
-					// Spam is a bit too much. The Russians have trouble with bad connections.
-			//		Session.DetectLostConnection();
-			//		session.WaitForAck = true;
-			//	}
-
+				session.UpdateSync.Wait();
+			
 				if (session.WaitingForAckQueue.Count == 0) return;
 
-			//	if (session.WaitForAck) return;
+				//long rto = session.SlidingWindow.GetRtoForRetransmission();
+				//if (rto == 0) return;
 
-				
-				long rto = session.SlidingWindow.GetRtoForRetransmission();
-				if (rto == 0) return;
-
-				int transmissionBandwith = session.SlidingWindow.GetRetransmissionBandwidth(session.UnackedBytes);
+				int transmissionBandwidth = session.SlidingWindow.GetRetransmissionBandwidth(session.UnackedBytes);
 				
 				var queue = session.WaitingForAckQueue;
 
@@ -576,24 +562,25 @@ namespace Alex.Net.Bedrock
 
 					if (datagram.RetransmitImmediate || elapsedTime >= datagramTimeout)
 					{
-						if (transmissionBandwith < datagram.Bytes.Length)
+						if (transmissionBandwidth < datagram.Bytes.Length)
 							break;
-						
-						transmissionBandwith -= datagram.Bytes.Length;
-						
+
 						if (!session.Evicted && session.WaitingForAckQueue.TryRemove(datagramPair.Key, out datagram))
 						{
+							transmissionBandwidth -= datagram.Bytes.Length;
 							session.UnackedBytes -= datagram.Bytes.Length;
 							
-							session.ErrorCount++;
-							session.ResendCount++;
+							//session.ErrorCount++;
+							//session.ResendCount++;
 
 							//if (Log.IsDebugEnabled) 
-								Log.Warn($"{(datagram.RetransmitImmediate ? "NAK RSND" : "TIMEOUT")}, Resent #{datagram.Header.DatagramSequenceNumber.IntValue()} Type: {datagram.FirstMessageId} (0x{datagram.FirstMessageId:x2}) ({elapsedTime} > {datagramTimeout}) RTO {rto}");
+								Log.Warn($"{(datagram.RetransmitImmediate ? "NAK RSND" : "TIMEOUT")}, Resent #{datagram.Header.DatagramSequenceNumber.IntValue()} Type: {datagram.FirstMessageId} (0x{datagram.FirstMessageId:x2}) ({elapsedTime} > {datagramTimeout})");
 
 							Interlocked.Increment(ref ConnectionInfo.Resends);
+							
 							session.SlidingWindow.OnResend(RaknetSession.CurrentTimeMillis(), datagramPair.Key);
-							await SendDatagramAsync(session, datagram);
+							
+							SendDatagram(session, datagram);
 						}
 					}
 				}
@@ -614,7 +601,7 @@ namespace Alex.Net.Bedrock
 			message.PutPool();
 		}
 
-		public async Task SendPacketAsync(RaknetSession session, List<Packet> messages)
+		public void SendPacket(RaknetSession session, List<Packet> messages)
 		{
 		//	await Task.WhenAll(
 		//		Datagram.CreateDatagrams(messages, session.MtuSize, session)
@@ -622,7 +609,7 @@ namespace Alex.Net.Bedrock
 
 			foreach (Datagram datagram in Datagram.CreateDatagrams(messages, session.MtuSize, session))
 			{
-				await SendDatagramAsync(session, datagram);
+				SendDatagram(session, datagram);
 			}
 			
 			foreach (Packet message in messages)
@@ -630,14 +617,8 @@ namespace Alex.Net.Bedrock
 				message.PutPool();
 			}
 		}
-
 		
-		public async void SendDatagram(RaknetSession session, Datagram datagram)
-		{
-			await SendDatagramAsync(session, datagram);
-		}
-
-		public async Task SendDatagramAsync(RaknetSession session, Datagram datagram)
+		public void SendDatagram(RaknetSession session, Datagram datagram)
 		{
 			if (datagram.MessageParts.Count == 0)
 			{
@@ -659,10 +640,9 @@ namespace Alex.Net.Bedrock
 
 			var sequenceNumber = (int)session.SlidingWindow.GetAndIncrementNextDatagramSequenceNumber();// Interlocked.Increment(ref session.DatagramSequenceNumber);
 			
-			long rto = session.SlidingWindow.GetRtoForRetransmission();
-			datagram.RetransmissionTimeOut = 3000 - ((rto * (datagram.TransmissionCount + session.ResendCount + 1)) * 2);
+			long rto = session.SlidingWindow.GetRtoForRetransmission(datagram.TransmissionCount++);
+			datagram.RetransmissionTimeOut = rto;
 			datagram.Header.DatagramSequenceNumber = sequenceNumber;
-			datagram.TransmissionCount++;
 			datagram.RetransmitImmediate = false;
 			//datagram.Header.NeedsBAndAs = session.SlidingWindow.IsInSlowStart();
 			//datagram.Header.IsContinuousSend = session.SlidingWindow.IsContinuousSend;
@@ -689,7 +669,7 @@ namespace Alex.Net.Bedrock
 				}
 				
 				Interlocked.Increment(ref ConnectionInfo.PacketsOut);
-				await SendDataAsync(buffer, length, session.EndPoint);
+				SendData(buffer, length, session.EndPoint);
 				
 				datagram.Timer.Restart();
 			}
@@ -700,18 +680,13 @@ namespace Alex.Net.Bedrock
 		}
 
 
-		public async void SendData(byte[] data, IPEndPoint targetEndPoint)
+		public void SendData(byte[] data, IPEndPoint targetEndPoint)
 		{
-			await SendDataAsync(data, targetEndPoint);
-		}
-
-		public async Task SendDataAsync(byte[] data, IPEndPoint targetEndPoint)
-		{
-			await SendDataAsync(data, data.Length, targetEndPoint);
+			SendData(data, data.Length, targetEndPoint);
 		}
 
 		private object _sendSync = new object();
-		private async Task SendDataAsync(byte[] data, int length, IPEndPoint targetEndPoint)
+		private void SendData(byte[] data, int length, IPEndPoint targetEndPoint)
 		{
 			if (length <= 0)
 				return;

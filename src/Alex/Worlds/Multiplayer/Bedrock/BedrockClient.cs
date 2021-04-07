@@ -262,7 +262,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			long fails   = Interlocked.Exchange(ref Connection.ConnectionInfo.Fails, 0L);
 
 			string str =
-				$"Pkt in/out(#/s) {packetCountIn}/{packetCountOut}, ACK in/out(#/s) {ackReceived}/{ackSent}, NAK in/out(#/s) {nakReceive}/{nakSent}, THR in/out(Kbps){throughPutIn:F2}/{throughtPutOut:F2}, RTT {Session.SlidingWindow.GetRtt()}, RTO {Session.SlidingWindow.GetRtoForRetransmission()}";
+				$"Pkt in/out(#/s) {packetCountIn}/{packetCountOut}, ACK in/out(#/s) {ackReceived}/{ackSent}, NAK in/out(#/s) {nakReceive}/{nakSent}, THR in/out(Kbps){throughPutIn:F2}/{throughtPutOut:F2}, RTT {Session.SlidingWindow.GetRtt()}, RTO {Session.SlidingWindow.GetRtoForRetransmission(1)}";
 
 			//if (Config.GetProperty("ServerInfoInTitle", false))
 			//	Console.Title = str;
@@ -1300,10 +1300,13 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		{
 			ResourcePackManager?.Dispose();
 			ResourcePackManager = null;
-			
+
 			if (PacketHandler != null)
+			{
 				PacketHandler.ReportPackets();
-			
+				PacketHandler = null;
+			}
+
 			CancellationTokenSource?.Cancel();
 			SendDisconnectionNotification();
 

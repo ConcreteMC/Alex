@@ -93,9 +93,12 @@ namespace Alex.Worlds.Chunks
 
 		public void SetScheduled(int x, int y, int z, bool value)
 		{
+			var scheduled = _scheduledUpdates;
+			if (scheduled == null) return;
+			
 			var idx = GetCoordinateIndex(x, y, z);
 
-			var oldValue = _scheduledUpdates[idx];
+			var oldValue = scheduled[idx];
 
 			if (oldValue && !value)
 			{
@@ -108,7 +111,7 @@ namespace Alex.Worlds.Chunks
 				//ScheduledUpdatesCount++;
 			}
 			
-            _scheduledUpdates.Set(idx, value);
+			scheduled.Set(idx, value);
 		}
 
 		public bool IsBlockLightScheduled(int x, int y, int z)

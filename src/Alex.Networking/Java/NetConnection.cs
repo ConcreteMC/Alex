@@ -164,10 +164,11 @@ namespace Alex.Networking.Java
 	    {
 		    Stopwatch time           = Stopwatch.StartNew();
 		    
-		    var cancelSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, CancellationToken.Token);
 		    
 		    try
 		    {
+			    var cancelSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, CancellationToken.Token);
+			    
 			    using (NetworkStream ns = client.GetStream())
 			    {
 				    using (MinecraftStream writeStream = new MinecraftStream(ns, cancelSource.Token))

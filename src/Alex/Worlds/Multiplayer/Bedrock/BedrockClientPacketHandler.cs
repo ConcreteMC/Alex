@@ -2126,8 +2126,12 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			
 			foreach (var p in entries)
 			{
+				var type = p.Value.type;
+				if (type == null)
+					continue;
+				
 				Log.Warn(
-					$"Unhandled packet: {p.Value.type.FullName} * {p.Value.count} (0x{p.Key:x2})");
+					$"Unhandled packet: {type.FullName} * {p.Value.count} (0x{p.Key:x2})");
 			}
 		}
 	}
