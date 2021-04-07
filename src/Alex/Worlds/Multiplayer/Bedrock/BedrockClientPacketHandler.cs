@@ -996,9 +996,14 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			Entity entity = null;
 
 
-			if (Client.World.TryGetEntity(message.runtimeEntityId, out entity))
+			if (!Client.World.TryGetEntity(message.runtimeEntityId, out entity))
 			{
+				if (message.runtimeEntityId == Client.World.Player.EntityId)
+					entity = Client.World.Player;
+			}
 
+			if (entity != null)
+			{
 				//if (entity != null)
 				//	entity.UpdateAttributes(message.attributes);
 
@@ -1030,6 +1035,16 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				{
 					entity.HealthManager.Saturation = (int) saturation.Value;
 					entity.HealthManager.MaxSaturation = (int) saturation.MaxValue;
+				}
+
+				if (message.attributes.TryGetValue("minecraft:player.experience", out var experience))
+				{
+					entity.Experience = experience.Value;
+				}
+
+				if (message.attributes.TryGetValue("minecraft:player.level", out var experienceLevel))
+				{
+					entity.ExperienceLevel = experienceLevel.Value;
 				}
 			}
 		}

@@ -320,6 +320,9 @@ namespace Alex.Entities
 		public TimeSpan LifeTime => DateTime.UtcNow - TimeOfCreation;
 		private readonly DateTime TimeOfCreation;
 		private Stopwatch _lifeTime;
+
+		public float Experience { get; set; } = 0;
+		public float ExperienceLevel { get; set; } = 0; 
 		protected ConcurrentStack<IEntityComponent> EntityComponents { get; }
 		public Entity(World level)
 		{

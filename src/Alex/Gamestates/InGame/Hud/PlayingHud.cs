@@ -25,6 +25,8 @@ namespace Alex.Gamestates.InGame.Hud
         private readonly PlayerController _playerController;
         private readonly HealthComponent _healthComponent;
         private readonly HungerComponent _hungerComponent;
+        private readonly ExperienceComponent _experienceComponent;
+        
         private readonly Container _healthContainer;
         private readonly MultiStackContainer _bottomContainer;
         private readonly TipPopupComponent _tipPopupComponent;
@@ -86,6 +88,10 @@ namespace Alex.Gamestates.InGame.Hud
 	        _hungerComponent = new HungerComponent(player);
 	        _hungerComponent.Anchor = Alignment.TopRight;
 
+	        _experienceComponent = new ExperienceComponent(player);
+	        _experienceComponent.Margin = new Thickness(0, 0, 0, 1);
+	        _experienceComponent.Anchor = Alignment.BottomFill;
+
 	        _tipPopupComponent = new TipPopupComponent();
 	        _tipPopupComponent.Anchor = Alignment.BottomCenter;
 	        _tipPopupComponent.AutoSizeMode = AutoSizeMode.GrowAndShrink;
@@ -113,6 +119,7 @@ namespace Alex.Gamestates.InGame.Hud
 
 		        _healthAndHotbar.AddChild(_healthContainer);
 
+		        _healthAndHotbar.AddChild(_experienceComponent);
 		        _healthAndHotbar.AddChild(_hotbar);
 
 		        _bottomContainer.AddRow(
@@ -183,7 +190,7 @@ namespace Alex.Gamestates.InGame.Hud
 				}
 			}
 
-			_hotbar.ShowItemCount = _hungerComponent.IsVisible = _healthComponent.IsVisible = Player.Gamemode != GameMode.Creative;
+			_experienceComponent.IsVisible = _hotbar.ShowItemCount = _hungerComponent.IsVisible = _healthComponent.IsVisible = Player.Gamemode != GameMode.Creative;
 			//if (Player.Gamemode != Gamemode.Creative){}
 
 			base.OnUpdate(gameTime);

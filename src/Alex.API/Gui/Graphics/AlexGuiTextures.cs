@@ -90,6 +90,9 @@ namespace Alex.API.Gui.Graphics
         public static readonly GuiTextures BossbarDivider12                    = new(AlexNamespace, nameof(BossbarDivider12));
         public static readonly GuiTextures BossbarDivider20                    = new(AlexNamespace, nameof(BossbarDivider20));
         
+        public static readonly GuiTextures ExperienceBackground          = new(AlexNamespace, nameof(ExperienceBackground));
+        public static readonly GuiTextures Experience                    = new(AlexNamespace, nameof(Experience));
+        
         public static readonly GuiTextures GradientBlur = new(AlexNamespace, nameof(GradientBlur));
     }
 }
