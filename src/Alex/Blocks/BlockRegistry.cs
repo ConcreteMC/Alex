@@ -125,6 +125,7 @@ namespace Alex.Blocks
 		    
 		    //Walls
 		    this.Register("minecraft:cobblestone_wall", () => new CobblestoneWall());
+		    this.Register("minecraft:mossy_cobblestone_wall", () => new CobblestoneWall());
 		    this.Register("minecraft:andesite_wall", () => new AndesiteWall());
 		    this.Register("minecraft:stone_brick_wall", () => new StoneBrickWall());
 
