@@ -31,7 +31,7 @@ namespace Alex.Graphics.Models.Entity
 				get { return _rotation; }
 				set { _targetRotation = _rotation = value; }
 			}
-			
+
 			private Vector3 _scale = Vector3.One;
 
 			public Vector3 Scale
@@ -51,23 +51,27 @@ namespace Alex.Graphics.Models.Entity
 			public bool Rendered { get; set; } = true;
 
 			public IAttached Parent { get; set; } = null;
-			
+
 			public Queue<ModelBoneAnimation> Animations { get; }
 			private ModelBoneAnimation CurrentAnim { get; set; } = null;
+
 			public bool IsAnimating => CurrentAnim != null || Animations.Count > 0;
-			internal EntityModelBone Definition { get; }
-			
-			public int StartIndex   { get; }
+			//internal EntityModelBone Definition { get; }
+
+			public int StartIndex { get; }
 			public int ElementCount { get; }
-			public ModelBone(EntityModelBone bone, int startIndex, int elementCount)
+
+			public Vector3? Pivot { get; set; }
+
+			public ModelBone(int startIndex, int elementCount)
 			{
-				Definition = bone;
+				//Definition = bone;
 				Animations = new Queue<ModelBoneAnimation>();
 
 				StartIndex = startIndex;
 				ElementCount = elementCount;
 			}
-			
+
 			public void ClearAnimations()
 			{
 				if (_disposed) return;
@@ -80,30 +84,30 @@ namespace Alex.Graphics.Models.Entity
 				}
 			}
 
-			private Matrix WorldMatrix   { get; set; } = Matrix.Identity;
+			private Matrix WorldMatrix { get; set; } = Matrix.Identity;
 
 			private Vector3 _startRotation = Vector3.Zero;
 			private Vector3 _targetRotation = Vector3.Zero;
 			public Vector3 TargetRotation => _targetRotation;
-			
+
 			//private Vector3 _tempStartRotation = Vector3.Zero;
 			private Vector3 _tempTargetRotation = Vector3.Zero;
-			
+
 			private Vector3 _startPosition = Vector3.Zero;
 			private Vector3 _targetPosition = Vector3.Zero;
-			
+
 			//private Vector3 _tempStartPosition = Vector3.Zero;
 			private Vector3 _tempTargetPosition = Vector3.Zero;
 
 			private Vector3 _startScale = Vector3.One;
 			private Vector3 _targetScale = Vector3.One;
-			
+
 			//private Vector3 _tempStartScale = Vector3.Zero;
 			private Vector3 _tempTargetScale = Vector3.One;
 
 			private double _accumulator = 1d;
 			private double _target = 1d;
-			
+
 			private double _tempTarget = 1d;
 
 			public void ApplyMovement()
@@ -119,10 +123,10 @@ namespace Alex.Graphics.Models.Entity
 				_startScale = _scale;
 				_targetScale = FixInvalidVector(_tempTargetScale);
 				_tempTargetScale = Vector3.One;
-				
+
 				_accumulator = 0;
 				_target = _tempTarget;
-				
+
 				//Console.WriteLine($"{Definition.Name}.Rotation = {_targetRotation}");
 			}
 
@@ -134,8 +138,13 @@ namespace Alex.Graphics.Models.Entity
 
 				return vector;
 			}
-			
-			public void MoveOverTime(Vector3 targetPosition, Vector3 targetRotation, Vector3 targetScale, TimeSpan time, bool overrideOthers = false, float blendWeight = 1f)
+
+			public void MoveOverTime(Vector3 targetPosition,
+				Vector3 targetRotation,
+				Vector3 targetScale,
+				TimeSpan time,
+				bool overrideOthers = false,
+				float blendWeight = 1f)
 			{
 				if (overrideOthers)
 				{
@@ -167,14 +176,13 @@ namespace Alex.Graphics.Models.Entity
 			{
 				MoveOverTime(targetPosition, targetRotation, _targetScale, time);
 			}
-			
+
 			public void MoveOverTime(Vector3 targetPosition, TimeSpan time)
 			{
 				MoveOverTime(targetPosition, _targetRotation, _targetScale, time);
 			}
-			
-			public void Update(IUpdateArgs args,
-				Matrix characterMatrix, Vector3 parentScale)
+
+			public void Update(IUpdateArgs args, Matrix characterMatrix, Vector3 parentScale)
 			{
 				if (_disposed) return;
 
@@ -182,16 +190,16 @@ namespace Alex.Graphics.Models.Entity
 				{
 					_accumulator += args.GameTime.ElapsedGameTime.TotalSeconds;
 					float progress = (float) ((1f / _target) * _accumulator);
-					
+
 					var targetRotation = _targetRotation;
 					var startRotation = _startRotation;
-					
+
 					var targetPosition = _targetPosition;
 					var startPosition = _startPosition;
-					
+
 					var targetScale = _targetScale;
 					var startScale = _startScale;
-					
+
 					//var rotationDifference = targetRotation - startRotation;
 					_rotation = startRotation + ((targetRotation - startRotation) * progress);
 					_position = startPosition + ((targetPosition - startPosition) * progress);
@@ -223,10 +231,10 @@ namespace Alex.Graphics.Models.Entity
 						}
 					}
 
-					var scale = parentScale * _scale;// (parentScale / _scale) * (_scale * parentScale);
+					var scale = parentScale * _scale; // (parentScale / _scale) * (_scale * parentScale);
 					var rotation = _rotation;
 					var translation = _position;
-					
+
 					/*if (characterMatrix.Decompose(
 						out var parentScale, out var parentRotation, out var parentTranslation))
 					{
@@ -235,23 +243,22 @@ namespace Alex.Graphics.Models.Entity
 							scale = scale * (16f * parentScale);
 						}
 					}*/
-					
+
 					Matrix matrix;
-					
-					if (Definition.Pivot.HasValue)
+
+					if (Pivot.HasValue)
 					{
-						var pivot = (Definition.Pivot ?? Vector3.Zero);
-						matrix = Matrix.CreateTranslation(-pivot) 
-						                                     * MatrixHelper.CreateRotationDegrees(rotation)
-						                                     * Matrix.CreateTranslation(pivot)
-						                                     * Matrix.CreateTranslation(translation)
-							                                     * characterMatrix;
+						var pivot = (Pivot ?? Vector3.Zero);
+
+						matrix = Matrix.CreateTranslation(-pivot) * MatrixHelper.CreateRotationDegrees(rotation)
+						                                          * Matrix.CreateTranslation(pivot)
+						                                          * Matrix.CreateTranslation(translation)
+						                                          * characterMatrix;
 					}
 					else
 					{
-						matrix = MatrixHelper.CreateRotationDegrees(rotation)
-						                                     * Matrix.CreateTranslation(translation)
-						                                     * characterMatrix;
+						matrix = MatrixHelper.CreateRotationDegrees(rotation) * Matrix.CreateTranslation(translation)
+						                                                      * characterMatrix;
 					}
 
 					var children = Children.ToArray();
@@ -265,22 +272,23 @@ namespace Alex.Graphics.Models.Entity
 					}
 
 					var bindingRotation = _bindingRotation;
-					if (Definition.Pivot.HasValue)
+
+					if (Pivot.HasValue)
 					{
-						var pivot = (Definition.Pivot ?? Vector3.Zero);
-						WorldMatrix = Matrix.CreateTranslation(-pivot) 
-						                                          * MatrixHelper.CreateRotationDegrees(bindingRotation)
-						                                          * Matrix.CreateTranslation(pivot)
-						                                          * matrix;
+						var pivot = (Pivot ?? Vector3.Zero);
+
+						WorldMatrix = Matrix.CreateTranslation(-pivot)
+						              * MatrixHelper.CreateRotationDegrees(bindingRotation)
+						              * Matrix.CreateTranslation(pivot) * matrix;
 					}
 					else
 					{
-						WorldMatrix = MatrixHelper.CreateRotationDegrees(bindingRotation)  * matrix;
+						WorldMatrix = MatrixHelper.CreateRotationDegrees(bindingRotation) * matrix;
 					}
 				}
 				finally
 				{
-				//	Monitor.Exit(_disposeLock);
+					//	Monitor.Exit(_disposeLock);
 				}
 			}
 
@@ -289,9 +297,9 @@ namespace Alex.Graphics.Models.Entity
 				var renderCount = 0;
 				var count = ElementCount;
 
-				if (!Definition.NeverRender && Rendered && count > 0)
+				if (Rendered && count > 0)
 				{
-					((IEffectMatrices)effect).World = WorldMatrix;
+					((IEffectMatrices) effect).World = WorldMatrix;
 
 					foreach (var pass in effect.CurrentTechnique.Passes)
 					{
@@ -301,7 +309,7 @@ namespace Alex.Graphics.Models.Entity
 						renderCount++;
 					}
 				}
-			
+
 				foreach (var child in Children)
 				{
 					renderCount += child.Render(args, effect);
@@ -309,7 +317,7 @@ namespace Alex.Graphics.Models.Entity
 
 				return renderCount;
 			}
-			
+
 			private bool _disposed = false;
 			private Vector3 _position;
 
@@ -327,7 +335,7 @@ namespace Alex.Graphics.Models.Entity
 				}
 				else
 				{
-					Log.Warn($"Could not add {modelBone.Name} as child of {Definition.Name}");
+					Log.Warn($"Could not add {modelBone.Name} as child of {Name}");
 				}
 			}
 
@@ -337,12 +345,12 @@ namespace Alex.Graphics.Models.Entity
 				{
 					if (modelBone.Parent == this)
 						modelBone.Parent = null;
-					
+
 					//Children.Remove(modelBone);
 				}
 			}
 
-			public string        Name   => Definition.Name;
+			public string Name { get; set; }
 		}
 	}
 }

@@ -66,7 +66,7 @@ namespace Alex.Worlds.Chunks
 				Interlocked.Increment(ref _vertexCount);
 
 				var list = BlockIndices.GetOrAdd(
-					blockCoordinates, coordinates => new List<VertexData>(6 * 6));
+					blockCoordinates, coordinates => new List<VertexData>());
 				list.Add(vertexData);
 
 				HasChanges = true;

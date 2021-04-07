@@ -510,7 +510,7 @@ namespace Alex.Worlds
 				
 				var type = ScheduleType.Full;
 				
-				if ((priority & BlockUpdatePriority.Neighbors) != 0)
+				//if ((priority & BlockUpdatePriority.Neighbors) != 0)
 				{
 					UpdateNeighbors(x, y, z);
 				}

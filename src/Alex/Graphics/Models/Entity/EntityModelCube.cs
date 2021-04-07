@@ -38,32 +38,32 @@ namespace Alex.Graphics.Models.Entity
 			Front =
 				GetFrontVertex(
 					uv.North.WithOptionalSize(rawSize.X, rawSize.Y),
-					uv.South.Size.HasValue ? Vector2.Zero : new Vector2(cube.Size.Z, cube.Size.Z));
+					uv.South.Size.HasValue ? Vector2.Zero : new Vector2(rawSize.Z, rawSize.Z));
 
 			Back = 
 				GetBackVertex(
 					uv.South.WithOptionalSize(rawSize.X, rawSize.Y),
 					uv.North.Size.HasValue ? Vector2.Zero : new Vector2(
-						cube.Size.Z + cube.Size.Z + cube.Size.X, cube.Size.Z));
+						rawSize.Z + rawSize.Z + rawSize.X, rawSize.Z));
 
 			Left =
 				GetLeftVertex(
 					uv.West.WithOptionalSize(rawSize.Z, rawSize.Y),
-					uv.West.Size.HasValue ? Vector2.Zero : new Vector2(cube.Size.Z + cube.Size.X, cube.Size.Z));
+					uv.West.Size.HasValue ? Vector2.Zero : new Vector2(rawSize.Z + rawSize.X, rawSize.Z));
 
 			Right = 
 				GetRightVertex(
 					uv.East.WithOptionalSize(rawSize.Z, rawSize.Y),
-					uv.East.Size.HasValue ? Vector2.Zero : new Vector2(0, cube.Size.Z));
+					uv.East.Size.HasValue ? Vector2.Zero : new Vector2(0, rawSize.Z));
 
 			Top = 
 				GetTopVertex(
-					uv.Up.WithOptionalSize(size.X, size.Z), uv.Up.Size.HasValue ? Vector2.Zero : new Vector2(cube.Size.Z, 0));
+					uv.Up.WithOptionalSize(rawSize.X, rawSize.Z), uv.Up.Size.HasValue ? Vector2.Zero : new Vector2(rawSize.Z, 0));
 
 			Bottom = 
 				GetBottomVertex(
 					uv.Down.WithOptionalSize(rawSize.X, rawSize.Z),
-					uv.Down.Size.HasValue ? Vector2.Zero : new Vector2(cube.Size.Z + cube.Size.X, 0));
+					uv.Down.Size.HasValue ? Vector2.Zero : new Vector2(rawSize.Z + rawSize.X, 0));
 		}
 
 		public (VertexPositionColorTexture[] vertices, short[] indexes) Front, Back, Left, Right, Top, Bottom;

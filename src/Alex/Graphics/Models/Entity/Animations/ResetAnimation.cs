@@ -19,7 +19,7 @@ namespace Alex.Graphics.Models.Entity.Animations
 		/// <inheritdoc />
 		public override void Reset()
 		{
-			Bone.Rotation = Bone.Definition.Rotation ?? Vector3.Zero;
+			//Bone.Rotation = Bone.Definition.Rotation ?? Vector3.Zero;
 			//Bone.Position = Bone.EntityModelBone.;
 			//base.Reset();
 		}

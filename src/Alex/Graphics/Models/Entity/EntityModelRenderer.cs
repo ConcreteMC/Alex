@@ -167,18 +167,20 @@ namespace Alex.Graphics.Models.Entity
 					}
 					
 					Cube built = new Cube(cube, textureSize, mirror, inflation);
-					ModifyCubeIndexes(ref vertices, built.Front, origin, matrix);
-					ModifyCubeIndexes(ref vertices, built.Back, origin, matrix);
-					ModifyCubeIndexes(ref vertices, built.Top, origin, matrix);
-					ModifyCubeIndexes(ref vertices, built.Bottom, origin, matrix);
-					ModifyCubeIndexes(ref vertices, built.Left, origin, matrix);
-					ModifyCubeIndexes(ref vertices, built.Right, origin, matrix);
+					ModifyCubeIndexes(ref vertices, built.Front, matrix);
+					ModifyCubeIndexes(ref vertices, built.Back, matrix);
+					ModifyCubeIndexes(ref vertices, built.Top, matrix);
+					ModifyCubeIndexes(ref vertices, built.Bottom, matrix);
+					ModifyCubeIndexes(ref vertices, built.Left, matrix);
+					ModifyCubeIndexes(ref vertices, built.Right, matrix);
 				}
 			}
 
 			elementCount = vertices.Count - startIndex;
 
-			modelBone = new ModelBone(bone, startIndex, elementCount / 3);
+			modelBone = new ModelBone(startIndex, elementCount / 3);
+			modelBone.Pivot = bone.Pivot;
+			modelBone.Name = bone.Name;
 
 			if (bone.Rotation.HasValue)
 			{
@@ -217,7 +219,7 @@ namespace Alex.Graphics.Models.Entity
 		}
 
 		private void ModifyCubeIndexes(ref List<VertexPositionColorTexture> vertices,
-			(VertexPositionColorTexture[] vertices, short[] indexes) data, Vector3 origin, Matrix transformation)
+			(VertexPositionColorTexture[] vertices, short[] indexes) data, Matrix transformation)
 		{
 			for (int i = 0; i < data.indexes.Length; i++)
 			{
@@ -233,7 +235,7 @@ namespace Alex.Graphics.Models.Entity
 			DepthBias = 0f,
 			CullMode = CullMode.None,
 			FillMode = FillMode.Solid,
-			ScissorTestEnable = true
+			ScissorTestEnable = false
 		};
 		
 		private static readonly RasterizerState _rasterizerStateCulled = new RasterizerState()
@@ -241,7 +243,7 @@ namespace Alex.Graphics.Models.Entity
 			DepthBias = 0f,
 			CullMode = CullMode.CullClockwiseFace,
 			FillMode = FillMode.Solid,
-			ScissorTestEnable = true
+			ScissorTestEnable = false
 		};
 		
 		/// <summary>
@@ -323,18 +325,6 @@ namespace Alex.Graphics.Models.Entity
 			{
 				bone = null;
 				return false;
-			}
-			return Bones.TryGetValue(name, out bone);
-			
-
-			foreach (var b in Bones)
-			{
-				if (b.Key.Equals(name, StringComparison.InvariantCultureIgnoreCase))
-				{
-					bone = b.Value;
-
-					return true;
-				}
 			}
 			
 			return Bones.TryGetValue(name, out bone);

@@ -63,7 +63,7 @@ namespace Alex.Graphics.Models.Entity.Animations
 		{
 			if (ResetAfter)
 			{
-				Bone.Rotation = Bone.Definition.Rotation ?? Vector3.Zero;
+				//Bone.Rotation = Bone.Definition.Rotation ?? Vector3.Zero;
 				//	base.Reset();
 			}
 		}
