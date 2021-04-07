@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
+using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
+using Alex.API.Utils;
 using Alex.MoLang.Parser;
 using Alex.MoLang.Parser.Tokenizer;
 using Alex.MoLang.Runtime;
@@ -17,9 +20,11 @@ namespace Alex.MoLang.TestApp
 {
 	class Program
 	{
-		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(Program));
+		private static Logger Log = LogManager.GetCurrentClassLogger(typeof(Program));
 		static void Main(string[] args)
 		{
+			//LoggerSetup.ConfigureNLog( Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), DefaultConfig);
+			Stopwatch     sw      = Stopwatch.StartNew();
 			TokenIterator tokenIterator = new TokenIterator(@"t.a = 213 + 2 / 0.5 + 5 + 2 * 3;
 
 array.test.0 = 100;
@@ -39,21 +44,37 @@ query.debug_output('hello', 'test', t.a, array.test[2]);
 return t.a;");
 			MoLangParser  parser        = new MoLangParser(tokenIterator);
 			var           expressions   = parser.Parse();
-
-			Stopwatch     sw      = Stopwatch.StartNew();
+			
+			var timeElapsedOnParsing = sw.Elapsed;
+			
+			Console.WriteLine($"Parser completed in {timeElapsedOnParsing.TotalMilliseconds}ms");
+			
 			MoLangRuntime runtime = new MoLangRuntime();
-			runtime.Environment.Structs.TryAdd("query", new QueryStruct(new KeyValuePair<string, Func<MoParams, object>>[]
-			{
-				new ("life_time", moParams =>
+
+			var queryStruct = new QueryStruct(
+				new KeyValuePair<string, Func<MoParams, object>>[]
 				{
-					return new DoubleValue(sw.Elapsed.TotalSeconds);
-				})
-			}));
+					new(
+						"life_time", moParams =>
+						{
+							return new DoubleValue(sw.Elapsed.TotalSeconds);
+						})
+				});
+
+			queryStruct.UseNLog = false;
+			queryStruct.EnableDebugOutput = true;
+			
+			runtime.Environment.Structs.TryAdd("query", queryStruct);
 			
 			try
 			{
+				sw.Restart();
+				
 				var result = runtime.Execute(expressions).AsDouble();
-				Console.WriteLine($"Result: {result}");
+				
+				var timeElapsedOnExecution = sw.Elapsed;
+				
+				Console.WriteLine($"Execution took {timeElapsedOnExecution.TotalMilliseconds}ms");
 			}
 			catch (MoLangRuntimeException runtimeException)
 			{
@@ -69,5 +90,8 @@ return t.a;");
 				Thread.Sleep(13);
 			}*/
 		}
+
+		private const string DefaultConfig =
+			"<?xml version=\"1.0\" encoding=\"utf-8\" ?><nlog xmlns=\"http://www.nlog-project.org/schemas/NLog.xsd\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"><variable name=\"basedir\" value=\"${basedir}\" /><targets><target name=\"colouredConsole\" xsi:type=\"ColoredConsole\" useDefaultRowHighlightingRules=\"false\"layout=\"${pad:padding=5:inner=${level:uppercase=true}}|${callsite:className=true:includeSourcePath=false:methodName=false:includeNamespace=false}|${message} ${exception:format=tostring}\" ><highlight-row condition=\"level == LogLevel.Debug\" foregroundColor=\"DarkGray\" /><highlight-row condition=\"level == LogLevel.Info\" foregroundColor=\"Gray\" /><highlight-row condition=\"level == LogLevel.Warn\" foregroundColor=\"Yellow\" /><highlight-row condition=\"level == LogLevel.Error\" foregroundColor=\"Red\" /><highlight-row condition=\"level == LogLevel.Fatal\" foregroundColor=\"Red\" backgroundColor=\"White\" /></target></targets><rules><logger name=\"*\" minlevel=\"Debug\" writeTo=\"colouredConsole\" /></rules></nlog>";
 	}
 }

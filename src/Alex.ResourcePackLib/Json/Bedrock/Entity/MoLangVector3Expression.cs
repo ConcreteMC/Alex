@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Alex.MoLang.Parser;
@@ -50,15 +51,15 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Entity
 
 		private Vector3 Evaluate(MoLangRuntime runtime, IExpression[] xExpressions, IExpression[] yExpressions, IExpression[] zExpressions, Vector3 currentValue)
 		{
-			IMoValue x = runtime.Execute(xExpressions, new Dictionary<string, IMoValue>()
+			IMoValue x = runtime.Execute(xExpressions, new Dictionary<string, IMoValue>(StringComparer.OrdinalIgnoreCase)
 			{
 				{"this", new DoubleValue(currentValue.X)}
 			});
-			IMoValue y = runtime.Execute(yExpressions, new Dictionary<string, IMoValue>()
+			IMoValue y = runtime.Execute(yExpressions, new Dictionary<string, IMoValue>(StringComparer.OrdinalIgnoreCase)
 			{
 				{"this", new DoubleValue(currentValue.Y)}
 			});
-			IMoValue z = runtime.Execute(zExpressions, new Dictionary<string, IMoValue>()
+			IMoValue z = runtime.Execute(zExpressions, new Dictionary<string, IMoValue>(StringComparer.OrdinalIgnoreCase)
 			{
 				{"this", new DoubleValue(currentValue.Z)}
 			});
@@ -179,19 +180,19 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Entity
 
 		private Vector4 Evaluate(MoLangRuntime runtime, IExpression[] xExpressions, IExpression[] yExpressions, IExpression[] zExpressions, IExpression[] wExpressions, Vector4 currentValue)
 		{
-			IMoValue x = runtime.Execute(xExpressions, new Dictionary<string, IMoValue>()
+			IMoValue x = runtime.Execute(xExpressions, new Dictionary<string, IMoValue>(StringComparer.OrdinalIgnoreCase)
 			{
 				{"this", new DoubleValue(currentValue.X)}
 			});
-			IMoValue y = runtime.Execute(yExpressions, new Dictionary<string, IMoValue>()
+			IMoValue y = runtime.Execute(yExpressions, new Dictionary<string, IMoValue>(StringComparer.OrdinalIgnoreCase)
 			{
 				{"this", new DoubleValue(currentValue.Y)}
 			});
-			IMoValue z = runtime.Execute(zExpressions, new Dictionary<string, IMoValue>()
+			IMoValue z = runtime.Execute(zExpressions, new Dictionary<string, IMoValue>(StringComparer.OrdinalIgnoreCase)
 			{
 				{"this", new DoubleValue(currentValue.Z)}
 			});
-			IMoValue w = runtime.Execute(wExpressions, new Dictionary<string, IMoValue>()
+			IMoValue w = runtime.Execute(wExpressions, new Dictionary<string, IMoValue>(StringComparer.OrdinalIgnoreCase)
 			{
 				{"this", new DoubleValue(currentValue.W)}
 			});

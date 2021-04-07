@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Alex.API.Input;
 using Alex.API.Services;
+using Alex.API.Utils;
 using Alex.Utils;
 using Alex.Utils.Auth;
 using CommandLine;
@@ -48,12 +49,7 @@ namespace Alex
 		
 		private static void LaunchGame(LaunchSettings launchSettings)
 		{
-			if (!Directory.Exists(launchSettings.WorkDir))
-			{
-				Directory.CreateDirectory(launchSettings.WorkDir);
-			}
-
-			ConfigureNLog(launchSettings.WorkDir);
+			LoggerSetup.ConfigureNLog(launchSettings.WorkDir, Resources.NLogConfig);
 
 			if (launchSettings.Server == null && launchSettings.ConnectOnLaunch)
 			{
@@ -80,28 +76,6 @@ namespace Alex
 		{
 			return Thread.CurrentThread == _startupThread;
 		}
-
-		private static void ConfigureNLog(string baseDir)
-		{
-			string loggerConfigFile = Path.Combine(baseDir, "NLog.config");
-			if (!File.Exists(loggerConfigFile))
-			{
-				File.WriteAllText(loggerConfigFile, Resources.NLogConfig);
-			}
-
-			string logsDir = Path.Combine(baseDir, "logs");
-			if (!Directory.Exists(logsDir))
-			{
-				Directory.CreateDirectory(logsDir);
-			}
-
-			LogManager.ThrowConfigExceptions = false;
-			LogManager.LoadConfiguration(loggerConfigFile);
-//			LogManager.Configuration = new XmlLoggingConfiguration(loggerConfigFile);
-			LogManager.Configuration.Variables["basedir"] = baseDir;
-
-			NLogAppender.Initialize();
-        }
 	}
 
 }

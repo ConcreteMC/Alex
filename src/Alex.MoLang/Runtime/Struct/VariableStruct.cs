@@ -24,16 +24,26 @@ namespace Alex.MoLang.Runtime.Struct
 		public VariableStruct(IEnumerable<KeyValuePair<string, IMoValue>> values)
 		{
 			if (values != null)
+			{
 				Map = new Dictionary<string, IMoValue>(values, StringComparer.OrdinalIgnoreCase);
+			}
 		}
 
 		/// <inheritdoc />
 		public virtual void Set(string key, IMoValue value)
 		{
-			string[] segments = key.Split(".");
-			string        main     = segments[0];
+			var index = key.IndexOf('.');
 
-			if (segments.Length > 0 && !string.IsNullOrWhiteSpace(main)) {
+			if (index < 0)
+			{
+				Map[key] = value;
+
+				return;
+			}
+
+			string main = key.Substring(0, index);
+
+			if (!string.IsNullOrWhiteSpace(main)) {
 				//object vstruct = Get(main, MoParams.Empty);
 
 				if (!Map.TryGetValue(main, out var container)) {
@@ -43,7 +53,7 @@ namespace Alex.MoLang.Runtime.Struct
 				
 				if (container is IMoStruct moStruct)
 				{
-					moStruct.Set(string.Join(".", segments.Skip(1)), value);
+					moStruct.Set(key.Substring(index + 1), value);
 				}
 				else
 				{
@@ -53,37 +63,40 @@ namespace Alex.MoLang.Runtime.Struct
 				//((IMoStruct) vstruct).Set(string.Join(".", segments), value);
 
 				//Map[main] = (IMoStruct)vstruct;//.Add(main, (IMoStruct) vstruct);
-			} else
-			{
-				Map[key] = value;
-				//Map.Add(key, value);
 			}
 		}
 
 		/// <inheritdoc />
 		public virtual IMoValue Get(string key, MoParams parameters)
 		{
-			string[] segments = key.Split(".");
-			string        main     = segments[0];
-		
-			if (segments.Length > 0 && !string.IsNullOrWhiteSpace(main))
+			var index = key.IndexOf('.');
+
+			if (index >= 0)
 			{
-				IMoValue value = null;//Map[main];
-				if (!Map.TryGetValue(main, out value))
-					return DoubleValue.Zero;
+				string main = key.Substring(0, index);
 
-				if (value is IMoStruct moStruct)
+				if (!string.IsNullOrWhiteSpace(main))
 				{
-					return moStruct.Get(string.Join(".", segments.Skip(1)), parameters);
-				}
+					IMoValue value = null; //Map[main];
 
-				return value;
+					if (!Map.TryGetValue(main, out value))
+						return DoubleValue.Zero;
+
+					if (value is IMoStruct moStruct)
+					{
+						return moStruct.Get(key.Substring(index + 1), parameters);
+					}
+
+					return value;
+				}
 			}
 
 			if (Map.TryGetValue(key, out var v))
 				return v;
-
-			return this;
+			
+			//Console.WriteLine($"Unknown variable: {key}");
+			
+			return DoubleValue.Zero;
 			//
 			Console.WriteLine($"Unknown variable: {key}");
 			return DoubleValue.Zero;

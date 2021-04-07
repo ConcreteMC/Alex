@@ -11,9 +11,11 @@
         <AssemblyVersion>1.0.0</AssemblyVersion>
         <FileVersion>1.0.0</FileVersion>
         <PackageVersion>1.0.0</PackageVersion>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     </PropertyGroup>
 
     <ItemGroup>
+      <PackageReference Include="csFastFloat" Version="3.0.0" />
       <PackageReference Include="NLog" Version="4.7.8" />
     </ItemGroup>
 

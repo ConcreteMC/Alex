@@ -22,10 +22,15 @@ namespace Alex.MoLang.Parser.Expressions
 		{
 			//List<IExpression> p = Args.ToList();
 			string name = Name is NameExpression expression ? expression.Name : Name.Evaluate(scope, environment).ToString();
+			
+			IMoValue[] arguments = new IMoValue[Args.Length];
 
-			return environment.GetValue(name, new MoParams(
-				Args.Select(x => x.Evaluate(scope, environment)).ToArray()
-			));
+			for (int i = 0; i < arguments.Length; i++)
+			{
+				arguments[i] = Args[i].Evaluate(scope, environment);
+			}
+			
+			return environment.GetValue(name, new MoParams(arguments));
 		}
 	}
 }

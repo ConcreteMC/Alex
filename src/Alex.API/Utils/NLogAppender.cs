@@ -9,7 +9,7 @@ using log4net.Core;
 using NLog;
 using LogManager = log4net.LogManager;
 
-namespace Alex.Utils
+namespace Alex.API.Utils
 {
 	public class NLogAppender : AppenderSkeleton
 	{

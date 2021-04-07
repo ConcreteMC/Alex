@@ -23,15 +23,15 @@ namespace Alex.MoLang.Runtime
 		public IMoValue GetValue(string name, MoParams param) {
 			try
 			{
-				string[] segments = name.Split(".");
-				string main = segments[0]; //.Dequeue();
+				var index = name.IndexOf('.');
+				//string[] segments = name.;
+				string main = name.Substring(0, index); //.Dequeue();
 
 				//if (!Structs.ContainsKey(main))
 				//{
 				//	throw new MoLangRuntimeException($"Cannot retrieve struct: {name}", null);
 				//}
-
-				return Structs[main].Get(string.Join(".", segments.Skip(1)), param);
+				return Structs[main].Get(name.Substring(index + 1), param);
 			}
 			catch (Exception ex)
 			{
@@ -39,18 +39,18 @@ namespace Alex.MoLang.Runtime
 			}
 		}
 
-		public void SetValue(String name, IMoValue value)
+		public void SetValue(string name, IMoValue value)
 		{
 			try
 			{
-				string[] segments = name.Split(".");
-				string main = segments[0]; //.Dequeue();
+				var index = name.IndexOf('.');
+				string main = name.Substring(0, index);
 
 				//if (!Structs.ContainsKey(main)) {
 				//	throw new MoLangRuntimeException($"Cannot set value on struct: {name}", null);
 				//}
 
-				Structs[main].Set(string.Join(".", segments.Skip(1)), value);
+				Structs[main].Set(name.Substring(index + 1), value);
 			}
 			catch (Exception ex)
 			{

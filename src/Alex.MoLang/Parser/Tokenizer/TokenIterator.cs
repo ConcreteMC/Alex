@@ -75,7 +75,7 @@ namespace Alex.MoLang.Parser.Tokenizer
                         nameLength++;
                     }
 
-                    string    value = _code.Substring(_index, nameLength).ToLower();
+                    string    value = _code.Substring(_index, nameLength);
                     TokenType token = TokenType.BySymbol(value);
 
                     if (token == null)

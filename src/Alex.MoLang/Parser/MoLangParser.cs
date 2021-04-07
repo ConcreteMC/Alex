@@ -187,37 +187,39 @@ namespace Alex.MoLang.Parser
 
 		public String FixNameShortcut(String name)
 		{
-			String[] splits = name.Split(".");
+			//String[] splits = name.Split(".");
+			var index = name.IndexOf('.');
+			var first = name.Substring(0, index);
 
-			switch (splits[0])
+			switch (first)
 			{
 				case "q":
-					splits[0] = "query";
+					first = "query";
 
 					break;
 
 				case "v":
-					splits[0] = "variable";
+					first = "variable";
 
 					break;
 
 				case "t":
-					splits[0] = "temp";
+					first = "temp";
 
 					break;
 
 				case "c":
-					splits[0] = "context";
+					first = "context";
 
 					break;
 			}
 
-			return String.Join(".", splits);
+			return name.Remove(0, index).Insert(0, first);// String.Join(".", splits);
 		}
 
-		public String GetNameHead(String name)
+		public static string GetNameHead(string name)
 		{
-			return name.Split(".")[0];
+			return name.Substring(0, name.IndexOf('.'));// name.Split(".")[0];
 		}
 
 		public Token ConsumeToken()

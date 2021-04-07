@@ -22,18 +22,28 @@ namespace Alex.MoLang.Runtime.Struct
 			
 		}
 
+		public bool UseNLog = true;
+		public bool EnableDebugOutput = false;
 		public QueryStruct(IEnumerable<KeyValuePair<string, Func<MoParams, object>>> parameters)
 		{
 			Functions = new Dictionary<string, Func<MoParams, object>>(parameters);
 			Functions.Add("debug_output", mo =>
 			{
-				StringBuilder sb = new StringBuilder();
-
-				foreach (var param in mo.GetParams())
+				if (EnableDebugOutput)
 				{
-					sb.Append($"{param.AsString()} ");
+					StringBuilder sb = new StringBuilder();
+
+					foreach (var param in mo.GetParams())
+					{
+						sb.Append($"{param.AsString()} ");
+					}
+
+					if (UseNLog)
+						Log.Debug(sb.ToString());
+					else
+						Console.WriteLine(sb.ToString());
 				}
-				Log.Debug(sb.ToString());
+
 				return DoubleValue.Zero;
 			});
 		}

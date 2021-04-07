@@ -8,6 +8,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\Alex.API\Alex.API.csproj" />
       <ProjectReference Include="..\Alex.MoLang\Alex.MoLang.csproj" />
     </ItemGroup>
 
