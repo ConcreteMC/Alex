@@ -277,11 +277,13 @@ namespace Alex.Particles
 					value = "minecraft:mobspell_emitter";
 					return true;
 
-				case ParticleType.MobSpellAmbient:
-					break;
+				case ParticleType.MobSpellAmbient: 
+					value = "minecraft:mobspell_emitter";
+					return true;
 
 				case ParticleType.MobSpellInstantaneous:
-					break;
+					value = "minecraft:mobspell_emitter";
+					return true;
 
 				case ParticleType.Ink:
 					value = "minecraft:ink_emitter";

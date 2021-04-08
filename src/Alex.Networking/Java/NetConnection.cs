@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using Alex.API.Utils;
 using Alex.Networking.Java.Events;
 using Alex.Networking.Java.Packets;
+using Alex.Networking.Java.Packets.Login;
 using Alex.Networking.Java.Packets.Play;
 using Alex.Networking.Java.Util;
 using MonoGame.Framework.Utilities.Deflate;
@@ -46,8 +47,21 @@ namespace Alex.Networking.Java
 		
         public EventHandler<ConnectionClosedEventArgs> OnConnectionClosed;
         
-		public ConnectionState ConnectionState { get; set; }
-		public bool CompressionEnabled { get; set; }
+        public ConnectionState ConnectionState
+        {
+	        get => _connectionState;
+	        set
+	        {
+		        _connectionState = value;
+
+		        if (value == ConnectionState.Play)
+		        {
+			        
+		        }
+	        }
+        }
+
+        public bool CompressionEnabled { get; set; }
 		public int CompressionThreshold = 256;
 
 		public bool IsConnected { get; private set; }
@@ -66,8 +80,8 @@ namespace Alex.Networking.Java
 					return false;
 
 				Client = new TcpClient();
-				Client.ReceiveBufferSize = int.MaxValue;
-				Client.SendBufferSize = int.MaxValue;
+				//Client.ReceiveBufferSize = int.MaxValue;
+				//Client.SendBufferSize = int.MaxValue;
 				
 				Client.Connect(TargetEndpoint.Address, TargetEndpoint.Port);
 
@@ -150,16 +164,18 @@ namespace Alex.Networking.Java
 	        }
         }
 
+        private byte[] _sharedKey = null;
 	    public void InitEncryption(byte[] sharedKey)
 	    {
-			_readerStream.InitEncryption(sharedKey);
-			_sendStream.InitEncryption(sharedKey);
+		    _sharedKey = sharedKey;
+		    
 	    }
 
 	    //public static RecyclableMemoryStreamManager StreamManager { get; }= new RecyclableMemoryStreamManager();
 	    private MinecraftStream _readerStream;
 
 	    private int _lastReceivedPacketId;
+	    private object _readLock = new object();
 	    private void ProcessNetwork(TcpClient client, CancellationToken cancellationToken)
 	    {
 		    Stopwatch time           = Stopwatch.StartNew();
@@ -177,14 +193,17 @@ namespace Alex.Networking.Java
 					    SpinWait sw = new SpinWait();
 					    _readerStream = readStream;
 					    _sendStream = writeStream;
-					    
+
 					    while (!cancelSource.IsCancellationRequested)
 					    {
 						    if (cancelSource.IsCancellationRequested)
 							    break;
+
+						    bool didRead = Read(readStream);
+						    bool didWrite = Write(writeStream);
 						    
-						    if (!Write(readStream) && !Read(writeStream))
-							    sw.SpinOnce();
+						    if (!didRead && !didWrite)
+								sw.SpinOnce();
 						    //Write(mc);
 					    }
 				    }
@@ -222,17 +241,11 @@ namespace Alex.Networking.Java
 		    return false;
 	    }
 
-	    public bool SendPacketDirect(Packet packet)
-	    {
-		    Send(new EnqueuedPacket(packet, false), _sendStream);
-
-		    return true;
-	    }
-
 	    private object _sendLock = new object();
+
 	    private void Send(EnqueuedPacket packet, MinecraftStream stream)
 	    {
-		    lock (_sendLock)
+		    //lock (_sendLock)
 		    {
 			    try
 			    {
@@ -251,19 +264,35 @@ namespace Alex.Networking.Java
 			    }
 		    }
 	    }
-	    
+
 	    private bool Write(MinecraftStream stream)
 	    {
-		    if (PacketWriteQueue.TryTake(out var packet, 0))
-		    {
-			    Send(packet, stream);
+		    if (!Monitor.TryEnter(_sendLock))
+			    return false;
 
-			    return true;
+		    try
+		    {
+			    if (PacketWriteQueue.TryTake(out var packet, 0))
+			    {
+				    Send(packet, stream);
+
+				    if (packet.Packet is EncryptionResponsePacket responsePacket)
+				    {
+					    _readerStream.InitEncryption(_sharedKey);
+					    _sendStream.InitEncryption(_sharedKey);
+					    Log.Info($"Encryption enabled.");
+				    }
+				    return true;
+			    }
+		    }
+		    finally
+		    {
+			    Monitor.Exit(_sendLock);
 		    }
 
 		    return false;
 	    }
-	    
+
 	    public long PacketsIn;
 	    public long PacketsOut;
 	    public long PacketSizeIn;
@@ -308,7 +337,7 @@ namespace Alex.Networking.Java
 			    }
 			    else
 			    {
-				    var data = stream.ReadToSpan(packetLength - br);
+				    var data = stream.Read(packetLength - br);
 
 				    using (MinecraftStream a = new MinecraftStream(CancellationToken.Token))
 				    {
@@ -432,8 +461,9 @@ namespace Alex.Networking.Java
 	    }
 
 		private MinecraftStream _sendStream;
+		private ConnectionState _connectionState;
 
-	    private byte[] EncodePacket(EnqueuedPacket enqueued)
+		private byte[] EncodePacket(EnqueuedPacket enqueued)
 	    {
 		    var packet = enqueued.Packet;
 		    byte[] encodedPacket;

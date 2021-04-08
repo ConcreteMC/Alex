@@ -11,6 +11,7 @@ using Alex.Entities.Generic;
 using Alex.Entities.Hostile;
 using Alex.Entities.Passive;
 using Alex.Entities.Projectiles;
+using Alex.Entities.Vehicles;
 using Alex.Graphics.Models.Entity;
 using Alex.ResourcePackLib;
 using Alex.ResourcePackLib.Json.Bedrock.Entity;
@@ -460,6 +461,18 @@ namespace Alex.Entities
 					break;
 				case EntityType.EnderEye:
 					entity = new ThrownEyeOfEnderEntity(world);
+					break;
+				case EntityType.Minecart:
+					entity = new MinecartEntity(world);
+					break;
+				case EntityType.TntMinecart:
+					entity = new TntMinecartEntity(world);
+					break;
+				case EntityType.ChestMinecart:
+					entity = new ChestMinecartEntity(world);
+					break;
+				case EntityType.HopperMinecart:
+					entity = new HopperMinecartEntity(world);
 					break;
 				//case EntityType.Human:
 					//entity = new PlayerMob("test", world, );

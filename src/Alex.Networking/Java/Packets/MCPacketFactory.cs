@@ -205,6 +205,7 @@ namespace Alex.Networking.Java.Packets
 			Register(ConnectionState.Play, 0x13, () => WindowItems.CreateObject());
 			Register(ConnectionState.Play, 0x15, () => SetSlot.CreateObject());
 			Register(ConnectionState.Play, 0x17, () => PluginMessagePacket.CreateObject());
+			Register(ConnectionState.Play, 0x18, () => NamedSoundEffectPacket.CreateObject());
 			
 			Register(ConnectionState.Play, 0x19, () => DisconnectPacket.CreateObject());
 			Register(ConnectionState.Play, 0x1A, () => EntityStatusPacket.CreateObject());
@@ -252,6 +253,7 @@ namespace Alex.Networking.Java.Packets
 			
 			Register(ConnectionState.Play, 0x4F, () => TitlePacket.CreateObject());
 			
+			Register(ConnectionState.Play, 0x50, () => EntitySoundEffectPacket.CreateObject());
 			Register(ConnectionState.Play, 0x51, () => SoundEffectPacket.CreateObject());
 			
 			Register(ConnectionState.Play, 0x56, () => EntityTeleport.CreateObject());

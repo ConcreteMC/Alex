@@ -58,18 +58,24 @@ namespace Alex.Graphics.Models.Entity
 			public bool IsAnimating => CurrentAnim != null || Animations.Count > 0;
 			//internal EntityModelBone Definition { get; }
 
-			public int StartIndex { get; }
-			public int ElementCount { get; }
+			//public int StartIndex { get; }
+			//public int ElementCount { get; }
 
 			public Vector3? Pivot { get; set; }
 
-			public ModelBone(int startIndex, int elementCount)
+			private List<ModelMesh> _modelMeshes = new List<ModelMesh>();
+			public ModelBone()
 			{
 				//Definition = bone;
 				Animations = new Queue<ModelBoneAnimation>();
 
-				StartIndex = startIndex;
-				ElementCount = elementCount;
+				//StartIndex = startIndex;
+				//ElementCount = elementCount;
+			}
+
+			public void AddMesh(ModelMesh mesh)
+			{
+				_modelMeshes.Add(mesh);
 			}
 
 			public void ClearAnimations()
@@ -295,18 +301,31 @@ namespace Alex.Graphics.Models.Entity
 			public int Render(IRenderArgs args, Microsoft.Xna.Framework.Graphics.Effect effect)
 			{
 				var renderCount = 0;
-				var count = ElementCount;
+				//var count = ElementCount;
 
-				if (Rendered && count > 0)
+				if (Rendered)
 				{
-					((IEffectMatrices) effect).World = WorldMatrix;
+					var meshes = _modelMeshes;
 
-					foreach (var pass in effect.CurrentTechnique.Passes)
+					if (meshes.Count > 0)
 					{
-						pass?.Apply();
+						((IEffectMatrices) effect).World = WorldMatrix;
 
-						args.GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, StartIndex, count);
-						renderCount++;
+						foreach (var mesh in meshes)
+						{
+							if (mesh == null || mesh.ElementCount == 0)
+								continue;
+
+							foreach (var pass in effect.CurrentTechnique.Passes)
+							{
+								pass?.Apply();
+
+								args.GraphicsDevice.DrawIndexedPrimitives(
+									PrimitiveType.TriangleList, 0, mesh.StartIndex, mesh.ElementCount);
+
+								renderCount++;
+							}
+						}
 					}
 				}
 

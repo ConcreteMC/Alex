@@ -56,6 +56,7 @@ namespace Alex.Graphics.Models.Entity
 
 		private AlphaTestEffect    Effect       { get; set; }
 		private PooledVertexBuffer VertexBuffer { get; set; }
+		private PooledIndexBuffer IndexBuffer { get; set; }
 		public  bool               Valid        { get; private set; }
 
 		public EntityModel Model    { get; }
@@ -82,7 +83,8 @@ namespace Alex.Graphics.Models.Entity
 		private void BuildModel(PooledTexture2D texture, EntityModel model, Dictionary<string, ModelBone> modelBones)
 		{
 			List<VertexPositionColorTexture> vertices = new List<VertexPositionColorTexture>();
-
+			List<short> indices = new List<short>();
+			
 			var actualTextureSize = new Vector2(texture.Width, texture.Height);
 
 			int counter = 0;
@@ -94,7 +96,7 @@ namespace Alex.Graphics.Models.Entity
 				
 				if (modelBones.ContainsKey(bone.Name)) continue;
 				
-				var processed = ProcessBone(model, bone, ref vertices, actualTextureSize , modelBones);
+				var processed = ProcessBone(model, bone, ref vertices, ref indices, actualTextureSize , modelBones);
 				
 				if (!modelBones.TryAdd(bone.Name, processed))
 				{
@@ -102,11 +104,16 @@ namespace Alex.Graphics.Models.Entity
 				}
 			}
 
-			if (vertices.Count == 0)
+			if (vertices.Count == 0 || indices.Count == 0)
 			{
+				Log.Warn($"Oh no. Vertices: {vertices.Count} Indices: {indices.Count}");
 				Valid = true;
 				return;
 			}
+
+			IndexBuffer = GpuResourceManager.GetIndexBuffer(
+				this, Alex.Instance.GraphicsDevice, IndexElementSize.SixteenBits, indices.Count, BufferUsage.WriteOnly);
+			IndexBuffer.SetData(indices.ToArray());
 			
 			VertexBuffer = GpuResourceManager.GetBuffer(this, Alex.Instance.GraphicsDevice,
 				VertexPositionColorTexture.VertexDeclaration, vertices.Count, BufferUsage.WriteOnly);
@@ -124,12 +131,12 @@ namespace Alex.Graphics.Models.Entity
 			EntityModel source,
 			EntityModelBone bone,
 			ref List<VertexPositionColorTexture> vertices,
+			ref List<short> indices,
 			Vector2 textureSize,
 			Dictionary<string, ModelBone> modelBones)
 		{
-			ModelBone modelBone;
-
-			int           startIndex   = vertices.Count;
+			ModelBone modelBone = new ModelBone();
+			int           startIndex   = indices.Count;
 			int           elementCount = 0;
 			if (bone.Cubes != null)
 			{
@@ -141,7 +148,7 @@ namespace Alex.Graphics.Models.Entity
 
 						continue;
 					}
-
+					
 					var inflation = (float) (cube.Inflate ?? bone.Inflate);
 					var mirror    = cube.Mirror ?? bone.Mirror;
 
@@ -167,20 +174,23 @@ namespace Alex.Graphics.Models.Entity
 					}
 					
 					Cube built = new Cube(cube, textureSize, mirror, inflation);
-					ModifyCubeIndexes(ref vertices, built.Front, matrix);
-					ModifyCubeIndexes(ref vertices, built.Back, matrix);
-					ModifyCubeIndexes(ref vertices, built.Top, matrix);
-					ModifyCubeIndexes(ref vertices, built.Bottom, matrix);
-					ModifyCubeIndexes(ref vertices, built.Left, matrix);
-					ModifyCubeIndexes(ref vertices, built.Right, matrix);
+					ModifyCubeIndexes(ref vertices, ref indices, built.Front, matrix);
+					ModifyCubeIndexes(ref vertices, ref indices, built.Back, matrix);
+					ModifyCubeIndexes(ref vertices, ref indices, built.Top, matrix);
+					ModifyCubeIndexes(ref vertices, ref indices, built.Bottom, matrix);
+					ModifyCubeIndexes(ref vertices, ref indices, built.Left, matrix);
+					ModifyCubeIndexes(ref vertices, ref indices, built.Right, matrix);
 				}
+				
+				elementCount = indices.Count - startIndex;
+				modelBone.AddMesh(new ModelMesh(startIndex, elementCount / 3));
 			}
 
-			elementCount = vertices.Count - startIndex;
+			//startIndex, elementCount / 3
 
-			modelBone = new ModelBone(startIndex, elementCount / 3);
 			modelBone.Pivot = bone.Pivot;
 			modelBone.Name = bone.Name;
+			modelBone.Rendered = !bone.NeverRender;
 
 			if (bone.Rotation.HasValue)
 			{
@@ -203,7 +213,7 @@ namespace Alex.Graphics.Models.Entity
 				if (string.IsNullOrWhiteSpace(childBone.Name))
 					childBone.Name = Guid.NewGuid().ToString();
 				
-				var child = ProcessBone(source, childBone, ref vertices, textureSize, modelBones);
+				var child = ProcessBone(source, childBone, ref vertices, ref indices, textureSize, modelBones);
 				//child.Parent = modelBone;
 
 				modelBone.AddChild(child);
@@ -218,15 +228,30 @@ namespace Alex.Graphics.Models.Entity
 			return modelBone;
 		}
 
-		private void ModifyCubeIndexes(ref List<VertexPositionColorTexture> vertices,
+		private void ModifyCubeIndexes(ref List<VertexPositionColorTexture> vertices, ref List<short> indices,
 			(VertexPositionColorTexture[] vertices, short[] indexes) data, Matrix transformation)
 		{
+			var startIndex = vertices.Count;
+			
+			for (int i = 0; i < data.vertices.Length; i++)
+			{
+				var vertex = data.vertices[i];
+				var position =  Vector3.Transform(vertex.Position, transformation);
+				vertices.Add(new VertexPositionColorTexture(position, vertex.Color, vertex.TextureCoordinate));
+			}
+			
 			for (int i = 0; i < data.indexes.Length; i++)
 			{
+				var listIndex = startIndex + data.indexes[i];
+				indices.Add((short) listIndex);
+				/*if (listIndex < vertices.Count)
+				{
+					
+				}
 				var vertex = data.vertices[data.indexes[i]];
-				var position = Vector3.Transform(vertex.Position, transformation);
+				var position =  Vector3.Transform(vertex.Position, transformation);
 				
-				vertices.Add(new VertexPositionColorTexture(position, vertex.Color, vertex.TextureCoordinate));
+				vertices.Add(new VertexPositionColorTexture(position, vertex.Color, vertex.TextureCoordinate));*/
 			}
 		}
 		
@@ -268,6 +293,7 @@ namespace Alex.Graphics.Models.Entity
 				args.GraphicsDevice.BlendState = BlendState.Opaque;
 				args.GraphicsDevice.RasterizerState = useCulling ? _rasterizerStateCulled : _rasterizerState;
 
+				args.GraphicsDevice.Indices = IndexBuffer;
 				args.GraphicsDevice.SetVertexBuffer(VertexBuffer);
 
 				var newArgs = new AttachedRenderArgs()
@@ -352,10 +378,12 @@ namespace Alex.Graphics.Models.Entity
 			texture?.Release();
 			texture?.MarkForDisposal();
 			VertexBuffer?.MarkForDisposal();
+			IndexBuffer?.MarkForDisposal();
 			Effect?.Dispose();
 
 			Effect = null;
 			VertexBuffer = null;
+			IndexBuffer = null;
 			Texture = null;
 		}
 

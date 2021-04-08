@@ -60,6 +60,7 @@ using ChunkCoordinates = Alex.API.Utils.Vectors.ChunkCoordinates;
 using ConnectionState = Alex.Networking.Java.ConnectionState;
 using Entity = Alex.Entities.Entity;
 using MessageType = Alex.API.Data.MessageType;
+using Mob = Alex.Entities.Mob;
 using NibbleArray = Alex.API.Utils.NibbleArray;
 using Packet = Alex.Networking.Java.Packets.Packet;
 using Player = Alex.Entities.Player;
@@ -249,7 +250,7 @@ namespace Alex.Worlds.Multiplayer.Java
 				{
 					PlayerLookPacket playerLook = PlayerLookPacket.CreateObject();
 					playerLook.Pitch = FixPitch(pos.Pitch);
-					playerLook.Yaw = -pos.HeadYaw;
+					playerLook.Yaw = 360f - pos.HeadYaw;
 					playerLook.OnGround = pos.OnGround;
 
 					SendPacket(playerLook);
@@ -294,7 +295,7 @@ namespace Alex.Worlds.Multiplayer.Java
 		private void SendPlayerPostionAndLook(PlayerLocation pos)
 		{
 			PlayerPositionAndLookPacketServerBound packet = PlayerPositionAndLookPacketServerBound.CreateObject();
-			packet.Yaw = -pos.HeadYaw;
+			packet.Yaw = 360f - pos.HeadYaw;
 			packet.Pitch = FixPitch(pos.Pitch);
 			packet.X = pos.X;
 			packet.Y = pos.Y;
@@ -508,7 +509,7 @@ namespace Alex.Worlds.Multiplayer.Java
 					type = (EntityType)122;
 				else if (knownData.Name.Equals("fox"))
 					type = (EntityType) 121;
-				
+
 				entity = EntityFactory.Create(type, null, type != EntityType.ArmorStand && type != EntityType.PrimedTnt);
 			
 
@@ -884,7 +885,15 @@ namespace Alex.Worlds.Multiplayer.Java
 					HandleSoundEffectPacket(soundEffectPacket);
 
 					break;
+				
+				case EntitySoundEffectPacket entitySoundEffectPacket:
+					HandleEntitySoundEffectPacket(entitySoundEffectPacket);
+					break;
 
+				case NamedSoundEffectPacket namedSoundEffectPacket:
+					HandleNamedSoundEffectPacket(namedSoundEffectPacket);
+					break;
+				
 				case ParticlePacket particlePacket:
 					HandleParticlePacket(particlePacket);
 
@@ -903,6 +912,10 @@ namespace Alex.Worlds.Multiplayer.Java
 					HandleBossBarPacket(bossBarPacket);
 					break;
 				
+				case SetExperiencePacket experiencePacket:
+					HandleSetExperiencePacket(experiencePacket);
+					break;
+				
 				default:
 				{
 					if (UnhandledPackets.TryAdd(packet.PacketId, packet.GetType()))
@@ -915,6 +928,17 @@ namespace Alex.Worlds.Multiplayer.Java
 			}
 		}
 
+		private void HandleSetExperiencePacket(SetExperiencePacket packet)
+		{
+			var player = World?.Player;
+
+			if (player == null)
+				return;
+
+			player.ExperienceLevel = packet.Level;
+			player.Experience = packet.ExperienceBar;
+		}
+		
 		private void HandleBossBarPacket(BossBarPacket packet)
 		{
 			var container = BossBarContainer;
@@ -1054,13 +1078,15 @@ namespace Alex.Worlds.Multiplayer.Java
 		private ThreadSafeList<string> _missingSounds = new ThreadSafeList<string>();
 
 		private static readonly Regex _blockRegex = new Regex("block\\.(?<name>.*)\\.(?<action>.*)", RegexOptions.Compiled);
-		private void HandleSoundEffectPacket(SoundEffectPacket packet)
+
+		private bool TryResolveSound(int soundId, out string name)
 		{
+			name = null;
 			var soundEffect =
-				Alex.Resources.Registries.Sounds.Entries.FirstOrDefault(x => x.Value.ProtocolId == packet.SoundId).Key;
+				Alex.Resources.Registries.Sounds.Entries.FirstOrDefault(x => x.Value.ProtocolId == soundId).Key;
 
 			if (string.IsNullOrWhiteSpace(soundEffect))
-				return;
+				return false;
 
 			soundEffect = soundEffect.Replace("minecraft:", "");
 
@@ -1104,10 +1130,52 @@ namespace Alex.Worlds.Multiplayer.Java
 					case "entity.tnt.primed":
 						soundEffect = "random.fuse";
 						break;
+					
+					case "entity.creeper.hurt":
+						soundEffect = "mob.creeper.say";
+						break;
+					
+					case "entity.firework_rocket.launch":
+						soundEffect = "firework.launch";
+						break;
+					
+					case "entity.lightning_bolt.thunder":
+						soundEffect = "ambient.weather.thunder";
+						break;
 				}
 			}
 
-			if (!Alex.AudioEngine.PlaySound(soundEffect, packet.Position, packet.Pitch, packet.Volume))
+			name = soundEffect;
+
+			return true;
+		}
+
+		private void HandleNamedSoundEffectPacket(NamedSoundEffectPacket packet)
+		{
+			if (!Alex.AudioEngine.PlaySound(packet.SoundName, packet.Position, packet.Pitch, packet.Volume))
+			{
+				if (_missingSounds.TryAdd(packet.SoundName))
+					Log.Warn($"Missing named sound: {packet.SoundName}");
+			}
+		}
+		
+		private void HandleEntitySoundEffectPacket(EntitySoundEffectPacket packet)
+		{
+			if (World.TryGetEntity(packet.EntityId, out var entity))
+			{
+				if (TryResolveSound(packet.SoundId, out var soundEffect) && !Alex.AudioEngine.PlaySound(
+					soundEffect, entity.KnownPosition, packet.Pitch, packet.Volume))
+				{
+					if (_missingSounds.TryAdd(soundEffect))
+						Log.Warn($"Missing entity sound: {soundEffect}");
+				}
+			}
+		}
+		
+		private void HandleSoundEffectPacket(SoundEffectPacket packet)
+		{
+			if (TryResolveSound(packet.SoundId, out var soundEffect) &&
+			    !Alex.AudioEngine.PlaySound(soundEffect, packet.Position, packet.Pitch, packet.Volume))
 			{
 				if (_missingSounds.TryAdd(soundEffect))
 					Log.Warn($"Missing sound: {soundEffect}");
@@ -2421,11 +2489,11 @@ namespace Alex.Worlds.Multiplayer.Java
 				new PlayerLocation()
 				{
 					X = x,
-					Y = y + 0.05f,
+					Y = y,
 					Z = z,
 					Yaw = yaw,
 					HeadYaw = yaw,
-					Pitch = -pitch
+					Pitch = pitch
 				});
 
 			 if ((!World.Player.IsSpawned && ReadyToSpawn) || World.Player.IsSpawned)
@@ -2547,6 +2615,7 @@ namespace Alex.Worlds.Multiplayer.Java
 		
 		private void HandleLoginSuccess(LoginSuccessPacket packet)
 		{
+			Log.Info($"Login success! Username: {packet.Username}");
 			Client.ConnectionState = ConnectionState.Play;
 			
 			//Client.UsePacketHandlerQueue = true;
@@ -2555,7 +2624,9 @@ namespace Alex.Worlds.Multiplayer.Java
 		private void HandleSetCompression(SetCompressionPacket packet)
 		{
 			Client.CompressionThreshold = packet.Threshold;
-			Client.CompressionEnabled = true;
+			Client.CompressionEnabled = packet.Threshold > 0;
+			
+			Log.Info($"Compression threshold: {packet.Threshold}");
 		}
 
 		private async Task<bool> VerifySession(string serverHash)
@@ -2610,14 +2681,18 @@ namespace Alex.Worlds.Multiplayer.Java
 			Log.Info($"Received encryption request.");
 			FastRandom.Instance.NextBytes(SharedSecret);
 
+			var serverId = packet.ServerId;
+			var publicKey = packet.PublicKey;
+			var verificationToken = packet.VerifyToken;
+			
 			string serverHash;
 
 			using (MemoryStream ms = new MemoryStream())
 			{
-				byte[] ascii = Encoding.ASCII.GetBytes(packet.ServerId);
+				byte[] ascii = Encoding.ASCII.GetBytes(serverId);
 				ms.Write(ascii, 0, ascii.Length);
 				ms.Write(SharedSecret, 0, 16);
-				ms.Write(packet.PublicKey, 0, packet.PublicKey.Length);
+				ms.Write(publicKey, 0, publicKey.Length);
 
 				serverHash = JavaHexDigest(ms.ToArray());
 			}
@@ -2633,17 +2708,17 @@ namespace Alex.Worlds.Multiplayer.Java
 						return;
 					}
 					
-					var cryptoProvider = RsaHelper.DecodePublicKey(packet.PublicKey);
+					var cryptoProvider = RsaHelper.DecodePublicKey(publicKey);
 					//Log.Info($"Crypto: {cryptoProvider == null} Pub: {packet.PublicKey} Shared: {SharedSecret}");
 					var encrypted = cryptoProvider.Encrypt(SharedSecret, RSAEncryptionPadding.Pkcs1);
 
 					EncryptionResponsePacket response = EncryptionResponsePacket.CreateObject();
 					response.SharedSecret = encrypted;
-					response.VerifyToken = cryptoProvider.Encrypt(packet.VerifyToken, RSAEncryptionPadding.Pkcs1);
-					Client.SendPacketDirect(response);// SendPacket(response);
+					response.VerifyToken = cryptoProvider.Encrypt(verificationToken, RSAEncryptionPadding.Pkcs1);
 					
 					Client.InitEncryption(SharedSecret);
-				}).Wait();
+					Client.SendPacket(response);// SendPacket(response);
+				});//.Wait();
 		}
 
 		private bool Login(string username, string uuid, string accessToken)
