@@ -22,8 +22,7 @@ namespace Alex.Entities
 			Entity = entity;
 			Heading = Vector3.Zero;
 		}
-		
-		private Stopwatch _previousUpdate = Stopwatch.StartNew();
+
 		private float _distanceMoved = 0f, _lastDistanceMoved = 0f;
 		public float DistanceMoved
 		{
@@ -32,36 +31,11 @@ namespace Alex.Entities
 			{
 				if (float.IsNaN(value) || float.IsInfinity(value))
 					return;
-				var mvt = value;
 
 				_distanceMoved = value;
-				
-				//_speedAccumulator += frameTime;
-				var distanceMoved = mvt - _lastDistanceMoved;
-				
-				if (distanceMoved <= 0.0005f && _previousUpdate.ElapsedMilliseconds < 50)
-					return;
-				
-				_lastDistanceMoved = _distanceMoved;
-				//RawSpeed = (float) (distanceMoved);
-				//if (_speedAccumulator >= TargetTime)
-				{
-					//DistanceMoved = 0;
-
-					var difference = _previousUpdate.Elapsed;
-					//BlocksPerTick = (float) (distanceMoved * (TimeSpan.FromMilliseconds(50) / difference));// * (_speedAccumulator / TargetTime);
-					MetersPerSecond = (float) (distanceMoved * (TimeSpan.FromSeconds(1) / difference));
-				
-					_previousUpdate.Restart();
-					//_previousUpdate = DateTime.UtcNow;
-					//PreviousUpdate
-					//CurrentSpeed = (float) (distanceMoved * (TimeSpan.FromSeconds(1) / (DateTime.UtcNow - _previousUpdate)));
-				
-				}
 			}
 		}
 
-		private Stopwatch _previousVerticalUpdate = Stopwatch.StartNew();
 		private float _verticalDistanceMoved = 0f, _lastVerticalDistanceMoved = 0f;
 		public float VerticalDistanceMoved
 		{
@@ -71,18 +45,7 @@ namespace Alex.Entities
 				if (float.IsNaN(value) || float.IsInfinity(value))
 					return;
 				
-				var mvt = value;
 				_verticalDistanceMoved = value;
-
-				//_speedAccumulator += frameTime;
-				var distanceMoved = mvt - _lastVerticalDistanceMoved;
-				var difference = _previousVerticalUpdate.Elapsed;
-				if (distanceMoved <= 0.0005f && _previousVerticalUpdate.ElapsedMilliseconds < 50)
-					return;
-				
-				_lastVerticalDistanceMoved = _verticalDistanceMoved;
-				VerticalSpeed = (float) (distanceMoved * (TimeSpan.FromSeconds(1) / difference));
-				_previousVerticalUpdate.Restart();
 			}
 		}
 
@@ -99,12 +62,6 @@ namespace Alex.Entities
 		
 		public void MoveTo(PlayerLocation location, bool updateLook = true)
 		{
-			DistanceMoved += MathF.Abs(Microsoft.Xna.Framework.Vector3.Distance(
-				Entity.KnownPosition.ToVector3() * new Vector3(1f, 0f, 1f), location.ToVector3() * new Vector3(1f, 0f, 1f)));
-			
-			VerticalDistanceMoved += MathF.Abs(Microsoft.Xna.Framework.Vector3.Distance(
-				Entity.KnownPosition.ToVector3() * new Vector3(0f, 1f, 0f), location.ToVector3() * new Vector3(0f, 1f, 0f)));
-			
 			//var difference = Entity.KnownPosition.ToVector3() - location.ToVector3();
 			//Move(difference);
 
@@ -208,13 +165,13 @@ namespace Alex.Entities
 			
 			UpdateTarget();
 			
-			DistanceMoved +=
+		/*	DistanceMoved +=
 				MathF.Abs(Microsoft.Xna.Framework.Vector3.Distance(oldPosition * new Vector3(1f, 0f, 1f),
 					Entity.KnownPosition.ToVector3() * new Vector3(1f, 0f, 1f)));
 			
 			VerticalDistanceMoved +=
 				MathF.Abs(Microsoft.Xna.Framework.Vector3.Distance(oldPosition * new Vector3(0f, 1f, 0f),
-					Entity.KnownPosition.ToVector3() * new Vector3(0f, 1f, 0f)));
+					Entity.KnownPosition.ToVector3() * new Vector3(0f, 1f, 0f)));*/
 
 			return amount;
 		}
@@ -331,29 +288,18 @@ namespace Alex.Entities
 					MathF.Abs(Entity.Velocity.Z) < 0.0001f ? velocity.Z : Entity.Velocity.Z);
 			}
 		}
-		
-		public void Teleport(PlayerLocation location)
-		{
-			Entity.KnownPosition = location;
-			/*
-			var oldPosition = entity.KnownPosition;
-			entity.KnownPosition = position;
-			//if (entity is PlayerMob p)
-			{
-				entity.DistanceMoved += MathF.Abs(Vector3.Distance(oldPosition, position));
-			}*/
-		}
 
 		private       float _frameAccumulator = 0f;
 		private const float TargetTime        = 1f / 20f;
 		
 		public float MetersPerSecond { get; private set; } = 0f;
-		//public float BlocksPerTick { get; private set; } = 0f;
-		//public float Speed { get; private set; } = 0f;
+		private Vector3 _previousPosition = Vector3.Zero;
 		public void Update(GameTime gt)
 		{
 			var frameTime = (float) gt.ElapsedGameTime.TotalSeconds; // / 50;
 			var entity    = Entity;
+
+			UpdateDistanceMoved(frameTime);
 
 			if ((_target == null || _from == null))
 			{
@@ -409,6 +355,48 @@ namespace Alex.Entities
 			renderLocation.OnGround = targetPosition.OnGround;
 
 			entity.RenderLocation = renderLocation;
+		}
+
+		private float _speedAccumulator = 0f;
+		private void UpdateDistanceMoved(float deltaTime)
+		{
+			_speedAccumulator += deltaTime;
+			var current = Entity.RenderLocation.ToVector3();
+			var previous = _previousPosition;
+
+			var horizontalDistance = MathF.Abs(
+				Microsoft.Xna.Framework.Vector3.Distance(
+					current * new Vector3(1f, 0f, 1f), previous * new Vector3(1f, 0f, 1f)));
+			
+			var verticalDistance = MathF.Abs(Microsoft.Xna.Framework.Vector3.Distance(
+				current * new Vector3(0f, 1f, 0f), previous * new Vector3(0f, 1f, 0f)));
+
+			if (horizontalDistance > 0f)
+			{
+				DistanceMoved += horizontalDistance;
+			}
+
+			if (verticalDistance > 0f)
+			{
+				VerticalDistanceMoved += verticalDistance;
+			}
+
+			if (_speedAccumulator >= TargetTime)
+			{
+				var horizontalDist = _distanceMoved - _lastDistanceMoved;
+				_lastDistanceMoved = _distanceMoved;
+
+				var modifier = (1f / _speedAccumulator);
+				MetersPerSecond = (float) (horizontalDist * modifier);
+				
+				var verticalDistanceMoved = _verticalDistanceMoved - _lastVerticalDistanceMoved;
+				_lastVerticalDistanceMoved = _verticalDistanceMoved;
+				VerticalSpeed = (float) (verticalDistanceMoved * modifier);
+				
+				_speedAccumulator = 0f;
+			}
+
+			_previousPosition = current;
 		}
 
 		private bool CheckJump(ref Vector3 amount)
