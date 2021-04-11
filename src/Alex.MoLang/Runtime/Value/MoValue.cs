@@ -27,10 +27,10 @@ namespace Alex.MoLang.Runtime.Value
 				return moValue;
 			} 
 			
-			//if (value is string str)
-			//{
-			//	return new StringValue(str);
-			//}
+			if (value is string str)
+			{
+				return new StringValue(str);
+			}
 			
 			return new DoubleValue(value);
 		}

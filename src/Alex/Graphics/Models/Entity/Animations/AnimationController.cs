@@ -42,8 +42,7 @@ namespace Alex.Graphics.Models.Entity.Animations
 		private object _lock = new object();
 		
 		private static readonly Regex ControllerRegex = new Regex("", RegexOptions.Compiled);
-
-		private EntityQueryStruct _queryStruct = null;
+		
 		public void UpdateEntityDefinition(EntityDescription definition)
 		{
 			//Monitor.Enter(_lock);
@@ -55,7 +54,7 @@ namespace Alex.Graphics.Models.Entity.Animations
 				MoLangRuntime runtime = new MoLangRuntime();
 				_context.Clear();
 				//SetEnvironment(runtime.Environment);
-				runtime.Environment.Structs.TryAdd("query", _queryStruct = new EntityQueryStruct(Entity));
+				runtime.Environment.Structs.TryAdd("query", new ObjectStruct(Entity));
 
 				if (definition.Scripts != null)
 				{
@@ -299,7 +298,7 @@ namespace Alex.Graphics.Models.Entity.Animations
 									var result = runtime.Execute(expression.Value, context);
 									if (result.AsBool())
 									{
-									//	Console.WriteLine($"Old={oldState} New={expression.Key} (Cause: {result.Value})");	
+										//Console.WriteLine($"Old={oldState} New={expression.Key} (Cause: {result.Value})");	
 										
 										animation.State = expression.Key;
 										stateUpdated = true;
@@ -368,7 +367,7 @@ namespace Alex.Graphics.Models.Entity.Animations
 			
 			_deltaTimeStopwatch.Stop();
 			
-			_queryStruct?.Tick(_deltaTimeStopwatch.Elapsed);
+			//_queryStruct?.Tick(_deltaTimeStopwatch.Elapsed);
 			DoImportant();
 			
 			_deltaTimeStopwatch.Restart();

@@ -1,36 +1,298 @@
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 using Alex.MoLang.Attributes;
+using Alex.MoLang.Runtime.Exceptions;
+using Alex.MoLang.Runtime.Value;
 
 namespace Alex.MoLang.Runtime.Struct
 {
-	public class ObjectStruct<T> : QueryStruct
+	public abstract class ValueAccessor
 	{
-		private T _instance;
-		public ObjectStruct(T instance)
+		public abstract IMoValue Get(object instance);
+		
+		public abstract void Set(object instance, IMoValue value);
+	}
+
+	public class PropertyAccessor : ValueAccessor
+	{
+		private PropertyInfo _propertyInfo;
+		public PropertyAccessor(PropertyInfo propertyInfo)
+		{
+			_propertyInfo = propertyInfo;
+		}
+		
+		/// <inheritdoc />
+		public override IMoValue Get(object instance)
+		{
+			var value = _propertyInfo.GetValue(instance);
+
+			return value is IMoValue moValue ? moValue : MoValue.FromObject(value);
+			return (IMoValue) _propertyInfo.GetValue(instance);
+		}
+
+		/// <inheritdoc />
+		public override void Set(object instance, IMoValue value)
+		{
+			_propertyInfo.SetValue(instance, value);
+		}
+	}
+	
+	public class FieldAccessor : ValueAccessor
+	{
+		private FieldInfo _propertyInfo;
+		public FieldAccessor(FieldInfo propertyInfo)
+		{
+			_propertyInfo = propertyInfo;
+		}
+		
+		/// <inheritdoc />
+		public override IMoValue Get(object instance)
+		{
+			var value = _propertyInfo.GetValue(instance);
+
+			return value is IMoValue moValue ? moValue : MoValue.FromObject(value);
+		}
+
+		/// <inheritdoc />
+		public override void Set(object instance, IMoValue value)
+		{
+			_propertyInfo.SetValue(instance, value);
+		}
+	}
+	
+	public class ObjectStruct : IMoStruct
+	{
+		private object _instance;
+		private readonly Dictionary<string, ValueAccessor> _properties = new(StringComparer.OrdinalIgnoreCase);
+		private readonly Dictionary<string, Func<MoParams, IMoValue>> _functions = new(StringComparer.OrdinalIgnoreCase);
+		public ObjectStruct(object instance)
 		{
 			_instance = instance;
-			BuildFunctions(typeof(T));
+			
+			var type = instance.GetType();
+			BuildFunctions(type);
 		}
 
 		private void BuildFunctions(Type type)
 		{
-			var methods = type.GetMethods(BindingFlags.Public);
+			var methods = type.GetMethods(BindingFlags.Public | BindingFlags.Instance);
 
 			foreach (var method in methods)
 			{
-				var functionAttribute = method.GetCustomAttribute<FunctionAttribute>();
+				var functionAttribute = method.GetCustomAttribute<MoFunctionAttribute>();
 				if (functionAttribute == null)
 					continue;
 
-				if (Functions.ContainsKey(method.Name))
+				if (_functions.ContainsKey(functionAttribute.Name))
 					continue;
 
-				foreach (var parameter in method.GetParameters())
+				var methodParams = method.GetParameters();
+				
+				_functions.Add(functionAttribute.Name, mo =>
 				{
-					//TODO: Continue.
+					IMoValue value = DoubleValue.Zero;
+					
+					List<object> parameters = new List<object>();
+
+					if (methodParams.Length == 1 && methodParams[0].ParameterType == typeof(MoParams))
+					{
+						parameters.Add(mo);
+					}
+					else
+					{
+						for (var index = 0; index < methodParams.Length; index++)
+						{
+							var parameter = methodParams[index];
+
+							if (!mo.Contains(index))
+							{
+								if (!parameter.IsOptional)
+									throw new MissingMethodException($"Missing parameter: {parameter.Name}");
+
+								break;
+							}
+
+							var t = parameter.ParameterType;
+
+							if (t == typeof(MoParams))
+							{
+								parameters.Add(mo);
+							}
+							else if (t == typeof(int))
+							{
+								parameters.Add(mo.GetInt(index));
+							}
+							else if (t == typeof(double))
+							{
+								parameters.Add(mo.GetDouble(index));
+							}
+							else if (t == typeof(float))
+							{
+								parameters.Add((float) mo.GetDouble(index));
+							}
+							else if (t == typeof(string))
+							{
+								parameters.Add(mo.GetString(index));
+							}
+							else if (typeof(IMoStruct).IsAssignableFrom(t))
+							{
+								parameters.Add(mo.GetStruct(index));
+							}
+							else if (typeof(MoLangEnvironment).IsAssignableFrom(t))
+							{
+								parameters.Add(mo.GetEnv(index));
+							}
+							else
+							{
+								throw new Exception("Unknown parameter type.");
+							}
+
+							//TODO: Continue.
+						}
+					}
+
+					var result = method.Invoke(_instance, parameters.ToArray());
+
+					if (result != null)
+					{
+						if (result is IMoValue moValue)
+							return moValue;
+						
+						return MoValue.FromObject(result);
+					}
+
+					return value;
+				});
+			}
+
+			var properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+
+			foreach (var prop in properties)
+			{
+				foreach (var functionAttribute in prop.GetCustomAttributes<MoPropertyAttribute>())
+				{
+					if (functionAttribute == null)
+						continue;
+
+					if (_properties.ContainsKey(functionAttribute.Name))
+						continue;
+
+					_properties.Add(functionAttribute.Name, new PropertyAccessor(prop));
 				}
 			}
+			
+			var fields = type.GetFields(BindingFlags.Public | BindingFlags.Instance);
+
+			foreach (var prop in fields)
+			{
+				foreach (var functionAttribute in prop.GetCustomAttributes<MoPropertyAttribute>())
+				{
+					if (functionAttribute == null)
+						continue;
+
+					if (_properties.ContainsKey(functionAttribute.Name))
+						continue;
+
+					_properties.Add(functionAttribute.Name, new FieldAccessor(prop));
+				}
+			}
+		}
+
+		/// <inheritdoc />
+		public object Value => _instance;
+
+		/// <inheritdoc />
+		public void Set(string key, IMoValue value)
+		{
+			var index = key.IndexOf('.');
+
+			if (index < 0)
+			{
+				if (_properties.TryGetValue(key, out var accessor)) {
+					//Map.TryAdd(main, container = new VariableStruct());
+					accessor.Set(_instance, value);
+					return;
+				}
+				
+				throw new MoLangRuntimeException($"Variable was not a struct: {key}", null);
+			}
+
+			string main = key.Substring(0, index);
+
+			if (!string.IsNullOrWhiteSpace(main)) {
+				//object vstruct = Get(main, MoParams.Empty);
+
+				if (!_properties.TryGetValue(main, out var accessor)) {
+					//Map.TryAdd(main, container = new VariableStruct());
+					throw new MoLangRuntimeException($"Variable was not a struct: {key}", null);
+				}
+
+				var container = accessor.Get(_instance);
+				
+				if (container is IMoStruct moStruct)
+				{
+					moStruct.Set(key.Substring(index + 1), value);
+				}
+				else
+				{
+					throw new MoLangRuntimeException($"Variable was not a struct: {key}", null);
+				}
+				
+				//((IMoStruct) vstruct).Set(string.Join(".", segments), value);
+
+				//Map[main] = (IMoStruct)vstruct;//.Add(main, (IMoStruct) vstruct);
+			}
+		}
+
+		/// <inheritdoc />
+		public IMoValue Get(string key, MoParams parameters)
+		{
+			var index = key.IndexOf('.');
+
+			if (index >= 0)
+			{
+				string main = key.Substring(0, index);
+
+				if (!string.IsNullOrWhiteSpace(main))
+				{
+					IMoValue value = null; //Map[main];
+
+					if (_properties.TryGetValue(main, out var accessor))
+					{
+						value = accessor.Get(_instance);
+					}
+					else if (_functions.TryGetValue(main, out var func))
+					{
+						value = func.Invoke(parameters);
+					}
+					else
+					{
+						return DoubleValue.Zero;
+					}
+
+					if (value is IMoStruct moStruct)
+					{
+						return moStruct.Get(key.Substring(index + 1), parameters);
+					}
+
+					return value;
+				}
+			}
+
+			if (_properties.TryGetValue(key, out var v))
+				return v.Get(_instance);
+			
+			if (_functions.TryGetValue(key, out var f))
+				return f.Invoke(parameters);
+			
+			return DoubleValue.Zero;
+		}
+
+		/// <inheritdoc />
+		public void Clear()
+		{
+			throw new NotImplementedException();
 		}
 	}
 }

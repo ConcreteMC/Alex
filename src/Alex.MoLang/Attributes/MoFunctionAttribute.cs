@@ -3,10 +3,10 @@ using System;
 namespace Alex.MoLang.Attributes
 {
 	[AttributeUsage(AttributeTargets.Method)]
-	public class FunctionAttribute : Attribute
+	public class MoFunctionAttribute : Attribute
 	{
 		public string Name { get; }
-		public FunctionAttribute(string functionName)
+		public MoFunctionAttribute(string functionName)
 		{
 			Name = functionName;
 		}

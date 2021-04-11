@@ -70,16 +70,6 @@ namespace Alex.MoLang.Runtime.Struct
 			return DoubleValue.Zero;
 		}
 
-		private int AddValueFactory(string key)
-		{
-			return 1;
-		}
-
-		private int UpdateValueFactory(string key, int count)
-		{
-			return count + 1;
-		}
-
 		/// <inheritdoc />
 		public void Clear()
 		{

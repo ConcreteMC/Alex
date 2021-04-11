@@ -22,6 +22,9 @@ using Alex.Graphics.Models.Entity;
 using Alex.Graphics.Models.Entity.Animations;
 using Alex.Graphics.Models.Items;
 using Alex.Items;
+using Alex.MoLang.Attributes;
+using Alex.MoLang.Runtime;
+using Alex.MoLang.Runtime.Value;
 using Alex.Net;
 using Alex.Networking.Java.Packets.Play;
 using Alex.ResourcePackLib.Json.Models.Items;
@@ -169,7 +172,12 @@ namespace Alex.Entities
 		public bool AboveWater   { get; set; } = false;
 		public bool HeadInWater  { get; set; } = false;
 		public bool FeetInWater  { get; set; } = false;
+		
+		[MoProperty("is_in_water")]
 		public bool IsInWater    { get; set; } = false;
+
+		[MoProperty("is_in_water_or_rain")]
+		public bool IsInWaterOrRain => IsInWater || Level.Raining;
 		
 		public bool HeadInLava  { get; set; } = false;
 		public bool FeetInLava  { get; set; } = false;
@@ -206,6 +214,7 @@ namespace Alex.Entities
 		
 		public MiNET.Utils.UUID UUID { get; set; }
 
+		[MoProperty("can_fly")]
 		public bool CanFly { get; set; } = false;
 		public bool IsFlying { get; set; } = false;
 
@@ -217,6 +226,8 @@ namespace Alex.Entities
 		public bool IsWorldImmutable { get; set; } = false;
 		public bool IsNoPvP { get; set; } = true;
 		public bool IsNoPvM { get; set; } = true;
+		
+		[MoProperty("is_on_screen")]
 		public bool IsRendered
 		{
 			get
@@ -515,49 +526,125 @@ namespace Alex.Entities
 		}
 
 		public double AttackTime { get; set; } = -1d;
+		
+		[MoProperty("is_onfire"), MoProperty("is_on_fire")]
 		public bool IsOnFire { get; set; } = false;
+		
+		[MoProperty("is_sneaking")]
 		public bool IsSneaking { get; set; }
+		
+		[MoProperty("is_riding")]
 		public bool IsRiding { get; set; }
+		
+		[MoProperty("is_sprinting")]
 		public bool IsSprinting { get; set; }
+		
+		[MoProperty("is_using_item")]
 		public bool IsUsingItem { get; set; }
 		public bool IsInvisible { get; set; }
+		
+		[MoProperty("is_tempted")]
 		public bool IsTempted { get; set; }
+		
+		[MoProperty("is_in_love")]
 		public bool IsInLove { get; set; }
 		
+		[MoProperty("is_powered")]
 		public bool IsPowered { get; set; }
+		
+		[MoProperty("is_ignited")]
 		public bool IsIgnited { get; set; }
+		
+		[MoProperty("is_baby")]
 		public bool IsBaby { get; set; }
+		
+		[MoProperty("is_converting")]
 		public bool IsConverting { get; set; }
+		
+		[MoProperty("is_critical")]
 		public bool IsCritical { get; set; }
 		public bool IsShowName => !HideNameTag;
 		public bool IsAlwaysShowName { get; set; }
+		
+		[MoProperty("is_silent")]
 		public bool IsSilent { get; set; }
+		
+		[MoProperty("is_wall_climbing")]
 		public virtual bool IsWallClimbing { get; set; }
+		
+		[MoProperty("is_resting")]
 		public bool IsResting { get; set; }
+		
+		[MoProperty("is_sitting")]
 		public bool IsSitting { get; set; }
+		
+		[MoProperty("is_charging")]
 		public bool IsAngry { get; set; }
+		
+		[MoProperty("is_interested")]
 		public bool IsInterested { get; set; }
 
+		[MoProperty("is_tamed")]
 		public bool IsTamed { get; set; }
+		
+		[MoProperty("is_leashed")]
 		public bool IsLeashed { get; set; }
+		
+		[MoProperty("is_sheared")]
 		public bool IsSheared { get; set; }
 		public bool IsFlagAllFlying { get; set; }
+		
+		[MoProperty("is_elder")]
 		public bool IsElder { get; set; }
+		
+		[MoProperty("is_moving")]
 		public bool IsMoving { get; set; }
+		
+		[MoProperty("is_breathing")]
 		public bool IsBreathing => !IsInWater;
+		
+		[MoProperty("is_chested")]
 		public virtual bool IsChested { get; set; }
+		
+		[MoProperty("is_stackable")]
 		public bool IsStackable { get; set; }
+		
+		[MoProperty("is_eating")]
 		public bool IsEating { get; set; }
+		
+		[MoProperty("blocking"), MoProperty("is_blocking")]
 		public bool IsBlocking { get; set; }
 		public bool IsSpinAttacking { get; set; }
+		
+		[MoProperty("has_collision")]
 		public bool HasCollision { get; set; } = true;
+		
+		[MoProperty("has_gravity")]
 		public bool IsAffectedByGravity { get; set; } = true;
+		
+		[MoProperty("is_swimming")]
 		public virtual bool IsSwimming { get; set; }
+		
+		[MoProperty("is_sleeping")]
 		public bool IsSleeping { get; set; }
+		
+		[MoProperty("is_standing")]
 		public bool IsStanding { get; set; } = true;
+		
+		[MoProperty("is_emoting")]
 		public bool IsEmoting { get; set; } = false;
+		
+		[MoProperty("is_gliding")]
 		public bool IsGliding { get; set; } = false;
+		
+		[MoProperty("is_levitating")]
 		public bool IsLevitating { get; set; } = false;
+
+		[MoProperty("is_alive")]
+		public bool IsAlive => HealthManager.Health > 0;
+		
+		[MoProperty("is_on_ground")]
+		public bool IsOnGround => _knownPosition.OnGround;
 		
 		public Pose Pose { get; set; } = Pose.Standing;
 		
@@ -918,8 +1005,19 @@ namespace Alex.Entities
 			}
 		}
 
+		private TimeSpan _deltaTime = TimeSpan.Zero;
+		private Vector3 _previousKnownPosition = Vector3.Zero;
+		private Vector3 _delta = Vector3.Zero;
+		private Stopwatch _deltaStopwatch = Stopwatch.StartNew();
 		public virtual void OnTick()
 		{
+			_deltaTime = _deltaStopwatch.Elapsed;
+			_deltaStopwatch.Restart();
+			
+			var pos = RenderLocation.ToVector3();
+			_delta = pos - _previousKnownPosition;
+			_previousKnownPosition = pos;
+			
 			//Age++;
 			if (TargetEntityId != -1)
 			{
@@ -1350,5 +1448,201 @@ namespace Alex.Entities
 		{
 			return false;
 		}
+
+		#region MoLang Functions
+
+		[MoFunction("get_equipped_item_name")]
+		public string GetEquippedItemName(MoParams mo)
+		{
+			bool isOffHand = false;
+
+			if (mo.Contains(0))
+			{
+				var firstArgument = mo.Get(0);
+
+				if (firstArgument is StringValue sv)
+				{
+					if (!sv.Value.Equals("main_hand")) isOffHand = true;
+				}
+				else if (firstArgument is DoubleValue dv)
+				{
+					if (dv.Value > 0) isOffHand = true;
+				}
+			}
+
+			if (mo.Contains(1)) { }
+
+			Item item = null;
+
+			if (!isOffHand) item = Inventory.MainHand;
+			else item = Inventory.OffHand;
+
+			if (item?.Name == null) return "air";
+
+			return item.Name.Replace("minecraft:", "");
+		}
+		
+		[MoFunction("position")]
+		public double GetPosition(int axis)
+		{
+			double amount = 0d;
+
+			switch (axis)
+			{
+				case 0: //X-Axis
+					amount = KnownPosition.X;
+
+					break;
+
+				case 1: //Y-Axis
+					amount = KnownPosition.Y;
+
+					break;
+
+				case 2: //Z-Axis
+					amount = KnownPosition.Z;
+
+					break;
+			}
+
+			return amount;
+		}
+		
+		[MoFunction("life_time")]
+		public double GetLifeTime()
+		{
+			return LifeTime.TotalSeconds;
+		}
+		
+		[MoFunction("position_delta")]
+		public double PositionDelta(int axis)
+		{
+			double amount = 0d;
+			switch (axis)
+			{
+				case 0: //X-Axis
+					amount = _delta.X;
+					break;
+				case 1: //Y-Axis
+					amount = _delta.Y;
+					break;
+				case 2: //Z-Axis
+					amount = _delta.Z;
+					break;
+			}
+				
+			return amount;
+		}
+
+		[MoFunction("camera_rotation")]
+		public double CameraRotation(int axis = 0)
+		{
+			if (axis == 1)
+			{
+				return Level.Camera.Rotation.Y;
+				//Y Axis
+			}
+			else
+			{
+				//X Axis
+				return Level.Camera.Rotation.X;
+			}
+		}
+
+		[MoFunction("modified_distance_moved")]
+		public double ModifiedDistanceMoved()
+		{
+			return Movement.DistanceMoved;
+		}
+		
+		[MoFunction("modified_move_speed")]
+		public double ModifiedMoveSpeed()
+		{
+			return (1f / (CalculateMovementSpeed() * 43f)) * (Movement.MetersPerSecond);
+		}
+
+		[MoFunction("time_stamp")]
+		public double TimeStamp()
+		{
+			return (double) Level.Time;
+		}
+
+		[MoFunction("frame_alpha")]
+		public double FrameAlpha()
+		{
+			return (1f / 50f) * _deltaTime.TotalMilliseconds;
+		}
+
+		[MoFunction("delta_time")]
+		public double DeltaTime()
+		{
+			return _deltaTime.TotalSeconds;
+		}
+
+		[MoFunction("ground_speed")]
+		public double GroundSpeed()
+		{
+			return Movement.MetersPerSecond;
+		}
+		
+		[MoFunction("walk_distance")]
+		public double WalkDistance()
+		{
+			return Movement.DistanceMoved;
+		}
+		
+		[MoFunction("vertical_speed")]
+		public double VerticalSpeed()
+		{
+			return Movement.VerticalSpeed;
+		}
+		
+		[MoFunction("time_of_day")]
+		public double TimeOfDay()
+		{
+			return ((1f / 24000f) * Level.TimeOfDay);
+		}
+
+		[MoFunction("is_item_equipped")]
+		public bool IsItemEquipped(MoParams mo)
+		{
+			bool isMainHand = true;
+
+			if (mo.Contains(0))
+			{
+				var val = mo.Get(0);
+
+				if (val is StringValue sv)
+				{
+					if (sv.Value == "off_hand")
+						isMainHand = false;
+				}
+				else if (val is DoubleValue dv)
+				{
+					if (dv.Value > 0)
+						isMainHand = false;
+				}
+			}
+			Item item = isMainHand ? Inventory.MainHand : Inventory.OffHand;
+
+			return item.Count > 0 && !(item is ItemAir);
+		}
+
+		[MoProperty("has_target")]
+		public bool HasTarget => TargetEntityId != -1;
+		
+		[MoProperty("has_owner")]
+		public bool HasOwner => OwnerEntityId != -1;
+
+		[MoProperty("target_x_rotation")]
+		public double TargetXRotation => TargetRotation.X;
+		
+		[MoProperty("target_y_rotation")]
+		public double TargetYRotation => TargetRotation.X;
+
+		[MoProperty("is_selected_item")]
+		public bool IsSelectedItem => Inventory.MainHand.Count > 0 && !(Inventory.MainHand is ItemAir);
+
+		#endregion
 	}
 }
