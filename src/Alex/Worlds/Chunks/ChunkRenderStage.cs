@@ -177,7 +177,7 @@ namespace Alex.Worlds.Chunks
 					PooledVertexBuffer oldBuffer = null;
 					PooledVertexBuffer buffer = Buffer;
 
-					if (buffer != null && buffer.VertexCount - size >= 256)
+				/*	if (buffer != null && buffer.VertexCount - size >= 256)
 					{
 						oldBuffer = buffer;
 						
@@ -188,7 +188,7 @@ namespace Alex.Worlds.Chunks
 
 							callSetData = true;
 						}
-					}
+					}*/
 
 					if (buffer == null || buffer.VertexCount < size)
 					{
