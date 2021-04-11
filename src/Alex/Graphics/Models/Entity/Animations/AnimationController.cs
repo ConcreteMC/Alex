@@ -27,7 +27,7 @@ namespace Alex.Graphics.Models.Entity.Animations
 		public bool Enabled { get; set; } = true;
 		private Queue<ModelBoneAnimation> AnimationQueue { get; }
 
-		private MoLangRuntime Runtime { get; set; }
+		public MoLangRuntime Runtime { get; set; }
 		private Entities.Entity Entity { get; }
 		public AnimationController(Entities.Entity entity) : base()
 		{
@@ -58,6 +58,16 @@ namespace Alex.Graphics.Models.Entity.Animations
 
 				if (definition.Scripts != null)
 				{
+					if (definition.Scripts.Scale != null)
+					{
+						var scale = runtime.Execute(definition.Scripts.Scale, _context);
+
+						if (scale is DoubleValue dv)
+						{
+							Entity.Scale = dv.AsFloat();
+						}
+					}
+
 					foreach (var init in ConditionalExecute(runtime, definition.Scripts.Initialize, _context)) { }
 
 					foreach (var list in definition.Scripts.PreAnimation)
@@ -326,22 +336,15 @@ namespace Alex.Graphics.Models.Entity.Animations
 						if (renderer.GetBone(bone.Key, out var modelBone))
 						{
 							var value = bone.Value;
-						
-							//var rotationOutput = ConditionalExecute(runtime, value.Rotation, context).ToArray();
-							//var positionOutputs = ConditionalExecute(runtime, value.Position, context).ToArray();
-							//var scaleOutputs = ConditionalExecute(runtime, value.Scale, context).ToArray();
-							
+
 							var targetRotation = value.Rotation?.Evaluate(runtime, Vector3.Zero) ?? Vector3.Zero;
-							var targetPosition = value.Position?.Evaluate(runtime, modelBone.Position) ?? Vector3.Zero;// GetVector3(Vector3.Zero, positionOutputs);
-							var targetScale = value.Scale?.Evaluate(runtime, modelBone.Scale) ?? Vector3.Zero;//GetVector3(Vector3.Zero, scaleOutputs);
+							var targetPosition = value.Position?.Evaluate(runtime, modelBone.Position) ?? Vector3.Zero;
+							var targetScale = value.Scale?.Evaluate(runtime, modelBone.Scale) ?? Vector3.One;
 
 							modelBone.MoveOverTime(
 								targetPosition, targetRotation * new Vector3(-1f, 1f, 1f), targetScale,
 								_deltaTimeStopwatch.Elapsed, anim.OverridePreviousAnimation,
 								anim.BlendWeight != null ? runtime.Execute(anim.BlendWeight).AsFloat() : 1f);
-
-							//	modelBone.Rotation = GetVector3(modelBone.Rotation, rotationOutput);
-							//modelBone.Position = GetVector3(modelBone.Position, positionOutputs);
 						}
 					}
 				}

@@ -38,6 +38,7 @@ namespace Alex.Graphics.Models.Entity
 		public void Start()
 		{
 			RuntimeStopwatch.Restart();
+			OnStart();
 		}
 		
 		protected virtual void OnStart(){}

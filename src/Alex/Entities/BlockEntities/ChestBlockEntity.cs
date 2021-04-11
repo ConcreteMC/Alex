@@ -64,10 +64,7 @@ namespace Alex.Entities.BlockEntities
 				{
 					var targetRotation = _viewers > 0 ? new Vector3(90, 0, 0) : Vector3.Zero;
 
-					HeadBone.Animations.Enqueue(
-						new ServerAnimation(
-							HeadBone, new ModelParameters(HeadBone.Rotation),
-							new ModelParameters(targetRotation), TimeSpan.FromMilliseconds(250), false));
+					HeadBone.MoveOverTime(Vector3.Zero, targetRotation, TimeSpan.FromMilliseconds(250));
 				}
 			}
 		}

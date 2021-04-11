@@ -13,6 +13,7 @@ using Alex.MoLang.Parser.Exceptions;
 using Alex.ResourcePackLib.IO.Abstract;
 using Alex.ResourcePackLib.Json;
 using Alex.ResourcePackLib.Json.Bedrock;
+using Alex.ResourcePackLib.Json.Bedrock.Attachables;
 using Alex.ResourcePackLib.Json.Bedrock.Entity;
 using Alex.ResourcePackLib.Json.Bedrock.Particles;
 using Alex.ResourcePackLib.Json.Bedrock.Sound;
@@ -35,6 +36,7 @@ namespace Alex.ResourcePackLib
 		private ConcurrentDictionary<string,Lazy<Image<Rgba32>>> _bitmaps = new ConcurrentDictionary<string, Lazy<Image<Rgba32>>>();
         public IReadOnlyDictionary<string, Lazy<Image<Rgba32>>> Textures => _bitmaps;
 		public IReadOnlyDictionary<ResourceLocation, EntityDescription> EntityDefinitions { get; private set; } = new ConcurrentDictionary<ResourceLocation, EntityDescription>();
+		public IReadOnlyDictionary<string, AttachableDefinition> Attachables { get; private set; } = new ConcurrentDictionary<string, AttachableDefinition>();
 		public IReadOnlyDictionary<string, RenderController> RenderControllers { get; private set; } = new ConcurrentDictionary<string, RenderController>();
 		public IReadOnlyDictionary<string, AnimationController> AnimationControllers { get; private set; } = new ConcurrentDictionary<string, AnimationController>();
 		public IReadOnlyDictionary<string, Animation> Animations { get; private set; } = new ConcurrentDictionary<string, Animation>();
@@ -95,6 +97,7 @@ namespace Alex.ResourcePackLib
 		private static readonly Regex IsSoundDefinition    = new Regex(@"^sounds[\\\/]sound_definitions\.json$", RegexOpts);
 		private static readonly Regex IsFontFile    = new Regex(@"^font[\\\/](?'filename'.*)\.png$", RegexOpts);
 		private static readonly Regex IsParticleFile    = new Regex(@"^particles[\\\/](?'filename'.*)\.json$", RegexOpts);
+		private static readonly Regex IsAttachableFile    = new Regex(@"^attachables[\\\/](?'filename'.*)\.json$", RegexOpts);
 		private void Load(ResourcePack.LoadProgress progressReporter)
 		{
 			Dictionary<ResourceLocation, EntityDescription> entityDefinitions = new Dictionary<ResourceLocation, EntityDescription>();
@@ -105,7 +108,9 @@ namespace Alex.ResourcePackLib
 				animationControllers = new Dictionary<string, AnimationController>();
 
 			Dictionary<string, ParticleDefinition> particleDefinitions = new Dictionary<string, ParticleDefinition>();
-			
+
+			Dictionary<string, AttachableDefinition> attachableDefinitions =
+				new Dictionary<string, AttachableDefinition>();
 			Dictionary<string, Animation>
 				animations = new Dictionary<string, Animation>();
 			
@@ -180,6 +185,12 @@ namespace Alex.ResourcePackLib
 
 						continue;
 					}
+
+					if (IsAttachableFile.IsMatch(entry.FullName))
+					{
+						ProcessAttachable(entry, attachableDefinitions);
+						continue;
+					}
 				}
 				catch (Exception ex)
 				{
@@ -195,7 +206,47 @@ namespace Alex.ResourcePackLib
 			AnimationControllers = animationControllers;
 			Animations = animations;
 			Particles = particleDefinitions;
+			Attachables = attachableDefinitions;
 			// Log.Info($"Processed {EntityDefinitions.Count} entity definitions");
+		}
+
+		private void ProcessAttachable(IFile entry, Dictionary<string, AttachableDefinition> attachableDefinitions)
+		{
+			try
+			{
+				string json;
+
+				using (var stream = entry.Open())
+				{
+					json = Encoding.UTF8.GetString(stream.ReadToEnd());
+				}
+
+				var versionedResource = MCJsonConvert.DeserializeObject<VersionedResource<AttachableDefinition>>(
+					json, new VersionedResourceConverter<AttachableDefinition>("minecraft:attachable", true, (def) => def.Description.Identifier));
+
+				foreach (var controller in versionedResource.Values)
+				{
+					if (attachableDefinitions.TryAdd(controller.Key, controller.Value))
+					{
+						if (controller.Value?.Description?.Textures != null)
+						{
+							foreach (var kv in controller.Value.Description.Textures)
+							{
+								var texture = kv.Value;
+
+								if (texture != null && !_bitmaps.ContainsKey(texture))
+								{
+									TryAddBitmap(texture);
+								}
+							}
+						}
+					};
+				}
+			}
+			catch (MoLangParserException ex)
+			{
+				Log.Warn(ex, $"Failed to load attachable from file \"{entry.FullName}\"");
+			}
 		}
 
 		private void ProcessParticle(IFile entry, Dictionary<string, ParticleDefinition> particleDefinitions)

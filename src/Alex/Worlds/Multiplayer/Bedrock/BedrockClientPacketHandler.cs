@@ -756,7 +756,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		/// <inheritdoc />
 		public void HandleMcpeAlexEntityAnimation(McpeAlexEntityAnimation message)
 		{
-			Entity entity;
+			/*Entity entity;
 			if (!Client.World.EntityManager.TryGet(message.runtimeEntityId, out entity))
 			{
 				if (message.runtimeEntityId != Client.World.Player.EntityId)
@@ -799,9 +799,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 						new ModelParameters(
 							new Microsoft.Xna.Framework.Vector3(
 								key.EndRotation.X, key.EndRotation.Y, key.EndRotation.Z)), TimeSpan.FromMilliseconds(key.Duration), key.ResetAfter));
-			}
+			}*/
 
-			bone.Animations.Enqueue(new ResetAnimation(bone));
 		}
 
 		public void HandleMcpeNetworkChunkPublisherUpdate(McpeNetworkChunkPublisherUpdate message)

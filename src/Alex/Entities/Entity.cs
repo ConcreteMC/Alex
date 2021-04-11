@@ -935,6 +935,17 @@ namespace Alex.Entities
 
 		public virtual void Update(IUpdateArgs args)
 		{
+			var elapsed = args.GameTime.ElapsedGameTime.TotalSeconds;
+			if (UseItemIntervalProgress > 0d)
+			{
+				UseItemIntervalProgress -= elapsed;
+			}
+			
+			if (UseItemStartupProgress > 0d)
+			{
+				UseItemStartupProgress -= elapsed;
+			}
+
 			foreach (var entityComponent in EntityComponents)
 			{
 				entityComponent.Update(args.GameTime);
@@ -994,14 +1005,45 @@ namespace Alex.Entities
 			
 			SwingArm(broadcast, isLeftHand);
 		}
+
+		private double _useItemProgress = 0d;
+		private double UseItemIntervalProgress
+		{
+			get
+			{
+				return _useItemProgress;
+			}
+			set
+			{
+				_useItemProgress = Math.Clamp(value, 0d, 1d);
+				AnimationController.Runtime?.Environment?.SetValue("variable.use_item_interval_progress", new DoubleValue(_useItemProgress));
+			}
+		}
 		
+		private double _useItemStartupProgress = 0d;
+		private double UseItemStartupProgress
+		{
+			get
+			{
+				return _useItemStartupProgress;
+			}
+			set
+			{
+				_useItemStartupProgress = Math.Clamp(value, 0d, 1d);
+				AnimationController.Runtime?.Environment?.SetValue("variable.use_item_startup_progress", new DoubleValue(_useItemStartupProgress));
+			}
+		}
+
 		public virtual void SwingArm(bool broadcast, bool leftHanded)
 		{
 			EntityModelRenderer.ModelBone bone = leftHanded ? _leftArmModel : _rightArmModel;
 
 			if (bone != null && (!bone.IsAnimating || bone.Animations.Count <= 1))
 			{
-				bone.Animations.Enqueue(new SwingAnimation(bone, TimeSpan.FromMilliseconds(200)));
+				//UseItemStartupProgress = 1d;
+				//UseItemIntervalProgress = 1d;
+				//AnimationController.Runtime?.Environment.SetValue("variable.use_item_interval_progress", new DoubleValue(1d));
+				bone.Animations.Enqueue(new SwingAnimation(bone, TimeSpan.FromMilliseconds(250)));
 			}
 		}
 
