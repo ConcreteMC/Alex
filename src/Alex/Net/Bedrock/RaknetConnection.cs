@@ -108,6 +108,8 @@ namespace Alex.Net.Bedrock
 
 		public bool TryConnect(IPEndPoint targetEndPoint, int numberOfAttempts = int.MaxValue, short mtuSize = 1400, CancellationToken cancellationToken = default)
 		{
+			if (targetEndPoint.AddressFamily != AddressFamily.InterNetwork)
+				return false;
 			try
 			{
 				Start(); // Make sure we have started the listener
@@ -286,6 +288,7 @@ namespace Alex.Net.Bedrock
 					{
 						//var receive = await listener.ReceiveAsync();
 						var receiveBytes = listener.Receive(ref senderEndpoint);
+
 					//	var receiveBytes = receive.Buffer;
 						//senderEndpoint = receive.RemoteEndPoint;
 
@@ -714,7 +717,7 @@ namespace Alex.Net.Bedrock
 				}
 				catch (Exception e)
 				{
-					Log.Warn(e, "Error. Data length={data.Length} Length={length} Target={targetEndPoint}");
+					Log.Warn(e, $"Error. Data length={data.Length} Length={length} Target={targetEndPoint} Family: {targetEndPoint.AddressFamily.ToString()}");
 					//if(_listener == null || _listener.Client != null) Log.Error(string.Format("Send data lenght: {0}", data.Length), e);
 				}
 			}
@@ -802,7 +805,8 @@ namespace Alex.Net.Bedrock
 				{
 					senderEndpoint.Port = int.Parse(motdParts[10]);
 				}
-
+				RemoteEndpoint = senderEndpoint;
+				
 				if (AutoConnect)
 				{
 				//	Log.Warn($"Connecting to {senderEndpoint}");
