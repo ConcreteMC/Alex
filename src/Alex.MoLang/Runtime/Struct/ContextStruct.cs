@@ -6,7 +6,7 @@ namespace Alex.MoLang.Runtime.Struct
 {
 	public class ContextStruct : VariableStruct
 	{
-		public ContextStruct()
+		public ContextStruct() : base()
 		{
 			
 		}

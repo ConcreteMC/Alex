@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Reflection;
 using Alex.MoLang.Attributes;
@@ -64,22 +65,18 @@ namespace Alex.MoLang.Runtime.Struct
 			_propertyInfo.SetValue(instance, value);
 		}
 	}
-	
-	public class ObjectStruct : IMoStruct
-	{
-		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ObjectStruct));
-		private object _instance;
-		private readonly Dictionary<string, ValueAccessor> _properties = new(StringComparer.OrdinalIgnoreCase);
-		private readonly Dictionary<string, Func<MoParams, IMoValue>> _functions = new(StringComparer.OrdinalIgnoreCase);
-		public ObjectStruct(object instance)
-		{
-			_instance = instance;
-			
-			var type = instance.GetType();
-			BuildFunctions(type);
-		}
 
-		private void BuildFunctions(Type type)
+	public class PropertyCache
+	{
+		public readonly Dictionary<string, ValueAccessor> Properties = new(StringComparer.OrdinalIgnoreCase);
+		public readonly Dictionary<string, Func<object, MoParams, IMoValue>> Functions = new(StringComparer.OrdinalIgnoreCase);
+
+		public PropertyCache(Type arg)
+		{
+			BuildFunctions(arg, Functions, Properties);
+		}
+		
+		private static void BuildFunctions(Type type, Dictionary<string, Func<object, MoParams, IMoValue>> funcs, Dictionary<string, ValueAccessor> valueAccessors)
 		{
 			var methods = type.GetMethods(BindingFlags.Public | BindingFlags.Instance);
 
@@ -91,13 +88,13 @@ namespace Alex.MoLang.Runtime.Struct
 
 				foreach (var name in functionAttribute.Name)
 				{
-					if (_functions.ContainsKey(name))
+					if (funcs.ContainsKey(name))
 						continue;
 
 					var methodParams = method.GetParameters();
 
-					_functions.Add(
-						name, mo =>
+					funcs.Add(
+						name, (instance, mo) =>
 						{
 							IMoValue value = DoubleValue.Zero;
 
@@ -160,7 +157,7 @@ namespace Alex.MoLang.Runtime.Struct
 								}
 							}
 
-							var result = method.Invoke(_instance, parameters.ToArray());
+							var result = method.Invoke(instance, parameters.ToArray());
 
 							if (result != null)
 							{
@@ -181,13 +178,10 @@ namespace Alex.MoLang.Runtime.Struct
 			{
 				foreach (var functionAttribute in prop.GetCustomAttributes<MoPropertyAttribute>())
 				{
-					if (functionAttribute == null)
+					if (valueAccessors.ContainsKey(functionAttribute.Name))
 						continue;
 
-					if (_properties.ContainsKey(functionAttribute.Name))
-						continue;
-
-					_properties.Add(functionAttribute.Name, new PropertyAccessor(prop));
+					valueAccessors.Add(functionAttribute.Name, new PropertyAccessor(prop));
 				}
 			}
 			
@@ -197,17 +191,36 @@ namespace Alex.MoLang.Runtime.Struct
 			{
 				foreach (var functionAttribute in prop.GetCustomAttributes<MoPropertyAttribute>())
 				{
-					if (functionAttribute == null)
+					if (valueAccessors.ContainsKey(functionAttribute.Name))
 						continue;
 
-					if (_properties.ContainsKey(functionAttribute.Name))
-						continue;
-
-					_properties.Add(functionAttribute.Name, new FieldAccessor(prop));
+					valueAccessors.Add(functionAttribute.Name, new FieldAccessor(prop));
 				}
 			}
 		}
+	}
+	
+	public class ObjectStruct : IMoStruct
+	{
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ObjectStruct));
+		private object _instance;
+		private readonly Dictionary<string, ValueAccessor> _properties;// = new(StringComparer.OrdinalIgnoreCase);
+		private readonly Dictionary<string, Func<object, MoParams, IMoValue>> _functions;// = new(StringComparer.OrdinalIgnoreCase);
 
+		private static readonly ConcurrentDictionary<Type, PropertyCache> _propertyCaches =
+			new ConcurrentDictionary<Type, PropertyCache>();
+		
+		public ObjectStruct(object instance)
+		{
+			_instance = instance;
+			
+			var type = instance.GetType();
+
+			var propCache = _propertyCaches.GetOrAdd(type, t => new PropertyCache(t));
+			_properties = propCache.Properties;
+			_functions = propCache.Functions;
+		}
+		
 		/// <inheritdoc />
 		public object Value => _instance;
 
@@ -273,7 +286,7 @@ namespace Alex.MoLang.Runtime.Struct
 					}
 					else if (_functions.TryGetValue(main, out var func))
 					{
-						value = func.Invoke(parameters);
+						value = func.Invoke(_instance, parameters);
 					}
 					else
 					{
@@ -293,7 +306,7 @@ namespace Alex.MoLang.Runtime.Struct
 				return v.Get(_instance);
 			
 			if (_functions.TryGetValue(key, out var f))
-				return f.Invoke(parameters);
+				return f.Invoke(_instance, parameters);
 			
 			Log.Debug($"Unknown query: {key}");
 			return DoubleValue.Zero;

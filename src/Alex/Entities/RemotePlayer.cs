@@ -449,6 +449,34 @@ namespace Alex.Entities
 		}
 
 		/// <inheritdoc />
+		public override void HandleEntityStatus(byte status)
+		{
+			if (status == 9) //Marks item use as finished
+			{
+				IsUsingItem = false;
+				IsEating = false;
+				IsBlocking = false;
+				return;
+			}
+			
+			base.HandleEntityStatus(status);
+		}
+
+		/// <inheritdoc />
+		public override void EntityHurt()
+		{
+			base.EntityHurt();
+			Alex.Instance.AudioEngine.PlaySound("game.player.hurt", RenderLocation, 1f, 1f);
+		}
+
+		/// <inheritdoc />
+		public override void EntityDied()
+		{
+			base.EntityDied();
+			Alex.Instance.AudioEngine.PlaySound("game.player.die", RenderLocation, 1f, 1f);
+		}
+
+		/// <inheritdoc />
 		protected override void OnDispose()
 		{
 			base.OnDispose();

@@ -33,5 +33,19 @@ namespace Alex.Entities.Passive
 				AngerTime = angerTime.Value;
 			}
 		}
+		
+		/// <inheritdoc />
+		public override void EntityDied()
+		{
+			base.EntityDied();
+			Alex.Instance.AudioEngine.PlaySound("mob.bee.death", RenderLocation, 1f, 1f);
+		}
+
+		/// <inheritdoc />
+		public override void EntityHurt()
+		{
+			base.EntityHurt();
+			Alex.Instance.AudioEngine.PlaySound("mob.bee.hurt", RenderLocation, 1f, 1f);
+		}
 	}
 }

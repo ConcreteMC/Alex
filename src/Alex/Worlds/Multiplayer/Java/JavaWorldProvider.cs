@@ -1142,6 +1142,15 @@ namespace Alex.Worlds.Multiplayer.Java
 					case "entity.lightning_bolt.thunder":
 						soundEffect = "ambient.weather.thunder";
 						break;
+					case "open.chest":
+						soundEffect = "random.chestopen";
+						break;
+					case "close.chest":
+						soundEffect = "random.chestclosed";
+						break;
+					case "land.anvil":
+						soundEffect = "random.anvil_land";
+						break;
 				}
 			}
 
@@ -1773,7 +1782,11 @@ namespace Alex.Worlds.Multiplayer.Java
 
 		private void HandleEntityStatusPacket(EntityStatusPacket packet)
 		{
-			//TODO: Do somethign with the packet.
+			//
+			if (World.TryGetEntity(packet.EntityId, out var entity))
+			{
+				entity.HandleEntityStatus(packet.EntityStatus);
+			}
 		}
 
 		private void HandleCombatEventPacket(CombatEventPacket packet)

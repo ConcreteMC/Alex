@@ -16,6 +16,7 @@ using Alex.ResourcePackLib;
 using Alex.ResourcePackLib.Json.Bedrock.Entity;
 using Microsoft.Xna.Framework;
 using NLog;
+using RocketUI.Input;
 
 namespace Alex.Graphics.Models.Entity.Animations
 {
@@ -186,17 +187,46 @@ namespace Alex.Graphics.Models.Entity.Animations
 				if (animations == null)
 					return;
 				
+				_context.Clear();
+				
+				if (_preRenderExpressions != null)
+					runtime.Execute(_preRenderExpressions, _context);
+				
 				runtime.Environment.SetValue("variable.gliding_speed_value", new DoubleValue(1d));
 				runtime.Environment.SetValue("variable.is_first_person", new DoubleValue(Entity.IsFirstPersonMode ? 1 : 0));
 				runtime.Environment.SetValue("variable.attack_time", new DoubleValue(Entity.AttackTime));
 				runtime.Environment.SetValue("variable.is_using_vr", new DoubleValue(0d));
 				runtime.Environment.SetValue("variable.is_paperdoll", new DoubleValue(0d));
 				runtime.Environment.SetValue("variable.swim_amount", Entity.IsSwimming ? new DoubleValue(1d) : new DoubleValue(0d));
-				
-				_context.Clear();
-				
-				if (_preRenderExpressions != null)
-					runtime.Execute(_preRenderExpressions, _context);
+				runtime.Environment.SetValue("variable.player_x_rotation", new DoubleValue(Entity.KnownPosition.Pitch));
+
+				if (Entity is Player player)
+				{
+					bool holdingLeft = false;
+					bool holdingRight = false;
+
+					var leftHand = player.Inventory?.OffHand;
+
+					if (leftHand != null && !(leftHand is ItemAir) && leftHand.Count > 0)
+					{
+						holdingLeft = true;
+					}
+					
+					var rightHand = player.Inventory?.MainHand;
+
+					if (rightHand != null && !(rightHand is ItemAir) && rightHand.Count > 0)
+					{
+						holdingRight = true;
+					}
+					
+					runtime.Environment.SetValue(
+						"variable.is_holding_left",
+						new DoubleValue(holdingLeft));
+
+					runtime.Environment.SetValue(
+						"variable.is_holding_right",
+						new DoubleValue(holdingRight));
+				}
 
 				if (def.Scripts != null)
 				{

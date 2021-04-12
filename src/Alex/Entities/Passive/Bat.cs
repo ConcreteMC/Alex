@@ -42,5 +42,19 @@ namespace Alex.Entities.Passive
 				IsHanging = (meta.Value & 0x01) != 0;
 			}
 		}
+
+		/// <inheritdoc />
+		public override void EntityDied()
+		{
+			base.EntityDied();
+			Alex.Instance.AudioEngine.PlaySound("mob.bat.death", RenderLocation, 1f, 1f);
+		}
+
+		/// <inheritdoc />
+		public override void EntityHurt()
+		{
+			base.EntityHurt();
+			Alex.Instance.AudioEngine.PlaySound("mob.bat.hurt", RenderLocation, 1f, 1f);
+		}
 	}
 }

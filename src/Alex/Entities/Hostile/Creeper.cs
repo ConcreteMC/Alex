@@ -48,5 +48,11 @@ namespace Alex.Entities.Hostile
 				IsIgnited = ignited.Value;
 			}
 		}
+		/// <inheritdoc />
+		public override void EntityHurt()
+		{
+			base.EntityHurt();
+			Alex.Instance.AudioEngine.PlaySound("mob.creeper.hurt", RenderLocation, 1f, 1f);
+		}
 	}
 }

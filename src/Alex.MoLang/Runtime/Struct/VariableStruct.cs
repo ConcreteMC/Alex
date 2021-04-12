@@ -80,7 +80,10 @@ namespace Alex.MoLang.Runtime.Struct
 					IMoValue value = null; //Map[main];
 
 					if (!Map.TryGetValue(main, out value))
+					{
+						//		Log.Info($"Unknown variable map: {key}");
 						return DoubleValue.Zero;
+					}
 
 					if (value is IMoStruct moStruct)
 					{
@@ -94,7 +97,8 @@ namespace Alex.MoLang.Runtime.Struct
 			if (Map.TryGetValue(key, out var v))
 				return v;
 			
-			//Console.WriteLine($"Unknown variable: {key}");
+			//
+		//	Log.Info($"Unknown variable: {key}");
 			
 			return DoubleValue.Zero;
 			//

@@ -4,8 +4,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-
-
+using System.Threading;
 using Alex.API.Data.Servers;
 using Alex.API.Graphics;
 using Alex.API.Graphics.Typography;
@@ -518,7 +517,7 @@ namespace Alex.Entities
 			CheckHeldItem();
 		}
 
-		public double AttackTime { get; set; } = -1d;
+		public double AttackTime => -1d;
 		
 		[MoProperty("is_onfire"), MoProperty("is_on_fire")]
 		public bool IsOnFire { get; set; } = false;
@@ -542,7 +541,7 @@ namespace Alex.Entities
 			{
 				if (_isUsingItem != value)
 				{
-					Log.Info($"Using Item={value}, duration={(DateTime.UtcNow - _startOfItemUse).TotalMilliseconds}ms");
+					//Log.Info($"Using Item={value}, duration={(DateTime.UtcNow - _startOfItemUse).TotalMilliseconds}ms");
 				}
 				
 				_isUsingItem = value;
@@ -903,6 +902,75 @@ namespace Alex.Entities
 			return false;
 		}
 
+		public virtual void HandleEntityStatus(byte status)
+		{
+			
+		}
+
+		private DateTime _attackStart = DateTime.UtcNow;
+		public bool IsAttacking
+		{
+			get => _isAttacking;
+			set
+			{
+				var oldValue = _isAttacking;
+				
+				if (!oldValue && value)
+				{
+					_attackStart = DateTime.UtcNow;
+					_isAttacking = true;
+				}
+				else if (oldValue && !value)
+				{
+					_isAttacking = false;
+				}
+			}
+		}
+
+		public virtual void HandleEntityEvent(byte eventId, int data)
+		{
+			if (eventId == 2) //Entity Hurt
+			{
+				EntityHurt();
+			}
+			else if (eventId == 3) //Entity Death
+			{
+				EntityDied();
+			}
+			else if (eventId == 4) //Start Attack
+			{
+				SwingArm();
+				IsAttacking = true;
+			}
+			else if (eventId == 5) //Stop Attack
+			{
+				//SwingArm();
+				IsAttacking = false;
+			}
+			/*else if (message.eventId == 9) //Use Item
+			{
+				entity.IsUsingItem = true;
+				entity.Level.Ticker.ScheduleTick(
+					() =>
+					{
+						entity.IsUsingItem = false;
+					}, 40, CancellationToken.None);
+			}*/
+			else if (eventId == 10) //Eat block
+			{
+				IsGrazing = true;
+				Level.Ticker.ScheduleTick(
+					() =>
+					{
+						IsGrazing = false;
+					}, 40, CancellationToken.None);
+			}
+			else
+			{
+				Log.Warn($"{GetType().ToString()} unknown event. Id={eventId} data={data}");
+			}
+		}
+
 		private long _extendedData = 0;
 		private long _data = 0;
 		
@@ -1012,17 +1080,15 @@ namespace Alex.Entities
 
 			//if (!ShowItemInHand || _skipRendering || ItemRenderer == null) return;
 		}
-
-		//private long _hitAnimationEnd = 0;
-	//	private bool _isHit = false;
-		public void EntityHurt()
+		
+		public virtual void EntityHurt()
 		{
-			if (ModelRenderer == null)
-				return;
+			
+		}
 
-			//_isHit = true;
-		//	_hitAnimationEnd = Age + 5;
-			ModelRenderer.EntityColor = Color.Red.ToVector3();
+		public virtual void EntityDied()
+		{
+			
 		}
 		
 		protected bool DoRotationCalculations = true;
@@ -1122,12 +1188,6 @@ namespace Alex.Entities
 			HealthManager.OnTick();
 			
 			//AnimationController?.OnTick();
-
-			/*if (_isHit && Age > _hitAnimationEnd)
-			{
-				_isHit = false;
-				ModelRenderer.EntityColor = Color.White.ToVector3();
-			}*/
 
 			if (DoRotationCalculations)
 			{
@@ -1365,6 +1425,7 @@ namespace Alex.Entities
 		private bool _noAi = false;
 		private string _nameTag;
 		private bool _isUsingItem;
+		private bool _isAttacking = false;
 
 		public const float   JumpVelocity = 0.42f;
 		public virtual void Jump()
@@ -1733,10 +1794,10 @@ namespace Alex.Entities
 		public bool IsSelectedItem => Inventory.MainHand.Count > 0 && !(Inventory.MainHand is ItemAir);
 
 		[MoProperty("main_hand_item_use_duration")]
-		public double MainHandItemUseDuration { get; set; } = 0d;
+		public double MainHandItemUseDuration => ItemInUseDuration;
 
 		[MoProperty("main_hand_item_max_duration")]
-		public double MainHandItemMaxDuration { get; set; } = 0d;
+		public double MainHandItemMaxDuration { get; set; } = 1d;
 
 		[MoProperty("cape_flap_amount")]
 		public double CapeFlapAmount { get; set; } = 0d;

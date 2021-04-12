@@ -85,9 +85,9 @@ namespace Alex.Entities
 						{
 							IsBlocking = true;
 						} 
-						else if (item.ItemType == ItemType.AnyTool)
+						else if (!(item is ItemAir) && item.Count > 0)
 						{
-							
+							IsUsingItem = true;
 						}
 					}
 				}
@@ -95,6 +95,7 @@ namespace Alex.Entities
 				{
 					IsBlocking = false;
 					IsEating = false;
+					IsUsingItem = false;
 				}
 			}
 			else if (entry.Index == 8 && entry is MetadataFloat flt)
@@ -105,16 +106,25 @@ namespace Alex.Entities
 		
 		private bool _waitingOnChunk = true;
 		public bool HasChunk => !_waitingOnChunk;
-		
+
+		public long Age { get; set; } = 0;
 		/// <inheritdoc />
 		public override void OnTick()
 		{
+			Age++;
+			
 			if (_waitingOnChunk)
 			{
 				if (Level.GetChunk(KnownPosition.GetCoordinates3D(), true) != null)
 				{
 					_waitingOnChunk = false;
 				}
+			}
+			
+			if (_isHit && Age > _hitAnimationEnd)
+			{
+				_isHit = false;
+				ModelRenderer.EntityColor = Color.White.ToVector3();
 			}
 			
 			base.OnTick();
@@ -205,6 +215,37 @@ namespace Alex.Entities
 
 			IsInWater = FeetInWater || HeadInWater;
 			IsInLava = FeetInLava || HeadInLava;
+		}
+		
+		private long _hitAnimationEnd = 0;
+		private bool _isHit = false;
+		/// <inheritdoc />
+		public override void EntityHurt()
+		{
+			base.EntityHurt();
+			if (ModelRenderer == null)
+				return;
+
+			_isHit = true;
+			_hitAnimationEnd = Age + 5;
+		
+			ModelRenderer.EntityColor = Color.Red.ToVector3();
+		}
+
+		/// <inheritdoc />
+		public override void HandleEntityStatus(byte status)
+		{
+			if (status == 2) // Plays the hurt animation and hurt sound 
+			{
+				EntityHurt();
+				return;
+			}
+			else if (status == 3) // Plays the death sound and death animation 
+			{
+				EntityDied();
+				return;
+			}
+			base.HandleEntityStatus(status);
 		}
 	}
 }

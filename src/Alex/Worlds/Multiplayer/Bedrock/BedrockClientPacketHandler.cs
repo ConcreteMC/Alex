@@ -924,14 +924,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		{
 			if (Client.World.TryGetEntity(message.runtimeEntityId, out Entity entity))
 			{
-				if (message.eventId == 2)
-				{
-					entity.EntityHurt();
-				}
-				else if (message.eventId == 4)
-				{
-					entity.SwingArm();
-				}
+				entity.HandleEntityEvent(message.eventId, message.data);
 			}
 			//UnhandledPackage(message);
 		}

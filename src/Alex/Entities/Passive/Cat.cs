@@ -58,6 +58,13 @@ namespace Alex.Entities.Passive
 			}
 		}
 
+		/// <inheritdoc />
+		public override void EntityHurt()
+		{
+			base.EntityHurt();
+			Alex.Instance.AudioEngine.PlaySound("mob.cat.hit", RenderLocation, 1f, 1f);
+		}
+		
 		[MoProperty("variant")]
 		public int QueryVariant => (int) Variant;
 

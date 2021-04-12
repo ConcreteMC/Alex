@@ -9,5 +9,12 @@ namespace Alex.Entities.Passive
 			Height = 0.7;
 			Width = 0.4;
 		}
+
+		/// <inheritdoc />
+		public override void EntityHurt()
+		{
+			base.EntityHurt();
+			Alex.Instance.AudioEngine.PlaySound("mob.chicken.hurt", RenderLocation, 1f, 1f);
+		}
 	}
 }
