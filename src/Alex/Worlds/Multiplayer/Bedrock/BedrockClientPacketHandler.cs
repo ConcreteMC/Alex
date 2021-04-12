@@ -1691,12 +1691,11 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		public void HandleMcpeChunkRadiusUpdate(McpeChunkRadiusUpdate message)
 		{
 			Log.Info(
-				$"Received "
-				+ $"chunkradius. Requested={AlexInstance.Options.AlexOptions.VideoOptions.RenderDistance.Value} Received={message.chunkRadius}");
+				$"Received chunkradius. Requested={AlexInstance.Options.AlexOptions.VideoOptions.RenderDistance.Value} Received={message.chunkRadius}");
 			//if (message.chunkRadius <= 4)
 			//	return;
+			
 			Client.ChunkRadius = message.chunkRadius;
-			Client.WorldProvider.ChunksDirty = true;
 
 			//Client.SendMcpeMovePlayer(new MiNET.Utils.PlayerLocation(Client.SpawnPoint), false);
 			//if (!Client.CanSpawn && Client.GameStarted)

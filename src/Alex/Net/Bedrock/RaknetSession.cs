@@ -599,7 +599,6 @@ namespace Alex.Net.Bedrock
 					Update();
 					_tickCounter = 0;
 				}
-
 				SendQueue();
 				UpdateTick();
 			}
@@ -652,13 +651,15 @@ namespace Alex.Net.Bedrock
 
 					if (datagram.RetransmitImmediate || elapsedTime >= datagramTimeout)
 					{
-						if (transmissionBandwidth < datagram.Bytes.Length)
-							break;
+						//if (transmissionBandwidth < datagram.Bytes.Length)
+						//	break;
 
 						if (!Evicted && WaitingForAckQueue.TryRemove(datagramPair.Key, out datagram))
 						{
-							transmissionBandwidth -= datagram.Bytes.Length;
-							UnackedBytes -= datagram.Bytes.Length;
+							UnackedBytes -= datagram.Size;
+							//transmissionBandwidth -= datagram.Size;
+							//Interlocked.Add(ref UnackedBytes, -datagram.Size);
+							//UnackedBytes -= datagram.Bytes.Length;
 							
 							//session.ErrorCount++;
 							//session.ResendCount++;
@@ -670,7 +671,10 @@ namespace Alex.Net.Bedrock
 							
 							SlidingWindow.OnResend(RaknetSession.CurrentTimeMillis(), datagramPair.Key);
 							
-							_packetSender.SendDatagram(this, datagram);
+							var sent = _packetSender.SendDatagram(this, datagram);
+							UnackedBytes += datagram.Size;
+							
+							transmissionBandwidth -= sent;
 						}
 					}
 				}
@@ -796,8 +800,8 @@ namespace Alex.Net.Bedrock
 
 				for (int i = 0; i < length; i++)
 				{
-					if (transmissionBandwidth <= 0)
-						break;
+				//	if (transmissionBandwidth <= 0)
+				//		break;
 					
 					Packet packet;
 
@@ -812,11 +816,11 @@ namespace Alex.Net.Bedrock
 						continue;
 					}
 
-					var packetSize = packet.Encode().Length;
+				//	var packetSize = packet.Encode().Length;
 
 					//if (packetSize < transmissionBandwidth)
 					{
-						transmissionBandwidth -= packetSize;
+					//	transmissionBandwidth -= packetSize;
 						
 						sendList.Add(packet);
 					}
@@ -825,24 +829,36 @@ namespace Alex.Net.Bedrock
 				if (sendList.Count == 0) return;
 
 				List<Packet> prepareSend = CustomMessageHandler.PrepareSend(sendList);
-				var preppedSendList = new List<Packet>();
-				foreach (Packet packet in prepareSend)
+				Packet[] packets = new Packet[prepareSend.Count];
+				//var preppedSendList = new List<Packet>();
+				for (var index = 0; index < prepareSend.Count; index++)
 				{
-					Packet      message     = packet;
-					
+					Packet packet = prepareSend[index];
+					Packet message = packet;
+
 					Reliability reliability = message.ReliabilityHeader.Reliability;
-					
-					if (reliability == Reliability.Undefined) 
+
+					if (reliability == Reliability.Undefined)
 						reliability = Reliability.Reliable; // Questionable practice
 
-					if (reliability == Reliability.ReliableOrdered || reliability == Reliability.ReliableOrderedWithAckReceipt)
+					if (reliability == Reliability.ReliableOrdered
+					    || reliability == Reliability.ReliableOrderedWithAckReceipt)
 						message.ReliabilityHeader.OrderingIndex = Interlocked.Increment(ref OrderingIndex);
 
-					preppedSendList.Add(message);
+					packets[index] = message;
+					//preppedSendList.Add(message);
 					//await _packetSender.SendPacketAsync(this, message);
 				}
 
-				_packetSender.SendPacket(this, preppedSendList);
+				foreach (Datagram datagram in Datagram.CreateDatagrams(MtuSize, this, packets))
+				{
+					UnackedBytes += _packetSender.SendDatagram(this, datagram);
+				}
+					
+				foreach(var packet in packets)
+					packet?.PutPool();
+				
+				//UnackedBytes += _packetSender.SendPacket(this, preppedSendList);
 				
 				_bandwidthExceededStatistic = _sendQueue.Count > 0;
 			}
@@ -863,8 +879,13 @@ namespace Alex.Net.Bedrock
 
 			if (packet.ReliabilityHeader.Reliability == Reliability.Undefined)
 				packet.ReliabilityHeader.Reliability = Reliability.Reliable; // Questionable practice
-
-			_packetSender.SendPacket(this, packet);
+			
+			foreach (Datagram datagram in Datagram.CreateDatagrams(MtuSize, this, packet))
+			{
+				UnackedBytes += _packetSender.SendDatagram(this, datagram);
+			}
+			
+		//	_packetSender.SendPacket(this, packet);
 		}
 
 		public IPEndPoint GetClientEndPoint()
@@ -961,6 +982,8 @@ namespace Alex.Net.Bedrock
 					{
 						Interlocked.Increment(ref ConnectionInfo.Ack);
 						//_nacked.Remove(i);
+						
+						//Interlocked.Add(ref UnackedBytes, -datagram.Size);
 						
 						UnackedBytes -= datagram.Size;
 						//CalculateRto(datagram);

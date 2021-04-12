@@ -61,11 +61,9 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		private bool _initiated = false;
 		private bool _flying = false;
 		private PlayerLocation _lastLocation = new PlayerLocation();
-        private PlayerLocation _lastSentLocation = new PlayerLocation();
         
         private long _tickTime = 0;
         private long _lastPrioritization = 0;
-        public bool ChunksDirty { get; set; } = false;
         public void OnTick()
 		{
 			if (World == null) return;
@@ -76,8 +74,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 				if (World.Player != null && World.Player.IsSpawned && _gameStarted)
 				{
-					//	player.IsSpawned = Spawned;
-
 					if (World.Player.IsFlying != _flying)
 					{
 						_flying = World.Player.IsFlying;
@@ -85,30 +81,16 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 						McpeAdventureSettings settings = McpeAdventureSettings.CreateObject();
 						settings.flags = GetAdventureFlags();
 						Client.SendPacket(settings);
-						//SendPlayerAbilities(player);
 					}
 
 					var pos = (PlayerLocation) World.Player.KnownPosition.Clone();
 
-					/*if (pos.DistanceTo(_lastSentLocation) > 0.0f
-					    || MathF.Abs(pos.HeadYaw - _lastSentLocation.HeadYaw) > 0.0f
-					    || MathF.Abs(pos.Pitch - _lastSentLocation.Pitch) > 0.0f)
+					if ((pos.DistanceTo(_lastLocation) >= 16f)
+					    && (_tickTime - _lastPrioritization >= 10))
 					{
-						//
-						_lastSentLocation = pos;
-					}*/
-
-					if (ChunksDirty || ((pos.DistanceTo(_lastLocation) >= 16f)
-					    && (_tickTime - _lastPrioritization >= 10)))
-					{
-					//	World.ChunkManager.FlagPrioritization();
-
-						//SendLocation(pos);
-
 						_lastLocation = pos;
 						
 						UnloadChunks(new ChunkCoordinates(pos), Client.ChunkRadius + 2);
-						ChunksDirty = false;
 						_lastPrioritization = _tickTime;
 					}
 					

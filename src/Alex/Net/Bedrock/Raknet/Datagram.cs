@@ -128,26 +128,34 @@ namespace Alex.Net.Bedrock.Raknet
 
 		public override byte[] Encode()
 		{
-			byte[] buffer = ArrayPool<byte>.Shared.Rent(1600);
-			ArrayPool<byte>.Shared.Return(buffer);
-			using (var buf = new MemoryStream(buffer))
+			//byte[] buffer = ArrayPool<byte>.Shared.Rent(1600);
+
+			try
 			{
-				buf.WriteByte((byte) (Header.IsContinuousSend ? 0x8c : 0x84));
-				buf.Write(Header.DatagramSequenceNumber.GetBytes(), 0, 3);
-
-				// Message (Payload)
-				foreach (MessagePart messagePart in MessageParts)
+				using (var buf = new MemoryStream())
 				{
-					byte[] bytes = messagePart.Encode();
-					buf.Write(bytes, 0, bytes.Length);
-				}
+					buf.WriteByte((byte) (Header.IsContinuousSend ? 0x8c : 0x84));
+					buf.Write(Header.DatagramSequenceNumber.GetBytes(), 0, 3);
 
-				Size = (int) buf.Length;
-				return buf.ToArray();
+					// Message (Payload)
+					foreach (MessagePart messagePart in MessageParts)
+					{
+						byte[] bytes = messagePart.Encode();
+						buf.Write(bytes, 0, bytes.Length);
+					}
+
+					Size = (int) buf.Length;
+
+					return buf.ToArray();
+				}
+			}
+			finally
+			{
+				//ArrayPool<byte>.Shared.Return(buffer);
 			}
 		}
 		
-		public long GetEncoded(ref byte[] buffer)
+	/*	public long GetEncoded(ref byte[] buffer)
 		{
 			using var buf = new MemoryStream(buffer);
 			// This is a quick-fix to lower the impact of resend. I want to do this
@@ -168,7 +176,7 @@ namespace Alex.Net.Bedrock.Raknet
 
 			Size = (int) buf.Position;
 			return buf.Position;
-		}
+		}*/
 
 		public override void Reset()
 		{
@@ -209,7 +217,7 @@ namespace Alex.Net.Bedrock.Raknet
 
 		public int FirstMessageId { get; set; }
 
-		public static IEnumerable<Datagram> CreateDatagrams(List<Packet> messages, int mtuSize, RaknetSession session)
+		public static IEnumerable<Datagram> CreateDatagrams(int mtuSize, RaknetSession session, params Packet[] messages)
 		{
 			//Log.Debug($"CreateDatagrams multiple ({messages.Count}) messages");
 			Datagram datagram = CreateObject();
@@ -239,7 +247,7 @@ namespace Alex.Net.Bedrock.Raknet
 			yield return datagram;
 		}
 
-		public static IEnumerable<Datagram> CreateDatagrams(Packet message, int mtuSize, RaknetSession session)
+		/*public static IEnumerable<Datagram> CreateDatagrams(Packet message, int mtuSize, RaknetSession session)
 		{
 			Log.Warn($"CreateDatagrams single message");
 			Datagram datagram = CreateObject();
@@ -264,7 +272,7 @@ namespace Alex.Net.Bedrock.Raknet
 			}
 
 			yield return datagram;
-		}
+		}*/
 
 		private static List<MessagePart> CreateMessageParts(Packet message, int mtuSize, RaknetSession session)
 		{

@@ -34,6 +34,7 @@ using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using Alex.API.Utils;
 using Alex.Net.Bedrock.Raknet;
 using Alex.Utils;
 using MiNET;
@@ -96,7 +97,7 @@ namespace Alex.Net.Bedrock
 			if (_listener != null) return;
 
 			_readingThread = new Thread(ReceiveCallback);
-			
+
 			_listener = CreateListener(_endpoint);
 			_readingThread.Start();
 		}
@@ -134,9 +135,9 @@ namespace Alex.Net.Bedrock
 
 				if (Session == null) return false;
 
-				while (Session.State != ConnectionState.Connected && numberOfAttempts-- > 0)
+				while (Session.State != ConnectionState.Connected && numberOfAttempts-- > 0 && !cancellationToken.IsCancellationRequested)
 				{
-					Task.Delay(100, cancellationToken).Wait(cancellationToken);
+					sw.SpinOnce();
 				}
 			}
 			catch (OperationCanceledException)
@@ -199,95 +200,74 @@ namespace Alex.Net.Bedrock
 				//listener.Client.SendBufferSize = 1600*64;
 				listener.Client.SendBufferSize = int.MaxValue;
 			}
-
-			//listener.Client.Blocking = true;
+			
 			listener.DontFragment = true;
 			listener.EnableBroadcast = false;
 
-			if (Environment.OSVersion.Platform != PlatformID.Unix && Environment.OSVersion.Platform != PlatformID.MacOSX)
-			{
-				// SIO_UDP_CONNRESET (opcode setting: I, T==3)
-				// Windows:  Controls whether UDP PORT_UNREACHABLE messages are reported.
-				// - Set to TRUE to enable reporting.
-				// - Set to FALSE to disable reporting.
-
-				uint IOC_IN = 0x80000000;
-				uint IOC_VENDOR = 0x18000000;
-				uint SIO_UDP_CONNRESET = IOC_IN | IOC_VENDOR | 12;
-				listener.Client.IOControl((int) SIO_UDP_CONNRESET, new byte[] {Convert.ToByte(false)}, null);
-
-				//
-				//WARNING: We need to catch errors here to remove the code above.
-				//
-			}
-
-		//	listener.
-			//listener.ExclusiveAddressUse = true;
 			listener.Client.Bind(endpoint);
 			return listener;
 		}
-		
+
 		private void ReceiveCallback(object o)
 		{
-			//using (var stream = new NetworkStream(_listener.Client))
+
+			while (_listener != null)
 			{
-				while (_listener != null)
+				var listener = _listener;
+
+				// Check if we already closed the server
+				if (listener?.Client == null) return;
+
+				// WSAECONNRESET:
+				// The virtual circuit was reset by the remote side executing a hard or abortive close. 
+				// The application should close the socket; it is no longer usable. On a UDP-datagram socket 
+				// this error indicates a previous send operation resulted in an ICMP Port Unreachable message.
+				// Note the spocket settings on creation of the server. It makes us ignore these resets.
+				IPEndPoint senderEndpoint = null;
+
+				try
 				{
-					var listener = _listener;
-
-					// Check if we already closed the server
-					if (listener?.Client == null) return;
-
-					// WSAECONNRESET:
-					// The virtual circuit was reset by the remote side executing a hard or abortive close. 
-					// The application should close the socket; it is no longer usable. On a UDP-datagram socket 
-					// this error indicates a previous send operation resulted in an ICMP Port Unreachable message.
-					// Note the spocket settings on creation of the server. It makes us ignore these resets.
-					IPEndPoint senderEndpoint = null;
-
-					try
-					{
-						//var receive = await listener.ReceiveAsync();
-						var receiveBytes = listener.Receive(ref senderEndpoint);
+					//var receive = await listener.ReceiveAsync();;
+					var receiveBytes = listener.Receive(ref senderEndpoint);
 
 					//	var receiveBytes = receive.Buffer;
-						//senderEndpoint = receive.RemoteEndPoint;
+					//senderEndpoint = receive.RemoteEndPoint;
 
-						//Interlocked.Increment(ref ConnectionInfo.PacketsIn);
+					//Interlocked.Increment(ref ConnectionInfo.PacketsIn);
+
+					if (receiveBytes.Length != 0)
+					{
 						Interlocked.Add(ref ConnectionInfo.BytesIn, receiveBytes.Length);
 
-						if (receiveBytes.Length != 0)
+						try
 						{
-							try
-							{
-								ReceiveDatagram(receiveBytes, senderEndpoint);
-							}
-							catch (Exception e)
-							{
-								Log.Warn(e, $"Process message error from: {senderEndpoint.Address}");
-							}
+							ReceiveDatagram(receiveBytes, senderEndpoint);
 						}
-						else
+						catch (Exception e)
 						{
-							Log.Warn("Unexpected end of transmission?");
+							Log.Warn(e, $"Process message error from: {senderEndpoint.Address}");
 						}
-
-						//listener.BeginReceive(ReceiveCallback, listener);
 					}
-					catch (ObjectDisposedException e) { }
-					catch (SocketException e)
+					else
 					{
-						// 10058 (just regular disconnect while listening)
-						if (e.ErrorCode == 10058) return;
-						if (e.ErrorCode == 10038) return;
-						if (e.ErrorCode == 10004) return;
+						Log.Warn("Unexpected end of transmission?");
+					}
 
-						if (Log.IsDebugEnabled) Log.Error("Unexpected end of receive", e);
-					}
-					catch (NullReferenceException ex)
-					{
-						Log.Warn(ex, $"Unexpected end of transmission");
-					}
+					//listener.BeginReceive(ReceiveCallback, listener);
+				}
+				catch (ObjectDisposedException e) { }
+				catch (SocketException e)
+				{
+					// 10058 (just regular disconnect while listening)
+					if (e.ErrorCode == 10058) return;
+					if (e.ErrorCode == 10038) return;
+					if (e.ErrorCode == 10004) return;
+
+					if (Log.IsDebugEnabled) Log.Error("Unexpected end of receive", e);
+				}
+				catch (NullReferenceException ex)
+				{
+					Log.Warn(ex, $"Unexpected end of transmission");
 				}
 			}
 
@@ -318,13 +298,8 @@ namespace Alex.Net.Bedrock
 
 			var rakSession = Session;
 
-			if (rakSession == null || !Equals(Session.EndPoint, clientEndpoint))
+			if (rakSession == null)
 				return;
-
-			/*if (!RakSessions.TryGetValue(clientEndpoint, out RaknetSession rakSession))
-			{
-				return;
-			}*/
 
 			if (rakSession.Evicted) return;
 
@@ -364,44 +339,35 @@ namespace Alex.Net.Bedrock
 				return;
 			}
 
-			if (Session.Acknowledge(datagram))
-			{
+			Session.Acknowledge(datagram);
+			//{
 				Interlocked.Increment(ref ConnectionInfo.PacketsIn);
 				//if (Log.IsTraceEnabled) Log.Trace($"Receive datagram #{datagram.Header.DatagramSequenceNumber} for {_endpoint}");
-				HandleDatagram(rakSession, datagram);
-			}
+				foreach (var packet in datagram.Messages)
+				{
+					var message = packet;
+					if (message is SplitPartPacket splitPartPacket)
+					{
+						message = HandleSplitMessage(splitPartPacket);
+					}
+			
+					if (message == null) return;
+			
+					message.Timer.Restart();
+					Session.HandleRakMessage(message);
+				}
+			//}
 
 			datagram.PutPool();
 		}
 
-		private void HandleDatagram(RaknetSession session, Datagram datagram)
-		{
-			foreach (var packet in datagram.Messages)
-			{
-				Handle(session, packet);
-			}
-		}
-
-		private void Handle(RaknetSession session, Packet message)
-		{
-			if (message is SplitPartPacket splitPartPacket)
-			{
-				message = HandleSplitMessage(session, splitPartPacket);
-			}
-			
-			if (message == null) return;
-			
-			message.Timer.Restart();
-			session.HandleRakMessage(message);
-		}
-
-		private Packet HandleSplitMessage(RaknetSession session, SplitPartPacket splitPart)
+		private Packet HandleSplitMessage(SplitPartPacket splitPart)
 		{
 			int spId = splitPart.ReliabilityHeader.PartId;
 			int spIdx = splitPart.ReliabilityHeader.PartIndex;
 			int spCount = splitPart.ReliabilityHeader.PartCount;
 
-			SplitPartPacket[] splitPartList = session.Splits.GetOrAdd(spId, new SplitPartPacket[spCount]);
+			SplitPartPacket[] splitPartList = Session.Splits.GetOrAdd(spId, new SplitPartPacket[spCount]);
 			bool haveAllParts = true;
 			// Need sync for this part since they come very fast, and very close in time. 
 			// If no sync, will often detect complete message two times (or more).
@@ -426,7 +392,7 @@ namespace Alex.Net.Bedrock
 
 			//if (Log.IsTraceEnabled) Log.Trace($"Got all {spCount} split packets for split ID: {spId}");
 
-			session.Splits.TryRemove(spId, out SplitPartPacket[] _);
+			Session.Splits.TryRemove(spId, out SplitPartPacket[] _);
 
 			int contiguousLength = 0;
 			foreach (SplitPartPacket spp in splitPartList)
@@ -472,46 +438,19 @@ namespace Alex.Net.Bedrock
 			{
 				Log.Error(e, "Error during split message parsing");
 				if (Log.IsDebugEnabled) Log.Debug($"0x{buffer.Span[0]:x2}\n{Packet.HexDump(buffer)}");
-				session.Disconnect("Bad packet received from client.", false);
+				Session.Disconnect("Bad packet received from client.", false);
 			}
 
 			return null;
 		}
 
-		public void SendPacket(RaknetSession session, Packet message)
-		{
-			foreach (Datagram datagram in Datagram.CreateDatagrams(message, session.MtuSize, session))
-			{
-				SendDatagram(session, datagram);
-			}
-
-			message.PutPool();
-		}
-
-		public void SendPacket(RaknetSession session, List<Packet> messages)
-		{
-		//	await Task.WhenAll(
-		//		Datagram.CreateDatagrams(messages, session.MtuSize, session)
-			//	   .Select(async x => await SendDatagramAsync(session, x)));
-
-			foreach (Datagram datagram in Datagram.CreateDatagrams(messages, session.MtuSize, session))
-			{
-				SendDatagram(session, datagram);
-			}
-			
-			foreach (Packet message in messages)
-			{
-				message.PutPool();
-			}
-		}
-		
-		public void SendDatagram(RaknetSession session, Datagram datagram)
+		public int SendDatagram(RaknetSession session, Datagram datagram)
 		{
 			if (datagram.MessageParts.Count == 0)
 			{
 				Log.Warn($"Failed to send #{datagram.Header.DatagramSequenceNumber.IntValue()}");
 				datagram.PutPool();
-				return;
+				return 0;
 			}
 
 			if (datagram.TransmissionCount > 10)
@@ -522,7 +461,7 @@ namespace Alex.Net.Bedrock
 
 				Interlocked.Increment(ref ConnectionInfo.Fails);
 				//TODO: Disconnect! Because of encryption, this connection can't be used after this point
-				return;
+				return 0;
 			}
 
 			var sequenceNumber = (int)session.SlidingWindow.GetAndIncrementNextDatagramSequenceNumber();// Interlocked.Increment(ref session.DatagramSequenceNumber);
@@ -531,14 +470,14 @@ namespace Alex.Net.Bedrock
 			datagram.RetransmissionTimeOut = rto;
 			datagram.Header.DatagramSequenceNumber = sequenceNumber;
 			datagram.RetransmitImmediate = false;
-			//datagram.Header.NeedsBAndAs = session.SlidingWindow.IsInSlowStart();
-			//datagram.Header.IsContinuousSend = session.SlidingWindow.IsContinuousSend;
+			datagram.Header.NeedsBAndAs = session.SlidingWindow.IsInSlowStart();
+			datagram.Header.IsContinuousSend = session.SlidingWindow.IsContinuousSend;
 			//datagram.Header.IsContinuousSend = session.SlidingWindow.
 
-			byte[] buffer = ArrayPool<byte>.Shared.Rent(1600);
+		 //ArrayPool<byte>.Shared.Rent(1600);
 			try
 			{
-				int length = (int) datagram.GetEncoded(ref buffer);
+				//int length = (int) datagram.GetEncoded(ref buffer);
 
 				if (!session.WaitingForAckQueue.TryAdd(sequenceNumber, datagram))
 				{
@@ -547,22 +486,22 @@ namespace Alex.Net.Bedrock
 
 					datagram.PutPool();
 
-					return;
+					return 0;
 				}
-
-				if (datagram.TransmissionCount == 1) //First send.
-				{
-					session.UnackedBytes += datagram.Size;	
-				}
+				
+				byte[] buffer = datagram.Encode();
+				//session.UnackedBytes += datagram.Size;
 				
 				Interlocked.Increment(ref ConnectionInfo.PacketsOut);
-				SendData(buffer, length, session.EndPoint);
+				SendData(buffer, buffer.Length, session.EndPoint);
 				
 				datagram.Timer.Restart();
+
+				return buffer.Length;
 			}
 			finally
 			{
-				ArrayPool<byte>.Shared.Return(buffer);
+				//ArrayPool<byte>.Shared.Return(buffer);
 			}
 		}
 
@@ -578,7 +517,7 @@ namespace Alex.Net.Bedrock
 			if (length <= 0)
 				return;
 			
-			Monitor.Enter(_sendSync);
+			//Monitor.Enter(_sendSync);
 
 			try
 			{
@@ -589,7 +528,12 @@ namespace Alex.Net.Bedrock
 						return;
 					}
 
-					_listener.Send(data, length, targetEndPoint);
+					int sent = _listener.Send(data, length, targetEndPoint);
+
+					if (sent != length)
+					{
+						throw new Exception($"Wrote {sent} out of {length} bytes");
+					}
 					//_listener.Send(data, length, targetEndPoint);
 
 					//Interlocked.Increment(ref ConnectionInfo.PacketsOut);
@@ -607,7 +551,7 @@ namespace Alex.Net.Bedrock
 			}
 			finally
 			{
-				Monitor.Exit(_sendSync);
+			//	Monitor.Exit(_sendSync);
 			}
 		}
 		
@@ -724,7 +668,7 @@ namespace Alex.Net.Bedrock
 			
 			SendData(data, targetEndPoint);
 			
-			//packet.PutPool();
+			packet.PutPool();
 		}
 
 		private void HandleRakNetMessage(IPEndPoint senderEndpoint, OpenConnectionReply1 message)
@@ -753,21 +697,14 @@ namespace Alex.Net.Bedrock
 			packet.clientGuid = ClientGuid;
 
 			byte[] data = packet.Encode();
-
-			//TraceSend(packet);
-
+			
 			SendData(data, targetEndPoint);
 			
-			//packet.PutPool();
+			packet.PutPool();
 		}
 		
 		private void HandleRakNetMessage(IPEndPoint senderEndpoint, OpenConnectionReply2 message)
 		{
-			//if (HaveServer)
-			//	return;
-			
-		//	Log.Warn("Client Endpoint: " + message.clientEndpoint);
-
 			HaveServer = true;
 
 			SendConnectionRequest(senderEndpoint, message.mtuSize);
