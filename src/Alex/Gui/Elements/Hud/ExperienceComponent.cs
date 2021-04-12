@@ -19,6 +19,8 @@ namespace Alex.Gui.Elements.Hud
 
 		private bool _sizeDirty = true;
 		private Vector2 _textSize = Vector2.Zero;
+
+		private ITexture2D _bg;
 		public ExperienceComponent(Player player )
 		{
 			Player = player;
@@ -30,14 +32,23 @@ namespace Alex.Gui.Elements.Hud
 			//AutoSizeMode = AutoSizeMode.None;
 		}
 
-		
+		/// <inheritdoc />
+		protected override void OnInit(IGuiRenderer renderer)
+		{
+			base.OnInit(renderer);
+			_bg = renderer.GetTexture(AlexGuiTextures.Experience);
+		}
+
 		protected override void OnUpdate(GameTime gameTime)
 		{
 			base.OnUpdate(gameTime);
 			if (Math.Abs(Player.Experience - Experience) > 0.001f)
 			{
 				Experience = Player.Experience;
-				BackgroundOverlay.Scale = new Vector2(Experience, 1f);
+				var source = _bg.ClipBounds.Location;
+				var sourceSize = _bg.ClipBounds.Size;
+				BackgroundOverlay = _bg.Texture.Slice(source.X, source.Y, (int) (Experience * sourceSize.X), sourceSize.Y);
+				BackgroundOverlay.Scale = new Vector2(1f, 1f);
 			}
 			
 			if (Math.Abs(Player.ExperienceLevel - ExperienceLevel) > 0.001f)
@@ -51,8 +62,13 @@ namespace Alex.Gui.Elements.Hud
 		/// <inheritdoc />
 		protected override void OnDraw(GuiSpriteBatch graphics, GameTime gameTime)
 		{
-			base.OnDraw(graphics, gameTime);
+			graphics.FillRectangle(RenderBounds, Background);
 
+			//var source = BackgroundOverlay.Texture.ClipBounds.Location;
+			//var size = BackgroundOverlay.Texture.ClipBounds.Size;
+			
+			graphics.FillRectangle(RenderBounds, BackgroundOverlay);
+			
 			if (_sizeDirty)
 			{
 				_sizeDirty = false;
