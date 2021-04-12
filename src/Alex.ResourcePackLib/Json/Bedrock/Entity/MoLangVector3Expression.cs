@@ -135,7 +135,10 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Entity
 				Vector3 previousVector = Evaluate(runtime, previous, false, currentValue);
 				Vector3 nextVector = Evaluate(runtime, next, true, currentValue);
 
-				return Vector3.Lerp(previousVector, nextVector, (float) ((1f / timeBetweenFrames) * accumulator));
+				var lerpTime = (float) ((1f / timeBetweenFrames) * accumulator);
+			//	runtime.Environment.SetValue("query.key_frame_lerp_time", new DoubleValue(lerpTime));
+				
+				return Vector3.Lerp(previousVector, nextVector, lerpTime);
 			}
 
 			return Evaluate(runtime, _x, _y, _z, currentValue);

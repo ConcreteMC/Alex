@@ -674,10 +674,17 @@ namespace Alex.Entities
 		public bool IsOnGround => _knownPosition.OnGround;
 
 		[MoProperty("anim_time")]
-		public double AnimationTime => 0d;
+		public double AnimationTime => GetLifeTime();
 		
 		[MoProperty("is_grazing")]
 		public bool IsGrazing { get; set; } = false;
+
+		[MoProperty("key_frame_lerp_time")]
+		public double KeyframeLerpTime
+		{
+			get;
+			set;
+		}
 
 		[MoProperty("swell_amount")]
 		public double SwellAmount { get; set; } = 0d;
@@ -927,9 +934,15 @@ namespace Alex.Entities
 			}
 		}
 
+		private long _eatingEndTime = 0;
+		private long _grazingEndTime = 0;
 		public virtual void HandleEntityEvent(byte eventId, int data)
 		{
-			if (eventId == 2) //Entity Hurt
+			if (eventId == 1) //Entity Jump
+			{
+				Jump();
+			}
+			else if (eventId == 2) //Entity Hurt
 			{
 				EntityHurt();
 			}
@@ -937,33 +950,38 @@ namespace Alex.Entities
 			{
 				EntityDied();
 			}
-			else if (eventId == 4) //Start Attack
+			else if (eventId == 4) //Arm Swing
 			{
 				SwingArm();
-				IsAttacking = true;
+				//IsAttacking = true;
 			}
 			else if (eventId == 5) //Stop Attack
 			{
 				//SwingArm();
 				IsAttacking = false;
 			}
-			/*else if (message.eventId == 9) //Use Item
+			/*else if (eventId == 9) //Use Item
 			{
-				entity.IsUsingItem = true;
-				entity.Level.Ticker.ScheduleTick(
+				IsUsingItem = true;
+				Level.Ticker.ScheduleTick(
 					() =>
 					{
-						entity.IsUsingItem = false;
+						IsUsingItem = false;
 					}, 40, CancellationToken.None);
 			}*/
 			else if (eventId == 10) //Eat block
 			{
 				IsGrazing = true;
-				Level.Ticker.ScheduleTick(
-					() =>
-					{
-						IsGrazing = false;
-					}, 40, CancellationToken.None);
+				_grazingEndTime = Age + 40;
+				
+			//	Log.Info($"Grazing: {IsGrazing} | {data}");
+			}
+			else if (eventId == 57) //Eat item
+			{
+				IsEating = true;
+				_eatingEndTime = Age + 40;
+				
+			//	Log.Info($"Eating: {IsEating} | {data}");
 			}
 			else
 			{
@@ -1157,8 +1175,21 @@ namespace Alex.Entities
 		private Vector3 _previousKnownPosition = Vector3.Zero;
 		private Vector3 _delta = Vector3.Zero;
 		private Stopwatch _deltaStopwatch = Stopwatch.StartNew();
+		public long Age { get; set; } = 0;
 		public virtual void OnTick()
 		{
+			Age++;
+
+			if (IsEating && Age >= _eatingEndTime)
+			{
+				IsEating = false;
+			}
+
+			if (IsGrazing && Age >= _grazingEndTime)
+			{
+				IsGrazing = false;
+			}
+			
 			_deltaTime = _deltaStopwatch.Elapsed;
 			_deltaStopwatch.Restart();
 			

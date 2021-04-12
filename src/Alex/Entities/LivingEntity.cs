@@ -107,12 +107,10 @@ namespace Alex.Entities
 		private bool _waitingOnChunk = true;
 		public bool HasChunk => !_waitingOnChunk;
 
-		public long Age { get; set; } = 0;
+		
 		/// <inheritdoc />
 		public override void OnTick()
 		{
-			Age++;
-			
 			if (_waitingOnChunk)
 			{
 				if (Level.GetChunk(KnownPosition.GetCoordinates3D(), true) != null)
@@ -124,7 +122,9 @@ namespace Alex.Entities
 			if (_isHit && Age > _hitAnimationEnd)
 			{
 				_isHit = false;
-				ModelRenderer.EntityColor = Color.White.ToVector3();
+				
+				if (ModelRenderer != null)
+					ModelRenderer.EntityColor = Color.White.ToVector3();
 			}
 			
 			base.OnTick();
