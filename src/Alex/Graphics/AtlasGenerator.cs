@@ -222,10 +222,15 @@ namespace Alex.Graphics
 				    bmp.Mutate(x => x.Resize(mipWidth, mipHeight, KnownResamplers.NearestNeighbor, true));
 
 				    uint[] colorData;
-
+	        
 				    if (bmp.TryGetSinglePixelSpan(out var pixelSpan))
 				    {
-					    colorData = pixelSpan.ToArray().Select(x => x.Rgba).ToArray();
+					    colorData = new uint[pixelSpan.Length];
+
+					    for (int i = 0; i < pixelSpan.Length; i++)
+					    {
+						    colorData[i] = pixelSpan[i].Rgba;
+					    }
 				    }
 				    else
 				    {

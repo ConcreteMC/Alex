@@ -1,4 +1,5 @@
 using System;
+using System.Security.Policy;
 using System.Threading;
 
 namespace Alex.API.Resources
@@ -9,20 +10,21 @@ namespace Alex.API.Resources
         public string Namespace { get; }
         public string Path { get; }
 
-        private readonly int _hash;
+       // private readonly int _hash;
 
-        public ResourceLocation(string key) : this(key.Contains(':') ? key.Substring(0, key.IndexOf(':')) : DefaultNamespace,
-            key.Contains(':') ? key.Substring(key.IndexOf(':') + 1) : key)
-        {
-
-        }
+        public ResourceLocation(string key) : this(
+            key.Contains(':') ? key.Substring(0, key.IndexOf(':')) :
+                DefaultNamespace,
+            key.Contains(':') ?
+                key.Substring(key.IndexOf(':') + 1) : key) { }
 
         public ResourceLocation(string @namespace, string path)
         {
             Namespace = @namespace;
             Path = path;
-
-            _hash = $"{@namespace}:{@path}".GetHashCode(StringComparison.OrdinalIgnoreCase);
+            
+           // _hash = hash;
+            //_hash = String.GetHashCode($"{@namespace}:{@path}", StringComparison.Ordinal);
             // _hashCode = GetUniqueId();
         }
 
@@ -35,11 +37,11 @@ namespace Alex.API.Resources
         
         public static bool operator ==(ResourceLocation a, ResourceLocation b)
         {
-            return a is not null && a.Equals(b);
+          //  return a is not null && a.Equals(b);
             if (ReferenceEquals(null, a)) return false;
             if (ReferenceEquals(null, b)) return false;
             
-            return a._hash == b._hash;
+            return a.GetHashCode() == b.GetHashCode();
         }
 
         public static bool operator !=(ResourceLocation a, ResourceLocation b)
@@ -62,7 +64,7 @@ namespace Alex.API.Resources
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
 
-            return _hash == other._hash;
+            return GetHashCode() == other.GetHashCode();
             // return string.Equals(Namespace, other.Namespace, StringComparison.OrdinalIgnoreCase) && string.Equals(Path, other.Path, StringComparison.OrdinalIgnoreCase);
         }
 
@@ -73,15 +75,14 @@ namespace Alex.API.Resources
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != this.GetType()) return false;
-            return Equals((ResourceLocation) obj);
+            return obj.GetType() == this.GetType() && Equals((ResourceLocation) obj);
         }
         
         /// <summary>Serves as the default hash function.</summary>
         /// <returns>A hash code for the current object.</returns>
         public override int GetHashCode()
         {
-            return _hash;
+            return HashCode.Combine(Namespace, Path);
         }
     }
 }

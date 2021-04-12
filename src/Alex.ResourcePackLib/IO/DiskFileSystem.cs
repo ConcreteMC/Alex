@@ -73,7 +73,7 @@ namespace Alex.ResourcePackLib.IO
 			/// <inheritdoc />
 			public Stream Open()
 			{
-				return _fileInfo.Open(FileMode.Open);
+				return _fileInfo.OpenRead();
 			}
 		}
 	}

@@ -24,7 +24,7 @@ namespace Alex.Blocks.State
 		public             int                        Count  => Values.Count;
 		public BlockState()
 		{
-			Values = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+			Values = new Dictionary<string, string>(StringComparer.Ordinal);
 		}
 
 		public string Name { get; set; }
@@ -101,7 +101,7 @@ namespace Alex.Blocks.State
 			var dictionary = new Dictionary<string, string>(Count, StringComparer.Ordinal);
 			foreach (var kv in Values)
 			{
-				dictionary.TryAdd(kv.Key, kv.Value.ToString().ToLowerInvariant());
+				dictionary.TryAdd(kv.Key, kv.Value.ToString());
 			}
 			return dictionary;
 		}
@@ -159,7 +159,7 @@ namespace Alex.Blocks.State
 
 			if (matches.Count > 0)
 			{
-				Dictionary<string, string> values  = new Dictionary<string, string>(matches.Count, StringComparer.OrdinalIgnoreCase);
+				Dictionary<string, string> values  = new Dictionary<string, string>(matches.Count, StringComparer.Ordinal);
 				
 				foreach (Match match in matches)
 				{
@@ -193,7 +193,7 @@ namespace Alex.Blocks.State
 			{
 				Name = Name,
 				ID = ID,
-				Values = new Dictionary<string, string>(Values /*, new StateComparer()*/),
+				Values = new Dictionary<string, string>(Values, StringComparer.OrdinalIgnoreCase),
 				Block = Block,
 				VariantMapper = VariantMapper,
 		//		ResolveModel = ResolveModel,

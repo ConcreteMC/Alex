@@ -234,13 +234,11 @@ namespace Alex.Blocks
 
 			var blockStateTime = sw.Elapsed;
 			
-			var   mappings = mapping.GroupBy(x => x.Value.BedrockIdentifier).ToArray();
-
 			int counter = 1;
 
 			sw.Restart();
 			Parallel.ForEach(
-				mappings, (m) =>
+				mapping.GroupBy(x => x.Value.BedrockIdentifier), (m) =>
 				{
 					progressReceiver?.UpdateProgress(counter, mapping.Count, "Mapping blockstates...", m.Key);
 

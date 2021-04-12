@@ -790,11 +790,16 @@ namespace Alex.Net.Bedrock
 			// This methods handle ordering and potential encryption, hence order matters.
 			//if (!(_syncHack.Wait(millisecondsWait))) return;
 
+			var unacked = UnackedBytes;
+			int transmissionBandwidth = this.SlidingWindow.GetTransmissionBandwidth(this.UnackedBytes, _bandwidthExceededStatistic);
+
+			if (transmissionBandwidth > 0)
+			{
+				//ConnectionInfo.
+			}
+			
 			try
 			{
-				int transmissionBandwidth;
-				transmissionBandwidth = this.SlidingWindow.GetTransmissionBandwidth(this.UnackedBytes, _bandwidthExceededStatistic);
-
 				var sendList = new List<Packet>();
 				int length = _sendQueue.Count;
 
@@ -859,8 +864,6 @@ namespace Alex.Net.Bedrock
 					packet?.PutPool();
 				
 				//UnackedBytes += _packetSender.SendPacket(this, preppedSendList);
-				
-				_bandwidthExceededStatistic = _sendQueue.Count > 0;
 			}
 			catch (Exception e)
 			{
@@ -868,6 +871,7 @@ namespace Alex.Net.Bedrock
 			}
 			finally
 			{
+				_bandwidthExceededStatistic = UnackedBytes - unacked >= transmissionBandwidth;
 			//	_syncHack.Release();
 			}
 		}
@@ -1041,7 +1045,7 @@ namespace Alex.Net.Bedrock
 			var sequenceIndex = datagram.Header.DatagramSequenceNumber.IntValue();
 
 			if (SlidingWindow.OnPacketReceived(
-				CurrentTimeMillis(),  sequenceIndex, datagram.Size, out var skippedMessageCount))
+				CurrentTimeMillis(),  sequenceIndex, datagram.Header.IsContinuousSend, datagram.Size, out var skippedMessageCount))
 			{
 				if (skippedMessageCount > 0)
 					Log.Info($"Skipped {skippedMessageCount}");

@@ -646,6 +646,9 @@ namespace Alex.ResourcePackLib
 
 		private bool TryAddBitmap(string path)
 		{
+			if (_bitmaps.ContainsKey(path))
+				return false;
+			
 			if (_archive.GetEntry(path + ".tga") != null)
 			{
 				return _bitmaps.TryAdd(path, new Lazy<Image<Rgba32>>(

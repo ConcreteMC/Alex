@@ -228,7 +228,7 @@ namespace Alex.Gui
 					{
 						language = new CultureLanguage()
 						{
-							Name = lng.Value.Name,
+							Name = lng.Key.ToString(),
 							Code = lng.Value.CultureCode,
 							Region = lng.Value.CultureRegion
 						};

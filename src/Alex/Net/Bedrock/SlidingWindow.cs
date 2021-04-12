@@ -83,27 +83,9 @@ namespace Alex.Net.Bedrock
             }
         }
 
-        public bool OnPacketReceived(long currentTime, long datagramSequenceNumber, int sizeInBytes, out long skippedMessageCount)
+        public bool OnPacketReceived(long currentTime, long datagramSequenceNumber, bool isContinuousSend, int sizeInBytes, out long skippedMessageCount)
         {
-           /* skippedMessageCount = 0;
-            var last = Interlocked.CompareExchange(ref _lastReceivedSequenceNumber, datagramSequenceNumber, datagramSequenceNumber - 1);
-
-            if (last == datagramSequenceNumber - 1)
-            {
-                return true;
-            }
-
-            if (datagramSequenceNumber > last)
-                Interlocked.Exchange(ref _lastReceivedSequenceNumber, datagramSequenceNumber);
-
-         //   if (datagramSequenceNumber <= last)
-            {
-                skippedMessageCount = datagramSequenceNumber - last;
-            }
-
-            return true;*/
-
-             if (datagramSequenceNumber == _expectedNextSequenceNumber)
+            if (datagramSequenceNumber == _expectedNextSequenceNumber)
              {
                  skippedMessageCount=0;
                  _expectedNextSequenceNumber=datagramSequenceNumber+1;
@@ -306,6 +288,11 @@ namespace Alex.Net.Bedrock
             {
                 return (long) (LastRtt + CcSyn);
             }
+        }
+
+        public void OnGotPacketPair(int sequenceNumber)
+        {
+            
         }
     }
 }

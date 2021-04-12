@@ -33,19 +33,29 @@ namespace Alex.Blocks.State
         public bool TryResolve(BlockState source, string property, string value, out BlockState result, params string[] requiredMatches)
         {
             //  property = property.ToLowerInvariant();
-            value = value.ToLowerInvariant();
+          //  value = value;
 
             int highestMatch = 0;
             BlockState highest = null;
 
-            var matching = Variants.Where(x => x.Contains(property) && x[property].Equals(value, StringComparison.OrdinalIgnoreCase)).ToArray();
+            List<BlockState> list = new List<BlockState>(Variants.Count);
 
-            if (matching.Length == 1)
+            foreach (var x in Variants)
+            {
+                if (x.TryGetValue(property, out var v) && string.Equals(v, value, StringComparison.Ordinal))
+                {
+                    list.Add(x);
+                }
+            }
+
+            var matching = list;
+
+            if (matching.Count == 1)
             {
                 result = matching.FirstOrDefault();
                 return true;
             }
-            else if (matching.Length == 0)
+            else if (matching.Count == 0)
             {
                 result = source;
 

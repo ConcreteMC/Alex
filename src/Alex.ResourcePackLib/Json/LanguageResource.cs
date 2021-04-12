@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 
@@ -18,12 +19,17 @@ namespace Alex.ResourcePackLib.Json
 
         [JsonProperty("language.code")]
         public string CultureCode { get; set; }
-        
-        [JsonIgnore]
-        public string Name { get; set; }
-        [JsonIgnore]
-        public string Namespace { get; set; }
 
+        public LanguageResource()
+        {
+            
+        }
+        
+        public LanguageResource(IEnumerable<KeyValuePair<string, string>> values) : base(values, StringComparer.OrdinalIgnoreCase)
+        {
+            
+        }
+        
         public static LanguageResource ParseLangFile(string text)
         {
             var lines = LangFileRegex.Matches(text);

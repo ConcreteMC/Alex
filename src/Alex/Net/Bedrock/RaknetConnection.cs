@@ -339,25 +339,35 @@ namespace Alex.Net.Bedrock
 				return;
 			}
 
-			Session.Acknowledge(datagram);
-			//{
-				Interlocked.Increment(ref ConnectionInfo.PacketsIn);
-				//if (Log.IsTraceEnabled) Log.Trace($"Receive datagram #{datagram.Header.DatagramSequenceNumber} for {_endpoint}");
-				foreach (var packet in datagram.Messages)
-				{
-					var message = packet;
-					if (message is SplitPartPacket splitPartPacket)
-					{
-						message = HandleSplitMessage(splitPartPacket);
-					}
-			
-					if (message == null) return;
-			
-					message.Timer.Restart();
-					Session.HandleRakMessage(message);
-				}
-			//}
+			if (!Session.Acknowledge(datagram))
+			{
+				
+				return;
+			}
 
+			if (datagram.Header.IsPacketPair)
+			{
+				Session.SlidingWindow.OnGotPacketPair(datagram.Header.DatagramSequenceNumber.IntValue());
+			}
+			
+			Interlocked.Increment(ref ConnectionInfo.PacketsIn);
+
+			//if (Log.IsTraceEnabled) Log.Trace($"Receive datagram #{datagram.Header.DatagramSequenceNumber} for {_endpoint}");
+			foreach (var packet in datagram.Messages)
+			{
+				var message = packet;
+
+				if (message is SplitPartPacket splitPartPacket)
+				{
+					message = HandleSplitMessage(splitPartPacket);
+				}
+
+				if (message == null) return;
+
+				message.Timer.Restart();
+				Session.HandleRakMessage(message);
+			}
+			
 			datagram.PutPool();
 		}
 
