@@ -184,12 +184,20 @@ namespace Alex
                     }
                     else
                     {
-                        DeviceManager.PreferredBackBufferWidth = Window.ClientBounds.Width;
+                       DeviceManager.PreferredBackBufferWidth = Window.ClientBounds.Width;
                         DeviceManager.PreferredBackBufferHeight = Window.ClientBounds.Height;
                     }
 
                     DeviceManager.ApplyChanges();
                 }
+
+                var bounds = Window.ClientBounds;
+                var viewport = GraphicsDevice.Viewport;
+               // viewport.Width = bounds.Width;
+               // viewport.Height = bounds.Height;
+               // viewport = new Viewport(bounds);
+                
+               // GraphicsDevice.Viewport = viewport;
             };
 
 

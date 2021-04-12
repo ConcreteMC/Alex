@@ -524,7 +524,7 @@ namespace Alex.Gui
 
 		public GraphicsContext CreateGuiSpriteBatchContext(GraphicsDevice graphics)
 		{
-			return GraphicsContext.CreateContext(graphics, BlendState.NonPremultiplied, DepthStencilState.None, RasterizerState.CullNone, SamplerState.PointClamp);
+			return GraphicsContext.CreateContext(graphics, BlendState.NonPremultiplied, DepthStencilState.None, GuiSpriteBatch.GetDefaultRasterizerState(), SamplerState.PointClamp);
 		}
 		
 		public IStyle[] ResolveStyles(Type elementType, string[] classNames)
