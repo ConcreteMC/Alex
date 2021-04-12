@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-
+using System.Threading;
 using Alex.API.Graphics;
 using Alex.API.Utils;
 using Alex.API.Utils.Vectors;
@@ -24,68 +24,32 @@ namespace Alex.Graphics.Models.Entity
 		
 		private IReadOnlyDictionary<string, ModelBone> Bones { get; }
 		
-		private PooledTexture2D _texture;
-
-		public PooledTexture2D Texture
-		{
-			get
-			{
-				return _texture;
-			}
-			set
-			{
-				var oldValue = _texture;
-
-				try
-				{
-					_texture = value;
-					value?.Use();
-					
-					if (Effect != null && value != null)
-					{
-						Effect.Texture = value;
-					}
-				}
-				finally
-				{
-					oldValue?.Release();
-					oldValue?.MarkForDisposal();
-				}
-			}
-		}
-
-		private AlphaTestEffect    Effect       { get; set; }
 		private PooledVertexBuffer VertexBuffer { get; set; }
 		private PooledIndexBuffer IndexBuffer { get; set; }
 		public  bool               Valid        { get; private set; }
 
-		public EntityModel Model    { get; }
-		public EntityModelRenderer(
-			EntityModel model, PooledTexture2D texture)
+		public readonly double VisibleBoundsWidth = 0;
+
+		public readonly double VisibleBoundsHeight = 0;
+
+		public EntityModelRenderer(EntityModel model)
 		{
-			Model = model;
 			//	Model = model;
-			if (texture == null)
-			{
-				Log.Warn($"No texture set for rendererer for {model}!");
-				return;
-			}
+			
+			VisibleBoundsWidth = model.Description.VisibleBoundsWidth;
+			VisibleBoundsHeight = model.Description.VisibleBoundsHeight;
+			var bones = new Dictionary<string, ModelBone>(StringComparer.OrdinalIgnoreCase);
+			BuildModel(model, bones);
 
-			if (model != null)
-			{
-				var bones = new Dictionary<string, ModelBone>(StringComparer.OrdinalIgnoreCase);
-				BuildModel(texture, model, bones);
-
-				Bones = bones;
-			}
+			Bones = bones;
 		}
 
-		private void BuildModel(PooledTexture2D texture, EntityModel model, Dictionary<string, ModelBone> modelBones)
+		private void BuildModel(EntityModel model, Dictionary<string, ModelBone> modelBones)
 		{
 			List<VertexPositionColorTexture> vertices = new List<VertexPositionColorTexture>();
 			List<short> indices = new List<short>();
 			
-			var actualTextureSize = new Vector2(texture.Width, texture.Height);
+				//var actualTextureSize = new Vector2(texture.Width, texture.Height);
 
 			int counter = 0;
 			foreach (var bone in model.Bones.Where(x => string.IsNullOrWhiteSpace(x.Parent)))
@@ -96,7 +60,7 @@ namespace Alex.Graphics.Models.Entity
 				
 				if (modelBones.ContainsKey(bone.Name)) continue;
 				
-				var processed = ProcessBone(model, bone, ref vertices, ref indices, actualTextureSize , modelBones);
+				var processed = ProcessBone(model, bone, ref vertices, ref indices,  modelBones);
 				
 				if (!modelBones.TryAdd(bone.Name, processed))
 				{
@@ -119,12 +83,8 @@ namespace Alex.Graphics.Models.Entity
 				VertexPositionColorTexture.VertexDeclaration, vertices.Count, BufferUsage.WriteOnly);
 			VertexBuffer.SetData(vertices.ToArray());
 
-			Effect = new AlphaTestEffect(Alex.Instance.GraphicsDevice);
-			Effect.Texture = texture;
-			Effect.VertexColorEnabled = true;
-			
 			Valid = true;
-			Texture = texture;
+			//Texture = texture;
 		}
 
 		private ModelBone ProcessBone(
@@ -132,7 +92,6 @@ namespace Alex.Graphics.Models.Entity
 			EntityModelBone bone,
 			ref List<VertexPositionColorTexture> vertices,
 			ref List<short> indices,
-			Vector2 textureSize,
 			Dictionary<string, ModelBone> modelBones)
 		{
 			ModelBone modelBone = new ModelBone();
@@ -173,7 +132,7 @@ namespace Alex.Graphics.Models.Entity
 						         * Matrix.CreateTranslation(pivot);
 					}
 					
-					Cube built = new Cube(cube, textureSize, mirror, inflation);
+					Cube built = new Cube(cube, mirror, inflation);
 					ModifyCubeIndexes(ref vertices, ref indices, built.Front, matrix);
 					ModifyCubeIndexes(ref vertices, ref indices, built.Back, matrix);
 					ModifyCubeIndexes(ref vertices, ref indices, built.Top, matrix);
@@ -213,7 +172,7 @@ namespace Alex.Graphics.Models.Entity
 				if (string.IsNullOrWhiteSpace(childBone.Name))
 					childBone.Name = Guid.NewGuid().ToString();
 				
-				var child = ProcessBone(source, childBone, ref vertices, ref indices, textureSize, modelBones);
+				var child = ProcessBone(source, childBone, ref vertices, ref indices, modelBones);
 				//child.Parent = modelBone;
 
 				modelBone.AddChild(child);
@@ -244,14 +203,6 @@ namespace Alex.Graphics.Models.Entity
 			{
 				var listIndex = startIndex + data.indexes[i];
 				indices.Add((short) listIndex);
-				/*if (listIndex < vertices.Count)
-				{
-					
-				}
-				var vertex = data.vertices[data.indexes[i]];
-				var position =  Vector3.Transform(vertex.Position, transformation);
-				
-				vertices.Add(new VertexPositionColorTexture(position, vertex.Color, vertex.TextureCoordinate));*/
 			}
 		}
 		
@@ -276,11 +227,11 @@ namespace Alex.Graphics.Models.Entity
 		/// </summary>
 		/// <param name="args"></param>
 		/// <returns>The amount of GraphicsDevice.Draw calls made</returns>
-		public virtual int Render(IRenderArgs args, bool useCulling)
+		public virtual int Render(IRenderArgs args, bool useCulling, Microsoft.Xna.Framework.Graphics.Effect effect, Matrix worldMatrix)
 		{
-			if (Bones == null)
+			if (Bones == null || VertexBuffer == null || IndexBuffer == null)
 			{
-				Log.Warn($"No bones found for model...");
+				//Log.Warn($"No bones found for model...");
 				return 0;
 			}
 
@@ -290,7 +241,7 @@ namespace Alex.Graphics.Models.Entity
 			int counter = 0;
 			try
 			{
-				args.GraphicsDevice.BlendState = BlendState.Opaque;
+				args.GraphicsDevice.BlendState = BlendState.AlphaBlend;
 				args.GraphicsDevice.RasterizerState = useCulling ? _rasterizerStateCulled : _rasterizerState;
 
 				args.GraphicsDevice.Indices = IndexBuffer;
@@ -305,9 +256,11 @@ namespace Alex.Graphics.Models.Entity
 					SpriteBatch = args.SpriteBatch
 				};
 				
+				var matrix =  worldMatrix;
+				;
 				foreach (var bone in Bones.Where(x => x.Value.Parent == null))
 				{
-					counter += bone.Value.Render(newArgs, Effect);
+					counter += bone.Value.Render(newArgs, effect,  matrix);
 					//RenderBone(args, bone.Value);
 				}
 			}
@@ -325,24 +278,13 @@ namespace Alex.Graphics.Models.Entity
 
 		public float Scale { get; set; } = 1f;
 		
-		public virtual void Update(IUpdateArgs args, PlayerLocation position)
+		public virtual void Update(IUpdateArgs args)
 		{
-			if (Bones == null || Effect == null) return;
-
-			Effect.View = args.Camera.ViewMatrix;
-			Effect.Projection = args.Camera.ProjectionMatrix;
-			Effect.DiffuseColor = EntityColor * DiffuseColor;
-
-			//var rot = position.GetDirectionMatrix(false);
-
-			var matrix =  Matrix.CreateScale(Scale / 16f) * position.CalculateWorldMatrix();
-			//var matrix =  MCMatrix.CreateScale(Scale / 16f) * position.GetDirectionMatrix(false) * MCMatrix.CreateTranslation(position.ToVector3()); /*MCMatrix.CreateScale(Scale / 16f)
-			    //         * MCMatrix.CreateRotation(MathUtils.ToRadians(position.Yaw), Vector3.Down)
-			  //           * MCMatrix.CreateTranslation(position);*/
+			if (Bones == null) return;
 
 			foreach (var bone in Bones.Where(x => x.Value.Parent == null))
 			{
-				bone.Value.Update(args, matrix, Vector3.One * Scale);
+				bone.Value.Update(args, Vector3.One * Scale);
 			}
 		}
 		public bool GetBone(string name, out ModelBone bone)
@@ -364,27 +306,27 @@ namespace Alex.Graphics.Models.Entity
 			}
 		}
 
+		private int _instances = 0;
+		public void Use()
+		{
+			Interlocked.Increment(ref _instances);
+		}
+
 		public void Dispose()
 		{
-			if (Bones != null && Bones.Any())
+			if (Interlocked.Decrement(ref _instances) == 0)
 			{
-				foreach (var bone in Bones.ToArray())
-				{
-					bone.Value.Dispose();
-				}
+				VertexBuffer?.MarkForDisposal();
+				IndexBuffer?.MarkForDisposal();
+				//Effect?.Dispose();
+
+				//Effect = null;
+				VertexBuffer = null;
+				IndexBuffer = null;
+				//Texture = null;
 			}
 
-			var texture = Texture;
-			texture?.Release();
-			texture?.MarkForDisposal();
-			VertexBuffer?.MarkForDisposal();
-			IndexBuffer?.MarkForDisposal();
-			Effect?.Dispose();
-
-			Effect = null;
-			VertexBuffer = null;
-			IndexBuffer = null;
-			Texture = null;
+			return;
 		}
 
 		public void ApplyPending()

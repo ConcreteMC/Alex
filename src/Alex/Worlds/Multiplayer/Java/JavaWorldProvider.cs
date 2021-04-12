@@ -501,6 +501,7 @@ namespace Alex.Worlds.Multiplayer.Java
 			}
 			
 			Entity entity = null;
+			EntityModel model;
 			if (EntityFactory.ModelByNetworkId((long) type, out var renderer, out EntityData knownData))
 			{
 				type = MiNET.Entities.EntityHelpers.ToEntityType($"minecraft:{knownData.Name}");
@@ -511,7 +512,7 @@ namespace Alex.Worlds.Multiplayer.Java
 					type = (EntityType) 121;
 
 				entity = EntityFactory.Create(type, null, type != EntityType.ArmorStand && type != EntityType.PrimedTnt);
-			
+				
 
 				if (entity == null)
 				{
@@ -539,55 +540,16 @@ namespace Alex.Worlds.Multiplayer.Java
 				return null;
 			}
 
-			if (renderer == null || renderer.Texture == null)
-			{
-				var def = Alex.Resources.BedrockResourcePack.EntityDefinitions.FirstOrDefault(
-					x => x.Value.Identifier.Replace("_", "").ToLowerInvariant().Equals($"minecraft:{type}".ToLowerInvariant()));
-
-				if (def.Key != null)
-				{
-					EntityModel model;
-
-					if (ModelFactory.TryGetModel(def.Value.Geometry["default"], out model) && model != null)
-					{
-						var    textures = def.Value.Textures;
-						string texture;
-
-						if (!(textures.TryGetValue("default", out texture) || textures.TryGetValue(def.Key.Path, out texture)))
-						{
-							texture = textures.FirstOrDefault().Value;
-						}
-
-						PooledTexture2D texture2D = null;
-						if (Alex.Resources.BedrockResourcePack.Textures.TryGetValue(texture, out var bmp))
-						{
-							var             bitmapValue = bmp.Value;
-							PooledTexture2D t           = TextureUtils.BitmapToTexture2D(Alex.GraphicsDevice, bitmapValue);
-
-							texture2D = t;
-						}
-						else if (Alex.Resources.TryGetBitmap(texture, out var bmp2))
-						{
-							texture2D = TextureUtils.BitmapToTexture2D(Alex.GraphicsDevice, bmp2);
-						}
-
-						if (texture2D != null)
-						{
-							renderer = new EntityModelRenderer(model, texture2D);
-						}
-					}
-				}
-			}
-
 			if (renderer == null)
 			{
 				Log.Debug($"Missing renderer for entity: {type.ToString()} ({(int) type})");
 
 				return null;
 			}
-
-			if (renderer.Texture == null)
+			
+			if (entity.Texture == null)
 			{
+				
 				Log.Debug($"Missing texture for entity: {type.ToString()} ({(int) type})");
 
 				return null;
@@ -599,6 +561,7 @@ namespace Alex.Worlds.Multiplayer.Java
 			entity.Velocity = velocity;
 			entity.EntityId = entityId;
 			entity.UUID = uuid;
+			//entity.Texture = texture2D;
 
 			if (entity is EntityArmorStand armorStand)
 			{

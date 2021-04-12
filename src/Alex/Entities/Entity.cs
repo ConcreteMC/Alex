@@ -17,6 +17,7 @@ using Alex.Entities.Components;
 using Alex.Entities.Effects;
 using Alex.Entities.Properties;
 using Alex.Gamestates;
+using Alex.Graphics.Effect;
 using Alex.Graphics.Models.Entity;
 using Alex.Graphics.Models.Entity.Animations;
 using Alex.Graphics.Models.Items;
@@ -75,6 +76,7 @@ namespace Alex.Entities
 
 					if (value != null)
 					{
+						value.Use();
 						UpdateModelParts();
 						OnModelUpdated();
 						CheckHeldItem();
@@ -355,6 +357,10 @@ namespace Alex.Entities
 				
 			//EntityComponents.Push(Movement = new EntityMovement(this));
 			EntityComponents.Push(AnimationController = new AnimationController(this));
+			
+			Effect = new EntityEffect();
+			Effect.Texture = _texture;
+			Effect.VertexColorEnabled = true;
 		}
 
 		public double FlyingSpeed
@@ -699,8 +705,6 @@ namespace Alex.Entities
 		public long TargetEntityId { get; set; } = -1;
 		public long OwnerEntityId { get; set; } = -1;
 		public Vector2 TargetRotation { get; private set; } = Vector2.Zero;
-		
-		internal bool RequiresRealTimeTick { get; set; } = true;
 
 		public void HandleJavaMetadata(MetaDataEntry entry)
 		{
@@ -1037,6 +1041,38 @@ namespace Alex.Entities
 			//IsFlying = data[(int) MiNET.Entities.Entity.DataFlags.fl]
 		}
 
+		private PooledTexture2D _texture;
+
+		public PooledTexture2D Texture
+		{
+			get
+			{
+				return _texture;
+			}
+			set
+			{
+				var oldValue = _texture;
+
+				try
+				{
+					_texture = value;
+					value?.Use();
+					
+					if (Effect != null && value != null)
+					{
+						Effect.Texture = value;
+					}
+				}
+				finally
+				{
+					oldValue?.Release();
+					oldValue?.MarkForDisposal();
+				}
+			}
+		}
+		
+		private EntityEffect    Effect       { get; set; }
+		
 		/// <summary>
 		///		Renders the entity
 		/// </summary>
@@ -1049,11 +1085,11 @@ namespace Alex.Entities
 
 			if (!IsInvisible && RenderEntity && renderer != null)
 			{
-				renderCount += renderer.Render(renderArgs, useCulling);
+				renderCount += renderer.Render(renderArgs, useCulling, Effect, Matrix.CreateScale(Scale / 16f) * RenderLocation.CalculateWorldMatrix());
 			}
 			else if (ShowItemInHand && ItemRenderer != null && !_skipRendering)
 			{
-				renderCount += ItemRenderer.Render(renderArgs, null);
+				renderCount += ItemRenderer.Render(renderArgs, null, Matrix.CreateScale(Scale / 16f) * RenderLocation.CalculateWorldMatrix());
 			}
 
 			return renderCount;
@@ -1094,7 +1130,11 @@ namespace Alex.Entities
 				_head.Rotation = new Vector3(pitch, headYaw, 0f);
 			}
 			
-			renderer.Update(args, RenderLocation);
+			Effect.View = args.Camera.ViewMatrix;
+			Effect.Projection = args.Camera.ProjectionMatrix;
+			Effect.DiffuseColor = renderer.EntityColor * renderer.DiffuseColor;
+			Effect.Texture = _texture;
+			renderer.Update(args);
 
 			//if (!ShowItemInHand || _skipRendering || ItemRenderer == null) return;
 		}
@@ -1360,10 +1400,11 @@ namespace Alex.Entities
 			var width  = Width;
 			var height = Height;
 
-			if (ModelRenderer?.Model != null)
+			var renderer = ModelRenderer;
+			if (renderer != null)
 			{
-				width = ModelRenderer.Model.Description.VisibleBoundsWidth;
-				height = ModelRenderer.Model.Description.VisibleBoundsHeight;
+				width = renderer.VisibleBoundsWidth;
+				height = renderer.VisibleBoundsHeight;
 			}
 
 			double halfWidth = (width * Scale) / 2D;
@@ -1428,6 +1469,11 @@ namespace Alex.Entities
 
 			try
 			{
+				var texture = Texture;
+				texture?.Release();
+				texture?.MarkForDisposal();
+				Texture = null;
+				
 				var model = ModelRenderer;
 				ModelRenderer = null;
 				model?.Dispose();

@@ -44,12 +44,13 @@ namespace Alex.Gui.Dialogs.Containers
 
             if (player != null)
             {
-                var modelRenderer = player.ModelRenderer;
+            //    var modelRenderer = player.ModelRenderer;
 
                 var mob = new RemotePlayer(player.Level);
-                mob.ModelRenderer = new EntityModelRenderer(modelRenderer.Model, modelRenderer.Texture);
+                mob.ModelRenderer = player.ModelRenderer;
+                mob.Texture = player.Texture;
 
-                mob.KnownPosition = new PlayerLocation(0, 0, 0, 0f, 0f, 0f);
+             //   mob.KnownPosition = new PlayerLocation(0, 0, 0, 0f, 0f, 0f);
 
                 ContentContainer.AddChild(
                     _playerEntityModelView = new GuiEntityModelView(mob)

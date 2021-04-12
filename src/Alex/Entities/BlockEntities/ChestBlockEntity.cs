@@ -125,11 +125,13 @@ namespace Alex.Entities.BlockEntities
 
 				if (value)
 				{
-					ModelRenderer = new EntityModelRenderer(new DoubleChestEntityModel(), BlockEntityFactory.DoubleChestTexture);
+					ModelRenderer = new EntityModelRenderer(new DoubleChestEntityModel());
+					Texture = BlockEntityFactory.DoubleChestTexture;
 				}
 				else
 				{
-					ModelRenderer = new EntityModelRenderer(new ChestEntityModel(), BlockEntityFactory.ChestTexture);
+					ModelRenderer = new EntityModelRenderer(new ChestEntityModel());
+					Texture = BlockEntityFactory.ChestTexture;
 				}
 			}
 		}

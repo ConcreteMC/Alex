@@ -22,7 +22,8 @@ namespace Alex.Graphics.Effect
         private EffectParameter _projParam;
 
         private EffectParameter _viewParam;
-
+        
+        private EffectParameter _textureScaleParam;
          //EffectParameter worldViewProjParam;
 
         #endregion
@@ -51,6 +52,7 @@ namespace Alex.Graphics.Effect
 
         EffectDirtyFlags _dirtyFlags = EffectDirtyFlags.All;
 
+        Vector2 _textureScale = Vector2.One;
         #endregion
 
         #region Public Properties
@@ -210,7 +212,15 @@ namespace Alex.Graphics.Effect
         public Texture2D Texture
         {
             get { return _textureParam.GetValueTexture2D(); }
-            set { _textureParam.SetValue(value); }
+            set
+            {
+                _textureParam.SetValue(value);
+
+                if (value != null)
+                {
+                    _textureScaleParam.SetValue(Vector2.One / value.Bounds.Size.ToVector2());
+                }
+            }
         }
 
 
@@ -302,6 +312,7 @@ namespace Alex.Graphics.Effect
 
             _alphaFunction = cloneSource._alphaFunction;
             _referenceAlpha = cloneSource._referenceAlpha;
+            _textureScale = cloneSource._textureScale;
         }
 
         /// <summary>
@@ -331,6 +342,7 @@ namespace Alex.Graphics.Effect
             _projParam = Parameters["Projection"];
 
             _viewParam = Parameters["View"];
+            _textureScaleParam = Parameters["UvScale"];
             //  worldViewProjParam = Parameters["WorldViewProj"];
         }
         

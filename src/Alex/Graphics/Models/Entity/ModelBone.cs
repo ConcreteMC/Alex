@@ -14,7 +14,7 @@ namespace Alex.Graphics.Models.Entity
 {
 	public partial class EntityModelRenderer
 	{
-		public class ModelBone : IAttached, IDisposable
+		public class ModelBone : IAttached
 		{
 			internal ThreadSafeList<IAttached> Children { get; set; } = new ThreadSafeList<IAttached>();
 
@@ -80,7 +80,6 @@ namespace Alex.Graphics.Models.Entity
 
 			public void ClearAnimations()
 			{
-				if (_disposed) return;
 				var anim = CurrentAnim;
 
 				if (anim != null)
@@ -90,7 +89,7 @@ namespace Alex.Graphics.Models.Entity
 				}
 			}
 
-			private Matrix WorldMatrix { get; set; } = Matrix.Identity;
+			//private Matrix WorldMatrix { get; set; } = Matrix.Identity;
 
 			private Vector3 _startRotation = Vector3.Zero;
 			private Vector3 _targetRotation = Vector3.Zero;
@@ -188,10 +187,8 @@ namespace Alex.Graphics.Models.Entity
 				MoveOverTime(targetPosition, _targetRotation, _targetScale, time);
 			}
 
-			public void Update(IUpdateArgs args, Matrix characterMatrix, Vector3 parentScale)
+			public void Update(IUpdateArgs args, Vector3 parentScale)
 			{
-				if (_disposed) return;
-
 				if (_accumulator < _target)
 				{
 					_accumulator += args.GameTime.ElapsedGameTime.TotalSeconds;
@@ -237,7 +234,33 @@ namespace Alex.Graphics.Models.Entity
 						}
 					}
 
-					var scale = parentScale * _scale; // (parentScale / _scale) * (_scale * parentScale);
+					//var scale = parentScale * _scale; // (parentScale / _scale) * (_scale * parentScale);
+				
+					var children = Children.ToArray();
+
+					if (children.Length > 0)
+					{
+						foreach (var child in children)
+						{
+							child.Update(args, parentScale * _scale);
+						}
+					}
+				}
+				finally
+				{
+					//	Monitor.Exit(_disposeLock);
+				}
+			}
+
+			public int Render(IRenderArgs args, Microsoft.Xna.Framework.Graphics.Effect effect, Matrix worldMatrix)
+			{
+				var renderCount = 0;
+				//var count = ElementCount;
+
+			//	worldMatrix = WorldMatrix * worldMatrix;
+			Matrix childMatrix = worldMatrix;
+				if (Rendered)
+				{
 					var rotation = _rotation;
 					var translation = _position;
 
@@ -250,31 +273,18 @@ namespace Alex.Graphics.Models.Entity
 						}
 					}*/
 
-					Matrix matrix;
-
 					if (Pivot.HasValue)
 					{
 						var pivot = (Pivot ?? Vector3.Zero);
 
-						matrix = Matrix.CreateTranslation(-pivot) * MatrixHelper.CreateRotationDegrees(rotation)
-						                                          * Matrix.CreateTranslation(pivot)
-						                                          * Matrix.CreateTranslation(translation)
-						                                          * characterMatrix;
+						childMatrix = Matrix.CreateTranslation(-pivot) * MatrixHelper.CreateRotationDegrees(rotation)
+						                                               * Matrix.CreateTranslation(pivot)
+						                                               * Matrix.CreateTranslation(translation)
+						                                               * worldMatrix;
 					}
 					else
 					{
-						matrix = MatrixHelper.CreateRotationDegrees(rotation) * Matrix.CreateTranslation(translation)
-						                                                      * characterMatrix;
-					}
-
-					var children = Children.ToArray();
-
-					if (children.Length > 0)
-					{
-						foreach (var child in children)
-						{
-							child.Update(args, matrix, parentScale * _scale);
-						}
+						childMatrix = MatrixHelper.CreateRotationDegrees(rotation) * Matrix.CreateTranslation(translation) * worldMatrix;
 					}
 
 					var bindingRotation = _bindingRotation;
@@ -283,33 +293,20 @@ namespace Alex.Graphics.Models.Entity
 					{
 						var pivot = (Pivot ?? Vector3.Zero);
 
-						WorldMatrix = Matrix.CreateTranslation(-pivot)
+						worldMatrix = Matrix.CreateTranslation(-pivot)
 						              * MatrixHelper.CreateRotationDegrees(bindingRotation)
-						              * Matrix.CreateTranslation(pivot) * matrix;
+						              * Matrix.CreateTranslation(pivot) * childMatrix;
 					}
 					else
 					{
-						WorldMatrix = MatrixHelper.CreateRotationDegrees(bindingRotation) * matrix;
+						worldMatrix = MatrixHelper.CreateRotationDegrees(bindingRotation) * childMatrix;
 					}
-				}
-				finally
-				{
-					//	Monitor.Exit(_disposeLock);
-				}
-			}
-
-			public int Render(IRenderArgs args, Microsoft.Xna.Framework.Graphics.Effect effect)
-			{
-				var renderCount = 0;
-				//var count = ElementCount;
-
-				if (Rendered)
-				{
+					
 					var meshes = _modelMeshes;
 
 					if (meshes.Count > 0)
 					{
-						((IEffectMatrices) effect).World = WorldMatrix;
+						((IEffectMatrices) effect).World = worldMatrix;
 
 						foreach (var mesh in meshes)
 						{
@@ -331,19 +328,13 @@ namespace Alex.Graphics.Models.Entity
 
 				foreach (var child in Children)
 				{
-					renderCount += child.Render(args, effect);
+					renderCount += child.Render(args, effect, childMatrix);
 				}
 
 				return renderCount;
 			}
-
-			private bool _disposed = false;
+			
 			private Vector3 _position;
-
-			public void Dispose()
-			{
-				_disposed = true;
-			}
 
 			public void AddChild(IAttached modelBone)
 			{

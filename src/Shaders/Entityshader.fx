@@ -17,6 +17,7 @@ float FogEnabled;
 float FogStart;
 float FogEnd;
 float3 FogColor;
+float2 UvScale;
 
 Texture Texture;
 //: register(s0);
@@ -58,7 +59,7 @@ VertexToPixel VertexShaderFunction(float4 inPosition : POSITION, float4 inTexCoo
 PixelToFrame PixelShaderFunction(VertexToPixel PSIn)  {
     PixelToFrame Output = (PixelToFrame)0;
 
-    float4 textureColor = tex2D(textureSampler, PSIn.TexCoords);
+    float4 textureColor = tex2D(textureSampler, PSIn.TexCoords * UvScale);
     
     if (textureColor.a < 255 && textureColor.a > 0){
         textureColor.a = 255;

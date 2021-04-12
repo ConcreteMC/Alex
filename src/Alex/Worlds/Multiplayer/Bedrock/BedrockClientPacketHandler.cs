@@ -491,6 +491,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			entity.Velocity = velocity;
 			entity.EntityId = entityId;
 			entity.UUID = uuid;
+		//	entity.Texture = texture2D;
 			entity.SetInventory(new BedrockInventory(46));
 			
 			

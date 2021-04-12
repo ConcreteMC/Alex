@@ -328,8 +328,10 @@ namespace Alex.Entities
 
 						GeometryName = model.Description.Identifier;
 
-						var modelRenderer = new EntityModelRenderer(
-							model, TextureUtils.BitmapToTexture2D(this, Alex.Instance.GraphicsDevice, skinBitmap));
+						EntityModelRenderer modelRenderer = new EntityModelRenderer(
+								model);
+
+						Texture = TextureUtils.BitmapToTexture2D(this, Alex.Instance.GraphicsDevice, skinBitmap);
 
 						if (modelRenderer.Valid)
 						{

@@ -8,19 +8,16 @@ namespace Alex.Graphics.Models.Entity
 	public sealed class Cube
 	{
 		private static readonly Color   DefaultColor = Color.White;
-		private readonly        Vector2 _textureSize;
-		
+
 		private readonly bool        _mirror = false;
 
-		public Cube(EntityModelCube cube, Vector2 textureSize, bool mirrored, float inflation)
+		public Cube(EntityModelCube cube, bool mirrored, float inflation)
 		{
 			_mirror = mirrored;
 
 			var uv     = cube.Uv ?? new EntityModelUV();
 			var rawSize = cube.Size;
 			var size   = cube.InflatedSize(inflation);
-			
-			this._textureSize = textureSize;
 
 			//front verts with position and texture stuff
 			_topLeftFront = new Vector3(0f, size.Y, 0f);
@@ -212,7 +209,6 @@ namespace Alex.Graphics.Models.Entity
 		private TextureMapping GetTextureMapping(Vector2 textureOffset, float regionWidth, float regionHeight)
 		{
 			return new TextureMapping(
-				_textureSize,
 				textureOffset, regionWidth, regionHeight, _mirror);
 		}
 
@@ -224,19 +220,18 @@ namespace Alex.Graphics.Models.Entity
 			public Vector2 BotRight { get; }
 
 			public TextureMapping(
-				Vector2 textureSize,
 				Vector2 textureOffset,
 				float width,
 				float height,
 				bool mirrored)
 			{
-				var texelWidth  = (1f / textureSize.X);
-				var texelHeight = (1f / textureSize.Y);
+				//var texelWidth  = (1f / textureSize.X);
+				//var texelHeight = (1f / textureSize.Y);
 
-				var x1 = texelWidth * textureOffset.X;
-				var x2 = x1 + (width * texelWidth);
-				var y1 = texelHeight * (textureOffset.Y);
-				var y2 = y1 + (height * texelHeight);
+				var x1 = 1f * textureOffset.X;
+				var x2 = x1 + (width * 1f);
+				var y1 = 1f * (textureOffset.Y);
+				var y2 = y1 + (height * 1f);
 
 				if (mirrored)
 				{

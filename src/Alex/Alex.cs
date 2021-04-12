@@ -299,8 +299,8 @@ namespace Alex
                     }
                 }
             }
-            //base.InactiveSleepTime = TimeSpan.Zero;
-            base.InactiveSleepTime = TimeSpan.FromSeconds(1d / 30d); //Limit framerate to 30fps when window inactive
+            base.InactiveSleepTime = TimeSpan.Zero;
+           // base.InactiveSleepTime = TimeSpan.FromSeconds(1d / 30d); //Limit framerate to 30fps when window inactive
             
             GraphicsDevice.PresentationParameters.MultiSampleCount = 8;
 
@@ -333,6 +333,7 @@ namespace Alex
 			ResourceManager.BlockEffect = Content.Load<Effect>("Alex.Resources.Blockshader_dx.xnb").Clone();
 			ResourceManager.LightingEffect = Content.Load<Effect>("Alex.Resources.Lightmap_dx.xnb").Clone();
 #else
+            ResourceManager.EntityEffect = Content.Load<Effect>("Alex.Resources.Entityshader.xnb").Clone();
             ResourceManager.BlockEffect = Content.Load<Effect>("Alex.Resources.Blockshader.xnb").Clone();
             ResourceManager.LightingEffect = Content.Load<Effect>("Alex.Resources.Lightmap.xnb").Clone();
 #endif

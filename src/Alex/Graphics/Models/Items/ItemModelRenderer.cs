@@ -209,7 +209,7 @@ namespace Alex.Graphics.Models.Items
         }
 
         //private Matrix _parentMatrix = Matrix.Identity;
-        public void Update(IUpdateArgs args, Matrix characterMatrix, Vector3 parentScale)
+        public void Update(IUpdateArgs args, Vector3 parentScale)
         {
             // _parentMatrix = characterMatrix;
             
@@ -223,7 +223,38 @@ namespace Alex.Graphics.Models.Items
             Effect.Projection = args.Camera.ProjectionMatrix;
             Effect.View = args.Camera.ViewMatrix;
 
-            var halfSize          = Size / 2f;
+            //Effect.DiffuseColor = diffuseColor;
+            
+            if (Buffer == null && Vertices != null)
+            {
+                var vertices = Vertices;
+               
+                if (vertices.Length == 0)
+                {
+                   // _canInit = false;
+                }
+                else
+                {
+                    var buffer = GpuResourceManager.GetBuffer(this, args.GraphicsDevice, _declaration,
+                        Vertices.Length, BufferUsage.WriteOnly);
+
+                    buffer.SetData(vertices);
+
+                    Buffer = buffer;
+                }
+            }
+         //   Rotation = knownPosition.ToRotationVector3();
+        }
+
+        /// <inheritdoc />
+        public IAttached Parent { get; set; } = null;
+
+        public int Render(IRenderArgs args, Microsoft.Xna.Framework.Graphics.Effect effect, Matrix characterMatrix)
+        {
+            if (Effect == null || Buffer == null || Buffer.VertexCount == 0)
+                return 0;
+            
+                        var halfSize          = Size / 2f;
            // halfSize.Z = 0f;
            // halfSize.Y = 8f;
             var activeDisplayItem = ActiveDisplayItem;
@@ -274,7 +305,7 @@ namespace Alex.Graphics.Models.Items
             }
             else  if (DisplayPosition.HasFlag(DisplayPosition.FirstPerson))
             {
-                Effect.World = Matrix.CreateScale(Scale * activeDisplayItem.Scale)
+                Effect.World = Matrix.CreateScale(activeDisplayItem.Scale)
                                * Matrix.CreateRotationY(MathUtils.ToRadians(180f))
                                * MatrixHelper.CreateRotationDegrees(activeDisplayItem.Rotation)
                                * Matrix.CreateTranslation(halfSize)
@@ -287,37 +318,6 @@ namespace Alex.Graphics.Models.Items
                     Effect.World = characterMatrix;
                 
             }
-
-            //Effect.DiffuseColor = diffuseColor;
-            
-            if (Buffer == null && Vertices != null)
-            {
-                var vertices = Vertices;
-               
-                if (vertices.Length == 0)
-                {
-                   // _canInit = false;
-                }
-                else
-                {
-                    var buffer = GpuResourceManager.GetBuffer(this, args.GraphicsDevice, _declaration,
-                        Vertices.Length, BufferUsage.WriteOnly);
-
-                    buffer.SetData(vertices);
-
-                    Buffer = buffer;
-                }
-            }
-         //   Rotation = knownPosition.ToRotationVector3();
-        }
-
-        /// <inheritdoc />
-        public IAttached Parent { get; set; } = null;
-
-        public int Render(IRenderArgs args, Microsoft.Xna.Framework.Graphics.Effect effect)
-        {
-            if (Effect == null || Buffer == null || Buffer.VertexCount == 0)
-                return 0;
 
             int drawCount = 0;
             var original = args.GraphicsDevice.RasterizerState;

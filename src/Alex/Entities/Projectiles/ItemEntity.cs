@@ -30,6 +30,7 @@ namespace Alex.Entities.Projectiles
         private   float _rotation = 0;
         protected bool  DoRotation { get; set; } = true;
         private   bool  IsBlock    { get; set; } = false;
+       // private Matrix _worldMatrix = Matrix.Identity;
         public override void Update(IUpdateArgs args)
         {
             if (CanRender)
@@ -41,17 +42,11 @@ namespace Alex.Entities.Projectiles
                 {
                     //var offset = new Vector3((float) Width, (float) Height, (float) Width) / 2f;
                     var offset = new Vector3((float) Width, 0f, (float) Width);
-                    ItemRenderer.Update(args, Matrix.CreateScale(scale)
-                                             // * MCMatrix.CreateTranslation(-offset)
-                                              * Matrix.CreateRotationY(MathHelper.ToRadians(_rotation)) 
-                                            //  * MCMatrix.CreateTranslation(offset)
-                                              * Matrix.CreateTranslation(knownPos), new Vector3(scale));
+                    ItemRenderer.Update(args, new Vector3(scale));
                 }
                 else
                 {
-                    ItemRenderer.Update(args,  Matrix.CreateScale(scale)
-                                               * Matrix.CreateRotationY(MathHelper.ToRadians(KnownPosition.Yaw))
-                                               * Matrix.CreateTranslation(knownPos), new Vector3(scale));
+                    ItemRenderer.Update(args, new Vector3(scale));
                 }
             }
 
@@ -81,7 +76,27 @@ namespace Alex.Entities.Projectiles
             if (itemRenderer == null)
                 return 0;
             
-            return itemRenderer.Render(renderArgs, null);
+            var knownPos = KnownPosition.ToVector3();
+            // var knownPos = bb.GetCenter();
+            float scale = (float) (IsBlock ? (1f / (1f / Width)) : (1f / 32f));
+            Matrix worldMatrix;
+
+            if (DoRotation)
+            {
+                worldMatrix =  Matrix.CreateScale(scale)
+                               // * MCMatrix.CreateTranslation(-offset)
+                               * Matrix.CreateRotationY(MathHelper.ToRadians(_rotation))
+                               //  * MCMatrix.CreateTranslation(offset)
+                               * Matrix.CreateTranslation(knownPos);
+            }
+            else
+            {
+                worldMatrix = Matrix.CreateScale(scale)
+                              * Matrix.CreateRotationY(MathHelper.ToRadians(KnownPosition.Yaw))
+                              * Matrix.CreateTranslation(knownPos);
+            }
+            
+            return itemRenderer.Render(renderArgs, null, worldMatrix);
         }
     }
 }

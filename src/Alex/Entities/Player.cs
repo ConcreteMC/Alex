@@ -96,7 +96,6 @@ namespace Alex.Entities
 			ShowItemInHand = true;
 
 		//	ServerEntity = false;
-			RequiresRealTimeTick = true;
 	//		AlwaysTick = true;
 			
 			IsAffectedByGravity = true;
@@ -479,7 +478,7 @@ namespace Alex.Entities
 				    if (player.Skin != null)
 					    skin = player.Skin;
 			    }
-			    else
+			   /* else
 			    {
 				    if (sourceEntity?.ModelRenderer?.Model == null)
 					    return;
@@ -487,11 +486,11 @@ namespace Alex.Entities
 				    var model   = sourceEntity.ModelRenderer.Model;
 				    skin = model.ToSkin();
 			    }
-
+*/
 			    if (skin == null)
 				    return;
 
-			    var texture = sourceEntity.ModelRenderer.Texture;
+			    var texture = sourceEntity.Texture;
 
 			    if (skin.Data == null || skin.Data.Length == 0)
 			    {

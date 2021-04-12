@@ -58,10 +58,7 @@ namespace Alex.Entities
 			if (CanRender)
 			{
 				ItemRenderer.Update(
-					args,
-					Matrix.Identity * Matrix.CreateScale(Scale)
-					                  * Matrix.CreateRotationY(MathHelper.ToRadians(KnownPosition.Yaw))
-					                  * Matrix.CreateTranslation(KnownPosition.ToVector3()), new Vector3(Scale));
+					args, new Vector3(Scale));
 			}
 		}
 		
@@ -75,7 +72,9 @@ namespace Alex.Entities
 			if (itemRenderer == null)
 				return 0;
 			
-			return itemRenderer.Render(renderArgs, null);
+			return itemRenderer.Render(renderArgs, null, Matrix.Identity * Matrix.CreateScale(Scale)
+			                                                             * Matrix.CreateRotationY(MathHelper.ToRadians(KnownPosition.Yaw))
+			                                                             * Matrix.CreateTranslation(KnownPosition.ToVector3()));
 		}
 	}
 }

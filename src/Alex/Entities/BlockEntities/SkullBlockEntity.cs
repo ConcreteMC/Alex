@@ -25,7 +25,8 @@ namespace Alex.Entities.BlockEntities
 		/// <inheritdoc />
 		public SkullBlockEntity(World level, Block block, PooledTexture2D texture) : base(level, block)
 		{
-			ModelRenderer = new EntityModelRenderer(new SkullBlockEntityModel(), texture);
+			ModelRenderer = new EntityModelRenderer(new SkullBlockEntityModel());
+			Texture = texture;
 			
 			Width = 0.5f;
 			Height =  0.5f;
@@ -92,7 +93,8 @@ namespace Alex.Entities.BlockEntities
 						
 						if (_skeleton != null)
 						{
-							ModelRenderer = new EntityModelRenderer(new SkullBlockEntityModel(), _skeleton);
+							ModelRenderer = new EntityModelRenderer(new SkullBlockEntityModel());
+							Texture = _skeleton;
 							//ModelRenderer.Texture = _skeleton;
 						}
 						break;
@@ -109,7 +111,8 @@ namespace Alex.Entities.BlockEntities
 						
 						if (_witherSkeleton != null)
 						{
-							ModelRenderer = new EntityModelRenderer(new SkullBlockEntityModel(), _witherSkeleton);
+							ModelRenderer = new EntityModelRenderer(new SkullBlockEntityModel());
+							Texture = _witherSkeleton;
 						}
 						break;
 
@@ -125,7 +128,8 @@ namespace Alex.Entities.BlockEntities
 						
 						if (_zombie != null)
 						{
-							ModelRenderer = new EntityModelRenderer(new SkullBlockEntityModel(), _zombie);
+							ModelRenderer = new EntityModelRenderer(new SkullBlockEntityModel());
+							Texture = _zombie;
 						}
 						break;
 
@@ -141,7 +145,8 @@ namespace Alex.Entities.BlockEntities
 						
 						if (_creeper != null)
 						{
-							ModelRenderer = new EntityModelRenderer(new SkullBlockEntityModel(), _creeper);
+							ModelRenderer = new EntityModelRenderer(new SkullBlockEntityModel());
+							Texture = _creeper;
 						}
 						break;
 
@@ -159,7 +164,8 @@ namespace Alex.Entities.BlockEntities
 						{
 							if (ModelFactory.TryGetModel("geometry.dragon_head", out var dragonHead))
 							{
-								ModelRenderer = new EntityModelRenderer(dragonHead, _dragon);
+								ModelRenderer = new EntityModelRenderer(dragonHead);
+								Texture = _dragon;
 							}
 
 							//ModelRenderer.Texture = _dragon;

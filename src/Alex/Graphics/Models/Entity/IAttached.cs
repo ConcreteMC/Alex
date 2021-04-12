@@ -8,8 +8,8 @@ namespace Alex.Graphics.Models.Entity
 	public interface IAttached
 	{
 		IAttached Parent { get; set; }
-		int Render(IRenderArgs args, Microsoft.Xna.Framework.Graphics.Effect effect);
-		void Update(IUpdateArgs args, Matrix characterMatrix, Vector3 parentScale);
+		int Render(IRenderArgs args, Microsoft.Xna.Framework.Graphics.Effect effect, Matrix worldMatrix);
+		void Update(IUpdateArgs args, Vector3 parentScale);
 
 		string Name { get; }
 

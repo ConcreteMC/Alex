@@ -295,6 +295,7 @@ namespace Alex.Gamestates.Debugging
 		private Alex           Alex           { get; }
 		private World          World          { get; }
 
+		private BasicEffect Effect { get; }
 		public EntityModelExplorer(Alex alex, World world)
 		{
 			Alex           = alex;
@@ -302,6 +303,11 @@ namespace Alex.Gamestates.Debugging
 			GraphicsDevice = alex.GraphicsDevice;
 
 			_entityDefinitions = alex.Resources.BedrockResourcePack.EntityDefinitions.ToArray();
+			Effect = new BasicEffect(GraphicsDevice)
+			{
+				VertexColorEnabled = true,
+				TextureEnabled = true
+			};
 		}
 
 		private EntityModelRenderer _currentRenderer = null;
@@ -336,8 +342,10 @@ namespace Alex.Gamestates.Debugging
 					{
 						PooledTexture2D t = TextureUtils.BitmapToTexture2D(Alex.GraphicsDevice, bmp.Value);
 
-						renderer = new EntityModelRenderer(model, t);
+						renderer = new EntityModelRenderer(model);
 						renderer.Scale = 1f / 16f;
+
+						Effect.Texture = t;
 					}
 				}
 			}
@@ -418,13 +426,13 @@ namespace Alex.Gamestates.Debugging
 		public override void UpdateContext3D(IUpdateArgs args, IGuiRenderer guiRenderer)
 		{
 			_rot += (float)args.GameTime.ElapsedGameTime.TotalSeconds;
-			_currentRenderer?.Update(args, new PlayerLocation(args.Camera.Position, 16f * _rot % 360f, 16f * _rot % 360f, 8f * _rot % 360f));
+			_currentRenderer?.Update(args);
 		}
 
 		/// <inheritdoc />
 		public override void DrawContext3D(IRenderArgs args, IGuiRenderer guiRenderer)
 		{
-			_currentRenderer?.Render(args, false);
+			_currentRenderer?.Render(args, false, Effect, new PlayerLocation(args.Camera.Position, 16f * _rot % 360f, 16f * _rot % 360f, 8f * _rot % 360f).CalculateWorldMatrix());
 		}
 	}
 

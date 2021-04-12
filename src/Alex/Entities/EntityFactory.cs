@@ -33,8 +33,8 @@ namespace Alex.Entities
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(EntityFactory));
 
-		private static ConcurrentDictionary<string, Func<PooledTexture2D, EntityModelRenderer>> _registeredRenderers =
-			new ConcurrentDictionary<string, Func<PooledTexture2D, EntityModelRenderer>>();
+		private static ConcurrentDictionary<string, Func<EntityModelRenderer>> _registeredRenderers =
+			new ConcurrentDictionary<string,  Func<EntityModelRenderer>>();
 
 		private static IReadOnlyDictionary<long, EntityData> _idToData;
 		public static void Load(ResourceManager resourceManager, IProgressReceiver progressReceiver)
@@ -75,7 +75,7 @@ namespace Alex.Entities
 		{
 			if (_idToData.TryGetValue(networkId, out data))
 			{
-				renderer = TryGetRendererer(data, null);
+				renderer = TryGetRendererer(data);
 				if (renderer != null)
 				{
 					return true;
@@ -91,7 +91,7 @@ namespace Alex.Entities
 			return false;
 		}
 
-		private static EntityModelRenderer TryGetRendererer(EntityData data, PooledTexture2D texture)
+		private static EntityModelRenderer TryGetRendererer(EntityData data)
 		{
 			string lookupName = data.OriginalName;
 
@@ -102,7 +102,7 @@ namespace Alex.Entities
 			
 			if (_registeredRenderers.TryGetValue(lookupName, out var func))
 			{
-				return func(texture);
+				return func();
 			}
 			else
 			{
@@ -112,18 +112,18 @@ namespace Alex.Entities
 
 				if (f != null)
 				{
-					return f(texture);
+					return f();
 				}
 			}
 
 			return null;
 		}
 
-		public static EntityModelRenderer GetEntityRenderer(string name, PooledTexture2D texture)
+		public static EntityModelRenderer GetEntityRenderer(string name)
 		{
 			if (_registeredRenderers.TryGetValue(name, out var func))
 			{
-				if (func != null) return func(texture);
+				if (func != null) return func();
 			}
 			else
 			{
@@ -131,7 +131,7 @@ namespace Alex.Entities
 
 				if (f != null)
 				{
-					return f(texture);
+					return f();
 				}
 			}
 			return null;
@@ -197,9 +197,9 @@ namespace Alex.Entities
 		private static void Add(ResourceManager resources, GraphicsDevice graphics, EntityDescription entityDefinition, EntityModel model)
 		{
 			_registeredRenderers.AddOrUpdate(entityDefinition.Identifier,
-				(t) =>
+				(a) =>
 				{
-					if (t == null)
+					/*if (t == null)
 					{
 						var textures = entityDefinition.Textures;
 						string texture;
@@ -213,30 +213,13 @@ namespace Alex.Entities
 						{
 							t = TextureUtils.BitmapToTexture2D(graphics, bmp);
 						}
-					}
+					}*/
 
-					return new EntityModelRenderer(model, t);
+					return () => new EntityModelRenderer(model);
 				},
 				(s, func) =>
 				{
-					return (t) =>
-						{
-							var    textures = entityDefinition.Textures;
-							string texture;
-
-							if (!(textures.TryGetValue("default", out texture)
-							      || textures.TryGetValue(entityDefinition.Identifier, out texture)))
-							{
-								texture = textures.FirstOrDefault().Value;
-							}
-
-							if (resources.TryGetBedrockBitmap(texture, out var bmp))
-							{
-								t = TextureUtils.BitmapToTexture2D(graphics, bmp);
-							}
-
-							return new EntityModelRenderer(model, t);
-						};
+					return () => new EntityModelRenderer(model);
 				});
 		}
 		
@@ -482,7 +465,8 @@ namespace Alex.Entities
 			}
 
 			var stringId = entityType.ToStringId();
-			if (Alex.Instance.Resources.BedrockResourcePack.EntityDefinitions.TryGetValue(
+			var resources = Alex.Instance.Resources;
+			if (resources.BedrockResourcePack.EntityDefinitions.TryGetValue(
 				stringId, out var description))
 			{
 				if (initRenderController)
@@ -491,7 +475,44 @@ namespace Alex.Entities
 				}
 
 				entity.ModelRenderer = EntityFactory.GetEntityRenderer(
-					stringId, null);
+					stringId);
+				
+				PooledTexture2D texture2D = null;
+				//if (renderer == null || texture2D == null)
+				{
+					if (ModelFactory.TryGetModel(description.Geometry["default"], out var model) && model != null)
+					{
+						var textures = description.Textures;
+						string texture;
+
+						if (!(textures.TryGetValue("default", out texture)
+						      || textures.TryGetValue(description.Identifier, out texture)))
+						{
+							texture = textures.FirstOrDefault().Value;
+						}
+
+						if (Alex.Instance.Resources.BedrockResourcePack.Textures.TryGetValue(texture, out var bmp))
+						{
+							var bitmapValue = bmp.Value;
+
+							PooledTexture2D t = TextureUtils.BitmapToTexture2D(
+								Alex.Instance.GraphicsDevice, bitmapValue);
+
+							texture2D = t;
+						}
+						else if (Alex.Instance.Resources.TryGetBitmap(texture, out var bmp2))
+						{
+							texture2D = TextureUtils.BitmapToTexture2D(Alex.Instance.GraphicsDevice, bmp2);
+						}
+
+						//renderer = new EntityModelRenderer(model);
+					}
+				}
+
+				if (texture2D != null)
+				{
+					entity.Texture = texture2D;
+				}
 			}
 
 			return entity;
