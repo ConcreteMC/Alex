@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Runtime.Serialization;
 using Alex.API.Resources;
+using Alex.MoLang.Attributes;
 using Alex.Networking.Java.Packets.Play;
 using Alex.Worlds;
 using MiNET.Entities;
@@ -56,6 +57,9 @@ namespace Alex.Entities.Passive
 				Variant = (CatType) varInt.Value;
 			}
 		}
+
+		[MoProperty("variant")]
+		public int QueryVariant => (int) Variant;
 
 		public enum CatType
 		{

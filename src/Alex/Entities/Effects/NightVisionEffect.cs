@@ -9,10 +9,10 @@ namespace Alex.Entities.Effects
 		}
 
 		/// <inheritdoc />
-		public override void ApplyTo(Entity entity)
+		public override void Add(Entity entity)
 		{
 			//TODO: Apply to rendering, caves should light up etc see 
-			base.ApplyTo(entity);
+			base.Add(entity);
 		}
 	}
 }

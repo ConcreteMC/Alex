@@ -218,9 +218,6 @@ namespace Alex.Entities
 		public bool CanFly { get; set; } = false;
 		public bool IsFlying { get; set; } = false;
 
-		public bool IsCollidingWithWorld { get; set; } = false;
-		public bool AlwaysTick { get; set; } = false;
-
 		private bool _isRendered = false;
 
 		public bool IsWorldImmutable { get; set; } = false;
@@ -239,7 +236,7 @@ namespace Alex.Entities
 				var oldValue = _isRendered;
 				_isRendered = value;
 
-				if (value && !oldValue && !AlwaysTick)
+				if (value && !oldValue)
 				{
 					Velocity = Vector3.Zero;
 				}
@@ -257,14 +254,11 @@ namespace Alex.Entities
 				var newValue = value;
 				//_itemRenderer = value;
 
-				if (oldValue != null)
-				{
-					oldValue.Parent?.Remove(oldValue);
-				}
+				oldValue?.Parent?.Remove(oldValue);
 
 				if (newValue != null)
 				{
-					EntityModelRenderer.ModelBone arm = null;
+					IAttached arm = null;
 
 					if (_rightItemModel != null)
 					{
@@ -280,7 +274,7 @@ namespace Alex.Entities
 
 				_itemRenderer = newValue;
 				
-				UpdateItemPosition();
+				UpdateItemPosition(newValue);
 			}
 		}
 
@@ -288,11 +282,7 @@ namespace Alex.Entities
 		protected EntityModelRenderer.ModelBone _leftItemModel;
 		protected EntityModelRenderer.ModelBone _rightArmModel;
 		protected EntityModelRenderer.ModelBone _rightItemModel;
-		
-		protected EntityModelRenderer.ModelBone _leftLegModel;
-		protected EntityModelRenderer.ModelBone _rightLegModel;
 
-		protected EntityModelRenderer.ModelBone  _body;
 		protected EntityModelRenderer.ModelBone _head;
 		
 		public  HealthManager HealthManager { get; }
@@ -310,7 +300,7 @@ namespace Alex.Entities
 				if (value != _isFirstPersonMode)
 				{
 					_isFirstPersonMode = value;
-					UpdateItemPosition();
+					UpdateItemPosition(_itemRenderer);
 					//CheckHeldItem();
 				}
 			}
@@ -467,6 +457,11 @@ namespace Alex.Entities
 
         private void CheckHeldItem()
         {
+	        if (_isUsingItem && Inventory.SelectedSlot != _usingSlot)
+	        {
+		        IsUsingItem = false;
+	        }
+	        
             var inHand = Inventory.MainHand;
 
             if ((inHand == null || inHand.Count == 0 || inHand.Id <= 0) && ItemRenderer != null && ModelRenderer != null)
@@ -505,10 +500,8 @@ namespace Alex.Entities
             }
         }
 
-        protected virtual void UpdateItemPosition()
+        protected virtual void UpdateItemPosition(IItemRenderer renderer)
         {
-	        var renderer = ItemRenderer;
-
 	        if (renderer == null)
 		        return;
 	        
@@ -517,7 +510,7 @@ namespace Alex.Entities
 
         private void InventoryOnSelectedHotbarSlotChanged(object? sender, SelectedSlotChangedEventArgs e)
         {
-            CheckHeldItem();
+	        CheckHeldItem();
         }
 
 		protected virtual void OnInventorySlotChanged(object sender, SlotChangedEventArgs e)
@@ -538,9 +531,44 @@ namespace Alex.Entities
 		
 		[MoProperty("is_sprinting")]
 		public bool IsSprinting { get; set; }
-		
+
+		private DateTime _startOfItemUse = DateTime.UtcNow;
+		private int _usingSlot = 0;
 		[MoProperty("is_using_item")]
-		public bool IsUsingItem { get; set; }
+		public bool IsUsingItem
+		{
+			get => _isUsingItem;
+			set
+			{
+				if (_isUsingItem != value)
+				{
+					Log.Info($"Using Item={value}, duration={(DateTime.UtcNow - _startOfItemUse).TotalMilliseconds}ms");
+				}
+				
+				_isUsingItem = value;
+
+				if (value)
+				{
+					_usingSlot = Inventory.SelectedSlot;
+					_startOfItemUse = DateTime.UtcNow;
+				}
+			}
+		}
+
+		[MoProperty("item_in_use_duration")]
+		public double ItemInUseDuration
+		{
+			get
+			{
+				if (_isUsingItem)
+				{
+					return (DateTime.UtcNow - _startOfItemUse).TotalSeconds;
+				}
+
+				return 0d;
+			}
+		}
+
 		public bool IsInvisible { get; set; }
 		
 		[MoProperty("is_tempted")]
@@ -642,9 +670,21 @@ namespace Alex.Entities
 
 		[MoProperty("is_alive")]
 		public bool IsAlive => HealthManager.Health > 0;
-		
+
 		[MoProperty("is_on_ground")]
 		public bool IsOnGround => _knownPosition.OnGround;
+
+		[MoProperty("anim_time")]
+		public double AnimationTime => 0d;
+		
+		[MoProperty("is_grazing")]
+		public bool IsGrazing { get; set; } = false;
+
+		[MoProperty("swell_amount")]
+		public double SwellAmount { get; set; } = 0d;
+
+		[MoProperty("invulnerable_ticks")]
+		public double InvulnerableTicks { get; set; } = 0d;
 		
 		public Pose Pose { get; set; } = Pose.Standing;
 		
@@ -1101,6 +1141,9 @@ namespace Alex.Entities
 			foreach (var effect in _effects.Values.ToArray())
 			{
 				effect.OnTick(this);
+				
+				if (effect.HasExpired())
+					RemoveEffect(effect.EffectId);
 			}
 			//HealthManager.OnTick();
 		}
@@ -1179,15 +1222,15 @@ namespace Alex.Entities
 
 			ScaleChanged();
 			
-			ModelRenderer.GetBone("body", out _body);
+			//ModelRenderer.GetBone("body", out _body);
 
 			ModelRenderer.GetBone("leftArm", out _leftArmModel);
 			ModelRenderer.GetBone("leftItem", out _leftItemModel);
 			ModelRenderer.GetBone("rightArm", out _rightArmModel);
 			ModelRenderer.GetBone("rightItem", out _rightItemModel);
 
-			ModelRenderer.GetBone("rightLeg", out _rightLegModel);
-			ModelRenderer.GetBone("leftLeg", out _leftLegModel);
+		//	ModelRenderer.GetBone("rightLeg", out _rightLegModel);
+		//	ModelRenderer.GetBone("leftLeg", out _leftLegModel);
 
 			ModelRenderer.GetBone("head", out _head);
 		}
@@ -1321,6 +1364,7 @@ namespace Alex.Entities
 		private IItemRenderer                            _itemRenderer    = null;
 		private bool _noAi = false;
 		private string _nameTag;
+		private bool _isUsingItem;
 
 		public const float   JumpVelocity = 0.42f;
 		public virtual void Jump()
@@ -1365,14 +1409,14 @@ namespace Alex.Entities
 			var effect1 = effect;
 			
 			effect = _effects.AddOrUpdate(effect.EffectId, effect, (type, e) => effect1);
-			effect?.ApplyTo(this);
+			effect?.Add(this);
 		}
 
 		public void RemoveEffect(EffectType effectType)
 		{
 			if (_effects.TryRemove(effectType, out var removed))
 			{
-				removed.TakeFrom(this);
+				removed.Remove(this);
 			}
 		}
 
@@ -1493,6 +1537,9 @@ namespace Alex.Entities
 
 		#region MoLang Functions
 
+		[MoProperty("distance_from_camera")]
+		public double DistanceFromCamera => Vector3.Distance(Level.Camera.Position, KnownPosition);
+		
 		[MoFunction("get_equipped_item_name")]
 		public string GetEquippedItemName(MoParams mo)
 		{
@@ -1519,7 +1566,7 @@ namespace Alex.Entities
 			if (!isOffHand) item = Inventory.MainHand;
 			else item = Inventory.OffHand;
 
-			if (item?.Name == null) return "air";
+			if (item?.Name == null) return "";
 
 			return item.Name.Replace("minecraft:", "");
 		}
@@ -1680,11 +1727,39 @@ namespace Alex.Entities
 		public double TargetXRotation => TargetRotation.X;
 		
 		[MoProperty("target_y_rotation")]
-		public double TargetYRotation => TargetRotation.X;
+		public double TargetYRotation => TargetRotation.Y;
 
 		[MoProperty("is_selected_item")]
 		public bool IsSelectedItem => Inventory.MainHand.Count > 0 && !(Inventory.MainHand is ItemAir);
 
+		[MoProperty("main_hand_item_use_duration")]
+		public double MainHandItemUseDuration { get; set; } = 0d;
+
+		[MoProperty("main_hand_item_max_duration")]
+		public double MainHandItemMaxDuration { get; set; } = 0d;
+
+		[MoProperty("cape_flap_amount")]
+		public double CapeFlapAmount { get; set; } = 0d;
+
+		[MoFunction("get_root_locator_offset")]
+		public double GetRootLocatorOffset(MoParams param)
+		{
+			//Log.Info($"Root locator params: {param.ToString()}");
+			return 0d;
+		}
+
+		[MoFunction("debug_output", "debug")]
+		public void DebugOutput(MoParams param)
+		{
+			var values = param.GetParams();
+
+			if (values != null && values.Length > 0)
+			{
+				var str = string.Join(' ', values.Select(x => x.AsString()));
+				Log.Debug(str);
+			}
+		}
+		
 		#endregion
 	}
 }

@@ -487,7 +487,7 @@ namespace Alex.Entities
 			{
 				if (initRenderController)
 				{
-					entity.AnimationController.UpdateEntityDefinition(description);
+					entity.AnimationController.UpdateEntityDefinition(Alex.Instance.Resources.BedrockResourcePack, description);
 				}
 
 				entity.ModelRenderer = EntityFactory.GetEntityRenderer(

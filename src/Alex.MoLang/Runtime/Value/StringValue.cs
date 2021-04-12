@@ -16,9 +16,9 @@ namespace Alex.MoLang.Runtime.Value
 		/// <inheritdoc />
 		public bool Equals(IMoValue b)
 		{
-			if (Value == b.AsString())
-				return true;
-
+			if (b is StringValue stringValue)
+				return string.Equals(Value, stringValue.Value);// stringValue.Value.
+			
 			return false;
 		}
 	}

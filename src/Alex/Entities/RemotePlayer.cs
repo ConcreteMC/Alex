@@ -7,6 +7,7 @@ using System.Threading;
 using Alex.API.Graphics;
 using Alex.API.Utils;
 using Alex.Graphics.Models.Entity;
+using Alex.Graphics.Models.Items;
 using Alex.Net;
 using Alex.Networking.Java.Packets.Play;
 using Alex.ResourcePackLib;
@@ -171,7 +172,7 @@ namespace Alex.Entities
 				    Alex.Instance.Resources.BedrockResourcePack.EntityDefinitions.TryGetValue(
 					"minecraft:player", out var description))
 				{
-					AnimationController.UpdateEntityDefinition(description);
+					AnimationController.UpdateEntityDefinition( Alex.Instance.Resources.BedrockResourcePack, description);
 				}
 			}
 			finally
@@ -357,10 +358,8 @@ namespace Alex.Entities
 		}
 
 		/// <inheritdoc />
-		protected override void UpdateItemPosition()
+		protected override void UpdateItemPosition(IItemRenderer renderer)
 		{
-			var renderer = ItemRenderer;
-
 			if (renderer == null)
 				return;
 			

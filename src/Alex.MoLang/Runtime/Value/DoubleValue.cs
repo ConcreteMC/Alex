@@ -32,6 +32,11 @@ namespace Alex.MoLang.Runtime.Value
 				throw new NotSupportedException($"Cannot convert {value.GetType().FullName} to double");
 			}
 		}
+
+		public DoubleValue(bool value)
+		{
+			Value = value ? 1d : 0d;
+		}
 		
 		public DoubleValue(double value)
 		{

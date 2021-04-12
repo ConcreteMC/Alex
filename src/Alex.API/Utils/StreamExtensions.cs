@@ -21,6 +21,24 @@ namespace Alex.API.Utils
 
             return buffer;
         }
+
+        public static byte[] ReadToByteArray(this Stream stream, int bufferSize = 256)
+        {
+            using (MemoryStream ms = new MemoryStream())
+            {
+                byte[] buffer = new byte[bufferSize];
+                int read;
+                do
+                {
+                    read = stream.Read(buffer, 0, buffer.Length);
+                    
+                    if (read > 0)
+                        ms.Write(buffer, 0, read);
+                } while (read > 0);
+
+                return ms.ToArray();
+            }
+        }
         
         public static unsafe ReadOnlySpan<byte> ReadToEnd(this Stream stream, int bufferSize = 256)
         {

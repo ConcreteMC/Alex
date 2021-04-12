@@ -65,6 +65,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
         
         private long _tickTime = 0;
         private long _lastPrioritization = 0;
+        public bool ChunksDirty { get; set; } = false;
         public void OnTick()
 		{
 			if (World == null) return;
@@ -97,8 +98,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 						_lastSentLocation = pos;
 					}*/
 
-					if ((pos.DistanceTo(_lastLocation) >= 16f)
-					    && (_tickTime - _lastPrioritization >= 10))
+					if (ChunksDirty || ((pos.DistanceTo(_lastLocation) >= 16f)
+					    && (_tickTime - _lastPrioritization >= 10)))
 					{
 					//	World.ChunkManager.FlagPrioritization();
 
@@ -106,8 +107,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 						_lastLocation = pos;
 						
-						UnloadChunks(new ChunkCoordinates(pos), Alex.Options.AlexOptions.VideoOptions.RenderDistance.Value + 2);
-
+						UnloadChunks(new ChunkCoordinates(pos), Client.ChunkRadius + 2);
+						ChunksDirty = false;
 						_lastPrioritization = _tickTime;
 					}
 					

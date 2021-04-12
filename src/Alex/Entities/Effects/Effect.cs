@@ -48,15 +48,20 @@ namespace Alex.Entities.Effects
 			Particles = true;
 		}
 		
-		public virtual void ApplyTo(Entity entity){}
-		public virtual void TakeFrom(Entity entity){}
+		public virtual void Add(Entity entity){}
+		public virtual void Remove(Entity entity){}
 		
 		public virtual void OnTick(Entity entity)
 		{
-			if (Duration > 0 && Duration != MaxDuration) Duration -= 1;
-			if (Duration > 0 && Duration < 20) entity.RemoveEffect(this.EffectId); // Need 20 tick grace for some effects that fade
+			if (Duration > 0 && Duration != MaxDuration) 
+				Duration --;
 		}
 
+		public virtual bool HasExpired()
+		{
+			return Duration <= 0;
+		}
+		
 		public override string ToString()
 		{
 			return $"EffectId: {EffectId}, Duration: {Duration}, Level: {Level}, Particles: {Particles}";

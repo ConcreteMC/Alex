@@ -46,13 +46,13 @@ namespace Alex.Net.Bedrock
         /// <summary>
         ///     Every outgoing datagram is assigned a sequence number, which increments by 1 every assignment
         /// </summary>
-        private long  _nextDatagramSequenceNumber = 0;
+        private long  _nextDatagramSequenceNumber = -1;
 
         /// <summary>
         /// Track which datagram sequence numbers have arrived.
         /// If a sequence number is skipped, send a NAK for all skipped messages
         /// </summary>
-        private long _lastReceivedSequenceNumber = 0;
+        private long _expectedNextSequenceNumber = 0;
         
         public long NextCongestionControlBlock { get; set; }
         public bool BackoffThisBlock { get; set; }
@@ -85,7 +85,7 @@ namespace Alex.Net.Bedrock
 
         public bool OnPacketReceived(long currentTime, long datagramSequenceNumber, int sizeInBytes, out long skippedMessageCount)
         {
-            skippedMessageCount = 0;
+           /* skippedMessageCount = 0;
             var last = Interlocked.CompareExchange(ref _lastReceivedSequenceNumber, datagramSequenceNumber, datagramSequenceNumber - 1);
 
             if (last == datagramSequenceNumber - 1)
@@ -101,9 +101,9 @@ namespace Alex.Net.Bedrock
                 skippedMessageCount = datagramSequenceNumber - last;
             }
 
-            return true;
+            return true;*/
 
-            /* if (datagramSequenceNumber == _expectedNextSequenceNumber)
+             if (datagramSequenceNumber == _expectedNextSequenceNumber)
              {
                  skippedMessageCount=0;
                  _expectedNextSequenceNumber=datagramSequenceNumber+1;
@@ -127,7 +127,7 @@ namespace Alex.Net.Bedrock
                  skippedMessageCount = 0;
              }
  
-             return true;*/
+             return true;
         }
 
         public void OnResend(long currentTime, long nextActionTime)

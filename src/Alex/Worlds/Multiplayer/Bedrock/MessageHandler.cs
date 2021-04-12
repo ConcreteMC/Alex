@@ -11,7 +11,6 @@ using MiNET.Utils;
 using MiNET.Utils.Cryptography;
 using MiNET.Utils.IO;
 using NLog;
-using CryptoContext = Alex.Net.Bedrock.CryptoContext;
 
 namespace Alex.Worlds.Multiplayer.Bedrock
 {

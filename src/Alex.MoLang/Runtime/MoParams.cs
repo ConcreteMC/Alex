@@ -63,5 +63,17 @@ namespace Alex.MoLang.Runtime
 		public IMoValue[] GetParams() {
 			return _parameters;
 		}
+
+		/// <inheritdoc />
+		public override string ToString()
+		{
+			var values = GetParams();
+
+			if (values != null && values.Length > 0)
+			{
+				return string.Join(',', values.Select(x => x.AsString()));
+			}
+			return base.ToString();
+		}
 	}
 }

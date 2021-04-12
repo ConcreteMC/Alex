@@ -85,7 +85,7 @@ namespace Alex.Entities
         public Player(GraphicsDevice graphics, InputManager inputManager, World world, Skin skin, NetworkProvider networkProvider, PlayerIndex playerIndex) : base(world)
         {
 	        Network = networkProvider;
-
+	        
 		    Controller = new PlayerController(graphics, world, inputManager, this, playerIndex);
 
 		    SnapHeadYawRotationOnMovement = false;
@@ -97,7 +97,7 @@ namespace Alex.Entities
 
 		//	ServerEntity = false;
 			RequiresRealTimeTick = true;
-			AlwaysTick = true;
+	//		AlwaysTick = true;
 			
 			IsAffectedByGravity = true;
 			HasPhysics = true;
@@ -293,6 +293,24 @@ namespace Alex.Entities
 			    bool didLeftClick     = Controller.InputManager.IsPressed(AlexInputCommand.LeftClick);
 			    bool didRightClick    = Controller.InputManager.IsPressed(AlexInputCommand.RightClick);
 			    bool leftMouseBtnDown = Controller.InputManager.IsDown(AlexInputCommand.LeftClick);
+			    bool rightMouseBtnDown = Controller.InputManager.IsDown(AlexInputCommand.RightClick);
+			    bool beginLeftClick = Controller.InputManager.IsBeginPress(InputCommand.LeftClick);
+			    bool beginRightClick = Controller.InputManager.IsBeginPress(InputCommand.RightClick);
+			    
+			    if (IsUsingItem)
+			    {
+				    if (!leftMouseBtnDown && !rightMouseBtnDown)
+				    {
+					    StopUseItem();
+				    }
+			    }
+			    else
+			    {
+				    if (beginLeftClick || beginRightClick)
+				    {
+					    BeginUseItem(beginLeftClick);
+				    }
+			    }
 
 			    var hitEntity = HitEntity;
 
@@ -313,9 +331,10 @@ namespace Alex.Entities
 			    {
 				    if (!_destroyingBlock)
 				    {
+					    bool isBeginPress = Controller.InputManager.IsBeginPress(AlexInputCommand.LeftClick);
 					    if (HasRaytraceResult)
 					    {
-						    if (Controller.InputManager.IsBeginPress(AlexInputCommand.LeftClick) && !IsWorldImmutable)
+						    if (isBeginPress && !IsWorldImmutable)
 						    {
 							    StartBreakingBlock();
 						    }
@@ -366,6 +385,8 @@ namespace Alex.Entities
 		    }
 		    else
 		    {
+			    IsUsingItem = false;
+			    
 			    if (_destroyingBlock)
 			    {
 				    StopBreakingBlock();
@@ -796,13 +817,28 @@ namespace Alex.Entities
 	                {
 		                action = HasRaytraceResult ? ItemUseAction.RightClickBlock : ItemUseAction.RightClickAir;
 	                }
-	                
-                    Network?.UseItem(slot, hand, action, coordR, face, remainder);
+
+	                Network?.UseItem(slot, hand, action, coordR, face, remainder);
                     return true;
                 }
             }
 
 		    return false;
+	    }
+	    
+	    private void BeginUseItem(bool isLeftMouseButton)
+	    {
+		    var item = Inventory.MainHand;
+
+		    if (item != null && item.Count > 0 && item.Id > 0)
+		    {
+			    IsUsingItem = true;
+		    }
+	    }
+
+	    private void StopUseItem()
+	    {
+		    IsUsingItem = false;
 	    }
 
 	    private bool CanPlaceBlock(BlockCoordinates coordinates, Block block)

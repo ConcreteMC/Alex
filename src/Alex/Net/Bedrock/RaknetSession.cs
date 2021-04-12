@@ -96,6 +96,7 @@ namespace Alex.Net.Bedrock
 		public ConcurrentDictionary<int, Datagram> WaitingForAckQueue { get; } = new ConcurrentDictionary<int, Datagram>();
 
 		public short CompressionThreshold { get; set; } = -1;
+		private Timer _tickerHighPrecisionTimer;
 		public RaknetSession(ConnectionInfo connectionInfo, RaknetConnection packetSender, IPEndPoint endPoint, short mtuSize, ICustomMessageHandler messageHandler = null)
 		{
 			_packetSender = packetSender;
@@ -107,6 +108,7 @@ namespace Alex.Net.Bedrock
 			_cancellationToken = new CancellationTokenSource();
 
 			SlidingWindow = new SlidingWindow(mtuSize);
+			_tickerHighPrecisionTimer = new Timer(SendTick, null, 10, 10);
 		}
 
 		/// <summary>
@@ -580,66 +582,131 @@ namespace Alex.Net.Bedrock
 		}
 
 
-		public void SendTick(global::Alex.Net.Bedrock.RaknetConnection connection)
+		private int _tickCounter = 0;
+		private object _updateSync = new object();
+		private void SendTick(object obj)
 		{
+			if (!Monitor.TryEnter(_updateSync, 0))
+				return;
+
 			try
 			{
 				SendAckQueue();
 				SendNackQueue();
-				
-				//if (_tickCounter++ >= 5)
+
+				if (_tickCounter++ >= 5)
 				{
 					Update();
-				//	_tickCounter = 0;
+					_tickCounter = 0;
 				}
 
 				SendQueue();
-				connection.Update(this);
+				UpdateTick();
 			}
 			catch (Exception e)
 			{
 				Log.Warn(e);
 			}
+			finally
+			{
+				Monitor.Exit(_updateSync);
+			}
 		}
 
+		private void UpdateTick()
+		{
+			if (Evicted) return;
+			
+			try
+			{
+				//UpdateSync.Wait();
+			
+				if (WaitingForAckQueue.Count == 0) return;
 
-		//private object _updateSync = new object();
-		internal SemaphoreSlim UpdateSync = new SemaphoreSlim(1, 1);
+				//long rto = session.SlidingWindow.GetRtoForRetransmission();
+				//if (rto == 0) return;
 
+				int transmissionBandwidth = SlidingWindow.GetRetransmissionBandwidth(UnackedBytes);
+				
+				var queue = WaitingForAckQueue;
+
+				foreach (KeyValuePair<int, Datagram> datagramPair in queue)
+				{
+					if (Evicted) return;
+
+					Datagram datagram = datagramPair.Value;
+					
+					if (!datagram.Timer.IsRunning)
+					{
+						Log.Error($"Timer not running for #{datagram.Header.DatagramSequenceNumber}");
+						datagram.Timer.Restart();
+						continue;
+					}
+
+					//if (session.Rtt == -1) return;
+
+					long elapsedTime = datagram.Timer.ElapsedMilliseconds;
+					long datagramTimeout = datagram.RetransmissionTimeOut;
+					datagramTimeout = Math.Min(datagramTimeout, 3000);
+					datagramTimeout = Math.Max(datagramTimeout, 100);
+
+					if (datagram.RetransmitImmediate || elapsedTime >= datagramTimeout)
+					{
+						if (transmissionBandwidth < datagram.Bytes.Length)
+							break;
+
+						if (!Evicted && WaitingForAckQueue.TryRemove(datagramPair.Key, out datagram))
+						{
+							transmissionBandwidth -= datagram.Bytes.Length;
+							UnackedBytes -= datagram.Bytes.Length;
+							
+							//session.ErrorCount++;
+							//session.ResendCount++;
+
+							//if (Log.IsDebugEnabled) 
+								Log.Warn($"{(datagram.RetransmitImmediate ? "NAK RSND" : "TIMEOUT")}, Resent #{datagram.Header.DatagramSequenceNumber.IntValue()} Type: {datagram.FirstMessageId} (0x{datagram.FirstMessageId:x2}) ({elapsedTime} > {datagramTimeout})");
+
+							Interlocked.Increment(ref ConnectionInfo.Resends);
+							
+							SlidingWindow.OnResend(RaknetSession.CurrentTimeMillis(), datagramPair.Key);
+							
+							_packetSender.SendDatagram(this, datagram);
+						}
+					}
+				}
+			}
+			finally
+			{
+				//UpdateSync.Release();
+			}
+		}
 		private void Update()
 		{
 			if (Evicted) return;
 
 			//if (MiNetServer.FastThreadPool == null) return;
 
-			if (!UpdateSync.Wait(0)) return;
 
-			try
+			if (Evicted) return;
+
+			ConnectionInfo.Latency = (long) SlidingWindow.GetRtt();
+			long now = DateTime.UtcNow.Ticks / TimeSpan.TicksPerMillisecond;
+			long lastUpdate = LastUpdatedTime.Ticks / TimeSpan.TicksPerMillisecond;
+
+			if (lastUpdate + InactivityTimeout + 3000 < now)
 			{
-				if (Evicted) return;
+				Evicted = true;
+				Disconnect("Network timeout.");
+				Close();
 
-				ConnectionInfo.Latency = (long)SlidingWindow.GetRtt(); 
-				long now = DateTime.UtcNow.Ticks / TimeSpan.TicksPerMillisecond;
-				long lastUpdate = LastUpdatedTime.Ticks / TimeSpan.TicksPerMillisecond;
-
-				if (lastUpdate + InactivityTimeout + 3000 < now)
-				{
-					Evicted = true;
-					Disconnect("Network timeout.");
-					Close();
-
-					return;
-				}
-
-				if (State != ConnectionState.Connected && CustomMessageHandler != null && lastUpdate + 3000 < now)
-				{
-					Disconnect("Lost connection."); 
-					return;
-				}
+				return;
 			}
-			finally
+
+			if (State != ConnectionState.Connected && CustomMessageHandler != null && lastUpdate + 3000 < now)
 			{
-				UpdateSync.Release();
+				Disconnect("Lost connection.");
+
+				return;
 			}
 		}
 
@@ -717,7 +784,7 @@ namespace Alex.Net.Bedrock
 
 			// Extremely important that this will not allow more than one thread at a time.
 			// This methods handle ordering and potential encryption, hence order matters.
-			if (!(_syncHack.Wait(millisecondsWait))) return;
+			//if (!(_syncHack.Wait(millisecondsWait))) return;
 
 			try
 			{
@@ -785,7 +852,7 @@ namespace Alex.Net.Bedrock
 			}
 			finally
 			{
-				_syncHack.Release();
+			//	_syncHack.Release();
 			}
 		}
 
@@ -817,6 +884,10 @@ namespace Alex.Net.Bedrock
 				return;
 
 			_closed = true;
+
+			_tickerHighPrecisionTimer?.Change(Timeout.Infinite, Timeout.Infinite);
+			_tickerHighPrecisionTimer?.Dispose();
+			_tickerHighPrecisionTimer = null;
 			
 			State = ConnectionState.Unconnected;
 			Evicted = true;
@@ -831,7 +902,28 @@ namespace Alex.Net.Bedrock
 			_cancellationToken.Cancel();
 			_orderingBufferQueue.Clear();
 
-			_packetSender.Close(this);
+			var ackQueue = WaitingForAckQueue;
+			foreach (var kvp in ackQueue)
+			{
+				if (ackQueue.TryRemove(kvp.Key, out Datagram datagram)) datagram.PutPool();
+			}
+
+			var splits = Splits;
+			foreach (var kvp in splits)
+			{
+				if (splits.TryRemove(kvp.Key, out SplitPartPacket[] splitPartPackets))
+				{
+					if (splitPartPackets == null) continue;
+
+					foreach (SplitPartPacket packet in splitPartPackets)
+					{
+						packet?.PutPool();
+					}
+				}
+			}
+
+			ackQueue.Clear();
+			splits.Clear();
 
 			try
 			{

@@ -12,6 +12,7 @@ using Alex.MoLang.Parser;
 using Alex.MoLang.Runtime;
 using Alex.MoLang.Runtime.Struct;
 using Alex.MoLang.Runtime.Value;
+using Alex.ResourcePackLib;
 using Alex.ResourcePackLib.Json.Bedrock.Entity;
 using Microsoft.Xna.Framework;
 using NLog;
@@ -42,15 +43,15 @@ namespace Alex.Graphics.Models.Entity.Animations
 		private object _lock = new object();
 		
 		private static readonly Regex ControllerRegex = new Regex("", RegexOptions.Compiled);
-		
-		public void UpdateEntityDefinition(EntityDescription definition)
+
+		public void UpdateEntityDefinition(BedrockResourcePack resources, EntityDescription definition)
 		{
 			//Monitor.Enter(_lock);
 
 			try
 			{
 				List<IExpression> preRender = new List<IExpression>();
-				
+
 				MoLangRuntime runtime = new MoLangRuntime();
 				_context.Clear();
 				//SetEnvironment(runtime.Environment);
@@ -64,7 +65,7 @@ namespace Alex.Graphics.Models.Entity.Animations
 
 						if (scale is DoubleValue dv)
 						{
-							Entity.Scale = dv.AsFloat();
+							//Entity.Scale = dv.AsFloat();
 						}
 					}
 
@@ -78,7 +79,7 @@ namespace Alex.Graphics.Models.Entity.Animations
 
 				Dictionary<string, AnimationEntry> animations = new Dictionary<string, AnimationEntry>();
 
-				var resources = Alex.Instance.Resources.BedrockResourcePack;
+				//	var resources = Alex.Instance.Resources.BedrockResourcePack;
 
 				if (definition.Animations != null)
 				{
@@ -111,7 +112,7 @@ namespace Alex.Graphics.Models.Entity.Animations
 			}
 			finally
 			{
-			//	Monitor.Exit(_lock);
+				//	Monitor.Exit(_lock);
 			}
 		}
 

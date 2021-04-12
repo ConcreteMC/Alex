@@ -53,8 +53,6 @@ namespace Alex.Net.Bedrock
 
 		private          UdpClient  _listener;
 		private readonly IPEndPoint _endpoint;
-		
-		private HighPrecisionTimer _tickerHighPrecisionTimer;
 
 		private Thread _readingThread;
 
@@ -101,9 +99,6 @@ namespace Alex.Net.Bedrock
 			
 			_listener = CreateListener(_endpoint);
 			_readingThread.Start();
-
-			_tickerHighPrecisionTimer = new HighPrecisionTimer(10, SendTick, true);
-			
 		}
 
 		public bool TryConnect(IPEndPoint targetEndPoint, int numberOfAttempts = int.MaxValue, short mtuSize = 1400, CancellationToken cancellationToken = default)
@@ -179,10 +174,6 @@ namespace Alex.Net.Bedrock
 				//Log.Info("Shutting down...");
 				Session?.Close();
 
-				var timer = _tickerHighPrecisionTimer;
-				_tickerHighPrecisionTimer = null;
-				timer?.Dispose();
-
 				var listener = _listener;
 				if (listener == null) return;
 
@@ -235,37 +226,7 @@ namespace Alex.Net.Bedrock
 			listener.Client.Bind(endpoint);
 			return listener;
 		}
-
-		public void Close(RaknetSession session)
-		{
-			var ackQueue = session.WaitingForAckQueue;
-			foreach (var kvp in ackQueue)
-			{
-				if (ackQueue.TryRemove(kvp.Key, out Datagram datagram)) datagram.PutPool();
-			}
-
-			var splits = session.Splits;
-			foreach (var kvp in splits)
-			{
-				if (splits.TryRemove(kvp.Key, out SplitPartPacket[] splitPartPackets))
-				{
-					if (splitPartPackets == null) continue;
-
-					foreach (SplitPartPacket packet in splitPartPackets)
-					{
-						packet?.PutPool();
-					}
-				}
-			}
-
-			ackQueue.Clear();
-			splits.Clear();
-			
-			_tickerHighPrecisionTimer?.Dispose();
-			_tickerHighPrecisionTimer = null;
-		}
-
-
+		
 		private void ReceiveCallback(object o)
 		{
 			//using (var stream = new NetworkStream(_listener.Client))
@@ -515,83 +476,6 @@ namespace Alex.Net.Bedrock
 			}
 
 			return null;
-		}
-
-		private void SendTick(object obj)
-		{
-			if (_stopped || _listener == null)
-				return;
-			
-			if (Session != null)
-				Session.SendTick(this);
-		}
-
-		internal void Update(RaknetSession session)
-		{
-			if (session.Evicted) return;
-
-			try
-			{
-				session.UpdateSync.Wait();
-			
-				if (session.WaitingForAckQueue.Count == 0) return;
-
-				//long rto = session.SlidingWindow.GetRtoForRetransmission();
-				//if (rto == 0) return;
-
-				int transmissionBandwidth = session.SlidingWindow.GetRetransmissionBandwidth(session.UnackedBytes);
-				
-				var queue = session.WaitingForAckQueue;
-
-				foreach (KeyValuePair<int, Datagram> datagramPair in queue)
-				{
-					if (session.Evicted) return;
-
-					Datagram datagram = datagramPair.Value;
-					
-					if (!datagram.Timer.IsRunning)
-					{
-						Log.Error($"Timer not running for #{datagram.Header.DatagramSequenceNumber}");
-						datagram.Timer.Restart();
-						continue;
-					}
-
-					//if (session.Rtt == -1) return;
-
-					long elapsedTime = datagram.Timer.ElapsedMilliseconds;
-					long datagramTimeout = datagram.RetransmissionTimeOut;
-					datagramTimeout = Math.Min(datagramTimeout, 3000);
-					datagramTimeout = Math.Max(datagramTimeout, 100);
-
-					if (datagram.RetransmitImmediate || elapsedTime >= datagramTimeout)
-					{
-						if (transmissionBandwidth < datagram.Bytes.Length)
-							break;
-
-						if (!session.Evicted && session.WaitingForAckQueue.TryRemove(datagramPair.Key, out datagram))
-						{
-							transmissionBandwidth -= datagram.Bytes.Length;
-							session.UnackedBytes -= datagram.Bytes.Length;
-							
-							//session.ErrorCount++;
-							//session.ResendCount++;
-
-							//if (Log.IsDebugEnabled) 
-								Log.Warn($"{(datagram.RetransmitImmediate ? "NAK RSND" : "TIMEOUT")}, Resent #{datagram.Header.DatagramSequenceNumber.IntValue()} Type: {datagram.FirstMessageId} (0x{datagram.FirstMessageId:x2}) ({elapsedTime} > {datagramTimeout})");
-
-							Interlocked.Increment(ref ConnectionInfo.Resends);
-							
-							session.SlidingWindow.OnResend(RaknetSession.CurrentTimeMillis(), datagramPair.Key);
-							
-							SendDatagram(session, datagram);
-						}
-					}
-				}
-			}
-			finally
-			{
-				session.UpdateSync.Release();
-			}
 		}
 
 		public void SendPacket(RaknetSession session, Packet message)

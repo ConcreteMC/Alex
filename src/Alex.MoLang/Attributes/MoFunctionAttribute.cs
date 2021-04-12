@@ -5,10 +5,10 @@ namespace Alex.MoLang.Attributes
 	[AttributeUsage(AttributeTargets.Method)]
 	public class MoFunctionAttribute : Attribute
 	{
-		public string Name { get; }
-		public MoFunctionAttribute(string functionName)
+		public string[] Name { get; }
+		public MoFunctionAttribute(params string[] functionNames)
 		{
-			Name = functionName;
+			Name = functionNames;
 		}
 	}
 }

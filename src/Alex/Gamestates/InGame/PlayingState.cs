@@ -640,14 +640,14 @@ namespace Alex.Gamestates.InGame
 
 		protected override void OnDraw(IRenderArgs args)
 		{
-			args.Camera = World.Camera;
+			args.Camera = World?.Camera;
 
 			if (RenderMinimap)
 			{
 				MiniMap.Draw(args);
 			}
 
-			World.Render(args);
+			World?.Render(args);
 
 			base.OnDraw(args);
 
