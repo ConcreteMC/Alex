@@ -7,6 +7,8 @@ using System.Linq;
 using System.Threading;
 using Microsoft.Xna.Framework.Graphics;
 using NLog;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
 
 namespace Alex.API.Graphics
 {
@@ -103,19 +105,22 @@ namespace Alex.API.Graphics
 
         private void HandleDisposeQueue()
         {
+            IGpuResource[] disposed;
+
             lock (_disposalLock)
             {
-                var disposed = _disposalQueue.ToArray();
+                disposed = _disposalQueue.ToArray();
                 _disposalQueue.Clear();
-                foreach (var dispose in disposed)
-                {
-                    dispose.Dispose();
-                }
-               // while (_disposalQueue.TryDequeue(out IGpuResource resource))
-               // {
-               //     resource.Dispose();
-               // }
             }
+
+            foreach (var dispose in disposed)
+            {
+                dispose.Dispose();
+            }
+            // while (_disposalQueue.TryDequeue(out IGpuResource resource))
+            // {
+            //     resource.Dispose();
+            // }
         }
 
         public static bool TryGetRecycledBuffer(object caller,
@@ -136,7 +141,7 @@ namespace Alex.API.Graphics
             BufferUsage bufferUsage,
             out PooledVertexBuffer vertexBuffer)
         {
-            if (Monitor.TryEnter(_disposalLock))
+            if (Monitor.TryEnter(_disposalLock, 0))
             {
                 try
                 {
@@ -170,10 +175,10 @@ namespace Alex.API.Graphics
         public PooledVertexBuffer CreateBuffer(object caller, GraphicsDevice device, VertexDeclaration vertexDeclaration,
             int vertexCount, BufferUsage bufferUsage)
         {
-           /* if (GetRecycledBuffer(caller, device, vertexDeclaration, vertexCount, bufferUsage, out var b))
-            {
-                return b;
-            }*/
+           // if (GetRecycledBuffer(caller, device, vertexDeclaration, vertexCount, bufferUsage, out var b))
+           // {
+          //      return b;
+          //  }
             
             long id = Interlocked.Increment(ref _bufferId);
             PooledVertexBuffer buffer = new PooledVertexBuffer(this, id, caller, device, vertexDeclaration, vertexCount, bufferUsage);
@@ -346,15 +351,35 @@ namespace Alex.API.Graphics
 
         public static PooledTexture2D GetTexture2D(object caller, GraphicsDevice graphicsDevice, Stream stream)
         {
-             var texture = Texture2D.FromStream(graphicsDevice, stream);
-             var pooled = GetTexture2D(caller, texture.GraphicsDevice, texture.Width, texture.Height, false, texture.Format);
-             
-             uint[] imgData = new uint[texture.Height * texture.Width];
-             texture.GetData(imgData);
-             pooled.SetData(imgData);
-             texture.Dispose();
+             //var texture = Texture2D.FromStream(graphicsDevice, stream);
+             using (var texture = Image.Load<Rgba32>(stream))
+             {
+                 uint[] colorData;
+	        
+                 if (texture.TryGetSinglePixelSpan(out var pixelSpan))
+                 {
+                     colorData = new uint[pixelSpan.Length];
 
-             return pooled;
+                     for (int i = 0; i < pixelSpan.Length; i++)
+                     {
+                         colorData[i] = pixelSpan[i].Rgba;
+                     }
+                 }
+                 else
+                 {
+                     throw new Exception("Could not get image data!");
+                 }
+
+                 SurfaceFormat surfaceFormat = SurfaceFormat.Color;
+
+                 var pooled = GetTexture2D(
+                     caller, graphicsDevice, texture.Width, texture.Height, false, surfaceFormat);
+
+                 pooled.SetData(colorData);
+                 // texture.Dispose();
+
+                 return pooled;
+             }
         }
 
         public static PooledIndexBuffer GetIndexBuffer(object caller, GraphicsDevice graphicsDevice, IndexElementSize indexElementSize,
@@ -364,7 +389,7 @@ namespace Alex.API.Graphics
         }
     }
     
-    public class PooledVertexBuffer : DynamicVertexBuffer, IGpuResource
+    public class PooledVertexBuffer : VertexBuffer, IGpuResource
     {
         public GpuResourceManager Parent      { get; }
         public long               PoolId      { get; }
@@ -550,7 +575,7 @@ namespace Alex.API.Graphics
         }
     }
 
-    public class PooledIndexBuffer : DynamicIndexBuffer, IGpuResource
+    public class PooledIndexBuffer : IndexBuffer, IGpuResource
     { 
         public GpuResourceManager Parent      { get; }
         public long               PoolId      { get; }

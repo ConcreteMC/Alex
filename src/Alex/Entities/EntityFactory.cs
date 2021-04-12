@@ -503,10 +503,8 @@ namespace Alex.Entities
 								{
 									var bitmapValue = bmp.Value;
 
-									PooledTexture2D t = TextureUtils.BitmapToTexture2D(
+									pooled = TextureUtils.BitmapToTexture2D(
 										Alex.Instance.GraphicsDevice, bitmapValue);
-
-									pooled = t;
 								}
 								else if (Alex.Instance.Resources.TryGetBitmap(s, out var bmp2))
 								{
@@ -519,7 +517,7 @@ namespace Alex.Entities
 									{
 										if (_pooledTextures.TryRemove(s, out var p2))
 										{
-											p2?.MarkForDisposal();
+											//p2?.MarkForDisposal();
 										}
 									};
 								}
