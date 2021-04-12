@@ -50,7 +50,7 @@ namespace Alex.Gamestates.InGame.Hud
 	        Player.OnInventoryChanged += OnInventoryChanged;
 	        
 	        Anchor = Alignment.Fill;
-	        Padding = Thickness.One;
+	        Padding = Thickness.One * 3;
 	        
             _playerController = player.Controller;
 			InputManager.AddListener(new MouseInputListener(InputManager.PlayerIndex));
