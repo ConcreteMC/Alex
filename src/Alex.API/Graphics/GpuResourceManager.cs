@@ -170,10 +170,10 @@ namespace Alex.API.Graphics
         public PooledVertexBuffer CreateBuffer(object caller, GraphicsDevice device, VertexDeclaration vertexDeclaration,
             int vertexCount, BufferUsage bufferUsage)
         {
-            if (GetRecycledBuffer(caller, device, vertexDeclaration, vertexCount, bufferUsage, out var b))
+           /* if (GetRecycledBuffer(caller, device, vertexDeclaration, vertexCount, bufferUsage, out var b))
             {
                 return b;
-            }
+            }*/
             
             long id = Interlocked.Increment(ref _bufferId);
             PooledVertexBuffer buffer = new PooledVertexBuffer(this, id, caller, device, vertexDeclaration, vertexCount, bufferUsage);

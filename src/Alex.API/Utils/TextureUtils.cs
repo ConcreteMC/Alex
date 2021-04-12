@@ -37,11 +37,17 @@ namespace Alex.API.Utils
         
         public static PooledTexture2D BitmapToTexture2D(object owner, GraphicsDevice device, Image<Rgba32> image, out long byteSize)
         {
-	        var bmp = image;//.CloneAs<Rgba32>();
+	     //   var bmp = image;//.CloneAs<Rgba32>();
 	        uint[] colorData;
-	        if (bmp.TryGetSinglePixelSpan(out var pixelSpan))
+	        
+	        if (image.TryGetSinglePixelSpan(out var pixelSpan))
 	        {
-		        colorData = pixelSpan.ToArray().Select(x => x.Rgba).ToArray();
+		        colorData = new uint[pixelSpan.Length];
+
+		        for (int i = 0; i < pixelSpan.Length; i++)
+		        {
+			        colorData[i] = pixelSpan[i].Rgba;
+		        }
 	        }
 	        else
 	        {

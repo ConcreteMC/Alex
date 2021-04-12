@@ -222,7 +222,9 @@ namespace Alex.Entities
 					return () => new EntityModelRenderer(model);
 				});
 		}
-		
+
+		private static ConcurrentDictionary<string, PooledTexture2D> _pooledTextures =
+			new ConcurrentDictionary<string, PooledTexture2D>(StringComparer.OrdinalIgnoreCase);
 		public static Entity Create(MiNET.Entities.EntityType entityType, World world, bool initRenderController = true)
 		{
 			Entity entity = null;
@@ -491,19 +493,40 @@ namespace Alex.Entities
 							texture = textures.FirstOrDefault().Value;
 						}
 
-						if (Alex.Instance.Resources.BedrockResourcePack.Textures.TryGetValue(texture, out var bmp))
-						{
-							var bitmapValue = bmp.Value;
+						texture2D = _pooledTextures.GetOrAdd(
+							texture, s =>
+							{
+								PooledTexture2D pooled = null;
 
-							PooledTexture2D t = TextureUtils.BitmapToTexture2D(
-								Alex.Instance.GraphicsDevice, bitmapValue);
+								if (Alex.Instance.Resources.BedrockResourcePack.Textures.TryGetValue(
+									s, out var bmp))
+								{
+									var bitmapValue = bmp.Value;
 
-							texture2D = t;
-						}
-						else if (Alex.Instance.Resources.TryGetBitmap(texture, out var bmp2))
-						{
-							texture2D = TextureUtils.BitmapToTexture2D(Alex.Instance.GraphicsDevice, bmp2);
-						}
+									PooledTexture2D t = TextureUtils.BitmapToTexture2D(
+										Alex.Instance.GraphicsDevice, bitmapValue);
+
+									pooled = t;
+								}
+								else if (Alex.Instance.Resources.TryGetBitmap(s, out var bmp2))
+								{
+									pooled = TextureUtils.BitmapToTexture2D(Alex.Instance.GraphicsDevice, bmp2);
+								}
+
+								if (pooled != null)
+								{
+									pooled.Disposing += (sender, args) =>
+									{
+										if (_pooledTextures.TryRemove(s, out var p2))
+										{
+											p2?.MarkForDisposal();
+										}
+									};
+								}
+
+								//pooled?.Use();
+								return pooled;
+							});
 
 						//renderer = new EntityModelRenderer(model);
 					}
@@ -511,6 +534,7 @@ namespace Alex.Entities
 
 				if (texture2D != null)
 				{
+					//texture2D.Use();
 					entity.Texture = texture2D;
 				}
 			}
