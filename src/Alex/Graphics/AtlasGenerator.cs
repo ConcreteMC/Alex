@@ -39,7 +39,7 @@ namespace Alex.Graphics
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(SPWorldProvider));
 
 	    private Dictionary<ResourceLocation,  Utils.TextureInfo> _atlasLocations = new Dictionary<ResourceLocation,  Utils.TextureInfo>();
-	    private PooledTexture2D _stillFrame;
+	    private PooledTexture2D _textureAtlas;
 	    
         public Vector2 AtlasSize { get; private set; }
         public AtlasGenerator()
@@ -52,7 +52,7 @@ namespace Alex.Graphics
 		    _atlasLocations = new Dictionary<ResourceLocation,  Utils.TextureInfo>();
 
 		    AtlasSize = default;
-		    _stillFrame = default;
+		    _textureAtlas = default;
 	    }
 
 	    public void GetTextures(McResourcePack resourcePack,
@@ -187,13 +187,13 @@ namespace Alex.Graphics
 						    node.Bounds.Height / TextureHeight));
 			    }
 
-			    _stillFrame = GetMipMappedTexture2D(device, img);
+			    _textureAtlas = GetMipMappedTexture2D(device, img);
 			    _atlasLocations = textureInfos;
 			    break;
 		    }
 		    
-		    AtlasSize = new Vector2(_stillFrame.Width, _stillFrame.Height);
-		    totalSize += _stillFrame.MemoryUsage;
+		    AtlasSize = new Vector2(_textureAtlas.Width, _textureAtlas.Height);
+		    totalSize += _textureAtlas.MemoryUsage;
 		    sw.Stop();
 		    
 		    Log.Info(
@@ -283,9 +283,9 @@ namespace Alex.Graphics
             if (build) GenerateAtlas(device, loadedTextures, progressReceiver);
 		}
 
-        public Texture2D GetStillAtlas()
+        public Texture2D GetAtlas()
 		{
-			return _stillFrame;
+			return _textureAtlas;
 		}
 
         public  Utils.TextureInfo GetAtlasLocation(

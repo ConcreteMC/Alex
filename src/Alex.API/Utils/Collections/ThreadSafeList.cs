@@ -208,14 +208,13 @@ namespace Alex.API.Utils.Collections
 		///     If true, the <paramref name="action" /> will be performed on a <see cref="Clone" /> of
 		///     the items.
 		/// </param>
-		/// <param name="asParallel">Use the <see cref="ParallelQuery{TSource}" /> method.</param>
 		/// <param name="inParallel">
 		///     Use the
 		///     <see
 		///         cref="Parallel.ForEach{TSource}(System.Collections.Generic.IEnumerable{TSource},System.Action{TSource})" />
 		///     method.
 		/// </param>
-		public void ForAll(Action<T> action, bool performActionOnClones = true, bool asParallel = true,
+		public void ForEach(Action<T> action, bool performActionOnClones = true,
 			bool inParallel = false)
 		{
 			if (action == null)
@@ -226,11 +225,7 @@ namespace Alex.API.Utils.Collections
 			if (performActionOnClones)
 			{
 				List<T> clones = Clone();
-				if (asParallel)
-				{
-					clones.AsParallel().ForAll(action);
-				}
-				else if (inParallel)
+				if (inParallel)
 				{
 					Parallel.ForEach(clones, action);
 				}
@@ -243,73 +238,7 @@ namespace Alex.API.Utils.Collections
 			{
 				using (RwLock.Read())
 				{
-					if (asParallel)
-					{
-						Items.AsParallel().ForAll(action);
-					}
-					else if (inParallel)
-					{
-						Parallel.ForEach(Items, action);
-					}
-					else
-					{
-						Items.ForEach(action);
-					}
-				}
-			}
-		}
-
-		/// <summary>
-		///     Perform the <paramref name="action" /> on each item in the list.
-		/// </summary>
-		/// <param name="action">
-		///     <paramref name="action" /> to perform on each item.
-		/// </param>
-		/// <param name="performActionOnClones">
-		///     If true, the <paramref name="action" /> will be performed on a <see cref="Clone" /> of the items.
-		/// </param>
-		/// <param name="asParallel">
-		///     Use the <see cref="ParallelQuery{TSource}" /> method.
-		/// </param>
-		/// <param name="inParallel">
-		///     Use the
-		///     <see
-		///         cref="Parallel.ForEach{TSource}(System.Collections.Generic.IEnumerable{TSource},System.Action{TSource})" />
-		///     method.
-		/// </param>
-		public void ForEach(Action<T> action, bool performActionOnClones = true, bool asParallel = true,
-			bool inParallel = false)
-		{
-			if (action == null)
-			{
-				throw new ArgumentNullException("action");
-			}
-
-			if (performActionOnClones)
-			{
-				List<T> clones = Clone();
-				if (asParallel)
-				{
-					clones.AsParallel().ForAll(action);
-				}
-				else if (inParallel)
-				{
-					Parallel.ForEach(clones, action);
-				}
-				else
-				{
-					clones.ForEach(action);
-				}
-			}
-			else
-			{
-				using (RwLock.Read())
-				{
-					if (asParallel)
-					{
-						Items.AsParallel().ForAll(action);
-					}
-					else if (inParallel)
+					if (inParallel)
 					{
 						Parallel.ForEach(Items, action);
 					}

@@ -31,21 +31,20 @@ namespace Alex.Worlds
 		private readonly static RenderStage[]   RenderStages = ((RenderStage[]) Enum.GetValues(typeof(RenderStage)));
 		
 		private                 GraphicsDevice  Graphics  { get; }
-		private                 ResourceManager Resources { get; }
 		private                 World           World     { get; }
 		
 		private AlexOptions                                         Options        { get; }
 		private ConcurrentDictionary<ChunkCoordinates, ChunkColumn> Chunks         { get; }
 		
-		public  RenderingShaders        Shaders                { get; set; }
+		public  RenderingShaders        Shaders                { get; }
 		private CancellationTokenSource CancellationToken      { get; }
-		public BlockLightCalculations  BlockLightCalculations { get; set; }
-		public  SkyLightCalculations    SkyLightCalculator     { get; private set; }
+		private BlockLightCalculations  BlockLightCalculations { get; set; }
+		private SkyLightCalculations    SkyLightCalculator     { get; set; }
 
 		private FancyQueue<ChunkCoordinates>     FastUpdateQueue   { get; }
 		private FancyQueue<ChunkCoordinates>     UpdateQueue       { get; }
 		private FancyQueue<ChunkCoordinates>     UpdateBorderQueue { get; }
-		private ThreadSafeList<ChunkCoordinates> Scheduled         { get; } = new ThreadSafeList<ChunkCoordinates>();
+		//private ThreadSafeList<ChunkCoordinates> Scheduled         { get; } = new ThreadSafeList<ChunkCoordinates>();
 		
 		public ChunkManager(IServiceProvider serviceProvider, GraphicsDevice graphics, World world, CancellationToken cancellationToken)
 		{
@@ -53,9 +52,8 @@ namespace Alex.Worlds
 			World = world;
 			
 			Options = serviceProvider.GetRequiredService<IOptionsProvider>().AlexOptions;
-			Resources = serviceProvider.GetRequiredService<ResourceManager>();
-			
-			var stillAtlas = Resources.Atlas.GetStillAtlas();
+
+			var stillAtlas =  serviceProvider.GetRequiredService<ResourceManager>().Atlas.GetAtlas();
 	        
 			var fogStart = 0;
 			Shaders = new RenderingShaders(Graphics);
@@ -64,7 +62,7 @@ namespace Alex.Worlds
 			
 			_renderSampler.MaxMipLevel = stillAtlas.LevelCount;
 			
-			RenderDistance = Options.VideoOptions.RenderDistance;
+			RenderDistance = Options.VideoOptions.RenderDistance.Value;
 
 			Options.VideoOptions.RenderDistance.Bind(
 				(value, newValue) =>
@@ -110,7 +108,7 @@ namespace Alex.Worlds
 		}
 
 		public int ConcurrentChunkUpdates => (int) _threadsRunning;
-		public int EnqueuedChunkUpdates   => Scheduled.Count;
+		public int EnqueuedChunkUpdates => UpdateQueue?.Count ?? 0 + FastUpdateQueue?.Count ?? 0 + UpdateBorderQueue?.Count ?? 0;
 		
 		/// <inheritdoc />
 		public int ChunkCount => Chunks.Count;
@@ -191,10 +189,12 @@ namespace Alex.Worlds
 					_processingThread = null;
 				});
 		}
-		
+
+		private AutoResetEvent _processingSync = new AutoResetEvent(false);
 		private bool ProcessQueue()
 		{
 			var maxThreads = Options.VideoOptions.ChunkThreads.Value;
+
 			if (Interlocked.Read(ref _threadsRunning) >= maxThreads)
 			{
 				return false;
@@ -207,100 +207,134 @@ namespace Alex.Worlds
 
 			if (queue.IsEmpty)
 				queue = UpdateBorderQueue;
-			
-			//maxThreads = Math.Max(1, Math.Min(Options.VideoOptions.ChunkThreads, EnqueuedChunkUpdates / 4));
-			
-			if (queue.IsEmpty || Interlocked.Read(ref _threadsRunning) >= maxThreads)
+
+		//	maxThreads = Math.Max(1, Math.Min(maxThreads, EnqueuedChunkUpdates / 4));
+
+			var activeThreads = Interlocked.Read(ref _threadsRunning);
+
+			if (queue.IsEmpty || activeThreads >= maxThreads)
 			{
 				return false;
 			}
-			
-			//if (Interlocked.Read(ref _threadsRunning) )
 
-			Interlocked.Increment(ref _threadsRunning);
-						
-			ThreadPool.QueueUserWorkItem(
-				oo =>
-				{
-					try
+			if (Interlocked.CompareExchange(ref _threadsRunning, activeThreads + 1, activeThreads) == activeThreads)
+			{
+				ThreadPool.QueueUserWorkItem(
+					oo =>
 					{
-						while (!CancellationToken.IsCancellationRequested && queue.TryDequeue(out var chunkCoordinates))
+						try
 						{
-							if (TryGetChunk(chunkCoordinates, out var chunk))
+							while (!CancellationToken.IsCancellationRequested)
 							{
-								if (!Monitor.TryEnter(chunk.UpdateLock, 0))
-									continue;
-
-								try
+								if (EnqueuedChunkUpdates <= 0 || queue.IsEmpty)
 								{
-									bool newChunk = chunk.IsNew;
-									
-									if (BlockLightCalculations != null)
+									if (!_processingSync.WaitOne(50))
+										break;
+
+									queue = GetQueue(queue);
+
+									if (queue.IsEmpty)
+										break;
+								}
+
+
+								if (queue.TryDequeue(out var chunkCoordinates))
+								{
+									if (TryGetChunk(chunkCoordinates, out var chunk))
 									{
-										if (newChunk)
+										if (!Monitor.TryEnter(chunk.UpdateLock, 0))
+											continue;
+
+										try
 										{
-											//BlockLightCalculations.Recalculate(chunk);
+											bool newChunk = chunk.IsNew;
+
+											if (BlockLightCalculations != null)
+											{
+												if (newChunk)
+												{
+													//BlockLightCalculations.Recalculate(chunk);
+												}
+
+												if (BlockLightCalculations.HasEnqueued(chunkCoordinates))
+												{
+													BlockLightCalculations.Process(chunkCoordinates);
+												}
+											}
+
+											//SkyLightCalculator.TryProcess(chunkCoordinates);
+
+											if (SkyLightCalculator != null)
+											{
+												if (newChunk)
+												{
+													SkyLightCalculator.RecalcSkyLight(chunk, World);
+												}
+											}
+
+											chunk.UpdateBuffer(Graphics, World);
+
+											if (newChunk)
+											{
+												/*ScheduleChunkUpdate(
+													new ChunkCoordinates(chunk.X + 1, chunk.Z), ScheduleType.Border);
+
+												ScheduleChunkUpdate(
+													new ChunkCoordinates(chunk.X - 1, chunk.Z), ScheduleType.Border);
+
+												ScheduleChunkUpdate(
+													new ChunkCoordinates(chunk.X, chunk.Z + 1), ScheduleType.Border);
+
+												ScheduleChunkUpdate(
+													new ChunkCoordinates(chunk.X, chunk.Z - 1), ScheduleType.Border);*/
+											}
 										}
-										if (BlockLightCalculations.HasEnqueued(chunkCoordinates))
+										finally
 										{
-											BlockLightCalculations.Process(chunkCoordinates);
+											chunk.ScheduledForUpdate = false;
+											//Scheduled.Remove(chunkCoordinates);
+											Monitor.Exit(chunk.UpdateLock);
 										}
-									}
-
-									//SkyLightCalculator.TryProcess(chunkCoordinates);
-
-									if (SkyLightCalculator != null)
-									{
-										if (newChunk)
-										{
-											SkyLightCalculator.RecalcSkyLight(chunk, World);
-										}
-									}
-
-									chunk.UpdateBuffer(Graphics, World);
-
-									if (newChunk)
-									{
-										ScheduleChunkUpdate(new ChunkCoordinates(chunk.X + 1, chunk.Z), ScheduleType.Border);
-										ScheduleChunkUpdate(new ChunkCoordinates(chunk.X - 1, chunk.Z), ScheduleType.Border );
-										ScheduleChunkUpdate(new ChunkCoordinates(chunk.X, chunk.Z + 1), ScheduleType.Border);
-										ScheduleChunkUpdate(new ChunkCoordinates(chunk.X, chunk.Z - 1), ScheduleType.Border);
 									}
 								}
-								finally
-								{
-									Scheduled.Remove(chunkCoordinates);
-									Monitor.Exit(chunk.UpdateLock);
-								}
-							}
 
-							if (queue != FastUpdateQueue && !FastUpdateQueue.IsEmpty)
-							{
-								queue = FastUpdateQueue;
-							}
-							else if (queue == FastUpdateQueue && FastUpdateQueue.IsEmpty)
-							{
-								queue = UpdateQueue;
-							}
-							else if (queue == UpdateBorderQueue && !UpdateQueue.IsEmpty)
-							{
-								queue = UpdateQueue;
-							}
-							else if (queue == UpdateQueue && UpdateQueue.IsEmpty)
-							{
-								queue = UpdateBorderQueue;
+								queue = GetQueue(queue);
 							}
 						}
-					}
-					finally
-					{
-						Interlocked.Decrement(ref _threadsRunning);
-					}
-				});
+						finally
+						{
+							Interlocked.Decrement(ref _threadsRunning);
+						}
+					});
 
-			return true;
+				return true;
+			}
+
+			return false;
 		}
 
+		private FancyQueue<ChunkCoordinates> GetQueue(FancyQueue<ChunkCoordinates> queue)
+		{
+			if (queue != FastUpdateQueue && !FastUpdateQueue.IsEmpty)
+			{
+				queue = FastUpdateQueue;
+			}
+			else if (queue == FastUpdateQueue && FastUpdateQueue.IsEmpty)
+			{
+				queue = UpdateQueue;
+			}
+			else if (queue == UpdateBorderQueue && !UpdateQueue.IsEmpty)
+			{
+				queue = UpdateQueue;
+			}
+			else if (queue == UpdateQueue && UpdateQueue.IsEmpty)
+			{
+				queue = UpdateBorderQueue;
+			}
+
+			return queue;
+		}
+		
 		private bool ProcessLighting()
 		{
 			var blockLightCalc = BlockLightCalculations;
@@ -363,7 +397,7 @@ namespace Alex.Worlds
 			UpdateQueue.Remove(position);
 			UpdateBorderQueue.Remove(position);
 			FastUpdateQueue.Remove(position);
-			Scheduled.Remove(position);
+			//Scheduled.Remove(position);
 
 			if (Chunks.TryRemove(position, out var column))
 			{
@@ -393,15 +427,14 @@ namespace Alex.Worlds
 		/// <inheritdoc />
 		public void ClearChunks()
 		{
-			UpdateQueue.Clear();
-			FastUpdateQueue.Clear();
-			UpdateBorderQueue.Clear();
+			UpdateQueue?.Clear();
+			FastUpdateQueue?.Clear();
+			UpdateBorderQueue?.Clear();
+			
 			var chunks = Chunks.ToArray();
 			Chunks.Clear();
-			
-			Scheduled.Clear();
 
-			_renderedChunks = new ChunkData[0];
+			//_renderedChunks = new ChunkData[0];
 			foreach (var chunk in chunks)
 			{
 				chunk.Value.Dispose();
@@ -413,6 +446,9 @@ namespace Alex.Worlds
 			var queue = UpdateQueue;
 			if (Chunks.TryGetValue(position, out var cc))
 			{
+				if (cc.ScheduledForUpdate && !prioritize)
+					return;
+
 				if ((type & ScheduleType.Lighting) != 0)
 				{
 					//cc.SkyLightDirty = true;
@@ -434,11 +470,24 @@ namespace Alex.Worlds
 					return;
 				}
 
-				if (Scheduled.TryAdd(position))
+				if (Monitor.TryEnter(cc.UpdateLock, 0))
 				{
-					queue.Enqueue(position);
-				}
+					try
+					{
+						if (!cc.ScheduledForUpdate)
+						{
+							cc.ScheduledForUpdate = true;
 
+							queue.Enqueue(position);
+
+							_processingSync.Set();
+						}
+					}
+					finally
+					{
+						Monitor.Exit(cc.UpdateLock);
+					}
+				}
 				//Scheduled.TryAdd(position);
 				//queue.Enqueue(position);
 			}
@@ -635,11 +684,10 @@ namespace Alex.Worlds
 					//renderList.Add(chunk.Value.ChunkData);
 				}
 
-				if ((chunk.Value.BlockLightDirty || chunk.Value.SkyLightDirty))
-				{
-					//if (chunk.Value.ScheduledLightUpdates < 3)
-					ScheduleChunkUpdate(chunk.Key, ScheduleType.Lighting);
-				}
+				//if ((chunk.Value.BlockLightDirty || chunk.Value.SkyLightDirty))
+				//{
+				//	ScheduleChunkUpdate(chunk.Key, ScheduleType.Lighting);
+				//}
 			}
 
 			RenderedChunks = index;
@@ -665,16 +713,17 @@ namespace Alex.Worlds
 				SkyLightCalculator?.Dispose();
 				SkyLightCalculator = null;
 				
-				_renderSampler.Dispose();
-				CancellationToken.Cancel();
-				UpdateQueue.Clear();
-				FastUpdateQueue.Clear();
-				UpdateBorderQueue.Clear();
+				_renderSampler?.Dispose();
+				CancellationToken?.Cancel();
+				UpdateQueue?.Clear();
+				FastUpdateQueue?.Clear();
+				UpdateBorderQueue?.Clear();
 
 				ClearChunks();
 
-				foreach (var rendered in _renderedChunks)
-					rendered.Dispose();
+				if (_renderedChunks != null)
+					foreach (var rendered in _renderedChunks)
+						rendered?.Dispose();
 
 				_renderedChunks = null;
 			}

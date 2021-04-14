@@ -30,18 +30,7 @@ namespace Alex.Worlds.Chunks
 		public             NibbleArray    BlockLight;
 		public             NibbleArray    SkyLight;
 
-		private System.Collections.BitArray _scheduledUpdates;
-        private System.Collections.BitArray _scheduledSkylightUpdates;
-        private System.Collections.BitArray _scheduledBlocklightUpdates;
-
-        private int _pendingUpdates = 0;
-        public int SkyLightUpdates { get; private set; } = 0;
-        public int BlockLightUpdates { get; private set; } = 0;
-
-        public int PendingUpdates => _pendingUpdates;
-        public int PendingLightingUpdates => SkyLightUpdates + BlockLightUpdates;
-        
-        public List<BlockCoordinates> LightSources { get; private set; } = new List<BlockCoordinates>();
+		public List<BlockCoordinates> LightSources { get; private set; } = new List<BlockCoordinates>();
         
 		public bool IsAllAir => BlockRefCount == 0;
 		
@@ -66,10 +55,6 @@ namespace Alex.Worlds.Chunks
 			}
 
 			ResetLight(true, true);
-			
-		    _scheduledUpdates = new System.Collections.BitArray(new byte[(16 * 16 * 16) / 8 ]);
-		    _scheduledSkylightUpdates = new System.Collections.BitArray(new byte[(16 * 16 * 16) / 8 ]);
-		    _scheduledBlocklightUpdates = new System.Collections.BitArray(new byte[(16 * 16 * 16) / 8 ]);
         }
 
         internal void ResetLight(bool blockLight, bool skyLight)
@@ -86,12 +71,12 @@ namespace Alex.Worlds.Chunks
 			return (y << 8 | z << 4 | x);
 		}
 
-        public bool IsScheduled(int x, int y, int z)
-		{
-		    return _scheduledUpdates.Get(GetCoordinateIndex(x, y, z));
-		}
+       // public bool IsScheduled(int x, int y, int z)
+		//{
+		//    return _scheduledUpdates.Get(GetCoordinateIndex(x, y, z));
+		//}
 
-		public void SetScheduled(int x, int y, int z, bool value)
+		/*public void SetScheduled(int x, int y, int z, bool value)
 		{
 			var scheduled = _scheduledUpdates;
 			if (scheduled == null) return;
@@ -162,7 +147,7 @@ namespace Alex.Worlds.Chunks
 			_scheduledSkylightUpdates.Set(idx, value);
 
 			return value;
-		}
+		}*/
 
         public BlockState Get(int x, int y, int z)
 		{
@@ -262,7 +247,7 @@ namespace Alex.Worlds.Chunks
             }
 
             //ScheduledUpdates.Set(coordsIndex, true);
-            SetScheduled(x,y,z, true);
+           // SetScheduled(x,y,z, true);
 		}
 
 		protected virtual void OnBlockSet(int x, int y, int z, BlockState newState, BlockState oldState)
@@ -283,7 +268,7 @@ namespace Alex.Worlds.Chunks
 			if (value != oldSkylight)
 			{
 				this.SkyLight[idx] = (byte) value;
-				SetSkyLightUpdateScheduled(x, y, z, true);
+			//	SetSkyLightUpdateScheduled(x, y, z, true);
 
 				return true;
 			}
@@ -304,7 +289,7 @@ namespace Alex.Worlds.Chunks
 			if (oldBlocklight != value)
 			{
 				this.BlockLight[idx] = value;
-				SetBlockLightScheduled(x, y, z, true);
+				//SetBlockLightScheduled(x, y, z, true);
 
 				return true;
 			}
@@ -368,10 +353,6 @@ namespace Alex.Worlds.Chunks
 
 		    BlockLight = null;
 		    SkyLight = null;
-		    
-		    _scheduledUpdates = null;
-		    _scheduledBlocklightUpdates = null;
-		    _scheduledSkylightUpdates = null;
 	    }
 
 	    public class BlockEntry

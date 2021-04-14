@@ -35,14 +35,8 @@ namespace Alex.Worlds.Chunks
 		public int Z { get; set; }
 
 		public           bool           IsNew           { get; set; } = true;
-		
-		public           bool           SkyLightDirty   => Sections != null && Sections.Where(x => x != null).Sum(x => x.SkyLightUpdates) > 0; 
-		public           bool           BlockLightDirty => Sections != null && Sections.Where(x => x != null).Sum(x => x.BlockLightUpdates) > 0;
 
-		public ulong ScheduledLightUpdates => (ulong) (Sections.Where(x => x != null).Sum(x => x.SkyLightUpdates)
-		                                               + Sections.Where(x => x != null).Sum(x => x.BlockLightUpdates));
-		
-		
+
 		private readonly  Stopwatch      _lightUpdateWatch = new Stopwatch();
 		public           ChunkSection[] Sections { get; set; } = new ChunkSection[16];
 		private readonly int[]          _biomeId = ArrayOf<int>.Create(16 * 16 * 256, 1);
@@ -54,6 +48,8 @@ namespace Alex.Worlds.Chunks
 		
 		internal ChunkData ChunkData { get; private set; }
 		private object _dataLock = new object();
+		
+		internal bool ScheduledForUpdate { get; set; } = false;
 		
 		//private ChunkOctree _octree;
 		private DateTime _lastUpdate = DateTime.UtcNow;
@@ -86,26 +82,36 @@ namespace Alex.Worlds.Chunks
 			);
 			var bounds = new BoundingBox( boundsMin, boundsMax );
 		//	_octree = new ChunkOctree( bounds );
+		
+			_scheduledUpdates = new System.Collections.BitArray((16 * 256 * 16), false);
 		}
 
+		
+		private System.Collections.BitArray _scheduledUpdates;
+
+		protected void SetScheduled(int x, int y, int z, bool value)
+		{
+			_scheduledUpdates[GetCoordinateIndex(x, y, z)] = value;
+		}
+		
 		public void ScheduleBorder()
 		{
-			for (int sectionIndex = 0; sectionIndex < 16; sectionIndex++)
+			//for (int sectionIndex = 0; sectionIndex < 16; sectionIndex++)
 			{
-				var section = Sections[sectionIndex];
+			//	var section = Sections[sectionIndex];
 
-				if (section == null)
-					continue;
+			//	if (section == null)
+			//		continue;
 
 				for (int x = 0; x < 16; x++)
 				{
 					for (int z = 0; z < 16; z++)
 					{
-						for (int y = 0; y < 16; y++)
+						for (int y = 0; y < 256; y++)
 						{
 							if (x == 0 || x == 15 || z == 0 || z == 15)
 							{
-								section.SetScheduled(x,y,z, true);
+								_scheduledUpdates[GetCoordinateIndex(x, y, z)] = true;
 							}
 						}
 					}
@@ -115,9 +121,9 @@ namespace Alex.Worlds.Chunks
 		
 		public void UpdateBuffer(GraphicsDevice device, IBlockAccess world)
 		{
-			//Monitor.Enter(_dataLock);
-			if (!Monitor.TryEnter(_dataLock, 0))
-				return;
+			Monitor.Enter(_dataLock);
+		//	if (!Monitor.TryEnter(_dataLock, 0))
+		//		return;
 
 			try
 			{
@@ -126,115 +132,85 @@ namespace Alex.Worlds.Chunks
 				if (chunkData == null)
 					return;
 
-				bool forceUpdate = false;
-				bool changed = false;
+				bool isNew = IsNew;
+				
 				var chunkPosition = new Vector3(X << 4, 0, Z << 4);
+
 				for (int sectionIndex = 0; sectionIndex < 16; sectionIndex++)
 				{
 					var section = Sections[sectionIndex];
 
-					if (section == null || (section.PendingUpdates == 0 || section.PendingLightingUpdates == 0))
+					if (section == null)
 						continue;
 
 					//var sectionY = (sectionIndex << 4);
-					
+
 					for (int x = 0; x < 16; x++)
 					{
 						for (int z = 0; z < 16; z++)
 						{
 							for (int y = 0; y < 16; y++)
 							{
-								bool scheduled        = section.IsScheduled(x, y, z);
-								bool blockLightUpdate = section.IsBlockLightScheduled(x, y, z);
-								bool skyLightUpdate   = section.IsSkylightUpdateScheduled(x, y, z);
+								var idx = GetCoordinateIndex(x, (sectionIndex * 16) + y, z);
 
-								if ((skyLightUpdate || blockLightUpdate) && !scheduled)
-								{
-									forceUpdate = true;
-								}
+								bool scheduled = _scheduledUpdates[idx]; // IsScheduled(x, y, z);
 
-								try
+								//if ((skyLightUpdate || blockLightUpdate) && !scheduled)
+								//	{
+								//		forceUpdate = true;
+								//	}
+
+
+								if ((!isNew && !scheduled))
+									continue;
+
+								if (scheduled)
+									_scheduledUpdates[idx] = false;
+
+								var blockPosition = new BlockCoordinates(
+									(int) (chunkPosition.X + x), y + (sectionIndex * 16), (int) (chunkPosition.Z + z));
+
+								chunkData?.Remove(device, blockPosition);
+
+								for (int storage = 0; storage < section.StorageCount; storage++)
 								{
-									if ((!IsNew && !scheduled))
+									var blockState = section.Get(x, y, z, storage);
+
+									if (blockState == null || blockState?.VariantMapper?.Model == null
+									                       || blockState.Block == null || !blockState.Block.Renderable)
 										continue;
-									
-									if (scheduled)
-										section.SetScheduled(x, y, z, false);
-									
-									if (blockLightUpdate)
-										section.SetBlockLightScheduled(x, y, z, false);
-									
-									if (skyLightUpdate)
-										section.SetSkyLightUpdateScheduled(x, y, z, false);
 
-									changed = true;
-								
-									var blockPosition = new BlockCoordinates(
-										(int) (chunkPosition.X + x), y + (sectionIndex << 4), (int) (chunkPosition.Z + z));
-									ChunkData?.Remove(device, blockPosition);
-									
-									for(int storage = 0; storage < section.StorageCount; storage++)
+									var model = blockState.VariantMapper.Model;
+
+									if (IsNew && (blockState.Block.RequiresUpdate
+									              || blockState.VariantMapper.IsMultiPart))
 									{
-										var blockState = section.Get(x, y, z, storage);
-										if (blockState == null || blockState?.VariantMapper?.Model == null || blockState.Block == null || !blockState.Block.Renderable)
-											continue;
-										
-										var model = blockState.VariantMapper.Model;
+										var newblockState = blockState.Block.BlockPlaced(
+											world, blockState, blockPosition);
 
-										if (IsNew && (blockState.Block.RequiresUpdate || blockState.VariantMapper.IsMultiPart))
+										if (newblockState != blockState)
 										{
-											var newblockState = blockState.Block.BlockPlaced(
-												world, blockState, blockPosition);
+											blockState = newblockState;
 
-											if (newblockState != blockState)
-											{
-												blockState = newblockState;
-
-												section.Set(storage, x, y, z, blockState);
-												model = blockState?.VariantMapper?.Model;
-											}
-										}
-										
-										/*if (blockState.IsMultiPart)
-										{
-											var newBlockState = MultiPartModelHelper.GetBlockState(
-												world, blockPosition, blockState, blockState.MultiPartHelper);
-
-											if (newBlockState != blockState)
-											{
-												blockState = newBlockState;
-
-												section.Set(state.Storage, x, y, z, blockState);
-												model = blockState.Model;
-											}
-										}*/
-
-										if (model != null)
-										{
-											model.GetVertices(
-												world, ChunkData, blockPosition, blockPosition, blockState);
+											section.Set(storage, x, y, z, blockState);
+											model = blockState?.VariantMapper?.Model;
 										}
 									}
+
+									if (model != null)
+									{
+										model.GetVertices(world, chunkData, blockPosition, blockPosition, blockState);
+									}
 								}
-								finally
-								{
-									
-								}
+
 							}
 						}
 					}
 				}
-				
-				ChunkData?.ApplyChanges(world, device, true);
-				/*var a = new ChunkOctree(_octree.Bounds);
 
-				foreach (var box in ChunkData.BoundingBoxes)
-				{
-					a.Add(box);
-				}
-				
-				_octree = a;*/
-				
+				chunkData?.ApplyChanges(world, device, true);
+				ChunkData = chunkData;
+
 				IsNew = false;
 			}
 			finally
@@ -298,6 +274,8 @@ namespace Alex.Worlds.Chunks
 			var section  = GetSection(y);
 			//- 16 * (y >> 4)
 			section.Set(storage, x, y & 0xf, z, state);
+
+			_scheduledUpdates[GetCoordinateIndex(x, y, z)] = true;
 			//	_heightDirty = true;
 		}
 
@@ -493,14 +471,18 @@ namespace Alex.Worlds.Chunks
 			return GetSection(by).SetSkylight(bx, by &  0xf, bz, data);
 		}
 
+		protected static int GetCoordinateIndex(int x, int y, int z)
+		{
+			return (y << 8 | z << 4 | x);
+		}
+		
 		public void ScheduleBlockUpdate(int x, int y, int z)
 		{
 			if ((x < 0 || x > ChunkWidth) || (y < 0 || y > ChunkHeight) || (z < 0 || z > ChunkDepth))
 				return;
 
-			var section = Sections[y >> 4];
-			if (section == null) return;
-			section.SetScheduled(x, y & 0xf, z, true);
+			_scheduledUpdates[GetCoordinateIndex(x, y, z)] = true;
+			//	section.SetScheduled(x, y & 0xf, z, true);
 		}
 		
 		public void ScheduleBlocklightUpdate(int x, int y, int z)
@@ -508,9 +490,8 @@ namespace Alex.Worlds.Chunks
 			if ((x < 0 || x > ChunkWidth) || (y < 0 || y > ChunkHeight) || (z < 0 || z > ChunkDepth))
 				return;
 
-			var section = Sections[y >> 4];
-			if (section == null) return;
-			section.SetBlockLightScheduled(x, y & 0xf, z, true);
+			_scheduledUpdates[GetCoordinateIndex(x, y, z)] = true;
+		//	section.SetBlockLightScheduled(x, y & 0xf, z, true);
 		}
 		
 		public void ScheduleSkylightUpdate(int x, int y, int z)
@@ -518,9 +499,8 @@ namespace Alex.Worlds.Chunks
 			if ((x < 0 || x > ChunkWidth) || (y < 0 || y > ChunkHeight) || (z < 0 || z > ChunkDepth))
 				return;
 
-			var section = Sections[y >> 4];
-			if (section == null) return;
-			section.SetSkyLightUpdateScheduled(x, y & 0xf, z, true);
+			_scheduledUpdates[GetCoordinateIndex(x, y, z)] = true;
+			//section.SetSkyLightUpdateScheduled(x, y & 0xf, z, true);
 		}
 
 		public bool AddBlockEntity(BlockCoordinates coordinates, NbtCompound entity)
@@ -543,6 +523,8 @@ namespace Alex.Worlds.Chunks
 		{
 			lock (_dataLock)
 			{
+				_scheduledUpdates = null;
+				
 				for (var index = 0; index < Sections.Length; index++)
 				{
 					var chunksSection = Sections[index];

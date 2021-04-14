@@ -308,11 +308,11 @@ namespace Alex.Graphics.Models.Entity
 
 					//var scale = parentScale * _scale; // (parentScale / _scale) * (_scale * parentScale);
 				
-					Children.ForAll(
+					Children.ForEach(
 						child =>
 						{
 							child.Update(args, parentScale * _scale);
-						}, false, false, false);
+						}, false, false);
 				}
 				finally
 				{
@@ -354,11 +354,11 @@ namespace Alex.Graphics.Models.Entity
 					}
 				}
 
-				Children.ForAll(
+				Children.ForEach(
 					(child) =>
 					{
 						renderCount += child.Render(args, effect, childMatrix);
-					}, false, false, false);
+					}, false, false);
 				
 				return renderCount;
 			}
