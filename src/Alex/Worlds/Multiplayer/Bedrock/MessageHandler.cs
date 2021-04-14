@@ -267,7 +267,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			else
 			{
 				Log.Error($"Unhandled packet: {message.GetType().Name} 0x{message.Id:X2}, IP {_session.EndPoint.Address}");
-				if (Log.IsDebugEnabled) Log.Warn($"Unknown packet 0x{message.Id:X2}\n{Packet.HexDump(message.Bytes)}");
+				//if (Log.IsDebugEnabled) Log.Warn($"Unknown packet 0x{message.Id:X2}\n{Packet.HexDump(message.Bytes)}");
 			}
 		}
 
@@ -291,7 +291,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 						if (message is UnknownPacket unknownPacket)
 						{
 							Log.Warn(
-								$"Received unknown packet 0x{unknownPacket.Id:X2}\n{Packet.HexDump(unknownPacket.Message)}");
+								$"Received unknown packet 0x{unknownPacket.Id:X2}\n");
 						}
 					}
 				}

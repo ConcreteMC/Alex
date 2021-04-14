@@ -339,11 +339,7 @@ namespace Alex.Net.Bedrock
 				return;
 			}
 
-			if (!Session.Acknowledge(datagram))
-			{
-				
-				return;
-			}
+			Session.Acknowledge(datagram);
 
 			if (datagram.Header.IsPacketPair)
 			{

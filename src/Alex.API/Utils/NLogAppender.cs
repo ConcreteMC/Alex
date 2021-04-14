@@ -11,10 +11,17 @@ using LogManager = log4net.LogManager;
 
 namespace Alex.API.Utils
 {
-	public class NLogAppender : AppenderSkeleton
+	public class NLogAppender : AppenderSkeleton, IOptionHandler
 	{
 		readonly object _syncRoot = new object();
-		Dictionary<string, Logger> _cache = new Dictionary<string, Logger>();
+		Dictionary<string, Logger> _cache = new Dictionary<string, Logger>(StringComparer.Ordinal);
+
+		/// <inheritdoc />
+		protected override bool FilterEvent(LoggingEvent loggingEvent)
+		{
+			
+			return base.FilterEvent(loggingEvent);
+		}
 
 		protected override void Append(LoggingEvent loggingEvent)
 		{
@@ -90,12 +97,14 @@ namespace Alex.API.Utils
             throw new NotSupportedException("Level " + level + " is currently not supported.");
 		}
 
+		
 		public static void Initialize()
 		{
 			try
 			{
 				//foreach(var assemb in AppDomain.CurrentDomain.GetAssemblies())
 				var repo = LogManager.GetRepository(Assembly.GetEntryAssembly());
+				
 				(((log4net.Repository.Hierarchy.Hierarchy) repo)).Root.Level = Level.All;
 				(((log4net.Repository.Hierarchy.Hierarchy) repo)).RaiseConfigurationChanged(EventArgs.Empty);
 				BasicConfigurator.Configure(repo, new NLogAppender());
