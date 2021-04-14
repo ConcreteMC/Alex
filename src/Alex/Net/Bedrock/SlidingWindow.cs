@@ -1,10 +1,12 @@
 using System;
 using System.Threading;
+using NLog;
 
 namespace Alex.Net.Bedrock
 {
     public class SlidingWindow
     {
+        private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(SlidingWindow));
         private const long UNSET_TIME_US = -1;
         public static readonly long CcMaximumThreshold = 2000;
         public static readonly long CcAdditionalVariance = 30;
@@ -15,12 +17,19 @@ namespace Alex.Net.Bedrock
         /// <summary>
         ///      Max bytes on wire
         /// </summary>
-        public double Cwnd { get; set; }
+        public double Cwnd
+        {
+            get => _cwnd;
+            set
+            {
+                _cwnd = Math.Clamp(value, 0, MtuSize);
+            }
+        }
 
         /// <summary>
         ///      Threshold between slow start and congestion avoidance
         /// </summary>
-        public double SsThresh { get; set; } = 0;
+        public double SlowStartThreshold { get; set; } = 0;
         
         /// <summary>
         ///     The estimated Round Trip Time
@@ -46,14 +55,16 @@ namespace Alex.Net.Bedrock
         /// <summary>
         ///     Every outgoing datagram is assigned a sequence number, which increments by 1 every assignment
         /// </summary>
-        private long  _nextDatagramSequenceNumber = -1;
+        private long  _nextDatagramSequenceNumber = 0;
 
         /// <summary>
         /// Track which datagram sequence numbers have arrived.
         /// If a sequence number is skipped, send a NAK for all skipped messages
         /// </summary>
         private long _expectedNextSequenceNumber = 0;
-        
+
+        private double _cwnd;
+
         public long NextCongestionControlBlock { get; set; }
         public bool BackoffThisBlock { get; set; }
         public bool IsContinuousSend { get; set; } = false;
@@ -116,17 +127,19 @@ namespace Alex.Net.Bedrock
         {
             if (IsContinuousSend && !BackoffThisBlock && Cwnd > MtuSize * 2)
             {
-                SsThresh = Cwnd / 2;
+                SlowStartThreshold = Cwnd / 2;
 
-                if (SsThresh < MtuSize)
+                if (SlowStartThreshold < MtuSize)
                 {
-                    SsThresh = MtuSize;
+                    SlowStartThreshold = MtuSize;
                 }
 
                 Cwnd = MtuSize;
 
                 NextCongestionControlBlock = Interlocked.Read(ref _nextDatagramSequenceNumber);
                 BackoffThisBlock = true;
+                
+                Log.Info($"(Resend) Enter slow start. Cwnd={Cwnd:F2}");
             }
         }
 
@@ -138,13 +151,15 @@ namespace Alex.Net.Bedrock
         {
             if (IsContinuousSend && !BackoffThisBlock)
             {
-                SsThresh = Cwnd / 2D;
+                SlowStartThreshold = Cwnd / 2D;
+                
+                Log.Info($"Set congestion avoidance. Cwnd={Cwnd:F2}");
             }
         }
 
         public long GetAndIncrementNextDatagramSequenceNumber()
         {
-            return Interlocked.Increment(ref _nextDatagramSequenceNumber);
+            return Interlocked.Increment(ref _nextDatagramSequenceNumber)  -1;
         }
 
         /// <summary>
@@ -172,8 +187,8 @@ namespace Alex.Net.Bedrock
             else
             {
                 double difference = rtt - EstimatedRtt;
-                EstimatedRtt += 0.5D * difference;
-                DeviationRtt += 0.5 * (Math.Abs(difference) - DeviationRtt);
+                EstimatedRtt += 0.05D * difference;
+                DeviationRtt += 0.05d * (Math.Abs(difference) - DeviationRtt);
             }
 
             IsContinuousSend = isContinuousSend;
@@ -192,22 +207,29 @@ namespace Alex.Net.Bedrock
 
             if (IsInSlowStart())
             {
-                Cwnd += MtuSize;
-
-                if (Cwnd > SsThresh && SsThresh != 0)
+                if (Cwnd < MtuSize)
                 {
-                    Cwnd = SsThresh + MtuSize * MtuSize / Cwnd;
+                    Cwnd += MtuSize;
+
+                    if (Cwnd > SlowStartThreshold && SlowStartThreshold > 0)
+                    {
+                        Cwnd = SlowStartThreshold + MtuSize * MtuSize / Cwnd;
+                    }
+
+                    Log.Info($"Slow start increase... Cwnd={Cwnd:F2}");
                 }
             }
             else if (isNewCongestionControlPeriod)
             {
                 Cwnd += MtuSize * MtuSize / Cwnd;
+                
+                Log.Info($"Congestion avoidance increase... Cwnd={Cwnd:F2}");
             }
         }
 
         public bool IsInSlowStart()
         {
-            return Cwnd <= SsThresh || SsThresh == 0;
+            return Cwnd <= SlowStartThreshold || SlowStartThreshold <= 0;
         }
 
         /// <summary>
