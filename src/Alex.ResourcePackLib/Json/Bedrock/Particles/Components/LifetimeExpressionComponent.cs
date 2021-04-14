@@ -19,5 +19,12 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Particles.Components
 		{
 			return runtime.Execute(MaxLifetime).AsDouble();
 		}
+
+		/// <inheritdoc />
+		public override void OnCreate(IParticle particle, MoLangRuntime runtime)
+		{
+			base.OnCreate(particle, runtime);
+			particle.MaxLifetime = CalculateLifetime(runtime);
+		}
 	}
 }

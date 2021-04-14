@@ -17,9 +17,9 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Particles.Components
 		}
 
 		/// <inheritdoc />
-		public override void PreRender(MoLangRuntime runtime)
+		public override void PreRender(IParticle particle, MoLangRuntime runtime)
 		{
-			base.PreRender(runtime);
+			base.PreRender(particle, runtime);
 
 			if (PerRender != null)
 				runtime.Execute(PerRender);

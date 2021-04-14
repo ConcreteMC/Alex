@@ -22,8 +22,8 @@ namespace Alex.Particles
 	public class ParticleManager : DrawableGameComponent, ITicked
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ParticleManager));
-		private ConcurrentDictionary<string, Particle> _particles =
-			new ConcurrentDictionary<string, Particle>(StringComparer.OrdinalIgnoreCase);
+		private ConcurrentDictionary<string, ParticleEmitter> _particles =
+			new ConcurrentDictionary<string, ParticleEmitter>(StringComparer.OrdinalIgnoreCase);
 
 		private SpriteBatch _spriteBatch;
 		private GraphicsDevice _graphics;
@@ -70,7 +70,7 @@ namespace Alex.Particles
 				
 				if (texture2d != null)
 				{
-					Particle p = new Particle(texture2d, particle.Value);
+					ParticleEmitter p = new ParticleEmitter(texture2d, particle.Value);
 					texture2d.Use();
 
 					//if (particle.Value.Components.ContainsKey("minecraft:particle_appearance_tinting"))

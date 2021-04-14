@@ -16,6 +16,47 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Particles.Components
 		
 		[JsonProperty("uv")]
 		public ParticleUV UV { get; set; }
+
+		/// <inheritdoc />
+		public override void OnCreate(IParticle particle, MoLangRuntime runtime)
+		{
+			base.OnCreate(particle, runtime);
+			
+			particle.UvPosition = UV.GetUv(runtime);
+			particle.UvSize = UV.GetSize(runtime);
+			particle.Size = Size.Evaluate(runtime, particle.Size);
+			
+			var flipbook = UV?.Flipbook;
+
+			if (flipbook != null)
+			{
+				if (flipbook.MaxFrame != null)
+				{
+					particle.FrameCount = runtime.Execute(flipbook.MaxFrame).AsFloat();
+				}
+			}
+		}
+
+		/// <inheritdoc />
+		public override void Update(IParticle particle, MoLangRuntime runtime)
+		{
+			base.Update(particle, runtime);
+			
+			var flipbook = UV?.Flipbook;
+						
+			particle.Size = Size.Evaluate(runtime, particle.Size);
+	
+			if (flipbook != null)
+			{
+				if (flipbook.FPS.HasValue)
+				{
+					var frame = (int) ((particle.Lifetime * flipbook.FPS.Value) % particle.FrameCount);
+
+					particle.UvPosition = UV.GetUv(runtime)
+					                      + flipbook.Step * frame;
+				}
+			}
+		}
 	}
 
 	public class ParticleUV
@@ -49,10 +90,10 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Particles.Components
 		{
 			if (Flipbook?.Size != null)
 			{
-				return Flipbook.Size;
+				return Flipbook.Size.Value;
 			}
 			
-			return Size?.Evaluate(runtime, Vector2.Zero) ?? Vector2.One;
+			return (Size?.Evaluate(runtime, Vector2.One) ?? (Vector2.One));
 		}
 	}
 
@@ -62,7 +103,7 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Particles.Components
 		public MoLangVector2Expression Base { get; set; }
 		
 		[JsonProperty("size_UV")]
-		public Vector2 Size { get; set; }
+		public Vector2? Size { get; set; } = null;
 		
 		[JsonProperty("step_UV")]
 		public Vector2 Step { get; set; } = Vector2.Zero;

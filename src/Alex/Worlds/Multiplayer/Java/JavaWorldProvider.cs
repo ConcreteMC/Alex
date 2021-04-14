@@ -1021,7 +1021,7 @@ namespace Alex.Worlds.Multiplayer.Java
 							particleInstance.Color = packet.Color.Value;
 						}
 
-						particleInstance.Scale = packet.Scale;
+						//particleInstance.Scale = packet.Scale;
 					}
 					else
 					{

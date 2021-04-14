@@ -496,7 +496,8 @@ namespace Alex.Entities
 				PooledTexture2D texture2D = null;
 				//if (renderer == null || texture2D == null)
 				{
-					if (ModelFactory.TryGetModel(description.Geometry["default"], out var model) && model != null)
+					if (description.Geometry.TryGetValue("default", out var defaultGeometry) 
+					    && ModelFactory.TryGetModel(defaultGeometry, out var model) && model != null)
 					{
 						var textures = description.Textures;
 						string texture;

@@ -111,7 +111,6 @@
     <Compile Remove="Particles\ParticleVertex.cs" />
     <Compile Remove="Particles\ParticleSystem.cs" />
     <Compile Remove="Particles\ParticleSettings.cs" />
-    <Compile Remove="Particles\ParticleEmitter.cs" />
     <None Remove="Resources\blockmap.json" />
     <EmbeddedResource Include="Resources\blockmap.json" />
     <None Remove="Resources\default_font.png" />

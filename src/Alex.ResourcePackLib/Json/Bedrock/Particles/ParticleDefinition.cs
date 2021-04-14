@@ -3,7 +3,6 @@ using Alex.API.Resources;
 using Alex.MoLang.Runtime;
 using Alex.ResourcePackLib.Json.Bedrock.Particles.Components;
 using Alex.ResourcePackLib.Json.Converters.Particles;
-using Microsoft.Xna.Framework;
 using Newtonsoft.Json;
 
 namespace Alex.ResourcePackLib.Json.Bedrock.Particles
@@ -16,6 +15,9 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Particles
 		[JsonProperty("components"), JsonConverter(typeof(ParticleComponentConverter))]
 		public Dictionary<string, ParticleComponent> Components { get; set; }
 
+		/// <summary>
+		///		Maximum number of particles that can be active at once for this emitter
+		/// </summary>
 		public int MaxParticles
 		{
 			get
@@ -25,49 +27,8 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Particles
 					return erc.MaxParticles;
 				}
 
-				return 500;
+				return 50;
 			}
-		}
-
-		public Vector3 GetInitialSpeed(MoLangRuntime runtime)
-		{
-			if (Components.TryGetValue("minecraft:particle_initial_speed", out var c) && c is InitialSpeedComponent es)
-			{
-				return es.Value.Evaluate(runtime, Vector3.Zero);
-			}
-
-			return Vector3.Zero;
-		}
-
-		public double GetMaxLifetime(MoLangRuntime runtime)
-		{
-			if (Components.TryGetValue("minecraft:particle_lifetime_expression", out var lft)
-			    && lft is LifetimeExpressionComponent lec)
-			{
-				return lec.CalculateLifetime(runtime);
-			}
-
-			return 0.5d;
-		}
-
-		public Vector3 GetLinearAcceleration(MoLangRuntime runtime)
-		{
-			if (Components.TryGetValue("minecraft:particle_motion_dynamic", out var pc) && pc is MotionComponent mc && mc.LinearAcceleration != null)
-			{
-				return mc.LinearAcceleration.Evaluate(runtime, Vector3.Zero);
-			}
-			
-			return Vector3.Zero;
-		}
-		
-		public float GetLinearDragCoEfficient(MoLangRuntime runtime)
-		{
-			if (Components.TryGetValue("minecraft:particle_motion_dynamic", out var pc) && pc is MotionComponent mc)
-			{
-				return mc.LinearDragCoEfficient(runtime);
-			}
-			
-			return 0f;
 		}
 	}
 

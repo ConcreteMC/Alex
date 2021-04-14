@@ -20,18 +20,18 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Particles.Components
 		}
 
 		/// <inheritdoc />
-		public override void OnCreate(MoLangRuntime runtime)
+		public override void OnCreate(IParticle particle, MoLangRuntime runtime)
 		{
-			base.OnCreate(runtime);
+			base.OnCreate(particle, runtime);
 			
 			if (OnCreateExpressions != null)
 				runtime.Execute(OnCreateExpressions);
 		}
 
 		/// <inheritdoc />
-		public override void Update(MoLangRuntime runtime)
+		public override void Update(IParticle particle, MoLangRuntime runtime)
 		{
-			base.Update(runtime);
+			base.Update(particle, runtime);
 
 			if (UpdateExpressions != null)
 				runtime.Execute(UpdateExpressions);
