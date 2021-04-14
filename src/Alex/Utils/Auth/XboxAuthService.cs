@@ -11,8 +11,8 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Alex.Worlds.Multiplayer.Bedrock;
 using Jose;
-using MiNET;
 using MiNET.Net;
 using MiNET.Utils;
 using MiNET.Utils.Cryptography;
@@ -25,6 +25,7 @@ using Org.BouncyCastle.Crypto.Generators;
 using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.Security;
 using Org.BouncyCastle.X509;
+using CertificateData = MiNET.CertificateData;
 using Logger = NLog.Logger;
 
 namespace Alex.Utils.Auth
@@ -170,10 +171,10 @@ namespace Alex.Utils.Auth
 					{
 						response.EnsureSuccessStatusCode();
 
-						var rawResponse = await response.Content.ReadAsStringAsync();
-
+						var rawResponse = await response.Content.ReadAsByteArrayAsync();
 						DecodedChain = new ChainData();
-						dynamic a     = JObject.Parse(rawResponse);
+						
+						dynamic a     = JObject.Parse(Encoding.UTF8.GetString(rawResponse));
 						var     chain = ((JArray) a.chain).Values<string>().ToArray();
 						DecodedChain.Chain = new CertificateData[chain.Length];
 
@@ -183,7 +184,10 @@ namespace Alex.Utils.Auth
 
 							try
 							{
-								DecodedChain.Chain[i] = JWT.Payload<CertificateData>(element);
+								DecodedChain.Chain[i] = JWT.Payload<CertificateData>(element, new JwtSettings()
+								{
+									JsonMapper = new JWTMapper()
+								});
 							}
 							catch (Exception ex)
 							{
@@ -192,7 +196,7 @@ namespace Alex.Utils.Auth
 						}
 
 						//DecodedChain = JsonConvert.DeserializeObject<ChainData>(rawResponse);
-						MinecraftChain = Encoding.UTF8.GetBytes(rawResponse);
+						MinecraftChain = rawResponse;
 					//	File.WriteAllBytes("/home/kenny/xbox.json", MinecraftChain);
 						//   //Log.Debug($"Chain: {rawResponse}");
 					}
