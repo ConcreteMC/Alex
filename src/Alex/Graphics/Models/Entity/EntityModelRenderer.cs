@@ -22,34 +22,52 @@ namespace Alex.Graphics.Models.Entity
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(EntityModelRenderer));
 		
-		private IReadOnlyDictionary<string, ModelBone> Bones { get; }
+		private IReadOnlyDictionary<string, ModelBone> Bones { get; set; }
 		
 		private PooledVertexBuffer VertexBuffer { get; set; }
 		private PooledIndexBuffer IndexBuffer { get; set; }
-		public  bool               Valid        { get; private set; }
+		//public  bool               Valid        { get; private set; }
 
-		public readonly double VisibleBoundsWidth = 0;
+		public double VisibleBoundsWidth { get; set; } = 0;
 
-		public readonly double VisibleBoundsHeight = 0;
+		public double VisibleBoundsHeight { get; set; } = 0;
 
-		public EntityModelRenderer(EntityModel model)
+		public EntityModelRenderer()
 		{
 			//	Model = model;
 			
-			VisibleBoundsWidth = model.Description.VisibleBoundsWidth;
-			VisibleBoundsHeight = model.Description.VisibleBoundsHeight;
-			var bones = new Dictionary<string, ModelBone>(StringComparer.OrdinalIgnoreCase);
-			BuildModel(model, bones);
-
-			Bones = bones;
 		}
 
-		private void BuildModel(EntityModel model, Dictionary<string, ModelBone> modelBones)
+		public static bool TryGetModel(EntityModel model, out EntityModelRenderer renderer)
 		{
 			List<VertexPositionColorTexture> vertices = new List<VertexPositionColorTexture>();
 			List<short> indices = new List<short>();
+			var bones = new Dictionary<string, ModelBone>(StringComparer.OrdinalIgnoreCase);
+
+			if (BuildModel(model, bones, vertices, indices))
+			{
+				renderer = new EntityModelRenderer();
+				renderer.VisibleBoundsWidth = model.Description.VisibleBoundsWidth;
+				renderer.VisibleBoundsHeight = model.Description.VisibleBoundsHeight;
+				renderer.Bones = bones;
+				renderer.IndexBuffer = GpuResourceManager.GetIndexBuffer(
+					renderer, Alex.Instance.GraphicsDevice, IndexElementSize.SixteenBits, indices.Count, BufferUsage.WriteOnly);
+				renderer.IndexBuffer.SetData(indices.ToArray());
 			
-				//var actualTextureSize = new Vector2(texture.Width, texture.Height);
+				renderer.VertexBuffer = GpuResourceManager.GetBuffer(renderer, Alex.Instance.GraphicsDevice,
+					VertexPositionColorTexture.VertexDeclaration, vertices.Count, BufferUsage.WriteOnly);
+				renderer.VertexBuffer.SetData(vertices.ToArray());
+
+				return true;
+			}
+
+			renderer = null;
+			return false;
+		}
+
+		private static bool BuildModel(EntityModel model, Dictionary<string, ModelBone> modelBones, List<VertexPositionColorTexture> vertices, List<short> indices)
+		{
+			//var actualTextureSize = new Vector2(texture.Width, texture.Height);
 
 			int counter = 0;
 			foreach (var bone in model.Bones.Where(x => string.IsNullOrWhiteSpace(x.Parent)))
@@ -71,23 +89,14 @@ namespace Alex.Graphics.Models.Entity
 			if (vertices.Count == 0 || indices.Count == 0)
 			{
 				Log.Warn($"Oh no. Vertices: {vertices.Count} Indices: {indices.Count}");
-				Valid = true;
-				return;
+				return false;
 			}
 
-			IndexBuffer = GpuResourceManager.GetIndexBuffer(
-				this, Alex.Instance.GraphicsDevice, IndexElementSize.SixteenBits, indices.Count, BufferUsage.WriteOnly);
-			IndexBuffer.SetData(indices.ToArray());
-			
-			VertexBuffer = GpuResourceManager.GetBuffer(this, Alex.Instance.GraphicsDevice,
-				VertexPositionColorTexture.VertexDeclaration, vertices.Count, BufferUsage.WriteOnly);
-			VertexBuffer.SetData(vertices.ToArray());
-
-			Valid = true;
+			return true;
 			//Texture = texture;
 		}
 
-		private ModelBone ProcessBone(
+		private static ModelBone ProcessBone(
 			EntityModel source,
 			EntityModelBone bone,
 			ref List<VertexPositionColorTexture> vertices,
@@ -187,7 +196,7 @@ namespace Alex.Graphics.Models.Entity
 			return modelBone;
 		}
 
-		private void ModifyCubeIndexes(ref List<VertexPositionColorTexture> vertices, ref List<short> indices,
+		private static void ModifyCubeIndexes(ref List<VertexPositionColorTexture> vertices, ref List<short> indices,
 			(VertexPositionColorTexture[] vertices, short[] indexes) data, Matrix transformation)
 		{
 			var startIndex = vertices.Count;

@@ -25,7 +25,12 @@ namespace Alex.Entities.BlockEntities
 		/// <inheritdoc />
 		public SkullBlockEntity(World level, Block block, PooledTexture2D texture) : base(level, block)
 		{
-			ModelRenderer = new EntityModelRenderer(new SkullBlockEntityModel());
+			if (EntityModelRenderer.TryGetModel(new SkullBlockEntityModel(), out var renderer))
+			{
+				ModelRenderer = renderer;
+			}
+			
+			//ModelRenderer = new EntityModelRenderer(new SkullBlockEntityModel());
 			Texture = texture;
 			
 			Width = 0.5f;
@@ -87,13 +92,13 @@ namespace Alex.Entities.BlockEntities
 							if (Alex.Instance.Resources.TryGetBitmap(
 								"minecraft:entity/skeleton/skeleton", out var bmp))
 							{
-								_skeleton = TextureUtils.BitmapToTexture2D(Alex.Instance.GraphicsDevice, bmp);
+								_skeleton = TextureUtils.BitmapToTexture2D(this, Alex.Instance.GraphicsDevice, bmp);
 							}
 						}
 						
 						if (_skeleton != null)
 						{
-							ModelRenderer = new EntityModelRenderer(new SkullBlockEntityModel());
+							//ModelRenderer = new EntityModelRenderer(new SkullBlockEntityModel());
 							Texture = _skeleton;
 							//ModelRenderer.Texture = _skeleton;
 						}
@@ -105,13 +110,13 @@ namespace Alex.Entities.BlockEntities
 							if (Alex.Instance.Resources.TryGetBitmap(
 								"minecraft:entity/skeleton/wither_skeleton", out var bmp))
 							{
-								_witherSkeleton = TextureUtils.BitmapToTexture2D(Alex.Instance.GraphicsDevice, bmp);
+								_witherSkeleton = TextureUtils.BitmapToTexture2D(this, Alex.Instance.GraphicsDevice, bmp);
 							}
 						}
 						
 						if (_witherSkeleton != null)
 						{
-							ModelRenderer = new EntityModelRenderer(new SkullBlockEntityModel());
+							//ModelRenderer = new EntityModelRenderer(new SkullBlockEntityModel());
 							Texture = _witherSkeleton;
 						}
 						break;
@@ -122,13 +127,13 @@ namespace Alex.Entities.BlockEntities
 							if (Alex.Instance.Resources.TryGetBitmap(
 								"minecraft:entity/zombie/zombie", out var bmp))
 							{
-								_zombie = TextureUtils.BitmapToTexture2D(Alex.Instance.GraphicsDevice, bmp);
+								_zombie = TextureUtils.BitmapToTexture2D(this, Alex.Instance.GraphicsDevice, bmp);
 							}
 						}
 						
 						if (_zombie != null)
 						{
-							ModelRenderer = new EntityModelRenderer(new SkullBlockEntityModel());
+							//ModelRenderer = new EntityModelRenderer(new SkullBlockEntityModel());
 							Texture = _zombie;
 						}
 						break;
@@ -145,7 +150,6 @@ namespace Alex.Entities.BlockEntities
 						
 						if (_creeper != null)
 						{
-							ModelRenderer = new EntityModelRenderer(new SkullBlockEntityModel());
 							Texture = _creeper;
 						}
 						break;
@@ -156,7 +160,7 @@ namespace Alex.Entities.BlockEntities
 							if (Alex.Instance.Resources.TryGetBitmap(
 								"minecraft:entity/enderdragon/dragon", out var bmp))
 							{
-								_dragon = TextureUtils.BitmapToTexture2D(Alex.Instance.GraphicsDevice, bmp);
+								_dragon = TextureUtils.BitmapToTexture2D(this, Alex.Instance.GraphicsDevice, bmp);
 							}
 						}
 						
@@ -164,7 +168,11 @@ namespace Alex.Entities.BlockEntities
 						{
 							if (ModelFactory.TryGetModel("geometry.dragon_head", out var dragonHead))
 							{
-								ModelRenderer = new EntityModelRenderer(dragonHead);
+								if (EntityModelRenderer.TryGetModel(dragonHead, out var renderer))
+								{
+									ModelRenderer = renderer;
+								}
+								
 								Texture = _dragon;
 							}
 

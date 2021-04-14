@@ -38,7 +38,6 @@ namespace Alex.API.Utils.Collections
 	public sealed class ThreadSafeList<T> : IList<T>
 	{
 		private IList<T> Items { get; }
-		private FastRandom Random { get; } = new FastRandom();
 		private ReaderWriterLockSlim RwLock { get; } = new ReaderWriterLockSlim();
 
 		public ThreadSafeList(IList<T> dataHolder)
@@ -52,10 +51,7 @@ namespace Alex.API.Utils.Collections
 		{
 			get
 			{
-				using (RwLock.Read())
-				{
-					return Items.LongCount();
-				}
+				return Items.LongCount();
 			}
 		}
 
@@ -63,10 +59,7 @@ namespace Alex.API.Utils.Collections
 		{
 			get
 			{
-				using (RwLock.Read())
-				{
-					return Items.Count;
-				}
+				return Items.Count;
 			}
 		}
 
@@ -125,7 +118,7 @@ namespace Alex.API.Utils.Collections
 
 		public IEnumerator<T> GetEnumerator()
 		{
-			return Clone().GetEnumerator();
+			return new ThreadSafeListEnumerator(this);
 		}
 
 		IEnumerator IEnumerable.GetEnumerator()
@@ -173,9 +166,9 @@ namespace Alex.API.Utils.Collections
 			}
 		}
 
-		public Task AddAsync(T item)
+		public Task<bool> AddAsync(T item)
 		{
-			return Task.Run(() => { TryAdd(item); });
+			return Task.Run(() => TryAdd(item));
 		}
 
 		/// <summary>
@@ -199,11 +192,11 @@ namespace Alex.API.Utils.Collections
 		///     Returns a new copy of all items in the <see cref="List{T}" />.
 		/// </summary>
 		/// <returns></returns>
-		public List<T> Clone(bool asParallel = true)
+		public List<T> Clone()
 		{
 			using (RwLock.Read())
 			{
-				return asParallel ? new List<T>(Items.AsParallel()) : new List<T>(Items);
+				return new List<T>(Items);
 			}
 		}
 
@@ -229,31 +222,21 @@ namespace Alex.API.Utils.Collections
 			{
 				throw new ArgumentNullException("action");
 			}
-			Action<T> wrapper = obj =>
-			{
-				try
-				{
-					action(obj);
-				}
-				catch (ArgumentNullException)
-				{
-					//if a null gets into the list then swallow an ArgumentNullException so we can continue adding
-				}
-			};
+			
 			if (performActionOnClones)
 			{
-				List<T> clones = Clone(asParallel);
+				List<T> clones = Clone();
 				if (asParallel)
 				{
-					clones.AsParallel().ForAll(wrapper);
+					clones.AsParallel().ForAll(action);
 				}
 				else if (inParallel)
 				{
-					Parallel.ForEach(clones, wrapper);
+					Parallel.ForEach(clones, action);
 				}
 				else
 				{
-					clones.ForEach(wrapper);
+					clones.ForEach(action);
 				}
 			}
 			else
@@ -262,15 +245,15 @@ namespace Alex.API.Utils.Collections
 				{
 					if (asParallel)
 					{
-						Items.AsParallel().ForAll(wrapper);
+						Items.AsParallel().ForAll(action);
 					}
 					else if (inParallel)
 					{
-						Parallel.ForEach(Items, wrapper);
+						Parallel.ForEach(Items, action);
 					}
 					else
 					{
-						Items.ForEach(wrapper);
+						Items.ForEach(action);
 					}
 				}
 			}
@@ -301,31 +284,21 @@ namespace Alex.API.Utils.Collections
 			{
 				throw new ArgumentNullException("action");
 			}
-			Action<T> wrapper = obj =>
-			{
-				try
-				{
-					action(obj);
-				}
-				catch (ArgumentNullException)
-				{
-					//if a null gets into the list then swallow an ArgumentNullException so we can continue adding
-				}
-			};
+
 			if (performActionOnClones)
 			{
-				List<T> clones = Clone(asParallel);
+				List<T> clones = Clone();
 				if (asParallel)
 				{
-					clones.AsParallel().ForAll(wrapper);
+					clones.AsParallel().ForAll(action);
 				}
 				else if (inParallel)
 				{
-					Parallel.ForEach(clones, wrapper);
+					Parallel.ForEach(clones, action);
 				}
 				else
 				{
-					clones.ForEach(wrapper);
+					clones.ForEach(action);
 				}
 			}
 			else
@@ -334,15 +307,15 @@ namespace Alex.API.Utils.Collections
 				{
 					if (asParallel)
 					{
-						Items.AsParallel().ForAll(wrapper);
+						Items.AsParallel().ForAll(action);
 					}
 					else if (inParallel)
 					{
-						Parallel.ForEach(Items, wrapper);
+						Parallel.ForEach(Items, action);
 					}
 					else
 					{
-						Items.ForEach(wrapper);
+						Items.ForEach(action);
 					}
 				}
 			}
@@ -393,14 +366,14 @@ namespace Alex.API.Utils.Collections
 
 		public bool TryTake(out T item)
 		{
-			using (RwLock.Read())
+			using (RwLock.Write())
 			{
 				int count = Items.Count;
 				if (count >= 1)
 				{
-					int idx = Random.Next(0, count);
-					item = Items[idx];
-					Items.RemoveAt(idx);
+					//int idx = Random.Next(0, count);
+					item = Items[0];
+					Items.RemoveAt(0);
 					return true;
 				}
 			}
@@ -472,6 +445,65 @@ namespace Alex.API.Utils.Collections
 			finally
 			{
 				RwLock.ExitUpgradeableReadLock();
+			}
+		}
+		
+		private sealed class ThreadSafeListEnumerator : IEnumerator<T>
+		{
+			private ThreadSafeList<T> _list;
+			private int _index = 0;
+			public ThreadSafeListEnumerator(ThreadSafeList<T> list)
+			{
+				_list = list;
+				_list.RwLock.EnterReadLock();
+				//UpdateCurrent();
+			}
+
+			private void UpdateCurrent()
+			{
+				Current = _list.Items[_index];
+			}
+		
+			/// <inheritdoc />
+			public bool MoveNext()
+			{
+				if (_index + 1 >= _list.Items.Count)
+					return false;
+				
+				_index++;
+				
+				UpdateCurrent();
+				
+				return true;
+			}
+
+			/// <inheritdoc />
+			public void Reset()
+			{
+				_index = 0;
+			}
+
+			/// <inheritdoc />
+			public T Current { get; private set; }
+
+			/// <inheritdoc />
+			object IEnumerator.Current => Current;
+
+			private bool _disposed = false;
+			/// <inheritdoc />
+			public void Dispose()
+			{
+				if (_disposed)
+					return;
+				
+				_list.RwLock.ExitReadLock();
+				_disposed = true;
+			}
+
+			~ThreadSafeListEnumerator()
+			{
+				if (!_disposed)
+					Dispose();
 			}
 		}
 	}

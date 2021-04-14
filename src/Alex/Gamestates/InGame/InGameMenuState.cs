@@ -72,18 +72,13 @@ namespace Alex.Gamestates.InGame
 
 				if ( Alex.GameStateManager.TryGetState("play", out PlayingState s))
 				{
-					PlayerListItem[] players = s.World.PlayerList.Entries.Values.ToArray();
-
-					for (var index = 0; index < players.Length; index++)
+					foreach (var p in s.World.PlayerList)
 					{
-						var p           = players[index];
-						var displayName = p.Username;
-						
 						_playerList.AddChild(
-							new PlayerListItemElement(displayName, p.IsJavaPlayer ? p.Ping : (int?)null)
+							new PlayerListItemElement(p.Username, p.IsJavaPlayer ? p.Ping : (int?)null)
 							{
-								BackgroundOverlay = (index % 2 == 0) ? new Color(Color.Black, 0.35f) :
-									Color.Transparent,
+								//BackgroundOverlay = (index % 2 == 0) ? new Color(Color.Black, 0.35f) :
+								//	Color.Transparent,
 								//MaxWidth = _playerList.MaxWidth
 							});
 					}

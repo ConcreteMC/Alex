@@ -134,7 +134,11 @@ namespace Alex.Entities.BlockEntities
 		{
 			if (newBlock is WallSign)
 			{
-				ModelRenderer = new EntityModelRenderer(new WallSignEntityModel());
+				if (EntityModelRenderer.TryGetModel(new WallSignEntityModel(), out var renderer))
+				{
+					ModelRenderer = renderer;
+				}
+				
 				Texture = BlockEntityFactory.SignTexture;
 				if (newBlock.BlockState.TryGetValue("facing", out var facing))
 				{
@@ -164,7 +168,11 @@ namespace Alex.Entities.BlockEntities
 			}
 			else if (newBlock is StandingSign)
 			{
-				ModelRenderer = new EntityModelRenderer(new StandingSignEntityModel());
+				if (EntityModelRenderer.TryGetModel(new StandingSignEntityModel(), out var renderer))
+				{
+					ModelRenderer = renderer;
+				}
+				
 				Texture = BlockEntityFactory.SignTexture;
 				TextOffset = -0.1f;
 				if (newBlock.BlockState.TryGetValue("rotation", out var r))

@@ -123,7 +123,7 @@ namespace Alex.API
 		{
 			sb.Draw(WhiteTexture, rectangle, null, color, 0f, Vector2.Zero, SpriteEffects.None, layerDepth);
 		}
-
+		
 		public static void RenderBoundingBox(
 			this SpriteBatch sb,
 			BoundingBox box,

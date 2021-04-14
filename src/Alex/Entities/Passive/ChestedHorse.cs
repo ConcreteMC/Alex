@@ -19,7 +19,7 @@ namespace Alex.Entities.Passive
 
 				var modelRenderer = ModelRenderer;
 
-				if (modelRenderer != null && modelRenderer.Valid)
+				if (modelRenderer != null)
 				{
 					if (modelRenderer.GetBone("Bag1", out var bag1))
 					{

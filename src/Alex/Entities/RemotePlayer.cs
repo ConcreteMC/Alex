@@ -328,18 +328,13 @@ namespace Alex.Entities
 
 						GeometryName = model.Description.Identifier;
 
-						EntityModelRenderer modelRenderer = new EntityModelRenderer(
-								model);
-
-						Texture = TextureUtils.BitmapToTexture2D(this, Alex.Instance.GraphicsDevice, skinBitmap);
-
-						if (modelRenderer.Valid)
+						if (EntityModelRenderer.TryGetModel(model, out var renderer))
 						{
-							ModelRenderer = modelRenderer;
+							ModelRenderer = renderer;
+							Texture = TextureUtils.BitmapToTexture2D(this, Alex.Instance.GraphicsDevice, skinBitmap);
 						}
 						else
 						{
-							modelRenderer.Dispose();
 							Log.Debug($"Invalid model: for player {NameTag} (Disposing)");
 						}
 					}

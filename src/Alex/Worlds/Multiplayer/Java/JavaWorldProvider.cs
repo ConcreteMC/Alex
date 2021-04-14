@@ -2805,8 +2805,7 @@ namespace Alex.Worlds.Multiplayer.Java
 		{
 			//World?.Ticker?.UnregisterTicked(this);
 
-			var missingSounds = _missingSounds.ToArray();
-			_missingSounds.Clear();
+			var missingSounds = _missingSounds.TakeAndClear();
 
 			base.Dispose();
 

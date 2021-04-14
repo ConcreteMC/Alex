@@ -33,18 +33,18 @@ namespace Alex.Worlds.Chunks
             Interlocked.Increment(ref _instances);
         }
 
-        public bool Draw(GraphicsDevice device, RenderStage stage, Effect effect)
+        public int Draw(GraphicsDevice device, RenderStage stage, Effect effect)
         {
             if (Disposed)
             {
-                return false;
+                return 0;
             }
 
             var rStage = _stages[(int) stage];
 
             if (rStage == null)
             {
-                return false;
+                return 0;
             }
 
             return rStage.Render(device, effect);

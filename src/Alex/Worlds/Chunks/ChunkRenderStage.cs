@@ -124,11 +124,12 @@ namespace Alex.Worlds.Chunks
 				{
 					foreach (var vertex in block.Value)
 					{
-						var p = vertex.Position + vertex.Face.GetVector3();
-						
+						var p = vertex.Position;
+
+						var offset = vertex.Face.GetVector3();
 						vertices[index] = new MinifiedBlockShaderVertex(
-							vertex.Position, vertex.Face.GetVector3(), vertex.TexCoords, new Color(vertex.Color),
-							world?.GetBlockLight(p) ?? 0, world?.GetSkyLight(p) ?? 15);
+							vertex.Position, offset, vertex.TexCoords, new Color(vertex.Color),
+							world?.GetBlockLight(p) ?? 0, world?.GetSkyLight(p + offset) ?? 15);
 						
 						index++;
 					}
@@ -216,20 +217,23 @@ namespace Alex.Worlds.Chunks
 			}
 		}
         
-		public virtual bool Render(GraphicsDevice device, Effect effect)
+		public virtual int Render(GraphicsDevice device, Effect effect)
 		{
 			var primitives = _primitiveCount;
 
-			if (Buffer == null || primitives == 0) return false;
-            
+			if (Buffer == null || primitives == 0) return 0;
+
+			int count = 0;
 			device.SetVertexBuffer(Buffer);
 			foreach (var pass in effect.CurrentTechnique.Passes)
 			{
 				pass.Apply();
 				device.DrawPrimitives(PrimitiveType.TriangleList, 0, primitives);
+
+				count++;
 			}
 
-			return true;
+			return count;
 		}
 
 		private bool _disposed = false;

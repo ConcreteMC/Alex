@@ -4,14 +4,13 @@ namespace Alex.API
 {
     public enum RenderStage : int
     {
-        OpaqueFullCube = 0,
-        Opaque = 1,
+        Opaque = 0,
        // LiquidOld = 16,
-        Transparent = 2,
-        Translucent = 3,
-        Animated = 4,
+        Transparent = 1,
+        Translucent = 2,
+        Animated = 3,
         //AnimatedTranslucent = 4096,
-        Liquid = 5
+        Liquid = 4
     }
 
    /* public static class RenderStageExtensions

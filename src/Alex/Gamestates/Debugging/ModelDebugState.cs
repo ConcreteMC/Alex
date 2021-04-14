@@ -340,12 +340,11 @@ namespace Alex.Gamestates.Debugging
 					if (Alex.Resources.BedrockResourcePack.Textures.TryGetValue(texture,
 																				out var bmp))
 					{
-						PooledTexture2D t = TextureUtils.BitmapToTexture2D(Alex.GraphicsDevice, bmp.Value);
-
-						renderer = new EntityModelRenderer(model);
-						renderer.Scale = 1f / 16f;
-
-						Effect.Texture = t;
+						if (EntityModelRenderer.TryGetModel(model, out renderer))
+						{
+							renderer.Scale = 1f / 16f;
+							Effect.Texture = TextureUtils.BitmapToTexture2D(this, Alex.GraphicsDevice, bmp.Value);  
+						}
 					}
 				}
 			}
@@ -586,12 +585,11 @@ namespace Alex.Gamestates.Debugging
 				//context.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
 				//context.GraphicsDevice.SamplerStates[0] = SamplerState.PointWrap;
 
-				data.Draw(args.GraphicsDevice, RenderStage.OpaqueFullCube, _currentEffect);
 				data.Draw(args.GraphicsDevice, RenderStage.Opaque, _currentEffect);
 				data.Draw(args.GraphicsDevice, RenderStage.Transparent, _currentEffect);
-				data.Draw(args.GraphicsDevice, RenderStage.Translucent, _currentEffect);
+			//	data.Draw(args.GraphicsDevice, RenderStage.Translucent, _currentEffect);
 				data.Draw(args.GraphicsDevice, RenderStage.Animated, _currentEffect);
-				data.Draw(args.GraphicsDevice, RenderStage.Liquid, _currentEffect);
+			//	data.Draw(args.GraphicsDevice, RenderStage.Liquid, _currentEffect);
 			}
 		}
 

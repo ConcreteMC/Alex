@@ -1,15 +1,33 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using MiNET.Worlds;
 
 namespace Alex.API.Utils
 {
-	public class PlayerList
+	public class PlayerList : IEnumerable<PlayerListItem>
 	{
-		public Dictionary<MiNET.Utils.UUID, PlayerListItem> Entries { get; }
+		public ConcurrentDictionary<MiNET.Utils.UUID, PlayerListItem> Entries { get; }
 
 		public PlayerList()
 		{
-			Entries = new Dictionary<MiNET.Utils.UUID, PlayerListItem>();
+			Entries = new ConcurrentDictionary<MiNET.Utils.UUID, PlayerListItem>();
+		}
+
+		/// <inheritdoc />
+		public IEnumerator<PlayerListItem> GetEnumerator()
+		{
+			foreach (var entry in Entries)
+			{
+				if (entry.Value?.Username != null)
+					yield return entry.Value;
+			}
+		}
+
+		/// <inheritdoc />
+		IEnumerator IEnumerable.GetEnumerator()
+		{
+			return GetEnumerator();
 		}
 	}
 

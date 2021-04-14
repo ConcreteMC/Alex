@@ -196,30 +196,44 @@ namespace Alex.Entities
 
 		private static void Add(ResourceManager resources, GraphicsDevice graphics, EntityDescription entityDefinition, EntityModel model)
 		{
-			_registeredRenderers.AddOrUpdate(entityDefinition.Identifier,
-				(a) =>
+			_registeredRenderers.AddOrUpdate(entityDefinition.Identifier, (a) =>
 				{
-					/*if (t == null)
+					return () =>
 					{
-						var textures = entityDefinition.Textures;
-						string texture;
-						if (!textures.TryGetValue("default", out texture) && !textures.TryGetValue(entityDefinition.Identifier, out texture))
+						if (EntityModelRenderer.TryGetModel(model, out var renderer))
 						{
-							texture = textures.FirstOrDefault().Value;
+							return renderer;
 						}
 
-						if (resources.TryGetBedrockBitmap(texture,
-							out var bmp))
-						{
-							t = TextureUtils.BitmapToTexture2D(graphics, bmp);
-						}
-					}*/
+						return null;
+					};
+				/*if (t == null)
+				{
+					var textures = entityDefinition.Textures;
+					string texture;
+					if (!textures.TryGetValue("default", out texture) && !textures.TryGetValue(entityDefinition.Identifier, out texture))
+					{
+						texture = textures.FirstOrDefault().Value;
+					}
 
-					return () => new EntityModelRenderer(model);
+					if (resources.TryGetBedrockBitmap(texture,
+						out var bmp))
+					{
+						t = TextureUtils.BitmapToTexture2D(graphics, bmp);
+					}
+				}*/
 				},
 				(s, func) =>
 				{
-					return () => new EntityModelRenderer(model);
+					return () =>
+					{
+						if (EntityModelRenderer.TryGetModel(model, out var renderer))
+						{
+							return renderer;
+						}
+
+						return null;
+					};
 				});
 		}
 

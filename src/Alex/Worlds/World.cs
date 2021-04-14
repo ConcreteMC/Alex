@@ -227,7 +227,6 @@ namespace Alex.Worlds
             SkyBox.Draw(args);
             
             ChunkManager.Draw(args, null,
-	            RenderStage.OpaqueFullCube,
 	            RenderStage.Opaque);
             
             EntityManager.Render(args);
@@ -1033,7 +1032,7 @@ namespace Alex.Worlds
 
 		public void RemovePlayerListItem(MiNET.Utils.UUID item)
 		{
-			PlayerList.Entries.Remove(item);
+			PlayerList.Entries.TryRemove(item, out _);
 		}
 
 		public void UpdatePlayerLatency(MiNET.Utils.UUID uuid, int latency)

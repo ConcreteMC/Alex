@@ -21,7 +21,11 @@ namespace Alex.Graphics.Models.Entity
 			public Vector3 Position
 			{
 				get => _position;
-				set => _targetPosition = _position = value;
+				set
+				{
+					_targetPosition = _position = value;
+					UpdateTransform();
+				}
 			}
 
 			private Vector3 _rotation = Vector3.Zero;
@@ -29,7 +33,12 @@ namespace Alex.Graphics.Models.Entity
 			public Vector3 Rotation
 			{
 				get { return _rotation; }
-				set { _targetRotation = _rotation = value; }
+				set
+				{
+					_targetRotation = _rotation = value;
+					
+					UpdateTransform();
+				}
 			}
 
 			private Vector3 _scale = Vector3.One;
@@ -37,7 +46,11 @@ namespace Alex.Graphics.Models.Entity
 			public Vector3 Scale
 			{
 				get { return _scale; }
-				set { _targetScale = _scale = value; }
+				set
+				{
+					_targetScale = _scale = value;
+					UpdateTransform();
+				}
 			}
 
 			private Vector3 _bindingRotation = Vector3.Zero;
@@ -45,9 +58,57 @@ namespace Alex.Graphics.Models.Entity
 			public Vector3 BindingRotation
 			{
 				get { return _bindingRotation; }
-				set { _bindingRotation = value; }
+				set
+				{
+					_bindingRotation = value;
+					UpdateBindingMatrix();
+				}
 			}
 
+			private Matrix Transform { get; set; } = Matrix.Identity;
+
+			private void UpdateTransform()
+			{
+				Matrix matrix;
+				if (Pivot.HasValue)
+				{
+					var pivot = (Pivot ?? Vector3.Zero);
+
+					matrix = Matrix.CreateTranslation(-pivot) * MatrixHelper.CreateRotationDegrees(_rotation)
+					                                          * Matrix.CreateTranslation(pivot)
+					                                          * Matrix.CreateTranslation(_position);
+				}
+				else
+				{
+					matrix = MatrixHelper.CreateRotationDegrees(_rotation) * Matrix.CreateTranslation(_position);
+				}
+
+				Transform = matrix;
+			}
+			
+			private Matrix BindingMatrix { get; set; } = Matrix.Identity;
+
+			private void UpdateBindingMatrix()
+			{
+				Matrix matrix;
+				var bindingRotation = _bindingRotation;
+
+				if (Pivot.HasValue)
+				{
+					var pivot = (Pivot ?? Vector3.Zero);
+
+					matrix = Matrix.CreateTranslation(-pivot)
+					              * MatrixHelper.CreateRotationDegrees(bindingRotation)
+					              * Matrix.CreateTranslation(pivot);
+				}
+				else
+				{
+					matrix = MatrixHelper.CreateRotationDegrees(bindingRotation);
+				}
+
+				BindingMatrix = matrix;
+			}
+			
 			public bool Rendered { get; set; } = true;
 
 			public IAttached Parent { get; set; } = null;
@@ -61,7 +122,16 @@ namespace Alex.Graphics.Models.Entity
 			//public int StartIndex { get; }
 			//public int ElementCount { get; }
 
-			public Vector3? Pivot { get; set; }
+			public Vector3? Pivot
+			{
+				get => _pivot;
+				set
+				{
+					_pivot = value;
+					
+					UpdateBindingMatrix();
+				}
+			}
 
 			private List<ModelMesh> _modelMeshes = new List<ModelMesh>();
 			public ModelBone()
@@ -207,6 +277,8 @@ namespace Alex.Graphics.Models.Entity
 					_rotation = startRotation + ((targetRotation - startRotation) * progress);
 					_position = startPosition + ((targetPosition - startPosition) * progress);
 					_scale = startScale + ((targetScale - startScale) * progress);
+					
+					UpdateTransform();
 				}
 				//if (!Monitor.TryEnter(_disposeLock, 0))
 				//	return;
@@ -236,15 +308,11 @@ namespace Alex.Graphics.Models.Entity
 
 					//var scale = parentScale * _scale; // (parentScale / _scale) * (_scale * parentScale);
 				
-					var children = Children.ToArray();
-
-					if (children.Length > 0)
-					{
-						foreach (var child in children)
+					Children.ForAll(
+						child =>
 						{
 							child.Update(args, parentScale * _scale);
-						}
-					}
+						}, false, false, false);
 				}
 				finally
 				{
@@ -258,55 +326,15 @@ namespace Alex.Graphics.Models.Entity
 				//var count = ElementCount;
 
 			//	worldMatrix = WorldMatrix * worldMatrix;
-			Matrix childMatrix = worldMatrix;
+				Matrix childMatrix =  Transform * worldMatrix;
 				if (Rendered)
 				{
-					var rotation = _rotation;
-					var translation = _position;
-
-					/*if (characterMatrix.Decompose(
-						out var parentScale, out var parentRotation, out var parentTranslation))
-					{
-						if (parentScale.X != 0.0 && parentScale.Y != 0.0 & parentScale.Z != 0.0)
-						{
-							scale = scale * (16f * parentScale);
-						}
-					}*/
-
-					if (Pivot.HasValue)
-					{
-						var pivot = (Pivot ?? Vector3.Zero);
-
-						childMatrix = Matrix.CreateTranslation(-pivot) * MatrixHelper.CreateRotationDegrees(rotation)
-						                                               * Matrix.CreateTranslation(pivot)
-						                                               * Matrix.CreateTranslation(translation)
-						                                               * worldMatrix;
-					}
-					else
-					{
-						childMatrix = MatrixHelper.CreateRotationDegrees(rotation) * Matrix.CreateTranslation(translation) * worldMatrix;
-					}
-
-					var bindingRotation = _bindingRotation;
-
-					if (Pivot.HasValue)
-					{
-						var pivot = (Pivot ?? Vector3.Zero);
-
-						worldMatrix = Matrix.CreateTranslation(-pivot)
-						              * MatrixHelper.CreateRotationDegrees(bindingRotation)
-						              * Matrix.CreateTranslation(pivot) * childMatrix;
-					}
-					else
-					{
-						worldMatrix = MatrixHelper.CreateRotationDegrees(bindingRotation) * childMatrix;
-					}
-					
 					var meshes = _modelMeshes;
 
 					if (meshes.Count > 0)
 					{
-						((IEffectMatrices) effect).World = worldMatrix;
+						
+						((IEffectMatrices) effect).World = BindingMatrix * childMatrix;
 
 						foreach (var mesh in meshes)
 						{
@@ -326,15 +354,17 @@ namespace Alex.Graphics.Models.Entity
 					}
 				}
 
-				foreach (var child in Children)
-				{
-					renderCount += child.Render(args, effect, childMatrix);
-				}
-
+				Children.ForAll(
+					(child) =>
+					{
+						renderCount += child.Render(args, effect, childMatrix);
+					}, false, false, false);
+				
 				return renderCount;
 			}
 			
 			private Vector3 _position;
+			private Vector3? _pivot;
 
 			public void AddChild(IAttached modelBone)
 			{

@@ -188,9 +188,11 @@ namespace Alex.Gamestates
         {
             if (Alex.PlayerModel != null && Alex.PlayerTexture != null)
             {
-                var texture = TextureUtils.BitmapToTexture2D(Alex.GraphicsDevice, Alex.PlayerTexture);
-                entity.ModelRenderer = new EntityModelRenderer(Alex.PlayerModel);
-                entity.Texture = texture;   
+                if (EntityModelRenderer.TryGetModel(Alex.PlayerModel, out var renderer))
+                {
+                    entity.ModelRenderer = renderer;
+                    entity.Texture = TextureUtils.BitmapToTexture2D(this, Alex.GraphicsDevice, Alex.PlayerTexture);  
+                }
             }
         }
 

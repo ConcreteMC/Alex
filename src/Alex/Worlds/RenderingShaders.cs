@@ -13,7 +13,6 @@ namespace Alex.Worlds
 		public BlockEffect AnimatedEffect            { get; }
 
 		public BlockEffect TransparentEffect         { get; }
-		public BlockEffect TranslucentEffect         { get; }
 		public BlockEffect OpaqueEffect              { get; }
 		
 		
@@ -35,22 +34,6 @@ namespace Alex.Worlds
 				AmbientLightDirection = new Vector3(0f, -0.25f, -1f),
 				
 				// TextureEnabled = true
-			};
-
-			TranslucentEffect = new BlockEffect()
-			{
-				//Texture = stillAtlas,
-				VertexColorEnabled = true,
-				World = Matrix.Identity,
-				AlphaFunction = CompareFunction.Greater,
-				ReferenceAlpha = 32,
-				FogStart = fogStart,
-				FogEnabled = true,
-				
-				AmbientLightColor = Color.White,
-				AmbientLightDirection = new Vector3(0f, -0.25f, -1f),
-
-				//Alpha = 0.5f
 			};
 
 			AnimatedEffect = new BlockEffect()
@@ -85,72 +68,45 @@ namespace Alex.Worlds
 
 		public void SetTextures(Texture2D texture)
 		{
-			AnimatedEffect.Texture = texture;
-			TranslucentEffect.Texture = TransparentEffect.Texture = OpaqueEffect.Texture = texture;
+			AnimatedEffect.Texture =
+				TransparentEffect.Texture = OpaqueEffect.Texture = texture;
 		}
 
-		public void NextFrame()
-		{
-			AnimatedEffect.Frame++;
-		}
 
-		public void Update(float dt, SkyBox skyBox, ICamera camera /*Matrix view, Matrix projection*/)
+		private float _timer = 0f;
+
+		public void Update(float dt, ICamera camera /*Matrix view, Matrix projection*/)
 		{
-			//AnimatedEffect.Frame += dt;
-			//AnimatedTranslucentEffect.Frame += dt;
-			
-			var view       = camera.ViewMatrix;
+			_timer += dt;
+
+			if (_timer >= (1.0f / 12))
+			{
+				_timer -= 1.0f / 12;
+				AnimatedEffect.Frame++;
+			}
+
+			var view = camera.ViewMatrix;
 			var projection = camera.ProjectionMatrix;
 			var cameraPosition = camera.Position;
 
-		/*	var lightPosition = Vector3.Transform(
-				cameraPosition,
-				Matrix.CreateTranslation(0, 100, 0) * Matrix.CreateRotationX(MathHelper.TwoPi * skyBox.CelestialAngle));
+			OpaqueEffect.View = AnimatedEffect.View = TransparentEffect.View = view;
 
-			var lightDirection = lightPosition - cameraPosition;
-			
-			Matrix lightView = Matrix.CreateLookAt(lightPosition,
-				cameraPosition,
-				Vector3.Up);
+			OpaqueEffect.Projection =
+				AnimatedEffect.Projection = TransparentEffect.Projection = projection;
 
-			Matrix  lightProjection = Matrix.CreateOrthographic(100, 100, 0f, camera.FarDistance * 16f);
-			*/
-			TransparentEffect.View = view;
-			TransparentEffect.Projection = projection;
-		//	TransparentEffect.LightView = lightView;
-		//	TransparentEffect.LightProjection = lightProjection;
-			TransparentEffect.CameraPosition = cameraPosition;
-			TransparentEffect.CameraFarDistance = camera.FarDistance;
-			
-			AnimatedEffect.View = view;
-			AnimatedEffect.Projection = projection;
-		//	AnimatedEffect.LightView = lightView;
-		//	AnimatedEffect.LightProjection = lightProjection;
-			AnimatedEffect.CameraPosition = cameraPosition;
-			AnimatedEffect.CameraFarDistance = camera.FarDistance;
+			OpaqueEffect.CameraPosition =
+				AnimatedEffect.CameraPosition = TransparentEffect.CameraPosition = cameraPosition;
 
-			OpaqueEffect.View = view;
-			OpaqueEffect.Projection = projection;
-		//	OpaqueEffect.LightView = lightView;
-		//	OpaqueEffect.LightProjection = lightProjection;
-			OpaqueEffect.CameraPosition = cameraPosition;
-			OpaqueEffect.CameraFarDistance = camera.FarDistance;
-			
-			TranslucentEffect.View = view;
-			TranslucentEffect.Projection = projection;
-		//	TranslucentEffect.LightView = lightView;
-		//	TranslucentEffect.LightProjection = lightProjection;
-			TranslucentEffect.CameraPosition = cameraPosition;
-			TranslucentEffect.CameraFarDistance = camera.FarDistance;
+			OpaqueEffect.CameraFarDistance = AnimatedEffect.CameraFarDistance =
+				TransparentEffect.CameraFarDistance = camera.FarDistance;
 		}
-		
+
 		public bool FogEnabled
 		{
 			get { return TransparentEffect.FogEnabled; }
 			set
 			{
 				TransparentEffect.FogEnabled = value;
-				TranslucentEffect.FogEnabled = value;
 				AnimatedEffect.FogEnabled = value;
 				OpaqueEffect.FogEnabled = value;
 			}
@@ -164,7 +120,6 @@ namespace Alex.Worlds
 				TransparentEffect.FogColor = value;
 				OpaqueEffect.FogColor = value;
 				AnimatedEffect.FogColor = value;
-				TranslucentEffect.FogColor = value;
 			}
 		}
 
@@ -177,12 +132,10 @@ namespace Alex.Worlds
 				TransparentEffect.FogStart = fogStart;
 				OpaqueEffect.FogStart = fogStart;
 				AnimatedEffect.FogStart = fogStart;
-				TranslucentEffect.FogStart = fogStart;
 				
 				TransparentEffect.FogEnd = value;
 				OpaqueEffect.FogEnd = value;
 				AnimatedEffect.FogEnd = value;
-				TranslucentEffect.FogEnd = value;
 			}
 		}
 
@@ -192,10 +145,7 @@ namespace Alex.Worlds
 			set
 			{
 				TransparentEffect.DiffuseColor = value;
-				TranslucentEffect.DiffuseColor = value;
-
 				OpaqueEffect.DiffuseColor = value;
-				// OpaqueEffect.DiffuseColor = value;
 				AnimatedEffect.DiffuseColor = value;
 			}
 		}
@@ -209,8 +159,6 @@ namespace Alex.Worlds
 			set
 			{
 				TransparentEffect.LightOffset = value;
-				TranslucentEffect.LightOffset = value;
-
 				OpaqueEffect.LightOffset = value;
 				AnimatedEffect.LightOffset = value;
 			}

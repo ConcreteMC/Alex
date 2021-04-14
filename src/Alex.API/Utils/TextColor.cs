@@ -108,7 +108,7 @@ namespace Alex.API.Utils
 			AltNames = altNames;
 		}
         
-		public TextColor(char code, int r, int g, int b, int br, int bg, int bb, string name, params string[] altNames) : this(code, name, altNames)
+		public TextColor(char code, byte r, byte g, byte b, byte br, byte bg, byte bb, string name, params string[] altNames) : this(code, name, altNames)
 		{
 			try
 			{
@@ -171,7 +171,7 @@ namespace Alex.API.Utils
 		{
 			foreach (var allColor in Colors)
 			{
-				if (allColor.Aliases.Any(alias => string.Equals(name, alias, StringComparison.InvariantCultureIgnoreCase)))
+				if (allColor.Aliases.Any(alias => string.Equals(name, alias, StringComparison.OrdinalIgnoreCase)))
 				{
 					textColor = allColor;
 					return true;
@@ -180,7 +180,7 @@ namespace Alex.API.Utils
             
 			foreach (var allColor in Formatters)
 			{
-				if (allColor.Aliases.Any(alias => string.Equals(name, alias, StringComparison.InvariantCultureIgnoreCase)))
+				if (allColor.Aliases.Any(alias => string.Equals(name, alias, StringComparison.OrdinalIgnoreCase)))
 				{
 					textColor = allColor;
 					return true;

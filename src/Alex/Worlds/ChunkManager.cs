@@ -84,10 +84,31 @@ namespace Alex.Worlds
 		}
 
 		private long _threadsRunning = 0;
+		private ChunkData[] _renderedChunks = new ChunkData[0];
 
-		
-		public int RenderDistance { get; set; } = 0;
-		
+		public int RenderDistance
+		{
+			get => _renderDistance;
+			set
+			{
+				ChunkData[] renderedArray = new ChunkData[value * value * 3];
+
+				for (int i = 0; i < renderedArray.Length; i++)
+				{
+					if (i < _renderedChunks.Length)
+					{
+						renderedArray[i] = _renderedChunks[i];
+					}
+					else
+					{
+						renderedArray[i] = null;
+					}
+				}
+				_renderedChunks = renderedArray;
+				_renderDistance = value;
+			}
+		}
+
 		public int ConcurrentChunkUpdates => (int) _threadsRunning;
 		public int EnqueuedChunkUpdates   => Scheduled.Count;
 		
@@ -95,7 +116,7 @@ namespace Alex.Worlds
 		public int ChunkCount => Chunks.Count;
 
 		/// <inheritdoc />
-		public int RenderedChunks => _renderedChunks.Length;
+		public int RenderedChunks { get; private set; } = 0;
 
 		public bool FogEnabled
 		{
@@ -171,7 +192,6 @@ namespace Alex.Worlds
 				});
 		}
 		
-		private ChunkData[] _renderedChunks = new ChunkData[0];
 		private bool ProcessQueue()
 		{
 			var maxThreads = Options.VideoOptions.ChunkThreads.Value;
@@ -288,7 +308,7 @@ namespace Alex.Worlds
 			if (blockLightCalc == null)
 				return false;
 			
-			var target         = Chunks?.FirstOrDefault(x => blockLightCalc?.HasEnqueued(x.Key) ?? false).Key;
+			var target         = Chunks?.FirstOrDefault(x => blockLightCalc.HasEnqueued(x.Key)).Key;
 
 			if (!target.HasValue)
 				return false;
@@ -545,41 +565,19 @@ namespace Alex.Worlds
 				{
 					switch (stage)
 					{
-						case RenderStage.OpaqueFullCube:
-							if (Block.FancyGraphics)
-							{
-								effect = shaders.TransparentEffect;
-							}
-							else
-							{
-								effect = shaders.OpaqueEffect;
-							}
-							break;
 						case RenderStage.Opaque:
-							if (Block.FancyGraphics)
-							{
-								effect = shaders.TransparentEffect;
-							}
-							else
-							{
-								effect = shaders.OpaqueEffect;
-							}
-							//effect = shaders.TransparentEffect;
+							effect = Block.FancyGraphics ? shaders.TransparentEffect : shaders.OpaqueEffect;
 							break;
 						case RenderStage.Transparent:
 							effect = shaders.TransparentEffect;
 							break;
 						case RenderStage.Translucent:
 							args.GraphicsDevice.BlendState = TranslucentBlendState;
-							effect = shaders.TranslucentEffect;
-							break;
-						case RenderStage.Animated:
-							effect = shaders.AnimatedEffect;
+							effect = shaders.TransparentEffect;
 							break;
 						case RenderStage.Liquid:
-					//	case RenderStage.AnimatedTranslucent:
+						case RenderStage.Animated:
 							effect = shaders.AnimatedEffect;
-						    
 							break;
 						default:
 							throw new ArgumentOutOfRangeException();
@@ -605,61 +603,53 @@ namespace Alex.Worlds
 			{
 				var chunk = chunks[index];
 				if (chunk == null) continue;
-
-				if (chunk.Draw(device, stage, effect))
-				{
-					drawn++;
-				}
+				
+				drawn += chunk.Draw(device, stage, effect);
 			}
 
 			return drawn;
 		}
 		
 		#endregion
-
-		int                      _currentFrame = 0;
-		int                      _framerate    = 12;     // Animate at 12 frames per second
-		float                    _timer        = 0.0f;
+		
 		public void Update(IUpdateArgs args)
 		{
-			Shaders.Update((float)args.GameTime.ElapsedGameTime.TotalSeconds, World.SkyBox, args.Camera);
-
-			_timer += (float)args.GameTime.ElapsedGameTime.TotalSeconds;
-			if (_timer >= (1.0f / _framerate ))
-			{
-				_timer -= 1.0f / _framerate ;
-				Shaders.NextFrame();
-				//Shaders.NextFrame();
-				//_currentFrame = (_currentFrame + 1) % Resources.Atlas.GetFrameCount();
-				
-				//Shaders.SetAnimatedTextures(Resources.Atlas.GetAtlas(_currentFrame));
-			}
+			Shaders.Update((float)args.GameTime.ElapsedGameTime.TotalSeconds, args.Camera);
 		}
 
-		private int _tickCounter = 0;
 		/// <inheritdoc />
 		public void OnTick()
 		{
-			List<ChunkData> renderList = new List<ChunkData>();
+			//	List<ChunkData> renderList = new List<ChunkData>();
+			int index = 0;
+			int max = _renderedChunks.Length;
+
 			foreach (var chunk in Chunks)
 			{
 				bool inView = IsWithinView(chunk.Key, World.Camera);
-				if (inView)
+
+				if (inView && index < max)
 				{
-					renderList.Add(chunk.Value.ChunkData);
+					index++;
+					_renderedChunks[index] = chunk.Value.ChunkData;
+					//renderList.Add(chunk.Value.ChunkData);
 				}
 
 				if ((chunk.Value.BlockLightDirty || chunk.Value.SkyLightDirty))
 				{
 					//if (chunk.Value.ScheduledLightUpdates < 3)
-						ScheduleChunkUpdate(chunk.Key, ScheduleType.Lighting);
+					ScheduleChunkUpdate(chunk.Key, ScheduleType.Lighting);
 				}
 			}
 
-			_renderedChunks = renderList.ToArray();
+			RenderedChunks = index;
+
+			//_renderedChunks = renderList.ToArray();
 		}
 
 		private bool _disposed = false;
+		private int _renderDistance = 0;
+
 		/// <inheritdoc />
 		public void Dispose()
 		{
