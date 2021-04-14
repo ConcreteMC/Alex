@@ -523,8 +523,6 @@ namespace Alex.Worlds.Chunks
 		{
 			lock (_dataLock)
 			{
-				_scheduledUpdates = null;
-				
 				for (var index = 0; index < Sections.Length; index++)
 				{
 					var chunksSection = Sections[index];
@@ -536,6 +534,8 @@ namespace Alex.Worlds.Chunks
 				//Sections = null;
 				ChunkData?.Dispose();
 				ChunkData = null;
+				
+				_scheduledUpdates = null;
 			}
 		}
 	}
