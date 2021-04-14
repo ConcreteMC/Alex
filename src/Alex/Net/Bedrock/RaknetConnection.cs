@@ -476,8 +476,8 @@ namespace Alex.Net.Bedrock
 			datagram.RetransmissionTimeOut = rto;
 			datagram.Header.DatagramSequenceNumber = sequenceNumber;
 			datagram.RetransmitImmediate = false;
-			datagram.Header.NeedsBAndAs = session.SlidingWindow.IsInSlowStart();
-			datagram.Header.IsContinuousSend = session.SlidingWindow.IsContinuousSend;
+			//datagram.Header.NeedsBAndAs = session.SlidingWindow.IsInSlowStart();
+			//datagram.Header.IsContinuousSend = session.SlidingWindow.IsContinuousSend;
 			//datagram.Header.IsContinuousSend = session.SlidingWindow.
 
 		 //ArrayPool<byte>.Shared.Rent(1600);

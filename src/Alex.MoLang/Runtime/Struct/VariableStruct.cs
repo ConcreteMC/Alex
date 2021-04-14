@@ -11,14 +11,14 @@ namespace Alex.MoLang.Runtime.Struct
 	public class VariableStruct : IMoStruct
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(VariableStruct));
-		public readonly Dictionary<string, IMoValue> Map = new(StringComparer.OrdinalIgnoreCase);
+		public readonly Dictionary<string, IMoValue> Map;
 
 		/// <inheritdoc />
 		public object Value => Map;
 
 		public VariableStruct()
 		{
-			
+			Map = new(StringComparer.OrdinalIgnoreCase);
 		}
 
 		public VariableStruct(IEnumerable<KeyValuePair<string, IMoValue>> values)

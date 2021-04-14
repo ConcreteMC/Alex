@@ -113,7 +113,7 @@ namespace Alex.Items
 			           var entry = e;
 			           progressReceiver?.UpdateProgress(done, blocks.Count, $"Processing block items...", entry.Key);
 
-			           Item item;
+			         //  Item item;
 			           /*if (blockRegistry.TryGet(entry.Key, out var blockState))
 			          {
 				           item = new ItemBlock(blockState.Value);
@@ -122,7 +122,7 @@ namespace Alex.Items
 
 			           if (!(bs.Block is Air) && bs != null)
 			           {
-				           item = new ItemBlock(bs);
+				          // item = new ItemBlock(bs);
 				           //  Log.Info($"Registered block item: {entry.Key}");
 			           }
 			           else
@@ -130,36 +130,7 @@ namespace Alex.Items
 				           return;
 			           }
 
-			           /*var minetItem = MiNET.Items.ItemFactory.GetItem(entry.Key.Replace("minecraft:", ""));
-
-			           if (minetItem != null)
-			           {
-				           if (Enum.TryParse<ItemType>(minetItem.ItemType.ToString(), out ItemType t))
-				           {
-					           item.ItemType = t;
-				           }
-
-				           SetItemMaterial(item, minetItem.ItemMaterial);
-				           // item.Material = minetItem.ItemMaterial;
-
-				           item.Meta = minetItem.Metadata;
-				           item.Id = minetItem.Id;
-			           }*/
-
-			           item.Name = entry.Key;
-			           item.DisplayName = entry.Key;
-
-			           var data = ItemEntries.FirstOrDefault(
-				           x => x.name.Equals(entry.Key.Substring(10), StringComparison.OrdinalIgnoreCase));
-
-			           if (data != null)
-			           {
-				           item.MaxStackSize = data.stackSize;
-				           item.DisplayName = data.displayName;
-			           }
-
-			          
-				          string ns   = ResourceLocation.DefaultNamespace;
+			           string ns   = ResourceLocation.DefaultNamespace;
 				          string path = entry.Key;
 
 				          if (entry.Key.Contains(':'))
@@ -168,6 +139,9 @@ namespace Alex.Items
 					          ns = entry.Key.Substring(0, index);
 					          path = entry.Key.Substring(index + 1);
 				          }
+				          
+				          var data = ItemEntries.FirstOrDefault(
+					          x => x.name.Equals(entry.Key.Substring(10), StringComparison.OrdinalIgnoreCase));
 
 				          
 				         var resourceLocation = new ResourceLocation(ns, $"block/{path}");
@@ -195,11 +169,26 @@ namespace Alex.Items
 			           else
 			           {
 				           
-				           item.Renderer = new ItemBlockModelRenderer(bs, model, resources.Atlas.GetAtlas());
+				           //item.Renderer = new ItemBlockModelRenderer(bs, model, resources.Atlas.GetAtlas());
 				           //item.Renderer.Cache(resources);
 
 
-				           if (!items.TryAdd(entry.Key, () => { return item.Clone(); }))
+				           if (!items.TryAdd(entry.Key, () =>
+				           {
+					           var clone = new ItemBlock(bs) { };
+					           clone.Name = entry.Key;
+					           clone.DisplayName = entry.Key;
+					           
+					           if (data != null)
+					           {
+						           clone.MaxStackSize = data.stackSize;
+						           clone.DisplayName = data.displayName;
+					           }
+
+					           clone.Renderer = new ItemBlockModelRenderer(bs, model, resources.Atlas.GetAtlas());
+					           clone.Renderer.Cache(resources);
+					           return clone;
+				           }))
 				           {
 					          // items[entry.Key] = () => { return item.Clone(); };
 				           }

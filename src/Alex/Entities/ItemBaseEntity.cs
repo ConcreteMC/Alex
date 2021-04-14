@@ -41,7 +41,7 @@ namespace Alex.Entities
 			if (item.Renderer != null)
 			{
 				CanRender = true;
-				ItemRenderer = item.Renderer.Clone();
+				ItemRenderer = item.Renderer;
 				ItemRenderer.DisplayPosition = DisplayPosition.Ground;
 
 				Scale = (float) (item is ItemBlock ? (1f / (1f / Width)) : (1f / 32f));

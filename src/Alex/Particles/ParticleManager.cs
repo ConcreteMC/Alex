@@ -118,9 +118,9 @@ namespace Alex.Particles
 
 			try
 			{
-				foreach (var particle in _particles)
+				foreach (var particle in _particles.Values)
 				{
-					count += particle.Value.Draw(gameTime, _spriteBatch, _camera);
+					count += particle.Draw(gameTime, _spriteBatch, _camera);
 				}
 			}
 			finally
@@ -138,9 +138,9 @@ namespace Alex.Particles
 			if (!Enabled)
 				return;
 			
-			foreach (var particle in _particles)
+			foreach (var particle in _particles.Values)
 			{
-				particle.Value.Update(gameTime);
+				particle.Update(gameTime);
 			}
 			
 			/*_accumulator += gameTime.ElapsedGameTime.TotalMilliseconds;
@@ -155,9 +155,9 @@ namespace Alex.Particles
 		/// <inheritdoc />
 		public void OnTick()
 		{
-			foreach (var particle in _particles)
+			foreach (var particle in _particles.Values)
 			{
-				particle.Value.Tick();
+				particle.Tick();
 			}
 		}
 

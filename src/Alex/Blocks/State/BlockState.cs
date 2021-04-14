@@ -159,14 +159,15 @@ namespace Alex.Blocks.State
 
 			if (matches.Count > 0)
 			{
-				Dictionary<string, string> values  = new Dictionary<string, string>(matches.Count, StringComparer.Ordinal);
+				return matches.ToDictionary(x => x.Groups["property"].Value, x => x.Groups["value"].Value);
+				/*new Dictionary<string, string>(matches.Count, StringComparer.Ordinal);
 				
-				foreach (Match match in matches)
+				foreach (var match in matches)
 				{
 					values.Add(match.Groups["property"].Value, match.Groups["value"].Value);
 				}
 
-				return values;
+				return values;*/
 				//Match lastMatch = null;
 
 				/*do

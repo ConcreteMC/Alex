@@ -50,7 +50,7 @@ namespace Alex.Graphics.Models.Items
         }
 
         private bool _cached = false;
-        private VertexPositionColorTexture[] _vertices;
+        private VertexPositionColorTexture[] _vertices = null;
         
         public override bool Cache(ResourceManager pack)
         {
@@ -59,7 +59,7 @@ namespace Alex.Graphics.Models.Items
 
             _cached = true;
             
-            ChunkData chunkData = new ChunkData(null,ChunkCoordinates.Zero);
+            ChunkData chunkData = new ChunkData();
             
             _blockState?.VariantMapper.Model.GetVertices(new ItemRenderingWorld(_blockState.Block), chunkData, BlockCoordinates.Zero, Vector3.Zero, _blockState);
 
@@ -98,7 +98,7 @@ namespace Alex.Graphics.Models.Items
         {
             return new ItemBlockModelRenderer(_blockState, Model, _texture)
             {
-                Vertices = (VertexPositionColorTexture[]) Vertices.Clone(),
+               // Vertices = (VertexPositionColorTexture[]) Vertices.Clone(),
                 Size = Size
             };
         }
