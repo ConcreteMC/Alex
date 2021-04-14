@@ -29,9 +29,6 @@ namespace Alex.Entities
 			get => _distanceMoved;
 			set
 			{
-				if (float.IsNaN(value) || float.IsInfinity(value))
-					return;
-
 				_distanceMoved = value;
 			}
 		}
@@ -42,9 +39,6 @@ namespace Alex.Entities
 			get => _verticalDistanceMoved;
 			set
 			{
-				if (float.IsNaN(value) || float.IsInfinity(value))
-					return;
-				
 				_verticalDistanceMoved = value;
 			}
 		}
@@ -383,14 +377,28 @@ namespace Alex.Entities
 
 			if (_speedAccumulator >= TargetTime)
 			{
+				var modifier = (1f / _speedAccumulator);
+				
 				var horizontalDist = _distanceMoved - _lastDistanceMoved;
 				_lastDistanceMoved = _distanceMoved;
 
-				var modifier = (1f / _speedAccumulator);
+				if (horizontalDist <= 0.001f)
+				{
+					horizontalDist = 0f;
+					_lastDistanceMoved = _distanceMoved = 0f;
+				}
+
 				MetersPerSecond = (float) (horizontalDist * modifier);
 				
 				var verticalDistanceMoved = _verticalDistanceMoved - _lastVerticalDistanceMoved;
 				_lastVerticalDistanceMoved = _verticalDistanceMoved;
+
+				if (verticalDistanceMoved <= 0.001f)
+				{
+					verticalDistanceMoved = 0f;
+					_lastVerticalDistanceMoved = _verticalDistanceMoved = 0f;
+				}
+
 				VerticalSpeed = (float) (verticalDistanceMoved * modifier);
 				
 				_speedAccumulator = 0f;
