@@ -20,12 +20,9 @@ namespace Alex.Worlds.Chunks
     {
         private        ChunkRenderStage[] _stages;
         private static long               _instances = 0;
-        public         ChunkCoordinates   Coordinates { get; }
-        private ChunkColumn _chunkColumn;
-        public ChunkData(ChunkColumn chunk, ChunkCoordinates coordinates)
+
+        public ChunkData()
         {
-            _chunkColumn = chunk;
-            Coordinates = coordinates;
             var availableStages = Enum.GetValues(typeof(RenderStage));
             _stages = new ChunkRenderStage[availableStages.Length];
             

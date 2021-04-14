@@ -66,22 +66,8 @@ namespace Alex.Worlds.Chunks
 			BlockEntities = new ConcurrentDictionary<BlockCoordinates, NbtCompound>();
 			_lightUpdateWatch.Start();
 			
-			ChunkData = new ChunkData(this, new ChunkCoordinates(x, z));
-			
-			var index = new Vector3(x << 4, 0, z << 4);
-			var sizeOffs = 16 * 0.5f - 0.5f;
-			Vector3 boundsMin = new Vector3(
-				index.X - sizeOffs,
-				-0.5f,
-				index.Z - sizeOffs
-			);
-			Vector3 boundsMax = new Vector3(
-				index.X + sizeOffs,
-				0.5f + 256,
-				index.Z + sizeOffs
-			);
-			var bounds = new BoundingBox( boundsMin, boundsMax );
-		//	_octree = new ChunkOctree( bounds );
+			ChunkData = new ChunkData();
+			//	_octree = new ChunkOctree( bounds );
 		
 			_scheduledUpdates = new System.Collections.BitArray((16 * 256 * 16), false);
 		}

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace Alex.ResourcePackLib.Json.BlockStates
@@ -14,7 +15,7 @@ namespace Alex.ResourcePackLib.Json.BlockStates
 		/// <summary>
 		/// Holds the names of all the variants of the block.
 		/// </summary>
-		public Dictionary<string, BlockStateVariant> Variants { get; set; } = new Dictionary<string, BlockStateVariant>();
+		public Dictionary<string, BlockStateVariant> Variants { get; set; } = new Dictionary<string, BlockStateVariant>(StringComparer.OrdinalIgnoreCase);
 
 		[JsonProperty("multipart")]
 		public BlockStateMultiPart[] Parts { get; set; } = new BlockStateMultiPart[0];

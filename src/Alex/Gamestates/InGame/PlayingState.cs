@@ -36,7 +36,7 @@ namespace Alex.Gamestates.InGame
 		public World World { get; private set; }
 
         private WorldProvider WorldProvider { get; set; }
-		public NetworkProvider NetworkProvider { get; private set; }
+        private NetworkProvider NetworkProvider { get; set; }
 
 		private readonly PlayingHud _playingHud;
 		private readonly GuiDebugInfo _debugInfo;
@@ -182,6 +182,7 @@ namespace Alex.Gamestates.InGame
 			});
 
 			_debugInfo.AddDebugLeft(() => $"Primitives: {Alex.Metrics.PrimitiveCount:N0} Draw count: {Alex.Metrics.DrawCount}", TimeSpan.FromMilliseconds(500));
+			_debugInfo.AddDebugLeft(() => $"Textures: {Alex.Metrics.TextureCount:N0} Sprite count: {Alex.Metrics.SpriteCount}", TimeSpan.FromMilliseconds(500));
 		//	_debugInfo.AddDebugLeft(() => $"IndexBuffer Elements: {World.IndexBufferSize:N0} ({GetBytesReadable(World.IndexBufferSize * 4)})");
 			_debugInfo.AddDebugLeft(() => $"Chunks: {World.ChunkCount}, {World.ChunkManager.RenderedChunks}, {World.ChunkManager.DrawCount}", TimeSpan.FromMilliseconds(500));
 			_debugInfo.AddDebugLeft(() => $"Entities: {World.EntityManager.EntityCount}, {World.EntityManager.EntitiesRendered}, {World.EntityManager.DrawCount}", TimeSpan.FromMilliseconds(500));

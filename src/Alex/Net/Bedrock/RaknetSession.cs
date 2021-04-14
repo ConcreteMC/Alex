@@ -651,9 +651,6 @@ namespace Alex.Net.Bedrock
 
 					if (datagram.RetransmitImmediate || elapsedTime >= datagramTimeout)
 					{
-						//if (transmissionBandwidth < datagram.Bytes.Length)
-						//	break;
-
 						if (!Evicted && WaitingForAckQueue.TryRemove(datagramPair.Key, out datagram))
 						{
 							UnackedBytes -= datagram.Size;
@@ -672,9 +669,12 @@ namespace Alex.Net.Bedrock
 							SlidingWindow.OnResend(RaknetSession.CurrentTimeMillis(), datagramPair.Key);
 							
 							var sent = _packetSender.SendDatagram(this, datagram);
-							UnackedBytes += datagram.Size;
+							UnackedBytes += sent;
 							
 							transmissionBandwidth -= sent;
+							
+							if (transmissionBandwidth <= 0)
+								break;
 						}
 					}
 				}
@@ -686,11 +686,6 @@ namespace Alex.Net.Bedrock
 		}
 		private void Update()
 		{
-			if (Evicted) return;
-
-			//if (MiNetServer.FastThreadPool == null) return;
-
-
 			if (Evicted) return;
 
 			ConnectionInfo.Latency = (long) SlidingWindow.GetRtt();
@@ -793,8 +788,9 @@ namespace Alex.Net.Bedrock
 			var unacked = UnackedBytes;
 			int transmissionBandwidth = this.SlidingWindow.GetTransmissionBandwidth(this.UnackedBytes, _bandwidthExceededStatistic);
 
-			if (transmissionBandwidth > 0)
+			if (transmissionBandwidth <= 0)
 			{
+				return;
 				//ConnectionInfo.
 			}
 			
@@ -1047,8 +1043,8 @@ namespace Alex.Net.Bedrock
 			if (SlidingWindow.OnPacketReceived(
 				CurrentTimeMillis(),  sequenceIndex, datagram.Header.IsContinuousSend, datagram.Size, out var skippedMessageCount))
 			{
-				if (skippedMessageCount > 0)
-					Log.Info($"Skipped {skippedMessageCount}");
+			//	if (skippedMessageCount > 0)
+			//		Log.Info($"Skipped {skippedMessageCount}");
 				OutgoingAckQueue.Enqueue(sequenceIndex);
 				
 				for (long i = skippedMessageCount; i > 0; i--)

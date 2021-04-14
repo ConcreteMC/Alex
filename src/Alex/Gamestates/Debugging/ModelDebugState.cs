@@ -464,7 +464,7 @@ namespace Alex.Gamestates.Debugging
 			var world = new ItemRenderingWorld(b.Block);
 				
 			var       old       = _data;
-			ChunkData chunkData = new ChunkData(null, ChunkCoordinates.Zero);
+			ChunkData chunkData = new ChunkData();
 			b.VariantMapper.Model.GetVertices(world, chunkData, _location.GetCoordinates3D(), _location, b);
 
 			_data = chunkData;

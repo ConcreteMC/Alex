@@ -384,7 +384,7 @@ namespace Alex.API.Utils.Collections
 			public ThreadSafeListEnumerator(ThreadSafeList<T> list)
 			{
 				_list = list;
-				_list.RwLock.EnterReadLock();
+			//	_list.RwLock.EnterReadLock();
 				//UpdateCurrent();
 			}
 
@@ -425,7 +425,7 @@ namespace Alex.API.Utils.Collections
 				if (_disposed)
 					return;
 				
-				_list.RwLock.ExitReadLock();
+			//	_list.RwLock.ExitReadLock();
 				_disposed = true;
 			}
 

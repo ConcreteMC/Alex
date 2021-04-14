@@ -168,7 +168,7 @@ namespace Alex.Worlds
 			{
 				var blendState = args.GraphicsDevice.BlendState;
 
-				args.GraphicsDevice.BlendState = BlendState.AlphaBlend;
+				args.GraphicsDevice.BlendState = BlendState.Opaque;
 				
 				int renderCount = 0;
 				int drawCount = 0;

@@ -23,7 +23,7 @@ namespace Alex.Items
 			    Meta = Meta,
 			    Name = Name,
 			    Nbt = Nbt,
-			    Renderer = Renderer,
+			    Renderer = Renderer.Clone(),
 			    DisplayName = DisplayName,
 			    ItemType = ItemType,
 			    MaxStackSize = MaxStackSize
