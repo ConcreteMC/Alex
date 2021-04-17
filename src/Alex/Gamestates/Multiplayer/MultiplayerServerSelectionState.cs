@@ -256,7 +256,7 @@ namespace Alex.Gamestates.Multiplayer
 									    ServerType = serverType.Id,
 									    Host = r.QueryResponse.Status.Address,
 									    Port = r.QueryResponse.Status.Port,
-									    Name = r.QueryResponse.Status.EndPoint.ToString(),
+									    Name = $"[LAN] {r.EndPoint}",
 									    InternalIdentifier = Guid.NewGuid()
 								    });
 

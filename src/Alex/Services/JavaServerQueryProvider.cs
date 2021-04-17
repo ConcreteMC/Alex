@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Alex.API.Services;
@@ -55,14 +57,110 @@ namespace Alex.Services
 		    return new ResolveResult(true, ipAddresses);
 	    }
 
+	    //
+	    // \[(?<tag>.*)\](?<tagvalue>.*)\[\/(?P=tag)\]
 	    public Task QueryServerAsync(ServerConnectionDetails connectionDetails, PingServerDelegate pingCallback, ServerStatusDelegate statusCallBack, CancellationToken cancellationToken)
         {
 			return QueryJavaServerAsync(connectionDetails, pingCallback, statusCallBack, cancellationToken);
         }
 
+	    private static Regex LanDiscoveryRegex = new Regex(@"\[(?<tag>.*)\](?<value>.*)\[\/(\k<tag>)\]");
+
 	    /// <inheritdoc />
 	    public Task StartLanDiscovery(CancellationToken cancellationToken, LandDiscoveryDelegate callback = null)
 	    {
+		    return Task.Run(
+			    () =>
+			    {
+				    try
+				    {
+					    List<IPEndPoint> knownEndpoints = new List<IPEndPoint>();
+
+					    using (UdpClient udp = new UdpClient(4445))
+					    {
+						    udp.EnableBroadcast = true;
+
+						    udp.JoinMulticastGroup(IPAddress.Parse("224.0.2.60"));
+
+						    cancellationToken.Register(
+							    (o) =>
+							    {
+								    if (o != null && o is UdpClient client)
+								    {
+									    client?.Close();
+								    }
+							    }, udp);
+
+						    while (!cancellationToken.IsCancellationRequested)
+						    {
+							    IPEndPoint? remoteEndPoint = null;
+
+							    byte[] received = udp.Receive(ref remoteEndPoint);
+
+
+							    if (!knownEndpoints.Contains(remoteEndPoint))
+							    {
+								    if (received.Length > 0)
+								    {
+									    knownEndpoints.Add(remoteEndPoint);
+									    var message = Encoding.UTF8.GetString(received);
+									    var match = LanDiscoveryRegex.Matches(message);
+
+									    var port = remoteEndPoint.Port;
+									    string motd = "";
+
+									    foreach (Match m in match)
+									    {
+										    var key = m.Groups["tag"].Value;
+										    var value = m.Groups["value"].Value;
+
+										    switch (key)
+										    {
+											    case "MOTD":
+												    motd = value;
+
+												    break;
+
+											    case "AD":
+												    if (int.TryParse(value, out var p))
+												    {
+													    port = p;
+												    }
+
+												    break;
+										    }
+									    }
+
+									    if (!string.IsNullOrWhiteSpace(motd))
+									    {
+										    callback?.Invoke(
+											    new LanDiscoveryResult(
+												    remoteEndPoint, new ServerPingResponse(true, 0),
+												    new ServerQueryResponse(
+													    true,
+													    new ServerQueryStatus()
+													    {
+														    Delay = 0,
+														    Success = true,
+														    WaitingOnPing = false,
+														    EndPoint = remoteEndPoint,
+														    Address = remoteEndPoint.Address.ToString(),
+														    Port = (ushort) port,
+														    Query = new ServerQuery()
+														    {
+															    Description = new Description() {Text = motd}
+														    }
+													    })));
+									    }
+
+									    Log.Info($"Lan broadcast: {Encoding.UTF8.GetString(received)}");
+								    }
+							    }
+						    }
+					    }
+				    }catch(Exception){}
+			    }, cancellationToken);
+
 		    return Task.CompletedTask;
 	    }
 
