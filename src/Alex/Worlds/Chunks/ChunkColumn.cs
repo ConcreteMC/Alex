@@ -77,34 +77,31 @@ namespace Alex.Worlds.Chunks
 
 		protected void SetScheduled(int x, int y, int z, bool value)
 		{
-			_scheduledUpdates[GetCoordinateIndex(x, y, z)] = value;
+			var queue = _scheduledUpdates;
+
+			if (queue != null)
+			{
+				queue[GetCoordinateIndex(x, y, z)] = value;
+			}
 		}
-		
+
 		public void ScheduleBorder()
 		{
-			//for (int sectionIndex = 0; sectionIndex < 16; sectionIndex++)
+			for (int x = 0; x < 16; x++)
 			{
-			//	var section = Sections[sectionIndex];
-
-			//	if (section == null)
-			//		continue;
-
-				for (int x = 0; x < 16; x++)
+				for (int z = 0; z < 16; z++)
 				{
-					for (int z = 0; z < 16; z++)
+					for (int y = 0; y < 256; y++)
 					{
-						for (int y = 0; y < 256; y++)
+						if (x == 0 || x == 15 || z == 0 || z == 15)
 						{
-							if (x == 0 || x == 15 || z == 0 || z == 15)
-							{
-								_scheduledUpdates[GetCoordinateIndex(x, y, z)] = true;
-							}
+							SetScheduled(x,y,z, true);
 						}
 					}
 				}
 			}
 		}
-		
+
 		public void UpdateBuffer(GraphicsDevice device, IBlockAccess world)
 		{
 			Monitor.Enter(_dataLock);
@@ -116,6 +113,11 @@ namespace Alex.Worlds.Chunks
 				var chunkData     = ChunkData;
 
 				if (chunkData == null)
+					return;
+
+				var scheduleQueue = _scheduledUpdates;
+
+				if (scheduleQueue == null)
 					return;
 
 				bool isNew = IsNew;
@@ -139,7 +141,7 @@ namespace Alex.Worlds.Chunks
 							{
 								var idx = GetCoordinateIndex(x, (sectionIndex * 16) + y, z);
 
-								bool scheduled = _scheduledUpdates[idx]; // IsScheduled(x, y, z);
+								bool scheduled = scheduleQueue[idx]; // IsScheduled(x, y, z);
 
 								//if ((skyLightUpdate || blockLightUpdate) && !scheduled)
 								//	{
@@ -464,29 +466,17 @@ namespace Alex.Worlds.Chunks
 		
 		public void ScheduleBlockUpdate(int x, int y, int z)
 		{
-			if ((x < 0 || x > ChunkWidth) || (y < 0 || y > ChunkHeight) || (z < 0 || z > ChunkDepth))
-				return;
-
-			_scheduledUpdates[GetCoordinateIndex(x, y, z)] = true;
-			//	section.SetScheduled(x, y & 0xf, z, true);
+			SetScheduled(x,y,z, true);
 		}
 		
 		public void ScheduleBlocklightUpdate(int x, int y, int z)
 		{
-			if ((x < 0 || x > ChunkWidth) || (y < 0 || y > ChunkHeight) || (z < 0 || z > ChunkDepth))
-				return;
-
-			_scheduledUpdates[GetCoordinateIndex(x, y, z)] = true;
-		//	section.SetBlockLightScheduled(x, y & 0xf, z, true);
+			SetScheduled(x,y,z, true);
 		}
 		
 		public void ScheduleSkylightUpdate(int x, int y, int z)
 		{
-			if ((x < 0 || x > ChunkWidth) || (y < 0 || y > ChunkHeight) || (z < 0 || z > ChunkDepth))
-				return;
-
-			_scheduledUpdates[GetCoordinateIndex(x, y, z)] = true;
-			//section.SetSkyLightUpdateScheduled(x, y & 0xf, z, true);
+			SetScheduled(x,y,z, true);
 		}
 
 		public bool AddBlockEntity(BlockCoordinates coordinates, NbtCompound entity)
