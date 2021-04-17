@@ -120,8 +120,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	      //  long length = 0;
 	     //   foreach (Packet packet in packets) length += packet.Encode().Length;
 
-	      //  var compressionLevel = _session.CompressionThreshold > -1 && length >= _session.CompressionThreshold ?
-		 //       System.IO.Compression.CompressionLevel.Fastest : System.IO.Compression.CompressionLevel.NoCompression;
+	       // var compressionLevel = _session.CompressionThreshold > -1 && length >= _session.CompressionThreshold ?
+		    //   System.IO.Compression.CompressionLevel.Fastest : System.IO.Compression.CompressionLevel.NoCompression;
 
 	        using (MemoryStream stream = MiNetServer.MemoryStreamManager.GetStream())
 	        {
@@ -165,116 +165,118 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		}
 
 		private object _handlingLock = new object();
+
 		public void HandlePacket(Packet message)
 		{
-			lock (_handlingLock)
+
+			if (_session.Evicted)
+				return;
+
+			if (message is McpeWrapper wrapper)
 			{
-				if (_session.Evicted)
-					return;
+				var payload = wrapper.payload;
 
-				if (message is McpeWrapper wrapper)
+				lock (_handlingLock)
 				{
-					var payload = wrapper.payload;
-
 					// Decrypt bytes
 					if (CryptoContext != null && CryptoContext.UseEncryption)
 					{
-						payload = CryptoContext.Decryptor.ProcessBytes(payload.ToArray());
-						payload = payload.Slice(0, payload.Length - 8);
+						payload = CryptoUtils.Decrypt(payload, CryptoContext);
 					}
-					
+
 					using (var compressionStream = new DeflateStream(
 						new MemoryStreamReader(payload), System.IO.Compression.CompressionMode.Decompress, false))
 					{
 						payload = compressionStream.ReadToReadOnlyMemory();
 					}
+				}
 
-					//var messages = new List<Packet>();
+				//var messages = new List<Packet>();
 
-					// Get bytes to process
-					//	var payload = wrapper.payload;
+				// Get bytes to process
+				//	var payload = wrapper.payload;
 
-					using (var ms = new MemoryStreamReader(payload))
+				using (var ms = new MemoryStreamReader(payload))
+				{
+					ms.Position = 0;
+
+					int count = 0;
+
+					// Get actual packet out of bytes
+					while (ms.Position < ms.Length)
 					{
-						ms.Position = 0;
+						uint len = VarInt.ReadUInt32(ms);
+						long pos = ms.Position;
 
-						int count = 0;
+						//byte[] data = new byte[len];
 
-						// Get actual packet out of bytes
-						while (ms.Position < ms.Length)
+						var data = ms.Read(len);
+						//	var data = MemoryPool<byte>.Shared.Rent((int) len);
+						//if (ms.Read(data, 0, data.Length) != len)
+						//	Log.Warn($"Did not read enough data.");
+
+						ms.Position = pos;
+						int id = VarInt.ReadInt32(ms);
+
+						Packet packet = null;
+
+						try
 						{
-							uint len = VarInt.ReadUInt32(ms);
-							long pos = ms.Position;
+							packet = PacketFactory.Create((byte) id, data, "mcpe")
+							         ?? new UnknownPacket((byte) id, data);
 
-							//byte[] data = new byte[len];
+							packet.ReliabilityHeader = wrapper.ReliabilityHeader;
 
-							var data = ms.Read(len);
-							//	var data = MemoryPool<byte>.Shared.Rent((int) len);
-							//if (ms.Read(data, 0, data.Length) != len)
-							//	Log.Warn($"Did not read enough data.");
+							//messages.Add(packet);
+							count++;
+						}
+						catch (Exception e)
+						{
+							Log.Warn(
+								e,
+								$"Error parsing bedrock message #{count} id={id} (Buffer size={data.Length} Packet size={len})");
 
-							ms.Position = pos;
-							int id = VarInt.ReadInt32(ms);
 
-							Packet packet = null;
+							//throw;
+							//return; // Exit, but don't crash.
+						}
 
+
+						if (packet != null)
+						{
 							try
 							{
-								packet = PacketFactory.Create((byte) id, data, "mcpe")
-								         ?? new UnknownPacket((byte) id, data);
-
-								packet.ReliabilityHeader = wrapper.ReliabilityHeader;
-
-								//messages.Add(packet);
-								count++;
+								HandleGamePacket(packet);
 							}
 							catch (Exception e)
 							{
-								Log.Warn(
-									e,
-									$"Error parsing bedrock message #{count} id={id} (Buffer size={data.Length} Packet size={len})");
-
-
-								//throw;
-								//return; // Exit, but don't crash.
+								Log.Warn(e, $"Error handling game packet #{count} id={id}");
 							}
-
-
-							if (packet != null)
+							finally
 							{
-								try
-								{
-									HandleGamePacket(packet);
-								}
-								catch (Exception e)
-								{
-									Log.Warn(e, $"Error handling game packet #{count} id={id}");
-								}
-
 								packet.PutPool();
 							}
-
-							ms.Position = pos + len;
 						}
+
+						ms.Position = pos + len;
 					}
+				}
 
-					//var msgs = messages.ToArray();
-					//messages.Clear();
-					//wrapper.PutPool();
-				}
-				else if (message is UnknownPacket unknownPacket)
-				{
-					Log.Warn(
-						$"Received unknown packet 0x{unknownPacket.Id:X2}\n{Packet.HexDump(unknownPacket.Message)}");
+				//var msgs = messages.ToArray();
+				//messages.Clear();
+				//wrapper.PutPool();
+			}
+			else if (message is UnknownPacket unknownPacket)
+			{
+				Log.Warn($"Received unknown packet 0x{unknownPacket.Id:X2}\n{Packet.HexDump(unknownPacket.Message)}");
 
-					//	unknownPacket.PutPool();
-				}
-				else
-				{
-					Log.Error(
-						$"Unhandled packet: {message.GetType().Name} 0x{message.Id:X2}, IP {_session.EndPoint.Address}");
-					//if (Log.IsDebugEnabled) Log.Warn($"Unknown packet 0x{message.Id:X2}\n{Packet.HexDump(message.Bytes)}");
-				}
+				//	unknownPacket.PutPool();
+			}
+			else
+			{
+				Log.Error(
+					$"Unhandled packet: {message.GetType().Name} 0x{message.Id:X2}, IP {_session.EndPoint.Address}");
+				//if (Log.IsDebugEnabled) Log.Warn($"Unknown packet 0x{message.Id:X2}\n{Packet.HexDump(message.Bytes)}");
 			}
 		}
 

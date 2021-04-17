@@ -28,9 +28,9 @@ namespace Alex.Net.Bedrock.Packets
                // case 132:
               //      PrevBuffer = buffer.ToArray();
                //    break;
-              //  case 16:
-               //     packet = new RequestAccepted();
-                //    break;
+                case 16:
+                   packet = ConnectionRequestAccepted.CreateObject();
+                    break;
             }
 
             try

@@ -75,8 +75,11 @@ namespace Alex.Networking.Bedrock.RakNet
             Cwnd = mtuSize;
         }
 
-        public int GetRetransmissionBandwidth(int unAckedBytes)
+        public int GetRetransmissionBandwidth(long currentTime, int unAckedBytes)
         {
+            if (currentTime - _lastPacketReceived >= GetRtoForRetransmission())
+                return 0;
+            
             return unAckedBytes;
         }
 
@@ -94,8 +97,10 @@ namespace Alex.Networking.Bedrock.RakNet
             }
         }
 
+        private long _lastPacketReceived = 0;
         public bool OnPacketReceived(long currentTime, long datagramSequenceNumber, bool isContinuousSend, int sizeInBytes, out long skippedMessageCount)
         {
+            _lastPacketReceived = currentTime;
             if (datagramSequenceNumber == _expectedNextSequenceNumber)
              {
                  skippedMessageCount=0;
@@ -261,7 +266,7 @@ namespace Alex.Networking.Bedrock.RakNet
         /// Minimum value is 100 milliseconds
         /// </summary>
         /// <returns></returns>
-        public long GetRtoForRetransmission(int transmissionCount)
+        public long GetRtoForRetransmission()
         {
             if (EstimatedRtt < 0d)
             {
@@ -270,7 +275,7 @@ namespace Alex.Networking.Bedrock.RakNet
 
             long threshold = (long) ((2.0D * EstimatedRtt + 4.0D * DeviationRtt) + CcAdditionalVariance);
 
-            return (threshold > CcMaximumThreshold ? CcMaximumThreshold : threshold) * transmissionCount;
+            return (threshold > CcMaximumThreshold ? CcMaximumThreshold : threshold);
         }
 
         public double GetRtt()

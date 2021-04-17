@@ -481,8 +481,9 @@ namespace Alex.Networking.Bedrock.RakNet
 				//long rto = session.SlidingWindow.GetRtoForRetransmission();
 				//if (rto == 0) return;
 
-				int transmissionBandwidth = SlidingWindow.GetRetransmissionBandwidth(UnackedBytes);
-				
+				int transmissionBandwidth = SlidingWindow.GetRetransmissionBandwidth(CurrentTimeMillis(), UnackedBytes);
+				if (transmissionBandwidth <= 0)
+					return;
 				var queue = WaitingForAckQueue;
 
 				foreach (KeyValuePair<int, Datagram> datagramPair in queue)
@@ -501,7 +502,7 @@ namespace Alex.Networking.Bedrock.RakNet
 					//if (session.Rtt == -1) return;
 
 					long elapsedTime = datagram.Timer.ElapsedMilliseconds;
-					long datagramTimeout = SlidingWindow.GetRtoForRetransmission(datagram.TransmissionCount);// datagram.RetransmissionTimeOut;
+					long datagramTimeout = datagram.RetransmissionTimeOut;
 					datagramTimeout = Math.Min(datagramTimeout, 3000);
 					datagramTimeout = Math.Max(datagramTimeout, 100);
 
@@ -640,19 +641,18 @@ namespace Alex.Networking.Bedrock.RakNet
 
 			// Extremely important that this will not allow more than one thread at a time.
 			// This methods handle ordering and potential encryption, hence order matters.
-			if (!(_syncHack.Wait(millisecondsWait))) return;
 
-			var unacked = UnackedBytes;
-			int transmissionBandwidth = this.SlidingWindow.GetTransmissionBandwidth(this.UnackedBytes, _bandwidthExceededStatistic);
-
-			if (transmissionBandwidth <= 0)
-			{
-				return;
-				//ConnectionInfo.
-			}
-			
 			try
 			{
+				var unacked = UnackedBytes;
+				int transmissionBandwidth = this.SlidingWindow.GetTransmissionBandwidth(this.UnackedBytes, _bandwidthExceededStatistic);
+
+				if (transmissionBandwidth <= 0)
+				{
+					return;
+					//ConnectionInfo.
+				}
+				
 				var sendList = new List<Packet>();
 				int length = _sendQueue.Count;
 
@@ -716,6 +716,7 @@ namespace Alex.Networking.Bedrock.RakNet
 				foreach(var packet in packets)
 					packet?.PutPool();
 				
+				_bandwidthExceededStatistic = UnackedBytes - unacked >= transmissionBandwidth;
 				//UnackedBytes += _packetSender.SendPacket(this, preppedSendList);
 			}
 			catch (Exception e)
@@ -724,8 +725,7 @@ namespace Alex.Networking.Bedrock.RakNet
 			}
 			finally
 			{
-				_bandwidthExceededStatistic = UnackedBytes - unacked >= transmissionBandwidth;
-				_syncHack.Release();
+				//_syncHack.Release();
 			}
 		}
 

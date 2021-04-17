@@ -315,54 +315,61 @@ namespace Alex.Networking.Bedrock.RakNet
 				nak.PutPool();
 				return;
 			}
-
+			
 			var datagram = Datagram.CreateObject();
+
 			try
 			{
-				datagram.Decode(receivedBytes);
-			}
-			catch (Exception e)
-			{
-				rakSession.Disconnect("Bad packet received from server.");
-
-				Log.Warn(e, $"Bad packet {receivedBytes.Span[0]}\n{Packet.HexDump(receivedBytes)}");
-				return;
-			}
-
-			if (Session.Acknowledge(datagram))
-			{
-				if (datagram.Header.IsPacketPair)
+				try
 				{
-					Session.SlidingWindow.OnGotPacketPair(datagram.Header.DatagramSequenceNumber.IntValue());
+					datagram.Decode(receivedBytes);
+				}
+				catch (Exception e)
+				{
+					rakSession.Disconnect("Bad packet received from server.");
+
+					Log.Warn(e, $"Bad packet {receivedBytes.Span[0]}\n{Packet.HexDump(receivedBytes)}");
+
+					return;
 				}
 
-				Interlocked.Increment(ref ConnectionInfo.PacketsIn);
-
-				List<Packet> packets = new List<Packet>();
-
-				//if (Log.IsTraceEnabled) Log.Trace($"Receive datagram #{datagram.Header.DatagramSequenceNumber} for {_endpoint}");
-				foreach (var packet in datagram.Messages)
+				if (Session.Acknowledge(datagram))
 				{
-					var message = packet;
-
-					if (message is SplitPartPacket splitPartPacket)
+					if (datagram.Header.IsPacketPair)
 					{
-						message = HandleSplitMessage(splitPartPacket);
+						Session.SlidingWindow.OnGotPacketPair(datagram.Header.DatagramSequenceNumber.IntValue());
 					}
 
-					if (message == null) continue;
+					Interlocked.Increment(ref ConnectionInfo.PacketsIn);
 
-					message.Timer.Restart();
-					packets.Add(message);
-				}
+					List<Packet> packets = new List<Packet>();
 
-				foreach (var message in packets)
-				{
-					Session.HandleRakMessage(message);
+					//if (Log.IsTraceEnabled) Log.Trace($"Receive datagram #{datagram.Header.DatagramSequenceNumber} for {_endpoint}");
+					foreach (var packet in datagram.Messages)
+					{
+						var message = packet;
+
+						if (message is SplitPartPacket splitPartPacket)
+						{
+							message = HandleSplitMessage(splitPartPacket);
+						}
+
+						if (message == null) continue;
+
+						packets.Add(message);
+					}
+
+					foreach (var message in packets)
+					{
+						message.Timer.Restart();
+						Session.HandleRakMessage(message);
+					}
 				}
 			}
-
-			datagram.PutPool();
+			finally
+			{
+				datagram?.PutPool();
+			}
 		}
 
 		private Packet HandleSplitMessage(SplitPartPacket splitPart)
@@ -470,7 +477,8 @@ namespace Alex.Networking.Bedrock.RakNet
 
 			var sequenceNumber = (int)session.SlidingWindow.GetAndIncrementNextDatagramSequenceNumber();// Interlocked.Increment(ref session.DatagramSequenceNumber);
 			
-			long rto = session.SlidingWindow.GetRtoForRetransmission(datagram.TransmissionCount++);
+			long rto = session.SlidingWindow.GetRtoForRetransmission();
+			datagram.TransmissionCount++;
 			datagram.RetransmissionTimeOut = rto;
 			datagram.Header.DatagramSequenceNumber = sequenceNumber;
 			datagram.RetransmitImmediate = false;
@@ -478,7 +486,7 @@ namespace Alex.Networking.Bedrock.RakNet
 			//datagram.Header.IsContinuousSend = session.SlidingWindow.IsContinuousSend;
 			//datagram.Header.IsContinuousSend = session.SlidingWindow.
 
-			byte[] buffer = ArrayPool<byte>.Shared.Rent(1600);
+			byte[] buffer = null;
 			try
 			{
 				if (!session.WaitingForAckQueue.TryAdd(sequenceNumber, datagram))
@@ -490,7 +498,8 @@ namespace Alex.Networking.Bedrock.RakNet
 
 					return 0;
 				}
-				
+
+				buffer = ArrayPool<byte>.Shared.Rent(1600);
 				int length = (int) datagram.GetEncoded(ref buffer);
 			//	byte[] buffer = datagram.Encode();
 				//session.UnackedBytes += datagram.Size;
@@ -504,7 +513,8 @@ namespace Alex.Networking.Bedrock.RakNet
 			}
 			finally
 			{
-				ArrayPool<byte>.Shared.Return(buffer);
+				if (buffer != null)
+					ArrayPool<byte>.Shared.Return(buffer);
 			}
 		}
 
