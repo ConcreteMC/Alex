@@ -18,7 +18,14 @@ namespace Alex.Net.Bedrock.Packets
 
 			this.input = ReadItemStacks2();
 		}
-		
+
+		/// <inheritdoc />
+		protected override void ResetPacket()
+		{
+			base.ResetPacket();
+			
+		}
+
 		public ItemStacks ReadItemStacks2()
 		{
 			var metadata = new ItemStacks();
@@ -43,13 +50,13 @@ namespace Alex.Net.Bedrock.Packets
 		
 		public static MiNET.Items.Item ReadItem2(Packet packet)
 		{
-			int id = packet.ReadVarInt();
+			int id = packet.ReadSignedVarInt();
 			if (id == 0)
 			{
 				return new MiNET.Items.ItemAir();
 			}
 
-			int   aux      = packet.ReadVarInt();
+			int   aux      = packet.ReadSignedVarInt();
 			short metadata = (short) (aux >> 8);
 			byte  count    = (byte) (aux & 0xff);
 			
@@ -57,8 +64,8 @@ namespace Alex.Net.Bedrock.Packets
 			
 			var stack = MiNET.Items.ItemFactory.GetItem((short) id, metadata, count);
 			
-			var nbtLen = packet.ReadShort(); // NbtLen
-			if (nbtLen == -1)
+			var nbtLen = packet.ReadUshort(); // NbtLen
+			if (nbtLen == 0xffff)
 			{
 				var version = packet.ReadByte();
 
@@ -81,13 +88,13 @@ namespace Alex.Net.Bedrock.Packets
 				}
 			}
 
-			var canPlace = packet.ReadVarInt();
+			var canPlace = packet.ReadSignedVarInt();
 			for (int i = 0; i < canPlace; i++)
 			{
 				packet.ReadString();
 			}
 			
-			var canBreak = packet.ReadVarInt();
+			var canBreak = packet.ReadSignedVarInt();
 			for (int i = 0; i < canBreak; i++)
 			{
 				packet.ReadString();
@@ -95,7 +102,7 @@ namespace Alex.Net.Bedrock.Packets
 
 			if (id == MiNET.Items.ItemFactory.GetItemIdByName("minecraft:shield")) // shield
 			{
-				packet.ReadSignedVarLong(); // something about tick, crap code
+				//packet.ReadSignedVarLong(); // something about tick, crap code
 			}
 
 			return stack;

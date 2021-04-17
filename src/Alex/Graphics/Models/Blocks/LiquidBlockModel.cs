@@ -65,7 +65,7 @@ namespace Alex.Graphics.Models.Blocks
 					x => x.State.Block.Renderable && (x.State.Block.BlockMaterial == Material.Water || x.State.Block.BlockMaterial == Material.WaterPlant))) || (IsLava
 					&& blocksUp.Any(x => x.State.Block.Renderable && x.State.Block.BlockMaterial == Material.Lava));
 			 */
-			bool aboveIsLiquid = blocksUp.Any(x => x.State?.VariantMapper.Model is LiquidBlockModel);
+			bool aboveIsLiquid = blocksUp.Any(x => x.State?.VariantMapper?.Model is LiquidBlockModel);
 
 			List<BlockFace> renderedFaces = new List<BlockFace>(6);
 			foreach (var face in Faces)

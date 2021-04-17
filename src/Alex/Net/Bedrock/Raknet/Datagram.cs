@@ -27,7 +27,7 @@ namespace Alex.Net.Bedrock.Raknet
 		// From decoding
 		public List<Packet> Messages { get; set; } = new List<Packet>();
 
-		public int Size { get; set; } = 0;
+		public int Size => _currentSize;
 		public Datagram()
 		{
 			MessageParts = new List<MessagePart>(50);
@@ -144,7 +144,7 @@ namespace Alex.Net.Bedrock.Raknet
 						buf.Write(bytes, 0, bytes.Length);
 					}
 
-					Size = (int) buf.Length;
+					//Size = (int) buf.Length;
 
 					return buf.ToArray();
 				}
@@ -155,7 +155,7 @@ namespace Alex.Net.Bedrock.Raknet
 			}
 		}
 		
-	/*	public long GetEncoded(ref byte[] buffer)
+		public long GetEncoded(ref byte[] buffer)
 		{
 			using var buf = new MemoryStream(buffer);
 			// This is a quick-fix to lower the impact of resend. I want to do this
@@ -174,9 +174,9 @@ namespace Alex.Net.Bedrock.Raknet
 				}
 			}
 
-			Size = (int) buf.Position;
+			//Size = (int) buf.Position;
 			return buf.Position;
-		}*/
+		}
 
 		public override void Reset()
 		{
@@ -188,7 +188,7 @@ namespace Alex.Net.Bedrock.Raknet
 			TransmissionCount = 0;
 			_currentSize = 4;
 			FirstMessageId = 0;
-			Size = 0;
+			//Size = 0;
 
 			foreach (MessagePart part in MessageParts)
 			{

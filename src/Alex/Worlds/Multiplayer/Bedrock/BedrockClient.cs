@@ -257,7 +257,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			long fails   = Interlocked.Exchange(ref Connection.ConnectionInfo.Fails, 0L);
 
 			string str =
-				$"Pkt in/out(#/s) {packetCountIn}/{packetCountOut}, ACK in/out(#/s) {ackReceived}/{ackSent}, NAK in/out(#/s) {nakReceive}/{nakSent}, THR in/out(Kbps){throughPutIn:F2}/{throughtPutOut:F2}, RTT {Session.SlidingWindow.GetRtt()}, RTO {Session.SlidingWindow.GetRtoForRetransmission(1)}";
+				$"Pkt in/out(#/s) {packetCountIn}/{packetCountOut}, ACK in/out(#/s) {ackReceived}/{ackSent}, NAK in/out(#/s) {nakReceive}/{nakSent}, THR in/out(Kbps){throughPutIn:F2}/{throughtPutOut:F2}, RTT {Session.SlidingWindow.GetRtt()}, RTO {Session.SlidingWindow.GetRtoForRetransmission(1)}, CWND {Session.SlidingWindow.Cwnd}";
 
 			//if (Config.GetProperty("ServerInfoInTitle", false))
 			//	Console.Title = str;

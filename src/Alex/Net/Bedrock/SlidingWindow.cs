@@ -270,7 +270,7 @@ namespace Alex.Net.Bedrock
 
             long threshold = (long) ((2.0D * EstimatedRtt + 4.0D * DeviationRtt) + CcAdditionalVariance);
 
-            return threshold > CcMaximumThreshold ? CcMaximumThreshold : threshold;
+            return (threshold > CcMaximumThreshold ? CcMaximumThreshold : threshold) * transmissionCount;
         }
 
         public double GetRtt()

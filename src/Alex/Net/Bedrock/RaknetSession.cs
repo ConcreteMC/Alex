@@ -27,6 +27,8 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Net;
 using System.Runtime.CompilerServices;
@@ -37,6 +39,7 @@ using Alex.API.Utils;
 using Alex.API.Utils.Collections;
 using Alex.Net.Bedrock.Raknet;
 using Alex.Utils;
+using Alex.Worlds.Multiplayer.Bedrock;
 using log4net;
 using MiNET;
 using MiNET.Net;
@@ -68,7 +71,7 @@ namespace Alex.Net.Bedrock
 
 		public ConnectionInfo ConnectionInfo { get; }
 
-		public ICustomMessageHandler CustomMessageHandler { get; set; }
+		public MessageHandler CustomMessageHandler { get; set; }
 		
 		public IPEndPoint EndPoint { get; }
 		public short MtuSize { get; }
@@ -97,11 +100,11 @@ namespace Alex.Net.Bedrock
 
 		public short CompressionThreshold { get; set; } = -1;
 		private Timer _tickerHighPrecisionTimer;
-		public RaknetSession(ConnectionInfo connectionInfo, RaknetConnection packetSender, IPEndPoint endPoint, short mtuSize, ICustomMessageHandler messageHandler = null)
+		public RaknetSession(ConnectionInfo connectionInfo, RaknetConnection packetSender, IPEndPoint endPoint, short mtuSize, MessageHandler messageHandler = null)
 		{
 			_packetSender = packetSender;
 			ConnectionInfo = connectionInfo;
-			CustomMessageHandler = messageHandler ?? new DefaultMessageHandler();
+			CustomMessageHandler = messageHandler;
 			EndPoint = endPoint;
 			MtuSize = mtuSize;
 
@@ -119,6 +122,8 @@ namespace Alex.Net.Bedrock
 		internal void HandleRakMessage(Packet message)
 		{
 			if (message == null) return;
+
+			message = CustomMessageHandler.HandleRakMessage(message);
 
 			// This is not completely finished. Ordering and sequence streams (32 unique channels/streams each)
 			// needs to work by their channel index. Right now, it's only one channel per reliability type.
@@ -170,8 +175,8 @@ namespace Alex.Net.Bedrock
 				}
 				else
 				{
-					if (current <= last)
-						return;
+					//if (current < last)
+				//		return;
 					
 					_orderingBufferQueue.Enqueue(current, message);
 					
@@ -233,6 +238,7 @@ namespace Alex.Net.Bedrock
 						else if (pair.Key < last)
 						{
 							//_orderingBufferQueue.TryDequeue(out _);
+							Log.Warn($"Old. {pair.Key} < {last}");
 							pair.Value.PutPool();
 						}
 						else if (pair.Key > last)
@@ -645,7 +651,7 @@ namespace Alex.Net.Bedrock
 					//if (session.Rtt == -1) return;
 
 					long elapsedTime = datagram.Timer.ElapsedMilliseconds;
-					long datagramTimeout = datagram.RetransmissionTimeOut;
+					long datagramTimeout = SlidingWindow.GetRtoForRetransmission(datagram.TransmissionCount);// datagram.RetransmissionTimeOut;
 					datagramTimeout = Math.Min(datagramTimeout, 3000);
 					datagramTimeout = Math.Max(datagramTimeout, 100);
 
@@ -662,7 +668,7 @@ namespace Alex.Net.Bedrock
 							//session.ResendCount++;
 
 							//if (Log.IsDebugEnabled) 
-								Log.Warn($"{(datagram.RetransmitImmediate ? "NAK RSND" : "TIMEOUT")}, Resent #{datagram.Header.DatagramSequenceNumber.IntValue()} Type: {datagram.FirstMessageId} (0x{datagram.FirstMessageId:x2}) ({elapsedTime} > {datagramTimeout})");
+								Log.Warn($"{(datagram.RetransmitImmediate ? "NAK RSND" : "TIMEOUT")}, Resent #{datagramPair.Key}, Transmissions: {datagram.TransmissionCount} Type: {datagram.FirstMessageId} (0x{datagram.FirstMessageId:x2}) ({elapsedTime} > {datagramTimeout})");
 
 							Interlocked.Increment(ref ConnectionInfo.Resends);
 							

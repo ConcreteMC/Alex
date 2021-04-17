@@ -27,12 +27,14 @@ namespace Alex.Worlds.Lighting
 		
 		public  bool              DoLogging         { get; set; } = false;
 		private CancellationToken CancellationToken { get; }
-		public SkyLightCalculations(CancellationToken cancellationToken)
+		private IBlockAccess Level { get; }
+		public SkyLightCalculations(IBlockAccess level, CancellationToken cancellationToken)
 		{
+			Level = level;
 			CancellationToken = cancellationToken;
 		}
 
-		public bool RecalcSkyLight(ChunkColumn chunk, IBlockAccess level)
+		public bool Recalculate(ChunkColumn chunk)
 		{
 			if (chunk == null) return false;
 
@@ -42,12 +44,12 @@ namespace Alex.Worlds.Lighting
 			{
 				for (int z = 0; z < 16; z++)
 				{
-					if (!IsOnChunkBorder(x, z))
-					{
-						continue;
-					}
+				//	if (!IsOnChunkBorder(x, z))
+				//	{
+				//		continue;
+				//	}
 
-					int height = GetHeighestSurrounding(x, z, chunk, level);
+					int height = GetHeighestSurrounding(x, z, chunk);
 					if (height == 0)
 					{
 						continue;
@@ -70,17 +72,17 @@ namespace Alex.Worlds.Lighting
 				}
 			}
 
-			Calculate(level, lightBfQueue, lightBfSet);
+			Calculate(lightBfQueue, lightBfSet);
 
 			return true;
 		}
 
-		public void Calculate(IBlockAccess level, BlockCoordinates coordinates)
+		public void Calculate(BlockCoordinates coordinates)
 		{
-			int currentLight = level.GetSkyLight(coordinates);
+			int currentLight = Level.GetSkyLight(coordinates);
 
 			var cc = new ChunkCoordinates(coordinates);
-			ChunkColumn chunk = (ChunkColumn) level.GetChunk(cc);
+			ChunkColumn chunk = (ChunkColumn) Level.GetChunk(cc);
 			var height = chunk.GetRecalculatedHeight(coordinates.X & 0x0f, coordinates.Z & 0x0f);
 
 			Queue<BlockCoordinates> sourceQueue = new Queue<BlockCoordinates>();
@@ -106,18 +108,18 @@ namespace Alex.Worlds.Lighting
 
 					if (coord.DistanceTo(coordinates) > 16) continue;
 
-					ResetLight(level, resetQueue, sourceQueue, coord);
+					ResetLight(resetQueue, sourceQueue, coord);
 					if (!sourceQueue.Contains(coord))
 					{
 						deleteQueue.Enqueue(coord);
 					}
 				}
 
-				level.SetSkyLight(coordinates, 0);
+				Level.SetSkyLight(coordinates, 0);
 
 				foreach (var delete in deleteQueue)
 				{
-					level.SetSkyLight(delete, 0);
+					Level.SetSkyLight(delete, 0);
 				}
 			}
 			else
@@ -138,26 +140,26 @@ namespace Alex.Worlds.Lighting
 			HashSet<BlockCoordinates> lightBfSet = new HashSet<BlockCoordinates>(sourceQueue);
 
 		//	SkyLightBlockAccess blockAccess = new SkyLightBlockAccess(level.ChunkManager);
-			Calculate(level, lightBfQueue, lightBfSet);
+			Calculate(lightBfQueue, lightBfSet);
 		}
 
-		private void ResetLight(IBlockAccess level, Queue<BlockCoordinates> resetQueue, Queue<BlockCoordinates> sourceQueue, BlockCoordinates coordinates)
+		private void ResetLight(Queue<BlockCoordinates> resetQueue, Queue<BlockCoordinates> sourceQueue, BlockCoordinates coordinates)
 		{
-			int currentLight = level.GetSkyLight(coordinates);
+			int currentLight = Level.GetSkyLight(coordinates);
 
 			if (coordinates.Y < 255)
-				TestForSource(level, resetQueue, sourceQueue, coordinates.BlockUp(), currentLight);
+				TestForSource(resetQueue, sourceQueue, coordinates.BlockUp(), currentLight);
 			if (coordinates.Y > 0)
-				TestForSource(level, resetQueue, sourceQueue, coordinates.BlockDown(), currentLight, true);
-			TestForSource(level, resetQueue, sourceQueue, coordinates.BlockWest(), currentLight);
-			TestForSource(level, resetQueue, sourceQueue, coordinates.BlockEast(), currentLight);
-			TestForSource(level, resetQueue, sourceQueue, coordinates.BlockNorth(), currentLight);
-			TestForSource(level, resetQueue, sourceQueue, coordinates.BlockSouth(), currentLight);
+				TestForSource(resetQueue, sourceQueue, coordinates.BlockDown(), currentLight, true);
+			TestForSource(resetQueue, sourceQueue, coordinates.BlockWest(), currentLight);
+			TestForSource( resetQueue, sourceQueue, coordinates.BlockEast(), currentLight);
+			TestForSource( resetQueue, sourceQueue, coordinates.BlockNorth(), currentLight);
+			TestForSource( resetQueue, sourceQueue, coordinates.BlockSouth(), currentLight);
 		}
 
-		private void TestForSource(IBlockAccess level, Queue<BlockCoordinates> resetQueue, Queue<BlockCoordinates> sourceQueue, BlockCoordinates coordinates, int currentLight, bool down = false)
+		private void TestForSource(Queue<BlockCoordinates> resetQueue, Queue<BlockCoordinates> sourceQueue, BlockCoordinates coordinates, int currentLight, bool down = false)
 		{
-			int light = level.GetSkyLight(coordinates);
+			int light = Level.GetSkyLight(coordinates);
 			if (light == 0) return;
 
 			if (light > currentLight || (light == 15 && !down))
@@ -169,7 +171,7 @@ namespace Alex.Worlds.Lighting
 			if (!resetQueue.Contains(coordinates)) resetQueue.Enqueue(coordinates);
 		}
 
-		private void Calculate(IBlockAccess level, Queue<BlockCoordinates> lightBfQueue, HashSet<BlockCoordinates> lightBfSet)
+		private void Calculate(Queue<BlockCoordinates> lightBfQueue, HashSet<BlockCoordinates> lightBfSet)
 		{
 			try
 			{
@@ -189,7 +191,7 @@ namespace Alex.Worlds.Lighting
 						continue;
 					}
 					
-					ChunkColumn chunk = level.GetChunk(coordinates);
+					ChunkColumn chunk = Level.GetChunk(coordinates);
 					if (chunk == null)
 					{
 						if (DoLogging)
@@ -200,7 +202,7 @@ namespace Alex.Worlds.Lighting
 					var newChunkCoord = (ChunkCoordinates) coordinates;
 					if (chunk.X != newChunkCoord.X || chunk.Z != newChunkCoord.Z)
 					{
-						chunk = (ChunkColumn) level.GetChunk(newChunkCoord);
+						chunk = (ChunkColumn) Level.GetChunk(newChunkCoord);
 						if (chunk == null)
 						{
 							if (DoLogging)
@@ -209,7 +211,7 @@ namespace Alex.Worlds.Lighting
 						}
 					}
 
-					ProcessNode(level, chunk, coordinates, lightBfQueue, lightBfSet);
+					ProcessNode(chunk, coordinates, lightBfQueue, lightBfSet);
 				}
 			}
 			catch (Exception e)
@@ -218,7 +220,7 @@ namespace Alex.Worlds.Lighting
 			}
 		}
 
-		private void ProcessNode(IBlockAccess level, ChunkColumn chunk, BlockCoordinates coordinates, Queue<BlockCoordinates> lightBfsQueue, HashSet<BlockCoordinates> lightBfSet)
+		private void ProcessNode(ChunkColumn chunk, BlockCoordinates coordinates, Queue<BlockCoordinates> lightBfsQueue, HashSet<BlockCoordinates> lightBfSet)
 		{
 			//if (section.IsAllAir())
 
@@ -231,28 +233,28 @@ namespace Alex.Worlds.Lighting
 			if (coordinates.Y < 255)
 			{
 				var up = coordinates.BlockUp();
-				maxSkyLight = Math.Max(maxSkyLight, SetLightLevel(level, chunk, subChunk, sectionIdx, lightBfsQueue, lightBfSet, up, currentSkyLight, up: true));
+				maxSkyLight = Math.Max(maxSkyLight, SetLightLevel(chunk, subChunk, sectionIdx, lightBfsQueue, lightBfSet, up, currentSkyLight, up: true));
 			}
 
 			if (coordinates.Y > 0)
 			{
 				var down = coordinates.BlockDown();
-				maxSkyLight = Math.Max(maxSkyLight, SetLightLevel(level, chunk, subChunk, sectionIdx, lightBfsQueue, lightBfSet, down, currentSkyLight, down: true));
+				maxSkyLight = Math.Max(maxSkyLight, SetLightLevel(chunk, subChunk, sectionIdx, lightBfsQueue, lightBfSet, down, currentSkyLight, down: true));
 			}
 
 			var west = coordinates.BlockWest();
-			maxSkyLight = Math.Max(maxSkyLight, SetLightLevel(level, chunk, subChunk, sectionIdx, lightBfsQueue, lightBfSet, west, currentSkyLight));
+			maxSkyLight = Math.Max(maxSkyLight, SetLightLevel(chunk, subChunk, sectionIdx, lightBfsQueue, lightBfSet, west, currentSkyLight));
 
 
 			var east = coordinates.BlockEast();
-			maxSkyLight = Math.Max(maxSkyLight, SetLightLevel(level, chunk, subChunk, sectionIdx, lightBfsQueue, lightBfSet, east, currentSkyLight));
+			maxSkyLight = Math.Max(maxSkyLight, SetLightLevel(chunk, subChunk, sectionIdx, lightBfsQueue, lightBfSet, east, currentSkyLight));
 
 
 			var south = coordinates.BlockSouth();
-			maxSkyLight = Math.Max(maxSkyLight, SetLightLevel(level, chunk, subChunk, sectionIdx, lightBfsQueue, lightBfSet, south, currentSkyLight));
+			maxSkyLight = Math.Max(maxSkyLight, SetLightLevel(chunk, subChunk, sectionIdx, lightBfsQueue, lightBfSet, south, currentSkyLight));
 
 			var north = coordinates.BlockNorth();
-			maxSkyLight = Math.Max(maxSkyLight, SetLightLevel(level, chunk, subChunk, sectionIdx, lightBfsQueue, lightBfSet, north, currentSkyLight));
+			maxSkyLight = Math.Max(maxSkyLight, SetLightLevel(chunk, subChunk, sectionIdx, lightBfsQueue, lightBfSet, north, currentSkyLight));
 
 			if (IsTransparent(coordinates, subChunk) && currentSkyLight != 15)
 			{
@@ -261,7 +263,7 @@ namespace Alex.Worlds.Lighting
 
 				if (maxSkyLight > currentSkyLight)
 				{
-					level.SetSkyLight(coordinates, maxSkyLight);
+					Level.SetSkyLight(coordinates, maxSkyLight);
 
 					if (!lightBfSet.Contains(coordinates))
 					{
@@ -272,13 +274,13 @@ namespace Alex.Worlds.Lighting
 			}
 		}
 
-		private byte SetLightLevel(IBlockAccess level, ChunkColumn chunk, ChunkSection subChunk, int sectionIdx, Queue<BlockCoordinates> lightBfsQueue, HashSet<BlockCoordinates> lightBfSet, BlockCoordinates coordinates, byte lightLevel, bool down = false, bool up = false)
+		private byte SetLightLevel(ChunkColumn chunk, ChunkSection subChunk, int sectionIdx, Queue<BlockCoordinates> lightBfsQueue, HashSet<BlockCoordinates> lightBfSet, BlockCoordinates coordinates, byte lightLevel, bool down = false, bool up = false)
 		{
 			var chunkCoords = (ChunkCoordinates) coordinates;
 			
 			if (!(up || down) && (chunk.X != coordinates.X >> 4 || chunk.Z != coordinates.Z >> 4))
 			{
-				chunk = (ChunkColumn) level.GetChunk(chunkCoords);
+				chunk = (ChunkColumn) Level.GetChunk(chunkCoords);
 				subChunk = null;
 			}
 			else
@@ -298,7 +300,7 @@ namespace Alex.Worlds.Lighting
 			{
 				if (GetSkyLight(coordinates, subChunk) != 15)
 				{
-					SetSkyLight(level, coordinates, 15);
+					SetSkyLight(coordinates, 15);
 
 					if (!lightBfSet.Contains(coordinates))
 					{
@@ -321,7 +323,7 @@ namespace Alex.Worlds.Lighting
 				{
 					if (skyLight != 15)
 					{
-						SetSkyLight(level, coordinates, 15);
+						SetSkyLight(coordinates, 15);
 					}
 
 					if (!lightBfSet.Contains(coordinates))
@@ -340,7 +342,7 @@ namespace Alex.Worlds.Lighting
 				if (skyLight + 1 + diffuseLevel <= lightLevel)
 				{
 					byte newLevel = (byte) (lightLevel - diffuseLevel);
-					SetSkyLight(level, coordinates, newLevel);
+					SetSkyLight(coordinates, newLevel);
 
 					if (!lightBfSet.Contains(coordinates))
 					{
@@ -355,9 +357,9 @@ namespace Alex.Worlds.Lighting
 			return skyLight;
 		}
 
-		private static void SetSkyLight(IBlockAccess world, BlockCoordinates coordinates, byte skyLight)
+		private void SetSkyLight(BlockCoordinates coordinates, byte skyLight)
 		{
-			world?.SetSkyLight(coordinates, skyLight);
+			Level.SetSkyLight(coordinates, skyLight);
 			//chunk?.SetSkyLight(coordinates.X & 0x0f, coordinates.Y & 0xff, coordinates.Z & 0x0f, skyLight);
 		}
 
@@ -428,7 +430,7 @@ namespace Alex.Worlds.Lighting
 			return !(x > 0 && x < 15 && z > 0 && z < 15);
 		}
 
-		private static int GetHeighestSurrounding(int x, int z, ChunkColumn chunk, IBlockAccess level)
+		private int GetHeighestSurrounding(int x, int z, ChunkColumn chunk)
 		{
 			int h = chunk.GetHeight(x, z);
 			if (h == 255) return h;
@@ -438,10 +440,10 @@ namespace Alex.Worlds.Lighting
 				var coords = new BlockCoordinates(x + (chunk.X * 16), h, z + (chunk.Z * 16));
 
 				//h = Math.Max(h, level.GetHeight(coords + BlockCoordinates.Up));
-				h = Math.Max(h, level.GetHeight(coords + BlockCoordinates.West));
-				h = Math.Max(h, level.GetHeight(coords + BlockCoordinates.East));
-				h = Math.Max(h, level.GetHeight(coords + BlockCoordinates.North));
-				h = Math.Max(h, level.GetHeight(coords + BlockCoordinates.South));
+				h = Math.Max(h, Level.GetHeight(coords + BlockCoordinates.West));
+				h = Math.Max(h, Level.GetHeight(coords + BlockCoordinates.East));
+				h = Math.Max(h, Level.GetHeight(coords + BlockCoordinates.North));
+				h = Math.Max(h, Level.GetHeight(coords + BlockCoordinates.South));
 				if (h > 255) h = 255;
 				if (h < 0) h = 0;
 				return h;

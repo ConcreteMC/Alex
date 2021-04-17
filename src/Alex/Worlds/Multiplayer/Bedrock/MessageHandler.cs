@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
+using System.Threading;
+using Alex.API.Utils;
 using Alex.Net.Bedrock;
 using MiNET;
 using MiNET.Net;
@@ -11,6 +13,7 @@ using MiNET.Utils;
 using MiNET.Utils.Cryptography;
 using MiNET.Utils.IO;
 using NLog;
+using Org.BouncyCastle.Crypto;
 
 namespace Alex.Worlds.Multiplayer.Bedrock
 {
@@ -65,7 +68,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					wrapper.ReliabilityHeader.Reliability = Reliability.ReliableOrdered;
 					wrapper.ForceClear = true;
 					wrapper.payload = Compress(new List<Packet>(){packet});
-					wrapper.Encode(); // prepare
+					//wrapper.Encode(); // prepare
 					packet.PutPool();
 					sendList.Add(wrapper);
 					continue;
@@ -104,7 +107,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					batch.payload = Compress(sendInBatch);
 				}
 
-				batch.Encode(); // prepare
+				//batch.Encode(); // prepare
 				sendList.Add(batch);
 			}
 
@@ -113,17 +116,15 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
         private byte[] Compress(ICollection<Packet> packets)
         {
-	        long length = 0;
-	        foreach (Packet packet in packets) length += packet.Encode().Length;
+	      //  long length = 0;
+	     //   foreach (Packet packet in packets) length += packet.Encode().Length;
 
-	        var compressionLevel = _session.CompressionThreshold > -1 && length >= _session.CompressionThreshold ?
-		        System.IO.Compression.CompressionLevel.Fastest : System.IO.Compression.CompressionLevel.NoCompression;
+	      //  var compressionLevel = _session.CompressionThreshold > -1 && length >= _session.CompressionThreshold ?
+		 //       System.IO.Compression.CompressionLevel.Fastest : System.IO.Compression.CompressionLevel.NoCompression;
 
 	        using (MemoryStream stream = MiNetServer.MemoryStreamManager.GetStream())
 	        {
-		        int checksum;
-
-		        using (var compressStream = new DeflateStream(stream, compressionLevel, true))
+		        using (var compressStream = new DeflateStream(stream, CompressionLevel.Fastest, true))
 		        {
 			        foreach (Packet packet in packets)
 			        {
@@ -161,7 +162,17 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 			return packet;
 		}
-		
+
+		public Packet HandleRakMessage(Packet message)
+		{
+			if (message is McpeWrapper wrapper)
+			{
+				
+			}
+
+			return message;
+		}
+
 		public void HandlePacket(Packet message)
 		{
 			if (_session.Evicted)
@@ -169,47 +180,45 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			
 			if (message is McpeWrapper wrapper)
 			{
-				//var messages = new List<Packet>();
-
-				// Get bytes to process
 				var payload = wrapper.payload;
 
 				// Decrypt bytes
-
-
 				if (CryptoContext != null && CryptoContext.UseEncryption)
 				{
-					//FirstEncryptedPacketWaitHandle.WaitOne();
-
-					payload = CryptoUtils.Decrypt(payload, CryptoContext);
+					payload = CryptoContext.Decryptor.ProcessBytes(payload.ToArray());
+					payload = payload.Slice(0, payload.Length - 8);
 				}
 
-				try
+				using (var compressionStream = new DeflateStream(
+					new MemoryStreamReader(payload), System.IO.Compression.CompressionMode.Decompress, false))
 				{
-					using (var deflateStream = new DeflateStream(
-						new MemoryStreamReader(payload), System.IO.Compression.CompressionMode.Decompress, false))
-					{
-						payload = deflateStream.ReadAllBytes();
-					}
-				}catch(InvalidDataException){}
+					payload = compressionStream.ReadToReadOnlyMemory();
+				}
+				
+				//var messages = new List<Packet>();
 
+				// Get bytes to process
+			//	var payload = wrapper.payload;
+				
 				using (var ms = new MemoryStreamReader(payload))
 				{
+					ms.Position = 0;
+
 					int count = 0;
 
 					// Get actual packet out of bytes
-					while (ms.Position < ms.Length - 1)
+					while (ms.Position < ms.Length)
 					{
-						uint   len  = VarInt.ReadUInt32(ms);
-						long   pos  = ms.Position;
+						uint len = VarInt.ReadUInt32(ms);
+						long pos = ms.Position;
+
 						//byte[] data = new byte[len];
 
 						var data = ms.Read(len);
-					//	var data = MemoryPool<byte>.Shared.Rent((int) len);
-					//	if (ms.Read(data.Memory, 0, len) != len)
-						//	Log.Warn(
-						//		$"Did not read enough data.");
-								
+						//	var data = MemoryPool<byte>.Shared.Rent((int) len);
+						//if (ms.Read(data, 0, data.Length) != len)
+						//	Log.Warn($"Did not read enough data.");
+
 						ms.Position = pos;
 						int id = VarInt.ReadInt32(ms);
 
@@ -228,9 +237,10 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 						catch (Exception e)
 						{
 							Log.Warn(
-								e, $"Error parsing bedrock message #{count} id={id} (Buffer size={data.Length} Packet size={len})");
+								e,
+								$"Error parsing bedrock message #{count} id={id} (Buffer size={data.Length} Packet size={len})");
 
-									
+
 							//throw;
 							//return; // Exit, but don't crash.
 						}
@@ -246,7 +256,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 							{
 								Log.Warn(e, $"Error handling game packet #{count} id={id}");
 							}
-							
+
 							packet.PutPool();
 						}
 
@@ -278,7 +288,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			
 			RaknetSession.TraceReceive(message);
 			
-			_lastPacketReceived = DateTime.UtcNow;
 			Stopwatch sw = Stopwatch.StartNew();
 
 			try
@@ -311,6 +320,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					Log.Warn(
 						$"Packet handling took longer than expected! Time elapsed: {sw.ElapsedMilliseconds}ms (Packet={message})");
 				}
+				
+				_lastPacketReceived = DateTime.UtcNow;
 			}
 		}
     }

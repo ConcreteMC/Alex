@@ -45,14 +45,13 @@ namespace Alex.Worlds.Chunks
 		public  object                                              UpdateLock       { get; set; } = new object();
 		public ConcurrentDictionary<BlockCoordinates, NbtCompound> BlockEntities    { get; }
 		//public  NbtCompound[]                                       GetBlockEntities => BlockEntities.ToArray();
-		
+
 		internal ChunkData ChunkData { get; private set; }
 		private object _dataLock = new object();
 		
 		internal bool ScheduledForUpdate { get; set; } = false;
-		
-		//private ChunkOctree _octree;
-		private DateTime _lastUpdate = DateTime.UtcNow;
+
+		private System.Collections.BitArray _scheduledUpdates;
 		public ChunkColumn(int x, int z)
 		{
 			X = x;
@@ -71,9 +70,6 @@ namespace Alex.Worlds.Chunks
 		
 			_scheduledUpdates = new System.Collections.BitArray((16 * 256 * 16), false);
 		}
-
-		
-		private System.Collections.BitArray _scheduledUpdates;
 
 		protected void SetScheduled(int x, int y, int z, bool value)
 		{
@@ -268,7 +264,8 @@ namespace Alex.Worlds.Chunks
 		private void RecalculateHeight(int x, int z, bool doLighting = true)
 		{
 			bool inLight = doLighting;
-			
+
+			int currentLightValue = 15;
 			for (int y = 255; y > 0; y--)
 			{
 				if (inLight)
@@ -283,6 +280,7 @@ namespace Alex.Worlds.Chunks
 							_octree.Add(box);
 						}
 					}*/
+					
 					
 					if (!block.Renderable || (!block.BlockMaterial.BlocksLight))
 					{

@@ -37,6 +37,7 @@ using System.Threading.Tasks;
 using Alex.API.Utils;
 using Alex.Net.Bedrock.Raknet;
 using Alex.Utils;
+using Alex.Worlds.Multiplayer.Bedrock;
 using MiNET;
 using MiNET.Net;
 using MiNET.Net.RakNet;
@@ -73,7 +74,7 @@ namespace Alex.Net.Bedrock
 		public IPEndPoint RemoteEndpoint { get; set; }
 		public string RemoteServerName { get; set; }
 
-		public Func<RaknetSession, ICustomMessageHandler> CustomMessageHandlerFactory { get; set; }
+		public Func<RaknetSession, MessageHandler> CustomMessageHandlerFactory { get; set; }
 
 		// RakNet found a remote server using Ping.
 		public bool HaveServer { get; set; }
@@ -326,7 +327,7 @@ namespace Alex.Net.Bedrock
 				return;
 			}
 
-			var datagram = new Datagram();
+			var datagram = Datagram.CreateObject();
 			try
 			{
 				datagram.Decode(receivedBytes);
@@ -348,6 +349,7 @@ namespace Alex.Net.Bedrock
 			
 			Interlocked.Increment(ref ConnectionInfo.PacketsIn);
 
+			List<Packet> packets = new List<Packet>();
 			//if (Log.IsTraceEnabled) Log.Trace($"Receive datagram #{datagram.Header.DatagramSequenceNumber} for {_endpoint}");
 			foreach (var packet in datagram.Messages)
 			{
@@ -358,9 +360,14 @@ namespace Alex.Net.Bedrock
 					message = HandleSplitMessage(splitPartPacket);
 				}
 
-				if (message == null) return;
+				if (message == null) continue;
 
 				message.Timer.Restart();
+				packets.Add(message);
+			}
+
+			foreach (var message in packets)
+			{
 				Session.HandleRakMessage(message);
 			}
 			
@@ -396,7 +403,7 @@ namespace Alex.Net.Bedrock
 
 			if (!haveAllParts) return null;
 
-			//if (Log.IsTraceEnabled) Log.Trace($"Got all {spCount} split packets for split ID: {spId}");
+			//if (Log.IsTraceEnabled)Log.Trace($"Got all {spCount} split packets for split ID: {spId}");
 
 			Session.Splits.TryRemove(spId, out SplitPartPacket[] _);
 
@@ -480,11 +487,9 @@ namespace Alex.Net.Bedrock
 			//datagram.Header.IsContinuousSend = session.SlidingWindow.IsContinuousSend;
 			//datagram.Header.IsContinuousSend = session.SlidingWindow.
 
-		 //ArrayPool<byte>.Shared.Rent(1600);
+			byte[] buffer = ArrayPool<byte>.Shared.Rent(1600);
 			try
 			{
-				//int length = (int) datagram.GetEncoded(ref buffer);
-
 				if (!session.WaitingForAckQueue.TryAdd(sequenceNumber, datagram))
 				{
 					Log.Warn(
@@ -495,19 +500,20 @@ namespace Alex.Net.Bedrock
 					return 0;
 				}
 				
-				byte[] buffer = datagram.Encode();
+				int length = (int) datagram.GetEncoded(ref buffer);
+			//	byte[] buffer = datagram.Encode();
 				//session.UnackedBytes += datagram.Size;
 				
 				Interlocked.Increment(ref ConnectionInfo.PacketsOut);
-				SendData(buffer, buffer.Length, session.EndPoint);
+				SendData(buffer, length, session.EndPoint);
 				
 				datagram.Timer.Restart();
 
-				return buffer.Length;
+				return length;
 			}
 			finally
 			{
-				//ArrayPool<byte>.Shared.Return(buffer);
+				ArrayPool<byte>.Shared.Return(buffer);
 			}
 		}
 

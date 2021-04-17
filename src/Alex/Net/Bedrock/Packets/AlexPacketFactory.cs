@@ -75,9 +75,9 @@ namespace Alex.Net.Bedrock.Packets
                     case 0x8a:
                         packet = McpeEmote.CreateObject();
                         break;
-               //     case 0x91:
-               //         packet = new CreativeContent();
-                //        break;
+                    case 0x91:
+                        packet = new CreativeContent();
+                        break;
                     case 0x9e:
                         packet = McpeAnimateEntity.CreateObject();
                         break;

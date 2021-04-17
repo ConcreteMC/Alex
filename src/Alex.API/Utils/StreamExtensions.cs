@@ -40,6 +40,24 @@ namespace Alex.API.Utils
             }
         }
         
+        public static ReadOnlyMemory<byte> ReadToReadOnlyMemory(this Stream stream, int bufferSize = 256)
+        {
+            using (MemoryStream ms = new MemoryStream())
+            {
+                byte[] buffer = new byte[bufferSize];
+                int read;
+                do
+                {
+                    read = stream.Read(buffer, 0, buffer.Length);
+                    
+                    if (read > 0)
+                        ms.Write(buffer, 0, read);
+                } while (read > 0);
+
+                return new ReadOnlyMemory<byte>(ms.ToArray());
+            }
+        }
+        
         public static unsafe ReadOnlySpan<byte> ReadToEnd(this Stream stream, int bufferSize = 256)
         {
             var ptr = Marshal.AllocHGlobal(bufferSize);

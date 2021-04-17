@@ -47,12 +47,9 @@ namespace Alex.Worlds.Chunks
             return rStage.Render(device, effect);
         }
 
-        public MinifiedBlockShaderVertex[] Vertices
+        public MinifiedBlockShaderVertex[] BuildVertices(IBlockAccess blockAccess)
         {
-            get
-            {
-                return _stages.Where(x => x != null).SelectMany(x => x.BuildVertices(null)).ToArray();
-            }
+            return _stages.Where(x => x != null).SelectMany(x => x.BuildVertices(blockAccess)).ToArray();
         }
 
         public void AddVertex(BlockCoordinates blockCoordinates,
