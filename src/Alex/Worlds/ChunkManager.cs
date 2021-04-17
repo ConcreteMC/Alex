@@ -89,19 +89,22 @@ namespace Alex.Worlds
 			get => _renderDistance;
 			set
 			{
+				var currentlyRenderedChunks = _renderedChunks;
 				ChunkData[] renderedArray = new ChunkData[value * value * 3];
 
 				for (int i = 0; i < renderedArray.Length; i++)
 				{
-					if (i < _renderedChunks.Length)
+					if (currentlyRenderedChunks != null 
+					    && i < currentlyRenderedChunks.Length)
 					{
-						renderedArray[i] = _renderedChunks[i];
+						renderedArray[i] = currentlyRenderedChunks[i];
 					}
 					else
 					{
 						renderedArray[i] = null;
 					}
 				}
+
 				_renderedChunks = renderedArray;
 				_renderDistance = value;
 			}
