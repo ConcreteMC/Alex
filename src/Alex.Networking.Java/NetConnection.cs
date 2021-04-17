@@ -82,6 +82,7 @@ namespace Alex.Networking.Java
 					return false;
 
 				Client = new TcpClient();
+				
 				//Client.ReceiveBufferSize = int.MaxValue;
 				//Client.SendBufferSize = int.MaxValue;
 				
@@ -212,7 +213,7 @@ namespace Alex.Networking.Java
 						    if (cancellationToken.IsCancellationRequested)
 							    break;
 
-						    if (TryReadPacket(readStream, out var lastPacketId))
+						    if (readStream.DataAvailable && TryReadPacket(readStream, out var lastPacketId))
 						    {
 							    _lastReceivedPacketId = lastPacketId;
 						    }
