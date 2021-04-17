@@ -35,6 +35,7 @@ using MiNET.Net;
 using MiNET.Net.RakNet;
 using MiNET.Utils;
 using MiNET.Utils.Collections;
+using MiNET.Utils.IO;
 using MiNET.Utils.Nbt;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
@@ -55,7 +56,6 @@ namespace Alex.Networking.Bedrock.RakNet
 
 		private readonly ConcurrentPriorityQueue<int, Packet> _orderingBufferQueue = new ConcurrentPriorityQueue<int, Packet>();
 		private          CancellationTokenSource                          _cancellationToken;
-		private          Thread                                           _orderedQueueProcessingThread;
 
 		public ConnectionInfo ConnectionInfo { get; }
 
@@ -87,7 +87,7 @@ namespace Alex.Networking.Bedrock.RakNet
 		public ConcurrentDictionary<int, Datagram> WaitingForAckQueue { get; } = new ConcurrentDictionary<int, Datagram>();
 
 		public int CompressionThreshold { get; set; } = -1;
-		private Timer _tickerHighPrecisionTimer;
+		private HighPrecisionTimer _tickerHighPrecisionTimer;
 		public RaknetSession(ConnectionInfo connectionInfo, RaknetConnection connection, IPEndPoint endPoint, short mtuSize, ICustomMessageHandler messageHandler = null)
 		{
 			_connection = connection;
@@ -99,7 +99,7 @@ namespace Alex.Networking.Bedrock.RakNet
 			_cancellationToken = new CancellationTokenSource();
 
 			SlidingWindow = new SlidingWindow(mtuSize);
-			_tickerHighPrecisionTimer = new Timer(SendTick, null, 10, 10);
+			_tickerHighPrecisionTimer = new HighPrecisionTimer(10, SendTick);
 		}
 
 		/// <summary>
@@ -151,27 +151,20 @@ namespace Alex.Networking.Bedrock.RakNet
 				
 				var current  = message.ReliabilityHeader.OrderingIndex.IntValue();
 
-				var last = Interlocked.CompareExchange(ref _lastOrderingIndex, current, current - 1);
-				if (last == current - 1)
+				if (Interlocked.Read(ref _lastOrderingIndex) >= current)
+					return;
+
+				if (HandleOrdered(current, message) != OrderedHandlingResult.Success)
 				{
-					HandlePacket(message);
-					
-					if (_orderingBufferQueue.Count > 0)
-						StartOrderingThread();
-				}
-				else
-				{
-					if (current <= last)
-						return;
-					
 					_orderingBufferQueue.Enqueue(current, message);
 					
-					if (!IsOutOfOrder)
-					{
-						IsOutOfOrder = true;
-						Log.Warn($"Network channel out of order. Expected {last + 1}, but was {current}.");
-					}
+					if (_orderingBufferQueue.Count > 1)
+						ProcessOrderedQueue();
 				}
+				//_orderingBufferQueue.Enqueue(current, message);
+				//ProcessOrderedQueue();
+				
+				
 			}
 			catch (Exception e)
 			{
@@ -179,63 +172,31 @@ namespace Alex.Networking.Bedrock.RakNet
 			}
 		}
 
-		private void StartOrderingThread()
-		{
-			_orderingResetEvent.Set();
-			if (_orderedQueueProcessingThread != null)
-				return;
-			
-			_orderedQueueProcessingThread = new Thread(ProcessOrderedQueue)
-			{
-				IsBackground = true,
-				Name = $"Ordering Thread [{EndPoint}]"
-			};
-			_orderedQueueProcessingThread.Start();
-			if (Log.IsDebugEnabled) Log.Warn($"Started network ordering thread.");
-		}
-
-		public bool IsOutOfOrder
-		{
-			get => _isOutOfOrder;
-			private set
-			{
-				_isOutOfOrder = value;
-			}
-		}
+		public bool IsOutOfOrder => _orderingBufferQueue.Count > 0;
 
 		private void ProcessOrderedQueue()
 		{
-			Log.Info($"Ordering start");
+		//	Log.Info($"Ordering start");
 			try
 			{
-				while (!_cancellationToken.IsCancellationRequested)
-				{
 
-					while (_orderingBufferQueue.TryDequeue(out KeyValuePair<int, Packet> pair)
-					       && !_cancellationToken.IsCancellationRequested)
+				while (_orderingBufferQueue.TryPeek(out KeyValuePair<int, Packet> pair)
+				       && !_cancellationToken.IsCancellationRequested)
+				{
+					var result = HandleOrdered(pair.Key, pair.Value);
+					
+					if (result == OrderedHandlingResult.Success || result == OrderedHandlingResult.Invalid)
 					{
-						var last = Interlocked.CompareExchange(ref _lastOrderingIndex, pair.Key, pair.Key - 1);
-						if (last == pair.Key - 1)
-						{
-							//_orderingBufferQueue.TryDequeue(out _);
-							
-							HandlePacket(pair.Value);
-						}
-						else if (pair.Key < last)
-						{
-							//_orderingBufferQueue.TryDequeue(out _);
-							//Log.Warn($"Old. {pair.Key} < {last}");
-							pair.Value.PutPool();
-						}
-						else if (pair.Key > last)
-						{
-							_orderingBufferQueue.Enqueue(pair.Key, pair.Value);
-						}
+						_orderingBufferQueue.TryDequeue(out _);
+						continue;
 					}
 
-					if (!_orderingResetEvent.WaitOne(500)) //Keep the thread alive for longer.
-						break;
+					break;
 				}
+
+				//	if (!_orderingResetEvent.WaitOne(500)) //Keep the thread alive for longer.
+				//	break;
+
 			}
 			catch (ObjectDisposedException)
 			{
@@ -247,14 +208,38 @@ namespace Alex.Networking.Bedrock.RakNet
 			}
 			finally
 			{
-				_orderingResetEvent?.Reset();
-				_orderedQueueProcessingThread = null;
-				
-				if (_orderingBufferQueue.IsEmpty)
-					IsOutOfOrder = false;
-				
-				Log.Info($"Ordering stop");
+				//_orderingResetEvent?.Reset();
+				//if (_orderingBufferQueue.IsEmpty)
+				//	IsOutOfOrder = false;
+
+			//	Log.Info($"Ordering stop");
 			}
+		}
+
+		public enum OrderedHandlingResult
+		{
+			Success,
+			Invalid,
+			OutOfOrder
+		}
+		
+		private OrderedHandlingResult HandleOrdered(int orderingIndex, Packet packet)
+		{
+			var last = Interlocked.CompareExchange(ref _lastOrderingIndex, orderingIndex, orderingIndex - 1);
+
+			if (orderingIndex - 1 == last)
+			{
+				HandlePacket(packet);
+
+				return OrderedHandlingResult.Success;
+			}
+			else if (orderingIndex < last)
+			{
+				packet?.PutPool();
+				return OrderedHandlingResult.Invalid;
+			}
+
+			return OrderedHandlingResult.OutOfOrder;
 		}
 
 		private void HandlePacket(Packet message)
@@ -447,16 +432,25 @@ namespace Alex.Networking.Bedrock.RakNet
 
 			try
 			{
-				SendAckQueue();
-				SendNackQueue();
-
 				if (_tickCounter++ >= 5)
 				{
-					Update();
+					SendAckQueue();
+					
+					SendQueue();
+					
+					DoResends();
+					
+					CheckTimeout();
+					
+					SendNackQueue();
+					
 					_tickCounter = 0;
 				}
-				SendQueue();
-				UpdateTick();
+				else
+				{
+					SendAckQueue();
+					SendNackQueue();
+				}
 			}
 			catch (Exception e)
 			{
@@ -468,7 +462,7 @@ namespace Alex.Networking.Bedrock.RakNet
 			}
 		}
 
-		private void UpdateTick()
+		private void DoResends()
 		{
 			if (Evicted) return;
 			
@@ -541,7 +535,7 @@ namespace Alex.Networking.Bedrock.RakNet
 				//UpdateSync.Release();
 			}
 		}
-		private void Update()
+		private void CheckTimeout()
 		{
 			if (Evicted) return;
 
@@ -580,8 +574,11 @@ namespace Alex.Networking.Bedrock.RakNet
 			{
 				if (!queue.TryDequeue(out int ack)) break;
 
-				enqueued.Add(ack);
-				Interlocked.Increment(ref ConnectionInfo.NakSent);
+				if (!enqueued.Contains(i))
+				{
+					enqueued.Add(ack);
+					Interlocked.Increment(ref ConnectionInfo.NakSent);
+				}
 			}
 
 			if (enqueued.Count > 0)
@@ -763,7 +760,7 @@ namespace Alex.Networking.Bedrock.RakNet
 
 			_closed = true;
 
-			_tickerHighPrecisionTimer?.Change(Timeout.Infinite, Timeout.Infinite);
+			//_tickerHighPrecisionTimer?.Change(Timeout.Infinite, Timeout.Infinite);
 			_tickerHighPrecisionTimer?.Dispose();
 			_tickerHighPrecisionTimer = null;
 			
@@ -805,7 +802,6 @@ namespace Alex.Networking.Bedrock.RakNet
 
 			try
 			{
-				_orderedQueueProcessingThread = null;
 				_cancellationToken.Dispose();
 			}
 			catch

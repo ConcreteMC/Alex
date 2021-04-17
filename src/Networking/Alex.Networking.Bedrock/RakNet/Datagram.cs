@@ -47,7 +47,7 @@ namespace Alex.Networking.Bedrock.RakNet
 
 			// End datagram, online packet starts
 
-			Messages = new List<Packet>();
+			Messages.Clear();// = new List<Packet>();
 
 			while (!_reader.Eof)
 			{
@@ -246,38 +246,11 @@ namespace Alex.Networking.Bedrock.RakNet
 			yield return datagram;
 		}
 
-		/*public static IEnumerable<Datagram> CreateDatagrams(Packet message, int mtuSize, RaknetSession session)
-		{
-			Log.Warn($"CreateDatagrams single message");
-			Datagram datagram = CreateObject();
-
-			List<MessagePart> messageParts = CreateMessageParts(message, mtuSize, session);
-			foreach (MessagePart messagePart in messageParts)
-			{
-				if (!datagram.TryAddMessagePart(messagePart, mtuSize))
-				{
-					yield return datagram;
-
-					datagram = CreateObject();
-					if (datagram.MessageParts.Count != 0) throw new Exception("Excepted no message parts in new message");
-
-					if (!datagram.TryAddMessagePart(messagePart, mtuSize))
-					{
-						string error = $"Message part too big for a single datagram. Size: {messagePart.Encode().Length}, MTU: {mtuSize}";
-						Log.Error(error);
-						throw new Exception(error);
-					}
-				}
-			}
-
-			yield return datagram;
-		}*/
-
 		private static List<MessagePart> CreateMessageParts(Packet message, int mtuSize, RaknetSession session)
 		{
-			Memory<byte> encodedMessage = message.Encode();
+			var encodedMessage = message.Encode();
 
-			if (encodedMessage.IsEmpty) return new List<MessagePart>(0);
+			if (encodedMessage.Length == 0) return new List<MessagePart>(0);
 
 			if (message.IsMcpe) Log.Error($"Got bedrock message in unexpected place {message.GetType().Name}");
 
@@ -322,7 +295,7 @@ namespace Alex.Networking.Bedrock.RakNet
 				messagePart.ReliabilityHeader.PartIndex = index++;
 				messagePart.ReliabilityHeader.SequencingIndex = message.ReliabilityHeader.SequencingIndex;
 				
-				messagePart.Buffer = encodedMessage.Slice(span.@from, span.length);
+				messagePart.Buffer = encodedMessage.AsMemory(span.@from, span.length);//.Slice(span.@from, span.length);
 
 				messageParts.Add(messagePart);
 			}
@@ -333,8 +306,6 @@ namespace Alex.Networking.Bedrock.RakNet
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static int GetHeaderSize(ReliabilityHeader reliabilityHeader, bool split)
 		{
-			//Write((byte) (flags | (ReliabilityHeader.HasSplit ? 0b00010000 : 0x00)));
-			//Write((short) (encodedMessage.Length * 8), true); // bit length
 			int size = 3;
 
 			switch (reliabilityHeader.Reliability)
@@ -344,37 +315,22 @@ namespace Alex.Networking.Bedrock.RakNet
 				case Reliability.ReliableSequenced:
 				case Reliability.ReliableWithAckReceipt:
 				case Reliability.ReliableOrderedWithAckReceipt:
-					//Write(reliabilityHeader.ReliableMessageNumber);
 					size += 3;
 					break;
 			}
-
-			//switch (ReliabilityHeader.Reliability)
-			//{
-			//	case Reliability.UnreliableSequenced:
-			//	case Reliability.ReliableSequenced:
-			//		ReliabilityHeader.SequencingIndex = WriteLittle();
-			//		break;
-			//}
-
+			
 			switch (reliabilityHeader.Reliability)
 			{
 				case Reliability.UnreliableSequenced:
 				case Reliability.ReliableOrdered:
 				case Reliability.ReliableSequenced:
 				case Reliability.ReliableOrderedWithAckReceipt:
-					//Write(ReliabilityHeader.OrderingIndex);
-					//Write(ReliabilityHeader.OrderingChannel);
 					size += 4;
 					break;
 			}
 
 			if (split)
 			{
-				//Write(ReliabilityHeader.PartCount, true);
-				//Write(ReliabilityHeader.PartId, true);
-				//Write(ReliabilityHeader.PartIndex, true);
-
 				size += 10;
 			}
 

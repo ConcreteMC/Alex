@@ -78,7 +78,7 @@ namespace Alex.Networking.Bedrock.RakNet
 			ConnectionInfo = new API.Utils.ConnectionInfo();
 			
 			byte[] buffer = new byte[8];
-			new Random().NextBytes(buffer);
+			FastRandom.Instance.NextBytes(buffer);
 			ClientGuid = BitConverter.ToInt64(buffer, 0);
 		}
 
@@ -119,23 +119,18 @@ namespace Alex.Networking.Bedrock.RakNet
 							numberOfAttempts--;
 						}
 					}
-					
 					sw.SpinOnce();
 				}
 
 				if (Session == null) return false;
 
-				while (Session.State != ConnectionState.Connected && numberOfAttempts-- > 0 && !cancellationToken.IsCancellationRequested)
-				{
-					sw.SpinOnce();
-				}
 			}
 			catch (OperationCanceledException)
 			{
 				return false;
 			}
 
-			return Session.State == ConnectionState.Connected;
+			return true;
 		}
 		
 		public void SendUnconnectedPingInternal(IPEndPoint targetEndPoint)
@@ -333,7 +328,7 @@ namespace Alex.Networking.Bedrock.RakNet
 					return;
 				}
 
-				if (Session.Acknowledge(datagram))
+				Session.Acknowledge(datagram);
 				{
 					if (datagram.Header.IsPacketPair)
 					{
@@ -356,11 +351,6 @@ namespace Alex.Networking.Bedrock.RakNet
 
 						if (message == null) continue;
 
-						packets.Add(message);
-					}
-
-					foreach (var message in packets)
-					{
 						message.Timer.Restart();
 						Session.HandleRakMessage(message);
 					}
@@ -486,7 +476,7 @@ namespace Alex.Networking.Bedrock.RakNet
 			//datagram.Header.IsContinuousSend = session.SlidingWindow.IsContinuousSend;
 			//datagram.Header.IsContinuousSend = session.SlidingWindow.
 
-			byte[] buffer = null;
+			//byte[] buffer = null;
 			try
 			{
 				if (!session.WaitingForAckQueue.TryAdd(sequenceNumber, datagram))
@@ -499,9 +489,10 @@ namespace Alex.Networking.Bedrock.RakNet
 					return 0;
 				}
 
-				buffer = ArrayPool<byte>.Shared.Rent(1600);
-				int length = (int) datagram.GetEncoded(ref buffer);
-			//	byte[] buffer = datagram.Encode();
+				//buffer = ArrayPool<byte>.Shared.Rent(1600);
+				//int length = (int) datagram.GetEncoded(ref buffer);
+				byte[] buffer = datagram.Encode();
+				int length = buffer.Length;
 				//session.UnackedBytes += datagram.Size;
 				
 				Interlocked.Increment(ref ConnectionInfo.PacketsOut);
@@ -513,8 +504,8 @@ namespace Alex.Networking.Bedrock.RakNet
 			}
 			finally
 			{
-				if (buffer != null)
-					ArrayPool<byte>.Shared.Return(buffer);
+				//if (buffer != null)
+				//	ArrayPool<byte>.Shared.Return(buffer);
 			}
 		}
 

@@ -173,8 +173,10 @@ namespace Alex.Networking.Bedrock.RakNet
         /// B and AS are used in the calculations in UpdateWindowSizeAndAckOnAckPerSyn
         /// B and AS are updated at most once per SYN 
         /// </summary>
+        /// <param name="currentTime"></param>
         /// <param name="rtt"></param>
         /// <param name="sequenceIndex"></param>
+        /// <param name="isContinuousSend"></param>
         public void OnAck(long currentTime, long rtt, long sequenceIndex, bool isContinuousSend)
         {
             if (OldestUnsentAck == 0)

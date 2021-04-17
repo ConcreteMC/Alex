@@ -82,7 +82,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
         public RaknetConnection Connection { get; }
         private MessageHandler MessageHandler { get; set; }
         private RaknetSession Session { get; set; }//=> Connection.ConnectionInfo.RakSessions.Values.FirstOrDefault();
-        public override bool IsConnected => Session?.State == ConnectionState.Connected;
+        public override bool IsConnected => Session?.State != ConnectionState.Unconnected;
         
         private IPEndPoint _remoteEndpoint;
 
@@ -224,7 +224,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					//cancellationToken.CancelAfter(timeout);
 					if (Connection.TryConnect(ServerEndpoint, cancellationToken: cancellationToken))
 					{
-						ThroughPut = new Timer(state => { UpdateConnectionInfo();}, null, 1000, 1000);
+						Log.Info("Connected");
+						ThroughPut = new Timer(state => { UpdateConnectionInfo();}, null, 0, 1000);
 
 						//resetEvent.Set();
 						return true;
@@ -234,8 +235,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				return false;
 			} //));
 		}
-
-		private System.Timers.Timer _timer;
 
 		private void UpdateConnectionInfo()
 		{

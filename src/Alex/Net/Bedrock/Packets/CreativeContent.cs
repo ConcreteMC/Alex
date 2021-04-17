@@ -56,15 +56,13 @@ namespace Alex.Net.Bedrock.Packets
 				return new MiNET.Items.ItemAir();
 			}
 
-			int   aux      = packet.ReadSignedVarInt();
-			short metadata = (short) (aux >> 8);
-			byte  count    = (byte) (aux & 0xff);
-			
-			//if (metadata == short.MaxValue) metadata = -1;
-			
+			int tmp = packet.ReadSignedVarInt();
+			short metadata = (short) (tmp >> 8);
+			if (metadata == short.MaxValue) metadata = -1;
+			byte count = (byte) (tmp & 0xff);
 			var stack = MiNET.Items.ItemFactory.GetItem((short) id, metadata, count);
-			
-			var nbtLen = packet.ReadUshort(); // NbtLen
+
+			ushort nbtLen = packet.ReadUshort(); // NbtLen
 			if (nbtLen == 0xffff)
 			{
 				var version = packet.ReadByte();
@@ -73,18 +71,14 @@ namespace Alex.Net.Bedrock.Packets
 				{
 					stack.ExtraData = (NbtCompound) packet.ReadNbt().NbtFile.RootTag;
 				}
-				else
-				{
-					throw new Exception($"Unknown NBT version: {version}");
-				}
 			}
 			else if (nbtLen > 0)
 			{
 				var nbtData = packet.ReadBytes(nbtLen);
-				
+
 				using (MemoryStream ms = new MemoryStream(nbtData))
 				{
-					stack.ExtraData = (NbtCompound) ReadLegacyNbtCompound(ms);
+					stack.ExtraData = ReadLegacyNbtCompound(ms);
 				}
 			}
 
@@ -93,16 +87,15 @@ namespace Alex.Net.Bedrock.Packets
 			{
 				packet.ReadString();
 			}
-			
 			var canBreak = packet.ReadSignedVarInt();
 			for (int i = 0; i < canBreak; i++)
 			{
 				packet.ReadString();
 			}
 
-			if (id == MiNET.Items.ItemFactory.GetItemIdByName("minecraft:shield")) // shield
+			if (id == 513) // shield
 			{
-				//packet.ReadSignedVarLong(); // something about tick, crap code
+				packet.ReadSignedVarLong(); // something about tick, crap code
 			}
 
 			return stack;
