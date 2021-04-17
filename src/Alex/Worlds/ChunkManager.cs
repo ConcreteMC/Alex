@@ -58,6 +58,12 @@ namespace Alex.Worlds
 			var fogStart = 0;
 			Shaders = new RenderingShaders(Graphics);
 			Shaders.SetTextures(stillAtlas);
+			Shaders.FogEnabled = Options.VideoOptions.Fog.Value;
+			Options.VideoOptions.Fog.Bind(
+				(old, newValue) =>
+				{
+					Shaders.FogEnabled = newValue;
+				});
 			//Shaders.SetAnimatedTextures(Resources.Atlas.GetAtlas(0));
 			
 			_renderSampler.MaxMipLevel = stillAtlas.LevelCount;

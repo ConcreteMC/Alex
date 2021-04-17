@@ -13,6 +13,7 @@ using CommandLine;
 using Microsoft.Extensions.DependencyInjection;
 using NLog;
 using NLog.Config;
+using RocketUI.Utilities.IO;
 using LogManager = NLog.LogManager;
 
 namespace Alex

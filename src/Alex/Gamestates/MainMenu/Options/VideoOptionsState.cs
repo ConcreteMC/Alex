@@ -34,6 +34,7 @@ namespace Alex.Gamestates.MainMenu.Options
         private ToggleButton GraphicsMode       { get; set; }
         private ToggleButton ParticleToggle { get; set; }
         private ToggleButton EntityCulling { get; set; }
+        private ToggleButton Fog { get; set; }
         
         private Dictionary<IGuiControl, string> Descriptions { get; } = new Dictionary<IGuiControl, string>();
         public VideoOptionsState(GuiPanoramaSkyBox skyBox) : base(skyBox)
@@ -96,6 +97,8 @@ namespace Alex.Gamestates.MainMenu.Options
                     ParticleToggle = CreateToggle("Render Particles: {0}", options => options.VideoOptions.Particles),
                     EntityCulling = CreateToggle("Entity Culling: {0}", options => options.VideoOptions.EntityCulling));
 
+                AddGuiRow(Fog = CreateToggle($"Render Fog", options => options.VideoOptions.Fog), 
+                    new RocketElement());
                 /*  AddGuiRow(
                       /ClientSideLighting = CreateToggle(
                           "Client Side Lighting: {0}", options => options.VideoOptions.ClientSideLighting), 
@@ -111,6 +114,10 @@ namespace Alex.Gamestates.MainMenu.Options
 
                 var row = AddGuiRow(Description);
                 row.ChildAnchor = Alignment.MiddleLeft;
+                
+                Descriptions.Add(
+                    Fog,
+                    $"{TextColor.Bold}Render Fog:{TextColor.Reset}\nRenders fog to smooth out the render distance");
 
                 Descriptions.Add(
                     RenderDistance,

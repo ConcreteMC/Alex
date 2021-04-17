@@ -60,6 +60,9 @@ namespace Alex.API.Data.Options
         
         [DataMember]
         public OptionsProperty<bool> Particles { get; set; }
+        
+        [DataMember]
+        public OptionsProperty<bool> Fog { get; set; }
         public VideoOptions()
         {
             RenderDistance = DefineRangedProperty(6, 2, 32);
@@ -85,6 +88,7 @@ namespace Alex.API.Data.Options
             Particles = DefineProperty(true);
 
             EntityCulling = DefineProperty(false);
+            Fog = DefineProperty(true);
         }
     }
 }
