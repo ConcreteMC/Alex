@@ -1,5 +1,4 @@
 using System;
-using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
@@ -8,7 +7,7 @@ using MiNET.Net;
 using MiNET.Net.RakNet;
 using NLog;
 
-namespace Alex.Net.Bedrock.Raknet
+namespace Alex.Networking.Bedrock.RakNet
 {
 	public class Datagram : Packet<Datagram>
 	{

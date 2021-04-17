@@ -23,7 +23,7 @@ using Alex.Gamestates;
 using Alex.Net;
 using Alex.Net.Bedrock;
 using Alex.Net.Bedrock.Packets;
-using Alex.Net.Bedrock.Raknet;
+using Alex.Networking.Bedrock.RakNet;
 using Alex.ResourcePackLib.Json;
 using Alex.ResourcePackLib.Json.Models.Entities;
 using Alex.Utils;

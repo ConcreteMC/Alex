@@ -1,6 +1,6 @@
 using MiNET.Net.RakNet;
 
-namespace Alex.Net.Bedrock.Raknet
+namespace Alex.Networking.Bedrock.RakNet
 {
 	public class InternalDatagramHeader : DatagramHeader
 	{

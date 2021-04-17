@@ -2,7 +2,7 @@ using System;
 using System.Threading;
 using NLog;
 
-namespace Alex.Net.Bedrock
+namespace Alex.Networking.Bedrock.RakNet
 {
     public class SlidingWindow
     {

@@ -28,7 +28,6 @@ using Alex.Gui.Elements;
 using Alex.Items;
 using Alex.Net.Bedrock;
 using Alex.Net.Bedrock.Packets;
-using Alex.Net.Bedrock.Raknet;
 using Alex.Networking.Java.Packets.Play;
 using Alex.ResourcePackLib.Json;
 using Alex.ResourcePackLib.Json.Converters;
@@ -714,6 +713,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		{
 			//Client.Connection.Session.
 			var threshold = BitConverter.ToInt16(new byte[] {message.unknown, message.compressionThreshold});
+			
 			Client.Connection.Session.CompressionThreshold = threshold;
 			
 			Log.Info($"Compression Threshold: {threshold}");
