@@ -27,17 +27,9 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Net;
-using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using System.Threading;
-using System.Threading.Tasks;
-using Alex.API.Utils;
-using Alex.API.Utils.Collections;
-using Alex.Net.Bedrock.Raknet;
-using Alex.Utils;
-using log4net;
 using MiNET;
 using MiNET.Net;
 using MiNET.Net.RakNet;
@@ -48,16 +40,15 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using NLog;
 using ConnectionInfo = Alex.API.Utils.ConnectionInfo;
-using Datagram = Alex.Net.Bedrock.Raknet.Datagram;
 using LogManager = NLog.LogManager;
 
-namespace Alex.Net.Bedrock
+namespace Alex.Networking.Bedrock.RakNet
 {
 	public class RaknetSession : INetworkHandler
 	{
 		private static readonly ILogger Log = LogManager.GetCurrentClassLogger();
 
-		private readonly RaknetConnection _packetSender;
+		private readonly RaknetConnection _connection;
 
 		private long _lastOrderingIndex   = -1; // That's the first message with wrapper
 
@@ -95,13 +86,13 @@ namespace Alex.Net.Bedrock
 		private ConcurrentQueue<int> OutgoingNackQueue { get; } = new ConcurrentQueue<int>();
 		public ConcurrentDictionary<int, Datagram> WaitingForAckQueue { get; } = new ConcurrentDictionary<int, Datagram>();
 
-		public short CompressionThreshold { get; set; } = -1;
+		public int CompressionThreshold { get; set; } = -1;
 		private Timer _tickerHighPrecisionTimer;
-		public RaknetSession(ConnectionInfo connectionInfo, RaknetConnection packetSender, IPEndPoint endPoint, short mtuSize, ICustomMessageHandler messageHandler = null)
+		public RaknetSession(ConnectionInfo connectionInfo, RaknetConnection connection, IPEndPoint endPoint, short mtuSize, ICustomMessageHandler messageHandler = null)
 		{
-			_packetSender = packetSender;
+			_connection = connection;
 			ConnectionInfo = connectionInfo;
-			CustomMessageHandler = messageHandler ?? new DefaultMessageHandler();
+			CustomMessageHandler = messageHandler;
 			EndPoint = endPoint;
 			MtuSize = mtuSize;
 
@@ -119,7 +110,7 @@ namespace Alex.Net.Bedrock
 		internal void HandleRakMessage(Packet message)
 		{
 			if (message == null) return;
-
+			
 			// This is not completely finished. Ordering and sequence streams (32 unique channels/streams each)
 			// needs to work by their channel index. Right now, it's only one channel per reliability type.
 			// According to Dylan order and sequence streams can run on the same channel, but documentation
@@ -233,6 +224,7 @@ namespace Alex.Net.Bedrock
 						else if (pair.Key < last)
 						{
 							//_orderingBufferQueue.TryDequeue(out _);
+							//Log.Warn($"Old. {pair.Key} < {last}");
 							pair.Value.PutPool();
 						}
 						else if (pair.Key > last)
@@ -267,21 +259,11 @@ namespace Alex.Net.Bedrock
 
 		private void HandlePacket(Packet message)
 		{
-
 			if (message == null) return;
 
-			/*if ((message.ReliabilityHeader.Reliability == Reliability.ReliableSequenced 
-			     || message.ReliabilityHeader.Reliability == Reliability.UnreliableSequenced)
-			    && message.ReliabilityHeader.SequencingIndex < Interlocked.Read(ref _lastSequencingIndex))
-			{
-				return;
-			}
-			*/
 			try
 			{
 				//	RakOfflineHandler.TraceReceive(Log, message);
-				TraceReceive(message);
-
 				if (message.Id < (int) DefaultMessageIdTypes.ID_USER_PACKET_ENUM)
 				{
 					// Standard RakNet online message handlers
@@ -453,134 +435,8 @@ namespace Alex.Net.Bedrock
 				return;
 			}
 
-			TraceSend(packet);
-
 			_sendQueue.Enqueue(packet);
 		}
-
-		internal static void TraceReceive(Packet message)
-		{
-			if (!Log.IsTraceEnabled)
-				return;
-
-			try
-			{
-				string name      = message.GetType().Name;
-				string property1 = Config.GetProperty("TracePackets.Include", ".*");
-				string property2 = Config.GetProperty("TracePackets.Exclude", (string) null);
-				int    property3 = Config.GetProperty("TracePackets.Verbosity", 0);
-				int    property4 = Config.GetProperty("TracePackets.Verbosity." + name, property3);
-
-				if (!Regex.IsMatch(name, property1)
-				    || !string.IsNullOrWhiteSpace(property2) && Regex.IsMatch(name, property2))
-					return;
-
-				if (property4 == 0)
-					Log.Trace(
-						string.Format(
-							"> Receive: {0} (0x{1:x2}): {2}", (object) message.Id, (object) message.Id,
-							(object) message.GetType().Name));
-				else if (property4 == 1 || property4 == 3)
-				{
-					JsonSerializerSettings settings = new JsonSerializerSettings()
-					{
-						PreserveReferencesHandling = PreserveReferencesHandling.Arrays,
-						TypeNameHandling = TypeNameHandling.Auto,
-						Formatting = Formatting.Indented,
-						ReferenceLoopHandling = ReferenceLoopHandling.Ignore
-					};
-
-					settings.Converters.Add((JsonConverter) new StringEnumConverter());
-					settings.Converters.Add((JsonConverter) new NbtIntConverter());
-					settings.Converters.Add((JsonConverter) new NbtStringConverter());
-					settings.Converters.Add((JsonConverter) new IPAddressConverter());
-					settings.Converters.Add((JsonConverter) new IPEndPointConverter());
-					string str = JsonConvert.SerializeObject((object) message, settings);
-
-					Log.Trace(
-						string.Format(
-							"> Receive: {0} (0x{1:x2}): {2}\n{3}", (object) message.Id, (object) message.Id,
-							(object) message.GetType().Name, (object) str));
-				}
-				else
-				{
-					if (property4 != 2)
-						return;
-
-					Log.Trace(
-						string.Format(
-							"> Receive: {0} (0x{1:x2}): {2}\n{3}", (object) message.Id, (object) message.Id,
-							(object) message.GetType().Name, (object) Packet.HexDump(message.Bytes)));
-				}
-			}
-			catch (Exception ex)
-			{
-				Log.Error(ex, "Error when printing trace");
-			}
-		}
-
-		internal static void TraceSend(Packet message)
-		{
-			if (!Log.IsTraceEnabled)
-				return;
-
-			try
-			{
-				string name      = message.GetType().Name;
-				string property1 = Config.GetProperty("TracePackets.Include", ".*");
-				string property2 = Config.GetProperty("TracePackets.Exclude", (string) null);
-				int    property3 = Config.GetProperty("TracePackets.Verbosity", 0);
-				int    property4 = Config.GetProperty("TracePackets.Verbosity." + name, property3);
-
-				if (!Regex.IsMatch(name, property1)
-				    || !string.IsNullOrWhiteSpace(property2) && Regex.IsMatch(name, property2))
-					return;
-
-				if (property4 == 0)
-					Log.Trace(
-						string.Format(
-							"<    Send: {0} (0x{1:x2}): {2}", (object) message.Id, (object) message.Id,
-							(object) message.GetType().Name));
-				else if (property4 == 1 || property4 == 3)
-				{
-					JsonSerializerSettings settings = new JsonSerializerSettings()
-					{
-						PreserveReferencesHandling = PreserveReferencesHandling.Arrays,
-						TypeNameHandling = TypeNameHandling.Auto,
-						Formatting = Formatting.Indented,
-						DefaultValueHandling = DefaultValueHandling.Include,
-						ReferenceLoopHandling = ReferenceLoopHandling.Ignore
-					};
-
-					settings.Converters.Add((JsonConverter) new StringEnumConverter());
-					settings.Converters.Add((JsonConverter) new NbtIntConverter());
-					settings.Converters.Add((JsonConverter) new NbtStringConverter());
-					settings.Converters.Add((JsonConverter) new IPAddressConverter());
-					settings.Converters.Add((JsonConverter) new IPEndPointConverter());
-					string str = JsonConvert.SerializeObject((object) message, settings);
-
-					Log.Trace(
-						string.Format(
-							"<    Send: {0} (0x{1:x2}): {2}\n{3}", (object) message.Id, (object) message.Id,
-							(object) message.GetType().Name, (object) str));
-				}
-				else
-				{
-					if (property4 != 2 && property4 != 3)
-						return;
-
-					Log.Trace(
-						string.Format(
-							"<    Send: {0} (0x{1:x2}): {2}\n{3}", (object) message.Id, (object) message.Id,
-							(object) message.GetType().Name, (object) Packet.HexDump(message.Bytes)));
-				}
-			}
-			catch (Exception ex)
-			{
-				Log.Error(ex, "Error when printing trace");
-			}
-		}
-
 
 		private int _tickCounter = 0;
 		private object _updateSync = new object();
@@ -645,7 +501,7 @@ namespace Alex.Net.Bedrock
 					//if (session.Rtt == -1) return;
 
 					long elapsedTime = datagram.Timer.ElapsedMilliseconds;
-					long datagramTimeout = datagram.RetransmissionTimeOut;
+					long datagramTimeout = SlidingWindow.GetRtoForRetransmission(datagram.TransmissionCount);// datagram.RetransmissionTimeOut;
 					datagramTimeout = Math.Min(datagramTimeout, 3000);
 					datagramTimeout = Math.Max(datagramTimeout, 100);
 
@@ -662,13 +518,13 @@ namespace Alex.Net.Bedrock
 							//session.ResendCount++;
 
 							//if (Log.IsDebugEnabled) 
-								Log.Warn($"{(datagram.RetransmitImmediate ? "NAK RSND" : "TIMEOUT")}, Resent #{datagram.Header.DatagramSequenceNumber.IntValue()} Type: {datagram.FirstMessageId} (0x{datagram.FirstMessageId:x2}) ({elapsedTime} > {datagramTimeout})");
+								Log.Warn($"{(datagram.RetransmitImmediate ? "NAK RSND" : "TIMEOUT")}, Resent #{datagramPair.Key}, Transmissions: {datagram.TransmissionCount} Type: {datagram.FirstMessageId} (0x{datagram.FirstMessageId:x2}) ({elapsedTime} > {datagramTimeout})");
 
 							Interlocked.Increment(ref ConnectionInfo.Resends);
 							
 							SlidingWindow.OnResend(RaknetSession.CurrentTimeMillis(), datagramPair.Key);
 							
-							var sent = _packetSender.SendDatagram(this, datagram);
+							var sent = _connection.SendDatagram(this, datagram);
 							UnackedBytes += sent;
 							
 							transmissionBandwidth -= sent;
@@ -716,27 +572,28 @@ namespace Alex.Net.Bedrock
 			int           queueCount = queue.Count;
 
 			if (queueCount == 0) return;
-
-			var acks = CustomNak.CreateObject();
+			
+			List<int> enqueued = new List<int>();
+			
 			for (int i = 0; i < queueCount; i++)
 			{
 				if (!queue.TryDequeue(out int ack)) break;
 
-				if (!acks.Naks.Contains(ack))
-				{
-					acks.Naks.Add(ack);
-					Interlocked.Increment(ref ConnectionInfo.NakSent);
-				}
+				enqueued.Add(ack);
+				Interlocked.Increment(ref ConnectionInfo.NakSent);
 			}
 
-			if (acks.Naks.Count > 0)
+			if (enqueued.Count > 0)
 			{
-				byte[] data = acks.Encode();
-				_packetSender.SendData(data, EndPoint);
+				var acks = Nak.CreateObject();
+				acks.ranges = Acks.Slize(enqueued);
 				
+				byte[] data = acks.Encode();
+				_connection.SendData(data, EndPoint);
 				this.SlidingWindow.OnSendNack();
+				
+				acks.PutPool();
 			}
-			acks.PutPool();
 		}
 		
 		private void SendAckQueue()
@@ -765,7 +622,7 @@ namespace Alex.Net.Bedrock
 			{
 				byte[] data = acks.Encode();
 				
-				_packetSender.SendData(data, EndPoint);
+				_connection.SendData(data, EndPoint);
 
 				this.SlidingWindow.OnSendAck();
 			}
@@ -783,7 +640,7 @@ namespace Alex.Net.Bedrock
 
 			// Extremely important that this will not allow more than one thread at a time.
 			// This methods handle ordering and potential encryption, hence order matters.
-			//if (!(_syncHack.Wait(millisecondsWait))) return;
+			if (!(_syncHack.Wait(millisecondsWait))) return;
 
 			var unacked = UnackedBytes;
 			int transmissionBandwidth = this.SlidingWindow.GetTransmissionBandwidth(this.UnackedBytes, _bandwidthExceededStatistic);
@@ -853,7 +710,7 @@ namespace Alex.Net.Bedrock
 
 				foreach (Datagram datagram in Datagram.CreateDatagrams(MtuSize, this, packets))
 				{
-					UnackedBytes += _packetSender.SendDatagram(this, datagram);
+					UnackedBytes += _connection.SendDatagram(this, datagram);
 				}
 					
 				foreach(var packet in packets)
@@ -868,7 +725,7 @@ namespace Alex.Net.Bedrock
 			finally
 			{
 				_bandwidthExceededStatistic = UnackedBytes - unacked >= transmissionBandwidth;
-			//	_syncHack.Release();
+				_syncHack.Release();
 			}
 		}
 
@@ -882,7 +739,7 @@ namespace Alex.Net.Bedrock
 			
 			foreach (Datagram datagram in Datagram.CreateDatagrams(MtuSize, this, packet))
 			{
-				UnackedBytes += _packetSender.SendDatagram(this, datagram);
+				UnackedBytes += _connection.SendDatagram(this, datagram);
 			}
 			
 		//	_packetSender.SendPacket(this, packet);
@@ -1016,9 +873,9 @@ namespace Alex.Net.Bedrock
 			}
 		}
 		
-		internal void HandleNak(CustomNak nak)
+		internal void HandleNak(Nak nak)
 		{
-			foreach (Tuple<int, int> range in nak.Ranges)
+			foreach (Tuple<int, int> range in nak.ranges)
 			{
 				int start = range.Item1;
 				int end = range.Item2;

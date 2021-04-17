@@ -3,7 +3,10 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
+using System.Threading;
+using Alex.API.Utils;
 using Alex.Net.Bedrock;
+using Alex.Networking.Bedrock.RakNet;
 using MiNET;
 using MiNET.Net;
 using MiNET.Net.RakNet;
@@ -11,6 +14,7 @@ using MiNET.Utils;
 using MiNET.Utils.Cryptography;
 using MiNET.Utils.IO;
 using NLog;
+using Org.BouncyCastle.Crypto;
 
 namespace Alex.Worlds.Multiplayer.Bedrock
 {
@@ -65,7 +69,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					wrapper.ReliabilityHeader.Reliability = Reliability.ReliableOrdered;
 					wrapper.ForceClear = true;
 					wrapper.payload = Compress(new List<Packet>(){packet});
-					wrapper.Encode(); // prepare
+					//wrapper.Encode(); // prepare
 					packet.PutPool();
 					sendList.Add(wrapper);
 					continue;
@@ -104,7 +108,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					batch.payload = Compress(sendInBatch);
 				}
 
-				batch.Encode(); // prepare
+				//batch.Encode(); // prepare
 				sendList.Add(batch);
 			}
 
@@ -113,17 +117,15 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
         private byte[] Compress(ICollection<Packet> packets)
         {
-	        long length = 0;
-	        foreach (Packet packet in packets) length += packet.Encode().Length;
+	      //  long length = 0;
+	     //   foreach (Packet packet in packets) length += packet.Encode().Length;
 
-	        var compressionLevel = _session.CompressionThreshold > -1 && length >= _session.CompressionThreshold ?
-		        System.IO.Compression.CompressionLevel.Fastest : System.IO.Compression.CompressionLevel.NoCompression;
+	      //  var compressionLevel = _session.CompressionThreshold > -1 && length >= _session.CompressionThreshold ?
+		 //       System.IO.Compression.CompressionLevel.Fastest : System.IO.Compression.CompressionLevel.NoCompression;
 
 	        using (MemoryStream stream = MiNetServer.MemoryStreamManager.GetStream())
 	        {
-		        int checksum;
-
-		        using (var compressStream = new DeflateStream(stream, compressionLevel, true))
+		        using (var compressStream = new DeflateStream(stream, CompressionLevel.Fastest, true))
 		        {
 			        foreach (Packet packet in packets)
 			        {
@@ -161,113 +163,118 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 			return packet;
 		}
-		
+
+		private object _handlingLock = new object();
 		public void HandlePacket(Packet message)
 		{
-			if (_session.Evicted)
-				return;
-			
-			if (message is McpeWrapper wrapper)
+			lock (_handlingLock)
 			{
-				//var messages = new List<Packet>();
+				if (_session.Evicted)
+					return;
 
-				// Get bytes to process
-				var payload = wrapper.payload;
-
-				// Decrypt bytes
-
-
-				if (CryptoContext != null && CryptoContext.UseEncryption)
+				if (message is McpeWrapper wrapper)
 				{
-					//FirstEncryptedPacketWaitHandle.WaitOne();
+					var payload = wrapper.payload;
 
-					payload = CryptoUtils.Decrypt(payload, CryptoContext);
-				}
-
-				try
-				{
-					using (var deflateStream = new DeflateStream(
+					// Decrypt bytes
+					if (CryptoContext != null && CryptoContext.UseEncryption)
+					{
+						payload = CryptoContext.Decryptor.ProcessBytes(payload.ToArray());
+						payload = payload.Slice(0, payload.Length - 8);
+					}
+					
+					using (var compressionStream = new DeflateStream(
 						new MemoryStreamReader(payload), System.IO.Compression.CompressionMode.Decompress, false))
 					{
-						payload = deflateStream.ReadAllBytes();
+						payload = compressionStream.ReadToReadOnlyMemory();
 					}
-				}catch(InvalidDataException){}
 
-				using (var ms = new MemoryStreamReader(payload))
-				{
-					int count = 0;
+					//var messages = new List<Packet>();
 
-					// Get actual packet out of bytes
-					while (ms.Position < ms.Length - 1)
+					// Get bytes to process
+					//	var payload = wrapper.payload;
+
+					using (var ms = new MemoryStreamReader(payload))
 					{
-						uint   len  = VarInt.ReadUInt32(ms);
-						long   pos  = ms.Position;
-						//byte[] data = new byte[len];
+						ms.Position = 0;
 
-						var data = ms.Read(len);
-					//	var data = MemoryPool<byte>.Shared.Rent((int) len);
-					//	if (ms.Read(data.Memory, 0, len) != len)
-						//	Log.Warn(
-						//		$"Did not read enough data.");
-								
-						ms.Position = pos;
-						int id = VarInt.ReadInt32(ms);
+						int count = 0;
 
-						Packet packet = null;
-
-						try
+						// Get actual packet out of bytes
+						while (ms.Position < ms.Length)
 						{
-							packet = PacketFactory.Create((byte) id, data, "mcpe")
-							         ?? new UnknownPacket((byte) id, data);
+							uint len = VarInt.ReadUInt32(ms);
+							long pos = ms.Position;
 
-							packet.ReliabilityHeader = wrapper.ReliabilityHeader;
+							//byte[] data = new byte[len];
 
-							//messages.Add(packet);
-							count++;
-						}
-						catch (Exception e)
-						{
-							Log.Warn(
-								e, $"Error parsing bedrock message #{count} id={id} (Buffer size={data.Length} Packet size={len})");
+							var data = ms.Read(len);
+							//	var data = MemoryPool<byte>.Shared.Rent((int) len);
+							//if (ms.Read(data, 0, data.Length) != len)
+							//	Log.Warn($"Did not read enough data.");
 
-									
-							//throw;
-							//return; // Exit, but don't crash.
-						}
+							ms.Position = pos;
+							int id = VarInt.ReadInt32(ms);
 
+							Packet packet = null;
 
-						if (packet != null)
-						{
 							try
 							{
-								HandleGamePacket(packet);
+								packet = PacketFactory.Create((byte) id, data, "mcpe")
+								         ?? new UnknownPacket((byte) id, data);
+
+								packet.ReliabilityHeader = wrapper.ReliabilityHeader;
+
+								//messages.Add(packet);
+								count++;
 							}
 							catch (Exception e)
 							{
-								Log.Warn(e, $"Error handling game packet #{count} id={id}");
+								Log.Warn(
+									e,
+									$"Error parsing bedrock message #{count} id={id} (Buffer size={data.Length} Packet size={len})");
+
+
+								//throw;
+								//return; // Exit, but don't crash.
 							}
-							
-							packet.PutPool();
+
+
+							if (packet != null)
+							{
+								try
+								{
+									HandleGamePacket(packet);
+								}
+								catch (Exception e)
+								{
+									Log.Warn(e, $"Error handling game packet #{count} id={id}");
+								}
+
+								packet.PutPool();
+							}
+
+							ms.Position = pos + len;
 						}
-
-						ms.Position = pos + len;
 					}
+
+					//var msgs = messages.ToArray();
+					//messages.Clear();
+					//wrapper.PutPool();
 				}
+				else if (message is UnknownPacket unknownPacket)
+				{
+					Log.Warn(
+						$"Received unknown packet 0x{unknownPacket.Id:X2}\n{Packet.HexDump(unknownPacket.Message)}");
 
-				//var msgs = messages.ToArray();
-				//messages.Clear();
-				//wrapper.PutPool();
-			}
-			else if (message is UnknownPacket unknownPacket)
-			{
-				Log.Warn($"Received unknown packet 0x{unknownPacket.Id:X2}\n{Packet.HexDump(unknownPacket.Message)}");
-
-			//	unknownPacket.PutPool();
-			}
-			else
-			{
-				Log.Error($"Unhandled packet: {message.GetType().Name} 0x{message.Id:X2}, IP {_session.EndPoint.Address}");
-				//if (Log.IsDebugEnabled) Log.Warn($"Unknown packet 0x{message.Id:X2}\n{Packet.HexDump(message.Bytes)}");
+					//	unknownPacket.PutPool();
+				}
+				else
+				{
+					Log.Error(
+						$"Unhandled packet: {message.GetType().Name} 0x{message.Id:X2}, IP {_session.EndPoint.Address}");
+					//if (Log.IsDebugEnabled) Log.Warn($"Unknown packet 0x{message.Id:X2}\n{Packet.HexDump(message.Bytes)}");
+				}
 			}
 		}
 
@@ -276,9 +283,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			if (_session.Evicted)
 				return;
 			
-			RaknetSession.TraceReceive(message);
+			//RaknetSession.TraceReceive(message);
 			
-			_lastPacketReceived = DateTime.UtcNow;
 			Stopwatch sw = Stopwatch.StartNew();
 
 			try
@@ -311,6 +317,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					Log.Warn(
 						$"Packet handling took longer than expected! Time elapsed: {sw.ElapsedMilliseconds}ms (Packet={message})");
 				}
+				
+				_lastPacketReceived = DateTime.UtcNow;
 			}
 		}
     }

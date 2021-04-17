@@ -152,7 +152,7 @@ namespace Alex.Graphics.Models.Blocks
 			}
 		}
 
-	    protected static void GetLight(IBlockAccess world, Vector3 facePosition, out byte blockLight, out byte skyLight, bool smooth = false)
+	    public static void GetLight(IBlockAccess world, Vector3 facePosition, out byte blockLight, out byte skyLight, bool smooth = false)
 		{
 			var faceBlock = world.GetBlockState(facePosition).Block;
 			

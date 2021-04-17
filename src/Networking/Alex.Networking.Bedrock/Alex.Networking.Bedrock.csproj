@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net5.0</TargetFramework>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\..\..\submodules\MiNET\src\MiNET\MiNET\MiNET.csproj" />
+      <ProjectReference Include="..\..\Alex.API\Alex.API.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="NLog" Version="4.7.9" />
+    </ItemGroup>
+
+</Project>

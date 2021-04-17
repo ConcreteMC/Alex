@@ -145,6 +145,7 @@
     <ProjectReference Include="..\Alex.API\Alex.API.csproj" />
     <ProjectReference Include="..\Alex.Networking.Java\Alex.Networking.Java.csproj" />
     <ProjectReference Include="..\Alex.ResourcePackLib\Alex.ResourcePackLib.csproj" />
+    <ProjectReference Include="..\Networking\Alex.Networking.Bedrock\Alex.Networking.Bedrock.csproj" />
   </ItemGroup>
 
   <ItemGroup>

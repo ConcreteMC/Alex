@@ -74,7 +74,7 @@ namespace Alex.Worlds
 			CancellationToken = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 			
 			BlockLightCalculations = new BlockLightCalculations(world, CancellationToken.Token);
-			SkyLightCalculator = new SkyLightCalculations(CancellationToken.Token);
+			SkyLightCalculator = new SkyLightCalculations(world, CancellationToken.Token);
 			
 			UpdateQueue = new FancyQueue<ChunkCoordinates>();
 			UpdateBorderQueue = new FancyQueue<ChunkCoordinates>();
@@ -268,7 +268,7 @@ namespace Alex.Worlds
 											{
 												if (newChunk)
 												{
-													SkyLightCalculator.RecalcSkyLight(chunk, World);
+													SkyLightCalculator.Recalculate(chunk);
 												}
 											}
 
@@ -276,17 +276,17 @@ namespace Alex.Worlds
 
 											if (newChunk)
 											{
-												/*ScheduleChunkUpdate(
-													new ChunkCoordinates(chunk.X + 1, chunk.Z), ScheduleType.Border);
+												ScheduleChunkUpdate(
+													new ChunkCoordinates(chunk.X + 1, chunk.Z), ScheduleType.Full);
 
 												ScheduleChunkUpdate(
-													new ChunkCoordinates(chunk.X - 1, chunk.Z), ScheduleType.Border);
+													new ChunkCoordinates(chunk.X - 1, chunk.Z), ScheduleType.Full);
 
 												ScheduleChunkUpdate(
-													new ChunkCoordinates(chunk.X, chunk.Z + 1), ScheduleType.Border);
+													new ChunkCoordinates(chunk.X, chunk.Z + 1), ScheduleType.Full);
 
 												ScheduleChunkUpdate(
-													new ChunkCoordinates(chunk.X, chunk.Z - 1), ScheduleType.Border);*/
+													new ChunkCoordinates(chunk.X, chunk.Z - 1), ScheduleType.Full);
 											}
 										}
 										finally
@@ -356,10 +356,12 @@ namespace Alex.Worlds
 		{
 			if (CancellationToken.IsCancellationRequested)
 				return;
-			//chunk.CalculateHeight();
+			
+			chunk.CalculateHeight();
+			
 			if (chunk.IsNew)
 			{
-				SkyLightCalculator.RecalcSkyLight(chunk, World);
+				//	SkyLightCalculator.Recalculate(chunk);
 				BlockLightCalculations.Recalculate(chunk);
 			}
 

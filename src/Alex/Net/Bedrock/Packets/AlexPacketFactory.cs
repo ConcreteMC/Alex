@@ -1,6 +1,4 @@
 using System;
-using System.Linq;
-using Alex.Net.Bedrock.Raknet;
 using MiNET.Net;
 using MiNET.Net.RakNet;
 using NLog;
@@ -25,17 +23,14 @@ namespace Alex.Net.Bedrock.Packets
             Packet packet = null;
             switch (messageId)
             {
-                case 0x03:
-                    packet = new CustomConnectedPong();
-                    break;
-                
+
                 //Hack to spawn on the Hive
                // case 132:
               //      PrevBuffer = buffer.ToArray();
                //    break;
-                case 16:
-                    packet = new RequestAccepted();
-                    break;
+              //  case 16:
+               //     packet = new RequestAccepted();
+                //    break;
             }
 
             try
@@ -75,9 +70,9 @@ namespace Alex.Net.Bedrock.Packets
                     case 0x8a:
                         packet = McpeEmote.CreateObject();
                         break;
-               //     case 0x91:
-               //         packet = new CreativeContent();
-                //        break;
+                    case 0x91:
+                        packet = new CreativeContent();
+                        break;
                     case 0x9e:
                         packet = McpeAnimateEntity.CreateObject();
                         break;

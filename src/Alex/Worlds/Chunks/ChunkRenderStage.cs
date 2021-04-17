@@ -9,6 +9,7 @@ using Alex.API.Graphics;
 using Alex.API.Utils;
 using Alex.API.Utils.Collections;
 using Alex.API.Utils.Vectors;
+using Alex.Graphics.Models.Blocks;
 using Alex.Worlds.Abstraction;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -125,11 +126,14 @@ namespace Alex.Worlds.Chunks
 					foreach (var vertex in block.Value)
 					{
 						var p = vertex.Position;
-
 						var offset = vertex.Face.GetVector3();
+						
+						BlockModel.GetLight(
+							world, p, out byte blockLight, out byte skyLight, true);
+						
 						vertices[index] = new MinifiedBlockShaderVertex(
 							vertex.Position, offset, vertex.TexCoords, new Color(vertex.Color),
-							world?.GetBlockLight(p) ?? 0, world?.GetSkyLight(p + offset) ?? 15);
+							blockLight, skyLight);
 						
 						index++;
 					}

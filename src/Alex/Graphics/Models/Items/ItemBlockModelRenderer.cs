@@ -51,30 +51,35 @@ namespace Alex.Graphics.Models.Items
 
         private bool _cached = false;
         private VertexPositionColorTexture[] _vertices = null;
-        
+
         public override bool Cache(ResourceManager pack)
         {
             if (_cached)
                 return true;
 
             _cached = true;
-            
+
+            var world = new ItemRenderingWorld(_blockState.Block);
+
             ChunkData chunkData = new ChunkData();
-            
-            _blockState?.VariantMapper.Model.GetVertices(new ItemRenderingWorld(_blockState.Block), chunkData, BlockCoordinates.Zero, Vector3.Zero, _blockState);
 
-           // var max         = _block.Model.GetBoundingBoxes(Vector3.Zero).Max(x => x.Max - x.Min);
-            var rawVertices = chunkData.Vertices;
+            _blockState?.VariantMapper.Model.GetVertices(
+                world, chunkData, BlockCoordinates.Zero, Vector3.Zero, _blockState);
 
-          //  while (count > 0 && count % 3 != 0)
-           // {
-          //      count--;
-           // }
-            
+            // var max         = _block.Model.GetBoundingBoxes(Vector3.Zero).Max(x => x.Max - x.Min);
+            var rawVertices = chunkData.BuildVertices(world);
+
+            //  while (count > 0 && count % 3 != 0)
+            // {
+            //      count--;
+            // }
+
             Vertices = rawVertices.Select(
-                x => new VertexPositionColorTexture(x.Position, x.Color, new Vector2(x.TexCoords.X, x.TexCoords.Y))).ToArray();
+                    x => new VertexPositionColorTexture(x.Position, x.Color, new Vector2(x.TexCoords.X, x.TexCoords.Y)))
+               .ToArray();
 
             chunkData.Dispose();
+
 
             return true;
         }
