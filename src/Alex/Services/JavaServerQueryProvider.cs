@@ -152,8 +152,6 @@ namespace Alex.Services
 														    }
 													    })));
 									    }
-
-									    Log.Info($"Lan broadcast: {Encoding.UTF8.GetString(received)}");
 								    }
 							    }
 						    }
@@ -256,7 +254,7 @@ namespace Alex.Services
 			    //conn.LogExceptions = false;
 			    using (var conn = new NetConnection(connectionDetails.EndPoint, cancellationToken)
 			    {
-				    LogExceptions = true
+				    LogExceptions = false
 			    })
 			    {
 				    long pingId = Rnd.NextUInt();

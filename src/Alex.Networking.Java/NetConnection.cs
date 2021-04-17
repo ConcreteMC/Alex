@@ -88,8 +88,31 @@ namespace Alex.Networking.Java
 				
 				Client.Connect(TargetEndpoint.Address, TargetEndpoint.Port);
 
-				//if (!Client.Connected)
-				//	return false;
+				if (!Client.Connected)
+					return false;
+				
+				NetworkStream ns = Client.GetStream();
+				_readerStream = new MinecraftStream(ns, CancellationToken.Token);
+				_sendStream = new MinecraftStream(ns, CancellationToken.Token);
+			
+				_readThread = new Thread(
+					() =>
+					{
+						ProcessNetworkRead();
+					});
+
+				_readThread.Name = "MC:Java Network Read";
+			
+				_writeThread = new Thread(
+					() =>
+					{
+						ProcessNetworkWrite();
+					});
+
+				_writeThread.Name = "MC:Java Network Write";
+			
+				_readThread.Start();
+				_writeThread.Start();
 			}
 			catch (SocketException exception)
 			{
@@ -97,25 +120,6 @@ namespace Alex.Networking.Java
 					return false;
 			}
 
-			_readThread = new Thread(
-				() =>
-				{
-					ProcessNetworkRead(Client, CancellationToken.Token);
-				});
-
-			_readThread.Name = "MC:Java Network Read";
-			
-			_writeThread = new Thread(
-				() =>
-				{
-					ProcessNetworkWrite(Client, CancellationToken.Token);
-				});
-
-			_writeThread.Name = "MC:Java Network Write";
-			
-			_readThread.Start();
-			_writeThread.Start();
-			
 			StartTime = DateTime.UtcNow;
 
 			return true;
@@ -183,9 +187,6 @@ namespace Alex.Networking.Java
 	    public void InitEncryption(byte[] sharedKey)
 	    {
 		    _sharedKey = sharedKey;
-		    _readerStream.InitEncryption(_sharedKey);
-		    _sendStream.InitEncryption(_sharedKey);
-		    Log.Info($"Encryption enabled.");
 	    }
 
 	    //public static RecyclableMemoryStreamManager StreamManager { get; }= new RecyclableMemoryStreamManager();
@@ -194,43 +195,41 @@ namespace Alex.Networking.Java
 	    private int _lastReceivedPacketId;
 	    private object _readLock = new object();
 
-	    private void ProcessNetworkRead(TcpClient client, CancellationToken cancellationToken)
+	    private void ProcessNetworkRead()
 	    {
 		    Stopwatch time = Stopwatch.StartNew();
 
 
 		    try
 		    {
-			    using (NetworkStream ns = client.GetStream())
+			    SpinWait sw = new SpinWait();
+
+			    while (!CancellationToken.IsCancellationRequested)
 			    {
-				    using (MinecraftStream readStream = new MinecraftStream(ns, cancellationToken))
+				    if (CancellationToken.IsCancellationRequested)
+					    break;
+
+				    var stream = _readerStream;
+				    if (stream == null)
+					    break;
+
+				    if (stream.DataAvailable && TryReadPacket(stream, out var lastPacketId))
 				    {
-					    SpinWait sw = new SpinWait();
-					    _readerStream = readStream;
-
-					    while (!cancellationToken.IsCancellationRequested)
-					    {
-						    if (cancellationToken.IsCancellationRequested)
-							    break;
-
-						    if (readStream.DataAvailable && TryReadPacket(readStream, out var lastPacketId))
-						    {
-							    _lastReceivedPacketId = lastPacketId;
-						    }
-						    else
-						    {
-							    sw.SpinOnce();
-						    }
-						    //Write(mc);
-					    }
+					    _lastReceivedPacketId = lastPacketId;
 				    }
+				    else
+				    {
+					    sw.SpinOnce();
+				    }
+				    //Write(mc);
 			    }
+
 		    }
 		    catch (Exception ex)
 		    {
-			    if (ex is OperationCanceledException) return;
-			    if (ex is EndOfStreamException) return;
-			    if (ex is IOException) return;
+			  //  if (ex is OperationCanceledException) return;
+			 //   if (ex is EndOfStreamException) return;
+			 //   if (ex is IOException) return;
 
 			    if (LogExceptions)
 				    Log.Warn(
@@ -243,38 +242,45 @@ namespace Alex.Networking.Java
 		    }
 	    }
 
-	    private void ProcessNetworkWrite(TcpClient client, CancellationToken cancellationToken)
+	    private void ProcessNetworkWrite()
 	    {
 		    try
 		    {
-			    using (NetworkStream ns = client.GetStream())
+
+			    SpinWait sw = new SpinWait();
+
+			    while (!CancellationToken.IsCancellationRequested)
 			    {
-				    using (MinecraftStream writeStream = new MinecraftStream(ns, cancellationToken))
+				    if (CancellationToken.IsCancellationRequested)
+					    break;
+
+				    var stream = _sendStream;
+
+				    if (stream == null)
+					    break;
+
+				    var queue = PacketWriteQueue;
+
+				    if (queue.TryTake(out var packet, -1, CancellationToken.Token))
 				    {
-					    SpinWait sw = new SpinWait();
-					    _sendStream = writeStream;
+					    Send(packet, stream);
 
-					    while (!cancellationToken.IsCancellationRequested)
+					    if (packet.Packet is EncryptionResponsePacket)
 					    {
-						    if (cancellationToken.IsCancellationRequested)
-							    break;
-
-						    var queue = PacketWriteQueue;
-
-						    if (queue.TryTake(out var packet, -1, cancellationToken))
-						    {
-							    Send(packet, writeStream);
-						    }
-						    //Write(mc);
+						    _readerStream.InitEncryption(_sharedKey);
+						    _sendStream.InitEncryption(_sharedKey);
+						    Log.Info($"Encryption enabled.");
 					    }
 				    }
+				    //Write(mc);
 			    }
+
 		    }
 		    catch (Exception ex)
 		    {
-			    if (ex is OperationCanceledException) return;
-			    if (ex is EndOfStreamException) return;
-			    if (ex is IOException) return;
+			  //  if (ex is OperationCanceledException) return;
+			 //   if (ex is EndOfStreamException) return;
+			   // if (ex is IOException) return;
 
 			    if (LogExceptions)
 				    Log.Warn(
@@ -291,7 +297,7 @@ namespace Alex.Networking.Java
 
 	    private void Send(EnqueuedPacket packet, MinecraftStream stream)
 	    {
-		    //lock (_sendLock)
+		    lock (_sendLock)
 		    {
 			    try
 			    {

@@ -2692,8 +2692,9 @@ namespace Alex.Worlds.Multiplayer.Java
 					response.SharedSecret = encrypted;
 					response.VerifyToken = cryptoProvider.Encrypt(verificationToken, RSAEncryptionPadding.Pkcs1);
 					
-					Client.SendPacket(response);// SendPacket(response);
 					Client.InitEncryption(SharedSecret);
+					
+					Client.SendPacket(response);// SendPacket(response);
 				});//.Wait();
 		}
 
