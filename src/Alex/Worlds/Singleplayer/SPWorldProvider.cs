@@ -237,6 +237,12 @@ namespace Alex.Worlds.Singleplayer
 				//world.Player.Controller.IsFreeCam = true;
 
 			World.UpdatePlayerPosition(new PlayerLocation(GetSpawnPoint()));
+
+			if (ItemFactory.TryGetItem("minecraft:diamond_sword", out var sword))
+				World.Player.Inventory[World.Player.Inventory.HotbarOffset] = sword;
+			
+			if (ItemFactory.TryGetItem("minecraft:grass_block", out var grass))
+				World.Player.Inventory[World.Player.Inventory.HotbarOffset  + 1] = grass;
 		}
 
 		public override Vector3 GetSpawnPoint()

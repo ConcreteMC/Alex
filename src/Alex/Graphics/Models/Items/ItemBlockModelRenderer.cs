@@ -24,8 +24,9 @@ namespace Alex.Graphics.Models.Items
         {
             _blockState = block;
             _texture = texture;
-            Scale = new Vector3(8f, 8f, 8f);
-          //  Size = new Vector3(16f, 16f, 16f);
+            
+            Scale = new Vector3(16f);
+            Size = new Vector3(16f, 16f, 16f);
             //Offset = new Vector3(0f, -0.5f, 0f);
             //  Translation = -Vector3.Forward * 8f;
         }
@@ -74,8 +75,10 @@ namespace Alex.Graphics.Models.Items
             //      count--;
             // }
 
+            var scale = Vector2.One / _texture.Bounds.Size.ToVector2();
+
             Vertices = rawVertices.Select(
-                    x => new VertexPositionColorTexture(x.Position, x.Color, new Vector2(x.TexCoords.X, x.TexCoords.Y)))
+                    x => new VertexPositionColorTexture(x.Position, x.Color, new Vector2(x.TexCoords.X, x.TexCoords.Y) * scale))
                .ToArray();
 
             chunkData.Dispose();

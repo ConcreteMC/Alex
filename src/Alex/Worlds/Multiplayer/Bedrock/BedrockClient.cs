@@ -235,7 +235,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				return false;
 			} //));
 		}
-
+		
 		private void UpdateConnectionInfo()
 		{
 			long packetSizeOut = Interlocked.Exchange(ref Connection.ConnectionInfo.BytesOut, 0L);
@@ -267,7 +267,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 			if (nakSent > 0)
 			{
-				networkState = ConnectionInfo.NetworkState.PacketLoss;
+			//	networkState = ConnectionInfo.NetworkState.PacketLoss;
 			}
 			else if (Connection.IsNetworkOutOfOrder)
 			{

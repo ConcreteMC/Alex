@@ -260,13 +260,17 @@ namespace Alex.Graphics.Models.Items
             var activeDisplayItem = ActiveDisplayItem;
             //   world.Right = -world.Right;
 
+            var scale = activeDisplayItem.Scale * Scale;
+            var translation = activeDisplayItem.Translation;
+            var rotation = activeDisplayItem.Rotation;
+
             if (DisplayPosition.HasFlag(DisplayPosition.Gui))
             {
                 if (this is ItemBlockModelRenderer)
                 {
                     Effect.World = Matrix.CreateScale(activeDisplayItem.Scale)
                                    * MatrixHelper.CreateRotationDegrees(new Vector3(25f, 45f, 0f))
-                                   * Matrix.CreateTranslation(activeDisplayItem.Translation)
+                                   * Matrix.CreateTranslation(translation)
                                    * Matrix.CreateTranslation(new Vector3(0f, 0.25f, 0f)) * characterMatrix;
                 }
                 else
@@ -276,40 +280,36 @@ namespace Alex.Graphics.Models.Items
             }
             else if (DisplayPosition.HasFlag(DisplayPosition.ThirdPerson))
             {
-                var t = activeDisplayItem.Translation;
-                var r = activeDisplayItem.Rotation;
-
-                if (r != Vector3.Zero)
+                if (rotation != Vector3.Zero)
                 {
                     //r.Y += 12.5f;
-                    r.Z -= 67.5f;
-                    Effect.World = Matrix.CreateScale(Scale * activeDisplayItem.Scale)
+                    rotation.Z -= 67.5f;
+                    Effect.World = Matrix.CreateScale(scale)
                                    * Matrix.CreateTranslation(-halfSize)
                                    * Matrix.CreateRotationZ(MathUtils.ToRadians(-32.5f))
                                    * Matrix.CreateTranslation(halfSize)
                                    //* MCMatrix.CreateRotationDegrees(new Vector3(-67.5f, 180f, 0f))
-                                   * MatrixHelper.CreateRotationDegrees(r * new Vector3(1f, -1f, -1f))
+                                   * MatrixHelper.CreateRotationDegrees(rotation * new Vector3(1f, -1f, -1f))
                                    * Matrix.CreateTranslation(
-                                       new Vector3(t.X + 6f, t.Y + 3f,  t.Z))
+                                       new Vector3(translation.X + 6f, translation.Y + 3f,  translation.Z))
                                    * characterMatrix;
                 }
                 else
                 {
                     Effect.World =  
-                        Matrix.CreateScale(Scale * activeDisplayItem.Scale)
+                        Matrix.CreateScale(scale)
                         * MatrixHelper.CreateRotationDegrees(new Vector3(-67.5f, 0f, 0f))
                         * Matrix.CreateTranslation(
-                           new Vector3(t.X + 2f, Size.Y - t.Y, t.Z))
+                           new Vector3(translation.X + 2f, Size.Y - translation.Y, translation.Z))
                         * characterMatrix;
                 }
             }
             else  if (DisplayPosition.HasFlag(DisplayPosition.FirstPerson))
             {
-                Effect.World = Matrix.CreateScale(activeDisplayItem.Scale)
+                Effect.World = Matrix.CreateScale(scale)
                                * Matrix.CreateRotationY(MathUtils.ToRadians(180f))
-                               * MatrixHelper.CreateRotationDegrees(activeDisplayItem.Rotation)
-                               * Matrix.CreateTranslation(halfSize)
-                               * Matrix.CreateTranslation(activeDisplayItem.Translation * new Vector3(1f, 1f, -1f))
+                               * MatrixHelper.CreateRotationDegrees(rotation)
+                               * Matrix.CreateTranslation(halfSize + translation)
                                * characterMatrix;
             }
             else 
