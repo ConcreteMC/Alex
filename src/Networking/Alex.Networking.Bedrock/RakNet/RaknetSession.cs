@@ -174,9 +174,11 @@ namespace Alex.Networking.Bedrock.RakNet
 
 		public bool IsOutOfOrder => _orderingBufferQueue.Count > 0;
 
+		private object _threadLock = new object();
+
 		private void ProcessOrderedQueue()
 		{
-		//	Log.Info($"Ordering start");
+			//	Log.Info($"Ordering start");
 			try
 			{
 
@@ -184,10 +186,11 @@ namespace Alex.Networking.Bedrock.RakNet
 				       && !_cancellationToken.IsCancellationRequested)
 				{
 					var result = HandleOrdered(pair.Key, pair.Value);
-					
+
 					if (result == OrderedHandlingResult.Success || result == OrderedHandlingResult.Invalid)
 					{
 						_orderingBufferQueue.TryDequeue(out _);
+
 						continue;
 					}
 
@@ -212,7 +215,7 @@ namespace Alex.Networking.Bedrock.RakNet
 				//if (_orderingBufferQueue.IsEmpty)
 				//	IsOutOfOrder = false;
 
-			//	Log.Info($"Ordering stop");
+				//	Log.Info($"Ordering stop");
 			}
 		}
 
@@ -227,13 +230,13 @@ namespace Alex.Networking.Bedrock.RakNet
 		{
 			var last = Interlocked.CompareExchange(ref _lastOrderingIndex, orderingIndex, orderingIndex - 1);
 
-			if (orderingIndex - 1 == last)
+			if (last == orderingIndex - 1)
 			{
 				HandlePacket(packet);
 
 				return OrderedHandlingResult.Success;
-			}
-			else if (orderingIndex < last)
+			} 
+			else if (last > orderingIndex)
 			{
 				packet?.PutPool();
 				return OrderedHandlingResult.Invalid;
@@ -309,21 +312,7 @@ namespace Alex.Networking.Bedrock.RakNet
 						Log.Warn(e, $"Custom message handler error");
 					}
 				}
-
-				if (message.Timer.IsRunning)
-				{
-					long elapsedMilliseconds = message.Timer.ElapsedMilliseconds;
-
-					if (elapsedMilliseconds > 1000)
-					{
-						Log.Warn(
-							$"Packet (0x{message.Id:x2}) handling too long {elapsedMilliseconds}ms ({message.ToString()})");
-					}
-				}
-				else
-				{
-					Log.Warn("Packet (0x{0:x2}) timer not started.", message.Id);
-				}
+				
 			}
 			catch (Exception e)
 			{
@@ -425,25 +414,27 @@ namespace Alex.Networking.Bedrock.RakNet
 
 		private int _tickCounter = 0;
 		private object _updateSync = new object();
+
 		private void SendTick(object obj)
 		{
-			if (!Monitor.TryEnter(_updateSync, 0))
+			if (!_syncHack.Wait(0))
 				return;
 
 			try
+
 			{
 				if (_tickCounter++ >= 5)
 				{
 					SendAckQueue();
-					
+
 					SendQueue();
-					
+
 					DoResends();
-					
+
 					CheckTimeout();
-					
+
 					SendNackQueue();
-					
+
 					_tickCounter = 0;
 				}
 				else
@@ -458,7 +449,8 @@ namespace Alex.Networking.Bedrock.RakNet
 			}
 			finally
 			{
-				Monitor.Exit(_updateSync);
+				_syncHack.Release();
+				//Monitor.Exit(_updateSync);
 			}
 		}
 
@@ -572,11 +564,11 @@ namespace Alex.Networking.Bedrock.RakNet
 			
 			for (int i = 0; i < queueCount; i++)
 			{
-				if (!queue.TryDequeue(out int ack)) break;
+				if (!queue.TryDequeue(out int nack)) break;
 
-				if (!enqueued.Contains(i))
+				if (!enqueued.Contains(nack))
 				{
-					enqueued.Add(ack);
+					enqueued.Add(nack);
 					Interlocked.Increment(ref ConnectionInfo.NakSent);
 				}
 			}
@@ -593,39 +585,44 @@ namespace Alex.Networking.Bedrock.RakNet
 				acks.PutPool();
 			}
 		}
-		
+
 		private void SendAckQueue()
 		{
 			if (!SlidingWindow.ShouldSendAcks(CurrentTimeMillis()))
 				return;
+			
 			var           queue      = OutgoingAckQueue;
 			int           queueCount = queue.Count;
 
 			if (queueCount == 0) return;
 
 			var acks = Acks.CreateObject();
-			for (int i = 0; i < queueCount; i++)
-			{
-				if (!queue.TryDequeue(out int ack)) break;
-	//			_nacked.Remove(ack);
 
-				if (!acks.acks.Contains(ack))
+			try
+			{
+				for (int i = 0; i < queueCount; i++)
 				{
-					acks.acks.Add(ack);
-					Interlocked.Increment(ref ConnectionInfo.AckSent);
+					if (!queue.TryDequeue(out int ack)) break;
+
+					if (!acks.acks.Contains(ack))
+					{
+						acks.acks.Add(ack);
+						Interlocked.Increment(ref ConnectionInfo.AckSent);
+					}
+				}
+
+				if (acks.acks.Count > 0)
+				{
+					byte[] data = acks.Encode();
+					_connection.SendData(data, EndPoint);
+
+					this.SlidingWindow.OnSendAck();
 				}
 			}
-
-			if (acks.acks.Count > 0)
+			finally
 			{
-				byte[] data = acks.Encode();
-				
-				_connection.SendData(data, EndPoint);
-
-				this.SlidingWindow.OnSendAck();
+				acks.PutPool();
 			}
-			
-			acks.PutPool();
 		}
 
 		private SemaphoreSlim _syncHack = new SemaphoreSlim(1, 1);
@@ -892,17 +889,20 @@ namespace Alex.Networking.Bedrock.RakNet
 		public bool Acknowledge(Datagram datagram)
 		{
 			var sequenceIndex = datagram.Header.DatagramSequenceNumber.IntValue();
-
+			OutgoingAckQueue.Enqueue(sequenceIndex);
 			if (SlidingWindow.OnPacketReceived(
 				CurrentTimeMillis(),  sequenceIndex, datagram.Header.IsContinuousSend, datagram.Size, out var skippedMessageCount))
 			{
 			//	if (skippedMessageCount > 0)
 			//		Log.Info($"Skipped {skippedMessageCount}");
-				OutgoingAckQueue.Enqueue(sequenceIndex);
-				
-				for (long i = skippedMessageCount; i > 0; i--)
+				//OutgoingAckQueue.Enqueue(sequenceIndex);
+
+				if (skippedMessageCount > 0)
 				{
-					OutgoingNackQueue.Enqueue((int) (sequenceIndex- i));
+					for (long i = skippedMessageCount; i > 0; i--)
+					{
+						OutgoingNackQueue.Enqueue((int) (sequenceIndex - i));
+					}
 				}
 
 				return true;

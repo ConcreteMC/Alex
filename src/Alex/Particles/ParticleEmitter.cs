@@ -86,6 +86,8 @@ namespace Alex.Particles
 
 			foreach (var instance in _instances)
 			{
+				if (instance == null)
+					continue;
 				if (instance.Lifetime >= instance.MaxLifetime)
 				{
 					toRemove.Add(instance);
@@ -116,7 +118,7 @@ namespace Alex.Particles
 		{
 			foreach (var instance in _instances)
 			{
-				instance.Update(gameTime);
+				instance?.Update(gameTime);
 			}
 		}
 
@@ -126,7 +128,7 @@ namespace Alex.Particles
 
 			foreach (var instance in _instances)
 			{
-				if (count >= MaxParticles)
+				if (instance  == null || count >= MaxParticles)
 					continue;
 
 				var pos = instance.Position;

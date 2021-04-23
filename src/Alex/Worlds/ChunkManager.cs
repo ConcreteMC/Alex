@@ -718,14 +718,13 @@ namespace Alex.Worlds
 			try
 			{
 				//Graphics?.Dispose();
-				BlockLightCalculations?.Dispose();
-				BlockLightCalculations = null;
-				
-				SkyLightCalculator?.Dispose();
-				SkyLightCalculator = null;
-				
-				_renderSampler?.Dispose();
 				CancellationToken?.Cancel();
+				
+				BlockLightCalculations?.Dispose();
+
+				SkyLightCalculator?.Dispose();
+
+				_renderSampler?.Dispose();
 				UpdateQueue?.Clear();
 				FastUpdateQueue?.Clear();
 				UpdateBorderQueue?.Clear();
@@ -737,6 +736,8 @@ namespace Alex.Worlds
 						rendered?.Dispose();
 
 				_renderedChunks = null;
+				BlockLightCalculations = null;
+				SkyLightCalculator = null;
 			}
 			finally
 			{

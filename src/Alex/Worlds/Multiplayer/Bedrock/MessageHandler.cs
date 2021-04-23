@@ -178,7 +178,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 				lock (_handlingLock)
 				{
-					// Decrypt bytes
+					// Decrypt byteswrapper
 					if (CryptoContext != null && CryptoContext.UseEncryption)
 					{
 						payload = CryptoUtils.Decrypt(payload, CryptoContext);

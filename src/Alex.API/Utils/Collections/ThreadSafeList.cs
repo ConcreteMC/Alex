@@ -118,7 +118,19 @@ namespace Alex.API.Utils.Collections
 
 		public IEnumerator<T> GetEnumerator()
 		{
-			return new ThreadSafeListEnumerator(this);
+			using (RwLock.Read())
+			{
+				var items = Items;
+				if (items == null) 
+					yield break;
+				
+				foreach (var item in items)
+				{
+					yield return item;
+				}
+			}
+
+			//return new ThreadSafeListEnumerator(this);
 		}
 
 		IEnumerator IEnumerable.GetEnumerator()
@@ -390,6 +402,10 @@ namespace Alex.API.Utils.Collections
 
 			private void UpdateCurrent()
 			{
+				if (_index >= _list.Count - 1)
+				{
+					return;
+				}
 				Current = _list.Items[_index];
 			}
 		
