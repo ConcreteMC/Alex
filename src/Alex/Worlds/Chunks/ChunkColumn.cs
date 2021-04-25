@@ -145,13 +145,13 @@ namespace Alex.Worlds.Chunks
 								//	}
 
 
+								var blockPosition = new BlockCoordinates(x, y + (sectionIndex * 16), z);
+								
 								if ((!isNew && !scheduled))
 									continue;
 
 								if (scheduled)
 									_scheduledUpdates[idx] = false;
-
-								var blockPosition = new BlockCoordinates(x, y + (sectionIndex * 16), z);
 
 								chunkData?.Remove(blockPosition);
 

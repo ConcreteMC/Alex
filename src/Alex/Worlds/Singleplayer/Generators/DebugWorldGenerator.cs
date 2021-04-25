@@ -25,8 +25,7 @@ namespace Alex.Worlds.Singleplayer.Generators
 
 	    public DebugWorldGenerator()
 	    {
-		    foreach (var state in BlockFactory.AllBlockstatesByName.OrderByDescending(
-			    x => x.Value.GetVariants().Any(xx => xx.Block.Animated)))
+		    foreach (var state in BlockFactory.AllBlockstatesByName.OrderByDescending(x => x.Key.Path))
 		    {
 			    foreach (var variant in state.Value.GetVariants())
 			    {
@@ -45,17 +44,17 @@ namespace Alex.Worlds.Singleplayer.Generators
 			return _cache.GetOrAdd(
 				chunkCoordinates, (cc) =>
 				{
-					ChunkColumn chunk = new ChunkColumn(chunkCoordinates.X, chunkCoordinates.Z);
+					ChunkColumn chunk = new ChunkColumn(cc.X, cc.Z);
 					for (int x = 0; x < 16; x++)
 					{
+						int rx = (cc.X * 16) + x;
 						for (int z = 0; z < 16; z++)
 						{
-							int rx = (chunkCoordinates.X * 16) + x;
-							int rz = (chunkCoordinates.Z * 16) + z;
+							int rz = (cc.Z * 16) + z;
 
 							BlockState iblockstate = GetBlockStateFor(rx, rz);
 
-							if (iblockstate != null)
+							if (iblockstate != null && iblockstate.Block.Renderable)
 							{
 								chunk.SetBlockState(x, 1, z, iblockstate);
 								//chunk.Height[((z << 4) + (x))] = 70;

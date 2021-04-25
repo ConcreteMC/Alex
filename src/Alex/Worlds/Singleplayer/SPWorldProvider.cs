@@ -164,7 +164,8 @@ namespace Alex.Worlds.Singleplayer
 			
 			int minX = Math.Min(center.X - renderDistance, center.X + renderDistance);
 			int maxX = Math.Max(center.X - renderDistance, center.X + renderDistance);
-			
+
+			List<Task<ChunkColumn>> generatorTasks = new List<Task<ChunkColumn>>();
 			for (int x = minX; x <= maxX; x++)
 			for (int z = minZ; z <= maxZ; z++)
 			{
@@ -175,16 +176,25 @@ namespace Alex.Worlds.Singleplayer
 				{
 					_loadedChunks.Add(cc);
 					
-					ChunkColumn chunk =
-						_generator.GenerateChunkColumn(cc);
-
-					if (chunk == null) continue;
-
-					base.World.ChunkManager.AddChunk(chunk, cc, false);
-					LoadEntities(chunk);
-					
-					yield return chunk;
+					generatorTasks.Add(Task.Run(
+						() =>
+						{
+							return _generator.GenerateChunkColumn(cc);
+						}));
 				}
+			}
+
+			Task.WaitAll(generatorTasks.ToArray());
+
+			foreach (var task in generatorTasks)
+			{
+				var chunk = task.Result;
+				if (chunk == null) continue;
+
+				base.World.ChunkManager.AddChunk(chunk, new ChunkCoordinates(chunk.X, chunk.Z), false);
+				LoadEntities(chunk);
+					
+				yield return chunk;
 			}
 
 			foreach (var chunk in oldChunks)

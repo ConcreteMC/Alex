@@ -27,7 +27,8 @@ namespace Alex.Worlds.Chunks
 		private bool                  HasChanges     { get; set; }
 
 		private long      _vertexCount = 0;
-		
+
+		private object _writeLock = new object();
 		public ChunkRenderStage()
 		{
 			BlockIndices = new ConcurrentDictionary<BlockCoordinates, List<VertexData>>();
@@ -39,7 +40,7 @@ namespace Alex.Worlds.Chunks
 			Vector4 textureCoordinates,
 			Color color)
 		{
-			//lock (_writeLock)
+			lock (_writeLock)
 			{
 				var vertexData = new VertexData(
 					position, face, textureCoordinates, color.PackedValue);
@@ -56,7 +57,7 @@ namespace Alex.Worlds.Chunks
 
 		public void Remove(BlockCoordinates coordinates)
 		{
-		//	lock (_writeLock)
+			lock (_writeLock)
 			{
 				if (BlockIndices.TryRemove(coordinates, out var indices))
 				{
@@ -68,7 +69,7 @@ namespace Alex.Worlds.Chunks
 
 		public bool Contains(BlockCoordinates coordinates)
 		{
-		//	lock (_writeLock)
+			lock (_writeLock)
 			{
 				return BlockIndices.ContainsKey(coordinates);
 			}
@@ -77,7 +78,7 @@ namespace Alex.Worlds.Chunks
 		private const int MaxArraySize = 16 * 16 * 256 * (6 * 6);
 		internal MinifiedBlockShaderVertex[] BuildVertices(IBlockAccess world)
 		{
-			//lock (_writeLock)
+			lock (_writeLock)
 			{
 				var blockIndices = BlockIndices;
 				var size = blockIndices.Sum(x => x.Value.Count);
@@ -93,16 +94,17 @@ namespace Alex.Worlds.Chunks
 				int index = 0;
 				foreach (var block in blockIndices)
 				{
+					var v3 = new Vector3(block.Key.X, block.Key.Y, block.Key.Z);
 					foreach (var vertex in block.Value)
 					{
-						var p = vertex.Position;
+						var p = v3 + vertex.Position;
 						var offset = vertex.Face.GetVector3();
 						
 						BlockModel.GetLight(
 							world, p, out byte blockLight, out byte skyLight, true);
 						
 						vertices[index] = new MinifiedBlockShaderVertex(
-							vertex.Position, offset, vertex.TexCoords, new Color(vertex.Color),
+							p, offset, vertex.TexCoords, new Color(vertex.Color),
 							blockLight, skyLight);
 						
 						index++;
@@ -117,7 +119,7 @@ namespace Alex.Worlds.Chunks
 		private int  _primitiveCount = 0;
 		public void Apply(IBlockAccess world, GraphicsDevice device = null, bool keepInMemory = true, bool force = false)
 		{
-			//lock (_writeLock)
+			lock (_writeLock)
 			{
 				if (!HasChanges && !force)
 					return;
@@ -195,27 +197,30 @@ namespace Alex.Worlds.Chunks
 		private bool _disposed = false;
 		public void Dispose()
 		{
-			if (_disposed)
-				return;
-
-			try
+			lock (_writeLock)
 			{
-				var keys = BlockIndices.Keys.ToArray();
+				if (_disposed)
+					return;
 
-				foreach (var key in keys)
+				try
 				{
-					Remove(key);
+					var keys = BlockIndices.Keys.ToArray();
+
+					foreach (var key in keys)
+					{
+						Remove(key);
+					}
+
+					BlockIndices.Clear();
+
+					Buffer?.MarkForDisposal();
+					Buffer = null;
+					BlockIndices = null;
 				}
-
-				BlockIndices.Clear();
-
-				Buffer?.MarkForDisposal();
-				Buffer = null;
-				BlockIndices = null;
-			}
-			finally
-			{
-				_disposed = true;
+				finally
+				{
+					_disposed = true;
+				}
 			}
 		}
 	}

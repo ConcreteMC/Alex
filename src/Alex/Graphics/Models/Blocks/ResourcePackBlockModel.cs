@@ -459,258 +459,242 @@ namespace Alex.Graphics.Models.Blocks
 			ResourcePackModelBase model,
 			Biome biome)
 		{
-			//var positionOffset = baseBlock.GetOffset(NoiseGenerator, position);
-			//bsModel.Y = Math.Abs(180 - bsModel.Y);
+			var baseColor = baseBlock.BlockMaterial.TintColor;
 
-			//if (Resources.BlockModelRegistry.TryGet(blockStateModel.ModelName, out var registryEntry))
+			for (var index = 0; index < model.Elements.Length; index++)
 			{
-				//var model = registryEntry.Value;
+				var element = model.Elements[index];
+				element.To *= Scale;
+				element.From *= Scale;
 
-				var baseColor = baseBlock.BlockMaterial.TintColor;
-
-				for (var index = 0; index < model.Elements.Length; index++)
+				//var faces = element.Faces.ToArray();
+				foreach (var face in element.Faces)
 				{
-					var element = model.Elements[index];
-					element.To *= Scale;
-					element.From *= Scale;
+					var facing = face.Key;
+					//var cullFace = face.Value.CullFace ?? face.Key;
 
-					//var faces = element.Faces.ToArray();
-					foreach (var face in element.Faces)
+					if (blockStateModel.X > 0f)
 					{
-						var facing   = face.Key;
-						//var cullFace = face.Value.CullFace ?? face.Key;
+						var offset = blockStateModel.X / 90;
+						//cullFace = RotateDirection(cullFace, offset, FACE_ROTATION_X, INVALID_FACE_ROTATION_X);
+						facing = RotateDirection(facing, offset, FACE_ROTATION_X, INVALID_FACE_ROTATION_X);
+					}
 
-						if (blockStateModel.X > 0f)
+					if (blockStateModel.Y > 0f)
+					{
+						var offset = blockStateModel.Y / 90;
+						//cullFace = RotateDirection(cullFace, offset, FACE_ROTATION, INVALID_FACE_ROTATION);
+						facing = RotateDirection(facing, offset, FACE_ROTATION, INVALID_FACE_ROTATION);
+					}
+
+					float minX = float.MaxValue, minY = float.MaxValue, minZ = float.MaxValue;
+					float maxX = float.MinValue, maxY = float.MinValue, maxZ = float.MinValue;
+
+
+
+					if (!ShouldRenderFace(world, facing, position, baseBlock))
+						continue;
+
+					var uv = face.Value.Uv;
+					float x1 = 0, x2 = 0, y1 = 0, y2 = 0;
+
+					if (uv == null)
+					{
+						var from = element.From;
+						var to = element.To;
+
+						/*switch (face.Key)
 						{
-							var offset = blockStateModel.X / 90;
-							//cullFace = RotateDirection(cullFace, offset, FACE_ROTATION_X, INVALID_FACE_ROTATION_X);
-							facing = RotateDirection(facing, offset, FACE_ROTATION_X, INVALID_FACE_ROTATION_X);
-						}
-
-						if (blockStateModel.Y > 0f)
-						{
-							var offset = blockStateModel.Y / 90;
-							//cullFace = RotateDirection(cullFace, offset, FACE_ROTATION, INVALID_FACE_ROTATION);
-							facing = RotateDirection(facing, offset, FACE_ROTATION, INVALID_FACE_ROTATION);
-						}
-
-						float minX = float.MaxValue, minY = float.MaxValue, minZ = float.MaxValue;
-						float maxX = float.MinValue, maxY = float.MinValue, maxZ = float.MinValue;
-
-						
-						
-						if (!ShouldRenderFace(world, facing, position, baseBlock))
-							continue;
-
-						var   uv = face.Value.Uv;
-						float x1 = 0, x2 = 0, y1 = 0, y2 = 0;
-
-						if (uv == null)
-						{
-							var from = element.From;
-							var to = element.To;
-
-							/*switch (face.Key)
-							{
-								case BlockFace.North:
-									x1 = from.X;
-									y1 = 16f - to.Y;
-									x2 = to.X;
-									y2 = 16f - from.Y;
-									break;
-								
-								case BlockFace.East:
-									x1 = from.Z;
-									y1 = 16f - to.Y;
-									x2 = to.Z;
-									y2 = 16f - from.Y;
-									break;
-								
-								case BlockFace.South:
-									x1 = to.X;
-									y1 = 16f - to.Y;
-									x2 = from.X;
-									y2 = 16f - from.Y;
-									break;
-								
-								case BlockFace.West:
-									x1 = from.Z;
-									y1 = 16f - to.Y;
-									x2 = to.Z;
-									y2 = 16f - from.Y;
-									break;
-								
-								case BlockFace.Up:
-									x1 = from.X;
-									y1 = from.Z;
-									x2 = to.X;
-									y2 = to.Z;
-									break;
-								
-								case BlockFace.Down:
-									x1 = to.X;
-									y1 = from.Z;
-									x2 = from.X;
-									y2 = to.Z;
-									break;
-							}*/
+							case BlockFace.North:
+								x1 = from.X;
+								y1 = 16f - to.Y;
+								x2 = to.X;
+								y2 = 16f - from.Y;
+								break;
 							
-							switch (face.Key)
+							case BlockFace.East:
+								x1 = from.Z;
+								y1 = 16f - to.Y;
+								x2 = to.Z;
+								y2 = 16f - from.Y;
+								break;
+							
+							case BlockFace.South:
+								x1 = to.X;
+								y1 = 16f - to.Y;
+								x2 = from.X;
+								y2 = 16f - from.Y;
+								break;
+							
+							case BlockFace.West:
+								x1 = from.Z;
+								y1 = 16f - to.Y;
+								x2 = to.Z;
+								y2 = 16f - from.Y;
+								break;
+							
+							case BlockFace.Up:
+								x1 = from.X;
+								y1 = from.Z;
+								x2 = to.X;
+								y2 = to.Z;
+								break;
+							
+							case BlockFace.Down:
+								x1 = to.X;
+								y1 = from.Z;
+								x2 = from.X;
+								y2 = to.Z;
+								break;
+						}*/
+
+						switch (face.Key)
+						{
+							case BlockFace.North:
+							case BlockFace.South:
+								x1 = element.From.X;
+								x2 = element.To.X;
+								y1 = 16f - element.To.Y;
+								y2 = 16f - element.From.Y;
+
+								break;
+
+							case BlockFace.West:
+							case BlockFace.East:
+								x1 = element.From.Z;
+								x2 = element.To.Z;
+								y1 = 16f - element.To.Y;
+								y2 = 16f - element.From.Y;
+
+								break;
+
+							case BlockFace.Down:
+							case BlockFace.Up:
+								x1 = element.From.X;
+								x2 = element.To.X;
+								y1 = 16f - element.To.Z;
+								y2 = 16f - element.From.Z;
+
+								break;
+						}
+					}
+					else
+					{
+						x1 = uv.X1;
+						y1 = uv.Y1;
+						x2 = uv.X2;
+						y2 = uv.Y2;
+					}
+
+					var faceColor = baseColor;
+
+					bool hasTint = (face.Value.TintIndex.HasValue && face.Value.TintIndex == 0);
+
+					if (hasTint)
+					{
+						switch (baseBlock.BlockMaterial.TintType)
+						{
+							case TintType.Default:
+								faceColor = Color.White;
+
+								break;
+
+							case TintType.Color:
+								faceColor = baseBlock.BlockMaterial.TintColor;
+
+								break;
+
+							case TintType.Grass:
+								if (SmoothLighting)
+								{
+									var bx = (int) position.X;
+									var y = (int) position.Y;
+									var bz = (int) position.Z;
+
+									faceColor = CombineColors(
+										GetGrassBiomeColor(world, bx, y, bz), GetGrassBiomeColor(world, bx - 1, y, bz),
+										GetGrassBiomeColor(world, bx, y, bz - 1),
+										GetGrassBiomeColor(world, bx + 1, y, bz),
+										GetGrassBiomeColor(world, bx, y, bz + 1),
+										GetGrassBiomeColor(world, bx + 1, y, bz - 1));
+								}
+								else
+								{
+
+									faceColor = Resources.GetGrassColor(
+										biome.Temperature, biome.Downfall, (int) position.Y);
+								}
+
+								break;
+
+							case TintType.Foliage:
+								if (face.Value.TintIndex.HasValue && face.Value.TintIndex == 0)
+								{
+									faceColor = Resources.GetFoliageColor(
+										biome.Temperature, biome.Downfall, (int) position.Y);
+								}
+
+								break;
+
+							default:
+								throw new ArgumentOutOfRangeException();
+						}
+					}
+
+					faceColor = AdjustColor(faceColor, facing, element.Shade);
+
+					BlockTextureData uvMap = GetTextureUVMap(
+						Resources, face.Value.Texture, x1, x2, y1, y2, face.Value.Rotation, faceColor, null);
+					//uvMap.Rotate(face.Value.Rotation);
+
+					var vertices = GetFaceVertices(face.Key, element.From, element.To, uvMap);
+
+					vertices = ProcessVertices(vertices, blockStateModel, element, uvMap, facing, face.Value);
+
+					RenderStage targetState = RenderStage.Opaque;
+
+					if (baseBlock.BlockMaterial.IsLiquid)
+					{
+						targetState = RenderStage.Liquid;
+					}
+					else if (uvMap.IsAnimated)
+					{
+						targetState = RenderStage.Animated;
+					}
+					else if (baseBlock.Transparent)
+					{
+						if (baseBlock.BlockMaterial.IsOpaque)
+						{
+							if (!Block.FancyGraphics && baseBlock.IsFullCube)
 							{
-								case BlockFace.North:
-								case BlockFace.South:
-									x1 = element.From.X;
-									x2 = element.To.X;
-									y1 = 16f - element.To.Y;
-									y2 = 16f - element.From.Y;
-
-									break;
-
-								case BlockFace.West:
-								case BlockFace.East:
-									x1 = element.From.Z;
-									x2 = element.To.Z;
-									y1 = 16f - element.To.Y;
-									y2 = 16f - element.From.Y;
-
-									break;
-
-								case BlockFace.Down:
-								case BlockFace.Up:
-									x1 = element.From.X;
-									x2 = element.To.X;
-									y1 = 16f - element.To.Z;
-									y2 = 16f - element.From.Z;
-
-									break;
+								targetState = RenderStage.Opaque;
+							}
+							else
+							{
+								targetState = RenderStage.Transparent;
 							}
 						}
 						else
 						{
-							x1 = uv.X1;
-							y1 = uv.Y1;
-							x2 = uv.X2;
-							y2 = uv.Y2;
+							targetState = RenderStage.Translucent;
 						}
+					}
+					else if (!baseBlock.IsFullCube)
+					{
+						targetState = RenderStage.Opaque;
+					}
 
-						var faceColor = baseColor;
-
-						bool hasTint = (face.Value.TintIndex.HasValue && face.Value.TintIndex == 0);
-
-						if (hasTint)
-						{
-							switch (baseBlock.BlockMaterial.TintType)
-							{
-								case TintType.Default:
-									faceColor = Color.White;
-
-									break;
-
-								case TintType.Color:
-									faceColor = baseBlock.BlockMaterial.TintColor;
-
-									break;
-
-								case TintType.Grass:
-									if (SmoothLighting)
-									{
-										var bx = (int) position.X;
-										var y  = (int) position.Y;
-										var bz = (int) position.Z;
-
-										faceColor = CombineColors(
-											GetGrassBiomeColor(world, bx, y, bz),
-											GetGrassBiomeColor(world, bx - 1, y, bz),
-											GetGrassBiomeColor(world, bx, y, bz - 1),
-											GetGrassBiomeColor(world, bx + 1, y, bz),
-											GetGrassBiomeColor(world, bx, y, bz + 1),
-											GetGrassBiomeColor(world, bx + 1, y, bz - 1));
-									}
-									else
-									{
-
-										faceColor = Resources.GetGrassColor(
-											biome.Temperature, biome.Downfall, (int) position.Y);
-									}
-
-									break;
-
-								case TintType.Foliage:
-									if (face.Value.TintIndex.HasValue && face.Value.TintIndex == 0)
-									{
-										faceColor = Resources.GetFoliageColor(
-											biome.Temperature, biome.Downfall, (int) position.Y);
-									}
-
-									break;
-
-								default:
-									throw new ArgumentOutOfRangeException();
-							}
-						}
-
-						faceColor = AdjustColor(faceColor, facing, element.Shade);
-
-						BlockTextureData uvMap = GetTextureUVMap(
-								Resources, face.Value.Texture, x1, x2, y1, y2, face.Value.Rotation, faceColor, null);
-						//uvMap.Rotate(face.Value.Rotation);
+					for (int i = 0; i < vertices.Length; i++)
+					{
+						var vertex = vertices[i];
+						var textureCoordinates = (vertex.TexCoords) + uvMap.TextureInfo.Position;
 						
-						var vertices = GetFaceVertices(face.Key, element.From, element.To, uvMap);
+						chunkBuilder.AddVertex(
+							position, vertex.Position, facing,
+							new Vector4(
+								textureCoordinates.X, textureCoordinates.Y, uvMap.TextureInfo.Width,
+								uvMap.TextureInfo.Height), vertex.Color, targetState);
 
-						vertices = ProcessVertices(vertices, blockStateModel, element, uvMap, facing, face.Value);
-
-						RenderStage targetState = RenderStage.Opaque;
-
-						if (baseBlock.BlockMaterial.IsLiquid)
-						{
-							targetState = RenderStage.Liquid;
-						}
-						else if (uvMap.IsAnimated)
-						{
-							targetState = RenderStage.Animated;
-						}
-						else if (baseBlock.Transparent)
-						{
-							if (baseBlock.BlockMaterial.IsOpaque)
-							{
-								if (!Block.FancyGraphics && baseBlock.IsFullCube)
-								{
-									targetState = RenderStage.Opaque;
-								}
-								else
-								{
-									targetState = RenderStage.Transparent;
-								}
-							}
-							else
-							{
-								targetState = RenderStage.Translucent;
-							}
-						}
-						else if (!baseBlock.IsFullCube)
-						{
-							targetState = RenderStage.Opaque;
-						}
-
-						for (int i = 0; i < vertices.Length; i++)
-						{
-							var vertex = vertices[i];
-							var vertexPosition = (vertex.Position) + new Vector3(position.X, position.Y, position.Z);
-							var textureCoordinates = (vertex.TexCoords) + uvMap.TextureInfo.Position;
-							
-							/*BlockModel.GetLight(
-								world, vertexPosition + facing.GetVector3(), out var blockLight,
-								out var skyLight, true);*/
-							
-							chunkBuilder.AddVertex(
-								position, vertexPosition, facing,
-								new Vector4(
-									textureCoordinates.X, textureCoordinates.Y,
-									 uvMap.TextureInfo.Width,
-									uvMap.TextureInfo.Height), vertex.Color,
-								targetState);
-							
-						}
 					}
 				}
 			}

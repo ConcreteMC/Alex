@@ -259,18 +259,10 @@ namespace Alex.Graphics.Models.Blocks
 							rot = 270;
 						}
 
-						
-						vert.Position.Y = (7f - height) / 8f;
+						vert.Position.Y = MathF.Abs((1f / 16f) * (16f - ((height) * modifier)));
+						//if (vert.Position.Y <= 0)
 						//vert.Position.Y = height; //; + (position.Y);
 					}
-
-					vert.Position.Y += position.Y;
-					vert.Position.X += position.X;
-					vert.Position.Z += position.Z;
-
-					//vert.Lighting = new Short2(skyLight, blockLight);
-					//vert.SkyLight = skyLight;
-					//vert.BlockLight = blockLight;
 
 					if (IsWater)
 					{

@@ -73,12 +73,10 @@ namespace Alex.Particles
 					ParticleEmitter p = new ParticleEmitter(texture2d, particle.Value);
 					texture2d.Use();
 
-					//if (particle.Value.Components.ContainsKey("minecraft:particle_appearance_tinting"))
-					//	p.HasColor = true;
-					
-					if (!_particles.TryAdd(particle.Value.Description.Identifier, p))
+					if (!TryRegister(particle.Value.Description.Identifier, p))
 					{
-						Log.Info($"Could not add particle: {particle.Key}");
+						Log.Warn($"Could not add particle: {particle.Key}");
+						texture2d.Release();
 					}
 				}
 				else
@@ -86,6 +84,16 @@ namespace Alex.Particles
 					Log.Warn($"Failed to add particle: {particle.Key}");
 				}
 			}
+		}
+
+		public bool TryRegister(string identifier, ParticleEmitter emitter)
+		{
+			if (!_particles.TryAdd(identifier, emitter))
+			{
+				return false;
+			}
+
+			return true;
 		}
 
 		private ICamera _camera;
