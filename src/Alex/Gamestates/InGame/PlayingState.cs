@@ -18,6 +18,7 @@ using Alex.Services.Discord;
 using Alex.Utils;
 using Alex.Worlds;
 using Alex.Worlds.Abstraction;
+using Alex.Worlds.Chunks;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -159,7 +160,7 @@ namespace Alex.Gamestates.InGame
 					}*/
 
 					return
-						$"Alex {gameVersion} ({Alex.FpsMonitor.Value:##} FPS, {World.Ticker.TicksPerSecond:##} TPS, Chunk Updates: {World.EnqueuedChunkUpdates} queued, {World.ConcurrentChunkUpdates} active)";
+						$"Alex {gameVersion} ({Alex.FpsMonitor.Value:##} FPS, {World.Ticker.TicksPerSecond:##} TPS, Chunk Updates: {World.EnqueuedChunkUpdates} queued, {World.ConcurrentChunkUpdates} active, {ChunkColumn.AverageUpdateTime:F2}ms avg, {ChunkColumn.MinUpdateTime:F2}ms min, {ChunkColumn.MaxUpdateTime:F2}ms max)";
 				}, TimeSpan.FromMilliseconds(50));
 			
 			_debugInfo.AddDebugLeft(() =>

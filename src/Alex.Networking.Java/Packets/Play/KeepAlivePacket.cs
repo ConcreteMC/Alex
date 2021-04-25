@@ -20,5 +20,12 @@ namespace Alex.Networking.Java.Packets.Play
 		{
 			stream.WriteLong(KeepAliveid);
 		}
+
+		/// <inheritdoc />
+		protected override void ResetPacket()
+		{
+			base.ResetPacket();
+			PacketId = 0x10;
+		}
 	}
 }

@@ -394,7 +394,26 @@ namespace Alex.Worlds
 		        }
 	        }
         }
-        
+
+        /// <inheritdoc />
+        public void GetLight(BlockCoordinates coordinates, out byte blockLight, out byte skyLight)
+        {
+	        blockLight = 0;
+	        skyLight = 15;
+
+	        var x = coordinates.X;
+	        var y = coordinates.Y;
+	        var z = coordinates.Z;
+	        
+	        ChunkColumn chunk;
+	        if (ChunkManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
+	        {
+		        skyLight = chunk.GetSkylight(x & 0xf, y & 0xff, z & 0xf);
+		        blockLight = chunk.GetBlocklight(x & 0xf, y & 0xff, z & 0xf);
+	        }
+	        
+        }
+
         public byte GetSkyLight(BlockCoordinates position)
         {
 	        return GetSkyLight(position.X, position.Y, position.Z);

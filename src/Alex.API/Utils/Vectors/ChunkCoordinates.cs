@@ -3,7 +3,7 @@ using Microsoft.Xna.Framework;
 
 namespace Alex.API.Utils.Vectors
 {
-	public struct ChunkCoordinates : IEquatable<ChunkCoordinates>
+	public readonly struct ChunkCoordinates : IEquatable<ChunkCoordinates>
 	{
 		public readonly int X, Z;
 
@@ -100,14 +100,14 @@ namespace Alex.API.Utils.Vectors
 
 		#region Operators
 
-		public static bool operator !=(ChunkCoordinates a, ChunkCoordinates b)
+		public static bool operator ==(ChunkCoordinates left, ChunkCoordinates right)
 		{
-			return !a.Equals(b);
+			return left.Equals(right);
 		}
 
-		public static bool operator ==(ChunkCoordinates a, ChunkCoordinates b)
+		public static bool operator !=(ChunkCoordinates left, ChunkCoordinates right)
 		{
-			return a.Equals(b);
+			return !(left == right);
 		}
 
 		public static ChunkCoordinates operator +(ChunkCoordinates a, ChunkCoordinates b)
@@ -215,25 +215,21 @@ namespace Alex.API.Utils.Vectors
 
 		public bool Equals(ChunkCoordinates other)
 		{
-			return X.Equals(other.X)&& Z.Equals(other.Z);
+			return X == other.X && Z == other.Z;
 		}
 
-		public override bool Equals(object obj)
-		{
-			if (ReferenceEquals(null, obj)) return false;
-			
-			return obj is ChunkCoordinates coordinates && Equals(coordinates);
-		}
+        public override bool Equals(object obj)
+        {
+            return obj is ChunkCoordinates coordinates && Equals(coordinates);
+        }
 
-		public override int GetHashCode()
-		{
-			unchecked
-			{
-				// https://stackoverflow.com/questions/1835976/what-is-a-sensible-prime-for-hashcode-calculation
-				int hash = this.X.GetHashCode() * 486187739;
-				hash = HashHelper.Combine(hash * 486187739, this.Z.GetHashCode());
-				return hash;
-			}
-		}
-	}
+        /// <inheritdoc />
+        public override int GetHashCode()
+        {
+	        var zHash = Z.GetHashCode();
+
+	        return X.GetHashCode() ^ (zHash >> 4) ^ (zHash << 28);
+	        return HashCode.Combine(X, Z);
+        }
+    }
 }

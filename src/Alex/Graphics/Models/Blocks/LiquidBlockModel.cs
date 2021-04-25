@@ -72,7 +72,7 @@ namespace Alex.Graphics.Models.Blocks
 			{
 				var pos = position + face.GetBlockCoordinates();
 
-				bool shouldRenderFace = true;
+				bool shouldRenderFace = false;
 				foreach (var blockState in blockAccess.GetBlockStates(pos.X, pos.Y, pos.Z))
 				{
 				//	if (blockState.Storage != 0 && (blockState.State == null || (blockState.State.Block is Air)))
@@ -259,7 +259,15 @@ namespace Alex.Graphics.Models.Blocks
 							rot = 270;
 						}
 
-						vert.Position.Y = MathF.Abs((1f / 16f) * (16f - ((height) * modifier)));
+						if (height > 8)
+							height -= 8;
+
+						if (height == 0)
+							height = 7;
+						
+						height *= modifier;
+						
+						vert.Position.Y = MathF.Abs((1f / 16f) * height);
 						//if (vert.Position.Y <= 0)
 						//vert.Position.Y = height; //; + (position.Y);
 					}
@@ -344,7 +352,7 @@ namespace Alex.Graphics.Models.Blocks
 							//	level = lvl;
 							//}
 
-							if (lvl < lowestLevel)
+							if (lvl > lowestLevel)
 							{
 								lowestLevel = lvl;
 								lowest = new BlockCoordinates(position.X + xx, position.Y, position.Z + zz);

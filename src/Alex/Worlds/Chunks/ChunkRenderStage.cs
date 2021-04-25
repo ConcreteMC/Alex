@@ -43,7 +43,7 @@ namespace Alex.Worlds.Chunks
 			lock (_writeLock)
 			{
 				var vertexData = new VertexData(
-					position, face, textureCoordinates, color.PackedValue);
+					position, face, new Microsoft.Xna.Framework.Graphics.PackedVector.Short4(textureCoordinates.X, textureCoordinates.Y, textureCoordinates.Z, textureCoordinates.W), color.PackedValue);
 				
 				Interlocked.Increment(ref _vertexCount);
 
@@ -98,13 +98,13 @@ namespace Alex.Worlds.Chunks
 					foreach (var vertex in block.Value)
 					{
 						var p = v3 + vertex.Position;
-						var offset = vertex.Face.GetVector3();
+						//var offset = vertex.Face.GetVector3();
 						
 						BlockModel.GetLight(
 							world, p, out byte blockLight, out byte skyLight, true);
 						
 						vertices[index] = new MinifiedBlockShaderVertex(
-							p, offset, vertex.TexCoords, new Color(vertex.Color),
+							p, vertex.Face, vertex.TexCoords.ToVector4(), new Color(vertex.Color),
 							blockLight, skyLight);
 						
 						index++;

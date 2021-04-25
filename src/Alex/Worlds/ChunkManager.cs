@@ -351,12 +351,12 @@ namespace Alex.Worlds
 			if (blockLightCalc == null)
 				return false;
 			
-			var target         = Chunks?.FirstOrDefault(x => blockLightCalc.HasEnqueued(x.Key)).Key;
+			var target         = Chunks?.FirstOrDefault(x => blockLightCalc.HasEnqueued(x.Value.Coordinates));
 
-			if (!target.HasValue)
+			if (!target.HasValue || target.Value.Value?.Coordinates == null)
 				return false;
 			
-			return blockLightCalc.Process(target.Value);
+			return blockLightCalc.Process(target.Value.Value.Coordinates);
 		}
 
 

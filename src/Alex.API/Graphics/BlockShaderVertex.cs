@@ -8,7 +8,7 @@ namespace Alex.API.Graphics
 {
 	public struct MinifiedBlockShaderVertex : IVertexType
     {
-	    public static readonly MinifiedBlockShaderVertex Default = new MinifiedBlockShaderVertex(Vector3.Zero, Vector3.Zero, Vector4.Zero, Color.White);
+	    public static readonly MinifiedBlockShaderVertex Default = new MinifiedBlockShaderVertex(Vector3.Zero, BlockFace.None, Vector4.Zero, Color.White);
 	    
         /// <summary>
         ///     Stores the position of this vertex
@@ -18,7 +18,7 @@ namespace Alex.API.Graphics
 		/// <summary>
 		/// 	Stores the normal of this vertex
 		/// </summary>
-        public Vector3 Normal;
+        public float Normal;
 
         /// <summary>
         ///     The UV co-ords for this vertex (the co-ords in the texture)
@@ -36,9 +36,9 @@ namespace Alex.API.Graphics
         ///     Creates a new MinifiedBlockShaderVertex
         /// </summary>
         /// <param name="position">The position in space for this vertex</param>
-        /// <param name="normal">The nomal for this vector</param>
+        /// <param name="normal">The normal for this vector</param>
         /// <param name="texCoords">The UV co-ords for this vertex</param>
-        public MinifiedBlockShaderVertex(Vector3 position, Vector3 normal, Vector4 texCoords) : this(position, normal, texCoords, Color.White, 0, 15)
+        public MinifiedBlockShaderVertex(Vector3 position, BlockFace normal, Vector4 texCoords) : this(position, normal, texCoords, Color.White, 0, 15)
         {
 	        //BlockLight = 0;
             //SkyLight = 15;
@@ -48,26 +48,30 @@ namespace Alex.API.Graphics
         ///     Creates a new MinifiedBlockShaderVertex
         /// </summary>
         /// <param name="position">The position in space for this vertex</param>
+        /// <param name="normal">The normal for this vector</param>
         /// <param name="texCoords">The UV co-ords for this vertex</param>
         /// <param name="color">The color of this vertex</param>
-        public MinifiedBlockShaderVertex(Vector3 position, Vector3 normal, Vector4 texCoords, Color color) : this(position, normal, texCoords, color, 0, 15)
+        public MinifiedBlockShaderVertex(Vector3 position, BlockFace normal, Vector4 texCoords, Color color) : this(position, normal, texCoords, color, 0, 15)
         {
            
         }
-        
+
         /// <summary>
         ///     Creates a new MinifiedBlockShaderVertex
         /// </summary>
         /// <param name="position">The position in space for this vertex</param>
+        /// <param name="normal">The normal for this vector</param>
         /// <param name="texCoords">The UV co-ords for this vertex</param>
         /// <param name="color">The color of this vertex</param>
-        public MinifiedBlockShaderVertex(Vector3 position, Vector3 normal, Vector4 texCoords, Color color, byte blockLight, byte skyLight)
+        /// <param name="blockLight">The blockLight value for this vertex</param>
+        /// <param name="skyLight">The skyLight value for this vertex</param>
+        public MinifiedBlockShaderVertex(Vector3 position, BlockFace normal, Vector4 texCoords, Color color, byte blockLight, byte skyLight)
         {
 	        Position = position;
 	        TexCoords = texCoords;
 	        Color = color;
 	        Lighting = new Short2(skyLight, blockLight);
-	        Normal = normal;
+	        Normal = (byte)normal;
         }
 
         /// <summary>
@@ -76,10 +80,10 @@ namespace Alex.API.Graphics
         public static VertexDeclaration VertexDeclaration { get; } = new VertexDeclaration
         (
 	        new VertexElement(0, VertexElementFormat.Vector3,VertexElementUsage.Position, 0),
-	        new VertexElement(3 * sizeof(float), VertexElementFormat.Vector3,VertexElementUsage.Normal, 0),
-	        new VertexElement(6 * sizeof(float), VertexElementFormat.Vector4, VertexElementUsage.TextureCoordinate, 0),
-	        new VertexElement((10 * sizeof(float)), VertexElementFormat.Color, VertexElementUsage.Color, 0),
-	        new VertexElement((10 * sizeof(float)) + (4 * sizeof(byte)), VertexElementFormat.Short2, VertexElementUsage.TextureCoordinate, 1)
+	        new VertexElement(3 * sizeof(float), VertexElementFormat.Single,VertexElementUsage.Normal, 0),
+	        new VertexElement(4 * sizeof(float), VertexElementFormat.Vector4, VertexElementUsage.TextureCoordinate, 0),
+	        new VertexElement((8 * sizeof(float)), VertexElementFormat.Color, VertexElementUsage.Color, 0),
+	        new VertexElement((8 * sizeof(float)) + (4 * sizeof(byte)), VertexElementFormat.Short2, VertexElementUsage.TextureCoordinate, 1)
         );
         
         VertexDeclaration IVertexType.VertexDeclaration => VertexDeclaration;

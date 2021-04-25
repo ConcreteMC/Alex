@@ -34,6 +34,8 @@ namespace Alex.Worlds.Chunks
 		public int X { get; set; }
 		public int Z { get; set; }
 
+		public ChunkCoordinates Coordinates => new ChunkCoordinates(X, Z);
+
 		public           bool           IsNew           { get; set; } = true;
 
 
@@ -98,12 +100,20 @@ namespace Alex.Worlds.Chunks
 			}
 		}
 
+		public static float AverageUpdateTime => MovingAverage.Average;
+		public static float MaxUpdateTime => MovingAverage.Maximum;
+		public static float MinUpdateTime => MovingAverage.Minimum;
+		
+		private static readonly MovingAverage MovingAverage = new MovingAverage();
+		
 		public void UpdateBuffer(GraphicsDevice device, IBlockAccess world)
 		{
 			Monitor.Enter(_dataLock);
 		//	if (!Monitor.TryEnter(_dataLock, 0))
 		//		return;
 
+			Stopwatch time = Stopwatch.StartNew();
+		
 			try
 			{
 				var chunkData     = ChunkData;
@@ -115,17 +125,20 @@ namespace Alex.Worlds.Chunks
 
 				if (scheduleQueue == null)
 					return;
-
+				
 				bool isNew = IsNew;
 				
 				var chunkPosition = new Vector3(X << 4, 0, Z << 4);
 				world = new OffsetBlockAccess(chunkPosition, world);
+				
 				for (int sectionIndex = 0; sectionIndex < 16; sectionIndex++)
 				{
 					var section = Sections[sectionIndex];
 
 					if (section == null)
 						continue;
+
+					var sectionOffset = (sectionIndex * 16);
 
 					//var sectionY = (sectionIndex << 4);
 
@@ -135,7 +148,7 @@ namespace Alex.Worlds.Chunks
 						{
 							for (int y = 0; y < 16; y++)
 							{
-								var idx = GetCoordinateIndex(x, (sectionIndex * 16) + y, z);
+								var idx = GetCoordinateIndex(x, sectionOffset + y, z);
 
 								bool scheduled = scheduleQueue[idx]; // IsScheduled(x, y, z);
 
@@ -144,15 +157,13 @@ namespace Alex.Worlds.Chunks
 								//		forceUpdate = true;
 								//	}
 
-
-								var blockPosition = new BlockCoordinates(x, y + (sectionIndex * 16), z);
-								
 								if ((!isNew && !scheduled))
 									continue;
 
 								if (scheduled)
 									_scheduledUpdates[idx] = false;
 
+								var blockPosition = new BlockCoordinates(x, y + sectionOffset, z);
 								chunkData?.Remove(blockPosition);
 
 								for (int storage = 0; storage < section.StorageCount; storage++)
@@ -165,7 +176,7 @@ namespace Alex.Worlds.Chunks
 
 									var model = blockState.VariantMapper.Model;
 
-									if (IsNew && (blockState.Block.RequiresUpdate
+									if (isNew && (blockState.Block.RequiresUpdate
 									              || blockState.VariantMapper.IsMultiPart))
 									{
 										var newblockState = blockState.Block.BlockPlaced(
@@ -200,6 +211,9 @@ namespace Alex.Worlds.Chunks
 			{
 				//_previousKeepInMemory = keepInMemory;
 				Monitor.Exit(_dataLock);
+				time.Stop();
+				
+				MovingAverage.ComputeAverage((float) time.Elapsed.TotalMilliseconds);
 			}
 		}
 		

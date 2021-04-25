@@ -34,7 +34,7 @@ namespace Alex.Worlds.Chunks
         
 		public bool IsAllAir => BlockRefCount == 0;
 		
-        public ChunkSection(bool storeSkylight, int sections = 2)
+        public ChunkSection(bool storeSkylight, int sections = 1)
         {
 	        //_octree.
 	        if (sections <= 0)

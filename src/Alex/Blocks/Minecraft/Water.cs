@@ -31,7 +31,7 @@ namespace Alex.Blocks.Minecraft
 			{
 				var neighborLevel = neighbor.BlockState.GetTypedValue(LEVEL);
 
-				if (neighborLevel < myLevelValue)
+				if (neighborLevel != myLevelValue)
 				{
 					return true;
 				}

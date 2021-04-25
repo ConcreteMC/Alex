@@ -1,18 +1,23 @@
+using System.Runtime.InteropServices;
 using Alex.API.Blocks;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics.PackedVector;
+
 
 namespace Alex.Worlds.Chunks
 {
-	public struct VertexData
+	[StructLayout(LayoutKind.Sequential)]
+	public readonly struct VertexData
 	{
-		public Vector3 Position;
-		public BlockFace Face;
+		public readonly Vector3 Position;
+		
+		public readonly BlockFace Face;
 
-		public Vector4 TexCoords;
+		public readonly Short4 TexCoords;
 
-		public uint Color;
+		public readonly uint Color;
 
-		public VertexData(Vector3 position, BlockFace face, Vector4 textureCoordinates, uint color)
+		public VertexData(Vector3 position, BlockFace face, Short4 textureCoordinates, uint color)
 		{
 			Position = position;
 			Face = face;

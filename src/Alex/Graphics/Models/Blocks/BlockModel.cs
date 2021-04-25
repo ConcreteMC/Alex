@@ -152,13 +152,23 @@ namespace Alex.Graphics.Models.Blocks
 			}
 		}
 
-	    public static void GetLight(IBlockAccess world, Vector3 facePosition, out byte blockLight, out byte skyLight, bool smooth = false)
-		{
-			var faceBlock = world.GetBlockState(facePosition).Block;
-			
-			skyLight = world.GetSkyLight(facePosition);
-			blockLight = world.GetBlockLight(facePosition);
+	    public static void GetLight(IBlockAccess world, BlockCoordinates facePosition, out byte blockLight, out byte skyLight, bool smooth = false)
+	    {
+		    /*var chunk = world.GetChunk(facePosition);
 
+		    if (chunk == null)
+		    {
+			    blockLight = 0;
+			    skyLight = 0;
+			    return;
+		    }
+
+		    skyLight = chunk.GetSkylight(facePosition.X & 0xf, facePosition.Y & 0xff, facePosition.Z & 0xf);
+		    blockLight = chunk.GetBlocklight(facePosition.X & 0xf, facePosition.Y & 0xff, facePosition.Z & 0xf);
+		    var faceBlock = chunk.GetBlockState(facePosition.X & 0xf, facePosition.Y & 0xff, facePosition.Z & 0xf).Block;*/
+		    var faceBlock = world.GetBlockState(facePosition).Block;
+			world.GetLight(facePosition, out blockLight, out skyLight);
+			
 			//if (skyLight == 15 || blockLight == 15)
 			//	return;
 			
@@ -168,7 +178,7 @@ namespace Alex.Graphics.Models.Blocks
 			}
 
 
-			Vector3 lightOffset = Vector3.Zero;
+			BlockCoordinates lightOffset = BlockCoordinates.Zero;
 
 			byte highestBlocklight = blockLight;
 		    byte highestSkylight = skyLight;
@@ -178,22 +188,22 @@ namespace Alex.Graphics.Models.Blocks
 			    switch (i)
 			    {
 					case 0:
-						lightOffset = Vector3.Up;
+						lightOffset = BlockCoordinates.Up;
 						break;
 					case 1:
-						lightOffset = Vector3.Down;
+						lightOffset = BlockCoordinates.Down;
 						break;
 					case 2:
-						lightOffset = Vector3.Forward;
+						lightOffset = BlockCoordinates.Forwards;
 						break;
 					case 3:
-						lightOffset = Vector3.Backward;
+						lightOffset = BlockCoordinates.Backwards;
 						break;
 					case 4:
-						lightOffset = Vector3.Left;
+						lightOffset = BlockCoordinates.Left;
 						break;
 					case 5:
-						lightOffset = Vector3.Right;
+						lightOffset = BlockCoordinates.Right;
 						break;
 			    }
 

@@ -2416,8 +2416,9 @@ namespace Alex.Worlds.Multiplayer.Java
         }
 
         private void HandleKeepAlivePacket(KeepAlivePacket packet)
-		{
-			KeepAlivePacket response = KeepAlivePacket.CreateObject();
+        {
+	        //Log.Info($"Keep alive: {packet.KeepAliveid}");
+	        KeepAlivePacket response =  KeepAlivePacket.CreateObject();
 			response.KeepAliveid = packet.KeepAliveid;
 			//response.PacketId = 0x0E;
 

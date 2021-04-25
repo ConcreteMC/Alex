@@ -4,7 +4,7 @@ using Microsoft.Xna.Framework;
 
 namespace Alex.API.Utils.Vectors
 {
-	public struct BlockCoordinates : IEquatable<BlockCoordinates>
+	public readonly struct BlockCoordinates : IEquatable<BlockCoordinates>
 	{
 		public readonly int X;
 		public readonly int Y;
@@ -247,17 +247,15 @@ namespace Alex.API.Utils.Vectors
 			if (ReferenceEquals(null, obj)) return false;
 			return obj is BlockCoordinates coordinates && Equals(coordinates);
 		}
-		
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 
 		public override int GetHashCode()
 		{
-			unchecked
-			{
-				var yHash = Y.GetHashCode();
-				var zHash = Z.GetHashCode();
-				return X.GetHashCode() ^ (yHash << 4) ^ (yHash >> 28) ^ (zHash >> 4) ^ (zHash << 28);
-			}
+			var yHash = Y.GetHashCode();
+			var zHash = Z.GetHashCode();
+
+			return X.GetHashCode() ^ (yHash << 4) ^ (yHash >> 28) ^ (zHash >> 4) ^ (zHash << 28);
 		}
 
 		public override string ToString()

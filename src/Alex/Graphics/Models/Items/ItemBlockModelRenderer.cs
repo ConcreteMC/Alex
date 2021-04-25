@@ -78,7 +78,11 @@ namespace Alex.Graphics.Models.Items
             var scale = Vector2.One / _texture.Bounds.Size.ToVector2();
 
             Vertices = rawVertices.Select(
-                    x => new VertexPositionColorTexture(x.Position, x.Color, new Vector2(x.TexCoords.X, x.TexCoords.Y) * scale))
+                    x =>
+                    {
+                        return new VertexPositionColorTexture(
+                            x.Position, x.Color, new Vector2(x.TexCoords.X, x.TexCoords.Y) * scale);
+                    })
                .ToArray();
 
             chunkData.Dispose();

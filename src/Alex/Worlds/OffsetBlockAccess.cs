@@ -18,11 +18,13 @@ namespace Alex.Worlds
 
 		private BlockCoordinates GetOffset(BlockCoordinates coordinates)
 		{
-			return coordinates + _offset;
+			return new BlockCoordinates(
+				coordinates.X + _offset.X, coordinates.Y + _offset.Y, coordinates.Z + _offset.Z);
 		}
-		
+
 		private ChunkCoordinates GetOffset(ChunkCoordinates coordinates)
 		{
+			return new ChunkCoordinates((coordinates.X >> 4) + _offset.X, (coordinates.Z >> 4) + _offset.Z);
 			return coordinates + new ChunkCoordinates(_offset);
 		}
 
@@ -61,6 +63,12 @@ namespace Alex.Worlds
 		public void SetBlockLight(BlockCoordinates coordinates, byte blockLight)
 		{
 			_world.SetBlockLight(GetOffset(coordinates), blockLight);
+		}
+
+		/// <inheritdoc />
+		public void GetLight(BlockCoordinates coordinates, out byte blockLight, out byte skyLight)
+		{
+			_world.GetLight(GetOffset(coordinates), out blockLight, out skyLight);
 		}
 
 		/// <inheritdoc />
