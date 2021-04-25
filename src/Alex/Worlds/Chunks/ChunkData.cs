@@ -21,11 +21,14 @@ namespace Alex.Worlds.Chunks
         private        ChunkRenderStage[] _stages;
         private static long               _instances = 0;
 
-        public ChunkData()
+        private int _x, _z;
+        public ChunkData(int x, int y)
         {
+            _x = x;
+            _z = y;
+            
             var availableStages = Enum.GetValues(typeof(RenderStage));
             _stages = new ChunkRenderStage[availableStages.Length];
-            
             
             Interlocked.Increment(ref _instances);
         }
@@ -44,7 +47,17 @@ namespace Alex.Worlds.Chunks
                 return 0;
             }
 
-            return rStage.Render(device, effect);
+            IEffectMatrices em = (IEffectMatrices) effect;
+            var originalWorld = em.World;
+            try
+            {
+                em.World = Matrix.CreateTranslation(_x << 4, 0f, _z << 4);
+                return rStage.Render(device, effect);
+            }
+            finally
+            {
+                em.World = originalWorld;
+            }
         }
 
         public MinifiedBlockShaderVertex[] BuildVertices(IBlockAccess blockAccess)
@@ -72,10 +85,10 @@ namespace Alex.Worlds.Chunks
 
         private ChunkRenderStage CreateRenderStage(RenderStage arg)
         {
-            return new ChunkRenderStage(this);
+            return new ChunkRenderStage();
         }
 
-        public void Remove(GraphicsDevice device, BlockCoordinates blockCoordinates)
+        public void Remove(BlockCoordinates blockCoordinates)
         {
             for (var index = 0; index < _stages.Length; index++)
             {

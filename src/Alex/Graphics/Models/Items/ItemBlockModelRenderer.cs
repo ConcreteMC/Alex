@@ -62,10 +62,10 @@ namespace Alex.Graphics.Models.Items
 
             var world = new ItemRenderingWorld(_blockState.Block);
 
-            ChunkData chunkData = new ChunkData();
+            ChunkData chunkData = new ChunkData(0,0);
 
             _blockState?.VariantMapper.Model.GetVertices(
-                world, chunkData, BlockCoordinates.Zero, Vector3.Zero, _blockState);
+                world, chunkData, BlockCoordinates.Zero, _blockState);
 
             // var max         = _block.Model.GetBoundingBoxes(Vector3.Zero).Max(x => x.Max - x.Min);
             var rawVertices = chunkData.BuildVertices(world);

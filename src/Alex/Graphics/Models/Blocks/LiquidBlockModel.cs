@@ -40,24 +40,24 @@ namespace Alex.Graphics.Models.Blocks
 		
 		private bool TryGetLevel(BlockState state, out int level)
 		{
-			level = -1;
+			level = 0;
 			if (state.TryGetValue("level", out string rawLevel))
 			{
 				if (int.TryParse(rawLevel, out int lvl))
 				{
-					level =  7 - (lvl & 0x7);
+					level = (lvl);
 
 					return true;
 				}
 			}
 
 			level = 0;
-			return true;
+			return false;
 		}
 
-		public override void GetVertices(IBlockAccess blockAccess, ChunkData chunkBuilder, BlockCoordinates blockCoordinates, Vector3 vectorPos, BlockState baseBlock)
+		public override void GetVertices(IBlockAccess blockAccess, ChunkData chunkBuilder, BlockCoordinates blockCoordinates, BlockState baseBlock)
 		{
-			var position = new BlockCoordinates(vectorPos);
+			var position = blockCoordinates;
 			var blocksUp = blockAccess.GetBlockStates(position.X, position.Y + 1, position.Z).ToArray();//.GetType();
 			
 			/*
@@ -75,8 +75,8 @@ namespace Alex.Graphics.Models.Blocks
 				bool shouldRenderFace = true;
 				foreach (var blockState in blockAccess.GetBlockStates(pos.X, pos.Y, pos.Z))
 				{
-					if (blockState.Storage != 0 && (blockState.State == null || (blockState.State.Block is Air)))
-						continue;
+				//	if (blockState.Storage != 0 && (blockState.State == null || (blockState.State.Block is Air)))
+					//	continue;
 					
 					var neighbor = blockState.State.Block;
 					
@@ -90,7 +90,7 @@ namespace Alex.Graphics.Models.Blocks
 			if (renderedFaces.Count == 0 && !aboveIsLiquid)
 				return;
 			
-			int tl , tr, bl, br;
+			int topLeft , topRight, bottomLeft, bottomRight;
 			
 			int lowestFound = 999;
 			BlockCoordinates lowestBlock = BlockCoordinates.Up;
@@ -100,39 +100,39 @@ namespace Alex.Graphics.Models.Blocks
 
 			if (aboveIsLiquid)
 			{
-				tl = 8;
-				tr = 8;
-				bl = 8;
-				br = 8;
+				topLeft = 8;
+				topRight = 8;
+				bottomLeft = 8;
+				bottomRight = 8;
 
 				rot = 180;
 				isFlowing = true;
 			}
 			else
 			{
-				tl = GetAverageLiquidLevels(blockAccess, position, out lowestBlock, out lowestFound);
+				topLeft = GetAverageLiquidLevels(blockAccess, position, out lowestBlock, out lowestFound);
 
-				tr = GetAverageLiquidLevels(blockAccess, position + BlockCoordinates.Right, out var trl, out var trv);
+				topRight = GetAverageLiquidLevels(blockAccess, position + BlockCoordinates.Right, out var trl, out var trv);
 				if (trv < lowestFound)
 				{
 					lowestBlock = trl;
 					lowestFound = trv;
 				}
 
-				bl = GetAverageLiquidLevels(blockAccess, position + BlockCoordinates.Forwards, out var bll, out var blv);
+				bottomLeft = GetAverageLiquidLevels(blockAccess, position + BlockCoordinates.Forwards, out var bll, out var blv);
 				if (blv < lowestFound)
 				{
 					lowestBlock = bll;
 					lowestFound = blv;
 				}
 
-				br = GetAverageLiquidLevels(blockAccess, position + new BlockCoordinates(1, 0, 1), out var brl,
+				bottomRight = GetAverageLiquidLevels(blockAccess, position + new BlockCoordinates(1, 0, 1), out var brl,
 					out var brv);
 			}
 
 			double lowestDistance = 9999;
 
-			isFlowing = isFlowing || (tl < 7 || tr < 7 || bl < 7 || br < 7);
+			isFlowing = isFlowing || (topLeft > 0 || topRight > 0 || bottomLeft > 0 || bottomRight > 0);
 			
 			if (lowestBlock.Y <= position.Y && isFlowing)
 			{
@@ -169,7 +169,7 @@ namespace Alex.Graphics.Models.Blocks
 					}
 				}
 			}
-
+			
 			string texture = "";
 			if (IsLava)
 			{
@@ -195,9 +195,9 @@ namespace Alex.Graphics.Models.Blocks
 
 			foreach (var face in renderedFaces)
 			{
-				float s = 1f - Scale;
-				var start = Vector3.One * s;
-				var end = Vector3.One * Scale;
+				float s = 1f;
+				var start = Vector3.Zero;
+				var end = Vector3.One;
 				
 				var faceMap = map;
 
@@ -240,29 +240,31 @@ namespace Alex.Graphics.Models.Blocks
 
 						if (vert.Position.X < end.X && vert.Position.Z < end.Z)
 						{
-							height = (modifier * (tl));
+							height = (topLeft);
 							rot = 0;
 						}
 						else if (vert.Position.X > start.X && vert.Position.Z < end.Z)
 						{
-							height = (modifier * (tr));
+							height = (topRight);
 							rot = 270;
 						}
 						else if (vert.Position.X < end.X && vert.Position.Z > start.Z)
 						{
-							height = (modifier * (bl));
+							height = (bottomLeft);
 							rot = 90;
 						}
 						else
 						{
-							height = (modifier * (br));
+							height = (bottomRight);
 							rot = 270;
 						}
 
-						vert.Position.Y = height / 16.0f; //; + (position.Y);
+						
+						vert.Position.Y = (7f - height) / 8f;
+						//vert.Position.Y = height; //; + (position.Y);
 					}
 
-					vert.Position.Y += position.Y - s;
+					vert.Position.Y += position.Y;
 					vert.Position.X += position.X;
 					vert.Position.Z += position.Z;
 
@@ -311,14 +313,15 @@ namespace Alex.Graphics.Models.Blocks
 		protected int GetAverageLiquidLevels(IBlockAccess world, BlockCoordinates position, out BlockCoordinates lowest, out int lowestLevel)
 		{
 			lowest = BlockCoordinates.Up;
-			lowestLevel = 7;
-			
+			lowestLevel =  7;
+
+			int blocks = 0;
 			int level = 0;
 			for (int xx = -1; xx < 1; xx++)
 			{
 				for (int zz = -1; zz < 1; zz++)
 				{
-					if (world.GetBlockStates(position.X + xx, position.Y + 1, position.Z + zz).Any(
+					/*if (world.GetBlockStates(position.X + xx, position.Y + 1, position.Z + zz).Any(
 						x =>
 						{
 							if (x.State?.VariantMapper.Model is LiquidBlockModel)
@@ -328,23 +331,26 @@ namespace Alex.Graphics.Models.Blocks
 						}))
 					{
 						return 8;
-					}
+					}*/
 
 					foreach (var bs in world.GetBlockStates(position.X + xx, position.Y, position.Z + zz))
 					{
 						var b = bs.State;
 						
-						if (!b.Block.Renderable || !(b?.VariantMapper.Model is LiquidBlockModel l))
+						if (!(b?.VariantMapper.Model is LiquidBlockModel l))
 							continue;
 
 						if (l.IsLava != IsLava) continue;
 
 						if (TryGetLevel(b, out int lvl))
 						{
-							if (lvl > level)
-							{
-								level = lvl;
-							}
+							blocks++;
+
+							level += lvl;
+							//if (lvl > level)
+							//{
+							//	level = lvl;
+							//}
 
 							if (lvl < lowestLevel)
 							{
@@ -358,7 +364,16 @@ namespace Alex.Graphics.Models.Blocks
 				}
 			}
 
+			if (level > 0 && blocks > 0)
+			{
+				level /= blocks;
+			}
+
 			return level;
+			
+			var result = (blocks > 0 ? level / blocks : 0);
+
+			return result;
 		}
 	}
 }

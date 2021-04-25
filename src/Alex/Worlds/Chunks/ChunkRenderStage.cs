@@ -21,26 +21,16 @@ namespace Alex.Worlds.Chunks
 	public class ChunkRenderStage : IDisposable
 	{
 		private static ILogger Log         = LogManager.GetCurrentClassLogger();
-		
-		private const  int     DefaultSize = 64;
-
-		//private static SmartStorage<Vector4>                      TextureStorage { get; } = new SmartStorage<Vector4>();
 		private ConcurrentDictionary<BlockCoordinates, List<VertexData>> BlockIndices     { get; set; }
 		private PooledVertexBuffer                             Buffer           { get; set; }
 		
 		private bool                  HasChanges     { get; set; }
-		private bool                  HasResized     { get; set; } = false;
 
-		private ChunkData Parent { get; }
-		//private object    _writeLock   = new object();
 		private long      _vertexCount = 0;
-		public ChunkRenderStage(ChunkData parent)
+		
+		public ChunkRenderStage()
 		{
-			Parent = parent;
-			
-			//TextureStorage = new SmartStorage<Vector2>();
 			BlockIndices = new ConcurrentDictionary<BlockCoordinates, List<VertexData>>();
-			//AvailableIndices = new List<(ushort, ushort)>();// new LinkedList<KeyValuePair<int, int>>();
 		}
 		
 		public void AddVertex(BlockCoordinates blockCoordinates, 
@@ -51,16 +41,6 @@ namespace Alex.Worlds.Chunks
 		{
 			//lock (_writeLock)
 			{
-				//Add(blockCoordinates, position, textureCoordinates, color, blockLight, skyLight);
-				/*var textureIndex = TextureStorage.GetIndex(textureCoordinates);
-
-				if (textureIndex == -1)
-				{
-					textureIndex = TextureStorage.Add(textureCoordinates);
-				}
-
-				TextureStorage.IncreaseUsage(textureIndex);*/
-
 				var vertexData = new VertexData(
 					position, face, textureCoordinates, color.PackedValue);
 				
@@ -80,15 +60,7 @@ namespace Alex.Worlds.Chunks
 			{
 				if (BlockIndices.TryRemove(coordinates, out var indices))
 				{
-					foreach (var vertex in indices)
-					{
-					//	TextureStorage.DecrementUsage(vertex.TexCoords);
-						Interlocked.Decrement(ref _vertexCount);
-						//FreeIndex(index);
-					}
-
-					// ApplyIntermediate();
-
+					Interlocked.Add(ref _vertexCount, -indices.Count);
 					HasChanges = true;
 				}
 			}
@@ -103,8 +75,6 @@ namespace Alex.Worlds.Chunks
 		}
 
 		private const int MaxArraySize = 16 * 16 * 256 * (6 * 6);
-		//public static ArrayPool<MinifiedBlockShaderVertex> Pool { get; } =
-		//	ArrayPool<MinifiedBlockShaderVertex>.Create(MaxArraySize, 16);
 		internal MinifiedBlockShaderVertex[] BuildVertices(IBlockAccess world)
 		{
 			//lock (_writeLock)
@@ -155,7 +125,6 @@ namespace Alex.Worlds.Chunks
 				_previousKeepInMemory = keepInMemory;
 
 				var realVertices = BuildVertices(world);
-				HasResized = false;
 				HasChanges = false;
 				
 				var size = realVertices.Length;
@@ -178,22 +147,8 @@ namespace Alex.Worlds.Chunks
 
 					_primitiveCount = verticeCount / 3;
 
-					bool callSetData = HasResized;
 					PooledVertexBuffer oldBuffer = null;
 					PooledVertexBuffer buffer = Buffer;
-
-				/*	if (buffer != null && buffer.VertexCount - size >= 256)
-					{
-						oldBuffer = buffer;
-						
-						buffer = GpuResourceManager.GetBuffer(
-							this, device, MinifiedBlockShaderVertex.VertexDeclaration, size, BufferUsage.WriteOnly);
-						{
-							
-
-							callSetData = true;
-						}
-					}*/
 
 					if (buffer == null || buffer.VertexCount < size)
 					{
@@ -202,12 +157,9 @@ namespace Alex.Worlds.Chunks
 						buffer = GpuResourceManager.GetBuffer(
 							this, device, MinifiedBlockShaderVertex.VertexDeclaration, size,
 							BufferUsage.WriteOnly);
-
-						callSetData = true;
 					}
 
-					//if (callSetData)
-						buffer.SetData(realVertices, 0, size);
+					buffer.SetData(realVertices, 0, size);
 
 					Buffer = buffer;
 					
@@ -248,13 +200,11 @@ namespace Alex.Worlds.Chunks
 
 			try
 			{
-				//Buffer?.MarkForDisposal();
 				var keys = BlockIndices.Keys.ToArray();
 
 				foreach (var key in keys)
 				{
 					Remove(key);
-					//indices.Value.Clear();
 				}
 
 				BlockIndices.Clear();

@@ -19,7 +19,7 @@ namespace Alex.Graphics.Models.Blocks
 	{
 		public float Scale { get; set; } = 1f;
 
-		public virtual void GetVertices(IBlockAccess blockAccess, ChunkData chunkBuilder, BlockCoordinates blockCoordinates, Vector3 position, BlockState state)
+		public virtual void GetVertices(IBlockAccess blockAccess, ChunkData chunkBuilder, BlockCoordinates position, BlockState state)
         {
 			
         }

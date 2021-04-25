@@ -65,7 +65,7 @@ namespace Alex.Worlds.Chunks
 			BlockEntities = new ConcurrentDictionary<BlockCoordinates, NbtCompound>();
 			_lightUpdateWatch.Start();
 			
-			ChunkData = new ChunkData();
+			ChunkData = new ChunkData(x,z);
 			//	_octree = new ChunkOctree( bounds );
 		
 			_scheduledUpdates = new System.Collections.BitArray((16 * 256 * 16), false);
@@ -119,7 +119,7 @@ namespace Alex.Worlds.Chunks
 				bool isNew = IsNew;
 				
 				var chunkPosition = new Vector3(X << 4, 0, Z << 4);
-
+				world = new OffsetBlockAccess(chunkPosition, world);
 				for (int sectionIndex = 0; sectionIndex < 16; sectionIndex++)
 				{
 					var section = Sections[sectionIndex];
@@ -151,10 +151,9 @@ namespace Alex.Worlds.Chunks
 								if (scheduled)
 									_scheduledUpdates[idx] = false;
 
-								var blockPosition = new BlockCoordinates(
-									(int) (chunkPosition.X + x), y + (sectionIndex * 16), (int) (chunkPosition.Z + z));
+								var blockPosition = new BlockCoordinates(x, y + (sectionIndex * 16), z);
 
-								chunkData?.Remove(device, blockPosition);
+								chunkData?.Remove(blockPosition);
 
 								for (int storage = 0; storage < section.StorageCount; storage++)
 								{
@@ -183,7 +182,7 @@ namespace Alex.Worlds.Chunks
 
 									if (model != null)
 									{
-										model.GetVertices(world, chunkData, blockPosition, blockPosition, blockState);
+										model.GetVertices(world, chunkData, blockPosition, blockState);
 									}
 								}
 

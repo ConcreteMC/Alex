@@ -80,7 +80,7 @@ namespace Alex.Gamestates.Login
 	            Text = $"If you click Sign-In, the above auth code will be copied to your clipboard!"
             };
             
-            CanUseClipboard = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+            CanUseClipboard = Clipboard.IsClipboardAvailable();
             
             Initialize();
         }

@@ -305,6 +305,16 @@ namespace Alex.Gamestates.InGame
 				var entity = player.HitEntity;
 				return $"Hit entity: {entity.EntityId} / {entity.ToString()}\n{entity.NameTag}\n{ChatFormatting.Reset}Shown: {!entity.HideNameTag}\nNoAI: {entity.NoAi}\nGravity: {entity.IsAffectedByGravity}\nFlying: {entity.IsFlying}\nAllFlying: {entity.IsFlagAllFlying}\nOn Ground: {entity.KnownPosition.OnGround}\nHas Collisions: {entity.HasCollision}";
 			}, TimeSpan.FromMilliseconds(500));
+			/*
+			_debugInfo.AddDebugRight(
+				() =>
+				{
+					var item = World.Player?.Inventory?.MainHand;
+					if (item == null) return string.Empty;
+
+					var renderer = item.Renderer;
+					return $"Hand:\n{item.Name}\n{renderer}";
+				}, TimeSpan.FromMilliseconds(500));*/
 		}
 
 		private float AspectRatio { get; set; }

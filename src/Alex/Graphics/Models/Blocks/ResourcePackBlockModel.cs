@@ -42,7 +42,7 @@ namespace Alex.Graphics.Models.Blocks
 	public class ResourcePackBlockModel : BlockModel
 	{
 		private static readonly Logger        Log = LogManager.GetCurrentClassLogger(typeof(SPWorldProvider));
-		private static          SimplexPerlin NoiseGenerator { get; } = new SimplexPerlin(1337);
+		private static readonly SimplexPerlin NoiseGenerator = new SimplexPerlin(1337);
 
 		static ResourcePackBlockModel()
 		{
@@ -50,59 +50,10 @@ namespace Alex.Graphics.Models.Blocks
 		}
 		
 		public static           bool       SmoothLighting { get; set; } = true;
-		
-		//private BlockStateModelWrapper[] Models    { get; set; }
-		//private BlockStateResource BlockStateResource { get; }
 		private ResourceManager    Resources          { get; }
-		
-		//private  BoundingBox[] Boxes         { get; set; }
-		//private bool          UseRandomizer { get; set; }
-		//private int           WeightSum     { get; }
 		public ResourcePackBlockModel(ResourceManager resources, BlockStateResource blockStateResource)
 		{
 			Resources = resources;
-
-			//Models = models.Where(x => x != null).ToArray();
-			
-			//Models = models;
-		//	UseRandomizer = useRandomizer;
-			//WeightSum = Models.Sum(x => x.BlockStateModel.Weight);
-			
-			//Boxes = CalculateBoundingBoxes(Models);
-			/*
-			Boxes = new BoundingBox[] {new BoundingBox(new Vector3(0f), new Vector3(1f))};
-			for (int i = 0; i < Boxes.Length; i++)
-			{
-				var box        = Boxes[i];
-				var dimensions = box.GetDimensions();
-
-				if (dimensions.X < 0.015f)
-				{
-					var diff = (0.015f - dimensions.X) / 2f;
-					box.Min.X -= diff;
-					box.Max.X += diff;
-					//box.Inflate(new Vector3(0.015f - dimensions.X, 0f, 0f));
-				}
-				
-				if (dimensions.Y < 0.015f)
-				{
-					var diff = (0.015f - dimensions.Y) / 2f;
-					box.Min.Y -= diff;
-					box.Max.Y += diff;
-					//box.Inflate(new Vector3(0f, 0.015f - dimensions.Y, 0f));
-				}
-				
-				if (dimensions.Z < 0.015f)
-				{
-					var diff = (0.015f - dimensions.Z) / 2f;
-					box.Min.Z -= diff;
-					box.Max.Z += diff;
-					//box.Inflate(new Vector3(0f, 0f, 0.015f - dimensions.Z));
-				}
-
-				Boxes[i] = box;
-			}
-			*/
 		}
 		
 		/// <inheritdoc />
@@ -165,18 +116,18 @@ namespace Alex.Graphics.Models.Blocks
 				
 			var pos = position + face.GetBlockCoordinates();
 
-			var cX = (int)pos.X & 0xf;
+			/*var cX = (int)pos.X & 0xf;
 			var cZ = (int)pos.Z & 0xf;
 
 			if (cX < 0 || cX > 16)
 				return false;
 
 			if (cZ < 0 || cZ > 16)
-				return false;
+				return false;*/
 			
-			var theBlock = world.GetBlockState(pos).Block;
+			var theBlock = world.GetBlockState(pos)?.Block;
 
-			if (!theBlock.Renderable)
+			if (theBlock == null || !theBlock.Renderable)
 				return true;
 			
 			return me.ShouldRenderFace(face, theBlock);
@@ -501,9 +452,8 @@ namespace Alex.Graphics.Models.Blocks
 		}
 
 		private void CalculateModel(IBlockAccess world,
-			BlockCoordinates blockCoordinates,
 			ChunkData chunkBuilder,
-			Vector3 position,
+			BlockCoordinates position,
 			Block baseBlock,
 			BlockStateModel blockStateModel,
 			ResourcePackModelBase model,
@@ -745,7 +695,7 @@ namespace Alex.Graphics.Models.Blocks
 						for (int i = 0; i < vertices.Length; i++)
 						{
 							var vertex = vertices[i];
-							var vertexPosition = (vertex.Position) + position;
+							var vertexPosition = (vertex.Position) + new Vector3(position.X, position.Y, position.Z);
 							var textureCoordinates = (vertex.TexCoords) + uvMap.TextureInfo.Position;
 							
 							/*BlockModel.GetLight(
@@ -753,7 +703,7 @@ namespace Alex.Graphics.Models.Blocks
 								out var skyLight, true);*/
 							
 							chunkBuilder.AddVertex(
-								blockCoordinates, vertexPosition, facing,
+								position, vertexPosition, facing,
 								new Vector4(
 									textureCoordinates.X, textureCoordinates.Y,
 									 uvMap.TextureInfo.Width,
@@ -835,8 +785,7 @@ namespace Alex.Graphics.Models.Blocks
 		
 		public override void GetVertices(IBlockAccess world,
 			ChunkData chunkBuilder,
-			BlockCoordinates blockCoordinates,
-			Vector3 position,
+			BlockCoordinates position,
 			BlockState baseBlock)
 		{
 			var biome = world == null ? BiomeUtils.GetBiomeById(0) : world.GetBiome(position);
@@ -852,7 +801,7 @@ namespace Alex.Graphics.Models.Blocks
 					if (Resources.BlockModelRegistry.TryGet(model.ModelName, out var registryEntry))
 					{
 						CalculateModel(
-							world, blockCoordinates, chunkBuilder, position, baseBlock.Block, model,
+							world, chunkBuilder, position, baseBlock.Block, model,
 							registryEntry.Value, biome);
 					}
 				}
@@ -896,7 +845,7 @@ namespace Alex.Graphics.Models.Blocks
 				if (Resources.BlockModelRegistry.TryGet(selectedModel.ModelName, out var registryEntry))
 				{
 					CalculateModel(
-						world, blockCoordinates, chunkBuilder, position, baseBlock.Block, selectedModel,
+						world, chunkBuilder, position, baseBlock.Block, selectedModel,
 						registryEntry.Value, biome);
 				}
 

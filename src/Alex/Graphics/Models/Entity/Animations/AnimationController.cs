@@ -200,7 +200,7 @@ namespace Alex.Graphics.Models.Entity.Animations
 				runtime.Environment.SetValue("variable.swim_amount", Entity.IsSwimming ? new DoubleValue(1d) : new DoubleValue(0d));
 				runtime.Environment.SetValue("variable.player_x_rotation", new DoubleValue(Entity.KnownPosition.Pitch));
 
-				if (Entity is Player player)
+				if (Entity is RemotePlayer player)
 				{
 					bool holdingLeft = false;
 					bool holdingRight = false;

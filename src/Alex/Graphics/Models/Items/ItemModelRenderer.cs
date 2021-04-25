@@ -394,5 +394,17 @@ namespace Alex.Graphics.Models.Items
         {
             throw new NotImplementedException();
         }
+
+        /// <inheritdoc />
+        public override string ToString()
+        {
+            var displayItem = ActiveDisplayItem;
+
+            if (displayItem != null)
+            {
+                return $"Translation= {displayItem.Translation}, Rotation= {displayItem.Rotation} Scale= {displayItem.Scale}";
+            }
+            return base.ToString();
+        }
     }
 }

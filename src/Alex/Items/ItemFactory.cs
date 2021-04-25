@@ -184,7 +184,7 @@ namespace Alex.Items
 						           clone.MaxStackSize = data.stackSize;
 						           clone.DisplayName = data.displayName;
 					           }
-
+					           
 					           clone.Renderer = new ItemBlockModelRenderer(bs, model, resources.Atlas.GetAtlas());
 					           clone.Renderer.Cache(resources);
 					           return clone;
