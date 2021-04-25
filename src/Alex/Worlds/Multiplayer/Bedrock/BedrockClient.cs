@@ -171,6 +171,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 				return handler;
 			};
+
+			CommandProvider = new BedrockCommandProvider();
 		}
 
 		private void ClientSideLightingChanged(bool oldvalue, bool newvalue)
@@ -783,9 +785,12 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			        }
 			        skinData = ms.ToArray();
 		        }
-		        
-		        GeometryModel mm       = new GeometryModel();
-		        mm.Geometry.Add(model.Description.Identifier, model);
+
+		        Dictionary<string, object> mm = new Dictionary<string, object>();
+		        mm.Add("format_version", "1.12.0");
+		        mm.Add("minecraft:geometry", model);
+		      //  GeometryModel mm       = new GeometryModel();
+		      //  mm.Geometry.Add(model.Description.Identifier, model);
 
 		        var modelIdentifier = model.Description.Identifier;
 		        

@@ -49,19 +49,22 @@ namespace Alex.Gamestates.InGame.Hud
             };
 
             AddChild(WarningElement);
-            
-            NetworkInfoElement = new AutoUpdatingTextElement(GetNetworkInfo, true);
-            NetworkInfoElement.Background = Color.Transparent;
-            NetworkInfoElement.Interval = TimeSpan.FromMilliseconds(500);
-            
-            NetworkInfoElement.BackgroundOverlay = Color.Black * 0.5f;
-            
-            NetworkInfoElement.Anchor = Alignment.BottomRight;
-            NetworkInfoElement.TextOpacity = 0.75f;
-            NetworkInfoElement.TextColor = (Color) TextColor.Red;
-            NetworkInfoElement.Scale = 1f;
-            NetworkInfoElement.IsVisible = false;
-            
+
+            NetworkInfoElement = new AutoUpdatingTextElement(GetNetworkInfo, true)
+            {
+                Background = Color.Transparent,
+                Interval = TimeSpan.FromMilliseconds(500),
+                BackgroundOverlay = Color.Black * 0.5f,
+                Anchor = Alignment.BottomRight,
+                TextOpacity = 0.75f,
+                TextColor = (Color) TextColor.Red,
+                Scale = 1f,
+                IsVisible = false,
+                TextAlignment = TextAlignment.Right
+            };
+
+
+
             AddChild(NetworkInfoElement);
         }
         
@@ -79,18 +82,15 @@ namespace Alex.Gamestates.InGame.Hud
             double        dataIn  = (double) (info.BytesIn) / 1000.0;
             
             StringBuilder sb      = new StringBuilder();
-            sb.Append($"Latency: {info.Latency}ms");
-            sb.Append($" | Pkt in/out(#/s): {info.PacketsIn}/{info.PacketsOut}");
+            sb.AppendLine($"Latency: {info.Latency}ms");
+            sb.AppendLine($"Pkt in/out(#/s): {info.PacketsIn:00}/{info.PacketsOut:00}");
 
-         //   if (info.Ack.HasValue && info.AckSent.HasValue)
-            {
-                sb.Append($" | Ack in/out(#/s): {info.Ack}/{info.AckSent}");
-            }
+             sb.AppendLine($"Ack in/out(#/s): {info.Ack:00}/{info.AckSent:00}");
 
-            /* sb.Append($" | NACK's: {info.Nack}");
-             sb.Append($" | Resends: {info.Resends}");
-             sb.Append($" | Fails: {info.Fails}");*/
-            sb.Append($" | THR in/out(Kbps): {dataIn:F2}/{dataOut:F2}");
+              sb.AppendLine($"Nak in/out(#/s): {info.Nak:00}/{info.NakSent:00}");
+             // sb.AppendLine($"Resends: {info.Resends:00}");
+              //sb.AppendLine($"Fails: {info.Fails:00}");
+            sb.Append($"THR in/out(Kbps): {dataIn:F2}/{dataOut:F2}");
 
             // WarningElement.IsVisible = info.State != ConnectionInfo.NetworkState.Ok;
 

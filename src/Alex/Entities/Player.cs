@@ -33,14 +33,9 @@ using Newtonsoft.Json.Serialization;
 using NLog;
 using NLog.Fluent;
 using RocketUI.Input;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Formats.Png;
-using SixLabors.ImageSharp.PixelFormats;
 using BlockCoordinates = Alex.API.Utils.Vectors.BlockCoordinates;
 using BoundingBox = Microsoft.Xna.Framework.BoundingBox;
 using ContainmentType = Microsoft.Xna.Framework.ContainmentType;
-using GeometryIdentifier = Alex.Worlds.Multiplayer.Bedrock.GeometryIdentifier;
-using GeometryModel = Alex.Worlds.Multiplayer.Bedrock.GeometryModel;
 using Skin = Alex.API.Utils.Skin;
 using SkinResourcePatch = Alex.Worlds.Multiplayer.Bedrock.SkinResourcePatch;
 

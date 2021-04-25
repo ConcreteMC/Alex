@@ -4,6 +4,7 @@ using Alex.API.Utils;
 using Alex.API.Utils.Vectors;
 using Alex.Entities;
 using Alex.Items;
+using Alex.Utils;
 using Microsoft.Xna.Framework;
 using MiNET;
 using MiNET.Net;
@@ -21,6 +22,7 @@ namespace Alex.Net
 	
 	public abstract class NetworkProvider
 	{
+		public CommandProvider CommandProvider { get; set; }
 		public abstract bool IsConnected { get; }
 		public abstract ConnectionInfo GetConnectionInfo();
 

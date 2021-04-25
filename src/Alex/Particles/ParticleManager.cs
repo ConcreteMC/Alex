@@ -400,6 +400,9 @@ namespace Alex.Particles
 		{
 			if (!Enabled)
 				return true;
+
+			if (type == ParticleType.TrackingEmitter)
+				return true;
 			
 			if (TryConvert(type, out var str, out ParticleDataMode dataMode))
 			{

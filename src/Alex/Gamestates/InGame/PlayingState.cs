@@ -64,6 +64,7 @@ namespace Alex.Gamestates.InGame
 
 			_playingHud = new PlayingHud(Alex, World.Player, title);
 			_playingHud.Chat.Network = networkProvider;
+			_playingHud.Chat.CommandProvider = networkProvider.CommandProvider;
 			
 			WorldProvider.ScoreboardView = _playingHud.Scoreboard;
 			WorldProvider.ChatRecipient = _playingHud;
@@ -88,6 +89,7 @@ namespace Alex.Gamestates.InGame
             }
             
             _networkDebugHud = new NetworkDebugHud(NetworkProvider);
+            _networkDebugHud.Advanced = true;
 		}
 
 		private void OnMinimapSettingChange(bool oldvalue, bool newvalue)

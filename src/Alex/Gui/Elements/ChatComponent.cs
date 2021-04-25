@@ -12,6 +12,7 @@ using Alex.Worlds;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using MiNET;
+using MiNET.Plugins;
 using NLog;
 using RocketUI;
 using SixLabors.ImageSharp.Drawing;
@@ -30,6 +31,7 @@ namespace Alex.Gui.Elements
 		public int FocusedHeight { get; set; } = 180;
 		
 		public  NetworkProvider  Network         { get; set; }
+		public CommandProvider CommandProvider { get; set; } = null;
 
 		public ChatComponent()
 		{
@@ -40,6 +42,8 @@ namespace Alex.Gui.Elements
 			Width = 320;
 			
 			Font = Alex.Instance.GuiRenderer.Font;
+
+			Padding = new Thickness(2, 0, 2, 0);
 		}
 
 		private IFont Font;
@@ -104,7 +108,7 @@ namespace Alex.Gui.Elements
 			if (messages.Length > 0)
 			{
 				DateTime now = DateTime.UtcNow;
-				Vector2 offset = new Vector2(0, 48);
+				Vector2 offset = new Vector2(0, -48);
 
 				foreach (var msg in messages.Reverse())
 				{
@@ -131,15 +135,19 @@ namespace Alex.Gui.Elements
 			}
 		}
 
+		private double MaxTextWidth => (RenderBounds.Width - (Padding.Left + Padding.Right));
 		private string GetFitting(string text, out string rest)
 		{
 			rest = string.Empty;
 
 			var size = Font.MeasureString(text);
-			while (size.X > Bounds.Width)
+			while ((size.X) > MaxTextWidth)
 			{
 				string current        = text;
 
+				if (current.Length == 0)
+					break;
+				
 				var lastWhiteSpace = current.LastIndexOf(' ');
 				if (lastWhiteSpace > 0)
 				{
@@ -161,7 +169,7 @@ namespace Alex.Gui.Elements
 		private string[] CalculateLines(string text)
 		{
 			var size = Font.MeasureString(text);
-			if (size.X > Bounds.Width)
+			if (size.X > MaxTextWidth)
 			{
 				List<string> output = new List<string>();
 				do
@@ -201,13 +209,13 @@ namespace Alex.Gui.Elements
 		{
 			var size = Font.MeasureString(text);
 
-			var renderPos = Bounds.BottomLeft() - offset;
+			var renderPos = RenderBounds.BottomLeft() + offset;
 
 			graphics.FillRectangle(new Rectangle(renderPos.ToPoint(), new Point(Width, (int) Math.Ceiling(size.Y + 2))),
 				new Color(Color.Black, alpha * 0.5f));
 
-			Font.DrawString(graphics.SpriteBatch, text, renderPos + new Vector2(0, 2), (Color) API.Utils.TextColor.White, opacity: alpha);
-			offset.Y += (size.Y + 2);
+			Font.DrawString(graphics.SpriteBatch, text, renderPos + new Vector2(Padding.Left, 2), (Color) API.Utils.TextColor.White, opacity: alpha);
+			offset.Y -= (size.Y + 2);
 		}
 
 		public static TextColor FindLastColor(string message)
@@ -232,7 +240,7 @@ namespace Alex.Gui.Elements
 		{
 			if (Focused)
 			{
-				/*if (key == Keys.Tab)
+				if (key == Keys.Tab && CommandProvider != null)
 				{
 					if (_hasTabCompleteResults)
 					{
@@ -243,25 +251,29 @@ namespace Alex.Gui.Elements
 
 					if (TextBuilder.Length == 0) return true;
 
-					TextBuilder.CursorPosition = 1;
-					string text = TextBuilder.GetAllBehindCursor(out _tabCompletePosition);
+					//TextBuilder.CursorPosition = 1;
+					_tabCompletePosition = TextBuilder.CursorPosition;
+					string text = TextBuilder.Text.Substring(0, TextBuilder.CursorPosition);//.GetAllBehindCursor(out _tabCompletePosition);
 					if (text.StartsWith('/'))
 					{
 						_tabCompletePosition += 1;
 						text = text.Substring(1, text.Length - 1);
 					}
 
-					ChatProvider?.RequestTabComplete(text, out _latestTransactionId);
+					CommandProvider.Match(text, ReceivedTabComplete);
+					//ChatProvider?.RequestTabComplete(text, out _latestTransactionId);
 					return true;
 				}
-				else */if (key == Keys.Enter)
+				else if (key == Keys.Enter)
 				{
 					SubmitMessage();
 					ResetTabComplete();
+					
+					return true;
 				}
-				else if (key == Keys.Up && _currentNode != null)
+				else if (key == Keys.Up)
 				{
-					if (_submittedMessages.Last != null && _currentNode != _submittedMessages.Last)
+					if (_currentNode == null)
 					{
 						_currentNode = _submittedMessages.Last;
 					}
@@ -270,8 +282,13 @@ namespace Alex.Gui.Elements
 						_currentNode = _currentNode.Previous;
 					}
 
-					TextBuilder.Clear();
-					TextBuilder.Append(_currentNode.Value);					
+					if (_currentNode != null)
+					{
+						TextBuilder.Clear();
+						TextBuilder.Append(_currentNode.Value);
+					}
+					
+					return true;
 				}
 				else if (key == Keys.Down && _currentNode != null)
 				{
@@ -282,8 +299,10 @@ namespace Alex.Gui.Elements
 						TextBuilder.Clear();
 						TextBuilder.Append(next.Value);
 					}
+					
+					return true;
 				}
-				else
+				/*else
 				{
 					int prevLength = TextBuilder.Length;
 					base.OnKeyInput(character, key);
@@ -291,7 +310,14 @@ namespace Alex.Gui.Elements
 					{
 						ResetTabComplete();
 					}
-				}
+				}*/
+			}
+
+			var position = TextBuilder.CursorPosition;
+			base.OnKeyInput(character, key);
+			if (TextBuilder.CursorPosition != position)
+			{
+				ResetTabComplete();
 				return true;
 			}
 
@@ -304,6 +330,7 @@ namespace Alex.Gui.Elements
 			{
 				_hasTabCompleteResults = false;
 				_tabCompletePrevLength = 0;
+				_tabCompleteMatchIndex = 0;
 			}
 		}
 
@@ -395,9 +422,10 @@ namespace Alex.Gui.Elements
 			//Submit message
 			if (TextBuilder.Length > 0)
 			{
+				var text = TextBuilder.Text;
 				if (Alex.IsMultiplayer)
 				{
-					Network?.SendChatMessage(new ChatObject(TextBuilder.Text));
+					Network?.SendChatMessage(new ChatObject(text));
 					//EventDispatcher.DispatchEvent(
 					//	new ChatMessagePublishEvent(new ChatObject(TextBuilder.Text)));
 				}
@@ -406,8 +434,13 @@ namespace Alex.Gui.Elements
 					Receive(TextBuilder.Text);
 				}
 
-				_submittedMessages.AddLast(TextBuilder.Text);
-				_currentNode = _submittedMessages.Last;
+				_currentNode = _submittedMessages.AddLast(text);
+
+				if (_submittedMessages.Count > 10)
+				{
+					_submittedMessages.RemoveFirst();
+				}
+				//_currentNode = _submittedMessages.Last;
 			}
 
 			Dismiss();
@@ -453,11 +486,15 @@ namespace Alex.Gui.Elements
 		private int _tabCompleteStart, _tabCompleteLength;
 		private TabCompleteMatch[] _tabCompleteMatches;
 		private bool _hasTabCompleteResults = false;
-		public void ReceivedTabComplete(int transactionId, int start, int length, TabCompleteMatch[] matches)
+		public void ReceivedTabComplete(int start, int length, TabCompleteMatch[] matches)
 		{
-			if (_latestTransactionId == transactionId)
+		//t/he	if (_latestTransactionId == transactionId)
 			{
-				if (matches.Length == 0) return;
+				if (matches.Length == 0)
+				{
+					ResetTabComplete();
+					return;
+				}
 
 				_tabCompletePrevLength = 0;
 				_tabCompleteMatchIndex = 0;

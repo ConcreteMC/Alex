@@ -200,6 +200,7 @@ namespace Alex.Networking.Java.Packets
 		//	Register(ConnectionState.Play, 0x0F, () => MultiBlockChange.CreateObject());
 			
 			Register(ConnectionState.Play, 0xF, () => TabCompleteClientBound.CreateObject());
+			Register(ConnectionState.Play, 0x10, () => DeclareCommandsPacket.CreateObject());
 			Register(ConnectionState.Play, 0x11, () => WindowConfirmationPacket.CreateObject());
 			Register(ConnectionState.Play, 0x12, () => CloseWindowPacket.CreateObject());
 			Register(ConnectionState.Play, 0x13, () => WindowItems.CreateObject());

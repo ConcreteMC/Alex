@@ -178,15 +178,6 @@ namespace Alex.Gamestates.InGame.Hud
 						Chat.Dismiss();
 						Alex.GuiManager.FocusManager.FocusedElement = null;
 					}
-
-					if (InputManager.IsPressed(AlexInputCommand.Left))
-					{
-						Chat.MoveCursor(false);
-					}
-					else if (InputManager.IsPressed(AlexInputCommand.Right))
-					{
-						Chat.MoveCursor(true);
-					}
 				}
 			}
 

@@ -58,6 +58,7 @@ using SixLabors.ImageSharp.PixelFormats;
 using AnvilWorldProvider = Alex.Worlds.Singleplayer.AnvilWorldProvider;
 using BlockCoordinates = Alex.API.Utils.Vectors.BlockCoordinates;
 using ChunkCoordinates = Alex.API.Utils.Vectors.ChunkCoordinates;
+using CommandProperty = Alex.Utils.CommandProperty;
 using Entity = Alex.Entities.Entity;
 using MathF = System.MathF;
 using MessageType = Alex.API.Data.MessageType;
@@ -1810,8 +1811,37 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		public void HandleMcpeAvailableCommands(McpeAvailableCommands message)
 		{
+			if (Client.CommandProvider is BedrockCommandProvider bcp)
+			{
+				foreach (var cmd in message.CommandSet)
+				{
+					foreach (var version in cmd.Value.Versions)
+					{
+						foreach (var overload in version.Overloads)
+						{
+							Command c = new Command(cmd.Key);
+							foreach (var param in overload.Value.Input.Parameters)
+							{
+								CommandProperty cp = new CommandProperty(param.Name, !param.Optional);
+
+								switch (param.Type)
+								{
+									default:
+									//	Log.Info($"Unknown param type: {param.Type}");
+										break;
+								}
+								c.Properties.Add(cp);
+							}
+							
+							bcp.Register(c);
+						}
+					}
+				}
+				
+				Log.Info($"Registered {bcp.Count} commands.");
+			}
 			// Client.LoadCommands(message.CommandSet);
-			UnhandledPackage(message);
+			//UnhandledPackage(message);
 		}
 
 		public void HandleMcpeCommandOutput(McpeCommandOutput message)

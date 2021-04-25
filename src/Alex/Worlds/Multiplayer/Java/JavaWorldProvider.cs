@@ -57,6 +57,8 @@ using RocketUI.Input;
 using BlockCoordinates = Alex.API.Utils.Vectors.BlockCoordinates;
 using ChunkColumn = Alex.Worlds.Chunks.ChunkColumn;
 using ChunkCoordinates = Alex.API.Utils.Vectors.ChunkCoordinates;
+using Command = Alex.Utils.Command;
+using CommandProperty = Alex.Utils.CommandProperty;
 using ConnectionState = Alex.Networking.Java.ConnectionState;
 using Entity = Alex.Entities.Entity;
 using MessageType = Alex.API.Data.MessageType;
@@ -87,6 +89,7 @@ namespace Alex.Worlds.Multiplayer.Java
 		public string Hostname { get; set; }
 		
 		private          JavaNetworkProvider NetworkProvider { get; }
+		private JavaCommandProvider CommandProvider { get; }
 		private readonly List<IDisposable>   _disposables = new List<IDisposable>();
 		public JavaWorldProvider(Alex alex, IPEndPoint endPoint, PlayerProfile profile, out NetworkProvider networkProvider)
 		{
@@ -95,8 +98,7 @@ namespace Alex.Worlds.Multiplayer.Java
 			Endpoint = endPoint;
 
 			OptionsProvider = alex.Services.GetRequiredService<IOptionsProvider>();
-			
-		//	ThreadPool = new DedicatedThreadPool(new DedicatedThreadPoolSettings(Environment.ProcessorCount));
+			//	ThreadPool = new DedicatedThreadPool(new DedicatedThreadPoolSettings(Environment.ProcessorCount));
 		
 			Client = new NetConnection(endPoint, CancellationToken.None);
 			Client.OnConnectionClosed += OnConnectionClosed;
@@ -106,6 +108,8 @@ namespace Alex.Worlds.Multiplayer.Java
 			networkProvider = NetworkProvider;
 
 			_disposables.Add(Options.VideoOptions.RenderDistance.Bind(RenderDistanceSettingChanged));
+			CommandProvider = new JavaCommandProvider(this, Client);
+			NetworkProvider.CommandProvider = CommandProvider;
 		}
 
 		private void RenderDistanceSettingChanged(int oldvalue, int newvalue)
@@ -879,6 +883,10 @@ namespace Alex.Worlds.Multiplayer.Java
 					HandleSetExperiencePacket(experiencePacket);
 					break;
 				
+				case DeclareCommandsPacket declareCommandsPacket:
+					HandleDeclareCommandsPacket(declareCommandsPacket);
+					break;
+				
 				default:
 				{
 					if (UnhandledPackets.TryAdd(packet.PacketId, packet.GetType()))
@@ -891,6 +899,46 @@ namespace Alex.Worlds.Multiplayer.Java
 			}
 		}
 
+		private void HandleDeclareCommandsPacket(DeclareCommandsPacket packet)
+		{
+			var nodes = packet.Nodes.ToArray();
+			var rootNode = nodes[packet.RootIndex];
+
+			foreach (var childIndex in rootNode.Children)
+			{
+				var child = nodes[childIndex];
+
+				if (child is LiteralCommandNode lcn)
+				{
+					var command = new Command(lcn.Name.Split(':'));
+
+					foreach (var ci in lcn.Children)
+					{
+						var subChild = nodes[ci];
+
+						if (subChild is ArgumentCommandNode acn)
+						{
+							foreach (var property in acn.Properties)
+							{
+								//CommandProperty commandProperty = new CommandProperty(property.Name, !acn.IsExecutable);
+							
+							
+								//command.AddProperty(commandProperty);
+							}
+							CommandProperty commandProperty = new CommandProperty(acn.Name, !acn.IsExecutable);
+							
+							
+							command.AddProperty(commandProperty);
+						}
+					}
+					CommandProvider.Register(command);
+				}
+			}
+			
+			Log.Info($"Registered {CommandProvider.Count} commands.");
+			//CommandProvider.Register();
+		}
+		
 		private void HandleSetExperiencePacket(SetExperiencePacket packet)
 		{
 			var player = World?.Player;
@@ -1795,8 +1843,9 @@ namespace Alex.Worlds.Multiplayer.Java
 
 		private void HandleTabCompleteClientBound(TabCompleteClientBound tabComplete)
 		{
+			CommandProvider.HandleTabCompleteClientBound(tabComplete);
 			//TODO: Re-implement tab complete
-			Log.Info($"!!! TODO: Re-implement tab complete.");
+		//	Log.Info($"!!! TODO: Re-implement tab complete.");
 			//ChatReceiver?.ReceivedTabComplete(tabComplete.TransactionId, tabComplete.Start, tabComplete.Length, tabComplete.Matches);
 		}
 
