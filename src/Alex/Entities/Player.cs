@@ -204,9 +204,10 @@ namespace Alex.Entities
 		    _skipUpdate = true;
 	    }
 
+	    private bool _previousHasActiveDialog = false;
 	    public override void Update(IUpdateArgs args)
 	    {
-		    bool hasActiveDialog = Alex.Instance.GuiManager.ActiveDialog != null;
+		    bool hasActiveDialog = Alex.Instance.GuiManager.ActiveDialog != null || ((Network is BedrockClient c) && c.WorldProvider.FormManager.IsShowingForm);
 		    Controller.CheckMovementInput = !hasActiveDialog;
 		    
 		    if (WaitingOnChunk)
@@ -273,7 +274,7 @@ namespace Alex.Entities
 		    {
 			    _skipUpdate = false;
 		    }
-		    else if ((Controller.CheckInput && Controller.CheckMovementInput && !hasActiveDialog))
+		    else if ((Controller.CheckInput && Controller.CheckMovementInput && !hasActiveDialog && !_previousHasActiveDialog))
 		    {
 
 			    UpdateBlockRayTracer();
@@ -325,10 +326,9 @@ namespace Alex.Entities
 			    {
 				    if (!_destroyingBlock)
 				    {
-					    bool isBeginPress = Controller.InputManager.IsBeginPress(AlexInputCommand.LeftClick);
 					    if (HasRaytraceResult)
 					    {
-						    if (isBeginPress && !IsWorldImmutable)
+						    if (beginLeftClick && !IsWorldImmutable)
 						    {
 							    StartBreakingBlock();
 						    }
@@ -394,6 +394,7 @@ namespace Alex.Entities
 			    PreviousSlot = slot;
 		    }
 
+		    _previousHasActiveDialog = hasActiveDialog;
 		    if (hasActiveDialog)
 			    _skipUpdate = true;
 		    

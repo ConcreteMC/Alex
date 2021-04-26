@@ -77,7 +77,7 @@ namespace Alex.Entities
 				if (geometry != null)
 					_skinDirty = true;
 			}
-
+			
 			base.NoAi = true;
 		}
 

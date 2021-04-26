@@ -37,7 +37,7 @@ namespace Alex.Utils
 
 		public static Image<Rgba32> ConvertSkin(Image<Rgba32> input, int width, int height)
 		{
-			return input;
+			//return input;
 			SkinSize size       = SkinSize.W64H32;
 			SkinSize sourceSize = SkinSize.W64H32;
 			

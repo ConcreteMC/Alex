@@ -72,5 +72,12 @@ namespace Alex.Gui.Forms
                 client.SendPacket(response);
             }
         }
+
+        public void CloseAll()
+        {
+            var active = _activeForm;
+            if (active != null) 
+                Hide(active.FormId);
+        }
     }
 }

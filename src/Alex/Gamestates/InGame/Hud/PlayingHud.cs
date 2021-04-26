@@ -163,15 +163,14 @@ namespace Alex.Gamestates.InGame.Hud
 						Chat.Dismiss();
 						Chat.Enabled = true;
 						Alex.GuiManager.FocusManager.FocusedElement = Chat;
-					}
-
-					if (InputManager.IsPressed(AlexInputCommand.Exit) && CheckInput)
+					} 
+					else if (InputManager.IsPressed(AlexInputCommand.Exit))
 					{
 						//Player.Controller.CheckMovementInput = false;
 						Alex.GameStateManager.SetActiveState<InGameMenuState>("ingamemenu");
 					}
 				}
-				else if (CheckInput)
+				else
 				{
 					if (InputManager.IsPressed(AlexInputCommand.Exit))
 					{

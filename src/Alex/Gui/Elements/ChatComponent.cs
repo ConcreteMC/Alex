@@ -321,7 +321,7 @@ namespace Alex.Gui.Elements
 				return true;
 			}
 
-			return false;
+			return true;
 		}
 
 		private void ResetTabComplete()

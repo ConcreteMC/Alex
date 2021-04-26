@@ -1046,7 +1046,10 @@ namespace Alex.Worlds
 
 		public void AddPlayerListItem(PlayerListItem item)
 		{
-			PlayerList.Entries.TryAdd(item.UUID, item);
+			if (PlayerList.Entries.TryAdd(item.UUID, item))
+			{
+				UpdatePlayerLatency(item.UUID, item.Ping);
+			}
 		}
 
 		public void RemovePlayerListItem(MiNET.Utils.UUID item)

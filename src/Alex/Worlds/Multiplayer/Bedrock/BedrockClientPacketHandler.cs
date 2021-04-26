@@ -245,7 +245,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		{
 			Log.Info($"Start game, movement type: {message.movementType}");
 
-			if (message.movementType != 0)
+			if (message.movementType > 0)
 			{
 				Log.Warn($"!!! Server uses server-authoritive movement, only client-auth is currently supported.");
 			}
@@ -363,22 +363,30 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				new PlayerLocation(message.x, message.y, message.z), Client.World.Player.KnownPosition.OnGround, 1);*/
 		}
 
-		private void UpdateEntityAdventureFlags(Entity entity, uint flags)
+		private void UpdateEntityAdventureFlags(Entity entity, uint flags, uint actionPermissions)
 		{
 			if (entity == null)
 				return;
 			
-			entity.CanFly = ((flags & 0x40) == 0x40);
+			/*entity.CanFly = ((flags & 0x40) == 0x40);
 			entity.IsFlying = ((flags & 0x200) == 0x200);
 			entity.IsWorldImmutable = ((flags & 0x01) == 0x01);
 			entity.IsNoPvP = (flags & 0x02) == 0x02;
 			entity.IsNoPvM = (flags & 0x04) == 0x04;
-			entity.HasCollision = (flags & 0x80) != 0x80;
+			entity.HasCollision = (flags & 0x80) != 0x80;*/
+			
+			entity.IsWorldImmutable = (flags & 0x01) != 0;
+			entity.IsNoPvP = (flags & 0x02) != 0;
+			entity.IsNoPvM = (flags & 0x04) != 0;
+			entity.CanFly = (flags & 0x40) != 0;
+			entity.HasCollision = (flags & 0x80) == 0;
+			entity.IsFlying = (flags & 0x200) != 0;
 		}
 
 		public void HandleMcpeAdventureSettings(McpeAdventureSettings message)
 		{
-			UpdateEntityAdventureFlags(Client.World.Player, message.flags);
+			if (Client.World.TryGetEntity(message.userId, out var entity))
+				UpdateEntityAdventureFlags(entity, message.flags, message.actionPermissions);
 		}
 
 		public void HandleMcpeAddPlayer(McpeAddPlayer message)
@@ -401,7 +409,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					entity.HandleMetadata(message.metadata);
 				}
 
-				UpdateEntityAdventureFlags(entity, message.flags);
+				UpdateEntityAdventureFlags(entity, message.flags, message.actionPermissions);
 
 				Client.World.SpawnEntity(entity);
 			}
@@ -1530,20 +1538,14 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				return;
 			}
 			
-			ChunkProcessor.HandleChunkData(cacheEnabled, blobs, subChunkCount, chunkData, cx, cz,
-				column =>
-				{ 
-					Client.World.ChunkManager.AddChunk(column, new ChunkCoordinates(column.X, column.Z), true);
-					
-					//EventDispatcher.DispatchEvent(
-					//	new ChunkReceivedEvent(new ChunkCoordinates(column.X, column.Z), column));
-				});
+			ChunkProcessor.HandleChunkData(cacheEnabled, blobs, subChunkCount, chunkData, cx, cz);
 		}
 
+		private int _changeDimensionLock = 0;
 		public void HandleMcpeChangeDimension(McpeChangeDimension message)
 		{
 			//base.HandleMcpeChangeDimension(message);
-
+			Client.WorldProvider.FormManager.CloseAll();
 			var chunkCoords = new ChunkCoordinates(
 				new PlayerLocation(Client.World.SpawnPoint.X, Client.World.SpawnPoint.Y, Client.World.SpawnPoint.Z));
 
@@ -1557,83 +1559,94 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			ThreadPool.QueueUserWorkItem(
 				(o) =>
 				{
-					World world = Client.World;
-
-					//_entityMapping.Clear();
-					world.ClearChunksAndEntities();
-
-
-					//world.ChunkManager.ClearChunks();
-					world.UpdatePlayerPosition(
-						new PlayerLocation(message.position.X, message.position.Y, message.position.Z));
-
-
-					//foreach (var loadedChunk in provider.LoadedChunks)
-					//{
-					//	provider.UnloadChunk(loadedChunk);
-					//}
-					McpePlayerAction action = McpePlayerAction.CreateObject();
-					action.runtimeEntityId = Client.EntityId;
-					action.actionId = (int) PlayerAction.DimensionChangeAck;
-					Client.SendPacket(action);
-					
-					int  percentage         = 0;
-					bool ready              = false;
-					int  previousPercentage = 0;
-
-					do
+					try
 					{
-						chunkCoords = new ChunkCoordinates(
-							new PlayerLocation(
-								Client.World.Player.KnownPosition.X, Client.World.Player.KnownPosition.Y,
-								Client.World.Player.KnownPosition.Z));
+						if (Interlocked.Increment(ref _changeDimensionLock) != 1)
+							return;
+						
+						World world = Client.World;
+
+						//_entityMapping.Clear();
+
+						world.ClearChunksAndEntities();
 
 
-						double radiusSquared = Math.Pow(Client.ChunkRadius, 2);
-						var    target        = radiusSquared;
+						//world.ChunkManager.ClearChunks();
+						world.UpdatePlayerPosition(
+							new PlayerLocation(message.position.X, message.position.Y, message.position.Z));
 
-						percentage = (int) ((100 / target) * world.ChunkManager.ChunkCount);
 
-						if (percentage != previousPercentage)
-						{
-							loadingWorldScreen.UpdateProgress(LoadingState.LoadingChunks, percentage);
-							previousPercentage = percentage;
-
-							//Log.Info($"Progress: {percentage} ({ChunksReceived} of {target})");
-						}
-
-						//if (!ready)
+						//foreach (var loadedChunk in provider.LoadedChunks)
 						//{
-						if (!ready)
-						{
-							if (Client.ChangeDimensionResetEvent.WaitOne(5))
-							{
-								ready = true;
-							}
-						}
-
-
-						if (percentage >= 100)
-						{
-							break;
-						}
-
-						//	}
-						//	else
-						//	{
-						//	await Task.Delay(50);
+						//	provider.UnloadChunk(loadedChunk);
 						//}
-					} while (true);
+						McpePlayerAction action = McpePlayerAction.CreateObject();
+						action.runtimeEntityId = Client.EntityId;
+						action.actionId = (int) PlayerAction.DimensionChangeAck;
+						Client.SendPacket(action);
 
-					AlexInstance.GuiManager.RemoveScreen(loadingWorldScreen);
-					//AlexInstance.GameStateManager.Back();
+						int percentage = 0;
+						bool ready = false;
+						int previousPercentage = 0;
 
-					var p = Client.World.Player.KnownPosition;
+						LoadingState state = LoadingState.LoadingChunks;
+						do
+						{
+							chunkCoords = new ChunkCoordinates(
+								new PlayerLocation(
+									Client.World.Player.KnownPosition.X, Client.World.Player.KnownPosition.Y,
+									Client.World.Player.KnownPosition.Z));
 
-					//Client.SendMcpeMovePlayer(p, 1);
-					//Client.SendMcpeMovePlayer(new MiNET.Utils.PlayerLocation(Client.World.Player.KnownPosition.X, Client.World.Player.KnownPosition.Y, Client.World.Player.KnownPosition.Z), false);
 
-					Client.World.Player.IsSpawned = true;
+							double radiusSquared = Math.Pow(Client.ChunkRadius, 2);
+							var target = radiusSquared;
+
+							percentage = (int) ((100 / target) * world.ChunkManager.ChunkCount);
+
+							if (percentage != previousPercentage)
+							{
+								loadingWorldScreen.UpdateProgress(state, percentage);
+								previousPercentage = percentage;
+
+								//Log.Info($"Progress: {percentage} ({ChunksReceived} of {target})");
+							}
+
+							//if (!ready)
+							//{
+							if (!ready)
+							{
+								if (Client.ChangeDimensionResetEvent.WaitOne(5))
+								{
+									ready = true;
+								}
+							}
+
+
+							if (percentage >= 100 && Client.CanSpawn)
+							{
+								break;
+							}
+
+							//	}
+							//	else
+							//	{
+							//	await Task.Delay(50);
+							//}
+						} while (true);
+						//AlexInstance.GameStateManager.Back();
+
+						var p = Client.World.Player.KnownPosition;
+
+						//Client.SendMcpeMovePlayer(p, 1);
+						//Client.SendMcpeMovePlayer(new MiNET.Utils.PlayerLocation(Client.World.Player.KnownPosition.X, Client.World.Player.KnownPosition.Y, Client.World.Player.KnownPosition.Z), false);
+
+						Client.World.Player.IsSpawned = true;
+					}
+					finally
+					{
+						AlexInstance.GuiManager.RemoveScreen(loadingWorldScreen);
+						Interlocked.Decrement(ref _changeDimensionLock);
+					}
 				});
 		}
 

@@ -125,10 +125,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			if (wp != null)
 			{
 				ChunkProcessor = new ChunkProcessor(
-					this,
-					alex.Services.GetRequiredService<IOptionsProvider>().AlexOptions.MiscelaneousOptions
-					   .ServerSideLighting, CancellationTokenSource.Token,
-					Alex.Services.GetRequiredService<BlobCache>());
+					this, CancellationTokenSource.Token, Alex.Services.GetRequiredService<BlobCache>());
 
 				ChunkProcessor.ClientSideLighting = Options.VideoOptions.ClientSideLighting;
 				//ChunkProcessor.Instance = ChunkProcessor;

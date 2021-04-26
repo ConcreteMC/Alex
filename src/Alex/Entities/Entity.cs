@@ -4,6 +4,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using Alex.API.Data.Servers;
 using Alex.API.Graphics;
@@ -1003,7 +1004,7 @@ namespace Alex.Entities
 
 			BitArray data = new BitArray(
 				BitConverter.GetBytes(rawData).Concat(BitConverter.GetBytes(extendedData)).ToArray());
-
+			
 			IsInvisible = data[(int) MiNET.Entities.Entity.DataFlags.Invisible];// (data & ((int) MiNET.Entities.Entity.DataFlags.Invisible)) != 0;
 			IsSneaking = data[(int) MiNET.Entities.Entity.DataFlags.Sneaking];
 			IsSitting = data[(int) MiNET.Entities.Entity.DataFlags.Sitting];

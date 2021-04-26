@@ -85,9 +85,11 @@ namespace Alex.Gamestates.InGame.Hud
             sb.AppendLine($"Latency: {info.Latency}ms");
             sb.AppendLine($"Pkt in/out(#/s): {info.PacketsIn:00}/{info.PacketsOut:00}");
 
-             sb.AppendLine($"Ack in/out(#/s): {info.Ack:00}/{info.AckSent:00}");
+            if (info.Ack >= 0) 
+                sb.AppendLine($"Ack in/out(#/s): {info.Ack:00}/{info.AckSent:00}");
 
-              sb.AppendLine($"Nak in/out(#/s): {info.Nak:00}/{info.NakSent:00}");
+            if (info.Nak >= 0)
+                sb.AppendLine($"Nak in/out(#/s): {info.Nak:00}/{info.NakSent:00}");
              // sb.AppendLine($"Resends: {info.Resends:00}");
               //sb.AppendLine($"Fails: {info.Fails:00}");
             sb.Append($"THR in/out(Kbps): {dataIn:F2}/{dataOut:F2}");

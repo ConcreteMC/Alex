@@ -217,7 +217,8 @@ namespace Alex.Particles
 					return true;
 
 				case ParticleType.RisingRedDust:
-					break;
+					value = "minecraft:redstone_wire_dust_particle";
+					return true;
 
 				case ParticleType.ItemBreak:
 					dataMode = ParticleDataMode.Item;
@@ -362,6 +363,7 @@ namespace Alex.Particles
 					return true;
 
 				case ParticleType.FireworksOverlay:
+					value = "minecraft:sparkler_emitter";
 					break;
 
 				case ParticleType.BalloonGas:

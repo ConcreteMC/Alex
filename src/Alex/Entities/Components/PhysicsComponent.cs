@@ -51,7 +51,7 @@ namespace Alex.Worlds
 		protected override void OnUpdate(float deltaTime)
 		{
 			var e = Entity;
-			if (!e.IsSpawned || e.NoAi || !Enabled)
+			if (!e.IsSpawned || e.NoAi || !Enabled || e.Level == null)
 				return;
 
 			var onGround       = e.KnownPosition.OnGround;

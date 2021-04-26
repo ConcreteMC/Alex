@@ -11,6 +11,7 @@ using Alex.Networking.Java.Packets.Play;
 using Microsoft.Xna.Framework;
 using MiNET;
 using MiNET.Net;
+using MiNET.Utils.IO;
 using ConnectionState = Alex.Networking.Java.ConnectionState;
 using Player = Alex.Entities.Player;
 
@@ -19,12 +20,12 @@ namespace Alex.Worlds.Multiplayer.Java
 	public class JavaNetworkProvider : NetworkProvider
 	{
 		private NetConnection Client            { get; }
-		private Timer      NetworkReportTimer { get; }
+		private HighPrecisionTimer      NetworkReportTimer { get; }
 		public JavaNetworkProvider(NetConnection client)
 		{
 			Client = client;
 			
-			NetworkReportTimer =  new Timer(
+			NetworkReportTimer =  new HighPrecisionTimer( 1000,
 						state =>
 						{
 							long   packetSizeOut = Interlocked.Exchange(ref Client.PacketSizeOut, 0L);
@@ -34,9 +35,9 @@ namespace Alex.Worlds.Multiplayer.Java
 							long   packetCountIn = Interlocked.Exchange(ref Client.PacketsIn, 0L);
 
 							_connectionInfo = new ConnectionInfo(
-								Client.StartTime, Client.Latency, 0, 0, 0, 0, 0,
+								Client.StartTime, Client.Latency, -1, -1, -1, -1, -1,
 								packetSizeIn, packetSizeOut, packetCountIn, packetCountOut);
-						}, null, 1000L, 1000L);
+						});
 		}
 
 		/// <inheritdoc />
@@ -190,8 +191,11 @@ namespace Alex.Worlds.Multiplayer.Java
 
 		public override void Close()
 		{
-			NetworkReportTimer?.Change(Timeout.Infinite, Timeout.Infinite);
-			NetworkReportTimer?.Dispose();
+			//NetworkReportTimer?.Change(Timeout.Infinite, Timeout.Infinite);
+			try
+			{
+				NetworkReportTimer?.Dispose();
+			}catch{}
 		}
 
 		/// <inheritdoc />

@@ -491,6 +491,7 @@ namespace Alex.API.Utils.Collections
 			internal ReadLock(ReaderWriterLockSlim rwl)
 			{
 				TheLock = rwl;
+
 				TheLock.EnterReadLock();
 			}
 
@@ -507,6 +508,7 @@ namespace Alex.API.Utils.Collections
 			internal WriteLock(ReaderWriterLockSlim rwl)
 			{
 				TheLock = rwl;
+				
 				TheLock.EnterWriteLock();
 			}
 
