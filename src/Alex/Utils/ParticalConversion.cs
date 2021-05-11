@@ -46,13 +46,14 @@ namespace Alex.Utils
 				case "minecraft:mycelium":              return "minecraft:mycelium_dust_particle";
 				case "minecraft:nautilus":              return "minecraft:nautilus";
 				case "minecraft:note":                  return "minecraft:note_particle";
-				case "minecraft:poof":                  return "minecraft:explode";
+				case "minecraft:poof":                  return "minecraft:death_explosion_emitter";
 				case "minecraft:portal":                return "minecraft:mob_portal";
 				case "minecraft:squid_ink":             return "minecraft:ink";
 				case "minecraft:splash":                return "minecraft:water_splash_particle_manual";
 				case "minecraft:spit":                  return "minecraft:llama_spit_smoke";
 				case "minecraft:totem_of_undying":      return "minecraft:totem_particle";
 				case "minecraft:witch":                 return "minecraft:mobspell_emitter";
+				case "minecraft:block":                 return "minecraft:block_destruct";
 			}
 
 			return java;

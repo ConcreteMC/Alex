@@ -34,14 +34,14 @@ jobs:
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v1.7.2
       with:
-        dotnet-version: 5.0.100
+        dotnet-version: 5.0.6
     
     - name: Get short SHA
       id: vars
       run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
       
     - name: Build
-      run: dotnet publish --configuration Release -o "build-linux" --version-suffix ${{steps.vars.outputs.sha_short}} -r linux-x64 /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true /p:IncludeAllContentForselfExtract=true /p:PublishReadyToRun=true
+      run: dotnet publish --configuration Release -o "build-linux" --version-suffix ${{steps.vars.outputs.sha_short}} -r linux-x64 /p:PublishReadyToRun=false /p:TieredCompilation=false --self-contained
       working-directory: src/Alex
 
     - name: Set executable permissions
@@ -69,14 +69,14 @@ jobs:
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v1.7.2
       with:
-        dotnet-version: 5.0.100
+        dotnet-version: 5.0.6
     
     - name: Get short SHA
       id: vars
       run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
       
     - name: Build
-      run: dotnet publish --configuration Release -o /build-win --version-suffix ${{steps.vars.outputs.sha_short}} -r win-x64 /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true /p:IncludeAllContentForselfExtract=true /p:PublishReadyToRun=true
+      run: dotnet publish --configuration Release -o /build-win --version-suffix ${{steps.vars.outputs.sha_short}} -r win-x64 /p:PublishReadyToRun=false /p:TieredCompilation=false --self-contained
       working-directory: src/Alex
 
     - name: Upload artifact
@@ -131,14 +131,14 @@ jobs:
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v1.7.2
       with:
-        dotnet-version: 5.0.100
+        dotnet-version: 5.0.6
     
     - name: Get short SHA
       id: vars
       run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
       
     - name: Build
-      run: dotnet publish --configuration Release -o "build-osx" --version-suffix ${{steps.vars.outputs.sha_short}} -r osx-x64 /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true /p:IncludeAllContentForselfExtract=true /p:PublishReadyToRun=true
+      run: dotnet publish --configuration Release -o "build-osx" --version-suffix ${{steps.vars.outputs.sha_short}} -r osx-x64 /p:PublishReadyToRun=false /p:TieredCompilation=false --self-contained
       working-directory: src/Alex
 
     - name: Set executable permissions

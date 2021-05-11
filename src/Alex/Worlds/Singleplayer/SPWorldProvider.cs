@@ -119,41 +119,7 @@ namespace Alex.Worlds.Singleplayer
 			ThreadCancellationTokenSource = new CancellationTokenSource();
 		}
 
-		private void RunThread()
-		{
-			SpinWait sw = new SpinWait();
-			while (!ThreadCancellationTokenSource.IsCancellationRequested)
-			{
-				if (!World.Player.IsSpawned)
-				{
-					sw.SpinOnce();
-					continue;
-				}
-
-				/*var e = base.WorldReceiver?.Player;
-				if (e != null)
-				{
-					pp = e.KnownPosition;
-				}*/
-				//var pp = base.WorldReceiver.Player;
-				ChunkCoordinates currentCoordinates =
-					new ChunkCoordinates(World.Player.KnownPosition);
-
-				if (PreviousChunkCoordinates != currentCoordinates)
-				{
-					PreviousChunkCoordinates = currentCoordinates;
-
-					GenerateChunks(currentCoordinates, OptionsProvider.AlexOptions.VideoOptions.RenderDistance);
-
-					//World.ChunkManager.FlagPrioritization();
-				}
-
-				//sw.SpinOnce();
-				Thread.Sleep(500);
-			}
-		}
-
-		private IEnumerable<ChunkColumn> GenerateChunks(ChunkCoordinates center, int renderDistance)
+        private IEnumerable<ChunkColumn> GenerateChunks(ChunkCoordinates center, int renderDistance)
 		{
 			var oldChunks = _loadedChunks.ToArray();
 			
@@ -224,8 +190,7 @@ namespace Alex.Worlds.Singleplayer
 				}
 			}*/
 		}
-
-		private Thread UpdateThread { get; set; }
+		
 		protected override void Initiate()
 		{
 			/*lock (genLock)
@@ -296,9 +261,9 @@ namespace Alex.Worlds.Singleplayer
 
 			World.Player.IsSpawned = true;
 
-			UpdateThread = new Thread(RunThread) {IsBackground = true};
+		//	UpdateThread = new Thread(RunThread) {IsBackground = true};
 
-			UpdateThread.Start();
+			//UpdateThread.Start();
 
 			return LoadResult.Done;
 		}
@@ -309,6 +274,33 @@ namespace Alex.Worlds.Singleplayer
 			
 			ThreadCancellationTokenSource?.Cancel();
 			base.Dispose();
+		}
+
+		/// <inheritdoc />
+		public override void OnTick()
+		{
+			if (!World.Player.IsSpawned)
+			{
+				return;
+			}
+
+			/*var e = base.WorldReceiver?.Player;
+			if (e != null)
+			{
+				pp = e.KnownPosition;
+			}*/
+			//var pp = base.WorldReceiver.Player;
+			ChunkCoordinates currentCoordinates =
+				new ChunkCoordinates(World.Player.KnownPosition);
+
+			if (PreviousChunkCoordinates != currentCoordinates)
+			{
+				PreviousChunkCoordinates = currentCoordinates;
+
+				GenerateChunks(currentCoordinates, OptionsProvider.AlexOptions.VideoOptions.RenderDistance);
+
+				//World.ChunkManager.FlagPrioritization();
+			}
 		}
 	}
 }

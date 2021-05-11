@@ -1,4 +1,5 @@
 ﻿using System;
+using Alex.API.Data;
 using Alex.API.Resources;
 using Alex.Networking.Java.Util;
 using Microsoft.Xna.Framework;
@@ -22,6 +23,11 @@ namespace Alex.Networking.Java.Packets.Play
 
 		public Color? Color = null;
 		public float Scale = 1f;
+
+		public SlotData SlotData = null;
+
+		public int? BlockStateId = null;
+		
 		public override void Decode(MinecraftStream stream)
 		{
 			ParticleId = stream.ReadInt();
@@ -49,6 +55,12 @@ namespace Alex.Networking.Java.Packets.Play
 					Color = new Color(r, g, b);
 					Scale = stream.ReadFloat();
 					break;
+				case "minecraft:item":
+					SlotData = stream.ReadSlot();
+					break;
+				case "minecraft:block":
+					BlockStateId = stream.ReadVarInt();
+					break;
 			}
 			//TODO: Read data, varies per particle tho...
 		}
@@ -65,6 +77,8 @@ namespace Alex.Networking.Java.Packets.Play
 			
 			Color = null;
 			Scale = 1f;
+			SlotData = null;
+			BlockStateId = null;
 		}
 	}
 }

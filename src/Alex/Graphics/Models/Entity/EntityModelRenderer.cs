@@ -325,8 +325,8 @@ namespace Alex.Graphics.Models.Entity
 		{
 			if (Interlocked.Decrement(ref _instances) == 0)
 			{
-				VertexBuffer?.MarkForDisposal();
-				IndexBuffer?.MarkForDisposal();
+				VertexBuffer?.ReturnResource(this);
+				IndexBuffer?.ReturnResource(this);
 				//Effect?.Dispose();
 
 				//Effect = null;

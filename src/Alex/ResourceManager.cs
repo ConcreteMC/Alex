@@ -59,8 +59,9 @@ namespace Alex
 		private LinkedList<BedrockResourcePack> ActiveBedrockResourcePacks { get; } = new LinkedList<BedrockResourcePack>();
 		public BedrockResourcePack BedrockResourcePack => ActiveBedrockResourcePacks.First?.Value;
 		public  Registries                 Registries          { get; private set; }
-		public  AtlasGenerator             Atlas               { get; private set; }
-
+		public  AtlasGenerator             BlockAtlas               { get; private set; }
+		public  AtlasGenerator             ItemAtlas               { get; private set; }
+		
 		private IStorageSystem Storage { get; }
 		private IOptionsProvider Options { get; }
 		private IRegistryManager RegistryManager { get; }
@@ -81,7 +82,9 @@ namespace Alex
 		public static PooledTexture2D NethergamesLogo { get; private set; }
 		public ResourceManager(IServiceProvider serviceProvider)
 		{
-			Atlas = new AtlasGenerator();
+			BlockAtlas = new AtlasGenerator("block/");
+			ItemAtlas = new AtlasGenerator("items/");
+			
 			Storage = serviceProvider.GetService<IStorageSystem>();
 
 			Options = serviceProvider.GetService<IOptionsProvider>();
@@ -386,7 +389,7 @@ namespace Alex
             _hasInit = true;
             
             var data = ReadResource("Alex.Resources.nethergames.png");
-            NethergamesLogo = TextureUtils.BitmapToTexture2D(Alex.GraphicsDevice, Image.Load(data));
+            NethergamesLogo = TextureUtils.BitmapToTexture2D(this, Alex.GraphicsDevice, Image.Load(data));
 	            
             return true;
 		}
@@ -437,7 +440,8 @@ namespace Alex
 	        if (_hasInit)
 	        {
 		        PreloadCallback?.Invoke(first.FontBitmap, McResourcePack.BitmapFontCharacters.ToList());
-		        Atlas.Reset();
+		        BlockAtlas.Reset();
+		        ItemAtlas.Reset();
 	        }
 	        
 	        foreach (string file in resourcePacks)
@@ -502,29 +506,42 @@ namespace Alex
 	        Log.Info($"Imported {imported} blockstates from resourcepack in {sw.ElapsedMilliseconds}ms!");
 
 	        var textures = new Dictionary<ResourceLocation, AtlasGenerator.ImageEntry>();
+
 	        for (var index = 0; index < active.Length; index++)
 	        {
 		        var resourcePack = active[index];
-		        
-		        progress?.UpdateProgress(0, $"Loading textures: {resourcePack.Info?.Name ?? "Unknown"}");
-	        
-		        Atlas.LoadResourcePackOnTop(device,
-			        textures,
-			        resourcePack,
-			        progress, index == active.Length - 1);
+
+		        progress?.UpdateProgress(0, $"Loading block textures: {resourcePack.Info?.Name ?? "Unknown"}");
+
+		        BlockAtlas.LoadResourcePackOnTop(device, textures, resourcePack, progress, index == active.Length - 1);
 		        //LoadTextures(device, progress, resourcePack, ref textures, index == active.Length - 1);
 	        }
+	        
+	        textures.Clear();
 
-	        foreach (var resourcePack in ActiveBedrockResourcePacks)
+	        for (var index = 0; index < active.Length; index++)
 	        {
+		        var resourcePack = active[index];
+
+		        progress?.UpdateProgress(0, $"Loading item textures: {resourcePack.Info?.Name ?? "Unknown"}");
+
+		        ItemAtlas.LoadResourcePackOnTop(device, textures, resourcePack, progress, index == active.Length - 1);
+	        }
+
+	        var activeBedrockPacks = ActiveBedrockResourcePacks.ToArray();
+
+
+	        for (int index = 0; index < activeBedrockPacks.Length; index++)
+	        {
+		        var resourcePack = activeBedrockPacks[index];
 		        //LoadEntityModels(resourcePack, progress);
 		        int modelCount = EntityFactory.LoadModels(resourcePack, this, device, true, progress);
 
 		        Log.Debug($"Imported {modelCount} entity models...");
-		        
+
 		        Alex.ParticleManager.Load(resourcePack);
 	        }
-	        
+
 	        progress?.UpdateProgress(0, $"Loading UI textures...");
 	        Alex.GuiRenderer.LoadResourcePackTextures(this, progress);
 

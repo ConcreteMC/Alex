@@ -29,28 +29,28 @@ namespace Alex.Networking.Bedrock.RakNet
         /// <summary>
         ///      Threshold between slow start and congestion avoidance
         /// </summary>
-        public double SlowStartThreshold { get; set; } = 0;
+        public double SlowStartThreshold { get; private set; } = 0;
         
         /// <summary>
         ///     The estimated Round Trip Time
         /// </summary>
-        public double EstimatedRtt { get; set; } = -1;
+        public double EstimatedRtt { get; private set; } = -1;
         
         /// <summary>
         ///     The last known Round Trip Time
         /// </summary>
-        public long LastRtt { get; set; } = -1;
+        public long LastRtt { get; private set; } = -1;
         
         /// <summary>
         ///     The amount the Round Trip Time is allowed to deviate
         /// </summary>
-        public double DeviationRtt { get; set; } = -1;
+        public double DeviationRtt { get; private set; } = -1;
 
         /// <summary>
         /// When we get an ack, if oldestUnsentAck==0, set it to the current time
         /// When we send out acks, set oldestUnsentAck to 0
         /// </summary>
-        public long OldestUnsentAck { get; set; } = 0;
+        public long OldestUnsentAck { get; private set; } = 0;
 
         /// <summary>
         ///     Every outgoing datagram is assigned a sequence number, which increments by 1 every assignment
@@ -65,9 +65,9 @@ namespace Alex.Networking.Bedrock.RakNet
 
         private double _cwnd;
 
-        public long NextCongestionControlBlock { get; set; }
-        public bool BackoffThisBlock { get; set; }
-        public bool IsContinuousSend { get; set; } = false;
+        public long NextCongestionControlBlock { get; private set; }
+        public bool BackoffThisBlock { get; private set; }
+        public bool IsContinuousSend { get; private set; } = false;
 
         public SlidingWindow(int mtuSize)
         {
@@ -158,7 +158,7 @@ namespace Alex.Networking.Bedrock.RakNet
             {
                 SlowStartThreshold = Cwnd / 2D;
                 
-                Log.Info($"Set congestion avoidance. Cwnd={Cwnd:F2}");
+                Log.Info($"Set congestion avoidance. Cwnd={Cwnd:F2}, SlowStartThreshold={SlowStartThreshold:F2}, NAKSequenceNumber={nakSequenceNumber}");
             }
         }
 

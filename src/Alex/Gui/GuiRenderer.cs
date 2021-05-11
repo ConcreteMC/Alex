@@ -284,7 +284,7 @@ namespace Alex.Gui
 
 			if (_scrollbar == null)
 			{
-				_scrollbar = TextureUtils.ImageToTexture2D(_graphicsDevice,
+				_scrollbar = TextureUtils.ImageToTexture2D(this, _graphicsDevice,
 					ResourceManager.ReadResource("Alex.Resources.ScrollBar.png"));
 				LoadScrollBar(_scrollbar);
 			}
@@ -445,7 +445,7 @@ namespace Alex.Gui
 
 		private TextureSlice2D LoadTextureFromEmbeddedResource(GuiTextures guiTexture, byte[] resource)
 		{
-			_textureCache[guiTexture] = TextureUtils.ImageToTexture2D(_graphicsDevice, resource);
+			_textureCache[guiTexture] = TextureUtils.ImageToTexture2D(this, _graphicsDevice, resource);
 			return _textureCache[guiTexture];
 		}
 
@@ -454,7 +454,7 @@ namespace Alex.Gui
 		{
 			if (resources.TryGetBitmap(path, out var texture))
 			{
-				_textureCache[guiTexture] = TextureUtils.BitmapToTexture2D(_graphicsDevice, texture);
+				_textureCache[guiTexture] = TextureUtils.BitmapToTexture2D(this, _graphicsDevice, texture);
 			}
 		}
 

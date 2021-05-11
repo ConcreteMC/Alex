@@ -47,7 +47,7 @@ namespace Alex.Particles
 			_instances.Clear();
 		}
 
-		public bool Spawn(Vector3 position, int data, ParticleDataMode dataMode, out ParticleInstance instance)
+		public bool Spawn(Vector3 position, long data, ParticleDataMode dataMode, out ParticleInstance instance)
 		{
 			if (AppearanceComponent == null)
 			{

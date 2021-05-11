@@ -26,6 +26,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Text.RegularExpressions;
@@ -54,7 +55,7 @@ namespace Alex.Networking.Bedrock.RakNet
 		private long _lastOrderingIndex   = -1; // That's the first message with wrapper
 
 
-		private readonly ConcurrentPriorityQueue<int, Packet> _orderingBufferQueue = new ConcurrentPriorityQueue<int, Packet>();
+		private readonly ConcurrentDictionary<long, Packet> _orderingBufferQueue = new ConcurrentDictionary<long, Packet>();
 		private          CancellationTokenSource                          _cancellationToken;
 
 		public ConnectionInfo ConnectionInfo { get; }
@@ -143,28 +144,29 @@ namespace Alex.Networking.Bedrock.RakNet
 		}
 
 		private AutoResetEvent _orderingResetEvent = new AutoResetEvent(false);
+
+		private Thread _orderingThread = null;
 		private void AddToOrderedChannel(Packet message)
 		{
+
 			try
 			{
 				if (_cancellationToken.Token.IsCancellationRequested) return;
-				
-				var current  = message.ReliabilityHeader.OrderingIndex.IntValue();
+
+				var current = message.ReliabilityHeader.OrderingIndex.IntValue();
 
 				if (Interlocked.Read(ref _lastOrderingIndex) >= current)
 					return;
-
-				if (HandleOrdered(current, message) != OrderedHandlingResult.Success)
+				
+				if (_orderingThread == null)
 				{
-					_orderingBufferQueue.Enqueue(current, message);
-					
-					if (_orderingBufferQueue.Count > 1)
-						ProcessOrderedQueue();
+					_orderingThread = new Thread(
+						ProcessOrderedQueue);
+					_orderingThread.Start();
 				}
-				//_orderingBufferQueue.Enqueue(current, message);
-				//ProcessOrderedQueue();
-				
-				
+
+				if (_orderingBufferQueue.TryAdd(current, message))
+					_orderingResetEvent.Set();
 			}
 			catch (Exception e)
 			{
@@ -173,32 +175,24 @@ namespace Alex.Networking.Bedrock.RakNet
 		}
 
 		public bool IsOutOfOrder => _orderingBufferQueue.Count > 0;
-
-		private object _threadLock = new object();
-
 		private void ProcessOrderedQueue()
 		{
-			//	Log.Info($"Ordering start");
+			int count = 0;
+			
 			try
 			{
-
-				while (_orderingBufferQueue.TryPeek(out KeyValuePair<int, Packet> pair)
-				       && !_cancellationToken.IsCancellationRequested)
+				while (!_cancellationToken.IsCancellationRequested)
 				{
-					var result = HandleOrdered(pair.Key, pair.Value);
-
-					if (result == OrderedHandlingResult.Success || result == OrderedHandlingResult.Invalid)
+					var key = Interlocked.Read(ref _lastOrderingIndex) + 1;
+					if (_orderingBufferQueue.TryRemove(key, out var value))
 					{
-						_orderingBufferQueue.TryDequeue(out _);
-
+						Interlocked.Exchange(ref _lastOrderingIndex, key);
+						HandlePacket(value);
 						continue;
 					}
-
-					break;
+					
+					_orderingResetEvent.WaitOne();
 				}
-
-				//	if (!_orderingResetEvent.WaitOne(500)) //Keep the thread alive for longer.
-				//	break;
 
 			}
 			catch (ObjectDisposedException)
@@ -209,40 +203,6 @@ namespace Alex.Networking.Bedrock.RakNet
 			{
 				Log.Error(e, $"Exit receive handler task for player");
 			}
-			finally
-			{
-				//_orderingResetEvent?.Reset();
-				//if (_orderingBufferQueue.IsEmpty)
-				//	IsOutOfOrder = false;
-
-				//	Log.Info($"Ordering stop");
-			}
-		}
-
-		public enum OrderedHandlingResult
-		{
-			Success,
-			Invalid,
-			OutOfOrder
-		}
-		
-		private OrderedHandlingResult HandleOrdered(int orderingIndex, Packet packet)
-		{
-			var last = Interlocked.CompareExchange(ref _lastOrderingIndex, orderingIndex, orderingIndex - 1);
-
-			if (last == orderingIndex - 1)
-			{
-				HandlePacket(packet);
-
-				return OrderedHandlingResult.Success;
-			} 
-			else if (last > orderingIndex)
-			{
-				packet?.PutPool();
-				return OrderedHandlingResult.Invalid;
-			}
-
-			return OrderedHandlingResult.OutOfOrder;
 		}
 
 		private void HandlePacket(Packet message)
@@ -758,9 +718,12 @@ namespace Alex.Networking.Bedrock.RakNet
 			_closed = true;
 
 			//_tickerHighPrecisionTimer?.Change(Timeout.Infinite, Timeout.Infinite);
-			_tickerHighPrecisionTimer?.Dispose();
-			_tickerHighPrecisionTimer = null;
-			
+			try
+			{
+				_tickerHighPrecisionTimer?.Dispose();
+				_tickerHighPrecisionTimer = null;
+			}catch{}
+
 			State = ConnectionState.Unconnected;
 			Evicted = true;
 			
@@ -808,9 +771,7 @@ namespace Alex.Networking.Bedrock.RakNet
 
 			if (Log.IsDebugEnabled) Log.Info($"Closed network session");
 		}
-
-		private bool   _isOutOfOrder                       = false;
-
+		
 		private static readonly DateTime Jan1st1970 = new DateTime
 			(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 		

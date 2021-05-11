@@ -799,6 +799,10 @@ namespace Alex.Entities
 			
 		}
 		
+		public Vector3 RiderSeatPosition { get; set; } = Vector3.Zero;
+		public float RiderMinRotation { get; set; } = 0f;
+		public float RiderMaxRotation { get; set; } = 360f;
+		public bool RiderRotationLocked { get; set; } = true;
 		public void HandleMetadata(MetadataDictionary metadata)
 		{
 			foreach (var meta in metadata._entries)
@@ -829,9 +833,42 @@ namespace Alex.Entities
 							Scale = flt.Value;
 						}
 					} break;
+
+					case (int) MiNET.Entities.Entity.MetadataFlags.RiderSeatPosition:
+					{
+						if (meta.Value is MiNET.Utils.Metadata.MetadataVector3 seatPosition)
+						{
+							var val = seatPosition.Value;
+							RiderSeatPosition = new Vector3(val.X, val.Y, val.Z);
+						}	
+					} break;
+
+					case (int) MiNET.Entities.Entity.MetadataFlags.RiderMinRotation:
+					{
+						if (meta.Value is MiNET.Utils.Metadata.MetadataFloat mdf)
+						{
+							RiderMinRotation = mdf.Value;
+						}	
+					} break;
+					
+					case (int) MiNET.Entities.Entity.MetadataFlags.RiderMaxRotation:
+					{
+						if (meta.Value is MiNET.Utils.Metadata.MetadataFloat mdf)
+						{
+							RiderMaxRotation = mdf.Value;
+						}	
+					} break;
+					
+					case (int) MiNET.Entities.Entity.MetadataFlags.RiderRotationLocked:
+					{
+						if (meta.Value is MiNET.Utils.Metadata.MetadataByte mdf)
+						{
+							RiderRotationLocked = mdf.Value == 1;
+						}	
+					} break;
 					
 					//case (int) MiNET.Entities.Entity.MetadataFlags.EntityFlags2:
-					case (int) MiNET.Entities.Entity.MetadataFlags.EntityFlags2:
+					case 92://((int) MiNET.Entities.Entity.MetadataFlags.EntityFlags2):
 					{
 						if (meta.Value is MiNET.Utils.Metadata.MetadataLong lng)
 						{
@@ -898,10 +935,18 @@ namespace Alex.Entities
 						}
 					} break;
 
+					case 81:
+					{
+						if (meta.Value is MiNET.Utils.Metadata.MetadataByte alwaysShowNameTag)
+						{
+							IsAlwaysShowName = alwaysShowNameTag.Value == 1;
+						}	
+					} break;
+
 					default:
 						if (!HandleMetadata((MiNET.Entities.Entity.MetadataFlags) meta.Key, meta.Value))
 						{
-							Log.Debug($"Unimplemented flag: {(MiNET.Entities.Entity.MetadataFlags) meta.Key}");
+							Log.Debug($"({GetType().Name}) Unimplemented flag: {(MiNET.Entities.Entity.MetadataFlags) meta.Key}");
 						}
 
 						break;
@@ -1052,12 +1097,15 @@ namespace Alex.Entities
 			}
 			set
 			{
-				var oldValue = _texture;
+				if (value == _texture)
+					return;
+				
+				PooledTexture2D oldValue = _texture;
 
 				try
 				{
 					_texture = value;
-					value?.Use();
+					value?.Use(this);
 					
 					if (Effect != null && value != null)
 					{
@@ -1066,8 +1114,8 @@ namespace Alex.Entities
 				}
 				finally
 				{
-					oldValue?.Release();
-					oldValue?.MarkForDisposal();
+					oldValue?.Release(this);
+					oldValue?.ReturnResource(this);
 				}
 			}
 		}
@@ -1470,9 +1518,6 @@ namespace Alex.Entities
 
 			try
 			{
-				var texture = Texture;
-				texture?.Release();
-				texture?.MarkForDisposal();
 				Texture = null;
 				
 				var model = ModelRenderer;
@@ -1679,6 +1724,12 @@ namespace Alex.Entities
 		[MoProperty("distance_from_camera")]
 		public double DistanceFromCamera => Vector3.Distance(Level.Camera.Position, KnownPosition);
 		
+		/// <summary>
+		///		takes one optional hand slot as a parameter (0 or 'main_hand' for main hand, 1 or 'off_hand' for off hand),
+		///		and a second parameter (0=default) if you would like the equipped item or any non-zero number for the currently rendered item
+		/// </summary>
+		/// <param name="mo"></param>
+		/// <returns>returns the name of the item in the requested slot (defaulting to the main hand if no parameter is supplied) if there is one, otherwise returns ''.</returns>
 		[MoFunction("get_equipped_item_name")]
 		public string GetEquippedItemName(MoParams mo)
 		{
@@ -1710,6 +1761,11 @@ namespace Alex.Entities
 			return item.Name.Replace("minecraft:", "");
 		}
 		
+		/// <summary>
+		///		Takes one argument that represents the desired axis (0 == x-axis, 1 == y-axis, 2 == z-axis).
+		/// </summary>
+		/// <param name="axis"></param>
+		/// <returns>Returns the absolute position of an actor.</returns>
 		[MoFunction("position")]
 		public double GetPosition(int axis)
 		{
@@ -1742,6 +1798,11 @@ namespace Alex.Entities
 			return LifeTime.TotalSeconds;
 		}
 		
+		/// <summary>
+		///		Takes one argument that represents the desired axis (0 == x-axis, 1 == y-axis, 2 == z-axis).
+		/// </summary>
+		/// <param name="axis"></param>
+		/// <returns>Returns the position delta for an actor.</returns>
 		[MoFunction("position_delta")]
 		public double PositionDelta(int axis)
 		{
@@ -1762,6 +1823,11 @@ namespace Alex.Entities
 			return amount;
 		}
 
+		/// <summary>
+		///		Returns the rotation of the camera
+		/// </summary>
+		/// <param name="axis"></param>
+		/// <returns>Requires one argument representing the rotation axis you would like (`0==x`, `1==y`)</returns>
 		[MoFunction("camera_rotation")]
 		public double CameraRotation(int axis = 0)
 		{
@@ -1831,6 +1897,11 @@ namespace Alex.Entities
 			return ((1f / 24000f) * Level.TimeOfDay);
 		}
 
+		/// <summary>
+		///		takes one optional hand slot as a parameter (0 or 'main_hand' for main hand, 1 or 'off_hand' for off hand)
+		/// </summary>
+		/// <param name="mo"></param>
+		/// <returns>returns 1.0 if there is an item in the requested slot (defaulting to the main hand if no parameter is supplied), otherwise returns 0.0.</returns>
 		[MoFunction("is_item_equipped")]
 		public bool IsItemEquipped(MoParams mo)
 		{
@@ -1868,6 +1939,9 @@ namespace Alex.Entities
 		[MoProperty("target_y_rotation")]
 		public double TargetYRotation => TargetRotation.Y;
 
+		/// <summary>
+		///		Returns true if the player has selected an item in the inventory
+		/// </summary>
 		[MoProperty("is_selected_item")]
 		public bool IsSelectedItem => Inventory.MainHand.Count > 0 && !(Inventory.MainHand is ItemAir);
 
@@ -1880,6 +1954,11 @@ namespace Alex.Entities
 		[MoProperty("cape_flap_amount")]
 		public double CapeFlapAmount { get; set; } = 0d;
 
+		/// <summary>
+		///		Gets specified axis of the specified locator offset of the root model
+		/// </summary>
+		/// <param name="param"></param>
+		/// <returns></returns>
 		[MoFunction("get_root_locator_offset")]
 		public double GetRootLocatorOffset(MoParams param)
 		{
@@ -1887,6 +1966,10 @@ namespace Alex.Entities
 			return 0d;
 		}
 
+		/// <summary>
+		///		Debug log a value to the output debug window for builds that have one
+		/// </summary>
+		/// <param name="param"></param>
 		[MoFunction("debug_output", "debug")]
 		public void DebugOutput(MoParams param)
 		{
@@ -1898,7 +1981,24 @@ namespace Alex.Entities
 				Log.Debug(str);
 			}
 		}
+
+		/// <summary>
+		///		takes one optional hand slot as a parameter (0 or 'main_hand' for main hand, 1 or 'off_hand' for off hand)
+		/// </summary>
+		/// <param name="param"></param>
+		/// <returns>returns 1.0 if the item is charged in the requested slot (defaulting to the main hand if no parameter is supplied), otherwise returns 0.0.</returns>
+		[MoFunction("item_is_charged")]
+		public double ItemIsCharged(MoParams param)
+		{
+			return 0d;
+		}
+
+		[MoProperty("item_max_use_duration")] 
+		public double ItemMaxUseDuration => 0d;//MainHandItemMaxDuration;
 		
+		[MoProperty("item_remaining_use_duration")]
+		public double ItemRemainingUseDuration => ItemMaxUseDuration > 0d ? (ItemMaxUseDuration - ItemInUseDuration) : 0d;
+
 		#endregion
 	}
 }

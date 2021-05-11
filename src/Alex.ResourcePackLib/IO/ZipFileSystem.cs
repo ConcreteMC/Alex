@@ -1,25 +1,25 @@
-using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
-using System.IO.Compression;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using Alex.ResourcePackLib.IO.Abstract;
+using Ionic.Zip;
 
 namespace Alex.ResourcePackLib.IO
 {
 	public class ZipFileSystem : IFilesystem
 	{
-		private  ZipArchive                       _archive;
+		private  ZipFile                       _archive;
 		private  ReadOnlyCollection<ZipFileEntry> _entries;
 		internal object                           Lock    = new object();
 		internal Thread                           ActiveThread = null;
 		public ZipFileSystem(Stream stream, string name)
 		{
 			Name = name;
-			_archive = new ZipArchive(stream, ZipArchiveMode.Read, false);
-			
+			_archive = ZipFile.Read(stream);
+
 			List<ZipFileEntry> entries = new List<ZipFileEntry>();
 			foreach (var entry in _archive.Entries)
 			{
@@ -31,6 +31,15 @@ namespace Alex.ResourcePackLib.IO
 
 		/// <inheritdoc />
 		public string Name { get; }
+		
+		public bool PasswordProtected { get; private set; }
+		public string Password { get; private set; }
+
+		public void UseEncryption(string password)
+		{
+			PasswordProtected = true;
+			Password = password;
+		}
 
 		/// <inheritdoc />
 		public IReadOnlyCollection<IFile> Entries 
@@ -45,13 +54,6 @@ namespace Alex.ResourcePackLib.IO
 		public IFile GetEntry(string name)
 		{
 			return _entries.FirstOrDefault(x => x.Name == name);
-			
-			var result = _archive.GetEntry(name);
-
-			if (result != null)
-				return new ZipFileEntry(this, result);
-
-			return null;
 		}
 		
 		public override string ToString()
@@ -67,23 +69,27 @@ namespace Alex.ResourcePackLib.IO
 
 		public class ZipFileEntry : IFile
 		{
-			private ZipArchiveEntry _entry;
+			private ZipEntry _entry;
 			private ZipFileSystem   _archive;
-			public ZipFileEntry(ZipFileSystem archive, ZipArchiveEntry entry)
+			public ZipFileEntry(ZipFileSystem archive, ZipEntry entry)
 			{
 				_archive = archive;
 				_entry = entry;
+
+				FullName = entry.FileName;
+				Name = Path.GetFileName(FullName);
+				Length = entry.UncompressedSize;
 			}
 
 			/// <inheritdoc />
-			public string FullName => _entry.FullName;
+			public string FullName { get; }
 
 			/// <inheritdoc />
-			public string Name => _entry.Name;
+			public string Name { get; }
 
 			/// <inheritdoc />
-			public long Length => _entry.Length;
-
+			public long Length { get; }
+			
 			/// <inheritdoc />
 			public Stream Open()
 			{
@@ -91,86 +97,24 @@ namespace Alex.ResourcePackLib.IO
 				{
 					SpinWait.SpinUntil(() => _archive.ActiveThread == null);
 					_archive.ActiveThread = Thread.CurrentThread;
-					
-					return new StreamWrapper(_entry.Open(), () =>
+
+					byte[] buffer;
+					using (MemoryStream ms = new MemoryStream())
 					{
-						_archive.ActiveThread = null;
-					});
+						if (_archive.PasswordProtected)
+						{
+							_entry.ExtractWithPassword(ms, _archive.Password);
+						}
+						else
+						{
+							_entry.Extract(ms);
+						}
+
+						buffer = ms.ToArray();
+					}
+
+					return new StreamWrapper(new MemoryStream(buffer), () => { _archive.ActiveThread = null; });
 				}
-			}
-		}
-
-		public class StreamWrapper : Stream
-		{
-			private Stream _base;
-			private Action _disposeAction;
-			public StreamWrapper(Stream baseStream, Action onDispose)
-			{
-				_base = baseStream;
-				_disposeAction = onDispose;
-			}
-
-			/// <inheritdoc />
-			public override void Flush()
-			{
-				_base.Flush();
-			}
-
-			/// <inheritdoc />
-			public override int Read(byte[] buffer, int offset, int count)
-			{
-				return _base.Read(buffer, offset, count);
-			}
-
-			/// <inheritdoc />
-			public override long Seek(long offset, SeekOrigin origin)
-			{
-				return _base.Seek(offset, origin);
-			}
-
-			/// <inheritdoc />
-			public override void SetLength(long value)
-			{
-				_base.SetLength(value);
-			}
-
-			/// <inheritdoc />
-			public override void Write(byte[] buffer, int offset, int count)
-			{
-				_base.Write(buffer, offset, count);
-			}
-
-			/// <inheritdoc />
-			public override bool CanRead => _base.CanRead;
-
-			/// <inheritdoc />
-			public override bool CanSeek => _base.CanSeek;
-
-			/// <inheritdoc />
-			public override bool CanWrite => _base.CanWrite;
-
-			/// <inheritdoc />
-			public override long Length => _base.Length;
-
-			/// <inheritdoc />
-			public override long Position
-			{
-				get
-				{
-					return _base.Position;
-				}
-				set
-				{
-					_base.Position = value;
-				}
-			}
-
-			/// <inheritdoc />
-			protected override void Dispose(bool disposing)
-			{
-				_disposeAction?.Invoke();
-				_disposeAction = null;
-				base.Dispose(disposing);
 			}
 		}
 	}

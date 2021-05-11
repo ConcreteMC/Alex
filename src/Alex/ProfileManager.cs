@@ -105,7 +105,7 @@ namespace Alex
 
 				if (alex.Resources.TryGetBitmap("entity/alex", out var rawTexture))
 				{
-					profile.Skin.Texture = TextureUtils.BitmapToTexture2D(alex.GraphicsDevice, rawTexture);
+					profile.Skin.Texture = TextureUtils.BitmapToTexture2D(this, alex.GraphicsDevice, rawTexture);
 					profile.Skin.Slim = true;
 				}
 			}

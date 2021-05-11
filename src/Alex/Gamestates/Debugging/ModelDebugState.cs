@@ -563,7 +563,7 @@ namespace Alex.Gamestates.Debugging
 				//else
 				//{
 				//	_alphaEffect.Texture = Alex.Resources.Atlas.GetStillAtlas();
-					_basicEffect.Texture = Alex.Resources.Atlas.GetAtlas();
+					_basicEffect.Texture = Alex.Resources.BlockAtlas.GetAtlas();
 				//}
 
 				_previousIndex = _index;

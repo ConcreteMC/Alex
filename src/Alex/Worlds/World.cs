@@ -132,12 +132,12 @@ namespace Alex.Worlds
 			
 			if (Alex.PlayerTexture != null)
 			{
-				texture = TextureUtils.BitmapToTexture2D(graphics, Alex.PlayerTexture);
+				texture = TextureUtils.BitmapToTexture2D(this, graphics, Alex.PlayerTexture);
 			}
 			else
 			{
 				resources.TryGetBitmap("entity/alex", out var rawTexture);
-				texture = TextureUtils.BitmapToTexture2D(graphics, rawTexture);
+				texture = TextureUtils.BitmapToTexture2D(this, graphics, rawTexture);
 			}
 			
 			Skin skin = profileService?.CurrentProfile?.Skin;
@@ -176,7 +176,7 @@ namespace Alex.Worlds
 
 			BackgroundWorker = new BackgroundWorker(_cancellationTokenSource.Token);
 			
-			Player?.OnSpawn();
+			//Player?.OnSpawn();
 			
 			_disposables.Add(Ticker);
 			_disposables.Add(EntityManager);

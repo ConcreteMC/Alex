@@ -29,6 +29,7 @@ using Alex.ResourcePackLib.Json.Models.Entities;
 using Alex.Utils;
 using Alex.Utils.Auth;
 using Alex.Utils.Inventories;
+using Alex.Worlds.Multiplayer.Bedrock.Resources;
 using Jose;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
@@ -68,7 +69,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		//public BedrockMotd KnownMotd = new BedrockMotd(string.Empty);
 
         private Alex                Alex                { get; }
-        public  ResourcePackManager ResourcePackManager { get; set; }
+        public  ResourcePackManager ResourcePackManager { get; private set; }
         private IOptionsProvider    OptionsProvider     { get; }
         private XboxAuthService     XboxAuthService     { get; }
         private AlexOptions         Options             => OptionsProvider.AlexOptions;
@@ -633,7 +634,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
         //    Session.CryptoContext.UseEncryption = true;
         }
 
-		public void SendMcpeMovePlayer(PlayerLocation location, byte mode = 0)
+		public void SendMcpeMovePlayer(PlayerLocation location, byte mode = 0, long tick = 0)
 		{
 			var movePlayerPacket = McpeMovePlayer.CreateObject();
 			movePlayerPacket.runtimeEntityId = EntityId;
@@ -646,7 +647,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			movePlayerPacket.headYaw = location.HeadYaw;
 			movePlayerPacket.mode = mode;
 			movePlayerPacket.onGround = location.OnGround;
-			//movePlayerPacket.tick = 
+			movePlayerPacket.tick = tick;
 
 			SendPacket(movePlayerPacket);
 		}
@@ -1098,7 +1099,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				    Item = minetItem,
 				    FromPosition = new System.Numerics.Vector3(p.KnownPosition.X, p.KnownPosition.Y, p.KnownPosition.Z),
 				    Slot = slot,
-				    BlockRuntimeId = ChunkProcessor.BlockStateMap.FirstOrDefault(x => x.Value.Id == itemInHand.Id && x.Value.Data == itemInHand.Meta).Key
+				    //BlockRuntimeId = ChunkProcessor.BlockStateMap.FirstOrDefault(x => x.Value.Id == itemInHand.Id && x.Value.Data == itemInHand.Meta).Key
 				    //BlockRuntimeId = 
 			    };
 

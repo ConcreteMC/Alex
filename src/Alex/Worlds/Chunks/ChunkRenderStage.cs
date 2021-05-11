@@ -166,7 +166,7 @@ namespace Alex.Worlds.Chunks
 					Buffer = buffer;
 					
 					if (oldBuffer != buffer)
-						oldBuffer?.MarkForDisposal();
+						oldBuffer?.ReturnResource(this);
 				}
 				finally
 				{
@@ -213,7 +213,7 @@ namespace Alex.Worlds.Chunks
 
 					BlockIndices.Clear();
 
-					Buffer?.MarkForDisposal();
+					Buffer?.ReturnResource(this);
 					Buffer = null;
 					BlockIndices = null;
 				}

@@ -22,6 +22,8 @@ namespace Alex.API.Utils
         public long PacketsIn;
         public long PacketsOut;
         
+        public long PacketLoss => (100 / (PacketsOut + PacketsIn)) * (Nak + NakSent);
+        
         public NetworkState State { get; }
         public ConnectionInfo(DateTime connectionOpenedTime, long latency, long nack, long ack, long acksSent, long fails, long resends, long bytesIn, long bytesOut, long packetsIn, long packetsOut, NetworkState state = NetworkState.Ok)
         {

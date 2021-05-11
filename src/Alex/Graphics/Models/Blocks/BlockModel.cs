@@ -267,7 +267,7 @@ namespace Alex.Graphics.Models.Blocks
 
 			if (ti == null)
 			{
-				ti = resources.Atlas.GetAtlasLocation(texture);
+				ti = resources.BlockAtlas.GetAtlasLocation(texture);
 			}
 
 			var textureInfo = ti.Value;

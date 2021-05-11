@@ -20,7 +20,7 @@ using PlayerLocation = Alex.API.Utils.Vectors.PlayerLocation;
 
 namespace Alex.Worlds.Multiplayer.Bedrock
 {
-	public class BedrockWorldProvider : WorldProvider, ITicked
+	public class BedrockWorldProvider : WorldProvider
 	{
 		private static Logger Log = LogManager.GetCurrentClassLogger();
 		
@@ -61,12 +61,14 @@ namespace Alex.Worlds.Multiplayer.Bedrock
         
         private long _tickTime = 0;
         private long _lastPrioritization = 0;
-        public void OnTick()
+        private long _serverTick = 0;
+        public override void OnTick()
 		{
 			if (World == null) return;
 
 			if (_initiated)
 			{
+				_serverTick++;
 				_tickTime++;
 
 				if (World.Player != null && World.Player.IsSpawned && _gameStarted)
@@ -91,7 +93,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 						_lastPrioritization = _tickTime;
 					}
 					
-					SendLocation(World.Player.KnownPosition);
+					SendLocation(World.Player.RenderLocation);
 				}
 
 				//World.Player.OnTick();
@@ -105,7 +107,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			Client.SendMcpeMovePlayer(new PlayerLocation(location.X, location.Y + Player.EyeLevel, location.Z, -location.HeadYaw,-location.Yaw, -location.Pitch)
 			{
 				OnGround = location.OnGround
-			}, 1);
+			}, 0, World.Time);
 		}
 
 		//private ThreadSafeList<ChunkCoordinates> _loadedChunks = new ThreadSafeList<ChunkCoordinates>();
@@ -158,7 +160,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			//World.Player.SetInventory(new BedrockInventory(46));
 
 			//CustomConnectedPong.CanPing = true;
-			World.Ticker.RegisterTicked(this);
 		}
 
 		public override LoadResult Load(ProgressReport progressReport)
@@ -195,49 +196,56 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 			while (Client.IsConnected && Client.DisconnectReason != DisconnectReason.Unknown)
 			{
-				if (Client.Connection.IsNetworkOutOfOrder && !outOfOrder)
-				{
-					subTitle = "Waiting for network to catch up...";
-					outOfOrder = true;
-				}
-				else if (!Client.Connection.IsNetworkOutOfOrder && outOfOrder)
-				{
-					subTitle = "";
-					outOfOrder = false;
-					sw.Restart();
-				}
-
-				double radiusSquared = Math.Pow(Client.ChunkRadius, 2);
-				var    target        = radiusSquared;
-
-				percentage = (int) ((100 / target) * World.ChunkManager.ChunkCount);
 				progressReport(state, percentage, subTitle);
+
+				bool waitingOnResources = Client?.ResourcePackManager?.WaitingOnResources ?? false;
+
+				if (waitingOnResources)
+				{
+					state = LoadingState.RetrievingResources;
+					percentage = (int) Math.Ceiling(Client.ResourcePackManager.Progress * 100);
+				}
+
+				if (Client.Connection.IsNetworkOutOfOrder)
+				{
+					if (!outOfOrder)
+					{
+						subTitle = "Waiting for network to catch up...";
+						outOfOrder = true;
+					}
+				}
+				else
+				{
+					if (outOfOrder)
+					{
+						outOfOrder = false;
+						sw.Restart();
+					}
+					else
+					{
+						double radiusSquared = Math.Pow(Client.ChunkRadius, 2);
+						var target = radiusSquared;
+						percentage = (int) ((100 / target) * World.ChunkManager.ChunkCount);
+
+						state = percentage >= 100 ? LoadingState.Spawning : LoadingState.LoadingChunks;
+						
+						if (!Client.GameStarted)
+						{
+							subTitle = "Waiting on game start...";
+						}
+						else
+						{
+							subTitle = "Waiting on spawn confirmation...";
+						}
+					}
+				}
 
 				if (Client.CanSpawn && Client.GameStarted)
 				{
 					break;
 				}
 
-				if (Client.Connection.IsNetworkOutOfOrder)
-				{
-					subTitle = "Waiting for the network to catch up...";
-				}
-				else
-				{
-					if (!Client.GameStarted)
-					{
-						subTitle = "Waiting on game start...";
-					}
-					else
-					{
-						subTitle = "Waiting on spawn confirmation...";
-					}
-				}
-
-				state = percentage >= 100 ? LoadingState.Spawning : LoadingState.LoadingChunks;
-
 				//Log.Warn($"Status: {statusChanged} | Gamestarted: {Client.GameStarted} | OutOfOrder: {Client.Connection.IsNetworkOutOfOrder}");
-
 
 				if ((!Client.GameStarted || percentage == 0) && sw.ElapsedMilliseconds >= 15000)
 				{
@@ -262,7 +270,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 			timer.Stop();
 
-			World.Player.IsSpawned = true;
+			//World.Player.IsSpawned = true;
+			World.Player.OnSpawn();
 			_gameStarted = true;
 			
 			return LoadResult.Done;

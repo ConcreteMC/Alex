@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading;
 using Alex.API.Graphics;
 using Alex.API.Utils;
+using Alex.API.Utils.Vectors;
 using Alex.Graphics.Models.Entity;
 using Alex.Graphics.Models.Items;
 using Alex.Net;
@@ -22,13 +23,17 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MiNET;
+using MiNET.Utils.Metadata;
 using MiNET.Worlds;
 using Newtonsoft.Json;
 using NLog;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
+using Color = Microsoft.Xna.Framework.Color;
 using LogManager = NLog.LogManager;
+using MetadataByte = Alex.Networking.Java.Packets.Play.MetadataByte;
+using MetadataFloat = Alex.Networking.Java.Packets.Play.MetadataFloat;
 using Point = System.Drawing.Point;
 using Skin = MiNET.Utils.Skins.Skin;
 
@@ -46,6 +51,9 @@ namespace Alex.Entities
 		public int Score   { get; set; } = 0;
 		public int Latency { get; set; } = 0;
 
+		public BlockCoordinates BedPosition { get; set; } = BlockCoordinates.Zero;
+		public Color PotionColor { get; set; } = Color.White;
+		
 		//private PooledTexture2D _texture;
 		public RemotePlayer(World level, string geometry = "geometry.humanoid.customSlim", Skin skin = null) : base(level)
 		{
@@ -428,6 +436,31 @@ namespace Alex.Entities
 			{
 				IsLeftHanded = metaByte.Value == 0;
 			}
+		}
+
+		/// <inheritdoc />
+		protected override bool HandleMetadata(MiNET.Entities.Entity.MetadataFlags flag, MetadataEntry entry)
+		{
+			if (flag == MiNET.Entities.Entity.MetadataFlags.BedPosition && entry is MetadataIntCoordinates mic)
+			{
+				BedPosition = new BlockCoordinates(mic.Value.X, mic.Value.Y, mic.Value.Z);
+				return true;
+			}
+			
+			if (flag == MiNET.Entities.Entity.MetadataFlags.PotionColor && entry is MetadataInt potionColor)
+			{
+				//int a = 255;
+				//int r = 255;
+				//int g = 255;
+				//int b = 255;
+
+				PotionColor = new Color((uint) potionColor.Value);
+				
+				//PotionColor = 
+				return true;
+			}
+
+			return base.HandleMetadata(flag, entry);
 		}
 
 		public void UpdateGamemode(GameMode gamemode)

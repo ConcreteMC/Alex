@@ -74,7 +74,7 @@ namespace Alex.Gamestates.MainMenu
                 _defaultSkin = new Skin()
                 {
                     Slim = true,
-                    Texture = TextureUtils.BitmapToTexture2D(Alex.Instance.GraphicsDevice, rawTexture)
+                    Texture = TextureUtils.BitmapToTexture2D(this, Alex.Instance.GraphicsDevice, rawTexture)
                 };
             }
 

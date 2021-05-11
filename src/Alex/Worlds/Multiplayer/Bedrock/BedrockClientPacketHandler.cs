@@ -79,15 +79,10 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
         private WorldProvider  WorldProvider         { get; }
         private PlayerProfile  PlayerProfile         { get; }
-        private IStorageSystem Storage               { get; }
-        private bool           UseCustomEntityModels { get; set; }
 
         public BedrockClientPacketHandler(BedrockClient client, WorldProvider worldProvider, PlayerProfile profile, Alex alex, CancellationToken cancellationToken, ChunkProcessor chunkProcessor) //:
 	       // base(client)
         {
-	        //Plugin = plugin;
-	        Storage = alex.Services.GetRequiredService<IStorageSystem>();
-
 	        Client = client;
 	        AlexInstance = alex;
 	        CancellationToken = cancellationToken;
@@ -97,11 +92,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	        AnvilWorldProvider.LoadBlockConverter();
 
 	        ChunkProcessor = chunkProcessor;
-
-	        var options = alex.Services.GetRequiredService<IOptionsProvider>().AlexOptions;
-	        
-	        options.VideoOptions.CustomSkins.Bind((value, newValue) => UseCustomEntityModels = newValue);
-	        UseCustomEntityModels = options.VideoOptions.CustomSkins.Value;
         }
 
         public  bool                  ReportUnhandled { get; set; } = true;
@@ -195,7 +185,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	        Client.ResourcePackManager.HandleMcpeResourcePackChunkData(message);
         }
 
-        private ResourcePackIds _resourcePackIds;
+       // private ResourcePackIds _resourcePackIds;
         public void HandleMcpeResourcePacksInfo(McpeResourcePacksInfo message)
         {
 	        Client.ResourcePackManager.HandleMcpeResourcePacksInfo(message);
@@ -291,7 +281,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 				ChunkProcessor.Itemstates = message.itemstates;
 
-				Dictionary<uint, BlockStateContainer> ourStates = new Dictionary<uint, BlockStateContainer>();
+				/*Dictionary<uint, BlockStateContainer> ourStates = new Dictionary<uint, BlockStateContainer>();
 
 				foreach (var bs in message.blockPalette)
 				{
@@ -319,9 +309,9 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					}
 
 					ourStates.TryAdd((uint) bs.RuntimeId, bs);
-				}
+				}*/
 
-				ChunkProcessor.BlockStateMap = ourStates;
+				//ChunkProcessor.BlockStateMap = message.blockPalette;
 			}
 			finally
 			{
@@ -345,8 +335,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 			if (message.runtimeEntityId == Client.EntityId)
 			{
-				Client.SendMcpeMovePlayer(
-					new PlayerLocation(message.x, message.y, message.z), 1);
+				//Client.SendMcpeMovePlayer(
+				//	new PlayerLocation(message.x, message.y, message.z), 1);
 			}
 			/*if (message.runtimeEntityId != Client.EntityId)
 			{

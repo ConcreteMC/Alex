@@ -518,12 +518,12 @@ namespace Alex.Entities
 								{
 									var bitmapValue = bmp.Value;
 
-									pooled = TextureUtils.BitmapToTexture2D(
+									pooled = TextureUtils.BitmapToTexture2D(entity,
 										Alex.Instance.GraphicsDevice, bitmapValue);
 								}
 								else if (Alex.Instance.Resources.TryGetBitmap(s, out var bmp2))
 								{
-									pooled = TextureUtils.BitmapToTexture2D(Alex.Instance.GraphicsDevice, bmp2);
+									pooled = TextureUtils.BitmapToTexture2D(entity, Alex.Instance.GraphicsDevice, bmp2);
 								}
 
 								if (pooled != null)

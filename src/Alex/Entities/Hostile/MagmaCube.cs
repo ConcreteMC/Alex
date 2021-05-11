@@ -1,33 +1,12 @@
+using Alex.MoLang.Attributes;
 using Alex.Networking.Java.Packets.Play;
 using Alex.Worlds;
 using MiNET.Entities;
 
 namespace Alex.Entities.Hostile
 {
-	public class MagmaCube : HostileMob
+	public class MagmaCube : Slime
 	{
-		private const double BoundingWidth  = 0.51000005;
-		private const double BoundingHeight = 0.51000005;
-		
-		private int _size;
-
-		public int Size
-		{
-			get
-			{
-				return _size;
-			}
-			set
-			{
-				_size = value;
-				
-				Width = BoundingWidth + 0.2 * value;
-				Height = BoundingHeight + 0.1 * value;
-
-				Scale = (float) (Width / BoundingWidth);
-			}
-		}
-		
 		public MagmaCube(World level) : base(level)
 		{
 			Height = 0.51000005;

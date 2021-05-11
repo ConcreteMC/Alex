@@ -36,6 +36,7 @@ namespace Alex.Gamestates.MainMenu
             
             Background = new GuiTexture2D(_skyBox, TextureRepeatMode.Stretch);
 
+            Body.Orientation = Orientation.Horizontal;
             //base.ListContainer.ChildAnchor = Alignment.MiddleCenter;
            // base.ListContainer.Orientation = Orientation.Horizontal;
 
@@ -96,7 +97,7 @@ namespace Alex.Gamestates.MainMenu
                 Alex.UIThreadQueue.Enqueue(
                     () =>
                     {
-                        var texture = TextureUtils.BitmapToTexture2D(Alex.GraphicsDevice, Alex.PlayerTexture);
+                        var texture = TextureUtils.BitmapToTexture2D(this, Alex.GraphicsDevice, Alex.PlayerTexture);
                         
                         SkinEntry entry = new SkinEntry(
                             new LoadedSkin("Default", Alex.PlayerModel, Alex.PlayerTexture), texture, OnDoubleClick);
@@ -114,7 +115,7 @@ namespace Alex.Gamestates.MainMenu
                         Alex.UIThreadQueue.Enqueue(
                             () =>
                             {
-                                var texture = TextureUtils.BitmapToTexture2D(Alex.GraphicsDevice, skin.Texture);
+                                var texture = TextureUtils.BitmapToTexture2D(this, Alex.GraphicsDevice, skin.Texture);
                                 SkinEntry entry = new SkinEntry(skin, texture, OnDoubleClick);
                                 AddItem(entry);
                             });

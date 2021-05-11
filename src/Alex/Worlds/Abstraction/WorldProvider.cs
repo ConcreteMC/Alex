@@ -9,7 +9,7 @@ using Microsoft.Xna.Framework;
 
 namespace Alex.Worlds.Abstraction
 {
-	public abstract class WorldProvider : IDisposable
+	public abstract class WorldProvider : IDisposable, ITicked
 	{
 		public delegate void ProgressReport(LoadingState state, int percentage, string subTitle = null);
 
@@ -40,6 +40,9 @@ namespace Alex.Worlds.Abstraction
 		{
 
 		}
+
+		/// <inheritdoc />
+		public abstract void OnTick();
 	}
 
 	public enum LoadResult 

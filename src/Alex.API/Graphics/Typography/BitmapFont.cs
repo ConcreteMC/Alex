@@ -43,8 +43,9 @@ namespace Alex.API.Graphics.Typography
             this(graphics, bitmap, gridSize, gridSize, characters)
         { }
         public BitmapFont(GraphicsDevice graphics, Image<Rgba32> bitmap, int gridWidth, int gridHeight, List<char> characters) :
-            this(TextureUtils.BitmapToTexture2D(graphics, bitmap), gridWidth, gridHeight, characters)
+            this(null, gridWidth, gridHeight, characters)
         {
+	        Texture = TextureUtils.BitmapToTexture2D(this, graphics, bitmap);
 	        Scale = new Vector2(128f / bitmap.Width, 128f / bitmap.Height);
             LoadGlyphs(bitmap, characters);
         }
@@ -53,7 +54,8 @@ namespace Alex.API.Graphics.Typography
 
         public BitmapFont(Texture2D texture, int gridWidth, int gridHeight, List<char> characters) : this(gridWidth, gridHeight, characters)
         {
-            Texture = texture;
+	        if (texture != null)
+				Texture = texture;
         }
 
         private BitmapFont(int gridWidth, int gridHeight, List<char> characters)

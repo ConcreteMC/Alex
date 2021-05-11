@@ -94,12 +94,12 @@ namespace Alex.API.Utils
 	        }*/
         }
 
-		public static Texture2D ImageToTexture2D(GraphicsDevice device, byte[] bmp)
+		public static Texture2D ImageToTexture2D(object owner, GraphicsDevice device, byte[] bmp)
 		{
 			//using (MemoryStream s = new MemoryStream(bmp))
 			{
 				var image = Image.Load(bmp);
-				return BitmapToTexture2D(device, image);
+				return BitmapToTexture2D(owner, device, image);
 			}
 		}
 

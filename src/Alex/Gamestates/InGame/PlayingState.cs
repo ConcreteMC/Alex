@@ -57,7 +57,7 @@ namespace Alex.Gamestates.InGame
 
 			WorldProvider = worldProvider;
 			WorldProvider.Init(World);
-			
+
 			Alex.ParticleManager.Initialize(World.Camera);
 
 			WorldProvider.TitleComponent = title;
@@ -90,6 +90,8 @@ namespace Alex.Gamestates.InGame
             
             _networkDebugHud = new NetworkDebugHud(NetworkProvider);
             _networkDebugHud.Advanced = true;
+            
+            World.Ticker.RegisterTicked(WorldProvider);
 		}
 
 		private void OnMinimapSettingChange(bool oldvalue, bool newvalue)
@@ -127,7 +129,7 @@ namespace Alex.Gamestates.InGame
 
 			if (RenderDebug)
 				Alex.GuiManager.AddScreen(_debugInfo);
-			
+
 			World.Ticker.RegisterTicked(_playingHud.Title);
 			_playingHud.Title.Ready();
 		}

@@ -36,7 +36,7 @@ using MathHelper = Microsoft.Xna.Framework.MathHelper;
 
 namespace Alex.ResourcePackLib
 {
-	public class McResourcePack : ResourcePack, IDisposable
+	public class McResourcePack : ResourcePack, ITexturePack, IDisposable
 	{
 		public delegate void McResourcePackPreloadCallback(Image<Rgba32> fontBitmap, List<char> bitmapFontCharacters);
 

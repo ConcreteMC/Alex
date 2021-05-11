@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using Alex.API.Utils.Collections;
 using Microsoft.Xna.Framework.Graphics;
 using NLog;
 using SixLabors.ImageSharp;
@@ -121,55 +122,6 @@ namespace Alex.API.Graphics
             // {
             //     resource.Dispose();
             // }
-        }
-
-        public static bool TryGetRecycledBuffer(object caller,
-            GraphicsDevice device,
-            VertexDeclaration vertexDeclaration,
-            int vertexCount,
-            BufferUsage bufferUsage,
-            out PooledVertexBuffer vertexBuffer)
-        {
-            return _instance.GetRecycledBuffer(
-                caller, device, vertexDeclaration, vertexCount, bufferUsage, out vertexBuffer);
-        }
-
-        public bool GetRecycledBuffer(object caller,
-            GraphicsDevice device,
-            VertexDeclaration vertexDeclaration,
-            int vertexCount,
-            BufferUsage bufferUsage,
-            out PooledVertexBuffer vertexBuffer)
-        {
-            if (Monitor.TryEnter(_disposalLock, 0))
-            {
-                try
-                {
-                    var items = _disposalQueue.Where(x => x is PooledVertexBuffer).Cast<PooledVertexBuffer>()
-                       .Where(x => x.VertexCount >= vertexCount && x.VertexDeclaration == vertexDeclaration).ToArray();
-
-                    var closest = items.OrderBy(x => Math.Abs(x.VertexCount - vertexCount)).FirstOrDefault();
-                    if (closest != null)
-                    {
-                        // if (Buffers.TryAdd(closest.PoolId, closest))
-                        //{
-                        closest.UnMark(caller);
-                        _disposalQueue.Remove(closest);
-
-                        vertexBuffer = closest;
-                        //      Interlocked.Add(ref _totalMemoryUsage, closest.MemoryUsage);
-                        return true;
-                        // }
-                    }
-                }
-                finally
-                {
-                    Monitor.Exit(_disposalLock);
-                }
-            }
-
-            vertexBuffer = null;
-            return false;
         }
 
         public PooledVertexBuffer CreateBuffer(object caller, GraphicsDevice device, VertexDeclaration vertexDeclaration,
@@ -430,7 +382,7 @@ namespace Alex.API.Graphics
         }
 
         public bool MarkedForDisposal { get; private set; }
-        public void MarkForDisposal()
+        public void ReturnResource(object caller)
         {
             if (!MarkedForDisposal)
             {
@@ -438,17 +390,14 @@ namespace Alex.API.Graphics
                 Parent?.QueueForDisposal(this);
             }
         }
-
-        public void UnMark(object caller)
-        {
-            Owner = caller;
-            MarkedForDisposal = false;
-        }
         
         protected override void Dispose(bool disposing)
         {
             //  if (!IsDisposed)
-            Parent?.Disposed(this);
+            if (disposing)
+            {
+                Parent?.Disposed(this);
+            }
 
             base.Dispose(disposing);
         }
@@ -469,7 +418,8 @@ namespace Alex.API.Graphics
         }
 
         private long _references = 0;
-        
+
+        //private WeakList<object> _objectReferences = new WeakList<object>();
         public PooledTexture2D(GpuResourceManager parent, long id, object owner, GraphicsDevice graphicsDevice, int width, int height) : base(graphicsDevice, width, height)
         {
             Parent = parent;
@@ -530,14 +480,24 @@ namespace Alex.API.Graphics
             }
         }
 
-        public void Use()
+        public void Use(object caller)
         {
-            Interlocked.Increment(ref _references);
+           // if (caller == Owner) return;
+            
+            if (Interlocked.Increment(ref _references) > 0)
+            {
+                
+            }
         }
 
-        public void Release()
+        public void Release(object caller)
         {
-            Interlocked.Decrement(ref _references);
+           // if (caller == Owner) return;
+            
+            if (Interlocked.Decrement(ref _references) == 0)
+            {
+                
+            }
         }
         
         /*public PooledTexture2D(GpuResourceManager parent, long id, GraphicsDevice graphicsDevice, int width, int height, bool mipmap, SurfaceFormat format, SurfaceType type, bool shared, int arraySize) : base(graphicsDevice, width, height, mipmap, format, type, shared, arraySize)
@@ -546,32 +506,41 @@ namespace Alex.API.Graphics
             PoolId = id;
             CreatedTime = DateTime.UtcNow;
         }*/
-        
+
         public bool MarkedForDisposal { get; private set; }
-        public void MarkForDisposal()
+        public static bool ReportInvalidReturn { get; set; } = true;
+
+        static PooledTexture2D()
         {
+            ReportInvalidReturn = int.Parse(LogManager.Configuration.Variables["textureDisposalWarning"].OriginalText) != 0;
+        }
+        
+        public void ReturnResource(object caller)
+        {
+            if (MarkedForDisposal) return;
+
             if (Interlocked.Read(ref _references) > 0)
             {
-                Log.Debug($"Cannot mark texture for disposal, has uncleared references. Owner: {Owner.ToString()} Id: {PoolId} References: {_references}");
+                if (ReportInvalidReturn)
+                    Log.Debug(
+                        $"Cannot mark texture for disposal, has uncleared references. Owner={Owner.ToString()}, Id={PoolId}, References={_references}");
+
                 return;
             }
-            if (!MarkedForDisposal)
-            {
-                MarkedForDisposal = true;
-                Parent?.QueueForDisposal(this);
-            }
+
+            MarkedForDisposal = true;
+            Parent?.QueueForDisposal(this);
         }
 
-        public void UnMark(object caller)
-        {
-            Owner = caller;
-            MarkedForDisposal = false;
-        }
-        
         protected override void Dispose(bool disposing)
         {
-            Parent?.Disposed(this);
+            if (disposing)
+            {
+                Parent?.Disposed(this);
+            }
+
             base.Dispose(disposing);
+            
         }
     }
 
@@ -596,7 +565,7 @@ namespace Alex.API.Graphics
         }
 
         public bool MarkedForDisposal { get; private set; }
-        public void MarkForDisposal()
+        public void ReturnResource(object caller)
         {
             if (!MarkedForDisposal)
             {
@@ -604,16 +573,13 @@ namespace Alex.API.Graphics
                 Parent?.QueueForDisposal(this);
             }
         }
-        
-        public void UnMark(object caller)
-        {
-            MarkedForDisposal = false;
-            Owner = caller;
-        }
-        
+
         protected override void Dispose(bool disposing)
         {
-            Parent?.Disposed(this);
+            if (disposing)
+            {
+                Parent?.Disposed(this);
+            }
             
             base.Dispose(disposing);
         }
@@ -630,8 +596,6 @@ namespace Alex.API.Graphics
         long MemoryUsage { get; }
 
         bool MarkedForDisposal { get; }
-        void MarkForDisposal();
-
-        void UnMark(object caller);
+        void ReturnResource(object caller);
     }
 }

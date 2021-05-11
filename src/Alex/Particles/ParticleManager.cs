@@ -6,7 +6,9 @@ using Alex.API.Graphics;
 using Alex.API.Resources;
 using Alex.API.Utils;
 using Alex.API.World;
+using Alex.Graphics;
 using Alex.Graphics.Camera;
+using Alex.Graphics.Textures;
 using Alex.MoLang.Runtime;
 using Alex.ResourcePackLib;
 using Microsoft.Xna.Framework;
@@ -32,13 +34,15 @@ namespace Alex.Particles
 
 		private ConcurrentDictionary<string, PooledTexture2D> _sharedTextures =
 			new ConcurrentDictionary<string, PooledTexture2D>();
-		public ParticleManager(Game game, GraphicsDevice device) : base(game)
+		private ResourceManager ResourceManager { get; }
+		public ParticleManager(Game game, GraphicsDevice device, ResourceManager resourceManager) : base(game)
 		{
 			_spriteBatch = new SpriteBatch(device);
 			_graphics = device;
 
 			_camera = new Camera();
 			Visible = false;
+			ResourceManager = resourceManager;
 		}
 
 		public void Load(BedrockResourcePack resourcePack)
@@ -53,35 +57,47 @@ namespace Alex.Particles
 
 				var texturePath = particle.Value.Description.BasicRenderParameters.Texture;
 
-				PooledTexture2D texture2d = null;
+				PooledTexture2D particleTexture = null;
 
 				if (!_sharedTextures.TryGetValue(texturePath
-					, out texture2d))
+					, out particleTexture))
 				{
-					if (resourcePack.TryGetTexture(
-						texturePath, out var img))
+					switch (texturePath)
 					{
-						var pooled = TextureUtils.BitmapToTexture2D(this, _graphics, img);
-						texture2d = pooled;
-
-						_sharedTextures.TryAdd(texturePath, texture2d);
+						case "atlas.terrain":
+							particleTexture = ResourceManager.BlockAtlas.GetAtlas();
+							break;
+						case "atlas.items":
+							particleTexture = ResourceManager.ItemAtlas.GetAtlas();
+							break;
+						default:
+							if (resourcePack.TryGetTexture(
+								texturePath, out var img))
+							{
+								particleTexture = TextureUtils.BitmapToTexture2D(this, _graphics, img);
+								//particleTexture = pooled;
+							}
+							break;
 					}
+
+					if (particleTexture != null)
+						_sharedTextures.TryAdd(texturePath, particleTexture);
 				}
 				
-				if (texture2d != null)
+				if (particleTexture != null)
 				{
-					ParticleEmitter p = new ParticleEmitter(texture2d, particle.Value);
-					texture2d.Use();
+					ParticleEmitter p = new ParticleEmitter(particleTexture, particle.Value);
+					particleTexture.Use(this);
 
 					if (!TryRegister(particle.Value.Description.Identifier, p))
 					{
-						Log.Warn($"Could not add particle: {particle.Key}");
-						texture2d.Release();
+						Log.Warn($"Could not add particle (duplicate): {particle.Key}");
+						particleTexture.Release(this);
 					}
 				}
 				else
 				{
-					Log.Warn($"Failed to add particle: {particle.Key}");
+					Log.Warn($"Failed to add particle (missing texture): {particle.Key}");
 				}
 			}
 		}
@@ -398,7 +414,7 @@ namespace Alex.Particles
 			return false;
 		}
 
-		public bool SpawnParticle(ParticleType type, Vector3 position, int data = 0)
+		public bool SpawnParticle(ParticleType type, Vector3 position, long data = 0)
 		{
 			if (!Enabled)
 				return true;
@@ -414,12 +430,12 @@ namespace Alex.Particles
 			return false;
 		}
 		
-		public bool SpawnParticle(string name, Vector3 position, int data = 0, ParticleDataMode dataMode = ParticleDataMode.None)
+		public bool SpawnParticle(string name, Vector3 position, long data = 0, ParticleDataMode dataMode = ParticleDataMode.None)
 		{
 			return SpawnParticle(name, position, out _, data, dataMode);
 		}
 		
-		public bool SpawnParticle(string name, Vector3 position, out ParticleInstance instance, int data = 0, ParticleDataMode dataMode = ParticleDataMode.None)
+		public bool SpawnParticle(string name, Vector3 position, out ParticleInstance instance, long data = 0, ParticleDataMode dataMode = ParticleDataMode.None)
 		{
 			instance = null;
 			

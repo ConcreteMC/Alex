@@ -225,7 +225,7 @@ namespace Alex.Gamestates
                 skin = new Skin()
                 {
                     Slim = true,
-                    Texture = TextureUtils.BitmapToTexture2D(Alex.GraphicsDevice, rawTexture)
+                    Texture = TextureUtils.BitmapToTexture2D(this, Alex.GraphicsDevice, rawTexture)
                 };
             }
 

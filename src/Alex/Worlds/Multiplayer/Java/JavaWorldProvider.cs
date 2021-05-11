@@ -40,6 +40,7 @@ using Alex.Networking.Java.Packets.Login;
 using Alex.Networking.Java.Packets.Play;
 using Alex.Networking.Java.Util;
 using Alex.Networking.Java.Util.Encryption;
+using Alex.Particles;
 using Alex.ResourcePackLib.Json.Models.Entities;
 using Alex.Utils;
 using Alex.Utils.Inventories;
@@ -71,7 +72,7 @@ using Vector3 = Microsoft.Xna.Framework.Vector3;
 
 namespace Alex.Worlds.Multiplayer.Java
 {
-	public class JavaWorldProvider : WorldProvider, IPacketHandler, ITicked
+	public class JavaWorldProvider : WorldProvider, IPacketHandler
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger();
 
@@ -216,7 +217,7 @@ namespace Alex.Worlds.Multiplayer.Java
 			SendPacket(abilitiesPacket);
 		}
 
-		public void OnTick()
+		public override void OnTick()
 		{
 			if (World == null) return;
 
@@ -226,7 +227,7 @@ namespace Alex.Worlds.Multiplayer.Java
 			//if (!_initiated) return;
 			
 			var player = World.Player;
-			if (player != null && player.IsSpawned)
+			if (player != null && player.IsSpawned && Client.ConnectionState == ConnectionState.Play)
 			{
 				Client.Latency = player.Latency;
 				//player.IsSpawned = Spawned;
@@ -247,17 +248,12 @@ namespace Alex.Worlds.Multiplayer.Java
 					
 				if (Math.Abs(pos.DistanceTo(_lastSentLocation)) > 0.0f)
 				{
-					SendPlayerPostionAndLook(pos);
+					SendPlayerPositionAndLook(pos, SendPositionReason.Tick);
 					//World.ChunkManager.FlagPrioritization();
 				}
 				else if (Math.Abs(pos.Pitch - _lastSentLocation.Pitch) > 0f || Math.Abs(pos.HeadYaw - _lastSentLocation.Yaw) > 0f)
 				{
-					PlayerLookPacket playerLook = PlayerLookPacket.CreateObject();
-					playerLook.Pitch = FixPitch(pos.Pitch);
-					playerLook.Yaw = 360f - pos.HeadYaw;
-					playerLook.OnGround = pos.OnGround;
-
-					SendPacket(playerLook);
+					SendPlayerLook(pos, SendPositionReason.Tick);
 
 					//_tickSinceLastPositionUpdate = 0;
 						
@@ -268,16 +264,7 @@ namespace Alex.Worlds.Multiplayer.Java
 				}
 				else if (_tickSinceLastPositionUpdate >= 20)
 				{
-					PlayerPosition packet = PlayerPosition.CreateObject();
-					packet.FeetY = pos.Y;
-					packet.X = pos.X;
-					packet.Z = pos.Z;
-					packet.OnGround = pos.OnGround;
-
-					SendPacket(packet);
-					_lastSentLocation = pos;
-
-					_tickSinceLastPositionUpdate = 0;
+					SendPlayerPosition(pos, SendPositionReason.Tick);
 				}
 				else
 				{
@@ -296,8 +283,34 @@ namespace Alex.Worlds.Multiplayer.Java
 			return pitch;
 		}
 
-		private void SendPlayerPostionAndLook(PlayerLocation pos)
+		private enum SendPositionReason
 		{
+			Tick,
+			Respawn,
+			Server,
+			Other
+		}
+
+		private void SendPlayerPosition(PlayerLocation pos, SendPositionReason reason = SendPositionReason.Other)
+		{
+			//Log.Info($"Sending PlayerPosition: {reason}");
+			
+			PlayerPosition packet = PlayerPosition.CreateObject();
+			packet.FeetY = pos.Y;
+			packet.X = pos.X;
+			packet.Z = pos.Z;
+			packet.OnGround = pos.OnGround;
+
+			SendPacket(packet);
+			
+			_lastSentLocation = pos;
+			_tickSinceLastPositionUpdate = 0;
+		}
+
+		private void SendPlayerPositionAndLook(PlayerLocation pos, SendPositionReason reason = SendPositionReason.Other)
+		{
+			//Log.Info($"Sending PlayerPositionAndLook: {reason}");
+			
 			PlayerPositionAndLookPacketServerBound packet = PlayerPositionAndLookPacketServerBound.CreateObject();
 			packet.Yaw = 360f - pos.HeadYaw;
 			packet.Pitch = FixPitch(pos.Pitch);
@@ -307,9 +320,20 @@ namespace Alex.Worlds.Multiplayer.Java
 			packet.OnGround = pos.OnGround;
 
 			SendPacket(packet);
+			
 			_lastSentLocation = pos;
-
 			_tickSinceLastPositionUpdate = 0;
+		}
+
+		private void SendPlayerLook(PlayerLocation pos, SendPositionReason reason = SendPositionReason.Other)
+		{
+			//Log.Info($"Sending playerlook: {reason}");
+			PlayerLookPacket playerLook = PlayerLookPacket.CreateObject();
+			playerLook.Pitch = FixPitch(pos.Pitch);
+			playerLook.Yaw = 360f - pos.HeadYaw;
+			playerLook.OnGround = pos.OnGround;
+
+			SendPacket(playerLook);
 		}
 
 		private PooledTexture2D _alexSkin;
@@ -324,8 +348,7 @@ namespace Alex.Worlds.Multiplayer.Java
 			//	World?.UpdatePlayerPosition(_lastReceivedLocation);
 
 			Alex.Resources.TryGetBitmap("entity/alex", out var rawTexture);
-			_alexSkin = TextureUtils.BitmapToTexture2D(Alex.GraphicsDevice, rawTexture);
-			World.Ticker.RegisterTicked(this);
+			_alexSkin = TextureUtils.BitmapToTexture2D(this, Alex.GraphicsDevice, rawTexture);
 			//_initiated = true;
 		}
 		
@@ -452,7 +475,7 @@ namespace Alex.Worlds.Multiplayer.Java
 					       || _disconnected; // Spawned || _disconnected;
 				});
 
-			World.Player.IsSpawned = true;
+			World.Player.OnSpawn();
 
 			World.Player.Inventory.CursorChanged += InventoryOnCursorChanged;
 			World.Player.Inventory.Closed += (sender, args) => { ClosedContainer(0); };
@@ -1054,20 +1077,42 @@ namespace Alex.Worlds.Multiplayer.Java
 					byte a = color.A;
 					data = ((a & 0xff) << 24) | ((r & 0xff) << 16) | ((g & 0xff) << 8) | (b & 0xff);
 				}*/
-				
+
 				for (int i = 0; i < packet.ParticleCount; i++)
 				{
+					long data = 0;
+					ParticleDataMode dataMode = ParticleDataMode.None;
+					if (packet.SlotData != null)
+					{
+						//var item = GetItemFromSlotData(packet.SlotData);
+
+						//if (item != null)
+						{
+							dataMode = ParticleDataMode.Item;
+							data = packet.SlotData.ItemID;//BlockFactory.GetBlockStateID(item.Id, (byte) item.Meta);
+							//particleInstance.SetData(item.Id, ParticleDataMode.Item);
+						}
+					}
+					else if (packet.BlockStateId.HasValue)
+					{
+						dataMode = ParticleDataMode.BlockRuntimeId;
+						data = packet.BlockStateId.Value;
+						//particleInstance.SetData(packet.BlockStateId.Value, ParticleDataMode.BlockRuntimeId);
+					}
+					else if (packet.Color.HasValue)
+					{
+						dataMode = ParticleDataMode.Color;
+						data = packet.Color.Value.PackedValue;
+					}
+					
 					if (Alex.ParticleManager.SpawnParticle(
 						type,
 						new Vector3(
 							(float) ((float) packet.X + (packet.OffsetX * RandomParticleOffset())),
 							(float) ((float) packet.Y + (packet.OffsetY * RandomParticleOffset())),
-							(float) ((float) packet.Z + (packet.OffsetZ * RandomParticleOffset()))), out var particleInstance))
+							(float) ((float) packet.Z + (packet.OffsetZ * RandomParticleOffset()))),
+						out var particleInstance, data, dataMode))
 					{
-						if (packet.Color.HasValue)
-						{
-							particleInstance.Color = packet.Color.Value;
-						}
 
 						//particleInstance.Scale = packet.Scale;
 					}
@@ -1406,8 +1451,7 @@ namespace Alex.Worlds.Multiplayer.Java
 		private void HandleSpawnPositionPacket(SpawnPositionPacket packet)
 		{
 			_spawn = packet.SpawnPosition;
-
-			ReadyToSpawn = true;
+			HasSpawnPosition = true;
 		}
 		
 		private void InventoryOnCursorChanged(object sender, CursorChangedEventArgs e)
@@ -1685,7 +1729,8 @@ namespace Alex.Worlds.Multiplayer.Java
 			
 			World.Player.UpdateGamemode(packet.Gamemode);
 			World.ClearChunksAndEntities();
-			SendPlayerPostionAndLook(World.Player.KnownPosition);
+			
+			SendPlayerPositionAndLook(World.Player.KnownPosition, SendPositionReason.Respawn);
 			
 			//player.
 
@@ -2473,8 +2518,9 @@ namespace Alex.Worlds.Multiplayer.Java
 
 			SendPacket(response);
 		}
-		
-		public bool ReadyToSpawn { get; set; } = false;
+
+        public bool ReadyToSpawn { get; set; } = false;
+        private bool HasSpawnPosition { get; set; } = false;
 		private void HandlePlayerPositionAndLookPacket(PlayerPositionAndLookPacket packet)
 		{
 			Respawning = false;
@@ -2522,25 +2568,28 @@ namespace Alex.Worlds.Multiplayer.Java
 					Pitch = pitch
 				});
 
-			 if ((!World.Player.IsSpawned && ReadyToSpawn) || World.Player.IsSpawned)
-			{
+			// if (World.Player.IsSpawned)
+			//{
 				TeleportConfirm confirmation = TeleportConfirm.CreateObject();
 				confirmation.TeleportId = packet.TeleportId;
 				SendPacket(confirmation);
-			}
+			//}
 
 			//UpdatePlayerPosition(
 			//	new PlayerLocation(packet.X, packet.Y, packet.Z, packet.Yaw, packet.Yaw, pitch: packet.Pitch));
 
-			if (!World.Player.IsSpawned && ReadyToSpawn)
+			if (!ReadyToSpawn && HasSpawnPosition)
 			{
-				SendPlayerPostionAndLook(World.Player.KnownPosition);
+				Log.Info($"Ready to spawn!");
+				
+				SendPlayerPositionAndLook(World.Player.KnownPosition, SendPositionReason.Server);
 				
 				ClientStatusPacket clientStatus = ClientStatusPacket.CreateObject();
 				clientStatus.ActionID = ClientStatusPacket.Action.PerformRespawnOrConfirmLogin;
 				SendPacket(clientStatus);
 				
-				World.Player.IsSpawned = true;
+				//World.Player.IsSpawned = true;
+				ReadyToSpawn = true;
 			}
 		}
 

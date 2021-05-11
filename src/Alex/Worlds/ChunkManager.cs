@@ -53,7 +53,7 @@ namespace Alex.Worlds
 			
 			Options = serviceProvider.GetRequiredService<IOptionsProvider>().AlexOptions;
 
-			var stillAtlas =  serviceProvider.GetRequiredService<ResourceManager>().Atlas.GetAtlas();
+			var stillAtlas =  serviceProvider.GetRequiredService<ResourceManager>().BlockAtlas.GetAtlas();
 	        
 			var fogStart = 0;
 			Shaders = new RenderingShaders(Graphics);

@@ -13,11 +13,11 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Entity
 	/// </summary>
 	public class Animation
 	{
-		/// <summary>
-		///		Determines whether the animation should go back to T0 when finished.
-		/// </summary>
-		[JsonProperty("loop")]
-		public bool Loop { get; set; } = false;
+	//	/// <summary>
+	//	///		Determines whether the animation should go back to T0 when finished.
+	//	/// </summary>
+	//	[JsonProperty("loop")]
+	//	public bool Loop { get; set; } = false;
 
 		/// <summary>
 		///		Determines what the value of query.anim_time should be.

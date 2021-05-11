@@ -5,6 +5,7 @@
 		ConnectingToServer,
 		LoadingChunks,
 		GeneratingVertices,
-		Spawning
+		Spawning,
+		RetrievingResources
     }
 }

@@ -36,8 +36,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		    
 	    }
 	    
-	    public IReadOnlyDictionary<uint, BlockStateContainer> BlockStateMap { get; set; } =
-		    new Dictionary<uint, BlockStateContainer>();
+	    //public IReadOnlyDictionary<uint, BlockStateContainer> BlockStateMap { get; set; } =
+		//    new Dictionary<uint, BlockStateContainer>();
 
 	    public static Itemstates Itemstates { get; set; } = new Itemstates();
 	    
@@ -224,12 +224,13 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		        return BlockFactory.GetBlockState(existing);
 	        }
 	        
-	        if (!BlockStateMap.TryGetValue(p, out var bs))
-	        {
-		        var a = MiNET.Blocks.BlockFactory.BlockPalette.FirstOrDefault(x => x.RuntimeId == p);
-		        bs = a;
-	        }
+	    //    if (!BlockStateMap.TryGetValue(p, out var bs))
+	      //  {
+		 //       var a = MiNET.Blocks.BlockFactory.BlockPalette.FirstOrDefault(x => x.RuntimeId == p);
+		//        bs = a;
+	    //    }
 
+	    var bs = MiNET.Blocks.BlockFactory.BlockPalette.FirstOrDefault(x => x.RuntimeId == p);
 	        if (bs != null)
 	        {
 		        var copy = new BlockStateContainer()

@@ -29,12 +29,12 @@ using Image = SixLabors.ImageSharp.Image;
 
 namespace Alex.ResourcePackLib
 {
-	public class BedrockResourcePack : ResourcePack, IDisposable
+	public class BedrockResourcePack : ResourcePack, ITexturePack, IDisposable
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(BedrockResourcePack));
 
-		private ConcurrentDictionary<string,Lazy<Image<Rgba32>>> _bitmaps = new ConcurrentDictionary<string, Lazy<Image<Rgba32>>>();
-        public IReadOnlyDictionary<string, Lazy<Image<Rgba32>>> Textures => _bitmaps;
+		private ConcurrentDictionary<ResourceLocation,Lazy<Image<Rgba32>>> _bitmaps = new ConcurrentDictionary<ResourceLocation, Lazy<Image<Rgba32>>>();
+        public IReadOnlyDictionary<ResourceLocation, Lazy<Image<Rgba32>>> Textures => _bitmaps;
 		public IReadOnlyDictionary<ResourceLocation, EntityDescription> EntityDefinitions { get; private set; } = new ConcurrentDictionary<ResourceLocation, EntityDescription>();
 		public IReadOnlyDictionary<string, AttachableDefinition> Attachables { get; private set; } = new ConcurrentDictionary<string, AttachableDefinition>();
 		public IReadOnlyDictionary<string, RenderController> RenderControllers { get; private set; } = new ConcurrentDictionary<string, RenderController>();

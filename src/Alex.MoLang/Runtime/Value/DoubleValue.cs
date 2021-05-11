@@ -26,6 +26,9 @@ namespace Alex.MoLang.Runtime.Value
 				Value = dbl;
 			} else if (value is float flt){
 				Value = flt;
+			} else if (value is int integer)
+			{
+				Value = integer;
 			}
 			else
 			{

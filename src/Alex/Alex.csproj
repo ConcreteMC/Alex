@@ -11,6 +11,10 @@
     <PackageProjectUrl>https://github.com/kennyvv/Alex</PackageProjectUrl>
     <PackageLicenseUrl>https://github.com/kennyvv/Alex/blob/master/LICENSE</PackageLicenseUrl>
     <RepositoryUrl>https://github.com/kennyvv/Alex</RepositoryUrl>
+    <TieredCompilation>false</TieredCompilation>
+    <PublishSingleFile>false</PublishSingleFile>
+    <PublishReadyToRun>false</PublishReadyToRun>
+    <SelfContained>true</SelfContained>
     <PackageVersion />
   </PropertyGroup>
 
@@ -188,6 +192,7 @@
   <ItemGroup>
     <Folder Include="Audio\Models" />
     <Folder Include="Gui\Elements\Web" />
+    <Folder Include="Particles\Builtin" />
   </ItemGroup>
 
   <Target Name="ChangeAliasesOfNugetRefs" BeforeTargets="FindReferenceAssembliesForReferences;ResolveReferences">

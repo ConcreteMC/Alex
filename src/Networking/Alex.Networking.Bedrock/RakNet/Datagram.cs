@@ -110,7 +110,7 @@ namespace Alex.Networking.Bedrock.RakNet
 					splitPartPacket.Message = internalBuffer;
 					Messages.Add(splitPartPacket);
 
-					if (Log.IsDebugEnabled && _reader.Position < _reader.Length) Log.Debug($"Got split message, but more to read {_reader.Length - _reader.Position}");
+					//if (Log.IsDebugEnabled && _reader.Position < _reader.Length) Log.Debug($"Got split message, but more to read {_reader.Length - _reader.Position}");
 				}
 				else
 				{

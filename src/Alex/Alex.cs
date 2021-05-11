@@ -230,8 +230,8 @@ namespace Alex
             serviceCollection.AddSingleton<GuiRenderer>();
             serviceCollection.AddSingleton<IGuiRenderer, GuiRenderer>(sp => sp.GetRequiredService<GuiRenderer>());
             serviceCollection.AddSingleton<GuiManager>();
-            serviceCollection.AddSingleton<RocketDebugSocketServer>();
-            serviceCollection.AddHostedService<RocketDebugSocketServer>(sp => sp.GetRequiredService<RocketDebugSocketServer>());
+            //serviceCollection.AddSingleton<RocketDebugSocketServer>();
+           // serviceCollection.AddHostedService<RocketDebugSocketServer>(sp => sp.GetRequiredService<RocketDebugSocketServer>());
 
             InitiatePluginSystem(serviceCollection);
 
@@ -426,7 +426,7 @@ namespace Alex
             GuiManager.ScaledResolution.GuiScale = Options.AlexOptions.VideoOptions.GuiScale.Value;
             Options.AlexOptions.VideoOptions.GuiScale.Bind(GuiScaleChanged);
             
-            ParticleManager = new ParticleManager(this, GraphicsDevice);
+            ParticleManager = new ParticleManager(this, GraphicsDevice, Resources);
             ParticleManager.Enabled = Options.AlexOptions.VideoOptions.Particles.Value;
 
             Options.AlexOptions.VideoOptions.Particles.Bind(

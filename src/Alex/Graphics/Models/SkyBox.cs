@@ -52,7 +52,7 @@ namespace Alex.Graphics.Models
 
 		    if (alex.Resources.TryGetBitmap("environment/sun", out var sun))
 		    {
-			    SunTexture = TextureUtils.BitmapToTexture2D(device, sun);
+			    SunTexture = TextureUtils.BitmapToTexture2D(this, device, sun);
 		    }
 		    else
 		    {
@@ -62,7 +62,7 @@ namespace Alex.Graphics.Models
 
 		    if (alex.Resources.TryGetBitmap("environment/moon_phases", out var moonPhases))
 		    {
-			    MoonTexture = TextureUtils.BitmapToTexture2D(device, moonPhases);
+			    MoonTexture = TextureUtils.BitmapToTexture2D(this, device, moonPhases);
 		    }
 		    else
 		    {
@@ -72,7 +72,7 @@ namespace Alex.Graphics.Models
 
 		    if (alex.Resources.TryGetBitmap("environment/clouds", out var cloudTexture))
 		    {
-			    CloudTexture = TextureUtils.BitmapToTexture2D(device, cloudTexture);
+			    CloudTexture = TextureUtils.BitmapToTexture2D(this, device, cloudTexture);
 			    EnableClouds = false;
 		    }
 		    else
@@ -473,13 +473,13 @@ namespace Alex.Graphics.Models
 
 		public void Dispose()
 		{
-			CloudsPlane?.MarkForDisposal();
-			SkyPlane?.MarkForDisposal();
-			CelestialPlane?.MarkForDisposal();
-			MoonPlane?.MarkForDisposal();
-			SunTexture?.MarkForDisposal();
-			MoonTexture?.MarkForDisposal();
-			CloudTexture?.MarkForDisposal();
+			CloudsPlane?.ReturnResource(this);
+			SkyPlane?.ReturnResource(this);
+			CelestialPlane?.ReturnResource(this);
+			MoonPlane?.ReturnResource(this);
+			SunTexture?.ReturnResource(this);
+			MoonTexture?.ReturnResource(this);
+			CloudTexture?.ReturnResource(this);
 			
 			SkyPlaneEffect?.Dispose();
 			CelestialPlaneEffect?.Dispose();

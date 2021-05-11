@@ -144,7 +144,7 @@ namespace Alex.Entities.BlockEntities
 							if (Alex.Instance.Resources.TryGetBitmap(
 								"minecraft:entity/creeper/creeper", out var bmp))
 							{
-								_creeper = TextureUtils.BitmapToTexture2D(Alex.Instance.GraphicsDevice, bmp);
+								_creeper = TextureUtils.BitmapToTexture2D(this, Alex.Instance.GraphicsDevice, bmp);
 							}
 						}
 						

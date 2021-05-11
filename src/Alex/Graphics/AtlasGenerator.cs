@@ -42,10 +42,11 @@ namespace Alex.Graphics
 	    private PooledTexture2D _textureAtlas;
 	    
         public Vector2 AtlasSize { get; private set; }
-        public AtlasGenerator()
-	    {
-
-	    }
+        public string Selector { get; }
+        public AtlasGenerator(string selector)
+        {
+	        Selector = selector;
+        }
 
 	    public void Reset()
 	    {
@@ -55,21 +56,26 @@ namespace Alex.Graphics
 		    _textureAtlas = default;
 	    }
 
-	    public void GetTextures(McResourcePack resourcePack,
+	    public void GetTextures(ITexturePack resourcePack,
 		    Dictionary<ResourceLocation, ImageEntry> textures,
 		    IProgressReceiver progressReceiver)
 	    {
 		    int done  = 0;
 		//    var items = resourcePack.Textures.Where(x => texturePaths.Contains(x.Key)).ToArray();
-		var texturePaths = resourcePack.Textures.Where(x => x.Key.Path.Contains("block/")).ToArray();
+		var texturePaths = resourcePack.Textures.Where(x => x.Key.Path.Contains(Selector)).ToArray();
 		    foreach (var path in texturePaths)
 		    {
 			    progressReceiver?.UpdateProgress(done++, texturePaths.Length, "Resolving textures...", path.ToString());
 
-			    if (resourcePack.TryGetBitmap(path.Key, out var texture))
+			    var texture = path.Value.Value;
+			 //   if (resourcePack.TryGetBitmap(path.Key, out var texture))
 			    {
 				    TextureMeta meta = null;
-				    resourcePack.TryGetTextureMeta(path.Key, out meta);
+
+				    if (resourcePack is McResourcePack javaPack)
+				    {
+					     javaPack.TryGetTextureMeta(path.Key, out meta);
+				    }
 				    //var entry = new ImageEntry(texture.Value.Value, meta);
 
 				    if (textures.ContainsKey(path.Key))
@@ -256,7 +262,7 @@ namespace Alex.Graphics
 	    public int TextureWidth { get; private set; } = 16;
 	    public int TextureHeight { get; private set; }= 16;
 
-        public void LoadResourcePackOnTop(GraphicsDevice device, Dictionary<ResourceLocation, ImageEntry> loadedTextures, McResourcePack resourcePack, IProgressReceiver progressReceiver, bool build)
+        public void LoadResourcePackOnTop(GraphicsDevice device, Dictionary<ResourceLocation, ImageEntry> loadedTextures, ITexturePack resourcePack, IProgressReceiver progressReceiver, bool build)
 		{
 			int textureWidth = TextureWidth, textureHeight = TextureHeight;
 
@@ -283,7 +289,7 @@ namespace Alex.Graphics
             if (build) GenerateAtlas(device, loadedTextures, progressReceiver);
 		}
 
-        public Texture2D GetAtlas()
+        public PooledTexture2D GetAtlas()
 		{
 			return _textureAtlas;
 		}

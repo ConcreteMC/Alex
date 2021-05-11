@@ -35,7 +35,7 @@ namespace Alex.Gui.Forms
                         }
                     });
 
-                    Background = (TextureSlice2D)TextureUtils.BitmapToTexture2D(Alex.Instance.GraphicsDevice, SixLabors.ImageSharp.Image.Load<Rgba32>(imageData));
+                    Background = (TextureSlice2D)TextureUtils.BitmapToTexture2D(this, Alex.Instance.GraphicsDevice, SixLabors.ImageSharp.Image.Load<Rgba32>(imageData));
                 }
                 catch (Exception ex)
                 {

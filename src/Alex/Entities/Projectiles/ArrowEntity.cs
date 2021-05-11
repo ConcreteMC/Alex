@@ -1,3 +1,4 @@
+using Alex.MoLang.Attributes;
 using Alex.Net;
 using Alex.Worlds;
 using Microsoft.Xna.Framework;
@@ -19,5 +20,7 @@ namespace Alex.Entities.Projectiles
 			StopOnImpact = true;
 			DespawnOnImpact = false;
 		}
+
+		[MoProperty("shake_time")] public double ShakeTime { get; set; } = 0;
 	}
 }

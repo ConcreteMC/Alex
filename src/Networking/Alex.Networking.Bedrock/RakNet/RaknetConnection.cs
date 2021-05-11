@@ -247,8 +247,9 @@ namespace Alex.Networking.Bedrock.RakNet
 					if (e.ErrorCode == 10058) return;
 					if (e.ErrorCode == 10038) return;
 					if (e.ErrorCode == 10004) return;
-
-					if (Log.IsDebugEnabled) Log.Error("Unexpected end of receive", e);
+					if (e.ErrorCode == 4) return;
+					
+					if (Log.IsDebugEnabled) Log.Error(e, "Unexpected end of receive");
 				}
 				catch (NullReferenceException ex)
 				{

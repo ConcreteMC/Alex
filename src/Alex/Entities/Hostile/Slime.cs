@@ -1,6 +1,9 @@
+using Alex.MoLang.Attributes;
 using Alex.Networking.Java.Packets.Play;
 using Alex.Worlds;
 using MiNET.Entities;
+using MiNET.Utils.Metadata;
+using MetadataByte = MiNET.Utils.Metadata.MetadataByte;
 
 namespace Alex.Entities.Hostile
 {
@@ -28,10 +31,26 @@ namespace Alex.Entities.Hostile
 			}
 		}
 
+		[MoProperty("previous_squish_value")]
+		public float PreviousSquishValue { get; set; } = 0f;
+		
+		[MoProperty("current_squish_value")]
+		public float SquishValue { get; set; } = 0f;
+
 		public Slime(World level) : base( level)
 		{
 			Height = 0.51000005;
 			Width = 0.51000005;
+		}
+
+		/// <inheritdoc />
+		protected override bool HandleMetadata(MiNET.Entities.Entity.MetadataFlags flag, MetadataEntry entry)
+		{
+			if (entry.Identifier == 16 && entry is MetadataByte mdb)
+			{
+				Size = mdb.Value;
+			}
+			return base.HandleMetadata(flag, entry);
 		}
 
 		/// <inheritdoc />

@@ -185,7 +185,7 @@ namespace Alex.Items
 						           clone.DisplayName = data.displayName;
 					           }
 					           
-					           clone.Renderer = new ItemBlockModelRenderer(bs, model, resources.Atlas.GetAtlas());
+					           clone.Renderer = new ItemBlockModelRenderer(bs, model, resources.BlockAtlas.GetAtlas());
 					           clone.Renderer.Cache(resources);
 					           return clone;
 				           }))

@@ -23,8 +23,8 @@ namespace Alex.Entities.BlockEntities
 		{
 			if (resources.TryGetBitmap("minecraft:entity/chest/normal", out var bmp))
 			{
-				ChestTexture = TextureUtils.BitmapToTexture2D(graphicsDevice, bmp);
-				ChestTexture?.Use();
+				ChestTexture = TextureUtils.BitmapToTexture2D($"BlockEntityFactory/Chest", graphicsDevice, bmp);
+				//ChestTexture?.Use();
 			}
 			else
 			{
@@ -33,8 +33,8 @@ namespace Alex.Entities.BlockEntities
 			
 			if (resources.TryGetBedrockBitmap("minecraft:textures/entity/chest/double_normal", out var doubleBmp))
 			{
-				DoubleChestTexture = TextureUtils.BitmapToTexture2D(graphicsDevice, doubleBmp);
-				DoubleChestTexture?.Use();
+				DoubleChestTexture = TextureUtils.BitmapToTexture2D("BlockEntityFactory/Chest/Double", graphicsDevice, doubleBmp);
+				//DoubleChestTexture?.Use();
 			}
 			else
 			{
@@ -43,8 +43,8 @@ namespace Alex.Entities.BlockEntities
 			
 			if (resources.TryGetBitmap("minecraft:entity/chest/ender", out var enderBmp))
 			{
-				EnderChestTexture = TextureUtils.BitmapToTexture2D(graphicsDevice, enderBmp);
-				EnderChestTexture?.Use();
+				EnderChestTexture = TextureUtils.BitmapToTexture2D("BlockEntityFactory/Chest/Ender", graphicsDevice, enderBmp);
+				//EnderChestTexture?.Use();
 			}
 			else
 			{
@@ -53,8 +53,8 @@ namespace Alex.Entities.BlockEntities
 			
 			if (resources.TryGetBitmap("minecraft:entity/steve", out var steveBmp))
 			{
-				SkullTexture = TextureUtils.BitmapToTexture2D(graphicsDevice, steveBmp);
-				SkullTexture?.Use();
+				SkullTexture = TextureUtils.BitmapToTexture2D("BlockEntityFactory/Steve", graphicsDevice, steveBmp);
+				//SkullTexture?.Use(this);
 			}
 			else
 			{
@@ -64,8 +64,8 @@ namespace Alex.Entities.BlockEntities
 						
 			if (resources.TryGetBitmap("minecraft:entity/signs/oak", out var signBmp))
 			{
-				SignTexture = TextureUtils.BitmapToTexture2D(graphicsDevice, signBmp);
-				SignTexture?.Use();
+				SignTexture = TextureUtils.BitmapToTexture2D("BlockEntityFactory/Signs/Oak", graphicsDevice, signBmp);
+				//SignTexture?.Use(this);
 			}
 			else
 			{
