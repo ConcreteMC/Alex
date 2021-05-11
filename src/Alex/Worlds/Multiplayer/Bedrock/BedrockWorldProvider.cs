@@ -205,6 +205,23 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					state = LoadingState.RetrievingResources;
 					percentage = (int) Math.Ceiling(Client.ResourcePackManager.Progress * 100);
 				}
+				else if (!Client.Connection.IsNetworkOutOfOrder && !outOfOrder)
+				{
+					double radiusSquared = Math.Pow(Client.ChunkRadius, 2);
+					var target = radiusSquared;
+					percentage = (int) ((100 / target) * World.ChunkManager.ChunkCount);
+
+					state = percentage >= 100 ? LoadingState.Spawning : LoadingState.LoadingChunks;
+
+					if (!Client.GameStarted)
+					{
+						subTitle = "Waiting on game start...";
+					}
+					else
+					{
+						subTitle = "Waiting on spawn confirmation...";
+					}
+				}
 
 				if (Client.Connection.IsNetworkOutOfOrder)
 				{
@@ -218,25 +235,9 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				{
 					if (outOfOrder)
 					{
+						subTitle = "";
 						outOfOrder = false;
 						sw.Restart();
-					}
-					else
-					{
-						double radiusSquared = Math.Pow(Client.ChunkRadius, 2);
-						var target = radiusSquared;
-						percentage = (int) ((100 / target) * World.ChunkManager.ChunkCount);
-
-						state = percentage >= 100 ? LoadingState.Spawning : LoadingState.LoadingChunks;
-						
-						if (!Client.GameStarted)
-						{
-							subTitle = "Waiting on game start...";
-						}
-						else
-						{
-							subTitle = "Waiting on spawn confirmation...";
-						}
 					}
 				}
 

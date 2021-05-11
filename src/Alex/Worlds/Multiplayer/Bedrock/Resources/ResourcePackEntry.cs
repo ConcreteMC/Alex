@@ -11,14 +11,18 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ResourcePackEntry));
 
+		public string PackageId;
 		public string Identifier;
+		public string UUID;
 		public string Version;
 
 		public ResourcePackType PackType { get; set; }
 		public ResourcePackEntry(string packUuid, string version)
 		{
-			Identifier = packUuid;
+			UUID = packUuid;
 			Version = version;
+
+			PackageId = Identifier = $"{UUID}_{Version}";
 		}
 
 		private byte[] _completedData = null;
@@ -35,8 +39,9 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 		public ulong ChunkCount { get; private set; } = 0;
 		private byte[] _hash = null;
 
-		public void SetDataInfo(ResourcePackType packType, byte[] hash, uint messageChunkCount, uint messageMaxChunkSize, ulong messageCompressedPackageSize)
+		public void SetDataInfo(ResourcePackType packType, byte[] hash, uint messageChunkCount, uint messageMaxChunkSize, ulong messageCompressedPackageSize, string packageId)
 		{
+			PackageId = packageId;
 			PackType = packType;
 			_hash = hash;
 			

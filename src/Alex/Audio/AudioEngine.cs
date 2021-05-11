@@ -108,16 +108,32 @@ namespace Alex.Audio
 					if (element.SoundClass != null)
 					{
 						elementPath = $"{element.SoundClass.Name}.fsb";
-						path = Path.Combine(path, elementPath);
+						path = Path.Combine(StoragePath, elementPath);
 					}
 					else if (element.Path != null)
 					{
 						elementPath = $"{element.Path}.fsb";
-						path = Path.Combine(path, elementPath);
+						path = Path.Combine(StoragePath, elementPath);
 					}
 
 					bool exists = StorageSystem.Exists(path);
 
+					if (!exists)
+					{
+						if (element.SoundClass != null)
+						{
+							elementPath = $"{element.SoundClass.Name}.ogg";
+							path = Path.Combine(StoragePath, elementPath);
+						}
+						else if (element.Path != null)
+						{
+							elementPath = $"{element.Path}.ogg";
+							path = Path.Combine(StoragePath, elementPath);
+						}
+					}
+
+					exists = StorageSystem.Exists(path);
+					
 					//Sound s = null;
 
 					if (exists && Supported && elementPath != null)

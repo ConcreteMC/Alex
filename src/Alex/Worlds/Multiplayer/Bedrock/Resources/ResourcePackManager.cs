@@ -65,21 +65,19 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 
 			foreach (var packInfo in message.texturepacks)
 			{
-				string id = $"{packInfo.UUID}_{packInfo.Version}";
-
-				if (_resourcePackEntries.TryAdd(packInfo.UUID, new TexturePackEntry(packInfo)))
+				var entry = new TexturePackEntry(packInfo);
+				if (_resourcePackEntries.TryAdd(entry.UUID, entry))
 				{
-					resourcePackIds.Add(id);
+					resourcePackIds.Add(entry.Identifier);
 				}
 			}
 
 			foreach (var packInfo in message.behahaviorpackinfos)
 			{
-				string identifier = $"{packInfo.UUID}_{packInfo.Version}";
-
-				if (_resourcePackEntries.TryAdd(packInfo.UUID, new BehaviorPackEntry(packInfo)))
+				var entry = new BehaviorPackEntry(packInfo);
+				if (_resourcePackEntries.TryAdd(entry.UUID, entry))
 				{
-					resourcePackIds.Add(identifier);
+					resourcePackIds.Add(entry.Identifier);
 				}
 			}
 
@@ -117,7 +115,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 				return;
 			}
 			
-			packEntry.SetDataInfo((ResourcePackType)message.packType, message.hash, message.chunkCount, message.maxChunkSize, message.compressedPackageSize);
+			packEntry.SetDataInfo((ResourcePackType)message.packType, message.hash, message.chunkCount, message.maxChunkSize, message.compressedPackageSize, message.packageId);
 			CheckCompletion(packEntry);
 			//McpeResourcePackClientResponse response = new McpeResourcePackClientResponse();
 			//	response.responseStatus = (byte) McpeResourcePackClientResponse.ResponseStatus.Completed;
@@ -130,7 +128,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 			{
 				McpeResourcePackClientResponse response = McpeResourcePackClientResponse.CreateObject();
 				response.responseStatus = (byte) McpeResourcePackClientResponse.ResponseStatus.Completed;
-				response.resourcepackids = new ResourcePackIds() {{$"{entry.Identifier}_{entry.Version}"}};
+				response.resourcepackids = new ResourcePackIds() {entry.Identifier};
 				_client.SendPacket(response);
 
 				//_client.WorldProvider.Alex.Resources.
@@ -147,7 +145,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 			{
 				McpeResourcePackChunkRequest request = McpeResourcePackChunkRequest.CreateObject();
 				request.chunkIndex = entry.ExpectedIndex;
-				request.packageId = $"{entry.Identifier}";
+				request.packageId = entry.PackageId;
 
 				Log.Info(
 					$"Requesting resource pack chunk, index={entry.ExpectedIndex}/{entry.ChunkCount} packageId={request.packageId} (Received: {PlayingState.GetBytesReadable(entry.TotalReceived)}, Expected: {PlayingState.GetBytesReadable(entry.ExpectedSize)})");

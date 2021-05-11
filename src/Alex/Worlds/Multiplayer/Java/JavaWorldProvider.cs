@@ -2044,21 +2044,17 @@ namespace Alex.Worlds.Multiplayer.Java
 
 				if (World.SpawnEntity(entity))
 				{
-					World.BackgroundWorker.Enqueue(
-						() =>
+					string skinJson = null;
+
+					foreach (var property in entry.Properties)
+					{
+						if (property.Name == "textures")
 						{
-							string skinJson = null;
+							skinJson = Encoding.UTF8.GetString(Convert.FromBase64String(property.Value));
+						}
+					}
 
-							foreach (var property in entry.Properties)
-							{
-								if (property.Name == "textures")
-								{
-									skinJson = Encoding.UTF8.GetString(Convert.FromBase64String(property.Value));
-								}
-							}
-
-							ProcessSkin(entity, skinJson);
-						});
+					ProcessSkin(entity, skinJson);
 				}
 			}
 		}
@@ -2131,6 +2127,11 @@ namespace Alex.Worlds.Multiplayer.Java
 
 		private void ProcessSkin(RemotePlayer entity, string skinJson)
 		{
+			if (string.IsNullOrWhiteSpace(skinJson))
+			{
+				Log.Warn($"Invalid java skin, skinJson was null or whitespace.");
+				return;
+			}
 			World.BackgroundWorker.Enqueue(
 				() =>
 				{
