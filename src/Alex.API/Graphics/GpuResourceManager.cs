@@ -512,7 +512,11 @@ namespace Alex.API.Graphics
 
         static PooledTexture2D()
         {
-            ReportInvalidReturn = int.Parse(LogManager.Configuration.Variables["textureDisposalWarning"].OriginalText) != 0;
+            if (LogManager.Configuration.Variables.TryGetValue("textureDisposalWarning", out var v)
+                && int.TryParse(v.OriginalText, out int r))
+            {
+                ReportInvalidReturn = r != 0;
+            }
         }
         
         public void ReturnResource(object caller)
