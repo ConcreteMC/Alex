@@ -5,6 +5,8 @@ namespace Alex.Graphics.Models
 {
     public abstract class Model
     {
+	    public float Scale { get; set; } = 1f;
+	    
 	    static Model()
 	    {
 		 

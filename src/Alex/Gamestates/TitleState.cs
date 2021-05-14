@@ -158,6 +158,15 @@ namespace Alex.Gamestates
             _playerProfileService = Alex.Services.GetService<IPlayerProfileService>();
             _playerProfileService.ProfileChanged += PlayerProfileServiceOnProfileChanged;
 
+            var dropDown = new GuiDropdown() { };
+            dropDown.Options.Add("option 1");
+            dropDown.Options.Add("option 2");
+            dropDown.Options.Add("option 3");
+            dropDown.SelectedIndex = 0;
+            
+            dropDown.Anchor = Alignment.MiddleCenter;
+            
+          //  AddChild(dropDown);
             /*ScoreboardView scoreboardView;
             AddChild(scoreboardView = new ScoreboardView());
             scoreboardView.Anchor = Alignment.MiddleRight;

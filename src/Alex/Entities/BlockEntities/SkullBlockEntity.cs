@@ -20,7 +20,7 @@ namespace Alex.Entities.BlockEntities
 			_creeper                             = null,
 			_dragon                              = null;
 		
-		private EntityModelRenderer.ModelBone HeadBone { get; set; }
+		private ModelBone HeadBone { get; set; }
 		
 		/// <inheritdoc />
 		public SkullBlockEntity(World level, Block block, PooledTexture2D texture) : base(level, block)

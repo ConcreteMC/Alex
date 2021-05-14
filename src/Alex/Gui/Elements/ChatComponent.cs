@@ -273,21 +273,22 @@ namespace Alex.Gui.Elements
 				}
 				else if (key == Keys.Up)
 				{
-					if (_currentNode == null)
+					var currentNode = _currentNode;
+					if (currentNode == null)
 					{
-						_currentNode = _submittedMessages.Last;
+						currentNode = _submittedMessages.Last;
 					}
-					else if (_currentNode.Previous != null)
+					else if (currentNode.Previous != null)
 					{
-						_currentNode = _currentNode.Previous;
+						currentNode = currentNode.Previous;
 					}
 
-					if (_currentNode != null)
+					if (currentNode != null && !string.IsNullOrEmpty(currentNode.Value))
 					{
 						TextBuilder.Clear();
 						TextBuilder.Append(_currentNode.Value);
 					}
-					
+
 					return true;
 				}
 				else if (key == Keys.Down && _currentNode != null)

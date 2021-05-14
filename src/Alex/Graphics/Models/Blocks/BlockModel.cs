@@ -1,12 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using Alex.API.Blocks;
 using Alex.API.Graphics;
 using Alex.API.Resources;
-using Alex.API.Utils;
 using Alex.API.Utils.Vectors;
-using Alex.Blocks.Minecraft;
 using Alex.Blocks.State;
 using Alex.Utils;
 using Alex.Worlds.Abstraction;
@@ -17,8 +14,10 @@ namespace Alex.Graphics.Models.Blocks
 {
 	public abstract class BlockModel : Model
 	{
-		public float Scale { get; set; } = 1f;
-
+		public BlockModel()
+		{
+			
+		}
 		public virtual void GetVertices(IBlockAccess blockAccess, ChunkData chunkBuilder, BlockCoordinates position, BlockState state)
         {
 			
@@ -111,37 +110,37 @@ namespace Alex.Graphics.Models.Blocks
 			switch (blockFace)
 			{
 				case BlockFace.Up:
-					return new BlockShaderVertex[]
+					return new[]
 					{
 						bottomLeft, topLeft, topRight,
 						bottomRight, bottomLeft, topRight
 					};
 				case BlockFace.Down:
-					return new BlockShaderVertex[]
+					return new[]
 					{
 						topLeft, bottomLeft, topRight,
 						bottomLeft, bottomRight, topRight
 					};
 				case BlockFace.South:
-					return new BlockShaderVertex[]
+					return new[]
 					{
 						topLeft, bottomLeft, topRight,
 						bottomLeft, bottomRight, topRight
 					};
 				case BlockFace.East:
-					return new BlockShaderVertex[]
+					return new[]
 					{
 						bottomLeft, topLeft, topRight,
 						bottomRight, bottomLeft, topRight
 					};
 				case BlockFace.North:
-					return new BlockShaderVertex[]
+					return new[]
 					{
 						bottomLeft, topLeft, topRight,
 						bottomRight, bottomLeft, topRight
 					};
 				case BlockFace.West:
-					return new BlockShaderVertex[]
+					return new[]
 					{
 						topLeft, bottomLeft, topRight,
 						bottomLeft, bottomRight, topRight
@@ -211,18 +210,19 @@ namespace Alex.Graphics.Models.Blocks
 			    blockLight = world.GetBlockLight(facePosition + lightOffset);
 			    
 				if (skyLight > 0 || blockLight > 0)
-			    {
-				    if (skyLight > 0)
+				{
+					if (skyLight > 0)
 				    {
 					    lightFound = true;
 						break;
 				    }
-				    else if (blockLight > highestBlocklight)
-				    {
-					    highestBlocklight = blockLight;
-					    highestSkylight = skyLight;
-				    }
-			    }
+
+					if (blockLight > highestBlocklight)
+					{
+						highestBlocklight = blockLight;
+						highestSkylight = skyLight;
+					}
+				}
 			}
 
 		    if (!lightFound)
@@ -250,7 +250,7 @@ namespace Alex.Graphics.Models.Blocks
 			float y2,
 		    int rotation,
 			Color color,
-			Utils.TextureInfo? ti)
+			TextureInfo? ti)
 		{
 			if (resources == null)
 			{
@@ -259,9 +259,9 @@ namespace Alex.Graphics.Models.Blocks
 				y1 = 0;
 				y2 = 1 / 32f;
 
-				return new BlockTextureData(new  Utils.TextureInfo(new Vector2(), Vector2.Zero, 16, 16, false, 1, 1), 
-					new Microsoft.Xna.Framework.Vector2(x1, y1), new Microsoft.Xna.Framework.Vector2(x2, y1),
-					new Microsoft.Xna.Framework.Vector2(x1, y2), new Microsoft.Xna.Framework.Vector2(x2, y2), color,
+				return new BlockTextureData(new  TextureInfo(new Vector2(), Vector2.Zero, 16, 16, false, 1, 1), 
+					new Vector2(x1, y1), new Vector2(x2, y1),
+					new Vector2(x1, y2), new Vector2(x2, y2), color,
 					color, color);
 			}
 
@@ -302,10 +302,10 @@ namespace Alex.Graphics.Models.Blocks
 				}
 			}
 			
-			var topLeft = new Microsoft.Xna.Framework.Vector2(x1, y1);
-			var topRight = new Microsoft.Xna.Framework.Vector2(x2, y1);
-			var bottomLeft = new Microsoft.Xna.Framework.Vector2(x1, y2);
-			var bottomRight = new Microsoft.Xna.Framework.Vector2(x2, y2);
+			var topLeft = new Vector2(x1, y1);
+			var topRight = new Vector2(x2, y1);
+			var bottomLeft = new Vector2(x1, y2);
+			var bottomRight = new Vector2(x2, y2);
 			
 			var map = new BlockTextureData(textureInfo,
 				topLeft, topRight,
@@ -316,8 +316,7 @@ namespace Alex.Graphics.Models.Blocks
 			return map;
 		}
 
-		public static BlockFace[] INVALID_FACE_ROTATION = new BlockFace[]
-	    {
+		public static BlockFace[] INVALID_FACE_ROTATION = {
 		    BlockFace.Up,
 		    BlockFace.Down,
 		    BlockFace.None
@@ -340,8 +339,7 @@ namespace Alex.Graphics.Models.Blocks
 			BlockFace.Up
 		};
 
-		protected static BlockFace[] INVALID_FACE_ROTATION_X = new BlockFace[]
-		{
+		protected static BlockFace[] INVALID_FACE_ROTATION_X = {
 			BlockFace.East,
 			BlockFace.West,
 			BlockFace.None

@@ -14,8 +14,8 @@ namespace Alex.Entities.BlockEntities
 {
 	public class ChestBlockEntity : BlockEntity
 	{
-		private EntityModelRenderer.ModelBone HeadBone { get; set; }
-		private EntityModelRenderer.ModelBone Body     { get; set; }
+		private ModelBone HeadBone { get; set; }
+		private ModelBone Body     { get; set; }
 		
 		/// <inheritdoc />
 		public ChestBlockEntity(Block block, World level) : base(level, block)

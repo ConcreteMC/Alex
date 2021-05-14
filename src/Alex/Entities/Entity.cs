@@ -49,6 +49,7 @@ using MathF = System.MathF;
 using MetadataByte = Alex.Networking.Java.Packets.Play.MetadataByte;
 using MetadataFloat = Alex.Networking.Java.Packets.Play.MetadataFloat;
 using MetadataString = Alex.Networking.Java.Packets.Play.MetadataString;
+using ModelBone = Alex.Graphics.Models.Entity.ModelBone;
 using PlayerLocation = Alex.API.Utils.Vectors.PlayerLocation;
 using UUID = Alex.API.Utils.UUID;
 
@@ -280,12 +281,12 @@ namespace Alex.Entities
 			}
 		}
 
-		protected EntityModelRenderer.ModelBone _leftArmModel;
-		protected EntityModelRenderer.ModelBone _leftItemModel;
-		protected EntityModelRenderer.ModelBone _rightArmModel;
-		protected EntityModelRenderer.ModelBone _rightItemModel;
+		protected ModelBone _leftArmModel;
+		protected ModelBone _leftItemModel;
+		protected ModelBone _rightArmModel;
+		protected ModelBone _rightItemModel;
 
-		protected EntityModelRenderer.ModelBone _head;
+		protected ModelBone _head;
 		
 		public  HealthManager HealthManager { get; }
 		
@@ -1144,10 +1145,39 @@ namespace Alex.Entities
 			return renderCount;
 		}
 
+		private bool _doUseItemAnimation = false;
 		public virtual void Update(IUpdateArgs args)
 		{
 			var elapsed = args.GameTime.ElapsedGameTime.TotalSeconds;
-			if (UseItemIntervalProgress > 0d)
+
+			if (_doUseItemAnimation)
+			{
+				if (UseItemStartupProgress < 1f)
+				{
+					UseItemStartupProgress += elapsed * 4;
+				}
+
+				if (UseItemIntervalProgress < 1f)
+				{
+					UseItemIntervalProgress += elapsed * 4;
+				}
+				else
+				{
+					_doUseItemAnimation = false;
+					UseItemStartupProgress = 0d;
+					UseItemIntervalProgress = 0d;
+				}
+				//else if (UseItemIntervalProgress < 1f)
+				//{
+				//	UseItemIntervalProgress += elapsed * 3;
+				//}
+				//else
+				//{
+					
+				//}
+			}
+
+		/*	if (UseItemIntervalProgress > 0d)
 			{
 				UseItemIntervalProgress -= elapsed;
 			}
@@ -1155,7 +1185,7 @@ namespace Alex.Entities
 			if (UseItemStartupProgress > 0d)
 			{
 				UseItemStartupProgress -= elapsed;
-			}
+			}*/
 
 			foreach (var entityComponent in EntityComponents)
 			{
@@ -1249,15 +1279,11 @@ namespace Alex.Entities
 
 		public virtual void SwingArm(bool broadcast, bool leftHanded)
 		{
-			EntityModelRenderer.ModelBone bone = leftHanded ? _leftArmModel : _rightArmModel;
-
-			if (bone != null && (!bone.IsAnimating || bone.Animations.Count <= 1))
-			{
-				//UseItemStartupProgress = 1d;
-				//UseItemIntervalProgress = 1d;
-				//AnimationController.Runtime?.Environment.SetValue("variable.use_item_interval_progress", new DoubleValue(1d));
-				bone.Animations.Enqueue(new SwingAnimation(bone, TimeSpan.FromMilliseconds(250)));
-			}
+			_doUseItemAnimation = true;
+			//UseItemStartupProgress = 1d;
+			//UseItemIntervalProgress = 1d;
+			//AnimationController.Runtime?.Environment.SetValue("variable.use_item_interval_progress", new DoubleValue(1d));
+			//	bone.Animations.Enqueue(new SwingAnimation(bone, TimeSpan.FromMilliseconds(250)));
 		}
 
 		private TimeSpan _deltaTime = TimeSpan.Zero;
@@ -1505,7 +1531,7 @@ namespace Alex.Entities
 			}
 		}
 
-		protected void ToggleCubes(EntityModelRenderer.ModelBone bone, bool isInvisible)
+		protected void ToggleCubes(ModelBone bone, bool isInvisible)
 		{
 			bone.Rendered = !isInvisible;
 		}

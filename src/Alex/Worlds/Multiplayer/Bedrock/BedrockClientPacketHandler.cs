@@ -1540,7 +1540,17 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				new PlayerLocation(Client.World.SpawnPoint.X, Client.World.SpawnPoint.Y, Client.World.SpawnPoint.Z));
 
 			Client.World.Player.IsSpawned = false;
-			LoadingWorldScreen loadingWorldScreen = new LoadingWorldScreen() {ConnectingToServer = true};
+			bool cancelled = false;
+			LoadingWorldScreen loadingWorldScreen = new LoadingWorldScreen()
+			{
+				ConnectingToServer = true,
+				CancelAction = () =>
+				{
+					cancelled = true;
+					Client.ShowDisconnect("Disconnect requested by user.", false, false, DisconnectReason.Unknown);
+					Client.Close();
+				}
+			};
 
 			AlexInstance.GuiManager.AddScreen(loadingWorldScreen);
 			//	AlexInstance.GameStateManager.SetActiveState(loadingWorldState, true);
@@ -1582,6 +1592,11 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 						LoadingState state = LoadingState.LoadingChunks;
 						do
 						{
+							if (cancelled || Client?.World?.Player?.KnownPosition == null || !Client.IsConnected)
+							{
+								break;
+							}
+							
 							chunkCoords = new ChunkCoordinates(
 								new PlayerLocation(
 									Client.World.Player.KnownPosition.X, Client.World.Player.KnownPosition.Y,

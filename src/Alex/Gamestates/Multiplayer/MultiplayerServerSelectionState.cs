@@ -361,7 +361,8 @@ namespace Alex.Gamestates.Multiplayer
 
 			try
 			{
-				var       entry = SelectedItem.SavedServerEntry;
+				var selectedItem = SelectedItem;
+				var       entry = selectedItem.SavedServerEntry;
 				//var ips = await JavaServerQueryProvider.ResolveHostnameAsync(entry.Host);// Dns.GetHostAddresses(entry.Host).ToArray();
 
 				//IPAddress ip = ips.Result;
@@ -385,7 +386,7 @@ namespace Alex.Gamestates.Multiplayer
 					
 					void Connect(PlayerProfile profile)
 					{
-						var target = SelectedItem.ConnectionEndpoint;
+						var target = selectedItem.ConnectionEndpoint;
 						if (target == null)
 						{
 							Alex.GuiManager.RemoveScreen(overlay);

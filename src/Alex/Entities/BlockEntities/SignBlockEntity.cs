@@ -12,12 +12,13 @@ using fNbt;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using RocketUI;
+using ModelBone = Alex.Graphics.Models.Entity.ModelBone;
 
 namespace Alex.Entities.BlockEntities
 {
 	public class SignBlockEntity : BlockEntity
 	{
-		private EntityModelRenderer.ModelBone RootBone { get; set; }
+		private ModelBone RootBone { get; set; }
 
 		/// <inheritdoc />
 		public SignBlockEntity(World level, Block block) : base(level, block)

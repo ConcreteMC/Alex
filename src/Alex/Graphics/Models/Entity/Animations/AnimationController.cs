@@ -27,14 +27,12 @@ namespace Alex.Graphics.Models.Entity.Animations
 		public bool Initialized => _didInit;
 		
 		public bool Enabled { get; set; } = true;
-		private Queue<ModelBoneAnimation> AnimationQueue { get; }
 
 		public MoLangRuntime Runtime { get; set; }
 		private Entities.Entity Entity { get; }
 		public AnimationController(Entities.Entity entity) : base()
 		{
 			Entity = entity;
-			AnimationQueue = new Queue<ModelBoneAnimation>();
 			Runtime = new MoLangRuntime();
 		}
 
