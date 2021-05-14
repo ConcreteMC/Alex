@@ -1,28 +1,85 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-
-
-using Alex.API.Utils;
 using Alex.API.Utils.Vectors;
-using Alex.API.World;
 using Alex.Worlds;
 using Microsoft.Xna.Framework;
 
-namespace Alex.Entities
+namespace Alex.Entities.Components
 {
-	public class EntityMovement
+	public class MovementComponent : EntityComponent
 	{
-		public Entity  Entity  { get; }
 		public Vector3 Heading { get; private set; }
 		
-		public EntityMovement(Entity entity)
+		/// <inheritdoc />
+		public MovementComponent(Entity entity) : base(entity)
 		{
-			Entity = entity;
 			Heading = Vector3.Zero;
 		}
 
+		/// <inheritdoc />
+		protected override void OnUpdate(float deltaTime)
+		{
+			var entity    = Entity;
+
+			UpdateDistanceMoved(deltaTime);
+
+			if ((_target == null || _from == null))
+			{
+				UpdateTarget();
+				return;
+			}
+
+			if (_frameAccumulator >= TargetTime)
+				return;
+			
+			_frameAccumulator += deltaTime;
+
+			var alpha                 = (float) (_frameAccumulator / TargetTime);
+			alpha = MathF.Min(1f, MathF.Max(alpha, 0f));
+			
+			var targetPosition        = _target;
+			var previousStatePosition = _from;
+			
+			var previousYaw     = previousStatePosition.Yaw;
+			var previousHeadYaw = previousStatePosition.HeadYaw;
+			var previousPitch   = previousStatePosition.Pitch;
+			
+			var targetYaw             = targetPosition.Yaw;
+			var targetHeadYaw         = targetPosition.HeadYaw;
+			var targetPitch           = targetPosition.Pitch;
+
+			//var pos = Vector3.Lerp(previousStatePosition.ToVector3(), position.ToVector3(), alpha);
+			var pos = targetPosition.ToVector3() * alpha + previousStatePosition.ToVector3() * (1f - alpha);
+
+			//var yaw = targetPosition.Yaw;
+			//var yaw = MathHelper.Lerp(previousStatePosition.Yaw, targetPosition.Yaw, alpha);
+			var yaw = targetYaw * alpha + previousYaw * (1f - alpha);
+
+			//var headYaw = targetPosition.HeadYaw;
+			//var headYaw = MathHelper.Lerp(previousStatePosition.HeadYaw, targetPosition.HeadYaw, alpha);
+			//var headYawDifference = MathF.Abs(targetHeadYaw - previousHeadYaw);
+			var headYaw          = targetHeadYaw * alpha + previousHeadYaw * (1f - alpha);
+
+			//var pitch = targetPosition.Pitch;
+			var pitch = targetPitch * alpha + previousPitch * (1f - alpha);
+			//var pitch = MathHelper.Lerp(previousStatePosition.Pitch, targetPosition.Pitch, alpha);
+
+			var renderLocation = entity.RenderLocation;
+			
+			renderLocation.X = pos.X;
+			renderLocation.Y = pos.Y;
+			renderLocation.Z = pos.Z;
+
+			renderLocation.HeadYaw = headYaw;
+			renderLocation.Yaw = yaw;
+			renderLocation.Pitch = pitch;
+			
+			renderLocation.OnGround = targetPosition.OnGround;
+
+			entity.RenderLocation = renderLocation;
+		}
+		
 		private float _distanceMoved = 0f, _lastDistanceMoved = 0f;
 		public float DistanceMoved
 		{
@@ -288,68 +345,6 @@ namespace Alex.Entities
 		
 		public float MetersPerSecond { get; private set; } = 0f;
 		private Vector3 _previousPosition = Vector3.Zero;
-		public void Update(GameTime gt)
-		{
-			var frameTime = (float) gt.ElapsedGameTime.TotalSeconds; // / 50;
-			var entity    = Entity;
-
-			UpdateDistanceMoved(frameTime);
-
-			if ((_target == null || _from == null))
-			{
-				UpdateTarget();
-				return;
-			}
-
-			if (_frameAccumulator >= TargetTime)
-				return;
-			
-			_frameAccumulator += frameTime;
-
-			var alpha                 = (float) (_frameAccumulator / TargetTime);
-			alpha = MathF.Min(1f, MathF.Max(alpha, 0f));
-			
-			var targetPosition        = _target;
-			var previousStatePosition = _from;
-			
-			var previousYaw     = previousStatePosition.Yaw;
-			var previousHeadYaw = previousStatePosition.HeadYaw;
-			var previousPitch   = previousStatePosition.Pitch;
-			
-			var targetYaw             = targetPosition.Yaw;
-			var targetHeadYaw         = targetPosition.HeadYaw;
-			var targetPitch           = targetPosition.Pitch;
-
-			//var pos = Vector3.Lerp(previousStatePosition.ToVector3(), position.ToVector3(), alpha);
-			var pos = targetPosition.ToVector3() * alpha + previousStatePosition.ToVector3() * (1f - alpha);
-
-			//var yaw = targetPosition.Yaw;
-			//var yaw = MathHelper.Lerp(previousStatePosition.Yaw, targetPosition.Yaw, alpha);
-			var yaw = targetYaw * alpha + previousYaw * (1f - alpha);
-
-			//var headYaw = targetPosition.HeadYaw;
-			//var headYaw = MathHelper.Lerp(previousStatePosition.HeadYaw, targetPosition.HeadYaw, alpha);
-			//var headYawDifference = MathF.Abs(targetHeadYaw - previousHeadYaw);
-			var headYaw          = targetHeadYaw * alpha + previousHeadYaw * (1f - alpha);
-
-			//var pitch = targetPosition.Pitch;
-			var pitch = targetPitch * alpha + previousPitch * (1f - alpha);
-			//var pitch = MathHelper.Lerp(previousStatePosition.Pitch, targetPosition.Pitch, alpha);
-
-			var renderLocation = entity.RenderLocation;
-			
-			renderLocation.X = pos.X;
-			renderLocation.Y = pos.Y;
-			renderLocation.Z = pos.Z;
-
-			renderLocation.HeadYaw = headYaw;
-			renderLocation.Yaw = yaw;
-			renderLocation.Pitch = pitch;
-			
-			renderLocation.OnGround = targetPosition.OnGround;
-
-			entity.RenderLocation = renderLocation;
-		}
 
 		private float _speedAccumulator = 0f;
 		private void UpdateDistanceMoved(float deltaTime)
@@ -895,16 +890,5 @@ namespace Alex.Entities
 		}
 
 		private const float MaxJumpHeight = 0.55f;
-	}
-
-	public class ColoredBoundingBox
-	{
-		public BoundingBox Box   { get; }
-		public Color       Color { get; }
-		public ColoredBoundingBox(BoundingBox box, Color color)
-		{
-			Box = box;
-			Color = color;
-		}
 	}
 }

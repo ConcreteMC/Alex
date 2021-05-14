@@ -681,8 +681,9 @@ namespace Alex.Worlds
 		public void OnTick()
 		{
 			//	List<ChunkData> renderList = new List<ChunkData>();
+			var array = _renderedChunks;
 			int index = 0;
-			int max = _renderedChunks.Length;
+			int max = array.Length;
 
 			foreach (var chunk in Chunks)
 			{
@@ -691,7 +692,7 @@ namespace Alex.Worlds
 				if (inView && index < max)
 				{
 					index++;
-					_renderedChunks[index] = chunk.Value.ChunkData;
+					array[index] = chunk.Value?.ChunkData;
 					//renderList.Add(chunk.Value.ChunkData);
 				}
 

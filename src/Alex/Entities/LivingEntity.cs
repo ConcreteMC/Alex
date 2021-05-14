@@ -2,6 +2,7 @@
 using Alex.API.Utils;
 using Alex.API.Utils.Vectors;
 using Alex.Blocks.Minecraft;
+using Alex.Entities.Components;
 using Alex.Items;
 using Alex.Net;
 using Alex.Networking.Java.Packets.Play;

@@ -1,23 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using Alex.API.Data.Servers;
-using Alex.API.Utils;
-using Alex.API.Utils.Collections;
 using Alex.API.Utils.Vectors;
-using Alex.API.World;
-using Alex.Blocks.Minecraft;
-using Alex.Blocks.State;
-using Alex.Entities;
-using Alex.Entities.Components;
-using Alex.Graphics.Models.Blocks;
-using Alex.Utils;
 using Microsoft.Xna.Framework;
 using NLog;
 using MathF = System.MathF;
 
-namespace Alex.Worlds
+namespace Alex.Entities.Components
 {
 	/// <summary>
 	///		Handles entity physics

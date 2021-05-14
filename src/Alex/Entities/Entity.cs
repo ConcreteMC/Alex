@@ -93,8 +93,7 @@ namespace Alex.Entities
 			}
 		}
 		
-		public EntityMovement Movement { get; }
-
+		public MovementComponent Movement { get; }
 		public World Level { get; set; }
 
 		public long EntityId { get; internal set; } = -1;
@@ -115,19 +114,7 @@ namespace Alex.Entities
 			}
 		}
 
-		private PlayerLocation _renderLocation;
-
-		internal virtual PlayerLocation RenderLocation
-		{
-			get
-			{
-				return _renderLocation;
-			}
-			set
-			{
-				_renderLocation = value;
-			}
-		}
+		internal virtual PlayerLocation RenderLocation { get; set; }
 
 		public float   Slipperines { get; set; } = 0.6f;
 		public Vector3 Velocity    { get; set; } = Vector3.Zero;
@@ -355,8 +342,9 @@ namespace Alex.Entities
 			
 			AddOrUpdateProperty(new FlyingSpeedProperty(this));
 			AddOrUpdateProperty(new MovementSpeedProperty(this));
-			Movement = new EntityMovement(this);
-				
+			Movement = new MovementComponent(this);
+			EntityComponents.Push(Movement);
+					
 			//EntityComponents.Push(Movement = new EntityMovement(this));
 			EntityComponents.Push(AnimationController = new AnimationController(this));
 			
@@ -1191,8 +1179,6 @@ namespace Alex.Entities
 			{
 				entityComponent.Update(args.GameTime);
 			}
-
-			Movement?.Update(args.GameTime);
 
 			var renderer = ModelRenderer;
 
