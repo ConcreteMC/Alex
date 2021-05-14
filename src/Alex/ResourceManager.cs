@@ -546,9 +546,17 @@ namespace Alex
 	        Alex.GuiRenderer.LoadResourcePackTextures(this, progress);
 
 	        progress?.UpdateProgress(50, "Loading language...");
-	        if (!Alex.GuiRenderer.SetLanguage(Options.AlexOptions.MiscelaneousOptions.Language.Value))
+	        if (!Alex.GuiRenderer.SetLanguage(Options.AlexOptions.MiscelaneousOptions.Language))
 	        {
-		        Alex.GuiRenderer.SetLanguage(CultureInfo.InstalledUICulture.Name);
+		        string language = CultureInfo.InstalledUICulture.Name;
+
+		        if (!Alex.GuiRenderer.SetLanguage(language))
+		        {
+			        language = "en_uk";
+			        Alex.GuiRenderer.SetLanguage(language);
+		        }
+
+		        Options.AlexOptions.MiscelaneousOptions.Language.Value = language;
 	        }
 	        
 	        progress?.UpdateProgress(100, "Loading language...");

@@ -161,7 +161,7 @@ namespace Alex.Gui
 		//private CultureInfo Culture { get; set; }
 		public bool SetLanguage(string cultureCode)
 		{
-			cultureCode = cultureCode;
+			//cultureCode = cultureCode;
 
 			try
 			{
@@ -171,7 +171,7 @@ namespace Alex.Gui
 				CultureInfo.DefaultThreadCurrentUICulture = Culture;
 				CultureInfo.DefaultThreadCurrentUICulture = Culture;
 */
-				if (_languages.TryGetValue(cultureCode, out var lng))
+				if (_languages.TryGetValue(cultureCode, out var lng) || _languages.TryGetValue(cultureCode.Replace("-", "_"), out lng))
 				{
 					Language = lng;
 					ChatParser.Language = lng;

@@ -396,12 +396,7 @@ namespace Alex
             options.AlexOptions.VideoOptions.Antialiasing.Bind((value, newValue) => { SetAntiAliasing(newValue > 0, newValue); });
 
             options.AlexOptions.MiscelaneousOptions.Language.Bind((value, newValue) => { GuiRenderer.SetLanguage(newValue); });
-
-            if (!GuiRenderer.SetLanguage(options.AlexOptions.MiscelaneousOptions.Language))
-            {
-                GuiRenderer.SetLanguage(CultureInfo.InstalledUICulture.Name);
-            }
-
+            
             options.AlexOptions.VideoOptions.SmoothLighting.Bind((value, newValue) => { ResourcePackBlockModel.SmoothLighting = newValue; });
 
             ResourcePackBlockModel.SmoothLighting = options.AlexOptions.VideoOptions.SmoothLighting.Value;
@@ -420,6 +415,11 @@ namespace Alex
             GameStateManager.SetActiveState("splash");
 
             GuiManager.Init();
+            
+           // if (!GuiRenderer.SetLanguage(options.AlexOptions.MiscelaneousOptions.Language) && !GuiRenderer.SetLanguage(CultureInfo.InstalledUICulture.Name))
+            //{
+            //    GuiRenderer.SetLanguage("en_uk");
+           // }
 
             GuiManager.ScaledResolution.TargetWidth = 320;
             GuiManager.ScaledResolution.TargetHeight = 240;
