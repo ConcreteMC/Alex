@@ -4,10 +4,12 @@ using Alex.API.Resources;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 
-namespace Alex.ResourcePackLib
+namespace Alex.ResourcePackLib.Abstraction
 {
-	public interface ITexturePack
+	public interface ITextureProvider
 	{
 		IReadOnlyDictionary<ResourceLocation, Lazy<Image<Rgba32>>> Textures { get; }
+
+		bool TryGetBitmap(ResourceLocation textureName, out Image<Rgba32> bitmap);
 	}
 }

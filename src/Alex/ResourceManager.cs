@@ -691,7 +691,7 @@ namespace Alex
 			model = null;
 			foreach (var resourcePack in ActiveResourcePacks.Reverse())
 			{
-				if (resourcePack.ItemModels.TryGetValue(key, out model))
+				if (resourcePack.TryGetItemModel(key, out model))
 				{
 					return true;
 				}
@@ -705,7 +705,7 @@ namespace Alex
 			model = null;
 			foreach (var resourcePack in ActiveResourcePacks.Reverse())
 			{
-				if (resourcePack.BlockModels.TryGetValue(key, out model))
+				if (resourcePack.TryGetBlockModel(key, out model))
 				{
 					return true;
 				}

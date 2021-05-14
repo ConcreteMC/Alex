@@ -7,6 +7,7 @@ using Alex.API.Utils;
 using Alex.Gamestates.MainMenu.Options.Elements;
 using Alex.Gui;
 using Alex.ResourcePackLib;
+using Alex.ResourcePackLib.Exceptions;
 using Alex.ResourcePackLib.Generic;
 using Microsoft.Xna.Framework;
 using NLog;

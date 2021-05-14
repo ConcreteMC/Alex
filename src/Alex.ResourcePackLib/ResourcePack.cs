@@ -117,9 +117,4 @@ namespace Alex.ResourcePackLib
 			return null;
 		}
     }
-
-	public class InvalidResourcePackException : Exception
-	{
-
-	}
 }

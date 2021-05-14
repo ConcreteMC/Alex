@@ -14,6 +14,7 @@ using Alex.Gamestates.InGame;
 using Alex.Graphics.Models.Blocks;
 using Alex.Graphics.Textures;
 using Alex.ResourcePackLib;
+using Alex.ResourcePackLib.Abstraction;
 using Alex.ResourcePackLib.Json.BlockStates;
 using Alex.ResourcePackLib.Json.Textures;
 using Alex.Utils;
@@ -56,7 +57,7 @@ namespace Alex.Graphics
 		    _textureAtlas = default;
 	    }
 
-	    public void GetTextures(ITexturePack resourcePack,
+	    public void GetTextures(ITextureProvider resourcePack,
 		    Dictionary<ResourceLocation, ImageEntry> textures,
 		    IProgressReceiver progressReceiver)
 	    {
@@ -262,7 +263,7 @@ namespace Alex.Graphics
 	    public int TextureWidth { get; private set; } = 16;
 	    public int TextureHeight { get; private set; }= 16;
 
-        public void LoadResourcePackOnTop(GraphicsDevice device, Dictionary<ResourceLocation, ImageEntry> loadedTextures, ITexturePack resourcePack, IProgressReceiver progressReceiver, bool build)
+        public void LoadResourcePackOnTop(GraphicsDevice device, Dictionary<ResourceLocation, ImageEntry> loadedTextures, ITextureProvider resourcePack, IProgressReceiver progressReceiver, bool build)
 		{
 			int textureWidth = TextureWidth, textureHeight = TextureHeight;
 

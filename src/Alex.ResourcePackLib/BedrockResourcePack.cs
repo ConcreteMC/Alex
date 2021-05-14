@@ -10,6 +10,7 @@ using System.Text.RegularExpressions;
 using Alex.API.Resources;
 using Alex.API.Utils;
 using Alex.MoLang.Parser.Exceptions;
+using Alex.ResourcePackLib.Abstraction;
 using Alex.ResourcePackLib.IO.Abstract;
 using Alex.ResourcePackLib.Json;
 using Alex.ResourcePackLib.Json.Bedrock;
@@ -29,7 +30,7 @@ using Image = SixLabors.ImageSharp.Image;
 
 namespace Alex.ResourcePackLib
 {
-	public class BedrockResourcePack : ResourcePack, ITexturePack, IDisposable
+	public class BedrockResourcePack : ResourcePack, ITextureProvider, IDisposable
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(BedrockResourcePack));
 
@@ -695,12 +696,16 @@ namespace Alex.ResourcePackLib
 			return null;
 		}
 
-		public class EntityDefinition
+		public bool TryGetBitmap(ResourceLocation textureName, out Image<Rgba32> bitmap)
 		{
-			[JsonIgnore] public string Filename { get; set; } = string.Empty;
+			if (Textures.TryGetValue(textureName, out var val))
+			{
+				bitmap = val.Value.Clone();
+				return true;
+			}
 
-			public Dictionary<string, string> Textures;
-			public Dictionary<string, string> Geometry;
+			bitmap = null;
+			return false;
 		}
 
 		public void Dispose()

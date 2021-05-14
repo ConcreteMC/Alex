@@ -13,6 +13,7 @@ using Alex.API.Graphics;
 using Alex.API.Graphics.Typography;
 using Alex.API.Resources;
 using Alex.API.Utils;
+using Alex.ResourcePackLib.Abstraction;
 using Alex.ResourcePackLib.Generic;
 using Alex.ResourcePackLib.IO;
 using Alex.ResourcePackLib.IO.Abstract;
@@ -36,7 +37,7 @@ using MathHelper = Microsoft.Xna.Framework.MathHelper;
 
 namespace Alex.ResourcePackLib
 {
-	public class McResourcePack : ResourcePack, ITexturePack, IDisposable
+	public class McResourcePack : ResourcePack, ITextureProvider, IBlockStateResourceProvider, IItemModelProvider, IBlockModelProvider, IDisposable
 	{
 		public delegate void McResourcePackPreloadCallback(Image<Rgba32> fontBitmap, List<char> bitmapFontCharacters);
 
@@ -55,16 +56,12 @@ namespace Alex.ResourcePackLib
 		private static readonly Regex IsSoundDefinition     = new(@"^assets[\\\/](?'namespace'.*)[\\\/]sounds.json$", RegexOpts);
 
 		private readonly Dictionary<string, Lazy<BlockStateResource>> _blockStates   = new(StringComparer.OrdinalIgnoreCase);
-		//private readonly Dictionary<string, BlockModel>         _blockModels   = new Dictionary<string, BlockModel>();
 		private readonly Dictionary<ResourceLocation, ResourcePackModelBase>   _models    = new();
-		//private readonly Dictionary<string, Texture2D>          _textureCache  = new Dictionary<string, Texture2D>();
 		private readonly Dictionary<ResourceLocation, Lazy<Image<Rgba32>>> _bitmapCache      = new();
 		private readonly Dictionary<ResourceLocation, TextureMeta>         _textureMetaCache = new();
 		private readonly Dictionary<string, LanguageResource>              _languageCache    = new(StringComparer.OrdinalIgnoreCase);
 
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(McResourcePack));
-
-		public IReadOnlyDictionary<string, Lazy<BlockStateResource>> BlockStates       => _blockStates;
 
 		public IReadOnlyDictionary<ResourceLocation, ResourcePackModelBase> BlockModels =>
 			_models.Where(x => x.Value.Type == ModelType.Block)
@@ -72,7 +69,7 @@ namespace Alex.ResourcePackLib
 		
 		public IReadOnlyDictionary<ResourceLocation, ResourcePackModelBase>   ItemModels        => _models.Where(x => x.Value.Type == ModelType.Item)
 		   .ToDictionary(x => x.Key, x => x.Value);
-		public IReadOnlyDictionary<ResourceLocation, TextureMeta> TextureMetas => _textureMetaCache;
+		//public IReadOnlyDictionary<ResourceLocation, TextureMeta> TextureMetas => _textureMetaCache;
 		public IReadOnlyDictionary<ResourceLocation, Lazy<Image<Rgba32>>>          Textures          => _bitmapCache;
 		public IReadOnlyDictionary<string, LanguageResource>   Languages		 => _languageCache;
 		
@@ -678,6 +675,15 @@ namespace Alex.ResourcePackLib
 			}
 			
 			model = null;
+			return false;
+		}
+		
+		/// <inheritdoc />
+		public bool TryGetItemModel(ResourceLocation resourceLocation, out ResourcePackModelBase model)
+		{
+			if (ItemModels.TryGetValue(resourceLocation, out model))
+				return true;
+			
 			return false;
 		}
 		
