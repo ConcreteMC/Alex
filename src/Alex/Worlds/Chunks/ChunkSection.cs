@@ -297,9 +297,16 @@ namespace Alex.Worlds.Chunks
 			return false;
 		}
 		
-		public int GetBlocklight(int x, int y, int z)
+		public byte GetBlocklight(int x, int y, int z)
 		{
 			return this.BlockLight[GetCoordinateIndex(x,y,z)];
+		}
+
+		public void GetLight(int x, int y, int z, out byte skyLight, out byte blockLight)
+		{
+			var index = GetCoordinateIndex(x, y, z);
+			blockLight = this.BlockLight[index];
+			skyLight = this.SkyLight[index];
 		}
 
 		public virtual void RemoveInvalidBlocks()

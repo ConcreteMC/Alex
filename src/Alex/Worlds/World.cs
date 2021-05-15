@@ -409,10 +409,8 @@ namespace Alex.Worlds
 	        ChunkColumn chunk;
 	        if (ChunkManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
 	        {
-		        skyLight = chunk.GetSkylight(x & 0xf, y & 0xff, z & 0xf);
-		        blockLight = chunk.GetBlocklight(x & 0xf, y & 0xff, z & 0xf);
+		        chunk.GetLight(x & 0xf, y & 0xff, z & 0xf, out skyLight, out blockLight);
 	        }
-	        
         }
 
         public byte GetSkyLight(BlockCoordinates position)

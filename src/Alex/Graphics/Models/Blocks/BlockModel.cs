@@ -165,13 +165,13 @@ namespace Alex.Graphics.Models.Blocks
 		    skyLight = chunk.GetSkylight(facePosition.X & 0xf, facePosition.Y & 0xff, facePosition.Z & 0xf);
 		    blockLight = chunk.GetBlocklight(facePosition.X & 0xf, facePosition.Y & 0xff, facePosition.Z & 0xf);
 		    var faceBlock = chunk.GetBlockState(facePosition.X & 0xf, facePosition.Y & 0xff, facePosition.Z & 0xf).Block;*/
-		    var faceBlock = world.GetBlockState(facePosition).Block;
+		   // var faceBlock = world.GetBlockState(facePosition).Block;
 			world.GetLight(facePosition, out blockLight, out skyLight);
 			
 			//if (skyLight == 15 || blockLight == 15)
 			//	return;
 			
-			if (!smooth && !faceBlock.Transparent && !(skyLight > 0 || blockLight > 0))
+			if (!smooth && !(skyLight > 0 || blockLight > 0))
 			{
 				return;// (byte)Math.Min(blockLight + skyLight, 15);
 			}
@@ -206,8 +206,10 @@ namespace Alex.Graphics.Models.Blocks
 						break;
 			    }
 
-			    skyLight = world.GetSkyLight(facePosition + lightOffset);
-			    blockLight = world.GetBlockLight(facePosition + lightOffset);
+			    world.GetLight(facePosition + lightOffset, out blockLight, out skyLight);
+			    
+			   // skyLight = world.GetSkyLight(facePosition + lightOffset);
+			   // blockLight = world.GetBlockLight(facePosition + lightOffset);
 			    
 				if (skyLight > 0 || blockLight > 0)
 				{

@@ -105,9 +105,14 @@ namespace Alex.Worlds.Chunks
 
         public void ApplyChanges(IBlockAccess world, GraphicsDevice device, bool keepInMemory, bool forceUpdate = false)
         {
-            for (var index = 0; index < _stages.Length; index++)
+            var stages = _stages;
+
+            if (stages == null)
+                return;
+            
+            for (var index = 0; index < stages.Length; index++)
             {
-                var stage = _stages[index];
+                var stage = stages[index];
                 stage?.Apply(world, device, keepInMemory, forceUpdate);
             }
         }

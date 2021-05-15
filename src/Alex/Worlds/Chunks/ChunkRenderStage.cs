@@ -49,7 +49,7 @@ namespace Alex.Worlds.Chunks
 				Interlocked.Increment(ref _vertexCount);
 
 				var list = BlockIndices.GetOrAdd(
-					blockCoordinates, coordinates => new List<VertexData>());
+					blockCoordinates, coordinates => new List<VertexData>(6 * 6));
 				list.Add(vertexData);
 
 				HasChanges = true;
@@ -101,8 +101,10 @@ namespace Alex.Worlds.Chunks
 						var p = v3 + vertex.Position;
 						//var offset = vertex.Face.GetVector3();
 						
-						BlockModel.GetLight(
-							world, p, out byte blockLight, out byte skyLight, true);
+						//BlockModel.GetLight(
+						//	world, new BlockCoordinates(v3) + vertex.Face.GetBlockCoordinates(), out byte blockLight, out byte skyLight, false);
+						
+						world.GetLight(new BlockCoordinates(v3) + vertex.Face.GetBlockCoordinates(), out var blockLight, out var skyLight);
 						
 						vertices[index] = new MinifiedBlockShaderVertex(
 							p, vertex.Face, vertex.TexCoords.ToVector4(), new Color(vertex.Color),
@@ -118,8 +120,15 @@ namespace Alex.Worlds.Chunks
 
 		private bool _previousKeepInMemory     = false;
 		private int  _primitiveCount = 0;
-		public void Apply(IBlockAccess world, GraphicsDevice device = null, bool keepInMemory = true, bool force = false)
+
+		private object _applyLock = new object();
+		public void Apply(IBlockAccess world,
+			GraphicsDevice device = null,
+			bool keepInMemory = true,
+			bool force = false)
 		{
+			MinifiedBlockShaderVertex[] realVertices;
+
 			lock (_writeLock)
 			{
 				if (!HasChanges && !force)
@@ -127,13 +136,15 @@ namespace Alex.Worlds.Chunks
 
 				_previousKeepInMemory = keepInMemory;
 
-				var realVertices = BuildVertices(world);
+				realVertices = BuildVertices(world);
 				HasChanges = false;
-				
+			
 				var size = realVertices.Length;
 
 				try
 				{
+					ManagedVertexBuffer buffer = Buffer;
+
 					if (realVertices.Length == 0)
 					{
 						_primitiveCount = 0;
@@ -151,31 +162,29 @@ namespace Alex.Worlds.Chunks
 					_primitiveCount = verticeCount / 3;
 
 					ManagedVertexBuffer oldBuffer = null;
-					ManagedVertexBuffer buffer = Buffer;
 
 					if (buffer == null || buffer.VertexCount < size)
 					{
 						oldBuffer = buffer;
 
 						buffer = GpuResourceManager.GetBuffer(
-							this, device, MinifiedBlockShaderVertex.VertexDeclaration, size,
-							BufferUsage.WriteOnly);
+							this, device, MinifiedBlockShaderVertex.VertexDeclaration, size, BufferUsage.WriteOnly);
 					}
 
 					buffer.SetData(realVertices, 0, size);
 
 					Buffer = buffer;
-					
+
 					if (oldBuffer != buffer)
 						oldBuffer?.ReturnResource(this);
 				}
 				finally
 				{
-				//	Pool.Return(realVertices, true);
+					//	Pool.Return(realVertices, true);
 				}
 			}
 		}
-        
+
 		public virtual int Render(GraphicsDevice device, Effect effect)
 		{
 			var primitives = _primitiveCount;

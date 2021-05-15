@@ -453,6 +453,20 @@ namespace Alex.Worlds.Chunks
 			return GetSection(by).SetBlocklight(bx, by & 0xf, bz, data);
 		}
 
+		public void GetLight(int bx, int by, int bz, out byte skyLight, out byte blockLight)
+		{
+			skyLight = 0xff;
+			blockLight = 0;
+			
+			if ((bx < 0 || bx > ChunkWidth) || (by < 0 || by > ChunkHeight) || (bz < 0 || bz > ChunkDepth))
+				return;
+
+			var section = Sections[by >> 4];
+			if (section == null) return;
+
+			section.GetLight(bx, by & 0xf, bz, out skyLight, out blockLight);
+		}
+
 		public byte GetSkylight(int bx, int by, int bz)
 		{
 			if ((bx < 0 || bx > ChunkWidth) || (by < 0 || by > ChunkHeight) || (bz < 0 || bz > ChunkDepth))
