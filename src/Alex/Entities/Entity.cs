@@ -1532,9 +1532,9 @@ namespace Alex.Entities
 			{
 				Texture = null;
 				
-				var model = ModelRenderer;
+				//var model = ModelRenderer;
 				ModelRenderer = null;
-				model?.Dispose();
+				//model?.Dispose();
 				
 				OnDispose();
 			}

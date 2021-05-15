@@ -30,6 +30,7 @@ using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
+using System.Threading.Tasks;
 using Alex.API.Utils;
 using MiNET;
 using MiNET.Net;
@@ -71,6 +72,7 @@ namespace Alex.Networking.Bedrock.RakNet
 		public bool AutoConnect { get; set; } = true;
 
 		public  long             ClientGuid { get; }
+		private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 		public RaknetConnection()
 		{
 			_endpoint = new IPEndPoint(IPAddress.Any, 0);
@@ -87,9 +89,13 @@ namespace Alex.Networking.Bedrock.RakNet
 			if (_listener != null) return;
 			_listener = CreateListener(_endpoint);
 			//_listener.BeginReceive(ReceiveCallback, _listener);
-			
-			_readingThread = new Thread(ReceiveCallback);
-			_readingThread.Start();
+
+			var receiveTask = new Task(
+				ReceiveCallback, _cancellationTokenSource.Token, TaskCreationOptions.LongRunning);
+
+			receiveTask.Start();
+			//_readingThread = new Thread(ReceiveCallback);
+			//_readingThread.Start();
 		}
 
 		public bool TryConnect(IPEndPoint targetEndPoint, int numberOfAttempts = int.MaxValue, short mtuSize = 1400, CancellationToken cancellationToken = default)
@@ -196,6 +202,9 @@ namespace Alex.Networking.Bedrock.RakNet
 
 		private void ReceiveCallback(object state)
 		{
+			_readingThread = Thread.CurrentThread;
+			_readingThread.Name = $"RaknetConnection Read ({_endpoint})";
+			
 			//UdpClient listener;
 			while (_listener != null)
 			{

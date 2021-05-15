@@ -231,6 +231,7 @@ namespace Alex.Worlds
 				ThreadPool.QueueUserWorkItem(
 					oo =>
 					{
+						Thread.CurrentThread.Name = $"ChunkManager Processing Thread {activeThreads}";
 						try
 						{
 							while (!CancellationToken.IsCancellationRequested)

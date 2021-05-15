@@ -106,11 +106,11 @@ namespace Alex.Worlds.Chunks
 		
 		private static readonly MovingAverage MovingAverage = new MovingAverage();
 		
-		public void UpdateBuffer(GraphicsDevice device, IBlockAccess world)
+		public bool UpdateBuffer(GraphicsDevice device, IBlockAccess world)
 		{
-			Monitor.Enter(_dataLock);
-		//	if (!Monitor.TryEnter(_dataLock, 0))
-		//		return;
+			//Monitor.Enter(_dataLock);
+			//if (!Monitor.TryEnter(_dataLock, 0))
+			//	return false;
 
 			Stopwatch time = Stopwatch.StartNew();
 		
@@ -119,12 +119,12 @@ namespace Alex.Worlds.Chunks
 				var chunkData     = ChunkData;
 
 				if (chunkData == null)
-					return;
+					return false;
 
 				var scheduleQueue = _scheduledUpdates;
 
 				if (scheduleQueue == null)
-					return;
+					return false;
 				
 				bool isNew = IsNew;
 				
@@ -210,11 +210,13 @@ namespace Alex.Worlds.Chunks
 			finally
 			{
 				//_previousKeepInMemory = keepInMemory;
-				Monitor.Exit(_dataLock);
+				//Monitor.Exit(_dataLock);
 				time.Stop();
 				
 				MovingAverage.ComputeAverage((float) time.Elapsed.TotalMilliseconds);
 			}
+
+			return true;
 		}
 		
 		public IEnumerable<BlockCoordinates> GetLightSources()

@@ -19,7 +19,7 @@ namespace Alex
             "Ehhhh hi?",
 			"Such compatibility, wow.",
 			"Who like minecwaf?!",
-			$"Thanks {TextColor.Cyan}TruDan!",
+			$"Thanks {TextColor.Rainbow("TruDan")}!",
 			"3D Transformations are hard...",
 			$"Powered by {TextColor.Rainbow("MiNET")}",
 			$"Wow... This logo {TextColor.Bold}SUCKS{TextColor.Reset} :O",

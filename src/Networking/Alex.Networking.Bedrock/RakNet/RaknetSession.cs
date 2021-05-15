@@ -31,6 +31,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Threading.Tasks;
 using MiNET;
 using MiNET.Net;
 using MiNET.Net.RakNet;
@@ -160,9 +161,15 @@ namespace Alex.Networking.Bedrock.RakNet
 				
 				if (_orderingThread == null)
 				{
-					_orderingThread = new Thread(
-						ProcessOrderedQueue);
-					_orderingThread.Start();
+					var task = new Task(ProcessOrderedQueue, _cancellationToken.Token, TaskCreationOptions.LongRunning);
+					
+					/*_orderingThread = new Thread(
+						ProcessOrderedQueue)
+					{
+						Name = $"RaknetSession Ordering"
+					};
+					_orderingThread.Start();*/
+					task.Start();
 				}
 
 				if (_orderingBufferQueue.TryAdd(current, message))
@@ -177,6 +184,8 @@ namespace Alex.Networking.Bedrock.RakNet
 		public bool IsOutOfOrder => _orderingBufferQueue.Count > 0;
 		private void ProcessOrderedQueue()
 		{
+			_orderingThread = Thread.CurrentThread;
+			_orderingThread.Name = $"RaknetSession Ordering ({EndPoint})";
 			int count = 0;
 			
 			try

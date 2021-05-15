@@ -5,7 +5,7 @@ using MiNET.Utils.IO;
 
 namespace Alex.Utils.Queue
 {
-    public class PrioritizedActionQueue
+    /*public class PrioritizedActionQueue
     {
         private DedicatedThreadPool _threadPool;
         private PriorityQueue<EnqueuedTask> Queue { get; }
@@ -143,5 +143,5 @@ namespace Alex.Utils.Queue
             //if (priorityComparison != 0) return priorityComparison;
            // return TaskIdentifier.CompareTo(other.TaskIdentifier);
         }
-    }
+    }*/
 }

@@ -409,7 +409,10 @@ namespace Alex.Worlds
 
 		public void RemoveBlockEntity(BlockCoordinates coordinates)
 		{
-			BlockEntities.TryRemove(coordinates, out _);
+			if (BlockEntities.TryRemove(coordinates, out var entity))
+			{
+				entity?.Dispose();
+			}
 		}
 
 		public bool Remove(long id)

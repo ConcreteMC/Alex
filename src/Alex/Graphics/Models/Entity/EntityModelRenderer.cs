@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -23,9 +24,49 @@ namespace Alex.Graphics.Models.Entity
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(EntityModelRenderer));
 		
 		private IReadOnlyDictionary<string, ModelBone> Bones { get; set; }
-		
-		private PooledVertexBuffer VertexBuffer { get; set; }
-		private PooledIndexBuffer IndexBuffer { get; set; }
+
+		private PooledVertexBuffer VertexBuffer
+		{
+			get => _vertexBuffer;
+			set
+			{
+				var previousValue = _vertexBuffer;
+
+				if (value != null)
+				{
+					value.Use(this);
+				}
+
+				if (previousValue != null)
+				{
+					previousValue.Release(this);
+					previousValue.ReturnResource(this);
+				}
+				
+				_vertexBuffer = value;
+			}
+		}
+
+		private PooledIndexBuffer IndexBuffer
+		{
+			get => _indexBuffer;
+			set
+			{
+				var previousValue = _indexBuffer;
+
+				if (value != null)
+				{
+					value.Use(this);
+				}
+
+				if (previousValue != null)
+				{
+					previousValue.Release(this);
+					previousValue.ReturnResource(this);
+				}
+				_indexBuffer = value;
+			}
+		}
 		//public  bool               Valid        { get; private set; }
 
 		public double VisibleBoundsWidth { get; set; } = 0;
@@ -38,6 +79,10 @@ namespace Alex.Graphics.Models.Entity
 			
 		}
 
+		private static ConcurrentDictionary<string, Tuple<PooledIndexBuffer, PooledVertexBuffer>> _sharedModels =
+			new ConcurrentDictionary<string, Tuple<PooledIndexBuffer, PooledVertexBuffer>>();
+		
+		
 		public static bool TryGetModel(EntityModel model, out EntityModelRenderer renderer)
 		{
 			List<VertexPositionColorTexture> vertices = new List<VertexPositionColorTexture>();
@@ -50,13 +95,43 @@ namespace Alex.Graphics.Models.Entity
 				renderer.VisibleBoundsWidth = model.Description.VisibleBoundsWidth;
 				renderer.VisibleBoundsHeight = model.Description.VisibleBoundsHeight;
 				renderer.Bones = bones;
-				renderer.IndexBuffer = GpuResourceManager.GetIndexBuffer(
-					renderer, Alex.Instance.GraphicsDevice, IndexElementSize.SixteenBits, indices.Count, BufferUsage.WriteOnly);
-				renderer.IndexBuffer.SetData(indices.ToArray());
+
+				var tuple = _sharedModels.GetOrAdd(model.Description.Identifier, s =>
+				{
+					var indexBuffer = GpuResourceManager.GetIndexBuffer(
+						_sharedModels, Alex.Instance.GraphicsDevice, IndexElementSize.SixteenBits, indices.Count, BufferUsage.WriteOnly);
+					indexBuffer.SetData(indices.ToArray());
+					
+					indexBuffer.ResourceDisposed += (sender, resource) =>
+					{
+						_sharedModels.TryRemove(model.Description.Identifier, out _);
+					};
+					
+					var vertexBuffer = GpuResourceManager.GetBuffer(_sharedModels, Alex.Instance.GraphicsDevice,
+						VertexPositionColorTexture.VertexDeclaration, vertices.Count, BufferUsage.WriteOnly);
+					vertexBuffer.SetData(vertices.ToArray());
+
+					vertexBuffer.ResourceDisposed += (sender, resource) =>
+					{
+						_sharedModels.TryRemove(model.Description.Identifier, out _);
+					};
+
+					return new Tuple<PooledIndexBuffer, PooledVertexBuffer>(indexBuffer, vertexBuffer);
+				});
+
+				//tuple.Item1.Use(renderer);
+				//tuple.Item2.Use(renderer);
+				
+				renderer.IndexBuffer = tuple.Item1;
+				renderer.VertexBuffer = tuple.Item2;
+				
+				//renderer.IndexBuffer = GpuResourceManager.GetIndexBuffer(
+				//	renderer, Alex.Instance.GraphicsDevice, IndexElementSize.SixteenBits, indices.Count, BufferUsage.WriteOnly);
+				//renderer.IndexBuffer.SetData(indices.ToArray());
 			
-				renderer.VertexBuffer = GpuResourceManager.GetBuffer(renderer, Alex.Instance.GraphicsDevice,
-					VertexPositionColorTexture.VertexDeclaration, vertices.Count, BufferUsage.WriteOnly);
-				renderer.VertexBuffer.SetData(vertices.ToArray());
+			//	renderer.VertexBuffer = GpuResourceManager.GetBuffer(renderer, Alex.Instance.GraphicsDevice,
+			//		VertexPositionColorTexture.VertexDeclaration, vertices.Count, BufferUsage.WriteOnly);
+			//	renderer.VertexBuffer.SetData(vertices.ToArray());
 
 				return true;
 			}
@@ -316,6 +391,9 @@ namespace Alex.Graphics.Models.Entity
 		}
 
 		private int _instances = 0;
+		private PooledIndexBuffer _indexBuffer;
+		private PooledVertexBuffer _vertexBuffer;
+
 		public void Use()
 		{
 			Interlocked.Increment(ref _instances);
@@ -325,8 +403,6 @@ namespace Alex.Graphics.Models.Entity
 		{
 			if (Interlocked.Decrement(ref _instances) == 0)
 			{
-				VertexBuffer?.ReturnResource(this);
-				IndexBuffer?.ReturnResource(this);
 				//Effect?.Dispose();
 
 				//Effect = null;
