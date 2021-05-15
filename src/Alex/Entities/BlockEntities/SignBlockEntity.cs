@@ -32,6 +32,12 @@ namespace Alex.Entities.BlockEntities
 		}
 
 		/// <inheritdoc />
+		public override BoundingBox GetVisibilityBoundingBox(Vector3 pos)
+		{
+			return new BoundingBox(pos, pos + new Vector3(1f, 1f, 1f));
+		}
+
+		/// <inheritdoc />
 		protected override void UpdateModelParts()
 		{
 			base.UpdateModelParts();
@@ -272,7 +278,7 @@ namespace Alex.Entities.BlockEntities
 			if (string.IsNullOrWhiteSpace(clean))
 				return;
 			
-			var maxDistance = (args.Camera.FarDistance) / (64f);
+			var maxDistance = (args.Camera.FarDistance);
 			
 			Vector3 lookAtOffset = Vector3.Transform(Vector3.Forward, Matrix.CreateRotationY(MathUtils.ToRadians(_yRotation)));
 			lookAtOffset *= TextOffset;

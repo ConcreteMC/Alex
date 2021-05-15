@@ -29,6 +29,12 @@ namespace Alex.Entities.BlockEntities
 		{
 			return new BoundingBox(pos, pos + Vector3.One);
 		}
+		
+		/// <inheritdoc />
+		public override BoundingBox GetVisibilityBoundingBox(Vector3 pos)
+		{
+			return new BoundingBox(pos, pos + new Vector3(1f, 1f, 1f));
+		}
 
 		/// <inheritdoc />
 		protected override void UpdateModelParts()
