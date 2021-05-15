@@ -117,7 +117,7 @@ namespace Alex.Worlds
 		}
 
 		public int ConcurrentChunkUpdates => (int) _threadsRunning;
-		public int EnqueuedChunkUpdates => UpdateQueue?.Count ?? 0 + FastUpdateQueue?.Count ?? 0 + UpdateBorderQueue?.Count ?? 0;
+		public int EnqueuedChunkUpdates => (UpdateQueue?.Count ?? 0) + (FastUpdateQueue?.Count ?? 0) + (UpdateBorderQueue?.Count ?? 0);
 		
 		/// <inheritdoc />
 		public int ChunkCount => Chunks.Count;
@@ -254,11 +254,26 @@ namespace Alex.Worlds
 									{
 										if (!Monitor.TryEnter(chunk.UpdateLock, 0))
 											continue;
+										
 
 										try
 										{
 											bool newChunk = chunk.IsNew;
 
+											bool c1 = false;
+											bool c2 = false;
+											bool c3 = false;
+											bool c4 = false;
+											
+											if (newChunk)
+											{
+												c1 = TryGetChunk(new ChunkCoordinates(chunk.X + 1, chunk.Z), out _);
+												c2 = TryGetChunk(new ChunkCoordinates(chunk.X - 1, chunk.Z), out _);
+												
+												c3 = TryGetChunk(new ChunkCoordinates(chunk.X, chunk.Z + 1), out _);
+												c4 = TryGetChunk(new ChunkCoordinates(chunk.X, chunk.Z - 1), out _);
+											}
+											
 											if (BlockLightCalculations != null)
 											{
 												if (newChunk)
@@ -286,17 +301,21 @@ namespace Alex.Worlds
 
 											if (newChunk)
 											{
-												ScheduleChunkUpdate(
-													new ChunkCoordinates(chunk.X + 1, chunk.Z), ScheduleType.Full);
+												if (c1)
+													ScheduleChunkUpdate(
+														new ChunkCoordinates(chunk.X + 1, chunk.Z), ScheduleType.Border);
 
-												ScheduleChunkUpdate(
-													new ChunkCoordinates(chunk.X - 1, chunk.Z), ScheduleType.Full);
+												if (c2)
+													ScheduleChunkUpdate(
+														new ChunkCoordinates(chunk.X - 1, chunk.Z), ScheduleType.Border);
 
-												ScheduleChunkUpdate(
-													new ChunkCoordinates(chunk.X, chunk.Z + 1), ScheduleType.Full);
+												if (c3)
+													ScheduleChunkUpdate(
+														new ChunkCoordinates(chunk.X, chunk.Z + 1), ScheduleType.Border);
 
-												ScheduleChunkUpdate(
-													new ChunkCoordinates(chunk.X, chunk.Z - 1), ScheduleType.Full);
+												if (c4)
+													ScheduleChunkUpdate(
+														new ChunkCoordinates(chunk.X, chunk.Z - 1), ScheduleType.Border);
 											}
 										}
 										finally
