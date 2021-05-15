@@ -5,6 +5,7 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using Alex.API.Graphics;
+using Alex.API.Graphics.GpuResources;
 using Microsoft.Xna.Framework.Graphics;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Advanced;
@@ -25,17 +26,17 @@ namespace Alex.API.Utils
 		public static Thread         RenderThread        { get; set; }
 		public static Action<Action> QueueOnRenderThread { get; set; }
 		
-		public static PooledTexture2D BitmapToTexture2D(GraphicsDevice device, Image<Rgba32> bmp, [CallerMemberName] string caller = "Image Converter")
+		public static ManagedTexture2D BitmapToTexture2D(GraphicsDevice device, Image<Rgba32> bmp, [CallerMemberName] string caller = "Image Converter")
 		{
 			return BitmapToTexture2D(caller, device, bmp, out _);
 		}
 		
-		public static PooledTexture2D BitmapToTexture2D(object owner, GraphicsDevice device, Image<Rgba32> bmp)
+		public static ManagedTexture2D BitmapToTexture2D(object owner, GraphicsDevice device, Image<Rgba32> bmp)
         {
 	        return BitmapToTexture2D(owner, device, bmp, out _);
         }
         
-        public static PooledTexture2D BitmapToTexture2D(object owner, GraphicsDevice device, Image<Rgba32> image, out long byteSize)
+        public static ManagedTexture2D BitmapToTexture2D(object owner, GraphicsDevice device, Image<Rgba32> image, out long byteSize)
         {
 	     //   var bmp = image;//.CloneAs<Rgba32>();
 	        uint[] colorData;
@@ -55,7 +56,7 @@ namespace Alex.API.Utils
 	        }
 	       // var colorData = pixels.ToArray().Select(x => x.Rgba).ToArray();
 
-	       PooledTexture2D result = null;
+	       ManagedTexture2D result = null;
 	       if (Thread.CurrentThread != RenderThread)
 	       {
 		       AutoResetEvent resetEvent = new AutoResetEvent(false);

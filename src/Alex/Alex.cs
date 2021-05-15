@@ -63,7 +63,7 @@ using RocketUI.Utilities.Extensions;
 using RocketUI.Utilities.Helpers;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
-using GpuResourceManager = Alex.API.Graphics.GpuResourceManager;
+using GpuResourceManager = Alex.API.Graphics.GpuResources.GpuResourceManager;
 using Image = SixLabors.ImageSharp.Image;
 using Point = Microsoft.Xna.Framework.Point;
 using Size = RocketUI.Size;

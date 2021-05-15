@@ -141,7 +141,7 @@ namespace Alex.Entities.BlockEntities
 		{
 			if (newBlock is WallSign)
 			{
-				if (EntityModelRenderer.TryGetModel(new WallSignEntityModel(), out var renderer))
+				if (EntityModelRenderer.TryGetRenderer(new WallSignEntityModel(), out var renderer))
 				{
 					ModelRenderer = renderer;
 				}
@@ -175,7 +175,7 @@ namespace Alex.Entities.BlockEntities
 			}
 			else if (newBlock is StandingSign)
 			{
-				if (EntityModelRenderer.TryGetModel(new StandingSignEntityModel(), out var renderer))
+				if (EntityModelRenderer.TryGetRenderer(new StandingSignEntityModel(), out var renderer))
 				{
 					ModelRenderer = renderer;
 				}

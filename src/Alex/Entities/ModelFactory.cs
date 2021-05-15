@@ -8,7 +8,7 @@ namespace Alex.Entities
             {
 				if (Alex.Instance.Resources.BedrockResourcePack.EntityModels.TryGetValue(geometry, out var m))
 				{
-					model = m;
+					model = m.Clone();
 					return true;
 				}
 

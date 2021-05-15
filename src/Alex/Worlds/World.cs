@@ -8,6 +8,7 @@ using Alex.API;
 using Alex.API.Data.Options;
 using Alex.API.Data.Servers;
 using Alex.API.Graphics;
+using Alex.API.Graphics.GpuResources;
 using Alex.API.Gui;
 using Alex.API.Services;
 using Alex.API.Utils;
@@ -128,7 +129,7 @@ namespace Alex.Worlds
 			var profileService = serviceProvider.GetRequiredService<IPlayerProfileService>();
 			var resources = serviceProvider.GetRequiredService<ResourceManager>();
 			
-			PooledTexture2D texture;
+			ManagedTexture2D texture;
 			
 			if (Alex.PlayerTexture != null)
 			{

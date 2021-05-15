@@ -14,6 +14,7 @@ using System.Threading.Tasks;
 using Alex.API.Data;
 using Alex.API.Data.Options;
 using Alex.API.Graphics;
+using Alex.API.Graphics.GpuResources;
 using Alex.API.Input;
 using Alex.API.Services;
 using Alex.API.Utils;
@@ -336,7 +337,7 @@ namespace Alex.Worlds.Multiplayer.Java
 			SendPacket(playerLook);
 		}
 
-		private PooledTexture2D _alexSkin;
+		private ManagedTexture2D _alexSkin;
 		private Vector3 _spawn = Vector3.Zero;
 		public override Vector3 GetSpawnPoint()
 		{
@@ -2139,9 +2140,9 @@ namespace Alex.Worlds.Multiplayer.Java
 					{
 						if (texture != null)
 						{
-							entity.GeometryName = slim ? "geometry.humanoid.customSlim" : "geometry.humanoid.custom";
+							var geometryName = slim ? "geometry.humanoid.customSlim" : "geometry.humanoid.custom";
 
-							if (ModelFactory.TryGetModel(entity.GeometryName, out var entityModel))
+							if (ModelFactory.TryGetModel(geometryName, out var entityModel))
 							{
 								var skin = entityModel.ToSkin();
 								skin.UpdateTexture(texture);

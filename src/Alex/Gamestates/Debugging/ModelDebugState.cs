@@ -27,7 +27,7 @@ using Microsoft.Xna.Framework.Input;
 using RocketUI;
 using Color = Microsoft.Xna.Framework.Color;
 using DateTime = System.DateTime;
-using GpuResourceManager = Alex.API.Graphics.GpuResourceManager;
+using GpuResourceManager = Alex.API.Graphics.GpuResources.GpuResourceManager;
 using Task = System.Threading.Tasks.Task;
 
 namespace Alex.Gamestates.Debugging
@@ -340,7 +340,7 @@ namespace Alex.Gamestates.Debugging
 					if (Alex.Resources.BedrockResourcePack.Textures.TryGetValue(texture,
 																				out var bmp))
 					{
-						if (EntityModelRenderer.TryGetModel(model, out renderer))
+						if (EntityModelRenderer.TryGetRenderer(model, out renderer))
 						{
 							renderer.Scale = 1f / 16f;
 							Effect.Texture = TextureUtils.BitmapToTexture2D(this, Alex.GraphicsDevice, bmp.Value);  

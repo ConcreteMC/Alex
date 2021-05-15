@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Linq;
 using Alex.API.Blocks;
 using Alex.API.Graphics;
+using Alex.API.Graphics.GpuResources;
 using Alex.API.Utils;
 using Alex.Blocks.Minecraft;
 using Alex.Entities;
@@ -393,6 +394,12 @@ namespace Alex.Graphics.Models.Items
         public void Remove(IAttached modelBone)
         {
             throw new NotImplementedException();
+        }
+
+        /// <inheritdoc />
+        IAttached IAttached.Clone()
+        {
+            return Clone();
         }
 
         /// <inheritdoc />

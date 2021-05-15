@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net;
 using System.Threading;
 using Alex.API.Graphics;
+using Alex.API.Graphics.GpuResources;
 using Alex.Blocks.Minecraft;
 using Alex.ResourcePackLib.Json.Models.Entities;
 using Microsoft.Xna.Framework;
@@ -211,7 +212,7 @@ namespace Alex.Utils
 			return output;
 		}
 		
-		public static void TryGetSkin(string json, GraphicsDevice graphics, Action<PooledTexture2D, bool> onComplete)
+		public static void TryGetSkin(string json, GraphicsDevice graphics, Action<ManagedTexture2D, bool> onComplete)
 		{
 			//isSlim = false;
 			try
@@ -228,7 +229,7 @@ namespace Alex.Utils
 							data = wc.DownloadData(url);
 						}
 
-						PooledTexture2D text = null;
+						ManagedTexture2D text = null;
 						Alex.Instance.UIThreadQueue.Enqueue(
 							() =>
 							{
@@ -260,7 +261,7 @@ namespace Alex.Utils
 			//return false;
 		}
 		
-		public static bool TryGetSkin(Uri skinUri, GraphicsDevice graphics, out PooledTexture2D texture)
+		public static bool TryGetSkin(Uri skinUri, GraphicsDevice graphics, out ManagedTexture2D texture)
 		{
 			try
 			{
@@ -272,7 +273,7 @@ namespace Alex.Utils
 				
 				ManualResetEvent resetEvent = new ManualResetEvent(false);
 
-				PooledTexture2D text = null;
+				ManagedTexture2D text = null;
 				Alex.Instance.UIThreadQueue.Enqueue(
 					() =>
 					{
@@ -487,7 +488,7 @@ namespace Alex.Utils
 			return skin;
 		}
 
-		public static MiNET.Utils.Skins.Skin UpdateTexture(this MiNET.Utils.Skins.Skin skin, PooledTexture2D texture)
+		public static MiNET.Utils.Skins.Skin UpdateTexture(this MiNET.Utils.Skins.Skin skin, ManagedTexture2D texture)
 		{
 			Image<Rgba32> skinTexture;
 

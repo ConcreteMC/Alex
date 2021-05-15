@@ -1,4 +1,5 @@
 using Alex.API.Graphics;
+using Alex.API.Graphics.GpuResources;
 using Alex.API.Utils;
 using Alex.Blocks.Minecraft;
 using Alex.ResourcePackLib;
@@ -13,11 +14,11 @@ namespace Alex.Entities.BlockEntities
 	public class BlockEntityFactory
 	{
 		private static readonly Logger          Log = LogManager.GetCurrentClassLogger(typeof(BlockEntityFactory));
-		internal static         PooledTexture2D DoubleChestTexture      { get; set; }
-		internal static         PooledTexture2D ChestTexture      { get; set; }
-		internal static         PooledTexture2D EnderChestTexture { get; set; }
-		internal static         PooledTexture2D SkullTexture      { get; set; }
-		internal static         PooledTexture2D SignTexture       { get; set; }
+		internal static         ManagedTexture2D DoubleChestTexture      { get; set; }
+		internal static         ManagedTexture2D ChestTexture      { get; set; }
+		internal static         ManagedTexture2D EnderChestTexture { get; set; }
+		internal static         ManagedTexture2D SkullTexture      { get; set; }
+		internal static         ManagedTexture2D SignTexture       { get; set; }
 		
 		public static void LoadResources(GraphicsDevice graphicsDevice, ResourceManager resources)
 		{

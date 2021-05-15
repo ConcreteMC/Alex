@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Alex.API.Graphics;
+using Alex.API.Graphics.GpuResources;
 using Alex.API.Utils;
 using Alex.API.Utils.Vectors;
 using Alex.Graphics.Models.Items;
@@ -25,7 +26,7 @@ namespace Alex.Graphics.Models.Entity
 		
 		private IReadOnlyDictionary<string, ModelBone> Bones { get; set; }
 
-		private PooledVertexBuffer VertexBuffer
+		private ManagedVertexBuffer VertexBuffer
 		{
 			get => _vertexBuffer;
 			set
@@ -47,7 +48,7 @@ namespace Alex.Graphics.Models.Entity
 			}
 		}
 
-		private PooledIndexBuffer IndexBuffer
+		private ManagedIndexBuffer IndexBuffer
 		{
 			get => _indexBuffer;
 			set
@@ -79,51 +80,95 @@ namespace Alex.Graphics.Models.Entity
 			
 		}
 
-		private static ConcurrentDictionary<string, Tuple<PooledIndexBuffer, PooledVertexBuffer>> _sharedModels =
-			new ConcurrentDictionary<string, Tuple<PooledIndexBuffer, PooledVertexBuffer>>();
-		
-		
-		public static bool TryGetModel(EntityModel model, out EntityModelRenderer renderer)
+
+		private class SharedBuffer
 		{
-			List<VertexPositionColorTexture> vertices = new List<VertexPositionColorTexture>();
-			List<short> indices = new List<short>();
-			var bones = new Dictionary<string, ModelBone>(StringComparer.OrdinalIgnoreCase);
-
-			if (BuildModel(model, bones, vertices, indices))
+			public SharedBuffer(ManagedVertexBuffer vertexBuffer, ManagedIndexBuffer indexBuffer, IReadOnlyDictionary<string, ModelBone> bones)
 			{
-				renderer = new EntityModelRenderer();
-				renderer.VisibleBoundsWidth = model.Description.VisibleBoundsWidth;
-				renderer.VisibleBoundsHeight = model.Description.VisibleBoundsHeight;
-				renderer.Bones = bones;
+				VertexBuffer = vertexBuffer;
+				IndexBuffer = indexBuffer;
+				Bones = bones;
+				//Vertices = vertices;
+				//Indices = indices;
+			}
 
-				var tuple = _sharedModels.GetOrAdd(model.Description.Identifier, s =>
+			public ManagedVertexBuffer VertexBuffer { get; }
+			public ManagedIndexBuffer IndexBuffer { get; }
+			public IReadOnlyDictionary<string, ModelBone> Bones { get; }
+			//public List<VertexPositionColorTexture> Vertices { get; }
+			//public List<short> Indices { get; }
+		}
+
+		private static ConcurrentDictionary<string, SharedBuffer> _sharedBuffers =
+			new ConcurrentDictionary<string, SharedBuffer>();
+		
+		
+		public static bool TryGetRenderer(EntityModel model, out EntityModelRenderer renderer)
+		{
+			{
+				var tuple = _sharedBuffers.GetOrAdd(model.Description.Identifier, s =>
 				{
-					var indexBuffer = GpuResourceManager.GetIndexBuffer(
-						_sharedModels, Alex.Instance.GraphicsDevice, IndexElementSize.SixteenBits, indices.Count, BufferUsage.WriteOnly);
-					indexBuffer.SetData(indices.ToArray());
-					
-					indexBuffer.ResourceDisposed += (sender, resource) =>
-					{
-						_sharedModels.TryRemove(model.Description.Identifier, out _);
-					};
-					
-					var vertexBuffer = GpuResourceManager.GetBuffer(_sharedModels, Alex.Instance.GraphicsDevice,
-						VertexPositionColorTexture.VertexDeclaration, vertices.Count, BufferUsage.WriteOnly);
-					vertexBuffer.SetData(vertices.ToArray());
+					List<VertexPositionColorTexture> vertices = new List<VertexPositionColorTexture>();
+					List<short> indices = new List<short>();
+					var bones = new Dictionary<string, ModelBone>(StringComparer.OrdinalIgnoreCase);
 
-					vertexBuffer.ResourceDisposed += (sender, resource) =>
+					if (BuildModel(model, bones, vertices, indices))
 					{
-						_sharedModels.TryRemove(model.Description.Identifier, out _);
-					};
 
-					return new Tuple<PooledIndexBuffer, PooledVertexBuffer>(indexBuffer, vertexBuffer);
+						var indexBuffer = GpuResourceManager.GetIndexBuffer(
+							_sharedBuffers, Alex.Instance.GraphicsDevice, IndexElementSize.SixteenBits, indices.Count,
+							BufferUsage.WriteOnly);
+
+						indexBuffer.SetData(indices.ToArray());
+
+						indexBuffer.ResourceDisposed += (sender, resource) =>
+						{
+							_sharedBuffers.TryRemove(model.Description.Identifier, out _);
+						};
+
+						var vertexBuffer = GpuResourceManager.GetBuffer(
+							_sharedBuffers, Alex.Instance.GraphicsDevice, VertexPositionColorTexture.VertexDeclaration,
+							vertices.Count, BufferUsage.WriteOnly);
+
+						vertexBuffer.SetData(vertices.ToArray());
+
+						vertexBuffer.ResourceDisposed += (sender, resource) =>
+						{
+							_sharedBuffers.TryRemove(model.Description.Identifier, out _);
+						};
+
+						return new SharedBuffer(vertexBuffer, indexBuffer, bones);
+					}
+
+					return null;
 				});
 
 				//tuple.Item1.Use(renderer);
 				//tuple.Item2.Use(renderer);
 				
-				renderer.IndexBuffer = tuple.Item1;
-				renderer.VertexBuffer = tuple.Item2;
+				renderer = new EntityModelRenderer();
+				renderer.VisibleBoundsWidth = model.Description.VisibleBoundsWidth;
+				renderer.VisibleBoundsHeight = model.Description.VisibleBoundsHeight;
+
+				Dictionary<string, ModelBone> clonedBones = new Dictionary<string, ModelBone>(StringComparer.OrdinalIgnoreCase);
+
+				foreach (var bone in tuple.Bones.Where(x => x.Value.Parent == null)) //We only wanna clone the root bones
+				{
+					if (bone.Value.Clone() is ModelBone boneClone)
+					{
+						clonedBones.Add(bone.Key, boneClone);
+
+						foreach (var child in GetAllChildren(boneClone))
+						{
+							if (!clonedBones.ContainsKey(child.Name))
+								clonedBones.Add(child.Name, child);
+						}
+					}
+				}
+				renderer.Bones = clonedBones;
+				
+				renderer.IndexBuffer = tuple.IndexBuffer;
+				renderer.VertexBuffer = tuple.VertexBuffer;
 				
 				//renderer.IndexBuffer = GpuResourceManager.GetIndexBuffer(
 				//	renderer, Alex.Instance.GraphicsDevice, IndexElementSize.SixteenBits, indices.Count, BufferUsage.WriteOnly);
@@ -138,6 +183,22 @@ namespace Alex.Graphics.Models.Entity
 
 			renderer = null;
 			return false;
+		}
+
+		private static IEnumerable<ModelBone> GetAllChildren(ModelBone root)
+		{
+			foreach (var child in root.Children)
+			{
+				if (child is ModelBone modelBone)
+				{
+					yield return modelBone;
+
+					foreach (var subChild in GetAllChildren(modelBone))
+					{
+						yield return subChild;
+					}
+				}
+			}
 		}
 
 		private static bool BuildModel(EntityModel model, Dictionary<string, ModelBone> modelBones, List<VertexPositionColorTexture> vertices, List<short> indices)
@@ -390,18 +451,13 @@ namespace Alex.Graphics.Models.Entity
 			}
 		}
 
-		private int _instances = 0;
-		private PooledIndexBuffer _indexBuffer;
-		private PooledVertexBuffer _vertexBuffer;
-
-		public void Use()
-		{
-			Interlocked.Increment(ref _instances);
-		}
+		//private int _instances = 0;
+		private ManagedIndexBuffer _indexBuffer;
+		private ManagedVertexBuffer _vertexBuffer;
 
 		public void Dispose()
 		{
-			if (Interlocked.Decrement(ref _instances) == 0)
+			//if (Interlocked.Decrement(ref _instances) == 0)
 			{
 				//Effect?.Dispose();
 

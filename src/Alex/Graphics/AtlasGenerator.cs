@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using Alex.API.Graphics;
+using Alex.API.Graphics.GpuResources;
 using Alex.API.Resources;
 using Alex.API.Utils;
 using Alex.Blocks;
@@ -40,7 +41,7 @@ namespace Alex.Graphics
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(SPWorldProvider));
 
 	    private Dictionary<ResourceLocation,  Utils.TextureInfo> _atlasLocations = new Dictionary<ResourceLocation,  Utils.TextureInfo>();
-	    private PooledTexture2D _textureAtlas;
+	    private ManagedTexture2D _textureAtlas;
 	    
         public Vector2 AtlasSize { get; private set; }
         public string Selector { get; }
@@ -207,9 +208,9 @@ namespace Alex.Graphics
 			    $"TextureAtlas's generated in {sw.ElapsedMilliseconds}ms! ({PlayingState.GetBytesReadable(totalSize, 2)})");
 	    }
 
-	    private PooledTexture2D GetMipMappedTexture2D(GraphicsDevice device, Image<Rgba32> image)
+	    private ManagedTexture2D GetMipMappedTexture2D(GraphicsDevice device, Image<Rgba32> image)
 	    {
-		    PooledTexture2D texture = GpuResourceManager.GetTexture2D(this, device, image.Width, image.Height, true, SurfaceFormat.Color);
+		    ManagedTexture2D texture = GpuResourceManager.GetTexture2D(this, device, image.Width, image.Height, true, SurfaceFormat.Color);
 
 		    for (int level = 0; level < Alex.MipMapLevel; level++)
 		    {
@@ -290,7 +291,7 @@ namespace Alex.Graphics
             if (build) GenerateAtlas(device, loadedTextures, progressReceiver);
 		}
 
-        public PooledTexture2D GetAtlas()
+        public ManagedTexture2D GetAtlas()
 		{
 			return _textureAtlas;
 		}

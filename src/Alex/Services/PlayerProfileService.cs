@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Alex.API.Graphics;
+using Alex.API.Graphics.GpuResources;
 using Alex.API.Services;
 using Alex.API.Utils;
 using Alex.Utils;
@@ -52,7 +53,7 @@ namespace Alex.Services
 				var profile = await new Profile(auth.SelectedProfile.Value).PerformRequestAsync();
 
 				bool skinSlim = false;
-				PooledTexture2D texture = null;
+				ManagedTexture2D texture = null;
 			
 				if (profile.Properties.SkinUri != null)
 				{

@@ -44,8 +44,6 @@ namespace Alex.Entities
 		private static readonly Logger   Log = LogManager.GetCurrentClassLogger(typeof(RemotePlayer));
 		public  GameMode Gamemode { get; private set; }
 
-		public string GeometryName { get; set; }
-		
 		public PlayerSkinFlags SkinFlags { get; }
 
 		public int Score   { get; set; } = 0;
@@ -71,7 +69,7 @@ namespace Alex.Entities
 
 			Velocity = Vector3.Zero;
 
-			GeometryName = geometry;
+			//GeometryName = geometry;
 			
 			MovementSpeed = 0.1f;//0000000149011612f;//0000000149011612f;
 			FlyingSpeed = 0.4f;
@@ -160,16 +158,7 @@ namespace Alex.Entities
 			{
 				if (_skin == null)
 				{
-					if (ModelFactory.TryGetModel(GeometryName, out var entityModel))
-					{
-						//var skin = entityModel.ToSkin();
-						//	PooledTexture2D texture2D = skinTexture ?? _alex;
-						//if (texture2D != null)
-						//	skin.UpdateTexture(texture2D);
-				
-						//_skin = skin;
-						LoadSkin(null, entityModel);
-					}
+					LoadSkin(null, null);
 				}
 				else
 				{
@@ -268,7 +257,7 @@ namespace Alex.Entities
 				if (model == null)
 				{
 					ModelFactory.TryGetModel(
-						skin.Slim ? "geometry.humanoid.custom" : "geometry.humanoid.customSlim", out model);
+						slim ? "geometry.humanoid.custom" : "geometry.humanoid.customSlim", out model);
 
 					/*model = skin.Slim ? (EntityModel) new Models.HumanoidCustomslimModel() :
 						(EntityModel) new HumanoidModel();*/ // new Models.HumanoidCustomGeometryHumanoidModel();
@@ -334,9 +323,9 @@ namespace Alex.Entities
 							skinBitmap = bitmap;*/
 						}
 
-						GeometryName = model.Description.Identifier;
+						//GeometryName = model.Description.Identifier;
 
-						if (EntityModelRenderer.TryGetModel(model, out var renderer))
+						if (EntityModelRenderer.TryGetRenderer(model, out var renderer))
 						{
 							ModelRenderer = renderer;
 							Texture = TextureUtils.BitmapToTexture2D(this, Alex.Instance.GraphicsDevice, skinBitmap);

@@ -1,5 +1,6 @@
 
 using Alex.API.Graphics;
+using Alex.API.Graphics.GpuResources;
 using Alex.Gamestates;
 using Microsoft.Xna.Framework;
 
@@ -15,10 +16,12 @@ namespace Alex.Graphics.Models.Entity
 
 		void AddChild(IAttached modelBone);
 		void Remove(IAttached modelBone);
+
+		IAttached Clone();
 	}
 
 	public class AttachedRenderArgs : RenderArgs
 	{
-		public PooledVertexBuffer Buffer { get; set; }
+		public ManagedVertexBuffer Buffer { get; set; }
 	}
 }

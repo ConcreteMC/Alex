@@ -339,5 +339,40 @@ namespace Alex.Graphics.Models.Entity
 		}
 
 		public string Name { get; set; }
+
+		public IAttached Clone()
+		{
+			var bone = new ModelBone()
+			{
+				Pivot = 
+					_pivot.HasValue ? new Vector3(_pivot.Value.X, _pivot.Value.Y, _pivot.Value.Z) : (Vector3?) null,
+				Position = new Vector3(_position.X, _position.Y, _position.Z),
+				Rotation = new Vector3(_rotation.X, _rotation.Y, _rotation.Z),
+				Scale = new Vector3(_scale.X, _scale.Y, _scale.Z),
+				BindingRotation = new Vector3(_bindingRotation.X, _bindingRotation.Y, _bindingRotation.Z),
+				Rendered = Rendered,
+				BindingMatrix = BindingMatrix,
+				 Name = Name,
+				 Transform = Transform
+			};
+
+			var meshes = _modelMeshes.ToArray();
+
+			foreach (var mesh in meshes)
+			{
+				bone.AddMesh(mesh);
+			}
+			
+			var children = Children.ToArray();
+			foreach (var child in children)
+			{
+				if (child is ModelBone modelBone)
+				{
+					bone.AddChild(modelBone.Clone());
+				}
+			}
+			
+			return bone;
+		}
 	}
 }

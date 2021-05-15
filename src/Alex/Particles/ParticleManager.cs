@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using Alex.API.Graphics;
+using Alex.API.Graphics.GpuResources;
 using Alex.API.Resources;
 using Alex.API.Utils;
 using Alex.API.World;
@@ -32,8 +33,8 @@ namespace Alex.Particles
 
 		public int ParticleCount { get; private set; }
 
-		private ConcurrentDictionary<string, PooledTexture2D> _sharedTextures =
-			new ConcurrentDictionary<string, PooledTexture2D>();
+		private ConcurrentDictionary<string, ManagedTexture2D> _sharedTextures =
+			new ConcurrentDictionary<string, ManagedTexture2D>();
 		private ResourceManager ResourceManager { get; }
 		public ParticleManager(Game game, GraphicsDevice device, ResourceManager resourceManager) : base(game)
 		{
@@ -57,7 +58,7 @@ namespace Alex.Particles
 
 				var texturePath = particle.Value.Description.BasicRenderParameters.Texture;
 
-				PooledTexture2D particleTexture = null;
+				ManagedTexture2D particleTexture = null;
 
 				if (!_sharedTextures.TryGetValue(texturePath
 					, out particleTexture))

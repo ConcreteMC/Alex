@@ -22,7 +22,7 @@ using Microsoft.Xna.Framework.Graphics;
 using MiNET.Net;
 using MiNET.Utils;
 using RocketUI;
-using GpuResourceManager = Alex.API.Graphics.GpuResourceManager;
+using GpuResourceManager = Alex.API.Graphics.GpuResources.GpuResourceManager;
 
 namespace Alex.Gamestates.Multiplayer
 {

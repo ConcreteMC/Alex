@@ -131,7 +131,7 @@ namespace Alex.Entities.BlockEntities
 
 				if (value)
 				{
-					if (EntityModelRenderer.TryGetModel(new DoubleChestEntityModel(), out var renderer))
+					if (EntityModelRenderer.TryGetRenderer(new DoubleChestEntityModel(), out var renderer))
 					{
 						ModelRenderer = renderer;
 					}
@@ -140,7 +140,7 @@ namespace Alex.Entities.BlockEntities
 				}
 				else
 				{
-					if (EntityModelRenderer.TryGetModel(new ChestEntityModel(), out var renderer))
+					if (EntityModelRenderer.TryGetRenderer(new ChestEntityModel(), out var renderer))
 					{
 						ModelRenderer = renderer;
 					}

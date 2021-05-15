@@ -1,6 +1,7 @@
 using System;
 using Alex.API.Blocks;
 using Alex.API.Graphics;
+using Alex.API.Graphics.GpuResources;
 using Alex.API.Utils;
 using Alex.API.Utils.Vectors;
 using Alex.Blocks.Minecraft;
@@ -14,7 +15,7 @@ namespace Alex.Entities.BlockEntities
 {
 	public class SkullBlockEntity : BlockEntity
 	{
-		private static PooledTexture2D _skeleton = null,
+		private static ManagedTexture2D _skeleton = null,
 			_witherSkeleton                      = null,
 			_zombie                              = null,
 			_creeper                             = null,
@@ -23,9 +24,9 @@ namespace Alex.Entities.BlockEntities
 		private ModelBone HeadBone { get; set; }
 		
 		/// <inheritdoc />
-		public SkullBlockEntity(World level, Block block, PooledTexture2D texture) : base(level, block)
+		public SkullBlockEntity(World level, Block block, ManagedTexture2D texture) : base(level, block)
 		{
-			if (EntityModelRenderer.TryGetModel(new SkullBlockEntityModel(), out var renderer))
+			if (EntityModelRenderer.TryGetRenderer(new SkullBlockEntityModel(), out var renderer))
 			{
 				ModelRenderer = renderer;
 			}
@@ -174,7 +175,7 @@ namespace Alex.Entities.BlockEntities
 						{
 							if (ModelFactory.TryGetModel("geometry.dragon_head", out var dragonHead))
 							{
-								if (EntityModelRenderer.TryGetModel(dragonHead, out var renderer))
+								if (EntityModelRenderer.TryGetRenderer(dragonHead, out var renderer))
 								{
 									ModelRenderer = renderer;
 								}

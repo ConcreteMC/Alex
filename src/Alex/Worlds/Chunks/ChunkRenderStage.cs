@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading;
 using Alex.API.Blocks;
 using Alex.API.Graphics;
+using Alex.API.Graphics.GpuResources;
 using Alex.API.Utils;
 using Alex.API.Utils.Collections;
 using Alex.API.Utils.Vectors;
@@ -22,7 +23,7 @@ namespace Alex.Worlds.Chunks
 	{
 		private static ILogger Log         = LogManager.GetCurrentClassLogger();
 		private ConcurrentDictionary<BlockCoordinates, List<VertexData>> BlockIndices     { get; set; }
-		private PooledVertexBuffer                             Buffer           { get; set; }
+		private ManagedVertexBuffer                             Buffer           { get; set; }
 		
 		private bool                  HasChanges     { get; set; }
 
@@ -149,8 +150,8 @@ namespace Alex.Worlds.Chunks
 
 					_primitiveCount = verticeCount / 3;
 
-					PooledVertexBuffer oldBuffer = null;
-					PooledVertexBuffer buffer = Buffer;
+					ManagedVertexBuffer oldBuffer = null;
+					ManagedVertexBuffer buffer = Buffer;
 
 					if (buffer == null || buffer.VertexCount < size)
 					{

@@ -19,7 +19,7 @@ namespace Alex.Entities.BlockEntities
 		/// <inheritdoc />
 		public EnderChestBlockEntity(Block block, World level) : base(block, level)
 		{
-			if (EntityModelRenderer.TryGetModel(new ChestEntityModel(), out var renderer))
+			if (EntityModelRenderer.TryGetRenderer(new ChestEntityModel(), out var renderer))
 			{
 				ModelRenderer = renderer;
 			}

@@ -2,6 +2,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using Alex.API.Graphics;
+using Alex.API.Graphics.GpuResources;
 using Alex.API.Utils;
 using Alex.API.Utils.Collections;
 using Alex.MoLang.Parser;
@@ -19,12 +20,12 @@ namespace Alex.Particles
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ParticleEmitter));
 		private ThreadSafeList<ParticleInstance> _instances = new ThreadSafeList<ParticleInstance>();
-		private PooledTexture2D Texture { get; }
+		private ManagedTexture2D Texture { get; }
 
 		private AppearanceComponent AppearanceComponent { get; }
 		public int MaxParticles { get; set; } = 500;
 		public ParticleDefinition Definition { get; }
-		public ParticleEmitter(PooledTexture2D texture, ParticleDefinition definition)
+		public ParticleEmitter(ManagedTexture2D texture, ParticleDefinition definition)
 		{
 			Texture = texture;
 			Definition = definition;

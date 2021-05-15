@@ -25,7 +25,7 @@ using Microsoft.Xna.Framework.Input;
 using MiNET.Utils;
 using NLog;
 using RocketUI;
-using GpuResourceManager = Alex.API.Graphics.GpuResourceManager;
+using GpuResourceManager = Alex.API.Graphics.GpuResources.GpuResourceManager;
 using PlayerLocation = Alex.API.Utils.Vectors.PlayerLocation;
 
 namespace Alex.Gamestates.InGame
@@ -188,7 +188,7 @@ namespace Alex.Gamestates.InGame
 
 			_debugInfo.AddDebugLeft(() => $"Primitives: {Alex.Metrics.PrimitiveCount:N0} Draw count: {Alex.Metrics.DrawCount}", TimeSpan.FromMilliseconds(500));
 			_debugInfo.AddDebugLeft(() => $"Textures: {Alex.Metrics.TextureCount:N0} Sprite count: {Alex.Metrics.SpriteCount}", TimeSpan.FromMilliseconds(500));
-			_debugInfo.AddDebugLeft(() => $"GPU Resources: {GpuResourceManager.Instance.ResourceCount}", TimeSpan.FromMilliseconds(500));
+			_debugInfo.AddDebugLeft(() => $"Graphic Resources: {GpuResourceManager.GetResourceCount}", TimeSpan.FromMilliseconds(500));
 		//	_debugInfo.AddDebugLeft(() => $"IndexBuffer Elements: {World.IndexBufferSize:N0} ({GetBytesReadable(World.IndexBufferSize * 4)})");
 			_debugInfo.AddDebugLeft(() => $"Chunks: {World.ChunkCount}, {World.ChunkManager.RenderedChunks}, {World.ChunkManager.DrawCount}", TimeSpan.FromMilliseconds(500));
 			_debugInfo.AddDebugLeft(() => $"Entities: {World.EntityManager.EntityCount}, {World.EntityManager.EntitiesRendered}, {World.EntityManager.DrawCount}", TimeSpan.FromMilliseconds(500));

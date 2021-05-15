@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using Alex.API.Graphics;
+using Alex.API.Graphics.GpuResources;
 using Alex.API.Gui;
 using Alex.API.Gui.Elements;
 
@@ -24,7 +25,7 @@ namespace Alex.Gamestates.MainMenu.Profile
         public LoadedSkin Skin { get; }
         private Action<SkinEntry> OnDoubleClick { get; }
 
-        public SkinEntry(LoadedSkin skin, PooledTexture2D texture2D, Action<SkinEntry> onDoubleClick)
+        public SkinEntry(LoadedSkin skin, ManagedTexture2D texture2D, Action<SkinEntry> onDoubleClick)
         {
             Skin = skin;
             OnDoubleClick = onDoubleClick;
@@ -49,7 +50,7 @@ namespace Alex.Gamestates.MainMenu.Profile
 
             var mob = new RemotePlayer(null, null);
             
-            if (EntityModelRenderer.TryGetModel(skin.Model, out var renderer))
+            if (EntityModelRenderer.TryGetRenderer(skin.Model, out var renderer))
             {
                 mob.ModelRenderer = renderer;
                 mob.Texture = texture2D;  

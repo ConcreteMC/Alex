@@ -10,6 +10,7 @@ using System.Reflection;
 using System.Text;
 using Alex.API.Data.Options;
 using Alex.API.Graphics;
+using Alex.API.Graphics.GpuResources;
 using Alex.API.Resources;
 using Alex.API.Services;
 using Alex.API.Utils;
@@ -79,7 +80,7 @@ namespace Alex
 		public BlockModelRegistry  BlockModelRegistry  { get; private set; }
 		public EntityModelRegistry EntityModelRegistry { get; private set; }
 		
-		public static PooledTexture2D NethergamesLogo { get; private set; }
+		public static ManagedTexture2D NethergamesLogo { get; private set; }
 		public ResourceManager(IServiceProvider serviceProvider)
 		{
 			BlockAtlas = new AtlasGenerator("block/");

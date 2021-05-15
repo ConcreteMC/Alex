@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework.Graphics;
+﻿using Alex.API.Graphics.GpuResources;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace Alex.API.Graphics
 {

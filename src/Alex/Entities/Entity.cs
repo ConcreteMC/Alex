@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading;
 using Alex.API.Data.Servers;
 using Alex.API.Graphics;
+using Alex.API.Graphics.GpuResources;
 using Alex.API.Graphics.Typography;
 using Alex.API.Resources;
 using Alex.API.Utils;
@@ -78,7 +79,6 @@ namespace Alex.Entities
 
 					if (value != null)
 					{
-						value.Use();
 						UpdateModelParts();
 						OnModelUpdated();
 						CheckHeldItem();
@@ -1076,9 +1076,9 @@ namespace Alex.Entities
 			//IsFlying = data[(int) MiNET.Entities.Entity.DataFlags.fl]
 		}
 
-		private PooledTexture2D _texture;
+		private ManagedTexture2D _texture;
 
-		public PooledTexture2D Texture
+		public ManagedTexture2D Texture
 		{
 			get
 			{
@@ -1089,7 +1089,7 @@ namespace Alex.Entities
 				if (value == _texture)
 					return;
 				
-				PooledTexture2D oldValue = _texture;
+				ManagedTexture2D oldValue = _texture;
 
 				try
 				{

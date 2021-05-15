@@ -4,6 +4,7 @@ using System.Drawing.Imaging;
 using System.Linq;
 using Alex.API.Data.Options;
 using Alex.API.Graphics;
+using Alex.API.Graphics.GpuResources;
 using Alex.API.Services;
 using Alex.API.Utils;
 using Alex.Utils;
@@ -26,14 +27,14 @@ namespace Alex.Graphics.Models
 	    private BasicEffect     CelestialPlaneEffect { get; set; }
 		private AlphaTestEffect CloudsPlaneEffect    { get; set; }
 
-	    private PooledVertexBuffer CloudsPlane { get; set; }
-        private PooledVertexBuffer SkyPlane { get; set; }
-	    private PooledVertexBuffer CelestialPlane { get; set; }
-		private PooledVertexBuffer MoonPlane { get; }
+	    private ManagedVertexBuffer CloudsPlane { get; set; }
+        private ManagedVertexBuffer SkyPlane { get; set; }
+	    private ManagedVertexBuffer CelestialPlane { get; set; }
+		private ManagedVertexBuffer MoonPlane { get; }
 
-		private PooledTexture2D SunTexture { get; }
-		private PooledTexture2D MoonTexture { get; }
-		private PooledTexture2D CloudTexture { get; }
+		private ManagedTexture2D SunTexture { get; }
+		private ManagedTexture2D MoonTexture { get; }
+		private ManagedTexture2D CloudTexture { get; }
 
 		private bool CanRender { get; set; } = true;
 		public bool EnableClouds { get; set; } = false;

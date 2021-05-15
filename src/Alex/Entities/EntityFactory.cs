@@ -5,6 +5,7 @@ using System.Drawing;
 using System.Linq;
 using System.Reflection;
 using Alex.API.Graphics;
+using Alex.API.Graphics.GpuResources;
 using Alex.API.Resources;
 using Alex.API.Utils;
 using Alex.Entities.Generic;
@@ -200,7 +201,7 @@ namespace Alex.Entities
 				{
 					return () =>
 					{
-						if (EntityModelRenderer.TryGetModel(model, out var renderer))
+						if (EntityModelRenderer.TryGetRenderer(model, out var renderer))
 						{
 							return renderer;
 						}
@@ -227,7 +228,7 @@ namespace Alex.Entities
 				{
 					return () =>
 					{
-						if (EntityModelRenderer.TryGetModel(model, out var renderer))
+						if (EntityModelRenderer.TryGetRenderer(model, out var renderer))
 						{
 							return renderer;
 						}
@@ -237,8 +238,8 @@ namespace Alex.Entities
 				});
 		}
 
-		private static ConcurrentDictionary<string, PooledTexture2D> _pooledTextures =
-			new ConcurrentDictionary<string, PooledTexture2D>(StringComparer.OrdinalIgnoreCase);
+		private static ConcurrentDictionary<string, ManagedTexture2D> _pooledTextures =
+			new ConcurrentDictionary<string, ManagedTexture2D>(StringComparer.OrdinalIgnoreCase);
 		public static Entity Create(MiNET.Entities.EntityType entityType, World world, bool initRenderController = true)
 		{
 			Entity entity = null;
@@ -493,7 +494,7 @@ namespace Alex.Entities
 				entity.ModelRenderer = EntityFactory.GetEntityRenderer(
 					stringId);
 				
-				PooledTexture2D texture2D = null;
+				ManagedTexture2D texture2D = null;
 				//if (renderer == null || texture2D == null)
 				{
 					if (description.Geometry.TryGetValue("default", out var defaultGeometry) 
@@ -511,7 +512,7 @@ namespace Alex.Entities
 						texture2D = _pooledTextures.GetOrAdd(
 							texture, s =>
 							{
-								PooledTexture2D pooled = null;
+								ManagedTexture2D pooled = null;
 
 								if (Alex.Instance.Resources.BedrockResourcePack.Textures.TryGetValue(
 									s, out var bmp))
