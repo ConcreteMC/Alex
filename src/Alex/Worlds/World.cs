@@ -543,10 +543,20 @@ namespace Alex.Worlds
 					SetBlockLight(blockCoords, 0);
 				}
 				*/
-				//ChunkManager.SkyLightCalculator.Calculate(this, blockCoords);
+				ChunkManager.SkyLightCalculator.Calculate(blockCoords);
 
-				//ChunkManager.BlockLightCalculations.Enqueue(blockCoords);
-				
+				if (GetBlockLight(blockCoords) > 0)
+				{
+					if ((type & ScheduleType.Lighting) == 0)
+					{
+						type |= ScheduleType.Lighting;
+					}
+				}
+				else
+				{
+					ChunkManager.BlockLightCalculations.Enqueue(blockCoords);
+				}
+
 				//chunk.SetDirty();
 				//chunk.IsDirty = true;
 				ChunkManager.ScheduleChunkUpdate(chunkCoords, type, (priority & BlockUpdatePriority.Priority) != 0);

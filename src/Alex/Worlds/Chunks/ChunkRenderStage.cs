@@ -43,12 +43,16 @@ namespace Alex.Worlds.Chunks
 		{
 			lock (_writeLock)
 			{
+				var bi = BlockIndices;
+
+				if (bi == null) return;
+				
 				var vertexData = new VertexData(
 					position, face, new Microsoft.Xna.Framework.Graphics.PackedVector.Short4(textureCoordinates.X, textureCoordinates.Y, textureCoordinates.Z, textureCoordinates.W), color.PackedValue);
 				
 				Interlocked.Increment(ref _vertexCount);
 
-				var list = BlockIndices.GetOrAdd(
+				var list = bi.GetOrAdd(
 					blockCoordinates, coordinates => new List<VertexData>(6 * 6));
 				list.Add(vertexData);
 
@@ -60,7 +64,11 @@ namespace Alex.Worlds.Chunks
 		{
 			lock (_writeLock)
 			{
-				if (BlockIndices.TryRemove(coordinates, out var indices))
+				var bi = BlockIndices;
+
+				if (bi == null) return;
+
+				if (bi.TryRemove(coordinates, out var indices))
 				{
 					Interlocked.Add(ref _vertexCount, -indices.Count);
 					HasChanges = true;
@@ -72,7 +80,11 @@ namespace Alex.Worlds.Chunks
 		{
 			lock (_writeLock)
 			{
-				return BlockIndices.ContainsKey(coordinates);
+				var bi = BlockIndices;
+
+				if (bi == null) return false;
+
+				return bi.ContainsKey(coordinates);
 			}
 		}
 
@@ -81,6 +93,10 @@ namespace Alex.Worlds.Chunks
 		{
 			lock (_writeLock)
 			{
+				var bi = BlockIndices;
+
+				if (bi == null) return null;
+				
 				var blockIndices = BlockIndices;
 				var size = blockIndices.Sum(x => x.Value.Count);
 				//length = size;
@@ -137,6 +153,10 @@ namespace Alex.Worlds.Chunks
 				_previousKeepInMemory = keepInMemory;
 
 				realVertices = BuildVertices(world);
+
+				if (realVertices == null)
+					return;
+				
 				HasChanges = false;
 			
 				var size = realVertices.Length;

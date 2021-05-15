@@ -1444,9 +1444,11 @@ namespace Alex.Worlds.Multiplayer.Java
 			//World.ChunkManager.RenderDistance = packet.ViewDistance / 16;
 		}
 
+		private bool _gotViewPosition = false;
 		private void HandleUpdateViewPositionPacket(UpdateViewPositionPacket packet)
 		{
-		//	World.ChunkManager.ViewPosition = new ChunkCoordinates(packet.ChunkX, packet.ChunkZ);
+			_gotViewPosition = true;
+			//	World.ChunkManager.ViewPosition = new ChunkCoordinates(packet.ChunkX, packet.ChunkZ);
 		}
 
 		private void HandleSpawnPositionPacket(SpawnPositionPacket packet)
@@ -2523,7 +2525,7 @@ namespace Alex.Worlds.Multiplayer.Java
 
         public bool ReadyToSpawn { get; set; } = false;
         private bool HasSpawnPosition { get; set; } = false;
-		private void HandlePlayerPositionAndLookPacket(PlayerPositionAndLookPacket packet)
+        private void HandlePlayerPositionAndLookPacket(PlayerPositionAndLookPacket packet)
 		{
 			Respawning = false;
 			var x = (float)packet.X;
@@ -2676,6 +2678,7 @@ namespace Alex.Worlds.Multiplayer.Java
 
 		private void HandleDisconnectPacket(DisconnectPacket packet)
 		{
+			Log.Info($"Received disconnect: {packet.Message}");
 			if (ChatObject.TryParse(packet.Message, out string o))
 			{
 				ShowDisconnect(o, force:true);
@@ -2686,7 +2689,6 @@ namespace Alex.Worlds.Multiplayer.Java
 			}
 
 			_disconnected = true;
-			Log.Info($"Received disconnect: {packet.Message}");
 			Client.Stop();
 		}
 		

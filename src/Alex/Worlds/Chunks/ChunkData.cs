@@ -72,12 +72,16 @@ namespace Alex.Worlds.Chunks
             Color color,
             RenderStage stage)
         {
-            var rStage = _stages[(int) stage];
+            var stages = _stages;
+
+            if (stages == null) return;
+            
+            var rStage = stages[(int) stage];
 
             if (rStage == null)
             {
                 rStage = CreateRenderStage(stage);
-                _stages[(int) stage] = rStage;
+                stages[(int) stage] = rStage;
             }
            
             rStage.AddVertex(blockCoordinates, position, face, textureCoordinates, color);
@@ -90,9 +94,13 @@ namespace Alex.Worlds.Chunks
 
         public void Remove(BlockCoordinates blockCoordinates)
         {
-            for (var index = 0; index < _stages.Length; index++)
+            var stages = _stages;
+
+            if (stages == null) return;
+            
+            for (var index = 0; index < stages.Length; index++)
             {
-                var stage = _stages[index];
+                var stage = stages[index];
 
                 stage?.Remove(blockCoordinates);
             }

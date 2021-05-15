@@ -38,8 +38,8 @@ namespace Alex.Worlds
 		
 		public  RenderingShaders        Shaders                { get; }
 		private CancellationTokenSource CancellationToken      { get; }
-		private BlockLightCalculations  BlockLightCalculations { get; set; }
-		private SkyLightCalculations    SkyLightCalculator     { get; set; }
+		internal BlockLightCalculations  BlockLightCalculations { get; set; }
+		internal SkyLightCalculations    SkyLightCalculator     { get; set; }
 
 		private FancyQueue<ChunkCoordinates>     FastUpdateQueue   { get; }
 		private FancyQueue<ChunkCoordinates>     UpdateQueue       { get; }
@@ -254,8 +254,8 @@ namespace Alex.Worlds
 									{
 										if (!Monitor.TryEnter(chunk.UpdateLock, 0))
 											continue;
-										
 
+										
 										try
 										{
 											bool newChunk = chunk.IsNew;
@@ -482,6 +482,7 @@ namespace Alex.Worlds
 
 				if ((type & ScheduleType.Lighting) != 0)
 				{
+					BlockLightCalculations.Recalculate(cc);
 					//cc.SkyLightDirty = true;
 				}
 				

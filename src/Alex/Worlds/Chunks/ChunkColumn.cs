@@ -109,8 +109,8 @@ namespace Alex.Worlds.Chunks
 		public bool UpdateBuffer(GraphicsDevice device, IBlockAccess world)
 		{
 			//Monitor.Enter(_dataLock);
-			//if (!Monitor.TryEnter(_dataLock, 0))
-			//	return false;
+			if (!Monitor.TryEnter(_dataLock, 0))
+				return false;
 
 			Stopwatch time = Stopwatch.StartNew();
 		
@@ -210,7 +210,7 @@ namespace Alex.Worlds.Chunks
 			finally
 			{
 				//_previousKeepInMemory = keepInMemory;
-				//Monitor.Exit(_dataLock);
+				Monitor.Exit(_dataLock);
 				time.Stop();
 				
 				MovingAverage.ComputeAverage((float) time.Elapsed.TotalMilliseconds);
