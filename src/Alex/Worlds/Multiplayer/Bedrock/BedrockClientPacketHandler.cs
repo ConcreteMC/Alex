@@ -147,7 +147,15 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			Log.Info($"Client status: {message.status}");
 			Client.PlayerStatus = message.status;
 
-			if (Client.PlayerStatus == 3)
+			if (Client.PlayerStatus == 1)
+			{
+				Client.ShowDisconnect("multiplayer.status.client_out_of_date", true, true, DisconnectReason.Network);
+			}
+			else if (Client.PlayerStatus == 2)
+			{
+				Client.ShowDisconnect("multiplayer.status.server_out_of_date", true, true, DisconnectReason.Network);
+			}
+			else if (Client.PlayerStatus == 3)
 			{
 				Client.MarkAsInitialized();
 			}

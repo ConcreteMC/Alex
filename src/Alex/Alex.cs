@@ -318,7 +318,6 @@ namespace Alex
             Components.Add(InputManager);       
             
             base.Initialize();
-
             
             RichPresenceProvider.Initialize();
         }
@@ -569,6 +568,8 @@ namespace Alex
            // GuiDebugHelper.Dispose();
 
             PluginManager.UnloadAll();
+            
+            RichPresenceProvider.ClearPresence();
         }
 
         protected override void Update(GameTime gt)

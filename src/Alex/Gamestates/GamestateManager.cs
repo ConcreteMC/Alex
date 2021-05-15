@@ -35,7 +35,7 @@ namespace Alex.Gamestates
             States = new ConcurrentDictionary<string, IGameState>();
 		}
 
-	    public void Back()
+        public void Back()
 	    {
 		    lock (_historyLock)
 		    {
@@ -263,5 +263,36 @@ namespace Alex.Gamestates
 			    return History.Last.Value;
 		    }
 	    }
-	}
+
+	    private void ClearStates()
+	    {
+		    var states = States.ToArray();
+		    
+		    States.Clear();
+		    
+		    foreach (var gamestate in states)
+		    {
+			    gamestate.Value?.Unload();
+		    }
+
+		    var activeState = ActiveState;
+
+		    if (activeState != null)
+		    {
+			    activeState.Hide();
+			    activeState.Unload();
+			    
+			    ActiveState = null;
+		    }
+	    }
+
+	    /// <inheritdoc />
+	    protected override void UnloadContent()
+	    {
+		    Log.Info($"Unload content...");
+		    ClearStates();
+		    
+		    base.UnloadContent();
+	    }
+    }
 }

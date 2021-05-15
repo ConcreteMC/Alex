@@ -450,6 +450,13 @@ namespace Alex.Particles
 
 			return false;
 		}
+
+		/// <inheritdoc />
+		protected override void UnloadContent()
+		{
+			base.UnloadContent();
+			
+		}
 	}
 
 	public enum ParticleDataMode

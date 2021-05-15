@@ -301,7 +301,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				DateTime nextPingAttempt = DateTime.UtcNow;
 				SpinWait spinWait = new SpinWait();
 
-				while (!this.Connection.FoundServer)
+				while (!this.Connection.FoundServer && !cancellationToken.IsCancellationRequested)
 				{
 					if (!cancellationToken.IsCancellationRequested && DateTime.UtcNow >= nextPingAttempt
 					                                               && numberOfAttempts-- > 0)
