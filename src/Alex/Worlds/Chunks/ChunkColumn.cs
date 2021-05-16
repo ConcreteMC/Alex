@@ -106,7 +106,8 @@ namespace Alex.Worlds.Chunks
 		
 		private static readonly MovingAverage MovingAverage = new MovingAverage();
 		
-		public bool UpdateBuffer(GraphicsDevice device, IBlockAccess world)
+		private bool _bufferDirty = false;
+		public bool UpdateBuffer(GraphicsDevice device, IBlockAccess world, bool applyImediately)
 		{
 			//Monitor.Enter(_dataLock);
 			if (!Monitor.TryEnter(_dataLock, 0))
@@ -201,7 +202,13 @@ namespace Alex.Worlds.Chunks
 					}
 				}
 
-				chunkData?.ApplyChanges(world, device, true, force);
+				_bufferDirty = true;
+				
+				if (applyImediately || force)
+				{
+					ApplyChanges(device, world, force);
+				}
+				
 				ChunkData = chunkData;
 
 				IsNew = false;
@@ -216,6 +223,22 @@ namespace Alex.Worlds.Chunks
 			}
 
 			return true;
+		}
+
+		private Stopwatch _lastUpdateWatch = new Stopwatch();
+		public void ApplyChanges(GraphicsDevice device, IBlockAccess world, bool force = false)
+		{
+			if (!_bufferDirty || (!force && _lastUpdateWatch.IsRunning && _lastUpdateWatch.ElapsedMilliseconds < 50))
+				return;
+			
+			var chunkData = ChunkData;
+
+			if (chunkData == null || chunkData.Disposed)
+				return;
+			
+			chunkData?.ApplyChanges(world, device, true, force);
+			_bufferDirty = false;
+			_lastUpdateWatch.Restart();
 		}
 		
 		public IEnumerable<BlockCoordinates> GetLightSources()
@@ -497,12 +520,12 @@ namespace Alex.Worlds.Chunks
 		
 		public void ScheduleBlocklightUpdate(int x, int y, int z)
 		{
-			//SetScheduled(x,y,z, true);
+			SetScheduled(x,y,z, true);
 		}
 		
 		public void ScheduleSkylightUpdate(int x, int y, int z)
 		{
-			//SetScheduled(x,y,z, true);
+			SetScheduled(x,y,z, true);
 		}
 
 		public bool AddBlockEntity(BlockCoordinates coordinates, NbtCompound entity)

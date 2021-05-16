@@ -303,7 +303,7 @@ namespace Alex.Worlds
 												}
 											}
 
-											chunk.UpdateBuffer(Graphics, World);
+											chunk.UpdateBuffer(Graphics, World, false);
 
 											if (newChunk)
 											{
@@ -630,10 +630,9 @@ namespace Alex.Worlds
 			if (chunk.DistanceTo(center) > RenderDistance)
 				return false;
 
-			return true;frustum.Intersects(new Microsoft.Xna.Framework.BoundingBox(chunkPos,
+			return frustum.Intersects(new Microsoft.Xna.Framework.BoundingBox(chunkPos,
 				chunkPos + new Vector3(ChunkColumn.ChunkWidth, MathF.Max(camera.Position.Y + 10f, 256f),
 					ChunkColumn.ChunkDepth)));
-
 		}
 		
 		private int DrawStaged(IRenderArgs args,
@@ -733,12 +732,17 @@ namespace Alex.Worlds
 			foreach (var chunk in Chunks)
 			{
 				bool inView = IsWithinView(chunk.Key, World.Camera);
-
-				if (inView && index + 1 < max)
+				var data = chunk.Value?.ChunkData;
+				
+				if (inView && index + 1 < max && data != null)
 				{
-					array[index] = chunk.Value?.ChunkData;
+					array[index] = data;
+					
+					chunk.Value.ApplyChanges(Graphics, World);
+					
 					index++;
 					//renderList.Add(chunk.Value.ChunkData);
+					
 				}
 
 				//if ((chunk.Value.BlockLightDirty || chunk.Value.SkyLightDirty))

@@ -22,7 +22,7 @@ namespace Alex.Worlds.Chunks
 	public class ChunkRenderStage : IDisposable
 	{
 		private static ILogger Log         = LogManager.GetCurrentClassLogger();
-		private ConcurrentDictionary<BlockCoordinates, List<VertexData>> BlockIndices     { get; set; }
+		private Dictionary<BlockCoordinates, List<VertexData>> BlockIndices     { get; set; }
 		private ManagedVertexBuffer                             Buffer           { get; set; }
 		
 		private bool                  HasChanges     { get; set; }
@@ -32,7 +32,7 @@ namespace Alex.Worlds.Chunks
 		private object _writeLock = new object();
 		public ChunkRenderStage()
 		{
-			BlockIndices = new ConcurrentDictionary<BlockCoordinates, List<VertexData>>();
+			BlockIndices = new Dictionary<BlockCoordinates, List<VertexData>>();
 		}
 		
 		public void AddVertex(BlockCoordinates blockCoordinates, 
@@ -52,8 +52,14 @@ namespace Alex.Worlds.Chunks
 				
 				Interlocked.Increment(ref _vertexCount);
 
-				var list = bi.GetOrAdd(
-					blockCoordinates, coordinates => new List<VertexData>(6 * 6));
+				List<VertexData> list;
+				if (!bi.TryGetValue(blockCoordinates, out list))
+				{
+					list = new List<VertexData>(6 * 6);
+					bi.Add(blockCoordinates, list);
+				}
+				//var list = bi.GetOrAdd(
+				//	blockCoordinates, coordinates => new List<VertexData>(6 * 6));
 				list.Add(vertexData);
 
 				HasChanges = true;
@@ -68,7 +74,7 @@ namespace Alex.Worlds.Chunks
 
 				if (bi == null) return;
 
-				if (bi.TryRemove(coordinates, out var indices))
+				if (bi.Remove(coordinates, out var indices))
 				{
 					Interlocked.Add(ref _vertexCount, -indices.Count);
 					HasChanges = true;
