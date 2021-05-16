@@ -4,14 +4,11 @@
     {
 	    public Kelp() : base()
 	    {
-		    IsWater = true;
+		    //IsWater = true;
 
 		    Transparent = true;
 		    Solid = false;
-		    IsReplacible = true;
 
-		    Animated = true;
-		    
 		    BlockMaterial = Material.WaterPlant;
 		    //  BlockMaterial = Material.Water;
 	    }

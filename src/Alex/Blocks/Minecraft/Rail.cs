@@ -14,12 +14,9 @@ namespace Alex.Blocks.Minecraft
 		{
 			Solid = false;
 			Transparent = true;
-			IsReplacible = false;
 
 			RequiresUpdate = true;
 			IsFullCube = false;
-
-			Hardness = 0.7f;
 		}
 
 		/*private bool UpdateState(IBlockAccess world,

@@ -4,7 +4,6 @@ namespace Alex.Blocks.Minecraft
 	{
 		public StoneCutter()
 		{
-			Animated = true;
 			Solid = true;
 			
 		}

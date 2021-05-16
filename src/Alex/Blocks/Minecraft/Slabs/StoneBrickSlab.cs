@@ -4,8 +4,8 @@ namespace Alex.Blocks.Minecraft
 	{
 		public StoneBrickSlab() : base()
 		{
-			BlockMaterial = Material.Stone;
-			Hardness = 1.5f;
+			BlockMaterial = Material.Stone.Clone().SetHardness(1.5f);
+			//Hardness = 1.5f;
 		}
 	}
 }

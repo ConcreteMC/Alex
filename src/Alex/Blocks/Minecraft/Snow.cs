@@ -9,12 +9,9 @@ namespace Alex.Blocks.Minecraft
 		{
 			Solid = true;
 			Transparent = true;
-			IsReplacible = false;
 			IsFullCube = false;
-
-			Hardness = 0.2f;
 			
-			BlockMaterial = Material.Snow.Clone().SetTintType(TintType.Color, Color.Snow);
+			BlockMaterial = Material.Snow.Clone().SetTintType(TintType.Color, Color.Snow).SetHardness(0.2f);
 		}
 	}
 }

@@ -4,8 +4,6 @@ namespace Alex.Blocks.Minecraft
 	{
 		public SoulFire()
 		{
-			Animated = true;
-			
 			LightValue = 10;
 			
 			BlockMaterial = Material.Fire;

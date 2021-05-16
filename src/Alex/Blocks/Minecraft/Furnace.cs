@@ -8,11 +8,7 @@ namespace Alex.Blocks.Minecraft
 		{
 			Solid = true;
 			Transparent = false;
-			IsReplacible = false;
-			Animated = true;
 			CanInteract = true;
-			
-			Hardness = 3.5f;
 		}
 		
 		/// <inheritdoc />

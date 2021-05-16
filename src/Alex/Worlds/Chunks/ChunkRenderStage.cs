@@ -39,7 +39,10 @@ namespace Alex.Worlds.Chunks
 			Vector3 position,
 			BlockFace face,
 			Vector4 textureCoordinates,
-			Color color)
+			Color color,
+			bool isSolid = true,
+			bool isTransparent = false,
+			bool isFullCube = true)
 		{
 			lock (_writeLock)
 			{
@@ -48,7 +51,15 @@ namespace Alex.Worlds.Chunks
 				if (bi == null) return;
 				
 				var vertexData = new VertexData(
-					position, face, new Microsoft.Xna.Framework.Graphics.PackedVector.Short4(textureCoordinates.X, textureCoordinates.Y, textureCoordinates.Z, textureCoordinates.W), color.PackedValue);
+					position,
+					face, 
+					new Microsoft.Xna.Framework.Graphics.PackedVector.Short4(
+						textureCoordinates.X, textureCoordinates.Y, textureCoordinates.Z, textureCoordinates.W), 
+					color.PackedValue,
+					isTransparent,
+					isFullCube,
+					isSolid
+				);
 				
 				Interlocked.Increment(ref _vertexCount);
 
@@ -118,15 +129,22 @@ namespace Alex.Worlds.Chunks
 				foreach (var block in blockIndices)
 				{
 					var v3 = new Vector3(block.Key.X, block.Key.Y, block.Key.Z);
+					var bc = new BlockCoordinates(v3);
 					foreach (var vertex in block.Value)
 					{
 						var p = v3 + vertex.Position;
+						var lightProbe = bc;
+						
+						if (vertex.IsSolid)
+						{
+							lightProbe += vertex.Face.GetBlockCoordinates();
+						}
 						//var offset = vertex.Face.GetVector3();
 						
 						//BlockModel.GetLight(
 						//	world, new BlockCoordinates(v3) + vertex.Face.GetBlockCoordinates(), out byte blockLight, out byte skyLight, false);
 						
-						world.GetLight(new BlockCoordinates(v3) + vertex.Face.GetBlockCoordinates(), out var blockLight, out var skyLight);
+						world.GetLight(lightProbe, out var blockLight, out var skyLight);
 						
 						vertices[index] = new MinifiedBlockShaderVertex(
 							p, vertex.Face, vertex.TexCoords.ToVector4(), new Color(vertex.Color),

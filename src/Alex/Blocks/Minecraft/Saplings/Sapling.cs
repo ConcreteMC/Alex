@@ -9,7 +9,6 @@ namespace Alex.Blocks.Minecraft.Saplings
 			
 			Transparent = true;
 			Solid = false;
-			IsFullBlock = false;
 			IsFullCube = false;
 			
 			BlockMaterial = Material.Plants;

@@ -15,10 +15,9 @@ namespace Alex.Blocks.Minecraft
 		{
 			Solid = true;
 			Transparent = true;
-			IsReplacible = false;
 			LightValue = 7;
 			
-			Hardness = 22.5f;
+			//Hardness = 22.5f;
 			
 			CanInteract = true;
 			Renderable = false;
@@ -26,6 +25,7 @@ namespace Alex.Blocks.Minecraft
 			HasHitbox = true;
 
 			RequiresUpdate = true;
+			BlockMaterial = Material.Stone.Clone().SetHardness(22.5f);
 		}
 		
 		/// <inheritdoc />

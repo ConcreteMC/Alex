@@ -158,7 +158,7 @@ namespace Alex.Entities
 					HeadInBlock = false;
 				}
 
-				if (headBlock.BlockMaterial == Material.Water || headBlock.IsWater)
+				if (headBlock.BlockMaterial == Material.Water || headBlock.BlockMaterial.IsLiquid)
 				{
 					HeadInWater = true;
 				}
@@ -179,7 +179,7 @@ namespace Alex.Entities
 
 			if (blockBelowFeet != null)
 			{
-				if (blockBelowFeet.Any(b => b.State.Block.BlockMaterial == Material.Water || b.State.Block.IsWater))
+				if (blockBelowFeet.Any(b => b.State.Block.BlockMaterial == Material.Water || b.State.Block.BlockMaterial.IsLiquid))
 				{
 					AboveWater = true;
 				}
@@ -195,7 +195,7 @@ namespace Alex.Entities
 
 			if (feetBlock != null)
 			{
-				if (feetBlock.Any(b => b.State.Block.BlockMaterial == Material.Water || b.State.Block.IsWater))
+				if (feetBlock.Any(b => b.State.Block.BlockMaterial == Material.Water || b.State.Block.BlockMaterial.IsLiquid))
 				{
 					FeetInWater = true;
 				}

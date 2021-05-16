@@ -6,9 +6,8 @@ namespace Alex.Blocks.Minecraft
 		{
 			Solid = true;
 			Transparent = true;
-			IsReplacible = false;
-
-			Hardness = 0.2f;
+			
+			BlockMaterial = Material.Plants.SetHardness(0.2f);
 		}
 	}
 }

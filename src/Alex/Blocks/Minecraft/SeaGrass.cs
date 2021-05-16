@@ -10,11 +10,10 @@ namespace Alex.Blocks.Minecraft
     {
         public SeaGrass()
         {
-            IsWater = true;
+            //IsWater = true;
             Transparent = true;
             Solid = false;
 
-            Animated = true;
             IsFullCube = false;
 
             BlockMaterial = Material.ReplaceableWaterPlant;

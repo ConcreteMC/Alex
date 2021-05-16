@@ -18,7 +18,7 @@ namespace Alex.Blocks.Minecraft
     {
         public WoodStairs() : base()
         {
-            BlockMaterial = Material.Wood;
+            BlockMaterial = Material.Wood.Clone().SetWaterLoggable().SetHardness(2);
         }
     }
 
@@ -30,22 +30,20 @@ namespace Alex.Blocks.Minecraft
         {
             Solid = true;
             Transparent = true;
-            IsReplacible = false;
             RequiresUpdate = true;
-            Hardness = 2;
+            //Hardness = 2;
             
-            BlockMaterial = Material.Stone;
+            BlockMaterial = Material.Stone.Clone().SetWaterLoggable().SetHardness(2);
         }
 
         public Stairs()
         {
             Solid = true;
             Transparent = true;
-            IsReplacible = false;
             RequiresUpdate = true;
-            Hardness = 2;
+           // Hardness = 2;
             
-            BlockMaterial = Material.Stone;
+            BlockMaterial = Material.Stone.Clone().SetWaterLoggable().SetHardness(2);
         }
 
         /// <inheritdoc />

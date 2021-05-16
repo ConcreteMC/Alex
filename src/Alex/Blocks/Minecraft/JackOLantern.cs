@@ -7,8 +7,9 @@ namespace Alex.Blocks.Minecraft
 			Solid = true;
 			Transparent = false;
 
-			Hardness = 1;
 			LightValue = 15;
+			
+			BlockMaterial = Material.Wood.Clone().SetHardness(1);
 		}
 	}
 }

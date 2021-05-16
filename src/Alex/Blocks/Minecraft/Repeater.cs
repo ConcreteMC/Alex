@@ -5,7 +5,6 @@ namespace Alex.Blocks.Minecraft
 		public Repeater()
 		{
 			BlockMaterial = Material.Circuits;
-			IsFullBlock = false;
 			CanInteract = true;
 		}
 	}

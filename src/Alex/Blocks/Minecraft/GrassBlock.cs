@@ -15,13 +15,12 @@ namespace Alex.Blocks.Minecraft
 		{
 			Solid = true;
 			Transparent = false;
-			IsReplacible = false;
 			//IsFullBlock = true;
 			//IsFullCube = true;
 			//
 
 			//BlockMaterial = Material.Grass;
-			Hardness = 0.6f;
+			//BlockMaterial = Material.Grass.Clone().SetHardness()
 		}
 
 		/// <inheritdoc />
@@ -31,11 +30,11 @@ namespace Alex.Blocks.Minecraft
 			{
 				if (BlockState.TryGetValue("snowy", out string val) && val.Equals("true", StringComparison.OrdinalIgnoreCase))
 				{
-					return Material.Snow;//.Clone().SetTintType(TintType.Color, Color.Snow);
+					return Material.Snow.Clone().SetHardness( 0.6f);//.Clone().SetTintType(TintType.Color, Color.Snow);
 				}
 				else
 				{
-					return Material.Grass;
+					return Material.Grass.Clone().SetHardness( 0.6f);
 				}
 			}
 		}

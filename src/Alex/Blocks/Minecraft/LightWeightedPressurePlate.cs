@@ -6,12 +6,8 @@ namespace Alex.Blocks.Minecraft
 		{
 			Solid = true;
 			Transparent = true;
-			IsReplacible = false;
-			IsFullBlock = false;
-			
-			Hardness = 0.5f;
-			
-			BlockMaterial  = Material.Iron;
+
+			BlockMaterial  = Material.Iron.Clone().SetHardness(0.5f);
 		}
 	}
 }

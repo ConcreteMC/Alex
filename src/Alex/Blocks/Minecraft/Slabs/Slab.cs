@@ -17,7 +17,6 @@ namespace Alex.Blocks.Minecraft
 	    {
 		    Solid = true;
 		    Transparent = true;
-		    IsFullBlock = false;
 	    }
 
 	    /// <inheritdoc />

@@ -221,12 +221,12 @@ namespace Alex.Worlds
         {
 	        if (_destroyed)
 		        return;
-	        
+
+	        SkyBox.Draw(args);
+            
 	        args.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
 	        args.GraphicsDevice.SamplerStates[0] = SamplerState.PointWrap;
-
-            SkyBox.Draw(args);
-            
+	        
             ChunkManager.Draw(args, null,
 	            RenderStage.Opaque);
             

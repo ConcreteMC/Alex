@@ -14,13 +14,10 @@ namespace Alex.Blocks.Minecraft
         {
             Solid = true;
             Transparent = true;
-            IsReplacible = false;
 
             CanInteract = true;
             IsFullCube = false;
-            
-            Hardness = 2;
-            
+
             BlockMaterial = Material.Wood;
         }
 

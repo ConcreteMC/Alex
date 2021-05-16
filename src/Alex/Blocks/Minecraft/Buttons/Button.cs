@@ -10,7 +10,6 @@
 		    CanInteract = true;
 		    
 		    BlockMaterial = Material.Circuits;
-		    Hardness = 0.5f;
 		    /*
 		     * Solid = false;
 		    Transparent = true;

@@ -6,11 +6,10 @@ namespace Alex.Blocks.Minecraft
 		{
 			Solid = true;
 			Transparent = false;
-			IsReplacible = false;
-
-			Hardness = 2.5f;
 
 			CanInteract = true;
+			
+			BlockMaterial = Material.Wood.SetHardness(2.5f);
 		}
 	}
 }

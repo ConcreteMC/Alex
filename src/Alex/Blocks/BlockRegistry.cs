@@ -1,11 +1,16 @@
+using System.IO;
+using System.Linq;
+using System.Text;
 using Alex.API.Resources;
 using Alex.Blocks.Minecraft;
 using Alex.Blocks.Minecraft.Saplings;
+using NLog;
 
 namespace Alex.Blocks
 {
     public class BlockRegistry : RegistryBase<Block>
     {
+	    private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(BlockRegistry));
 	    public BlockRegistry() : base("block")
 	    {
 		    this.Register("minecraft:air", () => new Air());

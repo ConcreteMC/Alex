@@ -6,13 +6,12 @@ namespace Alex.Blocks.Minecraft
 		{
 			Solid = true;
 			Transparent = true;
-			IsReplacible = false;
 			LightValue = 15;
 			CanInteract = true;
 			
-			Hardness = 3;
+			//Hardness = 3;
 
-			BlockMaterial = Material.Glass;
+			BlockMaterial = Material.Glass.Clone().SetHardness(3f);
 		}
 	}
 }

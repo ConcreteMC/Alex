@@ -13,8 +13,7 @@ namespace Alex.Blocks.Minecraft
 		{
 			Solid = false;
 			Transparent = true;
-			IsReplacible = false;
-			
+
 			IsFullCube = false;
 
 			BlockMaterial = Material.Plants;

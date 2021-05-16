@@ -4,7 +4,6 @@ namespace Alex.Blocks.Minecraft
 	{
 		public SoulCampfire()
 		{
-			Animated = true;
 			LightValue = 10;
 		}
 	}

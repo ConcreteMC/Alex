@@ -688,12 +688,13 @@ namespace Alex.Graphics.Models.Blocks
 					{
 						var vertex = vertices[i];
 						var textureCoordinates = (vertex.TexCoords) + uvMap.TextureInfo.Position;
-						
+
 						chunkBuilder.AddVertex(
 							position, vertex.Position, facing,
 							new Vector4(
 								textureCoordinates.X, textureCoordinates.Y, uvMap.TextureInfo.Width,
-								uvMap.TextureInfo.Height), vertex.Color, targetState);
+								uvMap.TextureInfo.Height), vertex.Color, targetState, baseBlock.Solid,
+							baseBlock.Transparent, baseBlock.IsFullCube);
 
 					}
 				}

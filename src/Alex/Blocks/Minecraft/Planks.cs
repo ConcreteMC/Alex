@@ -4,9 +4,7 @@ namespace Alex.Blocks.Minecraft
     {
         public Planks()
         {
-            Animated = false;
             Solid = true;
-            IsFullBlock = true;
             IsFullCube = true;
             
             BlockMaterial = Material.Wood;

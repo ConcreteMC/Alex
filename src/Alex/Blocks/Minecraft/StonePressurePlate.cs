@@ -11,10 +11,6 @@ namespace Alex.Blocks.Minecraft
 		{
 			Solid = true;
 			Transparent = true;
-			IsReplacible = false;
-			IsFullBlock = false;
-			
-			Hardness = 0.5f;
 		}
 	}
 }

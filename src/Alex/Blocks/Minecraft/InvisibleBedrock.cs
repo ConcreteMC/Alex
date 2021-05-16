@@ -8,8 +8,9 @@
 			HasHitbox = false;
 			Solid = true;
 			Transparent = true;
-			
-			Hardness = 60000;
+
+			BlockMaterial = Material.Portal.Clone().SetHardness(60000);
+			//Hardness = 60000;
 		}
 	}
 }

@@ -6,10 +6,8 @@ namespace Alex.Blocks.Minecraft
 		{
 			Solid = true;
 			Transparent = false;
-			IsReplacible = false;
-			
+
 			BlockMaterial = Material.Ore;
-			Hardness = 3;
 		}
 		
 		public override byte LightValue {

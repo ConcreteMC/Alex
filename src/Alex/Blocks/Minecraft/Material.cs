@@ -20,7 +20,7 @@ namespace Alex.Blocks.Minecraft
 		public static readonly IMaterial Ore = new Material(MapColor.STONE).SetRequiresTool().SetRequiredTool(ItemType.PickAxe, ItemMaterial.Any).SetHardness(3);
 		
 		public static readonly IMaterial Iron = (new Material(MapColor.IRON)).SetRequiresTool().SetHardness(5f);
-		public static readonly IMaterial Anvil = (new Material(MapColor.IRON)).SetRequiresTool();
+		public static readonly IMaterial Anvil = (new Material(MapColor.IRON)).SetRequiresTool().SetHardness(5f);
 
 		public static readonly IMaterial Water = (new MaterialLiquid(MapColor.WATER)).SetTranslucent()
 		   .SetTintType(TintType.Water, new Color(68, 175, 245));
@@ -32,13 +32,13 @@ namespace Alex.Blocks.Minecraft
 		public static readonly IMaterial Plants = (new MaterialLogic(MapColor.FOLIAGE)).SetTintType(TintType.Foliage).SetHardness(0.6f);
 		public static readonly IMaterial ReplaceablePlants = (new MaterialLogic(MapColor.FOLIAGE)).SetTintType(TintType.Foliage).SetHardness(0.6f).SetReplaceable();
 		
-		public static readonly IMaterial Vine = (new MaterialLogic(MapColor.FOLIAGE)).SetTintType(TintType.Foliage).SetBurning().SetReplaceable();
+		public static readonly IMaterial Vine = (new MaterialLogic(MapColor.FOLIAGE)).SetTintType(TintType.Foliage).SetBurning().SetReplaceable().SetHardness(0.2f);
 		public static readonly IMaterial Sponge = new Material(MapColor.YELLOW);
 		public static readonly IMaterial Cloth = (new Material(MapColor.CLOTH)).SetBurning();
 		public static readonly IMaterial Fire = (new MaterialTransparent(MapColor.AIR));
 		public static readonly IMaterial Sand = new Material(MapColor.SAND);
 		public static readonly IMaterial Circuits = (new MaterialLogic(MapColor.AIR)).SetHardness(0.2f);
-		public static readonly IMaterial Carpet = (new MaterialLogic(MapColor.CLOTH)).SetBurning();
+		public static readonly IMaterial Carpet = (new MaterialLogic(MapColor.CLOTH)).SetBurning().SetHardness(0.1f);
 		public static readonly IMaterial Glass = (new Material(MapColor.AIR)).SetTranslucent().SetHardness(0.3f);
 		public static readonly IMaterial RedstoneLight = (new Material(MapColor.AIR));
 		public static readonly IMaterial Tnt = (new Material(MapColor.TNT)).SetBurning();
@@ -48,7 +48,7 @@ namespace Alex.Blocks.Minecraft
 		public static readonly IMaterial PackedIce = (new Material(MapColor.ICE)).SetSlipperines(0.989d);
 		public static readonly IMaterial Snow = (new MaterialLogic(MapColor.SNOW)).SetReplaceable().SetRequiresTool().SetTintType(TintType.Color, Color.Snow);
 		public static readonly IMaterial CraftedSnow = (new Material(MapColor.SNOW)).SetRequiresTool();
-		public static readonly IMaterial Cactus = (new Material(MapColor.FOLIAGE));
+		public static readonly IMaterial Cactus = (new Material(MapColor.FOLIAGE)).SetHardness(0.4f);
 		public static readonly IMaterial Clay = new Material(MapColor.CLAY);
 		public static readonly IMaterial Gourd = (new Material(MapColor.FOLIAGE));
 		public static readonly IMaterial DragonEgg = (new Material(MapColor.FOLIAGE));

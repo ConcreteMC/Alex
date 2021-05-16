@@ -319,7 +319,7 @@ namespace Alex
             
             base.Initialize();
             
-            RichPresenceProvider.Initialize();
+           // RichPresenceProvider.Initialize();
         }
 
         protected override void LoadContent()

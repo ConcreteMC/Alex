@@ -70,7 +70,10 @@ namespace Alex.Worlds.Chunks
             BlockFace face,
             Vector4 textureCoordinates,
             Color color,
-            RenderStage stage)
+            RenderStage stage,
+            bool isSolid = true,
+            bool isTransparent = false,
+            bool isFullCube = true)
         {
             var stages = _stages;
 
@@ -84,7 +87,7 @@ namespace Alex.Worlds.Chunks
                 stages[(int) stage] = rStage;
             }
            
-            rStage.AddVertex(blockCoordinates, position, face, textureCoordinates, color);
+            rStage.AddVertex(blockCoordinates, position, face, textureCoordinates, color, isSolid, isTransparent, isFullCube);
         }
 
         private ChunkRenderStage CreateRenderStage(RenderStage arg)

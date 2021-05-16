@@ -5,8 +5,6 @@ namespace Alex.Blocks.Minecraft
         public StoneStairs()
         {
             BlockMaterial = Material.Stone;
-
-            Hardness = 2f;
         }
     }
 }

@@ -12,12 +12,10 @@ namespace Alex.Blocks.Minecraft
 		{
 			Solid = false;
 			Transparent = true;
-			IsReplacible = true;
 			HasHitbox = true;
 			//BlockModel = BlockFactory.StationairyWaterModel;
 
-			IsWater = true;
-			Animated = true;
+			//IsWater = true;
 			BlockMaterial = Material.Water;
 
 			LightOpacity = 3;
@@ -27,7 +25,7 @@ namespace Alex.Blocks.Minecraft
 		{
 			var myLevelValue = BlockState.GetTypedValue(LEVEL);
 			
-			if (neighbor.BlockMaterial == Material.Water || neighbor.BlockMaterial == Material.WaterPlant)
+			if (neighbor.BlockMaterial.IsLiquid || neighbor.BlockMaterial == Material.WaterPlant || (neighbor.BlockMaterial.IsWatterLoggable && neighbor.IsWaterLogged))
 			{
 				var neighborLevel = neighbor.BlockState.GetTypedValue(LEVEL);
 
@@ -39,7 +37,7 @@ namespace Alex.Blocks.Minecraft
 				return false;
 			}
 
-			if (neighbor.IsWater)
+			if (neighbor.BlockMaterial.IsLiquid)
 				return false;
 
 			if (neighbor.Solid && (!neighbor.Transparent || neighbor.BlockMaterial.IsOpaque))

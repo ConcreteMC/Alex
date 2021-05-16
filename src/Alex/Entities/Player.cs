@@ -771,7 +771,7 @@ namespace Alex.Entities
 
 					    if (blockState != null && !(blockState.Block is Air) && HasRaytraceResult)
 					    {
-						    if (existingBlock.IsReplacible || !existingBlock.Solid)
+						    if (existingBlock.BlockMaterial.IsReplaceable || !existingBlock.Solid)
 						    {
 							//    Log.Info($"Placing block 1");
 							    if (CanPlaceBlock(coordR, (Block) blockState.Block))

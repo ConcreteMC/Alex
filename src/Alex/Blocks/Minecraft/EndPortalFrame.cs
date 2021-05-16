@@ -6,10 +6,7 @@ namespace Alex.Blocks.Minecraft
 		{
 			Solid = true;
 			Transparent = false;
-			IsReplacible = false;
 			LightValue = 1;
-			
-			Hardness = 60000;
 		}
 	}
 }

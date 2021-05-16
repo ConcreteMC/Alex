@@ -12,11 +12,9 @@ namespace Alex.Blocks.Minecraft
 		{
 			Solid = false;
 			Transparent = true;
-			IsReplacible = true;
 			IsFullCube = false;
 			
 			BlockMaterial = Material.Grass;
-			Hardness = 0.6f;
 		}
 
 		/// <inheritdoc />

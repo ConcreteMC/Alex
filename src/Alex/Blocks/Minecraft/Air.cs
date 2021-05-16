@@ -6,7 +6,6 @@ namespace Alex.Blocks.Minecraft
 		{
 			Solid = false;
 			Transparent = true;
-			IsReplacible = true;
 			Renderable = false;
 			HasHitbox = false;
 

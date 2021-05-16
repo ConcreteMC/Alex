@@ -4,7 +4,6 @@ namespace Alex.Blocks.Minecraft
 	{
 		public CampFire()
 		{
-			Animated = true;
 			LightValue = 15;
 		}
 	}

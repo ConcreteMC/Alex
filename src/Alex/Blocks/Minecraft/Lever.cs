@@ -6,11 +6,9 @@ namespace Alex.Blocks.Minecraft
 		{
 			Solid = true;
 			Transparent = true;
-			IsReplacible = false;
 			CanInteract = true;
 			
 			BlockMaterial = Material.Circuits;
-			Hardness = 0.5f;
 		}
 	}
 }

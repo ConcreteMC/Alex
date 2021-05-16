@@ -6,7 +6,6 @@ namespace Alex.Blocks.Minecraft
         {
             Transparent = true;
             Solid = true;
-            IsFullBlock = false;
             IsFullCube = false;
 
             BlockMaterial = Material.Iron;

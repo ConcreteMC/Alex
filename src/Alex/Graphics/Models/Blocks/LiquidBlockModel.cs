@@ -73,12 +73,12 @@ namespace Alex.Graphics.Models.Blocks
 				var pos = position + face.GetBlockCoordinates();
 
 				bool shouldRenderFace = false;
-				foreach (var blockState in blockAccess.GetBlockStates(pos.X, pos.Y, pos.Z))
+				var blockState = blockAccess.GetBlockState(pos);
 				{
 				//	if (blockState.Storage != 0 && (blockState.State == null || (blockState.State.Block is Air)))
 					//	continue;
 					
-					var neighbor = blockState.State.Block;
+					var neighbor = blockState.Block;
 					
 					shouldRenderFace = baseBlock.Block.ShouldRenderFace(face, neighbor);
 				}

@@ -17,12 +17,34 @@ namespace Alex.Worlds.Chunks
 
 		public readonly uint Color;
 
-		public VertexData(Vector3 position, BlockFace face, Short4 textureCoordinates, uint color)
+		public readonly byte Flags;
+
+		public bool IsTransparent => (Flags & (byte)(1 << 1)) != 0;
+		public bool IsFullCube => (Flags & (byte)(1 << 2)) != 0;
+		public bool IsSolid => (Flags & (byte)(1 << 3)) != 0;
+		
+		public VertexData(Vector3 position,
+			BlockFace face,
+			Short4 textureCoordinates,
+			uint color,
+			bool isTransparent = false,
+			bool isFullCube = false,
+			bool isSolid = false)
 		{
 			Position = position;
 			Face = face;
 			TexCoords = textureCoordinates;
 			Color = color;
+			Flags = 0;
+
+			if (isTransparent)
+				Flags |= (1 << 1);
+			
+			if (isFullCube)
+				Flags |= (1 << 2);
+
+			if (isSolid)
+				Flags |= (1 << 3);
 		}
 	}
 }

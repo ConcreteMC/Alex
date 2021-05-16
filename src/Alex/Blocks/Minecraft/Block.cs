@@ -34,43 +34,43 @@ namespace Alex.Blocks.Minecraft
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(Block));
 
 		protected static PropertyBool Lit = new PropertyBool("lit", "true", "false");
-		
-		public bool Solid { get; set; }
-		public bool Transparent { get; set; }
-		public bool Animated { get; set; } = false;
-		public bool Renderable { get; set; }
-		public bool HasHitbox { get; set; }
-		public virtual bool IsFullCube { get; set; } = true;
-		public bool IsFullBlock { get; set; } = true;
+		protected static PropertyBool WaterLogged = new PropertyBool("waterlogged", "true", "false");
 
-		public bool IsReplacible { get; set; } = false;
-		public bool RequiresUpdate { get; set; } = false;
-		public bool CanInteract { get; set; } = false;
+		public bool IsWaterLogged => BlockState.GetTypedValue(WaterLogged);
+
+		private ushort _flags = 0;
+
+		private bool GetFlagBit(int bit) => (_flags & (1 << bit)) != 0;
+
+		private void SetFlagBit(int bit, bool value)
+		{
+			var mask = (ushort)(1 << bit);
+			
+			if (value)
+			{
+				_flags |= mask;
+			}
+			else
+			{
+				_flags = (ushort)(_flags & ~mask);
+			}
+		}
+		
+		public bool Solid { get => GetFlagBit(1); set => SetFlagBit(1, value); }
+		public bool Transparent { get => GetFlagBit(2); set => SetFlagBit(2, value); }
+		public bool Renderable { get => GetFlagBit(4); set => SetFlagBit(4, value); }
+		public bool HasHitbox { get => GetFlagBit(5); set => SetFlagBit(5, value); }
+		public virtual bool IsFullCube { get => GetFlagBit(6); set => SetFlagBit(6, value); }
+
+		public bool RequiresUpdate { get => GetFlagBit(9); set => SetFlagBit(9, value); }
+		public bool CanInteract { get => GetFlagBit(10); set => SetFlagBit(10, value); }
 		
 	    public virtual byte LightValue { get; set; } = 0;
 	    public int LightOpacity { get; set; } = 1;
 	    
 		public BlockState BlockState { get; set; }
-		public bool IsWater { get; set; } = false;
 
-		private float _hardness = -1f;
-
-		public float Hardness
-		{
-			get
-			{
-				if (_hardness > 0f)
-					return _hardness;
-
-				return BlockMaterial.Hardness;
-			}
-			set
-			{
-				_hardness = value;
-			}
-		}
-
-        private IMaterial _material = new Material(MapColor.STONE);
+		private IMaterial _material = new Material(MapColor.STONE);
 
 		public virtual IMaterial BlockMaterial
 		{
@@ -89,6 +89,7 @@ namespace Alex.Blocks.Minecraft
 			Transparent = false;
 			Renderable = true;
 			HasHitbox = true;
+			IsFullCube = true;
 		}
 
 		public virtual IEnumerable<BoundingBox> GetBoundingBoxes(Vector3 blockPos)
@@ -173,8 +174,8 @@ namespace Alex.Blocks.Minecraft
 		        toolItemType = miningTool.ItemType;
 		        toolItemMaterial = miningTool.Material;
 	        }
-	        
-			double       secondsForBreak  = Hardness;
+
+	        double secondsForBreak = BlockMaterial.Hardness;
 			bool         isHarvestable    = true;
 			
 			if (BlockMaterial.IsToolRequired)
@@ -261,7 +262,7 @@ namespace Alex.Blocks.Minecraft
 		        {
 			        if (!FancyGraphics)
 			        {
-				        if (neighbor.Solid && neighbor.IsFullBlock && neighbor.Transparent)
+				        if (neighbor.Solid && neighbor.IsFullCube && neighbor.Transparent) //Was isfullblock
 					        return false;
 			        }
 
@@ -272,7 +273,7 @@ namespace Alex.Blocks.Minecraft
 				        if (!BlockMaterial.IsOpaque && !neighbor.BlockMaterial.IsOpaque)
 					        return false;
 
-				        if (!IsFullBlock || !neighbor.IsFullBlock) return true;
+				        //if (!IsFullBlock || !neighbor.IsFullBlock) return true;
 			        }
 			        
 			        //If neighbor is solid & not transparent. Hmmm?
@@ -300,8 +301,7 @@ namespace Alex.Blocks.Minecraft
 
         public virtual bool CanAttach(BlockFace face, Block block)
         {
-	        return block.Solid && (block.IsFullCube || (block.BlockState.Name.Equals(
-		        BlockState.Name, StringComparison.OrdinalIgnoreCase)));
+	        return block.Solid && (block.IsFullCube);
         }
 
         protected static string GetShape(BlockState state)

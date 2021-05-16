@@ -6,11 +6,8 @@ namespace Alex.Blocks.Minecraft
 		{
 			Solid = true;
 			Transparent = false;
-			IsReplacible = false;
 			LightValue = 15;
-			
-			Hardness = -1;
-			
+
 			BlockMaterial = Material.Portal;
 		}
 	}
