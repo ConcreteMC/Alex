@@ -181,7 +181,7 @@ namespace Alex.Networking.Bedrock.RakNet
 			}
 		}
 
-		public bool IsOutOfOrder => _orderingBufferQueue.Count > 0;
+		public bool IsOutOfOrder => _orderingBufferQueue.Count > 1;
 		private void ProcessOrderedQueue()
 		{
 			_orderingThread = Thread.CurrentThread;
@@ -212,6 +212,8 @@ namespace Alex.Networking.Bedrock.RakNet
 			{
 				Log.Error(e, $"Exit receive handler task for player");
 			}
+
+			_orderingThread = null;
 		}
 
 		private void HandlePacket(Packet message)
@@ -232,7 +234,7 @@ namespace Alex.Networking.Bedrock.RakNet
 							break;
 
 						case ConnectedPong connectedPong:
-							//	HandleConnectedPong(connectedPong);
+							//HandleConnectedPong(connectedPong);
 
 							break;
 

@@ -1423,7 +1423,7 @@ namespace Alex.Worlds.Multiplayer.Java
 
 		private void HandleAcknowledgePlayerDiggingPacket(AcknowledgePlayerDiggingPacket packet)
 		{
-			Log.Info($"Player digging acknowledgement, status={packet.Status} success={packet.Successful}");
+			//Log.Info($"Player digging acknowledgement, status={packet.Status} success={packet.Successful}");
 			
 			if (!packet.Successful)
 			{
@@ -1441,6 +1441,7 @@ namespace Alex.Worlds.Multiplayer.Java
 
 		private void HandleUpdateViewDistancePacket(UpdateViewDistancePacket packet)
 		{
+		//	World.ChunkManager.RenderDistance = Math.Min(packet.ViewDistance / 16, Alex.Options.AlexOptions.VideoOptions.RenderDistance);
 			//World.ChunkManager.RenderDistance = packet.ViewDistance / 16;
 		}
 
@@ -1448,7 +1449,7 @@ namespace Alex.Worlds.Multiplayer.Java
 		private void HandleUpdateViewPositionPacket(UpdateViewPositionPacket packet)
 		{
 			_gotViewPosition = true;
-			//	World.ChunkManager.ViewPosition = new ChunkCoordinates(packet.ChunkX, packet.ChunkZ);
+			World.ChunkManager.ViewPosition = new ChunkCoordinates(packet.ChunkX, packet.ChunkZ);
 		}
 
 		private void HandleSpawnPositionPacket(SpawnPositionPacket packet)
@@ -1725,8 +1726,8 @@ namespace Alex.Worlds.Multiplayer.Java
 		
 		private void HandleRespawnPacket(RespawnPacket packet)
 		{
-
 			Respawning = true;
+			//ReadyToSpawn = false;
 			
 			HandleDimension(packet.Dimension);
 			
@@ -2294,7 +2295,7 @@ namespace Alex.Worlds.Multiplayer.Java
 			var flags = packet.Flags;
 			var player = World.Player;
 			
-			player.FlyingSpeed = packet.FlyingSpeed;
+			//player.FlyingSpeed = packet.FlyingSpeed;
 			
 			//player.AddOrUpdateProperty();
 
@@ -2360,7 +2361,9 @@ namespace Alex.Worlds.Multiplayer.Java
 		private void HandleJoinGamePacket(JoinGamePacket packet)
 		{
 			//_dimension = packet.Dimension;
-
+			
+			World.ChunkManager.RenderDistance = Math.Min(World.ChunkManager.RenderDistance, packet.ViewDistance);
+			
 			SendSettings();
 			
 			//World.ChunkManager.RenderDistance = packet.ViewDistance / 16;
@@ -2378,36 +2381,45 @@ namespace Alex.Worlds.Multiplayer.Java
         }
 
         //private BlockingCollection<ChunkDataPacket> _chunkQueue = new BlockingCollection<ChunkDataPacket>();
-        private void HandleChunkData(ChunkDataPacket chunk)
+        private void HandleChunkData(ChunkDataPacket packet)
         {
+	        _loginCompleteEvent?.Set();
+	        
+	        var buffer = packet.Buffer.Span.ToArray();
+	        var x = packet.ChunkX;
+	        var z = packet.ChunkZ;
+	        var biomes = packet.Biomes;
+	        var heightMaps = packet.HeightMaps;
+	        var entities = packet.TileEntities;
+	        var primaryBitmask = packet.PrimaryBitmask;
+	        bool groundUp = packet.GroundUp;
 	      World.BackgroundWorker.Enqueue(() =>
 		        {
 			        unsafe
 			        {
-				        _loginCompleteEvent?.Set();
-
 				        //_chunkQueue.Add(chunk);
 				        //	ThreadPool.QueueUserWorkItem(() =>
-				        using (var memoryStream = new UnmanagedMemoryStream(
-						        (byte*) chunk.Buffer.Pin().Pointer, chunk.Buffer.Length))
-					        // using(var memoryStream = new MemoryStream(chunk.Buffer))
+				      //  using (var memoryStream = new UnmanagedMemoryStream(
+					//	        (byte*) chunk.Buffer.Pin().Pointer, chunk.Buffer.Length))
+					
+				        using(var memoryStream = new MemoryStream(buffer))
 				        using (var stream = new MinecraftStream(memoryStream))
 				        {
 					        JavaChunkColumn result = null; // = new ChunkColumn();
 
-					        if (chunk.GroundUp)
+					        if (groundUp)
 					        {
-						        result = new JavaChunkColumn(chunk.ChunkX, chunk.ChunkZ);
+						        result = new JavaChunkColumn(x, z);
 					        }
 					        else
 					        {
-						        if (World.GetChunkColumn(chunk.ChunkX, chunk.ChunkZ) is JavaChunkColumn c)
+						        if (World.GetChunkColumn(x, z) is JavaChunkColumn c)
 						        {
 							        result = c;
 						        }
 						        else
 						        {
-							        result = new JavaChunkColumn(chunk.ChunkX, chunk.ChunkZ);
+							        result = new JavaChunkColumn(x,z);
 						        }
 					        }
 
@@ -2415,28 +2427,28 @@ namespace Alex.Worlds.Multiplayer.Java
 					        // result.Z = chunk.ChunkZ;
 					        //     result.IsDirty = true;
 
-					        result.Read(stream, chunk.PrimaryBitmask, chunk.GroundUp, World.Dimension == Dimension.Overworld);
+					        result.Read(stream, primaryBitmask, groundUp, World.Dimension == Dimension.Overworld);
 
-					        if (chunk.GroundUp)
+					        if (groundUp)
 					        {
 						        /*for (int i = 0; i < chunk.Biomes.Length; i++)
 					        {
 						        result.BiomeId[i] = chunk.Biomes[i];
 					        }*/
-						        for (int x = 0; x < 16; x++)
+						        for (int bx = 0; bx < 16; bx++)
 						        {
-							        for (int z = 0; z < 16; z++)
+							        for (int bz = 0; bz < 16; bz++)
 							        {
-								        for (int y = 0; y < 256; y++)
+								        for (int by = 0; by < 256; by++)
 								        {
-									        result.SetBiome(x, y, z, chunk.Biomes[((y >> 2) & 63) << 4 | ((z >> 2) & 3) << 2 | ((x >> 2) & 3)]);
+									        result.SetBiome(bx, by, bz, biomes[((by >> 2) & 63) << 4 | ((bz >> 2) & 3) << 2 | ((bx >> 2) & 3)]);
 								        }
 							        }
 						        }
 					        }
 
 
-					        foreach (var tag in chunk.TileEntities)
+					        foreach (var tag in entities)
 					        {
 						        if (tag == null || !(tag.Contains("id")))
 							        continue;
@@ -2582,7 +2594,7 @@ namespace Alex.Worlds.Multiplayer.Java
 			//UpdatePlayerPosition(
 			//	new PlayerLocation(packet.X, packet.Y, packet.Z, packet.Yaw, packet.Yaw, pitch: packet.Pitch));
 
-			if (!ReadyToSpawn && HasSpawnPosition)
+			if (!ReadyToSpawn)
 			{
 				Log.Info($"Ready to spawn!");
 				

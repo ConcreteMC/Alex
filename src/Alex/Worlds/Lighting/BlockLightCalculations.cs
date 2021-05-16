@@ -59,7 +59,7 @@ namespace Alex.Worlds.Lighting
 	        var chunkpos = new BlockCoordinates(chunk.X << 4, 0, chunk.Z << 4);
 	        foreach (var lightsource in chunk.GetLightSources().OrderByDescending(x => x.Y))
 	        {
-		        Enqueue(chunkpos + lightsource);
+		        Calculate(chunkpos + lightsource);
 	        }
 	        //chunk.GetLightSources()
         }
@@ -84,7 +84,7 @@ namespace Alex.Worlds.Lighting
 	        return count > 0;
         }
 
-        public void Enqueue(BlockCoordinates coordinates)
+        public void Calculate(BlockCoordinates coordinates)
         {
 	       /* if (!Queue.Contains(coordinates))
 	        {

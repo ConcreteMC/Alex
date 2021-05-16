@@ -146,7 +146,7 @@ namespace Alex
             {
                 PreferMultiSampling = true,
                 SynchronizeWithVerticalRetrace = false,
-                GraphicsProfile = GraphicsProfile.Reach,
+                GraphicsProfile = GraphicsProfile.HiDef,
                 PreferHalfPixelOffset = false,
                 PreferredDepthStencilFormat = DepthFormat.Depth24Stencil8
             };
@@ -825,4 +825,5 @@ namespace Alex
         void UpdateProgress(int done, int total, string statusMessage, string sub) =>
             UpdateProgress((int) (((double) done / (double) total) * 100D), statusMessage, sub);
     }
+   
 }

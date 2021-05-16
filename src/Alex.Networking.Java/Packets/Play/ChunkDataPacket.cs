@@ -73,5 +73,16 @@ namespace Alex.Networking.Java.Packets.Play
 				stream.WriteNbtCompound(tileEntity);
 			}
 		}
+
+		/// <inheritdoc />
+		protected override void ResetPacket()
+		{
+			base.ResetPacket();
+
+			Biomes = null;
+			HeightMaps = null;
+			Buffer = null;
+			TileEntities = new List<NbtCompound>();
+		}
 	}
 }

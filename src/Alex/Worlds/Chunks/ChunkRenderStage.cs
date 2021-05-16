@@ -213,6 +213,7 @@ namespace Alex.Worlds.Chunks
 
 			int count = 0;
 			device.SetVertexBuffer(Buffer);
+			
 			foreach (var pass in effect.CurrentTechnique.Passes)
 			{
 				pass.Apply();

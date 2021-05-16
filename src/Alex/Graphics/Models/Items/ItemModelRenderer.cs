@@ -362,12 +362,6 @@ namespace Alex.Graphics.Models.Items
             effect.VertexColorEnabled = true;
         }
 
-        public static void DrawLine(GraphicsDevice device, Vector3 start, Vector3 end, Color color)
-        {
-            var vertices = new[] {new VertexPositionColor(start, color), new VertexPositionColor(end, color)};
-            device.DrawUserPrimitives(PrimitiveType.LineList, vertices, 0, 1);
-        }
-        
         public virtual bool Cache(ResourceManager pack)
         {
             return false;

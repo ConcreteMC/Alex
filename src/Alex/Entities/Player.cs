@@ -324,7 +324,23 @@ namespace Alex.Entities
 			    }
 			    else
 			    {
-				    if (!_destroyingBlock)
+				    if (_destroyingBlock)
+				    {
+					    if (!leftMouseBtnDown)
+					    {
+						    StopBreakingBlock();
+					    }
+					    else if (_destroyingTarget != new BlockCoordinates(Vector3.Floor(_raytraced)))
+					    {
+						    StopBreakingBlock(true);
+
+						    if (Gamemode != GameMode.Creative)
+						    {
+							    //	StartBreakingBlock();
+						    }
+					    }
+				    }
+				    else
 				    {
 					    if (HasRaytraceResult)
 					    {
@@ -338,22 +354,6 @@ namespace Alex.Entities
 						    if (didLeftClick)
 						    {
 							    HandleLeftClick(IsLeftHanded ? Inventory.OffHand : Inventory.MainHand, IsLeftHanded ? 1 : 0);
-						    }
-					    }
-				    }
-				    else
-				    {
-					    if (!leftMouseBtnDown)
-					    {
-						    StopBreakingBlock();
-					    }
-					    else if (_destroyingTarget != new BlockCoordinates(Vector3.Floor(_raytraced)))
-					    {
-						    StopBreakingBlock(true, true);
-
-						    if (Gamemode != GameMode.Creative)
-						    {
-							    //	StartBreakingBlock();
 						    }
 					    }
 				    }
@@ -685,6 +685,9 @@ namespace Alex.Entities
 
 	    private void StopBreakingBlock(bool sendToServer = true, bool forceCanceled = false)
 	    {
+		    if (!_destroyingBlock)
+			    return;
+		    
 		    _destroyingBlock = false;
 		    
             var ticks = Interlocked.Exchange(ref _destroyingTick, 0);// = 0;

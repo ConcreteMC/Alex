@@ -127,6 +127,7 @@ namespace Alex.Worlds.Chunks
 					return false;
 				
 				bool isNew = IsNew;
+				bool force = false;
 				
 				var chunkPosition = new Vector3(X << 4, 0, Z << 4);
 				world = new OffsetBlockAccess(chunkPosition, world);
@@ -150,18 +151,16 @@ namespace Alex.Worlds.Chunks
 							{
 								var idx = GetCoordinateIndex(x, sectionOffset + y, z);
 
-								bool scheduled = scheduleQueue[idx]; // IsScheduled(x, y, z);
-
-								//if ((skyLightUpdate || blockLightUpdate) && !scheduled)
-								//	{
-								//		forceUpdate = true;
-								//	}
+								bool scheduled = scheduleQueue[idx]; // IsScheduled(x, y, z)
 
 								if ((!isNew && !scheduled))
 									continue;
 
 								if (scheduled)
+								{
 									_scheduledUpdates[idx] = false;
+									force = true;
+								}
 
 								var blockPosition = new BlockCoordinates(x, y + sectionOffset, z);
 								chunkData?.Remove(blockPosition);
@@ -202,7 +201,7 @@ namespace Alex.Worlds.Chunks
 					}
 				}
 
-				chunkData?.ApplyChanges(world, device, true);
+				chunkData?.ApplyChanges(world, device, true, force);
 				ChunkData = chunkData;
 
 				IsNew = false;
@@ -498,12 +497,12 @@ namespace Alex.Worlds.Chunks
 		
 		public void ScheduleBlocklightUpdate(int x, int y, int z)
 		{
-			SetScheduled(x,y,z, true);
+			//SetScheduled(x,y,z, true);
 		}
 		
 		public void ScheduleSkylightUpdate(int x, int y, int z)
 		{
-			SetScheduled(x,y,z, true);
+			//SetScheduled(x,y,z, true);
 		}
 
 		public bool AddBlockEntity(BlockCoordinates coordinates, NbtCompound entity)
