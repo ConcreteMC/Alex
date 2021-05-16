@@ -544,22 +544,22 @@ namespace Alex.Worlds
 				}
 				*/
 				ChunkManager.SkyLightCalculator.Calculate(blockCoords);
-
-				if (GetBlockLight(blockCoords) > 0)
+				ChunkManager.BlockLightCalculations.Calculate(blockCoords);
+				//if (GetBlockLight(blockCoords) > 0)
 				{
 					if ((type & ScheduleType.Lighting) == 0)
 					{
 						type |= ScheduleType.Lighting;
 					}
 				}
-				else
+				//	else
 				{
-					ChunkManager.BlockLightCalculations.Enqueue(blockCoords);
+					//ChunkManager.BlockLightCalculations.Enqueue(blockCoords);
 				}
 
 				//chunk.SetDirty();
 				//chunk.IsDirty = true;
-				ChunkManager.ScheduleChunkUpdate(chunkCoords, type, (priority & BlockUpdatePriority.Priority) != 0);
+				ChunkManager.ScheduleChunkUpdate(chunkCoords, type, true);
 				
 				CheckForUpdate(chunkCoords, cx, cz);
 			}

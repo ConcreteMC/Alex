@@ -611,13 +611,13 @@ namespace Alex.Worlds
 			// ColorBlendFunction = BlendFunction.Add
 		};
 		
-		public void Draw(IRenderArgs args, Effect forceEffect = null, string technique = "Block", params RenderStage[] stages)
+		public void Draw(IRenderArgs args, Effect forceEffect = null, params RenderStage[] stages)
 		{
 			using (GraphicsContext gc = GraphicsContext.CreateContext(
 				args.GraphicsDevice, Block.FancyGraphics ? BlendState.AlphaBlend : BlendState.Opaque, DepthStencilState, _rasterizerState,
 				_renderSampler))
 			{
-				DrawCount = DrawStaged(args, forceEffect, technique, stages.Length > 0 ? stages : RenderStages);
+				DrawCount = DrawStaged(args, forceEffect, stages.Length > 0 ? stages : RenderStages);
 			}
 		}
 		
@@ -637,7 +637,7 @@ namespace Alex.Worlds
 		}
 		
 		private int DrawStaged(IRenderArgs args,
-			Effect forceEffect = null, string technique = "Block", params RenderStage[] stages)
+			Effect forceEffect = null, params RenderStage[] stages)
 		{
 			int drawCount = 0;
 			var originalBlendState = args.GraphicsDevice.BlendState;
@@ -681,10 +681,10 @@ namespace Alex.Worlds
 					}
 				}
 
-				if (effect is BlockEffect be)
-				{
-					be.CurrentTechnique = be.Techniques[technique];
-				}
+				//if (effect is BlockEffect be)
+				//{
+				//	be.CurrentTechnique = be.Techniques[technique];
+				//}
 				
 				drawCount += DrawChunks(args.GraphicsDevice, chunks, effect, stage);
 			}
@@ -719,7 +719,7 @@ namespace Alex.Worlds
 		
 		public void Update(IUpdateArgs args)
 		{
-			Shaders.Update((float)args.GameTime.ElapsedGameTime.TotalSeconds, args.Camera, World.SkyBox.CelestialAngle, RenderDistance);
+			Shaders.Update((float)args.GameTime.ElapsedGameTime.TotalSeconds, args.Camera);
 		}
 
 		/// <inheritdoc />
