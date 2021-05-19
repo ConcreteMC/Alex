@@ -69,6 +69,8 @@ namespace Alex.Gamestates
 		{
 			if(IsShown) return;
 
+			Alex.IsFixedTimeStep = Options.VideoOptions.UseVsync.Value;
+			
 			if (Gui != null)
 			{
 				Alex.GuiManager.AddScreen(Gui);
