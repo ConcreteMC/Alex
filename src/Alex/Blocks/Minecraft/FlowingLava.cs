@@ -1,6 +1,6 @@
 ﻿namespace Alex.Blocks.Minecraft
 {
-	public class FlowingLava : Block
+	public class FlowingLava : Lava
 	{
 		public FlowingLava(byte meta = 0) : base()
 		{

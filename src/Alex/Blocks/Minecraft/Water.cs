@@ -5,6 +5,14 @@ using Alex.Blocks.Properties;
 
 namespace Alex.Blocks.Minecraft
 {
+	public class LiquidBlock : Block
+	{
+		protected LiquidBlock()
+		{
+			
+		}
+	}
+	
 	public class Water : Block
 	{
 		public static readonly PropertyInt LEVEL = new PropertyInt("level", 0);
@@ -12,7 +20,7 @@ namespace Alex.Blocks.Minecraft
 		{
 			Solid = false;
 			Transparent = true;
-			HasHitbox = false;
+			HasHitbox = true;
 			//BlockModel = BlockFactory.StationairyWaterModel;
 
 			//IsWater = true;

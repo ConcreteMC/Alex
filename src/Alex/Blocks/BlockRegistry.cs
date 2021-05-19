@@ -306,7 +306,11 @@ namespace Alex.Blocks
 		    this.Register("minecraft:dark_prismarine_stairs", () => new PrismarineStairs());
 		    
 		    this.Register("minecraft:water", () => new Water());
+		    this.Register("minecraft:flowing_water", () => new FlowingWater());
+		    
 		    this.Register("minecraft:lava", () => new Lava());
+		    this.Register("minecraft:flowing_lava", () => new FlowingLava());
+		    
 		    this.Register("minecraft:kelp", () => new Kelp());
 		    this.Register("minecraft:kelp_plant", () => new Kelp());
 		    this.Register("minecraft:seagrass", () => new SeaGrass());
