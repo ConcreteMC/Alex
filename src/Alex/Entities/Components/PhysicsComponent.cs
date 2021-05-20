@@ -46,26 +46,34 @@ namespace Alex.Entities.Components
 			var slipperiness   = 0.91f;
 			var movementFactor = (float) e.CalculateMovementSpeed();
 
-			if (onGround)
+			if (e.FeetInWater)
 			{
-				slipperiness *= GetSlipperiness(e);
-				e.Slipperines = slipperiness;
-				
-				var acceleration = 0.1627714f / (slipperiness * slipperiness * slipperiness);
-				movementFactor *= acceleration;
+				movementFactor = 0.02f;
+				slipperiness = 0.8f;
 			}
 			else
 			{
-				if (e.IsFlying)
+				if (onGround)
 				{
-					movementFactor *= 0.1627714f / (slipperiness * slipperiness * slipperiness);
+					slipperiness *= GetSlipperiness(e);
+					e.Slipperines = slipperiness;
+
+					var acceleration = 0.1627714f / (slipperiness * slipperiness * slipperiness);
+					movementFactor *= acceleration;
 				}
 				else
 				{
-					movementFactor = 0.02f;
+					if (e.IsFlying)
+					{
+						movementFactor *= 0.1627714f / (slipperiness * slipperiness * slipperiness);
+					}
+					else
+					{
+						movementFactor = 0.02f;
+					}
 				}
 			}
-			
+
 			e.Velocity += ConvertHeading(e, movementFactor);
 			//var momentum     = e.Velocity * e.Slipperines * 0.91f;
 			//var acceleration = (ConvertMovementIntoVelocity(e, out var slipperiness));
@@ -74,11 +82,16 @@ namespace Alex.Entities.Components
 
 
 			if (e.IsAffectedByGravity && !e.IsFlying && !e.KnownPosition.OnGround)
-			{ 
-				e.Velocity -= new Vector3(0f, (float) (e.Gravity), 0f);
+			{
+				var gravity = (float)e.Gravity;
+
+				if (e.FeetInWater)
+					gravity /= 4f;
+				
+				e.Velocity -= new Vector3(0f, gravity, 0f);
 			}
 
-			if (e.IsFlying)
+			if (e.IsFlying || e.FeetInWater)
 			{
 				e.Velocity *= new Vector3(slipperiness, slipperiness, slipperiness);
 			}

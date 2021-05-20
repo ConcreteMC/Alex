@@ -1562,26 +1562,18 @@ namespace Alex.Entities
 		private bool _isUsingItem;
 		private bool _isAttacking = false;
 
+		public bool CanSurface { get; set; } = false;
 		public const float   JumpVelocity = 0.42f;
 		public virtual void Jump()
 		{
 			HealthManager.Exhaust(IsSprinting ? 0.2f : 0.05f);
 			var jumpVelocity = JumpVelocity;
 			
-			if (IsInWater)
+			if (IsInWater || IsInLava)
 			{
 				jumpVelocity = 0.04f;
 				
-				if (FeetInWater && !HeadInWater)
-				{
-					jumpVelocity += 0.3f;
-				}
-			}
-			else if (IsInLava)
-			{
-				jumpVelocity = 0.04f;
-				
-				if (FeetInLava && !HeadInLava)
+				if (((FeetInWater && !HeadInWater) || (FeetInLava && !HeadInLava)) && CanSurface)
 				{
 					jumpVelocity += 0.3f;
 				}

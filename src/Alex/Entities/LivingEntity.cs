@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using Alex.API.Utils;
 using Alex.API.Utils.Vectors;
 using Alex.Blocks.Minecraft;
@@ -133,53 +134,20 @@ namespace Alex.Entities
 			if (NoAi || _waitingOnChunk) return;
 			//	IsMoving = Velocity.LengthSquared() > 0f;
 
-			var knownPos  = new BlockCoordinates(new Vector3(KnownPosition.X, KnownPosition.Y, KnownPosition.Z));
-			var knownDown = KnownPosition.GetCoordinates3D();
+			var renderPosition = RenderLocation;
+			var knownDown = renderPosition.GetCoordinates3D();
 
 			//	if (Alex.ServerType == ServerType.Bedrock)
 			{
 				knownDown = knownDown.BlockDown();
 			}
 
+			var entityBoundingBox = GetBoundingBox(renderPosition);
 			var blockBelowFeet = Level?.GetBlockStates(knownDown.X, knownDown.Y, knownDown.Z);
-			var feetBlock      = Level?.GetBlockStates(knownPos.X, knownPos.Y, knownPos.Z).ToArray();
-			var headBlockState = Level?.GetBlockState(KnownPosition.GetCoordinates3D() + new BlockCoordinates(0, 1, 0));
-
-			if (headBlockState != null)
-			{
-				var headBlock = headBlockState.Block;
-
-				if (headBlock.Solid)
-				{
-					HeadInBlock = true;
-				}
-				else
-				{
-					HeadInBlock = false;
-				}
-
-				if (headBlock.BlockMaterial == Material.Water || headBlock.BlockMaterial.IsLiquid)
-				{
-					HeadInWater = true;
-				}
-				else
-				{
-					HeadInWater = false;
-				}
-
-				if (headBlock.BlockMaterial == Material.Lava || headBlock is Lava || headBlock is FlowingLava)
-				{
-					HeadInLava = true;
-				}
-				else
-				{
-					HeadInLava = false;
-				}
-			}
 
 			if (blockBelowFeet != null)
 			{
-				if (blockBelowFeet.Any(b => b.State.Block.BlockMaterial == Material.Water || b.State.Block.BlockMaterial.IsLiquid))
+				if (blockBelowFeet.Any(b => b.State.Block.BlockMaterial == Material.Water))
 				{
 					AboveWater = true;
 				}
@@ -193,29 +161,93 @@ namespace Alex.Entities
 				AboveWater = false;
 			}
 
-			if (feetBlock != null)
+			bool feetInWater = false;
+			bool feetInLava = false;
+			bool headInWater = false;
+			bool headInLava = false;
+			foreach (var corner in entityBoundingBox.GetCorners())
 			{
-				if (feetBlock.Any(b => b.State.Block.BlockMaterial == Material.Water || b.State.Block.BlockMaterial.IsLiquid))
+				if (Math.Abs(corner.Y - entityBoundingBox.Min.Y) < 0.001f) //Check feet.
 				{
-					FeetInWater = true;
-				}
-				else
-				{
-					FeetInWater = false;
-				}
+					var blockcoords = new BlockCoordinates(
+						new PlayerLocation(corner.X, (float) (corner.Y + (Height * 0.5f)), corner.Z));
 
-				if (feetBlock.Any(b => b.State.Block.BlockMaterial == Material.Lava))
-				{
-					FeetInLava = true;
+					var feetBlock = Level?.GetBlockState(blockcoords.X, blockcoords.Y, blockcoords.Z);
+
+					if (feetBlock != null)
+					{
+						if (!feetInWater)
+						{
+							if (feetBlock.Block.BlockMaterial == Material.Water)
+							{
+								feetInWater = true;
+							}
+							else
+							{
+								feetInWater = false;
+							}
+						}
+
+						if (!feetInLava)
+						{
+							if (feetBlock.Block.BlockMaterial == Material.Lava)
+							{
+								feetInLava = true;
+							}
+							else
+							{
+								feetInLava = false;
+							}
+						}
+					}
 				}
-				else
+				else //Check head.
 				{
-					FeetInLava = false;
+					var blockcoords = new BlockCoordinates(
+						new PlayerLocation(corner.X, Math.Floor(corner.Y), corner.Z));
+
+					var headBlock = Level?.GetBlockState(blockcoords.X, blockcoords.Y, blockcoords.Z);
+
+					if (headBlock != null)
+					{
+						if (!headInWater)
+						{
+							if (headBlock.Block.BlockMaterial == Material.Water)
+							{
+								headInWater = true;
+							}
+							else
+							{
+								headInWater = false;
+							}
+						}
+
+						if (!headInLava)
+						{
+							if (headBlock.Block.BlockMaterial == Material.Lava)
+							{
+								headInLava = true;
+							}
+							else
+							{
+								headInLava = false;
+							}
+						}
+					}
 				}
 			}
 
+			FeetInWater = feetInWater;
+			FeetInLava = feetInLava;
+
+			HeadInWater = headInWater;
+			HeadInLava = headInLava;
+			
 			IsInWater = FeetInWater || HeadInWater;
 			IsInLava = FeetInLava || HeadInLava;
+
+			if (IsSwimming && (!feetInWater || !headInWater))
+				IsSwimming = false;
 		}
 		
 		private long _hitAnimationEnd = 0;

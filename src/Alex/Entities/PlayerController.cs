@@ -219,9 +219,26 @@ namespace Alex.Entities
 
 	    public float LastSpeedFactor = 0f;
 	    private Vector3 LastVelocity { get; set; } = Vector3.Zero;
-	    private bool WasInWater { get; set; } = false;
 	    private double CursorSensitivity { get; set; } = 30d;
 	    private double GamepadSensitivity { get; set; } = 200d;
+	    private bool _jumping = false;
+
+	    private void SetSprinting(bool sprinting)
+	    {
+		    if (sprinting)
+		    {
+			    if (!Player.IsSprinting && Player.CanSprint)
+			    {
+				    Player.IsSprinting = true;
+			    }
+		    }
+		    else
+		    {
+			    if (Player.IsSprinting)
+				    Player.IsSprinting = false;
+		    }
+	    }
+	    
 	    private void UpdateMovementInput(GameTime gt)
 	    {
 		    if (!_allowMovementInput)
@@ -235,11 +252,7 @@ namespace Alex.Entities
 
 			if (Player.CanFly)
 			{
-			    if (InputManager.IsPressed(AlexInputCommand.ToggleCameraFree))
-			    {
-				    Player.IsFlying = !Player.IsFlying;
-			    }
-			    else if (InputManager.IsDown(AlexInputCommand.MoveUp) || InputManager.IsDown(AlexInputCommand.Jump))
+			    if (InputManager.IsDown(AlexInputCommand.MoveUp) || InputManager.IsDown(AlexInputCommand.Jump))
 			    {
 				    if ((InputManager.IsBeginPress(AlexInputCommand.MoveUp) || InputManager.IsBeginPress(AlexInputCommand.Jump)) &&
 				        now.Subtract(_lastUp).TotalMilliseconds <= 125)
@@ -253,16 +266,30 @@ namespace Alex.Entities
 
 		    //float speedFactor = (float)Player.CalculateMovementSpeed();
 
+		    bool holdingDownSprint = InputManager.IsDown(AlexInputCommand.Sprint);
+
+		    bool canSwim = Player.FeetInWater && Player.HeadInWater;
+
+		    if (canSwim)
+		    {
+			    if (InputManager.IsBeginPress(AlexInputCommand.Sprint))
+			    {
+				    Player.IsSwimming = !Player.IsSwimming;
+			    }
+		    }
+		    else if (Player.IsSwimming)
+		    {
+			    Player.IsSwimming = false;
+		    }
+
 		    if (InputManager.IsDown(AlexInputCommand.MoveForwards))
 			{
 				moveVector.Z += 1;
-				if (!Player.IsSprinting && Player.CanSprint)
+
+				if (holdingDownSprint || (InputManager.IsBeginPress(AlexInputCommand.MoveForwards)
+				                      && now.Subtract(_lastForward).TotalMilliseconds <= 125))
 				{
-					if (InputManager.IsBeginPress(AlexInputCommand.MoveForwards) &&
-						now.Subtract(_lastForward).TotalMilliseconds <= 125)
-					{
-						Player.IsSprinting = true;
-					}
+					SetSprinting(true);
 				}
 
 				_lastForward = now;
@@ -270,9 +297,7 @@ namespace Alex.Entities
 			else
 			{
 				if (Player.IsSprinting)
-				{
-					Player.IsSprinting = false;
-				}
+					SetSprinting(false);
 			}
 
 			if (InputManager.IsDown(AlexInputCommand.MoveBackwards))
@@ -304,15 +329,22 @@ namespace Alex.Entities
 			}
 			else
 			{
-				if (Player.FeetInWater && InputManager.IsDown(AlexInputCommand.MoveUp))
+				if (_jumping && Player.Velocity.Y <= 0.00001f)
+					_jumping = false;
+				
+				var jumpPressed = (InputManager.IsDown(AlexInputCommand.Jump)
+				                   || InputManager.IsDown(AlexInputCommand.MoveUp));
+				
+				bool readyToJump = Player.Velocity.Y <= 0.00001f && Player.Velocity.Y >= -0.00001f && Math.Abs(LastVelocity.Y - Player.Velocity.Y) < 0.0001f;
+				
+				if (jumpPressed)
 				{
-					Player.Velocity = new Vector3(Player.Velocity.X, 1f, Player.Velocity.Z);
-				}
-				else if (!Player.IsInWater && Player.KnownPosition.OnGround && (InputManager.IsDown(AlexInputCommand.Jump) || InputManager.IsDown(AlexInputCommand.MoveUp)))
-				{
-					if (Player.Velocity.Y <= 0.00001f && Player.Velocity.Y >= -0.00001f
-					    && Math.Abs(LastVelocity.Y - Player.Velocity.Y) < 0.0001f)
-					//if (Player.Velocity.Y <= 0f)
+					if (Player.IsInWater && !_jumping)
+					{
+						_jumping = true;
+						Player.Jump();
+					}
+					else if (!Player.IsInWater && Player.KnownPosition.OnGround && readyToJump)
 					{
 						//	moveVector.Y += 42f;
 						//	Player.Velocity += new Vector3(0f, 4.65f, 0f); // //, 0);
@@ -332,8 +364,7 @@ namespace Alex.Entities
 					}
 				}
 			}
-
-			WasInWater = Player.FeetInWater;
+			
 			Player.Movement.UpdateHeading(moveVector);
 
 				// LastSpeedFactor = speedFactor;

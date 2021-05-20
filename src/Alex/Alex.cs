@@ -283,10 +283,26 @@ namespace Alex
             GpuResourceManager.ReportIncorrectlyDisposedBuffers = false;
             base.OnExiting(sender, args);
         }
-        
+
         private void Window_TextInput(object sender, TextInputEventArgs e)
         {
-            GuiManager.FocusManager.OnTextInput(this, e);
+            if (char.IsLetterOrDigit(e.Character) || char.IsPunctuation(e.Character) || char.IsSymbol(e.Character) || char.IsWhiteSpace(e.Character))
+            {
+                GuiManager.FocusManager.OnTextInput(this, e);
+            }
+        }
+
+        private void WindowOnKeyDown(object? sender, InputKeyEventArgs e)
+        {
+            if (!e.Key.TryConvertKeyboardInput(out _))
+            {
+                var focusedElement = GuiManager.FocusManager.FocusedElement;
+
+                if (focusedElement != null)
+                {
+                    focusedElement.InvokeKeyInput('\0', e.Key);
+                }
+            }
         }
 
         protected override void Initialize()
@@ -295,7 +311,8 @@ namespace Alex
 
             // InitCamera();
             this.Window.TextInput += Window_TextInput;
-
+            this.Window.KeyDown += WindowOnKeyDown;
+            
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
                 var currentAdapter = GraphicsAdapter.Adapters.FirstOrDefault(x => x == GraphicsDevice.Adapter);

@@ -400,6 +400,10 @@ namespace Alex.Entities
 		    
 		    base.Update(args);
 
+		    //if (FeetInWater && HeadInWater)
+			//    IsSwimming = true;
+		    //else
+			//    IsSwimming = false;
 	    }
 
 	    private void InteractWithEntity(Entity entity, bool attack, int hand)

@@ -149,21 +149,26 @@ namespace Alex.Entities.Components
 					AdjustY(beforeAdjustment, yCollisionPoint, collisionY, ref amount);
 				}
 
-				bool collideX = TestTerrainCollisionX(
-					ref amount, out var xCollisionPoint, out var collisionX, boxes);
+				bool collideX = TestTerrainCollisionX(ref amount, out var xCollisionPoint, out var collisionX, boxes);
 
-				bool collideZ = TestTerrainCollisionZ(
-					ref amount, out var zCollisionPoint, out var collisionZ, boxes);
+				bool collideZ = TestTerrainCollisionZ(ref amount, out var zCollisionPoint, out var collisionZ, boxes);
 
 				bool jumped = CheckJump(ref amount);
-
-				//if (canJump)
-				//{
-				//	amount.Y = yTarget;
-				//}
-				//if (collideY)
-					//canJump = false;
 				
+				if (!jumped && (collideX || collideZ) && Entity.FeetInWater)
+				{
+					Entity.CanSurface = true;
+				}
+				else
+				{
+					Entity.CanSurface = false;
+				}
+				/*
+				 if (Entity.FeetInWater && !Entity.HeadInWater)
+				{
+					Entity.Jump();
+				}
+				 */
 				if (!jumped && collideX)
 				{
 					AdjustX(beforeAdjustment, xCollisionPoint, collisionX, ref amount);
@@ -173,10 +178,6 @@ namespace Alex.Entities.Components
 					jumped = CheckJump(ref amount);
 				}
 				
-				//if (canJump)
-				//{
-				//	amount.Y = yTarget;
-				//}
 
 				if (!jumped && collideZ)
 				{
@@ -187,24 +188,6 @@ namespace Alex.Entities.Components
 					jumped = CheckJump(ref amount);
 				}
 
-				//if (canJump)
-				//{
-				//	amount.Y = yTarget;
-				//}
-				
-				//if (!canJump)
-				{
-					/*if (collideX)
-					{
-						AdjustX(beforeAdjustment, xCollisionPoint, collisionX, ref amount);
-					}
-
-					if (collideZ)
-					{
-						AdjustZ(beforeAdjustment, zCollisionPoint, collisionZ, ref amount);
-					}*/
-				}
-				
 				if (boxes.Count > 0)
 				{
 					LastCollision = boxes.ToArray();

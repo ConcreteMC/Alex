@@ -7,6 +7,7 @@ using Alex.API.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using RocketUI;
+using RocketUI.Input;
 
 namespace Alex.Gui.Elements
 {
@@ -19,8 +20,10 @@ namespace Alex.Gui.Elements
         public Color BorderColor { get; set; } = Color.LightGray;
         public Thickness BorderThickness { get; set; } = Thickness.One;
         
-        public KeybindElement(Keys key)
+        public InputCommand InputCommand { get; }
+        public KeybindElement(InputCommand inputCommand, Keys key)
         {
+            InputCommand = inputCommand;
             _value = key;
             
             BackgroundOverlay = Color.Black;
@@ -62,13 +65,13 @@ namespace Alex.Gui.Elements
 
         protected override bool OnKeyInput(char character, Keys key)
         {
-            if (Focused)
-            {
+           // if (Focused)
+           // {
                 Value = key;
                 
                 ClearFocus();
                 return true;
-            }
+           // }
 
             return false;
         }
