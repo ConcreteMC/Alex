@@ -2,6 +2,7 @@ using System.Threading;
 using Alex.Networking.Java;
 using Alex.Networking.Java.Packets.Play;
 using Alex.Utils;
+using Alex.Utils.Commands;
 
 namespace Alex.Worlds.Multiplayer.Java
 {
@@ -9,7 +10,7 @@ namespace Alex.Worlds.Multiplayer.Java
 	{
 		private JavaWorldProvider Provider { get; }
 		private NetConnection Connection { get; }
-		public JavaCommandProvider(JavaWorldProvider provider, NetConnection connection)
+		public JavaCommandProvider(JavaWorldProvider provider, NetConnection connection, World world) : base(world)
 		{
 			Provider = provider;
 			Connection = connection;

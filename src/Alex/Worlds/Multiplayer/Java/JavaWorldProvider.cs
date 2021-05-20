@@ -35,6 +35,8 @@ using Alex.Items;
 using Alex.Net;
 using Alex.Networking.Java;
 using Alex.Networking.Java.Events;
+using Alex.Networking.Java.Models.Commands.Nodes;
+using Alex.Networking.Java.Models.Commands.Properties;
 using Alex.Networking.Java.Packets;
 using Alex.Networking.Java.Packets.Handshake;
 using Alex.Networking.Java.Packets.Login;
@@ -44,6 +46,7 @@ using Alex.Networking.Java.Util.Encryption;
 using Alex.Particles;
 using Alex.ResourcePackLib.Json.Models.Entities;
 using Alex.Utils;
+using Alex.Utils.Commands;
 using Alex.Utils.Inventories;
 using Alex.Worlds.Abstraction;
 using fNbt;
@@ -59,8 +62,8 @@ using RocketUI.Input;
 using BlockCoordinates = Alex.API.Utils.Vectors.BlockCoordinates;
 using ChunkColumn = Alex.Worlds.Chunks.ChunkColumn;
 using ChunkCoordinates = Alex.API.Utils.Vectors.ChunkCoordinates;
-using Command = Alex.Utils.Command;
-using CommandProperty = Alex.Utils.CommandProperty;
+using Command = Alex.Utils.Commands.Command;
+using CommandProperty = Alex.Utils.Commands.CommandProperty;
 using ConnectionState = Alex.Networking.Java.ConnectionState;
 using Entity = Alex.Entities.Entity;
 using MessageType = Alex.API.Data.MessageType;
@@ -91,7 +94,7 @@ namespace Alex.Worlds.Multiplayer.Java
 		public string Hostname { get; set; }
 		
 		private          JavaNetworkProvider NetworkProvider { get; }
-		private JavaCommandProvider CommandProvider { get; }
+		private JavaCommandProvider CommandProvider { get; set; }
 		private readonly List<IDisposable>   _disposables = new List<IDisposable>();
 		public JavaWorldProvider(Alex alex, IPEndPoint endPoint, PlayerProfile profile, out NetworkProvider networkProvider)
 		{
@@ -110,8 +113,6 @@ namespace Alex.Worlds.Multiplayer.Java
 			networkProvider = NetworkProvider;
 
 			_disposables.Add(Options.VideoOptions.RenderDistance.Bind(RenderDistanceSettingChanged));
-			CommandProvider = new JavaCommandProvider(this, Client);
-			NetworkProvider.CommandProvider = CommandProvider;
 		}
 
 		private void RenderDistanceSettingChanged(int oldvalue, int newvalue)
@@ -347,7 +348,10 @@ namespace Alex.Worlds.Multiplayer.Java
 		protected override void Initiate()
 		{
 			//	World?.UpdatePlayerPosition(_lastReceivedLocation);
-
+			
+			CommandProvider = new JavaCommandProvider(this, Client, World);
+			NetworkProvider.CommandProvider = CommandProvider;
+			
 			Alex.Resources.TryGetBitmap("entity/alex", out var rawTexture);
 			_alexSkin = TextureUtils.BitmapToTexture2D(this, Alex.GraphicsDevice, rawTexture);
 			//_initiated = true;
@@ -942,17 +946,50 @@ namespace Alex.Worlds.Multiplayer.Java
 
 						if (subChild is ArgumentCommandNode acn)
 						{
-							foreach (var property in acn.Properties)
+							foreach (var parser in acn.Parsers)
 							{
-								//CommandProperty commandProperty = new CommandProperty(property.Name, !acn.IsExecutable);
-							
-							
-								//command.AddProperty(commandProperty);
+								CommandProperty commandProperty = null;
+								if (parser is IntegerArgumentParser icp)
+								{
+									commandProperty = new IntCommandProperty(parser.Name, !acn.IsExecutable)
+									{
+										MaxValue = (icp.Flags & 0x02) != 0 ? icp.Max : int.MaxValue,
+										MinValue = (icp.Flags & 0x02) != 0 ? icp.Min : int.MinValue
+									};
+								}
+								else if (parser is FloatArgumentParser fcp)
+								{
+									commandProperty = new Utils.Commands.FloatCommandProperty(parser.Name, !acn.IsExecutable)
+									{
+										MaxValue = (fcp.Flags & 0x02) != 0 ? fcp.Max : float.MaxValue,
+										MinValue = (fcp.Flags & 0x02) != 0 ? fcp.Min : float.MinValue
+									};
+								}
+								else if (parser is DoubleArgumentParser dcp)
+								{
+									commandProperty = new Utils.Commands.DoubleCommandProperty(parser.Name, !acn.IsExecutable)
+									{
+										MaxValue = (dcp.Flags & 0x02) != 0 ? dcp.Max : double.MaxValue,
+										MinValue = (dcp.Flags & 0x02) != 0 ? dcp.Min : double.MinValue
+									};
+								}
+								else
+								{
+									commandProperty = new CommandProperty(parser.Name, !acn.IsExecutable);
+								}
+
+								if (!string.IsNullOrWhiteSpace(acn.SuggestionType))
+								{
+									commandProperty.TypeIdentifier = acn.SuggestionType;
+								}
+
+								if (commandProperty != null)
+									command.AddProperty(commandProperty);
 							}
-							CommandProperty commandProperty = new CommandProperty(acn.Name, !acn.IsExecutable);
+							/*CommandProperty commandProperty = new CommandProperty(acn.Name, !acn.IsExecutable);
 							
 							
-							command.AddProperty(commandProperty);
+							command.AddProperty(commandProperty);*/
 						}
 					}
 					CommandProvider.Register(command);
@@ -962,6 +999,16 @@ namespace Alex.Worlds.Multiplayer.Java
 			Log.Info($"Registered {CommandProvider.Count} commands.");
 			//CommandProvider.Register();
 		}
+
+		/*private Command ProcessNode(CommandNode[] nodes, CommandNode node)
+		{
+			
+			foreach (var childIndex in node.Children)
+			{
+				var childNode = nodes[childIndex];
+				
+			}
+		}*/
 		
 		private void HandleSetExperiencePacket(SetExperiencePacket packet)
 		{

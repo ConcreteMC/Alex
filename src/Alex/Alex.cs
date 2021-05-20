@@ -288,6 +288,8 @@ namespace Alex
         {
             if (char.IsLetterOrDigit(e.Character) || char.IsPunctuation(e.Character) || char.IsSymbol(e.Character) || char.IsWhiteSpace(e.Character))
             {
+                if (e.Key == Keys.Tab)
+                    return;
                 GuiManager.FocusManager.OnTextInput(this, e);
             }
         }

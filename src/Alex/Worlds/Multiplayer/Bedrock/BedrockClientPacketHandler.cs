@@ -35,6 +35,7 @@ using Alex.ResourcePackLib.Json.Models.Entities;
 using Alex.Services;
 using Alex.Utils;
 using Alex.Utils.Auth;
+using Alex.Utils.Commands;
 using Alex.Utils.Inventories;
 using Alex.Worlds.Abstraction;
 using fNbt;
@@ -58,7 +59,7 @@ using SixLabors.ImageSharp.PixelFormats;
 using AnvilWorldProvider = Alex.Worlds.Singleplayer.AnvilWorldProvider;
 using BlockCoordinates = Alex.API.Utils.Vectors.BlockCoordinates;
 using ChunkCoordinates = Alex.API.Utils.Vectors.ChunkCoordinates;
-using CommandProperty = Alex.Utils.CommandProperty;
+using CommandProperty = Alex.Utils.Commands.CommandProperty;
 using Entity = Alex.Entities.Entity;
 using MathF = System.MathF;
 using MessageType = Alex.API.Data.MessageType;
@@ -1839,6 +1840,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		{
 			if (Client.CommandProvider is BedrockCommandProvider bcp)
 			{
+				bcp.Reset();
 				foreach (var cmd in message.CommandSet)
 				{
 					foreach (var version in cmd.Value.Versions)
@@ -1846,17 +1848,56 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 						foreach (var overload in version.Overloads)
 						{
 							Command c = new Command(cmd.Key);
+							c.Description = version.Description;
+							
 							foreach (var param in overload.Value.Input.Parameters)
 							{
-								CommandProperty cp = new CommandProperty(param.Name, !param.Optional);
-
-								switch (param.Type)
+								if (param.Type == "stringenum")
 								{
-									default:
-									//	Log.Info($"Unknown param type: {param.Type}");
-										break;
+									string enumName = "enum";
+									string[] options = null;
+									if (param.EnumValues != null)
+									{
+										options = param.EnumValues;
+									}
+
+									switch (param.EnumType)
+									{
+										case "":
+											break;
+									}
+									
+									c.Properties.Add(new EnumCommandProperty(param.Name, !param.Optional, options, enumName));
 								}
-								c.Properties.Add(cp);
+								else if (param.Type == "target")
+								{
+									c.Properties.Add(new TargetCommandProperty(param.Name, !param.Optional));
+								}
+								else if (param.Type == "rawtext")
+								{
+									c.Properties.Add(new TextCommandProperty(param.Name, !param.Optional));
+								}
+								else if (param.Type == "int")
+								{
+									c.Properties.Add(new IntCommandProperty(param.Name, !param.Optional));
+								}
+								else if (param.Type == "float")
+								{
+									c.Properties.Add(new FloatCommandProperty(param.Name, !param.Optional));
+								}
+								else if (param.Type == "string")
+								{
+									c.Properties.Add(new TextCommandProperty(param.Name, !param.Optional));
+								}
+								else
+								{
+									Log.Debug($"Unknown parameter type: {param.Type} (name: {param.Name})");
+									c.Properties.Add(new CommandProperty(param.Name, !param.Optional));
+								}
+								
+								//CommandProperty cp = new CommandProperty(param.Name, !param.Optional);
+								//
+								//c.Properties.Add(cp);
 							}
 							
 							bcp.Register(c);

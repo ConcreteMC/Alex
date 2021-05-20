@@ -167,7 +167,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				return handler;
 			};
 
-			CommandProvider = new BedrockCommandProvider();
+			//CommandProvider = new BedrockCommandProvider(World);
 		}
 
 		private void ClientSideLightingChanged(bool oldvalue, bool newvalue)

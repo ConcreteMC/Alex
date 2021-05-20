@@ -157,6 +157,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		{
 			_initiated = true;
 			Client.World = World;
+			Client.CommandProvider = new BedrockCommandProvider(World);
 			//World.Player.SetInventory(new BedrockInventory(46));
 
 			//CustomConnectedPong.CanPing = true;

@@ -1,4 +1,5 @@
 using Alex.Utils;
+using Alex.Utils.Commands;
 
 namespace Alex.Worlds.Multiplayer.Bedrock
 {
@@ -9,5 +10,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		{
 			
 		}
+
+		/// <inheritdoc />
+		public BedrockCommandProvider(World world) : base(world) { }
 	}
 }

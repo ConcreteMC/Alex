@@ -2,12 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using Alex.API.Data;
+using Alex.API.Graphics.Typography;
 using Alex.API.Gui;
 
 using Alex.API.Gui.Graphics;
 using Alex.API.Utils;
 using Alex.Net;
 using Alex.Utils;
+using Alex.Utils.Commands;
 using Alex.Worlds;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
@@ -133,6 +135,46 @@ namespace Alex.Gui.Elements
 						break;
 				}
 			}
+
+			//if (Focused)
+			{
+				if (_hasTabCompleteResults && _tabCompleteMatches.Length > 0)
+				{
+					var tabRenderPos = (TextElement.RenderBounds.BottomLeft() - new Vector2(0, 8));
+
+					var t = TextBuilder.Text;
+					var tabCompleteStart = _tabCompleteStart;
+
+					var stringOffset = t.Substring(0, tabCompleteStart);
+					var stringSize = Font.MeasureString(stringOffset);
+
+					var xOffset = stringSize.X + TextElement.Margin.Left;
+					tabRenderPos.X += xOffset;
+					
+					var offset = _tabCompleteMatchIndex;
+					var tabCompletionResults = _tabCompleteMatches;
+					var maxWidth = tabCompletionResults.Max(x => x.Size.X);
+					for(int i = 0; i < tabCompletionResults.Length; i++)
+					{
+						var tab = tabCompletionResults[i];
+						var text = tab.Match.GetDescriptive();
+						var size = tab.Size;
+						tabRenderPos.Y -= size.Y;
+
+						graphics.FillRectangle(new Rectangle((int) tabRenderPos.X, (int) (tabRenderPos.Y) - 2, maxWidth, size.Y), new Color(Color.Black, 0.95f));
+						graphics.DrawString(tabRenderPos, text, i == (offset - 1) ? Color.Gold : Color.White, FontStyle.None, 1f);
+					}
+
+					stringOffset = t.Substring(0, TextBuilder.CursorPosition);
+					stringSize = Font.MeasureString(stringOffset);
+					
+					var currentSelection = tabCompletionResults[offset];
+					if (currentSelection.Match.HasTooltip)
+					{
+						graphics.DrawString(Font, currentSelection.Match.Tooltip, new Vector2(TextElement.RenderBounds.BottomLeft().X + TextElement.Margin.Left + stringSize.X, TextElement.RenderBounds.Y + TextElement.Margin.Top), API.Utils.TextColor.Gray, FontStyle.None);
+					}
+				}
+			}
 		}
 
 		private double MaxTextWidth => (RenderBounds.Width - (Padding.Left + Padding.Right));
@@ -242,10 +284,11 @@ namespace Alex.Gui.Elements
 			{
 				if (key == Keys.Tab && CommandProvider != null)
 				{
+					//ResetTabComplete();
 					if (_hasTabCompleteResults)
 					{
 						DoTabComplete(true);
-						_prevWasTab = true;
+						//_prevWasTab = true;
 						return true;
 					}
 
@@ -266,6 +309,13 @@ namespace Alex.Gui.Elements
 				}
 				else if (key == Keys.Enter)
 				{
+					if (_hasTabCompleteResults)
+					{
+						ResetTabComplete();
+
+						return true;
+					}
+
 					SubmitMessage();
 					ResetTabComplete();
 					
@@ -273,6 +323,13 @@ namespace Alex.Gui.Elements
 				}
 				else if (key == Keys.Up)
 				{
+					if (_hasTabCompleteResults)
+					{
+						DoTabComplete(true);
+
+						return true;
+					}
+					
 					var currentNode = _currentNode;
 					if (currentNode == null)
 					{
@@ -291,17 +348,28 @@ namespace Alex.Gui.Elements
 
 					return true;
 				}
-				else if (key == Keys.Down && _currentNode != null)
+				else if (key == Keys.Down)
 				{
-					var next = _currentNode.Next;
-
-					if (next != null)
+					if (_hasTabCompleteResults)
 					{
-						TextBuilder.Clear();
-						TextBuilder.Append(next.Value);
+						DoTabComplete(false);
+
+						return true;
 					}
-					
-					return true;
+
+					if (_currentNode != null)
+					{
+
+						var next = _currentNode.Next;
+
+						if (next != null)
+						{
+							TextBuilder.Clear();
+							TextBuilder.Append(next.Value);
+						}
+
+						return true;
+					}
 				}
 				/*else
 				{
@@ -332,38 +400,31 @@ namespace Alex.Gui.Elements
 				_hasTabCompleteResults = false;
 				_tabCompletePrevLength = 0;
 				_tabCompleteMatchIndex = 0;
+				_tabCompletePosition = 0;
 			}
 		}
-
-		private bool _prevWasTab = false;
+		
 		private int _tabCompleteMatchIndex = 0;
 		private int _tabCompletePrevLength = 0;
 		private void DoTabComplete(bool incremental)
 		{
 			if (_hasTabCompleteResults)
 			{
-				string firstMatch = _tabCompleteMatches[_tabCompleteMatchIndex].Match;
+				string firstMatch = _tabCompleteMatches[_tabCompleteMatchIndex].Match.Match;
 				//_textBuilder.CursorPosition = _tabCompletePosition + _tabCompleteStart + _tabCompleteLength;
 
-				if (_tabCompletePrevLength > 0)
-				{
-					TextBuilder.CursorPosition = _tabCompletePosition + _tabCompleteStart + _tabCompletePrevLength;
-					for (int i = 0; i < _tabCompletePrevLength; i++)
-					{
-						TextBuilder.RemoveCharacter();
-					}
-				}
-				else
-				{
-					TextBuilder.CursorPosition = _tabCompletePosition + _tabCompleteStart + _tabCompleteLength;
-					for (int i = 0; i < _tabCompleteLength; i++)
-					{
-						TextBuilder.RemoveCharacter();
-					}
+				//Remove the existing match first.
+				int removalLength = _tabCompletePrevLength > 0 ? _tabCompletePrevLength : _tabCompleteLength;
+				TextBuilder.CursorPosition = _tabCompletePosition + _tabCompleteStart + removalLength;
+				for (int i = 0; i < removalLength; i++)
+				{ 
+					TextBuilder.RemoveCharacter();
 				}
 
+				//Now append the new match
 				TextBuilder.CursorPosition = _tabCompletePosition + _tabCompleteStart;
-				TextBuilder.AppendLine(firstMatch);
+				TextBuilder.Append(firstMatch);
+				
 				_tabCompletePrevLength = firstMatch.Length;
 
 				if (incremental)
@@ -485,7 +546,7 @@ namespace Alex.Gui.Elements
 		}
 
 		private int _tabCompleteStart, _tabCompleteLength;
-		private TabCompleteMatch[] _tabCompleteMatches;
+		private TabCompleteMatchWrapper[] _tabCompleteMatches;
 		private bool _hasTabCompleteResults = false;
 		public void ReceivedTabComplete(int start, int length, TabCompleteMatch[] matches)
 		{
@@ -499,7 +560,15 @@ namespace Alex.Gui.Elements
 
 				_tabCompletePrevLength = 0;
 				_tabCompleteMatchIndex = 0;
-				_tabCompleteMatches = matches;
+
+				matches = matches.Distinct().ToArray();
+				TabCompleteMatchWrapper[] wrappers = new TabCompleteMatchWrapper[matches.Length];
+				for (int i = 0; i < matches.Length; i++)
+				{
+					wrappers[i] = new TabCompleteMatchWrapper(matches[i], Font.MeasureString(matches[i].GetDescriptive()).ToPoint());
+				}
+				_tabCompleteMatches = wrappers;
+				
 				_tabCompleteStart = start;
 				_tabCompleteLength = length;
 
@@ -518,6 +587,17 @@ namespace Alex.Gui.Elements
 		public void AddMessage(string message, MessageType messageType)
 		{
 			Receive(message);
+		}
+
+		private class TabCompleteMatchWrapper
+		{
+			public TabCompleteMatch Match { get; }
+			public Point Size { get; }
+			public TabCompleteMatchWrapper(TabCompleteMatch tabCompleteMatch, Point size)
+			{
+				Match = tabCompleteMatch;
+				Size = size;
+			}
 		}
 	}
 
