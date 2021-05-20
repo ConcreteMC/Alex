@@ -217,6 +217,11 @@ namespace Alex.Worlds
 	        ChunkManager.UseWireFrames = !ChunkManager.UseWireFrames;
         }
         
+		/// <summary>
+		///		The amount of calls made to DrawPrimitives in the last render call
+		/// </summary>
+		public int ChunkDrawCount { get; set; } = 0;
+		
         public void Render(IRenderArgs args)
         {
 	        if (_destroyed)
@@ -227,16 +232,18 @@ namespace Alex.Worlds
 	        args.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
 	        args.GraphicsDevice.SamplerStates[0] = SamplerState.PointWrap;
 	        
-            ChunkManager.Draw(args, null,
+            int chunkDrawCount = ChunkManager.Draw(args, null,
 	            RenderStage.Opaque);
             
             EntityManager.Render(args);
             
-            ChunkManager.Draw(args, null,
+            chunkDrawCount += ChunkManager.Draw(args, null,
 	            RenderStage.Transparent,
 	            RenderStage.Translucent,
 	            RenderStage.Animated,
 	            RenderStage.Liquid);
+
+            ChunkDrawCount = chunkDrawCount;
 
 	        Player.Render(args, Options.VideoOptions.EntityCulling.Value);
         }

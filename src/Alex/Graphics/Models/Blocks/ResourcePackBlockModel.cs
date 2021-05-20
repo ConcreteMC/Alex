@@ -655,7 +655,7 @@ namespace Alex.Graphics.Models.Blocks
 
 					if (baseBlock.BlockMaterial.IsLiquid)
 					{
-						targetState = RenderStage.Liquid;
+						targetState = RenderStage.Animated;
 					}
 					else if (uvMap.IsAnimated)
 					{

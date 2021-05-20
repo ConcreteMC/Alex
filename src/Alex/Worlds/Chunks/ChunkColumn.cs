@@ -68,6 +68,7 @@ namespace Alex.Worlds.Chunks
 			_lightUpdateWatch.Start();
 			
 			ChunkData = new ChunkData(x,z);
+			//ChunkData.KeepInMemory = Alex.Instance.Options.AlexOptions.VideoOptions.
 			//	_octree = new ChunkOctree( bounds );
 		
 			_scheduledUpdates = new System.Collections.BitArray((16 * 256 * 16), false);
@@ -103,11 +104,11 @@ namespace Alex.Worlds.Chunks
 		public static float AverageUpdateTime => MovingAverage.Average;
 		public static float MaxUpdateTime => MovingAverage.Maximum;
 		public static float MinUpdateTime => MovingAverage.Minimum;
-		
+
 		private static readonly MovingAverage MovingAverage = new MovingAverage();
 		
 		private bool _bufferDirty = false;
-		public bool UpdateBuffer(GraphicsDevice device, IBlockAccess world, bool applyImediately)
+		public bool UpdateBuffer(GraphicsDevice device, IBlockAccess world, bool applyChanges)
 		{
 			//Monitor.Enter(_dataLock);
 			if (!Monitor.TryEnter(_dataLock, 0))
@@ -128,7 +129,7 @@ namespace Alex.Worlds.Chunks
 					return false;
 				
 				bool isNew = IsNew;
-				bool force = false;
+				bool didChange = false;
 				
 				var chunkPosition = new Vector3(X << 4, 0, Z << 4);
 				world = new OffsetBlockAccess(chunkPosition, world);
@@ -160,7 +161,7 @@ namespace Alex.Worlds.Chunks
 								if (scheduled)
 								{
 									_scheduledUpdates[idx] = false;
-									force = true;
+									didChange = true;
 								}
 
 								var blockPosition = new BlockCoordinates(x, y + sectionOffset, z);
@@ -202,11 +203,13 @@ namespace Alex.Worlds.Chunks
 					}
 				}
 
-				_bufferDirty = true;
-				
-				if (applyImediately || force)
+				if (didChange || isNew)
 				{
-					ApplyChanges(device, world, force);
+					_bufferDirty = true;
+				}
+				if (applyChanges && (didChange || isNew))
+				{
+					ApplyChanges(world, true);
 				}
 				
 				ChunkData = chunkData;
@@ -226,17 +229,17 @@ namespace Alex.Worlds.Chunks
 		}
 
 		private Stopwatch _lastUpdateWatch = new Stopwatch();
-		public void ApplyChanges(GraphicsDevice device, IBlockAccess world, bool force = false)
+		public void ApplyChanges(IBlockAccess world, bool force = false)
 		{
 			if (!_bufferDirty || (!force && _lastUpdateWatch.IsRunning && _lastUpdateWatch.ElapsedMilliseconds < 50))
 				return;
 			
 			var chunkData = ChunkData;
 
-			if (chunkData == null || chunkData.Disposed)
+			if (chunkData == null || chunkData.Disposed )
 				return;
 			
-			chunkData?.ApplyChanges(world, device, true, force);
+			chunkData.ApplyChanges(world, force);
 			_bufferDirty = false;
 			_lastUpdateWatch.Restart();
 		}

@@ -11,6 +11,7 @@ using Alex.API.Utils;
 using Alex.API.Utils.Collections;
 using Alex.API.Utils.Vectors;
 using Alex.Graphics.Models.Blocks;
+using Alex.Utils.Tasks;
 using Alex.Worlds.Abstraction;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -24,7 +25,7 @@ namespace Alex.Worlds.Chunks
 		private static ILogger Log         = LogManager.GetCurrentClassLogger();
 		private Dictionary<BlockCoordinates, List<VertexData>> BlockIndices     { get; set; }
 		private ManagedVertexBuffer                             Buffer           { get; set; }
-		
+
 		private bool                  HasChanges     { get; set; }
 
 		private long      _vertexCount = 0;
@@ -53,8 +54,7 @@ namespace Alex.Worlds.Chunks
 				var vertexData = new VertexData(
 					position,
 					face, 
-					new Microsoft.Xna.Framework.Graphics.PackedVector.Short4(
-						textureCoordinates.X, textureCoordinates.Y, textureCoordinates.Z, textureCoordinates.W), 
+					textureCoordinates, 
 					color.PackedValue,
 					isTransparent,
 					isFullCube,
@@ -145,9 +145,10 @@ namespace Alex.Worlds.Chunks
 						//	world, new BlockCoordinates(v3) + vertex.Face.GetBlockCoordinates(), out byte blockLight, out byte skyLight, false);
 						
 						world.GetLight(lightProbe, out var blockLight, out var skyLight);
-						
+
+						var textureCoords = vertex.TexCoords;
 						vertices[index] = new MinifiedBlockShaderVertex(
-							p, vertex.Face, vertex.TexCoords.ToVector4(), new Color(vertex.Color),
+							p, vertex.Face,textureCoords.ToVector4(), new Color(vertex.Color),
 							blockLight, skyLight);
 						
 						index++;
@@ -157,75 +158,83 @@ namespace Alex.Worlds.Chunks
 				return vertices;
 			}
 		}
-
-		private bool _previousKeepInMemory     = false;
+		
 		private int  _primitiveCount = 0;
 
-		private object _applyLock = new object();
+		private ManagedTask _previousManagedTask = null;
 		public void Apply(IBlockAccess world,
-			GraphicsDevice device = null,
-			bool keepInMemory = true,
 			bool force = false)
 		{
 			MinifiedBlockShaderVertex[] realVertices;
-
+			var previousTask = _previousManagedTask;
+			
 			lock (_writeLock)
 			{
 				if (!HasChanges && !force)
 					return;
 
-				_previousKeepInMemory = keepInMemory;
+				HasChanges = false;
 
 				realVertices = BuildVertices(world);
 
 				if (realVertices == null)
 					return;
-				
-				HasChanges = false;
-			
-				var size = realVertices.Length;
+			}
 
-				try
+			if (previousTask != null && previousTask.State == TaskState.Enqueued)
+			{
+				previousTask.Data = realVertices;
+			}
+			else
+			{
+				//previousTask.Cancel();
+				_previousManagedTask = Alex.Instance.UiTaskManager.Enqueue(UpdateAction, realVertices);
+			}
+		}
+		
+		private void UpdateAction(object state)
+		{
+			var realVertices = (MinifiedBlockShaderVertex[]) state;
+			var size = realVertices.Length;
+
+			try
+			{
+				ManagedVertexBuffer buffer = Buffer;
+
+				if (realVertices.Length == 0)
 				{
-					ManagedVertexBuffer buffer = Buffer;
+					_primitiveCount = 0;
 
-					if (realVertices.Length == 0)
-					{
-						_primitiveCount = 0;
-
-						return;
-					}
-
-					var verticeCount = realVertices.Length;
-
-					while (verticeCount % 3 != 0) //Make sure we have a valid triangle list.
-					{
-						verticeCount--;
-					}
-
-					_primitiveCount = verticeCount / 3;
-
-					ManagedVertexBuffer oldBuffer = null;
-
-					if (buffer == null || buffer.VertexCount < size)
-					{
-						oldBuffer = buffer;
-
-						buffer = GpuResourceManager.GetBuffer(
-							this, device, MinifiedBlockShaderVertex.VertexDeclaration, size, BufferUsage.WriteOnly);
-					}
-
-					buffer.SetData(realVertices, 0, size);
-
-					Buffer = buffer;
-
-					if (oldBuffer != buffer)
-						oldBuffer?.ReturnResource(this);
+					return;
 				}
-				finally
+
+				var verticeCount = realVertices.Length;
+
+				while (verticeCount % 3 != 0) //Make sure we have a valid triangle list.
 				{
-					//	Pool.Return(realVertices, true);
+					verticeCount--;
 				}
+
+				_primitiveCount = verticeCount / 3;
+
+				ManagedVertexBuffer oldBuffer = null;
+
+				if (buffer == null || buffer.VertexCount < size)
+				{
+					oldBuffer = buffer;
+
+					buffer = GpuResourceManager.GetBuffer(this, Alex.Instance.GraphicsDevice, MinifiedBlockShaderVertex.VertexDeclaration, size, BufferUsage.WriteOnly);
+				}
+
+				buffer.SetData(realVertices, 0, size);
+
+				Buffer = buffer;
+
+				if (oldBuffer != buffer) oldBuffer?.ReturnResource(this);
+			}
+			finally
+			{
+				//	Pool.Return(realVertices, true);
 			}
 		}
 

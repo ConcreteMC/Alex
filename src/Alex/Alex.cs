@@ -42,6 +42,7 @@ using Alex.Services;
 using Alex.Services.Discord;
 using Alex.Utils;
 using Alex.Utils.Auth;
+using Alex.Utils.Tasks;
 using Alex.Worlds.Abstraction;
 using Alex.Worlds.Multiplayer.Bedrock;
 using Alex.Worlds.Multiplayer.Java;
@@ -114,7 +115,7 @@ namespace Alex
 
         public GraphicsDeviceManager DeviceManager { get; }
 
-        internal ConcurrentQueue<Action> UIThreadQueue { get; }
+        internal ManagedTaskManager UiTaskManager { get; }
 
         private LaunchSettings LaunchSettings { get; }
         public  PluginManager  PluginManager  { get; }
@@ -133,7 +134,6 @@ namespace Alex
         public Alex(LaunchSettings launchSettings)
         {
             WindowSize = new Point(1280, 750);
-            
             EntityProperty.Factory = new AlexPropertyFactory();
 
             Instance = this;
@@ -261,11 +261,12 @@ namespace Alex
             ServerTypeManager.TryRegister(
                 "bedrock", new BedrockServerType(this, Services.GetService<XboxAuthService>()));
 
-            UIThreadQueue = new ConcurrentQueue<Action>();
-
             FpsMonitor = new FpsMonitor(this);
             FpsMonitor.UpdateOrder = 0;
             Components.Add(FpsMonitor);
+            
+            UiTaskManager = new ManagedTaskManager(this);
+            Components.Add(UiTaskManager);
 
             Resources = Services.GetRequiredService<ResourceManager>();
 
@@ -273,7 +274,7 @@ namespace Alex
             //    ThreadType.Background, "Dedicated ThreadPool"));
 
             TextureUtils.RenderThread = Thread.CurrentThread;
-            TextureUtils.QueueOnRenderThread = action => UIThreadQueue.Enqueue(action);
+            TextureUtils.QueueOnRenderThread = action => UiTaskManager.Enqueue(action);
         }
 
         /// <inheritdoc />
@@ -504,7 +505,7 @@ namespace Alex
 
         private void SetAntiAliasing(bool enabled, int count)
         {
-            UIThreadQueue.Enqueue(
+            UiTaskManager.Enqueue(
                 () =>
                 {
                     DeviceManager.PreferMultiSampling = enabled;
@@ -516,7 +517,7 @@ namespace Alex
 
         private void SetFrameRateLimiter(bool enabled, int frameRateLimit)
         {
-            UIThreadQueue.Enqueue(
+            UiTaskManager.Enqueue(
                 () =>
                 {
                     base.IsFixedTimeStep = enabled;
@@ -526,7 +527,7 @@ namespace Alex
 
         private void SetVSync(bool enabled)
         {
-            UIThreadQueue.Enqueue(
+            UiTaskManager.Enqueue(
                 () =>
                 {
                     base.IsFixedTimeStep = enabled;
@@ -537,7 +538,7 @@ namespace Alex
 
         private void SetFullscreen(bool enabled)
         {
-            UIThreadQueue.Enqueue(
+            UiTaskManager.Enqueue(
                 () =>
                 {
                     if (this.DeviceManager.IsFullScreen != enabled)
@@ -570,27 +571,6 @@ namespace Alex
             PluginManager.UnloadAll();
             
             RichPresenceProvider.ClearPresence();
-        }
-
-        protected override void Update(GameTime gt)
-        {
-            if(GraphicsDevice == null) return;
-            base.Update(gt);
-            
-            while (!UIThreadQueue.IsEmpty && UIThreadQueue.TryDequeue(out Action a))
-            {
-                try
-                {
-                    a.Invoke();
-                }
-                catch (Exception ex)
-                {
-                    Log.Warn($"Exception on UIThreadQueue: {ex.ToString()}");
-                }
-            }
-
-           // GameStateManager.Update(gt);
-            //AudioEngine?.Update(gt, Vector3.Zero);
         }
 
         /// <inheritdoc />
@@ -713,7 +693,7 @@ namespace Alex
 
         private void OnResourcePackPreLoadCompleted(Image<Rgba32> fontBitmap, List<char> bitmapCharacters)
         {
-            UIThreadQueue.Enqueue(
+            UiTaskManager.Enqueue(
                 () =>
                 {
                     Font = new BitmapFont(GraphicsDevice, fontBitmap, 16, bitmapCharacters);

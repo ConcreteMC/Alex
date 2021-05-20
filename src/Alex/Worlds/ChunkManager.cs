@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Alex.API;
 using Alex.API.Data.Options;
 using Alex.API.Graphics;
@@ -15,6 +16,7 @@ using Alex.Blocks.Minecraft;
 using Alex.Entities.BlockEntities;
 using Alex.Gamestates;
 using Alex.Graphics.Effect;
+using Alex.Utils;
 using Alex.Utils.Queue;
 using Alex.Worlds.Abstraction;
 using Alex.Worlds.Chunks;
@@ -86,6 +88,7 @@ namespace Alex.Worlds
 			UpdateQueue = new FancyQueue<ChunkCoordinates>();
 			UpdateBorderQueue = new FancyQueue<ChunkCoordinates>();
 			FastUpdateQueue = new FancyQueue<ChunkCoordinates>();
+			EnsureStarted();
 		}
 
 		private long _threadsRunning = 0;
@@ -171,12 +174,12 @@ namespace Alex.Worlds
 			if (_processingThread != null)
 				return;
 
-			ThreadPool.QueueUserWorkItem(
-				o =>
+			var task = new Task(
+				() =>
 				{
 					_processingThread = Thread.CurrentThread;
 					Thread.CurrentThread.Name = "Chunk Management";
-
+					
 					SpinWait sw = new SpinWait();
 					while (!CancellationToken.IsCancellationRequested)
 					{
@@ -188,19 +191,23 @@ namespace Alex.Worlds
 
 						if (CancellationToken.IsCancellationRequested)
 							break;
-						
-						bool processedLighting = ProcessLighting();
+
+						//bool processedLighting = ProcessLighting();
 						bool processedQueue    = ProcessQueue();
 
-						if (!processedQueue && !processedLighting)
-							sw.SpinOnce();
+						if (!processedQueue)
+							_processingSync.WaitOne();
+						//sw.SpinOnce();
 					}
 
 					_processingThread = null;
-				});
+				}, TaskCreationOptions.LongRunning);
+			
+			task.Start();
 		}
 
 		private AutoResetEvent _processingSync = new AutoResetEvent(false);
+
 		private bool ProcessQueue()
 		{
 			var maxThreads = Options.VideoOptions.ChunkThreads.Value;
@@ -210,22 +217,16 @@ namespace Alex.Worlds
 				return false;
 			}
 
-			FancyQueue<ChunkCoordinates> queue = FastUpdateQueue;
+			FancyQueue<ChunkCoordinates> queue = GetQueue(FastUpdateQueue);
+
+			//	maxThreads = Math.Max(1, Math.Min(maxThreads, EnqueuedChunkUpdates / 4));
 
 			if (queue.IsEmpty)
-				queue = UpdateQueue;
-
-			if (queue.IsEmpty)
-				queue = UpdateBorderQueue;
-
-		//	maxThreads = Math.Max(1, Math.Min(maxThreads, EnqueuedChunkUpdates / 4));
-
-			var activeThreads = Interlocked.Read(ref _threadsRunning);
-
-			if (queue.IsEmpty || activeThreads >= maxThreads)
 			{
 				return false;
 			}
+
+			var activeThreads = Interlocked.Read(ref _threadsRunning);
 
 			if (Interlocked.CompareExchange(ref _threadsRunning, activeThreads + 1, activeThreads) == activeThreads)
 			{
@@ -233,6 +234,7 @@ namespace Alex.Worlds
 					oo =>
 					{
 						Thread.CurrentThread.Name = $"ChunkManager Processing Thread {activeThreads}";
+
 						try
 						{
 							while (!CancellationToken.IsCancellationRequested)
@@ -240,17 +242,7 @@ namespace Alex.Worlds
 								queue = GetQueue(queue);
 
 								if (EnqueuedChunkUpdates <= 0 && queue.IsEmpty)
-									break;
-								/*if (EnqueuedChunkUpdates <= 0 || queue.IsEmpty)
-								{
-									if (!_processingSync.WaitOne(50))
-										break;
-
-									queue = GetQueue(queue);
-
-									if (queue.IsEmpty)
-										break;
-								}*/
+									return;
 
 
 								if (queue.TryDequeue(out var chunkCoordinates))
@@ -260,7 +252,6 @@ namespace Alex.Worlds
 										if (!Monitor.TryEnter(chunk.UpdateLock, 0))
 											continue;
 
-										
 										try
 										{
 											bool newChunk = chunk.IsNew;
@@ -269,16 +260,16 @@ namespace Alex.Worlds
 											bool c2 = false;
 											bool c3 = false;
 											bool c4 = false;
-											
+
 											if (newChunk)
 											{
 												c1 = TryGetChunk(new ChunkCoordinates(chunk.X + 1, chunk.Z), out _);
 												c2 = TryGetChunk(new ChunkCoordinates(chunk.X - 1, chunk.Z), out _);
-												
+
 												c3 = TryGetChunk(new ChunkCoordinates(chunk.X, chunk.Z + 1), out _);
 												c4 = TryGetChunk(new ChunkCoordinates(chunk.X, chunk.Z - 1), out _);
 											}
-											
+
 											if (BlockLightCalculations != null)
 											{
 												if (newChunk)
@@ -303,25 +294,30 @@ namespace Alex.Worlds
 												}
 											}
 
-											chunk.UpdateBuffer(Graphics, World, false);
+											chunk.UpdateBuffer(
+												Graphics, World, true);
 
 											if (newChunk)
 											{
 												if (c1)
 													ScheduleChunkUpdate(
-														new ChunkCoordinates(chunk.X + 1, chunk.Z), ScheduleType.Border);
+														new ChunkCoordinates(chunk.X + 1, chunk.Z),
+														ScheduleType.Border);
 
 												if (c2)
 													ScheduleChunkUpdate(
-														new ChunkCoordinates(chunk.X - 1, chunk.Z), ScheduleType.Border);
+														new ChunkCoordinates(chunk.X - 1, chunk.Z),
+														ScheduleType.Border);
 
 												if (c3)
 													ScheduleChunkUpdate(
-														new ChunkCoordinates(chunk.X, chunk.Z + 1), ScheduleType.Border);
+														new ChunkCoordinates(chunk.X, chunk.Z + 1),
+														ScheduleType.Border);
 
 												if (c4)
 													ScheduleChunkUpdate(
-														new ChunkCoordinates(chunk.X, chunk.Z - 1), ScheduleType.Border);
+														new ChunkCoordinates(chunk.X, chunk.Z - 1),
+														ScheduleType.Border);
 											}
 										}
 										finally
@@ -332,8 +328,6 @@ namespace Alex.Worlds
 										}
 									}
 								}
-
-								queue = GetQueue(queue);
 							}
 						}
 						finally
@@ -358,23 +352,6 @@ namespace Alex.Worlds
 
 			if (!UpdateBorderQueue.IsEmpty)
 				return UpdateBorderQueue;
-			
-			/*if (queue != FastUpdateQueue && !FastUpdateQueue.IsEmpty)
-			{
-				queue = FastUpdateQueue;
-			}
-			else if (queue == FastUpdateQueue && FastUpdateQueue.IsEmpty)
-			{
-				queue = UpdateQueue;
-			}
-			else if (queue == UpdateBorderQueue && !UpdateQueue.IsEmpty)
-			{
-				queue = UpdateQueue;
-			}
-			else if (queue == UpdateQueue && UpdateQueue.IsEmpty)
-			{
-				queue = UpdateBorderQueue;
-			}*/
 
 			return queue;
 		}
@@ -432,7 +409,7 @@ namespace Alex.Worlds
 
 			ScheduleChunkUpdate(position, ScheduleType.Full, false);
 
-			EnsureStarted();
+			//EnsureStarted();
 			//UpdateQueue.Enqueue(position);
 		}
 
@@ -526,7 +503,7 @@ namespace Alex.Worlds
 							cc.ScheduledForUpdate = true;
 
 							queue.Enqueue(position);
-
+							
 							_processingSync.Set();
 						}
 					}
@@ -611,13 +588,13 @@ namespace Alex.Worlds
 			// ColorBlendFunction = BlendFunction.Add
 		};
 		
-		public void Draw(IRenderArgs args, Effect forceEffect = null, params RenderStage[] stages)
+		public int Draw(IRenderArgs args, Effect forceEffect = null, params RenderStage[] stages)
 		{
 			using (GraphicsContext gc = GraphicsContext.CreateContext(
 				args.GraphicsDevice, Block.FancyGraphics ? BlendState.AlphaBlend : BlendState.Opaque, DepthStencilState, _rasterizerState,
 				_renderSampler))
 			{
-				DrawCount = DrawStaged(args, forceEffect, stages.Length > 0 ? stages : RenderStages);
+				return DrawStaged(args, forceEffect, stages.Length > 0 ? stages : RenderStages);
 			}
 		}
 		
@@ -685,7 +662,13 @@ namespace Alex.Worlds
 				//	be.CurrentTechnique = be.Techniques[technique];
 				//}
 				
-				drawCount += DrawChunks(args.GraphicsDevice, chunks, effect, stage);
+				for (var index = 0; index < chunks.Length; index++)
+				{
+					var chunk = chunks[index];
+					if (chunk == null) continue;
+				
+					drawCount += chunk.Draw(args.GraphicsDevice, stage, effect);
+				}
 			}
 
 			args.GraphicsDevice.BlendState = originalBlendState;
@@ -693,27 +676,8 @@ namespace Alex.Worlds
 			return drawCount;
 		}
 
-		/// <summary>
-		///		The amount of calls made to DrawPrimitives in the last render call
-		/// </summary>
-		public int DrawCount { get; set; } = 0;
-
 		public ChunkCoordinates? ViewPosition { get; set; } = null;
 
-		private int DrawChunks(GraphicsDevice device, ChunkData[] chunks, Effect effect, RenderStage stage)
-		{
-			int drawn = 0;
-			for (var index = 0; index < chunks.Length; index++)
-			{
-				var chunk = chunks[index];
-				if (chunk == null) continue;
-				
-				drawn += chunk.Draw(device, stage, effect);
-			}
-
-			return drawn;
-		}
-		
 		#endregion
 		
 		public void Update(IUpdateArgs args)
@@ -733,16 +697,26 @@ namespace Alex.Worlds
 			{
 				bool inView = IsWithinView(chunk.Key, World.Camera);
 				var data = chunk.Value?.ChunkData;
-				
-				if (inView && index + 1 < max && data != null)
+
+				if (data != null)
 				{
-					array[index] = data;
-					
-					chunk.Value.ApplyChanges(Graphics, World);
-					
-					index++;
-					//renderList.Add(chunk.Value.ChunkData);
-					
+					if (inView && index + 1 < max)
+					{
+						//if (!chunk.Value.IsNew)
+						//	chunk.Value.ApplyChanges(World);
+						
+						data.Rendered = true;
+						
+						array[index] = data;
+						index++;
+						
+						//renderList.Add(chunk.Value.ChunkData);
+					}
+					else
+					{
+						data.Rendered = false;
+						//chunk.Value?.SetVisibility(Alex.Instance.GraphicsDevice, World, false);
+					}
 				}
 
 				//if ((chunk.Value.BlockLightDirty || chunk.Value.SkyLightDirty))

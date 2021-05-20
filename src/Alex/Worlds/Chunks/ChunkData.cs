@@ -1,7 +1,5 @@
 using System;
-using System.Buffers;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using Alex.API;
@@ -12,7 +10,6 @@ using Alex.API.Utils.Vectors;
 using Alex.Worlds.Abstraction;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Graphics.PackedVector;
 
 namespace Alex.Worlds.Chunks
 {
@@ -31,6 +28,19 @@ namespace Alex.Worlds.Chunks
             _stages = new ChunkRenderStage[availableStages.Length];
             
             Interlocked.Increment(ref _instances);
+        }
+
+        private bool _rendered = false;
+        public bool Rendered
+        {
+            get
+            {
+                return _rendered;
+            }
+            set
+            {
+                _rendered = value;
+            }
         }
 
         public int Draw(GraphicsDevice device, RenderStage stage, Effect effect)
@@ -113,18 +123,32 @@ namespace Alex.Worlds.Chunks
         {
             return _stages.Where(x => x != null).Any(x => x.Contains(coordinates));
         }
-
-        public void ApplyChanges(IBlockAccess world, GraphicsDevice device, bool keepInMemory, bool forceUpdate = false)
+        
+        public static float AverageUpdateTime => MovingAverage.Average;
+        public static float MaxUpdateTime => MovingAverage.Maximum;
+        public static float MinUpdateTime => MovingAverage.Minimum;
+        
+        private static readonly MovingAverage MovingAverage = new MovingAverage();
+        public void ApplyChanges(IBlockAccess world, bool forceUpdate = false)
         {
-            var stages = _stages;
+            Stopwatch sw = Stopwatch.StartNew();
 
-            if (stages == null)
-                return;
-            
-            for (var index = 0; index < stages.Length; index++)
+            try
             {
-                var stage = stages[index];
-                stage?.Apply(world, device, keepInMemory, forceUpdate);
+                var stages = _stages;
+
+                if (stages == null)
+                    return;
+
+                for (var index = 0; index < stages.Length; index++)
+                {
+                    var stage = stages[index];
+                    stage?.Apply(world, forceUpdate);
+                }
+            }
+            finally
+            {
+                MovingAverage.ComputeAverage((float) sw.Elapsed.TotalMilliseconds);
             }
         }
 

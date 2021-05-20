@@ -13,6 +13,16 @@ namespace Alex.API.Utils
 		public float Minimum { get; private set; }
 		public float Maximum { get; private set; }
 
+		public MovingAverage() : this(128)
+		{
+			
+		}
+
+		public MovingAverage(int windowSize)
+		{
+			_windowSize = windowSize;
+		}
+		
 		/// <summary>
 		/// Computes a new windowed average each time a new sample arrives
 		/// </summary>

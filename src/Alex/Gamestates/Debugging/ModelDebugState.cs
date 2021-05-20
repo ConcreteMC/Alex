@@ -468,7 +468,7 @@ namespace Alex.Gamestates.Debugging
 			b.VariantMapper.Model.GetVertices(world, chunkData, _location.GetCoordinates3D(), b);
 
 			_data = chunkData;
-			_data.ApplyChanges(world, Alex.GraphicsDevice, true);
+			_data.ApplyChanges(world);
 
 			old?.Dispose();
 			// _vertices = vertices.vertices;

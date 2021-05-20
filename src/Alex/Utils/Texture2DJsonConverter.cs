@@ -24,7 +24,7 @@ namespace Alex.Utils
 				ManualResetEvent resetEvent = new ManualResetEvent(false);
 				
 
-				Alex.Instance.UIThreadQueue.Enqueue(
+				Alex.Instance.UiTaskManager.Enqueue(
 					() =>
 					{
 						using (MemoryStream ms = new MemoryStream())
@@ -72,7 +72,7 @@ namespace Alex.Utils
 
 					Texture2D result      = null;
 
-					Alex.Instance.UIThreadQueue.Enqueue(
+					Alex.Instance.UiTaskManager.Enqueue(
 						() =>
 						{
 							using (MemoryStream stream = new MemoryStream(data))

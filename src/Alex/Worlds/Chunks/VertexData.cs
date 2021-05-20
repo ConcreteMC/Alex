@@ -1,3 +1,4 @@
+using System;
 using System.Runtime.InteropServices;
 using Alex.API.Blocks;
 using Microsoft.Xna.Framework;
@@ -6,13 +7,13 @@ using Microsoft.Xna.Framework.Graphics.PackedVector;
 
 namespace Alex.Worlds.Chunks
 {
-	[StructLayout(LayoutKind.Sequential)]
-	public readonly struct VertexData
+//	[StructLayout(LayoutKind.Sequential)]
+	public class VertexData
 	{
 		public readonly Vector3 Position;
 		
 		public readonly BlockFace Face;
-
+		
 		public readonly Short4 TexCoords;
 
 		public readonly uint Color;
@@ -22,10 +23,10 @@ namespace Alex.Worlds.Chunks
 		public bool IsTransparent => (Flags & (byte)(1 << 1)) != 0;
 		public bool IsFullCube => (Flags & (byte)(1 << 2)) != 0;
 		public bool IsSolid => (Flags & (byte)(1 << 3)) != 0;
-		
+
 		public VertexData(Vector3 position,
 			BlockFace face,
-			Short4 textureCoordinates,
+			Vector4 textureCoordinates,
 			uint color,
 			bool isTransparent = false,
 			bool isFullCube = false,
@@ -33,7 +34,7 @@ namespace Alex.Worlds.Chunks
 		{
 			Position = position;
 			Face = face;
-			TexCoords = textureCoordinates;
+			TexCoords = new Short4(textureCoordinates);
 			Color = color;
 			Flags = 0;
 

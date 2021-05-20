@@ -360,7 +360,7 @@ namespace Alex.Gamestates.Multiplayer
 					if (match.Success && _graphicsDevice != null)
 					{
 						AutoResetEvent reset = new AutoResetEvent(false);
-						Alex.Instance.UIThreadQueue.Enqueue(() =>
+						Alex.Instance.UiTaskManager.Enqueue(() =>
 						{
 							using (MemoryStream ms = new MemoryStream(Convert.FromBase64String(match.Groups["data"].Value)))
 							{

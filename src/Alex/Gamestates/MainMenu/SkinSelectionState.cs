@@ -94,7 +94,7 @@ namespace Alex.Gamestates.MainMenu
 
             if (Alex.PlayerModel != null && Alex.PlayerTexture != null)
             {
-                Alex.UIThreadQueue.Enqueue(
+                Alex.UiTaskManager.Enqueue(
                     () =>
                     {
                         var texture = TextureUtils.BitmapToTexture2D(this, Alex.GraphicsDevice, Alex.PlayerTexture);
@@ -112,7 +112,7 @@ namespace Alex.Gamestates.MainMenu
                 {
                     foreach (var skin in module.Skins)
                     {
-                        Alex.UIThreadQueue.Enqueue(
+                        Alex.UiTaskManager.Enqueue(
                             () =>
                             {
                                 var texture = TextureUtils.BitmapToTexture2D(this, Alex.GraphicsDevice, skin.Texture);

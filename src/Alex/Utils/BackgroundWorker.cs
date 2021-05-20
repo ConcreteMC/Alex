@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Alex.Utils
 {
@@ -10,36 +11,43 @@ namespace Alex.Utils
 		private ConcurrentQueue<Action> _workerQueue             = new ConcurrentQueue<Action>();
 		private ManualResetEvent        _manualResetEvent        = new ManualResetEvent(false);
 
-		private Thread _workerThread;
+		public int MaxThreads { get; set; }
+		
+		//private Thread _workerThread;
 		public BackgroundWorker(CancellationToken cancellationToken, int threads = 1)
 		{
+			MaxThreads = threads;
 			_cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-			ThreadPool.QueueUserWorkItem((o) =>
-			{
-				_workerThread = Thread.CurrentThread;
-
-				while (!_cancellationTokenSource.IsCancellationRequested)
+			
+			var task = new Task(
+				() =>
 				{
-					if (_manualResetEvent.WaitOne(50))
+					Thread.CurrentThread.Name = $"BackgroundWorker Thread";
+					//_workerThread = Thread.CurrentThread;
+					while (!_cancellationTokenSource.IsCancellationRequested)
 					{
-						if (_cancellationTokenSource.IsCancellationRequested)
-							break;
-
-						while (_workerQueue.TryDequeue(out var action))
+						if (_manualResetEvent.WaitOne(50))
 						{
-							action?.Invoke();
-
 							if (_cancellationTokenSource.IsCancellationRequested)
 								break;
-						}
 
-						_manualResetEvent.Reset();
-					}
+							while (_workerQueue.TryDequeue(out var action))
+							{
+								action?.Invoke();
+
+								if (_cancellationTokenSource.IsCancellationRequested)
+									break;
+							}
+
+							_manualResetEvent.Reset();
+						}
 					
-					if (_cancellationTokenSource.IsCancellationRequested)
-						break;
-				}
-			});
+						if (_cancellationTokenSource.IsCancellationRequested)
+							break;
+					}
+				}, _cancellationTokenSource.Token, TaskCreationOptions.LongRunning);
+			
+			task.Start();
 		}
 
 		public void Enqueue(Action action)

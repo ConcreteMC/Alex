@@ -131,7 +131,7 @@ namespace Alex
 				//_playerProfileService.Force(profile);
 			}
 
-			alex.UIThreadQueue.Enqueue(SaveProfiles);
+			alex.UiTaskManager.Enqueue(SaveProfiles);
 		}
 
 		public PlayerProfile[] GetProfiles(string type)

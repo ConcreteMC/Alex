@@ -147,24 +147,26 @@ namespace Alex.Gamestates.InGame
 
 		private long _ramUsage = 0;
 		private long _threadsUsed, _maxThreads;
+		private long _complPortsUsed, _maxComplPorts;
 		private Biome _currentBiome = BiomeUtils.GetBiomeById(0);
 		private int _currentBiomeId = 0;
 		private void InitDebugInfo()
 		{
 			string gameVersion = VersionUtils.GetVersion();
+
 			_debugInfo.AddDebugLeft(
 				() =>
 				{
 					double avg = 0;
 
-				/*	if (World.ChunkManager.TotalChunkUpdates > 0)
-					{
-						avg = (World.ChunkManager.ChunkUpdateTime / World.ChunkManager.TotalChunkUpdates)
-						   .TotalMilliseconds;
-					}*/
+					/*	if (World.ChunkManager.TotalChunkUpdates > 0)
+						{
+							avg = (World.ChunkManager.ChunkUpdateTime / World.ChunkManager.TotalChunkUpdates)
+							   .TotalMilliseconds;
+						}*/
 
 					return
-						$"Alex {gameVersion} ({Alex.FpsMonitor.Value:##} FPS, {World.Ticker.TicksPerSecond:##} TPS, Chunk Updates: {World.EnqueuedChunkUpdates} queued, {World.ConcurrentChunkUpdates} active, {ChunkColumn.AverageUpdateTime:F2}ms avg, {ChunkColumn.MinUpdateTime:F2}ms min, {ChunkColumn.MaxUpdateTime:F2}ms max)";
+						$"Alex {gameVersion} ({Alex.FpsMonitor.Value:##} FPS, {World.Ticker.TicksPerSecond:##} TPS, Chunk Updates: {World.EnqueuedChunkUpdates} queued, {World.ConcurrentChunkUpdates} active)";
 				}, TimeSpan.FromMilliseconds(50));
 			
 			_debugInfo.AddDebugLeft(() =>
@@ -190,7 +192,7 @@ namespace Alex.Gamestates.InGame
 			_debugInfo.AddDebugLeft(() => $"Textures: {Alex.Metrics.TextureCount:N0} Sprite count: {Alex.Metrics.SpriteCount}", TimeSpan.FromMilliseconds(500));
 			_debugInfo.AddDebugLeft(() => $"Graphic Resources: {GpuResourceManager.GetResourceCount}", TimeSpan.FromMilliseconds(500));
 		//	_debugInfo.AddDebugLeft(() => $"IndexBuffer Elements: {World.IndexBufferSize:N0} ({GetBytesReadable(World.IndexBufferSize * 4)})");
-			_debugInfo.AddDebugLeft(() => $"Chunks: {World.ChunkCount}, {World.ChunkManager.RenderedChunks}, {World.ChunkManager.DrawCount}", TimeSpan.FromMilliseconds(500));
+			_debugInfo.AddDebugLeft(() => $"Chunks: {World.ChunkCount}, {World.ChunkManager.RenderedChunks}, {World.ChunkDrawCount}", TimeSpan.FromMilliseconds(500));
 			_debugInfo.AddDebugLeft(() => $"Entities: {World.EntityManager.EntityCount}, {World.EntityManager.EntitiesRendered}, {World.EntityManager.DrawCount}", TimeSpan.FromMilliseconds(500));
 			_debugInfo.AddDebugLeft(() => $"Particles: {Alex.ParticleManager.ParticleCount}", TimeSpan.FromMilliseconds(500));
 			_debugInfo.AddDebugLeft(() =>
@@ -233,8 +235,11 @@ namespace Alex.Gamestates.InGame
 			_debugInfo.AddDebugRight(() =>
 			{
 				return
-					$"Threads: {(_threadsUsed):00}/{_maxThreads}";
+					$"Threads: {(_threadsUsed):00}/{_maxThreads}\nCompl.Ports: {_complPortsUsed:00}/{_maxComplPorts}";
 			}, TimeSpan.FromMilliseconds(50));
+			
+			_debugInfo.AddDebugRight(() => $"Chunk Updates: {ChunkColumn.AverageUpdateTime:F2}ms avg, {ChunkColumn.MaxUpdateTime:F2}ms max\nBuffer Upload: {ChunkData.AverageUpdateTime:F2}ms avg, {ChunkData.MaxUpdateTime:F2}ms max", TimeSpan.FromMilliseconds(50));
+			_debugInfo.AddDebugRight(() => $"Tasks: {Alex.UiTaskManager.Count}, {Alex.UiTaskManager.AverageExecutionTime:F2}ms avg", TimeSpan.FromMilliseconds(50));
 			_debugInfo.AddDebugRight(() =>
 			{
 				var player = World?.Player;
@@ -369,11 +374,13 @@ namespace Alex.Gamestates.InGame
 
 				_ramUsage = Environment.WorkingSet;
 
-				ThreadPool.GetMaxThreads(out int maxThreads, out _);
-				ThreadPool.GetAvailableThreads(out int availableThreads, out _);
-				_threadsUsed = maxThreads - availableThreads;
-
+				ThreadPool.GetMaxThreads(out int maxThreads, out int maxComplPorts);
+				ThreadPool.GetAvailableThreads(out int availableThreads, out int availableComplPorts);
+				_threadsUsed = ThreadPool.ThreadCount;// maxThreads - availableThreads;
 				_maxThreads = maxThreads;
+				
+				_complPortsUsed = maxComplPorts - availableComplPorts;
+				_maxComplPorts = maxComplPorts;
 
 				var pos     = World.Player.KnownPosition.GetCoordinates3D();
 				var biomeId = World.GetBiome(pos.X, pos.Y, pos.Z);
