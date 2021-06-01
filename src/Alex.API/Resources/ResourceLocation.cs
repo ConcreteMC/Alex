@@ -35,9 +35,9 @@ namespace Alex.API.Resources
             return new ResourceLocation(input);
         }
         
-        public static bool operator ==(ResourceLocation a, ResourceLocation b)
+        /*public static bool operator ==(ResourceLocation a, ResourceLocation b)
         {
-          //  return a is not null && a.Equals(b);
+            return a is not null && a.Equals(b);
             if (ReferenceEquals(null, a)) return false;
             if (ReferenceEquals(null, b)) return false;
             
@@ -47,7 +47,7 @@ namespace Alex.API.Resources
         public static bool operator !=(ResourceLocation a, ResourceLocation b)
         {
             return !(a == b);
-        }
+        }*/
 
         /// <summary>Returns a string that represents the current object.</summary>
         /// <returns>A string that represents the current object.</returns>

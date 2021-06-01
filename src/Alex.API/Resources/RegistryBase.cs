@@ -12,6 +12,7 @@ namespace Alex.API.Resources
         public ResourceLocation RegistryName { get; }
         public Type RegistryType => typeof(TEntry);
 
+        public int Count => Entries.Count;
         public RegistryBase(string registryName)
         {
             RegistryName = registryName;

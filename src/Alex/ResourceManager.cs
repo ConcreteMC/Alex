@@ -29,6 +29,7 @@ using Alex.Items;
 using Alex.Networking.Java;
 using Alex.Networking.Java.Packets.Play;
 using Alex.ResourcePackLib;
+using Alex.ResourcePackLib.Abstraction;
 using Alex.ResourcePackLib.Generic;
 using Alex.ResourcePackLib.IO;
 using Alex.ResourcePackLib.IO.Abstract;
@@ -36,6 +37,7 @@ using Alex.ResourcePackLib.Json.BlockStates;
 using Alex.ResourcePackLib.Json.Models;
 using Alex.ResourcePackLib.Json.Models.Blocks;
 using Alex.ResourcePackLib.Json.Models.Entities;
+using Alex.ResourcePackLib.Json.Textures;
 using Alex.Utils;
 using Alex.Utils.Assets;
 using JetBrains.Profiler.Api;
@@ -52,7 +54,7 @@ using Task = System.Threading.Tasks.Task;
 
 namespace Alex
 {
-	public class ResourceManager
+	public class ResourceManager : ITextureProvider
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ResourceManager));
 
@@ -80,7 +82,17 @@ namespace Alex
 		public BlockModelRegistry  BlockModelRegistry  { get; private set; }
 		public EntityModelRegistry EntityModelRegistry { get; private set; }
 		
+		
 		public static ManagedTexture2D NethergamesLogo { get; private set; }
+		
+		/*private readonly Dictionary<ResourceLocation, ResourcePackModelBase>   _models    = new Dictionary<ResourceLocation, ResourcePackModelBase>();
+		public IReadOnlyDictionary<ResourceLocation, ResourcePackModelBase> BlockModels =>
+			_models.Where(x => x.Value.Type == ModelType.Block)
+			   .ToDictionary(x => x.Key, x => x.Value);
+		
+		public IReadOnlyDictionary<ResourceLocation, ResourcePackModelBase>   ItemModels        => _models.Where(x => x.Value.Type == ModelType.Item)
+		   .ToDictionary(x => x.Key, x => x.Value);*/
+		
 		public ResourceManager(IServiceProvider serviceProvider)
 		{
 			BlockAtlas = new AtlasGenerator("block/");
@@ -97,6 +109,59 @@ namespace Alex
 			BedrockAssetUtil = new MCBedrockAssetUtils(Storage);
 		}
 
+		private ResourcePackModelBase ProcessModel(ResourceLocation resourceLocation,
+			ResourcePackModelBase model,
+			ref Dictionary<ResourceLocation, ResourcePackModelBase> models)
+		{
+			//if (_models.TryGetValue(resourceLocation, out var existingModel))
+			//	return existingModel;
+
+
+			if (model.ParentName != null && !model.ParentName.Equals(resourceLocation))
+			{
+				ResourceLocation parentKey = model.ParentName;
+
+				/*	if (model.ParentName.Equals("builtin/generated"))
+					{
+						model.Display = new Dictionary<string, DisplayElement>()
+						{
+							{"gui", new DisplayElement(new Vector3(30, 225, 0), new Vector3(0,0,0), new Vector3(0.625f, 0.625f, 0.625f))},
+							{"ground", new DisplayElement(new Vector3(0, 0, 0), new Vector3(0,3,0), new Vector3(0.25f, 0.25f, 0.25f))},
+							{"fixed", new DisplayElement(new Vector3(0, 0, 0), new Vector3(0,0,0), new Vector3(0.5f, 0.5f, 0.5f))},
+							{"thirdperson_righthand", new DisplayElement(new Vector3(75, 45, 0), new Vector3(0,2.5f,0), new Vector3(0.375f, 0.375f, 0.375f))},
+							{"firstperson_righthand", new DisplayElement(new Vector3(0, 45, 0), new Vector3(0,0,0), new Vector3(0.4f, 0.4f, 0.4f))},
+							{"firstperson_lefthand", new DisplayElement(new Vector3(0, 225, 0), new Vector3(0,0,0), new Vector3(0.4f, 0.4f, 0.4f))}
+							//  {"gui", new DisplayElement(new Vector3(30, 255, 0), new Vector3(0,0,0), new Vector3(0.625f, 0.625f, 0.625f))}
+						};
+					}*/
+
+				ResourcePackModelBase parent;
+
+				if (BlockModelRegistry.TryGet(parentKey, out var rawParent))
+				{
+					parent = rawParent.Value;
+					//else if (TryGetBlockModel(parentKey, out parent)){}
+				}
+				else if (models.TryGetValue(parentKey, out parent))
+				{
+					parent = ProcessModel(parentKey, parent, ref models);
+				}
+
+				if (parent != null)
+				{
+					model.UpdateValuesFromParent(parent);
+					//model.Parent = parent;
+				}
+			}
+
+			var entry = new BlockModelEntry(model);
+			BlockModelRegistry.Set(resourceLocation, () => entry);
+		//	_models[resourceLocation] = model;
+			//_models.Add(resourceLocation, model);
+
+			return model;
+		}
+		
 		private void ResourcePacksChanged(string[] oldvalue, string[] newvalue)
 		{
 			Log.Info($"Resource packs changed.");
@@ -142,8 +207,8 @@ namespace Alex
 			
 			Log.Info($"Loading resource pack ({fs.Name})...");
 
-			try
-			{
+			//try
+			//{
 				var manifest = ResourcePackLib.ResourcePack.GetManifest(fs);
 
 				if (manifest == null || manifest.Type == ResourcePackType.Java)
@@ -156,8 +221,8 @@ namespace Alex
 					
 					sw.Stop();
 			
-					Log.Debug($"Loaded {resourcePack.BlockModels.Count} block models from resourcepack");
-					Log.Debug($"Loaded {resourcePack.ItemModels.Count} item models from resourcepack");
+					//Log.Debug($"Loaded {resourcePack.BlockModels.Count} block models from resourcepack");
+				//	Log.Debug($"Loaded {resourcePack.ItemModels.Count} item models from resourcepack");
 					Log.Debug($"Loading resourcepack took: {sw.ElapsedMilliseconds}ms");
 
 					return resourcePack;
@@ -177,31 +242,36 @@ namespace Alex
 
 					return brp;
 				}
-			}
-			catch (Exception ex)
-			{
-				Log.Warn(ex, $"Failed to load resourcepack ({fs.Name})");
-			}
+			//}
+		//	catch (Exception ex)
+		//	{
+		//		Log.Warn(ex, $"Failed to load resourcepack ({fs.Name})");
+		//	}
 
 			return null;
 		}
 
-		private void LoadModels(IProgressReceiver progressReceiver, McResourcePack resourcePack, bool replaceModels,
-            bool reportMissingModels)
-        {
-            Stopwatch sw = Stopwatch.StartNew();
-            var modelRegistry = RegistryManager.GetRegistry<ResourcePackModelBase>();
+		private static string ResolveTexture(ResourcePackModelBase var, string texture)
+		{
+			if (texture[0] != '#')
+				return texture;
 
-            int imported = 0;
-            if (modelRegistry is BlockModelRegistry bmr)
-            {
-	            imported = bmr.LoadResourcePack(progressReceiver, resourcePack, replaceModels);
-            }
+			var original = texture;
+			var modified = texture.Substring(1);
+			if (var.Textures.TryGetValue(modified, out texture))
+			{
+				if (texture[0] == '#')
+				{
+					if (!var.Textures.TryGetValue(texture.Substring(1), out texture))
+					{
+						//texture = "no_texture";
+						return original;
+					}
+				}
+			}
 
-            Log.Debug($"Imported {imported} block models from resourcepack in {sw.ElapsedMilliseconds}ms!");
-            
-            sw.Stop();
-        }
+			return texture;
+		}
 		
         private bool CheckBedrockAssets(IProgressReceiver progressReceiver, out string bedrockResources)
         {
@@ -483,23 +553,81 @@ namespace Alex
 		        }
 	        }
 
+	        Dictionary<ResourceLocation, ResourcePackModelBase> models =
+		        new Dictionary<ResourceLocation, ResourcePackModelBase>();
 	        var  active  = ActiveResourcePacks.ToArray();
-	        bool isFirst = true;
+
+	        Stopwatch modelTimer = Stopwatch.StartNew();
+	        foreach (var resourcePack in active)
+	        {
+		        foreach (var model in resourcePack.Models)
+		        {
+			       // if (!models.ContainsKey(model.Key))
+				        models[model.Key] = model.Value;//.Add(model.Key, model.Value);
+		        }
+	        }
+
+	        int modelsProcessed = 0;
+	        foreach (var model in models.OrderBy(
+		        x =>
+		        {
+			        if (x.Value.ParentName == null)
+				        return 0;
+
+			        return 1;
+		        }))
+	        {
+		        progress?.UpdateProgress(modelsProcessed, models.Count, model.Key.ToString());
+		        //  ProgressReporter?.Invoke((int) (((double) count / (double) total) * 100D), model.Key.ToString());
+
+		        ProcessModel(model.Key, model.Value, ref models);
+
+		        modelsProcessed++;
+		        //count++;
+	        }
+	        
+	        foreach (var m in models.Where(x => x.Value.Type == ModelType.Block)
+		       .OrderByDescending(x => x.Value.ParentName != null))
+	        {
+		        var model = m.Value;
+
+		        if (model.Elements != null)
+		        {
+			        for (var index = 0; index < model.Elements.Length; index++)
+			        {
+				        var element = model.Elements[index];
+
+				        if (element.Faces != null)
+				        {
+					        foreach (var face in element.Faces.ToArray())
+					        {
+						        if (face.Value != null && !string.IsNullOrWhiteSpace(face.Value.Texture))
+						        {
+							        var result = ResolveTexture(model, face.Value.Texture);
+
+							        if (!string.IsNullOrWhiteSpace(result))
+							        {
+								        model.Elements[index].Faces[face.Key].Texture = result;
+							        }
+						        }
+
+						        //face.Value.Texture
+					        }
+				        }
+			        }
+		        }
+	        }
+	        
+	        Log.Debug($"Imported {BlockModelRegistry.Count} models from resourcepacks in {modelTimer.ElapsedMilliseconds}ms!");
+
 	        foreach (var resourcePack in active)
 	        {
 		        Alex.GuiRenderer.LoadLanguages(resourcePack, progress);
-		        
-		        LoadModels(progress, resourcePack, !isFirst, isFirst);
-		        if (isFirst)
-		        { //Only load models for vanilla until above we fix blockstate replacement issues.
-			        isFirst = false;
-			       // break;
-		        }
 	        }
 	        
 	        Stopwatch sw = Stopwatch.StartNew();
 	        MeasureProfiler.StartCollectingData();
-	        var imported = BlockFactory.LoadBlockstates(RegistryManager, this, false, false, progress);
+	        var imported = BlockFactory.LoadBlockstates(RegistryManager, this, true, false, progress);
 	        MeasureProfiler.SaveData();
             
 	        MeasureProfiler.StopCollectingData();
@@ -508,26 +636,22 @@ namespace Alex
 
 	        var textures = new Dictionary<ResourceLocation, AtlasGenerator.ImageEntry>();
 
-	        for (var index = 0; index < active.Length; index++)
-	        {
-		        var resourcePack = active[index];
+	        progress?.UpdateProgress(0, $"Loading block textures...");
 
-		        progress?.UpdateProgress(0, $"Loading block textures: {resourcePack.Info?.Name ?? "Unknown"}");
-
-		        BlockAtlas.LoadResourcePackOnTop(device, textures, resourcePack, progress, index == active.Length - 1);
-		        //LoadTextures(device, progress, resourcePack, ref textures, index == active.Length - 1);
-	        }
+	        BlockAtlas.LoadResources(device, textures, this, progress, true);
 	        
 	        textures.Clear();
 
-	        for (var index = 0; index < active.Length; index++)
-	        {
-		        var resourcePack = active[index];
+	        progress?.UpdateProgress(0, $"Loading item textures...");
 
-		        progress?.UpdateProgress(0, $"Loading item textures: {resourcePack.Info?.Name ?? "Unknown"}");
+	        ItemAtlas.LoadResources(device, textures, this, progress, true);
+	        
+	       // for (var index = 0; index < active.Length; index++)
+	       // {
+		  //      var resourcePack = active[index];
 
-		        ItemAtlas.LoadResourcePackOnTop(device, textures, resourcePack, progress, index == active.Length - 1);
-	        }
+		       
+	       // }
 
 	        var activeBedrockPacks = ActiveBedrockResourcePacks.ToArray();
 
@@ -639,7 +763,23 @@ namespace Alex
 
 			return false;
 		}
-		
+
+		/// <inheritdoc />
+		public bool TryGetTextureMeta(ResourceLocation location, out TextureMeta meta)
+		{
+			meta = null;
+			foreach (var resourcePack in ActiveResourcePacks.Reverse())
+			{
+				if (resourcePack.TryGetTextureMeta(location, out var f))
+				{
+					meta = f;
+					return true;
+				}
+			}
+
+			return false;
+		}
+
 		public bool TryGetBedrockBitmap(ResourceLocation location, out Image<Rgba32> bitmap)
 		{
 			bitmap = null;
@@ -655,7 +795,7 @@ namespace Alex
 			return false;
 		}
 
-		public bool TryGetBlockState(string location, out BlockStateResource resource)
+		public bool TryGetBlockState(ResourceLocation location, out BlockStateResource resource)
 		{
 			resource = null;
 			foreach (var resourcePack in ActiveResourcePacks.Reverse())
@@ -695,9 +835,14 @@ namespace Alex
 			return new Microsoft.Xna.Framework.Color(94, 157, 52);
 		}
 
-		public bool TryGetItemModel(ResourceLocation key, out ResourcePackModelBase model)
+		/*public bool TryGetItemModel(ResourceLocation key, out ResourcePackModelBase model)
 		{
-			model = null;
+			if (ItemModels.TryGetValue(key, out model))
+				return true;
+			
+			return false;
+			
+			/*model = null;
 			foreach (var resourcePack in ActiveResourcePacks.Reverse())
 			{
 				if (resourcePack.TryGetItemModel(key, out model))
@@ -706,12 +851,26 @@ namespace Alex
 				}
 			}
 
-			return false;
-		}
+			return false;*
+		}*/
 
-		public bool TryGetBlockModel(ResourceLocation key, out ResourcePackModelBase model)
+		/*public bool TryGetBlockModel(ResourceLocation key, out ResourcePackModelBase model)
 		{
+			if (BlockModels.TryGetValue(key, out model))
+				return true;
+
+			var m = BlockModels.FirstOrDefault(x => x.Key.ToString().EndsWith(key.Path, StringComparison.OrdinalIgnoreCase))
+			   .Value;
+
+			if (m != null)
+			{
+				model = m;
+				return true;
+			}
+			
 			model = null;
+			return false;
+			/*model = null;
 			foreach (var resourcePack in ActiveResourcePacks.Reverse())
 			{
 				if (resourcePack.TryGetBlockModel(key, out model))
@@ -720,8 +879,8 @@ namespace Alex
 				}
 			}
 
-			return false;
-		}
+			return false;*
+		}*/
 	}
 
 	public class Registries

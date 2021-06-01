@@ -460,21 +460,21 @@ namespace Alex
             ThreadPool.QueueUserWorkItem(
                 async (o) =>
                 {
-                    try
-                    {
+                  //  try
+                  //  {
                         await Task.WhenAll(Services.GetServices<IHostedService>().Select(s => s.StartAsync(CancellationToken.None)));
                         
                         InitializeGame(splash);
-                    }
-                    catch (Exception ex)
-                    {
-                        Log.Error(ex, $"Could not initialize! {ex}");
-                    }
-                    finally
-                    {
+                  //  }
+                   // catch (Exception ex)
+                   // {
+                   //     Log.Error(ex, $"Could not initialize! {ex}");
+                   // }
+                    //finally
+                    //{
                         loadingStopwatch.Stop();
                         Log.Info($"Startup time: {loadingStopwatch.Elapsed}");
-                    }
+                    //}
                 });
         }
 

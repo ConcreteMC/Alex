@@ -58,13 +58,48 @@ namespace Alex.Graphics
 		    _textureAtlas = default;
 	    }
 
-	    public void GetTextures(ITextureProvider resourcePack,
+	    public void GetTextures(ResourceManager resourcePack,
 		    Dictionary<ResourceLocation, ImageEntry> textures,
 		    IProgressReceiver progressReceiver)
 	    {
 		    int done  = 0;
+
+		    foreach (var blockModel in resourcePack.BlockModelRegistry)
+		    {
+			    foreach (var path in blockModel.Value.Textures)
+			    {
+				    if (!path.Value.Contains(Selector, StringComparison.InvariantCultureIgnoreCase))
+					    continue;
+
+				    var p = new ResourceLocation(path.Value);
+				    
+				    if (resourcePack.TryGetBitmap(p, out var texture))
+				    {
+					    TextureMeta meta = null;
+
+					    resourcePack.TryGetTextureMeta(p, out meta);
+					    if (textures.ContainsKey(p))
+					    {
+							 if (meta != null)
+								 textures[p].Meta = meta;
+						      
+
+						    if (texture != null)
+							    textures[p].Image = texture;
+
+						    //textures[texture.Key] = entry;
+					    }
+					    else
+					    {
+						    textures.Add(p, new ImageEntry(texture, meta));
+					    }
+				    }
+			    }
+		    }
+
+		    return;
 		//    var items = resourcePack.Textures.Where(x => texturePaths.Contains(x.Key)).ToArray();
-		var texturePaths = resourcePack.Textures.Where(x => x.Key.Path.Contains(Selector)).ToArray();
+		/*var texturePaths = resourcePack.Textures.Where(x => x.Key.Path.Contains(Selector)).ToArray();
 		    foreach (var path in texturePaths)
 		    {
 			    progressReceiver?.UpdateProgress(done++, texturePaths.Length, "Resolving textures...", path.ToString());
@@ -74,10 +109,10 @@ namespace Alex.Graphics
 			    {
 				    TextureMeta meta = null;
 
-				    if (resourcePack is McResourcePack javaPack)
-				    {
-					     javaPack.TryGetTextureMeta(path.Key, out meta);
-				    }
+				  //  if (resourcePack is McResourcePack javaPack)
+				   // {
+					//     javaPack.TryGetTextureMeta(path.Key, out meta);
+				  //  }
 				    //var entry = new ImageEntry(texture.Value.Value, meta);
 
 				    if (textures.ContainsKey(path.Key))
@@ -97,7 +132,7 @@ namespace Alex.Graphics
 					    textures.Add(path.Key, new ImageEntry(texture, meta));
 				    }
 			    }
-		    }
+		    }*/
 	    }
 
 	    public class ImageEntry
@@ -168,12 +203,14 @@ namespace Alex.Graphics
 		    }
 
 		    var size = textures.Max(x => Math.Max(x.Width, x.Height));
-		   
+		    size *= 2;
+
 		    Packer p = new Packer();
-		    p.FitHeuristic = BestFitHeuristic.MaxOneAxis;
-		    
+		    p.FitHeuristic = BestFitHeuristic.Area;
+
 		    Dictionary<ResourceLocation, Utils.TextureInfo> textureInfos = new Dictionary<ResourceLocation, Utils.TextureInfo>();
 
+		    int count = 0;
 		    foreach (var atlas in p.Process(textures, size, 4))
 		    {
 			    var img = atlas.GenerateTexture(false);// p.CreateAtlasImage(atlas);
@@ -182,27 +219,32 @@ namespace Alex.Graphics
 			    {
 				    if (node.Texture == null)
 					    continue;
-				    
-				    textureInfos.TryAdd(
-					    node.Texture.ResourceLocation,
-					    new Utils.TextureInfo(
-						    new Vector2(img.Width, img.Height),
-						    new Vector2(node.Bounds.Location.X, node.Bounds.Location.Y) ,
-						    node.Bounds.Size.Width, 
-						    node.Bounds.Size.Height, 
-						    node.Bounds.Size.Height != node.Bounds.Size.Width,
-						    node.Bounds.Width / TextureWidth,
-						    node.Bounds.Height / TextureHeight));
+
+				    textureInfos[node.Texture.ResourceLocation] = new Utils.TextureInfo(
+					    new Vector2(img.Width, img.Height), new Vector2(node.Bounds.Location.X, node.Bounds.Location.Y),
+					    node.Bounds.Size.Width, node.Bounds.Size.Height,
+					    node.Bounds.Size.Height != node.Bounds.Size.Width, node.Bounds.Width / TextureWidth,
+					    node.Bounds.Height / TextureHeight);
+			    }
+
+			    count++;
+
+			   // if (Selector.Contains("block", StringComparison.InvariantCultureIgnoreCase))
+			    {
+				  //  Log.Info($"Texture atlas: {count}");
+				  //  img.SaveAsPng($"atlas{count}.png");
 			    }
 
 			    _textureAtlas = GetMipMappedTexture2D(device, img);
 			    _atlasLocations = textureInfos;
-			    break;
+			    //break;
 		    }
 		    
 		    AtlasSize = new Vector2(_textureAtlas.Width, _textureAtlas.Height);
 		    totalSize += _textureAtlas.MemoryUsage;
 		    sw.Stop();
+		    
+		    Log.Info($"Atlas size: {AtlasSize} | TW: {TextureWidth} TH: {TextureHeight}");
 		    
 		    Log.Info(
 			    $"TextureAtlas's generated in {sw.ElapsedMilliseconds}ms! ({PlayingState.GetBytesReadable(totalSize, 2)})");
@@ -264,11 +306,11 @@ namespace Alex.Graphics
 	    public int TextureWidth { get; private set; } = 16;
 	    public int TextureHeight { get; private set; }= 16;
 
-        public void LoadResourcePackOnTop(GraphicsDevice device, Dictionary<ResourceLocation, ImageEntry> loadedTextures, ITextureProvider resourcePack, IProgressReceiver progressReceiver, bool build)
+        public void LoadResources(GraphicsDevice device, Dictionary<ResourceLocation, ImageEntry> loadedTextures, ResourceManager resources, IProgressReceiver progressReceiver, bool build)
 		{
 			int textureWidth = TextureWidth, textureHeight = TextureHeight;
 
-			GetTextures(resourcePack, loadedTextures, progressReceiver);
+			GetTextures(resources, loadedTextures, progressReceiver);
 
 			foreach (var image in loadedTextures.ToArray())
 			{

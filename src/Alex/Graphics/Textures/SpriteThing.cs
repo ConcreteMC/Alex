@@ -40,7 +40,7 @@ namespace Alex.Graphics.Textures
         /// <summary>
         /// Heuristic guesses what might be a good output width for a list of sprites.
         /// </summary>
-        static int GuessOutputWidth(List<TextureInfo> sprites)
+        public static int GuessOutputWidth(List<TextureInfo> sprites)
         {
             // Gather the widths of all our sprites into a temporary list.
             List<int> widths = new List<int>();

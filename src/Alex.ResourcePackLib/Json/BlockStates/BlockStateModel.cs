@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using Alex.API.Resources;
+using Newtonsoft.Json;
 
 namespace Alex.ResourcePackLib.Json.BlockStates
 {
@@ -9,7 +10,7 @@ namespace Alex.ResourcePackLib.Json.BlockStates
 		/// All specified models alternate in the game.
 		/// </summary>
 		[JsonProperty("model")]
-		public string ModelName { get; set; }
+		public ResourceLocation ModelName { get; set; }
 
 		/// <summary>
 		/// Rotation of the model on the x-axis in increments of 90 degrees.

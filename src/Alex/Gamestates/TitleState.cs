@@ -19,7 +19,9 @@ using Alex.Gui;
 using Alex.Gui.Dialogs.Containers;
 using Alex.Gui.Elements;
 using Alex.Gui.Elements.Context3D;
+using Alex.Gui.Elements.Hud;
 using Alex.Items;
+using Alex.Networking.Java.Packets.Play;
 using Alex.ResourcePackLib.Json.Models.Entities;
 using Alex.Utils;
 using Alex.Utils.Inventories;
@@ -29,9 +31,11 @@ using Alex.Worlds.Singleplayer.Generators;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
+using MiNET.Utils;
 using NLog;
 using RocketUI;
 using Color = Microsoft.Xna.Framework.Color;
+using UUID = MiNET.Utils.UUID;
 
 
 namespace Alex.Gamestates
@@ -48,6 +52,7 @@ namespace Alex.Gamestates
         private          GuiEntityModelView    _playerView;
         private          IPlayerProfileService _playerProfileService;
 
+        //private BossBarContainer _bossBarContainer;
         public TitleState()
         {
             _backgroundSkyBox = new GuiPanoramaSkyBox(Alex);

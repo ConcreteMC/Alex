@@ -85,6 +85,7 @@ namespace Alex.Items
 	    public static void Init(IRegistryManager registryManager, ResourceManager resources, IProgressReceiver progressReceiver = null)
 	    {
 		    ResourceManager = resources;
+		    var modelRegistry = resources.BlockModelRegistry;
 		   // ResourcePack = resourcePack;
 
 		    var otherRaw = ResourceManager.ReadStringResource("Alex.Resources.items3.json");
@@ -148,8 +149,9 @@ namespace Alex.Items
 
 				          ResourcePackModelBase model            = null;
 
-			           if (!ResourceManager.TryGetBlockModel(resourceLocation, out model))
+			           if (modelRegistry.TryGet(resourceLocation, out var modelEntry))
 			           {
+				           model = modelEntry.Value;
 				           /*foreach (var it in ResourcePack.ItemModels)
 				           {
 					           if (it.Key.Path.Equals(key.Path, StringComparison.OrdinalIgnoreCase))
@@ -258,13 +260,21 @@ namespace Alex.Items
 		           ItemModelRenderer renderer;
 		           if (!ItemRenderers.TryGetValue(resourceLocation, out renderer))
 		           {
-			           if (ResourceManager.TryGetItemModel(resourceLocation, out var model))
+			           if (modelRegistry.TryGet(resourceLocation, out var modelEntry))
+			           {
+				           renderer = new ItemModelRenderer(modelEntry.Value);
+				           //renderer.Cache(ResourceManager);
+
+				           ItemRenderers.TryAdd(resourceLocation, renderer);
+			           }
+
+			          /* if (ResourceManager.TryGetItemModel(resourceLocation, out var model))
 			           {
 				           renderer = new ItemModelRenderer(model);
 				           //renderer.Cache(ResourceManager);
 
 				           ItemRenderers.TryAdd(resourceLocation, renderer);
-			           }
+			           }*/
 
 			           if (renderer == null)
 			           {

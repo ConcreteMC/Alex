@@ -74,7 +74,7 @@ namespace Alex.Graphics.Models.Items
 
             if (pack.TryGetBitmap(texture, out var bitmap))
             {
-                if (Model.ParentName.Contains("handheld", StringComparison.InvariantCultureIgnoreCase))
+                if (Model.ParentName.Path.Contains("handheld", StringComparison.InvariantCultureIgnoreCase))
                 {
                     bitmap.Mutate(
                         x =>

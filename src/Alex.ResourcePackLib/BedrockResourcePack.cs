@@ -20,12 +20,14 @@ using Alex.ResourcePackLib.Json.Bedrock.Particles;
 using Alex.ResourcePackLib.Json.Bedrock.Sound;
 using Alex.ResourcePackLib.Json.Converters;
 using Alex.ResourcePackLib.Json.Models.Entities;
+using Alex.ResourcePackLib.Json.Textures;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NLog;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Tga;
 using SixLabors.ImageSharp.PixelFormats;
+using Animation = Alex.ResourcePackLib.Json.Bedrock.Entity.Animation;
 using Image = SixLabors.ImageSharp.Image;
 
 namespace Alex.ResourcePackLib
@@ -705,6 +707,13 @@ namespace Alex.ResourcePackLib
 			}
 
 			bitmap = null;
+			return false;
+		}
+
+		/// <inheritdoc />
+		public bool TryGetTextureMeta(ResourceLocation textureName, out TextureMeta meta)
+		{
+			meta = null;
 			return false;
 		}
 

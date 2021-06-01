@@ -59,6 +59,12 @@ namespace Alex.Gui.Elements
 		{
 			StackContainer progressBarContainer;
 
+			AddChild(new Image(AlexGuiTextures.AlexLogo)
+			{
+				Margin = new Thickness(0, 25, 0, 0),
+				Anchor = Alignment.TopCenter
+			});
+			
 			AddChild(progressBarContainer = new StackContainer()
 			{
 				//Width  = 300,

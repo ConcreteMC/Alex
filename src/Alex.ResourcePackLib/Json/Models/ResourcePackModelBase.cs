@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Alex.API.Resources;
 using Alex.ResourcePackLib.Json.Models.Blocks;
 using Alex.ResourcePackLib.Json.Models.Items;
 using Microsoft.Xna.Framework;
@@ -24,7 +25,7 @@ namespace Alex.ResourcePackLib.Json.Models
         /// Can be set to "builtin/generated" to use a model that is created out of the specified icon. Note that only the first layer is supported, and rotation can only be achieved using block states files.
         /// </summary>
         [JsonProperty("parent")]
-        public string ParentName;
+        public ResourceLocation ParentName;
         
         [JsonProperty("gui_light"), JsonConverter(typeof(StringEnumConverter))]
         public GuiLight? GuiLight;

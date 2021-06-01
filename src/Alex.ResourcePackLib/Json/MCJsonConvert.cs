@@ -41,6 +41,7 @@ namespace Alex.ResourcePackLib.Json
 			DefaultSettings.Converters.Add(new FontDefinitionConverter());
 			DefaultSettings.Converters.Add(new MoLangExpressionConverter());
 			DefaultSettings.Converters.Add(new AnimateElementConverter());
+			DefaultSettings.Converters.Add(new ResourceLocationConverter());
 			Serializer = JsonSerializer.Create(DefaultSettings);
 		}
 

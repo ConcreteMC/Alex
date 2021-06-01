@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using System;
+using Microsoft.Xna.Framework;
 using Rectangle = System.Drawing.Rectangle;
 
 namespace Alex.Utils
@@ -28,8 +29,8 @@ namespace Alex.Utils
 			Height = height;
 			Animated = animated;
 
-			YFrames = framesInHeight;
-			XFrames = framesInWidth;
+			YFrames =  Math.Max(framesInHeight, 1);
+			XFrames = Math.Max(framesInWidth, 1);
 			//int framesInWidth  = width / frameWidth;
 			//int framesInHeight = height / frameHeight;
 		}

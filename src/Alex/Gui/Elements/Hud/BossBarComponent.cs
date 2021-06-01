@@ -106,7 +106,8 @@ namespace Alex.Gui.Elements.Hud
 				Height = 5,
 				MinHeight = 5,
 				Width = MaxWidth,
-				MinWidth = MaxWidth
+				MinWidth = MaxWidth,
+				MaxWidth = MaxWidth
 			};
 
 			//_textureElement.Width = _textureElement.MinWidth = 182;

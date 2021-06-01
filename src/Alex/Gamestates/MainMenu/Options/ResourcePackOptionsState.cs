@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Alex.API.Data.Options;
 using Alex.API.Gui;
 using Alex.API.Gui.Elements;
 using Alex.API.Utils;
+using Alex.Gamestates.Common;
 using Alex.Gamestates.MainMenu.Options.Elements;
 using Alex.Gui;
 using Alex.ResourcePackLib;
@@ -15,31 +17,35 @@ using RocketUI;
 
 namespace Alex.Gamestates.MainMenu.Options
 {
-    public class ResourcePackOptionsState : OptionsStateBase
+    public class ResourcePackOptionsState : ListSelectionStateBase<ResourcePackEntry>
     {
         private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ResourcePackOptionsState));
         
         protected ResourcePackEntry[] Items => _items.ToArray();
         private List<ResourcePackEntry> _items { get; } = new List<ResourcePackEntry>();
 
-        protected ResourcePackEntry SelectedItem => ListContainer.SelectedItem as ResourcePackEntry;
+        //protected ResourcePackEntry SelectedItem => ListContainer.SelectedItem as ResourcePackEntry;
         
-        protected readonly SelectionList ListContainer;
+        //protected readonly SelectionList ListContainer;
 
         private Button _loadBtn;
-        public ResourcePackOptionsState(GuiPanoramaSkyBox skyBox) : base(skyBox)
+        private AlexOptions Options => Alex.Instance.Options.AlexOptions;
+        public ResourcePackOptionsState(GuiPanoramaSkyBox skyBox) : base()
         {
+            Background = new GuiTexture2D(skyBox, TextureRepeatMode.Stretch);
+            
             TitleTranslationKey = "resourcePack.title";
             
             Body.BackgroundOverlay = new Color(Color.Black, 0.35f);
             Body.ChildAnchor = Alignment.FillCenter;
             
-            AddRocketElement(ListContainer = new SelectionList()
+            /*AddRocketElement(ListContainer = new SelectionList()
             {
                 Anchor = Alignment.Fill,
                 ChildAnchor = Alignment.TopFill,
             });
-            ListContainer.SelectedItemChanged += HandleSelectedItemChanged;
+            ListContainer.SelectedItemChanged += HandleSelectedItemChanged;*/
+            
 
             var footerChildren = Footer.ChildElements.ToArray();
             foreach (var child in footerChildren)
@@ -127,10 +133,10 @@ namespace Alex.Gamestates.MainMenu.Options
                 _loadBtn.Enabled = false;
             }
         }
-
-        private void HandleSelectedItemChanged(object sender, SelectionListItem item)
+        
+        protected override void OnSelectedItemChanged(ResourcePackEntry newItem)
         {
-            if (item != null && item.Enabled)
+            if (newItem != null && newItem.Enabled)
             {
                 _loadBtn.Enabled = true;
             }
@@ -154,7 +160,7 @@ namespace Alex.Gamestates.MainMenu.Options
             
             AddItem(stockItem);
 
-            var enabled = base.Options.ResourceOptions.LoadedResourcesPacks.Value;
+            var enabled = this.Options.ResourceOptions.LoadedResourcesPacks.Value;
             
             foreach (var resource in Alex.Resources.ResourcePackDirectory.EnumerateFiles())
             {
@@ -195,25 +201,6 @@ namespace Alex.Gamestates.MainMenu.Options
             Reload();
         }
 
-        public void AddItem(ResourcePackEntry item)
-        {
-            _items.Add(item);
-            ListContainer.AddChild(item);
-        }
-        
-        public void RemoveItem(ResourcePackEntry item)
-        {
-            ListContainer.RemoveChild(item);
-            _items.Remove(item);
-        }
-        
-        public void ClearItems()
-        {
-            foreach (var item in _items)
-            {
-                ListContainer.RemoveChild(item);
-            }
-            _items.Clear();
-        }
+      
     }
 }

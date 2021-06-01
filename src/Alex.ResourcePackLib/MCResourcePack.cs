@@ -37,7 +37,7 @@ using MathHelper = Microsoft.Xna.Framework.MathHelper;
 
 namespace Alex.ResourcePackLib
 {
-	public class McResourcePack : ResourcePack, ITextureProvider, IBlockStateResourceProvider, IItemModelProvider, IBlockModelProvider, IDisposable
+	public class McResourcePack : ResourcePack, ITextureProvider, IBlockStateResourceProvider, IDisposable
 	{
 		public delegate void McResourcePackPreloadCallback(Image<Rgba32> fontBitmap, List<char> bitmapFontCharacters);
 
@@ -55,20 +55,13 @@ namespace Alex.ResourcePackLib
 		private static readonly Regex IsParticle            = new(@"^assets[\\\/](?'namespace'.*)[\\\/]particles[\\\/](?'filename'.*)\.json$", RegexOpts);
 		private static readonly Regex IsSoundDefinition     = new(@"^assets[\\\/](?'namespace'.*)[\\\/]sounds.json$", RegexOpts);
 
-		private readonly Dictionary<string, Lazy<BlockStateResource>> _blockStates   = new(StringComparer.OrdinalIgnoreCase);
-		private readonly Dictionary<ResourceLocation, ResourcePackModelBase>   _models    = new();
+		private readonly Dictionary<ResourceLocation, Lazy<BlockStateResource>> _blockStates   = new();
+		public Dictionary<ResourceLocation, ResourcePackModelBase>   Models    = new();
 		private readonly Dictionary<ResourceLocation, Lazy<Image<Rgba32>>> _bitmapCache      = new();
 		private readonly Dictionary<ResourceLocation, TextureMeta>         _textureMetaCache = new();
 		private readonly Dictionary<string, LanguageResource>              _languageCache    = new(StringComparer.OrdinalIgnoreCase);
 
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(McResourcePack));
-
-		public IReadOnlyDictionary<ResourceLocation, ResourcePackModelBase> BlockModels =>
-			_models.Where(x => x.Value.Type == ModelType.Block)
-			   .ToDictionary(x => x.Key, x => x.Value);
-		
-		public IReadOnlyDictionary<ResourceLocation, ResourcePackModelBase>   ItemModels        => _models.Where(x => x.Value.Type == ModelType.Item)
-		   .ToDictionary(x => x.Key, x => x.Value);
 		//public IReadOnlyDictionary<ResourceLocation, TextureMeta> TextureMetas => _textureMetaCache;
 		public IReadOnlyDictionary<ResourceLocation, Lazy<Image<Rgba32>>>          Textures          => _bitmapCache;
 		public IReadOnlyDictionary<string, LanguageResource>   Languages		 => _languageCache;
@@ -76,7 +69,7 @@ namespace Alex.ResourcePackLib
 		//public new ResourcePackInfo Info { get; private set; }
 
 		//public IFont Font { get; private set; }
-		
+	
 		public bool IsPreLoaded { get; private set; }
 		public bool IsLoaded { get; private set; }
 		
@@ -149,7 +142,7 @@ namespace Alex.ResourcePackLib
 			//	Info = GetManifest(archive, ResourcePackType.Java);
 			//}
 
-			Dictionary<ResourceLocation, ResourcePackModelBase> models = new Dictionary<ResourceLocation, ResourcePackModelBase>();
+			//Dictionary<ResourceLocation, ResourcePackModelBase> models = new Dictionary<ResourceLocation, ResourcePackModelBase>();
 
 			var total = archive.Entries.Count;
 			int count = 0;
@@ -202,7 +195,7 @@ namespace Alex.ResourcePackLib
 
 					var model = ReadModel(entry, resourceLocation);
 					if (model != null)
-						models.Add(resourceLocation, model);
+						Models.Add(resourceLocation, model);
 
 					continue;
 				}
@@ -221,64 +214,6 @@ namespace Alex.ResourcePackLib
 					continue;
 				}
 			}
-
-			total = models.Count;
-			count = 0;
-
-			foreach (var model in models.OrderBy(
-				x => (string.IsNullOrWhiteSpace(x.Value.ParentName) || x.Value.ParentName.StartsWith("builtin/")) ? 0 : 1))
-			{
-				ProgressReporter?.Invoke((int) (((double) count / (double) total) * 100D), model.Key.ToString());
-
-				ProcessModel(model.Key, model.Value, ref models);
-
-				count++;
-			}
-
-			foreach (var m in models.Where(x => x.Value.Type == ModelType.Block)
-			   .OrderByDescending(x => !string.IsNullOrWhiteSpace(x.Value.ParentName)))
-			{
-				var model = m.Value;
-
-				if (model.Elements != null)
-				{
-					for (var index = 0; index < model.Elements.Length; index++)
-					{
-						var element = model.Elements[index];
-
-						if (element.Faces != null)
-						{
-							foreach (var face in element.Faces.ToArray())
-							{
-								if (face.Value != null && !string.IsNullOrWhiteSpace(face.Value.Texture))
-								{
-									var result = ResolveTexture(model, face.Value.Texture);
-
-									if (!string.IsNullOrWhiteSpace(result))
-									{
-										model.Elements[index].Faces[face.Key].Texture = result;
-									}
-								}
-
-								//face.Value.Texture
-							}
-						}
-					}
-				}
-			}
-
-			/*var blockStates = _blockStates.ToArray();
-			total = blockStates.Length;
-			count = 0;
-			
-			foreach (var blockState in blockStates.OrderBy(x => x.Value.Parts.Length + x.Value.Variants.Count))
-			{
-				ProgressReporter?.Invoke((int)(((double)count / (double)total) * 100D), blockState.Key.ToString());
-				
-				_blockStates[blockState.Key] = blockState.Value;
-
-				count++;
-			}*/
 
 			LoadColormap();
 
@@ -558,7 +493,7 @@ namespace Alex.ResourcePackLib
 			}
 		}
 		
-		public bool TryGetBlockState(string modelName, out BlockStateResource stateResource)
+		public bool TryGetBlockState(ResourceLocation modelName, out BlockStateResource stateResource)
 		{
 			if (_blockStates.TryGetValue(modelName, out var lazy))
 			{
@@ -593,98 +528,6 @@ namespace Alex.ResourcePackLib
 
 				return null;
 			}
-		}
-		
-		private ResourcePackModelBase ProcessModel(ResourceLocation resourceLocation, ResourcePackModelBase model, ref Dictionary<ResourceLocation, ResourcePackModelBase> models)
-		{
-			if (_models.TryGetValue(resourceLocation, out var existingModel))
-				return existingModel;
-
-			if (!string.IsNullOrWhiteSpace(model.ParentName) && !model.ParentName.Equals(resourceLocation.Path, StringComparison.OrdinalIgnoreCase))
-			{
-				ResourceLocation parentKey = new ResourceLocation(model.ParentName);
-
-			/*	if (model.ParentName.Equals("builtin/generated"))
-				{
-					model.Display = new Dictionary<string, DisplayElement>()
-					{
-						{"gui", new DisplayElement(new Vector3(30, 225, 0), new Vector3(0,0,0), new Vector3(0.625f, 0.625f, 0.625f))},
-						{"ground", new DisplayElement(new Vector3(0, 0, 0), new Vector3(0,3,0), new Vector3(0.25f, 0.25f, 0.25f))},
-						{"fixed", new DisplayElement(new Vector3(0, 0, 0), new Vector3(0,0,0), new Vector3(0.5f, 0.5f, 0.5f))},
-						{"thirdperson_righthand", new DisplayElement(new Vector3(75, 45, 0), new Vector3(0,2.5f,0), new Vector3(0.375f, 0.375f, 0.375f))},
-						{"firstperson_righthand", new DisplayElement(new Vector3(0, 45, 0), new Vector3(0,0,0), new Vector3(0.4f, 0.4f, 0.4f))},
-						{"firstperson_lefthand", new DisplayElement(new Vector3(0, 225, 0), new Vector3(0,0,0), new Vector3(0.4f, 0.4f, 0.4f))}
-						//  {"gui", new DisplayElement(new Vector3(30, 255, 0), new Vector3(0,0,0), new Vector3(0.625f, 0.625f, 0.625f))}
-					};
-				}*/
-				
-				ResourcePackModelBase parent;
-				if (!_models.TryGetValue(parentKey, out parent))
-				{
-					if (models.TryGetValue(parentKey, out parent))
-					{
-						parent = ProcessModel(parentKey, parent, ref models);
-					}
-				}
-
-				if (parent != null)
-				{
-					model.UpdateValuesFromParent(parent);
-					//model.Parent = parent;
-				}
-			}
-
-			_models.Add(resourceLocation, model);
-			return model;
-		}
-		
-		private static string ResolveTexture(ResourcePackModelBase var, string texture)
-		{
-			if (texture[0] != '#')
-				return texture;
-
-			var original = texture;
-			var modified = texture.Substring(1);
-			if (var.Textures.TryGetValue(modified, out texture))
-			{
-				if (texture[0] == '#')
-				{
-					if (!var.Textures.TryGetValue(texture.Substring(1), out texture))
-					{
-						//texture = "no_texture";
-						return original;
-					}
-				}
-			}
-
-			return texture;
-		}
-		
-		public bool TryGetBlockModel(ResourceLocation modelName, out ResourcePackModelBase model)
-		{
-			if (BlockModels.TryGetValue(modelName, out model))
-				return true;
-
-			var m = BlockModels.FirstOrDefault(x => x.Key.ToString().EndsWith(modelName.Path, StringComparison.OrdinalIgnoreCase))
-			                    .Value;
-
-			if (m != null)
-			{
-				model = m;
-				return true;
-			}
-			
-			model = null;
-			return false;
-		}
-		
-		/// <inheritdoc />
-		public bool TryGetItemModel(ResourceLocation resourceLocation, out ResourcePackModelBase model)
-		{
-			if (ItemModels.TryGetValue(resourceLocation, out model))
-				return true;
-			
-			return false;
 		}
 		
 		#endregion
