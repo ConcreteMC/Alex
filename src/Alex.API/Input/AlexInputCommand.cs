@@ -24,6 +24,7 @@ namespace Alex.API.Input
         [InputCommandDescriptor("key.keyboard.f3")] public static readonly InputCommand ToggleDebugInfo      = InputCommand.ToggleDebugInfo;
         [InputCommandDescriptor("key.chat")] public static readonly InputCommand ToggleChat           = new(AlexNamespace, nameof(ToggleChat));
         [InputCommandDescriptor("key.togglePerspective")] public static readonly InputCommand ToggleCamera         = new(AlexNamespace, nameof(ToggleCamera));
+        [InputCommandDescriptor("key.screenshot")] public static readonly InputCommand TakeScreenshot         = new(AlexNamespace, nameof(TakeScreenshot));
        // [InputCommandDescriptor("")] public static readonly InputCommand ToggleCameraFree     = new(AlexNamespace, nameof(ToggleCameraFree));
         [InputCommandDescriptor("")] public static readonly InputCommand ToggleWireframe      = new(AlexNamespace, nameof(ToggleWireframe));
         [InputCommandDescriptor("key.inventory")] public static readonly InputCommand ToggleInventory      = new(AlexNamespace, nameof(ToggleInventory));

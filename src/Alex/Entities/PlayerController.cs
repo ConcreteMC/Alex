@@ -1,19 +1,29 @@
 ﻿using System;
+using System.IO;
+using System.Linq;
+using Alex.API.Data;
 using Alex.API.Input;
 using Alex.API.Services;
 using Alex.API.Utils;
+using Alex.Gamestates.InGame;
 using Alex.Graphics.Camera;
 using Alex.Gui.Dialogs.Containers;
+using Alex.Gui.Elements;
 using Alex.Worlds;
 using Alex.Worlds.Multiplayer.Bedrock;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using MiNET.Utils;
 using NLog;
 using RocketUI;
 using RocketUI.Input;
 using RocketUI.Input.Listeners;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
+using Color = Microsoft.Xna.Framework.Color;
+using Image = SixLabors.ImageSharp.Image;
 using MathF = System.MathF;
 
 namespace Alex.Entities
@@ -167,6 +177,56 @@ namespace Alex.Entities
 				if (InputManager.IsPressed(AlexInputCommand.DropItem))
 				{
 					Player.DropHeldItem();
+				}
+
+				if (InputManager.IsPressed(AlexInputCommand.TakeScreenshot))
+				{
+					//Take screenshot.
+					Alex.Instance.UiTaskManager.Enqueue(
+						() =>
+						{
+							var blendMode = Graphics.BlendState;
+
+							try
+							{
+								Graphics.BlendState = BlendState.NonPremultiplied;
+
+								var graphicsDevice = Alex.Instance.GraphicsDevice;
+								//	var viewPort = Alex.Instance.DeviceManager.PreferredBackBufferWidth
+								var w = graphicsDevice.PresentationParameters.BackBufferWidth;
+								var h = graphicsDevice.PresentationParameters.BackBufferHeight;
+								Color[] data = new Color[w * h];
+
+								graphicsDevice.GetBackBufferData(data);
+
+								Image<Rgba32> t = Image.LoadPixelData(
+									data.Select(x => new Rgba32(x.PackedValue)).ToArray(), w, h);
+
+								//Texture2D t = new Texture2D(graphicsDevice, w, h, false, SurfaceFormat.Color);
+								//t.SetData(data);
+								var pics = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures);
+								var screenshotPath = Path.Combine(pics, $"alex-{DateTime.Now.ToString("s")}.png");
+
+								using (FileStream fs = File.OpenWrite(screenshotPath))
+								{
+									t.SaveAsPng(fs);
+								}
+
+								t.Dispose();
+
+								ChatComponent.AddSystemMessage(
+									$"{ChatColors.Gray}{ChatFormatting.Italic}Saved screenshot to: {screenshotPath}");
+							}
+							catch (Exception error)
+							{
+								Log.Error(error, $"Failed to save screenshot.");
+								ChatComponent.AddSystemMessage($"{ChatColors.Red}Failed to save screenshot, see console for more information.");
+							}
+							finally
+							{
+								Graphics.BlendState = blendMode;
+							}
+						});
 				}
 		    }
 

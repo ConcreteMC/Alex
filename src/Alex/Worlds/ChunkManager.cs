@@ -617,7 +617,7 @@ namespace Alex.Worlds
 		{
 			int drawCount = 0;
 			var originalBlendState = args.GraphicsDevice.BlendState;
-
+			var originalCullMode = args.GraphicsDevice.RasterizerState;
 			if (stages == null || stages.Length == 0)
 				stages = RenderStages;
 
@@ -632,6 +632,7 @@ namespace Alex.Worlds
 			foreach (var stage in stages)
 			{
 				args.GraphicsDevice.BlendState = originalBlendState;
+				args.GraphicsDevice.RasterizerState = originalCullMode;
 				
 				Effect effect   = forceEffect;
 				if (forceEffect == null)
@@ -649,6 +650,14 @@ namespace Alex.Worlds
 							effect = shaders.TransparentEffect;
 							break;
 						case RenderStage.Liquid:
+							if (World.Player.HeadInWater)
+							{
+								args.GraphicsDevice.RasterizerState = RasterizerState.CullNone;
+							}
+
+							effect = shaders.AnimatedEffect;
+
+							break;
 						case RenderStage.Animated:
 							effect = shaders.AnimatedEffect;
 							break;

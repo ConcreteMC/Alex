@@ -156,6 +156,7 @@ namespace Alex
             {
                 Gpu = args.GraphicsDeviceInformation.Adapter.Description;
                 args.GraphicsDeviceInformation.PresentationParameters.DepthStencilFormat = DepthFormat.Depth24Stencil8;
+                DeviceManager.PreferredBackBufferFormat = SurfaceFormat.Color;
                 DeviceManager.PreferMultiSampling = true;
                 
                 DeviceManager.PreferredBackBufferWidth = WindowSize.X;

@@ -35,6 +35,7 @@ namespace Alex.Gui.Elements
 		public  NetworkProvider  Network         { get; set; }
 		public CommandProvider CommandProvider { get; set; } = null;
 
+		private static ChatComponent _instance;
 		public ChatComponent()
 		{
 			Anchor = Alignment.BottomLeft;
@@ -64,6 +65,8 @@ namespace Alex.Gui.Elements
 			base.TextElement.Anchor = Alignment.BottomLeft;
 
 			BorderColor = Color.Transparent;
+			
+			_instance = this;
 		}
 
 		protected override void OnFocusActivate()
@@ -598,6 +601,11 @@ namespace Alex.Gui.Elements
 				Match = tabCompleteMatch;
 				Size = size;
 			}
+		}
+
+		public static void AddSystemMessage(string message)
+		{
+			_instance?.AddMessage(message, MessageType.System);
 		}
 	}
 

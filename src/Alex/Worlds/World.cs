@@ -258,6 +258,7 @@ namespace Alex.Worlds
         
 	//	private float _fovModifier  = -1;
 		private float _brightnessMod = 0f;
+		private bool _wasInWater = false;
 		public void Update(UpdateArgs args)
 		{
 			if (_destroyed)
@@ -284,15 +285,25 @@ namespace Alex.Worlds
 			EntityManager.Update(args);
 				///PhysicsEngine.Update(args.GameTime);
 
+			bool inWater = Player.HeadInWater;
+			
 			if (Math.Abs(_brightnessMod - SkyBox.BrightnessModifier) > 0f)
 			{
 				_brightnessMod = SkyBox.BrightnessModifier;
 				
 				var diffuseColor = Color.White.ToVector3() * SkyBox.BrightnessModifier;
 				ChunkManager.AmbientLightColor = diffuseColor;
-				ChunkManager.FogColor = SkyBox.WorldFogColor.ToVector3();
-				ChunkManager.FogDistance = args.Camera.FarDistance;
-				
+
+				if (!inWater)
+				{
+					if (_wasInWater || ChunkManager.FogEnabled)
+					{
+						ChunkManager.FogColor = SkyBox.WorldFogColor.ToVector3();
+						ChunkManager.FogDistance = args.Camera.FarDistance;
+						ChunkManager.FogEnabled = Options.VideoOptions.Fog.Value;
+					}
+				}
+
 				if (Math.Abs(ChunkManager.Shaders.BrightnessModifier - SkyBox.BrightnessModifier) > 0f)
 				{
 					ChunkManager.Shaders.BrightnessModifier = SkyBox.BrightnessModifier;
@@ -305,8 +316,23 @@ namespace Alex.Worlds
 					modelRenderer.DiffuseColor = diffuseColor;
 				}
 			}
-
+			
 			Player?.Update(args);
+			
+			if (inWater && !_wasInWater)
+			{
+				ChunkManager.FogColor = new Color(68, 175, 245).Darken(0.3f).ToVector3();
+				ChunkManager.FogDistance = 16;
+				ChunkManager.FogEnabled = true;
+			}
+			else if (_wasInWater && !inWater)
+			{
+				ChunkManager.FogColor = SkyBox.WorldFogColor.ToVector3();
+				ChunkManager.FogDistance = args.Camera.FarDistance;
+				ChunkManager.FogEnabled = Options.VideoOptions.Fog.Value;
+			}
+
+			_wasInWater = inWater;
 		}
 
 		public void OnTick()
