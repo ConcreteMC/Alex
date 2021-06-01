@@ -29,7 +29,7 @@ namespace Alex.ResourcePackLib.IO
 			Entries = new ReadOnlyCollection<IFile>(entries);
 		}
 
-		private static string NormalizePath(string path)
+		internal static string NormalizePath(string path)
 		{
 			return path.Replace('\\', '/');
 		}

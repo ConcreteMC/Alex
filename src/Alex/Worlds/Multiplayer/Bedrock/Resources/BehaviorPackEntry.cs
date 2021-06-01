@@ -11,7 +11,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(BehaviorPackEntry));
 		private ResourcePackInfo Info { get; }
 		private ZipFileSystem FileSystem { get; set; } = null;
-		public BedrockResourcePack ResourcePack { get; private set; }
+		//public BedrockResourcePack ResourcePack { get; private set; }
 
 		/// <inheritdoc />
 		public BehaviorPackEntry(ResourcePackInfo info) : base(info.UUID, info.Version)
@@ -36,7 +36,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 				FileSystem.UseEncryption(Info.ContentKey);
 			}
 			
-			ResourcePack = new BedrockResourcePack(FileSystem);
+			//ResourcePack = new BedrockResourcePack(FileSystem);
 
 			//Log.Info($"Behaviorpack contains {ResourcePack.Textures.Count} textures");
 		}

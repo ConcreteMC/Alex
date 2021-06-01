@@ -121,6 +121,8 @@
     <EmbeddedResource Include="Resources\default_font.png" />
     <None Remove="Resources\nethergames.png" />
     <EmbeddedResource Include="Resources\nethergames.png" />
+    <None Remove="Resources\AlexDefault.zip" />
+    <EmbeddedResource Include="Resources\AlexDefault.zip" />
   </ItemGroup>
 
   <ItemGroup>

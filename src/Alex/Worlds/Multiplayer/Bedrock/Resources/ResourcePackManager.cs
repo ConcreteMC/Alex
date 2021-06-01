@@ -139,7 +139,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 				{
 					//	Log.Info($"Texturepack contains {tpe.ResourcePack.Textures.Count} textures");
 				}
-				//_resourceManager
 			}
 			else
 			{

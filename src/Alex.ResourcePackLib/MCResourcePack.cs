@@ -91,8 +91,9 @@ namespace Alex.ResourcePackLib
 		public  IDictionary<string, SoundDefinition> SoundDefinitions { get; private set; }
 		
 		private IFilesystem Filesystem  { get; set; }
-		public McResourcePack(IFilesystem archive, McResourcePackPreloadCallback preloadCallback, LoadProgress progressReporter = null)
+		public McResourcePack(IFilesystem archive, McResourcePackPreloadCallback preloadCallback, ResourcePackManifest manifest, LoadProgress progressReporter = null)
 		{
+			Info = manifest;
 			Filesystem = archive;
 			ProgressReporter = progressReporter;
 			
@@ -223,7 +224,7 @@ namespace Alex.ResourcePackLib
 
 		private void LoadMeta(IFilesystem archive)
 		{
-			Info = GetManifest(archive);
+			//Info = GetManifest(archive);
 			/*ResourcePackInfo info;
 
 			var entry = archive.GetEntry("pack.mcmeta");

@@ -53,7 +53,7 @@ namespace Alex.ResourcePackLib.IO
 		/// <inheritdoc />
 		public IFile GetEntry(string name)
 		{
-			return _entries.FirstOrDefault(x => x.Name == name);
+			return _entries.FirstOrDefault(x => x.FullName == name);
 		}
 		
 		public override string ToString()
@@ -76,7 +76,7 @@ namespace Alex.ResourcePackLib.IO
 				_archive = archive;
 				_entry = entry;
 
-				FullName = entry.FileName;
+				FullName = DiskFileSystem.NormalizePath(entry.FileName);
 				Name = Path.GetFileName(FullName);
 				Length = entry.UncompressedSize;
 			}

@@ -16,7 +16,14 @@ using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
 using RocketUI;
 using RocketUI.Audio;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Processing;
 using AudioEngine = Alex.Audio.AudioEngine;
+using Color = Microsoft.Xna.Framework.Color;
+using Point = SixLabors.ImageSharp.Point;
+using Rectangle = Microsoft.Xna.Framework.Rectangle;
+using Size = RocketUI.Size;
 
 namespace Alex.Gui
 {
@@ -55,6 +62,7 @@ namespace Alex.Gui
 		private Texture2D _craftingTable;
 		private Texture2D _furnace;
 		private Texture2D _tabItemSearch;
+		private Texture2D _mcLogo;
 		
 		#region SpriteSheet Definitions
 
@@ -250,7 +258,7 @@ namespace Alex.Gui
 
 		private void LoadEmbeddedTextures()
 		{
-			LoadTextureFromEmbeddedResource(AlexGuiTextures.AlexLogo, ResourceManager.ReadResource("Alex.Resources.logo2.png"));
+			//LoadTextureFromEmbeddedResource(AlexGuiTextures.AlexLogo, ResourceManager.ReadResource("Alex.Resources.logo2.png"));
 			LoadTextureFromEmbeddedResource(AlexGuiTextures.ProgressBar, ResourceManager.ReadResource("Alex.Resources.ProgressBar.png"));
 			LoadTextureFromEmbeddedResource(AlexGuiTextures.SplashBackground, ResourceManager.ReadResource("Alex.Resources.Splash.png"));
 			LoadTextureFromEmbeddedResource(AlexGuiTextures.GradientBlur, ResourceManager.ReadResource("Alex.Resources.GradientBlur.png"));							
@@ -261,6 +269,35 @@ namespace Alex.Gui
 			//progressReceiver?.UpdateProgress(0, null, "gui/widgets");
 			//LoadTextureFromResourcePack(GuiTextures.AlexLogo, resourcePack, "");
 
+			progressReceiver?.UpdateProgress(0, null, "gui/title/minecraft");
+			Image<Rgba32> mcBmp;
+
+			if (resourceManager.TryGetBedrockBitmap("textures/ui/title", out mcBmp))
+			{
+				mcBmp.Mutate(x => x.Resize(275, 44));
+
+				_mcLogo = TextureUtils.BitmapToTexture2D(this, _graphicsDevice, mcBmp);
+				LoadTextureFromSpriteSheet(AlexGuiTextures.AlexLogo, _mcLogo, new Rectangle(0, 0, 275, 44), new Size(275, 44));
+			} 
+			else if (resourceManager.TryGetBitmap("gui/title/minecraft", out mcBmp))
+			{
+				var part1 = mcBmp.Clone();
+				part1.Mutate(x => x.Crop(new SixLabors.ImageSharp.Rectangle(0,0, 154, 44)));
+				
+				var part2 = mcBmp.Clone();
+				part2.Mutate(x => x.Crop(new SixLabors.ImageSharp.Rectangle(0,46, 119, 44)));
+
+				var finalLogo = new Image<Rgba32>(275, 44);
+				finalLogo.Mutate(x =>
+				{
+					x.DrawImage(part1, new Point(1, 0), PixelColorBlendingMode.Normal, 1f);
+					x.DrawImage(part2, new Point(156, 0), PixelColorBlendingMode.Normal, 1f);
+				});
+				
+				_mcLogo = TextureUtils.BitmapToTexture2D(this, _graphicsDevice, finalLogo);
+				LoadTextureFromSpriteSheet(AlexGuiTextures.AlexLogo, _mcLogo, new Rectangle(0, 0, 273, 44), new Size(273, 44));
+			}
+			
 			// First load Widgets
 			progressReceiver?.UpdateProgress(0, null, "gui/widgets");
 			if (resourceManager.TryGetBitmap("gui/widgets", out var widgetsBmp))

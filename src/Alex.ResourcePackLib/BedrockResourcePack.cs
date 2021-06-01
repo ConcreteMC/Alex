@@ -11,6 +11,7 @@ using Alex.API.Resources;
 using Alex.API.Utils;
 using Alex.MoLang.Parser.Exceptions;
 using Alex.ResourcePackLib.Abstraction;
+using Alex.ResourcePackLib.Generic;
 using Alex.ResourcePackLib.IO.Abstract;
 using Alex.ResourcePackLib.Json;
 using Alex.ResourcePackLib.Json.Bedrock;
@@ -51,11 +52,12 @@ namespace Alex.ResourcePackLib
 		
 		private readonly IFilesystem _archive;
 
-		public BedrockResourcePack(IFilesystem archive, ResourcePack.LoadProgress progressReporter = null)
+		public BedrockResourcePack(IFilesystem archive, ResourcePackManifest manifest, ResourcePack.LoadProgress progressReporter = null)
 		{
+			Info = manifest;
 			_archive = archive;
 
-			Info = GetManifest(archive);
+			//Info = GetManifest(archive);
 			Load(progressReporter);
 		}
 
@@ -101,6 +103,8 @@ namespace Alex.ResourcePackLib
 		private static readonly Regex IsFontFile    = new Regex(@"^font[\\\/](?'filename'.*)\.png$", RegexOpts);
 		private static readonly Regex IsParticleFile    = new Regex(@"^particles[\\\/](?'filename'.*)\.json$", RegexOpts);
 		private static readonly Regex IsAttachableFile    = new Regex(@"^attachables[\\\/](?'filename'.*)\.json$", RegexOpts);
+		
+		private static readonly Regex IsUiTexture    = new Regex(@"^textures[\\\/]ui[\\\/](?'filename'.*)\.png", RegexOpts);
 		private void Load(ResourcePack.LoadProgress progressReporter)
 		{
 			Dictionary<ResourceLocation, EntityDescription> entityDefinitions = new Dictionary<ResourceLocation, EntityDescription>();
@@ -116,6 +120,8 @@ namespace Alex.ResourcePackLib
 				new Dictionary<string, AttachableDefinition>();
 			Dictionary<string, Animation>
 				animations = new Dictionary<string, Animation>();
+			
+			TryAddBitmap("textures/ui/title");
 			
 			if (TryLoadMobModels(entityModels))
 			{
@@ -133,6 +139,12 @@ namespace Alex.ResourcePackLib
 					count++;
 					progressReporter?.Invoke((int) (((double) count / (double) total) * 100D), entry.FullName);
 
+					if (IsUiTexture.IsMatch(entry.FullName))
+					{
+						ProcessTexture(entry);
+						continue;
+					}
+					
 					if (IsEntityDefinition.IsMatch(entry.FullName))
 					{
 						LoadEntityDefinition(entry, entityDefinitions);
@@ -200,6 +212,7 @@ namespace Alex.ResourcePackLib
 					Log.Warn(ex, $"Could not process file in resource pack: '{entry.FullName}' continuing anyways...");
 				}
 			}
+
 			EntityModels = ProcessEntityModels(entityModels);
 
 			//Log.Info($"Processed {EntityModels.Count} entity models");
@@ -211,6 +224,11 @@ namespace Alex.ResourcePackLib
 			Particles = particleDefinitions;
 			Attachables = attachableDefinitions;
 			// Log.Info($"Processed {EntityDefinitions.Count} entity definitions");
+		}
+
+		private void ProcessTexture(IFile entry)
+		{
+			
 		}
 
 		private void ProcessAttachable(IFile entry, Dictionary<string, AttachableDefinition> attachableDefinitions)

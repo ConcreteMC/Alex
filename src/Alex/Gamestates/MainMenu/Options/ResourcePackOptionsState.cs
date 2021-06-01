@@ -169,16 +169,19 @@ namespace Alex.Gamestates.MainMenu.Options
                     if (resource.FullName.EndsWith(".zip", StringComparison.OrdinalIgnoreCase))
                     {
                         if (Alex.Resources.TryLoadResourcePackInfo(resource.FullName,
-                            out ResourcePackManifest packInfo))
+                            out ResourcePackManifest[] packInfos))
                         {
-                            var item = new ResourcePackEntry(packInfo, resource.FullName);
-
-                            if (enabled.Any(x => x.ToLower().Contains(resource.Name.ToLower())))
+                            foreach (var packInfo in packInfos)
                             {
-                                item.SetLoaded(true);
-                            }
+                                var item = new ResourcePackEntry(packInfo, resource.FullName);
 
-                            AddItem(item);
+                                if (enabled.Any(x => x.ToLower().Contains(resource.Name.ToLower())))
+                                {
+                                    item.SetLoaded(true);
+                                }
+
+                                AddItem(item);
+                            }
                         }
                     }
                 }

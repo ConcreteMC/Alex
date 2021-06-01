@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.IO.Compression;
@@ -29,7 +30,7 @@ namespace Alex.ResourcePackLib
 
 	    }
 
-		public static ResourcePackManifest GetManifest(IFilesystem archive)
+		public static IEnumerable<ResourcePackManifest> GetManifests(IFilesystem archive)
 		{
 			//if (archive.GetEntry("pack.mcmeta") != null)
 
@@ -37,6 +38,7 @@ namespace Alex.ResourcePackLib
 
 			if (entry != null)
 			{
+				ResourcePackManifest manifest = null;
 				ResourcePackInfo info;
 
 				using (TextReader reader = new StreamReader(entry.Open()))
@@ -60,7 +62,7 @@ namespace Alex.ResourcePackLib
 							
 							var bmp  = Image.Load(stream).CloneAs<Rgba32>();
 
-							return new ResourcePackManifest(bmp, "", info.Description, ResourcePackType.Java);
+							manifest = new ResourcePackManifest(bmp, "", info.Description, ResourcePackType.Java);
 						}
 					}
 				}
@@ -69,13 +71,20 @@ namespace Alex.ResourcePackLib
 					Log.Warn(ex, $"Could not read resourcepack logo: {archive.ToString()}");
 				}
 
-				return new ResourcePackManifest("", info.Description, ResourcePackType.Java);
+				if (manifest == null)
+				{
+					manifest = new ResourcePackManifest("", info.Description, ResourcePackType.Java);
+				}
+
+				if (manifest != null)
+					yield return manifest;
 			}
 
 			entry = archive.GetEntry("manifest.json");
 
 			if (entry != null)
 			{
+				ResourcePackManifest manifest = null;
 				//Load bedrock meta
 				McPackManifest info;
 
@@ -101,7 +110,7 @@ namespace Alex.ResourcePackLib
 							
 							var bmp = Image.Load(stream).CloneAs<Rgba32>();
 
-							return new ResourcePackManifest(bmp, info.Header.Name, info.Header.Description, ResourcePackType.Bedrock);
+							manifest = new ResourcePackManifest(bmp, info.Header.Name, info.Header.Description, ResourcePackType.Bedrock);
 						}
 					}
 				}
@@ -110,11 +119,14 @@ namespace Alex.ResourcePackLib
 					Log.Warn(ex, $"Could not read resourcepack logo: {archive.ToString()}");
 				}
 
-				return new ResourcePackManifest(info.Header.Name, info.Header.Description, ResourcePackType.Bedrock);
+				if (manifest == null)
+				{
+					manifest = new ResourcePackManifest(info.Header.Name, info.Header.Description, ResourcePackType.Bedrock);
+				}
+
+				if (manifest != null)
+					yield return manifest;
 			}
-
-
-			return null;
 		}
     }
 }

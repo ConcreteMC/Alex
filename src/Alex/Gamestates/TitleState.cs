@@ -137,7 +137,7 @@ namespace Alex.Gamestates
                 TextColor = (Color) TextColor.Yellow,
                 Rotation = 17.5f,
 
-                Margin = new Thickness(240, 15, 0, 0),
+                Margin = new Thickness(275, 15, 0, 0),
                 Anchor = Alignment.TopCenter,
 
                 Text = "Who liek minecwaf?!",
