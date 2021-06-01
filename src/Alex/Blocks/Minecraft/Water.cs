@@ -20,7 +20,7 @@ namespace Alex.Blocks.Minecraft
 		{
 			Solid = false;
 			Transparent = true;
-			HasHitbox = true;
+			HasHitbox = false;
 			//BlockModel = BlockFactory.StationairyWaterModel;
 
 			//IsWater = true;
