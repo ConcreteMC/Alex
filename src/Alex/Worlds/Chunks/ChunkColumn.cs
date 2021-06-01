@@ -54,6 +54,7 @@ namespace Alex.Worlds.Chunks
 		internal bool ScheduledForUpdate { get; set; } = false;
 
 		private System.Collections.BitArray _scheduledUpdates;
+		private ChunkOctree _octree;
 		public ChunkColumn(int x, int z)
 		{
 			X = x;
@@ -69,9 +70,14 @@ namespace Alex.Worlds.Chunks
 			
 			ChunkData = new ChunkData(x,z);
 			//ChunkData.KeepInMemory = Alex.Instance.Options.AlexOptions.VideoOptions.
-			//	_octree = new ChunkOctree( bounds );
+			_octree = new ChunkOctree(new BoundingBox(Vector3.Zero, new Vector3(16,256, 16)));
 		
 			_scheduledUpdates = new System.Collections.BitArray((16 * 256 * 16), false);
+		}
+
+		public bool Collides(BoundingBox box, ref List<BoundingBox> collisions)
+		{
+			return _octree.Collides(box, ref collisions);
 		}
 
 		protected void SetScheduled(int x, int y, int z, bool value)
@@ -196,6 +202,11 @@ namespace Alex.Worlds.Chunks
 									{
 										model.GetVertices(world, chunkData, blockPosition, blockState);
 									}
+
+								//	foreach (var bb in blockState.Block.GetBoundingBoxes(blockPosition))
+								//	{
+								//		_octree.Add(bb);
+								//	}
 								}
 
 							}
