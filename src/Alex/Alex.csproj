@@ -140,6 +140,7 @@
     <PackageReference Include="Mono.Cecil" Version="0.11.3" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageReference Include="NLog" Version="4.7.9" />
+    <PackageReference Include="PuppeteerSharp" Version="4.0.0" />
     <PackageReference Include="System.Globalization" Version="4.3.0" />
     <PackageReference Include="System.Reactive.Core" Version="5.0.0" />
     <PackageReference Include="System.Reactive.Interfaces" Version="5.0.0" />
@@ -193,7 +194,6 @@
 
   <ItemGroup>
     <Folder Include="Audio\Models" />
-    <Folder Include="Gui\Elements\Web" />
     <Folder Include="Particles\Builtin" />
   </ItemGroup>
 
@@ -202,10 +202,16 @@
       <ReferencePath Condition="'%(FileName)' == 'Splat'">
         <Aliases>SuperSplat</Aliases>
       </ReferencePath>
-      <ReferencePath Condition="'%(FileName)' == 'Chromely.CefGlue.Winapi'">
-        <Aliases>CefGlueWIN</Aliases>
-      </ReferencePath>
     </ItemGroup>
   </Target>
+  
+  <ItemGroup>
+    <Reference Update="CefSharp">
+      <Private>true</Private>
+    </Reference>
+    <Reference Update="CefSharp.Core">
+      <Private>true</Private>
+    </Reference>
+  </ItemGroup>
 
 </Project>

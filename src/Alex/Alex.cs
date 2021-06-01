@@ -27,6 +27,7 @@ using Alex.Gamestates.InGame;
 using Alex.Gamestates.Login;
 using Alex.Graphics.Models.Blocks;
 using Alex.Gui;
+using Alex.Gui.Dialogs;
 using Alex.Gui.Dialogs.Containers;
 using Alex.Gui.Elements;
 using Alex.Items;
@@ -456,6 +457,7 @@ namespace Alex
             
             Components.Add(ParticleManager);
             
+           // GuiManager.ShowDialog(new BrowserDialog());
             //	Log.Info($"Initializing Alex...");
             ThreadPool.QueueUserWorkItem(
                 async (o) =>

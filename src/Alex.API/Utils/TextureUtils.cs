@@ -95,7 +95,7 @@ namespace Alex.API.Utils
 	        }*/
         }
 
-		public static Texture2D ImageToTexture2D(object owner, GraphicsDevice device, byte[] bmp)
+		public static ManagedTexture2D ImageToTexture2D(object owner, GraphicsDevice device, byte[] bmp)
 		{
 			//using (MemoryStream s = new MemoryStream(bmp))
 			{
