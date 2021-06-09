@@ -463,6 +463,9 @@ namespace Alex.Gui
 			
 			LoadTextureFromSpriteSheet(AlexGuiTextures.ExperienceBackground, spriteSheet, new Rectangle(0, 64, 182, 5), IconSize);
 			LoadTextureFromSpriteSheet(AlexGuiTextures.Experience, spriteSheet, new Rectangle(0, 69, 182, 5), IconSize);
+			
+			LoadTextureFromSpriteSheet(AlexGuiTextures.AirBubble, spriteSheet, new Rectangle(16, 18, 9, 9), IconSize);
+			LoadTextureFromSpriteSheet(AlexGuiTextures.PoppedAirBubble, spriteSheet, new Rectangle(25, 18, 9, 9), IconSize);
 		}
 		
 		private Size BarsSize { get; } = new Size(256, 256);

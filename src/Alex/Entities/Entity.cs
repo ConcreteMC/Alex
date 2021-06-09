@@ -509,6 +509,10 @@ namespace Alex.Entities
 			CheckHeldItem();
 		}
 
+		public bool CanPowerJump { get; set; } = false;
+		public bool CanClimb { get; set; } = false;
+		public bool CanSwim { get; set; } = false;
+		
 		public double AttackTime => -1d;
 		
 		[MoProperty("is_onfire"), MoProperty("is_on_fire")]
@@ -1069,6 +1073,11 @@ namespace Alex.Entities
 			IsBlocking = data[71];
 			IsSpinAttacking = data[55];
 			IsSwimming = data[56];
+
+			CanSwim = data[(int) MiNET.Entities.Entity.DataFlags.CanSwim];
+			CanClimb = data[(int) MiNET.Entities.Entity.DataFlags.CanClimb];
+			CanFly = data[(int) MiNET.Entities.Entity.DataFlags.CanFly];
+			CanPowerJump = data[(int) MiNET.Entities.Entity.DataFlags.CanPowerJump];
 			//IsFlying = data[(int) MiNET.Entities.Entity.DataFlags.fl]
 		}
 
@@ -1440,16 +1449,24 @@ namespace Alex.Entities
 
 		public virtual BoundingBox GetBoundingBox(Vector3 pos)
 		{
+			var    length     = Width;
 			var    width     = Width;
 			var    height    = Height;
+
+			if (IsSwimming)
+			{
+				height = Width;
+				width = Width;
+				length = Height;
+			}
 			
 			double halfWidth = (width * Scale) / 2D;
-			double halfDepth = (width * Scale) / 2D;
+			double halfLength = (length * Scale) / 2D;
 
 			return new BoundingBox(
-				new Vector3((float) (pos.X - halfWidth), pos.Y, (float) (pos.Z - halfDepth)),
+				new Vector3((float) (pos.X - halfWidth), pos.Y, (float) (pos.Z - halfLength)),
 				new Vector3(
-					(float) (pos.X + halfWidth), (float) (pos.Y + (height * Scale)), (float) (pos.Z + halfDepth)));
+					(float) (pos.X + halfWidth), (float) (pos.Y + (height * Scale)), (float) (pos.Z + halfLength)));
 		}
 
 		public virtual BoundingBox GetVisibilityBoundingBox(Vector3 pos)
@@ -1925,6 +1942,39 @@ namespace Alex.Entities
 			Item item = isMainHand ? Inventory.MainHand : Inventory.OffHand;
 
 			return item.Count > 0 && !(item is ItemAir);
+		}
+
+		[MoFunction("get_default_bone_pivot")]
+		public double GetDefaultBonePivot(MoParams mo)
+		{
+			var p1 = mo.Get(0);
+
+			ModelBone bone = null;
+			if (p1 is StringValue sv)
+			{
+				if (_modelRenderer.GetBone(sv.Value, out bone))
+				{
+					int axis = 0;
+					if (mo.Contains(1))
+					{
+						axis = mo.GetInt(1);
+					}
+					
+					var pivot = bone.Pivot.GetValueOrDefault(Vector3.Zero);
+
+					switch (axis)
+					{
+						case 0:
+							return pivot.X;
+						case 1:
+							return pivot.Y;
+						case 2:
+							return pivot.Z;
+					}
+				}
+			}
+
+			return 0d;
 		}
 
 		[MoProperty("has_target")]

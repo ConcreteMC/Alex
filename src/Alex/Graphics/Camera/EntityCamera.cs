@@ -1,4 +1,5 @@
 using Alex.Common.Graphics;
+using Alex.Common.Utils;
 using Alex.Common.Utils.Vectors;
 using Alex.Entities;
 using Microsoft.Xna.Framework;
@@ -106,11 +107,12 @@ namespace Alex.Graphics.Camera
 
 			//var offset = ThirdPersonOffset;
 			//offset = Vector3.Transform(offset, MatrixHelper.CreateRotationDegrees(Rotation));
-
+			var boundingBox = TrackingEntity.GetBoundingBox();
+			
 			var renderLocation = TrackingEntity.RenderLocation;
 			
 			var target = Position;
-			target.Y += (float)(TrackingEntity.Height * TrackingEntity.Scale);
+			target.Y += boundingBox.GetHeight();
 			
 			float pitch = (-renderLocation.Pitch).ToRadians();
 			float yaw   = ((renderLocation.Yaw)).ToRadians();
@@ -137,8 +139,9 @@ namespace Alex.Graphics.Camera
 			
 			if (_mode == EntityCameraMode.FirstPerson)
 			{
+				var boundingBox = TrackingEntity.GetBoundingBox();
 				MoveTo(
-					entityLocation + new Vector3(0, (float) (TrackingEntity.Height - 0.175f), 0),
+					entityLocation + new Vector3(0, (float) (boundingBox.GetHeight() - 0.175f), 0),
 						entityPhysicalLocation.GetDirection(true, true));
 			}
 			else

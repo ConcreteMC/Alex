@@ -326,7 +326,7 @@ namespace Alex.Entities
 
 		    bool holdingDownSprint = InputManager.IsDown(AlexInputCommand.Sprint);
 
-		    bool canSwim = Player.FeetInWater && Player.HeadInWater;
+		    bool canSwim = Player.CanSwim && Player.FeetInWater && Player.HeadInWater;
 
 		    if (canSwim)
 		    {
@@ -422,6 +422,9 @@ namespace Alex.Entities
 					}
 				}
 			}
+
+			if (Player.IsSwimming && moveVector.LengthSquared() <= 0.01f)
+				Player.IsSwimming = false;
 			
 			Player.Movement.UpdateHeading(moveVector);
 
@@ -445,8 +448,10 @@ namespace Alex.Entities
 						                                                       * (float) (gt.ElapsedGameTime.TotalSeconds);
 
 						look = -look;
-
-						Player.KnownPosition.HeadYaw -= look.X;
+						
+						Player.KnownPosition.HeadYaw = FixValue(Player.KnownPosition.HeadYaw - look.X);
+						//Player.KnownPosition.HeadYaw -= look.X;
+						
 						Player.KnownPosition.Pitch -= look.Y;
 						//Player.KnownPosition.HeadYaw = MathUtils.NormDeg(Player.KnownPosition.HeadYaw);
 						//Player.KnownPosition.Pitch = MathHelper.Clamp(Player.KnownPosition.Pitch, -89.9f, 89.9f);
@@ -471,7 +476,7 @@ namespace Alex.Entities
 
 						var look = (new Vector2((-mouseDelta.X), (mouseDelta.Y)) * (float) CursorSensitivity) * (float) (gt.ElapsedGameTime.TotalSeconds);
 
-						Player.KnownPosition.HeadYaw -= look.X;
+						Player.KnownPosition.HeadYaw = FixValue(Player.KnownPosition.HeadYaw - look.X);
 
 						Player.KnownPosition.SetPitchBounded(Player.KnownPosition.Pitch - look.Y);
 						//Player.KnownPosition.Pitch -= look.Y; 
@@ -490,6 +495,18 @@ namespace Alex.Entities
 			}
 
 			LastVelocity = Player.Velocity;
+	    }
+	    
+	    float FixValue(float value)
+	    {
+		    var val = value;
+
+		    if (val < 0f)
+			    val = 360f - (MathF.Abs(val) % 360f);
+		    else if (val > 360f)
+			    val = val % 360f;
+
+		    return val;
 	    }
     }
 }

@@ -197,7 +197,9 @@ namespace Alex.Graphics.Models.Entity.Animations
 				runtime.Environment.SetValue("variable.is_paperdoll", new DoubleValue(0d));
 				runtime.Environment.SetValue("variable.swim_amount", Entity.IsSwimming ? new DoubleValue(1d) : new DoubleValue(0d));
 				runtime.Environment.SetValue("variable.player_x_rotation", new DoubleValue(Entity.KnownPosition.Pitch));
-
+				runtime.Environment.SetValue("variable.bob_animation", new DoubleValue(1d));
+				runtime.Environment.SetValue("variable.hand_bob", new DoubleValue(1d));
+				
 				if (Entity is RemotePlayer player)
 				{
 					bool holdingLeft = false;

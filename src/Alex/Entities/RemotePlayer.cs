@@ -50,7 +50,7 @@ namespace Alex.Entities
 
 		public BlockCoordinates BedPosition { get; set; } = BlockCoordinates.Zero;
 		public Color PotionColor { get; set; } = Color.White;
-		
+
 		//private PooledTexture2D _texture;
 		public RemotePlayer(World level, string geometry = "geometry.humanoid.customSlim", Skin skin = null) : base(level)
 		{

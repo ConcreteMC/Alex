@@ -309,7 +309,7 @@ namespace Alex.Graphics.Models.Items
                 Effect.World = Matrix.CreateScale(scale)
                                * Matrix.CreateRotationY(MathUtils.ToRadians(180f))
                                * MatrixHelper.CreateRotationDegrees(rotation)
-                               * Matrix.CreateTranslation(halfSize + translation)
+                               * Matrix.CreateTranslation( halfSize + translation)
                                * characterMatrix;
             }
             else 

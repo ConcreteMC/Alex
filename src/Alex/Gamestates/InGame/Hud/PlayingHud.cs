@@ -21,8 +21,10 @@ namespace Alex.Gamestates.InGame.Hud
         private readonly PlayerController _playerController;
         private readonly HealthComponent _healthComponent;
         private readonly HungerComponent _hungerComponent;
+        private readonly AirComponent _airComponent;
         private readonly ExperienceComponent _experienceComponent;
-        
+
+        private readonly Container _armorAndAirContainer;
         private readonly Container _healthContainer;
         private readonly MultiStackContainer _bottomContainer;
         private readonly TipPopupComponent _tipPopupComponent;
@@ -84,6 +86,13 @@ namespace Alex.Gamestates.InGame.Hud
 	        _hungerComponent = new HungerComponent(player);
 	        _hungerComponent.Anchor = Alignment.TopRight;
 
+	        _armorAndAirContainer = new Container();
+	        _armorAndAirContainer.Anchor = Alignment.Fill;
+	        _armorAndAirContainer.Margin = new Thickness(0, 0, 0, 1);
+	        
+	        _airComponent = new AirComponent(player);
+	        _airComponent.Anchor = Alignment.TopRight;
+	        
 	        _experienceComponent = new ExperienceComponent(player);
 	        _experienceComponent.Margin = new Thickness(0, 0, 0, 1);
 	        _experienceComponent.Anchor = Alignment.BottomFill;
@@ -110,6 +119,9 @@ namespace Alex.Gamestates.InGame.Hud
 	        {
 		        _bottomContainer.AddChild(_tipPopupComponent);
 
+		        _armorAndAirContainer.AddChild(_airComponent);
+		        _healthAndHotbar.AddChild(_armorAndAirContainer);
+		        
 		        _healthContainer.AddChild(_healthComponent);
 		        _healthContainer.AddChild(_hungerComponent);
 

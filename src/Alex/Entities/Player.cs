@@ -96,6 +96,7 @@ namespace Alex.Entities
 			IsAffectedByGravity = true;
 			HasPhysics = true;
 			NoAi = false;
+			CanSwim = true;
         }
 
         protected override void OnInventorySlotChanged(object sender, SlotChangedEventArgs e)
@@ -859,7 +860,7 @@ namespace Alex.Entities
 		    return true;
 	    }
 
-	    public override BoundingBox GetBoundingBox(Vector3 pos)
+	    /*public override BoundingBox GetBoundingBox(Vector3 pos)
 		{
 			double halfWidth = (0.6 * Scale) / 2D;
 			var height = IsSneaking ? 1.5 : Height;
@@ -868,7 +869,7 @@ namespace Alex.Entities
 				new Vector3((float) (pos.X - halfWidth), pos.Y, (float) (pos.Z - halfWidth)),
 				new Vector3(
 					(float) (pos.X + halfWidth), (float) (pos.Y + (height * Scale)), (float) (pos.Z + halfWidth)));
-		}
+		}*/
 
 	    private bool  Falling      { get; set; } = false;
 	    private float FallingStart { get; set; } = 0;

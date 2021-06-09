@@ -78,7 +78,7 @@ namespace Alex.Entities.Components
 			e.Movement.Move(e.Velocity);
 
 
-			if (e.IsAffectedByGravity && !e.IsFlying && !e.KnownPosition.OnGround)
+			if (e.IsAffectedByGravity && !e.IsFlying && !e.KnownPosition.OnGround && !e.IsSwimming)
 			{
 				var gravity = (float)e.Gravity;
 
@@ -121,7 +121,7 @@ namespace Alex.Entities.Components
 			var heading  = entity.Movement.Heading;
 			var strafe   = heading.X;
 			var forward  = heading.Z;
-			var vertical = entity.IsFlying ? heading.Y : 0f;
+			var vertical = (entity.IsFlying || entity.IsSwimming) ? heading.Y : 0f;
 			
 			var speed    = MathF.Sqrt(strafe * strafe + forward * forward + vertical * vertical);
 			if (speed < 0.01f)

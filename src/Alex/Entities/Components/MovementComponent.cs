@@ -83,6 +83,7 @@ namespace Alex.Entities.Components
 		}
 		
 		private float _distanceMoved = 0f, _lastDistanceMoved = 0f;
+		public float TotalDistanceMoved { get; set; } = 0f;
 		public float DistanceMoved
 		{
 			get => _distanceMoved;
@@ -109,7 +110,7 @@ namespace Alex.Entities.Components
 		{
 			lock (_headingLock)
 			{
-				Heading = heading.Transform(Entity.KnownPosition.GetDirectionMatrix(false, true));
+				Heading = heading.Transform(Entity.KnownPosition.GetDirectionMatrix(Entity.IsSwimming, true));
 			}
 		}
 		
@@ -380,6 +381,7 @@ namespace Alex.Entities.Components
 			if (horizontalDistance > 0f)
 			{
 				DistanceMoved += horizontalDistance;
+				TotalDistanceMoved += horizontalDistance;
 			}
 
 			if (verticalDistance > 0f)

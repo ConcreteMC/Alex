@@ -18,7 +18,7 @@ namespace Alex.Common.Utils.Vectors
 			get => _yaw;
 			set
 			{
-				_yaw = FixValue(value);
+				_yaw = value;// FixValue(value);
 			}
 		}
 
@@ -27,7 +27,7 @@ namespace Alex.Common.Utils.Vectors
 			get => _pitch;
 			set
 			{
-				var pitch = FixValue(value);
+				var pitch = value;//FixValue(value);
 				_pitch = pitch;
 			}
 		}
@@ -37,7 +37,7 @@ namespace Alex.Common.Utils.Vectors
 			get => _headYaw;
 			set
 			{
-				_headYaw = FixValue(value);
+				_headYaw = value; //FixValue(value);
 			}
 		}
 

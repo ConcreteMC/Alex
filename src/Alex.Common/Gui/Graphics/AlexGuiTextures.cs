@@ -63,6 +63,9 @@ namespace Alex.Common.Gui.Graphics
         public static readonly GuiTextures HungerPlaceholder                    = new(AlexNamespace, nameof(HungerPlaceholder));
         public static readonly GuiTextures HungerFull                           = new(AlexNamespace, nameof(HungerFull));
         public static readonly GuiTextures HungerHalf                           = new(AlexNamespace, nameof(HungerHalf));
+
+        public static readonly GuiTextures AirBubble = new(AlexNamespace, nameof(AirBubble));
+        public static readonly GuiTextures PoppedAirBubble = new(AlexNamespace, nameof(PoppedAirBubble));
         
         public static readonly GuiTextures BossbarBackgroundPink                    = new(AlexNamespace, nameof(BossbarBackgroundPink));
         public static readonly GuiTextures BossbarProgressPink                    = new(AlexNamespace, nameof(BossbarProgressPink));
