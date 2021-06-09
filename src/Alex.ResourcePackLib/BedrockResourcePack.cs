@@ -57,6 +57,7 @@ namespace Alex.ResourcePackLib
 		
 		private readonly IFilesystem _archive;
 
+		public string ContentKey { get; set; } = null;
 		public BedrockResourcePack(IFilesystem archive, ResourcePackManifest manifest, ResourcePack.LoadProgress progressReporter = null)
 		{
 			Info = manifest;
@@ -64,18 +65,6 @@ namespace Alex.ResourcePackLib
 
 			//Info = GetManifest(archive);
 			Load(progressReporter);
-		}
-
-		public Stream GetStream(string path)
-		{
-			var entry = _archive.GetEntry(path);
-
-			if (entry == null)
-			{
-				throw new FileNotFoundException();
-			}
-			
-			return entry.Open();
 		}
 
 		private string NormalisePath(string path)
@@ -134,7 +123,7 @@ namespace Alex.ResourcePackLib
 					{
 						try
 						{
-							using (var stream = entry.Open())
+							using (var stream = entry.OpenEncoded(ContentKey))
 							{
 								var json = Encoding.UTF8.GetString(stream.ReadToSpan(entry.Length));
 
@@ -248,12 +237,7 @@ namespace Alex.ResourcePackLib
 		{
 			try
 			{
-				string json;
-
-				using (var stream = entry.Open())
-				{
-					json = Encoding.UTF8.GetString(stream.ReadToEnd());
-				}
+				string json = entry.ReadAsEncodedString(ContentKey);
 
 				var versionedResource = MCJsonConvert.DeserializeObject<VersionedResource<AttachableDefinition>>(
 					json, new VersionedResourceConverter<AttachableDefinition>("minecraft:attachable", true, (def) => def.Description.Identifier));
@@ -287,12 +271,7 @@ namespace Alex.ResourcePackLib
 		{
 			try
 			{
-				string json;
-
-				using (var stream = entry.Open())
-				{
-					json = Encoding.UTF8.GetString(stream.ReadToEnd());
-				}
+				string json = entry.ReadAsEncodedString(ContentKey);
 
 				var versionedResource = MCJsonConvert.DeserializeObject<VersionedResource<ParticleDefinition>>(
 					json, new VersionedResourceConverter<ParticleDefinition>("particle_effect", true, (def) => def.Description.Identifier));
@@ -320,12 +299,7 @@ namespace Alex.ResourcePackLib
 		{
 			try
 			{
-				string json;
-
-				using (var stream = entry.Open())
-				{
-					json = Encoding.UTF8.GetString(stream.ReadToEnd());
-				}
+				string json = entry.ReadAsEncodedString(ContentKey);
 
 				var versionedResource = MCJsonConvert.DeserializeObject<VersionedResource<Animation>>(
 					json, new VersionedResourceConverter<Animation>("animations"));
@@ -343,11 +317,7 @@ namespace Alex.ResourcePackLib
 		
 		private void ProcessAnimationController(IFile entry, Dictionary<string, AnimationController> renderControllers)
 		{
-			string json;
-			using (var stream = entry.Open())
-			{
-				json = Encoding.UTF8.GetString(stream.ReadToEnd());
-			}
+			string json = entry.ReadAsEncodedString(ContentKey);
 
 			var versionedResource = MCJsonConvert.DeserializeObject<VersionedResource<AnimationController>>(
 				json, new VersionedResourceConverter<AnimationController>("animation_controllers"));
@@ -360,11 +330,7 @@ namespace Alex.ResourcePackLib
 		
 		private void ProcessRenderController(IFile entry, Dictionary<string, RenderController> renderControllers)
 		{
-			string json;
-			using (var stream = entry.Open())
-			{
-				json = Encoding.UTF8.GetString(stream.ReadToEnd());
-			}
+			string json = entry.ReadAsEncodedString(ContentKey);
 
 			var versionedResource = MCJsonConvert.DeserializeObject<VersionedResource<RenderController>>(
 				json, new VersionedResourceConverter<RenderController>("render_controllers"));
@@ -490,16 +456,11 @@ namespace Alex.ResourcePackLib
 			return final;
 		}
 
-		private static void LoadEntityModel(IFile entry, Dictionary<string, EntityModel> models)
+		private void LoadEntityModel(IFile entry, Dictionary<string, EntityModel> models)
 		{
 			try
 			{
-				string json;
-
-				using (var stream = entry.Open())
-				{
-					json = Encoding.UTF8.GetString(stream.ReadToEnd());
-				}
+				string json = entry.ReadAsEncodedString(ContentKey);
 
 				LoadEntityModel(json, models);
 			}
@@ -550,13 +511,9 @@ namespace Alex.ResourcePackLib
 
 		private void ProcessSounds(ResourcePack.LoadProgress progress, IFile entry)
 		{
-			using (var fs = entry.Open())
-			{
-				var fileContents = fs.ReadToEnd();
-				var json         = Encoding.UTF8.GetString(fileContents);
+			string json = entry.ReadAsEncodedString(ContentKey);
 
-				SoundDefinitions = SoundDefinitionFormat.FromJson(json);
-			}
+			SoundDefinitions = SoundDefinitionFormat.FromJson(json);
 		}
 
 		private enum DefFormat
@@ -565,104 +522,111 @@ namespace Alex.ResourcePackLib
 			v18,
 			v110
 		}
-		private void LoadEntityDefinition(IFile entry, Dictionary<ResourceLocation, EntityDescription> entityDefinitions)
+
+		private void LoadEntityDefinition(IFile entry,
+			Dictionary<ResourceLocation, EntityDescription> entityDefinitions)
 		{
-			using (var stream = entry.Open())
+
+			string json = entry.ReadAsEncodedString(ContentKey);
+
+			//string fileName = Path.GetFileNameWithoutExtension(entry.Name);
+
+			Dictionary<ResourceLocation, EntityDescription> definitions =
+				new Dictionary<ResourceLocation, EntityDescription>();
+
+			JObject obj = JObject.Parse(json, new JsonLoadSettings());
+
+			DefFormat format = DefFormat.unknown;
+
+			if (obj.TryGetValue("format_version", out var ftv))
 			{
-				var json = Encoding.UTF8.GetString(stream.ReadToSpan(entry.Length));
-
-				//string fileName = Path.GetFileNameWithoutExtension(entry.Name);
-
-				Dictionary<ResourceLocation, EntityDescription> definitions = new Dictionary<ResourceLocation, EntityDescription>();
-				
-				JObject obj  = JObject.Parse(json, new JsonLoadSettings());
-
-				DefFormat format = DefFormat.unknown;
-				if (obj.TryGetValue("format_version", out var ftv))
+				if (ftv.Type == JTokenType.String)
 				{
-					if (ftv.Type == JTokenType.String)
+					switch (ftv.Value<string>())
 					{
-						switch (ftv.Value<string>())
-						{
-							case "1.10.0":
-								format = DefFormat.v110;
-								break;
-							case "1.8.0":
-								format = DefFormat.v18;
-								break;
-						}
+						case "1.10.0":
+							format = DefFormat.v110;
+
+							break;
+
+						case "1.8.0":
+							format = DefFormat.v18;
+
+							break;
 					}
 				}
-				foreach (var e in obj)
+			}
+
+			foreach (var e in obj)
+			{
+				if (e.Key == "format_version") continue;
+
+				if (e.Key == "minecraft:client_entity" && e.Value != null)
 				{
-					if (e.Key == "format_version") continue;
+					EntityDescription desc = null;
+					var clientEntity = (JObject) e.Value;
 
-					if (e.Key == "minecraft:client_entity" && e.Value != null)
+					if (clientEntity.TryGetValue("description", out var descriptionToken))
 					{
-						EntityDescription desc = null;
-						var               clientEntity = (JObject) e.Value;
-						
-						if (clientEntity.TryGetValue("description", out var descriptionToken))
+						if (descriptionToken.Type == JTokenType.Object)
 						{
-							if (descriptionToken.Type == JTokenType.Object)
-							{
-								desc = descriptionToken.ToObject<EntityDescription>(MCJsonConvert.Serializer);
-							}
-						}
-						
-						/*desc = e.Value.ToObject<EntityDescriptionWrapper>(JsonSerializer.Create(new JsonSerializerSettings()
-						{
-							Converters = MCJsonConvert.DefaultSettings.Converters,
-							MissingMemberHandling = MissingMemberHandling.Ignore,
-							NullValueHandling = NullValueHandling.Ignore,
-						}));*/
-
-						if (desc != null)
-						{
-							if (!definitions.TryAdd(desc.Identifier, desc))
-							{
-								Log.Warn($"Duplicate definition: {desc.Identifier}");
-							}
+							desc = descriptionToken.ToObject<EntityDescription>(MCJsonConvert.Serializer);
 						}
 					}
-				}
 
-				foreach (var def in definitions)
-				{
-					//def.Value.Filename = fileName;
-					if (def.Value != null && def.Value.Textures != null)
+					/*desc = e.Value.ToObject<EntityDescriptionWrapper>(JsonSerializer.Create(new JsonSerializerSettings()
 					{
-						//if (entityDefinitions.TryAdd(def.Key, def.Value))
-						{
-							//entityDefinitions.Add(def.Key, def.Value);
-							try
-							{
-								foreach (var texture in def.Value.Textures)
-								{
-									if (_bitmaps.ContainsKey(texture.Value))
-									{
-										//Log.Warn($"Duplicate bitmap: {texture.Value}");
-										continue;
-									}
+						Converters = MCJsonConvert.DefaultSettings.Converters,
+						MissingMemberHandling = MissingMemberHandling.Ignore,
+						NullValueHandling = NullValueHandling.Ignore,
+					}));*/
 
-									TryAddBitmap(texture.Value);
-								}
-							}
-							catch (Exception ex)
-							{
-								Log.Warn($"Could not load texture! {ex}");
-							}
-
-							entityDefinitions[def.Key] = def.Value;
-						}
-					//	else
+					if (desc != null)
+					{
+						if (!definitions.TryAdd(desc.Identifier, desc))
 						{
-						//	Log.Warn($"Tried loading duplicate entity: {def.Key}");
+							Log.Warn($"Duplicate definition: {desc.Identifier}");
 						}
 					}
 				}
 			}
-			
+
+			foreach (var def in definitions)
+			{
+				//def.Value.Filename = fileName;
+				if (def.Value != null && def.Value.Textures != null)
+				{
+					//if (entityDefinitions.TryAdd(def.Key, def.Value))
+					{
+						//entityDefinitions.Add(def.Key, def.Value);
+						try
+						{
+							foreach (var texture in def.Value.Textures)
+							{
+								if (_bitmaps.ContainsKey(texture.Value))
+								{
+									//Log.Warn($"Duplicate bitmap: {texture.Value}");
+									continue;
+								}
+
+								TryAddBitmap(texture.Value);
+							}
+						}
+						catch (Exception ex)
+						{
+							Log.Warn($"Could not load texture! {ex}");
+						}
+
+						entityDefinitions[def.Key] = def.Value;
+					}
+
+					//	else
+					{
+						//	Log.Warn($"Tried loading duplicate entity: {def.Key}");
+					}
+				}
+			}
+
 			TryAddBitmap("textures/entity/chest/double_normal");
 		}
 
@@ -709,7 +673,7 @@ namespace Alex.ResourcePackLib
 			if (entry != null)
 			{
 				Image<Rgba32> bmp = null;
-				using (var fs = entry.Open())
+				using (var fs = entry.OpenEncoded(ContentKey))
 				{
 					if (file.EndsWith(".tga"))
 					{

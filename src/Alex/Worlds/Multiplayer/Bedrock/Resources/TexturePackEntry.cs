@@ -38,13 +38,12 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 			{
 				Log.Warn($"Skipping resources as they seem to require encryption.");
 				return;
-				FileSystem.UseEncryption(Info.ContentKey);
 			}
 			
 			FileSystem = new ZipFileSystem(new MemoryStream(data), Info.ContentIdentity);
 			
 			Log.Info($"Loading textures etc from bedrock pack...");
-			_resourcePacks = Alex.Instance.Resources.LoadBedrockTexturePack(FileSystem).ToArray();
+			_resourcePacks = Alex.Instance.Resources.LoadBedrockTexturePack(FileSystem, null, Info.ContentKey).ToArray();
 			//ResourcePack = new BedrockResourcePack(FileSystem);
 
 			Log.Info($"Texturepack completed: {Identifier}_{Version}");

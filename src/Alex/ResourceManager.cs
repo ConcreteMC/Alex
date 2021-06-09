@@ -209,15 +209,17 @@ namespace Alex
 			return false;
 		}
 		
-		internal IEnumerable<BedrockResourcePack> LoadBedrockTexturePack(IFilesystem fs, IProgressReceiver progress = null)
+		internal IEnumerable<BedrockResourcePack> LoadBedrockTexturePack(IFilesystem fs, IProgressReceiver progress = null, string contentKey = null)
 		{
 			//var fs = new ZipFileSystem(new MemoryStream(data), "servertextures");
 
-			foreach (var resourcePack in LoadResourcePack(null, fs))
+			foreach (var resourcePack in LoadResourcePack(null, fs, null))
 			{
 				if (resourcePack.Info.Type == ResourcePackType.Bedrock)
 				{
 					var pack = (BedrockResourcePack) resourcePack;
+					pack.ContentKey = contentKey;
+					
 					ActiveBedrockResourcePacks.AddLast(pack);
 					
 					ProcessBedrockResources(progress, Alex.Instance.GraphicsDevice, pack);

@@ -32,15 +32,6 @@ namespace Alex.ResourcePackLib.IO
 		/// <inheritdoc />
 		public string Name { get; }
 		
-		public bool PasswordProtected { get; private set; }
-		public string Password { get; private set; }
-
-		public void UseEncryption(string password)
-		{
-			PasswordProtected = true;
-			Password = password;
-		}
-
 		/// <inheritdoc />
 		public IReadOnlyCollection<IFile> Entries 
 		{
@@ -101,14 +92,7 @@ namespace Alex.ResourcePackLib.IO
 					byte[] buffer;
 					using (MemoryStream ms = new MemoryStream())
 					{
-						if (_archive.PasswordProtected)
-						{
-							_entry.ExtractWithPassword(ms, _archive.Password);
-						}
-						else
-						{
-							_entry.Extract(ms);
-						}
+						_entry.Extract(ms);
 
 						buffer = ms.ToArray();
 					}

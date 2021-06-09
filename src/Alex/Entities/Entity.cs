@@ -142,7 +142,7 @@ namespace Alex.Entities
 
 		public virtual bool NoAi
 		{
-			get => _noAi;
+			get => _noAi || _scale <= 0.01f;
 			set
 			{
 				_noAi = value;
@@ -413,7 +413,7 @@ namespace Alex.Entities
 			{
 				ModelRenderer.Scale = _scale;
 
-				if (_scale <= 0.1f)
+				if (_scale <= 0.01f)
 				{
 					_skipRendering = true;
 				}

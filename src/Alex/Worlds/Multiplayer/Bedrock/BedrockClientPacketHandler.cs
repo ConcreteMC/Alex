@@ -1823,6 +1823,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					break;
 
 				case McpeBossEvent.Type.UpdateStyle:
+				//	if (_bossBarMapping.TryGetValue(message.bossEntityId, out var uuid))
+				//		container.UpdateStyle(uuid, message.color, message.overlay);
 					break;
 			}
 		}

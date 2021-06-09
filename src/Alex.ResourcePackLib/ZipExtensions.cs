@@ -23,5 +23,22 @@ namespace Alex.ResourcePackLib
 			    return reader.ReadToEnd();
 		    }
 	    }
+
+	    public static Stream OpenEncoded(this IFile entry, string contentKey)
+	    {
+		    if (contentKey == null)
+			    return entry.Open();
+
+		    //TODO: Decrypt.
+		    return entry.Open();
+	    }
+	    
+	    public static string ReadAsEncodedString(this IFile entry, string contentKey)
+	    {
+		    using (TextReader reader = new StreamReader(entry.OpenEncoded(contentKey)))
+		    {
+			    return reader.ReadToEnd();
+		    }
+	    }
     }
 }

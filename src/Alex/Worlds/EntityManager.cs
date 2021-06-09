@@ -71,6 +71,9 @@ namespace Alex.Worlds
 
 		public void OnTick()
 		{
+			if (World?.Camera == null)
+				return;
+			
 			_sw.Restart();
 
 			int ticked = 0;
