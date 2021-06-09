@@ -8,7 +8,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\..\..\submodules\MiNET\src\MiNET\MiNET\MiNET.csproj" />
-      <ProjectReference Include="..\..\Alex.API\Alex.API.csproj" />
+      <ProjectReference Include="..\..\Alex.Common\Alex.Common.csproj" />
     </ItemGroup>
 
     <ItemGroup>

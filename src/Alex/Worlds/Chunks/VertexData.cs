@@ -1,6 +1,6 @@
 using System;
 using System.Runtime.InteropServices;
-using Alex.API.Blocks;
+using Alex.Common.Blocks;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics.PackedVector;
 

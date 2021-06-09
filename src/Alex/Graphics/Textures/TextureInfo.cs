@@ -1,4 +1,4 @@
-using Alex.API.Resources;
+using Alex.Common.Resources;
 using Alex.ResourcePackLib.Json.Textures;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;

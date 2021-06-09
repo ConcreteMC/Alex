@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using Alex.API.Blocks.Properties;
 using Alex.Blocks.Minecraft;
+using Alex.Common.Blocks.Properties;
 using Alex.Graphics.Models.Blocks;
 
 namespace Alex.Blocks.State

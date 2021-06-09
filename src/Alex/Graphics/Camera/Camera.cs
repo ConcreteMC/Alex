@@ -1,7 +1,6 @@
 ﻿using System;
-
-using Alex.API.Graphics;
-using Alex.API.Utils;
+using Alex.Common.Graphics;
+using Alex.Common.Utils;
 using Microsoft.Xna.Framework;
 using MathF = System.MathF;
 

@@ -1,5 +1,5 @@
-﻿using Alex.API.Gui.Graphics;
-using Alex.API.Utils;
+﻿using Alex.Common.Gui.Graphics;
+using Alex.Common.Utils;
 using Microsoft.Xna.Framework;
 using RocketUI;
 

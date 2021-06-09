@@ -1,10 +1,8 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
-using Alex.API.Data;
-using Alex.API.Input;
-using Alex.API.Services;
-using Alex.API.Utils;
+using Alex.Common.Input;
+using Alex.Common.Services;
 using Alex.Gamestates.InGame;
 using Alex.Graphics.Camera;
 using Alex.Gui.Dialogs.Containers;

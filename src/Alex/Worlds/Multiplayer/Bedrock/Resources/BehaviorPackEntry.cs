@@ -24,21 +24,25 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 		{
 			base.OnComplete(data);
 
-			//if (!Directory.Exists("texturepacks"))
-			//	Directory.CreateDirectory("texturepacks");
-
-			//File.WriteAllBytes($"BEHAVIORPACK_{Identifier}_{Version}.zip", data);
-
-			FileSystem = new ZipFileSystem(new MemoryStream(data), Info.ContentIdentity);
+			if (!Alex.Instance.Options.AlexOptions.MiscelaneousOptions.LoadServerResources.Value)
+				return;
 			
+			if (!Directory.Exists("texturepacks"))
+				Directory.CreateDirectory("texturepacks");
+
+			File.WriteAllBytes($"BEHAVIORPACK_{Identifier}_{Version}.zip", data);
+
 			if (!string.IsNullOrWhiteSpace(Info.ContentKey))
 			{
-				FileSystem.UseEncryption(Info.ContentKey);
+				Log.Warn($"Skipping behaviorpack as they seem to require encryption.");
+				return;
+				//FileSystem.UseEncryption(Info.ContentKey);
 			}
 			
+			FileSystem = new ZipFileSystem(new MemoryStream(data), Info.ContentIdentity);
 			//ResourcePack = new BedrockResourcePack(FileSystem);
 
-			//Log.Info($"Behaviorpack contains {ResourcePack.Textures.Count} textures");
+			Log.Info($"Behaviorpack completed: {Identifier}_{Version}");
 		}
 
 		/// <inheritdoc />

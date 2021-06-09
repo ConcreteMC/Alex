@@ -1,14 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Alex.API.Blocks;
-using Alex.API.Resources;
-using Alex.API.Utils;
-using Alex.API.Utils.Noise;
-using Alex.API.Utils.Vectors;
-using Alex.API.World;
 using Alex.Blocks.Properties;
 using Alex.Blocks.State;
+using Alex.Common.Blocks;
+using Alex.Common.Resources;
+using Alex.Common.Utils.Noise;
+using Alex.Common.Utils.Vectors;
 using Alex.Entities;
 using Alex.Graphics.Models.Blocks;
 using Alex.Items;
@@ -22,8 +20,8 @@ using Microsoft.Xna.Framework;
 using MiNET.Blocks;
 using NLog;
 using ItemBlock = Alex.Items.ItemBlock;
-using ItemMaterial = Alex.API.Utils.ItemMaterial;
-using ItemType = Alex.API.Utils.ItemType;
+using ItemMaterial = Alex.Common.Utils.ItemMaterial;
+using ItemType = Alex.Common.Utils.ItemType;
 
 namespace Alex.Blocks.Minecraft
 {

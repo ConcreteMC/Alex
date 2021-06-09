@@ -4,14 +4,14 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
-using Alex.API;
-using Alex.API.Blocks;
-using Alex.API.Graphics;
-using Alex.API.Input;
-using Alex.API.Utils;
-using Alex.API.Utils.Vectors;
 using Alex.Blocks.Minecraft;
 using Alex.Blocks.State;
+using Alex.Common;
+using Alex.Common.Blocks;
+using Alex.Common.Graphics;
+using Alex.Common.Input;
+using Alex.Common.Utils;
+using Alex.Common.Utils.Vectors;
 using Alex.Items;
 using Alex.Net;
 using Alex.ResourcePackLib.Json;
@@ -33,10 +33,10 @@ using Newtonsoft.Json.Serialization;
 using NLog;
 using NLog.Fluent;
 using RocketUI.Input;
-using BlockCoordinates = Alex.API.Utils.Vectors.BlockCoordinates;
+using BlockCoordinates = Alex.Common.Utils.Vectors.BlockCoordinates;
 using BoundingBox = Microsoft.Xna.Framework.BoundingBox;
 using ContainmentType = Microsoft.Xna.Framework.ContainmentType;
-using Skin = Alex.API.Utils.Skin;
+using Skin = Alex.Common.Utils.Skin;
 using SkinResourcePatch = Alex.Worlds.Multiplayer.Bedrock.SkinResourcePatch;
 
 namespace Alex.Entities
@@ -193,7 +193,7 @@ namespace Alex.Entities
 	    private bool _destroyingBlock = false;
         private int _destroyingTick = 0;
 	    private double _destroyTimeNeeded = 0;
-	    private API.Blocks.BlockFace _destroyingFace;
+	    private BlockFace _destroyingFace;
 
 	    private int  PreviousSlot { get; set; } = -1;
 	    public  bool CanSprint    => HealthManager.Hunger > 6;

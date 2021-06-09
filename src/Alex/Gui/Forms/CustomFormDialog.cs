@@ -1,8 +1,6 @@
 using System.Collections.Generic;
-using Alex.API.Gui;
-using Alex.API.Gui.Elements;
-using Alex.API.Input;
-using Alex.API.Utils;
+using Alex.Common.Gui.Elements;
+using Alex.Common.Utils;
 using Microsoft.Xna.Framework;
 using MiNET.Net;
 using MiNET.UI;

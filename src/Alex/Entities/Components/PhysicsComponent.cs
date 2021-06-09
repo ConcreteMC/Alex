@@ -1,5 +1,5 @@
 ﻿using System;
-using Alex.API.Utils.Vectors;
+using Alex.Common.Utils.Vectors;
 using Microsoft.Xna.Framework;
 using NLog;
 using MathF = System.MathF;
@@ -8,7 +8,6 @@ namespace Alex.Entities.Components
 {
 	/// <summary>
 	///		Handles entity physics
-	///		Collision detection heavily based on https://github.com/ddevault/TrueCraft/blob/master/TrueCraft.Core/Physics/PhysicsEngine.cs
 	/// </summary>
     public class PhysicsComponent : FixedRateEntityComponent
     {
@@ -17,9 +16,7 @@ namespace Alex.Entities.Components
 	    {
 		    
 	    }
-	    
-		//private ThreadSafeList<Entity> PhysicsEntities { get; set; } = new ThreadSafeList<Entity>();
-		
+
 		private Vector3 TruncateVelocity(Vector3 velocity)
 		{
 			if (Math.Abs(velocity.X) < 0.005f)
@@ -104,53 +101,10 @@ namespace Alex.Entities.Components
 			e.Velocity = TruncateVelocity(e.Velocity);
 		}
 
-		/*public void Update(GameTime elapsed)
-		{
-			var frameTime = (float) elapsed.ElapsedGameTime.TotalSeconds; // / 50;
-			_frameAccumulator += frameTime;
-
-		//	if (_frameAccumulator >= (TargetTime * 1.3))
-		//	{
-			//	Log.Warn($"Physics running slow! Running {(_frameAccumulator / TargetTime)} ticks behind... (DeltaTime={_frameAccumulator}s Target={TargetTime}s)");
-		//	}
-
-			var entities = PhysicsEntities.ToArray();
-			//var realTime = entities.Where(x => (x.RequiresRealTimeTick || (x.IsRendered && x.ServerEntity))).ToArray();
-			
-			while (_frameAccumulator >= TargetTime)
-			{
-				foreach (var entity in entities)
-				{
-					try
-					{
-						UpdatePhysics(entity);
-					}
-					catch (Exception ex)
-					{
-						Log.Warn(ex, $"Entity tick threw exception: {ex.ToString()}");
-					}
-				}
-				
-				_frameAccumulator -= TargetTime;
-			}
-
-			/*var alpha = (float) (_frameAccumulator / TargetTime);
-
-			foreach (var entity in entities)
-			{
-				UpdateEntityLocation(entity, alpha);
-			}*
-		}*/
-
 		private float GetSlipperiness(Entity entity)
 		{
 			var blockcoords = entity.KnownPosition.GetCoordinates3D();
 
-			//if (entity.KnownPosition.Y % 1 <= 0.01f)
-			//{
-			//	blockcoords = blockcoords.BlockDown();
-			//	}
-			
 			if (entity.BoundingBox.Min.Y % 1 < 0.05f)
 			{
 				blockcoords -= new BlockCoordinates(0, 1, 0);
@@ -182,31 +136,5 @@ namespace Alex.Entities.Components
 
 			return new Vector3(strafe, vertical, forward);
 		}
-		/*public bool AddTickable(Entity entity)
-		{
-			var collection = PhysicsEntities;
-
-			if (collection == null)
-				return false;
-			
-		    return collection.TryAdd(entity);
-	    }
-
-	    public bool Remove(Entity entity)
-	    {
-		    var collection = PhysicsEntities;
-
-		    if (collection == null)
-			    return false;
-		    
-		    return collection.Remove(entity);
-	    }*/
-
-		/// <inheritdoc />
-	    public void Dispose()
-	    {
-		   // var entities = PhysicsEntities.TakeAndClear();
-		   // PhysicsEntities = null;
-	    }
     }
 }

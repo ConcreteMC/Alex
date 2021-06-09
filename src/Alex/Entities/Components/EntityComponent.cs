@@ -1,5 +1,5 @@
 using System;
-using Alex.API.World;
+using Alex.Common.World;
 using Microsoft.Xna.Framework;
 
 namespace Alex.Entities.Components

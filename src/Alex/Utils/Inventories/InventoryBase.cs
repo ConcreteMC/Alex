@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using Alex.API.Input;
 using Alex.Items;
 using Alex.Networking.Java.Packets.Play;
 using MiNET.Utils;

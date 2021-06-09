@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using Alex.API.Blocks;
-using Alex.API.Data;
-using Alex.API.Utils;
+using Alex.Common.Data;
+using Alex.Common.Utils;
 using Alex.Networking.Java.Util;
 using fNbt;
 using JetBrains.Annotations;
@@ -95,7 +94,7 @@ namespace Alex.Networking.Java.Packets.Play
 						    break;
 
 					    case MetadataType.Direction:
-						    meta = new MetadataDirection(index, (API.Utils.Direction) stream.ReadVarInt());// stream.ReadVarInt();
+						    meta = new MetadataDirection(index, (Direction) stream.ReadVarInt());// stream.ReadVarInt();
 						    break;
 
 					    case MetadataType.OptUUID:
@@ -337,9 +336,9 @@ namespace Alex.Networking.Java.Packets.Play
 
     public class MetadataDirection : MetaDataEntry
     {
-	    public Alex.API.Utils.Direction Direction { get; set; }
+	    public Direction Direction { get; set; }
 	    /// <inheritdoc />
-	    public MetadataDirection(byte index, Alex.API.Utils.Direction direction) : base(index, MetadataType.Direction)
+	    public MetadataDirection(byte index, Direction direction) : base(index, MetadataType.Direction)
 	    {
 		    Direction = direction;
 	    }

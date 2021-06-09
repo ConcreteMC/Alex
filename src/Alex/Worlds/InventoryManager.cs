@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Concurrent;
-using Alex.API.Gui;
 using Alex.Gui.Dialogs.Containers;
 using Alex.Utils;
 using Alex.Utils.Inventories;

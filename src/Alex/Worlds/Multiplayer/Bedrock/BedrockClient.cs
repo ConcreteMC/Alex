@@ -13,11 +13,10 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using Alex.API;
-using Alex.API.Data.Options;
-
-using Alex.API.Services;
-using Alex.API.Utils;
+using Alex.Common;
+using Alex.Common.Data.Options;
+using Alex.Common.Services;
+using Alex.Common.Utils;
 using Alex.Entities;
 using Alex.Gamestates;
 using Alex.Net;
@@ -49,13 +48,13 @@ using Org.BouncyCastle.Crypto.Agreement;
 using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.Security;
 using Org.BouncyCastle.X509;
-using BlockCoordinates = Alex.API.Utils.Vectors.BlockCoordinates;
-using BlockFace = Alex.API.Blocks.BlockFace;
-using ConnectionInfo = Alex.API.Utils.ConnectionInfo;
+using BlockCoordinates = Alex.Common.Utils.Vectors.BlockCoordinates;
+using BlockFace = Alex.Common.Blocks.BlockFace;
+using ConnectionInfo = Alex.Common.Utils.ConnectionInfo;
 using Item = Alex.Items.Item;
 using LevelInfo = MiNET.Worlds.LevelInfo;
 using Player = Alex.Entities.Player;
-using PlayerLocation = Alex.API.Utils.Vectors.PlayerLocation;
+using PlayerLocation = Alex.Common.Utils.Vectors.PlayerLocation;
 
 namespace Alex.Worlds.Multiplayer.Bedrock
 {
@@ -897,21 +896,21 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			PlayerAction translated;
 			switch (action)
 			{
-				case API.Utils.EntityAction.StartSneaking:
+				case Common.Utils.EntityAction.StartSneaking:
 					translated = PlayerAction.StartSneak;
 					break;
-				case API.Utils.EntityAction.StopSneaking:
+				case Common.Utils.EntityAction.StopSneaking:
 					translated = PlayerAction.StopSneak;
 					break;
 
-				case API.Utils.EntityAction.StartSprinting:
+				case Common.Utils.EntityAction.StartSprinting:
 					translated = PlayerAction.StartSprint;
 					break;
-				case API.Utils.EntityAction.StopSprinting:
+				case Common.Utils.EntityAction.StopSprinting:
 					translated = PlayerAction.StopSprint;
 					break;
 				
-				case API.Utils.EntityAction.Jump:
+				case Common.Utils.EntityAction.Jump:
 					translated = PlayerAction.Jump;
 					break;
 
@@ -966,7 +965,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			SendPacket(packet);
 		}
 		
-	    public override void PlayerDigging(DiggingStatus status, BlockCoordinates position, API.Blocks.BlockFace face, Vector3 cursorPosition)
+	    public override void PlayerDigging(DiggingStatus status, BlockCoordinates position, BlockFace face, Vector3 cursorPosition)
 	    {
             if (World?.Player is Entities.Player player)
             {
@@ -1029,7 +1028,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		    return minetItem;
 	    }
 
-	    private MiNET.BlockFace ConvertBlockFace(API.Blocks.BlockFace face)
+	    private MiNET.BlockFace ConvertBlockFace(BlockFace face)
 	    {
 		    MiNET.BlockFace updatedFace =MiNET.BlockFace.None;
 
@@ -1067,7 +1066,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		    return updatedFace;
 	    }
 	    
-	    public override void BlockPlaced(BlockCoordinates position, API.Blocks.BlockFace face, int hand, int slot, Vector3 cursorPosition, Entity entity)
+	    public override void BlockPlaced(BlockCoordinates position, BlockFace face, int hand, int slot, Vector3 cursorPosition, Entity entity)
 	    {
 		    if (entity is Player p)
 		    {
@@ -1172,7 +1171,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		    }
 	    }
 
-	    public override void WorldInteraction(Entity entity, BlockCoordinates position, API.Blocks.BlockFace face, int hand, int slot, Vector3 cursorPosition)
+	    public override void WorldInteraction(Entity entity, BlockCoordinates position, BlockFace face, int hand, int slot, Vector3 cursorPosition)
 	    {
 		    MiNET.Items.Item minetItem;// = GetMiNETItem(item);
 		     var orig = entity.Inventory[slot];
@@ -1212,7 +1211,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		  SendPacket(packet);
 	    }
 
-	    public override void UseItem(Item item, int hand, ItemUseAction action, BlockCoordinates position, API.Blocks.BlockFace face, Vector3 cursorPosition)
+	    public override void UseItem(Item item, int hand, ItemUseAction action, BlockCoordinates position, BlockFace face, Vector3 cursorPosition)
 	    {
 		    MiNET.Items.Item minetItem;// = GetMiNETItem(item);
 		    minetItem = GetMiNETItem(item);

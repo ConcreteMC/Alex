@@ -1,12 +1,7 @@
 ﻿using System;
 using System.Linq;
-using Alex.API.Graphics.Typography;
-using Alex.API.Gui;
-using Alex.API.Gui.Elements;
-using Alex.API.Gui.Graphics;
-using Alex.API.Input;
-using Alex.API.Utils;
-using Alex.API.Utils.Vectors;
+using Alex.Common.Gui.Graphics;
+using Alex.Common.Utils.Vectors;
 using Alex.Entities;
 using Alex.Graphics.Models.Entity;
 using Alex.Gui.Elements;

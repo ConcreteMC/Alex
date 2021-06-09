@@ -1,10 +1,10 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
-using Alex.API.Graphics;
-using Alex.API.Graphics.GpuResources;
-using Alex.API.Utils;
-using Alex.API.Utils.Collections;
+using Alex.Common.Graphics;
+using Alex.Common.Graphics.GpuResources;
+using Alex.Common.Utils;
+using Alex.Common.Utils.Collections;
 using Alex.MoLang.Parser;
 using Alex.MoLang.Runtime;
 using Alex.MoLang.Runtime.Value;

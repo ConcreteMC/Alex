@@ -1,4 +1,4 @@
-﻿using Alex.API.Graphics;
+﻿using Alex.Common.Graphics;
 using Microsoft.Xna.Framework;
 
 namespace Alex.Gamestates.Common

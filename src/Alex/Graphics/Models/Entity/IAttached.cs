@@ -1,6 +1,5 @@
-
-using Alex.API.Graphics;
-using Alex.API.Graphics.GpuResources;
+using Alex.Common.Graphics;
+using Alex.Common.Graphics.GpuResources;
 using Alex.Gamestates;
 using Microsoft.Xna.Framework;
 

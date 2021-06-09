@@ -3,10 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
-using Alex.API;
-using Alex.API.Graphics;
-using Alex.API.Gui;
-using Alex.API.Services;
+using Alex.Common;
+using Alex.Common.Graphics;
+using Alex.Common.Services;
 using Alex.Gamestates.InGame.Hud;
 using Alex.Graphics.Camera;
 using Alex.Gui;
@@ -25,8 +24,8 @@ using Microsoft.Xna.Framework.Input;
 using MiNET.Utils;
 using NLog;
 using RocketUI;
-using GpuResourceManager = Alex.API.Graphics.GpuResources.GpuResourceManager;
-using PlayerLocation = Alex.API.Utils.Vectors.PlayerLocation;
+using GpuResourceManager = Alex.Common.Graphics.GpuResources.GpuResourceManager;
+using PlayerLocation = Alex.Common.Utils.Vectors.PlayerLocation;
 
 namespace Alex.Gamestates.InGame
 {

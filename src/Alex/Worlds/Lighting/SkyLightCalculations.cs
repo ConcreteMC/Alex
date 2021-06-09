@@ -13,9 +13,9 @@ using Alex.Worlds.Chunks;
 using Microsoft.Xna.Framework;
 using MiNET.Utils;
 using NLog;
-using BlockCoordinates = Alex.API.Utils.Vectors.BlockCoordinates;
+using BlockCoordinates = Alex.Common.Utils.Vectors.BlockCoordinates;
 using ChunkColumn = Alex.Worlds.Chunks.ChunkColumn;
-using ChunkCoordinates = Alex.API.Utils.Vectors.ChunkCoordinates;
+using ChunkCoordinates = Alex.Common.Utils.Vectors.ChunkCoordinates;
 using Color = System.Drawing.Color;
 using IBlockAccess = Alex.Worlds.Abstraction.IBlockAccess;
 

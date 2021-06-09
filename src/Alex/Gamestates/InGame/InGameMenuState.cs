@@ -1,7 +1,6 @@
 ﻿using System.Linq;
-using Alex.API.Gui;
-using Alex.API.Gui.Elements;
-using Alex.API.Utils;
+using Alex.Common.Gui.Elements;
+using Alex.Common.Gui.Graphics;
 using Alex.Gamestates.Common;
 using Alex.Gamestates.MainMenu;
 using Microsoft.Xna.Framework;
@@ -23,6 +22,7 @@ namespace Alex.Gamestates.InGame
 	        HeaderTitle.Anchor = Alignment.TopCenter;
 	        HeaderTitle.Scale = 2f;
 	        HeaderTitle.FontStyle = FontStyle.DropShadow;
+	        HeaderTitle.IsVisible = false;
 
 			_mainMenu = new StackMenu()
 			{
@@ -61,6 +61,12 @@ namespace Alex.Gamestates.InGame
 
 			AddChild(_mainMenu);
 			AddChild(_playerList);
+			
+			AddChild(new Image(AlexGuiTextures.AlexLogo)
+			{
+				Margin = new Thickness(0, 25, 0, 0),
+				Anchor = Alignment.TopCenter
+			});
         }
 
 		private bool _didInitialization = false;

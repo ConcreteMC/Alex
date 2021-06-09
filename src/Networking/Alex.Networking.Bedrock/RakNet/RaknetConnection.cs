@@ -31,11 +31,12 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
-using Alex.API.Utils;
+using Alex.Common.Utils;
 using MiNET;
 using MiNET.Net;
 using MiNET.Net.RakNet;
 using NLog;
+using ConnectionInfo = Alex.Common.Utils.ConnectionInfo;
 
 namespace Alex.Networking.Bedrock.RakNet
 {
@@ -53,7 +54,7 @@ namespace Alex.Networking.Bedrock.RakNet
 		public          short          MtuSize    { get; set; } = 1400;
 		
 		public RaknetSession              Session        { get; set; } = null;
-		public API.Utils.ConnectionInfo ConnectionInfo { get; }
+		public ConnectionInfo ConnectionInfo { get; }
 
 		public bool FoundServer => HaveServer;
 
@@ -77,7 +78,7 @@ namespace Alex.Networking.Bedrock.RakNet
 		{
 			_endpoint = new IPEndPoint(IPAddress.Any, 0);
 
-			ConnectionInfo = new API.Utils.ConnectionInfo();
+			ConnectionInfo = new ConnectionInfo();
 			
 			byte[] buffer = new byte[8];
 			FastRandom.Instance.NextBytes(buffer);

@@ -1,5 +1,4 @@
-using Alex.API.Input;
-using Alex.API.Utils;
+using Alex.Common.Utils;
 using Alex.Entities;
 using Microsoft.Xna.Framework.Input;
 using NLog;

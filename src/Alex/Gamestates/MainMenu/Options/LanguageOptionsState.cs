@@ -1,9 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using Alex.API.Gui.Elements;
-using Alex.API.Gui.Graphics;
-using Alex.API.Localization;
+using Alex.Common.Gui.Elements;
+using Alex.Common.Localization;
 using Alex.Gui;
 using RocketUI;
 

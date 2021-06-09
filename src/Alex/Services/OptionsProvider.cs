@@ -1,6 +1,6 @@
 ﻿using System;
-using Alex.API.Data.Options;
-using Alex.API.Services;
+using Alex.Common.Data.Options;
+using Alex.Common.Services;
 using Newtonsoft.Json;
 using NLog;
 

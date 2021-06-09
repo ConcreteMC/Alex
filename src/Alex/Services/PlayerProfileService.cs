@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Alex.API.Graphics;
-using Alex.API.Graphics.GpuResources;
-using Alex.API.Services;
-using Alex.API.Utils;
+using Alex.Common.Graphics.GpuResources;
+using Alex.Common.Services;
+using Alex.Common.Utils;
 using Alex.Utils;
 using MojangSharp.Api;
 using MojangSharp.Endpoints;

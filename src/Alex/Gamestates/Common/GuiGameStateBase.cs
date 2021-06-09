@@ -1,6 +1,6 @@
-﻿using Alex.API.GameStates;
-using Alex.API.Graphics;
-using Alex.API.Utils;
+﻿using Alex.Common.GameStates;
+using Alex.Common.Graphics;
+using Alex.Common.Utils;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using NLog;

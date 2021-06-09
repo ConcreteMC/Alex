@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
-using Alex.API.Utils;
+using Alex.Common.Utils;
 using Microsoft.Xna.Framework;
 
 namespace Alex.Utils

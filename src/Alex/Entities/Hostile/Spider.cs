@@ -1,6 +1,5 @@
 using System;
 using System.Diagnostics;
-using Alex.API.Graphics;
 using Alex.Graphics.Models.Entity;
 using Alex.Networking.Java.Packets.Play;
 using Alex.Worlds;

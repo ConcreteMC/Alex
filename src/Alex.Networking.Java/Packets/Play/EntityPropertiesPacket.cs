@@ -2,7 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using Alex.API.Utils;
+using Alex.Common.Entities.Properties;
 using Alex.Networking.Java.Util;
 
 namespace Alex.Networking.Java.Packets.Play
@@ -74,7 +74,7 @@ namespace Alex.Networking.Java.Packets.Play
 
 		public string                  Key       { get; }
 		public double                  Value     { get; set; }
-		public ConcurrentDictionary<MiNET.Utils.UUID, Modifier> Modifiers { get; }
+		private ConcurrentDictionary<MiNET.Utils.UUID, Modifier> Modifiers { get; }
 
 		public EntityProperty(string key, double value, Modifier[] modifiers)
 		{
@@ -107,17 +107,28 @@ namespace Alex.Networking.Java.Packets.Play
 
 		public void RemoveModifier(MiNET.Utils.UUID key)
 		{
-			Modifiers.TryRemove(key, out _);
+			if (Modifiers.TryRemove(key, out _))
+			{
+				
+			}
 		}
 		
-		protected virtual IEnumerable<Modifier> GetAppliedModifiers()
+		/*protected virtual IEnumerable<Modifier> GetAppliedModifiers()
 		{
-			return Modifiers.Values.ToArray();
-		}
+			foreach (var modifier in Modifiers)
+			{
+				yield return modifier.Value;
+			}
+			//return Modifiers.Values.ToArray();
+		}*/
 		
 		public virtual double Calculate()
 		{
-			var modifiers = GetAppliedModifiers().ToArray();
+			if (Modifiers.Count == 0)
+				return Value;
+			
+			var modifiers = Modifiers.Values.ToArray();
+			//var modifiers = GetAppliedModifiers().ToArray();
 			
 			var baseValue = Value;
 			foreach (var modifier in modifiers.Where(modifier => modifier.Operation == ModifierMode.Add))
@@ -139,28 +150,5 @@ namespace Alex.Networking.Java.Packets.Play
 
 			return value;
 		}
-	}
-
-	public class Modifier
-	{
-		public MiNET.Utils.UUID         Uuid;
-		public double       Amount;
-		public ModifierMode Operation;
-
-		public Modifier() { }
-
-		public Modifier(MiNET.Utils.UUID uuid, double amount, ModifierMode mode)
-		{
-			Uuid = uuid;
-			Amount = amount;
-			Operation = mode;
-		}
-	}
-
-	public enum ModifierMode
-	{
-		Add          = 0,
-		AddMultiplied = 1,
-		Multiply     = 2
 	}
 }

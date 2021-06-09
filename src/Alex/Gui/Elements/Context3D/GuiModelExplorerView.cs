@@ -1,6 +1,4 @@
 ﻿using RocketUI;
-using Alex.API.Gui.Graphics;
-using Alex.API.Utils;
 using Alex.Gamestates;
 using Alex.Gamestates.Debugging;
 using Microsoft.Xna.Framework;

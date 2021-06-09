@@ -8,16 +8,14 @@ using System.Linq;
 using System.Net;
 using System.Reflection;
 using System.Text;
-using Alex.API.Data.Options;
-using Alex.API.Graphics;
-using Alex.API.Graphics.GpuResources;
-using Alex.API.Resources;
-using Alex.API.Services;
-using Alex.API.Utils;
 using Alex.Blocks;
 using Alex.Blocks.Mapping;
 using Alex.Blocks.Minecraft;
 using Alex.Blocks.State;
+using Alex.Common.Graphics.GpuResources;
+using Alex.Common.Resources;
+using Alex.Common.Services;
+using Alex.Common.Utils;
 using Alex.Entities;
 using Alex.Entities.BlockEntities;
 using Alex.Gamestates;
@@ -49,7 +47,7 @@ using NLog;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using DateTime = System.DateTime;
-using ResourceLocation = Alex.API.Resources.ResourceLocation;
+using ResourceLocation = Alex.Common.Resources.ResourceLocation;
 using Task = System.Threading.Tasks.Task;
 
 namespace Alex
@@ -60,6 +58,7 @@ namespace Alex
 
 		private LinkedList<McResourcePack> ActiveResourcePacks { get; } = new LinkedList<McResourcePack>();
 		private LinkedList<BedrockResourcePack> ActiveBedrockResourcePacks { get; } = new LinkedList<BedrockResourcePack>();
+		public IReadOnlyCollection<BedrockResourcePack> ActiveBedrockResources => ActiveBedrockResourcePacks;
 		public BedrockResourcePack BedrockResourcePack => ActiveBedrockResourcePacks.First?.Value;
 		public  Registries                 Registries          { get; private set; }
 		public  AtlasGenerator             BlockAtlas               { get; private set; }
@@ -188,6 +187,43 @@ namespace Alex
 			}
 
 			return true;
+		}
+
+		internal void ReloadTextures(IProgressReceiver progress)
+		{
+			progress?.UpdateProgress(0, $"Loading UI textures...");
+			Alex.GuiRenderer.LoadResourcePackTextures(this, progress);
+		}
+		
+		internal bool Remove(ResourcePack resourcePack)
+		{
+			if (resourcePack.Info.Type == ResourcePackType.Bedrock)
+			{
+				if (ActiveBedrockResourcePacks.Remove((BedrockResourcePack) resourcePack))
+				{
+					return true;
+				}
+			}
+
+			return false;
+		}
+		
+		internal IEnumerable<BedrockResourcePack> LoadBedrockTexturePack(IFilesystem fs, IProgressReceiver progress = null)
+		{
+			//var fs = new ZipFileSystem(new MemoryStream(data), "servertextures");
+
+			foreach (var resourcePack in LoadResourcePack(null, fs))
+			{
+				if (resourcePack.Info.Type == ResourcePackType.Bedrock)
+				{
+					var pack = (BedrockResourcePack) resourcePack;
+					ActiveBedrockResourcePacks.AddLast(pack);
+					
+					ProcessBedrockResources(progress, Alex.Instance.GraphicsDevice, pack);
+
+					yield return pack;
+				}
+			}
 		}
 
 		private IEnumerable<ResourcePack> LoadResourcePack(IProgressReceiver progressReceiver,
@@ -580,12 +616,10 @@ namespace Alex
 	        for (int index = 0; index < activeBedrockPacks.Length; index++)
 	        {
 		        var resourcePack = activeBedrockPacks[index];
+		        ProcessBedrockResources(progress, device, resourcePack);
+		        
 		        //LoadEntityModels(resourcePack, progress);
-		        int modelCount = EntityFactory.LoadModels(resourcePack, this, device, true, progress);
-
-		        Log.Debug($"Imported {modelCount} entity models from \"{resourcePack.Info.Name}\"...");
-
-		        Alex.ParticleManager.Load(resourcePack);
+		        
 	        }
 
 	        progress?.UpdateProgress(0, $"Loading UI textures...");
@@ -612,6 +646,15 @@ namespace Alex
 	        {
 		        PreloadCallback?.Invoke(f.FontBitmap, McResourcePack.BitmapFontCharacters.ToList());
 	        }
+        }
+
+        private void ProcessBedrockResources(IProgressReceiver progress, GraphicsDevice device, BedrockResourcePack resourcePack)
+        {
+	        int modelCount = EntityFactory.LoadEntityDefinitions(resourcePack, this, device, true, progress);
+
+	        Log.Debug($"Imported {modelCount} entity models from \"{resourcePack.Info.Name}\"...");
+
+	        Alex.ParticleManager.Load(resourcePack);
         }
 
         public void LoadBedrockPacks(IProgressReceiver progressReceiver, DirectoryInfo directoryInfo)

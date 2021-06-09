@@ -1,4 +1,4 @@
-using Alex.API.Resources;
+using Alex.Common.Resources;
 
 namespace Alex.Items
 {

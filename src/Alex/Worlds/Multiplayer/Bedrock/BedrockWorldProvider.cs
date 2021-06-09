@@ -3,8 +3,8 @@ using System.Diagnostics;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
-using Alex.API.Services;
-using Alex.API.World;
+using Alex.Common.Services;
+using Alex.Common.World;
 using Alex.Gui.Forms;
 using Alex.Net;
 using Alex.Worlds.Abstraction;
@@ -13,10 +13,10 @@ using MiNET;
 using MiNET.Net;
 using MiNET.Utils;
 using NLog;
-using ChunkCoordinates = Alex.API.Utils.Vectors.ChunkCoordinates;
+using ChunkCoordinates = Alex.Common.Utils.Vectors.ChunkCoordinates;
 using MathF = System.MathF;
 using Player = Alex.Entities.Player;
-using PlayerLocation = Alex.API.Utils.Vectors.PlayerLocation;
+using PlayerLocation = Alex.Common.Utils.Vectors.PlayerLocation;
 
 namespace Alex.Worlds.Multiplayer.Bedrock
 {

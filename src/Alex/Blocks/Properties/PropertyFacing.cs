@@ -1,6 +1,6 @@
 ﻿using System;
-using Alex.API.Blocks;
 using Alex.Blocks.State;
+using Alex.Common.Blocks;
 using Alex.ResourcePackLib.Json;
 
 namespace Alex.Blocks.Properties

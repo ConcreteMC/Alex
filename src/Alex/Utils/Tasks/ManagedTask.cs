@@ -41,6 +41,7 @@ namespace Alex.Utils.Tasks
 			finally
 			{
 				State = TaskState.Finished;
+				Data = null;
 			}
 		}
 

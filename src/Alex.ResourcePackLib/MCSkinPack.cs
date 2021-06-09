@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
-using Alex.API.Utils;
+using Alex.Common.Utils;
 using Alex.ResourcePackLib.IO;
 using Alex.ResourcePackLib.IO.Abstract;
 using Alex.ResourcePackLib.Json;

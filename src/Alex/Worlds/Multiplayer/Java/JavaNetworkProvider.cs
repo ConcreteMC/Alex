@@ -1,8 +1,8 @@
 using System;
 using System.Threading;
-using Alex.API;
-using Alex.API.Utils;
-using Alex.API.Utils.Vectors;
+using Alex.Common;
+using Alex.Common.Utils;
+using Alex.Common.Utils.Vectors;
 using Alex.Entities;
 using Alex.Items;
 using Alex.Net;
@@ -12,6 +12,7 @@ using Microsoft.Xna.Framework;
 using MiNET;
 using MiNET.Net;
 using MiNET.Utils.IO;
+using BlockFace = Alex.Common.Blocks.BlockFace;
 using ConnectionState = Alex.Networking.Java.ConnectionState;
 using Player = Alex.Entities.Player;
 
@@ -69,7 +70,7 @@ namespace Alex.Worlds.Multiplayer.Java
 
 		public override void EntityAction(int entityId, EntityAction action)
 		{
-			if (action == API.Utils.EntityAction.Jump)
+			if (action == Common.Utils.EntityAction.Jump)
 				return;
 
 			EntityActionPacket packet = EntityActionPacket.CreateObject();
@@ -108,7 +109,7 @@ namespace Alex.Worlds.Multiplayer.Java
 			Client.SendPacket(packet);
 		}
 
-	    public override void BlockPlaced(BlockCoordinates position, API.Blocks.BlockFace face, int hand, int slot, Vector3 cursorPosition, Entity p)
+	    public override void BlockPlaced(BlockCoordinates position, BlockFace face, int hand, int slot, Vector3 cursorPosition, Entity p)
 	    {
 		    var packet = PlayerBlockPlacementPacket.CreateObject();
 		    packet.CursorPosition = cursorPosition;
@@ -120,7 +121,7 @@ namespace Alex.Worlds.Multiplayer.Java
 		    Client.SendPacket(packet);
 	    }
 
-		public override void PlayerDigging(DiggingStatus status, BlockCoordinates position, API.Blocks.BlockFace face, Vector3 cursorPosition)
+		public override void PlayerDigging(DiggingStatus status, BlockCoordinates position, BlockFace face, Vector3 cursorPosition)
 		{
 			var packet = PlayerDiggingPacket.CreateObject();
 			packet.Face = face;
@@ -161,7 +162,7 @@ namespace Alex.Worlds.Multiplayer.Java
 			}
 		}
 
-		public override void WorldInteraction(Entity entity, BlockCoordinates position, API.Blocks.BlockFace face, int hand, int slot, Vector3 cursorPosition)
+		public override void WorldInteraction(Entity entity, BlockCoordinates position, BlockFace face, int hand, int slot, Vector3 cursorPosition)
 		{
 			var packet = PlayerBlockPlacementPacket.CreateObject();
 			packet.Location = position;
@@ -173,7 +174,7 @@ namespace Alex.Worlds.Multiplayer.Java
 			Client.SendPacket(packet);
 		}
 
-		public override void UseItem(Item item, int hand, ItemUseAction action, BlockCoordinates position, API.Blocks.BlockFace face, Vector3 cursorPosition)
+		public override void UseItem(Item item, int hand, ItemUseAction action, BlockCoordinates position, BlockFace face, Vector3 cursorPosition)
 		{
 			//if (!(action == ))
 			var packet = UseItemPacket.CreateObject();

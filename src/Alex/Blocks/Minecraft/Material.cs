@@ -1,8 +1,8 @@
-﻿using Alex.API.Blocks;
-using Alex.API.Utils;
+﻿using Alex.Common.Blocks;
+using Alex.Common.Utils;
 using Alex.Utils;
 using Microsoft.Xna.Framework;
-using ItemType = Alex.API.Utils.ItemType;
+using ItemType = Alex.Common.Utils.ItemType;
 
 namespace Alex.Blocks.Minecraft
 {

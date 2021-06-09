@@ -1,9 +1,7 @@
 ﻿using System;
-using Alex.API.Gui;
-using Alex.API.Gui.Elements;
-
-using Alex.API.Services;
-using Alex.API.Utils;
+using Alex.Common.Gui.Elements;
+using Alex.Common.Services;
+using Alex.Common.Utils;
 using Alex.Gamestates.Common;
 using Microsoft.Xna.Framework;
 using NLog;

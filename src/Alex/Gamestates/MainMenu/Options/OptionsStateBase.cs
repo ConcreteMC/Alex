@@ -1,11 +1,9 @@
 ﻿using System;
-using Alex.API.Data.Options;
-using Alex.API.GameStates;
-using Alex.API.Graphics;
-using Alex.API.Gui;
-using Alex.API.Gui.Elements;
-using Alex.API.Gui.Graphics;
-using Alex.API.Services;
+using Alex.Common.Data.Options;
+using Alex.Common.GameStates;
+using Alex.Common.Graphics;
+using Alex.Common.Gui.Elements;
+using Alex.Common.Services;
 using Alex.Gamestates.Common;
 using Alex.Gui;
 using Alex.Gui.Elements;

@@ -6,11 +6,10 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Channels;
-using Alex.API.Utils;
-using Alex.API.Utils.Collections;
 using Alex.Blocks;
 using Alex.Blocks.Mapping;
 using Alex.Blocks.Minecraft;
+using Alex.Common.Utils.Collections;
 using Alex.Entities.BlockEntities;
 using Alex.Utils;
 using Alex.Worlds.Chunks;
@@ -20,9 +19,9 @@ using MiNET;
 using MiNET.Net;
 using MiNET.Utils;
 using NLog;
-using BlockCoordinates = Alex.API.Utils.Vectors.BlockCoordinates;
+using BlockCoordinates = Alex.Common.Utils.Vectors.BlockCoordinates;
 using BlockState = Alex.Blocks.State.BlockState;
-using ChunkCoordinates = Alex.API.Utils.Vectors.ChunkCoordinates;
+using ChunkCoordinates = Alex.Common.Utils.Vectors.ChunkCoordinates;
 using NibbleArray = MiNET.Utils.NibbleArray;
 
 namespace Alex.Worlds.Multiplayer.Bedrock

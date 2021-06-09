@@ -1,6 +1,6 @@
 ﻿using System;
-using Alex.API.Services;
-using Alex.API.Utils;
+using Alex.Common.Services;
+using Alex.Common.Utils;
 using Alex.Gui;
 using Microsoft.Xna.Framework;
 using MojangSharp.Api;

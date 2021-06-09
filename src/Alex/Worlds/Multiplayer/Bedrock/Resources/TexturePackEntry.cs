@@ -1,4 +1,5 @@
 using System.IO;
+using System.Linq;
 using Alex.ResourcePackLib;
 using Alex.ResourcePackLib.IO;
 using MiNET.Utils;
@@ -14,6 +15,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 		private ZipFileSystem FileSystem { get; set; } = null;
 		//public BedrockResourcePack ResourcePack { get; private set; }
 
+		private BedrockResourcePack[] _resourcePacks = null;
 		/// <inheritdoc />
 		public TexturePackEntry(TexturePackInfo info) : base(info.UUID, info.Version)
 		{
@@ -27,20 +29,28 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 		{
 			base.OnComplete(data);
 
-			//if (!Directory.Exists("texturepacks"))
-			//	Directory.CreateDirectory("texturepacks");
+			if (!Alex.Instance.Options.AlexOptions.MiscelaneousOptions.LoadServerResources.Value)
+				return;
 
-			//	File.WriteAllBytes(Path.Combine("texturepacks", $"TEXTUREPACK_{Identifier}_{Version}.zip"), data);
+			if (!Directory.Exists("texturepacks"))
+				Directory.CreateDirectory("texturepacks");
 
-			FileSystem = new ZipFileSystem(new MemoryStream(data), Info.ContentIdentity);
+			File.WriteAllBytes(Path.Combine("texturepacks", $"TEXTUREPACK_{Identifier}_{Version}.zip"), data);
 
 			if (!string.IsNullOrWhiteSpace(Info.ContentKey))
 			{
+				Log.Warn($"Skipping resources as they seem to require encryption.");
+				return;
 				FileSystem.UseEncryption(Info.ContentKey);
 			}
 			
+			FileSystem = new ZipFileSystem(new MemoryStream(data), Info.ContentIdentity);
+			
+			Log.Info($"Loading textures etc from bedrock pack...");
+			_resourcePacks = Alex.Instance.Resources.LoadBedrockTexturePack(FileSystem).ToArray();
 			//ResourcePack = new BedrockResourcePack(FileSystem);
 
+			Log.Info($"Texturepack completed: {Identifier}_{Version}");
 			//	Log.Info($"Texturepack contains {ResourcePack.Textures.Count} textures");
 		}
 
@@ -51,6 +61,17 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 
 			if (disposing)
 			{
+				if (_resourcePacks != null)
+				{
+					foreach (var pack in _resourcePacks)
+					{
+						Alex.Instance.Resources.Remove(pack);
+						pack.Dispose();
+					}
+
+					_resourcePacks = null;
+				}
+
 				FileSystem?.Dispose();
 				FileSystem = null;
 			}

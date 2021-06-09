@@ -42,7 +42,7 @@ using MiNET.Utils.Nbt;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using NLog;
-using ConnectionInfo = Alex.API.Utils.ConnectionInfo;
+using ConnectionInfo = Alex.Common.Utils.ConnectionInfo;
 using LogManager = NLog.LogManager;
 
 namespace Alex.Networking.Bedrock.RakNet

@@ -1,8 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Alex.API.Utils;
-using Alex.API.Utils.Vectors;
+using Alex.Common.Utils.Vectors;
 using Alex.Worlds;
 using Microsoft.Xna.Framework;
 using NLog;

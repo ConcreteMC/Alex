@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Alex.API.Services;
-using Alex.API.Utils;
+using Alex.Common.Services;
+using Alex.Common.Utils;
 using Microsoft.Extensions.DependencyInjection;
 using NLog;
 

@@ -93,82 +93,84 @@ namespace Alex.MoLang.Runtime.Struct
 
 					var methodParams = method.GetParameters();
 
-					funcs.Add(
-						name, (instance, mo) =>
+					IMoValue executeMolangFunction(object instance, MoParams mo)
+					{
+						IMoValue value = DoubleValue.Zero;
+
+						object[] parameters = new object[methodParams.Length];
+						//List<object> parameters = new List<object>();
+
+						if (methodParams.Length == 1 && methodParams[0].ParameterType == typeof(MoParams))
 						{
-							IMoValue value = DoubleValue.Zero;
-
-							List<object> parameters = new List<object>();
-
-							if (methodParams.Length == 1 && methodParams[0].ParameterType == typeof(MoParams))
+							parameters[0] = mo;
+							//parameters.Add(mo);
+						}
+						else
+						{
+							for (var index = 0; index < methodParams.Length; index++)
 							{
-								parameters.Add(mo);
-							}
-							else
-							{
-								for (var index = 0; index < methodParams.Length; index++)
+								var parameter = methodParams[index];
+
+								if (!mo.Contains(index))
 								{
-									var parameter = methodParams[index];
+									if (!parameter.IsOptional) throw new MissingMethodException($"Missing parameter: {parameter.Name}");
 
-									if (!mo.Contains(index))
-									{
-										if (!parameter.IsOptional)
-											throw new MissingMethodException($"Missing parameter: {parameter.Name}");
-
-										break;
-									}
-
-									var t = parameter.ParameterType;
-
-									if (t == typeof(MoParams))
-									{
-										parameters.Add(mo);
-									}
-									else if (t == typeof(int))
-									{
-										parameters.Add(mo.GetInt(index));
-									}
-									else if (t == typeof(double))
-									{
-										parameters.Add(mo.GetDouble(index));
-									}
-									else if (t == typeof(float))
-									{
-										parameters.Add((float) mo.GetDouble(index));
-									}
-									else if (t == typeof(string))
-									{
-										parameters.Add(mo.GetString(index));
-									}
-									else if (typeof(IMoStruct).IsAssignableFrom(t))
-									{
-										parameters.Add(mo.GetStruct(index));
-									}
-									else if (typeof(MoLangEnvironment).IsAssignableFrom(t))
-									{
-										parameters.Add(mo.GetEnv(index));
-									}
-									else
-									{
-										throw new Exception("Unknown parameter type.");
-									}
-
-									//TODO: Continue.
+									break;
 								}
+
+								var t = parameter.ParameterType;
+
+								if (t == typeof(MoParams))
+								{
+									parameters[index] = mo; //.Add(mo);
+								}
+								else if (t == typeof(int))
+								{
+									parameters[index] = mo.GetInt(index);
+								}
+								else if (t == typeof(double))
+								{
+									parameters[index] = mo.GetDouble(index);
+								}
+								else if (t == typeof(float))
+								{
+									parameters[index] = (float) mo.GetDouble(index);
+								}
+								else if (t == typeof(string))
+								{
+									parameters[index] = mo.GetString(index);
+								}
+								else if (typeof(IMoStruct).IsAssignableFrom(t))
+								{
+									parameters[index] = mo.GetStruct(index);
+								}
+								else if (typeof(MoLangEnvironment).IsAssignableFrom(t))
+								{
+									parameters[index] = mo.GetEnv(index);
+								}
+								else
+								{
+									throw new Exception("Unknown parameter type.");
+								}
+
+								//TODO: Continue.
 							}
+						}
 
-							var result = method.Invoke(instance, parameters.ToArray());
+						var result = method.Invoke(instance, parameters);
 
-							if (result != null)
-							{
-								if (result is IMoValue moValue)
-									return moValue;
+						if (result != null)
+						{
+							if (result is IMoValue moValue) return moValue;
 
-								return MoValue.FromObject(result);
-							}
+							return MoValue.FromObject(result);
+						}
 
-							return value;
-						});
+						return value;
+					}
+
+					funcs.Add(
+						name, executeMolangFunction);
 				}
 			}
 

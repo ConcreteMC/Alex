@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Alex.API.Input;
 using Alex.Items;
 using log4net;
 using RocketUI.Input;

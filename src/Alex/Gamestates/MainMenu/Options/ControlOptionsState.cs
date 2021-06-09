@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Alex.API.Gui;
-using Alex.API.Gui.Elements;
+using Alex.Common.Gui.Elements;
+using Alex.Common.Input;
 using RocketUI;
-using Alex.API.Input;
 using Alex.Gui;
 using Alex.Gui.Elements;
 using Microsoft.Xna.Framework;

@@ -1,6 +1,5 @@
-using Alex.API.Utils;
-using Alex.API.Utils.Noise;
-using Alex.API.Utils.Vectors;
+using Alex.Common.Utils.Noise;
+using Alex.Common.Utils.Vectors;
 using Microsoft.Xna.Framework;
 
 namespace Alex.Blocks.Minecraft

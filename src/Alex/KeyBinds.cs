@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using Alex.API.Input;
 using Microsoft.Xna.Framework.Input;
 
 namespace Alex

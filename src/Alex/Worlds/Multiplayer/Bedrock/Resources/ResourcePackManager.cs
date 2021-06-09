@@ -139,6 +139,11 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 				{
 					//	Log.Info($"Texturepack contains {tpe.ResourcePack.Textures.Count} textures");
 				}
+
+				if (!WaitingOnResources && Alex.Instance.Options.AlexOptions.MiscelaneousOptions.LoadServerResources.Value) //We got all packs.
+				{
+					_resourceManager.ReloadTextures(null);
+				}
 			}
 			else
 			{
@@ -181,6 +186,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 			{
 				entry.Value?.Dispose();
 			}
+			
+			_resourceManager.ReloadTextures(null);
 		}
 	}
 }

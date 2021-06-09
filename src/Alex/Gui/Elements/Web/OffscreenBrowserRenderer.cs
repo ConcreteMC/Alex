@@ -1,6 +1,6 @@
 using System;
 using System.Threading.Tasks;
-using Alex.API.Graphics.GpuResources;
+using Alex.Common.Graphics.GpuResources;
 using Alex.Utils;
 using Microsoft.Xna.Framework.Graphics;
 using NLog;

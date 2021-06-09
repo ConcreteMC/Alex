@@ -4,12 +4,10 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using Alex.API.Blocks;
-using Alex.API.Graphics;
-using Alex.API.Graphics.GpuResources;
-using Alex.API.Utils;
-using Alex.API.Utils.Collections;
-using Alex.API.Utils.Vectors;
+using Alex.Common.Blocks;
+using Alex.Common.Graphics;
+using Alex.Common.Graphics.GpuResources;
+using Alex.Common.Utils.Vectors;
 using Alex.Graphics.Models.Blocks;
 using Alex.Utils.Tasks;
 using Alex.Worlds.Abstraction;
@@ -110,11 +108,11 @@ namespace Alex.Worlds.Chunks
 		{
 			lock (_writeLock)
 			{
-				var bi = BlockIndices;
-
-				if (bi == null) return null;
-				
 				var blockIndices = BlockIndices;
+
+				if (blockIndices == null) return null;
+				
+				//var blockIndices = BlockIndices;
 				var size = blockIndices.Sum(x => x.Value.Count);
 				//length = size;
 

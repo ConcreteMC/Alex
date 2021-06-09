@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.IO.Compression;
-using Alex.API.Utils;
 using Alex.ResourcePackLib.Generic;
 using Alex.ResourcePackLib.IO;
 using Alex.ResourcePackLib.IO.Abstract;

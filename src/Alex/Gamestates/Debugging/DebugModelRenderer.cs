@@ -1,12 +1,6 @@
 using System;
 using System.Numerics;
-
-using Alex.API.Graphics;
-using Alex.API.Gui;
 using RocketUI;
-using Alex.API.Gui.Graphics;
-using Alex.API.Services;
-using Alex.API.Utils;
 using Alex.Graphics.Camera;
 using Alex.Gui.Elements.Context3D;
 using Alex.Worlds;

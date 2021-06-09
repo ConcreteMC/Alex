@@ -1,5 +1,4 @@
-﻿using Alex.API.Blocks;
-using Alex.ResourcePackLib.Json;
+﻿using Alex.ResourcePackLib.Json;
 
 namespace Alex.Blocks.Minecraft
 {

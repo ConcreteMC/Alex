@@ -1,7 +1,6 @@
 ﻿using System;
-using Alex.API.Blocks;
-using Alex.API.Utils;
-using Alex.API.Utils.Vectors;
+using Alex.Common.Blocks;
+using Alex.Common.Utils.Vectors;
 using Alex.Networking.Java.Util;
 using Microsoft.Xna.Framework;
 

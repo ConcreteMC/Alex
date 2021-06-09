@@ -1,5 +1,4 @@
-﻿using Alex.API.Gui.Graphics;
-using Alex.Gamestates.MainMenu.Options;
+﻿using Alex.Gamestates.MainMenu.Options;
 using Alex.Gui;
 using RocketUI;
 

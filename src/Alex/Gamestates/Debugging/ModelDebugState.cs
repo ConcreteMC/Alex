@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
-using Alex.API;
-using Alex.API.Graphics;
-using Alex.API.Resources;
-using Alex.API.Utils;
-using Alex.API.Utils.Vectors;
 using Alex.Blocks;
 using Alex.Blocks.State;
+using Alex.Common;
+using Alex.Common.Graphics;
+using Alex.Common.Resources;
+using Alex.Common.Utils;
+using Alex.Common.Utils.Vectors;
 using Alex.Entities;
 using Alex.Gamestates.Common;
 using Alex.Gamestates.InGame;
@@ -27,7 +27,7 @@ using Microsoft.Xna.Framework.Input;
 using RocketUI;
 using Color = Microsoft.Xna.Framework.Color;
 using DateTime = System.DateTime;
-using GpuResourceManager = Alex.API.Graphics.GpuResources.GpuResourceManager;
+using GpuResourceManager = Alex.Common.Graphics.GpuResources.GpuResourceManager;
 using Task = System.Threading.Tasks.Task;
 
 namespace Alex.Gamestates.Debugging

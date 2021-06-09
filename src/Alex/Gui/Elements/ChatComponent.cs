@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Alex.API.Data;
-using Alex.API.Graphics.Typography;
-using Alex.API.Gui;
-
-using Alex.API.Gui.Graphics;
-using Alex.API.Utils;
+using Alex.Common.Data;
+using Alex.Common.Graphics.Typography;
+using Alex.Common.Utils;
 using Alex.Net;
 using Alex.Utils;
 using Alex.Utils.Commands;
@@ -19,7 +16,7 @@ using NLog;
 using RocketUI;
 using SixLabors.ImageSharp.Drawing;
 
-using MessageType = Alex.API.Data.MessageType;
+using MessageType = Alex.Common.Data.MessageType;
 
 namespace Alex.Gui.Elements
 {
@@ -174,7 +171,7 @@ namespace Alex.Gui.Elements
 					var currentSelection = tabCompletionResults[offset];
 					if (currentSelection.Match.HasTooltip)
 					{
-						graphics.DrawString(Font, currentSelection.Match.Tooltip, new Vector2(TextElement.RenderBounds.BottomLeft().X + TextElement.Margin.Left + stringSize.X, TextElement.RenderBounds.Y + TextElement.Margin.Top), API.Utils.TextColor.Gray, FontStyle.None);
+						graphics.DrawString(Font, currentSelection.Match.Tooltip, new Vector2(TextElement.RenderBounds.BottomLeft().X + TextElement.Margin.Left + stringSize.X, TextElement.RenderBounds.Y + TextElement.Margin.Top), Common.Utils.TextColor.Gray, FontStyle.None);
 					}
 				}
 			}
@@ -259,18 +256,18 @@ namespace Alex.Gui.Elements
 			graphics.FillRectangle(new Rectangle(renderPos.ToPoint(), new Point(Width, (int) Math.Ceiling(size.Y + 2))),
 				new Color(Color.Black, alpha * 0.5f));
 
-			Font.DrawString(graphics.SpriteBatch, text, renderPos + new Vector2(Padding.Left, 2), (Color) API.Utils.TextColor.White, opacity: alpha);
+			Font.DrawString(graphics.SpriteBatch, text, renderPos + new Vector2(Padding.Left, 2), (Color) Common.Utils.TextColor.White, opacity: alpha);
 			offset.Y -= (size.Y + 2);
 		}
 
 		public static TextColor FindLastColor(string message)
 		{
-			TextColor last = API.Utils.TextColor.White;
+			TextColor last = Common.Utils.TextColor.White;
 			for (int i = 0; i < message.Length - 1; i++)
 			{
 				if (message[i] == '§')
 				{
-					last = API.Utils.TextColor.GetColor(message[i + 1]);
+					last = Common.Utils.TextColor.GetColor(message[i + 1]);
 					i++;
 				}
 			}
@@ -515,14 +512,14 @@ namespace Alex.Gui.Elements
 		{
 			string msg = message;
 
-			TextColor lastColor = API.Utils.TextColor.White;
+			TextColor lastColor = Common.Utils.TextColor.White;
 
 			foreach (var split in msg.Split('\n'))
 			{
 				foreach (var line in CalculateLines(split).Reverse())
 				{
 					var t = line;
-					if (lastColor != API.Utils.TextColor.White)
+					if (lastColor != Common.Utils.TextColor.White)
 					{
 						t = $"§{lastColor.Code}{t}";
 					}

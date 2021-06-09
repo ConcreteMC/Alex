@@ -1,8 +1,7 @@
-﻿using Alex.API.Data.Options;
-using Alex.API.GameStates;
-using Alex.API.Graphics;
-using Alex.API.Gui;
-using Alex.API.Services;
+﻿using Alex.Common.Data.Options;
+using Alex.Common.GameStates;
+using Alex.Common.Graphics;
+using Alex.Common.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;

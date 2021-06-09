@@ -4,10 +4,10 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
-using Alex.API.Resources;
-using Alex.API.Utils;
 using Alex.Blocks;
 using Alex.Blocks.Minecraft;
+using Alex.Common.Resources;
+using Alex.Common.Utils;
 using Alex.Graphics.Models.Blocks;
 using Alex.Graphics.Models.Items;
 using Alex.ResourcePackLib;
@@ -52,22 +52,22 @@ namespace Alex.Items
 			switch (material)
 			{
 				case ItemMaterial.None:
-					item.Material = API.Utils.ItemMaterial.None;
+					item.Material = Common.Utils.ItemMaterial.None;
 					break;
 				case ItemMaterial.Wood:
-					item.Material = API.Utils.ItemMaterial.Wood;
+					item.Material = Common.Utils.ItemMaterial.Wood;
 					break;
 				case ItemMaterial.Stone:
-					item.Material = API.Utils.ItemMaterial.Stone;
+					item.Material = Common.Utils.ItemMaterial.Stone;
 					break;
 				case ItemMaterial.Gold:
-					item.Material = API.Utils.ItemMaterial.Gold;
+					item.Material = Common.Utils.ItemMaterial.Gold;
 					break;
 				case ItemMaterial.Iron:
-					item.Material = API.Utils.ItemMaterial.Iron;
+					item.Material = Common.Utils.ItemMaterial.Iron;
 					break;
 				case ItemMaterial.Diamond:
-					item.Material = API.Utils.ItemMaterial.Diamond;
+					item.Material = Common.Utils.ItemMaterial.Diamond;
 					break;
 			}
 		}

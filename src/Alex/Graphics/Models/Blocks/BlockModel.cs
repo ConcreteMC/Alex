@@ -1,10 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using Alex.API.Blocks;
-using Alex.API.Graphics;
-using Alex.API.Resources;
-using Alex.API.Utils.Vectors;
 using Alex.Blocks.State;
+using Alex.Common.Blocks;
+using Alex.Common.Graphics;
+using Alex.Common.Resources;
+using Alex.Common.Utils.Vectors;
 using Alex.Utils;
 using Alex.Worlds.Abstraction;
 using Alex.Worlds.Chunks;

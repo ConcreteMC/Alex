@@ -1,4 +1,4 @@
-﻿using Alex.API.Blocks;
+﻿using Alex.Common.Blocks;
 using Newtonsoft.Json;
 
 namespace Alex.ResourcePackLib.Json.Models

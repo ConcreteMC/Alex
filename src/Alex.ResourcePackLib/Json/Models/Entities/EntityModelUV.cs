@@ -1,5 +1,5 @@
 using System;
-using Alex.API.Blocks;
+using Alex.Common.Blocks;
 using Alex.ResourcePackLib.Json.Converters;
 using Microsoft.Xna.Framework;
 using Newtonsoft.Json;

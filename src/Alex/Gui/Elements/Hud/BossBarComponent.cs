@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Concurrent;
-using Alex.API.Gui.Graphics;
+using Alex.Common.Gui.Graphics;
 using Alex.Networking.Java.Packets.Play;
 using Microsoft.Xna.Framework;
-using MiNET.Utils;
 using RocketUI;
+using UUID = MiNET.Utils.UUID;
 
 namespace Alex.Gui.Elements.Hud
 {
@@ -26,7 +26,8 @@ namespace Alex.Gui.Elements.Hud
 			float health,
 			BossBarPacket.BossBarColor color,
 			BossBarPacket.BossBarDivisions divisions,
-			byte flags)
+			byte flags,
+			Color? customColor = null)
 		{
 			var bossbar = new BossBar()
 			{
@@ -36,6 +37,11 @@ namespace Alex.Gui.Elements.Hud
 				Divisions = divisions,
 				Flags = flags
 			};
+
+			if (customColor != null)
+			{
+				bossbar.CustomColor = customColor;
+			}
 			
 			if (_bossBars.TryAdd(
 				uuid, bossbar))
@@ -159,6 +165,25 @@ namespace Alex.Gui.Elements.Hud
 		private bool _colorDirty = true;
 		private GuiTextures _guiTexture;
 		private BossBarPacket.BossBarDivisions _divisions;
+		private Color? _customColor = null;
+
+		public Color? CustomColor
+		{
+			get => _customColor;
+			set
+			{
+				_customColor = value;
+
+				Color = BossBarPacket.BossBarColor.White;
+				if (value != null)
+				{
+					_textureElement.Background.Mask = value.Value;
+					_textureElement.BackgroundOverlay.Mask = value.Value;
+					//_textureElement.Background.Mask = ColorHelper.HexToColor("#ec00b8");
+					//_textureElement.BackgroundOverlay.Mask = ColorHelper.HexToColor("#490039");
+				}
+			}
+		}
 
 		public BossBarPacket.BossBarColor Color
 		{

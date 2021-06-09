@@ -1,9 +1,5 @@
 using System;
-using Alex.API.Gui;
-using Alex.API.Gui.Elements;
-
-
-using Alex.API.Gui.Graphics;
+using Alex.Common.Gui.Graphics;
 using Alex.Entities;
 using Microsoft.Xna.Framework;
 using RocketUI;

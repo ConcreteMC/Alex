@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Alex.API.Utils;
 using NLog;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Drawing.Processing;

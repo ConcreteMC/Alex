@@ -1,7 +1,5 @@
-
-using Alex.API.Graphics;
-using Alex.API.Utils;
-using Alex.API.Utils.Vectors;
+using Alex.Common.Graphics;
+using Alex.Common.Utils.Vectors;
 using Alex.Entities;
 using Microsoft.Xna.Framework;
 

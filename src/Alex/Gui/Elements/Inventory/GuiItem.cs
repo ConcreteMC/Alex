@@ -1,8 +1,6 @@
 ﻿using System;
-using Alex.API.Graphics;
-using Alex.API.Gui.Graphics;
-using Alex.API.Utils;
-using Alex.API.Utils.Vectors;
+using Alex.Common.Graphics;
+using Alex.Common.Utils.Vectors;
 using Alex.Graphics.Models.Items;
 using Alex.Gui.Elements.Context3D;
 using Alex.Items;

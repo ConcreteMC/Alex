@@ -1,6 +1,5 @@
 ﻿using System;
-using Alex.API.Data;
-using Alex.API.Resources;
+using Alex.Common.Data;
 using Alex.Networking.Java.Util;
 using Microsoft.Xna.Framework;
 

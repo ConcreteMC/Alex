@@ -17,7 +17,7 @@
     <PackageReference Include="NLog" Version="4.7.9" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Alex.API\Alex.API.csproj" />
+    <ProjectReference Include="..\Alex.Common\Alex.Common.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Compile Update="Properties\Resources.Designer.cs">

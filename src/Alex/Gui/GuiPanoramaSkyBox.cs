@@ -1,6 +1,6 @@
 ﻿using System;
-using Alex.API.Graphics;
-using Alex.API.Gui.Graphics;
+using Alex.Common.Graphics;
+using Alex.Common.Gui.Graphics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using RocketUI;

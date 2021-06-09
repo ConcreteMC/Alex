@@ -4,13 +4,13 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
-using Alex.API;
-using Alex.API.Graphics;
-using Alex.API.Graphics.Typography;
-using Alex.API.Services;
-using Alex.API.Utils;
-using Alex.API.Utils.Vectors;
-using Alex.API.World;
+using Alex.Common;
+using Alex.Common.Graphics;
+using Alex.Common.Graphics.Typography;
+using Alex.Common.Services;
+using Alex.Common.Utils;
+using Alex.Common.Utils.Vectors;
+using Alex.Common.World;
 using Alex.Entities;
 using Alex.Entities.BlockEntities;
 using Alex.Graphics.Camera;
@@ -68,12 +68,14 @@ namespace Alex.Worlds
 		}
 
 		private Stopwatch _sw = new Stopwatch();
+
 		public void OnTick()
 		{
 			_sw.Restart();
 
 			int ticked = 0;
 			int entityCount = 0;
+
 			try
 			{
 				List<Entity> rendered = new List<Entity>(_rendered.Length);
@@ -89,12 +91,15 @@ namespace Alex.Worlds
 
 					//if (!entity.IsSpawned)
 					//	continue;
-					var entityPos = entity.KnownPosition.ToVector3();
-					if (Math.Abs(Vector3.Distance(entityPos, cameraChunkPosition)) <= World.ChunkManager.RenderDistance * 16f)
+					var entityPos = entity.KnownPosition;
+
+					if (Math.Abs(Vector3.Distance(cameraChunkPosition, entityPos)) <= Math.Min(
+						World.ChunkManager.RenderDistance,
+						OptionsProvider.AlexOptions.VideoOptions.EntityRenderDistance.Value) * 16f)
 					{
 						entityCount++;
 						rendered.Add(entity);
-						
+
 						var entityBox = entity.GetVisibilityBoundingBox(entityPos);
 
 						if (World.Camera.BoundingFrustum.Contains(entityBox) != ContainmentType.Disjoint)
@@ -103,18 +108,22 @@ namespace Alex.Worlds
 							entity.OnTick();
 
 							ticked++;
+
 							continue;
 						}
 					}
-					
+
 					entity.IsRendered = false;
 				}
 
 				_rendered = rendered.ToArray();
-			}finally{
+			}
+			finally
+			{
 				if (_sw.Elapsed.TotalMilliseconds >= 50)
 				{
-					Log.Warn($"Tick took {_sw.ElapsedMilliseconds}ms for {entityCount} entities of which {ticked} were ticked!");
+					Log.Warn(
+						$"Tick took {_sw.ElapsedMilliseconds}ms for {entityCount} entities of which {ticked} were ticked!");
 				}
 			}
 		}
@@ -139,7 +148,6 @@ namespace Alex.Worlds
 			//var entities      = Entities.Values.ToArray();
 			//var blockEntities = BlockEntities.Values.ToArray();
 			
-			var maxDistance = (World.ChunkManager.RenderDistance * 16f);
 			foreach (var entity in _rendered)
 			{
 				_updateWatch.Restart();

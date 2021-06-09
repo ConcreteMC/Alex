@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Alex.API.Resources;
+using Alex.Common.Resources;
 using Alex.ResourcePackLib.Json.Models.Blocks;
 using Alex.ResourcePackLib.Json.Models.Items;
 using Microsoft.Xna.Framework;

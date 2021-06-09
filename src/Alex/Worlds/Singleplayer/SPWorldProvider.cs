@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
-using Alex.API;
-using Alex.API.Data.Options;
-using Alex.API.Services;
-using Alex.API.Utils;
-using Alex.API.Utils.Vectors;
-using Alex.API.World;
+using Alex.Common;
+using Alex.Common.Data.Options;
+using Alex.Common.Services;
+using Alex.Common.Utils;
+using Alex.Common.Utils.Vectors;
+using Alex.Common.World;
 using Alex.Entities;
 using Alex.Items;
 using Alex.Net;
@@ -19,6 +19,7 @@ using Microsoft.Xna.Framework;
 using MiNET;
 using MiNET.Net;
 using NLog;
+using BlockFace = Alex.Common.Blocks.BlockFace;
 using Player = Alex.Entities.Player;
 
 namespace Alex.Worlds.Singleplayer
@@ -54,12 +55,12 @@ namespace Alex.Worlds.Singleplayer
 			
 		}
 
-		public override void BlockPlaced(BlockCoordinates position, API.Blocks.BlockFace face, int hand, int slot, Vector3 cursorPosition, Entity p)
+		public override void BlockPlaced(BlockCoordinates position, BlockFace face, int hand, int slot, Vector3 cursorPosition, Entity p)
 		{
 			
 		}
 
-		public override void PlayerDigging(DiggingStatus status, BlockCoordinates position, API.Blocks.BlockFace face, Vector3 cursorPosition)
+		public override void PlayerDigging(DiggingStatus status, BlockCoordinates position, BlockFace face, Vector3 cursorPosition)
 		{
 			
 		}
@@ -69,12 +70,12 @@ namespace Alex.Worlds.Singleplayer
 			
 		}
 
-		public override void WorldInteraction(Entity player, BlockCoordinates position, API.Blocks.BlockFace face, int hand, int slot, Vector3 cursorPosition)
+		public override void WorldInteraction(Entity player, BlockCoordinates position, BlockFace face, int hand, int slot, Vector3 cursorPosition)
 		{
 			
 		}
 
-		public override void UseItem(Item item, int hand, ItemUseAction useAction, BlockCoordinates position, API.Blocks.BlockFace face, Vector3 cursorPosition)
+		public override void UseItem(Item item, int hand, ItemUseAction useAction, BlockCoordinates position, BlockFace face, Vector3 cursorPosition)
 		{
 			
 		}

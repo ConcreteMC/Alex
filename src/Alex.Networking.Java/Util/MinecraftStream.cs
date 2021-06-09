@@ -5,8 +5,8 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
-using Alex.API.Data;
-using Alex.API.Utils;
+using Alex.Common.Data;
+using Alex.Common.Utils;
 using fNbt;
 using Microsoft.Xna.Framework;
 using Org.BouncyCastle.Crypto;
@@ -14,7 +14,7 @@ using Org.BouncyCastle.Crypto.Engines;
 using Org.BouncyCastle.Crypto.IO;
 using Org.BouncyCastle.Crypto.Modes;
 using Org.BouncyCastle.Crypto.Parameters;
-using BlockCoordinates = Alex.API.Utils.Vectors.BlockCoordinates;
+using BlockCoordinates = Alex.Common.Utils.Vectors.BlockCoordinates;
 
 namespace Alex.Networking.Java.Util
 {

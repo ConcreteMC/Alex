@@ -1,9 +1,5 @@
-﻿using Alex.API.Graphics;
-using Alex.API.Gui;
-using Alex.API.Gui.Elements;
-using Alex.API.Gui.Graphics;
-using Alex.API.Utils;
-using Alex.API.Utils.Vectors;
+﻿using Alex.Common.Graphics;
+using Alex.Common.Utils.Vectors;
 using Alex.Gamestates;
 using Alex.Graphics.Camera;
 using Alex.Worlds;

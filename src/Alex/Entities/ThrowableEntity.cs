@@ -1,4 +1,4 @@
-using Alex.API.Resources;
+using Alex.Common.Resources;
 using Alex.Items;
 using Alex.Net;
 using Alex.Worlds;

@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using Alex.API.Resources;
 using Alex.MoLang.Runtime;
 using Alex.ResourcePackLib.Json.Bedrock.Particles.Components;
 using Alex.ResourcePackLib.Json.Converters.Particles;

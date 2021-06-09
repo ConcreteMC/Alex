@@ -4,10 +4,8 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Reflection;
-using Alex.API.Graphics;
-using Alex.API.Graphics.GpuResources;
-using Alex.API.Resources;
-using Alex.API.Utils;
+using Alex.Common.Graphics.GpuResources;
+using Alex.Common.Utils;
 using Alex.Entities.Generic;
 using Alex.Entities.Hostile;
 using Alex.Entities.Passive;
@@ -24,9 +22,9 @@ using Microsoft.Xna.Framework.Graphics;
 using MiNET.Entities;
 using Newtonsoft.Json;
 using NLog;
-using PlayerLocation = Alex.API.Utils.Vectors.PlayerLocation;
-using ResourceLocation = Alex.API.Resources.ResourceLocation;
-using UUID = Alex.API.Utils.UUID;
+using PlayerLocation = Alex.Common.Utils.Vectors.PlayerLocation;
+using ResourceLocation = Alex.Common.Resources.ResourceLocation;
+using UUID = Alex.Common.Utils.UUID;
 
 namespace Alex.Entities
 {
@@ -138,7 +136,7 @@ namespace Alex.Entities
 			return null;
 		}
 		
-		public static int LoadModels(BedrockResourcePack resourcePack, ResourceManager resources, GraphicsDevice graphics, bool replaceModels, IProgressReceiver progressReceiver = null)
+		public static int LoadEntityDefinitions(BedrockResourcePack resourcePack, ResourceManager resources, GraphicsDevice graphics, bool replaceModels, IProgressReceiver progressReceiver = null)
 		{
 			var entityDefinitions = resourcePack.EntityDefinitions;
 			int done              = 0;

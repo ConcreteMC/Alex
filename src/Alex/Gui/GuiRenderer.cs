@@ -4,16 +4,17 @@ using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
-using Alex.API.Gui;
-using Alex.API.Gui.Graphics;
-using Alex.API.Localization;
-using Alex.API.Utils;
 using Alex.Audio;
+using Alex.Common.Gui.Graphics;
+using Alex.Common.Localization;
+using Alex.Common.Utils;
 using Alex.ResourcePackLib;
+using Alex.ResourcePackLib.Json;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
+using Newtonsoft.Json.Linq;
 using RocketUI;
 using RocketUI.Audio;
 using SixLabors.ImageSharp;
@@ -263,11 +264,30 @@ namespace Alex.Gui
 			LoadTextureFromEmbeddedResource(AlexGuiTextures.SplashBackground, ResourceManager.ReadResource("Alex.Resources.Splash.png"));
 			LoadTextureFromEmbeddedResource(AlexGuiTextures.GradientBlur, ResourceManager.ReadResource("Alex.Resources.GradientBlur.png"));							
 		}
+
+		public T GetGlobalOrDefault<T>(string variable, T defaultValue)
+		{
+			foreach (var resource in _resourceManager.ActiveBedrockResources.Reverse())
+			{
+				if (resource.GlobalUiVariables.TryGetValue(variable, out JToken v))
+				{
+					return v.ToObject<T>(MCJsonConvert.Serializer);
+				}
+			}
+
+			return defaultValue;
+		}
 		
 		public void LoadResourcePackTextures(ResourceManager resourceManager, IProgressReceiver progressReceiver)
 		{
 			//progressReceiver?.UpdateProgress(0, null, "gui/widgets");
 			//LoadTextureFromResourcePack(GuiTextures.AlexLogo, resourcePack, "");
+
+			foreach (var color in TextColor.Colors)
+			{
+				var c = GetGlobalOrDefault($"${color.Code}_color_format", color.ForegroundColor.ToVector3());
+				color.ForegroundColor = new Color(c);
+			}
 
 			progressReceiver?.UpdateProgress(0, null, "gui/title/minecraft");
 			Image<Rgba32> mcBmp;

@@ -9,13 +9,11 @@ using System.Numerics;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
-using Alex.API.Graphics;
-using Alex.API.Gui;
-using Alex.API.Services;
-using Alex.API.Utils;
-using Alex.API.World;
 using Alex.Blocks;
 using Alex.Blocks.Minecraft;
+using Alex.Common.Services;
+using Alex.Common.Utils;
+using Alex.Common.World;
 using Alex.Entities;
 using Alex.Entities.BlockEntities;
 using Alex.Entities.Effects;
@@ -57,15 +55,16 @@ using Org.BouncyCastle.Security;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using AnvilWorldProvider = Alex.Worlds.Singleplayer.AnvilWorldProvider;
-using BlockCoordinates = Alex.API.Utils.Vectors.BlockCoordinates;
-using ChunkCoordinates = Alex.API.Utils.Vectors.ChunkCoordinates;
+using BlockCoordinates = Alex.Common.Utils.Vectors.BlockCoordinates;
+using ChunkCoordinates = Alex.Common.Utils.Vectors.ChunkCoordinates;
+using Color = Microsoft.Xna.Framework.Color;
 using CommandProperty = Alex.Utils.Commands.CommandProperty;
 using Entity = Alex.Entities.Entity;
 using MathF = System.MathF;
-using MessageType = Alex.API.Data.MessageType;
+using MessageType = Alex.Common.Data.MessageType;
 using Player = Alex.Entities.Player;
-using PlayerLocation = Alex.API.Utils.Vectors.PlayerLocation;
-using UUID = Alex.API.Utils.UUID;
+using PlayerLocation = Alex.Common.Utils.Vectors.PlayerLocation;
+using UUID = Alex.Common.Utils.UUID;
 
 namespace Alex.Worlds.Multiplayer.Bedrock
 {
@@ -1783,10 +1782,11 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 								text = entity.NameTag;
 							}
 						}*/
+						Microsoft.Xna.Framework.Vector3 customColor = AlexInstance.GuiRenderer.GetGlobalOrDefault("$boss_health_bar_color", Microsoft.Xna.Framework.Vector3.Zero);
 						
 						container.Add(
 							uuid, text, health, BossBarPacket.BossBarColor.Pink,
-							BossBarPacket.BossBarDivisions.None, 0);
+							BossBarPacket.BossBarDivisions.None, 0, customColor == Microsoft.Xna.Framework.Vector3.Zero ? (Color?) null : new Color(customColor));
 						
 						return uuid;
 					});

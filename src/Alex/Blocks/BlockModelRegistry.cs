@@ -1,5 +1,5 @@
 using System.Linq;
-using Alex.API.Resources;
+using Alex.Common.Resources;
 using Alex.Graphics.Models.Blocks;
 using Alex.ResourcePackLib;
 using Alex.ResourcePackLib.Json.Models;

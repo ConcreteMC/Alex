@@ -1,6 +1,5 @@
 using System.ComponentModel;
 using System.Runtime.Serialization;
-using Alex.API.Resources;
 using Alex.MoLang.Attributes;
 using Alex.Networking.Java.Packets.Play;
 using Alex.Worlds;

@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using Alex.API.Utils;
+using Alex.Common.Entities.Properties;
 using Alex.Entities.Effects;
 using Alex.Networking.Java.Packets.Play;
 
@@ -26,7 +26,7 @@ namespace Alex.Entities.Properties
 		}
 
 		/// <inheritdoc />
-		protected override IEnumerable<Modifier> GetAppliedModifiers()
+		/*protected override IEnumerable<Modifier> GetAppliedModifiers()
 		{
 			List<Modifier> baseModifiers = new List<Modifier>();
 			baseModifiers.AddRange(base.GetAppliedModifiers());
@@ -55,9 +55,9 @@ namespace Alex.Entities.Properties
 						}
 					}
 				}*/
-			}
+			//}
 
-			return baseModifiers;
-		}
+			//return baseModifiers;
+		//}
 	}
 }

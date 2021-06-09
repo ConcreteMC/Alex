@@ -5,15 +5,11 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using Alex.API.Data.Servers;
-using Alex.API.Gui;
-using Alex.API.Gui.Elements;
-
-using Alex.API.Gui.Elements.Icons;
-
-using Alex.API.Gui.Graphics;
-using Alex.API.Services;
-using Alex.API.Utils;
+using Alex.Common.Data.Servers;
+using Alex.Common.Gui.Elements.Icons;
+using Alex.Common.Gui.Graphics;
+using Alex.Common.Services;
+using Alex.Common.Utils;
 using Alex.Networking.Java;
 using Alex.Services;
 using Alex.Utils;
@@ -22,7 +18,7 @@ using Microsoft.Xna.Framework.Graphics;
 using MiNET.Net;
 using MiNET.Utils;
 using RocketUI;
-using GpuResourceManager = Alex.API.Graphics.GpuResources.GpuResourceManager;
+using GpuResourceManager = Alex.Common.Graphics.GpuResources.GpuResourceManager;
 
 namespace Alex.Gamestates.Multiplayer
 {
@@ -317,7 +313,7 @@ namespace Alex.Gamestates.Multiplayer
 					foreach (var extra in q.Description.Extra)
 					{
 						if (extra.Color != null)
-							builder.Append(API.Utils.TextColor.GetColor(extra.Color).ToString());
+							builder.Append(TextColor.GetColor(extra.Color).ToString());
 
 						if (extra.Bold.HasValue)
 						{

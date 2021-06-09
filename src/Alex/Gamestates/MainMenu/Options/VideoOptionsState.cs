@@ -1,11 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using Alex.API.Graphics;
-using Alex.API.Gui;
-using Alex.API.Gui.Elements;
-
-using Alex.API.Gui.Graphics;
-using Alex.API.Utils;
+using Alex.Common.Utils;
 using Alex.Gui;
 using Microsoft.Xna.Framework;
 using RocketUI;
@@ -35,7 +30,7 @@ namespace Alex.Gamestates.MainMenu.Options
         private ToggleButton ParticleToggle { get; set; }
         private ToggleButton EntityCulling { get; set; }
         private ToggleButton Fog { get; set; }
-        
+        private Slider EntityRenderDistance { get; set; }
         private Dictionary<IGuiControl, string> Descriptions { get; } = new Dictionary<IGuiControl, string>();
         public VideoOptionsState(GuiPanoramaSkyBox skyBox) : base(skyBox)
         {
@@ -97,8 +92,11 @@ namespace Alex.Gamestates.MainMenu.Options
                     ParticleToggle = CreateToggle("Render Particles: {0}", options => options.VideoOptions.Particles),
                     EntityCulling = CreateToggle("Entity Culling: {0}", options => options.VideoOptions.EntityCulling));
 
-                AddGuiRow(Fog = CreateToggle($"Render Fog", options => options.VideoOptions.Fog), 
-                    new RocketElement());
+                AddGuiRow(
+                    Fog = CreateToggle("Render Fog: {0}", options => options.VideoOptions.Fog),
+                    EntityRenderDistance = CreateSlider(
+                        "Entity Render Distance: {0}", options => options.VideoOptions.EntityRenderDistance, 2, 32, 1));
+                
                 /*  AddGuiRow(
                       /ClientSideLighting = CreateToggle(
                           "Client Side Lighting: {0}", options => options.VideoOptions.ClientSideLighting), 
@@ -117,7 +115,7 @@ namespace Alex.Gamestates.MainMenu.Options
                 
                 Descriptions.Add(
                     Fog,
-                    $"{TextColor.Bold}Render Fog:{TextColor.Reset}\nRenders fog to smooth out the render distance");
+                    $"{TextColor.Bold}Render Fog:{TextColor.Reset}\nRenders fog to smooth out the render distance\n");
 
                 Descriptions.Add(
                     RenderDistance,
@@ -169,7 +167,7 @@ namespace Alex.Gamestates.MainMenu.Options
                 
                 Descriptions.Add(ParticleToggle, $"{TextColor.Bold}Render Particles:{TextColor.Reset}\nEnabled: Looks cooler, but may impact performance.\nDisabled: Hides all particles, may improve performance.");
                 Descriptions.Add(EntityCulling, $"{TextColor.Bold}Entity Culling:{TextColor.Reset}\nEnabled: Culls entity models, may improve performance.\nDisabled: Do not cull entities, heavily impacts performance.");
-                
+                Descriptions.Add(EntityRenderDistance, $"{TextColor.Bold}Entity Render Distance:{TextColor.Reset}\n{TextColor.Red}High values may decrease performance significantly!\n");
             }
 
             base.OnInit(renderer);

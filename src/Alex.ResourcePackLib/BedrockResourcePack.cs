@@ -1,14 +1,15 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Drawing;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using Alex.API.Resources;
-using Alex.API.Utils;
+using Alex.Common.Resources;
+using Alex.Common.Utils;
 using Alex.MoLang.Parser.Exceptions;
 using Alex.ResourcePackLib.Abstraction;
 using Alex.ResourcePackLib.Generic;
@@ -22,6 +23,7 @@ using Alex.ResourcePackLib.Json.Bedrock.Sound;
 using Alex.ResourcePackLib.Json.Converters;
 using Alex.ResourcePackLib.Json.Models.Entities;
 using Alex.ResourcePackLib.Json.Textures;
+using Microsoft.Xna.Framework;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NLog;
@@ -47,6 +49,9 @@ namespace Alex.ResourcePackLib
 
 		public IReadOnlyDictionary<string, ParticleDefinition> Particles { get; private set; } =
 			new ConcurrentDictionary<string, ParticleDefinition>();
+
+		public IReadOnlyDictionary<string, JToken> GlobalUiVariables { get; private set; } =
+			new Dictionary<string, JToken>();
 		
 		public SoundDefinitionFormat SoundDefinitions { get; private set; } = null;
 		
@@ -105,6 +110,7 @@ namespace Alex.ResourcePackLib
 		private static readonly Regex IsAttachableFile    = new Regex(@"^attachables[\\\/](?'filename'.*)\.json$", RegexOpts);
 		
 		private static readonly Regex IsUiTexture    = new Regex(@"^textures[\\\/]ui[\\\/](?'filename'.*)\.png", RegexOpts);
+		private static readonly Regex IsUiDefinition    = new Regex(@"^ui[\\\/](?'filename'.*)\.json", RegexOpts);
 		private void Load(ResourcePack.LoadProgress progressReporter)
 		{
 			Dictionary<ResourceLocation, EntityDescription> entityDefinitions = new Dictionary<ResourceLocation, EntityDescription>();
@@ -139,6 +145,28 @@ namespace Alex.ResourcePackLib
 					count++;
 					progressReporter?.Invoke((int) (((double) count / (double) total) * 100D), entry.FullName);
 
+					if (entry.Name.Equals("_global_variables.json"))
+					{
+						try
+						{
+							using (var stream = entry.Open())
+							{
+								var json = Encoding.UTF8.GetString(stream.ReadToSpan(entry.Length));
+
+								Dictionary<string, JToken> globalVariables =
+									MCJsonConvert.DeserializeObject<Dictionary<string, JToken>>(json);
+
+								GlobalUiVariables = new ReadOnlyDictionary<string, JToken>(globalVariables);
+							}
+						}
+						catch (Exception ex)
+						{
+							Log.Warn(ex, $"Could not load global variables.");
+						}
+
+						continue;
+					}
+					
 					if (IsUiTexture.IsMatch(entry.FullName))
 					{
 						ProcessTexture(entry);

@@ -3,12 +3,13 @@ using System.Diagnostics;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
-using Alex.API.Services;
+using Alex.Common.Services;
 using Alex.Net.Bedrock;
 using Alex.Networking.Bedrock.RakNet;
 using Alex.Worlds.Multiplayer.Bedrock;
 using MiNET.Net;
 using NLog;
+using Version = Alex.Common.Services.Version;
 
 namespace Alex.Services
 {
@@ -93,7 +94,7 @@ namespace Alex.Services
 										{
 											Players =
 												new Players() {Max = motd.MaxPlayers, Online = motd.Players},
-											Version = new API.Services.Version()
+											Version = new Version()
 											{
 												Protocol = motd.ProtocolVersion,
 												Name = motd.ClientVersion,
@@ -189,7 +190,7 @@ namespace Alex.Services
 							Query = new ServerQuery()
 							{
 								Players = new Players() {Max = motd.MaxPlayers, Online = motd.Players},
-								Version = new API.Services.Version()
+								Version = new Version()
 								{
 									Protocol = motd.ProtocolVersion,
 									Name = motd.ClientVersion,
