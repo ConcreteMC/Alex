@@ -22,6 +22,7 @@ using Alex.Worlds.Lighting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using NLog;
 using RocketUI;
 using MathF = System.MathF;
 
@@ -29,6 +30,7 @@ namespace Alex.Worlds
 {
 	public class ChunkManager : IChunkManager, IDisposable, ITicked
 	{
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ChunkManager));
 		private readonly static RenderStage[]   RenderStages = ((RenderStage[]) Enum.GetValues(typeof(RenderStage)));
 		
 		private                 GraphicsDevice  Graphics  { get; }
@@ -773,6 +775,7 @@ namespace Alex.Worlds
 			finally
 			{
 				_disposed = true;
+			//	Log.Info($"ChunkManager disposed.");
 			}
 		}
 	}

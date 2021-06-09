@@ -124,7 +124,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				ChunkProcessor = new ChunkProcessor(
 					this, CancellationTokenSource.Token, Alex.Services.GetRequiredService<BlobCache>());
 
-				ChunkProcessor.ClientSideLighting = Options.VideoOptions.ClientSideLighting;
+				_disposables.Add(ChunkProcessor);
+			//	ChunkProcessor.ClientSideLighting = Options.VideoOptions.ClientSideLighting;
 				//ChunkProcessor.Instance = ChunkProcessor;
 			}
 
@@ -171,7 +172,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		private void ClientSideLightingChanged(bool oldvalue, bool newvalue)
 		{
-			ChunkProcessor.ClientSideLighting = newvalue;
+			//ChunkProcessor.ClientSideLighting = newvalue;
 		}
 
 		private bool     Starting    { get; set; } = false;

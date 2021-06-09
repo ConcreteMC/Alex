@@ -40,10 +40,10 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 	    public static Itemstates Itemstates { get; set; } = new Itemstates();
 	    
-	    private readonly ConcurrentDictionary<uint, uint> _convertedStates = new ConcurrentDictionary<uint, uint>();
+	    private ConcurrentDictionary<uint, uint> _convertedStates = new ConcurrentDictionary<uint, uint>();
 	    
 	    private CancellationToken CancellationToken  { get; }
-	    public  bool              ClientSideLighting { get; set; } = true;
+	    //public  bool              ClientSideLighting { get; set; } = true;
 
 	    private BedrockClient    Client           { get; }
 	    public BlobCache        Cache            { get; }
@@ -1516,6 +1516,15 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		public void Dispose()
 		{
+			_actionQueue?.Clear();
+			_actionQueue = null;
+			
+			_blobQueue?.Clear();
+			_blobQueue = null;
+			
+			_convertedStates?.Clear();
+			_convertedStates = null;
+			
 			if (Instance != this)
 			{
 				//BackgroundWorker?.Dispose();

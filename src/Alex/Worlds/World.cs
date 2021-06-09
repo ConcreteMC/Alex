@@ -912,6 +912,8 @@ namespace Alex.Worlds
 			//Ticker.Dispose();
 			Ticker = null;
 			Player = null;
+			
+			//Log.Info($"World disposed.");
 		}
 
 		#region IWorldReceiver (Handle WorldProvider callbacks)

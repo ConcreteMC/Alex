@@ -27,6 +27,9 @@ namespace Alex.Worlds.Chunks
 		private bool                  HasChanges     { get; set; }
 
 		private long      _vertexCount = 0;
+		private int  _primitiveCount = 0;
+		
+		public bool IsEmpty => BlockIndices == null || BlockIndices.Count == 0;
 
 		private object _writeLock = new object();
 		public ChunkRenderStage()
@@ -39,9 +42,7 @@ namespace Alex.Worlds.Chunks
 			BlockFace face,
 			Vector4 textureCoordinates,
 			Color color,
-			bool isSolid = true,
-			bool isTransparent = false,
-			bool isFullCube = true)
+			VertexFlags flags = VertexFlags.Default)
 		{
 			lock (_writeLock)
 			{
@@ -54,9 +55,7 @@ namespace Alex.Worlds.Chunks
 					face, 
 					textureCoordinates, 
 					color.PackedValue,
-					isTransparent,
-					isFullCube,
-					isSolid
+					flags
 				);
 				
 				Interlocked.Increment(ref _vertexCount);
@@ -64,7 +63,7 @@ namespace Alex.Worlds.Chunks
 				List<VertexData> list;
 				if (!bi.TryGetValue(blockCoordinates, out list))
 				{
-					list = new List<VertexData>(6 * 6);
+					list = new List<VertexData>();
 					bi.Add(blockCoordinates, list);
 				}
 				//var list = bi.GetOrAdd(
@@ -74,7 +73,7 @@ namespace Alex.Worlds.Chunks
 				HasChanges = true;
 			}
 		}
-
+		
 		public void Remove(BlockCoordinates coordinates)
 		{
 			lock (_writeLock)
@@ -85,6 +84,7 @@ namespace Alex.Worlds.Chunks
 
 				if (bi.Remove(coordinates, out var indices))
 				{
+					indices.Clear();
 					Interlocked.Add(ref _vertexCount, -indices.Count);
 					HasChanges = true;
 				}
@@ -156,8 +156,6 @@ namespace Alex.Worlds.Chunks
 				return vertices;
 			}
 		}
-		
-		private int  _primitiveCount = 0;
 
 		private ManagedTask _previousManagedTask = null;
 		public void Apply(IBlockAccess world,
@@ -179,15 +177,15 @@ namespace Alex.Worlds.Chunks
 					return;
 			}
 
-			if (previousTask != null && previousTask.State == TaskState.Enqueued)
-			{
-				previousTask.Data = realVertices;
-			}
-			else
-			{
-				//previousTask.Cancel();
+		//	if (previousTask != null && previousTask.State == TaskState.Enqueued)
+		//	{
+		//		previousTask.Data = realVertices;
+		//	}
+		//	else
+		//	{
+				previousTask?.Cancel();
 				_previousManagedTask = Alex.Instance.UiTaskManager.Enqueue(UpdateAction, realVertices);
-			}
+		//	}
 		}
 		
 		private void UpdateAction(object state)
@@ -228,7 +226,7 @@ namespace Alex.Worlds.Chunks
 
 				Buffer = buffer;
 
-				if (oldBuffer != buffer) oldBuffer?.ReturnResource(this);
+				if (oldBuffer != null && oldBuffer.PoolId != buffer.PoolId) oldBuffer?.ReturnResource(this);
 			}
 			finally
 			{
@@ -259,7 +257,7 @@ namespace Alex.Worlds.Chunks
 		private bool _disposed = false;
 		public void Dispose()
 		{
-			lock (_writeLock)
+			//lock (_writeLock)
 			{
 				if (_disposed)
 					return;

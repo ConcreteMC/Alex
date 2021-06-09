@@ -81,9 +81,7 @@ namespace Alex.Worlds.Chunks
             Vector4 textureCoordinates,
             Color color,
             RenderStage stage,
-            bool isSolid = true,
-            bool isTransparent = false,
-            bool isFullCube = true)
+            VertexFlags flags = VertexFlags.Default)
         {
             var stages = _stages;
 
@@ -97,7 +95,7 @@ namespace Alex.Worlds.Chunks
                 stages[(int) stage] = rStage;
             }
            
-            rStage.AddVertex(blockCoordinates, position, face, textureCoordinates, color, isSolid, isTransparent, isFullCube);
+            rStage.AddVertex(blockCoordinates, position, face, textureCoordinates, color, flags);
         }
 
         private ChunkRenderStage CreateRenderStage(RenderStage arg)
@@ -115,7 +113,16 @@ namespace Alex.Worlds.Chunks
             {
                 var stage = stages[index];
 
-                stage?.Remove(blockCoordinates);
+                if (stage != null)
+                {
+                    stage.Remove(blockCoordinates);
+
+                    if (stage.IsEmpty)
+                    {
+                        stage.Dispose();
+                        stages[index] = null;
+                    }
+                }
             }
         }
 

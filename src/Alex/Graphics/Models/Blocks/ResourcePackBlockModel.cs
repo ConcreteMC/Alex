@@ -682,17 +682,27 @@ namespace Alex.Graphics.Models.Blocks
 						targetState = RenderStage.Opaque;
 					}
 
+					var vertexFlags = VertexFlags.None;
+
+					if (baseBlock.Solid)
+						vertexFlags |= VertexFlags.Solid;
+					
+					if (baseBlock.Transparent)
+						vertexFlags |= VertexFlags.Transparent;
+					
+					if (baseBlock.IsFullCube)
+						vertexFlags |= VertexFlags.FullCube;
+					
 					for (int i = 0; i < vertices.Length; i++)
 					{
 						var vertex = vertices[i];
 						var textureCoordinates = (vertex.TexCoords) + uvMap.TextureInfo.Position;
-
+						
 						chunkBuilder.AddVertex(
-							position, vertex.Position, facing,
+							position, vertex.Position, vertex.Face,
 							new Vector4(
 								textureCoordinates.X, textureCoordinates.Y, uvMap.TextureInfo.Width,
-								uvMap.TextureInfo.Height), vertex.Color, targetState, baseBlock.Solid,
-							baseBlock.Transparent, baseBlock.IsFullCube);
+								uvMap.TextureInfo.Height), vertex.Color, targetState, vertexFlags);
 
 					}
 				}

@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.InteropServices;
 using Alex.Common.Blocks;
+using Alex.Common.Graphics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics.PackedVector;
 
@@ -8,7 +9,7 @@ using Microsoft.Xna.Framework.Graphics.PackedVector;
 namespace Alex.Worlds.Chunks
 {
 //	[StructLayout(LayoutKind.Sequential)]
-	public class VertexData
+	public readonly struct VertexData
 	{
 		public readonly Vector3 Position;
 		
@@ -17,35 +18,24 @@ namespace Alex.Worlds.Chunks
 		public readonly Short4 TexCoords;
 
 		public readonly uint Color;
+		
+		private readonly VertexFlags _flags;
 
-		public readonly byte Flags;
-
-		public bool IsTransparent => (Flags & (byte)(1 << 1)) != 0;
-		public bool IsFullCube => (Flags & (byte)(1 << 2)) != 0;
-		public bool IsSolid => (Flags & (byte)(1 << 3)) != 0;
+		public bool IsTransparent => (_flags & VertexFlags.Transparent) != 0;
+		public bool IsFullCube => (_flags & VertexFlags.FullCube) != 0;
+		public bool IsSolid => (_flags & VertexFlags.Solid) != 0;
 
 		public VertexData(Vector3 position,
 			BlockFace face,
 			Vector4 textureCoordinates,
 			uint color,
-			bool isTransparent = false,
-			bool isFullCube = false,
-			bool isSolid = false)
+			VertexFlags flags)
 		{
 			Position = position;
 			Face = face;
 			TexCoords = new Short4(textureCoordinates);
 			Color = color;
-			Flags = 0;
-
-			if (isTransparent)
-				Flags |= (1 << 1);
-			
-			if (isFullCube)
-				Flags |= (1 << 2);
-
-			if (isSolid)
-				Flags |= (1 << 3);
+			_flags = flags;
 		}
 	}
 }

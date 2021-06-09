@@ -24,9 +24,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 		{
 			base.OnComplete(data);
 
-			if (!Alex.Instance.Options.AlexOptions.MiscelaneousOptions.LoadServerResources.Value)
-				return;
-			
 			if (!Directory.Exists("texturepacks"))
 				Directory.CreateDirectory("texturepacks");
 

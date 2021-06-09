@@ -25,25 +25,25 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 			PackageId = Identifier = $"{UUID}_{Version}";
 		}
 
-		private byte[] _completedData = null;
+		//private byte[] _completedData = null;
 
-		public byte[] GetData()
-		{
-			return _completedData;
-		}
+		//public byte[] GetData()
+		//{
+		//	return _completedData;
+		//}
 
 		private byte[][] _chunks;
 		private uint _maxChunkSize;
 		private ulong _compressedPackageSize;
 
 		public ulong ChunkCount { get; private set; } = 0;
-		private byte[] _hash = null;
+		//private byte[] _hash = null;
 
 		public void SetDataInfo(ResourcePackType packType, byte[] hash, uint messageChunkCount, uint messageMaxChunkSize, ulong messageCompressedPackageSize, string packageId)
 		{
 			PackageId = packageId;
 			PackType = packType;
-			_hash = hash;
+			//_hash = hash;
 			
 			var chunkCount = messageCompressedPackageSize / messageMaxChunkSize;
 
@@ -67,9 +67,12 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 		}
 
 		public uint ExpectedIndex { get; set; } = 0;
-
+		
 		public bool SetChunkData(uint chunkIndex, byte[] chunkData)
 		{
+			if (IsComplete)
+				return false;
+			
 			if (chunkIndex != ExpectedIndex)
 			{
 				Log.Warn($"Received wrong chunk index, expected={ExpectedIndex} received={chunkIndex}");
@@ -87,6 +90,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 					for (int i = 0; i < _chunks.Length; i++)
 					{
 						ms.Write(_chunks[i]);
+						_chunks[i] = null;
 					}
 
 					ms.Position = 0;
@@ -94,12 +98,15 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 					byte[] buffer = new byte[_compressedPackageSize];
 					ms.Read(buffer, 0, buffer.Length);
 
-					_completedData = buffer;
+					//_completedData = buffer;
 
 					//_completedData = ms.
 					//_completedData = ms.Read().ToArray();
 
-					OnComplete(_completedData);
+					if (Alex.Instance.Options.AlexOptions.MiscelaneousOptions.LoadServerResources.Value)
+					{
+						OnComplete(buffer);
+					}
 				}
 
 				IsComplete = true;
@@ -121,18 +128,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 		///		The expected amount of data to come in.
 		/// </summary>
 		public long ExpectedSize => (long) _compressedPackageSize;
-
-		public IEnumerable<uint> GetMissingChunks()
-		{
-			if (_chunks == null)
-				yield break;
-
-			for (uint i = 0; i < _chunks.Length; i++)
-			{
-				if (_chunks[i] == null)
-					yield return i;
-			}
-		}
 
 		protected virtual void Dispose(bool disposing) { }
 

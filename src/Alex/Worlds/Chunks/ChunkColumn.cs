@@ -217,10 +217,10 @@ namespace Alex.Worlds.Chunks
 				}
 				if (applyChanges && (didChange || isNew))
 				{
-					ApplyChanges(world, true);
+					ApplyChanges(world, true, chunkData);
 				}
 				
-				ChunkData = chunkData;
+				//ChunkData = chunkData;
 
 				IsNew = false;
 			}
@@ -237,17 +237,19 @@ namespace Alex.Worlds.Chunks
 		}
 
 		private Stopwatch _lastUpdateWatch = new Stopwatch();
-		public void ApplyChanges(IBlockAccess world, bool force = false)
+		private void ApplyChanges(IBlockAccess world, bool force, ChunkData chunkData)
 		{
 			if (!_bufferDirty || (!force && _lastUpdateWatch.IsRunning && _lastUpdateWatch.ElapsedMilliseconds < 50))
 				return;
 			
-			var chunkData = ChunkData;
+			//var chunkData = ChunkData;
 
 			if (chunkData == null || chunkData.Disposed )
 				return;
 			
 			chunkData.ApplyChanges(world, force);
+			ChunkData = chunkData;
+			
 			_bufferDirty = false;
 			_lastUpdateWatch.Restart();
 		}

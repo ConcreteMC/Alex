@@ -26,7 +26,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 		/// <summary>
 		///		Are we waiting on resources?
 		/// </summary>
-		public bool WaitingOnResources => _resourcePackEntries.Any(x => !x.Value.IsComplete);
+		public bool WaitingOnResources => AcceptServerResources && _resourcePackEntries.Any(x => !x.Value.IsComplete);
 
 		/// <summary>
 		///		The progress so far (value between 0 & 1)
@@ -45,7 +45,10 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 		//	private ResourcePackIds _resourcePackIds;
 		//	private ResourcePackIdVersions _resourcePackIdVersions;
 		//	private ResourcePackIdVersions _texturePackIdVersions;
-
+		
+		private static bool AcceptServerResources =>
+			Alex.Instance.Options.AlexOptions.MiscelaneousOptions.LoadServerResources.Value;
+		
 		public void HandleMcpeResourcePackStack(McpeResourcePackStack message)
 		{
 			Log.Info(
@@ -85,7 +88,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 
 			//_resourcePackIds = resourcePackIds;
 
-			if (resourcePackIds.Count > 0)
+			if (AcceptServerResources && resourcePackIds.Count > 0)
 			{
 				response.responseStatus = (byte) McpeResourcePackClientResponse.ResponseStatus.SendPacks;
 				//Log.Info($"Received resourcepack info, requesting data for {message.texturepacks.Count} texture packs & {message.behahaviorpackinfos.Count} behavior packs.");

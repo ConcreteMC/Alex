@@ -11,6 +11,7 @@ namespace Alex.Gamestates.MainMenu.Options
     {
         private Slider                       ProcessingThreads { get; set; }
         private ToggleButton                 ChunkCaching { get; set; }
+        private ToggleButton                 ServerResources { get; set; }
         private TextElement                  Description       { get; set; }
         private Dictionary<IGuiControl, string> Descriptions      { get; } = new Dictionary<IGuiControl, string>();
         
@@ -38,6 +39,10 @@ namespace Alex.Gamestates.MainMenu.Options
                         Environment.ProcessorCount, 1),
                     ChunkCaching = CreateToggle("Chunk Caching: {0}", o => o.MiscelaneousOptions.UseChunkCache));
 
+                AddGuiRow(
+                    ServerResources = CreateToggle(
+                        "Server Resources: {0}", o => o.MiscelaneousOptions.LoadServerResources), new RocketElement());
+
                 AddDescription(
                     ProcessingThreads, "Processing Threads",
                     "The amount of threads that get assigned to datagram processing",
@@ -46,6 +51,10 @@ namespace Alex.Gamestates.MainMenu.Options
                 AddDescription(
                     ChunkCaching, "Chunk Caching (Bedrock Only)", "Reduced network traffic but increased disk I/O usage.",
                     $"{TextColor.Prefix}{TextColor.Red.Code}Unstable feature, doesn't work reliably.");
+
+                AddDescription(
+                    ServerResources, "Server Resources (Bedrock Only)", "Load server resource packs",
+                    $"{TextColor.Prefix}{TextColor.Red.Code}Experimental feature, doesn't support all features.");
 
                 Description = new TextElement()
                 {
