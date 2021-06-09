@@ -880,6 +880,21 @@ namespace Alex
 
 			return false;
 		}
+
+		public bool TryGetEntityModel(string location, out EntityModel entityDef)
+		{
+			entityDef = null;
+			foreach (var resourcePack in ActiveBedrockResourcePacks.Reverse())
+			{
+				if (resourcePack.EntityModels.TryGetValue(location, out var f))
+				{
+					entityDef = f;
+					return true;
+				}
+			}
+
+			return false;
+		}
 		
 		public bool TryGetBlockState(ResourceLocation location, out BlockStateResource resource)
 		{

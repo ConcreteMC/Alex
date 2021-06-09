@@ -266,8 +266,9 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				return LoadResult.Timeout;
 
 			var p = World.Player.KnownPosition;
-
-			//Client.SendMcpeMovePlayer(
+			
+			Client.MarkAsInitialized();
+				//Client.SendMcpeMovePlayer(
 			//	p, 1);
 
 			timer.Stop();

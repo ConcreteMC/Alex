@@ -248,6 +248,13 @@ namespace Alex.Entities
 					}
 				}
 
+				if (model != null)
+				{
+					if (model.Bones.All(x => x.Cubes == null || x.Cubes.Length == 0))
+					{
+						model = null;
+					}
+				}
 				//if (!skin.IsPersonaSkin)
 				//{
 					

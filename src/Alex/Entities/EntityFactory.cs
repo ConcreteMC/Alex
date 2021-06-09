@@ -246,14 +246,14 @@ namespace Alex.Entities
 
 		private static ConcurrentDictionary<string, ManagedTexture2D> _pooledTextures =
 			new ConcurrentDictionary<string, ManagedTexture2D>(StringComparer.OrdinalIgnoreCase);
-		public static Entity Create(MiNET.Entities.EntityType entityType, World world, bool initRenderController = true)
+		public static Entity Create(ResourceLocation entityType, World world, bool initRenderController = true)
 		{
 			Entity entity = null;
 
-			switch (entityType)
+			switch (MiNET.Entities.EntityHelpers.ToEntityType(entityType.ToString()))
 			{
-				case MiNET.Entities.EntityType.None:
-					return null;
+			//	case MiNET.Entities.EntityType.None:
+					//return null;
 				case MiNET.Entities.EntityType.Chicken:
 					entity = new Chicken(world);
 					break;
@@ -480,25 +480,44 @@ namespace Alex.Entities
 				case EntityType.HopperMinecart:
 					entity = new HopperMinecartEntity(world);
 					break;
+				case EntityType.AreaEffectCloud:
+				//	entity = new EntityAreaEffectCloud(world);
+					break;
 				//case EntityType.Human:
 					//entity = new PlayerMob("test", world, );
 				//	break;
-				default:
-					return null;
+				//default:
+				//	return null;
 			}
 
-			var stringId = entityType.ToStringId();
+			//entity = new Entity(world);
+
+			//var stringId = entityType.ToStringId();
 			var resources = Alex.Instance.Resources;
 			if (resources.TryGetEntityDefinition(
-				stringId, out var description))
+				entityType, out var description))
 			{
+				var modelRenderer = GetEntityRenderer(
+					description.Identifier);
+				
+				if (modelRenderer == null)
+				{
+					Log.Warn($"Missing entity renderer: {entityType}");
+					return null;
+				}
+
+				if (entity == null)
+				{
+					Log.Warn($"No entity implementation found, falling back to Alex.Entities.Entity for: {entityType}");
+					entity = new Entity(world);
+				}
+
 				if (initRenderController)
 				{
 					entity.AnimationController.UpdateEntityDefinition(Alex.Instance.Resources.BedrockResourcePack, description);
 				}
 
-				entity.ModelRenderer = EntityFactory.GetEntityRenderer(
-					stringId);
+				entity.ModelRenderer = modelRenderer;
 				
 				ManagedTexture2D texture2D = null;
 				//if (renderer == null || texture2D == null)

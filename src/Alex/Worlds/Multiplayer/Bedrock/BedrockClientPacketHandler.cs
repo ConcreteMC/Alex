@@ -157,7 +157,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			}
 			else if (Client.PlayerStatus == 3)
 			{
-				Client.MarkAsInitialized();
+				//Client.MarkAsInitialized();
 			}
 			else if (Client.PlayerStatus == 0)
 			{
@@ -470,77 +470,62 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			}
 		}
 
-		public bool SpawnMob(long entityId,
-			EntityType type,
-			PlayerLocation position,
-			Microsoft.Xna.Framework.Vector3 velocity, EntityAttributes attributes, MetadataDictionary metadata)
+
+		public void HandleMcpeAddEntity(McpeAddEntity message)
 		{
+			//else
+			//{
+			//	entityType = MiNET.Entities.EntityHelpers.ToEntityType(message.entityType);
+			//}
+			MiNET.Entities.EntityType entityType = EntityType.None;
+			if (_entityIdentifiers.TryGetValue(message.entityType, out var realId))
+			{
+				entityType = (MiNET.Entities.EntityType) realId;
+
+				//if (t != EntityType.None)
+				//	entityType = t;
+			}
+			
+			
+			if (entityType == EntityType.None)
+			{
+				entityType = MiNET.Entities.EntityHelpers.ToEntityType(message.entityType);
+			}
 			
 			Entity entity = null;
 
-			if (type == EntityType.FallingBlock)
+			if (entityType == EntityType.FallingBlock)
 			{
 				entity = new EntityFallingBlock(null);
 			}
 			else
 			{
-				entity = EntityFactory.Create(type, null);
+				entity = EntityFactory.Create(message.entityType, null);
 			}
 
 			if (entity == null)
 			{
-				return false;
+				Log.Warn($"Cannot spawn entity of type: {message.entityType} -> {entityType}");
+				return;
 			}
 
-			var uuid = MiNETExtensions.FromEntityId(entityId);
-			entity.KnownPosition = position;
-			entity.Velocity = velocity;
-			entity.EntityId = entityId;
+			var uuid = MiNETExtensions.FromEntityId(message.runtimeEntityId);
+			entity.KnownPosition = new PlayerLocation(message.x, message.y, message.z, -message.headYaw, -message.yaw, -message.pitch);
+			entity.Velocity = new Microsoft.Xna.Framework.Vector3(message.speedX, message.speedY, message.speedZ);
+			entity.EntityId = message.runtimeEntityId;
 			entity.UUID = uuid;
-		//	entity.Texture = texture2D;
+			//	entity.Texture = texture2D;
 			entity.SetInventory(new BedrockInventory(46));
 			
 			
-			if (metadata != null)
-				entity.HandleMetadata(metadata);
+			if (message.metadata != null)
+				entity.HandleMetadata(message.metadata);
 
-			if (attributes != null)
-				entity.UpdateAttributes(attributes);
+			if (message.attributes != null)
+				entity.UpdateAttributes(message.attributes);
 			//entity.ad
 			
 			Client.World.SpawnEntity(entity);
-
-			return true;
-		}
-
-
-		public void HandleMcpeAddEntity(McpeAddEntity message)
-		{
-			MiNET.Entities.EntityType entityType = MiNET.Entities.EntityHelpers.ToEntityType(message.entityType);
-			if (_entityIdentifiers.TryGetValue(message.entityType, out var realId))
-			{
-				var t = (MiNET.Entities.EntityType) realId;
-
-				if (t != EntityType.None)
-					entityType = t;
-			}
-			//else
-			//{
-			//	entityType = MiNET.Entities.EntityHelpers.ToEntityType(message.entityType);
-			//}
-
-			if (!SpawnMob(
-				message.runtimeEntityId, entityType,
-				new PlayerLocation(message.x, message.y, message.z, -message.headYaw, -message.yaw, -message.pitch),
-				new Microsoft.Xna.Framework.Vector3(message.speedX, message.speedY, message.speedZ), message.attributes,
-				message.metadata))
-			{
-				Log.Warn($"Unknown entity type: {message.entityType} (MiNET.EntityType: {entityType})");
-			}
-			else
-			{
-				//_entityMapping.TryAdd(message.entityIdSelf, message.runtimeEntityId);
-			}
 		}
 
 		//private ConcurrentDictionary<long, long> _entityMapping = new ConcurrentDictionary<long, long>();
@@ -705,6 +690,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					&& tag.TryGet("rid", out NbtInt realId))
 					{
 						_entityIdentifiers[id.Value] = realId.Value;
+						
+						Log.Info($"Registered entity identifier: {id.Value}");
 					}
 				}
 			}
@@ -1539,43 +1526,50 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			ChunkProcessor.HandleChunkData(cacheEnabled, blobs, subChunkCount, chunkData, cx, cz);
 		}
 
-		private int _changeDimensionLock = 0;
+		private object _changeDimensionLock = new object();
 		public void HandleMcpeChangeDimension(McpeChangeDimension message)
 		{
 			//base.HandleMcpeChangeDimension(message);
-			Client.WorldProvider.FormManager.CloseAll();
-			var chunkCoords = new ChunkCoordinates(
-				new PlayerLocation(Client.World.SpawnPoint.X, Client.World.SpawnPoint.Y, Client.World.SpawnPoint.Z));
-
-			Client.World.Player.IsSpawned = false;
-			bool cancelled = false;
-			LoadingWorldScreen loadingWorldScreen = new LoadingWorldScreen()
-			{
-				ConnectingToServer = true,
-				CancelAction = () =>
-				{
-					cancelled = true;
-					Client.ShowDisconnect("Disconnect requested by user.", false, false, DisconnectReason.Unknown);
-					Client.Close();
-				}
-			};
-
-			AlexInstance.GuiManager.AddScreen(loadingWorldScreen);
-			//	AlexInstance.GameStateManager.SetActiveState(loadingWorldState, true);
-			loadingWorldScreen.UpdateProgress(LoadingState.LoadingChunks, 0);
 
 			ThreadPool.QueueUserWorkItem(
 				(o) =>
 				{
+					if (!Monitor.TryEnter(_changeDimensionLock))
+						return;
+
+					Client.WorldProvider.FormManager.CloseAll();
+					var chunkCoords = new ChunkCoordinates(
+						new PlayerLocation(Client.World.SpawnPoint.X, Client.World.SpawnPoint.Y, Client.World.SpawnPoint.Z));
+			
+					Client.World.Player.IsSpawned = false;
+					bool cancelled = false;
+					LoadingWorldScreen loadingWorldScreen = new LoadingWorldScreen()
+					{
+						ConnectingToServer = true,
+						CancelAction = () =>
+						{
+							cancelled = true;
+							Client.ShowDisconnect("Disconnect requested by user.", false, false, DisconnectReason.Unknown);
+							Client.Close();
+						}
+					};
+
+					AlexInstance.GuiManager.AddScreen(loadingWorldScreen);
+					//	AlexInstance.GameStateManager.SetActiveState(loadingWorldState, true);
+					loadingWorldScreen.UpdateProgress(LoadingState.LoadingChunks, 0);
+					
 					try
 					{
-						if (Interlocked.Increment(ref _changeDimensionLock) != 1)
-							return;
+						Client.ResetInitialized();
 						
 						World world = Client.World;
 
 						//_entityMapping.Clear();
-
+						
+						WorldProvider?.BossBarContainer?.Reset();
+						_bossBarMapping.Clear();
+						
+					//	WorldProvider.BossBarContainer?.Reset();
 						world.ClearChunksAndEntities();
 
 
@@ -1635,7 +1629,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 							}
 
 
-							if (percentage >= 100 && Client.CanSpawn)
+							if (Client.CanSpawn)
 							{
 								break;
 							}
@@ -1645,7 +1639,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 							//	{
 							//	await Task.Delay(50);
 							//}
-						} while (true);
+						} while (Client.IsConnected);
+						Client.MarkAsInitialized();
 						//AlexInstance.GameStateManager.Back();
 
 						var p = Client.World.Player.KnownPosition;
@@ -1658,7 +1653,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					finally
 					{
 						AlexInstance.GuiManager.RemoveScreen(loadingWorldScreen);
-						Interlocked.Decrement(ref _changeDimensionLock);
+						Monitor.Exit(_changeDimensionLock);
+						//Interlocked.Decrement(ref _changeDimensionLock);
 					}
 				});
 		}

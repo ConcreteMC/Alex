@@ -211,6 +211,7 @@ namespace Alex.Gamestates.Multiplayer
 			_pingStatus.SetOffline();
 		}
 
+		private int _queryAttempt = 0;
 		private async Task QueryServer(string address, ushort port, CancellationToken cancellationToken)
 		{
 			SetErrorMessage(null);
@@ -240,7 +241,7 @@ namespace Alex.Gamestates.Multiplayer
 			}
 			else
 			{
-				var endPoint = new IPEndPoint(resolved.Result, port);
+				var endPoint = new IPEndPoint(resolved.Results[_queryAttempt++ % resolved.Results.Length], port);
 				
 				await QueryProvider.QueryServerAsync(
 					new ServerConnectionDetails(endPoint, address), PingCallback,

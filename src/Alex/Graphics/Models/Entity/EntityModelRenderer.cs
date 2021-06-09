@@ -100,48 +100,61 @@ namespace Alex.Graphics.Models.Entity
 
 		private static ConcurrentDictionary<string, SharedBuffer> _sharedBuffers =
 			new ConcurrentDictionary<string, SharedBuffer>();
-		
+
+		private static SharedBuffer BuildSharedBuffer(EntityModel model)
+		{
+			List<VertexPositionColorTexture> vertices = new List<VertexPositionColorTexture>();
+			List<short> indices = new List<short>();
+			var bones = new Dictionary<string, ModelBone>(StringComparer.OrdinalIgnoreCase);
+
+			if (!BuildModel(model, bones, vertices, indices))
+			{
+				return null;
+			}
+
+			var indexBuffer = GpuResourceManager.GetIndexBuffer(
+				_sharedBuffers, Alex.Instance.GraphicsDevice, IndexElementSize.SixteenBits, indices.Count,
+				BufferUsage.WriteOnly);
+
+			indexBuffer.SetData(indices.ToArray());
+
+			indexBuffer.ResourceDisposed += (sender, resource) =>
+			{
+				_sharedBuffers.TryRemove(model.Description.Identifier, out _);
+			};
+
+			var vertexBuffer = GpuResourceManager.GetBuffer(
+				_sharedBuffers, Alex.Instance.GraphicsDevice, VertexPositionColorTexture.VertexDeclaration,
+				vertices.Count, BufferUsage.WriteOnly);
+
+			vertexBuffer.SetData(vertices.ToArray());
+
+			vertexBuffer.ResourceDisposed += (sender, resource) =>
+			{
+				_sharedBuffers.TryRemove(model.Description.Identifier, out _);
+			};
+
+			return new SharedBuffer(vertexBuffer, indexBuffer, bones);
+		}
 		
 		public static bool TryGetRenderer(EntityModel model, out EntityModelRenderer renderer)
 		{
 			{
-				var tuple = _sharedBuffers.GetOrAdd(model.Description.Identifier, s =>
+				SharedBuffer tuple = null;
+
+				if (!_sharedBuffers.TryGetValue(model.Description.Identifier, out tuple))
 				{
-					List<VertexPositionColorTexture> vertices = new List<VertexPositionColorTexture>();
-					List<short> indices = new List<short>();
-					var bones = new Dictionary<string, ModelBone>(StringComparer.OrdinalIgnoreCase);
+					tuple = BuildSharedBuffer(model);
 
-					if (BuildModel(model, bones, vertices, indices))
+					if (tuple == null)
 					{
-
-						var indexBuffer = GpuResourceManager.GetIndexBuffer(
-							_sharedBuffers, Alex.Instance.GraphicsDevice, IndexElementSize.SixteenBits, indices.Count,
-							BufferUsage.WriteOnly);
-
-						indexBuffer.SetData(indices.ToArray());
-
-						indexBuffer.ResourceDisposed += (sender, resource) =>
-						{
-							_sharedBuffers.TryRemove(model.Description.Identifier, out _);
-						};
-
-						var vertexBuffer = GpuResourceManager.GetBuffer(
-							_sharedBuffers, Alex.Instance.GraphicsDevice, VertexPositionColorTexture.VertexDeclaration,
-							vertices.Count, BufferUsage.WriteOnly);
-
-						vertexBuffer.SetData(vertices.ToArray());
-
-						vertexBuffer.ResourceDisposed += (sender, resource) =>
-						{
-							_sharedBuffers.TryRemove(model.Description.Identifier, out _);
-						};
-
-						return new SharedBuffer(vertexBuffer, indexBuffer, bones);
+						renderer = null;
+						return false;
 					}
 
-					return null;
-				});
-
+					_sharedBuffers.TryAdd(model.Description.Identifier, tuple);
+				}
+				
 				//tuple.Item1.Use(renderer);
 				//tuple.Item2.Use(renderer);
 				

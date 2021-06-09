@@ -534,14 +534,14 @@ namespace Alex.Worlds.Multiplayer.Java
 			EntityModel model;
 			if (EntityFactory.ModelByNetworkId((long) type, out var renderer, out EntityData knownData))
 			{
-				type = MiNET.Entities.EntityHelpers.ToEntityType($"minecraft:{knownData.Name}");
+				/*type = MiNET.Entities.EntityHelpers.ToEntityType($"minecraft:{knownData.Name}");
 
 				if (knownData.Name.Equals("bee"))
 					type = (EntityType)122;
 				else if (knownData.Name.Equals("fox"))
 					type = (EntityType) 121;
-
-				entity = EntityFactory.Create(type, null, type != EntityType.ArmorStand && type != EntityType.PrimedTnt);
+*/
+				entity = EntityFactory.Create($"minecraft:{knownData.Name}", null, type != EntityType.ArmorStand && type != EntityType.PrimedTnt);
 				
 
 				if (entity == null)

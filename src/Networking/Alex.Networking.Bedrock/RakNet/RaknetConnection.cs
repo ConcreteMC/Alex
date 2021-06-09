@@ -205,7 +205,8 @@ namespace Alex.Networking.Bedrock.RakNet
 		{
 			_readingThread = Thread.CurrentThread;
 			_readingThread.Name = $"RaknetConnection Read ({_endpoint})";
-			
+
+			bool hasReadData = false;
 			//UdpClient listener;
 			while (_listener != null)
 			{
@@ -234,6 +235,7 @@ namespace Alex.Networking.Bedrock.RakNet
 
 					if (receiveBytes.Length != 0)
 					{
+						hasReadData = true;
 						Interlocked.Add(ref ConnectionInfo.BytesIn, receiveBytes.Length);
 
 						try
@@ -247,7 +249,7 @@ namespace Alex.Networking.Bedrock.RakNet
 					}
 					else
 					{
-						Log.Warn("Unexpected end of transmission?");
+						Log.Warn($"Unexpected end of transmission for {RemoteEndpoint} from {senderEndpoint} (Any data received? {hasReadData} Servername: {RemoteServerName})");
 					}
 				}
 				catch (ObjectDisposedException e) { }

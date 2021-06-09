@@ -427,14 +427,29 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		}
 
 		private bool _markedAsInitialized = false;
+
+		public void ResetInitialized()
+		{
+			Log.Warn($"Resetting initialized status...");
+			_markedAsInitialized = false;
+		}
+		
 		public void MarkAsInitialized()
 		{
+			if (!CanSpawn)
+			{
+				Log.Warn($"Tried sending LocalPlayerInitialized while playerstatus={PlayerStatus}");
+				return;
+			}
+
 			if (_markedAsInitialized)
 			{
 				Log.Warn($"Tried sending initialize more than once");
 
 				return;
 			}
+			
+			_markedAsInitialized = true;
 			
 			Log.Info($"Sent LocalPlayerInitialized");
 			var packet = McpeSetLocalPlayerAsInitialized.CreateObject();
@@ -443,8 +458,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			
 			//Connection.Session.SendDirectPacket(packet);
 			SendPacket(packet);
-
-			_markedAsInitialized = true;
 
 			//_isInitialized = true;
 		}

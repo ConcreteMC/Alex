@@ -89,6 +89,16 @@ namespace Alex.Gui.Elements.Hud
 
 			return false;
 		}
+
+		public void Reset()
+		{
+			foreach (var bar in _bossBars)
+			{
+				RemoveChild(bar.Value);
+			}
+			
+			_bossBars.Clear();
+		}
 	}
 
 	public class BossBar : Container
