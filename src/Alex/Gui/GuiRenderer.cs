@@ -298,6 +298,7 @@ namespace Alex.Gui
 
 				_mcLogo = TextureUtils.BitmapToTexture2D(this, _graphicsDevice, mcBmp);
 				LoadTextureFromSpriteSheet(AlexGuiTextures.AlexLogo, _mcLogo, new Rectangle(0, 0, 275, 44), new Size(275, 44));
+				mcBmp.Dispose();
 			} 
 			else if (resourceManager.TryGetBitmap("gui/title/minecraft", out mcBmp))
 			{
@@ -316,6 +317,7 @@ namespace Alex.Gui
 				
 				_mcLogo = TextureUtils.BitmapToTexture2D(this, _graphicsDevice, finalLogo);
 				LoadTextureFromSpriteSheet(AlexGuiTextures.AlexLogo, _mcLogo, new Rectangle(0, 0, 273, 44), new Size(273, 44));
+				mcBmp.Dispose();
 			}
 			
 			// First load Widgets
@@ -324,6 +326,7 @@ namespace Alex.Gui
 			{
 				_widgets = TextureUtils.BitmapToTexture2D(this, _graphicsDevice, widgetsBmp);
 				LoadWidgets(_widgets);
+				widgetsBmp.Dispose();
 			}
 
 			progressReceiver?.UpdateProgress(25, null, "gui/icons");
@@ -331,12 +334,16 @@ namespace Alex.Gui
 			{
 				_icons = TextureUtils.BitmapToTexture2D(this, _graphicsDevice, icons);
 				LoadIcons(_icons);
+				
+				icons.Dispose();
 			}
 			
 			if (resourceManager.TryGetBitmap("gui/bars", out var bars))
 			{
 				_bars = TextureUtils.BitmapToTexture2D(this, _graphicsDevice, bars);
 				LoadBars(_bars);
+				
+				bars.Dispose();
 			}
 
 			if (_scrollbar == null)
@@ -358,30 +365,40 @@ namespace Alex.Gui
 				{
 					_inventory = TextureUtils.BitmapToTexture2D(this, _graphicsDevice, bmp);
 					LoadTextureFromSpriteSheet(AlexGuiTextures.InventoryPlayerBackground, _inventory, new Rectangle(0, 0, 176, 166), IconSize);
+					
+					bmp.Dispose();
 				}
 
 				if (resourceManager.TryGetBitmap("gui/container/generic_54", out var genericInvBmp))
 				{
 					_chestInventory = TextureUtils.BitmapToTexture2D(this, _graphicsDevice, genericInvBmp);
 					LoadTextureFromSpriteSheet(AlexGuiTextures.InventoryChestBackground, _chestInventory, new Rectangle(0, 0, 175, 221), IconSize);
+					
+					genericInvBmp.Dispose();
 				}
 
 				if (resourceManager.TryGetBitmap("gui/container/crafting_table", out var craftingTable))
 				{
 					_craftingTable = TextureUtils.BitmapToTexture2D(this, _graphicsDevice, craftingTable);
 					LoadTextureFromSpriteSheet(AlexGuiTextures.InventoryCraftingTable, _craftingTable, new Rectangle(0, 0, 175, 165), IconSize);
+					
+					craftingTable.Dispose();
 				}
 				
 				if (resourceManager.TryGetBitmap("gui/container/furnace", out var furnace))
 				{
 					_furnace = TextureUtils.BitmapToTexture2D(this, _graphicsDevice, furnace);
 					LoadTextureFromSpriteSheet(AlexGuiTextures.InventoryFurnace, _furnace, new Rectangle(0, 0, 175, 165), IconSize);
+					
+					furnace.Dispose();
 				}
 
 				if (resourceManager.TryGetBitmap("gui/container/creative_inventory/tab_item_search", out var tabImage))
 				{
 					_tabItemSearch = TextureUtils.BitmapToTexture2D(this, _graphicsDevice, tabImage);
 					LoadTextureFromSpriteSheet(AlexGuiTextures.InventoryCreativeItemSearch, _tabItemSearch, new Rectangle(0, 0, 194, 135), IconSize);
+					
+					tabImage.Dispose();
 				}
 				//LoadTextureFromSpriteSheet(GuiTextures.InventoryChestBackground, _inventory, new Rectangle(0, 0, 175, 221), IconSize);
 			}
@@ -512,6 +529,7 @@ namespace Alex.Gui
 			if (resources.TryGetBitmap(path, out var texture))
 			{
 				_textureCache[guiTexture] = TextureUtils.BitmapToTexture2D(this, _graphicsDevice, texture);
+				texture.Dispose();
 			}
 		}
 

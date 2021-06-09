@@ -64,16 +64,22 @@ namespace Alex.Utils
 
 					m.DrawImage(cloned, 1f);
 					
+					cloned.Dispose();
+					
 					//Hat
 					cloned = input.Clone();
 					cloned.Mutate(x => x.Crop(new Rectangle(32, 0, 32, 16)));
 					
 					m.DrawImage(cloned, new SixLabors.ImageSharp.Point(32, 0), 1f);
 					
+					cloned.Dispose();
+					
 					//Body
 					var body = input.Clone();
 					body.Mutate(x => x.Crop(new Rectangle(16, 16, 24, 16)));
 					m.DrawImage(body, new SixLabors.ImageSharp.Point(16, 16), 1f);
+					
+					body.Dispose();
 					
 					//Legs
 					var leg = input.Clone();
@@ -94,6 +100,8 @@ namespace Alex.Utils
 							
 							x.DrawImage(outer, new SixLabors.ImageSharp.Point(8, 4), 1f);
 							
+							outer.Dispose();
+							
 							var inner = clonedLeg.Clone();
 							inner.Mutate(o =>
 							{
@@ -102,6 +110,8 @@ namespace Alex.Utils
 							});
 
 							x.DrawImage(inner, new SixLabors.ImageSharp.Point(0, 4), 1f);
+							
+							inner.Dispose();
 							
 							var front = clonedLeg.Clone();
 							front.Mutate(o =>
@@ -112,6 +122,8 @@ namespace Alex.Utils
 
 							x.DrawImage(front, new SixLabors.ImageSharp.Point(4, 4), 1f);
 							
+							front.Dispose();
+							
 							var back = clonedLeg.Clone();
 							back.Mutate(o =>
 							{
@@ -120,6 +132,8 @@ namespace Alex.Utils
 							});
 
 							x.DrawImage(back, new SixLabors.ImageSharp.Point(12, 4), 1f);
+
+							back.Dispose();
 							
 							var top = clonedLeg.Clone();
 							top.Mutate(o =>
@@ -130,6 +144,8 @@ namespace Alex.Utils
 
 							x.DrawImage(top, new SixLabors.ImageSharp.Point(4, 0), 1f);
 							
+							top.Dispose();
+							
 							var bottom = clonedLeg.Clone();
 							bottom.Mutate(o =>
 							{
@@ -138,8 +154,15 @@ namespace Alex.Utils
 							});
 
 							x.DrawImage(bottom, new SixLabors.ImageSharp.Point(8, 0), 1f);
+							
+							bottom.Dispose();
 						});
+					
+					clonedLeg.Dispose();
+					
 					m.DrawImage(leg, new SixLabors.ImageSharp.Point(16, 48), 1f); //Left Leg
+					
+					leg.Dispose();
 					
 					//Arms
 					var arm = input.Clone();
@@ -159,6 +182,8 @@ namespace Alex.Utils
 							
 							x.DrawImage(outer, new SixLabors.ImageSharp.Point(8, 4), 1f);
 							
+							outer.Dispose();
+							
 							var inner = clonedArm.Clone();
 							inner.Mutate(o =>
 							{
@@ -167,6 +192,8 @@ namespace Alex.Utils
 							});
 
 							x.DrawImage(inner, new SixLabors.ImageSharp.Point(0, 4), 1f);
+							
+							inner.Dispose();
 							
 							var front = clonedArm.Clone();
 							front.Mutate(o =>
@@ -177,6 +204,8 @@ namespace Alex.Utils
 
 							x.DrawImage(front, new SixLabors.ImageSharp.Point(4, 4), 1f);
 							
+							front.Dispose();
+							
 							var back = clonedArm.Clone();
 							back.Mutate(o =>
 							{
@@ -185,6 +214,8 @@ namespace Alex.Utils
 							});
 
 							x.DrawImage(back, new SixLabors.ImageSharp.Point(12, 4), 1f);
+							
+							back.Dispose();
 							
 							var top = clonedArm.Clone();
 							top.Mutate(o =>
@@ -195,6 +226,8 @@ namespace Alex.Utils
 
 							x.DrawImage(top, new SixLabors.ImageSharp.Point(4, 0), 1f);
 							
+							top.Dispose();
+							
 							var bottom = clonedArm.Clone();
 							bottom.Mutate(o =>
 							{
@@ -203,9 +236,15 @@ namespace Alex.Utils
 							});
 
 							x.DrawImage(bottom, new SixLabors.ImageSharp.Point(8, 0), 1f);
+							
+							bottom.Dispose();
 						});
+					
+					clonedArm.Dispose();
 				//	arm.Mutate(x => x.Flip(FlipMode.Horizontal));
 					m.DrawImage(arm, new SixLabors.ImageSharp.Point(32, 48), 1f); //Left Arm
+					
+					arm.Dispose();
 				});
 
 			return output;

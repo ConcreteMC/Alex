@@ -71,7 +71,7 @@ namespace Alex.Particles
 							particleTexture = ResourceManager.ItemAtlas.GetAtlas();
 							break;
 						default:
-							if (resourcePack.TryGetTexture(
+							if (resourcePack.TryGetBitmap(
 								texturePath, out var img))
 							{
 								particleTexture = TextureUtils.BitmapToTexture2D(this, _graphics, img);

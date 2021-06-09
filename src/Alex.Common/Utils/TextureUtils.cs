@@ -93,8 +93,8 @@ namespace Alex.Common.Utils
 		{
 			//using (MemoryStream s = new MemoryStream(bmp))
 			{
-				var image = Image.Load(bmp);
-				return BitmapToTexture2D(owner, device, image);
+				using (var image = Image.Load(bmp))
+					return BitmapToTexture2D(owner, device, image);
 			}
 		}
 

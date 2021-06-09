@@ -55,13 +55,12 @@ namespace Alex.ResourcePackLib
 
 		private readonly Dictionary<ResourceLocation, Lazy<BlockStateResource>> _blockStates   = new();
 		public Dictionary<ResourceLocation, ResourcePackModelBase>   Models    = new();
-		private readonly Dictionary<ResourceLocation, Lazy<Image<Rgba32>>> _bitmapCache      = new();
+		private readonly Dictionary<ResourceLocation, Func<Image<Rgba32>>> _bitmapCache      = new();
 		private readonly Dictionary<ResourceLocation, TextureMeta>         _textureMetaCache = new();
 		private readonly Dictionary<string, LanguageResource>              _languageCache    = new(StringComparer.OrdinalIgnoreCase);
 
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(McResourcePack));
 		//public IReadOnlyDictionary<ResourceLocation, TextureMeta> TextureMetas => _textureMetaCache;
-		public IReadOnlyDictionary<ResourceLocation, Lazy<Image<Rgba32>>>          Textures          => _bitmapCache;
 		public IReadOnlyDictionary<string, LanguageResource>   Languages		 => _languageCache;
 		
 		//public new ResourcePackInfo Info { get; private set; }
@@ -264,7 +263,7 @@ namespace Alex.ResourcePackLib
 			}
 		}
 
-		private Lazy<Image<Rgba32>> LoadBitmap(IFile entry, Match match)
+		private Func<Image<Rgba32>> LoadBitmap(IFile entry, Match match)
 		{
 			var resource = new ResourceLocation(match.Groups["namespace"].Value, SanitizeFilename(match.Groups["filename"].Value));
 
@@ -273,7 +272,7 @@ namespace Alex.ResourcePackLib
 				return result;
 			}
 
-			_bitmapCache[resource] = new Lazy<Image<Rgba32>>(
+			_bitmapCache[resource] = new Func<Image<Rgba32>>(
 				() =>
 				{
 					Image<Rgba32> img;
@@ -349,7 +348,7 @@ namespace Alex.ResourcePackLib
 				var fontBitmap = LoadBitmap(entry, match);
 				//ProcessTexture(entry, match);
 
-				FontBitmap = fontBitmap.Value;
+				FontBitmap = fontBitmap();
 
 				if (!DidPreload)
 				{
@@ -421,17 +420,32 @@ namespace Alex.ResourcePackLib
 
 			return colors;
 		}
-
+		
+		private string NormalisePath(string path)
+		{
+			return path.Replace('\\', '/').ToLowerInvariant();
+		}
+		
 		public bool TryGetBitmap(ResourceLocation textureName, out Image<Rgba32> bitmap)
 		{
-			if (_bitmapCache.TryGetValue(textureName, out var val))
+			if (_bitmapCache.TryGetValue(new ResourceLocation(textureName.Namespace, NormalisePath(textureName.Path)), out var t))
 			{
-				bitmap = val.Value.Clone();
-				return true;
+				bitmap = t();
+
+				return bitmap != null;
 			}
 
 			bitmap = null;
 			return false;
+			
+			/*if (_bitmapCache.TryGetValue(textureName, out var val))
+			{
+				bitmap = val.Value;
+				return true;
+			}
+
+			bitmap = null;
+			return false;*/
 		}
 		
 		private void LoadBitmapMeta(IFile entry, Match match)

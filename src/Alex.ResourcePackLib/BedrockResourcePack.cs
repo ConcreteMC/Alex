@@ -39,8 +39,8 @@ namespace Alex.ResourcePackLib
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(BedrockResourcePack));
 
-		private ConcurrentDictionary<ResourceLocation,Lazy<Image<Rgba32>>> _bitmaps = new ConcurrentDictionary<ResourceLocation, Lazy<Image<Rgba32>>>();
-        public IReadOnlyDictionary<ResourceLocation, Lazy<Image<Rgba32>>> Textures => _bitmaps;
+		private ConcurrentDictionary<ResourceLocation,Func<Image<Rgba32>>> _bitmaps = new ConcurrentDictionary<ResourceLocation, Func<Image<Rgba32>>>();
+        public IReadOnlyDictionary<ResourceLocation, Func<Image<Rgba32>>> Textures => _bitmaps;
 		public IReadOnlyDictionary<ResourceLocation, EntityDescription> EntityDefinitions { get; private set; } = new ConcurrentDictionary<ResourceLocation, EntityDescription>();
 		public IReadOnlyDictionary<string, AttachableDefinition> Attachables { get; private set; } = new ConcurrentDictionary<string, AttachableDefinition>();
 		public IReadOnlyDictionary<string, RenderController> RenderControllers { get; private set; } = new ConcurrentDictionary<string, RenderController>();
@@ -76,21 +76,6 @@ namespace Alex.ResourcePackLib
 			}
 			
 			return entry.Open();
-		}
-		
-		public bool TryGetTexture(ResourceLocation name, out Image<Rgba32> texture)
-		{
-			if (Textures.TryGetValue(NormalisePath(name.Path), out var t))
-
-			{
-				texture = t.Value;
-
-				return true;
-			}
-
-			texture = null;
-
-			return false;
 		}
 
 		private string NormalisePath(string path)
@@ -700,7 +685,7 @@ namespace Alex.ResourcePackLib
 			
 			if (_archive.GetEntry(path + ".tga") != null)
 			{
-				return _bitmaps.TryAdd(path, new Lazy<Image<Rgba32>>(
+				return _bitmaps.TryAdd(path, new Func<Image<Rgba32>>(
 					() =>
 					{
 						return TryLoad(path + ".tga");
@@ -708,7 +693,7 @@ namespace Alex.ResourcePackLib
 			}
 			else if (_archive.GetEntry(path + ".png") != null)
 			{
-				return _bitmaps.TryAdd(path, new Lazy<Image<Rgba32>>(
+				return _bitmaps.TryAdd(path, new Func<Image<Rgba32>>(
 					() =>
 					{
 						return TryLoad(path + ".png");
@@ -746,10 +731,11 @@ namespace Alex.ResourcePackLib
 
 		public bool TryGetBitmap(ResourceLocation textureName, out Image<Rgba32> bitmap)
 		{
-			if (Textures.TryGetValue(textureName, out var val))
+			if (Textures.TryGetValue(new ResourceLocation(textureName.Namespace, NormalisePath(textureName.Path)), out var t))
 			{
-				bitmap = val.Value.Clone();
-				return true;
+				bitmap = t();
+
+				return bitmap != null;
 			}
 
 			bitmap = null;

@@ -31,6 +31,7 @@ using Alex.ResourcePackLib.Abstraction;
 using Alex.ResourcePackLib.Generic;
 using Alex.ResourcePackLib.IO;
 using Alex.ResourcePackLib.IO.Abstract;
+using Alex.ResourcePackLib.Json.Bedrock.Entity;
 using Alex.ResourcePackLib.Json.BlockStates;
 using Alex.ResourcePackLib.Json.Models;
 using Alex.ResourcePackLib.Json.Models.Blocks;
@@ -854,7 +855,7 @@ namespace Alex
 			bitmap = null;
 			foreach (var resourcePack in ActiveBedrockResourcePacks.Reverse())
 			{
-				if (resourcePack.TryGetTexture(location, out var f))
+				if (resourcePack.TryGetBitmap(location, out var f))
 				{
 					bitmap = f;
 					return true;
@@ -863,7 +864,23 @@ namespace Alex
 
 			return false;
 		}
+		
+		//TryGetEntityDefinition
+		public bool TryGetEntityDefinition(ResourceLocation location, out EntityDescription entityDef)
+		{
+			entityDef = null;
+			foreach (var resourcePack in ActiveBedrockResourcePacks.Reverse())
+			{
+				if (resourcePack.EntityDefinitions.TryGetValue(location, out var f))
+				{
+					entityDef = f;
+					return true;
+				}
+			}
 
+			return false;
+		}
+		
 		public bool TryGetBlockState(ResourceLocation location, out BlockStateResource resource)
 		{
 			resource = null;

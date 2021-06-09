@@ -156,9 +156,17 @@ namespace Alex.Entities
 
 					var geometry = def.Value.Geometry;
 
-					if (_registeredRenderers.TryGetValue(def.Value.Identifier, out _))
+					Func<EntityModelRenderer> previousValue = null;
+					if (_registeredRenderers.TryGetValue(def.Value.Identifier, out previousValue))
 					{
-						continue;
+					//	if (replaceModels)
+						//{
+						//	_registeredRenderers.Remove(def.Value.Identifier, out _);
+					//	}
+					//	else
+						//{
+							continue;
+						//}
 					}
 
 					string modelKey;
@@ -481,7 +489,7 @@ namespace Alex.Entities
 
 			var stringId = entityType.ToStringId();
 			var resources = Alex.Instance.Resources;
-			if (resources.BedrockResourcePack.EntityDefinitions.TryGetValue(
+			if (resources.TryGetEntityDefinition(
 				stringId, out var description))
 			{
 				if (initRenderController)
@@ -511,14 +519,12 @@ namespace Alex.Entities
 							texture, s =>
 							{
 								ManagedTexture2D pooled = null;
-
-								if (Alex.Instance.Resources.BedrockResourcePack.Textures.TryGetValue(
+								
+								if (Alex.Instance.Resources.TryGetBedrockBitmap(
 									s, out var bmp))
 								{
-									var bitmapValue = bmp.Value;
-
 									pooled = TextureUtils.BitmapToTexture2D(entity,
-										Alex.Instance.GraphicsDevice, bitmapValue);
+										Alex.Instance.GraphicsDevice, bmp);
 								}
 								else if (Alex.Instance.Resources.TryGetBitmap(s, out var bmp2))
 								{

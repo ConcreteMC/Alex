@@ -337,13 +337,13 @@ namespace Alex.Gamestates.Debugging
 						texture = textures.FirstOrDefault().Value;
 					}
 
-					if (Alex.Resources.BedrockResourcePack.Textures.TryGetValue(texture,
+					if (Alex.Resources.TryGetBedrockBitmap(texture,
 																				out var bmp))
 					{
 						if (EntityModelRenderer.TryGetRenderer(model, out renderer))
 						{
 							renderer.Scale = 1f / 16f;
-							Effect.Texture = TextureUtils.BitmapToTexture2D(this, Alex.GraphicsDevice, bmp.Value);  
+							Effect.Texture = TextureUtils.BitmapToTexture2D(this, Alex.GraphicsDevice, bmp);  
 						}
 					}
 				}
