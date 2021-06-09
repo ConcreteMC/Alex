@@ -3,6 +3,7 @@ using System.Linq;
 using System.Text;
 using Alex.Blocks.Minecraft;
 using Alex.Blocks.Minecraft.Saplings;
+using Alex.Blocks.Minecraft.Walls;
 using Alex.Common.Resources;
 using NLog;
 
@@ -134,7 +135,8 @@ namespace Alex.Blocks
 		    this.Register("minecraft:mossy_cobblestone_wall", () => new CobblestoneWall());
 		    this.Register("minecraft:andesite_wall", () => new AndesiteWall());
 		    this.Register("minecraft:stone_brick_wall", () => new StoneBrickWall());
-
+			this.Register("minecraft:red_nether_brick_wall", () => new RedNetherBrickWall());
+		    
 		    //Redstone
 		    this.Register("minecraft:lever", () => new Lever());
 		    this.Register("minecraft:redstone_wire", () => new RedstoneWire());

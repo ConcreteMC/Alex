@@ -1,6 +1,6 @@
 namespace Alex.Blocks.Minecraft
 {
-	public class AndesiteWall : Block
+	public class AndesiteWall : AbstractWall
 	{
 		public AndesiteWall()
 		{
