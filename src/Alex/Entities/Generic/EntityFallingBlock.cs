@@ -52,6 +52,12 @@ namespace Alex.Entities.Generic
 			{
 				var blockState = ChunkProcessor.Instance.GetBlockState((uint) mdi.Value);
 
+				if (blockState == null)
+				{
+					Log.Warn($"Could not find block! Lookup={(uint)mdi.Value} Original={mdi.Value}");
+					return true;
+				}
+
 				if (ItemFactory.TryGetItem(blockState.Name, out var item))
 				{
 					SetItem(item);
@@ -60,10 +66,10 @@ namespace Alex.Entities.Generic
 				{
 					Log.Info($"Could not get item: {blockState.Name}");
 				}
-				
+
 				return true;
 			}
-			
+
 			return base.HandleMetadata(flag, entry);
 		}
 

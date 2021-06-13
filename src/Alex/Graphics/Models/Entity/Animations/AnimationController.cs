@@ -13,6 +13,7 @@ using Alex.MoLang.Runtime;
 using Alex.MoLang.Runtime.Struct;
 using Alex.MoLang.Runtime.Value;
 using Alex.ResourcePackLib;
+using Alex.ResourcePackLib.Abstraction;
 using Alex.ResourcePackLib.Json.Bedrock.Entity;
 using Microsoft.Xna.Framework;
 using NLog;
@@ -43,7 +44,7 @@ namespace Alex.Graphics.Models.Entity.Animations
 		
 		private static readonly Regex ControllerRegex = new Regex("", RegexOptions.Compiled);
 
-		public void UpdateEntityDefinition(BedrockResourcePack resources, EntityDescription definition)
+		public void UpdateEntityDefinition(IAnimationProvider animationProvider, EntityDescription definition)
 		{
 			//Monitor.Enter(_lock);
 
@@ -86,12 +87,12 @@ namespace Alex.Graphics.Models.Entity.Animations
 					{
 						if (kv.Value.StartsWith("controller."))
 						{
-							if (resources.AnimationControllers.TryGetValue(kv.Value, out var controller))
+							if (animationProvider.TryGetAnimationController(kv.Value, out var controller))
 								animations.TryAdd(kv.Key, new AnimationEntry(controller));
 						}
 						else
 						{
-							if (resources.Animations.TryGetValue(kv.Value, out var animation))
+							if (animationProvider.TryGetAnimation(kv.Value, out var animation))
 								animations.TryAdd(kv.Key, new AnimationEntry(animation));
 						}
 

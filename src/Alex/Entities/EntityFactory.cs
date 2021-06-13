@@ -249,7 +249,7 @@ namespace Alex.Entities
 		public static Entity Create(ResourceLocation entityType, World world, bool initRenderController = true)
 		{
 			Entity entity = null;
-
+			
 			switch (MiNET.Entities.EntityHelpers.ToEntityType(entityType.ToString()))
 			{
 			//	case MiNET.Entities.EntityType.None:
@@ -483,6 +483,10 @@ namespace Alex.Entities
 				case EntityType.AreaEffectCloud:
 				//	entity = new EntityAreaEffectCloud(world);
 					break;
+				case EntityType.ExperienceOrb:
+					entity = new XpOrbEntity(world);
+
+					break;
 				//case EntityType.Human:
 					//entity = new PlayerMob("test", world, );
 				//	break;
@@ -495,7 +499,7 @@ namespace Alex.Entities
 			//var stringId = entityType.ToStringId();
 			var resources = Alex.Instance.Resources;
 			if (resources.TryGetEntityDefinition(
-				entityType, out var description))
+				entityType, out var description, out var resourcePack))
 			{
 				var modelRenderer = GetEntityRenderer(
 					description.Identifier);
@@ -514,7 +518,7 @@ namespace Alex.Entities
 
 				if (initRenderController)
 				{
-					entity.AnimationController.UpdateEntityDefinition(Alex.Instance.Resources.BedrockResourcePack, description);
+					entity.AnimationController.UpdateEntityDefinition(resourcePack, description);
 				}
 
 				entity.ModelRenderer = modelRenderer;

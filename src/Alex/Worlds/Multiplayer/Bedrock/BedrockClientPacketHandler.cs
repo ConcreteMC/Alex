@@ -1060,9 +1060,16 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 						
 						break;
 				}
-				
-				entity.Inventory[slot] = item;
-				entity.Inventory.SelectedSlot = message.selectedSlot;
+
+				if (slot >= 0 || slot < entity.Inventory.SlotCount)
+				{
+					entity.Inventory[slot] = item;
+					entity.Inventory.SelectedSlot = message.selectedSlot;
+				}
+				else
+				{
+					Log.Warn($"Inventory slot {slot} is out of range for entity: {entity.ToString()} (Min=0 Max={entity.Inventory.SlotCount})");
+				}
 			}
 
 		//	UnhandledPackage(message);

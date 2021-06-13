@@ -868,14 +868,16 @@ namespace Alex
 		}
 		
 		//TryGetEntityDefinition
-		public bool TryGetEntityDefinition(ResourceLocation location, out EntityDescription entityDef)
+		public bool TryGetEntityDefinition(ResourceLocation location, out EntityDescription entityDef, out BedrockResourcePack source)
 		{
 			entityDef = null;
+			source = null;
 			foreach (var resourcePack in ActiveBedrockResourcePacks.Reverse())
 			{
 				if (resourcePack.EntityDefinitions.TryGetValue(location, out var f))
 				{
 					entityDef = f;
+					source = resourcePack;
 					return true;
 				}
 			}

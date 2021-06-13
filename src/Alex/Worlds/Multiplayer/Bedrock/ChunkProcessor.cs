@@ -251,9 +251,9 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			        return convertedState;
 		        }
 
-		        var t = TranslateBlockState(
+		        var t = BlockFactory.GetBlockState(copy.Name);/* TranslateBlockState(
 			        BlockFactory.GetBlockState(copy.Name),
-			        -1, copy.Data);
+			        -1, copy.Data);*/
 
 		        if (t.Name == "Unknown" && !Failed.Contains(copy.Name))
 		        {

@@ -165,10 +165,10 @@ namespace Alex.Entities
 				}
 				
 				if (!AnimationController.Initialized &&
-				    Alex.Instance.Resources.BedrockResourcePack.EntityDefinitions.TryGetValue(
-					"minecraft:player", out var description))
+				    Alex.Instance.Resources.TryGetEntityDefinition(
+					"minecraft:player", out var description, out var source))
 				{
-					AnimationController.UpdateEntityDefinition( Alex.Instance.Resources.BedrockResourcePack, description);
+					AnimationController.UpdateEntityDefinition(source, description);
 				}
 			}
 			finally

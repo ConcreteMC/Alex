@@ -35,7 +35,7 @@ using Image = SixLabors.ImageSharp.Image;
 
 namespace Alex.ResourcePackLib
 {
-	public class BedrockResourcePack : ResourcePack, ITextureProvider, IDisposable
+	public class BedrockResourcePack : ResourcePack, ITextureProvider, IAnimationProvider, IDisposable
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(BedrockResourcePack));
 
@@ -716,6 +716,18 @@ namespace Alex.ResourcePackLib
 		public void Dispose()
 		{
 			_archive?.Dispose();
+		}
+
+		/// <inheritdoc />
+		public bool TryGetAnimationController(string key, out AnimationController animationController)
+		{
+			return AnimationControllers.TryGetValue(key, out animationController);
+		}
+
+		/// <inheritdoc />
+		public bool TryGetAnimation(string key, out Animation animation)
+		{
+			return Animations.TryGetValue(key, out animation);
 		}
 	}
 }

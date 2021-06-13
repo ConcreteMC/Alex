@@ -151,17 +151,7 @@ namespace Alex.Blocks.Minecraft
 				}
 			}
 		}
-
-		public virtual Item[] GetDrops(Item tool)
-		{
-			if (BlockMaterial.IsToolRequired && !BlockMaterial.CanUseTool(tool.ItemType, tool.Material))
-			{
-				return new Item[0];
-			}
-			
-			return new Item[] { new ItemBlock(BlockState) { Count = 1 } };
-		}
-
+		
         public double GetBreakTime(Item miningTool)
         {
 	        ItemType     toolItemType     = ItemType.Hand;
