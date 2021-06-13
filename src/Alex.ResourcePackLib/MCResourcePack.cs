@@ -529,8 +529,15 @@ namespace Alex.ResourcePackLib
 				using (var stream = entry.Open())
 				{
 					var model = MCJsonConvert.DeserializeObject<ResourcePackModelBase>(Encoding.UTF8.GetString(stream.ReadToSpan(entry.Length)));
-					model.Type = location.Path.Contains("block/", StringComparison.OrdinalIgnoreCase) ?
+
+					model.Type = entry.FullName.Contains("models/block/", StringComparison.InvariantCultureIgnoreCase) ?
 						ModelType.Block : ModelType.Item;
+					
+					//if (model.ParentName != null)
+					//{
+					//	model.Type = model.ParentName.Path.StartsWith("item/", StringComparison.InvariantCultureIgnoreCase) ?
+					//		ModelType.Block : ModelType.Item;
+					//}
 
 					return model;
 				}

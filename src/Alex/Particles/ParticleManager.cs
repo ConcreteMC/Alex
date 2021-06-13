@@ -24,16 +24,16 @@ namespace Alex.Particles
 	public class ParticleManager : DrawableGameComponent, ITicked
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ParticleManager));
-		private ConcurrentDictionary<string, ParticleEmitter> _particles =
-			new ConcurrentDictionary<string, ParticleEmitter>(StringComparer.OrdinalIgnoreCase);
+		private Dictionary<string, ParticleEmitter> _particles =
+			new Dictionary<string, ParticleEmitter>(StringComparer.OrdinalIgnoreCase);
 
 		private SpriteBatch _spriteBatch;
 		private GraphicsDevice _graphics;
 
 		public int ParticleCount { get; private set; }
 
-		private ConcurrentDictionary<string, ManagedTexture2D> _sharedTextures =
-			new ConcurrentDictionary<string, ManagedTexture2D>();
+		private Dictionary<string, ManagedTexture2D> _sharedTextures =
+			new Dictionary<string, ManagedTexture2D>();
 		private ResourceManager ResourceManager { get; }
 		public ParticleManager(Game game, GraphicsDevice device, ResourceManager resourceManager) : base(game)
 		{
@@ -42,67 +42,79 @@ namespace Alex.Particles
 
 			_camera = new Camera();
 			Visible = false;
+			Enabled = false;
 			ResourceManager = resourceManager;
 		}
 
 		public void Load(BedrockResourcePack resourcePack)
 		{
-			foreach (var particle in resourcePack.Particles)
+			try
 			{
-				if (particle.Value?.Description?.Identifier == null)
-					continue;
-				
-				if (_particles.ContainsKey(particle.Value.Description.Identifier))
-					continue;
-
-				var texturePath = particle.Value.Description.BasicRenderParameters.Texture;
-
-				ManagedTexture2D particleTexture = null;
-
-				if (!_sharedTextures.TryGetValue(texturePath
-					, out particleTexture))
+				Enabled = false;
+				foreach (var particle in resourcePack.Particles)
 				{
-					switch (texturePath)
+					if (particle.Value?.Description?.Identifier == null)
+						continue;
+
+					if (_particles.ContainsKey(particle.Value.Description.Identifier))
+						continue;
+
+					var texturePath = particle.Value.Description.BasicRenderParameters.Texture;
+
+					ManagedTexture2D particleTexture = null;
+
+					if (!_sharedTextures.TryGetValue(texturePath, out particleTexture))
 					{
-						case "atlas.terrain":
-							particleTexture = ResourceManager.BlockAtlas.GetAtlas();
-							break;
-						case "atlas.items":
-							particleTexture = ResourceManager.ItemAtlas.GetAtlas();
-							break;
-						default:
-							if (resourcePack.TryGetBitmap(
-								texturePath, out var img))
-							{
-								particleTexture = TextureUtils.BitmapToTexture2D(this, _graphics, img);
-								//particleTexture = pooled;
-							}
-							break;
+						switch (texturePath)
+						{
+							case "atlas.terrain":
+								particleTexture = ResourceManager.BlockAtlas.GetAtlas();
+
+								break;
+
+							case "atlas.items":
+								particleTexture = ResourceManager.ItemAtlas.GetAtlas();
+
+								break;
+
+							default:
+								if (resourcePack.TryGetBitmap(texturePath, out var img))
+								{
+									particleTexture = TextureUtils.BitmapToTexture2D(this, _graphics, img);
+									//particleTexture = pooled;
+								}
+
+								break;
+						}
+
+						if (particleTexture != null)
+							_sharedTextures.TryAdd(texturePath, particleTexture);
 					}
 
 					if (particleTexture != null)
-						_sharedTextures.TryAdd(texturePath, particleTexture);
-				}
-				
-				if (particleTexture != null)
-				{
-					ParticleEmitter p = new ParticleEmitter(particleTexture, particle.Value);
-					particleTexture.Use(this);
-
-					if (!TryRegister(particle.Value.Description.Identifier, p))
 					{
-						Log.Warn($"Could not add particle (duplicate): {particle.Key}");
-						particleTexture.Release(this);
+						ParticleEmitter p = new ParticleEmitter(particleTexture, particle.Value);
+						particleTexture.Use(this);
+
+						if (!TryRegister(particle.Value.Description.Identifier, p))
+						{
+							Log.Warn($"Could not add particle (duplicate): {particle.Key}");
+							particleTexture.Release(this);
+						}
+					}
+					else
+					{
+						Log.Warn($"Failed to add particle (missing texture): {particle.Key}");
 					}
 				}
-				else
-				{
-					Log.Warn($"Failed to add particle (missing texture): {particle.Key}");
-				}
+			}
+			finally
+			{
+				Enabled = true;
 			}
 		}
 
-		public bool TryRegister(string identifier, ParticleEmitter emitter)
+		private bool TryRegister(string identifier, ParticleEmitter emitter)
 		{
 			if (!_particles.TryAdd(identifier, emitter))
 			{

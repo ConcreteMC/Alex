@@ -1,10 +1,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using Alex.Blocks.State;
+using Alex.Common.Utils;
 using Alex.Common.Utils.Vectors;
 using Alex.Graphics.Models.Blocks;
 using Alex.ResourcePackLib;
 using Alex.ResourcePackLib.Json.Models;
+using Alex.ResourcePackLib.Json.Models.Items;
 using Alex.Worlds;
 using Alex.Worlds.Chunks;
 using Microsoft.Xna.Framework;
@@ -23,8 +25,21 @@ namespace Alex.Graphics.Models.Items
             _blockState = block;
             _texture = texture;
             
-            Scale = new Vector3(16f);
+            Scale = new Vector3(8f);
             Size = new Vector3(16f, 16f, 16f);
+
+            float biggestDimensions = 0;
+            foreach (var bb in block.Block.GetBoundingBoxes(Vector3.Zero))
+            {
+                var dimension = bb.GetDimensions();
+                var len = dimension.Length();
+                if (len > biggestDimensions)
+                {
+                    biggestDimensions = len;
+                    Size = dimension;
+                }
+            }
+           // Size = block.Block.GetBoundingBoxes(Vector3.Zero)
             //Offset = new Vector3(0f, -0.5f, 0f);
             //  Translation = -Vector3.Forward * 8f;
         }
@@ -104,12 +119,48 @@ namespace Alex.Graphics.Models.Items
             }
         }
 
+        /// <inheritdoc />
+        protected override Matrix GetWorldMatrix(DisplayElement activeDisplayItem, Matrix characterMatrix)
+        {
+            if ((DisplayPosition & DisplayPosition.FirstPerson) != 0)
+            {
+                var translate = activeDisplayItem.Translation;
+                return Matrix.CreateScale(activeDisplayItem.Scale * Scale)
+                       * MatrixHelper.CreateRotationDegrees(new Vector3(-67.5f, 0f, 0f))
+                       * MatrixHelper.CreateRotationDegrees(activeDisplayItem.Rotation)
+                       * Matrix.CreateTranslation(new Vector3(translate.X + 2f, translate.Y + (16f), translate.Z - 4f))
+                       * characterMatrix;
+            }
+            
+            if ((DisplayPosition & DisplayPosition.ThirdPerson) != 0)
+            {
+                var translate = activeDisplayItem.Translation;
+                return Matrix.CreateScale(activeDisplayItem.Scale * Scale)
+                       * MatrixHelper.CreateRotationDegrees(new Vector3(-67.5f, 0f, 0f))
+                       * MatrixHelper.CreateRotationDegrees(activeDisplayItem.Rotation)
+                       * Matrix.CreateTranslation(new Vector3(translate.X + 2f, translate.Y + (8f), translate.Z - 2f))
+                       * characterMatrix;
+            }
+            
+            if ((DisplayPosition & DisplayPosition.Gui) != 0)
+            {
+                return Matrix.CreateScale(activeDisplayItem.Scale)
+                       * MatrixHelper.CreateRotationDegrees(new Vector3(25f, 45f, 0f))
+                       * Matrix.CreateTranslation(activeDisplayItem.Translation) 
+                       * Matrix.CreateTranslation(new Vector3(0f, 0.25f, 0f))
+                       * characterMatrix;
+            }
+
+            return base.GetWorldMatrix(activeDisplayItem, characterMatrix);
+        }
+
         public override IItemRenderer Clone()
         {
             return new ItemBlockModelRenderer(_blockState, Model, _texture)
             {
-               // Vertices = (VertexPositionColorTexture[]) Vertices.Clone(),
-                Size = Size
+                Vertices = (VertexPositionColorTexture[]) Vertices.Clone(),
+                Size = Size,
+                Scale = Scale
             };
         }
     }

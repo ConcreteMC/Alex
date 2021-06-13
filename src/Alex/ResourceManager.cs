@@ -95,8 +95,8 @@ namespace Alex
 		
 		public ResourceManager(IServiceProvider serviceProvider)
 		{
-			BlockAtlas = new AtlasGenerator("block/");
-			ItemAtlas = new AtlasGenerator("items/");
+			BlockAtlas = new AtlasGenerator("atlases/blocks/");
+			ItemAtlas = new AtlasGenerator("atlases/items/");
 			
 			Storage = serviceProvider.GetService<IStorageSystem>();
 
@@ -606,12 +606,27 @@ namespace Alex
 
 	        progress?.UpdateProgress(0, $"Loading block textures...");
 
+	        GetTextures(
+		        models, textures, progress, ModelType.Block);
+	        
+	        FindAndAddTexture(new ResourceLocation(ResourceLocation.DefaultNamespace, "block/water_flow"), textures);
+	        FindAndAddTexture(new ResourceLocation(ResourceLocation.DefaultNamespace, "block/water_still"), textures);
+	        
+	        FindAndAddTexture(new ResourceLocation(ResourceLocation.DefaultNamespace, "block/lava_flow"), textures);
+	        FindAndAddTexture(new ResourceLocation(ResourceLocation.DefaultNamespace, "block/lava_still"), textures);
+	        
+	        //if (TryGetBitmap())
+	        //textures.Add(, new AtlasGenerator.ImageEntry());
+	        
 	        BlockAtlas.LoadResources(device, textures, this, progress, true);
 	        
 	        textures.Clear();
 
 	        progress?.UpdateProgress(0, $"Loading item textures...");
 
+	        GetTextures(
+		        models, textures, progress, ModelType.Item);
+	        
 	        ItemAtlas.LoadResources(device, textures, this, progress, true);
 
 	        var activeBedrockPacks = ActiveBedrockResourcePacks.ToArray();
@@ -648,6 +663,59 @@ namespace Alex
 	        if (f != null)
 	        {
 		        PreloadCallback?.Invoke(f.FontBitmap, McResourcePack.BitmapFontCharacters.ToList());
+	        }
+        }
+
+        private void FindAndAddTexture(ResourceLocation search,
+	        Dictionary<ResourceLocation, AtlasGenerator.ImageEntry> textures)
+        {
+	        if (TryGetBitmap(search, out var texture))
+	        {
+		        TextureMeta meta = null;
+
+		        TryGetTextureMeta(search, out meta);
+		        if (textures.ContainsKey(search))
+		        {
+			        if (meta != null)
+				        textures[search].Meta = meta;
+						      
+
+			        if (texture != null)
+				        textures[search].Image = texture;
+
+			        //textures[texture.Key] = entry;
+		        }
+		        else
+		        {
+			        textures.Add(search, new AtlasGenerator.ImageEntry(texture, meta));
+		        }
+	        }
+	        
+	       // if (TryGetBitmap(search, out var bmp))
+	       // {
+		   //     textures.TryAdd(search, new AtlasGenerator.ImageEntry(bmp, ));
+	       // }
+        }
+        
+        private void GetTextures(IDictionary<ResourceLocation, ResourcePackModelBase> models,
+	        Dictionary<ResourceLocation, AtlasGenerator.ImageEntry> textures,
+	        IProgressReceiver progress, ModelType type)
+        {
+	        int counter = 0;
+	        foreach (var itemModel in models.Where(x => x.Value.Type == type))
+	        {
+		        progress.UpdateProgress(counter, models.Count, null, itemModel.Key.ToString());
+		        foreach (var path in itemModel.Value.Textures)
+		        {
+			        // if (!path.Value.Contains(Selector, StringComparison.InvariantCultureIgnoreCase))
+			        //    continue;
+
+			        var p = new ResourceLocation(path.Value);
+
+			        FindAndAddTexture(p, textures);
+		        }
+
+		        counter++;
 	        }
         }
 

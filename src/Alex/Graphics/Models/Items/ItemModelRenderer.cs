@@ -249,75 +249,69 @@ namespace Alex.Graphics.Models.Items
         /// <inheritdoc />
         public IAttached Parent { get; set; } = null;
 
-        public int Render(IRenderArgs args, Microsoft.Xna.Framework.Graphics.Effect effect, Matrix characterMatrix)
+        protected virtual Matrix GetWorldMatrix(DisplayElement activeDisplayItem, Matrix characterMatrix)
         {
-            if (Effect == null || Buffer == null || Buffer.VertexCount == 0)
-                return 0;
+            var halfSize          = Size / 2f;
             
-                        var halfSize          = Size / 2f;
-           // halfSize.Z = 0f;
-           // halfSize.Y = 8f;
-            var activeDisplayItem = ActiveDisplayItem;
-            //   world.Right = -world.Right;
-
             var scale = activeDisplayItem.Scale * Scale;
             var translation = activeDisplayItem.Translation;
             var rotation = activeDisplayItem.Rotation;
 
             if (DisplayPosition.HasFlag(DisplayPosition.Gui))
             {
-                if (this is ItemBlockModelRenderer)
-                {
-                    Effect.World = Matrix.CreateScale(activeDisplayItem.Scale)
-                                   * MatrixHelper.CreateRotationDegrees(new Vector3(25f, 45f, 0f))
-                                   * Matrix.CreateTranslation(translation)
-                                   * Matrix.CreateTranslation(new Vector3(0f, 0.25f, 0f)) * characterMatrix;
-                }
-                else
-                {
-                    Effect.World = Matrix.CreateScale(1f/16f) * characterMatrix;
-                }
+                return Matrix.CreateScale(1f/16f) * characterMatrix;
             }
-            else if (DisplayPosition.HasFlag(DisplayPosition.ThirdPerson))
+
+            if (DisplayPosition.HasFlag(DisplayPosition.ThirdPerson))
             {
-                if (rotation != Vector3.Zero)
+                if (rotation == Vector3.Zero)
                 {
-                    //r.Y += 12.5f;
-                    rotation.Z -= 67.5f;
-                    Effect.World = Matrix.CreateScale(scale)
-                                   * Matrix.CreateTranslation(-halfSize)
-                                   * Matrix.CreateRotationZ(MathUtils.ToRadians(-32.5f))
-                                   * Matrix.CreateTranslation(halfSize)
-                                   //* MCMatrix.CreateRotationDegrees(new Vector3(-67.5f, 180f, 0f))
-                                   * MatrixHelper.CreateRotationDegrees(rotation * new Vector3(1f, -1f, -1f))
-                                   * Matrix.CreateTranslation(
-                                       new Vector3(translation.X + 6f, translation.Y + 3f,  translation.Z))
-                                   * characterMatrix;
+                    return Matrix.CreateScale(scale) * MatrixHelper.CreateRotationDegrees(new Vector3(-67.5f, 0f, 0f))
+                                                     * Matrix.CreateTranslation(
+                                                         new Vector3(
+                                                             translation.X + 2f, Size.Y - translation.Y, translation.Z))
+                                                     * characterMatrix;
                 }
-                else
-                {
-                    Effect.World =  
-                        Matrix.CreateScale(scale)
-                        * MatrixHelper.CreateRotationDegrees(new Vector3(-67.5f, 0f, 0f))
-                        * Matrix.CreateTranslation(
-                           new Vector3(translation.X + 2f, Size.Y - translation.Y, translation.Z))
-                        * characterMatrix;
-                }
+
+                //r.Y += 12.5f;
+                rotation.Z -= 67.5f;
+
+                return Matrix.CreateScale(scale) * Matrix.CreateTranslation(-halfSize)
+                                                 * Matrix.CreateRotationZ(MathUtils.ToRadians(-32.5f))
+                                                 * Matrix.CreateTranslation(halfSize)
+                                                 //* MCMatrix.CreateRotationDegrees(new Vector3(-67.5f, 180f, 0f))
+                                                 * MatrixHelper.CreateRotationDegrees(
+                                                     rotation * new Vector3(1f, -1f, -1f))
+                                                 * Matrix.CreateTranslation(
+                                                     new Vector3(
+                                                         translation.X + 6f, translation.Y + 3f, translation.Z))
+                                                 * characterMatrix;
+
             }
-            else  if (DisplayPosition.HasFlag(DisplayPosition.FirstPerson))
+
+            if (DisplayPosition.HasFlag(DisplayPosition.FirstPerson))
             {
-                Effect.World = Matrix.CreateScale(scale)
+               return Matrix.CreateScale(scale)
                                * Matrix.CreateRotationY(MathUtils.ToRadians(180f))
                                * MatrixHelper.CreateRotationDegrees(rotation)
                                * Matrix.CreateTranslation( halfSize + translation)
                                * characterMatrix;
             }
-            else 
-            {
-                
-                    Effect.World = characterMatrix;
-                
-            }
+
+            return characterMatrix;
+        }
+        
+        public int Render(IRenderArgs args, Microsoft.Xna.Framework.Graphics.Effect effect, Matrix characterMatrix)
+        {
+            if (Effect == null || Buffer == null || Buffer.VertexCount == 0)
+                return 0;
+            
+           // halfSize.Z = 0f;
+           // halfSize.Y = 8f;
+            var activeDisplayItem = ActiveDisplayItem;
+            //   world.Right = -world.Right;
+
+            Effect.World = GetWorldMatrix(activeDisplayItem, characterMatrix);
 
             int drawCount = 0;
             var original = args.GraphicsDevice.RasterizerState;

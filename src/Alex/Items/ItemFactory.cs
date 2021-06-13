@@ -96,7 +96,7 @@ namespace Alex.Items
 		    ItemEntries = JsonConvert.DeserializeObject<ItemEntry[]>(raw);
 
 
-		    var ii = resources.Registries.Items.Entries;
+		    //var ii = resources.Registries.Items.Entries;
 		    var blocks = resources.Registries.Blocks.Entries;
 		    
 		   // LoadModels();
@@ -121,15 +121,11 @@ namespace Alex.Items
 	                   }*/
 			           var bs = BlockFactory.GetBlockState(entry.Key);
 
-			           if (!(bs.Block is Air) && bs != null)
-			           {
-				          // item = new ItemBlock(bs);
-				           //  Log.Info($"Registered block item: {entry.Key}");
-			           }
-			           else
+			           if (!bs.Block.Renderable)
 			           {
 				           return;
 			           }
+			           
 
 			           string ns   = ResourceLocation.DefaultNamespace;
 				          string path = entry.Key;
@@ -142,7 +138,7 @@ namespace Alex.Items
 				          }
 				          
 				          var data = ItemEntries.FirstOrDefault(
-					          x => x.name.Equals(entry.Key.Substring(10), StringComparison.OrdinalIgnoreCase));
+					          x => x.name.Equals(path, StringComparison.OrdinalIgnoreCase));
 
 				          
 				         var resourceLocation = new ResourceLocation(ns, $"block/{path}");
@@ -174,22 +170,22 @@ namespace Alex.Items
 				           //item.Renderer = new ItemBlockModelRenderer(bs, model, resources.Atlas.GetAtlas());
 				           //item.Renderer.Cache(resources);
 
-
-				           if (!items.TryAdd(entry.Key, () =>
+				           var item = new ItemBlock(bs) { };
+				           item.Name = entry.Key;
+				           item.DisplayName = entry.Key;
+					           
+				           if (data != null)
 				           {
-					           var clone = new ItemBlock(bs) { };
-					           clone.Name = entry.Key;
-					           clone.DisplayName = entry.Key;
+					           item.MaxStackSize = data.stackSize;
+					           item.DisplayName = data.displayName;
+				           }
 					           
-					           if (data != null)
-					           {
-						           clone.MaxStackSize = data.stackSize;
-						           clone.DisplayName = data.displayName;
-					           }
-					           
-					           clone.Renderer = new ItemBlockModelRenderer(bs, model, resources.BlockAtlas.GetAtlas());
-					           clone.Renderer.Cache(resources);
-					           return clone;
+				           item.Renderer = new ItemBlockModelRenderer(bs, model, resources.BlockAtlas.GetAtlas());
+				           item.Renderer.Cache(resources);
+
+				           if (!items.TryAdd(resourceLocation, () =>
+				           {
+					           return item.Clone();
 				           }))
 				           {
 					          // items[entry.Key] = () => { return item.Clone(); };
@@ -205,12 +201,22 @@ namespace Alex.Items
            int i = 0;
 
            Parallel.ForEach(
-	           ii, (entry) =>
+	           resources.Registries.Items.Entries, (entry) =>
 	           {
 		           // var entry = ii.ElementAt(i);
-		           progressReceiver?.UpdateProgress(i++, ii.Count, $"Processing items...", entry.Key);
-		           var  resourceLocation = new ResourceLocation(entry.Key);
-		           resourceLocation = new ResourceLocation(resourceLocation.Namespace, $"item/{resourceLocation.Path}");
+		           progressReceiver?.UpdateProgress(i++,  resources.Registries.Items.Entries.Count, $"Processing items...", entry.Key);
+		           
+		           string ns   = ResourceLocation.DefaultNamespace;
+		           string path = entry.Key;
+
+		           if (entry.Key.Contains(':'))
+		           {
+			           var index = entry.Key.IndexOf(':');
+			           ns = entry.Key.Substring(0, index);
+			           path = entry.Key.Substring(index + 1);
+		           }
+
+		           var resourceLocation = new ResourceLocation(ns, $"item/{path}");
 
 		           if (items.ContainsKey(resourceLocation))
 			           return;

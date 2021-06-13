@@ -36,11 +36,6 @@ namespace Alex.Blocks.State
 		public Block Block       { get; set; } = new Air();
 		public bool  Default     { get; set; } = false;
 
-		//public string[] AppliedModels { get; set; } = new string[0];
-		
-		//TODO: Remove
-		//internal BlockStateResource MultiPartHelper { get; set; }
-		
 		public BlockStateVariantMapper VariantMapper { get; set; }
 
 		internal BoundingBox[] BoundingBoxes { get; set; } = null;
@@ -153,9 +148,9 @@ namespace Alex.Blocks.State
 		private static readonly Regex VariantParser = new Regex("(?'property'[^=,]*?)=(?'value'[^,]*)", RegexOptions.Compiled);
 		public static Dictionary<string, string> ParseData(string variant)
 		{
-			var matches = VariantParser.Matches(variant);
+			var matches = VariantParser.Matches(variant).ToArray();
 
-			if (matches.Count > 0)
+			if (matches.Length > 0)
 			{
 				return matches.ToDictionary(x => x.Groups["property"].Value, x => x.Groups["value"].Value);
 				/*new Dictionary<string, string>(matches.Count, StringComparer.Ordinal);
