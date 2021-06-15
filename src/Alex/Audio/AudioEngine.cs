@@ -89,16 +89,19 @@ namespace Alex.Audio
 				});*/
 		}
 
-		public void Initialize(BedrockResourcePack resourcePack)
+		public int Initialize(BedrockResourcePack resourcePack, IProgressReceiver progress)
 		{
 			if (!Supported)
-				return;
+				return 0;
 			
 			if (resourcePack.SoundDefinitions == null)
-				return;
+				return 0;
 
+			int count = 0;
+			int total = resourcePack.SoundDefinitions.SoundDefinitions.Count;
 			foreach (var sound in resourcePack.SoundDefinitions.SoundDefinitions)
 			{
+				progress?.UpdateProgress(count, total, "Importing sound definitions...", sound.Key);
 				List<WrappedSound> values = new List<WrappedSound>();
 				foreach (var element in sound.Value.Sounds)
 				{
@@ -199,9 +202,16 @@ namespace Alex.Audio
 
 				if (values.Count > 0)
 				{
-					_sounds.TryAdd(sound.Key, new SoundInfo(sound.Key, SoundCategory.Effects, values.ToArray()));
+					var soundInfo = new SoundInfo(sound.Key, SoundCategory.Effects, values.ToArray());
+					_sounds.AddOrUpdate(sound.Key, s => soundInfo, (s, info) => soundInfo);
+					//if (_sounds.TryAdd(sound.Key, ))
+					{
+						count++;
+					}
 				}
 			}
+
+			return count;
 		}
 
 		private Vector3 _lastPos = Vector3.Zero;

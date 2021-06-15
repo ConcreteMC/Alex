@@ -1,12 +1,16 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
+using Alex.Common.Resources;
 using Alex.Common.Utils;
+using Alex.ResourcePackLib.Abstraction;
 using Alex.ResourcePackLib.IO;
 using Alex.ResourcePackLib.IO.Abstract;
 using Alex.ResourcePackLib.Json;
 using Alex.ResourcePackLib.Json.Bedrock;
 using Alex.ResourcePackLib.Json.Models.Entities;
+using Alex.ResourcePackLib.Json.Textures;
 using NLog;
 using NLog.Fluent;
 using SixLabors.ImageSharp;
@@ -25,8 +29,8 @@ namespace Alex.ResourcePackLib
 			}
 		}
 
-		protected IFile Entry { get; }
-		protected MCPackModule(IFile entry)
+		protected IFilesystem Entry { get; }
+		protected MCPackModule(IFilesystem entry)
 		{
 			Entry = entry;
 		}
@@ -37,7 +41,7 @@ namespace Alex.ResourcePackLib
 		}
 	}
 	
-	public class MCSkinPack : MCPackModule
+	public class MCSkinPack : MCPackModule, ITextureProvider
 	{
 		private static readonly ILogger Log = LogManager.GetCurrentClassLogger();
 		
@@ -56,10 +60,12 @@ namespace Alex.ResourcePackLib
 			
 
 		public MCPackSkins Info { get; private set; }
-		public LoadedSkin[] Skins { get; private set; }
+		//public LoadedSkin[] Skins { get; private set; }
+		
+		public IReadOnlyDictionary<string, EntityModel> EntityModels { get; private set; }
 		
 		/// <inheritdoc />
-		internal MCSkinPack(IFile entry) : base(entry)
+		internal MCSkinPack(IFilesystem entry) : base(entry)
 		{
 			
 		}
@@ -71,43 +77,56 @@ namespace Alex.ResourcePackLib
 			{
 				List<LoadedSkin> skins = new List<LoadedSkin>();
 
-				using (var archive = new ZipFileSystem(Entry.Open(), Entry.Name))
+				var archive = Entry;
+				//using (var archive = new ZipFileSystem(Entry.Open(), Entry.Name))
 				{
 					var skinsEntry = archive.GetEntry("skins.json");
+					if (skinsEntry == null)
+						return false;
+						
 					Info = MCJsonConvert.DeserializeObject<MCPackSkins>(skinsEntry.ReadAsString());
 
 					var geometryEntry = archive.GetEntry("geometry.json");
 
-					Dictionary<string, EntityModel> models =
-						MCJsonConvert.DeserializeObject<Dictionary<string, EntityModel>>(geometryEntry.ReadAsString());
-
-					foreach (var skin in Info.Skins)
+					if (geometryEntry != null)
 					{
-						EntityModel model;
+						ProcessGeometryJson(geometryEntry);
+						/*Dictionary<string, EntityModel> models =
+							MCJsonConvert.DeserializeObject<Dictionary<string, EntityModel>>(
+								geometryEntry.ReadAsString());
 
-						if (!models.TryGetValue(skin.Geometry, out model))
-							continue;
-
-						var textureEntry = archive.GetEntry(skin.Texture);
-
-						if (textureEntry == null)
-							continue;
-
-						Image<Rgba32> img;
-
-						using (var s = textureEntry.Open())
+						foreach (var skin in Info.Skins)
 						{
-							//img = new Bitmap(s);
-							img = Image.Load<Rgba32>(s.ReadToSpan(textureEntry.Length), PngDecoder);
-						}
+							EntityModel model;
 
-						LoadedSkin loaded = new LoadedSkin(skin.LocalizationName, model, img);
-						skins.Add(loaded);
-						//skin.
+							if (!models.TryGetValue(skin.Geometry, out model))
+								continue;
+
+							var textureEntry = archive.GetEntry(skin.Texture);
+
+							if (textureEntry == null)
+								continue;
+
+							Image<Rgba32> img;
+
+							using (var s = textureEntry.Open())
+							{
+								//img = new Bitmap(s);
+								img = Image.Load<Rgba32>(s.ReadToSpan(textureEntry.Length), PngDecoder);
+							}
+
+							LoadedSkin loaded = new LoadedSkin(skin.LocalizationName, model, img);
+							skins.Add(loaded);
+							//skin.
+						}*/
+					}
+					else
+					{
+						EntityModels = new Dictionary<string, EntityModel>();
 					}
 				}
 
-				Skins = skins.ToArray();
+				//Skins = skins.ToArray();
 
 				return true;
 			}
@@ -117,6 +136,50 @@ namespace Alex.ResourcePackLib
 			}
 
 			return false;
+		}
+
+		private void ProcessGeometryJson(IFile entry)
+		{
+			try
+			{
+				Dictionary<string, EntityModel> entityModels = new Dictionary<string, EntityModel>();
+				BedrockResourcePack.LoadEntityModel(entry.ReadAsString(), entityModels);
+				entityModels = BedrockResourcePack.ProcessEntityModels(entityModels);
+
+				EntityModels = entityModels;
+			}
+			catch (Exception exception)
+			{
+				Log.Error(exception, "Could not process skinpack geometry.");
+			}
+		}
+
+		/// <inheritdoc />
+		public bool TryGetBitmap(ResourceLocation textureName, out Image<Rgba32> bitmap)
+		{
+			bitmap = null;
+			var textureEntry = Entry.GetEntry(textureName.Path);
+
+			if (textureEntry == null)
+				return false;
+
+			Image<Rgba32> img;
+
+			using (var s = textureEntry.Open())
+			{
+				//img = new Bitmap(s);
+				img = Image.Load<Rgba32>(s.ReadToSpan(textureEntry.Length), PngDecoder);
+			}
+
+			bitmap = img;
+
+			return true;
+		}
+
+		/// <inheritdoc />
+		public bool TryGetTextureMeta(ResourceLocation textureName, out TextureMeta meta)
+		{
+			throw new System.NotImplementedException();
 		}
 	}
 

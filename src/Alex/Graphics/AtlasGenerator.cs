@@ -77,7 +77,7 @@ namespace Alex.Graphics
 	    {
 		    Stopwatch sw = Stopwatch.StartNew();
 
-		    Log.Info($"Generating texture atlas out of {(blockTextures.Count)} bitmaps...");
+		    Log.Debug($"Generating texture atlas out of {(blockTextures.Count)} bitmaps...");
 
 		    long totalSize = 0;
 
@@ -159,7 +159,7 @@ namespace Alex.Graphics
 			    _textureAtlas = GetMipMappedTexture2D(device, img);
 			    _atlasLocations = textureInfos;
 			    
-			    Log.Info($"Atlas size: W={_textureAtlas.Width},H={_textureAtlas.Height} | TW: {TextureWidth} TH: {TextureHeight}");
+			    Log.Debug($"Atlas size: W={_textureAtlas.Width},H={_textureAtlas.Height} | TW: {TextureWidth} TH: {TextureHeight}");
 			    //break;
 		    }
 		    
@@ -168,7 +168,7 @@ namespace Alex.Graphics
 		    sw.Stop();
 
 		    Log.Info(
-			    $"TextureAtlas's generated in {sw.ElapsedMilliseconds}ms! ({PlayingState.GetBytesReadable(totalSize, 2)})");
+			    $"TextureAtlas '{Selector}' generated in {sw.ElapsedMilliseconds}ms! ({PlayingState.GetBytesReadable(totalSize, 2)})");
 	    }
 
 	    private ManagedTexture2D GetMipMappedTexture2D(GraphicsDevice device, Image<Rgba32> image)

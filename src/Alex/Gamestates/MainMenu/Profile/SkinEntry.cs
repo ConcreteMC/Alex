@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using Alex.Common.Graphics.GpuResources;
+using Alex.Common.Utils;
 using Alex.Common.Utils.Vectors;
 using Alex.Entities;
 using Alex.Graphics.Models.Entity;
@@ -19,25 +20,19 @@ namespace Alex.Gamestates.MainMenu.Profile
         public LoadedSkin Skin { get; }
         private Action<SkinEntry> OnDoubleClick { get; }
 
-        public SkinEntry(LoadedSkin skin, ManagedTexture2D texture2D, Action<SkinEntry> onDoubleClick)
+        public SkinEntry(LoadedSkin skin, Action<SkinEntry> onDoubleClick)
         {
             Skin = skin;
             OnDoubleClick = onDoubleClick;
 
             MinWidth = 92;
             MaxWidth = 92;
-            MinHeight = 128;
-            MaxHeight = 128;
+            MinHeight = 96;
+            MaxHeight = 96;
 
             // AutoSizeMode = AutoSizeMode.GrowOnly;
 
-            AddChild(
-                new TextElement()
-                {
-                    Text = skin.Name, Margin = Thickness.Zero, Anchor = Alignment.TopCenter, //Enabled = false
-                });
-
-            Margin = new Thickness(0, 8);
+            Margin = new Thickness(0, 4);
             Anchor = Alignment.FillY;
             // AutoSizeMode = AutoSizeMode.GrowAndShrink;
             // BackgroundOverlay = new GuiTexture2D(GuiTextures.OptionsBackground);
@@ -46,6 +41,7 @@ namespace Alex.Gamestates.MainMenu.Profile
             
             if (EntityModelRenderer.TryGetRenderer(skin.Model, out var renderer))
             {
+                var texture2D = TextureUtils.BitmapToTexture2D(this, Alex.Instance.GraphicsDevice, skin.Texture);
                 mob.ModelRenderer = renderer;
                 mob.Texture = texture2D;  
             }
@@ -57,11 +53,17 @@ namespace Alex.Gamestates.MainMenu.Profile
                     //   Margin = new Thickness(15, 15, 5, 40),
 
                     Width = 92,
-                    Height = 128,
+                    Height = 96,
                     Anchor = Alignment.Fill,
                 };
 
             AddChild(ModelView);
+            
+            AddChild(
+                new TextElement()
+                {
+                    Text = skin.Name, Margin = Thickness.Zero, Anchor = Alignment.BottomCenter, //Enabled = false
+                });
         }
 
         private readonly float _playerViewDepth = -512.0f;
@@ -71,15 +73,16 @@ namespace Alex.Gamestates.MainMenu.Profile
             
             var mousePos = Alex.Instance.GuiManager.FocusManager.CursorPosition;
 
-            mousePos = Vector2.Transform(mousePos, Alex.Instance.GuiManager.ScaledResolution.InverseTransformMatrix);
+            mousePos = Alex.Instance.GuiRenderer.Unproject(mousePos);
             var playerPos = ModelView.RenderBounds.Center.ToVector2();
 
-            var mouseDelta = (new Vector3(playerPos.X, playerPos.Y, _playerViewDepth) - new Vector3(mousePos.X, mousePos.Y, 0.0f));
+            var mouseDelta = (new Vector3(playerPos.X, playerPos.Y, _playerViewDepth) -
+                              new Vector3(mousePos.X, mousePos.Y, 0.0f));
             mouseDelta.Normalize();
 
-            var headYaw = (float)mouseDelta.GetYaw();
-            var pitch = (float)mouseDelta.GetPitch();
-            var yaw = (float)headYaw;
+            var headYaw = (float) mouseDelta.GetYaw();
+            var pitch   = (float) mouseDelta.GetPitch();
+            var yaw     = (float) headYaw;
 
             ModelView.SetEntityRotation(-yaw, pitch, -headYaw);
         }

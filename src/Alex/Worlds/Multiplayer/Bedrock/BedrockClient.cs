@@ -777,7 +777,9 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	        if (Alex.PlayerModel != null && Alex.PlayerTexture != null)
 	        {
 		        var model = Alex.PlayerModel;
-
+		        model.Description.TextureHeight = Alex.PlayerTexture.Height;
+		        model.Description.TextureWidth = Alex.PlayerTexture.Width;
+		        model.Description.Identifier = model.Description.Identifier.Split(':')[0];
 		        byte[] skinData;
 		        using (MemoryStream ms = new MemoryStream())
 		        {
@@ -800,6 +802,9 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		      //  GeometryModel mm       = new GeometryModel();
 		      //  mm.Geometry.Add(model.Description.Identifier, model);
 
+		      var geoData = Encoding.UTF8.GetBytes(MCJsonConvert.SerializeObject(mm));
+		    //  File.WriteAllBytes("currentSkin.json", geoData);
+		      
 		        var modelIdentifier = model.Description.Identifier;
 		        
 		        skin = new Skin()
@@ -826,9 +831,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			        Height = (int) Alex.PlayerTexture.Height,
 			        Data = skinData,
 			        GeometryName = modelIdentifier,
-			        GeometryData =
-				        Convert.ToBase64String(
-					        Encoding.UTF8.GetBytes(MCJsonConvert.SerializeObject(mm))),
+			        GeometryData = Convert.ToBase64String(geoData),
 			        AnimationData = "",
 			        IsPremiumSkin = false,
 			        IsPersonaSkin = false,
@@ -864,6 +867,17 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			        IsPersonaSkin = payload.IsPersonaSkin,
 		        };
 	        }
+	        
+	        World.Player.Skin = new MiNET.Utils.Skins.Skin()
+	        {
+		        ResourcePatch = skin.ResourcePatch,
+		        Width = skin.Width,
+		        Height = skin.Height,
+		        Data = skin.Data,
+		        GeometryData = skin.GeometryData,
+		        GeometryName = skin.GeometryName,
+		        SkinId = skin.SkinId
+	        };
 
 	        var serialized = JsonConvert.SerializeObject(
 		        new BedrockSkinData(skin)

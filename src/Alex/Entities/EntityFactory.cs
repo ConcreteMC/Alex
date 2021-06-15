@@ -139,6 +139,7 @@ namespace Alex.Entities
 		public static int LoadEntityDefinitions(BedrockResourcePack resourcePack, ResourceManager resources, GraphicsDevice graphics, bool replaceModels, IProgressReceiver progressReceiver = null)
 		{
 			var entityDefinitions = resourcePack.EntityDefinitions;
+			var beforeImport = _registeredRenderers.Count;
 			int done              = 0;
 			int total             = entityDefinitions.Count;
 
@@ -198,7 +199,7 @@ namespace Alex.Entities
 			
 		//    Log.Info($"Registered {(Assembly.GetExecutingAssembly().GetTypes().Count(t => t.Namespace == "Alex.Entities.Models"))} entity models");
 		   // Log.Info($"Loaded {_registeredRenderers.Count} entity models");
-		   return _registeredRenderers.Count;
+		   return _registeredRenderers.Count - beforeImport;
 		}
 
 		private static void Add(ResourceManager resources, GraphicsDevice graphics, EntityDescription entityDefinition, EntityModel model)

@@ -78,7 +78,7 @@ namespace Alex
 		public static Effect BlockEffect { get; set; }
 		public static Effect LightingEffect { get; set; }
 		
-		public List<MCPack>        Packs               { get; } = new List<MCPack>();
+		public List<MCPack>        SkinPacks               { get; } = new List<MCPack>();
 		public BlockModelRegistry  BlockModelRegistry  { get; private set; }
 		public EntityModelRegistry EntityModelRegistry { get; private set; }
 		
@@ -235,8 +235,6 @@ namespace Alex
 		{
 			Stopwatch sw = Stopwatch.StartNew();
 
-			Log.Info($"Loading resource pack ({fs.Name})...");
-
 			//try
 			//{
 			foreach (var manifest in ResourcePackLib.ResourcePack.GetManifests(fs))
@@ -254,8 +252,9 @@ namespace Alex
 
 					//Log.Debug($"Loaded {resourcePack.BlockModels.Count} block models from resourcepack");
 					//	Log.Debug($"Loaded {resourcePack.ItemModels.Count} item models from resourcepack");
-					Log.Debug($"Loading resourcepack took: {sw.ElapsedMilliseconds}ms");
+					Log.Info($"Loading resourcepack \"{(string.IsNullOrWhiteSpace(manifest.Name) ? fs.Name : manifest.Name)}\" took: {sw.ElapsedMilliseconds}ms");
 
+					sw.Restart();
 					yield return resourcePack;
 				}
 				else if (manifest.Type == ResourcePackType.Bedrock)
@@ -266,9 +265,10 @@ namespace Alex
 
 					sw.Stop();
 
-					Log.Debug($"Loaded {brp.EntityModels.Count} entity models from resourcepack");
-					Log.Debug($"Loading resourcepack took: {sw.ElapsedMilliseconds}ms");
+				//	Log.Debug($"Loaded {brp.EntityModels.Count} entity models from resourcepack");
+					Log.Info($"Loading resourcepack \"{manifest.Name}\" took: {sw.ElapsedMilliseconds}ms");
 
+					sw.Restart();
 					yield return brp;
 				}
 			}
@@ -466,18 +466,17 @@ namespace Alex
 			{
 				if (pack.Info.Type == ResourcePackType.Java)
 				{
-					if (pack.Info != null)
+					if (pack.Info != null && string.IsNullOrWhiteSpace(pack.Info.Name))
 						pack.Info.Name = "Vanilla";
 
 					ActiveResourcePacks.AddLast((McResourcePack) pack);
 				}
 				else if (pack.Info.Type == ResourcePackType.Bedrock)
 				{
-					if (pack.Info != null)
+					if (pack.Info != null && string.IsNullOrWhiteSpace(pack.Info.Name))
 						pack.Info.Name = "Vanilla Bedrock";
 
 					ActiveBedrockResourcePacks.AddLast((BedrockResourcePack) pack);
-					Alex.AudioEngine.Initialize((BedrockResourcePack) pack);
 				}
 			}
 			//Log.Info($"Loading known entity data...");
@@ -721,11 +720,14 @@ namespace Alex
 
         private void ProcessBedrockResources(IProgressReceiver progress, GraphicsDevice device, BedrockResourcePack resourcePack)
         {
+	        int audioCount = Alex.AudioEngine.Initialize(resourcePack, progress);
+	        Log.Debug($"Imported {audioCount} sounds from \"{resourcePack.Info.Name}\"...");
+	        
 	        int modelCount = EntityFactory.LoadEntityDefinitions(resourcePack, this, device, true, progress);
-
 	        Log.Debug($"Imported {modelCount} entity models from \"{resourcePack.Info.Name}\"...");
 
-	        Alex.ParticleManager.Load(resourcePack);
+	        int particleCount = Alex.ParticleManager.Load(resourcePack, progress);
+	        Log.Debug($"Imported {particleCount} particles from \"{resourcePack.Info.Name}\"...");
         }
 
         public void LoadBedrockPacks(IProgressReceiver progressReceiver, DirectoryInfo directoryInfo)
@@ -744,7 +746,7 @@ namespace Alex
 			        using (var archive = new ZipFileSystem(file.Open(FileMode.Open, FileAccess.Read), file.Name))
 			        {
 				        MCPack pack = new MCPack(archive);
-				        Packs.Add(pack);
+				        SkinPacks.Add(pack);
 			        }
 		        }
 		        catch (Exception ex)
@@ -965,6 +967,18 @@ namespace Alex
 				}
 			}
 
+			/*foreach (var resourcePack in SkinPacks)
+			{
+				foreach (var module in resourcePack.Modules.Where(x => x is MCSkinPack).Cast<MCSkinPack>())
+				{
+					if (module.EntityModels.TryGetValue(location, out var f))
+					{
+						entityDef = f;
+						return true;
+					}
+				}
+			}*/
+			
 			return false;
 		}
 		

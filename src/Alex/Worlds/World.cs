@@ -150,6 +150,7 @@ namespace Alex.Worlds
 			}
 
 			Player = new Player(graphics, serviceProvider.GetRequiredService<Alex>().InputManager, this, networkProvider, PlayerIndex.One);
+			
 			Camera = new EntityCamera(Player);
 
 			Player.KnownPosition = new PlayerLocation(GetSpawnPoint());

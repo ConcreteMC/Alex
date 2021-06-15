@@ -26,7 +26,7 @@ namespace Alex.ResourcePackLib
 		private void Load(IFilesystem archive)
 		{
 			var manifestEntry = archive.GetEntry("manifest.json");
-			var contentEntry  = archive.GetEntry("content.zipe");
+			//var contentEntry  = archive.GetEntry("content.zipe");
 			
 			if (manifestEntry == null)
 			{
@@ -35,10 +35,10 @@ namespace Alex.ResourcePackLib
 
 			Manifest = MCJsonConvert.DeserializeObject<McPackManifest>(manifestEntry.ReadAsString());
 
-			if (contentEntry == null)
-			{
-				throw new InvalidMCPackException($"No content found for MCPack: {Manifest.Header.Name}");
-			}
+			//if (contentEntry == null)
+			//{
+			//	throw new InvalidMCPackException($"No content found for MCPack: {Manifest.Header.Name}");
+			//}
 			
 			List<MCPackModule> modules = new List<MCPackModule>();
 			
@@ -49,7 +49,7 @@ namespace Alex.ResourcePackLib
 					case "skin_pack":
 						try
 						{
-							MCSkinPack skinPack = new MCSkinPack(contentEntry);
+							MCSkinPack skinPack = new MCSkinPack(archive);
 							modules.Add(skinPack);
 						}
 						catch

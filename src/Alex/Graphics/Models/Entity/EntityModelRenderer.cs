@@ -141,7 +141,7 @@ namespace Alex.Graphics.Models.Entity
 		{
 			{
 				SharedBuffer tuple = null;
-
+				
 				if (!_sharedBuffers.TryGetValue(model.Description.Identifier, out tuple))
 				{
 					tuple = BuildSharedBuffer(model);

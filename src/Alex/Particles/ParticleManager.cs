@@ -46,16 +46,21 @@ namespace Alex.Particles
 			ResourceManager = resourceManager;
 		}
 
-		public void Load(BedrockResourcePack resourcePack)
+		public int Load(BedrockResourcePack resourcePack, IProgressReceiver progress)
 		{
+			int counter = 0;
 			try
 			{
 				Enabled = false;
+				
+				int total = resourcePack.Particles.Count;
 				foreach (var particle in resourcePack.Particles)
 				{
 					if (particle.Value?.Description?.Identifier == null)
 						continue;
-
+					
+					progress?.UpdateProgress(counter, total, "Importing particles...", particle.Key);
+					
 					if (_particles.ContainsKey(particle.Value.Description.Identifier))
 						continue;
 
@@ -101,6 +106,10 @@ namespace Alex.Particles
 							Log.Warn($"Could not add particle (duplicate): {particle.Key}");
 							particleTexture.Release(this);
 						}
+						else
+						{
+							counter++;
+						}
 					}
 					else
 					{
@@ -112,6 +121,8 @@ namespace Alex.Particles
 			{
 				Enabled = true;
 			}
+
+			return counter;
 		}
 
 		private bool TryRegister(string identifier, ParticleEmitter emitter)
