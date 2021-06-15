@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using Alex.Common.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Mono.Cecil;
 using NLog;
@@ -40,6 +41,45 @@ namespace Alex.Plugins
         }
 
         private LinkedList<PluginConstructorData> PluginConstructors { get; } = new LinkedList<PluginConstructorData>();
+
+        public void Initiate(IServiceCollection serviceCollection, IOptionsProvider options, LaunchSettings launchSettings)
+        {
+	        string pluginDirectoryPaths =
+		        Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
+
+	        var pluginDir = options.AlexOptions.ResourceOptions.PluginDirectory;
+
+	        if (!string.IsNullOrWhiteSpace(pluginDir))
+	        {
+		        pluginDirectoryPaths = pluginDir;
+	        }
+	        else
+	        {
+		        if (!string.IsNullOrWhiteSpace(launchSettings.WorkDir) && Directory.Exists(launchSettings.WorkDir))
+		        {
+			        pluginDirectoryPaths = launchSettings.WorkDir;
+		        }
+	        }
+
+	        List<string> paths = new List<string>();
+
+	        foreach (string dirPath in pluginDirectoryPaths.Split(
+		        new char[] {';'}, StringSplitOptions.RemoveEmptyEntries))
+	        {
+		        string directory = dirPath;
+
+		        if (!Path.IsPathRooted(directory))
+		        {
+			        directory = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), dirPath);
+		        }
+
+		        paths.Add(directory);
+		        //PluginManager.DiscoverPlugins(directory);
+	        }
+
+	        DiscoverPlugins(paths.ToArray());
+	        ConfigureServices(serviceCollection);
+        }
 
         /// <summary>
         /// 	Scans the specified paths for plugins & loads them into the AppDomain

@@ -481,7 +481,7 @@ namespace Alex.Entities
 					entity = new HopperMinecartEntity(world);
 					break;
 				case EntityType.AreaEffectCloud:
-				//	entity = new EntityAreaEffectCloud(world);
+					entity = new EntityAreaEffectCloud(world);
 					break;
 				case EntityType.ExperienceOrb:
 					entity = new XpOrbEntity(world);

@@ -16,7 +16,7 @@ using Alex.Common.Utils;
 using Alex.Common.World;
 using Alex.Entities;
 using Alex.Entities.BlockEntities;
-using Alex.Entities.Effects;
+using Alex.Entities.Components.Effects;
 using Alex.Entities.Generic;
 using Alex.Entities.Projectiles;
 using Alex.Gamestates;
@@ -383,8 +383,20 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		public void HandleMcpeAdventureSettings(McpeAdventureSettings message)
 		{
-			if (Client.World.TryGetEntity(message.userId, out var entity))
-				UpdateEntityAdventureFlags(entity, message.flags, message.actionPermissions);
+			Entity entity = null;
+
+			if (!Client.World.TryGetEntity(message.userId, out entity))
+			{
+				if (message.userId == Client.EntityId)
+				{
+					entity = Client.World.Player;
+				}
+			}
+
+			if (entity == null)
+				return;
+			
+			UpdateEntityAdventureFlags(entity, message.flags, message.actionPermissions);
 		}
 
 		public void HandleMcpeAddPlayer(McpeAddPlayer message)
@@ -493,7 +505,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			}
 			
 			Entity entity = null;
-
 			if (entityType == EntityType.FallingBlock)
 			{
 				entity = new EntityFallingBlock(null);
@@ -524,6 +535,14 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			if (message.attributes != null)
 				entity.UpdateAttributes(message.attributes);
 			//entity.ad
+
+			if (message.links != null)
+			{
+				foreach (var link in message.links)
+				{
+					
+				}
+			}
 			
 			Client.World.SpawnEntity(entity);
 		}
@@ -957,22 +976,22 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 						effect.Duration = message.duration;
 						effect.Level = message.amplifier;
 						effect.Particles = message.particles;
-						entity.AddOrUpdateEffect(effect);
+						entity.Effects.AddOrUpdateEffect(effect);
 						break;
 				
 					case 2: //Modify
-						if (entity.TryGetEffect(effectType, out effect))
+						if (entity.Effects.TryGetEffect(effectType, out effect))
 						{
 							effect.Duration = message.duration;
 							effect.Particles = message.particles;
 							effect.Level = message.amplifier;
 						
-							entity.AddOrUpdateEffect(effect);
+							entity.Effects.AddOrUpdateEffect(effect);
 						}
 						break;
 
 					case 3: //Remove
-						entity.RemoveEffect(effect.EffectId);
+						entity.Effects.RemoveEffect(effect.EffectId);
 						break;
 				}
 			}
@@ -985,54 +1004,52 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 			if (!Client.World.TryGetEntity(message.runtimeEntityId, out entity))
 			{
-				if (message.runtimeEntityId == Client.World.Player.EntityId)
+				if (message.runtimeEntityId == Client.EntityId)
 					entity = Client.World.Player;
 			}
 
-			if (entity != null)
+			if (entity == null) return;
+			//if (entity != null)
+			//	entity.UpdateAttributes(message.attributes);
+
+
+			if (message.attributes.TryGetValue("minecraft:health", out var value))
 			{
-				//if (entity != null)
-				//	entity.UpdateAttributes(message.attributes);
+				entity.HealthManager.MaxHealth = (int) value.MaxValue;
+				entity.HealthManager.Health = (int) value.Value;
+			}
 
+			if (message.attributes.TryGetValue("minecraft:movement", out var movement))
+			{
+				entity.MovementSpeed = movement.Value;
+			}
 
-				if (message.attributes.TryGetValue("minecraft:health", out var value))
-				{
-					entity.HealthManager.MaxHealth = (int) value.MaxValue;
-					entity.HealthManager.Health = (int) value.Value;
-				}
+			if (message.attributes.TryGetValue("minecraft:player.hunger", out var hunger))
+			{
+				entity.HealthManager.Hunger = (int) hunger.Value;
+				entity.HealthManager.MaxHunger = (int) hunger.MaxValue;
+			}
 
-				if (message.attributes.TryGetValue("minecraft:movement", out var movement))
-				{
-					entity.MovementSpeed = movement.Value;
-				}
+			if (message.attributes.TryGetValue("minecraft:player.exhaustion", out var exhaustion))
+			{
+				entity.HealthManager.Exhaustion = (int) exhaustion.Value;
+				entity.HealthManager.MaxExhaustion = (int) exhaustion.MaxValue;
+			}
 
-				if (message.attributes.TryGetValue("minecraft:player.hunger", out var hunger))
-				{
-					entity.HealthManager.Hunger = (int) hunger.Value;
-					entity.HealthManager.MaxHunger = (int) hunger.MaxValue;
-				}
+			if (message.attributes.TryGetValue("minecraft:player.saturation", out var saturation))
+			{
+				entity.HealthManager.Saturation = (int) saturation.Value;
+				entity.HealthManager.MaxSaturation = (int) saturation.MaxValue;
+			}
 
-				if (message.attributes.TryGetValue("minecraft:player.exhaustion", out var exhaustion))
-				{
-					entity.HealthManager.Exhaustion = (int) exhaustion.Value;
-					entity.HealthManager.MaxExhaustion = (int) exhaustion.MaxValue;
-				}
+			if (message.attributes.TryGetValue("minecraft:player.experience", out var experience))
+			{
+				entity.Experience = experience.Value;
+			}
 
-				if (message.attributes.TryGetValue("minecraft:player.saturation", out var saturation))
-				{
-					entity.HealthManager.Saturation = (int) saturation.Value;
-					entity.HealthManager.MaxSaturation = (int) saturation.MaxValue;
-				}
-
-				if (message.attributes.TryGetValue("minecraft:player.experience", out var experience))
-				{
-					entity.Experience = experience.Value;
-				}
-
-				if (message.attributes.TryGetValue("minecraft:player.level", out var experienceLevel))
-				{
-					entity.ExperienceLevel = experienceLevel.Value;
-				}
+			if (message.attributes.TryGetValue("minecraft:player.level", out var experienceLevel))
+			{
+				entity.ExperienceLevel = experienceLevel.Value;
 			}
 		}
 
@@ -1043,7 +1060,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		public void HandleMcpeMobEquipment(McpeMobEquipment message)
 		{
-			if (Client.World.Player.EntityId == message.runtimeEntityId)
+			if (Client.EntityId == message.runtimeEntityId)
 			{
 				Client.World.Player.Inventory.SelectedSlot = message.selectedSlot;
 				return;
@@ -1081,7 +1098,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 			if (!Client.World.TryGetEntity(message.runtimeEntityId, out entity))
 			{
-				if (Client.World.Player.EntityId == message.runtimeEntityId)
+				if (Client.EntityId == message.runtimeEntityId)
 				{
 					entity = Client.World.Player;
 				}
@@ -1121,7 +1138,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			Entity entity = null;
 			if (!Client.World.TryGetEntity(message.runtimeEntityId, out entity))
 			{
-				if (Client.World.Player.EntityId == message.runtimeEntityId)
+				if (Client.EntityId == message.runtimeEntityId)
 				{
 					entity = Client.World.Player;
 				}
@@ -1142,7 +1159,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			//Client.World.TryGetEntity(message.runtimeEntityId, out entity);
 			if (!Client.World.TryGetEntity(message.runtimeEntityId, out entity))
 			{
-				if (Client.World.Player.EntityId == message.runtimeEntityId)
+				if (Client.EntityId == message.runtimeEntityId)
 				{
 					entity = Client.World.Player;
 				}

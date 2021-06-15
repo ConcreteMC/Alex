@@ -29,6 +29,7 @@
   
   <ItemGroup>
     <Folder Include="Data\Commands" />
+    <Folder Include="Entities\Effects" />
   </ItemGroup>
   
   <ItemGroup>

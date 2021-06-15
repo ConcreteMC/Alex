@@ -77,7 +77,7 @@ namespace Alex.Entities
         public NetworkProvider Network { get; set; }
 
         //public Camera Camera { get; internal set; }
-        public Player(GraphicsDevice graphics, InputManager inputManager, World world, Skin skin, NetworkProvider networkProvider, PlayerIndex playerIndex) : base(world)
+        public Player(GraphicsDevice graphics, InputManager inputManager, World world, NetworkProvider networkProvider, PlayerIndex playerIndex) : base(world)
         {
 	        Network = networkProvider;
 	        

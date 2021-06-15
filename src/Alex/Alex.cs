@@ -233,7 +233,7 @@ namespace Alex
             //serviceCollection.AddSingleton<RocketDebugSocketServer>();
            // serviceCollection.AddHostedService<RocketDebugSocketServer>(sp => sp.GetRequiredService<RocketDebugSocketServer>());
 
-            InitiatePluginSystem(serviceCollection);
+            PluginManager.Initiate(serviceCollection, Options, LaunchSettings);
 
             serviceCollection.TryAddSingleton<ProfileManager>();
 
@@ -465,7 +465,7 @@ namespace Alex
                   //  {
                         await Task.WhenAll(Services.GetServices<IHostedService>().Select(s => s.StartAsync(CancellationToken.None)));
                         
-                        InitializeGame(splash);
+                        await InitializeGame(splash);
                   //  }
                    // catch (Exception ex)
                    // {
@@ -482,45 +482,6 @@ namespace Alex
         private void GuiScaleChanged(int oldvalue, int newvalue)
         {
             GuiManager.ScaledResolution.GuiScale = newvalue;
-        }
-
-        private void InitiatePluginSystem(IServiceCollection serviceCollection)
-        {
-            string pluginDirectoryPaths =
-                Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
-
-            var pluginDir = Options.AlexOptions.ResourceOptions.PluginDirectory;
-
-            if (!string.IsNullOrWhiteSpace(pluginDir))
-            {
-                pluginDirectoryPaths = pluginDir;
-            }
-            else
-            {
-                if (!string.IsNullOrWhiteSpace(LaunchSettings.WorkDir) && Directory.Exists(LaunchSettings.WorkDir))
-                {
-                    pluginDirectoryPaths = LaunchSettings.WorkDir;
-                }
-            }
-
-            List<string> paths = new List<string>();
-
-            foreach (string dirPath in pluginDirectoryPaths.Split(
-                new char[] {';'}, StringSplitOptions.RemoveEmptyEntries))
-            {
-                string directory = dirPath;
-
-                if (!Path.IsPathRooted(directory))
-                {
-                    directory = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), dirPath);
-                }
-
-                paths.Add(directory);
-                //PluginManager.DiscoverPlugins(directory);
-            }
-
-            PluginManager.DiscoverPlugins(paths.ToArray());
-            PluginManager.ConfigureServices(serviceCollection);
         }
 
         private void SetAntiAliasing(bool enabled, int count)
@@ -602,7 +563,7 @@ namespace Alex
         
         public GraphicsMetrics Metrics { get; private set; }
 
-        private void InitializeGame(IProgressReceiver progressReceiver)
+        private Task InitializeGame(IProgressReceiver progressReceiver)
         {
             progressReceiver.UpdateProgress(0, "Initializing...");
 
@@ -620,10 +581,10 @@ namespace Alex
                 Console.ReadLine();
                 Exit();
 
-                return;
+                return Task.CompletedTask;
             }
 
-            var profileManager = Services.GetService<ProfileManager>();
+            var profileManager = Services.GetRequiredService<ProfileManager>();
             profileManager.LoadProfiles(progressReceiver);
 
             //GuiRenderer.LoadResourcePack(Resources.ResourcePack, null);
@@ -709,6 +670,8 @@ namespace Alex
             }
 
             GameStateManager.RemoveState("splash");
+
+            return Task.CompletedTask;
         }
 
         private void OnResourcePackPreLoadCompleted(Image<Rgba32> fontBitmap, List<char> bitmapCharacters)

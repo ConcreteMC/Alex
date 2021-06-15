@@ -12,7 +12,7 @@ using Alex.Common.Graphics.GpuResources;
 using Alex.Common.Utils;
 using Alex.Common.World;
 using Alex.Entities.Components;
-using Alex.Entities.Effects;
+using Alex.Entities.Components.Effects;
 using Alex.Entities.Properties;
 using Alex.Gamestates;
 using Alex.Graphics.Effect;
@@ -39,7 +39,7 @@ using Mono.Collections.Generic;
 using NLog;
 using BlockCoordinates = Alex.Common.Utils.Vectors.BlockCoordinates;
 using BoundingBox = Microsoft.Xna.Framework.BoundingBox;
-using Effect = Alex.Entities.Effects.Effect;
+using Effect = Alex.Entities.Components.Effects.Effect;
 using HealthManager = Alex.Entities.Meta.HealthManager;
 using Inventory = Alex.Utils.Inventories.Inventory;
 using MathF = System.MathF;
@@ -311,6 +311,7 @@ namespace Alex.Entities
 		public float Experience { get; set; } = 0;
 		public float ExperienceLevel { get; set; } = 0; 
 		protected ConcurrentStack<IEntityComponent> EntityComponents { get; }
+		public EffectManagerComponent Effects { get; }
 		public Entity(World level)
 		{
 			TimeOfCreation = DateTime.UtcNow;
@@ -343,6 +344,7 @@ namespace Alex.Entities
 					
 			//EntityComponents.Push(Movement = new EntityMovement(this));
 			EntityComponents.Push(AnimationController = new AnimationController(this));
+			EntityComponents.Push(Effects = new EffectManagerComponent(this));
 			
 			Effect = new EntityEffect();
 			Effect.Texture = _texture;
@@ -1334,14 +1336,6 @@ namespace Alex.Entities
 			{
 				KnownPosition.Yaw = KnownPosition.HeadYaw;
 			}
-
-			foreach (var effect in _effects.Values.ToArray())
-			{
-				effect.OnTick(this);
-				
-				if (effect.HasExpired())
-					RemoveEffect(effect.EffectId);
-			}
 			//HealthManager.OnTick();
 		}
 
@@ -1567,8 +1561,7 @@ namespace Alex.Entities
 		{
 			return base.ToString();
 		}
-
-		private ConcurrentDictionary<EffectType, Effect> _effects = new ConcurrentDictionary<EffectType, Effect>();
+		
 		private IItemRenderer                            _itemRenderer    = null;
 		private bool _noAi = false;
 		private string _nameTag;
@@ -1593,61 +1586,17 @@ namespace Alex.Entities
 			}
 			else
 			{
-				if (_effects.TryGetValue(EffectType.JumpBoost, out var effect))
-				{
-					jumpVelocity += ((jumpVelocity * 0.5f) * effect.Level);
-				}
+				jumpVelocity = Effects.ApplyEffect(EffectType.JumpBoost, jumpVelocity);
+				//if (_effects.TryGetValue(EffectType.JumpBoost, out var effect))
+				//{
+				//	jumpVelocity += ((jumpVelocity * 0.5f) * effect.Level);
+				//}
 			}
 
 			//Movement.Move(new Vector3(0f, jumpVelocity, 0f));
 			Velocity += new Vector3(0f, jumpVelocity, 0f);
 			//Velocity += new Vector3(0f, MathF.Sqrt(2f * (float) (Gravity * 20f) * 1.2f), 0f);
 			//	Network?.EntityAction((int) EntityId, EntityAction.Jump);
-		}
-		
-		public void AddOrUpdateEffect(Effect effect)
-		{
-			var effect1 = effect;
-			
-			effect = _effects.AddOrUpdate(effect.EffectId, effect, (type, e) => effect1);
-			effect?.Add(this);
-		}
-
-		public void RemoveEffect(EffectType effectType)
-		{
-			if (_effects.TryRemove(effectType, out var removed))
-			{
-				removed.Remove(this);
-			}
-		}
-
-		public bool TryGetEffect(EffectType type, out Effect effect)
-		{
-			return _effects.TryGetValue(type, out effect);
-		}
-		
-		public bool TryGetEffect<T>(EffectType type, out T effect) where T : Effect
-		{
-			if (_effects.TryGetValue(type, out var temp))
-			{
-				if (temp is T t)
-				{
-					effect = t;
-					return true;
-				}
-			}
-
-			effect = null;
-
-			return false;
-		}
-
-		public IEnumerable<Effect> AppliedEffects()
-		{
-			foreach (var effect in _effects.Values.ToArray())
-			{
-				yield return effect;
-			}
 		}
 
 		public virtual void OnSpawn()

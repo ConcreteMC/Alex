@@ -1,6 +1,6 @@
 using Microsoft.Xna.Framework;
 
-namespace Alex.Entities.Effects
+namespace Alex.Entities.Components.Effects
 {
 	public class JumpBoostEffect : Effect
 	{
@@ -9,6 +9,12 @@ namespace Alex.Entities.Effects
 		{
 			Particles = false;
 			ParticleColor = new Color(0x22, 0xFF, 0x4C);
+		}
+
+		/// <inheritdoc />
+		public override float Modify(float modifier)
+		{
+			return modifier + ((modifier * 0.5f) * Level);
 		}
 	}
 }

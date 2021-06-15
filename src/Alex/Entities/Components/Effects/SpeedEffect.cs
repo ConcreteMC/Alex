@@ -2,7 +2,7 @@ using Alex.Common.Entities.Properties;
 using Alex.Networking.Java.Packets.Play;
 using Microsoft.Xna.Framework;
 
-namespace Alex.Entities.Effects
+namespace Alex.Entities.Components.Effects
 {
 	public class SpeedEffect: Effect
 	{
@@ -15,7 +15,7 @@ namespace Alex.Entities.Effects
 			ParticleColor = new Color(0x7c, 0xaf, 0xc6);
 		}
 
-		public override void Add(Entity entity)
+		public override void ApplyTo(Entity entity)
 		{
 			entity.EntityProperties[EntityProperties.MovementSpeed].ApplyModifier(new Modifier(_uuid, (Level + 1) * _multiplier, ModifierMode.Multiply));
 			//entity.MovementSpeed = (float) (0.1 + (Level + 1) * _multiplier);

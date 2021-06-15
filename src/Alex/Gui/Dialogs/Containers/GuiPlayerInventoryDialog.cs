@@ -41,9 +41,10 @@ namespace Alex.Gui.Dialogs.Containers
             {
             //    var modelRenderer = player.ModelRenderer;
 
-                var mob = new RemotePlayer(player.Level);
-                mob.ModelRenderer = player.ModelRenderer;
-                mob.Texture = player.Texture;
+                var mob = new RemotePlayer(player.Level, skin: player.Skin);
+              //  mob.Skin = player.Skin;
+               // mob.ModelRenderer = player.ModelRenderer;
+                //mob.Texture = player.Texture;
 
              //   mob.KnownPosition = new PlayerLocation(0, 0, 0, 0f, 0f, 0f);
 

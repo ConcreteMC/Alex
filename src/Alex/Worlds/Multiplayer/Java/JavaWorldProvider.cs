@@ -23,7 +23,7 @@ using Alex.Common.Utils.Collections;
 using Alex.Common.World;
 using Alex.Entities;
 using Alex.Entities.BlockEntities;
-using Alex.Entities.Effects;
+using Alex.Entities.Components.Effects;
 using Alex.Entities.Generic;
 using Alex.Entities.Passive;
 using Alex.Entities.Projectiles;
@@ -1093,7 +1093,7 @@ namespace Alex.Worlds.Multiplayer.Java
 					effect.Level = packet.Amplifier;
 					effect.Particles = (packet.Flags & 0x02) != 0;
 					
-					entity.AddOrUpdateEffect(effect);
+					entity.Effects.AddOrUpdateEffect(effect);
 				}
 			}
 		}

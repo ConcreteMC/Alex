@@ -1,12 +1,15 @@
 using Alex.Networking.Java.Packets.Play;
 using Alex.Worlds;
 using MiNET.Utils.Metadata;
+using NLog;
 using MetadataFloat = Alex.Networking.Java.Packets.Play.MetadataFloat;
 
 namespace Alex.Entities.Generic
 {
 	public class EntityAreaEffectCloud : Entity
 	{
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(EntityAreaEffectCloud));
+		
 		private float _radius = 0.5f;
 
 		public float Radius
@@ -59,7 +62,7 @@ namespace Alex.Entities.Generic
 		/// <inheritdoc />
 		protected override bool HandleMetadata(MiNET.Entities.Entity.MetadataFlags flag, MetadataEntry entry)
 		{
-			
+			Log.Info($"EffectCloud! Flag: {flag} Entry: {entry}");
 			
 			return base.HandleMetadata(flag, entry);
 		}

@@ -1,5 +1,4 @@
 using Alex.Common.Graphics;
-using Alex.Entities.Effects;
 using Alex.Graphics.Camera;
 using Alex.Graphics.Effect;
 using Alex.Graphics.Models;

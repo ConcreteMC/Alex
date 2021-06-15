@@ -1,4 +1,4 @@
-namespace Alex.Entities.Effects
+namespace Alex.Entities.Components.Effects
 {
 	public class NightVisionEffect : Effect
 	{
@@ -9,10 +9,10 @@ namespace Alex.Entities.Effects
 		}
 
 		/// <inheritdoc />
-		public override void Add(Entity entity)
+		public override void ApplyTo(Entity entity)
 		{
 			//TODO: Apply to rendering, caves should light up etc see 
-			base.Add(entity);
+			base.ApplyTo(entity);
 		}
 	}
 }
