@@ -953,6 +953,9 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				EffectType effectType = (EffectType) message.effectId;
 				switch (effectType)
 				{
+					case EffectType.Slowness:
+						effect = new SlownessEffect();
+						break;
 					case EffectType.Speed:
 						effect = new SpeedEffect();
 						break;

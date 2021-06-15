@@ -207,7 +207,7 @@ namespace Alex.Entities
 
 								if (processedModels == null || processedModels.Count == 0)
 								{
-									//		Log.Warn($"!! Model count was 0 for player {NameTag} !!");
+									Log.Debug($"!! Model count was 0 for player {NameTag} !!");
 									/*
 																		if (!Directory.Exists("failed"))
 																			Directory.CreateDirectory("failed");
@@ -275,7 +275,7 @@ namespace Alex.Entities
 
 					try
 					{
-						if (!skin.TryGetBitmap(model, out skinBitmap))
+						if (skin == null || !skin.TryGetBitmap(model, out skinBitmap))
 						{
 							//Log.Warn($"No custom skin data for player {NameTag}");
 

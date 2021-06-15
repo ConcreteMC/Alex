@@ -97,5 +97,6 @@ namespace Alex.Common.Gui.Graphics
         public static readonly GuiTextures Experience                    = new(AlexNamespace, nameof(Experience));
         
         public static readonly GuiTextures GradientBlur = new(AlexNamespace, nameof(GradientBlur));
+        
     }
 }

@@ -989,7 +989,7 @@ namespace Alex.Worlds
 		{
 			Entity entity = null;
 
-			if (entityId == Player.EntityId)
+			if (Player != null && entityId == Player.EntityId)
 				entity = Player;
 			else
 			{

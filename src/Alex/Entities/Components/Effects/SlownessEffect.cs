@@ -4,21 +4,19 @@ using Microsoft.Xna.Framework;
 
 namespace Alex.Entities.Components.Effects
 {
-	public class SpeedEffect: Effect
+	public class SlownessEffect : Effect
 	{
-		private double _multiplier = 0.02;
-
-		//private MiNET.Utils.UUID _uuid = new MiNET.Utils.UUID("91AEAA56-376B-4498-935B-2F7F68070635");
-
-		private Modifier _modifier = new Modifier(
-			new MiNET.Utils.UUID("91AEAA56-376B-4498-935B-2F7F68070635"), 0d, ModifierMode.Multiply);
+		private double _multiplier = -0.15000000596046448;
 		
-		public SpeedEffect() : base(EffectType.Speed)
+		private Modifier _modifier = new Modifier(
+			new MiNET.Utils.UUID("7107de5e-7ce8-4030-940e-514c1f160890"), 0d, ModifierMode.Multiply);
+		/// <inheritdoc />
+		public SlownessEffect() : base(EffectType.Slowness)
 		{
 			Particles = false;
 			ParticleColor = new Color(0x7c, 0xaf, 0xc6);
 		}
-
+		
 		public override void ApplyTo(Entity entity)
 		{
 			_modifier.Amount = (Level + 1) * _multiplier;

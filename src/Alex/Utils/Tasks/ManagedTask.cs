@@ -4,7 +4,7 @@ namespace Alex.Utils.Tasks
 {
 	public class ManagedTask
 	{
-		public TaskState State { get; private set; } = TaskState.Enqueued;
+		public TaskState State { get; private set; } = TaskState.Created;
 		public bool IsCancelled => State == TaskState.Cancelled;
 		
 		private readonly Action _action;
@@ -15,19 +15,29 @@ namespace Alex.Utils.Tasks
 
 		public object Data { get; set; } = null;
 		private readonly Action<object> _parameterizedTask;
+		private DateTime _enqueueTime = DateTime.UtcNow;
 		public ManagedTask(Action<object> action, object state)
 		{
 			_parameterizedTask = action;
 			Data = state;
 		}
 
-		public void Execute()
+		public void Enqueued()
+		{
+			if (State != TaskState.Created)
+				return;
+
+			State = TaskState.Enqueued;
+			_enqueueTime = DateTime.UtcNow;
+		}
+
+		public TimeSpan Execute()
 		{
 			if (State != TaskState.Enqueued)
-				return;
+				return TimeSpan.Zero;
 			
 			State = TaskState.Running;
-
+			
 			try
 			{
 				if (_action != null)
@@ -43,6 +53,8 @@ namespace Alex.Utils.Tasks
 				State = TaskState.Finished;
 				Data = null;
 			}
+
+			return DateTime.UtcNow - _enqueueTime;
 		}
 
 		public void Cancel()

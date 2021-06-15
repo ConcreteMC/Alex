@@ -12,12 +12,14 @@ namespace Alex.Utils.Tasks
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ManagedTaskManager));
 
 		public int Count => _queue.Count;
-		public float AverageExecutionTime => _movingAverage.Average;
+		public float AverageExecutionTime => _executionTimeMovingAverage.Average;
+		public float AverageTimeTillExecution => _timeTillExecutionMovingAverage.Average;
 		
 		private ConcurrentQueue<ManagedTask> _queue = new ConcurrentQueue<ManagedTask>();
 		private Alex _alex;
 
-		private MovingAverage _movingAverage = new MovingAverage();
+		private MovingAverage _executionTimeMovingAverage = new MovingAverage();
+		private MovingAverage _timeTillExecutionMovingAverage = new MovingAverage();
 		public ManagedTaskManager(Alex game) : base(game)
 		{
 			_alex = game;
@@ -47,9 +49,12 @@ namespace Alex.Utils.Tasks
 					continue;
 
 				var beforeRun = sw.Elapsed.TotalMilliseconds;
+
+				//TimeSpan timeTillExecution;
 				try
 				{
-					a.Execute();
+					var timeTillExecution = a.Execute();
+					_timeTillExecutionMovingAverage.ComputeAverage((float) timeTillExecution.TotalMilliseconds);
 				}
 				catch (Exception ex)
 				{
@@ -57,7 +62,7 @@ namespace Alex.Utils.Tasks
 				}
 
 				var afterRun = sw.Elapsed.TotalMilliseconds;
-				_movingAverage.ComputeAverage((float) (afterRun - beforeRun));
+				_executionTimeMovingAverage.ComputeAverage((float) (afterRun - beforeRun));
 			}
 
 			var elapsed = (float)sw.Elapsed.TotalMilliseconds;
@@ -69,6 +74,7 @@ namespace Alex.Utils.Tasks
 		public ManagedTask Enqueue(Action action)
 		{
 			ManagedTask task = new ManagedTask(action);
+			task.Enqueued();
 			_queue.Enqueue(task);
 
 			return task;
@@ -77,6 +83,7 @@ namespace Alex.Utils.Tasks
 		public ManagedTask Enqueue(Action<object> action, object state)
 		{
 			ManagedTask task = new ManagedTask(action, state);
+			task.Enqueued();
 			_queue.Enqueue(task);
 
 			return task;

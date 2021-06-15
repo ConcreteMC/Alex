@@ -224,6 +224,13 @@ namespace Alex.Gamestates.InGame
 					return $"Gamemode: {World.Player.Gamemode}";
 				}, TimeSpan.FromSeconds(5));
 			
+			_debugInfo.AddDebugLeft(
+				() =>
+				{
+					var effects = World.Player.Effects.AppliedEffects().ToArray();
+					return $"Applied Effects ({effects.Length}): {string.Join('\n',effects.Select(x => x.EffectId.ToString()))}";
+				}, TimeSpan.FromSeconds(1));
+			
 			_debugInfo.AddDebugRight(Alex.OperatingSystem);
 			_debugInfo.AddDebugRight(Alex.Gpu);
 			_debugInfo.AddDebugRight($"{Alex.DotnetRuntime}\n");
@@ -238,7 +245,7 @@ namespace Alex.Gamestates.InGame
 			}, TimeSpan.FromMilliseconds(50));
 			
 			_debugInfo.AddDebugRight(() => $"Chunk Updates: {ChunkColumn.AverageUpdateTime:F2}ms avg, {ChunkColumn.MaxUpdateTime:F2}ms max\nBuffer Upload: {ChunkData.AverageUpdateTime:F2}ms avg, {ChunkData.MaxUpdateTime:F2}ms max", TimeSpan.FromMilliseconds(50));
-			_debugInfo.AddDebugRight(() => $"Tasks: {Alex.UiTaskManager.Count}, {Alex.UiTaskManager.AverageExecutionTime:F2}ms avg", TimeSpan.FromMilliseconds(50));
+			_debugInfo.AddDebugRight(() => $"Tasks: {Alex.UiTaskManager.Count} ExecutionTime={Alex.UiTaskManager.AverageExecutionTime:F2}ms avg QueueTime={Alex.UiTaskManager.AverageTimeTillExecution:F2}ms avg", TimeSpan.FromMilliseconds(50));
 			_debugInfo.AddDebugRight(() =>
 			{
 				var player = World?.Player;

@@ -1073,9 +1073,9 @@ namespace Alex.Worlds.Multiplayer.Java
 					case 1:
 						effect = new SpeedEffect();
 						break;
-					//case 2:
-						//effect = new 
-					//	break;
+					case 2:
+						effect = new SlownessEffect();
+						break;
 					case 8:
 						effect = new JumpBoostEffect();
 						break;
