@@ -182,6 +182,7 @@ namespace Alex.Entities
 		{
 			try
 			{
+				bool applyTexture = Texture == null || skin != null;
 //				EntityModel model = null;
 				bool slim = skin?.Slim ?? false;
 				if (skin != null && model == null)
@@ -203,7 +204,15 @@ namespace Alex.Entities
 								Dictionary<string, EntityModel> models = new Dictionary<string, EntityModel>();
 								BedrockResourcePack.LoadEntityModel(skin.GeometryData, models);
 
-								var processedModels = BedrockResourcePack.ProcessEntityModels(models);
+								var processedModels = BedrockResourcePack.ProcessEntityModels(models, s =>
+								{
+									if (Alex.Instance.Resources.TryGetEntityModel(s, out var eModel))
+									{
+										return eModel;
+									}
+
+									return null;
+								});
 
 								if (processedModels == null || processedModels.Count == 0)
 								{
@@ -307,26 +316,32 @@ namespace Alex.Entities
 							}
 						}
 
-						var modelTextureSize = new Point(
-							(int) model.Description.TextureWidth, (int) model.Description.TextureHeight);
-
-						var textureSize = new Point(skinBitmap.Width, skinBitmap.Height);
-
-						if (modelTextureSize != textureSize)
+						if (skinBitmap != null)
 						{
-							if (modelTextureSize.Y > textureSize.Y)
-							{
-								skinBitmap = SkinUtils.ConvertSkin(skinBitmap, modelTextureSize.X, modelTextureSize.Y);
-							}
+							var modelTextureSize = new Point(
+								(int) model.Description.TextureWidth, (int) model.Description.TextureHeight);
+							
+							var textureSize = new Point(skinBitmap.Width, skinBitmap.Height);
 
-							/*var bitmap = skinBitmap;
-							bitmap.Mutate<Rgba32>(xx =>
+							if (modelTextureSize != textureSize)
 							{
-								xx.Resize(modelTextureSize.X, modelTextureSize.Y);
-							//	xx.Flip(FlipMode.Horizontal);
-							});
-		
-							skinBitmap = bitmap;*/
+								if (modelTextureSize.Y > textureSize.Y)
+								{
+									skinBitmap = SkinUtils.ConvertSkin(
+										skinBitmap, modelTextureSize.X, modelTextureSize.Y);
+
+									applyTexture = true;
+								}
+
+								/*var bitmap = skinBitmap;
+								bitmap.Mutate<Rgba32>(xx =>
+								{
+									xx.Resize(modelTextureSize.X, modelTextureSize.Y);
+								//	xx.Flip(FlipMode.Horizontal);
+								});
+			
+								skinBitmap = bitmap;*/
+							}
 						}
 
 						//GeometryName = model.Description.Identifier;
@@ -334,7 +349,12 @@ namespace Alex.Entities
 						if (EntityModelRenderer.TryGetRenderer(model, out var renderer))
 						{
 							ModelRenderer = renderer;
-							Texture = TextureUtils.BitmapToTexture2D(this, Alex.Instance.GraphicsDevice, skinBitmap);
+
+							if (skinBitmap != null)
+							{
+								Texture = TextureUtils.BitmapToTexture2D(
+									this, Alex.Instance.GraphicsDevice, skinBitmap);
+							}
 						}
 						else
 						{

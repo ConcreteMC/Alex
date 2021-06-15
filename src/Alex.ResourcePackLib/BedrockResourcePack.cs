@@ -215,7 +215,7 @@ namespace Alex.ResourcePackLib
 				}
 			}
 
-			EntityModels = ProcessEntityModels(entityModels);
+			EntityModels = entityModels;
 
 			//Log.Info($"Processed {EntityModels.Count} entity models");
 		

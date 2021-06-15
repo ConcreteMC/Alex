@@ -192,6 +192,9 @@ namespace Alex
 
 		internal void ReloadTextures(IProgressReceiver progress)
 		{
+			ProcessEntityModels(progress);
+			ProcessBedrockResourcePacks(progress);
+			
 			progress?.UpdateProgress(0, $"Loading UI textures...");
 			Alex.GuiRenderer.LoadResourcePackTextures(this, progress);
 		}
@@ -205,6 +208,14 @@ namespace Alex
 					return true;
 				}
 			}
+			
+			if (resourcePack.Info.Type == ResourcePackType.Java)
+			{
+				if (ActiveResourcePacks.Remove((McResourcePack) resourcePack))
+				{
+					return true;
+				}
+			}
 
 			return false;
 		}
@@ -213,7 +224,7 @@ namespace Alex
 		{
 			//var fs = new ZipFileSystem(new MemoryStream(data), "servertextures");
 
-			foreach (var resourcePack in LoadResourcePack(null, fs, null))
+			foreach (var resourcePack in LoadResourcePack(progress, fs, null))
 			{
 				if (resourcePack.Info.Type == ResourcePackType.Bedrock)
 				{
@@ -221,8 +232,6 @@ namespace Alex
 					pack.ContentKey = contentKey;
 					
 					ActiveBedrockResourcePacks.AddLast(pack);
-					
-					ProcessBedrockResources(progress, Alex.Instance.GraphicsDevice, pack);
 
 					yield return pack;
 				}
@@ -524,6 +533,42 @@ namespace Alex
             return true;
 		}
 
+        private void ProcessEntityModels(IProgressReceiver progress)
+        {
+	        Dictionary<string, EntityModel> entityModels = new Dictionary<string, EntityModel>();
+	        var activeBedrockPacks = ActiveBedrockResourcePacks.ToArray();
+
+	        for (int index = 0; index < activeBedrockPacks.Length; index++)
+	        {
+		        var resourcePack = activeBedrockPacks[index];
+
+		        foreach (var model in resourcePack.EntityModels)
+		        {
+			        entityModels[model.Key] = model.Value;
+		        }
+	        }
+
+	        entityModels = BedrockResourcePack.ProcessEntityModels(entityModels);
+	        foreach(var model in entityModels)
+	        {
+		        EntityModelRegistry.Set(model.Key, () => new EntityModelEntry(model.Value));
+	        }
+        }
+
+        private void ProcessBedrockResourcePacks(IProgressReceiver progress)
+        {
+	        var activeBedrockPacks = ActiveBedrockResourcePacks.ToArray();
+
+	        for (int index = 0; index < activeBedrockPacks.Length; index++)
+	        {
+		        var resourcePack = activeBedrockPacks[index];
+		        ProcessBedrockResources(progress, Alex.GraphicsDevice, resourcePack);
+		        
+		        //LoadEntityModels(resourcePack, progress);
+		        
+	        }
+        }
+        
         private void ProcessResources(GraphicsDevice device, IProgressReceiver progress)
         {
 	        Dictionary<ResourceLocation, ResourcePackModelBase> models =
@@ -628,16 +673,9 @@ namespace Alex
 	        
 	        ItemAtlas.LoadResources(device, textures, this, progress, true);
 
-	        var activeBedrockPacks = ActiveBedrockResourcePacks.ToArray();
-	        
-	        for (int index = 0; index < activeBedrockPacks.Length; index++)
-	        {
-		        var resourcePack = activeBedrockPacks[index];
-		        ProcessBedrockResources(progress, device, resourcePack);
-		        
-		        //LoadEntityModels(resourcePack, progress);
-		        
-	        }
+	        ProcessEntityModels(progress);
+
+	        ProcessBedrockResourcePacks(progress);
 
 	        progress?.UpdateProgress(0, $"Loading UI textures...");
 	        Alex.GuiRenderer.LoadResourcePackTextures(this, progress);
@@ -957,7 +995,14 @@ namespace Alex
 
 		public bool TryGetEntityModel(string location, out EntityModel entityDef)
 		{
+			if (EntityModelRegistry.TryGet(location, out var entry))
+			{
+				entityDef = entry.Value;
+				return true;
+			}
 			entityDef = null;
+
+			return false;
 			foreach (var resourcePack in ActiveBedrockResourcePacks.Reverse())
 			{
 				if (resourcePack.EntityModels.TryGetValue(location, out var f))
