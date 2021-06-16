@@ -145,7 +145,7 @@ namespace Alex
             {
                 PreferMultiSampling = true,
                 SynchronizeWithVerticalRetrace = false,
-                GraphicsProfile = GraphicsProfile.HiDef,
+                GraphicsProfile = GraphicsProfile.Reach,
                 PreferHalfPixelOffset = false,
                 PreferredDepthStencilFormat = DepthFormat.Depth24Stencil8
             };
