@@ -9,6 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Alex.Blocks.Mapping;
 using Alex.Blocks.Minecraft;
+using Alex.Blocks.Properties;
 using Alex.Blocks.State;
 using Alex.Common.Resources;
 using Alex.Common.Utils;
@@ -362,18 +363,12 @@ namespace Alex.Blocks
 
 			if (name.Contains("water"))
 			{
-				return new LiquidBlockModel()
-				{
-					IsLava = false
-				};
+				return new LiquidBlockModel();
 			}
 
 			if (name.Contains("lava"))
 			{
-				return new LiquidBlockModel()
-				{
-					IsLava = true
-				};
+				return new LiquidBlockModel();
 			}
 
 			return new ResourcePackBlockModel(resources, blockStateResource);

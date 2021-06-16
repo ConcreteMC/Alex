@@ -583,7 +583,7 @@ namespace Alex.Worlds
 			ColorDestinationBlend = Microsoft.Xna.Framework.Graphics.Blend.InverseSourceAlpha,
 			ColorSourceBlend = Microsoft.Xna.Framework.Graphics.Blend.SourceAlpha,
 			//ColorBlendFunction = BlendFunction.Add,
-			IndependentBlendEnable = true,
+			IndependentBlendEnable = false,
 			//AlphaBlendFunction = BlendFunction.Add,
 			// ColorBlendFunction = BlendFunction.Add
 		};

@@ -1,6 +1,6 @@
 namespace Alex.Blocks.Minecraft
 {
-	public class Lava : Block
+	public class Lava : LiquidBlock
 	{
 		public Lava() : base()
 		{

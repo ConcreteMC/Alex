@@ -5,46 +5,27 @@ namespace Alex.Blocks.Minecraft
 {
 	public class LiquidBlock : Block
 	{
+		public static readonly PropertyInt LEVEL = new PropertyInt("level", 0);
 		protected LiquidBlock()
 		{
 			
-		}
-	}
-	
-	public class Water : Block
-	{
-		public static readonly PropertyInt LEVEL = new PropertyInt("level", 0);
-		public Water() : base()
-		{
-			Solid = false;
-			Transparent = true;
-			HasHitbox = false;
-			//BlockModel = BlockFactory.StationairyWaterModel;
-
-			//IsWater = true;
-			BlockMaterial = Material.Water;
-
-			LightOpacity = 3;
 		}
 		
 		public override bool ShouldRenderFace(BlockFace face, Block neighbor)
 		{
 			var myLevelValue = BlockState.GetTypedValue(LEVEL);
 			
-			if (neighbor.BlockMaterial.IsLiquid || neighbor.BlockMaterial == Material.WaterPlant || (neighbor.BlockMaterial.IsWatterLoggable && neighbor.IsWaterLogged))
+			if (neighbor.BlockMaterial.IsLiquid || neighbor is LiquidBlock)
 			{
 				var neighborLevel = neighbor.BlockState.GetTypedValue(LEVEL);
 
-				if (neighborLevel != myLevelValue)
+				if (neighborLevel < myLevelValue)
 				{
 					return true;
 				}
 
 				return false;
 			}
-
-			if (neighbor.BlockMaterial.IsLiquid)
-				return false;
 
 			if (neighbor.Solid && (!neighbor.Transparent || neighbor.BlockMaterial.IsOpaque))
 				return false;
@@ -55,6 +36,24 @@ namespace Alex.Blocks.Minecraft
 			//else if (neighbor.Transparent)
 			return base.ShouldRenderFace(face, neighbor);
 		}
+	}
+	
+	public class Water : LiquidBlock
+	{
+		public Water() : base()
+		{
+			Solid = false;
+			Transparent = true;
+			HasHitbox = true;
+			//BlockModel = BlockFactory.StationairyWaterModel;
+
+			//IsWater = true;
+			base.BlockMaterial = Material.Water;
+
+			LightOpacity = 3;
+		}
+		
+
 
 		/*public override void BlockPlaced(IWorld world, BlockCoordinates position)
 		{
