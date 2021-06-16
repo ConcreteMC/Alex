@@ -607,10 +607,10 @@ namespace Alex.Gamestates.Debugging
 			{
 				sb.AppendLine($"{block.Name}");
 				
-				var dict = block.ToDictionary();
+				var dict = block.ToArray();
 				foreach (var kv in dict)
 				{
-					sb.AppendLine($"{kv.Key}={kv.Value}");
+					sb.AppendLine($"{kv.Name}={kv.StringValue}");
 				}
 			}
 

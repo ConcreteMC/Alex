@@ -86,7 +86,7 @@ namespace Alex.Worlds.Chunks
 	        if (storage > BlockStorages.Length)
 		        throw new IndexOutOfRangeException($"The storage id {storage} does not exist!");
 
-	        return BlockStorages[storage]?.Get(x, y, z) ?? BlockFactory.GetBlockState("minecraft:air");
+	        return BlockStorages[storage]?.Get(x, y, z);
         }
 
         public void Set(int x, int y, int z, BlockState state)

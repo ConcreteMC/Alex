@@ -12,6 +12,12 @@ namespace Alex.Blocks.Properties
 			
 		}
 
+		/// <inheritdoc />
+		protected override StateProperty<BlockFace> WithValue(BlockFace value)
+		{
+			return new PropertyFace(Name) {Value = value};
+		}
+
 		public override BlockFace ParseValue(string value)
 		{
 			if (Enum.TryParse(value, true, out BlockFace result))

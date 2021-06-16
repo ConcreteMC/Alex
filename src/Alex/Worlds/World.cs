@@ -295,7 +295,7 @@ namespace Alex.Worlds
 
 				if (!inWater)
 				{
-					if (_wasInWater || ChunkManager.FogEnabled)
+					if (Options.VideoOptions.Fog.Value)
 					{
 						ChunkManager.FogColor = SkyBox.WorldFogColor.ToVector3();
 						ChunkManager.FogDistance = args.Camera.FarDistance;
@@ -317,11 +317,13 @@ namespace Alex.Worlds
 			}
 			
 			Player?.Update(args);
+			var biome = Player.CurrentBiome;
+			ChunkManager.WaterSurfaceTransparency = biome.WaterSurfaceTransparency;
 			
 			if (inWater && !_wasInWater)
 			{
-				ChunkManager.FogColor = new Color(68, 175, 245).Darken(0.3f).ToVector3();
-				ChunkManager.FogDistance = 16;
+				ChunkManager.FogColor = biome.WaterFogColor.ToVector3();
+				ChunkManager.FogDistance = biome.WaterFogDistance;
 				ChunkManager.FogEnabled = true;
 			}
 			else if (_wasInWater && !inWater)
@@ -337,7 +339,7 @@ namespace Alex.Worlds
 		public void OnTick()
 		{
 			Player?.OnTick();
-			Alex.Instance.ParticleManager.OnTick();
+				//Alex.Instance.ParticleManager.OnTick();
 
 			Time++;
 			

@@ -8,7 +8,7 @@ namespace Alex.Blocks.State
     public sealed class BlockStateVariantMapper
     {
         private static NLog.Logger Log = NLog.LogManager.GetCurrentClassLogger(typeof(BlockStateVariantMapper));
-        private IList<BlockState> Variants { get; } = new List<BlockState>();
+        private HashSet<BlockState> Variants { get; } = new HashSet<BlockState>();
         
         public  bool       IsMultiPart { get; set; } = false;
         
@@ -25,13 +25,46 @@ namespace Alex.Blocks.State
             }
         }
         
-        public BlockStateVariantMapper()
+        public BlockStateVariantMapper(List<BlockState> variants)
         {
+            Variants = new HashSet<BlockState>(variants);
 
+            foreach (var variant in variants)
+            {
+                variant.VariantMapper = this;
+            }
         }
 		
         public bool TryResolve(BlockState source, string property, string value, out BlockState result, params string[] requiredMatches)
         {
+            //var clone = source.WithPropertyNoResolve(property, value, true);
+
+            var clone = source.Clone();
+            
+            List<StateProperty> properties = new List<StateProperty>();
+            foreach (var prop in clone.States)
+            {
+                var p = prop;
+
+                if (p.Name.Equals(property, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    p = p.WithValue(value);
+                }
+                
+                properties.Add(p);
+            }
+            
+            clone.States = properties;
+            
+            if (Variants.TryGetValue(clone, out var actualValue))
+            {
+                result = actualValue;
+                return true;
+            }
+
+            result = source;
+            return false;
+            /*
             //  property = property.ToLowerInvariant();
           //  value = value;
 
@@ -100,7 +133,7 @@ namespace Alex.Blocks.State
                     {
                         matches--;
                     }
-                }*/
+                }*\/
 
                 if (matches == source.Count)
                 {
@@ -124,15 +157,7 @@ namespace Alex.Blocks.State
             }
 
             result = null;
-            return false;
-        }
-
-        public bool TryAdd(BlockState state)
-        {
-            //return Variants.TryAdd(state);
-            if (Variants.Contains(state)) return false;
-            Variants.Add(state);
-            return true;
+            return false;*/
         }
 
         public BlockState[] GetVariants()

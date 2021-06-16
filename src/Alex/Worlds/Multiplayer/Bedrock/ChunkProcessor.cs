@@ -811,8 +811,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			        {
 				        foreach (var prop in record.States)
 				        {
-					        if (!defaultState.Contains(prop.Name))
-						        continue;
+					        //if (!defaultState.Contains(prop.Name))
+						    //    continue;
 					        
 					        defaultState = defaultState.WithProperty(
 						        prop.Name, prop.Value());

@@ -113,12 +113,18 @@ namespace Alex.Worlds.Lighting
 		{
 			if (level.TryGetBlockLight(coord, out var lightLevel))
 			{
-				Test(level, coord, coord + BlockCoordinates.Up, lightBfsQueue, lightLevel);
+				Test(level, coord, coord + BlockCoordinates.Down, lightBfsQueue, lightLevel);
+				Test(level, coord, coord + BlockCoordinates.West, lightBfsQueue, lightLevel);
+				Test(level, coord, coord + BlockCoordinates.East, lightBfsQueue, lightLevel);
+				Test(level, coord, coord + BlockCoordinates.South, lightBfsQueue, lightLevel);
+				Test(level, coord, coord + BlockCoordinates.North, lightBfsQueue, lightLevel);
+				
+				/*Test(level, coord, coord + BlockCoordinates.Up, lightBfsQueue, lightLevel);
 				Test(level, coord, coord + BlockCoordinates.Left, lightBfsQueue, lightLevel);
 				Test(level, coord, coord + BlockCoordinates.Right, lightBfsQueue, lightLevel);
 				Test(level, coord, coord + BlockCoordinates.Forwards, lightBfsQueue, lightLevel);
 				Test(level, coord, coord + BlockCoordinates.Backwards, lightBfsQueue, lightLevel);
-				Test(level, coord, coord + BlockCoordinates.Down, lightBfsQueue, lightLevel);
+				Test(level, coord, coord + BlockCoordinates.Down, lightBfsQueue, lightLevel);*/
 				
 				//SetLightLevel(level, lightBfsQueue, level.GetBlockId(coord + BlockCoordinates.Down, chunk), lightLevel);
 				//SetLightLevel(level, lightBfsQueue, level.GetBlockId(coord + BlockCoordinates.West, chunk), lightLevel);
@@ -232,7 +238,7 @@ namespace Alex.Worlds.Lighting
 				
 				//UpdateNeighbors(world, coordinates);
 				
-				if (!lightBfsQueue.Contains(coordinates))
+			//	if (!lightBfsQueue.Contains(coordinates))
 				{
 					lightBfsQueue.Enqueue(coordinates);
 				}
@@ -248,7 +254,7 @@ namespace Alex.Worlds.Lighting
 				
 			//	UpdateNeighbors(World, coord);
 				
-				if (!lightBfsQueue.Contains(coord))
+				//if (!lightBfsQueue.Contains(coord))
 				{
 					lightBfsQueue.Enqueue(coord);
 				}

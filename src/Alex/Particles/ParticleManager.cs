@@ -195,7 +195,7 @@ namespace Alex.Particles
 			ParticleCount = count;
 		}
 
-		//private double _accumulator = 0d;
+		private double _accumulator = 0d;
 		/// <inheritdoc />
 		public override void Update(GameTime gameTime)
 		{
@@ -207,13 +207,13 @@ namespace Alex.Particles
 				particle.Update(gameTime);
 			}
 			
-			/*_accumulator += gameTime.ElapsedGameTime.TotalMilliseconds;
+			_accumulator += gameTime.ElapsedGameTime.TotalMilliseconds;
 
 			while (_accumulator >= 50d)
 			{
 				OnTick();
 				_accumulator -= 50d;
-			}*/
+			}
 		}
 
 		/// <inheritdoc />

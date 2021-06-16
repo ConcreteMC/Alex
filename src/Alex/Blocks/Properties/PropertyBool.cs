@@ -18,6 +18,12 @@ namespace Alex.Blocks.Properties
 			FalseString = falseS;
 		}
 
+		/// <inheritdoc />
+		protected override StateProperty<bool> WithValue(bool value)
+		{
+			return new PropertyBool(Name, TrueString, FalseString) {Value = value};
+		}
+
 		public override bool ParseValue(string value)
 		{
 			if (bool.TryParse(value, out var result))

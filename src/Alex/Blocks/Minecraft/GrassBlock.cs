@@ -19,11 +19,11 @@ namespace Alex.Blocks.Minecraft
 			//
 
 			//BlockMaterial = Material.Grass;
-			//BlockMaterial = Material.Grass.Clone().SetHardness()
+			BlockMaterial =  Material.Grass.Clone().SetHardness( 0.6f);
 		}
 
 		/// <inheritdoc />
-		public override IMaterial BlockMaterial
+		/*public override IMaterial BlockMaterial
 		{
 			get
 			{
@@ -36,6 +36,6 @@ namespace Alex.Blocks.Minecraft
 					return Material.Grass.Clone().SetHardness( 0.6f);
 				}
 			}
-		}
+		}*/
 	}
 }

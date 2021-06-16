@@ -166,6 +166,8 @@ namespace Alex.Worlds
 				Shaders.AmbientLightColor = value;
 			}
 		}
+
+		public float WaterSurfaceTransparency { get; set; } = 0.65f;
 		
 		private Thread _processingThread = null;
 		/// <inheritdoc />
@@ -263,11 +265,11 @@ namespace Alex.Worlds
 
 											if (newChunk)
 											{
-												c1 = TryGetChunk(new ChunkCoordinates(chunk.X + 1, chunk.Z), out _);
-												c2 = TryGetChunk(new ChunkCoordinates(chunk.X - 1, chunk.Z), out _);
+												c1 = TryGetChunk(new ChunkCoordinates(chunk.X + 1, chunk.Z), out var cc1) && !cc1.IsNew;
+												c2 = TryGetChunk(new ChunkCoordinates(chunk.X - 1, chunk.Z), out var cc2) && !cc2.IsNew;
 
-												c3 = TryGetChunk(new ChunkCoordinates(chunk.X, chunk.Z + 1), out _);
-												c4 = TryGetChunk(new ChunkCoordinates(chunk.X, chunk.Z - 1), out _);
+												c3 = TryGetChunk(new ChunkCoordinates(chunk.X, chunk.Z + 1), out var cc3) && !cc3.IsNew;
+												c4 = TryGetChunk(new ChunkCoordinates(chunk.X, chunk.Z - 1), out var cc4) && !cc4.IsNew;
 											}
 
 											if (BlockLightCalculations != null)
@@ -469,8 +471,8 @@ namespace Alex.Worlds
 			var queue = UpdateQueue;
 			if (Chunks.TryGetValue(position, out var cc))
 			{
-				if (cc.ScheduledForUpdate && !prioritize)
-					return;
+				//if (cc.ScheduledForUpdate && !prioritize)
+				//	return;
 
 				if ((type & ScheduleType.Lighting) != 0)
 				{
@@ -480,8 +482,7 @@ namespace Alex.Worlds
 				
 				if ((type & ScheduleType.Border) != 0)
 				{
-					
-						cc.ScheduleBorder();
+					cc.ScheduleBorder();
 					
 					queue = UpdateBorderQueue;
 				}
@@ -498,9 +499,9 @@ namespace Alex.Worlds
 				{
 					try
 					{
-						if (!cc.ScheduledForUpdate)
+						//if (!cc.ScheduledForUpdate)
 						{
-							cc.ScheduledForUpdate = true;
+						//	cc.ScheduledForUpdate = true;
 
 							queue.Enqueue(position);
 							

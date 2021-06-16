@@ -8,6 +8,13 @@ namespace Alex.Blocks.Properties
 		public PropertyInt(string name, int defaultValue = 0) : base(name)
 		{
 			_defaultValue = defaultValue;
+			Value = defaultValue;
+		}
+
+		/// <inheritdoc />
+		protected override StateProperty<int> WithValue(int value)
+		{
+			return new PropertyInt(Name, _defaultValue) {Value = value};
 		}
 
 		public override int ParseValue(string value)
@@ -18,6 +25,12 @@ namespace Alex.Blocks.Properties
 			}
 
 			return _defaultValue;
+		}
+
+		/// <inheritdoc />
+		public override string ToFormattedString()
+		{
+			return $"{Name}={Value:D2}";
 		}
 	}
 }

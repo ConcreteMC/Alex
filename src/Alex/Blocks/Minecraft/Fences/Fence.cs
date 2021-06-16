@@ -1,3 +1,5 @@
+using System;
+using Alex.Blocks.Properties;
 using Alex.Blocks.State;
 using Alex.Common.Blocks;
 using Alex.Common.Utils.Vectors;
@@ -9,6 +11,11 @@ namespace Alex.Blocks.Minecraft
 {
 	public class Fence : Block
 	{
+		private static PropertyBool NORTH = new PropertyBool("north");
+		private static PropertyBool EAST = new PropertyBool("east");
+		private static PropertyBool SOUTH = new PropertyBool("south");
+		private static PropertyBool WEST = new PropertyBool("west");
+		
 		public Fence()
 		{
 			Transparent = true;
@@ -17,6 +24,11 @@ namespace Alex.Blocks.Minecraft
 			RequiresUpdate = true;
 		}
 
+		public bool North => BlockState.GetTypedValue(NORTH);
+		public bool East => BlockState.GetTypedValue(EAST);
+		public bool South => BlockState.GetTypedValue(SOUTH);
+		public bool West => BlockState.GetTypedValue(WEST);
+		
 		/// <inheritdoc />
 		public override BlockState BlockPlaced(IBlockAccess world, BlockState state, BlockCoordinates position)
 		{/*
@@ -51,12 +63,33 @@ namespace Alex.Blocks.Minecraft
 			
 			var face       = new Vector3(fp.X, fp.Y, fp.Z).GetBlockFace();
 			var faceString = face.ToString().ToLower();
-			
-			current.TryGetValue(faceString, out var currentValue);
+
+			bool currentValue = false;
+
+			switch (face)
+			{
+				
+				case BlockFace.East:
+					currentValue = East;
+					break;
+
+				case BlockFace.West:
+					currentValue = West;
+					break;
+
+				case BlockFace.North:
+					currentValue = North;
+					break;
+
+				case BlockFace.South:
+					currentValue = South;
+					break;
+			}
+			//current.TryGetValue(faceString, out var currentValue);
 			
 			if (CanAttach(face, neighbor.Block))
 			{
-				if (currentValue != "true")
+				if (!currentValue)
 				{
 					return current.WithProperty(faceString, "true");
 					//world.SetBlockState(position, state);
@@ -64,7 +97,7 @@ namespace Alex.Blocks.Minecraft
 			}
 			else 
 			{
-				if (currentValue != "false")
+				if (currentValue)
 				{
 					return current.WithProperty(faceString, "false");
 					//world.SetBlockState(position, state);

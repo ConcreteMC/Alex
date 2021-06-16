@@ -24,7 +24,23 @@ namespace Alex.Worlds
 
 		public Color FogColor                 { get; set; } = DefaultFogColor;
 		public Color Water                    { get; set; } = DefaultWaterColor;
-		public Color WaterFogColor            { get; set; } = DefaultWaterFogColor;
+		
+		private bool _waterFogColorSet = false;
+		private Color _waterFogColor = DefaultWaterFogColor;
+
+		public Color WaterFogColor
+		{
+			get
+			{
+				return _waterFogColorSet ? _waterFogColor : Water;
+			}
+			set
+			{
+				_waterFogColorSet = true;
+				_waterFogColor = value;
+			}
+		}
+
 		public float WaterFogDistance         { get; set; } = 15f;
 		public float WaterSurfaceTransparency { get; set; } = 0.65f;
 
@@ -44,7 +60,8 @@ namespace Alex.Worlds
 				MinHeight = -1f,
 				MaxHeight = 0.4f,
 				
-				Water = ColorHelper.HexToColor("#1787D4")
+				Water = ColorHelper.HexToColor("#1787D4"),
+				WaterFogDistance = 60
 				//	SurfaceBlock = 12,
 				//	SoilBlock = 24
 			}, // default values of temp and rain
@@ -106,7 +123,8 @@ namespace Alex.Worlds
 				Downfall = 0.9f,
 				MinHeight = -0.2f,
 				MaxHeight = 0.1f,
-				Water = ColorHelper.HexToColor("#4c6559")
+				Water = ColorHelper.HexToColor("#4c6559"),
+				WaterFogDistance = 8
 			},
 			new Biome
 			{
@@ -116,7 +134,8 @@ namespace Alex.Worlds
 				Downfall = 0.5f,
 				MinHeight = -0.5f,
 				MaxHeight = 0f,
-				Water = ColorHelper.HexToColor("#0084FF")
+				Water = ColorHelper.HexToColor("#0084FF"),
+				WaterFogDistance = 30
 			}, // default values of temp and rain
 			new Biome
 			{
@@ -146,7 +165,8 @@ namespace Alex.Worlds
 				Downfall = 0.5f,
 				MinHeight = -1f,
 				MaxHeight = 0.5f,
-				Water = ColorHelper.HexToColor("#2570B5")
+				Water = ColorHelper.HexToColor("#2570B5"),
+				WaterFogDistance = 20
 			},
 			new Biome
 			{
@@ -206,7 +226,8 @@ namespace Alex.Worlds
 				Downfall = 0.4f,
 				MinHeight = 0f,
 				MaxHeight = 0.1f,
-				Water = ColorHelper.HexToColor("#157cab")
+				Water = ColorHelper.HexToColor("#157cab"),
+				WaterFogDistance = 60
 			},
 			new Biome
 			{
@@ -288,7 +309,8 @@ namespace Alex.Worlds
 				Downfall = 0.5f,
 				MinHeight = -1.8F,
 				MaxHeight = 0.1f,
-				Water = ColorHelper.HexToColor("#1787D4")
+				Water = ColorHelper.HexToColor("#1787D4"),
+				WaterFogDistance = 60
 			},
 			new Biome
 			{
@@ -308,7 +330,8 @@ namespace Alex.Worlds
 				Downfall = 0.3f,
 				MinHeight = 0f,
 				MaxHeight = 0.025f,
-				Water = ColorHelper.HexToColor("#1463a5")
+				Water = ColorHelper.HexToColor("#1463a5"),
+				WaterFogDistance = 50
 			},
 			new Biome
 			{
@@ -445,14 +468,16 @@ namespace Alex.Worlds
 				Id = 46,
 				Name = "Cold Ocean",
 				Temperature = 0.5f,
-				Water = ColorHelper.HexToColor("#2080C9")
+				Water = ColorHelper.HexToColor("#2080C9"),
+				WaterFogDistance = 60
 			}, 
 			new Biome()
 			{
 				Id = 49,
 				Name = "Cold Deep Ocean",
 				Temperature = 0.5f,
-				Water = ColorHelper.HexToColor("#2080C9")
+				Water = ColorHelper.HexToColor("#2080C9"),
+				WaterFogDistance = 60
 			}, 
 			new Biome {Id = 127, Name = "The Void", Temperature = 0.8f, Downfall = 0.4f},
 			new Biome {Id = 128, Name = "Unknown Biome", Temperature = 0.8f, Downfall = 0.4f},
@@ -475,7 +500,7 @@ namespace Alex.Worlds
 			},
 			new Biome {Id = 132, Name = "Flower Forest", Temperature = 0.7f, Downfall = 0.8f, Water = ColorHelper.HexToColor("#20A3CC")},
 			new Biome {Id = 133, Name = "Taiga M", Temperature = 0.05f, Downfall = 0.8f},
-			new Biome {Id = 134, Name = "Swampland M", Temperature = 0.8f, Downfall = 0.9f},
+			new Biome {Id = 134, Name = "Swampland M", Temperature = 0.8f, Downfall = 0.9f, WaterFogDistance = 8},
 			new Biome {Id = 140, Name = "Ice Plains Spikes", Temperature = 0.0f, Downfall = 0.5f},
 			new Biome {Id = 149, Name = "Jungle M", Temperature = 1.2f, Downfall = 0.9f},
 			new Biome {Id = 150, Name = "Unknown Biome", Temperature = 0.8f, Downfall = 0.4f},

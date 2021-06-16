@@ -10,31 +10,23 @@ using Microsoft.Xna.Framework;
 
 namespace Alex.Blocks.Minecraft
 {
-	public class PowerState : IStateProperty<int>
+	public class PowerState : StateProperty<int>
 	{
 		public static readonly PowerState Instance = new PowerState();
-		
-		public string Name => "power";
 
-		public int Value { get; set; } = 0;
-		
-		public int ParseValue(string value)
+		/// <inheritdoc />
+		protected override StateProperty<int> WithValue(int value)
+		{
+			return new PowerState() {Value = value};
+		}
+
+		public override int ParseValue(string value)
 		{
 			return int.Parse(value);
 		}
 
-		public bool Equals(IStateProperty other)
-		{
-			if (ReferenceEquals(null, other)) return false;
-			if (ReferenceEquals(other, this)) return true;
-
-			if (other is PowerState ps)
-			{
-				return ps.Value == Value;
-			}
-
-			return false;
-		}
+		/// <inheritdoc />
+		public PowerState() : base("power") { }
 	}
 
 	public class RedstoneBase : Block

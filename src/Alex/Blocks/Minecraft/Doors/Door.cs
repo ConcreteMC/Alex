@@ -47,11 +47,7 @@ namespace Alex.Blocks.Minecraft
 			if (!(updatedBlock.Block is Door))
 				return blockState;
 
-			bool isUpper = false;
-			if (blockState.TryGetValue("half", out string half))
-			{
-				isUpper = half.Equals("upper", StringComparison.OrdinalIgnoreCase);
-			}
+			bool isUpper = IsUpper;
 			
 			if (updated == coordinates + BlockCoordinates.Up && !isUpper)
 			{

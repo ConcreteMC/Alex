@@ -23,12 +23,9 @@ namespace Alex.Worlds.Singleplayer.Generators
 
 	    public DebugWorldGenerator()
 	    {
-		    foreach (var state in BlockFactory.AllBlockstatesByName.OrderByDescending(x => x.Key.Path))
+		    foreach (var state in BlockFactory.AllBlockstates)
 		    {
-			    foreach (var variant in state.Value.GetVariants())
-			    {
-				    ALL_VALID_STATES.Add(variant);
-			    }
+			    ALL_VALID_STATES.Add(state.Value);
 		    }
 
 		    GRID_WIDTH = (int)MathF.Ceiling(MathF.Sqrt(ALL_VALID_STATES.Count));

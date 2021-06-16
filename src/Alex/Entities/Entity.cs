@@ -1891,7 +1891,7 @@ namespace Alex.Entities
 			}
 			Item item = isMainHand ? Inventory.MainHand : Inventory.OffHand;
 
-			return item.Count > 0 && !(item is ItemAir);
+			return item != null && item.Count > 0 && !(item is ItemAir);
 		}
 
 		[MoFunction("get_default_bone_pivot")]

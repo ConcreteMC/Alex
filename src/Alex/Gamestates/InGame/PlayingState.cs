@@ -291,16 +291,16 @@ namespace Alex.Gamestates.InGame
 								}
 							}*/
 
-							var dict = blockstate.ToDictionary();
+							var dict = blockstate.ToArray();
 
-							if (dict.Count > 0)
+							if (dict.Length > 0)
 							{
 								sb.AppendLine();
 								sb.AppendLine("Blockstate:");
 
 								foreach (var kv in dict)
 								{
-									sb.AppendLine($"{kv.Key}={kv.Value}");
+									sb.AppendLine($"{kv.Name}={kv.StringValue}");
 								}
 							}
 						}

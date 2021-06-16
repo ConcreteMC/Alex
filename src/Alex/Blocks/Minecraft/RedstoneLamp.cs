@@ -14,12 +14,9 @@ namespace Alex.Blocks.Minecraft
 		{
 			get
 			{
-				if (BlockState.TryGetValue("lit", out string lit))
+				if (BlockState.GetTypedValue(Lit))
 				{
-					if (lit == "true")
-					{
-						return 15;
-					}
+					return 15;
 				}
 
 				return 0;

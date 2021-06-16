@@ -76,13 +76,13 @@ namespace Alex.Worlds.Chunks
 		
 		public void Remove(BlockCoordinates coordinates)
 		{
-			lock (_writeLock)
+			//lock (_writeLock)
 			{
 				var bi = BlockIndices;
 
 				if (bi == null) return;
 
-				if (bi.Remove(coordinates, out var indices))
+				if (bi.TryGetValue(coordinates, out var indices))
 				{
 					indices.Clear();
 					Interlocked.Add(ref _vertexCount, -indices.Count);
@@ -131,11 +131,12 @@ namespace Alex.Worlds.Chunks
 					foreach (var vertex in block.Value)
 					{
 						var p = v3 + vertex.Position;
-						var lightProbe = bc;
+						var lightProbe = p;
 						
 						if (vertex.IsSolid)
 						{
-							lightProbe += vertex.Face.GetBlockCoordinates();
+							
+							lightProbe += vertex.Face.GetVector3();
 						}
 						//var offset = vertex.Face.GetVector3();
 						

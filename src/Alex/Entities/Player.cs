@@ -33,6 +33,7 @@ using Newtonsoft.Json.Serialization;
 using NLog;
 using NLog.Fluent;
 using RocketUI.Input;
+using Biome = Alex.Worlds.Biome;
 using BlockCoordinates = Alex.Common.Utils.Vectors.BlockCoordinates;
 using BoundingBox = Microsoft.Xna.Framework.BoundingBox;
 using ContainmentType = Microsoft.Xna.Framework.ContainmentType;
@@ -206,6 +207,7 @@ namespace Alex.Entities
 	    }
 
 	    private bool _previousHasActiveDialog = false;
+	    public Biome CurrentBiome { get; private set; }
 	    public override void Update(IUpdateArgs args)
 	    {
 		    bool hasActiveDialog = Alex.Instance.GuiManager.ActiveDialog != null || ((Network is BedrockClient c) && c.WorldProvider.FormManager.IsShowingForm);
@@ -228,6 +230,8 @@ namespace Alex.Entities
 			    return;
 		    }
 
+		    CurrentBiome = Level.GetBiome(RenderLocation.GetCoordinates3D());
+		    
 		    bool sprint = IsSprinting;
 		    bool sneak  = IsSneaking;
 

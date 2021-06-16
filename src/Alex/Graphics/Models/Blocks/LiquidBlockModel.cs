@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Alex.Blocks.Minecraft;
+using Alex.Blocks.Minecraft.Liquid;
 using Alex.Blocks.Properties;
 using Alex.Blocks.State;
 using Alex.Common;
