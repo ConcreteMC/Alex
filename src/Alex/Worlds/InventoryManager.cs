@@ -31,6 +31,12 @@ namespace Alex.Worlds
 					//		inv = new GuiChestDialog(new InventoryBase(90));
 //
 					//		break;
+					case ContainerType.CraftingTable:
+						inv = new CraftingTableDialog(new InventoryBase(90)
+						{
+							InventoryId = containerId
+						}, playerInventory);
+						break;
 					case ContainerType.Chest:
 							inv = new GuiChestDialog(new InventoryBase(90)
 							{
@@ -85,6 +91,7 @@ namespace Alex.Worlds
 	public enum ContainerType : byte
 	{
 		Chest = 0,
+		CraftingTable = 1,
 		Furnace = 2,
 		EnchantingTable = 3,
 	}

@@ -66,9 +66,15 @@ namespace Alex.Audio
 			soundMappings = JsonConvert.DeserializeObject<Dictionary<string, SoundMapping>>(soundJson);
 
 			Dictionary<string, string> mapped = new Dictionary<string, string>();
+			//Dictionary<string, string> 
 			foreach (var mapping in soundMappings)
 			{
 				mapped.TryAdd(mapping.Key, mapping.Value.PlaysoundMapping);
+
+				if (!string.IsNullOrWhiteSpace(mapping.Value.BedrockMapping))
+				{
+					mapped.TryAdd(mapping.Value.BedrockMapping, mapping.Value.PlaysoundMapping);
+				}
 			}
 
 			_soundMapping = mapped;
@@ -283,7 +289,11 @@ namespace Alex.Audio
 						new System.Numerics.Vector3(position.X, position.Y, position.Z), default, default);
 				}
 
-				instance.Volume = MathHelper.Clamp(volume, 0f, 1f) * selected.Volume;
+				if (volume > 1f || volume < 0f)
+				{
+				//	Log.Warn($"Invalid volume: {volume}");
+				}
+				instance.Volume = volume * selected.Volume;
 
 				switch (soundInfo.Category)
 				{

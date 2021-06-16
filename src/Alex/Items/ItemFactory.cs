@@ -88,6 +88,10 @@ namespace Alex.Items
 		    var modelRegistry = resources.BlockModelRegistry;
 		   // ResourcePack = resourcePack;
 
+		   var itemMap =
+			   JsonConvert.DeserializeObject<Dictionary<string, ItemMapping>>(ResourceManager.ReadStringResource("Alex.Resources.itemmapping.json"));
+
+		  
 		    var otherRaw = ResourceManager.ReadStringResource("Alex.Resources.items3.json");
 		    SecItemEntries = JsonConvert.DeserializeObject<SecondItemEntry[]>(otherRaw);
 		    
