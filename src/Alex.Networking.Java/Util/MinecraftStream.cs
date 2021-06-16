@@ -423,9 +423,25 @@ namespace Alex.Networking.Java.Util
 	    {
             WritePosition(new Vector3(pos.X, pos.Y, pos.Z));
 	    }
+	    
+	    private int WriteRawVarInt32(uint value)
+	    {
+		    int written = 0;
+		    while ((value & -128) != 0)
+		    {
+			    WriteByte((byte) ((value & 0x7F) | 0x80));
+			    value >>= 7;
+		    }
+
+		    WriteByte((byte) value);
+		    written++;
+
+		    return written;
+	    }
 
 		public int WriteVarInt(int value)
 		{
+			return WriteRawVarInt32((uint) value);
 			int write = 0;
 			do
 			{

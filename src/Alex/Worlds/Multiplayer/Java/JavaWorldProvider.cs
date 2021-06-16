@@ -1126,9 +1126,16 @@ namespace Alex.Worlds.Multiplayer.Java
 					Alex.Resources.Registries.Particles.Entries.FirstOrDefault(
 						x => x.Value.ProtocolId == packet.ParticleId);
 
-				if (particleType.Key != null)
+				if (particleType.Key != null )
 				{
-					var type = ParticleConversion.ConvertToBedrock(particleType.Key);
+					if (!Alex.ParticleManager.TryConvertToBedrock(particleType.Key, out string type))
+					{
+						type = ParticleConversion.ConvertToBedrock(particleType.Key);
+						
+						//Log.Warn($"Could not convert particle from java -> bedrock: {particleType.Key}");
+						//return;
+					}
+					//var type = ParticleConversion.ConvertToBedrock(particleType.Key);
 					/*int data = 0;
 	
 					if (packet.Color.HasValue)
@@ -1214,7 +1221,7 @@ namespace Alex.Worlds.Multiplayer.Java
 
 			soundEffect = soundEffect.Replace("minecraft:", "");
 
-			var match = _blockRegex.Match(soundEffect);
+			/*var match = _blockRegex.Match(soundEffect);
 		
 			if (match.Success)
 			{
@@ -1243,7 +1250,7 @@ namespace Alex.Worlds.Multiplayer.Java
 					{
 						
 					}
-				}*/
+				}*
 				
 				switch (soundEffect)
 				{
@@ -1276,7 +1283,7 @@ namespace Alex.Worlds.Multiplayer.Java
 						soundEffect = "random.anvil_land";
 						break;
 				}
-			}
+			}*/
 
 			name = soundEffect;
 
@@ -1285,7 +1292,7 @@ namespace Alex.Worlds.Multiplayer.Java
 
 		private void HandleNamedSoundEffectPacket(NamedSoundEffectPacket packet)
 		{
-			if (!Alex.AudioEngine.PlaySound(packet.SoundName, packet.Position, packet.Pitch, packet.Volume))
+			if (!Alex.AudioEngine.PlayJavaSound(packet.SoundName, packet.Position, packet.Pitch, packet.Volume))
 			{
 				if (_missingSounds.TryAdd(packet.SoundName))
 					Log.Warn($"Missing named sound: {packet.SoundName}");
@@ -1296,7 +1303,7 @@ namespace Alex.Worlds.Multiplayer.Java
 		{
 			if (World.TryGetEntity(packet.EntityId, out var entity))
 			{
-				if (TryResolveSound(packet.SoundId, out var soundEffect) && !Alex.AudioEngine.PlaySound(
+				if (TryResolveSound(packet.SoundId, out var soundEffect) && !Alex.AudioEngine.PlayJavaSound(
 					soundEffect, entity.KnownPosition, packet.Pitch, packet.Volume))
 				{
 					if (_missingSounds.TryAdd(soundEffect))
@@ -1308,7 +1315,7 @@ namespace Alex.Worlds.Multiplayer.Java
 		private void HandleSoundEffectPacket(SoundEffectPacket packet)
 		{
 			if (TryResolveSound(packet.SoundId, out var soundEffect) &&
-			    !Alex.AudioEngine.PlaySound(soundEffect, packet.Position, packet.Pitch, packet.Volume))
+			    !Alex.AudioEngine.PlayJavaSound(soundEffect, packet.Position, packet.Pitch, packet.Volume))
 			{
 				if (_missingSounds.TryAdd(soundEffect))
 					Log.Warn($"Missing sound: {soundEffect}");
@@ -2715,9 +2722,7 @@ namespace Alex.Worlds.Multiplayer.Java
 
 		private void HandleSpawnEntity(SpawnEntity packet)
 		{
-			//World.BackgroundWorker.Enqueue(
-			//	() =>
-			//	{
+			
 					var velocity = Vector3.Zero;
 
 					if (packet.Data > 0)
@@ -2745,21 +2750,17 @@ namespace Alex.Worlds.Multiplayer.Java
 						}
 						else { }
 					}
-				//});
 		}
 
 		private void HandleSpawnMob(SpawnLivingEntity packet)
 		{
-			/*World.BackgroundWorker.Enqueue(
-				() =>
-				{*/
-					SpawnMob(
-						packet.EntityId, packet.Uuid, (EntityType) packet.Type, new PlayerLocation(
-							packet.X, packet.Y, packet.Z, packet.Yaw, packet.Yaw, packet.Pitch)
-						{
-							//	OnGround = packet.SpawnMob
-						}, ModifyVelocity(new Vector3(packet.VelocityX, packet.VelocityY, packet.VelocityZ)));
-			//	});
+			SpawnMob(
+				packet.EntityId, packet.Uuid, (EntityType) packet.Type, new PlayerLocation(
+					packet.X, packet.Y, packet.Z, packet.Yaw, packet.Yaw, packet.Pitch)
+				{
+					//	OnGround = packet.SpawnMob
+				}, ModifyVelocity(new Vector3(packet.VelocityX, packet.VelocityY, packet.VelocityZ)));
+
 		}
 
 		private void HandleDisconnectPacket(DisconnectPacket packet)

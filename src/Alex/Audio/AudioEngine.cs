@@ -12,6 +12,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Media;
 using MiNET.Sounds;
 using MiNET.Utils;
+using Newtonsoft.Json;
 using NLog;
 using Sound = FmodAudio.Sound;
 
@@ -28,6 +29,7 @@ namespace Alex.Audio
 		private                 string            StoragePath   { get; }
 
 		private   ConcurrentDictionary<string, SoundInfo> _sounds = new ConcurrentDictionary<string, SoundInfo>();
+		private IReadOnlyDictionary<string, string> _soundMapping;
 		protected FmodSystem                              FmodSystem;
 		private   bool                                    Supported { get; }
 
@@ -59,34 +61,45 @@ namespace Alex.Audio
 				Supported = false;
 			}
 
-		/*	GlobalVolume = optionsProvider.AlexOptions.SoundOptions.GlobalVolume;
-			optionsProvider.AlexOptions.SoundOptions.GlobalVolume.Bind(
-				(value, newValue) =>
-				{
-					GlobalVolume = newValue;
-				});
-			
-			MusicVolume = optionsProvider.AlexOptions.SoundOptions.MusicVolume;
-			optionsProvider.AlexOptions.SoundOptions.MusicVolume.Bind(
-				(value, newValue) =>
-				{
-					MusicVolume = newValue;
-				});
-			
-			SoundFxVolume = optionsProvider.AlexOptions.SoundOptions.SoundEffectsVolume;
-			optionsProvider.AlexOptions.SoundOptions.SoundEffectsVolume.Bind(
-				(value, newValue) =>
-				{
-					SoundFxVolume = newValue;
-				});
+			Dictionary<string, SoundMapping> soundMappings;
+			string soundJson = ResourceManager.ReadStringResource("Alex.Resources.sounds.json");
+			soundMappings = JsonConvert.DeserializeObject<Dictionary<string, SoundMapping>>(soundJson);
 
-			AmbientVolume = optionsProvider.AlexOptions.SoundOptions.AmbientVolume;
+			Dictionary<string, string> mapped = new Dictionary<string, string>();
+			foreach (var mapping in soundMappings)
+			{
+				mapped.TryAdd(mapping.Key, mapping.Value.PlaysoundMapping);
+			}
 
-			optionsProvider.AlexOptions.SoundOptions.AmbientVolume.Bind(
-				(value, newValue) =>
-				{
-					AmbientVolume = newValue;
-				});*/
+			_soundMapping = mapped;
+			/*	GlobalVolume = optionsProvider.AlexOptions.SoundOptions.GlobalVolume;
+				optionsProvider.AlexOptions.SoundOptions.GlobalVolume.Bind(
+					(value, newValue) =>
+					{
+						GlobalVolume = newValue;
+					});
+				
+				MusicVolume = optionsProvider.AlexOptions.SoundOptions.MusicVolume;
+				optionsProvider.AlexOptions.SoundOptions.MusicVolume.Bind(
+					(value, newValue) =>
+					{
+						MusicVolume = newValue;
+					});
+				
+				SoundFxVolume = optionsProvider.AlexOptions.SoundOptions.SoundEffectsVolume;
+				optionsProvider.AlexOptions.SoundOptions.SoundEffectsVolume.Bind(
+					(value, newValue) =>
+					{
+						SoundFxVolume = newValue;
+					});
+	
+				AmbientVolume = optionsProvider.AlexOptions.SoundOptions.AmbientVolume;
+	
+				optionsProvider.AlexOptions.SoundOptions.AmbientVolume.Bind(
+					(value, newValue) =>
+					{
+						AmbientVolume = newValue;
+					});*/
 		}
 
 		public int Initialize(BedrockResourcePack resourcePack, IProgressReceiver progress)
@@ -240,6 +253,16 @@ namespace Alex.Audio
 		public bool PlaySound(Sounds sound, Vector3 position, float pitch, float volume)
 		{
 			return PlaySound(GetName(sound), position, pitch, volume);
+		}
+
+		public bool PlayJavaSound(string sound, Vector3 position, float pitch, float volume)
+		{
+			if (_soundMapping.TryGetValue(sound, out var mapped))
+			{
+				return PlaySound(mapped, position, pitch, volume);
+			}
+
+			return false;
 		}
 		
 		public bool PlaySound(string sound, Vector3 position, float pitch, float volume)

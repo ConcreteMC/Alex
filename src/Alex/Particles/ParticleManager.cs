@@ -14,6 +14,7 @@ using Alex.ResourcePackLib;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MiNET.Particles;
+using Newtonsoft.Json;
 using NLog;
 
 namespace Alex.Particles
@@ -35,6 +36,7 @@ namespace Alex.Particles
 		private Dictionary<string, ManagedTexture2D> _sharedTextures =
 			new Dictionary<string, ManagedTexture2D>();
 		private ResourceManager ResourceManager { get; }
+		private IReadOnlyDictionary<string, string> _particleMapping;
 		public ParticleManager(Game game, GraphicsDevice device, ResourceManager resourceManager) : base(game)
 		{
 			_spriteBatch = new SpriteBatch(device);
@@ -44,6 +46,21 @@ namespace Alex.Particles
 			Visible = false;
 			Enabled = false;
 			ResourceManager = resourceManager;
+			
+			Dictionary<string, ParticleMapping> soundMappings;
+			string soundJson = ResourceManager.ReadStringResource("Alex.Resources.particles.json");
+			soundMappings = JsonConvert.DeserializeObject<Dictionary<string, ParticleMapping>>(soundJson);
+
+			Dictionary<string, string> mapped = new Dictionary<string, string>();
+			foreach (var mapping in soundMappings)
+			{
+				if (!string.IsNullOrWhiteSpace(mapping.Value.BedrockId))
+				{
+					mapped.TryAdd($"minecraft:{mapping.Key.ToLower()}", mapping.Value.BedrockId);
+				}
+			}
+
+			_particleMapping = mapped;
 		}
 
 		public int Load(BedrockResourcePack resourcePack, IProgressReceiver progress)
@@ -474,6 +491,11 @@ namespace Alex.Particles
 			return false;
 		}
 
+		public bool TryConvertToBedrock(string particleName, out string bedrockParticleName)
+		{
+			return _particleMapping.TryGetValue(particleName, out bedrockParticleName);
+		}
+		
 		/// <inheritdoc />
 		protected override void UnloadContent()
 		{

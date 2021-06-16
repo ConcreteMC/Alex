@@ -123,6 +123,12 @@
     <EmbeddedResource Include="Resources\nethergames.png" />
     <None Remove="Resources\AlexDefault.zip" />
     <EmbeddedResource Include="Resources\AlexDefault.zip" />
+    <None Remove="Resources\sounds.json" />
+    <EmbeddedResource Include="Resources\sounds.json" />
+    <None Remove="Resources\itemmapping.json" />
+    <EmbeddedResource Include="Resources\itemmapping.json" />
+    <None Remove="Resources\particles.json" />
+    <EmbeddedResource Include="Resources\particles.json" />
   </ItemGroup>
 
   <ItemGroup>
