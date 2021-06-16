@@ -330,7 +330,7 @@ namespace Alex.Gamestates.InGame
 					if (item == null) return string.Empty;
 
 					var renderer = item.Renderer;
-					return $"Hand:\n{item.Name}\n{renderer}";
+					return $"In-Hand:\n{item.Name}";
 				}, TimeSpan.FromMilliseconds(500));
 		}
 

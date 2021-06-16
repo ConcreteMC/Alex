@@ -220,6 +220,7 @@ namespace Alex.Gamestates.Multiplayer
 
 			    ClearItems();
 
+			    Task previousTask = null;
 			    if (_filterValue == "bedrock" && Alex.ServerTypeManager.TryGet(
 				    "bedrock", out ServerTypeImplementation serverTypeImplementation))
 			    {
@@ -234,8 +235,9 @@ namespace Alex.Gamestates.Multiplayer
 						    ServerType = serverTypeImplementation.Id
 					    });
 
+				    item.CanDelete = false;
 				    item.SaveEntry = false;
-				    item.PingAsync(true, token);
+				    previousTask = item.PingAsync(true, token);
 
 				    AddItem(item);
 			    }
@@ -259,6 +261,7 @@ namespace Alex.Gamestates.Multiplayer
 								    });
 
 							    entry.SaveEntry = false;
+							    entry.CanDelete = false;
 
 							    entry.ConnectionEndpoint = r.EndPoint;
 							    entry.ServerName = $"[LAN] {r.QueryResponse.Status.Query.Description.Text}";
@@ -268,8 +271,6 @@ namespace Alex.Gamestates.Multiplayer
 							    await entry.PingAsync(false, token);
 						    }
 					    });
-
-				    Task previousTask = null;
 
 				    foreach (var entry in _listProvider.Data.Where(x => x.ServerType.Equals(_filterValue)).ToArray())
 				    {
@@ -299,8 +300,8 @@ namespace Alex.Gamestates.Multiplayer
 		    if (newItem != null)
 		    {
 			    JoinServerButton.Enabled = true;
-			    EditServerButton.Enabled = true;
-			    DeleteServerButton.Enabled = true;
+			    EditServerButton.Enabled = newItem.SaveEntry;
+			    DeleteServerButton.Enabled = newItem.CanDelete;
 		    }
 		    else
 		    {

@@ -29,7 +29,15 @@ namespace Alex.Graphics.Models.Blocks
 
 		private int GetLevel(BlockState state)
 		{
-			return 7 - (state.GetTypedValue(LEVEL) & 7);
+			if (state.Block is LiquidBlock lb)
+			{
+				return 7 - (state.GetTypedValue(LEVEL) & 7);
+			}
+			
+			if (state.Block.Solid)
+				return 7;
+
+			return 0;
 		}
 
 		public override void GetVertices(IBlockAccess blockAccess, ChunkData chunkBuilder, BlockCoordinates blockCoordinates, BlockState baseBlock)
@@ -80,34 +88,13 @@ namespace Alex.Graphics.Models.Blocks
 			}
 			else
 			{
-				var lowestFound = 999;
-				topLeft = GetAverageLiquidLevels(blockAccess, position, out lowestBlock, out lowestFound);
+				topLeft = GetAverageLiquidLevels(blockAccess, position);
 
-				topRight = GetAverageLiquidLevels(blockAccess, position + BlockCoordinates.Right, out var trl, out var trv);
-				if (trv < lowestFound)
-				{
-					lowestBlock = trl;
-					lowestFound = trv;
-					isFlowing = true;
-				}
+				topRight = GetAverageLiquidLevels(blockAccess, position + BlockCoordinates.Right);
 
-				bottomLeft = GetAverageLiquidLevels(blockAccess, position + BlockCoordinates.Forwards, out var bll, out var blv);
-				if (blv < lowestFound)
-				{
-					lowestBlock = bll;
-					lowestFound = blv;
-					isFlowing = true;
-				}
+				bottomLeft = GetAverageLiquidLevels(blockAccess, position + BlockCoordinates.Forwards);
 
-				bottomRight = GetAverageLiquidLevels(blockAccess, position + new BlockCoordinates(1, 0, 1), out var brl,
-					out var brv);
-				
-				if (brv < lowestFound)
-				{
-					lowestBlock = brl;
-					lowestFound = brv;
-					isFlowing = true;
-				}
+				bottomRight = GetAverageLiquidLevels(blockAccess, position + new BlockCoordinates(1, 0, 1));
 
 				//if (lowestFound != GetLevel(baseBlock.Value))
 				//	isFlowing = true;
@@ -275,12 +262,8 @@ namespace Alex.Graphics.Models.Blocks
 			return access.GetBiome(new BlockCoordinates(x, y, z)).Water;
 		}
 
-		protected int GetAverageLiquidLevels(IBlockAccess world, BlockCoordinates position, out BlockCoordinates lowest, out int lowestLevel)
+		protected int GetAverageLiquidLevels(IBlockAccess world, BlockCoordinates position)
 		{
-			lowest = position;
-			lowestLevel = GetLevel(world.GetBlockState(position));
-			
-			int blocks = 0;
 			int level = 0;
 			for (int xx = -1; xx < 1; xx++)
 			{
@@ -293,31 +276,16 @@ namespace Alex.Graphics.Models.Blocks
 					
 					var bs = world.GetBlockState(new BlockCoordinates(position.X + xx, position.Y, position.Z + zz));
 
-					if (!(bs.Block is LiquidBlock))
-						continue;
-
 					//if (bs.Block is Lava && !()) continue;
 
 					var lvl = GetLevel(bs);
 
-					blocks++;
-
-					level += lvl;
-
-					if (lowestLevel > lvl)
-					{
-						lowestLevel = lvl;
-						lowest = new BlockCoordinates(position.X + xx, position.Y, position.Z + zz);
-					}
+					if (lvl > level)
+						level = lvl;
 				}
 			}
 
-			if (level > 0 && blocks > 0)
-			{
-				level /= blocks;
-			}
-
-			return lowestLevel;
+			return level;
 		}
 	}
 }

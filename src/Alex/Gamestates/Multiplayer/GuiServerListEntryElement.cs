@@ -61,6 +61,7 @@ namespace Alex.Gamestates.Multiplayer
 
 		public bool                     SaveEntry                { get; set; } = true;
 		public ServerTypeImplementation ServerTypeImplementation { get; }
+		public bool CanDelete { get; set; } = true;
 		public GuiServerListEntryElement(ServerTypeImplementation serverTypeImplementation, SavedServerEntry entry) : this(
 			serverTypeImplementation.QueryProvider,
 			$"{entry.Name}",
