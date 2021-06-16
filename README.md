@@ -14,13 +14,14 @@ About
 
 This is a hobby project i work on from time to time, the end goal being it able to connect to a MC:Bedrock & MC:Java server & be feature compatible with most features required for the typical minigame server.
 
-As of now, it is able to connect to java 1.16 & bedrock 1.16 servers.
+As of now, it is able to connect to java 1.17 & bedrock 1.16.210 servers.
 
 Screenshots
 -----------
 
-![Bedrock Lifeboat](https://raw.githubusercontent.com/kennyvv/Alex/master/screenshots/lbsg3.png)
+![Title screen](https://raw.githubusercontent.com/kennyvv/Alex/master/screenshots/menu.png)
 
+![Nethergames Lobby](https://raw.githubusercontent.com/kennyvv/Alex/master/screenshots/ng-lobby.png)
 
 Cloning the Repository
 ----------------------
@@ -54,6 +55,7 @@ These repositories were super helpfull while i was building Alex! You should che
 * [TrueCraft](https://github.com/SirCmpwn/TrueCraft) - A Minecraft beta 1.7.3 client written in C#
 * [MoLang](https://github.com/bedrockk/MoLang) - A MoLang implementation for Java
 * [RocketUI](https://github.com/TruDan/RocketUI) - The GUI library used in Alex
+* [GeyserMC](https://github.com/GeyserMC/mappings) - Provides Bedrock <-> Java mappings
 
 Other resources
 ---------------

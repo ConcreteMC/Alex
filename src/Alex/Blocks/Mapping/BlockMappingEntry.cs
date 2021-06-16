@@ -16,6 +16,12 @@ namespace Alex.Blocks.Mapping
 	{
 		[JsonProperty("bedrock_identifier")]
 		public string BedrockIdentifier { get; set; }
+
+		[JsonProperty("block_hardnessblock_hardness")]
+		public float BlockHardness { get; set; } = 0.6f;
+
+		[JsonProperty("can_break_with_hand")]
+		public bool CanBreakWithHand { get; set; } = true;
 		
 		[JsonProperty("bedrock_states")]
 		public Dictionary<string, string> BedrockStates { get; set; }

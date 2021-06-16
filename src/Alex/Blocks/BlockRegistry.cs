@@ -2,6 +2,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using Alex.Blocks.Minecraft;
+using Alex.Blocks.Minecraft.Buttons;
 using Alex.Blocks.Minecraft.Saplings;
 using Alex.Blocks.Minecraft.Walls;
 using Alex.Common.Resources;
@@ -102,7 +103,6 @@ namespace Alex.Blocks
 		    this.Register("minecraft:chorus_plant", () => new ChorusPlant());
 		    this.Register("minecraft:chorus_flower", () => new ChorusFlower());
 		    this.Register("minecraft:purpur_block", () => new PurpurBlock());
-		    this.Register("minecraft:grass_path", () => new GrassPath());
 		    this.Register("minecraft:end_gateway", () => new EndGateway());
 		    this.Register("minecraft:frosted_ice", () => new FrostedIce());
 		    this.Register("minecraft:observer", () => new Observer());
@@ -174,6 +174,7 @@ namespace Alex.Blocks
 		    this.Register("minecraft:jungle_button", () => new JungleButton());
 		    this.Register("minecraft:acacia_button", () => new AcaciaButton());
 		    this.Register("minecraft:dark_oak_button", () => new DarkOakButton());
+		    this.Register("minecraft:polished_blackstone_button", () => new PolishedBlackStoneButton());
 		    
 		    //Terracotta
 		    this.Register("minecraft:white_glazed_terracotta", () => new WhiteGlazedTerracotta());
@@ -533,6 +534,9 @@ namespace Alex.Blocks
 		    this.Register("minecraft:dark_oak_sapling", () => new Sapling(WoodType.DarkOak));
 		    this.Register("minecraft:crimson_sapling", () => new Sapling(WoodType.Crimson));
 		    this.Register("minecraft:warped_sapling", () => new Sapling(WoodType.Warped));
+		    
+		    this.Register("minecraft:grass_path", () => new GrassPath());
+		    this.Register("minecraft:dirt_path", () => new GrassPath());
 	    }
     }
 }

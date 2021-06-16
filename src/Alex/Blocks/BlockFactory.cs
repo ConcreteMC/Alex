@@ -11,6 +11,7 @@ using Alex.Blocks.Mapping;
 using Alex.Blocks.Minecraft;
 using Alex.Blocks.State;
 using Alex.Common.Resources;
+using Alex.Common.Utils;
 using Alex.Graphics.Models.Blocks;
 using Alex.ResourcePackLib;
 using Alex.ResourcePackLib.Json.BlockStates;
@@ -313,6 +314,14 @@ namespace Alex.Blocks
 						bedrockState.ID = (uint) Interlocked.Increment(ref counter);
 						bedrockState.Default = first;
 
+						bedrockState.Block.BlockMaterial = bedrockState.Block.BlockMaterial.Clone()
+						   .SetHardness(state.Value.BlockHardness);
+
+						if (state.Value.CanBreakWithHand)
+						{
+							bedrockState.Block.BlockMaterial =	bedrockState.Block.BlockMaterial.SetRequiredTool(ItemType.Any, ItemMaterial.Any);
+						}
+						
 						first = false;
 
 						if (state.Value.BedrockStates != null && state.Value.BedrockStates.Count > 0)
