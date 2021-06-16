@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers.Binary;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -368,6 +369,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			
 			/*entity.CanFly = ((flags & 0x40) == 0x40);
 			entity.IsFlying = ((flags & 0x200) == 0x200);
+			
 			entity.IsWorldImmutable = ((flags & 0x01) == 0x01);
 			entity.IsNoPvP = (flags & 0x02) == 0x02;
 			entity.IsNoPvM = (flags & 0x04) == 0x04;
@@ -383,14 +385,16 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		public void HandleMcpeAdventureSettings(McpeAdventureSettings message)
 		{
+			var userId = BinaryPrimitives.ReverseEndianness(message.userId);
 			Entity entity = null;
 
-			if (!Client.World.TryGetEntity(message.userId, out entity))
+			if (userId == Client.World.Player.EntityId)
 			{
-				if (message.userId == Client.EntityId)
-				{
-					entity = Client.World.Player;
-				}
+				entity = Client.World.Player;
+			}
+			else if (!Client.World.TryGetEntity(userId, out entity))
+			{
+			
 			}
 
 			if (entity == null)
@@ -710,7 +714,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					{
 						_entityIdentifiers[id.Value] = realId.Value;
 						
-						Log.Info($"Registered entity identifier: {id.Value}");
+						//Log.Info($"Registered entity identifier: {id.Value}");
 					}
 				}
 			}
