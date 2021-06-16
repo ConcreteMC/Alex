@@ -258,7 +258,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			//if (Config.GetProperty("ServerInfoInTitle", false))
 			//	Console.Title = str;
 			//else
-			Log.Debug(str);
+			if (LoggingConstants.LogNetworkStatistics)
+				Log.Debug(str);
 
 			ConnectionInfo.NetworkState networkState = ConnectionInfo.NetworkState.Ok;
 

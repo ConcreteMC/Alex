@@ -254,134 +254,23 @@ namespace Alex.Entities.Components
 				
 				bool collided = false;
 
-				//float adjustedY = amount.Y;
-				float adjustedX = amount.X;
-				float adjustedZ = amount.Z;
+				bool collideY = CheckY(ref amount, false, ref boxes);
 
-				bool collideX = false;
-				bool collideZ = false;
-				if (TestTerrainCollisionY(ref amount, out var yCollisionPoint, out var collisionY, boxes))
-				{
-					Entity.CollidedWithWorld(
-						beforeAdjustment.Y < 0 ? Vector3.Down : Vector3.Up, yCollisionPoint, beforeAdjustment.Y);
-			
-					amount.Y = collisionY;
-
-					Entity.Velocity = new Vector3(Entity.Velocity.X, 0f, Entity.Velocity.Z);
-				}
-
-				var entityVelocity = Entity.Velocity;
-				if (TestTerrainCollisionX(ref amount, out var xCollisionPoint, out var collisionX, boxes, false))
-				{
-					collided = true;
-					collideX = true;
-
-					if (CheckJump(amount, out float yValue))
-					{
-						amount.Y = yValue;
-					}
-					else
-					{
-						if (collisionX < 0f)
-							collisionX -= 0.01f;
-
-						amount.X += collisionX;
-						entityVelocity.X = 0;
-					}
-					//AdjustX(beforeAdjustment, xCollisionPoint, collisionX, ref amount);
-				}
-
-				if (TestTerrainCollisionZ(ref amount, out var zCollisionPoint, out var collisionZ, boxes, false))
-				{
-					collided = true;
-					collideZ = true;
-					
-					if (CheckJump(amount, out float yValue))
-					{
-						amount.Y = yValue;
-					}
-					else
-					{
-						if (collisionZ < 0f)
-							collisionZ -= 0.01f;
-
-						amount.Z += collisionZ;
-						entityVelocity.Z = 0;
-					}
-					//	AdjustZ(beforeAdjustment, zCollisionPoint, collisionZ, ref amount);
-				}
+				bool collideX = CheckX(ref amount, false, ref boxes);
 				
-				if (!collideX && TestTerrainCollisionX(ref amount, out xCollisionPoint, out collisionX, boxes, true))
+				bool collideZ = CheckZ(ref amount, false, ref boxes);
+
+				if (!collideX && CheckX(ref amount, true, ref boxes))
 				{
-					collided = true;
 					collideX = true;
-					
-					if (CheckJump(amount, out float yValue))
-					{
-						amount.Y = yValue;
-					}
-					else
-					{
-						if (collisionX < 0f)
-							collisionX -= 0.01f;
-
-						amount.X += collisionX;
-						entityVelocity.X = 0;
-					}
-					//AdjustX(beforeAdjustment, xCollisionPoint, collisionX, ref amount);
 				}
 
-				if (!collideZ &&TestTerrainCollisionZ(ref amount, out zCollisionPoint, out collisionZ, boxes, true))
+				if (!collideZ && CheckZ(ref amount, true, ref boxes))
 				{
-					collided = true;
 					collideZ = true;
-					
-					if (CheckJump(amount, out float yValue))
-					{
-						amount.Y = yValue;
-					}
-					else
-					{
-						if (collisionZ < 0f)
-							collisionZ -= 0.01f;
-
-						amount.Z += collisionZ;
-						entityVelocity.Z = 0;
-					}
-					//	AdjustZ(beforeAdjustment, zCollisionPoint, collisionZ, ref amount);
 				}
 
-				Entity.Velocity = entityVelocity;
-
-				if (collideX && collideZ)
-				{
-					var modified = new Vector3(amount.X, amount.Y, amount.Z);
-					
-				}
-
-				/*Vector3 a1;
-				if (CheckJump(a1 = new Vector3(adjustedX, amount.Y, adjustedZ), out var yAmount))
-				{
-					amount = a1;
-					amount.Y = yAmount;
-				}
-				else if (CheckJump(a1 = new Vector3(adjustedX, yAmount, amount.Z), out yAmount))
-				{
-					amount = a1;
-					amount.Y = yAmount;
-				}
-				else if (CheckJump(a1 = new Vector3(amount.X, yAmount, adjustedZ), out yAmount))
-				{
-					amount = a1;
-					amount.Y = yAmount;
-				}
-				else
-				{
-					amount.X = adjustedX;
-					amount.Z = adjustedZ;
-				}*/
-
-				//amount.Y = adjustedY;
+				collided = collideX || collideZ;
 
 				if (collided && Entity.FeetInWater && !Entity.HeadInWater)
 				{
@@ -405,7 +294,66 @@ namespace Alex.Entities.Components
 
 			return amount;
 		}
+
+		private bool CheckY(ref Vector3 amount, bool checkOther, ref List<ColoredBoundingBox> boxes)
+		{
+			var beforeAdjustment = amount.Y;
+
+			if (!TestTerrainCollisionY(ref amount, out var yCollisionPoint, out var collisionY, boxes))
+				return false;
+			
+			Entity.CollidedWithWorld(
+				beforeAdjustment < 0 ? Vector3.Down : Vector3.Up, yCollisionPoint, beforeAdjustment);
+
+			amount.Y = collisionY;
+
+			Entity.Velocity = new Vector3(Entity.Velocity.X, 0, Entity.Velocity.Z);
+
+			return true;
+		}
+
+		private bool CheckX(ref Vector3 amount, bool checkOther, ref List<ColoredBoundingBox> boxes)
+		{
+			if (!TestTerrainCollisionX(amount, out _, out var collisionX, boxes, checkOther)) 
+				return false;
+
+			if (CheckJump(amount, out float yValue))
+			{
+				amount.Y = yValue;
+			}
+			else
+			{
+				if (collisionX < 0f)
+					collisionX -= 0.005f;
+
+				amount.X += collisionX;
+				Entity.Velocity = new Vector3(0, Entity.Velocity.Y, Entity.Velocity.Z);
+			}
+
+			return true;
+		}
 		
+		private bool CheckZ(ref Vector3 amount, bool checkOther, ref List<ColoredBoundingBox> boxes)
+		{
+			if (!TestTerrainCollisionZ(amount, out _, out var collisionZ, boxes, checkOther)) 
+				return false;
+
+			if (CheckJump(amount, out float yValue))
+			{
+				amount.Y = yValue;
+			}
+			else
+			{
+				if (collisionZ < 0f)
+					collisionZ -= 0.005f;
+
+				amount.Z += collisionZ;
+				Entity.Velocity = new Vector3(Entity.Velocity.X, Entity.Velocity.Y, 0f);
+			}
+
+			return true;
+		}
+
 		public ColoredBoundingBox[] LastCollision { get; private set; } = new ColoredBoundingBox[0];
 
 		private bool CheckJump(Vector3 amount, out float yValue)
@@ -628,7 +576,7 @@ namespace Alex.Entities.Components
 			return false;
 		}
 
-		private bool TestTerrainCollisionX(ref Vector3 velocity, out Vector3 collisionPoint, out float result, List<ColoredBoundingBox> boxes, bool includeOther)
+		private bool TestTerrainCollisionX(Vector3 velocity, out Vector3 collisionPoint, out float result, List<ColoredBoundingBox> boxes, bool includeOther)
 		{
 			result = velocity.X;
 			collisionPoint = Vector3.Zero;
@@ -711,7 +659,7 @@ namespace Alex.Entities.Components
 							}
 							else
 							{
-								if (box.Min.Z >= maxZ)
+								if (box.Min.X >= maxX)
 									continue;
 								
 								if (box.Min.X - entityBox.Max.X < 0)
@@ -750,7 +698,7 @@ namespace Alex.Entities.Components
 				
 				if (negative)
 				{
-					diff = (collisionExtent.Value - minX);
+					diff = (collisionExtent.Value - minX) + 0.01f;
 				}
 				else
 				{
@@ -759,7 +707,7 @@ namespace Alex.Entities.Components
 
 				result = (float) diff;
 
-				//if (Entity is Player p)
+			//	if (Entity is Player p)
 				//	Log.Debug($"ColX, Distance={diff}, X={(negative ? minX : maxX)} PointOfCollision={collisionExtent.Value} (negative: {negative})");
 				
 				return true;
@@ -768,7 +716,7 @@ namespace Alex.Entities.Components
 			return false;
 		}
 
-		private bool TestTerrainCollisionZ(ref Vector3 velocity, out Vector3 collisionPoint, out float result, List<ColoredBoundingBox> boxes, bool includeOther)
+		private bool TestTerrainCollisionZ(Vector3 velocity, out Vector3 collisionPoint, out float result, List<ColoredBoundingBox> boxes, bool includeOther)
 		{
 			result = velocity.Z; 
 			collisionPoint = Vector3.Zero;
@@ -851,7 +799,7 @@ namespace Alex.Entities.Components
 							}
 							else
 							{
-								if (box.Min.X >= maxX)
+								if (box.Min.Z >= maxZ)
 									continue;
 								
 								if (box.Min.Z - entityBox.Max.Z < 0)
@@ -886,18 +834,20 @@ namespace Alex.Entities.Components
 
 			if (collisionExtent != null) // Collision detected, adjust accordingly
 			{
+				var cp = collisionExtent.Value;
+				
 				double diff;
 
 				if (negative)
-					diff = (collisionExtent.Value - minZ);
+					diff = (cp - minZ) + 0.01f;
 				else
-					diff = (collisionExtent.Value - maxZ);
+					diff = (cp - maxZ);
 
 				//velocity.Z = (float)diff;	
 				result = (float) diff;
 
-				//if (Entity is Player p)
-				//	Log.Debug($"ColZ, Distance={diff}, Z={(negative ? minZ : maxZ)} PointOfCollision={collisionExtent.Value} (negative: {negative})");
+			//	if (Entity is Player p)
+			//		Log.Debug($"ColZ, Distance={diff}, MinZ={(minZ)} MaxZ={maxZ} PointOfCollision={cp} (negative: {negative})");
 				
 				return true;
 			}

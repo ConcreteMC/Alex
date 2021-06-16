@@ -75,7 +75,8 @@ namespace Alex.Blocks.State
 				return result;
 			}
 
-			Log.Debug($"Invalid property on state {Name} ({property}={value})");
+			if (LoggingConstants.LogInvalidBlockProperties)
+				Log.Debug($"Invalid property on state {Name} ({property}={value})");
 			return this;
 		}
 		

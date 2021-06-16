@@ -937,7 +937,8 @@ namespace Alex.Entities
 					default:
 						if (!HandleMetadata((MiNET.Entities.Entity.MetadataFlags) meta.Key, meta.Value))
 						{
-							Log.Debug($"({GetType().Name}) Unimplemented flag: {(MiNET.Entities.Entity.MetadataFlags) meta.Key}");
+							if (LoggingConstants.LogUnimplementedEntityFlags)
+								Log.Debug($"({GetType().Name}) Unimplemented flag: {(MiNET.Entities.Entity.MetadataFlags) meta.Key}");
 						}
 
 						break;

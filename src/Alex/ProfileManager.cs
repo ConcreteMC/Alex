@@ -64,7 +64,7 @@ namespace Alex
 					progressReceiver.UpdateProgress(99, StatusMessage);
 					foreach (var profile in profiles)
 					{
-						Profiles.Add(profile.Profile.Uuid, profile);
+						Profiles.TryAdd(profile.Profile.Uuid, profile);
 					}
 				}
 				else

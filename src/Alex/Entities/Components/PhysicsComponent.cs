@@ -75,7 +75,7 @@ namespace Alex.Entities.Components
 			//var momentum     = e.Velocity * e.Slipperines * 0.91f;
 			//var acceleration = (ConvertMovementIntoVelocity(e, out var slipperiness));
 
-			e.Movement.Move(e.Velocity);
+			e.Movement.Move(TruncateVelocity(e.Velocity));
 
 
 			if (e.IsAffectedByGravity && !e.IsFlying && !e.KnownPosition.OnGround && !e.IsSwimming)
