@@ -550,7 +550,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 					        //var ruid = BlockFactory.GetBlockStateID(id, meta);
 
-					        BlockState result = GetBlockState(MiNET.Blocks.BlockFactory.GetRuntimeId(id, meta));
+					        var block = MiNET.Blocks.BlockFactory.GetRuntimeId(id, meta);
+					        BlockState result = GetBlockState(block);
 
 					        if (result != null)
 					        {
