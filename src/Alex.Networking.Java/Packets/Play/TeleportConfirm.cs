@@ -9,7 +9,7 @@ namespace Alex.Networking.Java.Packets.Play
 		    PacketId = 0x00;
 	    }
 
-	    public int TeleportId;
+	    public int TeleportId = 1;
 
 	    public override void Decode(MinecraftStream stream)
 	    {
@@ -19,6 +19,13 @@ namespace Alex.Networking.Java.Packets.Play
 	    public override void Encode(MinecraftStream stream)
 	    {
 		    stream.WriteVarInt(TeleportId);
+	    }
+
+	    /// <inheritdoc />
+	    protected override void ResetPacket()
+	    {
+		    base.ResetPacket();
+		    TeleportId = 1;
 	    }
     }
 }

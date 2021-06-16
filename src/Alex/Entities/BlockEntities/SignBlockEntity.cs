@@ -26,8 +26,9 @@ namespace Alex.Entities.BlockEntities
 			
 			Width = 1f;
 			Height = 1f;
-			
-				//	Offset = Vector3.Zero;
+			HideNameTag = true;
+			IsAlwaysShowName = false;
+			//	Offset = Vector3.Zero;
 		}
 
 		/// <inheritdoc />
@@ -246,12 +247,12 @@ namespace Alex.Entities.BlockEntities
 
 			NameTag = $"{text1}\n{text2}\n{text3}\n{text4}";
 
-			if (_lines.All(string.IsNullOrWhiteSpace))
-				HideNameTag = true;
-			else
-			{
-				HideNameTag = false;
-			}
+			//if (_lines.All(string.IsNullOrWhiteSpace))
+			//	HideNameTag = true;
+			//else
+			//{
+			//	HideNameTag = false;
+			//}
 		}
 
 		private BasicEffect _basicEffect = null;

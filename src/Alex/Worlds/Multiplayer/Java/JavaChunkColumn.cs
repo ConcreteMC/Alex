@@ -13,9 +13,20 @@ namespace Alex.Worlds.Multiplayer.Java
 		{
 			return new JavaChunkSection(storeSkylight, sections);
 		}
+		
+		public static bool GetBitX(long[] bytes, int x) {
+			var index = x/64;
+			var bit = x-index*64;
 
-		public void Read(MinecraftStream ms, int availableSections, bool groundUp, bool readSkylight)
+			if (bytes.Length == 0 || index > bytes.Length - 1)
+				return false;
+			
+			return (bytes[index] & (1<<bit)) != 0;
+		}
+		
+		public void Read(MinecraftStream ms, long[] primaryBitMask, bool readSkylight)
 		{
+			
 			try
 			{
 				//	Stopwatch s = Stopwatch.StartNew();
@@ -24,7 +35,7 @@ namespace Alex.Worlds.Multiplayer.Java
 				for (int sectionY = 0; sectionY < this.Sections.Length; sectionY++)
 				{
 					var storage = (JavaChunkSection) this.Sections[sectionY];
-					if ((availableSections & (1 << sectionY)) != 0)
+					if (/*(availableSections & (1 << sectionY)) != 0*/GetBitX(primaryBitMask, sectionY))
 					{
 						if (storage == null)
 						{
@@ -35,7 +46,7 @@ namespace Alex.Worlds.Multiplayer.Java
 					}
 					else
 					{
-						if (groundUp && (storage == null || storage.Blocks > 0))
+						//if (groundUp && (storage == null || storage.Blocks > 0))
 						{
 							//if (storage == null)
 							//	storage = new ChunkSection(this, sectionY, readSkylight, 2);

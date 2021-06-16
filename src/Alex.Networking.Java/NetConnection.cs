@@ -183,6 +183,7 @@ namespace Alex.Networking.Java
 
 	    private int _lastReceivedPacketId;
 	    private int _lastSentPacketId;
+	    private int[] _lastSentPacketIds = new int[10];
 	    private object _readLock = new object();
 
 	    private void ProcessNetworkRead()
@@ -200,13 +201,17 @@ namespace Alex.Networking.Java
 					    break;
 
 				    var stream = _readerStream;
+
 				    if (stream == null)
 					    break;
 
 				    if (stream.DataAvailable)
 				    {
 					    if (TryReadPacket(stream, out var lastPacketId))
-						    _lastReceivedPacketId = lastPacketId;
+					    {
+						    
+					    }
+						    //_lastReceivedPacketId = lastPacketId;
 				    }
 				    else
 				    {
@@ -218,13 +223,21 @@ namespace Alex.Networking.Java
 		    }
 		    catch (Exception ex)
 		    {
-			  //  if (ex is OperationCanceledException) return;
-			 //   if (ex is EndOfStreamException) return;
-			 //   if (ex is IOException) return;
+			    //  if (ex is OperationCanceledException) return;
+			    //   if (ex is EndOfStreamException) return;
+			    //   if (ex is IOException) return;
 
 			    if (LogExceptions)
-				    Log.Warn(ex,
+			    {
+				    Log.Warn(
+					    ex,
 					    $"Failed read from network (Last packet read=0x{_lastReceivedPacketId:X2}, last packet written=0x{_lastSentPacketId:X2}, State: {ConnectionState})");
+
+				    for (int i = 0; i < _lastSentPacketIds.Length; i++)
+				    {
+					    Log.Debug($"Sent: 0x{_lastSentPacketIds[i]:X2}");
+				    }
+			    }
 		    }
 		    finally
 		    {
@@ -260,7 +273,7 @@ namespace Alex.Networking.Java
 				    //Send(packet, stream);
 				    try
 				    {
-					   
+					//    Log.Info($"Sent packet: {packet.Packet} (0x{packet.Packet.PacketId:X2})");
 						    var data = EncodePacket(packet);
 
 						    Interlocked.Increment(ref PacketsOut);
@@ -271,6 +284,16 @@ namespace Alex.Networking.Java
 				    }
 				    finally
 				    {
+					    int[] copy = new int[_lastSentPacketIds.Length];
+
+					    for (int i = 1; i < _lastSentPacketIds.Length; i++)
+					    {
+						    copy[i - 1] = _lastSentPacketIds[i];
+					    }
+
+					    copy[^1] = packet.Packet.PacketId;
+					    _lastSentPacketIds = copy;
+
 					    _lastSentPacketId = packet.Packet.PacketId;
 					    packet.Packet.PutPool();
 				    }
@@ -295,14 +318,24 @@ namespace Alex.Networking.Java
 			 //   if (ex is EndOfStreamException) return;
 			   // if (ex is IOException) return;
 
-			    if (LogExceptions)
-				    Log.Warn(ex,
-					    $"Failed write to network (Last packet read=0x{_lastReceivedPacketId:X2}, last packet written=0x{_lastSentPacketId:X2}, State: {ConnectionState})");
+			   if (LogExceptions)
+			   {
+				   Log.Warn(
+					   ex,
+					   $"Failed write to network (Last packet read=0x{_lastReceivedPacketId:X2}, last packet written=0x{_lastSentPacketId:X2}, State: {ConnectionState})");
+				   
+				   for (int i = 0; i < _lastSentPacketIds.Length; i++)
+				   {
+					   Log.Debug($"Sent: 0x{_lastSentPacketIds[i]:X2}");
+				   }
+			   }
 		    }
 		    finally
 		    {
 			    Disconnected(false);
 		    }
+		    
+		 //   Log.Warn($"Write thread exited!");
 	    }
 
 	    private object _sendLock = new object();
@@ -326,7 +359,7 @@ namespace Alex.Networking.Java
 
 				    int packetIdLength;
 				    packetId = stream.ReadVarInt(out packetIdLength);
-				    lastPacketId = packetId;
+				    _lastReceivedPacketId = lastPacketId = packetId;
 
 				    if (length - packetIdLength > 0)
 				    {
@@ -349,7 +382,7 @@ namespace Alex.Networking.Java
 				    if (dataLength == 0)
 				    {
 					    packetId = stream.ReadVarInt(out readMore);
-					    lastPacketId = packetId;
+					    _lastReceivedPacketId = lastPacketId = packetId;
 					    packetData = stream.Read(packetLength - (br + readMore));
 				    }
 				    else
@@ -369,7 +402,7 @@ namespace Alex.Networking.Java
 
 						    int l;
 						    packetId = a.ReadVarInt(out l);
-						    lastPacketId = packetId;
+						    _lastReceivedPacketId = lastPacketId = packetId;
 						    packetData = a.Read(dataLength - l);
 					    }
 				    }
@@ -377,7 +410,7 @@ namespace Alex.Networking.Java
 		    }
 
 		    packet = MCPacketFactory.GetPacket(ConnectionState, packetId);
-
+//Log.Info($"Got packet: {packet} (0x{packetId:X2})");
 		    try
 		    {
 			    Interlocked.Increment(ref PacketsIn);
@@ -485,39 +518,47 @@ namespace Alex.Networking.Java
 	    {
 		    var packet = enqueued.Packet;
 		    byte[] encodedPacket;
+
 		    using (MemoryStream ms = new MemoryStream())
 		    {
 			    using (MinecraftStream mc = new MinecraftStream(ms, CancellationToken.Token))
 			    {
 				    mc.WriteVarInt(packet.PacketId);
 				    packet.Encode(mc);
-				    
-				    encodedPacket = ms.ToArray();
+			    }
+			    
+			    encodedPacket = ms.ToArray();
+		    }
 
-				    mc.Position = 0;
-				    mc.SetLength(0);
-
-				    if (enqueued.CompressionEnabled)
+		    if (enqueued.CompressionEnabled)
+		    {
+			    using (MemoryStream ms = new MemoryStream())
+			    {
+				    using (MinecraftStream mc = new MinecraftStream(ms, CancellationToken.Token))
 				    {
+
 					    if (encodedPacket.Length >= CompressionThreshold)
 					    {
 						    //byte[] compressed;
 						    //CompressData(encodedPacket, out compressed);
 
 						    mc.WriteVarInt(encodedPacket.Length);
-						    using (ZlibStream outZStream = new ZlibStream(mc, CompressionMode.Compress, CompressionLevel.Default, true))
+
+						    using (ZlibStream outZStream = new ZlibStream(
+							    mc, CompressionMode.Compress, CompressionLevel.Default, true))
 						    {
 							    outZStream.Write(encodedPacket, 0, encodedPacket.Length);
 						    }
-						   // mc.Write(compressed);
+						    // mc.Write(compressed);
 					    }
 					    else //Uncompressed
 					    {
 						    mc.WriteVarInt(0);
 						    mc.Write(encodedPacket);
 					    }
-					    encodedPacket = ms.ToArray();
 				    }
+
+				    encodedPacket = ms.ToArray();
 			    }
 		    }
 

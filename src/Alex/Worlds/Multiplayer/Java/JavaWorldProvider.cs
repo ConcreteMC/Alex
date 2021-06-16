@@ -789,7 +789,11 @@ namespace Alex.Worlds.Multiplayer.Java
 
 					break;
 
-				case TitlePacket titlePacket:
+				case SetTitleTextPacket titleTextPacket:
+					HandleSetTitlePacket(titleTextPacket);
+					break;
+				
+				case SetTitleTimesPacket titlePacket:
 					HandleTitlePacket(titlePacket);
 
 					break;
@@ -912,6 +916,11 @@ namespace Alex.Worlds.Multiplayer.Java
 				case DeclareCommandsPacket declareCommandsPacket:
 					HandleDeclareCommandsPacket(declareCommandsPacket);
 					break;
+
+				case PlayPingPacket pingPacket:
+				{
+					HandlePingPacket(pingPacket);
+				} break;
 				
 				default:
 				{
@@ -923,6 +932,13 @@ namespace Alex.Worlds.Multiplayer.Java
 					break;
 				}
 			}
+		}
+
+		private void HandlePingPacket(PlayPingPacket packet)
+		{
+			PongPacket pong = PongPacket.CreateObject();
+			pong.PingId = packet.PingId;
+			SendPacket(pong);
 		}
 
 		private void HandleDeclareCommandsPacket(DeclareCommandsPacket packet)
@@ -1104,77 +1120,83 @@ namespace Alex.Worlds.Multiplayer.Java
 		}
 
 		private void HandleParticlePacket(ParticlePacket packet)
-		{
-			var particleType =
-				Alex.Resources.Registries.Particles.Entries.FirstOrDefault(
-					x => x.Value.ProtocolId == packet.ParticleId);
-
-			if (particleType.Key != null)
+		{	World.BackgroundWorker.Enqueue(() =>
 			{
-				var type = ParticleConversion.ConvertToBedrock(particleType.Key);
-				/*int data = 0;
+				var particleType =
+					Alex.Resources.Registries.Particles.Entries.FirstOrDefault(
+						x => x.Value.ProtocolId == packet.ParticleId);
 
-				if (packet.Color.HasValue)
+				if (particleType.Key != null)
 				{
-					var color = packet.Color.Value;
-					byte r = color.R;
-					byte g = color.G;
-					byte b = color.B;
-					byte a = color.A;
-					data = ((a & 0xff) << 24) | ((r & 0xff) << 16) | ((g & 0xff) << 8) | (b & 0xff);
-				}*/
-
-				for (int i = 0; i < packet.ParticleCount; i++)
-				{
-					long data = 0;
-					ParticleDataMode dataMode = ParticleDataMode.None;
-					if (packet.SlotData != null)
+					var type = ParticleConversion.ConvertToBedrock(particleType.Key);
+					/*int data = 0;
+	
+					if (packet.Color.HasValue)
 					{
-						//var item = GetItemFromSlotData(packet.SlotData);
+						var color = packet.Color.Value;
+						byte r = color.R;
+						byte g = color.G;
+						byte b = color.B;
+						byte a = color.A;
+						data = ((a & 0xff) << 24) | ((r & 0xff) << 16) | ((g & 0xff) << 8) | (b & 0xff);
+					}*/
 
-						//if (item != null)
+					for (int i = 0; i < packet.ParticleCount; i++)
+					{
+						long data = 0;
+						ParticleDataMode dataMode = ParticleDataMode.None;
+
+						if (packet.SlotData != null)
 						{
-							dataMode = ParticleDataMode.Item;
-							data = packet.SlotData.ItemID;//BlockFactory.GetBlockStateID(item.Id, (byte) item.Meta);
-							//particleInstance.SetData(item.Id, ParticleDataMode.Item);
+							//var item = GetItemFromSlotData(packet.SlotData);
+
+							//if (item != null)
+							{
+								dataMode = ParticleDataMode.Item;
+
+								data = packet.SlotData
+								   .ItemID; //BlockFactory.GetBlockStateID(item.Id, (byte) item.Meta);
+								//particleInstance.SetData(item.Id, ParticleDataMode.Item);
+							}
+						}
+						else if (packet.BlockStateId.HasValue)
+						{
+							dataMode = ParticleDataMode.BlockRuntimeId;
+							data = packet.BlockStateId.Value;
+							//particleInstance.SetData(packet.BlockStateId.Value, ParticleDataMode.BlockRuntimeId);
+						}
+						else if (packet.Color.HasValue)
+						{
+							dataMode = ParticleDataMode.Color;
+							data = packet.Color.Value.PackedValue;
+						}
+
+
+						if (Alex.ParticleManager.SpawnParticle(
+							type,
+							new Vector3(
+								(float) ((float) packet.X + (packet.OffsetX * RandomParticleOffset())),
+								(float) ((float) packet.Y + (packet.OffsetY * RandomParticleOffset())),
+								(float) ((float) packet.Z + (packet.OffsetZ * RandomParticleOffset()))),
+							out var particleInstance, data, dataMode))
+						{
+
+							//particleInstance.Scale = packet.Scale;
+						}
+						else
+						{
+							Log.Debug(
+								$"Could not spawn particle with type: {packet.ParticleId} (Java: {particleType.Key} | Bedrock: {type})");
+
+							break;
 						}
 					}
-					else if (packet.BlockStateId.HasValue)
-					{
-						dataMode = ParticleDataMode.BlockRuntimeId;
-						data = packet.BlockStateId.Value;
-						//particleInstance.SetData(packet.BlockStateId.Value, ParticleDataMode.BlockRuntimeId);
-					}
-					else if (packet.Color.HasValue)
-					{
-						dataMode = ParticleDataMode.Color;
-						data = packet.Color.Value.PackedValue;
-					}
-					
-					if (Alex.ParticleManager.SpawnParticle(
-						type,
-						new Vector3(
-							(float) ((float) packet.X + (packet.OffsetX * RandomParticleOffset())),
-							(float) ((float) packet.Y + (packet.OffsetY * RandomParticleOffset())),
-							(float) ((float) packet.Z + (packet.OffsetZ * RandomParticleOffset()))),
-						out var particleInstance, data, dataMode))
-					{
-
-						//particleInstance.Scale = packet.Scale;
-					}
-					else
-					{
-						Log.Debug(
-							$"Could not spawn particle with type: {packet.ParticleId} (Java: {particleType.Key} | Bedrock: {type})");
-
-						break;
-					}
 				}
-			}
-			else
-			{
-				Log.Debug($"Could not find particle with protocolid: {packet.ParticleId}");
-			}
+				else
+				{
+					Log.Debug($"Could not find particle with protocolid: {packet.ParticleId}");
+				}
+			});
 		}
 		
 		private ThreadSafeList<string> _missingSounds = new ThreadSafeList<string>();
@@ -1533,7 +1555,7 @@ namespace Alex.Worlds.Multiplayer.Java
 				ClickWindowPacket packet = ClickWindowPacket.CreateObject();
 				packet.Mode = mode;
 				packet.Button = button;
-				packet.Action = actionNumber;
+				//packet.Action = actionNumber;
 				packet.WindowId = (byte) inv.InventoryId;
 				packet.Slot = (short) e.Index;
 				packet.ClickedItem = new SlotData()
@@ -1691,33 +1713,38 @@ namespace Alex.Worlds.Multiplayer.Java
 
 		private Dictionary<int, Type> UnhandledPackets = new Dictionary<int, Type>();
 
-		private void HandleTitlePacket(TitlePacket packet)
+		private void HandleSetTitlePacket(SetTitleTextPacket packet)
 		{
-			switch (packet.Action)
+			TitleComponent.SetTitle(packet.Text);
+		}
+		
+		private void HandleTitlePacket(SetTitleTimesPacket packet)
+		{
+			/*switch (packet.Action)
 			{
-				case TitlePacket.ActionEnum.SetTitle:
+				case SetTitleTimesPacket.ActionEnum.SetTitle:
 					TitleComponent.SetTitle(packet.TitleText);
 					break;
-				case TitlePacket.ActionEnum.SetSubTitle:
+				case SetTitleTimesPacket.ActionEnum.SetSubTitle:
 					TitleComponent.SetSubtitle(packet.SubtitleText);
                     break;
-				case TitlePacket.ActionEnum.SetActionBar:
+				case SetTitleTimesPacket.ActionEnum.SetActionBar:
 					
 					break;
-				case TitlePacket.ActionEnum.SetTimesAndDisplay:
+				case SetTitleTimesPacket.ActionEnum.SetTimesAndDisplay:*/
 					TitleComponent.SetTimes(packet.FadeIn, packet.Stay, packet.FadeOut);
 					TitleComponent.Show();
-					break;
-				case TitlePacket.ActionEnum.Hide:
+				/*	break;
+				case SetTitleTimesPacket.ActionEnum.Hide:
 					TitleComponent.Hide();
 					break;
-				case TitlePacket.ActionEnum.Reset:
+				case SetTitleTimesPacket.ActionEnum.Reset:
 					TitleComponent.Reset();
 					break;
 				default:
 					Log.Warn($"Unknown Title Action: {(int) packet.Action}");
 					break;
-			}
+			}*/
 		}
 
 		public bool Respawning = false;
@@ -1844,10 +1871,11 @@ namespace Alex.Worlds.Multiplayer.Java
 
 			if (World.TryGetEntity(packet.EntityId, out Entity entity))
 			{
+				foreach(var slot in packet.Slots)
 				{
-					Item item = GetItemFromSlotData(packet.Item).Clone();;
+					Item item = GetItemFromSlotData(slot.Data).Clone();;
 
-					switch (packet.Slot)
+					switch (slot.Slot)
 					{
 						case EntityEquipmentPacket.SlotEnum.MainHand:
 							entity.Inventory.MainHand = item;
@@ -2437,7 +2465,7 @@ namespace Alex.Worlds.Multiplayer.Java
 	        var heightMaps = packet.HeightMaps;
 	        var entities = packet.TileEntities;
 	        var primaryBitmask = packet.PrimaryBitmask;
-	        bool groundUp = packet.GroundUp;
+	        //bool groundUp = packet.GroundUp;
 	      World.BackgroundWorker.Enqueue(() =>
 		        {
 			        unsafe
@@ -2452,11 +2480,11 @@ namespace Alex.Worlds.Multiplayer.Java
 				        {
 					        JavaChunkColumn result = null; // = new ChunkColumn();
 
-					        if (groundUp)
+					        //if (groundUp)
 					        {
 						        result = new JavaChunkColumn(x, z);
 					        }
-					        else
+					       /* else
 					        {
 						        if (World.GetChunkColumn(x, z) is JavaChunkColumn c)
 						        {
@@ -2466,15 +2494,15 @@ namespace Alex.Worlds.Multiplayer.Java
 						        {
 							        result = new JavaChunkColumn(x,z);
 						        }
-					        }
+					        }*/
 
 					        // result.X = chunk.ChunkX;
 					        // result.Z = chunk.ChunkZ;
 					        //     result.IsDirty = true;
 
-					        result.Read(stream, primaryBitmask, groundUp, World.Dimension == Dimension.Overworld);
+					        result.Read(stream, primaryBitmask, World.Dimension == Dimension.Overworld);
 
-					        if (groundUp)
+					        //if (groundUp)
 					        {
 						        /*for (int i = 0; i < chunk.Biomes.Length; i++)
 					        {
@@ -2575,6 +2603,7 @@ namespace Alex.Worlds.Multiplayer.Java
 	        //Log.Info($"Keep alive: {packet.KeepAliveid}");
 	        KeepAlivePacket response =  KeepAlivePacket.CreateObject();
 			response.KeepAliveid = packet.KeepAliveid;
+			response.PacketId = 0x0F;
 			//response.PacketId = 0x0E;
 
 			SendPacket(response);

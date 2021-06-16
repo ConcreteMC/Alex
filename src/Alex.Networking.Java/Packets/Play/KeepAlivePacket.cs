@@ -6,7 +6,7 @@ namespace Alex.Networking.Java.Packets.Play
 	{
 		public KeepAlivePacket()
 		{
-			PacketId = 0x10; //Clientbound
+			PacketId = 0x0F; //Clientbound
 		}
 
 		public long KeepAliveid;
@@ -25,7 +25,7 @@ namespace Alex.Networking.Java.Packets.Play
 		protected override void ResetPacket()
 		{
 			base.ResetPacket();
-			PacketId = 0x10;
+			PacketId = 0x0F;
 		}
 	}
 }

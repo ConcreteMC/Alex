@@ -3,7 +3,7 @@ using Alex.Networking.Java.Util;
 
 namespace Alex.Networking.Java.Packets.Play
 {
-	public class TitlePacket : Packet<TitlePacket>
+	public class SetTitleTimesPacket : Packet<SetTitleTimesPacket>
 	{
 		public enum ActionEnum
 		{
@@ -15,15 +15,19 @@ namespace Alex.Networking.Java.Packets.Play
 			Reset = 5
 		}
 
-		public ActionEnum Action;
-		public string     TitleText;
-		public string     SubtitleText;
-		public string     ActionBarText;
+		//public ActionEnum Action;
+	//	public string     TitleText;
+	//	public string     SubtitleText;
+	//	public string     ActionBarText;
 		public int        FadeIn, Stay, FadeOut;
 
 		public override void Decode(MinecraftStream stream)
 		{
-			Action = (ActionEnum) stream.ReadVarInt();
+			FadeIn = stream.ReadInt();
+			Stay = stream.ReadInt();
+			FadeOut = stream.ReadInt();
+			
+			/*Action = (ActionEnum) stream.ReadVarInt();
 			switch (Action)
 			{
 				case ActionEnum.SetTitle:
@@ -46,7 +50,7 @@ namespace Alex.Networking.Java.Packets.Play
 				case ActionEnum.Reset:
 
 					break;
-			}
+			}*/
 		}
 
 		public override void Encode(MinecraftStream stream)

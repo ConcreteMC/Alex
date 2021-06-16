@@ -2,24 +2,23 @@ using Alex.Networking.Java.Util;
 
 namespace Alex.Networking.Java.Packets.Play
 {
-	public class PlayerMovementPacket : Packet<PlayerMovementPacket>
+	public class PongPacket : Packet<PongPacket>
 	{
-		public bool OnGround { get; set; }
-		public PlayerMovementPacket()
+		public PongPacket()
 		{
-			PacketId = 0x14;
+			PacketId = 0x1D;
 		}
-		
+		public int PingId { get; set; }
 		/// <inheritdoc />
 		public override void Decode(MinecraftStream stream)
 		{
-			throw new System.NotImplementedException();
+			PingId = stream.ReadInt();
 		}
 
 		/// <inheritdoc />
 		public override void Encode(MinecraftStream stream)
 		{
-			stream.WriteBool(OnGround);
+			stream.WriteInt(PingId);
 		}
 	}
 }

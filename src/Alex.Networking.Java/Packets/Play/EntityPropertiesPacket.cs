@@ -17,7 +17,7 @@ namespace Alex.Networking.Java.Packets.Play
 		public override void Decode(MinecraftStream stream)
 		{
 			EntityId = stream.ReadVarInt();
-			int count = stream.ReadInt();
+			int count = stream.ReadVarInt();
 
 			for (int i = 0; i < count; i++)
 			{

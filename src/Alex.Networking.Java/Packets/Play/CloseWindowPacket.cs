@@ -6,7 +6,7 @@ namespace Alex.Networking.Java.Packets.Play
     {
         public CloseWindowPacket()
         {
-            PacketId = 0x0A;
+            PacketId = 0x09;
         }
         
         public byte WindowId { get; set; }

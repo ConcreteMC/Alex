@@ -34,7 +34,7 @@ namespace Alex.ResourcePackLib.Generic
 		    Type = type;
 	    }
 
-	    internal ResourcePackManifest(string name, string description, ResourcePackType type = ResourcePackType.Unknown) : this(UnknownPack, name, description, type)
+	    public ResourcePackManifest(string name, string description, ResourcePackType type = ResourcePackType.Unknown) : this(UnknownPack, name, description, type)
 	    {
 
 	    }

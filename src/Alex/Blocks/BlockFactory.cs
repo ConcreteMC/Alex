@@ -191,6 +191,7 @@ namespace Alex.Blocks
 				//	if (variantState.IsMultiPart) multipartBased++;
 
 					variantState.Default = s.Default;
+					//variantState.VariantMapper = variantMap;
 
 					if (variantMap.TryAdd(variantState))
 					{

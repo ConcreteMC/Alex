@@ -389,6 +389,14 @@ namespace Alex
 
 		        if (directoryInfo != null)
 		        {
+			        var rootMatches = directoryInfo.GetFiles(".mcassetsroot", SearchOption.AllDirectories);
+
+			        if (rootMatches.Length > 0)
+			        {
+				        javaResources = rootMatches[0].Directory.FullName;
+
+				        return true;
+			        }
 			        javaResources = directoryInfo.FullName;
 
 			        return true;

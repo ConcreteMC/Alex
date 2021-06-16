@@ -70,6 +70,8 @@ namespace Alex.Blocks.State
 
 		public BlockState WithProperty(string property, string value, params string[] requiredMatches)
 		{
+			if (VariantMapper == null)
+				return this;
 			if (VariantMapper.TryResolve(this, property, value, out BlockState result, requiredMatches))
 			{
 				return result;

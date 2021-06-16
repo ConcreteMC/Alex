@@ -10,6 +10,7 @@ namespace Alex.Networking.Java.Packets.Play
 		public bool ChatColors;
 		public byte SkinParts;
 		public int MainHand;
+		public bool DisableTextFiltering;
 
 		public ClientSettingsPacket()
 		{
@@ -24,6 +25,7 @@ namespace Alex.Networking.Java.Packets.Play
 			ChatColors = stream.ReadBool();
 			SkinParts = (byte) stream.ReadByte();
 			MainHand = stream.ReadVarInt();
+			DisableTextFiltering = stream.ReadBool();
 		}
 
 		public override void Encode(MinecraftStream stream)
@@ -34,6 +36,7 @@ namespace Alex.Networking.Java.Packets.Play
 			stream.WriteBool(ChatColors);
 			stream.WriteByte(SkinParts);
 			stream.WriteVarInt(MainHand);
+			stream.WriteBool(DisableTextFiltering);
 		}
 	}
 }

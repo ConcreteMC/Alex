@@ -111,6 +111,9 @@ namespace Alex.Worlds.Multiplayer.Java
 
 	    public override void BlockPlaced(BlockCoordinates position, BlockFace face, int hand, int slot, Vector3 cursorPosition, Entity p)
 	    {
+		    if (hand < 0) hand = 0;
+		    if (hand > 1) hand = 1;
+		    
 		    var packet = PlayerBlockPlacementPacket.CreateObject();
 		    packet.CursorPosition = cursorPosition;
 		    packet.Location = position;
@@ -132,6 +135,8 @@ namespace Alex.Worlds.Multiplayer.Java
 
 		public override void EntityInteraction(Entity player, Entity target, ItemUseOnEntityAction action, int hand, int slot)
 		{
+			if (hand < 0) hand = 0;
+			if (hand > 1) hand = 1;
 			
 			switch (action)
 			{
@@ -164,6 +169,9 @@ namespace Alex.Worlds.Multiplayer.Java
 
 		public override void WorldInteraction(Entity entity, BlockCoordinates position, BlockFace face, int hand, int slot, Vector3 cursorPosition)
 		{
+			if (hand < 0) hand = 0;
+			if (hand > 1) hand = 1;
+			
 			var packet = PlayerBlockPlacementPacket.CreateObject();
 			packet.Location = position;
 			packet.Face = face;
@@ -176,7 +184,12 @@ namespace Alex.Worlds.Multiplayer.Java
 
 		public override void UseItem(Item item, int hand, ItemUseAction action, BlockCoordinates position, BlockFace face, Vector3 cursorPosition)
 		{
-			//if (!(action == ))
+			if (hand > 1)
+				hand = 1;
+
+			if (hand < 0)
+				hand = 0;
+			
 			var packet = UseItemPacket.CreateObject();
 			packet.Hand = hand;
 			Client.SendPacket(packet);

@@ -162,7 +162,7 @@ namespace Alex.Networking.Java.Packets
 		private static void RegisterStatus()
 		{
 			Register(ConnectionState.Status, 0x00, () => ResponsePacket.CreateObject());
-			Register(ConnectionState.Status, 0x01, () => PingPacket.CreateObject());
+			Register(ConnectionState.Status, 0x01, () => Alex.Networking.Java.Packets.Status.PingPacket.CreateObject());
 		}
 
 		private static void RegisterLogin()
@@ -179,15 +179,15 @@ namespace Alex.Networking.Java.Packets
 			Register(ConnectionState.Play, 0x00, () => SpawnEntity.CreateObject());
 			Register(ConnectionState.Play, 0x02, () => SpawnLivingEntity.CreateObject());
 			Register(ConnectionState.Play, 0x04, () => SpawnPlayerPacket.CreateObject());
-			Register(ConnectionState.Play, 0x05, () => EntityAnimationPacket.CreateObject());
-			Register(ConnectionState.Play, 0x07, () => AcknowledgePlayerDiggingPacket.CreateObject());
-			Register(ConnectionState.Play, 0x09, () => BlockEntityDataPacket.CreateObject());
+			Register(ConnectionState.Play, 0x06, () => EntityAnimationPacket.CreateObject());
+			Register(ConnectionState.Play, 0x08, () => AcknowledgePlayerDiggingPacket.CreateObject());
+			Register(ConnectionState.Play, 0x0A, () => BlockEntityDataPacket.CreateObject());
 			
-			Register(ConnectionState.Play, 0x0A, () => BlockActionPacket.CreateObject());
-			Register(ConnectionState.Play, 0x0B, () => BlockChangePacket.CreateObject());
-			Register(ConnectionState.Play, 0x0C, () => BossBarPacket.CreateObject());
-			Register(ConnectionState.Play, 0x0D, () => ServerDifficultyPacket.CreateObject());
-			Register(ConnectionState.Play, 0x0E, () =>
+			Register(ConnectionState.Play, 0x0B, () => BlockActionPacket.CreateObject());
+			Register(ConnectionState.Play, 0x0C, () => BlockChangePacket.CreateObject());
+			Register(ConnectionState.Play, 0x0D, () => BossBarPacket.CreateObject());
+			Register(ConnectionState.Play, 0x0E, () => ServerDifficultyPacket.CreateObject());
+			Register(ConnectionState.Play, 0x0F, () =>
 			{
 				var packet = ChatMessagePacket.CreateObject();
 				packet.ServerBound = false;
@@ -199,67 +199,71 @@ namespace Alex.Networking.Java.Packets
 			//});
 		//	Register(ConnectionState.Play, 0x0F, () => MultiBlockChange.CreateObject());
 			
-			Register(ConnectionState.Play, 0xF, () => TabCompleteClientBound.CreateObject());
-			Register(ConnectionState.Play, 0x10, () => DeclareCommandsPacket.CreateObject());
-			Register(ConnectionState.Play, 0x11, () => WindowConfirmationPacket.CreateObject());
-			Register(ConnectionState.Play, 0x12, () => CloseWindowPacket.CreateObject());
-			Register(ConnectionState.Play, 0x13, () => WindowItems.CreateObject());
-			Register(ConnectionState.Play, 0x15, () => SetSlot.CreateObject());
-			Register(ConnectionState.Play, 0x17, () => PluginMessagePacket.CreateObject());
-			Register(ConnectionState.Play, 0x18, () => NamedSoundEffectPacket.CreateObject());
+			Register(ConnectionState.Play, 0x11, () => TabCompleteClientBound.CreateObject());
+			Register(ConnectionState.Play, 0x12, () => DeclareCommandsPacket.CreateObject());
+			//Register(ConnectionState.Play, 0x11, () => WindowConfirmationPacket.CreateObject());
+			Register(ConnectionState.Play, 0x13, () => CloseWindowPacket.CreateObject());
+			Register(ConnectionState.Play, 0x14, () => WindowItems.CreateObject());
+			Register(ConnectionState.Play, 0x16, () => SetSlot.CreateObject());
+			Register(ConnectionState.Play, 0x18, () => PluginMessagePacket.CreateObject());
+			Register(ConnectionState.Play, 0x19, () => NamedSoundEffectPacket.CreateObject());
 			
-			Register(ConnectionState.Play, 0x19, () => DisconnectPacket.CreateObject());
-			Register(ConnectionState.Play, 0x1A, () => EntityStatusPacket.CreateObject());
-			Register(ConnectionState.Play, 0x1C, () => UnloadChunk.CreateObject());
-			Register(ConnectionState.Play, 0x1D, () => ChangeGameStatePacket.CreateObject());
-			Register(ConnectionState.Play, 0x1F, () => KeepAlivePacket.CreateObject());
+			Register(ConnectionState.Play, 0x1A, () => DisconnectPacket.CreateObject());
+			Register(ConnectionState.Play, 0x1B, () => EntityStatusPacket.CreateObject());
+			Register(ConnectionState.Play, 0x1D, () => UnloadChunk.CreateObject());
+			Register(ConnectionState.Play, 0x1E, () => ChangeGameStatePacket.CreateObject());
 			
-			Register(ConnectionState.Play, 0x20, () => ChunkDataPacket.CreateObject());
-			Register(ConnectionState.Play, 0x22, () => ParticlePacket.CreateObject());
-			Register(ConnectionState.Play, 0x23, () => UpdateLightPacket.CreateObject());
-			Register(ConnectionState.Play, 0x24, () => JoinGamePacket.CreateObject());
-			Register(ConnectionState.Play, 0x27, () => EntityRelativeMove.CreateObject());
-			Register(ConnectionState.Play, 0x28, () => EntityLookAndRelativeMove.CreateObject());
-			Register(ConnectionState.Play, 0x29, () => EntityLook.CreateObject());
+			Register(ConnectionState.Play, 0x21, () => KeepAlivePacket.CreateObject());
+			Register(ConnectionState.Play, 0x22, () => ChunkDataPacket.CreateObject());
+			Register(ConnectionState.Play, 0x24, () => ParticlePacket.CreateObject());
+			Register(ConnectionState.Play, 0x25, () => UpdateLightPacket.CreateObject());
+			Register(ConnectionState.Play, 0x26, () => JoinGamePacket.CreateObject());
 			
-			Register(ConnectionState.Play, 0x2D, () => OpenWindowPacket.CreateObject());
+			Register(ConnectionState.Play, 0x29, () => EntityRelativeMove.CreateObject());
+			Register(ConnectionState.Play, 0x2A, () => EntityLookAndRelativeMove.CreateObject());
+			Register(ConnectionState.Play, 0x2B, () => EntityLook.CreateObject());
 			
-			Register(ConnectionState.Play, 0x30, () => PlayerAbilitiesPacket.CreateObject());
-			Register(ConnectionState.Play, 0x31, () => CombatEventPacket.CreateObject());
-			Register(ConnectionState.Play, 0x32, () => PlayerListItemPacket.CreateObject()); //< -----
-			Register(ConnectionState.Play, 0x33, () => FacePlayerPacket.CreateObject());
-			Register(ConnectionState.Play, 0x34, () => PlayerPositionAndLookPacket.CreateObject());
-			Register(ConnectionState.Play, 0x36, () => DestroyEntitiesPacket.CreateObject());
-			Register(ConnectionState.Play, 0x39, () => RespawnPacket.CreateObject());
+			Register(ConnectionState.Play, 0x2E, () => OpenWindowPacket.CreateObject());
 			
-			Register(ConnectionState.Play, 0x3A, () => EntityHeadLook.CreateObject());
-			Register(ConnectionState.Play, 0x3B, () => MultiBlockChange.CreateObject());
+			Register(ConnectionState.Play, 0x30, () => PlayPingPacket.CreateObject());
+			Register(ConnectionState.Play, 0x32, () => PlayerAbilitiesPacket.CreateObject());
+			//Register(ConnectionState.Play, 0x31, () => CombatEventPacket.CreateObject());
+			Register(ConnectionState.Play, 0x36, () => PlayerListItemPacket.CreateObject()); //< -----
+			Register(ConnectionState.Play, 0x37, () => FacePlayerPacket.CreateObject());
+			Register(ConnectionState.Play, 0x38, () => PlayerPositionAndLookPacket.CreateObject());
+			Register(ConnectionState.Play, 0x3A, () => DestroyEntitiesPacket.CreateObject());
+			Register(ConnectionState.Play, 0x3D, () => RespawnPacket.CreateObject());
 			
-			Register(ConnectionState.Play, 0x3F, () => HeldItemChangePacket.CreateObject());
+			Register(ConnectionState.Play, 0x3E, () => EntityHeadLook.CreateObject());
+			Register(ConnectionState.Play, 0x3F, () => MultiBlockChange.CreateObject());
 			
-			Register(ConnectionState.Play, 0x40, () => UpdateViewPositionPacket.CreateObject());
-			Register(ConnectionState.Play, 0x41, () => UpdateViewDistancePacket.CreateObject());
-			Register(ConnectionState.Play, 0x42, () => SpawnPositionPacket.CreateObject());
-			Register(ConnectionState.Play, 0x43, () => DisplayScoreboardPacket.CreateObject());
-			Register(ConnectionState.Play, 0x44, () => EntityMetadataPacket.CreateObject());
-			Register(ConnectionState.Play, 0x46, () => EntityVelocity.CreateObject());
-			Register(ConnectionState.Play, 0x47, () => EntityEquipmentPacket.CreateObject());
-			Register(ConnectionState.Play, 0x48, () => SetExperiencePacket.CreateObject());
-			Register(ConnectionState.Play, 0x49, () => UpdateHealthPacket.CreateObject());
+			Register(ConnectionState.Play, 0x48, () => HeldItemChangePacket.CreateObject());
+			Register(ConnectionState.Play, 0x49, () => UpdateViewPositionPacket.CreateObject());
 			
-			Register(ConnectionState.Play, 0x4A, () => ScoreboardObjectivePacket.CreateObject());
-			Register(ConnectionState.Play, 0x4c, () => TeamsPacket.CreateObject());
-			Register(ConnectionState.Play, 0x4D, () => UpdateScorePacket.CreateObject());
-			Register(ConnectionState.Play, 0x4E, () => TimeUpdatePacket.CreateObject());
+			Register(ConnectionState.Play, 0x4A, () => UpdateViewDistancePacket.CreateObject());
+			Register(ConnectionState.Play, 0x4B, () => SpawnPositionPacket.CreateObject());
+			Register(ConnectionState.Play, 0x4C, () => DisplayScoreboardPacket.CreateObject());
+			Register(ConnectionState.Play, 0x4D, () => EntityMetadataPacket.CreateObject());
+			Register(ConnectionState.Play, 0x4F, () => EntityVelocity.CreateObject());
 			
-			Register(ConnectionState.Play, 0x4F, () => TitlePacket.CreateObject());
+			Register(ConnectionState.Play, 0x50, () => EntityEquipmentPacket.CreateObject());
+			Register(ConnectionState.Play, 0x51, () => SetExperiencePacket.CreateObject());
+			Register(ConnectionState.Play, 0x52, () => UpdateHealthPacket.CreateObject());
 			
-			Register(ConnectionState.Play, 0x50, () => EntitySoundEffectPacket.CreateObject());
-			Register(ConnectionState.Play, 0x51, () => SoundEffectPacket.CreateObject());
+			Register(ConnectionState.Play, 0x53, () => ScoreboardObjectivePacket.CreateObject());
+			Register(ConnectionState.Play, 0x55, () => TeamsPacket.CreateObject());
+			Register(ConnectionState.Play, 0x56, () => UpdateScorePacket.CreateObject());
+			Register(ConnectionState.Play, 0x58, () => TimeUpdatePacket.CreateObject());
 			
-			Register(ConnectionState.Play, 0x56, () => EntityTeleport.CreateObject());
-			Register(ConnectionState.Play, 0x58, () => EntityPropertiesPacket.CreateObject());
-			Register(ConnectionState.Play, 0x59, () => EntityEffectPacket.CreateObject());
+			Register(ConnectionState.Play, 0x59, () => SetTitleTextPacket.CreateObject());
+			Register(ConnectionState.Play, 0x5A, () => SetTitleTimesPacket.CreateObject());
+			
+			Register(ConnectionState.Play, 0x5B, () => EntitySoundEffectPacket.CreateObject());
+			Register(ConnectionState.Play, 0x5C, () => SoundEffectPacket.CreateObject());
+			
+			Register(ConnectionState.Play, 0x61, () => EntityTeleport.CreateObject());
+			Register(ConnectionState.Play, 0x63, () => EntityPropertiesPacket.CreateObject());
+			Register(ConnectionState.Play, 0x64, () => EntityEffectPacket.CreateObject());
 		}
 		
 		public static string GetPlayPacketName(int id)

@@ -249,7 +249,7 @@ namespace Alex.Networking.Java.Packets.Play
 				node.IsExecutable = (flags & 0x04) != 0;
 				node.Children = children;
 
-				Log.Info(
+				Log.Debug(
 					$"Type={nodeType.ToString()} Index={i} Name={name ?? "null"}, properties={properties.Count} isExecuteable={node.IsExecutable} hasRedirect={node.HasRedirect} redirectIndex={node.RedirectIndex} children={children.Length} suggestionType={suggestionType}");
 
 				nodes.Add(node);

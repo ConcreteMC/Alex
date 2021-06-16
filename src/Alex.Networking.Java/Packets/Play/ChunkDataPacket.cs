@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using Alex.Networking.Java.Util;
 using fNbt;
@@ -9,12 +10,12 @@ namespace Alex.Networking.Java.Packets.Play
 	{
 		public int ChunkX;
 		public int ChunkZ;
-		public int PrimaryBitmask;
+		public long[] PrimaryBitmask;
 		public Memory<byte> Buffer;
 		public List<NbtCompound> TileEntities;
 		public NbtCompound HeightMaps;
-		public bool GroundUp;
-		public bool IgnoreOldData;
+		//public bool GroundUp;
+	//	public bool IgnoreOldData;
 		public int[] Biomes;
 
 		public ChunkDataPacket()
@@ -28,13 +29,22 @@ namespace Alex.Networking.Java.Packets.Play
 		{
 			ChunkX = stream.ReadInt();
 			ChunkZ = stream.ReadInt();
-			GroundUp = stream.ReadBool();
+			var bitmaskLength = stream.ReadVarInt();
+			var bitmasks = new long[bitmaskLength];
+
+			for (int ind = 0; ind < bitmasks.Length; ind++)
+			{
+				bitmasks[ind] = stream.ReadLong();
+			}
+
+			PrimaryBitmask = bitmasks;
+			//GroundUp = stream.ReadBool();
 			//IgnoreOldData = stream.ReadBool();
-			PrimaryBitmask = stream.ReadVarInt();
+			//PrimaryBitmask = stream.ReadVarInt();
 
 			HeightMaps = stream.ReadNbtCompound();
 
-			if (GroundUp)
+			//if (GroundUp)
 			{
 				int biomeCount = stream.ReadVarInt();
 				
@@ -62,9 +72,15 @@ namespace Alex.Networking.Java.Packets.Play
 		{
 			stream.WriteInt(ChunkX);
 			stream.WriteInt(ChunkZ);
-			stream.WriteBool(GroundUp);
-			stream.WriteBool(IgnoreOldData);
-			stream.WriteVarInt(PrimaryBitmask);
+		//	stream.WriteBool(GroundUp);
+			stream.WriteVarInt(PrimaryBitmask.Length);
+
+			for (int i = 0; i < PrimaryBitmask.Length; i++)
+			{
+				stream.WriteLong(PrimaryBitmask[i]);
+			}
+
+			//stream.WriteVarInt(PrimaryBitmask);
 			stream.WriteVarInt(Buffer.Length);
 			stream.Write(Buffer, 0, Buffer.Length);
 			stream.WriteVarInt(TileEntities.Count);

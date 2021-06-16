@@ -8,13 +8,14 @@ namespace Alex.Networking.Java.Packets.Play
         public byte WindowId { get; set; }
         public short Slot { get; set; }
         public byte Button { get; set; }
-        public short Action { get; set; }
+       // public short Action { get; set; }
         public TransactionMode Mode { get; set; }
         public SlotData ClickedItem { get; set; }
+        public SlotEntry[] Slots { get; set; } = new SlotEntry[0];
         
         public ClickWindowPacket()
         {
-            PacketId = 0x09;
+            PacketId = 0x08;
         }
         
         public override void Decode(MinecraftStream stream)
@@ -27,8 +28,25 @@ namespace Alex.Networking.Java.Packets.Play
             stream.WriteByte(WindowId);
             stream.WriteShort(Slot);
             stream.WriteByte(Button);
-            stream.WriteShort(Action);
+        //    stream.WriteShort(Action);
             stream.WriteVarInt((int) Mode);
+
+            if (Slots != null)
+            {
+                stream.WriteVarInt(Slots.Length);
+
+                for (int i = 0; i < Slots.Length; i++)
+                {
+                    var slot = Slots[i];
+                    stream.WriteShort(slot.SlotNumber);
+                    stream.WriteSlot(slot.Data);
+                }
+            }
+            else
+            {
+                stream.WriteVarInt(0);
+            }
+
             stream.WriteSlot(ClickedItem);
         }
 
@@ -41,6 +59,12 @@ namespace Alex.Networking.Java.Packets.Play
             Drop = 4,
             MouseDrag = 5,
             DoubleClick = 6
+        }
+
+        public class SlotEntry
+        {
+            public short SlotNumber;
+            public SlotData Data;
         }
     }
 }
