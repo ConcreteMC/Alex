@@ -29,6 +29,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Alex.Common.Utils;
@@ -184,17 +185,17 @@ namespace Alex.Networking.Bedrock.RakNet
 		{
 			var listener = new UdpClient();
 
-			if (Environment.OSVersion.Platform != PlatformID.MacOSX)
+			if (Environment.OSVersion.Platform != PlatformID.MacOSX && !RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
 			{
 				//listener.Client.ReceiveBufferSize = 1600*64;
 				listener.Client.ReceiveBufferSize = int.MaxValue;
 				//listener.Ttl = Int16.MaxValue;
 				//listener.Client.SendBufferSize = 1600*64;
 				listener.Client.SendBufferSize = int.MaxValue;
+				
+				listener.DontFragment = true;
+				listener.EnableBroadcast = false;
 			}
-			
-			listener.DontFragment = true;
-			listener.EnableBroadcast = false;
 
 			listener.Client.Blocking = true;
 			listener.Client.Bind(endpoint);
