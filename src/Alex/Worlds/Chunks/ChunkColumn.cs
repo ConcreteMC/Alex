@@ -2,15 +2,11 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Threading;
 using Alex.Blocks;
 using Alex.Blocks.State;
 using Alex.Common.Utils;
 using Alex.Common.Utils.Vectors;
-using Alex.Entities.BlockEntities;
-using Alex.Graphics.Models.Blocks;
-using Alex.Networking.Java.Util;
 using Alex.Worlds.Abstraction;
 using Alex.Worlds.Singleplayer;
 using fNbt;
@@ -20,6 +16,7 @@ using NLog;
 
 namespace Alex.Worlds.Chunks
 {
+	//TODO: Implement support support for blocks < 0, possibly implement infinite world height.
 	public class ChunkColumn
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(SPWorldProvider));

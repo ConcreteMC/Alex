@@ -4,9 +4,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using Alex.Blocks.State;
-using Alex.Utils;
 
-namespace Alex.Blocks.Storage
+namespace Alex.Blocks.Storage.Palette
 {
 	public class IntIdentityHashBiMap : IEnumerable<BlockState>, IPallete
 	{

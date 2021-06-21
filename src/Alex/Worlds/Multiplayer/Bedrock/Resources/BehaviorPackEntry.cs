@@ -24,10 +24,10 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 		{
 			base.OnComplete(data);
 
-			if (!Directory.Exists("texturepacks"))
-				Directory.CreateDirectory("texturepacks");
+		//	if (!Directory.Exists("texturepacks"))
+		//		Directory.CreateDirectory("texturepacks");
 
-			File.WriteAllBytes($"BEHAVIORPACK_{Identifier}_{Version}.zip", data);
+		//	File.WriteAllBytes($"BEHAVIORPACK_{Identifier}_{Version}.zip", data);
 
 			if (!string.IsNullOrWhiteSpace(Info.ContentKey))
 			{

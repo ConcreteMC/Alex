@@ -1,7 +1,7 @@
 using System;
 using Alex.Blocks.State;
 
-namespace Alex.Blocks.Storage
+namespace Alex.Blocks.Storage.Palette
 {
     public interface IPallete : IDisposable
     {

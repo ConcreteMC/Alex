@@ -113,7 +113,7 @@ namespace Alex.Audio
 			if (!Supported)
 				return 0;
 			
-			if (resourcePack.SoundDefinitions == null)
+			if (resourcePack?.SoundDefinitions?.SoundDefinitions == null)
 				return 0;
 
 			int count = 0;

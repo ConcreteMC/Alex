@@ -113,11 +113,12 @@ namespace Alex.Worlds.Lighting
 		{
 			if (level.TryGetBlockLight(coord, out var lightLevel))
 			{
+				Test(level, coord, coord + BlockCoordinates.Up, lightBfsQueue, lightLevel);
 				Test(level, coord, coord + BlockCoordinates.Down, lightBfsQueue, lightLevel);
-				Test(level, coord, coord + BlockCoordinates.West, lightBfsQueue, lightLevel);
+				Test(level, coord, coord + BlockCoordinates.North, lightBfsQueue, lightLevel);
 				Test(level, coord, coord + BlockCoordinates.East, lightBfsQueue, lightLevel);
 				Test(level, coord, coord + BlockCoordinates.South, lightBfsQueue, lightLevel);
-				Test(level, coord, coord + BlockCoordinates.North, lightBfsQueue, lightLevel);
+				Test(level, coord, coord + BlockCoordinates.West, lightBfsQueue, lightLevel);
 				
 				/*Test(level, coord, coord + BlockCoordinates.Up, lightBfsQueue, lightLevel);
 				Test(level, coord, coord + BlockCoordinates.Left, lightBfsQueue, lightLevel);

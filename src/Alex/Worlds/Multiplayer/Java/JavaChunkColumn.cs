@@ -14,14 +14,14 @@ namespace Alex.Worlds.Multiplayer.Java
 			return new JavaChunkSection(storeSkylight, sections);
 		}
 		
-		public static bool GetBitX(long[] bytes, int x) {
+		public static bool GetBitX(long[] data, int x) {
 			var index = x/64;
 			var bit = x-index*64;
 
-			if (bytes.Length == 0 || index > bytes.Length - 1)
+			if (data.Length == 0 || index > data.Length - 1)
 				return false;
 			
-			return (bytes[index] & (1<<bit)) != 0;
+			return (data[index] & (1<<bit)) != 0;
 		}
 		
 		public void Read(MinecraftStream ms, long[] primaryBitMask, bool readSkylight)
@@ -32,26 +32,20 @@ namespace Alex.Worlds.Multiplayer.Java
 				//	Stopwatch s = Stopwatch.StartNew();
 				//	Log.Debug($"Reading chunk data...");
 
+				//TODO: Properly support 1.17 world heights
+				
 				for (int sectionY = 0; sectionY < this.Sections.Length; sectionY++)
 				{
-					var storage = (JavaChunkSection) this.Sections[sectionY];
-					if (/*(availableSections & (1 << sectionY)) != 0*/GetBitX(primaryBitMask, sectionY))
-					{
-						if (storage == null)
-						{
-							storage = new JavaChunkSection(readSkylight);
-						}
+					if (!GetBitX(primaryBitMask, sectionY))
+						continue;
 
-						storage.Read(ms);
+					var storage = (JavaChunkSection) this.Sections[sectionY];
+					if (storage == null)
+					{ 
+						storage = new JavaChunkSection(readSkylight);
 					}
-					else
-					{
-						//if (groundUp && (storage == null || storage.Blocks > 0))
-						{
-							//if (storage == null)
-							//	storage = new ChunkSection(this, sectionY, readSkylight, 2);
-						}
-					}
+
+					storage.Read(ms);
 
 					this.Sections[sectionY] = storage;
 				}

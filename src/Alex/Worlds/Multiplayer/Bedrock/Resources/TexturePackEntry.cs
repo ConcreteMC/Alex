@@ -29,11 +29,11 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 		{
 			base.OnComplete(data);
 
-			if (!Directory.Exists("texturepacks"))
-				Directory.CreateDirectory("texturepacks");
+			//if (!Directory.Exists("texturepacks"))
+			//	Directory.CreateDirectory("texturepacks");
 
-			File.WriteAllBytes(Path.Combine("texturepacks", $"TEXTUREPACK_{Identifier}_{Version}.zip"), data);
-
+		//	File.WriteAllBytes(Path.Combine("texturepacks", $"TEXTUREPACK_{Identifier}_{Version}.zip"), data);
+		//	File.WriteAllText(Path.Combine("texturepacks", $"TEXTUREPACK_{Identifier}_{Version}.txt"), Info.ContentKey ?? "");
 			if (!string.IsNullOrWhiteSpace(Info.ContentKey))
 			{
 				Log.Warn($"Skipping resources as they seem to require encryption.");

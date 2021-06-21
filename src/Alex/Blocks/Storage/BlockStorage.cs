@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Alex.Blocks.State;
+using Alex.Blocks.Storage.Palette;
 using Alex.Networking.Java.Util;
 using NLog;
 
