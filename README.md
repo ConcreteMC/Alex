@@ -30,6 +30,15 @@ As we use submodules to add support for MC:Bedrock, you need to pull the submodu
 
 The easiest method of doing this is to clone the repository using ```git clone --recursive https://github.com/kennyvv/Alex.git```
 
+Supported platforms
+----------------------
+
+- [X] Windows
+- [X] Linux
+- [X] MacOS
+- [ ] Android (planned for .NET 6)
+
+
 Requirements
 -------------------
 
