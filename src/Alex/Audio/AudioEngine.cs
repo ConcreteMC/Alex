@@ -243,7 +243,7 @@ namespace Alex.Audio
 			FmodSystem.Set3DListenerAttributes(
 				0, new System.Numerics.Vector3(position.X, position.Y, position.Z),
 				System.Numerics.Vector3.Zero, //new System.Numerics.Vector3(vel.X, vel.Y, vel.Z), 
-				-System.Numerics.Vector3.UnitZ, 
+				new System.Numerics.Vector3(forward.X, forward.Y, forward.Z), 
 				System.Numerics.Vector3.UnitY);
 			
 			_lastPos = position;
@@ -256,22 +256,22 @@ namespace Alex.Audio
 			return sound.ToString();
 		}
 
-		public bool PlaySound(Sounds sound, Vector3 position, float pitch, float volume)
+		public bool PlaySound(Sounds sound, Vector3 position, float pitch, float volume, bool isGlobal = false)
 		{
-			return PlaySound(GetName(sound), position, pitch, volume);
+			return PlaySound(GetName(sound), position, pitch, volume, isGlobal);
 		}
 
-		public bool PlayJavaSound(string sound, Vector3 position, float pitch, float volume)
+		public bool PlayJavaSound(string sound, Vector3 position, float pitch, float volume, bool isGlobal = false)
 		{
 			if (_soundMapping.TryGetValue(sound, out var mapped))
 			{
-				return PlaySound(mapped, position, pitch, volume);
+				return PlaySound(mapped, position, pitch, volume, isGlobal);
 			}
 
 			return false;
 		}
 		
-		public bool PlaySound(string sound, Vector3 position, float pitch, float volume)
+		public bool PlaySound(string sound, Vector3 position, float pitch, float volume, bool isGlobal = false)
 		{
 			if (!_sounds.TryGetValue(sound, out var soundInfo))
 			{
@@ -283,46 +283,47 @@ namespace Alex.Audio
 				var     selected    = soundInfo.Sound;
 				Channel instance = FmodSystem.PlaySound(selected.Value, paused:true);
 
-				if (selected.Is3D)
+				if (selected.Is3D && !isGlobal)
 				{
 					instance.Set3DAttributes(
 						new System.Numerics.Vector3(position.X, position.Y, position.Z), default, default);
 				}
 
-				if (volume > 1f || volume < 0f)
+				if (volume > 1f)
 				{
-				//	Log.Warn($"Invalid volume: {volume}");
+					volume = (1f / 100f) * volume;
+					//	Log.Warn($"Invalid volume: {volume}");
 				}
-				instance.Volume = volume * selected.Volume;
+				volume *= selected.Volume;
 
 				switch (soundInfo.Category)
 				{
 					case SoundCategory.Ambient:
-						instance.Volume *= (float)OptionsProvider.AlexOptions.SoundOptions.AmbientVolume;
+						volume *= (float)OptionsProvider.AlexOptions.SoundOptions.AmbientVolume;
 						break;
 
 					case SoundCategory.Weather:
-						instance.Volume *= (float)OptionsProvider.AlexOptions.SoundOptions.WeatherVolume;
+						volume *= (float)OptionsProvider.AlexOptions.SoundOptions.WeatherVolume;
 						break;
 
 					case SoundCategory.Player:
-						instance.Volume *= (float)OptionsProvider.AlexOptions.SoundOptions.PlayerVolume;
+						volume *= (float)OptionsProvider.AlexOptions.SoundOptions.PlayerVolume;
 						break;
 
 					case SoundCategory.Block:
-						instance.Volume *= (float)OptionsProvider.AlexOptions.SoundOptions.BlocksVolume;
+						volume *= (float)OptionsProvider.AlexOptions.SoundOptions.BlocksVolume;
 						break;
 
 					case SoundCategory.Hostile:
-						instance.Volume *= (float)OptionsProvider.AlexOptions.SoundOptions.HostileVolume;
+						volume *= (float)OptionsProvider.AlexOptions.SoundOptions.HostileVolume;
 						break;
 
 					case SoundCategory.Neutral:
-						instance.Volume *= (float)OptionsProvider.AlexOptions.SoundOptions.NeutralVolume;
+						volume *= (float)OptionsProvider.AlexOptions.SoundOptions.NeutralVolume;
 						break;
 
 					case SoundCategory.Record:
-						instance.Volume *= (float)OptionsProvider.AlexOptions.SoundOptions.RecordVolume;
+						volume *= (float)OptionsProvider.AlexOptions.SoundOptions.RecordVolume;
 						break;
 
 					case SoundCategory.Bottle:
@@ -330,20 +331,21 @@ namespace Alex.Audio
 						break;
 
 					case SoundCategory.Ui:
-						instance.Volume = 1f;
+						volume = 1f;
 						break;
 
 					case SoundCategory.Music:
-						instance.Volume *= (float)OptionsProvider.AlexOptions.SoundOptions.MusicVolume;
+						volume *= (float)OptionsProvider.AlexOptions.SoundOptions.MusicVolume;
 						break;
 
 					case SoundCategory.Effects:
-						instance.Volume *= (float)OptionsProvider.AlexOptions.SoundOptions.SoundEffectsVolume;
+						volume *= (float)OptionsProvider.AlexOptions.SoundOptions.SoundEffectsVolume;
 						break;
 				}
 			
 				
-				instance.Volume *= (float)	OptionsProvider.AlexOptions.SoundOptions.GlobalVolume;
+				volume *= (float)	OptionsProvider.AlexOptions.SoundOptions.GlobalVolume;
+				instance.Volume = Math.Clamp(volume, 0f, 1f);
 				
 				instance.Pitch = pitch;
 				instance.Paused = false;
@@ -352,9 +354,9 @@ namespace Alex.Audio
 			return true;
 		}
 		
-		public bool PlaySound(string sound, float pitch = 1f, float volume = 1f)
+		public bool PlaySound(string sound, float pitch = 1f, float volume = 1f, bool isGlobal = false)
 		{
-			return PlaySound(sound, _lastPos, pitch, volume);
+			return PlaySound(sound, _lastPos, pitch, volume, isGlobal);
 		}
 	}
 }

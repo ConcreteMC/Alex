@@ -108,6 +108,9 @@ namespace Alex.Entities
 			}
 			set
 			{
+				if (value == null || value == _skin || value.IsPersonaSkin)
+					return;
+				
 				_skin = value;
 				_skinDirty = true;
 
@@ -138,7 +141,7 @@ namespace Alex.Entities
 		private int _skinQueuedCount = 0;
 		private void QueueSkinProcessing()
 		{
-			//if (Interlocked.CompareExchange(ref _skinQueuedCount, 1, 0) == 0)
+			if (Interlocked.CompareExchange(ref _skinQueuedCount, 1, 0) == 0)
 			{
 				if (Level?.BackgroundWorker == null)
 				{
@@ -182,9 +185,9 @@ namespace Alex.Entities
 		{
 			try
 			{
-				bool applyTexture = Texture == null || skin != null;
-//				EntityModel model = null;
+				//				EntityModel model = null;
 				bool slim = skin?.Slim ?? false;
+
 				if (skin != null && model == null)
 				{
 					if (!string.IsNullOrWhiteSpace(skin.GeometryData) && !skin.GeometryData.Equals(
@@ -200,32 +203,24 @@ namespace Alex.Entities
 							{
 								var resourcePatch = JsonConvert.DeserializeObject<SkinResourcePatch>(
 									skin.ResourcePatch, GeometrySerializationSettings);
-								
+
 								Dictionary<string, EntityModel> models = new Dictionary<string, EntityModel>();
 								BedrockResourcePack.LoadEntityModel(skin.GeometryData, models);
 
-								var processedModels = BedrockResourcePack.ProcessEntityModels(models, s =>
-								{
-									if (Alex.Instance.Resources.TryGetEntityModel(s, out var eModel))
+								var processedModels = BedrockResourcePack.ProcessEntityModels(
+									models, s =>
 									{
-										return eModel;
-									}
+										if (Alex.Instance.Resources.TryGetEntityModel(s, out var eModel))
+										{
+											return eModel;
+										}
 
-									return null;
-								});
+										return null;
+									});
 
 								if (processedModels == null || processedModels.Count == 0)
 								{
 									Log.Debug($"!! Model count was 0 for player {NameTag} !!");
-									/*
-																		if (!Directory.Exists("failed"))
-																			Directory.CreateDirectory("failed");
-									
-																		File.WriteAllText(
-																			Path.Combine(
-																				"failed",
-																				$"{Environment.TickCount64}-{resourcePatch.Geometry.Default}.json"),
-																			skin.GeometryData);*/
 								}
 								else
 								{
@@ -253,7 +248,8 @@ namespace Alex.Entities
 					}
 					else
 					{
-						//Log.Debug($"Geometry data null for player {Name}");
+						//skin = null;
+						//Log.Debug($"Geometry data null for player {NameTag}");
 					}
 				}
 
@@ -264,111 +260,96 @@ namespace Alex.Entities
 						model = null;
 					}
 				}
-				//if (!skin.IsPersonaSkin)
-				//{
-					
-				//}
 
 				if (model == null)
 				{
-					ModelFactory.TryGetModel(
-						slim ? "geometry.humanoid.custom" : "geometry.humanoid.customSlim", out model);
+					if (!ModelFactory.TryGetModel(
+						slim ? "geometry.humanoid.custom" : "geometry.humanoid.customSlim", out model))
+					{
+						Log.Debug($"Invalid model for player {NameTag}");
+
+						return;
+					}
 
 					/*model = skin.Slim ? (EntityModel) new Models.HumanoidCustomslimModel() :
 						(EntityModel) new HumanoidModel();*/ // new Models.HumanoidCustomGeometryHumanoidModel();
 				}
 
-				if (model != null)
+
+				Image<Rgba32> skinBitmap = null;
+
+				try
 				{
-					Image<Rgba32> skinBitmap = null;
-
-					try
+					if (skin == null || !skin.TryGetBitmap(model, out skinBitmap))
 					{
-						if (skin == null || !skin.TryGetBitmap(model, out skinBitmap))
-						{
-							//Log.Warn($"No custom skin data for player {NameTag}");
+						//Log.Warn($"No custom skin data for player {NameTag}");
 
-							if (slim)
+						if (slim)
+						{
+							if (_alex == null)
 							{
-								if (_alex == null && Alex.Instance.Resources.TryGetBitmap(
-									"entity/alex", out var rawTexture))
+								if (Alex.Instance.Resources.TryGetBitmap("entity/alex", out var rawTexture))
 								{
 									_alex = rawTexture.Clone();
 									skinBitmap = rawTexture;
 								}
-								else
-								{
-									skinBitmap = _alex.Clone();
-								}
 							}
 							else
 							{
-								if (_steve == null && Alex.Instance.Resources.TryGetBitmap(
-									"entity/steve", out var rawTexture))
-								{
-									_steve = rawTexture.Clone();
-									skinBitmap = rawTexture;
-								}
-								else
-								{
-									skinBitmap = _steve.Clone();
-								}
-							}
-						}
-
-						if (skinBitmap != null)
-						{
-							var modelTextureSize = new Point(
-								(int) model.Description.TextureWidth, (int) model.Description.TextureHeight);
-							
-							var textureSize = new Point(skinBitmap.Width, skinBitmap.Height);
-
-							if (modelTextureSize != textureSize)
-							{
-								if (modelTextureSize.Y > textureSize.Y)
-								{
-									skinBitmap = SkinUtils.ConvertSkin(
-										skinBitmap, modelTextureSize.X, modelTextureSize.Y);
-
-									applyTexture = true;
-								}
-
-								/*var bitmap = skinBitmap;
-								bitmap.Mutate<Rgba32>(xx =>
-								{
-									xx.Resize(modelTextureSize.X, modelTextureSize.Y);
-								//	xx.Flip(FlipMode.Horizontal);
-								});
-			
-								skinBitmap = bitmap;*/
-							}
-						}
-
-						//GeometryName = model.Description.Identifier;
-
-						if (EntityModelRenderer.TryGetRenderer(model, out var renderer))
-						{
-							ModelRenderer = renderer;
-
-							if (skinBitmap != null)
-							{
-								Texture = TextureUtils.BitmapToTexture2D(
-									this, Alex.Instance.GraphicsDevice, skinBitmap);
+								skinBitmap = _alex.Clone();
 							}
 						}
 						else
 						{
-							Log.Debug($"Invalid model: for player {NameTag} (Disposing)");
+							if (_steve == null)
+							{
+								if (Alex.Instance.Resources.TryGetBitmap("entity/steve", out var rawTexture))
+								{
+									_steve = rawTexture.Clone();
+									skinBitmap = rawTexture;
+								}
+							}
+							else
+							{
+								skinBitmap = _steve.Clone();
+							}
 						}
 					}
-					finally
+
+					if (skinBitmap != null)
 					{
-						skinBitmap?.Dispose();
+						var modelTextureSize = new Point(
+							(int) model.Description.TextureWidth, (int) model.Description.TextureHeight);
+
+						var textureSize = new Point(skinBitmap.Width, skinBitmap.Height);
+
+						if (modelTextureSize != textureSize)
+						{
+							if (modelTextureSize.Y > textureSize.Y)
+							{
+								skinBitmap = SkinUtils.ConvertSkin(skinBitmap, modelTextureSize.X, modelTextureSize.Y);
+							}
+						}
+					}
+
+					if (EntityModelRenderer.TryGetRenderer(model, out var renderer))
+					{
+						ModelRenderer = renderer;
+
+						if (skinBitmap != null)
+						{
+							Texture = TextureUtils.BitmapToTexture2D(this, Alex.Instance.GraphicsDevice, skinBitmap);
+						}
+					}
+					else
+					{
+						Log.Debug(
+							$"No renderer for model: \"{model.Description?.Identifier ?? "N/A"}\" for player \'{NameTag}\' (Disposing)");
 					}
 				}
-				else
+				finally
 				{
-					Log.Debug($"Invalid model for player {NameTag}");
+					skinBitmap?.Dispose();
 				}
 			}
 			catch (Exception ex)

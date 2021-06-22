@@ -83,6 +83,11 @@ namespace Alex.Entities.BlockEntities
 
 				switch (id.ToLower())
 				{
+					case "minecraft:bed":
+					case "bed":
+						blockEntity = new BedBlockEntity(world, block);
+						break;
+					
 					case "minecraft:chest":
 					case "chest":
 						blockEntity = new ChestBlockEntity(block, world);

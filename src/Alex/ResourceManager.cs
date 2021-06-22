@@ -151,7 +151,7 @@ namespace Alex
 
 			Task.Run(() =>
 			{
-				LoadResourcePacks(Alex.GraphicsDevice, splashScreen, newvalue);
+				LoadResourcePacks(splashScreen, newvalue);
 				
 				Alex.GameStateManager.Back();
 			});
@@ -190,8 +190,10 @@ namespace Alex
 			return true;
 		}
 
-		internal void ReloadTextures(IProgressReceiver progress)
+		internal void ReloadBedrockResources(IProgressReceiver progress)
 		{
+			EntityFactory.Reset();
+			
 			ProcessEntityModels(progress);
 			ProcessBedrockResourcePacks(progress);
 			
@@ -208,8 +210,7 @@ namespace Alex
 					return true;
 				}
 			}
-			
-			if (resourcePack.Info.Type == ResourcePackType.Java)
+			else if (resourcePack.Info.Type == ResourcePackType.Java)
 			{
 				if (ActiveResourcePacks.Remove((McResourcePack) resourcePack))
 				{
@@ -504,7 +505,7 @@ namespace Alex
             LoadRegistries(progressReceiver);
             
 	        LoadResourcePacks(
-		        device, progressReceiver, Options.AlexOptions.ResourceOptions.LoadedResourcesPacks.Value);
+		        progressReceiver, Options.AlexOptions.ResourceOptions.LoadedResourcesPacks.Value);
 
 	        ProcessResources(device, progressReceiver);
 	        
@@ -559,7 +560,9 @@ namespace Alex
 	        entityModels = BedrockResourcePack.ProcessEntityModels(entityModels);
 	        foreach(var model in entityModels)
 	        {
-		        EntityModelRegistry.Set(model.Key, () => new EntityModelEntry(model.Value));
+		        var key = new ResourceLocation(model.Key);
+		        
+		        EntityModelRegistry.Set(key, () => new EntityModelEntry(model.Value));
 	        }
         }
 
@@ -570,10 +573,8 @@ namespace Alex
 	        for (int index = 0; index < activeBedrockPacks.Length; index++)
 	        {
 		        var resourcePack = activeBedrockPacks[index];
+		        
 		        ProcessBedrockResources(progress, Alex.GraphicsDevice, resourcePack);
-		        
-		        //LoadEntityModels(resourcePack, progress);
-		        
 	        }
         }
         
@@ -681,12 +682,13 @@ namespace Alex
 	        
 	        ItemAtlas.LoadResources(device, textures, this, progress, true);
 
-	        ProcessEntityModels(progress);
+	        ReloadBedrockResources(progress);
+	      //  ProcessEntityModels(progress);
 
-	        ProcessBedrockResourcePacks(progress);
+	        //ProcessBedrockResourcePacks(progress);
 
-	        progress?.UpdateProgress(0, $"Loading UI textures...");
-	        Alex.GuiRenderer.LoadResourcePackTextures(this, progress);
+	        //progress?.UpdateProgress(0, $"Loading UI textures...");
+	        //Alex.GuiRenderer.LoadResourcePackTextures(this, progress);
 
 	        progress?.UpdateProgress(50, "Loading language...");
 	        if (!Alex.GuiRenderer.SetLanguage(Options.AlexOptions.MiscelaneousOptions.Language))
@@ -766,14 +768,18 @@ namespace Alex
 
         private void ProcessBedrockResources(IProgressReceiver progress, GraphicsDevice device, BedrockResourcePack resourcePack)
         {
+	        Log.Debug($"== Start Processing \"{resourcePack.Info.Name}\" ==");
+	        
 	        int audioCount = Alex.AudioEngine.Initialize(resourcePack, progress);
 	        Log.Debug($"Imported {audioCount} sounds from \"{resourcePack.Info.Name}\"...");
 	        
-	        int modelCount = EntityFactory.LoadEntityDefinitions(resourcePack, this, device, true, progress);
-	        Log.Debug($"Imported {modelCount} entity models from \"{resourcePack.Info.Name}\"...");
+	        int modelCount = EntityFactory.LoadEntityDefinitions(resourcePack, true, progress);
+	        Log.Debug($"Imported {modelCount} entity definitions from \"{resourcePack.Info.Name}\"...");
 
 	        int particleCount = Alex.ParticleManager.Load(resourcePack, progress);
 	        Log.Debug($"Imported {particleCount} particles from \"{resourcePack.Info.Name}\"...");
+	        
+	        Log.Debug($"== End Processing \"{resourcePack.Info.Name}\" ==\n");
         }
 
         public void LoadBedrockPacks(IProgressReceiver progressReceiver, DirectoryInfo directoryInfo)
@@ -804,7 +810,7 @@ namespace Alex
 
         private bool _hasInit = false;
 
-        private void LoadResourcePacks(GraphicsDevice device, IProgressReceiver progress, string[] resourcePacks)
+        private void LoadResourcePacks(IProgressReceiver progress, string[] resourcePacks)
         {
 	        var countBefore = ActiveResourcePacks.Count;
 

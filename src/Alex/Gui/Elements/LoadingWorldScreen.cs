@@ -158,6 +158,9 @@ namespace Alex.Gui.Elements
 	    {
 		    switch (state)
 		    {
+			    case LoadingState.LoadingResources:
+				    _textDisplay.TranslationKey = "resourcepack.loading";
+				    break;
 			    case LoadingState.RetrievingResources:
 				    _textDisplay.TranslationKey = "resourcepack.downloading";
 				    break;

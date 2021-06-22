@@ -96,6 +96,7 @@ namespace Alex.Graphics.Models.Entity
 			public IReadOnlyDictionary<string, ModelBone> Bones { get; }
 			//public List<VertexPositionColorTexture> Vertices { get; }
 			//public List<short> Indices { get; }
+			/// <inheritdoc />
 		}
 
 		private static ConcurrentDictionary<string, SharedBuffer> _sharedBuffers =
@@ -135,6 +136,15 @@ namespace Alex.Graphics.Models.Entity
 			};
 
 			return new SharedBuffer(vertexBuffer, indexBuffer, bones);
+		}
+
+		public static void Remove(string identifier)
+		{
+			if (_sharedBuffers.TryRemove(identifier, out var shared))
+			{
+				shared.VertexBuffer?.ReturnResource(null);
+				shared.IndexBuffer?.ReturnResource(null);
+			}
 		}
 		
 		public static bool TryGetRenderer(EntityModel model, out EntityModelRenderer renderer)

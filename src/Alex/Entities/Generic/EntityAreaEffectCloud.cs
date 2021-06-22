@@ -29,7 +29,7 @@ namespace Alex.Entities.Generic
 		public bool IgnoreRadiusAndShowPoint { get; set; } = false;
 
 		public int Color { get; set; } = 0;
-		public int ParticleId { get; set; } = 0;
+		public int? ParticleId { get; set; } = null;
 		public int Duration { get; set; } = 5 * 20;
 		public float RadiusPerTick { get; set; } = 0f;
 		
@@ -124,13 +124,17 @@ namespace Alex.Entities.Generic
 
 			if (Age > Duration)
 			{
+				return;
 				//Stop. Kill. Destroy.
 			}
 
-			//if (Alex.Instance.ParticleManager.SpawnParticle((ParticleType) ParticleId, RenderLocation))
-			//{
-				
-			//}
+			if (ParticleId.HasValue)
+			{
+				if (Alex.Instance.ParticleManager.SpawnParticle((ParticleType) ParticleId, RenderLocation, Color))
+				{
+					
+				}
+			}
 		}
 	}
 }

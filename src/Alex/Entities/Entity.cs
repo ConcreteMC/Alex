@@ -229,6 +229,8 @@ namespace Alex.Entities
 			}
 		}
 		
+		public Color? EntityColor { get; set; } = null;
+		
 		public Inventory Inventory { get; protected set; }
 
 		public IItemRenderer ItemRenderer
@@ -932,6 +934,14 @@ namespace Alex.Entities
 						{
 							IsAlwaysShowName = alwaysShowNameTag.Value == 1;
 						}	
+					} break;
+
+					case (int) MiNET.Entities.Entity.MetadataFlags.Color:
+					{
+						if (meta.Value is MiNET.Utils.Metadata.MetadataInt color)
+						{
+							EntityColor = new Microsoft.Xna.Framework.Color((uint) color.Value);
+						}
 					} break;
 
 					default:

@@ -320,7 +320,7 @@ namespace Alex.Gamestates.InGame
 				if (player == null || player.HitEntity == null) return string.Empty;
 
 				var entity = player.HitEntity;
-				return $"Hit entity: {entity.EntityId} / {entity.ToString()}\n{entity.NameTag}\n{ChatFormatting.Reset}Shown: {!entity.HideNameTag}\nNoAI: {entity.NoAi}\nGravity: {entity.IsAffectedByGravity}\nFlying: {entity.IsFlying}\nAllFlying: {entity.IsFlagAllFlying}\nOn Ground: {entity.KnownPosition.OnGround}\nHas Collisions: {entity.HasCollision}";
+				return $"Hit entity: {entity.EntityId} / {entity.ToString()}\n{entity.NameTag}\n{ChatFormatting.Reset}Shown: {!entity.HideNameTag}\nNoAI: {entity.NoAi}\nGravity: {entity.IsAffectedByGravity}\nFlying: {entity.IsFlying}\nAllFlying: {entity.IsFlagAllFlying}\nOn Ground: {entity.KnownPosition.OnGround}\nHas Collisions: {entity.HasCollision}\nHas Model: {entity.ModelRenderer != null}\nTextured: {entity.Texture != null}\n";
 			}, TimeSpan.FromMilliseconds(500));
 			
 			_debugInfo.AddDebugRight(
@@ -397,10 +397,26 @@ namespace Alex.Gamestates.InGame
 
 			var dir = World.Camera.Position - World.Camera.Target;
 			dir.Normalize();
-			dir = new Vector3(MathF.Round(dir.X), MathF.Round(dir.Y), MathF.Round(dir.Z));
+			//dir = new Vector3(MathF.Round(dir.X), MathF.Round(dir.Y), MathF.Round(dir.Z));
+
+			// Calculate the direction vector.
+			var direction = Vector3.Normalize( World.Camera.Target - World.Camera.Position );
+
+			// Calculate the angle between direction and forward on XZ.
+			var xzAngle = MathF.Acos(Vector2.Dot(
+				new Vector2( Vector3.Forward.X, Vector3.Forward.Z),
+				new Vector2( direction.X, direction.Z)));
+
+			// Rotate about up.
+			var rotationY = float.IsNaN( xzAngle )
+				? Quaternion.Identity
+				: Quaternion.CreateFromAxisAngle( Vector3.Up, xzAngle );
+
+			// Get rotation axis.
+			var rotatedForward = Vector3.Transform( Vector3.Forward, rotationY );
 
 			//dir.Normalize();
-			Alex.AudioEngine.Update(gameTime, World.Camera.Position, dir);
+			Alex.AudioEngine.Update(gameTime, World.Camera.Position, Vector3.Normalize(rotatedForward));
 			
 			//Alex.ParticleManager.Update(gameTime);
 			

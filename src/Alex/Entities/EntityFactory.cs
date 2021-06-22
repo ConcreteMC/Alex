@@ -135,20 +135,34 @@ namespace Alex.Entities
 			}
 			return null;
 		}
-		
-		public static int LoadEntityDefinitions(BedrockResourcePack resourcePack, ResourceManager resources, GraphicsDevice graphics, bool replaceModels, IProgressReceiver progressReceiver = null)
+
+		public static void Reset()
+		{
+			var registered = _registeredRenderers.ToArray();
+			_registeredRenderers.Clear();
+
+			foreach (var kv in registered)
+			{
+				EntityModelRenderer.Remove(kv.Key);
+			}
+		}
+
+		public static int LoadEntityDefinitions(BedrockResourcePack resourcePack,
+			bool replaceModels,
+			IProgressReceiver progressReceiver = null)
 		{
 			var entityDefinitions = resourcePack.EntityDefinitions;
 			var beforeImport = _registeredRenderers.Count;
-			int done              = 0;
-			int total             = entityDefinitions.Count;
+			int done = 0;
+			int total = entityDefinitions.Count;
 
-			foreach (var def in entityDefinitions.OrderByDescending(x => !string.IsNullOrWhiteSpace(x.Value.MinEngineVersion)))
+			foreach (var def in entityDefinitions.OrderByDescending(
+				x => !string.IsNullOrWhiteSpace(x.Value.MinEngineVersion)))
 			{
-			//	double percentage = 100D * ((double)done / (double)total);
+				//	double percentage = 100D * ((double)done / (double)total);
 				progressReceiver?.UpdateProgress(done, total, $"Importing entity definitions...", def.Key.ToString());
 
-                try
+				try
 				{
 					if (def.Value.Textures == null) continue;
 					if (def.Value.Geometry == null) continue;
@@ -158,28 +172,44 @@ namespace Alex.Entities
 					var geometry = def.Value.Geometry;
 
 					Func<EntityModelRenderer> previousValue = null;
-					if (_registeredRenderers.TryGetValue(def.Value.Identifier, out previousValue))
-					{
-					//	if (replaceModels)
-						//{
-						//	_registeredRenderers.Remove(def.Value.Identifier, out _);
-					//	}
-					//	else
-						//{
-							continue;
-						//}
-					}
+
+					/*	if (_registeredRenderers.TryGetValue(def.Value.Identifier, out previousValue))
+						{
+							if (replaceModels)
+							{
+								_registeredRenderers.Remove(def.Value.Identifier, out _);
+							}
+							else
+							{
+								continue;
+							}
+						}*/
 
 					string modelKey;
-					if (!geometry.TryGetValue("default", out modelKey) && !geometry.TryGetValue(new ResourceLocation(def.Value.Identifier).Path, out modelKey))
+
+					if (!geometry.TryGetValue("default", out modelKey) && !geometry.TryGetValue(
+						new ResourceLocation(def.Value.Identifier).Path, out modelKey))
 					{
 						modelKey = geometry.FirstOrDefault().Value;
 					}
 
 					EntityModel model;
+
 					if (ModelFactory.TryGetModel(modelKey, out model) && model != null)
 					{
-						Add(resources, graphics, def.Value, model);
+						if (_registeredRenderers.TryGetValue(def.Value.Identifier, out previousValue) && !replaceModels)
+							continue;
+
+						_registeredRenderers[def.Value.Identifier] = () =>
+						{
+							if (EntityModelRenderer.TryGetRenderer(model, out var renderer))
+							{
+								return renderer;
+							}
+
+							return null;
+						};
+						//Add(def.Value, model);
 						//Add(resources, graphics, def.Value, model, def.Key.ToString());
 					}
 					//else 
@@ -189,60 +219,17 @@ namespace Alex.Entities
 					Log.Warn(ex, $"Failed to load model {def.Key}!");
 				}
 				finally
-                {
-	                done++;
-                }
+				{
+					done++;
+				}
 			}
 
 			if (_registeredRenderers.TryGetValue("minecraft:armor_stand", out var func))
 				_registeredRenderers.TryAdd("minecraft:armorstand", func);
-			
-		//    Log.Info($"Registered {(Assembly.GetExecutingAssembly().GetTypes().Count(t => t.Namespace == "Alex.Entities.Models"))} entity models");
-		   // Log.Info($"Loaded {_registeredRenderers.Count} entity models");
-		   return _registeredRenderers.Count - beforeImport;
-		}
 
-		private static void Add(ResourceManager resources, GraphicsDevice graphics, EntityDescription entityDefinition, EntityModel model)
-		{
-			_registeredRenderers.AddOrUpdate(entityDefinition.Identifier, (a) =>
-				{
-					return () =>
-					{
-						if (EntityModelRenderer.TryGetRenderer(model, out var renderer))
-						{
-							return renderer;
-						}
-
-						return null;
-					};
-				/*if (t == null)
-				{
-					var textures = entityDefinition.Textures;
-					string texture;
-					if (!textures.TryGetValue("default", out texture) && !textures.TryGetValue(entityDefinition.Identifier, out texture))
-					{
-						texture = textures.FirstOrDefault().Value;
-					}
-
-					if (resources.TryGetBedrockBitmap(texture,
-						out var bmp))
-					{
-						t = TextureUtils.BitmapToTexture2D(graphics, bmp);
-					}
-				}*/
-				},
-				(s, func) =>
-				{
-					return () =>
-					{
-						if (EntityModelRenderer.TryGetRenderer(model, out var renderer))
-						{
-							return renderer;
-						}
-
-						return null;
-					};
-				});
+			//    Log.Info($"Registered {(Assembly.GetExecutingAssembly().GetTypes().Count(t => t.Namespace == "Alex.Entities.Models"))} entity models");
+			// Log.Info($"Loaded {_registeredRenderers.Count} entity models");
+			return _registeredRenderers.Count - beforeImport;
 		}
 
 		private static ConcurrentDictionary<string, ManagedTexture2D> _pooledTextures =

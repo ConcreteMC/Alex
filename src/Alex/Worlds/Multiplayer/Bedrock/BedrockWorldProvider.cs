@@ -8,6 +8,7 @@ using Alex.Common.World;
 using Alex.Gui.Forms;
 using Alex.Net;
 using Alex.Worlds.Abstraction;
+using Alex.Worlds.Multiplayer.Bedrock.Resources;
 using Microsoft.Xna.Framework;
 using MiNET;
 using MiNET.Net;
@@ -195,16 +196,54 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			LoadingState state        = LoadingState.ConnectingToServer;
 			string       subTitle     = "";
 
+			bool waitingOnResources = false;
+			bool loadingResources = false;
+			
+			var resourcePackManager = Client?.ResourcePackManager;
+			void statusHandler (object sender, ResourcePackManager.ResourceStatusChangedEventArgs args)
+			{
+				switch (args.Status)
+				{
+					case ResourcePackManager.ResourceManagerStatus.Ready:
+						waitingOnResources = false;
+						loadingResources = false;
+						break;
+					case ResourcePackManager.ResourceManagerStatus.ReceivingResources:
+						waitingOnResources = true;
+						loadingResources = false;
+						break;
+					case ResourcePackManager.ResourceManagerStatus.StartLoading:
+						waitingOnResources = false;
+						loadingResources = true;
+						break;
+					case ResourcePackManager.ResourceManagerStatus.FinishedLoading:
+						waitingOnResources = false;
+						loadingResources = false;
+						break;
+				}
+			}
+
+			if (resourcePackManager != null)
+			{
+				resourcePackManager.StatusChanged += statusHandler;
+
+				waitingOnResources = resourcePackManager.Status != ResourcePackManager.ResourceManagerStatus.Ready
+				                     && resourcePackManager.Status
+				                     != ResourcePackManager.ResourceManagerStatus.Initialized;
+			}
+
 			while (Client.IsConnected && Client.DisconnectReason != DisconnectReason.Unknown)
 			{
 				progressReport(state, percentage, subTitle);
 
-				bool waitingOnResources = Client?.ResourcePackManager?.WaitingOnResources ?? false;
-
 				if (waitingOnResources)
 				{
 					state = LoadingState.RetrievingResources;
-					percentage = (int) Math.Ceiling(Client.ResourcePackManager.Progress * 100);
+					percentage = (int) Math.Ceiling(resourcePackManager.Progress * 100);
+				}
+				else if (loadingResources)
+				{
+					state = LoadingState.LoadingResources;
 				}
 				else if (!Client.Connection.IsNetworkOutOfOrder && !outOfOrder)
 				{
@@ -242,7 +281,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					}
 				}
 
-				if (Client.CanSpawn && Client.GameStarted)
+				if (Client.CanSpawn && Client.GameStarted && !waitingOnResources && !loadingResources)
 				{
 					break;
 				}
@@ -276,6 +315,9 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			//World.Player.IsSpawned = true;
 			World.Player.OnSpawn();
 			_gameStarted = true;
+			
+			if (resourcePackManager != null)
+				resourcePackManager.StatusChanged -= statusHandler;
 			
 			return LoadResult.Done;
 		}

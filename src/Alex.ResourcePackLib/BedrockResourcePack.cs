@@ -54,6 +54,8 @@ namespace Alex.ResourcePackLib
 			new Dictionary<string, JToken>();
 		
 		public SoundDefinitionFormat SoundDefinitions { get; private set; } = null;
+
+		public SoundBindingsCollection SoundBindings { get; private set; } = null;
 		
 		private readonly IFilesystem _archive;
 
@@ -79,6 +81,7 @@ namespace Alex.ResourcePackLib
 		private static readonly Regex IsAnimationController     = new Regex(@"^animation_controllers[\\\/](?'filename'.*)\.json$", RegexOpts);
 		private static readonly Regex IsAnimation = new Regex(@"^animations[\\\/](?'filename'.*)\.json$", RegexOpts);
 		private static readonly Regex IsSoundDefinition    = new Regex(@"^sounds[\\\/]sound_definitions\.json$", RegexOpts);
+		private static readonly Regex IsSoundBindings    = new Regex(@"^sounds\.json$", RegexOpts);
 		private static readonly Regex IsFontFile    = new Regex(@"^font[\\\/](?'filename'.*)\.png$", RegexOpts);
 		private static readonly Regex IsParticleFile    = new Regex(@"^particles[\\\/](?'filename'.*)\.json$", RegexOpts);
 		private static readonly Regex IsAttachableFile    = new Regex(@"^attachables[\\\/](?'filename'.*)\.json$", RegexOpts);
@@ -138,6 +141,12 @@ namespace Alex.ResourcePackLib
 							Log.Warn(ex, $"Could not load global variables.");
 						}
 
+						continue;
+					}
+
+					if (IsSoundBindings.IsMatch(entry.FullName))
+					{
+						ProcessSoundBindings(entry);
 						continue;
 					}
 					
@@ -226,6 +235,19 @@ namespace Alex.ResourcePackLib
 			Particles = particleDefinitions;
 			Attachables = attachableDefinitions;
 			// Log.Info($"Processed {EntityDefinitions.Count} entity definitions");
+		}
+
+		private void ProcessSoundBindings(IFile entry)
+		{
+			try
+			{
+				string json = entry.ReadAsEncodedString(ContentKey);
+				SoundBindings = MCJsonConvert.DeserializeObject<SoundBindingsCollection>(json);
+			}
+			catch (Exception ex)
+			{
+				Log.Warn(ex, $"Failed to load soundbindings from file \"{entry.FullName}\"");
+			}
 		}
 
 		private void ProcessTexture(IFile entry)

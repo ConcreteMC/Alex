@@ -12,6 +12,7 @@ using System.Text;
 using System.Threading;
 using Alex.Blocks;
 using Alex.Blocks.Minecraft;
+using Alex.Common.Resources;
 using Alex.Common.Services;
 using Alex.Common.Utils;
 using Alex.Common.World;
@@ -29,6 +30,7 @@ using Alex.Net.Bedrock;
 using Alex.Net.Bedrock.Packets;
 using Alex.Networking.Java.Packets.Play;
 using Alex.ResourcePackLib.Json;
+using Alex.ResourcePackLib.Json.Bedrock.Sound;
 using Alex.ResourcePackLib.Json.Converters;
 using Alex.ResourcePackLib.Json.Models.Entities;
 using Alex.Services;
@@ -489,11 +491,16 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		public void HandleMcpeAddEntity(McpeAddEntity message)
 		{
+			if (message.entityType.Contains("hive"))
+			{
+				Log.Info($"spawning: {message.entityType}");
+			}
+			Entity entity = null;
 			//else
 			//{
 			//	entityType = MiNET.Entities.EntityHelpers.ToEntityType(message.entityType);
 			//}
-			MiNET.Entities.EntityType entityType = EntityType.None;
+			/*MiNET.Entities.EntityType entityType = EntityType.None;
 			if (_entityIdentifiers.TryGetValue(message.entityType, out var realId))
 			{
 				entityType = (MiNET.Entities.EntityType) realId;
@@ -508,19 +515,18 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				entityType = MiNET.Entities.EntityHelpers.ToEntityType(message.entityType);
 			}
 			
-			Entity entity = null;
 			if (entityType == EntityType.FallingBlock)
 			{
 				entity = new EntityFallingBlock(null);
 			}
 			else
-			{
+			{*/
 				entity = EntityFactory.Create(message.entityType, null);
-			}
+			//}
 
 			if (entity == null)
 			{
-				Log.Warn($"Cannot spawn entity of type: {message.entityType} -> {entityType}");
+				Log.Warn($"Cannot spawn entity of type: {message.entityType}");
 				return;
 			}
 
@@ -709,7 +715,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					{
 						_entityIdentifiers[id.Value] = realId.Value;
 
-						//Log.Info($"Registered entity identifier: {id.Value}");
+						if (LoggingConstants.LogServerEntityDefinitions)
+							Log.Debug($"Registered entity identifier: {id.Value}");
 					}
 				}
 			}
@@ -1969,32 +1976,115 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		public void HandleMcpeLevelSoundEventOld(McpeLevelSoundEventOld message)
 		{
-			if (!TryConvertSoundId(message.soundId, out string sound) || !AlexInstance.AudioEngine.PlayJavaSound(
-				sound, new Microsoft.Xna.Framework.Vector3(message.position.X, message.position.Y, message.position.Z),
-				1f, 1f))
-			{
-				Log.Debug($"SoundID not found: {message.soundId} (Sound={sound})");
-			}
+			PlaySound(message.soundId, message.blockId, message.entityType.ToString(), message.position, message.isGlobal);
 		}
 		
 		public void HandleMcpeLevelSoundEventV2(McpeLevelSoundEventV2 message)
 		{
-			if (!TryConvertSoundId(message.soundId, out string sound) || !AlexInstance.AudioEngine.PlayJavaSound(
-				sound, new Microsoft.Xna.Framework.Vector3(message.position.X, message.position.Y, message.position.Z),
-				1f, 1f))
+			PlaySound(message.soundId, message.blockId, message.entityType, message.position, message.isGlobal);
+		}
+
+		private void PlaySound(uint soundId, int blockId, string entityTypeId, Vector3 position, bool isGlobal)
+		{
+			string sound = null;
+			string soundEvent = null;
+			string soundCategory = null;
+			string blockName = null;
+			
+			float pitch = 1f;
+			float volume = 1f;
+			SoundEvent se = null;
+			SoundBindingsCollection collection = null;
+			
+			if (TryConvertSoundIdToMapping(soundId, out soundEvent))
 			{
-				Log.Debug($"SoundID not found: {message.soundId} (Sound={sound})");
+				soundEvent = soundEvent.ToLower();
+
+				//if (!string.IsNullOrWhiteSpace(message.entityType))
+				//{
+					string entityType = string.IsNullOrWhiteSpace(entityTypeId) ? null : new ResourceLocation(entityTypeId).Path;
+					bool useEntityType = blockId == -1 && !string.IsNullOrWhiteSpace(entityType);
+					var blockstate = BlockFactory.GetBlockState((uint) blockId);
+					soundCategory = blockstate == null ? null : blockstate.Block.BlockMaterial.SoundCategory;
+					blockName = blockstate == null ? null : new ResourceLocation(blockstate.Name).Path;
+
+
+					foreach (var resourcePack in Alex.Instance.Resources.ActiveBedrockResources)
+					{
+						if (!string.IsNullOrWhiteSpace(sound))
+							break;
+						
+						if (se != null)
+							break;
+
+						if (resourcePack.SoundBindings == null)
+							continue;
+
+						collection = resourcePack.SoundBindings;
+
+						if (collection.EntitySounds.Entities.TryGetValue(entityType, out var soundBinding))
+						{
+							if (soundBinding.Events.TryGetValue(soundEvent, out se))
+							{
+								if (!string.IsNullOrWhiteSpace(se.Sound))
+								{
+									sound = se.Sound;
+								}
+							}
+						} 
+						
+						if (collection.BlockSounds.TryGetValue(blockName, out soundBinding)
+						      || collection.InteractiveSounds.BlockSounds.TryGetValue(blockName, out soundBinding))
+						{
+							if (soundBinding.Events.TryGetValue(soundEvent, out se))
+							{
+								if (!string.IsNullOrWhiteSpace(se.Sound))
+								{
+									sound = se.Sound;
+								}
+							}
+						}
+
+						if (collection.BlockSounds.TryGetValue(soundCategory, out soundBinding)
+						    || collection.InteractiveSounds.BlockSounds.TryGetValue(soundCategory, out soundBinding))
+						{
+							if (soundBinding.Events.TryGetValue(soundEvent, out se))
+							{
+								if (!string.IsNullOrWhiteSpace(se.Sound))
+								{
+									sound = se.Sound;
+								}
+							}
+						}
+						
+						if (collection.EntitySounds.Defaults.Events.TryGetValue(soundEvent, out se))
+						{
+							if (!string.IsNullOrWhiteSpace(se.Sound))
+							{
+								sound = se.Sound;
+							}
+						}
+					}
+					//}
+			}
+			
+			if (string.IsNullOrWhiteSpace(sound))
+			{
+				Log.Debug($"Failed to translate sound with id: {soundId} (Sound={sound}, SoundEvent={soundEvent}, blockid={blockId}, entityType={entityTypeId}, block={blockName}, soundCat={soundCategory})");
+				return;
+			}
+ 
+			if (!AlexInstance.AudioEngine.PlaySound(
+				sound, new Microsoft.Xna.Framework.Vector3(position.X, position.Y, position.Z),
+				pitch, volume, isGlobal))
+			{
+				Log.Debug($"Could not play sound: {sound}");
 			}
 		}
 
 		public void HandleMcpeLevelSoundEvent(McpeLevelSoundEvent message)
 		{
-			if (!TryConvertSoundId(message.soundId, out string sound) || !AlexInstance.AudioEngine.PlayJavaSound(
-				sound, new Microsoft.Xna.Framework.Vector3(message.position.X, message.position.Y, message.position.Z),
-				1f, 1f))
-			{
-				Log.Debug($"SoundID not found: {message.soundId} (Sound={sound})");
-			}
+			PlaySound(message.soundId, message.blockId, message.entityType, message.position, message.isGlobal);
 			//UnhandledPackage(message);
 		}
 

@@ -5,6 +5,9 @@ namespace Alex.Common.Blocks
 {
 	public interface IMaterial
 	{
+		string SoundCategory { get; }
+		IMaterial SetSoundCategory(string soundCategory);
+		
 		IMapColor MapColorValue { get; }
 		
 		TintType TintType { get; }

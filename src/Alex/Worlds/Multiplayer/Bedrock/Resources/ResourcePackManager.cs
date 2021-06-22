@@ -23,6 +23,23 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 			_resourceManager = resourceManager;
 		}
 
+		//public bool Loading { get; private set; } = false;
+		public EventHandler<ResourceStatusChangedEventArgs> StatusChanged = null;
+		
+		private ResourceManagerStatus _status = ResourceManagerStatus.Initialized;
+		public ResourceManagerStatus Status
+		{
+			get
+			{
+				return _status;
+			}
+			private set
+			{
+				StatusChanged?.Invoke(this, new ResourceStatusChangedEventArgs(value));
+				_status = value;
+			}
+		}
+
 		/// <summary>
 		///		Are we waiting on resources?
 		/// </summary>
@@ -91,12 +108,13 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 			if (AcceptServerResources && resourcePackIds.Count > 0)
 			{
 				response.responseStatus = (byte) McpeResourcePackClientResponse.ResponseStatus.SendPacks;
+				Status = ResourceManagerStatus.ReceivingResources;
 				//Log.Info($"Received resourcepack info, requesting data for {message.texturepacks.Count} texture packs & {message.behahaviorpackinfos.Count} behavior packs.");
 			}
 			else
 			{
 				response.responseStatus = (byte) McpeResourcePackClientResponse.ResponseStatus.HaveAllPacks;
-
+				Status = ResourceManagerStatus.Ready;
 				//Log.Info($"Received resourcepack info, marking as HaveAllPacks");
 			}
 
@@ -145,7 +163,11 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 
 				if (!WaitingOnResources && AcceptServerResources) //We got all packs.
 				{
-					_resourceManager.ReloadTextures(null);
+					Status = ResourceManagerStatus.StartLoading;
+					_resourceManager.ReloadBedrockResources(null);
+					Status = ResourceManagerStatus.FinishedLoading;
+					
+					Status = ResourceManagerStatus.Ready;
 				}
 			}
 			else
@@ -195,7 +217,25 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 			}
 			
 			if (anyComplete)
-				_resourceManager.ReloadTextures(null);
+				_resourceManager.ReloadBedrockResources(null);
+		}
+
+		public class ResourceStatusChangedEventArgs : EventArgs
+		{
+			public ResourceManagerStatus Status { get; }
+			public ResourceStatusChangedEventArgs(ResourceManagerStatus status)
+			{
+				Status = status;
+			}
+		}
+
+		public enum ResourceManagerStatus
+		{
+			Initialized,
+			ReceivingResources,
+			StartLoading,
+			FinishedLoading,
+			Ready
 		}
 	}
 }

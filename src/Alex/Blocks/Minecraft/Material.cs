@@ -9,17 +9,17 @@ namespace Alex.Blocks.Minecraft
     public class Material : IMaterial
 	{
 		public static readonly IMaterial Air = new MaterialTransparent(MapColor.AIR);
-		public static readonly IMaterial Grass = new Material(MapColor.GRASS).SetTintType(TintType.Grass);
+		public static readonly IMaterial Grass = new Material(MapColor.GRASS).SetTintType(TintType.Grass).SetSoundCategory("grass");
 		public static readonly IMaterial Ground = new Material(MapColor.DIRT).SetHardness(0.5f);
-		public static readonly IMaterial Wood = (new Material(MapColor.WOOD)).SetBurning().SetHardness(2f);
+		public static readonly IMaterial Wood = (new Material(MapColor.WOOD)).SetBurning().SetHardness(2f).SetSoundCategory("wood");
 		public static readonly IMaterial NetherWood = new Material(MapColor.WOOD).SetBlocksMovement().SetHardness(2f);
 		
 		public static readonly IMaterial Stone = (new Material(MapColor.STONE)).SetRequiresTool()
-			.SetRequiredTool(ItemType.PickAxe, ItemMaterial.AnyMaterial).SetHardness(3f);
+			.SetRequiredTool(ItemType.PickAxe, ItemMaterial.AnyMaterial).SetHardness(3f).SetSoundCategory("normal");
 		
 		public static readonly IMaterial Ore = new Material(MapColor.STONE).SetRequiresTool().SetRequiredTool(ItemType.PickAxe, ItemMaterial.Any).SetHardness(3);
 		
-		public static readonly IMaterial Iron = (new Material(MapColor.IRON)).SetRequiresTool().SetHardness(5f);
+		public static readonly IMaterial Iron = (new Material(MapColor.IRON)).SetRequiresTool().SetHardness(5f).SetSoundCategory("metal");
 		public static readonly IMaterial Anvil = (new Material(MapColor.IRON)).SetRequiresTool().SetHardness(5f);
 
 		public static readonly IMaterial Water = (new MaterialLiquid(MapColor.WATER)).SetTranslucent()
@@ -64,11 +64,12 @@ namespace Alex.Blocks.Minecraft
 		//https://minecraft.gamepedia.com/Materials
 		public static readonly IMaterial WaterPlant = new Material(MapColor.WATER).SetWaterLoggable();
 		public static readonly IMaterial ReplaceableWaterPlant = new Material(MapColor.WATER).SetReplaceable().SetWaterLoggable();
+		
 		private bool _canBurn;
 		private bool _replaceable;
 		private bool _isTranslucent;
 		private bool _requiresNoTool = true;
-
+		
 		public IMapColor MapColorValue { get; }
 		public Material(IMapColor color)
 		{
@@ -87,6 +88,16 @@ namespace Alex.Blocks.Minecraft
 			return this;
 		}
 
+		/// <inheritdoc />
+		public string SoundCategory { get; private set; } = "normal";
+
+		public IMaterial SetSoundCategory(string soundCategory)
+		{
+			SoundCategory = soundCategory;
+
+			return this;
+		}
+		
 		public virtual bool BlocksLight { get; protected set; } = true;
 
 		public virtual bool BlocksMovement { get; protected set; } = true;

@@ -6,6 +6,7 @@
 		LoadingChunks,
 		GeneratingVertices,
 		Spawning,
-		RetrievingResources
+		RetrievingResources,
+		LoadingResources
     }
 }
