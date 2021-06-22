@@ -36,35 +36,39 @@ namespace Alex.MoLang.Parser
 
         public readonly List<IExprVisitor> Visitors = new List<IExprVisitor>();
 
-        public IEnumerable<IExpression> Traverse(IExpression[] expressions)
+        public IEnumerable<IExpression> Traverse(IEnumerable<IExpression> expressions)
         {
+            var enumerable = expressions as IExpression[] ?? expressions.ToArray();
+
             foreach (IExprVisitor visitor in Visitors) {
-                visitor.BeforeTraverse(expressions);
+                visitor.BeforeTraverse(enumerable);
             }
 
             _stopTraversal = false;
 
-            foreach (var expression in TraverseArray(expressions))
+            foreach (var expression in TraverseArray(enumerable))
             {
                 yield return expression;
             }
             //TraverseArray(expressions);
 
             foreach (IExprVisitor visitor in Visitors) {
-                visitor.AfterTraverse(expressions);
+                visitor.AfterTraverse(enumerable);
             }
 
            // return expressions;
         }
 
-        private IEnumerable<IExpression> TraverseArray(IExpression[] expressions)
+        private IEnumerable<IExpression> TraverseArray(IEnumerable<IExpression> expressions)
         {
             //var list = expressions.ToList();
 
             //for (var i = 0; i < list.Count; i++)
-            for (var index = 0; index < expressions.Length; index++)
+            //for (var index = 0; index < expressions.Length; index++)
+            foreach(var e in expressions)
             {
-                IExpression expression = expressions[index];
+                var expression = e;
+               // IExpression expression = expressions[index];
                 
                 if (expression == null)
                     throw new MoLangRuntimeException("Expression was null", null);
@@ -127,11 +131,11 @@ namespace Alex.MoLang.Parser
                 if (removeCurrent)
                 {
                     //list.Remove(expression);
-                    expressions[index] = null;//.Remove(expression);
+                  //  expressions[index] = null;//.Remove(expression);
                 }
                 else
                 {
-                    expressions[index] = expression;
+                 //   expressions[index] = expression;
 
                     yield return expression;
                     //expressions[i] = expression;//.set(i, expression);
@@ -227,11 +231,13 @@ namespace Alex.MoLang.Parser
                 else if (fieldValue != null && fieldValue.GetType().IsArray)
                 {
                     var array = (object[]) fieldValue;
-                    var exprs = array.Where(x => x is IExpression).Cast<IExpression>().ToArray();
+                    //var exprs = array.Where(x => x is IExpression).Cast<IExpression>().ToArray();
 
-                    exprs = TraverseArray(exprs).ToArray();
-                    
-                    SetFieldValue(field, expression, exprs);
+                    //exprs = TraverseArray(array.Where(x => x is IExpression).Cast<IExpression>()).ToArray();
+
+                    SetFieldValue(
+                        field, expression,
+                        TraverseArray(array.Where(x => x is IExpression).Cast<IExpression>()).ToArray());
                 }
             }
 

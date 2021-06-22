@@ -9,7 +9,7 @@ namespace Alex.MoLang.Parser.Visitors
 		private IExpression Previous { get; set; }
 
 		/// <inheritdoc />
-		public override void BeforeTraverse(IExpression[] expressions)
+		public override void BeforeTraverse(IEnumerable<IExpression> expressions)
 		{
 			Stack.Clear();
 			Previous = null;

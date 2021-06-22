@@ -11,6 +11,8 @@ namespace Alex.MoLang.Parser
 {
 	public class MoLangParser
 	{
+		public static TimeSpan TotalTimeSpent { get; private set; } = TimeSpan.Zero;
+		
 		private static readonly Dictionary<TokenType, PrefixParselet> PrefixParselets =
 			new Dictionary<TokenType, PrefixParselet>();
 
@@ -69,6 +71,8 @@ namespace Alex.MoLang.Parser
 
 		public IExpression[] Parse()
 		{
+			Stopwatch sw = Stopwatch.StartNew();
+
 			try
 			{
 				List<IExpression> exprs = new List<IExpression>();
@@ -87,11 +91,16 @@ namespace Alex.MoLang.Parser
 					}
 				} while (MatchToken(TokenType.Semicolon));
 
-				return _exprTraverser.Traverse(exprs.ToArray()).ToArray();
+				return _exprTraverser.Traverse(exprs).ToArray();
 			}
 			catch (Exception ex)
 			{
 				throw new MoLangParserException($"Failed to parse expression", ex);
+			}
+			finally
+			{
+				sw.Stop();
+				TotalTimeSpent += sw.Elapsed;
 			}
 		}
 
