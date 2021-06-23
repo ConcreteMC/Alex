@@ -84,15 +84,7 @@ namespace Alex
 		
 		
 		public static ManagedTexture2D NethergamesLogo { get; private set; }
-		
-		/*private readonly Dictionary<ResourceLocation, ResourcePackModelBase>   _models    = new Dictionary<ResourceLocation, ResourcePackModelBase>();
-		public IReadOnlyDictionary<ResourceLocation, ResourcePackModelBase> BlockModels =>
-			_models.Where(x => x.Value.Type == ModelType.Block)
-			   .ToDictionary(x => x.Key, x => x.Value);
-		
-		public IReadOnlyDictionary<ResourceLocation, ResourcePackModelBase>   ItemModels        => _models.Where(x => x.Value.Type == ModelType.Item)
-		   .ToDictionary(x => x.Key, x => x.Value);*/
-		
+
 		public ResourceManager(IServiceProvider serviceProvider)
 		{
 			BlockAtlas = new AtlasGenerator("atlases/blocks/");
@@ -908,8 +900,8 @@ namespace Alex
 	        progress.UpdateProgress(0, "Loading entity model registry...");
 	        RegistryManager.AddRegistry<EntityModelEntry, EntityModel>(EntityModelRegistry = new EntityModelRegistry());
 	        
-	        progress.UpdateProgress(0, "Loading blockstate registry...");
-	        RegistryManager.AddRegistry(new RegistryBase<BlockState>("blockstate"));
+	       // progress.UpdateProgress(0, "Loading blockstate registry...");
+	       // RegistryManager.AddRegistry(new RegistryBase<BlockState>("blockstate"));
 	        
 	        progress.UpdateProgress(50, "Loading block registry...");
 	        RegistryManager.AddRegistry(new BlockRegistry());

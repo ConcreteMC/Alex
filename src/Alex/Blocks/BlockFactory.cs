@@ -264,7 +264,7 @@ namespace Alex.Blocks
 							continue;
 						}
 
-						BlockState pcVariant = GetBlockState(keyMatch.Value).Clone();
+						BlockState pcVariant = GetBlockState(keyMatch.Value);
 
 						if (pcVariant != null)
 						{
@@ -292,23 +292,15 @@ namespace Alex.Blocks
 							continue;
 						}
 
-						//pcVariant = pcVariant.CloneSilent();
-
 						PeBlockState bedrockState = new PeBlockState(pcVariant);
-						//List<StateProperty> stateProperties = new List<StateProperty>();
-
 						if (state.Value.BedrockStates != null && state.Value.BedrockStates.Count > 0)
 						{
 							foreach (var bs in state.Value.BedrockStates)
 							{
 								bedrockState.States.Add(new PropertyString(bs.Key, bs.Value));
-								//stateProperties.Add(new PropertyString(bs.Key, bs.Value));
 							}
 						}
 						
-						//if (string.IsNullOrWhiteSpace(block.DisplayName)) block.DisplayName = entry.Key;
-						
-						//bedrockState.States = stateProperties.ToArray();
 						bedrockState.Name = state.Value.BedrockIdentifier;
 						bedrockState.ID = (uint) Interlocked.Increment(ref counter);
 						bedrockState.Default = first;
@@ -322,10 +314,6 @@ namespace Alex.Blocks
 						first = false;
 
 						states.Add(bedrockState);
-						//if (!mapper.TryAdd(bedrockState.WithLocation(bedrockState.Name).Value))
-						//{
-						//	Log.Warn($"Failed to add bedrockstate: {state.Value.BedrockIdentifier}");
-						//}
 					}
 
 					BedrockStates[m.Key] = new BlockStateVariantMapper(states)

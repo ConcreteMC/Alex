@@ -6,18 +6,14 @@ using System.Text;
 using System.Text.RegularExpressions;
 using Alex.Blocks.Minecraft;
 using Alex.Blocks.Properties;
-using Alex.Common.Blocks.Properties;
 using Alex.Common.Resources;
-using Alex.Graphics.Models.Blocks;
 using Alex.ResourcePackLib.Json.BlockStates;
-using Alex.Utils;
 using Microsoft.Xna.Framework;
-using MiNET.Utils;
 using NLog;
 
 namespace Alex.Blocks.State
 {
-	public class BlockState : IRegistryEntry<BlockState>, IEnumerable<StateProperty>
+	public class BlockState : IEnumerable<StateProperty>
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(BlockState));
 		
@@ -41,8 +37,6 @@ namespace Alex.Blocks.State
 
 		public BlockStateVariantMapper VariantMapper { get; set; }
 
-		internal BoundingBox[] BoundingBoxes { get; set; } = null;
-
 		public T GetTypedValue<T>(StateProperty<T> property)
 		{
 			if (States.TryGetValue(property, out var first))
@@ -59,9 +53,9 @@ namespace Alex.Blocks.State
 			return default(T);
 		}
 
-		public BlockState WithProperty(string property, string value, params string[] requiredMatches)
+		public BlockState WithProperty(string property, string value)
 		{
-			if (VariantMapper.TryResolve(this, property, value, out BlockState result, requiredMatches))
+			if (VariantMapper.TryResolve(this, property, value, out BlockState result))
 			{
 				return result;
 			}
@@ -194,51 +188,10 @@ namespace Alex.Blocks.State
 		}
 		
 		private static readonly Regex VariantParser = new Regex("(?'property'[^=,]*?)=(?'value'[^,]*)", RegexOptions.Compiled);
-
 		public static Dictionary<string, string> ParseData(string variant)
 		{
 			return VariantParser.Matches(variant).ToDictionary(
 				x => x.Groups["property"].Value, x => x.Groups["value"].Value);
 		}
-
-		public BlockState CloneSilent()
-		{
-			//StateProperty[] properties = new StateProperty[States.Length];
-			//Array.Copy(States, properties, States.Length);
-			
-			BlockState bs = new BlockState
-			{
-				Name = Name,
-				ID = ID,
-				States = new HashSet<StateProperty>(States),
-				Block = Block,
-				VariantMapper = VariantMapper,
-				//		ResolveModel = ResolveModel,
-				Default = Default,
-				ModelData = ModelData,
-				//Location = new ResourceLocation(Location.Namespace, Location.Path)
-				//	Location = Location == null ? null : new ResourceLocation(Location.Namespace, Location.Path),
-				//		AppliedModels = AppliedModels,
-				//IsMultiPart = IsMultiPart,
-				//	MultiPartHelper = MultiPartHelper
-			};
-
-			return bs;
-		}
-
-		public BlockState Clone()
-		{
-			return CloneSilent();
-		}
-
-		public ResourceLocation Location { get; private set; }
-		public IRegistryEntry<BlockState> WithLocation(ResourceLocation location)
-		{
-			Location = location;
-
-			return this;
-		}
-
-		public BlockState Value => this;
 	}
 }

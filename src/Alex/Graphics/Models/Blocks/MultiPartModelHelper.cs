@@ -53,7 +53,7 @@ namespace Alex.Graphics.Models.Blocks
 		public static BlockState GetBlockState(IBlockAccess world, Vector3 position, BlockState blockState,
 			BlockStateResource blockStateModel)
 		{
-			var blockStateCopy = blockState.VariantMapper.GetDefaultState().CloneSilent();
+			var blockStateCopy = blockState.VariantMapper.GetDefaultState();
 			foreach (var s in blockStateModel.Parts)
 			{
 				if (s.When == null)

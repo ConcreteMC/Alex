@@ -57,19 +57,17 @@ namespace Alex.Graphics.Models.Blocks
 		/// <inheritdoc />
 		public override IEnumerable<BoundingBox> GetBoundingBoxes(BlockState blockState, Vector3 blockPos)
 		{
-			if (blockState.BoundingBoxes == null)
-			{
+			
 				List<BoundingBox> boxes = new List<BoundingBox>();
 				foreach (var model in GetAppliedModels(blockState))
 				{
 					boxes.AddRange(GenerateBoundingBoxes(model.BlockStateModel, model.BlockModel));
 				}
 
-				blockState.BoundingBoxes = boxes.ToArray();
-			}
+				//blockState.BoundingBoxes = boxes.ToArray();
 
 
-			foreach (var box in blockState.BoundingBoxes)
+			foreach (var box in boxes)
 			{
 				var x = box;
 				var dimensions = x.GetDimensions();
