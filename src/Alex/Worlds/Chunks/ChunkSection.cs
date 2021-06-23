@@ -172,7 +172,7 @@ namespace Alex.Worlds.Chunks
 
 		protected virtual void OnBlockSet(int x, int y, int z, BlockState newState, BlockState oldState)
 		{
-
+			
 		}
 
 		public bool IsEmpty()

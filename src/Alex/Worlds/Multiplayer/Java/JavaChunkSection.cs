@@ -38,7 +38,7 @@ namespace Alex.Worlds.Multiplayer.Java
                         {
                             ++this.BlockRefCount;
 
-                            if (block.BlockMaterial.IsWatterLoggable && block.IsWaterLogged)
+                            if (block.IsWaterLogged || block.BlockMaterial == Material.WaterPlant || block.BlockMaterial == Material.ReplaceableWaterPlant)
                             {
                                 Set(1, x, y, z, BlockFactory.GetBlockState("minecraft:water"));
                             }
@@ -71,17 +71,20 @@ namespace Alex.Worlds.Multiplayer.Java
             if (newState == null || oldState == null)
                 return;
 
-            if (oldState.Block.BlockMaterial.IsWatterLoggable && !newState.Block.BlockMaterial.IsWatterLoggable)
+            if (oldState.Block.IsWaterLogged && !newState.Block.IsWaterLogged)
             {
                 Set(1, x, y, z, BlockFactory.GetBlockState("minecraft:air"));
             }
-            else if (!oldState.Block.BlockMaterial.IsWatterLoggable && newState.Block.BlockMaterial.IsWatterLoggable && newState.Block.IsWaterLogged)
+            else if (!oldState.Block.IsWaterLogged && newState.Block.IsWaterLogged)
             {
                 Set(1, x, y, z, BlockFactory.GetBlockState("minecraft:water"));
             }
 
             // base.OnBlockSet(x, y, z, newState, oldState);
         }
+
+        /// <inheritdoc />
+        
 
         public void Read(MinecraftStream ms)
         {
