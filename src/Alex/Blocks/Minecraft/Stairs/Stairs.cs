@@ -1,4 +1,5 @@
 using System;
+using Alex.Blocks.Properties;
 using Alex.Blocks.State;
 using Alex.Common.Blocks;
 using Alex.Common.Utils.Vectors;
@@ -23,7 +24,7 @@ namespace Alex.Blocks.Minecraft
     public class Stairs : Block
     {
         private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(Stairs));
-        
+
         public Stairs(uint baseId) : base()
         {
             Solid = true;
@@ -188,6 +189,12 @@ namespace Alex.Blocks.Minecraft
             }
 
             return state.WithProperty("shape", "straight");
+        }
+        
+        /// <inheritdoc />
+        public override bool TryGetStateProperty(string prop, out StateProperty stateProperty)
+        {
+            return base.TryGetStateProperty(prop, out stateProperty);
         }
     }
 }

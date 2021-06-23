@@ -1127,7 +1127,7 @@ namespace Alex.Entities
 			}
 		}
 		
-		private EntityEffect    Effect       { get; set; }
+		protected EntityEffect    Effect       { get; set; }
 		
 		/// <summary>
 		///		Renders the entity

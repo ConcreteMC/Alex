@@ -733,7 +733,7 @@ namespace Alex.Worlds
 			}
 		}
 
-		public Biome GetBiome(int biomeId)
+		public static Biome GetBiome(int biomeId)
 		{
 			Biome first = null;
 			foreach (var biome in Biomes)
@@ -747,22 +747,6 @@ namespace Alex.Worlds
 
 			return first ?? new Biome { Id = biomeId };
 		}
-
-		public static Biome GetBiomeById(int biomeId)
-		{
-			Biome first = null;
-			foreach (var biome in Biomes)
-			{
-				if (biome.Id == biomeId)
-				{
-					first = biome;
-					break;
-				}
-			}
-
-			return first ?? new Biome { Id = biomeId };
-		}
-
 		public int BiomeSwampRiverColor(int color)
 		{
 			int r = (int)((color >> 16) & 0xff);
@@ -782,11 +766,11 @@ namespace Alex.Worlds
 		{
 			if (biome.Id == 21 || biome.Id == 22) //Jungle or Jungle Hills
 			{
-				return GetBiomeById(23); //Return Jungle Edge
+				return GetBiome(23); //Return Jungle Edge
 			}
 			else if (biome.MaxHeight >= 0.8f)
 			{
-				return GetBiomeById(20); //Extreme hills edge.
+				return GetBiome(20); //Extreme hills edge.
 			}
 
 			return biome;

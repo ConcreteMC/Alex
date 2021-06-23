@@ -9,6 +9,7 @@ using Alex.Blocks.Storage;
 using Alex.Common.Utils;
 using Alex.Common.Utils.Vectors;
 using Alex.Networking.Java.Util;
+using Alex.Worlds.Lighting;
 using Microsoft.Xna.Framework;
 using NLog;
 
@@ -24,8 +25,8 @@ namespace Alex.Worlds.Chunks
 		public int StorageCount => BlockStorages.Length;
 		
 		protected readonly BlockStorage[] BlockStorages;
-		public             NibbleArray    BlockLight;
-		public             NibbleArray    SkyLight;
+		public   readonly LightArray    BlockLight;
+		public   readonly LightArray    SkyLight;
 
 		public List<BlockCoordinates> LightSources { get; private set; } = new List<BlockCoordinates>();
         
@@ -44,11 +45,11 @@ namespace Alex.Worlds.Chunks
 		        BlockStorages[i] = new BlockStorage();
 	        }
 	        
-	        this.BlockLight = new NibbleArray(new byte[2048]);
+	        this.BlockLight = new LightArray();
 
 	        //	if (storeSkylight)
 			{
-				this.SkyLight = new NibbleArray(new byte[2048]);
+				this.SkyLight = new LightArray();
 			}
 
 			ResetLight(true, true);
@@ -57,13 +58,13 @@ namespace Alex.Worlds.Chunks
         internal void ResetLight(bool blockLight, bool skyLight)
         {
 	        if (blockLight)
-				MiNET.Worlds.ChunkColumn.Fill<byte>(BlockLight.Data, 0);
+				BlockLight.Reset(0);
 	        
 	        if (skyLight)
-		        MiNET.Worlds.ChunkColumn.Fill<byte>(SkyLight.Data, 0x00);
+		        SkyLight.Reset(0);
         }
 
-        protected static int GetCoordinateIndex(int x, int y, int z)
+        internal static int GetCoordinateIndex(int x, int y, int z)
 		{
 			return (y << 8 | z << 4 | x);
 		}
@@ -277,8 +278,8 @@ namespace Alex.Worlds.Chunks
 		    LightSources.Clear();
 		    LightSources = null;
 
-		    BlockLight = null;
-		    SkyLight = null;
+		    //BlockLight = null;
+		    //SkyLight = null;
 	    }
 
 	    public class BlockEntry

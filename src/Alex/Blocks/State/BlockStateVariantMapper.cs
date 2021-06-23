@@ -8,7 +8,7 @@ namespace Alex.Blocks.State
     public sealed class BlockStateVariantMapper
     {
         private static NLog.Logger Log = NLog.LogManager.GetCurrentClassLogger(typeof(BlockStateVariantMapper));
-        private HashSet<BlockState> Variants { get; } = new HashSet<BlockState>();
+        private HashSet<BlockState> Variants { get; }
         
         public  bool       IsMultiPart { get; set; } = false;
         
@@ -38,7 +38,7 @@ namespace Alex.Blocks.State
         public bool TryResolve(BlockState source, string property, string value, out BlockState result, params string[] requiredMatches)
         {
             //var clone = source.WithPropertyNoResolve(property, value, true);
-
+            var propHah = property.GetHashCode(StringComparison.InvariantCultureIgnoreCase);
             var clone = source.Clone();
             
             List<StateProperty> properties = new List<StateProperty>();
@@ -46,15 +46,15 @@ namespace Alex.Blocks.State
             {
                 var p = prop;
 
-                if (p.Name.Equals(property, StringComparison.InvariantCultureIgnoreCase))
+                if (p.Identifier == propHah)
                 {
                     p = p.WithValue(value);
                 }
                 
                 properties.Add(p);
             }
-            
-            clone.States = properties;
+
+            clone.States = new HashSet<StateProperty>(properties);
             
             if (Variants.TryGetValue(clone, out var actualValue))
             {

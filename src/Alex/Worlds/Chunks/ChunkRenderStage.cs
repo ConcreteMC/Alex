@@ -104,13 +104,13 @@ namespace Alex.Worlds.Chunks
 		}
 
 		private const int MaxArraySize = 16 * 16 * 256 * (6 * 6);
-		internal MinifiedBlockShaderVertex[] BuildVertices(IBlockAccess world)
+		internal IEnumerable<MinifiedBlockShaderVertex> BuildVertices(IBlockAccess world)
 		{
 			lock (_writeLock)
 			{
 				var blockIndices = BlockIndices;
 
-				if (blockIndices == null) return null;
+				if (blockIndices == null) yield break;
 				
 				//var blockIndices = BlockIndices;
 				var size = blockIndices.Sum(x => x.Value.Count);
@@ -121,7 +121,8 @@ namespace Alex.Worlds.Chunks
 					Log.Warn($"Array size exceeded max pool size. Found {size}, limit: {MaxArraySize}");
 				}
 				//var vertices = Pool.Rent(size);
-				var vertices = new MinifiedBlockShaderVertex[size];
+				
+				//var vertices = new MinifiedBlockShaderVertex[size];
 
 				int index = 0;
 				foreach (var block in blockIndices)
@@ -146,7 +147,7 @@ namespace Alex.Worlds.Chunks
 						world.GetLight(lightProbe, out var blockLight, out var skyLight);
 
 						var textureCoords = vertex.TexCoords;
-						vertices[index] = new MinifiedBlockShaderVertex(
+						yield return new MinifiedBlockShaderVertex(
 							p, vertex.Face,textureCoords.ToVector4(), new Color(vertex.Color),
 							blockLight, skyLight);
 						
@@ -154,7 +155,7 @@ namespace Alex.Worlds.Chunks
 					}
 				}
 				
-				return vertices;
+				//return vertices;
 			}
 		}
 
@@ -172,21 +173,21 @@ namespace Alex.Worlds.Chunks
 
 				HasChanges = false;
 
-				realVertices = BuildVertices(world);
+				realVertices = BuildVertices(world).ToArray();
 
 				if (realVertices == null)
 					return;
 			}
 
-		//	if (previousTask != null && previousTask.State == TaskState.Enqueued)
-		//	{
-		//		previousTask.Data = realVertices;
-		//	}
-		//	else
-		//	{
+			if (previousTask != null && previousTask.State == TaskState.Enqueued)
+			{
+				previousTask.Data = realVertices;
+			}
+			else
+			{
 				previousTask?.Cancel();
 				_previousManagedTask = Alex.Instance.UiTaskManager.Enqueue(UpdateAction, realVertices);
-		//	}
+			}
 		}
 		
 		private void UpdateAction(object state)

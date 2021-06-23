@@ -5,13 +5,36 @@ using Alex.Common.Blocks.Properties;
 
 namespace Alex.Blocks.State
 {
+	public class StatePropertyComparer : EqualityComparer<StateProperty>
+	{
+		/// <inheritdoc />
+		public override bool Equals(StateProperty? x, StateProperty? y)
+		{
+			if (x == null && y == null)
+				return true;
+
+			if (x != null && y != null)
+			{
+				return x.Identifier == y.Identifier;
+			}
+
+			return false;
+		}
+
+		/// <inheritdoc />
+		public override int GetHashCode(StateProperty obj)
+		{
+			return obj.Identifier;
+		}
+	}
+	
 	public abstract class StateProperty : IStateProperty
 	{
 		//public static Dictionary<string, StateProperty> _registeredTypes = new Dictionary<string, StateProperty>(StringComparer.InvariantCultureIgnoreCase);
 		public string Name { get; }
 
 		/// <inheritdoc />
-		public string StringValue => Value.ToString();
+		public virtual string StringValue => Value.ToString();
 		
 		public object Value { get; set; }
 
@@ -19,7 +42,7 @@ namespace Alex.Blocks.State
 		protected StateProperty(string name)
 		{
 			Name = name;
-			Identifier = name.ToLowerInvariant().GetHashCode();
+			Identifier = name.GetHashCode(StringComparison.InvariantCultureIgnoreCase);
 
 			//_registeredTypes.TryAdd(name, this);
 		}
@@ -48,7 +71,7 @@ namespace Alex.Blocks.State
 		{
 			if (ReferenceEquals(null, other)) return false;
 			if (ReferenceEquals(this, other)) return true;
-
+			
 			return other.GetHashCode().Equals(GetHashCode());
 			if (other.GetType() != this.GetType()) return false;
 

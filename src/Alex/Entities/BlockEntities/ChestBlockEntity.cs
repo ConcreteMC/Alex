@@ -1,5 +1,6 @@
 using System;
 using Alex.Blocks.Minecraft;
+using Alex.Blocks.Properties;
 using Alex.Common.Blocks;
 using Alex.Graphics.Models.Entity;
 using Alex.Graphics.Models.Entity.Animations;
@@ -75,7 +76,7 @@ namespace Alex.Entities.BlockEntities
 
 		private BlockFace _rotation  = BlockFace.North;
 		private float     _yRotation = 0f;
-		public BlockFace Rotation
+		public BlockFace Facing
 		{
 			get
 			{
@@ -157,13 +158,14 @@ namespace Alex.Entities.BlockEntities
 			}
 		}
 
+		private static readonly PropertyFace FACING = new PropertyFace("facing");
 		/// <inheritdoc />
-		protected override void BlockChanged(Block oldBlock, Block newBlock)
+		protected override bool BlockChanged(Block oldBlock, Block newBlock)
 		{
 			base.BlockChanged(oldBlock, newBlock);
 
 			if (newBlock == null || !(newBlock is Chest))
-				return;
+				return false;
 
 			if (newBlock.BlockState.TryGetValue("type", out string type))
 			{
@@ -181,13 +183,15 @@ namespace Alex.Entities.BlockEntities
 				}
 			}
 			
-			if (newBlock.BlockState.TryGetValue("facing", out string value))
+			if (newBlock.BlockState.TryGetValue(FACING, out var value))
 			{
-				if (Enum.TryParse<BlockFace>(value, true, out var val))
+				//if (Enum.TryParse<BlockFace>(value, true, out var val))
 				{
-					Rotation = (BlockFace) val;
+					Facing = value;
 				}
 			}
+
+			return true;
 		}
 	}
 }

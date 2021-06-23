@@ -1,6 +1,8 @@
-﻿namespace Alex.Blocks.Minecraft
+﻿using Alex.Blocks.State;
+
+namespace Alex.Blocks.Minecraft
 {
-    public class Button : Block
+    public class Button : RedstoneBase
     {
 	    public Button(uint id) : base()
 	    {
@@ -16,5 +18,11 @@
 		    IsReplacible = false;
 		     */
 	    }
-	}
+
+	    /// <inheritdoc />
+	    public override bool TryGetStateProperty(string prop, out StateProperty stateProperty)
+	    {
+		    return base.TryGetStateProperty(prop, out stateProperty);
+	    }
+    }
 }

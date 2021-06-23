@@ -41,7 +41,8 @@ namespace Alex.Worlds
 		
 		public  RenderingShaders        Shaders                { get; }
 		private CancellationTokenSource CancellationToken      { get; }
-		internal BlockLightCalculations  BlockLightCalculations { get; set; }
+		internal BlockLightCalculations  BlockLightUpdate { get; set; }
+		//internal BlockLightUpdate BlockLightUpdate { get; set; }
 		internal SkyLightCalculations    SkyLightCalculator     { get; set; }
 
 		private FancyQueue<ChunkCoordinates>     FastUpdateQueue   { get; }
@@ -82,7 +83,8 @@ namespace Alex.Worlds
 			Chunks = new ConcurrentDictionary<ChunkCoordinates, ChunkColumn>();
 			CancellationToken = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 			
-			BlockLightCalculations = new BlockLightCalculations(world, CancellationToken.Token);
+			BlockLightUpdate = new BlockLightCalculations(world, CancellationToken.Token);
+			//BlockLightUpdate = new BlockLightUpdate(world);
 			SkyLightCalculator = new SkyLightCalculations(world, CancellationToken.Token);
 			
 			UpdateQueue = new FancyQueue<ChunkCoordinates>();
@@ -195,11 +197,15 @@ namespace Alex.Worlds
 							break;
 
 						//bool processedLighting = ProcessLighting();
+						int lightUpdatesExecuted = BlockLightUpdate.Execute();
 						bool processedQueue    = ProcessQueue();
 
-						if (!processedQueue)
-							_processingSync.WaitOne();
-						//sw.SpinOnce();
+						if (!processedQueue && lightUpdatesExecuted == 0)
+						{
+							//if (BlockLightUpdate.Execute() == 0)
+							//_processingSync.WaitOne();
+						}
+						sw.SpinOnce();
 					}
 
 					_processingThread = null;
@@ -210,6 +216,8 @@ namespace Alex.Worlds
 
 		private AutoResetEvent _processingSync = new AutoResetEvent(false);
 
+		private object _blockLightLock = new object();
+		
 		private bool ProcessQueue()
 		{
 			var maxThreads = Options.VideoOptions.ChunkThreads.Value;
@@ -236,7 +244,7 @@ namespace Alex.Worlds
 					oo =>
 					{
 						Thread.CurrentThread.Name = $"ChunkManager Processing Thread {activeThreads}";
-
+						
 						try
 						{
 							while (!CancellationToken.IsCancellationRequested)
@@ -266,34 +274,16 @@ namespace Alex.Worlds
 											if (newChunk)
 											{
 												c1 = TryGetChunk(new ChunkCoordinates(chunk.X + 1, chunk.Z), out var cc1) && !cc1.IsNew;
-												c2 = TryGetChunk(new ChunkCoordinates(chunk.X - 1, chunk.Z), out var cc2) && !cc2.IsNew;
+												c2 = TryGetChunk(new ChunkCoordinates(chunk.X, chunk.Z + 1), out var cc2) && !cc2.IsNew;
 
-												c3 = TryGetChunk(new ChunkCoordinates(chunk.X, chunk.Z + 1), out var cc3) && !cc3.IsNew;
+												c3 = TryGetChunk(new ChunkCoordinates(chunk.X - 1, chunk.Z), out var cc3) && !cc3.IsNew;
 												c4 = TryGetChunk(new ChunkCoordinates(chunk.X, chunk.Z - 1), out var cc4) && !cc4.IsNew;
-											}
+											
+												if (BlockLightUpdate != null)
+													BlockLightUpdate.RecalculateChunk(chunk);
 
-											if (BlockLightCalculations != null)
-											{
-												if (newChunk)
-												{
-													BlockLightCalculations.Recalculate(chunk);
-													//BlockLightCalculations.Recalculate(chunk);
-												}
-
-												if (BlockLightCalculations.HasEnqueued(chunkCoordinates))
-												{
-													BlockLightCalculations.Process(chunkCoordinates);
-												}
-											}
-
-											//SkyLightCalculator.TryProcess(chunkCoordinates);
-
-											if (SkyLightCalculator != null)
-											{
-												if (newChunk)
-												{
+												if (SkyLightCalculator != null)
 													SkyLightCalculator.Recalculate(chunk);
-												}
 											}
 
 											chunk.UpdateBuffer(
@@ -308,12 +298,12 @@ namespace Alex.Worlds
 
 												if (c2)
 													ScheduleChunkUpdate(
-														new ChunkCoordinates(chunk.X - 1, chunk.Z),
+														new ChunkCoordinates(chunk.X, chunk.Z + 1),
 														ScheduleType.Border);
-
+												
 												if (c3)
 													ScheduleChunkUpdate(
-														new ChunkCoordinates(chunk.X, chunk.Z + 1),
+														new ChunkCoordinates(chunk.X - 1, chunk.Z),
 														ScheduleType.Border);
 
 												if (c4)
@@ -324,7 +314,6 @@ namespace Alex.Worlds
 										}
 										finally
 										{
-											chunk.ScheduledForUpdate = false;
 											//Scheduled.Remove(chunkCoordinates);
 											Monitor.Exit(chunk.UpdateLock);
 										}
@@ -356,21 +345,6 @@ namespace Alex.Worlds
 				return UpdateBorderQueue;
 
 			return queue;
-		}
-		
-		private bool ProcessLighting()
-		{
-			var blockLightCalc = BlockLightCalculations;
-
-			if (blockLightCalc == null)
-				return false;
-			
-			var target         = Chunks?.FirstOrDefault(x => blockLightCalc.HasEnqueued(x.Value.Coordinates));
-
-			if (!target.HasValue || target.Value.Value?.Coordinates == null)
-				return false;
-			
-			return blockLightCalc.Process(target.Value.Value.Coordinates);
 		}
 
 
@@ -418,18 +392,19 @@ namespace Alex.Worlds
 		/// <inheritdoc />
 		public void RemoveChunk(ChunkCoordinates position, bool dispose = true)
 		{
-			BlockLightCalculations.Remove(position);
-			UpdateQueue.Remove(position);
-			UpdateBorderQueue.Remove(position);
-			FastUpdateQueue.Remove(position);
 			//Scheduled.Remove(position);
 
 			if (Chunks.TryRemove(position, out var column))
 			{
-				//foreach (var blockEntity in column.GetBlockEntities)
+				UpdateQueue.Remove(position);
+				UpdateBorderQueue.Remove(position);
+				FastUpdateQueue.Remove(position);
+				
+				foreach (var blockEntity in column.BlockEntities)
 				{
-				//	World.EntityManager.RemoveBlockEntity(
-				//		new BlockCoordinates((column.X << 4) + blockEntity.X, blockEntity.Y, (column.Z << 4) + blockEntity.Z));
+					var pos = blockEntity.Key;
+					World.EntityManager.RemoveBlockEntity(
+						new BlockCoordinates((column.X << 4) + pos.X, pos.Y, (column.Z << 4) + pos.Z));
 				}
 				
 				if (dispose)
@@ -754,7 +729,7 @@ namespace Alex.Worlds
 				//Graphics?.Dispose();
 				CancellationToken?.Cancel();
 				
-				BlockLightCalculations?.Dispose();
+				//BlockLightCalculations?.Dispose();
 
 				SkyLightCalculator?.Dispose();
 
@@ -770,7 +745,7 @@ namespace Alex.Worlds
 						rendered?.Dispose();
 
 				_renderedChunks = null;
-				BlockLightCalculations = null;
+				//BlockLightCalculations = null;
 				SkyLightCalculator = null;
 			}
 			finally

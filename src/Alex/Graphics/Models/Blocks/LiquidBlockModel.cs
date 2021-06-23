@@ -21,7 +21,6 @@ namespace Alex.Graphics.Models.Blocks
 	public class LiquidBlockModel : BlockModel
 	{
 		private static readonly BlockFace[] Faces = Enum.GetValues(typeof(BlockFace)).Cast<BlockFace>().ToArray();
-		private static PropertyInt LEVEL = new PropertyInt("level");
 
 		public LiquidBlockModel()
 		{
@@ -32,7 +31,7 @@ namespace Alex.Graphics.Models.Blocks
 		{
 			if (state.Block is LiquidBlock lb)
 			{
-				return 7 - (state.GetTypedValue(LEVEL) & 7);
+				return 7 - (state.GetTypedValue(LiquidBlock.LEVEL) & 7);
 			}
 			
 			if (state.Block.Solid)

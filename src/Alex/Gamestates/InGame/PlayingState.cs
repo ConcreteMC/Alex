@@ -147,7 +147,7 @@ namespace Alex.Gamestates.InGame
 		private long _ramUsage = 0;
 		private long _threadsUsed, _maxThreads;
 		private long _complPortsUsed, _maxComplPorts;
-		private Biome _currentBiome = BiomeUtils.GetBiomeById(0);
+		private Biome _currentBiome = BiomeUtils.GetBiome(0);
 		private int _currentBiomeId = 0;
 		private void InitDebugInfo()
 		{
@@ -300,7 +300,7 @@ namespace Alex.Gamestates.InGame
 
 								foreach (var kv in dict)
 								{
-									sb.AppendLine($"{kv.Name}={kv.StringValue}");
+									sb.AppendLine(kv.ToFormattedString());
 								}
 							}
 						}
@@ -390,7 +390,7 @@ namespace Alex.Gamestates.InGame
 
 				var pos     = World.Player.KnownPosition.GetCoordinates3D();
 				var biomeId = World.GetBiome(pos.X, pos.Y, pos.Z);
-				var biome   = BiomeUtils.GetBiomeById(biomeId);
+				var biome   = BiomeUtils.GetBiome(biomeId);
 				_currentBiomeId = biomeId;
 				_currentBiome = biome;
 			}

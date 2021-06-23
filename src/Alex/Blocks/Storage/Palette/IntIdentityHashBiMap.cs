@@ -9,7 +9,7 @@ namespace Alex.Blocks.Storage.Palette
 {
 	public class IntIdentityHashBiMap : IEnumerable<BlockState>, IPallete
 	{
-		private static BlockState _empty = null;
+		private static object _empty = null;
 		private BlockState[] _values;
 		private uint[] _keys;
 		private BlockState[] _byId;
@@ -55,10 +55,7 @@ namespace Alex.Blocks.Storage.Palette
 
 			return _nextFreeIndex;
 		}
-
-		/**
-	     * Rehashes the map to the new capacity
-	     */
+		
 		private void Grow(int capacity)
 		{
 			BlockState[] ak = _values;

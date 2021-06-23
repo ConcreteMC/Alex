@@ -68,6 +68,12 @@ namespace Alex.Worlds
 		}
 
 		/// <inheritdoc />
+		public bool TryGetBlockLight(BlockCoordinates coordinates, out byte blockLight)
+		{
+			return _world.TryGetBlockLight(coordinates, out blockLight);
+		}
+
+		/// <inheritdoc />
 		public void GetLight(BlockCoordinates coordinates, out byte blockLight, out byte skyLight)
 		{
 			_world.GetLight(GetOffset(coordinates), out blockLight, out skyLight);

@@ -1,6 +1,7 @@
 ﻿using System;
 using Alex.Blocks.State;
 using Alex.Common.Blocks;
+using Alex.Common.Utils;
 using Alex.ResourcePackLib.Json;
 
 namespace Alex.Blocks.Properties
@@ -11,6 +12,8 @@ namespace Alex.Blocks.Properties
 		{
 			
 		}
+		
+		public override string StringValue => Value.ToString().ToLower();
 
 		/// <inheritdoc />
 		protected override StateProperty<BlockFace> WithValue(BlockFace value)
@@ -26,6 +29,43 @@ namespace Alex.Blocks.Properties
 			}
 
 			return BlockFace.None;
+		}
+
+		/// <inheritdoc />
+		public override string ToFormattedString()
+		{
+			TextColor color = TextColor.White;
+
+			switch (Value)
+			{
+				case BlockFace.Down:
+					color = TextColor.DarkGray;
+					break;
+
+				case BlockFace.Up:
+					color = TextColor.White;
+					break;
+
+				case BlockFace.East:
+					color = TextColor.BrightGreen;
+					break;
+
+				case BlockFace.West:
+					color = TextColor.Red;
+					break;
+
+				case BlockFace.North:
+					color = TextColor.Blue;
+					break;
+
+				case BlockFace.South:
+					color = TextColor.Yellow;
+					break;
+
+				case BlockFace.None:
+					break;
+			}
+			return $"{Name}={color.ToString()}{StringValue}";
 		}
 	}
 }

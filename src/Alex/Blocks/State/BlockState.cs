@@ -21,11 +21,11 @@ namespace Alex.Blocks.State
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(BlockState));
 		
-		protected  internal  List<StateProperty> States { get; set; }
+		protected internal HashSet<StateProperty> States { get; set; }
 		public int Count => States.Count;
 		public BlockState()
 		{
-			States = new List<StateProperty>();
+			States = new HashSet<StateProperty>(new StatePropertyComparer());
 		}
 
 		public string Name { get; set; }
@@ -45,16 +45,18 @@ namespace Alex.Blocks.State
 
 		public T GetTypedValue<T>(StateProperty<T> property)
 		{
-			var first = States.FirstOrDefault(
-				x => x.Identifier == property.Identifier);
+			if (States.TryGetValue(property, out var first))
+			{
+				if (first.Value is T t)
+					return t;
+			
+				if (first is StateProperty<T> ip)
+					return ip.Value;
 
-			if (first == null)
-				return default(T);
+				return property.ParseValue(first.StringValue);
+			}
 
-			if (first is StateProperty<T> ip)
-				return ip.Value;
-
-			return property.ParseValue(first.StringValue);
+			return default(T);
 		}
 
 		public BlockState WithProperty(string property, string value, params string[] requiredMatches)
@@ -72,7 +74,8 @@ namespace Alex.Blocks.State
 
 		public bool TryGetValue(string property, out string value)
 		{
-			var first = States.FirstOrDefault(x => x.Name.Equals(property, StringComparison.InvariantCultureIgnoreCase));
+			var hashcode = property.GetHashCode(StringComparison.InvariantCultureIgnoreCase);
+			var first = States.FirstOrDefault(x => x.Identifier == hashcode);
 
 			if (first != null)
 			{
@@ -81,6 +84,31 @@ namespace Alex.Blocks.State
 			}
 
 			value = null;
+			return false;
+		}
+		
+		public bool TryGetValue<T>(StateProperty<T> property, out T value)
+		{ 
+			//var hashcode = property.Identifier;
+			//var first = States.TryGetValue();
+
+			if (States.TryGetValue(property, out var first))
+			{
+				var v = first.Value;
+
+				if (v is T t)
+				{
+					value = t;
+				}
+				else
+				{
+					value = property.ParseValue(first.StringValue);
+				}
+
+				return true;
+			}
+
+			value = default(T);
 			return false;
 		}
 
@@ -156,10 +184,7 @@ namespace Alex.Blocks.State
 			for (var index = 0; index < v.Length; index++)
 			{
 				var kv = v[index];
-
-				sb.Append(kv.Name);
-				sb.Append('=');
-				sb.Append(kv.StringValue.ToLowerInvariant());
+				sb.Append(kv.ToFormattedString());
 
 				if (index != v.Length - 1)
 					sb.Append(',');
@@ -178,11 +203,14 @@ namespace Alex.Blocks.State
 
 		public BlockState CloneSilent()
 		{
+			//StateProperty[] properties = new StateProperty[States.Length];
+			//Array.Copy(States, properties, States.Length);
+			
 			BlockState bs = new BlockState
 			{
 				Name = Name,
 				ID = ID,
-				States = new List<StateProperty>(States),
+				States = new HashSet<StateProperty>(States),
 				Block = Block,
 				VariantMapper = VariantMapper,
 				//		ResolveModel = ResolveModel,

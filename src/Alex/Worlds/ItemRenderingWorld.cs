@@ -132,7 +132,7 @@ namespace Alex.Worlds
         /// <inheritdoc />
         public Biome GetBiome(BlockCoordinates coordinates)
         {
-            return BiomeUtils.GetBiomeById(0);
+            return BiomeUtils.GetBiome(0);
         }
 
         public int GetBiome(int x, int y, int z)
@@ -205,6 +205,13 @@ namespace Alex.Worlds
         public void SetBlockLight(BlockCoordinates coordinates, byte blockLight)
         {
             throw new System.NotImplementedException();
+        }
+
+        /// <inheritdoc />
+        public bool TryGetBlockLight(BlockCoordinates coordinates, out byte blockLight)
+        {
+            blockLight = 0;
+            return true;
         }
 
         /// <inheritdoc />

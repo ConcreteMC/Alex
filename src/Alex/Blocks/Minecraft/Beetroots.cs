@@ -1,6 +1,6 @@
 namespace Alex.Blocks.Minecraft
 {
-	public class Beetroots : Block
+	public class Beetroots : AgingPlantBlock
 	{
 		public Beetroots() : base()
 		{

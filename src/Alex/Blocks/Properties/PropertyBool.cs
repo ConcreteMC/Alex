@@ -1,5 +1,7 @@
 ﻿using System;
 using Alex.Blocks.State;
+using Alex.Common.Utils;
+using MiNET.Utils;
 
 namespace Alex.Blocks.Properties
 {
@@ -19,6 +21,9 @@ namespace Alex.Blocks.Properties
 		}
 
 		/// <inheritdoc />
+		public override string StringValue => Value ? TrueString : FalseString;
+
+		/// <inheritdoc />
 		protected override StateProperty<bool> WithValue(bool value)
 		{
 			return new PropertyBool(Name, TrueString, FalseString) {Value = value};
@@ -31,12 +36,18 @@ namespace Alex.Blocks.Properties
 				return result;
 			}
 
-			if (value.Equals(TrueString, StringComparison.InvariantCultureIgnoreCase))
+			if (string.Equals(value, TrueString, StringComparison.InvariantCultureIgnoreCase) )
 			{
 				return true;
 			}
 
 			return false;
+		}
+
+		/// <inheritdoc />
+		public override string ToFormattedString()
+		{
+			return $"{Name}={(Value ? TextColor.BrightGreen : TextColor.Red)}{(Value ? TrueString : FalseString)}";
 		}
 	}
 }

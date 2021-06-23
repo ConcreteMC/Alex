@@ -1,4 +1,5 @@
 using Alex.Blocks.Properties;
+using Alex.Blocks.State;
 using Alex.Common.Blocks;
 
 namespace Alex.Blocks.Minecraft.Liquid
@@ -13,7 +14,8 @@ namespace Alex.Blocks.Minecraft.Liquid
 
 		public override bool ShouldRenderFace(BlockFace face, Block neighbor)
 		{
-			var myLevelValue = BlockState.GetTypedValue(LEVEL);
+			int myLevelValue = 0;
+			BlockState.TryGetValue(LEVEL, out myLevelValue);//.GetTypedValue(LEVEL);
 
 			if (neighbor.BlockMaterial == Material.WaterPlant
 			    || neighbor.BlockMaterial == Material.ReplaceableWaterPlant)
@@ -21,7 +23,9 @@ namespace Alex.Blocks.Minecraft.Liquid
 			
 			if (neighbor.BlockMaterial.IsLiquid || neighbor is LiquidBlock)
 			{
-				var neighborLevel = neighbor.BlockState.GetTypedValue(LEVEL);
+				int neighborLevel = 0;
+				neighbor.BlockState.TryGetValue(LEVEL, out myLevelValue);
+				//var neighborLevel = neighbor.BlockState.GetTypedValue(LEVEL);
 
 				if (neighborLevel < myLevelValue)
 				{
@@ -39,6 +43,19 @@ namespace Alex.Blocks.Minecraft.Liquid
 
 			//else if (neighbor.Transparent)
 			return base.ShouldRenderFace(face, neighbor);
+		}
+
+		/// <inheritdoc />
+		public override bool TryGetStateProperty(string prop, out StateProperty stateProperty)
+		{
+			switch (prop)
+			{
+				case "level":
+					stateProperty = LEVEL;
+					return true;
+			}
+			
+			return base.TryGetStateProperty(prop, out stateProperty);
 		}
 	}
 }

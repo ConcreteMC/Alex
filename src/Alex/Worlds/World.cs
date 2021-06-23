@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using Alex.Blocks;
 using Alex.Blocks.Minecraft;
@@ -184,6 +185,103 @@ namespace Alex.Worlds
 			_disposables.Add(BackgroundWorker);
 		}
 
+		private const int MORTON3D_BIT_SIZE = 21;
+		private const int BLOCKHASH_Y_BITS = 9;
+		private const int BLOCKHASH_Y_PADDING = 128; //size (in blocks) of padding after both boundaries of the Y axis
+		private const int BLOCKHASH_Y_OFFSET = BLOCKHASH_Y_PADDING - 0;
+		private const int BLOCKHASH_Y_MASK = (1 << BLOCKHASH_Y_BITS) - 1;
+		private const int BLOCKHASH_XZ_MASK = (1 << MORTON3D_BIT_SIZE) - 1;
+		private const int BLOCKHASH_XZ_EXTRA_BITS = 6;
+		private const int BLOCKHASH_XZ_EXTRA_MASK = (1 << BLOCKHASH_XZ_EXTRA_BITS) - 1;
+		private const int BLOCKHASH_XZ_SIGN_SHIFT = 64 - MORTON3D_BIT_SIZE - BLOCKHASH_XZ_EXTRA_BITS;
+		private const int BLOCKHASH_X_SHIFT = BLOCKHASH_Y_BITS;
+		private const int BLOCKHASH_Z_SHIFT = BLOCKHASH_X_SHIFT + BLOCKHASH_XZ_EXTRA_BITS;
+
+		public static int BlockHash(int x, int y, int z)
+		{
+			var shiftedY = y + BLOCKHASH_Y_OFFSET;
+
+			if ((shiftedY & (~0 << BLOCKHASH_Y_BITS)) != 0)
+			{
+				throw new ArgumentException("Y coordinate $y is out of range!");
+			}
+
+			return Morton3dEncode(
+				x & BLOCKHASH_XZ_MASK,
+				(shiftedY /* & BLOCKHASH_Y_MASK */)
+				| (((x >> MORTON3D_BIT_SIZE) & BLOCKHASH_XZ_EXTRA_MASK) << BLOCKHASH_X_SHIFT)
+				| (((z >> MORTON3D_BIT_SIZE) & BLOCKHASH_XZ_EXTRA_MASK) << BLOCKHASH_Z_SHIFT), z & BLOCKHASH_XZ_MASK);
+		}
+
+		public static BlockCoordinates BlockHashDecode(int hash)
+		{
+			Morton3dDecode(hash, out var x, out var y, out var z);
+
+			return new BlockCoordinates(x, y, z);
+		}
+		public static void Morton3dDecode(
+			int morton, out int x, out int y, out int z)
+		{
+#if INTRINSIC
+            if (X86.Bmi2.IsSupported)
+            {
+                x = X86.Bmi2.ParallelBitExtract(morton, 0x09249249);
+                y = X86.Bmi2.ParallelBitExtract(morton, 0x12492492);
+                z = X86.Bmi2.ParallelBitExtract(morton, 0x24924924);
+            }
+            else
+#endif
+			{
+				x = morton & 0x9249249;
+				x = (x ^ (x >> 2)) & 0x30c30c3;
+				x = (x ^ (x >> 4)) & 0x0300f00f;
+				x = (x ^ (x >> 8)) & 0x30000ff;
+				x = (x ^ (x >> 16)) & 0x000003ff;
+
+				y = (morton >> 1) & 0x9249249;
+				y = (y ^ (y >> 2)) & 0x30c30c3;
+				y = (y ^ (y >> 4)) & 0x0300f00f;
+				y = (y ^ (y >> 8)) & 0x30000ff;
+				y = (y ^ (y >> 16)) & 0x000003ff;
+
+				z = (morton >> 2) & 0x9249249;
+				z = (z ^ (z >> 2)) & 0x30c30c3;
+				z = (z ^ (z >> 4)) & 0x0300f00f;
+				z = (z ^ (z >> 8)) & 0x30000ff;
+				z = (z ^ (z >> 16)) & 0x000003ff;
+
+			}
+		}
+		
+		private static int Morton3dEncode(int x, int y, int z)
+		{
+#if INTRINSIC
+            if (X86.Bmi2.IsSupported)
+                return X86.Bmi2.ParallelBitDeposit(z, 0x24924924)
+                     | X86.Bmi2.ParallelBitDeposit(y, 0x12492492)
+                     | X86.Bmi2.ParallelBitDeposit(x, 0x09249249);
+            else
+#endif
+			{
+				x = (x | (x << 16)) & 0x030000FF;
+				x = (x | (x << 8)) & 0x0300F00F;
+				x = (x | (x << 4)) & 0x030C30C3;
+				x = (x | (x << 2)) & 0x09249249;
+
+				y = (y | (y << 16)) & 0x030000FF;
+				y = (y | (y << 8)) & 0x0300F00F;
+				y = (y | (y << 4)) & 0x030C30C3;
+				y = (y | (y << 2)) & 0x09249249;
+
+				z = (z | (z << 16)) & 0x030000FF;
+				z = (z | (z << 8)) & 0x0300F00F;
+				z = (z | (z << 4)) & 0x030C30C3;
+				z = (z | (z << 2)) & 0x09249249;
+
+				return x | (y << 1) | (z << 2);
+			}
+		}
+		
 		private void FieldOfVisionOnValueChanged(int oldvalue, int newvalue)
 		{
 			Camera.FOV = newvalue;
@@ -394,14 +492,14 @@ namespace Alex.Worlds
 			        var y = coordinates.Y;
 			        var z = coordinates.Z;
 			        
-			        ScheduleLightingUpdate(new BlockCoordinates(x + 1, y, z));
-			        ScheduleLightingUpdate(new BlockCoordinates(x - 1, y, z));
+			        ScheduleBlockUpdate(new BlockCoordinates(x + 1, y, z));
+			        ScheduleBlockUpdate(new BlockCoordinates(x - 1, y, z));
 			        
-			        ScheduleLightingUpdate(new BlockCoordinates(x, y, z + 1));
-			        ScheduleLightingUpdate(new BlockCoordinates(x, y, z - 1));
+			        ScheduleBlockUpdate(new BlockCoordinates(x, y, z + 1));
+			        ScheduleBlockUpdate(new BlockCoordinates(x, y, z - 1));
 			        
-			        ScheduleLightingUpdate(new BlockCoordinates(x, y + 1, z));
-			        ScheduleLightingUpdate(new BlockCoordinates(x, y - 1, z));
+			        ScheduleBlockUpdate(new BlockCoordinates(x, y + 1, z));
+			        ScheduleBlockUpdate(new BlockCoordinates(x, y - 1, z));
 		        }
 	        }
         }
@@ -418,14 +516,14 @@ namespace Alex.Worlds
 			        var y = coordinates.Y;
 			        var z = coordinates.Z;
 
-			        ScheduleLightingUpdate(new BlockCoordinates(x + 1, y, z), true);
-			        ScheduleLightingUpdate(new BlockCoordinates(x + -1, y, z), true);
+			        ScheduleBlockUpdate(new BlockCoordinates(x + 1, y, z));
+			        ScheduleBlockUpdate(new BlockCoordinates(x + -1, y, z));
 
-			        ScheduleLightingUpdate(new BlockCoordinates(x, y, z + 1), true);
-			        ScheduleLightingUpdate(new BlockCoordinates(x, y, z + -1), true);
+			        ScheduleBlockUpdate(new BlockCoordinates(x, y, z + 1));
+			        ScheduleBlockUpdate(new BlockCoordinates(x, y, z + -1));
 
-			        ScheduleLightingUpdate(new BlockCoordinates(x, y + 1, z), true);
-			        ScheduleLightingUpdate(new BlockCoordinates(x, y + -1, z), true);
+			        ScheduleBlockUpdate(new BlockCoordinates(x, y + 1, z));
+			        ScheduleBlockUpdate(new BlockCoordinates(x, y + -1, z));
 		        }
 	        }
         }
@@ -554,10 +652,16 @@ namespace Alex.Worlds
 				{
 					//block = block.Block.BlockPlaced(this, block, new BlockCoordinates(x,y,z));
 				}
-				
+
+				var blockcoords = new BlockCoordinates(x, y, z);
+			//	var previousBlockstate = chunk.GetBlockState(cx, cy, cz, storage);
 				chunk.SetBlockState(cx, cy, cz, block, storage);
 
-				EntityManager.RemoveBlockEntity(new BlockCoordinates(x, y, z));
+				if (storage == 0 && EntityManager.TryGetBlockEntity(blockcoords, out var blockEntity))
+				{
+					blockEntity.Block = block.Block;
+				}
+				//EntityManager.RemoveBlockEntity(new BlockCoordinates(x, y, z));
 				
 				var type = ScheduleType.Full;
 				
@@ -577,8 +681,10 @@ namespace Alex.Worlds
 					SetBlockLight(blockCoords, 0);
 				}
 				*/
+				
 				ChunkManager.SkyLightCalculator.Calculate(blockCoords);
-				ChunkManager.BlockLightCalculations.Calculate(blockCoords);
+				ChunkManager.BlockLightUpdate.Enqueue(blockCoords);
+
 				//if (GetBlockLight(blockCoords) > 0)
 				{
 					if ((type & ScheduleType.Lighting) == 0)
@@ -595,7 +701,7 @@ namespace Alex.Worlds
 				//chunk.IsDirty = true;
 				ChunkManager.ScheduleChunkUpdate(chunkCoords, type, true);
 				
-				CheckForUpdate(chunkCoords, cx, cz);
+				//CheckForUpdate(chunkCoords, cx, cz);
 			}
 		}
 
@@ -640,28 +746,6 @@ namespace Alex.Worlds
 			ScheduleBlockUpdate(source, new BlockCoordinates(x, y - 1, z));
 		}
 		
-		private void ScheduleLightingUpdate(BlockCoordinates coordinates, bool blockLight = false)
-		{
-			var chunkCoords = new ChunkCoordinates(coordinates.X >> 4, coordinates.Z >> 4);
-			
-			ChunkColumn chunk;
-			if (ChunkManager.TryGetChunk(chunkCoords, out chunk))
-			{
-				var cx = coordinates.X & 0xf;
-				var cy = coordinates.Y & 0xff;
-				var cz = coordinates.Z & 0xf;
-
-				if (blockLight)
-				{
-					chunk.ScheduleBlocklightUpdate(cx, cy, cz);
-				}
-				else
-				{
-					chunk.ScheduleSkylightUpdate(cx, cy, cz);
-				}
-			}
-		}
-
 		public void ScheduleBlockUpdate(BlockCoordinates coordinates)
 		{
 			var chunkCoords = new ChunkCoordinates(coordinates.X >> 4, coordinates.Z >> 4);
@@ -738,7 +822,7 @@ namespace Alex.Worlds
 		/// <inheritdoc />
 		public Biome GetBiome(BlockCoordinates coordinates)
 		{
-			return BiomeUtils.GetBiomeById(GetBiome(coordinates.X, coordinates.Y, coordinates.Z));
+			return BiomeUtils.GetBiome(GetBiome(coordinates.X, coordinates.Y, coordinates.Z));
 		}
 		
 		public int GetBiome(int x, int y, int z)

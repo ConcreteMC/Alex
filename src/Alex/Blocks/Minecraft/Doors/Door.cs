@@ -24,13 +24,12 @@ namespace Alex.Blocks.Minecraft
 		private static PropertyBool OPEN = new PropertyBool("open");
 		private static PropertyBool UPPER = new PropertyBool("half", "upper", "lower");
 		private static PropertyBool RIGHTHINCHED = new PropertyBool("hinge", "left", "right");
-		private static PropertyBool POWERED = new PropertyBool("powered");
 		private static PropertyFace FACING = new PropertyFace("facing");
 
 		public bool IsUpper => BlockState.GetTypedValue(UPPER);//(Metadata & 0x08) == 0x08;
 		public bool IsOpen => BlockState.GetTypedValue(OPEN);// (Metadata & 0x04) == 0x04;
 		//public bool IsRightHinch => (Metadata & 0x01) == 0x01;
-		public bool IsPowered => BlockState.GetTypedValue<bool>(POWERED); //(Metadata & 0x02) == 0x02;
+		public bool IsPowered => BlockState.GetTypedValue<bool>(RedstoneBase.POWERED); //(Metadata & 0x02) == 0x02;
 
 		protected bool CanOpen { get; set; } = true;
 		public Door(uint blockId) : base()
@@ -96,6 +95,23 @@ namespace Alex.Blocks.Minecraft
 		public override bool ShouldRenderFace(BlockFace face, Block neighbor)
 		{
 			return true;
+		}
+		
+		public override bool TryGetStateProperty(string prop, out StateProperty stateProperty)
+		{
+			switch (prop)
+			{
+				case "open":
+					stateProperty = OPEN;
+					return true;
+				case "powered":
+					stateProperty = RedstoneBase.POWERED;
+					return true;
+				case "half":
+					stateProperty = UPPER;
+					return true;
+			}
+			return base.TryGetStateProperty(prop, out stateProperty);
 		}
 	}
 }

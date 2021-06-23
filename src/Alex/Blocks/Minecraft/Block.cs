@@ -328,5 +328,22 @@ namespace Alex.Blocks.Minecraft
 		}
 
 		public Block Value => this;
+		
+		private static readonly PropertyFace Facing = new PropertyFace("facing");
+		public virtual bool TryGetStateProperty(string prop, out StateProperty stateProperty)
+		{
+			switch (prop)
+			{
+				case "facing":
+					stateProperty = Facing;
+					return true;
+				case "waterlogged":
+					stateProperty = WaterLogged;
+					return true;
+			}
+			
+			stateProperty = null;
+			return false;
+		}
 	}
 }

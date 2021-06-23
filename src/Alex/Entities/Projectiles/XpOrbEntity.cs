@@ -1,3 +1,4 @@
+using Alex.MoLang.Attributes;
 using Alex.Worlds;
 
 namespace Alex.Entities.Projectiles
@@ -6,5 +7,7 @@ namespace Alex.Entities.Projectiles
 	{
 		/// <inheritdoc />
 		public XpOrbEntity(World level) : base(level) { }
+
+		[MoProperty("texture_frame_index")] public int TextureFrameIndex { get; set; } = 0;
 	}
 }

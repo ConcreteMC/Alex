@@ -31,9 +31,6 @@ namespace Alex.Worlds.Chunks
 		public ChunkCoordinates Coordinates => new ChunkCoordinates(X, Z);
 
 		public           bool           IsNew           { get; set; } = true;
-
-
-		private readonly  Stopwatch      _lightUpdateWatch = new Stopwatch();
 		public           ChunkSection[] Sections { get; set; } = new ChunkSection[16];
 		private readonly int[]          _biomeId = ArrayOf<int>.Create(16 * 16 * 256, 1);
 		private readonly  short[]        _height  = new short[256];
@@ -44,11 +41,8 @@ namespace Alex.Worlds.Chunks
 
 		internal ChunkData ChunkData { get; private set; }
 		private object _dataLock = new object();
-		
-		internal bool ScheduledForUpdate { get; set; } = false;
 
 		private System.Collections.BitArray _scheduledUpdates;
-		private ChunkOctree _octree;
 		public ChunkColumn(int x, int z)
 		{
 			X = x;
@@ -60,20 +54,11 @@ namespace Alex.Worlds.Chunks
 			}
 			
 			BlockEntities = new ConcurrentDictionary<BlockCoordinates, NbtCompound>();
-			_lightUpdateWatch.Start();
+			_scheduledUpdates = new System.Collections.BitArray((16 * 256 * 16), false);
 			
 			ChunkData = new ChunkData(x,z);
-			//ChunkData.KeepInMemory = Alex.Instance.Options.AlexOptions.VideoOptions.
-			_octree = new ChunkOctree(new BoundingBox(Vector3.Zero, new Vector3(16,256, 16)));
+		}
 		
-			_scheduledUpdates = new System.Collections.BitArray((16 * 256 * 16), false);
-		}
-
-		public bool Collides(BoundingBox box, ref List<BoundingBox> collisions)
-		{
-			return _octree.Collides(box, ref collisions);
-		}
-
 		protected void SetScheduled(int x, int y, int z, bool value)
 		{
 			var queue = _scheduledUpdates;
@@ -528,16 +513,6 @@ namespace Alex.Worlds.Chunks
 			SetScheduled(x,y,z, true);
 		}
 		
-		public void ScheduleBlocklightUpdate(int x, int y, int z)
-		{
-			SetScheduled(x,y,z, true);
-		}
-		
-		public void ScheduleSkylightUpdate(int x, int y, int z)
-		{
-			SetScheduled(x,y,z, true);
-		}
-
 		public bool AddBlockEntity(BlockCoordinates coordinates, NbtCompound entity)
 		{
 			//entity.Block = GetBlockState(coordinates.X & 0x0f, coordinates.Y & 0xf, coordinates.Z & 0x0f).Block;

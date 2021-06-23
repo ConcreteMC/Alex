@@ -781,7 +781,7 @@ namespace Alex.Graphics.Models.Blocks
 			BlockCoordinates position,
 			BlockState baseBlock)
 		{
-			var biome = world == null ? BiomeUtils.GetBiomeById(0) : world.GetBiome(position);
+			var biome = world == null ? BiomeUtils.GetBiome(0) : world.GetBiome(position);
 			
 			
 			if (baseBlock.ModelData == null)

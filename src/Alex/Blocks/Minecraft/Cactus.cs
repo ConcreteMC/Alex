@@ -1,6 +1,6 @@
 namespace Alex.Blocks.Minecraft
 {
-	public class Cactus : Block
+	public class Cactus : AgingPlantBlock
 	{
 		public Cactus() : base()
 		{

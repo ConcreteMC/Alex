@@ -137,7 +137,7 @@ namespace Alex.Entities.BlockEntities
 		}
 
 		private float TextOffset = 0.1f;
-		protected override void BlockChanged(Block oldBlock, Block newBlock)
+		protected override bool BlockChanged(Block oldBlock, Block newBlock)
 		{
 			if (newBlock is WallSign)
 			{
@@ -172,8 +172,11 @@ namespace Alex.Entities.BlockEntities
 						}
 					}
 				}
+
+				return true;
 			}
-			else if (newBlock is StandingSign)
+			
+			if (newBlock is StandingSign)
 			{
 				if (EntityModelRenderer.TryGetRenderer(new StandingSignEntityModel(), out var renderer))
 				{
@@ -189,7 +192,11 @@ namespace Alex.Entities.BlockEntities
 						Rotation = (byte) rot;// // ((rot + 3) % 15);
 					}
 				}
+
+				return true;
 			}
+
+			return false;
 		}
 		
 		/// <inheritdoc />

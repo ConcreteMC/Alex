@@ -1,3 +1,4 @@
+using Alex.Blocks.Properties;
 using Alex.Blocks.State;
 using Alex.Common.Blocks;
 using Alex.Common.Utils.Vectors;
@@ -89,6 +90,23 @@ namespace Alex.Blocks.Minecraft
 				return true;
 			
 			return base.CanAttach(face, block);
+		}
+
+		//private static readonly PropertyBool DirectionalProp = new PropertyBool("")
+		/// <inheritdoc />
+		public override bool TryGetStateProperty(string prop, out StateProperty stateProperty)
+		{
+			switch (prop)
+			{
+				case "up":
+				case "north":
+				case "east":
+				case "south":
+				case "west":
+					stateProperty = new PropertyBool(prop, "true", "none");
+					return true;
+			}
+			return base.TryGetStateProperty(prop, out stateProperty);
 		}
 	}
 }

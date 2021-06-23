@@ -18,4 +18,18 @@ namespace Alex.Blocks.Minecraft
             BlockMaterial = Material.ReplaceableWaterPlant;
         }
     }
+    
+    public class SeaPickle : Block
+    {
+        public SeaPickle()
+        {
+            //IsWater = true;
+            Transparent = true;
+            Solid = false;
+
+            IsFullCube = false;
+
+            BlockMaterial = Material.ReplaceableWaterPlant;
+        }
+    }
 }

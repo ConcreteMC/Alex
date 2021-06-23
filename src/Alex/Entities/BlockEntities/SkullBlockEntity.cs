@@ -83,7 +83,7 @@ namespace Alex.Entities.BlockEntities
 		}
 
 		/// <inheritdoc />
-		protected override void BlockChanged(Block oldBlock, Block newBlock)
+		protected override bool BlockChanged(Block oldBlock, Block newBlock)
 		{
 			if (newBlock is Skull s)
 			{
@@ -186,6 +186,8 @@ namespace Alex.Entities.BlockEntities
 						}
 						break;
 				}
+
+				
 			}
 			
 			if (newBlock is WallSkull)
@@ -208,6 +210,8 @@ namespace Alex.Entities.BlockEntities
 					}
 				}
 			}
+			
+			return true;
 		}
 
 		/// <inheritdoc />

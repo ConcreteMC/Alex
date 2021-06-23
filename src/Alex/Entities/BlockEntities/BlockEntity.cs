@@ -1,5 +1,6 @@
 using Alex.Blocks.Minecraft;
 using Alex.Common.Graphics;
+using Alex.Common.Utils;
 using Alex.Common.Utils.Vectors;
 using Alex.Net;
 using Alex.Worlds;
@@ -13,6 +14,8 @@ namespace Alex.Entities.BlockEntities
 		public int X { get; set; }
 		public int Y { get; set; }
 		public int Z { get; set; }
+
+		protected BlockCoordinates BlockCoordinates => new BlockCoordinates(X, Y, Z);
 
 		private Block _block = null;
 
@@ -28,7 +31,12 @@ namespace Alex.Entities.BlockEntities
 				_block = value;
 
 				if (value != null)
-					BlockChanged(oldValue, value);
+				{
+					if (!BlockChanged(oldValue, value))
+					{
+						Level?.EntityManager.RemoveBlockEntity(BlockCoordinates);
+					}
+				}
 			}
 		}
 		
@@ -38,7 +46,7 @@ namespace Alex.Entities.BlockEntities
 			IsAffectedByGravity = false;
 			Block = block;
 			DoRotationCalculations = false;
-
+			AnimationController.Enabled = false;
 			//base.Movement.InterpolatedMovement = false;
 		}
 
@@ -51,9 +59,9 @@ namespace Alex.Entities.BlockEntities
 			}
 		}
 
-		protected virtual void BlockChanged(Block oldBlock, Block newBlock)
+		protected virtual bool BlockChanged(Block oldBlock, Block newBlock)
 		{
-			
+			return true;
 		}
 
 		public void Read(NbtCompound compound)
@@ -73,26 +81,59 @@ namespace Alex.Entities.BlockEntities
 		}
 
 		protected Vector3 Offset { get; set; } = new Vector3(0.5f, 0f, 0.5f);
+
+		public virtual void Render2D(IRenderArgs args){}
+
+		private PlayerLocation GetLocation() => new PlayerLocation(X + Offset.X, Y + Offset.Y, Z + Offset.Z);
+		protected Vector3 Rotation { get; set; } = Vector3.Zero;
 		
-		/// <inheritdoc />
-		public override PlayerLocation KnownPosition
+		internal override PlayerLocation RenderLocation
 		{
-			get => base.KnownPosition;
+			get => GetLocation();
 			set
 			{
-				base.KnownPosition = value;
 				//base.RenderLocation = value;
 			}
 		}
 
-		public virtual void Render2D(IRenderArgs args){}
-
-		internal override PlayerLocation RenderLocation
+		/// <inheritdoc />
+		public override PlayerLocation KnownPosition
 		{
-			get => base.RenderLocation + Offset;
-			set => base.RenderLocation = value;
+			get => GetLocation();
+			set
+			{
+				//base.RenderLocation = value;
+			}
 		}
+		
+		/// <inheritdoc />
+		public override int Render(IRenderArgs renderArgs, bool useCulling)
+		{
+			int renderCount = 0;
+			var  renderer = ModelRenderer;
 
+			if (!IsInvisible && RenderEntity && renderer != null)
+			{
+				Vector3 vector = Vector3.Backward;
+
+				var offset = new Vector3(Offset.X, Offset.Y, Offset.Z);
+
+				var rot = Matrix.CreateRotationX(Rotation.X.ToRadians())
+				          * Matrix.CreateRotationY(Rotation.Y.ToRadians())
+				          * Matrix.CreateRotationZ(Rotation.Z.ToRadians());
+
+				//offset = Vector3.Transform(offset, rot);
+				vector = Vector3.Transform(vector, rot);
+				
+				renderCount += renderer.Render(
+					renderArgs, useCulling, Effect,
+					Matrix.CreateScale(Scale / 16f) 
+					* Matrix.CreateWorld(new PlayerLocation(X + offset.X, Y + offset.Y, Z + offset.Z), vector, Vector3.Up));
+			}
+
+			return renderCount;
+		}
+		
 		public virtual void SetData(byte action, NbtCompound compound)
 		{
 			//throw new System.NotImplementedException();

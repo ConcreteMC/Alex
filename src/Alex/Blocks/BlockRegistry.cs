@@ -7,6 +7,7 @@ using Alex.Blocks.Minecraft.Liquid;
 using Alex.Blocks.Minecraft.Saplings;
 using Alex.Blocks.Minecraft.Walls;
 using Alex.Common.Resources;
+using Alex.Entities.BlockEntities;
 using NLog;
 
 namespace Alex.Blocks
@@ -137,6 +138,7 @@ namespace Alex.Blocks
 		    this.Register("minecraft:andesite_wall", () => new AndesiteWall());
 		    this.Register("minecraft:stone_brick_wall", () => new StoneBrickWall());
 			this.Register("minecraft:red_nether_brick_wall", () => new RedNetherBrickWall());
+			this.Register("minecraft:sandstone_wall", () => new StoneBrickWall());
 		    
 		    //Redstone
 		    this.Register("minecraft:lever", () => new Lever());
@@ -295,6 +297,7 @@ namespace Alex.Blocks
 		    this.Register("minecraft:smooth_sandstone_stairs", () => new SandstoneStairs());
 		    this.Register("minecraft:brick_stairs", () => new BrickStairs());
 		    this.Register("minecraft:stone_brick_stairs", () => new StoneBrickStairs());
+		    this.Register("minecraft:end_stone_brick_stairs", () => new StoneBrickStairs());
 		    this.Register("minecraft:mossy_stone_brick_stairs", () => new StoneBrickStairs());
 		    this.Register("minecraft:nether_brick_stairs", () => new NetherBrickStairs());
 		    this.Register("minecraft:red_nether_brick_stairs", () => new NetherBrickStairs());
@@ -538,6 +541,29 @@ namespace Alex.Blocks
 		    
 		    this.Register("minecraft:grass_path", () => new GrassPath());
 		    this.Register("minecraft:dirt_path", () => new GrassPath());
+		    
+		    this.Register("minecraft:potted_cactus", () => new PottedCactus());
+		    this.Register("minecraft:potted_dead_bush", () => new PottedDeadBush());
+		    this.Register("minecraft:sea_pickle", () => new SeaPickle());
+		    
+		    //Beds (I should really implement block tags...)
+		    this.Register("minecraft:bed", () => new Bed(BedBlockEntity.BedColor.Red));
+		    this.Register("minecraft:white_bed", () => new Bed(BedBlockEntity.BedColor.White));
+		    this.Register("minecraft:orange_bed", () => new Bed(BedBlockEntity.BedColor.Orange));
+		    this.Register("minecraft:magenta_bed", () => new Bed(BedBlockEntity.BedColor.Magenta));
+		    this.Register("minecraft:light_blue_bed", () => new Bed(BedBlockEntity.BedColor.LightBlue));
+		    this.Register("minecraft:yellow_bed", () => new Bed(BedBlockEntity.BedColor.Yellow));
+		    this.Register("minecraft:lime_bed", () => new Bed(BedBlockEntity.BedColor.Lime));
+		    this.Register("minecraft:pink_bed", () => new Bed(BedBlockEntity.BedColor.Pink));
+		    this.Register("minecraft:gray_bed", () => new Bed(BedBlockEntity.BedColor.Gray));
+		    this.Register("minecraft:light_gray_bed", () => new Bed(BedBlockEntity.BedColor.LightGray));
+		    this.Register("minecraft:cyan_bed", () => new Bed(BedBlockEntity.BedColor.Cyan));
+		    this.Register("minecraft:purple_bed", () => new Bed(BedBlockEntity.BedColor.Purple));
+		    this.Register("minecraft:blue_bed", () => new Bed(BedBlockEntity.BedColor.Blue));
+		    this.Register("minecraft:brown_bed", () => new Bed(BedBlockEntity.BedColor.Brown));
+		    this.Register("minecraft:green_bed", () => new Bed(BedBlockEntity.BedColor.Green));
+		    this.Register("minecraft:red_bed", () => new Bed(BedBlockEntity.BedColor.Red));
+		    this.Register("minecraft:black_bed", () => new Bed(BedBlockEntity.BedColor.Black));
 	    }
     }
 }

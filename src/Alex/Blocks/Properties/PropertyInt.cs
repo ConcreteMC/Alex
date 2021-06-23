@@ -30,7 +30,7 @@ namespace Alex.Blocks.Properties
 		/// <inheritdoc />
 		public override string ToFormattedString()
 		{
-			return $"{Name}={Value:D2}";
+			return $"{Name}={Value:D}";
 		}
 	}
 }

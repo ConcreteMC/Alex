@@ -1,4 +1,5 @@
 using System;
+using Alex.Blocks.Properties;
 using Alex.Blocks.State;
 using Alex.Common.Blocks;
 using Alex.Common.Blocks.Properties;
@@ -31,10 +32,26 @@ namespace Alex.Blocks.Minecraft
 
 	public class RedstoneBase : Block
 	{
+		internal static readonly PropertyBool POWERED = new PropertyBool("powered");
 		//public bool CanConnect()
 		//{
 			
 		//}
+
+		/// <inheritdoc />
+		public override bool TryGetStateProperty(string prop, out StateProperty stateProperty)
+		{
+			switch (prop)
+			{
+				case "power":
+					stateProperty = new PowerState();
+					return true;
+				case "powered":
+					stateProperty = RedstoneBase.POWERED;
+					return true;
+			}
+			return base.TryGetStateProperty(prop, out stateProperty);
+		}
 	}
 	
 	public class RedstoneWire : RedstoneBase, IMultipartCheck

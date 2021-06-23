@@ -67,11 +67,5 @@ namespace Alex.Entities.BlockEntities
 		{
 			base.SetData(action, compound);
 		}
-
-		/// <inheritdoc />
-		protected override void BlockChanged(Block oldBlock, Block newBlock)
-		{
-			base.BlockChanged(oldBlock, newBlock);
-		}
 	}
 }

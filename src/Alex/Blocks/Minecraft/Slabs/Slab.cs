@@ -1,4 +1,6 @@
-﻿using Alex.ResourcePackLib.Json;
+﻿using Alex.Blocks.Properties;
+using Alex.Blocks.State;
+using Alex.ResourcePackLib.Json;
 
 namespace Alex.Blocks.Minecraft
 {
@@ -30,6 +32,20 @@ namespace Alex.Blocks.Minecraft
 			    return false;
 		    }
 		    set { }
+	    }
+
+	    private static readonly PropertyString TypeProp = new PropertyString("type");
+
+	    /// <inheritdoc />
+	    public override bool TryGetStateProperty(string prop, out StateProperty stateProperty)
+	    {
+		    switch (prop)
+		    {
+			    case "type":
+				    stateProperty = TypeProp;
+				    return true;
+		    }
+		    return base.TryGetStateProperty(prop, out stateProperty);
 	    }
     }
 }

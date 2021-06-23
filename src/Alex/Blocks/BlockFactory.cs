@@ -58,11 +58,9 @@ namespace Alex.Blocks
 					Default = i == 0,
 					Name = "minecraft:light_block",
 					//VariantMapper = lightBlockVariantMapper,
-					States = new List<StateProperty>()
-					{
-						new PropertyInt("block_light_level", i)
-					}
 				};
+
+				bs.States.Add(new PropertyInt("block_light_level", i));
 				
 				var block = new LightBlock()
 				{
@@ -145,16 +143,6 @@ namespace Alex.Blocks
 						continue;
 					}
 
-					List<StateProperty> stateProperties = new List<StateProperty>();
-					if (entry.Value.Properties != null)
-					{
-						foreach (var property in entry.Value.Properties)
-						{
-							stateProperties.Add(new PropertyString(property.Key, s.Properties[property.Key]));
-							//	defaultState = (BlockState) defaultState.WithPropertyNoResolve(property.Key, property.Value.FirstOrDefault(), false);
-						}
-					}
-					
 					IRegistryEntry<Block> registryEntry;
 
 					if (!blockRegistry.TryGet(location, out registryEntry))
@@ -168,11 +156,28 @@ namespace Alex.Blocks
 					}
 
 					var block = registryEntry.Value;
+					
+					BlockState variantState = new BlockState();
+					//List<StateProperty> stateProperties = new List<StateProperty>();
+					if (entry.Value.Properties != null)
+					{
+						foreach (var property in entry.Value.Properties)
+						{
+							if (block.TryGetStateProperty(property.Key, out var stateProp))
+							{
+								variantState.States.Add(stateProp.WithValue(s.Properties[property.Key]));
+							}
+							else
+							{
+								variantState.States.Add(new PropertyString(property.Key, s.Properties[property.Key]));
+							}
+							//	defaultState = (BlockState) defaultState.WithPropertyNoResolve(property.Key, property.Value.FirstOrDefault(), false);
+						}
+					}
 
 					if (string.IsNullOrWhiteSpace(block.DisplayName)) block.DisplayName = entry.Key;
 					
-					BlockState variantState = new BlockState();
-					variantState.States = new List<StateProperty>(stateProperties);
+					//variantState.States = stateProperties.ToArray();
 					variantState.ID = s.ID;
 					variantState.Name = entry.Key;
 					variantState.ModelData = ResolveVariant(blockStateResource, variantState, isMultipartModel);
@@ -289,20 +294,21 @@ namespace Alex.Blocks
 
 						//pcVariant = pcVariant.CloneSilent();
 
-						List<StateProperty> stateProperties = new List<StateProperty>();
+						PeBlockState bedrockState = new PeBlockState(pcVariant);
+						//List<StateProperty> stateProperties = new List<StateProperty>();
 
 						if (state.Value.BedrockStates != null && state.Value.BedrockStates.Count > 0)
 						{
 							foreach (var bs in state.Value.BedrockStates)
 							{
-								stateProperties.Add(new PropertyString(bs.Key, bs.Value));
+								bedrockState.States.Add(new PropertyString(bs.Key, bs.Value));
+								//stateProperties.Add(new PropertyString(bs.Key, bs.Value));
 							}
 						}
 						
 						//if (string.IsNullOrWhiteSpace(block.DisplayName)) block.DisplayName = entry.Key;
 						
-						PeBlockState bedrockState = new PeBlockState(pcVariant);
-						bedrockState.States = new List<StateProperty>(stateProperties);
+						//bedrockState.States = stateProperties.ToArray();
 						bedrockState.Name = state.Value.BedrockIdentifier;
 						bedrockState.ID = (uint) Interlocked.Increment(ref counter);
 						bedrockState.Default = first;
