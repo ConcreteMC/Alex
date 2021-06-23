@@ -3,11 +3,7 @@ A Minecraft (Java & Bedrock Edition) client written in C#
 
 ![Build status](https://github.com/kennyvv/Alex/workflows/.NET%20Core/badge.svg)
 
-##### This client requires a paid Minecraft account.
-
-You also need access to the resources from both Java & Bedrock edition of Minecraft.
-
-As of the current state, there are still a few resources required from the Bedrock engine, work is being done on removing this dependency.
+##### This client requires a paid Minecraft account!
 
 About
 -----
@@ -29,6 +25,15 @@ Cloning the Repository
 As we use submodules to add support for MC:Bedrock, you need to pull the submodules in order to compile Alex.
 
 The easiest method of doing this is to clone the repository using ```git clone --recursive https://github.com/kennyvv/Alex.git```
+
+Supported platforms
+----------------------
+
+- [X] Windows
+- [X] Linux
+- [X] MacOS
+- [ ] Android (planned for .NET 6)
+
 
 Requirements
 -------------------
