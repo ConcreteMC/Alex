@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Alex.Utils.Queue
+namespace Alex.Utils.Collections.Queue
 {
     public interface IPriorityQueue<TElement, in TPriority> : IEnumerable<TElement> where TPriority : IComparable<TPriority>
     {

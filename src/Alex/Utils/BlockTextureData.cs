@@ -45,56 +45,5 @@ namespace Alex.Utils
 
             IsAnimated = isAnimated;
         }
-
-        public void Rotate(int rot)
-        {
-            return;
-            if (rot > 0)
-            {
-                //var tw = TextureInfo.FrameWidth;
-               // var th = TextureInfo.FrameHeight;
-
-                var x1 = TopLeft.X;
-                var x2 = TopRight.X;
-                var y1 = TopLeft.Y;
-                var y2 = BottomLeft.Y;
-            
-               /* x1 = (x1 * (tw));
-                x2 = (x2 * (tw));
-                y1 = (y1 * (th));
-                y2 = (y2 * (th));*/
-                
-                var ox1 = x1;
-                var ox2 = x2;
-                var oy1 = y1;
-                var oy2 = y2;
-                switch (rot)
-                {
-                    case 270:
-                        y1 = ox2;
-                        y2 = ox1;
-                        x1 = oy1;
-                        x2 = oy2;
-                        break;
-                    case 180:
-                        y1 = oy2;
-                        y2 = oy1;
-                        x1 = ox2;
-                        x2 = ox1;
-                        break;
-                    case 90:
-                        y1 = ox1;
-                        y2 = ox2;
-                        x1 = oy2;
-                        x2 = oy1;
-                        break;
-                }
-                
-                TopLeft = new Microsoft.Xna.Framework.Vector2(x1, y1);
-                TopRight = new Microsoft.Xna.Framework.Vector2(x2, y1);
-                BottomLeft = new Microsoft.Xna.Framework.Vector2(x1, y2);
-                BottomRight = new Microsoft.Xna.Framework.Vector2(x2, y2);
-            }
-        }
     }
 }

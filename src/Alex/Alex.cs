@@ -41,7 +41,7 @@ using Alex.Services;
 using Alex.Services.Discord;
 using Alex.Utils;
 using Alex.Utils.Auth;
-using Alex.Utils.Tasks;
+using Alex.Utils.Threading;
 using Alex.Worlds.Abstraction;
 using Alex.Worlds.Multiplayer.Bedrock;
 using Alex.Worlds.Multiplayer.Java;
@@ -310,7 +310,7 @@ namespace Alex
         protected override void Initialize()
         {
             Window.Title = $"Alex - {VersionUtils.GetVersion()} - {RenderingEngine}";
-
+            Mouse.WindowHandle = Window.Handle;
             // InitCamera();
             this.Window.TextInput += Window_TextInput;
             this.Window.KeyDown += WindowOnKeyDown;

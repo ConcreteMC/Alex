@@ -328,7 +328,7 @@ namespace Alex.Gui.Dialogs.Containers
 
 		private void ContainerItemOnCursorEnter(object sender, GuiCursorEventArgs e)
 		{
-			if (sender is InventoryContainerItem containerItem)
+			if (sender is InventoryContainerItem containerItem && containerItem.Item != null && containerItem.Item.Id != 0)
 			{
 				HighlightedSlot = containerItem;
 				SetOverlayText(containerItem.Item);

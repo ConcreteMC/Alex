@@ -15,6 +15,7 @@ using Alex.Gamestates.MainMenu;
 using Alex.Gamestates.Multiplayer;
 using Alex.Graphics.Models.Entity;
 using Alex.Gui;
+using Alex.Gui.Dialogs;
 using Alex.Gui.Dialogs.Containers;
 using Alex.Gui.Elements;
 using Alex.Gui.Elements.Context3D;
@@ -364,6 +365,7 @@ namespace Alex.Gamestates
 
 
             ApplyModel(_playerView.Entity);
+           // Alex.Instance.GuiManager.ShowDialog(new BrowserDialog("Microsoft Login", "https://login.live.com/oauth20_remoteconnect.srf"));
             base.OnShow();
         }
 

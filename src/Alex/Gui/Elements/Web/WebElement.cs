@@ -1,21 +1,11 @@
 using System;
-using System.ComponentModel;
-using System.Drawing;
-using System.Linq;
-using System.Threading;
-using Alex.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using NLog.Common;
-using NLog.Fluent;
 using PuppeteerSharp.Input;
 using RocketUI;
 using Color = Microsoft.Xna.Framework.Color;
-using GpuResourceManager = Alex.Common.Graphics.GpuResources.GpuResourceManager;
 using Mouse = Microsoft.Xna.Framework.Input.Mouse;
-using Point = Microsoft.Xna.Framework.Point;
-using Rectangle = Microsoft.Xna.Framework.Rectangle;
 using Size = System.Drawing.Size;
 
 namespace Alex.Gui.Elements.Web
@@ -25,6 +15,8 @@ namespace Alex.Gui.Elements.Web
 		readonly OffscreenBrowserRenderer _browserRenderer;
 
 		public string Homepage { get; set; } = "https://google.com/";
+		public Point TargetResolution { get; set; } = new Point(1920, 1080);
+		public float Transparency { get; set; } = 0f;
 		public WebElement()
 		{
 			_browserRenderer = new OffscreenBrowserRenderer();
@@ -32,13 +24,6 @@ namespace Alex.Gui.Elements.Web
 
 			CanFocus = true;
 			CanHighlight = true;
-		}
-
-
-		private void BrowserRenderer_DataChanged(object obj)
-		{
-		//	Settings = (ShapeSettings)obj;
-			//AddOrRemoveShapes();
 		}
 
 		private bool _didInit = false;
@@ -51,10 +36,11 @@ namespace Alex.Gui.Elements.Web
 			base.OnInit(renderer);
 			
 			var size = RenderBounds;
-			AsyncHelpers.RunSync(() => _browserRenderer.MainAsync(GuiManager.GraphicsDevice, Alex.Instance.Window.Handle, 
-				Homepage,
-				null,
-				new System.Drawing.Size(size.Width, size.Height)));
+
+			AsyncHelpers.RunSync(
+				() => _browserRenderer.MainAsync(
+					GuiManager.GraphicsDevice, Alex.Instance.Window.Handle, Homepage, null,
+					new System.Drawing.Size(TargetResolution.X, TargetResolution.Y)));
 
 			Focus();
 
@@ -72,44 +58,11 @@ namespace Alex.Gui.Elements.Web
 			base.Dispose(disposing);
 		}
 
-		private RocketUI.Size _previousSize = RocketUI.Size.Zero;
+		private Point _previousSize = Point.Zero;
 		/// <inheritdoc />
 		protected override void OnUpdateLayout()
 		{
 			base.OnUpdateLayout();
-		}
-
-		/// <inheritdoc />
-		protected override void OnCursorDown(Point cursorPosition)
-		{
-			base.OnCursorDown(cursorPosition);
-			Log.Info($"Cursor down, {cursorPosition}");
-			
-			//_browserRenderer.HandleMouseDown(cursorPosition.X, cursorPosition.Y, MouseButton.Left);
-		}
-
-		/// <inheritdoc />
-		protected override void OnCursorUp(Point cursorPosition)
-		{
-			base.OnCursorUp(cursorPosition);
-			Log.Info($"Cursor up, {cursorPosition}");
-			//_browserRenderer.HandleMouseUp(cursorPosition.X, cursorPosition.Y, MouseButton.Left);
-		}
-
-		/// <inheritdoc />
-		protected override void OnCursorMove(Point cursorPosition, Point previousCursorPosition, bool isCursorDown)
-		{
-			base.OnCursorMove(cursorPosition, previousCursorPosition, isCursorDown);
-			//_browserRenderer.HandleMouseMove(cursorPosition.X, cursorPosition.Y);
-			
-			Log.Info($"Cursor move, {cursorPosition}");
-		}
-
-		/// <inheritdoc />
-		protected override void OnCursorPressed(Point cursorPosition, RocketUI.Input.MouseButton button)
-		{
-		//	Log.Info($"Cursor pressed: {cursorPosition}");
-			base.OnCursorPressed(cursorPosition, button);
 		}
 
 		/// <inheritdoc />
@@ -128,42 +81,48 @@ namespace Alex.Gui.Elements.Web
 		protected override void OnDraw(GuiSpriteBatch graphics, GameTime gameTime)
 		{
 			//base.OnDraw(graphics, gameTime);
-
-			var frame = _browserRenderer.CurrentFrame;
-			if (frame != null)
+			using (var branch = graphics.BranchContext(BlendState.NonPremultiplied))
 			{
-				graphics.SpriteBatch.Draw(frame, RenderBounds, frame.Bounds, Color.White);
+				graphics.Begin();
+				
+				var frame = _browserRenderer.CurrentFrame;
+
+				if (frame != null)
+				{
+					graphics.SpriteBatch.Draw(frame, RenderBounds, frame.Bounds, Color.White * (1f - Transparency));
+				}
+				
+				graphics.End();
 			}
 			//graphics.FillRectangle(RenderBounds, _webViewTexture, TextureRepeatMode.Stretch);
 		}
 
 
 		private MouseState _lastMouseState;
-		private KeyboardHandler KeyHandler = new KeyboardHandler();
 		/// <inheritdoc />
 		protected override void OnUpdate(GameTime gameTime)
 		{
 			base.OnUpdate(gameTime);
 
-			var size = RenderSize;
+			var size = RenderBounds.Size;
 
 			if (_previousSize != size)
 			{
-				size = GuiRenderer.Project(new Vector2(size.Width, size.Height)).ToPoint();
-				_browserRenderer.Resize(new Size(size.Width, size.Height));
+				size = GuiRenderer.Project(new Vector2(size.X, size.Y)).ToPoint();
+				_browserRenderer.Resize(new Size(size.X, size.Y));
 				_previousSize = size;
 			}
 
 			var mouseState = Mouse.GetState();
 
-			var mousePosition = mouseState.Position;
-			//if (mousePosition != _lastMouseState.Position)
-			//{
-				_browserRenderer.HandleMouseMove(mousePosition.X, mousePosition.Y);
-			//}
-
 			if (mouseState != _lastMouseState)
 			{
+				var mousePosition = new Vector2(mouseState.X, mouseState.Y);
+				mousePosition -= GuiRenderer.Project(RenderPosition);
+				//mousePosition = GuiRenderer.Unproject(mousePosition);
+				_browserRenderer.HandleMouseMove(mousePosition.X, mousePosition.Y);
+				
+				
 				if (mouseState.LeftButton != _lastMouseState.LeftButton)
 				{
 					if (mouseState.LeftButton == ButtonState.Pressed)
@@ -180,28 +139,31 @@ namespace Alex.Gui.Elements.Web
 						_browserRenderer.HandleMouseUp(mousePosition.X, mousePosition.Y, MouseButton.Right);
 				}
 
-				if (mouseState.ScrollWheelValue != _lastMouseState.ScrollWheelValue)
+				if (mouseState.MiddleButton != _lastMouseState.MiddleButton)
 				{
-					//if (mouse.RightButton == ButtonState.Pressed)
-					//	_browserRenderer.HandleMouseDown(mousePosition.X, mousePosition.Y, MouseButton.Right);
-					//else
-					//	_browserRenderer.HandleMouseUp(mousePosition.X, mousePosition.Y, MouseButton.Right);
+					if (mouseState.MiddleButton == ButtonState.Pressed)
+						_browserRenderer.HandleMouseDown(mousePosition.X, mousePosition.Y, MouseButton.Middle);
+					else
+						_browserRenderer.HandleMouseUp(mousePosition.X, mousePosition.Y, MouseButton.Middle);
+				}
+
+				if (mouseState.ScrollWheelValue != _lastMouseState.ScrollWheelValue
+				    || mouseState.HorizontalScrollWheelValue != _lastMouseState.HorizontalScrollWheelValue)
+				{
+					var deltaX = _lastMouseState.HorizontalScrollWheelValue - mouseState.HorizontalScrollWheelValue;
+					var deltaY = _lastMouseState.ScrollWheelValue - mouseState.ScrollWheelValue;
+
+					_browserRenderer.HandleMouseScroll(deltaX, deltaY);
 				}
 
 				_lastMouseState = mouseState;
 			}
-			/*	KeyHandler.Update();
-				var keys = KeyHandler.Query();
-				foreach (var key in keys)
-				{
-					_browserRenderer.HandleKeyEvent(key);
-				}*/
 
 			_browserRenderer.Update();
-			
-		//	BrowserRenderer.PullLatestDataIfChanged();
+
+			//	BrowserRenderer.PullLatestDataIfChanged();
 		}
-		
+
 		public Uri Source
 		{
 			get
@@ -211,9 +173,10 @@ namespace Alex.Gui.Elements.Web
 			set
 			{
 				var str = value.ToString();
-				AsyncHelpers.RunSync(
-					async () => _browserRenderer.LoadPageAsync(str));
+				_browserRenderer.LoadPageAsync(str).Wait();
 			}
 		}
+
+		public string Title { get; set; } = "N/A";
 	}
 }

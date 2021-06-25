@@ -15,7 +15,7 @@ using Alex.Entities.BlockEntities;
 using Alex.Gamestates;
 using Alex.Graphics.Effect;
 using Alex.Utils;
-using Alex.Utils.Queue;
+using Alex.Utils.Collections.Queue;
 using Alex.Worlds.Abstraction;
 using Alex.Worlds.Chunks;
 using Alex.Worlds.Lighting;

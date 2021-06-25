@@ -1,4 +1,4 @@
-namespace Alex.Utils.Tasks
+namespace Alex.Utils.Threading
 {
 	public enum TaskState
 	{

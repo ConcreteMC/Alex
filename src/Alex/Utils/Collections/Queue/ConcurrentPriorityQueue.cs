@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Alex.Utils.Queue
+namespace Alex.Utils.Collections.Queue
 {
    /// <summary>
     /// Heap-based implementation of concurrent priority queue. Max priority is on top of the heap.

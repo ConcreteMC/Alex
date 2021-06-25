@@ -25,6 +25,7 @@ using Alex.Graphics.Models.Entity;
 using Alex.Graphics.Models.Items;
 using Alex.Net;
 using Alex.Utils;
+using Alex.Utils.Threading;
 using Alex.Worlds.Abstraction;
 using Alex.Worlds.Chunks;
 using Alex.Worlds.Lighting;

@@ -9,7 +9,7 @@ using Alex.Common.Graphics;
 using Alex.Common.Graphics.GpuResources;
 using Alex.Common.Utils.Vectors;
 using Alex.Graphics.Models.Blocks;
-using Alex.Utils.Tasks;
+using Alex.Utils.Threading;
 using Alex.Worlds.Abstraction;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;

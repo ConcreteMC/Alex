@@ -1,10 +1,6 @@
-using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 
-namespace Alex.Utils
+namespace Alex.Utils.Collections
 {
     public class ConcurrentDeck<T>
     {

@@ -3,7 +3,7 @@ using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Alex.Utils
+namespace Alex.Utils.Threading
 {
 	public class BackgroundWorker : IDisposable
 	{

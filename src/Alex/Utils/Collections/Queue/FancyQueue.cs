@@ -1,9 +1,8 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 
-namespace Alex.Utils.Queue
+namespace Alex.Utils.Collections.Queue
 {
 	public class FancyQueue<T> : IEnumerable<T>
 	{

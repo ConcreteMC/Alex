@@ -1,12 +1,15 @@
 using System;
 using System.Threading.Tasks;
 using Alex.Common.Graphics.GpuResources;
-using Alex.Utils;
+using Alex.Common.Utils;
+using Alex.Gui.Dialogs;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 using NLog;
 using PuppeteerSharp;
 using PuppeteerSharp.Input;
 using Keys = Microsoft.Xna.Framework.Input.Keys;
+using Mouse = Microsoft.Xna.Framework.Input.Mouse;
 using MouseButton = PuppeteerSharp.Input.MouseButton;
 
 namespace Alex.Gui.Elements.Web
@@ -29,6 +32,7 @@ namespace Alex.Gui.Elements.Web
     }
 
     public Browser Browser;
+    public EventHandler<Uri> OnNavigate;
 
     public ManagedTexture2D CurrentFrame
     {
@@ -50,16 +54,16 @@ namespace Alex.Gui.Elements.Web
 
     private bool _frameDirty = false;
    // private bool _ready = false;
-    public void Resize(System.Drawing.Size size)
+    public async void Resize(System.Drawing.Size size)
     {
       if (_page != null)
       {
-        AsyncHelpers.RunSync(
-          async () =>
+        await _page.SetViewportAsync(
+          new ViewPortOptions()
           {
-            await _page.SetViewportAsync(new ViewPortOptions() {Height = size.Height, Width = size.Width});
-
-          //  _ready = true;
+            Height = size.Height, 
+            Width = size.Width, 
+            DeviceScaleFactor = 1f
           });
       }
       // Browser.Size = size;
@@ -67,19 +71,36 @@ namespace Alex.Gui.Elements.Web
 
     public void Update()
     {
-      if (_frameDirty)
+     // if (_frameDirty)
       {
-        _frameDirty = false;
+      //  _frameDirty = false;
         UpdateFrame(_page);
       }
     }
     
-    private void UpdateFrame(Page page)
+    private async void UpdateFrame(Page page)
     {
-      using (var bmp = AsyncHelpers.RunSync(
-        () => page.ScreenshotStreamAsync(new ScreenshotOptions())))
+      var bmpData = await page.ScreenshotDataAsync(new ScreenshotOptions()
       {
-        CurrentFrame = GpuResourceManager.GetTexture2D(this, Alex.Instance.GraphicsDevice, bmp);
+        OmitBackground = true,
+        
+      });
+      
+      {
+       // if (CurrentFrame == null)
+        {
+          CurrentFrame = TextureUtils.ImageToTexture2D(this, Alex.Instance.GraphicsDevice, bmpData);
+         // CurrentFrame = GpuResourceManager.Get(this, Alex.Instance.GraphicsDevice);
+        }
+       // else
+        {
+        //  Image<Rgba32> img = Image.Load(bmpData);
+//
+        //  if (img.TryGetSinglePixelSpan(out var screenData))
+        //  {
+        //    CurrentFrame.SetData(screenData.ToArray().Select(x => new Color(x.PackedValue)).ToArray());
+         // }
+        }
       }
     }
     
@@ -95,8 +116,24 @@ namespace Alex.Gui.Elements.Web
       
       var page = await Browser.NewPageAsync();
       await page.SetJavaScriptEnabledAsync(true);
-      
       await page.ExposeFunctionAsync("alexDomChanged", InvalidateView);
+      await page.ExposeFunctionAsync("reportCursor", (string cursor) =>
+      {
+        switch (cursor)
+        {
+          case "pointer":
+            Mouse.SetCursor(MouseCursor.Hand);
+            break;
+          case "text":
+            Mouse.SetCursor(MouseCursor.IBeam);
+            break;
+          default:
+            //Log.Info($"Got cursor: {cursor}");
+            Mouse.SetCursor(MouseCursor.Arrow);
+            break;
+        }
+          return false;
+      });
       
       page.Console += PageOnConsole;
       page.FrameNavigated += PageOnFrameNavigated;
@@ -141,6 +178,13 @@ namespace Alex.Gui.Elements.Web
           alexDomChanged();
         }, true);
 
+        document.addEventListener('mouseover',function(e) {{
+         const tgt = e.target;
+         const inline = tgt.style.cursor || 'Not defined';
+         const computed = window.getComputedStyle(tgt)['cursor'];
+         reportCursor(computed);
+        }}, false);
+
         }");
       }
       catch (Exception error)
@@ -160,8 +204,8 @@ namespace Alex.Gui.Elements.Web
       if (e.Frame.Url != _previousUrl)
       {
         _previousUrl = e.Frame.Url;
-        Log.Info($"Navigated: {e.Frame.Url}");
-
+        //Log.Info($"Navigated: {e.Frame.Url}");
+        OnNavigate?.Invoke(this, new Uri(e.Frame.Url));
         await Bind(_page);
         // if (_page != null)
         // await Bind(_page);
@@ -184,63 +228,80 @@ namespace Alex.Gui.Elements.Web
 
     private Page _page;
     private ManagedTexture2D _currentFrame;
+
+    public async void HandleMouseScroll(int deltaX, int deltaY)
+    {
+      if (Browser != null)
+      {
+          await _page.Mouse.WheelAsync(deltaX, deltaY);
+      }
+    }
     
-    public void HandleMouseMove(int x, int y)
+    public async void HandleMouseMove(float x, float y)
     {
       if (Browser != null)
       {
-        AsyncHelpers.RunSync(() => _page.Mouse.MoveAsync(x, y));
+        await _page.Mouse.MoveAsync((decimal) x, (decimal) y);
       }
     }
-    public void HandleMouseDown(int x, int y, MouseButton type)
+    public async void HandleMouseDown(float x, float y, MouseButton type)
     {
       if (Browser != null)
       {
-        AsyncHelpers.RunSync(() => _page.Mouse.ClickAsync(x, y, new ClickOptions(){Button = type}));
+        await _page.Mouse.MoveAsync((decimal) x, (decimal) y);
+        await _page.Mouse.DownAsync(new ClickOptions() {Button = type});
       }
     }
-    public void HandleMouseUp(int x, int y, MouseButton type)
+    public async void HandleMouseUp(float x, float y, MouseButton type)
     {
       if (Browser != null)
       {
-        AsyncHelpers.RunSync(() => _page.Mouse.ClickAsync(x, y, new ClickOptions(){Button = type}));
+        await _page.Mouse.MoveAsync((decimal) x, (decimal) y);
+        await _page.Mouse.UpAsync(new ClickOptions() {Button = type});
+       // await _page.Mouse.ClickAsync(x, y, new ClickOptions() {Button = type});
       }
     }
 
-    public void OnKeyInput(char character, Keys key)
+    public async void OnKeyInput(char character, Keys key)
     {
-      if (key.TryConvertKeyboardInput(out var keyCharacter))
+      if (!char.IsControl(character))
       {
-        AsyncHelpers.RunSync(() => _page.Keyboard.PressAsync(keyCharacter.ToString()));
+          await _page.Keyboard.SendCharacterAsync(character.ToString());
       }
       else
       {
-        AsyncHelpers.RunSync(() => _page.Keyboard.PressAsync(key.ToString()));
-      }
-    }
-    
-    public void HandleKeyEvent(KeyEvent k)
-    {
-      if (Browser != null)
-      {
-        var page = _page;
-        switch (k.Type)
+        if (key == Keys.Back)
         {
-          case KeyEventType.KeyUp:
-            page.Keyboard.UpAsync(k.Key.ToString());
-            break;
-
-          case KeyEventType.KeyDown:
-            page.Keyboard.DownAsync(k.Key.ToString(), new DownOptions()
-            {
-              
-            });
-            break;
-
-          case KeyEventType.Char:
-            page.Keyboard.SendCharacterAsync(k.Key.ToString());
-            break;
+          await _page.Keyboard.PressAsync("Backspace");
         }
+        else if (key == Keys.Delete)
+        {
+          await _page.Keyboard.PressAsync("Delete");
+        }
+        else if (key == Keys.Left)
+        {
+          await _page.Keyboard.PressAsync("ArrowLeft");
+        }
+        else if (key == Keys.Right)
+        {
+          await _page.Keyboard.PressAsync("ArrowRight");
+        }
+        else if (key == Keys.Up)
+        {
+          await _page.Keyboard.PressAsync("ArrowUp");
+        }
+        else if (key == Keys.Down)
+        {
+          await _page.Keyboard.PressAsync("ArrowDown");
+        }
+        else if (key == Keys.Enter)
+        {
+          await _page.Keyboard.PressAsync("Enter");
+        }
+       // if (KeyDefinitions.TryGet(key, out var keyDefinition))
+       // {
+          //await _page.Keyboard.PressAsync(keyDefinition.Code);
+       // }
       }
     }
   }

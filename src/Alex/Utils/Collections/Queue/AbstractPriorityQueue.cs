@@ -2,7 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 
-namespace Alex.Utils.Queue
+namespace Alex.Utils.Collections.Queue
 {
      /// <summary>
     /// Heap-based implementation of priority queue.

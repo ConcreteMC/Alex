@@ -84,7 +84,7 @@ namespace Alex.Gui.Elements.Inventory
                 
                // GuiItem.Item = _item;
                 
-                if (value == null || value is ItemAir || value.Count == 0 || value.Id <= 0)
+                if (value == null || value is ItemAir || value.Count == 0 || value.Count == 255 || value.Id <= 0)
                 {
                  //   TextureElement.IsVisible = false;
                     ShowCount = false;

@@ -5,7 +5,7 @@ using Alex.Common.Utils;
 using Microsoft.Xna.Framework;
 using NLog;
 
-namespace Alex.Utils.Tasks
+namespace Alex.Utils.Threading
 {
 	public class ManagedTaskManager : GameComponent
 	{
