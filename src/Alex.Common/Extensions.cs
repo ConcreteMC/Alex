@@ -125,7 +125,7 @@ namespace Alex.Common
 		}
 		
 		public static void RenderBoundingBox(
-			this SpriteBatch sb,
+			this GraphicsDevice sb,
 			BoundingBox box,
 			Matrix view,
 			Matrix projection,
@@ -133,7 +133,7 @@ namespace Alex.Common
 		{
 			if (_effect == null)
 			{
-				_effect = new BasicEffect(sb.GraphicsDevice)
+				_effect = new BasicEffect(sb)
 				{
 					VertexColorEnabled = true,
 					FogEnabled = false,
@@ -182,7 +182,7 @@ namespace Alex.Common
 
 				if (!asCube)
 				{
-					sb.GraphicsDevice.DrawUserIndexedPrimitives(
+					sb.DrawUserIndexedPrimitives(
 						PrimitiveType.LineList,
 						Verts,
 						0,
@@ -193,7 +193,7 @@ namespace Alex.Common
 				}
 				else
 				{
-					sb.GraphicsDevice.DrawUserPrimitives(PrimitiveType.TriangleList, CubeVertices, 0, CubeVertices.Length / 3, VertexPositionColor.VertexDeclaration);
+					sb.DrawUserPrimitives(PrimitiveType.TriangleList, CubeVertices, 0, CubeVertices.Length / 3, VertexPositionColor.VertexDeclaration);
 				}
 			}
 

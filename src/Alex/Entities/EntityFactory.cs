@@ -475,7 +475,7 @@ namespace Alex.Entities
 					entity = new XpOrbEntity(world);
 
 					break;
-				//case EntityType.Human:
+			//case EntityType.Human:
 					//entity = new PlayerMob("test", world, );
 				//	break;
 				//default:

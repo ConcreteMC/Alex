@@ -307,7 +307,7 @@ namespace Alex.Entities.BlockEntities
 
 			try
 			{
-				sb.End();
+				//sb.End();
 			
 				sb.Begin(SpriteSortMode.Immediate, BlendState.NonPremultiplied, SamplerState.PointWrap,
 					DepthStencilState.DepthRead, effect: _basicEffect);
@@ -337,8 +337,8 @@ namespace Alex.Entities.BlockEntities
 			finally
 			{
 				sb.End();
-				sb.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, SamplerState.PointWrap,
-					DepthStencilState.DepthRead);
+				//sb.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, SamplerState.PointWrap,
+				//	DepthStencilState.DepthRead);
 			}
 		}
 	}

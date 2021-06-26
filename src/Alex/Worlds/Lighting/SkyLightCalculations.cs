@@ -368,7 +368,7 @@ namespace Alex.Worlds.Lighting
 			if (chunk == null) return true;
 
 			var b = chunk.GetBlockState(blockCoordinates.X & 0x0f, blockCoordinates.Y & 0xff, blockCoordinates.Z & 0x0f).Block;
-			return b is Air || !b.BlockMaterial.BlocksLight;// (b.Transparent && !(b is Leaves));
+			return b == null || b is Air || !b.BlockMaterial.BlocksLight;// (b.Transparent && !(b is Leaves));
 			//	int bid = chunk.GetBlockId(blockCoordinates.X & 0x0f, blockCoordinates.Y & 0xff, blockCoordinates.Z & 0x0f);
 			//	return bid == 0 || (BlockFactory.TransparentBlocks[bid] == 1 && bid != 18 && bid != 161 && bid != 30 && bid != 8 && bid != 9);
 		}
@@ -383,7 +383,7 @@ namespace Alex.Worlds.Lighting
 			int bz = blockCoordinates.Z & 0x0f;
 
 			var state = section.Get(bx, by - 16 * (by >> 4), bz);
-			return state.Block.LightOpacity;
+			return state?.Block?.LightOpacity ?? 1;
 			//return bid == 8 || bid == 9 ? 3 : bid == 18 || bid == 161 || bid == 30 ? 2 : 1;
 		}
 
@@ -395,8 +395,8 @@ namespace Alex.Worlds.Lighting
 			int by = blockCoordinates.Y & 0xff;
 			int bz = blockCoordinates.Z & 0x0f;
 
-			var state = section.Get(bx, by - 16 * (by >> 4), bz);
-			return state.Block is Air || state.Block.Transparent;
+			var state = section?.Get(bx, by - 16 * (by >> 4), bz);
+			return state == null || state.Block is Air || state.Block.Transparent;
 		//	return bid == 0 || BlockFactory.TransparentBlocks[bid] == 1;
 		}
 

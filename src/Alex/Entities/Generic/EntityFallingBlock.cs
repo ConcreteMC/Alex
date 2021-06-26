@@ -28,8 +28,6 @@ namespace Alex.Entities.Generic
 			
 			HasPhysics = true;
 			IsAffectedByGravity = true;
-			HasCollision = true;
-			NoAi = false;
 		}
 
 		/// <inheritdoc />
@@ -87,17 +85,20 @@ namespace Alex.Entities.Generic
 		/// <inheritdoc />
 		public override void CollidedWithWorld(Vector3 direction, Vector3 position, float impactVelocity)
 		{
-			if (direction == Vector3.Down)
+			if (StopOnImpact)
 			{
-				Velocity = new Vector3(Velocity.X, 0f, Velocity.Z);
-			}
-			else if (direction == Vector3.Left || Velocity == Vector3.Right)
-			{
-				Velocity = new Vector3(0, Velocity.Y, Velocity.Z);
-			}
-			else if (direction == Vector3.Forward || Velocity == Vector3.Backward)
-			{
-				Velocity = new Vector3(Velocity.X, Velocity.Y, 0);
+				if (direction == Vector3.Down)
+				{
+					Velocity = new Vector3(Velocity.X, 0f, Velocity.Z);
+				}
+				else if (direction == Vector3.Left || Velocity == Vector3.Right)
+				{
+					Velocity = new Vector3(0, Velocity.Y, Velocity.Z);
+				}
+				else if (direction == Vector3.Forward || Velocity == Vector3.Backward)
+				{
+					Velocity = new Vector3(Velocity.X, Velocity.Y, 0);
+				}
 			}
 		}
 	}

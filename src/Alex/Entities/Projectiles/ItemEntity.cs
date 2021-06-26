@@ -78,19 +78,21 @@ namespace Alex.Entities.Projectiles
             // var knownPos = bb.GetCenter();
             float scale = (float) (IsBlock ? (1f / (1f / Width)) : (1f / 32f));
             Matrix worldMatrix;
-
+            var offset = new Vector3((float) Width / 2f, 0f, (float) Width / 2f);
             if (DoRotation)
             {
                 worldMatrix =  Matrix.CreateScale(scale)
-                               // * MCMatrix.CreateTranslation(-offset)
+                                * Matrix.CreateTranslation(-offset)
                                * Matrix.CreateRotationY(MathHelper.ToRadians(_rotation))
-                               //  * MCMatrix.CreateTranslation(offset)
+                                 * Matrix.CreateTranslation(offset)
                                * Matrix.CreateTranslation(knownPos);
             }
             else
             {
                 worldMatrix = Matrix.CreateScale(scale)
+                              * Matrix.CreateTranslation(-offset)
                               * Matrix.CreateRotationY(MathHelper.ToRadians(KnownPosition.Yaw))
+                              * Matrix.CreateTranslation(offset)
                               * Matrix.CreateTranslation(knownPos);
             }
             

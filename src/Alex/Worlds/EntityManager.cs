@@ -63,7 +63,10 @@ namespace Alex.Worlds
 			_spriteEffect = new BasicEffect(device)
 			{
 				VertexColorEnabled = true,
-				TextureEnabled = true
+				TextureEnabled = true,
+				LightingEnabled = false,
+				FogEnabled = false,
+				PreferPerPixelLighting = false
 			};
 		}
 
@@ -101,22 +104,26 @@ namespace Alex.Worlds
 						OptionsProvider.AlexOptions.VideoOptions.EntityRenderDistance.Value) * 16f)
 					{
 						entityCount++;
-						rendered.Add(entity);
 
 						var entityBox = entity.GetVisibilityBoundingBox(entityPos);
 
 						if (World.Camera.BoundingFrustum.Contains(entityBox) != ContainmentType.Disjoint)
 						{
-							entity.IsRendered = true;
-							entity.OnTick();
-
-							ticked++;
+							rendered.Add(entity);
 
 							continue;
 						}
 					}
 
 					entity.IsRendered = false;
+				}
+
+				foreach (var entity in rendered)
+				{
+					entity.IsRendered = true;
+					entity.OnTick();
+
+					ticked++;
 				}
 
 				_rendered = rendered.ToArray();
@@ -135,22 +142,6 @@ namespace Alex.Worlds
 
 		public void Update(IUpdateArgs args)
 		{
-			//	float sw = whMultiplier;
-			//	float sh = whMultiplier;
-				
-			//_spriteEffect.World = Matrix.Identity * Matrix.CreateScale(sw, sh, 1f);
-			//_spriteEffect.View = Matrix.CreateLookAt(Vector3.Forward * 1f, Vector3.Backward * 0f, Vector3.Up);
-			//_spriteEffect.Projection = Matrix.CreatePerspectiveFieldOfView(, args.GraphicsDevice.Viewport.AspectRatio, 0.01f, args.Camera.FarDistance);
-			//_spriteEffect.View = Matrix.CreateLookAt(args.Camera.Position, args.Camera.Target, Vector3.Up);
-			//_spriteEffect.Projection = Matrix.CreatePerspectiveOffCenter(
-			//	0f, args.GraphicsDevice.Viewport.Width, args.GraphicsDevice.Viewport.Bounds.Height, 0f,
-			//	Camera.NearDistance, args.Camera.FarDistance);
-			
-			//_spriteEffect.Projection = args.Camera.ProjectionMatrix;
-			//_spriteEffect.View = args.Camera.ViewMatrix;
-			//var entities      = Entities.Values.ToArray();
-			//var blockEntities = BlockEntities.Values.ToArray();
-			
 			foreach (var entity in _rendered)
 			{
 				_updateWatch.Restart();
@@ -210,6 +201,7 @@ namespace Alex.Worlds
 			DepthClipEnable = true, 
 			ScissorTestEnable = false,
 			MultiSampleAntiAlias = true,
+			
 		};
 
 		private BasicEffect _spriteEffect;
@@ -222,28 +214,32 @@ namespace Alex.Worlds
 				if (entities.Length == 0)
 					return;
 				
-				
-				args.SpriteBatch.Begin(
-					SpriteSortMode.BackToFront, BlendState.NonPremultiplied, SamplerState.PointWrap,
-					DepthStencilState.DepthRead, RasterizerState);
+				_spriteEffect.Projection = args.Camera.ProjectionMatrix;
+				_spriteEffect.View = args.Camera.ViewMatrix;
 
 				try
 				{
+					args.SpriteBatch.Begin(
+						SpriteSortMode.BackToFront, BlendState.NonPremultiplied, SamplerState.PointWrap,
+						DepthStencilState.DepthRead, RasterizerState);
+					
 					foreach (var entity in entities)
 					{
-						if (!entity.IsRendered)
-							continue;
-						
-						if (!entity.HideNameTag || entity.IsAlwaysShowName)
+						if (!entity.HideNameTag)
 							RenderNametag(args, entity);
-						
-						if (entity is BlockEntity be)
-							be.Render2D(args);
 					}
 				}
 				finally
 				{
 					args.SpriteBatch.End();
+				}
+
+				foreach (var sign in entities.Where(x => x is BlockEntity))
+				{
+					if (sign is BlockEntity be)
+					{
+						be.Render2D(args);
+					}
 				}
 			}
 		}
@@ -252,82 +248,84 @@ namespace Alex.Worlds
 
 		private void RenderNametag(IRenderArgs args, Entity entity)
 		{
-			//var maxDistance = (World.ChunkManager.RenderDistance * 16f);
 			var lines = entity.NameTagLines;
-		//	string clean = entity.NameTag;
-
+			
 			if (lines == null || lines.Length == 0)
 				return;
 
-			Vector3 posOffset = new Vector3(0,  0.2f, 0);
+			Vector3 posOffset = new Vector3(0,  0.5f, 0);
 
 			//if (!entity.IsInvisible)
 			{
 				posOffset.Y += (float) ((entity.Height) * entity.Scale);
 			}
 
-			var cameraPosition = new Vector3(args.Camera.Position.X, args.Camera.Position.Y, args.Camera.Position.Z);
-
+			var renderlocation = entity.RenderLocation.ToVector3();
 			var rotation = new Vector3(
-				               entity.RenderLocation.X, entity.RenderLocation.Y + posOffset.Y, entity.RenderLocation.Z)
-			               - cameraPosition;
+				               renderlocation.X, renderlocation.Y + posOffset.Y, renderlocation.Z)
+			               - args.Camera.Position;
 
 			rotation.Normalize();
 
 			var halfWidth = (float) (entity.Width * entity.Scale);
-			var pos = entity.RenderLocation + posOffset + (-(rotation * (float) halfWidth));
+			var pos = renderlocation + posOffset + (-(rotation * halfWidth));
 
-			Vector2 textPosition;
+			//Matrix rotationMatrix = MatrixHelper.CreateRotation(args.Camera.Rotation);
+			//Vector3 lookAtOffset = Vector3.Forward.Transform(rotationMatrix);
+			
+			/*
+			var world = Matrix.Identity;
+			world *= Matrix.CreateScale(0.25f / 16f, 0.25f / 16f, 1f);
+			world *= Matrix.CreateBillboard(pos, args.Camera.Position, Vector3.Up, args.Camera.Direction);
+			world.Right = -world.Right;
+			world.Up = -world.Up;
+			_spriteEffect.World = world;*/
 
-			var screenSpace = args.GraphicsDevice.Viewport.Project(
+			
+			//
+			//Matrix.CreateBillboard(
+			//	pos, args.Camera.Position, Vector3.Up, args.Camera.Direction)
+			var screenSpace = args.SpriteBatch.GraphicsDevice.Viewport.Project(
 				pos, args.Camera.ProjectionMatrix, args.Camera.ViewMatrix, Matrix.Identity);
+				
+			//bool isOnScreen = args.SpriteBatch.GraphicsDevice.Viewport.Bounds.Contains((int) screenSpace.X, (int) screenSpace.Y);
 
-			bool isOnScreen = args.GraphicsDevice.Viewport.Bounds.Contains((int) screenSpace.X, (int) screenSpace.Y);
-
-			if (!isOnScreen) return;
-
-			textPosition.X = screenSpace.X;
-			textPosition.Y = screenSpace.Y;
-
-			Vector2 renderPosition = textPosition;
-			//var s = new Vector2((float) scale);
-
-			// Compute the depth and scale of the object.
+			//if (!isOnScreen) return;
+				
+			//count++;
 			float depth = screenSpace.Z;
-			
-			//Log.Info($"Depth: {depth}");
-			//float scale = 1.0f / depth;
-			
-			float scale =  1f - (Vector3.Distance(args.Camera.Position, pos) / args.Camera.FarDistance);// 1.0f / depth;
-			if (scale <= 0f)
-				return;
-			
-			var s = new Vector2(scale, scale);
-			
-			foreach (var str in lines)
+			var scale = 1f / depth;
+			try
 			{
-				var line = str;
+				int yOffset = 0;
+				
+				Vector2 renderPosition = Vector2.Zero;
+				foreach (var str in lines)
+				{
+					var line = str;
 
-				if (line.Length == 0 || string.IsNullOrWhiteSpace(line))
-					continue;
+					if (line.Length == 0)
+						continue;
+					
+					var stringSize = Alex.Font.MeasureString(line, scale).ToPoint();
+					
+					renderPosition.X = screenSpace.X;
+					renderPosition.Y = screenSpace.Y;
+					renderPosition.X +=  -(stringSize.X / 2f);
+					renderPosition.Y += yOffset;
 
-				var stringSize = Alex.Font.MeasureString(line, scale).ToPoint();
-				//var c = new Point((int) stringSize.X, (int) stringSize.Y);
+					args.SpriteBatch.FillRectangle(
+						new Rectangle(renderPosition.ToPoint(), stringSize), _backgroundColor * 1f, depth + 0.0000001f);
 
-				renderPosition.X = textPosition.X - (stringSize.X / 2f);
-				renderPosition.Y -= (stringSize.Y);
-				//renderPosition.Y = (int) ((textPosition.Y + yOffset));
+					args.SpriteBatch.DrawString(
+						Alex.Font, line, renderPosition, TextColor.White, FontStyle.None, 0f, Vector2.Zero, Vector2.One * scale, layerDepth: depth);
 
-				args.SpriteBatch.FillRectangle(
-					new Rectangle(renderPosition.ToPoint(), stringSize), _backgroundColor * 1f, depth + 0.0000001f);
-
-				args.SpriteBatch.DrawString(
-					Alex.Font, line, renderPosition, TextColor.White, FontStyle.None, 0f, Vector2.Zero, s, 1f,
-					SpriteEffects.None, depth);
-
-				//Alex.Font.DrawString(
-				//	args.SpriteBatch, line, renderPosition, (Color) TextColor.White, FontStyle.None, layerDepth: depth,
-				///	scale: new Vector2(scale, scale), opacity:opacity);
+					yOffset += (stringSize.Y);
+				}
+			}
+			finally
+			{
+			//	args.SpriteBatch.End();
 			}
 		}
 

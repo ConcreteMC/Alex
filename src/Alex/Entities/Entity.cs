@@ -1664,7 +1664,7 @@ namespace Alex.Entities
 
 
 			var bDiff = MathF.Sqrt((dx * dx) + (dz * dz));
-			var dy = (float)(KnownPosition.Y + Height) - (targetPosition.Y);
+			var dy = (float)(KnownPosition.Y ) - (targetPosition.Y);
 			var pitch = MathUtils.RadianToDegree(MathF.Atan(dy / (bDiff)));
 
 			return new Vector2(pitch, yaw);

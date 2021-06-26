@@ -13,7 +13,7 @@ namespace Alex.Common.Graphics
 		Vector3         Rotation         { get; set; }
 		Vector3         Target           { get; }
 		Matrix        ViewMatrix       { get; set; }
-		
+		Vector3 Direction { get; }
 		void MoveTo(Vector3 position, Vector3 rotation);
 		void Update(IUpdateArgs args);
 		void UpdateAspectRatio(float aspectRatio);

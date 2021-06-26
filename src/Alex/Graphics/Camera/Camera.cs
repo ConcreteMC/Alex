@@ -124,7 +124,7 @@ namespace Alex.Graphics.Camera
 	        UpdateViewMatrix();
         }
         
-        public  Vector3 Direction;
+        public  Vector3 Direction { get; protected set; }
         private float   _fovModifier = 0f;
 
         /// <summary>

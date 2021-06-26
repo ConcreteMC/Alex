@@ -460,16 +460,17 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 					RemotePlayer remotePlayer = new RemotePlayer(Client.World, skin: r.Skin);
 					remotePlayer.EntityId = r.EntityId;
-
 					remotePlayer.NameTag = r.DisplayName;
 					remotePlayer.UUID = r.ClientUuid;
+					
 					//m.Skin = r.Skin;
 
 					//if (isNewEntity)
 					{
 						remotePlayer.SetInventory(new BedrockInventory(46));
 
-						if (_playerListPlayers.TryAdd(remotePlayer.UUID, remotePlayer))
+						_playerListPlayers[r.ClientUuid] = remotePlayer;
+						//if (_playerListPlayers.TryAdd(r.ClientUuid, remotePlayer))
 						{
 							Client.World.AddPlayerListItem(
 								new PlayerListItem(r.ClientUuid, r.DisplayName, (GameMode) ((int) r.GameMode), 0, false));
@@ -482,7 +483,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			{
 				foreach (var r in removeRecords)
 				{
-					_playerListPlayers.TryRemove(r.ClientUuid, out _);
 					Client.World.RemovePlayerListItem(r.ClientUuid);
 				}
 			}
@@ -532,6 +532,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 			var uuid = MiNETExtensions.FromEntityId(message.runtimeEntityId);
 			entity.KnownPosition = new PlayerLocation(message.x, message.y, message.z, -message.headYaw, -message.yaw, -message.pitch);
+			entity.KnownPosition.OnGround = false;
+			
 			entity.Velocity = new Microsoft.Xna.Framework.Vector3(message.speedX, message.speedY, message.speedZ);
 			entity.EntityId = message.runtimeEntityId;
 			entity.UUID = uuid;
@@ -612,7 +614,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				}
 				else
 				{
-					Log.Warn($"Invalid TakeItemEntity request.");
+					//Log.Warn($"Invalid TakeItemEntity request.");
 					return;
 				}
 
@@ -4537,7 +4539,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			var scoreboard = WorldProvider?.ScoreboardView;
 			if (scoreboard == null)
 				return;
-			
+		
 			foreach (var entry in message.entries)
 			{
 				if (entry is ScoreEntryChangeFakePlayer fakePlayer)
@@ -4550,7 +4552,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				}
 				else if (entry is ScoreEntryChangePlayer player)
 				{
-
 					if (Client.World.EntityManager.TryGet(player.EntityId, out var playerEntity))
 					{
 						if (scoreboard.TryGetObjective(player.ObjectiveName, out var objective))
@@ -4558,6 +4559,20 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 							objective.AddOrUpdate(
 								player.Id.ToString(),
 								new ScoreboardEntry(player.Id.ToString(), player.Score, playerEntity.NameTag));
+						}
+
+						//scoreboard.AddRow($"{player.ObjectiveName}:{player.Id}", playerEntity.NameTag, player.Score);
+					}
+				}
+				else if (entry is ScoreEntryChangeEntity ent)
+				{
+					if (Client.World.EntityManager.TryGet(ent.EntityId, out var entity))
+					{
+						if (scoreboard.TryGetObjective(ent.ObjectiveName, out var objective))
+						{
+							objective.AddOrUpdate(
+								ent.Id.ToString(),
+								new ScoreboardEntry(ent.Id.ToString(), ent.Score, entity.NameTag));
 						}
 
 						//scoreboard.AddRow($"{player.ObjectiveName}:{player.Id}", playerEntity.NameTag, player.Score);
@@ -4572,6 +4587,10 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 					//	scoreboard.Remove($"{remove.ObjectiveName}:{remove.Id}");
 				}
+				else
+				{
+					
+				}
 			}
 		}
 
@@ -4582,7 +4601,21 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		public void HandleMcpeUpdateBlockSynced(McpeUpdateBlockSynced message)
 		{
-			UnhandledPackage(message);
+			var converted = ChunkProcessor.GetBlockState(message.blockRuntimeId);
+
+			if (converted != null)
+			{
+				BlockUpdatePriority priority = (BlockUpdatePriority) message.blockPriority;
+
+				Client.World?.SetBlockState(
+					new BlockCoordinates(message.coordinates.X, message.coordinates.Y, message.coordinates.Z), 
+					converted, (int) message.dataLayerId, priority);
+			}
+			else
+			{
+				Log.Warn($"Received unknown block runtime id.");
+			}
+			//UnhandledPackage(message);
 		}
 
         public void HandleMcpeSetScoreboardIdentity(McpeSetScoreboardIdentity message)

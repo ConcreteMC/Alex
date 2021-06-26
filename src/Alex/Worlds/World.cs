@@ -320,6 +320,7 @@ namespace Alex.Worlds
 		/// </summary>
 		public int ChunkDrawCount { get; set; } = 0;
 		
+		public bool RenderBoundingBoxes { get; set; } = false;
         public void Render(IRenderArgs args)
         {
 	        if (_destroyed)
@@ -344,9 +345,80 @@ namespace Alex.Worlds
             ChunkDrawCount = chunkDrawCount;
 
 	        Player.Render(args, Options.VideoOptions.EntityCulling.Value);
+	        
+	        if (Player != null && Player.HasRaytraceResult)
+	        {
+		        var player = Player;
+		        var block = player.SelBlock;
+		        //var               blockPos = player.RaytracedBlock;
+		        var boxes = player.RaytraceBoundingBoxes;
+
+		        if (boxes != null && boxes.Length > 0)
+		        {
+			        foreach (var boundingBox in boxes)
+			        {
+				        if (block.CanInteract || !Player.IsWorldImmutable)
+				        {
+					        Color color = Color.LightGray;
+
+					        if (Player.IsBreakingBlock)
+					        {
+						        var progress = Player.BlockBreakProgress;
+
+						        color = Color.Red * progress;
+
+						        var depth = args.GraphicsDevice.DepthStencilState;
+						        args.GraphicsDevice.DepthStencilState = DepthStencilState.None;
+
+						        args.GraphicsDevice.RenderBoundingBox(
+							        boundingBox, Camera.ViewMatrix, Camera.ProjectionMatrix, color, true);
+
+						        args.GraphicsDevice.DepthStencilState = depth;
+					        }
+					        else
+					        {
+						        args.GraphicsDevice.RenderBoundingBox(
+							        boundingBox, Camera.ViewMatrix, Camera.ProjectionMatrix, color);
+					        }
+				        }
+			        }
+		        }
+	        }
+
+	        if (RenderBoundingBoxes)
+	        {
+		        var hitEntity = Player?.HitEntity;
+
+		        var entities = Player?.EntitiesInRange;
+
+		        if (entities != null)
+		        {
+			        foreach (var entity in entities)
+			        {
+				        args.GraphicsDevice.RenderBoundingBox(
+					        entity.GetBoundingBox(), Camera.ViewMatrix, Camera.ProjectionMatrix,
+					        entity == hitEntity ? Color.Red : Color.Yellow);
+			        }
+		        }
+
+		        if (Player != null)
+		        {
+			        args.GraphicsDevice.RenderBoundingBox(
+				        Player.GetBoundingBox(), Camera.ViewMatrix, Camera.ProjectionMatrix,
+				        Color.Red);
+
+			        var hit = Player.Movement.LastCollision;
+
+			        foreach (var bb in hit)
+			        {
+				        args.GraphicsDevice.RenderBoundingBox(
+					        bb.Box, Camera.ViewMatrix, Camera.ProjectionMatrix, bb.Color, true);
+			        }
+		        }
+	        }
         }
 
-        public void Render2D(IRenderArgs args)
+        public void RenderSprites(IRenderArgs args)
         {
 	        if (_destroyed)
 		        return;
@@ -676,15 +748,14 @@ namespace Alex.Worlds
 					type |= ScheduleType.LowPriority;
 				}
 
-				var blockCoords = new BlockCoordinates(x, y, z);
 				/*if (block.Block.BlockMaterial.BlocksLight)
 				{
 					SetBlockLight(blockCoords, 0);
 				}
 				*/
 				
-				ChunkManager.SkyLightCalculator.Calculate(blockCoords);
-				ChunkManager.BlockLightUpdate.Enqueue(blockCoords);
+				//ChunkManager.SkyLightCalculator.Calculate(blockcoords);
+				//ChunkManager.BlockLightUpdate.Enqueue(blockcoords);
 
 				//if (GetBlockLight(blockCoords) > 0)
 				{

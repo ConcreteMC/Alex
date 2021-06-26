@@ -452,7 +452,7 @@ namespace Alex.Gamestates.InGame
 			}
 		}
 		private bool RenderDebug         { get; set; } = false;
-		private bool RenderBoundingBoxes { get; set; } = false;
+		
 
 		private KeyboardState _oldKeyboardState;
 		protected void CheckInput(GameTime gameTime) //TODO: Move this input out of the main update loop and use the new per-player based implementation by @TruDan
@@ -466,7 +466,7 @@ namespace Alex.Gamestates.InGame
 				}
 				else if (KeyBinds.EntityBoundingBoxes.All(x => currentKeyboardState.IsKeyDown(x)))
 				{
-					RenderBoundingBoxes = !RenderBoundingBoxes;
+					World.RenderBoundingBoxes = !World.RenderBoundingBoxes;
 				}
 				else if (currentKeyboardState.IsKeyDown(KeyBinds.DebugInfo))
 				{
@@ -493,93 +493,6 @@ namespace Alex.Gamestates.InGame
 			}
 
 			_oldKeyboardState = currentKeyboardState;
-		}
-
-		protected void Draw2D(IRenderArgs args)
-		{
-			try
-			{
-				args.SpriteBatch.Begin(SpriteSortMode.Deferred, samplerState: SamplerState.PointClamp, blendState:BlendState.NonPremultiplied);
-
-				if (World?.Player != null && World.Player.HasRaytraceResult)
-				{
-					var               player   = World?.Player;
-					var               block    = player.SelBlock;
-					//var               blockPos = player.RaytracedBlock;
-					var boxes    = player.RaytraceBoundingBoxes;
-					
-					if (boxes != null && boxes.Length >0)
-					{
-						foreach (var boundingBox in boxes)
-						{
-							if (block.CanInteract || !World.Player.IsWorldImmutable)
-							{
-								Color color = Color.LightGray;
-
-								if (World.Player.IsBreakingBlock)
-								{
-									var progress = World.Player.BlockBreakProgress;
-
-									color = Color.Red * progress;
-
-									var depth = args.GraphicsDevice.DepthStencilState;
-									args.GraphicsDevice.DepthStencilState = DepthStencilState.None;
-
-									args.SpriteBatch.RenderBoundingBox(
-										boundingBox, World.Camera.ViewMatrix, World.Camera.ProjectionMatrix,
-										color, true);
-
-									args.GraphicsDevice.DepthStencilState = depth;
-								}
-								else
-								{
-									args.SpriteBatch.RenderBoundingBox(
-										boundingBox, World.Camera.ViewMatrix, World.Camera.ProjectionMatrix,
-										color);
-								}
-							}
-						}
-					}
-				}
-
-				if (RenderBoundingBoxes)
-				{
-					var hitEntity = World.Player?.HitEntity;
-
-					var entities = World.Player?.EntitiesInRange;
-					if (entities != null)
-					{
-						foreach (var entity in entities)
-						{
-							args.SpriteBatch.RenderBoundingBox(entity.GetBoundingBox(), World.Camera.ViewMatrix,
-								World.Camera.ProjectionMatrix, entity == hitEntity ? Color.Red : Color.Yellow);
-						}
-					}
-
-					if (World?.Player != null)
-					{
-						args.SpriteBatch.RenderBoundingBox(
-							World.Player.GetBoundingBox(), World.Camera.ViewMatrix, World.Camera.ProjectionMatrix,
-							Color.Red);
-
-						var hit = World.Player.Movement.LastCollision;
-
-						foreach (var bb in hit)
-						{
-							args.SpriteBatch.RenderBoundingBox(
-								bb.Box, World.Camera.ViewMatrix, World.Camera.ProjectionMatrix, bb.Color, true);
-						}
-					}
-				}
-			}
-			finally
-			{
-				args.SpriteBatch.End();
-			}
-			
-			World?.Render2D(args);
-			
-			//Alex.ParticleManager.Draw(args.GameTime, World.Camera);
 		}
 
 		public static string GetCardinalDirection(PlayerLocation cam)
@@ -695,9 +608,7 @@ namespace Alex.Gamestates.InGame
 
 			World?.Render(args);
 
-			base.OnDraw(args);
-
-			Draw2D(args);
+			World?.RenderSprites(args);
 		}
 
 		protected override void OnUnload()
