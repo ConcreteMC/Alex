@@ -128,7 +128,7 @@ namespace Alex.Networking.Java.Util
 				Read(dat, 0, length);
 				return dat;
 			}
-			
+
 			//SpinWait s = new SpinWait();
 			int read = 0;
 
@@ -138,7 +138,7 @@ namespace Alex.Networking.Java.Util
 				int oldRead = read;
 
 				int r = this.Read(buffer, read, length - read);
-				if (r < 0) //No data read?
+				if (r == 0) //No data read?
 				{
 					break;
 				}
@@ -148,6 +148,9 @@ namespace Alex.Networking.Java.Util
 				if (CancelationToken.IsCancellationRequested) 
 					throw new ObjectDisposedException("");
 			}
+
+			if (read < length)
+				throw new EndOfStreamException();
 
 			return buffer;
 		}
@@ -184,8 +187,7 @@ namespace Alex.Networking.Java.Util
 
 		public int ReadVarInt()
 		{
-			int read = 0;
-			return ReadVarInt(out read);
+			return ReadVarInt(out _);
 		}
 
 		public int ReadVarInt(out int bytesRead)

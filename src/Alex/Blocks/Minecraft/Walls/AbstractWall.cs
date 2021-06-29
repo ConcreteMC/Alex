@@ -96,7 +96,7 @@ namespace Alex.Blocks.Minecraft
 		/// <inheritdoc />
 		public override bool TryGetStateProperty(string prop, out StateProperty stateProperty)
 		{
-			switch (prop)
+		/*	switch (prop)
 			{
 				case "up":
 				case "north":
@@ -105,7 +105,7 @@ namespace Alex.Blocks.Minecraft
 				case "west":
 					stateProperty = new PropertyBool(prop, "true", "none");
 					return true;
-			}
+			}*/
 			return base.TryGetStateProperty(prop, out stateProperty);
 		}
 	}

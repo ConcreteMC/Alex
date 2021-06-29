@@ -126,6 +126,11 @@ namespace Alex.Graphics
 		    var size = textures.Sum(x => Math.Max(x.Width, x.Height)) / TextureWidth;
 		    size *= 2;
 
+		    while (size % TextureWidth != 0)
+		    {
+			    size++;
+		    }
+
 		    Packer p = new Packer();
 		    p.FitHeuristic = BestFitHeuristic.Area;
 

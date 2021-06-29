@@ -31,18 +31,15 @@ namespace Alex.Graphics.Models.Blocks
 		{
 			if (state.Block is LiquidBlock lb)
 			{
-				return 7 - (state.GetTypedValue(LiquidBlock.LEVEL) & 7);
+				return (state.GetTypedValue(LiquidBlock.LEVEL));
 			}
-			
-			if (state.Block.Solid)
-				return 7;
 
 			return 0;
 		}
 
 		public override void GetVertices(IBlockAccess blockAccess, ChunkData chunkBuilder, BlockCoordinates blockCoordinates, BlockState baseBlock)
 		{
-			var myLiquidLevel = GetLevel(baseBlock);
+			//var myLiquidLevel = GetLevel(baseBlock);
 			
 			var position = blockCoordinates;
 			var blocksUp = blockAccess.GetBlockState(new BlockCoordinates(position.X, position.Y + 1, position.Z));//.GetType();
@@ -90,9 +87,9 @@ namespace Alex.Graphics.Models.Blocks
 			{
 				topLeft = GetAverageLiquidLevels(blockAccess, position);
 
-				topRight = GetAverageLiquidLevels(blockAccess, position + BlockCoordinates.Right);
+				topRight = GetAverageLiquidLevels(blockAccess, position + new BlockCoordinates(1, 0, 0));
 
-				bottomLeft = GetAverageLiquidLevels(blockAccess, position + BlockCoordinates.Forwards);
+				bottomLeft = GetAverageLiquidLevels(blockAccess, position + new BlockCoordinates(0, 0, 1));
 
 				bottomRight = GetAverageLiquidLevels(blockAccess, position + new BlockCoordinates(1, 0, 1));
 
@@ -192,7 +189,7 @@ namespace Alex.Graphics.Models.Blocks
 					vertColor = GetBiomeColor(blockAccess, bx, y, bz);
 				}
 
-				float height   = 0;
+				//float height   = 0;
 
 				for (var index = 0; index < vertices.Length; index++)
 				{
@@ -200,38 +197,31 @@ namespace Alex.Graphics.Models.Blocks
 
 					if (vert.Position.Y > start.Y)
 					{
-						const float modifier = 2f;
+						//const float modifier = 2f;
 
+						int height = 0;
 						if (vert.Position.X < end.X && vert.Position.Z < end.Z)
 						{
-							height = (topLeft);
+							height = (int)((16.0 / 8.0) * (topLeft));
 							rot = 0;
 						}
 						else if (vert.Position.X > start.X && vert.Position.Z < end.Z)
 						{
-							height = (topRight);
+							height = (int)((16.0 / 8.0) * (topRight));
 							rot = 270;
 						}
 						else if (vert.Position.X < end.X && vert.Position.Z > start.Z)
 						{
-							height = (bottomLeft);
+							height = (int)((16.0 / 8.0) * (bottomLeft));
 							rot = 90;
 						}
 						else
 						{
-							height = (bottomRight);
+							height = (int)((16.0 / 8.0) * (bottomRight));
 							rot = 270;
 						}
-
-						if (height > 8)
-							height -= 8;
-
-						if (height == 0)
-							height = 7;
-						
-						height *= modifier;
-						
-						vert.Position.Y = MathF.Abs((1f / 16f) * height);
+					
+						vert.Position.Y = ((float)height) / 16f;
 					}
 
 					if (baseBlock.Block is Water)
@@ -278,14 +268,14 @@ namespace Alex.Graphics.Models.Blocks
 
 					//if (bs.Block is Lava && !()) continue;
 
-					var lvl = GetLevel(bs);
+					var lvl = (GetLevel(bs));
 
 					if (lvl > level)
 						level = lvl;
 				}
 			}
 
-			return level;
+			return 7 - (level & 0x7);
 		}
 	}
 }

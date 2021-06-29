@@ -27,7 +27,7 @@ namespace Alex.Blocks.Minecraft.Liquid
 				neighbor.BlockState.TryGetValue(LEVEL, out myLevelValue);
 				//var neighborLevel = neighbor.BlockState.GetTypedValue(LEVEL);
 
-				if (neighborLevel < myLevelValue)
+				if (neighborLevel > myLevelValue)
 				{
 					return true;
 				}

@@ -20,7 +20,7 @@ namespace Alex.Networking.Bedrock.RakNet
         public double Cwnd
         {
             get => _cwnd;
-            set
+            private set
             {
                 _cwnd = Math.Clamp(value, 0, MtuSize);
             }

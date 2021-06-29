@@ -347,16 +347,20 @@ namespace Alex.Networking.Java
 
 	    private bool TryReadPacket(MinecraftStream stream, out int lastPacketId)
 	    {
+		    lastPacketId = 0;
 		    Packets.Packet packet = null;
 		    int packetId;
 		    byte[] packetData;
 
 		    lock (_readLock)
 		    {
+			    int length = stream.ReadVarInt(out int read);
+
+			    if (read == 0)
+				    return false;
+			    
 			    if (!CompressionEnabled)
 			    {
-				    int length = stream.ReadVarInt();
-
 				    int packetIdLength;
 				    packetId = stream.ReadVarInt(out packetIdLength);
 				    _lastReceivedPacketId = lastPacketId = packetId;
@@ -372,8 +376,6 @@ namespace Alex.Networking.Java
 			    }
 			    else
 			    {
-				    int packetLength = stream.ReadVarInt();
-
 				    int br;
 				    int dataLength = stream.ReadVarInt(out br);
 
@@ -383,11 +385,11 @@ namespace Alex.Networking.Java
 				    {
 					    packetId = stream.ReadVarInt(out readMore);
 					    _lastReceivedPacketId = lastPacketId = packetId;
-					    packetData = stream.Read(packetLength - (br + readMore));
+					    packetData = stream.Read(length - (br + readMore));
 				    }
 				    else
 				    {
-					    var data = stream.Read(packetLength - br);
+					    var data = stream.Read(length - br);
 
 					    using (MinecraftStream a = new MinecraftStream(CancellationToken.Token))
 					    {

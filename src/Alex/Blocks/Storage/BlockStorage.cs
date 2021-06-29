@@ -14,11 +14,12 @@ namespace Alex.Blocks.Storage
         private int _bits;
         private IPallete Pallette { get; set; }
 
-        private static BlockState Air = BlockFactory.GetBlockState("minecraft:air");
+        private BlockState Air { get; }
         private object _lock = new object();
         public BlockStorage()
         {
             _bits = 8;
+            Air = BlockFactory.GetBlockState("minecraft:air");
             
             Storage = new FlexibleStorage(_bits, 4096);
             Pallette = new IntIdentityHashBiMap((1 << _bits));
