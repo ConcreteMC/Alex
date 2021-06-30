@@ -146,8 +146,9 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 								        var chunks = _futureChunks.Where(c => c.SubChunks.Contains(hash) || c.Biome == hash).ToArray();
 								        foreach (CachedChunk chunk in chunks)
 								        {
+									        chunk.TryBuild(this);
 									        //CachedChunk chunk = kvp.Key;
-
+/*
 									        if (chunk.Biome == hash)
 									        {
 										        if (data.Length >= 256)
@@ -178,15 +179,13 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 											        {
 												        // parse data
 												        chunk.Sections[i] = data;
-												        // chunk.Chunk.Sections[i] = HandleChunk(1, data, chunk.X, chunk.Z).Sections[0];//ClientUtils.DecodeChunkColumn(1, data, BlockPalette, _internalStates).Sections[0];
-												        //chunk.SubChunks[i] = 0;
 												        chunk.SubChunkCount--;
 											        }
 										        }
 									        }
 			        
 									        //TRYBUILD
-									        chunk.TryBuild(this);
+									        chunk.TryBuild(this);*/
 								        }
 
 								        handled = true;
@@ -274,77 +273,109 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
         public class CachedChunk
         {
-	        public int      X         { get; set; }
-	        public int      Z         { get; set; }
-	        public ulong[]  SubChunks { get; set; } = new ulong[16];
-	        public byte[][] Sections  { get; set; } = new byte[16][];
-	        public ulong    Biome     { get; set; }
+	        public int X { get; }
+	        public int Z { get; }
+	        public ulong[] SubChunks { get; set; } = new ulong[16];
+	        public byte[][] Sections { get; set; } = new byte[16][];
+	        public ulong Biome { get; set; }
 
-	        public ChunkColumn         Chunk    { get; set; } = new ChunkColumn(0,0);
+	        public ChunkColumn Chunk { get; }
+
+	        public bool IsComplete => Sections.All(x => x != null);
 	        // public Action<ChunkColumn> Callback { get; set; }
-	        public uint               SubChunkCount = 0;
+	        //public uint               SubChunkCount = 0;
 
+	        public CachedChunk(int x, int z)
+	        {
+		        X = x;
+		        Z = z;
+		        
+		        Chunk = new ChunkColumn(x, z);
+		        Chunk.IsNew = true;
+	        }
+	        
 	        public void TryBuild(ChunkProcessor processor)
 	        {
-		        if (SubChunkCount <= 0 && processor.Cache.TryGet(Biome, out var biomeIds))
+		        bool complete = IsComplete;
+		        if (!complete)
 		        {
-			        if (biomeIds.Length >= 256){
-				        for (int x = 0; x < 16; x++)
-				        {
-					        for (int z = 0; z < 16; z++)
-					        {
-						        var biomeId = biomeIds[(z << 4) + (x)];
+			        complete = true;
+			        for (int i = 0; i < Sections.Length; i++)
+			        {
+				        if (Sections[i] != null)
+					        continue;
 
-						        for (int y = 0; y < 255; y++)
-						        {
-							        Chunk.SetBiome(x, y, z, biomeId);
-						        }
+				        if (processor.Cache.TryGet(SubChunks[i], out var data))
+				        {
+					        Sections[i] = data;
+				        }
+				        else
+				        {
+					        complete = false;
+				        }
+			        }
+		        }
+		        
+		        if (!complete || !processor.Cache.TryGet(Biome, out var biomeIds))
+			        return;
+
+		        if (biomeIds.Length >= 256)
+		        {
+			        for (int x = 0; x < 16; x++)
+			        {
+				        for (int z = 0; z < 16; z++)
+				        {
+					        var biomeId = biomeIds[(z << 4) + (x)];
+
+					        for (int y = 0; y < 255; y++)
+					        {
+						        Chunk.SetBiome(x, y, z, biomeId);
 					        }
 				        }
 			        }
-
-			        processor._futureChunks.Remove(this);
-			        
-			        var coordinates = new ChunkCoordinates(Chunk.X, Chunk.Z);
-
-			        foreach (KeyValuePair<BlockCoordinates, NbtCompound> bePair in processor._futureBlockEntities.Where(
-				        be => (ChunkCoordinates) be.Key == coordinates))
-			        {
-				        Chunk.BlockEntities.TryAdd(bePair.Key, bePair.Value);
-				        processor._futureBlockEntities.TryRemove(bePair.Key, out _);
-			        }
-
-			        for (int i = 0; i < 16; i++)
-			        {
-				        var sectionData = Sections[i];
-
-				        if (sectionData == null)
-				        {
-					        processor.Cache.TryGet(SubChunks[i], out sectionData);
-				        }
-				        
-				        if (sectionData != null && sectionData.Length > 0)
-				        {
-					      //  Chunk.Sections[i] = processor.HandleChunk(1, sectionData, coordinates.X, coordinates.Z).Sections[0];
-
-					      using (MemoryStream ms = new MemoryStream(sectionData))
-					      {
-						      using NbtBinaryReader defStream = new NbtBinaryReader(ms, true);
-						      Chunk.Sections[i] = processor.ReadSection(ms, defStream);
-					      }
-					      //Chunk.Sections[i] = processor.HandleChunk(
-						//	        new ChunkData(true, new ulong[0], 1, sectionData, coordinates.X, coordinates.Z))
-						  //     .Sections[0];
-				        }
-			        }
-
-			        Chunk.CalculateHeight();
-			      //  Callback?.Invoke(Chunk);
-			        //Client.Chunks[coordinates] = chunk.Chunk;
-
-			        processor.Client.World.ChunkManager.AddChunk(
-				        Chunk, coordinates, true);
 		        }
+
+		        processor._futureChunks.Remove(this);
+
+		        var coordinates = new ChunkCoordinates(Chunk.X, Chunk.Z);
+
+		        foreach (KeyValuePair<BlockCoordinates, NbtCompound> bePair in processor._futureBlockEntities.Where(
+			        be => (ChunkCoordinates) be.Key == coordinates))
+		        {
+			        Chunk.BlockEntities.TryAdd(bePair.Key, bePair.Value);
+			        processor._futureBlockEntities.TryRemove(bePair.Key, out _);
+		        }
+
+		        for (int i = 0; i < Sections.Length; i++)
+		        {
+			        var sectionData = Sections[i];
+
+			        if (sectionData == null)
+			        {
+				        if (processor.Cache.TryGet(SubChunks[i], out sectionData))
+				        {
+					        Sections[i] = sectionData;
+				        }
+				        else
+				        {
+					        Log.Warn($"Missing data for subchunk");
+				        }
+			        }
+
+			        if (sectionData != null && sectionData.Length > 0)
+			        {
+				        using (MemoryStream ms = new MemoryStream(sectionData))
+				        {
+					        using NbtBinaryReader defStream = new NbtBinaryReader(ms, true);
+					        Chunk.Sections[i] = processor.ReadSection(ms, defStream);
+				        }
+			        }
+		        }
+
+		        Chunk.CalculateHeight();
+		        
+		        processor.Client.World.ChunkManager.AddChunk(
+			        Chunk, coordinates, true);
 	        }
         }
 
@@ -364,14 +395,9 @@ namespace Alex.Worlds.Multiplayer.Bedrock
         
         private void HandleChunkCachePacket(ChunkData chunkData)
         {
-	        var chunk = new CachedChunk
-	        {
-		        X = chunkData.X,
-		        Z = chunkData.Z
-	        };
-	        chunk.Chunk.X = chunk.X;
-	        chunk.Chunk.Z = chunk.Z;
-	        chunk.SubChunkCount = chunkData.SubChunkCount;
+	        var chunk = new CachedChunk(chunkData.X, chunkData.Z);
+	        chunk.SubChunks = new ulong[chunkData.SubChunkCount];
+	        chunk.Sections = new byte[chunkData.SubChunkCount][];
 
 	        var hits   = new List<ulong>();
 	        var misses = new List<ulong>();
@@ -392,13 +418,15 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		        ulong hash = chunkData.Blobs[i];
 		        chunk.SubChunks[i] = hash;
 		        
-		        if (Cache.Contains(hash))
+		        if (Cache.TryGet(hash, out byte[] subChunkData))
 		        {
+			        chunk.Sections[i] = subChunkData;
 			        hits.Add(hash);
-			        chunk.SubChunkCount--;
+			        //chunk.SubChunkCount--;
 		        }
 		        else
 		        {
+			        chunk.Sections[i] = null;
 			        misses.Add(hash);
 		        }
 	        }
@@ -416,7 +444,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		        ReadExtra(chunk.Chunk, ms);
 	        }
 
-	        if (chunk.SubChunkCount <= 0)
+	        if (chunk.IsComplete)
 	        {
 		        chunk.TryBuild(this);
 	        }
