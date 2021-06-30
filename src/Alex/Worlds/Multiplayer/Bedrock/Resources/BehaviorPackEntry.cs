@@ -17,7 +17,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 		public BehaviorPackEntry(ResourcePackInfo info) : base(info.UUID, info.Version)
 		{
 			Info = info;
-			Log.Info($"Downloading behaviorpack... ID={Identifier}, Key={info.ContentKey}");
+			//Log.Info($"Downloading behaviorpack... ID={Identifier}, Key={info.ContentKey}");
 		}
 
 		protected override void OnComplete(byte[] data)

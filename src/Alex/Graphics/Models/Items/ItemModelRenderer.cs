@@ -291,10 +291,12 @@ namespace Alex.Graphics.Models.Items
 
             if (DisplayPosition.HasFlag(DisplayPosition.FirstPerson))
             {
+                var firstPersonTranslation = halfSize + translation;
+                
                return Matrix.CreateScale(scale)
                                * Matrix.CreateRotationY(MathUtils.ToRadians(180f))
                                * MatrixHelper.CreateRotationDegrees(rotation)
-                               * Matrix.CreateTranslation( halfSize + translation)
+                               * Matrix.CreateTranslation(firstPersonTranslation.X, firstPersonTranslation.Y + 3f, firstPersonTranslation.Z)
                                * characterMatrix;
             }
 

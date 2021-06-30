@@ -176,7 +176,7 @@ namespace Alex.Particles
 
 				case ParticleDataMode.Item:
 				{
-					if (ItemFactory.ResolveItemName((int) data, out string name))
+					if (ItemFactory.ResolveItemName((int) data, out var name))
 					{
 						if (ItemFactory.TryGetItem(name, out Item item))
 						{

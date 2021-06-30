@@ -333,20 +333,17 @@ namespace Alex.Networking.Java.Util
 
 			int id = ReadVarInt();
 			byte count = 0;
-			short damage = 0;
 			NbtCompound nbt = null;
-
 			
-				count = (byte)ReadByte();
-			//	damage = ReadShort();
-				nbt = ReadNbtCompound();
+			count = (byte)ReadByte();
+			nbt = ReadNbtCompound();
 			
 
 			SlotData slot = new SlotData();
 			slot.Count = count;
 			slot.Nbt = nbt;
 			slot.ItemID = id;
-			slot.ItemDamage = damage;
+		//	slot.ItemDamage = damage;
 
 			return slot;
 		}

@@ -1851,9 +1851,9 @@ namespace Alex.Worlds.Multiplayer.Java
 			if (data == null)
 				return new ItemAir();
 			
-			if (ItemFactory.ResolveItemName(data.ItemID, out string name))
+			if (ItemFactory.ResolveItemName(data.ItemID, out var location))
 			{
-				if (ItemFactory.TryGetItem(name, out Item item))
+				if (ItemFactory.TryGetItem(location, out Item item))
 				{
 					item = item.Clone();
 					
@@ -1863,7 +1863,10 @@ namespace Alex.Worlds.Multiplayer.Java
 
 					return item;
 				}
+				
+				Log.Info($"Resolved itemId but failed to get item: {data.ItemID} -> {location}");
 			}
+			Log.Info($"Failed to resolve item name: {data.ItemID}");
 
 			return new ItemAir();
 		}
@@ -2723,34 +2726,33 @@ namespace Alex.Worlds.Multiplayer.Java
 
 		private void HandleSpawnEntity(SpawnEntity packet)
 		{
-			
-					var velocity = Vector3.Zero;
 
-					if (packet.Data > 0)
-					{
-						velocity = ModifyVelocity(new Vector3(packet.VelocityX, packet.VelocityY, packet.VelocityZ));
-					}
+			var velocity = Vector3.Zero;
 
-					var mob = SpawnMob(
-						packet.EntityId, packet.Uuid, (EntityType) packet.Type, new PlayerLocation(
-							packet.X, packet.Y, packet.Z, packet.Yaw, packet.Yaw, packet.Pitch)
-						{
-							//	OnGround = packet.SpawnMob
-						}, velocity);
+			if (packet.Data > 0)
+			{
+				velocity = ModifyVelocity(new Vector3(packet.VelocityX, packet.VelocityY, packet.VelocityZ));
+			}
 
-					
-					if (mob is EntityFallingBlock efb)
-					{
-						//32
-						var blockId  = packet.Data << 12 >> 12;
-						var metaData = packet.Data >> 12;
+			var mob = SpawnMob(
+				packet.EntityId, packet.Uuid, (EntityType) packet.Type, new PlayerLocation(
+					packet.X, packet.Y, packet.Z, packet.Yaw, packet.Yaw, packet.Pitch)
+				{
+					//	OnGround = packet.SpawnMob
+				}, velocity);
 
-						if (ItemFactory.TryGetItem((short) blockId, (short) metaData, out var item))
-						{
-							efb.SetItem(item);
-						}
-						else { }
-					}
+
+			if (mob is EntityFallingBlock efb)
+			{
+				//32
+				var blockId = packet.Data << 12 >> 12;
+				var metaData = packet.Data >> 12;
+
+				if (ItemFactory.TryGetItem((short) blockId, (short) metaData, out var item))
+				{
+					efb.SetItem(item);
+				}
+			}
 		}
 
 		private void HandleSpawnMob(SpawnLivingEntity packet)

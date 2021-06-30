@@ -35,7 +35,7 @@ namespace Alex.Entities.Projectiles
             {
                 var knownPos = KnownPosition.ToVector3();
                 // var knownPos = bb.GetCenter();
-               float scale = (float) (IsBlock ? (1f / (1f / Width)) : (1f / 32f));
+               float scale =  1f / 16f;
                 if (DoRotation)
                 {
                     //var offset = new Vector3((float) Width, (float) Height, (float) Width) / 2f;
@@ -75,8 +75,7 @@ namespace Alex.Entities.Projectiles
                 return 0;
             
             var knownPos = KnownPosition.ToVector3();
-            // var knownPos = bb.GetCenter();
-            float scale = (float) (IsBlock ? (1f / (1f / Width)) : (1f / 32f));
+            float scale = 1f / 16f;
             Matrix worldMatrix;
             var offset = new Vector3((float) Width / 2f, 0f, (float) Width / 2f);
             if (DoRotation)

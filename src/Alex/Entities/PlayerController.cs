@@ -175,7 +175,8 @@ namespace Alex.Entities
 
 				if (InputManager.IsPressed(AlexInputCommand.DropItem))
 				{
-					Player.DropHeldItem();
+					//Sprint is bound to LeftCtrl by default.
+					Player.DropHeldItem(InputManager.IsDown(AlexInputCommand.Sprint)); 
 				}
 
 				if (InputManager.IsPressed(AlexInputCommand.TakeScreenshot))

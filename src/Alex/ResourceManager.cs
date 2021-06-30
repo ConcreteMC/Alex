@@ -110,7 +110,7 @@ namespace Alex
 				ResourceLocation parentKey = model.ParentName;
 				
 				ResourcePackModelBase parent;
-
+				
 				if (BlockModelRegistry.TryGet(parentKey, out var rawParent))
 				{
 					parent = rawParent.Value;

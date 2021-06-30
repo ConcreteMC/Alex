@@ -1397,7 +1397,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					result.StackID = slot.UniqueId;
 					inventory.SetSlot(startIndex + index, result, true);
 					
-					Log.Info($"Server container slot (slot={(startIndex + index)} inventory={message.inventoryId} stackId={result.StackID} uniqueId={slot.UniqueId}): {result.Name}");
+					//Log.Info($"Server container slot (slot={(startIndex + index)} inventory={message.inventoryId} stackId={result.StackID} uniqueId={slot.UniqueId}): {result.Name}");
 					//inventory[usedIndex] = result;
 				}
 				else
@@ -1461,7 +1461,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			           if (inventory is BedrockInventory bi)
 			           {
 				           bi.OffHand = result;
-				           Log.Info($"Server set single slot (slot={index} inventory={message.inventoryId} stackId={result.StackID} uniqueId={message.uniqueid}): {result.Name}");
+				       //    Log.Info($"Server set single slot (slot={index} inventory={message.inventoryId} stackId={result.StackID} uniqueId={message.uniqueid}): {result.Name}");
 			           }
 
 			           break;
@@ -1472,7 +1472,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			           if (inventory is BedrockInventory bi)
 			           {
 				           bi.SetSlot(bi.BootsSlot + index, result, true);
-				           Log.Info($"Server set single slot (slot={index} inventory={message.inventoryId} stackId={result.StackID} uniqueId={message.uniqueid}): {result.Name}");
+				         //  Log.Info($"Server set single slot (slot={index} inventory={message.inventoryId} stackId={result.StackID} uniqueId={message.uniqueid}): {result.Name}");
 			           }
 
 			           // inventory.SetSlot();
@@ -1480,17 +1480,17 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		           }
 
 		           case 124:
-			           Log.Info($"Server set cursor: {result.Name}");
+			         //  Log.Info($"Server set cursor: {result.Name}");
 			           inventory.SetCursor(result, true);
 			           break;
 		           
 		           case 0:
-			           Log.Info($"Server set single slot (slot={index} inventory={message.inventoryId} stackId={result.StackID} uniqueId={message.uniqueid}): {result.Name}");
+			         //  Log.Info($"Server set single slot (slot={index} inventory={message.inventoryId} stackId={result.StackID} uniqueId={message.uniqueid}): {result.Name}");
 			           inventory.SetSlot(index, result, true);
 			           break;
 		           
 		           default:
-			           Log.Warn($"Server tried to set single slot (slot={index} inventory={message.inventoryId} stackId={result.StackID} uniqueId={message.uniqueid}): {result.Name}");
+			          // Log.Warn($"Server tried to set single slot (slot={index} inventory={message.inventoryId} stackId={result.StackID} uniqueId={message.uniqueid}): {result.Name}");
 			          // inventory[index] = result;
 			           break;
 	           }

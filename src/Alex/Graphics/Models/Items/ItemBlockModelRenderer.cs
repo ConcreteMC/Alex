@@ -25,7 +25,7 @@ namespace Alex.Graphics.Models.Items
             _blockState = block;
             _texture = texture;
             
-            Scale = new Vector3(8f);
+            Scale = new Vector3(16f);
             Size = new Vector3(16f, 16f, 16f);
 
             float biggestDimensions = 0;
@@ -39,9 +39,6 @@ namespace Alex.Graphics.Models.Items
                     Size = dimension;
                 }
             }
-           // Size = block.Block.GetBoundingBoxes(Vector3.Zero)
-            //Offset = new Vector3(0f, -0.5f, 0f);
-            //  Translation = -Vector3.Forward * 8f;
         }
 
         
@@ -80,14 +77,7 @@ namespace Alex.Graphics.Models.Items
             _blockState?.VariantMapper.Model.GetVertices(
                 world, chunkData, BlockCoordinates.Zero, _blockState);
 
-            // var max         = _block.Model.GetBoundingBoxes(Vector3.Zero).Max(x => x.Max - x.Min);
             var rawVertices = chunkData.BuildVertices(world);
-
-            //  while (count > 0 && count % 3 != 0)
-            // {
-            //      count--;
-            // }
-
             var scale = Vector2.One / _texture.Bounds.Size.ToVector2();
 
             Vertices = rawVertices.Select(
@@ -108,27 +98,28 @@ namespace Alex.Graphics.Models.Items
         {
             base.InitEffect(effect);
             effect.TextureEnabled = true;
-
-           // if (_animated)
-            {
-                effect.Texture = _texture;// _resource.Atlas.GetAtlas(0);
-            }
-            //else
-            {
-                //effect.Texture = _resource.Atlas.GetStillAtlas();
-            }
+            
+            effect.Texture = _texture;
         }
 
         /// <inheritdoc />
         protected override Matrix GetWorldMatrix(DisplayElement activeDisplayItem, Matrix characterMatrix)
         {
+            if ((DisplayPosition & DisplayPosition.Ground) != 0)
+            {
+                return Matrix.CreateScale(activeDisplayItem.Scale * Scale)
+                       * MatrixHelper.CreateRotationDegrees(activeDisplayItem.Rotation)
+                       * Matrix.CreateTranslation(activeDisplayItem.Translation)
+                       * characterMatrix;
+            }
+            
             if ((DisplayPosition & DisplayPosition.FirstPerson) != 0)
             {
                 var translate = activeDisplayItem.Translation;
-                return Matrix.CreateScale(activeDisplayItem.Scale * Scale)
+                return Matrix.CreateScale(activeDisplayItem.Scale * (Scale / 2f))
                        * MatrixHelper.CreateRotationDegrees(new Vector3(-67.5f, 0f, 0f))
                        * MatrixHelper.CreateRotationDegrees(activeDisplayItem.Rotation)
-                       * Matrix.CreateTranslation(new Vector3(translate.X + 2f, translate.Y + (16f), translate.Z - 4f))
+                       * Matrix.CreateTranslation(new Vector3(translate.X + 4f, translate.Y + 18f, translate.Z - 2f))
                        * characterMatrix;
             }
             

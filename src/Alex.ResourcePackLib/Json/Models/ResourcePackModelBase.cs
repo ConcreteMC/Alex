@@ -50,6 +50,11 @@ namespace Alex.ResourcePackLib.Json.Models
         {
             if (parent == null) return;
 		    
+            if (Type == ModelType.Item && parent.Type == ModelType.Block)
+            {
+                Type = ModelType.Block;
+            }
+            
             if (!GuiLight.HasValue && parent.GuiLight.HasValue)
             {
                 GuiLight = parent.GuiLight;
@@ -75,6 +80,7 @@ namespace Alex.ResourcePackLib.Json.Models
                     Display.Add(kvp.Key, kvp.Value);
                 }
             }
+            
         }
         
         /// <summary>

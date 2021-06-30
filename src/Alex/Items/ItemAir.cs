@@ -8,6 +8,9 @@ namespace Alex.Items
 	    {
 		    Material = ItemMaterial.None;
 		    ItemType = ItemType.Hand;
+		    
+		    Name = "minecraft:air";
+		    DisplayName = "Air";
 	    }
     }
 }

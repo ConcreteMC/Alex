@@ -156,6 +156,7 @@ namespace Alex.Utils.Inventories
 			{
 				var id = item.Id;
 				var meta = (byte) item.Metadata;
+
 				var reverseMap = MiNET.Worlds.AnvilWorldProvider.Convert.FirstOrDefault(map => map.Value.Item1 == id);
 
 				if (reverseMap.Value != null)
@@ -171,27 +172,6 @@ namespace Alex.Utils.Inventories
 
 					ItemFactory.TryGetItem(t.Name, out result);
 				}
-				/*else
-				{
-					var block = BlockFactory.RuntimeIdTable.FirstOrDefault(x => x.Id == item.Id);
-
-					if (block != null)
-					{
-						ItemFactory.TryGetItem(block.Name, out result);
-					}
-				}*/
-
-				if (result != null)
-				{
-					//result.Id = item.Id;
-					//result.Meta = item.Metadata;
-				}
-			}
-
-			if (result == null)
-			{
-				ItemFactory.TryGetItem(item.Id, item.Metadata, out result);
-				//  Log.Info($"Set inventory slot: {message.slot} Id: {message.item.Id}:{message.item.Metadata} x {message.item.Count} Name: {item.DisplayName} IsPeInv: {inventory.IsPeInventory}");
 			}
 
 			if (result != null)

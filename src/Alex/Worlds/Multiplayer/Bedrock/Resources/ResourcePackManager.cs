@@ -65,11 +65,16 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 		
 		private static bool AcceptServerResources =>
 			Alex.Instance.Options.AlexOptions.MiscelaneousOptions.LoadServerResources.Value;
+
+		/// <summary>
+		///		If true, client will try to download & decrypt server resources. Otherwise we will ignore encrypted packs.
+		/// </summary>
+		public static bool AcceptEncrypted { get; set; } = false;
 		
 		public void HandleMcpeResourcePackStack(McpeResourcePackStack message)
 		{
-			Log.Info(
-				$"Received ResourcePackStack/ (ForcedToAccept={message.mustAccept} Gameversion={message.gameVersion} Behaviorpacks={message.behaviorpackidversions.Count} Resourcepacks={message.resourcepackidversions.Count})");
+		//	Log.Info(
+		//		$"Received ResourcePackStack/ (ForcedToAccept={message.mustAccept} Gameversion={message.gameVersion} Behaviorpacks={message.behaviorpackidversions.Count} Resourcepacks={message.resourcepackidversions.Count})");
 
 			McpeResourcePackClientResponse response = McpeResourcePackClientResponse.CreateObject();
 			response.responseStatus = (byte) McpeResourcePackClientResponse.ResponseStatus.Completed;
@@ -85,7 +90,14 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 
 			foreach (var packInfo in message.texturepacks)
 			{
+				if (!AcceptEncrypted && !string.IsNullOrWhiteSpace(packInfo.ContentKey))
+				{
+					Log.Info($"Skipping encrypted resourcepack: {packInfo.ContentIdentity}");
+					continue;
+				}
+
 				var entry = new TexturePackEntry(packInfo);
+
 				if (_resourcePackEntries.TryAdd(entry.UUID, entry))
 				{
 					resourcePackIds.Add(entry.Identifier);
@@ -94,7 +106,15 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 
 			foreach (var packInfo in message.behahaviorpackinfos)
 			{
+				if (!AcceptEncrypted && !string.IsNullOrWhiteSpace(packInfo.ContentKey))
+				{
+					Log.Info($"Skipping encrypted resourcepack: {packInfo.ContentIdentity}");
+
+					continue;
+				}
+
 				var entry = new BehaviorPackEntry(packInfo);
+
 				if (_resourcePackEntries.TryAdd(entry.UUID, entry))
 				{
 					resourcePackIds.Add(entry.Identifier);

@@ -63,6 +63,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 
 			ExpectedIndex = 0;
 			
+			Log.Info($"Downloading resources... ID={Identifier}");
 			//Log.Info($"Resourcepack data info, packType={packType}");
 		}
 

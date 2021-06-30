@@ -217,6 +217,8 @@ namespace Alex.Entities
 	    public Biome CurrentBiome { get; private set; }
 	    public override void Update(IUpdateArgs args)
 	    {
+		    base.Update(args);
+		    
 		    bool hasActiveDialog = Alex.Instance.GuiManager.ActiveDialog != null || ((Network is BedrockClient c) && c.WorldProvider.FormManager.IsShowingForm);
 		    Controller.CheckMovementInput = !hasActiveDialog;
 		    
@@ -335,6 +337,7 @@ namespace Alex.Entities
 						    var remainder = new Vector3(adjacent.X - flooredAdj.X, adjacent.Y - flooredAdj.Y, adjacent.Z - flooredAdj.Z);
 						    
 						    InteractWithEntity(hitEntity, didLeftClick, IsLeftHanded ? 1 : 0, remainder);
+						    return;
 					    }
 				    }
 			    }
@@ -413,8 +416,6 @@ namespace Alex.Entities
 		    _previousHasActiveDialog = hasActiveDialog;
 		    if (hasActiveDialog)
 			    _skipUpdate = true;
-		    
-		    base.Update(args);
 
 		    //if (FeetInWater && HeadInWater)
 			//    IsSwimming = true;
@@ -424,7 +425,6 @@ namespace Alex.Entities
 
 	    private void InteractWithEntity(Entity entity, bool attack, int hand, Vector3 cursorPosition)
 	    {
-		    Log.Info($"Entity interact detected. Attack: {attack}");
 		    SwingArm(true);
 		    
 		    bool canAttack = true;
@@ -525,13 +525,6 @@ namespace Alex.Entities
 
 			    Skin = skin;
 			    Log.Info($"Stole skin from {sourceEntity.NameTag}");
-			    
-			   /* File.WriteAllText(Path.Combine("skins", skin.GeometryName + ".json"), skin.GeometryData);
-
-			    if (skin.TryGetBitmap(out var bmp))
-			    {
-				    bmp.SaveAsPng(Path.Combine("skins", skin.GeometryName + ".png"));
-			    }*/
 		    }
 		    
 	    }
@@ -709,8 +702,6 @@ namespace Alex.Entities
 		    
 		    _destroyTimeNeeded = block.GetBreakTime(Inventory.MainHand ?? new ItemAir()) * 20f;
 
-		    Log.Debug($"Start break block ({_destroyingTarget}, {_destroyTimeNeeded} ticks.)");
-
             var flooredAdj = Vector3.Floor(adjacent);
             var remainder = new Vector3(adjacent.X - flooredAdj.X, adjacent.Y - flooredAdj.Y, adjacent.Z - flooredAdj.Z);
 
@@ -731,21 +722,17 @@ namespace Alex.Entities
 
             if (!sendToServer)
 		    {
-			    Log.Debug($"Stopped breaking block, not notifying server. Time: {ticks}");
-                return;
+			    return;
 		    }
 
 		    if ((Gamemode == GameMode.Creative  || ticks >= _destroyTimeNeeded) && !forceCanceled)
 		    {
                 Network?.PlayerDigging(DiggingStatus.Finished, _destroyingTarget, _destroyingFace, remainder);
-			    Log.Debug($"Stopped breaking block. Ticks passed: {ticks}");
-
-				Level.SetBlockState(_destroyingTarget, new Air().BlockState);
+                Level.SetBlockState(_destroyingTarget, new Air().BlockState);
             }
 		    else
 		    {
 			    Network?.PlayerDigging(DiggingStatus.Cancelled, _destroyingTarget, _destroyingFace, remainder);
-			    Log.Debug($"Cancelled breaking block. Tick passed: {ticks}");
             }
 	    }
 
@@ -798,14 +785,14 @@ namespace Alex.Entities
 					    return true;
 				    }
 				    
-				    if (slot is ItemBlock ib && canModifyWorld)
+				    if (slot is ItemBlock ib && canModifyWorld && !isLeftClick)
 				    {
 					   // Log.Info($"Placing block.");
 					    BlockState blockState = ib.Block;
 
 					    if (blockState != null && !(blockState.Block is Air) && HasRaytraceResult)
 					    {
-						    if (existingBlock.BlockMaterial.IsReplaceable || !existingBlock.Solid)
+						    if (existingBlock.BlockMaterial.IsReplaceable)
 						    {
 							//    Log.Info($"Placing block 1");
 							    if (CanPlaceBlock(coordR, (Block) blockState.Block))

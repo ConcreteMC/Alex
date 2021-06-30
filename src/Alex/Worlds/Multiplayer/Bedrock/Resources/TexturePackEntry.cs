@@ -21,7 +21,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 		{
 			Info = info;
 
-			Log.Info($"Downloading texturepack... ID={Identifier}, Key={info.ContentKey}");
+			//Log.Info($"Downloading texturepack... ID={Identifier}, Key={info.ContentKey}");
 		}
 
 		/// <inheritdoc />
