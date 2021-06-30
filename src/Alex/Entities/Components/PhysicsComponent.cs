@@ -42,7 +42,7 @@ namespace Alex.Entities.Components
 			var onGround = e.KnownPosition.OnGround;
 
 			var slipperiness = 0.91f;
-			var movementFactor = (float) e.CalculateMovementSpeed();
+			var movementFactor = (float) e.CalculateMovementFactor();
 
 			if (e.FeetInWater && !e.IsFlying)
 			{

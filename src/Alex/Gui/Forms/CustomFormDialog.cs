@@ -1,6 +1,8 @@
+using System;
 using System.Collections.Generic;
 using Alex.Common.Gui.Elements;
 using Alex.Common.Utils;
+using Alex.Gui.Elements;
 using Microsoft.Xna.Framework;
 using MiNET.Net;
 using MiNET.UI;
@@ -81,35 +83,70 @@ namespace Alex.Gui.Forms
                         RocketUI.Slider Slider;
                         stackContainer.AddChild(Slider = new RocketUI.Slider()
                         {
-                            Label = { Text = slider.Text},
+                            Label =
+                            {
+                                Text = slider.Text,
+                            },
                             Value = slider.Value,
                             MaxValue = slider.Max,
                             MinValue = slider.Min,
                             StepInterval = slider.Step,
-                            Margin = margin
+                            Margin = margin,
+                            DisplayFormat = (new ValueFormatter<double>($"{slider.Text}: {{0}}"))
                         }.ApplyStyle());
-
                         Slider.ValueChanged += (sender, d) => { slider.Value = (float) d; };
                     }
                         break;
                     case StepSlider stepSlider:
                     {
-                        stackContainer.AddChild(new TextElement()
+                        RocketUI.Slider Slider;
+                        stackContainer.AddChild(Slider = new RocketUI.Slider()
                         {
-                            Text = "Unsupported stepslider",
-                            TextColor = (Color) TextColor.Red,
-                            Margin = margin
-                        });
+                            Label =
+                            {
+                                Text = stepSlider.Text,
+                            },
+                            Value = stepSlider.Value,
+                            MaxValue = stepSlider.Steps.Count,
+                            MinValue = 0,
+                            StepInterval = 1,
+                            Margin = margin,
+                            DisplayFormat = (new ValueFormatter<double>(
+                                value =>
+                                {
+                                    int v = (int) Math.Floor(value);
+                                    var text = stepSlider.Steps[v];
+
+                                    return text;
+                                }))
+                        }.ApplyStyle());
+                        
+                        Slider.ValueChanged += (sender, d) => { stepSlider.Value = (int) Math.Floor(d); };
                     }
                         break;
                     case Dropdown dropdown:
                     {
-                        stackContainer.AddChild(new TextElement()
+                        GuiDropdown dd = new GuiDropdown()
                         {
-                            Text = "Unsupported dropdown",
-                            TextColor = (Color) TextColor.Red,
                             Margin = margin
-                        });
+                        };
+                        dd.Options.AddRange(dropdown.Options);
+
+                        dd.ValueChanged += (sender, i) =>
+                        {
+                            dropdown.Value = i;
+                        };
+                        
+                        stackContainer.AddChild(dd);
+
+                        dd.Value = dropdown.Value;
+
+                        // stackContainer.AddChild(new TextElement()
+                        // {
+                        //     Text = "Unsupported dropdown",
+                        //    TextColor = (Color) TextColor.Red,
+                        //    Margin = margin
+                        // });
                     }
                         break;
                 }

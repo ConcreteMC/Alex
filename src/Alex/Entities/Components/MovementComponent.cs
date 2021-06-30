@@ -87,7 +87,7 @@ namespace Alex.Entities.Components
 		public float DistanceMoved
 		{
 			get => _distanceMoved;
-			set
+			private set
 			{
 				_distanceMoved = value;
 			}
@@ -153,27 +153,7 @@ namespace Alex.Entities.Components
 		private void UpdateDistanceMoved(float deltaTime)
 		{
 			_speedAccumulator += deltaTime;
-			var current = Entity.RenderLocation.ToVector3();
-			var previous = _previousPosition;
-
-			var horizontalDistance = MathF.Abs(
-				Microsoft.Xna.Framework.Vector3.Distance(
-					current * new Vector3(1f, 0f, 1f), previous * new Vector3(1f, 0f, 1f)));
 			
-			var verticalDistance = MathF.Abs(Microsoft.Xna.Framework.Vector3.Distance(
-				current * new Vector3(0f, 1f, 0f), previous * new Vector3(0f, 1f, 0f)));
-
-			if (horizontalDistance > 0f)
-			{
-				DistanceMoved += horizontalDistance;
-				TotalDistanceMoved += horizontalDistance;
-			}
-
-			if (verticalDistance > 0f)
-			{
-				VerticalDistanceMoved += verticalDistance;
-			}
-
 			if (_speedAccumulator >= TargetTime)
 			{
 				var modifier = (1f / _speedAccumulator);
@@ -187,7 +167,11 @@ namespace Alex.Entities.Components
 					_lastDistanceMoved = _distanceMoved = 0f;
 				}
 
-				MetersPerSecond = (float) (horizontalDist * modifier);
+				var mps = MetersPerSecond;
+				mps += horizontalDist * modifier;
+				mps /= 2f;
+				
+				MetersPerSecond = mps;
 				
 				var verticalDistanceMoved = _verticalDistanceMoved - _lastVerticalDistanceMoved;
 				_lastVerticalDistanceMoved = _verticalDistanceMoved;
@@ -198,12 +182,14 @@ namespace Alex.Entities.Components
 					_lastVerticalDistanceMoved = _verticalDistanceMoved = 0f;
 				}
 
-				VerticalSpeed = (float) (verticalDistanceMoved * modifier);
+				var vmps = VerticalSpeed;
+				vmps += verticalDistanceMoved * modifier;
+				vmps /= 2f;
+				
+				VerticalSpeed = vmps;
 				
 				_speedAccumulator = 0f;
 			}
-
-			_previousPosition = current;
 		}
 
 		public void Push(Vector3 velocity)
@@ -230,9 +216,6 @@ namespace Alex.Entities.Components
 		
 		public void MoveTo(PlayerLocation location, bool updateLook = true)
 		{
-			//var difference = Entity.KnownPosition.ToVector3() - location.ToVector3();
-			//Move(difference);
-
 			if (!updateLook)
 			{
 				location.Yaw = Entity.KnownPosition.Yaw;
@@ -240,9 +223,31 @@ namespace Alex.Entities.Components
 				location.Pitch = Entity.KnownPosition.Pitch;
 			}
 			
+			var difference = location.ToVector3() - Entity.KnownPosition.ToVector3();
+			MovedBy(difference);
+			
 			Entity.KnownPosition = location;
 
 			UpdateTarget();
+		}
+
+		private void MovedBy(Vector3 amount)
+		{
+			var horizontalDistance = MathF.Abs(
+				(amount * new Vector3(1f, 0f, 1f)).Length());
+			
+			var verticalDistance = MathF.Abs((amount * new Vector3(0f, 1f, 0f)).Length());
+
+			if (horizontalDistance > 0.001f)
+			{
+				DistanceMoved += horizontalDistance;
+				TotalDistanceMoved += horizontalDistance;
+			}
+
+			if (verticalDistance > 0.001f)
+			{
+				VerticalDistanceMoved += verticalDistance;
+			}
 		}
 
 		public Vector3 Move(Vector3 amount)
@@ -287,10 +292,11 @@ namespace Alex.Entities.Components
 					LastCollision = boxes.ToArray();
 				}
 			}
-
+			
 			Entity.KnownPosition += amount;
 			Entity.KnownPosition.OnGround = DetectOnGround();
 			
+			MovedBy(amount);
 			UpdateTarget();
 
 			return amount;

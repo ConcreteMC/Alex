@@ -167,7 +167,7 @@ namespace Alex.Gamestates
             dropDown.Options.Add("option 1");
             dropDown.Options.Add("option 2");
             dropDown.Options.Add("option 3");
-            dropDown.SelectedIndex = 0;
+            dropDown.Value = 0;
             
             dropDown.Anchor = Alignment.MiddleCenter;
             

@@ -421,27 +421,38 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		public void HandleMcpeAddPlayer(McpeAddPlayer message)
 		{
-			if (_playerListPlayers.TryGetValue(message.uuid, out var entity))
+			if (_playerListPlayers.TryGetValue(message.uuid, out var entityData))
 			{
-				entity.EntityId = message.runtimeEntityId;
-				entity.RenderLocation = entity.KnownPosition = new PlayerLocation(
+				var remotePlayer = new RemotePlayer(Client.World, skin: entityData.Skin);
+				remotePlayer.SetInventory(new BedrockInventory(46));
+				
+				remotePlayer.NameTag = entityData.Nametag;
+				remotePlayer.UUID = entityData.Uuid;
+				remotePlayer.EntityId = message.runtimeEntityId;
+				remotePlayer.RenderLocation = remotePlayer.KnownPosition = new PlayerLocation(
 					message.x, message.y, message.z, -message.headYaw, -message.yaw, -message.pitch) {OnGround = true};
 
-				entity.Velocity = new Microsoft.Xna.Framework.Vector3(message.speedX, message.speedY, message.speedZ);
+				remotePlayer.Velocity = new Microsoft.Xna.Framework.Vector3(message.speedX, message.speedY, message.speedZ);
 
 				if (message.item != null)
 				{
-					entity.Inventory.MainHand = message.item.ToAlexItem();
+					remotePlayer.Inventory.MainHand = message.item.ToAlexItem();
 				}
 
 				if (message.metadata != null)
 				{
-					entity.HandleMetadata(message.metadata);
+					remotePlayer.HandleMetadata(message.metadata);
 				}
 
-				UpdateEntityAdventureFlags(entity, message.flags, message.actionPermissions);
+				UpdateEntityAdventureFlags(remotePlayer, message.flags, message.actionPermissions);
 
-				Client.World.SpawnEntity(entity);
+				Client.World.SpawnEntity(remotePlayer);
+
+				if (entityData.AllowRemoval)
+				{
+					_playerListPlayers.TryRemove(entityData.Uuid, out _);
+				}
+				//entityData.RemoveIn(TimeSpan.Zero);
 			}
 			else
 			{
@@ -460,36 +471,21 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			}
 		}
 
-		private ConcurrentDictionary<MiNET.Utils.UUID, RemotePlayer> _playerListPlayers =
-			new ConcurrentDictionary<MiNET.Utils.UUID, RemotePlayer>();
-
+		private ConcurrentDictionary<MiNET.Utils.UUID, PlayerListData> _playerListPlayers =
+			new ConcurrentDictionary<MiNET.Utils.UUID, PlayerListData>();
+		
 		public void HandleMcpePlayerList(McpePlayerList message)
 		{
 			if (message.records is PlayerAddRecords addRecords)
 			{
 				foreach (var r in addRecords)
 				{
-					if (_playerListPlayers.ContainsKey(r.ClientUuid))
-						continue;
-
-					RemotePlayer remotePlayer = new RemotePlayer(Client.World, skin: r.Skin);
-					remotePlayer.EntityId = r.EntityId;
-					remotePlayer.NameTag = r.DisplayName;
-					remotePlayer.UUID = r.ClientUuid;
-					
-					//m.Skin = r.Skin;
-
-					//if (isNewEntity)
+					if (_playerListPlayers.TryAdd(
+						r.ClientUuid, new PlayerListData(r.ClientUuid, r.Skin, r.DisplayName)))
 					{
-						remotePlayer.SetInventory(new BedrockInventory(46));
-
-						_playerListPlayers[r.ClientUuid] = remotePlayer;
-						//if (_playerListPlayers.TryAdd(r.ClientUuid, remotePlayer))
-						{
-							Client.World.AddPlayerListItem(
-								new PlayerListItem(r.ClientUuid, r.DisplayName, (GameMode) ((int) r.GameMode), 0, false));
-						}
-						//Client.World.EntityManager.AddEntity(m);
+						Client.World.AddPlayerListItem(
+							new PlayerListItem(
+								r.ClientUuid, r.DisplayName, (GameMode) ((int) r.GameMode), 0, false));
 					}
 				}
 			}
@@ -498,10 +494,43 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				foreach (var r in removeRecords)
 				{
 					Client.World.RemovePlayerListItem(r.ClientUuid);
+
+					if (_playerListPlayers.TryGetValue(r.ClientUuid, out var value))
+					{
+						value.RemoveIn(TimeSpan.FromMinutes(5));
+					}
 				}
+			}
+
+			foreach (var element in _playerListPlayers.Where(x => x.Value.ShouldRemove).ToArray())
+			{
+				_playerListPlayers.TryRemove(element.Key, out _);
 			}
 		}
 
+		private class PlayerListData
+		{
+			public MiNET.Utils.Skins.Skin Skin { get; }
+			public MiNET.Utils.UUID Uuid { get; }
+			public string Nametag { get; }
+
+			private DateTime RemovalTime { get; set; } = DateTime.MaxValue;
+			public bool ShouldRemove => DateTime.UtcNow > RemovalTime;
+
+			public bool AllowRemoval { get; set; } = false;
+			public PlayerListData(MiNET.Utils.UUID uuid, MiNET.Utils.Skins.Skin skin, string nametag)
+			{
+				Skin = skin;
+				Uuid = uuid;
+				Nametag = nametag;
+			}
+
+			public void RemoveIn(TimeSpan time)
+			{
+				AllowRemoval = true;
+				RemovalTime = DateTime.UtcNow + time;
+			}
+		}
 
 		public void HandleMcpeAddEntity(McpeAddEntity message)
 		{

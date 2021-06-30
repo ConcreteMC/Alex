@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using Alex.Blocks.Minecraft;
+using Alex.Common.Entities.Properties;
 using Alex.Common.Graphics;
 using Alex.Common.Graphics.GpuResources;
 using Alex.Common.Utils;
@@ -397,7 +398,7 @@ namespace Alex.Entities
 			}
 		}
 
-		public double CalculateMovementSpeed()
+		public double CalculateMovementFactor()
 		{
 			var modifier =
 				(_entityProperties[
@@ -527,9 +528,23 @@ namespace Alex.Entities
 		
 		[MoProperty("is_riding")]
 		public bool IsRiding { get; set; }
-		
+
+		private static readonly MiNET.Utils.UUID SprintingModifierGuid = new MiNET.Utils.UUID("662A6B8D-DA3E-4C1C-8813-96EA6097278D");
 		[MoProperty("is_sprinting")]
-		public bool IsSprinting { get; set; }
+		public bool IsSprinting
+		{
+			get => _isSprinting;
+			set
+			{
+				_isSprinting = value;
+				
+				/*var movementSpeedAttribute = _entityProperties[Networking.Java.Packets.Play.EntityProperties.MovementSpeed];
+				movementSpeedAttribute.RemoveModifier(SprintingModifierGuid);
+				
+				if (value)
+					movementSpeedAttribute.ApplyModifier(new Modifier(SprintingModifierGuid, 0.3f, ModifierMode.Multiply));*/
+			}
+		}
 
 		private DateTime _startOfItemUse = DateTime.UtcNow;
 		private int _usingSlot = 0;
@@ -1578,6 +1593,7 @@ namespace Alex.Entities
 		private string _nameTag;
 		private bool _isUsingItem;
 		private bool _isAttacking = false;
+		private bool _isSprinting;
 
 		public bool CanSurface { get; set; } = false;
 		public const float   JumpVelocity = 0.42f;
@@ -1819,7 +1835,7 @@ namespace Alex.Entities
 				return Level.Camera.Rotation.X;
 			}
 		}
-
+		
 		[MoFunction("modified_distance_moved")]
 		public double ModifiedDistanceMoved()
 		{
@@ -1829,7 +1845,20 @@ namespace Alex.Entities
 		[MoFunction("modified_move_speed")]
 		public double ModifiedMoveSpeed()
 		{
-			return (1f / (CalculateMovementSpeed() * 43f)) * (Movement.MetersPerSecond);
+			var maxSpeed = 4.317f;
+			if (IsSneaking)
+			{
+				maxSpeed *= 0.3f;
+			}
+			else if (IsSprinting)
+			{
+			//	maxSpeed *= 1.3f;
+			}
+
+			maxSpeed *= 10f;
+			maxSpeed *= (float)CalculateMovementFactor();
+			
+			return Movement.MetersPerSecond / maxSpeed;
 		}
 
 		[MoFunction("time_stamp")]
