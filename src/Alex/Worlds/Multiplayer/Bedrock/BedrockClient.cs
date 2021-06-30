@@ -19,6 +19,7 @@ using Alex.Common.Services;
 using Alex.Common.Utils;
 using Alex.Entities;
 using Alex.Gamestates;
+using Alex.Items;
 using Alex.Net;
 using Alex.Net.Bedrock;
 using Alex.Net.Bedrock.Packets;
@@ -39,6 +40,7 @@ using MiNET.Plugins;
 using MiNET.Utils;
 using MiNET.Utils.Cryptography;
 using MiNET.Utils.Skins;
+using MiNET.Worlds;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
@@ -102,8 +104,11 @@ namespace Alex.Worlds.Multiplayer.Bedrock
         private BedrockClientPacketHandler PacketHandler       { get; set; }
 
         private readonly List<IDisposable> _disposables = new List<IDisposable>();
+        public BedrockTransactionTracker TransactionTracker { get; }
+        public bool EnableNewInventorySystem { get; set; } = false;
         public BedrockClient(Alex alex, IPEndPoint endpoint, PlayerProfile playerProfile, BedrockWorldProvider wp)
 		{
+			TransactionTracker = new BedrockTransactionTracker(this);
 			PacketFactory.CustomPacketFactory = new AlexPacketFactory();
 			CancellationTokenSource = new CancellationTokenSource();
 			
@@ -363,58 +368,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			fall.fallDistance = distance;
 			fall.isInVoid = inVoid;
 			SendPacket(fall);*/
-		}
-
-		private void InventoryOnSlotChanged(object? sender, SlotChangedEventArgs e)
-		{
-			if (e.IsServerTransaction)
-				return;
-			
-			int inventoryId = 0;
-			int slot = e.Index;
-			if (e.Index >= 36 && e.Index <= 39)
-			{
-				inventoryId = 120;
-				slot = 39 - e.Index;
-			}
-			
-			ContainerTransactionRecord transactionRecord = new ContainerTransactionRecord();
-			transactionRecord.InventoryId = inventoryId;
-			transactionRecord.Slot = slot;
-			transactionRecord.NewItem = GetMiNETItem(e.Value);
-			transactionRecord.OldItem = GetMiNETItem(e.OldItem);
-
-			var packet = McpeInventoryTransaction.CreateObject();
-			packet.transaction = new NormalTransaction()
-			{
-				TransactionRecords = new List<TransactionRecord>(){
-					transactionRecord
-				}
-			};
-			
-			SendPacket(packet);
-		}
-
-		private void InventoryOnCursorChanged(object? sender, SlotChangedEventArgs e)
-		{
-			if (e.IsServerTransaction)
-				return;
-			
-			ContainerTransactionRecord transactionRecord = new ContainerTransactionRecord();
-			transactionRecord.InventoryId = 124;
-			transactionRecord.Slot = 0;
-			transactionRecord.NewItem = GetMiNETItem(e.Value);
-			transactionRecord.OldItem = GetMiNETItem(e.OldItem);
-
-			var packet = McpeInventoryTransaction.CreateObject();
-			packet.transaction = new NormalTransaction()
-			{
-				TransactionRecords = new List<TransactionRecord>(){
-					transactionRecord
-				}
-			};
-			
-			SendPacket(packet);
 		}
 
 		public void SendPacket(Packet packet)
@@ -993,51 +946,59 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			
 			SendPacket(packet);
 		}
-		
-	    public override void PlayerDigging(DiggingStatus status, BlockCoordinates position, BlockFace face, Vector3 cursorPosition)
-	    {
-            if (World?.Player is Entities.Player player)
-            {
-                var item = player.Inventory[player.Inventory.SelectedSlot];
-                if (status == DiggingStatus.Started)
-                {
-                    SendPlayerAction(PlayerAction.StartBreak, position, (int) face);
-                }
-                else if (status == DiggingStatus.Finished)
-                {
-                    SendPlayerAction(PlayerAction.StopBreak, position, (int) face);
-                    var packet = McpeInventoryTransaction.CreateObject();
-                   /* packet.transaction = new Transaction()*/
-                   packet.transaction = new ItemUseTransaction()
-                    {
-                        ActionType = McpeInventoryTransaction.ItemUseAction.Destroy,
-                        ClickPosition =
-                            new System.Numerics.Vector3(cursorPosition.X, cursorPosition.Y, cursorPosition.Z),
-                       // TransactionType = McpeInventoryTransaction.TransactionType.ItemUse,
-                       // EntityId = NetworkEntityId,
-                        Position = new MiNET.Utils.Vectors.BlockCoordinates(position.X, position.Y, position.Z),
-                        Face = (int) ConvertBlockFace(face),
-                        Slot = player.Inventory.SelectedSlot,
-                        //Item = item.
-                        Item = MiNET.Items.ItemFactory.GetItem(item.Id, item.Meta, item.Count)
-                        
-                    };
 
-                   SendPacket(packet);
-                }
-                else if (status == DiggingStatus.Cancelled)
-                {
-                    SendPlayerAction(PlayerAction.AbortBreak, position, (int) face);
-                }
-                else if (status == DiggingStatus.DropItem)
-                {
-	                SendPlayerAction(PlayerAction.DropItem, position, (int) face);
-                }
-            }
-        }
+		public override void PlayerDigging(DiggingStatus status,
+			BlockCoordinates position,
+			BlockFace face,
+			Vector3 cursorPosition)
+		{
+			var player = World.Player;
+			var item = player.Inventory[player.Inventory.SelectedSlot];
 
-	    public static MiNET.Items.Item GetMiNETItem(Item item)
+			if (status == DiggingStatus.Started)
+			{
+				SendPlayerAction(PlayerAction.StartBreak, position, (int) face);
+			}
+			else if (status == DiggingStatus.Finished)
+			{
+				uint blockRuntimeId = 0;
+				var minetItem = GetMiNETItem(item);
+                            
+				if (minetItem is MiNET.Items.ItemBlock itemBlock)
+				{
+					blockRuntimeId = (uint) itemBlock.Block.GetRuntimeId();
+				}
+				
+				SendPlayerAction(PlayerAction.StopBreak, position, (int) face);
+				var packet = McpeInventoryTransaction.CreateObject();
+
+				/* packet.transaction = new Transaction()*/
+				packet.transaction = new ItemUseTransaction()
+				{
+					ActionType = McpeInventoryTransaction.ItemUseAction.Destroy,
+					ClickPosition = new System.Numerics.Vector3(cursorPosition.X, cursorPosition.Y, cursorPosition.Z),
+					Position = new MiNET.Utils.Vectors.BlockCoordinates(position.X, position.Y, position.Z),
+					Face = (int) ConvertBlockFace(face),
+					Slot = player.Inventory.SelectedSlot,
+					Item = minetItem,
+					FromPosition = new System.Numerics.Vector3(player.KnownPosition.X, player.KnownPosition.Y, player.KnownPosition.Z),
+					HasNetworkIds = EnableNewInventorySystem,
+					BlockRuntimeId = blockRuntimeId
+				};
+
+				SendPacket(packet);
+			}
+			else if (status == DiggingStatus.Cancelled)
+			{
+				SendPlayerAction(PlayerAction.AbortBreak, position, (int) face);
+			}
+		}
+
+		public static MiNET.Items.Item GetMiNETItem(Item item)
 	    {
+		    if (item == null)
+			    return new MiNET.Items.ItemAir();
+		    
 		    var minetItem = MiNET.Items.ItemFactory.GetItem(item.Id, item.Meta, item.Count);
 
 		    if (minetItem.Id == 0)
@@ -1053,46 +1014,24 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		    minetItem.ExtraData = item.Nbt;
 		    minetItem.UniqueId = item.StackID;
+		    minetItem.Count = (byte) item.Count;
 		    
 		    return minetItem;
 	    }
 
 	    private MiNET.BlockFace ConvertBlockFace(BlockFace face)
 	    {
-		    MiNET.BlockFace updatedFace =MiNET.BlockFace.None;
-
-		    switch (face)
+		    return face switch
 		    {
-			    case BlockFace.Down:
-				    updatedFace = MiNET.BlockFace.Down;
-				    break;
-
-			    case BlockFace.Up:
-				    updatedFace = MiNET.BlockFace.Up;
-				    break;
-
-			    case BlockFace.East:
-				    updatedFace = MiNET.BlockFace.East;
-				    break;
-
-			    case BlockFace.West:
-				    updatedFace = MiNET.BlockFace.West;
-				    break;
-
-			    case BlockFace.North:
-				    updatedFace = MiNET.BlockFace.North;
-				    break;
-
-			    case BlockFace.South:
-				    updatedFace = MiNET.BlockFace.Down;
-				    break;
-
-			    case BlockFace.None:
-				    updatedFace = MiNET.BlockFace.None;
-				    break;
-		    }
-
-		    return updatedFace;
+			    BlockFace.Down  => MiNET.BlockFace.Down,
+			    BlockFace.Up    => MiNET.BlockFace.Up,
+			    BlockFace.East  => MiNET.BlockFace.East,
+			    BlockFace.West  => MiNET.BlockFace.West,
+			    BlockFace.North => MiNET.BlockFace.North,
+			    BlockFace.South => MiNET.BlockFace.South,
+			    BlockFace.None  => MiNET.BlockFace.None,
+			    _               => MiNET.BlockFace.None
+		    };
 	    }
 	    
 	    public override void BlockPlaced(BlockCoordinates position, BlockFace face, int hand, int slot, Vector3 cursorPosition, Entity entity)
@@ -1110,22 +1049,13 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				    ActionType = (int) McpeInventoryTransaction.ItemUseAction.Place,
 				    ClickPosition =
 					    new System.Numerics.Vector3(cursorPosition.X, cursorPosition.Y, cursorPosition.Z),
-				    //TransactionType = McpeInventoryTransaction.TransactionType.ItemUse,
-				    // = NetworkEntityId,
 				    Position = new MiNET.Utils.Vectors.BlockCoordinates(position.X, position.Y, position.Z),
 				    Face = (int) ConvertBlockFace(face),
-				    TransactionRecords = new List<TransactionRecord>()
-				    {
-						new WorldInteractionTransactionRecord()
-						{
-							//StackNetworkId = 
-						}
-				    },
+				    TransactionRecords = new List<TransactionRecord>() { },
 				    Item = minetItem,
 				    FromPosition = new System.Numerics.Vector3(p.KnownPosition.X, p.KnownPosition.Y, p.KnownPosition.Z),
 				    Slot = slot,
-				    //BlockRuntimeId = ChunkProcessor.BlockStateMap.FirstOrDefault(x => x.Value.Id == itemInHand.Id && x.Value.Data == itemInHand.Meta).Key
-				    //BlockRuntimeId = 
+				    HasNetworkIds = EnableNewInventorySystem
 			    };
 
 			    SendPacket(packet);
@@ -1133,7 +1063,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	    }
 
 		public override void EntityInteraction(Entity player, Entity target,
-		    ItemUseOnEntityAction action, int hand, int slot)
+		    ItemUseOnEntityAction action, int hand, int slot, Vector3 cursorPosition)
 	    {
 		    if (player is Player p)
 		    {
@@ -1142,69 +1072,61 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 			    // WorldProvider?.GetChatReceiver?.Receive(new ChatObject($"(CLIENT) Hit entity: {target.EntityId} | Action: {action.ToString()} | Item: {itemInHand.Id}:{itemInHand.Meta} ({itemInHand.Name})"));
 
-			  //  var item = GetMiNETItem(itemInHand); //MiNET.Items.ItemFactory.GetItem(itemInHand.Id, itemInHand.Meta, itemInHand.Count);
-			  //  item.Metadata = itemInHand.Meta;
-			  //  item.ExtraData = itemInHand.Nbt;
-			   // item.Count = (byte) itemInHand.Count;
+			    //  var item = GetMiNETItem(itemInHand); //MiNET.Items.ItemFactory.GetItem(itemInHand.Id, itemInHand.Meta, itemInHand.Count);
+			    //  item.Metadata = itemInHand.Meta;
+			    //  item.ExtraData = itemInHand.Nbt;
+			    // item.Count = (byte) itemInHand.Count;
 
-			   McpeInventoryTransaction.ItemUseOnEntityAction realAction;
+			    McpeInventoryTransaction.ItemUseOnEntityAction realAction;
 
-			   switch (action)
-			   {
-				   case ItemUseOnEntityAction.Interact:
-					   realAction = McpeInventoryTransaction.ItemUseOnEntityAction.Interact;
-					   break;
+			    switch (action)
+			    {
+				    case ItemUseOnEntityAction.Interact:
+					    realAction = McpeInventoryTransaction.ItemUseOnEntityAction.Interact;
 
-				   case ItemUseOnEntityAction.Attack:
-					   realAction = McpeInventoryTransaction.ItemUseOnEntityAction.Attack;
-					   break;
+					    break;
 
-				   default:
-					   realAction = McpeInventoryTransaction.ItemUseOnEntityAction.ItemInteract;
-					   break;
-			   }
-			   
-			   if (p.Inventory is ItemStackInventory isi)
-			   {
-				   var packet = McpeInventoryTransaction.CreateObject();
+				    case ItemUseOnEntityAction.Attack:
+					    realAction = McpeInventoryTransaction.ItemUseOnEntityAction.Attack;
 
-				   packet.transaction = new ItemUseOnEntityTransaction()
-				   {
-					   ActionType = realAction,
-					//   Item = isi.GetOriginal(slot),
-					Item = GetMiNETItem(p.Inventory[slot]),
-					   EntityId = target.EntityId,
-					   Slot = slot,
-					   FromPosition = new System.Numerics.Vector3(p.KnownPosition.X, p.KnownPosition.Y, p.KnownPosition.Z)
-				   };
+					    break;
 
-				   SendPacket(packet);
-			   }
-			   else
-			   {
-				   var packet = McpeInventoryTransaction.CreateObject();
+				    default:
+					    realAction = McpeInventoryTransaction.ItemUseOnEntityAction.ItemInteract;
 
-				   packet.transaction = new ItemUseOnEntityTransaction()
-				   {
-					   ActionType = realAction,
-					   //Item = GetMiNETItem(p.Inventory[hand == 1 ? p.Inventory.OffHandSlot : (p.Inventory.HotbarOffset + p.Inventory.SelectedSlot)]),
-					   Item = GetMiNETItem(p.Inventory[slot]),
-					   EntityId = target.EntityId,
-					   Slot = slot,
-					   FromPosition = new System.Numerics.Vector3(p.KnownPosition.X, p.KnownPosition.Y, p.KnownPosition.Z),
-					   ClickPosition = new System.Numerics.Vector3(0.5f)
-				   };
+					    break;
+			    }
 
-				   SendPacket(packet);
-			   }
+
+			    var packet = McpeInventoryTransaction.CreateObject();
+
+			    packet.transaction = new ItemUseOnEntityTransaction()
+			    {
+				    ActionType = realAction,
+				    //Item = GetMiNETItem(p.Inventory[hand == 1 ? p.Inventory.OffHandSlot : (p.Inventory.HotbarOffset + p.Inventory.SelectedSlot)]),
+				    Item = GetMiNETItem(p.Inventory[slot]),
+				    EntityId = target.EntityId,
+				    Slot = slot,
+				    FromPosition = new System.Numerics.Vector3(p.KnownPosition.X, p.KnownPosition.Y, p.KnownPosition.Z),
+				    ClickPosition = new System.Numerics.Vector3(cursorPosition.X, cursorPosition.Y, cursorPosition.Z),
+				    HasNetworkIds = EnableNewInventorySystem
+			    };
+
+			    SendPacket(packet);
 		    }
 	    }
 
 	    public override void WorldInteraction(Entity entity, BlockCoordinates position, BlockFace face, int hand, int slot, Vector3 cursorPosition)
 	    {
+		    uint blockRuntimeId = 0;
 		    MiNET.Items.Item minetItem;// = GetMiNETItem(item);
 		     var orig = entity.Inventory[slot];
-            			    minetItem = GetMiNETItem(orig);
+		     minetItem = GetMiNETItem(orig);
+                            
+		    if (minetItem is MiNET.Items.ItemBlock itemBlock)
+		    {
+			    blockRuntimeId = (uint) itemBlock.Block.GetRuntimeId();
+		    }
 		   /* if (entity.Inventory is ItemStackInventory isi)
 		    {
 			    minetItem = isi.GetOriginal(slot);
@@ -1228,11 +1150,12 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			    Item = minetItem,
 			    Slot = slot,
 			    FromPosition = new System.Numerics.Vector3(entity.KnownPosition.X, entity.KnownPosition.Y, entity.KnownPosition.Z),
-			    HasNetworkIds = true,
+			    HasNetworkIds = EnableNewInventorySystem,
 			    TransactionRecords = new List<TransactionRecord>()
 			    {
 				    
-			    }
+			    },
+			    BlockRuntimeId = blockRuntimeId
 			  //  BlockRuntimeId = 
 			  //  BlockRuntimeId = 
 		    };
@@ -1242,8 +1165,14 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 	    public override void UseItem(Item item, int hand, ItemUseAction action, BlockCoordinates position, BlockFace face, Vector3 cursorPosition)
 	    {
+		    uint blockRuntimeId = 0;
 		    MiNET.Items.Item minetItem;// = GetMiNETItem(item);
 		    minetItem = GetMiNETItem(item);
+
+		    if (minetItem is MiNET.Items.ItemBlock itemBlock)
+		    {
+			    blockRuntimeId = (uint) itemBlock.Block.GetRuntimeId();
+		    }
 		   /* if (World.Player.Inventory is ItemStackInventory isi)
 		    {
 			    minetItem = isi.GetOriginal(isi.SelectedSlot);
@@ -1276,6 +1205,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		   // packet.
 		    packet.transaction = new ItemUseTransaction()
 		    {
+			    HasNetworkIds = EnableNewInventorySystem,
 			    ActionType = useAction,
 			    ClickPosition =
 				    new System.Numerics.Vector3(cursorPosition.X, cursorPosition.Y, cursorPosition.Z),
@@ -1286,7 +1216,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			    Item = minetItem,
 			    Slot = World.Player.Inventory.SelectedSlot,
 			    FromPosition = new System.Numerics.Vector3(World.Player.KnownPosition.X, World.Player.KnownPosition.Y, World.Player.KnownPosition.Z),
-			   // Item = minetItem,
+			    BlockRuntimeId = blockRuntimeId
+			    // Item = minetItem,
 			   // Slot = World.Player.Inventory.SelectedSlot
 		    };
 
@@ -1316,6 +1247,40 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			SendPacket(packet);
 			
 			//Log.Warn($"Held item slot changed: {slot} | Inventor: ");
+		}
+
+		/// <inheritdoc />
+		public override void DropItem(BlockCoordinates position, BlockFace face, Item item, bool dropFullStack)
+		{
+			var player = World.Player;
+			var newItem = item.Clone();
+			
+			if (!dropFullStack)
+				newItem.Count = 1;
+			
+			if (player.Gamemode != GameMode.Creative)
+			{
+				// newItem.Count--;
+			}
+
+			var packet = McpeInventoryTransaction.CreateObject();
+			
+			packet.transaction = new NormalTransaction()
+			{
+				HasNetworkIds = EnableNewInventorySystem,
+				TransactionRecords = new List<TransactionRecord>()
+				{
+					new WorldInteractionTransactionRecord()
+					{
+						NewItem = GetMiNETItem(newItem),
+						OldItem = GetMiNETItem(item),
+						Slot = player.Inventory.SelectedSlot,
+						StackNetworkId = item.StackID
+					}
+				}
+			};
+	                
+			SendPacket(packet);
 		}
 
 		public override void Close()

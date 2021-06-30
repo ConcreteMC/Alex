@@ -113,7 +113,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 						        {
 							        bool handled = false;
 
-							        if (_actionQueue.TryDequeue(out var enqueuedChunk))
+							        if (_actionQueue != null && _actionQueue.TryDequeue(out var enqueuedChunk))
 							        {
 								        //if (_actions.TryRemove(chunkCoordinates, out var chunk))
 
@@ -134,7 +134,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 								        handled = true;
 							        }
 
-							        if (_blobQueue.TryDequeue(out var kv))
+							        if (_blobQueue != null && _blobQueue.TryDequeue(out var kv))
 							        {
 								        ulong  hash = kv.Key;
 								        byte[] data = kv.Value;

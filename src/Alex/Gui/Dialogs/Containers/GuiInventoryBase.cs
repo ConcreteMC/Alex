@@ -22,6 +22,9 @@ namespace Alex.Gui.Dialogs.Containers
 
 		private GuiItem CursorItemRenderer { get; }
 		public InventoryBase Inventory { get; }
+
+		public IInventoryTransactionHandler TransactionTracker { get; set; } = null;
+		private List<InventoryBase> _registeredInventories = new List<InventoryBase>();
 		public GuiInventoryBase(InventoryBase inventory, GuiTextures background, int width, int height)
 		{
 			Inventory = inventory;
@@ -59,8 +62,15 @@ namespace Alex.Gui.Dialogs.Containers
 				Anchor = Alignment.TopLeft
 			});
 			
-			Inventory.SlotChanged += InventoryOnSlotChanged;
-			Inventory.CursorChanged += InventoryOnCursorChanged;
+			RegisterInventory(inventory);
+		}
+
+		public void RegisterInventory(InventoryBase inventory)
+		{
+			_registeredInventories.Add(inventory);
+			
+			inventory.SlotChanged += InventoryOnSlotChanged;
+			inventory.CursorChanged += InventoryOnCursorChanged;
 		}
 
 		public void UpdateSlot(int inventoryId, int slotId, Item item)
@@ -184,21 +194,30 @@ namespace Alex.Gui.Dialogs.Containers
 
 		private void ContainerItemOnCursorMove(object sender, GuiCursorMoveEventArgs e)
 		{
-			if (!AllowDragging)
-				return;
-			
 			if (sender is InventoryContainerItem containerItem)
 			{
+				if (TransactionTracker != null)
+				{
+					TransactionTracker.SlotHover((byte) containerItem.InventoryId, (byte) containerItem.InventoryIndex);
+
+					return;
+				}
+
+
+				if (!AllowDragging)
+					return;
+
+
 				if (!_dragging || containerItem == _previousItem || !CanDrag())
 					return;
 
 				_previousItem = containerItem;
-				
+
 				if (!_draggedContainers.ContainsKey(containerItem))
 					_draggedContainers.Add(containerItem, containerItem.Item.Clone());
-				
-				if (containerItem.Item == null || containerItem.Item.Id == HoverItem.Item.Id &&
-					containerItem.Item.Id < containerItem.Item.MaxStackSize)
+
+				if (containerItem.Item == null || containerItem.Item.Id == HoverItem.Item.Id
+					&& containerItem.Item.Id < containerItem.Item.MaxStackSize)
 				{
 					if (containerItem.Item == null)
 					{
@@ -213,20 +232,24 @@ namespace Alex.Gui.Dialogs.Containers
 					}
 				}
 
-				if (!CanDrag())
-				{
-					
-				}
+				if (!CanDrag()) { }
 			}
 		}
 		
 		private void ContainerItemOnCursorUp(object sender, GuiCursorEventArgs e)
 		{
-			if (!AllowDragging)
-				return;
-			
 			if (sender is InventoryContainerItem containerItem)
 			{
+				if (TransactionTracker != null)
+				{
+					
+					return;
+				}
+				
+				if (!AllowDragging)
+					return;
+			
+			
 				if (_dragStartItem == null)
 					return;
 
@@ -239,12 +262,21 @@ namespace Alex.Gui.Dialogs.Containers
 
 		private void ContainerItemOnCursorDown(object sender, GuiCursorEventArgs e)
 		{
-			if (!AllowDragging)
-				return;
-			
 			if (sender is InventoryContainerItem containerItem)
 			{
-				if (_dragStartItem == null && (containerItem.Item == null || containerItem.Item is ItemAir || containerItem.Item.Id <= 0) && HoverItem != null)
+				if (TransactionTracker != null)
+				{
+
+					return;
+				}
+
+				if (!AllowDragging)
+					return;
+
+
+				if (_dragStartItem == null
+				    && (containerItem.Item == null || containerItem.Item is ItemAir || containerItem.Item.Id <= 0)
+				    && HoverItem != null)
 				{
 					_draggedContainers.Clear();
 					_dragStartItem = containerItem;
@@ -257,6 +289,13 @@ namespace Alex.Gui.Dialogs.Containers
 		{
 			if (sender is InventoryContainerItem containerItem)
 			{
+				if (TransactionTracker != null)
+				{
+					TransactionTracker.SlotClicked(e.Button, (byte) containerItem.InventoryId, (byte) containerItem.InventoryIndex);
+
+					return;
+				}
+				
 				//We have not yet selected an item to move.
 				if (HoverItem == null)
 				{
@@ -426,28 +465,43 @@ namespace Alex.Gui.Dialogs.Containers
 
 		private void InventoryOnSlotChanged(object sender, SlotChangedEventArgs e)
 		{
-			if (!e.IsServerTransaction)
-				return;
+			//if (!e.IsServerTransaction)
+			//	return;
 			
 			UpdateSlot(e.InventoryId, e.Index, e.Value);
 		}
 		
 		private void InventoryOnCursorChanged(object sender, SlotChangedEventArgs e)
 		{
-			if (!e.IsServerTransaction)
-				return;
-
-			SelectedItem = null;
-			CursorItemRenderer.IsVisible = false;
+			CursorItemRenderer.IsVisible = e.Value != null && e.Value.Count > 0 && !(e.Value is ItemAir);
+			
+			if (e.Value != null)
+			{
+				CursorItemRenderer.Item = e.Value;
+			}
+			
+			//if (!e.IsServerTransaction)
+				//return;
+//
+			//SelectedItem = null;
+			//CursorItemRenderer.IsVisible = false;
 		}
 
 		/// <inheritdoc />
 		public override void OnClose()
 		{
+			//TransactionTracker?.DialogClosed();
 			OnContainerClose?.Invoke(this, EventArgs.Empty);
-			Inventory.SlotChanged -= InventoryOnSlotChanged;
-			Inventory.CursorChanged -= InventoryOnCursorChanged;
+
+			var registered = _registeredInventories;
+			_registeredInventories.Clear();
 			
+			foreach (var inventory in registered)
+			{
+				inventory.SlotChanged -= InventoryOnSlotChanged;
+				inventory.CursorChanged -= InventoryOnCursorChanged;
+			}
+
 			base.OnClose();
 		}
 

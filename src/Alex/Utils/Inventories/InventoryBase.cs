@@ -3,12 +3,14 @@ using System.Collections.Generic;
 using Alex.Items;
 using Alex.Networking.Java.Packets.Play;
 using MiNET.Utils;
+using NLog;
 using RocketUI.Input;
 
 namespace Alex.Utils.Inventories
 {
 	public class InventoryBase
 	{
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(InventoryBase));
 		public int InventoryId { get; set; } = 0;
 		
 		protected virtual Item[] Slots     { get; }
@@ -31,8 +33,14 @@ namespace Alex.Utils.Inventories
 					Count = 0
 				};
 			}
+
+			_cursor = new ItemAir()
+			{
+				Count = 0
+			};
 		}
-		
+
+		public bool ReportTransaction = false;
 		public void SetSlot(int index, Item value, bool isServerTransaction)
 		{
 			if (index < 0 || index >= Slots.Length) throw new IndexOutOfRangeException();
@@ -42,6 +50,15 @@ namespace Alex.Utils.Inventories
 				{
 					Count = 0
 				};
+			}
+
+			if (ReportTransaction)
+			{
+			//	if (isServerTransaction)
+			//		Log.Info($"Server set slot (slot={index} inventory={InventoryId}): {value.Name}");
+			//	else
+			if (!isServerTransaction)
+					Log.Info($"Client set slot (slot={index} inventory={InventoryId}): {value.Name}");
 			}
 
 			//var oldValue = Slots[index];
@@ -90,14 +107,18 @@ namespace Alex.Utils.Inventories
 		
 		public int ActionNumber { get; set; } = 1;
 		public event EventHandler<CursorChangedEventArgs> CursorChanged = null;
-		public void SetCursor(Item item, bool isServerTransaction, int index = -2, MouseButton button = MouseButton.Left)
+		public virtual void SetCursor(Item item, bool isServerTransaction, int index = -2, MouseButton button = MouseButton.Left)
 		{
 			var oldValue = _cursor;
 			Cursor = item;
 			
-			CursorChanged?.Invoke(this, new CursorChangedEventArgs(InventoryId, index, item, oldValue, isServerTransaction, button));
+			InvokeCursorChanged(new CursorChangedEventArgs(InventoryId, index, item, oldValue, isServerTransaction, button));
 		}
-		
+
+		protected void InvokeCursorChanged(CursorChangedEventArgs args)
+		{
+			CursorChanged?.Invoke(this, args);
+		}
 		
 		private Item _cursor;
 

@@ -83,6 +83,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
         private WorldProvider  WorldProvider         { get; }
         private PlayerProfile  PlayerProfile         { get; }
 
+        private BedrockTransactionTracker TransactionTracker => Client.TransactionTracker;
         public BedrockClientPacketHandler(BedrockClient client, WorldProvider worldProvider, PlayerProfile profile, Alex alex, CancellationToken cancellationToken, ChunkProcessor chunkProcessor) //:
 	       // base(client)
         {
@@ -253,7 +254,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			//McpeClientCacheStatus status = McpeClientCacheStatus.CreateObject();
 		//	status.enabled = ChunkProcessor.Cache.Enabled;
 			//Client.SendPacket(status);
-			
+
 			try
 			{
 				Client.World.Player.EntityId = Client.EntityId = message.runtimeEntityId;
@@ -267,18 +268,31 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 				Client.World?.UpdatePlayerPosition(
 					new PlayerLocation(
-						new Microsoft.Xna.Framework.Vector3(
-							message.spawn.X, message.spawn.Y, message.spawn.Z), message.rotation.Y,
-						message.rotation.Y, message.rotation.X));
+						new Microsoft.Xna.Framework.Vector3(message.spawn.X, message.spawn.Y, message.spawn.Z),
+						message.rotation.Y, message.rotation.Y, message.rotation.X));
 
 				if (message.enableNewInventorySystem)
 				{
-					Log.Info($"Using new transaction based inventory.");
-					Client.World.Player.SetInventory(new ItemStackInventory(Client));
+					Client.EnableNewInventorySystem = true;
+					Log.Info($"Using new inventory system.");
 				}
-				else
+
+				if (message.enableNewBlockBreakSystem)
 				{
-					Client.World.Player.SetInventory(new BedrockInventory(46));
+					Log.Info($"New blockbreak system?");
+				}
+
+			//if (message.enableNewInventorySystem)
+				//{
+				//	Log.Info($"Using new transaction based inventory.");
+				//	Client.World.Player.SetInventory(new ItemStackInventory(Client));
+				//}
+				//else
+				{
+					Client.World.Player.SetInventory(new BedrockInventory(46)
+					{
+						ReportTransaction = true
+					});
 				}
 
 				Client.World.Player.UpdateGamemode((GameMode) message.playerGamemode);
@@ -752,11 +766,13 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		/// <inheritdoc />
 		public void HandleMcpeItemStackResponse(McpeItemStackResponse message)
 		{
+			TransactionTracker.HandleResponse(message.responses);
+			
 			//UnhandledPackage(message);
-			if (Client.World.Player.Inventory is ItemStackInventory itemStackInventory)
-			{
-				itemStackInventory.HandleResponses(message.responses);
-			}
+		//	if (Client.World.Player.Inventory is ItemStackInventory itemStackInventory)
+		//	{
+			//	itemStackInventory.HandleResponses(message.responses);
+		//	}
 		}
 
 		/// <inheritdoc />
@@ -1249,37 +1265,16 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			}
 		}
 
-		private void InventoryOnCursorChanged(object sender, CursorChangedEventArgs e)
-		{
-			if (e.IsServerTransaction)
-				return;
-
-			
-		}
-		
-		private void InventoryOnSlotChanged(object sender, SlotChangedEventArgs e)
-		{
-			if (e.IsServerTransaction)
-				return;
-
-			TakeAction a = new TakeAction();
-			
-		}
-		
 		public void HandleMcpeContainerOpen(McpeContainerOpen message)
 		{
 			try
 			{
 				var windowId = message.windowId;
 				var dialog = Client.World.InventoryManager.Show(Client.World.Player.Inventory, message.windowId, (ContainerType) message.type);
-				dialog.Inventory.CursorChanged += InventoryOnCursorChanged;
-				dialog.Inventory.SlotChanged += InventoryOnSlotChanged;
-				
+				dialog.TransactionTracker = TransactionTracker;
+
 				dialog.OnContainerClose += (sender, args) =>
 				{
-					dialog.Inventory.CursorChanged -= InventoryOnCursorChanged;
-					dialog.Inventory.SlotChanged -= InventoryOnSlotChanged;
-					
 					var packet = McpeContainerClose.CreateObject();
 					packet.windowId = windowId;
 					Client.SendPacket(packet);
@@ -1326,23 +1321,12 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 				return;
 			}
-			
-			if (Client.World.Player.Inventory is ItemStackInventory isi)
-			{
-				isi.HandleInventoryContent(message.inventoryId, message.input);
-				return;
-			}
-			
+
 			InventoryBase inventory  = null;
 			//var 
-			if (message.inventoryId == 0x00 //Inventory
-			 //   || message.inventoryId == 124 //UI
-			    || message.inventoryId == 120 //Armor
-			    || message.inventoryId == 119 //Offhand
-			 ) 
-			{
-				
+
 				inventory = Client.World.Player.Inventory;
+
 				if (inventory is BedrockInventory bi)
 				{
 					if (message.inventoryId == 0)
@@ -1352,20 +1336,21 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					else if (message.inventoryId == 120)
 					{
 						startIndex = bi.BootsSlot;
-					} 
+					}
 					else if (message.inventoryId == 119)
 					{
 						startIndex = bi.OffHandSlot;
+
+						return;
 					}
 
-				/*	if (message.inventoryId == 124)
-					{
-						startIndex = bi.slot
-					}*/
+					/*	if (message.inventoryId == 124)
+						{
+							startIndex = bi.slot
+						}*/
 				}
-			}
 
-			if (inventory == null)
+				if (inventory == null)
 			{
 				Log.Warn($"(Inventory content) Unknown inventory ID: {message.inventoryId}");
 				return;
@@ -1382,6 +1367,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				{
 					result.StackID = slot.UniqueId;
 					inventory.SetSlot(startIndex + index, result, true);
+					
+					Log.Info($"Server container slot (slot={(startIndex + index)} inventory={message.inventoryId} stackId={result.StackID} uniqueId={slot.UniqueId}): {result.Name}");
 					//inventory[usedIndex] = result;
 				}
 				else
@@ -1411,17 +1398,14 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				return;
 			}
 
-			if (Client.World.Player.Inventory is ItemStackInventory isi)
-			{
-				isi.HandleSetSlot(message);
-
-				return;
-			}
-			
 			InventoryBase inventory = null;
 
+			if (message.inventoryId == 124)
+			{
+				inventory = Client.World.Player.Inventory.UiInventory;
+			}
+			
 			if (message.inventoryId == 0x00 //Inventory
-			    || message.inventoryId == 124 //UI
 			    || message.inventoryId == 120 //Armor
 			    || message.inventoryId == 119 //Offhand
                                      )
@@ -1448,6 +1432,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			           if (inventory is BedrockInventory bi)
 			           {
 				           bi.OffHand = result;
+				           Log.Info($"Server set single slot (slot={index} inventory={message.inventoryId} stackId={result.StackID} uniqueId={message.uniqueid}): {result.Name}");
 			           }
 
 			           break;
@@ -1458,6 +1443,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			           if (inventory is BedrockInventory bi)
 			           {
 				           bi.SetSlot(bi.BootsSlot + index, result, true);
+				           Log.Info($"Server set single slot (slot={index} inventory={message.inventoryId} stackId={result.StackID} uniqueId={message.uniqueid}): {result.Name}");
 			           }
 
 			           // inventory.SetSlot();
@@ -1465,10 +1451,17 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		           }
 
 		           case 124:
+			           Log.Info($"Server set cursor: {result.Name}");
 			           inventory.SetCursor(result, true);
 			           break;
-		           default:
+		           
+		           case 0:
+			           Log.Info($"Server set single slot (slot={index} inventory={message.inventoryId} stackId={result.StackID} uniqueId={message.uniqueid}): {result.Name}");
 			           inventory.SetSlot(index, result, true);
+			           break;
+		           
+		           default:
+			           Log.Warn($"Server tried to set single slot (slot={index} inventory={message.inventoryId} stackId={result.StackID} uniqueId={message.uniqueid}): {result.Name}");
 			          // inventory[index] = result;
 			           break;
 	           }
@@ -2024,41 +2017,52 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 						collection = resourcePack.SoundBindings;
 
-						if (collection.EntitySounds.Entities.TryGetValue(entityType, out var soundBinding))
+						SoundBinding soundBinding;
+						if (!string.IsNullOrWhiteSpace(entityType))
 						{
-							if (soundBinding.Events.TryGetValue(soundEvent, out se))
+							if (collection.EntitySounds.Entities.TryGetValue(entityType, out soundBinding))
 							{
-								if (!string.IsNullOrWhiteSpace(se.Sound))
+								if (soundBinding.Events.TryGetValue(soundEvent, out se))
 								{
-									sound = se.Sound;
-								}
-							}
-						} 
-						
-						if (collection.BlockSounds.TryGetValue(blockName, out soundBinding)
-						      || collection.InteractiveSounds.BlockSounds.TryGetValue(blockName, out soundBinding))
-						{
-							if (soundBinding.Events.TryGetValue(soundEvent, out se))
-							{
-								if (!string.IsNullOrWhiteSpace(se.Sound))
-								{
-									sound = se.Sound;
+									if (!string.IsNullOrWhiteSpace(se.Sound))
+									{
+										sound = se.Sound;
+									}
 								}
 							}
 						}
 
-						if (collection.BlockSounds.TryGetValue(soundCategory, out soundBinding)
-						    || collection.InteractiveSounds.BlockSounds.TryGetValue(soundCategory, out soundBinding))
+						if (!string.IsNullOrWhiteSpace(blockName))
 						{
-							if (soundBinding.Events.TryGetValue(soundEvent, out se))
+							if (collection.BlockSounds.TryGetValue(blockName, out soundBinding)
+							    || collection.InteractiveSounds.BlockSounds.TryGetValue(blockName, out soundBinding))
 							{
-								if (!string.IsNullOrWhiteSpace(se.Sound))
+								if (soundBinding.Events.TryGetValue(soundEvent, out se))
 								{
-									sound = se.Sound;
+									if (!string.IsNullOrWhiteSpace(se.Sound))
+									{
+										sound = se.Sound;
+									}
 								}
 							}
 						}
-						
+
+						if (!string.IsNullOrWhiteSpace(soundCategory))
+						{
+							if (collection.BlockSounds.TryGetValue(soundCategory, out soundBinding)
+							    || collection.InteractiveSounds.BlockSounds.TryGetValue(
+								    soundCategory, out soundBinding))
+							{
+								if (soundBinding.Events.TryGetValue(soundEvent, out se))
+								{
+									if (!string.IsNullOrWhiteSpace(se.Sound))
+									{
+										sound = se.Sound;
+									}
+								}
+							}
+						}
+
 						if (collection.EntitySounds.Defaults.Events.TryGetValue(soundEvent, out se))
 						{
 							if (!string.IsNullOrWhiteSpace(se.Sound))

@@ -133,7 +133,7 @@ namespace Alex.Worlds.Multiplayer.Java
 			Client.SendPacket(packet);
 		}
 
-		public override void EntityInteraction(Entity player, Entity target, ItemUseOnEntityAction action, int hand, int slot)
+		public override void EntityInteraction(Entity player, Entity target, ItemUseOnEntityAction action, int hand, int slot, Vector3 cursorPosition)
 		{
 			if (hand < 0) hand = 0;
 			if (hand > 1) hand = 1;
@@ -200,6 +200,16 @@ namespace Alex.Worlds.Multiplayer.Java
 			var packet = HeldItemChangePacket.CreateObject();
 			packet.Slot = slot;
 			
+			Client.SendPacket(packet);
+		}
+
+		/// <inheritdoc />
+		public override void DropItem(BlockCoordinates position, BlockFace face, Item item, bool dropFullStack)
+		{
+			var packet = PlayerDiggingPacket.CreateObject();
+			packet.Face = face;
+			packet.Location = position;
+			packet.Status = DiggingStatus.DropItem;
 			Client.SendPacket(packet);
 		}
 

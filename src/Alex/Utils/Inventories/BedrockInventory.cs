@@ -4,7 +4,7 @@ namespace Alex.Utils.Inventories
 {
 	public class BedrockInventory : Inventory
 	{
-		public BedrockInventory(int slots) : base(slots)
+		public BedrockInventory( int slots) : base(slots)
 		{
 			HelmetSlot = 39;
 			ChestSlot = 38;
@@ -13,6 +13,8 @@ namespace Alex.Utils.Inventories
 
 			HotbarOffset = 0;
 			InventoryOffset = 9;
+
+			InventoryId = 28;
 		}
 
 		protected byte _selectedSlot = 0;

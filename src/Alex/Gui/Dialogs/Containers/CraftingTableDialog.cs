@@ -10,6 +10,7 @@ namespace Alex.Gui.Dialogs.Containers
 		public CraftingTableDialog(InventoryBase inventory, Inventory playerInventory) : base(
 			inventory, AlexGuiTextures.InventoryCraftingTable, 175, 165)
 		{
+			RegisterInventory(playerInventory);
 			//7, 17
 			
 			//Add chest slots

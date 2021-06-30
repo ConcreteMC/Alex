@@ -322,8 +322,12 @@ namespace Alex.Entities
 					    {
 						    if (_destroyingBlock)
 							    StopBreakingBlock(forceCanceled: true);
+
+						    var adjacent = EntityTracerPoint;
+						    var flooredAdj = Vector3.Floor(adjacent);
+						    var remainder = new Vector3(adjacent.X - flooredAdj.X, adjacent.Y - flooredAdj.Y, adjacent.Z - flooredAdj.Z);
 						    
-						    InteractWithEntity(hitEntity, didLeftClick, IsLeftHanded ? 1 : 0);
+						    InteractWithEntity(hitEntity, didLeftClick, IsLeftHanded ? 1 : 0, remainder);
 					    }
 				    }
 			    }
@@ -411,7 +415,7 @@ namespace Alex.Entities
 			//    IsSwimming = false;
 	    }
 
-	    private void InteractWithEntity(Entity entity, bool attack, int hand)
+	    private void InteractWithEntity(Entity entity, bool attack, int hand, Vector3 cursorPosition)
 	    {
 		    Log.Info($"Entity interact detected. Attack: {attack}");
 		    SwingArm(true);
@@ -469,7 +473,7 @@ namespace Alex.Entities
 			    //Network?.EntityInteraction(this, entity, ItemUseOnEntityAction.Interact, hand, slot);
 		    }
 		    
-		    Network?.EntityInteraction(this, entity, interaction, hand, slot);
+		    Network?.EntityInteraction(this, entity, interaction, hand, slot, cursorPosition);
 	    }
 
 	    private void StealSkin(Entity sourceEntity)
@@ -526,6 +530,7 @@ namespace Alex.Entities
 	    }
 	    
 	    public Entity HitEntity { get; private set; } = null;
+	    private Vector3	EntityTracerPoint { get; set; } = Vector3.Zero;
 	    public Entity[] EntitiesInRange { get; private set; } = null;
 
 	    private void UpdateRayTracer()
@@ -551,6 +556,7 @@ namespace Alex.Entities
 
 			    if (entity != null)
 			    {
+				    EntityTracerPoint = targetPoint;
 				    hitEntity = entity;
 				    break;
 			    }
@@ -634,16 +640,28 @@ namespace Alex.Entities
 		    return false;
 	    }
 
-	    public void DropHeldItem()
+	    public void DropHeldItem(bool fullStack = false)
 	    {
 		    var floored = new BlockCoordinates(Vector3.Floor(_raytraced));
 		    var face    = GetTargetFace();
 		    
-		    var adjacent = _adjacentRaytrace;
-		    var flooredAdj = Vector3.Floor(adjacent);
-		    var remainder = new Vector3(adjacent.X - flooredAdj.X, adjacent.Y - flooredAdj.Y, adjacent.Z - flooredAdj.Z);
+		    //var adjacent = _adjacentRaytrace;
+		    //var flooredAdj = Vector3.Floor(adjacent);
+		    //var remainder = new Vector3(adjacent.X - flooredAdj.X, adjacent.Y - flooredAdj.Y, adjacent.Z - flooredAdj.Z);
+
+		    var item = Inventory.MainHand;
+		    Network?.DropItem(floored, face, item, fullStack);
 		    
-		    Network?.PlayerDigging(DiggingStatus.DropItem, floored, face, remainder);
+		    if (Gamemode != GameMode.Creative)
+		    {
+			    item.Count -= 1;
+			    if (fullStack || item.Count <= 0)
+			    {
+				    item = new ItemAir() {Count = 0};
+			    }
+
+			    Inventory.MainHand = item;
+		    }
 	    }
 	    
 	    private void BlockBreakTick()

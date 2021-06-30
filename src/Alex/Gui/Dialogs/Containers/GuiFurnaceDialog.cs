@@ -10,6 +10,7 @@ namespace Alex.Gui.Dialogs.Containers
 		/// <inheritdoc />
 		public GuiFurnaceDialog(Inventory playerInventory, InventoryBase inventory) : base(inventory, AlexGuiTextures.InventoryFurnace, 175, 165)
 		{
+			RegisterInventory(playerInventory);
 			PlayerInventory = playerInventory;
 
 			var topSlot = AddSlot(56, 17, 0, inventory.InventoryId);

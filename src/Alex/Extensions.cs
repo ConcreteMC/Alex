@@ -7,6 +7,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using Alex.Common.Blocks;
+using Alex.Items;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -18,6 +19,11 @@ namespace Alex
 		static Extensions()
 		{
 			
+		}
+
+		public static bool IsAir(this Item item)
+		{
+			return item == null || item is ItemAir || item.Count <= 0;
 		}
 		
 		/// <summary>

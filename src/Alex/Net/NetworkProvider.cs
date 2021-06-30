@@ -44,7 +44,7 @@ namespace Alex.Net
 		public abstract void PlayerDigging(DiggingStatus status, BlockCoordinates position, BlockFace face, Vector3 cursorPosition);
 
 		public abstract void EntityInteraction(Entity player, Entity target,
-			ItemUseOnEntityAction action, int hand, int slot);
+			ItemUseOnEntityAction action, int hand, int slot, Vector3 cursorPosition);
 
 		public abstract void WorldInteraction(Entity entity,
 			BlockCoordinates position,
@@ -54,6 +54,7 @@ namespace Alex.Net
 			Vector3 cursorPosition);
 		public abstract void UseItem(Item item, int hand, ItemUseAction action, BlockCoordinates position, BlockFace face, Vector3 cursorPosition);
 		public abstract void HeldItemChanged(Item item, short slot);
+		public abstract void DropItem(BlockCoordinates position, BlockFace face, Item item, bool dropFullStack);
 		public abstract void Close();
 
 		public abstract void SendChatMessage(ChatObject message);

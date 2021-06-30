@@ -32,7 +32,7 @@ namespace Alex.Worlds
 				case 41: // loom
 				case 58: // cursor
 				case 59: // creative
-					item = _player.Inventory.UiInventory.Slots[slot];
+					item = _player.Inventory.UiInventory[slot];
 					break;
 				case 12: // auto
 				case 27: // hotbar
@@ -82,7 +82,7 @@ namespace Alex.Worlds
 				case 41: // loom
 				case 58: // cursor
 				case 59: // creative
-					_player.Inventory.UiInventory.Slots[slot] = item;
+					_player.Inventory.UiInventory[slot] = item;
 					break;
 				case 12: // auto
 				case 27: // hotbar

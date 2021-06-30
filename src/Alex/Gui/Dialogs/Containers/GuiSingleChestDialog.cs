@@ -10,6 +10,7 @@ namespace Alex.Gui.Dialogs.Containers
 	{
 		public GuiChestDialog(InventoryBase inventory, Inventory playerInventory) : base(inventory, AlexGuiTextures.InventoryChestBackground, 175, 221)
 		{
+			RegisterInventory(playerInventory);
 			//7, 17
 			
 			//Add chest slots

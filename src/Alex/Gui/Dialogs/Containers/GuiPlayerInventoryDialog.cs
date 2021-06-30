@@ -107,13 +107,13 @@ namespace Alex.Gui.Dialogs.Containers
             }
 
             var playerInventory = player.Inventory;
-            foreach (var slot in AddSlots(98, 18, 2, 4, 1, 999))
+            foreach (var slot in AddSlots(98, 18, 2, 4, 1, 13))
             {
                 slot.Item = playerInventory.GetCraftingSlot(slot.InventoryIndex);// Inventory[slot.InventoryIndex];
               //  slot.HighlightedBackground = new Microsoft.Xna.Framework.Color(Color.Purple, 0.5f);
             }
 
-            CraftingOutput = AddSlot(154, 28, 45, 0);
+            CraftingOutput = AddSlot(154, 28, 0, 13);
           //  CraftingOutput.HighlightedBackground = new Microsoft.Xna.Framework.Color(Color.Purple, 0.5f);
            
             /*var shieldSlot = new InventoryContainerItem()
@@ -166,6 +166,13 @@ namespace Alex.Gui.Dialogs.Containers
         
         protected override void OnSlotChanged(InventoryContainerItem slot, Item item, bool isServerTransaction)
         {
+            return;
+            if (slot == null)
+            {
+                
+                return;
+            }
+            
             if (slot.InventoryId == 120)
             {
                 //Armor
@@ -176,6 +183,7 @@ namespace Alex.Gui.Dialogs.Containers
             }
             else
             {
+                
                 Inventory.SetSlot(slot.InventoryIndex, item, isServerTransaction);
             }
 

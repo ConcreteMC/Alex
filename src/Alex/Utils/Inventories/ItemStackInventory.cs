@@ -130,6 +130,7 @@ namespace Alex.Utils.Inventories
 		private static readonly ILogger Log = LogManager.GetCurrentClassLogger();
 		
 		private static JsonSerializerSettings SerializerSettings = new JsonSerializerSettings() {ReferenceLoopHandling = ReferenceLoopHandling.Ignore};
+
 		public static Item ToAlexItem(this MiNET.Items.Item item)
 		{
 			if (item == null)
@@ -137,31 +138,24 @@ namespace Alex.Utils.Inventories
 
 			Item result = null;
 
+
 			var itemState = ChunkProcessor.Itemstates.FirstOrDefault(x => x.Id == item.Id);
+
 			if (itemState == null)
 				itemState = MiNET.Items.ItemFactory.Itemstates.FirstOrDefault(x => x.Id == item.Id);
-			
+
 			if (itemState != null)
-			//if (ChunkProcessor.Itemstates.TryGetValue(item.Id, out var itemState))
 			{
-				//item.Id = itemState.Id;
-				if (ItemFactory.TryGetItem(itemState.Name, out result) || ItemFactory.TryGetItem(itemState.Id, item.Metadata, out result) )
+				if (ItemFactory.TryGetItem(itemState.Name, out result))
 				{
-				//	Log.Info($"{item.Id} = {JsonConvert.SerializeObject(itemState, SerializerSettings)} || {JsonConvert.SerializeObject(result, SerializerSettings)}");
-				}
-				else
-				{
-				//	Log.Info($"{item.Id} = {JsonConvert.SerializeObject(itemState, SerializerSettings)}");
+					//	Log.Info($"{item.Id} = {JsonConvert.SerializeObject(itemState, SerializerSettings)} || {JsonConvert.SerializeObject(result, SerializerSettings)}");
 				}
 			}
-			else
-			{
-			}
-			
+
 			if (result == null && item.Id < 256 && item.Id >= 0) //Block
 			{
-				var id         = item.Id;
-				var meta       = (byte) item.Metadata;
+				var id = item.Id;
+				var meta = (byte) item.Metadata;
 				var reverseMap = MiNET.Worlds.AnvilWorldProvider.Convert.FirstOrDefault(map => map.Value.Item1 == id);
 
 				if (reverseMap.Value != null)
@@ -207,7 +201,7 @@ namespace Alex.Utils.Inventories
 				result.Count = item.Count;
 				result.Nbt = item.ExtraData;
 				result.Id = item.Id;
-				
+
 				return result;
 			}
 

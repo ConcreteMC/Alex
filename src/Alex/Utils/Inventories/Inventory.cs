@@ -7,25 +7,18 @@ using RocketUI.Input;
 
 namespace Alex.Utils.Inventories
 {
-	public class CursorInventory
+	public class CursorInventory : InventoryBase
 	{
 		private static readonly ILog Log = LogManager.GetLogger(typeof(CursorInventory));
-
-		public List<Item> Slots { get; } = Enumerable.Repeat((Item) new ItemAir(), 51).ToList();
-
-		public Item Cursor
+		
+		public CursorInventory() : base(51)
 		{
-			get => Slots[0];
-			set => Slots[0] = value;
-		}
-
-		public CursorInventory()
-		{
+			Clear();
 		}
 
 		public void Clear()
 		{
-			for (int i = 0; i < Slots.Count; i++)
+			for (int i = 0; i < SlotCount; i++)
 			{
 				if (Slots[i] == null || Slots[i].Id != 0) Slots[i] = new ItemAir();
 			}
@@ -142,7 +135,23 @@ namespace Alex.Utils.Inventories
 
 	    public Inventory(int slots) : base(slots)
 	    {
-		    
+		    UiInventory.CursorChanged += UiInventoryOnCursorChanged;
+	    }
+
+	    /// <inheritdoc />
+	    public override Item Cursor => UiInventory.Cursor;
+
+	    private void UiInventoryOnCursorChanged(object sender, CursorChangedEventArgs e)
+	    {
+		    InvokeCursorChanged(
+			    new CursorChangedEventArgs(
+				    e.InventoryId, e.Index, e.Value, e.OldItem, e.IsServerTransaction, e.Button));
+	    }
+
+	    /// <inheritdoc />
+	    public override void SetCursor(Item item, bool isServerTransaction, int index = -2, MouseButton button = MouseButton.Left)
+	    {
+			UiInventory.SetCursor(item, isServerTransaction, index, button);
 	    }
 
 	    public virtual Item[] GetHotbar()

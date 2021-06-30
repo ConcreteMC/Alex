@@ -65,7 +65,7 @@ namespace Alex.Worlds.Singleplayer
 			
 		}
 
-		public override void EntityInteraction(Entity player, Entity target, ItemUseOnEntityAction action, int hand, int slot)
+		public override void EntityInteraction(Entity player, Entity target, ItemUseOnEntityAction action, int hand, int slot, Vector3 cursorPosition)
 		{
 			
 		}
@@ -81,6 +81,12 @@ namespace Alex.Worlds.Singleplayer
 		}
 
 		public override void HeldItemChanged(Item item, short slot)
+		{
+			
+		}
+
+		/// <inheritdoc />
+		public override void DropItem(BlockCoordinates position, BlockFace face, Item item, bool dropFullStack)
 		{
 			
 		}

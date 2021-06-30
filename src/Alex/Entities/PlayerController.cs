@@ -247,9 +247,15 @@ namespace Alex.Entities
 				{
 					if (_guiPlayerInventoryDialog == null)
 					{
+						var dialog = new GuiPlayerInventoryDialog(Player, Player.Inventory);
+
+						if (Player.Network is BedrockClient client)
+						{
+							dialog.TransactionTracker = client.TransactionTracker;
+						}
+
 						//_allowMovementInput = false;
-						Alex.Instance.GuiManager.ShowDialog(
-							_guiPlayerInventoryDialog = new GuiPlayerInventoryDialog(Player, Player.Inventory));
+						Alex.Instance.GuiManager.ShowDialog(dialog);
 					}
 					else
 					{
