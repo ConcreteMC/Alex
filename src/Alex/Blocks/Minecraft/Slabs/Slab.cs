@@ -1,8 +1,7 @@
 ﻿using Alex.Blocks.Properties;
 using Alex.Blocks.State;
-using Alex.ResourcePackLib.Json;
 
-namespace Alex.Blocks.Minecraft
+namespace Alex.Blocks.Minecraft.Slabs
 {
 	public class WoodenSlab : Slab
 	{

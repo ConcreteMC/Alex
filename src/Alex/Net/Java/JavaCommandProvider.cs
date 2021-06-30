@@ -1,10 +1,11 @@
 using System.Threading;
 using Alex.Networking.Java;
 using Alex.Networking.Java.Packets.Play;
-using Alex.Utils;
 using Alex.Utils.Commands;
+using Alex.Worlds;
+using Alex.Worlds.Multiplayer;
 
-namespace Alex.Worlds.Multiplayer.Java
+namespace Alex.Net.Java
 {
 	public class JavaCommandProvider : CommandProvider
 	{

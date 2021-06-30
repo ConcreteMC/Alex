@@ -5,7 +5,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 
-namespace Alex.Worlds.Multiplayer.Bedrock
+namespace Alex.Utils
 {
     public class SkinResourcePatch : ICloneable
 	{
@@ -82,7 +82,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		public string PieceType { get; set; } //is the piece type that it refers to, which is present in the previous list
 	}
 	
-	public class Skin : ICloneable
+	/*public class Skin : ICloneable
 	{
 		public bool Slim { get; set; }
 		public bool IsPersonaSkin { get; set; }
@@ -146,5 +146,5 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 			return clonedSkin;
 		}
-	}
+	}*/
 }

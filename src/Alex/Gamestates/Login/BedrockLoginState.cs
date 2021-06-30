@@ -16,6 +16,7 @@ using Newtonsoft.Json;
 using NLog;
 using RocketUI;
 using RocketUI.Utilities.IO;
+using Skin = Alex.Common.Utils.Skin;
 
 
 namespace Alex.Gamestates.Login
@@ -208,9 +209,9 @@ namespace Alex.Gamestates.Login
 				        {
 
 					        var r = AuthenticationService.DecodedChain.Chain.FirstOrDefault(x =>
-						        x.ExtraData != null && !string.IsNullOrWhiteSpace(x.ExtraData.Xuid));
+						        x.ExtraData != null && !string.IsNullOrWhiteSpace(x.ExtraData.XUID));
 
-					        var profile = new PlayerProfile(r.ExtraData.Xuid, r.ExtraData.DisplayName,
+					        var profile = new PlayerProfile(r.ExtraData.XUID, r.ExtraData.DisplayName,
 						        r.ExtraData.DisplayName,
 						       new Skin()
 						       {

@@ -1,4 +1,5 @@
 using Alex.Net;
+using Alex.Net.Bedrock;
 using Alex.Worlds.Multiplayer.Bedrock;
 using MiNET.Net;
 using MiNET.UI;

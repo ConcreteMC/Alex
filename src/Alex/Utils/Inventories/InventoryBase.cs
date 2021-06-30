@@ -52,22 +52,7 @@ namespace Alex.Utils.Inventories
 				};
 			}
 
-			if (ReportTransaction)
-			{
-			//	if (isServerTransaction)
-			//		Log.Info($"Server set slot (slot={index} inventory={InventoryId}): {value.Name}");
-			//	else
-			if (!isServerTransaction)
-					Log.Info($"Client set slot (slot={index} inventory={InventoryId}): {value.Name}");
-			}
-
-			//var oldValue = Slots[index];
 			Set(index, value, !isServerTransaction);
-			//Slots[index] = value;
-			/*if ((index == 36 + _selectedSlot && !IsPeInventory) || (index == _selectedSlot && IsPeInventory))
-			{
-			    MainHand = value;
-			}*/
 		}
 
 		protected void InvokeSlotChanged(SlotChangedEventArgs eventArgs)
@@ -97,7 +82,6 @@ namespace Alex.Utils.Inventories
 			set
 			{
 				Set(index, value, true);
-				//SetSlot(index, value, false);
 			}
 		}
 
@@ -130,9 +114,7 @@ namespace Alex.Utils.Inventories
 			}
 			private set
 			{
-				// var oldValue = _cursor;
 				_cursor = value;
-				// CursorChanged?.Invoke(this, new SlotChangedEventArgs(0, value, oldValue, true));
 			}
 		}
 	}

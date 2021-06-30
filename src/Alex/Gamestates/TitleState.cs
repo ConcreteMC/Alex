@@ -35,6 +35,7 @@ using MiNET.Utils;
 using NLog;
 using RocketUI;
 using Color = Microsoft.Xna.Framework.Color;
+using Skin = Alex.Common.Utils.Skin;
 using UUID = MiNET.Utils.UUID;
 
 

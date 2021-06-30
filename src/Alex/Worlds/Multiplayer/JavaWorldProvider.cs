@@ -25,14 +25,13 @@ using Alex.Entities;
 using Alex.Entities.BlockEntities;
 using Alex.Entities.Components.Effects;
 using Alex.Entities.Generic;
-using Alex.Entities.Passive;
 using Alex.Entities.Projectiles;
 using Alex.Gamestates;
-using Alex.Graphics.Models.Entity;
 using Alex.Gui.Dialogs.Containers;
 using Alex.Gui.Elements;
 using Alex.Items;
 using Alex.Net;
+using Alex.Net.Java;
 using Alex.Networking.Java;
 using Alex.Networking.Java.Events;
 using Alex.Networking.Java.Packets;
@@ -47,15 +46,14 @@ using Alex.Utils;
 using Alex.Utils.Commands;
 using Alex.Utils.Inventories;
 using Alex.Worlds.Abstraction;
+using Alex.Worlds.Multiplayer.Java;
 using fNbt;
 using Microsoft.Extensions.DependencyInjection;
 using MiNET;
 using MiNET.Entities;
-using MiNET.Plugins;
 using MiNET.Worlds;
 using Newtonsoft.Json;
 using NLog;
-using Org.BouncyCastle.Utilities.Encoders;
 using RocketUI.Input;
 using BlockCoordinates = Alex.Common.Utils.Vectors.BlockCoordinates;
 using ChunkColumn = Alex.Worlds.Chunks.ChunkColumn;
@@ -65,14 +63,12 @@ using CommandProperty = Alex.Utils.Commands.CommandProperty;
 using ConnectionState = Alex.Networking.Java.ConnectionState;
 using Entity = Alex.Entities.Entity;
 using MessageType = Alex.Common.Data.MessageType;
-using Mob = Alex.Entities.Mob;
-using NibbleArray = Alex.Common.Utils.NibbleArray;
 using Packet = Alex.Networking.Java.Packets.Packet;
 using Player = Alex.Entities.Player;
 using PlayerLocation = Alex.Common.Utils.Vectors.PlayerLocation;
 using Vector3 = Microsoft.Xna.Framework.Vector3;
 
-namespace Alex.Worlds.Multiplayer.Java
+namespace Alex.Worlds.Multiplayer
 {
 	public class JavaWorldProvider : WorldProvider, IPacketHandler
 	{

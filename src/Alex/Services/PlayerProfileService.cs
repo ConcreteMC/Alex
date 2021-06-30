@@ -8,6 +8,7 @@ using Alex.Utils;
 using MojangSharp.Api;
 using MojangSharp.Endpoints;
 using NLog;
+using Skin = Alex.Common.Utils.Skin;
 
 namespace Alex.Services
 {

@@ -1,4 +1,4 @@
-namespace Alex.Blocks.Minecraft
+namespace Alex.Blocks.Minecraft.Planks
 {
     public class DarkOakPlanks : Planks
     {

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Linq;
 using Alex.Gamestates.InGame;
+using Alex.Net.Bedrock;
 using Alex.Utils;
 using Alex.Utils.Caching;
 using MiNET.Net;

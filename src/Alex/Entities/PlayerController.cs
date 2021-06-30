@@ -7,6 +7,7 @@ using Alex.Gamestates.InGame;
 using Alex.Graphics.Camera;
 using Alex.Gui.Dialogs.Containers;
 using Alex.Gui.Elements;
+using Alex.Net.Bedrock;
 using Alex.Worlds;
 using Alex.Worlds.Multiplayer.Bedrock;
 using Microsoft.Extensions.DependencyInjection;

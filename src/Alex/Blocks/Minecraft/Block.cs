@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Alex.Blocks.Minecraft.Leaves;
 using Alex.Blocks.Properties;
 using Alex.Blocks.State;
 using Alex.Common.Blocks;
@@ -217,7 +218,7 @@ namespace Alex.Blocks.Minecraft
 						{
 							return secondsForBreak / 5;
 						}
-						else if (this is Leaves || this is AcaciaLeaves || this is Cobweb)
+						else if (this is Leaves.Leaves || this is AcaciaLeaves || this is Cobweb)
 						{
 							return secondsForBreak / 15;
 						}

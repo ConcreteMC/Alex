@@ -2,24 +2,22 @@
 using System.Diagnostics;
 using System.Net;
 using System.Threading;
-using System.Threading.Tasks;
 using Alex.Common.Services;
 using Alex.Common.World;
 using Alex.Gui.Forms;
 using Alex.Net;
+using Alex.Net.Bedrock;
 using Alex.Worlds.Abstraction;
+using Alex.Worlds.Multiplayer.Bedrock;
 using Alex.Worlds.Multiplayer.Bedrock.Resources;
 using Microsoft.Xna.Framework;
-using MiNET;
 using MiNET.Net;
-using MiNET.Utils;
 using NLog;
 using ChunkCoordinates = Alex.Common.Utils.Vectors.ChunkCoordinates;
-using MathF = System.MathF;
 using Player = Alex.Entities.Player;
 using PlayerLocation = Alex.Common.Utils.Vectors.PlayerLocation;
 
-namespace Alex.Worlds.Multiplayer.Bedrock
+namespace Alex.Worlds.Multiplayer
 {
 	public class BedrockWorldProvider : WorldProvider
 	{

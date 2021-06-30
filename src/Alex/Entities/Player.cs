@@ -14,6 +14,7 @@ using Alex.Common.Utils;
 using Alex.Common.Utils.Vectors;
 using Alex.Items;
 using Alex.Net;
+using Alex.Net.Bedrock;
 using Alex.ResourcePackLib.Json;
 using Alex.ResourcePackLib.Json.Models.Entities;
 using Alex.Utils;
@@ -38,7 +39,7 @@ using BlockCoordinates = Alex.Common.Utils.Vectors.BlockCoordinates;
 using BoundingBox = Microsoft.Xna.Framework.BoundingBox;
 using ContainmentType = Microsoft.Xna.Framework.ContainmentType;
 using Skin = Alex.Common.Utils.Skin;
-using SkinResourcePatch = Alex.Worlds.Multiplayer.Bedrock.SkinResourcePatch;
+using SkinResourcePatch = Alex.Utils.SkinResourcePatch;
 
 namespace Alex.Entities
 {

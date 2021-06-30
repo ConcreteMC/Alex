@@ -1,6 +1,6 @@
 using Alex.Common.Blocks;
 
-namespace Alex.Blocks.Minecraft
+namespace Alex.Blocks.Minecraft.Fences
 {
     public class FenceGate : Block
     {

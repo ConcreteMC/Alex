@@ -1,4 +1,4 @@
-namespace Alex.Blocks.Minecraft
+namespace Alex.Blocks.Minecraft.Doors
 {
 	public class BirchDoor : Door
 	{

@@ -1,6 +1,6 @@
 using System.Net;
 
-namespace Alex.Worlds.Multiplayer.Bedrock
+namespace Alex.Utils
 {
 	public class BedrockMotd
 	{

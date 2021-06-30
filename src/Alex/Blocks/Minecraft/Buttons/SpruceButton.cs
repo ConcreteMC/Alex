@@ -1,4 +1,4 @@
-namespace Alex.Blocks.Minecraft
+namespace Alex.Blocks.Minecraft.Buttons
 {
 	public class SpruceButton : Button
 	{

@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 
-namespace Alex.Worlds.Multiplayer.Bedrock
+namespace Alex.Utils
 {
 
     public class CertificateData

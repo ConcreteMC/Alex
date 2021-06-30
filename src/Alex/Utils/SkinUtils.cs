@@ -340,7 +340,7 @@ namespace Alex.Utils
 			
 		}
 
-		public static bool TryGetBitmap(this Skin skin, EntityModel model, out Image<Rgba32> result)
+		public static bool TryGetBitmap(this MiNET.Utils.Skins.Skin skin, EntityModel model, out Image<Rgba32> result)
 		{
 			try
 			{

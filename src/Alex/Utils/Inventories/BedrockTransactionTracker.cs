@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using Alex.Entities;
 using Alex.Items;
+using Alex.Net.Bedrock;
 using Alex.Worlds.Multiplayer.Bedrock;
 using MiNET.Net;
 using MiNET.Utils;

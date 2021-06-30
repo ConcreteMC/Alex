@@ -3,9 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
-using System.Threading;
 using Alex.Common.Utils;
-using Alex.Net.Bedrock;
 using Alex.Networking.Bedrock.RakNet;
 using MiNET;
 using MiNET.Net;
@@ -14,11 +12,10 @@ using MiNET.Utils;
 using MiNET.Utils.Cryptography;
 using MiNET.Utils.IO;
 using NLog;
-using Org.BouncyCastle.Crypto;
 
-namespace Alex.Worlds.Multiplayer.Bedrock
+namespace Alex.Net.Bedrock
 {
-    public class MessageHandler : ICustomMessageHandler
+    public class BedrockMessageHandler : ICustomMessageHandler
     {
         private static readonly ILogger Log = LogManager.GetCurrentClassLogger();
         
@@ -35,7 +32,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
         public  TimeSpan TimeSinceLastPacket => DateTime.UtcNow - _lastPacketReceived;
         
 		private BedrockClientPacketHandler PacketHandler { get; }
-        public MessageHandler(RaknetSession session, BedrockClientPacketHandler handler) : base()
+        public BedrockMessageHandler(RaknetSession session, BedrockClientPacketHandler handler) : base()
         {
 	        _session = session;
             _messageDispatcher = new McpeClientMessageDispatcher(handler);

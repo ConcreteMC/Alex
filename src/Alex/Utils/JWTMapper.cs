@@ -2,7 +2,7 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 
-namespace Alex.Worlds.Multiplayer.Bedrock
+namespace Alex.Utils
 {
     public class JWTMapper : IJsonMapper
     {

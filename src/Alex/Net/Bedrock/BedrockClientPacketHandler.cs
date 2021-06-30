@@ -2,16 +2,11 @@
 using System.Buffers.Binary;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Net;
 using System.Numerics;
-using System.Security.Cryptography;
-using System.Text;
 using System.Threading;
 using Alex.Blocks;
-using Alex.Blocks.Minecraft;
 using Alex.Common.Resources;
 using Alex.Common.Services;
 using Alex.Common.Utils;
@@ -19,53 +14,42 @@ using Alex.Common.World;
 using Alex.Entities;
 using Alex.Entities.BlockEntities;
 using Alex.Entities.Components.Effects;
-using Alex.Entities.Generic;
 using Alex.Entities.Projectiles;
-using Alex.Gamestates;
-using Alex.Graphics.Models.Entity;
-using Alex.Graphics.Models.Entity.Animations;
 using Alex.Gui.Elements;
-using Alex.Items;
-using Alex.Net.Bedrock;
 using Alex.Net.Bedrock.Packets;
 using Alex.Networking.Java.Packets.Play;
-using Alex.ResourcePackLib.Json;
 using Alex.ResourcePackLib.Json.Bedrock.Sound;
-using Alex.ResourcePackLib.Json.Converters;
-using Alex.ResourcePackLib.Json.Models.Entities;
 using Alex.Services;
 using Alex.Utils;
 using Alex.Utils.Auth;
 using Alex.Utils.Commands;
 using Alex.Utils.Inventories;
+using Alex.Worlds;
 using Alex.Worlds.Abstraction;
+using Alex.Worlds.Multiplayer.Bedrock;
 using fNbt;
 using Jose;
 using Microsoft.Extensions.DependencyInjection;
 using MiNET;
-using MiNET.Entities;
 using MiNET.Net;
 using MiNET.Particles;
 using MiNET.UI;
 using MiNET.Utils;
-using MiNET.Utils.Metadata;
 using MiNET.Worlds;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using NLog;
 using AnvilWorldProvider = Alex.Worlds.Singleplayer.AnvilWorldProvider;
 using BlockCoordinates = Alex.Common.Utils.Vectors.BlockCoordinates;
 using ChunkCoordinates = Alex.Common.Utils.Vectors.ChunkCoordinates;
 using Color = Microsoft.Xna.Framework.Color;
 using CommandProperty = Alex.Utils.Commands.CommandProperty;
+using Dimension = Alex.Worlds.Dimension;
 using Entity = Alex.Entities.Entity;
-using MathF = System.MathF;
 using MessageType = Alex.Common.Data.MessageType;
 using Player = Alex.Entities.Player;
 using PlayerLocation = Alex.Common.Utils.Vectors.PlayerLocation;
-using UUID = Alex.Common.Utils.UUID;
 
-namespace Alex.Worlds.Multiplayer.Bedrock
+namespace Alex.Net.Bedrock
 {
 	public class BedrockClientPacketHandler : IMcpeClientMessageHandler
 	{

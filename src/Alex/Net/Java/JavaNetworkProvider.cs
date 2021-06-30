@@ -5,18 +5,15 @@ using Alex.Common.Utils;
 using Alex.Common.Utils.Vectors;
 using Alex.Entities;
 using Alex.Items;
-using Alex.Net;
 using Alex.Networking.Java;
 using Alex.Networking.Java.Packets.Play;
 using Microsoft.Xna.Framework;
-using MiNET;
-using MiNET.Net;
 using MiNET.Utils.IO;
 using BlockFace = Alex.Common.Blocks.BlockFace;
 using ConnectionState = Alex.Networking.Java.ConnectionState;
 using Player = Alex.Entities.Player;
 
-namespace Alex.Worlds.Multiplayer.Java
+namespace Alex.Net.Java
 {
 	public class JavaNetworkProvider : NetworkProvider
 	{

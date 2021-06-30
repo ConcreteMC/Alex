@@ -1,16 +1,12 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Dynamic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Net;
-using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Alex.Common;
@@ -20,24 +16,22 @@ using Alex.Common.Utils;
 using Alex.Entities;
 using Alex.Gamestates;
 using Alex.Items;
-using Alex.Net;
-using Alex.Net.Bedrock;
 using Alex.Net.Bedrock.Packets;
 using Alex.Networking.Bedrock.RakNet;
 using Alex.ResourcePackLib.Json;
-using Alex.ResourcePackLib.Json.Models.Entities;
 using Alex.Utils;
 using Alex.Utils.Auth;
 using Alex.Utils.Caching;
 using Alex.Utils.Inventories;
+using Alex.Worlds;
+using Alex.Worlds.Multiplayer;
+using Alex.Worlds.Multiplayer.Bedrock;
 using Alex.Worlds.Multiplayer.Bedrock.Resources;
 using Jose;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using MiNET;
 using MiNET.Net;
-using MiNET.Net.RakNet;
-using MiNET.Plugins;
 using MiNET.Utils;
 using MiNET.Utils.Cryptography;
 using MiNET.Utils.Skins;
@@ -53,13 +47,18 @@ using Org.BouncyCastle.Security;
 using Org.BouncyCastle.X509;
 using BlockCoordinates = Alex.Common.Utils.Vectors.BlockCoordinates;
 using BlockFace = Alex.Common.Blocks.BlockFace;
+using CertificateData = Alex.Utils.CertificateData;
 using ConnectionInfo = Alex.Common.Utils.ConnectionInfo;
+using ExtraData = Alex.Utils.ExtraData;
+using GeometryIdentifier = Alex.Utils.GeometryIdentifier;
 using Item = Alex.Items.Item;
 using LevelInfo = MiNET.Worlds.LevelInfo;
 using Player = Alex.Entities.Player;
 using PlayerLocation = Alex.Common.Utils.Vectors.PlayerLocation;
+using Skin = MiNET.Utils.Skins.Skin;
+using SkinResourcePatch = Alex.Utils.SkinResourcePatch;
 
-namespace Alex.Worlds.Multiplayer.Bedrock
+namespace Alex.Net.Bedrock
 {
 	public class BedrockClient : NetworkProvider, IDisposable
 	{
@@ -83,7 +82,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
         public AutoResetEvent ChangeDimensionResetEvent { get; } = new AutoResetEvent(false);
         public RaknetConnection Connection { get; }
-        private MessageHandler MessageHandler { get; set; }
+        private BedrockMessageHandler BedrockMessageHandler { get; set; }
         private RaknetSession Session { get; set; }//=> Connection.ConnectionInfo.RakSessions.Values.FirstOrDefault();
         public override bool IsConnected => Session?.State != ConnectionState.Unconnected;
         
@@ -99,7 +98,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	        }
         }
 
-        public  TimeSpan                   TimeSinceLastPacket => MessageHandler?.TimeSinceLastPacket ?? TimeSpan.Zero;
+        public  TimeSpan                   TimeSinceLastPacket => BedrockMessageHandler?.TimeSinceLastPacket ?? TimeSpan.Zero;
         public  bool                       GameStarted         { get; set; } = false;
         private ChunkProcessor             ChunkProcessor      { get; }
         private BedrockClientPacketHandler PacketHandler       { get; set; }
@@ -145,9 +144,9 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			//	bool hasSession = Session != null;
 
 			BedrockClientPacketHandler packetHandler;
-			var handler = new MessageHandler(session, packetHandler = new BedrockClientPacketHandler(this, wp, playerProfile, alex, CancellationTokenSource.Token, ChunkProcessor));
+			var handler = new BedrockMessageHandler(session, packetHandler = new BedrockClientPacketHandler(this, wp, playerProfile, alex, CancellationTokenSource.Token, ChunkProcessor));
 				
-				if (MessageHandler != null)
+				if (BedrockMessageHandler != null)
 					Log.Warn($"Messagehandler was already set.");
 				
 				if (Session == null)
@@ -166,7 +165,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 						ShowDisconnect(reason, false, false, DisconnectReason.Unknown);
 					};
 					
-					MessageHandler = handler;
+					BedrockMessageHandler = handler;
 					PacketHandler = packetHandler;
 				}
 
@@ -277,7 +276,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			{
 				networkState = ConnectionInfo.NetworkState.OutOfOrder;
 			}
-			else if (MessageHandler != null && MessageHandler.TimeSinceLastPacket.TotalMilliseconds >= 250)
+			else if (BedrockMessageHandler != null && BedrockMessageHandler.TimeSinceLastPacket.TotalMilliseconds >= 250)
 			{
 				networkState = ConnectionInfo.NetworkState.Slow;
 			}
@@ -517,7 +516,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
                 username = element.ExtraData.DisplayName;
                 identity = element.ExtraData.Identity;
-                xuid = element.ExtraData.Xuid;
+                xuid = element.ExtraData.XUID;
 
                 long iat = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
                 long exp = DateTimeOffset.UtcNow.AddDays(1).ToUnixTimeSeconds();
@@ -587,7 +586,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
                 payload = data
             };
 
-            MessageHandler.CryptoContext =  new MiNET.Utils.Cryptography.CryptoContext() {ClientKey = clientKey, UseEncryption = false,};
+            BedrockMessageHandler.CryptoContext =  new MiNET.Utils.Cryptography.CryptoContext() {ClientKey = clientKey, UseEncryption = false,};
 
             SendPacket(loginPacket);
 
@@ -624,7 +623,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			{
 				ECPublicKeyParameters remotePublicKey = (ECPublicKeyParameters) PublicKeyFactory.CreateKey(serverKey);
 
-				var handler = MessageHandler;
+				var handler = BedrockMessageHandler;
 
 				ECDHBasicAgreement agreement = new ECDHBasicAgreement();
 				agreement.Init(handler.CryptoContext.ClientKey.Private);
@@ -835,7 +834,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	        };
 
 	        var serialized = JsonConvert.SerializeObject(
-		        new BedrockSkinData(skin)
+		        new BedrockJwtData(skin)
 		        {
 			        SelfSignedID = Alex.Resources.DeviceID,
 			        ClientRandomId = new Random().Next(),

@@ -1,7 +1,7 @@
-using Alex.Utils;
 using Alex.Utils.Commands;
+using Alex.Worlds;
 
-namespace Alex.Worlds.Multiplayer.Bedrock
+namespace Alex.Net.Bedrock
 {
 	public class BedrockCommandProvider : CommandProvider
 	{

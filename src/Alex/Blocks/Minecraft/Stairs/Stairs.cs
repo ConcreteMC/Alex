@@ -1,17 +1,12 @@
-using System;
-using Alex.Blocks.Properties;
 using Alex.Blocks.State;
 using Alex.Common.Blocks;
 using Alex.Common.Utils.Vectors;
 using Alex.Graphics.Models.Blocks;
-using Alex.ResourcePackLib.Json;
 using Alex.Worlds;
 using Alex.Worlds.Abstraction;
-using Microsoft.Xna.Framework;
 using NLog;
-using MathF = System.MathF;
 
-namespace Alex.Blocks.Minecraft
+namespace Alex.Blocks.Minecraft.Stairs
 {
     public class WoodStairs : Stairs
     {

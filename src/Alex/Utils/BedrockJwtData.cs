@@ -3,12 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using MiNET.Net;
-using MiNET.Utils.Skins;
 using Newtonsoft.Json;
 
-namespace Alex.Worlds.Multiplayer.Bedrock
+namespace Alex.Utils
 {
-    public class BedrockSkinData
+    public class BedrockJwtData
     {
         public bool ThirdPartyNameOnly { get; set; } = false;
         public string ThirdPartyName { get; set; }
@@ -65,28 +64,10 @@ namespace Alex.Worlds.Multiplayer.Bedrock
         
         [JsonProperty("PieceTintColors")]
         public List<PieceTint>    PieceTintColours { get; set; } = new List<PieceTint>();
-        
-        public class SkinAnimation
-        {
-            public string Image { get; set; }
-            public int ImageWidth { get; set; }
-            public int ImageHeight { get; set; }
-            public float FrameCount { get; set; }
-            public int Type { get; set; } // description above
 
-            public SkinAnimation(Animation animation)
-            {
-                Image = Convert.ToBase64String(animation.Image);
-                ImageWidth = animation.ImageWidth;
-                ImageHeight = animation.ImageHeight;
-                FrameCount = animation.FrameCount;
-                Type = animation.Type;
-            }
-        }
-
-        public BedrockSkinData(Skin skin)
+        public BedrockJwtData(MiNET.Utils.Skins.Skin skin)
         {
-            SkinResourcePatch = skin.ResourcePatch ?? Convert.ToBase64String(Encoding.Default.GetBytes(Skin.ToJson(skin.SkinResourcePatch)));
+            SkinResourcePatch = skin.ResourcePatch ?? Convert.ToBase64String(Encoding.Default.GetBytes(MiNET.Utils.Skins.Skin.ToJson(skin.SkinResourcePatch)));
             
             SkinId = skin.SkinId;
             SkinData = Convert.ToBase64String(skin.Data);
@@ -106,9 +87,12 @@ namespace Alex.Worlds.Multiplayer.Bedrock
             PremiumSkin = skin.IsPremiumSkin;
             PersonaSkin = skin.IsPersonaSkin;
             CapeOnClassicSkin = skin.Cape.OnClassicSkin;
+
+            SkinColor = skin.SkinColor;
+            ArmSize = skin.ArmSize;
         }
 
-        public BedrockSkinData()
+        public BedrockJwtData()
         {
             
         }

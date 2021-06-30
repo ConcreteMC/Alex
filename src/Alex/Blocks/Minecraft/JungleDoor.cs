@@ -1,3 +1,5 @@
+using Alex.Blocks.Minecraft.Doors;
+
 namespace Alex.Blocks.Minecraft
 {
 	public class JungleDoor : Door

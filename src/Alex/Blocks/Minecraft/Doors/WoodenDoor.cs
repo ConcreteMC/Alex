@@ -3,11 +3,9 @@ using Alex.Blocks.Properties;
 using Alex.Blocks.State;
 using Alex.Common.Blocks;
 using Alex.Common.Utils.Vectors;
-using Alex.Entities;
-using Alex.ResourcePackLib.Json;
 using Alex.Worlds;
 
-namespace Alex.Blocks.Minecraft
+namespace Alex.Blocks.Minecraft.Doors
 {
 	public class WoodenDoor : Block
 	{

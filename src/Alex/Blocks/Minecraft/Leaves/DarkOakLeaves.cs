@@ -1,4 +1,4 @@
-namespace Alex.Blocks.Minecraft
+namespace Alex.Blocks.Minecraft.Leaves
 {
 	public class DarkOakLeaves : Leaves
 	{
