@@ -232,8 +232,7 @@ namespace Alex.Gui
 				progressReceiver?.UpdateProgress(done, languages, "Loading languages...", key);
 				try
 				{
-					CultureLanguage language;
-					if (!_languages.TryGetValue(key, out language))
+					if (!_languages.TryGetValue(key, out var language))
 					{
 						language = new CultureLanguage()
 						{
@@ -248,10 +247,11 @@ namespace Alex.Gui
 						}
 					}
 
-					//if (lng.Value.CultureCode == Culture.Name)
-					language.Load(lng.Value);
-
-					_languages[key] = language;
+					if (language != null)
+					{
+						language.Load(lng.Value);
+						_languages[key] = language;
+					}
 				}catch(CultureNotFoundException){}
 			}
 		}

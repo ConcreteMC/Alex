@@ -136,6 +136,7 @@ namespace Alex
 		
 		private void ResourcePacksChanged(string[] oldvalue, string[] newvalue)
 		{
+			return;
 			Log.Info($"Resource packs changed.");
 			
 			SplashScreen splashScreen = new SplashScreen();
@@ -638,6 +639,22 @@ namespace Alex
 		        Alex.GuiRenderer.LoadLanguages(resourcePack, progress);
 	        }
 	        
+	        progress?.UpdateProgress(50, "Loading language...");
+	        if (!Alex.GuiRenderer.SetLanguage(Options.AlexOptions.MiscelaneousOptions.Language))
+	        {
+		        string language = CultureInfo.InstalledUICulture.Name;
+
+		        if (!Alex.GuiRenderer.SetLanguage(language))
+		        {
+			        language = "en_uk";
+			        Alex.GuiRenderer.SetLanguage(language);
+		        }
+
+		        Options.AlexOptions.MiscelaneousOptions.Language.Value = language;
+	        }
+	        
+	        progress?.UpdateProgress(100, "Loading language...");
+	        
 	        Stopwatch sw = Stopwatch.StartNew();
 	        MeasureProfiler.StartCollectingData();
 	        var imported = BlockFactory.LoadBlockstates(RegistryManager, this, true, false, progress);
@@ -682,22 +699,6 @@ namespace Alex
 	        //progress?.UpdateProgress(0, $"Loading UI textures...");
 	        //Alex.GuiRenderer.LoadResourcePackTextures(this, progress);
 
-	        progress?.UpdateProgress(50, "Loading language...");
-	        if (!Alex.GuiRenderer.SetLanguage(Options.AlexOptions.MiscelaneousOptions.Language))
-	        {
-		        string language = CultureInfo.InstalledUICulture.Name;
-
-		        if (!Alex.GuiRenderer.SetLanguage(language))
-		        {
-			        language = "en_uk";
-			        Alex.GuiRenderer.SetLanguage(language);
-		        }
-
-		        Options.AlexOptions.MiscelaneousOptions.Language.Value = language;
-	        }
-	        
-	        progress?.UpdateProgress(100, "Loading language...");
-	        
 	        var f = ActiveResourcePacks.LastOrDefault(x => x.FontBitmap != null);
 	        if (f != null)
 	        {
@@ -808,7 +809,7 @@ namespace Alex
 
 	        //Java Reset
 	        {
-		        if (ActiveResourcePacks.First != null)
+		       /* if (ActiveResourcePacks.First != null)
 		        {
 			        var first = ActiveResourcePacks.First.Value;
 			        var before = ActiveResourcePacks.ToArray();
@@ -828,7 +829,7 @@ namespace Alex
 				        BlockAtlas.Reset();
 				        ItemAtlas.Reset();
 			        }
-		        }
+		        }*/
 	        }
 	        
 	        //Bedrock Reset

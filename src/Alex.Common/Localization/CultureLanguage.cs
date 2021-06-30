@@ -20,8 +20,8 @@ namespace Alex.Common.Localization
 
         public void Load(IDictionary<string, string> translations)
         {
-            if (Loaded)
-                return;
+            //if (Loaded)
+             //   return;
             
             foreach (var translation in translations)
             {
@@ -29,7 +29,7 @@ namespace Alex.Common.Localization
                 _translations[translation.Key] = translation.Value;
             }
 
-            Loaded = true;
+           // Loaded = true;
         }
 
         public string GetString(string key)
