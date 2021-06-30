@@ -1146,6 +1146,9 @@ namespace Alex.Worlds
 			bool teleport = false,
 			bool adjustForEntityHeight = false)
 		{
+			if (EntityManager == null)
+				return;
+			
 			Entity entity = null;
 
 			if (Player != null && entityId == Player.EntityId)

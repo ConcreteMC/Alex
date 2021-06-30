@@ -1061,9 +1061,6 @@ namespace Alex.Entities
 		
 		private void HandleEntityFlags(long rawData, long extendedData)
 		{
-			if ((this is Player))
-				return;
-
 			BitArray data = new BitArray(
 				BitConverter.GetBytes(rawData).Concat(BitConverter.GetBytes(extendedData)).ToArray());
 			

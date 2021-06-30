@@ -190,7 +190,7 @@ namespace Alex.Networking.Bedrock.RakNet
 			
 			try
 			{
-				while (!_cancellationToken.IsCancellationRequested)
+				while (!_cancellationToken.IsCancellationRequested && !Evicted)
 				{
 					var key = Interlocked.Read(ref _lastOrderingIndex) + 1;
 					if (_orderingBufferQueue.TryRemove(key, out var value))

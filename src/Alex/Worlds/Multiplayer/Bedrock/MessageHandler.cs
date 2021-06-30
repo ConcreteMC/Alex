@@ -168,7 +168,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		public void HandlePacket(Packet message)
 		{
-
 			if (_session.Evicted)
 				return;
 
@@ -205,15 +204,13 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					// Get actual packet out of bytes
 					while (ms.Position < ms.Length)
 					{
+						if (_session.Evicted)
+							return;
+						
 						uint len = VarInt.ReadUInt32(ms);
 						long pos = ms.Position;
 
-						//byte[] data = new byte[len];
-
 						var data = ms.Read(len);
-						//	var data = MemoryPool<byte>.Shared.Rent((int) len);
-						//if (ms.Read(data, 0, data.Length) != len)
-						//	Log.Warn($"Did not read enough data.");
 
 						ms.Position = pos;
 						int id = VarInt.ReadInt32(ms);
@@ -235,10 +232,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 							Log.Warn(
 								e,
 								$"Error parsing bedrock message #{count} id={id} (Buffer size={data.Length} Packet size={len})");
-
-
-							//throw;
-							//return; // Exit, but don't crash.
 						}
 
 
@@ -261,22 +254,15 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 						ms.Position = pos + len;
 					}
 				}
-
-				//var msgs = messages.ToArray();
-				//messages.Clear();
-				//wrapper.PutPool();
 			}
 			else if (message is UnknownPacket unknownPacket)
 			{
 				Log.Warn($"Received unknown packet 0x{unknownPacket.Id:X2}\n{Packet.HexDump(unknownPacket.Message)}");
-
-				//	unknownPacket.PutPool();
 			}
 			else
 			{
 				Log.Error(
 					$"Unhandled packet: {message.GetType().Name} 0x{message.Id:X2}, IP {_session.EndPoint.Address}");
-				//if (Log.IsDebugEnabled) Log.Warn($"Unknown packet 0x{message.Id:X2}\n{Packet.HexDump(message.Bytes)}");
 			}
 		}
 
@@ -286,7 +272,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				return;
 			
 			//RaknetSession.TraceReceive(message);
-			
+
 			Stopwatch sw = Stopwatch.StartNew();
 
 			try

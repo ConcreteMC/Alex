@@ -57,24 +57,6 @@ namespace Alex.Entities
 
         public bool HasRaytraceResult = false;
 
-        /// <inheritdoc />
-        public override PlayerLocation KnownPosition
-        {
-	        get
-	        {
-		        return base.KnownPosition;
-	        }
-	        set
-	        {
-		        if (Level != null && !Level.ChunkManager.TryGetChunk(new ChunkCoordinates(value), out _))
-		        {
-			        WaitingOnChunk = true;
-		        }
-		        
-		        base.KnownPosition = value;
-	        }
-        }
-        
         public NetworkProvider Network { get; set; }
 
         //public Camera Camera { get; internal set; }
@@ -98,30 +80,6 @@ namespace Alex.Entities
 			HasPhysics = true;
 			NoAi = false;
 			CanSwim = true;
-        }
-
-        protected override void OnInventorySlotChanged(object sender, SlotChangedEventArgs e)
-        {
-	        //Crafting!
-	    /*    if (e.Index >= 41 && e.Index <= 44)
-	        {
-		        McpeInventoryTransaction transaction = McpeInventoryTransaction.CreateObject();
-		        transaction.transaction = new NormalTransaction()
-		        {
-			        TransactionRecords = new List<TransactionRecord>()
-			        {
-				        new CraftTransactionRecord()
-				        {
-					        Action = McpeInventoryTransaction.CraftingAction.CraftAddIngredient,
-					        Slot = e.Index,
-					        NewItem = BedrockClient.GetMiNETItem(e.Value),
-					        OldItem = BedrockClient.GetMiNETItem(e.OldItem)
-				        }
-			        }
-		        };
-	        }*/
-	        
-	        base.OnInventorySlotChanged(sender, e);
         }
 
         /// <inheritdoc />
