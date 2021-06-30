@@ -161,5 +161,14 @@ namespace Alex.Entities.Meta
 		{
 			DoHealthAndExhaustion();
 		}
+
+		public void Reset()
+		{
+			AvailableAir = MaxAir;
+			Health = MaxHealth;
+			Exhaustion = 0f;
+			Saturation = MaxSaturation;
+			Hunger = MaxHunger;
+		}
 	}
 }

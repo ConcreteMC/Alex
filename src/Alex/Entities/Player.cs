@@ -165,29 +165,7 @@ namespace Alex.Entities
 		    }
 	    }
 
-	    private bool _waitingOnChunk = true;
-
-	    public bool WaitingOnChunk
-	    {
-		    get
-		    {
-			    return _waitingOnChunk;
-		    }
-		    set
-		    {
-			    _waitingOnChunk = value;
-
-			    if (value)
-			    {
-				    NoAi = true;
-			    }
-			    else
-			    {
-				    Velocity = Vector3.Zero;
-				    NoAi = false;
-			    }
-		    }
-	    }
+	    public bool WaitingOnChunk { get; set; } = true;
 
 	    /// <inheritdoc />
 	    public override bool NoAi 

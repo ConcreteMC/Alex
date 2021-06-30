@@ -1692,6 +1692,24 @@ namespace Alex.Entities
 			{
 				switch (attribute.Key)
 				{
+					case "minecraft:player.level":
+						ExperienceLevel = attribute.Value.Value;
+						break;
+					case "minecraft:player.experience":
+						Experience = attribute.Value.Value;
+						break;
+					case "minecraft:player.saturation":
+						HealthManager.Saturation = (int) attribute.Value.Value;
+						HealthManager.MaxSaturation = (int) attribute.Value.MaxValue;
+						break;
+					case "minecraft:player.exhaustion":
+						HealthManager.Exhaustion = (int) attribute.Value.Value;
+						HealthManager.MaxExhaustion = (int) attribute.Value.MaxValue;
+						break;
+					case "minecraft:player.hunger":
+						HealthManager.Hunger = (int) attribute.Value.Value;
+						HealthManager.MaxHunger = (int) attribute.Value.MaxValue;
+						break;
 					case "minecraft:movement":
 						MovementSpeed = attribute.Value.Value;
 						break;

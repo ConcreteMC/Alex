@@ -53,10 +53,6 @@ using MiNET.Worlds;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NLog;
-using Org.BouncyCastle.Crypto.Parameters;
-using Org.BouncyCastle.Security;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
 using AnvilWorldProvider = Alex.Worlds.Singleplayer.AnvilWorldProvider;
 using BlockCoordinates = Alex.Common.Utils.Vectors.BlockCoordinates;
 using ChunkCoordinates = Alex.Common.Utils.Vectors.ChunkCoordinates;
@@ -245,16 +241,11 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		
 		public void HandleMcpeStartGame(McpeStartGame message)
 		{
-			Log.Info($"Start game, movement type: {message.movementType}");
-
 			if (message.movementType > 0)
 			{
 				Log.Warn($"!!! Server uses server-authoritive movement, only client-auth is currently supported.");
 			}
-			//McpeClientCacheStatus status = McpeClientCacheStatus.CreateObject();
-		//	status.enabled = ChunkProcessor.Cache.Enabled;
-			//Client.SendPacket(status);
-
+			
 			try
 			{
 				Client.World.Player.EntityId = Client.EntityId = message.runtimeEntityId;
@@ -263,7 +254,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				Client.SpawnPoint = new Vector3(
 					message.spawn.X, message.spawn.Y - Player.EyeLevel, message.spawn.Z); //message.spawn;
 
-				//Client.CurrentLocation = new MiNET.Utils.PlayerLocation(Client.SpawnPoint, message.spawn.X, message.spawn.X, message.spawn.Y);
 				Client.World.Dimension = (Dimension) message.dimension;
 
 				Client.World?.UpdatePlayerPosition(
@@ -282,18 +272,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					Log.Info($"New blockbreak system?");
 				}
 
-			//if (message.enableNewInventorySystem)
-				//{
-				//	Log.Info($"Using new transaction based inventory.");
-				//	Client.World.Player.SetInventory(new ItemStackInventory(Client));
-				//}
-				//else
-				{
-					Client.World.Player.SetInventory(new BedrockInventory(46)
-					{
-						ReportTransaction = true
-					});
-				}
+				Client.World.Player.SetInventory(new BedrockInventory(46) {ReportTransaction = true});
 
 				Client.World.Player.UpdateGamemode((GameMode) message.playerGamemode);
 
@@ -301,42 +280,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				{
 					Client.World.SetGameRule(gr);
 				}
-				
-				//message.itemstates[0].
 
 				ChunkProcessor.Itemstates = message.itemstates;
-
-				/*Dictionary<uint, BlockStateContainer> ourStates = new Dictionary<uint, BlockStateContainer>();
-
-				foreach (var bs in message.blockPalette)
-				{
-					foreach (var blockstate in bs.States)
-					{
-						var name = blockstate.Name;
-
-						if (name != null)
-						{
-							if (name.Equals("minecraft:grass", StringComparison.InvariantCultureIgnoreCase))
-								name = "minecraft:grass_block";
-
-							blockstate.Name = name;
-						}
-					}
-
-					var name2 = bs.Name;
-
-					if (name2 != null)
-					{
-						if (name2.Equals("minecraft:grass", StringComparison.InvariantCultureIgnoreCase))
-							name2 = "minecraft:grass_block";
-
-						bs.Name = name2;
-					}
-
-					ourStates.TryAdd((uint) bs.RuntimeId, bs);
-				}*/
-
-				//ChunkProcessor.BlockStateMap = message.blockPalette;
 			}
 			finally
 			{
@@ -344,8 +289,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				
 				Client.RequestChunkRadius(AlexInstance.Options.AlexOptions.VideoOptions.RenderDistance.Value);
 			}
-
-			//_entityMapping.TryAdd(message.entityIdSelf, message.runtimeEntityId);
 		}
 
 		public void HandleMcpeMovePlayer(McpeMovePlayer message)
@@ -357,25 +300,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			};
 
 			Client.World.UpdateEntityPosition(message.runtimeEntityId, pos, false, true, true, adjustForEntityHeight:true, teleport:message.mode == 2);
-
-			if (message.runtimeEntityId == Client.EntityId)
-			{
-				//Client.SendMcpeMovePlayer(
-				//	new PlayerLocation(message.x, message.y, message.z), 1);
-			}
-			/*if (message.runtimeEntityId != Client.EntityId)
-			{
-				pos.Yaw = -pos.Yaw;
-				pos.HeadYaw = -pos.HeadYaw;
-				pos.Pitch = -pos.Pitch;
-				Client.World.UpdateEntityPosition(message.runtimeEntityId, pos, false, true, true, adjustForEntityHeight:true, teleport:message.mode == 2);
-				return;
-			}
-			
-			Client.World.UpdatePlayerPosition(pos, message.mode == 2);
-
-			Client.SendMcpeMovePlayer(
-				new PlayerLocation(message.x, message.y, message.z), Client.World.Player.KnownPosition.OnGround, 1);*/
 		}
 
 		private void UpdateEntityAdventureFlags(Entity entity, uint flags, uint actionPermissions)
@@ -538,34 +462,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			{
 				Log.Info($"spawning: {message.entityType}");
 			}
-			Entity entity = null;
-			//else
-			//{
-			//	entityType = MiNET.Entities.EntityHelpers.ToEntityType(message.entityType);
-			//}
-			/*MiNET.Entities.EntityType entityType = EntityType.None;
-			if (_entityIdentifiers.TryGetValue(message.entityType, out var realId))
-			{
-				entityType = (MiNET.Entities.EntityType) realId;
-
-				//if (t != EntityType.None)
-				//	entityType = t;
-			}
-			
-			
-			if (entityType == EntityType.None)
-			{
-				entityType = MiNET.Entities.EntityHelpers.ToEntityType(message.entityType);
-			}
-			
-			if (entityType == EntityType.FallingBlock)
-			{
-				entity = new EntityFallingBlock(null);
-			}
-			else
-			{*/
-				entity = EntityFactory.Create(message.entityType, null);
-			//}
+			Entity entity = EntityFactory.Create(message.entityType, null);
 
 			if (entity == null)
 			{
@@ -1044,11 +941,30 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			}
 		}
 
+		public EntityAttributes ConvertEntityAttributes(PlayerAttributes playerAttributes)
+		{
+			EntityAttributes attributes = new EntityAttributes();
+
+			foreach (var attribute in playerAttributes)
+			{
+				attributes.TryAdd(
+					attribute.Key,
+					new EntityAttribute()
+					{
+						Name = attribute.Value.Name,
+						Value = attribute.Value.Value,
+						MaxValue = attribute.Value.MaxValue,
+						MinValue = attribute.Value.MinValue
+					});
+			}
+			//if (entity != null)
+			return attributes;
+		}
+
 		public void HandleMcpeUpdateAttributes(McpeUpdateAttributes message)
 		{
 			Entity entity = null;
-
-
+			
 			if (!Client.World.TryGetEntity(message.runtimeEntityId, out entity))
 			{
 				if (message.runtimeEntityId == Client.EntityId)
@@ -1056,48 +972,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			}
 
 			if (entity == null) return;
-			//if (entity != null)
-			//	entity.UpdateAttributes(message.attributes);
 
-
-			if (message.attributes.TryGetValue("minecraft:health", out var value))
-			{
-				entity.HealthManager.MaxHealth = (int) value.MaxValue;
-				entity.HealthManager.Health = (int) value.Value;
-			}
-
-			if (message.attributes.TryGetValue("minecraft:movement", out var movement))
-			{
-				entity.MovementSpeed = movement.Value;
-			}
-
-			if (message.attributes.TryGetValue("minecraft:player.hunger", out var hunger))
-			{
-				entity.HealthManager.Hunger = (int) hunger.Value;
-				entity.HealthManager.MaxHunger = (int) hunger.MaxValue;
-			}
-
-			if (message.attributes.TryGetValue("minecraft:player.exhaustion", out var exhaustion))
-			{
-				entity.HealthManager.Exhaustion = (int) exhaustion.Value;
-				entity.HealthManager.MaxExhaustion = (int) exhaustion.MaxValue;
-			}
-
-			if (message.attributes.TryGetValue("minecraft:player.saturation", out var saturation))
-			{
-				entity.HealthManager.Saturation = (int) saturation.Value;
-				entity.HealthManager.MaxSaturation = (int) saturation.MaxValue;
-			}
-
-			if (message.attributes.TryGetValue("minecraft:player.experience", out var experience))
-			{
-				entity.Experience = experience.Value;
-			}
-
-			if (message.attributes.TryGetValue("minecraft:player.level", out var experienceLevel))
-			{
-				entity.ExperienceLevel = experienceLevel.Value;
-			}
+			entity.UpdateAttributes(ConvertEntityAttributes(message.attributes));
 		}
 
 		public void HandleMcpeInventoryTransaction(McpeInventoryTransaction message)
