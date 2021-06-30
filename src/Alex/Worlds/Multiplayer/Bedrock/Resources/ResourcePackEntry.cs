@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Alex.Utils;
 using MiNET.Utils;
 using NLog;
 
@@ -23,6 +24,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 			Version = version;
 
 			PackageId = Identifier = $"{UUID}_{Version}";
+			
 		}
 
 		//private byte[] _completedData = null;
@@ -69,8 +71,9 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 
 		public uint ExpectedIndex { get; set; } = 0;
 		
-		public bool SetChunkData(uint chunkIndex, byte[] chunkData)
+		public bool SetChunkData(uint chunkIndex, byte[] chunkData, out byte[] completedData)
 		{
+			completedData = null;
 			if (IsComplete)
 				return false;
 			
@@ -104,6 +107,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 					//_completedData = ms.
 					//_completedData = ms.Read().ToArray();
 
+					completedData = buffer;
 					if (Alex.Instance.Options.AlexOptions.MiscelaneousOptions.LoadServerResources.Value)
 					{
 						OnComplete(buffer);
@@ -114,6 +118,12 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 			}
 
 			return true;
+		}
+		
+		public void SetData(byte[] data)
+		{
+			OnComplete(data);
+			IsComplete = true;
 		}
 
 		protected virtual void OnComplete(byte[] data) { }

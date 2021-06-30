@@ -28,6 +28,7 @@ using Alex.ResourcePackLib.Json;
 using Alex.ResourcePackLib.Json.Models.Entities;
 using Alex.Utils;
 using Alex.Utils.Auth;
+using Alex.Utils.Caching;
 using Alex.Utils.Inventories;
 using Alex.Worlds.Multiplayer.Bedrock.Resources;
 using Jose;
@@ -122,7 +123,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			_disposables.Add(Options.VideoOptions.RenderDistance.Bind(RenderDistanceChanged));
 			_disposables.Add(Options.VideoOptions.ClientSideLighting.Bind(ClientSideLightingChanged));
 
-			_disposables.Add(ResourcePackManager = new ResourcePackManager(this, Alex.Resources));
+			_disposables.Add(ResourcePackManager = new ResourcePackManager(this, Alex.Resources, alex.Services.GetRequiredService<ResourcePackCache>()));
 
 			if (wp != null)
 			{

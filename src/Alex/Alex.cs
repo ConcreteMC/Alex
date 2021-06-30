@@ -41,6 +41,7 @@ using Alex.Services;
 using Alex.Services.Discord;
 using Alex.Utils;
 using Alex.Utils.Auth;
+using Alex.Utils.Caching;
 using Alex.Utils.Threading;
 using Alex.Worlds.Abstraction;
 using Alex.Worlds.Multiplayer.Bedrock;
@@ -249,6 +250,7 @@ namespace Alex
             serviceCollection.TryAddSingleton<XboxAuthService>();
 
             serviceCollection.TryAddSingleton<BlobCache>();
+            serviceCollection.TryAddSingleton<ResourcePackCache>();
 
             Services = serviceCollection.BuildServiceProvider();
 

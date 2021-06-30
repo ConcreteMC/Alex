@@ -2,6 +2,8 @@ using System;
 using System.Collections.Concurrent;
 using System.Linq;
 using Alex.Gamestates.InGame;
+using Alex.Utils;
+using Alex.Utils.Caching;
 using MiNET.Net;
 using MiNET.Utils;
 using NLog;
@@ -15,9 +17,10 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 		private BedrockClient _client;
 		private ConcurrentDictionary<string, ResourcePackEntry> _resourcePackEntries;
 		private ResourceManager _resourceManager;
-
-		public ResourcePackManager(BedrockClient client, ResourceManager resourceManager)
+		private ResourcePackCache _resourcePackCache;
+		public ResourcePackManager(BedrockClient client, ResourceManager resourceManager, ResourcePackCache resourcePackCache)
 		{
+			_resourcePackCache = resourcePackCache;
 			_client = client;
 			_resourcePackEntries = new ConcurrentDictionary<string, ResourcePackEntry>();
 			_resourceManager = resourceManager;
@@ -155,8 +158,14 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 
 				return;
 			}
-			
+
 			packEntry.SetDataInfo((ResourcePackType)message.packType, message.hash, message.chunkCount, message.maxChunkSize, message.compressedPackageSize, message.packageId);
+			
+			if (_resourcePackCache.TryGet(packEntry.Identifier, out byte[] data))
+			{
+				packEntry.SetData(data);
+			}
+			
 			CheckCompletion(packEntry);
 			//McpeResourcePackClientResponse response = new McpeResourcePackClientResponse();
 			//	response.responseStatus = (byte) McpeResourcePackClientResponse.ResponseStatus.Completed;
@@ -214,11 +223,16 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 				return;
 			}
 
-			if (packEntry.SetChunkData(message.chunkIndex, message.payload)) { }
+			if (packEntry.SetChunkData(message.chunkIndex, message.payload, out byte[] completedData))
+			{
+				_resourcePackCache.TryStore(packEntry.Identifier, completedData);
+				
+				CheckCompletion(packEntry);
+			}
 
 			//	Log.Info($"Received resourcepack chunk {message.chunkIndex + 1}/{packEntry.ChunkCount}");
 
-			CheckCompletion(packEntry);
+			//CheckCompletion(packEntry);
 		}
 
 		/// <inheritdoc />

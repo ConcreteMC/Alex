@@ -12,6 +12,7 @@ using Alex.Blocks.Minecraft;
 using Alex.Common.Utils.Collections;
 using Alex.Entities.BlockEntities;
 using Alex.Utils;
+using Alex.Utils.Caching;
 using Alex.Worlds.Chunks;
 using Alex.Worlds.Singleplayer;
 using fNbt;
