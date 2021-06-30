@@ -35,15 +35,16 @@ namespace Alex.Entities.Components
 		protected override void OnUpdate(float deltaTime)
 		{
 			var e = Entity;
+
 			if (!e.IsSpawned || e.NoAi || !Enabled || e.Level == null)
 				return;
 
-			var onGround       = e.KnownPosition.OnGround;
-			
-			var slipperiness   = 0.91f;
+			var onGround = e.KnownPosition.OnGround;
+
+			var slipperiness = 0.91f;
 			var movementFactor = (float) e.CalculateMovementSpeed();
 
-			if (e.FeetInWater)
+			if (e.FeetInWater && !e.IsFlying)
 			{
 				movementFactor = 0.02f;
 				slipperiness = 0.8f;
@@ -71,7 +72,28 @@ namespace Alex.Entities.Components
 				}
 			}
 
-			e.Velocity += ConvertHeading(e, movementFactor);
+			var heading = e.Movement.Heading;
+
+			if (e.IsSwimming)
+			{
+				heading = heading.Transform(Matrix.CreateRotationX(e.KnownPosition.Pitch.ToRadians()));
+			}
+
+			var strafing = heading.X * 0.98F;
+			var forward = heading.Z * 0.98F;
+
+			if (e.IsSneaking)
+			{
+				strafing *= 0.3f;
+				forward *= 0.3f;
+			}
+
+			heading = ConvertHeading(
+				e.KnownPosition.HeadYaw, strafing, forward, (e.IsFlying || e.IsSwimming) ? heading.Y : 0f,
+				movementFactor);
+
+			e.Velocity += heading;
+			
 			//var momentum     = e.Velocity * e.Slipperines * 0.91f;
 			//var acceleration = (ConvertMovementIntoVelocity(e, out var slipperiness));
 
@@ -116,13 +138,8 @@ namespace Alex.Entities.Components
 			return slipperiness;
 		}
 
-		private Vector3 ConvertHeading(Entity entity, float multiplier)
+		private Vector3 ConvertHeading(float yaw, float strafe, float forward, float vertical, float multiplier)
 		{
-			var heading  = entity.Movement.Heading;
-			var strafe   = heading.X;
-			var forward  = heading.Z;
-			var vertical = (entity.IsFlying || entity.IsSwimming) ? heading.Y : 0f;
-			
 			var speed    = MathF.Sqrt(strafe * strafe + forward * forward + vertical * vertical);
 			if (speed < 0.01f)
 				return Vector3.Zero;
@@ -132,9 +149,12 @@ namespace Alex.Entities.Components
 			strafe *= speed;
 			forward *= speed;
 			vertical *= speed;
-			
 
-			return new Vector3(strafe, vertical, forward);
+			var rotationYaw = -yaw;
+			var sinYaw = MathF.Sin(rotationYaw * MathF.PI / 180.0F);
+			var cosYaw = MathF.Cos(rotationYaw * MathF.PI / 180.0F);
+
+			return new Vector3(strafe * cosYaw - forward * sinYaw, vertical, forward * cosYaw + strafe * sinYaw);
 		}
     }
 }

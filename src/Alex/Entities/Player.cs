@@ -188,7 +188,14 @@ namespace Alex.Entities
 			    }
 		    }
 	    }
-	    
+
+	    /// <inheritdoc />
+	    public override bool NoAi 
+	    { 
+		    get => base.NoAi || WaitingOnChunk;
+		    set => base.NoAi = value;
+	    }
+
 	    public BlockCoordinates TargetBlock => _destroyingTarget;
 
 	    private BlockCoordinates _destroyingTarget = BlockCoordinates.Zero;
@@ -215,12 +222,12 @@ namespace Alex.Entities
 		    
 		    if (WaitingOnChunk)
 		    {
-			    NoAi = true;
+			  //  NoAi = true;
 
 			    if (Level.GetChunk(KnownPosition.GetCoordinates3D(), true) != null)
 			    {
 				    WaitingOnChunk = false;
-				    NoAi = false;
+				   // NoAi = false;
 			    }
 		    }
 

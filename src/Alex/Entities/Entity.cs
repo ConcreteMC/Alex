@@ -404,8 +404,8 @@ namespace Alex.Entities
 					IsFlying ? Networking.Java.Packets.Play.EntityProperties.FlyingSpeed :
 						Networking.Java.Packets.Play.EntityProperties.MovementSpeed]).Calculate();
 
-			if (IsSneaking)
-				modifier *= 0.29997683577f;
+			//if (IsSneaking)
+			//	modifier *= 0.29997683577f;
 			
 			return (modifier);
 		}

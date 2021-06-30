@@ -110,7 +110,8 @@ namespace Alex.Entities.Components
 		{
 			lock (_headingLock)
 			{
-				Heading = heading.Transform(Entity.KnownPosition.GetDirectionMatrix(Entity.IsSwimming, true));
+				Heading = heading;
+				//Heading = heading.Transform(Entity.KnownPosition.GetDirectionMatrix(Entity.IsSwimming, true));
 			}
 		}
 		

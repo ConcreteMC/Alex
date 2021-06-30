@@ -14,6 +14,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using MiNET.Utils;
+using MiNET.Utils.Vectors;
 using NLog;
 using RocketUI;
 using RocketUI.Input;
@@ -372,7 +373,7 @@ namespace Alex.Entities
 
 			if (InputManager.IsDown(AlexInputCommand.MoveRight))
 				moveVector.X -= 1;
-
+			
 			if (Player.IsFlying)
 			{
 				//speedFactor *= 1f + (float)Player.FlyingSpeed;
