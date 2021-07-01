@@ -2718,6 +2718,19 @@ namespace Alex.Worlds.Multiplayer
 			{
 				HandleLoginSuccess(success);
 			}
+			else if (packet is LoginPluginRequestPacket loginPluginRequestPacket)
+			{
+				HandleLoginPluginRequestPacket(loginPluginRequestPacket);
+			}
+		}
+
+		private void HandleLoginPluginRequestPacket(LoginPluginRequestPacket packet)
+		{
+			LoginPluginResponsePacket response = LoginPluginResponsePacket.CreateObject();
+			response.MessageId = packet.MessageId;
+			response.Succesful = false;
+			response.Data = new byte[0];
+			Client.SendPacket(response);
 		}
 
 		private void HandleSpawnEntity(SpawnEntity packet)
