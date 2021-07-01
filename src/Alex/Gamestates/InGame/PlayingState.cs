@@ -88,7 +88,7 @@ namespace Alex.Gamestates.InGame
             }
             
             _networkDebugHud = new NetworkDebugHud(NetworkProvider);
-            _networkDebugHud.Advanced = true;
+            _networkDebugHud.Advanced = settings.AlexOptions.MiscelaneousOptions.ShowNetworkInfoByDefault.Value;
             
             World.Ticker.RegisterTicked(WorldProvider);
 		}

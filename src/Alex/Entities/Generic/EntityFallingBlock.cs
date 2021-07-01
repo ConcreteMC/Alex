@@ -1,3 +1,4 @@
+using Alex.Common.Utils.Vectors;
 using Alex.Entities.Projectiles;
 using Alex.Items;
 using Alex.Networking.Java.Packets.Play;
@@ -28,6 +29,26 @@ namespace Alex.Entities.Generic
 			
 			HasPhysics = true;
 			IsAffectedByGravity = true;
+			NoAi = false;
+		}
+
+		/// <inheritdoc />
+		public override PlayerLocation KnownPosition
+		{
+			get
+			{
+				return base.KnownPosition + new Vector3(-0.5f, 0f, -0.5f);
+			}
+			set
+			{
+				base.KnownPosition = value;
+			}
+		}
+
+		/// <inheritdoc />
+		protected override float GetScale()
+		{
+			return 1f;
 		}
 
 		/// <inheritdoc />

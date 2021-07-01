@@ -291,8 +291,8 @@ namespace Alex.Audio
 
 				if (volume > 1f)
 				{
-					volume = (1f / 100f) * volume;
-					//	Log.Warn($"Invalid volume: {volume}");
+					Log.Debug($"Invalid volume: {volume}");
+				//	volume = (1f / 100f) * volume;
 				}
 				volume *= selected.Volume;
 

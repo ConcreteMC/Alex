@@ -1232,6 +1232,10 @@ namespace Alex.Net.Bedrock
 
 						return;
 					}
+					else if (message.inventoryId == 124)
+					{
+						inventory = Client.World.Player.Inventory.UiInventory;
+					}
 
 					/*	if (message.inventoryId == 124)
 						{
@@ -1255,8 +1259,17 @@ namespace Alex.Net.Bedrock
 				if (result != null)
 				{
 					result.StackID = slot.UniqueId;
-					inventory.SetSlot(startIndex + index, result, true);
-					
+					var adjustedIndex = startIndex + index;
+
+					if (adjustedIndex > inventory.SlotCount - 1)
+					{
+						Log.Warn($"Slot {adjustedIndex} out of range for inventory {message.inventoryId} (Limit: {inventory.SlotCount})");
+					}
+					else
+					{
+						inventory.SetSlot(adjustedIndex, result, true);
+					}
+
 					//Log.Info($"Server container slot (slot={(startIndex + index)} inventory={message.inventoryId} stackId={result.StackID} uniqueId={slot.UniqueId}): {result.Name}");
 					//inventory[usedIndex] = result;
 				}
@@ -1760,7 +1773,7 @@ namespace Alex.Net.Bedrock
 							{
 								if (param.Type == "stringenum")
 								{
-									string enumName = "enum";
+									string enumName = param.EnumType;
 									string[] options = null;
 									if (param.EnumValues != null)
 									{

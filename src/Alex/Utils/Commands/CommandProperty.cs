@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Linq;
 
@@ -8,7 +9,7 @@ namespace Alex.Utils.Commands
 		public string Name { get; }
 		public bool Required { get; }
 
-		public string TypeIdentifier { get; set; } = "Unknown";
+		public string TypeIdentifier { get; set; }
 
 		public CommandProperty(string name, bool required = true, string typeIdentifier = "Unknown")
 		{
@@ -47,7 +48,7 @@ namespace Alex.Utils.Commands
 		{
 			if (reader.ReadSingleWord(out string result) > 0)
 			{
-				if (Options.Any(x => x.Equals(result)))
+				if (Options.Any(x => string.Equals(x, result, StringComparison.InvariantCultureIgnoreCase)))
 					return true;
 			}
 

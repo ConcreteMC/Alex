@@ -64,6 +64,11 @@ namespace Alex.Entities.Projectiles
                 IsBlock = true;
         }
 
+        protected virtual float GetScale()
+        {
+            return 1f / 16f;
+        }
+
         public override int Render(IRenderArgs renderArgs, bool useCulling)
         {
             if (!CanRender)
@@ -75,7 +80,7 @@ namespace Alex.Entities.Projectiles
                 return 0;
             
             var knownPos = KnownPosition.ToVector3();
-            float scale = 1f / 16f;
+            float scale = GetScale();
             Matrix worldMatrix;
             var offset = new Vector3((float) Width / 2f, 0f, (float) Width / 2f);
             if (DoRotation)

@@ -1073,7 +1073,7 @@ namespace Alex.Entities
 			
 			NoAi = data[(int) MiNET.Entities.Entity.DataFlags.NoAi];
 			IsAffectedByGravity = data[(int) MiNET.Entities.Entity.DataFlags.AffectedByGravity];
-			HasCollision = data[(int) MiNET.Entities.Entity.DataFlags.HasCollision];
+			//HasCollision = data[(int) MiNET.Entities.Entity.DataFlags.HasCollision];
 			
 			//HideNameTag = !data[(int) MiNET.Entities.Entity.DataFlags.ShowName];
 			IsAlwaysShowName = data[(int) MiNET.Entities.Entity.DataFlags.AlwaysShowName];

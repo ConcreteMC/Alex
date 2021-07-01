@@ -24,6 +24,9 @@ namespace Alex.Common.Data.Options
         [DataMember]
         public OptionsProperty<bool> LoadServerResources { get; set; }
         
+        [DataMember]
+        public OptionsProperty<bool> ShowNetworkInfoByDefault { get; set; }
+        
         public MiscelaneousOptions()
         {
             ServerSideLighting = new OptionsProperty<bool>(false);
@@ -32,6 +35,7 @@ namespace Alex.Common.Data.Options
             ObjectPools = new OptionsProperty<bool>(true);
             UseChunkCache = new OptionsProperty<bool>(false);
             LoadServerResources = new OptionsProperty<bool>(false);
+            ShowNetworkInfoByDefault = new OptionsProperty<bool>(false);
         }
     }
 }

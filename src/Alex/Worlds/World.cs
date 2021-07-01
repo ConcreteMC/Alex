@@ -338,8 +338,9 @@ namespace Alex.Worlds
             
             chunkDrawCount += ChunkManager.Draw(args, null,
 	            RenderStage.Transparent,
-	            RenderStage.Translucent,
 	            RenderStage.Animated,
+	            RenderStage.Translucent,
+	            //RenderStage.Animated,
 	            RenderStage.Liquid);
 
             ChunkDrawCount = chunkDrawCount;

@@ -12,6 +12,7 @@ namespace Alex.Gamestates.MainMenu.Options
         private Slider                       ProcessingThreads { get; set; }
         private ToggleButton                 ChunkCaching { get; set; }
         private ToggleButton                 ServerResources { get; set; }
+        private ToggleButton                 NetworkDebugInfo { get; set; }
         private TextElement                  Description       { get; set; }
         private Dictionary<IGuiControl, string> Descriptions      { get; } = new Dictionary<IGuiControl, string>();
         
@@ -41,7 +42,9 @@ namespace Alex.Gamestates.MainMenu.Options
 
                 AddGuiRow(
                     ServerResources = CreateToggle(
-                        "Server Resources: {0}", o => o.MiscelaneousOptions.LoadServerResources), new RocketElement());
+                        "Server Resources: {0}", o => o.MiscelaneousOptions.LoadServerResources),
+                    NetworkDebugInfo = CreateToggle(
+                        "Network Info: {0}", o => o.MiscelaneousOptions.ShowNetworkInfoByDefault));
 
                 AddDescription(
                     ProcessingThreads, "Processing Threads",
@@ -56,6 +59,11 @@ namespace Alex.Gamestates.MainMenu.Options
                     ServerResources, "Server Resources (Bedrock Only)", "Load server resource packs",
                     $"{TextColor.Prefix}{TextColor.Red.Code}Experimental feature, doesn't support all features.");
 
+                AddDescription(NetworkDebugInfo, 
+                    "Network Latency Info", 
+                    "If enabled, shows the network debug info by default.",
+                    "You can always press 'F3 + N' while in-game to toggle it");
+                
                 Description = new TextElement()
                 {
                     Anchor = Alignment.MiddleLeft, Margin = new Thickness(5, 15, 5, 5), MinHeight = 80
