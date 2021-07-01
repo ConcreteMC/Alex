@@ -52,7 +52,7 @@ namespace Alex.Worlds.Lighting
 
 		        if (c != null)
 		        {
-			        var lightLevel = c.GetBlocklight(coords.X & 0xf, coords.Y & 0xff, coords.Z & 0xf);
+			        var lightLevel = c.GetBlocklight(coords.X & 0xf, coords.Y, coords.Z & 0xf);
 			        foreach (var offset in LightUpdate.Adjacents)
 			        {
 				        Test(c, cc, coords + offset, lightLevel);
@@ -87,10 +87,10 @@ namespace Alex.Worlds.Lighting
 				return;
 			}
 
-			var currentLightLevel = column.GetBlocklight(target.X & 0xf, target.Y & 0xff, target.Z & 0xf);
+			var currentLightLevel = column.GetBlocklight(target.X & 0xf, target.Y , target.Z & 0xf);
 			if (currentLightLevel + 2 <= lightLevel)
 			{
-				var block = column.GetBlockState(target.X & 0xf, target.Y & 0xff, target.Z & 0xf).Block;
+				var block = column.GetBlockState(target.X & 0xf, target.Y , target.Z & 0xf).Block;
 				if ((!block.Solid || block.Transparent))
 				{
 					SetLightLevel(column, target, (lightLevel - block.LightOpacity));
@@ -101,8 +101,8 @@ namespace Alex.Worlds.Lighting
 
         private void SetLightLevel(ChunkColumn column, BlockCoordinates coord, int lightLevel)
         {
-	        column?.SetBlocklight(coord.X & 0xf, coord.Y & 0xff, coord.Z & 0xf, (byte) Math.Clamp(lightLevel, 0, 15));
-	        column?.ScheduleBlockUpdate(coord.X & 0xf, coord.Y & 0xff, coord.Z & 0xf);
+	        column?.SetBlocklight(coord.X & 0xf, coord.Y, coord.Z & 0xf, (byte) Math.Clamp(lightLevel, 0, 15));
+	        column?.ScheduleBlockUpdate(coord.X & 0xf, coord.Y, coord.Z & 0xf);
 	        //if (World.GetBlockLight(coord) + 2 <= lightLevel)
 	        //	{
 	        //World.SetBlockLight(coord, (byte) Math.Clamp(lightLevel, 0, 15));

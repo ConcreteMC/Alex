@@ -560,7 +560,7 @@ namespace Alex.Worlds
 	        ChunkColumn chunk;
 	        if (ChunkManager.TryGetChunk(chunkCoords, out chunk))
 	        {
-		        if (chunk.SetSkyLight(coordinates.X & 0xf, coordinates.Y & 0xff, coordinates.Z & 0xf, p1))
+		        if (chunk.SetSkyLight(coordinates.X & 0xf, coordinates.Y, coordinates.Z & 0xf, p1))
 		        {
 			        var x = coordinates.X;
 			        var y = coordinates.Y;
@@ -584,7 +584,7 @@ namespace Alex.Worlds
 	        ChunkColumn chunk;
 	        if (ChunkManager.TryGetChunk(chunkCoords, out chunk))
 	        {
-		        if (chunk.SetBlocklight(coordinates.X & 0xf, coordinates.Y & 0xff, coordinates.Z & 0xf, value))
+		        if (chunk.SetBlocklight(coordinates.X & 0xf, coordinates.Y, coordinates.Z & 0xf, value))
 		        {
 			        var x = coordinates.X;
 			        var y = coordinates.Y;
@@ -615,7 +615,7 @@ namespace Alex.Worlds
 	        ChunkColumn chunk;
 	        if (ChunkManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
 	        {
-		        chunk.GetLight(x & 0xf, y & 0xff, z & 0xf, out skyLight, out blockLight);
+		        chunk.GetLight(x & 0xf, y, z & 0xf, out skyLight, out blockLight);
 	        }
         }
 
@@ -632,7 +632,7 @@ namespace Alex.Worlds
 	        ChunkColumn chunk;
 	        if (ChunkManager.TryGetChunk(new ChunkCoordinates(coordinates), out chunk))
 	        {
-		        blockLight = chunk.GetBlocklight(coordinates.X & 0xf, coordinates.Y & 0xff, coordinates.Z & 0xf);
+		        blockLight = chunk.GetBlocklight(coordinates.X & 0xf, coordinates.Y, coordinates.Z & 0xf);
 		        return true;
 	        }
 	        
@@ -651,7 +651,7 @@ namespace Alex.Worlds
             ChunkColumn chunk;
 	        if (ChunkManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
 	        {
-				return chunk.GetSkylight(x & 0xf, y & 0xff, z & 0xf);
+				return chunk.GetSkylight(x & 0xf, y, z & 0xf);
             }
 	        
             return 15;
@@ -673,7 +673,7 @@ namespace Alex.Worlds
 			ChunkColumn chunk;
 	        if (ChunkManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
 	        {
-                return chunk.GetBlocklight(x & 0xf, y & 0xff, z & 0xf);
+                return chunk.GetBlocklight(x & 0xf, y, z & 0xf);
             }
             return 0;
         }
@@ -688,7 +688,7 @@ namespace Alex.Worlds
 			if (ChunkManager.TryGetChunk(chunkCoords, out chunk))
 			{
 				var cx       = x & 0xf;
-				var cy       = y & 0xff;
+				var cy       = y;
 				var cz       = z & 0xf;
 				
 				var chunkPos   = new BlockCoordinates(cx, cy, cz);
@@ -718,7 +718,7 @@ namespace Alex.Worlds
 			if (ChunkManager.TryGetChunk(chunkCoords, out chunk))
 			{
 				var cx = x & 0xf;
-				var cy = y & 0xff;
+				var cy = y;
 				var cz = z & 0xf;
 
 				//var previousBlock = chunk.GetBlockState(cx, cy, cz, storage);
@@ -827,7 +827,7 @@ namespace Alex.Worlds
 			if (ChunkManager.TryGetChunk(chunkCoords, out chunk))
 			{
 				var cx = coordinates.X & 0xf;
-				var cy = coordinates.Y & 0xff;
+				var cy = coordinates.Y;
 				var cz = coordinates.Z & 0xf;
 
 				chunk.ScheduleBlockUpdate(cx, cy, cz);
@@ -849,7 +849,7 @@ namespace Alex.Worlds
 			ChunkColumn chunk;
 			if (ChunkManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
 			{
-				foreach (var bs in chunk.GetBlockStates(x & 0xf, y & 0xff, z & 0xf))
+				foreach (var bs in chunk.GetBlockStates(x & 0xf, y, z & 0xf))
 				{
 					yield return bs;
 				}
@@ -864,7 +864,7 @@ namespace Alex.Worlds
 			ChunkColumn chunk;
 			if (ChunkManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
 			{
-				return chunk.GetBlockState(x & 0xf, y & 0xff, z & 0xf, storage);
+				return chunk.GetBlockState(x & 0xf, y, z & 0xf, storage);
 			}
 
 			return Airstate;
@@ -904,7 +904,7 @@ namespace Alex.Worlds
 			if (ChunkManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
 			{
 				ChunkColumn realColumn = (ChunkColumn) chunk;
-				return	realColumn.GetBiome(x & 0xf, y & 0xff, z & 0xf);
+				return	realColumn.GetBiome(x & 0xf, y, z & 0xf);
 			}
 
 			//Log.Debug($"Failed getting biome: {x} | {y} | {z}");

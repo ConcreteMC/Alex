@@ -42,7 +42,7 @@ namespace Alex.Blocks
 		public static readonly ConcurrentDictionary<ResourceLocation, BlockStateVariantMapper> BedrockStates = new ConcurrentDictionary<ResourceLocation, BlockStateVariantMapper>();
 
 		private static bool _builtin = false;
-		private static void RegisterBuiltinBlocks()
+		private static void RegisterBuiltinBlocks(ResourceManager manager)
 		{
 			if (_builtin)
 				return;
@@ -76,6 +76,41 @@ namespace Alex.Blocks
 			var lightBlockVariantMapper = new BlockStateVariantMapper(states);
 
 			BlockStateByName.TryAdd("minecraft:light_block", lightBlockVariantMapper);
+
+			var missingBlock = new BlockState();
+			missingBlock.Block = new MissingBlock();
+			missingBlock.Block.BlockState = missingBlock;
+
+			missingBlock.ModelData = new BlockStateVariant()
+			{
+				new BlockStateModel()
+				{
+					Uvlock = false,
+					Weight = 0,
+					X = 0,
+					Y = 0,
+					ModelName = new ResourceLocation("minecraft:block/cube")
+				}
+			};
+			
+			missingBlock.VariantMapper =
+				new BlockStateVariantMapper(new List<BlockState>()
+				{
+					missingBlock
+				});
+
+			missingBlock.VariantMapper.Model = new ResourcePackBlockModel(manager, new BlockStateResource()
+			{
+				 Name = "unknown",
+				 Namespace = "alex",
+				 Variants = new Dictionary<string, BlockStateVariant>()
+				 {
+					 {"alex:unknown", missingBlock.ModelData}
+				 },
+			});
+
+			BlockStateByName.TryAdd("alex:missing_block", missingBlock.VariantMapper);
+			AirState = missingBlock;
 			//RegisteredBlockStates.Add(Block.GetBlockStateID(), StationairyWaterModel);
 		}
 		
@@ -87,7 +122,7 @@ namespace Alex.Blocks
 
 			progressReceiver?.UpdateProgress(0, "Loading block models...");
 
-			RegisterBuiltinBlocks();
+			RegisterBuiltinBlocks(resources);
 
 			return LoadModels(registryManager, resources, replace, reportMissing, progressReceiver);
 		}
@@ -407,7 +442,7 @@ namespace Alex.Blocks
 			return closest.Value;
 		}
 
-		private static readonly BlockState AirState = new BlockState(){Name = "Unknown"};
+		private static BlockState AirState = new BlockState(){Name = "Unknown"};
 
 		public static BlockState GetBlockState(string palleteId)
 		{

@@ -367,7 +367,7 @@ namespace Alex.Worlds
 				//var coordinates = new BlockCoordinates(blockEntity.X, blockEntity.Y, blockEntity.Z);
 				//World.SetBlockEntity(coordinates.X, coordinates.Y, coordinates.Z, blockEntity);
 				var entity = BlockEntityFactory.ReadFrom(blockEntity.Value, World, 
-					chunk.GetBlockState(blockEntity.Key.X & 0xf, blockEntity.Key.Y & 0xff, blockEntity.Key.Z & 0xf).Block);
+					chunk.GetBlockState(blockEntity.Key.X & 0xf, blockEntity.Key.Y, blockEntity.Key.Z & 0xf).Block);
 				if (entity != null)
 					World?.EntityManager?.AddBlockEntity(blockEntity.Key, entity);
 			}
@@ -578,13 +578,13 @@ namespace Alex.Worlds
 		{
 			ChunkCoordinates center = ViewPosition.GetValueOrDefault(new ChunkCoordinates(camera.Position));
 			var frustum  = camera.BoundingFrustum;
-			var chunkPos = new Vector3(chunk.X << 4, 0, chunk.Z << 4);
+			var chunkPos = new Vector3(chunk.X << 4, -64, chunk.Z << 4);
 
 			if (chunk.DistanceTo(center) > RenderDistance)
 				return false;
 
 			return frustum.Intersects(new Microsoft.Xna.Framework.BoundingBox(chunkPos,
-				chunkPos + new Vector3(ChunkColumn.ChunkWidth, MathF.Max(camera.Position.Y + 10f, 256f),
+				chunkPos + new Vector3(ChunkColumn.ChunkWidth, MathF.Max(camera.Position.Y + 16f, 256f),
 					ChunkColumn.ChunkDepth)));
 		}
 		

@@ -306,9 +306,13 @@ namespace Alex.Networking.Java.Util
 			var val = ReadLong();
 			var x = Convert.ToSingle(val >> 38);
 			var y = Convert.ToSingle(val & 0xFFF);
+
+			//if (y > 2048)
+			//	y = -(0xFFF - y);
+			
 			var z = Convert.ToSingle((val << 38 >> 38) >> 12);
 
-			/*if (x >= (2^25))
+			if (x >= (2^25))
 			{
 				x -= 2^26;
 			}
@@ -321,7 +325,7 @@ namespace Alex.Networking.Java.Util
 			if (z >= (2^25))
 			{
 				z -= 2^26;
-			}*/
+			}
 
             return new Vector3(x, y, z);
 		}

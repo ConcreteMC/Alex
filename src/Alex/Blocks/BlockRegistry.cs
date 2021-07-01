@@ -574,6 +574,7 @@ namespace Alex.Blocks
 		    this.Register("minecraft:black_bed", () => new Bed(BedBlockEntity.BedColor.Black));
 		    
 		    this.Register("minecraft:glow_lichen", () => new GlowLichen());
+		    this.Register("minecraft:pointed_dripstone", () => new PointedDripstone());
 	    }
     }
 }

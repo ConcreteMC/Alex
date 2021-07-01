@@ -9,6 +9,10 @@ namespace Alex.Worlds.Multiplayer.Java
 	{
 		private static readonly ILogger Log = LogManager.GetCurrentClassLogger();
 
+		/// <inheritdoc />
+		public JavaChunkColumn(int x, int z) : base(x, z) { }
+		public JavaChunkColumn(int x, int z, WorldSettings worldSettings) : base(x, z, worldSettings) { }
+		
 		protected override ChunkSection CreateSection(bool storeSkylight, int sections)
 		{
 			return new JavaChunkSection(storeSkylight, sections);
@@ -32,8 +36,6 @@ namespace Alex.Worlds.Multiplayer.Java
 				//	Stopwatch s = Stopwatch.StartNew();
 				//	Log.Debug($"Reading chunk data...");
 
-				//TODO: Properly support 1.17 world heights
-				
 				for (int sectionY = 0; sectionY < this.Sections.Length; sectionY++)
 				{
 					if (!GetBitX(primaryBitMask, sectionY))
@@ -50,18 +52,6 @@ namespace Alex.Worlds.Multiplayer.Java
 					this.Sections[sectionY] = storage;
 				}
 
-				/*if (groundUp)
-				{
-					for (int x = 0; x < 16; x++)
-					{
-						for (int z = 0; z < 16; z++)
-						{
-							var biomeId = ms.ReadInt();
-							SetBiome(x, z, biomeId);
-						}
-					}
-				}*/
-
 				for (int i = 0; i < Sections.Length; i++)
 				{
 					Sections[i]?.RemoveInvalidBlocks();
@@ -71,7 +61,7 @@ namespace Alex.Worlds.Multiplayer.Java
 				{
 					for (int z = 0; z < 16; z++)
 					{
-						for (int y = 0; y < 256; y++)
+						for (int y = WorldSettings.MinY; y < WorldSettings.WorldHeight; y++)
 						{
 							SetScheduled(x, y, z, true);
 						}
@@ -85,8 +75,5 @@ namespace Alex.Worlds.Multiplayer.Java
 				Log.Warn($"Received supposedly corrupted chunk:" + e);
 			}
 		}
-
-		/// <inheritdoc />
-		public JavaChunkColumn(int x, int z) : base(x, z) { }
 	}
 }

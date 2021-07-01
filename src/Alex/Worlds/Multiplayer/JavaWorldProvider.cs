@@ -90,6 +90,8 @@ namespace Alex.Worlds.Multiplayer
 		private          JavaNetworkProvider NetworkProvider { get; }
 		private JavaCommandProvider CommandProvider { get; set; }
 		private readonly List<IDisposable>   _disposables = new List<IDisposable>();
+		
+		private WorldSettings WorldSettings { get; set; } = WorldSettings.Default;
 		public JavaWorldProvider(Alex alex, IPEndPoint endPoint, PlayerProfile profile, out NetworkProvider networkProvider)
 		{
 			Alex = alex;
@@ -1749,11 +1751,11 @@ namespace Alex.Worlds.Multiplayer
 					break;
 			}*/
 		}
-
-		public bool Respawning = false;
-
+		
 		private void HandleDimension(NbtCompound dim)
 		{
+			//Log.Info(dim.ToString());
+			
 			Dimension dimension = Dimension.Overworld;
 			switch (dim["effects"]?.StringValue)
 			{
@@ -1797,11 +1799,24 @@ namespace Alex.Worlds.Multiplayer
 					
 				}
 			}
+
+			int minY = 0;
+			int worldHeight = 256;
+			if (dim.TryGet("min_y", out NbtInt minYTag))
+			{
+				minY = minYTag.Value;
+			}
+			if (dim.TryGet("height", out NbtInt heightTag))
+			{
+				worldHeight = heightTag.Value;
+			}
+
+			WorldSettings = new WorldSettings(worldHeight, minY);
 		}
 		
 		private void HandleRespawnPacket(RespawnPacket packet)
 		{
-			Respawning = true;
+			//Respawning = true;
 			//ReadyToSpawn = false;
 			
 			HandleDimension(packet.Dimension);
@@ -2487,42 +2502,20 @@ namespace Alex.Worlds.Multiplayer
 				        {
 					        JavaChunkColumn result = null; // = new ChunkColumn();
 
-					        //if (groundUp)
-					        {
-						        result = new JavaChunkColumn(x, z);
-					        }
-					       /* else
-					        {
-						        if (World.GetChunkColumn(x, z) is JavaChunkColumn c)
-						        {
-							        result = c;
-						        }
-						        else
-						        {
-							        result = new JavaChunkColumn(x,z);
-						        }
-					        }*/
-
-					        // result.X = chunk.ChunkX;
-					        // result.Z = chunk.ChunkZ;
-					        //     result.IsDirty = true;
+					        result = new JavaChunkColumn(x, z, WorldSettings);
 
 					        result.Read(stream, primaryBitmask, World.Dimension == Dimension.Overworld);
 
-					        //if (groundUp)
+
+					        for (int bx = 0; bx < 16; bx++)
 					        {
-						        /*for (int i = 0; i < chunk.Biomes.Length; i++)
-					        {
-						        result.BiomeId[i] = chunk.Biomes[i];
-					        }*/
-						        for (int bx = 0; bx < 16; bx++)
+						        for (int bz = 0; bz < 16; bz++)
 						        {
-							        for (int bz = 0; bz < 16; bz++)
+							        for (int by = WorldSettings.MinY; by < WorldSettings.WorldHeight; by++)
 							        {
-								        for (int by = 0; by < 256; by++)
-								        {
-									        result.SetBiome(bx, by, bz, biomes[((by >> 2) & 63) << 4 | ((bz >> 2) & 3) << 2 | ((bx >> 2) & 3)]);
-								        }
+								        result.SetBiome(
+									        bx, by, bz,
+									        biomes[((by >> 2) & 63) << 4 | ((bz >> 2) & 3) << 2 | ((bx >> 2) & 3)]);
 							        }
 						        }
 					        }
@@ -2620,7 +2613,7 @@ namespace Alex.Worlds.Multiplayer
         private bool HasSpawnPosition { get; set; } = false;
         private void HandlePlayerPositionAndLookPacket(PlayerPositionAndLookPacket packet)
 		{
-			Respawning = false;
+		//	Respawning = false;
 			var x = (float)packet.X;
 			var y = (float)packet.Y;
 			var z = (float)packet.Z;
