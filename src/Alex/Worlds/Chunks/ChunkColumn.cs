@@ -216,11 +216,6 @@ namespace Alex.Worlds.Chunks
 									{
 										model.GetVertices(world, chunkData, blockPosition, blockState);
 									}
-
-								//	foreach (var bb in blockState.Block.GetBoundingBoxes(blockPosition))
-								//	{
-								//		_octree.Add(bb);
-								//	}
 								}
 
 							}
@@ -232,12 +227,13 @@ namespace Alex.Worlds.Chunks
 				{
 					_bufferDirty = true;
 				}
+				
 				if (applyChanges && (didChange || isNew))
 				{
 					ApplyChanges(world, true, chunkData);
 				}
 				
-				//ChunkData = chunkData;
+				ChunkData = chunkData;
 
 				IsNew = false;
 			}
@@ -259,8 +255,6 @@ namespace Alex.Worlds.Chunks
 			if (!_bufferDirty || (!force && _lastUpdateWatch.IsRunning && _lastUpdateWatch.ElapsedMilliseconds < 50))
 				return;
 			
-			//var chunkData = ChunkData;
-
 			if (chunkData == null || chunkData.Disposed )
 				return;
 			

@@ -34,11 +34,9 @@ namespace Alex.Worlds.Chunks
 		
         public ChunkSection(bool storeSkylight, int sections = 1)
         {
-	        //_octree.
 	        if (sections <= 0)
 		        sections = 1;
 
-	        //Data = new BlockStorage();
 	        BlockStorages = new BlockStorage[sections];
 	        for (int i = 0; i < sections; i++)
 	        {
@@ -46,13 +44,9 @@ namespace Alex.Worlds.Chunks
 	        }
 	        
 	        this.BlockLight = new LightArray();
+	        this.SkyLight = new LightArray();
 
-	        //	if (storeSkylight)
-			{
-				this.SkyLight = new LightArray();
-			}
-
-			ResetLight(true, true);
+	        ResetLight(true, true);
         }
 
         internal void ResetLight(bool blockLight, bool skyLight)
@@ -107,8 +101,6 @@ namespace Alex.Worlds.Chunks
 				state = BlockFactory.GetBlockState("minecraft:air");
 			}
 
-			//var coordsIndex = GetCoordinateIndex(x, y, z);
-
 			if (storage == 0)
 			{
 				if (state.Block.LightValue > 0)
@@ -122,8 +114,6 @@ namespace Alex.Worlds.Chunks
 					{
 						SetBlocklight(x, y, z, (byte) state.Block.LightValue);
 					}
-
-					//SetBlockLightScheduled(x,y,z, true);
 				}
 				else
 				{
@@ -161,13 +151,7 @@ namespace Alex.Worlds.Chunks
 	            }
             }
 
-            if (state != null)
-            {
-	            BlockStorages[storage].Set(x, y, z, state);
-            }
-
-            //ScheduledUpdates.Set(coordsIndex, true);
-           // SetScheduled(x,y,z, true);
+            BlockStorages[storage].Set(x, y, z, state);
 		}
 
 		protected virtual void OnBlockSet(int x, int y, int z, BlockState newState, BlockState oldState)
@@ -188,8 +172,6 @@ namespace Alex.Worlds.Chunks
 			if (value != oldSkylight)
 			{
 				this.SkyLight[idx] = (byte) value;
-			//	SetSkyLightUpdateScheduled(x, y, z, true);
-
 				return true;
 			}
 
@@ -209,8 +191,6 @@ namespace Alex.Worlds.Chunks
 			if (oldBlocklight != value)
 			{
 				this.BlockLight[idx] = value;
-				//SetBlockLightScheduled(x, y, z, true);
-
 				return true;
 			}
 
@@ -259,7 +239,6 @@ namespace Alex.Worlds.Chunks
 							if (GetBlocklight(x, y, z) < block.LightValue)
 							{
 								SetBlocklight(x, y, z, (byte) block.LightValue);
-								//SetBlockLightScheduled(x, y, z, true);
 							}
 						}
 					}
@@ -277,9 +256,6 @@ namespace Alex.Worlds.Chunks
 		    
 		    LightSources.Clear();
 		    LightSources = null;
-
-		    //BlockLight = null;
-		    //SkyLight = null;
 	    }
 
 	    public class BlockEntry

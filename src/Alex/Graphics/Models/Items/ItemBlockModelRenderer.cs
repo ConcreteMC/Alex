@@ -77,7 +77,7 @@ namespace Alex.Graphics.Models.Items
             _blockState?.VariantMapper.Model.GetVertices(
                 world, chunkData, BlockCoordinates.Zero, _blockState);
 
-            var rawVertices = chunkData.BuildVertices(world);
+            var rawVertices = chunkData.BuildVertices();
             var scale = Vector2.One / _texture.Bounds.Size.ToVector2();
 
             Vertices = rawVertices.Select(

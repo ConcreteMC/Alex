@@ -221,29 +221,32 @@ namespace Alex.Gamestates.Multiplayer
 			    ClearItems();
 
 			    Task previousTask = null;
-			    if (_filterValue == "bedrock" && Alex.ServerTypeManager.TryGet(
-				    "bedrock", out ServerTypeImplementation serverTypeImplementation))
-			    {
-				    var item = new GuiServerListEntryElement(
-					    serverTypeImplementation,
-					    new SavedServerEntry()
-					    {
-						    CachedIcon = ResourceManager.NethergamesLogo,
-						    Host = "play.nethergames.org",
-						    Name = "NetherGames",
-						    Port = 19132,
-						    ServerType = serverTypeImplementation.Id
-					    });
-
-				    item.CanDelete = false;
-				    item.SaveEntry = false;
-				    previousTask = item.PingAsync(true, token);
-
-				    AddItem(item);
-			    }
 
 			    if (Alex.ServerTypeManager.TryGet(_filterValue, out var serverType))
 			    {
+				    void setPrevious(Task task)
+				    {
+					    if (previousTask != null && !previousTask.IsCompleted)
+					    {
+						    previousTask = previousTask.ContinueWith(async r => await task, token);
+					    }
+					    else
+					    {
+						    previousTask = task;
+					    }
+				    }
+				    
+				    foreach (var entry in serverType.SponsoredServers)
+				    {
+					    var item = new GuiServerListEntryElement(serverType, entry);
+					    item.CanDelete = false;
+					    item.SaveEntry = false;
+				    
+					    AddItem(item);
+				    
+					    setPrevious(item.PingAsync(false, token));
+				    }
+				    
 				    serverType.QueryProvider.StartLanDiscovery(
 					    token, async r =>
 					    {
@@ -264,7 +267,7 @@ namespace Alex.Gamestates.Multiplayer
 							    entry.CanDelete = false;
 
 							    entry.ConnectionEndpoint = r.EndPoint;
-							    entry.ServerName = $"[LAN] {r.QueryResponse.Status.Query.Description.Text}";
+							    //entry.ServerName = $"[LAN] {r.QueryResponse.Status.Query.Description.Text}";
 
 							    AddItem(entry);
 
@@ -277,15 +280,7 @@ namespace Alex.Gamestates.Multiplayer
 					    var element = new GuiServerListEntryElement(serverType, entry);
 					    AddItem(element);
 
-					    if (previousTask != null)
-					    {
-						    previousTask = previousTask.ContinueWith(
-							    async r => await element.PingAsync(false, token), token);
-					    }
-					    else
-					    {
-						    previousTask = element.PingAsync(false, token);
-					    }
+					    setPrevious(element.PingAsync(false, token));
 				    }
 			    }
 		    }
@@ -350,9 +345,7 @@ namespace Alex.Gamestates.Multiplayer
 		    }));
 	    }
 
-	    private FastRandom Rnd = new FastRandom();
-
-		private async void OnJoinServerButtonPressed()
+	    private async void OnJoinServerButtonPressed()
 		{
 			CancellationTokenSource?.Cancel();
 			var overlay = new LoadingOverlay();
@@ -362,17 +355,8 @@ namespace Alex.Gamestates.Multiplayer
 			{
 				var selectedItem = SelectedItem;
 				var       entry = selectedItem.SavedServerEntry;
-				//var ips = await JavaServerQueryProvider.ResolveHostnameAsync(entry.Host);// Dns.GetHostAddresses(entry.Host).ToArray();
-
-				//IPAddress ip = ips.Result;
-
-			//	if (ip == null) return;
-
-				//IPEndPoint target = new IPEndPoint(ip, entry.Port);
 
 				var           authenticationService = GetService<IPlayerProfileService>();
-				//var currentProfile        = authenticationService.CurrentProfile;
-
 				if (Alex.ServerTypeManager.TryGet(entry.ServerType, out var typeImplementation))
 				{
 					var           profiles       = authenticationService.GetProfiles(entry.ServerType);
@@ -444,21 +428,8 @@ namespace Alex.Gamestates.Multiplayer
 				    RemoveItem(item);
 			    }
 		    }
-		    _listProvider.Save(_listProvider.Data);
-		  /*  foreach (var entry in _listProvider.Data.ToArray())
-		    {
-			    _listProvider.RemoveEntry(entry);
-		    }
-
-		    foreach (var item in Items)
-		    {
-			    _listProvider.AddEntry(item.SavedServerEntry);
-		    }*/
 		    
-		    /*Alex.UIThreadQueue.Enqueue(() =>
-		    {
-			    
-		    });*/
+		    _listProvider.Save(_listProvider.Data);
 	    }
 
 	    private void AddEditServerCallbackAction(MultiplayerAddEditServerState.AddOrEditCallback obj)

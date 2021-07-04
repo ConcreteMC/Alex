@@ -729,7 +729,11 @@ namespace Alex.Worlds
 
 				if (storage == 0 && EntityManager.TryGetBlockEntity(blockcoords, out var blockEntity))
 				{
-					blockEntity.Block = block.Block;
+					if (!blockEntity.SetBlock(block.Block))
+					{
+						EntityManager.RemoveBlockEntity(blockcoords);
+					}
+					//blockEntity.Block = block.Block;
 				}
 				//EntityManager.RemoveBlockEntity(new BlockCoordinates(x, y, z));
 				

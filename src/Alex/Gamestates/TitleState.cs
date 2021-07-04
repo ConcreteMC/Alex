@@ -82,14 +82,6 @@ namespace Alex.Gamestates
                             {
                                 Title = "Blockstates",
                                 OnClick = (sender, args) => { Debug(new DebugWorldGenerator()); }
-                            },
-                            new MenuItem()
-                            {
-                                Title = "Flatland",
-								OnClick = (sender, args) =>
-								{
-									Debug(new FlatlandGenerator());
-								}
                             }
                         }
                     },

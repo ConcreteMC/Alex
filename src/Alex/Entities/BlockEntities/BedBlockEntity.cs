@@ -20,7 +20,7 @@ namespace Alex.Entities.BlockEntities
 		private BlockFace _facing = BlockFace.North;
 
 		/// <inheritdoc />
-		public BedBlockEntity(World level, Block block) : base(level, block)
+		public BedBlockEntity(World level) : base(level)
 		{
 			Width = 1f;
 			Height = 1f;

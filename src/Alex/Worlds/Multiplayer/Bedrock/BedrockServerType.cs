@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Threading.Tasks;
+using Alex.Common.Data.Servers;
 using Alex.Common.Services;
 using Alex.Gamestates.Login;
 using Alex.Gui;
@@ -32,6 +33,18 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			Alex = game;
 			ProtocolVersion = McpeProtocolInfo.ProtocolVersion;
 			XboxAuthService = xboxAuthService;
+
+			SponsoredServers = new SavedServerEntry[]
+			{
+				new SavedServerEntry()
+				{
+					CachedIcon = ResourceManager.NethergamesLogo,
+					Name = $"{ChatColors.Gold}NetherGames",
+					Host = "play.nethergames.org",
+					Port = 19132,
+					ServerType = TypeIdentifier
+				}
+			};
 		}
 
 		/// <inheritdoc />

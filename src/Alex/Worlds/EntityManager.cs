@@ -407,7 +407,7 @@ namespace Alex.Worlds
 		public bool AddBlockEntity(BlockCoordinates coordinates, BlockEntity entity)
 		{
 			entity.KnownPosition = coordinates;
-			entity.Block = World.GetBlockState(coordinates).Block;
+			//entity.Block = World.GetBlockState(coordinates).Block;
 			return BlockEntities.TryAdd(coordinates, entity);
 		}
 

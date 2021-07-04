@@ -89,10 +89,11 @@ namespace Alex.Gamestates.Common
         public void Hide()
         {
 			if(!IsShown) return;
-			IsShown = false;
 
-	        OnHide();
+			OnHide();
             Alex.GuiManager.RemoveScreen(this);
+            
+            IsShown = false;
 
             Alex.IsFixedTimeStep = _previousIsFixedTimeStep;
         }

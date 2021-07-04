@@ -268,11 +268,6 @@ namespace Alex
 
             PluginManager.LoadPlugins();
 
-            ServerTypeManager.TryRegister("java", new JavaServerType(this));
-
-            ServerTypeManager.TryRegister(
-                "bedrock", new BedrockServerType(this, Services.GetService<XboxAuthService>()));
-
             FpsMonitor = new FpsMonitor(this);
             FpsMonitor.UpdateOrder = 0;
             Components.Add(FpsMonitor);
@@ -435,7 +430,7 @@ namespace Alex
 
             Components.Add(new GuiDebugHelper(this, GuiManager));
 
-            GameStateManager = new GameStateManager(this, GraphicsDevice, _spriteBatch, GuiManager);
+            GameStateManager = new GameStateManager(this, GraphicsDevice, _spriteBatch);
             GameStateManager.DrawOrder = 0;
             GameStateManager.UpdateOrder = 0;
             Components.Add(GameStateManager);
@@ -603,6 +598,12 @@ namespace Alex
                 return Task.CompletedTask;
             }
 
+            
+            ServerTypeManager.TryRegister("java", new JavaServerType(this));
+
+            ServerTypeManager.TryRegister(
+                "bedrock", new BedrockServerType(this, Services.GetService<XboxAuthService>()));
+            
             var profileManager = Services.GetRequiredService<ProfileManager>();
             profileManager.LoadProfiles(progressReceiver);
 
@@ -762,7 +763,7 @@ namespace Alex
                         
                         if (networkProvider.IsConnected && result == LoadResult.Done)
                         {
-                            GameStateManager.SetActiveState("play");
+                            GameStateManager.SetActiveState("play", false);
 
                             return;
                         }

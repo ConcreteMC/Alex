@@ -185,6 +185,7 @@ namespace Alex
 
 		internal void ReloadBedrockResources(IProgressReceiver progress)
 		{
+			Alex.ParticleManager.Reset();
 			EntityFactory.Reset();
 			
 			ProcessEntityModels(progress);

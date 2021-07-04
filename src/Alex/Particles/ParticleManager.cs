@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using Alex.Common.Graphics;
 using Alex.Common.Graphics.GpuResources;
 using Alex.Common.Utils;
@@ -33,8 +34,8 @@ namespace Alex.Particles
 
 		public int ParticleCount { get; private set; }
 
-		//private Dictionary<string, Texture2D> _sharedTextures =
-		//	new Dictionary<string, Texture2D>();
+		private Dictionary<string, Texture2D> _sharedTextures =
+			new Dictionary<string, Texture2D>();
 		private ResourceManager ResourceManager { get; }
 		private IReadOnlyDictionary<string, string> _particleMapping;
 		public ParticleManager(Game game, GraphicsDevice device, ResourceManager resourceManager) : base(game)
@@ -85,7 +86,7 @@ namespace Alex.Particles
 
 					Texture2D particleTexture = null;
 
-					//if (!_sharedTextures.TryGetValue(texturePath, out particleTexture))
+					if (!_sharedTextures.TryGetValue(texturePath, out particleTexture))
 					{
 						switch (texturePath)
 						{
@@ -109,8 +110,8 @@ namespace Alex.Particles
 								break;
 						}
 
-						//if (particleTexture != null)
-						//	_sharedTextures.TryAdd(texturePath, particleTexture);
+						if (particleTexture != null)
+							_sharedTextures.TryAdd(texturePath, particleTexture);
 					}
 
 					if (particleTexture != null)
@@ -121,7 +122,7 @@ namespace Alex.Particles
 						if (!TryRegister(particle.Value.Description.Identifier, p))
 						{
 							Log.Warn($"Could not add particle (duplicate): {particle.Key}");
-							particleTexture.Dispose();
+							//particleTexture.Dispose();
 							//particleTexture.Release(this);
 						}
 						else
@@ -503,6 +504,29 @@ namespace Alex.Particles
 			base.UnloadContent();
 			
 		}
+
+		public void Reset()
+		{
+			var particles = _particles.ToArray();
+			_particles.Clear();
+
+			foreach (var particle in particles)
+			{
+				particle.Value.Dispose();
+			}
+			
+			var textures = _sharedTextures.ToArray();
+			_sharedTextures.Clear();
+
+			foreach (var texture in textures)
+			{
+				if (texture.Key != "atlas.terrain" && texture.Key != "atlas.items")
+				{
+					if (texture.Value != null && !texture.Value.IsDisposed)
+						texture.Value.Dispose();
+				}
+			}
+			}
 	}
 
 	public enum ParticleDataMode

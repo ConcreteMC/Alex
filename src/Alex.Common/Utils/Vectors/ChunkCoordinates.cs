@@ -11,12 +11,14 @@ namespace Alex.Common.Utils.Vectors
 		{
 			X = Z = value;
 		}
-
+		
+		
 		public ChunkCoordinates(int x, int z)
 		{
 			X = x;
 			Z = z;
 		}
+
 
 		public ChunkCoordinates(ChunkCoordinates v)
 		{
@@ -139,7 +141,7 @@ namespace Alex.Common.Utils.Vectors
 
 		public static ChunkCoordinates operator %(ChunkCoordinates a, ChunkCoordinates b)
 		{
-			return new ChunkCoordinates(a.X % b.X, a.Z % b.Z);
+			return new ChunkCoordinates(a.X % b.X,a.Z % b.Z);
 		}
 
 		public static ChunkCoordinates operator +(ChunkCoordinates a, int b)
@@ -208,9 +210,10 @@ namespace Alex.Common.Utils.Vectors
 
 		public static readonly ChunkCoordinates Forward = new ChunkCoordinates(0, 1);
 		public static readonly ChunkCoordinates Backward = new ChunkCoordinates(0, -1);
+		
 		public static readonly ChunkCoordinates Left = new ChunkCoordinates(-1, 0);
 		public static readonly ChunkCoordinates Right = new ChunkCoordinates(1, 0);
-
+		
 		#endregion
 
 		public bool Equals(ChunkCoordinates other)
@@ -226,9 +229,9 @@ namespace Alex.Common.Utils.Vectors
         /// <inheritdoc />
         public override int GetHashCode()
         {
-	        var zHash = Z.GetHashCode();
+	        //var zHash = Z.GetHashCode();
 
-	        return X.GetHashCode() ^ (zHash >> 4) ^ (zHash << 28);
+	       // return X.GetHashCode() ^ (zHash >> 4) ^ (zHash << 28);
 	        return HashCode.Combine(X, Z);
         }
     }

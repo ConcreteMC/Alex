@@ -77,40 +77,8 @@ namespace Alex.Blocks
 
 			BlockStateByName.TryAdd("minecraft:light_block", lightBlockVariantMapper);
 
-			var missingBlock = new BlockState();
-			missingBlock.Block = new MissingBlock();
-			missingBlock.Block.BlockState = missingBlock;
-
-			missingBlock.ModelData = new BlockStateVariant()
-			{
-				new BlockStateModel()
-				{
-					Uvlock = false,
-					Weight = 0,
-					X = 0,
-					Y = 0,
-					ModelName = new ResourceLocation("minecraft:block/cube")
-				}
-			};
-			
-			missingBlock.VariantMapper =
-				new BlockStateVariantMapper(new List<BlockState>()
-				{
-					missingBlock
-				});
-
-			missingBlock.VariantMapper.Model = new ResourcePackBlockModel(manager, new BlockStateResource()
-			{
-				 Name = "unknown",
-				 Namespace = "alex",
-				 Variants = new Dictionary<string, BlockStateVariant>()
-				 {
-					 {"alex:unknown", missingBlock.ModelData}
-				 },
-			});
-
+			var missingBlock = new MissingBlockState("missing_block");
 			BlockStateByName.TryAdd("alex:missing_block", missingBlock.VariantMapper);
-			AirState = missingBlock;
 			//RegisteredBlockStates.Add(Block.GetBlockStateID(), StationairyWaterModel);
 		}
 		
@@ -126,8 +94,6 @@ namespace Alex.Blocks
 
 			return LoadModels(registryManager, resources, replace, reportMissing, progressReceiver);
 		}
-		
-		//public static BlockModel UnknownBlockModel { get; set; }
 
 		private static readonly Regex _blockMappingRegex = new Regex(@"(?'key'[\:a-zA-Z_\d][^\[]*)(\[(?'data'.*)\])?", RegexOptions.Compiled);
 		private static int LoadModels(IRegistryManager registryManager,
@@ -387,7 +353,7 @@ namespace Alex.Blocks
 				return new LiquidBlockModel();
 			}
 
-			return new ResourcePackBlockModel(resources, blockStateResource);
+			return new ResourcePackBlockModel(resources);
 		}
 
 		private static BlockStateVariant ResolveVariant(BlockStateResource blockStateResource, BlockState state, bool isMultiPart)
@@ -403,7 +369,6 @@ namespace Alex.Blocks
 			foreach (var v in blockStateResource.Variants)
 			{
 				int matches = 0;
-				//var variantBlockState = Blocks.State.BlockState.FromString(v.Key);
 				var variant = Blocks.State.BlockState.ParseData(v.Key);
 
 				if (variant != null)
@@ -442,8 +407,6 @@ namespace Alex.Blocks
 			return closest.Value;
 		}
 
-		private static BlockState AirState = new BlockState(){Name = "Unknown"};
-
 		public static BlockState GetBlockState(string palleteId)
 		{
 			if (BlockStateByName.TryGetValue(palleteId, out var result))
@@ -451,7 +414,7 @@ namespace Alex.Blocks
 				return result.GetDefaultState();
 			}
 
-			return AirState;
+			return new MissingBlockState(palleteId);
 		}
 
 		public static BlockState GetBlockState(uint palleteId)
@@ -461,7 +424,7 @@ namespace Alex.Blocks
 				return result;
 			}
 
-			return AirState;
+			return new MissingBlockState(palleteId.ToString());
 		}
 
 		public static uint GetBlockStateID(int id, byte meta)

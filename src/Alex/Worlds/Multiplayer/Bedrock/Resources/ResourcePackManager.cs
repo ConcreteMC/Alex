@@ -11,7 +11,7 @@ using NLog;
 
 namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 {
-	public class ResourcePackManager : IDisposable
+	public class ResourcePackManager : IDisposable, IProgressReceiver
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ResourcePackManager));
 
@@ -70,6 +70,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 		private static bool AcceptServerResources =>
 			Alex.Instance.Options.AlexOptions.MiscelaneousOptions.LoadServerResources.Value;
 
+		public int LoadingProgress { get; private set; } = 0;
+		
 		/// <summary>
 		///		If true, client will try to download & decrypt server resources. Otherwise we will ignore encrypted packs.
 		/// </summary>
@@ -193,11 +195,13 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 
 				if (!WaitingOnResources && AcceptServerResources) //We got all packs.
 				{
+					LoadingProgress = 0;
 					Status = ResourceManagerStatus.StartLoading;
-					_resourceManager.ReloadBedrockResources(null);
+					_resourceManager.ReloadBedrockResources(this);
 					Status = ResourceManagerStatus.FinishedLoading;
 					
 					Status = ResourceManagerStatus.Ready;
+					LoadingProgress = 0;
 				}
 			}
 			else
@@ -271,6 +275,18 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 			StartLoading,
 			FinishedLoading,
 			Ready
+		}
+
+		/// <inheritdoc />
+		public void UpdateProgress(int percentage, string statusMessage)
+		{
+			LoadingProgress = percentage;
+		}
+
+		/// <inheritdoc />
+		public void UpdateProgress(int percentage, string statusMessage, string sub)
+		{
+			LoadingProgress = percentage;
 		}
 	}
 }

@@ -242,6 +242,7 @@ namespace Alex.Worlds.Multiplayer
 				else if (loadingResources)
 				{
 					state = LoadingState.LoadingResources;
+					percentage = resourcePackManager.LoadingProgress;
 				}
 				else if (!Client.Connection.IsNetworkOutOfOrder && !outOfOrder)
 				{

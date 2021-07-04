@@ -41,12 +41,13 @@ namespace Alex.Blocks.Minecraft
 				if (entity is ChestBlockEntity) 
 					return base.BlockPlaced(world, state, position);
 
-				var ent = new ChestBlockEntity(this, w)
+				var ent = new ChestBlockEntity(w)
 				{
 					X = position.X & 0xf, Y = position.Y & 0xff, Z = position.Z & 0xf
 				};
 
-				w.SetBlockEntity(position.X, position.Y, position.Z, ent);
+				if (ent.SetBlock(this))
+					w.SetBlockEntity(position.X, position.Y, position.Z, ent);
 			}
 			return base.BlockPlaced(world, state, position);
 		}

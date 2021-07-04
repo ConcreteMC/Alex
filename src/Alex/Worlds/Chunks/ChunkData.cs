@@ -72,9 +72,9 @@ namespace Alex.Worlds.Chunks
             }
         }
 
-        public MinifiedBlockShaderVertex[] BuildVertices(IBlockAccess blockAccess)
+        public MinifiedBlockShaderVertex[] BuildVertices()
         {
-            return _stages.Where(x => x != null).SelectMany(x => x.BuildVertices(blockAccess)).ToArray();
+            return _stages.Where(x => x != null).SelectMany(x => x.BuildVertices()).ToArray();
         }
 
         public void AddVertex(BlockCoordinates blockCoordinates,
@@ -133,9 +133,9 @@ namespace Alex.Worlds.Chunks
             return _stages.Where(x => x != null).Any(x => x.Contains(coordinates));
         }
         
-        public static float AverageUpdateTime => MovingAverage.Average;
-        public static float MaxUpdateTime => MovingAverage.Maximum;
-        public static float MinUpdateTime => MovingAverage.Minimum;
+        public static float AverageUploadTime => MovingAverage.Average;
+        public static float MaxUploadTime => MovingAverage.Maximum;
+        public static float MinUploadTime => MovingAverage.Minimum;
         
         private static readonly MovingAverage MovingAverage = new MovingAverage();
         public void ApplyChanges(IBlockAccess world, bool forceUpdate = false)

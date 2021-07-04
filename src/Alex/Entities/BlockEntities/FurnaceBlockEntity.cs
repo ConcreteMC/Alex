@@ -14,7 +14,7 @@ namespace Alex.Entities.BlockEntities
 		public short BurnTick      { get; set; }
 
 		/// <inheritdoc />
-		public FurnaceBlockEntity(World level, Block block) : base(level, block)
+		public FurnaceBlockEntity(World level) : base(level)
 		{
 			Inventory = new Inventory(3);
 		}

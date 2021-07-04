@@ -32,7 +32,7 @@ namespace Alex.Blocks.State
 			new BlockStateModel()
 		};
 		
-		public Block Block       { get; set; } = new Air();
+		public Block Block       { get; set; }
 		public bool  Default     { get; set; } = false;
 
 		public BlockStateVariantMapper VariantMapper { get; set; }
@@ -53,6 +53,19 @@ namespace Alex.Blocks.State
 			return default(T);
 		}
 
+		public BlockState WithProperty<T>(StateProperty<T> property, T value)
+		{
+			if (VariantMapper.TryResolve(this, property, value, out BlockState result))
+			{
+				return result;
+			}
+
+			if (LoggingConstants.LogInvalidBlockProperties)
+				Log.Debug($"Invalid property on state {Name} ({property}={value})");
+			
+			return this;
+		}
+		
 		public BlockState WithProperty(string property, string value)
 		{
 			if (VariantMapper.TryResolve(this, property, value, out BlockState result))
@@ -111,11 +124,11 @@ namespace Alex.Blocks.State
 			bool result = Name.Equals(other.Name, StringComparison.InvariantCultureIgnoreCase);
 			if (!result) return false;
 
-			var thisStates = new HashSet<StateProperty>(States);
-			var otherStates = new HashSet<StateProperty>(other.States);
+			//var thisStates = new HashSet<StateProperty>(States);
+			var otherStates = new HashSet<StateProperty>(other.States, new StatePropertyComparer());
 
-			otherStates.IntersectWith(thisStates);
-			result = otherStates.Count == thisStates.Count;
+			otherStates.IntersectWith(States);
+			result = otherStates.Count == States.Count;
 
 			return result;
 		}

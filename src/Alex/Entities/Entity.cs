@@ -1130,7 +1130,14 @@ namespace Alex.Entities
 				}
 				finally
 				{
-					oldValue?.Dispose();
+					if (oldValue != null)
+					{
+						if (!(oldValue.Tag is Guid tag) || tag != EntityFactory.PooledTagIdentifier)
+						{
+							oldValue?.Dispose();
+						}
+					}
+					//oldValue?.Dispose();
 					//oldValue?.Release(this);
 					//oldValue?.ReturnResource(this);
 				}
@@ -1620,7 +1627,7 @@ namespace Alex.Entities
 			//Velocity += new Vector3(0f, MathF.Sqrt(2f * (float) (Gravity * 20f) * 1.2f), 0f);
 			//	Network?.EntityAction((int) EntityId, EntityAction.Jump);
 		}
-
+		
 		public virtual void OnSpawn()
 		{
 			IsSpawned = true;

@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using Alex.Common.Data.Servers;
 using Alex.Common.Services;
 using Alex.Gamestates.Login;
 using Alex.Gui;
@@ -9,6 +10,7 @@ using Alex.Services;
 using Alex.Utils;
 using Alex.Worlds.Abstraction;
 using Microsoft.Extensions.DependencyInjection;
+using MiNET.Utils;
 using MojangSharp.Api;
 using MojangSharp.Endpoints;
 
@@ -24,6 +26,24 @@ namespace Alex.Worlds.Multiplayer.Java
 		{
 			Alex = alex;
 			ProtocolVersion = JavaProtocol.ProtocolVersion;
+			
+			SponsoredServers = new SavedServerEntry[]
+			{
+				new SavedServerEntry()
+				{
+					Name = $"{ChatColors.Gold}Hypixel",
+					Host = "mc.hypixel.net",
+					Port = 25565,
+					ServerType = TypeIdentifier
+				},
+				new SavedServerEntry()
+				{
+					Name = $"{ChatColors.Gold}Mineplex",
+					Host = "eu.mineplex.com",
+					Port = 25565,
+					ServerType = TypeIdentifier
+				}
+			};
 		}
 
 		/// <inheritdoc />

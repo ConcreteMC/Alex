@@ -673,7 +673,6 @@ namespace Alex.Worlds
 		/// <inheritdoc />
 		public void OnTick()
 		{
-			//	List<ChunkData> renderList = new List<ChunkData>();
 			var array = _renderedChunks;
 			int index = 0;
 			int max = array.Length;
@@ -687,32 +686,19 @@ namespace Alex.Worlds
 				{
 					if (inView && index + 1 < max)
 					{
-						//if (!chunk.Value.IsNew)
-						//	chunk.Value.ApplyChanges(World);
-						
 						data.Rendered = true;
 						
 						array[index] = data;
 						index++;
-						
-						//renderList.Add(chunk.Value.ChunkData);
 					}
 					else
 					{
 						data.Rendered = false;
-						//chunk.Value?.SetVisibility(Alex.Instance.GraphicsDevice, World, false);
 					}
 				}
-
-				//if ((chunk.Value.BlockLightDirty || chunk.Value.SkyLightDirty))
-				//{
-				//	ScheduleChunkUpdate(chunk.Key, ScheduleType.Lighting);
-				//}
 			}
 
 			RenderedChunks = index;
-
-			//_renderedChunks = renderList.ToArray();
 		}
 
 		private bool _disposed = false;

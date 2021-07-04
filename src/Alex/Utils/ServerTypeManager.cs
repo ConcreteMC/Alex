@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
+using Alex.Common.Data.Servers;
 using Alex.Common.Services;
 using Alex.Gui;
 using Alex.Net;
@@ -86,5 +87,7 @@ namespace Alex.Utils
 		{
 			return Task.CompletedTask;
 		}
+
+		public SavedServerEntry[] SponsoredServers { get; protected set; } = new SavedServerEntry[0];
 	}
 }

@@ -26,9 +26,6 @@ namespace Alex.Gamestates.Multiplayer
 	{
 		private const int ServerIconSize = 32;
 
-		public string ServerName    { get; set; }
-		public string ServerAddress { get; set; }
-
 		private IPEndPoint _connectionEndPoint = null;
 		public IPEndPoint ConnectionEndpoint
 		{
@@ -47,8 +44,6 @@ namespace Alex.Gamestates.Multiplayer
 			}
 		}
 
-		public Texture2D ServerIcon { get; private set; }
-		
 		private readonly TextureElement     _serverIcon;
 		private readonly StackContainer     _textWrapper;
 		private readonly GuiConnectionPingIcon _pingStatus;
@@ -57,29 +52,21 @@ namespace Alex.Gamestates.Multiplayer
 		private readonly TextElement _serverMotd;
 
 		internal SavedServerEntry SavedServerEntry;
-		internal Guid             InternalIdentifier = Guid.NewGuid();
-
 		public bool                     SaveEntry                { get; set; } = true;
-		public ServerTypeImplementation ServerTypeImplementation { get; }
 		public bool CanDelete { get; set; } = true;
 		public GuiServerListEntryElement(ServerTypeImplementation serverTypeImplementation, SavedServerEntry entry) : this(
 			serverTypeImplementation.QueryProvider,
-			$"{entry.Name}",
-			entry.Host + ":" + entry.Port)
+			$"{entry.Name}")
 		{
-			ServerTypeImplementation = serverTypeImplementation;
 			SavedServerEntry = entry;
 		}
 
 		private IServerQueryProvider QueryProvider { get; }
 	//	private CancellationTokenSource _cancellationTokenSource;
-		private GuiServerListEntryElement(IServerQueryProvider queryProvider, string serverName, string serverAddress)
+		private GuiServerListEntryElement(IServerQueryProvider queryProvider, string serverName)
 		{
 			QueryProvider = queryProvider;
 			SetFixedSize(355, 36);
-		    
-			ServerName = serverName;
-			ServerAddress = serverAddress;
 
 			Margin = new Thickness(5, 5, 5, 5);
 			Padding = Thickness.One;
@@ -110,29 +97,32 @@ namespace Alex.Gamestates.Multiplayer
 
 			_textWrapper.AddChild(_serverName = new TextElement()
 			{
-				Text = ServerName,
+				Text = serverName,
 				Margin = Thickness.Zero
 			});
 
 			_textWrapper.AddChild(_serverMotd = new TextElement()
 			{
-				TranslationKey = "multiplayer.status.pinging",
+				TranslationKey = PingTranslationKey,
 				Margin = new Thickness(0, 0, 5, 0),
 				
 				//Anchor = center
 			});
 		}
 
+
+
+		private const string PingTranslationKey = "multiplayer.status.pinging";
+		
 		public bool PingCompleted { get; private set; }
 
 		protected override void OnInit(IGuiRenderer renderer)
 		{
 			base.OnInit(renderer);
+			
 			if (SavedServerEntry.CachedIcon != null)
 			{
-				ServerIcon = SavedServerEntry.CachedIcon;
-				_serverIcon.Texture = ServerIcon;
-
+				_serverIcon.Texture = SavedServerEntry.CachedIcon;
 			}
 			else
 			{
@@ -155,41 +145,22 @@ namespace Alex.Gamestates.Multiplayer
 			if (PingCompleted && !force) return;
 			PingCompleted = true;
 
-			var hostname = ServerAddress;
-
-			ushort port = (ushort) SavedServerEntry.Port;// 25565;
-
-			var split = hostname.Split(':');
-			if (split.Length == 2)
-			{
-				if (ushort.TryParse(split[1], out port))
-				{
-					await QueryServer(split[0], port, cancellationToken);
-				}
-				else
-				{
-					SetErrorMessage("Invalid Server Address!");
-				}
-			}
-			else if (split.Length == 1)
-			{
-				await QueryServer(split[0], port, cancellationToken);
-			}
-			else
-			{
-				SetErrorMessage("Invalid Server Address!");
-			}
+			var hostname = SavedServerEntry.Host;
+			ushort port = SavedServerEntry.Port;
+			
+			await QueryServer(hostname, port, cancellationToken);
 		}
 
 		private void SetConnectingState(bool connecting)
 		{
 			if (connecting)
 			{
-				_serverMotd.TranslationKey = "multiplayer.status.pinging";
+				_serverMotd.TranslationKey = PingTranslationKey;
 			}
 			else
 			{
 				_serverMotd.Text = "...";
+				_serverMotd.TranslationKey = null;
 			}
 
 			_pingStatus.SetPending();
@@ -346,10 +317,12 @@ namespace Alex.Gamestates.Multiplayer
 					}
 
 					_serverMotd.Text = builder.ToString();
+					_serverMotd.TranslationKey = null;
 				}
 				else
 				{
 					_serverMotd.Text = q.Description.Text;
+					_serverMotd.TranslationKey = null;
 				}
 
 				if (!string.IsNullOrWhiteSpace(q.Favicon))
@@ -362,16 +335,11 @@ namespace Alex.Gamestates.Multiplayer
 						{
 							using (MemoryStream ms = new MemoryStream(Convert.FromBase64String(match.Groups["data"].Value)))
 							{
-								ServerIcon = Texture2D.FromStream(_graphicsDevice, ms);
+								_serverIcon.Texture = SavedServerEntry.CachedIcon = Texture2D.FromStream(_graphicsDevice, ms);
 							}
 
 							reset.Set();
 						});
-
-						reset.WaitOne();
-
-						SavedServerEntry.CachedIcon = ServerIcon;
-						_serverIcon.Texture = ServerIcon;
 					}
 				}
 			}
@@ -389,7 +357,7 @@ namespace Alex.Gamestates.Multiplayer
 			
 			if (disposing)
 			{
-				ServerIcon?.Dispose();
+				//ServerIcon?.Dispose();
 			}
 		}
 	}

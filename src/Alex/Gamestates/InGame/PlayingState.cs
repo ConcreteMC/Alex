@@ -145,8 +145,6 @@ namespace Alex.Gamestates.InGame
 		}
 
 		private long _ramUsage = 0;
-		private long _threadsUsed, _maxThreads;
-		private long _complPortsUsed, _maxComplPorts;
 		private Biome _currentBiome = BiomeUtils.GetBiome(0);
 		private int _currentBiomeId = 0;
 		private void InitDebugInfo()
@@ -235,17 +233,13 @@ namespace Alex.Gamestates.InGame
 			_debugInfo.AddDebugRight(Alex.Gpu);
 			_debugInfo.AddDebugRight($"{Alex.DotnetRuntime}\n");
 			_debugInfo.AddDebugRight(Alex.RenderingEngine);
-			//_debugInfo.AddDebugRight(() => MemoryUsageDisplay);
+			
 			_debugInfo.AddDebugRight(() => $"RAM: {GetBytesReadable(_ramUsage, 2)}", TimeSpan.FromMilliseconds(1000));
 			_debugInfo.AddDebugRight(() => $"GPU: {GetBytesReadable(GpuResourceManager.MemoryUsage, 2)}", TimeSpan.FromMilliseconds(1000));
-			_debugInfo.AddDebugRight(() =>
-			{
-				return
-					$"Threads: {(_threadsUsed):00}/{_maxThreads}\nCompl.Ports: {_complPortsUsed:00}/{_maxComplPorts}";
-			}, TimeSpan.FromMilliseconds(50));
+			_debugInfo.AddDebugRight(() => $"Threads: {(ThreadPool.ThreadCount):00}/{Environment.ProcessorCount:00}\nPending: {ThreadPool.PendingWorkItemCount:00}\n", TimeSpan.FromMilliseconds(50));
 			
-			_debugInfo.AddDebugRight(() => $"Chunk Updates: {ChunkColumn.AverageUpdateTime:F2}ms avg, {ChunkColumn.MaxUpdateTime:F2}ms max\nBuffer Upload: {ChunkData.AverageUpdateTime:F2}ms avg, {ChunkData.MaxUpdateTime:F2}ms max", TimeSpan.FromMilliseconds(50));
-			_debugInfo.AddDebugRight(() => $"Tasks: {Alex.UiTaskManager.Count} ExecutionTime={Alex.UiTaskManager.AverageExecutionTime:F2}ms avg QueueTime={Alex.UiTaskManager.AverageTimeTillExecution:F2}ms avg", TimeSpan.FromMilliseconds(50));
+			_debugInfo.AddDebugRight(() => $"Updates: {ChunkColumn.AverageUpdateTime:F2}ms avg\nUpload: {ChunkData.AverageUploadTime:F2}ms avg\n", TimeSpan.FromMilliseconds(50));
+			_debugInfo.AddDebugRight(() => $"UI Tasks: {Alex.UiTaskManager.Pending:00}\nR: {Alex.UiTaskManager.AverageExecutionTime:F2}ms\nQ: {Alex.UiTaskManager.AverageTimeTillExecution:F2}ms", TimeSpan.FromMilliseconds(50));
 			_debugInfo.AddDebugRight(() =>
 			{
 				var player = World?.Player;
@@ -269,8 +263,6 @@ namespace Alex.Gamestates.InGame
 					sb.AppendLine(
 						$"Blocklight: {World.GetBlockLight(raytracedBlock)} Face Blocklight: {World.GetBlockLight(adjacentBlock)}");
 
-					//sb.AppendLine($"Skylight scheduled: {World.IsScheduled((int) _raytracedBlock.X, (int) _raytracedBlock.Y, (int) _raytracedBlock.Z)}");
-					
 					foreach (var bs in World
 						.GetBlockStates((int) raytracedBlock.X, (int) raytracedBlock.Y, (int) raytracedBlock.Z))
 					{
@@ -278,19 +270,6 @@ namespace Alex.Gamestates.InGame
 						if (blockstate != null && blockstate.Block.HasHitbox)
 						{
 							sb.AppendLine($"{blockstate.Name} (S: {bs.Storage})");
-							/*if (blockstate.IsMultiPart)
-							{
-								sb.AppendLine($"MultiPart=true");
-								sb.AppendLine();
-								
-								sb.AppendLine("Models:");
-
-								foreach (var model in blockstate.AppliedModels)
-								{
-									sb.AppendLine(model);
-								}
-							}*/
-
 							var dict = blockstate.ToArray();
 
 							if (dict.Length > 0)
@@ -376,17 +355,7 @@ namespace Alex.Gamestates.InGame
 			if (now - _previousMemUpdate > TimeSpan.FromSeconds(5))
 			{
 				_previousMemUpdate = now;
-
-
 				_ramUsage = Environment.WorkingSet;
-
-				ThreadPool.GetMaxThreads(out int maxThreads, out int maxComplPorts);
-				ThreadPool.GetAvailableThreads(out int availableThreads, out int availableComplPorts);
-				_threadsUsed = ThreadPool.ThreadCount;// maxThreads - availableThreads;
-				_maxThreads = maxThreads;
-				
-				_complPortsUsed = maxComplPorts - availableComplPorts;
-				_maxComplPorts = maxComplPorts;
 
 				var pos     = World.Player.KnownPosition.GetCoordinates3D();
 				var biomeId = World.GetBiome(pos.X, pos.Y, pos.Z);

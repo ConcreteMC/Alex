@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -16,7 +17,7 @@ using NLog;
 
 namespace Alex.Particles
 {
-	public class ParticleEmitter
+	public class ParticleEmitter : IDisposable
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ParticleEmitter));
 		private ThreadSafeList<ParticleInstance> _instances = new ThreadSafeList<ParticleInstance>();
@@ -170,6 +171,18 @@ namespace Alex.Particles
 			}
 
 			return count;
+		}
+
+		/// <inheritdoc />
+		public void Dispose()
+		{
+			Reset();
+			
+			//if (Texture != null)
+			//{
+			//	if (!Texture.IsDisposed)
+				//	Texture.Dispose();
+			//}
 		}
 	}
 }

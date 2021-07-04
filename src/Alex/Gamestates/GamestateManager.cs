@@ -17,19 +17,17 @@ namespace Alex.Gamestates
 		private ConcurrentDictionary<string, IGameState> States { get; }
 
 		private LinkedList<IGameState> History { get; } = new LinkedList<IGameState>();
-		private object _historyLock { get; } = new object();
+		private readonly object _historyLock = new object();
 		
         private IGameState ActiveState { get; set; }
 
         private GraphicsDevice Graphics { get; }
         private SpriteBatch SpriteBatch { get; }
-		
-	    public GuiManager GuiManager { get; private set; }
-        public GameStateManager(Game game, GraphicsDevice graphics, SpriteBatch spriteBatch, GuiManager guiManager) : base(game)
+        
+        public GameStateManager(Game game, GraphicsDevice graphics, SpriteBatch spriteBatch) : base(game)
         { 
             Graphics = graphics;
             SpriteBatch = spriteBatch;
-	        GuiManager = guiManager;
 
             States = new ConcurrentDictionary<string, IGameState>();
 		}
@@ -39,7 +37,7 @@ namespace Alex.Gamestates
 		    lock (_historyLock)
 		    {
 			    var last = History.Last;
-			    if (History.Last != null)
+			    if (last != null)
 			    {
 				    var prev = last.Value;
 				    if (prev != ActiveState)
@@ -144,53 +142,36 @@ namespace Alex.Gamestates
 		    return SetActiveState<TStateType>(key);
 	    }
 
-	    public bool SetAndUpdateActiveState<TStateType>(Func<TStateType, TStateType> doActionBeforeSwitching) where TStateType : IGameState, new()
-	    {
-		    IGameState state = null;
-			var key = typeof(TStateType).FullName;
-		    if (States.TryGetValue(key, out state))
-		    {
-			    state = doActionBeforeSwitching.Invoke((TStateType)state);
-			    return SetActiveState(state);
-		    }
 
-		    state = new TStateType();
-		    state = doActionBeforeSwitching.Invoke((TStateType)state);
-			AddState(key, state);
-
-			return SetActiveState(state);
-	    }
-
-
-		public bool SetActiveState(IGameState state, bool keepHistory = true)
+	    public bool SetActiveState(IGameState state, bool keepHistory = true)
 	    {
 			EnsureStateLoaded(state);
 
-		    var current = ActiveState;
-		    current?.Hide();
-
-		    if (current != null && state != null && state.ParentState == null)
+		    var previous = ActiveState;
+		    if (keepHistory && previous != null && state != null && state.ParentState == null)
 		    {
-			    state.ParentState = current;
+			    state.ParentState = previous;
 		    }
 
 		    ActiveState = state;
 		    ActiveState?.Show();
+		    previous?.Hide();
 
-		    lock (_historyLock)
+		    if (keepHistory)
 		    {
-			    if (History.Last?.Previous?.Value != state && keepHistory)
+			    lock (_historyLock)
 			    {
-				    History.AddLast(current);
+				    if (History.Last?.Previous?.Value != state)
+				    {
+					    History.AddLast(previous);
+				    }
 			    }
 		    }
-
-		    _activeStateDoubleBuffer = state;
-
+		    
 		    return true;
 	    }
 
-	    public bool SetActiveState(string name)
+	    public bool SetActiveState(string name, bool keepHistory = true)
         {
 	        IGameState state;
             if (!States.TryGetValue(name, out state))
@@ -198,15 +179,15 @@ namespace Alex.Gamestates
                 return false;
             }
 
-	        return SetActiveState(state);
+	        return SetActiveState(state, keepHistory);
         }
 
-	    private IGameState _activeStateDoubleBuffer = null;
+	   // private IGameState _activeStateDoubleBuffer = null;
 
 	    
 	    public override void Draw(GameTime gameTime)
 	    {
-		    IGameState activeState = _activeStateDoubleBuffer;
+		    IGameState activeState = ActiveState;
 
 		    if (activeState == null) return;
 
@@ -229,7 +210,7 @@ namespace Alex.Gamestates
 
 	    public override void Update(GameTime gameTime)
 	    {
-		    IGameState activeState = _activeStateDoubleBuffer;
+		    IGameState activeState = ActiveState;
 
 		    if (activeState == null) return;
 

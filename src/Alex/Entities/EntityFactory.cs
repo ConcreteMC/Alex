@@ -144,6 +144,15 @@ namespace Alex.Entities
 			{
 				EntityModelRenderer.Remove(kv.Key);
 			}
+
+			var textures = _pooledTextures.ToArray();
+			_pooledTextures.Clear();
+
+			foreach (var texture in textures)
+			{
+			//	if (texture.Value != null)
+				//	texture.Value.Dispose();
+			}
 		}
 
 		public static int LoadEntityDefinitions(BedrockResourcePack resourcePack,
@@ -231,8 +240,10 @@ namespace Alex.Entities
 			return _registeredRenderers.Count - beforeImport;
 		}
 
-		//private static ConcurrentDictionary<string, ManagedTexture2D> _pooledTextures =
-		//	new ConcurrentDictionary<string, ManagedTexture2D>(StringComparer.OrdinalIgnoreCase);
+		private static ConcurrentDictionary<string, Texture2D> _pooledTextures =
+			new ConcurrentDictionary<string, Texture2D>(StringComparer.OrdinalIgnoreCase);
+
+		public static readonly Guid PooledTagIdentifier = Guid.Parse("58142097-1b3d-4dc5-b98e-33da88bcf74a");
 		public static Entity Create(ResourceLocation entityType, World world, bool initRenderController = true)
 		{
 			Entity entity = null;
@@ -526,10 +537,10 @@ namespace Alex.Entities
 							texture = textures.FirstOrDefault().Value;
 						}
 
-						/*texture2D = _pooledTextures.GetOrAdd(
+						texture2D = _pooledTextures.GetOrAdd(
 							texture, s =>
 							{
-								ManagedTexture2D pooled = null;
+								Texture2D pooled = null;
 								
 								if (Alex.Instance.Resources.TryGetBedrockBitmap(
 									s, out var bmp))
@@ -544,9 +555,10 @@ namespace Alex.Entities
 
 								if (pooled != null)
 								{
+									pooled.Tag = PooledTagIdentifier;
 									pooled.Disposing += (sender, args) =>
 									{
-										if (_pooledTextures.TryRemove(s, out var p2))
+										//if (_pooledTextures.TryRemove(s, out var p2))
 										{
 											//p2?.MarkForDisposal();
 										}
@@ -555,9 +567,9 @@ namespace Alex.Entities
 
 								//pooled?.Use();
 								return pooled;
-							});*/
+							});
 						
-						if (Alex.Instance.Resources.TryGetBedrockBitmap(
+					/*	if (Alex.Instance.Resources.TryGetBedrockBitmap(
 							texture, out var bmp))
 						{
 							texture2D = TextureUtils.BitmapToTexture2D(entity,
@@ -566,7 +578,7 @@ namespace Alex.Entities
 						else if (Alex.Instance.Resources.TryGetBitmap(texture, out var bmp2))
 						{
 							texture2D = TextureUtils.BitmapToTexture2D(entity, Alex.Instance.GraphicsDevice, bmp2);
-						}
+						}*/
 
 						//renderer = new EntityModelRenderer(model);
 					}

@@ -11,7 +11,7 @@ namespace Alex.Utils.Threading
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ManagedTaskManager));
 
-		public int Count => _queue.Count;
+		public int Pending => _queue.Count;
 		public float AverageExecutionTime => _executionTimeMovingAverage.Average;
 		public float AverageTimeTillExecution => _timeTillExecutionMovingAverage.Average;
 		
@@ -43,6 +43,7 @@ namespace Alex.Utils.Threading
 
 			var avgFrameTime = _alex.FpsMonitor.AverageFrameTime;
 			Stopwatch sw = Stopwatch.StartNew();
+			
 			while (sw.Elapsed.TotalMilliseconds < avgFrameTime && !_queue.IsEmpty && _queue.TryDequeue(out var a))
 			{
 				if (a.IsCancelled)

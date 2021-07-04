@@ -85,44 +85,44 @@ namespace Alex.Entities.BlockEntities
 				{
 					case "minecraft:bed":
 					case "bed":
-						blockEntity = new BedBlockEntity(world, block);
+						blockEntity = new BedBlockEntity(world);
 						break;
 					
 					case "minecraft:chest":
 					case "chest":
-						blockEntity = new ChestBlockEntity(block, world);
+						blockEntity = new ChestBlockEntity(world);
 
 						break;
 					case "minecraft:ender_chest":
 					case "ender_chest":
 					case "enderchest":
-						blockEntity = new EnderChestBlockEntity(block, world);
+						blockEntity = new EnderChestBlockEntity(world);
 						break;
 
 					case "minecraft:sign":
 					case "sign":
-						blockEntity = new SignBlockEntity(world, block);
+						blockEntity = new SignBlockEntity(world);
 
 						break;
 					
 					case "minecraft:skull":
 					case "skull":
-						blockEntity = new SkullBlockEntity(world, block, SkullTexture);
+						blockEntity = new SkullBlockEntity(world, SkullTexture);
 						break;
 					
 					case "minecraft:flowerpot":
 					case "flowerpot":
-						blockEntity = new FlowerPotBlockEntity(world, block);
+						blockEntity = new FlowerPotBlockEntity(world);
 						break;
 					
 					case "minecraft:itemframe":
 					case "itemframe":
-						blockEntity = new ItemFrameBlockEntity(world, block);
+						blockEntity = new ItemFrameBlockEntity(world);
 						break;
 					
 					case "minecraft:furnace":
 					case "furnace":
-						blockEntity = new FurnaceBlockEntity(world, block);
+						blockEntity = new FurnaceBlockEntity(world);
 						break;
 					
 					default:
@@ -134,9 +134,10 @@ namespace Alex.Entities.BlockEntities
 				if (blockEntity != null)
 				{
 					blockEntity.Read(compound);
+					
+					if (blockEntity.SetBlock(block))
+						return blockEntity;
 				}
-
-				return blockEntity;
 			}
 
 			return null;

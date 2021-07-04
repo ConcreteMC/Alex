@@ -29,8 +29,8 @@ namespace Alex.Common.Utils
         {
 	        return BitmapToTexture2D(owner, device, bmp, out _);
         }
-        
-        public static Texture2D BitmapToTexture2D(object owner, GraphicsDevice device, Image<Rgba32> image, out long byteSize)
+
+		public static Texture2D BitmapToTexture2D(object owner, GraphicsDevice device, Image<Rgba32> image, out long byteSize)
         {
 	     //   var bmp = image;//.CloneAs<Rgba32>();
 	        uint[] colorData;
@@ -72,6 +72,7 @@ namespace Alex.Common.Utils
 	       }
 
 	       byteSize = result.MemoryUsage();
+	       result.Tag = owner;
 	        return result;
 	        /*for (int x = 0; x < bmp.Width; x++)
 	        {

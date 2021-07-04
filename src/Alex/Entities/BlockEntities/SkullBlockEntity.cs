@@ -25,13 +25,13 @@ namespace Alex.Entities.BlockEntities
 		private ModelBone HeadBone { get; set; }
 		
 		/// <inheritdoc />
-		public SkullBlockEntity(World level, Block block, Texture2D texture) : base(level, block)
+		public SkullBlockEntity(World level, Texture2D texture) : base(level)
 		{
 			if (EntityModelRenderer.TryGetRenderer(new SkullBlockEntityModel(), out var renderer))
 			{
 				ModelRenderer = renderer;
 			}
-			
+
 			//ModelRenderer = new EntityModelRenderer(new SkullBlockEntityModel());
 			Texture = texture;
 			
@@ -87,7 +87,9 @@ namespace Alex.Entities.BlockEntities
 		/// <inheritdoc />
 		protected override bool BlockChanged(Block oldBlock, Block newBlock)
 		{
-			if (newBlock is Skull s)
+			if (!(newBlock is Skull s))
+				return false;
+			
 			{
 				switch (s.SkullType)
 				{
@@ -188,8 +190,6 @@ namespace Alex.Entities.BlockEntities
 						}
 						break;
 				}
-
-				
 			}
 			
 			if (newBlock is WallSkull)
@@ -202,7 +202,7 @@ namespace Alex.Entities.BlockEntities
 					}
 				}
 			}
-			else if (newBlock is Skull)
+			else
 			{
 				if (newBlock.BlockState.TryGetValue("rotation", out var r))
 				{

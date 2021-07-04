@@ -49,7 +49,7 @@ namespace Alex.Graphics.Models.Blocks
 		
 		public static           bool       SmoothLighting { get; set; } = true;
 		private ResourceManager    Resources          { get; }
-		public ResourcePackBlockModel(ResourceManager resources, BlockStateResource blockStateResource)
+		public ResourcePackBlockModel(ResourceManager resources)
 		{
 			Resources = resources;
 		}

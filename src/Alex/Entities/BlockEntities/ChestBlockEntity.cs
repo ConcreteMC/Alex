@@ -17,7 +17,7 @@ namespace Alex.Entities.BlockEntities
 		private ModelBone Body     { get; set; }
 		
 		/// <inheritdoc />
-		public ChestBlockEntity(Block block, World level) : base(level, block)
+		public ChestBlockEntity(World level) : base(level)
 		{
 			Width = 1f;
 			Height = 1f;

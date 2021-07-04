@@ -422,18 +422,12 @@ namespace Alex.Worlds.Multiplayer
 
 					if (_chunksReceived < target)
 					{
-						//	Log.Info($"Chunks: {_chunksReceived} / {target}");
 						progressReport(LoadingState.LoadingChunks, (int) Math.Floor((100 / target) * _chunksReceived));
 					}
 					else if (loaded < target || !allowSpawn || _generatingHelper.Count > 0)
 					{
 						if (_generatingHelper.TryTake(out ChunkColumn chunkColumn, 50))
 						{
-							//base.LoadChunk(chunkColumn, chunkColumn.X, chunkColumn.Z, true);
-							/*EventDispatcher.DispatchEvent(new ChunkReceivedEvent(new ChunkCoordinates(chunkColumn.X ,chunkColumn.Z), chunkColumn)
-							{
-								DoUpdates = true
-							})*/
 							World.ChunkManager.AddChunk(
 								chunkColumn, new ChunkCoordinates(chunkColumn.X, chunkColumn.Z), true);
 
@@ -676,7 +670,7 @@ namespace Alex.Worlds.Multiplayer
 					break;
 
 				case SpawnLivingEntity spawnMob:
-					HandleSpawnMob(spawnMob);
+					HandleSpawnLivingEntity(spawnMob);
 
 					break;
 
@@ -2478,11 +2472,8 @@ namespace Alex.Worlds.Multiplayer
 			
         }
 
-        //private BlockingCollection<ChunkDataPacket> _chunkQueue = new BlockingCollection<ChunkDataPacket>();
         private void HandleChunkData(ChunkDataPacket packet)
         {
-	        _loginCompleteEvent?.Set();
-	        
 	        var buffer = packet.Buffer.Span.ToArray();
 	        var x = packet.ChunkX;
 	        var z = packet.ChunkZ;
@@ -2490,76 +2481,72 @@ namespace Alex.Worlds.Multiplayer
 	        var heightMaps = packet.HeightMaps;
 	        var entities = packet.TileEntities;
 	        var primaryBitmask = packet.PrimaryBitmask;
-	        //bool groundUp = packet.GroundUp;
-	      World.BackgroundWorker.Enqueue(() =>
+
+	        World.BackgroundWorker.Enqueue(
+		        () =>
 		        {
-			        unsafe
+			        using (var memoryStream = new MemoryStream(buffer))
+			        using (var stream = new MinecraftStream(memoryStream))
 			        {
-				        //_chunkQueue.Add(chunk);
-				        //	ThreadPool.QueueUserWorkItem(() =>
-				      //  using (var memoryStream = new UnmanagedMemoryStream(
-					//	        (byte*) chunk.Buffer.Pin().Pointer, chunk.Buffer.Length))
-					
-				        using(var memoryStream = new MemoryStream(buffer))
-				        using (var stream = new MinecraftStream(memoryStream))
+				        JavaChunkColumn result = null; // = new ChunkColumn();
+
+				        result = new JavaChunkColumn(x, z, WorldSettings);
+
+				        result.Read(stream, primaryBitmask, World.Dimension == Dimension.Overworld);
+
+
+				        for (int bx = 0; bx < 16; bx++)
 				        {
-					        JavaChunkColumn result = null; // = new ChunkColumn();
-
-					        result = new JavaChunkColumn(x, z, WorldSettings);
-
-					        result.Read(stream, primaryBitmask, World.Dimension == Dimension.Overworld);
-
-
-					        for (int bx = 0; bx < 16; bx++)
+					        for (int bz = 0; bz < 16; bz++)
 					        {
-						        for (int bz = 0; bz < 16; bz++)
+						        for (int by = WorldSettings.MinY; by < WorldSettings.WorldHeight; by++)
 						        {
-							        for (int by = WorldSettings.MinY; by < WorldSettings.WorldHeight; by++)
-							        {
-								        result.SetBiome(
-									        bx, by, bz,
-									        biomes[((by >> 2) & 63) << 4 | ((bz >> 2) & 3) << 2 | ((bx >> 2) & 3)]);
-							        }
+							        result.SetBiome(
+								        bx, by, bz,
+								        biomes[((by >> 2) & 63) << 4 | ((bz >> 2) & 3) << 2 | ((bx >> 2) & 3)]);
 						        }
 					        }
+				        }
 
 
-					        foreach (var tag in entities)
+				        foreach (var tag in entities)
+				        {
+					        if (tag == null || !(tag.Contains("id")))
+						        continue;
+
+					        try
 					        {
-						        if (tag == null || !(tag.Contains("id")))
-							        continue;
-					        
-						        try
-						        {
-							        var blockEntity = BlockEntityFactory.ReadFrom(tag, World, null);
+						        //var blockEntity = BlockEntityFactory.ReadFrom(tag, World, null);
 
-							        if (blockEntity != null)
-							        {
-								        result.AddBlockEntity(
-									        new BlockCoordinates(blockEntity.X, blockEntity.Y, blockEntity.Z), tag);
-							        }
-							        else
-							        {
-								        Log.Debug($"Got null block entity: {tag}");
-							        }
+						       // if (blockEntity != null)
+						       // {
+							       int x = tag["x"].IntValue;
+							       int y = tag["y"].IntValue;
+							       int z = tag["z"].IntValue;
+							        result.AddBlockEntity(
+								        new BlockCoordinates(x,y,z), tag);
+						       // }
+						       // else
+						       // {
+							    //    Log.Debug($"Got null block entity: {tag}");
+						        //}
 
-						        }
-						        catch (Exception ex)
-						        {
-							        Log.Warn(ex, "Could not add block entity!");
-						        }
 					        }
-
-					        if (!_generatingHelper.IsAddingCompleted)
+					        catch (Exception ex)
 					        {
-						        _generatingHelper.Add(result);
-						        _chunksReceived++;
-
-						        return;
+						        Log.Warn(ex, "Could not add block entity!");
 					        }
+				        }
 
-					        World.ChunkManager.AddChunk(result, new ChunkCoordinates(result.X, result.Z), true);
-				        } //);
+				        if (!_generatingHelper.IsAddingCompleted)
+				        {
+					        _generatingHelper.Add(result);
+					        _chunksReceived++;
+
+					        return;
+				        }
+
+				        World.ChunkManager.AddChunk(result, new ChunkCoordinates(result.X, result.Z), true);
 			        }
 		        });
         }
@@ -2569,13 +2556,8 @@ namespace Alex.Worlds.Multiplayer
 	        World.BackgroundWorker.Enqueue(
 		        () =>
 		        {
-			        //Log.Warn($"Got block entity data for ({packet.Location}) Action={packet.Action}");
-
 			        if (World.EntityManager.TryGetBlockEntity(packet.Location, out var entity))
 			        {
-				       // var block = World.GetBlockState(packet.Location);
-				       // entity.Block = block.Block;
-
 				        entity.SetData(packet.Action, packet.Compound);
 			        }
 			        else
@@ -2589,8 +2571,6 @@ namespace Alex.Worlds.Multiplayer
 					        {
 						        World.SetBlockEntity(
 							        packet.Location.X, packet.Location.Y, packet.Location.Z, blockEntity);
-
-						        //Log.Info($"Added block entity of type \"{blockEntity.GetType()}\" ({packet.Location})");
 					        }
 				        }
 				        catch (Exception ex)
@@ -2760,7 +2740,7 @@ namespace Alex.Worlds.Multiplayer
 			}
 		}
 
-		private void HandleSpawnMob(SpawnLivingEntity packet)
+		private void HandleSpawnLivingEntity(SpawnLivingEntity packet)
 		{
 			SpawnMob(
 				packet.EntityId, packet.Uuid, (EntityType) packet.Type, new PlayerLocation(
@@ -2791,7 +2771,7 @@ namespace Alex.Worlds.Multiplayer
 		{
 			Log.Info($"Login success! Username: {packet.Username}");
 			Client.ConnectionState = ConnectionState.Play;
-			
+			_loginCompleteEvent?.Set();
 			//Client.UsePacketHandlerQueue = true;
 		}
 

@@ -7,6 +7,13 @@ namespace Alex.Blocks.Properties
 {
 	public class PropertyBool : StateProperty<bool>
 	{
+		public static readonly PropertyBool NORTH = new PropertyBool("north");
+		public static readonly PropertyBool EAST = new PropertyBool("east");
+		public static readonly PropertyBool SOUTH = new PropertyBool("south");
+		public static readonly PropertyBool WEST = new PropertyBool("west");
+		public static readonly PropertyBool UP = new PropertyBool("up");
+		public static readonly PropertyBool DOWN = new PropertyBool("down");
+		
 		public PropertyBool(string name) : this(name, "true", "false")
 		{
 		

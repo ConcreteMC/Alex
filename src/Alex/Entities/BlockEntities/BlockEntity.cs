@@ -25,29 +25,39 @@ namespace Alex.Entities.BlockEntities
 			{
 				return _block;
 			}
-			set
+			/*set
 			{
 				var oldValue = _block;
 				_block = value;
-
-				if (value != null)
+				
+				if (value == null || !BlockChanged(oldValue, value))
 				{
-					if (!BlockChanged(oldValue, value))
-					{
-						Level?.EntityManager.RemoveBlockEntity(BlockCoordinates);
-					}
+					Level?.EntityManager.RemoveBlockEntity(BlockCoordinates);
 				}
-			}
+			}*/
 		}
 		
 		/// <inheritdoc />
-		public BlockEntity(World level, Block block) : base(level)
+		public BlockEntity(World level) : base(level)
 		{
 			IsAffectedByGravity = false;
-			Block = block;
+			//Block = block;
 			DoRotationCalculations = false;
 			AnimationController.Enabled = false;
 			//base.Movement.InterpolatedMovement = false;
+		}
+
+		public virtual bool SetBlock(Block block)
+		{
+			var oldValue = _block;
+			_block = block;
+				
+			if (block == null || !BlockChanged(oldValue, block))
+			{
+				return false;
+			}
+			
+			return true;
 		}
 
 		/// <inheritdoc />

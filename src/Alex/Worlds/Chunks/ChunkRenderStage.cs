@@ -104,7 +104,7 @@ namespace Alex.Worlds.Chunks
 		}
 
 		private const int MaxArraySize = 16 * 16 * 256 * (6 * 6);
-		internal IEnumerable<MinifiedBlockShaderVertex> BuildVertices(IBlockAccess world)
+		internal IEnumerable<MinifiedBlockShaderVertex> BuildVertices()
 		{
 			lock (_writeLock)
 			{
@@ -112,71 +112,50 @@ namespace Alex.Worlds.Chunks
 
 				if (blockIndices == null) yield break;
 				
-				//var blockIndices = BlockIndices;
-				var size = blockIndices.Sum(x => x.Value.Count);
-				//length = size;
-
-				if (size > MaxArraySize)
-				{
-					Log.Warn($"Array size exceeded max pool size. Found {size}, limit: {MaxArraySize}");
-				}
-				//var vertices = Pool.Rent(size);
-				
-				//var vertices = new MinifiedBlockShaderVertex[size];
-
-				int index = 0;
 				foreach (var block in blockIndices)
 				{
 					var v3 = new Vector3(block.Key.X, block.Key.Y, block.Key.Z);
-					var bc = new BlockCoordinates(v3);
 					foreach (var vertex in block.Value)
 					{
 						var p = v3 + vertex.Position;
-						var lightProbe = p;
-						
-						if (vertex.IsSolid)
-						{
-							
-							lightProbe += vertex.Face.GetVector3();
-						}
-						//var offset = vertex.Face.GetVector3();
-						
-						//BlockModel.GetLight(
-						//	world, new BlockCoordinates(v3) + vertex.Face.GetBlockCoordinates(), out byte blockLight, out byte skyLight, false);
-						
-						world.GetLight(lightProbe, out var blockLight, out var skyLight);
 
 						var textureCoords = vertex.TexCoords;
 						yield return new MinifiedBlockShaderVertex(
-							p, vertex.Face,textureCoords.ToVector4(), new Color(vertex.Color),
-							blockLight, skyLight);
-						
-						index++;
+							p, vertex.IsSolid ? vertex.Face : BlockFace.None,textureCoords.ToVector4(), new Color(vertex.Color),
+							0, 0);
 					}
 				}
-				
-				//return vertices;
 			}
 		}
 
 		private ManagedTask _previousManagedTask = null;
-		public void Apply(IBlockAccess world,
-			bool force = false)
+
+		public void Apply(IBlockAccess world, bool force = false)
 		{
 			MinifiedBlockShaderVertex[] realVertices;
 			var previousTask = _previousManagedTask;
-			
-			lock (_writeLock)
+
+
+			if (!HasChanges && !force)
+				return;
+
+			HasChanges = false;
+
+			realVertices = BuildVertices().ToArray();
+
+			for (int i = 0; i < realVertices.Length; i++)
 			{
-				if (!HasChanges && !force)
-					return;
+				var vertex = realVertices[i];
+				var lightProbe = vertex.Position;
 
-				HasChanges = false;
-
-				realVertices = BuildVertices(world).ToArray();
-
-				if (realVertices == null)
-					return;
+				BlockFace face = (BlockFace) vertex.Normal;
+				if (face != BlockFace.None)
+				{
+					lightProbe += face.GetVector3();
+				}
+						
+				world.GetLight(lightProbe, out var blockLight, out var skyLight);
+				realVertices[i].Lighting = new Short2(skyLight, blockLight);
 			}
 
 			if (previousTask != null && previousTask.State == TaskState.Enqueued)
@@ -189,7 +168,7 @@ namespace Alex.Worlds.Chunks
 				_previousManagedTask = Alex.Instance.UiTaskManager.Enqueue(UpdateAction, realVertices);
 			}
 		}
-		
+
 		private void UpdateAction(object state)
 		{
 			var realVertices = (MinifiedBlockShaderVertex[]) state;

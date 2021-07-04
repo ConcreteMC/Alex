@@ -10,11 +10,6 @@ namespace Alex.Blocks.Minecraft.Fences
 {
 	public class Fence : Block
 	{
-		private static PropertyBool NORTH = new PropertyBool("north");
-		private static PropertyBool EAST = new PropertyBool("east");
-		private static PropertyBool SOUTH = new PropertyBool("south");
-		private static PropertyBool WEST = new PropertyBool("west");
-		
 		public Fence()
 		{
 			Transparent = true;
@@ -23,10 +18,10 @@ namespace Alex.Blocks.Minecraft.Fences
 			RequiresUpdate = true;
 		}
 
-		public bool North => BlockState.GetTypedValue(NORTH);
-		public bool East => BlockState.GetTypedValue(EAST);
-		public bool South => BlockState.GetTypedValue(SOUTH);
-		public bool West => BlockState.GetTypedValue(WEST);
+		public bool North => BlockState.GetTypedValue(PropertyBool.NORTH);
+		public bool East => BlockState.GetTypedValue(PropertyBool.EAST);
+		public bool South => BlockState.GetTypedValue(PropertyBool.SOUTH);
+		public bool West => BlockState.GetTypedValue(PropertyBool.WEST);
 		
 		/// <inheritdoc />
 		public override BlockState BlockPlaced(IBlockAccess world, BlockState state, BlockCoordinates position)
@@ -113,6 +108,33 @@ namespace Alex.Blocks.Minecraft.Fences
 				return true;
 			
 			return base.CanAttach(face, block);
+		}
+
+		/// <inheritdoc />
+		public override bool TryGetStateProperty(string prop, out StateProperty stateProperty)
+		{
+			switch (prop)
+			{
+				case "north":
+					stateProperty = PropertyBool.NORTH;
+					return true;
+				case "east":
+					stateProperty = PropertyBool.EAST;
+					return true;
+				case "south":
+					stateProperty = PropertyBool.SOUTH;
+					return true;
+				case "west":
+					stateProperty = PropertyBool.WEST;
+					return true;
+				case "up":
+					stateProperty = PropertyBool.UP;
+					return true;
+				case "down":
+					stateProperty = PropertyBool.DOWN;
+					return true;
+			}
+			return base.TryGetStateProperty(prop, out stateProperty);
 		}
 	}
 }

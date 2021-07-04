@@ -20,7 +20,7 @@ namespace Alex.Entities.BlockEntities
 		private ModelBone RootBone { get; set; }
 
 		/// <inheritdoc />
-		public SignBlockEntity(World level, Block block) : base(level, block)
+		public SignBlockEntity(World level) : base(level)
 		{
 			//ModelRenderer = new EntityModelRenderer(new StandingSignEntityModel(), texture);
 			
