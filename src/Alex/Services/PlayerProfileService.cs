@@ -5,6 +5,7 @@ using Alex.Common.Graphics.GpuResources;
 using Alex.Common.Services;
 using Alex.Common.Utils;
 using Alex.Utils;
+using Alex.Utils.Skins;
 using Microsoft.Xna.Framework.Graphics;
 using MojangSharp.Api;
 using MojangSharp.Endpoints;

@@ -20,6 +20,7 @@ using Alex.ResourcePackLib.Json;
 using Alex.ResourcePackLib.Json.Models.Entities;
 using Alex.Utils;
 using Alex.Utils.Inventories;
+using Alex.Utils.Skins;
 using Alex.Worlds;
 using Alex.Worlds.Multiplayer.Bedrock;
 using LibNoise.Combiner;
@@ -40,7 +41,7 @@ using BlockCoordinates = Alex.Common.Utils.Vectors.BlockCoordinates;
 using BoundingBox = Microsoft.Xna.Framework.BoundingBox;
 using ContainmentType = Microsoft.Xna.Framework.ContainmentType;
 using Skin = Alex.Common.Utils.Skin;
-using SkinResourcePatch = Alex.Utils.SkinResourcePatch;
+using SkinResourcePatch = Alex.Utils.Skins.SkinResourcePatch;
 
 namespace Alex.Entities
 {

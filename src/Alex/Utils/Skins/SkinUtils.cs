@@ -1,14 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Threading;
-using Alex.Blocks.Minecraft;
-using Alex.Common.Graphics.GpuResources;
 using Alex.ResourcePackLib.Json.Models.Entities;
-using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MiNET.Utils.Skins;
 using Newtonsoft.Json;
@@ -20,10 +15,9 @@ using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 using Image = SixLabors.ImageSharp.Image;
-using Point = System.Drawing.Point;
 using Rectangle = SixLabors.ImageSharp.Rectangle;
 
-namespace Alex.Utils
+namespace Alex.Utils.Skins
 {
 	public enum SkinSize
 	{

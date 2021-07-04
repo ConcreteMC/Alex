@@ -45,6 +45,7 @@ using Alex.ResourcePackLib.Json.Models.Entities;
 using Alex.Utils;
 using Alex.Utils.Commands;
 using Alex.Utils.Inventories;
+using Alex.Utils.Skins;
 using Alex.Worlds.Abstraction;
 using Alex.Worlds.Multiplayer.Java;
 using fNbt;

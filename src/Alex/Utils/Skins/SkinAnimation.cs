@@ -1,7 +1,7 @@
 using System;
 using MiNET.Utils.Skins;
 
-namespace Alex.Utils
+namespace Alex.Utils.Skins
 {
 	public class SkinAnimation
 	{

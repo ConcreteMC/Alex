@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Alex.Utils.Skins;
 using MiNET.Net;
 using Newtonsoft.Json;
 
@@ -88,8 +89,8 @@ namespace Alex.Utils
             PersonaSkin = skin.IsPersonaSkin;
             CapeOnClassicSkin = skin.Cape.OnClassicSkin;
 
-            SkinColor = skin.SkinColor;
-            ArmSize = skin.ArmSize;
+           // SkinColor = skin.SkinColor;
+         //   ArmSize = skin.ArmSize;
         }
 
         public BedrockJwtData()

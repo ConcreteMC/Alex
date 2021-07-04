@@ -42,6 +42,7 @@ using Alex.Services.Discord;
 using Alex.Utils;
 using Alex.Utils.Auth;
 using Alex.Utils.Caching;
+using Alex.Utils.Skins;
 using Alex.Utils.Threading;
 using Alex.Worlds.Abstraction;
 using Alex.Worlds.Multiplayer.Bedrock;

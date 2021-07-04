@@ -16,6 +16,7 @@ using Alex.ResourcePackLib.Json.Converters;
 using Alex.ResourcePackLib.Json.Models.Entities;
 using Alex.ResourcePackLib.Json.Models.Items;
 using Alex.Utils;
+using Alex.Utils.Skins;
 using Alex.Worlds;
 using Alex.Worlds.Multiplayer.Bedrock;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;

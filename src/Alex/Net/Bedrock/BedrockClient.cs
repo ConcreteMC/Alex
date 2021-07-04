@@ -51,13 +51,13 @@ using BlockFace = Alex.Common.Blocks.BlockFace;
 using CertificateData = Alex.Utils.CertificateData;
 using ConnectionInfo = Alex.Common.Utils.ConnectionInfo;
 using ExtraData = Alex.Utils.ExtraData;
-using GeometryIdentifier = Alex.Utils.GeometryIdentifier;
+using GeometryIdentifier = Alex.Utils.Skins.GeometryIdentifier;
 using Item = Alex.Items.Item;
 using LevelInfo = MiNET.Worlds.LevelInfo;
 using Player = Alex.Entities.Player;
 using PlayerLocation = Alex.Common.Utils.Vectors.PlayerLocation;
 using Skin = MiNET.Utils.Skins.Skin;
-using SkinResourcePatch = Alex.Utils.SkinResourcePatch;
+using SkinResourcePatch = Alex.Utils.Skins.SkinResourcePatch;
 
 namespace Alex.Net.Bedrock
 {
