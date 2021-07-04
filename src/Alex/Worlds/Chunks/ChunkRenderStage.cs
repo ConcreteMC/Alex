@@ -22,7 +22,7 @@ namespace Alex.Worlds.Chunks
 	{
 		private static ILogger Log         = LogManager.GetCurrentClassLogger();
 		private Dictionary<BlockCoordinates, List<VertexData>> BlockIndices     { get; set; }
-		private ManagedVertexBuffer                             Buffer           { get; set; }
+		private VertexBuffer                             Buffer           { get; set; }
 
 		private bool                  HasChanges     { get; set; }
 
@@ -197,7 +197,7 @@ namespace Alex.Worlds.Chunks
 
 			try
 			{
-				ManagedVertexBuffer buffer = Buffer;
+				VertexBuffer buffer = Buffer;
 
 				if (realVertices.Length == 0)
 				{
@@ -215,20 +215,24 @@ namespace Alex.Worlds.Chunks
 
 				_primitiveCount = verticeCount / 3;
 
-				ManagedVertexBuffer oldBuffer = null;
+				VertexBuffer oldBuffer = null;
 
 				if (buffer == null || buffer.VertexCount < size)
 				{
 					oldBuffer = buffer;
 
-					buffer = GpuResourceManager.GetBuffer(this, Alex.Instance.GraphicsDevice, MinifiedBlockShaderVertex.VertexDeclaration, size, BufferUsage.WriteOnly);
+				//	buffer = GpuResourceManager.GetBuffer(this, Alex.Instance.GraphicsDevice, MinifiedBlockShaderVertex.VertexDeclaration, size, BufferUsage.WriteOnly);
+					buffer = new VertexBuffer(
+						Alex.Instance.GraphicsDevice, MinifiedBlockShaderVertex.VertexDeclaration, size,
+						BufferUsage.WriteOnly);
 				}
 
 				buffer.SetData(realVertices, 0, size);
 
 				Buffer = buffer;
 
-				if (oldBuffer != null && oldBuffer.PoolId != buffer.PoolId) oldBuffer?.ReturnResource(this);
+				oldBuffer?.Dispose();
+				//if (oldBuffer != null && oldBuffer.PoolId != buffer.PoolId) oldBuffer?.ReturnResource(this);
 			}
 			finally
 			{
@@ -275,7 +279,7 @@ namespace Alex.Worlds.Chunks
 
 					BlockIndices.Clear();
 
-					Buffer?.ReturnResource(this);
+					Buffer?.Dispose();
 					Buffer = null;
 					BlockIndices = null;
 				}

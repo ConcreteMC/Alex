@@ -9,22 +9,7 @@ namespace Alex.Common.Utils
 		{
 			return centreAngle + Clamp(targetAngle - centreAngle, -maximumDifference, maximumDifference);
 		}
-
-		// normalizes a double degrees angle to between +180 and -180
-		public static float NormDeg(float a)
-		{
-			a %= 360f;
-			if (a >= 180f)
-			{
-				a -= 360f;
-			}
-			if (a < -180)
-			{
-				a += 360f;
-			}
-			return a;
-		}
-
+		
 		// numeric double clamp
 		public static float Clamp(float value, float min, float max)
 		{

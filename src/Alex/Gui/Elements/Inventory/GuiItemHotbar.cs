@@ -7,6 +7,7 @@ using Alex.Utils.Inventories;
 using Microsoft.Xna.Framework;
 using NLog;
 using RocketUI;
+using RocketUI.Utilities.Extensions;
 
 
 namespace Alex.Gui.Elements.Inventory
@@ -224,6 +225,7 @@ namespace Alex.Gui.Elements.Inventory
 		    base.OnDraw(graphics, gameTime);
 		    Vector2 textSize =
 			    graphics.Font.MeasureString(_itemNameTextElement.Text, _itemNameTextElement.Scale);
+		    
 			graphics.DrawString(Bounds.TopCenter() + new Vector2(-textSize.X / 2f, -(textSize.Y)), _itemNameTextElement.Text, _itemNameTextElement.TextColor, _itemNameTextElement.FontStyle, _itemNameTextElement.Scale, opacity: _itemNameTextElement.TextOpacity);
 	    }
 

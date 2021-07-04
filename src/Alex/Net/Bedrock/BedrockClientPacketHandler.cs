@@ -393,7 +393,7 @@ namespace Alex.Net.Bedrock
 					{
 						Client.World.AddPlayerListItem(
 							new PlayerListItem(
-								r.ClientUuid, r.DisplayName, (GameMode) ((int) r.GameMode), 0, false));
+								r.ClientUuid, r.DisplayName, (GameMode) ((int) r.GameMode), 0));
 					}
 				}
 			}
@@ -454,13 +454,13 @@ namespace Alex.Net.Bedrock
 				return;
 			}
 
-			var uuid = MiNETExtensions.FromEntityId(message.runtimeEntityId);
+			//var uuid = MiNETExtensions.FromEntityId(message.runtimeEntityId);
 			entity.KnownPosition = new PlayerLocation(message.x, message.y, message.z, -message.headYaw, -message.yaw, -message.pitch);
 			entity.KnownPosition.OnGround = false;
 			
 			entity.Velocity = new Microsoft.Xna.Framework.Vector3(message.speedX, message.speedY, message.speedZ);
 			entity.EntityId = message.runtimeEntityId;
-			entity.UUID = uuid;
+			entity.UUID = new UUID(Guid.NewGuid().ToByteArray());
 			//	entity.Texture = texture2D;
 			entity.SetInventory(new BedrockInventory(46));
 			
@@ -985,9 +985,10 @@ namespace Alex.Net.Bedrock
 						break;
 				}
 
-				if (slot >= 0 || slot < entity.Inventory.SlotCount)
+				if (slot >= 0 || slot < entity.Inventory.SlotCount - 1)
 				{
-					entity.Inventory[slot] = item;
+					entity.Inventory.SetSlot(slot, item, true);
+					//entity.Inventory[slot] = item;
 					entity.Inventory.SelectedSlot = message.selectedSlot;
 				}
 				else

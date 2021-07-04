@@ -155,9 +155,9 @@ namespace Alex.Gui.Dialogs.Containers
                 {
                     _playerEntityModelView.Entity.ShowItemInHand = true;
 
-                    _playerEntityModelView.Entity.Inventory[inv.SelectedSlot] = Inventory[inv.SelectedSlot];
-                    _playerEntityModelView.Entity.Inventory.MainHand = inv.MainHand;
-                    _playerEntityModelView.Entity.Inventory.SelectedSlot = inv.SelectedSlot;
+                    _playerEntityModelView.Entity.SetInventory(inv);// = Inventory;
+                    //_playerEntityModelView.Entity.Inventory.MainHand = inv.MainHand;
+                   // _playerEntityModelView.Entity.Inventory.SelectedSlot = inv.SelectedSlot;
                 }
                 
                 

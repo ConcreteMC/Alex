@@ -20,17 +20,17 @@ namespace Alex.Common.Utils
 		public static Thread         RenderThread        { get; set; }
 		public static Action<Action> QueueOnRenderThread { get; set; }
 		
-		public static ManagedTexture2D BitmapToTexture2D(GraphicsDevice device, Image<Rgba32> bmp, [CallerMemberName] string caller = "Image Converter")
+		public static Texture2D BitmapToTexture2D(GraphicsDevice device, Image<Rgba32> bmp, [CallerMemberName] string caller = "Image Converter")
 		{
 			return BitmapToTexture2D(caller, device, bmp, out _);
 		}
 		
-		public static ManagedTexture2D BitmapToTexture2D(object owner, GraphicsDevice device, Image<Rgba32> bmp)
+		public static Texture2D BitmapToTexture2D(object owner, GraphicsDevice device, Image<Rgba32> bmp)
         {
 	        return BitmapToTexture2D(owner, device, bmp, out _);
         }
         
-        public static ManagedTexture2D BitmapToTexture2D(object owner, GraphicsDevice device, Image<Rgba32> image, out long byteSize)
+        public static Texture2D BitmapToTexture2D(object owner, GraphicsDevice device, Image<Rgba32> image, out long byteSize)
         {
 	     //   var bmp = image;//.CloneAs<Rgba32>();
 	        uint[] colorData;
@@ -50,14 +50,15 @@ namespace Alex.Common.Utils
 	        }
 	       // var colorData = pixels.ToArray().Select(x => x.Rgba).ToArray();
 
-	       ManagedTexture2D result = null;
+	       Texture2D result = null;
 	       if (Thread.CurrentThread != RenderThread)
 	       {
 		       AutoResetEvent resetEvent = new AutoResetEvent(false);
 		       QueueOnRenderThread(
 			       () =>
 			       {
-				       result = GpuResourceManager.GetTexture2D(owner, device, image.Width, image.Height);
+				      // result = GpuResourceManager.GetTexture2D(owner, device, image.Width, image.Height);
+				      result = new Texture2D(device, image.Width, image.Height);
 				       result.SetData(colorData);
 
 				       resetEvent.Set();
@@ -66,11 +67,11 @@ namespace Alex.Common.Utils
 	       }
 	       else
 	       {
-		       result = GpuResourceManager.GetTexture2D(owner, device, image.Width, image.Height);
+		       result = new Texture2D(device, image.Width, image.Height); //GpuResourceManager.GetTexture2D(owner, device, image.Width, image.Height);
 		       result.SetData(colorData);
 	       }
 
-	       byteSize = result.MemoryUsage;
+	       byteSize = result.MemoryUsage();
 	        return result;
 	        /*for (int x = 0; x < bmp.Width; x++)
 	        {
@@ -89,7 +90,7 @@ namespace Alex.Common.Utils
 	        }*/
         }
 
-		public static ManagedTexture2D ImageToTexture2D(object owner, GraphicsDevice device, byte[] bmp)
+		public static Texture2D ImageToTexture2D(object owner, GraphicsDevice device, byte[] bmp)
 		{
 			//using (MemoryStream s = new MemoryStream(bmp))
 			{

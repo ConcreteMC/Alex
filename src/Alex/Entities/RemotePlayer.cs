@@ -204,61 +204,46 @@ namespace Alex.Entities
 								var resourcePatch = JsonConvert.DeserializeObject<SkinResourcePatch>(
 									skin.ResourcePatch, GeometrySerializationSettings);
 
-								Dictionary<string, EntityModel> models = new Dictionary<string, EntityModel>();
-								BedrockResourcePack.LoadEntityModel(skin.GeometryData, models);
-
-								var processedModels = BedrockResourcePack.ProcessEntityModels(
-									models, s =>
-									{
-										if (Alex.Instance.Resources.TryGetEntityModel(s, out var eModel))
-										{
-											return eModel;
-										}
-
-										return null;
-									});
-
-								if (processedModels == null || processedModels.Count == 0)
+								if (resourcePatch?.Geometry != null)
 								{
-									Log.Debug($"!! Model count was 0 for player {NameTag} !!");
+									Dictionary<string, EntityModel> models = new Dictionary<string, EntityModel>();
+									BedrockResourcePack.LoadEntityModel(skin.GeometryData, models);
+
+									int preProcessed = models.Count;
+									models = BedrockResourcePack.ProcessEntityModels(
+										models, s =>
+										{
+											if (Alex.Instance.Resources.TryGetEntityModel(s, out var eModel))
+											{
+												return eModel;
+											}
+
+											Log.Debug($"Failed to resolve model: {s}");
+											return null;
+										});
+									
+									if (models == null || !models.TryGetValue(resourcePatch.Geometry.Default, out model))
+									{
+										Log.Debug(
+											$"Invalid geometry: \'{resourcePatch.Geometry.Default}\' for player \'{NameTag.Replace("\n", "")}\'. Pre-Processing: {preProcessed}, post: {models?.Count ?? 0}");
+									}
 								}
 								else
 								{
-									if (resourcePatch?.Geometry != null)
-									{
-										if (!processedModels.TryGetValue(resourcePatch.Geometry.Default, out model))
-										{
-											Log.Debug(
-												$"Invalid geometry: {resourcePatch.Geometry.Default} for player {NameTag}");
-										}
-
-									}
-									else
-									{
-										Log.Debug($"Resourcepatch geometry was null for player {NameTag}");
-									}
+									Log.Debug($"Resourcepatch geometry was null for player {NameTag.Replace("\n", "")}");
 								}
 							}
 						}
 						catch (Exception ex)
 						{
-							string name = "N/A";
-							Log.Debug(ex, $"Could not create geometry ({name}): {ex.ToString()} for player {NameTag}");
+							Log.Debug(ex, $"Could not create geometry: {ex.ToString()} for player {NameTag.Replace("\n", "")}");
 						}
-					}
-					else
-					{
-						//skin = null;
-						//Log.Debug($"Geometry data null for player {NameTag}");
 					}
 				}
 
-				if (model != null)
+				if (model != null && model.Bones.All(x => x.Cubes == null || x.Cubes.Length == 0))
 				{
-					if (model.Bones.All(x => x.Cubes == null || x.Cubes.Length == 0))
-					{
-						model = null;
-					}
+					model = null;
 				}
 
 				if (model == null)
@@ -266,24 +251,17 @@ namespace Alex.Entities
 					if (!ModelFactory.TryGetModel(
 						slim ? "geometry.humanoid.custom" : "geometry.humanoid.customSlim", out model))
 					{
-						Log.Debug($"Invalid model for player {NameTag}");
-
+						Log.Debug($"Invalid model for player {NameTag.Replace("\n", "")}");
 						return;
 					}
-
-					/*model = skin.Slim ? (EntityModel) new Models.HumanoidCustomslimModel() :
-						(EntityModel) new HumanoidModel();*/ // new Models.HumanoidCustomGeometryHumanoidModel();
 				}
 
 
 				Image<Rgba32> skinBitmap = null;
-
 				try
 				{
 					if (skin == null || !skin.TryGetBitmap(model, out skinBitmap))
 					{
-						//Log.Warn($"No custom skin data for player {NameTag}");
-
 						if (slim)
 						{
 							if (_alex == null)
@@ -344,7 +322,7 @@ namespace Alex.Entities
 					else
 					{
 						Log.Debug(
-							$"No renderer for model: \"{model.Description?.Identifier ?? "N/A"}\" for player \'{NameTag}\' (Disposing)");
+							$"No renderer for model: \"{model.Description?.Identifier ?? "N/A"}\" for player \'{NameTag.Replace("\n", "")}\' (Disposing)");
 					}
 				}
 				finally

@@ -2,6 +2,7 @@ using Alex.Common.Graphics;
 using Alex.Common.Graphics.GpuResources;
 using Alex.Gamestates;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace Alex.Graphics.Models.Entity
 {
@@ -21,6 +22,6 @@ namespace Alex.Graphics.Models.Entity
 
 	public class AttachedRenderArgs : RenderArgs
 	{
-		public ManagedVertexBuffer Buffer { get; set; }
+		public VertexBuffer Buffer { get; set; }
 	}
 }

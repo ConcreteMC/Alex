@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Alex.Common;
 using Alex.Common.Data.Options;
+using Alex.Common.Items;
 using Alex.Common.Services;
 using Alex.Common.Utils;
 using Alex.Common.Utils.Vectors;
@@ -221,10 +222,10 @@ namespace Alex.Worlds.Singleplayer
 			World.UpdatePlayerPosition(new PlayerLocation(GetSpawnPoint()));
 
 			if (ItemFactory.TryGetItem("minecraft:diamond_sword", out var sword))
-				World.Player.Inventory[World.Player.Inventory.HotbarOffset] = sword;
+				World.Player.Inventory.SetSlot(World.Player.Inventory.HotbarOffset, sword, false);
 			
 			if (ItemFactory.TryGetItem("minecraft:grass_block", out var grass))
-				World.Player.Inventory[World.Player.Inventory.HotbarOffset  + 1] = grass;
+				World.Player.Inventory.SetSlot(World.Player.Inventory.HotbarOffset + 1, grass, false);
 		}
 
 		public override Vector3 GetSpawnPoint()

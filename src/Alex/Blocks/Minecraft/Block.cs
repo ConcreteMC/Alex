@@ -21,8 +21,8 @@ using Microsoft.Xna.Framework;
 using MiNET.Blocks;
 using NLog;
 using ItemBlock = Alex.Items.ItemBlock;
-using ItemMaterial = Alex.Common.Utils.ItemMaterial;
-using ItemType = Alex.Common.Utils.ItemType;
+using ItemMaterial = Alex.Common.Items.ItemMaterial;
+using ItemType = Alex.Common.Items.ItemType;
 
 namespace Alex.Blocks.Minecraft
 {

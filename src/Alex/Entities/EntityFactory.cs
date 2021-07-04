@@ -24,7 +24,6 @@ using Newtonsoft.Json;
 using NLog;
 using PlayerLocation = Alex.Common.Utils.Vectors.PlayerLocation;
 using ResourceLocation = Alex.Common.Resources.ResourceLocation;
-using UUID = Alex.Common.Utils.UUID;
 
 namespace Alex.Entities
 {
@@ -232,8 +231,8 @@ namespace Alex.Entities
 			return _registeredRenderers.Count - beforeImport;
 		}
 
-		private static ConcurrentDictionary<string, ManagedTexture2D> _pooledTextures =
-			new ConcurrentDictionary<string, ManagedTexture2D>(StringComparer.OrdinalIgnoreCase);
+		//private static ConcurrentDictionary<string, ManagedTexture2D> _pooledTextures =
+		//	new ConcurrentDictionary<string, ManagedTexture2D>(StringComparer.OrdinalIgnoreCase);
 		public static Entity Create(ResourceLocation entityType, World world, bool initRenderController = true)
 		{
 			Entity entity = null;
@@ -511,7 +510,8 @@ namespace Alex.Entities
 
 				entity.ModelRenderer = modelRenderer;
 				
-				ManagedTexture2D texture2D = null;
+				
+				Texture2D texture2D = null;
 				//if (renderer == null || texture2D == null)
 				{
 					if (description.Geometry.TryGetValue("default", out var defaultGeometry) 
@@ -526,7 +526,7 @@ namespace Alex.Entities
 							texture = textures.FirstOrDefault().Value;
 						}
 
-						texture2D = _pooledTextures.GetOrAdd(
+						/*texture2D = _pooledTextures.GetOrAdd(
 							texture, s =>
 							{
 								ManagedTexture2D pooled = null;
@@ -555,7 +555,18 @@ namespace Alex.Entities
 
 								//pooled?.Use();
 								return pooled;
-							});
+							});*/
+						
+						if (Alex.Instance.Resources.TryGetBedrockBitmap(
+							texture, out var bmp))
+						{
+							texture2D = TextureUtils.BitmapToTexture2D(entity,
+								Alex.Instance.GraphicsDevice, bmp);
+						}
+						else if (Alex.Instance.Resources.TryGetBitmap(texture, out var bmp2))
+						{
+							texture2D = TextureUtils.BitmapToTexture2D(entity, Alex.Instance.GraphicsDevice, bmp2);
+						}
 
 						//renderer = new EntityModelRenderer(model);
 					}

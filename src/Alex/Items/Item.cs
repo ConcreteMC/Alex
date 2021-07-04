@@ -1,10 +1,11 @@
 ﻿using System.Diagnostics;
+using Alex.Common.Items;
 using Alex.Common.Utils;
 using Alex.Graphics.Models.Items;
 using fNbt;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using ItemType = Alex.Common.Utils.ItemType;
+using ItemType = Alex.Common.Items.ItemType;
 
 namespace Alex.Items
 {

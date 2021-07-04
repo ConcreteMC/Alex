@@ -15,6 +15,7 @@ using MiNET;
 using MiNET.Plugins;
 using NLog;
 using RocketUI;
+using RocketUI.Utilities.Extensions;
 using SixLabors.ImageSharp.Drawing;
 
 using MessageType = Alex.Common.Data.MessageType;

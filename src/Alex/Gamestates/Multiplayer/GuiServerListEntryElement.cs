@@ -362,7 +362,7 @@ namespace Alex.Gamestates.Multiplayer
 						{
 							using (MemoryStream ms = new MemoryStream(Convert.FromBase64String(match.Groups["data"].Value)))
 							{
-								ServerIcon = GpuResourceManager.GetTexture2D(this, _graphicsDevice, ms);
+								ServerIcon = Texture2D.FromStream(_graphicsDevice, ms);
 							}
 
 							reset.Set();
@@ -380,6 +380,17 @@ namespace Alex.Gamestates.Multiplayer
 				SetErrorMessage(response.ErrorMessage);
 			}
 
+		}
+
+		/// <inheritdoc />
+		protected override void Dispose(bool disposing)
+		{
+			base.Dispose(disposing);
+			
+			if (disposing)
+			{
+				ServerIcon?.Dispose();
+			}
 		}
 	}
 }

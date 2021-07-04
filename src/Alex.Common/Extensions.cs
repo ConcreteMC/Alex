@@ -11,7 +11,7 @@ namespace Alex.Common
 
 	    public static void Init(GraphicsDevice gd)
 	    {
-		    WhiteTexture = GpuResourceManager.GetTexture2D("Alex.Extensions", gd, 1, 1);
+		    WhiteTexture = new Texture2D(gd, 1, 1);
 		    WhiteTexture.SetData(new Color[] {Color.White});
 
 		    var size = Vector3.One;

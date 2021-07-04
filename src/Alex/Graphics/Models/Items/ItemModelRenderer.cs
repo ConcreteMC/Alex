@@ -235,9 +235,11 @@ namespace Alex.Graphics.Models.Items
                 }
                 else
                 {
-                    var buffer = GpuResourceManager.GetBuffer(this, args.GraphicsDevice, _declaration,
-                        Vertices.Length, BufferUsage.WriteOnly);
-
+                   // var buffer = GpuResourceManager.GetBuffer(this, args.GraphicsDevice, _declaration,
+                   //     Vertices.Length, BufferUsage.WriteOnly);
+                   var buffer = new VertexBuffer(
+                       args.GraphicsDevice, _declaration, vertices.Length, BufferUsage.WriteOnly);
+                   
                     buffer.SetData(vertices);
 
                     Buffer = buffer;

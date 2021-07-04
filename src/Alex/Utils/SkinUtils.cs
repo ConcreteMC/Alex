@@ -250,7 +250,7 @@ namespace Alex.Utils
 			return output;
 		}
 		
-		public static void TryGetSkin(string json, GraphicsDevice graphics, Action<ManagedTexture2D, bool> onComplete)
+		public static void TryGetSkin(string json, GraphicsDevice graphics, Action<Texture2D, bool> onComplete)
 		{
 			//isSlim = false;
 			try
@@ -267,14 +267,13 @@ namespace Alex.Utils
 							data = wc.DownloadData(url);
 						}
 
-						ManagedTexture2D text = null;
+						Texture2D text = null;
 						Alex.Instance.UiTaskManager.Enqueue(
 							() =>
 							{
 								using (MemoryStream ms = new MemoryStream(data))
 								{
-									text = GpuResourceManager.GetTexture2D(
-										"SkinUtils", graphics, ms); // Texture2D.FromStream(graphics, ms);
+									text = Texture2D.FromStream(graphics, ms);
 								}
 
 								onComplete?.Invoke(text, r.textures.SKIN.metadata?.model == "slim");
@@ -299,7 +298,7 @@ namespace Alex.Utils
 			//return false;
 		}
 		
-		public static bool TryGetSkin(Uri skinUri, GraphicsDevice graphics, out ManagedTexture2D texture)
+		public static bool TryGetSkin(Uri skinUri, GraphicsDevice graphics, out Texture2D texture)
 		{
 			try
 			{
@@ -311,14 +310,13 @@ namespace Alex.Utils
 				
 				ManualResetEvent resetEvent = new ManualResetEvent(false);
 
-				ManagedTexture2D text = null;
+				Texture2D text = null;
 				Alex.Instance.UiTaskManager.Enqueue(
 					() =>
 					{
 						using (MemoryStream ms = new MemoryStream(data))
 						{
-							text = GpuResourceManager.GetTexture2D(
-								"SkinUtils", graphics, ms); // Texture2D.FromStream(graphics, ms);
+							text = Texture2D.FromStream(graphics, ms);
 						}
 
 						resetEvent.Set();
@@ -526,7 +524,7 @@ namespace Alex.Utils
 			return skin;
 		}
 
-		public static MiNET.Utils.Skins.Skin UpdateTexture(this MiNET.Utils.Skins.Skin skin, ManagedTexture2D texture)
+		public static MiNET.Utils.Skins.Skin UpdateTexture(this MiNET.Utils.Skins.Skin skin, Texture2D texture)
 		{
 			Image<Rgba32> skinTexture;
 

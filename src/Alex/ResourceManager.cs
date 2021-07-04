@@ -83,7 +83,7 @@ namespace Alex
 		public EntityModelRegistry EntityModelRegistry { get; private set; }
 		
 		
-		public static ManagedTexture2D NethergamesLogo { get; private set; }
+		public static Texture2D NethergamesLogo { get; private set; }
 
 		public ResourceManager(IServiceProvider serviceProvider)
 		{

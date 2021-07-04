@@ -9,12 +9,14 @@ using Alex.Graphics.Models.Entity.BlockEntities;
 using Alex.Worlds;
 using fNbt;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using ModelBone = Alex.Graphics.Models.Entity.ModelBone;
 
 namespace Alex.Entities.BlockEntities
 {
 	public class SkullBlockEntity : BlockEntity
 	{
-		private static ManagedTexture2D _skeleton = null,
+		private static Texture2D _skeleton = null,
 			_witherSkeleton                      = null,
 			_zombie                              = null,
 			_creeper                             = null,
@@ -23,7 +25,7 @@ namespace Alex.Entities.BlockEntities
 		private ModelBone HeadBone { get; set; }
 		
 		/// <inheritdoc />
-		public SkullBlockEntity(World level, Block block, ManagedTexture2D texture) : base(level, block)
+		public SkullBlockEntity(World level, Block block, Texture2D texture) : base(level, block)
 		{
 			if (EntityModelRenderer.TryGetRenderer(new SkullBlockEntityModel(), out var renderer))
 			{

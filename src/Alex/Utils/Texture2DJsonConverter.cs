@@ -76,8 +76,7 @@ namespace Alex.Utils
 						{
 							using (MemoryStream stream = new MemoryStream(data))
 							{
-								result = GpuResourceManager.GetTexture2D(
-									this, GraphicsDevice, stream); //Texture2D.FromStream(GraphicsDevice, stream);
+								result = Texture2D.FromStream(GraphicsDevice, stream);
 							}
 
 							resetEvent.Set();
@@ -91,8 +90,7 @@ namespace Alex.Utils
 				{
 					using (MemoryStream stream = new MemoryStream(data))
 					{
-						return GpuResourceManager.GetTexture2D(
-							this, GraphicsDevice, stream); //Texture2D.FromStream(GraphicsDevice, stream);
+						return Texture2D.FromStream(GraphicsDevice, stream);
 					}
 				}
 			}

@@ -81,7 +81,7 @@ namespace Alex.Gamestates.InGame
 					foreach (var p in s.World.PlayerList)
 					{
 						_playerList.AddChild(
-							new PlayerListItemElement(p.Username, p.IsJavaPlayer ? p.Ping : (int?)null)
+							new PlayerListItemElement(p.Username, p.Ping)
 							{
 								//BackgroundOverlay = (index % 2 == 0) ? new Color(Color.Black, 0.35f) :
 								//	Color.Transparent,

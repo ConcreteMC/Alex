@@ -131,6 +131,7 @@ namespace Alex
 
         private Point       WindowSize  { get; set; }
         public  AudioEngine AudioEngine { get; set; }
+
         public Alex(LaunchSettings launchSettings)
         {
             WindowSize = new Point(1280, 750);
@@ -154,10 +155,12 @@ namespace Alex
             DeviceManager.PreparingDeviceSettings += (sender, args) =>
             {
                 Gpu = args.GraphicsDeviceInformation.Adapter.Description;
+
                 args.GraphicsDeviceInformation.PresentationParameters.DepthStencilFormat = DepthFormat.Depth24Stencil8;
+
                 DeviceManager.PreferredBackBufferFormat = SurfaceFormat.Color;
                 DeviceManager.PreferMultiSampling = true;
-                
+
                 DeviceManager.PreferredBackBufferWidth = WindowSize.X;
                 DeviceManager.PreferredBackBufferHeight = WindowSize.Y;
             };
@@ -185,7 +188,7 @@ namespace Alex
                     }
                     else
                     {
-                       DeviceManager.PreferredBackBufferWidth = Window.ClientBounds.Width;
+                        DeviceManager.PreferredBackBufferWidth = Window.ClientBounds.Width;
                         DeviceManager.PreferredBackBufferHeight = Window.ClientBounds.Height;
                     }
 
@@ -194,11 +197,11 @@ namespace Alex
 
                 var bounds = Window.ClientBounds;
                 var viewport = GraphicsDevice.Viewport;
-               // viewport.Width = bounds.Width;
-               // viewport.Height = bounds.Height;
-               // viewport = new Viewport(bounds);
-                
-               // GraphicsDevice.Viewport = viewport;
+                // viewport.Width = bounds.Width;
+                // viewport.Height = bounds.Height;
+                // viewport = new Viewport(bounds);
+
+                // GraphicsDevice.Viewport = viewport;
             };
 
 
@@ -222,17 +225,23 @@ namespace Alex
             serviceCollection.AddSingleton<IOptionsProvider>(Options);
             AudioEngine = new AudioEngine(Storage, Options);
             serviceCollection.AddSingleton<Audio.AudioEngine>(AudioEngine);
-            
+
             // RocketUI
-            serviceCollection.TryAddEnumerable(ServiceDescriptor.Singleton<IInputListenerFactory, AlexKeyboardInputListenerFactory>());
-            serviceCollection.TryAddEnumerable(ServiceDescriptor.Singleton<IInputListenerFactory, AlexMouseInputListenerFactory>());
-            serviceCollection.TryAddEnumerable(ServiceDescriptor.Singleton<IInputListenerFactory, AlexGamePadInputListenerFactory>());
+            serviceCollection.TryAddEnumerable(
+                ServiceDescriptor.Singleton<IInputListenerFactory, AlexKeyboardInputListenerFactory>());
+
+            serviceCollection.TryAddEnumerable(
+                ServiceDescriptor.Singleton<IInputListenerFactory, AlexMouseInputListenerFactory>());
+
+            serviceCollection.TryAddEnumerable(
+                ServiceDescriptor.Singleton<IInputListenerFactory, AlexGamePadInputListenerFactory>());
+
             serviceCollection.AddSingleton<InputManager>();
             serviceCollection.AddSingleton<GuiRenderer>();
             serviceCollection.AddSingleton<IGuiRenderer, GuiRenderer>(sp => sp.GetRequiredService<GuiRenderer>());
             serviceCollection.AddSingleton<GuiManager>();
             //serviceCollection.AddSingleton<RocketDebugSocketServer>();
-           // serviceCollection.AddHostedService<RocketDebugSocketServer>(sp => sp.GetRequiredService<RocketDebugSocketServer>());
+            // serviceCollection.AddHostedService<RocketDebugSocketServer>(sp => sp.GetRequiredService<RocketDebugSocketServer>());
 
             PluginManager.Initiate(serviceCollection, Options, LaunchSettings);
 
@@ -266,7 +275,7 @@ namespace Alex
             FpsMonitor = new FpsMonitor(this);
             FpsMonitor.UpdateOrder = 0;
             Components.Add(FpsMonitor);
-            
+
             UiTaskManager = new ManagedTaskManager(this);
             Components.Add(UiTaskManager);
 
@@ -282,7 +291,7 @@ namespace Alex
         /// <inheritdoc />
         protected override void OnExiting(object sender, EventArgs args)
         {
-            GpuResourceManager.ReportIncorrectlyDisposedBuffers = false;
+            //GpuResourceManager.ReportIncorrectlyDisposedBuffers = false;
             base.OnExiting(sender, args);
         }
 
@@ -337,17 +346,16 @@ namespace Alex
             DeviceManager.ApplyChanges();
 
             InputManager = Services.GetRequiredService<InputManager>();
-            Components.Add(InputManager);       
+            Components.Add(InputManager);
             
             base.Initialize();
-            
-           // RichPresenceProvider.Initialize();
+            // RichPresenceProvider.Initialize();
         }
-
         protected override void LoadContent()
         {
             Stopwatch loadingStopwatch = Stopwatch.StartNew();
-
+            
+            GpuResourceManager.Setup(GraphicsDevice);
             RocketUI.GpuResourceManager.Init(GraphicsDevice);
             
             var builtInFont = ResourceManager.ReadResource("Alex.Resources.default_font.png");
@@ -562,7 +570,15 @@ namespace Alex
             Metrics = GraphicsDevice.Metrics;
             base.EndDraw();
         }
-        
+
+        /// <inheritdoc />
+        protected override void Update(GameTime gameTime)
+        {
+            base.Update(gameTime);
+            
+            GpuResourceManager.Update(gameTime, GraphicsDevice);
+        }
+
         public GraphicsMetrics Metrics { get; private set; }
 
         private Task InitializeGame(IProgressReceiver progressReceiver)

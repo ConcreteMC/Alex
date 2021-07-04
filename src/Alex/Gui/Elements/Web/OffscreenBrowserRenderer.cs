@@ -34,7 +34,7 @@ namespace Alex.Gui.Elements.Web
     public Browser Browser;
     public EventHandler<Uri> OnNavigate;
 
-    public ManagedTexture2D CurrentFrame
+    public Texture2D CurrentFrame
     {
       get => _currentFrame;
       private set
@@ -47,7 +47,8 @@ namespace Alex.Gui.Elements.Web
 
         if (oldFrame != null)
         {
-          oldFrame.ReturnResource(this);
+          oldFrame.Dispose();
+          //oldFrame.ReturnResource(this);
         }
       }
     }
@@ -227,7 +228,7 @@ namespace Alex.Gui.Elements.Web
     }
 
     private Page _page;
-    private ManagedTexture2D _currentFrame;
+    private Texture2D _currentFrame;
 
     public async void HandleMouseScroll(int deltaX, int deltaY)
     {

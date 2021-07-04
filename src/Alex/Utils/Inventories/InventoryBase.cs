@@ -79,10 +79,10 @@ namespace Alex.Utils.Inventories
 			{
 				return Get(index);
 			}
-			set
-			{
-				Set(index, value, true);
-			}
+			//set
+			//{
+			//	Set(index, value, true);
+			//}
 		}
 
 		public Dictionary<short, (ClickWindowPacket packet, SlotChangedEventArgs slot, bool isCursorTransaction)>

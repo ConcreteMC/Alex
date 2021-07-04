@@ -189,7 +189,7 @@ namespace Alex.Gamestates.InGame
 
 			_debugInfo.AddDebugLeft(() => $"Primitives: {Alex.Metrics.PrimitiveCount:N0} Draw count: {Alex.Metrics.DrawCount}", TimeSpan.FromMilliseconds(500));
 			_debugInfo.AddDebugLeft(() => $"Textures: {Alex.Metrics.TextureCount:N0} Sprite count: {Alex.Metrics.SpriteCount}", TimeSpan.FromMilliseconds(500));
-			_debugInfo.AddDebugLeft(() => $"Graphic Resources: {GpuResourceManager.GetResourceCount}", TimeSpan.FromMilliseconds(500));
+			_debugInfo.AddDebugLeft(() => $"Graphic Resources: {GpuResourceManager.ResourceCount}", TimeSpan.FromMilliseconds(500));
 		//	_debugInfo.AddDebugLeft(() => $"IndexBuffer Elements: {World.IndexBufferSize:N0} ({GetBytesReadable(World.IndexBufferSize * 4)})");
 			_debugInfo.AddDebugLeft(() => $"Chunks: {World.ChunkCount}, {World.ChunkManager.RenderedChunks}, {World.ChunkDrawCount}", TimeSpan.FromMilliseconds(500));
 			_debugInfo.AddDebugLeft(() => $"Entities: {World.EntityManager.EntityCount}, {World.EntityManager.EntitiesRendered}, {World.EntityManager.DrawCount}", TimeSpan.FromMilliseconds(500));
@@ -237,7 +237,7 @@ namespace Alex.Gamestates.InGame
 			_debugInfo.AddDebugRight(Alex.RenderingEngine);
 			//_debugInfo.AddDebugRight(() => MemoryUsageDisplay);
 			_debugInfo.AddDebugRight(() => $"RAM: {GetBytesReadable(_ramUsage, 2)}", TimeSpan.FromMilliseconds(1000));
-			_debugInfo.AddDebugRight(() => $"GPU: {GetBytesReadable(GpuResourceManager.GetMemoryUsage, 2)}", TimeSpan.FromMilliseconds(1000));
+			_debugInfo.AddDebugRight(() => $"GPU: {GetBytesReadable(GpuResourceManager.MemoryUsage, 2)}", TimeSpan.FromMilliseconds(1000));
 			_debugInfo.AddDebugRight(() =>
 			{
 				return

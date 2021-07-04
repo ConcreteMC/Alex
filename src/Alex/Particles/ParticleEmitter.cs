@@ -20,12 +20,12 @@ namespace Alex.Particles
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ParticleEmitter));
 		private ThreadSafeList<ParticleInstance> _instances = new ThreadSafeList<ParticleInstance>();
-		private ManagedTexture2D Texture { get; }
+		private Texture2D Texture { get; }
 
 		private AppearanceComponent AppearanceComponent { get; }
 		public int MaxParticles { get; set; } = 500;
 		public ParticleDefinition Definition { get; }
-		public ParticleEmitter(ManagedTexture2D texture, ParticleDefinition definition)
+		public ParticleEmitter(Texture2D texture, ParticleDefinition definition)
 		{
 			Texture = texture;
 			Definition = definition;

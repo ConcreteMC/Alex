@@ -27,14 +27,14 @@ namespace Alex.Graphics.Models
 	    private BasicEffect     CelestialPlaneEffect { get; set; }
 		private AlphaTestEffect CloudsPlaneEffect    { get; set; }
 
-	    private ManagedVertexBuffer CloudsPlane { get; set; }
-        private ManagedVertexBuffer SkyPlane { get; set; }
-	    private ManagedVertexBuffer CelestialPlane { get; set; }
-		private ManagedVertexBuffer MoonPlane { get; }
+	    private VertexBuffer CloudsPlane { get; set; }
+        private VertexBuffer SkyPlane { get; set; }
+	    private VertexBuffer CelestialPlane { get; set; }
+		private VertexBuffer MoonPlane { get; }
 
-		private ManagedTexture2D SunTexture { get; }
-		private ManagedTexture2D MoonTexture { get; }
-		private ManagedTexture2D CloudTexture { get; }
+		private Texture2D SunTexture { get; }
+		private Texture2D MoonTexture { get; }
+		private Texture2D CloudTexture { get; }
 
 		private bool CanRender { get; set; } = true;
 		public bool EnableClouds { get; set; } = false;
@@ -108,8 +108,10 @@ namespace Alex.Graphics.Models
 				new VertexPositionColor(new Vector3(planeDistance, 0, planeDistance), Color.White),
 				new VertexPositionColor(new Vector3(-planeDistance, 0, planeDistance), Color.White)
 			};
-			SkyPlane = GpuResourceManager.GetBuffer(this, device, VertexPositionColor.VertexDeclaration,
-				plane.Length, BufferUsage.WriteOnly);
+			//SkyPlane = GpuResourceManager.GetBuffer(this, device, VertexPositionColor.VertexDeclaration,
+			//	plane.Length, BufferUsage.WriteOnly);
+			SkyPlane = new VertexBuffer(
+				device, VertexPositionColor.VertexDeclaration, plane.Length, BufferUsage.WriteOnly);
 			SkyPlane.SetData<VertexPositionColor>(plane);
 
 			planeDistance = 60;
@@ -123,8 +125,9 @@ namespace Alex.Graphics.Models
 				new VertexPositionTexture(new Vector3(planeDistance, 0, planeDistance), new Vector2(1, 1)),
 				new VertexPositionTexture(new Vector3(-planeDistance, 0, planeDistance), new Vector2(0, 1))
 			};
-			CelestialPlane = GpuResourceManager.GetBuffer(this, device, VertexPositionTexture.VertexDeclaration,
-				celestialPlane.Length, BufferUsage.WriteOnly);
+
+			CelestialPlane = new VertexBuffer(
+				device, VertexPositionTexture.VertexDeclaration, celestialPlane.Length, BufferUsage.WriteOnly);
 			CelestialPlane.SetData<VertexPositionTexture>(celestialPlane);
 
 			_moonPlaneVertices = new[]
@@ -137,7 +140,7 @@ namespace Alex.Graphics.Models
 				new VertexPositionTexture(new Vector3(planeDistance, 0, planeDistance), new Vector2(_moonX, _moonY)),
 				new VertexPositionTexture(new Vector3(-planeDistance, 0, planeDistance), new Vector2(0, _moonY)),
 			};
-			MoonPlane = GpuResourceManager.GetBuffer(this, device, VertexPositionTexture.VertexDeclaration,
+			MoonPlane = new VertexBuffer(device, VertexPositionTexture.VertexDeclaration,
 				_moonPlaneVertices.Length, BufferUsage.WriteOnly);
 			MoonPlane.SetData<VertexPositionTexture>(_moonPlaneVertices);
 
@@ -179,7 +182,7 @@ namespace Alex.Graphics.Models
 			};
 
 
-            CloudsPlane = GpuResourceManager.GetBuffer(this, device, VertexPositionTexture.VertexDeclaration,
+            CloudsPlane = new VertexBuffer(device, VertexPositionTexture.VertexDeclaration,
 				cloudVertices.Length, BufferUsage.WriteOnly);
 			CloudsPlane.SetData<VertexPositionTexture>(cloudVertices);
         }
@@ -474,13 +477,13 @@ namespace Alex.Graphics.Models
 
 		public void Dispose()
 		{
-			CloudsPlane?.ReturnResource(this);
-			SkyPlane?.ReturnResource(this);
-			CelestialPlane?.ReturnResource(this);
-			MoonPlane?.ReturnResource(this);
-			SunTexture?.ReturnResource(this);
-			MoonTexture?.ReturnResource(this);
-			CloudTexture?.ReturnResource(this);
+			CloudsPlane?.Dispose();
+			SkyPlane?.Dispose();
+			CelestialPlane?.Dispose();
+			MoonPlane?.Dispose();
+			SunTexture?.Dispose();
+			MoonTexture?.Dispose();
+			CloudTexture?.Dispose();
 			
 			SkyPlaneEffect?.Dispose();
 			CelestialPlaneEffect?.Dispose();

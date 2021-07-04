@@ -49,6 +49,7 @@ using Alex.Worlds.Abstraction;
 using Alex.Worlds.Multiplayer.Java;
 using fNbt;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Xna.Framework.Graphics;
 using MiNET;
 using MiNET.Entities;
 using MiNET.Worlds;
@@ -61,6 +62,7 @@ using ChunkCoordinates = Alex.Common.Utils.Vectors.ChunkCoordinates;
 using Command = Alex.Utils.Commands.Command;
 using CommandProperty = Alex.Utils.Commands.CommandProperty;
 using ConnectionState = Alex.Networking.Java.ConnectionState;
+using Effect = Alex.Entities.Components.Effects.Effect;
 using Entity = Alex.Entities.Entity;
 using MessageType = Alex.Common.Data.MessageType;
 using Packet = Alex.Networking.Java.Packets.Packet;
@@ -334,7 +336,7 @@ namespace Alex.Worlds.Multiplayer
 			SendPacket(playerLook);
 		}
 
-		private ManagedTexture2D _alexSkin;
+		private Texture2D _alexSkin;
 		private Vector3 _spawn = Vector3.Zero;
 		public override Vector3 GetSpawnPoint()
 		{
@@ -2171,7 +2173,7 @@ namespace Alex.Worlds.Multiplayer
 					if (_players.TryAdd(uuid, entry))
 					{
 						World.AddPlayerListItem(
-							new PlayerListItem(uuid, entry.Name, (GameMode) entry.Gamemode, entry.Ping, true));
+							new PlayerListItem(uuid, entry.Name, (GameMode) entry.Gamemode, entry.Ping));
 					}
 				}
 			}

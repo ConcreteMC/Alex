@@ -49,7 +49,6 @@ using MetadataFloat = Alex.Networking.Java.Packets.Play.MetadataFloat;
 using MetadataString = Alex.Networking.Java.Packets.Play.MetadataString;
 using ModelBone = Alex.Graphics.Models.Entity.ModelBone;
 using PlayerLocation = Alex.Common.Utils.Vectors.PlayerLocation;
-using UUID = Alex.Common.Utils.UUID;
 
 namespace Alex.Entities
 {
@@ -196,8 +195,6 @@ namespace Alex.Entities
 
 		public double Gravity { get; set; } = 0.08f; //16.8f; //9.81f; //1.6f;
 		//Drag & gravity etc is Vanilla * 400
-		
-		public float TerminalVelocity { get; set; } = 78.4f;
 		
 		public MiNET.Utils.UUID UUID { get; set; }
 
@@ -1106,9 +1103,9 @@ namespace Alex.Entities
 			//IsFlying = data[(int) MiNET.Entities.Entity.DataFlags.fl]
 		}
 
-		private ManagedTexture2D _texture;
+		private Texture2D _texture;
 
-		public ManagedTexture2D Texture
+		public Texture2D Texture
 		{
 			get
 			{
@@ -1119,12 +1116,12 @@ namespace Alex.Entities
 				if (value == _texture)
 					return;
 				
-				ManagedTexture2D oldValue = _texture;
+				Texture2D oldValue = _texture;
 
 				try
 				{
 					_texture = value;
-					value?.Use(this);
+					//value?.Use(this);
 					
 					if (Effect != null && value != null)
 					{
@@ -1133,8 +1130,9 @@ namespace Alex.Entities
 				}
 				finally
 				{
-					oldValue?.Release(this);
-					oldValue?.ReturnResource(this);
+					oldValue?.Dispose();
+					//oldValue?.Release(this);
+					//oldValue?.ReturnResource(this);
 				}
 			}
 		}

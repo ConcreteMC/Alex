@@ -25,7 +25,7 @@ namespace Alex.Graphics.Models.Entity
 		
 		private IReadOnlyDictionary<string, ModelBone> Bones { get; set; }
 
-		private ManagedVertexBuffer VertexBuffer
+		private VertexBuffer VertexBuffer
 		{
 			get => _vertexBuffer;
 			set
@@ -34,20 +34,21 @@ namespace Alex.Graphics.Models.Entity
 
 				if (value != null)
 				{
-					value.Use(this);
+					//value.Use(this);
 				}
 
-				if (previousValue != null)
+				if (previousValue != null && previousValue != value)
 				{
-					previousValue.Release(this);
-					previousValue.ReturnResource(this);
+					previousValue.Dispose();
+					//previousValue.Release(this);
+					//previousValue.ReturnResource(this);
 				}
 				
 				_vertexBuffer = value;
 			}
 		}
 
-		private ManagedIndexBuffer IndexBuffer
+		private IndexBuffer IndexBuffer
 		{
 			get => _indexBuffer;
 			set
@@ -56,13 +57,14 @@ namespace Alex.Graphics.Models.Entity
 
 				if (value != null)
 				{
-					value.Use(this);
+					//value.Use(this);
 				}
 
-				if (previousValue != null)
+				if (previousValue != null && previousValue != value)
 				{
-					previousValue.Release(this);
-					previousValue.ReturnResource(this);
+					previousValue.Dispose();
+					//previousValue.Release(this);
+					//previousValue.ReturnResource(this);
 				}
 				_indexBuffer = value;
 			}
@@ -82,7 +84,7 @@ namespace Alex.Graphics.Models.Entity
 
 		private class SharedBuffer
 		{
-			public SharedBuffer(ManagedVertexBuffer vertexBuffer, ManagedIndexBuffer indexBuffer, IReadOnlyDictionary<string, ModelBone> bones)
+			public SharedBuffer(VertexBuffer vertexBuffer, IndexBuffer indexBuffer, IReadOnlyDictionary<string, ModelBone> bones)
 			{
 				VertexBuffer = vertexBuffer;
 				IndexBuffer = indexBuffer;
@@ -91,16 +93,16 @@ namespace Alex.Graphics.Models.Entity
 				//Indices = indices;
 			}
 
-			public ManagedVertexBuffer VertexBuffer { get; }
-			public ManagedIndexBuffer IndexBuffer { get; }
+			public VertexBuffer VertexBuffer { get; }
+			public IndexBuffer IndexBuffer { get; }
 			public IReadOnlyDictionary<string, ModelBone> Bones { get; }
 			//public List<VertexPositionColorTexture> Vertices { get; }
 			//public List<short> Indices { get; }
 			/// <inheritdoc />
 		}
 
-		private static ConcurrentDictionary<string, SharedBuffer> _sharedBuffers =
-			new ConcurrentDictionary<string, SharedBuffer>();
+		//private static ConcurrentDictionary<string, SharedBuffer> _sharedBuffers =
+		//	new ConcurrentDictionary<string, SharedBuffer>();
 
 		private static SharedBuffer BuildSharedBuffer(EntityModel model)
 		{
@@ -113,46 +115,53 @@ namespace Alex.Graphics.Models.Entity
 				return null;
 			}
 
-			var indexBuffer = GpuResourceManager.GetIndexBuffer(
-				_sharedBuffers, Alex.Instance.GraphicsDevice, IndexElementSize.SixteenBits, indices.Count,
-				BufferUsage.WriteOnly);
+			//var indexBuffer = GpuResourceManager.GetIndexBuffer(
+			//	_sharedBuffers, Alex.Instance.GraphicsDevice, IndexElementSize.SixteenBits, indices.Count,
+			//	BufferUsage.WriteOnly);
 
+			var indexBuffer = new IndexBuffer(
+				Alex.Instance.GraphicsDevice, IndexElementSize.SixteenBits, indices.Count, BufferUsage.WriteOnly);
 			indexBuffer.SetData(indices.ToArray());
 
-			indexBuffer.ResourceDisposed += (sender, resource) =>
-			{
-				_sharedBuffers.TryRemove(model.Description.Identifier, out _);
-			};
+			//indexBuffer.ResourceDisposed += (sender, resource) =>
+		//	{
+			//	_sharedBuffers.TryRemove(model.Description.Identifier, out _);
+		//	};
 
-			var vertexBuffer = GpuResourceManager.GetBuffer(
-				_sharedBuffers, Alex.Instance.GraphicsDevice, VertexPositionColorTexture.VertexDeclaration,
-				vertices.Count, BufferUsage.WriteOnly);
+			//var vertexBuffer = GpuResourceManager.GetBuffer(
+			//	_sharedBuffers, Alex.Instance.GraphicsDevice, VertexPositionColorTexture.VertexDeclaration,
+			//	vertices.Count, BufferUsage.WriteOnly);
 
-			vertexBuffer.SetData(vertices.ToArray());
+			var vertexarray = vertices.ToArray();
+			var vertexBuffer = new VertexBuffer(
+				Alex.Instance.GraphicsDevice, VertexPositionColorTexture.VertexDeclaration, vertexarray.Length,
+				BufferUsage.WriteOnly);
+			
+			vertexBuffer.SetData(vertexarray);
 
-			vertexBuffer.ResourceDisposed += (sender, resource) =>
-			{
-				_sharedBuffers.TryRemove(model.Description.Identifier, out _);
-			};
+			//vertexBuffer.ResourceDisposed += (sender, resource) =>
+			//{
+			//	_sharedBuffers.TryRemove(model.Description.Identifier, out _);
+			//};
 
 			return new SharedBuffer(vertexBuffer, indexBuffer, bones);
 		}
 
 		public static void Remove(string identifier)
 		{
-			if (_sharedBuffers.TryRemove(identifier, out var shared))
+			/*if (_sharedBuffers.TryRemove(identifier, out var shared))
 			{
 				shared.VertexBuffer?.ReturnResource(null);
 				shared.IndexBuffer?.ReturnResource(null);
-			}
+			}*/
 		}
 		
 		public static bool TryGetRenderer(EntityModel model, out EntityModelRenderer renderer)
 		{
 			{
-				SharedBuffer tuple = null;
+				SharedBuffer tuple = BuildSharedBuffer(model);
 				
-				if (!_sharedBuffers.TryGetValue(model.Description.Identifier, out tuple))
+				/*if (!_sharedBuffers.TryGetValue(model.Description.Identifier, out tuple))
 				{
 					tuple = BuildSharedBuffer(model);
 
@@ -163,7 +172,7 @@ namespace Alex.Graphics.Models.Entity
 					}
 
 					_sharedBuffers.TryAdd(model.Description.Identifier, tuple);
-				}
+				}*/
 				
 				//tuple.Item1.Use(renderer);
 				//tuple.Item2.Use(renderer);
@@ -246,7 +255,7 @@ namespace Alex.Graphics.Models.Entity
 
 			if (vertices.Count == 0 || indices.Count == 0)
 			{
-				Log.Warn($"Oh no. Vertices: {vertices.Count} Indices: {indices.Count}");
+				Log.Debug($"Oh no. Vertices: {vertices.Count} Indices: {indices.Count}");
 				return false;
 			}
 
@@ -474,8 +483,8 @@ namespace Alex.Graphics.Models.Entity
 		}
 
 		//private int _instances = 0;
-		private ManagedIndexBuffer _indexBuffer;
-		private ManagedVertexBuffer _vertexBuffer;
+		private IndexBuffer _indexBuffer;
+		private VertexBuffer _vertexBuffer;
 
 		public void Dispose()
 		{

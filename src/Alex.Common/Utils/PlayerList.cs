@@ -37,21 +37,19 @@ namespace Alex.Common.Utils
 		public string           Username { get; set; }
 		public GameMode         Gamemode { get; set; } = GameMode.Survival;
 		public int              Ping     { get; set; } = 0;
-
-		public bool IsJavaPlayer { get; set; } = false;
+		
 		public PlayerListItem()
 		{
 
 		}
 
-		public PlayerListItem(MiNET.Utils.UUID id, string username, GameMode gamemode, int ping, bool isJavaPlayer)
+		public PlayerListItem(MiNET.Utils.UUID id, string username, GameMode gamemode, int ping)
 		{
 			UUID = id;
 			Username = username;
 			Gamemode = gamemode;
 
 			Ping = ping;
-			IsJavaPlayer = isJavaPlayer;
 		}
 	}
 }

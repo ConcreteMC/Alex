@@ -9,6 +9,7 @@ using Alex.Blocks.Minecraft;
 using Alex.Blocks.State;
 using Alex.Common.Graphics.GpuResources;
 using Alex.Common.Resources;
+using Alex.Common.Utils;
 using Alex.Gamestates.InGame;
 using Alex.Graphics.Models.Blocks;
 using Alex.Graphics.Textures;
@@ -39,7 +40,7 @@ namespace Alex.Graphics
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(SPWorldProvider));
 
 	    private Dictionary<ResourceLocation,  Utils.TextureInfo> _atlasLocations = new Dictionary<ResourceLocation,  Utils.TextureInfo>();
-	    private ManagedTexture2D _textureAtlas;
+	    private Texture2D _textureAtlas;
 	    
         public Vector2 AtlasSize { get; private set; }
         public string Selector { get; }
@@ -169,16 +170,16 @@ namespace Alex.Graphics
 		    }
 		    
 		    AtlasSize = new Vector2(_textureAtlas.Width, _textureAtlas.Height);
-		    totalSize += _textureAtlas.MemoryUsage;
+		    totalSize += _textureAtlas.MemoryUsage();
 		    sw.Stop();
 
 		    Log.Info(
 			    $"TextureAtlas '{Selector}' generated in {sw.ElapsedMilliseconds}ms! ({PlayingState.GetBytesReadable(totalSize, 2)})");
 	    }
 
-	    private ManagedTexture2D GetMipMappedTexture2D(GraphicsDevice device, Image<Rgba32> image)
+	    private Texture2D GetMipMappedTexture2D(GraphicsDevice device, Image<Rgba32> image)
 	    {
-		    ManagedTexture2D texture = GpuResourceManager.GetTexture2D(this, device, image.Width, image.Height, true, SurfaceFormat.Color);
+		    Texture2D texture = new Texture2D(device, image.Width, image.Height, true, SurfaceFormat.Color);
 
 		    for (int level = 0; level < Alex.MipMapLevel; level++)
 		    {
@@ -259,7 +260,7 @@ namespace Alex.Graphics
             if (build) GenerateAtlas(device, loadedTextures, progressReceiver);
 		}
 
-        public ManagedTexture2D GetAtlas()
+        public Texture2D GetAtlas()
 		{
 			return _textureAtlas;
 		}

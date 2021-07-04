@@ -33,8 +33,8 @@ namespace Alex.Particles
 
 		public int ParticleCount { get; private set; }
 
-		private Dictionary<string, ManagedTexture2D> _sharedTextures =
-			new Dictionary<string, ManagedTexture2D>();
+		//private Dictionary<string, Texture2D> _sharedTextures =
+		//	new Dictionary<string, Texture2D>();
 		private ResourceManager ResourceManager { get; }
 		private IReadOnlyDictionary<string, string> _particleMapping;
 		public ParticleManager(Game game, GraphicsDevice device, ResourceManager resourceManager) : base(game)
@@ -83,9 +83,9 @@ namespace Alex.Particles
 
 					var texturePath = particle.Value.Description.BasicRenderParameters.Texture;
 
-					ManagedTexture2D particleTexture = null;
+					Texture2D particleTexture = null;
 
-					if (!_sharedTextures.TryGetValue(texturePath, out particleTexture))
+					//if (!_sharedTextures.TryGetValue(texturePath, out particleTexture))
 					{
 						switch (texturePath)
 						{
@@ -109,19 +109,20 @@ namespace Alex.Particles
 								break;
 						}
 
-						if (particleTexture != null)
-							_sharedTextures.TryAdd(texturePath, particleTexture);
+						//if (particleTexture != null)
+						//	_sharedTextures.TryAdd(texturePath, particleTexture);
 					}
 
 					if (particleTexture != null)
 					{
 						ParticleEmitter p = new ParticleEmitter(particleTexture, particle.Value);
-						particleTexture.Use(this);
+						//particleTexture.Use(this);
 
 						if (!TryRegister(particle.Value.Description.Identifier, p))
 						{
 							Log.Warn($"Could not add particle (duplicate): {particle.Key}");
-							particleTexture.Release(this);
+							particleTexture.Dispose();
+							//particleTexture.Release(this);
 						}
 						else
 						{

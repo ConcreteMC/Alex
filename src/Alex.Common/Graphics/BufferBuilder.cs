@@ -27,7 +27,7 @@ namespace Alex.Common.Graphics
             Index = new short[IndexSize];
             Data = new TVertexType[DataSize];
             
-            IndexBuffer = GpuResourceManager.GetIndexBuffer(this, graphicsDevice, IndexElementSize.SixteenBits, IndexSize, BufferUsage.WriteOnly);
+            IndexBuffer = new IndexBuffer(graphicsDevice, IndexElementSize.SixteenBits, IndexSize, BufferUsage.WriteOnly);
             VertexBuffer = new VertexBuffer(graphicsDevice, typeof(TVertexType), DataSize, BufferUsage.WriteOnly);
 
         }

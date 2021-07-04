@@ -10,6 +10,7 @@ using Alex.Common;
 using Alex.Common.Blocks;
 using Alex.Common.Graphics;
 using Alex.Common.Input;
+using Alex.Common.Items;
 using Alex.Common.Utils;
 using Alex.Common.Utils.Vectors;
 using Alex.Items;

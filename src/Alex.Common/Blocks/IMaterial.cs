@@ -1,4 +1,5 @@
-﻿using Alex.Common.Utils;
+﻿using Alex.Common.Items;
+using Alex.Common.Utils;
 using Microsoft.Xna.Framework;
 
 namespace Alex.Common.Blocks

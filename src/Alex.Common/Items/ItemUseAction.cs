@@ -1,4 +1,4 @@
-namespace Alex.Common.Utils
+namespace Alex.Common.Items
 {
 	public enum ItemUseAction
 	{

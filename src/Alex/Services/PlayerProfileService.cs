@@ -5,6 +5,7 @@ using Alex.Common.Graphics.GpuResources;
 using Alex.Common.Services;
 using Alex.Common.Utils;
 using Alex.Utils;
+using Microsoft.Xna.Framework.Graphics;
 using MojangSharp.Api;
 using MojangSharp.Endpoints;
 using NLog;
@@ -53,7 +54,7 @@ namespace Alex.Services
 				var profile = await new Profile(auth.SelectedProfile.Value).PerformRequestAsync();
 
 				bool skinSlim = false;
-				ManagedTexture2D texture = null;
+				Texture2D texture = null;
 			
 				if (profile.Properties.SkinUri != null)
 				{

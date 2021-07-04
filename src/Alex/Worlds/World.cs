@@ -39,13 +39,9 @@ using RocketUI;
 using BlockCoordinates = Alex.Common.Utils.Vectors.BlockCoordinates;
 using ChunkCoordinates = Alex.Common.Utils.Vectors.ChunkCoordinates;
 using Color = Microsoft.Xna.Framework.Color;
-using Inventory = MiNET.Inventory;
-using MathF = System.MathF;
 using Player = Alex.Entities.Player;
 using PlayerLocation = Alex.Common.Utils.Vectors.PlayerLocation;
-using Rectangle = Microsoft.Xna.Framework.Rectangle;
 using Skin = Alex.Common.Utils.Skin;
-using UUID = Alex.Common.Utils.UUID;
 
 //using System.Reflection.Metadata.Ecma335;
 
@@ -129,7 +125,7 @@ namespace Alex.Worlds
 			var profileService = serviceProvider.GetRequiredService<IPlayerProfileService>();
 			var resources = serviceProvider.GetRequiredService<ResourceManager>();
 			
-			ManagedTexture2D texture;
+			Texture2D texture;
 			
 			if (Alex.PlayerTexture != null)
 			{
