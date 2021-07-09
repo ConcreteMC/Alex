@@ -41,14 +41,14 @@ namespace Alex.Gui.Dialogs.Containers
             {
             //    var modelRenderer = player.ModelRenderer;
 
-                var mob = new RemotePlayer(player.Level, skin: player.Skin);
+               // var mob = new RemotePlayer(player.Level, skin: player.Skin);
               //  mob.Skin = player.Skin;
                // mob.ModelRenderer = player.ModelRenderer;
                 //mob.Texture = player.Texture;
 
              //   mob.KnownPosition = new PlayerLocation(0, 0, 0, 0f, 0f, 0f);
 
-                ContentContainer.AddChild(
+                /*ContentContainer.AddChild(
                     _playerEntityModelView = new GuiEntityModelView(mob)
                     {
                         Margin = new Thickness(7, 25),
@@ -58,7 +58,7 @@ namespace Alex.Gui.Dialogs.Containers
                         AutoSizeMode = AutoSizeMode.None,
                         Background = null,
                         BackgroundOverlay = null
-                    });
+                    });*/
             }
 
             Color color = Color.Blue;

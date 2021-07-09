@@ -34,7 +34,7 @@ namespace Alex.Gamestates.InGame.Hud
 	    public readonly TitleComponent Title;
 	    public readonly ScoreboardView Scoreboard;
 	    public readonly BossBarContainer BossBar;
-        private PlayerInputManager InputManager => _playerController.InputManager;
+        private PlayerInputManager PlayerInputManager => _playerController.InputManager;
 
 		private Alex Alex { get; }
 		private Player Player { get; }
@@ -51,7 +51,7 @@ namespace Alex.Gamestates.InGame.Hud
 	        Padding = Thickness.One * 3;
 	        
             _playerController = player.Controller;
-			InputManager.AddListener(new MouseInputListener(InputManager.PlayerIndex));
+            PlayerInputManager.AddListener(new MouseInputListener(PlayerInputManager.PlayerIndex));
 
 			_healthAndHotbar = new StackContainer()
 			{
@@ -115,46 +115,45 @@ namespace Alex.Gamestates.InGame.Hud
         private bool _didInit = false;
         protected override void OnInit(IGuiRenderer renderer)
         {
-	        if (!_didInit)
-	        {
-		        _bottomContainer.AddChild(_tipPopupComponent);
+	        if (_didInit) return;
+	        
+	        _bottomContainer.AddChild(_tipPopupComponent);
 
-		        _armorAndAirContainer.AddChild(_airComponent);
-		        _healthAndHotbar.AddChild(_armorAndAirContainer);
+	        _armorAndAirContainer.AddChild(_airComponent);
+	        _healthAndHotbar.AddChild(_armorAndAirContainer);
 		        
-		        _healthContainer.AddChild(_healthComponent);
-		        _healthContainer.AddChild(_hungerComponent);
+	        _healthContainer.AddChild(_healthComponent);
+	        _healthContainer.AddChild(_hungerComponent);
 
-		        _healthAndHotbar.AddChild(_healthContainer);
+	        _healthAndHotbar.AddChild(_healthContainer);
 
-		        _healthAndHotbar.AddChild(_experienceComponent);
-		        _healthAndHotbar.AddChild(_hotbar);
+	        _healthAndHotbar.AddChild(_experienceComponent);
+	        _healthAndHotbar.AddChild(_hotbar);
 
-		        _bottomContainer.AddRow(
-			        container =>
-			        {
-				        //		        container.AutoSizeMode = AutoSizeMode.GrowAndShrink;
-				        container.Anchor = Alignment.BottomCenter;
-				        container.ChildAnchor = Alignment.FillCenter;
+	        _bottomContainer.AddRow(
+		        container =>
+		        {
+			        //		        container.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+			        container.Anchor = Alignment.BottomCenter;
+			        container.ChildAnchor = Alignment.FillCenter;
 
-				        container.AddChild(_healthAndHotbar);
-				        //container.AddChild(_hotbar);
-			        });
+			        container.AddChild(_healthAndHotbar);
+			        //container.AddChild(_hotbar);
+		        });
 
-		        AddChild(_bottomContainer);
+	        AddChild(_bottomContainer);
 
-		        AddChild(Chat);
+	        AddChild(Chat);
 
-		        //AddChild(_hotbar);
-		        AddChild(new AlexCrosshair());
-		        AddChild(Title);
+	        //AddChild(_hotbar);
+	        AddChild(new AlexCrosshair());
+	        AddChild(Title);
 
-		        AddChild(Scoreboard);
+	        AddChild(Scoreboard);
 		        
-		        AddChild(BossBar);
+	        AddChild(BossBar);
 
-		        _didInit = true;
-	        }
+	        _didInit = true;
         }
 
         public bool CheckInput { get; set; } = true;
@@ -166,13 +165,13 @@ namespace Alex.Gamestates.InGame.Hud
 				{
 					Chat.Enabled = false;
 
-					if (InputManager.IsPressed(AlexInputCommand.ToggleChat))
+					if (PlayerInputManager.IsPressed(AlexInputCommand.ToggleChat))
 					{
 						Chat.Dismiss();
 						Chat.Enabled = true;
 						Alex.GuiManager.FocusManager.FocusedElement = Chat;
 					} 
-					else if (InputManager.IsPressed(AlexInputCommand.Exit))
+					else if (PlayerInputManager.IsPressed(AlexInputCommand.Exit))
 					{
 						//Player.Controller.CheckMovementInput = false;
 						Alex.GameStateManager.SetActiveState<InGameMenuState>("ingamemenu");
@@ -180,7 +179,7 @@ namespace Alex.Gamestates.InGame.Hud
 				}
 				else
 				{
-					if (InputManager.IsPressed(AlexInputCommand.Exit))
+					if (PlayerInputManager.IsPressed(AlexInputCommand.Exit))
 					{
 						Chat.Dismiss();
 						Alex.GuiManager.FocusManager.FocusedElement = null;

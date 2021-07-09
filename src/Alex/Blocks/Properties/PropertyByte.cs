@@ -12,7 +12,7 @@ namespace Alex.Blocks.Properties
 		}
 
 		/// <inheritdoc />
-		protected override StateProperty<byte> WithValue(byte value)
+		public override StateProperty<byte> WithValue(byte value)
 		{
 			return new PropertyByte(Name, _defaultValue) {Value = value};
 		}

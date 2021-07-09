@@ -6,6 +6,11 @@ namespace Alex.Common.Blocks.Properties
 	{
 		string Name { get; }
 		string StringValue { get; }
+		int Identifier { get; }
+
+		string ToFormattedString();
+
+		IStateProperty WithValue(object value);
 	}
 
 	public interface IStateProperty<TType> : IStateProperty
@@ -15,5 +20,16 @@ namespace Alex.Common.Blocks.Properties
 
 		/// <inheritdoc />
 		string IStateProperty.StringValue => Value.ToString();
+		IStateProperty<TType> WithValue(TType value);
+		
+		IStateProperty IStateProperty.WithValue(object value)
+		{
+			if (value is TType val)
+			{
+				return WithValue(val);
+			}
+
+			return WithValue(ParseValue(value.ToString()));
+		}
 	}
 }

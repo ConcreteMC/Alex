@@ -31,7 +31,7 @@ namespace Alex.Graphics.Models.Blocks
 		{
 			if (state.Block is LiquidBlock lb)
 			{
-				return (state.GetTypedValue(LiquidBlock.LEVEL));
+				return LiquidBlock.LEVEL.GetValue(state);
 			}
 
 			return 0;

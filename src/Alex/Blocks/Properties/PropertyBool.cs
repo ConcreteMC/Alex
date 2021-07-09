@@ -31,7 +31,7 @@ namespace Alex.Blocks.Properties
 		public override string StringValue => Value ? TrueString : FalseString;
 
 		/// <inheritdoc />
-		protected override StateProperty<bool> WithValue(bool value)
+		public override StateProperty<bool> WithValue(bool value)
 		{
 			return new PropertyBool(Name, TrueString, FalseString) {Value = value};
 		}

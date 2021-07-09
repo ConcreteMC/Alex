@@ -2,7 +2,7 @@
 
 namespace Alex.Blocks.Properties
 {
-	public class UnknownProperty : StateProperty
+	/*public class UnknownProperty : StateProperty
 	{
 		public UnknownProperty(string name) : base(name)
 		{
@@ -13,5 +13,5 @@ namespace Alex.Blocks.Properties
 		{
 			return new UnknownProperty(Name) {Value = value};
 		}
-	}
+	}*/
 }

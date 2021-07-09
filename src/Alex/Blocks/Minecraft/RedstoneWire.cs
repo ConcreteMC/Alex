@@ -16,7 +16,7 @@ namespace Alex.Blocks.Minecraft
 		public static readonly PowerState Instance = new PowerState();
 
 		/// <inheritdoc />
-		protected override StateProperty<int> WithValue(int value)
+		public override StateProperty<int> WithValue(int value)
 		{
 			return new PowerState() {Value = value};
 		}
@@ -39,7 +39,7 @@ namespace Alex.Blocks.Minecraft
 		//}
 
 		/// <inheritdoc />
-		public override bool TryGetStateProperty(string prop, out StateProperty stateProperty)
+		public override bool TryGetStateProperty(string prop, out IStateProperty stateProperty)
 		{
 			switch (prop)
 			{
@@ -69,7 +69,7 @@ namespace Alex.Blocks.Minecraft
 		{
 			get
 			{
-				var power = BlockState.GetTypedValue(PowerState.Instance);
+				var power = PowerState.Instance.GetValue(BlockState);// BlockState.GetTypedValue(PowerState.Instance);
 				
 				return Material.Circuits.Clone().SetTintType(TintType.Color, Colors[Math.Clamp(power, 0, Colors.Length - 1)]);
 			}

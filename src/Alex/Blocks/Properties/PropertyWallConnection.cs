@@ -20,7 +20,7 @@ namespace Alex.Blocks.Properties
 		}
 
 		/// <inheritdoc />
-		protected override StateProperty<bool> WithValue(bool value)
+		public override StateProperty<bool> WithValue(bool value)
 		{
 			return new PropertyBool(Name, TrueString, FalseString) {Value = value};
 		}

@@ -109,9 +109,9 @@ namespace Alex.Gamestates.Debugging
 
 			_debugInfo.AddDebugRight(() => Alex.DotnetRuntime);
 			//_debugInfo.AddDebugRight(() => MemoryUsageDisplay);
-			_debugInfo.AddDebugRight(() => $"RAM: {PlayingState.GetBytesReadable(_ramUsage, 2)}");
+			_debugInfo.AddDebugRight(() => $"RAM: {FormattingUtils.GetBytesReadable(_ramUsage, 2)}");
 			_debugInfo.AddDebugRight(() =>
-										 $"GPU: {PlayingState.GetBytesReadable(GpuResourceManager.MemoryUsage, 2)}");
+										 $"GPU: {FormattingUtils.GetBytesReadable(GpuResourceManager.MemoryUsage, 2)}");
 			_debugInfo.AddDebugRight(() =>
 			{
 				return

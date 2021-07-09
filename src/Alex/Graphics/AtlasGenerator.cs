@@ -174,7 +174,7 @@ namespace Alex.Graphics
 		    sw.Stop();
 
 		    Log.Info(
-			    $"TextureAtlas '{Selector}' generated in {sw.ElapsedMilliseconds}ms! ({PlayingState.GetBytesReadable(totalSize, 2)})");
+			    $"TextureAtlas '{Selector}' generated in {sw.ElapsedMilliseconds}ms! ({FormattingUtils.GetBytesReadable(totalSize, 2)})");
 	    }
 
 	    private Texture2D GetMipMappedTexture2D(GraphicsDevice device, Image<Rgba32> image)

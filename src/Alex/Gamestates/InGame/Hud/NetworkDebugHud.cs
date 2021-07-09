@@ -15,7 +15,6 @@ namespace Alex.Gamestates.InGame.Hud
         private TextElement             WarningElement     { get; }
 
         private bool _advanced = false;
-
         public bool Advanced
         {
             get
@@ -25,7 +24,15 @@ namespace Alex.Gamestates.InGame.Hud
             set
             {
                 _advanced = value;
-                NetworkInfoElement.IsVisible = value;
+
+                if (value)
+                {
+                    AddChild(NetworkInfoElement);
+                }
+                else
+                {
+                    RemoveChild(NetworkInfoElement);
+                }
             }
         }
 
@@ -57,17 +64,14 @@ namespace Alex.Gamestates.InGame.Hud
                 TextOpacity = 0.75f,
                 TextColor = (Color) TextColor.Red,
                 Scale = 1f,
-                IsVisible = false,
+                IsVisible = true,
                 TextAlignment = TextAlignment.Right
             };
-
-
-
-            AddChild(NetworkInfoElement);
+            
+           // AddChild(NetworkInfoElement);
         }
         
         private string   _lastString = String.Empty;
-        private DateTime _nextUpdate = DateTime.UtcNow;
         private bool     _state      = false;
 
         private string GetNetworkInfo()

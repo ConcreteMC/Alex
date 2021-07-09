@@ -5,6 +5,7 @@ using Alex.Blocks.Minecraft.Leaves;
 using Alex.Blocks.Properties;
 using Alex.Blocks.State;
 using Alex.Common.Blocks;
+using Alex.Common.Blocks.Properties;
 using Alex.Common.Resources;
 using Alex.Common.Utils.Noise;
 using Alex.Common.Utils.Vectors;
@@ -35,7 +36,7 @@ namespace Alex.Blocks.Minecraft
 		protected static PropertyBool Lit = new PropertyBool("lit", "true", "false");
 		protected static PropertyBool WaterLogged = new PropertyBool("waterlogged", "true", "false");
 
-		public bool IsWaterLogged => BlockState.GetTypedValue(WaterLogged);
+		public bool IsWaterLogged => WaterLogged.GetValue(BlockState);// BlockState.GetTypedValue(WaterLogged);
 
 		private ushort _flags = 0;
 
@@ -330,8 +331,8 @@ namespace Alex.Blocks.Minecraft
 
 		public Block Value => this;
 		
-		private static readonly PropertyFace Facing = new PropertyFace("facing");
-		public virtual bool TryGetStateProperty(string prop, out StateProperty stateProperty)
+		public static readonly PropertyFace Facing = new PropertyFace("facing");
+		public virtual bool TryGetStateProperty(string prop, out IStateProperty stateProperty)
 		{
 			switch (prop)
 			{
@@ -342,9 +343,9 @@ namespace Alex.Blocks.Minecraft
 					stateProperty = WaterLogged;
 					return true;
 			}
-			
-			stateProperty = null;
-			return false;
+
+			stateProperty = new PropertyString(prop);
+			return true;
 		}
 	}
 }

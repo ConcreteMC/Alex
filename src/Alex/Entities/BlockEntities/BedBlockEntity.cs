@@ -87,12 +87,9 @@ namespace Alex.Entities.BlockEntities
 				}
 			}
 			
-			if (bed.BlockState.TryGetValue(FACING, out var blockFacing))
-			{
-				Facing = blockFacing;
-			}
+			Facing = FACING.GetValue(bed.BlockState);
 			
-			if (bed.BlockState.TryGetValue(Bed.PART, out bool value) && !value)
+			if (!Bed.PART.GetValue(bed.BlockState))
 			{
 				ModelRenderer = null;
 				return true;

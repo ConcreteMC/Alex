@@ -18,11 +18,5 @@ namespace Alex.Blocks.Minecraft.Buttons
 		    IsReplacible = false;
 		     */
 	    }
-
-	    /// <inheritdoc />
-	    public override bool TryGetStateProperty(string prop, out StateProperty stateProperty)
-	    {
-		    return base.TryGetStateProperty(prop, out stateProperty);
-	    }
     }
 }

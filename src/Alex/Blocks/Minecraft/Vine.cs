@@ -2,6 +2,7 @@ using Alex.Blocks.Minecraft.Slabs;
 using Alex.Blocks.Properties;
 using Alex.Blocks.State;
 using Alex.Common.Blocks;
+using Alex.Common.Blocks.Properties;
 using Alex.Common.Utils.Vectors;
 using Alex.Worlds;
 using Alex.Worlds.Abstraction;
@@ -11,11 +12,11 @@ namespace Alex.Blocks.Minecraft
 {
 	public class Vine : Block
 	{
-		public bool North => BlockState.GetTypedValue(PropertyBool.NORTH);
-		public bool East => BlockState.GetTypedValue(PropertyBool.EAST);
-		public bool South => BlockState.GetTypedValue(PropertyBool.SOUTH);
-		public bool West => BlockState.GetTypedValue(PropertyBool.WEST);
-		public bool Up => BlockState.GetTypedValue(PropertyBool.UP);
+		public bool North => PropertyBool.NORTH.GetValue(BlockState);
+		public bool East =>PropertyBool.EAST.GetValue(BlockState);
+		public bool South => PropertyBool.SOUTH.GetValue(BlockState);
+		public bool West => PropertyBool.WEST.GetValue(BlockState);
+		public bool Up => PropertyBool.UP.GetValue(BlockState);
 		
 		public Vine() : base()
 		{
@@ -109,7 +110,7 @@ namespace Alex.Blocks.Minecraft
 
 					if (up.Block is Vine vine)
 					{
-						if (vine.BlockState.GetTypedValue(prop))
+						if (prop.GetValue(vine.BlockState))
 						{
 							return current.WithProperty(prop, true);
 						}
@@ -135,7 +136,7 @@ namespace Alex.Blocks.Minecraft
 			return base.CanAttach(face, block);
 		}
 		
-		public override bool TryGetStateProperty(string prop, out StateProperty stateProperty)
+		public override bool TryGetStateProperty(string prop, out IStateProperty stateProperty)
 		{
 			switch (prop)
 			{

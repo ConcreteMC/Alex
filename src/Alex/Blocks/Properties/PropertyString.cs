@@ -12,7 +12,7 @@ namespace Alex.Blocks.Properties
 		}
 
 		/// <inheritdoc />
-		protected override StateProperty<string> WithValue(string value)
+		public override StateProperty<string> WithValue(string value)
 		{
 			return new PropertyString(Name, _defaultValue) {Value = value};
 		}

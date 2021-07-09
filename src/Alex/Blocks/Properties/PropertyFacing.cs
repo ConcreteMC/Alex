@@ -16,7 +16,7 @@ namespace Alex.Blocks.Properties
 		public override string StringValue => Value.ToString().ToLower();
 
 		/// <inheritdoc />
-		protected override StateProperty<BlockFace> WithValue(BlockFace value)
+		public override StateProperty<BlockFace> WithValue(BlockFace value)
 		{
 			return new PropertyFace(Name) {Value = value};
 		}

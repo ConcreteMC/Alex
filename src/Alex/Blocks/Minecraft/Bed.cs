@@ -1,5 +1,6 @@
 using Alex.Blocks.Properties;
 using Alex.Blocks.State;
+using Alex.Common.Blocks.Properties;
 using Alex.Entities.BlockEntities;
 
 namespace Alex.Blocks.Minecraft
@@ -10,7 +11,7 @@ namespace Alex.Blocks.Minecraft
 		public static readonly PropertyBool PART = new PropertyBool("part", "foot", "head");
 		
 		public BedBlockEntity.BedColor Variant { get; }
-		public bool IsFoot => BlockState.GetTypedValue(PART);
+		public bool IsFoot => PART.GetValue(BlockState);// BlockState.GetTypedValue(PART);
 		public Bed(BedBlockEntity.BedColor variant)
 		{
 			Variant = variant;
@@ -21,7 +22,7 @@ namespace Alex.Blocks.Minecraft
 		}
 
 		/// <inheritdoc />
-		public override bool TryGetStateProperty(string prop, out StateProperty stateProperty)
+		public override bool TryGetStateProperty(string prop, out IStateProperty stateProperty)
 		{
 			switch (prop)
 			{

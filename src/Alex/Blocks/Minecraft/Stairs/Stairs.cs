@@ -1,5 +1,6 @@
 using Alex.Blocks.State;
 using Alex.Common.Blocks;
+using Alex.Common.Blocks.Properties;
 using Alex.Common.Utils.Vectors;
 using Alex.Graphics.Models.Blocks;
 using Alex.Worlds;
@@ -187,7 +188,7 @@ namespace Alex.Blocks.Minecraft.Stairs
         }
         
         /// <inheritdoc />
-        public override bool TryGetStateProperty(string prop, out StateProperty stateProperty)
+        public override bool TryGetStateProperty(string prop, out IStateProperty stateProperty)
         {
             return base.TryGetStateProperty(prop, out stateProperty);
         }

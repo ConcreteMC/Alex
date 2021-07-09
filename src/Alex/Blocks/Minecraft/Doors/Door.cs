@@ -2,6 +2,7 @@
 using Alex.Blocks.Properties;
 using Alex.Blocks.State;
 using Alex.Common.Blocks;
+using Alex.Common.Blocks.Properties;
 using Alex.Common.Utils.Vectors;
 using Alex.Worlds;
 using Alex.Worlds.Abstraction;
@@ -9,25 +10,15 @@ using NLog;
 
 namespace Alex.Blocks.Minecraft.Doors
 {
-	public class Door : Block
+	public class Door : OpenableBlockBase
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(Door));
 
-		/*public static PropertyBool UPPER = new PropertyBool("half", "upper", "lower");
-		public static PropertyBool OPEN = new PropertyBool("open");
-		public static PropertyBool POWERED = new PropertyBool("powered");
-		public static PropertyFace FACING = new PropertyFace("facing");*/
-
-		private static PropertyBool OPEN = new PropertyBool("open");
 		private static PropertyBool UPPER = new PropertyBool("half", "upper", "lower");
 		private static PropertyBool RIGHTHINCHED = new PropertyBool("hinge", "left", "right");
 		private static PropertyFace FACING = new PropertyFace("facing");
 
-		public bool IsUpper => BlockState.GetTypedValue(UPPER);//(Metadata & 0x08) == 0x08;
-		public bool IsOpen => BlockState.GetTypedValue(OPEN);// (Metadata & 0x04) == 0x04;
-		//public bool IsRightHinch => (Metadata & 0x01) == 0x01;
-		public bool IsPowered => BlockState.GetTypedValue<bool>(RedstoneBase.POWERED); //(Metadata & 0x02) == 0x02;
-
+		public bool IsUpper => UPPER.GetValue(BlockState);
 		protected bool CanOpen { get; set; } = true;
 		public Door(uint blockId) : base()
 		{
@@ -94,16 +85,10 @@ namespace Alex.Blocks.Minecraft.Doors
 			return true;
 		}
 		
-		public override bool TryGetStateProperty(string prop, out StateProperty stateProperty)
+		public override bool TryGetStateProperty(string prop, out IStateProperty stateProperty)
 		{
 			switch (prop)
 			{
-				case "open":
-					stateProperty = OPEN;
-					return true;
-				case "powered":
-					stateProperty = RedstoneBase.POWERED;
-					return true;
 				case "half":
 					stateProperty = UPPER;
 					return true;

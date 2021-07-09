@@ -214,6 +214,61 @@ namespace Alex.Common.Utils.Vectors
 			return Matrix.CreateWorld(ToVector3(), dir, Vector3.Up);
 		}
 
+		public string GetCardinalDirection()
+		{
+			double rotation = (HeadYaw) % 360;
+			if (rotation < 0)
+			{
+				rotation += 360.0;
+			}
+
+			return GetDirection(rotation);
+		}
+		
+		private static string GetDirection(double rotation)
+		{
+			if (0 <= rotation && rotation < 22.5)
+			{
+				return "South";
+			}
+			else if (22.5 <= rotation && rotation < 67.5)
+			{
+				return "South West";
+			}
+			else if (67.5 <= rotation && rotation < 112.5)
+			{
+				return "West";
+			}
+			else if (112.5 <= rotation && rotation < 157.5)
+			{
+				return "North West"; //
+			}
+			else if (157.5 <= rotation && rotation < 202.5)
+			{
+				return "North"; // 
+			}
+			else if (202.5 <= rotation && rotation < 247.5)
+			{
+				return "North East"; //
+			}
+			else if (247.5 <= rotation && rotation < 292.5)
+			{
+				return "East";
+			}
+			else if (292.5 <= rotation && rotation < 337.5)
+			{
+				return "South East";
+			}
+			else if (337.5 <= rotation && rotation < 360.0)
+			{
+				return "South";
+			}
+			else
+			{
+				return "N/A";
+			}
+		}
+		
 		public override string ToString()
 		{
 			return $"X={X}, Y={Y}, Z={Z}, HeadYaw={HeadYaw}, Yaw={Yaw}, Pitch={Pitch}";

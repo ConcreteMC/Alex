@@ -332,11 +332,11 @@ namespace Alex.Graphics.Models.Items
                 {
                     a.Apply();
 
-                  /*  DrawLine(args.GraphicsDevice, Vector3.Zero, Vector3.UnitY * 16f, Color.Green);
-                    DrawLine(args.GraphicsDevice, Vector3.Zero, Vector3.UnitZ * 16f, Color.Blue);
-                    DrawLine(args.GraphicsDevice, Vector3.Zero, Vector3.UnitX * 16f, Color.Red);*/
+                    args.GraphicsDevice.DrawLine( Vector3.Zero, Vector3.UnitY * 16f, Color.Green);
+                    args.GraphicsDevice.DrawLine(Vector3.Zero, Vector3.UnitZ * 16f, Color.Blue);
+                    args.GraphicsDevice.DrawLine(Vector3.Zero, Vector3.UnitX * 16f, Color.Red);
 
-                    args.GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, count / 3);
+                  args.GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, count / 3);
                     drawCount++;
                     //device.DrawUserIndexedPrimitives(PrimitiveType.TriangleList, Vertices, 0, Vertices.Length, Indexes, 0, Indexes.Length / 3);
                 }

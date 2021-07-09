@@ -1,5 +1,6 @@
 using Alex.Blocks.State;
 using Alex.Common.Blocks;
+using Alex.Common.Blocks.Properties;
 using Alex.Common.Utils.Vectors;
 using Alex.Worlds;
 using Alex.Worlds.Abstraction;
@@ -93,7 +94,7 @@ namespace Alex.Blocks.Minecraft.Walls
 
 		//private static readonly PropertyBool DirectionalProp = new PropertyBool("")
 		/// <inheritdoc />
-		public override bool TryGetStateProperty(string prop, out StateProperty stateProperty)
+		public override bool TryGetStateProperty(string prop, out IStateProperty stateProperty)
 		{
 		/*	switch (prop)
 			{

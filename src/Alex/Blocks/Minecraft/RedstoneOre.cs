@@ -13,7 +13,7 @@ namespace Alex.Blocks.Minecraft
 		public override byte LightValue {
 			get
 			{
-				if (BlockState.GetTypedValue(Lit))
+				if (Lit.GetValue(BlockState))
 				{
 					return 9;
 				}

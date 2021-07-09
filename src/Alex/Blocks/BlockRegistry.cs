@@ -575,6 +575,8 @@ namespace Alex.Blocks
 		    
 		    this.Register("minecraft:glow_lichen", () => new GlowLichen());
 		    this.Register("minecraft:pointed_dripstone", () => new PointedDripstone());
+		    
+		    this.Register("minecraft:item_frame", () => new ItemFrame());
 	    }
     }
 }

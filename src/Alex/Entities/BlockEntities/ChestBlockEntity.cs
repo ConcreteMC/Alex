@@ -159,6 +159,7 @@ namespace Alex.Entities.BlockEntities
 		}
 
 		private static readonly PropertyFace FACING = new PropertyFace("facing");
+
 		/// <inheritdoc />
 		protected override bool BlockChanged(Block oldBlock, Block newBlock)
 		{
@@ -173,23 +174,24 @@ namespace Alex.Entities.BlockEntities
 				{
 					case "single":
 						IsDoubleChest = false;
+
 						break;
+
 					case "left":
 						IsDoubleChest = true;
+
 						break;
+
 					case "right":
 						IsDoubleChest = true;
+
 						break;
 				}
 			}
-			
-			if (newBlock.BlockState.TryGetValue(FACING, out var value))
-			{
-				//if (Enum.TryParse<BlockFace>(value, true, out var val))
-				{
-					Facing = value;
-				}
-			}
+
+
+			Facing = FACING.GetValue(newBlock.BlockState);
+
 
 			return true;
 		}

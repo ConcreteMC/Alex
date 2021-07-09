@@ -1,5 +1,6 @@
 ﻿using Alex.Blocks.Properties;
 using Alex.Blocks.State;
+using Alex.Common.Blocks.Properties;
 
 namespace Alex.Blocks.Minecraft.Slabs
 {
@@ -36,7 +37,7 @@ namespace Alex.Blocks.Minecraft.Slabs
 	    private static readonly PropertyString TypeProp = new PropertyString("type");
 
 	    /// <inheritdoc />
-	    public override bool TryGetStateProperty(string prop, out StateProperty stateProperty)
+	    public override bool TryGetStateProperty(string prop, out IStateProperty stateProperty)
 	    {
 		    switch (prop)
 		    {

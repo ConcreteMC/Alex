@@ -6,6 +6,7 @@ using System.Threading;
 using Alex.Common;
 using Alex.Common.Graphics;
 using Alex.Common.Services;
+using Alex.Common.Utils;
 using Alex.Gamestates.InGame.Hud;
 using Alex.Graphics.Camera;
 using Alex.Gui;
@@ -42,8 +43,6 @@ namespace Alex.Gamestates.InGame
 		private readonly GuiDebugInfo _debugInfo;
 		private readonly NetworkDebugHud _networkDebugHud;
 		
-		private GuiMiniMap MiniMap { get; }
-		private bool RenderMinimap { get; set; } = false;
 		public PlayingState(Alex alex, GraphicsDevice graphics, WorldProvider worldProvider, NetworkProvider networkProvider) : base(alex)
 		{
 			NetworkProvider = networkProvider;
@@ -73,37 +72,10 @@ namespace Alex.Gamestates.InGame
 			_debugInfo = new GuiDebugInfo();
             InitDebugInfo();
             
-            MiniMap = new GuiMiniMap(World.ChunkManager)
-            {
-	            Anchor = Alignment.TopRight
-            };
-
-            var settings = GetService<IOptionsProvider>();
-            settings.AlexOptions.VideoOptions.Minimap.Bind(OnMinimapSettingChange);
-            RenderMinimap = settings.AlexOptions.VideoOptions.Minimap.Value;
-            
-            if (RenderMinimap)
-            {
-	            _playingHud.AddChild(MiniMap);
-            }
-            
             _networkDebugHud = new NetworkDebugHud(NetworkProvider);
-            _networkDebugHud.Advanced = settings.AlexOptions.MiscelaneousOptions.ShowNetworkInfoByDefault.Value;
+            RenderNetworking = Options.MiscelaneousOptions.ShowNetworkInfoByDefault.Value;
             
             World.Ticker.RegisterTicked(WorldProvider);
-		}
-
-		private void OnMinimapSettingChange(bool oldvalue, bool newvalue)
-		{
-			RenderMinimap = newvalue;
-			if (!newvalue)
-			{
-				_playingHud.RemoveChild(MiniMap);
-			}
-			else
-			{
-				_playingHud.AddChild(MiniMap);
-			}
 		}
 
 		protected override void OnLoad(IRenderArgs args)
@@ -137,11 +109,71 @@ namespace Alex.Gamestates.InGame
 		{
 			World.Ticker.UnregisterTicked(_playingHud.Title);
 			
-			Alex.GuiManager.RemoveScreen(_debugInfo);
+			if (RenderDebug)
+				Alex.GuiManager.RemoveScreen(_debugInfo);
+			
 			Alex.GuiManager.RemoveScreen(_playingHud);
 			Alex.GuiManager.RemoveScreen(_networkDebugHud);
 			
 			base.OnHide();
+		}
+		
+		private bool RenderDebug { get; set; } = false;
+		
+		private bool RenderNetworking
+		{
+			get
+			{
+				return _networkDebugHud.Advanced;
+			}
+			set
+			{
+				if (value != _networkDebugHud.Advanced)
+				{
+					_networkDebugHud.Advanced = value;
+				}
+			}
+		}
+		
+		private KeyboardState _oldKeyboardState;
+		protected void CheckInput(GameTime gameTime)
+		{
+			KeyboardState currentKeyboardState = Keyboard.GetState();
+			if (currentKeyboardState != _oldKeyboardState)
+			{
+				if (KeyBinds.NetworkDebugging.All(x => currentKeyboardState.IsKeyDown(x)))
+				{
+					RenderNetworking = !RenderNetworking;
+				}
+				else if (KeyBinds.EntityBoundingBoxes.All(x => currentKeyboardState.IsKeyDown(x)))
+				{
+					World.RenderBoundingBoxes = !World.RenderBoundingBoxes;
+				}
+				else if (currentKeyboardState.IsKeyDown(KeyBinds.DebugInfo))
+				{
+					RenderDebug = !RenderDebug;
+					if (!RenderDebug)
+					{
+						Alex.GuiManager.RemoveScreen(_debugInfo);
+					}
+					else
+					{
+						Alex.GuiManager.AddScreen(_debugInfo);
+					}
+				}
+
+				if (currentKeyboardState.IsKeyDown(KeyBinds.Fog) && !_oldKeyboardState.IsKeyDown(KeyBinds.Fog))
+				{
+					World.ChunkManager.FogEnabled = !World.ChunkManager.FogEnabled;
+				}
+
+				if (currentKeyboardState.IsKeyDown(KeyBinds.ToggleWireframe))
+				{
+					World.ToggleWireFrame();
+				}
+			}
+
+			_oldKeyboardState = currentKeyboardState;
 		}
 
 		private long _ramUsage = 0;
@@ -152,19 +184,7 @@ namespace Alex.Gamestates.InGame
 			string gameVersion = VersionUtils.GetVersion();
 
 			_debugInfo.AddDebugLeft(
-				() =>
-				{
-					double avg = 0;
-
-					/*	if (World.ChunkManager.TotalChunkUpdates > 0)
-						{
-							avg = (World.ChunkManager.ChunkUpdateTime / World.ChunkManager.TotalChunkUpdates)
-							   .TotalMilliseconds;
-						}*/
-
-					return
-						$"Alex {gameVersion} ({Alex.FpsMonitor.Value:##} FPS, {World.Ticker.TicksPerSecond:##} TPS, Chunk Updates: {World.EnqueuedChunkUpdates} queued, {World.ConcurrentChunkUpdates} active)";
-				}, TimeSpan.FromMilliseconds(50));
+				() => $"Alex {gameVersion} ({Alex.FpsMonitor.Value:##} FPS, {World.Ticker.TicksPerSecond:##} TPS, Chunk Updates: {World.EnqueuedChunkUpdates} queued, {World.ConcurrentChunkUpdates} active)", TimeSpan.FromMilliseconds(50));
 			
 			_debugInfo.AddDebugLeft(() =>
 			{
@@ -176,7 +196,7 @@ namespace Alex.Gamestates.InGame
 			_debugInfo.AddDebugLeft(() =>
 			{
 				var pos =  World?.Player?.KnownPosition ?? new PlayerLocation();
-				return  $"Facing: {GetCardinalDirection(pos)} (HeadYaw={pos.HeadYaw:F2}, Yaw={pos.Yaw:F2}, Pitch={pos.Pitch:F2})";
+				return  $"Facing: {pos.GetCardinalDirection()} (HeadYaw={pos.HeadYaw:F2}, Yaw={pos.Yaw:F2}, Pitch={pos.Pitch:F2})";
 			}, TimeSpan.FromMilliseconds(50));
 			
 			_debugInfo.AddDebugLeft(() =>
@@ -188,7 +208,7 @@ namespace Alex.Gamestates.InGame
 			_debugInfo.AddDebugLeft(() => $"Primitives: {Alex.Metrics.PrimitiveCount:N0} Draw count: {Alex.Metrics.DrawCount}", TimeSpan.FromMilliseconds(500));
 			_debugInfo.AddDebugLeft(() => $"Textures: {Alex.Metrics.TextureCount:N0} Sprite count: {Alex.Metrics.SpriteCount}", TimeSpan.FromMilliseconds(500));
 			_debugInfo.AddDebugLeft(() => $"Graphic Resources: {GpuResourceManager.ResourceCount}", TimeSpan.FromMilliseconds(500));
-		//	_debugInfo.AddDebugLeft(() => $"IndexBuffer Elements: {World.IndexBufferSize:N0} ({GetBytesReadable(World.IndexBufferSize * 4)})");
+
 			_debugInfo.AddDebugLeft(() => $"Chunks: {World.ChunkCount}, {World.ChunkManager.RenderedChunks}, {World.ChunkDrawCount}", TimeSpan.FromMilliseconds(500));
 			_debugInfo.AddDebugLeft(() => $"Entities: {World.EntityManager.EntityCount}, {World.EntityManager.EntitiesRendered}, {World.EntityManager.DrawCount}", TimeSpan.FromMilliseconds(500));
 			_debugInfo.AddDebugLeft(() => $"Particles: {Alex.ParticleManager.ParticleCount}", TimeSpan.FromMilliseconds(500));
@@ -234,8 +254,8 @@ namespace Alex.Gamestates.InGame
 			_debugInfo.AddDebugRight($"{Alex.DotnetRuntime}\n");
 			_debugInfo.AddDebugRight(Alex.RenderingEngine);
 			
-			_debugInfo.AddDebugRight(() => $"RAM: {GetBytesReadable(_ramUsage, 2)}", TimeSpan.FromMilliseconds(1000));
-			_debugInfo.AddDebugRight(() => $"GPU: {GetBytesReadable(GpuResourceManager.MemoryUsage, 2)}", TimeSpan.FromMilliseconds(1000));
+			_debugInfo.AddDebugRight(() => $"RAM: {FormattingUtils.GetBytesReadable(_ramUsage, 2)}", TimeSpan.FromMilliseconds(1000));
+			_debugInfo.AddDebugRight(() => $"GPU: {FormattingUtils.GetBytesReadable(GpuResourceManager.MemoryUsage, 2)}", TimeSpan.FromMilliseconds(1000));
 			_debugInfo.AddDebugRight(() => $"Threads: {(ThreadPool.ThreadCount):00}/{Environment.ProcessorCount:00}\nPending: {ThreadPool.PendingWorkItemCount:00}\n", TimeSpan.FromMilliseconds(50));
 			
 			_debugInfo.AddDebugRight(() => $"Updates: {ChunkColumn.AverageUpdateTime:F2}ms avg\nUpload: {ChunkData.AverageUploadTime:F2}ms avg\n", TimeSpan.FromMilliseconds(50));
@@ -299,18 +319,8 @@ namespace Alex.Gamestates.InGame
 				if (player == null || player.HitEntity == null) return string.Empty;
 
 				var entity = player.HitEntity;
-				return $"Hit entity: {entity.EntityId} / {entity.ToString()}\n{entity.NameTag}\n{ChatFormatting.Reset}Shown: {!entity.HideNameTag}\nNoAI: {entity.NoAi}\nGravity: {entity.IsAffectedByGravity}\nFlying: {entity.IsFlying}\nAllFlying: {entity.IsFlagAllFlying}\nOn Ground: {entity.KnownPosition.OnGround}\nHas Collisions: {entity.HasCollision}\nHas Model: {entity.ModelRenderer != null}\nTextured: {entity.Texture != null}\n";
+				return $"Hit entity: {entity.EntityId} / {entity.ToString()}\n{ChatFormatting.Reset}Hide nametag: {!entity.HideNameTag}\nNoAI: {entity.NoAi}\nHas Gravity: {entity.IsAffectedByGravity}\nFlying: {entity.IsFlying}\nAllFlying: {entity.IsFlagAllFlying}\nOn Ground: {entity.KnownPosition.OnGround}\nHas Collisions: {entity.HasCollision}\nHas Model: {entity.ModelRenderer != null}\nTextured: {entity.Texture != null}\n";
 			}, TimeSpan.FromMilliseconds(500));
-			
-			_debugInfo.AddDebugRight(
-				() =>
-				{
-					var item = World.Player?.Inventory?.MainHand;
-					if (item == null) return string.Empty;
-
-					var renderer = item.Renderer;
-					return $"In-Hand:\n{item.Name}";
-				}, TimeSpan.FromMilliseconds(500));
 		}
 
 		private float AspectRatio { get; set; }
@@ -319,8 +329,6 @@ namespace Alex.Gamestates.InGame
 
 		protected override void OnUpdate(GameTime gameTime)
 		{
-			MiniMap.PlayerLocation = World.Player.KnownPosition;
-
 			var args = new UpdateArgs() {Camera = World.Camera, GraphicsDevice = Graphics, GameTime = gameTime};
 
 			_playingHud.CheckInput = Alex.GuiManager.ActiveDialog == null;
@@ -391,189 +399,10 @@ namespace Alex.Gamestates.InGame
 			
 			base.OnUpdate(gameTime);
 		}
-
-		//private Microsoft.Xna.Framework.BoundingBox RayTraceBoundingBox { get; set; }
-		private bool _renderNetworking = true;
-
-		private bool RenderNetworking
-		{
-			get
-			{
-				return _renderNetworking;
-			}
-			set
-			{
-				if (value != _renderNetworking)
-				{
-					_renderNetworking = value;
-
-					if (value)
-					{
-						_networkDebugHud.Advanced = true;
-						//Alex.GuiManager.AddScreen(_networkDebugHud);
-					}
-					else
-					{
-						_networkDebugHud.Advanced = false;
-						//Alex.GuiManager.RemoveScreen(_networkDebugHud);
-					}
-				}
-			}
-		}
-		private bool RenderDebug         { get; set; } = false;
 		
-
-		private KeyboardState _oldKeyboardState;
-		protected void CheckInput(GameTime gameTime) //TODO: Move this input out of the main update loop and use the new per-player based implementation by @TruDan
-		{
-			KeyboardState currentKeyboardState = Keyboard.GetState();
-			if (currentKeyboardState != _oldKeyboardState)
-			{
-				if (KeyBinds.NetworkDebugging.All(x => currentKeyboardState.IsKeyDown(x)))
-				{
-					RenderNetworking = !RenderNetworking;
-				}
-				else if (KeyBinds.EntityBoundingBoxes.All(x => currentKeyboardState.IsKeyDown(x)))
-				{
-					World.RenderBoundingBoxes = !World.RenderBoundingBoxes;
-				}
-				else if (currentKeyboardState.IsKeyDown(KeyBinds.DebugInfo))
-				{
-					RenderDebug = !RenderDebug;
-					if (!RenderDebug)
-					{
-						Alex.GuiManager.RemoveScreen(_debugInfo);
-					}
-					else
-					{
-						Alex.GuiManager.AddScreen(_debugInfo);
-					}
-				}
-
-				if (currentKeyboardState.IsKeyDown(KeyBinds.Fog) && !_oldKeyboardState.IsKeyDown(KeyBinds.Fog))
-				{
-					World.ChunkManager.FogEnabled = !World.ChunkManager.FogEnabled;
-				}
-
-				if (currentKeyboardState.IsKeyDown(KeyBinds.ToggleWireframe))
-				{
-					World.ToggleWireFrame();
-				}
-			}
-
-			_oldKeyboardState = currentKeyboardState;
-		}
-
-		public static string GetCardinalDirection(PlayerLocation cam)
-		{
-			double rotation = (cam.HeadYaw) % 360;
-			if (rotation < 0)
-			{
-				rotation += 360.0;
-			}
-
-			return GetDirection(rotation);
-		}
-
-		private static string GetDirection(double rotation)
-		{
-			if (0 <= rotation && rotation < 22.5)
-			{
-				return "South";
-			}
-			else if (22.5 <= rotation && rotation < 67.5)
-			{
-				return "South West";
-			}
-			else if (67.5 <= rotation && rotation < 112.5)
-			{
-				return "West";
-			}
-			else if (112.5 <= rotation && rotation < 157.5)
-			{
-				return "North West"; //
-			}
-			else if (157.5 <= rotation && rotation < 202.5)
-			{
-				return "North"; // 
-			}
-			else if (202.5 <= rotation && rotation < 247.5)
-			{
-				return "North East"; //
-			}
-			else if (247.5 <= rotation && rotation < 292.5)
-			{
-				return "East";
-			}
-			else if (292.5 <= rotation && rotation < 337.5)
-			{
-				return "South East";
-			}
-			else if (337.5 <= rotation && rotation < 360.0)
-			{
-				return "South";
-			}
-			else
-			{
-				return "N/A";
-			}
-		}
-
-		public static string GetBytesReadable(long i, int decimals = 4)
-		{
-			// Get absolute value
-			long absolute_i = (i < 0 ? -i : i);
-			// Determine the suffix and readable value
-			string suffix;
-			double readable;
-			if (absolute_i >= 0x1000000000000000) // Exabyte
-			{
-				suffix = "EB";
-				readable = (i >> 50);
-			}
-			else if (absolute_i >= 0x4000000000000) // Petabyte
-			{
-				suffix = "PB";
-				readable = (i >> 40);
-			}
-			else if (absolute_i >= 0x10000000000) // Terabyte
-			{
-				suffix = "TB";
-				readable = (i >> 30);
-			}
-			else if (absolute_i >= 0x40000000) // Gigabyte
-			{
-				suffix = "GB";
-				readable = (i >> 20);
-			}
-			else if (absolute_i >= 0x100000) // Megabyte
-			{
-				suffix = "MB";
-				readable = (i >> 10);
-			}
-			else if (absolute_i >= 0x400) // Kilobyte
-			{
-				suffix = "KB";
-				readable = i;
-			}
-			else
-			{
-				return i.ToString("0 B"); // Byte
-			}
-			// Divide by 1024 to get fractional value
-			readable = (readable / 1024);
-			// Return formatted number with suffix
-			return readable.ToString($"F{decimals}") + suffix;
-		}
-
 		protected override void OnDraw(IRenderArgs args)
 		{
 			args.Camera = World?.Camera;
-
-			if (RenderMinimap)
-			{
-				MiniMap.Draw(args);
-			}
 
 			World?.Render(args);
 

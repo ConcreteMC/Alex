@@ -1,5 +1,6 @@
 using Alex.Blocks.Properties;
 using Alex.Blocks.State;
+using Alex.Common.Blocks.Properties;
 
 namespace Alex.Blocks.Minecraft
 {
@@ -13,7 +14,7 @@ namespace Alex.Blocks.Minecraft
 			BlockMaterial = Material.Iron.Clone().SetHardness(5);
 		}
 		
-		public override bool TryGetStateProperty(string prop, out StateProperty stateProperty)
+		public override bool TryGetStateProperty(string prop, out IStateProperty stateProperty)
 		{
 			switch (prop)
 			{

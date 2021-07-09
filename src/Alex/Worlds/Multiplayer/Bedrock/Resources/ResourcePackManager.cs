@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Linq;
+using Alex.Common.Utils;
 using Alex.Gamestates.InGame;
 using Alex.Net.Bedrock;
 using Alex.Utils;
@@ -185,7 +186,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 				_client.SendPacket(response);
 
 				//_client.WorldProvider.Alex.Resources.
-				Log.Info($"Completed pack, Identifier={entry.Identifier} (Received: {PlayingState.GetBytesReadable(entry.TotalReceived)}, Expected: {PlayingState.GetBytesReadable(entry.ExpectedSize)})");
+				Log.Info($"Completed pack, Identifier={entry.Identifier} (Received: {FormattingUtils.GetBytesReadable(entry.TotalReceived)}, Expected: {FormattingUtils.GetBytesReadable(entry.ExpectedSize)})");
 				//TODO: Load the newly received resourcepack iinto the resourcemanager.
 
 				if (entry is TexturePackEntry tpe)
@@ -211,7 +212,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 				request.packageId = entry.PackageId;
 
 				Log.Info(
-					$"Requesting resource pack chunk, index={entry.ExpectedIndex}/{entry.ChunkCount} packageId={request.packageId} (Received: {PlayingState.GetBytesReadable(entry.TotalReceived)}, Expected: {PlayingState.GetBytesReadable(entry.ExpectedSize)})");
+					$"Requesting resource pack chunk, index={entry.ExpectedIndex}/{entry.ChunkCount} packageId={request.packageId} (Received: {FormattingUtils.GetBytesReadable(entry.TotalReceived)}, Expected: {FormattingUtils.GetBytesReadable(entry.ExpectedSize)})");
 
 				_client.SendPacket(request);
 			}

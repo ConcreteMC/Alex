@@ -1,6 +1,7 @@
 using Alex.Blocks.Properties;
 using Alex.Blocks.State;
 using Alex.Common.Blocks;
+using Alex.Common.Blocks.Properties;
 using Alex.Common.Utils.Vectors;
 using Alex.Worlds;
 using Alex.Worlds.Abstraction;
@@ -18,10 +19,10 @@ namespace Alex.Blocks.Minecraft.Fences
 			RequiresUpdate = true;
 		}
 
-		public bool North => BlockState.GetTypedValue(PropertyBool.NORTH);
-		public bool East => BlockState.GetTypedValue(PropertyBool.EAST);
-		public bool South => BlockState.GetTypedValue(PropertyBool.SOUTH);
-		public bool West => BlockState.GetTypedValue(PropertyBool.WEST);
+		public bool North => PropertyBool.NORTH.GetValue(BlockState);
+		public bool East =>PropertyBool.EAST.GetValue(BlockState);
+		public bool South => PropertyBool.SOUTH.GetValue(BlockState);
+		public bool West => PropertyBool.WEST.GetValue(BlockState);
 		
 		/// <inheritdoc />
 		public override BlockState BlockPlaced(IBlockAccess world, BlockState state, BlockCoordinates position)
@@ -111,7 +112,7 @@ namespace Alex.Blocks.Minecraft.Fences
 		}
 
 		/// <inheritdoc />
-		public override bool TryGetStateProperty(string prop, out StateProperty stateProperty)
+		public override bool TryGetStateProperty(string prop, out IStateProperty stateProperty)
 		{
 			switch (prop)
 			{

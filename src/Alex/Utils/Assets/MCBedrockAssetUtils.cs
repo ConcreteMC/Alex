@@ -7,6 +7,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Alex.Common.Services;
+using Alex.Common.Utils;
 using Alex.Gamestates.InGame;
 using NLog;
 
@@ -95,7 +96,7 @@ namespace Alex.Utils.Assets
                             wc.DownloadProgressChanged += (sender, args) =>
                             {
                                 var downloadSpeed =
-                                    $"Download speed: {PlayingState.GetBytesReadable((long) (Convert.ToDouble(args.BytesReceived) / sw.Elapsed.TotalSeconds), 2)}/s";
+                                    $"Download speed: {FormattingUtils.GetBytesReadable((long) (Convert.ToDouble(args.BytesReceived) / sw.Elapsed.TotalSeconds), 2)}/s";
 
                                 progressReceiver?.UpdateProgress(
                                     args.ProgressPercentage, $"Downloading latest bedrock assets...", downloadSpeed);

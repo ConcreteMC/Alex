@@ -1,0 +1,82 @@
+{
+  "minecraft:item_frame[map=false,facing=north]": {
+    "bedrock_identifier": "minecraft:frame",
+    "block_hardness": 0.0,
+    "collision_index": 158,
+    "can_break_with_hand": true,
+    "bedrock_states": {
+      "item_frame_map_bit": false,
+      "facing_direction": 2
+    }
+  },
+  "minecraft:item_frame[map=true,facing=north]": {
+    "bedrock_identifier": "minecraft:frame",
+    "block_hardness": 0.0,
+    "collision_index": 158,
+    "can_break_with_hand": true,
+    "bedrock_states": {
+      "item_frame_map_bit": true,
+      "facing_direction": 2
+    }
+  },
+  "minecraft:item_frame[map=false,facing=east]": {
+    "bedrock_identifier": "minecraft:frame",
+    "block_hardness": 0.0,
+    "collision_index": 158,
+    "can_break_with_hand": true,
+    "bedrock_states": {
+      "item_frame_map_bit": false,
+      "facing_direction": 5
+    }
+  },
+  "minecraft:item_frame[map=true,facing=east]": {
+    "bedrock_identifier": "minecraft:frame",
+    "block_hardness": 0.0,
+    "collision_index": 158,
+    "can_break_with_hand": true,
+    "bedrock_states": {
+      "item_frame_map_bit": true,
+      "facing_direction": 5
+    }
+  },
+  "minecraft:item_frame[map=false,facing=south]": {
+    "bedrock_identifier": "minecraft:frame",
+    "block_hardness": 0.0,
+    "collision_index": 158,
+    "can_break_with_hand": true,
+    "bedrock_states": {
+      "item_frame_map_bit": false,
+      "facing_direction": 3
+    }
+  },
+  "minecraft:item_frame[map=true,facing=south]": {
+    "bedrock_identifier": "minecraft:frame",
+    "block_hardness": 0.0,
+    "collision_index": 158,
+    "can_break_with_hand": true,
+    "bedrock_states": {
+      "item_frame_map_bit": true,
+      "facing_direction": 3
+    }
+  },
+  "minecraft:item_frame[map=false,facing=west]": {
+    "bedrock_identifier": "minecraft:frame",
+    "block_hardness": 0.0,
+    "collision_index": 158,
+    "can_break_with_hand": true,
+    "bedrock_states": {
+      "item_frame_map_bit": false,
+      "facing_direction": 4
+    }
+  },
+  "minecraft:item_frame[map=true,facing=west]": {
+    "bedrock_identifier": "minecraft:frame",
+    "block_hardness": 0.0,
+    "collision_index": 158,
+    "can_break_with_hand": true,
+    "bedrock_states": {
+      "item_frame_map_bit": true,
+      "facing_direction": 4
+    }
+  }
+}

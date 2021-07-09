@@ -1,5 +1,6 @@
 using Alex.Blocks.Properties;
 using Alex.Blocks.State;
+using Alex.Common.Blocks.Properties;
 
 namespace Alex.Blocks.Minecraft
 {
@@ -16,7 +17,7 @@ namespace Alex.Blocks.Minecraft
 
 	public class AgingPlantBlock : Block
 	{
-		public override bool TryGetStateProperty(string prop, out StateProperty stateProperty)
+		public override bool TryGetStateProperty(string prop, out IStateProperty stateProperty)
 		{
 			switch (prop)
 			{

@@ -79,6 +79,9 @@ namespace Alex.Blocks
 
 			var missingBlock = new MissingBlockState("missing_block");
 			BlockStateByName.TryAdd("alex:missing_block", missingBlock.VariantMapper);
+
+			var itemFrameBlock = ItemFrameBlockState.Build();
+			BlockStateByName.TryAdd("minecraft:item_frame", itemFrameBlock);
 			//RegisteredBlockStates.Add(Block.GetBlockStateID(), StationairyWaterModel);
 		}
 		
@@ -103,10 +106,24 @@ namespace Alex.Blocks
 			IProgressReceiver progressReceiver)
 		{
 			Stopwatch sw  = Stopwatch.StartNew();
+			
 			var       raw = ResourceManager.ReadStringResource("Alex.Resources.blockmap.json");
-
 			var mapping = JsonConvert.DeserializeObject<BlockMap>(raw);
 			
+			raw = ResourceManager.ReadStringResource("Alex.Resources.custom_blockmap.json");
+			var mapping2 = JsonConvert.DeserializeObject<BlockMap>(raw);
+
+			if (mapping != null && mapping2 != null)
+			{
+				foreach (var map in mapping2)
+				{
+					if (!mapping.TryAdd(map.Key, map.Value))
+					{
+						Log.Warn($"Failed to register custom block mapping: {map.Key} -> {map.Value.BedrockIdentifier}");
+					}
+				}
+			}
+
 			var blockRegistry      = registryManager.GetRegistry<Block>();
 			//var blockStateRegistry = registryManager.GetRegistry<BlockState>();
 
@@ -167,10 +184,6 @@ namespace Alex.Blocks
 							if (block.TryGetStateProperty(property.Key, out var stateProp))
 							{
 								variantState.States.Add(stateProp.WithValue(s.Properties[property.Key]));
-							}
-							else
-							{
-								variantState.States.Add(new PropertyString(property.Key, s.Properties[property.Key]));
 							}
 							//	defaultState = (BlockState) defaultState.WithPropertyNoResolve(property.Key, property.Value.FirstOrDefault(), false);
 						}

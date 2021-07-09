@@ -97,7 +97,8 @@ namespace Alex.Gui.Elements.Inventory
 			        IsSelected = i == SelectedIndex,
 			        Anchor = Alignment.TopLeft,
 			        //  Item = hotbarItems[i],
-			        AutoSizeMode = AutoSizeMode.None
+			        AutoSizeMode = AutoSizeMode.None,
+			        CanHighlight = false
 		        });
 	        }
 	        
@@ -117,7 +118,8 @@ namespace Alex.Gui.Elements.Inventory
 		        Text = "",
 		        Margin = new Thickness(0, -5, 0, 5),
 				FontStyle = FontStyle.DropShadow,
-				IsVisible = false
+				IsVisible = false,
+				Background = Color.Black * 0.5f
 	        };
 	       
 	       AddChild(_itemNameTextElement);
@@ -202,7 +204,7 @@ namespace Alex.Gui.Elements.Inventory
 	        var item = items[SelectedIndex];
 	        item.IsSelected = true;
 			
-	        if (item.Item != null && !(item.Item is ItemAir))
+	        if (item.Item != null && !item.Item.IsAir())
 	        {
 		        var displayName = item.Item?.GetDisplayName();
 		        if (!string.IsNullOrWhiteSpace(displayName))
@@ -216,17 +218,29 @@ namespace Alex.Gui.Elements.Inventory
 	        }
 	        else
 	        {
-		        _itemNameTextElement.Text = "";
+		        _itemNameTextElement.Text = string.Empty;
 	        }
         }
 
 	    protected override void OnDraw(GuiSpriteBatch graphics, GameTime gameTime)
 	    {
 		    base.OnDraw(graphics, gameTime);
-		    Vector2 textSize =
-			    graphics.Font.MeasureString(_itemNameTextElement.Text, _itemNameTextElement.Scale);
-		    
-			graphics.DrawString(Bounds.TopCenter() + new Vector2(-textSize.X / 2f, -(textSize.Y)), _itemNameTextElement.Text, _itemNameTextElement.TextColor, _itemNameTextElement.FontStyle, _itemNameTextElement.Scale, opacity: _itemNameTextElement.TextOpacity);
+		    var opacity = _itemNameTextElement.TextOpacity;
+
+		    if (opacity > 0.1f)
+		    {
+			    var textSize = graphics.Font.MeasureString(_itemNameTextElement.Text, _itemNameTextElement.Scale).ToPoint();
+
+			    var textPosition = Bounds.TopCenter() - new Vector2((textSize.X / 2f), (textSize.Y + 2));
+			    var rectanglePosition = textPosition.ToPoint();
+			    
+			    var rect = new Rectangle(rectanglePosition.X - 2, rectanglePosition.Y - 2, textSize.X + 4, textSize.Y + 2);
+
+			    graphics.FillRectangle(rect, Color.Black * (0.75f) * opacity);
+			    graphics.DrawString(
+				    textPosition, _itemNameTextElement.Text, _itemNameTextElement.TextColor, _itemNameTextElement.FontStyle,
+				    _itemNameTextElement.Scale, opacity: opacity);
+		    }
 	    }
 
 	    protected override void OnInit(IGuiRenderer renderer)

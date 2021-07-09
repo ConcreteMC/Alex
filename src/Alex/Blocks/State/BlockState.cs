@@ -6,6 +6,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using Alex.Blocks.Minecraft;
 using Alex.Blocks.Properties;
+using Alex.Common.Blocks.Properties;
 using Alex.Common.Resources;
 using Alex.ResourcePackLib.Json.BlockStates;
 using Microsoft.Xna.Framework;
@@ -13,15 +14,15 @@ using NLog;
 
 namespace Alex.Blocks.State
 {
-	public class BlockState : IEnumerable<StateProperty>
+	public class BlockState : IEnumerable<IStateProperty>
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(BlockState));
 		
-		protected internal HashSet<StateProperty> States { get; set; }
+		protected internal HashSet<IStateProperty> States { get; set; }
 		public int Count => States.Count;
 		public BlockState()
 		{
-			States = new HashSet<StateProperty>(new StatePropertyComparer());
+			States = new HashSet<IStateProperty>(new StatePropertyComparer());
 		}
 
 		public string Name { get; set; }
@@ -37,22 +38,21 @@ namespace Alex.Blocks.State
 
 		public BlockStateVariantMapper VariantMapper { get; set; }
 
-		public T GetTypedValue<T>(StateProperty<T> property)
+		public T GetValue<T>(StateProperty<T> property)
 		{
 			if (States.TryGetValue(property, out var first))
 			{
-				if (first.Value is T t)
-					return t;
-			
-				if (first is StateProperty<T> ip)
-					return ip.Value;
+				if (first is StateProperty<T> t)
+				{
+					return t.Value;
+				}
 
 				return property.ParseValue(first.StringValue);
 			}
 
-			return default(T);
+			return property.DefaultValue;
 		}
-
+		
 		public BlockState WithProperty<T>(StateProperty<T> property, T value)
 		{
 			if (VariantMapper.TryResolve(this, property, value, out BlockState result))
@@ -94,11 +94,8 @@ namespace Alex.Blocks.State
 			return false;
 		}
 		
-		public bool TryGetValue<T>(StateProperty<T> property, out T value)
-		{ 
-			//var hashcode = property.Identifier;
-			//var first = States.TryGetValue();
-
+		/*public bool TryGetValue<T>(StateProperty<T> property, out T value)
+		{
 			if (States.TryGetValue(property, out var first))
 			{
 				var v = first.Value;
@@ -118,6 +115,16 @@ namespace Alex.Blocks.State
 			value = default(T);
 			return false;
 		}
+		
+		public T GetTypedValue<T>(StateProperty<T> property)
+		{
+			if (TryGetValue(property, out var val))
+			{
+				return val;
+			}
+
+			return default(T);
+		}*/
 
 		public bool Equals(BlockState other)
 		{
@@ -125,7 +132,7 @@ namespace Alex.Blocks.State
 			if (!result) return false;
 
 			//var thisStates = new HashSet<StateProperty>(States);
-			var otherStates = new HashSet<StateProperty>(other.States, new StatePropertyComparer());
+			var otherStates = new HashSet<IStateProperty>(other.States, new StatePropertyComparer());
 
 			otherStates.IntersectWith(States);
 			result = otherStates.Count == States.Count;
@@ -176,7 +183,7 @@ namespace Alex.Blocks.State
 		}
 
 		/// <inheritdoc />
-		public IEnumerator<StateProperty> GetEnumerator()
+		public IEnumerator<IStateProperty> GetEnumerator()
 		{
 			foreach (var kv in States)
 			{
