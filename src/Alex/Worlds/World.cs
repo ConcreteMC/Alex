@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
@@ -15,6 +16,7 @@ using Alex.Common.Graphics;
 using Alex.Common.Graphics.GpuResources;
 using Alex.Common.Services;
 using Alex.Common.Utils;
+using Alex.Common.Utils.Collections;
 using Alex.Common.World;
 using Alex.Entities;
 using Alex.Entities.BlockEntities;
@@ -68,6 +70,7 @@ namespace Alex.Worlds
 		public long Time      { get; set; } = 1;
 		public long TimeOfDay { get; set; } = 1;
 		public bool Raining   { get; set; } = false;
+		public bool Thundering { get; set; } = false;
 		
 		public bool DrowningDamage      { get; set; } = true;
 		public bool CommandblockOutput  { get; set; } = true;
@@ -107,6 +110,7 @@ namespace Alex.Worlds
 		public  BackgroundWorker  BackgroundWorker { get; }
 		private List<IDisposable> _disposables = new List<IDisposable>();
 		private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+		private static Texture2D[] _destroyStages = null;//new Texture2D[10];
 		public World(IServiceProvider serviceProvider, GraphicsDevice graphics, AlexOptions options,
 			NetworkProvider networkProvider)
 		{
@@ -180,6 +184,24 @@ namespace Alex.Worlds
 			_disposables.Add(EntityManager);
 			_disposables.Add(ChunkManager);
 			_disposables.Add(BackgroundWorker);
+
+			_breakingEffect = new BasicEffect(graphics);
+			_breakingEffect.TextureEnabled = true;
+			_breakingEffect.LightingEnabled = false;
+			_breakingEffect.FogEnabled = false;
+			_breakingEffect.VertexColorEnabled = true;
+
+			if (_destroyStages == null)
+			{
+				_destroyStages = new Texture2D[10];
+				for (int i = 0; i < _destroyStages.Length; i++)
+				{
+					if (resources.TryGetBitmap($"block/destroy_stage_{i}", out var bmp))
+					{
+						_destroyStages[i] = TextureUtils.BitmapToTexture2D(graphics, bmp);
+					}
+				}
+			}
 		}
 
 		private const int MORTON3D_BIT_SIZE = 21;
@@ -291,21 +313,6 @@ namespace Alex.Worlds
 		public EntityManager  EntityManager { get; set; }
 		public ChunkManager   ChunkManager  { get; private set; }
 
-		public int ChunkCount
-        {
-            get { return ChunkManager.ChunkCount; }
-        }
-
-		public int ConcurrentChunkUpdates
-        {
-            get { return ChunkManager.ConcurrentChunkUpdates; }
-        }
-
-		public int EnqueuedChunkUpdates
-		{
-			get { return ChunkManager.EnqueuedChunkUpdates; }
-		}
-
 		public void ToggleWireFrame()
         {
 	        ChunkManager.UseWireFrames = !ChunkManager.UseWireFrames;
@@ -317,6 +324,9 @@ namespace Alex.Worlds
 		public int ChunkDrawCount { get; set; } = 0;
 		
 		public bool RenderBoundingBoxes { get; set; } = false;
+
+		private ConcurrentDictionary<BlockCoordinates, BlockBreakProgress> _blockBreakProgresses = new ConcurrentDictionary<BlockCoordinates, BlockBreakProgress>();
+		private BasicEffect _breakingEffect;
         public void Render(IRenderArgs args)
         {
 	        if (_destroyed)
@@ -342,6 +352,32 @@ namespace Alex.Worlds
             ChunkDrawCount = chunkDrawCount;
 
 	        Player.Render(args, Options.VideoOptions.EntityCulling.Value);
+
+	        foreach (var block in _blockBreakProgresses)
+	        {
+		        var index = block.Value.Stage;
+		        var texture = _destroyStages[index];
+						        
+		        if (texture != null)
+		        {
+			        _breakingEffect.Texture = texture;
+			        _breakingEffect.TextureEnabled = true;
+			        _breakingEffect.VertexColorEnabled = false;
+		        }
+		        else
+		        {
+			        _breakingEffect.TextureEnabled = false;
+			        _breakingEffect.VertexColorEnabled = true;
+		        }
+
+		        //var color = Color.Red * block.Value.Progress;
+
+		        // var depth = args.GraphicsDevice.DepthStencilState;
+		        // args.GraphicsDevice.DepthStencilState = DepthStencilState.None;
+
+		        args.GraphicsDevice.RenderBoundingBox(
+			        block.Value.BoundingBox, Camera.ViewMatrix, Camera.ProjectionMatrix, Color.White, true, _breakingEffect);
+	        }
 	        
 	        if (Player != null && Player.HasRaytraceResult)
 	        {
@@ -358,21 +394,14 @@ namespace Alex.Worlds
 				        {
 					        Color color = Color.LightGray;
 
-					        if (Player.IsBreakingBlock)
+					       /* if (Player.IsBreakingBlock)
 					        {
 						        var progress = Player.BlockBreakProgress;
+						        
 
-						        color = Color.Red * progress;
-
-						        var depth = args.GraphicsDevice.DepthStencilState;
-						        args.GraphicsDevice.DepthStencilState = DepthStencilState.None;
-
-						        args.GraphicsDevice.RenderBoundingBox(
-							        boundingBox, Camera.ViewMatrix, Camera.ProjectionMatrix, color, true);
-
-						        args.GraphicsDevice.DepthStencilState = depth;
+						       // args.GraphicsDevice.DepthStencilState = depth;
 					        }
-					        else
+					        else*/
 					        {
 						        args.GraphicsDevice.RenderBoundingBox(
 							        boundingBox, Camera.ViewMatrix, Camera.ProjectionMatrix, color);
@@ -450,7 +479,6 @@ namespace Alex.Worlds
 			ChunkManager.Update(args);
 			
 			EntityManager.Update(args);
-				///PhysicsEngine.Update(args.GameTime);
 
 			bool inWater = Player.HeadInWater;
 			
@@ -516,6 +544,41 @@ namespace Alex.Worlds
 				var tod = TimeOfDay;
 				TimeOfDay = ((tod + 1) % 24000);
 			}
+
+			foreach (var blockBreak in _blockBreakProgresses)
+			{
+				blockBreak.Value.Tick();
+			}
+		}
+
+		public void AddOrUpdateBlockBreak(BlockCoordinates coordinates, double requiredTime, byte destroyStage = 0)
+		{
+			var block = GetBlockState(coordinates);
+
+			if (block == null)
+				return;
+
+			if (_blockBreakProgresses.TryGetValue(coordinates, out var i))
+			{
+				i.SetStage(destroyStage);
+			}
+			else
+			{
+				var item = new BlockBreakProgress(coordinates, requiredTime);
+				var boundingBoxes = block.Block.GetBoundingBoxes(coordinates).ToArray();
+
+				if (boundingBoxes.Length > 0)
+				{
+					item.BoundingBox = boundingBoxes.OrderByDescending(x => (x.Max - x.Min).LengthSquared()).FirstOrDefault();
+				}
+
+				_blockBreakProgresses.TryAdd(coordinates, item);
+			}
+		}
+
+		public void EndBreakBlock(BlockCoordinates coordinates)
+		{
+			_blockBreakProgresses.TryRemove(coordinates, out _);
 		}
 		
         public Vector3 SpawnPoint { get; set; } = Vector3.Zero;
@@ -623,7 +686,6 @@ namespace Alex.Worlds
         public bool TryGetBlockLight(BlockCoordinates coordinates, out byte blockLight)
         {
 	        blockLight = 0;
-	        if (coordinates.Y < 0 || coordinates.Y > ChunkColumn.ChunkHeight) return false;
 
 	        ChunkColumn chunk;
 	        if (ChunkManager.TryGetChunk(new ChunkCoordinates(coordinates), out chunk))
@@ -642,9 +704,7 @@ namespace Alex.Worlds
         
         public byte GetSkyLight(int x, int y, int z)
         {
-            if (y < 0 || y > ChunkColumn.ChunkHeight) return 15;
-            
-            ChunkColumn chunk;
+	        ChunkColumn chunk;
 	        if (ChunkManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
 	        {
 				return chunk.GetSkylight(x & 0xf, y, z & 0xf);
@@ -664,9 +724,7 @@ namespace Alex.Worlds
 
         public byte GetBlockLight(int x, int y, int z)
         {
-            if (y < 0 || y > ChunkColumn.ChunkHeight) return 0;
-
-			ChunkColumn chunk;
+	        ChunkColumn chunk;
 	        if (ChunkManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
 	        {
                 return chunk.GetBlocklight(x & 0xf, y, z & 0xf);
@@ -687,7 +745,7 @@ namespace Alex.Worlds
 				var cy       = y;
 				var cz       = z & 0xf;
 				
-				var chunkPos   = new BlockCoordinates(cx, cy, cz);
+			//	var chunkPos   = new BlockCoordinates(cx, cy, cz);
 			//	var blockAtPos = chunk.GetBlockState(cx, cy, cz);
 
 				//if (blockAtPos.Block.BlockMaterial == Material.Air)
@@ -1073,6 +1131,8 @@ namespace Alex.Worlds
 			Ticker = null;
 			Player = null;
 			
+			_breakingEffect?.Dispose();
+			
 			//Log.Info($"World disposed.");
 		}
 
@@ -1237,6 +1297,11 @@ namespace Alex.Worlds
 		public void SetRain(bool raining)
 		{
 			Raining = raining;
+		}
+		
+		public void SetThunder(bool thundering)
+		{
+			Thundering = thundering;
 		}
 
 		public void SetBlockState(BlockCoordinates coordinates, BlockState blockState, BlockUpdatePriority priority = BlockUpdatePriority.High)

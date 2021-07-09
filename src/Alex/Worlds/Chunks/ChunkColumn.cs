@@ -16,20 +16,16 @@ using NLog;
 
 namespace Alex.Worlds.Chunks
 {
-	//TODO: Implement support support for blocks < 0, possibly implement infinite world height.
 	public class ChunkColumn
 	{
-		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(SPWorldProvider));
-
-		public const int ChunkHeight = 256;
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ChunkColumn));
+		
 		public const int ChunkWidth = 16;
 		public const int ChunkDepth = 16;
 
 		public int X { get; set; }
 		public int Z { get; set; }
-
-		public ChunkCoordinates Coordinates => new ChunkCoordinates(X, Z);
-
+		
 		public           bool           IsNew           { get; set; } = true;
 		public           ChunkSection[] Sections { get; set; }
 		private readonly int[] _biomeId;
@@ -45,7 +41,6 @@ namespace Alex.Worlds.Chunks
 		private System.Collections.BitArray _scheduledUpdates;
 		public WorldSettings WorldSettings { get; }
 		private readonly int _sectionOffset;
-		protected readonly int _realHeight;
 		public ChunkColumn(int x, int z, WorldSettings worldSettings)
 		{
 			X = x;
@@ -54,7 +49,6 @@ namespace Alex.Worlds.Chunks
 			_sectionOffset = worldSettings.MinY < 0 ? Math.Abs(worldSettings.MinY >> 4) : 0;
 
 			int realHeight = worldSettings.WorldHeight + Math.Abs(worldSettings.MinY);
-			_realHeight = realHeight;
 			
 			Sections = new ChunkSection[realHeight / 16];
 			for (int i = 0; i < Sections.Length; i++)
@@ -64,7 +58,7 @@ namespace Alex.Worlds.Chunks
 
 			BlockEntities = new ConcurrentDictionary<BlockCoordinates, NbtCompound>();
 			_scheduledUpdates = new System.Collections.BitArray((16 * 16 * realHeight), false);
-			_biomeId = ArrayOf<int>.Create(16 * 16 * realHeight);
+			_biomeId = new int[16 * 16 * realHeight];
 
 			ChunkData = new ChunkData(x,z);
 		}
@@ -287,7 +281,7 @@ namespace Alex.Worlds.Chunks
 		
 		protected virtual ChunkSection CreateSection(bool storeSkylight, int sections)
 		{
-			return new ChunkSection(storeSkylight, sections);
+			return new ChunkSection(sections);
 		}
 
 		public ChunkSection GetSection(int y)
@@ -424,20 +418,20 @@ namespace Alex.Worlds.Chunks
 		{
 			if (!CheckWithinCoordinates(bx, by, bz, false))
 			{
-				yield return new ChunkSection.BlockEntry(Air, 0);
+				//yield return new ChunkSection.BlockEntry(Air, 0);
 				yield break;
 			}
 			
 			if ((bx < 0 || bx > ChunkWidth) || (bz < 0 || bz > ChunkDepth))
 			{
-				yield return new ChunkSection.BlockEntry(Air, 0);
+				//yield return new ChunkSection.BlockEntry(Air, 0);
 				yield break;
 			}
 
 			var chunk = GetSection(by);
 			if (chunk == null)
 			{
-				yield return new ChunkSection.BlockEntry(Air, 0);
+				//yield return new ChunkSection.BlockEntry(Air, 0);
 				yield break;
 			}
 			

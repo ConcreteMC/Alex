@@ -45,26 +45,6 @@ namespace Alex {
             }
         }
         
-        internal static byte[] no {
-            get {
-                object obj = ResourceManager.GetObject("no", resourceCulture);
-                return ((byte[])(obj));
-            }
-        }
-        
-        internal static byte[] logo {
-            get {
-                object obj = ResourceManager.GetObject("logo", resourceCulture);
-                return ((byte[])(obj));
-            }
-        }
-        
-        internal static string runtimeid_table {
-            get {
-                return ResourceManager.GetString("runtimeid_table", resourceCulture);
-            }
-        }
-        
         internal static string NewBlocks {
             get {
                 return ResourceManager.GetString("NewBlocks", resourceCulture);
@@ -74,19 +54,6 @@ namespace Alex {
         internal static string NLogConfig {
             get {
                 return ResourceManager.GetString("NLogConfig", resourceCulture);
-            }
-        }
-        
-        internal static string Entities {
-            get {
-                return ResourceManager.GetString("Entities", resourceCulture);
-            }
-        }
-        
-        internal static byte[] Alex {
-            get {
-                object obj = ResourceManager.GetObject("Alex", resourceCulture);
-                return ((byte[])(obj));
             }
         }
         
@@ -104,20 +71,6 @@ namespace Alex {
             }
         }
         
-        internal static byte[] logo2 {
-            get {
-                object obj = ResourceManager.GetObject("logo2", resourceCulture);
-                return ((byte[])(obj));
-            }
-        }
-        
-        internal static byte[] DebugFont {
-            get {
-                object obj = ResourceManager.GetObject("DebugFont", resourceCulture);
-                return ((byte[])(obj));
-            }
-        }
-        
         internal static byte[] GradientBlur {
             get {
                 object obj = ResourceManager.GetObject("GradientBlur", resourceCulture);
@@ -128,12 +81,6 @@ namespace Alex {
         internal static string NewEntities {
             get {
                 return ResourceManager.GetString("NewEntities", resourceCulture);
-            }
-        }
-        
-        internal static string Items {
-            get {
-                return ResourceManager.GetString("Items", resourceCulture);
             }
         }
         

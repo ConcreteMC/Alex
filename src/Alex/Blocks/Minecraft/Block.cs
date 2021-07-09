@@ -347,5 +347,10 @@ namespace Alex.Blocks.Minecraft
 			stateProperty = new PropertyString(prop);
 			return true;
 		}
+
+		public virtual bool Interact(Player player, Item item, Vector3 cursorPosition)
+		{
+			return false;
+		}
 	}
 }

@@ -62,6 +62,28 @@ namespace Alex.Entities
 
         public NetworkProvider Network { get; set; }
 
+        /// <inheritdoc />
+        public override PlayerLocation KnownPosition
+        {
+	        get
+	        {
+		        return base.KnownPosition;
+	        }
+	        set
+	        {
+		        base.KnownPosition = value;
+
+		        if (Level == null)
+			        return;
+		        
+		        if (!Level.ChunkManager.TryGetChunk(new ChunkCoordinates(value), out _))
+		        {
+			        WaitingOnChunk = true;
+			        // NoAi = false;
+		        }
+	        }
+        }
+
         //public Camera Camera { get; internal set; }
         public Player(GraphicsDevice graphics, InputManager inputManager, World world, NetworkProvider networkProvider, PlayerIndex playerIndex) : base(world)
         {
@@ -114,7 +136,7 @@ namespace Alex.Entities
 			    if (!IsBreakingBlock)
 				    return 0;
 
-			    return (float) ((1f / (float) _destroyTimeNeeded) * _destroyingTick);
+			    return (1f / (float) _destroyTimeNeeded) * _destroyingTick;
 		    }
 	    }
 
@@ -610,6 +632,8 @@ namespace Alex.Entities
 		    {
 			    SwingArm(true);
 		    }
+
+		   // Level?.SetBlockBreakProgress(_destroyingTarget, BlockBreakProgress);
 		    
 		    if (tick >= _destroyTimeNeeded)
 		    {
@@ -645,6 +669,8 @@ namespace Alex.Entities
             var remainder = new Vector3(adjacent.X - flooredAdj.X, adjacent.Y - flooredAdj.Y, adjacent.Z - flooredAdj.Z);
 
             Network?.PlayerDigging(DiggingStatus.Started, floored, face, remainder);
+            
+            Level?.AddOrUpdateBlockBreak(_destroyingTarget, _destroyTimeNeeded);
         }
 
 	    private void StopBreakingBlock(bool sendToServer = true, bool forceCanceled = false)
@@ -653,12 +679,14 @@ namespace Alex.Entities
 			    return;
 		    
 		    _destroyingBlock = false;
-		    
-            var ticks = Interlocked.Exchange(ref _destroyingTick, 0);// = 0;
+
+		    var ticks = Interlocked.Exchange(ref _destroyingTick, 0);// = 0;
 
             var flooredAdj = Vector3.Floor(_adjacentRaytrace);
             var remainder = new Vector3(_adjacentRaytrace.X - flooredAdj.X, _adjacentRaytrace.Y - flooredAdj.Y, _adjacentRaytrace.Z - flooredAdj.Z);
-
+            
+            Level?.EndBreakBlock(_destroyingTarget);
+            
             if (!sendToServer)
 		    {
 			    return;
@@ -675,6 +703,11 @@ namespace Alex.Entities
             }
 	    }
 
+	    public void CancelBlockBreaking()
+	    {
+		    StopBreakingBlock(true, true);
+	    }
+	    
 	    private BlockFace GetTargetFace()
 	    {
 		    var flooredAdj =  Vector3.Floor(_adjacentRaytrace);
@@ -691,99 +724,92 @@ namespace Alex.Entities
 		    HandleClick(slot, hand, Inventory.HotbarOffset + Inventory.SelectedSlot, false, true);
 	    }
 
-	    private bool HandleClick(Item slot, int hand, int inventorySlot, bool canModifyWorld = true, bool isLeftClick = false)
+	    private bool HandleClick(Item slot,
+		    int hand,
+		    int inventorySlot,
+		    bool canModifyWorld = true,
+		    bool isLeftClick = false)
 	    {
-		  //  Log.Info($"Clicky clicky click. Left click: {isLeftClick} Can modify world: {canModifyWorld} HasRaytrace: {HasRaytraceResult}");
+		    //  Log.Info($"Clicky clicky click. Left click: {isLeftClick} Can modify world: {canModifyWorld} HasRaytrace: {HasRaytraceResult}");
 		    SwingArm(true);
-		    //if (ItemFactory.ResolveItemName(slot.ItemID, out string itemName))
+
+		    var flooredAdj = Vector3.Floor(_adjacentRaytrace);
+		    var raytraceFloored = Vector3.Floor(_raytraced);
+
+		    var adj = flooredAdj - raytraceFloored;
+		    adj.Normalize();
+
+		    var face = adj.GetBlockFace();
+
+		    var remainder = new Vector3(
+			    _adjacentRaytrace.X - flooredAdj.X, _adjacentRaytrace.Y - flooredAdj.Y,
+			    _adjacentRaytrace.Z - flooredAdj.Z);
+
+		    var coordR = new BlockCoordinates(raytraceFloored);
+
+		    if (HasRaytraceResult)
 		    {
-			    var flooredAdj = Vector3.Floor(_adjacentRaytrace);
-			    var raytraceFloored = Vector3.Floor(_raytraced);
+			    var existingBlockState = Level.GetBlockState(coordR);
+			    var existingBlock = existingBlockState.Block;
 
-			    var adj = flooredAdj - raytraceFloored;
-			    adj.Normalize();
-
-			    var face = adj.GetBlockFace();
-
-			    var remainder = new Vector3(_adjacentRaytrace.X - flooredAdj.X,
-				    _adjacentRaytrace.Y - flooredAdj.Y, _adjacentRaytrace.Z - flooredAdj.Z);
-
-			    var coordR = new BlockCoordinates(raytraceFloored);
-			    
-			    //IBlock block = null;
-			    if (/*!IsWorldImmutable &&*/ HasRaytraceResult)
+			    if (existingBlock.CanInteract && ((!(slot is ItemBlock) || isLeftClick) || IsSneaking))
 			    {
-				    var  existingBlockState = Level.GetBlockState(coordR);
-				    var  existingBlock      = existingBlockState.Block;
-				    bool isBlockItem        = slot is ItemBlock;
-				    
-				    if (existingBlock.CanInteract && (!isBlockItem || IsSneaking))
+				    if (!existingBlock.Interact(this, slot, remainder))
 				    {
 					    Network?.WorldInteraction(this, coordR, face, hand, inventorySlot, remainder);
-					//	Log.Info($"World interaction.");
-					    return true;
 				    }
-				    
-				    if (slot is ItemBlock ib && canModifyWorld && !isLeftClick)
-				    {
-					   // Log.Info($"Placing block.");
-					    BlockState blockState = ib.Block;
 
-					    if (blockState != null && !(blockState.Block is Air) && HasRaytraceResult)
-					    {
-						    if (existingBlock.BlockMaterial.IsReplaceable)
-						    {
-							//    Log.Info($"Placing block 1");
-							    if (CanPlaceBlock(coordR, (Block) blockState.Block))
-							    {
-								    Level.SetBlockState(coordR, blockState);
-
-								    Network?.BlockPlaced(coordR.BlockDown(), BlockFace.Up, hand, inventorySlot, remainder, this);
-
-								    return true;
-							    }
-						    }
-						    else
-						    {
-							//    Log.Info($"Placing block 2");
-							    var target = new BlockCoordinates(raytraceFloored + adj);
-							    if (CanPlaceBlock(target, (Block) blockState.Block))
-							    {
-								    Level.SetBlockState(target, blockState);
-
-								    Network?.BlockPlaced(coordR, face, hand, inventorySlot, remainder, this);
-								    
-								    return true;
-							    }
-						    }
-					    }
-				    }
-				    else if (!(slot is ItemBlock))
-				    {
-					   // Log.Info($"Item is not a block, got type of: {slot.GetType()}");
-				    }
+				    return true;
 			    }
 
-			    if (!(slot is ItemAir) && slot.Id > 0 && slot.Count > 0)
+			    if (slot is ItemBlock ib && canModifyWorld && !isLeftClick)
 			    {
-				    ItemUseAction action;
-	                if (isLeftClick)
-	                {
-		                action = HasRaytraceResult ? ItemUseAction.ClickBlock : ItemUseAction.ClickAir;
-	                }
-	                else
-	                {
-		                action = HasRaytraceResult ? ItemUseAction.RightClickBlock : ItemUseAction.RightClickAir;
-	                }
+				    BlockState blockState = ib.Block;
 
-	                Network?.UseItem(slot, hand, action, coordR, face, remainder);
-                    return true;
-                }
-            }
+				    if (blockState != null && !(blockState.Block is Air) && HasRaytraceResult)
+				    {
+					    BlockCoordinates target;
+					    if (existingBlock.BlockMaterial.IsReplaceable)
+					    {
+						    target = coordR;
+					    }
+					    else
+					    {
+						    target = new BlockCoordinates(raytraceFloored + adj);
+					    }
+					    
+					    if (CanPlaceBlock(target, (Block) blockState.Block))
+					    {
+						    Level.SetBlockState(target, blockState);
+						    Network?.BlockPlaced(coordR, face, hand, inventorySlot, remainder, this);
+						    
+						    return true;
+					    }
+				    }
+			    }
+		    }
+
+		    if (!(slot is ItemAir) && slot.Id > 0 && slot.Count > 0)
+		    {
+			    ItemUseAction action;
+
+			    if (isLeftClick)
+			    {
+				    action = HasRaytraceResult ? ItemUseAction.ClickBlock : ItemUseAction.ClickAir;
+			    }
+			    else
+			    {
+				    action = HasRaytraceResult ? ItemUseAction.RightClickBlock : ItemUseAction.RightClickAir;
+			    }
+
+			    Network?.UseItem(slot, hand, action, coordR, face, remainder);
+
+			    return true;
+		    }
 
 		    return false;
 	    }
-	    
+
 	    private void BeginUseItem(bool isLeftMouseButton)
 	    {
 		    var item = Inventory.MainHand;

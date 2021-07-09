@@ -852,6 +852,10 @@ namespace Alex.Worlds.Multiplayer
 					HandleAcknowledgePlayerDiggingPacket(diggingPacket);
 
 					break;
+				
+				case BlockBreakAnimationPacket blockBreakAnimationPacket:
+					HandleBlockBreakAnimationPacket(blockBreakAnimationPacket);
+					break;
 
 				case DisplayScoreboardPacket displayScoreboardPacket:
 					HandleDisplayScoreboardPacket(displayScoreboardPacket);
@@ -1490,13 +1494,36 @@ namespace Alex.Worlds.Multiplayer
 			}
 		}
 
+		private void HandleBlockBreakAnimationPacket(BlockBreakAnimationPacket packet)
+		{
+			var blockCoordinates = (BlockCoordinates) packet.Position;
+			if (packet.DestroyStage > 9)
+			{
+				World.EndBreakBlock(blockCoordinates);
+			}
+			else
+			{
+				World.AddOrUpdateBlockBreak(blockCoordinates, -1, packet.DestroyStage);
+			}
+		}
+
 		private void HandleAcknowledgePlayerDiggingPacket(AcknowledgePlayerDiggingPacket packet)
 		{
-			//Log.Info($"Player digging acknowledgement, status={packet.Status} success={packet.Successful}");
-			
+			Log.Info($"Player digging acknowledgement, status={packet.Status} success={packet.Successful}");
+			if (packet.Status == AcknowledgePlayerDiggingPacket.DigStatus.StartedDigging)
+			{
+				if (!packet.Successful)
+				{
+					World.Player.CancelBlockBreaking();
+				}
+			}
 			if (!packet.Successful)
 			{
 				World.SetBlockState(packet.Position, BlockFactory.GetBlockState((uint)packet.Block));
+			}
+			else
+			{
+				
 			}
 		}
 

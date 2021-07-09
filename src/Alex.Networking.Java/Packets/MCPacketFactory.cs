@@ -181,6 +181,7 @@ namespace Alex.Networking.Java.Packets
 			Register(ConnectionState.Play, 0x04, () => SpawnPlayerPacket.CreateObject());
 			Register(ConnectionState.Play, 0x06, () => EntityAnimationPacket.CreateObject());
 			Register(ConnectionState.Play, 0x08, () => AcknowledgePlayerDiggingPacket.CreateObject());
+			Register(ConnectionState.Play, 0x09, () => BlockBreakAnimationPacket.CreateObject());
 			Register(ConnectionState.Play, 0x0A, () => BlockEntityDataPacket.CreateObject());
 			
 			Register(ConnectionState.Play, 0x0B, () => BlockActionPacket.CreateObject());

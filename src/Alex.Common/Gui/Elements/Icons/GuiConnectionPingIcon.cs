@@ -2,6 +2,7 @@
 using Alex.Common.Gui.Graphics;
 using Alex.Common.Utils;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using RocketUI;
 
@@ -95,6 +96,11 @@ namespace Alex.Common.Gui.Elements.Icons
             {
 	            AddChild(_playerCountElement);
             }
+
+            if (!_isPending)
+            {
+	            SetPing(_ping);
+            }
         }
 
         public void SetPending()
@@ -164,7 +170,7 @@ namespace Alex.Common.Gui.Elements.Icons
         {
 	        base.OnUpdate(gameTime);
 
-            if (_isPending)
+	        if (_isPending)
             {
                 var dt = gameTime.TotalGameTime.TotalSeconds;
 
@@ -172,6 +178,9 @@ namespace Alex.Common.Gui.Elements.Icons
             }
             else
             {
+	            if (!IsVisible)
+		            return;
+
 	            var mouseState = Mouse.GetState();
 
 	            _cursorPosition = GuiRenderer.Unproject(new Vector2(mouseState.X, mouseState.Y)).ToPoint();
@@ -198,7 +207,7 @@ namespace Alex.Common.Gui.Elements.Icons
 	            
 	            //graphics.FillRectangle(RenderBounds, Background,  TextureRepeatMode.NoScaleCenterSlice);
 	            
-	            if (_renderLatency)
+	            if (_renderLatency && IsVisible)
 	            {
 		            string text = $"{_ping}ms";
 

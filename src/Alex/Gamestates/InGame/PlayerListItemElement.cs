@@ -1,44 +1,55 @@
 using Alex.Common.Gui.Elements.Icons;
+using Alex.Common.Utils;
 using RocketUI;
 
 namespace Alex.Gamestates.InGame
 {
     public class PlayerListItemElement : RocketControl
     {
-        private GuiConnectionPingIcon _pingElement = null;
-        private int                   _ping        = 0;
-        public PlayerListItemElement(string username, int? ping)
+        private GuiConnectionPingIcon _pingIcon;
+        private PlayerListItem _playerListItem;
+        public PlayerListItemElement(PlayerListItem item)
         {
-            AddChild(new TextElement()
-            {
-                Text = username.Replace("\n", "").Trim(),
-                Margin = new Thickness(2),
-                Anchor = Alignment.TopLeft,
-                //Enabled = false,
-                Padding = new Thickness(5,5)
-            });
-
-            if (ping.HasValue)
-            {
-                AddChild(_pingElement = new GuiConnectionPingIcon
+            _playerListItem = item;
+            
+            AddChild(
+                new TextElement()
                 {
-                    Anchor = Alignment.MiddleRight, 
-                    ShowPlayerCount = false,
-                    Margin = new Thickness(0, 0, 8, 0)
+                    Text = item.Username.Replace("\n", "").Trim(),
+                    Margin = new Thickness(2),
+                    Anchor = Alignment.TopLeft,
+                    //Enabled = false,
+                    Padding = new Thickness(5, 5)
                 });
-                
-                _ping = ping.Value;
-            }
 
+            _pingIcon = new GuiConnectionPingIcon
+            {
+                Anchor = Alignment.MiddleRight, 
+                ShowPlayerCount = false, 
+                Margin = new Thickness(0, 0, 8, 0),
+                IsVisible = false
+            };
+            _pingIcon.SetPing(item.Ping);
+
+            AddChild(_pingIcon);
+
+            //_ping = ping;
             AutoSizeMode = AutoSizeMode.GrowOnly;
         }
 
+        public void SetPingVisible(bool visible)
+        {
+            _pingIcon.IsVisible = visible;
+        }
+        
         /// <inheritdoc />
         protected override void OnInit(IGuiRenderer renderer)
         {
             base.OnInit(renderer);
-
-            _pingElement?.SetPing(_ping);
+            
+            _pingIcon.SetPing(_playerListItem.Ping);
+            if (_playerListItem.Ping >= 0)
+                SetPingVisible(true);
         }
     }
 }

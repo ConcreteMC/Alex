@@ -184,7 +184,7 @@ namespace Alex.Gamestates.InGame
 			string gameVersion = VersionUtils.GetVersion();
 
 			_debugInfo.AddDebugLeft(
-				() => $"Alex {gameVersion} ({Alex.FpsMonitor.Value:##} FPS, {World.Ticker.TicksPerSecond:##} TPS, Chunk Updates: {World.EnqueuedChunkUpdates} queued, {World.ConcurrentChunkUpdates} active)", TimeSpan.FromMilliseconds(50));
+				() => $"Alex {gameVersion} ({Alex.FpsMonitor.Value:##} FPS, {World.Ticker.TicksPerSecond:##} TPS, Chunk Updates: {World.ChunkManager.EnqueuedChunkUpdates} queued, {World.ChunkManager.ConcurrentChunkUpdates} active)", TimeSpan.FromMilliseconds(50));
 			
 			_debugInfo.AddDebugLeft(() =>
 			{
@@ -209,7 +209,7 @@ namespace Alex.Gamestates.InGame
 			_debugInfo.AddDebugLeft(() => $"Textures: {Alex.Metrics.TextureCount:N0} Sprite count: {Alex.Metrics.SpriteCount}", TimeSpan.FromMilliseconds(500));
 			_debugInfo.AddDebugLeft(() => $"Graphic Resources: {GpuResourceManager.ResourceCount}", TimeSpan.FromMilliseconds(500));
 
-			_debugInfo.AddDebugLeft(() => $"Chunks: {World.ChunkCount}, {World.ChunkManager.RenderedChunks}, {World.ChunkDrawCount}", TimeSpan.FromMilliseconds(500));
+			_debugInfo.AddDebugLeft(() => $"Chunks: {World.ChunkManager.ChunkCount}, {World.ChunkManager.RenderedChunks}, {World.ChunkDrawCount}", TimeSpan.FromMilliseconds(500));
 			_debugInfo.AddDebugLeft(() => $"Entities: {World.EntityManager.EntityCount}, {World.EntityManager.EntitiesRendered}, {World.EntityManager.DrawCount}", TimeSpan.FromMilliseconds(500));
 			_debugInfo.AddDebugLeft(() => $"Particles: {Alex.ParticleManager.ParticleCount}", TimeSpan.FromMilliseconds(500));
 			_debugInfo.AddDebugLeft(() =>

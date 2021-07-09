@@ -83,7 +83,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			foreach (KeyValuePair<BlockCoordinates, NbtCompound> bePair in processor._futureBlockEntities.Where(
 				be => (ChunkCoordinates) be.Key == coordinates))
 			{
-				Chunk.BlockEntities.TryAdd(bePair.Key, bePair.Value);
+				Chunk.AddBlockEntity(bePair.Key, bePair.Value);
 				processor._futureBlockEntities.TryRemove(bePair.Key, out _);
 			}
 

@@ -28,59 +28,64 @@ namespace Alex.Common
 		    Vector3 btmRightFront = new Vector3(size.X, 0, 0);
 		    Vector3 btmRightBack = Vector3.Zero;
 
+		    var x1 = 0;
+		    var x2 = 1f;
+		    var y1 = 0;
+		    var y2 = 1f;
+		    
 		    // UV texture coordinates
-		    Color textureTopLeft = Color.White;
-		    Color textureTopRight = Color.White;
-		    Color textureBottomLeft = Color.White;
-		    Color textureBottomRight = Color.White;
+		    Vector2 textureTopLeft = new Vector2(x1, y1);
+		    Vector2 textureTopRight = new Vector2(x2, y1);
+		    Vector2 textureBottomLeft = new Vector2(x1, y2);
+		    Vector2 textureBottomRight = new Vector2(x2, y2);
 
 		    // Add the vertices for the FRONT face.
-		    CubeVertices[0] = new VertexPositionColor(topLeftFront,textureTopLeft);
-		    CubeVertices[1] = new VertexPositionColor(btmLeftFront,  textureBottomLeft);
-		    CubeVertices[2] = new VertexPositionColor(topRightFront, textureTopRight);
-		    CubeVertices[3] = new VertexPositionColor(btmLeftFront,  textureBottomLeft);
-		    CubeVertices[4] = new VertexPositionColor(btmRightFront,textureBottomRight);
-		    CubeVertices[5] = new VertexPositionColor(topRightFront, textureTopRight);
+		    CubeVertices[0] = new VertexPositionColorTexture(topLeftFront, Color.White, textureTopLeft);
+		    CubeVertices[1] = new VertexPositionColorTexture(btmLeftFront, Color.White,  textureBottomLeft);
+		    CubeVertices[2] = new VertexPositionColorTexture(topRightFront, Color.White, textureTopRight);
+		    CubeVertices[3] = new VertexPositionColorTexture(btmLeftFront, Color.White,  textureBottomLeft);
+		    CubeVertices[4] = new VertexPositionColorTexture(btmRightFront, Color.White,textureBottomRight);
+		    CubeVertices[5] = new VertexPositionColorTexture(topRightFront, Color.White, textureTopRight);
 
 		    // Add the vertices for the BACK face.
-		    CubeVertices[6] = new VertexPositionColor(topLeftBack, textureTopRight);
-		    CubeVertices[7] = new VertexPositionColor(topRightBack,  textureTopLeft);
-		    CubeVertices[8] = new VertexPositionColor(btmLeftBack, textureBottomRight);
-		    CubeVertices[9] = new VertexPositionColor(btmLeftBack, textureBottomRight);
-		    CubeVertices[10] = new VertexPositionColor(topRightBack, textureTopLeft);
-		    CubeVertices[11] = new VertexPositionColor(btmRightBack,  textureBottomLeft);
+		    CubeVertices[6] = new VertexPositionColorTexture(topLeftBack, Color.White, textureTopRight);
+		    CubeVertices[7] = new VertexPositionColorTexture(topRightBack, Color.White,  textureTopLeft);
+		    CubeVertices[8] = new VertexPositionColorTexture(btmLeftBack, Color.White, textureBottomRight);
+		    CubeVertices[9] = new VertexPositionColorTexture(btmLeftBack, Color.White, textureBottomRight);
+		    CubeVertices[10] = new VertexPositionColorTexture(topRightBack, Color.White, textureTopLeft);
+		    CubeVertices[11] = new VertexPositionColorTexture(btmRightBack, Color.White,  textureBottomLeft);
 
 		    // Add the vertices for the TOP face.
-		    CubeVertices[12] = new VertexPositionColor(topLeftFront, textureBottomLeft);
-		    CubeVertices[13] = new VertexPositionColor(topRightBack,  textureTopRight);
-		    CubeVertices[14] = new VertexPositionColor(topLeftBack, textureTopLeft);
-		    CubeVertices[15] = new VertexPositionColor(topLeftFront, textureBottomLeft);
-		    CubeVertices[16] = new VertexPositionColor(topRightFront, textureBottomRight);
-		    CubeVertices[17] = new VertexPositionColor(topRightBack,textureTopRight);
+		    CubeVertices[12] = new VertexPositionColorTexture(topLeftFront, Color.White, textureBottomLeft);
+		    CubeVertices[13] = new VertexPositionColorTexture(topRightBack, Color.White,  textureTopRight);
+		    CubeVertices[14] = new VertexPositionColorTexture(topLeftBack, Color.White, textureTopLeft);
+		    CubeVertices[15] = new VertexPositionColorTexture(topLeftFront, Color.White, textureBottomLeft);
+		    CubeVertices[16] = new VertexPositionColorTexture(topRightFront, Color.White, textureBottomRight);
+		    CubeVertices[17] = new VertexPositionColorTexture(topRightBack, Color.White,textureTopRight);
 
 		    // Add the vertices for the BOTTOM face. 
-		    CubeVertices[18] = new VertexPositionColor(btmLeftFront,  textureTopLeft);
-		    CubeVertices[19] = new VertexPositionColor(btmLeftBack,  textureBottomLeft);
-		    CubeVertices[20] = new VertexPositionColor(btmRightBack,  textureBottomRight);
-		    CubeVertices[21] = new VertexPositionColor(btmLeftFront,  textureTopLeft);
-		    CubeVertices[22] = new VertexPositionColor(btmRightBack,  textureBottomRight);
-		    CubeVertices[23] = new VertexPositionColor(btmRightFront,  textureTopRight);
+		    CubeVertices[18] = new VertexPositionColorTexture(btmLeftFront, Color.White,  textureTopLeft);
+		    CubeVertices[19] = new VertexPositionColorTexture(btmLeftBack, Color.White,  textureBottomLeft);
+		    CubeVertices[20] = new VertexPositionColorTexture(btmRightBack, Color.White,  textureBottomRight);
+		    CubeVertices[21] = new VertexPositionColorTexture(btmLeftFront, Color.White,  textureTopLeft);
+		    CubeVertices[22] = new VertexPositionColorTexture(btmRightBack, Color.White,  textureBottomRight);
+		    CubeVertices[23] = new VertexPositionColorTexture(btmRightFront, Color.White,  textureTopRight);
 
 		    // Add the vertices for the LEFT face.
-		    CubeVertices[24] = new VertexPositionColor(topLeftFront, textureTopRight);
-		    CubeVertices[25] = new VertexPositionColor(btmLeftBack, textureBottomLeft);
-		    CubeVertices[26] = new VertexPositionColor(btmLeftFront, textureBottomRight);
-		    CubeVertices[27] = new VertexPositionColor(topLeftBack, textureTopLeft);
-		    CubeVertices[28] = new VertexPositionColor(btmLeftBack, textureBottomLeft);
-		    CubeVertices[29] = new VertexPositionColor(topLeftFront, textureTopRight);
+		    CubeVertices[24] = new VertexPositionColorTexture(topLeftFront, Color.White, textureTopRight);
+		    CubeVertices[25] = new VertexPositionColorTexture(btmLeftBack, Color.White, textureBottomLeft);
+		    CubeVertices[26] = new VertexPositionColorTexture(btmLeftFront, Color.White, textureBottomRight);
+		    CubeVertices[27] = new VertexPositionColorTexture(topLeftBack, Color.White, textureTopLeft);
+		    CubeVertices[28] = new VertexPositionColorTexture(btmLeftBack, Color.White, textureBottomLeft);
+		    CubeVertices[29] = new VertexPositionColorTexture(topLeftFront, Color.White, textureTopRight);
 
 		    // Add the vertices for the RIGHT face. 
-		    CubeVertices[30] = new VertexPositionColor(topRightFront, textureTopLeft);
-		    CubeVertices[31] = new VertexPositionColor(btmRightFront, textureBottomLeft);
-		    CubeVertices[32] = new VertexPositionColor(btmRightBack, textureBottomRight);
-		    CubeVertices[33] = new VertexPositionColor(topRightBack, textureTopRight);
-		    CubeVertices[34] = new VertexPositionColor(topRightFront, textureTopLeft);
-		    CubeVertices[35] = new VertexPositionColor(btmRightBack, textureBottomRight);
+		    CubeVertices[30] = new VertexPositionColorTexture(topRightFront, Color.White, textureTopLeft);
+		    CubeVertices[31] = new VertexPositionColorTexture(btmRightFront, Color.White, textureBottomLeft);
+		    CubeVertices[32] = new VertexPositionColorTexture(btmRightBack, Color.White, textureBottomRight);
+		    CubeVertices[33] = new VertexPositionColorTexture(topRightBack, Color.White, textureTopRight);
+		    CubeVertices[34] = new VertexPositionColorTexture(topRightFront, Color.White, textureTopLeft);
+		    CubeVertices[35] = new VertexPositionColorTexture(btmRightBack, Color.White, textureBottomRight);
 	    }
 
 	    /// <summary>
@@ -144,26 +149,18 @@ namespace Alex.Common
 
 			if (effect == null)
 				effect = _effect;
-			
-			var corners = box.GetCorners();
-			for (var i = 0; i < 8; i++)
-			{
-				Verts[i].Position = corners[i];
-				Verts[i].Color = color;
-			}
 
 			effect.View = view;
 			effect.Projection = projection;
 			
 			var oldDiffuse = effect.DiffuseColor;
-			//effect.DiffuseColor = color.ToVector3();
-
-			var alpha = effect.Alpha;
+			var oldWorld = effect.World;
+			var oldAlpha = effect.Alpha;
+			
 			if (asCube)
 			{
 				for (var index = 0; index < CubeVertices.Length; index++)
 				{
-				//	var vert = CubeVertices[index];
 					CubeVertices[index].Color = color;
 				}
 
@@ -175,8 +172,17 @@ namespace Alex.Common
 				effect.World = Matrix.CreateScale(new Vector3(x,y,z)) * Matrix.CreateTranslation(box.Min - new Vector3(inflation / 2f));
 				effect.Alpha = 0.5f;
 			}
+			else
+			{
+				var corners = box.GetCorners();
+				for (var i = 0; i < 8; i++)
+				{
+					Verts[i].Position = corners[i];
+					Verts[i].Color = color;
+				}
+			}
 
-			foreach (var pass in _effect.CurrentTechnique.Passes)
+			foreach (var pass in effect.CurrentTechnique.Passes)
 			{
 				pass.Apply();
 
@@ -193,18 +199,18 @@ namespace Alex.Common
 				}
 				else
 				{
-					sb.DrawUserPrimitives(PrimitiveType.TriangleList, CubeVertices, 0, CubeVertices.Length / 3, VertexPositionColor.VertexDeclaration);
+					sb.DrawUserPrimitives(PrimitiveType.TriangleList, CubeVertices, 0, CubeVertices.Length / 3, VertexPositionColorTexture.VertexDeclaration);
 				}
 			}
 
 			effect.DiffuseColor = oldDiffuse;
-			effect.World = Matrix.Identity;
-			effect.Alpha = alpha;
+			effect.World = oldWorld;
+			effect.Alpha = oldAlpha;
 		}
 
 		#region Fields
 
-		private static readonly VertexPositionColor[] CubeVertices = new VertexPositionColor[36];
+		private static readonly VertexPositionColorTexture[] CubeVertices = new VertexPositionColorTexture[36];
 		
 		private static readonly VertexPositionColor[] Verts = new VertexPositionColor[8];
 

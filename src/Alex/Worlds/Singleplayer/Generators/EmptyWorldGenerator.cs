@@ -16,7 +16,7 @@ namespace Alex.Worlds.Singleplayer.Generators
 			{
 				for (int z = 0; z < ChunkColumn.ChunkDepth; z++)
 				{
-					for (int y = 0; y < ChunkColumn.ChunkHeight; y++)
+					for (int y = 0; y < 256; y++)
 					{
 					//	_sharedChunk.SetBlockState(x, y, z, new Air());
 						_sharedChunk.SetSkyLight(x, y, z, 15);

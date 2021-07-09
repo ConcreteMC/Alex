@@ -351,7 +351,6 @@ namespace Alex
         {
             Stopwatch loadingStopwatch = Stopwatch.StartNew();
             
-            GpuResourceManager.Setup(GraphicsDevice);
             RocketUI.GpuResourceManager.Init(GraphicsDevice);
             
             var builtInFont = ResourceManager.ReadResource("Alex.Resources.default_font.png");

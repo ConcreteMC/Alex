@@ -39,6 +39,18 @@ namespace Alex.Worlds.Lighting
 			}
 		}
 
+		public byte this[int x, int y, int z]
+		{
+			get
+			{
+				return Get(x, y, z);
+			}
+			set
+			{
+				Set(x, y, z, value);
+			}
+		}
+
 		public void Reset(byte value)
 		{
 			MiNET.Worlds.ChunkColumn.Fill<byte>(Data.Data, value);

@@ -13,14 +13,15 @@ using SixLabors.ImageSharp.PixelFormats;
 
 namespace Alex.Common.Graphics.GpuResources
 {
-    public class GpuResourceManager
+    public static class GpuResourceManager
     {
         private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(GpuResourceManager));
-        public static void Setup(GraphicsDevice device)
-        {
-           // device.ResourceCreated += DeviceOnResourceCreated;
-        }
-
+        
+        private static long _totalMemoryUsage = 0;
+        private static long _resourceCount = 0;
+        public static long ResourceCount => _resourceCount;
+        public static long MemoryUsage => _totalMemoryUsage;
+        
         private static double TargetElapsedTime => 1d / 30d;
         private static double _elapsedTime = 0d;
         public static void Update(GameTime gameTime, GraphicsDevice device)
@@ -61,52 +62,15 @@ namespace Alex.Common.Graphics.GpuResources
             _totalMemoryUsage = memUsage;
             _resourceCount = count;
         }
-        
-        private static long _totalMemoryUsage = 0;
 
-        private static long _resourceCount = 0;
-        public static long ResourceCount => _resourceCount;
-        public static long MemoryUsage => _totalMemoryUsage;
-
-        private static void DeviceOnResourceCreated(object? sender, ResourceCreatedEventArgs e)
+        public static long TotalResources(this GraphicsDevice device)
         {
-            var resource = e.Resource;
-            string name = Environment.TickCount.ToString();
-
-            if (resource is VertexBuffer vb)
-            {
-                Interlocked.Increment(ref _resourceCount);
-                Interlocked.Add(ref _totalMemoryUsage, vb.MemoryUsage());
-                vb.Disposing += (o, args) =>
-                {
-                    Interlocked.Decrement(ref _resourceCount);
-                    Interlocked.Add(ref _totalMemoryUsage, -vb.MemoryUsage());
-                };
-            }
-            else if (resource is IndexBuffer ib)
-            {
-                Interlocked.Increment(ref _resourceCount);
-                Interlocked.Add(ref _totalMemoryUsage, ib.MemoryUsage());
-                ib.Disposing += (o, args) =>
-                {
-                    Interlocked.Decrement(ref _resourceCount);
-                    Interlocked.Add(ref _totalMemoryUsage, -ib.MemoryUsage());
-                };
-            }
-            else if (resource is Texture2D texture)
-            {
-                Interlocked.Increment(ref _resourceCount);
-                Interlocked.Add(ref _totalMemoryUsage, texture.MemoryUsage());
-                texture.Disposing += (o, args) =>
-                {
-                    Interlocked.Decrement(ref _resourceCount);
-                    Interlocked.Add(ref _totalMemoryUsage, -texture.MemoryUsage());
-                };
-            }
-            else
-            {
-                Log.Warn($"Unknown resourcetype: {resource.GetType()}");
-            }
+            return ResourceCount;
+        }
+        
+        public static long Memory(this GraphicsDevice device)
+        {
+            return MemoryUsage;
         }
     }
 }

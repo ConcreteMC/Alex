@@ -46,16 +46,8 @@ namespace Alex.Gamestates.InGame
 				BackgroundOverlay = new Color(Color.Black, 0.35f)
 			};
 	        _playerList.Orientation = Orientation.Vertical;
-	        
-		/*	AddChild(new TextElement()
-			{
-				TranslationKey = "menu.game",
-				Anchor = Alignment.TopCenter,
-				Scale = 2f,
-				FontStyle = FontStyle.DropShadow
-			});*/
 
-			_mainMenu.AddChild(new AlexButton("menu.returnToGame", OnReturnToGameButtonPressed, true));
+	        _mainMenu.AddChild(new AlexButton("menu.returnToGame", OnReturnToGameButtonPressed, true));
 			_mainMenu.AddChild(new AlexButton("menu.options", OnOptionsButtonPressed, true));
 			_mainMenu.AddChild(new AlexButton("menu.returnToMenu", OnQuitButtonPressed, true));
 
@@ -80,13 +72,9 @@ namespace Alex.Gamestates.InGame
 				{
 					foreach (var p in s.World.PlayerList)
 					{
-						_playerList.AddChild(
-							new PlayerListItemElement(p.Username, p.Ping)
-							{
-								//BackgroundOverlay = (index % 2 == 0) ? new Color(Color.Black, 0.35f) :
-								//	Color.Transparent,
-								//MaxWidth = _playerList.MaxWidth
-							});
+						var element = new PlayerListItemElement(p);
+
+						_playerList.AddChild(element);
 					}
 				}
 			}

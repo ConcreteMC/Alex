@@ -32,7 +32,7 @@ namespace Alex.Worlds.Chunks
         
 		public bool IsAllAir => BlockRefCount == 0;
 		
-        public ChunkSection(bool storeSkylight, int sections = 1)
+        public ChunkSection(int sections = 1)
         {
 	        if (sections <= 0)
 		        sections = 1;
@@ -158,12 +158,7 @@ namespace Alex.Worlds.Chunks
 		{
 			
 		}
-
-		public bool IsEmpty()
-		{
-			return this.BlockRefCount == 0;
-		}
-
+		
 		public bool SetSkylight(int x, int y, int z, int value)
 		{
 			var idx = GetCoordinateIndex(x, y, z);
@@ -219,7 +214,11 @@ namespace Alex.Worlds.Chunks
 				{
 					for (int z = 0; z < 16; z++)
 					{
-						var block = this.Get(x, y, z, 0).Block;
+						var blockState = this.Get(x, y, z, 0);//.Block;
+						if (blockState?.Block == null)
+							continue;
+
+						var block = blockState.Block;
 
 						if (!(block is Air))
 						{

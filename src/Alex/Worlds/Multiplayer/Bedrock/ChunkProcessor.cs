@@ -313,7 +313,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	        {
 		        int storageSize = version == 1 ? 1 : defStream.ReadByte();
 		        
-		        section = new ChunkSection(true, storageSize);
+		        section = new ChunkSection(storageSize);
 
 		        for (int storage = 0; storage < storageSize; storage++)
 		        {
@@ -407,7 +407,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	        }
 	        else if (version == 0)
 	        {
-		        section = new ChunkSection(true, 1);
+		        section = new ChunkSection(1);
 
 		        #region OldFormat
 

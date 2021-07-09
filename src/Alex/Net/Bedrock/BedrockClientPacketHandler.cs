@@ -243,7 +243,7 @@ namespace Alex.Net.Bedrock
 				Client.World?.UpdatePlayerPosition(
 					new PlayerLocation(
 						new Microsoft.Xna.Framework.Vector3(message.spawn.X, message.spawn.Y, message.spawn.Z),
-						message.rotation.Y, message.rotation.Y, message.rotation.X));
+						message.rotation.Y, message.rotation.Y, message.rotation.X), true);
 
 				if (message.enableNewInventorySystem)
 				{
@@ -393,7 +393,7 @@ namespace Alex.Net.Bedrock
 					{
 						Client.World.AddPlayerListItem(
 							new PlayerListItem(
-								r.ClientUuid, r.DisplayName, (GameMode) ((int) r.GameMode), 0));
+								r.ClientUuid, r.DisplayName, (GameMode) ((int) r.GameMode), -1));
 					}
 				}
 			}
@@ -560,7 +560,7 @@ namespace Alex.Net.Bedrock
 			if (message.runtimeEntityId == Client.EntityId)
 			{
 				location.Y -= Player.EyeLevel;
-				Client.World.UpdatePlayerPosition(location);
+				Client.World.UpdatePlayerPosition(location, true);
 				return;
 			}
 			
@@ -834,10 +834,46 @@ namespace Alex.Net.Bedrock
 				return;
 			}
 			
-			if (!Client.World.Player.IsBreakingBlock)
-				return;
+			//if (!Client.World.Player.IsBreakingBlock)
+			//	return;
+			var blockcoords = (BlockCoordinates) new Microsoft.Xna.Framework.Vector3(
+				message.position.X, message.position.Y, message.position.Z);
 
-			if ((BlockCoordinates) new Microsoft.Xna.Framework.Vector3(
+			switch (message.eventId)
+			{
+				case 3001:
+					Client.World.SetRain(true);
+					break;
+				
+				case 3002:
+					Client.World.SetThunder(true);
+					break;
+				
+				case 3003:
+					Client.World.SetRain(false);
+					break;
+				
+				case 3004:
+					Client.World.SetThunder(false);
+					break;
+				
+				case 3600: //Start blockbreak
+					var ticksRequired = (double) ushort.MaxValue / message.data;
+
+					if (blockcoords == Client.World.Player.TargetBlock)
+						Client.World.Player.BreakTimeNeeded = ticksRequired;
+					
+					Client.World.AddOrUpdateBlockBreak(blockcoords, ticksRequired);
+					break;
+				case 3601: //Stop blockbreak
+					Client.World.EndBreakBlock(blockcoords);
+					break;
+				case 3602: //Update blockcracking
+					//Client.World.SetBlockBreakProgress(blockcoords);
+					break;
+			}
+			
+			/*if ((BlockCoordinates) new Microsoft.Xna.Framework.Vector3(
 				message.position.X, message.position.Y, message.position.Z) == Client.World.Player.TargetBlock)
 			{
 				if (message.eventId == 3600)
@@ -845,7 +881,7 @@ namespace Alex.Net.Bedrock
 					var ticksRequired = (double) ushort.MaxValue / message.data;
 					Client.World.Player.BreakTimeNeeded = ticksRequired;
 				}
-			}
+			}*/
 		}
 
 		public void HandleMcpeBlockEvent(McpeBlockEvent message)
@@ -1142,7 +1178,7 @@ namespace Alex.Net.Bedrock
 			}
 			else if (message.state == 1)
 			{
-				Client.World.UpdatePlayerPosition(new PlayerLocation(message.x, message.y, message.z));
+				Client.World.UpdatePlayerPosition(new PlayerLocation(message.x, message.y, message.z), true);
 
 				if (Client.CanSpawn)
 				{
@@ -1497,7 +1533,7 @@ namespace Alex.Net.Bedrock
 
 						//world.ChunkManager.ClearChunks();
 						world.UpdatePlayerPosition(
-							new PlayerLocation(message.position.X, message.position.Y, message.position.Z));
+							new PlayerLocation(message.position.X, message.position.Y, message.position.Z), true);
 
 
 						//foreach (var loadedChunk in provider.LoadedChunks)
