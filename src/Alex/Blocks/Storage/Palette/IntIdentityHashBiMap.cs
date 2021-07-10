@@ -102,9 +102,9 @@ namespace Alex.Blocks.Storage.Palette
 			}
 		}
 
-		private uint HashObject(BlockState obectIn)
+		private uint HashObject(BlockState state)
 		{
-			return (uint) ((RuntimeHelpers.GetHashCode(obectIn) & uint.MaxValue) % _values.Length);
+			return (uint) ((state.GetHashCode() & uint.MaxValue) % _values.Length);
 		}
 
 		private uint GetIndex(BlockState objectIn, uint index)

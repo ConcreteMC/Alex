@@ -134,14 +134,16 @@ namespace Alex.Blocks.Storage
         public void Read(MinecraftStream ms)
         {
             var blockCount = ms.ReadShort();
-            var bitsPerBlock = (byte) ms.ReadByte();
+            int bitsPerBlock = (byte) ms.ReadByte();
 
-            int palleteLength = 0;// = ms.ReadVarInt();
+            int palleteLength = 0; // = ms.ReadVarInt();
 
             if (bitsPerBlock <= 4)
                 bitsPerBlock = 4;
-            
+
+            var oldStorage = Storage;
             var oldPalette = Pallette;
+            
             try
             {
                 if (bitsPerBlock <= 8)
@@ -150,7 +152,7 @@ namespace Alex.Blocks.Storage
 
                     palleteLength = ms.ReadVarInt();
 
-                    Pallette = new IntIdentityHashBiMap(palleteLength);
+                    Pallette = new IntIdentityHashBiMap(palleteLength + 1);
                     Pallette.Add(Air);
 
                     for (int id = 0; id < palleteLength; id++)
@@ -162,41 +164,75 @@ namespace Alex.Blocks.Storage
                 }
                 else
                 {
-                    _bits = (int) Math.Ceiling(Math.Log2(BlockFactory.AllBlockstates.Count));
+                    _bits = bitsPerBlock = (int) Math.Ceiling(Math.Log2(BlockFactory.AllBlockstates.Count));
                     Pallette = new DirectPallete();
                 }
+                
+                int length = ms.ReadVarInt();
+                long[] dataArray = new long[length];
+
+                for (int i = 0; i < dataArray.Length; i++)
+                {
+                    dataArray[i] = ms.ReadLong();
+                }
+                
+                Storage = new FlexibleStorage(bitsPerBlock, 4096);
+                var valueMask = (uint) ((1L << bitsPerBlock) - 1);
+
+                int bitOffset = 0;
+
+                for (int y = 0; y < 16; y++)
+                {
+                    for (int z = 0; z < 16; z++)
+                    {
+                        for (int x = 0; x < 16; x++)
+                        {
+                            if (64 - (bitOffset % 64) < bitsPerBlock)
+                            {
+                                bitOffset += 64 - (bitOffset % 64);
+                            }
+
+                            int startLongIndex = bitOffset / 64;
+                            int end_long_index = startLongIndex;
+                            int startOffset = bitOffset % 64;
+                            bitOffset += bitsPerBlock;
+
+                            uint rawId;
+
+                            if (startLongIndex == end_long_index)
+                            {
+                                rawId = (uint) (dataArray[startLongIndex] >> startOffset);
+                            }
+                            else
+                            {
+                                int endOffset = 64 - startOffset;
+
+                                rawId = (uint) (dataArray[startLongIndex] >> startOffset
+                                                | dataArray[end_long_index] << endOffset);
+                            }
+
+                            rawId &= valueMask;
+
+                            Storage[(((y * 16) + z) * 16) + x] = rawId;
+                        }
+                    }
+                }
+
+                /*   for (int index = 0; index < 4096; index++)
+                   {
+                       var state = index / (64 / bitsPerBlock);
+   
+                       var data = dataArray[state];
+   
+                       var shiftedData = data >> (index % (64 / bitsPerBlock) * bitsPerBlock);
+   
+                       Storage[index] = (uint) (shiftedData & valueMask);
+                   }*/
+                //Storage = storage;
             }
             finally
             {
                 oldPalette?.Dispose();
-            }
-
-            int length = ms.ReadVarInt();
-            long[] dataArray = new long[length];
-            for (int i = 0; i < dataArray.Length; i++)
-            {
-                dataArray[i] = ms.ReadLong();
-            }
-
-            var oldStorage = Storage;
-
-            try
-            {
-                Storage = new FlexibleStorage(_bits, 4096);
-                var valueMask = (uint) ((1L << _bits) - 1);
-
-                for (int index = 0; index < 4096; index++)
-                {
-                    var state = index / (64 / _bits);
-                    var data = dataArray[state];
-
-                    var shiftedData = data >> (index % (64 / _bits) * _bits);
-
-                    Storage[index] = (uint) (shiftedData & valueMask);
-                }
-            }
-            finally
-            {
                 oldStorage?.Dispose();
             }
         }
