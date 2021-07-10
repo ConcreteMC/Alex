@@ -17,6 +17,8 @@ namespace Alex.Gui.Forms
         private StackMenu           StackMenu { get; }
         public SimpleFormDialog(uint formId, BedrockFormManager parent, SimpleForm form, InputManager inputManager) : base(formId, parent, inputManager)
         {
+            var width  = 356;
+            
             StackMenu = new StackMenu();
             StackMenu.Anchor = Alignment.Fill;
             StackMenu.ChildAnchor = Alignment.MiddleCenter;
@@ -24,7 +26,9 @@ namespace Alex.Gui.Forms
 
             if (!string.IsNullOrWhiteSpace(form.Content))
             {
-                StackMenu.AddChild(new GuiStackMenuLabel(FixContrast(form.Content)));
+                var label = new GuiStackMenuLabel(FixContrast(form.Content)) {MaxWidth = width,};
+                label.Wrap = true;
+                StackMenu.AddChild(label);
                 StackMenu.AddSpacer();
             }
 
@@ -60,14 +64,13 @@ namespace Alex.Gui.Forms
                 
                 StackMenu.AddChild(new StackMenuItem(button.Text, submitAction)
                 {
-                    Enabled = true
+                    Enabled = true,
+                    TextAlignment = TextAlignment.Center
                 }.ApplyModernStyle(true));
                // StackMenu.AddMenuItem(button.Text, submitAction);
             }
             
             Background = Color.Transparent;
-
-            var width  = 356;
             var height = width;
 			
             ContentContainer.Width = ContentContainer.MinWidth = ContentContainer.MaxWidth = width;

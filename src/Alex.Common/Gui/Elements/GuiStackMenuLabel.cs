@@ -3,10 +3,10 @@ using RocketUI;
 
 namespace Alex.Common.Gui.Elements
 {
-    public class GuiStackMenuLabel : RocketElement
+    public class GuiStackMenuLabel : TextElement
     {
-        private TextElement TextElement { get; }
-
+        //private TextElement TextElement { get; }
+        
         public GuiStackMenuLabel(string text, bool isTranslationKey = false)
         {
             MinHeight = 20;
@@ -17,21 +17,21 @@ namespace Alex.Common.Gui.Elements
             Padding = new Thickness(5, 5);
             Margin = new Thickness(2);
 
-            AddChild(TextElement = new TextElement()
-            {
-                Margin = new Thickness(5),
-                Anchor = Alignment.MiddleCenter,
-                Text = text,
-                TextColor = Color.White,
-                TextOpacity = 0.875f,
-                FontStyle = FontStyle.DropShadow,
+          //  AddChild(TextElement = new TextElement()
+           // {
+                Margin = new Thickness(5);
+                Anchor = Alignment.MiddleCenter;
+                Text = text;
+                TextColor = Color.White;
+                TextOpacity = 0.875f;
+                FontStyle = FontStyle.DropShadow;
                 //Enabled = false,
                 //CanFocus = false
-            });
+           // });
 
             if (isTranslationKey)
             {
-                TextElement.TranslationKey = text;
+                TranslationKey = text;
             }
 
             Background = Color.Transparent;
