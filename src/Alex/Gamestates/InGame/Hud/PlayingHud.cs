@@ -1,4 +1,5 @@
-﻿using Alex.Common.Data;
+﻿using System.Linq;
+using Alex.Common.Data;
 using Alex.Common.Gui.Elements;
 using Alex.Common.Input;
 using Alex.Entities;
@@ -38,7 +39,7 @@ namespace Alex.Gamestates.InGame.Hud
 
 		private Alex Alex { get; }
 		private Player Player { get; }
-        public PlayingHud(Alex game, Player player, TitleComponent titleComponent) : base()
+		public PlayingHud(Alex game, Player player, TitleComponent titleComponent) : base()
         {
 	        Title = titleComponent;
 
@@ -116,8 +117,6 @@ namespace Alex.Gamestates.InGame.Hud
         protected override void OnInit(IGuiRenderer renderer)
         {
 	        if (_didInit) return;
-	        
-	        _bottomContainer.AddChild(_tipPopupComponent);
 
 	        _armorAndAirContainer.AddChild(_airComponent);
 	        _healthAndHotbar.AddChild(_armorAndAirContainer);
@@ -141,6 +140,8 @@ namespace Alex.Gamestates.InGame.Hud
 			        //container.AddChild(_hotbar);
 		        });
 
+	        AddChild(_tipPopupComponent);
+	        
 	        AddChild(_bottomContainer);
 
 	        AddChild(Chat);
@@ -188,6 +189,28 @@ namespace Alex.Gamestates.InGame.Hud
 			}
 
 			_experienceComponent.IsVisible = _hotbar.ShowItemCount = _hungerComponent.IsVisible = _healthComponent.IsVisible = Player.Gamemode != GameMode.Creative;
+
+			int offset = 0;
+			if (Player.Gamemode == GameMode.Creative)
+			{
+				offset = RenderBounds.Bottom - _hotbar.RenderBounds.Top;
+			}
+			else
+			{
+				if (_airComponent.IsVisible)
+				{
+					offset = RenderBounds.Bottom - _airComponent.RenderBounds.Top;
+				}
+				else
+				{
+					offset = RenderBounds.Bottom - _healthComponent.RenderBounds.Top;
+				}
+			}
+
+			if (offset != _tipPopupComponent.Margin.Bottom) //We don't wanna cause an UpdateLayout call every frame.
+			{
+				_tipPopupComponent.Margin = new Thickness(0, 0, 0, offset);
+			}
 			//if (Player.Gamemode != Gamemode.Creative){}
 
 			base.OnUpdate(gameTime);

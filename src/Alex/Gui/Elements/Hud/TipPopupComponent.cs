@@ -15,17 +15,21 @@ namespace Alex.Gui.Elements.Hud
 
         private bool DoUpdate { get; set; } = false;
 
+        private static readonly Thickness TipMargin = new Thickness(0, 0, 0, 16);
         public TipPopupComponent()
         {
-            Tip = new TextElement()
+            Tip = new TextElement(true)
             {
                 Anchor = Alignment.BottomCenter,
-                Margin = new Thickness(0, 0, 0, 5)
+                BackgroundOverlay = Color.Black * 0.5f,
+                Margin = TipMargin
             };
             
-            Popup = new TextElement()
+            Popup = new TextElement(true)
             {
-                Anchor = Alignment.BottomCenter
+                Anchor = Alignment.BottomCenter,
+                BackgroundOverlay = Color.Black * 0.5f
+               // Margin = new Thickness(0, 0, 0, -12)
             };
         }
 
@@ -50,15 +54,29 @@ namespace Alex.Gui.Elements.Hud
             if (DateTime.UtcNow >= PopupHideTime && Popup.IsVisible)
             {
                 Popup.IsVisible = false;
+                UpdateMargins();
             }
             
             if (DateTime.UtcNow >= TipHideTime && Tip.IsVisible)
             {
                 Tip.IsVisible = false;
+                UpdateMargins();
             }
 
             if (!Tip.IsVisible && !Popup.IsVisible)
                 DoUpdate = false;
+        }
+
+        private void UpdateMargins()
+        {
+            if (Popup.IsVisible)
+            {
+                Tip.Margin = TipMargin;
+            }
+            else
+            {
+                Tip.Margin = Thickness.Zero;
+            }
         }
 
         /// <inheritdoc />
@@ -76,11 +94,12 @@ namespace Alex.Gui.Elements.Hud
                     Tip.Text = message;
                     TipHideTime = DateTime.UtcNow + TimeSpan.FromSeconds(3);
                     Tip.IsVisible = true;
-                    
+
                     break;
             }
 
             DoUpdate = true;
+            UpdateMargins();
         }
     }
 }
