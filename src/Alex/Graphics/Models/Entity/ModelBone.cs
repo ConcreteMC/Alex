@@ -244,7 +244,7 @@ namespace Alex.Graphics.Models.Entity
 			MoveOverTime(targetPosition, _targetRotation, _targetScale, time);
 		}
 
-		public void Update(IUpdateArgs args, Vector3 parentScale)
+		public void Update(IUpdateArgs args)
 		{
 			if (_accumulator < _target)
 			{
@@ -270,7 +270,7 @@ namespace Alex.Graphics.Models.Entity
 			//if (!Monitor.TryEnter(_disposeLock, 0))
 			//	return;
 
-			Children.ForEach(child => { child.Update(args, parentScale * _scale); }, false, false);
+			Children.ForEach(child => { child.Update(args); }, false, false);
 		}
 
 		public int Render(IRenderArgs args, Microsoft.Xna.Framework.Graphics.Effect effect, Matrix worldMatrix)

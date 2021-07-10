@@ -33,18 +33,18 @@ namespace Alex.Entities.Projectiles
         {
             if (CanRender)
             {
-                var knownPos = KnownPosition.ToVector3();
+            //    var knownPos = KnownPosition.ToVector3();
                 // var knownPos = bb.GetCenter();
                float scale =  1f / 16f;
                 if (DoRotation)
                 {
                     //var offset = new Vector3((float) Width, (float) Height, (float) Width) / 2f;
-                    var offset = new Vector3((float) Width, 0f, (float) Width);
-                    ItemRenderer.Update(args, new Vector3(scale));
+                   // var offset = new Vector3((float) Width, 0f, (float) Width);
+                    ItemRenderer.Update(args);
                 }
                 else
                 {
-                    ItemRenderer.Update(args, new Vector3(scale));
+                    ItemRenderer.Update(args);
                 }
             }
 

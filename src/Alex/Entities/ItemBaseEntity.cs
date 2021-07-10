@@ -58,7 +58,7 @@ namespace Alex.Entities
 			if (CanRender)
 			{
 				ItemRenderer.Update(
-					args, new Vector3(Scale));
+					args);
 			}
 		}
 		

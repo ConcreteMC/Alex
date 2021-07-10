@@ -10,7 +10,7 @@ namespace Alex.Graphics.Models.Entity
 	{
 		IAttached Parent { get; set; }
 		int Render(IRenderArgs args, Microsoft.Xna.Framework.Graphics.Effect effect, Matrix worldMatrix);
-		void Update(IUpdateArgs args, Vector3 parentScale);
+		void Update(IUpdateArgs args);
 
 		string Name { get; }
 

@@ -140,10 +140,10 @@ namespace Alex.Entities
 			var registered = _registeredRenderers.ToArray();
 			_registeredRenderers.Clear();
 
-			foreach (var kv in registered)
-			{
-				EntityModelRenderer.Remove(kv.Key);
-			}
+			//foreach (var kv in registered)
+			//{
+			//	EntityModelRenderer.Remove(kv.Key);
+			//}
 
 			var textures = _pooledTextures.ToArray();
 			_pooledTextures.Clear();

@@ -160,9 +160,6 @@ namespace Alex.Gui.Dialogs.Containers
 				{
 					Count = 0
 				};
-
-				OnSlotChanged(slot, slot.Item, isServerTransaction);
-				//OnItemSelected(slot, slot.Item);
 			}
 			else
 			{
@@ -315,9 +312,6 @@ namespace Alex.Gui.Dialogs.Containers
 
 					TextOverlay.IsVisible = false;
 					CursorItemRenderer.IsVisible = false;
-					
-					OnSlotChanged(originalHighlight, originalSelectedItem, false);
-					//OnItemDeSelected(originalHighlight, originalSelectedItem);
 
 					if (HoverItem == HighlightedSlot) //We dropped the item in it's original slot.
 					{
@@ -504,10 +498,6 @@ namespace Alex.Gui.Dialogs.Containers
 
 			base.OnClose();
 		}
-
-		//protected virtual void OnItemSelected(InventoryContainerItem slot, Item item) { }
-
-		protected virtual void OnSlotChanged(InventoryContainerItem slot, Item item, bool isServerTransaction) { }
 
 		protected virtual void OnCursorItemChanged(InventoryContainerItem slot, Item item, bool isServerTransaction, MouseButton button)
 		{

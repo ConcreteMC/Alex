@@ -71,7 +71,7 @@ namespace Alex.Gui.Elements.Context3D
             }
 
             public void UpdateContext3D(IUpdateArgs args, IGuiRenderer guiRenderer)
-            {
+            { 
                 Entity?.Update(args);
             }
 

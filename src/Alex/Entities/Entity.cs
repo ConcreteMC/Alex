@@ -707,7 +707,7 @@ namespace Alex.Entities
 		public Pose Pose { get; set; } = Pose.Standing;
 		
 		public bool RenderEntity { get; set; } = true;
-		public bool ShowItemInHand { get; set; } = false;
+		//public bool ShowItemInHand { get; set; } = false;
 		public long TargetEntityId { get; set; } = -1;
 		public long OwnerEntityId { get; set; } = -1;
 		public Vector2 TargetRotation { get; private set; } = Vector2.Zero;
@@ -1144,26 +1144,21 @@ namespace Alex.Entities
 			}
 		}
 		
-		protected EntityEffect    Effect       { get; set; }
-		
-		/// <summary>
-		///		Renders the entity
-		/// </summary>
-		/// <param name="renderArgs"></param>
-		/// <returns>The amount of draw calls made</returns>
+		internal EntityEffect    Effect       { get; }
+
+		///  <summary>
+		/// 		Renders the entity
+		///  </summary>
+		///  <param name="renderArgs"></param>
+		///  <param name="useCulling">True if you want the model to use backface culling.</param>
+		///  <returns>The amount of draw calls made</returns>
 		public virtual int Render(IRenderArgs renderArgs, bool useCulling)
 		{
 			int renderCount = 0;
 			var  renderer = ModelRenderer;
 
-			if (!IsInvisible && RenderEntity && renderer != null)
-			{
-				renderCount += renderer.Render(renderArgs, useCulling, Effect, Matrix.CreateScale(Scale / 16f) * RenderLocation.CalculateWorldMatrix());
-			}
-			else if (ShowItemInHand && ItemRenderer != null && !_skipRendering)
-			{
-				renderCount += ItemRenderer.Render(renderArgs, null, Matrix.CreateScale(Scale / 16f) * RenderLocation.CalculateWorldMatrix());
-			}
+			if (renderer != null)
+				renderCount += renderer.Render(renderArgs, useCulling , Effect, Matrix.CreateScale((1f / 16f) * Scale) * RenderLocation.CalculateWorldMatrix());
 
 			return renderCount;
 		}
@@ -1190,26 +1185,8 @@ namespace Alex.Entities
 					UseItemStartupProgress = 0d;
 					UseItemIntervalProgress = 0d;
 				}
-				//else if (UseItemIntervalProgress < 1f)
-				//{
-				//	UseItemIntervalProgress += elapsed * 3;
-				//}
-				//else
-				//{
-					
-				//}
-			}
-
-		/*	if (UseItemIntervalProgress > 0d)
-			{
-				UseItemIntervalProgress -= elapsed;
 			}
 			
-			if (UseItemStartupProgress > 0d)
-			{
-				UseItemStartupProgress -= elapsed;
-			}*/
-
 			foreach (var entityComponent in EntityComponents)
 			{
 				entityComponent.Update(args.GameTime);

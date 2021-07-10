@@ -104,7 +104,7 @@ namespace Alex.Gui.Elements.Inventory
             Camera.Update(args);
             Camera.UpdateProjectionMatrix();
             
-            item.Renderer.Update(args, Vector3.One);
+            item.Renderer.Update(args);
         }
 
         protected override void OnDraw(GuiSpriteBatch graphics, GameTime gameTime)

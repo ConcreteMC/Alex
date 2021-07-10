@@ -72,13 +72,12 @@ namespace Alex.Graphics.Models.Entity
 		//public  bool               Valid        { get; private set; }
 
 		public double VisibleBoundsWidth { get; set; } = 0;
-
 		public double VisibleBoundsHeight { get; set; } = 0;
 
 		public EntityModelRenderer()
 		{
 			//	Model = model;
-			
+			//base.Scale = 1f;
 		}
 
 
@@ -96,13 +95,7 @@ namespace Alex.Graphics.Models.Entity
 			public VertexBuffer VertexBuffer { get; }
 			public IndexBuffer IndexBuffer { get; }
 			public IReadOnlyDictionary<string, ModelBone> Bones { get; }
-			//public List<VertexPositionColorTexture> Vertices { get; }
-			//public List<short> Indices { get; }
-			/// <inheritdoc />
 		}
-
-		//private static ConcurrentDictionary<string, SharedBuffer> _sharedBuffers =
-		//	new ConcurrentDictionary<string, SharedBuffer>();
 
 		private static SharedBuffer BuildSharedBuffer(EntityModel model)
 		{
@@ -115,22 +108,9 @@ namespace Alex.Graphics.Models.Entity
 				return null;
 			}
 
-			//var indexBuffer = GpuResourceManager.GetIndexBuffer(
-			//	_sharedBuffers, Alex.Instance.GraphicsDevice, IndexElementSize.SixteenBits, indices.Count,
-			//	BufferUsage.WriteOnly);
-
 			var indexBuffer = new IndexBuffer(
 				Alex.Instance.GraphicsDevice, IndexElementSize.SixteenBits, indices.Count, BufferUsage.WriteOnly);
 			indexBuffer.SetData(indices.ToArray());
-
-			//indexBuffer.ResourceDisposed += (sender, resource) =>
-		//	{
-			//	_sharedBuffers.TryRemove(model.Description.Identifier, out _);
-		//	};
-
-			//var vertexBuffer = GpuResourceManager.GetBuffer(
-			//	_sharedBuffers, Alex.Instance.GraphicsDevice, VertexPositionColorTexture.VertexDeclaration,
-			//	vertices.Count, BufferUsage.WriteOnly);
 
 			var vertexarray = vertices.ToArray();
 			var vertexBuffer = new VertexBuffer(
@@ -139,48 +119,18 @@ namespace Alex.Graphics.Models.Entity
 			
 			vertexBuffer.SetData(vertexarray);
 
-			//vertexBuffer.ResourceDisposed += (sender, resource) =>
-			//{
-			//	_sharedBuffers.TryRemove(model.Description.Identifier, out _);
-			//};
-
 			return new SharedBuffer(vertexBuffer, indexBuffer, bones);
 		}
 
-		public static void Remove(string identifier)
-		{
-			/*if (_sharedBuffers.TryRemove(identifier, out var shared))
-			{
-				shared.VertexBuffer?.ReturnResource(null);
-				shared.IndexBuffer?.ReturnResource(null);
-			}*/
-		}
-		
 		public static bool TryGetRenderer(EntityModel model, out EntityModelRenderer renderer)
 		{
 			{
 				SharedBuffer tuple = BuildSharedBuffer(model);
-				
-				/*if (!_sharedBuffers.TryGetValue(model.Description.Identifier, out tuple))
-				{
-					tuple = BuildSharedBuffer(model);
 
-					if (tuple == null)
-					{
-						renderer = null;
-						return false;
-					}
-
-					_sharedBuffers.TryAdd(model.Description.Identifier, tuple);
-				}*/
-				
-				//tuple.Item1.Use(renderer);
-				//tuple.Item2.Use(renderer);
-				
 				renderer = new EntityModelRenderer();
 				renderer.VisibleBoundsWidth = model.Description.VisibleBoundsWidth;
 				renderer.VisibleBoundsHeight = model.Description.VisibleBoundsHeight;
-
+				
 				Dictionary<string, ModelBone> clonedBones = new Dictionary<string, ModelBone>(StringComparer.OrdinalIgnoreCase);
 
 				foreach (var bone in tuple.Bones.Where(x => x.Value.Parent == null)) //We only wanna clone the root bones
@@ -196,24 +146,13 @@ namespace Alex.Graphics.Models.Entity
 						}
 					}
 				}
-				renderer.Bones = clonedBones;
 				
+				renderer.Bones = clonedBones;
 				renderer.IndexBuffer = tuple.IndexBuffer;
 				renderer.VertexBuffer = tuple.VertexBuffer;
-				
-				//renderer.IndexBuffer = GpuResourceManager.GetIndexBuffer(
-				//	renderer, Alex.Instance.GraphicsDevice, IndexElementSize.SixteenBits, indices.Count, BufferUsage.WriteOnly);
-				//renderer.IndexBuffer.SetData(indices.ToArray());
-			
-			//	renderer.VertexBuffer = GpuResourceManager.GetBuffer(renderer, Alex.Instance.GraphicsDevice,
-			//		VertexPositionColorTexture.VertexDeclaration, vertices.Count, BufferUsage.WriteOnly);
-			//	renderer.VertexBuffer.SetData(vertices.ToArray());
 
 				return true;
 			}
-
-			renderer = null;
-			return false;
 		}
 
 		private static IEnumerable<ModelBone> GetAllChildren(ModelBone root)
@@ -397,17 +336,19 @@ namespace Alex.Graphics.Models.Entity
 			FillMode = FillMode.Solid,
 			ScissorTestEnable = false
 		};
-		
-		/// <summary>
-		///		Renders the entity model
-		/// </summary>
-		/// <param name="args"></param>
-		/// <returns>The amount of GraphicsDevice.Draw calls made</returns>
+
+		///  <summary>
+		/// 		Renders the entity model
+		///  </summary>
+		///  <param name="args"></param>
+		///  <param name="useCulling">True if you want the model to use backface culling.</param>
+		///  <param name="effect">The effect to use for rendering</param>
+		///  <param name="worldMatrix">The world matrix</param>
+		///  <returns>The amount of GraphicsDevice.Draw calls made</returns>
 		public virtual int Render(IRenderArgs args, bool useCulling, Microsoft.Xna.Framework.Graphics.Effect effect, Matrix worldMatrix)
 		{
 			if (Bones == null || VertexBuffer == null || IndexBuffer == null)
 			{
-				//Log.Warn($"No bones found for model...");
 				return 0;
 			}
 
@@ -452,7 +393,7 @@ namespace Alex.Graphics.Models.Entity
 		public Vector3 EntityColor { get; set; } = Color.White.ToVector3();
 		public Vector3 DiffuseColor { get; set; } = Color.White.ToVector3();
 
-		public float Scale { get; set; } = 1f;
+		//public float Scale { get; set; } = 1f;
 		
 		public virtual void Update(IUpdateArgs args)
 		{
@@ -460,7 +401,7 @@ namespace Alex.Graphics.Models.Entity
 
 			foreach (var bone in Bones.Where(x => x.Value.Parent == null))
 			{
-				bone.Value.Update(args, Vector3.One * Scale);
+				bone.Value.Update(args);
 			}
 		}
 		public bool GetBone(string name, out ModelBone bone)

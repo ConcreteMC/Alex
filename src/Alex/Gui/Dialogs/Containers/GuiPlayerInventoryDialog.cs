@@ -41,14 +41,15 @@ namespace Alex.Gui.Dialogs.Containers
             {
             //    var modelRenderer = player.ModelRenderer;
 
-               // var mob = new RemotePlayer(player.Level, skin: player.Skin);
+                var mob = new RemotePlayer(player.Level, null, skin: null);
               //  mob.Skin = player.Skin;
-               // mob.ModelRenderer = player.ModelRenderer;
-                //mob.Texture = player.Texture;
+                mob.ModelRenderer = player.ModelRenderer;
+                mob.Texture = player.Texture;
+                mob.SetInventory(player.Inventory);
 
-             //   mob.KnownPosition = new PlayerLocation(0, 0, 0, 0f, 0f, 0f);
+            //   mob.RenderLocation = mob.KnownPosition = new PlayerLocation(0, 0, 0, 0f, 0f, 0f);
 
-                /*ContentContainer.AddChild(
+                ContentContainer.AddChild(
                     _playerEntityModelView = new GuiEntityModelView(mob)
                     {
                         Margin = new Thickness(7, 25),
@@ -58,7 +59,7 @@ namespace Alex.Gui.Dialogs.Containers
                         AutoSizeMode = AutoSizeMode.None,
                         Background = null,
                         BackgroundOverlay = null
-                    });*/
+                    });
             }
 
             Color color = Color.Blue;
@@ -153,7 +154,7 @@ namespace Alex.Gui.Dialogs.Containers
 
                 if (Inventory != null && Inventory is Inventory inv)
                 {
-                    _playerEntityModelView.Entity.ShowItemInHand = true;
+                  //  _playerEntityModelView.Entity.ShowItemInHand = true;
 
                     _playerEntityModelView.Entity.SetInventory(inv);// = Inventory;
                     //_playerEntityModelView.Entity.Inventory.MainHand = inv.MainHand;
@@ -162,32 +163,6 @@ namespace Alex.Gui.Dialogs.Containers
                 
                 
             }
-        }
-        
-        protected override void OnSlotChanged(InventoryContainerItem slot, Item item, bool isServerTransaction)
-        {
-            return;
-            if (slot == null)
-            {
-                
-                return;
-            }
-            
-            if (slot.InventoryId == 120)
-            {
-                //Armor
-            }
-            if (slot.InventoryId == 999)
-            {
-                //Crafting   
-            }
-            else
-            {
-                
-                Inventory.SetSlot(slot.InventoryIndex, item, isServerTransaction);
-            }
-
-            // Inventory[slot.InventoryIndex] = item;
         }
 
         public override void OnClose()

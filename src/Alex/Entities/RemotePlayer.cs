@@ -64,7 +64,7 @@ namespace Alex.Entities
 
 			Width = 0.6;
 			Height = 1.80;
-			ShowItemInHand = true;
+			//ShowItemInHand = true;
 			IsInWater = false;
 
 			Velocity = Vector3.Zero;
@@ -186,6 +186,7 @@ namespace Alex.Entities
 		{
 			try
 			{
+				string nametag = NameTag ?? "n/a";
 				//				EntityModel model = null;
 				bool slim = skin?.Slim ?? false;
 
@@ -198,7 +199,7 @@ namespace Alex.Entities
 						{
 							if (string.IsNullOrWhiteSpace(skin.ResourcePatch) || skin.ResourcePatch == "null")
 							{
-								Log.Debug($"Resourcepatch null for player {NameTag}");
+								Log.Debug($"Resourcepatch null for player {nametag}");
 							}
 							else
 							{
@@ -226,18 +227,18 @@ namespace Alex.Entities
 									if (models == null || !models.TryGetValue(resourcePatch.Geometry.Default, out model))
 									{
 										Log.Debug(
-											$"Invalid geometry: \'{resourcePatch.Geometry.Default}\' for player \'{NameTag.Replace("\n", "")}\'. Pre-Processing: {preProcessed}, post: {models?.Count ?? 0}");
+											$"Invalid geometry: \'{resourcePatch.Geometry.Default}\' for player \'{nametag.Replace("\n", "")}\'. Pre-Processing: {preProcessed}, post: {models?.Count ?? 0}");
 									}
 								}
 								else
 								{
-									Log.Debug($"Resourcepatch geometry was null for player {NameTag.Replace("\n", "")}");
+									Log.Debug($"Resourcepatch geometry was null for player {nametag.Replace("\n", "")}");
 								}
 							}
 						}
 						catch (Exception ex)
 						{
-							Log.Debug(ex, $"Could not create geometry: {ex.ToString()} for player {NameTag.Replace("\n", "")}");
+							Log.Debug(ex, $"Could not create geometry: {ex.ToString()} for player {nametag.Replace("\n", "")}");
 						}
 					}
 				}
@@ -252,7 +253,7 @@ namespace Alex.Entities
 					if (!ModelFactory.TryGetModel(
 						slim ? "geometry.humanoid.custom" : "geometry.humanoid.customSlim", out model))
 					{
-						Log.Debug($"Invalid model for player {NameTag.Replace("\n", "")}");
+						Log.Debug($"Invalid model for player {nametag.Replace("\n", "")}");
 						return;
 					}
 				}
@@ -323,7 +324,7 @@ namespace Alex.Entities
 					else
 					{
 						Log.Debug(
-							$"No renderer for model: \"{model.Description?.Identifier ?? "N/A"}\" for player \'{NameTag.Replace("\n", "")}\' (Disposing)");
+							$"No renderer for model: \"{model.Description?.Identifier ?? "N/A"}\" for player \'{nametag.Replace("\n", "")}\' (Disposing)");
 					}
 				}
 				finally

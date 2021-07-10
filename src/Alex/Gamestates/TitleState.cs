@@ -211,8 +211,6 @@ namespace Alex.Gamestates
                     e.Profile.Skin.Slim ? "geometry.humanoid.customSlim" : "geometry.humanoid.custom");
                 _playerView.Entity.SetInventory(new BedrockInventory(46));
 
-                _playerView.Entity.ShowItemInHand = true;
-
                 if (ItemFactory.TryGetItem("minecraft:diamond_sword", out var sword))
                 {
                     _playerView.Entity.Inventory.MainHand = sword;
@@ -346,8 +344,6 @@ namespace Alex.Gamestates
             Alex.GameStateManager.AddState("options", new OptionsState(_backgroundSkyBox));*/
 
             _playerView.Entity.SetInventory(new BedrockInventory(46));
-
-            _playerView.Entity.ShowItemInHand = true;
 
             if (ItemFactory.TryGetItem("minecraft:diamond_sword", out var sword))
             {

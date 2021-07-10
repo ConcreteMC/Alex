@@ -96,7 +96,7 @@ namespace Alex.Entities
 			DoRotationCalculations = false;
 			
 			RenderEntity = true;
-			ShowItemInHand = true;
+			//ShowItemInHand = true;
 
 		//	ServerEntity = false;
 	//		AlwaysTick = true;
@@ -893,6 +893,36 @@ namespace Alex.Entities
 			    _fovModifier = value;
 			    Level.Camera.FOVModifier = value;
 		    }
+	    }
+
+	    /// <inheritdoc />
+	    public override int Render(IRenderArgs renderArgs, bool useCulling)
+	    {
+		    int renderCount = 0;
+
+		    if (IsFirstPersonMode)
+		    {
+			    var renderer = ItemRenderer;
+
+			    if (renderer != null)
+			    {
+				    renderCount += renderer.Render(
+					    renderArgs, null, Matrix.CreateScale(Scale / 16f) * RenderLocation.CalculateWorldMatrix());
+			    }
+		    }
+		    else
+		    {
+			    var renderer = ModelRenderer;
+
+			    if (renderer != null)
+			    {
+				    renderCount += renderer.Render(
+					    renderArgs, useCulling, Effect,
+					    Matrix.CreateScale((1f / 16f) * Scale) * RenderLocation.CalculateWorldMatrix());
+			    }
+		    }
+
+		    return renderCount;
 	    }
 
 	    //private vector
