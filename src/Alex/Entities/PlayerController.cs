@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using Alex.Common.Input;
 using Alex.Common.Services;
+using Alex.Common.Utils;
 using Alex.Gamestates.InGame;
 using Alex.Graphics.Camera;
 using Alex.Gui.Dialogs.Containers;
@@ -118,8 +119,6 @@ namespace Alex.Entities
 		
 		private Vector2 _previousMousePosition = Vector2.Zero;
 
-		private GuiPlayerInventoryDialog _guiPlayerInventoryDialog = null;
-
 		public void Update(GameTime gameTime)
 		{
 			UpdatePlayerInput(gameTime);
@@ -233,22 +232,13 @@ namespace Alex.Entities
 
 		    if (InputManager.IsPressed(AlexInputCommand.Exit))
 		    {
-			    var activeDialog = Alex.Instance.GuiManager.ActiveDialog;
-
-			    if (activeDialog != null)
-			    {
-				    CenterCursor();
-				    Alex.Instance.GuiManager.HideDialog(activeDialog);
-			    }
-			    
-			    if (activeDialog is GuiPlayerInventoryDialog)
-				    _guiPlayerInventoryDialog = null;
+			    CloseActiveDialog();
 		    }
 			else if (InputManager.IsPressed(AlexInputCommand.ToggleInventory))
 			{
 				if (!(Alex.Instance.GuiManager.FocusManager.FocusedElement is TextInput))
 				{
-					if (_guiPlayerInventoryDialog == null)
+					if (!CloseActiveDialog())
 					{
 						var dialog = new GuiPlayerInventoryDialog(Player, Player.Inventory);
 
@@ -260,17 +250,25 @@ namespace Alex.Entities
 						//_allowMovementInput = false;
 						Alex.Instance.GuiManager.ShowDialog(dialog);
 					}
-					else
-					{
-						CenterCursor();
-						//_allowMovementInput = true;
-						Alex.Instance.GuiManager.HideDialog(_guiPlayerInventoryDialog);
-						_guiPlayerInventoryDialog = null;
-					}
 				}
 			}
 
 		    _allowMovementInput = Alex.Instance.GuiManager.ActiveDialog == null;
+	    }
+
+	    private bool CloseActiveDialog()
+	    {
+		    var activeDialog = Alex.Instance.GuiManager.ActiveDialog;
+		    if (activeDialog != null)
+		    {
+			    CenterCursor();
+			    //_allowMovementInput = true;
+			    Alex.Instance.GuiManager.HideDialog(activeDialog);
+
+			    return true;
+		    }
+
+		    return false;
 	    }
 
 	    private void CenterCursor()
@@ -296,13 +294,17 @@ namespace Alex.Entities
 		    {
 			    if (!Player.IsSprinting && Player.CanSprint)
 			    {
+				  //  Player.Network?.EntityAction((int) Player.EntityId, EntityAction.StartSprinting);
 				    Player.IsSprinting = true;
 			    }
 		    }
 		    else
 		    {
 			    if (Player.IsSprinting)
+			    {
 				    Player.IsSprinting = false;
+				  //  Player.Network?.EntityAction((int) Player.EntityId, EntityAction.StopSprinting);
+			    }
 		    }
 	    }
 	    

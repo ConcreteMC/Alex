@@ -39,8 +39,7 @@ namespace Alex.Utils.Inventories
 				Count = 0
 			};
 		}
-
-		public bool ReportTransaction = false;
+		
 		public void SetSlot(int index, Item value, bool isServerTransaction)
 		{
 			if (index < 0 || index >= Slots.Length) throw new IndexOutOfRangeException();

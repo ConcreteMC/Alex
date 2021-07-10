@@ -247,8 +247,8 @@ namespace Alex.Net.Bedrock
 
 				if (message.enableNewInventorySystem)
 				{
-					Client.EnableNewInventorySystem = true;
-					Log.Info($"Using new inventory system.");
+					Client.ServerAuthoritiveInventory = true;
+					Log.Info($"Using server authoritive inventories.");
 				}
 
 				if (message.enableNewBlockBreakSystem)
@@ -256,7 +256,7 @@ namespace Alex.Net.Bedrock
 					Log.Info($"New blockbreak system?");
 				}
 
-				Client.World.Player.SetInventory(new BedrockInventory(46) {ReportTransaction = true});
+				Client.World.Player.SetInventory(new BedrockInventory(46));
 
 				Client.World.Player.UpdateGamemode((GameMode) message.playerGamemode);
 
@@ -828,7 +828,8 @@ namespace Alex.Net.Bedrock
 					particleType,
 					new Microsoft.Xna.Framework.Vector3(message.position.X, message.position.Y, message.position.Z), message.data))
 				{
-					Log.Warn($"Unknown particle type: {particleType}");
+					if (Client.IsConnected)
+						Log.Warn($"Unknown particle type: {particleType}");
 				}
 
 				return;

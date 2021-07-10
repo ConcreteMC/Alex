@@ -86,27 +86,14 @@ namespace Alex.Net.Bedrock
         private BedrockMessageHandler BedrockMessageHandler { get; set; }
         private RaknetSession Session { get; set; }//=> Connection.ConnectionInfo.RakSessions.Values.FirstOrDefault();
         public override bool IsConnected => Session?.State != ConnectionState.Unconnected;
-        
-        private IPEndPoint _remoteEndpoint;
 
-        public IPEndPoint ServerEndpoint
-        {
-	        get { return _remoteEndpoint; }
-	        set
-	        {
-		        Connection.RemoteEndpoint = value;
-		        _remoteEndpoint = value;
-	        }
-        }
-
-        public  TimeSpan                   TimeSinceLastPacket => BedrockMessageHandler?.TimeSinceLastPacket ?? TimeSpan.Zero;
         public  bool                       GameStarted         { get; set; } = false;
         private ChunkProcessor             ChunkProcessor      { get; }
         private BedrockClientPacketHandler PacketHandler       { get; set; }
 
         private readonly List<IDisposable> _disposables = new List<IDisposable>();
         public BedrockTransactionTracker TransactionTracker { get; }
-        public bool EnableNewInventorySystem { get; set; } = false;
+        public bool ServerAuthoritiveInventory { get; set; } = false;
         public BedrockClient(Alex alex, IPEndPoint endpoint, PlayerProfile playerProfile, BedrockWorldProvider wp)
 		{
 			TransactionTracker = new BedrockTransactionTracker(this);
@@ -136,7 +123,8 @@ namespace Alex.Net.Bedrock
 			}
 
 			Connection = new RaknetConnection();
-			ServerEndpoint = endpoint;
+			Connection.RemoteEndpoint = endpoint;
+		//	ServerEndpoint = endpoint;
 
 			Connection.CustomMessageHandlerFactory = session =>
 			{
@@ -207,7 +195,7 @@ namespace Alex.Net.Bedrock
 				{
 					//Connection.ConnectionInfo.ThroughPut.Change(Timeout.Infinite, Timeout.Infinite);
 					
-					if (TryLocate(ServerEndpoint, out var serverInfo, cancellationToken))
+					if (TryLocate(Connection.RemoteEndpoint, out var serverInfo, cancellationToken))
 					{
 						OnMotdReceivedHandler?.Invoke(
 							this,
@@ -225,7 +213,7 @@ namespace Alex.Net.Bedrock
 					Connection.Start();
 					
 					//cancellationToken.CancelAfter(timeout);
-					if (Connection.TryConnect(ServerEndpoint, cancellationToken: cancellationToken))
+					if (Connection.TryConnect(Connection.RemoteEndpoint, cancellationToken: cancellationToken))
 					{
 						Log.Info("Connected");
 						ThroughPut = new Timer(state => { UpdateConnectionInfo();}, null, 0, 1000);
@@ -841,7 +829,7 @@ namespace Alex.Net.Bedrock
 			        ClientRandomId = new Random().Next(),
 			        LanguageCode = Alex.GuiRenderer.Language.Code.Replace("-", "_"),
 			        // Alex.Services.GetService<IOptionsProvider>().AlexOptions.MiscelaneousOptions.Language.Value,
-			        ServerAddress = $"{ServerEndpoint.Address.ToString()}:{ServerEndpoint.Port.ToString()}",
+			        ServerAddress = $"{Connection.RemoteEndpoint.Address.ToString()}:{Connection.RemoteEndpoint.Port.ToString()}",
 			        ThirdPartyName = username,
 			        DeviceId = Alex.Resources.DeviceID,
 			        GameVersion = McpeProtocolInfo.GameVersion,
@@ -983,7 +971,7 @@ namespace Alex.Net.Bedrock
 					Slot = player.Inventory.SelectedSlot,
 					Item = minetItem,
 					FromPosition = new System.Numerics.Vector3(player.KnownPosition.X, player.KnownPosition.Y, player.KnownPosition.Z),
-					HasNetworkIds = EnableNewInventorySystem,
+					HasNetworkIds = ServerAuthoritiveInventory,
 					BlockRuntimeId = blockRuntimeId
 				};
 
@@ -1054,7 +1042,7 @@ namespace Alex.Net.Bedrock
 				    Item = minetItem,
 				    FromPosition = new System.Numerics.Vector3(p.KnownPosition.X, p.KnownPosition.Y, p.KnownPosition.Z),
 				    Slot = slot,
-				    HasNetworkIds = EnableNewInventorySystem
+				    HasNetworkIds = ServerAuthoritiveInventory
 			    };
 
 			    SendPacket(packet);
@@ -1097,7 +1085,7 @@ namespace Alex.Net.Bedrock
 				    Slot = slot,
 				    FromPosition = new System.Numerics.Vector3(p.KnownPosition.X, p.KnownPosition.Y, p.KnownPosition.Z),
 				    ClickPosition = new System.Numerics.Vector3(cursorPosition.X, cursorPosition.Y, cursorPosition.Z),
-				    HasNetworkIds = EnableNewInventorySystem
+				    HasNetworkIds = ServerAuthoritiveInventory
 			    };
 
 			    SendPacket(packet);

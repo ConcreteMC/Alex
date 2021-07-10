@@ -101,7 +101,7 @@ namespace Alex.Utils.Inventories
 				var previousCursorItem = SetCursor(clickedItem, inventoryId, slotId, button);
 				SetContainerItem(inventoryId, slotId, previousCursorItem);
 				
-				if (Client.EnableNewInventorySystem)
+				if (Client.ServerAuthoritiveInventory)
 				{
 					ActionList.Add(
 						new SwapAction()
