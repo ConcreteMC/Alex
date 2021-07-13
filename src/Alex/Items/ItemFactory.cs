@@ -28,7 +28,7 @@ namespace Alex.Items
 		private static ResourceManager ResourceManager { get; set; }
 		//private static McResourcePack ResourcePack { get; set; }
 		private static IReadOnlyDictionary<ResourceLocation, Func<Item>> Items { get; set; }
-		private static SecondItemEntry[] SecItemEntries { get; set; }
+		//private static SecondItemEntry[] SecItemEntries { get; set; }
 
 		//private static ConcurrentDictionary<ResourceLocation, ItemModelRenderer> ItemRenderers { get; } = new ConcurrentDictionary<ResourceLocation, ItemModelRenderer>();
 
@@ -83,6 +83,18 @@ namespace Alex.Items
 		};
 
 		private static Dictionary<string, ItemMapping> _itemMappings;// = new Dictionary<string, ItemMapping>();
+
+		private static string GetDisplayName(ResourceLocation location)
+		{
+			var key = $"item.{location.Namespace}.{location.Path}";
+			var itemTranslation = Alex.Instance.GuiRenderer.GetTranslation(key);
+			if (itemTranslation == key)
+				itemTranslation = Alex.Instance.GuiRenderer.GetTranslation($"block.{location.Namespace}.{location.Path}");
+
+			return itemTranslation;
+		}
+
+		private static LegacyIdMap _legacyIdMap;
 	    public static void Init(IRegistryManager registryManager, ResourceManager resources, IProgressReceiver progressReceiver = null)
 	    {
 		    ResourceManager = resources;
@@ -93,9 +105,10 @@ namespace Alex.Items
 			   JsonConvert.DeserializeObject<Dictionary<string, ItemMapping>>(ResourceManager.ReadStringResource("Alex.Resources.itemmapping.json"));
 
 		  
-		    var otherRaw = ResourceManager.ReadStringResource("Alex.Resources.items3.json");
-		    SecItemEntries = JsonConvert.DeserializeObject<SecondItemEntry[]>(otherRaw);
-
+		   var otherRaw = ResourceManager.ReadStringResource("Alex.Resources.items3.json");
+		    var legacyIdMapping = JsonConvert.DeserializeObject<LegacyIdMap>(otherRaw);
+		    _legacyIdMap = legacyIdMapping;
+		    
 		    var blocks = resources.Registries.Blocks.Entries;
 		    
             ConcurrentDictionary<ResourceLocation, Func<Item>> items = new ConcurrentDictionary<ResourceLocation, Func<Item>>();
@@ -130,14 +143,6 @@ namespace Alex.Items
 		            }
 
 		            item.Name = entry.Key;
-		            item.DisplayName = entry.Key;
-
-		            var first = SecItemEntries.FirstOrDefault(x => x.TextType.Equals(resourceLocation.Path));
-		            if (first != null)
-		            {
-			            item.DisplayName = first.Name;
-		            }
-		           
 		            IItemRenderer renderer = null;
 
 		            if (modelRegistry.TryGet(
@@ -151,9 +156,14 @@ namespace Alex.Items
 			            else if (modelEntry.Value.Type == ModelType.Block)
 			            {
 				            var bs = BlockFactory.GetBlockState(entry.Key);
-				            renderer = new ItemBlockModelRenderer(bs, modelEntry.Value, resources.BlockAtlas.GetAtlas());
+
+				            renderer = new ItemBlockModelRenderer(
+					            bs, modelEntry.Value, resources.BlockAtlas.GetAtlas());
+
 			            }
 		            }
+
+		            item.DisplayName = GetDisplayName(resourceLocation);
 
 		            if (renderer != null)
 			            item.Renderer = renderer;
@@ -202,13 +212,8 @@ namespace Alex.Items
 			           {
 				           var item = new ItemBlock(bs) { };
 				           item.Name = entry.Key;
-				           item.DisplayName = entry.Key;
-				           
-				           var first = SecItemEntries.FirstOrDefault(x => x.TextType.Equals(resourceLocation.Path));
-				           if (first != null)
-				           {
-					           item.DisplayName = first.Name;
-				           }
+				           item.DisplayName = GetDisplayName(resourceLocation);
+				          // item.DisplayName = Alex.Instance.GuiRenderer.GetTranslation($"block.{resourceLocation.Namespace}.{resourceLocation.Path}");
 
 				           item.Renderer = new ItemBlockModelRenderer(bs, model, resources.BlockAtlas.GetAtlas());
 				           item.Renderer.Cache(resources);
@@ -256,39 +261,25 @@ namespace Alex.Items
 
 	    public static bool TryGetItem(short id, short meta, out Item item)
 	    {
-		    SecondItemEntry entry = SecItemEntries.FirstOrDefault(x => x.Type == id && x.Meta == meta);
-		    if (entry == null)
+		    if (_legacyIdMap.Items.TryGetValue($"{id}:{meta}", out var value))
 		    {
-			    entry = SecItemEntries.FirstOrDefault(x => x.Type == id);
+			    if (TryGetItem(value, out item))
+			    {
+				    return true;
+			    } 
 		    }
 
-		    if (entry == null)
-		    {
-			    item = null;
-			    return false;
-		    }
-
-		    if (TryGetItem($"minecraft:{entry.TextType}", out item))
-		    {
-			    return true;
-		    }
-
+		    item = null;
 		    return false;
 	    }
 
-	    private class SecondItemEntry
+	    private class LegacyIdMap
 	    {
-		    [JsonProperty("type")]
-		    public long Type { get; set; }
-
-		    [JsonProperty("meta")]
-		    public long Meta { get; set; }
-
-		    [JsonProperty("name")]
-		    public string Name { get; set; }
-
-		    [JsonProperty("text_type")]
-		    public string TextType { get; set; }
+		    [JsonProperty("blocks")]
+			public IReadOnlyDictionary<string, string> Blocks { get; set; }
+			
+			[JsonProperty("items")]
+			public IReadOnlyDictionary<string, string> Items { get; set; }
 	    }
     }
 }

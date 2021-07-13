@@ -564,15 +564,16 @@ namespace Alex.Worlds
 			}
 			else
 			{
-				var item = new BlockBreakProgress(coordinates, requiredTime);
 				var boundingBoxes = block.Block.GetBoundingBoxes(coordinates).ToArray();
 
 				if (boundingBoxes.Length > 0)
 				{
-					item.BoundingBox = boundingBoxes.OrderByDescending(x => (x.Max - x.Min).LengthSquared()).FirstOrDefault();
-				}
+					var item = new BlockBreakProgress(coordinates, requiredTime);
+					item.BoundingBox = boundingBoxes.OrderByDescending(x => (x.Max - x.Min).LengthSquared())
+					   .FirstOrDefault();
 
-				_blockBreakProgresses.TryAdd(coordinates, item);
+					_blockBreakProgresses.TryAdd(coordinates, item);
+				}
 			}
 		}
 

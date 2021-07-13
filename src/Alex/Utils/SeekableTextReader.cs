@@ -1,11 +1,15 @@
 using System;
 using System.IO;
 using System.Text;
+using NLog;
+using NLog.Fluent;
 
 namespace Alex.Utils
 {
 	public class SeekableTextReader : TextReader
 	{
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(SeekableTextReader));
+		
 		private string _text;
 		private int _position = 0;
 		public SeekableTextReader(string text) : base()
@@ -68,7 +72,7 @@ namespace Alex.Utils
 			} while (readCharacter != c);
 
 			result = sb.ToString();
-
+			Log.Info($"ReadUntil: {sb.ToString()}");
 			return sb.Length;
 		}
 		

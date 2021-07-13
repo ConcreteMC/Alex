@@ -189,7 +189,11 @@ namespace Alex.Blocks
 						}
 					}
 
-					if (string.IsNullOrWhiteSpace(block.DisplayName)) block.DisplayName = entry.Key;
+					if (string.IsNullOrWhiteSpace(block.DisplayName))
+					{
+						block.DisplayName = entry.Key;
+					}
+					//block.DisplayName = 
 					
 					//variantState.States = stateProperties.ToArray();
 					variantState.ID = s.ID;

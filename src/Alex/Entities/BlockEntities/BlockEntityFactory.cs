@@ -115,6 +115,8 @@ namespace Alex.Entities.BlockEntities
 						blockEntity = new FlowerPotBlockEntity(world);
 						break;
 					
+					case "item_frame":
+					case "minecraft:item_frame":
 					case "minecraft:itemframe":
 					case "itemframe":
 						blockEntity = new ItemFrameBlockEntity(world);

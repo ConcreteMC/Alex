@@ -15,7 +15,7 @@
 	},
 	"BUBBLE": {
 		"eventType": "PARTICLE_BUBBLE",
-		"bedrockId": "basic_bubble_particle_manual"
+		"bedrockId": "minecraft:basic_bubble_particle"
 	},
 	"BUBBLE_COLUMN_UP": {
 		"eventType": "PARTICLE_BUBBLE_COLUMN_UP",

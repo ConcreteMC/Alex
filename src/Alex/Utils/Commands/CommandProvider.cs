@@ -47,7 +47,11 @@ namespace Alex.Utils.Commands
 			var matchingCommands = _commands.Where(x => x.IsMatch(first)).ToArray();
 			var remainder = string.Join(' ', split.Skip(1));
 
+			Log.Info(
+				$"Matching... (Command={first}) (Remainder={remainder}) MatchingCommands={matchingCommands.Length}");
 			List<TabCompleteMatch> matches = new List<TabCompleteMatch>();
+			
+			//Resolved command alias, return all matches
 			if (split.Length == 1)
 			{
 				foreach (var command in matchingCommands)
@@ -75,9 +79,9 @@ namespace Alex.Utils.Commands
 
 			if (remainder.Length > 0)
 			{
-				using (SeekableTextReader sr = new SeekableTextReader(input))
+				using (SeekableTextReader sr = new SeekableTextReader(remainder))
 				{
-					sr.Position += first.Length + 1;
+				//	sr.Position += first.Length + 1;
 					foreach (var command in matchingCommands)
 					{
 						bool isValid = true;
@@ -90,7 +94,7 @@ namespace Alex.Utils.Commands
 						//
 						for (int i = 0; i < command.Properties.Count; i++)
 						{
-							if (sr.Position == sr.Length - 1) //Reached end of text.
+							if (sr.Position == sr.Length) //Reached end of text.
 							{
 								break;
 							}
@@ -102,14 +106,23 @@ namespace Alex.Utils.Commands
 
 							startPos = sr.Position;
 							var property = command.Properties[i];
-
+							property.Matches = new string[0];
+							
 							if (!property.TryParse(sr))
 							{
 								isValid = false;
-
+Log.Debug($"Property \"{property.Name}\" does not match \"{sr}\"");
 								break;
 							}
 
+							if (property.Matches.Length > 0)
+							{
+								matches.AddRange(property.Matches.Select(x => new TabCompleteMatch()
+								{
+									Description = property.Name,
+									Match = x,
+								}));
+							}
 							matchCount++;
 
 							var endPosition = sr.Position;
@@ -133,26 +146,49 @@ namespace Alex.Utils.Commands
 			}
 			else
 			{
+				var last = split.Last();
+				startIndex = input.Length - last.Length;// first.Length + 1;
+				length = last.Length;
+				
 				foreach (var command in matchingCommands)
 				{
-					var firstMatchingAlias = command.GetMatches(first);
-					matches.AddRange(firstMatchingAlias);
+					if (command.Properties.Count < split.Length)
+					{
+						Log.Warn($"Command properties: {command.Properties.Count}, split: {split.Length}");
+						continue;
+					}
+
+					//for (int i = split.Length - 1; i < command.Properties.Count; i++)
+					{
+						var property = command.Properties[split.Length - 1];
+						Log.Info($"Property: {property.Name}");
+						if (property is EnumCommandProperty enumProp)
+						{
+							matches.AddRange(enumProp.Options.Select(x => new TabCompleteMatch()
+							{
+								Match = x,
+							}));
+						}
+					}
+					//var firstMatchingAlias = command.GetMatches(first);
+					//matches.AddRange(firstMatchingAlias);
 				}
 			}
 
 			if (bestMatch != null)
 			{
-				Log.Info($"Best match: {bestMatch.ToString()}");
+				Log.Info($"Best match: {bestMatch.ToString()} (remainder: {remainder})");
+				//matches.AddRange(bestMatch.Properties..GetMatches(remainder));
 				//if (startIndex < )
 			}
 			else
 			{
-				length = first.Length;
+				//length = first.Length;
 			}
 			
 			if (matches.Count > 0)
 			{
-				Log.Info($"Found {matches.Count} matches for \"{input}\"!");
+				Log.Info($"Found {matches.Count} matches for \"{input}\"! (StartIndex={startIndex} Length={length})");
 				onMatch?.Invoke(startIndex, length, matches.ToArray());
 			}
 			else

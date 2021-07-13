@@ -1,6 +1,9 @@
 using System;
 using System.IO;
 using System.Linq;
+using Alex.Common.Data;
+using NLog;
+using NLog.Fluent;
 
 namespace Alex.Utils.Commands
 {
@@ -18,10 +21,14 @@ namespace Alex.Utils.Commands
 			TypeIdentifier = typeIdentifier;
 		}
 
+		public string[] Matches { get; set; } = new string[0];
 		public virtual bool TryParse(SeekableTextReader reader)
 		{
 			if (reader.ReadSingleWord(out string result) > 0)
+			{
+				Matches = new string[] {result};
 				return true;
+			}
 
 			return false;
 		}
@@ -35,6 +42,7 @@ namespace Alex.Utils.Commands
 	
 	public class EnumCommandProperty : CommandProperty
 	{
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(EnumCommandProperty));
 		public string[] Options { get; }
 
 		/// <inheritdoc />
@@ -48,9 +56,18 @@ namespace Alex.Utils.Commands
 		{
 			if (reader.ReadSingleWord(out string result) > 0)
 			{
-				if (Options.Any(x => string.Equals(x, result, StringComparison.InvariantCultureIgnoreCase)))
+				Log.Debug($"Enum Read: {result}");
+				var options = Options.Any(x => x.StartsWith(result, StringComparison.InvariantCultureIgnoreCase));
+
+				if (options)
+				{
+					Matches = Options.Where(x => x.StartsWith(result, StringComparison.InvariantCultureIgnoreCase))
+					   .ToArray();
 					return true;
+				}
 			}
+			
+		//	Log.Debug($"")
 
 			return false;
 		}

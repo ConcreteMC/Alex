@@ -383,6 +383,7 @@ namespace Alex.Gui.Dialogs.Containers
 			else
 			{
 				_overlayText = item?.GetDisplayName() ?? item.Name;
+
 				_overlayStart = 0;
 				_nextUpdate = TimeSpan.Zero;
 
@@ -402,7 +403,7 @@ namespace Alex.Gui.Dialogs.Containers
 						_overlayStart, Math.Min(_marqueueLength, Math.Max(0, text.Length - _overlayStart)));
 
 					TextOverlay.Text = _reverseMarqueue ? $"...{overlayText}" : $"{overlayText}...";
-
+										
 					if (_reverseMarqueue)
 					{
 						_overlayStart--;

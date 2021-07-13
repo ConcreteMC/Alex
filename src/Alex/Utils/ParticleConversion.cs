@@ -13,7 +13,7 @@ namespace Alex.Utils
 				case "minecraft:dust":                  return "minecraft:redstone_wire_dust_particle";
 				case "minecraft:ambient_entity_effect": return "minecraft:mobspell_emitter";
 				case "minecraft:angry_villager":        return "minecraft:villager_angry";
-				case "minecraft:bubble":                return "minecraft:basic_bubble_particle_manual";
+				case "minecraft:bubble":                return "minecraft:basic_bubble_particle";
 				case "minecraft:bubble_column_up":      return "minecraft:bubble_column_up_particle";
 				case "minecraft:bubble_pop":            return "minecraft:bubble_column_particle";
 				case "minecraft:campfire_cosy_smoke":   return "minecraft:campfire_smoke_particle";

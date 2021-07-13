@@ -191,13 +191,13 @@ namespace Alex.Worlds.Chunks
 
 									var model = blockState.VariantMapper.Model;
 
-									if (isNew && (blockState.Block.RequiresUpdate
+									if ((blockState.Block.RequiresUpdate
 									              || blockState.VariantMapper.IsMultiPart))
 									{
 										var newblockState = blockState.Block.BlockPlaced(
 											world, blockState, blockPosition);
 
-										if (newblockState != blockState)
+										if (blockState != newblockState)
 										{
 											blockState = newblockState;
 

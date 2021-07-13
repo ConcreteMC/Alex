@@ -35,22 +35,47 @@ namespace Alex.Entities.BlockEntities
 			
 			if (compound.TryGet("Item", out var itemTag))
 			{
-				var count = itemTag["Count"].ByteValue;
-				var id = itemTag["id"].ShortValue;
-				var damage = itemTag["Damage"].ShortValue;
-
-				if (ItemFactory.TryGetItem(id, damage, out var item))
-				{
-					item.Count = count;
-					SetItem(item);
-
-					return;
-				}
+				var idTag = itemTag["id"];
 				
-				if (ItemFactory.TryGetItem("minecraft:stone", out item))
+				var count = itemTag["Count"].ByteValue;
+				//var damage = itemTag["Damage"].ShortValue;
+
+				if (idTag.TagType == NbtTagType.String)
 				{
-					SetItem(item);
+					var id = idTag.StringValue;
+					if (ItemFactory.TryGetItem(id, out var item))
+					{
+						item.Count = count;
+						SetItem(item);
+
+						return;
+					}
+					else
+					{
+						Log.Warn($"Could not get item: {id}");
+					}
 				}
+				else if (idTag.TagType == NbtTagType.Short)
+				{
+					var id = idTag.ShortValue;
+					var damage = itemTag["Damage"].ShortValue;
+					if (ItemFactory.TryGetItem(id, damage, out var item))
+					{
+						item.Count = count;
+						SetItem(item);
+
+						return;
+					}
+					else
+					{
+						Log.Warn($"Could not get item: {id}:{damage}");
+					}
+				}
+
+				//if (ItemFactory.TryGetItem("minecraft:stone", out item))
+				//{
+				//	SetItem(item);
+				//}
 			}
 		}
 
