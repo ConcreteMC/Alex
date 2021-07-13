@@ -1,10 +1,12 @@
+using Alex.Blocks.Materials;
+
 namespace Alex.Blocks.Minecraft
 {
 	public class SoulFire : Fire
 	{
 		public SoulFire()
 		{
-			LightValue = 10;
+			Luminance = 10;
 			
 			BlockMaterial = Material.Fire;
 		}

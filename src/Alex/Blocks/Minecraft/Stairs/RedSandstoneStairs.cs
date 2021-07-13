@@ -1,3 +1,5 @@
+using Alex.Blocks.Materials;
+
 namespace Alex.Blocks.Minecraft.Stairs
 {
 	public class RedSandstoneStairs : Stairs

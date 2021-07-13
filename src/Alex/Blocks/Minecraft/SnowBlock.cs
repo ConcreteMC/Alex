@@ -1,3 +1,4 @@
+using Alex.Blocks.Materials;
 using Alex.Common.Blocks;
 using Microsoft.Xna.Framework;
 
@@ -9,7 +10,7 @@ namespace Alex.Blocks.Minecraft
 		{
 			Solid = true;
 			
-			BlockMaterial = Material.Snow.Clone().SetTintType(TintType.Color, Color.Snow);
+			BlockMaterial = Material.Snow.Clone().WithTintType(TintType.Color, Color.Snow);
 		}
 	}
 }

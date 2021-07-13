@@ -4,7 +4,7 @@ namespace Alex.Blocks.Minecraft
 	{
 		public Shroomlight()
 		{
-			LightValue = 15;
+			Luminance = 15;
 			Solid = true;
 			Transparent = false;
 		}

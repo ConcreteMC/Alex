@@ -1,3 +1,4 @@
+using Alex.Blocks.Materials;
 using Alex.Blocks.Minecraft.Slabs;
 using Alex.Blocks.Properties;
 using Alex.Blocks.State;

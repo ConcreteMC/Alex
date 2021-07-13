@@ -384,7 +384,7 @@ namespace Alex.Worlds.Lighting
 			int bz = blockCoordinates.Z & 0x0f;
 
 			var state = section.GetBlockState(bx, by, bz);
-			return state?.Block?.LightOpacity ?? 1;
+			return state?.Block?.Diffusion ?? 1;
 			//return bid == 8 || bid == 9 ? 3 : bid == 18 || bid == 161 || bid == 30 ? 2 : 1;
 		}
 

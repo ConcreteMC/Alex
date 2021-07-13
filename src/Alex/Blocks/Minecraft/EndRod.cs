@@ -1,3 +1,5 @@
+using Alex.Blocks.Materials;
+
 namespace Alex.Blocks.Minecraft
 {
 	public class EndRod : Block
@@ -6,7 +8,7 @@ namespace Alex.Blocks.Minecraft
 		{
 			Solid = true;
 			Transparent = true;
-			LightValue = 14;
+			Luminance = 14;
 
 			BlockMaterial = Material.Glass;
 			IsFullCube = false;

@@ -1,3 +1,5 @@
+using Alex.Blocks.Materials;
+
 namespace Alex.Blocks.Minecraft
 {
 	public class LightWeightedPressurePlate : Block
@@ -7,7 +9,7 @@ namespace Alex.Blocks.Minecraft
 			Solid = true;
 			Transparent = true;
 
-			BlockMaterial  = Material.Iron.Clone().SetHardness(0.5f);
+			BlockMaterial  = Material.Iron.Clone().WithHardness(0.5f);
 		}
 	}
 }

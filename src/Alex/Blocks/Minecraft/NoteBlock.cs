@@ -1,3 +1,5 @@
+using Alex.Blocks.Materials;
+
 namespace Alex.Blocks.Minecraft
 {
 	public class NoteBlock : Block
@@ -10,7 +12,7 @@ namespace Alex.Blocks.Minecraft
 			
 			CanInteract = true;
 
-			BlockMaterial = Material.Stone.Clone().SetHardness(0.8f);
+			BlockMaterial = Material.Stone.Clone().WithHardness(0.8f);
 		}
 	}
 }

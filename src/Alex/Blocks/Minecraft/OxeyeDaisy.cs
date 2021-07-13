@@ -1,4 +1,6 @@
-﻿namespace Alex.Blocks.Minecraft
+﻿using Alex.Blocks.Materials;
+
+namespace Alex.Blocks.Minecraft
 {
     public class OxeyeDaisy : FlowerBase
     {

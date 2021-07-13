@@ -1,3 +1,5 @@
+using Alex.Blocks.Materials;
+
 namespace Alex.Blocks.Minecraft
 {
 	public class Cobblestone : Block
@@ -7,7 +9,7 @@ namespace Alex.Blocks.Minecraft
 			Solid = true;
 			Transparent = false;
 
-			BlockMaterial = Material.Stone.Clone().SetHardness(2);
+			BlockMaterial = Material.Stone.Clone().WithHardness(2);
 		}
 	}
 }

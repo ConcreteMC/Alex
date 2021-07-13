@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Alex.Blocks.Materials;
 using Alex.Blocks.Minecraft.Leaves;
 using Alex.Blocks.Properties;
 using Alex.Blocks.State;
@@ -62,15 +63,29 @@ namespace Alex.Blocks.Minecraft
 		public bool HasHitbox { get => GetFlagBit(5); set => SetFlagBit(5, value); }
 		public virtual bool IsFullCube { get => GetFlagBit(6); set => SetFlagBit(6, value); }
 
+		/// <summary>
+		///		If true, the <see cref="BlockPlaced"/> function gets called whenever a block of this type of placed
+		/// </summary>
 		public bool RequiresUpdate { get => GetFlagBit(9); set => SetFlagBit(9, value); }
+		
+		/// <summary>
+		///		If true, clicking this block will send the server an interact event
+		/// </summary>
 		public bool CanInteract { get => GetFlagBit(10); set => SetFlagBit(10, value); }
 		
-	    public virtual byte LightValue { get; set; } = 0;
-	    public int LightOpacity { get; set; } = 1;
+		/// <summary>
+		///		The amount of light this block emits
+		/// </summary>
+	    public virtual byte Luminance { get; set; } = 0;
+		
+		/// <summary>
+		///		The amount of light this block blocks.
+		/// </summary>
+	    public int Diffusion { get; set; } = 1;
 	    
 		public BlockState BlockState { get; set; }
 
-		private IMaterial _material = new Material(MapColor.STONE);
+		private IMaterial _material = new Material(MapColor.Stone);
 
 		public virtual IMaterial BlockMaterial
 		{
@@ -122,6 +137,13 @@ namespace Alex.Blocks.Minecraft
 			return false;
 		}
 
+		/// <summary>
+		///		Called whenever a block of this type has been placed.
+		/// </summary>
+		/// <param name="world">The world the block was placed in</param>
+		/// <param name="state">The blockstate used when placing the block</param>
+		/// <param name="position">The position the block was placed at</param>
+		/// <returns>The blockstate to use</returns>
 		public virtual BlockState BlockPlaced(IBlockAccess world, BlockState state, BlockCoordinates position)
 		{
 			//return state;
@@ -139,6 +161,12 @@ namespace Alex.Blocks.Minecraft
 			return state;
 		}
 
+		/// <summary>
+		///		Called when a block adjacent to this block has been changed.
+		/// </summary>
+		/// <param name="world">The world the event occured in</param>
+		/// <param name="position">The world position of the current block</param>
+		/// <param name="updatedBlock">The world position of the updated block</param>
 		public virtual void BlockUpdate(World world, BlockCoordinates position, BlockCoordinates updatedBlock)
 		{
 			if (BlockState.VariantMapper.IsMultiPart)
@@ -154,6 +182,11 @@ namespace Alex.Blocks.Minecraft
 			}
 		}
 		
+		/// <summary>
+		///		Calculates the required tick time for this block to break.
+		/// </summary>
+		/// <param name="miningTool">The tool used to mine the block</param>
+		/// <returns>The time required for the block to break</returns>
         public double GetBreakTime(Item miningTool)
         {
 	        ItemType     toolItemType     = ItemType.Hand;
@@ -241,6 +274,12 @@ namespace Alex.Blocks.Minecraft
 			return secondsForBreak / tierMultiplier;
 		}
 
+		/// <summary>
+		///		Used to determine if a blockface should be culled or not
+		/// </summary>
+		/// <param name="face">The face</param>
+		/// <param name="neighbor">The block adjacent to this block at specified face</param>
+		/// <returns>True if the face should be rendered</returns>
         public virtual bool ShouldRenderFace(BlockFace face, Block neighbor)
         {
 	        if (!neighbor.Renderable)
@@ -289,6 +328,13 @@ namespace Alex.Blocks.Minecraft
 	        return true;
         }
 
+		/// <summary>
+		///		Determines whether or not this block can "attach" to an adjacent block.
+		///		This is used for blocks like fences.
+		/// </summary>
+		/// <param name="face"></param>
+		/// <param name="block">The adjacent block</param>
+		/// <returns></returns>
         public virtual bool CanAttach(BlockFace face, Block block)
         {
 	        return block.Solid && (block.IsFullCube);

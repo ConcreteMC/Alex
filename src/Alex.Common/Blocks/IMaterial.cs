@@ -7,27 +7,29 @@ namespace Alex.Common.Blocks
 	public interface IMaterial
 	{
 		string SoundCategory { get; }
-		IMaterial SetSoundCategory(string soundCategory);
+		IMaterial WithSoundCategory(string soundCategory);
 		
-		IMapColor MapColorValue { get; }
+		IMapColor MapColor { get; }
+
+		IMaterial WithMapColor(IMapColor color);
 		
 		TintType TintType { get; }
 		Color TintColor { get; }
-		IMaterial SetTintType(TintType type, Color color);
+		IMaterial WithTintType(TintType type, Color color);
 		
 		double Slipperiness { get; }
 
-		IMaterial SetSlipperines(double value);
+		IMaterial WithSlipperiness(double value);
 		
 		float Hardness { get; }
-		IMaterial SetHardness(float hardness);
+		IMaterial WithHardness(float hardness);
 		
 		bool BlocksLight { get; }
 		bool BlocksMovement { get; }
 		IMaterial SetTranslucent();
 		IMaterial SetRequiresTool();
-		IMaterial SetBurning();
-		bool CanBurn { get; }
+		IMaterial SetFlammable();
+		bool IsFlammable { get; }
 		bool IsLiquid { get; }
 		bool IsOpaque { get; }
 		bool IsReplaceable { get; }
@@ -47,6 +49,7 @@ namespace Alex.Common.Blocks
 
 	public interface IMapColor
 	{
-		int GetMapColor(int index);
+		Color BaseColor { get; }
+		Color GetMapColor(int index);
 	}
 }

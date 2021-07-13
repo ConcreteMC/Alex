@@ -1,4 +1,6 @@
-﻿namespace Alex.Blocks.Minecraft.Leaves
+﻿using Alex.Blocks.Materials;
+
+namespace Alex.Blocks.Minecraft.Leaves
 {
     public class Leaves : Block
     {
@@ -8,7 +10,7 @@
 		    Transparent = true;
 		    IsFullCube = true;
 
-		    LightOpacity = 2;
+		    Diffusion = 2;
 		    
 		    BlockMaterial = Material.Leaves;
 	    }

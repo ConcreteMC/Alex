@@ -1,3 +1,5 @@
+using Alex.Blocks.Materials;
+
 namespace Alex.Blocks.Minecraft
 {
 	public class EndPortal : Block
@@ -6,7 +8,7 @@ namespace Alex.Blocks.Minecraft
 		{
 			Solid = false;
 			Transparent = true;
-			LightValue = 15;
+			Luminance = 15;
 
 			BlockMaterial = Material.Portal;
 		}

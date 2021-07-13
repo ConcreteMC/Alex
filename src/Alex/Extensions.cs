@@ -5,9 +5,11 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Text.RegularExpressions;
+using Alex.Blocks.Minecraft.Terracotta;
 using Alex.Common.Blocks;
+using Alex.Entities.BlockEntities;
 using Alex.Items;
+using Alex.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -19,6 +21,120 @@ namespace Alex
 		static Extensions()
 		{
 			
+		}
+		
+		public static IMapColor ToMapColor(this BedColor color)
+		{
+			switch (color)
+			{
+				case BedColor.White:
+					return MapColor.TerracottaWhite;
+
+				case BedColor.Orange:
+					return MapColor.TerracottaOrange;
+
+				case BedColor.Magenta:
+					return MapColor.Magenta;
+
+				case BedColor.LightBlue:
+					return MapColor.LightBlue;
+
+				case BedColor.Yellow:
+					return MapColor.Yellow;
+
+				case BedColor.Lime:
+					return MapColor.LightGreen;
+
+				case BedColor.Pink:
+					return MapColor.Pink;
+
+				case BedColor.Gray:
+					return MapColor.Gray;
+
+				case BedColor.Silver:
+					return MapColor.LightGray;
+
+				case BedColor.Cyan:
+					return MapColor.Cyan;
+
+				case BedColor.Purple:
+					return MapColor.Purple;
+
+				case BedColor.Blue:
+					return MapColor.Blue;
+
+				case BedColor.Brown:
+					return MapColor.Brown;
+
+				case BedColor.Green:
+					return MapColor.Green;
+
+				case BedColor.Red:
+					return MapColor.Red;
+
+				case BedColor.Black:
+					return MapColor.Black;
+
+				default:
+					return MapColor.TerracottaWhite;
+			}
+		}
+
+		public static IMapColor ToMapColor(this ClayColor color)
+		{
+			switch (color)
+			{
+				case ClayColor.White:
+					return MapColor.TerracottaWhite;
+
+				case ClayColor.Orange:
+					return MapColor.TerracottaOrange;
+
+				case ClayColor.Magenta:
+					return MapColor.TerracottaMagenta;
+
+				case ClayColor.LightBlue:
+					return MapColor.TerracottaLightBlue;
+
+				case ClayColor.Yellow:
+					return MapColor.TerracottaYellow;
+
+				case ClayColor.Lime:
+					return MapColor.TerracottaLightGreen;
+
+				case ClayColor.Pink:
+					return MapColor.TerracottaPink;
+
+				case ClayColor.Gray:
+					return MapColor.TerracottaGray;
+
+				case ClayColor.Silver:
+					return MapColor.TerracottaLightGray;
+
+				case ClayColor.Cyan:
+					return MapColor.TerracottaCyan;
+
+				case ClayColor.Purple:
+					return MapColor.TerracottaPurple;
+
+				case ClayColor.Blue:
+					return MapColor.TerracottaBlue;
+
+				case ClayColor.Brown:
+					return MapColor.TerracottaBrown;
+
+				case ClayColor.Green:
+					return MapColor.TerracottaGreen;
+
+				case ClayColor.Red:
+					return MapColor.TerracottaRed;
+
+				case ClayColor.Black:
+					return MapColor.TerracottaBlack;
+
+				default:
+					return MapColor.TerracottaWhite;
+			}
 		}
 
 		public static bool IsAir(this Item item)

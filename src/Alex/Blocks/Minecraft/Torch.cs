@@ -1,3 +1,5 @@
+using Alex.Blocks.Materials;
+
 namespace Alex.Blocks.Minecraft
 {
 	public class Torch : Block
@@ -9,7 +11,7 @@ namespace Alex.Blocks.Minecraft
 
 			IsFullCube = false;
 			
-			LightValue = 14;
+			Luminance = 14;
 
 			BlockMaterial = Material.Circuits;
 		}

@@ -1,3 +1,5 @@
+using Alex.Blocks.Materials;
+
 namespace Alex.Blocks.Minecraft
 {
 	public class Cocoa : Block
@@ -7,7 +9,7 @@ namespace Alex.Blocks.Minecraft
 			Solid = true;
 			Transparent = true;
 			
-			BlockMaterial = Material.Plants.SetHardness(0.2f);
+			BlockMaterial = Material.Plants.WithHardness(0.2f);
 		}
 	}
 }

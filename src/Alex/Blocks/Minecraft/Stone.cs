@@ -1,3 +1,4 @@
+using Alex.Blocks.Materials;
 using Alex.Common.Utils;
 using Alex.Items;
 
@@ -10,7 +11,7 @@ namespace Alex.Blocks.Minecraft
 			Solid = true;
 			Transparent = false;
 
-			BlockMaterial = Material.Stone.Clone().SetHardness(1.5f);
+			BlockMaterial = Material.Stone.Clone().WithHardness(1.5f);
 		}
 	}
 }

@@ -1,3 +1,4 @@
+using Alex.Blocks.Materials;
 using Alex.Blocks.Minecraft.Doors;
 
 namespace Alex.Blocks.Minecraft

@@ -4,7 +4,7 @@ namespace Alex.Blocks.Minecraft
 	{
 		public Conduit()
 		{
-			LightValue = 15;
+			Luminance = 15;
 		}
 	}
 }

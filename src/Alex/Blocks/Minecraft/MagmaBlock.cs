@@ -8,7 +8,7 @@ namespace Alex.Blocks.Minecraft
 			Transparent = false;
 			IsFullCube = true;
 			
-			LightValue = 3;
+			Luminance = 3;
 		}
 	}
 }

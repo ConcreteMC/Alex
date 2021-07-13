@@ -331,14 +331,22 @@ namespace Alex.Worlds.Chunks
 		{
 			bool inLight = doLighting;
 
-			int currentLightValue = 15;
+			bool calculatingHeight = true;
 			for (int y = WorldSettings.WorldHeight - 1; y > WorldSettings.MinY; y--)
 			{
+				var section = GetSection(y);
+				var block = section.Get(x, y & 0xf, z).Block;
+				if (calculatingHeight)
+				{
+					if (block.Renderable && block.BlockMaterial.IsOpaque)
+					{
+						calculatingHeight = false;
+						SetHeight(x, z, (short) (y + 1));
+					}
+				}
+				
 				if (inLight)
 				{
-					var section = GetSection(y);
-					var block = section.Get(x, y & 0xf, z).Block;
-
 					/*if (block.Renderable && block.BlockState.Model != null)
 					{
 						foreach(var box in block.BlockState.Model.GetBoundingBoxes(new Vector3((X << 4) + x, y, (Z << 4) + z)))
@@ -354,15 +362,14 @@ namespace Alex.Worlds.Chunks
 					}
 					else
 					{
-						SetHeight(x, z, (short) (y + 1));
+					//	SetHeight(x, z, (short) (y + 1));
 						SetSkyLight(x, y, z, 0);
 						inLight = false;
 					}
 				}
-				else
-				{
-					//SetSkyLight(x, y, z, (byte) (doLighting ? 0 : 15));
-				}
+
+				if (!inLight && !calculatingHeight)
+					break;
 			}
 		}
 
@@ -468,12 +475,12 @@ namespace Alex.Worlds.Chunks
 			_height[((bz << 4) + (bx))] = h;
 		}
 
-		public byte GetHeight(int bx, int bz)
+		public int GetHeight(int bx, int bz)
 		{
 			if ((bx < 0 || bx > ChunkWidth) || (bz < 0 || bz > ChunkDepth))
-				return 255;
+				return WorldSettings.WorldHeight;
 
-			return (byte) _height[((bz << 4) + (bx))];
+			return _height[((bz << 4) + (bx))];
 		}
 
 		public void SetBiome(int bx, int by, int bz, int biome)

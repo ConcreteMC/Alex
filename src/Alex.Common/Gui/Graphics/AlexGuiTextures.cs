@@ -98,5 +98,9 @@ namespace Alex.Common.Gui.Graphics
         
         public static readonly GuiTextures GradientBlur = new(AlexNamespace, nameof(GradientBlur));
         
+        public static readonly GuiTextures MapMarkerWhite = new(AlexNamespace, nameof(MapMarkerWhite));
+        public static readonly GuiTextures MapMarkerGreen = new(AlexNamespace, nameof(MapMarkerGreen));
+        public static readonly GuiTextures MapMarkerRed = new(AlexNamespace, nameof(MapMarkerRed));
+        public static readonly GuiTextures MapMarkerBlue = new(AlexNamespace, nameof(MapMarkerBlue));
     }
 }

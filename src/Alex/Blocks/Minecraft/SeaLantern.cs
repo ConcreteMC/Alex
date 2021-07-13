@@ -1,3 +1,5 @@
+using Alex.Blocks.Materials;
+
 namespace Alex.Blocks.Minecraft
 {
 	public class SeaLantern : Block
@@ -6,7 +8,7 @@ namespace Alex.Blocks.Minecraft
 		{
 			Solid = true;
 			Transparent = false;
-			LightValue = 15;
+			Luminance = 15;
 
 			BlockMaterial = Material.Glass;
 		}

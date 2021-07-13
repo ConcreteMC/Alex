@@ -1,4 +1,5 @@
 using System;
+using Alex.Blocks.Materials;
 using Alex.Blocks.Properties;
 using Alex.Blocks.State;
 using Alex.Common.Blocks;
@@ -14,28 +15,8 @@ namespace Alex.Blocks.Minecraft
 		{
 			Solid = true;
 			Transparent = false;
-			//IsFullBlock = true;
-			//IsFullCube = true;
-			//
 
-			//BlockMaterial = Material.Grass;
-			BlockMaterial =  Material.Grass.Clone().SetHardness( 0.6f);
+			base.BlockMaterial = Material.Grass;
 		}
-
-		/// <inheritdoc />
-		/*public override IMaterial BlockMaterial
-		{
-			get
-			{
-				if (BlockState.TryGetValue("snowy", out string val) && val.Equals("true", StringComparison.OrdinalIgnoreCase))
-				{
-					return Material.Snow.Clone().SetHardness( 0.6f);//.Clone().SetTintType(TintType.Color, Color.Snow);
-				}
-				else
-				{
-					return Material.Grass.Clone().SetHardness( 0.6f);
-				}
-			}
-		}*/
 	}
 }

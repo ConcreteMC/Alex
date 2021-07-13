@@ -1,3 +1,5 @@
+using Alex.Blocks.Materials;
+
 namespace Alex.Blocks.Minecraft
 {
 	public class RedstoneLamp : Block
@@ -10,7 +12,7 @@ namespace Alex.Blocks.Minecraft
 			BlockMaterial = Material.RedstoneLight;
 		}
 
-		public override byte LightValue
+		public override byte Luminance
 		{
 			get
 			{

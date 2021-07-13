@@ -1,3 +1,5 @@
+using Alex.Blocks.Materials;
+
 namespace Alex.Blocks.Minecraft.Buttons
 {
 	public class DarkOakButton : Button

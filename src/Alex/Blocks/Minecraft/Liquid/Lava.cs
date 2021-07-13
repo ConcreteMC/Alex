@@ -1,3 +1,5 @@
+using Alex.Blocks.Materials;
+
 namespace Alex.Blocks.Minecraft.Liquid
 {
 	public class Lava : LiquidBlock
@@ -8,8 +10,8 @@ namespace Alex.Blocks.Minecraft.Liquid
 			Transparent = true;
 			HasHitbox = false;
 
-			LightValue = 15;
-			LightOpacity = 1;
+			Luminance = 15;
+			Diffusion = 1;
 
 			BlockMaterial = Material.Lava;
 			//BlockModel = BlockFactory.StationairyLavaModel;

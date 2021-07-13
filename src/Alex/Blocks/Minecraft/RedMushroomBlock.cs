@@ -1,3 +1,5 @@
+using Alex.Blocks.Materials;
+
 namespace Alex.Blocks.Minecraft
 {
 	public class RedMushroomBlock : Block
@@ -7,7 +9,7 @@ namespace Alex.Blocks.Minecraft
 			Solid = true;
 			Transparent = false;
 
-			BlockMaterial = Material.Ground.SetHardness(0.2f);
+			BlockMaterial = Material.Ground.WithHardness(0.2f);
 		}
 	}
 }

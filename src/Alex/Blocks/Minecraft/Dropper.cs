@@ -1,3 +1,5 @@
+using Alex.Blocks.Materials;
+
 namespace Alex.Blocks.Minecraft
 {
 	public class Dropper : Block
@@ -7,7 +9,7 @@ namespace Alex.Blocks.Minecraft
 			Solid = true;
 			Transparent = false;
 			
-			BlockMaterial = Material.Circuits.Clone().SetHardness(3.5f);
+			BlockMaterial = Material.Circuits.Clone().WithHardness(3.5f);
 			
 			CanInteract = true;
 		}

@@ -4,7 +4,7 @@ namespace Alex.Blocks.Minecraft
 	{
 		public CampFire()
 		{
-			LightValue = 15;
+			Luminance = 15;
 		}
 	}
 }

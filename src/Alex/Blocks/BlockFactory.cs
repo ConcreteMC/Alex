@@ -64,7 +64,7 @@ namespace Alex.Blocks
 				
 				var block = new LightBlock()
 				{
-					LightValue = i
+					Luminance = i
 				};
 				
 				bs.Block = block;

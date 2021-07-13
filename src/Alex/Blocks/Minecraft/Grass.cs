@@ -1,4 +1,5 @@
 using System;
+using Alex.Blocks.Materials;
 using Alex.Common.Utils.Noise;
 using Alex.Common.Utils.Vectors;
 using Microsoft.Xna.Framework;
@@ -12,10 +13,10 @@ namespace Alex.Blocks.Minecraft
 			Solid = false;
 			Transparent = true;
 
-			IsFullCube = false;
+			base.IsFullCube = false;
 
-			BlockMaterial = Material.Plants;
-			LightOpacity = 1;
+			base.BlockMaterial = Material.Plants;
+			Diffusion = 1;
 		}
 		
 		/// <inheritdoc />

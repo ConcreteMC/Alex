@@ -1,3 +1,5 @@
+using Alex.Blocks.Materials;
+
 namespace Alex.Blocks.Minecraft
 {
 	public class Netherrack : Block
@@ -6,7 +8,7 @@ namespace Alex.Blocks.Minecraft
 		{
 			Solid = true;
 			Transparent = false;
-			BlockMaterial = Material.Stone.SetHardness(0.4f);
+			BlockMaterial = Material.Stone.WithHardness(0.4f);
 		}
 	}
 }

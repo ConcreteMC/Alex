@@ -1,3 +1,5 @@
+using Alex.Blocks.Materials;
+
 namespace Alex.Blocks.Minecraft
 {
 	public class PackedIce : Block
@@ -9,7 +11,7 @@ namespace Alex.Blocks.Minecraft
 
 			BlockMaterial = Material.PackedIce;
 
-			LightOpacity = 4;
+			Diffusion = 4;
 		}
 	}
 }

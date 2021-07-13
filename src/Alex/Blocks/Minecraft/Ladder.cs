@@ -1,4 +1,5 @@
 using System;
+using Alex.Blocks.Materials;
 using Alex.Common.Blocks;
 using Alex.ResourcePackLib.Json;
 
@@ -14,7 +15,7 @@ namespace Alex.Blocks.Minecraft
 
 			IsFullCube = false;
 			
-			BlockMaterial = Material.Wood.Clone().SetHardness(0.4f);
+			BlockMaterial = Material.Wood.Clone().WithHardness(0.4f);
 			//Hardness = 0.4f;
 			HasHitbox = true;
 		}

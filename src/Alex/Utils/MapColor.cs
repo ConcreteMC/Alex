@@ -6,73 +6,84 @@ namespace Alex.Utils
 {
 	public class MapColor : IMapColor
 	{
-		public static MapColor[] COLORS = new MapColor[64];
-		public static MapColor[] BLOCK_COLORS = new MapColor[16];
-		public static MapColor AIR = new MapColor(0, 0);
-		public static MapColor GRASS = new MapColor(1, 8368696);
-		public static MapColor SAND = new MapColor(2, 16247203);
-		public static MapColor CLOTH = new MapColor(3, 13092807);
-		public static MapColor TNT = new MapColor(4, 16711680);
-		public static MapColor ICE = new MapColor(5, 10526975);
-		public static MapColor IRON = new MapColor(6, 10987431);
-		public static MapColor FOLIAGE = new MapColor(7, 31744);
-		public static MapColor SNOW = new MapColor(8, 16777215);
-		public static MapColor CLAY = new MapColor(9, 10791096);
-		public static MapColor DIRT = new MapColor(10, 9923917);
-		public static MapColor STONE = new MapColor(11, 7368816);
-		public static MapColor WATER = new MapColor(12, 4210943);
-		public static MapColor WOOD = new MapColor(13, 9402184);
-		public static MapColor QUARTZ = new MapColor(14, 16776437);
-		public static MapColor ADOBE = new MapColor(15, 14188339);
-		public static MapColor MAGENTA = new MapColor(16, 11685080);
-		public static MapColor LIGHT_BLUE = new MapColor(17, 6724056);
-		public static MapColor YELLOW = new MapColor(18, 15066419);
-		public static MapColor LIME = new MapColor(19, 8375321);
-		public static MapColor PINK = new MapColor(20, 15892389);
-		public static MapColor GRAY = new MapColor(21, 5000268);
-		public static MapColor SILVER = new MapColor(22, 10066329);
-		public static MapColor CYAN = new MapColor(23, 5013401);
-		public static MapColor PURPLE = new MapColor(24, 8339378);
-		public static MapColor BLUE = new MapColor(25, 3361970);
-		public static MapColor BROWN = new MapColor(26, 6704179);
-		public static MapColor GREEN = new MapColor(27, 6717235);
-		public static MapColor RED = new MapColor(28, 10040115);
-		public static MapColor BLACK = new MapColor(29, 1644825);
-		public static MapColor GOLD = new MapColor(30, 16445005);
-		public static MapColor DIAMOND = new MapColor(31, 6085589);
-		public static MapColor LAPIS = new MapColor(32, 4882687);
-		public static MapColor EMERALD = new MapColor(33, 55610);
-		public static MapColor OBSIDIAN = new MapColor(34, 8476209);
-		public static MapColor NETHERRACK = new MapColor(35, 7340544);
-		public static MapColor WHITE_STAINED_HARDENED_CLAY = new MapColor(36, 13742497);
-		public static MapColor ORANGE_STAINED_HARDENED_CLAY = new MapColor(37, 10441252);
-		public static MapColor MAGENTA_STAINED_HARDENED_CLAY = new MapColor(38, 9787244);
-		public static MapColor LIGHT_BLUE_STAINED_HARDENED_CLAY = new MapColor(39, 7367818);
-		public static MapColor YELLOW_STAINED_HARDENED_CLAY = new MapColor(40, 12223780);
-		public static MapColor LIME_STAINED_HARDENED_CLAY = new MapColor(41, 6780213);
-		public static MapColor PINK_STAINED_HARDENED_CLAY = new MapColor(42, 10505550);
-		public static MapColor GRAY_STAINED_HARDENED_CLAY = new MapColor(43, 3746083);
-		public static MapColor SILVER_STAINED_HARDENED_CLAY = new MapColor(44, 8874850);
-		public static MapColor CYAN_STAINED_HARDENED_CLAY = new MapColor(45, 5725276);
-		public static MapColor PURPLE_STAINED_HARDENED_CLAY = new MapColor(46, 8014168);
-		public static MapColor BLUE_STAINED_HARDENED_CLAY = new MapColor(47, 4996700);
-		public static MapColor BROWN_STAINED_HARDENED_CLAY = new MapColor(48, 4993571);
-		public static MapColor GREEN_STAINED_HARDENED_CLAY = new MapColor(49, 5001770);
-		public static MapColor RED_STAINED_HARDENED_CLAY = new MapColor(50, 9321518);
-		public static MapColor BLACK_STAINED_HARDENED_CLAY = new MapColor(51, 2430480);
-		
-		private uint ColorValue { get; }
-		public Color Color { get; }
-		public int Index { get; }
+		private static readonly MapColor[] BaseColors = new MapColor[64];
+		//public static MapColor[] BLOCK_COLORS = new MapColor[16];
 
-		private MapColor(int index, uint color)
+		public static readonly MapColor Air = new(0, 0, 0, 0, 0);
+		public static readonly MapColor Grass = new(1, 127, 178, 56);
+		public static readonly MapColor Sand = new(2, 247, 233, 163);
+		public static readonly MapColor Cloth = new(3, 199, 199, 199);
+		public static readonly MapColor Tnt = new(4,  	255, 0, 0 );
+		public static readonly MapColor Ice = new(5,  	160, 160, 255);
+		public static readonly MapColor Iron = new(6, 167, 167, 167);
+		public static readonly MapColor Foliage = new(7, 0, 124, 0 );
+		public static readonly MapColor Snow = new(8, 255, 255, 255 );
+		public static readonly MapColor Clay = new(9,  	164, 168, 184 );
+		public static readonly MapColor Dirt = new(10, 151, 109, 77 );
+		public static readonly MapColor Stone = new(11, 112, 112, 112 );
+		public static readonly MapColor Water = new(12, 64, 64, 255 );
+		public static readonly MapColor Wood = new(13, 143, 119, 72 );
+		public static readonly MapColor Quartz = new(14,  	255, 252, 245 );
+		public static readonly MapColor Orange = new(15, 216, 127, 51);
+		
+		public static readonly MapColor Magenta = new(16, 178, 76, 216 );
+		public static readonly MapColor LightBlue = new(17, 102, 153, 216 );
+		public static readonly MapColor Yellow = new(18, 229, 229, 51 );
+		public static readonly MapColor LightGreen = new(19, 127, 204, 25 );
+		public static readonly MapColor Pink = new(20, 242, 127, 165 );
+		public static readonly MapColor Gray = new(21, 76, 76, 76 );
+		public static readonly MapColor LightGray = new(22, 153, 153, 153 );
+		public static readonly MapColor Cyan = new(23,  	76, 127, 153);
+		public static readonly MapColor Purple = new(24, 127, 63, 178 );
+		public static readonly MapColor Blue = new(25, 51, 76, 178 );
+		public static readonly MapColor Brown = new(26, 102, 76, 51 );
+		public static readonly MapColor Green = new(27, 102, 127, 51 );
+		public static readonly MapColor Red = new(28, 153, 51, 51 );
+		public static readonly MapColor Black = new(29, 25, 25, 25 );
+		public static readonly MapColor Gold = new(30, 250, 238, 77 );
+		
+		public static readonly MapColor Diamond = new(31, 92, 219, 213 );
+		public static readonly MapColor Lapis = new(32, 74, 128, 255 );
+		public static readonly MapColor Emerald = new(33, 0, 217, 58 );
+		public static readonly MapColor Podzol = new(34, 129, 86, 49);
+		public static readonly MapColor Nether = new(35, 112, 2, 0);
+		
+		public static readonly MapColor TerracottaWhite = new(36, 209, 177, 161 );
+		public static readonly MapColor TerracottaOrange = new(37, 159, 82, 36 );
+		public static readonly MapColor TerracottaMagenta = new(38, 149, 87, 108 );
+		public static readonly MapColor TerracottaLightBlue = new(39, 112, 108, 138 );
+		public static readonly MapColor TerracottaYellow = new(40, 186, 133, 36 );
+		public static readonly MapColor TerracottaLightGreen = new(41, 103, 117, 53 );
+		public static readonly MapColor TerracottaPink = new(42, 160, 77, 78 );
+		public static readonly MapColor TerracottaGray = new(43, 57, 41, 35 );
+		public static readonly MapColor TerracottaLightGray = new(44, 135, 107, 98 );
+		public static readonly MapColor TerracottaCyan = new(45, 87, 92, 92 );
+		public static readonly MapColor TerracottaPurple = new(46, 122, 73, 88 );
+		public static readonly MapColor TerracottaBlue = new(47, 76, 62, 92 );
+		public static readonly MapColor TerracottaBrown = new(48, 76, 50, 35 );
+		public static readonly MapColor TerracottaGreen = new(49, 76, 82, 42 );
+		public static readonly MapColor TerracottaRed = new(50, 142, 60, 46 );
+		public static readonly MapColor TerracottaBlack = new(51, 37, 22, 16 );
+
+		public static readonly MapColor CrimsonNylium = new(52, 189, 48, 49 );
+		public static readonly MapColor CrimsonStem = new(53, 148, 63, 97  );
+		public static readonly MapColor CrimsonHyphae = new(54, 92, 25, 29  );
+		
+		public static readonly MapColor WarpedNylium = new(55, 22, 126, 134  );
+		public static readonly MapColor WarpedStem = new(56, 58, 142, 140  );
+		public static readonly MapColor WarpedHyphae = new(57, 86, 44, 62 );
+		public static readonly MapColor WarpedWartBlock = new(58, 20, 180, 133 );
+		
+		public Color BaseColor { get; }
+		public int Index { get; }
+		private MapColor(int index, byte r, byte g, byte b, byte a = 255)
 		{
 			if (index >= 0 && index <= 63)
 			{
-				this.Index = index;
-				ColorValue = color;
-				this.Color = new Color(color);
-				COLORS[index] = this;
+				Index = index;
+				BaseColor = new Color(r, g, b, a);
+				
+				BaseColors[index] = this;
 			}
 			else
 			{
@@ -80,7 +91,8 @@ namespace Alex.Utils
 			}
 		}
 
-		public int GetMapColor(int index)
+		//See https://minecraft.fandom.com/wiki/Map_item_format
+		public Color GetMapColor(int index)
 		{
 			int i = 220;
 
@@ -88,26 +100,26 @@ namespace Alex.Utils
 			{
 				i = 135;
 			}
-
-			if (index == 2)
+			else if (index == 2)
 			{
 				i = 255;
 			}
-
-			if (index == 1)
+			else if (index == 1)
 			{
 				i = 220;
 			}
-
-			if (index == 0)
+			else if (index == 0)
 			{
 				i = 180;
 			}
 
-			var r = (this.ColorValue >> 16 & 255) * i / 255;
-			var g = (this.ColorValue >> 8 & 255) * i / 255;
-			var b = (this.ColorValue & 255) * i / 255;
-			return (int) (-16777216 | r << 16 | g << 8 | b);
+			var modifier = i / 255;
+			return new Color(BaseColor.R * modifier, BaseColor.G * modifier, BaseColor.B * modifier, BaseColor.A);
 		}
+
+		//public static Color GetMapColor(int index)
+		//{
+		//	return COLORS[index].Color;
+		//}
 	}
 }

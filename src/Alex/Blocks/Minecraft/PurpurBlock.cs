@@ -1,3 +1,5 @@
+using Alex.Blocks.Materials;
+
 namespace Alex.Blocks.Minecraft
 {
 	public class PurpurBlock : Block
@@ -7,7 +9,7 @@ namespace Alex.Blocks.Minecraft
 			Solid = true;
 			Transparent = false;
 
-			BlockMaterial = Material.Stone.SetHardness(1.5f);
+			BlockMaterial = Material.Stone.WithHardness(1.5f);
 		}
 	}
 }

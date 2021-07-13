@@ -1,3 +1,5 @@
+using Alex.Blocks.Materials;
+
 namespace Alex.Blocks.Minecraft
 {
 	public class Fire : Block
@@ -7,7 +9,7 @@ namespace Alex.Blocks.Minecraft
 			Solid = false;
 			Transparent = true;
 
-			LightValue = 15;
+			Luminance = 15;
 
 			BlockMaterial = Material.Fire;
 		}

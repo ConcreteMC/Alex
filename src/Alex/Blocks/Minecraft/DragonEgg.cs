@@ -1,3 +1,5 @@
+using Alex.Blocks.Materials;
+
 namespace Alex.Blocks.Minecraft
 {
 	public class DragonEgg : Block
@@ -6,7 +8,7 @@ namespace Alex.Blocks.Minecraft
 		{
 			Solid = true;
 			Transparent = true;
-			LightValue = 1;
+			Luminance = 1;
 
 			BlockMaterial = Material.DragonEgg;
 		}

@@ -142,26 +142,26 @@ namespace Alex.Entities.BlockEntities
 
 			return true;
 		}
-
-		public enum BedColor
-		{
-			White,
-			Orange,
-			Magenta,
-			LightBlue,
-			Yellow,
-			Lime,
-			Pink,
-			Gray,
-			LightGray,
-			Silver,
-			Cyan,
-			Purple,
-			Blue,
-			Brown,
-			Green,
-			Red,
-			Black
-		}
+	}
+	
+	public enum BedColor
+	{
+		White,
+		Orange,
+		Magenta,
+		LightBlue,
+		Yellow,
+		Lime,
+		Pink,
+		Gray,
+		LightGray,
+		Silver,
+		Cyan,
+		Purple,
+		Blue,
+		Brown,
+		Green,
+		Red,
+		Black
 	}
 }

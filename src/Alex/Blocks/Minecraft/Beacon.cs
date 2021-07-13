@@ -1,3 +1,5 @@
+using Alex.Blocks.Materials;
+
 namespace Alex.Blocks.Minecraft
 {
 	public class Beacon : Block
@@ -6,12 +8,12 @@ namespace Alex.Blocks.Minecraft
 		{
 			Solid = true;
 			Transparent = true;
-			LightValue = 15;
+			Luminance = 15;
 			CanInteract = true;
 			
 			//Hardness = 3;
 
-			BlockMaterial = Material.Glass.Clone().SetHardness(3f);
+			BlockMaterial = Material.Glass.Clone().WithHardness(3f);
 		}
 	}
 }

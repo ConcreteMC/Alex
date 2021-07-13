@@ -12,7 +12,7 @@ namespace Alex.Blocks.Minecraft
 		}
 		
 		/// <inheritdoc />
-		public override byte LightValue {
+		public override byte Luminance {
 			get
 			{
 				if (Lit.GetValue(BlockState))

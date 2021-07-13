@@ -1,3 +1,5 @@
+using Alex.Blocks.Materials;
+
 namespace Alex.Blocks.Minecraft.Logs
 {
     public class Log : Block
@@ -7,7 +9,7 @@ namespace Alex.Blocks.Minecraft.Logs
             Transparent = false;
             Solid = true;
 
-            BlockMaterial = Material.Wood.Clone().SetHardness(2);
+            BlockMaterial = Material.Wood.Clone().WithHardness(2);
            // Hardness = 2;
         }
     }

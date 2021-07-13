@@ -1,3 +1,5 @@
+using Alex.Blocks.Materials;
+
 namespace Alex.Blocks.Minecraft.Liquid
 {
 	public class Water : LiquidBlock
@@ -12,7 +14,7 @@ namespace Alex.Blocks.Minecraft.Liquid
 			//IsWater = true;
 			base.BlockMaterial = Material.Water;
 
-			LightOpacity = 3;
+			Diffusion = 3;
 		}
 		
 

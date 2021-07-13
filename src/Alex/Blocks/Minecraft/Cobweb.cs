@@ -1,3 +1,5 @@
+using Alex.Blocks.Materials;
+
 namespace Alex.Blocks.Minecraft
 {
 	public class Cobweb : Block
@@ -7,7 +9,7 @@ namespace Alex.Blocks.Minecraft
 			Solid = false;
 			Transparent = true;
 			IsFullCube = false;
-			LightOpacity = 2;
+			Diffusion = 2;
 
 			BlockMaterial = Material.Web;
 		}

@@ -1,3 +1,5 @@
+using Alex.Blocks.Materials;
+
 namespace Alex.Blocks.Minecraft
 {
 	public class StoneBricks : Block
@@ -8,7 +10,7 @@ namespace Alex.Blocks.Minecraft
 			Transparent = false;
 			IsFullCube = true;
 			
-			BlockMaterial = Material.Stone.Clone().SetHardness(1.5f);
+			BlockMaterial = Material.Stone.Clone().WithHardness(1.5f);
 		}
 	}
 }

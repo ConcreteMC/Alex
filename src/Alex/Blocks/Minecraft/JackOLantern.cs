@@ -1,3 +1,5 @@
+using Alex.Blocks.Materials;
+
 namespace Alex.Blocks.Minecraft
 {
 	public class JackOLantern : Block
@@ -7,9 +9,9 @@ namespace Alex.Blocks.Minecraft
 			Solid = true;
 			Transparent = false;
 
-			LightValue = 15;
+			Luminance = 15;
 			
-			BlockMaterial = Material.Wood.Clone().SetHardness(1);
+			BlockMaterial = Material.Wood.Clone().WithHardness(1);
 		}
 	}
 }

@@ -1,3 +1,4 @@
+using Alex.Blocks.Materials;
 using Alex.Utils;
 
 namespace Alex.Blocks.Minecraft
@@ -7,11 +8,11 @@ namespace Alex.Blocks.Minecraft
 		public GlowLichen()
 		{
 			base.Solid = false;
-			base.LightValue = 7;
+			base.Luminance = 7;
 			base.Transparent = true;
 			base.IsFullCube = false;
 
-			base.BlockMaterial = new Material(MapColor.AIR).SetHardness(0.2f).SetReplaceable().SetWaterLoggable().SetBurning();
+			base.BlockMaterial = new Material(MapColor.Air).WithHardness(0.2f).SetReplaceable().SetWaterLoggable().SetFlammable();
 		}
 	}
 }

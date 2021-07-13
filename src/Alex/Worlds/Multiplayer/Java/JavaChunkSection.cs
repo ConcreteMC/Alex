@@ -1,4 +1,5 @@
 using Alex.Blocks;
+using Alex.Blocks.Materials;
 using Alex.Blocks.Minecraft;
 using Alex.Blocks.State;
 using Alex.Common.Utils.Vectors;
@@ -44,7 +45,7 @@ namespace Alex.Worlds.Multiplayer.Java
                             }
                         }
 
-                        if (block.LightValue > 0)
+                        if (block.Luminance > 0)
                         {
                             var coords = new BlockCoordinates(x, y, z);
 
@@ -53,9 +54,9 @@ namespace Alex.Worlds.Multiplayer.Java
                                 LightSources.Add(coords);
                             }
 
-                            if (GetBlocklight(x, y, z) < block.LightValue)
+                            if (GetBlocklight(x, y, z) < block.Luminance)
                             {
-                                SetBlocklight(x, y, z, (byte) block.LightValue);
+                                SetBlocklight(x, y, z, (byte) block.Luminance);
                                 //SetBlockLightScheduled(x, y, z, true);
                             }
                         }

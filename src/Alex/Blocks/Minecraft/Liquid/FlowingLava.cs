@@ -1,4 +1,6 @@
-﻿namespace Alex.Blocks.Minecraft.Liquid
+﻿using Alex.Blocks.Materials;
+
+namespace Alex.Blocks.Minecraft.Liquid
 {
 	public class FlowingLava : Lava
 	{
@@ -9,7 +11,7 @@
 			
 			BlockMaterial = Material.Lava;
 
-			LightValue = 15;
+			Luminance = 15;
 			//BlockModel = new LiquidBlockModel()
 			//{
 			//	IsFlowing = true,

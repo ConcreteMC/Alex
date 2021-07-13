@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using Alex.Blocks.Materials;
 using Alex.Blocks.Minecraft;
 using Alex.Common.Items;
 using Alex.Common.Utils;

@@ -1,3 +1,5 @@
+using Alex.Blocks.Materials;
+
 namespace Alex.Blocks.Minecraft
 {
 	public class Bedrock : Block
@@ -7,7 +9,7 @@ namespace Alex.Blocks.Minecraft
 			Solid = true;
 			Transparent = false;
 
-			BlockMaterial = Material.Stone.Clone().SetHardness(60000);
+			BlockMaterial = Material.Stone.Clone().WithHardness(60000);
 		}
 	}
 }

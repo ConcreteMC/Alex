@@ -1,3 +1,4 @@
+using Alex.Blocks.Materials;
 using Alex.Blocks.Properties;
 using Alex.Blocks.State;
 using Alex.Common.Blocks.Properties;

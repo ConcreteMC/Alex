@@ -1,3 +1,5 @@
+using Alex.Blocks.Materials;
+
 namespace Alex.Blocks.Minecraft
 {
 	public class RedstoneTorch : Block
@@ -9,7 +11,7 @@ namespace Alex.Blocks.Minecraft
 			
 			Solid = false;
 			Transparent = true;
-			LightValue = 7;
+			Luminance = 7;
 			
 			BlockMaterial = Material.RedstoneLight;
 		}

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Alex.Blocks.Materials;
 using Alex.Blocks.State;
 using Alex.Common.Utils.Vectors;
 using Alex.Entities.BlockEntities;
@@ -14,7 +15,7 @@ namespace Alex.Blocks.Minecraft
 		{
 			Solid = true;
 			Transparent = true;
-			LightValue = 7;
+			Luminance = 7;
 			
 			//Hardness = 22.5f;
 			
@@ -24,7 +25,7 @@ namespace Alex.Blocks.Minecraft
 			HasHitbox = true;
 
 			RequiresUpdate = true;
-			BlockMaterial = Material.Stone.Clone().SetHardness(22.5f);
+			BlockMaterial = Material.Stone.Clone().WithHardness(22.5f);
 		}
 		
 		/// <inheritdoc />

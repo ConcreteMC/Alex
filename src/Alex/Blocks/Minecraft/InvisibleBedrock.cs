@@ -1,4 +1,6 @@
-﻿namespace Alex.Blocks.Minecraft
+﻿using Alex.Blocks.Materials;
+
+namespace Alex.Blocks.Minecraft
 {
 	public class InvisibleBedrock : Block
 	{
@@ -9,7 +11,7 @@
 			Solid = true;
 			Transparent = true;
 
-			BlockMaterial = Material.Portal.Clone().SetHardness(60000);
+			BlockMaterial = Material.Portal.Clone().WithHardness(60000);
 			//Hardness = 60000;
 		}
 	}

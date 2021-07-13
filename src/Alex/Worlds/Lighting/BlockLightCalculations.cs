@@ -93,7 +93,7 @@ namespace Alex.Worlds.Lighting
 				var block = column.GetBlockState(target.X & 0xf, target.Y , target.Z & 0xf).Block;
 				if ((!block.Solid || block.Transparent))
 				{
-					SetLightLevel(column, target, (lightLevel - block.LightOpacity));
+					SetLightLevel(column, target, (lightLevel - block.Diffusion));
 					Queue.Enqueue(target);
 				}
 			}

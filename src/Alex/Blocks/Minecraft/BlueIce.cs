@@ -1,10 +1,12 @@
+using Alex.Blocks.Materials;
+
 namespace Alex.Blocks.Minecraft
 {
 	public class BlueIce : Ice
 	{
 		public BlueIce()
 		{
-			LightValue = 4;
+			Luminance = 4;
 
 			BlockMaterial = Material.BlueIce;
 		}

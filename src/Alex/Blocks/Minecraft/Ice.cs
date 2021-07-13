@@ -1,3 +1,5 @@
+using Alex.Blocks.Materials;
+
 namespace Alex.Blocks.Minecraft
 {
 	public class Ice : Block
@@ -8,7 +10,7 @@ namespace Alex.Blocks.Minecraft
 			Transparent = true;
 			IsFullCube = true;
 			
-			LightOpacity = 4;
+			Diffusion = 4;
 			
 			BlockMaterial = Material.Ice;
 		}

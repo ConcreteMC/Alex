@@ -1,12 +1,15 @@
 ﻿using System.Linq;
 using Alex.Common.Data;
+using Alex.Common.Data.Options;
 using Alex.Common.Gui.Elements;
 using Alex.Common.Input;
 using Alex.Entities;
+using Alex.Gui;
 using Alex.Gui.Elements;
 using Alex.Gui.Elements.Hud;
 using Alex.Gui.Elements.Inventory;
 using Alex.Utils.Inventories;
+using Alex.Worlds;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using MiNET.Worlds;
@@ -18,6 +21,7 @@ namespace Alex.Gamestates.InGame.Hud
 {
     public class PlayingHud : Screen, IChatRecipient
     {
+	    private readonly GuiMiniMap _miniMap;
         private readonly GuiItemHotbar _hotbar;
         private readonly PlayerController _playerController;
         private readonly HealthComponent _healthComponent;
@@ -39,19 +43,21 @@ namespace Alex.Gamestates.InGame.Hud
 
 		private Alex Alex { get; }
 		private Player Player { get; }
-		public PlayingHud(Alex game, Player player, TitleComponent titleComponent) : base()
+
+		private OptionsPropertyAccessor<bool> _minimapAccessor;
+		public PlayingHud(Alex game, World world, TitleComponent titleComponent) : base()
         {
 	        Title = titleComponent;
 
             Alex = game;
-	        Player = player;
+	        Player = world.Player;
 	        
 	        Player.OnInventoryChanged += OnInventoryChanged;
 	        
 	        Anchor = Alignment.Fill;
 	        Padding = Thickness.One * 3;
 	        
-            _playerController = player.Controller;
+            _playerController = Player.Controller;
             PlayerInputManager.AddListener(new MouseInputListener(PlayerInputManager.PlayerIndex));
 
 			_healthAndHotbar = new StackContainer()
@@ -68,7 +74,7 @@ namespace Alex.Gamestates.InGame.Hud
 
 			//BottomContainer.
 			
-	        _hotbar = new GuiItemHotbar(player.Inventory);
+	        _hotbar = new GuiItemHotbar(Player.Inventory);
 	        _hotbar.Anchor = Alignment.BottomCenter;
 	        _hotbar.Padding = Thickness.Zero;
 
@@ -81,20 +87,20 @@ namespace Alex.Gamestates.InGame.Hud
 
 	        _healthContainer.Margin = new Thickness(0, 0, 0, 1);
 
-	        _healthComponent = new HealthComponent(player);
+	        _healthComponent = new HealthComponent(Player);
 	        _healthComponent.Anchor = Alignment.TopLeft;
 	        
-	        _hungerComponent = new HungerComponent(player);
+	        _hungerComponent = new HungerComponent(Player);
 	        _hungerComponent.Anchor = Alignment.TopRight;
 
 	        _armorAndAirContainer = new Container();
 	        _armorAndAirContainer.Anchor = Alignment.Fill;
 	        _armorAndAirContainer.Margin = new Thickness(0, 0, 0, 1);
 	        
-	        _airComponent = new AirComponent(player);
+	        _airComponent = new AirComponent(Player);
 	        _airComponent.Anchor = Alignment.TopRight;
 	        
-	        _experienceComponent = new ExperienceComponent(player);
+	        _experienceComponent = new ExperienceComponent(Player);
 	        _experienceComponent.Margin = new Thickness(0, 0, 0, 1);
 	        _experienceComponent.Anchor = Alignment.BottomFill;
 
@@ -106,9 +112,22 @@ namespace Alex.Gamestates.InGame.Hud
 
 	        Scoreboard = new ScoreboardView();
 	        Scoreboard.Anchor = Alignment.MiddleRight;
+
+	        _miniMap = new GuiMiniMap(world)
+	        {
+		        Anchor = Alignment.TopRight
+	        };
+
+	        _minimapAccessor = Alex.Options.AlexOptions.VideoOptions.Minimap.Bind(OnMinimapEnabledChanged);
+	        _miniMap.IsVisible = Alex.Options.AlexOptions.VideoOptions.Minimap.Value;
         }
 
-        private void OnInventoryChanged(object sender, Inventory e)
+		private void OnMinimapEnabledChanged(bool oldvalue, bool newvalue)
+		{
+			_miniMap.IsVisible = newvalue;
+		}
+
+		private void OnInventoryChanged(object sender, Inventory e)
         {
 	        _hotbar.Inventory = e;
         }
@@ -153,6 +172,8 @@ namespace Alex.Gamestates.InGame.Hud
 	        AddChild(Scoreboard);
 		        
 	        AddChild(BossBar);
+	        
+	        AddChild(_miniMap);
 
 	        _didInit = true;
         }
@@ -224,7 +245,8 @@ namespace Alex.Gamestates.InGame.Hud
         public void Unload()
         {
 	        Chat.Unload();
-	        
+	        _minimapAccessor?.Dispose();
+	        _minimapAccessor = null;
         }
 
         /// <inheritdoc />

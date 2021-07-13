@@ -64,6 +64,7 @@ namespace Alex.Gui
 		private Texture2D _furnace;
 		private Texture2D _tabItemSearch;
 		private Texture2D _mcLogo;
+		private Texture2D _mapIcons;
 		
 		#region SpriteSheet Definitions
 
@@ -345,6 +346,13 @@ namespace Alex.Gui
 				
 				bars.Dispose();
 			}
+			
+			if (resourceManager.TryGetBitmap("map/map_icons", out var mapIconsBmp))
+			{
+				_mapIcons = TextureUtils.BitmapToTexture2D(this, _graphicsDevice, mapIconsBmp);
+				LoadMapIcons(_mapIcons);
+				mapIconsBmp.Dispose();
+			}
 
 			if (_scrollbar == null)
 			{
@@ -417,6 +425,27 @@ namespace Alex.Gui
 			LoadTextureFromResourcePack(AlexGuiTextures.DefaultServerIcon, resourceManager, "misc/unknown_server");
 			
 			progressReceiver?.UpdateProgress(100, null, "");
+		}
+
+		private void LoadMapIcons(Texture2D spriteSheet)
+		{
+			var iconSize = new Size(128, 128);
+
+			int x = 0;
+			LoadTextureFromSpriteSheet(
+				AlexGuiTextures.MapMarkerWhite, spriteSheet, new Rectangle(x, 0, 8, 8), iconSize);
+			
+			x += 8;
+			LoadTextureFromSpriteSheet(
+				AlexGuiTextures.MapMarkerGreen, spriteSheet, new Rectangle(x, 0, 8, 8), iconSize);
+			
+			x += 8;
+			LoadTextureFromSpriteSheet(
+				AlexGuiTextures.MapMarkerRed, spriteSheet, new Rectangle(x, 0, 8, 8), iconSize);
+			
+			x += 8;
+			LoadTextureFromSpriteSheet(
+				AlexGuiTextures.MapMarkerBlue, spriteSheet, new Rectangle(x, 0, 8, 8), iconSize);
 		}
 
 		private void LoadWidgets(Texture2D spriteSheet)

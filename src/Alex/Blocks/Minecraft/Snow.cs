@@ -1,3 +1,4 @@
+using Alex.Blocks.Materials;
 using Alex.Common.Blocks;
 using Microsoft.Xna.Framework;
 
@@ -11,7 +12,7 @@ namespace Alex.Blocks.Minecraft
 			Transparent = true;
 			IsFullCube = false;
 			
-			BlockMaterial = Material.Snow.Clone().SetTintType(TintType.Color, Color.Snow).SetHardness(0.2f);
+			BlockMaterial = Material.Snow.Clone().WithTintType(TintType.Color, Color.Snow).WithHardness(0.2f);
 		}
 	}
 }

@@ -1,3 +1,5 @@
+using Alex.Blocks.Materials;
+
 namespace Alex.Blocks.Minecraft
 {
 	public class Air : Block
@@ -9,8 +11,8 @@ namespace Alex.Blocks.Minecraft
 			Renderable = false;
 			HasHitbox = false;
 
-			BlockMaterial = Material.Air;
-			LightOpacity = 1;
+			base.BlockMaterial = Material.Air;
+			Diffusion = 1;
 		}
 	}
 }

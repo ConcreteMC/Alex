@@ -1,3 +1,5 @@
+using Alex.Blocks.Materials;
+
 namespace Alex.Blocks.Minecraft
 {
 	public class Sandstone : Block
@@ -7,7 +9,7 @@ namespace Alex.Blocks.Minecraft
 			Solid = true;
 			Transparent = false;
 
-			BlockMaterial = Material.Stone.Clone().SetHardness(0.8f);
+			BlockMaterial = Material.Stone.Clone().WithHardness(0.8f);
 		}
 	}
 }

@@ -1,3 +1,5 @@
+using Alex.Blocks.Materials;
+
 namespace Alex.Blocks.Minecraft
 {
 	public class CraftingTable : Block
@@ -9,7 +11,7 @@ namespace Alex.Blocks.Minecraft
 
 			CanInteract = true;
 			
-			BlockMaterial = Material.Wood.SetHardness(2.5f);
+			BlockMaterial = Material.Wood.WithHardness(2.5f);
 		}
 	}
 }

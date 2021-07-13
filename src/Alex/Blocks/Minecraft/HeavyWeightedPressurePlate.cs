@@ -1,3 +1,5 @@
+using Alex.Blocks.Materials;
+
 namespace Alex.Blocks.Minecraft
 {
 	public class HeavyWeightedPressurePlate : PressurePlate
@@ -9,7 +11,7 @@ namespace Alex.Blocks.Minecraft
 
 			//Hardness = 0.5f;
 			
-			BlockMaterial  = Material.Iron.Clone().SetHardness(0.5f);
+			BlockMaterial  = Material.Iron.Clone().WithHardness(0.5f);
 		}
 	}
 }

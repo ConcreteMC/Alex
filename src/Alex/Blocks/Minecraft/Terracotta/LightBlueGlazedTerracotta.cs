@@ -1,8 +1,8 @@
 namespace Alex.Blocks.Minecraft.Terracotta
 {
-	public class LightBlueGlazedTerracotta : Block
+	public class LightBlueGlazedTerracotta : Terracotta
 	{
-		public LightBlueGlazedTerracotta() : base()
+		public LightBlueGlazedTerracotta() : base(ClayColor.LightBlue)
 		{
 			Solid = true;
 			Transparent = false;

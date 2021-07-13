@@ -1,3 +1,4 @@
+using Alex.Blocks.Materials;
 using Alex.Blocks.Properties;
 using Alex.Blocks.State;
 using Alex.Common.Blocks.Properties;
@@ -11,7 +12,7 @@ namespace Alex.Blocks.Minecraft
 			Solid = true;
 			Transparent = true;
 			
-			BlockMaterial = Material.Iron.Clone().SetHardness(5);
+			BlockMaterial = Material.Iron.Clone().WithHardness(5);
 		}
 		
 		public override bool TryGetStateProperty(string prop, out IStateProperty stateProperty)

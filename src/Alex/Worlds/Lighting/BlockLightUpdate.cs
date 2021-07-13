@@ -21,7 +21,7 @@ namespace Alex.Worlds.Lighting
 		{
 			if(SubChunkExplorer.MoveTo(x, y, z) != SubChunkExplorer.ChunkExplorerStatus.Invalid){
 				var block = SubChunkExplorer.CurrentChunk.GetBlockState(x & 0xf, y & 0xff, z & 0xf).Block;
-				SetAndUpdateLight(x, y, z, (byte) Math.Max(block.LightValue, GetHighestAdjacentLight(x, y, z) - 1));
+				SetAndUpdateLight(x, y, z, (byte) Math.Max(block.Luminance, GetHighestAdjacentLight(x, y, z) - 1));
 			}
 		}
 
@@ -74,7 +74,7 @@ namespace Alex.Worlds.Lighting
 			foreach (var lightSource in chunk.GetLightSources())
 			{
 				var ls = chunkpos + lightSource;
-				SetAndUpdateLight(ls.X, ls.Y, ls.Z, chunk.GetBlockState(lightSource.X, lightSource.Y, lightSource.Z).Block.LightValue);
+				SetAndUpdateLight(ls.X, ls.Y, ls.Z, chunk.GetBlockState(lightSource.X, lightSource.Y, lightSource.Z).Block.Luminance);
 				lightSources++;
 			}
 			
@@ -91,7 +91,7 @@ namespace Alex.Worlds.Lighting
 				{
 					for (int y = 0; y < 16; y++)
 					{
-						var light = section.Get(x, y, z).Block.LightValue;
+						var light = section.Get(x, y, z).Block.Luminance;
 						if (light > 0)
 						{
 							SetAndUpdateLight(baseX + x, baseY + y, baseZ + z, light);

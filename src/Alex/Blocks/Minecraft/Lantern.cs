@@ -7,7 +7,7 @@ namespace Alex.Blocks.Minecraft
 			Solid = true;
 			Transparent = true;
 
-			LightValue = 15;
+			Luminance = 15;
 		}
 	}
 }

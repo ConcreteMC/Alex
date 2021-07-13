@@ -4,7 +4,7 @@ namespace Alex.Blocks.Minecraft
 	{
 		public SoulCampfire()
 		{
-			LightValue = 10;
+			Luminance = 10;
 		}
 	}
 }

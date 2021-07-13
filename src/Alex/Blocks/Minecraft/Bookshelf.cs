@@ -1,3 +1,5 @@
+using Alex.Blocks.Materials;
+
 namespace Alex.Blocks.Minecraft
 {
 	public class Bookshelf : Block
@@ -6,7 +8,7 @@ namespace Alex.Blocks.Minecraft
 		{
 			Solid = true;
 			Transparent = false;
-			BlockMaterial = Material.Wood.Clone().SetHardness(1.5f);
+			BlockMaterial = Material.Wood.Clone().WithHardness(1.5f);
 		}
 	}
 }

@@ -1,4 +1,5 @@
 using System;
+using Alex.Blocks.Materials;
 using Alex.Blocks.Properties;
 using Alex.Blocks.State;
 using Alex.Common.Blocks;
@@ -71,7 +72,7 @@ namespace Alex.Blocks.Minecraft
 			{
 				var power = PowerState.Instance.GetValue(BlockState);// BlockState.GetTypedValue(PowerState.Instance);
 				
-				return Material.Circuits.Clone().SetTintType(TintType.Color, Colors[Math.Clamp(power, 0, Colors.Length - 1)]);
+				return Material.Circuits.Clone().WithTintType(TintType.Color, Colors[Math.Clamp(power, 0, Colors.Length - 1)]);
 			}
 		}
 

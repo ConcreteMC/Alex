@@ -124,32 +124,8 @@ namespace Alex.Worlds
 			Ticker.RegisterTicked(this);
 			Ticker.RegisterTicked(EntityManager);
 			Ticker.RegisterTicked(ChunkManager);
-			
-			//ChunkManager.Start();
-			var profileService = serviceProvider.GetRequiredService<IPlayerProfileService>();
+
 			var resources = serviceProvider.GetRequiredService<ResourceManager>();
-			
-			Texture2D texture;
-			
-			if (Alex.PlayerTexture != null)
-			{
-				texture = TextureUtils.BitmapToTexture2D(this, graphics, Alex.PlayerTexture);
-			}
-			else
-			{
-				resources.TryGetBitmap("entity/alex", out var rawTexture);
-				texture = TextureUtils.BitmapToTexture2D(this, graphics, rawTexture);
-			}
-			
-			Skin skin = profileService?.CurrentProfile?.Skin;
-			if (skin == null)
-			{
-				skin = new Skin()
-				{
-					Texture = texture,
-					Slim = true
-				};
-			}
 
 			Player = new Player(graphics, serviceProvider.GetRequiredService<Alex>().InputManager, this, networkProvider, PlayerIndex.One);
 			

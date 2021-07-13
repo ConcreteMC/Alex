@@ -1,3 +1,4 @@
+using Alex.Blocks.Materials;
 using Alex.Blocks.Properties;
 using Alex.Blocks.State;
 using Alex.Common.Blocks.Properties;
@@ -10,9 +11,9 @@ namespace Alex.Blocks.Minecraft
 		public static readonly PropertyBool OCCUPIED = new PropertyBool("occupied", "true", "false");
 		public static readonly PropertyBool PART = new PropertyBool("part", "foot", "head");
 		
-		public BedBlockEntity.BedColor Variant { get; }
+		public BedColor Variant { get; }
 		public bool IsFoot => PART.GetValue(BlockState);// BlockState.GetTypedValue(PART);
-		public Bed(BedBlockEntity.BedColor variant)
+		public Bed(BedColor variant)
 		{
 			Variant = variant;
 			
