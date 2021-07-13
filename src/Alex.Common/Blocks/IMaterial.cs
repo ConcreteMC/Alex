@@ -7,40 +7,35 @@ namespace Alex.Common.Blocks
 	public interface IMaterial
 	{
 		string SoundCategory { get; }
-		IMaterial WithSoundCategory(string soundCategory);
-		
 		IMapColor MapColor { get; }
-
-		IMaterial WithMapColor(IMapColor color);
-		
 		TintType TintType { get; }
 		Color TintColor { get; }
-		IMaterial WithTintType(TintType type, Color color);
-		
-		double Slipperiness { get; }
 
-		IMaterial WithSlipperiness(double value);
-		
+		double Slipperiness { get; }
 		float Hardness { get; }
-		IMaterial WithHardness(float hardness);
-		
 		bool BlocksLight { get; }
 		bool BlocksMovement { get; }
-		IMaterial SetTranslucent();
-		IMaterial SetRequiresTool();
-		IMaterial SetFlammable();
 		bool IsFlammable { get; }
 		bool IsLiquid { get; }
 		bool IsOpaque { get; }
 		bool IsReplaceable { get; }
 		bool IsSolid { get; }
 		bool IsToolRequired { get; }
-		IMaterial SetReplaceable();
-
 		bool IsWatterLoggable { get; }
+		
+		IMaterial WithSoundCategory(string soundCategory);
+		IMaterial WithTintType(TintType type, Color color);
+		IMaterial WithMapColor(IMapColor color);
+		IMaterial WithSlipperiness(double value);
+		IMaterial WithHardness(float hardness);
 
+		IMaterial SetCollisionBehavior(BlockCollisionBehavior collisionBehavior);
+		IMaterial SetReplaceable();
 		IMaterial SetWaterLoggable();
-
+		IMaterial SetTranslucent();
+		IMaterial SetRequiresTool();
+		IMaterial SetFlammable();
+		
 		bool CanUseTool(ItemType type, ItemMaterial material);
 		IMaterial SetRequiredTool(ItemType type, ItemMaterial material);
 		
@@ -51,5 +46,11 @@ namespace Alex.Common.Blocks
 	{
 		Color BaseColor { get; }
 		Color GetMapColor(int index);
+	}
+
+	public enum BlockCollisionBehavior
+	{
+		None,
+		Blocking
 	}
 }

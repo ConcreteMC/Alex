@@ -12,7 +12,7 @@ namespace Alex.Blocks.Minecraft
 			Solid = true;
 			Transparent = true;
 			
-			BlockMaterial = Material.Iron.Clone().WithHardness(5);
+			BlockMaterial = Material.Metal.Clone().WithHardness(5);
 		}
 		
 		public override bool TryGetStateProperty(string prop, out IStateProperty stateProperty)

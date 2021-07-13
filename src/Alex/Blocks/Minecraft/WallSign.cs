@@ -1,4 +1,6 @@
+using System;
 using Alex.Blocks.Materials;
+using Alex.Utils;
 
 namespace Alex.Blocks.Minecraft
 {
@@ -17,9 +19,9 @@ namespace Alex.Blocks.Minecraft
 			
 			HasHitbox = true;
 
-			//RequiresUpdate = true;
+			//RequiresUpdate = true
 
-			BlockMaterial = Material.Wood;
+			base.BlockMaterial = Material.Wood.Clone().WithMapColor(woodType.ToMapColor());
 		}
 	}
 
@@ -39,7 +41,7 @@ namespace Alex.Blocks.Minecraft
 
 			//RequiresUpdate = true;
 
-			BlockMaterial = Material.Wood;
+			BlockMaterial = Material.Wood.Clone().WithMapColor(woodType.ToMapColor());
 		}
 	}
 

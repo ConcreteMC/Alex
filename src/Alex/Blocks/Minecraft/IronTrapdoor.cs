@@ -10,7 +10,7 @@ namespace Alex.Blocks.Minecraft
 			Solid = true;
 			Transparent = true;
 
-			BlockMaterial  = Material.Iron;
+			BlockMaterial  = Material.Metal;
 		}
 	}
 }

@@ -13,7 +13,7 @@ namespace Alex.Utils
 		public static readonly MapColor Grass = new(1, 127, 178, 56);
 		public static readonly MapColor Sand = new(2, 247, 233, 163);
 		public static readonly MapColor Cloth = new(3, 199, 199, 199);
-		public static readonly MapColor Tnt = new(4,  	255, 0, 0 );
+		public static readonly MapColor Fire = new(4,  	255, 0, 0 );
 		public static readonly MapColor Ice = new(5,  	160, 160, 255);
 		public static readonly MapColor Iron = new(6, 167, 167, 167);
 		public static readonly MapColor Foliage = new(7, 0, 124, 0 );

@@ -9,7 +9,7 @@ namespace Alex.Blocks.Minecraft
 			Solid = true;
 			Transparent = true;
 
-			BlockMaterial = Material.Cake;
+			base.BlockMaterial = Material.Cake;
 		}
 	}
 }

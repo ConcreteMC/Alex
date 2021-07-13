@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using Alex.Common;
@@ -20,15 +21,15 @@ namespace Alex.Gui
     {
         private World World { get; }
         
-        private Dictionary<ChunkCoordinates, TextureContainer> _textureContainers =
-            new Dictionary<ChunkCoordinates, TextureContainer>();
+        private ConcurrentDictionary<ChunkCoordinates, TextureContainer> _textureContainers =
+            new ConcurrentDictionary<ChunkCoordinates, TextureContainer>();
 
         private       float _frameAccumulator = 0f;
         private       float _targetTime        = 1f / 10f;
 
         // private RenderTarget2D _renderTarget;
         
-        private object _containerLock = new object();
+     //   private object _containerLock = new object();
         private SpriteBatch _spriteBatch;
         private Image _marker;
         public GuiMiniMap(World world)
@@ -97,43 +98,33 @@ namespace Alex.Gui
 
         private bool TryAdd(ChunkCoordinates coordinates, TextureContainer container)
         {
-            lock (_containerLock)
+           // lock (_containerLock)
             {
                 return _textureContainers.TryAdd(coordinates, container);
             }
-        }   
-        
+        }
+
         private bool TryGetContainer(ChunkCoordinates coordinates, out TextureContainer container)
         {
-            lock (_containerLock)
+          //  lock (_containerLock)
             {
-                if (_textureContainers.TryGetValue(coordinates, out container))
-                {
-                    if (container.Invalidated)
-                    {
-                        container.Dispose();
-                        _textureContainers.Remove(coordinates);
-                        container = default;
+                if (!_textureContainers.TryGetValue(coordinates, out container)) return false;
+            }
 
-                        return false;
-                    }
-
-                    return true;
-                }
-
+            if (container.Invalidated)
+            {
+                RemoveContainer(coordinates);
                 return false;
             }
+
+            return true;
         }
+        
 
         private void RemoveContainer(ChunkCoordinates coordinates)
         {
-            if (TryGetContainer(coordinates, out var container))
+            if (_textureContainers.TryRemove(coordinates, out var container))
             {
-                lock (_containerLock)
-                {
-                    _textureContainers.Remove(coordinates);
-                }
-                
                 container.Dispose();
             }
         }
@@ -170,6 +161,8 @@ namespace Alex.Gui
 
             if (_frameAccumulator < _targetTime)
                 return;
+
+            _frameAccumulator = 0;
             
             _rotation = (World.Player.KnownPosition.HeadYaw).ToRadians();
             _marker.Rotation = 180f - World.Player.KnownPosition.HeadYaw;
@@ -213,13 +206,14 @@ namespace Alex.Gui
             renderPos += _playerOffset;
             foreach (var container in GetContainers(center, _radius))
             {
-                var cc = container.Coordinates - center;
-                var texturePosition = tCenter + new Vector2(cc.X * 16, cc.Z * 16);
-
                 var texture = container.Texture;
 
                 if (texture != null)
+                {
+                    var cc = container.Coordinates - center;
+                    var texturePosition = tCenter + new Vector2(cc.X * 16, cc.Z * 16);
                     graphics.FillRectangle(new Rectangle((renderPos + texturePosition).ToPoint(), texture.Bounds.Size), (TextureSlice2D)texture);
+                }
             }
 
             graphics.DrawRectangle(RenderBounds, Color.Black, 1);
@@ -237,7 +231,11 @@ namespace Alex.Gui
 
             if (disposing)
             {
-                lock (_containerLock)
+                World.ChunkManager.OnChunkAdded -= OnChunkAdded;
+                World.ChunkManager.OnChunkRemoved -= OnChunkRemoved;
+                World.ChunkManager.OnChunkUpdate -= OnChunkUpdate;
+                
+              //  lock (_containerLock)
                 {
                     var elements = _textureContainers.ToArray();
                     _textureContainers.Clear();

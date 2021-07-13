@@ -1,3 +1,6 @@
+using Alex.Blocks.Materials;
+using Alex.Utils;
+
 namespace Alex.Blocks.Minecraft
 {
 	public class WarpedFungus : Block
@@ -8,6 +11,8 @@ namespace Alex.Blocks.Minecraft
 			Solid = false;
 
 			IsFullCube = false;
+			
+			base.BlockMaterial = Material.Plants.Clone().WithMapColor(MapColor.WarpedStem);
 		}
 	}
 }

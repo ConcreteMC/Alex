@@ -3,6 +3,7 @@ using System.Linq;
 using System.Text;
 using Alex.Blocks.Minecraft;
 using Alex.Blocks.Minecraft.Buttons;
+using Alex.Blocks.Minecraft.Decorations;
 using Alex.Blocks.Minecraft.Doors;
 using Alex.Blocks.Minecraft.Fences;
 using Alex.Blocks.Minecraft.Leaves;
@@ -284,17 +285,24 @@ namespace Alex.Blocks
 		    
 		    //Logs
 		    this.Register("minecraft:oak_log", () => new Log());
-		    this.Register("minecraft:acacia_log", () => new Log());
-		    this.Register("minecraft:jungle_log", () => new Log());
-		    this.Register("minecraft:spruce_log", () => new Log());
-		    this.Register("minecraft:birch_log", () => new Log());
+		    this.Register("minecraft:spruce_log", () => new Log(WoodType.Spruce));
+		    this.Register("minecraft:birch_log", () => new BirchLog());
+		    this.Register("minecraft:jungle_log", () => new Log(WoodType.Jungle));
+		    this.Register("minecraft:acacia_log", () => new Log(WoodType.Acacia));
+		    this.Register("minecraft:dark_oak_log", () => new Log(WoodType.DarkOak));
+		    this.Register("minecraft:crimson_log", () => new Log(WoodType.Crimson));
+		    this.Register("minecraft:warped_log", () => new Log(WoodType.Warped));
 		    
 		    //Planks
-		    this.Register("minecraft:oak_planks", () => new Planks());
-		    this.Register("minecraft:spruce_planks", () => new Planks());
+		    this.Register("minecraft:oak_planks", () => new Planks(WoodType.Oak));
+		    this.Register("minecraft:spruce_planks", () => new Planks(WoodType.Spruce));
+		    this.Register("minecraft:birch_planks", new BirchPlanks());
+		    this.Register("minecraft:jungle_planks", new Planks(WoodType.Jungle));
+		    this.Register("minecraft:acacia_planks", new Planks(WoodType.Acacia));
+		    this.Register("minecraft:crimson_planks", new Planks(WoodType.Crimson));
+		    this.Register("minecraft:warped_planks", new Planks(WoodType.Warped));
 		    this.Register("minecraft:dark_oak_planks", () => new DarkOakPlanks());
-		    this.Register("minecraft:nether_brick_fence", () => new NetherBrickFence());
-		    
+
 		    //Fences & fence gates
 		    this.Register("minecraft:oak_fence", () => new OakFence());
 		    this.Register("minecraft:oak_fence_gate", () => new FenceGate());
@@ -308,6 +316,7 @@ namespace Alex.Blocks
 		    this.Register("minecraft:jungle_fence", () => new Fence());
 		    this.Register("minecraft:acacia_fence_gate", () => new AcaciaFenceGate());
 		    this.Register("minecraft:acacia_fence", () => new Fence());
+		    this.Register("minecraft:nether_brick_fence", () => new NetherBrickFence());
 		    
 		    //Stairs
 		    this.Register("minecraft:stone_stairs", () => new StoneStairs());
@@ -348,6 +357,7 @@ namespace Alex.Blocks
 		    this.Register("minecraft:seagrass", () => new SeaGrass());
 		    this.Register("minecraft:tall_seagrass", () => new SeaGrass());
 		    this.Register("minecraft:lily_pad", () => new LilyPad());
+		    this.Register("minecraft:bubble_column", () => new BubbleColumn());
 		    
 		    this.Register("minecraft:bamboo", () => new Bamboo());
 		    
@@ -359,6 +369,7 @@ namespace Alex.Blocks
 		    this.Register("minecraft:diamond_ore", () => new DiamondOre());
 		    this.Register("minecraft:emerald_ore", () => new EmeraldOre());
 		    this.Register("minecraft:lapis_ore", () => new LapisOre());
+		    
 		    this.Register("minecraft:gold_block", () => new GoldBlock());
 		    this.Register("minecraft:iron_block", () => new IronBlock());
 		    this.Register("minecraft:diamond_block", () => new DiamondBlock());

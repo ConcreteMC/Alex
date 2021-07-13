@@ -1,4 +1,5 @@
 using Alex.Blocks.Materials;
+using Alex.Common.Items;
 
 namespace Alex.Blocks.Minecraft
 {
@@ -9,7 +10,7 @@ namespace Alex.Blocks.Minecraft
 			Solid = true;
 			Transparent = false;
 
-			BlockMaterial = Material.Iron;
+			base.BlockMaterial = Material.Metal.Clone().SetRequiredTool(ItemType.PickAxe, ItemMaterial.Stone);
 		}
 	}
 }

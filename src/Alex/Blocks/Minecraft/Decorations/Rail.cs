@@ -1,10 +1,11 @@
+using Alex.Blocks.Materials;
 using Alex.Blocks.State;
 using Alex.Common.Blocks;
 using Alex.Common.Utils.Vectors;
 using Alex.Worlds;
 using Alex.Worlds.Abstraction;
 
-namespace Alex.Blocks.Minecraft
+namespace Alex.Blocks.Minecraft.Decorations
 {
 	public class Rail : Block
 	{
@@ -15,6 +16,8 @@ namespace Alex.Blocks.Minecraft
 
 			RequiresUpdate = true;
 			IsFullCube = false;
+
+			base.BlockMaterial = Material.Decoration;
 		}
 
 		/*private bool UpdateState(IBlockAccess world,

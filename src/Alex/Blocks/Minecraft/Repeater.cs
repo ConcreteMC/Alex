@@ -1,4 +1,5 @@
 using Alex.Blocks.Materials;
+using Alex.Blocks.Minecraft.Decorations;
 
 namespace Alex.Blocks.Minecraft
 {
@@ -6,7 +7,7 @@ namespace Alex.Blocks.Minecraft
 	{
 		public Repeater()
 		{
-			BlockMaterial = Material.Circuits;
+			BlockMaterial = Material.Decoration;
 			CanInteract = true;
 		}
 	}

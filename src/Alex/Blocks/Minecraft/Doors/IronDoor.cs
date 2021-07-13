@@ -12,7 +12,7 @@ namespace Alex.Blocks.Minecraft.Doors
 			CanOpen = false;
 			CanInteract = false;
 
-			BlockMaterial = Material.Iron;
+			BlockMaterial = Material.Metal;
 		}
 	}
 }

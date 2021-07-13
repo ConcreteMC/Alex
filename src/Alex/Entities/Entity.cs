@@ -1696,6 +1696,9 @@ namespace Alex.Entities
 						HealthManager.Health = attribute.Value.Value;
 						HealthManager.MaxHealth = attribute.Value.MaxValue;
 						break;
+					case "minecraft:absorption":
+						//HealthManager
+						break;
 					default:
 						if (!TryUpdateAttribute(attribute.Value))
 							Log.Debug($"Unknown attribute: {attribute.Key} (Value={attribute.Value.Value} Min={attribute.Value.MinValue} Max={attribute.Value.MaxValue})");

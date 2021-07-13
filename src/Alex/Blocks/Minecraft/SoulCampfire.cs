@@ -1,3 +1,5 @@
+using Alex.Blocks.Materials;
+
 namespace Alex.Blocks.Minecraft
 {
 	public class SoulCampfire : Block
@@ -5,6 +7,8 @@ namespace Alex.Blocks.Minecraft
 		public SoulCampfire()
 		{
 			Luminance = 10;
+			
+			base.BlockMaterial = Material.Wood;
 		}
 	}
 }

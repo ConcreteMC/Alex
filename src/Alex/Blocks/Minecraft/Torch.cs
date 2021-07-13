@@ -13,7 +13,7 @@ namespace Alex.Blocks.Minecraft
 			
 			Luminance = 14;
 
-			BlockMaterial = Material.Circuits;
+			BlockMaterial = Material.Decoration;
 		}
 	}
 }

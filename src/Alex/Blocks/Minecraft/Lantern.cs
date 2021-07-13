@@ -1,3 +1,5 @@
+using Alex.Blocks.Materials;
+
 namespace Alex.Blocks.Minecraft
 {
 	public class Lantern : Block
@@ -8,6 +10,8 @@ namespace Alex.Blocks.Minecraft
 			Transparent = true;
 
 			Luminance = 15;
+			
+			base.BlockMaterial = Material.Metal;
 		}
 	}
 }

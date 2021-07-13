@@ -338,7 +338,7 @@ namespace Alex.Worlds.Chunks
 				var block = section.Get(x, y & 0xf, z).Block;
 				if (calculatingHeight)
 				{
-					if (block.Renderable && block.BlockMaterial.IsOpaque)
+					if (block.Renderable)
 					{
 						calculatingHeight = false;
 						SetHeight(x, z, (short) (y + 1));

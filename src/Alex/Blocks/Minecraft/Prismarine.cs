@@ -9,7 +9,7 @@ namespace Alex.Blocks.Minecraft
 			Solid = true;
 			Transparent = false;
 
-			BlockMaterial = Material.Stone.WithHardness(1.5f);
+			BlockMaterial = Material.Stone.Clone().WithHardness(1.5f);
 		}
 	}
 }

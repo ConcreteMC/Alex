@@ -1,3 +1,5 @@
+using Alex.Blocks.Materials;
+
 namespace Alex.Blocks.Minecraft
 {
 	public class Bamboo : Block
@@ -8,6 +10,7 @@ namespace Alex.Blocks.Minecraft
 			Transparent = true;
 			
 			IsFullCube = false;
+			base.BlockMaterial = Material.Bamboo;
 		}
 	}
 }

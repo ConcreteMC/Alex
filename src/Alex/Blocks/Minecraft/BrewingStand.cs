@@ -1,3 +1,5 @@
+using Alex.Blocks.Materials;
+
 namespace Alex.Blocks.Minecraft
 {
 	public class BrewingStand : Block
@@ -10,6 +12,8 @@ namespace Alex.Blocks.Minecraft
 			IsFullCube = false;
 
 			CanInteract = true;
+			
+			base.BlockMaterial = Material.Metal;
 		}
 	}
 }

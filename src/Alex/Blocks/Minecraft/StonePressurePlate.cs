@@ -2,7 +2,10 @@ namespace Alex.Blocks.Minecraft
 {
 	public class StonePressurePlate : PressurePlate
 	{
-		
+		public StonePressurePlate()
+		{
+			
+		}
 	}
 
 	public class PressurePlate : Block

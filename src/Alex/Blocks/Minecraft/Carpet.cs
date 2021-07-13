@@ -9,7 +9,7 @@ namespace Alex.Blocks.Minecraft
             Solid = true;
             Transparent = true;
             
-            BlockMaterial = Material.Carpet;
+            base.BlockMaterial = Material.Carpet;
             IsFullCube = false;
         }
     }

@@ -11,7 +11,7 @@ namespace Alex.Blocks.Minecraft
 
 			//Hardness = 0.5f;
 			
-			BlockMaterial  = Material.Iron.Clone().WithHardness(0.5f);
+			BlockMaterial  = Material.Metal.Clone().WithHardness(0.5f);
 		}
 	}
 }

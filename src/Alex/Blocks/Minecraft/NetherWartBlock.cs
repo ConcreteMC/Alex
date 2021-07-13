@@ -1,3 +1,6 @@
+using Alex.Blocks.Materials;
+using Alex.Utils;
+
 namespace Alex.Blocks.Minecraft
 {
 	public class NetherWartBlock : Block
@@ -8,6 +11,7 @@ namespace Alex.Blocks.Minecraft
 			Transparent = false;
 			IsFullCube = true;
 			
+			base.BlockMaterial = Material.Wood.Clone().WithMapColor(MapColor.Nether);
 		}
 	}
 }

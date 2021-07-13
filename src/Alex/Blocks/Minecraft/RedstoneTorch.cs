@@ -13,7 +13,7 @@ namespace Alex.Blocks.Minecraft
 			Transparent = true;
 			Luminance = 7;
 			
-			BlockMaterial = Material.RedstoneLight;
+			BlockMaterial = Material.Decoration;
 		}
 	}
 }

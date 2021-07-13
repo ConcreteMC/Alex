@@ -10,6 +10,7 @@ namespace Alex.Net.Bedrock.Packets
 {
 	public class StartGame : McpeStartGame
 	{
+		private static readonly Logger NLogger = LogManager.GetCurrentClassLogger(typeof(StartGame));
 		public GameRules ReadNewGameRules()
 		{
 			GameRules gameRules = new GameRules();
@@ -155,167 +156,292 @@ namespace Alex.Net.Bedrock.Packets
 				record.Id = record.RuntimeId;
 				record.Name = ReadString();
 				record.States = new List<IBlockState>();
-				
-				
+
 				var nbt     = NetworkUtils.ReadNewNbt(_reader);
 				var rootTag = nbt.NbtFile.RootTag;
 
-				if (rootTag is NbtList nbtList)
+				foreach (var state in GetBlockStates(rootTag))
 				{
-					foreach (NbtTag tag in nbtList)
-					{
-						var s = tag["states"];
-
-						if (s is NbtCompound compound)
-						{
-							foreach (NbtTag stateTag in compound)
-							{
-								IBlockState state = null;
-
-								switch (stateTag.TagType)
-								{
-									case NbtTagType.Byte:
-										state = new BlockStateByte() {Name = stateTag.Name, Value = stateTag.ByteValue};
-
-										break;
-
-									case NbtTagType.Int:
-										state = new BlockStateInt() {Name = stateTag.Name, Value = stateTag.IntValue};
-
-										break;
-
-									case NbtTagType.String:
-										state = new BlockStateString()
-										{
-											Name = stateTag.Name, Value = stateTag.StringValue
-										};
-
-										break;
-
-									default:
-										throw new ArgumentOutOfRangeException();
-								}
-
-								record.States.Add(state);
-							}
-						}
-						else if (s is NbtList list)
-						{
-							foreach (NbtTag stateTag in list)
-							{
-								IBlockState state = null;
-
-								switch (stateTag.TagType)
-								{
-									case NbtTagType.Byte:
-										state = new BlockStateByte() {Name = stateTag.Name, Value = stateTag.ByteValue};
-
-										break;
-
-									case NbtTagType.Int:
-										state = new BlockStateInt() {Name = stateTag.Name, Value = stateTag.IntValue};
-
-										break;
-
-									case NbtTagType.String:
-										state = new BlockStateString()
-										{
-											Name = stateTag.Name, Value = stateTag.StringValue
-										};
-
-										break;
-
-									default:
-										throw new ArgumentOutOfRangeException();
-								}
-
-								record.States.Add(state);
-							}
-						}
-
-						result.Add(record);
-					}
+					record.States.Add(state);
 				}
-				else if (rootTag is NbtCompound c)
+
+				if (record.States.Count > 0)
 				{
-					foreach (NbtTag tag in c)
+				//	NLogger.Info($"{record.Name} has {record.States.Count} states.");
+				}
+				else
+				{
+				//	NLogger.Info($"Tag: {rootTag.ToString()}");
+				}
+
+				/*				if (rootTag is NbtList nbtList)
+								{
+									foreach (NbtTag tag in nbtList)
+									{
+										if (tag.TagType == NbtTagType.Compound)
+										{
+											var s = tag["states"];
+											if (s is NbtCompound compound)
+											{
+												foreach (NbtTag stateTag in compound)
+												{
+													IBlockState state = null;
+				
+													switch (stateTag.TagType)
+													{
+														case NbtTagType.Byte:
+															state = new BlockStateByte()
+															{
+																Name = stateTag.Name, Value = stateTag.ByteValue
+															};
+				
+															break;
+				
+														case NbtTagType.Int:
+															state = new BlockStateInt()
+															{
+																Name = stateTag.Name, Value = stateTag.IntValue
+															};
+				
+															break;
+				
+														case NbtTagType.String:
+															state = new BlockStateString()
+															{
+																Name = stateTag.Name, Value = stateTag.StringValue
+															};
+				
+															break;
+				
+														default:
+															throw new ArgumentOutOfRangeException();
+													}
+				
+													record.States.Add(state);
+												}
+											}
+											else if (s is NbtList list)
+											{
+												foreach (NbtTag stateTag in list)
+												{
+													IBlockState state = null;
+				
+													switch (stateTag.TagType)
+													{
+														case NbtTagType.Byte:
+															state = new BlockStateByte()
+															{
+																Name = stateTag.Name, Value = stateTag.ByteValue
+															};
+				
+															break;
+				
+														case NbtTagType.Int:
+															state = new BlockStateInt()
+															{
+																Name = stateTag.Name, Value = stateTag.IntValue
+															};
+				
+															break;
+				
+														case NbtTagType.String:
+															state = new BlockStateString()
+															{
+																Name = stateTag.Name, Value = stateTag.StringValue
+															};
+				
+															break;
+				
+														default:
+															throw new ArgumentOutOfRangeException();
+													}
+				
+													record.States.Add(state);
+												}
+											}
+										}
+				
+										result.Add(record);
+									}
+								}
+								else if (rootTag is NbtCompound c)
+								{
+									foreach (NbtTag tag in c)
+									{
+										if (tag.TagType == NbtTagType.Compound)
+										{
+											var s = tag["states"];
+				
+											if (s is NbtCompound compound)
+											{
+												foreach (NbtTag stateTag in compound)
+												{
+													IBlockState state = null;
+				
+													switch (stateTag.TagType)
+													{
+														case NbtTagType.Byte:
+															state = new BlockStateByte()
+															{
+																Name = stateTag.Name, Value = stateTag.ByteValue
+															};
+				
+															break;
+				
+														case NbtTagType.Int:
+															state = new BlockStateInt()
+															{
+																Name = stateTag.Name, Value = stateTag.IntValue
+															};
+				
+															break;
+				
+														case NbtTagType.String:
+															state = new BlockStateString()
+															{
+																Name = stateTag.Name, Value = stateTag.StringValue
+															};
+				
+															break;
+				
+														default:
+															throw new ArgumentOutOfRangeException();
+													}
+				
+													record.States.Add(state);
+												}
+											}
+											else if (s is NbtList list)
+											{
+												foreach (NbtTag stateTag in list)
+												{
+													IBlockState state = null;
+				
+													switch (stateTag.TagType)
+													{
+														case NbtTagType.Byte:
+															state = new BlockStateByte()
+															{
+																Name = stateTag.Name, Value = stateTag.ByteValue
+															};
+				
+															break;
+				
+														case NbtTagType.Int:
+															state = new BlockStateInt()
+															{
+																Name = stateTag.Name, Value = stateTag.IntValue
+															};
+				
+															break;
+				
+														case NbtTagType.String:
+															state = new BlockStateString()
+															{
+																Name = stateTag.Name, Value = stateTag.StringValue
+															};
+				
+															break;
+				
+														default:
+															throw new ArgumentOutOfRangeException();
+													}
+				
+													record.States.Add(state);
+												}
+											}
+										}
+				
+										result.Add(record);
+									}
+								}*/
+			}
+			return result;
+		}
+
+		private IEnumerable<IBlockState> GetBlockStates(NbtTag tag)
+		{
+			switch (tag.TagType)
+			{
+				case NbtTagType.List:
+				{
+					foreach (var state in GetBlockStatesFromList((NbtList) tag))
+						yield return state;
+				} break;
+
+				case NbtTagType.Compound:
+				{
+					foreach (var state in GetBlockStatesFromCompound((NbtCompound) tag))
+						yield return state;
+				} break;
+
+				default:
+				{
+					if (TryGetStateFromTag(tag, out var state))
+						yield return state;
+				} break;
+			}
+		}
+
+		private IEnumerable<IBlockState> GetBlockStatesFromCompound(NbtCompound list)
+		{
+			if (list.TryGet("states", out NbtTag states))
+			{
+				foreach (var state in GetBlockStates(states))
+				{
+					yield return state;
+				}
+			}
+		}
+		
+		
+		private IEnumerable<IBlockState> GetBlockStatesFromList(NbtList list)
+		{
+			foreach (NbtTag tag in list)
+			{
+				if (TryGetStateFromTag(tag, out var state))
+				{
+					yield return state;
+				}
+				else
+				{
+					foreach (var s in GetBlockStates(tag))
 					{
-						var s = tag["states"];
-
-						if (s is NbtCompound compound)
-						{
-							foreach (NbtTag stateTag in compound)
-							{
-								IBlockState state = null;
-								switch (stateTag.TagType)
-								{
-									case NbtTagType.Byte:
-										state = new BlockStateByte()
-										{
-											Name = stateTag.Name,
-											Value = stateTag.ByteValue
-										};
-										break;
-									case NbtTagType.Int:
-										state = new BlockStateInt()
-										{
-											Name = stateTag.Name,
-											Value = stateTag.IntValue
-										};
-										break;
-									case NbtTagType.String:
-										state = new BlockStateString()
-										{
-											Name = stateTag.Name,
-											Value = stateTag.StringValue
-										};
-										break;
-									default:
-										throw new ArgumentOutOfRangeException();
-								}
-								record.States.Add(state);
-							}
-						}
-						else if (s is NbtList list)
-						{
-							foreach (NbtTag stateTag in list)
-							{
-								IBlockState state = null;
-								switch (stateTag.TagType)
-								{
-									case NbtTagType.Byte:
-										state = new BlockStateByte()
-										{
-											Name = stateTag.Name,
-											Value = stateTag.ByteValue
-										};
-										break;
-									case NbtTagType.Int:
-										state = new BlockStateInt()
-										{
-											Name = stateTag.Name,
-											Value = stateTag.IntValue
-										};
-										break;
-									case NbtTagType.String:
-										state = new BlockStateString()
-										{
-											Name = stateTag.Name,
-											Value = stateTag.StringValue
-										};
-										break;
-									default:
-										throw new ArgumentOutOfRangeException();
-								}
-								record.States.Add(state);
-							}
-						}
-
-						result.Add(record);
+						yield return s;
 					}
 				}
 			}
-			return result;
+		}
+
+		private bool TryGetStateFromTag(NbtTag tag, out IBlockState state)
+		{
+			switch (tag.TagType)
+			{
+				case NbtTagType.Byte:
+					state = new BlockStateByte()
+					{
+						Name = tag.Name, Value = tag.ByteValue
+					};
+					return true;
+
+				case NbtTagType.Int:
+					state = new BlockStateInt()
+					{
+						Name = tag.Name, Value = tag.IntValue
+					};
+					return true;
+
+				case NbtTagType.String:
+					state = new BlockStateString()
+					{
+						Name = tag.Name, Value = tag.StringValue
+					};
+					return true;
+			}
+
+			state = null;
+
+			return false;
 		}
 	}
 }

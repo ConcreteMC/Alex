@@ -6,11 +6,10 @@ using Alex.Common.Blocks;
 using Alex.Common.Blocks.Properties;
 using Alex.Common.Utils.Vectors;
 using Alex.Graphics.Models.Blocks;
-using Alex.Worlds;
 using Alex.Worlds.Abstraction;
 using Microsoft.Xna.Framework;
 
-namespace Alex.Blocks.Minecraft
+namespace Alex.Blocks.Minecraft.Decorations
 {
 	public class PowerState : StateProperty<int>
 	{
@@ -72,7 +71,7 @@ namespace Alex.Blocks.Minecraft
 			{
 				var power = PowerState.Instance.GetValue(BlockState);// BlockState.GetTypedValue(PowerState.Instance);
 				
-				return Material.Circuits.Clone().WithTintType(TintType.Color, Colors[Math.Clamp(power, 0, Colors.Length - 1)]);
+				return Material.Decoration.Clone().WithTintType(TintType.Color, Colors[Math.Clamp(power, 0, Colors.Length - 1)]);
 			}
 		}
 

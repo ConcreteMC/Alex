@@ -3,6 +3,7 @@ using Alex.Blocks;
 using Alex.Items;
 using Alex.Worlds.Multiplayer.Bedrock;
 using Alex.Worlds.Singleplayer;
+using MiNET;
 using Newtonsoft.Json;
 using NLog;
 
@@ -22,7 +23,11 @@ namespace Alex.Utils
 			Item result = null;
 
 
-			var itemState = ChunkProcessor.Itemstates.FirstOrDefault(x => x.Id == item.Id);
+			Itemstate itemState = null;
+
+			if (ChunkProcessor.Itemstates != null)
+				itemState = ChunkProcessor.Itemstates.FirstOrDefault(x => x.Id == item.Id);
+			
 
 			if (itemState == null)
 				itemState = MiNET.Items.ItemFactory.Itemstates.FirstOrDefault(x => x.Id == item.Id);

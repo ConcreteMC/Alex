@@ -1,3 +1,5 @@
+using Alex.Blocks.Materials;
+
 namespace Alex.Blocks.Minecraft
 {
 	public class RepeatingCommandBlock : Block
@@ -7,6 +9,8 @@ namespace Alex.Blocks.Minecraft
 			Solid = true;
 			Transparent = false;
 			IsFullCube = true;
+
+			base.BlockMaterial = Material.Metal;
 		}
 	}
 }

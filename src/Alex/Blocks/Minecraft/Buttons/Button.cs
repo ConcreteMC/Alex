@@ -1,4 +1,5 @@
 ﻿using Alex.Blocks.Materials;
+using Alex.Blocks.Minecraft.Decorations;
 using Alex.Blocks.State;
 
 namespace Alex.Blocks.Minecraft.Buttons
@@ -12,7 +13,7 @@ namespace Alex.Blocks.Minecraft.Buttons
 		    IsFullCube = false;
 		    CanInteract = true;
 		    
-		    BlockMaterial = Material.Circuits;
+		    BlockMaterial = Material.Decoration;
 		    /*
 		     * Solid = false;
 		    Transparent = true;

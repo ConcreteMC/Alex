@@ -1,4 +1,5 @@
 using Alex.Blocks.Materials;
+using Alex.Utils;
 
 namespace Alex.Blocks.Minecraft
 {
@@ -8,7 +9,7 @@ namespace Alex.Blocks.Minecraft
 		{
 			Solid = true;
 			Transparent = false;
-			BlockMaterial = Material.Stone.WithHardness(0.4f);
+			BlockMaterial = Material.Stone.Clone().WithMapColor(MapColor.Nether).WithHardness(0.4f);
 		}
 	}
 }

@@ -10,7 +10,7 @@ namespace Alex.Blocks.Minecraft
 			Transparent = false;
 			IsFullCube = true;
 			
-			BlockMaterial  = Material.Iron;
+			BlockMaterial  = Material.Metal;
 		}
 	}
 }

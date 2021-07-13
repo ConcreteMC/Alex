@@ -1,3 +1,6 @@
+using Alex.Blocks.Materials;
+using Alex.Utils;
+
 namespace Alex.Blocks.Minecraft.Stairs
 {
 	public class QuartzStairs : Stairs
@@ -6,6 +9,8 @@ namespace Alex.Blocks.Minecraft.Stairs
 		{
 			Solid = true;
 			Transparent = true;
+
+			base.BlockMaterial = Material.Stone.Clone().WithMapColor(MapColor.Quartz);
 		}
 	}
 }

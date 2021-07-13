@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using Alex.Blocks.Minecraft;
 using Alex.Blocks.Minecraft.Terracotta;
 using Alex.Common.Blocks;
 using Alex.Entities.BlockEntities;
@@ -21,6 +22,47 @@ namespace Alex
 		static Extensions()
 		{
 			
+		}
+
+		public static IMapColor ToMapColor(this WoodType woodType)
+		{
+			MapColor mapColor = MapColor.Wood;
+			switch (woodType)
+			{
+				case WoodType.Oak:
+					mapColor = MapColor.Wood;
+					break;
+
+				case WoodType.Spruce:
+					mapColor = MapColor.Podzol;
+					break;
+
+				case WoodType.Birch:
+					mapColor = MapColor.Sand;
+					break;
+
+				case WoodType.Jungle:
+					mapColor = MapColor.Dirt;
+					break;
+
+				case WoodType.Acacia:
+					mapColor = MapColor.Orange;
+					break;
+
+				case WoodType.DarkOak:
+					mapColor = MapColor.Brown;
+					break;
+
+				case WoodType.Crimson:
+					mapColor = MapColor.CrimsonStem;
+					break;
+
+				case WoodType.Warped:
+					mapColor = MapColor.WarpedStem;
+					break;
+			}
+
+			return mapColor;
 		}
 		
 		public static IMapColor ToMapColor(this BedColor color)

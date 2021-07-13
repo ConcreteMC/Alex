@@ -9,7 +9,7 @@ namespace Alex.Blocks.Minecraft
 			Solid = true;
 			Transparent = false;
 
-			BlockMaterial = Material.Ground.WithHardness(0.2f);
+			BlockMaterial = Material.Dirt.WithHardness(0.2f);
 		}
 	}
 }
