@@ -1,4 +1,5 @@
 using Alex.Blocks.Materials;
+using Alex.Utils;
 
 namespace Alex.Blocks.Minecraft.Stairs
 {
@@ -9,7 +10,7 @@ namespace Alex.Blocks.Minecraft.Stairs
 			Solid = true;
 			Transparent = true;
 
-			BlockMaterial = Material.Stone;
+			base.BlockMaterial = Material.Stone.Clone().WithMapColor(MapColor.Sand);;
 		}
 	}
 }

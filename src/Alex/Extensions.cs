@@ -70,10 +70,10 @@ namespace Alex
 			switch (color)
 			{
 				case BedColor.White:
-					return MapColor.TerracottaWhite;
+					return MapColor.Quartz;
 
 				case BedColor.Orange:
-					return MapColor.TerracottaOrange;
+					return MapColor.Orange;
 
 				case BedColor.Magenta:
 					return MapColor.Magenta;

@@ -1,4 +1,5 @@
 using Alex.Blocks.Materials;
+using Alex.Utils;
 
 namespace Alex.Blocks.Minecraft.Slabs
 {
@@ -6,7 +7,7 @@ namespace Alex.Blocks.Minecraft.Slabs
 	{
 		public SandstoneSlab() : base()
 		{
-			BlockMaterial = Material.Stone;
+			base.BlockMaterial = Material.Stone.Clone().WithMapColor(MapColor.Sand);;
 		}
 	}
 }

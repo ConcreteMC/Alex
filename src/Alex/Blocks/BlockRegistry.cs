@@ -1,6 +1,7 @@
 using System.IO;
 using System.Linq;
 using System.Text;
+using Alex.Blocks.Materials;
 using Alex.Blocks.Minecraft;
 using Alex.Blocks.Minecraft.Buttons;
 using Alex.Blocks.Minecraft.Decorations;
@@ -17,6 +18,7 @@ using Alex.Blocks.Minecraft.Terracotta;
 using Alex.Blocks.Minecraft.Walls;
 using Alex.Common.Resources;
 using Alex.Entities.BlockEntities;
+using Alex.Utils;
 using NLog;
 
 namespace Alex.Blocks
@@ -147,7 +149,10 @@ namespace Alex.Blocks
 		    this.Register("minecraft:andesite_wall", () => new AndesiteWall());
 		    this.Register("minecraft:stone_brick_wall", () => new StoneBrickWall());
 			this.Register("minecraft:red_nether_brick_wall", () => new RedNetherBrickWall());
-			this.Register("minecraft:sandstone_wall", () => new StoneBrickWall());
+			this.Register("minecraft:sandstone_wall", () => new StoneBrickWall()
+			{
+				BlockMaterial = Material.Stone.Clone().WithMapColor(MapColor.Sand)
+			});
 		    
 		    //Redstone
 		    this.Register("minecraft:lever", () => new Lever());
@@ -207,6 +212,7 @@ namespace Alex.Blocks
 		    this.Register("minecraft:light_gray_glazed_terracotta", () => new LightGrayGlazedTerracotta());
 		    
 		    // Terracotta
+		    this.Register("minecraft:terracotta", () => new Terracotta(ClayColor.Brown));
 		    this.Register("minecraft:white_terracotta", () => new Terracotta(ClayColor.White));
 		    this.Register("minecraft:orange_terracotta", () => new Terracotta(ClayColor.Orange));
 		    this.Register("minecraft:magenta_terracotta", () => new Terracotta(ClayColor.Magenta));
