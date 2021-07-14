@@ -19,13 +19,17 @@ namespace Alex.Entities
 		}
 		
 		/// <inheritdoc />
-		public override void CollidedWithWorld(Vector3 direction, Vector3 position, float impactVelocity)
+		public override float CollidedWithWorld(Vector3 direction, Vector3 position, float impactVelocity)
 		{
 			if (StopOnImpact)
 			{
 				Velocity = Vector3.Zero;
 				NoAi = true;
+				
+				return 0;
 			}
+
+			return base.CollidedWithWorld(direction, position, impactVelocity);
 		}
 	}
 	
@@ -55,13 +59,17 @@ namespace Alex.Entities
 		}
 
 		/// <inheritdoc />
-		public override void CollidedWithWorld(Vector3 direction, Vector3 position, float impactVelocity)
+		public override float CollidedWithWorld(Vector3 direction, Vector3 position, float impactVelocity)
 		{
 			if (StopOnImpact)
 			{
 				Velocity = Vector3.Zero;
 				NoAi = true;
+				
+				return 0;
 			}
+
+			return base.CollidedWithWorld(direction, position, impactVelocity);
 		}
 	}
 }

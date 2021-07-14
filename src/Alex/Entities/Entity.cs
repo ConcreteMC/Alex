@@ -685,8 +685,8 @@ namespace Alex.Entities
 		[MoProperty("is_on_ground")]
 		public bool IsOnGround => _knownPosition.OnGround;
 
-		[MoProperty("anim_time")]
-		public double AnimationTime => GetLifeTime();
+		[MoProperty("anim_time")] 
+		public double AnimationTime { get; set; } = 0d;
 		
 		[MoProperty("is_grazing")]
 		public bool IsGrazing { get; set; } = false;
@@ -1512,7 +1512,7 @@ namespace Alex.Entities
 			return a == b || a == b - 1 || a == b + 1;
 		}
 
-		public virtual void CollidedWithWorld(Vector3 direction, Vector3 position, float impactVelocity)
+		public virtual float CollidedWithWorld(Vector3 direction, Vector3 position, float impactVelocity)
 		{
 			if (direction == Vector3.Down)
 			{
@@ -1527,6 +1527,8 @@ namespace Alex.Entities
 			{
 			//	Velocity = new Vector3(Velocity.X, Velocity.Y, 0);
 			}
+
+			return 0;
 		}
 
 		protected void ToggleCubes(ModelBone bone, bool isInvisible)
@@ -1839,7 +1841,7 @@ namespace Alex.Entities
 		[MoFunction("modified_distance_moved")]
 		public double ModifiedDistanceMoved()
 		{
-			return Movement.DistanceMoved;
+			return Movement.TotalDistanceMoved;
 		}
 		
 		[MoFunction("modified_move_speed")]

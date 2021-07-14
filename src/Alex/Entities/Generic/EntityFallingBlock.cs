@@ -104,7 +104,7 @@ namespace Alex.Entities.Generic
 		}
 
 		/// <inheritdoc />
-		public override void CollidedWithWorld(Vector3 direction, Vector3 position, float impactVelocity)
+		public override float CollidedWithWorld(Vector3 direction, Vector3 position, float impactVelocity)
 		{
 			if (StopOnImpact)
 			{
@@ -120,7 +120,11 @@ namespace Alex.Entities.Generic
 				{
 					Velocity = new Vector3(Velocity.X, Velocity.Y, 0);
 				}
+
+				return 0f;
 			}
+
+			return base.CollidedWithWorld(direction, position, impactVelocity);
 		}
 	}
 }

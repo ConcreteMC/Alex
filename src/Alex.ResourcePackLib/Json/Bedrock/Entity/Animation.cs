@@ -13,15 +13,15 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Entity
 	/// </summary>
 	public class Animation
 	{
-	//	/// <summary>
+		//	/// <summary>
 	//	///		Determines whether the animation should go back to T0 when finished.
 	//	/// </summary>
 	//	[JsonProperty("loop")]
 	//	public bool Loop { get; set; } = false;
 
 		/// <summary>
-		///		Determines what the value of query.anim_time should be.
-		///		NOT CURRENTLY IMPLEMENTED
+		///		How does time pass when playing the animation.
+		///     Defaults to "query.anim_time + query.delta_time" which means advance in seconds.
 		/// </summary>
 		[JsonProperty("anim_time_update")]
 		public IExpression[] AnimationTimeUpdate { get; set; } = null;

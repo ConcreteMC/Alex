@@ -309,12 +309,15 @@ namespace Alex.Entities.Components
 			if (!TestTerrainCollisionY(ref amount, out var yCollisionPoint, out var collisionY, boxes))
 				return false;
 			
-			Entity.CollidedWithWorld(
+			var yVelocity = Entity.CollidedWithWorld(
 				beforeAdjustment < 0 ? Vector3.Down : Vector3.Up, yCollisionPoint, beforeAdjustment);
 
+			if (MathF.Abs(yVelocity) < 0.005f)
+				yVelocity = 0;
+			
 			amount.Y = collisionY;
 
-			Entity.Velocity = new Vector3(Entity.Velocity.X, 0, Entity.Velocity.Z);
+			Entity.Velocity = new Vector3(Entity.Velocity.X, yVelocity, Entity.Velocity.Z);
 
 			return true;
 		}

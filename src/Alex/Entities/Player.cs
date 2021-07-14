@@ -108,7 +108,7 @@ namespace Alex.Entities
         }
 
         /// <inheritdoc />
-        public override void CollidedWithWorld(Vector3 direction, Vector3 position, float impactVelocity)
+        public override float CollidedWithWorld(Vector3 direction, Vector3 position, float impactVelocity)
         {
 	        //var dirVelocity = direction * impactVelocity;
 	        if (direction == Vector3.Down)
@@ -116,6 +116,12 @@ namespace Alex.Entities
 		        //Velocity = new Vector3(Velocity.X, 0f, Velocity.Z);
 		        KnownPosition.OnGround = true;
 		        StopFalling();
+		        
+		       // if (bs?.Block is SlimeBlock sb)
+		       // {
+			       // if (MathF.Abs(imp))
+			    //    return -(impactVelocity * 0.8f);
+		        //}
 	        }
 	        else if (direction == Vector3.Left || direction == Vector3.Right)
 	        {
@@ -125,6 +131,8 @@ namespace Alex.Entities
 	        {
 		        //	Velocity = new Vector3(Velocity.X, Velocity.Y, 0);
 	        }
+
+	        return 0;
         }
 
         public bool IsBreakingBlock => _destroyingBlock;
@@ -695,7 +703,7 @@ namespace Alex.Entities
 		    if ((Gamemode == GameMode.Creative  || ticks >= _destroyTimeNeeded) && !forceCanceled)
 		    {
                 Network?.PlayerDigging(DiggingStatus.Finished, _destroyingTarget, _destroyingFace, remainder);
-                Level.SetBlockState(_destroyingTarget, new Air().BlockState);
+                Level?.SetBlockState(_destroyingTarget, new Air().BlockState);
             }
 		    else
 		    {
@@ -840,17 +848,6 @@ namespace Alex.Entities
 
 		    return true;
 	    }
-
-	    /*public override BoundingBox GetBoundingBox(Vector3 pos)
-		{
-			double halfWidth = (0.6 * Scale) / 2D;
-			var height = IsSneaking ? 1.5 : Height;
-			
-			return new BoundingBox(
-				new Vector3((float) (pos.X - halfWidth), pos.Y, (float) (pos.Z - halfWidth)),
-				new Vector3(
-					(float) (pos.X + halfWidth), (float) (pos.Y + (height * Scale)), (float) (pos.Z + halfWidth)));
-		}*/
 
 	    private bool  Falling      { get; set; } = false;
 	    private float FallingStart { get; set; } = 0;
