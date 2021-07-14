@@ -21,6 +21,7 @@ using Alex.ResourcePackLib.Json.Bedrock.Entity;
 using Alex.ResourcePackLib.Json.Bedrock.Particles;
 using Alex.ResourcePackLib.Json.Bedrock.Sound;
 using Alex.ResourcePackLib.Json.Converters;
+using Alex.ResourcePackLib.Json.Converters.Bedrock;
 using Alex.ResourcePackLib.Json.Models.Entities;
 using Alex.ResourcePackLib.Json.Textures;
 using Microsoft.Xna.Framework;
@@ -91,18 +92,18 @@ namespace Alex.ResourcePackLib
 		private void Load(ResourcePack.LoadProgress progressReporter)
 		{
 			Dictionary<ResourceLocation, EntityDescription> entityDefinitions = new Dictionary<ResourceLocation, EntityDescription>();
-			Dictionary<string, EntityModel> entityModels = new Dictionary<string, EntityModel>();
-			Dictionary<string, RenderController> renderControllers = new Dictionary<string, RenderController>();
+			Dictionary<string, EntityModel> entityModels = new Dictionary<string, EntityModel>(StringComparer.Ordinal);
+			Dictionary<string, RenderController> renderControllers = new Dictionary<string, RenderController>(StringComparer.Ordinal);
 
 			Dictionary<string, AnimationController>
-				animationControllers = new Dictionary<string, AnimationController>();
+				animationControllers = new Dictionary<string, AnimationController>(StringComparer.Ordinal);
 
-			Dictionary<string, ParticleDefinition> particleDefinitions = new Dictionary<string, ParticleDefinition>();
+			Dictionary<string, ParticleDefinition> particleDefinitions = new Dictionary<string, ParticleDefinition>(StringComparer.Ordinal);
 
 			Dictionary<string, AttachableDefinition> attachableDefinitions =
-				new Dictionary<string, AttachableDefinition>();
+				new Dictionary<string, AttachableDefinition>(StringComparer.Ordinal);
 			Dictionary<string, Animation>
-				animations = new Dictionary<string, Animation>();
+				animations = new Dictionary<string, Animation>(StringComparer.Ordinal);
 			
 			TryAddBitmap("textures/ui/title");
 			
@@ -317,7 +318,7 @@ namespace Alex.ResourcePackLib
 			}
 		}
 		
-		private void ProcessAnimation(IFile entry, Dictionary<string, Animation> renderControllers)
+		private void ProcessAnimation(IFile entry, Dictionary<string, Animation> animations)
 		{
 			try
 			{
@@ -328,7 +329,10 @@ namespace Alex.ResourcePackLib
 
 				foreach (var controller in versionedResource.Values)
 				{
-					renderControllers.TryAdd(controller.Key, controller.Value);
+					if (controller.Value.AnimationTimeUpdate == null)
+						controller.Value.AnimationTimeUpdate = Animation.DefaultTimeUpdate;
+					
+					animations.TryAdd(controller.Key, controller.Value);
 				}
 			}
 			catch (MoLangParserException ex)
@@ -337,7 +341,7 @@ namespace Alex.ResourcePackLib
 			}
 		}
 		
-		private void ProcessAnimationController(IFile entry, Dictionary<string, AnimationController> renderControllers)
+		private void ProcessAnimationController(IFile entry, Dictionary<string, AnimationController> animationControllers)
 		{
 			string json = entry.ReadAsEncodedString(ContentKey);
 
@@ -346,7 +350,7 @@ namespace Alex.ResourcePackLib
 
 			foreach (var controller in versionedResource.Values)
 			{
-				renderControllers.TryAdd(controller.Key, controller.Value);
+				animationControllers.TryAdd(controller.Key, controller.Value);
 			}
 		}
 		

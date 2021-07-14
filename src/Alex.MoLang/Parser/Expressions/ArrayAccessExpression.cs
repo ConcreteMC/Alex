@@ -1,5 +1,6 @@
 using Alex.MoLang.Runtime;
 using Alex.MoLang.Runtime.Value;
+using Alex.MoLang.Utils;
 
 namespace Alex.MoLang.Parser.Expressions
 {
@@ -17,7 +18,7 @@ namespace Alex.MoLang.Parser.Expressions
 		/// <inheritdoc />
 		public override IMoValue Evaluate(MoScope scope, MoLangEnvironment environment)
 		{
-			string name = Array is NameExpression expression ? expression.Name : Array.Evaluate(scope, environment).AsString();
+			var name = Array is NameExpression expression ? expression.Name.ToString() : Array.Evaluate(scope, environment).AsString();
 
 			return environment.GetValue(name + "." + (int) Index.Evaluate(scope, environment).AsDouble());
 		}
@@ -25,7 +26,7 @@ namespace Alex.MoLang.Parser.Expressions
 		/// <inheritdoc />
 		public override void Assign(MoScope scope, MoLangEnvironment environment, IMoValue value)
 		{
-			string name = Array is NameExpression expression ? expression.Name : Array.Evaluate(scope, environment).AsString();
+			var name = Array is NameExpression expression ? expression.Name.ToString() : Array.Evaluate(scope, environment).AsString();
 
 			environment.SetValue(name + "." + (int) Index.Evaluate(scope, environment).AsDouble(), value);
 		}

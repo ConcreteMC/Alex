@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Alex.MoLang.Runtime.Value;
+using Alex.MoLang.Utils;
 
 namespace Alex.MoLang.Runtime.Struct
 {
@@ -17,7 +18,7 @@ namespace Alex.MoLang.Runtime.Struct
 		}
 		
 		/// <inheritdoc />
-		public override void Set(string key, IMoValue value)
+		public override void Set(MoPath key, IMoValue value)
 		{
 			throw new NotSupportedException("Read-only context");
 		}

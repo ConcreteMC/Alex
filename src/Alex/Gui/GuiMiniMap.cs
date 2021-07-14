@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using Alex.Blocks.State;
 using Alex.Common;
 using Alex.Common.Graphics;
 using Alex.Common.Gui.Graphics;
@@ -38,10 +39,10 @@ namespace Alex.Gui
             Background = Color.White * 0.5f;
             ClipToBounds = true;
             
-            AutoSizeMode = AutoSizeMode.None;
+           // AutoSizeMode = AutoSizeMode.None;
             Width = 128;
             Height = 128;
-            Margin = new Thickness(10, 10);
+           // Margin = new Thickness(10, 10);
             Anchor = Alignment.TopRight;
             
             World.ChunkManager.OnChunkAdded += OnChunkAdded;
@@ -260,12 +261,17 @@ namespace Alex.Gui
 
                 if (Texture == null)
                     Init(device);
-                
+
+                var maxHeight = 0;
                 for (int x = 0; x < 16; x++)
                 {
                     for (int z = 0; z < 16; z++)
                     {
                         var height = target.GetHeight(x, z) - 1;
+                        maxHeight = Math.Max(height, maxHeight);
+                        
+                        var state = target.GetBlockState(x, height, z);
+
                         var surrounding = GetHeighestSurrounding(world, target, x, height, z);
                         var offset = 2;
 
@@ -279,8 +285,7 @@ namespace Alex.Gui
                                 offset = 0;
                         }
 
-                        var state = target.GetBlockState(x, height, z);
-                        var blockMaterial = state?.Block?.BlockMaterial;
+                    var blockMaterial = state?.Block?.BlockMaterial;
 
                         if (blockMaterial != null)
                         {

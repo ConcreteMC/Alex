@@ -1,10 +1,11 @@
 using System;
-using System.Collections.Generic;
 using Alex.MoLang.Parser;
+using Alex.ResourcePackLib.Json.Bedrock.Entity;
+using Alex.ResourcePackLib.Json.Bedrock.MoLang;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace Alex.ResourcePackLib.Json.Bedrock.Entity
+namespace Alex.ResourcePackLib.Json.Converters.Bedrock
 {
 	internal class ComplexStuffConverter : JsonConverter
 	{

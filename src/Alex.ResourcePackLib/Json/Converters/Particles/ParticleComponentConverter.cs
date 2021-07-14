@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Alex.MoLang.Parser;
 using Alex.MoLang.Parser.Expressions;
 using Alex.ResourcePackLib.Json.Bedrock.Entity;
+using Alex.ResourcePackLib.Json.Bedrock.MoLang;
 using Alex.ResourcePackLib.Json.Bedrock.Particles.Components;
 using Alex.ResourcePackLib.Json.Converters.MoLang;
 using Newtonsoft.Json;

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Alex.MoLang.Runtime.Value;
+using Alex.MoLang.Utils;
 
 namespace Alex.MoLang.Runtime.Struct
 {
@@ -13,9 +14,9 @@ namespace Alex.MoLang.Runtime.Struct
 		}
 
 		/// <inheritdoc />
-		public override void Set(string key, IMoValue value)
+		public override void Set(MoPath key, IMoValue value)
 		{
-			string[] parts = key.Split(".");
+			string[] parts = key.ToString().Split(".");
 			parts[^1] = int.Parse(parts[^1]).ToString();
 			
 			base.Set(string.Join(".", parts), value);

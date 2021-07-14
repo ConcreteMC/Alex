@@ -7,6 +7,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
+using Alex.MoLang.Attributes;
 using Alex.MoLang.Parser;
 using Alex.MoLang.Parser.Tokenizer;
 using Alex.MoLang.Runtime;
@@ -23,7 +24,7 @@ namespace Alex.MoLang.TestApp
 		static void Main(string[] args)
 		{
 			//LoggerSetup.ConfigureNLog( Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), DefaultConfig);
-			Stopwatch     sw      = Stopwatch.StartNew();
+			
 			TokenIterator tokenIterator = new TokenIterator(@"t.a = 213 + 2 / 0.5 + 5 + 2 * 3;
 
 array.test.0 = 100;
@@ -42,6 +43,8 @@ query.debug_output('hello', 'test', t.a, array.test[2]);
 
 return t.a;");
 			MoLangParser  parser        = new MoLangParser(tokenIterator);
+			
+			Stopwatch     sw      = Stopwatch.StartNew();
 			var           expressions   = parser.Parse();
 			
 			var timeElapsedOnParsing = sw.Elapsed;
@@ -49,21 +52,8 @@ return t.a;");
 			Console.WriteLine($"Parser completed in {timeElapsedOnParsing.TotalMilliseconds}ms");
 			
 			MoLangRuntime runtime = new MoLangRuntime();
-
-			var queryStruct = new QueryStruct(
-				new KeyValuePair<string, Func<MoParams, object>>[]
-				{
-					new(
-						"life_time", moParams =>
-						{
-							return new DoubleValue(sw.Elapsed.TotalSeconds);
-						})
-				});
-
-			queryStruct.UseNLog = false;
-			queryStruct.EnableDebugOutput = false;
 			
-			runtime.Environment.Structs.TryAdd("query", queryStruct);
+			runtime.Environment.Structs.TryAdd("query", new ObjectStruct(new TestClass(sw)) {UseNLog = false, EnableDebugOutput = false});
 			
 			try
 			{
@@ -110,5 +100,23 @@ return t.a;");
 
 		private const string DefaultConfig =
 			"<?xml version=\"1.0\" encoding=\"utf-8\" ?><nlog xmlns=\"http://www.nlog-project.org/schemas/NLog.xsd\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"><variable name=\"basedir\" value=\"${basedir}\" /><targets><target name=\"colouredConsole\" xsi:type=\"ColoredConsole\" useDefaultRowHighlightingRules=\"false\"layout=\"${pad:padding=5:inner=${level:uppercase=true}}|${callsite:className=true:includeSourcePath=false:methodName=false:includeNamespace=false}|${message} ${exception:format=tostring}\" ><highlight-row condition=\"level == LogLevel.Debug\" foregroundColor=\"DarkGray\" /><highlight-row condition=\"level == LogLevel.Info\" foregroundColor=\"Gray\" /><highlight-row condition=\"level == LogLevel.Warn\" foregroundColor=\"Yellow\" /><highlight-row condition=\"level == LogLevel.Error\" foregroundColor=\"Red\" /><highlight-row condition=\"level == LogLevel.Fatal\" foregroundColor=\"Red\" backgroundColor=\"White\" /></target></targets><rules><logger name=\"*\" minlevel=\"Debug\" writeTo=\"colouredConsole\" /></rules></nlog>";
+	}
+
+	public class TestClass
+	{
+		private Stopwatch _sw;
+		public TestClass(Stopwatch sw)
+		{
+			_sw = sw;
+		}
+
+		[MoProperty("life_time")]
+		public double Lifetime
+		{
+			get
+			{
+				return _sw.Elapsed.TotalSeconds;
+			}
+		}
 	}
 }

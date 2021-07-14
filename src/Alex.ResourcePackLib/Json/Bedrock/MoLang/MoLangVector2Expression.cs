@@ -3,10 +3,11 @@ using System.Linq;
 using Alex.MoLang.Parser;
 using Alex.MoLang.Runtime;
 using Alex.MoLang.Runtime.Value;
+using Alex.ResourcePackLib.Json.Converters.Bedrock;
 using Microsoft.Xna.Framework;
 using Newtonsoft.Json;
 
-namespace Alex.ResourcePackLib.Json.Bedrock.Entity
+namespace Alex.ResourcePackLib.Json.Bedrock.MoLang
 {
 	[JsonConverter(typeof(MoVec2Converter))]
 	public class MoLangVector2Expression
@@ -64,9 +65,6 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Entity
 			}
 
 			return Evaluate(runtime, expressions[0], expressions[0], currentValue);
-			//	var val = runtime.Execute(expressions[0]);
-
-			//	return new Vector3(val.AsFloat());
 		}
 		
 		private Vector2 Evaluate(MoLangRuntime runtime, ComplexStuff complex, bool lookAHead, Vector2 currentValue)
@@ -78,26 +76,20 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Entity
 			if (complex.Expressions != null)
 			{
 				var expressions = complex.Expressions;
-				return Evaluate(runtime, expressions, currentValue);// new Vector3(val.AsFloat());
+				return Evaluate(runtime, expressions, currentValue);
 			}
 
 			if (lookAHead)
 				return Evaluate(runtime, complex.Frame.Pre, currentValue);
 			
 			return Evaluate(runtime, complex.Frame.Post, currentValue);
-			//if (complex.Frame.)
-			//IMoValue x = runtime.Execute(xExpressions);
-			//IMoValue y = runtime.Execute(yExpressions);
-			//IMoValue z = runtime.Execute(zExpressions);
-
-			//return new Vector3(x.AsFloat(), y.AsFloat(), z.AsFloat());
 		}
 
-		public Vector2 Evaluate(MoLangRuntime runtime, Vector2 currentValue)
+		public Vector2 Evaluate(MoLangRuntime runtime, Vector2 currentValue, double animationTime = 0d)
 		{
 			if (_keyFrames != null)
 			{
-				var elapsedTime = runtime.Environment.GetValue("query.life_time").AsDouble() % _keyFrames.Max(x => x.Key);
+				var elapsedTime = animationTime % _keyFrames.Max(x => x.Key);
 
 				ComplexStuff previous = null;
 				double previousKey = 0d;

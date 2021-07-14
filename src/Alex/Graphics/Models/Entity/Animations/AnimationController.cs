@@ -1,429 +1,134 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text.RegularExpressions;
-using System.Threading;
-using Alex.Common.World;
-using Alex.Entities;
-using Alex.Entities.Components;
-using Alex.Items;
-using Alex.MoLang.Parser;
 using Alex.MoLang.Runtime;
-using Alex.MoLang.Runtime.Struct;
 using Alex.MoLang.Runtime.Value;
-using Alex.ResourcePackLib;
-using Alex.ResourcePackLib.Abstraction;
 using Alex.ResourcePackLib.Json.Bedrock.Entity;
-using Microsoft.Xna.Framework;
-using NLog;
-using Org.BouncyCastle.Utilities;
-using RocketUI.Input;
+using Alex.ResourcePackLib.Json.Bedrock.MoLang;
 
 namespace Alex.Graphics.Models.Entity.Animations
 {
-	public class AnimationController : ITickedEntityComponent
+	public class AnimationController : IAnimation
 	{
-		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(AnimationController));
+		public AnimationComponent Parent { get; }
+		public ResourcePackLib.Json.Bedrock.Entity.AnimationController Definition { get; }
 
-		public bool Initialized => _didInit;
-		
-		public bool Enabled { get; set; } = true;
-
-		public MoLangRuntime Runtime { get; set; }
-		private Entities.Entity Entity { get; }
-		public AnimationController(Entities.Entity entity) : base()
+		private AnimationState _state;
+		public AnimationController(AnimationComponent parent,
+			ResourcePackLib.Json.Bedrock.Entity.AnimationController definition)
 		{
-			Entity = entity;
-			Runtime = new MoLangRuntime();
-		}
+			Parent = parent;
+			Definition = definition;
 
-		private IExpression[] _preRenderExpressions = null;
-		private EntityDescription _entityDefinition = null;
-		private IReadOnlyDictionary<string, AnimationEntry> _animations = null;
-		private object _lock = new object();
-		
-		private static readonly Regex ControllerRegex = new Regex("", RegexOptions.Compiled);
-
-		public void UpdateEntityDefinition(IAnimationProvider animationProvider, EntityDescription definition)
-		{
-			//Monitor.Enter(_lock);
-
-			try
+			if (!definition.States.TryGetValue(definition.InitialState, out _state))
 			{
-				List<IExpression> preRender = new List<IExpression>();
-
-				MoLangRuntime runtime = new MoLangRuntime();
-				_context.Clear();
-				//SetEnvironment(runtime.Environment);
-				runtime.Environment.Structs.TryAdd("query", new ObjectStruct(Entity));
-
-				if (definition.Scripts != null)
-				{
-					if (definition.Scripts.Scale != null)
-					{
-						var scale = runtime.Execute(definition.Scripts.Scale, _context);
-
-						if (scale is DoubleValue dv)
-						{
-							//Entity.Scale = dv.AsFloat();
-						}
-					}
-
-					foreach (var init in ConditionalExecute(runtime, definition.Scripts.Initialize, _context)) { }
-
-					foreach (var list in definition.Scripts.PreAnimation)
-					{
-						preRender.AddRange(list);
-					}
-				}
-
-				Dictionary<string, AnimationEntry> animations = new Dictionary<string, AnimationEntry>(StringComparer.OrdinalIgnoreCase);
-
-				//	var resources = Alex.Instance.Resources.BedrockResourcePack;
-
-				if (definition.Animations != null)
-				{
-					foreach (var kv in definition.Animations)
-					{
-						if (kv.Value.StartsWith("controller."))
-						{
-							if (animationProvider.TryGetAnimationController(kv.Value, out var controller))
-								animations.TryAdd(kv.Key, new AnimationEntry(controller));
-						}
-						else
-						{
-							if (animationProvider.TryGetAnimation(kv.Value, out var animation))
-								animations.TryAdd(kv.Key, new AnimationEntry(animation));
-						}
-
-						/*else if (resources.Animations.TryGetValue(kv.Value, out var animation))
-						{
-							animations.TryAdd(kv.Key, animation);
-						}*/
-					}
-				}
-
-				_animations = animations;
-				_entityDefinition = definition;
-				_preRenderExpressions = preRender.ToArray();
-				Runtime = runtime;
-
-				_didInit = true;
-			}
-			finally
-			{
-				//	Monitor.Exit(_lock);
+				throw new Exception("Initial state not found!");
 			}
 		}
 
-		private class AnimationEntry
+		public void Update()
 		{
-			public ResourcePackLib.Json.Bedrock.Entity.AnimationController Controller { get; }
-			public Animation Animation { get; }
+			var state = _state;
+
+			if (state == null)
+				return;
+
+			UpdateVariables(state.Variables);
 			
-			public string State { get; set; } = null;
+			UpdateAnimations(state.Animations);
 
-			public double AnimationTime { get; set; } = 0d;
-			public Stopwatch ElapsedTimer { get; } = new Stopwatch();
-			public AnimationEntry(ResourcePackLib.Json.Bedrock.Entity.AnimationController controller)
-			{
-				Controller = controller;
-				Animation = null;
+			UpdateTransitions(state.Transitions);
+		}
 
-				State = controller.InitialState;
-			}
+		private void UpdateTransitions(AnnoyingMolangElement[] transitions)
+		{
+			if (transitions == null || transitions.Length == 0)
+				return;
 			
-			public AnimationEntry(Animation animation)
+			bool stateUpdated = false;
+			foreach (var transition in transitions)
 			{
-				Controller = null;
-				Animation = animation;
-				
-				ElapsedTimer.Start();
-			}
-
-			private void UpdateController(AnimationController animController, MoLangRuntime runtime, IDictionary<string, IMoValue> context)
-			{
-				var controller = Controller;
-				string state = State;
-
-				if (string.IsNullOrWhiteSpace(state))
-					return;
-
-				if (controller.States.TryGetValue(state, out var animationState))
+				foreach (var expression in transition.Expressions)
 				{
-					if (animationState.Variables != null)
-					{
-						foreach (var anim in animationState.Variables)
-						{
-							if (anim.Value.Input != null)
-							{
-								double input = runtime.Execute(anim.Value.Input, context).AsDouble();
-
-								runtime.Environment.Structs["variable"].Set(
-									anim.Key, new DoubleValue(input));
-							}
-							//HandleAnnoyingMolangElement(runtime, anim, context);
-						}
-					}
+					if (!Definition.States.TryGetValue(expression.Key, out var targetState) 
+					    || targetState == null) 
+						continue;
 						
-					if (animationState.Animations != null)
+					var result = Parent.Execute(expression.Value);
+
+					if (result.AsBool())
 					{
-						foreach (var anim in animationState.Animations)
-						{
-							animController.HandleAnnoyingMolangElement(runtime, anim, context);
-						}
-					}
-
-					if (animationState.Transitions != null)
-					{
-						var oldState = State;
-						bool stateUpdated = false;
-						foreach (var transition in animationState.Transitions)
-						{
-							foreach (var expression in transition.Expressions)
-							{
-								var result = runtime.Execute(expression.Value, context);
-								if (result.AsBool())
-								{
-									//Console.WriteLine($"Old={oldState} New={expression.Key} (Cause: {result.Value})");	
-
-									//AnimationTime = 0d;
-									State = expression.Key;
-									stateUpdated = true;
-									break;
-								}
-							}
-
-							if (stateUpdated)
-								break;
-						}
+						_state = targetState;
+						stateUpdated = true;
+						break;
 					}
 				}
-			}
 
-			private void UpdateAnimation(MoLangRuntime runtime, Entities.Entity entity)
+				if (stateUpdated)
+					break;
+			}
+		}
+
+		private void UpdateAnimation(string animation, bool play)
+		{
+			if (Parent.TryGetAnimation(animation, out var entityAnimation))
 			{
-				var elapsed = ElapsedTimer.Elapsed;
-				ElapsedTimer.Restart();
-				
-				entity.AnimationTime = AnimationTime;
-				double animTimeUpdate = AnimationTime + elapsed.TotalSeconds;
+				if (entityAnimation.Playing && !play)
+				{
+					entityAnimation.Stop();
+				}
+				else if (!entityAnimation.Playing && play)
+				{
+					entityAnimation.Play();
+				}
+
+				if (entityAnimation.Playing)
+				{
+					entityAnimation.BeforeUpdate();
 					
-				if (Animation.AnimationTimeUpdate != null && Animation.AnimationTimeUpdate.Length > 0)
-				{
-					animTimeUpdate = runtime.Execute(Animation.AnimationTimeUpdate).AsDouble();
-				}
-					
-				AnimationTime = entity.AnimationTime = animTimeUpdate;
-				
-				var renderer = entity.ModelRenderer;
-				var anim = Animation;
+					entityAnimation.Update();
 
-				if (renderer == null || anim.Bones == null)
-					return;
-				
-				foreach (var bone in anim.Bones)
-				{
-					if (bone.Value == null) continue;
-
-					if (renderer.GetBone(bone.Key, out var modelBone))
-					{
-						var value = bone.Value;
-
-						var targetRotation = value.Rotation?.Evaluate(runtime, Vector3.Zero) ?? Vector3.Zero;
-						var targetPosition = value.Position?.Evaluate(runtime, modelBone.Position) ?? Vector3.Zero;
-						var targetScale = value.Scale?.Evaluate(runtime, modelBone.Scale) ?? Vector3.One;
-
-						modelBone.MoveOverTime(
-							targetPosition, targetRotation * new Vector3(-1f, 1f, 1f), targetScale,
-							elapsed, anim.OverridePreviousAnimation,
-							anim.BlendWeight != null ? runtime.Execute(anim.BlendWeight).AsFloat() : 1f);
-					}
-				}
-			}
-			
-			public void Update(AnimationController controller, MoLangRuntime runtime, Entities.Entity entity, IDictionary<string, IMoValue> context)
-			{
-				if (Animation != null)
-				{
-					UpdateAnimation(runtime, entity);
-				} 
-				else if (Controller != null)
-				{
-					UpdateController(controller, runtime, context);
+					entityAnimation.AfterUpdate();
 				}
 			}
 		}
-
-		private IEnumerable<IMoValue> ConditionalExecute(MoLangRuntime runtime, IExpression[][] expressions, IDictionary<string, IMoValue> context)
+		
+		private void UpdateAnimations(AnnoyingMolangElement[] animations)
 		{
-			if (expressions == null)
-				yield break;
-			
-			foreach (var expressionList in expressions)
-			{
-				if (expressionList == null || expressionList.Length == 0)
-					continue;
-				
-				yield return runtime.Execute(expressionList, context);
-			}
-		}
-
-		private Stopwatch _deltaTimeStopwatch = new Stopwatch();
-		private bool _didInit = false;
-
-		private IDictionary<string, IMoValue> _context = new Dictionary<string, IMoValue>();
-		private void DoImportant()
-		{
-			if (!_didInit)
+			if (animations == null || animations.Length == 0)
 				return;
 			
-			//if (!Monitor.TryEnter(_lock, 0))
-			//	return;
-
-			var renderer = Entity?.ModelRenderer;
-
-			if (renderer == null)
-				return;
-			
-			try
+			foreach (var animation in animations)
 			{
-				var runtime = Runtime;
-
-				if (runtime == null)
-					return;
-
-				var def = _entityDefinition;
-
-				if (def == null)
-					return;
-
-				var animations = _animations;
-
-				if (animations == null)
-					return;
-				
-				_context.Clear();
-				
-				if (_preRenderExpressions != null)
-					runtime.Execute(_preRenderExpressions, _context);
-				
-				runtime.Environment.SetValue("variable.gliding_speed_value", new DoubleValue(1d));
-				runtime.Environment.SetValue("variable.is_first_person", new DoubleValue(Entity.IsFirstPersonMode ? 1 : 0));
-				runtime.Environment.SetValue("variable.attack_time", new DoubleValue(Entity.AttackTime));
-				runtime.Environment.SetValue("variable.is_using_vr", new DoubleValue(0d));
-				runtime.Environment.SetValue("variable.is_paperdoll", new DoubleValue(0d));
-				runtime.Environment.SetValue("variable.swim_amount", Entity.IsSwimming ? new DoubleValue(1d) : new DoubleValue(0d));
-				runtime.Environment.SetValue("variable.player_x_rotation", new DoubleValue(Entity.KnownPosition.Pitch));
-				runtime.Environment.SetValue("variable.bob_animation", new DoubleValue(1d));
-				runtime.Environment.SetValue("variable.hand_bob", new DoubleValue(1d));
-				
-				if (Entity is RemotePlayer player)
+				if (animation.IsString)
 				{
-					bool holdingLeft = false;
-					bool holdingRight = false;
-
-					var leftHand = player.Inventory?.OffHand;
-
-					if (leftHand != null && !(leftHand is ItemAir) && leftHand.Count > 0)
-					{
-						holdingLeft = true;
-					}
-					
-					var rightHand = player.Inventory?.MainHand;
-
-					if (rightHand != null && !(rightHand is ItemAir) && rightHand.Count > 0)
-					{
-						holdingRight = true;
-					}
-					
-					runtime.Environment.SetValue(
-						"variable.is_holding_left",
-						new DoubleValue(holdingLeft));
-
-					runtime.Environment.SetValue(
-						"variable.is_holding_right",
-						new DoubleValue(holdingRight));
+					UpdateAnimation(animation.StringValue, true);
 				}
-
-				if (def.Scripts != null)
+				else
 				{
-					if (def.Scripts.ShouldUpdateBonesAndEffectsOffscreen != null)
+					foreach (var expression in animation.Expressions)
 					{
-						if (!Entity.IsRendered && !runtime.Execute(
-							def.Scripts.ShouldUpdateBonesAndEffectsOffscreen, _context).AsBool())
-							return;
-					}
-					
-					foreach (var key in def.Scripts.Animate)
-					{
-						HandleAnnoyingMolangElement(runtime, key, _context);
+						var shouldPlay = Parent.Execute(expression.Value).AsBool();
+						UpdateAnimation(expression.Key, shouldPlay);
 					}
 				}
-
-				renderer.ApplyPending();
-			}
-			finally
-			{
-			//	Monitor.Exit(_lock);
+				//Parent.Execute(animation);
 			}
 		}
 
-		private void HandleAnnoyingMolangElement(MoLangRuntime runtime, AnnoyingMolangElement key, IDictionary<string, IMoValue> context)
+		private void UpdateVariables(IDictionary<string, ControllerVariable> variables)
 		{
-			if (key.IsString)
+			if (variables == null || variables.Count == 0)
+				return;
+			
+			foreach (var anim in variables)
 			{
-				TryAnimate(runtime, key.StringValue, context);
-			}
-			else
-			{
-				foreach (var expression in key.Expressions)
+				if (anim.Value.Input != null)
 				{
-					if (runtime.Execute(expression.Value, context).AsBool())
-					{
-						TryAnimate(runtime, expression.Key, context);
-					}
+					var input = Parent.Execute(anim.Value.Input);//.AsDouble();
+					Parent.Runtime.Environment.Structs["variable"].Set(anim.Key, input);
 				}
+				//HandleAnnoyingMolangElement(runtime, anim, context);
 			}
-		}
-
-		//private Stopwatch _animationRunTime = new Stopwatch();
-		private void TryAnimate(MoLangRuntime runtime, string name, IDictionary<string, IMoValue> context)
-		{
-			var renderer = Entity.ModelRenderer;
-
-			if (renderer == null)
-				return;
-
-			if (!_animations.TryGetValue(name, out var animation)) 
-				return;
-
-			if (animation == null)
-				return;
-
-			animation.Update(this, runtime, Entity, context);
-		}
-
-		/// <inheritdoc />
-		public void Update(GameTime gameTime)
-		{
-			if (!Enabled)
-				return;
-		}
-
-		/// <inheritdoc />
-		void ITicked.OnTick()
-		{
-			if (!Enabled)
-				return;
-			
-			_deltaTimeStopwatch.Stop();
-			
-			//_queryStruct?.Tick(_deltaTimeStopwatch.Elapsed);
-			DoImportant();
-			
-			_deltaTimeStopwatch.Restart();
 		}
 	}
 }

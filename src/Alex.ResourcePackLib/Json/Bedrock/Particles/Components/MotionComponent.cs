@@ -1,6 +1,7 @@
 using Alex.MoLang.Parser;
 using Alex.MoLang.Runtime;
 using Alex.ResourcePackLib.Json.Bedrock.Entity;
+using Alex.ResourcePackLib.Json.Bedrock.MoLang;
 using Microsoft.Xna.Framework;
 using Newtonsoft.Json;
 

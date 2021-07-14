@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Alex.MoLang.Runtime;
 using Alex.MoLang.Runtime.Value;
+using Alex.MoLang.Utils;
 
 namespace Alex.MoLang.Parser.Expressions
 {
@@ -21,7 +22,7 @@ namespace Alex.MoLang.Parser.Expressions
 		public override IMoValue Evaluate(MoScope scope, MoLangEnvironment environment)
 		{
 			//List<IExpression> p = Args.ToList();
-			string name = Name is NameExpression expression ? expression.Name : Name.Evaluate(scope, environment).ToString();
+			MoPath name = Name is NameExpression expression ? expression.Name : new MoPath(Name.Evaluate(scope, environment).ToString());
 			
 			IMoValue[] arguments = new IMoValue[Args.Length];
 

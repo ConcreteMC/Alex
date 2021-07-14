@@ -1,12 +1,13 @@
 using Alex.MoLang.Runtime.Value;
+using Alex.MoLang.Utils;
 
 namespace Alex.MoLang.Runtime.Struct
 {
 	public interface IMoStruct : IMoValue
 	{
-		void Set(string key, IMoValue value);
+		void Set(MoPath key, IMoValue value);
 
-		IMoValue Get(string key, MoParams parameters);
+		IMoValue Get(MoPath key, MoParams parameters);
 
 		void Clear();
 

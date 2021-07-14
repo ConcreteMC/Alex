@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Alex.MoLang.Runtime.Exceptions;
 using Alex.MoLang.Runtime.Value;
+using Alex.MoLang.Utils;
 using NLog;
 
 namespace Alex.MoLang.Runtime.Struct
@@ -30,18 +31,18 @@ namespace Alex.MoLang.Runtime.Struct
 		}
 
 		/// <inheritdoc />
-		public virtual void Set(string key, IMoValue value)
+		public virtual void Set(MoPath key, IMoValue value)
 		{
-			var index = key.IndexOf('.');
+			//var index = key.IndexOf('.');
 
-			if (index < 0)
+			if (!key.HasChildren)
 			{
-				Map[key] = value;
+				Map[key.ToString()] = value;
 
 				return;
 			}
 
-			string main = key.Substring(0, index);
+			string main = key.Segment;
 
 			if (!string.IsNullOrWhiteSpace(main)) {
 				//object vstruct = Get(main, MoParams.Empty);
@@ -53,7 +54,7 @@ namespace Alex.MoLang.Runtime.Struct
 				
 				if (container is IMoStruct moStruct)
 				{
-					moStruct.Set(key.Substring(index + 1), value);
+					moStruct.Set(key.Segments[0], value);
 				}
 				else
 				{
@@ -67,13 +68,13 @@ namespace Alex.MoLang.Runtime.Struct
 		}
 
 		/// <inheritdoc />
-		public virtual IMoValue Get(string key, MoParams parameters)
+		public virtual IMoValue Get(MoPath key, MoParams parameters)
 		{
-			var index = key.IndexOf('.');
+			//var index = key.IndexOf('.');
 
-			if (index >= 0)
+			if (key.HasChildren)
 			{
-				string main = key.Substring(0, index);
+				string main = key.Segment;
 
 				if (!string.IsNullOrWhiteSpace(main))
 				{
@@ -87,24 +88,20 @@ namespace Alex.MoLang.Runtime.Struct
 
 					if (value is IMoStruct moStruct)
 					{
-						return moStruct.Get(key.Substring(index + 1), parameters);
+						return moStruct.Get(key.Segments[0], parameters);
 					}
 
 					return value;
 				}
 			}
 
-			if (Map.TryGetValue(key, out var v))
+			if (Map.TryGetValue(key.ToString(), out var v))
 				return v;
 			
 			//
 		//	Log.Info($"Unknown variable: {key}");
 			
 			return DoubleValue.Zero;
-			//
-			Console.WriteLine($"Unknown variable: {key}");
-			return DoubleValue.Zero;
-			return Map[key];
 		}
 
 		/// <inheritdoc />

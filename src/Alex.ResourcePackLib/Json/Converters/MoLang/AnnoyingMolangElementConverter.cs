@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
 using Alex.MoLang.Parser;
+using Alex.ResourcePackLib.Json.Bedrock.MoLang;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
-namespace Alex.ResourcePackLib.Json.Bedrock.Entity
+namespace Alex.ResourcePackLib.Json.Converters.MoLang
 {
-	internal class AnimateElementConverter : JsonConverter
+	internal class AnnoyingMolangElementConverter : JsonConverter
 	{
 		public override bool CanConvert(Type t) => t == typeof(AnnoyingMolangElement);
 

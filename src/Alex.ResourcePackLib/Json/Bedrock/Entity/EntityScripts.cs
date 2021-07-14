@@ -1,6 +1,6 @@
-using System.Collections.Generic;
 using Alex.MoLang.Parser;
 using Alex.MoLang.Parser.Expressions;
+using Alex.ResourcePackLib.Json.Bedrock.MoLang;
 using Newtonsoft.Json;
 
 namespace Alex.ResourcePackLib.Json.Bedrock.Entity
@@ -20,39 +20,12 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Entity
 		public IExpression[] ParentSetup { get; set; } = null;
 
 		[JsonProperty("animate")] 
-		public AnnoyingMolangElement[] Animate { get; set; } = new AnnoyingMolangElement[0];
+		public AnnoyingMolangElement[] Animate { get; set; } = null;
 		
 		[JsonProperty("should_update_bones_and_effects_offscreen")]
 		public IExpression[] ShouldUpdateBonesAndEffectsOffscreen { get; set; } = null;
 		
 		[JsonProperty("should_update_effects_offscreen")]
 		public IExpression[] ShouldUpdateEffectsOffscreen { get; set; } = null;
-	}
-	
-	public class AnnoyingMolangElement
-	{
-		public Dictionary<string, IExpression[]> Expressions;
-		public string                                StringValue;
-
-		public AnnoyingMolangElement(Dictionary<string, IExpression[]> expressions)
-		{
-			Expressions = expressions;
-			StringValue = null;
-
-			IsString = false;
-		}
-
-		public AnnoyingMolangElement(string stringValue)
-		{
-			StringValue = stringValue;
-			Expressions = null;
-
-			IsString = true;
-		}
-		
-		public bool IsString { get; }
-
-		//	public static implicit operator AnnoyingMolangElement(Dictionary<string, IExpression[]> dictionary) => new AnnoyingMolangElement { Expressions = dictionary };
-	//	public static implicit operator AnnoyingMolangElement(string stringValue) => new AnnoyingMolangElement { StringValue = stringValue };
 	}
 }

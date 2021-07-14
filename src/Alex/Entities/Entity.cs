@@ -303,7 +303,7 @@ namespace Alex.Entities
 			//set => _entityProperties = value;
 		}
 		
-		public AnimationController AnimationController { get; }
+		public AnimationComponent AnimationController { get; }
 		public TimeSpan LifeTime => DateTime.UtcNow - TimeOfCreation;
 		private readonly DateTime TimeOfCreation;
 		private Stopwatch _lifeTime;
@@ -343,7 +343,7 @@ namespace Alex.Entities
 			EntityComponents.Push(Movement);
 					
 			//EntityComponents.Push(Movement = new EntityMovement(this));
-			EntityComponents.Push(AnimationController = new AnimationController(this));
+			EntityComponents.Push(AnimationController = new AnimationComponent(this));
 			EntityComponents.Push(Effects = new EffectManagerComponent(this));
 			
 			Effect = new EntityEffect();
@@ -1847,6 +1847,11 @@ namespace Alex.Entities
 		[MoFunction("modified_move_speed")]
 		public double ModifiedMoveSpeed()
 		{
+			var sp = Movement.MetersPerSecond;
+
+			if (MathF.Abs(sp) < 0.01f)
+				return 0;
+			
 			var maxSpeed = 4.317f;
 			if (IsSneaking)
 			{
@@ -1860,7 +1865,7 @@ namespace Alex.Entities
 			maxSpeed *= 10f;
 			maxSpeed *= (float)CalculateMovementFactor();
 			
-			return Movement.MetersPerSecond / maxSpeed;
+			return sp / maxSpeed;
 		}
 
 		[MoFunction("time_stamp")]

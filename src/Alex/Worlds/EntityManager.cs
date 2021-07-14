@@ -107,7 +107,7 @@ namespace Alex.Worlds
 
 						var entityBox = entity.GetVisibilityBoundingBox(entityPos);
 
-						if (World.Camera.BoundingFrustum.Contains(entityBox) != ContainmentType.Disjoint)
+						//if (World.Camera.BoundingFrustum.Contains(entityBox) != ContainmentType.Disjoint)
 						{
 							rendered.Add(entity);
 

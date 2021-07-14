@@ -16,11 +16,6 @@ namespace Alex.MoLang.Parser.Tokenizer
             this._code = code;
         }
 
-        public bool HasNext()
-        {
-            return _index < _code.Length;
-        }
-
         public Token Next()
         {
             while (_index < _code.Length)
@@ -47,91 +42,97 @@ namespace Alex.MoLang.Parser.Tokenizer
 
                     return new Token(tokenType, GetPosition());
                 }
-                else if (expr.Equals('\''))
+                else
                 {
-                    int stringStart  = _index + 1;
-                    int stringLength = 0;
-
-                    while (stringStart + stringLength < _code.Length && !GetCharacterAt(stringStart + stringLength).Equals('\''))
+                    if (expr.Equals('\''))
                     {
-                        stringLength++;
-                    }
+                        int stringStart  = _index + 1;
+                        int stringLength = 0;
 
-                    stringLength++;
-                    _index = stringStart + stringLength;
-
-                    return new Token(
-                        TokenType.String, _code.Substring(stringStart, stringLength - 1), GetPosition());
-                }
-                else if (char.IsLetter(expr))
-                {
-                    var nameStart  = _index;
-                    int nameLength = 1;
-
-                    while (nameStart + nameLength < _code.Length && (char.IsLetterOrDigit(GetCharacterAt(nameStart + nameLength))
-                                                                     || GetCharacterAt(nameStart + nameLength).Equals('_')
-                                                                     || GetCharacterAt(nameStart + nameLength).Equals('.')))
-                    {
-                        nameLength++;
-                    }
-
-                    string    value = _code.Substring(_index, nameLength);
-                    TokenType token = TokenType.BySymbol(value);
-
-                    if (token == null)
-                    {
-                        token = TokenType.Name;
-                    }
-
-                    _index = nameStart + nameLength;
-
-                    return new Token(token, value, GetPosition());
-                }
-                else if (char.IsDigit(expr))
-                {
-                    int     numStart   = _index;
-                    int     numLength  = 1;
-                    bool hasDecimal = false;
-                    bool isFloat = false;
-
-
-                    while (numStart + numLength < _code.Length)
-                    {
-                        var character = GetCharacterAt(numStart + numLength);
-
-                        if (!char.IsDigit(character))
+                        while (stringStart + stringLength < _code.Length && !GetCharacterAt(stringStart + stringLength).Equals('\''))
                         {
-                            if (character == 'f' && !isFloat)
-                            {
-                                isFloat = true;
-                            }
-                            else if (character == '.' && !hasDecimal)
-                            {
-                                hasDecimal = true;
-                            }
-                            else
-                            {
-                                break;
-                            }
+                            stringLength++;
                         }
 
-                        numLength++;
+                        stringLength++;
+                        _index = stringStart + stringLength;
+
+                        return new Token(
+                            TokenType.String, _code.Substring(stringStart, stringLength - 1), GetPosition());
+                    }
+                    
+                    if (char.IsLetter(expr))
+                    {
+                        var nameStart  = _index;
+                        int nameLength = 1;
+
+                        while (nameStart + nameLength < _code.Length && (char.IsLetterOrDigit(GetCharacterAt(nameStart + nameLength))
+                                                                         || GetCharacterAt(nameStart + nameLength).Equals('_')
+                                                                         || GetCharacterAt(nameStart + nameLength).Equals('.')))
+                        {
+                            nameLength++;
+                        }
+
+                        string    value = _code.Substring(_index, nameLength);
+                        TokenType token = TokenType.BySymbol(value);
+
+                        if (token == null)
+                        {
+                            token = TokenType.Name;
+                        }
+
+                        _index = nameStart + nameLength;
+
+                        return new Token(token, value, GetPosition());
+                    }
+                    
+                    if (char.IsDigit(expr))
+                    {
+                        int     numStart   = _index;
+                        int     numLength  = 1;
+                        bool hasDecimal = false;
+                        bool isFloat = false;
+
+
+                        while (numStart + numLength < _code.Length)
+                        {
+                            var character = GetCharacterAt(numStart + numLength);
+
+                            if (!char.IsDigit(character))
+                            {
+                                if (character == 'f' && !isFloat)
+                                {
+                                    isFloat = true;
+                                }
+                                else if (character == '.' && !hasDecimal)
+                                {
+                                    hasDecimal = true;
+                                }
+                                else
+                                {
+                                    break;
+                                }
+                            }
+
+                            numLength++;
+
+                            if (isFloat)
+                                break;
+                        }
+
+                        _index = numStart + numLength;
 
                         if (isFloat)
-                            break;
-                    }
-
-                    _index = numStart + numLength;
-
-                    if (isFloat)
-                        return new Token(
-                            TokenType.FloatingPointNumber, _code.Substring(numStart, numLength - 1), GetPosition());
+                            return new Token(
+                                TokenType.FloatingPointNumber, _code.Substring(numStart, numLength - 1), GetPosition());
                     
-                    return new Token(TokenType.Number, _code.Substring(numStart, numLength), GetPosition());
-                }
-                else if (expr.Equals('\n') || expr.Equals('\r'))
-                {
-                    _currentLine++;
+                        return new Token(TokenType.Number, _code.Substring(numStart, numLength), GetPosition());
+                    }
+                    
+                    if (expr.Equals('\n') || expr.Equals('\r'))
+                    {
+                        _currentLine++;
+                    }
                 }
 
                 _index++;
@@ -146,17 +147,12 @@ namespace Alex.MoLang.Parser.Tokenizer
             _lastStepLine = _currentLine;
         }
 
-        public TokenPosition GetPosition()
+        private TokenPosition GetPosition()
         {
             return new TokenPosition(_lastStepLine, _currentLine, _lastStep, _index);
         }
 
-        public string GetCharacterAt(string str, int i)
-        {
-            return str.Substring(i, 1);
-        }
-
-        public char GetCharacterAt(int index)
+        private char GetCharacterAt(int index)
         {
              if (index > _code.Length - 1)
                 throw new MoLangParserException($"Value '{index + 1}' is outside of range Min: 0, Max:{_code.Length - 1}", new IndexOutOfRangeException(nameof(index)));

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Alex.MoLang.Parser;
 using Alex.ResourcePackLib.Json.Bedrock.Entity;
+using Alex.ResourcePackLib.Json.Bedrock.MoLang;
 using Newtonsoft.Json;
 
 namespace Alex.ResourcePackLib.Json.Bedrock.Attachables

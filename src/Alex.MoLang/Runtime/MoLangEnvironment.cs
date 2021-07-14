@@ -5,6 +5,7 @@ using System.Linq;
 using Alex.MoLang.Runtime.Exceptions;
 using Alex.MoLang.Runtime.Struct;
 using Alex.MoLang.Runtime.Value;
+using Alex.MoLang.Utils;
 
 namespace Alex.MoLang.Runtime
 {
@@ -16,22 +17,22 @@ namespace Alex.MoLang.Runtime
 
 		public Dictionary<string, IMoStruct> Structs { get; } = new(StringComparer.OrdinalIgnoreCase);
 
-		public IMoValue GetValue(string name) {
+		public IMoValue GetValue(MoPath name) {
 			return GetValue(name, MoParams.Empty);
 		}
 
-		public IMoValue GetValue(string name, MoParams param) {
+		public IMoValue GetValue(MoPath name, MoParams param) {
 			try
 			{
-				var index = name.IndexOf('.');
+		//		var index = name.IndexOf('.');
 				//string[] segments = name.;
-				string main = name.Substring(0, index); //.Dequeue();
+			//	string main = name.Substring(0, index); //.Dequeue();
 
 				//if (!Structs.ContainsKey(main))
 				//{
 				//	throw new MoLangRuntimeException($"Cannot retrieve struct: {name}", null);
 				//}
-				return Structs[main].Get(name.Substring(index + 1), param);
+				return Structs[name.Segment].Get(name.Segments[0], param);
 			}
 			catch (Exception ex)
 			{
@@ -39,18 +40,18 @@ namespace Alex.MoLang.Runtime
 			}
 		}
 
-		public void SetValue(string name, IMoValue value)
+		public void SetValue(MoPath name, IMoValue value)
 		{
 			try
 			{
-				var index = name.IndexOf('.');
-				string main = name.Substring(0, index);
+				//var index = name.IndexOf('.');
+				//string main = name.Substring(0, index);
 
 				//if (!Structs.ContainsKey(main)) {
 				//	throw new MoLangRuntimeException($"Cannot set value on struct: {name}", null);
 				//}
 
-				Structs[main].Set(name.Substring(index + 1), value);
+				Structs[name.Segment].Set(name.Segments[0], value);
 			}
 			catch (Exception ex)
 			{

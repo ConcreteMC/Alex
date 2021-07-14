@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Alex.ResourcePackLib.Json.Bedrock.MoLang;
 using Newtonsoft.Json;
 
 namespace Alex.ResourcePackLib.Json.Bedrock.Entity
@@ -27,8 +28,9 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Entity
         public Dictionary<string, string> Animations { get; set; }
 
         [JsonProperty("render_controllers")] 
-        public AnnoyingMolangElement[] RenderControllers { get; set; } = new AnnoyingMolangElement[0];
-       // [JsonProperty("render_controllers")]
-       // public string[] RenderControllers { get; set; }
+        public AnnoyingMolangElement[] RenderControllers { get; set; }
+        
+        [JsonProperty("animation_controllers")]
+        public AnnoyingMolangElement[] AnimationControllers { get; set; }
     }
 }

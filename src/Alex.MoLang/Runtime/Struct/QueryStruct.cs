@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Text;
 using Alex.MoLang.Runtime.Exceptions;
 using Alex.MoLang.Runtime.Value;
+using Alex.MoLang.Utils;
 using NLog;
 
 namespace Alex.MoLang.Runtime.Struct
@@ -11,7 +12,7 @@ namespace Alex.MoLang.Runtime.Struct
 	public class QueryStruct : IMoStruct
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(QueryStruct));
-		protected IDictionary<string, Func<MoParams, object>> Functions = new Dictionary<string, Func<MoParams, object>>(StringComparer.OrdinalIgnoreCase);
+		protected readonly IDictionary<string, Func<MoParams, object>> Functions = new Dictionary<string, Func<MoParams, object>>(StringComparer.OrdinalIgnoreCase);
 		
 		//private static ConcurrentDictionary<string, int> _missingQueries = new ConcurrentDictionary<string, int>(StringComparer.OrdinalIgnoreCase);
 		/// <inheritdoc />
@@ -49,15 +50,15 @@ namespace Alex.MoLang.Runtime.Struct
 		}
 
 		/// <inheritdoc />
-		public void Set(string key, IMoValue value)
+		public void Set(MoPath key, IMoValue value)
 		{
 			throw new NotSupportedException("Cannot set a value in a query struct.");
 		}
 
 		/// <inheritdoc />
-		public IMoValue Get(string key, MoParams parameters)
+		public IMoValue Get(MoPath key, MoParams parameters)
 		{
-			if (Functions.TryGetValue(key, out var func))
+			if (Functions.TryGetValue(key.ToString(), out var func))
 			{
 				return MoValue.FromObject(func(parameters));
 			}

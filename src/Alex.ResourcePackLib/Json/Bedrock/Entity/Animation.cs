@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Numerics;
@@ -13,11 +14,18 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Entity
 	/// </summary>
 	public class Animation
 	{
-		//	/// <summary>
-	//	///		Determines whether the animation should go back to T0 when finished.
-	//	/// </summary>
-	//	[JsonProperty("loop")]
-	//	public bool Loop { get; set; } = false;
+		public static IExpression[] DefaultTimeUpdate { get; }
+
+		static Animation()
+		{
+			DefaultTimeUpdate = MoLangParser.Parse("query.anim_time + query.delta_time");
+		}
+		
+		/// <summary>
+		///		Determines whether the animation should go back to T0 when finished.
+		/// </summary>
+		[JsonProperty("loop")]
+		public bool Loop { get; set; } = false;
 
 		/// <summary>
 		///		How does time pass when playing the animation.
@@ -55,6 +63,6 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Entity
 		/// </summary>
 		[JsonProperty("bones")]
 		public Dictionary<string, AnimationBoneElement> Bones { get; set; } =
-			new Dictionary<string, AnimationBoneElement>();
+			new Dictionary<string, AnimationBoneElement>(StringComparer.Ordinal);
 	}
 }

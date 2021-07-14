@@ -1,11 +1,10 @@
 using System;
-using System.Collections.Generic;
-using Alex.ResourcePackLib.Json.Converters;
+using Alex.ResourcePackLib.Json.Bedrock;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NLog;
 
-namespace Alex.ResourcePackLib.Json.Bedrock.Entity
+namespace Alex.ResourcePackLib.Json.Converters.Bedrock
 {
 	internal class VersionedResourceConverter<T> : JsonConverter<VersionedResource<T>>
 	{

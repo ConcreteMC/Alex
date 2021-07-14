@@ -11,16 +11,4 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Entity
 		[JsonProperty("initial_state")]
 		public string InitialState { get; set; } = null;
 	}
-
-	public class AnimationState
-	{
-		[JsonProperty("animations")]
-		public AnnoyingMolangElement[] Animations { get; set; }
-		
-		[JsonProperty("transitions")]
-		public AnnoyingMolangElement[] Transitions { get; set; }
-		
-		[JsonProperty("remap_curve")]
-		public Dictionary<string, ControllerVariable> Variables { get; set; }
-	}
 }

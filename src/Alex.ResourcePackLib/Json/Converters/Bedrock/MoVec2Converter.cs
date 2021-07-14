@@ -1,11 +1,12 @@
 using System;
 using System.Collections.Generic;
 using Alex.MoLang.Parser;
+using Alex.ResourcePackLib.Json.Bedrock.MoLang;
 using Alex.ResourcePackLib.Json.Converters.MoLang;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace Alex.ResourcePackLib.Json.Bedrock.Entity
+namespace Alex.ResourcePackLib.Json.Converters.Bedrock
 {
 	public class MoVec2Converter : JsonConverter<MoLangVector2Expression>
 	{

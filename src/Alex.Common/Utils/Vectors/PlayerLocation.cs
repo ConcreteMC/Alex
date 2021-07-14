@@ -79,7 +79,7 @@ namespace Alex.Common.Utils.Vectors
 
 		public void SetPitchBounded(float pitch)
 		{
-			pitch = FixValue(pitch);
+			/*pitch = FixValue(pitch);
 
 			if (pitch < 269.99f && pitch > 89.99f)
 			{
@@ -95,9 +95,9 @@ namespace Alex.Common.Utils.Vectors
 				{
 					pitch = 89.99f;
 				}
-			}
+			}*/
 
-			_pitch = pitch;
+			_pitch = Math.Clamp(pitch, -89.99f, 89.99f);
 		}
 		
 		/*public PlayerLocation(MiNET.Utils.PlayerLocation p)

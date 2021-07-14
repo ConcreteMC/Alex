@@ -460,7 +460,7 @@ namespace Alex.Entities
 
 						look = -look;
 						
-						Player.KnownPosition.HeadYaw = FixValue(Player.KnownPosition.HeadYaw - look.X);
+						Player.KnownPosition.HeadYaw = (Player.KnownPosition.HeadYaw - look.X) % 360f;
 						//Player.KnownPosition.HeadYaw -= look.X;
 						
 						Player.KnownPosition.Pitch -= look.Y;
@@ -487,7 +487,7 @@ namespace Alex.Entities
 
 						var look = (new Vector2((-mouseDelta.X), (mouseDelta.Y)) * (float) CursorSensitivity) * (float) (gt.ElapsedGameTime.TotalSeconds);
 
-						Player.KnownPosition.HeadYaw = FixValue(Player.KnownPosition.HeadYaw - look.X);
+						Player.KnownPosition.HeadYaw = (Player.KnownPosition.HeadYaw - look.X) % 360f;
 
 						Player.KnownPosition.SetPitchBounded(Player.KnownPosition.Pitch - look.Y);
 						//Player.KnownPosition.Pitch -= look.Y; 
