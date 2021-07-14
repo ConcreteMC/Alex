@@ -5,9 +5,11 @@ using System.Linq;
 using Alex.Common;
 using Alex.Common.Graphics;
 using Alex.Common.Gui.Graphics;
+using Alex.Common.Utils;
 using Alex.Common.Utils.Vectors;
 using Alex.Gamestates;
 using Alex.Graphics.Camera;
+using Alex.Utils;
 using Alex.Worlds;
 using Alex.Worlds.Chunks;
 using Microsoft.Xna.Framework;
@@ -27,10 +29,6 @@ namespace Alex.Gui
         private       float _frameAccumulator = 0f;
         private       float _targetTime        = 1f / 10f;
 
-        // private RenderTarget2D _renderTarget;
-        
-     //   private object _containerLock = new object();
-        private SpriteBatch _spriteBatch;
         private Image _marker;
         public GuiMiniMap(World world)
         {
@@ -49,22 +47,12 @@ namespace Alex.Gui
             World.ChunkManager.OnChunkAdded += OnChunkAdded;
             World.ChunkManager.OnChunkRemoved += OnChunkRemoved;
             World.ChunkManager.OnChunkUpdate += OnChunkUpdate;
-
-            _spriteBatch = new SpriteBatch(Alex.Instance.GraphicsDevice) {Name = "Minimap Spritebatch"};
+            
             AddChild(_marker = new Image(AlexGuiTextures.MapMarkerWhite)
             {
                 Anchor = Alignment.MiddleCenter,
                 RotationOrigin = new Vector2(4, 4)
             });
-        }
-
-        /// <inheritdoc />
-        protected override void OnInit(IGuiRenderer renderer)
-        {
-            base.OnInit(renderer);
-            //    _renderTarget = new RenderTarget2D(GuiManager.GraphicsDevice, Width, Height);
-            //  _renderTarget.ContentLost += RenderTargetOnContentLost;
-            //    Background.Texture = (TextureSlice2D) _renderTarget;
         }
 
         private void OnChunkUpdate(object sender, ChunkUpdatedEventArgs e)
@@ -98,18 +86,12 @@ namespace Alex.Gui
 
         private bool TryAdd(ChunkCoordinates coordinates, TextureContainer container)
         {
-           // lock (_containerLock)
-            {
-                return _textureContainers.TryAdd(coordinates, container);
-            }
+            return _textureContainers.TryAdd(coordinates, container);
         }
 
         private bool TryGetContainer(ChunkCoordinates coordinates, out TextureContainer container)
         {
-          //  lock (_containerLock)
-            {
-                if (!_textureContainers.TryGetValue(coordinates, out container)) return false;
-            }
+            if (!_textureContainers.TryGetValue(coordinates, out container)) return false;
 
             if (container.Invalidated)
             {
@@ -185,7 +167,7 @@ namespace Alex.Gui
                     if (container.IsDirty)
                     {
                         World.ChunkManager.TryGetChunk(container.Coordinates, out var chunk);
-                        container.Update(chunk, device, _spriteBatch);
+                        container.Update(World, chunk, device);
                     }
                 }
             }
@@ -235,15 +217,12 @@ namespace Alex.Gui
                 World.ChunkManager.OnChunkRemoved -= OnChunkRemoved;
                 World.ChunkManager.OnChunkUpdate -= OnChunkUpdate;
                 
-              //  lock (_containerLock)
-                {
-                    var elements = _textureContainers.ToArray();
-                    _textureContainers.Clear();
+                var elements = _textureContainers.ToArray();
+                _textureContainers.Clear();
 
-                    foreach (var element in elements)
-                    {
-                        element.Value?.Dispose();
-                    }
+                foreach (var element in elements)
+                {
+                    element.Value?.Dispose();
                 }
             }
         }
@@ -253,12 +232,14 @@ namespace Alex.Gui
             public bool IsDirty { get; private set; }
             public bool Invalidated { get; private set; } = false;
             
-            public RenderTarget2D Texture { get; private set; }
+            public Texture2D Texture { get; private set; }
 
             public ChunkCoordinates Coordinates { get; }
+            private Map _map;
             public TextureContainer(ChunkCoordinates coordinates)
             {
                 Coordinates = coordinates;
+                _map = new Map(16, 16);
             }
 
             private void Init(GraphicsDevice device)
@@ -266,11 +247,10 @@ namespace Alex.Gui
                 if (Texture != null)
                     return;
                 
-                Texture = new RenderTarget2D(device, 16, 16, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
-                Texture.ContentLost += TextureOnContentLost;
+                Texture = new Texture2D(device, 16, 16);
             }
 
-            public void Update(ChunkColumn target, GraphicsDevice device, SpriteBatch spriteBatch)
+            public void Update(World world, ChunkColumn target, GraphicsDevice device)
             {
                 if (target == null)
                 {
@@ -281,33 +261,48 @@ namespace Alex.Gui
                 if (Texture == null)
                     Init(device);
                 
-                using (device.PushRenderTarget(Texture))
+                for (int x = 0; x < 16; x++)
                 {
-                    spriteBatch.Begin(
-                        SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointWrap,
-                        DepthStencilState.Default, RasterizerState.CullCounterClockwise);
-
-                    for (int x = 0; x < 16; x++)
+                    for (int z = 0; z < 16; z++)
                     {
-                        for (int z = 0; z < 16; z++)
-                        {
-                            var height = target.GetHeight(x, z);
-                            var state = target.GetBlockState(x, height - 1, z);
+                        var height = target.GetHeight(x, z) - 1;
+                        var surrounding = GetHeighestSurrounding(world, target, x, height, z);
+                        var offset = 2;
 
-                            var color = state?.Block?.BlockMaterial?.MapColor?.GetMapColor(2) ?? Color.Black;
-                            spriteBatch.FillRectangle(new Rectangle(x, z, 1, 1), color);
+                        if (surrounding > height)
+                        {
+                            var difference = surrounding - height;
+
+                            if (difference <= 8)
+                                offset = 1;
+                            else
+                                offset = 0;
+                        }
+
+                        var state = target.GetBlockState(x, height, z);
+                        var blockMaterial = state?.Block?.BlockMaterial;
+
+                        if (blockMaterial != null)
+                        {
+                            _map[x, z] = blockMaterial.MapColor.Index * 4 + offset;
                         }
                     }
-
-                    spriteBatch.End();
                 }
 
+                Texture.SetData(_map.GetData());
                 IsDirty = false;
             }
 
-            private void TextureOnContentLost(object sender, EventArgs e)
+            private int GetHeighestSurrounding(World world, ChunkColumn chunk, int x, int y, int z)
             {
-                MarkDirty();
+                var coords = new BlockCoordinates(x + (chunk.X * 16), y, z + (chunk.Z * 16));
+                
+                var h = Math.Max(0, world.GetHeight(coords + BlockCoordinates.West) - 1);
+                h = Math.Max(h, world.GetHeight(coords + BlockCoordinates.East) - 1);
+                h = Math.Max(h, world.GetHeight(coords + BlockCoordinates.North) - 1);
+                h = Math.Max(h, world.GetHeight(coords + BlockCoordinates.South) - 1);
+
+                return h;
             }
 
             public void MarkDirty()
@@ -318,6 +313,8 @@ namespace Alex.Gui
             /// <inheritdoc />
             public void Dispose()
             {
+                _map?.Dispose();
+                _map = null;
                Texture?.Dispose();
                Texture = null;
             }

@@ -154,13 +154,18 @@ namespace Alex.Blocks.Materials
 		private ItemType _requiredTool = ItemType.Any;
 		private ItemMaterial _requiredMaterial = ItemMaterial.Any;
 
+		private int _mapColorIndex;
+		public int ColorIndex => MapColor.Index * 4 + _mapColorIndex;
+		public Color BlockColor => Utils.MapColor.GetBlockColor(MapColor.Index * 4 + _mapColorIndex);
 		public IMapColor MapColor { get; set; }
 		public TintType TintType { get; protected set; } = TintType.Default;
 		public Color TintColor { get; protected set; } = Color.White;
 
 		public Material(IMapColor color)
 		{
-			this.MapColor = color;
+			MapColor = color;
+			_mapColorIndex = 2;
+			//this.MapColor = color;
 		}
 
 		public bool IsWatterLoggable { get; set; } = false;
@@ -203,9 +208,11 @@ namespace Alex.Blocks.Materials
 			return this;
 		}
 
-		public IMaterial WithMapColor(IMapColor color)
+		public IMaterial WithMapColor(IMapColor color, int index = 2)
 		{
 			MapColor = color;
+			_mapColorIndex = index;
+			//MapColor = color;
 
 			return this;
 		}

@@ -7,7 +7,7 @@ namespace Alex.Utils
 	public class MapColor : IMapColor
 	{
 		private static readonly MapColor[] BaseColors = new MapColor[64];
-		//public static MapColor[] BLOCK_COLORS = new MapColor[16];
+		private static readonly Color[] BlockColors = new Color[256];
 
 		public static readonly MapColor Air = new(0, 0, 0, 0, 0);
 		public static readonly MapColor Grass = new(1, 127, 178, 56);
@@ -78,12 +78,16 @@ namespace Alex.Utils
 		public int Index { get; }
 		private MapColor(int index, byte r, byte g, byte b, byte a = 255)
 		{
-			if (index >= 0 && index <= 63)
+			if (index >= 0 && index <= (BaseColors.Length - 1))
 			{
 				Index = index;
 				BaseColor = new Color(r, g, b, a);
-				
 				BaseColors[index] = this;
+				
+				BlockColors[index * 4 + 0] = GetMapColor(0);
+				BlockColors[index*4 + 1] = GetMapColor(1);
+				BlockColors[index*4 + 2] = BaseColor;
+				BlockColors[index*4 + 3] = GetMapColor(3);
 			}
 			else
 			{
@@ -94,32 +98,28 @@ namespace Alex.Utils
 		//See https://minecraft.fandom.com/wiki/Map_item_format
 		public Color GetMapColor(int index)
 		{
-			int i = 220;
+			int i = index switch
+			{
+				0 => 180,
+				1 => 220,
+				2 => 255,
+				3 => 135,
+				_ => 220
+			};
 
-			if (index == 3)
-			{
-				i = 135;
-			}
-			else if (index == 2)
-			{
-				i = 255;
-			}
-			else if (index == 1)
-			{
-				i = 220;
-			}
-			else if (index == 0)
-			{
-				i = 180;
-			}
-
-			var modifier = i / 255;
-			return new Color(BaseColor.R * modifier, BaseColor.G * modifier, BaseColor.B * modifier, BaseColor.A);
+			var modifier = i / 255f;
+			
+			return new Color((byte)(BaseColor.R * modifier), (byte)(BaseColor.G * modifier), (byte)(BaseColor.B * modifier), BaseColor.A);
 		}
-
-		//public static Color GetMapColor(int index)
-		//{
-		//	return COLORS[index].Color;
-		//}
+		
+		public static IMapColor GetBaseColor(int index)
+		{
+			return BaseColors[index];
+		}
+		
+		public static Color GetBlockColor(int index)
+		{
+			return BlockColors[index];
+		}
 	}
 }

@@ -924,7 +924,7 @@ namespace Alex.Worlds
 				return chunk.GetHeight(coords.X & 0xf, coords.Z & 0xf);
 			}
 
-			return 255;
+			return coords.Y;
 		}
 
 		/// <inheritdoc />

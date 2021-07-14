@@ -7,6 +7,8 @@ namespace Alex.Common.Blocks
 	public interface IMaterial
 	{
 		string SoundCategory { get; }
+		int ColorIndex { get; }
+		Color BlockColor { get; }
 		IMapColor MapColor { get; }
 		TintType TintType { get; }
 		Color TintColor { get; }
@@ -25,7 +27,7 @@ namespace Alex.Common.Blocks
 		
 		IMaterial WithSoundCategory(string soundCategory);
 		IMaterial WithTintType(TintType type, Color color);
-		IMaterial WithMapColor(IMapColor color);
+		IMaterial WithMapColor(IMapColor color, int index = 2);
 		IMaterial WithSlipperiness(double value);
 		IMaterial WithHardness(float hardness);
 
@@ -44,6 +46,7 @@ namespace Alex.Common.Blocks
 
 	public interface IMapColor
 	{
+		int Index { get; }
 		Color BaseColor { get; }
 		Color GetMapColor(int index);
 	}
