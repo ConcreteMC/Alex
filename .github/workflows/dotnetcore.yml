@@ -78,7 +78,7 @@ jobs:
         mode: uploadReleaseAsset
         filePath: ./release.zip
         assetName: ${{ format('{0}.zip', matrix.platform) }}
-        tag: ${{ format('Alex Release {0}', matrix.run_number) }}
+        tag: ${{ format('release-{0}', matrix.run_number) }}
         
     - name: Upload artifact
       uses: actions/upload-artifact@v1.0.0
