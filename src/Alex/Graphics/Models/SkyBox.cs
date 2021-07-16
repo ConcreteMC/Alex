@@ -9,9 +9,11 @@ using Alex.Common.Services;
 using Alex.Common.Utils;
 using Alex.Utils;
 using Alex.Worlds;
+using LibNoise.Combiner;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using RocketUI;
 using Color = Microsoft.Xna.Framework.Color;
 using MathF = System.MathF;
 
@@ -24,7 +26,8 @@ namespace Alex.Graphics.Models
 		private float _moonY = 1f/2f;
 
 		private BasicEffect     SkyPlaneEffect       { get; set; }
-	    private BasicEffect     CelestialPlaneEffect { get; set; }
+	    private BasicEffect     SunEffect { get; set; }
+	    private BasicEffect     MoonEffect { get; set; }
 		private AlphaTestEffect CloudsPlaneEffect    { get; set; }
 
 	    private VertexBuffer CloudsPlane { get; set; }
@@ -83,18 +86,34 @@ namespace Alex.Graphics.Models
 
             //var d = 144;
 
-			CelestialPlaneEffect = new BasicEffect(device);
-			CelestialPlaneEffect.VertexColorEnabled = false;
-			CelestialPlaneEffect.LightingEnabled = false;
-			CelestialPlaneEffect.TextureEnabled = true;
+            SunEffect = new BasicEffect(device)
+            {
+	            VertexColorEnabled = false,
+	            LightingEnabled = false,
+	            TextureEnabled = true,
+	            Texture = SunTexture,
+	            FogEnabled = false
+            };
 
-			SkyPlaneEffect = new BasicEffect(device);
-			SkyPlaneEffect.VertexColorEnabled = true;
-			SkyPlaneEffect.FogEnabled = true;
-			SkyPlaneEffect.FogStart = 0;
-			SkyPlaneEffect.FogEnd = 64 * 0.8f;
-			SkyPlaneEffect.LightingEnabled = false;
-			//SkyPlaneEffect.AmbientLightColor
+            MoonEffect = new BasicEffect(device)
+            {
+	            VertexColorEnabled = false,
+	            LightingEnabled = false,
+	            TextureEnabled = true,
+	            Texture = MoonTexture,
+	            FogEnabled = false
+            };
+
+            SkyPlaneEffect = new BasicEffect(device)
+            {
+	            VertexColorEnabled = true,
+	            FogEnabled = true,
+	            FogStart = 0,
+	            FogEnd = 64 * 0.8f,
+	            LightingEnabled = true
+            };
+
+            //SkyPlaneEffect.AmbientLightColor
 			//SkyPlaneEffect.DiffuseColor = Color.White.ToVector3();
 
 			var planeDistance = 64;
@@ -273,7 +292,8 @@ namespace Alex.Graphics.Models
 				//In Water: 0.02R, 0.02G, 0.2B
 				//In Lava: 0.6 0.1 0.0
 				
-				float blendFactor = 0.29f;// 1.0f - System.MathF.Pow(1.0f - (4f - (DrawDistance)), 0.25f); //((Options.VideoOptions.RenderDistance ^2) / 100f) * 0.45f;
+				float blendFactor = 0.29f; 
+			//	blendFactor = 1.0f - System.MathF.Pow(1.0f - (4f - (2f / Options.VideoOptions.RenderDistance)), 0.25f); //((Options.VideoOptions.RenderDistance ^2) / 100f) * 0.45f;
 				
 				var fog = WorldFogColor.ToVector3();
 				var sky = WorldSkyColor.ToVector3();
@@ -292,6 +312,9 @@ namespace Alex.Graphics.Models
 			    return new Color(r * 0.2f + 0.04f, g * 0.2f + 0.04f, b * 0.6f + 0.1f);
 		    }
 	    }
+
+	    private float RainFactor => World.Raining ? World.RainLevel : 0f;
+	    private float ThunderFactor => World.Thundering ? World.ThunderLevel : 0f;
 	    
 	    private int _currentMoonPhase = 0;
 	    public void Update(IUpdateArgs args)
@@ -326,30 +349,20 @@ namespace Alex.Graphics.Models
 			    var modified = _moonPlaneVertices.Select(xx => xx.TextureCoordinate).ToArray();
 			    MoonPlane.SetData(12, modified, 0, modified.Length, MoonPlane.VertexDeclaration.VertexStride);
 		    }
-		    
+
 		    var camera = args.Camera;
-		    SkyPlaneEffect.View = camera.ViewMatrix;
-		    SkyPlaneEffect.Projection = camera.ProjectionMatrix;
-
-		    CelestialPlaneEffect.View = camera.ViewMatrix;
-		    CelestialPlaneEffect.Projection = camera.ProjectionMatrix;
-
+		    SunEffect.View = MoonEffect.View = SkyPlaneEffect.View = camera.ViewMatrix;
+		    SunEffect.Projection = MoonEffect.View = SkyPlaneEffect.Projection = camera.ProjectionMatrix;
+		    MoonEffect.Alpha = SunEffect.Alpha = 1f - RainFactor;
+		    
+		    //SkyPlaneEffect.FogEnd = (OptionsProvider.AlexOptions.VideoOptions.RenderDistance.Value * 16f) * 0.8f;
+		    
 		    if (EnableClouds)
 		    {
 			    CloudsPlaneEffect.View = camera.ViewMatrix;
 			    CloudsPlaneEffect.Projection = camera.ProjectionMatrix;
 		    }
 	    }
-
-	    private static RasterizerState RasterState { get; } = new RasterizerState() { CullMode = CullMode.None };
-	    
-	    private static BlendState CelestialBlendState { get; } = new BlendState()
-	    {
-		    AlphaSourceBlend = Microsoft.Xna.Framework.Graphics.Blend.SourceAlpha,
-		    AlphaDestinationBlend = Microsoft.Xna.Framework.Graphics.Blend.SourceAlpha,
-		    ColorDestinationBlend = Microsoft.Xna.Framework.Graphics.Blend.SourceAlpha,
-		    ColorSourceBlend = Microsoft.Xna.Framework.Graphics.Blend.SourceAlpha
-	    };
 	    
 	    public void Draw(IRenderArgs renderArgs)
 	    {
@@ -357,54 +370,59 @@ namespace Alex.Graphics.Models
 		    
 		    if (!CanRender || !RenderSkybox) return;
 		    
-		    var depthState = renderArgs.GraphicsDevice.DepthStencilState;
-		    var raster = renderArgs.GraphicsDevice.RasterizerState;
-		    var bl = renderArgs.GraphicsDevice.BlendState;
+		    SkyPlaneEffect.FogColor = AtmosphereColor.ToVector3();
 
-		  renderArgs.GraphicsDevice.DepthStencilState = DepthStencilState.DepthRead;
-		    renderArgs.GraphicsDevice.RasterizerState = RasterState;
-			renderArgs.GraphicsDevice.BlendState = BlendState.AlphaBlend;
-			
-			DrawSky(renderArgs, renderArgs.Camera.Position);
+			using (var context = GraphicsContext.CreateContext(renderArgs.GraphicsDevice, BlendState.Opaque, DepthStencilState.DepthRead, RasterizerState.CullNone))
+			{
+				var position = renderArgs.Camera.Position;
+				DrawSky(renderArgs, position);
 
-			if (World.Dimension == Dimension.Overworld)
-		    {
-			    var backup = renderArgs.GraphicsDevice.BlendState;
-			
-			    renderArgs.GraphicsDevice.BlendState = CelestialBlendState;
-			    
-			    DrawSun(renderArgs, renderArgs.Camera.Position);
+				if (World.Dimension == Dimension.Overworld)
+				{
+					using (context.CreateContext(BlendState.Additive))
+					{
+						DrawSun(renderArgs, position);
 
-			    DrawMoon(renderArgs, renderArgs.Camera.Position);
+						DrawMoon(renderArgs, position);
+					}
 
-			    renderArgs.GraphicsDevice.BlendState = backup;
-			    
-			    if (EnableClouds)
-				    DrawClouds(renderArgs, renderArgs.Camera.Position);
-		    }
+					if (EnableClouds)
+						DrawClouds(renderArgs, position);
+				}
 
-			DrawVoid(renderArgs, renderArgs.Camera.Position);
-
-		    renderArgs.GraphicsDevice.DepthStencilState = depthState;
-		    renderArgs.GraphicsDevice.RasterizerState = raster;
-		    renderArgs.GraphicsDevice.BlendState = bl;
+				DrawVoid(renderArgs, position);
+			}
 	    }
 
+	    private void DrawVoid(IRenderArgs renderArgs, Vector3 position)
+	    {
+		    // Void
+		    renderArgs.GraphicsDevice.SetVertexBuffer(SkyPlane);
+
+		    SkyPlaneEffect.World = Matrix.CreateTranslation(0, -16, 0) * Matrix.CreateTranslation(position);
+			   // SkyPlaneEffect.DiffuseColor = VoidColor.ToVector3();
+			    SkyPlaneEffect.AmbientLightColor = VoidColor.ToVector3();
+
+		    foreach (var pass in SkyPlaneEffect.CurrentTechnique.Passes)
+		    {
+			    pass.Apply();
+			    renderArgs.GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, SkyPlane.VertexCount / 3);
+		    }
+	    }
+	    
 		private void DrawSky(IRenderArgs renderArgs, Vector3 position)
 		{
-			SkyPlaneEffect.FogColor = AtmosphereColor.ToVector3();
-			SkyPlaneEffect.World = Matrix.CreateRotationX(MathHelper.Pi)
-			                       * Matrix.CreateTranslation(0, 16, 0)
-			                       * Matrix.CreateTranslation(position);
-		    
-			SkyPlaneEffect.DiffuseColor = SkyPlaneEffect.AmbientLightColor = WorldSkyColor.ToVector3();
+			SkyPlaneEffect.World = Matrix.CreateRotationX(MathHelper.Pi) * Matrix.CreateTranslation(0, 16, 0) * Matrix.CreateTranslation(position);
+
+			//SkyPlaneEffect.DiffuseColor = WorldSkyColor.ToVector3();
+			SkyPlaneEffect.AmbientLightColor = WorldSkyColor.ToVector3();
 			
 			// Sky
 			renderArgs.GraphicsDevice.SetVertexBuffer(SkyPlane);
 			foreach (var pass in SkyPlaneEffect.CurrentTechnique.Passes)
 			{
 				pass.Apply();
-				renderArgs.GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, SkyPlane.VertexCount);
+				renderArgs.GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, SkyPlane.VertexCount / 3);
 			}
 		}
 
@@ -421,23 +439,23 @@ namespace Alex.Graphics.Models
 			foreach (var pass in CloudsPlaneEffect.CurrentTechnique.Passes)
 			{
 				pass.Apply();
-				renderArgs.GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, 2);
+				renderArgs.GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, CloudsPlane.VertexCount / 3);
 			}
 		}
 
         private void DrawSun(IRenderArgs renderArgs, Vector3 position)
 		{
 			// Sun
-			CelestialPlaneEffect.Texture = SunTexture;
-			CelestialPlaneEffect.World =
+			SunEffect.World =
 				Matrix.CreateTranslation(0, 100, 0)
-			                             * Matrix.CreateRotationX(MathHelper.TwoPi * CelestialAngle) * Matrix.CreateTranslation(position);
+				* Matrix.CreateRotationX(MathHelper.TwoPi * CelestialAngle) 
+				* Matrix.CreateTranslation(position);
 
 			renderArgs.GraphicsDevice.SetVertexBuffer(CelestialPlane);
-			foreach (var pass in CelestialPlaneEffect.CurrentTechnique.Passes)
+			foreach (var pass in SunEffect.CurrentTechnique.Passes)
 			{
 				pass.Apply();
-				renderArgs.GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, CelestialPlane.VertexCount);
+				renderArgs.GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, CelestialPlane.VertexCount / 3);
 			}
 			
 		}
@@ -445,32 +463,18 @@ namespace Alex.Graphics.Models
 		private void DrawMoon(IRenderArgs renderArgs, Vector3 position)
 		{
 			// Moon
-			CelestialPlaneEffect.Texture = MoonTexture;
-			CelestialPlaneEffect.World = Matrix.CreateTranslation(0, -100, 0)
-			                                                                                     * Matrix.CreateRotationX(MathHelper.TwoPi * CelestialAngle) * Matrix.CreateTranslation(position);
+			//CelestialPlaneEffect.Texture = MoonTexture;
+			MoonEffect.World = Matrix.CreateTranslation(0, -100, 0)
+			                   * Matrix.CreateRotationX(MathHelper.TwoPi * CelestialAngle) 
+			                   * Matrix.CreateTranslation(position);
 
 			renderArgs.GraphicsDevice.SetVertexBuffer(MoonPlane);
-			foreach (var pass in CelestialPlaneEffect.CurrentTechnique.Passes)
+			foreach (var pass in SunEffect.CurrentTechnique.Passes)
 			{
 				pass.Apply();
-				renderArgs.GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, MoonPlane.VertexCount);
+				renderArgs.GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, MoonPlane.VertexCount / 3);
 			}
 			
-		}
-
-		private void DrawVoid(IRenderArgs renderArgs, Vector3 position)
-		{
-			// Void
-			renderArgs.GraphicsDevice.SetVertexBuffer(SkyPlane);
-
-			SkyPlaneEffect.World = Matrix.CreateTranslation(0, -16, 0) * Matrix.CreateTranslation(position);
-			SkyPlaneEffect.DiffuseColor = SkyPlaneEffect.AmbientLightColor = VoidColor.ToVector3();
-
-			foreach (var pass in SkyPlaneEffect.CurrentTechnique.Passes)
-			{
-				pass.Apply();
-				renderArgs.GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, SkyPlane.VertexCount);
-			}
 		}
 
 		public void Dispose()
@@ -484,7 +488,8 @@ namespace Alex.Graphics.Models
 			CloudTexture?.Dispose();
 			
 			SkyPlaneEffect?.Dispose();
-			CelestialPlaneEffect?.Dispose();
+			SunEffect?.Dispose();
+			MoonEffect?.Dispose();
 			CloudsPlaneEffect?.Dispose();
 		}
 	}

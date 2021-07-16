@@ -29,8 +29,9 @@ namespace Alex.Networking.Java.Packets.Play
 		ExitEnd = 4,
 		DemoMessage = 5,
 		ArrowHitPlayer = 6,
-		FadeValue = 7,
-		FadeTime = 8,
-		PlayerElderGuardianMob = 10
+		RainLevelChange = 7,
+		ThunderLevelChange = 8,
+		PlayerElderGuardianMob = 10,
+		EnableRespawnScreen = 11
 	}
 }

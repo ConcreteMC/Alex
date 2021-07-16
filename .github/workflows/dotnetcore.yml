@@ -6,7 +6,7 @@ on:
 
 jobs:
   nuget:
-    name: Publish to NuGET
+    name: Publish Alex.MoLang to NuGET
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2

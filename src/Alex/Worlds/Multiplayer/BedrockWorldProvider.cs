@@ -103,7 +103,7 @@ namespace Alex.Worlds.Multiplayer
 
 		private void SendLocation(PlayerLocation location)
 		{
-			Client.SendMcpeMovePlayer(new PlayerLocation(location.X, location.Y + Player.EyeLevel, location.Z, -location.HeadYaw,-location.Yaw, -location.Pitch)
+			Client.SendMcpeMovePlayer(new PlayerLocation(location.X, location.Y + Player.EyeLevel, location.Z, -location.HeadYaw,-location.Yaw, location.Pitch)
 			{
 				OnGround = location.OnGround
 			}, 0, World.Time);

@@ -70,7 +70,9 @@ namespace Alex.Worlds
 		public long Time      { get; private set; } = 1;
 		public long TimeOfDay { get; private set; } = 1;
 		public bool Raining   { get; private set; } = false;
+		public float RainLevel { get; private set; } = 0f;
 		public bool Thundering { get; private set; } = false;
+		public float ThunderLevel { get; private set; } = 0f;
 		
 		public bool DrowningDamage      { get; private set; } = true;
 		public bool CommandblockOutput  { get; private set; } = true;
@@ -1271,14 +1273,16 @@ namespace Alex.Worlds
 			TimeOfDay = Math.Abs(timeOfDay);
 		}
 
-		public void SetRain(bool raining)
+		public void SetRain(bool raining, float rainLevel = 0f)
 		{
 			Raining = raining;
+			RainLevel = rainLevel;
 		}
 		
-		public void SetThunder(bool thundering)
+		public void SetThunder(bool thundering, float thunderLevel = 0f)
 		{
 			Thundering = thundering;
+			ThunderLevel = thunderLevel;
 		}
 
 		public void SetBlockState(BlockCoordinates coordinates, BlockState blockState, BlockUpdatePriority priority = BlockUpdatePriority.High)
