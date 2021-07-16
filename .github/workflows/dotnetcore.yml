@@ -31,14 +31,17 @@ jobs:
         - os: ubuntu-latest
           rid: linux-x64
           artifact: 'Linux Binaries'
+          platform: 'Linux'
           
         - os: macos-latest
           rid: osx-x64
           artifact: 'MacOS Binaries'
+          platform: 'MacOS'
           
         - os: windows-latest
           rid: win-x64
           artifact: 'Windows Binaries'
+          platform: 'Windows'
 
     steps:
     - uses: actions/checkout@v2
@@ -61,11 +64,26 @@ jobs:
     #- name: Set executable permissions
     #  working-directory: src/Alex/build
     #  run: chmod +x Alex
-
+        
+    - name: Zip Build
+      uses: papeloto/action-zip@v1
+      with:
+        files: "src/Alex/build"
+        dest: ./release.zip
+        
+    - name: Create Release
+      uses: tix-factory/release-manager@v1
+      with:
+        github_token: ${{ secrets.github_token }}
+        mode: uploadReleaseAsset
+        filePath: ./release.zip
+        assetName: ${{ format('{0}.zip', matrix.platform) }}
+        tag: ${{ format('{0}-release-{1}', matrix.platform, github.run_id) }}
+        
     - name: Upload artifact
       uses: actions/upload-artifact@v1.0.0
       with:
         # Artifact name
         name: ${{matrix.artifact}}
         # Directory containing files to upload
-        path: "src/Alex/build"
+        path: ./release.zip
