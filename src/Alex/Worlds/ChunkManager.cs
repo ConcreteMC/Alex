@@ -262,7 +262,7 @@ namespace Alex.Worlds
 		
 		private bool ProcessQueue()
 		{
-			var maxThreads = Options.VideoOptions.ChunkThreads.Value;
+			var maxThreads = Options.MiscelaneousOptions.ChunkThreads.Value;
 
 			if (Interlocked.Read(ref _threadsRunning) >= maxThreads)
 			{

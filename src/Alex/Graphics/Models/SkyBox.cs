@@ -334,8 +334,6 @@ namespace Alex.Graphics.Models
 		    CelestialPlaneEffect.View = camera.ViewMatrix;
 		    CelestialPlaneEffect.Projection = camera.ProjectionMatrix;
 
-		    var position = camera.Position;
-		    
 		    if (EnableClouds)
 		    {
 			    CloudsPlaneEffect.View = camera.ViewMatrix;

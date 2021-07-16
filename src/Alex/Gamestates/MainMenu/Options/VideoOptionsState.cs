@@ -12,26 +12,20 @@ namespace Alex.Gamestates.MainMenu.Options
         private Slider       GuiScaleGlider     { get; set; }
         private Slider       FpsSlider          { get; set; }
         private ToggleButton FrameRateLimiter   { get; set; }
-        private TextElement  Description        { get; set; }
         private Slider       RenderDistance     { get; set; }
-        private Slider       ProcessingThreads  { get; set; }
         private Slider       Brightness         { get; set; }
         private ToggleButton VSync              { get; set; }
         private ToggleButton Fullscreen         { get; set; }
-        private ToggleButton Depthmap           { get; set; }
-        private ToggleButton Minimap            { get; set; }
         private ToggleButton Skybox             { get; set; }
         private Slider       Antialiasing       { get; set; }
         private ToggleButton CustomSkins        { get; set; }
         private ToggleButton ClientSideLighting { get; set; }
-        private ToggleButton ChunkMeshInRam     { get; set; }
         private ToggleButton SmoothLighting     { get; set; }
         private ToggleButton GraphicsMode       { get; set; }
         private ToggleButton ParticleToggle { get; set; }
         private ToggleButton EntityCulling { get; set; }
         private ToggleButton Fog { get; set; }
         private Slider EntityRenderDistance { get; set; }
-        private Dictionary<IGuiControl, string> Descriptions { get; } = new Dictionary<IGuiControl, string>();
         public VideoOptionsState(GuiPanoramaSkyBox skyBox) : base(skyBox)
         {
             TitleTranslationKey = "options.videoTitle";
@@ -51,10 +45,7 @@ namespace Alex.Gamestates.MainMenu.Options
                         v => $"GUI Scale: {((int) v == 0 ? "Auto" : v.ToString("0"))}",
                         options => options.VideoOptions.GuiScale, 0, 3, 1));
 
-                AddGuiRow(
-                    ProcessingThreads = CreateSlider(
-                        "Processing Threads: {0}", o => Options.VideoOptions.ChunkThreads, 1,
-                        Environment.ProcessorCount, 1),
+                AddGuiRow( GraphicsMode = CreateToggle("Fancy Graphics: {0}", options => options.VideoOptions.FancyGraphics),
                     Brightness = CreateSlider("Brightness: {0}%", o => Options.VideoOptions.Brightness, 0, 100, 1));
 
                 AddGuiRow(
@@ -79,9 +70,8 @@ namespace Alex.Gamestates.MainMenu.Options
                         o => { return Options.VideoOptions.UseVsync; }),
                     Fullscreen = CreateToggle("Fullscreen: {0}", o => { return Options.VideoOptions.Fullscreen; }));
 
-                AddGuiRow(
-                    GraphicsMode = CreateToggle("Fancy Graphics: {0}", options => options.VideoOptions.FancyGraphics),
-                    Minimap = CreateToggle("Minimap: {0}", options => options.VideoOptions.Minimap));
+               // AddGuiRow(
+              //      GraphicsMode = CreateToggle("Fancy Graphics: {0}", options => options.VideoOptions.FancyGraphics));
 
                 AddGuiRow(
                     Skybox = CreateToggle("Render Skybox: {0}", options => options.VideoOptions.Skybox),
@@ -96,38 +86,12 @@ namespace Alex.Gamestates.MainMenu.Options
                     Fog = CreateToggle("Render Fog: {0}", options => options.VideoOptions.Fog),
                     EntityRenderDistance = CreateSlider(
                         "Entity Render Distance: {0}", options => options.VideoOptions.EntityRenderDistance, 2, 32, 1));
-                
-                /*  AddGuiRow(
-                      /ClientSideLighting = CreateToggle(
-                          "Client Side Lighting: {0}", options => options.VideoOptions.ClientSideLighting), 
-                      SmoothLighting = CreateToggle("Smooth Lighting: {0}", o => o.VideoOptions.SmoothLighting));*/
 
-                /* AddGuiRow(
-                     ChunkMeshInRam = CreateToggle("Meshes in RAM: {0}", options => options.MiscelaneousOptions.MeshInRam));*/
-
-                Description = new TextElement()
-                {
-                    Anchor = Alignment.MiddleLeft, Margin = new Thickness(5, 15, 5, 5), MinHeight = 80
-                };
-
-                var row = AddGuiRow(Description);
-                row.ChildAnchor = Alignment.MiddleLeft;
-                
-                Descriptions.Add(
-                    Fog,
-                    $"{TextColor.Bold}Render Fog:{TextColor.Reset}\nRenders fog to smooth out the render distance\n");
+                AddDescription(Fog, $"{TextColor.Bold}Render Fog:{TextColor.Reset}", "Renders fog to smooth out the render distance");
 
                 Descriptions.Add(
                     RenderDistance,
                     $"{TextColor.Bold}Render Distance:{TextColor.Reset}\n{TextColor.Red}High values may decrease performance significantly!\n");
-
-                Descriptions.Add(
-                    ProcessingThreads,
-                    $"{TextColor.Bold}Processing Threads:{TextColor.Reset}\nThe maximum amount of concurrent chunk updates to execute.\nIf you are experiencing lag spikes, try lowering this value.");
-
-                Descriptions.Add(
-                    Minimap,
-                    $"{TextColor.Bold}Minimap:{TextColor.Reset}\nIf enabled, renders a minimap in the top right corner of the screen.\nMay impact performance heavily.");
 
                 //  Descriptions.Add(Depthmap,
                 //     $"{TextColor.Bold}Use DepthMap:{TextColor.Reset}\n{TextColor.Bold}{TextColor.Red}EXPERIMENTAL FEATURE{TextColor.Reset}\nHeavy performance impact");
@@ -185,37 +149,7 @@ namespace Alex.Gamestates.MainMenu.Options
             base.OnHide();
             FrameRateLimiter.ValueChanged -= FrameRateLimiterOnValueChanged;
         }
-
-        private IGuiControl _focusedControl = null;
-        private static string DefaultDescription = $"Hover over any setting to get a description.\n\n";
-
-        protected override void OnUpdate(GameTime gameTime)
-        {
-            base.OnUpdate(gameTime);
-
-            var highlighted = Alex.GuiManager.FocusManager.HighlightedElement;
-            if (_focusedControl != highlighted)
-            {
-                _focusedControl = highlighted;
-
-                if (highlighted != null)
-                {
-                    if (Descriptions.TryGetValue(highlighted, out var description))
-                    {
-                        Description.Text = description;
-                    }
-                    else
-                    {
-                        Description.Text = DefaultDescription;
-                    }
-                }
-                else
-                {
-                    Description.Text = DefaultDescription;
-                }
-            }
-        }
-
+        
         private void FrameRateLimiterOnValueChanged(object? sender, bool e)
         {
             FpsSlider.Enabled = e;

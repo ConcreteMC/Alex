@@ -45,6 +45,7 @@ namespace Alex.Gamestates.InGame.Hud
 		private Player Player { get; }
 
 		private OptionsPropertyAccessor<bool> _minimapAccessor;
+		private OptionsPropertyAccessor<double> _minimapSizeAccessor;
 		public PlayingHud(Alex game, World world, TitleComponent titleComponent) : base()
         {
 	        Title = titleComponent;
@@ -118,9 +119,17 @@ namespace Alex.Gamestates.InGame.Hud
 		        Anchor = Alignment.TopRight
 	        };
 
-	        _minimapAccessor = Alex.Options.AlexOptions.VideoOptions.Minimap.Bind(OnMinimapEnabledChanged);
-	        _miniMap.IsVisible = Alex.Options.AlexOptions.VideoOptions.Minimap.Value;
+	        _minimapAccessor = Alex.Options.AlexOptions.MiscelaneousOptions.Minimap.Bind(OnMinimapEnabledChanged);
+	        _miniMap.IsVisible = Alex.Options.AlexOptions.MiscelaneousOptions.Minimap.Value;
+
+	        _minimapSizeAccessor = Alex.Options.AlexOptions.MiscelaneousOptions.MinimapSize.Bind(OnMinimapSizeChanged);
+	        _miniMap.SetSize(Alex.Options.AlexOptions.MiscelaneousOptions.MinimapSize.Value);
         }
+
+		private void OnMinimapSizeChanged(double oldvalue, double newvalue)
+		{
+			_miniMap.SetSize(newvalue);
+		}
 
 		private void OnMinimapEnabledChanged(bool oldvalue, bool newvalue)
 		{
@@ -247,6 +256,9 @@ namespace Alex.Gamestates.InGame.Hud
 	        Chat.Unload();
 	        _minimapAccessor?.Dispose();
 	        _minimapAccessor = null;
+	        
+	        _minimapSizeAccessor?.Dispose();
+	        _minimapSizeAccessor = null;
         }
 
         /// <inheritdoc />
