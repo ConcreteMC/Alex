@@ -618,6 +618,9 @@ namespace Alex.Entities
 		public bool IsSitting { get; set; }
 		
 		[MoProperty("is_charging")]
+		public bool IsCharging { get; set; }
+		
+		[MoProperty("is_angry")]
 		public bool IsAngry { get; set; }
 		
 		[MoProperty("is_interested")]
