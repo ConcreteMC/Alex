@@ -19,14 +19,22 @@ jobs:
         PROJECT_FILE_PATH: src/Alex.MoLang/Alex.MoLang.csproj
         PACKAGE_NAME: Alex.MoLang
         NUGET_KEY: ${{secrets.NUGET_PUBLISH_KEY}}
-        VERSION_REGEX: '^\s*<PackageVersion>(.*)<\/PackageVersion>\s*$'
+        VERSION_STATIC: '1.0.${{github.run_id}}'
         
-  linux:
-    name: Build Linux
-
-    runs-on: ubuntu-latest
+  package:
+    name: Build
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        rid: [linux-x64, osx-x64, win-x64]
+        artifact: ['Linux Binaries', 'MacOS Binaries', 'Windows Binaries']
 
     steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: 'recursive'
+
     - uses: actions/checkout@v2
       with:
         submodules: 'recursive'
@@ -41,114 +49,17 @@ jobs:
       run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
       
     - name: Build
-      run: dotnet publish --configuration Release -o "build-linux" --version-suffix ${{steps.vars.outputs.sha_short}} -r linux-x64 /p:PublishReadyToRun=false /p:TieredCompilation=false --self-contained
+      run: dotnet publish --configuration Release -o "build" --version-suffix ${{steps.vars.outputs.sha_short}} -r ${{matrix.rid}} /p:PublishReadyToRun=false /p:TieredCompilation=false --self-contained
       working-directory: src/Alex
 
-    - name: Set executable permissions
-      working-directory: src/Alex/build-linux
-      run: chmod +x Alex
+    #- name: Set executable permissions
+    #  working-directory: src/Alex/build
+    #  run: chmod +x Alex
 
     - name: Upload artifact
       uses: actions/upload-artifact@v1.0.0
       with:
         # Artifact name
-        name: Linux Binaries
+        name: ${{matrix.artifact}}
         # Directory containing files to upload
-        path: "src/Alex/build-linux"
-
-  windows:
-    name: Build Windows (OpenGL)
-
-    runs-on: [windows-latest]
-
-    steps:
-    - uses: actions/checkout@v2
-      with:
-        submodules: 'recursive'
-      
-    - name: Setup .NET Core
-      uses: actions/setup-dotnet@v1.8.0
-      with:
-        dotnet-version: 5.0.x
-    
-    - name: Get short SHA
-      id: vars
-      run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
-      
-    - name: Build
-      run: dotnet publish --configuration Release -o /build-win --version-suffix ${{steps.vars.outputs.sha_short}} -r win-x64 /p:PublishReadyToRun=false /p:TieredCompilation=false --self-contained
-      working-directory: src/Alex
-
-    - name: Upload artifact
-      uses: actions/upload-artifact@v1.0.0
-      with:
-        # Artifact name
-        name: Windows OpenGL
-        # Directory containing files to upload
-        path: /build-win
-
-  #directx:
-  #  name: Build Windows (DirectX)
-
-  #  runs-on: [windows-latest]
-
-  #  steps:
-  #  - uses: actions/checkout@v2
-  #    with:
-  #      submodules: 'recursive'
-      
-  #  - name: Setup .NET Core
-  #    uses: actions/setup-dotnet@v1.8.0
-  #    with:
-  #      dotnet-version: 5.0.100
-    
-  #  - name: Get short SHA
-  #    id: vars
-  #    run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
-      
-  #  - name: Build
-  #    run: dotnet publish --configuration DirectX -o /build-win --version-suffix ${{steps.vars.outputs.sha_short}} -r win10-x64 /p:DefineConstants=DIRECTX /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true /p:IncludeAllContentForselfExtract=true /p:PublishReadyToRun=true
-  #    working-directory: src/Alex
-
-  #  - name: Upload artifact
-  #    uses: actions/upload-artifact@v1.0.0
-  #    with:
-  #      # Artifact name
-  #      name: Windows DirectX
-  #      # Directory containing files to upload
-  #      path: /build-win
-
-  osx:
-    name: Build MacOS
-
-    runs-on: [macos-latest]
-
-    steps:
-    - uses: actions/checkout@v2
-      with:
-        submodules: 'recursive'
-      
-    - name: Setup .NET Core
-      uses: actions/setup-dotnet@v1.8.0
-      with:
-        dotnet-version: 5.0.x
-    
-    - name: Get short SHA
-      id: vars
-      run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
-      
-    - name: Build
-      run: dotnet publish --configuration Release -o "build-osx" --version-suffix ${{steps.vars.outputs.sha_short}} -r osx-x64 /p:PublishReadyToRun=false /p:TieredCompilation=false --self-contained
-      working-directory: src/Alex
-
-    - name: Set executable permissions
-      working-directory: src/Alex/build-osx
-      run: chmod +x Alex
-
-    - name: Upload artifact
-      uses: actions/upload-artifact@v1.0.0
-      with:
-        # Artifact name
-        name: Mac OS binaries
-        # Directory containing files to upload
-        path: "src/Alex/build-osx"
+        path: "src/Alex/build"
