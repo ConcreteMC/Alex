@@ -27,14 +27,20 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        rid: [linux-x64, osx-x64, win-x64]
-        artifact: ['Linux Binaries', 'MacOS Binaries', 'Windows Binaries']
+        include:
+        - os: ubuntu-latest
+          rid: linux-x64
+          artifact: 'Linux Binaries'
+          
+        - os: macos-latest
+          rid: osx-x64
+          artifact: 'MacOS Binaries'
+          
+        - os: windows-latest
+          rid: win-x64
+          artifact: 'Windows Binaries'
 
     steps:
-    - uses: actions/checkout@v2
-      with:
-        submodules: 'recursive'
-
     - uses: actions/checkout@v2
       with:
         submodules: 'recursive'
