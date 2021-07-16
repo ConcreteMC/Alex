@@ -1,5 +1,6 @@
 using System;
 using Alex.Blocks.State;
+using Alex.Common.Blocks.Properties;
 using Alex.Common.Utils;
 
 namespace Alex.Blocks.Properties
@@ -20,7 +21,7 @@ namespace Alex.Blocks.Properties
 		}
 
 		/// <inheritdoc />
-		public override StateProperty<bool> WithValue(bool value)
+		public override IStateProperty<bool> WithValue(bool value)
 		{
 			return new PropertyBool(Name, TrueString, FalseString) {Value = value};
 		}

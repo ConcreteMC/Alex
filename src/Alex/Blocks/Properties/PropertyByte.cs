@@ -1,4 +1,5 @@
 using Alex.Blocks.State;
+using Alex.Common.Blocks.Properties;
 
 namespace Alex.Blocks.Properties
 {
@@ -12,7 +13,7 @@ namespace Alex.Blocks.Properties
 		}
 
 		/// <inheritdoc />
-		public override StateProperty<byte> WithValue(byte value)
+		public override IStateProperty<byte> WithValue(byte value)
 		{
 			return new PropertyByte(Name, _defaultValue) {Value = value};
 		}

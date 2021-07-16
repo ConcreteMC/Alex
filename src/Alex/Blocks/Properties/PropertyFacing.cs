@@ -1,6 +1,7 @@
 ﻿using System;
 using Alex.Blocks.State;
 using Alex.Common.Blocks;
+using Alex.Common.Blocks.Properties;
 using Alex.Common.Utils;
 using Alex.ResourcePackLib.Json;
 
@@ -16,7 +17,7 @@ namespace Alex.Blocks.Properties
 		public override string StringValue => Value.ToString().ToLower();
 
 		/// <inheritdoc />
-		public override StateProperty<BlockFace> WithValue(BlockFace value)
+		public override IStateProperty<BlockFace> WithValue(BlockFace value)
 		{
 			return new PropertyFace(Name) {Value = value};
 		}
