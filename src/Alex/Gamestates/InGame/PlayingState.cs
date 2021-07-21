@@ -75,7 +75,7 @@ namespace Alex.Gamestates.InGame
             _networkDebugHud = new NetworkDebugHud(NetworkProvider);
             RenderNetworking = Options.MiscelaneousOptions.ShowNetworkInfoByDefault.Value;
             
-            World.Ticker.RegisterTicked(WorldProvider);
+            World.TickManager.RegisterTicked(WorldProvider);
 		}
 
 		protected override void OnLoad(IRenderArgs args)
@@ -101,13 +101,13 @@ namespace Alex.Gamestates.InGame
 			if (RenderDebug)
 				Alex.GuiManager.AddScreen(_debugInfo);
 
-			World.Ticker.RegisterTicked(_playingHud.Title);
+			World.TickManager.RegisterTicked(_playingHud.Title);
 			_playingHud.Title.Ready();
 		}
 
 		protected override void OnHide()
 		{
-			World.Ticker.UnregisterTicked(_playingHud.Title);
+			World.TickManager.UnregisterTicked(_playingHud.Title);
 			
 			if (RenderDebug)
 				Alex.GuiManager.RemoveScreen(_debugInfo);
@@ -184,7 +184,7 @@ namespace Alex.Gamestates.InGame
 			string gameVersion = VersionUtils.GetVersion();
 
 			_debugInfo.AddDebugLeft(
-				() => $"Alex {gameVersion} ({Alex.FpsMonitor.Value:##} FPS, {World.Ticker.TicksPerSecond:##} TPS, Chunk Updates: {World.ChunkManager.EnqueuedChunkUpdates} queued, {World.ChunkManager.ConcurrentChunkUpdates} active)", TimeSpan.FromMilliseconds(50));
+				() => $"Alex {gameVersion} ({Alex.FpsMonitor.Value:##} FPS, {World.TickManager.TicksPerSecond:##} TPS, Chunk Updates: {World.ChunkManager.EnqueuedChunkUpdates} queued, {World.ChunkManager.ConcurrentChunkUpdates} active)", TimeSpan.FromMilliseconds(50));
 			
 			_debugInfo.AddDebugLeft(() =>
 			{

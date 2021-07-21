@@ -9,13 +9,14 @@ namespace Alex.Gamestates.MainMenu.Options
 {
     public class MiscellaneousOptionsState : OptionsStateBase
     {
+        private Slider                       NetworkProcessingThreads { get; set; }
         private Slider                       ProcessingThreads { get; set; }
         private ToggleButton                 ChunkCaching { get; set; }
         private ToggleButton                 ServerResources { get; set; }
         private ToggleButton                 NetworkDebugInfo { get; set; }
-        private TextElement                  Description       { get; set; }
-        private Dictionary<IGuiControl, string> Descriptions      { get; } = new Dictionary<IGuiControl, string>();
-        
+        private ToggleButton Minimap            { get; set; }
+        private Slider MinimapSize { get; set; }
+
         public MiscellaneousOptionsState(GuiPanoramaSkyBox skyBox) : base(skyBox)
         {
             Title = "Miscellaneous";
@@ -34,20 +35,39 @@ namespace Alex.Gamestates.MainMenu.Options
             if (!_didInit)
             {
                 _didInit = true;
-                AddGuiRow(
-                    ProcessingThreads = CreateSlider(
-                        "Network Threads: {0}", o => Options.NetworkOptions.NetworkThreads, 1,
-                        Environment.ProcessorCount, 1),
-                    ChunkCaching = CreateToggle("Chunk Caching: {0}", o => o.MiscelaneousOptions.UseChunkCache));
 
-                AddGuiRow(
-                    ServerResources = CreateToggle(
-                        "Server Resources: {0}", o => o.MiscelaneousOptions.LoadServerResources),
-                    NetworkDebugInfo = CreateToggle(
-                        "Network Info: {0}", o => o.MiscelaneousOptions.ShowNetworkInfoByDefault));
 
+                NetworkProcessingThreads = CreateSlider(
+                    "Network Threads: {0}", o => Options.NetworkOptions.NetworkThreads, 1, Environment.ProcessorCount,
+                    1);
+                ProcessingThreads = CreateSlider(
+                    "Processing Threads: {0}", o => Options.MiscelaneousOptions.ChunkThreads, 1,
+                    Environment.ProcessorCount, 1);
+
+                ServerResources = CreateToggle("Server Resources: {0}", o => o.MiscelaneousOptions.LoadServerResources);
+
+                ChunkCaching = CreateToggle("Chunk Caching: {0}", o => o.MiscelaneousOptions.UseChunkCache);
+               
+                NetworkDebugInfo = CreateToggle(
+                    "Network Info: {0}", o => o.MiscelaneousOptions.ShowNetworkInfoByDefault);
+
+                Minimap = CreateToggle("Minimap: {0}", options => options.MiscelaneousOptions.Minimap);
+
+                MinimapSize = CreateSlider(
+                    "Minimap Size: {0}", o => o.MiscelaneousOptions.MinimapSize, 0.125d, 2d, 0.1d);
+                
+                AddGuiRow(ProcessingThreads, NetworkProcessingThreads);
+                AddGuiRow(ServerResources, ChunkCaching);
+                AddGuiRow(Minimap, MinimapSize);
+                AddGuiRow(NetworkDebugInfo);
+                
                 AddDescription(
                     ProcessingThreads, "Processing Threads",
+                    "The maximum amount of concurrent chunk updates to execute.",
+                    "If you are experiencing lag spikes, try lowering this value.");
+                
+                AddDescription(
+                    NetworkProcessingThreads, "Network Workers",
                     "The amount of threads that get assigned to datagram processing",
                     "Note: A restart is required for this setting to take affect.");
 
@@ -64,51 +84,16 @@ namespace Alex.Gamestates.MainMenu.Options
                     "If enabled, shows the network debug info by default.",
                     "You can always press 'F3 + N' while in-game to toggle it");
                 
-                Description = new TextElement()
-                {
-                    Anchor = Alignment.MiddleLeft, Margin = new Thickness(5, 15, 5, 5), MinHeight = 80
-                };
-
-                var row = AddGuiRow(Description);
-                row.ChildAnchor = Alignment.MiddleLeft;
+                AddDescription(Minimap, "Minimap", "Adds a minimap", "May impact performance");
+                AddDescription(MinimapSize, "Minimap Size", "The size of the minimap");
             }
 
             base.OnInit(renderer);
         }
-
-        private void AddDescription(IGuiControl control, string title, string line1, string line2 = "")
-        {
-            Descriptions.Add(control,  $"{TextColor.Bold}{title}:{TextColor.Reset}\n{line1}\n{line2}");
-        }
         
-        private IGuiControl _focusedControl = null;
-        private static string DefaultDescription = $"Hover over any setting to get a description.\n\n";
-
         protected override void OnUpdate(GameTime gameTime)
         {
             base.OnUpdate(gameTime);
-
-            var highlighted = Alex.GuiManager.FocusManager.HighlightedElement;
-            if (_focusedControl != highlighted)
-            {
-                _focusedControl = highlighted;
-
-                if (highlighted != null)
-                {
-                    if (Descriptions.TryGetValue(highlighted, out var description))
-                    {
-                        Description.Text = description;
-                    }
-                    else
-                    {
-                        Description.Text = DefaultDescription;
-                    }
-                }
-                else
-                {
-                    Description.Text = DefaultDescription;
-                }
-            }
         }
     }
 }

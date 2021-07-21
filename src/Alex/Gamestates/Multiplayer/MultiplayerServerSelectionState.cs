@@ -209,85 +209,87 @@ namespace Alex.Gamestates.Multiplayer
 
 	    private void Reload()
 	    {
-		    try
-		    {
-			    _cancellationTokenSource?.Cancel();
-			    _cancellationTokenSource = new CancellationTokenSource();
-
-			    var source = _cancellationTokenSource;
-			    var token = source.Token;
-			    source.CancelAfter(TimeSpan.FromSeconds(10));
-
-			    ClearItems();
-
-			    Task previousTask = null;
-
-			    if (Alex.ServerTypeManager.TryGet(_filterValue, out var serverType))
+		    ThreadPool.QueueUserWorkItem(
+			    o =>
 			    {
-				    void setPrevious(Task task)
+				    try
 				    {
-					    if (previousTask != null && !previousTask.IsCompleted)
+					    _cancellationTokenSource?.Cancel();
+					    _cancellationTokenSource = new CancellationTokenSource();
+
+					    var source = _cancellationTokenSource;
+					    var token = source.Token;
+					    source.CancelAfter(TimeSpan.FromSeconds(10));
+
+					    ClearItems();
+
+					    Task previousTask = null;
+
+					    if (Alex.ServerTypeManager.TryGet(_filterValue, out var serverType))
 					    {
-						    previousTask = previousTask.ContinueWith(async r => await task, token);
-					    }
-					    else
-					    {
-						    previousTask = task;
-					    }
-				    }
-				    
-				    foreach (var entry in serverType.SponsoredServers)
-				    {
-					    var item = new GuiServerListEntryElement(serverType, entry);
-					    item.CanDelete = false;
-					    item.SaveEntry = false;
-				    
-					    AddItem(item);
-				    
-					    setPrevious(item.PingAsync(false, token));
-				    }
-				    
-				    serverType.QueryProvider.StartLanDiscovery(
-					    token, async r =>
-					    {
-						    if (r.QueryResponse.Success)
+						    void setPrevious(Task task)
 						    {
-							    GuiServerListEntryElement entry = new GuiServerListEntryElement(
-								    serverType,
-								    new SavedServerEntry()
-								    {
-									    ServerType = serverType.Id,
-									    Host = r.QueryResponse.Status.Address,
-									    Port = r.QueryResponse.Status.Port,
-									    Name = $"[LAN] {r.EndPoint}",
-									    InternalIdentifier = Guid.NewGuid()
-								    });
-
-							    entry.SaveEntry = false;
-							    entry.CanDelete = false;
-
-							    entry.ConnectionEndpoint = r.EndPoint;
-							    //entry.ServerName = $"[LAN] {r.QueryResponse.Status.Query.Description.Text}";
-
-							    AddItem(entry);
-
-							    await entry.PingAsync(false, token);
+							    if (previousTask != null && !previousTask.IsCompleted)
+							    {
+								    previousTask = previousTask.ContinueWith(async r => await task, token);
+							    }
+							    else
+							    {
+								    previousTask = task;
+							    }
 						    }
-					    });
 
-				    foreach (var entry in _listProvider.Data.Where(x => x.ServerType.Equals(_filterValue)).ToArray())
-				    {
-					    var element = new GuiServerListEntryElement(serverType, entry);
-					    AddItem(element);
+						    foreach (var entry in serverType.SponsoredServers)
+						    {
+							    var item = new GuiServerListEntryElement(serverType, entry);
+							    item.CanDelete = false;
+							    item.SaveEntry = false;
 
-					    setPrevious(element.PingAsync(false, token));
+							    AddItem(item);
+
+							    setPrevious(item.PingAsync(false, token));
+						    }
+
+						    serverType.QueryProvider.StartLanDiscovery(
+							    token, async r =>
+							    {
+								    if (r.QueryResponse.Success)
+								    {
+									    GuiServerListEntryElement entry = new GuiServerListEntryElement(
+										    serverType,
+										    new SavedServerEntry()
+										    {
+											    ServerType = serverType.Id,
+											    Host = r.QueryResponse.Status.Address,
+											    Port = r.QueryResponse.Status.Port,
+											    Name = $"[LAN] {r.EndPoint}",
+											    InternalIdentifier = Guid.NewGuid()
+										    });
+
+									    entry.SaveEntry = false;
+									    entry.CanDelete = false;
+
+									    entry.ConnectionEndpoint = r.EndPoint;
+									    //entry.ServerName = $"[LAN] {r.QueryResponse.Status.Query.Description.Text}";
+
+									    AddItem(entry);
+
+									    await entry.PingAsync(false, token).ConfigureAwait(false);
+								    }
+							    }).ConfigureAwait(false);
+
+						    foreach (var entry in _listProvider.Data.Where(x => x.ServerType.Equals(_filterValue))
+							   .ToArray())
+						    {
+							    var element = new GuiServerListEntryElement(serverType, entry);
+							    AddItem(element);
+
+							    setPrevious(element.PingAsync(false, token));
+						    }
+					    }
 				    }
-			    }
-		    }
-		    finally
-		    {
-			    
-		    }
+				    finally { }
+			    });
 	    }
 
 	    protected override void OnSelectedItemChanged(GuiServerListEntryElement newItem)

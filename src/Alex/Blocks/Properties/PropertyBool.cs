@@ -1,5 +1,6 @@
 ﻿using System;
 using Alex.Blocks.State;
+using Alex.Common.Blocks.Properties;
 using Alex.Common.Utils;
 using MiNET.Utils;
 
@@ -31,7 +32,7 @@ namespace Alex.Blocks.Properties
 		public override string StringValue => Value ? TrueString : FalseString;
 
 		/// <inheritdoc />
-		public override StateProperty<bool> WithValue(bool value)
+		public override IStateProperty<bool> WithValue(bool value)
 		{
 			return new PropertyBool(Name, TrueString, FalseString) {Value = value};
 		}

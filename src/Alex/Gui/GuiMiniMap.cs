@@ -56,6 +56,12 @@ namespace Alex.Gui
             });
         }
 
+        public void SetSize(double multiplier)
+        {
+            Width = (int)Math.Ceiling(128 * multiplier);
+            Height = (int)Math.Ceiling(128 * multiplier);
+        }
+
         private void OnChunkUpdate(object sender, ChunkUpdatedEventArgs e)
         {
             if (TryGetContainer(e.Position, out var container))

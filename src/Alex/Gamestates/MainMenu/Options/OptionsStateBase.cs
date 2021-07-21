@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using Alex.Common.Data.Options;
 using Alex.Common.GameStates;
 using Alex.Common.Graphics;
 using Alex.Common.Gui.Elements;
 using Alex.Common.Services;
+using Alex.Common.Utils;
 using Alex.Gamestates.Common;
 using Alex.Gui;
 using Alex.Gui.Elements;
@@ -24,6 +26,8 @@ namespace Alex.Gamestates.MainMenu.Options
 
         private GuiPanoramaSkyBox _skyBox;
         protected GuiBackButton BackButton { get; }
+        private TextElement                  Description       { get; set; }
+        protected Dictionary<IGuiControl, string> Descriptions { get; } = new Dictionary<IGuiControl, string>();
         public OptionsStateBase(GuiPanoramaSkyBox skyBox)
         {
             _skyBox = skyBox;
@@ -41,6 +45,11 @@ namespace Alex.Gamestates.MainMenu.Options
             
             if (_skyBox != null)
                 Background = new GuiTexture2D(_skyBox, TextureRepeatMode.Stretch);
+            
+            Description = new TextElement()
+            {
+                Anchor = Alignment.MiddleLeft, Margin = new Thickness(5, 15, 5, 5), MinHeight = 80
+            };
         }
 
         protected override void OnShow()
@@ -73,7 +82,15 @@ namespace Alex.Gamestates.MainMenu.Options
             
             base.OnUnload();
         }
-        
+
+        private bool _initialized = false;
+        /// <inheritdoc />
+        protected override void OnInit(IGuiRenderer renderer)
+        {
+            base.OnInit(renderer);
+            _initialized = true;
+        }
+
         private TGameState Construct<TGameState>() where TGameState : class, IGameState
         {
             TGameState state = null;
@@ -236,12 +253,38 @@ namespace Alex.Gamestates.MainMenu.Options
             return control;
         }
 
+        private IGuiControl _focusedControl = null;
+        private static string DefaultDescription = $"Hover over any setting to get a description.\n\n";
+
         protected override void OnUpdate(GameTime gameTime)
         {
             base.OnUpdate(gameTime);
             _skyBox?.Update(gameTime);
+            
+            var highlighted = Alex.GuiManager.FocusManager.HighlightedElement;
+            if (_focusedControl != highlighted)
+            {
+                _focusedControl = highlighted;
+
+                if (highlighted != null)
+                {
+                    if (Descriptions.TryGetValue(highlighted, out var description))
+                    {
+                        Description.Text = description;
+                    }
+                    else
+                    {
+                        Description.Text = DefaultDescription;
+                    }
+                }
+                else
+                {
+                    Description.Text = DefaultDescription;
+                }
+            }
         }
 
+        private bool _descriptionsAdded = false;
         protected override void OnDraw(IRenderArgs args)
         {
             if (_skyBox != null)
@@ -260,6 +303,19 @@ namespace Alex.Gamestates.MainMenu.Options
             }
 
             base.OnDraw(args);
+
+            if (_initialized && !_descriptionsAdded)
+            {
+                var row = AddGuiRow(Description);
+                row.ChildAnchor = Alignment.MiddleLeft;
+
+                _descriptionsAdded = true;
+            }
+        }
+        
+        protected void AddDescription(IGuiControl control, string title, string line1, string line2 = "")
+        {
+            Descriptions.Add(control,  $"{TextColor.Bold}{title}:{TextColor.Reset}\n{line1}\n{line2}");
         }
     }
 }

@@ -1985,10 +1985,10 @@ namespace Alex.Worlds.Multiplayer
 				case GameStateReason.InvalidBed:
 					break;
 				case GameStateReason.EndRain:
-					World?.SetRain(false);
+					World?.SetRain(false, packet.Value);
 					break;
 				case GameStateReason.StartRain:
-					World?.SetRain(true);
+					World?.SetRain(true, packet.Value);
 					break;
 				case GameStateReason.ChangeGamemode:
 					World?.Player?.UpdateGamemode((GameMode) packet.Value);
@@ -1999,9 +1999,11 @@ namespace Alex.Worlds.Multiplayer
 					break;
 				case GameStateReason.ArrowHitPlayer:
 					break;
-				case GameStateReason.FadeValue:
+				case GameStateReason.RainLevelChange:
+					World?.SetRain(World.Raining, packet.Value);
 					break;
-				case GameStateReason.FadeTime:
+				case GameStateReason.ThunderLevelChange:
+					World?.SetThunder(World.Thundering, packet.Value);
 					break;
 				case GameStateReason.PlayerElderGuardianMob:
 					break;

@@ -1,3 +1,4 @@
+using System;
 using System.Globalization;
 using System.Runtime.Serialization;
 
@@ -6,9 +7,10 @@ namespace Alex.Common.Data.Options
     [DataContract]
     public class MiscelaneousOptions : OptionsBase
     {
+                
         [DataMember]
-        public OptionsProperty<bool> ServerSideLighting { get; set; }
-        
+        public OptionsProperty<int> ChunkThreads { get; set; }
+
         [DataMember]
         public OptionsProperty<string> Language { get; set; }
         
@@ -27,15 +29,23 @@ namespace Alex.Common.Data.Options
         [DataMember]
         public OptionsProperty<bool> ShowNetworkInfoByDefault { get; set; }
         
+        [DataMember]
+        public OptionsProperty<bool> Minimap { get; set; }
+        
+        [DataMember]
+        public OptionsProperty<double> MinimapSize { get; set; }
+        
         public MiscelaneousOptions()
         {
-            ServerSideLighting = new OptionsProperty<bool>(false);
-            Language = new OptionsProperty<string>(CultureInfo.InstalledUICulture.Name);
-            MeshInRam = new OptionsProperty<bool>(true);
-            ObjectPools = new OptionsProperty<bool>(true);
-            UseChunkCache = new OptionsProperty<bool>(false);
-            LoadServerResources = new OptionsProperty<bool>(false);
-            ShowNetworkInfoByDefault = new OptionsProperty<bool>(false);
+            ChunkThreads = DefineRangedProperty(Environment.ProcessorCount / 2, 1, Environment.ProcessorCount);
+            Language = DefineProperty(CultureInfo.InstalledUICulture.Name);
+            MeshInRam = DefineProperty(true);
+            ObjectPools = DefineProperty(true);
+            UseChunkCache = DefineProperty(false);
+            LoadServerResources = DefineProperty(false);
+            ShowNetworkInfoByDefault = DefineProperty(false);
+            Minimap = DefineProperty(false);
+            MinimapSize = DefineRangedProperty(1d, 0.125d, 2d);
         }
     }
 }

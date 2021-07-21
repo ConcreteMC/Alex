@@ -27,7 +27,7 @@ namespace Alex.Common.Utils.Vectors
 			get => _pitch;
 			set
 			{
-				var pitch = value;//FixValue(value);
+				var pitch = value;
 				_pitch = pitch;
 			}
 		}

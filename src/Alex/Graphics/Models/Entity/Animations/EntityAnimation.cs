@@ -76,7 +76,7 @@ namespace Alex.Graphics.Models.Entity.Animations
 						var targetScale = value.Scale?.Evaluate(_parent.Runtime, modelBone.Scale, _animationTime) ?? Vector3.One;
 
 						modelBone.MoveOverTime(
-							targetPosition * new Vector3(1f, 1f, 1f), targetRotation * new Vector3(-1f, 1f, 1f),
+							targetPosition, targetRotation * new Vector3(-1f, 1f, 1f),
 							targetScale, _elapsedTimer.Elapsed, anim.OverridePreviousAnimation,
 							anim.BlendWeight != null ? _parent.Execute(anim.BlendWeight).AsFloat() : 1f);
 					}

@@ -65,33 +65,35 @@ namespace Alex.Worlds
 		private AlexOptions Options { get; }
 		
 		public InventoryManager InventoryManager { get; }
-		public SkyBox SkyBox { get; }
+		private SkyBox SkyBox { get; }
 
-		public long Time      { get; set; } = 1;
-		public long TimeOfDay { get; set; } = 1;
-		public bool Raining   { get; set; } = false;
-		public bool Thundering { get; set; } = false;
+		public long Time      { get; private set; } = 1;
+		public long TimeOfDay { get; private set; } = 1;
+		public bool Raining   { get; private set; } = false;
+		public float RainLevel { get; private set; } = 0f;
+		public bool Thundering { get; private set; } = false;
+		public float ThunderLevel { get; private set; } = 0f;
 		
-		public bool DrowningDamage      { get; set; } = true;
-		public bool CommandblockOutput  { get; set; } = true;
-		public bool DoTiledrops         { get; set; } = true;
-		public bool DoMobloot           { get; set; } = true;
-		public bool KeepInventory       { get; set; } = true;
-		public bool DoDaylightcycle     { get; set; } = true;
-		public bool DoMobspawning       { get; set; } = true;
-		public bool DoEntitydrops       { get; set; } = true;
-		public bool DoFiretick          { get; set; } = true;
-		public bool DoWeathercycle      { get; set; } = true;
-		public bool Pvp                 { get; set; } = true;
-		public bool Falldamage          { get; set; } = true;
-		public bool Firedamage          { get; set; } = true;
-		public bool Mobgriefing         { get; set; } = true;
-		public bool ShowCoordinates     { get; set; } = true;
-		public bool NaturalRegeneration { get; set; } = true;
-		public bool TntExplodes         { get; set; } = true;
-		public bool SendCommandfeedback { get; set; } = true;
-		public bool InstantRespawn      { get; set; } = false;
-		public int  RandomTickSpeed     { get; set; } = 3;
+		public bool DrowningDamage      { get; private set; } = true;
+		public bool CommandblockOutput  { get; private set; } = true;
+		public bool DoTiledrops         { get; private set; } = true;
+		public bool DoMobloot           { get; private set; } = true;
+		public bool KeepInventory       { get; private set; } = true;
+		public bool DoDaylightcycle     { get; private set; } = true;
+		public bool DoMobspawning       { get; private set; } = true;
+		public bool DoEntitydrops       { get; private set; } = true;
+		public bool DoFiretick          { get; private set; } = true;
+		public bool DoWeathercycle      { get; private set; } = true;
+		public bool Pvp                 { get; private set; } = true;
+		public bool Falldamage          { get; private set; } = true;
+		public bool Firedamage          { get; private set; } = true;
+		public bool Mobgriefing         { get; private set; } = true;
+		public bool ShowCoordinates     { get; private set; } = true;
+		public bool NaturalRegeneration { get; private set; } = true;
+		public bool TntExplodes         { get; private set; } = true;
+		public bool SendCommandfeedback { get; private set; } = true;
+		public bool InstantRespawn      { get; private set; } = false;
+		public int  RandomTickSpeed     { get; private set; } = 3;
 
 		private Dimension _dimension = Dimension.Overworld;
 
@@ -118,12 +120,12 @@ namespace Alex.Worlds
 
 			ChunkManager = new ChunkManager(serviceProvider, graphics, this, _cancellationTokenSource.Token);
 			EntityManager = new EntityManager(serviceProvider, graphics, this, networkProvider);
-			Ticker = new TickManager();
+			TickManager = new TickManager();
 			PlayerList = new PlayerList();
 
-			Ticker.RegisterTicked(this);
-			Ticker.RegisterTicked(EntityManager);
-			Ticker.RegisterTicked(ChunkManager);
+			TickManager.RegisterTicked(this);
+			TickManager.RegisterTicked(EntityManager);
+			TickManager.RegisterTicked(ChunkManager);
 
 			var resources = serviceProvider.GetRequiredService<ResourceManager>();
 
@@ -156,7 +158,7 @@ namespace Alex.Worlds
 			
 			//Player?.OnSpawn();
 			
-			_disposables.Add(Ticker);
+			_disposables.Add(TickManager);
 			_disposables.Add(EntityManager);
 			_disposables.Add(ChunkManager);
 			_disposables.Add(BackgroundWorker);
@@ -285,8 +287,8 @@ namespace Alex.Worlds
 		//public long WorldTime { get; private set; } = 6000;
 
 		public PlayerList     PlayerList    { get; }
-		public TickManager    Ticker        { get; private set; }
-		public EntityManager  EntityManager { get; set; }
+		public TickManager    TickManager   { get; private set; }
+		public EntityManager  EntityManager { get; private set; }
 		public ChunkManager   ChunkManager  { get; private set; }
 
 		public void ToggleWireFrame()
@@ -872,7 +874,7 @@ namespace Alex.Worlds
 		private void ScheduleBlockUpdate(BlockCoordinates updatedBlock, BlockCoordinates block)
 		{
 			ScheduleBlockUpdate(block);
-			Ticker.ScheduleTick(() =>
+			TickManager.ScheduleTick(() =>
 			{
 				GetBlockState(block).Block.BlockUpdate(this, block, updatedBlock);
 				//GetBlock(block).BlockUpdate(this, block, updatedBlock);
@@ -1096,16 +1098,16 @@ namespace Alex.Worlds
 			}
 			_disposables.Clear();
 			
-			Ticker.UnregisterTicked(this);
-			Ticker.UnregisterTicked(EntityManager);
-			Ticker.UnregisterTicked(ChunkManager);
+			TickManager.UnregisterTicked(this);
+			TickManager.UnregisterTicked(EntityManager);
+			TickManager.UnregisterTicked(ChunkManager);
 			
 			EntityManager = null;
 			ChunkManager = null;
 
 			//Player.Dispose();
 			//Ticker.Dispose();
-			Ticker = null;
+			TickManager = null;
 			Player = null;
 			
 			_breakingEffect?.Dispose();
@@ -1271,14 +1273,16 @@ namespace Alex.Worlds
 			TimeOfDay = Math.Abs(timeOfDay);
 		}
 
-		public void SetRain(bool raining)
+		public void SetRain(bool raining, float rainLevel = 0f)
 		{
 			Raining = raining;
+			RainLevel = rainLevel;
 		}
 		
-		public void SetThunder(bool thundering)
+		public void SetThunder(bool thundering, float thunderLevel = 0f)
 		{
 			Thundering = thundering;
+			ThunderLevel = thunderLevel;
 		}
 
 		public void SetBlockState(BlockCoordinates coordinates, BlockState blockState, BlockUpdatePriority priority = BlockUpdatePriority.High)
