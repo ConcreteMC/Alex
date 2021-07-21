@@ -6,7 +6,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class Concrete : Block
 	{
-		public Concrete(BedColor color)
+		public Concrete(BlockColor color)
 		{
 			base.BlockMaterial = Material.Clay.Clone().WithMapColor(color.ToMapColor());
 		}
@@ -14,7 +14,7 @@ namespace Alex.Blocks.Minecraft
 	
 	public class ConcretePowder : Block
 	{
-		public ConcretePowder(BedColor color)
+		public ConcretePowder(BlockColor color)
 		{
 			base.BlockMaterial = Material.Sand.Clone().WithMapColor(color.ToMapColor());
 		}

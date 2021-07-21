@@ -111,21 +111,21 @@ namespace Alex.Entities.BlockEntities
 
 					switch (bed.Variant)
 					{
-						case BedColor.LightBlue:
+						case BlockColor.LightBlue:
 							texture = "light_blue";
 							break;
 
-						case BedColor.LightGray:
+						case BlockColor.LightGray:
 							texture = "default";
 							break;
-						case BedColor.Silver:
-						case BedColor.Cyan:
-						case BedColor.Purple:
-						case BedColor.Blue:
-						case BedColor.Brown:
-						case BedColor.Green:
-						case BedColor.Red:
-						case BedColor.Black:
+						case BlockColor.Silver:
+						case BlockColor.Cyan:
+						case BlockColor.Purple:
+						case BlockColor.Blue:
+						case BlockColor.Brown:
+						case BlockColor.Green:
+						case BlockColor.Red:
+						case BlockColor.Black:
 							texture = bed.Variant.ToString().ToLower();
 							break;
 						
@@ -144,7 +144,7 @@ namespace Alex.Entities.BlockEntities
 		}
 	}
 	
-	public enum BedColor
+	public enum BlockColor
 	{
 		White,
 		Orange,

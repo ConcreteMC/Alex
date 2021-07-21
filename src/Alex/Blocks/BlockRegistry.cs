@@ -589,23 +589,23 @@ namespace Alex.Blocks
 		    this.Register("minecraft:sea_pickle", () => new SeaPickle());
 		    
 		    //Beds (I should really implement block tags...)
-		    this.Register("minecraft:bed", () => new Bed(BedColor.Red));
-		    this.Register("minecraft:white_bed", () => new Bed(BedColor.White));
-		    this.Register("minecraft:orange_bed", () => new Bed(BedColor.Orange));
-		    this.Register("minecraft:magenta_bed", () => new Bed(BedColor.Magenta));
-		    this.Register("minecraft:light_blue_bed", () => new Bed(BedColor.LightBlue));
-		    this.Register("minecraft:yellow_bed", () => new Bed(BedColor.Yellow));
-		    this.Register("minecraft:lime_bed", () => new Bed(BedColor.Lime));
-		    this.Register("minecraft:pink_bed", () => new Bed(BedColor.Pink));
-		    this.Register("minecraft:gray_bed", () => new Bed(BedColor.Gray));
-		    this.Register("minecraft:light_gray_bed", () => new Bed(BedColor.LightGray));
-		    this.Register("minecraft:cyan_bed", () => new Bed(BedColor.Cyan));
-		    this.Register("minecraft:purple_bed", () => new Bed(BedColor.Purple));
-		    this.Register("minecraft:blue_bed", () => new Bed(BedColor.Blue));
-		    this.Register("minecraft:brown_bed", () => new Bed(BedColor.Brown));
-		    this.Register("minecraft:green_bed", () => new Bed(BedColor.Green));
-		    this.Register("minecraft:red_bed", () => new Bed(BedColor.Red));
-		    this.Register("minecraft:black_bed", () => new Bed(BedColor.Black));
+		    this.Register("minecraft:bed", () => new Bed(BlockColor.Red));
+		    this.Register("minecraft:white_bed", () => new Bed(BlockColor.White));
+		    this.Register("minecraft:orange_bed", () => new Bed(BlockColor.Orange));
+		    this.Register("minecraft:magenta_bed", () => new Bed(BlockColor.Magenta));
+		    this.Register("minecraft:light_blue_bed", () => new Bed(BlockColor.LightBlue));
+		    this.Register("minecraft:yellow_bed", () => new Bed(BlockColor.Yellow));
+		    this.Register("minecraft:lime_bed", () => new Bed(BlockColor.Lime));
+		    this.Register("minecraft:pink_bed", () => new Bed(BlockColor.Pink));
+		    this.Register("minecraft:gray_bed", () => new Bed(BlockColor.Gray));
+		    this.Register("minecraft:light_gray_bed", () => new Bed(BlockColor.LightGray));
+		    this.Register("minecraft:cyan_bed", () => new Bed(BlockColor.Cyan));
+		    this.Register("minecraft:purple_bed", () => new Bed(BlockColor.Purple));
+		    this.Register("minecraft:blue_bed", () => new Bed(BlockColor.Blue));
+		    this.Register("minecraft:brown_bed", () => new Bed(BlockColor.Brown));
+		    this.Register("minecraft:green_bed", () => new Bed(BlockColor.Green));
+		    this.Register("minecraft:red_bed", () => new Bed(BlockColor.Red));
+		    this.Register("minecraft:black_bed", () => new Bed(BlockColor.Black));
 		    
 		    this.Register("minecraft:glow_lichen", () => new GlowLichen());
 		    this.Register("minecraft:pointed_dripstone", () => new PointedDripstone());
@@ -613,58 +613,58 @@ namespace Alex.Blocks
 		    this.Register("minecraft:item_frame", () => new ItemFrame());
 		    
 		    //Wool
-		    this.Register("minecraft:white_wool", () => new Wool(BedColor.White));
-		    this.Register("minecraft:orange_wool", () => new Wool(BedColor.Orange));
-		    this.Register("minecraft:magenta_wool", () => new Wool(BedColor.Magenta));
-		    this.Register("minecraft:light_blue_wool", () => new Wool(BedColor.LightBlue));
-		    this.Register("minecraft:yellow_wool", () => new Wool(BedColor.Yellow));
-		    this.Register("minecraft:lime_wool", () => new Wool(BedColor.Lime));
-		    this.Register("minecraft:pink_wool", () => new Wool(BedColor.Pink));
-		    this.Register("minecraft:gray_wool", () => new Wool(BedColor.Gray));
-		    this.Register("minecraft:light_gray_wool", () => new Wool(BedColor.LightGray));
-		    this.Register("minecraft:cyan_wool", () => new Wool(BedColor.Cyan));
-		    this.Register("minecraft:purple_wool", () => new Wool(BedColor.Purple));
-		    this.Register("minecraft:blue_wool", () => new Wool(BedColor.Blue));
-		    this.Register("minecraft:brown_wool", () => new Wool(BedColor.Brown));
-		    this.Register("minecraft:green_wool", () => new Wool(BedColor.Green));
-		    this.Register("minecraft:red_wool", () => new Wool(BedColor.Red));
-		    this.Register("minecraft:black_wool", () => new Wool(BedColor.Black));
+		    this.Register("minecraft:white_wool", () => new Wool(BlockColor.White));
+		    this.Register("minecraft:orange_wool", () => new Wool(BlockColor.Orange));
+		    this.Register("minecraft:magenta_wool", () => new Wool(BlockColor.Magenta));
+		    this.Register("minecraft:light_blue_wool", () => new Wool(BlockColor.LightBlue));
+		    this.Register("minecraft:yellow_wool", () => new Wool(BlockColor.Yellow));
+		    this.Register("minecraft:lime_wool", () => new Wool(BlockColor.Lime));
+		    this.Register("minecraft:pink_wool", () => new Wool(BlockColor.Pink));
+		    this.Register("minecraft:gray_wool", () => new Wool(BlockColor.Gray));
+		    this.Register("minecraft:light_gray_wool", () => new Wool(BlockColor.LightGray));
+		    this.Register("minecraft:cyan_wool", () => new Wool(BlockColor.Cyan));
+		    this.Register("minecraft:purple_wool", () => new Wool(BlockColor.Purple));
+		    this.Register("minecraft:blue_wool", () => new Wool(BlockColor.Blue));
+		    this.Register("minecraft:brown_wool", () => new Wool(BlockColor.Brown));
+		    this.Register("minecraft:green_wool", () => new Wool(BlockColor.Green));
+		    this.Register("minecraft:red_wool", () => new Wool(BlockColor.Red));
+		    this.Register("minecraft:black_wool", () => new Wool(BlockColor.Black));
 		    
 		    //Concrete
-		    this.Register("minecraft:white_concrete", () => new Concrete(BedColor.White));
-		    this.Register("minecraft:orange_concrete", () => new Concrete(BedColor.Orange));
-		    this.Register("minecraft:magenta_concrete", () => new Concrete(BedColor.Magenta));
-		    this.Register("minecraft:light_blue_concrete", () => new Concrete(BedColor.LightBlue));
-		    this.Register("minecraft:yellow_concrete", () => new Concrete(BedColor.Yellow));
-		    this.Register("minecraft:lime_concrete", () => new Concrete(BedColor.Lime));
-		    this.Register("minecraft:pink_concrete", () => new Concrete(BedColor.Pink));
-		    this.Register("minecraft:gray_concrete", () => new Concrete(BedColor.Gray));
-		    this.Register("minecraft:light_gray_concrete", () => new Concrete(BedColor.LightGray));
-		    this.Register("minecraft:cyan_concrete", () => new Concrete(BedColor.Cyan));
-		    this.Register("minecraft:purple_concrete", () => new Concrete(BedColor.Purple));
-		    this.Register("minecraft:blue_concrete", () => new Concrete(BedColor.Blue));
-		    this.Register("minecraft:brown_concrete", () => new Concrete(BedColor.Brown));
-		    this.Register("minecraft:green_concrete", () => new Concrete(BedColor.Green));
-		    this.Register("minecraft:red_concrete", () => new Concrete(BedColor.Red));
-		    this.Register("minecraft:black_concrete", () => new Concrete(BedColor.Black));
+		    this.Register("minecraft:white_concrete", () => new Concrete(BlockColor.White));
+		    this.Register("minecraft:orange_concrete", () => new Concrete(BlockColor.Orange));
+		    this.Register("minecraft:magenta_concrete", () => new Concrete(BlockColor.Magenta));
+		    this.Register("minecraft:light_blue_concrete", () => new Concrete(BlockColor.LightBlue));
+		    this.Register("minecraft:yellow_concrete", () => new Concrete(BlockColor.Yellow));
+		    this.Register("minecraft:lime_concrete", () => new Concrete(BlockColor.Lime));
+		    this.Register("minecraft:pink_concrete", () => new Concrete(BlockColor.Pink));
+		    this.Register("minecraft:gray_concrete", () => new Concrete(BlockColor.Gray));
+		    this.Register("minecraft:light_gray_concrete", () => new Concrete(BlockColor.LightGray));
+		    this.Register("minecraft:cyan_concrete", () => new Concrete(BlockColor.Cyan));
+		    this.Register("minecraft:purple_concrete", () => new Concrete(BlockColor.Purple));
+		    this.Register("minecraft:blue_concrete", () => new Concrete(BlockColor.Blue));
+		    this.Register("minecraft:brown_concrete", () => new Concrete(BlockColor.Brown));
+		    this.Register("minecraft:green_concrete", () => new Concrete(BlockColor.Green));
+		    this.Register("minecraft:red_concrete", () => new Concrete(BlockColor.Red));
+		    this.Register("minecraft:black_concrete", () => new Concrete(BlockColor.Black));
 		    
 		    //Concrete Powder
-		    this.Register("minecraft:white_concrete_powder", () => new ConcretePowder(BedColor.White));
-		    this.Register("minecraft:orange_concrete_powder", () => new ConcretePowder(BedColor.Orange));
-		    this.Register("minecraft:magenta_concrete_powder", () => new ConcretePowder(BedColor.Magenta));
-		    this.Register("minecraft:light_blue_concrete_powder", () => new ConcretePowder(BedColor.LightBlue));
-		    this.Register("minecraft:yellow_concrete_powder", () => new ConcretePowder(BedColor.Yellow));
-		    this.Register("minecraft:lime_concrete_powder", () => new ConcretePowder(BedColor.Lime));
-		    this.Register("minecraft:pink_concrete_powder", () => new ConcretePowder(BedColor.Pink));
-		    this.Register("minecraft:gray_concrete_powder", () => new ConcretePowder(BedColor.Gray));
-		    this.Register("minecraft:light_gray_concrete_powder", () => new ConcretePowder(BedColor.LightGray));
-		    this.Register("minecraft:cyan_concrete_powder", () => new ConcretePowder(BedColor.Cyan));
-		    this.Register("minecraft:purple_concrete_powder", () => new ConcretePowder(BedColor.Purple));
-		    this.Register("minecraft:blue_concrete_powder", () => new ConcretePowder(BedColor.Blue));
-		    this.Register("minecraft:brown_concrete_powder", () => new ConcretePowder(BedColor.Brown));
-		    this.Register("minecraft:green_concrete_powder", () => new ConcretePowder(BedColor.Green));
-		    this.Register("minecraft:red_concrete_powder", () => new ConcretePowder(BedColor.Red));
-		    this.Register("minecraft:black_concrete_powder", () => new ConcretePowder(BedColor.Black));
+		    this.Register("minecraft:white_concrete_powder", () => new ConcretePowder(BlockColor.White));
+		    this.Register("minecraft:orange_concrete_powder", () => new ConcretePowder(BlockColor.Orange));
+		    this.Register("minecraft:magenta_concrete_powder", () => new ConcretePowder(BlockColor.Magenta));
+		    this.Register("minecraft:light_blue_concrete_powder", () => new ConcretePowder(BlockColor.LightBlue));
+		    this.Register("minecraft:yellow_concrete_powder", () => new ConcretePowder(BlockColor.Yellow));
+		    this.Register("minecraft:lime_concrete_powder", () => new ConcretePowder(BlockColor.Lime));
+		    this.Register("minecraft:pink_concrete_powder", () => new ConcretePowder(BlockColor.Pink));
+		    this.Register("minecraft:gray_concrete_powder", () => new ConcretePowder(BlockColor.Gray));
+		    this.Register("minecraft:light_gray_concrete_powder", () => new ConcretePowder(BlockColor.LightGray));
+		    this.Register("minecraft:cyan_concrete_powder", () => new ConcretePowder(BlockColor.Cyan));
+		    this.Register("minecraft:purple_concrete_powder", () => new ConcretePowder(BlockColor.Purple));
+		    this.Register("minecraft:blue_concrete_powder", () => new ConcretePowder(BlockColor.Blue));
+		    this.Register("minecraft:brown_concrete_powder", () => new ConcretePowder(BlockColor.Brown));
+		    this.Register("minecraft:green_concrete_powder", () => new ConcretePowder(BlockColor.Green));
+		    this.Register("minecraft:red_concrete_powder", () => new ConcretePowder(BlockColor.Red));
+		    this.Register("minecraft:black_concrete_powder", () => new ConcretePowder(BlockColor.Black));
 	    }
     }
 }

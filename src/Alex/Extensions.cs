@@ -65,56 +65,56 @@ namespace Alex
 			return mapColor;
 		}
 		
-		public static IMapColor ToMapColor(this BedColor color)
+		public static IMapColor ToMapColor(this BlockColor color)
 		{
 			switch (color)
 			{
-				case BedColor.White:
+				case BlockColor.White:
 					return MapColor.Quartz;
 
-				case BedColor.Orange:
+				case BlockColor.Orange:
 					return MapColor.Orange;
 
-				case BedColor.Magenta:
+				case BlockColor.Magenta:
 					return MapColor.Magenta;
 
-				case BedColor.LightBlue:
+				case BlockColor.LightBlue:
 					return MapColor.LightBlue;
 
-				case BedColor.Yellow:
+				case BlockColor.Yellow:
 					return MapColor.Yellow;
 
-				case BedColor.Lime:
+				case BlockColor.Lime:
 					return MapColor.LightGreen;
 
-				case BedColor.Pink:
+				case BlockColor.Pink:
 					return MapColor.Pink;
 
-				case BedColor.Gray:
+				case BlockColor.Gray:
 					return MapColor.Gray;
 
-				case BedColor.Silver:
+				case BlockColor.Silver:
 					return MapColor.LightGray;
 
-				case BedColor.Cyan:
+				case BlockColor.Cyan:
 					return MapColor.Cyan;
 
-				case BedColor.Purple:
+				case BlockColor.Purple:
 					return MapColor.Purple;
 
-				case BedColor.Blue:
+				case BlockColor.Blue:
 					return MapColor.Blue;
 
-				case BedColor.Brown:
+				case BlockColor.Brown:
 					return MapColor.Brown;
 
-				case BedColor.Green:
+				case BlockColor.Green:
 					return MapColor.Green;
 
-				case BedColor.Red:
+				case BlockColor.Red:
 					return MapColor.Red;
 
-				case BedColor.Black:
+				case BlockColor.Black:
 					return MapColor.Black;
 
 				default:

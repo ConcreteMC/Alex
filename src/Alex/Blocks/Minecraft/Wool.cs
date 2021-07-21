@@ -6,7 +6,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class Wool : Block
 	{
-		public Wool(BedColor color)
+		public Wool(BlockColor color)
 		{
 			BlockMaterial = Material.Wool.Clone().WithMapColor(color.ToMapColor());
 		}
