@@ -126,6 +126,10 @@ namespace Alex
 					model.UpdateValuesFromParent(parent);
 					//model.Parent = parent;
 				}
+				else if (parentKey.Path.Equals("builtin/entity"))
+				{
+					model.Type = ModelType.Entity;
+				}
 			}
 
 			var entry = new BlockModelEntry(model);

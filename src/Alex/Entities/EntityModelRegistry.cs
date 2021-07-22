@@ -35,35 +35,5 @@ namespace Alex.Entities
 		{
 			
 		}
-		
-		public int LoadResourcePack(IProgressReceiver progressReceiver, BedrockResourcePack resourcePack, bool replace)
-		{
-			int imported = 0;
-			var total    = resourcePack.EntityModels.Count;
-			
-			progressReceiver?.UpdateProgress(0, total, "Loading entity models...");
-			foreach (var blockmodel in resourcePack.EntityModels)
-			{   
-				progressReceiver?.UpdateProgress(imported, total, null, blockmodel.Key.ToString());
-				var key = blockmodel.Key;
-
-				if (ContainsKey(key))
-				{
-					if (replace)
-					{
-						var entry = new EntityModelEntry(blockmodel.Value);
-						Set(key, () => entry);
-					}
-				}
-				else
-				{
-					Register(blockmodel.Key, new EntityModelEntry(blockmodel.Value));
-				}
-
-				imported++;
-			}
-
-			return imported;
-		}
 	}
 }

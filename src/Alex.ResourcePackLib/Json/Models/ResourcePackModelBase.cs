@@ -14,6 +14,7 @@ namespace Alex.ResourcePackLib.Json.Models
     {
         Item,
         Block,
+        Entity,
         Unknown
     }
     
@@ -44,7 +45,7 @@ namespace Alex.ResourcePackLib.Json.Models
             }
         }*/
 
-        [JsonIgnore] public ModelType Type { get; internal set; } = ModelType.Unknown;
+        [JsonIgnore] public ModelType Type { get; set; } = ModelType.Unknown;
         
         public void UpdateValuesFromParent(ResourcePackModelBase parent)
         {

@@ -9,7 +9,10 @@ using Alex.Blocks.Minecraft;
 using Alex.Common.Items;
 using Alex.Common.Resources;
 using Alex.Common.Utils;
+using Alex.Entities;
+using Alex.Entities.BlockEntities;
 using Alex.Graphics.Models.Blocks;
+using Alex.Graphics.Models.Entity.BlockEntities;
 using Alex.Graphics.Models.Items;
 using Alex.ResourcePackLib;
 using Alex.ResourcePackLib.Json.Models;
@@ -161,6 +164,13 @@ namespace Alex.Items
 					            bs, modelEntry.Value, resources.BlockAtlas.GetAtlas());
 
 			            }
+			            else
+			            {
+				            if (modelEntry.Value.Textures.Count > 0)
+								renderer  = new ItemModelRenderer(modelEntry.Value);
+				            
+				            Log.Debug($"Unsupported model for item. ModelType={modelEntry.Value.Type} Item={resourceLocation}");
+			            }
 		            }
 
 		            item.DisplayName = GetDisplayName(resourceLocation);
@@ -230,6 +240,7 @@ namespace Alex.Items
 			           done++;
 		           }
 	           });
+           
            
 			Items = new ReadOnlyDictionary<ResourceLocation, Func<Item>>(items);
 	    }

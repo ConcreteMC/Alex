@@ -1,4 +1,5 @@
 using System.Linq;
+using System.Runtime.CompilerServices;
 using Alex.Blocks;
 using Alex.Items;
 using Alex.Worlds.Multiplayer.Bedrock;
@@ -15,7 +16,7 @@ namespace Alex.Utils
 		
 		private static JsonSerializerSettings SerializerSettings = new JsonSerializerSettings() {ReferenceLoopHandling = ReferenceLoopHandling.Ignore};
 
-		public static Item ToAlexItem(this MiNET.Items.Item item)
+		public static Item ToAlexItem(this MiNET.Items.Item item, [CallerMemberName]string source = "")
 		{
 			if (item == null)
 				return new ItemAir();
@@ -62,18 +63,25 @@ namespace Alex.Utils
 				}
 			}
 
-			if (result != null)
+			if (result == null || (result.IsAir() && !(item is MiNET.Items.ItemAir)))
 			{
-				result.StackID = item.UniqueId;
-				result.Meta = item.Metadata;
-				result.Count = item.Count;
-				result.Nbt = item.ExtraData;
-				result.Id = item.Id;
-
-				return result;
+				Log.Warn($"Failed to convert MiNET item to Alex item. (MiNET={item}, CallingMethod={source}{(itemState == null ? "" : $", Name={itemState.Name}")})");
 			}
 
-			return new ItemAir() {Count = 0};
+			if (result == null)
+			{
+				
+				return new ItemAir() {Count = 0};
+			}
+
+			result.StackID = item.UniqueId;
+			result.Meta = item.Metadata;
+			result.Count = item.Count;
+			result.Nbt = item.ExtraData;
+			result.Id = item.Id;
+
+			return result;
+
 		}
 	}
 }
