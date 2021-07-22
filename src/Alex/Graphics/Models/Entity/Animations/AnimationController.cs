@@ -7,6 +7,11 @@ using Alex.ResourcePackLib.Json.Bedrock.MoLang;
 
 namespace Alex.Graphics.Models.Entity.Animations
 {
+	//TODO: Get rid of all the string lookups
+	
+	/// <summary>
+	///		
+	/// </summary>
 	public class AnimationController : IAnimation
 	{
 		public AnimationComponent Parent { get; }
@@ -49,6 +54,7 @@ namespace Alex.Graphics.Models.Entity.Animations
 			{
 				foreach (var expression in transition.Expressions)
 				{
+					//TODO: Pre-verify if the states exist on initialization of the animation controller
 					if (!Definition.States.TryGetValue(expression.Key, out var targetState) 
 					    || targetState == null) 
 						continue;
@@ -72,18 +78,13 @@ namespace Alex.Graphics.Models.Entity.Animations
 		{
 			if (Parent.TryGetAnimation(animation, out var entityAnimation))
 			{
-				if (entityAnimation.Playing && !play)
+				if (entityAnimation.Playing || play)
 				{
-					entityAnimation.Stop();
-				}
-				else if (!entityAnimation.Playing && play)
-				{
-					entityAnimation.Play();
-				}
-
-				if (entityAnimation.Playing)
-				{
-					entityAnimation.BeforeUpdate();
+					if (!entityAnimation.CanPlay() || !play)
+					{
+						entityAnimation.Stop();
+						return;
+					}
 					
 					entityAnimation.Update();
 

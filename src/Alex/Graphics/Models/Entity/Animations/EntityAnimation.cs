@@ -28,9 +28,9 @@ namespace Alex.Graphics.Models.Entity.Animations
 		private double _animationLength = 0d;
 		private double _animationTime = 0d;
 
-		public void BeforeUpdate()
+		public bool CanPlay()
 		{
-			
+			return true;
 		}
 		
 		private Stopwatch _elapsedTimer = new Stopwatch();
