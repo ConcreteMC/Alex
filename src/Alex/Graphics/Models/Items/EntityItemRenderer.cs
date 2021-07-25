@@ -61,7 +61,7 @@ namespace Alex.Graphics.Models.Items
 		
 		/// <inheritdoc />
 		public IAttached Parent { get; set; }
-		public Vector3 Scale { get; set; } = Vector3.One;
+		public Vector3 Scale { get; set; } = new Vector3(1f / 16f, 1f / 16f, 1f / 16f);
 		
 		protected Matrix GetWorldMatrix(DisplayElement activeDisplayItem, Matrix characterMatrix)
         {

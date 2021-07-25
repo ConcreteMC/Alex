@@ -366,6 +366,9 @@ namespace Alex.Items
 
            if (items.TryGetValue("minecraft:player_head", out var func))
 	           items.TryAdd("minecraft:skull", func);
+
+           if (items.TryGetValue("minecraft:oak_door", out var oakDoorFunc))
+	           items.TryAdd("minecraft:wooden_door", oakDoorFunc);
            
 			Items = new ReadOnlyDictionary<ResourceLocation, Func<Item>>(items);
 	    }

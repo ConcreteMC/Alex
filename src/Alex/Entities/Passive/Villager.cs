@@ -3,12 +3,21 @@ using Alex.Worlds;
 
 namespace Alex.Entities.Passive
 {
-	public class Villager : PassiveMob
+	public class AbstractVillager : PassiveMob
 	{
-		public Villager(World level) : base(level)
+		/// <inheritdoc />
+		public AbstractVillager(World level) : base(level)
 		{
 			Height = 1.95;
 			Width = 0.6;
+		}
+	}
+	
+	public class Villager : AbstractVillager
+	{
+		public Villager(World level) : base(level)
+		{
+			
 		}
 
 		/// <inheritdoc />
