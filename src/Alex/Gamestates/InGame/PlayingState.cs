@@ -74,7 +74,7 @@ namespace Alex.Gamestates.InGame
             
             _networkDebugHud = new NetworkDebugHud(NetworkProvider);
             RenderNetworking = Options.MiscelaneousOptions.ShowNetworkInfoByDefault.Value;
-            
+            //Alex.Instance.l
             World.TickManager.RegisterTicked(WorldProvider);
 		}
 
@@ -103,6 +103,7 @@ namespace Alex.Gamestates.InGame
 
 			World.TickManager.RegisterTicked(_playingHud.Title);
 			_playingHud.Title.Ready();
+			Alex.ResetFrameRateLimiter();
 		}
 
 		protected override void OnHide()

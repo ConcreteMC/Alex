@@ -501,7 +501,14 @@ namespace Alex
                 });
         }
 
-        private void SetFrameRateLimiter(bool enabled, int frameRateLimit)
+        internal void ResetFrameRateLimiter()
+        {
+            SetFrameRateLimiter(
+                Options.AlexOptions.VideoOptions.LimitFramerate.Value,
+                Options.AlexOptions.VideoOptions.MaxFramerate.Value);
+        }
+        
+        internal void SetFrameRateLimiter(bool enabled, int frameRateLimit)
         {
             UiTaskManager.Enqueue(
                 () =>

@@ -17,12 +17,9 @@ namespace Alex.Gamestates.Common
 
 		public bool IsLoaded { get; private set; }
 		public bool IsShown  { get; private set; }
-		public bool IsFixedTimeStep { get; set; } = true;
-		
+
 		public IGameState ParentState { get; set; }
-		
-		private bool _previousIsFixedTimeStep;
-        public GuiGameStateBase()
+		public GuiGameStateBase()
         {
 	        //IsSelfManaged = true;
 	        
@@ -75,8 +72,7 @@ namespace Alex.Gamestates.Common
         {
 			if(IsShown) return;
 			
-			_previousIsFixedTimeStep = Alex.IsFixedTimeStep;
-			Alex.IsFixedTimeStep = IsFixedTimeStep;
+			Alex.SetFrameRateLimiter(true, 60);
 			
 	        Alex.GuiManager.AddScreen(this);
             OnShow();
@@ -95,7 +91,7 @@ namespace Alex.Gamestates.Common
             
             IsShown = false;
 
-            Alex.IsFixedTimeStep = _previousIsFixedTimeStep;
+			//Alex.ResetFrameRateLimiter();
         }
 
         public TService GetService<TService>() where TService : class
