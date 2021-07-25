@@ -720,9 +720,9 @@ namespace Alex.Net.Bedrock
 	        if (Alex.PlayerModel != null && Alex.PlayerTexture != null)
 	        {
 		        var model = Alex.PlayerModel;
-		        model.Description.TextureHeight = Alex.PlayerTexture.Height;
-		        model.Description.TextureWidth = Alex.PlayerTexture.Width;
-		        model.Description.Identifier = model.Description.Identifier.Split(':')[0];
+		      //  model.Description.TextureHeight = Alex.PlayerTexture.Height;
+		      //  model.Description.TextureWidth = Alex.PlayerTexture.Width;
+		        //model.Description.Identifier = model.Description.Identifier.Split(':')[0];
 		        byte[] skinData;
 		        using (MemoryStream ms = new MemoryStream())
 		        {
@@ -741,11 +741,14 @@ namespace Alex.Net.Bedrock
 
 		        Dictionary<string, object> mm = new Dictionary<string, object>();
 		        mm.Add("format_version", "1.12.0");
-		        mm.Add("minecraft:geometry", model);
+		        mm.Add("minecraft:geometry", new []
+		        {
+			        model
+		        });
 		      //  GeometryModel mm       = new GeometryModel();
 		      //  mm.Geometry.Add(model.Description.Identifier, model);
 
-		      var geoData = Encoding.UTF8.GetBytes(MCJsonConvert.SerializeObject(mm));
+		      var geoData = Encoding.UTF8.GetBytes(MCJsonConvert.SerializeObject(mm, true));
 		    //  File.WriteAllBytes("currentSkin.json", geoData);
 		      
 		        var modelIdentifier = model.Description.Identifier;

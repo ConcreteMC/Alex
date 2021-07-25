@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Alex.ResourcePackLib.Json.Models.Entities;
 using Microsoft.Xna.Framework;
 using Newtonsoft.Json;
@@ -6,34 +7,46 @@ using Newtonsoft.Json.Linq;
 
 namespace Alex.ResourcePackLib.Json.Converters
 {
-	public class UvConverter : JsonConverter
+	public class UvConverter : JsonConverter<EntityModelUV>
 	{
 		/// <inheritdoc />
-		public override bool CanWrite => false;
+		public override bool CanWrite => true;
 
 		/// <inheritdoc />
-		public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer)
+		public override void WriteJson(JsonWriter writer, EntityModelUV value, JsonSerializer serializer)
 		{
-			var val = value as EntityModelUV;
+			var val = value;
 
 			if (val.IsCube)
 			{
 				var v = val.Down.Origin;
 
-				serializer.Serialize(writer, new float[]
+				writer.WriteRawValue(JsonConvert.SerializeObject(new float[]
 				{
-					v.X,
-					v.Y
-				});
+					v.X, v.Y
+				}, Formatting.None));
 
 				return;
 			}
+
+			Dictionary<string, EntityModelUVData> newObject = new Dictionary<string, EntityModelUVData>();
+			//JObject newObject = new JObject();
+			newObject.Add("north", val.North);
+			newObject.Add("east", val.East);
+			newObject.Add("south", val.South);
+			newObject.Add("west", val.West);
+			newObject.Add("up", val.Up);
+			newObject.Add("down", val.Down);
 			
-			serializer.Serialize(writer, val);
+			serializer.Serialize(writer, newObject);
 		}
 
 		/// <inheritdoc />
-		public override object? ReadJson(JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer)
+		public override EntityModelUV? ReadJson(JsonReader reader,
+			Type objectType,
+			EntityModelUV? existingValue,
+			bool hasExistingValue,
+			JsonSerializer serializer)
 		{
 			var               obj     = JToken.Load(reader);
 
@@ -76,13 +89,6 @@ namespace Alex.ResourcePackLib.Json.Converters
 			}
 
 			return uvData;
-			//return jObject.ToObject<>()
-		}
-
-		/// <inheritdoc />
-		public override bool CanConvert(Type objectType)
-		{
-			return typeof(EntityModelUV).IsAssignableFrom(objectType);
 		}
 	}
 }

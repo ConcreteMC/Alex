@@ -113,12 +113,18 @@ namespace Alex.Entities
 					return;
 				
 				_skin = value;
-				_skinDirty = true;
 
-				if (IsSpawned)
-				{
-					QueueSkinProcessing();
-				}
+				OnSkinValueChanged(value);
+			}
+		}
+
+		protected virtual void OnSkinValueChanged(Skin newSkin)
+		{
+			_skinDirty = true;
+
+			if (IsSpawned)
+			{
+				QueueSkinProcessing();
 			}
 		}
 
@@ -208,6 +214,9 @@ namespace Alex.Entities
 
 								if (resourcePatch?.Geometry != null)
 								{
+									//if (!Directory.Exists("playerSkins"))
+									//File.WriteAllText(Path.Combine("playerskins", $"{resourcePatch.Geometry.Default}.json"), skin.GeometryData);
+									
 									Dictionary<string, EntityModel> models = new Dictionary<string, EntityModel>();
 									BedrockResourcePack.LoadEntityModel(skin.GeometryData, models);
 

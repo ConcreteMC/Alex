@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using Alex.ResourcePackLib.Json.Converters;
 using Newtonsoft.Json;
 using NLog;
 using Org.BouncyCastle.Security;
@@ -9,6 +10,9 @@ namespace Alex.ResourcePackLib.Json.Models.Entities
 	public class EntityModel
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(EntityModel));
+
+		[JsonIgnore]
+		public FormatVersion FormatVersion { get; set; } = FormatVersion.Unknown;
 		
 		[JsonProperty("description")]
 		public ModelDescription Description { get; set; }

@@ -2014,6 +2014,40 @@ namespace Alex.Entities
 			//Log.Info($"Root locator params: {param.ToString()}");
 			return 0d;
 		}
+		
+		[MoFunction("head_x_rotation")]
+		public double HeadXRotation(MoParams moParams)
+		{
+			int headNumber = 0;
+
+			if (moParams.Contains(0))
+			{
+				headNumber = moParams.GetInt(0);
+			}
+			
+			if (ModelRenderer.GetBone(headNumber > 0 ? $"head{headNumber}" : "head", out var bone))
+			{
+				return bone.Rotation.X;
+			}
+			return 0d;
+		}
+		
+		[MoFunction("head_y_rotation")]
+		public double HeadYRotation(MoParams moParams)
+		{
+			int headNumber = 0;
+
+			if (moParams.Contains(0))
+			{
+				headNumber = moParams.GetInt(0);
+			}
+			
+			if (ModelRenderer.GetBone(headNumber > 0 ? $"head{headNumber}" : "head", out var bone))
+			{
+				return bone.Rotation.Y;
+			}
+			return 0d;
+		}
 
 		/// <summary>
 		///		Debug log a value to the output debug window for builds that have one

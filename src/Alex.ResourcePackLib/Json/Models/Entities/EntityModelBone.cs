@@ -1,5 +1,7 @@
-﻿using System.Linq;
+﻿using System.ComponentModel;
+using System.Linq;
 using Microsoft.Xna.Framework;
+using Newtonsoft.Json;
 
 namespace Alex.ResourcePackLib.Json.Models.Entities
 {
@@ -27,7 +29,7 @@ namespace Alex.ResourcePackLib.Json.Models.Entities
         /// <summary>
         /// Grow this box by this additive amount in all directions (in model space units)
         /// </summary>
-        [J("inflate", NullValueHandling = N.Ignore)]
+        [J("inflate", NullValueHandling = N.Ignore, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate), DefaultValue(0d)]
         public double Inflate { get; set; } = 0;
 
         /// <summary>
@@ -48,12 +50,16 @@ namespace Alex.ResourcePackLib.Json.Models.Entities
         [J("bind_pose_rotation", NullValueHandling = N.Ignore)]
         public Vector3? BindPoseRotation { get; set; }
 
+        [J("neverRender", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate), DefaultValue(false)]
         public bool NeverRender { get; set; } = false;
 		
 		/// <summary>
 		/// Mirrors the UV's of the unrotated cubes along the x axis, also causes the east/west faces to get flipped.
 		/// </summary>
+		[JsonProperty("mirror", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate), DefaultValue(false)]
 		public bool Mirror { get; set; } = false;
+		
+		[JsonProperty("reset", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate), DefaultValue(false)]
 		public bool Reset { get; set; } = false;
 		
 		/// <summary>
@@ -61,7 +67,7 @@ namespace Alex.ResourcePackLib.Json.Models.Entities
 		/// </summary>
 		[J("cubes", NullValueHandling = N.Ignore)]
 		public EntityModelCube[] Cubes { get; set; }
-		
+
 		public EntityModelBone Clone()
 		{
 			return new EntityModelBone()

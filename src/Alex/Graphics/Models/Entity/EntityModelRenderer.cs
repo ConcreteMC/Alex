@@ -265,7 +265,8 @@ namespace Alex.Graphics.Models.Entity
 			modelBone.Pivot = bone.Pivot;
 			modelBone.Name = bone.Name;
 			modelBone.Rendered = !bone.NeverRender;
-
+			//modelBone.Rotation = bone.Rotation.GetValueOrDefault(Vector3.Zero);
+			
 			if (bone.Rotation.HasValue)
 			{
 				var r = bone.Rotation.Value;
@@ -276,7 +277,10 @@ namespace Alex.Graphics.Models.Entity
 			{
 				var r = bone.BindPoseRotation.Value;
 				modelBone.BindingRotation += new Vector3(r.X, r.Y, r.Z);
+				Log.Warn($"Got binding rotation for model: {source.Description.Identifier}");
 			}
+
+			modelBone.ModelVersion = source.FormatVersion;
 
 			foreach (var childBone in source.Bones.Where(
 				x => x.Parent != null && string.Equals(x.Parent, bone.Name, StringComparison.OrdinalIgnoreCase)))

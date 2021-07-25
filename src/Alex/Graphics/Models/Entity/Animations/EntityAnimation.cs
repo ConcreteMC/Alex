@@ -36,8 +36,8 @@ namespace Alex.Graphics.Models.Entity.Animations
 		private Stopwatch _elapsedTimer = new Stopwatch();
 		public void Update()
 		{
-			if (!Playing)
-				return;
+			//if (!Playing)
+			//	return;
 			
 			try
 			{
@@ -67,8 +67,9 @@ namespace Alex.Graphics.Models.Entity.Animations
 					{
 						var value = bone.Value;
 
-						var targetRotation = value.Rotation?.Evaluate(_parent.Runtime, Vector3.Zero, _animationTime)
-						                     ?? Vector3.Zero;
+						var targetRotation =
+							value.Rotation?.Evaluate(_parent.Runtime, Vector3.Zero, _animationTime) * new Vector3(-1f, 1f, 1f)
+							?? Vector3.Zero;
 
 						var targetPosition = value.Position?.Evaluate(_parent.Runtime, modelBone.Position, _animationTime)
 						                     ?? Vector3.Zero;
@@ -76,7 +77,7 @@ namespace Alex.Graphics.Models.Entity.Animations
 						var targetScale = value.Scale?.Evaluate(_parent.Runtime, modelBone.Scale, _animationTime) ?? Vector3.One;
 
 						modelBone.MoveOverTime(
-							targetPosition, targetRotation * new Vector3(-1f, 1f, 1f),
+							targetPosition, targetRotation,
 							targetScale, _elapsedTimer.Elapsed, anim.OverridePreviousAnimation,
 							anim.BlendWeight != null ? _parent.Execute(anim.BlendWeight).AsFloat() : 1f);
 					}

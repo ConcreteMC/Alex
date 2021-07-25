@@ -70,6 +70,7 @@ namespace Alex.ResourcePackLib.Json.Converters
 		private EntityModel DecodeSingle(JObject jObject, JsonSerializer serializer, FormatVersion version)
 		{
 			EntityModel model = new EntityModel();
+			model.FormatVersion = version;
 			model.Description = new ModelDescription();
 			foreach (var prop in jObject)
 			{

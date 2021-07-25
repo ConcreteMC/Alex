@@ -108,6 +108,12 @@ namespace Alex.Entities
         }
 
         /// <inheritdoc />
+        protected override void OnSkinValueChanged(MiNET.Utils.Skins.Skin newSkin)
+        {
+			//Do nothing.
+        }
+
+        /// <inheritdoc />
         public override float CollidedWithWorld(Vector3 direction, Vector3 position, float impactVelocity)
         {
 	        //var dirVelocity = direction * impactVelocity;

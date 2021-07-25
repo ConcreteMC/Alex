@@ -74,7 +74,7 @@ namespace Alex.Graphics.Models.Entity.Animations
 			}
 		}
 
-		private void UpdateAnimation(string animation, bool play)
+	/*	private void UpdateAnimation(string animation, bool play)
 		{
 			if (Parent.TryGetAnimation(animation, out var entityAnimation))
 			{
@@ -86,12 +86,15 @@ namespace Alex.Graphics.Models.Entity.Animations
 						return;
 					}
 					
+					if (!entityAnimation.Playing)
+						entityAnimation.Play();
+					
 					entityAnimation.Update();
 
 					entityAnimation.AfterUpdate();
 				}
 			}
-		}
+		}*/
 		
 		private void UpdateAnimations(AnnoyingMolangElement[] animations)
 		{
@@ -102,14 +105,13 @@ namespace Alex.Graphics.Models.Entity.Animations
 			{
 				if (animation.IsString)
 				{
-					UpdateAnimation(animation.StringValue, true);
+					Parent.ExecuteAnimationUpdate(animation.StringValue, true);
 				}
 				else
 				{
 					foreach (var expression in animation.Expressions)
 					{
-						var shouldPlay = Parent.Execute(expression.Value).AsBool();
-						UpdateAnimation(expression.Key, shouldPlay);
+						Parent.ExecuteAnimationUpdate(expression.Key, Parent.Execute(expression.Value).AsBool());
 					}
 				}
 				//Parent.Execute(animation);

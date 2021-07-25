@@ -189,7 +189,10 @@ namespace Alex.Graphics.Models.Entity.Animations
 				{
 					if (animationProvider.TryGetAnimation(kv.Value, out var animation))
 					{
-						if (!animations.TryAdd(kv.Key, new EntityAnimation(this, animation)))
+						var entityAnimation = new EntityAnimation(this, animation);
+						entityAnimation.Play();
+						
+						if (!animations.TryAdd(kv.Key, entityAnimation))
 						{
 							Log.Warn($"Failed to add animation: {kv.Key}");
 						}
@@ -299,7 +302,17 @@ namespace Alex.Graphics.Models.Entity.Animations
 					{
 						foreach (var key in def.Scripts.Animate)
 						{
-							Execute(key);
+							if (key.IsString)
+							{
+								ExecuteAnimationUpdate(key.StringValue, true);
+							}
+							else
+							{
+								foreach (var expression in key.Expressions)
+								{
+									ExecuteAnimationUpdate(expression.Key, Execute(expression.Value).AsBool());
+								}
+							}
 						}
 					}
 				}
@@ -325,38 +338,38 @@ namespace Alex.Graphics.Models.Entity.Animations
 			return Runtime.Execute(expressions, Context);
 		}
 
-		public void Execute(AnnoyingMolangElement key)
-		{
-			if (key.IsString)
-			{
-				ExecuteAnimationUpdate(key.StringValue);
-			}
-			else
-			{
-				foreach (var expression in key.Expressions)
-				{
-					if (Execute(expression.Value).AsBool())
-					{
-						ExecuteAnimationUpdate(expression.Key);
-					}
-				}
-			}
-		}
-		
 		//private Stopwatch _animationRunTime = new Stopwatch();
-		internal bool ExecuteAnimationUpdate(string name)
+		internal void ExecuteAnimationUpdate(string name, bool play)
 		{
 			if (_animations.TryGetValue(name, out var animation))
 			{
-				animation.Update();
-				return true;
+				if (animation is EntityAnimation ea)
+				{
+					if (ea.Playing || play)
+					{
+						if (!ea.CanPlay() || !play)
+						{
+							ea.Stop();
+							return;
+						}
+						
+						if (!ea.Playing)
+							ea.Play();
+					
+						ea.Update();
+
+						ea.AfterUpdate();
+					}
+				}
+				else
+				{
+					animation.Update();
+				}
 			}
 			else
 			{
 				Log.Debug($"Could not find animation: {name}");
 			}
-
-			return false;
 		}
 		
 		internal bool TryGetAnimation(string name, out EntityAnimation animation)
@@ -370,16 +383,6 @@ namespace Alex.Graphics.Models.Entity.Animations
 			}
 
 			return false;
-			/*{
-				animation.Update(_deltaTimeStopwatch.Elapsed);
-				return true;
-			}
-			else
-			{
-				Log.Debug($"Could not find animation: {name}");
-			}
-
-			return false;*/
 		}
 
 		/// <inheritdoc />

@@ -9,8 +9,7 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Entity
         [JsonProperty("identifier")]
         public string Identifier { get; set; }
 
-        [JsonProperty("min_engine_version")]
-        public string MinEngineVersion { get; set; }
+        [JsonProperty("min_engine_version")] public string MinEngineVersion { get; set; } = null;
 
         [JsonProperty("materials")]
         public Dictionary<string, string> Materials { get; set; }

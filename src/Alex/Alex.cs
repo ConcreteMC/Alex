@@ -631,19 +631,22 @@ namespace Alex
 
             var storage = Services.GetRequiredService<IStorageSystem>();
 
-            if (storage.TryReadString("skin.json", out var str, Encoding.UTF8))
+            if (storage.TryReadBytes("skin.json", out var bytes))
             {
                 Dictionary<string, EntityModel> models = new Dictionary<string, EntityModel>();
-                BedrockResourcePack.LoadEntityModel(str, models);
+                BedrockResourcePack.LoadEntityModel(Encoding.UTF8.GetString(bytes), models);
                 models = BedrockResourcePack.ProcessEntityModels(models);
 
-                if (models.Count > 0)
+                if (models.Count == 1)
+                {
+                    PlayerModel = models.First().Value;
+                }
+                else if (models.Count > 0)
                 {
                     if (models.TryGetValue("geometry.humanoid.custom", out var entityModel) || models.TryGetValue(
                         "geometry.humanoid.customSlim", out entityModel))
                     {
                         PlayerModel = entityModel;
-                        Log.Info($"Player model loaded...");
                     }
                 }
             }
@@ -656,13 +659,12 @@ namespace Alex
                     PlayerModel = model;
                 }
             }
-
-            if (PlayerModel != null)
+            else
             {
-                //Log.Info($"Player model loaded...");
+                Log.Info($"Player model loaded...");
             }
 
-            if (storage.TryReadBytes("skin.png", out byte[] skinBytes))
+            if (PlayerModel != null && storage.TryReadBytes("skin.png", out byte[] skinBytes))
             {
                 using (var skinImage = Image.Load<Rgba32>(skinBytes))
                 {
@@ -682,6 +684,8 @@ namespace Alex
                     {
                         PlayerTexture = skinImage.Clone(); //.Clone<Rgba32>();
                     }
+                    
+                    Log.Info($"Player skin loaded...");
                 }
             }
             else
@@ -691,12 +695,7 @@ namespace Alex
                     PlayerTexture = img;
                 }
             }
-
-            if (PlayerTexture != null)
-            {
-                Log.Info($"Player skin loaded...");
-            }
-
+            
             if (LaunchSettings.ModelDebugging)
             {
                 GameStateManager.SetActiveState<ModelDebugState>();

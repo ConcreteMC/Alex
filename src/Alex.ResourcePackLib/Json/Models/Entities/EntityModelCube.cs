@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Alex.ResourcePackLib.Json.Converters;
+using Microsoft.Xna.Framework;
 using Newtonsoft.Json;
 
 namespace Alex.ResourcePackLib.Json.Models.Entities
@@ -111,6 +112,8 @@ namespace Alex.ResourcePackLib.Json.Models.Entities
 	  
 	  public Vector3 InflatedPivot(float amount)
 	  {
+		  if (amount == 0f)
+			  return Pivot.Value;
 		  // var origin = Origin;// * new Vector3(1f, 1f, -1f);
 		  //  var s         = InflatedSize(amount);
 		  var inflation = (amount / 2f);

@@ -5,6 +5,7 @@ using System.Threading;
 using Alex.Common.Graphics;
 using Alex.Common.Utils;
 using Alex.Common.Utils.Collections;
+using Alex.ResourcePackLib.Json.Converters;
 using Alex.ResourcePackLib.Json.Models.Entities;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -54,6 +55,7 @@ namespace Alex.Graphics.Models.Entity
 
 		private Vector3 _bindingRotation = Vector3.Zero;
 
+		public FormatVersion ModelVersion = FormatVersion.Unknown;
 		public Vector3 BindingRotation
 		{
 			get { return _bindingRotation; }
@@ -93,19 +95,13 @@ namespace Alex.Graphics.Models.Entity
 			Matrix matrix;
 			var bindingRotation = _bindingRotation;
 
-			if (Pivot.HasValue)
-			{
-				var pivot = (Pivot ?? Vector3.Zero);
+			var pivot = Pivot.GetValueOrDefault(new Vector3(8f, 8f, 8f));
 
-				matrix = Matrix.CreateTranslation(-pivot) * MatrixHelper.CreateRotationDegrees(bindingRotation)
-				                                          * Matrix.CreateTranslation(pivot);
-			}
-			else
-			{
-				matrix = MatrixHelper.CreateRotationDegrees(bindingRotation);
-			}
+			matrix = Matrix.CreateTranslation(-pivot) 
+			         * MatrixHelper.CreateRotationDegrees(bindingRotation)
+			         * Matrix.CreateTranslation(pivot);
 
-			BindingMatrix = matrix;
+				BindingMatrix = matrix;
 		}
 
 		public bool Rendered { get; set; } = true;
@@ -279,7 +275,7 @@ namespace Alex.Graphics.Models.Entity
 			//var count = ElementCount;
 
 			//	worldMatrix = WorldMatrix * worldMatrix;
-			Matrix childMatrix = Transform * worldMatrix;
+			Matrix childMatrix = BindingMatrix * Transform * worldMatrix;
 
 			if (Rendered)
 			{
@@ -288,7 +284,7 @@ namespace Alex.Graphics.Models.Entity
 				if (meshes.Count > 0)
 				{
 
-					((IEffectMatrices) effect).World = BindingMatrix * childMatrix;
+					((IEffectMatrices) effect).World = childMatrix;
 
 					foreach (var mesh in meshes)
 					{
@@ -308,7 +304,11 @@ namespace Alex.Graphics.Models.Entity
 				}
 			}
 
-			Children.ForEach((child) => { renderCount += child.Render(args, effect, childMatrix); }, false, false);
+			Children.ForEach(
+				(child) =>
+				{
+					renderCount += child.Render(args, effect, childMatrix);
+				}, false, false);
 
 			return renderCount;
 		}

@@ -165,7 +165,7 @@ namespace Alex.Entities
 			int total = entityDefinitions.Count;
 
 			foreach (var def in entityDefinitions.OrderByDescending(
-				x => !string.IsNullOrWhiteSpace(x.Value.MinEngineVersion)))
+				x => string.IsNullOrWhiteSpace(x.Value.MinEngineVersion)))
 			{
 				//	double percentage = 100D * ((double)done / (double)total);
 				progressReceiver?.UpdateProgress(done, total, $"Importing entity definitions...", def.Key.ToString());

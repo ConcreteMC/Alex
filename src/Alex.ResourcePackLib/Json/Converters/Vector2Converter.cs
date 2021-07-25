@@ -1,27 +1,25 @@
-﻿using System;
-using System.Linq;
+using System;
 using Microsoft.Xna.Framework;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace Alex.ResourcePackLib.Json.Converters
 {
-
-	public class Vector3Converter : JsonConverter
+	public class Vector2Converter : JsonConverter
 	{
 		public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
 		{
-			var v = value is Vector3 ? (Vector3) value : new Vector3();
+			var v = value is Vector2 ? (Vector2) value : new Vector2();
 
 			writer.WriteRawValue(JsonConvert.SerializeObject(new float[]
 			{
-				v.X, v.Y, v.Z
+				v.X, v.Y
 			}, Formatting.None));
-			/*serializer.Serialize(writer, new float[]
+			/*
+			serializer.Serialize(writer, new float[]
 			{
 				v.X,
-				v.Y,
-				v.Z
+				v.Y
 			});*/
 		}
 
@@ -32,9 +30,9 @@ namespace Alex.ResourcePackLib.Json.Converters
 			if (obj.Type == JTokenType.Array)
 			{
 				var arr = (JArray)obj;
-				if (arr.Count == 3)
+				if (arr.Count == 2)
 				{
-					var v3 = new Vector3();
+					var v3 = new Vector2();
 
 					if (arr[0].Type == JTokenType.Integer)
 					{
@@ -54,15 +52,6 @@ namespace Alex.ResourcePackLib.Json.Converters
 						v3.Y = arr[1].Value<float>();
 					}
 
-					if (arr[2].Type == JTokenType.Integer)
-					{
-						v3.Z = arr[2].Value<int>();
-					}
-					else if (arr[2].Type == JTokenType.Float)
-					{
-						v3.Z = arr[2].Value<float>();
-					}
-
 					return v3;
 				}
 			}
@@ -72,7 +61,7 @@ namespace Alex.ResourcePackLib.Json.Converters
 
 		public override bool CanConvert(Type objectType)
 		{
-			return typeof(Vector3).IsAssignableFrom(objectType) || typeof(Vector3?).IsAssignableFrom(objectType);
+			return typeof(Vector2).IsAssignableFrom(objectType) || typeof(Vector2?).IsAssignableFrom(objectType);;
 		}
 	}
 }

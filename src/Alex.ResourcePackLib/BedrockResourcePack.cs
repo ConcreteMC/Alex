@@ -542,13 +542,6 @@ namespace Alex.ResourcePackLib
 			SoundDefinitions = SoundDefinitionFormat.FromJson(json);
 		}
 
-		private enum DefFormat
-		{
-			unknown,
-			v18,
-			v110
-		}
-
 		private void LoadEntityDefinition(IFile entry,
 			Dictionary<ResourceLocation, EntityDescription> entityDefinitions)
 		{
@@ -557,12 +550,12 @@ namespace Alex.ResourcePackLib
 
 			//string fileName = Path.GetFileNameWithoutExtension(entry.Name);
 
-			Dictionary<ResourceLocation, EntityDescription> definitions =
-				new Dictionary<ResourceLocation, EntityDescription>();
+			Dictionary<string, EntityDescription> definitions =
+				new Dictionary<string, EntityDescription>();
 
 			JObject obj = JObject.Parse(json, new JsonLoadSettings());
 
-			DefFormat format = DefFormat.unknown;
+			FormatVersion format = FormatVersion.Unknown;
 
 			if (obj.TryGetValue("format_version", out var ftv))
 			{
@@ -571,13 +564,11 @@ namespace Alex.ResourcePackLib
 					switch (ftv.Value<string>())
 					{
 						case "1.10.0":
-							format = DefFormat.v110;
-
+							format = FormatVersion.V1_10_0;
 							break;
 
 						case "1.8.0":
-							format = DefFormat.v18;
-
+							format = FormatVersion.V1_8_0;
 							break;
 					}
 				}
@@ -643,7 +634,19 @@ namespace Alex.ResourcePackLib
 							Log.Warn($"Could not load texture! {ex}");
 						}
 
-						entityDefinitions[def.Key] = def.Value;
+						var key = new ResourceLocation(def.Key);
+						if (entityDefinitions.TryGetValue(key, out var existing))
+						{
+							if (existing.MinEngineVersion != null && def.Value.MinEngineVersion == null)
+							{
+								entityDefinitions[key] = def.Value;
+							}
+						}
+						else
+						{
+							entityDefinitions[key] = def.Value;
+						}
+						//entityDefinitions[def.Key] = def.Value;
 					}
 
 					//	else
