@@ -145,7 +145,7 @@ namespace Alex.Graphics.Models.Items
             return base.GetWorldMatrix(activeDisplayItem, characterMatrix);
         }
 
-        public override IItemRenderer Clone()
+        public override IItemRenderer CloneItemRenderer()
         {
             return new ItemBlockModelRenderer(_blockState, Model, _texture)
             {

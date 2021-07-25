@@ -358,7 +358,7 @@ namespace Alex
             var image = Image.Load<Rgba32>(builtInFont);
             OnResourcePackPreLoadCompleted(image, McResourcePack.BitmapFontCharacters.ToList());
 
-            var options = Services.GetService<IOptionsProvider>();
+            var options = Services.GetRequiredService<IOptionsProvider>();
             options.Load();
 
 #if DIRECTX
@@ -381,7 +381,7 @@ namespace Alex
             GuiManager = Services.GetRequiredService<GuiManager>();
             Components.Add(GuiManager);
             GuiManager.DrawOrder = 100;
-            
+
 
             options.AlexOptions.VideoOptions.FancyGraphics.Bind(
                 (value, newValue) => { Block.FancyGraphics = newValue; });

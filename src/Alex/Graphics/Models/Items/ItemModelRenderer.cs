@@ -137,7 +137,7 @@ namespace Alex.Graphics.Models.Items
             }
         }
 
-        public override IItemRenderer Clone()
+        public override IItemRenderer CloneItemRenderer()
         {
             return new ItemModelRenderer(Model)
             {
@@ -365,7 +365,7 @@ namespace Alex.Graphics.Models.Items
             //Buffer = GpuResourceManager.GetBuffer(this, )
         }
 
-        public virtual IItemRenderer Clone()
+        public virtual IItemRenderer CloneItemRenderer()
         {
             return new ItemModelRenderer<TVertice>(Model, _declaration)
             {
@@ -390,7 +390,7 @@ namespace Alex.Graphics.Models.Items
         /// <inheritdoc />
         IAttached IAttached.Clone()
         {
-            return Clone();
+            return CloneItemRenderer();
         }
 
         /// <inheritdoc />

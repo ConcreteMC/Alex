@@ -1,3 +1,5 @@
+using Alex.Common.Resources;
+
 namespace Alex.Items
 {
 	using System;
@@ -10,10 +12,10 @@ namespace Alex.Items
 	public partial class ItemMapping
 	{
 		[JsonProperty("bedrock_id")]
-		public long BedrockId { get; set; }
+		public int BedrockId { get; set; }
 
 		[JsonProperty("bedrock_data")]
-		public long BedrockData { get; set; }
+		public int BedrockData { get; set; }
 
 		[JsonProperty("blockRuntimeId", NullValueHandling = NullValueHandling.Ignore)]
 		public long? BlockRuntimeId { get; set; }
@@ -26,5 +28,14 @@ namespace Alex.Items
 
 		[JsonProperty("tool_tier", NullValueHandling = NullValueHandling.Ignore)]
 		public string ToolTier { get; set; }
+
+		[JsonIgnore]
+		public ResourceLocation JavaId { get; set; } = null;
+
+		/// <inheritdoc />
+		public override int GetHashCode()
+		{
+			return HashCode.Combine(BedrockId, BedrockData);
+		}
 	}
 }

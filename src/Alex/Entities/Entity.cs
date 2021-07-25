@@ -476,7 +476,7 @@ namespace Alex.Entities
 
 		            if (renderer != ItemRenderer)
 		            {
-			            renderer = renderer.Clone();
+			            renderer = renderer.CloneItemRenderer();
 			            
 			            ItemRenderer = renderer;
 		            }

@@ -11,13 +11,17 @@ using Alex.Common.Resources;
 using Alex.Common.Utils;
 using Alex.Entities;
 using Alex.Entities.BlockEntities;
+using Alex.Gamestates;
 using Alex.Graphics.Models.Blocks;
+using Alex.Graphics.Models.Entity;
 using Alex.Graphics.Models.Entity.BlockEntities;
 using Alex.Graphics.Models.Items;
 using Alex.ResourcePackLib;
+using Alex.ResourcePackLib.Json;
 using Alex.ResourcePackLib.Json.Models;
 using Alex.ResourcePackLib.Json.Models.Items;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using Newtonsoft.Json;
 using NLog;
 using ItemMaterial = MiNET.Items.ItemMaterial;
@@ -85,8 +89,10 @@ namespace Alex.Items
 			{"firstperson_lefthand", new DisplayElement(new Vector3(0, 225, 0), new Vector3(0,0,0), new Vector3(0.4f, 0.4f, 0.4f))}
 		};
 
-		private static Dictionary<string, ItemMapping> _itemMappings;// = new Dictionary<string, ItemMapping>();
-
+		private static IReadOnlyDictionary<ResourceLocation, ItemMapping> _itemMappings;// = new Dictionary<string, ItemMapping>();
+		private static IReadOnlyDictionary<ReverseMapperKey, ResourceLocation> _reverseItemMappings;
+		private static HashSet<ItemMapping> _allItemMapping = new HashSet<ItemMapping>();
+		
 		private static string GetDisplayName(ResourceLocation location)
 		{
 			var key = $"item.{location.Namespace}.{location.Path}";
@@ -97,16 +103,147 @@ namespace Alex.Items
 			return itemTranslation;
 		}
 
+		private static bool TryGetRenderer(string itemName, ResourceManager resources, ResourceLocation resourceLocation, out IItemRenderer renderer)
+		{
+			var modelRegistry = resources.BlockModelRegistry;
+			if (modelRegistry.TryGet(
+				resourceLocation,
+				out var modelEntry))
+			{
+				if (modelEntry.Value.Type == ModelType.Item)
+				{
+					renderer = new ItemModelRenderer(modelEntry.Value);
+
+					return true;
+				}
+
+				if (modelEntry.Value.Type == ModelType.Block)
+				{
+					var bs = BlockFactory.GetBlockState(itemName);
+
+					renderer = new ItemBlockModelRenderer(
+						bs, modelEntry.Value, resources.BlockAtlas.GetAtlas());
+
+					return true;
+				}
+
+				if (modelEntry.Value.Type == ModelType.Entity)
+				{
+					EntityModelRenderer modelRenderer = null;
+					Texture2D modelTexture = null;
+					
+					switch (itemName)
+					{
+						case "minecraft:chest":
+							if (EntityModelRenderer.TryGetRenderer(new ChestEntityModel(), out modelRenderer))
+							{
+								modelTexture = BlockEntityFactory.ChestTexture;
+							}
+							break;
+						case "minecraft:ender_chest":
+							if (EntityModelRenderer.TryGetRenderer(new ChestEntityModel(), out modelRenderer))
+							{
+								modelTexture = BlockEntityFactory.EnderChestTexture;
+							}
+							break;
+						case "minecraft:player_head":
+						case "minecraft:skull":
+							if (EntityModelRenderer.TryGetRenderer(new SkullBlockEntityModel(), out modelRenderer))
+							{
+								modelTexture = BlockEntityFactory.SkullTexture;
+							}
+							break;
+					}
+
+					if (modelRenderer == null || modelTexture == null)
+					{
+						if (resources.TryGetEntityDefinition(itemName, out var description, out var resourcePack))
+						{
+							if (modelRenderer == null)
+								modelRenderer = EntityFactory.GetEntityRenderer(description.Identifier);
+
+							if (modelRenderer != null)
+							{
+								if (description.Geometry.TryGetValue("default", out var defaultGeometry)
+								    && ModelFactory.TryGetModel(defaultGeometry, out var model) && model != null)
+								{
+									var textures = description.Textures;
+									string texture;
+
+									if (!(textures.TryGetValue("default", out texture) || textures.TryGetValue(
+										description.Identifier, out texture)))
+									{
+										texture = textures.FirstOrDefault().Value;
+									}
+
+									if (resources.TryGetBedrockBitmap(texture, out var bmp))
+									{
+										modelTexture = TextureUtils.BitmapToTexture2D(
+											Alex.Instance.GraphicsDevice, bmp);
+									}
+									else if (resources.TryGetBitmap(texture, out var bmp2))
+									{
+										modelTexture = TextureUtils.BitmapToTexture2D(
+											Alex.Instance.GraphicsDevice, bmp2);
+									}
+								}
+							}
+						}
+					}
+
+					if (modelRenderer != null && modelTexture != null)
+					{
+						renderer = new EntityItemRenderer(itemName, modelRenderer, modelTexture);
+						return true;
+					}
+					else
+					{
+						modelRenderer?.Dispose();
+						modelTexture?.Dispose();
+					}
+				}
+
+				if (modelEntry.Value.Textures.Count > 0)
+				{
+					renderer = new ItemModelRenderer(modelEntry.Value);
+					return true;
+				}
+
+				Log.Debug($"Unsupported model for item. ModelType={modelEntry.Value.Type} Item={resourceLocation}");
+			}
+
+			renderer = null;
+			return false;
+		}
+		
 		private static LegacyIdMap _legacyIdMap;
 	    public static void Init(IRegistryManager registryManager, ResourceManager resources, IProgressReceiver progressReceiver = null)
 	    {
+		    _allItemMapping.Clear();
 		    ResourceManager = resources;
 		    var modelRegistry = resources.BlockModelRegistry;
 		   // ResourcePack = resourcePack;
 
 		   _itemMappings =
-			   JsonConvert.DeserializeObject<Dictionary<string, ItemMapping>>(ResourceManager.ReadStringResource("Alex.Resources.itemmapping.json"));
+			   MCJsonConvert.DeserializeObject<IReadOnlyDictionary<ResourceLocation, ItemMapping>>(ResourceManager.ReadStringResource("Alex.Resources.itemmapping.json"));
 
+		   
+		   Dictionary<ReverseMapperKey, ResourceLocation> reverseMap = new Dictionary<ReverseMapperKey, ResourceLocation>();
+
+		   if (_itemMappings != null)
+		   {
+			   foreach (var item in _itemMappings)
+			   {
+				   var value = item.Value;
+				   value.JavaId = item.Key;
+				   
+				   reverseMap.Add(new ReverseMapperKey(item.Value.BedrockId, item.Value.BedrockData), item.Key);
+
+				   _allItemMapping.Add(value);
+			   }
+		   }
+
+		   _reverseItemMappings = new ReadOnlyDictionary<ReverseMapperKey, ResourceLocation>(reverseMap);
 		  
 		   var otherRaw = ResourceManager.ReadStringResource("Alex.Resources.items3.json");
 		    var legacyIdMapping = JsonConvert.DeserializeObject<LegacyIdMap>(otherRaw);
@@ -148,29 +285,10 @@ namespace Alex.Items
 		            item.Name = entry.Key;
 		            IItemRenderer renderer = null;
 
-		            if (modelRegistry.TryGet(
-			            new ResourceLocation(resourceLocation.Namespace, $"item/{resourceLocation.Path}"),
-			            out var modelEntry))
+		            if (!TryGetRenderer(entry.Key, resources, new ResourceLocation(resourceLocation.Namespace, $"item/{resourceLocation.Path}"), out renderer))
 		            {
-			            if (modelEntry.Value.Type == ModelType.Item)
-			            {
-				            renderer = new ItemModelRenderer(modelEntry.Value);
-			            }
-			            else if (modelEntry.Value.Type == ModelType.Block)
-			            {
-				            var bs = BlockFactory.GetBlockState(entry.Key);
-
-				            renderer = new ItemBlockModelRenderer(
-					            bs, modelEntry.Value, resources.BlockAtlas.GetAtlas());
-
-			            }
-			            else
-			            {
-				            if (modelEntry.Value.Textures.Count > 0)
-								renderer  = new ItemModelRenderer(modelEntry.Value);
-				            
-				            Log.Debug($"Unsupported model for item. ModelType={modelEntry.Value.Type} Item={resourceLocation}");
-			            }
+						Log.Debug($"No model found for item: {entry.Key}");
+						return;
 		            }
 
 		            item.DisplayName = GetDisplayName(resourceLocation);
@@ -206,15 +324,20 @@ namespace Alex.Items
 			           {
 				           return;
 			           }
-			           
-			           ResourcePackModelBase model            = null;
 
-			           if (modelRegistry.TryGet(new ResourceLocation(resourceLocation.Namespace, $"block/{resourceLocation.Path}"), out var modelEntry))
+			           IItemRenderer renderer = null;
+			           if (!TryGetRenderer(entry.Key, resources, new ResourceLocation(resourceLocation.Namespace, $"block/{resourceLocation.Path}"), out renderer))
 			           {
-				           model = modelEntry.Value;
+				           ResourcePackModelBase model            = null;
+
+				           if (modelRegistry.TryGet(new ResourceLocation(resourceLocation.Namespace, $"block/{resourceLocation.Path}"), out var modelEntry))
+				           {
+					           model = modelEntry.Value;
+					           renderer = new ItemBlockModelRenderer(bs, model, resources.BlockAtlas.GetAtlas());
+				           }
 			           }
 
-			           if (model == null)
+			           if (renderer == null)
 			           {
 				           Log.Debug($"Missing item render definition for block {entry.Key}, using default.");
 			           }
@@ -225,7 +348,7 @@ namespace Alex.Items
 				           item.DisplayName = GetDisplayName(resourceLocation);
 				          // item.DisplayName = Alex.Instance.GuiRenderer.GetTranslation($"block.{resourceLocation.Namespace}.{resourceLocation.Path}");
 
-				           item.Renderer = new ItemBlockModelRenderer(bs, model, resources.BlockAtlas.GetAtlas());
+				          item.Renderer = renderer;
 				           item.Renderer.Cache(resources);
 
 				           items.TryAdd(
@@ -240,7 +363,9 @@ namespace Alex.Items
 			           done++;
 		           }
 	           });
-           
+
+           if (items.TryGetValue("minecraft:player_head", out var func))
+	           items.TryAdd("minecraft:skull", func);
            
 			Items = new ReadOnlyDictionary<ResourceLocation, Func<Item>>(items);
 	    }
@@ -282,6 +407,42 @@ namespace Alex.Items
 
 		    item = null;
 		    return false;
+	    }
+
+	    public static bool TryGetBedrockItem(int id, int meta, out Item item)
+	    {
+		    item = null;
+
+		    if (_reverseItemMappings.TryGetValue(new ReverseMapperKey(id, meta), out var itemName))
+		    {
+			    if (TryGetItem(itemName, out item))
+				    return true;
+		    }
+		    else if (_allItemMapping.TryGetValue(
+			    new ItemMapping() {BedrockData = id, BlockRuntimeId = meta}, out var actualValue))
+		    {
+			    return TryGetItem(actualValue.JavaId, out item);
+		    }
+		    
+		    return false;
+	    }
+
+	    private class ReverseMapperKey
+	    {
+		    private readonly int _id;
+		    private readonly int _meta;
+
+		    public ReverseMapperKey(int id, int meta)
+		    {
+			    _id = id;
+			    _meta = meta;
+		    }
+
+		    /// <inheritdoc />
+		    public override int GetHashCode()
+		    {
+			    return HashCode.Combine(_id, _meta);
+		    }
 	    }
 
 	    private class LegacyIdMap

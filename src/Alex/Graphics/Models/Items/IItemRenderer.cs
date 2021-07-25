@@ -23,6 +23,6 @@ namespace Alex.Graphics.Models.Items
 
         bool Cache(ResourceManager pack);
 
-        IItemRenderer Clone();
+        IItemRenderer CloneItemRenderer();
     }
 }
