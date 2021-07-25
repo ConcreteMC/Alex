@@ -59,7 +59,7 @@ namespace Alex.Plugins
 	        }
 	        catch (Exception ex)
 	        {
-		        Log.Error($"Failed to resolve!", ex);
+		        Log.Error(ex, $"Failed to resolve!");
 		        return null;
 	        }
         }
@@ -87,9 +87,22 @@ namespace Alex.Plugins
 			        }
 			        else
 			        {
+				        /*var resolved = module.AssemblyResolver.Resolve(assemblyName);
+
+				        if (resolved != null)
+				        {
+					        using (MemoryStream ms = new MemoryStream())
+					        {
+						        resolved.Write(ms);
+						        var assembly = Assembly.Load(ms.ToArray());
+						        resolvedAssemblies.Add(assemblyName, assembly);
+					        }
+					        continue;
+				        }
+*/
 				        Log.Warn($"Plugin \"{module.FileName}\" requires \"{assemblyName}\" but it could not be found.");
-				        //  assemblies = default(Assembly[]);
-				        // return false;
+				          assemblies = default(Assembly[]);
+				         return false;
 			        }
 		        }
 		        catch(Exception e)
@@ -121,61 +134,36 @@ namespace Alex.Plugins
 			    resultingPath = p;
 			    return true;
 		    }
-			    
+
+		    List<string> directories = new List<string>();
+		    directories.Add(rootPath);
+		    string execPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+		    if (!directories.Contains(execPath))
+				directories.Add(execPath);
+		    
+		    execPath = Path.GetDirectoryName(Assembly.GetCallingAssembly().Location);
+		    if (!directories.Contains(execPath))
+			    directories.Add(execPath);
+
+		    foreach (var path in AppDomain.CurrentDomain.GetAssemblies().Where(x => !x.IsDynamic)
+			   .Select(x => Path.GetDirectoryName(x.Location)))
+		    {
+			    if (!directories.Contains(path))
+				    directories.Add(path);
+		    }
+
 		    string dllName = name.Name + ".dll";
-
-		    var assemblyLocation = rootPath;
-
-			string file = Path.Combine(assemblyLocation, dllName);
-
-			string result = null;
-			if (CompareFileToAssemblyName(file, name) == FileAssemblyComparisonResult.Match)
-			{
-				result = file;
-			}
-			else
-			{
-				foreach (var path in AppDomain.CurrentDomain.GetAssemblies().Where(x => !x.IsDynamic).Select(x => x.Location))
-				{
-					file = Path.Combine(path, dllName);
-					if (CompareFileToAssemblyName(file, name) == FileAssemblyComparisonResult.Match)
-					{
-						result = file;
-
-						break;
-					}
-				}
-				/*string lastPath = _lastPath;
-				if (!string.IsNullOrEmpty(lastPath))
-				{
-					file = Path.Combine(lastPath, dllName);
-					if (CompareFileToAssemblyName(file, name) == FileAssemblyComparisonResult.Match)
-					{
-						result = file;
-					}
-				}
-*/
-				string executingPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-				string callingAssembliesPath = Path.GetDirectoryName(Assembly.GetCallingAssembly().Location);
-
-				if (result == null && executingPath != null)
-				{
-					file = Path.Combine(executingPath, dllName);
-					if (File.Exists(Path.Combine(executingPath, dllName)))
-					{
-						result = file;
-					}
-				}
-
-				if (result == null && callingAssembliesPath != null)
-				{
-					file = Path.Combine(callingAssembliesPath, dllName);
-					if (CompareFileToAssemblyName(file, name) == FileAssemblyComparisonResult.Match)
-					{
-						result = file;
-					}
-				}
-			}
+		    string result = null;
+		    
+		    foreach (var directory in directories)
+		    {
+			    string file = Path.Combine(directory, dllName);
+			    if (CompareFileToAssemblyName(file, name) == FileAssemblyComparisonResult.Match)
+			    {
+				    result = file;
+				    break;
+			    }
+		    }
 
 		    if (string.IsNullOrWhiteSpace(result))
 		    {
@@ -198,6 +186,8 @@ namespace Alex.Plugins
 
 	    private FileAssemblyComparisonResult CompareFileToAssemblyName(string file, AssemblyNameReference name)
 	    {
+		   // Log.Info($"Lookup: {file}");
+
 		    if (!File.Exists(file))
 			    return FileAssemblyComparisonResult.FileNotFound;
 

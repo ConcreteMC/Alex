@@ -47,7 +47,7 @@ namespace Alex.Plugins
 	        string pluginDirectoryPaths =
 		        Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
 
-	        var pluginDir = options.AlexOptions.ResourceOptions.PluginDirectory;
+	        var pluginDir = options.AlexOptions.ResourceOptions.PluginDirectory.Value;
 
 	        if (!string.IsNullOrWhiteSpace(pluginDir))
 	        {
@@ -107,7 +107,7 @@ namespace Alex.Plugins
 			        throw new DirectoryNotFoundException("Directory not found: " + path);
 	        }
 
-	        Dictionary<Assembly, string> loadedAssemblies = new Dictionary<Assembly, string>();
+	        Dictionary<AssemblyInfo, string> loadedAssemblies = new Dictionary<AssemblyInfo, string>();
 	        //List<(Assembly assembly, string path)> loadedAssemblies = new List<(Assembly assembly, string path)>();
 	        int processed = 0;
 
@@ -120,27 +120,17 @@ namespace Alex.Plugins
 		        {
 			        try
 			        {
-				        string filename = Path.GetFileNameWithoutExtension(file);
-				       /* if (!Config.GetProperty($"plugin.{filename}.enabled", true))
-				        {
-					        Log.Info($"Not loading \"{Path.GetRelativePath(rawPath, file)}\" as it was disabled by config.");
-					        continue;
-				        }*/
-				        
 				        path = Path.GetDirectoryName(file);
 
-				        Assembly[] result;
-				        ProcessFile(path, file, out result);
-				        processed++;
-
-				        if (result == null)
-					        continue;
-
-				        foreach (var assembly in result)
+				        if (ProcessFile(path, file, out var result))
 				        {
-					        if (!loadedAssemblies.ContainsKey(assembly))
-						        loadedAssemblies.Add(assembly, path);
+					        foreach (var assembly in result)
+					        {
+						        if (!loadedAssemblies.ContainsKey(assembly))
+							        loadedAssemblies.Add(assembly, path);
+					        }
 				        }
+				        processed++;
 			        }
 			        catch (BadImageFormatException ex)
 			        {
@@ -415,7 +405,8 @@ namespace Alex.Plugins
 
 	        Log.Info($"Enabled {enabled} plugins!");
         }
-  private bool ReferencesHost(ModuleDefinition assembly)
+        
+		private bool ReferencesHost(ModuleDefinition assembly)
 	    {
 		    var hostName = HostAssembly.GetName();
 
@@ -431,11 +422,34 @@ namespace Alex.Plugins
 			    .Any(x => x.Name.Equals(hostName.Name, StringComparison.InvariantCultureIgnoreCase));
 	    }
 
-	    private void ProcessFile(string directory, string file, out Assembly[] pluginAssemblies)
+	    private class AssemblyInfo
+	    {
+		    public Assembly Assembly { get; }
+		    public ModuleDefinition ModuleDefinition { get; }
+
+		    public AssemblyInfo(Assembly assembly, ModuleDefinition moduleDefinition)
+		    {
+			    Assembly = assembly;
+			    ModuleDefinition = moduleDefinition;
+		    }
+
+		    public IEnumerable<Type> GetPluginTypes()
+		    {
+			    foreach (var type in ModuleDefinition.GetTypes().Where(x => x.BaseType != null).Where(x => x.BaseType.FullName == "Alex.Plugins.Plugin"))
+			    {
+				    var r = Assembly.GetType(type.FullName, false);
+
+				    if (r != null)
+					    yield return r;
+			    }
+		    }
+	    }
+	    
+	    private bool ProcessFile(string directory, string file, out AssemblyInfo[] pluginAssemblies)
 	    {
 		    pluginAssemblies = null;
 
-		    List<Assembly> assemblies = new List<Assembly>();
+		    List<AssemblyInfo> assemblies = new List<AssemblyInfo>();
 
 
 		    if (!File.Exists(file))
@@ -447,35 +461,38 @@ namespace Alex.Plugins
 
 			    AssemblyNameReference assemblyName = module.Assembly.Name;
 			    if (AssemblyManager.IsLoaded(assemblyName.Name, out _))
-				    return;
+				    return false;
 
 			    if (!ReferencesHost(module))
-				    return;
+				    return false;
 
 			    if (AssemblyResolver.TryResolve(directory, module, out Assembly[] loadedReferences))
 			    {
 				    foreach (var reference in loadedReferences)
 				    {
-					    if (!assemblies.Contains(reference) && ReferencesHost(reference))
+					    if (assemblies.All(x => x.Assembly != reference) && ReferencesHost(reference))
 					    {
-						    assemblies.Add(reference);
+						   assemblies.Add(new AssemblyInfo(reference, ModuleDefinition.ReadModule(reference.Location)));
 					    }
 				    }
 
 				    if (AssemblyManager.TryLoadAssemblyFromFile(assemblyName.Name, file, out var result))
 				    {
-					    assemblies.Add(result);
+					    assemblies.Add(new AssemblyInfo(result, module));
 				    }
 			    }
 			    else
 			    {
 				    Log.Warn($"Could not resolve all references for \"{module.Name}\"");
+				    return false;
 			    }
 		    }
 		    catch (Exception ex)
 		    {
 			    if (!(ex is BadImageFormatException))
-				    Log.Error($"Could not load assembly as OpenPlugin (File: {file})", ex);
+				    Log.Error(ex, $"Could not load assembly as OpenPlugin (File: {file})");
+
+			    return false;
 		    }
 		    finally
 		    {
@@ -483,6 +500,7 @@ namespace Alex.Plugins
 		    }
 
 		    pluginAssemblies = assemblies.ToArray();
+		    return true;
 	    }
 
 	    private bool FindEmptyConstructor(Type type, out ConstructorInfo constructorInfo)
@@ -498,56 +516,70 @@ namespace Alex.Plugins
 		    return false;
 	    }
 
-	    private PluginConstructorData[] FindPluginConstructors(Assembly assembly)
+	    private PluginConstructorData[] FindPluginConstructors(AssemblyInfo assembly)
 	    {
-		    List<PluginConstructorData> assemblyDatas = new List<PluginConstructorData>();
-		    
-		    Type[] types = assembly.GetExportedTypes();
-		    foreach (Type type in types.Where(x => _openPluginType.IsAssignableFrom(x) && !x.IsAbstract && x.IsClass))
+		    try
 		    {
-			    /*if (!Config.GetProperty($"plugin.{type.Name}.enabled", true))
+			    List<PluginConstructorData> assemblyDatas = new List<PluginConstructorData>();
+			    Type[] types = assembly.GetPluginTypes().ToArray();
+
+			    foreach (Type type in types.Where(
+				    x => _openPluginType.IsAssignableFrom(x) && !x.IsAbstract && x.IsClass))
 			    {
-				    Log.Info($"Not creating plugin instance off type \"{type.FullName}\" as it was disabled by config.");
-				    continue;
-			    }*/
-			    
-			    if (FindEmptyConstructor(type, out var constructorInfo))
-			    {
-				    assemblyDatas.Add(new PluginConstructorData(type, constructorInfo));
-				    continue;
-			    }
-			    
-			    foreach (ConstructorInfo constructor in type.GetConstructors())
-			    {
-				    var constructorParameters = constructor.GetParameters();
-				    
-				   // List<Assembly> assembliesReferenced = new List<Assembly>();
-				    List<PluginConstructorData.ConstructorParameter> parameters = new List<PluginConstructorData.ConstructorParameter>();
-				    foreach (ParameterInfo argument in constructorParameters)
+				    /*if (!Config.GetProperty($"plugin.{type.Name}.enabled", true))
 				    {
-					    if (argument.ParameterType == typeof(Alex))
+					    Log.Info($"Not creating plugin instance off type \"{type.FullName}\" as it was disabled by config.");
+					    continue;
+				    }*/
+
+				    if (FindEmptyConstructor(type, out var constructorInfo))
+				    {
+					    assemblyDatas.Add(new PluginConstructorData(type, constructorInfo));
+
+					    continue;
+				    }
+
+				    foreach (ConstructorInfo constructor in type.GetConstructors())
+				    {
+					    var constructorParameters = constructor.GetParameters();
+
+					    // List<Assembly> assembliesReferenced = new List<Assembly>();
+					    List<PluginConstructorData.ConstructorParameter> parameters =
+						    new List<PluginConstructorData.ConstructorParameter>();
+
+					    foreach (ParameterInfo argument in constructorParameters)
 					    {
-						    parameters.Add(new PluginConstructorData.ConstructorParameter(typeof(Alex), false));
-						    continue;
-					    } 
-					    else if (_openPluginType.IsAssignableFrom(argument.ParameterType))
+						    if (argument.ParameterType == typeof(Alex))
+						    {
+							    parameters.Add(new PluginConstructorData.ConstructorParameter(typeof(Alex), false));
+
+							    continue;
+						    }
+						    else if (_openPluginType.IsAssignableFrom(argument.ParameterType))
+						    {
+							    parameters.Add(
+								    new PluginConstructorData.ConstructorParameter(argument.ParameterType, true));
+						    }
+					    }
+
+					    if (parameters.Count == constructorParameters.Length)
 					    {
-						    parameters.Add(new PluginConstructorData.ConstructorParameter(argument.ParameterType, true));
+						    assemblyDatas.Add(
+							    new PluginConstructorData(type, constructor) {Dependencies = parameters.ToArray()});
+
+						    break;
 					    }
 				    }
-
-				    if (parameters.Count == constructorParameters.Length)
-				    {
-					    assemblyDatas.Add(new PluginConstructorData(type, constructor)
-					    {
-						    Dependencies = parameters.ToArray()
-					    });
-					    break;
-				    }
 			    }
-		    }
 
-		    return assemblyDatas.ToArray();
+			    return assemblyDatas.ToArray();
+		    }
+		    catch (Exception ex)
+		    {
+			    Log.Error(ex, $"Failed to load plugin assembly: {assembly}");
+
+			    return new PluginConstructorData[0];
+		    }
 	    }
 
 	    private readonly Type _openPluginType = typeof(Plugin);

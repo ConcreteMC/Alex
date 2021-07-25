@@ -46,7 +46,7 @@ namespace Alex.Plugins
             }
             catch (Exception ex)
             {
-                Log.Error(ex, $"Failed to load assembly {assemblyName} even tho its path was found!");
+                Log.Error(ex,$"Failed to load assembly {assemblyName} even tho its path was found!");
 
                 //assemblies = default(Assembly[])
             }
@@ -65,7 +65,7 @@ namespace Alex.Plugins
             Assembly[] loadedAssemblies = AppDomain.CurrentDomain.GetAssemblies();//.Concat(AssemblyReferences.Values.ToArray()).ToArray();
 
             Assembly ooutAssembly =
-                loadedAssemblies.FirstOrDefault(x => x != null && x.GetName().Name
+                loadedAssemblies.FirstOrDefault(x => x.GetName().Name
                     .Equals(assemblyName, StringComparison.InvariantCultureIgnoreCase));
 
             if (ooutAssembly != null)

@@ -217,6 +217,7 @@ namespace Alex
 
             Storage = new StorageSystem(LaunchSettings.WorkDir);
             Options = new OptionsProvider(Storage);
+            Options.Load();
 
             IServiceCollection serviceCollection = new ServiceCollection();
             serviceCollection.AddSingleton<Alex>(this);
@@ -359,7 +360,6 @@ namespace Alex
             OnResourcePackPreLoadCompleted(image, McResourcePack.BitmapFontCharacters.ToList());
 
             var options = Services.GetRequiredService<IOptionsProvider>();
-            options.Load();
 
 #if DIRECTX
 			ResourceManager.BlockEffect = Content.Load<Effect>("Alex.Resources.Blockshader_dx.xnb").Clone();
@@ -566,10 +566,21 @@ namespace Alex
             RichPresenceProvider.ClearPresence();
         }
 
+        public EventHandler OnBeginDraw;
+        public EventHandler OnEndDraw;
+        
+        /// <inheritdoc />
+        protected override bool BeginDraw()
+        {
+            OnBeginDraw?.Invoke(this, EventArgs.Empty);
+            return base.BeginDraw();
+        }
+
         /// <inheritdoc />
         protected override void EndDraw()
         {
             Metrics = GraphicsDevice.Metrics;
+            OnEndDraw?.Invoke(this, EventArgs.Empty);
             base.EndDraw();
         }
 
