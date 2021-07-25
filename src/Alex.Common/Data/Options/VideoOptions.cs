@@ -62,7 +62,7 @@ namespace Alex.Common.Data.Options
             RenderDistance = DefineRangedProperty(6, 2, 32);
             UseVsync = DefineProperty(true);
             Fullscreen = DefineProperty(false);
-            GuiScale = DefineRangedProperty(1, 0, 3);
+            GuiScale = DefineRangedProperty(0, 0, 3);
             MaxFramerate = DefineRangedProperty(60, 1, 999);
             Brightness = DefineRangedProperty(50, 0, 100);
 
