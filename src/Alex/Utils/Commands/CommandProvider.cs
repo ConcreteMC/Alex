@@ -15,7 +15,7 @@ namespace Alex.Utils.Commands
 		private List<Command> _commands = new List<Command>();
 
 		private World _world;
-		public CommandProvider(World world)
+		protected CommandProvider(World world)
 		{
 			_world = world;
 		}
