@@ -166,12 +166,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="C:\Users\kenny\.nuget\packages\nlog.config\4.5.10\contentFiles\any\any\NLog.config">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-
-  <ItemGroup>
     <EmbeddedResource Include="Resources\Blockshader.xnb" />
     <EmbeddedResource Include="Resources\Blockshader_dx.xnb" />
   </ItemGroup>
@@ -181,28 +175,15 @@
     <EmbeddedResource Include="Resources\Icon.ico">
       <LogicalName>Icon.ico</LogicalName>
     </EmbeddedResource>
+    <None Remove="Resources\Icon.bmp" />
+    <EmbeddedResource Include="Resources\Icon.bmp">
+      <LogicalName>Icon.bmp</LogicalName>
+    </EmbeddedResource>
   </ItemGroup>
 
   <ItemGroup>
     <Folder Include="Audio\Models" />
     <Folder Include="Particles\Builtin" />
-  </ItemGroup>
-
-  <Target Name="ChangeAliasesOfNugetRefs" BeforeTargets="FindReferenceAssembliesForReferences;ResolveReferences">
-    <ItemGroup>
-      <ReferencePath Condition="'%(FileName)' == 'Splat'">
-        <Aliases>SuperSplat</Aliases>
-      </ReferencePath>
-    </ItemGroup>
-  </Target>
-  
-  <ItemGroup>
-    <Reference Update="CefSharp">
-      <Private>true</Private>
-    </Reference>
-    <Reference Update="CefSharp.Core">
-      <Private>true</Private>
-    </Reference>
   </ItemGroup>
 
 </Project>
