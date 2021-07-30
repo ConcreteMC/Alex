@@ -41,6 +41,16 @@ namespace Alex.Worlds.Lighting
 	        }
         }
 
+        internal static readonly BlockCoordinates[] Adjacents = new[]
+        {
+	        new BlockCoordinates(1, 0, 0),
+	        new BlockCoordinates(-1, 0, 0),
+	        new BlockCoordinates(0, 1, 0),
+	        new BlockCoordinates(0, -1, 0),
+	        new BlockCoordinates(0, 0, 1),
+	        new BlockCoordinates(0, 0, -1),
+        };
+        
         public int Execute()
         {
 	        int count = 0;
@@ -53,7 +63,7 @@ namespace Alex.Worlds.Lighting
 		        if (c != null)
 		        {
 			        var lightLevel = c.GetBlocklight(coords.X & 0xf, coords.Y, coords.Z & 0xf);
-			        foreach (var offset in LightUpdate.Adjacents)
+			        foreach (var offset in Adjacents)
 			        {
 				        Test(c, cc, coords + offset, lightLevel);
 			        }
