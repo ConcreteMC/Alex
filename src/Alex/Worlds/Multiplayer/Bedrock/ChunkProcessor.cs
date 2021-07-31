@@ -22,6 +22,7 @@ using MiNET;
 using MiNET.Net;
 using MiNET.Utils;
 using NLog;
+using Air = MiNET.Blocks.Air;
 using BlockCoordinates = Alex.Common.Utils.Vectors.BlockCoordinates;
 using BlockState = Alex.Blocks.State.BlockState;
 using ChunkCoordinates = Alex.Common.Utils.Vectors.ChunkCoordinates;
@@ -51,6 +52,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	    private BedrockClient    Client           { get; }
 	    public BlobCache        Cache            { get; }
 
+	    private Thread _processingThread;
 	    public ChunkProcessor(BedrockClient client, CancellationToken cancellationToken, BlobCache blobCache)
         {
 	        Client = client;
@@ -58,6 +60,12 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	        Cache = blobCache;
 
 	        Instance = this;
+
+	        _processingThread = new Thread(ProcessChunks)
+	        {
+		        IsBackground = true, Priority = ThreadPriority.Normal, Name = "Chunk Processing"
+	        };
+	        _processingThread.Start();
         }
 
 	    private ConcurrentQueue<KeyValuePair<ulong, byte[]>> _blobQueue =
@@ -65,7 +73,69 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	    
 	    private ConcurrentQueue<ChunkData>            _actionQueue = new ConcurrentQueue<ChunkData>();
 
-        public void HandleChunkData(bool cacheEnabled,
+	    private ManualResetEventSlim _resetEvent   = new ManualResetEventSlim(false);
+	    private void ProcessChunks()
+	    {
+		    try
+		    {
+			    while (!CancellationToken.IsCancellationRequested)
+			    {
+				    bool handled = false;
+
+				    if (_actionQueue != null && _actionQueue.TryDequeue(out var enqueuedChunk))
+				    {
+					    //if (_actions.TryRemove(chunkCoordinates, out var chunk))
+
+					    if (enqueuedChunk.CacheEnabled)
+					    {
+						    HandleChunkCachePacket(enqueuedChunk);
+
+						    continue;
+					    }
+
+					    var handledChunk = HandleChunk(enqueuedChunk);
+
+					    if (handledChunk != null)
+					    {
+						    Client.World.ChunkManager.AddChunk(
+							    handledChunk, new ChunkCoordinates(enqueuedChunk.X, enqueuedChunk.Z), true);
+					    }
+
+					    handled = true;
+				    }
+
+				    if (_blobQueue != null && _blobQueue.TryDequeue(out var kv))
+				    {
+					    ulong hash = kv.Key;
+					    byte[] data = kv.Value;
+
+					    if (!Cache.Contains(hash))
+						    Cache.TryStore(hash, data);
+
+					    var chunks = _futureChunks.Where(c => c.SubChunks.Contains(hash) || c.Biome == hash).ToArray();
+
+					    foreach (CachedChunk chunk in chunks)
+					    {
+						    chunk.TryBuild(Client, this);
+					    }
+
+					    handled = true;
+				    }
+
+				    if (!handled)
+				    {
+					    _resetEvent.Reset();
+					    _resetEvent.Wait(CancellationToken);
+				    }
+			    }
+		    }
+		    finally
+		    {
+			    _processingThread = null;
+		    }
+	    }
+
+	    public void HandleChunkData(bool cacheEnabled,
 	        ulong[] blobs,
 	        uint subChunkCount,
 	        byte[] chunkData,
@@ -78,105 +148,10 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	        var value = new ChunkData(cacheEnabled, blobs, subChunkCount, chunkData, cx, cz);
 
 	        _actionQueue.Enqueue(value);
-
 	        _resetEvent.Set();
-	        
-	        CheckThreads();
-        }
-        
-        //public void AddAction(ChunkCoordinates co)
-
-        private Thread           _workerThread = null;
-        private object           _syncObj      = new object();
-        private object           _threadSync   = new object();
-        private ManualResetEvent _resetEvent   = new ManualResetEvent(false);
-        private long             _threadHelper = 0;
-        private void CheckThreads()
-        {
-	        if (_actionQueue.IsEmpty && _blobQueue.IsEmpty)
-		        return;
-	        
-	        if (!Monitor.TryEnter(_syncObj, 0))
-		        return;
-
-	        try
-	        {
-		        if (_actionQueue.IsEmpty && _blobQueue.IsEmpty)
-			        return;
-		        if (_workerThread == null && Interlocked.CompareExchange(ref _threadHelper, 1, 0) == 0)
-		        {
-			        ThreadPool.QueueUserWorkItem(
-				        o =>
-				        {
-					        lock (_threadSync)
-					        {
-						        _workerThread = Thread.CurrentThread;
-
-						        while (!CancellationToken.IsCancellationRequested)
-						        {
-							        bool handled = false;
-
-							        if (_actionQueue != null && _actionQueue.TryDequeue(out var enqueuedChunk))
-							        {
-								        //if (_actions.TryRemove(chunkCoordinates, out var chunk))
-
-								        if (enqueuedChunk.CacheEnabled)
-								        {
-									        HandleChunkCachePacket(enqueuedChunk);
-
-									        continue;
-								        }
-
-								        var handledChunk = HandleChunk(enqueuedChunk);
-
-								        Client.World.ChunkManager.AddChunk(
-									        handledChunk, new ChunkCoordinates(enqueuedChunk.X, enqueuedChunk.Z), true);
-
-								        handled = true;
-							        }
-
-							        if (_blobQueue != null && _blobQueue.TryDequeue(out var kv))
-							        {
-								        ulong  hash = kv.Key;
-								        byte[] data = kv.Value;
-
-								        if (!Cache.Contains(hash))
-											Cache.TryStore(hash, data);
-
-								        var chunks = _futureChunks.Where(c => c.SubChunks.Contains(hash) || c.Biome == hash).ToArray();
-								        foreach (CachedChunk chunk in chunks)
-								        {
-									        chunk.TryBuild(Client, this);
-								        }
-
-								        handled = true;
-							        }
-							        
-							        if (!handled)
-							        {
-								        _resetEvent.Reset();
-								        
-								        if (!_resetEvent.WaitOne(50))
-											break;
-							        }
-						        }
-
-						        Interlocked.CompareExchange(ref _threadHelper, 0, 1);
-						      //  _threadHelper = 0;
-						        _workerThread = null;
-					        }
-				        });
-		        }
-	        }
-	        finally
-	        {
-		        Monitor.Exit(_syncObj);
-	        }
         }
 
-        private List<string> Failed     { get; set; } = new List<string>();
-
-        public BlockState GetBlockState(uint p)
+	    public BlockState GetBlockState(uint p)
         {
 	        if (_convertedStates.TryGetValue(p, out var existing))
 	        {
@@ -215,10 +190,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			        BlockFactory.GetBlockState(copy.Name),
 			        -1, copy.Data);*/
 
-		        if (t.Name == "Unknown" && !Failed.Contains(copy.Name))
+		        if (t.Name == "Unknown")
 		        {
-			        Failed.Add(copy.Name);
-
 			        return t;
 			        //  File.WriteAllText(Path.Combine("failed", bs.Name + ".json"), JsonConvert.SerializeObject(bs, Formatting.Indented));
 		        }
@@ -242,8 +215,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	        }
 	        
 	        _resetEvent.Set();
-	        
-	        CheckThreads();
         }
         
         private void HandleChunkCachePacket(ChunkData chunkData)
@@ -303,174 +274,187 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	        }
         }
 
-        internal ChunkSection ReadSection(Stream stream, NbtBinaryReader defStream)
+        internal BedrockChunkSection ReadSection(NbtBinaryReader defStream)
         {
-	        ChunkSection section = null;
-
 	        int version = defStream.ReadByte();
 
 	        if (version == 1 || version == 8)
 	        {
-		        int storageSize = version == 1 ? 1 : defStream.ReadByte();
-		        
-		        section = new ChunkSection(storageSize);
-
-		        for (int storage = 0; storage < storageSize; storage++)
-		        {
-			        int flags = stream.ReadByte();
-			        bool isRuntime = (flags & 1) != 0;
-			        int bitsPerBlock = flags >> 1;
-			        int blocksPerWord = (int) Math.Floor(32f / bitsPerBlock);
-			        int wordsPerChunk = (int) Math.Ceiling(4096f / blocksPerWord);
-
-			        long jumpPos = stream.Position;
-			        stream.Seek(wordsPerChunk * 4, SeekOrigin.Current);
-
-			        int paletteCount = VarInt.ReadSInt32(stream);
-			        var palette = new int[paletteCount];
-			        bool allZero = true;
-
-			        for (int j = 0; j < paletteCount; j++)
-			        {
-				        if (!isRuntime)
-				        {
-					        var file = new NbtFile {BigEndian = false, UseVarInt = true};
-					        file.LoadFromStream(stream, NbtCompression.None);
-					        var tag = (NbtCompound) file.RootTag;
-
-					        var block = MiNET.Blocks.BlockFactory.GetBlockByName(tag["name"].StringValue);
-
-					        if (block != null && block.GetType() != typeof(Block) && !(block is Air))
-					        {
-						        List<IBlockState> blockState = ReadBlockState(tag);
-						        block.SetState(blockState);
-					        }
-					        else
-					        {
-						        block = new MiNET.Blocks.Air();
-					        }
-
-					        palette[j] = block.GetRuntimeId();
-				        }
-				        else
-				        {
-					        int runtimeId = VarInt.ReadSInt32(stream);
-					        palette[j] = runtimeId;
-					        //if (bedrockPalette == null || internalBlockPallet == null) continue;
-
-					        // palette[j] = GetServerRuntimeId(bedrockPalette, internalBlockPallet, runtimeId);
-				        }
-
-				        if (palette[j] != 0)
-					        allZero = false;
-			        }
-
-			        if (!allZero)
-			        {
-				        long afterPos = stream.Position;
-				        stream.Position = jumpPos;
-				        int position = 0;
-
-				        for (int w = 0; w < wordsPerChunk; w++)
-				        {
-					        uint word = defStream.ReadUInt32();
-
-					        for (uint block = 0; block < blocksPerWord; block++)
-					        {
-						        if (position >= 4096)
-							        continue;
-
-						        uint state = (uint) ((word >> ((position % blocksPerWord) * bitsPerBlock))
-						                             & ((1 << bitsPerBlock) - 1));
-
-						        int x = (position >> 8) & 0xF;
-						        int y = position & 0xF;
-						        int z = (position >> 4) & 0xF;
-
-						        int runtimeId = palette[state];
-
-						        if (runtimeId != 0)
-						        {
-							        var blockState = GetBlockState((uint) runtimeId);
-
-							        if (blockState != null)
-								        section.Set(storage, x, y, z, blockState);
-						        }
-
-						        position++;
-					        }
-				        }
-
-				        stream.Position = afterPos;
-			        }
-		        }
+		        return ReadPalletedSection(defStream, version);
 	        }
 	        else if (version == 0)
 	        {
-		        section = new ChunkSection(1);
-
-		        #region OldFormat
-
-		        byte[] blockIds = new byte[4096];
-		        defStream.Read(blockIds, 0, blockIds.Length);
-
-		        NibbleArray data = new NibbleArray(4096);
-		        defStream.Read(data.Data, 0, data.Data.Length);
-
-		        for (int x = 0; x < 16; x++)
-		        {
-			        for (int z = 0; z < 16; z++)
-			        {
-				        for (int y = 0; y < 16; y++)
-				        {
-					        int idx = (x << 8) + (z << 4) + y;
-					        var id = blockIds[idx];
-					        var meta = data[idx];
-
-					        //var ruid = BlockFactory.GetBlockStateID(id, meta);
-
-					        var block = MiNET.Blocks.BlockFactory.GetRuntimeId(id, meta);
-					        BlockState result = GetBlockState(block);
-
-					        if (result != null)
-					        {
-						        section.Set(x, y, z, result);
-					        }
-					        else
-					        {
-						        Log.Info($"Unknown block: {id}:{meta}");
-					        }
-
-				        }
-			        }
-		        }
-
-		        #endregion
+		        return ReadLegacyChunkSection(defStream);
 	        }
 	        else
 	        {
 		        Log.Warn($"Unsupported storage version: {version}");
 	        }
 
+	        return null;
+        }
+
+        private BedrockChunkSection ReadPalletedSection(NbtBinaryReader defStream, int version)
+        {
+	        var stream = defStream.BaseStream;
+	        int storageSize = version == 1 ? 1 : defStream.ReadByte();
+
+	        var section = new BedrockChunkSection(storageSize);
+
+	        for (int storage = 0; storage < storageSize; storage++)
+	        {
+		        int flags = stream.ReadByte();
+		        bool isRuntime = (flags & 1) != 0;
+		        int bitsPerBlock = flags >> 1;
+		        int blocksPerWord = (int) Math.Floor(32f / bitsPerBlock);
+		        int wordsPerChunk = (int) Math.Ceiling(4096f / blocksPerWord);
+
+		        long jumpPos = stream.Position;
+		        stream.Seek(wordsPerChunk * 4, SeekOrigin.Current);
+
+		        int paletteCount = VarInt.ReadSInt32(stream);
+		        var palette = new int[paletteCount];
+		        bool allZero = true;
+
+		        for (int j = 0; j < paletteCount; j++)
+		        {
+			        if (!isRuntime)
+			        {
+				        var file = new NbtFile {BigEndian = false, UseVarInt = true};
+				        file.LoadFromStream(stream, NbtCompression.None);
+				        var tag = (NbtCompound) file.RootTag;
+
+				        var block = MiNET.Blocks.BlockFactory.GetBlockByName(tag["name"].StringValue);
+
+				        if (block != null && block.GetType() != typeof(Block) && !(block is Air))
+				        {
+					        List<IBlockState> blockState = ReadBlockState(tag);
+					        block.SetState(blockState);
+				        }
+				        else
+				        {
+					        block = new MiNET.Blocks.Air();
+				        }
+
+				        palette[j] = block.GetRuntimeId();
+			        }
+			        else
+			        {
+				        int runtimeId = VarInt.ReadSInt32(stream);
+				        palette[j] = runtimeId;
+				        //if (bedrockPalette == null || internalBlockPallet == null) continue;
+
+				        // palette[j] = GetServerRuntimeId(bedrockPalette, internalBlockPallet, runtimeId);
+			        }
+
+			        if (palette[j] != 0)
+				        allZero = false;
+		        }
+
+		        if (allZero) continue;
+
+		        {
+			        long afterPos = stream.Position;
+			        stream.Position = jumpPos;
+			        int position = 0;
+
+			        for (int w = 0; w < wordsPerChunk; w++)
+			        {
+				        uint word = defStream.ReadUInt32();
+
+				        for (uint block = 0; block < blocksPerWord; block++)
+				        {
+					        if (position >= 4096)
+						        continue;
+
+					        uint state = (uint) ((word >> ((position % blocksPerWord) * bitsPerBlock))
+					                             & ((1 << bitsPerBlock) - 1));
+
+					        int x = (position >> 8) & 0xF;
+					        int y = position & 0xF;
+					        int z = (position >> 4) & 0xF;
+
+					        int runtimeId = palette[state];
+
+					        if (runtimeId != 0)
+					        {
+						        var blockState = GetBlockState((uint) runtimeId);
+
+						        if (blockState != null)
+							        section.Set(storage, x, y, z, blockState);
+					        }
+
+					        position++;
+				        }
+			        }
+
+			        stream.Position = afterPos;
+		        }
+	        }
+
 	        return section;
         }
 
-        private ChunkColumn HandleChunk(ChunkData chunk)
+        private BedrockChunkSection ReadLegacyChunkSection(NbtBinaryReader defStream)
         {
-	        ChunkColumn chunkColumn = new ChunkColumn(chunk.X, chunk.Z);
+	        byte[] blockIds = new byte[4096];
+	        if (defStream.Read(blockIds, 0, blockIds.Length) != blockIds.Length)
+		        return null;
 
+	        NibbleArray data = new NibbleArray(4096);
+	        if (defStream.Read(data.Data, 0, data.Data.Length) != data.Data.Length)
+		        return null;
+
+	        var section = new BedrockChunkSection(1);
+	        for (int x = 0; x < 16; x++)
+	        {
+		        for (int z = 0; z < 16; z++)
+		        {
+			        for (int y = 0; y < 16; y++)
+			        {
+				        int idx = (x << 8) + (z << 4) + y;
+				        var id = blockIds[idx];
+				        var meta = data[idx];
+
+				        //var ruid = BlockFactory.GetBlockStateID(id, meta);
+
+				        var block = MiNET.Blocks.BlockFactory.GetRuntimeId(id, meta);
+				        BlockState result = GetBlockState(block);
+
+				        if (result != null)
+				        {
+					        section.Set(x, y, z, result);
+				        }
+				        else
+				        {
+					        Log.Info($"Unknown block: {id}:{meta}");
+				        }
+
+			        }
+		        }
+	        }
+
+	        return section;
+        }
+
+        private BedrockChunkColumn HandleChunk(ChunkData chunk)
+        {
+	        if (chunk.SubChunkCount == 0)
+		        return null;
+	        
 	        try
 	        {
 		        using (MemoryStream stream = new MemoryStream(chunk.Data))
 		        {
+			        BedrockChunkColumn chunkColumn = new BedrockChunkColumn(chunk.X, chunk.Z);
+			        
 			        using NbtBinaryReader defStream = new NbtBinaryReader(stream, true);
 			        for (int s = 0; s < chunk.SubChunkCount; s++)
 			        {
-				        chunkColumn.Sections[s] = ReadSection(stream, defStream);
+				        chunkColumn.Sections[s] = ReadSection(defStream);
 			        }
-			        
-			         byte[] biomeIds = new byte[256];
 
+			        byte[] biomeIds = new byte[256];
 			         if (defStream.Read(biomeIds, 0, 256) != 256) return chunkColumn;
 
 			        for (int x = 0; x < 16; x++)
@@ -503,8 +487,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	        catch (Exception ex)
 	        {
 		        Log.Error($"Exception in chunk loading: {ex.ToString()}");
-
-		        return chunkColumn;
+		        return null;
 	        }
 	        finally
 	        {
@@ -625,8 +608,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
         }
 
         public void Dispose()
-		{
-			_actionQueue?.Clear();
+        {
+	        _actionQueue?.Clear();
 			_actionQueue = null;
 			
 			_blobQueue?.Clear();
@@ -634,6 +617,15 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			
 			_convertedStates?.Clear();
 			_convertedStates = null;
+
+			var resetEvent = _resetEvent;
+
+			if (resetEvent != null)
+			{
+				resetEvent.Reset();
+				resetEvent.Dispose();
+				_resetEvent = null;
+			}
 			
 			if (Instance != this)
 			{

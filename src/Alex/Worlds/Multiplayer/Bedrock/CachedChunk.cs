@@ -108,7 +108,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					using (MemoryStream ms = new MemoryStream(sectionData))
 					{
 						using NbtBinaryReader defStream = new NbtBinaryReader(ms, true);
-						Chunk.Sections[i] = processor.ReadSection(ms, defStream);
+						Chunk.Sections[i] = processor.ReadSection(defStream);
 					}
 				}
 			}
