@@ -31,7 +31,7 @@ namespace Alex.Utils.Threading
 		{
 			base.Update(gameTime);
 
-			if (_frameSkip > 0)
+			if (_frameSkip >= 1f)
 			{
 				_frameSkip--;
 
@@ -42,13 +42,15 @@ namespace Alex.Utils.Threading
 				return;
 
 			var avgFrameTime = _alex.FpsMonitor.AverageFrameTime;
-			Stopwatch sw = Stopwatch.StartNew();
-			
-			while (sw.Elapsed.TotalMilliseconds < avgFrameTime && !_queue.IsEmpty && _queue.TryDequeue(out var a))
-			{
-				if (a.IsCancelled)
-					continue;
 
+			//if (avgFrameTime <= 1f)
+			//	avgFrameTime = _alex.FpsMonitor.AverageFrameTime;
+			
+			Stopwatch sw = Stopwatch.StartNew();
+
+			//while (sw.Elapsed.TotalMilliseconds < avgFrameTime && !_queue.IsEmpty && _queue.TryDequeue(out var a))
+			if (_queue.TryDequeue(out var a) && !a.IsCancelled)
+			{
 				var beforeRun = sw.Elapsed.TotalMilliseconds;
 
 				//TimeSpan timeTillExecution;

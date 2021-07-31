@@ -22,7 +22,7 @@ namespace Alex.Gamestates.MainMenu.Options
         
         protected AlexOptions Options => _optionsProvider.AlexOptions;
 
-        private readonly IOptionsProvider _optionsProvider;
+        private IOptionsProvider _optionsProvider => GetService<IOptionsProvider>();
 
         private GuiPanoramaSkyBox _skyBox;
         protected GuiBackButton BackButton { get; }
@@ -31,7 +31,7 @@ namespace Alex.Gamestates.MainMenu.Options
         public OptionsStateBase(GuiPanoramaSkyBox skyBox)
         {
             _skyBox = skyBox;
-            _optionsProvider = GetService<IOptionsProvider>();
+            //_optionsProvider = GetService<IOptionsProvider>();
 
             var footerRow = Footer.AddRow(BackButton = new GuiBackButton()
             {
@@ -202,6 +202,8 @@ namespace Alex.Gamestates.MainMenu.Options
             {
                 slider.StepInterval = stepInterval.Value;
             }
+
+            slider.Value = optionsAccessor(Options).Value;
 
             return slider;
         }

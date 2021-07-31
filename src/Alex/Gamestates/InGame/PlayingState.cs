@@ -261,6 +261,7 @@ namespace Alex.Gamestates.InGame
 			
 			_debugInfo.AddDebugRight(() => $"Updates: {ChunkColumn.AverageUpdateTime:F2}ms avg\nUpload: {ChunkData.AverageUploadTime:F2}ms avg\n", TimeSpan.FromMilliseconds(50));
 			_debugInfo.AddDebugRight(() => $"UI Tasks: {Alex.UiTaskManager.Pending:00}\nR: {Alex.UiTaskManager.AverageExecutionTime:F2}ms\nQ: {Alex.UiTaskManager.AverageTimeTillExecution:F2}ms", TimeSpan.FromMilliseconds(50));
+			_debugInfo.AddDebugRight(() => $"IsRunningSlow: {Alex.FpsMonitor.IsRunningSlow}");
 			_debugInfo.AddDebugRight(() =>
 			{
 				var player = World?.Player;

@@ -35,6 +35,9 @@ namespace Alex.Common.Data.Options
         [DataMember]
         public OptionsProperty<double> MinimapSize { get; set; }
         
+        [DataMember]
+        public OptionsProperty<double> AntiLagModifier { get; set; }
+        
         public MiscelaneousOptions()
         {
             ChunkThreads = DefineRangedProperty(Environment.ProcessorCount / 2, 1, Environment.ProcessorCount);
@@ -46,6 +49,7 @@ namespace Alex.Common.Data.Options
             ShowNetworkInfoByDefault = DefineProperty(false);
             Minimap = DefineProperty(false);
             MinimapSize = DefineRangedProperty(1d, 0.125d, 2d);
+            AntiLagModifier = DefineRangedProperty(0.75d, 0d, 1d);
         }
     }
 }

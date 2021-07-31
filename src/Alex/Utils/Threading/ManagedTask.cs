@@ -31,6 +31,10 @@ namespace Alex.Utils.Threading
 			_enqueueTime = DateTime.UtcNow;
 		}
 
+		/// <summary>
+		///		Executes the task
+		/// </summary>
+		/// <returns>The amount of time elapsed since the task was originally enqueued.</returns>
 		public TimeSpan Execute()
 		{
 			if (State != TaskState.Enqueued)

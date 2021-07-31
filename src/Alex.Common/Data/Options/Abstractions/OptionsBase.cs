@@ -24,12 +24,12 @@ namespace Alex.Common.Data.Options
         
         protected OptionsProperty<float> DefineRangedProperty(float defaultValue, float minValue, float maxValue)
         {
-            return DefineProperty(defaultValue, (value, newValue) => MathHelper.Clamp(newValue, minValue, maxValue));
+            return DefineProperty(defaultValue, (value, newValue) => Math.Clamp(newValue, minValue, maxValue));
         }
         
         protected OptionsProperty<int> DefineRangedProperty(int defaultValue, int minValue, int maxValue)
         {
-            return DefineProperty(defaultValue, (value, newValue) => MathHelper.Clamp(newValue, minValue, maxValue));
+            return DefineProperty(defaultValue, (value, newValue) => Math.Clamp(newValue, minValue, maxValue));
         }
         
         protected OptionsProperty<TProperty> DefineProperty<TProperty>(TProperty defaultValue, OptionsPropertyValidator<TProperty> validator = null)

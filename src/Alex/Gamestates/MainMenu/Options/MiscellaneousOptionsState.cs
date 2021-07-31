@@ -16,6 +16,7 @@ namespace Alex.Gamestates.MainMenu.Options
         private ToggleButton                 NetworkDebugInfo { get; set; }
         private ToggleButton Minimap            { get; set; }
         private Slider MinimapSize { get; set; }
+        private Slider AntiLagModifier { get; set; }
 
         public MiscellaneousOptionsState(GuiPanoramaSkyBox skyBox) : base(skyBox)
         {
@@ -38,10 +39,10 @@ namespace Alex.Gamestates.MainMenu.Options
 
 
                 NetworkProcessingThreads = CreateSlider(
-                    "Network Threads: {0}", o => Options.NetworkOptions.NetworkThreads, 1, Environment.ProcessorCount,
+                    "Network Threads: {0}", o => o.NetworkOptions.NetworkThreads, 1, Environment.ProcessorCount,
                     1);
                 ProcessingThreads = CreateSlider(
-                    "Processing Threads: {0}", o => Options.MiscelaneousOptions.ChunkThreads, 1,
+                    "Processing Threads: {0}", o => o.MiscelaneousOptions.ChunkThreads, 1,
                     Environment.ProcessorCount, 1);
 
                 ServerResources = CreateToggle("Server Resources: {0}", o => o.MiscelaneousOptions.LoadServerResources);
@@ -51,15 +52,18 @@ namespace Alex.Gamestates.MainMenu.Options
                 NetworkDebugInfo = CreateToggle(
                     "Network Info: {0}", o => o.MiscelaneousOptions.ShowNetworkInfoByDefault);
 
-                Minimap = CreateToggle("Minimap: {0}", options => options.MiscelaneousOptions.Minimap);
+                Minimap = CreateToggle("Minimap: {0}", o => o.MiscelaneousOptions.Minimap);
 
                 MinimapSize = CreateSlider(
                     "Minimap Size: {0}", o => o.MiscelaneousOptions.MinimapSize, 0.125d, 2d, 0.1d);
+
+                AntiLagModifier = CreateSlider(
+                    "Anti Lag Modifier: {0}", o => o.MiscelaneousOptions.AntiLagModifier, 0d, 1d, 0.05d);
                 
                 AddGuiRow(ProcessingThreads, NetworkProcessingThreads);
                 AddGuiRow(ServerResources, ChunkCaching);
                 AddGuiRow(Minimap, MinimapSize);
-                AddGuiRow(NetworkDebugInfo);
+                AddGuiRow(NetworkDebugInfo, AntiLagModifier);
                 
                 AddDescription(
                     ProcessingThreads, "Processing Threads",
@@ -86,6 +90,8 @@ namespace Alex.Gamestates.MainMenu.Options
                 
                 AddDescription(Minimap, "Minimap", "Adds a minimap", "May impact performance");
                 AddDescription(MinimapSize, "Minimap Size", "The size of the minimap");
+                
+                AddDescription(AntiLagModifier, "Anti-Lag Modifier", "Is used to determine when the game is considered laggy.");
             }
 
             base.OnInit(renderer);

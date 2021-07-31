@@ -27,7 +27,7 @@ namespace Alex.Common.Utils
 		/// Computes a new windowed average each time a new sample arrives
 		/// </summary>
 		/// <param name="newSample"></param>
-		public void ComputeAverage(float newSample)
+		public float ComputeAverage(float newSample)
 		{
 			_sampleAccumulator += newSample;
 			_samples.Enqueue(newSample);
@@ -40,6 +40,8 @@ namespace Alex.Common.Utils
 			Average = _sampleAccumulator / _samples.Count;
 			Minimum = Math.Min(Minimum, newSample);
 			Maximum = Math.Max(Maximum, newSample);
+
+			return Average;
 		}
 	}
 }
