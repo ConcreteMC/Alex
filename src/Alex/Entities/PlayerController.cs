@@ -6,6 +6,7 @@ using Alex.Common.Services;
 using Alex.Common.Utils;
 using Alex.Gamestates.InGame;
 using Alex.Graphics.Camera;
+using Alex.Gui.Dialogs;
 using Alex.Gui.Dialogs.Containers;
 using Alex.Gui.Elements;
 using Alex.Net.Bedrock;
@@ -68,7 +69,7 @@ namespace Alex.Entities
 				GamePadInputListener = null;
 			}
 			
-			var optionsProvider = Alex.Instance.Services.GetService<IOptionsProvider>();
+			var optionsProvider = Alex.Instance.Services.GetRequiredService<IOptionsProvider>();
 			CursorSensitivity = optionsProvider.AlexOptions.MouseSensitivity.Value;
 
 			optionsProvider.AlexOptions.MouseSensitivity.Bind(
@@ -173,87 +174,94 @@ namespace Alex.Entities
 				    World.Camera.ToggleMode();
 			    }
 
-				if (InputManager.IsPressed(AlexInputCommand.DropItem))
-				{
-					//Sprint is bound to LeftCtrl by default.
-					Player.DropHeldItem(InputManager.IsDown(AlexInputCommand.Sprint)); 
-				}
+			    if (InputManager.IsPressed(AlexInputCommand.DropItem))
+			    {
+				    //Sprint is bound to LeftCtrl by default.
+				    Player.DropHeldItem(InputManager.IsDown(AlexInputCommand.Sprint));
+			    }
 
-				if (InputManager.IsPressed(AlexInputCommand.TakeScreenshot))
-				{
-					//Take screenshot.
-					Alex.Instance.UiTaskManager.Enqueue(
-						() =>
-						{
-							var blendMode = Graphics.BlendState;
+			    if (InputManager.IsPressed(AlexInputCommand.TakeScreenshot))
+			    {
+				    //Take screenshot.
+				    Alex.Instance.UiTaskManager.Enqueue(
+					    () =>
+					    {
+						    var blendMode = Graphics.BlendState;
 
-							try
-							{
-								Graphics.BlendState = BlendState.NonPremultiplied;
+						    try
+						    {
+							    Graphics.BlendState = BlendState.NonPremultiplied;
 
-								var graphicsDevice = Alex.Instance.GraphicsDevice;
-								//	var viewPort = Alex.Instance.DeviceManager.PreferredBackBufferWidth
-								var w = graphicsDevice.PresentationParameters.BackBufferWidth;
-								var h = graphicsDevice.PresentationParameters.BackBufferHeight;
-								Color[] data = new Color[w * h];
+							    var graphicsDevice = Alex.Instance.GraphicsDevice;
+							    //	var viewPort = Alex.Instance.DeviceManager.PreferredBackBufferWidth
+							    var w = graphicsDevice.PresentationParameters.BackBufferWidth;
+							    var h = graphicsDevice.PresentationParameters.BackBufferHeight;
+							    Color[] data = new Color[w * h];
 
-								graphicsDevice.GetBackBufferData(data);
+							    graphicsDevice.GetBackBufferData(data);
 
-								Image<Rgba32> t = Image.LoadPixelData(
-									data.Select(x => new Rgba32(x.PackedValue)).ToArray(), w, h);
+							    Image<Rgba32> t = Image.LoadPixelData(
+								    data.Select(x => new Rgba32(x.PackedValue)).ToArray(), w, h);
 
-								//Texture2D t = new Texture2D(graphicsDevice, w, h, false, SurfaceFormat.Color);
-								//t.SetData(data);
-								var pics = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures);
-								var screenshotPath = Path.Combine(pics, $"alex-{DateTime.Now.ToString("s")}.png");
+							    //Texture2D t = new Texture2D(graphicsDevice, w, h, false, SurfaceFormat.Color);
+							    //t.SetData(data);
+							    var pics = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures);
+							    var screenshotPath = Path.Combine(pics, $"alex-{DateTime.Now.ToString("s")}.png");
 
-								using (FileStream fs = File.OpenWrite(screenshotPath))
-								{
-									t.SaveAsPng(fs);
-								}
+							    using (FileStream fs = File.OpenWrite(screenshotPath))
+							    {
+								    t.SaveAsPng(fs);
+							    }
 
-								t.Dispose();
+							    t.Dispose();
 
-								ChatComponent.AddSystemMessage(
-									$"{ChatColors.Gray}{ChatFormatting.Italic}Saved screenshot to: {screenshotPath}");
-							}
-							catch (Exception error)
-							{
-								Log.Error(error, $"Failed to save screenshot.");
-								ChatComponent.AddSystemMessage($"{ChatColors.Red}Failed to save screenshot, see console for more information.");
-							}
-							finally
-							{
-								Graphics.BlendState = blendMode;
-							}
-						});
-				}
+							    ChatComponent.AddSystemMessage(
+								    $"{ChatColors.Gray}{ChatFormatting.Italic}Saved screenshot to: {screenshotPath}");
+						    }
+						    catch (Exception error)
+						    {
+							    Log.Error(error, $"Failed to save screenshot.");
+
+							    ChatComponent.AddSystemMessage(
+								    $"{ChatColors.Red}Failed to save screenshot, see console for more information.");
+						    }
+						    finally
+						    {
+							    Graphics.BlendState = blendMode;
+						    }
+					    });
+			    }
 		    }
 
 		    if (InputManager.IsPressed(AlexInputCommand.Exit))
 		    {
 			    CloseActiveDialog();
 		    }
-			else if (InputManager.IsPressed(AlexInputCommand.ToggleInventory))
-			{
-				if (!(Alex.Instance.GuiManager.FocusManager.FocusedElement is TextInput))
-				{
-					if (!CloseActiveDialog())
-					{
-						var dialog = new GuiPlayerInventoryDialog(Player, Player.Inventory);
+		    else if (InputManager.IsPressed(AlexInputCommand.ToggleInventory) && CanOpenDialog())
+		    {
+			    var dialog = new GuiPlayerInventoryDialog(Player, Player.Inventory);
 
-						if (Player.Network is BedrockClient client)
-						{
-							dialog.TransactionTracker = client.TransactionTracker;
-						}
+			    if (Player.Network is BedrockClient client)
+			    {
+				    dialog.TransactionTracker = client.TransactionTracker;
+			    }
 
-						//_allowMovementInput = false;
-						Alex.Instance.GuiManager.ShowDialog(dialog);
-					}
-				}
-			}
+			    //_allowMovementInput = false;H
+			    
+			    Alex.Instance.GuiManager.ShowDialog(dialog);
+		    }
+		    else if (InputManager.IsPressed(AlexInputCommand.ToggleMap) && CanOpenDialog())
+		    {
+			    var dialog = new MapDialog(Player.Level);
+			    Alex.Instance.GuiManager.ShowDialog(dialog);
+		    }
 
 		    _allowMovementInput = Alex.Instance.GuiManager.ActiveDialog == null;
+	    }
+
+	    private bool CanOpenDialog()
+	    {
+		    return !(Alex.Instance.GuiManager.FocusManager.FocusedElement is TextInput) && (!CloseActiveDialog());
 	    }
 
 	    private bool CloseActiveDialog()

@@ -46,6 +46,9 @@ namespace Alex.Worlds
 		private NetworkProvider Network          { get; }
 
 		private Entity[] _rendered;
+
+		public EventHandler<Entity> EntityAdded;
+		public EventHandler<Entity> EntityRemoved;
 		
 		private IOptionsProvider OptionsProvider { get; }
 		public EntityManager(IServiceProvider serviceProvider, GraphicsDevice device, World world, NetworkProvider networkProvider)
@@ -374,6 +377,7 @@ namespace Alex.Worlds
 					}
 				}
 				
+				EntityRemoved?.Invoke(this, e);
 				e?.Dispose();
 			}
 		}
@@ -398,6 +402,7 @@ namespace Alex.Worlds
 					Log.Warn($"Tried adding entity with invalid entity id: {entity.NameTag} | {entity.UUID.ToString()}");
 				}
 
+				EntityAdded?.Invoke(this, entity);
 				return true;
 			}
 

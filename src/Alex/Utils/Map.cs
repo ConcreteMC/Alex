@@ -10,11 +10,18 @@ using Color = Microsoft.Xna.Framework.Color;
 
 namespace Alex.Utils
 {
-	public class Map : IDisposable
+	public interface IMap : IDisposable
+	{
+		float Scale { get; }
+		int CenterX { get; }
+		int CenterZ { get; }
+	}
+	
+	public class Map : IMap
 	{
 		public int Width { get; }
 		public int Height { get; }
-		public byte Scale { get; } = 3;
+		public float Scale { get; } = 1f;
 		
 		public int CenterX { get; set; }
 		public int CenterZ { get; set; }

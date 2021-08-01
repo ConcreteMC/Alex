@@ -8,6 +8,7 @@ using Alex.Gui;
 using Alex.Gui.Elements;
 using Alex.Gui.Elements.Hud;
 using Alex.Gui.Elements.Inventory;
+using Alex.Gui.Elements.Map;
 using Alex.Utils.Inventories;
 using Alex.Worlds;
 using Microsoft.Extensions.DependencyInjection;
@@ -21,7 +22,7 @@ namespace Alex.Gamestates.InGame.Hud
 {
     public class PlayingHud : Screen, IChatRecipient
     {
-	    private readonly GuiMiniMap _miniMap;
+	    private readonly MapRenderElement _miniMap;
         private readonly GuiItemHotbar _hotbar;
         private readonly PlayerController _playerController;
         private readonly HealthComponent _healthComponent;
@@ -114,7 +115,7 @@ namespace Alex.Gamestates.InGame.Hud
 	        Scoreboard = new ScoreboardView();
 	        Scoreboard.Anchor = Alignment.MiddleRight;
 
-	        _miniMap = new GuiMiniMap(world)
+	        _miniMap = new MapRenderElement(world)
 	        {
 		        Anchor = Alignment.TopRight
 	        };

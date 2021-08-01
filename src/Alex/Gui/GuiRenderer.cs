@@ -424,6 +424,8 @@ namespace Alex.Gui
 			// Other
 			LoadTextureFromResourcePack(AlexGuiTextures.DefaultServerIcon, resourceManager, "misc/unknown_server");
 			
+			Extensions.InitMarkers(this);
+			
 			progressReceiver?.UpdateProgress(100, null, "");
 		}
 
@@ -433,19 +435,112 @@ namespace Alex.Gui
 
 			int x = 0;
 			LoadTextureFromSpriteSheet(
-				AlexGuiTextures.MapMarkerWhite, spriteSheet, new Rectangle(x, 0, 8, 8), iconSize);
+				AlexGuiTextures.MapMarkers.WhitePointer, spriteSheet, new Rectangle(x, 0, 8, 8), iconSize);
 			
 			x += 8;
 			LoadTextureFromSpriteSheet(
-				AlexGuiTextures.MapMarkerGreen, spriteSheet, new Rectangle(x, 0, 8, 8), iconSize);
+				AlexGuiTextures.MapMarkers.GreenPointer, spriteSheet, new Rectangle(x, 0, 8, 8), iconSize);
 			
 			x += 8;
 			LoadTextureFromSpriteSheet(
-				AlexGuiTextures.MapMarkerRed, spriteSheet, new Rectangle(x, 0, 8, 8), iconSize);
+				AlexGuiTextures.MapMarkers.RedPointer, spriteSheet, new Rectangle(x, 0, 8, 8), iconSize);
 			
 			x += 8;
 			LoadTextureFromSpriteSheet(
-				AlexGuiTextures.MapMarkerBlue, spriteSheet, new Rectangle(x, 0, 8, 8), iconSize);
+				AlexGuiTextures.MapMarkers.BluePointer, spriteSheet, new Rectangle(x, 0, 8, 8), iconSize);
+
+			x += 8;
+			LoadTextureFromSpriteSheet(
+				AlexGuiTextures.MapMarkers.Cross, spriteSheet, new Rectangle(x, 0, 8, 8), iconSize);
+			
+			x += 8;
+			LoadTextureFromSpriteSheet(
+				AlexGuiTextures.MapMarkers.RedThing, spriteSheet, new Rectangle(x, 0, 8, 8), iconSize);
+			
+			x += 8;
+			LoadTextureFromSpriteSheet(
+				AlexGuiTextures.MapMarkers.BigDot, spriteSheet, new Rectangle(x, 0, 8, 8), iconSize);
+			
+			x += 8;
+			LoadTextureFromSpriteSheet(
+				AlexGuiTextures.MapMarkers.SmallDot, spriteSheet, new Rectangle(x, 0, 8, 8), iconSize);
+			
+			x += 8;
+			LoadTextureFromSpriteSheet(
+				AlexGuiTextures.MapMarkers.House, spriteSheet, new Rectangle(x, 0, 8, 8), iconSize);
+			
+			x += 8;
+			LoadTextureFromSpriteSheet(
+				AlexGuiTextures.MapMarkers.BlueStructure, spriteSheet, new Rectangle(x, 0, 8, 8), iconSize);
+			
+			x += 8;
+			LoadTextureFromSpriteSheet(
+				AlexGuiTextures.MapMarkers.WhiteBanner, spriteSheet, new Rectangle(x, 0, 8, 8), iconSize);
+			
+			x += 8;
+			LoadTextureFromSpriteSheet(
+				AlexGuiTextures.MapMarkers.OrangeBanner, spriteSheet, new Rectangle(x, 0, 8, 8), iconSize);
+			
+			x += 8;
+			LoadTextureFromSpriteSheet(
+				AlexGuiTextures.MapMarkers.PurpleBanner, spriteSheet, new Rectangle(x, 0, 8, 8), iconSize);
+			
+			x += 8;
+			LoadTextureFromSpriteSheet(
+				AlexGuiTextures.MapMarkers.LightBlueBanner, spriteSheet, new Rectangle(x, 0, 8, 8), iconSize);
+			
+			x += 8;
+			LoadTextureFromSpriteSheet(
+				AlexGuiTextures.MapMarkers.YellowBanner, spriteSheet, new Rectangle(x, 0, 8, 8), iconSize);
+			
+			x += 8;
+			LoadTextureFromSpriteSheet(
+				AlexGuiTextures.MapMarkers.LightGreenBanner, spriteSheet, new Rectangle(x, 0, 8, 8), iconSize);
+			
+			//2nd row
+			x = 0;
+			LoadTextureFromSpriteSheet(
+				AlexGuiTextures.MapMarkers.PinkBanner, spriteSheet, new Rectangle(x, 8, 8, 8), iconSize);
+			
+			x += 8;
+			LoadTextureFromSpriteSheet(
+				AlexGuiTextures.MapMarkers.DarkGrayBanner, spriteSheet, new Rectangle(x, 8, 8, 8), iconSize);
+			
+			x += 8;
+			LoadTextureFromSpriteSheet(
+				AlexGuiTextures.MapMarkers.GrayBanner, spriteSheet, new Rectangle(x, 8, 8, 8), iconSize);
+			
+			x += 8;
+			LoadTextureFromSpriteSheet(
+				AlexGuiTextures.MapMarkers.CyanBanner, spriteSheet, new Rectangle(x, 8, 8, 8), iconSize);
+			
+			x += 8;
+			LoadTextureFromSpriteSheet(
+				AlexGuiTextures.MapMarkers.DarkPurpleBanner, spriteSheet, new Rectangle(x, 8, 8, 8), iconSize);
+			
+			x += 8;
+			LoadTextureFromSpriteSheet(
+				AlexGuiTextures.MapMarkers.BlueBanner, spriteSheet, new Rectangle(x, 8, 8, 8), iconSize); //TODO
+			
+			x += 8;
+			LoadTextureFromSpriteSheet(
+				AlexGuiTextures.MapMarkers.BrownBanner, spriteSheet, new Rectangle(x, 8, 8, 8), iconSize);
+			
+			x += 8;
+			LoadTextureFromSpriteSheet(
+				AlexGuiTextures.MapMarkers.GreenBanner, spriteSheet, new Rectangle(x, 8, 8, 8), iconSize);
+			
+			x += 8;
+			LoadTextureFromSpriteSheet(
+				AlexGuiTextures.MapMarkers.RedBanner, spriteSheet, new Rectangle(x, 8, 8, 8), iconSize);
+			
+			x += 8;
+			LoadTextureFromSpriteSheet(
+				AlexGuiTextures.MapMarkers.BlackBanner, spriteSheet, new Rectangle(x, 8, 8, 8), iconSize);
+			
+			x += 8;
+			LoadTextureFromSpriteSheet(
+				AlexGuiTextures.MapMarkers.RedCross, spriteSheet, new Rectangle(x, 8, 8, 8), iconSize);
 		}
 
 		private void LoadWidgets(Texture2D spriteSheet)

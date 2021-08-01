@@ -91,6 +91,7 @@ namespace Alex.Common.Input
 
             l.RegisterMap(AlexInputCommand.DropItem, Keys.Q);
 
+            l.RegisterMap(AlexInputCommand.ToggleMap, Keys.M);
             //l.RegisterMap(AlexInputCommand.LeftClick, Keys.lef);
         }
     }
