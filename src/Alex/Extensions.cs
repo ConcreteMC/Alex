@@ -8,11 +8,14 @@ using System.Text;
 using Alex.Blocks.Minecraft;
 using Alex.Blocks.Minecraft.Terracotta;
 using Alex.Common.Blocks;
+using Alex.Common.Gui.Graphics;
 using Alex.Entities.BlockEntities;
+using Alex.Gui;
 using Alex.Items;
 using Alex.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using RocketUI;
 
 
 namespace Alex
@@ -22,6 +25,82 @@ namespace Alex
 		static Extensions()
 		{
 			
+		}
+
+		public static void InitMarkers(GuiRenderer renderer)
+		{
+			foreach (var m in Enum.GetValues<MapMarker>())
+			{
+				_mapTextures[m] = GetTexture2D(m, renderer);
+			}
+		}
+
+		private static GuiTexture2D GetTexture2D(MapMarker marker, IGuiRenderer renderer)
+		{
+			GuiTextures texture;
+			switch (marker)
+			{
+				case MapMarker.WhitePointer:
+					texture = AlexGuiTextures.MapMarkers.WhitePointer;
+					break;
+
+				case MapMarker.RedPointer:
+					texture = AlexGuiTextures.MapMarkers.RedPointer;
+					break;
+
+				case MapMarker.GreenPointer:
+					texture = AlexGuiTextures.MapMarkers.GreenPointer;
+					break;
+
+				case MapMarker.BluePointer:
+					texture = AlexGuiTextures.MapMarkers.BluePointer;
+					break;
+
+				case MapMarker.Cross:
+					texture = AlexGuiTextures.MapMarkers.Cross;
+					break;
+
+				case MapMarker.RedThing:
+					texture = AlexGuiTextures.MapMarkers.RedThing;
+					break;
+
+				case MapMarker.BigBlip:
+					texture = AlexGuiTextures.MapMarkers.BigDot;
+					break;
+
+				case MapMarker.SmallBlip:
+					texture = AlexGuiTextures.MapMarkers.SmallDot;
+					break;
+
+				case MapMarker.House:
+					texture = AlexGuiTextures.MapMarkers.House;
+					break;
+
+				case MapMarker.BlueStructure:
+					texture = AlexGuiTextures.MapMarkers.BlueStructure;
+					break;
+
+				case MapMarker.RedCross:
+					texture = AlexGuiTextures.MapMarkers.RedCross;
+					break;
+
+				default:
+					throw new ArgumentOutOfRangeException(nameof(marker), marker, null);
+			}
+
+			GuiTexture2D value = texture;
+			value.RepeatMode = TextureRepeatMode.Stretch;
+			value.TryResolveTexture(renderer);
+			
+			return value;
+		}
+
+		private static Dictionary<MapMarker, GuiTexture2D> _mapTextures = new Dictionary<MapMarker, GuiTexture2D>();
+		
+		public static GuiTexture2D ToTexture(this MapMarker marker)
+		{
+			return _mapTextures[marker];
+			//	Value = value;
 		}
 
 		public static IMapColor ToMapColor(this WoodType woodType)

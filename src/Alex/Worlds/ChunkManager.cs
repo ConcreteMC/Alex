@@ -113,15 +113,7 @@ namespace Alex.Worlds
 			//Shaders.SetAnimatedTextures(Resources.Atlas.GetAtlas(0));
 			
 			_renderSampler.MaxMipLevel = stillAtlas.LevelCount;
-			
-			RenderDistance = Options.VideoOptions.RenderDistance.Value;
 
-			Options.VideoOptions.RenderDistance.Bind(
-				(value, newValue) =>
-				{
-					RenderDistance = newValue;
-				});
-			
 			Chunks = new ConcurrentDictionary<ChunkCoordinates, ChunkColumn>();
 			CancellationToken = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 			

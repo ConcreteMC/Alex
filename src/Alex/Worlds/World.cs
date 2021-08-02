@@ -25,6 +25,8 @@ using Alex.Graphics.Camera;
 using Alex.Graphics.Models;
 using Alex.Graphics.Models.Entity;
 using Alex.Graphics.Models.Items;
+using Alex.Gui;
+using Alex.Gui.Elements.Map;
 using Alex.Net;
 using Alex.Utils;
 using Alex.Utils.Threading;
@@ -113,6 +115,8 @@ namespace Alex.Worlds
 		private List<IDisposable> _disposables = new List<IDisposable>();
 		private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 		private static Texture2D[] _destroyStages = null;//new Texture2D[10];
+		
+		public WorldMap Map { get; private set; }
 		public World(IServiceProvider serviceProvider, GraphicsDevice graphics, AlexOptions options,
 			NetworkProvider networkProvider)
 		{
@@ -150,9 +154,11 @@ namespace Alex.Worlds
 					(old, newValue) =>
 					{
 						Camera.SetRenderDistance(newValue);
+						ChunkManager.RenderDistance = newValue;
 					}));
 			
-			Camera.SetRenderDistance(options.VideoOptions.RenderDistance);
+			Camera.SetRenderDistance(options.VideoOptions.RenderDistance.Value);
+			ChunkManager.RenderDistance = options.VideoOptions.RenderDistance.Value;
 
 			BackgroundWorker = new BackgroundWorker(_cancellationTokenSource.Token);
 			
@@ -180,6 +186,11 @@ namespace Alex.Worlds
 					}
 				}
 			}
+			
+			Map = new WorldMap(this);
+			Player.MapIcon.Marker = MapMarker.WhitePointer;
+			Player.MapIcon.DrawOrder = int.MaxValue;
+			Map.Add(Player.MapIcon);
 		}
 
 		private const int MORTON3D_BIT_SIZE = 21;
@@ -508,6 +519,8 @@ namespace Alex.Worlds
 			}
 
 			_wasInWater = inWater;
+			
+			Map?.Update(args.GameTime);
 		}
 
 		public void OnTick()
@@ -1102,6 +1115,9 @@ namespace Alex.Worlds
 			TickManager.UnregisterTicked(EntityManager);
 			TickManager.UnregisterTicked(ChunkManager);
 			
+			Map?.Dispose();
+			Map = null;
+
 			EntityManager = null;
 			ChunkManager = null;
 

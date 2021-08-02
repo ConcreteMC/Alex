@@ -78,6 +78,8 @@ namespace Alex.Common.Input
         [InputCommandDescriptor("")] public static readonly InputCommand Navigate             = InputCommand.Navigate;
         [InputCommandDescriptor("")] public static readonly InputCommand NavigateBack         = InputCommand.NavigateBack;
 
+        [InputCommandDescriptor("")] public static readonly InputCommand ToggleMap = new(AlexNamespace, nameof(ToggleMap));
+        
         public static InputCommandWrapper[] GetAll()
         {
             var props = typeof(AlexInputCommand).GetFields(BindingFlags.Public | BindingFlags.Static)

@@ -97,10 +97,42 @@ namespace Alex.Common.Gui.Graphics
         public static readonly GuiTextures Experience                    = new(AlexNamespace, nameof(Experience));
         
         public static readonly GuiTextures GradientBlur = new(AlexNamespace, nameof(GradientBlur));
-        
-        public static readonly GuiTextures MapMarkerWhite = new(AlexNamespace, nameof(MapMarkerWhite));
-        public static readonly GuiTextures MapMarkerGreen = new(AlexNamespace, nameof(MapMarkerGreen));
-        public static readonly GuiTextures MapMarkerRed = new(AlexNamespace, nameof(MapMarkerRed));
-        public static readonly GuiTextures MapMarkerBlue = new(AlexNamespace, nameof(MapMarkerBlue));
+
+        public static class MapMarkers
+        {
+            private static string KeyPrefix = nameof(MapMarkers);
+            
+            public static readonly GuiTextures WhitePointer = new(AlexNamespace, KeyPrefix + nameof(WhitePointer));
+            public static readonly GuiTextures GreenPointer = new(AlexNamespace, KeyPrefix + nameof(GreenPointer));
+            public static readonly GuiTextures RedPointer = new(AlexNamespace, KeyPrefix + nameof(RedPointer));
+            public static readonly GuiTextures BluePointer = new(AlexNamespace, KeyPrefix + nameof(BluePointer));
+            
+            public static readonly GuiTextures Cross = new(AlexNamespace, KeyPrefix + nameof(Cross));
+            public static readonly GuiTextures RedThing = new(AlexNamespace, KeyPrefix + nameof(RedThing));
+            public static readonly GuiTextures BigDot = new(AlexNamespace, KeyPrefix + nameof(BigDot));
+            public static readonly GuiTextures SmallDot = new(AlexNamespace, KeyPrefix + nameof(SmallDot));
+            public static readonly GuiTextures House = new(AlexNamespace, KeyPrefix + nameof(House));
+            public static readonly GuiTextures BlueStructure = new(AlexNamespace, KeyPrefix + nameof(BlueStructure));
+            
+            public static readonly GuiTextures WhiteBanner = new(AlexNamespace, KeyPrefix + nameof(WhiteBanner));
+            public static readonly GuiTextures OrangeBanner = new(AlexNamespace, KeyPrefix + nameof(OrangeBanner));
+            public static readonly GuiTextures PurpleBanner = new(AlexNamespace, KeyPrefix + nameof(PurpleBanner));
+            public static readonly GuiTextures LightBlueBanner = new(AlexNamespace, KeyPrefix + nameof(LightBlueBanner));
+            public static readonly GuiTextures YellowBanner = new(AlexNamespace, KeyPrefix + nameof(YellowBanner));
+            public static readonly GuiTextures LightGreenBanner = new(AlexNamespace, KeyPrefix + nameof(LightGreenBanner));
+            
+            public static readonly GuiTextures PinkBanner = new(AlexNamespace, KeyPrefix + nameof(PinkBanner));
+            public static readonly GuiTextures DarkGrayBanner = new(AlexNamespace, KeyPrefix + nameof(DarkGrayBanner));
+            public static readonly GuiTextures GrayBanner = new(AlexNamespace, KeyPrefix + nameof(GrayBanner));
+            public static readonly GuiTextures CyanBanner = new(AlexNamespace, KeyPrefix + nameof(CyanBanner));
+            public static readonly GuiTextures DarkPurpleBanner = new(AlexNamespace, KeyPrefix + nameof(DarkPurpleBanner));
+            public static readonly GuiTextures BlueBanner = new(AlexNamespace, KeyPrefix + nameof(BlueBanner));
+            public static readonly GuiTextures BrownBanner = new(AlexNamespace, KeyPrefix + nameof(BrownBanner));
+            public static readonly GuiTextures GreenBanner = new(AlexNamespace, KeyPrefix + nameof(GreenBanner));
+            public static readonly GuiTextures RedBanner = new(AlexNamespace, KeyPrefix + nameof(RedBanner));
+            public static readonly GuiTextures BlackBanner = new(AlexNamespace, KeyPrefix + nameof(BlackBanner));
+            
+            public static readonly GuiTextures RedCross = new(AlexNamespace, KeyPrefix + nameof(RedCross));
+        }
     }
 }

@@ -20,6 +20,8 @@ using Alex.Graphics.Effect;
 using Alex.Graphics.Models.Entity;
 using Alex.Graphics.Models.Entity.Animations;
 using Alex.Graphics.Models.Items;
+using Alex.Gui;
+using Alex.Gui.Elements.Map;
 using Alex.Items;
 using Alex.MoLang.Attributes;
 using Alex.MoLang.Runtime;
@@ -58,6 +60,7 @@ namespace Alex.Entities
 
 		private EntityModelRenderer _modelRenderer;
 
+		public MapIcon MapIcon { get; }
 		public EntityModelRenderer ModelRenderer
 		{
 			get
@@ -349,6 +352,8 @@ namespace Alex.Entities
 			Effect = new EntityEffect();
 			Effect.Texture = _texture;
 			Effect.VertexColorEnabled = true;
+
+			MapIcon = new MapIcon(MapMarker.SmallBlip);
 		}
 
 		public double FlyingSpeed
@@ -1169,6 +1174,9 @@ namespace Alex.Entities
 		private bool _doUseItemAnimation = false;
 		public virtual void Update(IUpdateArgs args)
 		{
+			MapIcon.Position = KnownPosition.ToVector3();
+			MapIcon.Rotation = 180f - KnownPosition.HeadYaw;
+			
 			var elapsed = args.GameTime.ElapsedGameTime.TotalSeconds;
 
 			if (_doUseItemAnimation)
