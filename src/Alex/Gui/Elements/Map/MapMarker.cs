@@ -1,4 +1,4 @@
-namespace Alex.Gui
+namespace Alex.Gui.Elements.Map
 {
 	public enum MapMarker
 	{

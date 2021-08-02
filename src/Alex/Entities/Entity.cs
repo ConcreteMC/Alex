@@ -353,7 +353,7 @@ namespace Alex.Entities
 			Effect.Texture = _texture;
 			Effect.VertexColorEnabled = true;
 
-			MapIcon = new MapIcon(MapMarker.SmallBlip);
+			MapIcon = new EntityMapIcon(this, MapMarker.SmallBlip);
 		}
 
 		public double FlyingSpeed
@@ -1174,9 +1174,6 @@ namespace Alex.Entities
 		private bool _doUseItemAnimation = false;
 		public virtual void Update(IUpdateArgs args)
 		{
-			MapIcon.Position = KnownPosition.ToVector3();
-			MapIcon.Rotation = 180f - KnownPosition.HeadYaw;
-			
 			var elapsed = args.GameTime.ElapsedGameTime.TotalSeconds;
 
 			if (_doUseItemAnimation)

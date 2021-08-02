@@ -11,6 +11,7 @@ using Alex.Common.Blocks;
 using Alex.Common.Gui.Graphics;
 using Alex.Entities.BlockEntities;
 using Alex.Gui;
+using Alex.Gui.Elements.Map;
 using Alex.Items;
 using Alex.Utils;
 using Microsoft.Xna.Framework;

@@ -10,12 +10,9 @@ namespace Alex.Gui.Dialogs
 {
 	public class MapDialog : DialogBase
 	{
-		private World _world;
 		private MapRenderElement _mapRenderer;
-		public MapDialog(World world)
+		public MapDialog(WorldMap world)
 		{
-			_world = world;
-			
 			Anchor = Alignment.Fill;
 			ContentContainer.Anchor = Alignment.Fill;
 			ContentContainer.Padding = new Thickness(10, 10);
@@ -23,7 +20,9 @@ namespace Alex.Gui.Dialogs
 			_mapRenderer = new MapRenderElement(world)
 			{
 				AutoSizeMode = AutoSizeMode.GrowOnly,
-				Anchor = Alignment.Fill
+				Anchor = Alignment.Fill,
+				Radius = 128,
+				ZoomLevel = ZoomLevel.Maximum
 			};
 			
 			ContentContainer.AddChild(_mapRenderer);
@@ -44,6 +43,19 @@ namespace Alex.Gui.Dialogs
 			leftStack.AddChild(new AlexButton("Zoom Out", ZoomOut));
 			
 			ContentContainer.AddChild(leftStack);
+			
+			var rightStack = new StackContainer
+			{
+				Orientation = Orientation.Vertical, 
+				Anchor = Alignment.TopRight
+			};
+			
+			rightStack.AddChild(new AutoUpdatingTextElement(() => $"Zoom: {_mapRenderer.ZoomLevel}", true)
+			{
+				TextAlignment = TextAlignment.Right
+			});
+			
+			ContentContainer.AddChild(rightStack);
 		}
 
 		/// <inheritdoc />
@@ -61,12 +73,14 @@ namespace Alex.Gui.Dialogs
 
 		private void ZoomIn()
 		{
-			_mapRenderer.Scale = Math.Clamp(_mapRenderer.Scale + 1, 1, 10);
+			_mapRenderer.ZoomLevel--;
+		//	_mapRenderer.Scale = Math.Clamp(_mapRenderer.Scale + 1, 1, 10);
 		}
 
 		private void ZoomOut()
 		{
-			_mapRenderer.Scale = Math.Clamp(_mapRenderer.Scale - 1, 1, 10);
+			_mapRenderer.ZoomLevel++;
+			//_mapRenderer.Scale = Math.Clamp(_mapRenderer.Scale - 1, 1, 10);
 		}
 
 		/// <inheritdoc />

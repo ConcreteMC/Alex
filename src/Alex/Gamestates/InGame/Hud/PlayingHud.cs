@@ -47,6 +47,7 @@ namespace Alex.Gamestates.InGame.Hud
 
 		private OptionsPropertyAccessor<bool> _minimapAccessor;
 		private OptionsPropertyAccessor<double> _minimapSizeAccessor;
+		private OptionsPropertyAccessor<int> _renderDistanceAccessor;
 		public PlayingHud(Alex game, World world, TitleComponent titleComponent) : base()
         {
 	        Title = titleComponent;
@@ -115,10 +116,14 @@ namespace Alex.Gamestates.InGame.Hud
 	        Scoreboard = new ScoreboardView();
 	        Scoreboard.Anchor = Alignment.MiddleRight;
 
-	        _miniMap = new MapRenderElement(world)
+	        _miniMap = new MapRenderElement(world.Map)
 	        {
-		        Anchor = Alignment.TopRight
+		        Anchor = Alignment.TopRight,
+		        ZoomLevel = ZoomLevel.Level8
 	        };
+
+	        _renderDistanceAccessor = Alex.Options.AlexOptions.VideoOptions.RenderDistance.Bind(RenderDistanceChanged);
+	        _miniMap.Radius = Alex.Options.AlexOptions.VideoOptions.RenderDistance.Value;
 
 	        _minimapAccessor = Alex.Options.AlexOptions.MiscelaneousOptions.Minimap.Bind(OnMinimapEnabledChanged);
 	        _miniMap.IsVisible = Alex.Options.AlexOptions.MiscelaneousOptions.Minimap.Value;
@@ -126,6 +131,11 @@ namespace Alex.Gamestates.InGame.Hud
 	        _minimapSizeAccessor = Alex.Options.AlexOptions.MiscelaneousOptions.MinimapSize.Bind(OnMinimapSizeChanged);
 	        _miniMap.SetSize(Alex.Options.AlexOptions.MiscelaneousOptions.MinimapSize.Value);
         }
+
+		private void RenderDistanceChanged(int oldvalue, int newvalue)
+		{
+			_miniMap.Radius = newvalue;
+		}
 
 		private void OnMinimapSizeChanged(double oldvalue, double newvalue)
 		{

@@ -12,14 +12,27 @@ namespace Alex.Gui.Elements.Map
 {
     public class MapRenderElement : RocketElement
     {
-        private World _world;
+        private WorldMap _map;
 
         private       float _frameAccumulator = 0f;
         private       float _targetTime        = 1f / 10f;
+
+        private static readonly byte MaxZoomLevel = (byte) ZoomLevel.Maximum;
+        private static readonly byte MinZoomLevel = (byte) ZoomLevel.Minimum;
         
-        public MapRenderElement(World world)
+        private ZoomLevel _zoomLevel = ZoomLevel.Default;
+        public ZoomLevel ZoomLevel
         {
-            _world = world;
+            get => _zoomLevel;
+            set
+            {
+                _zoomLevel = (ZoomLevel)Math.Clamp((byte)value, MinZoomLevel, MaxZoomLevel);
+            }
+        }
+
+        public MapRenderElement(WorldMap map)
+        {
+            _map = map;
 
             Background = Color.White * 0.5f;
             ClipToBounds = true;
@@ -35,8 +48,6 @@ namespace Alex.Gui.Elements.Map
             Height = (int)Math.Ceiling(128 * multiplier);
         }
         
-        private float _rotation = 0f;
-
         public float Scale { get; set; }= 1f;
         protected override void OnUpdate(GameTime gameTime)
         {
@@ -53,73 +64,81 @@ namespace Alex.Gui.Elements.Map
 
             _frameAccumulator = 0;
             
-            _rotation = (_world.Player.KnownPosition.HeadYaw).ToRadians();
-            Rotation = _rotation;
+           // _rotation = (_world.Player.KnownPosition.HeadYaw).ToRadians();
+            //Rotation = _rotation;
         }
-        
-        //public Vector3 Center { get; private set; } = Vector3.Zero;
+
+        private int _radius = 1;
+        public int Radius
+        {
+            get => _radius;
+            set
+            {
+                _radius = value;
+            }
+        }
+
         protected override void OnDraw(GuiSpriteBatch graphics, GameTime gameTime)
         {
             base.OnDraw(graphics, gameTime);
             
             if (!IsVisible)
                 return;
-
-            var playerPos = _world.Camera.Position;
-            var center = new ChunkCoordinates(playerPos);
-            var renderPos = RenderBounds.Location.ToVector2();
             
+            var centerPosition = _map.CenterPosition;
+            var zoomScale = ((float) ZoomLevel.Maximum / (float) ZoomLevel);
             
-            var playerOffset =new Vector3(center.X << 4, 0, center.Z << 4) -  playerPos;
+            DrawMap(graphics, centerPosition, _radius, zoomScale);
+            DrawMarkers(graphics, centerPosition, _radius, zoomScale);
 
-            var cameraOffset = new Vector2(playerOffset.X, playerOffset.Z);
-            
-            renderPos += cameraOffset;
-            
-            var tCenter = RenderBounds.Size.ToVector2() / 2f;
-            //var renderPos = RenderBounds.Location.ToVector2();
+            graphics.DrawRectangle(RenderBounds, Color.Black, 1);
+        }
 
-            var radius = _world.ChunkManager.RenderDistance;
-           // var scale = RenderBounds.Width / (radius * 16f);
+        private static readonly Vector2 MarkerRotationOrigin = new Vector2(4, 4);
+        private void DrawMarkers(GuiSpriteBatch graphics, Vector3 centerPosition, int radius, float zoomScale)
+        {
+            var center = new ChunkCoordinates(centerPosition);
 
-          //  var scaledInstance = new Vector2(16f, 16f) * scale;
-            foreach (var container in _world.Map.GetContainers(center,  radius))
+            foreach (var icon in _map.GetMarkers(center, radius))
+            {
+                var position = GetRenderPosition(icon.Position, centerPosition, zoomScale);
+                var value = icon.Marker.ToTexture();
+
+                if (value.HasValue)
+                {
+                    graphics.SpriteBatch.Draw(
+                        value, position, value.Color.GetValueOrDefault(icon.Color),
+                        icon.Rotation.ToRadians(), MarkerRotationOrigin, Vector2.One * zoomScale);
+                }
+            }
+        }
+
+        private void DrawMap(GuiSpriteBatch graphics, Vector3 centerPosition, int radius, float zoomScale)
+        {
+            var center = new ChunkCoordinates(centerPosition);
+
+            foreach (var container in _map.GetContainers(center,  radius))
             {
                 var texture = container.Texture;
 
                 if (texture != null)
                 {
-                    var cc = container.Coordinates - center;
-                    var texturePosition = tCenter + new Vector2(cc.X * 16f, cc.Z * 16f);
-
-                    graphics.SpriteBatch.Draw((TextureSlice2D) texture, renderPos + texturePosition);
-                
+                    var position = GetRenderPosition(new Vector3(container.Coordinates.X * 16f, 0f, container.Coordinates.Z * 16f), centerPosition, zoomScale);
+                    graphics.SpriteBatch.Draw((TextureSlice2D) texture, position, Color.White, 0f, Vector2.Zero, Vector2.One * zoomScale);
                 }
             }
+        }
 
-            renderPos = RenderBounds.Location.ToVector2() + tCenter;
-            var rotationOrigin = new Vector2(4, 4);
-            foreach (var icon in _world.Map.GetMarkers(center, radius))
-            {
-                var relativePosition = icon.Position - playerPos;
-                var position = new Vector2(relativePosition.X, relativePosition.Z);
-                //mapIcon.Center = center;
-                //   var position = mapIcon.WorldPosition - playerPos;
-                var value = icon.Marker.ToTexture();
+        private Vector2 GetRenderPosition(Vector3 position, Vector3 centerPosition, float scale)
+        {
+            var distance = position - centerPosition;
 
-                if (value.HasValue)
-                {
-                  //  if (value.Texture != null)
-                    {
-                        graphics.SpriteBatch.Draw(
-                            value,  (renderPos + position), value.Color.GetValueOrDefault(Color.White), icon.Rotation.ToRadians(),
-                            rotationOrigin, Vector2.One);
-                    }
-                }
-            }
-            // _world.Map.Render(graphics, new Rectangle(renderPos.ToPoint(), RenderBounds.Size), center, _world.ChunkManager.RenderDistance);
+            var tCenter = RenderBounds.Size.ToVector2() / 2f;
+            var renderPos = RenderBounds.Location.ToVector2() + tCenter;
 
-            graphics.DrawRectangle(RenderBounds, Color.Black, 1);
+            renderPos += new Vector2(distance.X, distance.Z) * scale;
+            
+            return renderPos;
         }
 
         /// <inheritdoc />
@@ -128,12 +147,8 @@ namespace Alex.Gui.Elements.Map
             base.Dispose(disposing);
 
             if (disposing)
-            { 
-                //_icons.CollectionChanged -= IconsOnCollectionChanged;
-               // _icons.Clear();
-               // _icons = null;
-                
-                _world = null;
+            {
+                _map = null;
             }
         }
     }

@@ -252,7 +252,7 @@ namespace Alex.Entities
 		    }
 		    else if (InputManager.IsPressed(AlexInputCommand.ToggleMap) && CanOpenDialog())
 		    {
-			    var dialog = new MapDialog(Player.Level);
+			    var dialog = new MapDialog(Player.Level.Map);
 			    Alex.Instance.GuiManager.ShowDialog(dialog);
 		    }
 

@@ -1,6 +1,5 @@
-﻿using Alex.Networking.Java.Packets.Play;
-using Alex.Worlds;
-using MiNET.Entities;
+﻿using Alex.Worlds;
+using Microsoft.Xna.Framework;
 
 namespace Alex.Entities.Hostile
 {
@@ -9,6 +8,7 @@ namespace Alex.Entities.Hostile
 		protected HostileMob(World level)
 			: base(level)
 		{
+			base.MapIcon.Color = Color.Red;
 		}
 	}
 }

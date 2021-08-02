@@ -5,37 +5,52 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Drawing;
 using System.Linq;
-using Alex.Blocks.State;
 using Alex.Common.Utils.Collections;
 using Alex.Common.Utils.Vectors;
 using Alex.Entities;
 using Alex.Worlds;
-using Alex.Worlds.Chunks;
+using ConcurrentCollections;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using RocketUI;
 using Rectangle = Microsoft.Xna.Framework.Rectangle;
 
 namespace Alex.Gui.Elements.Map
 {
+    public enum ZoomLevel : byte
+    {
+        Level1 = 1,
+        Level2 = 2,
+        Level3 = 3,
+        Level4 = 4,
+        Level5 = 5,
+        Level6 = 6,
+        Level7 = 7,
+        Level8 = 8,
+        Level9 = 9,
+        Level10 = 10,
+        
+        Minimum = Level1,
+        Maximum = Level10,
+        Default = Level6,
+    }
+    
 	public class WorldMap : IUpdateable, IDisposable
     {
-        private World _world;
-        private ConcurrentDictionary<ChunkCoordinates, RenderedMap> _textureContainers =
-            new ConcurrentDictionary<ChunkCoordinates, RenderedMap>();
+        private readonly World _world;
+        private readonly ConcurrentDictionary<ChunkCoordinates, RenderedMap> _textureContainers = new();
 
-        //public ObservableCollection<MapIcon> Icons => _icons;
-        private ThreadSafeList<MapIcon> _icons;
+        private readonly ConcurrentHashSet<MapIcon> _markers;
+        public Vector3 CenterPosition => _world.Camera.Position;
+
         public WorldMap(World world)
         {
             _world = world;
-            _icons = new ThreadSafeList<MapIcon>();
+            _markers = new ConcurrentHashSet<MapIcon>();
             
             world.ChunkManager.OnChunkAdded += OnChunkAdded;
             world.ChunkManager.OnChunkRemoved += OnChunkRemoved;
             world.ChunkManager.OnChunkUpdate += OnChunkUpdate;
 
-            
             world.EntityManager.EntityAdded += EntityAdded;
             world.EntityManager.EntityRemoved += EntityRemoved;
         }
@@ -50,18 +65,28 @@ namespace Alex.Gui.Elements.Map
 
         public void Add(MapIcon icon)
         {
-            _icons.Add(icon);
+            if (icon == null)
+                return;
+            
+            _markers.Add(icon);
+        }
+
+        public void Remove(MapIcon icon)
+        {
+            if (icon == null)
+                return;
+
+            _markers.TryRemove(icon);
         }
 
         private void EntityRemoved(object sender, Entity e)
         {
-            _icons.Remove(e.MapIcon);
+            Remove(e.MapIcon);
         }
 
         private void EntityAdded(object sender, Entity e)
         {
-            _icons.Add(e.MapIcon);
-          //  TrackEntity(e, MapMarker.SmallBlip);
+            Add(e.MapIcon);
         }
         
         private void OnChunkUpdate(object sender, ChunkUpdatedEventArgs e)
@@ -136,9 +161,8 @@ namespace Alex.Gui.Elements.Map
         
         public IEnumerable<MapIcon> GetMarkers(ChunkCoordinates center, int radius)
         {
-            foreach (var icon in _icons.OrderBy(o => o.DrawOrder))
+            foreach (var icon in _markers.ToArray().OrderBy(x => x.DrawOrder))
             {
-                
                 yield return icon;
             }
         }
@@ -187,7 +211,9 @@ namespace Alex.Gui.Elements.Map
             _world.ChunkManager.OnChunkAdded -= OnChunkAdded;
             _world.ChunkManager.OnChunkRemoved -= OnChunkRemoved;
             _world.ChunkManager.OnChunkUpdate -= OnChunkUpdate;
-            
+
+            _markers.Clear();
+
             var elements = _textureContainers.ToArray();
             _textureContainers.Clear();
 
@@ -195,100 +221,6 @@ namespace Alex.Gui.Elements.Map
             {
                 element.Value?.Dispose();
             }
-        }
-    }
-
-    public class RenderedMap : Utils.Map, IDisposable
-    {
-        public bool IsDirty { get; private set; }
-        public bool Invalidated { get; private set; } = false;
-
-        public Texture2D Texture { get; private set; }
-
-        public ChunkCoordinates Coordinates { get; }
-        public RenderedMap(ChunkCoordinates coordinates) : base(16,16)
-        {
-            Coordinates = coordinates;
-        }
-
-        private void Init(GraphicsDevice device)
-        {
-            if (Texture != null)
-                return;
-
-            Texture = new Texture2D(device, 16, 16);
-        }
-
-        public void Update(World world, ChunkColumn target, GraphicsDevice device)
-        {
-            if (target == null)
-            {
-                Invalidated = true;
-
-                return;
-            }
-
-            if (Texture == null)
-                Init(device);
-
-            var cx = target.X * 16;
-            var cz = target.Z * 16;
-            var maxHeight = 0;
-
-            for (int x = 0; x < 16; x++)
-            {
-                for (int z = 0; z < 16; z++)
-                {
-                    BlockState state;
-
-                    var height = target.GetHeight(x, z);
-
-                    do
-                    {
-                        height--;
-                        state = target.GetBlockState(x, height, z);
-                        maxHeight = Math.Max(height, maxHeight);
-                    } while (height > 0 && state.Block.BlockMaterial.MapColor.BaseColor.A <= 0);
-
-                    var blockNorth = world.GetHeight(new BlockCoordinates((x + cx), height, (z + cz) - 1)) - 1;
-
-                    var offset = 1;
-
-                    if (blockNorth > height)
-                    {
-                        offset = 0;
-                    }
-                    else if (blockNorth < height)
-                    {
-                        offset = 2;
-                    }
-
-                    var blockMaterial = state?.Block?.BlockMaterial;
-
-                    if (blockMaterial != null)
-                    {
-                        this[x, z] = blockMaterial.MapColor.Index * 4 + offset;
-                    }
-                }
-            }
-
-            Texture.SetData(this.GetData());
-            IsDirty = false;
-        }
-
-        public void MarkDirty()
-        {
-            IsDirty = true;
-        }
-
-        /// <inheritdoc />
-        public void Dispose()
-        {
-            base.Dispose();
-            //_map?.Dispose();
-           // _map = null;
-            Texture?.Dispose();
-            Texture = null;
         }
     }
 }
