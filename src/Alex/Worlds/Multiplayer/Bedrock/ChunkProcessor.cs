@@ -129,6 +129,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				    }
 			    }
 		    }
+		    catch(OperationCanceledException){}
 		    finally
 		    {
 			    _processingThread = null;

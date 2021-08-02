@@ -665,6 +665,9 @@ namespace Alex.Blocks
 		    this.Register("minecraft:green_concrete_powder", () => new ConcretePowder(BlockColor.Green));
 		    this.Register("minecraft:red_concrete_powder", () => new ConcretePowder(BlockColor.Red));
 		    this.Register("minecraft:black_concrete_powder", () => new ConcretePowder(BlockColor.Black));
+		    
+		    this.Register("minecraft:granite", () => new Granite());
+		    this.Register("minecraft:polished_granite", () => new PolishedGranite());
 	    }
     }
 }

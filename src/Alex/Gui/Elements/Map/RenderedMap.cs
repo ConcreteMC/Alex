@@ -59,7 +59,7 @@ namespace Alex.Gui.Elements.Map
 						maxHeight = Math.Max(height, maxHeight);
 					} while (height > 0 && state.Block.BlockMaterial.MapColor.BaseColor.A <= 0);
 
-					var blockNorth = world.GetHeight(new BlockCoordinates((x + cx), height, (z + cz) - 1)) - 1;
+					var blockNorth = world.GetHeight(new BlockCoordinates((x + cx) + 1, height, (z + cz))) - 1;
 
 					var offset = 1;
 

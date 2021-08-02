@@ -31,17 +31,16 @@ namespace Alex.Utils.Threading
 		{
 			base.Update(gameTime);
 
-			if (_frameSkip >= 1f)
-			{
-				_frameSkip--;
-
-				return;
-			}
+		//	if (_frameSkip > 0)
+			//{
+		//		_frameSkip--;
+		//		return;
+		//	}
 
 			if (_alex.FpsMonitor.IsRunningSlow)
 				return;
 
-			var avgFrameTime = _alex.FpsMonitor.AverageFrameTime;
+			//var avgFrameTime = _alex.FpsMonitor.AverageFrameTime;
 
 			//if (avgFrameTime <= 1f)
 			//	avgFrameTime = _alex.FpsMonitor.AverageFrameTime;
@@ -67,11 +66,10 @@ namespace Alex.Utils.Threading
 				var afterRun = sw.Elapsed.TotalMilliseconds;
 				_executionTimeMovingAverage.ComputeAverage((float) (afterRun - beforeRun));
 			}
+			//var elapsed = (float)sw.Elapsed.TotalMilliseconds;
 
-			var elapsed = (float)sw.Elapsed.TotalMilliseconds;
-
-			if (elapsed > avgFrameTime)
-				_frameSkip = (int)MathF.Ceiling(elapsed / avgFrameTime);
+			//if (elapsed > avgFrameTime)
+			//	_frameSkip = (int)MathF.Ceiling(elapsed / avgFrameTime);
 		}
 
 		public ManagedTask Enqueue(Action action)
