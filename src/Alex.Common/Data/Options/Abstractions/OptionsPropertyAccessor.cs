@@ -9,6 +9,7 @@ namespace Alex.Common.Data.Options
 
         private readonly OptionsPropertyChangedDelegate<TProperty> _delegate;
 
+        public TProperty Value => _property.Value;
         internal OptionsPropertyAccessor(OptionsProperty<TProperty> property, OptionsPropertyChangedDelegate<TProperty> listenDelegate)
         {
             _property = property;
@@ -19,10 +20,23 @@ namespace Alex.Common.Data.Options
         {
             _delegate?.Invoke(oldValue, newValue);
         }
+        
+        protected void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                _property.Unbind(this);
+            }
+        }
 
         public void Dispose()
         {
-            _property.Unbind(this);
+            Dispose(true);
+        }
+
+        ~OptionsPropertyAccessor()
+        {
+            Dispose(false);
         }
     }
 }

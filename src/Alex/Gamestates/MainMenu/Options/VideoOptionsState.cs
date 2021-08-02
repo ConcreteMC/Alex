@@ -19,13 +19,12 @@ namespace Alex.Gamestates.MainMenu.Options
         private ToggleButton Skybox             { get; set; }
         private Slider       Antialiasing       { get; set; }
         private ToggleButton CustomSkins        { get; set; }
-        private ToggleButton ClientSideLighting { get; set; }
-        private ToggleButton SmoothLighting     { get; set; }
         private ToggleButton GraphicsMode       { get; set; }
         private ToggleButton ParticleToggle { get; set; }
         private ToggleButton EntityCulling { get; set; }
         private ToggleButton Fog { get; set; }
         private Slider EntityRenderDistance { get; set; }
+        private ToggleButton ShowHud { get; set; }
         public VideoOptionsState(GuiPanoramaSkyBox skyBox) : base(skyBox)
         {
             TitleTranslationKey = "options.videoTitle";
@@ -55,7 +54,8 @@ namespace Alex.Gamestates.MainMenu.Options
                             string subText = $"x{v:0}";
 
                             return $"Antialiasing: {((int) v == 0 ? "Disabled" : subText)}";
-                        }, options => options.VideoOptions.Antialiasing, 0, 16, 2));
+                        }, options => options.VideoOptions.Antialiasing, 0, 16, 2),
+                    ShowHud = CreateToggle("Show HUD: {0}", o => o.VideoOptions.DisplayHud));
 
                 AddGuiRow(
                     FrameRateLimiter = CreateToggle(
@@ -88,7 +88,8 @@ namespace Alex.Gamestates.MainMenu.Options
                         "Entity Render Distance: {0}", options => options.VideoOptions.EntityRenderDistance, 2, 32, 1));
 
                 AddDescription(Fog, $"{TextColor.Bold}Render Fog:{TextColor.Reset}", "Renders fog to smooth out the render distance");
-
+                AddDescription(ShowHud, "Show HUD", "");
+                
                 Descriptions.Add(
                     RenderDistance,
                     $"{TextColor.Bold}Render Distance:{TextColor.Reset}\n{TextColor.Red}High values may decrease performance significantly!\n");

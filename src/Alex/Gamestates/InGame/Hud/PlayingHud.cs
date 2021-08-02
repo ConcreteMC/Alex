@@ -48,6 +48,7 @@ namespace Alex.Gamestates.InGame.Hud
 		private OptionsPropertyAccessor<bool> _minimapAccessor;
 		private OptionsPropertyAccessor<double> _minimapSizeAccessor;
 		private OptionsPropertyAccessor<int> _renderDistanceAccessor;
+		private OptionsPropertyAccessor<bool> _hudVisibleAccessor;
 		public PlayingHud(Alex game, World world, TitleComponent titleComponent) : base()
         {
 	        Title = titleComponent;
@@ -122,15 +123,25 @@ namespace Alex.Gamestates.InGame.Hud
 		        ZoomLevel = ZoomLevel.Level8
 	        };
 
-	        _renderDistanceAccessor = Alex.Options.AlexOptions.VideoOptions.RenderDistance.Bind(RenderDistanceChanged);
-	        _miniMap.Radius = Alex.Options.AlexOptions.VideoOptions.RenderDistance.Value;
+	        var options = Alex.Options.AlexOptions;
+	        _renderDistanceAccessor = options.VideoOptions.RenderDistance.Bind(RenderDistanceChanged);
+	        _miniMap.Radius = _renderDistanceAccessor.Value;
 
-	        _minimapAccessor = Alex.Options.AlexOptions.MiscelaneousOptions.Minimap.Bind(OnMinimapEnabledChanged);
-	        _miniMap.IsVisible = Alex.Options.AlexOptions.MiscelaneousOptions.Minimap.Value;
+	        _minimapAccessor = options.MiscelaneousOptions.Minimap.Bind(OnMinimapEnabledChanged);
+	        _miniMap.IsVisible = _minimapAccessor.Value;
 
-	        _minimapSizeAccessor = Alex.Options.AlexOptions.MiscelaneousOptions.MinimapSize.Bind(OnMinimapSizeChanged);
-	        _miniMap.SetSize(Alex.Options.AlexOptions.MiscelaneousOptions.MinimapSize.Value);
+	        _minimapSizeAccessor = options.MiscelaneousOptions.MinimapSize.Bind(OnMinimapSizeChanged);
+	        _miniMap.SetSize(_minimapSizeAccessor.Value);
+
+	        _hudVisibleAccessor = options.VideoOptions.DisplayHud.Bind(DisplayHudValueChanged);
+	        IsVisible = _hudVisibleAccessor.Value;
+	        //IsVisible = 
         }
+
+		private void DisplayHudValueChanged(bool oldvalue, bool newvalue)
+		{
+			IsVisible = newvalue;
+		}
 
 		private void RenderDistanceChanged(int oldvalue, int newvalue)
 		{
@@ -270,6 +281,12 @@ namespace Alex.Gamestates.InGame.Hud
 	        
 	        _minimapSizeAccessor?.Dispose();
 	        _minimapSizeAccessor = null;
+	        
+	        _renderDistanceAccessor?.Dispose();
+	        _renderDistanceAccessor = null;
+	        
+	        _hudVisibleAccessor?.Dispose();
+	        _hudVisibleAccessor = null;
         }
 
         /// <inheritdoc />

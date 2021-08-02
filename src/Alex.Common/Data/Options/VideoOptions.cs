@@ -57,6 +57,9 @@ namespace Alex.Common.Data.Options
         [DataMember]
         public OptionsProperty<int> EntityRenderDistance { get; set; }
         
+        [DataMember]
+        public OptionsProperty<bool> DisplayHud { get; set; }
+        
         public VideoOptions()
         {
             RenderDistance = DefineRangedProperty(6, 2, 32);
@@ -82,6 +85,8 @@ namespace Alex.Common.Data.Options
             Fog = DefineProperty(true);
 
             EntityRenderDistance = DefineRangedProperty(6, 2, 32);
+
+            DisplayHud = DefineProperty(true);
         }
     }
 }

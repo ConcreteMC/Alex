@@ -267,16 +267,15 @@ namespace Alex.Entities
 	    private bool CloseActiveDialog()
 	    {
 		    var activeDialog = Alex.Instance.GuiManager.ActiveDialog;
-		    if (activeDialog != null)
-		    {
-			    CenterCursor();
-			    //_allowMovementInput = true;
-			    Alex.Instance.GuiManager.HideDialog(activeDialog);
+		    if (activeDialog == null) 
+			    return false;
+		    
+		    CenterCursor();
+		    //_allowMovementInput = true;
+		    Alex.Instance.GuiManager.HideDialog(activeDialog);
 
-			    return true;
-		    }
+		    return true;
 
-		    return false;
 	    }
 
 	    private void CenterCursor()

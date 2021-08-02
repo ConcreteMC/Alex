@@ -27,35 +27,56 @@ namespace Alex.Gui.Dialogs
 			
 			ContentContainer.AddChild(_mapRenderer);
 			
-			var leftStack = new StackContainer
+			var leftContainer = new StackContainer
+			{
+				Orientation = Orientation.Vertical, 
+				Anchor = Alignment.TopRight,
+				BackgroundOverlay = new Color(Color.Black, 0.3f),
+				ChildAnchor = Alignment.TopRight,
+				Padding = new Thickness(2)
+			};
+			
+			leftContainer.AddChild(new AutoUpdatingTextElement(() => $"Zoom: {_mapRenderer.ZoomLevel}"));
+			
+			ContentContainer.AddChild(leftContainer);
+			
+			var bottomContainer = new StackContainer
 			{
 				Orientation = Orientation.Horizontal, 
-				Anchor = Alignment.BottomLeft,
-				ChildAnchor = Alignment.FillCenter
+				Anchor = Alignment.BottomFill,
+				ChildAnchor = Alignment.MiddleLeft,
+				BackgroundOverlay = new Color(Color.Black, 0.3f)
 			};
 
-			leftStack.AddChild(new AlexButton("Exit", () =>
+			bottomContainer.AddChild(new AlexButton("Exit", () =>
 			{
 				GuiManager.HideDialog(this);
 			}));
 			
-			leftStack.AddChild(new AlexButton("Zoom In", ZoomIn));
-			leftStack.AddChild(new AlexButton("Zoom Out", ZoomOut));
+			bottomContainer.AddChild(new AlexButton("Zoom In", ZoomIn));
+			bottomContainer.AddChild(new AlexButton("Zoom Out", ZoomOut));
 			
-			ContentContainer.AddChild(leftStack);
+			ContentContainer.AddChild(bottomContainer);
+		}
+
+		private bool _displayHud;
+		/// <inheritdoc />
+		public override void OnShow()
+		{
+			base.OnShow();
+
+			var option = Alex.Instance.Options.AlexOptions.VideoOptions.DisplayHud;
+			_displayHud = option.Value;
 			
-			var rightStack = new StackContainer
-			{
-				Orientation = Orientation.Vertical, 
-				Anchor = Alignment.TopRight
-			};
-			
-			rightStack.AddChild(new AutoUpdatingTextElement(() => $"Zoom: {_mapRenderer.ZoomLevel}", true)
-			{
-				TextAlignment = TextAlignment.Right
-			});
-			
-			ContentContainer.AddChild(rightStack);
+			option.Value = false;
+		}
+		
+
+		/// <inheritdoc />
+		public override void OnClose()
+		{
+			base.OnClose();
+			Alex.Instance.Options.AlexOptions.VideoOptions.DisplayHud.Value = _displayHud;
 		}
 
 		/// <inheritdoc />

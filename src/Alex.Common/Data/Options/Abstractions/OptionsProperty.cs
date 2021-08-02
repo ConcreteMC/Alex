@@ -106,7 +106,7 @@ namespace Alex.Common.Data.Options
         {
             var accessor = new OptionsPropertyAccessor<TProperty>(this, listenerDelegate);
             ValueChanged += accessor.Invoke;
-
+            
             return accessor;
         }
         internal void Unbind(OptionsPropertyAccessor<TProperty> accessor)
