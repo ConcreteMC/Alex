@@ -353,7 +353,7 @@ namespace Alex.Gamestates
 
 
             ApplyModel(_playerView.Entity);
-            //Alex.Instance.GuiManager.ShowDialog(new BrowserDialog("Microsoft Login", "https://login.live.com/oauth20_remoteconnect.srf"));
+           // Alex.Instance.GuiManager.ShowDialog(new BrowserDialog("Microsoft Login", "https://google.com"));
             base.OnShow();
         }
 

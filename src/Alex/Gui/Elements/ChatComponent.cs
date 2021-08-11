@@ -31,12 +31,15 @@ namespace Alex.Gui.Elements
 		public int UnfocusedHeight { get; set; } = 100;
 		public int FocusedHeight { get; set; } = 180;
 		
-		public  NetworkProvider  Network         { get; set; }
-		public CommandProvider CommandProvider { get; set; } = null;
+		private  NetworkProvider  Network         { get; }
+		private CommandProvider CommandProvider { get; } = null;
 
 		private static ChatComponent _instance;
-		public ChatComponent()
+		public ChatComponent(NetworkProvider networkProvider)
 		{
+			Network = networkProvider;
+			CommandProvider = networkProvider.CommandProvider;
+			
 			Anchor = Alignment.BottomLeft;
 
 			MaxHeight = Height;

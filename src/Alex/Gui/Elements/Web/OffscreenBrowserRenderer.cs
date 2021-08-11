@@ -9,6 +9,7 @@ using Microsoft.Xna.Framework.Input;
 using NLog;
 using PuppeteerSharp;
 using PuppeteerSharp.Input;
+using RocketUI.Utilities.IO;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using Color = Microsoft.Xna.Framework.Color;
@@ -98,7 +99,6 @@ namespace Alex.Gui.Elements.Web
     
     private async void UpdateFrame(Page page)
     {
-      return;
       var width = page.Viewport.Width;
       var height = page.Viewport.Height;
       
@@ -120,7 +120,7 @@ namespace Alex.Gui.Elements.Web
       Browser = await Puppeteer.LaunchAsync(
         new LaunchOptions
         {
-          Headless = false, DefaultViewport = new ViewPortOptions() { Height = size.Height, Width = size.Width, },
+          Headless = true, DefaultViewport = new ViewPortOptions() { Height = size.Height, Width = size.Width, },
          // Args = 
         });
       
@@ -283,8 +283,53 @@ namespace Alex.Gui.Elements.Web
       }
     }
 
+    private bool _prevWasControl = false;
     public async void OnKeyInput(char character, Keys key)
     {
+      if (Clipboard.IsClipboardAvailable())
+      {
+        if (key == Keys.LeftControl)
+        {
+          _prevWasControl = true;
+        }
+        
+        if ((_prevWasControl && key == Keys.V) || (key.HasFlag(Keys.LeftControl) && key.HasFlag(Keys.V)))
+        {
+          await _page.Keyboard.TypeAsync(Clipboard.GetText());
+          _prevWasControl = false;
+        }
+        else if ((_prevWasControl && key == Keys.C) || (key.HasFlag(Keys.LeftControl) && key.HasFlag(Keys.C)))
+        {
+          var text =  await _page.EvaluateExpressionAsync<string>(@"
+                () => {
+                  var selectedText = '';
+    
+                  // window.getSelection
+                  if (window.getSelection) {
+                      selectedText = window.getSelection();
+                  }
+                  // document.getSelection
+                  else if (document.getSelection) {
+                      selectedText = document.getSelection();
+                  }
+                  // document.selection
+                  else if (document.selection) {
+                      selectedText = 
+                      document.selection.createRange().text;
+                  }
+                  return selectedText;
+                }
+           ");
+          
+          if (!string.IsNullOrWhiteSpace(text))
+          {
+            Clipboard.SetText(text);
+          }
+
+          _prevWasControl = false;
+        }
+        
+      }
       if (!char.IsControl(character))
       {
           await _page.Keyboard.SendCharacterAsync(character.ToString());
@@ -319,11 +364,7 @@ namespace Alex.Gui.Elements.Web
         {
           await _page.Keyboard.PressAsync("Enter");
         }
-        else
-        {
-          return;
-        }
-       // if (KeyDefinitions.TryGet(key, out var keyDefinition))
+        // if (KeyDefinitions.TryGet(key, out var keyDefinition))
        // {
           //await _page.Keyboard.PressAsync(keyDefinition.Code);
        // }

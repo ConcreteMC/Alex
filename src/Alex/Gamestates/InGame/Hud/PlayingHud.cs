@@ -9,6 +9,7 @@ using Alex.Gui.Elements;
 using Alex.Gui.Elements.Hud;
 using Alex.Gui.Elements.Inventory;
 using Alex.Gui.Elements.Map;
+using Alex.Net;
 using Alex.Utils.Inventories;
 using Alex.Worlds;
 using Microsoft.Extensions.DependencyInjection;
@@ -49,7 +50,7 @@ namespace Alex.Gamestates.InGame.Hud
 		private OptionsPropertyAccessor<double> _minimapSizeAccessor;
 		private OptionsPropertyAccessor<int> _renderDistanceAccessor;
 		private OptionsPropertyAccessor<bool> _hudVisibleAccessor;
-		public PlayingHud(Alex game, World world, TitleComponent titleComponent) : base()
+		public PlayingHud(Alex game, World world, TitleComponent titleComponent, NetworkProvider networkProvider) : base()
         {
 	        Title = titleComponent;
 
@@ -82,10 +83,10 @@ namespace Alex.Gamestates.InGame.Hud
 	        _hotbar.Anchor = Alignment.BottomCenter;
 	        _hotbar.Padding = Thickness.Zero;
 
-			Chat = new ChatComponent();
+			Chat = new ChatComponent(networkProvider);
 	        Chat.Enabled = false;
 	        Chat.Anchor = Alignment.BottomLeft;
-
+				
 	        _healthContainer = new Container();
 	        _healthContainer.Anchor = Alignment.Fill;
 

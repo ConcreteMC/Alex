@@ -60,9 +60,7 @@ namespace Alex.Gamestates.InGame
 
 			WorldProvider.TitleComponent = title;
 
-			_playingHud = new PlayingHud(Alex, World, title);
-			_playingHud.Chat.Network = networkProvider;
-			_playingHud.Chat.CommandProvider = networkProvider.CommandProvider;
+			_playingHud = new PlayingHud(Alex, World, title, networkProvider);
 			
 			WorldProvider.ScoreboardView = _playingHud.Scoreboard;
 			WorldProvider.ChatRecipient = _playingHud;
