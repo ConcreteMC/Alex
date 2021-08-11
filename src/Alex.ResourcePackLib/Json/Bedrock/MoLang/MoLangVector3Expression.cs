@@ -69,6 +69,7 @@ namespace Alex.ResourcePackLib.Json.Bedrock.MoLang
 
 		private Vector3 Evaluate(MoLangRuntime runtime, IExpression[][] expressions, Vector3 currentValue)
 		{
+			if (expressions == null) return currentValue;
 			if (expressions.Length == 3)
 			{
 				return Evaluate(runtime, expressions[0], expressions[1], expressions[2], currentValue);

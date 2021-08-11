@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Alex.MoLang.Runtime;
 using Alex.MoLang.Runtime.Value;
 using Alex.ResourcePackLib.Json.Bedrock.Entity;
@@ -24,10 +25,15 @@ namespace Alex.Graphics.Models.Entity.Animations
 			Parent = parent;
 			Definition = definition;
 
-			if (!definition.States.TryGetValue(definition.InitialState, out _state))
+
+			if (string.IsNullOrWhiteSpace(definition.InitialState)
+			         || !definition.States.TryGetValue(definition.InitialState, out _state))
 			{
-				throw new Exception("Initial state not found!");
+				_state = definition.States.FirstOrDefault().Value;
 			}
+			
+			if (_state == null)
+				throw new Exception("Initial state not found!");
 		}
 
 		public void Update()
