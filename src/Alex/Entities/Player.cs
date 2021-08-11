@@ -13,6 +13,7 @@ using Alex.Common.Input;
 using Alex.Common.Items;
 using Alex.Common.Utils;
 using Alex.Common.Utils.Vectors;
+using Alex.Gui.Elements.Map;
 using Alex.Items;
 using Alex.Net;
 using Alex.Net.Bedrock;
@@ -105,6 +106,8 @@ namespace Alex.Entities
 			HasPhysics = true;
 			NoAi = false;
 			CanSwim = true;
+
+			base.MapIcon = new LocalPlayerMapIcon(this, MapMarker.GreenPointer);
         }
 
         /// <inheritdoc />

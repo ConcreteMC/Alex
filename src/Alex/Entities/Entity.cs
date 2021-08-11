@@ -60,7 +60,8 @@ namespace Alex.Entities
 
 		private EntityModelRenderer _modelRenderer;
 
-		public MapIcon MapIcon { get; }
+		public MapIcon MapIcon { get; protected set; }
+
 		public EntityModelRenderer ModelRenderer
 		{
 			get
@@ -1623,6 +1624,14 @@ namespace Alex.Entities
 		public virtual void OnDespawn()
 		{
 			IsSpawned = false;
+		}
+
+		public Vector3 CalculateForwardVector()
+		{
+			return new Vector3(
+				MathF.Cos(KnownPosition.Pitch) * MathF.Sin(KnownPosition.Yaw), 
+				-MathF.Sin(KnownPosition.Pitch),
+				MathF.Cos(KnownPosition.Pitch) * MathF.Cos(KnownPosition.Yaw));
 		}
 		
 		public void LookAt(Vector3 targetPosition, bool aimWithHead)

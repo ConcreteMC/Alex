@@ -6,10 +6,10 @@ namespace Alex.Gui.Elements.Map
 {
 	public class EntityMapIcon : MapIcon
 	{
-		private Entity _entity;
+		protected readonly Entity Entity;
 		public EntityMapIcon(Entity entity, MapMarker marker) : base(marker)
 		{
-			_entity = entity;
+			Entity = entity;
 		}
 
 		/// <inheritdoc />
@@ -17,7 +17,7 @@ namespace Alex.Gui.Elements.Map
 		{
 			get
 			{
-				return _entity.KnownPosition.ToVector3();
+				return Entity.KnownPosition.ToVector3();
 			}
 		}
 
@@ -26,7 +26,25 @@ namespace Alex.Gui.Elements.Map
 		{
 			get
 			{
-				return 180f - _entity.KnownPosition.HeadYaw;
+				return 180f - Entity.RenderLocation.Yaw;
+			}
+		}
+	}
+
+	public class LocalPlayerMapIcon : EntityMapIcon
+	{
+		/// <inheritdoc />
+		public LocalPlayerMapIcon(Entity entity, MapMarker marker) : base(entity, marker)
+		{
+			
+		}
+
+		/// <inheritdoc />
+		public override float Rotation
+		{
+			get
+			{
+				return 180f - Entity.RenderLocation.Yaw;
 			}
 		}
 	}

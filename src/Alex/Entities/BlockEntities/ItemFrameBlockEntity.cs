@@ -35,8 +35,10 @@ namespace Alex.Entities.BlockEntities
 			
 			if (compound.TryGet("Item", out var itemTag))
 			{
-				var idTag = itemTag["id"];
-				
+				var idTag = itemTag["id"] ?? itemTag["ID"];
+				if(idTag == null)
+					return;
+
 				var count = itemTag["Count"].ByteValue;
 				//var damage = itemTag["Damage"].ShortValue;
 

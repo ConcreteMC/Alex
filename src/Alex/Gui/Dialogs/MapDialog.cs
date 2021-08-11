@@ -15,19 +15,30 @@ namespace Alex.Gui.Dialogs
 		{
 			Anchor = Alignment.Fill;
 			ContentContainer.Anchor = Alignment.Fill;
-			ContentContainer.Padding = new Thickness(10, 10);
 			
 			_mapRenderer = new MapRenderElement(world)
 			{
 				AutoSizeMode = AutoSizeMode.GrowOnly,
 				Anchor = Alignment.Fill,
 				Radius = 128,
-				ZoomLevel = ZoomLevel.Maximum
+				ZoomLevel = ZoomLevel.Maximum,
+				ShowCompass = false
 			};
 			
-			ContentContainer.AddChild(_mapRenderer);
-			
 			var leftContainer = new StackContainer
+			{
+				Orientation = Orientation.Vertical, 
+				Anchor = Alignment.TopLeft,
+				BackgroundOverlay = new Color(Color.Black, 0.3f),
+				ChildAnchor = Alignment.TopLeft,
+				Padding = new Thickness(2)
+			};
+
+			leftContainer.AddChild(new AutoUpdatingTextElement(() => $"Coordinates: {world.CenterPosition.ToString()}"));
+			
+			ContentContainer.AddChild(leftContainer);
+			
+			var rightContainer = new StackContainer
 			{
 				Orientation = Orientation.Vertical, 
 				Anchor = Alignment.TopRight,
@@ -35,10 +46,20 @@ namespace Alex.Gui.Dialogs
 				ChildAnchor = Alignment.TopRight,
 				Padding = new Thickness(2)
 			};
+
+			rightContainer.AddChild(new AutoUpdatingTextElement(() => $"Zoom: {_mapRenderer.ZoomLevel}"));
 			
-			leftContainer.AddChild(new AutoUpdatingTextElement(() => $"Zoom: {_mapRenderer.ZoomLevel}"));
+			ContentContainer.AddChild(rightContainer);
+
+			var middleContainer = new RocketElement()
+			{
+				//	Orientation = Orientation.Vertical,
+				Anchor = Alignment.Fill,
+				//	ChildAnchor = Alignment.Fill
+			};
+			//middleContainer.AddChild(_mapRenderer);
 			
-			ContentContainer.AddChild(leftContainer);
+			ContentContainer.AddChild(_mapRenderer);
 			
 			var bottomContainer = new StackContainer
 			{

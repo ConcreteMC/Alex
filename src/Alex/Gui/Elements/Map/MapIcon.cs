@@ -15,6 +15,8 @@ namespace Alex.Gui.Elements.Map
 		
 		public MapMarker Marker { get; set; }
 		public Color Color { get; set; } = Color.White;
+		public bool AlwaysShown { get; set; } = false;
+
 		public MapIcon(MapMarker marker)
 		{
 			Marker = marker;

@@ -41,6 +41,7 @@ namespace Alex.Gui.Elements.Map
 
         private readonly ConcurrentHashSet<MapIcon> _markers;
         public Vector3 CenterPosition => _world.Camera.Position;
+        public float MapRotation => 180f - _world.Player.KnownPosition.HeadYaw;
         
         public WorldMap(World world)
         {
@@ -168,8 +169,8 @@ namespace Alex.Gui.Elements.Map
             var markers = _markers;
             if (markers == null || markers.IsEmpty)
                 yield break;
-            
-            foreach (var icon in markers.Where(x => new ChunkCoordinates(x.Position).DistanceTo(center) <= radius).OrderBy(x => x.DrawOrder))
+           
+            foreach (var icon in markers.Where(x => x.AlwaysShown || new ChunkCoordinates(x.Position).DistanceTo(center) <= radius).OrderBy(x => x.DrawOrder))
             {
                 yield return icon;
             }

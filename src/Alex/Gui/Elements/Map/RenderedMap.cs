@@ -18,6 +18,8 @@ namespace Alex.Gui.Elements.Map
 		public Texture2D Texture { get; private set; }
 
 		public ChunkCoordinates Coordinates { get; }
+		public int MaxHeight { get; private set; }
+		public int MinHeight { get; private set; }
 		public RenderedMap(ChunkCoordinates coordinates) : base(Size,Size, 1)
 		{
 			Coordinates = coordinates;
@@ -60,46 +62,32 @@ namespace Alex.Gui.Elements.Map
 						height--;
 						state = target.GetBlockState(x, height, z);
 						maxHeight = Math.Max(height, maxHeight);
-					} while (height > 0 && (state.Block.BlockMaterial.MapColor.BaseColor.A <= 0));
+					} while (height > 0 && state.Block.BlockMaterial.MapColor.BaseColor.A <= 0);
+
+					var blockNorth = world.GetHeight(new BlockCoordinates((x + cx), height, (z + cz)).BlockNorth()) - 1;
+
+					var offset = 1;
+
+					if (blockNorth > height)
+					{
+						offset = 0;
+					}
+					else if (blockNorth < height)
+					{
+						offset = 2;
+					}
+
 					var blockMaterial = state?.Block?.BlockMaterial;
-					
-					if (blockMaterial == null)
-						continue;
-						
-					var blockNorth = world.GetHeight(new BlockCoordinates((x + cx) + 1, height, (z + cz))) - 1;
-					var offsetNorth = GetOffset(blockNorth, height);
-					
-					//var blockEast = world.GetHeight(new BlockCoordinates((x + cx), height, (z + cz) + 1)) - 1;
-					//var offsetEast = GetOffset(blockEast, height);
 
-
-					var bx = x * Multiplier;
-					var bz = z * Multiplier;
-					this[bx, bz] = blockMaterial.MapColor.Index * 4 + offsetNorth;
-
-					//this[bx, bz] = blockMaterial.MapColor.Index * 4 + offsetEast;
-					//this[bx, bz] = blockMaterial.MapColor.Index * 4 + offsetEast;
+					if (blockMaterial != null)
+					{
+						this[x, z] = blockMaterial.MapColor.Index * 4 + offset;
+					}
 				}
 			}
 
 			Texture.SetData(this.GetData());
 			IsDirty = false;
-		}
-
-		private int GetOffset(int neighbor, int self)
-		{
-			var offset = 1;
-
-			if (neighbor > self)
-			{
-				offset = 0;
-			}
-			else if (neighbor < self)
-			{
-				offset = 2;
-			}
-
-			return offset;
 		}
 
 		public void MarkDirty()

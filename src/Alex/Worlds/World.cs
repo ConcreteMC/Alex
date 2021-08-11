@@ -188,7 +188,7 @@ namespace Alex.Worlds
 			}
 			
 			Map = new WorldMap(this);
-			Player.MapIcon.Marker = MapMarker.WhitePointer;
+			Player.MapIcon.Marker = MapMarker.GreenPointer;
 			Player.MapIcon.DrawOrder = int.MaxValue;
 			Map.Add(Player.MapIcon);
 		}
