@@ -1107,7 +1107,7 @@ namespace Alex.Entities
 
 			CanSwim = data[(int) MiNET.Entities.Entity.DataFlags.CanSwim];
 			CanClimb = data[(int) MiNET.Entities.Entity.DataFlags.CanClimb];
-			CanFly = data[(int) MiNET.Entities.Entity.DataFlags.CanFly];
+			//CanFly = data[(int) MiNET.Entities.Entity.DataFlags.CanFly];
 			CanPowerJump = data[(int) MiNET.Entities.Entity.DataFlags.CanPowerJump];
 			//IsFlying = data[(int) MiNET.Entities.Entity.DataFlags.fl]
 		}

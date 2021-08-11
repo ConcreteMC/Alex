@@ -97,11 +97,7 @@ namespace Alex.Entities
 			DoRotationCalculations = false;
 			
 			RenderEntity = true;
-			//ShowItemInHand = true;
 
-		//	ServerEntity = false;
-	//		AlwaysTick = true;
-			
 			IsAffectedByGravity = true;
 			HasPhysics = true;
 			NoAi = false;
@@ -183,7 +179,6 @@ namespace Alex.Entities
 	    private BlockFace _destroyingFace;
 
 	    private int  PreviousSlot { get; set; } = -1;
-	    public  bool CanSprint    => HealthManager.Hunger > 6;
 	    private bool _skipUpdate = false;
 
 	    internal void SkipUpdate()

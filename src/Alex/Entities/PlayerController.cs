@@ -46,15 +46,19 @@ namespace Alex.Entities
         private Player Player { get; }
 		private InputManager GlobalInputManager { get; }
 		private GamePadInputListener GamePadInputListener { get; }
-		
-		public PlayerController(GraphicsDevice graphics, World world, InputManager inputManager, Player player, PlayerIndex playerIndex)
+
+		public PlayerController(GraphicsDevice graphics,
+			World world,
+			InputManager inputManager,
+			Player player,
+			PlayerIndex playerIndex)
 		{
 			Player = player;
-            Graphics = graphics;
-            World = world;
-            PlayerIndex = playerIndex;
+			Graphics = graphics;
+			World = world;
+			PlayerIndex = playerIndex;
 
-          //  IsFreeCam = true;
+			//  IsFreeCam = true;
 
 			GlobalInputManager = inputManager;
 			InputManager = inputManager.GetOrAddPlayerManager(playerIndex);
@@ -68,30 +72,173 @@ namespace Alex.Entities
 			{
 				GamePadInputListener = null;
 			}
-			
+
 			var optionsProvider = Alex.Instance.Services.GetRequiredService<IOptionsProvider>();
 			CursorSensitivity = optionsProvider.AlexOptions.MouseSensitivity.Value;
 
-			optionsProvider.AlexOptions.MouseSensitivity.Bind(
-				(value, newValue) =>
-				{
-					CursorSensitivity = newValue;
-				});
+			optionsProvider.AlexOptions.MouseSensitivity.Bind((value, newValue) => { CursorSensitivity = newValue; });
 
 			GamepadSensitivity = optionsProvider.AlexOptions.ControllerOptions.RightJoystickSensitivity.Value;
+
 			optionsProvider.AlexOptions.ControllerOptions.RightJoystickSensitivity.Bind(
-				(value, newValue) =>
+				(value, newValue) => { GamepadSensitivity = newValue; });
+
+			InputManager.RegisterListener(AlexInputCommand.Jump, InputBindingTrigger.Tap, CheckMovementPredicate, SetFlying);
+
+			InputManager.RegisterListener(AlexInputCommand.MoveUp, InputBindingTrigger.Tap, CheckMovementPredicate, SetFlying);
+
+			InputManager.RegisterListener(
+				AlexInputCommand.ToggleCamera, InputBindingTrigger.Tap, CheckMovementPredicate, () => World.Camera.ToggleMode());
+
+			InputManager.RegisterListener(
+				AlexInputCommand.DropItem, InputBindingTrigger.Tap, CheckMovementPredicate,
+				() => Player.DropHeldItem(InputManager.IsDown(AlexInputCommand.Sprint)));
+
+			InputManager.RegisterListener(
+				AlexInputCommand.HotBarSelect1, InputBindingTrigger.Tap, CheckMovementPredicate,
+				() => { player.Inventory.SelectedSlot = 0; });
+
+			InputManager.RegisterListener(
+				AlexInputCommand.HotBarSelect2, InputBindingTrigger.Tap, CheckMovementPredicate,
+				() => { player.Inventory.SelectedSlot = 1; });
+
+			InputManager.RegisterListener(
+				AlexInputCommand.HotBarSelect3, InputBindingTrigger.Tap, CheckMovementPredicate,
+				() => { player.Inventory.SelectedSlot = 2; });
+
+			InputManager.RegisterListener(
+				AlexInputCommand.HotBarSelect4, InputBindingTrigger.Tap, CheckMovementPredicate,
+				() => { player.Inventory.SelectedSlot = 3; });
+
+			InputManager.RegisterListener(
+				AlexInputCommand.HotBarSelect5, InputBindingTrigger.Tap, CheckMovementPredicate,
+				() => { player.Inventory.SelectedSlot = 4; });
+
+			InputManager.RegisterListener(
+				AlexInputCommand.HotBarSelect6, InputBindingTrigger.Tap, CheckMovementPredicate,
+				() => { player.Inventory.SelectedSlot = 5; });
+
+			InputManager.RegisterListener(
+				AlexInputCommand.HotBarSelect7, InputBindingTrigger.Tap, CheckMovementPredicate,
+				() => { player.Inventory.SelectedSlot = 6; });
+
+			InputManager.RegisterListener(
+				AlexInputCommand.HotBarSelect8, InputBindingTrigger.Tap, CheckMovementPredicate,
+				() => { player.Inventory.SelectedSlot = 7; });
+
+			InputManager.RegisterListener(
+				AlexInputCommand.HotBarSelect9, InputBindingTrigger.Tap, CheckMovementPredicate,
+				() => { player.Inventory.SelectedSlot = 8; });
+
+			InputManager.RegisterListener(
+				AlexInputCommand.Exit, InputBindingTrigger.Tap,
+				() => Alex.Instance.GuiManager.ActiveDialog != null, CloseActiveDialog);
+			
+			InputManager.RegisterListener(
+				AlexInputCommand.ToggleInventory, InputBindingTrigger.Discrete,
+				CanOpenDialog, OpenInventory);
+			
+			InputManager.RegisterListener(
+				AlexInputCommand.ToggleMap, InputBindingTrigger.Discrete,
+				CanOpenDialog, OpenMap);
+			
+			InputManager.RegisterListener(
+				AlexInputCommand.TakeScreenshot, InputBindingTrigger.Discrete, CheckMovementPredicate, () =>
 				{
-					GamepadSensitivity = newValue;
+					//Take screenshot.
+					Alex.Instance.UiTaskManager.Enqueue(
+						() =>
+						{
+							var blendMode = Graphics.BlendState;
+
+							try
+							{
+								Graphics.BlendState = BlendState.NonPremultiplied;
+
+								var graphicsDevice = Alex.Instance.GraphicsDevice;
+								//	var viewPort = Alex.Instance.DeviceManager.PreferredBackBufferWidth
+								var w = graphicsDevice.PresentationParameters.BackBufferWidth;
+								var h = graphicsDevice.PresentationParameters.BackBufferHeight;
+								Color[] data = new Color[w * h];
+
+								graphicsDevice.GetBackBufferData(data);
+
+								Image<Rgba32> t = Image.LoadPixelData(
+									data.Select(x => new Rgba32(x.PackedValue)).ToArray(), w, h);
+
+								//Texture2D t = new Texture2D(graphicsDevice, w, h, false, SurfaceFormat.Color);
+								//t.SetData(data);
+								var pics = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures);
+								var screenshotPath = Path.Combine(pics, $"alex-{DateTime.Now.ToString("s")}.png");
+
+								using (FileStream fs = File.OpenWrite(screenshotPath))
+								{
+									t.SaveAsPng(fs);
+								}
+
+								t.Dispose();
+
+								ChatComponent.AddSystemMessage(
+									$"{ChatColors.Gray}{ChatFormatting.Italic}Saved screenshot to: {screenshotPath}");
+							}
+							catch (Exception error)
+							{
+								Log.Error(error, $"Failed to save screenshot.");
+
+								ChatComponent.AddSystemMessage(
+									$"{ChatColors.Red}Failed to save screenshot, see console for more information.");
+							}
+							finally
+							{
+								Graphics.BlendState = blendMode;
+							}
+						});
 				});
-
 		}
 
-		public bool CheckMovementInput
+		private void OpenMap()
 		{
-			get { return _allowMovementInput; }
-			set { _allowMovementInput = value; }
+			var dialog = new MapDialog(Player.Level.Map);
+			Alex.Instance.GuiManager.ShowDialog(dialog);
 		}
+
+		private void OpenInventory()
+		{
+			var dialog = new GuiPlayerInventoryDialog(Player, Player.Inventory);
+
+			if (Player.Network is BedrockClient client)
+			{
+				dialog.TransactionTracker = client.TransactionTracker;
+			}
+
+			//_allowMovementInput = false;H
+			    
+			Alex.Instance.GuiManager.ShowDialog(dialog);
+		}
+
+		private bool CheckMovementPredicate()
+		{
+			return CheckMovementInput;
+		}
+
+		private void SetFlying()
+		{
+			var now = DateTime.UtcNow;
+			var timeBetween = now.Subtract(_lastUp).TotalMilliseconds;
+
+			if (timeBetween <= 350)
+			{
+				Player.SetFlying(!Player.IsFlying);
+			}
+			else
+			{
+				Log.Warn($"Fly failed: {timeBetween}ms");
+			}
+
+			_lastUp = now;
+		}
+
+		public bool CheckMovementInput { get; set; }
 
 		private bool _checkInput = true;
 
@@ -112,8 +259,8 @@ namespace Alex.Entities
 				_checkInput = value;
 			}
 		}
-	    private bool _allowMovementInput = true;
-	    private bool IgnoreNextUpdate { get; set; } = false;
+		
+		private bool IgnoreNextUpdate { get; set; } = false;
 	    
 		private DateTime _lastForward = DateTime.UtcNow;
 		private DateTime _lastUp = DateTime.UtcNow;
@@ -125,157 +272,40 @@ namespace Alex.Entities
 			UpdatePlayerInput(gameTime);
 		}
 
-		private bool _previousAllowMovementInput = true;
 	    private void UpdatePlayerInput(GameTime gt)
 	    {
 		    if (CheckInput)
 		    {
-				CheckGeneralInput(gt);
-				
-				if (_allowMovementInput != _previousAllowMovementInput)
-				{
-					CenterCursor();
-					_previousAllowMovementInput = _allowMovementInput;
-					return;
-				}
-				UpdateMovementInput(gt);
+			    /*if (_allowMovementInput != _previousAllowMovementInput)
+			    {
+				    CenterCursor();
+				    _previousAllowMovementInput = _allowMovementInput;
+				    return;
+			    }*/
+
+			    UpdateMovementInput(gt);
 		    }
 		}
 
-	    private void CheckGeneralInput(GameTime gt)
-	    {
-		    _allowMovementInput = Alex.Instance.GuiManager.ActiveDialog == null;
-
-		    if (_allowMovementInput)
-		    {
-			    if (InputManager.IsPressed(AlexInputCommand.HotBarSelectPrevious)
-			        || MouseInputListener.IsButtonDown(MouseButton.ScrollUp))
-			    {
-				    Player.Inventory.SelectedSlot--;
-			    }
-			    else if (InputManager.IsPressed(AlexInputCommand.HotBarSelectNext)
-			             || MouseInputListener.IsButtonDown(MouseButton.ScrollDown))
-			    {
-				    Player.Inventory.SelectedSlot++;
-			    }
-
-			    if (InputManager.IsPressed(AlexInputCommand.HotBarSelect1)) Player.Inventory.SelectedSlot = 0;
-			    if (InputManager.IsPressed(AlexInputCommand.HotBarSelect2)) Player.Inventory.SelectedSlot = 1;
-			    if (InputManager.IsPressed(AlexInputCommand.HotBarSelect3)) Player.Inventory.SelectedSlot = 2;
-			    if (InputManager.IsPressed(AlexInputCommand.HotBarSelect4)) Player.Inventory.SelectedSlot = 3;
-			    if (InputManager.IsPressed(AlexInputCommand.HotBarSelect5)) Player.Inventory.SelectedSlot = 4;
-			    if (InputManager.IsPressed(AlexInputCommand.HotBarSelect6)) Player.Inventory.SelectedSlot = 5;
-			    if (InputManager.IsPressed(AlexInputCommand.HotBarSelect7)) Player.Inventory.SelectedSlot = 6;
-			    if (InputManager.IsPressed(AlexInputCommand.HotBarSelect8)) Player.Inventory.SelectedSlot = 7;
-			    if (InputManager.IsPressed(AlexInputCommand.HotBarSelect9)) Player.Inventory.SelectedSlot = 8;
-
-			    if (InputManager.IsPressed(AlexInputCommand.ToggleCamera))
-			    {
-				    World.Camera.ToggleMode();
-			    }
-
-			    if (InputManager.IsPressed(AlexInputCommand.DropItem))
-			    {
-				    //Sprint is bound to LeftCtrl by default.
-				    Player.DropHeldItem(InputManager.IsDown(AlexInputCommand.Sprint));
-			    }
-
-			    if (InputManager.IsPressed(AlexInputCommand.TakeScreenshot))
-			    {
-				    //Take screenshot.
-				    Alex.Instance.UiTaskManager.Enqueue(
-					    () =>
-					    {
-						    var blendMode = Graphics.BlendState;
-
-						    try
-						    {
-							    Graphics.BlendState = BlendState.NonPremultiplied;
-
-							    var graphicsDevice = Alex.Instance.GraphicsDevice;
-							    //	var viewPort = Alex.Instance.DeviceManager.PreferredBackBufferWidth
-							    var w = graphicsDevice.PresentationParameters.BackBufferWidth;
-							    var h = graphicsDevice.PresentationParameters.BackBufferHeight;
-							    Color[] data = new Color[w * h];
-
-							    graphicsDevice.GetBackBufferData(data);
-
-							    Image<Rgba32> t = Image.LoadPixelData(
-								    data.Select(x => new Rgba32(x.PackedValue)).ToArray(), w, h);
-
-							    //Texture2D t = new Texture2D(graphicsDevice, w, h, false, SurfaceFormat.Color);
-							    //t.SetData(data);
-							    var pics = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures);
-							    var screenshotPath = Path.Combine(pics, $"alex-{DateTime.Now.ToString("s")}.png");
-
-							    using (FileStream fs = File.OpenWrite(screenshotPath))
-							    {
-								    t.SaveAsPng(fs);
-							    }
-
-							    t.Dispose();
-
-							    ChatComponent.AddSystemMessage(
-								    $"{ChatColors.Gray}{ChatFormatting.Italic}Saved screenshot to: {screenshotPath}");
-						    }
-						    catch (Exception error)
-						    {
-							    Log.Error(error, $"Failed to save screenshot.");
-
-							    ChatComponent.AddSystemMessage(
-								    $"{ChatColors.Red}Failed to save screenshot, see console for more information.");
-						    }
-						    finally
-						    {
-							    Graphics.BlendState = blendMode;
-						    }
-					    });
-			    }
-		    }
-
-		    if (InputManager.IsPressed(AlexInputCommand.Exit))
-		    {
-			    CloseActiveDialog();
-		    }
-		    else if (InputManager.IsPressed(AlexInputCommand.ToggleInventory) && CanOpenDialog())
-		    {
-			    var dialog = new GuiPlayerInventoryDialog(Player, Player.Inventory);
-
-			    if (Player.Network is BedrockClient client)
-			    {
-				    dialog.TransactionTracker = client.TransactionTracker;
-			    }
-
-			    //_allowMovementInput = false;H
-			    
-			    Alex.Instance.GuiManager.ShowDialog(dialog);
-		    }
-		    else if (InputManager.IsPressed(AlexInputCommand.ToggleMap) && CanOpenDialog())
-		    {
-			    var dialog = new MapDialog(Player.Level.Map);
-			    Alex.Instance.GuiManager.ShowDialog(dialog);
-		    }
-
-		    _allowMovementInput = Alex.Instance.GuiManager.ActiveDialog == null;
-	    }
-
 	    private bool CanOpenDialog()
 	    {
-		    return !(Alex.Instance.GuiManager.FocusManager.FocusedElement is TextInput) && (!CloseActiveDialog());
+		    if (!(Alex.Instance.GuiManager.FocusManager.FocusedElement is TextInput)
+		        && Alex.Instance.GuiManager.ActiveDialog == null)
+		    {
+			    return true;
+		    }
+
+		    return false;
 	    }
 
-	    private bool CloseActiveDialog()
+	    private void CloseActiveDialog()
 	    {
 		    var activeDialog = Alex.Instance.GuiManager.ActiveDialog;
 		    if (activeDialog == null) 
-			    return false;
+			    return;
 		    
 		    CenterCursor();
-		    //_allowMovementInput = true;
 		    Alex.Instance.GuiManager.HideDialog(activeDialog);
-
-		    return true;
-
 	    }
 
 	    private void CenterCursor()
@@ -295,52 +325,39 @@ namespace Alex.Entities
 	    private double GamepadSensitivity { get; set; } = 200d;
 	    private bool _jumping = false;
 
-	    private void SetSprinting(bool sprinting)
-	    {
-		    if (sprinting)
-		    {
-			    if (!Player.IsSprinting && Player.CanSprint)
-			    {
-				  //  Player.Network?.EntityAction((int) Player.EntityId, EntityAction.StartSprinting);
-				    Player.IsSprinting = true;
-			    }
-		    }
-		    else
-		    {
-			    if (Player.IsSprinting)
-			    {
-				    Player.IsSprinting = false;
-				  //  Player.Network?.EntityAction((int) Player.EntityId, EntityAction.StopSprinting);
-			    }
-		    }
-	    }
-	    
 	    private void UpdateMovementInput(GameTime gt)
 	    {
-		    if (!_allowMovementInput)
+		    if (!CheckMovementInput)
 		    {
 			    Player.Movement.UpdateHeading(Vector3.Zero);
 			    return;
+		    }
+		    
+		    if (InputManager.IsPressed(AlexInputCommand.HotBarSelectPrevious)
+		        || MouseInputListener.IsButtonDown(MouseButton.ScrollUp))
+		    {
+			    Player.Inventory.SelectedSlot--;
+		    }
+		    else if (InputManager.IsPressed(AlexInputCommand.HotBarSelectNext)
+		             || MouseInputListener.IsButtonDown(MouseButton.ScrollDown))
+		    {
+			    Player.Inventory.SelectedSlot++;
 		    }
 
 			var moveVector = Vector3.Zero;
 			var now = DateTime.UtcNow;
 
-			if (Player.CanFly)
+			/*if (InputManager.IsPressed(AlexInputCommand.Jump) || InputManager.IsPressed(InputCommand.MoveUp))
 			{
-			    if (InputManager.IsDown(AlexInputCommand.MoveUp) || InputManager.IsDown(AlexInputCommand.Jump))
-			    {
-				    if ((InputManager.IsBeginPress(AlexInputCommand.MoveUp) || InputManager.IsBeginPress(AlexInputCommand.Jump)) &&
-				        now.Subtract(_lastUp).TotalMilliseconds <= 125)
-				    {
-					    Player.IsFlying = !Player.IsFlying;
-				    }
+				if (now.Subtract(_lastUp).TotalMilliseconds <= 250)
+				{
+					Player.SetFlying(!Player.IsFlying);
+				}
 
-				    _lastUp = now;
-			    }
-		    }
+				_lastUp = now;
+			}*/
 
-		    //float speedFactor = (float)Player.CalculateMovementSpeed();
+			//float speedFactor = (float)Player.CalculateMovementSpeed();
 
 		    bool holdingDownSprint = InputManager.IsDown(AlexInputCommand.Sprint);
 
@@ -365,7 +382,7 @@ namespace Alex.Entities
 				if (holdingDownSprint || (InputManager.IsBeginPress(AlexInputCommand.MoveForwards)
 				                      && now.Subtract(_lastForward).TotalMilliseconds <= 125))
 				{
-					SetSprinting(true);
+					Player.SetSprinting(true);
 				}
 
 				_lastForward = now;
@@ -373,7 +390,7 @@ namespace Alex.Entities
 			else
 			{
 				if (Player.IsSprinting)
-					SetSprinting(false);
+					Player.SetSprinting(false);
 			}
 
 			if (InputManager.IsDown(AlexInputCommand.MoveBackwards))
@@ -468,11 +485,7 @@ namespace Alex.Entities
 						look = -look;
 						
 						Player.KnownPosition.HeadYaw = (Player.KnownPosition.HeadYaw - look.X) % 360f;
-						//Player.KnownPosition.HeadYaw -= look.X;
-						
 						Player.KnownPosition.Pitch -= look.Y;
-						//Player.KnownPosition.HeadYaw = MathUtils.NormDeg(Player.KnownPosition.HeadYaw);
-						//Player.KnownPosition.Pitch = MathHelper.Clamp(Player.KnownPosition.Pitch, -89.9f, 89.9f);
 					}
 				}
 
@@ -490,41 +503,17 @@ namespace Alex.Entities
 					{
 						var mouseDelta =
 							_previousMousePosition
-							- e; //this.GlobalInputManager.CursorInputListener.GetCursorPositionDelta();
+							- e;
 
 						var look = (new Vector2((-mouseDelta.X), (mouseDelta.Y)) * (float) CursorSensitivity) * (float) (gt.ElapsedGameTime.TotalSeconds);
-
 						Player.KnownPosition.HeadYaw = (Player.KnownPosition.HeadYaw - look.X) % 360f;
-
 						Player.KnownPosition.SetPitchBounded(Player.KnownPosition.Pitch - look.Y);
-						//Player.KnownPosition.Pitch -= look.Y; 
-						
-						// MathHelper.Clamp(Player.KnownPosition.Pitch - look.Y, 0f, 180f);
-						//Player.KnownPosition.Pitch = MathHelper.Clamp(Player.KnownPosition.Pitch, -89.9f, 89.9f);
-						//Player.KnownPosition.HeadYaw = MathUtils.NormDeg(Player.KnownPosition.HeadYaw);
-						//Player.KnownPosition.Pitch = MathHelper.Clamp(Player.KnownPosition.Pitch, -89.9f, 89.9f);
-
-						//Player.KnownPosition.Pitch = MathHelper.Clamp(Player.KnownPosition.Pitch + look.Y, -89.9f, 89.9f);
-						// Player.KnownPosition.Yaw = (Player.KnownPosition.Yaw + look.X) % 360f;
-						// Player.KnownPosition.Yaw %= 360f;
 						_previousMousePosition = e;
 					}
 				}
 			}
 
 			LastVelocity = Player.Velocity;
-	    }
-	    
-	    float FixValue(float value)
-	    {
-		    var val = value;
-
-		    if (val < 0f)
-			    val = 360f - (MathF.Abs(val) % 360f);
-		    else if (val > 360f)
-			    val = val % 360f;
-
-		    return val;
 	    }
     }
 }

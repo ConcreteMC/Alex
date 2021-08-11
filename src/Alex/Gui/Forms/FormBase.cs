@@ -55,7 +55,7 @@ namespace Alex.Gui.Forms
         /// <inheritdoc />
         public override void OnClose()
         {
-            
+            Parent.Hide(FormId);
         }
     }
 }

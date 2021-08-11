@@ -51,7 +51,8 @@ namespace Alex.Entities
 
 		public BlockCoordinates BedPosition { get; set; } = BlockCoordinates.Zero;
 		public Color PotionColor { get; set; } = Color.White;
-
+		
+		public  bool CanSprint    => HealthManager.Hunger > 6;
 		//private PooledTexture2D _texture;
 		public RemotePlayer(World level, string geometry = "geometry.humanoid.customSlim", Skin skin = null) : base(level)
 		{
@@ -115,6 +116,46 @@ namespace Alex.Entities
 				_skin = value;
 
 				OnSkinValueChanged(value);
+			}
+		}
+		
+		public void SetSprinting(bool sprinting)
+		{
+			if (sprinting)
+			{
+				if (!IsSprinting && CanSprint)
+				{
+					//  Player.Network?.EntityAction((int) Player.EntityId, EntityAction.StartSprinting);
+					IsSprinting = true;
+				}
+			}
+			else
+			{
+				if (IsSprinting)
+				{
+					IsSprinting = false;
+					//  Player.Network?.EntityAction((int) Player.EntityId, EntityAction.StopSprinting);
+				}
+			}
+		}
+
+		public void SetFlying(bool flying)
+		{
+			Log.Info($"Tried to toggle fly. CanFly={CanFly} IsFlying={IsFlying} Target={flying}");
+
+			if (!CanFly)
+			{
+				IsFlying = false;
+				return;
+			}
+
+			if (!IsFlying && flying)
+			{
+				IsFlying = true;
+			}
+			else if (IsFlying && !flying)
+			{
+				IsFlying = false;
 			}
 		}
 

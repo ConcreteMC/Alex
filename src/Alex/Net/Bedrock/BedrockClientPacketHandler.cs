@@ -306,6 +306,11 @@ namespace Alex.Net.Bedrock
 			entity.CanFly = (flags & 0x40) != 0;
 			entity.HasCollision = (flags & 0x80) == 0;
 			entity.IsFlying = (flags & 0x200) != 0;
+
+			if (entity is Player player)
+			{
+				Log.Warn($"Server told player... CanFly={entity.CanFly} IsFlying={entity.IsFlying}");
+			}
 		}
 
 		public void HandleMcpeAdventureSettings(McpeAdventureSettings message)
