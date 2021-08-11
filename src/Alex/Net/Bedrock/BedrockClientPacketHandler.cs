@@ -16,6 +16,7 @@ using Alex.Entities.BlockEntities;
 using Alex.Entities.Components.Effects;
 using Alex.Entities.Projectiles;
 using Alex.Gui.Elements;
+using Alex.Gui.Elements.Scoreboard;
 using Alex.Net.Bedrock.Packets;
 using Alex.Networking.Java.Packets.Play;
 using Alex.ResourcePackLib.Json.Bedrock.Sound;

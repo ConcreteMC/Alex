@@ -26,13 +26,21 @@ namespace Alex.Utils
 		public int CenterX { get; set; }
 		public int CenterZ { get; set; }
 
-		private int[] _colors;
+		private int[][] _colors;
 		//private Texture2D _texture;
-		public Map(int width, int height)
+		
+		protected int Layers { get; }
+		public Map(int width, int height, int layers = 1)
 		{
+			Layers = layers;
 			Width = width;
 			Height = height;
-			_colors = new int[width * height];
+			_colors = new int[width * height][];
+
+			for (int i = 0; i < _colors.Length; i++)
+			{
+				_colors[i] = new int[layers];
+			}
 			//_texture = new Texture2D(Alex.Instance.GraphicsDevice, width, height);
 		}
 
@@ -45,17 +53,34 @@ namespace Alex.Utils
 		{
 			get
 			{
-				return _colors[x + y * Width];
+				return _colors[x + y * Width][0];
 			}
 			set
 			{
-				_colors[x + y * Width] = value;
+				_colors[x + y * Width][0] = value;
+			}
+		}
+		
+		public int this[int x, int y, int layer]
+		{
+			get
+			{
+				return _colors[x + y * Width][layer];
+			}
+			set
+			{
+				_colors[x + y * Width][layer] = value;
 			}
 		}
 
 		public Color GetColor(int x, int y)
 		{
 			return MapColor.GetBlockColor(this[x, y]);
+		}
+		
+		public Color GetColor(int x, int y, int layer)
+		{
+			return MapColor.GetBlockColor(this[x, y, layer]);
 		}
 
 		public Image GetImage()
@@ -68,14 +93,33 @@ namespace Alex.Utils
 			return image;
 		}
 		
-		public Color[] GetColors()
-		{
-			return _colors.Select(MapColor.GetBlockColor).ToArray();
-		}
+		//public Color[] GetColors()
+		//{
+		//	return _colors.Select(MapColor.GetBlockColor).ToArray();
+		//}
 
 		public uint[] GetData()
 		{
-			return _colors.Select(x =>  MapColor.GetBlockColor(x).PackedValue).ToArray();
+			Color[] colors = new Color[Width * Height];
+
+			for (int c = 0; c < _colors.Length; c++)
+			{
+				var layerData = _colors[c];
+				var color = MapColor.GetBlockColor(layerData[0]);
+
+				if (layerData.Length > 1)
+				{
+					for (int i = layerData.Length; i > 0; --i)
+					{
+						
+					}
+				}
+
+				colors[c] = color;
+			}
+
+			return colors.Select(x => x.PackedValue).ToArray();
+		//	return _colors.Select(x =>  MapColor.GetBlockColor(x).PackedValue).ToArray();
 		}
 
 		private void Dispose(bool disposing)

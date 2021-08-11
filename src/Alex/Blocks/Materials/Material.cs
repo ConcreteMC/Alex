@@ -50,7 +50,7 @@ namespace Alex.Blocks.Materials
 
 		public static readonly IMaterial Water = (new MaterialLiquid(Utils.MapColor.Water))
 		   .SetTranslucent()
-		   .WithTintType(TintType.Water, new Color(68, 175, 245));
+		   .WithTintType(TintType.Water, new Color(68, 175, 245, 64));
 
 		public static readonly IMaterial Lava = (new MaterialLiquid(Utils.MapColor.Fire));
 

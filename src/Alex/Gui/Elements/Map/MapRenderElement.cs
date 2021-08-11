@@ -41,7 +41,7 @@ namespace Alex.Gui.Elements.Map
             Height = 128;
             Anchor = Alignment.TopRight;
         }
-        
+
         public void SetSize(double multiplier)
         {
             Width = (int)Math.Ceiling(128 * multiplier);
@@ -63,9 +63,6 @@ namespace Alex.Gui.Elements.Map
                 return;
 
             _frameAccumulator = 0;
-            
-           // _rotation = (_world.Player.KnownPosition.HeadYaw).ToRadians();
-            //Rotation = _rotation;
         }
 
         private int _radius = 1;
@@ -124,7 +121,12 @@ namespace Alex.Gui.Elements.Map
                 if (texture != null)
                 {
                     var position = GetRenderPosition(new Vector3(container.Coordinates.X * 16f, 0f, container.Coordinates.Z * 16f), centerPosition, zoomScale);
-                    graphics.SpriteBatch.Draw((TextureSlice2D) texture, position, Color.White, 0f, Vector2.Zero, Vector2.One * zoomScale);
+                    var scale = 1f;
+
+                    if (texture.Width > 16)
+                        scale = (1f / texture.Width) * 16f;
+                    
+                    graphics.SpriteBatch.Draw((TextureSlice2D) texture, position, Color.White, 0f, Vector2.Zero, (Vector2.One * scale) * zoomScale);
                 }
             }
         }

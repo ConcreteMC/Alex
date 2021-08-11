@@ -41,7 +41,7 @@ namespace Alex.Gui.Elements.Map
 
         private readonly ConcurrentHashSet<MapIcon> _markers;
         public Vector3 CenterPosition => _world.Camera.Position;
-
+        
         public WorldMap(World world)
         {
             _world = world;
@@ -147,6 +147,10 @@ namespace Alex.Gui.Elements.Map
 
         public IEnumerable<RenderedMap> GetContainers(ChunkCoordinates center, int radius)
         {
+            var containers = _textureContainers;
+            if (containers == null || containers.IsEmpty)
+                yield break;
+            
             for (int x = center.X - radius; x < center.X + radius; x++)
             {
                 for (int y = center.Z - radius; y < center.Z + radius; y++)
@@ -161,7 +165,11 @@ namespace Alex.Gui.Elements.Map
         
         public IEnumerable<MapIcon> GetMarkers(ChunkCoordinates center, int radius)
         {
-            foreach (var icon in _markers.ToArray().OrderBy(x => x.DrawOrder))
+            var markers = _markers;
+            if (markers == null || markers.IsEmpty)
+                yield break;
+            
+            foreach (var icon in markers.Where(x => new ChunkCoordinates(x.Position).DistanceTo(center) <= radius).OrderBy(x => x.DrawOrder))
             {
                 yield return icon;
             }
@@ -171,10 +179,10 @@ namespace Alex.Gui.Elements.Map
         public void Update(GameTime gameTime)
         {
             var device = Alex.Instance.GraphicsDevice;
-
+            
             using (new GraphicsContext(device))
             {
-                foreach (var container in GetContainers(new ChunkCoordinates(_world.Camera.Position), _world.ChunkManager.RenderDistance))
+                foreach (var container in GetContainers(new ChunkCoordinates(CenterPosition), _world.ChunkManager.RenderDistance))
                 {
                     if (container.IsDirty)
                     {

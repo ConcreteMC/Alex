@@ -5,6 +5,7 @@ using Alex.Common.World;
 using RocketUI;
 using Alex.Gui.Elements;
 using Alex.Gui.Elements.Hud;
+using Alex.Gui.Elements.Scoreboard;
 using Microsoft.Xna.Framework;
 
 namespace Alex.Worlds.Abstraction

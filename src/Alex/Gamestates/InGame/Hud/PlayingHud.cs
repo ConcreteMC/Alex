@@ -9,6 +9,7 @@ using Alex.Gui.Elements;
 using Alex.Gui.Elements.Hud;
 using Alex.Gui.Elements.Inventory;
 using Alex.Gui.Elements.Map;
+using Alex.Gui.Elements.Scoreboard;
 using Alex.Net;
 using Alex.Utils.Inventories;
 using Alex.Worlds;

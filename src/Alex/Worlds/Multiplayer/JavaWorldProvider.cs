@@ -29,6 +29,7 @@ using Alex.Entities.Projectiles;
 using Alex.Gamestates;
 using Alex.Gui.Dialogs.Containers;
 using Alex.Gui.Elements;
+using Alex.Gui.Elements.Scoreboard;
 using Alex.Items;
 using Alex.Net;
 using Alex.Net.Java;
@@ -1343,8 +1344,6 @@ namespace Alex.Worlds.Multiplayer
 				case TeamsPacket.Mode.CreateTeam:
 					if (packet.Payload is TeamsPacket.CreateTeam ct)
 					{
-					//	Log.Info($"Create team! Name: {packet.TeamName} Displayname: {ct.TeamDisplayName} Prefix: {ct.TeamPrefix} Suffix: {ct.TeamSuffix} Entities: {string.Join(',', ct.Entities)}");
-						
 						Team team = new Team(
 							packet.TeamName, ct.TeamDisplayName, ct.TeamColor, ct.TeamPrefix, ct.TeamSuffix);
 						
@@ -1370,7 +1369,6 @@ namespace Alex.Worlds.Multiplayer
 				case TeamsPacket.Mode.UpdateTeam:
 					if (packet.Payload is TeamsPacket.UpdateTeam ut)
 					{
-					//	Log.Info($"Update team! Name: {packet.TeamName} Displayname: {ut.TeamDisplayName} Prefix: {ut.TeamPrefix} Suffix: {ut.TeamSuffix}");
 						if (TeamsManager.TryGet(packet.TeamName, out var team))
 						{
 							team.DisplayName = ut.TeamDisplayName;
@@ -1390,7 +1388,6 @@ namespace Alex.Worlds.Multiplayer
 					{
 						if (TeamsManager.TryGet(packet.TeamName, out var team))
 						{
-						//	Log.Info($"Add entities to team: Name={packet.TeamName} Entities: {string.Join(',', addPlayers.Entities)}");
 							foreach (var entity in addPlayers.Entities)
 							{
 								team.AddEntity(entity);
@@ -1406,7 +1403,6 @@ namespace Alex.Worlds.Multiplayer
 					{
 						if (TeamsManager.TryGet(packet.TeamName, out var team))
 						{
-						//	Log.Info($"Remove entities from team: Name={packet.TeamName} Entities: {string.Join(',', removePlayers.Entities)}");
 							foreach (var entity in removePlayers.Entities)
 							{
 								team.RemoveEntity(entity);

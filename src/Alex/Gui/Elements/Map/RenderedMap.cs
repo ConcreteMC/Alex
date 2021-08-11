@@ -9,13 +9,16 @@ namespace Alex.Gui.Elements.Map
 {
 	public class RenderedMap : Utils.Map, IDisposable
 	{
+		private const int Size = 16;
+		private const int Multiplier = Size / 16;
+		
 		public bool IsDirty { get; private set; }
 		public bool Invalidated { get; private set; } = false;
 
 		public Texture2D Texture { get; private set; }
 
 		public ChunkCoordinates Coordinates { get; }
-		public RenderedMap(ChunkCoordinates coordinates) : base(16,16)
+		public RenderedMap(ChunkCoordinates coordinates) : base(Size,Size, 1)
 		{
 			Coordinates = coordinates;
 		}
@@ -25,7 +28,7 @@ namespace Alex.Gui.Elements.Map
 			if (Texture != null)
 				return;
 
-			Texture = new Texture2D(device, 16, 16);
+			Texture = new Texture2D(device, Size, Size);
 		}
 
 		public void Update(World world, ChunkColumn target, GraphicsDevice device)
@@ -57,32 +60,47 @@ namespace Alex.Gui.Elements.Map
 						height--;
 						state = target.GetBlockState(x, height, z);
 						maxHeight = Math.Max(height, maxHeight);
-					} while (height > 0 && state.Block.BlockMaterial.MapColor.BaseColor.A <= 0);
-
-					var blockNorth = world.GetHeight(new BlockCoordinates((x + cx) + 1, height, (z + cz))) - 1;
-
-					var offset = 1;
-
-					if (blockNorth > height)
-					{
-						offset = 0;
-					}
-					else if (blockNorth < height)
-					{
-						offset = 2;
-					}
-
+					} while (height > 0 && (state.Block.BlockMaterial.MapColor.BaseColor.A <= 0));
 					var blockMaterial = state?.Block?.BlockMaterial;
+					
+					if (blockMaterial == null)
+						continue;
+						
+					var blockNorth = world.GetHeight(new BlockCoordinates((x + cx) + 1, height, (z + cz))) - 1;
+					var offsetNorth = GetOffset(blockNorth, height);
+					
+					//var blockEast = world.GetHeight(new BlockCoordinates((x + cx), height, (z + cz) + 1)) - 1;
+					//var offsetEast = GetOffset(blockEast, height);
 
-					if (blockMaterial != null)
-					{
-						this[x, z] = blockMaterial.MapColor.Index * 4 + offset;
-					}
+
+					var bx = x * Multiplier;
+					var bz = x * Multiplier;
+					this[bx, bz] = blockMaterial.MapColor.Index * 4 + offsetNorth;
+					this[bx, bz] = blockMaterial.MapColor.Index * 4 + offsetNorth;
+					
+					//this[bx, bz] = blockMaterial.MapColor.Index * 4 + offsetEast;
+					//this[bx, bz] = blockMaterial.MapColor.Index * 4 + offsetEast;
 				}
 			}
 
 			Texture.SetData(this.GetData());
 			IsDirty = false;
+		}
+
+		private int GetOffset(int neighbor, int self)
+		{
+			var offset = 1;
+
+			if (neighbor > self)
+			{
+				offset = 0;
+			}
+			else if (neighbor < self)
+			{
+				offset = 2;
+			}
+
+			return offset;
 		}
 
 		public void MarkDirty()
