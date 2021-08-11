@@ -1,7 +1,11 @@
 ﻿using System;
+using System.Diagnostics;
+using System.Text;
 using System.Threading.Tasks;
-using Alex.Common.Utils;
+using MojangAPI;
+using MojangAPI.Model;
 using Newtonsoft.Json;
+using Skin = Alex.Common.Utils.Skin;
 
 namespace Alex.Common.Services
 {
@@ -56,12 +60,50 @@ namespace Alex.Common.Services
         {
             IsSuccess = true;
             Profile = profile;
+            AuthResult = MojangAuthResult.Success;
         }
 
-        public PlayerProfileAuthenticateEventArgs(string errorMessage)
+        public MojangAuthResult AuthResult { get; }
+        public PlayerProfileAuthenticateEventArgs(string errorMessage, MojangAuthResult result)
         {
             IsSuccess = false;
             ErrorMessage = errorMessage;
+            AuthResult = result;
+        }
+
+        public string ToUserFriendlyString()
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.Append(ErrorMessage);
+
+            switch (AuthResult)
+            {
+                case MojangAuthResult.Success:
+                    sb.AppendJoin(' ', "Login Successful!");
+                    break;
+
+                case MojangAuthResult.BadRequest:
+                    sb.AppendJoin(' ', "Server received bad request.");
+                    break;
+
+                case MojangAuthResult.InvalidCredentials:
+                    sb.AppendJoin(' ', "Invalid Credentials");
+                    break;
+
+                case MojangAuthResult.InvalidSession:
+                    sb.AppendJoin(' ', "Invalid session.");
+                    break;
+
+                case MojangAuthResult.NoProfile:
+                    sb.AppendJoin(' ', "No profile found for user.");
+                    break;
+
+                case MojangAuthResult.UnknownError:
+                    sb.AppendJoin(' ', "Un unknown error occured.");
+                    break;
+            }
+
+            return sb.ToString();
         }
     }
 
@@ -73,7 +115,6 @@ namespace Alex.Common.Services
         PlayerProfile CurrentProfile { get; }
 
         Task<bool> TryAuthenticateAsync(string username, string password);
-	    Task<bool> TryAuthenticateAsync(PlayerProfile profile);
         void Force(PlayerProfile profile);
         
         PlayerProfile[] GetProfiles(string type);

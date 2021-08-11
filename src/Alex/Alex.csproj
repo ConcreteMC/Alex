@@ -127,13 +127,13 @@
     <PackageReference Include="DiscordRichPresence" Version="1.0.175" />
     <PackageReference Include="EasyPipes" Version="1.3.0" />
     <PackageReference Include="FmodAudio" Version="2.0.2" />
-    <PackageReference Include="Hawezo.MojangSharp" Version="0.5.1" />
     <PackageReference Include="JetBrains.Profiler.Api" Version="1.1.7" />
     <PackageReference Include="JKang.IpcServiceFramework.Server" Version="2.3.1" />
     <PackageReference Include="jose-jwt" Version="3.1.1" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="5.0.1" />
     <PackageReference Include="Microsoft.Identity.Client" Version="4.28.0" />
     <PackageReference Include="MiNET.fnbt" Version="1.0.22" />
+    <PackageReference Include="MojangAPI" Version="1.0.3" />
     <PackageReference Include="Mono.Cecil" Version="0.11.3" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageReference Include="NLog" Version="4.7.9" />

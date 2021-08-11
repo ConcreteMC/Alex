@@ -2,6 +2,7 @@ using System;
 using System.Threading.Tasks;
 using Alex.Common.Data.Servers;
 using Alex.Common.Services;
+using Alex.Common.Utils;
 using Alex.Gamestates.Login;
 using Alex.Gui;
 using Alex.Net;
@@ -11,8 +12,6 @@ using Alex.Utils;
 using Alex.Worlds.Abstraction;
 using Microsoft.Extensions.DependencyInjection;
 using MiNET.Utils;
-using MojangSharp.Api;
-using MojangSharp.Endpoints;
 
 namespace Alex.Worlds.Multiplayer.Java
 {
@@ -106,7 +105,7 @@ namespace Alex.Worlds.Multiplayer.Java
 
 		private async Task<bool> TryAuthenticate(IPlayerProfileService authenticationService, PlayerProfile profile)
 		{
-			Requester.ClientToken = profile.ClientToken;
+		//	Requester.ClientToken = profile.ClientToken;
 
 			if (await Validate(profile.AccessToken))
 			{
@@ -122,29 +121,8 @@ namespace Alex.Worlds.Multiplayer.Java
 		
 		private async Task<bool> Validate(string accessToken)
 		{
-			return await new Validate(accessToken)
-			   .PerformRequestAsync()
-			   .ContinueWith(task =>
-				{
-					if (task.IsFaulted)
-					{
-						//Authenticate?.Invoke(this, new PlayerProfileAuthenticateEventArgs("Validation faulted!"));
-						return false;
-					}
-
-					var r = task.Result;
-					if (r.IsSuccess)
-					{
-					//	Authenticate?.Invoke(this, new PlayerProfileAuthenticateEventArgs(CurrentProfile));
-						//Alex.Instance.GameStateManager.SetActiveState<TitleState>();
-						return true;
-					}
-					else
-					{
-					//	Authenticate?.Invoke(this, new PlayerProfileAuthenticateEventArgs(r.Error.ErrorMessage));
-						return false;
-					}
-				});
+			return await MojangApi.CheckGameOwnership(accessToken);
+			
 		}
 	}
 }

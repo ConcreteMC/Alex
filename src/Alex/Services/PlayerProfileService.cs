@@ -7,9 +7,9 @@ using Alex.Common.Utils;
 using Alex.Utils;
 using Alex.Utils.Skins;
 using Microsoft.Xna.Framework.Graphics;
-using MojangSharp.Api;
-using MojangSharp.Endpoints;
+using MojangAPI.Model;
 using NLog;
+using PlayerProfile = Alex.Common.Services.PlayerProfile;
 using Skin = Alex.Common.Utils.Skin;
 
 namespace Alex.Services
@@ -40,61 +40,51 @@ namespace Alex.Services
 				ProfileChanged?.Invoke(this, new PlayerProfileChangedEventArgs(_currentProfile));
 			}
 		}
-		
+
 		public async Task<bool> TryAuthenticateAsync(string username, string password)
 		{
-			var auth = await new Authenticate(new Credentials()
+			Session session = null;
+
+			try
 			{
-				Username = username,
-				Password = password
-			})
-				  .PerformRequestAsync();
-
-			if (auth.IsSuccess)
-			{
-				var profile = await new Profile(auth.SelectedProfile.Value).PerformRequestAsync();
-
-				bool skinSlim = false;
-				Texture2D texture = null;
-			
-				if (profile.Properties.SkinUri != null)
-				{
-					SkinUtils.TryGetSkin(profile.Properties.SkinUri, Alex.Instance.GraphicsDevice, out texture);
-				}
-
-
-				//if (profile.Properties.SkinUri != null)
-				//	{
-				//	SkinUtils.TryGetSkin(profile.Properties.SkinUri, Alex.Instance.GraphicsDevice, out texture);
-				//	}
-
-				var playerProfile = new PlayerProfile(auth.SelectedProfile.Value, username, auth.SelectedProfile.PlayerName, new Skin()
-					{
-						Slim = skinSlim, Texture = texture
-					},
-					auth.AccessToken, auth.ClientToken);
-
-			//	Authenticate?.Invoke(this, new PlayerProfileAuthenticateEventArgs(playerProfile));
-				CurrentProfile = playerProfile;
-				return await Validate(auth.AccessToken);
+				session = await MojangApi.TryMojangLogin(username, password);
 			}
-			else
+			catch (LoginFailedException ex)
 			{
-				Authenticate?.Invoke(this, new PlayerProfileAuthenticateEventArgs(auth.Error.ErrorMessage));
+				Log.Warn($"Error: {ex.Response.Result} - {ex.Response.ErrorMessage}");
+				Authenticate?.Invoke(this, new PlayerProfileAuthenticateEventArgs(ex.Response.ErrorMessage, ex.Response.Result));
 				return false;
 			}
-		}
 
-		public async Task<bool> TryAuthenticateAsync(PlayerProfile profile)
-		{
-			return false;
-			Requester.ClientToken = profile.ClientToken;
-			if (await Validate(profile.AccessToken))
+			if (session == null || session.IsEmpty)
 			{
-				CurrentProfile = profile;
+				Authenticate?.Invoke(this, new PlayerProfileAuthenticateEventArgs("Unknown error.", MojangAuthResult.UnknownError));
+				return false;
+			}
+
+			var profile = await MojangApi.GetPlayerProfile(session.AccessToken);
+
+			if (profile.IsSuccess)
+			{
+				Texture2D texture = null;
+
+				if (profile?.Skin?.Url != null)
+				{
+					SkinUtils.TryGetSkin(new Uri(profile?.Skin?.Url), Alex.Instance.GraphicsDevice, out texture);
+				}
+
+				var playerProfile = new PlayerProfile(
+					profile.UUID, profile.Name, profile.Name,
+					new Skin() { Slim = (profile.Skin?.Model == SkinType.Alex), Texture = texture },
+					session.AccessToken, session.ClientToken);
+
+				Authenticate?.Invoke(this, new PlayerProfileAuthenticateEventArgs(playerProfile));
+				CurrentProfile = playerProfile;
+
 				return true;
 			}
 
+			Authenticate?.Invoke(this, new PlayerProfileAuthenticateEventArgs(profile.ErrorMessage, MojangAuthResult.UnknownError));
 			return false;
 		}
 
@@ -105,29 +95,15 @@ namespace Alex.Services
 
 		private async Task<bool> Validate(string accessToken)
 		{
-			return await new Validate(accessToken)
-				.PerformRequestAsync()
-				.ContinueWith(task =>
+			var result = await MojangApi.CheckGameOwnership(accessToken);
+			if (result)
 			{
-                if (task.IsFaulted)
-                {
-                    Authenticate?.Invoke(this, new PlayerProfileAuthenticateEventArgs("Validation faulted!"));
-                    return false;
-                }
-
-				var r = task.Result;
-				if (r.IsSuccess)
-				{
-					Authenticate?.Invoke(this, new PlayerProfileAuthenticateEventArgs(CurrentProfile));
-					//Alex.Instance.GameStateManager.SetActiveState<TitleState>();
-					return true;
-				}
-				else
-				{
-					Authenticate?.Invoke(this, new PlayerProfileAuthenticateEventArgs(r.Error.ErrorMessage));
-					return false;
-				}
-			});
+				Authenticate?.Invoke(this, new PlayerProfileAuthenticateEventArgs(CurrentProfile));
+				return true;
+			}
+			
+			Authenticate?.Invoke(this, new PlayerProfileAuthenticateEventArgs("Game ownership check failed.", MojangAuthResult.UnknownError));
+			return false;
 		}
 
 		public PlayerProfile[] GetProfiles(string type)

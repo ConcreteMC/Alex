@@ -3,7 +3,6 @@ using Alex.Common.Services;
 using Alex.Common.Utils;
 using Alex.Gui;
 using Microsoft.Xna.Framework;
-using MojangSharp.Api;
 
 namespace Alex.Gamestates.Login
 {
@@ -42,7 +41,7 @@ namespace Alex.Gamestates.Login
 
 				if (activeProfile != null)
 				{
-					Requester.ClientToken = activeProfile.Profile.ClientToken;
+				//	Requester.ClientToken = activeProfile.Profile.ClientToken;
 					NameInput.Value = activeProfile.Profile.Username;
 				}
 			}
@@ -59,7 +58,7 @@ namespace Alex.Gamestates.Login
 			}
 			else
 			{
-				ErrorMessage.Text      = "Could not login: " + e.ErrorMessage;
+				ErrorMessage.Text      = "Could not login: " + e.ToUserFriendlyString();
 				ErrorMessage.TextColor = (Color) TextColor.Red;
 
 				EnableInput();
