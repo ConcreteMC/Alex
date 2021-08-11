@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Alex.Common.Graphics.GpuResources;
 using Alex.Common.Utils;
@@ -8,6 +9,9 @@ using Microsoft.Xna.Framework.Input;
 using NLog;
 using PuppeteerSharp;
 using PuppeteerSharp.Input;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
+using Color = Microsoft.Xna.Framework.Color;
 using Keys = Microsoft.Xna.Framework.Input.Keys;
 using Mouse = Microsoft.Xna.Framework.Input.Mouse;
 using MouseButton = PuppeteerSharp.Input.MouseButton;
@@ -72,48 +76,53 @@ namespace Alex.Gui.Elements.Web
 
     public void Update()
     {
-     // if (_frameDirty)
+      if (_frameDirty)
       {
-      //  _frameDirty = false;
+          _frameDirty = false;
         UpdateFrame(_page);
+      }
+    }
+
+    private Color[] GetRawData(byte[] bmpData)
+    {
+      using (Image<Rgba32> img = Image.Load(bmpData))
+      {
+        if (!img.TryGetSinglePixelSpan(out var outVal))
+        {
+          throw new Exception("Failed to convert data");
+        }
+
+        return outVal.ToArray().Select(x => new Color(x.PackedValue)).ToArray();
       }
     }
     
     private async void UpdateFrame(Page page)
     {
-      var bmpData = await page.ScreenshotDataAsync(new ScreenshotOptions()
-      {
-        OmitBackground = true,
-        
-      });
+      return;
+      var width = page.Viewport.Width;
+      var height = page.Viewport.Height;
       
+      var bmpData = await page.ScreenshotDataAsync(new ScreenshotOptions() { OmitBackground = true, Type = ScreenshotType.Png, BurstMode = true});
+
+      if (CurrentFrame != null && width == CurrentFrame.Width && height == CurrentFrame.Height)
       {
-       // if (CurrentFrame == null)
-        {
-          CurrentFrame = TextureUtils.ImageToTexture2D(this, Alex.Instance.GraphicsDevice, bmpData);
-         // CurrentFrame = GpuResourceManager.Get(this, Alex.Instance.GraphicsDevice);
-        }
-       // else
-        {
-        //  Image<Rgba32> img = Image.Load(bmpData);
-//
-        //  if (img.TryGetSinglePixelSpan(out var screenData))
-        //  {
-        //    CurrentFrame.SetData(screenData.ToArray().Select(x => new Color(x.PackedValue)).ToArray());
-         // }
-        }
+        CurrentFrame.SetData(GetRawData(bmpData));
+      }
+      else
+      {
+        CurrentFrame = TextureUtils.ImageToTexture2D(this, Alex.Instance.GraphicsDevice, bmpData);
       }
     }
-    
+
     private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(OffscreenBrowserRenderer));
     public async Task MainAsync(GraphicsDevice gd, IntPtr windowHandle, string url, object data, System.Drawing.Size size, double zoomLevel = 1.0)
     {
       Browser = await Puppeteer.LaunchAsync(
-        new LaunchOptions { Headless = true, DefaultViewport = new ViewPortOptions()
+        new LaunchOptions
         {
-           Height = size.Height,
-           Width = size.Width
-        }});
+          Headless = false, DefaultViewport = new ViewPortOptions() { Height = size.Height, Width = size.Width, },
+         // Args = 
+        });
       
       var page = await Browser.NewPageAsync();
       await page.SetJavaScriptEnabledAsync(true);
@@ -208,6 +217,8 @@ namespace Alex.Gui.Elements.Web
         //Log.Info($"Navigated: {e.Frame.Url}");
         OnNavigate?.Invoke(this, new Uri(e.Frame.Url));
         await Bind(_page);
+        
+        InvalidateView();
         // if (_page != null)
         // await Bind(_page);
       }
@@ -235,6 +246,7 @@ namespace Alex.Gui.Elements.Web
       if (Browser != null)
       {
           await _page.Mouse.WheelAsync(deltaX, deltaY);
+          InvalidateView();
       }
     }
     
@@ -243,6 +255,7 @@ namespace Alex.Gui.Elements.Web
       if (Browser != null)
       {
         await _page.Mouse.MoveAsync((decimal) x, (decimal) y);
+        InvalidateView();
       }
     }
     public async void HandleMouseDown(float x, float y, MouseButton type)
@@ -250,7 +263,10 @@ namespace Alex.Gui.Elements.Web
       if (Browser != null)
       {
         await _page.Mouse.MoveAsync((decimal) x, (decimal) y);
+        InvalidateView();
+        
         await _page.Mouse.DownAsync(new ClickOptions() {Button = type});
+        InvalidateView();
       }
     }
     public async void HandleMouseUp(float x, float y, MouseButton type)
@@ -258,7 +274,11 @@ namespace Alex.Gui.Elements.Web
       if (Browser != null)
       {
         await _page.Mouse.MoveAsync((decimal) x, (decimal) y);
+        InvalidateView();
+        
         await _page.Mouse.UpAsync(new ClickOptions() {Button = type});
+        InvalidateView();
+        
        // await _page.Mouse.ClickAsync(x, y, new ClickOptions() {Button = type});
       }
     }
@@ -299,11 +319,18 @@ namespace Alex.Gui.Elements.Web
         {
           await _page.Keyboard.PressAsync("Enter");
         }
+        else
+        {
+          return;
+        }
        // if (KeyDefinitions.TryGet(key, out var keyDefinition))
        // {
           //await _page.Keyboard.PressAsync(keyDefinition.Code);
        // }
       }
+     
+      
+      InvalidateView();
     }
   }
 }
