@@ -74,10 +74,9 @@ namespace Alex.Gui.Elements.Map
 
 
 					var bx = x * Multiplier;
-					var bz = x * Multiplier;
+					var bz = z * Multiplier;
 					this[bx, bz] = blockMaterial.MapColor.Index * 4 + offsetNorth;
-					this[bx, bz] = blockMaterial.MapColor.Index * 4 + offsetNorth;
-					
+
 					//this[bx, bz] = blockMaterial.MapColor.Index * 4 + offsetEast;
 					//this[bx, bz] = blockMaterial.MapColor.Index * 4 + offsetEast;
 				}
