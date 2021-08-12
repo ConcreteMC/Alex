@@ -27,7 +27,14 @@ namespace Alex.Gui.Dialogs
 				ShowCompass = true
 			};
 
-			ContentContainer.AddChild(_mapRenderer);
+			Container mapContainer = new Container()
+			{
+				Anchor = Alignment.Fill,
+				Padding = new Thickness(5)
+			};
+			mapContainer.AddChild(_mapRenderer);
+			
+			ContentContainer.AddChild(mapContainer);
 			
 			var leftContainer = new StackContainer
 			{

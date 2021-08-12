@@ -25,6 +25,7 @@ namespace Alex.Gamestates.InGame.Hud
     public class PlayingHud : Screen, IChatRecipient
     {
 	    private readonly MapRenderElement _miniMap;
+	    
         private readonly GuiItemHotbar _hotbar;
         private readonly PlayerController _playerController;
         private readonly HealthComponent _healthComponent;
@@ -37,6 +38,7 @@ namespace Alex.Gamestates.InGame.Hud
         private readonly MultiStackContainer _bottomContainer;
         private readonly TipPopupComponent _tipPopupComponent;
         private readonly StackContainer _healthAndHotbar;
+        private readonly StackContainer _rightSideStackContainer;
         
 	    public readonly ChatComponent Chat;
 	    public readonly TitleComponent Title;
@@ -116,14 +118,25 @@ namespace Alex.Gamestates.InGame.Hud
 
 	        BossBar = new BossBarContainer();
 
-	        Scoreboard = new ScoreboardView();
-	        Scoreboard.Anchor = Alignment.MiddleRight;
+	        Scoreboard = new ScoreboardView()
+	        {
+		        Anchor = Alignment.MiddleRight,
+		        Margin = new Thickness(0, 5, 0, 0)
+	        };
+	      //  Scoreboard.Anchor = Alignment.MiddleRight;
 
-	        _miniMap = new MapRenderElement(world.Map)
+	      _miniMap = new MapRenderElement(world.Map)
 	        {
 		        Anchor = Alignment.TopRight,
 		        ZoomLevel = ZoomLevel.Level8,
 		        FixedRotation = false
+	        };
+
+	        _rightSideStackContainer = new StackContainer()
+	        {
+		        Orientation = Orientation.Vertical, 
+		        Anchor = Alignment.FillRight,
+		        ChildAnchor = Alignment.Default
 	        };
 
 	        var options = Alex.Options.AlexOptions;
@@ -131,7 +144,8 @@ namespace Alex.Gamestates.InGame.Hud
 	        _miniMap.Radius = _renderDistanceAccessor.Value;
 
 	        _minimapAccessor = options.MiscelaneousOptions.Minimap.Bind(OnMinimapEnabledChanged);
-	        _miniMap.IsVisible = _minimapAccessor.Value;
+	        OnMinimapEnabledChanged(false, _minimapAccessor.Value);
+	        //_miniMap.IsVisible = _minimapAccessor.Value;
 
 	        _minimapSizeAccessor = options.MiscelaneousOptions.MinimapSize.Bind(OnMinimapSizeChanged);
 	        _miniMap.SetSize(_minimapSizeAccessor.Value);
@@ -158,6 +172,15 @@ namespace Alex.Gamestates.InGame.Hud
 
 		private void OnMinimapEnabledChanged(bool oldvalue, bool newvalue)
 		{
+			if (newvalue)
+			{
+				_rightSideStackContainer.ChildAnchor = Alignment.Default;
+			}
+			else
+			{
+				_rightSideStackContainer.ChildAnchor = Alignment.MiddleCenter;
+			}
+			
 			_miniMap.IsVisible = newvalue;
 		}
 
@@ -196,6 +219,10 @@ namespace Alex.Gamestates.InGame.Hud
 	        AddChild(_tipPopupComponent);
 	        
 	        AddChild(_bottomContainer);
+	        
+	        _rightSideStackContainer.AddChild(_miniMap);
+	        _rightSideStackContainer.AddChild(Scoreboard);
+	        AddChild(_rightSideStackContainer);
 
 	        AddChild(Chat);
 
@@ -203,11 +230,11 @@ namespace Alex.Gamestates.InGame.Hud
 	        AddChild(new AlexCrosshair());
 	        AddChild(Title);
 
-	        AddChild(Scoreboard);
+	        //AddChild(Scoreboard);
 		        
 	        AddChild(BossBar);
 	        
-	        AddChild(_miniMap);
+	       // AddChild(_miniMap);
 
 	        _didInit = true;
         }
