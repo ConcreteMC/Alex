@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Alex.Common.Input;
@@ -30,7 +31,7 @@ using MathF = System.MathF;
 
 namespace Alex.Entities
 {
-    public class PlayerController
+    public class PlayerController : IDisposable
     {
 	    private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(PlayerController));
 
@@ -47,6 +48,8 @@ namespace Alex.Entities
 		private InputManager GlobalInputManager { get; }
 		private GamePadInputListener GamePadInputListener { get; }
 
+		private List<InputActionBinding> _inputBindings { get; }
+
 		public PlayerController(GraphicsDevice graphics,
 			World world,
 			InputManager inputManager,
@@ -58,6 +61,7 @@ namespace Alex.Entities
 			World = world;
 			PlayerIndex = playerIndex;
 
+			_inputBindings = new List<InputActionBinding>();
 			//  IsFreeCam = true;
 
 			GlobalInputManager = inputManager;
@@ -83,116 +87,123 @@ namespace Alex.Entities
 			optionsProvider.AlexOptions.ControllerOptions.RightJoystickSensitivity.Bind(
 				(value, newValue) => { GamepadSensitivity = newValue; });
 
-			InputManager.RegisterListener(AlexInputCommand.Jump, InputBindingTrigger.Tap, CheckMovementPredicate, SetFlying);
-
-			InputManager.RegisterListener(AlexInputCommand.MoveUp, InputBindingTrigger.Tap, CheckMovementPredicate, SetFlying);
-
-			InputManager.RegisterListener(
-				AlexInputCommand.ToggleCamera, InputBindingTrigger.Tap, CheckMovementPredicate, () => World.Camera.ToggleMode());
-
-			InputManager.RegisterListener(
-				AlexInputCommand.DropItem, InputBindingTrigger.Tap, CheckMovementPredicate,
-				() => Player.DropHeldItem(InputManager.IsDown(AlexInputCommand.Sprint)));
-
-			InputManager.RegisterListener(
-				AlexInputCommand.HotBarSelect1, InputBindingTrigger.Tap, CheckMovementPredicate,
-				() => { player.Inventory.SelectedSlot = 0; });
-
-			InputManager.RegisterListener(
-				AlexInputCommand.HotBarSelect2, InputBindingTrigger.Tap, CheckMovementPredicate,
-				() => { player.Inventory.SelectedSlot = 1; });
-
-			InputManager.RegisterListener(
-				AlexInputCommand.HotBarSelect3, InputBindingTrigger.Tap, CheckMovementPredicate,
-				() => { player.Inventory.SelectedSlot = 2; });
-
-			InputManager.RegisterListener(
-				AlexInputCommand.HotBarSelect4, InputBindingTrigger.Tap, CheckMovementPredicate,
-				() => { player.Inventory.SelectedSlot = 3; });
-
-			InputManager.RegisterListener(
-				AlexInputCommand.HotBarSelect5, InputBindingTrigger.Tap, CheckMovementPredicate,
-				() => { player.Inventory.SelectedSlot = 4; });
-
-			InputManager.RegisterListener(
-				AlexInputCommand.HotBarSelect6, InputBindingTrigger.Tap, CheckMovementPredicate,
-				() => { player.Inventory.SelectedSlot = 5; });
-
-			InputManager.RegisterListener(
-				AlexInputCommand.HotBarSelect7, InputBindingTrigger.Tap, CheckMovementPredicate,
-				() => { player.Inventory.SelectedSlot = 6; });
-
-			InputManager.RegisterListener(
-				AlexInputCommand.HotBarSelect8, InputBindingTrigger.Tap, CheckMovementPredicate,
-				() => { player.Inventory.SelectedSlot = 7; });
-
-			InputManager.RegisterListener(
-				AlexInputCommand.HotBarSelect9, InputBindingTrigger.Tap, CheckMovementPredicate,
-				() => { player.Inventory.SelectedSlot = 8; });
-
-			InputManager.RegisterListener(
-				AlexInputCommand.Exit, InputBindingTrigger.Tap,
-				() => Alex.Instance.GuiManager.ActiveDialog != null, CloseActiveDialog);
-			
-			InputManager.RegisterListener(
-				AlexInputCommand.ToggleInventory, InputBindingTrigger.Discrete,
-				CanOpenDialog, OpenInventory);
-			
-			InputManager.RegisterListener(
-				AlexInputCommand.ToggleMap, InputBindingTrigger.Discrete,
-				CanOpenDialog, OpenMap);
-			
-			InputManager.RegisterListener(
-				AlexInputCommand.TakeScreenshot, InputBindingTrigger.Discrete, CheckMovementPredicate, () =>
+			_inputBindings.AddRange(
+				new[]
 				{
-					//Take screenshot.
-					Alex.Instance.UiTaskManager.Enqueue(
-						() =>
+					InputManager.RegisterListener(
+						AlexInputCommand.Jump, InputBindingTrigger.Tap, CheckMovementPredicate, SetFlying),
+					
+					InputManager.RegisterListener(AlexInputCommand.MoveUp, InputBindingTrigger.Tap, 
+						CheckMovementPredicate, SetFlying),
+					
+					InputManager.RegisterListener(
+						AlexInputCommand.ToggleCamera, InputBindingTrigger.Tap, CheckMovementPredicate,
+						() => World.Camera.ToggleMode()),
+					
+					InputManager.RegisterListener(
+						AlexInputCommand.DropItem, InputBindingTrigger.Tap, CheckMovementPredicate,
+						() => Player.DropHeldItem(InputManager.IsDown(AlexInputCommand.Sprint))),
+					
+					InputManager.RegisterListener(
+						AlexInputCommand.HotBarSelect1, InputBindingTrigger.Tap, CheckMovementPredicate,
+						() => { player.Inventory.SelectedSlot = 0; }),
+					
+					InputManager.RegisterListener(
+						AlexInputCommand.HotBarSelect2, InputBindingTrigger.Tap, CheckMovementPredicate,
+						() => { player.Inventory.SelectedSlot = 1; }),
+					
+					InputManager.RegisterListener(
+						AlexInputCommand.HotBarSelect3, InputBindingTrigger.Tap, CheckMovementPredicate,
+						() => { player.Inventory.SelectedSlot = 2; }),
+					
+					InputManager.RegisterListener(
+						AlexInputCommand.HotBarSelect4, InputBindingTrigger.Tap, CheckMovementPredicate,
+						() => { player.Inventory.SelectedSlot = 3; }),
+					
+					InputManager.RegisterListener(
+						AlexInputCommand.HotBarSelect5, InputBindingTrigger.Tap, CheckMovementPredicate,
+						() => { player.Inventory.SelectedSlot = 4; }),
+					
+					InputManager.RegisterListener(
+						AlexInputCommand.HotBarSelect6, InputBindingTrigger.Tap, CheckMovementPredicate,
+						() => { player.Inventory.SelectedSlot = 5; }),
+					
+					InputManager.RegisterListener(
+						AlexInputCommand.HotBarSelect7, InputBindingTrigger.Tap, CheckMovementPredicate,
+						() => { player.Inventory.SelectedSlot = 6; }),
+					
+					InputManager.RegisterListener(
+						AlexInputCommand.HotBarSelect8, InputBindingTrigger.Tap, CheckMovementPredicate,
+						() => { player.Inventory.SelectedSlot = 7; }),
+					
+					InputManager.RegisterListener(
+						AlexInputCommand.HotBarSelect9, InputBindingTrigger.Tap, CheckMovementPredicate,
+						() => { player.Inventory.SelectedSlot = 8; }),
+					
+					InputManager.RegisterListener(
+						AlexInputCommand.Exit, InputBindingTrigger.Tap,
+						() => Alex.Instance.GuiManager.ActiveDialog != null, CloseActiveDialog),
+					
+					InputManager.RegisterListener(
+						AlexInputCommand.ToggleInventory, InputBindingTrigger.Discrete, CanOpenDialog, OpenInventory),
+					
+					InputManager.RegisterListener(
+						AlexInputCommand.ToggleMap, InputBindingTrigger.Discrete, CanOpenDialog, OpenMap),
+					
+					InputManager.RegisterListener(
+						AlexInputCommand.TakeScreenshot, InputBindingTrigger.Discrete, CheckMovementPredicate, () =>
 						{
-							var blendMode = Graphics.BlendState;
-
-							try
-							{
-								Graphics.BlendState = BlendState.NonPremultiplied;
-
-								var graphicsDevice = Alex.Instance.GraphicsDevice;
-								//	var viewPort = Alex.Instance.DeviceManager.PreferredBackBufferWidth
-								var w = graphicsDevice.PresentationParameters.BackBufferWidth;
-								var h = graphicsDevice.PresentationParameters.BackBufferHeight;
-								Color[] data = new Color[w * h];
-
-								graphicsDevice.GetBackBufferData(data);
-
-								Image<Rgba32> t = Image.LoadPixelData(
-									data.Select(x => new Rgba32(x.PackedValue)).ToArray(), w, h);
-
-								//Texture2D t = new Texture2D(graphicsDevice, w, h, false, SurfaceFormat.Color);
-								//t.SetData(data);
-								var pics = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures);
-								var screenshotPath = Path.Combine(pics, $"alex-{DateTime.Now.ToString("s")}.png");
-
-								using (FileStream fs = File.OpenWrite(screenshotPath))
+							//Take screenshot.
+							Alex.Instance.UiTaskManager.Enqueue(
+								() =>
 								{
-									t.SaveAsPng(fs);
-								}
+									var blendMode = Graphics.BlendState;
 
-								t.Dispose();
+									try
+									{
+										Graphics.BlendState = BlendState.NonPremultiplied;
 
-								ChatComponent.AddSystemMessage(
-									$"{ChatColors.Gray}{ChatFormatting.Italic}Saved screenshot to: {screenshotPath}");
-							}
-							catch (Exception error)
-							{
-								Log.Error(error, $"Failed to save screenshot.");
+										var graphicsDevice = Alex.Instance.GraphicsDevice;
+										//	var viewPort = Alex.Instance.DeviceManager.PreferredBackBufferWidth
+										var w = graphicsDevice.PresentationParameters.BackBufferWidth;
+										var h = graphicsDevice.PresentationParameters.BackBufferHeight;
+										Color[] data = new Color[w * h];
 
-								ChatComponent.AddSystemMessage(
-									$"{ChatColors.Red}Failed to save screenshot, see console for more information.");
-							}
-							finally
-							{
-								Graphics.BlendState = blendMode;
-							}
-						});
+										graphicsDevice.GetBackBufferData(data);
+
+										Image<Rgba32> t = Image.LoadPixelData(
+											data.Select(x => new Rgba32(x.PackedValue)).ToArray(), w, h);
+
+										//Texture2D t = new Texture2D(graphicsDevice, w, h, false, SurfaceFormat.Color);
+										//t.SetData(data);
+										var pics = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures);
+
+										var screenshotPath = Path.Combine(
+											pics, $"alex-{DateTime.Now.ToString("s")}.png");
+
+										using (FileStream fs = File.OpenWrite(screenshotPath))
+										{
+											t.SaveAsPng(fs);
+										}
+
+										t.Dispose();
+
+										ChatComponent.AddSystemMessage(
+											$"{ChatColors.Gray}{ChatFormatting.Italic}Saved screenshot to: {screenshotPath}");
+									}
+									catch (Exception error)
+									{
+										Log.Error(error, $"Failed to save screenshot.");
+
+										ChatComponent.AddSystemMessage(
+											$"{ChatColors.Red}Failed to save screenshot, see console for more information.");
+									}
+									finally
+									{
+										Graphics.BlendState = blendMode;
+									}
+								});
+						})
 				});
 		}
 
@@ -514,6 +525,18 @@ namespace Alex.Entities
 			}
 
 			LastVelocity = Player.Velocity;
+	    }
+
+	    /// <inheritdoc />
+	    public void Dispose()
+	    {
+		    var bindings = _inputBindings.ToArray();
+		    _inputBindings.Clear();
+
+		    foreach (var binding in bindings)
+		    {
+			    InputManager.UnregisterListener(binding);
+		    }
 	    }
     }
 }

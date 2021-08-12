@@ -1,6 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Alex.Common.Blocks;
+using Alex.Common.Utils.Vectors;
+using Alex.Gui.Elements.Map;
 using fNbt;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -12,19 +15,28 @@ namespace Alex.Utils
 {
 	public interface IMap : IDisposable
 	{
+		int Width { get; }
+		int Height { get; }
 		float Scale { get; }
-		int CenterX { get; }
-		int CenterZ { get; }
+		Vector3 Center { get; }
+		float Rotation { get; }
+
+		uint[] GetData();
+		Texture2D GetTexture(GraphicsDevice device);
+		
+		IEnumerable<MapIcon> GetMarkers(ChunkCoordinates center, int radius);
 	}
 	
 	public class Map : IMap
 	{
 		public int Width { get; }
 		public int Height { get; }
-		public float Scale { get; } = 1f;
+		public float Scale { get; set; } = 1f;
+		public Vector3 Center { get; set; } = Vector3.Zero;
+		public float Rotation { get; set; } = 0f;
 		
-		public int CenterX { get; set; }
-		public int CenterZ { get; set; }
+		//public int CenterX { get; set; }
+	//	public int CenterZ { get; set; }
 
 		private int[][] _colors;
 		//private Texture2D _texture;
@@ -98,7 +110,7 @@ namespace Alex.Utils
 		//	return _colors.Select(MapColor.GetBlockColor).ToArray();
 		//}
 
-		public uint[] GetData()
+		public virtual uint[] GetData()
 		{
 			Color[] colors = new Color[Width * Height];
 
@@ -120,6 +132,21 @@ namespace Alex.Utils
 
 			return colors.Select(x => x.PackedValue).ToArray();
 		//	return _colors.Select(x =>  MapColor.GetBlockColor(x).PackedValue).ToArray();
+		}
+
+		/// <inheritdoc />
+		public virtual Texture2D GetTexture(GraphicsDevice device)
+		{
+			var texture = new Texture2D(device, Width, Height);
+			texture.SetData(GetData());
+
+			return texture;	
+		}
+
+		/// <inheritdoc />
+		public IEnumerable<MapIcon> GetMarkers(ChunkCoordinates center, int radius)
+		{
+			yield break;
 		}
 
 		private void Dispose(bool disposing)

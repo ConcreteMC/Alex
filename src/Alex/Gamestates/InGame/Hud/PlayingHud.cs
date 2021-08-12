@@ -122,7 +122,8 @@ namespace Alex.Gamestates.InGame.Hud
 	        _miniMap = new MapRenderElement(world.Map)
 	        {
 		        Anchor = Alignment.TopRight,
-		        ZoomLevel = ZoomLevel.Level8
+		        ZoomLevel = ZoomLevel.Level8,
+		        FixedRotation = false
 	        };
 
 	        var options = Alex.Options.AlexOptions;

@@ -127,10 +127,13 @@ namespace Alex.Worlds
 			TickManager = new TickManager();
 			PlayerList = new PlayerList();
 
+			Map = new WorldMap(this);
+			
 			TickManager.RegisterTicked(this);
 			TickManager.RegisterTicked(EntityManager);
 			TickManager.RegisterTicked(ChunkManager);
-
+			TickManager.RegisterTicked(Map);
+			
 			var resources = serviceProvider.GetRequiredService<ResourceManager>();
 
 			Player = new Player(graphics, serviceProvider.GetRequiredService<Alex>().InputManager, this, networkProvider, PlayerIndex.One);
@@ -187,7 +190,6 @@ namespace Alex.Worlds
 				}
 			}
 			
-			Map = new WorldMap(this);
 			Player.MapIcon.Marker = MapMarker.GreenPointer;
 			Player.MapIcon.DrawOrder = int.MaxValue;
 			Map.Add(Player.MapIcon);
@@ -519,8 +521,6 @@ namespace Alex.Worlds
 			}
 
 			_wasInWater = inWater;
-			
-			Map?.Update(args.GameTime);
 		}
 
 		public void OnTick()

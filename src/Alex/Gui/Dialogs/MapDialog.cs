@@ -1,6 +1,7 @@
 using System;
 using Alex.Common.Gui.Elements;
 using Alex.Gui.Elements.Map;
+using Alex.Utils;
 using Alex.Worlds;
 using Microsoft.Xna.Framework;
 using RocketUI;
@@ -11,7 +12,8 @@ namespace Alex.Gui.Dialogs
 	public class MapDialog : DialogBase
 	{
 		private MapRenderElement _mapRenderer;
-		public MapDialog(WorldMap world)
+		private AlexButton _zoomInBtn, _zoomOutBtn;
+		public MapDialog(IMap world)
 		{
 			Anchor = Alignment.Fill;
 			ContentContainer.Anchor = Alignment.Fill;
@@ -22,8 +24,10 @@ namespace Alex.Gui.Dialogs
 				Anchor = Alignment.Fill,
 				Radius = 128,
 				ZoomLevel = ZoomLevel.Maximum,
-				ShowCompass = false
+				ShowCompass = true
 			};
+
+			ContentContainer.AddChild(_mapRenderer);
 			
 			var leftContainer = new StackContainer
 			{
@@ -31,10 +35,14 @@ namespace Alex.Gui.Dialogs
 				Anchor = Alignment.TopLeft,
 				BackgroundOverlay = new Color(Color.Black, 0.3f),
 				ChildAnchor = Alignment.TopLeft,
-				Padding = new Thickness(2)
+				Padding = new Thickness(2),
+				Margin = new Thickness(2)
 			};
 
-			leftContainer.AddChild(new AutoUpdatingTextElement(() => $"Coordinates: {world.CenterPosition.ToString()}"));
+			leftContainer.AddChild(
+				new AutoUpdatingTextElement(
+					() =>
+						$"Coordinates: X={world.Center.X:F2} Y={world.Center.Y:F2} Z={world.Center.Z:F2}"));
 			
 			ContentContainer.AddChild(leftContainer);
 			
@@ -44,22 +52,13 @@ namespace Alex.Gui.Dialogs
 				Anchor = Alignment.TopRight,
 				BackgroundOverlay = new Color(Color.Black, 0.3f),
 				ChildAnchor = Alignment.TopRight,
-				Padding = new Thickness(2)
+				Padding = new Thickness(2),
+				Margin = new Thickness(2)
 			};
 
-			rightContainer.AddChild(new AutoUpdatingTextElement(() => $"Zoom: {_mapRenderer.ZoomLevel}"));
+			rightContainer.AddChild(new AutoUpdatingTextElement(() => $"Zoom Level: {_mapRenderer.ZoomLevel}"));
 			
 			ContentContainer.AddChild(rightContainer);
-
-			var middleContainer = new RocketElement()
-			{
-				//	Orientation = Orientation.Vertical,
-				Anchor = Alignment.Fill,
-				//	ChildAnchor = Alignment.Fill
-			};
-			//middleContainer.AddChild(_mapRenderer);
-			
-			ContentContainer.AddChild(_mapRenderer);
 			
 			var bottomContainer = new StackContainer
 			{
@@ -69,13 +68,13 @@ namespace Alex.Gui.Dialogs
 				BackgroundOverlay = new Color(Color.Black, 0.3f)
 			};
 
-			bottomContainer.AddChild(new AlexButton("Exit", () =>
+			bottomContainer.AddChild(new AlexButton("Close", () =>
 			{
 				GuiManager.HideDialog(this);
 			}));
 			
-			bottomContainer.AddChild(new AlexButton("Zoom In", ZoomIn));
-			bottomContainer.AddChild(new AlexButton("Zoom Out", ZoomOut));
+			bottomContainer.AddChild(_zoomInBtn = new AlexButton("Zoom In", ZoomIn));
+			bottomContainer.AddChild(_zoomOutBtn = new AlexButton("Zoom Out", ZoomOut));
 			
 			ContentContainer.AddChild(bottomContainer);
 		}
@@ -90,8 +89,9 @@ namespace Alex.Gui.Dialogs
 			_displayHud = option.Value;
 			
 			option.Value = false;
+
+			UpdateZoomButtons();
 		}
-		
 
 		/// <inheritdoc />
 		public override void OnClose()
@@ -100,29 +100,41 @@ namespace Alex.Gui.Dialogs
 			Alex.Instance.Options.AlexOptions.VideoOptions.DisplayHud.Value = _displayHud;
 		}
 
-		/// <inheritdoc />
-		protected override void OnInit(IGuiRenderer renderer)
+		private void UpdateZoomButtons()
 		{
-			base.OnInit(renderer);
+			if (_mapRenderer.ZoomLevel >= ZoomLevel.Minimum && _mapRenderer.ZoomLevel <= ZoomLevel.Maximum)
+			{
+				_zoomInBtn.Enabled = true;
+				_zoomOutBtn.Enabled = true;
+				
+				return;
+			}
 			
-		}
+			if (_mapRenderer.ZoomLevel >= ZoomLevel.Maximum)
+			{
+				_zoomInBtn.Enabled = true;
+				_zoomOutBtn.Enabled = false;
 
-		/// <inheritdoc />
-		protected override void OnUpdate(GameTime gameTime)
-		{
-			base.OnUpdate(gameTime);
+				return;
+			}
+			
+			if (_mapRenderer.ZoomLevel <= ZoomLevel.Minimum)
+			{
+				_zoomInBtn.Enabled = false;
+				_zoomOutBtn.Enabled = true;
+			}
 		}
 
 		private void ZoomIn()
 		{
 			_mapRenderer.ZoomLevel--;
-		//	_mapRenderer.Scale = Math.Clamp(_mapRenderer.Scale + 1, 1, 10);
+			UpdateZoomButtons();
 		}
 
 		private void ZoomOut()
 		{
 			_mapRenderer.ZoomLevel++;
-			//_mapRenderer.Scale = Math.Clamp(_mapRenderer.Scale - 1, 1, 10);
+			UpdateZoomButtons();
 		}
 
 		/// <inheritdoc />

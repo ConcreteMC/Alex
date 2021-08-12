@@ -966,5 +966,13 @@ namespace Alex.Entities
 			    Network?.PlayerAnimate(leftHanded ? PlayerAnimations.SwingLeftArm : PlayerAnimations.SwingRightArm);
 		    }
 	    }
+
+	    /// <inheritdoc />
+	    protected override void OnDispose()
+	    {
+		    base.OnDispose();
+		    
+		    Controller?.Dispose();
+	    }
     }
 }

@@ -1,18 +1,20 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Collections.Specialized;
-using System.Drawing;
+using System.IO;
 using System.Linq;
-using Alex.Common.Utils.Collections;
 using Alex.Common.Utils.Vectors;
+using Alex.Common.World;
 using Alex.Entities;
+using Alex.Utils;
 using Alex.Worlds;
 using ConcurrentCollections;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using MiNET.Worlds;
+using NLog;
+using NLog.Fluent;
 using RocketUI;
-using Rectangle = Microsoft.Xna.Framework.Rectangle;
 
 namespace Alex.Gui.Elements.Map
 {
@@ -34,15 +36,31 @@ namespace Alex.Gui.Elements.Map
         Default = Level6,
     }
     
-	public class WorldMap : IUpdateable, IDisposable
+	public class WorldMap : IMap, ITicked, IDisposable
     {
+        private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(WorldMap));
+        
         private readonly World _world;
         private readonly ConcurrentDictionary<ChunkCoordinates, RenderedMap> _textureContainers = new();
 
         private readonly ConcurrentHashSet<MapIcon> _markers;
-        public Vector3 CenterPosition => _world.Camera.Position;
-        public float MapRotation => 180f - _world.Player.KnownPosition.HeadYaw;
         
+        
+        /// <inheritdoc />
+        public int Width => (_world.ChunkManager.RenderDistance) * 16;
+
+        /// <inheritdoc />
+        public int Height => (_world.ChunkManager.RenderDistance) * 16;
+
+        /// <inheritdoc />
+        public float Scale { get; } = 1f;
+
+        /// <inheritdoc />
+        public Vector3 Center => _world?.Camera?.Position ?? Vector3.Zero;
+
+        /// <inheritdoc />
+        public float Rotation => 180f - _world.Player.KnownPosition.HeadYaw;
+
         public WorldMap(World world)
         {
             _world = world;
@@ -100,7 +118,8 @@ namespace Alex.Gui.Elements.Map
 
         private void OnChunkRemoved(object sender, ChunkRemovedEventArgs e)
         {
-            RemoveContainer(e.Position);
+            if (TryGetContainer(e.Position, out var container))
+                container.Invalidate();
         }
 
         private void OnChunkAdded(object sender, ChunkAddedEventArgs e)
@@ -130,8 +149,8 @@ namespace Alex.Gui.Elements.Map
 
             if (container.Invalidated)
             {
-                RemoveContainer(coordinates);
-                return false;
+               // RemoveContainer(coordinates);
+                //return false;
             }
 
             return true;
@@ -146,7 +165,7 @@ namespace Alex.Gui.Elements.Map
             }
         }
 
-        public IEnumerable<RenderedMap> GetContainers(ChunkCoordinates center, int radius)
+        private IEnumerable<RenderedMap> GetContainers(ChunkCoordinates center, int radius)
         {
             var containers = _textureContainers;
             if (containers == null || containers.IsEmpty)
@@ -163,7 +182,75 @@ namespace Alex.Gui.Elements.Map
                 }
             }
         }
-        
+
+        /// <inheritdoc />
+        public uint[] GetData()
+        {
+            throw new NotImplementedException();
+        }
+
+        private Texture2D _texture = null;
+        private ChunkCoordinates _previousCenter = ChunkCoordinates.Zero;
+        /// <inheritdoc />
+        public Texture2D GetTexture(GraphicsDevice device)
+        {
+            var elementSize = 16;
+            var center = new ChunkCoordinates(Center);
+            var forceRedraw = center != _previousCenter;
+            
+            if (_texture == null || _texture.IsDisposed || _texture.Width != Width || _texture.Height != Height)
+            {
+                var oldTexture = _texture;
+                _texture = new Texture2D(device, Width, Height);
+                forceRedraw = true;
+                
+                oldTexture?.Dispose();
+            }
+
+            if (forceRedraw)
+            {
+                _texture.SetData(ArrayOf<uint>.Create(Width * Height));
+            }
+            
+            foreach (var container in GetContainers(center, _world.ChunkManager.RenderDistance))
+            {
+               // if (container.Invalidated)
+              //      continue;
+                
+                if (!forceRedraw && !container.PendingChanges && !container.Invalidated) continue;
+
+                var coordinates = container.Coordinates;
+                var distance = coordinates - center;
+
+                var renderPos = new Vector2(Width / 2f, Height / 2f);
+                renderPos += new Vector2(distance.X * elementSize, distance.Z * elementSize);
+
+                var pos = renderPos.ToPoint();
+                
+                var width = elementSize;
+                var height = elementSize;
+
+                var destination = new Rectangle(pos.X, pos.Y, width, height);
+
+                if (!_texture.Bounds.Contains(destination))
+                {
+                    Log.Warn($"Texture position out of bounds.");
+                }
+                else
+                {
+                    var data = container.GetData();
+                    _texture.SetData(0, destination, data, 0, data.Length);
+                    //didChange = true;
+                }
+                
+                if (container.Invalidated)
+                    RemoveContainer(container.Coordinates);
+            }
+
+            _previousCenter = center;
+            return _texture;
+        }
+
         public IEnumerable<MapIcon> GetMarkers(ChunkCoordinates center, int radius)
         {
             var markers = _markers;
@@ -177,34 +264,17 @@ namespace Alex.Gui.Elements.Map
         }
 
         /// <inheritdoc />
-        public void Update(GameTime gameTime)
+        public void OnTick()
         {
-            var device = Alex.Instance.GraphicsDevice;
-            
-            using (new GraphicsContext(device))
+            foreach (var container in GetContainers(new ChunkCoordinates(Center), _world.ChunkManager.RenderDistance))
             {
-                foreach (var container in GetContainers(new ChunkCoordinates(CenterPosition), _world.ChunkManager.RenderDistance))
+                if (container.IsDirty)
                 {
-                    if (container.IsDirty)
-                    {
-                        _world.ChunkManager.TryGetChunk(container.Coordinates, out var chunk);
-                        container.Update(_world, chunk, device);
-                    }
+                    _world.ChunkManager.TryGetChunk(container.Coordinates, out var chunk);
+                    container.Update(_world, chunk);
                 }
             }
         }
-
-        /// <inheritdoc />
-        public bool Enabled { get; } = true;
-
-        /// <inheritdoc />
-        public int UpdateOrder { get; } = 0;
-
-        /// <inheritdoc />
-        public event EventHandler<EventArgs> EnabledChanged;
-
-        /// <inheritdoc />
-        public event EventHandler<EventArgs> UpdateOrderChanged;
 
         /// <inheritdoc />
         public void Dispose()

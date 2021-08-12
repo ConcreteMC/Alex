@@ -127,7 +127,7 @@ namespace Alex.Worlds.Singleplayer
 			ThreadCancellationTokenSource = new CancellationTokenSource();
 		}
 
-        private IEnumerable<ChunkColumn> GenerateChunks(ChunkCoordinates center, int renderDistance)
+        private IEnumerable<ChunkCoordinates> GenerateChunks(ChunkCoordinates center, int renderDistance)
 		{
 			var oldChunks = _loadedChunks.ToArray();
 			
@@ -139,37 +139,31 @@ namespace Alex.Worlds.Singleplayer
 			int minX = Math.Min(center.X - renderDistance, center.X + renderDistance);
 			int maxX = Math.Max(center.X - renderDistance, center.X + renderDistance);
 
-			List<Task<ChunkColumn>> generatorTasks = new List<Task<ChunkColumn>>();
+			//List<Task<ChunkColumn>> generatorTasks = new List<Task<ChunkColumn>>();
 			for (int x = minX; x <= maxX; x++)
 			for (int z = minZ; z <= maxZ; z++)
 			{
 				var cc = new ChunkCoordinates(x, z);
 				newChunkCoordinates.Add(cc);
 
-				if (!_loadedChunks.Contains(cc))
-				{
-					_loadedChunks.Add(cc);
-					
-					generatorTasks.Add(Task.Run(
-						() =>
-						{
-							return _generator.GenerateChunkColumn(cc);
-						}));
-				}
+				yield return cc;
 			}
 
-			Task.WaitAll(generatorTasks.ToArray());
-
-			foreach (var task in generatorTasks)
+			Parallel.ForEach<ChunkCoordinates>(newChunkCoordinates, coordinates =>
 			{
-				var chunk = task.Result;
-				if (chunk == null) continue;
+				if (!_loadedChunks.Contains(coordinates))
+				{
+					_loadedChunks.Add(coordinates);
 
-				base.World.ChunkManager.AddChunk(chunk, new ChunkCoordinates(chunk.X, chunk.Z), false);
-				LoadEntities(chunk);
+					var chunk = _generator.GenerateChunkColumn(coordinates);
+					if (chunk == null) return;
 					
-				yield return chunk;
-			}
+					base.World.ChunkManager.AddChunk(chunk, new ChunkCoordinates(chunk.X, chunk.Z), false);
+					LoadEntities(chunk);
+				}
+			});
+			
+			//Task.WaitAll(generatorTasks.ToArray());
 
 			foreach (var chunk in oldChunks)
 			{
@@ -249,13 +243,13 @@ namespace Alex.Worlds.Singleplayer
 
 			Stopwatch sw = Stopwatch.StartNew();
 
-			foreach (var chunk in GenerateChunks(center, t))
+			foreach (var cc in GenerateChunks(center, t))
 			{
 				count++;
 
 				//base.World.ChunkManager.AddChunk(chunk, new ChunkCoordinates(chunk.X, chunk.Z), false);
 
-				progressReport(LoadingState.LoadingChunks, (int) Math.Floor((count / target) * 100));
+				progressReport(LoadingState.LoadingChunks, (int) Math.Floor((_loadedChunks.Count / target) * 100));
 			}
 
 			var loaded = sw.Elapsed;

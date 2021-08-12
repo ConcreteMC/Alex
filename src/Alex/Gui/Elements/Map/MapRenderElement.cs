@@ -1,10 +1,6 @@
 ﻿using System;
-using System.Collections.ObjectModel;
-using System.Collections.Specialized;
-using System.Linq;
 using Alex.Common.Utils.Vectors;
-using Alex.Entities;
-using Alex.Worlds;
+using Alex.Utils;
 using Microsoft.Xna.Framework;
 using RocketUI;
 
@@ -12,10 +8,7 @@ namespace Alex.Gui.Elements.Map
 {
     public class MapRenderElement : RocketElement
     {
-        private WorldMap _map;
-
-        private       float _frameAccumulator = 0f;
-        private       float _targetTime        = 1f / 10f;
+        private IMap _map;
 
         private static readonly byte MaxZoomLevel = (byte) ZoomLevel.Maximum;
         private static readonly byte MinZoomLevel = (byte) ZoomLevel.Minimum;
@@ -29,9 +22,38 @@ namespace Alex.Gui.Elements.Map
                 _zoomLevel = (ZoomLevel)Math.Clamp((byte)value, MinZoomLevel, MaxZoomLevel);
             }
         }
+        
+        private bool _showCompass = false;
+        public bool ShowCompass
+        {
+            get
+            {
+                return _showCompass;
+            }
+            set
+            {
+                _showCompass = value;
+                _north.IsVisible = value;
+                _east.IsVisible = value;
+                _south.IsVisible = value;
+                _west.IsVisible = value;
+            }
+        }
+
+        private int _radius = 1;
+        public int Radius
+        {
+            get => _radius;
+            set
+            {
+                _radius = value;
+            }
+        }
+        
+        public bool FixedRotation { get; set; } = true;
 
         private TextElement _north, _east, _south, _west;
-        public MapRenderElement(WorldMap map)
+        public MapRenderElement(IMap map)
         {
             _map = map;
 
@@ -72,23 +94,6 @@ namespace Alex.Gui.Elements.Map
             });
         }
 
-        private bool _showCompass = false;
-        public bool ShowCompass
-        {
-            get
-            {
-                return _showCompass;
-            }
-            set
-            {
-                _showCompass = value;
-                _north.IsVisible = value;
-                _east.IsVisible = value;
-                _south.IsVisible = value;
-                _west.IsVisible = value;
-            }
-        }
-
         private Point _previousSize = new Point(128, 128);
         /// <inheritdoc />
         protected override void OnAfterMeasure()
@@ -99,9 +104,6 @@ namespace Alex.Gui.Elements.Map
 
             if (_previousSize != size.Size)
             {
-                var z = ZoomLevel.Maximum;
-
-                var radiusBy2 = _radius * 2;
                 var chunksX = size.Width / 16;
                 var chunksZ = size.Height / 16;
 
@@ -127,25 +129,17 @@ namespace Alex.Gui.Elements.Map
             Height = (int)Math.Ceiling(128 * multiplier);
         }
 
-        private int _radius = 1;
-        public int Radius
-        {
-            get => _radius;
-            set
-            {
-                _radius = value;
-            }
-        }
-
         protected override void OnDraw(GuiSpriteBatch graphics, GameTime gameTime)
         {
             base.OnDraw(graphics, gameTime);
             
             if (!IsVisible)
                 return;
-
-            Rotation = _map.MapRotation;
-            var centerPosition = _map.CenterPosition;
+            
+            if (!FixedRotation)
+                Rotation = _map.Rotation;
+            
+            var centerPosition = _map.Center;
             var zoomScale = ((float) ZoomLevel.Maximum / (float) ZoomLevel);
             
             DrawMap(graphics, centerPosition, _radius, zoomScale, out var minY, out var maxY);
@@ -175,7 +169,7 @@ namespace Alex.Gui.Elements.Map
                     
                     graphics.SpriteBatch.Draw(
                         value, position, value.Color.GetValueOrDefault(icon.Color),
-                       ((icon.Rotation).ToRadians()) - Rotation, MarkerRotationOrigin, Vector2.One * zoomScale * (yDistance));
+                       ((icon.Rotation).ToRadians()) - Rotation, MarkerRotationOrigin, Vector2.One * zoomScale );
                 }
             }
         }
@@ -188,20 +182,13 @@ namespace Alex.Gui.Elements.Map
             
             var center = new ChunkCoordinates(centerPosition);
 
-            foreach (var container in _map.GetContainers(center,  radius))
-            {
-                var texture = container.Texture;
-
-                if (texture != null)
-                {
-                    var mapPosition = new Vector3(container.Coordinates.X * 16f, 0f, container.Coordinates.Z * 16f);
-                    var position = GetRenderPosition(mapPosition, centerPosition, zoomScale);
-                    graphics.SpriteBatch.Draw((TextureSlice2D) texture, position, Color.White, -Rotation, Vector2.Zero, (Vector2.One) * zoomScale);
-
-                    minY = Math.Min(container.MinHeight, minY);
-                    maxY = Math.Max(container.MaxHeight, maxY);
-                }
-            }
+            var texture = _map.GetTexture(graphics.Context.GraphicsDevice);
+            var position = GetRenderPosition(new Vector3(center.X * 16f, 0f, center.Z * 16f), centerPosition, zoomScale);
+            
+            graphics.SpriteBatch.Draw(
+                (TextureSlice2D)texture, position,
+                Color.White, -Rotation, new Vector2(texture.Width / 2f, texture.Height / 2f),
+                (Vector2.One) * zoomScale);
         }
 
         private Vector2 GetRenderPosition(Vector3 position, Vector3 centerPosition, float scale)

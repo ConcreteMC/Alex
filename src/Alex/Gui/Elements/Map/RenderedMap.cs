@@ -2,48 +2,45 @@ using System;
 using Alex.Blocks.State;
 using Alex.Common.Utils.Vectors;
 using Alex.Worlds;
-using Alex.Worlds.Chunks;
 using Microsoft.Xna.Framework.Graphics;
+using MiNET.Worlds;
+using ChunkColumn = Alex.Worlds.Chunks.ChunkColumn;
 
 namespace Alex.Gui.Elements.Map
 {
 	public class RenderedMap : Utils.Map, IDisposable
 	{
+		private static readonly uint[] DefaultData;
+
+		static RenderedMap()
+		{
+			DefaultData = ArrayOf<uint>.Create(Size * Size, 0);
+		}
+		
 		private const int Size = 16;
-		private const int Multiplier = Size / 16;
 		
 		public bool IsDirty { get; private set; }
 		public bool Invalidated { get; private set; } = false;
 
-		public Texture2D Texture { get; private set; }
-
+		public bool PendingChanges { get; private set; } = false;
 		public ChunkCoordinates Coordinates { get; }
-		public int MaxHeight { get; private set; }
-		public int MinHeight { get; private set; }
 		public RenderedMap(ChunkCoordinates coordinates) : base(Size,Size, 1)
 		{
 			Coordinates = coordinates;
 		}
 
-		private void Init(GraphicsDevice device)
+		public void Invalidate()
 		{
-			if (Texture != null)
-				return;
-
-			Texture = new Texture2D(device, Size, Size);
+			Invalidated = true;
 		}
-
-		public void Update(World world, ChunkColumn target, GraphicsDevice device)
+		
+		public void Update(World world, ChunkColumn target)
 		{
 			if (target == null)
 			{
 				Invalidated = true;
-
 				return;
 			}
-
-			if (Texture == null)
-				Init(device);
 
 			var cx = target.X * 16;
 			var cz = target.Z * 16;
@@ -64,7 +61,7 @@ namespace Alex.Gui.Elements.Map
 						maxHeight = Math.Max(height, maxHeight);
 					} while (height > 0 && state.Block.BlockMaterial.MapColor.BaseColor.A <= 0);
 
-					var blockNorth = world.GetHeight(new BlockCoordinates((x + cx), height, (z + cz)).BlockNorth()) - 1;
+					var blockNorth = world.GetHeight(new BlockCoordinates((x + cx), height, (z + cz)).BlockSouth()) - 1;
 
 					var offset = 1;
 
@@ -86,9 +83,31 @@ namespace Alex.Gui.Elements.Map
 				}
 			}
 
-			Texture.SetData(this.GetData());
+			//Texture.SetData(this.GetData());
 			IsDirty = false;
+			PendingChanges = true;
 		}
+
+		/// <inheritdoc />
+		public override uint[] GetData()
+		{
+			if (Invalidated)
+			{
+				PendingChanges = false;
+				return DefaultData;
+			}
+
+			var data = base.GetData();
+			PendingChanges = false;
+
+			return data;
+		}
+
+		/// <inheritdoc />
+		//public override Texture2D GetTexture(GraphicsDevice device)
+		//{
+		//	return Texture;
+		//}
 
 		public void MarkDirty()
 		{
@@ -101,8 +120,8 @@ namespace Alex.Gui.Elements.Map
 			base.Dispose();
 			//_map?.Dispose();
 			// _map = null;
-			Texture?.Dispose();
-			Texture = null;
+		//	Texture?.Dispose();
+		//	Texture = null;
 		}
 	}
 }
