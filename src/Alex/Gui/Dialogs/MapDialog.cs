@@ -13,12 +13,15 @@ namespace Alex.Gui.Dialogs
 	{
 		private MapRenderElement _mapRenderer;
 		private AlexButton _zoomInBtn, _zoomOutBtn;
+		private IMap _map;
 		public MapDialog(IMap world)
 		{
+			_map = world;
+			
 			Anchor = Alignment.Fill;
 			ContentContainer.Anchor = Alignment.Fill;
 			
-			_mapRenderer = new MapRenderElement(world)
+			_mapRenderer = new MapRenderElement(_map)
 			{
 				AutoSizeMode = AutoSizeMode.GrowOnly,
 				Anchor = Alignment.Fill,
@@ -49,7 +52,10 @@ namespace Alex.Gui.Dialogs
 			leftContainer.AddChild(
 				new AutoUpdatingTextElement(
 					() =>
-						$"Coordinates: X={world.Center.X:F2} Y={world.Center.Y:F2} Z={world.Center.Z:F2}"));
+					{
+						if (_map?.Center == null) return string.Empty;
+						return $"Coordinates: X={_map.Center.X:F2} Y={_map.Center.Y:F2} Z={_map.Center.Z:F2}";
+					}));
 			
 			ContentContainer.AddChild(leftContainer);
 			

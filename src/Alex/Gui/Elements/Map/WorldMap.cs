@@ -47,10 +47,10 @@ namespace Alex.Gui.Elements.Map
         
         
         /// <inheritdoc />
-        public int Width => (_world.ChunkManager.RenderDistance) * 16 * 3;
+        public int Width => (_world?.ChunkManager?.RenderDistance ?? 1) * 16 * 3;
 
         /// <inheritdoc />
-        public int Height => (_world.ChunkManager.RenderDistance) * 16 * 3;
+        public int Height => (_world?.ChunkManager?.RenderDistance ?? 1) * 16 * 3;
 
         /// <inheritdoc />
         public float Scale { get; } = 1f;
@@ -59,7 +59,7 @@ namespace Alex.Gui.Elements.Map
         public Vector3 Center => _world?.Camera?.Position ?? Vector3.Zero;
 
         /// <inheritdoc />
-        public float Rotation => 180f - _world.Player.KnownPosition.HeadYaw;
+        public float Rotation => 180f - (_world?.Player?.KnownPosition?.HeadYaw ?? 0);
 
         public WorldMap(World world)
         {

@@ -1116,7 +1116,7 @@ namespace Alex.Worlds
 			TickManager.UnregisterTicked(ChunkManager);
 			
 			Map?.Dispose();
-			Map = null;
+			//Map = null;
 
 			EntityManager = null;
 			ChunkManager = null;
