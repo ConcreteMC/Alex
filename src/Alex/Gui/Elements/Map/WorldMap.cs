@@ -47,10 +47,10 @@ namespace Alex.Gui.Elements.Map
         
         
         /// <inheritdoc />
-        public int Width => (_world.ChunkManager.RenderDistance) * 16;
+        public int Width => (_world.ChunkManager.RenderDistance) * 16 * 3;
 
         /// <inheritdoc />
-        public int Height => (_world.ChunkManager.RenderDistance) * 16;
+        public int Height => (_world.ChunkManager.RenderDistance) * 16 * 3;
 
         /// <inheritdoc />
         public float Scale { get; } = 1f;
@@ -198,18 +198,21 @@ namespace Alex.Gui.Elements.Map
             var center = new ChunkCoordinates(Center);
             var forceRedraw = center != _previousCenter;
             
-            if (_texture == null || _texture.IsDisposed || _texture.Width != Width || _texture.Height != Height)
+            Texture2D oldTexture = null;
+            var texture = _texture;
+            if (texture == null || texture.IsDisposed || texture.Width != Width || texture.Height != Height)
             {
-                var oldTexture = _texture;
-                _texture = new Texture2D(device, Width, Height);
+                oldTexture = texture;
+                
+                texture = new Texture2D(device, Width, Height);
                 forceRedraw = true;
                 
-                oldTexture?.Dispose();
+                //oldTexture?.Dispose();
             }
 
             if (forceRedraw)
             {
-                _texture.SetData(ArrayOf<uint>.Create(Width * Height));
+                texture.SetData(ArrayOf<uint>.Create(Width * Height));
             }
             
             foreach (var container in GetContainers(center, _world.ChunkManager.RenderDistance))
@@ -232,20 +235,25 @@ namespace Alex.Gui.Elements.Map
 
                 var destination = new Rectangle(pos.X, pos.Y, width, height);
 
-                if (!_texture.Bounds.Contains(destination))
+                if (!texture.Bounds.Contains(destination))
                 {
                     Log.Warn($"Texture position out of bounds.");
                 }
                 else
                 {
                     var data = container.GetData();
-                    _texture.SetData(0, destination, data, 0, data.Length);
+                    texture.SetData(0, destination, data, 0, data.Length);
                     //didChange = true;
                 }
                 
                 if (container.Invalidated)
                     RemoveContainer(container.Coordinates);
             }
+
+            _texture = texture;
+            
+            if (oldTexture != null && oldTexture != texture)
+                oldTexture.Dispose();
 
             _previousCenter = center;
             return _texture;

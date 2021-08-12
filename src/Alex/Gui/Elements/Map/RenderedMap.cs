@@ -61,17 +61,22 @@ namespace Alex.Gui.Elements.Map
 						maxHeight = Math.Max(height, maxHeight);
 					} while (height > 0 && state.Block.BlockMaterial.MapColor.BaseColor.A <= 0);
 
-					var blockNorth = world.GetHeight(new BlockCoordinates((x + cx), height, (z + cz)).BlockSouth()) - 1;
+					var north = world.GetHeight(new BlockCoordinates((x + cx), height, (z + cz - 1))) - 1;
+					var northWest = world.GetHeight(new BlockCoordinates((x + cx - 1), height, (z + cz - 1))) - 1;
 
 					var offset = 1;
 
-					if (blockNorth > height)
+					if (north > height && northWest <= height)
 					{
-						offset = 0;
+						offset = 0; //Darker
 					}
-					else if (blockNorth < height)
+					else if (north > height && northWest > height)
 					{
-						offset = 2;
+						offset = 3; //Darkest
+					}
+					else if (north < height && northWest < height)
+					{
+						offset = 2; //Lighter
 					}
 
 					var blockMaterial = state?.Block?.BlockMaterial;
