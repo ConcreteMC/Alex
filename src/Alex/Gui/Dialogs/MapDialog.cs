@@ -30,7 +30,7 @@ namespace Alex.Gui.Dialogs
 			Container mapContainer = new Container()
 			{
 				Anchor = Alignment.Fill,
-				Padding = new Thickness(5)
+				Padding = new Thickness(5, 5, 5, 15)
 			};
 			mapContainer.AddChild(_mapRenderer);
 			
