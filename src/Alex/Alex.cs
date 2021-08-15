@@ -242,8 +242,14 @@ namespace Alex
             serviceCollection.AddSingleton<GuiRenderer>();
             serviceCollection.AddSingleton<IGuiRenderer, GuiRenderer>(sp => sp.GetRequiredService<GuiRenderer>());
             serviceCollection.AddSingleton<GuiManager>();
-            //serviceCollection.AddSingleton<RocketDebugSocketServer>();
-            // serviceCollection.AddHostedService<RocketDebugSocketServer>(sp => sp.GetRequiredService<RocketDebugSocketServer>());
+
+            if (LaunchSettings.RocketDebugging)
+            {
+                serviceCollection.AddSingleton<RocketDebugSocketServer>();
+
+                serviceCollection.AddHostedService<RocketDebugSocketServer>(
+                    sp => sp.GetRequiredService<RocketDebugSocketServer>());
+            }
 
             PluginManager.Initiate(serviceCollection, Options, LaunchSettings);
 

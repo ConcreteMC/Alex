@@ -3,7 +3,7 @@
     "Alex": {
       "commandName": "Project",
       "workingDirectory": "",
-      "commandLineArgs": ""
+      "commandLineArgs": "--rocket-debug true"
     }
   }
 }

@@ -40,6 +40,9 @@ namespace Alex
 		
 		[Option("debug", Default = false, Required = false, HelpText = "Enable Model Debugging mode")]
 		public bool ModelDebugging { get; set; } = false;
+
+		[Option("rocket-debug", Default = false, Required = false, HelpText = "Adds the required services for the RocketUI designer to work")]
+		public bool RocketDebugging { get; set; } = false;
 		
 		public LaunchSettings()
 		{
