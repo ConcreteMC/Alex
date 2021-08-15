@@ -20,14 +20,13 @@ namespace Alex.Common.Services
 
         public string AccessToken { get; }
         public string ClientToken { get; }
-
-		//[JsonIgnore]
-		//public bool IsBedrock { get; set; }
-        //public string Type { get; set; }
+        
+        public string RefreshToken { get; }
+        public DateTime? ExpiryTime { get; }
 
         [JsonIgnore] public bool Authenticated { get; set; } = false;
 
-	    public PlayerProfile(string uuid, string username, string playerName, Skin skin, string accessToken, string clientToken)
+	    public PlayerProfile(string uuid, string username, string playerName, Skin skin, string accessToken, string clientToken, string refreshToken = null, DateTime? expiryTime = null)
         {
             Uuid = uuid;
             Username = username;
@@ -35,6 +34,8 @@ namespace Alex.Common.Services
             Skin = skin;
             AccessToken = accessToken;
             ClientToken = clientToken;
+            RefreshToken = refreshToken;
+            ExpiryTime = expiryTime;
         }
     }
 
@@ -105,18 +106,5 @@ namespace Alex.Common.Services
 
             return sb.ToString();
         }
-    }
-
-    public interface IPlayerProfileService
-    {
-        event EventHandler<PlayerProfileChangedEventArgs> ProfileChanged;
-        event EventHandler<PlayerProfileAuthenticateEventArgs> Authenticate;
-
-        PlayerProfile CurrentProfile { get; }
-
-        Task<bool> TryAuthenticateAsync(string username, string password);
-        void Force(PlayerProfile profile);
-        
-        PlayerProfile[] GetProfiles(string type);
     }
 }

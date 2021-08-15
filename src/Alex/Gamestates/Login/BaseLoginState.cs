@@ -127,13 +127,15 @@ namespace Alex.Gamestates.Login
 
 		private void OnLoginButtonPressed()
 		{
-			LoginButton.Enabled = false;
+			DisableInput();
+			
+		//	LoginButton.Enabled = false;
 			ErrorMessage.Text = "Authenticating...";
 
-			LOginButtonPressed(NameInput.Value, PasswordInput.Value);
+			LoginButtonPressed(NameInput.Value, PasswordInput.Value);
 		}
 
-		protected abstract void LOginButtonPressed(string username, string password);
+		protected abstract void LoginButtonPressed(string username, string password);
 
 		private void OnCancelButtonPressed()
 		{

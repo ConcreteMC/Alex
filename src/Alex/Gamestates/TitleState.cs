@@ -51,7 +51,7 @@ namespace Alex.Gamestates
 
         private readonly GuiPanoramaSkyBox     _backgroundSkyBox;
         private          GuiEntityModelView    _playerView;
-        private          IPlayerProfileService _playerProfileService;
+        private          ProfileManager _profileManager;
 
         //private BossBarContainer _bossBarContainer;
         public TitleState()
@@ -153,8 +153,8 @@ namespace Alex.Gamestates
             };
             guiItemStack.AddChild(row);
 
-            _playerProfileService = Alex.Services.GetService<IPlayerProfileService>();
-            _playerProfileService.ProfileChanged += PlayerProfileServiceOnProfileChanged;
+            _profileManager = Alex.Services.GetRequiredService<ProfileManager>();
+            //_playerProfileService.ProfileChanged += PlayerProfileServiceOnProfileChanged;
 
             var dropDown = new GuiDropdown() { };
             dropDown.Options.Add("option 1");
@@ -222,7 +222,7 @@ namespace Alex.Gamestates
 
         protected override void OnLoad(IRenderArgs args)
         {
-            Skin skin = _playerProfileService?.CurrentProfile?.Skin;
+            Skin skin = _profileManager?.CurrentProfile?.Skin;
             if (skin == null)
             {
                 Alex.Resources.TryGetBitmap("entity/alex", out var rawTexture);

@@ -19,15 +19,11 @@ namespace Alex.Gamestates.MainMenu
         private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ProfileSelectionState));
         
         private GuiPanoramaSkyBox _skyBox;
-        private IPlayerProfileService ProfileService { get; } 
-        private Alex Alex { get; }
-
+     
         private Button _addBtn, _editBtn, _deleteBtn, _cancelBtn, _selectBtn;
         public ProfileSelectionState(GuiPanoramaSkyBox skyBox, Alex alex)
         {
-            Alex = alex;
             _skyBox = skyBox;
-            ProfileService = GetService<IPlayerProfileService>();
             
             Title = "Select Profile";
             
@@ -94,9 +90,9 @@ namespace Alex.Gamestates.MainMenu
                 SetButtonState(false);
                 return;
             }
-            
-            ProfileService.Force(selected.Profile);
-            
+
+            //ProfileService.CurrentProfile = selected.Profile;
+        
             OnCancelButtonPressed();
         }
 
@@ -104,7 +100,7 @@ namespace Alex.Gamestates.MainMenu
         {
             ClearItems();
             
-            var activeProfile = ProfileService.CurrentProfile;
+        //   var activeProfile = ProfileService.CurrentProfile;
             /*foreach (var profile in ProfileService.GetJavaProfiles().Concat(ProfileService.GetBedrockProfiles()))
             {
                 ProfileEntry entry = new ProfileEntry(profile, _defaultSkin, OnDoubleClick);
@@ -122,8 +118,9 @@ namespace Alex.Gamestates.MainMenu
         private void OnDoubleClick(ProfileEntry profile)
         {
             Focus(profile);
-            
-            ProfileService.Force(profile.Profile);
+
+            //ProfileService.CurrentProfile = profile.Profile;
+          //  ProfileService.Force(profile.Profile);
             OnCancelButtonPressed();
         }
 

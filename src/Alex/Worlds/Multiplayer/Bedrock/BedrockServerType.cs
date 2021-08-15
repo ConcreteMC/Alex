@@ -58,88 +58,70 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			return true;
 		}
 
-		private async Task<PlayerProfile> ReAuthenticate(PlayerProfile profile)
+		private PlayerProfile Process(bool success, PlayerProfile profile)
 		{
-			var profileManager = Alex.Services.GetService<ProfileManager>();
-			var profileService = Alex.Services.GetService<IPlayerProfileService>();
-			try
-				{
-					//Validate Bedrock account.
-					//BedrockTokenPair tokenPair = JsonConvert.DeserializeObject<BedrockTokenPair>(profile.ClientToken);
-					BedrockTokenPair tokenPair = JsonConvert.DeserializeObject<BedrockTokenPair>(profile.ClientToken);
-					if (tokenPair.ExpiryTime < DateTime.UtcNow && await XboxAuthService.TryAuthenticate(profile.AccessToken))
-					{
-						var p = new PlayerProfile(profile.Uuid, profile.Username, profile.PlayerName,
-							profile.Skin, profile.AccessToken,
-							profile.ClientToken);
-
-						p.Authenticated = true;
-								
-						profileManager.CreateOrUpdateProfile(AccountType, p);
-
-						profileService.Force(p);// = p;
-								
-						//Authenticate?.Invoke(this, new PlayerProfileAuthenticateEventArgs(CurrentProfile));
-						return p;
-					}
-					
-					return await XboxAuthService.RefreshTokenAsync(tokenPair.RefreshToken).ContinueWith(task =>
-						{
-							if (task.IsFaulted)
-							{
-								//Authenticate?.Invoke(this, new PlayerProfileAuthenticateEventArgs("Validation faulted!"));
-								return profile;
-							}
-
-							var r = task.Result;
-							if (r.success)
-							{
-								var p = new PlayerProfile(profile.Uuid, profile.Username, profile.PlayerName,
-									profile.Skin, r.token.AccessToken,
-									JsonConvert.SerializeObject(r.token));
-
-								p.Authenticated = true;
-								
-								profileManager.CreateOrUpdateProfile(AccountType, p);
-
-								profileService.Force(p);
-								
-							//	Authenticate?.Invoke(this, new PlayerProfileAuthenticateEventArgs(CurrentProfile));
-								return p;
-							}
-							else
-							{
-								Log.Warn($"Authentication unknown error.");
-								
-							//	Authenticate?.Invoke(this, new PlayerProfileAuthenticateEventArgs("Unknown error!"));
-								return profile;
-							}
-							
-							return profile;
-						});
-				}
-				catch (Exception ex)
-				{
-					Log.Warn($"Failed to refresh bedrock access token: {ex.ToString()}");
-				}
+			if (success)
+			{
+				var profileManager = Alex.Services.GetRequiredService<ProfileManager>();
+				
+				profile.Authenticated = true;
+				profileManager.CreateOrUpdateProfile(AccountType, profile, true);
 
 				return profile;
+			}
+
+			return profile;
+		}
+
+		private async Task<PlayerProfile> ReAuthenticate(PlayerProfile profile)
+		{
+			try
+			{
+				if (profile.ExpiryTime.GetValueOrDefault(DateTime.MaxValue) < DateTime.UtcNow
+				    && await XboxAuthService.TryAuthenticate(profile.AccessToken))
+				{
+					return Process(
+						true,
+						new PlayerProfile(
+							profile.Uuid, profile.Username, profile.PlayerName, profile.Skin, profile.AccessToken,
+							null, profile.RefreshToken, profile.ExpiryTime));
+				}
+
+				return await XboxAuthService.RefreshTokenAsync(profile.RefreshToken).ContinueWith(
+					task =>
+					{
+						if (task.IsFaulted)
+						{
+							//Authenticate?.Invoke(this, new PlayerProfileAuthenticateEventArgs("Validation faulted!"));
+							return profile;
+						}
+
+						var r = task.Result;
+
+						return Process(
+							r.success,
+							new PlayerProfile(
+								profile.Uuid, profile.Username, profile.PlayerName, profile.Skin, r.token.AccessToken,
+								null, r.token?.RefreshToken, r.token?.ExpiryTime));
+					});
+			}
+			catch (Exception ex)
+			{
+				Log.Warn($"Failed to refresh bedrock access token: {ex.ToString()}");
+			}
+
+			return profile;
 		}
 
 		/// <inheritdoc />
 		public override async Task<bool> VerifyAuthentication(PlayerProfile currentProfile)
 		{
-			var authenticationService = Alex.Services.GetService<IPlayerProfileService>();
-
-			//if () //foreach (var profile in authenticationService.GetProfiles(AccountType))
 			if (!currentProfile.Authenticated)
 			{
 				var task = await ReAuthenticate(currentProfile);
 
 				if (task.Authenticated)
 				{
-				//	currentProfile = profile;
-
 					return true;
 				}
 			}
@@ -153,8 +135,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			{
 				return true;
 			}
-
-			//return base.VerifyAuthentication(profile);
 		}
 
 		/// <inheritdoc />

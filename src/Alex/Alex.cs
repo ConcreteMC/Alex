@@ -218,6 +218,8 @@ namespace Alex
             Storage = new StorageSystem(LaunchSettings.WorkDir);
             Options = new OptionsProvider(Storage);
             Options.Load();
+            
+            MojangApi.Init(Storage);
 
             IServiceCollection serviceCollection = new ServiceCollection();
             serviceCollection.AddSingleton<Alex>(this);
@@ -258,7 +260,7 @@ namespace Alex
             serviceCollection.TryAddSingleton<IListStorageProvider<SavedServerEntry>, SavedServerDataProvider>();
 
             serviceCollection.TryAddSingleton<IServerQueryProvider>(new JavaServerQueryProvider(this));
-            serviceCollection.TryAddSingleton<IPlayerProfileService, PlayerProfileService>();
+           // serviceCollection.TryAddSingleton<IPlayerProfileService, PlayerProfileService>();
 
             serviceCollection.TryAddSingleton<IRegistryManager, RegistryManager>();
 

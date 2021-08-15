@@ -27,8 +27,7 @@ namespace Alex.Gamestates.Login
 	    
 	    private readonly GuiPanoramaSkyBox            _backgroundSkyBox;
 		private          XboxAuthService              AuthenticationService { get; }
-		private          IPlayerProfileService        _playerProfileService;
-        protected        Button                    LoginButton;
+		protected        Button                    LoginButton;
 		private          Action<PlayerProfile>        Ready             { get; }
 
 		private MsaDeviceAuthConnectResponse _connectResponse;
@@ -84,9 +83,6 @@ namespace Alex.Gamestates.Login
 
         private void Initialize()
         {
-	        _playerProfileService = GetService<IPlayerProfileService>();
-	        _playerProfileService.Authenticate += PlayerProfileServiceOnAuthenticate;
-
             base.HeaderTitle.Anchor = Alignment.MiddleCenter;
             base.HeaderTitle.FontStyle = FontStyle.Bold | FontStyle.DropShadow;
             Footer.ChildAnchor = Alignment.MiddleCenter;
@@ -170,11 +166,6 @@ namespace Alex.Gamestates.Login
 		        _authCodeElement.Text = ConnectResponse.user_code;
 	        }
         }
-        
-        private void PlayerProfileServiceOnAuthenticate(object sender, PlayerProfileAuthenticateEventArgs e)
-        {
-			
-        }
 
         private void OnLoginButtonPressed()
         {
@@ -211,14 +202,10 @@ namespace Alex.Gamestates.Login
 					        var r = AuthenticationService.DecodedChain.Chain.FirstOrDefault(x =>
 						        x.ExtraData != null && !string.IsNullOrWhiteSpace(x.ExtraData.XUID));
 
-					        var profile = new PlayerProfile(r.ExtraData.XUID, r.ExtraData.DisplayName,
-						        r.ExtraData.DisplayName,
-						       new Skin()
-						       {
-							       Slim = true,
-							       Texture = null
-						       }, result.token.AccessToken,
-						        JsonConvert.SerializeObject(result.token));
+					        var profile = new PlayerProfile(
+						        r.ExtraData.XUID, r.ExtraData.DisplayName, r.ExtraData.DisplayName,
+						        new Skin() { Slim = true, Texture = null }, result.token.AccessToken, null,
+						        result.token.RefreshToken, result.token.ExpiryTime);
 
 					        profileManager.CreateOrUpdateProfile("bedrock" ,profile, true);
 					        Ready?.Invoke(profile);

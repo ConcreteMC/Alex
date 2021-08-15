@@ -14,6 +14,8 @@ namespace Alex
 		private Dictionary<string, SavedProfile> Profiles { get; }
 		public SavedProfile LastUsedProfile { get; private set; } = null;
 		private IServiceProvider ServiceProvider { get; }
+		
+		public PlayerProfile CurrentProfile { get; private set; }
 		public ProfileManager(IServiceProvider serviceProvider)
 		{
 			Profiles = new Dictionary<string, SavedProfile>();
@@ -24,16 +26,13 @@ namespace Alex
 		private const string ProfilesFile = "profiles";
 		public void LoadProfiles(IProgressReceiver progressReceiver)
 		{
-			IPlayerProfileService profileService = ServiceProvider.GetRequiredService<IPlayerProfileService>();
 			IStorageSystem storage = ServiceProvider.GetRequiredService<IStorageSystem>();
 			
 			progressReceiver.UpdateProgress(0, StatusMessage);
 			if (storage.TryReadJson(ProfilesFile, out ProfilesFileFormat saveFile))
-			//if (File.Exists(ProfilesFile))
 			{
 				progressReceiver.UpdateProgress(50, StatusMessage);
 
-			//	ProfilesFileFormat saveFile = null;
 				SavedProfile[] profiles = null;
 				
 
@@ -83,20 +82,17 @@ namespace Alex
 
 		public void SaveProfiles()
 		{
-			IPlayerProfileService profileService = ServiceProvider.GetRequiredService<IPlayerProfileService>();
 			IStorageSystem storage = ServiceProvider.GetRequiredService<IStorageSystem>();
 			
-			//IPlayerProfileService profileService = Alex.Services.GetService<IPlayerProfileService>();
 			storage.TryWriteJson(ProfilesFile, new ProfilesFileFormat()
 			{
 				Profiles = Profiles.Values.ToArray(),
-				SelectedProfile = profileService?.CurrentProfile?.Uuid ?? string.Empty
+				SelectedProfile = CurrentProfile?.Uuid ?? string.Empty
 			});
 		}
 
 		public void CreateOrUpdateProfile(string type, PlayerProfile profile, bool setActive = false)
 		{
-			IPlayerProfileService profileService = ServiceProvider.GetRequiredService<IPlayerProfileService>();
 			var alex = ServiceProvider.GetRequiredService<Alex>();
 			
 			if (profile.Skin?.Texture == null)
@@ -126,9 +122,7 @@ namespace Alex
 
 			if (setActive)
 			{
-				//ActiveProfile = savedProfile;
-				profileService?.Force(profile);
-				//_playerProfileService.Force(profile);
+				CurrentProfile = profile;
 			}
 
 			alex.UiTaskManager.Enqueue(SaveProfiles);

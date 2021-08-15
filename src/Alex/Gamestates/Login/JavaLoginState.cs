@@ -1,35 +1,41 @@
 ﻿using System;
+using System.Threading.Tasks;
 using Alex.Common.Services;
 using Alex.Common.Utils;
 using Alex.Gui;
+using Alex.Utils.Skins;
+using Alex.Worlds.Multiplayer.Java;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using MojangAPI.Model;
+using NLog;
+using PlayerProfile = Alex.Common.Services.PlayerProfile;
+using Skin = Alex.Common.Utils.Skin;
 
 namespace Alex.Gamestates.Login
 {
 	public class JavaLoginState : BaseLoginState
 	{
-		private IPlayerProfileService _playerProfileService;
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(JavaLoginState));
 		private ProfileManager _profileManager;
-		
+
+		private readonly JavaServerType _serverType;
 		private Action _loginSuccesAction;
 		private PlayerProfile _activeProfile;
-		public JavaLoginState(GuiPanoramaSkyBox skyBox, Action loginSuccesAction, PlayerProfile activeProfile = null) : base("Minecraft Login", skyBox)
+		public JavaLoginState(JavaServerType serverType, GuiPanoramaSkyBox skyBox, Action loginSuccesAction, PlayerProfile activeProfile = null) : base("Minecraft Login", skyBox)
 		{
+			_serverType = serverType;
 			_loginSuccesAction = loginSuccesAction;
 			_activeProfile = activeProfile;
 		}
 
 		protected override void Initialized()
 		{
-			_playerProfileService = GetService<IPlayerProfileService>();
-			_playerProfileService.Authenticate += PlayerProfileServiceOnAuthenticate;
-
 			_profileManager = GetService<ProfileManager>();
 			var profiles = _profileManager.GetProfiles("java");
 
 			if (profiles.Length == 1)
 				_activeProfile = profiles[0];
-			//var javaProfiles = _profileManager.GetProfiles("java");
 
 			if (_activeProfile != null)
 			{
@@ -41,33 +47,72 @@ namespace Alex.Gamestates.Login
 
 				if (activeProfile != null)
 				{
-				//	Requester.ClientToken = activeProfile.Profile.ClientToken;
 					NameInput.Value = activeProfile.Profile.Username;
 				}
 			}
 		}
 
-		private void PlayerProfileServiceOnAuthenticate(object sender, PlayerProfileAuthenticateEventArgs e)
+		protected override void LoginButtonPressed(string username, string password)
 		{
-			if (e.IsSuccess)
-			{
-				_profileManager.CreateOrUpdateProfile("java", e.Profile, true);
-				_loginSuccesAction?.Invoke();
-				//Alex.SaveJava(_nameInput.Value);
-				//Alex.GameStateManager.SetActiveState("serverlist");
-			}
-			else
-			{
-				ErrorMessage.Text      = "Could not login: " + e.ToUserFriendlyString();
-				ErrorMessage.TextColor = (Color) TextColor.Red;
-
-				EnableInput();
-			}
+			TryAuthenticateAsync(NameInput.Value, PasswordInput.Value);
+			//	_playerProfileService.TryAuthenticateAsync(NameInput.Value, PasswordInput.Value);
 		}
 
-		protected override void LOginButtonPressed(string username, string password)
+		private void LoginFailed(string error)
 		{
-			_playerProfileService.TryAuthenticateAsync(NameInput.Value, PasswordInput.Value);
+			ErrorMessage.Text      = "Could not login: " + error;
+			ErrorMessage.TextColor = (Color) TextColor.Red;
+
+			EnableInput();
+		}
+
+		private void LoginFailed(PlayerProfileAuthenticateEventArgs e)
+		{
+			LoginFailed(e.ToUserFriendlyString());
+		}
+		
+		private async Task<bool> TryAuthenticateAsync(string username, string password)
+		{
+			Session session = null;
+
+			try
+			{
+				if (_activeProfile != null)
+					session = new Session()
+					{
+						Username = username,
+						AccessToken = _activeProfile.AccessToken,
+						ClientToken = _activeProfile.ClientToken,
+						UUID = _activeProfile.Uuid
+					};
+				
+				session = await MojangApi.TryMojangLogin(username, password, session);
+			}
+			catch (LoginFailedException ex)
+			{
+				LoginFailed(new PlayerProfileAuthenticateEventArgs(ex.Response.ErrorMessage, ex.Response.Result));
+				
+				Log.Warn($"Error: {ex.Response.Result} - {ex.Response.ErrorMessage}");
+				return false;
+			}
+
+			if (session == null || session.IsEmpty)
+			{
+				LoginFailed(new PlayerProfileAuthenticateEventArgs("Unknown error.", MojangAuthResult.UnknownError));
+				return false;
+			}
+
+			session.Username = username;
+			var updateResult = await _serverType.UpdateProfile(session);
+			if (updateResult.Success)
+			{
+				_loginSuccesAction?.Invoke();
+
+				return true;
+			}
+
+			LoginFailed(new PlayerProfileAuthenticateEventArgs(updateResult.ErrorMessage, MojangAuthResult.UnknownError));
+			return false;
 		}
 	}
 }

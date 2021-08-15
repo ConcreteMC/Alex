@@ -9,14 +9,22 @@ using Alex.Net;
 using Alex.Networking.Java;
 using Alex.Services;
 using Alex.Utils;
+using Alex.Utils.Skins;
 using Alex.Worlds.Abstraction;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Xna.Framework.Graphics;
 using MiNET.Utils;
+using MojangAPI;
+using MojangAPI.Model;
+using NLog;
+using PlayerProfile = Alex.Common.Services.PlayerProfile;
+using Skin = MiNET.Utils.Skins.Skin;
 
 namespace Alex.Worlds.Multiplayer.Java
 {
 	public class JavaServerType : ServerTypeImplementation
 	{
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(JavaServerType));
 		private const string ProfileType = "java";
 		
 		private       Alex   Alex { get; }
@@ -63,6 +71,7 @@ namespace Alex.Worlds.Multiplayer.Java
 		public override Task Authenticate(GuiPanoramaSkyBox skyBox, PlayerProfile activeProfile, Action<bool> callBack)
 		{
 			JavaLoginState loginState = new JavaLoginState(
+				this,
 				skyBox,
 				() =>
 				{
@@ -78,11 +87,11 @@ namespace Alex.Worlds.Multiplayer.Java
 		/// <inheritdoc />
 		public override async Task<bool> VerifyAuthentication(PlayerProfile currentProfile)
 		{
-			var authenticationService = Alex.Services.GetService<IPlayerProfileService>();
+			var profileManager = Alex.Services.GetRequiredService<ProfileManager>();
 			
 			if (currentProfile != null)
 			{
-				if (await TryAuthenticate(authenticationService, currentProfile))
+				if (await TryAuthenticate(currentProfile))
 				{
 					currentProfile.Authenticated= true;
 
@@ -91,9 +100,9 @@ namespace Alex.Worlds.Multiplayer.Java
 			}
 			else
 			{
-				foreach (var profile in authenticationService.GetProfiles(ProfileType))
+				foreach (var profile in profileManager.GetProfiles(ProfileType))
 				{
-					if (await TryAuthenticate(authenticationService, profile))
+					if (await TryAuthenticate(profile))
 					{
 						return true;
 					}
@@ -103,26 +112,92 @@ namespace Alex.Worlds.Multiplayer.Java
 			return false;
 		}
 
-		private async Task<bool> TryAuthenticate(IPlayerProfileService authenticationService, PlayerProfile profile)
+		public async Task<ProfileUpdateResult> UpdateProfile(Session session)
+		{
+			var profileManager = Alex.Services.GetRequiredService<ProfileManager>();
+			
+			var profile = await MojangApi.GetPlayerProfile(session.AccessToken);
+
+			if (profile.IsSuccess)
+			{
+				Texture2D texture = null;
+
+				if (profile?.Skin?.Url != null)
+				{
+					SkinUtils.TryGetSkin(new Uri(profile?.Skin?.Url), Alex.Instance.GraphicsDevice, out texture);
+				}
+
+				var playerProfile = new PlayerProfile(
+					profile.UUID, session.Username, profile.Name,
+					new Common.Utils.Skin() { Slim = (profile.Skin?.Model == SkinType.Alex), Texture = texture },
+					session.AccessToken, session.ClientToken)
+				{
+					Authenticated = true
+				};
+
+				profileManager.CreateOrUpdateProfile("java", playerProfile, true);
+				//profileService.CurrentProfile = playerProfile;//.Force(playerProfile);
+				return new ProfileUpdateResult(true, null, null);
+			}
+
+			return new ProfileUpdateResult(false, profile.Error, profile.ErrorMessage);
+		}
+		
+		private async Task<bool> TryAuthenticate(PlayerProfile profile)
 		{
 		//	Requester.ClientToken = profile.ClientToken;
-
-			if (await Validate(profile.AccessToken))
+			var response = await MojangApi.Validate(profile.AccessToken, profile.ClientToken);
+			if (response.IsSuccess)
 			{
-				profile.Authenticated = true;
-				authenticationService.Force(profile);
+				Session session;
+				
+				if (response.Session != null)
+				{
+					session = response.Session;
+				//	await UpdateProfile(response.Session);
 
-				//CurrentProfile = profile;
-				return true;
+				//	return true;
+				}
+				else
+				{
+					session = new Session()
+					{
+						Username = profile.Username,
+						AccessToken = profile.AccessToken,
+						ClientToken = profile.ClientToken,
+						UUID = profile.Uuid
+					};
+				}
+
+				var updateResult = await UpdateProfile(session);
+				if (updateResult.Success)
+				{
+					return true;
+				}
+				
+				Log.Warn($"Authentication failed. Result={response.Result} Error={updateResult.Error} Errormessage={response.ErrorMessage}");
+			}
+			else
+			{
+				Log.Warn(
+					$"Authentication failed. Result={response.Result} Error={response.Error} ErrorMessage={response.ErrorMessage}");
 			}
 
 			return false;
 		}
+	}
+
+	public class ProfileUpdateResult
+	{
+		public bool Success { get; }
+		public string Error { get; }
+		public string ErrorMessage { get; }
 		
-		private async Task<bool> Validate(string accessToken)
+		public ProfileUpdateResult(bool success, string error, string profileErrorMessage)
 		{
-			return await MojangApi.CheckGameOwnership(accessToken);
-			
+			Success = success;
+			Error = error;
+			ErrorMessage = profileErrorMessage;
 		}
 	}
 }

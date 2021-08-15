@@ -358,10 +358,10 @@ namespace Alex.Gamestates.Multiplayer
 				var selectedItem = SelectedItem;
 				var       entry = selectedItem.SavedServerEntry;
 
-				var           authenticationService = GetService<IPlayerProfileService>();
+				var           profileManager = GetService<ProfileManager>();
 				if (Alex.ServerTypeManager.TryGet(entry.ServerType, out var typeImplementation))
 				{
-					var           profiles       = authenticationService.GetProfiles(entry.ServerType);
+					var           profiles       = profileManager.GetProfiles(entry.ServerType);
 					PlayerProfile currentProfile = null;
 
 					if (profiles.Length == 1)
@@ -394,7 +394,7 @@ namespace Alex.Gamestates.Multiplayer
 							{
 								if (result)
 								{
-									Connect(authenticationService.CurrentProfile);
+									Connect(profileManager.CurrentProfile);
 								}
 							});
 					}
