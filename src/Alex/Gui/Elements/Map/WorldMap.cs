@@ -33,24 +33,25 @@ namespace Alex.Gui.Elements.Map
         
         Minimum = Level1,
         Maximum = Level10,
-        Default = Level6,
+        Default = Level5,
     }
     
 	public class WorldMap : IMap, ITicked, IDisposable
     {
         private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(WorldMap));
         
-        private readonly World _world;
+        private World _world;
         private readonly ConcurrentDictionary<ChunkCoordinates, RenderedMap> _textureContainers = new();
 
         private readonly ConcurrentHashSet<MapIcon> _markers;
-        
+
+        private int RenderDistance => _world?.ChunkManager?.RenderDistance ?? 1;
         
         /// <inheritdoc />
-        public int Width => (_world?.ChunkManager?.RenderDistance ?? 1) * 16 * 3;
+        public int Width => RenderDistance * 16 * 3;
 
         /// <inheritdoc />
-        public int Height => (_world?.ChunkManager?.RenderDistance ?? 1) * 16 * 3;
+        public int Height => RenderDistance * 16 * 3;
 
         /// <inheritdoc />
         public float Scale { get; } = 1f;
@@ -60,7 +61,7 @@ namespace Alex.Gui.Elements.Map
 
         /// <inheritdoc />
         public float Rotation => 180f - (_world?.Player?.KnownPosition?.HeadYaw ?? 0);
-
+        
         public WorldMap(World world)
         {
             _world = world;
@@ -78,7 +79,8 @@ namespace Alex.Gui.Elements.Map
         {
             var res = new MapIcon(icon) {Position = position};
            // AddChild(res);
-
+           Add(res);
+           
             return res;
         }
 
@@ -192,10 +194,12 @@ namespace Alex.Gui.Elements.Map
         private Texture2D _texture = null;
         private ChunkCoordinates _previousCenter = ChunkCoordinates.Zero;
         /// <inheritdoc />
-        public Texture2D GetTexture(GraphicsDevice device)
+        public Texture2D GetTexture(GraphicsDevice device, Vector3 centerPosition)
         {
+            if (Disposed) return null;
+            
             var elementSize = 16;
-            var center = new ChunkCoordinates(Center);
+            var center = new ChunkCoordinates(centerPosition);
             var forceRedraw = center != _previousCenter;
             
             Texture2D oldTexture = null;
@@ -215,7 +219,7 @@ namespace Alex.Gui.Elements.Map
                 texture.SetData(ArrayOf<uint>.Create(Width * Height));
             }
             
-            foreach (var container in GetContainers(center, _world.ChunkManager.RenderDistance))
+            foreach (var container in GetContainers(center, RenderDistance))
             {
                // if (container.Invalidated)
               //      continue;
@@ -274,19 +278,27 @@ namespace Alex.Gui.Elements.Map
         /// <inheritdoc />
         public void OnTick()
         {
-            foreach (var container in GetContainers(new ChunkCoordinates(Center), _world.ChunkManager.RenderDistance))
+            var chunkManager = _world?.ChunkManager;
+            if (Disposed || chunkManager == null) return;
+
+            foreach (var container in GetContainers(new ChunkCoordinates(Center), RenderDistance))
             {
                 if (container.IsDirty)
                 {
-                    _world.ChunkManager.TryGetChunk(container.Coordinates, out var chunk);
+                    chunkManager.TryGetChunk(container.Coordinates, out var chunk);
                     container.Update(_world, chunk);
                 }
             }
         }
 
+        public bool Disposed { get; private set; } = false;
         /// <inheritdoc />
         public void Dispose()
         {
+            if (Disposed)
+                return;
+            
+            Disposed = true;
           //  _trackedEntities.CollectionChanged -= TrackedEntitiesOnCollectionChanged;
          //   _trackedEntities.Clear();
             
@@ -308,6 +320,8 @@ namespace Alex.Gui.Elements.Map
             {
                 element.Value?.Dispose();
             }
+
+            _world = null;
         }
     }
 }

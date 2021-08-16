@@ -129,7 +129,10 @@ namespace Alex.Gamestates.InGame.Hud
 	        {
 		        Anchor = Alignment.TopRight,
 		        ZoomLevel = ZoomLevel.Level8,
-		        FixedRotation = false
+		        FixedRotation = false,
+		        CanFocus = false,
+		        Enabled = false,
+		        CanHighlight = false
 	        };
 
 	        _rightSideStackContainer = new StackContainer()

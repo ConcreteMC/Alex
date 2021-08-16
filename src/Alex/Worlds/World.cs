@@ -116,7 +116,7 @@ namespace Alex.Worlds
 		private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 		private static Texture2D[] _destroyStages = null;//new Texture2D[10];
 		
-		public WorldMap Map { get; private set; }
+		public WorldMap Map { get; }
 		public World(IServiceProvider serviceProvider, GraphicsDevice graphics, AlexOptions options,
 			NetworkProvider networkProvider)
 		{
@@ -1121,7 +1121,7 @@ namespace Alex.Worlds
 			EntityManager = null;
 			ChunkManager = null;
 
-			//Player.Dispose();
+			Player.Dispose();
 			//Ticker.Dispose();
 			TickManager = null;
 			Player = null;

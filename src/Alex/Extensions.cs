@@ -41,6 +41,9 @@ namespace Alex
 			GuiTextures texture;
 			switch (marker)
 			{
+				case MapMarker.None:
+					return null;
+				
 				case MapMarker.WhitePointer:
 					texture = AlexGuiTextures.MapMarkers.WhitePointer;
 					break;

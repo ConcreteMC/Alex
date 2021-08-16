@@ -2,17 +2,23 @@
 using Alex.Common.Utils.Vectors;
 using Alex.Utils;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Input;
+using NLog;
 using RocketUI;
+using RocketUI.Input;
 
 namespace Alex.Gui.Elements.Map
 {
-    public class MapRenderElement : RocketElement
+    public class MapRenderElement : RocketControl
     {
+        private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(MapRenderElement));
         private IMap _map;
 
         private static readonly byte MaxZoomLevel = (byte) ZoomLevel.Maximum;
         private static readonly byte MinZoomLevel = (byte) ZoomLevel.Minimum;
-        
+
+        public EventHandler<MapClickedEventArgs> OnClick;
+
         private ZoomLevel _zoomLevel = ZoomLevel.Default;
         public ZoomLevel ZoomLevel
         {
@@ -94,6 +100,7 @@ namespace Alex.Gui.Elements.Map
             });
         }
 
+        private static readonly Vector2 MarkerRotationOrigin = new Vector2(4, 4);
         private Point _previousSize = new Point(128, 128);
         /// <inheritdoc />
         protected override void OnAfterMeasure()
@@ -128,7 +135,12 @@ namespace Alex.Gui.Elements.Map
             Width = (int)Math.Ceiling(128 * multiplier);
             Height = (int)Math.Ceiling(128 * multiplier);
         }
-
+        
+        private Vector3 _mapOffset = Vector3.Zero;
+        public Vector3 Center => _map.Center + (_mapOffset);
+        public float ZoomScale => ((float) _zoomLevel) / (((float) ZoomLevel.Maximum) / 2f);
+        public float CursorScale =>  ((float)ZoomLevel.Maximum / ((float)_zoomLevel * 2f));
+        public Vector3 CursorWorldPosition => GetWorldPosition(_cursorPosition.ToVector2());
         protected override void OnDraw(GuiSpriteBatch graphics, GameTime gameTime)
         {
             base.OnDraw(graphics, gameTime);
@@ -138,51 +150,58 @@ namespace Alex.Gui.Elements.Map
             
             if (!FixedRotation)
                 Rotation = _map.Rotation;
+
+            var centerPosition = Center;
+            var zoomScale = ZoomScale;
             
-            var centerPosition = _map.Center;
-            var zoomScale = ((float) ZoomLevel.Maximum / (float) ZoomLevel);
-            
-            DrawMap(graphics, centerPosition, _radius, zoomScale, out var minY, out var maxY);
-            DrawMarkers(graphics, centerPosition, _radius, zoomScale, minY, maxY);
+            DrawMap(graphics, centerPosition, _radius, zoomScale);
+            DrawMarkers(graphics, centerPosition, _radius, zoomScale);
 
             graphics.DrawRectangle(RenderBounds, Color.Black, 1);
         }
-
-        private static readonly Vector2 MarkerRotationOrigin = new Vector2(4, 4);
-        private void DrawMarkers(GuiSpriteBatch graphics, Vector3 centerPosition, int radius, float zoomScale, int minY, int maxY)
+        
+        private void DrawMarkers(GuiSpriteBatch graphics, Vector3 centerPosition, int radius, float zoomScale)
         {
             var center = new ChunkCoordinates(centerPosition);
 
             foreach (var icon in _map.GetMarkers(center, radius))
             {
                 var position = GetRenderPosition(icon.Position, centerPosition, zoomScale);
+
+                if (!RenderBounds.Contains(position))
+                {
+                    if (icon.AlwaysShown)
+                    {
+                        position = Vector2.Clamp(
+                            position, RenderBounds.Location.ToVector2() + MarkerRotationOrigin,
+                            (RenderBounds.Location + RenderBounds.Size).ToVector2() - MarkerRotationOrigin);
+                    }
+                    else
+                    {
+                        continue;
+                    }
+                }
+                
                 var value = icon.Marker.ToTexture();
 
                 if (value.HasValue)
                 {
-                    var yDistance =centerPosition.Y - icon.Position.Y;
-                    //For every block away from me, scale their map icon by 0.05
-                    yDistance *= 0.05f;
-                    yDistance = 1f - yDistance;
-
-                    yDistance = Math.Clamp(yDistance, 0.05f, 1f);
-                    
                     graphics.SpriteBatch.Draw(
                         value, position, value.Color.GetValueOrDefault(icon.Color),
                        ((icon.Rotation).ToRadians()) - Rotation, MarkerRotationOrigin, Vector2.One * zoomScale );
                 }
             }
         }
-
-        private static readonly Vector2 MapRotationOrigin = new Vector2(8, 8);
-        private void DrawMap(GuiSpriteBatch graphics, Vector3 centerPosition, int radius, float zoomScale, out int minY, out int maxY)
+        
+        private void DrawMap(GuiSpriteBatch graphics, Vector3 centerPosition, int radius, float zoomScale)
         {
-            minY = (int)centerPosition.Y;
-            maxY = minY;
-            
             var center = new ChunkCoordinates(centerPosition);
 
-            var texture = _map.GetTexture(graphics.Context.GraphicsDevice);
+            var texture = _map.GetTexture(graphics.Context.GraphicsDevice, centerPosition);
+
+            if (texture == null)
+                return;
+            
             var position = GetRenderPosition(new Vector3(center.X * 16f, 0f, center.Z * 16f), centerPosition, zoomScale);
             
             graphics.SpriteBatch.Draw(
@@ -204,6 +223,115 @@ namespace Alex.Gui.Elements.Map
             return renderPos;;
         }
 
+        private bool _dragging = false;
+
+        /// <inheritdoc />
+        protected override void OnFocusDeactivate()
+        {
+            base.OnFocusDeactivate();
+            _dragging = false;
+        }
+
+        /// <inheritdoc />
+        protected override void OnCursorDown(Point cursorPosition)
+        {
+            base.OnCursorDown(cursorPosition);
+            _dragging = true;
+        }
+
+        /// <inheritdoc />
+        protected override void OnCursorUp(Point cursorPosition)
+        {
+            base.OnCursorUp(cursorPosition);
+            _dragging = false;
+        }
+
+        private Point _cursorPosition = Point.Zero;
+        /// <inheritdoc />
+        protected override void OnCursorMove(Point cursorPosition, Point previousCursorPosition, bool isCursorDown)
+        {
+            _cursorPosition = cursorPosition;
+            base.OnCursorMove(cursorPosition, previousCursorPosition, isCursorDown);
+
+            if (!_dragging)
+                return;
+
+            var amount = (previousCursorPosition - cursorPosition).ToVector2() * (CursorScale);
+            _mapOffset += new Vector3(amount.X, 0f, amount.Y);
+            //_map.Move(amount);
+        }
+
+        private DateTime _lastLeftClick = DateTime.UtcNow;
+        private DateTime _lastRightClick = DateTime.UtcNow;
+        /// <inheritdoc />
+        protected override void OnCursorPressed(Point cursorPosition, MouseButton button)
+        {
+            base.OnCursorPressed(cursorPosition, button);
+
+            var now = DateTime.UtcNow;
+            
+            if (button == MouseButton.Left)
+            {
+                //Double click
+                if ((now - _lastLeftClick).TotalMilliseconds <= 750)
+                {
+                    OnClick?.Invoke(
+                        this,
+                        new MapClickedEventArgs(
+                            ClickEventType.DoubleClick, cursorPosition.ToVector2(),
+                            GetWorldPosition(cursorPosition.ToVector2()), MouseButton.Left));
+                }
+                else //Single Click
+                {
+                    OnClick?.Invoke(
+                        this,
+                        new MapClickedEventArgs(
+                            ClickEventType.SingleClick, cursorPosition.ToVector2(),
+                            GetWorldPosition(cursorPosition.ToVector2()), MouseButton.Left));
+                }
+
+                _lastLeftClick = now;
+            }
+            else if (button == MouseButton.Right)
+            {
+                //Double click
+                if ((now - _lastRightClick).TotalMilliseconds <= 750)
+                {
+                    OnClick?.Invoke(
+                        this,
+                        new MapClickedEventArgs(
+                            ClickEventType.DoubleClick, cursorPosition.ToVector2(),
+                            GetWorldPosition(cursorPosition.ToVector2()), MouseButton.Right));
+                }
+                else //Single Click
+                {
+                    OnClick?.Invoke(
+                        this,
+                        new MapClickedEventArgs(
+                            ClickEventType.SingleClick, cursorPosition.ToVector2(),
+                            GetWorldPosition(cursorPosition.ToVector2()), MouseButton.Right));
+                }
+
+                _lastRightClick = now;
+            }
+        }
+
+        private Vector3 GetWorldPosition(Vector2 cursorPosition)
+        {
+            var tCenter = RenderBounds.Size.ToVector2() / 2f;
+
+            var distanceFromCenter = cursorPosition - tCenter;
+            distanceFromCenter *= (CursorScale);
+            
+            return Center + new Vector3(distanceFromCenter.X, 0f, distanceFromCenter.Y);
+        }
+        
+        public void Reset()
+        {
+            _mapOffset = Vector3.Zero;
+            ZoomLevel = ZoomLevel.Default;
+        }
+
         /// <inheritdoc />
         protected override void Dispose(bool disposing)
         {
@@ -214,5 +342,27 @@ namespace Alex.Gui.Elements.Map
                 _map = null;
             }
         }
+    }
+
+    public class MapClickedEventArgs : EventArgs
+    {
+        public ClickEventType EventType { get; }
+        public Vector2 CursorPosition { get; }
+        public Vector3 WorldPosition { get; }
+        public MouseButton MouseButton { get; }
+
+        public MapClickedEventArgs(ClickEventType eventType, Vector2 cursorPosition, Vector3 worldPosition, MouseButton mouseButton)
+        {
+            EventType = eventType;
+            CursorPosition = cursorPosition;
+            WorldPosition = worldPosition;
+            MouseButton = mouseButton;
+        }
+    }
+
+    public enum ClickEventType
+    {
+        SingleClick,
+        DoubleClick
     }
 }

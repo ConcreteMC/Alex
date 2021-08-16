@@ -34,6 +34,7 @@ namespace Alex.Common.Gui.Elements
 					HighlightedBackground = new Color(Color.Black * 0.8f, 0.5f);
 					HighlightColor = (Color) TextColor.Cyan;
 					DefaultColor = (Color) TextColor.White;
+					DisabledColor = (Color) TextColor.Gray;
                 
 					/*if (button is ToggleButton toggleButton)
 					{
@@ -48,6 +49,7 @@ namespace Alex.Common.Gui.Elements
 					FocusedBackground = GuiTextures.ButtonFocused;
 					HighlightColor = (Color) TextColor.Yellow;
 					DefaultColor = (Color) TextColor.White;
+					DisabledColor = (Color) TextColor.Gray;
                 
 					/*if (button is ToggleButton toggleButton)
 					{

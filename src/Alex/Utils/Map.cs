@@ -4,6 +4,7 @@ using System.Linq;
 using Alex.Common.Blocks;
 using Alex.Common.Utils.Vectors;
 using Alex.Gui.Elements.Map;
+using ConcurrentCollections;
 using fNbt;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -22,9 +23,13 @@ namespace Alex.Utils
 		float Rotation { get; }
 
 		uint[] GetData();
-		Texture2D GetTexture(GraphicsDevice device);
+		Texture2D GetTexture(GraphicsDevice device, Vector3 center);
 		
+		void Add(MapIcon icon);
+		void Remove(MapIcon icon);
 		IEnumerable<MapIcon> GetMarkers(ChunkCoordinates center, int radius);
+
+		//void Move(Vector2 amount);
 	}
 	
 	public class Map : IMap
@@ -41,6 +46,7 @@ namespace Alex.Utils
 		private int[][] _colors;
 		//private Texture2D _texture;
 		
+		private readonly ConcurrentHashSet<MapIcon> _markers;
 		protected int Layers { get; }
 		public Map(int width, int height, int layers = 1)
 		{
@@ -48,7 +54,8 @@ namespace Alex.Utils
 			Width = width;
 			Height = height;
 			_colors = new int[width * height][];
-
+			_markers = new ConcurrentHashSet<MapIcon>();
+			
 			for (int i = 0; i < _colors.Length; i++)
 			{
 				_colors[i] = new int[layers];
@@ -135,7 +142,7 @@ namespace Alex.Utils
 		}
 
 		/// <inheritdoc />
-		public virtual Texture2D GetTexture(GraphicsDevice device)
+		public virtual Texture2D GetTexture(GraphicsDevice device, Vector3 center)
 		{
 			var texture = new Texture2D(device, Width, Height);
 			texture.SetData(GetData());
@@ -144,9 +151,34 @@ namespace Alex.Utils
 		}
 
 		/// <inheritdoc />
+		public void Add(MapIcon icon)
+		{
+			if (icon == null)
+				return;
+            
+			_markers.Add(icon);
+		}
+
+		/// <inheritdoc />
+		public void Remove(MapIcon icon)
+		{
+			if (icon == null)
+				return;
+
+			_markers.TryRemove(icon);
+		}
+
+		/// <inheritdoc />
 		public IEnumerable<MapIcon> GetMarkers(ChunkCoordinates center, int radius)
 		{
-			yield break;
+			var markers = _markers;
+			if (markers == null || markers.IsEmpty)
+				yield break;
+           
+			foreach (var icon in markers.Where(x => x.AlwaysShown || new ChunkCoordinates(x.Position).DistanceTo(center) <= radius).OrderBy(x => x.DrawOrder))
+			{
+				yield return icon;
+			}
 		}
 
 		private void Dispose(bool disposing)

@@ -90,7 +90,7 @@ namespace Alex.Entities
         {
 	        Network = networkProvider;
 	        
-		    Controller = new PlayerController(graphics, world, inputManager, this, playerIndex);
+		    Controller = new PlayerController(graphics, inputManager, this, playerIndex);
 
 		    SnapHeadYawRotationOnMovement = false;
 			SnapYawRotationOnMovement = true;

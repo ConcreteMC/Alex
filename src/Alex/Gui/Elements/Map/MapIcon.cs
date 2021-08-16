@@ -17,9 +17,19 @@ namespace Alex.Gui.Elements.Map
 		public Color Color { get; set; } = Color.White;
 		public bool AlwaysShown { get; set; } = false;
 
+		public string Label { get; set; } = null;
 		public MapIcon(MapMarker marker)
 		{
 			Marker = marker;
+		}
+	}
+
+	public class UserMapIcon : MapIcon
+	{
+		/// <inheritdoc />
+		public UserMapIcon(MapMarker marker) : base(marker)
+		{
+			
 		}
 	}
 }

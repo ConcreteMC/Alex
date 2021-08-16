@@ -42,7 +42,6 @@ namespace Alex.Entities
         //public bool IsFreeCam { get; set; }
 
         private GraphicsDevice Graphics { get; }
-        private World World { get; }
 
         private Player Player { get; }
 		private InputManager GlobalInputManager { get; }
@@ -51,17 +50,13 @@ namespace Alex.Entities
 		private List<InputActionBinding> _inputBindings { get; }
 
 		public PlayerController(GraphicsDevice graphics,
-			World world,
 			InputManager inputManager,
 			Player player,
 			PlayerIndex playerIndex)
 		{
 			Player = player;
 			Graphics = graphics;
-			World = world;
 			PlayerIndex = playerIndex;
-
-			_inputBindings = new List<InputActionBinding>();
 			//  IsFreeCam = true;
 
 			GlobalInputManager = inputManager;
@@ -86,9 +81,8 @@ namespace Alex.Entities
 
 			optionsProvider.AlexOptions.ControllerOptions.RightJoystickSensitivity.Bind(
 				(value, newValue) => { GamepadSensitivity = newValue; });
-
-			_inputBindings.AddRange(
-				new[]
+			
+			_inputBindings = new List<InputActionBinding>(new[]
 				{
 					InputManager.RegisterListener(
 						AlexInputCommand.Jump, InputBindingTrigger.Tap, CheckMovementPredicate, SetFlying),
@@ -98,7 +92,7 @@ namespace Alex.Entities
 					
 					InputManager.RegisterListener(
 						AlexInputCommand.ToggleCamera, InputBindingTrigger.Tap, CheckMovementPredicate,
-						() => World.Camera.ToggleMode()),
+						() => Player.Level.Camera.ToggleMode()),
 					
 					InputManager.RegisterListener(
 						AlexInputCommand.DropItem, InputBindingTrigger.Tap, CheckMovementPredicate,
@@ -527,9 +521,15 @@ namespace Alex.Entities
 			LastVelocity = Player.Velocity;
 	    }
 
+	    public bool Disposed { get; private set; } = false;
 	    /// <inheritdoc />
 	    public void Dispose()
 	    {
+		    if (Disposed)
+			    return;
+
+		    Disposed = true;
+		    
 		    var bindings = _inputBindings.ToArray();
 		    _inputBindings.Clear();
 
