@@ -29,7 +29,7 @@ namespace Alex.Gui.Elements.Map
 		/// <inheritdoc />
 		public UserMapIcon(MapMarker marker) : base(marker)
 		{
-			
+			AlwaysShown = true;
 		}
 	}
 }

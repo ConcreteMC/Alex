@@ -200,7 +200,8 @@ namespace Alex.Gui.Dialogs
 				{
 					var mapIcon = new UserMapIcon(_selectedMarker)
 					{
-						Position = e.WorldPosition, AlwaysShown = true, Label = "Waypoint"
+						Position = e.WorldPosition,
+						Label = "Waypoint"
 					};
 					
 					_map.Add(mapIcon);
