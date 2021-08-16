@@ -1658,28 +1658,16 @@ namespace Alex.Net.Bedrock
 			if (Client.CommandProvider is BedrockCommandProvider bcp)
 			{
 				bcp.Reset();
-
-				CommandTreeBuilder builder = new CommandTreeBuilder();
-
 				foreach (var cmd in message.CommandSet)
 				{
-					var node = new LiteralCommandNode(cmd.Key);
-					int nodeIndex = builder.Add(node);
-					
 					foreach (var version in cmd.Value.Versions)
 					{
-						foreach (var versionOverload in version.Overloads)
+						foreach (var overload in version.Overloads)
 						{
-							var overload = versionOverload.Value;
-
-							foreach (var param in overload.Input.Parameters)
-							{
-								
-							}
-							/*Command c = new Command(cmd.Key);
+							Command c = new Command(cmd.Key);
 							c.Description = version.Description;
 							
-							foreach (var param in overload.Input.Parameters)
+							foreach (var param in overload.Value.Input.Parameters)
 							{
 								if (param.Type == "stringenum")
 								{
@@ -1723,18 +1711,21 @@ namespace Alex.Net.Bedrock
 									Log.Debug($"Unknown parameter type: {param.Type} (name: {param.Name})");
 									c.Properties.Add(new CommandProperty(param.Name, !param.Optional));
 								}
+								
+								//CommandProperty cp = new CommandProperty(param.Name, !param.Optional);
+								//
+								//c.Properties.Add(cp);
 							}
 							
-							bcp.Register(c);*/
+							bcp.Register(c);
 						}
 					}
 				}
-
 				
-				bcp.Nodes = builder.ExportNodes();
-				bcp.RootIndex = builder.RootIndex;
 				Log.Info($"Registered {bcp.Count} commands.");
 			}
+			// Client.LoadCommands(message.CommandSet);
+			//UnhandledPackage(message);
 		}
 
 		public void HandleMcpeCommandOutput(McpeCommandOutput message)

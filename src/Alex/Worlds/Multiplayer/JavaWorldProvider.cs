@@ -944,10 +944,9 @@ namespace Alex.Worlds.Multiplayer
 		private void HandleDeclareCommandsPacket(DeclareCommandsPacket packet)
 		{
 			var nodes = packet.Nodes.ToArray();
-			CommandProvider.Nodes = nodes;
-			CommandProvider.RootIndex = packet.RootIndex;
+			var rootNode = nodes[packet.RootIndex];
 
-			/*foreach (var childIndex in rootNode.Children)
+			foreach (var childIndex in rootNode.Children)
 			{
 				var child = nodes[childIndex];
 
@@ -1004,9 +1003,9 @@ namespace Alex.Worlds.Multiplayer
 					
 					CommandProvider.Register(command);
 				}
-			}*/
+			}
 			
-			//Log.Info($"Registered {CommandProvider.Count} commands.");
+			Log.Info($"Registered {CommandProvider.Count} commands.");
 			//CommandProvider.Register();
 		}
 
