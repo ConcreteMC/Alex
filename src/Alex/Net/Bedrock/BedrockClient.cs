@@ -94,77 +94,75 @@ namespace Alex.Net.Bedrock
         private readonly List<IDisposable> _disposables = new List<IDisposable>();
         public BedrockTransactionTracker TransactionTracker { get; }
         public bool ServerAuthoritiveInventory { get; set; } = false;
+
         public BedrockClient(Alex alex, IPEndPoint endpoint, PlayerProfile playerProfile, BedrockWorldProvider wp)
-		{
-			TransactionTracker = new BedrockTransactionTracker(this);
-			PacketFactory.CustomPacketFactory = new AlexPacketFactory();
-			CancellationTokenSource = new CancellationTokenSource();
-			
-            Alex = alex;
-			WorldProvider = wp;
-			OptionsProvider = alex.Services.GetRequiredService<IOptionsProvider>();
-			XboxAuthService = alex.Services.GetRequiredService<XboxAuthService>();
-			
-			ChunkRadius = Options.VideoOptions.RenderDistance;
-			
-			_disposables.Add(Options.VideoOptions.RenderDistance.Bind(RenderDistanceChanged));
-			_disposables.Add(Options.VideoOptions.ClientSideLighting.Bind(ClientSideLightingChanged));
+        {
+	        TransactionTracker = new BedrockTransactionTracker(this);
+	        PacketFactory.CustomPacketFactory = new AlexPacketFactory();
+	        CancellationTokenSource = new CancellationTokenSource();
 
-			_disposables.Add(ResourcePackManager = new ResourcePackManager(this, Alex.Resources, alex.Services.GetRequiredService<ResourcePackCache>()));
+	        Alex = alex;
+	        WorldProvider = wp;
+	        OptionsProvider = alex.Services.GetRequiredService<IOptionsProvider>();
+	        XboxAuthService = alex.Services.GetRequiredService<XboxAuthService>();
 
-			if (wp != null)
-			{
-				ChunkProcessor = new ChunkProcessor(
-					this, CancellationTokenSource.Token, Alex.Services.GetRequiredService<BlobCache>());
+	        ChunkRadius = Options.VideoOptions.RenderDistance;
 
-				_disposables.Add(ChunkProcessor);
-			//	ChunkProcessor.ClientSideLighting = Options.VideoOptions.ClientSideLighting;
-				//ChunkProcessor.Instance = ChunkProcessor;
-			}
+	        _disposables.Add(Options.VideoOptions.RenderDistance.Bind(RenderDistanceChanged));
+	        _disposables.Add(Options.VideoOptions.ClientSideLighting.Bind(ClientSideLightingChanged));
 
-			Connection = new RaknetConnection();
-			Connection.RemoteEndpoint = endpoint;
-		//	ServerEndpoint = endpoint;
+	        _disposables.Add(
+		        ResourcePackManager = new ResourcePackManager(
+			        this, Alex.Resources, alex.Services.GetRequiredService<ResourcePackCache>()));
 
-			Connection.CustomMessageHandlerFactory = session =>
-			{
-				//Log.Info($"Requesting sessions...  {Connection.ConnectionInfo.RakSessions.Count}");
+	        if (wp != null)
+	        {
+		        ChunkProcessor = new ChunkProcessor(
+			        this, CancellationTokenSource.Token, Alex.Services.GetRequiredService<BlobCache>());
 
-			//	bool hasSession = Session != null;
+		        _disposables.Add(ChunkProcessor);
+	        }
 
-			BedrockClientPacketHandler packetHandler;
-			var handler = new BedrockMessageHandler(session, packetHandler = new BedrockClientPacketHandler(this, wp, playerProfile, alex, CancellationTokenSource.Token, ChunkProcessor));
-				
-				if (BedrockMessageHandler != null)
-					Log.Warn($"Messagehandler was already set.");
-				
-				if (Session == null)
-				{
-					Session = session;
-					
-					handler.ConnectionAction = () =>
-					{
-						ConnectionAcceptedWaitHandle?.Set();
-						SendAlexLogin(playerProfile.Username);
-					};
+	        Connection = new RaknetConnection();
+	        Connection.RemoteEndpoint = endpoint;
+	        
+	        Connection.CustomMessageHandlerFactory = session =>
+	        {
+		        BedrockClientPacketHandler packetHandler;
 
-					handler.DisconnectedAction = (reason, sendDisconnect) =>
-					{
-						Log.Warn($"Got disconnected from server: {reason}");
-						ShowDisconnect(reason, false, false, DisconnectReason.Unknown);
-					};
-					
-					BedrockMessageHandler = handler;
-					PacketHandler = packetHandler;
-				}
+		        var handler = new BedrockMessageHandler(
+			        session,
+			        packetHandler = new BedrockClientPacketHandler(
+				        this, wp, playerProfile, alex, CancellationTokenSource.Token, ChunkProcessor));
 
-				return handler;
-			};
+		        if (BedrockMessageHandler != null)
+			        Log.Warn($"Messagehandler was already set.");
 
-			//CommandProvider = new BedrockCommandProvider(World);
-		}
+		        if (Session == null)
+		        {
+			        Session = session;
 
-		private void ClientSideLightingChanged(bool oldvalue, bool newvalue)
+			        handler.ConnectionAction = () =>
+			        {
+				        ConnectionAcceptedWaitHandle?.Set();
+				        SendAlexLogin(playerProfile.Username);
+			        };
+
+			        handler.DisconnectedAction = (reason, sendDisconnect) =>
+			        {
+				        Log.Warn($"Got disconnected from server: {reason}");
+				        ShowDisconnect(reason, false, false, DisconnectReason.Unknown);
+			        };
+
+			        BedrockMessageHandler = handler;
+			        PacketHandler = packetHandler;
+		        }
+
+		        return handler;
+	        };
+        }
+
+        private void ClientSideLightingChanged(bool oldvalue, bool newvalue)
 		{
 			//ChunkProcessor.ClientSideLighting = newvalue;
 		}
@@ -181,52 +179,37 @@ namespace Alex.Net.Bedrock
 			Starting = true;
 
 			StartTime = DateTime.UtcNow;
-			//var cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(CancellationTokenSource.Token, cancellationToken);
-			//	var player = WorldReceiver.Player;
 
-			//player.Inventory.CursorChanged += InventoryOnCursorChanged;
-			//	player.Inventory.SlotChanged += InventoryOnSlotChanged;
-
-			//ConnectionAcceptedWaitHandle = resetEvent;
-
-			//return Task.Run((Func<bool>)(() =>
+			if (!Connection.AutoConnect)
 			{
-				if (!Connection.AutoConnect)
+				if (TryLocate(Connection.RemoteEndpoint, out var serverInfo, cancellationToken))
 				{
-					//Connection.ConnectionInfo.ThroughPut.Change(Timeout.Infinite, Timeout.Infinite);
+					OnMotdReceivedHandler?.Invoke(
+						this,
+						new BedrockMotd(serverInfo.serverName)
+						{
+							ServerEndpoint = serverInfo.serverEndPoint, Latency = serverInfo.ping
+						});
 					
-					if (TryLocate(Connection.RemoteEndpoint, out var serverInfo, cancellationToken))
-					{
-						OnMotdReceivedHandler?.Invoke(
-							this,
-							new BedrockMotd(serverInfo.serverName)
-							{
-								ServerEndpoint = serverInfo.serverEndPoint, Latency = serverInfo.ping
-							});
-						//resetEvent.Set();
-
-						return true;
-					}
+					return true;
 				}
-				else
+			}
+			else
+			{
+				Connection.Start();
+				
+				if (Connection.TryConnect(Connection.RemoteEndpoint, cancellationToken: cancellationToken))
 				{
-					Connection.Start();
-					
-					//cancellationToken.CancelAfter(timeout);
-					if (Connection.TryConnect(Connection.RemoteEndpoint, cancellationToken: cancellationToken))
-					{
-						Log.Info("Connected");
-						ThroughPut = new Timer(state => { UpdateConnectionInfo();}, null, 0, 1000);
+					Log.Info("Connected");
+					ThroughPut = new Timer(state => { UpdateConnectionInfo(); }, null, 0, 1000);
 
-						//resetEvent.Set();
-						return true;
-					}
+					return true;
 				}
+			}
 
-				return false;
-			} //));
+			return false;
 		}
-		
+
 		private void UpdateConnectionInfo()
 		{
 			long packetSizeOut = Interlocked.Exchange(ref Connection.ConnectionInfo.BytesOut, 0L);
@@ -248,12 +231,9 @@ namespace Alex.Net.Bedrock
 
 			string str =
 				$"Pkt in/out(#/s) {packetCountIn}/{packetCountOut}, ACK in/out(#/s) {ackReceived}/{ackSent}, NAK in/out(#/s) {nakReceive}/{nakSent}, THR in/out(Kbps){throughPutIn:F2}/{throughtPutOut:F2}, RTT {Session.SlidingWindow.GetRtt()}, RTO {Session.SlidingWindow.GetRtoForRetransmission()}, CWND {Session.SlidingWindow.Cwnd}, UnAcked {Session.UnackedBytes}";
-
-			//if (Config.GetProperty("ServerInfoInTitle", false))
-			//	Console.Title = str;
-			//else
+			
 			if (LoggingConstants.LogNetworkStatistics)
-				Log.Debug(str);
+				Log.Info(str);
 
 			ConnectionInfo.NetworkState networkState = ConnectionInfo.NetworkState.Ok;
 
@@ -306,8 +286,6 @@ namespace Alex.Net.Bedrock
 					if (numberOfAttempts <= 0 || cancellationToken.IsCancellationRequested)
 						break;
 
-					//Task.Delay(100).Wait();
-
 					spinWait.SpinOnce();
 				}
 
@@ -352,11 +330,7 @@ namespace Alex.Net.Bedrock
 		/// <inheritdoc />
 		public override void EntityFell(long entityId, float distance, bool inVoid)
 		{
-			/*McpeEntityFall fall = McpeEntityFall.CreateObject();
-			fall.runtimeEntityId = entityId;
-			fall.fallDistance = distance;
-			fall.isInVoid = inVoid;
-			SendPacket(fall);*/
+			
 		}
 
 		public void SendPacket(Packet packet)
@@ -365,7 +339,7 @@ namespace Alex.Net.Bedrock
 			{
 				return;
 			}
-		//	Log.Info($"Sent: {packet}");
+			
 			Session.SendPacket(packet);
 		}
 
@@ -391,7 +365,7 @@ namespace Alex.Net.Bedrock
 
 				return;
 			}
-			
+
 			_markedAsInitialized = true;
 			
 			Log.Info($"Sent LocalPlayerInitialized");
@@ -565,7 +539,7 @@ namespace Alex.Net.Bedrock
                 certChain = EncodeJwt(certificateData, b64Key, signKey, true);
             }
 
-            var skinData = EncodeSkinJwt(clientKey, signKey, username, b64Key);
+            var skinData = EncodeSkinJwt(signKey, username, b64Key);
 
 	        byte[] data = CryptoUtils.CompressJwtBytes(certChain, skinData, CompressionLevel.Fastest);
 
@@ -578,17 +552,13 @@ namespace Alex.Net.Bedrock
             BedrockMessageHandler.CryptoContext =  new MiNET.Utils.Cryptography.CryptoContext() {ClientKey = clientKey, UseEncryption = false,};
 
             SendPacket(loginPacket);
-
-            /*     var packet = McpeClientCacheStatus.CreateObject();
-                 packet.enabled = false;
-				     
-                 Session.SendPacket(packet);*/
-
-        //    Session.CryptoContext.UseEncryption = true;
         }
 
 		public void SendMcpeMovePlayer(PlayerLocation location, byte mode = 0, long tick = 0)
 		{
+			if (!CanSpawn || !GameStarted)
+				return;
+			
 			var movePlayerPacket = McpeMovePlayer.CreateObject();
 			movePlayerPacket.runtimeEntityId = EntityId;
 			//movePlayerPacket.otherRuntimeEntityId = NetworkEntityId;
@@ -685,9 +655,6 @@ namespace Alex.Net.Bedrock
                 JsonMapper = new JWTMapper()
             });
 
-           // Log.Warn(JWT.Payload(val));
-
-          //  Log.Warn(string.Join(";", JWT.Headers(val)));
           if (doChain)
           {
 	          val = $@"{{ ""chain"": [""{val}""] }}";
@@ -695,18 +662,8 @@ namespace Alex.Net.Bedrock
 
           return Encoding.UTF8.GetBytes(val);
         }
-
-        private BoneName ParseBoneName(string name)
-        {
-	        if (Enum.TryParse(name, true, out BoneName boneName))
-	        {
-		        return boneName;
-	        }
-
-	        return BoneName.Unknown;
-        }
-
-        private byte[] EncodeSkinJwt(AsymmetricCipherKeyPair newKey, ECDsa signKey, string username, string x5u)
+        
+        private byte[] EncodeSkinJwt(ECDsa signKey, string username, string x5u)
         {
 	        #region Skin Json
 
@@ -720,9 +677,6 @@ namespace Alex.Net.Bedrock
 	        if (Alex.PlayerModel != null && Alex.PlayerTexture != null)
 	        {
 		        var model = Alex.PlayerModel;
-		      //  model.Description.TextureHeight = Alex.PlayerTexture.Height;
-		      //  model.Description.TextureWidth = Alex.PlayerTexture.Width;
-		        //model.Description.Identifier = model.Description.Identifier.Split(':')[0];
 		        byte[] skinData;
 		        using (MemoryStream ms = new MemoryStream())
 		        {
@@ -745,11 +699,8 @@ namespace Alex.Net.Bedrock
 		        {
 			        model
 		        });
-		      //  GeometryModel mm       = new GeometryModel();
-		      //  mm.Geometry.Add(model.Description.Identifier, model);
 
-		      var geoData = Encoding.UTF8.GetBytes(MCJsonConvert.SerializeObject(mm, true));
-		    //  File.WriteAllBytes("currentSkin.json", geoData);
+				var geoData = Encoding.UTF8.GetBytes(MCJsonConvert.SerializeObject(mm, true));
 		      
 		        var modelIdentifier = model.Description.Identifier;
 		        
@@ -845,8 +796,6 @@ namespace Alex.Net.Bedrock
 			        DefaultValueHandling = DefaultValueHandling.Include
 		        });
 	        
-	   //     Log.Info(serialized);
-
 	        string val = JWT.Encode(serialized, signKey, JwsAlgorithm.ES384, new Dictionary<string, object> { { "x5u", x5u } }, new JwtSettings()
             {
                 JsonMapper = new JWTMapper()
@@ -1284,6 +1233,11 @@ namespace Alex.Net.Bedrock
 			var message = msg.RawMessage; 
 			if (message[0] == '/')
 			{
+				if (!CommandProvider.Enabled)
+				{
+					WorldProvider.ChatRecipient?.AddMessage($"{ChatColors.Gray}Commands are not enabled on this server!", Common.Data.MessageType.Raw);
+					return;
+				}
 				McpeCommandRequest commandRequest = McpeCommandRequest.CreateObject();
 				commandRequest.command = message;
 				commandRequest.unknownUuid = new MiNET.Utils.UUID(Guid.NewGuid().ToString());
@@ -1302,9 +1256,6 @@ namespace Alex.Net.Bedrock
 			packet.chunkRadius = radius;
 
 			SendPacket(packet);
-			
-			//if (PlayerStatus != 3 && GameStarted)
-				//MarkAsInitialized();
 		}
 
 		public void SendDisconnectionNotification()
@@ -1320,11 +1271,7 @@ namespace Alex.Net.Bedrock
 			}
 			
 			_disposables.Clear();
-			
-			//ChunkProcessor.Instance = null;
 			Close();
-			//WorkerThreadPool.Dispose();
-			//_threadPool.WaitForThreadsExit();
 		}
 	}
 

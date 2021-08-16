@@ -1,4 +1,6 @@
-namespace Alex.Common.Commands.Properties
+using Alex.Utils;
+
+namespace Alex.Common.Commands.Parsers
 {
 	public class ScoreHolderArgumentParser : ArgumentParser
 	{
@@ -7,6 +9,12 @@ namespace Alex.Common.Commands.Properties
 		public ScoreHolderArgumentParser(string name, byte flags) : base(name)
 		{
 			_flags = flags;
+		}
+
+		/// <inheritdoc />
+		public override bool TryParse(SeekableTextReader input)
+		{
+			return false;
 		}
 	}
 	
@@ -17,6 +25,12 @@ namespace Alex.Common.Commands.Properties
 		public EntityArgumentParser(string name, byte flags) : base(name)
 		{
 			_flags = flags;
+		}
+
+		/// <inheritdoc />
+		public override bool TryParse(SeekableTextReader input)
+		{
+			return false;
 		}
 	}
 }

@@ -53,14 +53,6 @@ namespace Alex.Net.Bedrock.Packets
             {
                 switch (messageId)
                 {
-                 //   case 0x37:
-                 ////       packet = new AdventureSettings();
-                 //       break;
-                  //  case 0x55:
-                   //     packet = McpeTransfer.CreateObject();
-                        //packet = new AdventureSettings();
-
-                   //     break;
                     case 0x0b:
                         packet = new StartGame();
                         break;
@@ -76,39 +68,9 @@ namespace Alex.Net.Bedrock.Packets
                     case 0x9e:
                         packet = McpeAnimateEntity.CreateObject();
                         break;
-                    //  case 0x07:
-                  //      packet = new McpeResourcePackStack();
-                  //      break;
-                   // case 0x0c:
-                   //     packet = new AddPlayer();
-                   //     break;
-
-                    //The following are only here so we can join.
-                  //  case 0x1F:
-                    //    packet = new MobEquipment();
-                      //  break;
-                  //  case 0x20:
-                  //       packet = new MobArmorEquipment();
-
-                  //       break;
-                    //case 0x27:
-                   //     packet = new SetEntityData();
-                   //     break;
-                  //  case 0x31:
-                  //      packet = new InventoryContent();
-                  //      break;
-                 //   case 0x32:
-                 //       packet = new InventorySlot();
-                 //       break;
                     case 0x6f: //Fixes entity delta
                         packet = new EntityDelta();
                         break;
-              //      case 0x77:
-              //          packet = new AvailableEntityIdentifiers();
-              //          break;
-              //      case 0x7a:
-              //          packet = new BiomeDefinitionList();
-              //          break;
                 }
 
                 packet?.Decode(buffer);

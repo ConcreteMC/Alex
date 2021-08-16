@@ -28,6 +28,7 @@ using Alex.Graphics.Models.Items;
 using Alex.Gui;
 using Alex.Gui.Elements.Map;
 using Alex.Net;
+using Alex.Net.Bedrock;
 using Alex.Utils;
 using Alex.Utils.Threading;
 using Alex.Worlds.Abstraction;
@@ -1171,27 +1172,18 @@ namespace Alex.Worlds
 
 		public void DespawnEntity(long entityId)
 		{
-			//BackgroundWorker.Enqueue(
-			//	() =>
-			//	{
-					if (EntityManager.TryGet(entityId, out Entity entity))
-					{
-						EntityManager.Remove(entityId);
 
-						entity.OnDespawn();
-						//entity.Dispose();
-					}
-			//	});
-			///	Log.Info($"Despawned entity {entityId}");
+			if (EntityManager.TryGet(entityId, out Entity entity))
+			{
+				EntityManager.Remove(entityId);
+
+				entity.OnDespawn();
+			}
 		}
 
 		public void UpdatePlayerPosition(PlayerLocation location, bool teleport = false)
 		{
-		//	var oldPosition = Player.KnownPosition;
 			Player.Movement.MoveTo(location);
-			//Player.KnownPosition = location;
-			
-			//Player.DistanceMoved += MathF.Abs(Vector3.Distance(oldPosition, location));
 		}
 
 		public void UpdateEntityPosition(long entityId,

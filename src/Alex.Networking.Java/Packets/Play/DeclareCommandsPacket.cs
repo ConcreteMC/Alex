@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using Alex.Common.Commands;
 using Alex.Common.Commands.Nodes;
-using Alex.Common.Commands.Properties;
+using Alex.Common.Commands.Parsers;
 using Alex.Networking.Java.Util;
 using NLog;
 using NLog.Fluent;
@@ -57,160 +57,7 @@ namespace Alex.Networking.Java.Packets.Play
 					name = stream.ReadString();
 				}
 
-				List<ArgumentParser> properties = new List<ArgumentParser>();
-				string parser = null;
-
-				if (nodeType == CommandNodeType.Argument)
-				{
-					parser = stream.ReadString();
-
-					switch (parser)
-					{
-						//	case "brigadier:bool":
-						//	stream.ReadBool();
-						//		break;
-
-						case "brigadier:double":
-						{
-							DoubleArgumentParser cp = new DoubleArgumentParser(parser);
-							var dFlags = (byte) stream.ReadByte();
-							cp.Flags = dFlags;
-
-							if ((dFlags & 0x01) != 0)
-							{
-								var dMin = stream.ReadDouble();
-								cp.Min = dMin;
-							}
-
-							if ((dFlags & 0x02) != 0)
-							{
-								var dMax = stream.ReadDouble();
-								cp.Max = dMax;
-							}
-
-							properties.Add(cp);
-						}
-
-							break;
-
-						case "brigadier:float":
-						{
-							FloatArgumentParser cp = new FloatArgumentParser(parser);
-							var dFlags = (byte) stream.ReadByte();
-							cp.Flags = dFlags;
-
-							if ((dFlags & 0x01) != 0)
-							{
-								var dMin = stream.ReadFloat();
-								cp.Min = dMin;
-							}
-
-							if ((dFlags & 0x02) != 0)
-							{
-								var dMax = stream.ReadFloat();
-								cp.Max = dMax;
-							}
-
-							properties.Add(cp);
-						}
-
-							break;
-
-						case "brigadier:integer":
-						{
-							IntegerArgumentParser cp = new IntegerArgumentParser(parser);
-							var dFlags = (byte) stream.ReadByte();
-							cp.Flags = dFlags;
-
-							if ((dFlags & 0x01) != 0)
-							{
-								var dMin = stream.ReadInt();
-								cp.Min = dMin;
-							}
-
-							if ((dFlags & 0x02) != 0)
-							{
-								var dMax = stream.ReadInt();
-								cp.Max = dMax;
-							}
-
-							properties.Add(cp);
-						}
-
-							break;
-
-						case "brigadier:string":
-						{
-							var a = stream.ReadVarInt();
-							properties.Add(new StringArgumentParser(name, (StringArgumentParser.StringMode) a));
-						}
-
-							break;
-
-						case "minecraft:entity":
-						{
-							var entityFlags = (byte) stream.ReadByte();
-							properties.Add(new EntityArgumentParser(name, entityFlags));
-						}
-
-							break;
-
-						//	case "minecraft:game_profile":
-						//		break;
-
-						//	case "minecraft:block_pos":
-						//		break;
-
-						case "minecraft:score_holder":
-						{
-							var scoreHolderFlags = (byte) stream.ReadByte();
-							properties.Add(new ScoreHolderArgumentParser(name, scoreHolderFlags));
-						}
-
-							break;
-
-						case "minecraft:range":
-						{
-							bool allowDecimals = stream.ReadBool();
-
-							if (allowDecimals)
-							{
-								properties.Add(new DoubleArgumentParser(parser) { });
-							}
-							else
-							{
-								properties.Add(new IntegerArgumentParser(parser) { });
-							}
-						}
-
-							break;
-
-						case "minecraft:message":
-						{
-							properties.Add(new MessageArgumentParser(name));
-						}
-
-							break;
-
-						case "minecraft:objective":
-						{
-							properties.Add(new ObjectiveArgumentParser(name));
-						}
-
-							break;
-
-						default:
-							Log.Warn($"Unknown parser: {parser}");
-							properties.Add(new ArgumentParser(parser));
-
-							break;
-					}
-				}
-
 				CommandNode node;
-
-				string suggestionType = "n/a";
-
 				switch (nodeType)
 				{
 					case CommandNodeType.Root:
@@ -224,18 +71,18 @@ namespace Alex.Networking.Java.Packets.Play
 						break;
 
 					case CommandNodeType.Argument:
-						var acn = new ArgumentCommandNode(name) {Parser = parser, Parsers = properties};
+						var acn = new ArgumentCommandNode(name)
+						{
+							Parser = GetParser(stream)
+						};
+
+						acn.Parser.Parent = acn;
 
 						if ((flags & 0x10) != 0)
 						{
-							suggestionType = acn.SuggestionType = stream.ReadString();
+							acn.SuggestionType = stream.ReadString();
 						}
-
-						foreach (var property in properties)
-						{
-							property.Parent = acn;
-						}
-
+						
 						node = acn;
 
 						break;
@@ -250,13 +97,164 @@ namespace Alex.Networking.Java.Packets.Play
 				node.Children = children;
 
 				Log.Debug(
-					$"Type={nodeType.ToString()} Index={i} Name={name ?? "null"}, properties={properties.Count} isExecuteable={node.IsExecutable} hasRedirect={node.HasRedirect} redirectIndex={node.RedirectIndex} children={children.Length} suggestionType={suggestionType}");
+					$"Type={nodeType.ToString()} Index={i} Name={name ?? "null"}, isExecuteable={node.IsExecutable} hasRedirect={node.HasRedirect} redirectIndex={node.RedirectIndex} children={children.Length}");
 
 				nodes.Add(node);
 			}
 
 			RootIndex = stream.ReadVarInt();
 			Nodes.AddRange(nodes);
+		}
+
+		private ArgumentParser GetParser(MinecraftStream stream)
+		{
+			string parser = stream.ReadString();
+
+			switch (parser)
+			{
+				//	case "brigadier:bool":
+				//	stream.ReadBool();
+				//		break;
+
+				case "brigadier:double":
+				{
+					DoubleArgumentParser cp = new DoubleArgumentParser(parser);
+					var dFlags = (byte)stream.ReadByte();
+					cp.Flags = dFlags;
+
+					if ((dFlags & 0x01) != 0)
+					{
+						var dMin = stream.ReadDouble();
+						cp.Min = dMin;
+					}
+
+					if ((dFlags & 0x02) != 0)
+					{
+						var dMax = stream.ReadDouble();
+						cp.Max = dMax;
+					}
+
+					return cp;
+				}
+
+					break;
+
+				case "brigadier:float":
+				{
+					FloatArgumentParser cp = new FloatArgumentParser(parser);
+					var dFlags = (byte)stream.ReadByte();
+					cp.Flags = dFlags;
+
+					if ((dFlags & 0x01) != 0)
+					{
+						var dMin = stream.ReadFloat();
+						cp.Min = dMin;
+					}
+
+					if ((dFlags & 0x02) != 0)
+					{
+						var dMax = stream.ReadFloat();
+						cp.Max = dMax;
+					}
+
+					return cp;
+				}
+
+					break;
+
+				case "brigadier:integer":
+				{
+					IntegerArgumentParser cp = new IntegerArgumentParser(parser);
+					var dFlags = (byte)stream.ReadByte();
+					cp.Flags = dFlags;
+
+					if ((dFlags & 0x01) != 0)
+					{
+						var dMin = stream.ReadInt();
+						cp.Min = dMin;
+					}
+
+					if ((dFlags & 0x02) != 0)
+					{
+						var dMax = stream.ReadInt();
+						cp.Max = dMax;
+					}
+
+					return cp;
+				}
+
+					break;
+
+				case "brigadier:string":
+				{
+					var a = stream.ReadVarInt();
+
+					return (new StringArgumentParser(parser, (StringArgumentParser.StringMode)a));
+				}
+
+					break;
+
+				case "minecraft:entity":
+				{
+					var entityFlags = (byte)stream.ReadByte();
+
+					return (new EntityArgumentParser(parser, entityFlags));
+				}
+
+					break;
+
+				//	case "minecraft:game_profile":
+				//		break;
+
+				//	case "minecraft:block_pos":
+				//		break;
+
+				case "minecraft:score_holder":
+				{
+					var scoreHolderFlags = (byte)stream.ReadByte();
+
+					return (new ScoreHolderArgumentParser(parser, scoreHolderFlags));
+				}
+
+					break;
+
+				case "minecraft:range":
+				{
+					bool allowDecimals = stream.ReadBool();
+
+					if (allowDecimals)
+					{
+						return (new DoubleArgumentParser(parser) { });
+					}
+					else
+					{
+						return (new IntegerArgumentParser(parser) { });
+					}
+				}
+
+					break;
+
+				case "minecraft:message":
+				{
+					return (new MessageArgumentParser(parser));
+				}
+
+					break;
+
+				case "minecraft:objective":
+				{
+					return (new ObjectiveArgumentParser(parser));
+				}
+
+					break;
+
+				default:
+					Log.Warn($"Unknown parser: {parser}");
+
+					return (new StringArgumentParser(parser, StringArgumentParser.StringMode.SingleWord));
+
+					break;
+			}
 		}
 
 		/// <inheritdoc />

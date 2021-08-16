@@ -16,14 +16,6 @@ namespace Alex.Net.Bedrock.Packets
 		public string Controller { get; set; }
 		public float BlendOutTime { get; set; }
 		public long[] EntityRuntimeIds { get; set; }
-		
-		
-		/// <inheritdoc />
-		protected override void EncodePacket()
-		{
-			base.EncodePacket();
-			
-		}
 
 		/// <inheritdoc />
 		protected override void DecodePacket()

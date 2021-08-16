@@ -107,6 +107,23 @@ namespace Alex.Entities
         }
 
         /// <inheritdoc />
+        public override void OnDespawn()
+        {
+	        base.OnDespawn();
+
+	        if (Network is BedrockClient bc)
+	        {
+		        bc.WorldProvider.FormManager.CloseAll();
+		        var activeDialog = Alex.Instance.GuiManager.ActiveDialog;
+
+		        if (activeDialog != null)
+		        {
+			        Alex.Instance.GuiManager.HideDialog(activeDialog);
+		        }
+	        }
+        }
+
+        /// <inheritdoc />
         protected override void OnSkinValueChanged(MiNET.Utils.Skins.Skin newSkin)
         {
 			//Do nothing.

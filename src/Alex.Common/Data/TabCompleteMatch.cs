@@ -43,5 +43,11 @@ namespace Alex.Common.Data
 		{
 			return HashCode.Combine(Match, HasTooltip, Tooltip, Description);
 		}
+
+		/// <inheritdoc />
+		public override string ToString()
+		{
+			return GetDescriptive();
+		}
 	}
 }

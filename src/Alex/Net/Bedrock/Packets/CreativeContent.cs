@@ -19,13 +19,6 @@ namespace Alex.Net.Bedrock.Packets
 			this.input = ReadItemStacks2();
 		}
 
-		/// <inheritdoc />
-		protected override void ResetPacket()
-		{
-			base.ResetPacket();
-			
-		}
-
 		public ItemStacks ReadItemStacks2()
 		{
 			var metadata = new ItemStacks();

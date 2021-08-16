@@ -94,10 +94,6 @@ namespace Alex.Worlds.Multiplayer
 					
 					SendLocation(World.Player.RenderLocation);
 				}
-
-				//World.Player.OnTick();
-				//World.EntityManager.Tick();
-				//World.PhysicsEngine.Tick();
 			}
 		}
 
@@ -108,8 +104,7 @@ namespace Alex.Worlds.Multiplayer
 				OnGround = location.OnGround
 			}, 0, World.Time);
 		}
-
-		//private ThreadSafeList<ChunkCoordinates> _loadedChunks = new ThreadSafeList<ChunkCoordinates>();
+		
 		private void UnloadChunks(ChunkCoordinates center, double maxViewDistance)
 		{
 			var chunkPublisher = Client.LastChunkPublish;
@@ -123,7 +118,6 @@ namespace Alex.Worlds.Multiplayer
 						chunkPublisher.coordinates.X, chunkPublisher.coordinates.Y, chunkPublisher.coordinates.Z));
 			}
 
-			//Client.ChunkRadius
 			foreach (var chunk in World.ChunkManager.GetAllChunks())
 			{
 				if (chunkPublisher != null)
@@ -135,21 +129,9 @@ namespace Alex.Worlds.Multiplayer
 				var distance = chunk.Key.DistanceTo(center);
 				if (distance > maxViewDistance)
 				{
-					//_chunkCache.TryRemove(chunkColumn.Key, out var waste);
 					World.UnloadChunk(chunk.Key);
 				}
 			}
-			//Parallel.ForEach(_loadedChunks.ToArray(), (chunkColumn) =>
-			//{
-				/*if (chunkPublisher != null)
-				{
-					if (chunkColumn.DistanceTo(new ChunkCoordinates(new Vector3(chunkPublisher.coordinates.X,
-						    chunkPublisher.coordinates.Y, chunkPublisher.coordinates.Z))) < chunkPublisher.radius)
-						return;
-				}*/
-				
-				
-		//	});
 		}
 
 		protected override void Initiate()
@@ -157,9 +139,6 @@ namespace Alex.Worlds.Multiplayer
 			_initiated = true;
 			Client.World = World;
 			Client.CommandProvider = new BedrockCommandProvider(World);
-			//World.Player.SetInventory(new BedrockInventory(46));
-
-			//CustomConnectedPong.CanPing = true;
 		}
 
 		public override LoadResult Load(ProgressReport progressReport)
@@ -180,11 +159,7 @@ namespace Alex.Worlds.Multiplayer
 				return LoadResult.Timeout;
 			}
 
-			//	Client.HaveServer = true;
-
 			progressReport(LoadingState.ConnectingToServer, 98, "Waiting on server confirmation...");
-
-			//progressReport(LoadingState.LoadingChunks, 0);
 
 			var  percentage         = 0;
 
@@ -285,8 +260,6 @@ namespace Alex.Worlds.Multiplayer
 					break;
 				}
 
-				//Log.Warn($"Status: {statusChanged} | Gamestarted: {Client.GameStarted} | OutOfOrder: {Client.Connection.IsNetworkOutOfOrder}");
-
 				if ((!Client.GameStarted || percentage == 0) && sw.ElapsedMilliseconds >= 15000)
 				{
 					if (Client.DisconnectReason == DisconnectReason.Kicked)
@@ -303,15 +276,10 @@ namespace Alex.Worlds.Multiplayer
 			if (!Client.IsConnected)
 				return LoadResult.Timeout;
 
-			var p = World.Player.KnownPosition;
-			
 			Client.MarkAsInitialized();
-				//Client.SendMcpeMovePlayer(
-			//	p, 1);
 
 			timer.Stop();
 
-			//World.Player.IsSpawned = true;
 			World.Player.OnSpawn();
 			_gameStarted = true;
 			

@@ -145,24 +145,16 @@ namespace Alex.Worlds.Singleplayer
 			{
 				var cc = new ChunkCoordinates(x, z);
 				newChunkCoordinates.Add(cc);
-
+				
+				var chunk = _generator.GenerateChunkColumn(cc);
+				if (chunk == null) continue;
+					
+				base.World.ChunkManager.AddChunk(chunk, new ChunkCoordinates(chunk.X, chunk.Z), false);
+				LoadEntities(chunk);
+				
 				yield return cc;
 			}
 
-			Parallel.ForEach<ChunkCoordinates>(newChunkCoordinates, coordinates =>
-			{
-				if (!_loadedChunks.Contains(coordinates))
-				{
-					_loadedChunks.Add(coordinates);
-
-					var chunk = _generator.GenerateChunkColumn(coordinates);
-					if (chunk == null) return;
-					
-					base.World.ChunkManager.AddChunk(chunk, new ChunkCoordinates(chunk.X, chunk.Z), false);
-					LoadEntities(chunk);
-				}
-			});
-			
 			//Task.WaitAll(generatorTasks.ToArray());
 
 			foreach (var chunk in oldChunks)
@@ -249,7 +241,7 @@ namespace Alex.Worlds.Singleplayer
 
 				//base.World.ChunkManager.AddChunk(chunk, new ChunkCoordinates(chunk.X, chunk.Z), false);
 
-				progressReport(LoadingState.LoadingChunks, (int) Math.Floor((_loadedChunks.Count / target) * 100));
+				progressReport(LoadingState.LoadingChunks, (int) Math.Floor((count / target) * 100));
 			}
 
 			var loaded = sw.Elapsed;

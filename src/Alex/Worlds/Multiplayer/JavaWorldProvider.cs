@@ -13,7 +13,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Alex.Blocks;
 using Alex.Common.Commands.Nodes;
-using Alex.Common.Commands.Properties;
+using Alex.Common.Commands.Parsers;
 using Alex.Common.Data;
 using Alex.Common.Data.Options;
 using Alex.Common.Graphics.GpuResources;
@@ -944,9 +944,10 @@ namespace Alex.Worlds.Multiplayer
 		private void HandleDeclareCommandsPacket(DeclareCommandsPacket packet)
 		{
 			var nodes = packet.Nodes.ToArray();
-			var rootNode = nodes[packet.RootIndex];
+			CommandProvider.Nodes = nodes;
+			CommandProvider.RootIndex = packet.RootIndex;
 
-			foreach (var childIndex in rootNode.Children)
+			/*foreach (var childIndex in rootNode.Children)
 			{
 				var child = nodes[childIndex];
 
@@ -960,57 +961,52 @@ namespace Alex.Worlds.Multiplayer
 
 						if (subChild is ArgumentCommandNode acn)
 						{
-							foreach (var parser in acn.Parsers)
+							var parser = acn.Parser;
+							CommandProperty commandProperty = null;
+							if (parser is IntegerArgumentParser icp)
 							{
-								CommandProperty commandProperty = null;
-								if (parser is IntegerArgumentParser icp)
+								commandProperty = new IntCommandProperty(acn.Name, !acn.IsExecutable)
 								{
-									commandProperty = new IntCommandProperty(parser.Name, !acn.IsExecutable)
-									{
-										MaxValue = (icp.Flags & 0x02) != 0 ? icp.Max : int.MaxValue,
-										MinValue = (icp.Flags & 0x02) != 0 ? icp.Min : int.MinValue
-									};
-								}
-								else if (parser is FloatArgumentParser fcp)
-								{
-									commandProperty = new Utils.Commands.FloatCommandProperty(parser.Name, !acn.IsExecutable)
-									{
-										MaxValue = (fcp.Flags & 0x02) != 0 ? fcp.Max : float.MaxValue,
-										MinValue = (fcp.Flags & 0x02) != 0 ? fcp.Min : float.MinValue
-									};
-								}
-								else if (parser is DoubleArgumentParser dcp)
-								{
-									commandProperty = new Utils.Commands.DoubleCommandProperty(parser.Name, !acn.IsExecutable)
-									{
-										MaxValue = (dcp.Flags & 0x02) != 0 ? dcp.Max : double.MaxValue,
-										MinValue = (dcp.Flags & 0x02) != 0 ? dcp.Min : double.MinValue
-									};
-								}
-								else
-								{
-									commandProperty = new CommandProperty(parser.Name, !acn.IsExecutable);
-								}
-
-								if (!string.IsNullOrWhiteSpace(acn.SuggestionType))
-								{
-									commandProperty.TypeIdentifier = acn.SuggestionType;
-								}
-
-								if (commandProperty != null)
-									command.AddProperty(commandProperty);
+									MaxValue = (icp.Flags & 0x02) != 0 ? icp.Max : int.MaxValue,
+									MinValue = (icp.Flags & 0x02) != 0 ? icp.Min : int.MinValue
+								};
 							}
-							/*CommandProperty commandProperty = new CommandProperty(acn.Name, !acn.IsExecutable);
-							
-							
-							command.AddProperty(commandProperty);*/
+							else if (parser is FloatArgumentParser fcp)
+							{
+								commandProperty = new Utils.Commands.FloatCommandProperty(acn.Name, !acn.IsExecutable)
+								{
+									MaxValue = (fcp.Flags & 0x02) != 0 ? fcp.Max : float.MaxValue,
+									MinValue = (fcp.Flags & 0x02) != 0 ? fcp.Min : float.MinValue
+								};
+							}
+							else if (parser is DoubleArgumentParser dcp)
+							{
+								commandProperty = new Utils.Commands.DoubleCommandProperty(acn.Name, !acn.IsExecutable)
+								{
+									MaxValue = (dcp.Flags & 0x02) != 0 ? dcp.Max : double.MaxValue,
+									MinValue = (dcp.Flags & 0x02) != 0 ? dcp.Min : double.MinValue
+								};
+							}
+							else
+							{
+								commandProperty = new CommandProperty(acn.Name, !acn.IsExecutable);
+							}
+
+							if (!string.IsNullOrWhiteSpace(acn.SuggestionType))
+							{
+								commandProperty.TypeIdentifier = acn.SuggestionType;
+							}
+
+							if (commandProperty != null)
+								command.AddProperty(commandProperty);
 						}
 					}
+					
 					CommandProvider.Register(command);
 				}
-			}
+			}*/
 			
-			Log.Info($"Registered {CommandProvider.Count} commands.");
+			//Log.Info($"Registered {CommandProvider.Count} commands.");
 			//CommandProvider.Register();
 		}
 

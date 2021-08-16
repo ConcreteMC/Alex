@@ -1,12 +1,24 @@
 using System.Text;
+using Alex.Utils;
 
-namespace Alex.Common.Commands.Properties
+namespace Alex.Common.Commands.Parsers
 {
-	public class RangeArgumentParser<T> : ArgumentParser
+	public abstract class RangeArgumentParser<T> : ArgumentParser
 	{
 		public byte Flags { get; set; }
 		public T? Min { get; set; }
 		public T? Max { get; set; }
+
+		/// <inheritdoc />
+		public override bool TryParse(SeekableTextReader input)
+		{
+			if (input.ReadSingleWord(out var textInput) >= 0 && TryParse(textInput, out T value))
+				return true;
+
+			return false;
+		}
+
+		protected abstract bool TryParse(string input, out T value);
 
 		/// <inheritdoc />
 		public override string ToString()
@@ -37,6 +49,6 @@ namespace Alex.Common.Commands.Properties
 		}
 
 		/// <inheritdoc />
-		public RangeArgumentParser(string name) : base(name) { }
+		protected RangeArgumentParser(string name) : base(name) { }
 	}
 }

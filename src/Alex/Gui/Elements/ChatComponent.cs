@@ -287,7 +287,7 @@ namespace Alex.Gui.Elements
 		{
 			if (Focused)
 			{
-				if (key == Keys.Tab && CommandProvider != null)
+				if (key == Keys.Tab && CommandProvider != null && CommandProvider.Enabled)
 				{
 					//ResetTabComplete();
 					if (_hasTabCompleteResults)
@@ -300,7 +300,7 @@ namespace Alex.Gui.Elements
 					if (TextBuilder.Length == 0) return true;
 
 					//TextBuilder.CursorPosition = 1;
-					_tabCompletePosition = TextBuilder.CursorPosition;
+					_tabCompletePosition = TextBuilder.CursorPosition - 1;
 					string text = TextBuilder.Text.Substring(0, TextBuilder.CursorPosition);//.GetAllBehindCursor(out _tabCompletePosition);
 					if (text.StartsWith('/'))
 					{

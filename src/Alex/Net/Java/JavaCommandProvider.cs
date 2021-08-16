@@ -1,4 +1,5 @@
 using System.Threading;
+using Alex.Common.Commands.Nodes;
 using Alex.Networking.Java;
 using Alex.Networking.Java.Packets.Play;
 using Alex.Utils.Commands;
@@ -11,6 +12,7 @@ namespace Alex.Net.Java
 	{
 		private JavaWorldProvider Provider { get; }
 		private NetConnection Connection { get; }
+
 		public JavaCommandProvider(JavaWorldProvider provider, NetConnection connection, World world) : base(world)
 		{
 			Provider = provider;
