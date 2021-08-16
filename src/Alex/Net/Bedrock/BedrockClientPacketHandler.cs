@@ -448,10 +448,6 @@ namespace Alex.Net.Bedrock
 
 		public void HandleMcpeAddEntity(McpeAddEntity message)
 		{
-			if (message.entityType.Contains("hive"))
-			{
-				Log.Info($"spawning: {message.entityType}");
-			}
 			Entity entity = EntityFactory.Create(message.entityType, null);
 
 			if (entity == null)

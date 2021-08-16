@@ -22,6 +22,8 @@ using Microsoft.Xna.Framework.Graphics;
 using MiNET.Entities;
 using Newtonsoft.Json;
 using NLog;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
 using PlayerLocation = Alex.Common.Utils.Vectors.PlayerLocation;
 using ResourceLocation = Alex.Common.Resources.ResourceLocation;
 
@@ -150,6 +152,8 @@ namespace Alex.Entities
 
 			foreach (var texture in textures)
 			{
+				if (!texture.Value.IsDisposed)
+					texture.Value?.Dispose();
 			//	if (texture.Value != null)
 				//	texture.Value.Dispose();
 			}
@@ -247,249 +251,398 @@ namespace Alex.Entities
 		public static Entity Create(ResourceLocation entityType, World world, bool initRenderController = true)
 		{
 			Entity entity = null;
-			
-			switch (MiNET.Entities.EntityHelpers.ToEntityType(entityType.ToString()))
+
+			if (entityType.Namespace == ResourceLocation.DefaultNamespace)
 			{
-			//	case MiNET.Entities.EntityType.None:
+				switch (MiNET.Entities.EntityHelpers.ToEntityType(entityType.ToString()))
+				{
+					//	case MiNET.Entities.EntityType.None:
 					//return null;
-				case MiNET.Entities.EntityType.Chicken:
-					entity = new Chicken(world);
-					break;
-				case MiNET.Entities.EntityType.Cow:
-					entity = new Cow(world);
-					break;
-				case MiNET.Entities.EntityType.Pig:
-					entity = new Pig(world);
-					break;
-				case MiNET.Entities.EntityType.Sheep:
-					entity = new Sheep(world);
-					break;
-				case MiNET.Entities.EntityType.Wolf:
-					entity = new Wolf(world);
-					break;
-				case MiNET.Entities.EntityType.Villager:
-					entity = new Villager(world);
-					break;
-				case MiNET.Entities.EntityType.MushroomCow:
-					entity = new Mooshroom(world);
-					break;
-				case MiNET.Entities.EntityType.Squid:
-					entity = new Squid(world);
-					break;
-				case MiNET.Entities.EntityType.Rabbit:
-					entity = new Rabbit(world);
-					break;
-				case MiNET.Entities.EntityType.Bat:
-					entity = new Bat(world);
-					break;
-				case MiNET.Entities.EntityType.IronGolem:
-					entity = new VillagerGolem(world);
-					break;
-				case MiNET.Entities.EntityType.SnowGolem:
-					entity = new Snowman(world);
-					break;
-				case MiNET.Entities.EntityType.Ocelot:
-					entity = new Ocelot(world);
-					break;
-				case MiNET.Entities.EntityType.Zombie:
-					entity = new Zombie(world);
-					break;
-				case MiNET.Entities.EntityType.Creeper:
-					entity = new Creeper(world);
-					break;
-				case MiNET.Entities.EntityType.Skeleton:
-					entity = new Skeleton(world);
-					break;
-				case EntityType.Spider:
-					entity = new Spider(world);
-					break;
-				case MiNET.Entities.EntityType.ZombiePigman:
-					entity = new ZombiePigman(world);
-					break;
-				case EntityType.Slime:
-					entity = new Slime(world);
-					break;
-				case EntityType.Endermite:
-					entity = new Endermite(world);
-					break;
-				case EntityType.Enderman:
-					entity = new Enderman(world);
-					break;
-				case EntityType.Silverfish:
-					entity = new Silverfish(world);
-					break;
-				case EntityType.CaveSpider:
-					entity = new CaveSpider(world);
-					break;
-				case EntityType.Ghast:
-					entity = new Ghast(world);
-					break;
-				case EntityType.MagmaCube:
-					entity = new MagmaCube(world);
-					break;
-				case EntityType.Blaze:
-					entity = new Blaze(world);
-					break;
-				case EntityType.ZombieVillager:
-					entity = new ZombieVillager(world);
-					break;
-				case EntityType.Witch:
-					entity = new Witch(world);
-					break;
-				case EntityType.Stray:
-					entity = new Stray(world);
-					break;
-				case EntityType.Husk:
-					entity = new Husk(world);
-					break;
-				case EntityType.WitherSkeleton:
-					entity = new WitherSkeleton(world);
-					break;
-				case EntityType.Guardian:
-					entity = new Guardian(world);
-					break;
-				case EntityType.ElderGuardian:
-					entity = new ElderGuardian(world);
-					break;
-				case EntityType.Horse:
-					entity = new Horse(world);
-					break;
-				case EntityType.ZombieHorse:
-					entity = new ZombieHorse(world);
-					break;
-				case EntityType.PolarBear:
-					entity = new PolarBear(world);
-					break;
-				case EntityType.Shulker:
-					entity = new Shulker(world);
-					break;
-				case EntityType.Dragon:
-					entity = new EnderDragon(world);
-					break;
-				case EntityType.SkeletonHorse:
-					entity = new SkeletonHorse(world);
-					break;
-				case EntityType.Wither:
-					entity = new Wither(world);
-					break;
-				case EntityType.Evoker:
-					entity = new EvocationIllager(world);
-					break;
-				case EntityType.Vindicator:
-					entity = new VindicationIllager(world);
-					break;
-				case EntityType.Vex:
-					entity = new Vex(world);
-					break;
-				case EntityType.FallingBlock:
-					entity = new EntityFallingBlock(world);
-					break;
-				case EntityType.ArmorStand:
-					entity = new EntityArmorStand(world);
-					break;
-				case EntityType.ShotArrow:
-					entity = new ArrowEntity(world);
-					break;
-				case EntityType.DroppedItem:
-					entity = new ItemEntity(world);
-					break;
-				case EntityType.ThrownSnowball:
-					entity = new SnowballEntity(world);
-					break;
-				case EntityType.ThrownEgg:
-					entity = new EggEntity(world);
+					case MiNET.Entities.EntityType.Chicken:
+						entity = new Chicken(world);
 
-					break;
-				case EntityType.Donkey:
-					entity = new Donkey(world);
-					break;
-				case EntityType.Llama:
-					entity = new Llama(world);
-					break;
-				case EntityType.Mule:
-					entity = new Mule(world);
-					break;
-				case (EntityType)121: //Fox
-					entity = new Fox(world);
-					break;
-				case (EntityType)122:
-					entity = new Bee(world);
-					break;
-				case EntityType.Parrot:
-					entity = new Parrot(world);
-					break;
-				case EntityType.Phantom:
-					entity = new Phantom(world);
-					break;
-				case EntityType.LlamaSpit:
-					entity = new LlamaSpit(world);
-					break;
-				case EntityType.Cat:
-					entity = new Cat(world);
-					break;
-				case EntityType.BlazeFireball:
-					entity = new SmallFireball(world);
-					break;
-				case EntityType.GhastFireball:
-					entity = new Fireball(world);
-					break;
-				case EntityType.Dolphin:
-					entity = new Dolphin(world);
-					break;
-				case (EntityType)112:
-					entity = new Cod(world);
-					break;
-				case EntityType.Pufferfish:
-					entity = new PufferFish(world);
-					break;
-				case EntityType.Salmon:
-					entity = new Salmon(world);
-					break;
-				case EntityType.TropicalFish:
-					entity = new TropicalFish(world);
-					break;
-				
-				case EntityType.FireworksRocket:
-					entity = new FireworkRocket(world);
-					break;
-				
-				case EntityType.Player:
-					entity = new RemotePlayer(world);
-					break;
+						break;
 
-				case EntityType.PrimedTnt:
-					entity = new PrimedTntEntity(world);
-					break;
-				case EntityType.ThrownEnderPerl:
-					entity = new ThrownEnderPearlEntity(world);
-					break;
-				case EntityType.EnderEye:
-					entity = new ThrownEyeOfEnderEntity(world);
-					break;
-				case EntityType.Minecart:
-					entity = new MinecartEntity(world);
-					break;
-				case EntityType.TntMinecart:
-					entity = new TntMinecartEntity(world);
-					break;
-				case EntityType.ChestMinecart:
-					entity = new ChestMinecartEntity(world);
-					break;
-				case EntityType.HopperMinecart:
-					entity = new HopperMinecartEntity(world);
-					break;
-				case EntityType.AreaEffectCloud:
-					entity = new EntityAreaEffectCloud(world);
-					break;
-				case EntityType.ExperienceOrb:
-					entity = new XpOrbEntity(world);
+					case MiNET.Entities.EntityType.Cow:
+						entity = new Cow(world);
 
-					break;
-			//case EntityType.Human:
+						break;
+
+					case MiNET.Entities.EntityType.Pig:
+						entity = new Pig(world);
+
+						break;
+
+					case MiNET.Entities.EntityType.Sheep:
+						entity = new Sheep(world);
+
+						break;
+
+					case MiNET.Entities.EntityType.Wolf:
+						entity = new Wolf(world);
+
+						break;
+
+					case MiNET.Entities.EntityType.Villager:
+						entity = new Villager(world);
+
+						break;
+
+					case MiNET.Entities.EntityType.MushroomCow:
+						entity = new Mooshroom(world);
+
+						break;
+
+					case MiNET.Entities.EntityType.Squid:
+						entity = new Squid(world);
+
+						break;
+
+					case MiNET.Entities.EntityType.Rabbit:
+						entity = new Rabbit(world);
+
+						break;
+
+					case MiNET.Entities.EntityType.Bat:
+						entity = new Bat(world);
+
+						break;
+
+					case MiNET.Entities.EntityType.IronGolem:
+						entity = new VillagerGolem(world);
+
+						break;
+
+					case MiNET.Entities.EntityType.SnowGolem:
+						entity = new Snowman(world);
+
+						break;
+
+					case MiNET.Entities.EntityType.Ocelot:
+						entity = new Ocelot(world);
+
+						break;
+
+					case MiNET.Entities.EntityType.Zombie:
+						entity = new Zombie(world);
+
+						break;
+
+					case MiNET.Entities.EntityType.Creeper:
+						entity = new Creeper(world);
+
+						break;
+
+					case MiNET.Entities.EntityType.Skeleton:
+						entity = new Skeleton(world);
+
+						break;
+
+					case EntityType.Spider:
+						entity = new Spider(world);
+
+						break;
+
+					case MiNET.Entities.EntityType.ZombiePigman:
+						entity = new ZombiePigman(world);
+
+						break;
+
+					case EntityType.Slime:
+						entity = new Slime(world);
+
+						break;
+
+					case EntityType.Endermite:
+						entity = new Endermite(world);
+
+						break;
+
+					case EntityType.Enderman:
+						entity = new Enderman(world);
+
+						break;
+
+					case EntityType.Silverfish:
+						entity = new Silverfish(world);
+
+						break;
+
+					case EntityType.CaveSpider:
+						entity = new CaveSpider(world);
+
+						break;
+
+					case EntityType.Ghast:
+						entity = new Ghast(world);
+
+						break;
+
+					case EntityType.MagmaCube:
+						entity = new MagmaCube(world);
+
+						break;
+
+					case EntityType.Blaze:
+						entity = new Blaze(world);
+
+						break;
+
+					case EntityType.ZombieVillager:
+						entity = new ZombieVillager(world);
+
+						break;
+
+					case EntityType.Witch:
+						entity = new Witch(world);
+
+						break;
+
+					case EntityType.Stray:
+						entity = new Stray(world);
+
+						break;
+
+					case EntityType.Husk:
+						entity = new Husk(world);
+
+						break;
+
+					case EntityType.WitherSkeleton:
+						entity = new WitherSkeleton(world);
+
+						break;
+
+					case EntityType.Guardian:
+						entity = new Guardian(world);
+
+						break;
+
+					case EntityType.ElderGuardian:
+						entity = new ElderGuardian(world);
+
+						break;
+
+					case EntityType.Horse:
+						entity = new Horse(world);
+
+						break;
+
+					case EntityType.ZombieHorse:
+						entity = new ZombieHorse(world);
+
+						break;
+
+					case EntityType.PolarBear:
+						entity = new PolarBear(world);
+
+						break;
+
+					case EntityType.Shulker:
+						entity = new Shulker(world);
+
+						break;
+
+					case EntityType.Dragon:
+						entity = new EnderDragon(world);
+
+						break;
+
+					case EntityType.SkeletonHorse:
+						entity = new SkeletonHorse(world);
+
+						break;
+
+					case EntityType.Wither:
+						entity = new Wither(world);
+
+						break;
+
+					case EntityType.Evoker:
+						entity = new EvocationIllager(world);
+
+						break;
+
+					case EntityType.Vindicator:
+						entity = new VindicationIllager(world);
+
+						break;
+
+					case EntityType.Vex:
+						entity = new Vex(world);
+
+						break;
+
+					case EntityType.FallingBlock:
+						entity = new EntityFallingBlock(world);
+
+						break;
+
+					case EntityType.ArmorStand:
+						entity = new EntityArmorStand(world);
+
+						break;
+
+					case EntityType.ShotArrow:
+						entity = new ArrowEntity(world);
+
+						break;
+
+					case EntityType.DroppedItem:
+						entity = new ItemEntity(world);
+
+						break;
+
+					case EntityType.ThrownSnowball:
+						entity = new SnowballEntity(world);
+
+						break;
+
+					case EntityType.ThrownEgg:
+						entity = new EggEntity(world);
+
+						break;
+
+					case EntityType.Donkey:
+						entity = new Donkey(world);
+
+						break;
+
+					case EntityType.Llama:
+						entity = new Llama(world);
+
+						break;
+
+					case EntityType.Mule:
+						entity = new Mule(world);
+
+						break;
+
+					case (EntityType)121: //Fox
+						entity = new Fox(world);
+
+						break;
+
+					case (EntityType)122:
+						entity = new Bee(world);
+
+						break;
+
+					case EntityType.Parrot:
+						entity = new Parrot(world);
+
+						break;
+
+					case EntityType.Phantom:
+						entity = new Phantom(world);
+
+						break;
+
+					case EntityType.LlamaSpit:
+						entity = new LlamaSpit(world);
+
+						break;
+
+					case EntityType.Cat:
+						entity = new Cat(world);
+
+						break;
+
+					case EntityType.BlazeFireball:
+						entity = new SmallFireball(world);
+
+						break;
+
+					case EntityType.GhastFireball:
+						entity = new Fireball(world);
+
+						break;
+
+					case EntityType.Dolphin:
+						entity = new Dolphin(world);
+
+						break;
+
+					case (EntityType)112:
+						entity = new Cod(world);
+
+						break;
+
+					case EntityType.Pufferfish:
+						entity = new PufferFish(world);
+
+						break;
+
+					case EntityType.Salmon:
+						entity = new Salmon(world);
+
+						break;
+
+					case EntityType.TropicalFish:
+						entity = new TropicalFish(world);
+
+						break;
+
+					case EntityType.FireworksRocket:
+						entity = new FireworkRocket(world);
+
+						break;
+
+					case EntityType.Player:
+						entity = new RemotePlayer(world);
+
+						break;
+
+					case EntityType.PrimedTnt:
+						entity = new PrimedTntEntity(world);
+
+						break;
+
+					case EntityType.ThrownEnderPerl:
+						entity = new ThrownEnderPearlEntity(world);
+
+						break;
+
+					case EntityType.EnderEye:
+						entity = new ThrownEyeOfEnderEntity(world);
+
+						break;
+
+					case EntityType.Minecart:
+						entity = new MinecartEntity(world);
+
+						break;
+
+					case EntityType.TntMinecart:
+						entity = new TntMinecartEntity(world);
+
+						break;
+
+					case EntityType.ChestMinecart:
+						entity = new ChestMinecartEntity(world);
+
+						break;
+
+					case EntityType.HopperMinecart:
+						entity = new HopperMinecartEntity(world);
+
+						break;
+
+					case EntityType.AreaEffectCloud:
+						entity = new EntityAreaEffectCloud(world);
+
+						break;
+
+					case EntityType.ExperienceOrb:
+						entity = new XpOrbEntity(world);
+
+						break;
+					//case EntityType.Human:
 					//entity = new PlayerMob("test", world, );
-				//	break;
-				//default:
-				//	return null;
+					//	break;
+					//default:
+					//	return null;
+				}
 			}
 
 			//entity = new Entity(world);
@@ -510,7 +663,7 @@ namespace Alex.Entities
 
 				if (entity == null)
 				{
-					Log.Warn($"No entity implementation found, falling back to Alex.Entities.Entity for: {entityType}");
+					//Log.Warn($"No entity implementation found, falling back to Alex.Entities.Entity for: {entityType}");
 					entity = new Entity(world);
 				}
 
@@ -522,7 +675,7 @@ namespace Alex.Entities
 				entity.ModelRenderer = modelRenderer;
 				
 				
-				Texture2D texture2D = null;
+				//Texture2D texture2D = null;
 				//if (renderer == null || texture2D == null)
 				{
 					if (description.Geometry.TryGetValue("default", out var defaultGeometry) 
@@ -537,21 +690,54 @@ namespace Alex.Entities
 							texture = textures.FirstOrDefault().Value;
 						}
 
-						texture2D = _pooledTextures.GetOrAdd(
+						if (!_pooledTextures.TryGetValue(texture, out var texture2D))
+						{
+							if (resourcePack.TryGetBitmap(texture, out var bmp))
+							{
+								Alex.Instance.UiTaskManager.Enqueue(
+									() =>
+									{
+										texture2D = TextureUtils.BitmapToTexture2D(entity, Alex.Instance.GraphicsDevice, bmp);
+										texture2D.Tag = EntityFactory.PooledTagIdentifier;
+
+										texture2D.Disposing += (sender, args) =>
+										{
+											_pooledTextures.TryRemove(texture, out _);
+										};
+										
+										_pooledTextures.TryAdd(
+											texture, texture2D);
+
+										entity.Texture = texture2D;
+									});
+							}
+						}
+						else
+						{
+							entity.Texture = texture2D;
+						}
+						
+						/*texture2D = _pooledTextures.GetOrAdd(
 							texture, s =>
 							{
 								Texture2D pooled = null;
-								
-								if (Alex.Instance.Resources.TryGetBedrockBitmap(
-									s, out var bmp))
+
+								Image<Rgba32> bmp;
+								if (resourcePack.TryGetBitmap(s, out bmp))
 								{
 									pooled = TextureUtils.BitmapToTexture2D(entity,
 										Alex.Instance.GraphicsDevice, bmp);
 								}
-								else if (Alex.Instance.Resources.TryGetBitmap(s, out var bmp2))
-								{
-									pooled = TextureUtils.BitmapToTexture2D(entity, Alex.Instance.GraphicsDevice, bmp2);
-								}
+								//if (Alex.Instance.Resources.TryGetBedrockBitmap(
+								//	s, out var bmp))
+								//{
+								//	pooled = TextureUtils.BitmapToTexture2D(entity,
+								//		Alex.Instance.GraphicsDevice, bmp);
+								//}
+								//else if (Alex.Instance.Resources.TryGetBitmap(s, out var bmp2))
+								//{
+								//	pooled = TextureUtils.BitmapToTexture2D(entity, Alex.Instance.GraphicsDevice, bmp2);
+								//}
 
 								if (pooled != null)
 								{
@@ -567,7 +753,7 @@ namespace Alex.Entities
 
 								//pooled?.Use();
 								return pooled;
-							});
+							});*/
 						
 					/*	if (Alex.Instance.Resources.TryGetBedrockBitmap(
 							texture, out var bmp))
@@ -584,10 +770,10 @@ namespace Alex.Entities
 					}
 				}
 
-				if (texture2D != null)
+				//if (texture2D != null)
 				{
 					//texture2D.Use();
-					entity.Texture = texture2D;
+					//entity.Texture = texture2D;
 				}
 			}
 
