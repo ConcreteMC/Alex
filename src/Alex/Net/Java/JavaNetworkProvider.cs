@@ -225,5 +225,26 @@ namespace Alex.Net.Java
 		{
 			SendChatMessage(message.RawMessage);
 		}
+
+		/// <inheritdoc />
+		public override void RequestRenderDistance(int oldValue, int newValue)
+		{
+			SendSettings(_skinParts, _mainHand == 1, newValue);
+		}
+
+		private byte _skinParts;
+		private int _mainHand = 0;
+		public void SendSettings(byte skinFlags, bool isLeftHanded, int renderDistance)
+		{
+			ClientSettingsPacket settings = ClientSettingsPacket.CreateObject();
+			settings.ChatColors = true;
+			settings.ChatMode = 0;
+			settings.ViewDistance = (byte)  renderDistance;
+			_skinParts = settings.SkinParts = skinFlags; // 255;
+			_mainHand = settings.MainHand = isLeftHanded ? 0 : 1;
+			settings.Locale = Alex.Instance.GuiRenderer.Language.Code; //Options.MiscelaneousOptions.Language.Value;
+			
+			Client.SendPacket(settings);
+		}
 	}
 }

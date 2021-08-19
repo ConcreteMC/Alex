@@ -112,12 +112,7 @@ namespace Alex.Worlds.Multiplayer
 			NetworkProvider = new JavaNetworkProvider(Client);;
 			networkProvider = NetworkProvider;
 
-			_disposables.Add(Options.VideoOptions.RenderDistance.Bind(RenderDistanceSettingChanged));
-		}
-
-		private void RenderDistanceSettingChanged(int oldvalue, int newvalue)
-		{
-			SendSettings();
+		//	_disposables.Add(Options.VideoOptions.RenderDistance.Bind(RenderDistanceSettingChanged));
 		}
 
 		private bool _disconnected = false;
@@ -143,7 +138,7 @@ namespace Alex.Worlds.Multiplayer
 		private bool _disconnectShown = false;
 		public void ShowDisconnect(string reason, bool useTranslation = false, bool force = false)
 		{
-			if (_disconnectShown && force && Alex.GameStateManager.GetActiveState() is DisconnectedScreen s)
+			if (_disconnectShown && force && Alex.GameStateManager.GetActiveState() is DisconnectedState s)
 			{
 				if (useTranslation)
 				{
@@ -162,7 +157,7 @@ namespace Alex.Worlds.Multiplayer
 			
 			_disconnectShown = true;
 
-			s = new DisconnectedScreen();
+			s = new DisconnectedState();
 			if (useTranslation)
 			{
 				s.DisconnectedTextElement.TranslationKey = reason;
@@ -183,15 +178,7 @@ namespace Alex.Worlds.Multiplayer
 
 		public void SendSettings()
 		{
-			ClientSettingsPacket settings = ClientSettingsPacket.CreateObject();
-			settings.ChatColors = true;
-			settings.ChatMode = 0;
-			settings.ViewDistance = (byte) World.ChunkManager.RenderDistance;
-			settings.SkinParts = World.Player.SkinFlags.Value;// 255;
-			settings.MainHand = World.Player.IsLeftHanded ? 0 : 1;
-			settings.Locale = Alex.GuiRenderer.Language.Code; //Options.MiscelaneousOptions.Language.Value;
-			
-			SendPacket(settings);
+			NetworkProvider.SendSettings(World.Player.SkinFlags.Value, World.Player.IsLeftHanded, World.ChunkManager.RenderDistance);
 		}
 		
 		private void SendPlayerAbilities(Player player)
@@ -337,38 +324,18 @@ namespace Alex.Worlds.Multiplayer
 
 			SendPacket(playerLook);
 		}
-
-		private Texture2D _alexSkin;
-		private Vector3 _spawn = Vector3.Zero;
+		
 		public override Vector3 GetSpawnPoint()
 		{
-			return _spawn;
+			return World?.SpawnPoint ?? Vector3.Zero;
 		}
 
 		protected override void Initiate()
 		{
-			//	World?.UpdatePlayerPosition(_lastReceivedLocation);
-			
 			CommandProvider = new JavaCommandProvider(this, Client, World);
 			NetworkProvider.CommandProvider = CommandProvider;
-			
-			Alex.Resources.TryGetBitmap("entity/alex", out var rawTexture);
-			_alexSkin = TextureUtils.BitmapToTexture2D(this, Alex.GraphicsDevice, rawTexture);
-			//_initiated = true;
 		}
 		
-
-		private int _transactionIds = 0;
-		/*void IChatProvider.RequestTabComplete(string text, out int transactionId)
-		{
-			/*transactionId = Interlocked.Increment(ref _transactionIds);
-			SendPacket(new TabCompleteServerBound()
-			{
-				Text = text,
-				TransactionId = transactionId
-			});*
-		}*/
-
 		private bool                            _hasDoneInitialChunks = false;
 		private BlockingCollection<ChunkColumn> _generatingHelper     = new BlockingCollection<ChunkColumn>();
 		private int                             _chunksReceived       = 0;
@@ -1531,17 +1498,15 @@ namespace Alex.Worlds.Multiplayer
 		//	World.ChunkManager.RenderDistance = Math.Min(packet.ViewDistance / 16, Alex.Options.AlexOptions.VideoOptions.RenderDistance);
 			//World.ChunkManager.RenderDistance = packet.ViewDistance / 16;
 		}
-
-		private bool _gotViewPosition = false;
+		
 		private void HandleUpdateViewPositionPacket(UpdateViewPositionPacket packet)
 		{
-			_gotViewPosition = true;
 			World.ChunkManager.ViewPosition = new ChunkCoordinates(packet.ChunkX, packet.ChunkZ);
 		}
 
 		private void HandleSpawnPositionPacket(SpawnPositionPacket packet)
 		{
-			_spawn = packet.SpawnPosition;
+			World.SpawnPoint = packet.SpawnPosition;
 			HasSpawnPosition = true;
 		}
 		
@@ -1831,45 +1796,12 @@ namespace Alex.Worlds.Multiplayer
 		
 		private void HandleRespawnPacket(RespawnPacket packet)
 		{
-			//Respawning = true;
-			//ReadyToSpawn = false;
-			
 			HandleDimension(packet.Dimension);
 			
 			World.Player.UpdateGamemode(packet.Gamemode);
 			World.ClearChunksAndEntities();
 			
 			SendPlayerPositionAndLook(World.Player.KnownPosition, SendPositionReason.Respawn);
-			
-			//player.
-
-
-			/*new Thread(() =>
-			{
-				LoadingWorldState state = new LoadingWorldState();
-				state.UpdateProgress(LoadingState.LoadingChunks, 0);
-				Alex.GameStateManager.SetActiveState(state, true);
-
-				int t = Options.VideoOptions.RenderDistance;
-				double radiusSquared = Math.Pow(t, 2);
-
-				var target = radiusSquared * 3;
-
-				while (Respawning)
-				{
-					int chunkProgress = (int) Math.Floor((target / 100) * World.ChunkManager.ChunkCount);
-					if (chunkProgress < 100)
-					{
-						state.UpdateProgress(LoadingState.LoadingChunks, chunkProgress);
-					}
-					else
-					{
-						state.UpdateProgress(LoadingState.Spawning, 99);
-					}
-				}
-
-				Alex.GameStateManager.Back();
-			}).Start();*/
 		}
 
 		public static Item GetItemFromSlotData(SlotData data)

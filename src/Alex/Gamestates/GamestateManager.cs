@@ -96,6 +96,7 @@ namespace Alex.Gamestates
 		    {
 			    if (ActiveState == state)
 			    {
+				    state.Hide();
 				    var parent = state.ParentState;
 				    if (parent == null)
 				    {
@@ -155,19 +156,23 @@ namespace Alex.Gamestates
 
 		    ActiveState = state;
 		    ActiveState?.Show();
-		    previous?.Hide();
 
-		    if (keepHistory)
+		    if (previous != null)
 		    {
-			    lock (_historyLock)
+			    previous.Hide();
+
+			    if (keepHistory)
 			    {
-				    if (History.Last?.Previous?.Value != state)
+				    lock (_historyLock)
 				    {
-					    History.AddLast(previous);
+					    if (History.Last?.Previous?.Value != state)
+					    {
+						    History.AddLast(previous);
+					    }
 				    }
 			    }
 		    }
-		    
+
 		    return true;
 	    }
 

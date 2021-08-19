@@ -56,5 +56,7 @@ namespace Alex.Net
 		public abstract void Close();
 
 		public abstract void SendChatMessage(ChatObject message);
+
+		public abstract void RequestRenderDistance(int oldValue, int newValue);
 	}
 }

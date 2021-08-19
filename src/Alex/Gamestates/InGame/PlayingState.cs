@@ -81,7 +81,7 @@ namespace Alex.Gamestates.InGame
 			Alex.InGame = true;
 			
 			World.SpawnPoint = WorldProvider.GetSpawnPoint();
-			World.Camera.MoveTo(World.GetSpawnPoint(), Vector3.Zero);
+			World.Camera.MoveTo(World.SpawnPoint, Vector3.Zero);
 
 			base.OnLoad(args);
 		}

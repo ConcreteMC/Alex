@@ -7,7 +7,7 @@ using RocketUI;
 
 namespace Alex.Gamestates
 {
-    public class DisconnectedScreen : GuiMenuStateBase
+    public class DisconnectedState : GuiMenuStateBase
     {
 	    private static string _reason = null;
 
@@ -20,17 +20,17 @@ namespace Alex.Gamestates
 		    set
 		    {
 			    _reason = value;
-				if (_activeScreen != null && !string.IsNullOrWhiteSpace(value))
+				if (_activeState != null && !string.IsNullOrWhiteSpace(value))
 				{
-					_activeScreen.DisconnectedTextElement.Text = _reason;
+					_activeState.DisconnectedTextElement.Text = _reason;
 				}
 		    }
 	    }
 
-	    private static DisconnectedScreen _activeScreen = null;
+	    private static DisconnectedState _activeState = null;
 	    public         string             Reason                  { get; set; } = "disconnect.lost";
 	    public         TextElement     DisconnectedTextElement { get; private set; }
-	    public DisconnectedScreen()
+	    public DisconnectedState()
 		{
 			TitleTranslationKey = "multiplayer.disconnect.generic";
 
@@ -68,7 +68,7 @@ namespace Alex.Gamestates
 	    protected override void OnShow()
 	    {
 		    Alex.IsMouseVisible = true;
-		    _activeScreen = this;
+		    _activeState = this;
 
 		    base.OnShow();
 	    }
@@ -76,7 +76,7 @@ namespace Alex.Gamestates
 	    /// <inheritdoc />
 	    protected override void OnHide()
 	    {
-		    _activeScreen = null;
+		    _activeState = null;
 		    DisconnectReason = null;
 		    base.OnHide();
 	    }

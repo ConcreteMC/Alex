@@ -84,6 +84,8 @@ namespace Alex.Entities
 		        }
 	        }
         }
+        
+        public BlockCoordinates SpawnPoint { get; set; } = BlockCoordinates.Zero;
 
         //public Camera Camera { get; internal set; }
         public Player(GraphicsDevice graphics, InputManager inputManager, World world, NetworkProvider networkProvider, PlayerIndex playerIndex) : base(world)

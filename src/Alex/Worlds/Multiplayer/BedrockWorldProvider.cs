@@ -42,7 +42,7 @@ namespace Alex.Worlds.Multiplayer
 
 		public override Vector3 GetSpawnPoint()
 		{
-			return new Vector3(Client.SpawnPoint.X, Client.SpawnPoint.Y, Client.SpawnPoint.Z);
+			return World?.SpawnPoint ?? Vector3.Zero;
 		}
 
 		private uint GetAdventureFlags()
@@ -88,7 +88,7 @@ namespace Alex.Worlds.Multiplayer
 					{
 						_lastLocation = pos;
 						
-						UnloadChunks(new ChunkCoordinates(pos), Client.ChunkRadius + 2);
+						UnloadChunks(new ChunkCoordinates(pos), Client.World.ChunkManager.RenderDistance + 2);
 						_lastPrioritization = _tickTime;
 					}
 					
@@ -107,26 +107,17 @@ namespace Alex.Worlds.Multiplayer
 		
 		private void UnloadChunks(ChunkCoordinates center, double maxViewDistance)
 		{
-			var chunkPublisher = Client.LastChunkPublish;
+			//var chunkPublisher = Client.ChunkPublishCenter;
 
-			ChunkCoordinates publisherCenter = center;
-
-			if (chunkPublisher != null)
-			{
-				publisherCenter = new ChunkCoordinates(
-					new Vector3(
-						chunkPublisher.coordinates.X, chunkPublisher.coordinates.Y, chunkPublisher.coordinates.Z));
-			}
+			ChunkCoordinates publisherCenter = new ChunkCoordinates(Client.ChunkPublisherPosition);
 
 			foreach (var chunk in World.ChunkManager.GetAllChunks())
 			{
-				if (chunkPublisher != null)
-				{
-					if (chunk.Key.DistanceTo(publisherCenter) <= (chunkPublisher.radius / 16f))
-						continue;
-				}
-				
+				if (chunk.Key.DistanceTo(publisherCenter) <= (Client.ChunkPublisherRadius / 16f))
+					continue;
+
 				var distance = chunk.Key.DistanceTo(center);
+
 				if (distance > maxViewDistance)
 				{
 					World.UnloadChunk(chunk.Key);
@@ -221,7 +212,7 @@ namespace Alex.Worlds.Multiplayer
 				}
 				else if (!Client.Connection.IsNetworkOutOfOrder && !outOfOrder)
 				{
-					double radiusSquared = Math.Pow(Client.ChunkRadius, 2);
+					double radiusSquared = Math.Pow(Client.World.ChunkManager.RenderDistance, 2);
 					var target = radiusSquared;
 					percentage = (int) ((100 / target) * World.ChunkManager.ChunkCount);
 

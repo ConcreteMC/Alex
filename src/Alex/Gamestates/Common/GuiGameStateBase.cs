@@ -71,13 +71,12 @@ namespace Alex.Gamestates.Common
         public void Show()
         {
 			if(IsShown) return;
+			IsShown = true;
 			
 			Alex.SetFrameRateLimiter(true, 60);
 			
 	        Alex.GuiManager.AddScreen(this);
             OnShow();
-			
-			IsShown = true;
 
             InvalidateLayout();
         }
@@ -85,11 +84,10 @@ namespace Alex.Gamestates.Common
         public void Hide()
         {
 			if(!IsShown) return;
-
+			IsShown = false;
+			
+			Alex.GuiManager.RemoveScreen(this);
 			OnHide();
-            Alex.GuiManager.RemoveScreen(this);
-            
-            IsShown = false;
 
 			//Alex.ResetFrameRateLimiter();
         }

@@ -128,7 +128,7 @@ namespace Alex.Utils
 
 			foreach (var icon in markers
 			   .Where(
-					x => x.AlwaysShown || new ChunkCoordinates(x.Position).DistanceTo(center) <= radius).OrderBy(x => x.DrawOrder))
+					x => x.AlwaysShown || Math.Abs(new ChunkCoordinates(x.Position).DistanceTo(center)) <= radius).OrderBy(x => x.DrawOrder))
 			{
 				yield return icon;
 			}

@@ -787,6 +787,7 @@ namespace Alex
                         
                         if (networkProvider.IsConnected && result == LoadResult.Done)
                         {
+                            
                             GameStateManager.SetActiveState("play", false);
 
                             return;
@@ -800,9 +801,9 @@ namespace Alex
                         if (result != LoadResult.Done)
                         {
                             if (result != LoadResult.Aborted &&
-                                !(GameStateManager.GetActiveState() is DisconnectedScreen))
+                                !(GameStateManager.GetActiveState() is DisconnectedState))
                             {
-                                var s = new DisconnectedScreen();
+                                var s = new DisconnectedState();
                                 s.DisconnectedTextElement.TranslationKey = "multiplayer.status.cannot_connect";
                                 s.ParentState = parentState;
                                 GameStateManager.SetActiveState(s, false);

@@ -102,7 +102,14 @@ namespace Alex.Worlds.Singleplayer
 		{
 			
 		}
+
+		/// <inheritdoc />
+		public override void RequestRenderDistance(int oldValue, int newValue)
+		{
+			
+		}
 	}
+	
 	public class SPWorldProvider : WorldProvider
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(SPWorldProvider));

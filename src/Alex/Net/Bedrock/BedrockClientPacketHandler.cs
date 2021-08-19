@@ -229,8 +229,9 @@ namespace Alex.Net.Bedrock
 				Client.World.Player.EntityId = Client.EntityId = message.runtimeEntityId;
 				Client.NetworkEntityId = message.entityIdSelf;
 
-				Client.SpawnPoint = new Vector3(
-					message.spawn.X, message.spawn.Y - Player.EyeLevel, message.spawn.Z); //message.spawn;
+				//Client.World.SpawnPoint 
+			//	Client.SpawnPoint = new Vector3(
+			//		message.spawn.X, message.spawn.Y - Player.EyeLevel, message.spawn.Z); //message.spawn;
 
 				Client.World.Dimension = (Dimension) message.dimension;
 
@@ -260,13 +261,14 @@ namespace Alex.Net.Bedrock
 				}
 
 				ChunkProcessor.Itemstates = message.itemstates;
-
+				Log.Info($"Start game, spawn: {message.spawn}");
 			}
 			finally
 			{
 				Client.GameStarted = true;
+				Client.RequestRenderDistance(0, Client.World.ChunkManager.RenderDistance);
 				
-				Client.RequestChunkRadius(AlexInstance.Options.AlexOptions.VideoOptions.RenderDistance.Value);
+				//Client.RequestChunkRadius(AlexInstance.Options.AlexOptions.VideoOptions.RenderDistance.Value);
 			}
 		}
 
@@ -675,7 +677,8 @@ namespace Alex.Net.Bedrock
 
 		public void HandleMcpeNetworkChunkPublisherUpdate(McpeNetworkChunkPublisherUpdate message)
 		{
-			Client.LastChunkPublish = message;
+			Client.ChunkPublisherPosition = new BlockCoordinates(message.coordinates.X, message.coordinates.Y, message.coordinates.Z);
+			Client.ChunkPublisherRadius = message.radius;
 		}
 
 		public void HandleMcpeBiomeDefinitionList(McpeBiomeDefinitionList message)
@@ -982,6 +985,7 @@ namespace Alex.Net.Bedrock
 
 		public void HandleMcpeInteract(McpeInteract message)
 		{
+			Log.Info($"Received McpeInteract. ActionID={message.actionId} EntityId={message.targetRuntimeEntityId}");
 			UnhandledPackage(message);
 		}
 
@@ -1039,17 +1043,23 @@ namespace Alex.Net.Bedrock
 
 		public void HandleMcpeSetSpawnPosition(McpeSetSpawnPosition message)
 		{
-			Client.SpawnPoint = new Vector3(
-				message.coordinates.X, (float) (message.coordinates.Y), message.coordinates.Z);
-
-			Client.LevelInfo.SpawnX = (int) Client.SpawnPoint.X;
-			Client.LevelInfo.SpawnY = (int) Client.SpawnPoint.Y;
-			Client.LevelInfo.SpawnZ = (int) Client.SpawnPoint.Z;
+			if (message.spawnType == 1) //Compass position
+			{
+				Client.World.CompassPosition = new BlockCoordinates(
+					message.coordinates.X, (message.coordinates.Y), message.coordinates.Z);
+			}
+			else if (message.spawnType == 0) //Player spawn
+			{
+				Client.World.Player.SpawnPoint = new BlockCoordinates(
+					message.coordinates.X, (message.coordinates.Y), message.coordinates.Z);
+			}
 
 			Client.World.SpawnPoint = new Microsoft.Xna.Framework.Vector3(
-				Client.SpawnPoint.X, Client.SpawnPoint.Y, Client.SpawnPoint.Z);
-			
-		//	Log.Info($"Spawn position: {message.coordinates}");
+				message.unknownCoordinates.X, (float)(message.unknownCoordinates.Y), message.unknownCoordinates.Z);
+			//Client.World.Dimension = (Dimension)message.dimension;
+			//Client.World.SpawnPoint = new Microsoft.Xna.Framework.Vector3(message.coordinates.X, (float) (message.coordinates.Y), message.coordinates.Z);
+
+			Log.Debug($"SetSpawn! (Position={message.coordinates}) (SpawnPosition={message.unknownCoordinates})");
 		}
 
 		public void HandleMcpeAnimate(McpeAnimate message)
@@ -1095,7 +1105,7 @@ namespace Alex.Net.Bedrock
 					Client.SendMcpeMovePlayer(new PlayerLocation(message.x, message.y, message.z), 1);
 				}
 
-				Client.RequestChunkRadius(AlexInstance.Options.AlexOptions.VideoOptions.RenderDistance.Value);
+				Client.RequestRenderDistance(0, Client.World.ChunkManager.RenderDistance);
 
 				Client.ChangeDimensionResetEvent.Set();
 			}
@@ -1448,7 +1458,7 @@ namespace Alex.Net.Bedrock
 								break;
 							}
 
-							double radiusSquared = Math.Pow(Client.ChunkRadius, 2);
+							double radiusSquared = Math.Pow(Client.World.ChunkManager.RenderDistance, 2);
 							var target = radiusSquared;
 
 							percentage = (int)((100 / target) * world.ChunkManager.ChunkCount);
@@ -1540,7 +1550,8 @@ namespace Alex.Net.Bedrock
 			Log.Info(
 				$"Received chunkradius. Requested={AlexInstance.Options.AlexOptions.VideoOptions.RenderDistance.Value} Received={message.chunkRadius}");
 
-			Client.ChunkRadius = message.chunkRadius;
+			Client.World.ChunkManager.RenderDistance = message.chunkRadius;
+		//	Client.ChunkRadius = message.chunkRadius;
 		}
 
 		public void HandleMcpeItemFrameDropItem(McpeItemFrameDropItem message)
@@ -1893,16 +1904,6 @@ namespace Alex.Net.Bedrock
 			//UnhandledPackage(message);
 		}
 
-		#region SoundConversion
-
-		private bool TryConvertSoundId(uint soundId, out string sound)
-		{
-			sound = null;
-			return false;
-		}
-		
-		#endregion
-		
 		public void HandleMcpePlaySound(McpePlaySound message)
 		{
 			var coords = message.coordinates;

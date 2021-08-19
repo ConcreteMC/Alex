@@ -141,7 +141,7 @@ namespace Alex.Worlds
 			
 			Camera = new EntityCamera(Player);
 
-			Player.KnownPosition = new PlayerLocation(GetSpawnPoint());
+			Player.KnownPosition = new PlayerLocation(SpawnPoint);
 			_disposables.Add(options.FieldOfVision.Bind(FieldOfVisionOnValueChanged));
 			//Options.FieldOfVision.ValueChanged += FieldOfVisionOnValueChanged;
 			Camera.FOV = Options.FieldOfVision.Value;
@@ -157,8 +157,9 @@ namespace Alex.Worlds
 				options.VideoOptions.RenderDistance.Bind(
 					(old, newValue) =>
 					{
+						networkProvider.RequestRenderDistance(old, newValue);
 						Camera.SetRenderDistance(newValue);
-						ChunkManager.RenderDistance = newValue;
+						//ChunkManager.RenderDistance = newValue;
 					}));
 			
 			Camera.SetRenderDistance(options.VideoOptions.RenderDistance.Value);
@@ -305,6 +306,9 @@ namespace Alex.Worlds
 		public TickManager    TickManager   { get; private set; }
 		public EntityManager  EntityManager { get; private set; }
 		public ChunkManager   ChunkManager  { get; private set; }
+		
+		public BlockCoordinates CompassPosition { get; set; } = BlockCoordinates.Zero;
+		public Vector3 SpawnPoint { get; set; } = Vector3.Zero;
 
 		public void ToggleWireFrame()
         {
@@ -574,17 +578,10 @@ namespace Alex.Worlds
 		{
 			_blockBreakProgresses.TryRemove(coordinates, out _);
 		}
-		
-        public Vector3 SpawnPoint { get; set; } = Vector3.Zero;
 
-        public float BrightnessModifier
+		public float BrightnessModifier
         {
 	        get { return (_brightnessMod + ((Options.VideoOptions.Brightness - 50f) * (0.5f / 100f))); }
-        }
-
-        public Vector3 GetSpawnPoint()
-        {
-	        return SpawnPoint;
         }
 
         public ChunkColumn GetChunk(BlockCoordinates coordinates, bool cacheOnly = false)
