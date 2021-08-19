@@ -60,11 +60,15 @@ namespace Alex.Common.Data.Options
 		[DataMember]
 		public OptionsProperty<ZoomLevel> DefaultZoomLevel { get; set; }
 
+		[DataMember]
+		public OptionsProperty<bool> AlphaBlending { get; set; }
+		
 		public MinimapOptions()
 		{
 			Enabled = DefineProperty(false);
 			Size = DefineRangedProperty(1d, 0.125d, 2d);
 			DefaultZoomLevel = DefineProperty(ZoomLevel.Default, ZoomValidator);
+			AlphaBlending = DefineProperty(true);
 		}
 
 		private ZoomLevel ZoomValidator(ZoomLevel currentValue, ZoomLevel newValue)

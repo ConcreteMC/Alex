@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Alex.Common.Data.Options;
 using Alex.Common.Utils.Vectors;
 using Alex.Common.World;
 using Alex.Entities;
@@ -43,8 +44,12 @@ namespace Alex.Gui.Elements.Map
 
         /// <inheritdoc />
         public float Rotation => 180f - (_world?.Player?.KnownPosition?.HeadYaw ?? 0);
-        
-        public WorldMap(World world, int lod = 1)
+
+        public bool AlphaBlending { get; set; } = true;
+        private OptionsPropertyAccessor<bool> _alphaBlendingAccessor;
+        private SpriteBatch _spriteBatch;
+        private RenderTarget2D _renderTarget;
+        public WorldMap(World world, AlexOptions options)
         {
             _world = world;
             _markers = new ConcurrentHashSet<MapIcon>();
@@ -56,9 +61,19 @@ namespace Alex.Gui.Elements.Map
             world.EntityManager.EntityAdded += EntityAdded;
             world.EntityManager.EntityRemoved += EntityRemoved;
 
-            ChunkSize = 16 * Math.Max(1, lod);
+            ChunkSize = 16;// * Math.Max(1, lod);
+
+            _alphaBlendingAccessor = options.UserInterfaceOptions.Minimap.AlphaBlending.Bind(AlphaBindSettingChanged);
+            AlphaBlending = _alphaBlendingAccessor.Value;
+
+            _spriteBatch = new SpriteBatch(Alex.Instance.GraphicsDevice);
         }
-        
+
+        private void AlphaBindSettingChanged(bool oldvalue, bool newvalue)
+        {
+            AlphaBlending = newvalue;
+        }
+
         public MapIcon AddMarker(Vector3 position, MapMarker icon)
         {
             var res = new MapIcon(icon) {Position = position};
@@ -110,20 +125,9 @@ namespace Alex.Gui.Elements.Map
 
         private void OnChunkAdded(object sender, ChunkAddedEventArgs e)
         {
-            var container = new RenderedMap(e.Position, ChunkSize);
-            //container.TryAddProcessingLayer(new LightShadingLayer(_world));
-            
-            if (TryAdd(e.Position, container))
-            {
-                container.MarkDirty();
-            }
-            else
-            {
-                if (TryGetContainer(e.Position, out var c))
-                {
-                    c.MarkDirty();
-                }
-            }
+            var container = _textureContainers.GetOrAdd(
+                e.Position, coordinates => new RenderedMap(coordinates, ChunkSize));
+            container.MarkDirty();
         }
 
         private bool TryAdd(ChunkCoordinates coordinates, RenderedMap container)
@@ -137,8 +141,8 @@ namespace Alex.Gui.Elements.Map
 
             if (container.Invalidated)
             {
-               // RemoveContainer(coordinates);
-                //return false;
+                RemoveContainer(coordinates);
+                return false;
             }
 
             return true;
@@ -153,7 +157,7 @@ namespace Alex.Gui.Elements.Map
             }
         }
 
-        private IEnumerable<RenderedMap> GetContainers(ChunkCoordinates center, int radius)
+        public IEnumerable<IMapElement> GetSections(ChunkCoordinates center, int radius)
         {
             var containers = _textureContainers;
             if (containers == null || containers.IsEmpty)
@@ -174,71 +178,53 @@ namespace Alex.Gui.Elements.Map
         /// <inheritdoc />
         public uint[] GetData()
         {
-            throw new NotImplementedException();
+            uint[] data = new uint[Width * Height];
+            
+            _renderTarget.GetData(data);
+            
+            return data;
         }
 
-        private Texture2D _texture = null;
-        private ChunkCoordinates _previousCenter = ChunkCoordinates.Zero;
         /// <inheritdoc />
-        public Texture2D GetTexture(GraphicsDevice device, Vector3 centerPosition)
+        public Texture2D GetTexture(GraphicsDevice device)
         {
             if (Disposed) return null;
             
-            var center = new ChunkCoordinates(centerPosition);
-            var forceRedraw = center != _previousCenter;
-            
             Texture2D oldTexture = null;
-            var texture = _texture;
-            
+            var texture = _renderTarget;
+
             try
             {
                 if (texture == null || texture.IsDisposed || texture.Width != Width || texture.Height != Height)
                 {
                     oldTexture = texture;
 
-                    texture = new Texture2D(device, Width, Height);
-                    forceRedraw = true;
-
-                    //oldTexture?.Dispose();
+                    texture = new RenderTarget2D(device, Width, Height);
                 }
-
-                if (forceRedraw)
+                
+                using (device.PushRenderTarget(_renderTarget))
                 {
-                    texture.SetData(ArrayOf<uint>.Create(Width * Height));
-                }
+                    _spriteBatch.Begin();
 
-                foreach (var container in GetContainers(center, RenderDistance))
-                {
-                    if (!forceRedraw && !container.PendingChanges && !container.Invalidated) continue;
-
-                    var distance = (container.Coordinates - center) * (ChunkSize / 16);
-
-                    var renderPos = new Vector2(Width / 2f, Height / 2f);
-                    renderPos += new Vector2(distance.X * 16, distance.Z * 16);
-
-                    var destination = new Rectangle(renderPos.ToPoint(), new Point(ChunkSize, ChunkSize));
-
-                    if (texture.Bounds.Contains(destination))
+                    foreach (var element in GetSections(new ChunkCoordinates(Center), RenderDistance))
                     {
-                        var data = container.GetData();
+                        var t = element.GetTexture(device);
+                        if (t == null)
+                            continue;
 
-                        if (data != null)
-                        {
-                            texture.SetData(0, destination, data, 0, data.Length);
-                        }
-                        //didChange = true;
+                        var distance = element.Position - Center;
+                        
+                        _spriteBatch.Draw(t, new Vector2(Width / 2f, Height / 2f) + new Vector2(distance.X, distance.Z), Color.White);
                     }
-
-                    if (container.Invalidated)
-                        RemoveContainer(container.Coordinates);
+                    
+                    _spriteBatch.End();
                 }
             }
             finally
             {
-                _texture = texture;
-                _previousCenter = center;
+                _renderTarget = texture;
                 
-                if (oldTexture != null && oldTexture != _texture)
+                if (oldTexture != null && oldTexture != _renderTarget)
                     oldTexture.Dispose();
             }
 
@@ -259,34 +245,20 @@ namespace Alex.Gui.Elements.Map
                 yield return icon;
             }
         }
-        
-        /// <inheritdoc />
-        private bool IsMarkerVisible(MapIcon icon)
-        {
-            if (_world.Camera.BoundingFrustum.Contains(icon.Position) != ContainmentType.Disjoint)
-                return true;
-
-
-            return false;
-            var iconPos = new BlockCoordinates(icon.Position);
-            var height = _world.GetHeight(iconPos) - 1;
-
-            if (iconPos.Y < height)
-                return false;
-
-            return true;
-        }
 
         /// <inheritdoc />
         public void OnTick()
         {
             if (Disposed) return;
 
-            foreach (var container in GetContainers(new ChunkCoordinates(Center), RenderDistance))
+            foreach (var container in GetSections(new ChunkCoordinates(Center), RenderDistance))
             {
-                if (container.IsDirty)
+                if (container is RenderedMap rm)
                 {
-                    container.Update(_world);
+                    if (rm.IsDirty)
+                    {
+                        rm.Tick(_world, AlphaBlending);
+                    }
                 }
             }
         }
@@ -322,6 +294,9 @@ namespace Alex.Gui.Elements.Map
             }
 
             _world = null;
+            
+            _alphaBlendingAccessor?.Dispose();
+            _alphaBlendingAccessor = null;
         }
     }
 }

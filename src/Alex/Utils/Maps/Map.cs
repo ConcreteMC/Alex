@@ -8,30 +8,14 @@ using ConcurrentCollections;
 using fNbt;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using RocketUI;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using Color = Microsoft.Xna.Framework.Color;
+using Image = SixLabors.ImageSharp.Image;
 
 namespace Alex.Utils
 {
-	public interface IMap : IDisposable
-	{
-		int Width { get; }
-		int Height { get; }
-		float Scale { get; }
-		Vector3 Center { get; }
-		float Rotation { get; }
-
-		uint[] GetData();
-		Texture2D GetTexture(GraphicsDevice device, Vector3 center);
-		
-		void Add(MapIcon icon);
-		void Remove(MapIcon icon);
-		IEnumerable<MapIcon> GetMarkers(ChunkCoordinates center, int radius);
-
-		//void Move(Vector2 amount);
-	}
-	
 	public class Map : IMap
 	{
 		public int Width { get; }
@@ -42,7 +26,8 @@ namespace Alex.Utils
 		
 		private Color[] _colors;
 		private readonly ConcurrentHashSet<MapIcon> _markers;
-		
+
+		public bool HasChanges { get; protected set; } = false;
 		public Map(int width, int height)
 		{
 			Width = width;
@@ -65,6 +50,7 @@ namespace Alex.Utils
 			set
 			{
 				_colors[x + y * Width] = value;
+				HasChanges = true;
 			}
 		}
 
@@ -80,24 +66,26 @@ namespace Alex.Utils
 		
 		public virtual uint[] GetData()
 		{
-			Color[] colors = new Color[Width * Height];
+			var data = _colors.Select(x => x.PackedValue).ToArray();
+			HasChanges = false;
 
-			for (int c = 0; c < _colors.Length; c++)
-			{
-				colors[c] = _colors[c];
-			}
-
-			return colors.Select(x => x.PackedValue).ToArray();
-		//	return _colors.Select(x =>  MapColor.GetBlockColor(x).PackedValue).ToArray();
+			return data;
+			//	return _colors.Select(x =>  MapColor.GetBlockColor(x).PackedValue).ToArray();
 		}
 
 		/// <inheritdoc />
-		public virtual Texture2D GetTexture(GraphicsDevice device, Vector3 center)
+		public virtual Texture2D GetTexture(GraphicsDevice device)
 		{
 			var texture = new Texture2D(device, Width, Height);
 			texture.SetData(GetData());
 
 			return texture;	
+		}
+
+		/// <inheritdoc />
+		public IEnumerable<IMapElement> GetSections(ChunkCoordinates center, int radius)
+		{
+			yield return new WrappedTexture(Center, GetTexture(Alex.Instance.GraphicsDevice));
 		}
 
 		/// <inheritdoc />
@@ -151,6 +139,25 @@ namespace Alex.Utils
 		~Map()
 		{
 			Dispose(false);
+		}
+
+		public class WrappedTexture : IMapElement
+		{
+			/// <inheritdoc />
+			public Vector3 Position { get; }
+
+			private Texture2D _texture;
+			public WrappedTexture(Vector3 position, Texture2D texture)
+			{
+				Position = position;
+				_texture = texture;
+			}
+
+			/// <inheritdoc />
+			public Texture2D GetTexture(GraphicsDevice device)
+			{
+				return _texture;
+			}
 		}
 	}
 }

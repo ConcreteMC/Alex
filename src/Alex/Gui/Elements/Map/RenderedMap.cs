@@ -4,22 +4,27 @@ using Alex.Blocks.Materials;
 using Alex.Blocks.State;
 using Alex.Common.Blocks;
 using Alex.Common.Utils.Vectors;
+using Alex.Utils;
 using Alex.Worlds;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using ChunkColumn = Alex.Worlds.Chunks.ChunkColumn;
 
 namespace Alex.Gui.Elements.Map
 {
-	public class RenderedMap : Utils.Map, IDisposable
+	public class RenderedMap : Utils.Map, IMapElement, IDisposable
 	{
 		private int Size { get; set; }
 		public bool IsDirty { get; private set; }
 		public bool Invalidated { get; private set; } = false;
-
-		public bool PendingChanges { get; private set; } = false;
+		
 		public ChunkCoordinates Coordinates { get; }
+		
+		/// <inheritdoc />
+		public Vector3 Position { get; }
 		public RenderedMap(ChunkCoordinates coordinates, int size = 16) : base(size, size)
 		{
+			Position = new Vector3(coordinates.X * 16, 0f, coordinates.Z * 16);
 			Size = size;
 			Coordinates = coordinates;
 		}
@@ -29,16 +34,23 @@ namespace Alex.Gui.Elements.Map
 			Invalidated = true;
 		}
 		
-		public void Update(World world)
+		public void MarkDirty()
 		{
+			IsDirty = true;
+		}
+
+		public void Tick(World world, bool alphaBlend)
+		{
+			if (Invalidated)
+				return;
+			
 			try
 			{
 				var target = world.GetChunkColumn(Coordinates.X, Coordinates.Z);
 
 				if (target == null)
 				{
-					Invalidated = true;
-
+					Invalidate();
 					return;
 				}
 
@@ -68,34 +80,30 @@ namespace Alex.Gui.Elements.Map
 						Color color = GetColorForBlock(
 							world, blockMaterial, rx, height, rz);
 
-						//Blend transparent layers
-						while (color.A < 255 && height > target.WorldSettings.MinY)
+						if (alphaBlend)
 						{
-							//Hmmm..
-							//Should we do a `s.Block.BlockMaterial.MapColor.Index != blockMaterial.MapColor.Index &&`
-							var bs = GetHighestBlock( 
-								target, x, height, z, (s) => s.Block.BlockMaterial.MapColor.BaseColor.A > 0, out height);
+							//Blend transparent layers
+							while (color.A < 255 && height > target.WorldSettings.MinY)
+							{
+								//Hmmm..
+								//Should we do a `s.Block.BlockMaterial.MapColor.Index != blockMaterial.MapColor.Index &&`
+								var bs = GetHighestBlock(
+									target, x, height, z, (s) => s.Block.BlockMaterial.MapColor.BaseColor.A > 0,
+									out height);
 
-							color = color.Blend(
-								GetColorForBlock(world, bs.Block.BlockMaterial, rx, height, rz),
-								color.A);
+								color = color.Blend(
+									GetColorForBlock(world, bs.Block.BlockMaterial, rx, height, rz), color.A);
+							}
 						}
 
 						color.A = 255;
-						for (int xOffset = 0; xOffset < scale; xOffset++)
-						{
-							for (int zOffset = 0; zOffset < scale; zOffset++)
-							{
-								this[(x * scale) + xOffset, (z * scale) + zOffset] = color;
-							}
-						}
+						this[(x * scale), (z * scale)] = color;
 					}
 				}
 			}
 			finally
 			{
 				IsDirty = false;
-				PendingChanges = true;
 			}
 		}
 
@@ -143,19 +151,40 @@ namespace Alex.Gui.Elements.Map
 		{
 			if (Invalidated)
 			{
-				PendingChanges = false;
+				HasChanges = false;
 				return null;
 			}
 
-			var data = base.GetData();
-			PendingChanges = false;
-
-			return data;
+			return base.GetData();
 		}
 
-		public void MarkDirty()
+		private Texture2D _texture = null;
+		/// <inheritdoc />
+		public override Texture2D GetTexture(GraphicsDevice device)
 		{
-			IsDirty = true;
+			if (_texture == null)
+			{
+				var data = GetData();
+
+				var texture = new Texture2D(device, Width, Height);
+
+				if (data != null)
+				{
+					texture.SetData(data);
+				}
+
+				_texture = texture;
+			}
+
+			if (HasChanges && !IsDirty)
+			{
+				var data = GetData();
+				
+				if (data != null)
+					_texture.SetData(data);
+			}
+
+			return _texture;	
 		}
 
 		/// <inheritdoc />

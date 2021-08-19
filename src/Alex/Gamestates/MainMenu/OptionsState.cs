@@ -1,4 +1,5 @@
 ﻿using Alex.Gamestates.MainMenu.Options;
+using Alex.Gamestates.MainMenu.Options.Ui;
 using Alex.Gui;
 using RocketUI;
 
@@ -29,7 +30,7 @@ namespace Alex.Gamestates.MainMenu
                 CreateLinkButton<ResourcePackOptionsState>("options.resourcepack", "Resource Packs"),
                 CreateLinkButton<MiscellaneousOptionsState>("options.miscellaneous", "Miscellaneous Settings..."));
 
-            AddGuiRow(CreateLinkButton<UserInterfaceOptionsState>("options.ui", "User Interface"));
+            AddGuiRow(CreateLinkButton<UserInterfaceOptionsState>("options.ui", "User Interface..."));
             
             base.OnInit(renderer);
         }

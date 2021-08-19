@@ -65,6 +65,7 @@ using RocketUI.Utilities.Extensions;
 using RocketUI.Utilities.Helpers;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
+using Color = Microsoft.Xna.Framework.Color;
 using GpuResourceManager = Alex.Common.Graphics.GpuResources.GpuResourceManager;
 using Image = SixLabors.ImageSharp.Image;
 using Point = Microsoft.Xna.Framework.Point;
@@ -195,14 +196,6 @@ namespace Alex
 
                     DeviceManager.ApplyChanges();
                 }
-
-                var bounds = Window.ClientBounds;
-                var viewport = GraphicsDevice.Viewport;
-                // viewport.Width = bounds.Width;
-                // viewport.Height = bounds.Height;
-                // viewport = new Viewport(bounds);
-
-                // GraphicsDevice.Viewport = viewport;
             };
 
 
@@ -576,11 +569,12 @@ namespace Alex
 
         public EventHandler OnBeginDraw;
         public EventHandler OnEndDraw;
-        
+
         /// <inheritdoc />
         protected override bool BeginDraw()
         {
             OnBeginDraw?.Invoke(this, EventArgs.Empty);
+
             return base.BeginDraw();
         }
 

@@ -128,7 +128,7 @@ namespace Alex.Worlds
 			TickManager = new TickManager();
 			PlayerList = new PlayerList();
 
-			Map = new WorldMap(this, 1);
+			Map = new WorldMap(this, options);
 			
 			TickManager.RegisterTicked(this);
 			TickManager.RegisterTicked(EntityManager);

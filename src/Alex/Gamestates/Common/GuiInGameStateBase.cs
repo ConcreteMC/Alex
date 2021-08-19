@@ -13,7 +13,8 @@ namespace Alex.Gamestates.Common
 
         protected override void OnDraw(IRenderArgs args)
         {
-            ParentState.Draw(args);
+            base.OnDraw(args);
+            ParentState?.Draw(args);
         }
 
         /// <inheritdoc />

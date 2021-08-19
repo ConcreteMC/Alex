@@ -159,9 +159,10 @@ namespace Alex.Gui.Elements.Map
 
             var centerPosition = Center;
             var zoomScale = ZoomScale;
-            
-            DrawMap(graphics, centerPosition, _radius, zoomScale);
-            DrawMarkers(graphics, centerPosition, _radius, zoomScale);
+
+            var cx = (int)Math.Ceiling(RenderBounds.Width / (16 * zoomScale));
+            DrawMap(graphics, centerPosition, cx, zoomScale);
+            DrawMarkers(graphics, centerPosition, cx, zoomScale);
 
             graphics.DrawRectangle(RenderBounds, Color.Black, 1);
         }
@@ -198,22 +199,23 @@ namespace Alex.Gui.Elements.Map
                 }
             }
         }
-        
+
         private void DrawMap(GuiSpriteBatch graphics, Vector3 centerPosition, int radius, float zoomScale)
         {
             var center = new ChunkCoordinates(centerPosition);
+            var scale = Vector2.One * zoomScale;
 
-            var texture = _map.GetTexture(graphics.Context.GraphicsDevice, centerPosition);
+            foreach (var container in _map.GetSections(center, radius))
+            {
+                var renderPos = GetRenderPosition(container.Position, centerPosition, zoomScale);
+                var texture = container.GetTexture(graphics.Context.GraphicsDevice);
 
-            if (texture == null)
-                return;
-            
-            var position = GetRenderPosition(new Vector3(center.X * 16f, 0f, center.Z * 16f), centerPosition, zoomScale);
-            
-            graphics.SpriteBatch.Draw(
-                (TextureSlice2D)texture, position,
-                Color.White, -Rotation, new Vector2(texture.Width / 2f, texture.Height / 2f),
-                (Vector2.One) * zoomScale);
+                if (texture != null)
+                {
+                    graphics.SpriteBatch.Draw(
+                        (TextureSlice2D)texture, (renderPos), Color.White, -Rotation, Vector2.Zero, scale);
+                }
+            }
         }
 
         private Vector2 GetRenderPosition(Vector3 position, Vector3 centerPosition, float scale)

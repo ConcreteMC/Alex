@@ -135,8 +135,8 @@ namespace Alex.Gamestates.MainMenu.Options
             
             return new AlexButton(() =>
             {
-                Alex.GameStateManager.SetActiveState(state);
                 state.ParentState = ParentState;
+                Alex.GameStateManager.SetActiveState(state);
             })
             {
                 Text = fallback ?? translationKey,
@@ -288,8 +288,16 @@ namespace Alex.Gamestates.MainMenu.Options
         protected override void OnUpdate(GameTime gameTime)
         {
             base.OnUpdate(gameTime);
-            _skyBox?.Update(gameTime);
             
+            if (Alex.InGame)
+            {
+                ParentState?.Update(gameTime);
+            }
+            else
+            {
+                _skyBox?.Update(gameTime);
+            }
+
             var highlighted = Alex.GuiManager.FocusManager.HighlightedElement;
             if (_focusedControl != highlighted)
             {
@@ -316,7 +324,11 @@ namespace Alex.Gamestates.MainMenu.Options
         private bool _descriptionsAdded = false;
         protected override void OnDraw(IRenderArgs args)
         {
-            if (_skyBox != null)
+            if (Alex.InGame)
+            {
+                ParentState?.Draw(args);
+            }
+            else if (_skyBox != null)
             {
                 if (!_skyBox.Loaded)
                 {
@@ -324,11 +336,6 @@ namespace Alex.Gamestates.MainMenu.Options
                 }
                 
                 _skyBox.Draw(args);
-            }
-
-            if (Alex.InGame)
-            {
-                ParentState.Draw(args);
             }
 
             base.OnDraw(args);

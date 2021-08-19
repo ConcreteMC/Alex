@@ -211,12 +211,15 @@ namespace Alex.Gui
 
 	        using (var context = GraphicsContext.CreateContext(args.GraphicsDevice, _blendState, _depthStencilState, _rasterizerState, _samplerState))
 	        {
-		        device.SetRenderTarget(_renderTarget);
+		       // device.SetRenderTarget(_renderTarget);
 
-		        _skyboxBuilder.Bind();
-				DrawSkyBoxCube(device);
+		        using (var target = device.PushRenderTarget(_renderTarget))
+		        {
+			        _skyboxBuilder.Bind();
+			        DrawSkyBoxCube(device);
+		        }
 
-		        device.SetRenderTarget(null);
+		      //  device.SetRenderTarget(null);
 	        }
         }
     }

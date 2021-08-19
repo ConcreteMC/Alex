@@ -2,15 +2,17 @@ using System;
 using Alex.Common.Gui.Graphics;
 using Alex.Utils;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using RocketUI;
 
 namespace Alex.Gui.Elements.Map
 {
-	public class MapIcon
+	public class MapIcon : IMapElement
 	{
 		public int DrawOrder { get; set; } = 0;
 
 		public virtual Vector3 Position { get; set; }
+
 		public virtual float Rotation { get; set; } = 0f;
 		
 		public MapMarker Marker { get; set; }
@@ -21,6 +23,12 @@ namespace Alex.Gui.Elements.Map
 		public MapIcon(MapMarker marker)
 		{
 			Marker = marker;
+		}
+		
+		/// <inheritdoc />
+		public Texture2D GetTexture(GraphicsDevice device)
+		{
+			throw new NotImplementedException();
 		}
 	}
 

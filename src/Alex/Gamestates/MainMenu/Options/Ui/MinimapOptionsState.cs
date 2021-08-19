@@ -1,25 +1,32 @@
 using Alex.Common.Data;
+using Alex.Common.Utils;
 using Alex.Gui;
+using MiNET.UI;
 using RocketUI;
+using Slider = RocketUI.Slider;
 
-namespace Alex.Gamestates.MainMenu.Options
+namespace Alex.Gamestates.MainMenu.Options.Ui
 {
-	public class UserInterfaceOptionsState : OptionsStateBase
+	public class MinimapOptionsState : OptionsStateBase
 	{
 		private ToggleButton Minimap            { get; set; }
 		private Slider MinimapSize { get; set; }
 		private Slider<ZoomLevel> MinimapZoomLevel { get; set; }
-		
+		private ToggleButton AlphaBlending { get; set; }
+
 		/// <inheritdoc />
-		public UserInterfaceOptionsState(GuiPanoramaSkyBox skyBox) : base(skyBox)
+		public MinimapOptionsState(GuiPanoramaSkyBox skyBox) : base(skyBox)
 		{
-			Title = "User Interface";
+			Title = "Minimap";
 		}
 
 		/// <inheritdoc />
 		protected override void OnInit(IGuiRenderer renderer)
 		{
 			base.OnInit(renderer);
+
+			AlphaBlending = CreateToggle(
+				"Alpha Blending: {0}", o => o.UserInterfaceOptions.Minimap.AlphaBlending);
 			
 			Minimap = CreateToggle("Show Minimap: {0}", o => o.UserInterfaceOptions.Minimap.Enabled);
 
@@ -45,13 +52,16 @@ namespace Alex.Gamestates.MainMenu.Options
 				
 				return $"Zoom Level: {display}";
 			}, o => o.UserInterfaceOptions.Minimap.DefaultZoomLevel, ZoomLevel.Minimum, ZoomLevel.Maximum);
+
+			MinimapZoomLevel.StepInterval = ZoomLevel.Level1;
 			
 			AddGuiRow(Minimap, MinimapSize);
-			AddGuiRow(MinimapZoomLevel);
+			AddGuiRow(AlphaBlending, MinimapZoomLevel);
 			
-			AddDescription(Minimap, "Minimap", "Adds a minimap", "May impact performance");
+			AddDescription(Minimap, "Minimap", "Enabled: Show a minimap in the HUD");
 			AddDescription(MinimapSize, "Minimap Size", "The size of the minimap");
 			AddDescription(MinimapZoomLevel, "Minimap Zoom", "The zoomlevel used for the minimap");
+			AddDescription(AlphaBlending, "Alpha Blending", "Enabled: Materials like water are transparent", $"{TextColor.Red}May impact chunk loading performance!");
 		}
 	}
 }
