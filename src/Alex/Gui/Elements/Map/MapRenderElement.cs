@@ -1,4 +1,5 @@
 ﻿using System;
+using Alex.Common.Data;
 using Alex.Common.Utils.Vectors;
 using Alex.Utils;
 using Microsoft.Xna.Framework;
@@ -28,6 +29,8 @@ namespace Alex.Gui.Elements.Map
                 _zoomLevel = (ZoomLevel)Math.Clamp((byte)value, MinZoomLevel, MaxZoomLevel);
             }
         }
+
+        public bool AutoZoomLevel { get; set; } = false;
         
         private bool _showCompass = false;
         public bool ShowCompass
@@ -109,24 +112,27 @@ namespace Alex.Gui.Elements.Map
             
             var size = RenderBounds;
 
-            if (_previousSize != size.Size)
+            if (AutoZoomLevel)
             {
-                var chunksX = size.Width / 16;
-                var chunksZ = size.Height / 16;
-
-                for (int zl = (int)ZoomLevel.Minimum; zl < (int)ZoomLevel.Maximum; zl++)
+                if (_previousSize != size.Size)
                 {
-                    var zoomScale = ((float)ZoomLevel.Maximum / (float)zl);
+                    var chunksX = size.Width / 16;
+                    var chunksZ = size.Height / 16;
 
-                    if (16 * zoomScale <= chunksX && 16 * zoomScale <= chunksZ)
+                    for (int zl = (int)ZoomLevel.Minimum; zl < (int)ZoomLevel.Maximum; zl++)
                     {
-                        ZoomLevel = (ZoomLevel)zl;
+                        var zoomScale = ((float)ZoomLevel.Maximum / (float)zl);
 
-                        break;
+                        if (16 * zoomScale <= chunksX && 16 * zoomScale <= chunksZ)
+                        {
+                            ZoomLevel = (ZoomLevel)zl;
+
+                            break;
+                        }
                     }
-                }
 
-                _previousSize = size.Size;
+                    _previousSize = size.Size;
+                }
             }
         }
 

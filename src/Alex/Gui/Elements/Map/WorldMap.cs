@@ -6,6 +6,7 @@ using System.Linq;
 using Alex.Common.Utils.Vectors;
 using Alex.Common.World;
 using Alex.Entities;
+using Alex.Gui.Elements.Map.Processing;
 using Alex.Utils;
 using Alex.Worlds;
 using ConcurrentCollections;
@@ -18,25 +19,7 @@ using RocketUI;
 
 namespace Alex.Gui.Elements.Map
 {
-    public enum ZoomLevel : byte
-    {
-        Level1 = 1,
-        Level2 = 2,
-        Level3 = 3,
-        Level4 = 4,
-        Level5 = 5,
-        Level6 = 6,
-        Level7 = 7,
-        Level8 = 8,
-        Level9 = 9,
-        Level10 = 10,
-        
-        Minimum = Level1,
-        Maximum = Level10,
-        Default = Level5,
-    }
-    
-	public class WorldMap : IMap, ITicked, IDisposable
+    public class WorldMap : IMap, ITicked, IDisposable
     {
         private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(WorldMap));
         
@@ -127,6 +110,8 @@ namespace Alex.Gui.Elements.Map
         private void OnChunkAdded(object sender, ChunkAddedEventArgs e)
         {
             var container = new RenderedMap(e.Position);
+            //container.TryAddProcessingLayer(new LightShadingLayer(_world));
+            
             if (TryAdd(e.Position, container))
             {
                 container.MarkDirty();
@@ -268,25 +253,43 @@ namespace Alex.Gui.Elements.Map
             var markers = _markers;
             if (markers == null || markers.IsEmpty)
                 yield break;
-           
-            foreach (var icon in markers.Where(x => x.AlwaysShown || new ChunkCoordinates(x.Position).DistanceTo(center) <= radius).OrderBy(x => x.DrawOrder))
+
+            foreach (var icon in markers
+               .Where(
+                    x => x.AlwaysShown || (new ChunkCoordinates(x.Position).DistanceTo(center) <= radius
+                                           )).OrderBy(x => x.DrawOrder))
             {
                 yield return icon;
             }
+        }
+        
+        /// <inheritdoc />
+        private bool IsMarkerVisible(MapIcon icon)
+        {
+            if (_world.Camera.BoundingFrustum.Contains(icon.Position) != ContainmentType.Disjoint)
+                return true;
+
+
+            return false;
+            var iconPos = new BlockCoordinates(icon.Position);
+            var height = _world.GetHeight(iconPos) - 1;
+
+            if (iconPos.Y < height)
+                return false;
+
+            return true;
         }
 
         /// <inheritdoc />
         public void OnTick()
         {
-            var chunkManager = _world?.ChunkManager;
-            if (Disposed || chunkManager == null) return;
+            if (Disposed) return;
 
             foreach (var container in GetContainers(new ChunkCoordinates(Center), RenderDistance))
             {
                 if (container.IsDirty)
                 {
-                    chunkManager.TryGetChunk(container.Coordinates, out var chunk);
-                    container.Update(_world, chunk);
+                    container.Update(_world);
                 }
             }
         }

@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using Alex.Blocks.State;
 using Alex.Common.Utils.Vectors;
+using Alex.Gui.Elements.Map.Processing;
 using Alex.Worlds;
 using Microsoft.Xna.Framework.Graphics;
 using MiNET.Worlds;
@@ -24,7 +26,11 @@ namespace Alex.Gui.Elements.Map
 
 		public bool PendingChanges { get; private set; } = false;
 		public ChunkCoordinates Coordinates { get; }
-		public RenderedMap(ChunkCoordinates coordinates) : base(Size,Size, 1)
+		
+		private List<MapProcessingLayer> _processingLayers = new List<MapProcessingLayer>();
+		private object _processingLayerLock = new object();
+		
+		public RenderedMap(ChunkCoordinates coordinates) : base(Size,Size)
 		{
 			Coordinates = coordinates;
 		}
@@ -33,9 +39,11 @@ namespace Alex.Gui.Elements.Map
 		{
 			Invalidated = true;
 		}
-		
-		public void Update(World world, ChunkColumn target)
+
+		private int[] _heightMap = new int[16 * 16];
+		public void Update(World world)
 		{
+			var target = world.GetChunkColumn(Coordinates.X, Coordinates.Z);
 			if (target == null)
 			{
 				Invalidated = true;
@@ -60,7 +68,13 @@ namespace Alex.Gui.Elements.Map
 						state = target.GetBlockState(x, height, z);
 						maxHeight = Math.Max(height, maxHeight);
 					} while (height > 0 && state.Block.BlockMaterial.MapColor.BaseColor.A <= 0);
+					
+					var blockMaterial = state?.Block?.BlockMaterial;
+					if (blockMaterial == null || blockMaterial.MapColor.BaseColor.A <= 0)
+						continue;
 
+					_heightMap[x + z * Width] = height;
+					
 					var north = world.GetHeight(new BlockCoordinates((x + cx), height, (z + cz - 1))) - 1;
 					var northWest = world.GetHeight(new BlockCoordinates((x + cx - 1), height, (z + cz - 1))) - 1;
 
@@ -79,12 +93,17 @@ namespace Alex.Gui.Elements.Map
 						offset = 2; //Lighter
 					}
 
-					var blockMaterial = state?.Block?.BlockMaterial;
+					var color = blockMaterial.MapColor.GetMapColor(offset);
 
-					if (blockMaterial != null)
+					lock (_processingLayers)
 					{
-						this[x, z] = blockMaterial.MapColor.Index * 4 + offset;
+						foreach (var layer in _processingLayers)
+						{
+							color = layer.Apply(color, x, height, z, state);
+						}
 					}
+
+					this[x, z] = color;//  blockMaterial.MapColor.Index * 4 + offset;
 				}
 			}
 
@@ -108,25 +127,40 @@ namespace Alex.Gui.Elements.Map
 			return data;
 		}
 
-		/// <inheritdoc />
-		//public override Texture2D GetTexture(GraphicsDevice device)
-		//{
-		//	return Texture;
-		//}
-
 		public void MarkDirty()
 		{
 			IsDirty = true;
 		}
+		
+		public bool TryAddProcessingLayer(MapProcessingLayer layer)
+		{
+			lock (_processingLayerLock)
+			{
+				if (_processingLayers.Contains(layer))
+					return false;
+			
+				_processingLayers.Add(layer);
+				return true;
+			}
+		}
+
+		public bool RemoveProcessingLayer(MapProcessingLayer layer)
+		{
+			lock (_processingLayerLock)
+			{
+				if (!_processingLayers.Contains(layer))
+					return false;
+			
+				_processingLayers.Remove(layer);
+				return true;
+			}
+		}
 
 		/// <inheritdoc />
-		public void Dispose()
+		/// <inheritdoc />
+		protected override void Dispose(bool disposing)
 		{
-			base.Dispose();
-			//_map?.Dispose();
-			// _map = null;
-		//	Texture?.Dispose();
-		//	Texture = null;
+			base.Dispose(disposing);
 		}
 	}
 }

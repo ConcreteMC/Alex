@@ -207,6 +207,33 @@ namespace Alex.Gamestates.MainMenu.Options
 
             return slider;
         }
+        
+        protected Slider<TEnum> CreateSlider<TEnum>(Func<TEnum, string> formatter, Func<AlexOptions, OptionsProperty<TEnum>> optionsAccessor,
+            TEnum minValue, TEnum maxValue) where TEnum : Enum
+            => CreateSlider<TEnum>(new ValueFormatter<TEnum>(formatter), optionsAccessor, minValue, maxValue);
+
+
+        protected Slider<TEnum> CreateSlider<TEnum>(string label,
+            Func<AlexOptions, OptionsProperty<TEnum>> optionsAccessor,
+            TEnum minValue,
+            TEnum maxValue) where TEnum : Enum => CreateSlider<TEnum>(
+            new ValueFormatter<TEnum>(label), optionsAccessor, minValue, maxValue);
+        
+        protected Slider<TEnum> CreateSlider<TEnum>(ValueFormatter<TEnum> valueFormatter, Func<AlexOptions, OptionsProperty<TEnum>> optionsAccessor, TEnum minValue, TEnum maxValue) where TEnum : Enum
+        {
+            var slider = CreateValuedControl<Slider<TEnum>, TEnum>(valueFormatter, optionsAccessor);
+            slider.ApplyStyle<Slider<TEnum>, TEnum>();
+            
+            slider.MinValue = minValue;
+            slider.MaxValue = maxValue;
+
+           // slider.StepInterval = ;
+
+            slider.Value = optionsAccessor(Options).Value;
+
+            return slider;
+        }
+        
 
         protected EnumSwitchButton<TEnum> CreateSwitch<TEnum>(string displayFormat, Func<AlexOptions, OptionsProperty<TEnum>> optionsAccessor) where TEnum : Enum
         {

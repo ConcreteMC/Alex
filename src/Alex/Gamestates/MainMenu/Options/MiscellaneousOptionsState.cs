@@ -14,8 +14,6 @@ namespace Alex.Gamestates.MainMenu.Options
         private ToggleButton                 ChunkCaching { get; set; }
         private ToggleButton                 ServerResources { get; set; }
         private ToggleButton                 NetworkDebugInfo { get; set; }
-        private ToggleButton Minimap            { get; set; }
-        private Slider MinimapSize { get; set; }
         private Slider AntiLagModifier { get; set; }
 
         public MiscellaneousOptionsState(GuiPanoramaSkyBox skyBox) : base(skyBox)
@@ -51,18 +49,13 @@ namespace Alex.Gamestates.MainMenu.Options
                
                 NetworkDebugInfo = CreateToggle(
                     "Network Info: {0}", o => o.MiscelaneousOptions.ShowNetworkInfoByDefault);
-
-                Minimap = CreateToggle("Minimap: {0}", o => o.MiscelaneousOptions.Minimap);
-
-                MinimapSize = CreateSlider(
-                    "Minimap Size: {0}", o => o.MiscelaneousOptions.MinimapSize, 0.125d, 2d, 0.1d);
+                
 
                 AntiLagModifier = CreateSlider(
                     "Anti Lag Modifier: {0}", o => o.MiscelaneousOptions.AntiLagModifier, 0d, 1d, 0.05d);
                 
                 AddGuiRow(ProcessingThreads, NetworkProcessingThreads);
                 AddGuiRow(ServerResources, ChunkCaching);
-                AddGuiRow(Minimap, MinimapSize);
                 AddGuiRow(NetworkDebugInfo, AntiLagModifier);
                 
                 AddDescription(
@@ -87,10 +80,7 @@ namespace Alex.Gamestates.MainMenu.Options
                     "Network Latency Info", 
                     "If enabled, shows the network debug info by default.",
                     "You can always press 'F3 + N' while in-game to toggle it");
-                
-                AddDescription(Minimap, "Minimap", "Adds a minimap", "May impact performance");
-                AddDescription(MinimapSize, "Minimap Size", "The size of the minimap");
-                
+
                 AddDescription(AntiLagModifier, "Anti-Lag Modifier", "Is used to determine when the game is considered laggy.");
             }
 

@@ -28,13 +28,7 @@ namespace Alex.Common.Data.Options
         
         [DataMember]
         public OptionsProperty<bool> ShowNetworkInfoByDefault { get; set; }
-        
-        [DataMember]
-        public OptionsProperty<bool> Minimap { get; set; }
-        
-        [DataMember]
-        public OptionsProperty<double> MinimapSize { get; set; }
-        
+
         [DataMember]
         public OptionsProperty<double> AntiLagModifier { get; set; }
         
@@ -47,8 +41,6 @@ namespace Alex.Common.Data.Options
             UseChunkCache = DefineProperty(false);
             LoadServerResources = DefineProperty(false);
             ShowNetworkInfoByDefault = DefineProperty(false);
-            Minimap = DefineProperty(false);
-            MinimapSize = DefineRangedProperty(1d, 0.125d, 2d);
             AntiLagModifier = DefineRangedProperty(0.75d, 0d, 1d);
         }
     }

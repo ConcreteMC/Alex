@@ -29,6 +29,8 @@ namespace Alex.Gamestates.MainMenu
                 CreateLinkButton<ResourcePackOptionsState>("options.resourcepack", "Resource Packs"),
                 CreateLinkButton<MiscellaneousOptionsState>("options.miscellaneous", "Miscellaneous Settings..."));
 
+            AddGuiRow(CreateLinkButton<UserInterfaceOptionsState>("options.ui", "User Interface"));
+            
             base.OnInit(renderer);
         }
     }

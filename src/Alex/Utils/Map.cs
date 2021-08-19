@@ -4,6 +4,7 @@ using System.Linq;
 using Alex.Common.Blocks;
 using Alex.Common.Utils.Vectors;
 using Alex.Gui.Elements.Map;
+using Alex.Gui.Elements.Map.Processing;
 using ConcurrentCollections;
 using fNbt;
 using Microsoft.Xna.Framework;
@@ -40,27 +41,15 @@ namespace Alex.Utils
 		public Vector3 Center { get; set; } = Vector3.Zero;
 		public float Rotation { get; set; } = 0f;
 		
-		//public int CenterX { get; set; }
-	//	public int CenterZ { get; set; }
-
-		private int[][] _colors;
-		//private Texture2D _texture;
-		
+		private Color[] _colors;
 		private readonly ConcurrentHashSet<MapIcon> _markers;
-		protected int Layers { get; }
-		public Map(int width, int height, int layers = 1)
+		
+		public Map(int width, int height)
 		{
-			Layers = layers;
 			Width = width;
 			Height = height;
-			_colors = new int[width * height][];
+			_colors = new Color[width * height];
 			_markers = new ConcurrentHashSet<MapIcon>();
-			
-			for (int i = 0; i < _colors.Length; i++)
-			{
-				_colors[i] = new int[layers];
-			}
-			//_texture = new Texture2D(Alex.Instance.GraphicsDevice, width, height);
 		}
 
 		public Map(NbtCompound compound)
@@ -68,38 +57,16 @@ namespace Alex.Utils
 			throw new NotImplementedException();
 		}
 
-		public int this[int x, int y]
+		public Color this[int x, int y]
 		{
 			get
 			{
-				return _colors[x + y * Width][0];
+				return _colors[x + y * Width];
 			}
 			set
 			{
-				_colors[x + y * Width][0] = value;
+				_colors[x + y * Width] = value;
 			}
-		}
-		
-		public int this[int x, int y, int layer]
-		{
-			get
-			{
-				return _colors[x + y * Width][layer];
-			}
-			set
-			{
-				_colors[x + y * Width][layer] = value;
-			}
-		}
-
-		public Color GetColor(int x, int y)
-		{
-			return MapColor.GetBlockColor(this[x, y]);
-		}
-		
-		public Color GetColor(int x, int y, int layer)
-		{
-			return MapColor.GetBlockColor(this[x, y, layer]);
 		}
 
 		public Image GetImage()
@@ -107,34 +74,18 @@ namespace Alex.Utils
 			Image<Rgba32> image = new Image<Rgba32>(Width, Height);
 			for(int x = 0; x < Width; x++)
 			for (int y = 0; y < Height; y++)
-				image[x, y] = new Rgba32(MapColor.GetBlockColor(this[x, y]).PackedValue);
+				image[x, y] = new Rgba32(this[x, y].PackedValue);
 
 			return image;
 		}
 		
-		//public Color[] GetColors()
-		//{
-		//	return _colors.Select(MapColor.GetBlockColor).ToArray();
-		//}
-
 		public virtual uint[] GetData()
 		{
 			Color[] colors = new Color[Width * Height];
 
 			for (int c = 0; c < _colors.Length; c++)
 			{
-				var layerData = _colors[c];
-				var color = MapColor.GetBlockColor(layerData[0]);
-
-				if (layerData.Length > 1)
-				{
-					for (int i = layerData.Length; i > 0; --i)
-					{
-						
-					}
-				}
-
-				colors[c] = color;
+				colors[c] = _colors[c];
 			}
 
 			return colors.Select(x => x.PackedValue).ToArray();
@@ -174,14 +125,16 @@ namespace Alex.Utils
 			var markers = _markers;
 			if (markers == null || markers.IsEmpty)
 				yield break;
-           
-			foreach (var icon in markers.Where(x => x.AlwaysShown || new ChunkCoordinates(x.Position).DistanceTo(center) <= radius).OrderBy(x => x.DrawOrder))
+
+			foreach (var icon in markers
+			   .Where(
+					x => x.AlwaysShown || new ChunkCoordinates(x.Position).DistanceTo(center) <= radius).OrderBy(x => x.DrawOrder))
 			{
 				yield return icon;
 			}
 		}
 
-		private void Dispose(bool disposing)
+		protected virtual void Dispose(bool disposing)
 		{
 			if (disposing)
 			{
@@ -189,7 +142,7 @@ namespace Alex.Utils
 			//	_texture = null;
 			}
 		}
-		
+
 		/// <inheritdoc />
 		public void Dispose()
 		{

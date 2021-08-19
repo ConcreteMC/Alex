@@ -28,6 +28,14 @@ namespace Alex.Common.Utils
 
             return hsl.ToRgb();
         }
+        
+        public static Color Lighten(this Color color, float amount)
+        {
+            var hsl = (HslColor) color;
+            hsl.Luminosity += amount;
+
+            return hsl.ToRgb();
+        }
 
         public static void RgbToHsl(byte red, byte green, byte blue, out double h, out double s, out double l)
         {

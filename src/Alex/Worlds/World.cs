@@ -190,7 +190,8 @@ namespace Alex.Worlds
 					}
 				}
 			}
-			
+
+			Player.MapIcon.AlwaysShown = true;
 			Player.MapIcon.Marker = MapMarker.GreenPointer;
 			Player.MapIcon.DrawOrder = int.MaxValue;
 			Map.Add(Player.MapIcon);

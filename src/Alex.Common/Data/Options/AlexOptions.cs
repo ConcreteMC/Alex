@@ -29,6 +29,9 @@ namespace Alex.Common.Data.Options
         [DataMember]
         public ControllerOptions ControllerOptions { get; set; }
         
+        [DataMember]
+        public UiOptions UserInterfaceOptions { get; set; }
+        
         public AlexOptions()
         {
             FieldOfVision = DefineRangedProperty(70, 30, 120);
@@ -40,6 +43,7 @@ namespace Alex.Common.Data.Options
             MiscelaneousOptions = DefineBranch<MiscelaneousOptions>();
             NetworkOptions = DefineBranch<NetworkOptions>();
             ControllerOptions = DefineBranch<ControllerOptions>();
+            UserInterfaceOptions = DefineBranch<UiOptions>();
         }
     }
 }

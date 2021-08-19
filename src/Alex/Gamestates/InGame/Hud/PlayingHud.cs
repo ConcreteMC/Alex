@@ -53,6 +53,7 @@ namespace Alex.Gamestates.InGame.Hud
 		private OptionsPropertyAccessor<double> _minimapSizeAccessor;
 		private OptionsPropertyAccessor<int> _renderDistanceAccessor;
 		private OptionsPropertyAccessor<bool> _hudVisibleAccessor;
+		private OptionsPropertyAccessor<ZoomLevel> _zoomLevelAccessor;
 		public PlayingHud(Alex game, World world, TitleComponent titleComponent, NetworkProvider networkProvider) : base()
         {
 	        Title = titleComponent;
@@ -146,17 +147,25 @@ namespace Alex.Gamestates.InGame.Hud
 	        _renderDistanceAccessor = options.VideoOptions.RenderDistance.Bind(RenderDistanceChanged);
 	        _miniMap.Radius = _renderDistanceAccessor.Value;
 
-	        _minimapAccessor = options.MiscelaneousOptions.Minimap.Bind(OnMinimapEnabledChanged);
+	        _minimapAccessor = options.UserInterfaceOptions.Minimap.Enabled.Bind(OnMinimapEnabledChanged);
 	        OnMinimapEnabledChanged(false, _minimapAccessor.Value);
 	        //_miniMap.IsVisible = _minimapAccessor.Value;
 
-	        _minimapSizeAccessor = options.MiscelaneousOptions.MinimapSize.Bind(OnMinimapSizeChanged);
+	        _minimapSizeAccessor = options.UserInterfaceOptions.Minimap.Size.Bind(OnMinimapSizeChanged);
 	        _miniMap.SetSize(_minimapSizeAccessor.Value);
 
+	        _zoomLevelAccessor = options.UserInterfaceOptions.Minimap.DefaultZoomLevel.Bind(OnZoomLevelChanged);
+	        _miniMap.ZoomLevel = _zoomLevelAccessor.Value;
+	        
 	        _hudVisibleAccessor = options.VideoOptions.DisplayHud.Bind(DisplayHudValueChanged);
 	        IsVisible = _hudVisibleAccessor.Value;
 	        //IsVisible = 
         }
+
+		private void OnZoomLevelChanged(ZoomLevel oldvalue, ZoomLevel newvalue)
+		{
+			_miniMap.ZoomLevel = newvalue;
+		}
 
 		private void DisplayHudValueChanged(bool oldvalue, bool newvalue)
 		{
@@ -193,6 +202,7 @@ namespace Alex.Gamestates.InGame.Hud
         }
 
         private bool _didInit = false;
+
         protected override void OnInit(IGuiRenderer renderer)
         {
 	        if (_didInit) return;
@@ -320,6 +330,9 @@ namespace Alex.Gamestates.InGame.Hud
 	        
 	        _hudVisibleAccessor?.Dispose();
 	        _hudVisibleAccessor = null;
+	        
+	        _zoomLevelAccessor?.Dispose();
+	        _zoomLevelAccessor = null;
         }
 
         /// <inheritdoc />
