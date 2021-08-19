@@ -48,4 +48,24 @@ namespace Alex.Common.Commands.Parsers
 			return length >= 0;
 		}
 	}
+
+	public class ResourceLocationArgumentParser : ArgumentParser
+	{
+		/// <inheritdoc />
+		public ResourceLocationArgumentParser(string name) : base(name)
+		{
+			
+		}
+
+		/// <inheritdoc />
+		public override bool TryParse(SeekableTextReader input)
+		{
+			if (input.ReadSingleWord(out var textInput) > 0)
+			{
+				return true;
+			}
+
+			return false;
+		}
+	}
 }

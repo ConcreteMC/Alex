@@ -112,9 +112,31 @@ namespace Alex.Networking.Java.Packets.Play
 
 			switch (parser)
 			{
-				//	case "brigadier:bool":
-				//	stream.ReadBool();
-				//		break;
+				case "minecraft:resource_location":
+				{
+					return new ResourceLocationArgumentParser(parser);
+				} break;
+				case "minecraft:block_pos":
+				{
+					return new BlockPositionArgumentParser(parser);
+				} break;
+				case "minecraft:vec2":
+				{
+					return new Vector2ArgumentParser(parser);
+				} break;
+				case "minecraft:vec3":
+				{
+					return new Vector3ArgumentParser(parser);
+				} break;
+				case "minecraft:column_pos":
+				{
+					return new ColumnPositionArgumentParser(parser);
+				} break;
+				
+				case "brigadier:bool":
+				{
+					return new BoolArgumentParser(parser);
+				} break;
 
 				case "brigadier:double":
 				{

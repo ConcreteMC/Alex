@@ -61,8 +61,15 @@ namespace Alex.Gamestates.Common
             OnUnload();
         }
 
-        public void Draw(IRenderArgs args)
+        void IGameState.Update(GameTime gameTime)
         {
+	        ParentState?.Update(gameTime);
+	        OnUpdate(gameTime);
+        }
+        
+        void IGameState.Draw(IRenderArgs args)
+        {
+	        ParentState?.Draw(args);
             OnDraw(args);
 
             //Draw(Alex.GuiManager.GuiSpriteBatch, args.GameTime);
@@ -73,9 +80,12 @@ namespace Alex.Gamestates.Common
 			if(IsShown) return;
 			IsShown = true;
 			
-			Alex.SetFrameRateLimiter(true, 60);
+			if (!Alex.InGame)
+				Alex.SetFrameRateLimiter(true, 60);
 			
-	        Alex.GuiManager.AddScreen(this);
+			if (!Alex.GuiManager.HasScreen(this)) 
+				Alex.GuiManager.AddScreen(this);
+			
             OnShow();
 
             InvalidateLayout();
@@ -86,7 +96,9 @@ namespace Alex.Gamestates.Common
 			if(!IsShown) return;
 			IsShown = false;
 			
-			Alex.GuiManager.RemoveScreen(this);
+			if (Alex.GuiManager.HasScreen(this)) 
+				Alex.GuiManager.RemoveScreen(this);
+			
 			OnHide();
 
 			//Alex.ResetFrameRateLimiter();

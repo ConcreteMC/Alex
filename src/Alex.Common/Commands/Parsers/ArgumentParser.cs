@@ -63,5 +63,25 @@ namespace Alex.Common.Commands.Parsers
 			s = null;
 			return false;
 		}
+		
+		public bool ParseRelative(string input, out double value)
+		{
+			if (input[0] == '~')
+			{
+				input = input.Substring(1);
+			}
+
+			return double.TryParse(input, out value);
+		}
+		
+		public bool ParseRelative(string input, out int value)
+		{
+			if (input[0] == '~')
+			{
+				input = input.Substring(1);
+			}
+
+			return int.TryParse(input, out value);
+		}
 	}
 }

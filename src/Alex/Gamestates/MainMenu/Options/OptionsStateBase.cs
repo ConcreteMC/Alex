@@ -289,11 +289,7 @@ namespace Alex.Gamestates.MainMenu.Options
         {
             base.OnUpdate(gameTime);
             
-            if (Alex.InGame)
-            {
-                ParentState?.Update(gameTime);
-            }
-            else
+            if (!Alex.InGame && _skyBox != null)
             {
                 _skyBox?.Update(gameTime);
             }
@@ -324,11 +320,7 @@ namespace Alex.Gamestates.MainMenu.Options
         private bool _descriptionsAdded = false;
         protected override void OnDraw(IRenderArgs args)
         {
-            if (Alex.InGame)
-            {
-                ParentState?.Draw(args);
-            }
-            else if (_skyBox != null)
+            if (!Alex.InGame && _skyBox != null)
             {
                 if (!_skyBox.Loaded)
                 {

@@ -96,16 +96,16 @@ namespace Alex.Gamestates
 		    {
 			    if (ActiveState == state)
 			    {
-				    state.Hide();
-				    var parent = state.ParentState;
-				    if (parent == null)
+				    //state.Hide();
+				    //var parent = state.ParentState;
+				    //if (parent == null)
 				    {
 					    SetActiveState((IGameState) null);
 					}
-				    else
-				    {
+				    //else
+				    //{
 					  //  SetActiveState(state.ParentState);
-				    }
+				    //}
 			    }
 
 			    state.Unload();
@@ -149,10 +149,15 @@ namespace Alex.Gamestates
 			EnsureStateLoaded(state);
 
 		    var previous = ActiveState;
-		    if (keepHistory && previous != null && state != null && state.ParentState == null)
+
+		    if (state != null && previous != null && state.ParentState == null)
 		    {
 			    state.ParentState = previous;
 		    }
+		    //if (keepHistory && previous != null && state != null && state.ParentState == null)
+		    //{
+			   // state.ParentState = previous;
+		    //}
 
 		    ActiveState = state;
 		    ActiveState?.Show();
