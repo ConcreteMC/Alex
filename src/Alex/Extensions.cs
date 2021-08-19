@@ -28,6 +28,15 @@ namespace Alex
 			
 		}
 		
+		public static Color Blend(this Color color, Color backColor, byte amount)
+		{
+			amount = (byte)(255 - amount);
+			byte r = (byte)((color.R * amount / 255) + backColor.R * (255 - amount) / 255);
+			byte g = (byte)((color.G * amount / 255) + backColor.G * (255 - amount) / 255);
+			byte b = (byte)((color.B * amount / 255) + backColor.B * (255 - amount) / 255);
+			return new Color(r, g, b, backColor.A);
+		}
+		
 		 /// <summary>
         /// Calculate percentage similarity of two strings
         /// <param name="source">Source String to Compare with</param>

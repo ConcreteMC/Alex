@@ -21,7 +21,7 @@ namespace Alex.Utils
 		public static readonly MapColor Clay = new(9,  	164, 168, 184 );
 		public static readonly MapColor Dirt = new(10, 151, 109, 77 );
 		public static readonly MapColor Stone = new(11, 112, 112, 112 );
-		public static readonly MapColor Water = new(12, 64, 64, 255 );
+		public static readonly MapColor Water = new(12, 64, 64, 255, 64);
 		public static readonly MapColor Wood = new(13, 143, 119, 72 );
 		public static readonly MapColor Quartz = new(14,  	255, 252, 245 );
 		public static readonly MapColor Orange = new(15, 216, 127, 51);
@@ -111,7 +111,13 @@ namespace Alex.Utils
 			
 			return new Color((byte)(BaseColor.R * modifier), (byte)(BaseColor.G * modifier), (byte)(BaseColor.B * modifier), BaseColor.A);
 		}
-		
+
+		/// <inheritdoc />
+		public IMapColor WithAlpha(byte alpha)
+		{
+			return new MapColor(Index, BaseColor.R, BaseColor.G, BaseColor.B, alpha);
+		}
+
 		public static IMapColor GetBaseColor(int index)
 		{
 			return BaseColors[index];

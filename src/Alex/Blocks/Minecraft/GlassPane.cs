@@ -3,18 +3,27 @@ using Alex.Blocks.Properties;
 using Alex.Blocks.State;
 using Alex.Common.Blocks;
 using Alex.Common.Blocks.Properties;
+using Alex.Entities.BlockEntities;
 
 namespace Alex.Blocks.Minecraft
 {
+	public class StainedGlassPane : GlassPane
+	{
+		public readonly BlockColor Color;
+		public StainedGlassPane(BlockColor color)
+		{
+			Color = color;
+		}
+	}
 	public class GlassPane : Block
 	{
 		public GlassPane() : base()
 		{
 			Solid = true;
 			Transparent = true;
-			IsFullCube = false;
+			base.IsFullCube = false;
 
-			BlockMaterial = Material.Glass;
+			base.BlockMaterial = Material.Glass;
 		}
 		
 		public override bool CanAttach(BlockFace face, Block block)

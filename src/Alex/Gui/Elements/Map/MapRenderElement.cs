@@ -224,7 +224,7 @@ namespace Alex.Gui.Elements.Map
             var tCenter = RenderBounds.Size.ToVector2() / 2f;
             var renderPos = RenderBounds.Location.ToVector2() + tCenter;
 
-            renderPos += new Vector2(distance.X, distance.Z) * scale;
+            renderPos += new Vector2(distance.X * _map.Scale, distance.Z * _map.Scale) * scale;
 
             return renderPos;;
         }

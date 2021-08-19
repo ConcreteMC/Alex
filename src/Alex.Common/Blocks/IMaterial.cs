@@ -47,6 +47,8 @@ namespace Alex.Common.Blocks
 		int Index { get; }
 		Color BaseColor { get; }
 		Color GetMapColor(int index);
+
+		IMapColor WithAlpha(byte alpha);
 	}
 
 	public enum BlockCollisionBehavior

@@ -1,4 +1,5 @@
 using Alex.Blocks.Materials;
+using Alex.Entities.BlockEntities;
 
 namespace Alex.Blocks.Minecraft
 {
@@ -16,13 +17,16 @@ namespace Alex.Blocks.Minecraft
 
 	public class StainedGlass : Glass
 	{
-		public StainedGlass()
+		public readonly BlockColor Color;
+		public StainedGlass(BlockColor color = BlockColor.White)
 		{
+			Color = color;
+			
 			Solid = true;
 			Transparent = true;
 			base.IsFullCube = true;
 
-			base.BlockMaterial = Material.Glass;
+			base.BlockMaterial = Material.Glass.Clone().WithMapColor(color.ToMapColor().WithAlpha(64));
 		}
 	}
 }

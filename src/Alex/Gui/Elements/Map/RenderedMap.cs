@@ -1,37 +1,26 @@
 using System;
 using System.Collections.Generic;
+using Alex.Blocks.Materials;
 using Alex.Blocks.State;
+using Alex.Common.Blocks;
 using Alex.Common.Utils.Vectors;
-using Alex.Gui.Elements.Map.Processing;
 using Alex.Worlds;
-using Microsoft.Xna.Framework.Graphics;
-using MiNET.Worlds;
+using Microsoft.Xna.Framework;
 using ChunkColumn = Alex.Worlds.Chunks.ChunkColumn;
 
 namespace Alex.Gui.Elements.Map
 {
 	public class RenderedMap : Utils.Map, IDisposable
 	{
-		private static readonly uint[] DefaultData;
-
-		static RenderedMap()
-		{
-			DefaultData = ArrayOf<uint>.Create(Size * Size, 0);
-		}
-		
-		private const int Size = 16;
-		
+		private int Size { get; set; }
 		public bool IsDirty { get; private set; }
 		public bool Invalidated { get; private set; } = false;
 
 		public bool PendingChanges { get; private set; } = false;
 		public ChunkCoordinates Coordinates { get; }
-		
-		private List<MapProcessingLayer> _processingLayers = new List<MapProcessingLayer>();
-		private object _processingLayerLock = new object();
-		
-		public RenderedMap(ChunkCoordinates coordinates) : base(Size,Size)
+		public RenderedMap(ChunkCoordinates coordinates, int size = 16) : base(size, size)
 		{
+			Size = size;
 			Coordinates = coordinates;
 		}
 
@@ -39,77 +28,114 @@ namespace Alex.Gui.Elements.Map
 		{
 			Invalidated = true;
 		}
-
-		private int[] _heightMap = new int[16 * 16];
+		
 		public void Update(World world)
 		{
-			var target = world.GetChunkColumn(Coordinates.X, Coordinates.Z);
-			if (target == null)
+			try
 			{
-				Invalidated = true;
-				return;
-			}
+				var target = world.GetChunkColumn(Coordinates.X, Coordinates.Z);
 
-			var cx = target.X * 16;
-			var cz = target.Z * 16;
-			var maxHeight = 0;
-
-			for (int x = 0; x < 16; x++)
-			{
-				for (int z = 0; z < 16; z++)
+				if (target == null)
 				{
-					BlockState state;
+					Invalidated = true;
 
-					var height = target.GetHeight(x, z);
+					return;
+				}
 
-					do
+				var cx = target.X * 16;
+				var cz = target.Z * 16;
+
+				var scale = Size / 16;
+				for (int x = 0; x < 16; x++)
+				{
+					var rx = cx + x;
+					for (int z = 0; z < 16; z++)
 					{
-						height--;
-						state = target.GetBlockState(x, height, z);
-						maxHeight = Math.Max(height, maxHeight);
-					} while (height > 0 && state.Block.BlockMaterial.MapColor.BaseColor.A <= 0);
-					
-					var blockMaterial = state?.Block?.BlockMaterial;
-					if (blockMaterial == null || blockMaterial.MapColor.BaseColor.A <= 0)
-						continue;
+						var rz = cz + z;
+						
+						BlockState state;
 
-					_heightMap[x + z * Width] = height;
-					
-					var north = world.GetHeight(new BlockCoordinates((x + cx), height, (z + cz - 1))) - 1;
-					var northWest = world.GetHeight(new BlockCoordinates((x + cx - 1), height, (z + cz - 1))) - 1;
+						var height = target.GetHeight(x, z);
 
-					var offset = 1;
+						state = GetHighestBlock(
+							target, x, height, z, (s) => s.Block.BlockMaterial.MapColor.BaseColor.A > 0, out height);
+						
+						var blockMaterial = state?.Block?.BlockMaterial;
 
-					if (north > height && northWest <= height)
-					{
-						offset = 0; //Darker
-					}
-					else if (north > height && northWest > height)
-					{
-						offset = 3; //Darkest
-					}
-					else if (north < height && northWest < height)
-					{
-						offset = 2; //Lighter
-					}
+						if (blockMaterial == null || blockMaterial.MapColor.BaseColor.A <= 0)
+							continue;
 
-					var color = blockMaterial.MapColor.GetMapColor(offset);
+						Color color = GetColorForBlock(
+							world, blockMaterial, rx, height, rz);
 
-					lock (_processingLayers)
-					{
-						foreach (var layer in _processingLayers)
+						//Blend transparent layers
+						while (color.A < 255 && height > target.WorldSettings.MinY)
 						{
-							color = layer.Apply(color, x, height, z, state);
+							//Hmmm..
+							//Should we do a `s.Block.BlockMaterial.MapColor.Index != blockMaterial.MapColor.Index &&`
+							var bs = GetHighestBlock( 
+								target, x, height, z, (s) => s.Block.BlockMaterial.MapColor.BaseColor.A > 0, out height);
+
+							color = color.Blend(
+								GetColorForBlock(world, bs.Block.BlockMaterial, rx, height, rz),
+								color.A);
+						}
+
+						color.A = 255;
+						for (int xOffset = 0; xOffset < scale; xOffset++)
+						{
+							for (int zOffset = 0; zOffset < scale; zOffset++)
+							{
+								this[(x * scale) + xOffset, (z * scale) + zOffset] = color;
+							}
 						}
 					}
-
-					this[x, z] = color;//  blockMaterial.MapColor.Index * 4 + offset;
 				}
 			}
+			finally
+			{
+				IsDirty = false;
+				PendingChanges = true;
+			}
+		}
 
-			//Texture.SetData(this.GetData());
-			IsDirty = false;
-			PendingChanges = true;
+		private BlockState GetHighestBlock(ChunkColumn target, int x, int height, int z, Predicate<BlockState> predicate, out int finalHeight)
+		{
+			BlockState state;
+			
+			do
+			{
+				height--;
+				state = target.GetBlockState(x, height, z);
+			} while (height > target.WorldSettings.MinY && !predicate(state));
+
+			finalHeight = height;
+			return state;
+		}
+
+		private Color GetColorForBlock(World world, IMaterial blockMaterial, int x, int height, int z)
+		{
+			var north = world.GetHeight(new BlockCoordinates(x, height, z - 1)) - 1;
+			var northWest = world.GetHeight(new BlockCoordinates(x - 1, height, z)) - 1;
+
+			var offset = 1;
+
+			if (north > height && northWest <= height)
+			{
+				offset = 0; //Darker
+			}
+			else if (north > height && northWest > height)
+			{
+				offset = 3; //Darkest
+			}
+			else if (north < height && northWest < height)
+			{
+				offset = 2; //Lighter
+			}
+
+			var color = blockMaterial.MapColor.GetMapColor(offset);
+
+			return color;
 		}
 
 		/// <inheritdoc />
@@ -118,7 +144,7 @@ namespace Alex.Gui.Elements.Map
 			if (Invalidated)
 			{
 				PendingChanges = false;
-				return DefaultData;
+				return null;
 			}
 
 			var data = base.GetData();
@@ -130,30 +156,6 @@ namespace Alex.Gui.Elements.Map
 		public void MarkDirty()
 		{
 			IsDirty = true;
-		}
-		
-		public bool TryAddProcessingLayer(MapProcessingLayer layer)
-		{
-			lock (_processingLayerLock)
-			{
-				if (_processingLayers.Contains(layer))
-					return false;
-			
-				_processingLayers.Add(layer);
-				return true;
-			}
-		}
-
-		public bool RemoveProcessingLayer(MapProcessingLayer layer)
-		{
-			lock (_processingLayerLock)
-			{
-				if (!_processingLayers.Contains(layer))
-					return false;
-			
-				_processingLayers.Remove(layer);
-				return true;
-			}
 		}
 
 		/// <inheritdoc />

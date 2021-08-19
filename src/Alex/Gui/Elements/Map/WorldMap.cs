@@ -6,7 +6,6 @@ using System.Linq;
 using Alex.Common.Utils.Vectors;
 using Alex.Common.World;
 using Alex.Entities;
-using Alex.Gui.Elements.Map.Processing;
 using Alex.Utils;
 using Alex.Worlds;
 using ConcurrentCollections;
@@ -28,13 +27,13 @@ namespace Alex.Gui.Elements.Map
 
         private readonly ConcurrentHashSet<MapIcon> _markers;
 
+        public int ChunkSize { get; set; } = 16;
         private int RenderDistance => _world?.ChunkManager?.RenderDistance ?? 1;
-        
         /// <inheritdoc />
-        public int Width => RenderDistance * 16 * 3;
+        public int Width => RenderDistance * ChunkSize * 3;
 
         /// <inheritdoc />
-        public int Height => RenderDistance * 16 * 3;
+        public int Height => RenderDistance * ChunkSize * 3;
 
         /// <inheritdoc />
         public float Scale { get; } = 1f;
@@ -45,7 +44,7 @@ namespace Alex.Gui.Elements.Map
         /// <inheritdoc />
         public float Rotation => 180f - (_world?.Player?.KnownPosition?.HeadYaw ?? 0);
         
-        public WorldMap(World world)
+        public WorldMap(World world, int lod = 1)
         {
             _world = world;
             _markers = new ConcurrentHashSet<MapIcon>();
@@ -56,6 +55,8 @@ namespace Alex.Gui.Elements.Map
 
             world.EntityManager.EntityAdded += EntityAdded;
             world.EntityManager.EntityRemoved += EntityRemoved;
+
+            ChunkSize = 16 * Math.Max(1, lod);
         }
         
         public MapIcon AddMarker(Vector3 position, MapMarker icon)
@@ -109,7 +110,7 @@ namespace Alex.Gui.Elements.Map
 
         private void OnChunkAdded(object sender, ChunkAddedEventArgs e)
         {
-            var container = new RenderedMap(e.Position);
+            var container = new RenderedMap(e.Position, ChunkSize);
             //container.TryAddProcessingLayer(new LightShadingLayer(_world));
             
             if (TryAdd(e.Position, container))
@@ -183,69 +184,65 @@ namespace Alex.Gui.Elements.Map
         {
             if (Disposed) return null;
             
-            var elementSize = 16;
             var center = new ChunkCoordinates(centerPosition);
             var forceRedraw = center != _previousCenter;
             
             Texture2D oldTexture = null;
             var texture = _texture;
-            if (texture == null || texture.IsDisposed || texture.Width != Width || texture.Height != Height)
-            {
-                oldTexture = texture;
-                
-                texture = new Texture2D(device, Width, Height);
-                forceRedraw = true;
-                
-                //oldTexture?.Dispose();
-            }
-
-            if (forceRedraw)
-            {
-                texture.SetData(ArrayOf<uint>.Create(Width * Height));
-            }
             
-            foreach (var container in GetContainers(center, RenderDistance))
+            try
             {
-               // if (container.Invalidated)
-              //      continue;
-                
-                if (!forceRedraw && !container.PendingChanges && !container.Invalidated) continue;
-
-                var coordinates = container.Coordinates;
-                var distance = coordinates - center;
-
-                var renderPos = new Vector2(Width / 2f, Height / 2f);
-                renderPos += new Vector2(distance.X * elementSize, distance.Z * elementSize);
-
-                var pos = renderPos.ToPoint();
-                
-                var width = elementSize;
-                var height = elementSize;
-
-                var destination = new Rectangle(pos.X, pos.Y, width, height);
-
-                if (!texture.Bounds.Contains(destination))
+                if (texture == null || texture.IsDisposed || texture.Width != Width || texture.Height != Height)
                 {
-                    Log.Warn($"Texture position out of bounds.");
+                    oldTexture = texture;
+
+                    texture = new Texture2D(device, Width, Height);
+                    forceRedraw = true;
+
+                    //oldTexture?.Dispose();
                 }
-                else
+
+                if (forceRedraw)
                 {
-                    var data = container.GetData();
-                    texture.SetData(0, destination, data, 0, data.Length);
-                    //didChange = true;
+                    texture.SetData(ArrayOf<uint>.Create(Width * Height));
                 }
+
+                foreach (var container in GetContainers(center, RenderDistance))
+                {
+                    if (!forceRedraw && !container.PendingChanges && !container.Invalidated) continue;
+
+                    var distance = (container.Coordinates - center) * (ChunkSize / 16);
+
+                    var renderPos = new Vector2(Width / 2f, Height / 2f);
+                    renderPos += new Vector2(distance.X * 16, distance.Z * 16);
+
+                    var destination = new Rectangle(renderPos.ToPoint(), new Point(ChunkSize, ChunkSize));
+
+                    if (texture.Bounds.Contains(destination))
+                    {
+                        var data = container.GetData();
+
+                        if (data != null)
+                        {
+                            texture.SetData(0, destination, data, 0, data.Length);
+                        }
+                        //didChange = true;
+                    }
+
+                    if (container.Invalidated)
+                        RemoveContainer(container.Coordinates);
+                }
+            }
+            finally
+            {
+                _texture = texture;
+                _previousCenter = center;
                 
-                if (container.Invalidated)
-                    RemoveContainer(container.Coordinates);
+                if (oldTexture != null && oldTexture != _texture)
+                    oldTexture.Dispose();
             }
 
-            _texture = texture;
-            
-            if (oldTexture != null && oldTexture != texture)
-                oldTexture.Dispose();
-
-            _previousCenter = center;
-            return _texture;
+            return texture;
         }
 
         public IEnumerable<MapIcon> GetMarkers(ChunkCoordinates center, int radius)
