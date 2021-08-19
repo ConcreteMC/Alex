@@ -133,6 +133,7 @@ namespace Alex
         private Point       WindowSize  { get; set; }
         public  AudioEngine AudioEngine { get; set; }
 
+        private HtmlRenderer _htmlRenderer;
         public Alex(LaunchSettings launchSettings)
         {
             WindowSize = new Point(1280, 750);
@@ -289,6 +290,8 @@ namespace Alex
             // ThreadPool = new DedicatedThreadPool(new DedicatedThreadPoolSettings(Environment.ProcessorCount,
             //    ThreadType.Background, "Dedicated ThreadPool"));
 
+            _htmlRenderer = new HtmlRenderer(this, Storage, Options);
+
             TextureUtils.RenderThread = Thread.CurrentThread;
             TextureUtils.QueueOnRenderThread = action => UiTaskManager.Enqueue(action);
         }
@@ -330,7 +333,7 @@ namespace Alex
             // InitCamera();
             this.Window.TextInput += Window_TextInput;
             this.Window.KeyDown += WindowOnKeyDown;
-            
+
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
                 var currentAdapter = GraphicsAdapter.Adapters.FirstOrDefault(x => x == GraphicsDevice.Adapter);
@@ -387,7 +390,7 @@ namespace Alex
             //GuiRenderer.Init(GraphicsDevice);
 
             GuiManager = Services.GetRequiredService<GuiManager>();
-            Components.Add(GuiManager);
+        //    Components.Add(GuiManager);
             GuiManager.DrawOrder = 100;
 
 
@@ -468,6 +471,9 @@ namespace Alex
                 });
             
             Components.Add(ParticleManager);
+            Components.Add(_htmlRenderer);
+            _htmlRenderer.DrawOrder = 150;
+            _htmlRenderer.Initialize();
             
            // GuiManager.ShowDialog(new BrowserDialog());
             //	Log.Info($"Initializing Alex...");
