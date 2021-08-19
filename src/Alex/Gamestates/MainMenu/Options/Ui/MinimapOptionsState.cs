@@ -1,3 +1,4 @@
+using System;
 using Alex.Common.Data;
 using Alex.Common.Utils;
 using Alex.Gui;
@@ -37,17 +38,47 @@ namespace Alex.Gamestates.MainMenu.Options.Ui
 			{
 				string display = v.ToString();
 
-				if (v == ZoomLevel.Maximum)
+				switch (v)
 				{
-					display = "Max";
-				}
-				else if (v == ZoomLevel.Minimum)
-				{
-					display = "Min";
-				}
-				else if (v == ZoomLevel.Default)
-				{
-					display = "Default";
+					case ZoomLevel.Level1:
+						display = "-4";
+						break;
+
+					case ZoomLevel.Level2:
+						display = "-3";
+						break;
+
+					case ZoomLevel.Level3:
+						display = "-2";
+						break;
+
+					case ZoomLevel.Level4:
+						display = "-1";
+						break;
+
+					case ZoomLevel.Level5:
+						display = "Default";
+						break;
+
+					case ZoomLevel.Level6:
+						display = "+1";
+						break;
+
+					case ZoomLevel.Level7:
+						display = "+2";
+						break;
+
+					case ZoomLevel.Level8:
+						display = "+3";
+						break;
+
+					case ZoomLevel.Level9:
+						display = "+4";
+						break;
+
+					case ZoomLevel.Level10:
+						display = "+5";
+						break;
 				}
 				
 				return $"Zoom Level: {display}";

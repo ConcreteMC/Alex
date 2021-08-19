@@ -34,7 +34,8 @@ namespace Alex.Gui.Dialogs
 				Radius = 128,
 				ZoomLevel = ZoomLevel.Maximum,
 				ShowCompass = false,
-				AutoZoomLevel = true
+				AutoZoomLevel = true,
+				Rotation = 0f
 			};
 			_mapRenderer.OnClick += OnMapClicked;
 

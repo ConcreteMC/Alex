@@ -90,6 +90,9 @@ namespace Alex.Gui.Elements.Map
 								var bs = GetHighestBlock(
 									target, x, height, z, (s) => s.Block.BlockMaterial.MapColor.BaseColor.A > 0,
 									out height);
+								
+								if (bs == null)
+									break;
 
 								color = color.Blend(
 									GetColorForBlock(world, bs.Block.BlockMaterial, rx, height, rz), color.A);
@@ -109,22 +112,29 @@ namespace Alex.Gui.Elements.Map
 
 		private BlockState GetHighestBlock(ChunkColumn target, int x, int height, int z, Predicate<BlockState> predicate, out int finalHeight)
 		{
-			BlockState state;
-			
-			do
-			{
-				height--;
-				state = target.GetBlockState(x, height, z);
-			} while (height > target.WorldSettings.MinY && !predicate(state));
-
 			finalHeight = height;
-			return state;
+			
+			if (height > target.WorldSettings.MinY)
+			{
+				for (int y = height - 1; y > target.WorldSettings.MinY; y--)
+				{
+					var state = target.GetBlockState(x, y, z);
+
+					if (predicate(state))
+					{
+						finalHeight = y;
+						return state;
+					}
+				}
+			}
+
+			return null;
 		}
 
 		private Color GetColorForBlock(World world, IMaterial blockMaterial, int x, int height, int z)
 		{
 			var north = world.GetHeight(new BlockCoordinates(x, height, z - 1)) - 1;
-			var northWest = world.GetHeight(new BlockCoordinates(x - 1, height, z)) - 1;
+			var northWest = world.GetHeight(new BlockCoordinates(x - 1, height, z - 1)) - 1;
 
 			var offset = 1;
 
