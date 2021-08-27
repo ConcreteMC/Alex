@@ -169,7 +169,7 @@ namespace Alex.Worlds.Chunks
 			}
 		}
 
-		private void UpdateAction(object state)
+		private void UpdateAction(ManagedTask task, object state)
 		{
 			var realVertices = (MinifiedBlockShaderVertex[]) state;
 			var size = realVertices.Length;
@@ -211,6 +211,7 @@ namespace Alex.Worlds.Chunks
 				Buffer = buffer;
 
 				oldBuffer?.Dispose();
+				
 				//if (oldBuffer != null && oldBuffer.PoolId != buffer.PoolId) oldBuffer?.ReturnResource(this);
 			}
 			finally

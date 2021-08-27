@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -59,11 +60,12 @@ namespace Alex.Worlds
 	public class ChunkUpdatedEventArgs : ChunkEventArgs
 	{
 		public ChunkColumn Chunk { get; }
-		
+		public TimeSpan ExecutionTime { get; }
 		/// <inheritdoc />
-		internal ChunkUpdatedEventArgs(ChunkColumn column) : base(new ChunkCoordinates(column.X, column.Z))
+		internal ChunkUpdatedEventArgs(ChunkColumn column, TimeSpan executionTime) : base(new ChunkCoordinates(column.X, column.Z))
 		{
 			Chunk = column;
+			ExecutionTime = executionTime;
 		}
 	}
 	
@@ -278,7 +280,7 @@ namespace Alex.Worlds
 					oo =>
 					{
 						Thread.CurrentThread.Name = $"ChunkManager Processing Thread {activeThreads}";
-						
+						Stopwatch timingWatch = Stopwatch.StartNew();
 						try
 						{
 							while (!CancellationToken.IsCancellationRequested)
@@ -320,6 +322,7 @@ namespace Alex.Worlds
 													SkyLightCalculator.Recalculate(chunk);
 											}
 
+											timingWatch.Restart();
 											if (chunk.UpdateBuffer(Graphics, World, true))
 											{
 												if (newChunk)
@@ -345,7 +348,7 @@ namespace Alex.Worlds
 															ScheduleType.Border);
 												}
 												
-												OnChunkUpdate?.Invoke(this, new ChunkUpdatedEventArgs(chunk));
+												OnChunkUpdate?.Invoke(this, new ChunkUpdatedEventArgs(chunk, timingWatch.Elapsed));
 											}
 										}
 										finally

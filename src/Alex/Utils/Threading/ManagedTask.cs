@@ -1,12 +1,29 @@
 using System;
+using System.Diagnostics;
 
 namespace Alex.Utils.Threading
 {
 	public class ManagedTask
 	{
-		public TaskState State { get; private set; } = TaskState.Created;
+		public EventHandler<TaskStateUpdatedEventArgs> StateChanged;
+
+		public TaskState State
+		{
+			get => _state;
+			private set
+			{
+				var previousState = _state;
+				_state = value;
+				
+				StateChanged?.Invoke(this, new TaskStateUpdatedEventArgs(previousState, value));
+			}
+		}
+
 		public bool IsCancelled => State == TaskState.Cancelled;
+		public TimeSpan ExecutionTime => _executionStopwatch.Elapsed;
+		public TimeSpan TimeSinceCreation => DateTime.UtcNow - _enqueueTime;
 		
+		private Stopwatch _executionStopwatch = new Stopwatch();
 		private readonly Action _action;
 		public ManagedTask(Action action)
 		{
@@ -14,9 +31,17 @@ namespace Alex.Utils.Threading
 		}
 
 		public object Data { get; set; } = null;
-		private readonly Action<object> _parameterizedTask;
+		private readonly Action<ManagedTask, object> _parameterizedTask;
 		private DateTime _enqueueTime = DateTime.UtcNow;
+		private TaskState _state = TaskState.Created;
+
 		public ManagedTask(Action<object> action, object state)
+		{
+			_parameterizedTask = (t, s) => action(s);
+			Data = state;
+		}
+		
+		public ManagedTask(Action<ManagedTask, object> action, object state)
 		{
 			_parameterizedTask = action;
 			Data = state;
@@ -35,12 +60,13 @@ namespace Alex.Utils.Threading
 		///		Executes the task
 		/// </summary>
 		/// <returns>The amount of time elapsed since the task was originally enqueued.</returns>
-		public TimeSpan Execute()
+		public bool Execute()
 		{
 			if (State != TaskState.Enqueued)
-				return TimeSpan.Zero;
+				return false;
 			
 			State = TaskState.Running;
+			_executionStopwatch.Start();
 			
 			try
 			{
@@ -49,16 +75,17 @@ namespace Alex.Utils.Threading
 					_action?.Invoke();
 				}else if (_parameterizedTask != null)
 				{
-					_parameterizedTask?.Invoke(Data);
+					_parameterizedTask?.Invoke(this, Data);
 				}
 			}
 			finally
 			{
+				_executionStopwatch.Stop();
 				State = TaskState.Finished;
 				Data = null;
 			}
 
-			return DateTime.UtcNow - _enqueueTime;
+			return true;
 		}
 
 		public void Cancel()

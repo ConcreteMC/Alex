@@ -57,6 +57,19 @@ namespace Alex.Common.Utils
             if (fi == null) throw new ArgumentOutOfRangeException("propName", string.Format("Field {0} was not found in Type {1}", propName, obj.GetType().FullName));
             return (T)fi.GetValue(obj);
         }
+        
+        public static FieldInfo GetPrivateFieldAccesor(Type t, string propName)
+        {
+            FieldInfo fi = null;
+            while (fi == null && t != null)
+            {
+                fi = t.GetField(propName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+                t = t.BaseType;
+            }
+            if (fi == null) throw new ArgumentOutOfRangeException("propName", string.Format("Field {0} was not found in Type {1}", propName, t.FullName));
+
+            return fi;
+        }
 
         /// <summary>
         /// Sets a _private_ Property Value from a given Object. Uses Reflection.

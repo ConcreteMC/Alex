@@ -21,6 +21,8 @@ namespace Alex.Particles
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ParticleEmitter));
 		private ThreadSafeList<ParticleInstance> _instances = new ThreadSafeList<ParticleInstance>();
+		private ParticleInstance[] _activeInstances = new ParticleInstance[0];
+		
 		private Texture2D Texture { get; }
 
 		private AppearanceComponent AppearanceComponent { get; }
@@ -114,11 +116,14 @@ namespace Alex.Particles
 
 			foreach (var removed in toRemove)
 				_instances.Remove(removed);
+
+			_activeInstances = _instances.ToArray();
 		}
 		
 		public void Update(GameTime gameTime)
 		{
-			foreach (var instance in _instances)
+			var instances = _activeInstances;
+			foreach (var instance in instances)
 			{
 				instance?.Update(gameTime);
 			}
@@ -128,7 +133,8 @@ namespace Alex.Particles
 		{
 			int count = 0;
 
-			foreach (var instance in _instances)
+			var instances = _activeInstances;
+			foreach (var instance in instances)
 			{
 				if (instance  == null || count >= MaxParticles)
 					continue;

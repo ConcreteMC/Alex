@@ -292,7 +292,10 @@ namespace Alex.Net.Bedrock
 			entity.IsNoPvP = (flags & 0x02) != 0;
 			entity.IsNoPvM = (flags & 0x04) != 0;
 			entity.CanFly = (flags & 0x40) != 0;
+			
+			//if (entity is Player)
 			entity.HasCollision = (flags & 0x80) == 0;
+			
 			entity.IsFlying = (flags & 0x200) != 0;
 		}
 
