@@ -117,7 +117,7 @@ namespace Alex
 
         public GraphicsDeviceManager DeviceManager { get; }
 
-        internal ManagedTaskManager UiTaskManager { get; }
+        public ManagedTaskManager UiTaskManager { get; }
 
         private LaunchSettings LaunchSettings { get; }
         public  PluginManager  PluginManager  { get; }
@@ -361,8 +361,9 @@ namespace Alex
             OnResourcePackPreLoadCompleted(image, McResourcePack.BitmapFontCharacters.ToList());
 
             var options = Services.GetRequiredService<IOptionsProvider>();
-
+            
 #if DIRECTX
+            ResourceManager.EntityEffect = Content.Load<Effect>("Alex.Resources.Entityshader_dx.xnb").Clone();
 			ResourceManager.BlockEffect = Content.Load<Effect>("Alex.Resources.Blockshader_dx.xnb").Clone();
 			ResourceManager.LightingEffect = Content.Load<Effect>("Alex.Resources.Lightmap_dx.xnb").Clone();
 #else

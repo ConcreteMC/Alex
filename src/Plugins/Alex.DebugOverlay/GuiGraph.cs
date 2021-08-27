@@ -11,12 +11,13 @@ namespace Alex.DebugOverlay
 		private ConcurrentDeck<Record> _history = new ConcurrentDeck<Record>(512);
 		public GuiGraph()
 		{
-			
+			this.ClipToBounds = false;
+			BackgroundOverlay = Color.Black * 0.5f;
 		}
 
-		public void Add(double x, double y)
+		public void Add(double x, double y, Color color)
 		{
-			_history.Push(new Record(x,y));
+			_history.Push(new Record(x,y, color));
 		}
 		
 		/// <inheritdoc />
@@ -32,16 +33,23 @@ namespace Alex.DebugOverlay
 			var maxYValue = datapoints.Max(xx => xx.Y);
 			var minYValue = datapoints.Min(xx => xx.Y);
 			
-			var elementWidth = (float)Width / datapoints.Length;
-			var elementHeight = (float)Height / (maxYValue);
+			var elementWidth = (float)RenderBounds.Width / datapoints.Length;
+			var elementHeight = (float)RenderBounds.Height / (maxYValue - minYValue);
 
-			Vector2 previousPoint = Vector2.Zero;
+			var     yPosTop       = RenderBounds.Top;
+
+			var     basePosition          = RenderBounds.BottomLeft();
+			Vector2 previousPoint = basePosition;
 			for (var index = 0; index < datapoints.Length ; index++)
 			{
 				var element = datapoints[index];
-				var pos = new Vector2((float) (index* elementWidth),  (float) (element.Y * elementHeight));
+				
+				var pos = basePosition + 
+				          new Vector2((float) (index* elementWidth),  -(float) ((element.Y - minYValue) * elementHeight));
+				
 				if (index > 0)
-					graphics.DrawLine(RenderPosition + previousPoint,  RenderPosition + pos, Color.Green);
+					graphics.DrawLine(previousPoint,  pos, element.Color);
+				
 				previousPoint = pos;
 			}
 			
@@ -54,10 +62,13 @@ namespace Alex.DebugOverlay
 			public double X;
 			public double Y;
 
-			public Record(double x, double y)
+			public Color Color;
+
+			public Record(double x, double y, Color color)
 			{
 				X = x;
 				Y = y;
+				Color = color;
 			}
 		}
 	}

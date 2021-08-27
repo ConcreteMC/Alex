@@ -1,11 +1,17 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net5.0</TargetFramework>
+        <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+        <Configurations>Debug;Release;DirectX</Configurations>
+        <Platforms>AnyCPU;x64</Platforms>
     </PropertyGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\..\Alex\Alex.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="InfluxDB.Client" Version="2.1.0" />
     </ItemGroup>
 
 </Project>
