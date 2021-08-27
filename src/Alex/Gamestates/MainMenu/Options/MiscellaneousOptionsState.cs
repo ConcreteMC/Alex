@@ -9,12 +9,13 @@ namespace Alex.Gamestates.MainMenu.Options
 {
     public class MiscellaneousOptionsState : OptionsStateBase
     {
-        private Slider                       NetworkProcessingThreads { get; set; }
+        //private Slider                       NetworkProcessingThreads { get; set; }
         private Slider                       ProcessingThreads { get; set; }
         private ToggleButton                 ChunkCaching { get; set; }
         private ToggleButton                 ServerResources { get; set; }
         private ToggleButton                 NetworkDebugInfo { get; set; }
         private Slider AntiLagModifier { get; set; }
+        private ToggleButton SkipFrames { get; set; }
 
         public MiscellaneousOptionsState(GuiPanoramaSkyBox skyBox) : base(skyBox)
         {
@@ -36,9 +37,9 @@ namespace Alex.Gamestates.MainMenu.Options
                 _didInit = true;
 
 
-                NetworkProcessingThreads = CreateSlider(
-                    "Network Threads: {0}", o => o.NetworkOptions.NetworkThreads, 1, Environment.ProcessorCount,
-                    1);
+              //  NetworkProcessingThreads = CreateSlider(
+               //     "Network Threads: {0}", o => o.NetworkOptions.NetworkThreads, 1, Environment.ProcessorCount,
+              //      1);
                 ProcessingThreads = CreateSlider(
                     "Processing Threads: {0}", o => o.MiscelaneousOptions.ChunkThreads, 1,
                     Environment.ProcessorCount, 1);
@@ -53,20 +54,22 @@ namespace Alex.Gamestates.MainMenu.Options
 
                 AntiLagModifier = CreateSlider(
                     "Anti Lag Modifier: {0}", o => o.MiscelaneousOptions.AntiLagModifier, 0d, 1d, 0.05d);
+
+                SkipFrames = CreateToggle("Skip Frames: {0}", o => o.MiscelaneousOptions.SkipFrames);
                 
-                AddGuiRow(ProcessingThreads, NetworkProcessingThreads);
+                AddGuiRow(ProcessingThreads, NetworkDebugInfo);
                 AddGuiRow(ServerResources, ChunkCaching);
-                AddGuiRow(NetworkDebugInfo, AntiLagModifier);
+                AddGuiRow(SkipFrames, AntiLagModifier);
                 
                 AddDescription(
                     ProcessingThreads, "Processing Threads",
                     "The maximum amount of concurrent chunk updates to execute.",
                     "If you are experiencing lag spikes, try lowering this value.");
                 
-                AddDescription(
-                    NetworkProcessingThreads, "Network Workers",
-                    "The amount of threads that get assigned to datagram processing",
-                    "Note: A restart is required for this setting to take affect.");
+              //  AddDescription(
+              //      NetworkProcessingThreads, "Network Workers",
+             //       "The amount of threads that get assigned to datagram processing",
+              //      "Note: A restart is required for this setting to take affect.");
 
                 AddDescription(
                     ChunkCaching, "Chunk Caching (Bedrock Only)", "Reduced network traffic but increased disk I/O usage.",
@@ -82,6 +85,8 @@ namespace Alex.Gamestates.MainMenu.Options
                     "You can always press 'F3 + N' while in-game to toggle it");
 
                 AddDescription(AntiLagModifier, "Anti-Lag Modifier", "Is used to determine when the game is considered laggy.");
+                
+                AddDescription(SkipFrames, "Skip Frames", "Skip frames when a background task takes too long to execute");
             }
 
             base.OnInit(renderer);

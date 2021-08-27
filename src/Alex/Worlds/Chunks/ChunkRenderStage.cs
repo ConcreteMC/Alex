@@ -4,6 +4,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using Alex.Common;
 using Alex.Common.Blocks;
 using Alex.Common.Graphics;
 using Alex.Common.Graphics.GpuResources;
@@ -20,6 +21,7 @@ namespace Alex.Worlds.Chunks
 {
 	public class ChunkRenderStage : IDisposable
 	{
+		private readonly RenderStage _stage;
 		private static ILogger Log         = LogManager.GetCurrentClassLogger();
 		private Dictionary<BlockCoordinates, List<VertexData>> BlockIndices     { get; set; }
 		private VertexBuffer                             Buffer           { get; set; }
@@ -32,8 +34,9 @@ namespace Alex.Worlds.Chunks
 		public bool IsEmpty => BlockIndices == null || BlockIndices.Count == 0;
 
 		private object _writeLock = new object();
-		public ChunkRenderStage()
+		public ChunkRenderStage(RenderStage stage)
 		{
+			_stage = stage;
 			BlockIndices = new Dictionary<BlockCoordinates, List<VertexData>>();
 		}
 		
@@ -165,8 +168,13 @@ namespace Alex.Worlds.Chunks
 			else
 			{
 				previousTask?.Cancel();
-				_previousManagedTask = Alex.Instance.UiTaskManager.Enqueue(UpdateAction, realVertices);
+				_previousManagedTask = Alex.Instance.UiTaskManager.Enqueue(UpdateAction, realVertices, TaskSetup);
 			}
+		}
+
+		private void TaskSetup(ManagedTask task)
+		{
+			task.Tag = $"RenderStage Update: {_stage}";
 		}
 
 		private void UpdateAction(ManagedTask task, object state)

@@ -32,6 +32,9 @@ namespace Alex.Common.Data.Options
         [DataMember]
         public OptionsProperty<double> AntiLagModifier { get; set; }
         
+        [DataMember]
+        public OptionsProperty<bool> SkipFrames { get; set; }
+
         public MiscelaneousOptions()
         {
             ChunkThreads = DefineRangedProperty(Environment.ProcessorCount / 2, 1, Environment.ProcessorCount);
@@ -42,6 +45,7 @@ namespace Alex.Common.Data.Options
             LoadServerResources = DefineProperty(false);
             ShowNetworkInfoByDefault = DefineProperty(false);
             AntiLagModifier = DefineRangedProperty(0.75d, 0d, 1d);
+            SkipFrames = DefineProperty(true);
         }
     }
 }

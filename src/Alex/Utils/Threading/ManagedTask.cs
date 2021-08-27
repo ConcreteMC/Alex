@@ -23,10 +23,14 @@ namespace Alex.Utils.Threading
 		public TimeSpan ExecutionTime => _executionStopwatch.Elapsed;
 		public TimeSpan TimeSinceCreation => DateTime.UtcNow - _enqueueTime;
 		
+		public object Tag { get; set; } = null;
+		public uint Identifier { get; } = 0;
+		
 		private Stopwatch _executionStopwatch = new Stopwatch();
 		private readonly Action _action;
-		public ManagedTask(Action action)
+		public ManagedTask(uint identifier, Action action)
 		{
+			Identifier = identifier;
 			_action = action;
 		}
 
@@ -35,14 +39,16 @@ namespace Alex.Utils.Threading
 		private DateTime _enqueueTime = DateTime.UtcNow;
 		private TaskState _state = TaskState.Created;
 
-		public ManagedTask(Action<object> action, object state)
+		public ManagedTask(uint identifier, Action<object> action, object state)
 		{
+			Identifier = identifier;
 			_parameterizedTask = (t, s) => action(s);
 			Data = state;
 		}
 		
-		public ManagedTask(Action<ManagedTask, object> action, object state)
+		public ManagedTask(uint identifier, Action<ManagedTask, object> action, object state)
 		{
+			Identifier = identifier;
 			_parameterizedTask = action;
 			Data = state;
 		}

@@ -102,7 +102,7 @@ namespace Alex.Worlds.Chunks
 
         private ChunkRenderStage CreateRenderStage(RenderStage arg)
         {
-            return new ChunkRenderStage();
+            return new ChunkRenderStage(arg);
         }
 
         public void Remove(BlockCoordinates blockCoordinates)
