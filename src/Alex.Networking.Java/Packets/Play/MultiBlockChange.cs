@@ -9,8 +9,17 @@ namespace Alex.Networking.Java.Packets.Play
 	    public int ChunkZ;
 
 	    public BlockUpdate[] Records = null;
+	    public bool TrustEdges;
 
-		public override void Decode(MinecraftStream stream)
+	    /// <inheritdoc />
+	    protected override void ResetPacket()
+	    {
+		    base.ResetPacket();
+		    Records = null;
+		    TrustEdges = false;
+	    }
+
+	    public override void Decode(MinecraftStream stream)
 		{
 			var chunkSectionPos = stream.ReadLong();
 			ChunkX = (int) (chunkSectionPos >> 42);
@@ -18,6 +27,7 @@ namespace Alex.Networking.Java.Packets.Play
 			ChunkZ = (int) (chunkSectionPos << 22 >> 42);
 
 			var inverse = stream.ReadBool();
+			TrustEdges = inverse;
 			//ChunkX = stream.ReadInt();
 		//	ChunkZ = stream.ReadInt();
 
@@ -38,7 +48,7 @@ namespace Alex.Networking.Java.Packets.Play
 				BlockUpdate update = new BlockUpdate();
 				update.X = (ChunkX << 4) + x;
 				update.Z = (ChunkZ << 4) + z;
-				update.Y = (sectionY << 4) + y;
+				update.Y = (sectionY * 16) + y;
 				update.BlockId = (uint) rawId;
 
 				Records[i] = update;

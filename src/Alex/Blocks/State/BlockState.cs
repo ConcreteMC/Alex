@@ -206,6 +206,8 @@ namespace Alex.Blocks.State
 
 			return sb.ToString();
 		}
+
+		public string FormattedString => $"{Name}[{ToString()}]";
 		
 		private static readonly Regex VariantParser = new Regex("(?'property'[^=,]*?)=(?'value'[^,]*)", RegexOptions.Compiled);
 		public static Dictionary<string, string> ParseData(string variant)

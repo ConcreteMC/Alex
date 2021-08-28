@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Alex.Net;
 using Alex.Networking.Java.Packets.Play;
 using Alex.Worlds;
@@ -19,12 +20,33 @@ namespace Alex.Entities.Generic
 		}
 
 		/// <inheritdoc />
+		protected override void OnModelUpdated()
+		{
+			base.OnModelUpdated();
+
+			if (ModelRenderer != null)
+			{
+				var meta = _pendingMetadata.ToArray();
+				_pendingMetadata.Clear();
+				foreach(var entry in meta)
+					HandleJavaMeta(entry);
+			}
+		}
+
+		private List<MetaDataEntry> _pendingMetadata = new List<MetaDataEntry>();
+		/// <inheritdoc />
 		protected override void HandleJavaMeta(MetaDataEntry entry)
 		{
 			base.HandleJavaMeta(entry);
 
 			if (entry.Index == 14 && entry is MetadataByte data)
 			{
+				if (ModelRenderer == null)
+				{
+					_pendingMetadata.Add(entry);
+					return;
+				}
+				
 				var isSmall = (data.Value & 0x01) != 0;
 				
 				SetSmall(isSmall);
@@ -51,6 +73,12 @@ namespace Alex.Entities.Generic
 			}
 			else if (entry.Index >= 15 && entry.Index <= 20 && entry is MetadataRotation rotation)
 			{
+				if (ModelRenderer == null)
+				{
+					_pendingMetadata.Add(entry);
+					return;
+				}
+				
 				switch (entry.Index)
 				{
 					case 15: //Head
@@ -77,6 +105,7 @@ namespace Alex.Entities.Generic
 
 		public void SetHeadRotation(Vector3 rotation)
 		{
+			if (ModelRenderer == null) return;
 			if (ModelRenderer.GetBone("head", out var head))
 			{
 				//rotation.Y = 180f - rotation.Y;
@@ -86,6 +115,7 @@ namespace Alex.Entities.Generic
 
 		public void SetBodyRotation(Vector3 rotation)
 		{
+			if (ModelRenderer == null) return;
 			if (ModelRenderer.GetBone("body", out var head))
 			{
 				rotation.Y = 180f - rotation.Y;
@@ -95,6 +125,7 @@ namespace Alex.Entities.Generic
 
 		public void SetArmRotation(Vector3 rotation, bool isLeftArm)
 		{
+			if (ModelRenderer == null) return;
 			if (ModelRenderer.GetBone(isLeftArm ? "leftarm" : "rightarm", out var head))
 			{
 				head.Rotation = rotation;
@@ -103,6 +134,7 @@ namespace Alex.Entities.Generic
 		
 		public void SetLegRotation(Vector3 rotation, bool isLeftLeg)
 		{
+			if (ModelRenderer == null) return;
 			if (ModelRenderer.GetBone(isLeftLeg ? "leftleg" : "rightleg", out var head))
 			{
 				//rotation.Y = 180f - rotation.Y;

@@ -100,7 +100,7 @@ namespace Alex.Entities.Projectiles
                               * Matrix.CreateTranslation(knownPos);
             }
             
-            return itemRenderer.Render(renderArgs, null, worldMatrix);
+            return itemRenderer.Render(renderArgs, worldMatrix);
         }
     }
 }

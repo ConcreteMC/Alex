@@ -434,7 +434,7 @@ namespace Alex.Net.Bedrock
 
 		public void HandleMcpeAddEntity(McpeAddEntity message)
 		{
-			Entity entity = EntityFactory.Create(message.entityType, null);
+			Entity entity = EntityFactory.Create(message.entityType, Client.World);
 
 			if (entity == null)
 			{

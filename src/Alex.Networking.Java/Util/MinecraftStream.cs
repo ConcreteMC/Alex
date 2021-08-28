@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using Alex.Common.Data;
@@ -20,12 +21,11 @@ namespace Alex.Networking.Java.Util
 {
 	public class MinecraftStream : Stream
 	{
-		private BufferedBlockCipher EncryptCipher { get; set; }
-		private BufferedBlockCipher DecryptCipher { get; set; }
-
 		private CancellationTokenSource CancelationToken { get; }
 		private Stream BaseStream { get; set; }
-
+		private Stream ReadStream { get; set; }
+		private Stream WriteStream { get; set; }
+		
 		public bool DataAvailable
 		{
 			get
@@ -45,6 +45,8 @@ namespace Alex.Networking.Java.Util
 			_originalBaseStream = baseStream;
 			BaseStream = baseStream;
 			CancelationToken = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+			ReadStream = baseStream;
+			WriteStream = baseStream;
 		}
 
 		public MinecraftStream(CancellationToken cancellationToken = default) : this(new MemoryStream(), cancellationToken)
@@ -52,9 +54,27 @@ namespace Alex.Networking.Java.Util
 			
 		}
 
-		public void InitEncryption(byte[] key)
+		public static Rijndael GenerateAES(byte[] key)
 		{
-			EncryptCipher = new BufferedBlockCipher(new CfbBlockCipher(new AesEngine(), 8));
+			var cipher = new RijndaelManaged ();
+			cipher.Mode = CipherMode.CFB;
+			cipher.Padding = PaddingMode.None;
+			cipher.KeySize = 128;
+			cipher.FeedbackSize = 8;
+			cipher.Key = key;
+			cipher.IV = key;
+
+			return cipher;
+		}
+
+		public void InitEncryption(Rijndael rijndael)
+		{
+			var aes = rijndael;
+			ICryptoTransform encryptTransform = aes.CreateEncryptor ();
+			ICryptoTransform decryptTransform = aes.CreateDecryptor ();
+			ReadStream = new CryptoStream(BaseStream, decryptTransform, CryptoStreamMode.Read);
+			WriteStream = new CryptoStream(BaseStream, encryptTransform, CryptoStreamMode.Write);
+			/*EncryptCipher = new BufferedBlockCipher(new CfbBlockCipher(new AesEngine(), 8));
 			EncryptCipher.Init(true, new ParametersWithIV(
 				new KeyParameter(key), key, 0, 16));
 
@@ -62,7 +82,7 @@ namespace Alex.Networking.Java.Util
 			DecryptCipher.Init(false, new ParametersWithIV(
 				new KeyParameter(key), key, 0, 16));
 
-			BaseStream = new CipherStream(BaseStream, DecryptCipher, EncryptCipher);
+			BaseStream = new CipherStream(BaseStream, DecryptCipher, EncryptCipher);*/
 		}
 
 		public override bool CanRead => BaseStream.CanRead;
@@ -72,8 +92,8 @@ namespace Alex.Networking.Java.Util
 
 		public override long Position
 		{
-			get { return BaseStream.Position; }
-			set { BaseStream.Position = value; }
+			get { return ReadStream.Position; }
+			set { ReadStream.Position = value; }
 		}
 
 		public override long Seek(long offset, SeekOrigin origin)
@@ -88,36 +108,39 @@ namespace Alex.Networking.Java.Util
 
 		public void Read(Span<byte> memory, int count)
 		{
-			var data = BaseStream.ReadToSpan(count);
+			var data = ReadStream.ReadToSpan(count);
 			data.CopyTo(memory);
 			//BaseStream.ReadToSpan()
 		}
 
 		public override int Read(byte[] buffer, int offset, int count)
 		{
-			return BaseStream.Read(buffer, offset, count);
+			return ReadStream.Read(buffer, offset, count);
 		}
 
 		public override void Write(byte[] buffer, int offset, int count)
 		{
-			BaseStream.Write(buffer, offset, count);
+			WriteStream.Write(buffer, offset, count);
 		}
 		
 		public void Write(in Memory<byte> buffer, int offset, in int bufferLength)
 		{
-			BaseStream.Write(buffer.Slice(offset, bufferLength).Span);
+			var bytes = buffer.Slice(offset, bufferLength).ToArray();
+			
+			WriteStream.Write(bytes, offset, bytes.Length);
 		}
 
 		public override void Flush()
 		{
-			BaseStream.Flush();
+			WriteStream.Flush();
+			//BaseStream.Flush();
 		}
 
 		#region Reader
 
 		public override int ReadByte()
 		{
-			return BaseStream.ReadByte();
+			return ReadStream.ReadByte();
 		}
 
 		public byte[] Read(int length)
@@ -197,7 +220,8 @@ namespace Alex.Networking.Java.Util
 			byte read;
 			do
 			{
-				read = (byte)ReadByte();
+				read = (byte)ReadByte();;
+
 				int value = (read & 0x7f);
 				result |= (value << (7 * numRead));
 
@@ -303,14 +327,14 @@ namespace Alex.Networking.Java.Util
 
         public Vector3 ReadPosition()
 		{
-			var val = ReadLong();
+			var val = ReadULong();
 			var x = Convert.ToSingle(val >> 38);
 			var y = Convert.ToSingle(val & 0xFFF);
 
 			//if (y > 2048)
 			//	y = -(0xFFF - y);
-			
-			var z = Convert.ToSingle((val << 38 >> 38) >> 12);
+
+			var z = Convert.ToSingle(val << 26 >> 38);  //Convert.ToSingle((val << 38 >> 38) >> 12);
 
 			if (x >= (2^25))
 			{
@@ -329,6 +353,35 @@ namespace Alex.Networking.Java.Util
 
             return new Vector3(x, y, z);
 		}
+        
+        public BlockCoordinates ReadBlockCoordinates()
+        {
+	        var val = ReadLong();
+	        var x = (val >> 38);
+	        var y =(val & 0xFFF);
+
+	        //if (y > 2048)
+	        //	y = -(0xFFF - y);
+
+	        var z = ((val << 38 >> 38) >> 12);  //Convert.ToSingle((val << 38 >> 38) >> 12);
+
+	        if (x >= (2^25))
+	        {
+		        x -= 2^26;
+	        }
+
+	        //if (y >= (2^11))
+	        //{
+		    //    y -= 2^12;
+	        //}
+
+	        if (z >= (2^25))
+	        {
+		        z -= 2^26;
+	        }
+
+	        return new BlockCoordinates((int)x, (int)y, (int)z);
+        }
 
 		public SlotData ReadSlot()
 		{

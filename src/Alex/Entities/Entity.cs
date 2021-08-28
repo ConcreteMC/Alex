@@ -16,7 +16,7 @@ using Alex.Entities.Components;
 using Alex.Entities.Components.Effects;
 using Alex.Entities.Properties;
 using Alex.Gamestates;
-using Alex.Graphics.Effect;
+using Alex.Graphics.Camera;
 using Alex.Graphics.Models.Entity;
 using Alex.Graphics.Models.Entity.Animations;
 using Alex.Graphics.Models.Items;
@@ -36,19 +36,13 @@ using Alex.Worlds.Multiplayer.Java;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MiNET;
-using MiNET.Utils;
 using MiNET.Utils.Metadata;
-using Mono.Collections.Generic;
 using NLog;
-using BlockCoordinates = Alex.Common.Utils.Vectors.BlockCoordinates;
 using BoundingBox = Microsoft.Xna.Framework.BoundingBox;
-using Effect = Alex.Entities.Components.Effects.Effect;
 using HealthManager = Alex.Entities.Meta.HealthManager;
 using Inventory = Alex.Utils.Inventories.Inventory;
 using MathF = System.MathF;
 using MetadataByte = Alex.Networking.Java.Packets.Play.MetadataByte;
-using MetadataFloat = Alex.Networking.Java.Packets.Play.MetadataFloat;
-using MetadataString = Alex.Networking.Java.Packets.Play.MetadataString;
 using ModelBone = Alex.Graphics.Models.Entity.ModelBone;
 using PlayerLocation = Alex.Common.Utils.Vectors.PlayerLocation;
 
@@ -79,6 +73,11 @@ namespace Alex.Entities
 
 					if (value != null)
 					{
+						if (_texture != null)
+						{
+							value.Effect.Texture = _texture;
+						}
+
 						UpdateModelParts();
 						OnModelUpdated();
 						CheckHeldItem();
@@ -231,7 +230,7 @@ namespace Alex.Entities
 			}
 		}
 		
-		public Color? EntityColor { get; set; } = null;
+		//public Color? EntityColor { get; set; } = null;
 		
 		public Inventory Inventory { get; protected set; }
 
@@ -241,30 +240,17 @@ namespace Alex.Entities
 			private set
 			{
 				var oldValue = _itemRenderer;
-				var newValue = value;
-				//_itemRenderer = value;
 
-				oldValue?.Parent?.Remove(oldValue);
+				UpdateItemPosition(oldValue, value);
+				_itemRenderer = value;
 
-				if (newValue != null)
+				if (oldValue != null)
 				{
-					IAttached arm = null;
-
-					if (_rightItemModel != null)
+					if (oldValue.Parent is ModelBone bone)
 					{
-						arm = _rightItemModel;
+						bone.Remove(oldValue);
 					}
-					else if (_rightArmModel != null)
-					{
-						arm = _rightArmModel;
-					}
-
-					arm?.AddChild(value);
 				}
-
-				_itemRenderer = newValue;
-				
-				UpdateItemPosition(newValue);
 			}
 		}
 
@@ -290,7 +276,8 @@ namespace Alex.Entities
 				if (value != _isFirstPersonMode)
 				{
 					_isFirstPersonMode = value;
-					UpdateItemPosition(_itemRenderer);
+					var newValue = _itemRenderer;
+					UpdateItemPosition(_itemRenderer, newValue);
 					//CheckHeldItem();
 				}
 			}
@@ -350,9 +337,9 @@ namespace Alex.Entities
 			EntityComponents.Push(AnimationController = new AnimationComponent(this));
 			EntityComponents.Push(Effects = new EffectManagerComponent(this));
 			
-			Effect = new EntityEffect();
-			Effect.Texture = _texture;
-			Effect.VertexColorEnabled = true;
+			//Effect = new EntityEffect();
+			//Effect.Texture = _texture;
+			//Effect.VertexColorEnabled = true;
 
 			MapIcon = new EntityMapIcon(this, MapMarker.SmallBlip);
 		}
@@ -482,9 +469,9 @@ namespace Alex.Entities
 
 		            if (renderer != ItemRenderer)
 		            {
-			            renderer = renderer.CloneItemRenderer();
+			          //  renderer = renderer.CloneItemRenderer();
 			            
-			            ItemRenderer = renderer;
+			            ItemRenderer = renderer.CloneItemRenderer();
 		            }
 	            }
             }
@@ -492,19 +479,52 @@ namespace Alex.Entities
             {
                 if (ItemRenderer != null)
                 {
-	               // ItemRenderer?.Parent?.Remove(ItemRenderer);
-	                
 	                ItemRenderer = null;
                 }
             }
         }
 
-        protected virtual void UpdateItemPosition(IItemRenderer renderer)
+        protected ModelBone GetPrimaryArm()
         {
+	        ModelBone arm = null;
+
+	        if (_rightItemModel != null)
+	        {
+		        arm = _rightItemModel;
+	        }
+	        else if (_rightArmModel != null)
+	        {
+		        arm = _rightArmModel;
+	        }
+
+	        return arm;
+        }
+
+        protected virtual void UpdateItemPosition(IItemRenderer oldValue, IItemRenderer renderer)
+        {
+	        ModelBone arm = GetPrimaryArm();
+	        if (oldValue != renderer)
+	        {
+		        arm?.Remove(oldValue);
+	        }
+
 	        if (renderer == null)
 		        return;
-	        
+
 	        renderer.DisplayPosition = DisplayPosition.ThirdPersonRightHand;
+
+	        if (oldValue != renderer)
+	        {
+		        renderer.Update(
+			        new UpdateArgs()
+			        {
+				        Camera = new Camera(),
+				        GameTime = new GameTime(),
+				        GraphicsDevice = Alex.Instance.GraphicsDevice
+			        });
+
+		        arm?.AddChild(renderer);
+	        }
         }
 
         private void InventoryOnSelectedHotbarSlotChanged(object? sender, SelectedSlotChangedEventArgs e)
@@ -525,10 +545,20 @@ namespace Alex.Entities
 		
 		[MoProperty("is_onfire"), MoProperty("is_on_fire")]
 		public bool IsOnFire { get; set; } = false;
-		
+
 		[MoProperty("is_sneaking")]
-		public bool IsSneaking { get; set; }
-		
+		public bool IsSneaking
+		{
+			get => _isSneaking;
+			set
+			{
+				var oldValue = _isSneaking;
+				_isSneaking = value;
+				
+				OnSneakingChanged(value);
+			}
+		}
+
 		[MoProperty("is_riding")]
 		public bool IsRiding { get; set; }
 
@@ -540,7 +570,7 @@ namespace Alex.Entities
 			set
 			{
 				_isSprinting = value;
-				
+				OnSprintingChanged(value);
 				/*var movementSpeedAttribute = _entityProperties[Networking.Java.Packets.Play.EntityProperties.MovementSpeed];
 				movementSpeedAttribute.RemoveModifier(SprintingModifierGuid);
 				
@@ -721,6 +751,16 @@ namespace Alex.Entities
 		public long OwnerEntityId { get; set; } = -1;
 		public Vector2 TargetRotation { get; private set; } = Vector2.Zero;
 
+		protected virtual void OnSneakingChanged(bool newValue)
+		{
+			
+		}
+
+		protected virtual void OnSprintingChanged(bool newValue)
+		{
+			
+		}
+		
 		public void HandleJavaMetadata(MetaDataEntry entry)
 		{
 			if (entry.Index == 0 && entry is MetadataByte flags)
@@ -961,7 +1001,12 @@ namespace Alex.Entities
 					{
 						if (meta.Value is MiNET.Utils.Metadata.MetadataInt color)
 						{
-							EntityColor = new Microsoft.Xna.Framework.Color((uint) color.Value);
+							if (_modelRenderer != null)
+							{
+								_modelRenderer.EntityColor = new Microsoft.Xna.Framework.Color((uint)color.Value).ToVector3();
+							}
+
+						//	EntityColor = new Microsoft.Xna.Framework.Color((uint) color.Value);
 						}
 					} break;
 
@@ -1122,20 +1167,25 @@ namespace Alex.Entities
 			}
 			set
 			{
-				if (value == _texture)
-					return;
+				//if (value == _texture)
+				//	return;
 				
 				Texture2D oldValue = _texture;
 
 				try
 				{
 					_texture = value;
-					//value?.Use(this);
-					
-					if (Effect != null && value != null)
+
+					if (_modelRenderer != null)
 					{
-						Effect.Texture = value;
+						_modelRenderer.Effect.Texture = value;
 					}
+					//value?.Use(this);
+
+					//if (Effect != null && value != null)
+					//{
+					//	Effect.Texture = value;
+					//}
 				}
 				finally
 				{
@@ -1143,7 +1193,7 @@ namespace Alex.Entities
 					{
 						if (!(oldValue.Tag is Guid tag) || tag != EntityFactory.PooledTagIdentifier)
 						{
-							oldValue?.Dispose();
+						//	oldValue?.Dispose();
 						}
 					}
 					//oldValue?.Dispose();
@@ -1153,7 +1203,7 @@ namespace Alex.Entities
 			}
 		}
 		
-		internal EntityEffect    Effect       { get; }
+		//internal EntityEffect    Effect       { get; }
 
 		///  <summary>
 		/// 		Renders the entity
@@ -1167,7 +1217,7 @@ namespace Alex.Entities
 			var  renderer = ModelRenderer;
 
 			if (renderer != null)
-				renderCount += renderer.Render(renderArgs, useCulling , Effect, Matrix.CreateScale((1f / 16f) * Scale) * RenderLocation.CalculateWorldMatrix());
+				renderCount += renderer.Render(renderArgs, Matrix.CreateScale((1f / 16f) * Scale) * RenderLocation.CalculateWorldMatrix());
 
 			return renderCount;
 		}
@@ -1216,10 +1266,11 @@ namespace Alex.Entities
 				_head.Rotation = new Vector3(pitch, headYaw, 0f);
 			}
 			
-			Effect.View = args.Camera.ViewMatrix;
-			Effect.Projection = args.Camera.ProjectionMatrix;
-			Effect.DiffuseColor = renderer.EntityColor * renderer.DiffuseColor;
-			Effect.Texture = _texture;
+		//	renderer.Effect.View = args.Camera.ViewMatrix;
+		//	renderer.Effect.Projection = args.Camera.ProjectionMatrix;
+		//	renderer.Effect.DiffuseColor = renderer.EntityColor * renderer.DiffuseColor;
+		//	renderer.Effect.Texture = _texture;
+			
 			renderer.Update(args);
 
 			//if (!ShowItemInHand || _skipRendering || ItemRenderer == null) return;
@@ -1584,6 +1635,7 @@ namespace Alex.Entities
 		private bool _isUsingItem;
 		private bool _isAttacking = false;
 		private bool _isSprinting;
+		private bool _isSneaking;
 
 		public bool CanSurface { get; set; } = false;
 		public const float   JumpVelocity = 0.42f;

@@ -299,6 +299,15 @@ namespace Alex.Blocks
 		    this.Register("minecraft:crimson_log", () => new Log(WoodType.Crimson));
 		    this.Register("minecraft:warped_log", () => new Log(WoodType.Warped));
 		    
+		    this.Register("minecraft:oak_wood", () => new Log());
+		    this.Register("minecraft:spruce_wood", () => new Log(WoodType.Spruce));
+		    this.Register("minecraft:birch_wood", () => new BirchLog());
+		    this.Register("minecraft:jungle_wood", () => new Log(WoodType.Jungle));
+		    this.Register("minecraft:acacia_wood", () => new Log(WoodType.Acacia));
+		    this.Register("minecraft:dark_oak_wood", () => new Log(WoodType.DarkOak));
+		    this.Register("minecraft:crimson_wood", () => new Log(WoodType.Crimson));
+		    this.Register("minecraft:warped_wood", () => new Log(WoodType.Warped));
+		    
 		    //Planks
 		    this.Register("minecraft:oak_planks", () => new Planks(WoodType.Oak));
 		    this.Register("minecraft:spruce_planks", () => new Planks(WoodType.Spruce));

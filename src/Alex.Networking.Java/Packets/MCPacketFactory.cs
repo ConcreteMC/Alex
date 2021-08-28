@@ -226,7 +226,7 @@ namespace Alex.Networking.Java.Packets
 			
 			Register(ConnectionState.Play, 0x2E, () => OpenWindowPacket.CreateObject());
 			
-			Register(ConnectionState.Play, 0x30, () => PlayPingPacket.CreateObject());
+			//Register(ConnectionState.Play, 0x30, () => PlayPingPacket.CreateObject());
 			Register(ConnectionState.Play, 0x32, () => PlayerAbilitiesPacket.CreateObject());
 			//Register(ConnectionState.Play, 0x31, () => CombatEventPacket.CreateObject());
 			Register(ConnectionState.Play, 0x36, () => PlayerListItemPacket.CreateObject()); //< -----

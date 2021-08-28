@@ -13,7 +13,7 @@ namespace Alex.Networking.Java.Packets.Play
 		/// <inheritdoc />
 		public override void Decode(MinecraftStream stream)
 		{
-			Location = stream.ReadPosition();
+			Location = stream.ReadBlockCoordinates();
 			Action = (byte) stream.ReadByte();
 			Compound = stream.ReadNbtCompound();
 		}

@@ -152,10 +152,10 @@ namespace Alex.Entities.BlockEntities
 		{
 			var itemRenderer = ItemRenderer;
 
-			if (itemRenderer?.Model == null)
+			if (itemRenderer?.ResourcePackModel == null)
 				return;
 			
-			if (itemRenderer.Model.Type == ModelType.Block)
+			if (itemRenderer.ResourcePackModel.Type == ModelType.Block)
 			{
 				Scale = 0.25f;
 				Offset = Vector3.Transform(new Vector3(0.375f, 0.375f,-0.125f), Matrix.CreateRotationY(MathHelper.ToRadians(_yaw)));
@@ -195,7 +195,7 @@ namespace Alex.Entities.BlockEntities
 			                                        * Matrix.CreateTranslation(offset)
 			                                        * Matrix.CreateTranslation(knownPos);
 
-				return itemRenderer.Render(renderArgs, null, worldMatrix);
+				return itemRenderer.Render(renderArgs, worldMatrix);
 		}
 	}
 }

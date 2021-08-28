@@ -98,6 +98,17 @@ namespace Alex.Worlds
 		}
 
 		/// <inheritdoc />
+		public void SetBlockState(int x,
+			int y,
+			int z,
+			BlockState block,
+			int storage,
+			BlockUpdatePriority priority = BlockUpdatePriority.High)
+		{
+			
+		}
+
+		/// <inheritdoc />
 		public Biome GetBiome(BlockCoordinates coordinates)
 		{
 			return _world.GetBiome(GetOffset(coordinates));

@@ -136,11 +136,60 @@ namespace Alex.Entities.BlockEntities
 			}
 		}
 
+		private void ReadTextFrom(NbtCompound compound)
+		{
+			if (compound.TryGet("text1", out var text1)
+			    || compound.TryGet("Text1", out text1))
+			{
+				if (text1 != null && text1.HasValue)
+				{
+					Text1 = text1.StringValue;
+				}
+			}
+			
+			if (compound.TryGet("text2", out var text2)
+			    || compound.TryGet("Text2", out text2))
+			{
+				if (text2 != null && text2.HasValue)
+				{
+					Text2 = text2.StringValue;
+				}
+			}
+			
+			if (compound.TryGet("text3", out var text3)
+			    || compound.TryGet("Text3", out text3))
+			{
+				if (text3 != null && text3.HasValue)
+				{
+					Text3 = text3.StringValue;
+				}
+			}
+			
+			if (compound.TryGet("text4", out var text4)
+			    || compound.TryGet("Text4", out text4))
+			{
+				if (text4 != null && text4.HasValue)
+				{
+					Text4 = text4.StringValue;
+				}
+			}
+		}
+
+		/// <inheritdoc />
+		public override void SetData(byte action, NbtCompound compound)
+		{
+			if (action == 9) //Set text on sign
+			{
+				ReadTextFrom(compound);
+			}
+		}
+
 		private float TextOffset = 0.1f;
 		protected override bool BlockChanged(Block oldBlock, Block newBlock)
 		{
 			if (newBlock is WallSign)
 			{
+				TextYStart = 0.75f;
 				if (EntityModelRenderer.TryGetRenderer(new WallSignEntityModel(), out var renderer))
 				{
 					ModelRenderer = renderer;
@@ -178,6 +227,8 @@ namespace Alex.Entities.BlockEntities
 			
 			if (newBlock is StandingSign)
 			{
+				TextYStart = 0.95f;
+				
 				if (EntityModelRenderer.TryGetRenderer(new StandingSignEntityModel(), out var renderer))
 				{
 					ModelRenderer = renderer;
@@ -204,41 +255,7 @@ namespace Alex.Entities.BlockEntities
 		{
 			base.ReadFrom(compound);
 			
-			if (compound.TryGet("text1", out var text1)
-			|| compound.TryGet("Text1", out text1))
-			{
-				if (text1 != null && text1.HasValue)
-				{
-					Text1 = text1.StringValue;
-				}
-			}
-			
-			if (compound.TryGet("text2", out var text2)
-			    || compound.TryGet("Text2", out text2))
-			{
-				if (text2 != null && text2.HasValue)
-				{
-					Text2 = text2.StringValue;
-				}
-			}
-			
-			if (compound.TryGet("text3", out var text3)
-			    || compound.TryGet("Text3", out text3))
-			{
-				if (text3 != null && text3.HasValue)
-				{
-					Text3 = text3.StringValue;
-				}
-			}
-			
-			if (compound.TryGet("text4", out var text4)
-			    || compound.TryGet("Text4", out text4))
-			{
-				if (text4 != null && text4.HasValue)
-				{
-					Text4 = text4.StringValue;
-				}
-			}
+			ReadTextFrom(compound);
 			//Text1 = compound["Text1"].StringValue;
 			//Text2 = compound["Text2"].StringValue;
 			//Text3 = compound["Text3"].StringValue;
@@ -264,6 +281,7 @@ namespace Alex.Entities.BlockEntities
 
 		private BasicEffect _basicEffect = null;
 
+		private float TextYStart { get; set; } = 0.75f;
 		/// <inheritdoc />
 		public override void Render2D(IRenderArgs args)
 		{
@@ -290,7 +308,7 @@ namespace Alex.Entities.BlockEntities
 			Vector3 lookAtOffset = Vector3.Transform(Vector3.Forward, Matrix.CreateRotationY(MathUtils.ToRadians(_yRotation)));
 			lookAtOffset *= TextOffset;
 			
-			var pos = this.RenderLocation + new Vector3(lookAtOffset.X, 0.75f, lookAtOffset.Z);
+			var pos = this.RenderLocation + new Vector3(lookAtOffset.X, TextYStart, lookAtOffset.Z);
 
 			var world = Matrix.CreateScale(1f / 96f) * Matrix.CreateRotationY(MathUtils.ToRadians(_yRotation))
 			                                         * Matrix.CreateTranslation(pos);

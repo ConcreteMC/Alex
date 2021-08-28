@@ -19,13 +19,13 @@ namespace Alex.Graphics.Models.Items
         private BlockState _blockState;
         private Texture2D  _texture;
 
-        public ItemBlockModelRenderer(BlockState block, ResourcePackModelBase model, Texture2D texture) : base(model,
+        public ItemBlockModelRenderer(BlockState block, ResourcePackModelBase resourcePackModel, Texture2D texture) : base(resourcePackModel,
             VertexPositionColorTexture.VertexDeclaration)
         {
             _blockState = block;
             _texture = texture;
             
-            Scale = new Vector3(16f);
+            Scale = 16f;
             Size = new Vector3(16f, 16f, 16f);
 
             float biggestDimensions = 0;
@@ -103,14 +103,55 @@ namespace Alex.Graphics.Models.Items
         }
 
         /// <inheritdoc />
-        protected override Matrix GetWorldMatrix(DisplayElement activeDisplayItem, Matrix characterMatrix)
+        protected override void UpdateDisplayInfo(DisplayPosition displayPosition, DisplayElement displayElement)
+        {
+            var root = Model?.Root;
+
+            if (root != null)
+            {
+                if (displayPosition.HasFlag(DisplayPosition.Gui))
+                {
+                    root.Size = Size;
+                    root.BaseScale = displayElement.Scale;
+                    root.BaseRotation = new Vector3(25f, 45f, 0f);
+                    root.BasePosition = new Vector3(displayElement.Translation.X, displayElement.Translation.Y + 0.25f, displayElement.Translation.Z);
+                }
+                else if (displayPosition.HasFlag(DisplayPosition.ThirdPerson))
+                {
+                    root.Size = Size;
+                    root.BaseScale = displayElement.Scale * Scale;
+                    root.BaseRotation = new Vector3(-67.5f, 0f, 0f);
+                    root.BasePosition = new Vector3(displayElement.Translation.X + 2f, displayElement.Translation.Y +8f, displayElement.Translation.Z - 2f);
+                }
+                else if (displayPosition.HasFlag(DisplayPosition.FirstPerson))
+                {
+                    root.Size = Size;
+                    root.BaseScale = displayElement.Scale * (Scale / 2f);
+                    root.BaseRotation = new Vector3(-67.5f, 0f, 0f) + new Vector3(displayElement.Rotation.X, displayElement.Rotation.Y, displayElement.Rotation.Z);
+                    root.BasePosition = new Vector3(displayElement.Translation.X + 4f, displayElement.Translation.Y + 18f, displayElement.Translation.Z - 2f);
+                }
+                else if (displayPosition.HasFlag(DisplayPosition.Ground))
+                {
+                    root.Size = null;
+                    root.BaseScale = displayElement.Scale * Scale;
+                    root.BaseRotation = new Vector3(displayElement.Rotation.X, displayElement.Rotation.Y, displayElement.Rotation.Z);
+                    root.BasePosition = new Vector3(displayElement.Translation.X, displayElement.Translation.Y, displayElement.Translation.Z);
+                }
+                else
+                {
+                    base.UpdateDisplayInfo(displayPosition, displayElement);
+                }
+            }
+        }
+
+        /// <inheritdoc />
+       /* protected override Matrix GetWorldMatrix(DisplayElement activeDisplayItem)
         {
             if ((DisplayPosition & DisplayPosition.Ground) != 0)
             {
                 return Matrix.CreateScale(activeDisplayItem.Scale * Scale)
                        * MatrixHelper.CreateRotationDegrees(activeDisplayItem.Rotation)
-                       * Matrix.CreateTranslation(activeDisplayItem.Translation)
-                       * characterMatrix;
+                       * Matrix.CreateTranslation(activeDisplayItem.Translation);
             }
             
             if ((DisplayPosition & DisplayPosition.FirstPerson) != 0)
@@ -119,8 +160,7 @@ namespace Alex.Graphics.Models.Items
                 return Matrix.CreateScale(activeDisplayItem.Scale * (Scale / 2f))
                        * MatrixHelper.CreateRotationDegrees(new Vector3(-67.5f, 0f, 0f))
                        * MatrixHelper.CreateRotationDegrees(activeDisplayItem.Rotation)
-                       * Matrix.CreateTranslation(new Vector3(translate.X + 4f, translate.Y + 18f, translate.Z - 2f))
-                       * characterMatrix;
+                       * Matrix.CreateTranslation(new Vector3(translate.X + 4f, translate.Y + 18f, translate.Z - 2f));
             }
             
             if ((DisplayPosition & DisplayPosition.ThirdPerson) != 0)
@@ -129,8 +169,7 @@ namespace Alex.Graphics.Models.Items
                 return Matrix.CreateScale(activeDisplayItem.Scale * Scale)
                        * MatrixHelper.CreateRotationDegrees(new Vector3(-67.5f, 0f, 0f))
                        * MatrixHelper.CreateRotationDegrees(activeDisplayItem.Rotation)
-                       * Matrix.CreateTranslation(new Vector3(translate.X + 2f, translate.Y + (8f), translate.Z - 2f))
-                       * characterMatrix;
+                       * Matrix.CreateTranslation(new Vector3(translate.X + 2f, translate.Y + (8f), translate.Z - 2f));
             }
             
             if ((DisplayPosition & DisplayPosition.Gui) != 0)
@@ -138,16 +177,15 @@ namespace Alex.Graphics.Models.Items
                 return Matrix.CreateScale(activeDisplayItem.Scale)
                        * MatrixHelper.CreateRotationDegrees(new Vector3(25f, 45f, 0f))
                        * Matrix.CreateTranslation(activeDisplayItem.Translation) 
-                       * Matrix.CreateTranslation(new Vector3(0f, 0.25f, 0f))
-                       * characterMatrix;
+                       * Matrix.CreateTranslation(new Vector3(0f, 0.25f, 0f));
             }
 
-            return base.GetWorldMatrix(activeDisplayItem, characterMatrix);
-        }
+            return base.GetWorldMatrix(activeDisplayItem);
+        }*/
 
         public override IItemRenderer CloneItemRenderer()
         {
-            return new ItemBlockModelRenderer(_blockState, Model, _texture)
+            return new ItemBlockModelRenderer(_blockState, ResourcePackModel, _texture)
             {
                 Vertices = (VertexPositionColorTexture[]) Vertices.Clone(),
                 Size = Size,

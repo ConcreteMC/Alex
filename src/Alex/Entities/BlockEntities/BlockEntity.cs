@@ -136,7 +136,7 @@ namespace Alex.Entities.BlockEntities
 				vector = Vector3.Transform(vector, rot);
 				
 				renderCount += renderer.Render(
-					renderArgs, useCulling, Effect,
+					renderArgs,
 					Matrix.CreateScale(Scale / 16f) 
 					* Matrix.CreateWorld(new PlayerLocation(X + offset.X, Y + offset.Y, Z + offset.Z), vector, Vector3.Up));
 			}

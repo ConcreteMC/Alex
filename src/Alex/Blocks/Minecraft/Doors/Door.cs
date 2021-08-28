@@ -4,8 +4,10 @@ using Alex.Blocks.State;
 using Alex.Common.Blocks;
 using Alex.Common.Blocks.Properties;
 using Alex.Common.Utils.Vectors;
+using Alex.Entities;
 using Alex.Worlds;
 using Alex.Worlds.Abstraction;
+using Microsoft.Xna.Framework;
 using NLog;
 
 namespace Alex.Blocks.Minecraft.Doors
@@ -62,8 +64,15 @@ namespace Alex.Blocks.Minecraft.Doors
 
 		public override BlockState BlockPlaced(IBlockAccess world, BlockState state, BlockCoordinates position)
 		{
-			if (state.TryGetValue("half", out string half) && half.Equals(
-				"upper", StringComparison.OrdinalIgnoreCase))
+			if (!IsUpper)
+			{
+				var blockstate = state.WithProperty(UPPER, true);
+				world.SetBlockState(position.X, position.Y + 1, position.Z, blockstate, 0, BlockUpdatePriority.High);
+
+				return state;
+			}
+			
+			if (IsUpper)
 			{
 				return Update(world, state, position, position + BlockCoordinates.Down);
 			}
@@ -74,12 +83,40 @@ namespace Alex.Blocks.Minecraft.Doors
 		public override void BlockUpdate(World world, BlockCoordinates position, BlockCoordinates updatedBlock)
 		{
 			var newValue = Update(world, BlockState, position, updatedBlock);
-			if (newValue != BlockState)
+			if (newValue.ID != BlockState.ID)
 			{
 				world.SetBlockState(position.X, position.Y, position.Z, newValue);
 			}
 		}
-		
+
+		/// <inheritdoc />
+		public override BlockState PlaceBlock(World world, Player player, BlockCoordinates position, BlockFace face, Vector3 cursorPosition)
+		{
+			var blockAbove = world.GetBlockState(position + BlockCoordinates.Up);
+
+			if (!blockAbove.Block.BlockMaterial.IsReplaceable)
+				return null;
+			
+			var facing = player.KnownPosition.GetFacing();
+			BlockState state = BlockState;
+			state = state.WithProperty(FACING, facing);
+			state = state.WithProperty(UPPER, false);
+			
+			var blockLeft = world.GetBlockState(position + BlockCoordinates.Left);
+			var blockRight = world.GetBlockState(position + BlockCoordinates.Right);
+
+			if (blockLeft.Block is Door)
+			{
+				state = state.WithProperty("hinge", "right");
+			}
+			else if (blockRight.Block is Door)
+			{
+				state = state.WithProperty("hinge", "left");
+			}
+			
+			return state;
+		}
+
 		public override bool ShouldRenderFace(BlockFace face, Block neighbor)
 		{
 			return true;

@@ -82,8 +82,10 @@ namespace Alex.Networking.Java
 
 				Client = new TcpClient();
 				
-				//Client.ReceiveBufferSize = int.MaxValue;
-				//Client.SendBufferSize = int.MaxValue;
+				//Client.ReceiveBufferSize = 1024;
+				//Client.SendBufferSize = 1024;
+				//Client.NoDelay = true;
+				//Client.Client.DontFragment = false;
 				
 				Client.Connect(TargetEndpoint.Address, TargetEndpoint.Port);
 
@@ -194,7 +196,7 @@ namespace Alex.Networking.Java
 		    try
 		    {
 			    SpinWait sw = new SpinWait();
-
+			    
 			    while (!CancellationToken.IsCancellationRequested)
 			    {
 				    if (CancellationToken.IsCancellationRequested)
@@ -207,9 +209,15 @@ namespace Alex.Networking.Java
 
 				    if (stream.DataAvailable)
 				    {
+					    time.Restart();
 					    if (TryReadPacket(stream, out var lastPacketId))
 					    {
-						    
+						    var elapsed = time.Elapsed;
+
+						    if (elapsed >= TimeSpan.FromMilliseconds(500))
+						    {
+							  //  Log.Warn($"Packet Read took: {elapsed.TotalMilliseconds:F2}ms");
+						    }
 					    }
 						    //_lastReceivedPacketId = lastPacketId;
 				    }
@@ -263,10 +271,8 @@ namespace Alex.Networking.Java
 					    break;
 
 				    var queue = PacketWriteQueue;
-
-				    var packet = queue.Take(CancellationToken.Token);
-
-				    if (packet.Packet == null)
+				    
+				    if (!queue.TryTake(out var packet, 10, CancellationToken.Token))
 					    continue;
 
 
@@ -281,6 +287,18 @@ namespace Alex.Networking.Java
 
 						    stream.WriteVarInt(data.Length);
 						    stream.Write(data);
+						    
+						    if (packet.Packet is EncryptionResponsePacket)
+						    {
+							    // lock (_readLock)
+							    {
+								    var aes = MinecraftStream.GenerateAES(_sharedKey);
+								    _readerStream.InitEncryption(aes);
+								    _writerStream.InitEncryption(aes);
+							    }
+
+							    Log.Info($"Encryption enabled.");
+						    }
 				    }
 				    finally
 				    {
@@ -296,17 +314,6 @@ namespace Alex.Networking.Java
 
 					    _lastSentPacketId = packet.Packet.PacketId;
 					    packet.Packet.PutPool();
-				    }
-				    
-				    if (packet.Packet is EncryptionResponsePacket)
-				    {
-					    lock (_readLock)
-					    {
-						    _readerStream.InitEncryption(_sharedKey);
-						    _writerStream.InitEncryption(_sharedKey);
-					    }
-
-					    Log.Info($"Encryption enabled.");
 				    }
 				    //Write(mc);
 			    }
@@ -355,8 +362,8 @@ namespace Alex.Networking.Java
 		    lock (_readLock)
 		    {
 			    int length = stream.ReadVarInt(out int read);
-
-			    if (read == 0)
+				
+			    if (read == 0 || length == -1)
 				    return false;
 			    
 			    if (!CompressionEnabled)
@@ -450,7 +457,7 @@ namespace Alex.Networking.Java
 
 			    packet.Stopwatch.Stop();
 
-			    if (packet.Stopwatch.ElapsedMilliseconds > 250)
+			    if (packet.Stopwatch.ElapsedMilliseconds > 120)
 			    {
 				    Log.Warn(
 					    $"Packet handling took too long: {packet.GetType()} | {packet.Stopwatch.ElapsedMilliseconds}ms Processed bytes: {packetData.Length} (Queue size: 0)");
@@ -501,13 +508,13 @@ namespace Alex.Networking.Java
 	    {
 		    if (PacketWriteQueue.IsAddingCompleted)
 		    {
-			    Log.Warn($"Cannot send packet, adding has completed.");
+			   // Log.Warn($"Cannot send packet, adding has completed.");
 			    return;
 		    }
 		    
 			if (packet.PacketId == -1) throw new Exception();
 
-			lock (_readLock)
+			//lock (_readLock)
 			{
 				PacketWriteQueue.Add(new EnqueuedPacket(packet, CompressionEnabled));
 			}

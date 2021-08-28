@@ -33,10 +33,10 @@ namespace Alex.Gui.Elements.Context3D
                 if (!value.IsSpawned)
                 {
                     value.OnSpawn();
-                    
                 }
+                
                 _entity = value;
-                Drawable = _entity?.ModelRenderer == null ? null : new EntityDrawable(_entity);
+                Drawable = new EntityDrawable(_entity);
             }
         }
 

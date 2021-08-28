@@ -6,6 +6,7 @@ using System.Threading;
 using Alex.Common.Graphics;
 using Alex.Common.Graphics.GpuResources;
 using Alex.Common.Utils;
+using Alex.Graphics.Effect;
 using Alex.Graphics.Models.Items;
 using Alex.ResourcePackLib;
 using Alex.ResourcePackLib.Json.Bedrock.Entity;
@@ -19,203 +20,190 @@ using MathF = System.MathF;
 
 namespace Alex.Graphics.Models.Entity
 {
-	public partial class EntityModelRenderer : Model, IDisposable
+	public partial class EntityModelRenderer : Models.Model, IDisposable
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(EntityModelRenderer));
+		private Vector3 _entityColor = Color.White.ToVector3();
+		private Vector3 _diffuseColor = Color.White.ToVector3();
+		private Model Model { get; set; }
 		
-		private IReadOnlyDictionary<string, ModelBone> Bones { get; set; }
-
-		private VertexBuffer VertexBuffer
-		{
-			get => _vertexBuffer;
-			set
-			{
-				var previousValue = _vertexBuffer;
-
-				if (value != null)
-				{
-					//value.Use(this);
-				}
-
-				if (previousValue != null && previousValue != value)
-				{
-					previousValue.Dispose();
-					//previousValue.Release(this);
-					//previousValue.ReturnResource(this);
-				}
-				
-				_vertexBuffer = value;
-			}
-		}
-
-		private IndexBuffer IndexBuffer
-		{
-			get => _indexBuffer;
-			set
-			{
-				var previousValue = _indexBuffer;
-
-				if (value != null)
-				{
-					//value.Use(this);
-				}
-
-				if (previousValue != null && previousValue != value)
-				{
-					previousValue.Dispose();
-					//previousValue.Release(this);
-					//previousValue.ReturnResource(this);
-				}
-				_indexBuffer = value;
-			}
-		}
-		//public  bool               Valid        { get; private set; }
-
 		public double VisibleBoundsWidth { get; set; } = 0;
 		public double VisibleBoundsHeight { get; set; } = 0;
 
+		public Vector3 EntityColor
+		{
+			get => _entityColor;
+			set
+			{
+				_entityColor = value;
+				var effect = Effect;
+
+				if (effect != null)
+					effect.DiffuseColor = _diffuseColor * _entityColor;
+			}
+		}
+
+		public Vector3 DiffuseColor
+		{
+			get => _diffuseColor;
+			set
+			{
+				_diffuseColor = value;
+				var effect = Effect;
+
+				if (effect != null)
+					effect.DiffuseColor = _diffuseColor * _entityColor;
+			}
+		}
+
+		public EntityEffect Effect { get; private set; }
+		public string ModelName { get; private set; }
 		public EntityModelRenderer()
 		{
+			
 			//	Model = model;
 			//base.Scale = 1f;
 		}
 
-
-		private class SharedBuffer
+		public static bool TryGetRenderer(EntityModel model, out EntityModelRenderer renderer)
 		{
-			public SharedBuffer(VertexBuffer vertexBuffer, IndexBuffer indexBuffer, IReadOnlyDictionary<string, ModelBone> bones)
+			if (!BuildModel(model, out var instance))
 			{
-				VertexBuffer = vertexBuffer;
-				IndexBuffer = indexBuffer;
-				Bones = bones;
-				//Vertices = vertices;
-				//Indices = indices;
+				renderer = null;
+				return false;
 			}
+			//var sharedBuffer = BuildSharedBuffer(model);
 
-			public VertexBuffer VertexBuffer { get; }
-			public IndexBuffer IndexBuffer { get; }
-			public IReadOnlyDictionary<string, ModelBone> Bones { get; }
+			renderer = new EntityModelRenderer();
+			renderer.ModelName = model.Description.Identifier;
+			renderer.Effect = new EntityEffect
+			{
+				VertexColorEnabled = true,
+				DiffuseColor = renderer._diffuseColor * renderer._entityColor
+			};
+
+			renderer.VisibleBoundsWidth = model.Description.VisibleBoundsWidth;
+			renderer.VisibleBoundsHeight = model.Description.VisibleBoundsHeight;
+
+			foreach (var mesh in instance.Meshes)
+			{
+				foreach (var part in mesh.MeshParts)
+				{
+					part.Effect = renderer.Effect;
+				}
+			}
+			
+			renderer.Model = instance;
+			
+			return true;
 		}
 
-		private static SharedBuffer BuildSharedBuffer(EntityModel model)
+		private static IEnumerable<ModelBone> GetChildren(ModelBone parent)
 		{
+			foreach (var child in parent.Children)
+			{
+				yield return child;
+
+				foreach (var subChild in GetChildren(child))
+				{
+					yield return subChild;
+				}
+			}
+		}
+
+		private static bool BuildModel(EntityModel model, out Model instance)
+		{
+			instance = null;
+
+			List<ModelBone> modelBoneInstances = new List<ModelBone>();
+			List<ModelMesh> modelMeshInstances = new List<ModelMesh>();
+
 			List<VertexPositionColorTexture> vertices = new List<VertexPositionColorTexture>();
 			List<short> indices = new List<short>();
-			var bones = new Dictionary<string, ModelBone>(StringComparer.OrdinalIgnoreCase);
 
-			if (!BuildModel(model, bones, vertices, indices))
+			List<ModelBone> rootModelBones = new List<ModelBone>();
+
+			int counter = 0;
+
+			foreach (var bone in model.Bones.Where(x => string.IsNullOrWhiteSpace(x.Parent)))
 			{
-				return null;
+				if (string.IsNullOrWhiteSpace(bone.Name))
+					bone.Name = $"bone{counter++}";
+
+				var processed = ProcessBone(model, bone, ref vertices, ref indices, ref modelMeshInstances);
+				rootModelBones.Add(processed);
 			}
+
+			foreach (var bone in rootModelBones)
+			{
+				modelBoneInstances.Add(bone);
+
+				foreach (var child in GetChildren(bone))
+				{
+					modelBoneInstances.Add(child);
+				}
+			}
+
+			ModelBone root = new ModelBone { Name = "AlexModelRoot" };
+
+			foreach (var child in rootModelBones)
+			{
+				root.AddChild(child);
+			}
+			
+			modelBoneInstances.Add(root);
+
+			var vertexBuffer = new VertexBuffer(
+				Alex.Instance.GraphicsDevice, VertexPositionColorTexture.VertexDeclaration, vertices.Count,
+				BufferUsage.WriteOnly);
+
+			vertexBuffer.SetData(vertices.ToArray());
 
 			var indexBuffer = new IndexBuffer(
 				Alex.Instance.GraphicsDevice, IndexElementSize.SixteenBits, indices.Count, BufferUsage.WriteOnly);
+
 			indexBuffer.SetData(indices.ToArray());
 
-			var vertexarray = vertices.ToArray();
-			var vertexBuffer = new VertexBuffer(
-				Alex.Instance.GraphicsDevice, VertexPositionColorTexture.VertexDeclaration, vertexarray.Length,
-				BufferUsage.WriteOnly);
-			
-			vertexBuffer.SetData(vertexarray);
-
-			return new SharedBuffer(vertexBuffer, indexBuffer, bones);
-		}
-
-		public static bool TryGetRenderer(EntityModel model, out EntityModelRenderer renderer)
-		{
+			foreach (var meshInstance in modelMeshInstances)
 			{
-				SharedBuffer tuple = BuildSharedBuffer(model);
-
-				renderer = new EntityModelRenderer();
-				renderer.VisibleBoundsWidth = model.Description.VisibleBoundsWidth;
-				renderer.VisibleBoundsHeight = model.Description.VisibleBoundsHeight;
-				
-				Dictionary<string, ModelBone> clonedBones = new Dictionary<string, ModelBone>(StringComparer.OrdinalIgnoreCase);
-
-				foreach (var bone in tuple.Bones.Where(x => x.Value.Parent == null)) //We only wanna clone the root bones
+				foreach (var part in meshInstance.MeshParts)
 				{
-					if (bone.Value.Clone() is ModelBone boneClone)
-					{
-						clonedBones.Add(bone.Key, boneClone);
-
-						foreach (var child in GetAllChildren(boneClone))
-						{
-							if (!clonedBones.ContainsKey(child.Name))
-								clonedBones.Add(child.Name, child);
-						}
-					}
-				}
-				
-				renderer.Bones = clonedBones;
-				renderer.IndexBuffer = tuple.IndexBuffer;
-				renderer.VertexBuffer = tuple.VertexBuffer;
-
-				return true;
-			}
-		}
-
-		private static IEnumerable<ModelBone> GetAllChildren(ModelBone root)
-		{
-			foreach (var child in root.Children)
-			{
-				if (child is ModelBone modelBone)
-				{
-					yield return modelBone;
-
-					foreach (var subChild in GetAllChildren(modelBone))
-					{
-						yield return subChild;
-					}
-				}
-			}
-		}
-
-		private static bool BuildModel(EntityModel model, Dictionary<string, ModelBone> modelBones, List<VertexPositionColorTexture> vertices, List<short> indices)
-		{
-			//var actualTextureSize = new Vector2(texture.Width, texture.Height);
-
-			int counter = 0;
-			foreach (var bone in model.Bones.Where(x => string.IsNullOrWhiteSpace(x.Parent)))
-			{
-				//if (bone.NeverRender) continue;
-				if (string.IsNullOrWhiteSpace(bone.Name))
-					bone.Name = $"bone{counter++}";
-				
-				if (modelBones.ContainsKey(bone.Name)) continue;
-				
-				var processed = ProcessBone(model, bone, ref vertices, ref indices,  modelBones);
-				
-				if (!modelBones.TryAdd(bone.Name, processed))
-				{
-					Log.Warn($"Failed to add bone! {bone.Name}");
+					part.VertexBuffer = vertexBuffer;
+					part.IndexBuffer = indexBuffer;
 				}
 			}
 
-			if (vertices.Count == 0 || indices.Count == 0)
-			{
-				Log.Debug($"Oh no. Vertices: {vertices.Count} Indices: {indices.Count}");
-				return false;
-			}
+			instance = new Model(modelBoneInstances, modelMeshInstances);
+
+			instance.Root = root;
+			instance.BuildHierarchy();
 
 			return true;
 			//Texture = texture;
 		}
+		
 
 		private static ModelBone ProcessBone(
 			EntityModel source,
 			EntityModelBone bone,
 			ref List<VertexPositionColorTexture> vertices,
 			ref List<short> indices,
-			Dictionary<string, ModelBone> modelBones)
+			ref List<ModelMesh> modelMeshInstances)
 		{
-			ModelBone modelBone = new ModelBone();
-			int           startIndex   = indices.Count;
-			int           elementCount = 0;
+			ModelBone modelBone = new ModelBone()
+			{
+				Name = bone.Name,
+				Rendered = !bone.NeverRender
+			};
+			
 			if (bone.Cubes != null)
 			{
+				List<ModelMeshPart> meshParts = new List<ModelMeshPart>();
 				foreach (var cube in bone.Cubes)
 				{
+					int vertexStart = vertices.Count;
+					int           cubeStartIndex   = indices.Count;
+					
 					if (cube == null)
 					{
 						Log.Warn("Cube was null!");
@@ -254,53 +242,54 @@ namespace Alex.Graphics.Models.Entity
 					ModifyCubeIndexes(ref vertices, ref indices, built.Bottom, matrix);
 					ModifyCubeIndexes(ref vertices, ref indices, built.Left, matrix);
 					ModifyCubeIndexes(ref vertices, ref indices, built.Right, matrix);
+
+					ModelMeshPart part = new ModelMeshPart
+					{
+						StartIndex = cubeStartIndex,
+						PrimitiveCount = (indices.Count - cubeStartIndex) / 3,
+						NumVertices = vertices.Count - vertexStart
+					};
+
+					meshParts.Add(part);
 				}
-				
-				elementCount = indices.Count - startIndex;
-				modelBone.AddMesh(new ModelMesh(startIndex, elementCount / 3));
+
+				var meshInstance = new ModelMesh(Alex.Instance.GraphicsDevice, meshParts)
+				{
+					Name = "Cubes"
+				};
+
+				modelMeshInstances.Add(meshInstance);
+				modelBone.AddMesh(meshInstance);
 			}
 
-			//startIndex, elementCount / 3
-
-			modelBone.Pivot = bone.Pivot;
-			modelBone.Name = bone.Name;
-			modelBone.Rendered = !bone.NeverRender;
-			//modelBone.Rotation = bone.Rotation.GetValueOrDefault(Vector3.Zero);
+			modelBone.Pivot = bone.Pivot.HasValue ?
+				new Vector3(bone.Pivot.Value.X, bone.Pivot.Value.Y, bone.Pivot.Value.Z) : null;
 			
+			modelBone.Rendered = !bone.NeverRender;
 			if (bone.Rotation.HasValue)
 			{
 				var r = bone.Rotation.Value;
-				modelBone.BindingRotation = new Vector3(r.X, r.Y, r.Z);
+				modelBone.BaseRotation = new Vector3(r.X, r.Y, r.Z);
 			}
 			
 			if (bone.BindPoseRotation.HasValue)
 			{
 				var r = bone.BindPoseRotation.Value;
-				modelBone.BindingRotation += new Vector3(r.X, r.Y, r.Z);
+				modelBone.BaseRotation += new Vector3(r.X, r.Y, r.Z);
 				Log.Warn($"Got binding rotation for model: {source.Description.Identifier}");
 			}
-
-			modelBone.ModelVersion = source.FormatVersion;
-
+			
 			foreach (var childBone in source.Bones.Where(
 				x => x.Parent != null && string.Equals(x.Parent, bone.Name, StringComparison.OrdinalIgnoreCase)))
 			{
-				if (childBone.Parent != null && childBone.Parent.Equals(childBone.Name))
+				if (childBone.Parent != null && childBone.Parent.Equals(childBone.Name, StringComparison.OrdinalIgnoreCase))
 					continue;
 
 				if (string.IsNullOrWhiteSpace(childBone.Name))
 					childBone.Name = Guid.NewGuid().ToString();
 				
-				var child = ProcessBone(source, childBone, ref vertices, ref indices, modelBones);
-				//child.Parent = modelBone;
-
+				var child = ProcessBone(source, childBone, ref vertices, ref indices, ref modelMeshInstances);
 				modelBone.AddChild(child);
-				
-				if (!modelBones.TryAdd(childBone.Name, child))
-				{
-					Log.Warn($"Failed to add bone! {childBone.Name}");
-					break;
-				}
 			}
 
 			return modelBone;
@@ -324,99 +313,39 @@ namespace Alex.Graphics.Models.Entity
 				indices.Add((short) listIndex);
 			}
 		}
-		
-		private static readonly RasterizerState _rasterizerState = new RasterizerState()
-		{
-			DepthBias = 0f,
-			CullMode = CullMode.None,
-			FillMode = FillMode.Solid,
-			ScissorTestEnable = false
-		};
-		
-		private static readonly RasterizerState _rasterizerStateCulled = new RasterizerState()
-		{
-			DepthBias = 0f,
-			CullMode = CullMode.CullClockwiseFace,
-			FillMode = FillMode.Solid,
-			ScissorTestEnable = false
-		};
 
 		///  <summary>
 		/// 		Renders the entity model
 		///  </summary>
 		///  <param name="args"></param>
-		///  <param name="useCulling">True if you want the model to use backface culling.</param>
-		///  <param name="effect">The effect to use for rendering</param>
 		///  <param name="worldMatrix">The world matrix</param>
 		///  <returns>The amount of GraphicsDevice.Draw calls made</returns>
-		public virtual int Render(IRenderArgs args, bool useCulling, Microsoft.Xna.Framework.Graphics.Effect effect, Matrix worldMatrix)
+		public virtual int Render(IRenderArgs args, Matrix worldMatrix)
 		{
-			if (Bones == null || VertexBuffer == null || IndexBuffer == null)
-			{
+			var modelInstance = Model;
+
+			if (modelInstance == null)
 				return 0;
-			}
-
-			var originalRaster = args.GraphicsDevice.RasterizerState;
-			var blendState = args.GraphicsDevice.BlendState;
-
-			int counter = 0;
-			try
-			{
-				args.GraphicsDevice.BlendState = BlendState.AlphaBlend;
-				args.GraphicsDevice.RasterizerState = useCulling ? _rasterizerStateCulled : _rasterizerState;
-
-				args.GraphicsDevice.Indices = IndexBuffer;
-				args.GraphicsDevice.SetVertexBuffer(VertexBuffer);
-
-				var newArgs = new AttachedRenderArgs()
-				{
-					Buffer = VertexBuffer,
-					Camera = args.Camera,
-					GameTime = args.GameTime,
-					GraphicsDevice = args.GraphicsDevice,
-					SpriteBatch = args.SpriteBatch
-				};
-				
-				var matrix =  worldMatrix;
-				;
-				foreach (var bone in Bones.Where(x => x.Value.Parent == null))
-				{
-					counter += bone.Value.Render(newArgs, effect,  matrix);
-					//RenderBone(args, bone.Value);
-				}
-			}
-			finally
-			{
-				args.GraphicsDevice.RasterizerState = originalRaster;
-				args.GraphicsDevice.BlendState = blendState;
-			}
-
-			return counter;
+			
+			return modelInstance.Draw(worldMatrix, args.Camera.ViewMatrix, args.Camera.ProjectionMatrix);
 		}
 
-		public Vector3 EntityColor { get; set; } = Color.White.ToVector3();
-		public Vector3 DiffuseColor { get; set; } = Color.White.ToVector3();
-
-		//public float Scale { get; set; } = 1f;
-		
 		public virtual void Update(IUpdateArgs args)
 		{
-			if (Bones == null) return;
+			var model = Model;
+			if (model == null) return;
 
-			foreach (var bone in Bones.Where(x => x.Value.Parent == null))
-			{
-				bone.Value.Update(args);
-			}
+			model.Update(args);
 		}
+
 		public bool GetBone(string name, out ModelBone bone)
 		{
-			if (string.IsNullOrWhiteSpace(name) || Bones == null || Bones.Count == 0)
+			if (Model.Bones.TryGetValue(name, out bone))
 			{
-				bone = null;
-				return false;
+				return true;
 			}
-			
-			return Bones.TryGetValue(name, out bone);
+
+			return false;
 		}
 		
 		public void SetVisibility(string bone, bool visible)
@@ -428,29 +357,23 @@ namespace Alex.Graphics.Models.Entity
 		}
 
 		//private int _instances = 0;
-		private IndexBuffer _indexBuffer;
-		private VertexBuffer _vertexBuffer;
 
 		public void Dispose()
 		{
-			//if (Interlocked.Decrement(ref _instances) == 0)
-			{
-				//Effect?.Dispose();
-
-				//Effect = null;
-				VertexBuffer = null;
-				IndexBuffer = null;
-				//Texture = null;
-			}
-
-			return;
+			Effect?.Dispose();
+			Effect = null;
 		}
 
 		public void ApplyPending()
 		{
-			foreach (var b in Bones)
+			var modelInstance = Model;
+
+			if (modelInstance == null)
+				return;
+			
+			foreach (var b in modelInstance.Bones)
 			{
-				b.Value?.ApplyMovement();
+				b?.ApplyMovement();
 			}
 		}
 	}

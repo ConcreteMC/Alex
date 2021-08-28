@@ -197,7 +197,7 @@ namespace Alex.Worlds.Chunks
 										var newblockState = blockState.Block.BlockPlaced(
 											world, blockState, blockPosition);
 
-										if (blockState != newblockState)
+										if (blockState.ID != newblockState.ID)
 										{
 											blockState = newblockState;
 
@@ -377,7 +377,7 @@ namespace Alex.Worlds.Chunks
 		{
 			bool isInAir = true;
 
-			for (int y = WorldSettings.WorldHeight; y >= WorldSettings.MinY; y--)
+			for (int y = WorldSettings.WorldHeight - 1; y >= WorldSettings.MinY; y--)
 			{
 				{
 					var chunk = GetSection(y);

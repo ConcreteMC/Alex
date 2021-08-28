@@ -6,7 +6,7 @@ namespace Alex.Networking.Java.Packets.Play
 	{
 		public KeepAlivePacket()
 		{
-			PacketId = 0x0F; //Clientbound
+			PacketId = 0x21; //Clientbound
 		}
 
 		public long KeepAliveid;
@@ -20,12 +20,25 @@ namespace Alex.Networking.Java.Packets.Play
 		{
 			stream.WriteLong(KeepAliveid);
 		}
-
-		/// <inheritdoc />
-		protected override void ResetPacket()
+	}
+	
+	public class KeepAliveResponsePacket : Packet<KeepAliveResponsePacket>
+	{
+		public KeepAliveResponsePacket()
 		{
-			base.ResetPacket();
-			PacketId = 0x0F;
+			PacketId = 0x0F; //serverbound
+		}
+
+		public long KeepAliveid;
+
+		public override void Decode(MinecraftStream stream)
+		{
+			KeepAliveid = stream.ReadLong();
+		}
+
+		public override void Encode(MinecraftStream stream)
+		{
+			stream.WriteLong(KeepAliveid);
 		}
 	}
 }

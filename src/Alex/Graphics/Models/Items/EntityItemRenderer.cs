@@ -14,9 +14,8 @@ namespace Alex.Graphics.Models.Items
 		private readonly EntityModelRenderer _entityRenderer;
 		private readonly Texture2D _texture;
 
-		public EntityItemRenderer(string name, EntityModelRenderer entityRenderer, Texture2D texture)
+		public EntityItemRenderer(EntityModelRenderer entityRenderer, Texture2D texture)
 		{
-			Name = name;
 			_entityRenderer = entityRenderer;
 			_texture = texture;
 		}
@@ -44,7 +43,7 @@ namespace Alex.Graphics.Models.Items
 		{
 			try
 			{
-				if (Model.Display.TryGetValue(DisplayPositionHelper.ToString(_displayPosition), out var display))
+				if (ResourcePackModel.Display.TryGetValue(DisplayPositionHelper.ToString(_displayPosition), out var display))
 				{
 					ActiveDisplayItem = display;
 
@@ -58,9 +57,12 @@ namespace Alex.Graphics.Models.Items
             
 			//ActiveDisplayItem = DisplayElement.Default;
 		}
-		
+
 		/// <inheritdoc />
-		public IAttached Parent { get; set; }
+		public Entity.Model Model { get; set; } = null;
+
+		/// <inheritdoc />
+		public IHoldAttachment Parent { get; set; }
 		public Vector3 Scale { get; set; } = new Vector3(1f / 16f, 1f / 16f, 1f / 16f);
 		
 		protected Matrix GetWorldMatrix(DisplayElement activeDisplayItem, Matrix characterMatrix)
@@ -106,9 +108,9 @@ namespace Alex.Graphics.Models.Items
         }
 
 		/// <inheritdoc />
-		public int Render(IRenderArgs args, Microsoft.Xna.Framework.Graphics.Effect effect, Matrix worldMatrix)
+		public int Render(IRenderArgs args, Matrix worldMatrix)
 		{
-			return _entityRenderer.Render(args, true, effect, GetWorldMatrix(ActiveDisplayItem, worldMatrix));
+			return _entityRenderer.Render(args, GetWorldMatrix(ActiveDisplayItem, worldMatrix));
 		}
 
 		/// <inheritdoc />
@@ -116,9 +118,6 @@ namespace Alex.Graphics.Models.Items
 		{
 			_entityRenderer.Update(args);
 		}
-
-		/// <inheritdoc />
-		public string Name { get; }
 
 		/// <inheritdoc />
 		public void AddChild(IAttached modelBone)
@@ -139,7 +138,7 @@ namespace Alex.Graphics.Models.Items
 		}
 
 		/// <inheritdoc />
-		public ResourcePackModelBase Model { get; }
+		public ResourcePackModelBase ResourcePackModel { get; }
 
 		/// <inheritdoc />
 		public bool Cache(ResourceManager pack)
@@ -150,7 +149,7 @@ namespace Alex.Graphics.Models.Items
 		/// <inheritdoc />
 		public IItemRenderer CloneItemRenderer()
 		{
-			return new EntityItemRenderer(Name, _entityRenderer, _texture);
+			return new EntityItemRenderer(_entityRenderer, _texture);
 		}
 
 

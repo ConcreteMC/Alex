@@ -27,10 +27,7 @@ namespace Alex.Entities
 
 		private void Set(EntityModelRenderer renderer, string bone, bool value)
 		{
-			if (renderer.GetBone(bone, out var boneValue))
-			{
-				boneValue.Rendered = value;
-			}
+			renderer.SetVisibility(bone, value);
 		}
 	}
 }

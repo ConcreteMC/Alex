@@ -23,6 +23,13 @@ namespace Alex.Worlds.Abstraction
         IEnumerable<ChunkSection.BlockEntry> GetBlockStates(int positionX, int positionY, int positionZ);
         BlockState GetBlockState(BlockCoordinates position);
 
+        void SetBlockState(int x,
+	        int y,
+	        int z,
+	        BlockState block,
+	        int storage,
+	        BlockUpdatePriority priority = BlockUpdatePriority.High | BlockUpdatePriority.Neighbors);
+
         Biome GetBiome(BlockCoordinates coordinates);
     }
 }

@@ -1,4 +1,5 @@
 using Alex.Blocks.Materials;
+using Alex.Common.Blocks;
 using Alex.Entities.BlockEntities;
 
 namespace Alex.Blocks.Minecraft
@@ -12,6 +13,20 @@ namespace Alex.Blocks.Minecraft
 			base.IsFullCube = true;
 
 			base.BlockMaterial = Material.Glass;
+		}
+
+		/// <inheritdoc />
+		public override bool ShouldRenderFace(BlockFace face, Block other)
+		{
+			/*if (FancyGraphics && other is Glass)
+			{
+				if (face == BlockFace.Up || face == BlockFace.Down)
+				{
+					return true;
+				}
+			}*/
+
+			return base.ShouldRenderFace(face, other);
 		}
 	}
 
@@ -27,6 +42,20 @@ namespace Alex.Blocks.Minecraft
 			base.IsFullCube = true;
 
 			base.BlockMaterial = Material.Glass.Clone().WithMapColor(color.ToMapColor().WithAlpha(64));
+		}
+		
+		/// <inheritdoc />
+		public override bool ShouldRenderFace(BlockFace face, Block other)
+		{
+			if (FancyGraphics && other is StainedGlass stained && stained.Color != Color)
+			{
+				//if (face == BlockFace.Up || face == BlockFace.Down)
+				{
+					return true;
+				}
+			}
+
+			return base.ShouldRenderFace(face, other);
 		}
 	}
 }

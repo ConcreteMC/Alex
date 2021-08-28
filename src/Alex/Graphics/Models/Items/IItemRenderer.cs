@@ -9,17 +9,9 @@ namespace Alex.Graphics.Models.Items
 {
     public interface IItemRenderer : IAttached
     {
-        ResourcePackModelBase Model { get; }
-
-     //   Vector3         Rotation          { get; set; }
-      //  Vector3         Translation       { get; set; }
-      //  Vector3         Scale             { get; set; }
+        ResourcePackModelBase ResourcePackModel { get; }
+        
         DisplayPosition DisplayPosition   { get; set; }
-       // DisplayElement  ActiveDisplayItem { get; set; }
-
-        //void Update(IUpdateArgs args, MCMatrix characterMatrix);
-
-        //void Render(IRenderArgs args, bool mock, out int vertices);
 
         bool Cache(ResourceManager pack);
 

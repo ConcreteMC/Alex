@@ -128,17 +128,46 @@ namespace Alex.Common
 		{
 			sb.Draw(WhiteTexture, rectangle, null, color, 0f, Vector2.Zero, SpriteEffects.None, layerDepth);
 		}
-		
-		public static void RenderBoundingBox(
-			this GraphicsDevice sb,
-			BoundingBox box,
+
+		public static void RenderBox(this GraphicsDevice device,
+			Vector3[] corners,
 			Matrix view,
 			Matrix projection,
-			Color color, bool asCube = false, BasicEffect effect = null)
+			Color color)
+		{
+			var effect = GetEffect(device);
+			
+			effect.View = view;
+			effect.Projection = projection;
+			
+			var oldDiffuse = effect.DiffuseColor;
+			var oldWorld = effect.World;
+			var oldAlpha = effect.Alpha;
+
+
+			for (var i = 0; i < 8; i++)
+			{
+				Verts[i].Position = corners[i];
+				Verts[i].Color = color;
+			}
+
+			foreach (var pass in effect.CurrentTechnique.Passes)
+			{
+				pass.Apply();
+				
+				device.DrawUserIndexedPrimitives(PrimitiveType.LineList, Verts, 0, 8, Indices, 0, Indices.Length / 2);
+			}
+
+			effect.DiffuseColor = oldDiffuse;
+			effect.World = oldWorld;
+			effect.Alpha = oldAlpha;
+		}
+
+		private static BasicEffect GetEffect(GraphicsDevice device)
 		{
 			if (_effect == null)
 			{
-				_effect = new BasicEffect(sb)
+				_effect = new BasicEffect(device)
 				{
 					VertexColorEnabled = true,
 					FogEnabled = false,
@@ -147,8 +176,18 @@ namespace Alex.Common
 				};
 			}
 
+			return _effect;
+		}
+		
+		public static void RenderBoundingBox(
+			this GraphicsDevice sb,
+			BoundingBox box,
+			Matrix view,
+			Matrix projection,
+			Color color, bool asCube = false, BasicEffect effect = null)
+		{
 			if (effect == null)
-				effect = _effect;
+				effect = GetEffect(sb);
 
 			effect.View = view;
 			effect.Projection = projection;

@@ -342,9 +342,10 @@ namespace Alex.Worlds
             chunkDrawCount += ChunkManager.Draw(args, null,
 	            RenderStage.Transparent,
 	            RenderStage.Animated,
-	            RenderStage.Translucent,
+	            RenderStage.Liquid,
+	            RenderStage.Translucent
 	            //RenderStage.Animated,
-	            RenderStage.Liquid);
+	            );
 
             ChunkDrawCount = chunkDrawCount;
 
@@ -803,9 +804,6 @@ namespace Alex.Worlds
 					SetBlockLight(blockCoords, 0);
 				}
 				*/
-				
-				//ChunkManager.SkyLightCalculator.Calculate(blockcoords);
-				//ChunkManager.BlockLightUpdate.Enqueue(blockcoords);
 
 				//if (GetBlockLight(blockCoords) > 0)
 				{
@@ -823,6 +821,8 @@ namespace Alex.Worlds
 				//chunk.IsDirty = true;
 				ChunkManager.ScheduleChunkUpdate(chunkCoords, type, true);
 				
+				ChunkManager.SkyLightCalculator.Calculate(blockcoords);
+				//ChunkManager.BlockLightUpdate.Enqueue(blockcoords);
 				//CheckForUpdate(chunkCoords, cx, cz);
 			}
 		}
@@ -851,7 +851,7 @@ namespace Alex.Worlds
 		private void UpdateNeighbors(int x, int y, int z)
 		{
 			var source = new BlockCoordinates(x, y, z);
-
+			ScheduleBlockUpdate(source);
 			if (Options.VideoOptions.ClientSideLighting && Dimension == Dimension.Overworld)
 			{
 				//ChunkManager.SkyLightCalculator.Calculate(this, source);
@@ -885,12 +885,11 @@ namespace Alex.Worlds
 		
 		private void ScheduleBlockUpdate(BlockCoordinates updatedBlock, BlockCoordinates block)
 		{
-			ScheduleBlockUpdate(block);
 			TickManager.ScheduleTick(() =>
 			{
 				GetBlockState(block).Block.BlockUpdate(this, block, updatedBlock);
 				//GetBlock(block).BlockUpdate(this, block, updatedBlock);
-			}, 1, _cancellationTokenSource.Token);
+			}, 0, _cancellationTokenSource.Token);
 		}
 
 		public IEnumerable<ChunkSection.BlockEntry> GetBlockStates(int x, int y, int z)

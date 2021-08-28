@@ -185,7 +185,7 @@ namespace Alex.Worlds.Chunks
 			try
 			{
 				VertexBuffer buffer = Buffer;
-
+				
 				if (realVertices.Length == 0)
 				{
 					_primitiveCount = 0;

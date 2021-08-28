@@ -13,6 +13,7 @@ using Alex.ResourcePackLib.Json;
 using Alex.ResourcePackLib.Json.Models;
 using Alex.ResourcePackLib.Json.Models.Items;
 using Alex.Utils;
+using FmodAudio;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Newtonsoft.Json;
@@ -20,12 +21,15 @@ using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 using Color = Microsoft.Xna.Framework.Color;
 using MathF = System.MathF;
+using ModelBone = Alex.Graphics.Models.Entity.ModelBone;
+using ModelMesh = Alex.Graphics.Models.Entity.ModelMesh;
+using ModelMeshPart = Alex.Graphics.Models.Entity.ModelMeshPart;
 
 namespace Alex.Graphics.Models.Items
 {
     public class ItemModelRenderer : ItemModelRenderer<VertexPositionColor>
     {
-        public ItemModelRenderer(ResourcePackModelBase model) : base(model,
+        public ItemModelRenderer(ResourcePackModelBase resourcePackModel) : base(resourcePackModel,
             VertexPositionColor.VertexDeclaration)
         {
            
@@ -59,9 +63,9 @@ namespace Alex.Graphics.Models.Items
 
             _cached = true;
             
-            if (!Model.Textures.TryGetValue("layer0", out var texture))
+            if (!ResourcePackModel.Textures.TryGetValue("layer0", out var texture))
             {
-                texture = Model.Textures.FirstOrDefault(x => x.Value != null).Value;
+                texture = ResourcePackModel.Textures.FirstOrDefault(x => x.Value != null).Value;
             }
 
             if (texture == null)
@@ -73,7 +77,7 @@ namespace Alex.Graphics.Models.Items
 
             if (pack.TryGetBitmap(texture, out var bitmap))
             {
-                if (Model.ParentName.Path.Contains("handheld", StringComparison.InvariantCultureIgnoreCase))
+                if (ResourcePackModel.ParentName.Path.Contains("handheld", StringComparison.InvariantCultureIgnoreCase))
                 {
                     bitmap.Mutate(
                         x =>
@@ -112,7 +116,7 @@ namespace Alex.Graphics.Models.Items
                             }
                         }
 
-                        this.Size = new Vector3(16f, 16f, 1f);
+                        this.Size = new Vector3(bitmap.Width * pixelSize.X, bitmap.Height * pixelSize.Y, pixelSize.Z);
                     }
                 }
                 finally
@@ -139,11 +143,11 @@ namespace Alex.Graphics.Models.Items
 
         public override IItemRenderer CloneItemRenderer()
         {
-            return new ItemModelRenderer(Model)
+            return new ItemModelRenderer(ResourcePackModel)
             {
                 Vertices = Vertices != null ? Vertices.Clone() as VertexPositionColor[] : null,
-                Size = Size
-           //     Indexes = Indexes.ToArray()
+                Size = Size,
+                Scale = Scale
             };
         }
     }
@@ -152,7 +156,7 @@ namespace Alex.Graphics.Models.Items
     {
         public Vector3               Size  { get; set; } = Vector3.One;
         
-        public ResourcePackModelBase Model { get; }
+        public ResourcePackModelBase ResourcePackModel { get; }
 
         private DisplayPosition _displayPosition = DisplayPosition.Undefined;
 
@@ -161,13 +165,8 @@ namespace Alex.Graphics.Models.Items
             get => _displayPosition;
             set
             {
-                var oldDisplayPosition = _displayPosition;
                 _displayPosition = value;
-
-                //if (oldDisplayPosition != _displayPosition)
-                {
-                    UpdateDisplay();
-                }
+                UpdateDisplay();
             }
         }
 
@@ -177,12 +176,13 @@ namespace Alex.Graphics.Models.Items
         {
             try
             {
-                if (Model.Display.TryGetValue(DisplayPositionHelper.ToString(_displayPosition), out var display))
+                if (ResourcePackModel.Display.TryGetValue(DisplayPositionHelper.ToString(_displayPosition), out var display))
                 {
                     ActiveDisplayItem = display;
-
-                    return;
                 }
+                
+                UpdateDisplayInfo(_displayPosition, ActiveDisplayItem);
+                
             }
             catch(ArgumentOutOfRangeException)
             {
@@ -192,27 +192,69 @@ namespace Alex.Graphics.Models.Items
             //ActiveDisplayItem = DisplayElement.Default;
         }
 
-        protected virtual TVertice[]  Vertices { get; set; } = null;
-        private   BasicEffect Effect   { get; set; } = null;
-        
-        //public Vector3 Rotation { get; set; } = Vector3.Zero;
-        //public Vector3 Translation { get; set; } = Vector3.Zero;
-        public Vector3 Scale { get; set; } = Vector3.One;
+        protected virtual void UpdateDisplayInfo(DisplayPosition displayPosition, DisplayElement displayElement)
+        {
+            var root = Model?.Root;
 
-        private          VertexBuffer      Buffer { get; set; } = null;
+                if (root != null)
+                {
+                    if (_displayPosition.HasFlag(DisplayPosition.Gui))
+                    {
+                        root.BaseScale = Vector3.One / 16f;
+                        root.BaseRotation = Vector3.Zero;
+                        root.BasePosition = Vector3.Zero;
+                    }
+                    else if (displayPosition.HasFlag(DisplayPosition.Ground))
+                    {
+                        root.Size = null;
+                        root.BaseScale = displayElement.Scale * Scale;
+                        root.BaseRotation = new Vector3(displayElement.Rotation.X, displayElement.Rotation.Y, displayElement.Rotation.Z);
+                        root.BasePosition = new Vector3(displayElement.Translation.X, displayElement.Translation.Y, displayElement.Translation.Z);
+                    }
+                    else
+                    {
+                        root.BaseScale = new Vector3(
+                            ActiveDisplayItem.Scale.X, ActiveDisplayItem.Scale.Y, ActiveDisplayItem.Scale.Z);// ActiveDisplayItem.Scale;
+
+                        root.BaseRotation = new Vector3(
+                            ActiveDisplayItem.Rotation.X, -ActiveDisplayItem.Rotation.Y, -ActiveDisplayItem.Rotation.Z) + new Vector3(-67.5f, 0f, 0f)/* + new Vector3(-67.5f, -22.5f, -10f)*/;
+
+                         root.Size = Size;
+
+                        root.BasePosition = new Vector3(
+                             ((Size.Z / 2f) + ActiveDisplayItem.Translation.X), ActiveDisplayItem.Translation.Y,
+                            ((Size.X / 2f) + ActiveDisplayItem.Translation.Z));
+                       
+                    /*   bool isLeftHand = (DisplayPosition & DisplayPosition.LeftHand) == DisplayPosition.LeftHand;//.HasFlag(DisplayPosition.LeftHand);
+                       var handMultiplier = (isLeftHand ? -1f : 1f);
+                       
+                       var display = ActiveDisplayItem;
+
+                       root.Size = new Vector3(Size.X * handMultiplier, Size.Y* handMultiplier, Size.Z * handMultiplier);
+                       
+                       root.BaseRotation = new Vector3(display.Rotation.X + -67.5f, -(display.Rotation.Y  * handMultiplier), display.Rotation.Z * handMultiplier);
+                       root.BasePosition = new Vector3(display.Translation.X * handMultiplier, -display.Translation.Y, display.Translation.Z);
+                       root.BaseScale = new Vector3(display.Scale.X , display.Scale.Y, display.Scale.Z);*/
+                    }
+                }
+        }
+        
+        protected virtual TVertice[]  Vertices { get; set; } = null;
+        protected   BasicEffect Effect   { get; set; } = null;
+       // public Vector3 Scale { get; set; } = Vector3.One;
+        
         private readonly VertexDeclaration _declaration;
 
-        public ItemModelRenderer(ResourcePackModelBase model, VertexDeclaration declaration)
+        public Entity.Model Model { get; set; } = null;
+        public ItemModelRenderer(ResourcePackModelBase resourcePackModel, VertexDeclaration declaration)
         {
-            Model = model;
+            Scale = 1f;
+            ResourcePackModel = resourcePackModel;
             _declaration = declaration;
         }
-
-        //private Matrix _parentMatrix = Matrix.Identity;
+        
         public void Update(IUpdateArgs args)
         {
-            // _parentMatrix = characterMatrix;
-            
             if (Effect == null)
             {
                 var effect = new BasicEffect(args.GraphicsDevice);
@@ -222,136 +264,73 @@ namespace Alex.Graphics.Models.Items
 
             Effect.Projection = args.Camera.ProjectionMatrix;
             Effect.View = args.Camera.ViewMatrix;
-
-            //Effect.DiffuseColor = diffuseColor;
             
-            if (Buffer == null && Vertices != null)
+            if (Model == null && Vertices != null)
             {
                 var vertices = Vertices;
-               
-                if (vertices.Length == 0)
-                {
-                   // _canInit = false;
-                }
-                else
-                {
-                   // var buffer = GpuResourceManager.GetBuffer(this, args.GraphicsDevice, _declaration,
-                   //     Vertices.Length, BufferUsage.WriteOnly);
-                   var buffer = new VertexBuffer(
-                       args.GraphicsDevice, _declaration, vertices.Length, BufferUsage.WriteOnly);
-                   
-                    buffer.SetData(vertices);
+                
+                var buffer = new VertexBuffer(
+                    args.GraphicsDevice, _declaration, vertices.Length, BufferUsage.WriteOnly);
+                buffer.SetData(vertices);
 
-                    Buffer = buffer;
-                }
+                List<short> indices = new List<short>();
+                for(int i = 0; i < vertices.Length; i++)
+                    indices.Add((short)i);
+
+                var indexBuffer = new IndexBuffer(
+                    Alex.Instance.GraphicsDevice, IndexElementSize.SixteenBits, indices.Count, BufferUsage.WriteOnly);
+                indexBuffer.SetData(indices.ToArray());
+                
+                List<ModelBone> bones = new List<ModelBone>();
+                List<ModelMesh> meshes = new List<ModelMesh>();
+                List<ModelMeshPart> meshParts = new List<ModelMeshPart>();
+
+                var rootBone = new ModelBone
+                {
+                    Name = "ItemRoot"
+                };
+
+                var meshPart = new ModelMeshPart()
+                {
+                    StartIndex = 0,
+                    PrimitiveCount = (indices.Count) / 3,
+                    NumVertices = vertices.Length,
+                    
+                    VertexBuffer = buffer,
+                    IndexBuffer = indexBuffer,
+                    VertexOffset = 0
+                };
+                meshParts.Add(meshPart);
+
+                ModelMesh mesh = new ModelMesh(args.GraphicsDevice, meshParts)
+                {
+                    Name = "Item"
+                };
+                meshPart.Effect = Effect;
+                meshes.Add(mesh);
+                rootBone.AddMesh(mesh);
+                
+                bones.Add(rootBone);
+
+                Entity.Model model = new Entity.Model(bones, meshes);
+                model.Root = rootBone;
+                
+                model.BuildHierarchy();
+
+                Model = model;
+                UpdateDisplay();
             }
-         //   Rotation = knownPosition.ToRotationVector3();
         }
 
         /// <inheritdoc />
-        public IAttached Parent { get; set; } = null;
+        public IHoldAttachment Parent { get; set; } = null;
 
-        protected virtual Matrix GetWorldMatrix(DisplayElement activeDisplayItem, Matrix characterMatrix)
+        public int Render(IRenderArgs args, Matrix characterMatrix)
         {
-            var halfSize          = Size / 2f;
-            
-            var scale = activeDisplayItem.Scale * Scale;
-            var translation = activeDisplayItem.Translation;
-            var rotation = activeDisplayItem.Rotation;
-
-            if (DisplayPosition.HasFlag(DisplayPosition.Gui))
-            {
-                return Matrix.CreateScale(1f/16f) * characterMatrix;
-            }
-
-            if (DisplayPosition.HasFlag(DisplayPosition.ThirdPerson))
-            {
-                if (rotation == Vector3.Zero)
-                {
-                    return Matrix.CreateScale(scale) * MatrixHelper.CreateRotationDegrees(new Vector3(-67.5f, 0f, 0f))
-                                                     * Matrix.CreateTranslation(
-                                                         new Vector3(
-                                                             translation.X + 2f, Size.Y - translation.Y, translation.Z))
-                                                     * characterMatrix;
-                }
-
-                //r.Y += 12.5f;
-                rotation.Z -= 67.5f;
-
-                return Matrix.CreateScale(scale) * Matrix.CreateTranslation(-halfSize)
-                                                 * Matrix.CreateRotationZ(MathUtils.ToRadians(-32.5f))
-                                                 * Matrix.CreateTranslation(halfSize)
-                                                 //* MCMatrix.CreateRotationDegrees(new Vector3(-67.5f, 180f, 0f))
-                                                 * MatrixHelper.CreateRotationDegrees(
-                                                     rotation * new Vector3(1f, -1f, -1f))
-                                                 * Matrix.CreateTranslation(
-                                                     new Vector3(
-                                                         translation.X + 6f, translation.Y + 3f, translation.Z))
-                                                 * characterMatrix;
-
-            }
-
-            if (DisplayPosition.HasFlag(DisplayPosition.FirstPerson))
-            {
-                var firstPersonTranslation = halfSize + translation;
-                
-               return Matrix.CreateScale(scale)
-                               * Matrix.CreateRotationY(MathUtils.ToRadians(180f))
-                               * MatrixHelper.CreateRotationDegrees(rotation)
-                               * Matrix.CreateTranslation(firstPersonTranslation.X, firstPersonTranslation.Y + 3f, firstPersonTranslation.Z)
-                               * characterMatrix;
-            }
-
-            return characterMatrix;
-        }
-        
-        public int Render(IRenderArgs args, Microsoft.Xna.Framework.Graphics.Effect effect, Matrix characterMatrix)
-        {
-            if (Effect == null || Buffer == null || Buffer.VertexCount == 0)
+            if (Effect == null || Model == null)
                 return 0;
-            
-           // halfSize.Z = 0f;
-           // halfSize.Y = 8f;
-            var activeDisplayItem = ActiveDisplayItem;
-            //   world.Right = -world.Right;
 
-            Effect.World = GetWorldMatrix(activeDisplayItem, characterMatrix);
-
-            int drawCount = 0;
-            var original = args.GraphicsDevice.RasterizerState;
-
-            try
-            {
-                // device.RasterizerState = RasterizerState.CullCounterClockwise;
-                var count = Vertices.Length;
-                args.GraphicsDevice.SetVertexBuffer(Buffer);
-
-                count = Math.Min(count, Buffer.VertexCount);
-
-                foreach (var a in Effect.CurrentTechnique.Passes)
-                {
-                    a.Apply();
-
-                    //args.GraphicsDevice.DrawLine( Vector3.Zero, Vector3.UnitY * 16f, Color.Green);
-                    //args.GraphicsDevice.DrawLine(Vector3.Zero, Vector3.UnitZ * 16f, Color.Blue);
-                    //args.GraphicsDevice.DrawLine(Vector3.Zero, Vector3.UnitX * 16f, Color.Red);
-
-                  args.GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, count / 3);
-                    drawCount++;
-                    //device.DrawUserIndexedPrimitives(PrimitiveType.TriangleList, Vertices, 0, Vertices.Length, Indexes, 0, Indexes.Length / 3);
-                }
-            }
-            finally
-            {
-                args.GraphicsDevice.RasterizerState = original;
-
-                if (args is AttachedRenderArgs at)
-                {
-                    args.GraphicsDevice.SetVertexBuffer(at.Buffer);
-                }
-            }
-
-            return drawCount;
+            return Model.Draw(characterMatrix, args.Camera.ViewMatrix, args.Camera.ProjectionMatrix);
         }
 
         protected virtual void InitEffect(BasicEffect effect)
@@ -367,30 +346,12 @@ namespace Alex.Graphics.Models.Items
 
         public virtual IItemRenderer CloneItemRenderer()
         {
-            return new ItemModelRenderer<TVertice>(Model, _declaration)
+            return new ItemModelRenderer<TVertice>(ResourcePackModel, _declaration)
             {
-                Size = this.Size
+                Size = this.Size,
+                Vertices = Vertices != null ? Vertices.Clone() as TVertice[] : null,
+                Scale = Scale
             };
-        }
-
-        public string Name => "Item-Renderer";
-
-        /// <inheritdoc />
-        public void AddChild(IAttached modelBone)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <inheritdoc />
-        public void Remove(IAttached modelBone)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <inheritdoc />
-        IAttached IAttached.Clone()
-        {
-            return CloneItemRenderer();
         }
 
         /// <inheritdoc />

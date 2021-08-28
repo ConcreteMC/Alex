@@ -7,6 +7,7 @@ using Alex.Blocks;
 using Alex.Blocks.State;
 using Alex.Common;
 using Alex.Common.Graphics;
+using Alex.Common.Gui.Elements;
 using Alex.Common.Resources;
 using Alex.Common.Utils;
 using Alex.Common.Utils.Vectors;
@@ -14,6 +15,7 @@ using Alex.Entities;
 using Alex.Gamestates.Common;
 using Alex.Gamestates.InGame;
 using Alex.Graphics.Models.Entity;
+using Alex.Gui;
 using Alex.Gui.Elements;
 using Alex.Gui.Elements.Context3D;
 using Alex.ResourcePackLib;
@@ -76,7 +78,7 @@ namespace Alex.Gamestates.Debugging
 				// Height = 100
 			});
 
-			AddChild(_mainMenu = new StackMenu()
+			_modelExplorerView.AddChild(_mainMenu = new StackMenu()
 			{
 				Margin  = new Thickness(0, 0,  15, 0),
 				Padding = new Thickness(0, 50, 0,  0),
@@ -84,7 +86,7 @@ namespace Alex.Gamestates.Debugging
 				Anchor  = Alignment.FillY | Alignment.MinX,
 
 				ChildAnchor       = Alignment.CenterY | Alignment.FillX,
-				BackgroundOverlay = new Color(Color.Black, 0.35f)
+				BackgroundOverlay = new Color(Color.Black, 0.35f),
 			});
 
 			//_wrap.AddChild(_modelRenderer = new DebugModelRenderer(Alex)
@@ -95,15 +97,14 @@ namespace Alex.Gamestates.Debugging
 			//});
 
 
-
-			_mainMenu.AddMenuItem("Skip",          () => { Task.Run(() => { ModelExplorer.Skip(); }); });
-			_mainMenu.AddMenuItem("Next",          NextModel);
-			_mainMenu.AddMenuItem("Previous",      PrevModel);
-			_mainMenu.AddMenuItem("Switch Models", () =>
+			_mainMenu.AddChild(new AlexButton("Skip", () => { Task.Run(() => { ModelExplorer.Skip(); }); }).ApplyModernStyle());
+			_mainMenu.AddChild(new AlexButton("Next", NextModel).ApplyModernStyle());
+			_mainMenu.AddChild(new AlexButton("Previous", PrevModel).ApplyModernStyle());
+			_mainMenu.AddChild(new AlexButton("Switch Models", () =>
 			{
 				SwitchModelExplorers();
 				_modelExplorerView.ModelExplorer = ModelExplorer;
-			});
+			}).ApplyModernStyle());
 
 			//AddChild(_mainMenu);
 
@@ -149,7 +150,7 @@ namespace Alex.Gamestates.Debugging
 		protected override void OnShow()
 		{
 			base.OnShow();
-			Alex.GuiManager.AddScreen(_debugInfo);
+			//Alex.GuiManager.AddScreen(_debugInfo);
 
 			Alex.IsMouseVisible = true;
 		}
@@ -157,7 +158,7 @@ namespace Alex.Gamestates.Debugging
 		protected override void OnHide()
 		{
 			base.OnHide();
-			Alex.GuiManager.RemoveScreen(_debugInfo);
+			//Alex.GuiManager.RemoveScreen(_debugInfo);
 
 			Alex.IsMouseVisible = false;
 		}
@@ -295,7 +296,7 @@ namespace Alex.Gamestates.Debugging
 		private Alex           Alex           { get; }
 		private World          World          { get; }
 
-		private BasicEffect Effect { get; }
+	//	private BasicEffect Effect { get; }
 		public EntityModelExplorer(Alex alex, World world)
 		{
 			Alex           = alex;
@@ -303,11 +304,6 @@ namespace Alex.Gamestates.Debugging
 			GraphicsDevice = alex.GraphicsDevice;
 
 			_entityDefinitions = alex.Resources.BedrockResourcePack.EntityDefinitions.ToArray();
-			Effect = new BasicEffect(GraphicsDevice)
-			{
-				VertexColorEnabled = true,
-				TextureEnabled = true
-			};
 		}
 
 		private EntityModelRenderer _currentRenderer = null;
@@ -343,7 +339,8 @@ namespace Alex.Gamestates.Debugging
 						if (EntityModelRenderer.TryGetRenderer(model, out renderer))
 						{
 							renderer.Scale = 1f / 16f;
-							Effect.Texture = TextureUtils.BitmapToTexture2D(this, Alex.GraphicsDevice, bmp);  
+							
+							renderer.Effect.Texture = TextureUtils.BitmapToTexture2D(this, Alex.GraphicsDevice, bmp);  
 						}
 					}
 				}
@@ -431,7 +428,7 @@ namespace Alex.Gamestates.Debugging
 		/// <inheritdoc />
 		public override void DrawContext3D(IRenderArgs args, IGuiRenderer guiRenderer)
 		{
-			_currentRenderer?.Render(args, false, Effect, new PlayerLocation(args.Camera.Position, 16f * _rot % 360f, 16f * _rot % 360f, 8f * _rot % 360f).CalculateWorldMatrix());
+			_currentRenderer?.Render(args, new PlayerLocation(args.Camera.Position, 16f * _rot % 360f, 16f * _rot % 360f, 8f * _rot % 360f).CalculateWorldMatrix());
 		}
 	}
 

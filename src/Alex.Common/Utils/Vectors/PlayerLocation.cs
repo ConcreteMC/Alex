@@ -1,4 +1,5 @@
 ﻿using System;
+using Alex.Common.Blocks;
 using Microsoft.Xna.Framework;
 
 namespace Alex.Common.Utils.Vectors
@@ -214,6 +215,37 @@ namespace Alex.Common.Utils.Vectors
 			return Matrix.CreateWorld(ToVector3(), dir, Vector3.Up);
 		}
 
+		public BlockFace GetFacing()
+		{
+			byte direction = (byte)((int)Math.Floor((HeadYaw * 4F) / 360F + 0.5D) & 0x03);
+
+			BlockFace facing = BlockFace.North;
+			switch (direction)
+			{
+				case 0: //East
+					facing = BlockFace.North;
+
+					break;
+
+				case 1: //South
+					facing = BlockFace.East;
+
+					break;
+
+				case 2: //West
+					facing = BlockFace.South;
+
+					break;
+
+				case 3: //North
+					facing = BlockFace.West;
+
+					break;
+			}
+
+			return facing;
+		}
+		
 		public string GetCardinalDirection()
 		{
 			double rotation = (HeadYaw) % 360;

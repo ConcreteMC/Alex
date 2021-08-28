@@ -54,7 +54,7 @@ namespace Alex.Gui.Elements.Inventory
 
         public void DrawContext3D(IRenderArgs args, IGuiRenderer guiRenderer)
         {
-            _itemRenderer?.Render(args, null, Matrix.Identity);
+            _itemRenderer?.Render(args, Matrix.Identity);
         }
 
 

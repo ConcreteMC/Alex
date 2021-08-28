@@ -228,11 +228,7 @@ namespace Alex.Entities
 			{
 				Player.SetFlying(!Player.IsFlying);
 			}
-			else
-			{
-				Log.Warn($"Fly failed: {timeBetween}ms");
-			}
-
+		
 			_lastUp = now;
 		}
 

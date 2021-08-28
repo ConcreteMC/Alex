@@ -78,7 +78,7 @@ namespace Alex.Graphics.Models.Entity
 			Vector2 size)
 		{
 			//Vector3 normal = new Vector3(-1.0f, 0.0f, 0.0f) * Size;
-			Color normal = Model.AdjustColor(DefaultColor, BlockFace.West);
+			Color normal = Models.Model.AdjustColor(DefaultColor, BlockFace.West);
 
 			//var map = GetTextureMapping(uv + new Vector2(Size.Z + Size.X, Size.Z), Size.Z, Size.Y);
 			var map = GetTextureMapping(uv.Origin + size, uv.Size.Value.X, uv.Size.Value.Y);
@@ -103,7 +103,7 @@ namespace Alex.Graphics.Models.Entity
 			Vector2 size)
 		{
 			//Vector3 normal = new Vector3(1.0f, 0.0f, 0.0f) * Size;
-			Color normal = Model.AdjustColor(DefaultColor, BlockFace.East);
+			Color normal = Models.Model.AdjustColor(DefaultColor, BlockFace.East);
 
 			var map = GetTextureMapping(uv.Origin + size, uv.Size.Value.X, uv.Size.Value.Y);
 			//var map = GetTextureMapping(uv + new Vector2(0, Size.Z), Size.Z, Size.Y);
@@ -124,7 +124,7 @@ namespace Alex.Graphics.Models.Entity
 			Vector2 size)
 		{
 			//Vector3 normal = new Vector3(0.0f, 0.0f, 1.0f) * Size;
-			Color normal = Model.AdjustColor(DefaultColor, BlockFace.South);
+			Color normal = Models.Model.AdjustColor(DefaultColor, BlockFace.South);
 
 			var map = GetTextureMapping(uv.Origin + size, uv.Size.Value.X, uv.Size.Value.Y);
 
@@ -148,7 +148,7 @@ namespace Alex.Graphics.Models.Entity
 			Vector2 size)
 		{
 			//Vector3 normal = new Vector3(0.0f, 0.0f, -1.0f) * Size;
-			Color normal = Model.AdjustColor(DefaultColor, BlockFace.North);
+			Color normal = Models.Model.AdjustColor(DefaultColor, BlockFace.North);
 
 			var map = GetTextureMapping(uv.Origin + size, uv.Size.Value.X, uv.Size.Value.Y);
 
@@ -172,7 +172,7 @@ namespace Alex.Graphics.Models.Entity
 			Vector2 size)
 		{
 			//	Vector3 normal = new Vector3(0.0f, 1.0f, 0.0f) * Size;
-			Color normal = Model.AdjustColor(DefaultColor, BlockFace.Up);
+			Color normal = Models.Model.AdjustColor(DefaultColor, BlockFace.Up);
 
 			var map = GetTextureMapping(uv.Origin + size, uv.Size.Value.X, uv.Size.Value.Y);
 
@@ -191,7 +191,7 @@ namespace Alex.Graphics.Models.Entity
 		private (VertexPositionColorTexture[] vertices, short[] indexes) GetBottomVertex(EntityModelUVData uv, Vector2 size)
 		{
 			//	Vector3 normal = new Vector3(0.0f, -1.0f, 0.0f) * Size;
-			Color normal = Model.AdjustColor(DefaultColor, BlockFace.Down);
+			Color normal = Models.Model.AdjustColor(DefaultColor, BlockFace.Down);
 			var   map    = GetTextureMapping(uv.Origin + size, uv.Size.Value.X, uv.Size.Value.Y);
 
 			// Add the vertices for the RIGHT face. 

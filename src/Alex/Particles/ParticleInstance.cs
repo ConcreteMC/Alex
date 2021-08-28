@@ -180,7 +180,7 @@ namespace Alex.Particles
 					{
 						if (ItemFactory.TryGetItem(name, out Item item))
 						{
-							var firstTexture = item.Renderer.Model.Textures.FirstOrDefault();
+							var firstTexture = item.Renderer.ResourcePackModel.Textures.FirstOrDefault();
 
 							if (firstTexture.Value == null)
 							{

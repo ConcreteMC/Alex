@@ -193,7 +193,7 @@ namespace Alex.Items
 
 					if (modelRenderer != null && modelTexture != null)
 					{
-						renderer = new EntityItemRenderer(itemName, modelRenderer, modelTexture);
+						renderer = new EntityItemRenderer(modelRenderer, modelTexture);
 						return true;
 					}
 					else
@@ -264,8 +264,26 @@ namespace Alex.Items
 
 		            if (items.ContainsKey(resourceLocation))
 			            return;
-		           
-		            Item item = new Item();
+		            
+		            IItemRenderer renderer = null;
+		            Item item;
+		            if (!TryGetRenderer(entry.Key, resources, new ResourceLocation(resourceLocation.Namespace, $"item/{resourceLocation.Path}"), out renderer))
+		            {
+						Log.Debug($"No model found for item: {entry.Key}");
+						return;
+		            }
+		            
+		            var bs = BlockFactory.GetBlockState(entry.Key);
+		            if (bs.Block.Renderable)
+		            {
+			            item = new ItemBlock(bs);
+		            }
+		            else
+		            {
+			            item = new Item();
+		            }
+		            
+		           // item = renderer is ItemBlockModelRenderer ? new ItemBlock() : new Item();
 
 		            var minetItem = MiNET.Items.ItemFactory.GetItem(resourceLocation.Path);
 
@@ -283,13 +301,6 @@ namespace Alex.Items
 		            }
 
 		            item.Name = entry.Key;
-		            IItemRenderer renderer = null;
-
-		            if (!TryGetRenderer(entry.Key, resources, new ResourceLocation(resourceLocation.Namespace, $"item/{resourceLocation.Path}"), out renderer))
-		            {
-						Log.Debug($"No model found for item: {entry.Key}");
-						return;
-		            }
 
 		            item.DisplayName = GetDisplayName(resourceLocation);
 

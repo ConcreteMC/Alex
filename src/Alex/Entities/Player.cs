@@ -13,6 +13,8 @@ using Alex.Common.Input;
 using Alex.Common.Items;
 using Alex.Common.Utils;
 using Alex.Common.Utils.Vectors;
+using Alex.Entities.Projectiles;
+using Alex.Gamestates;
 using Alex.Gui.Elements.Map;
 using Alex.Items;
 using Alex.Net;
@@ -205,6 +207,36 @@ namespace Alex.Entities
 		    _skipUpdate = true;
 	    }
 
+	    /// <inheritdoc />
+	    protected override void OnSneakingChanged(bool newValue)
+	    {
+		    if (newValue)
+		    {
+			    Network.EntityAction((int) EntityId, EntityAction.StartSneaking);
+			    Level.Camera.UpdateOffset(new Vector3(0f, -0.15f, 0.35f));
+		    }
+		    else
+		    {
+			    Network.EntityAction((int) EntityId, EntityAction.StopSneaking);
+			    Level.Camera.UpdateOffset(Vector3.Zero);
+		    }
+	    }
+
+	    /// <inheritdoc />
+	    protected override void OnSprintingChanged(bool newValue)
+	    {
+		    if (newValue)
+		    {
+			    FOVModifier = 10;
+			    Network.EntityAction((int) EntityId, EntityAction.StartSprinting);
+		    }
+		    else
+		    {
+			    FOVModifier = 0;
+			    Network.EntityAction((int) EntityId, EntityAction.StopSprinting);
+		    }
+	    }
+
 	    private bool _previousHasActiveDialog = false;
 	    public Biome CurrentBiome { get; private set; }
 	    public override void Update(IUpdateArgs args)
@@ -233,9 +265,6 @@ namespace Alex.Entities
 
 		    CurrentBiome = Level.GetBiome(RenderLocation.GetCoordinates3D());
 		    
-		    bool sprint = IsSprinting;
-		    bool sneak  = IsSneaking;
-
 		    if (!CanFly && IsFlying)
 			    IsFlying = false;
 
@@ -246,31 +275,6 @@ namespace Alex.Entities
 		    
 		    Controller.Update(args.GameTime);
 		    //KnownPosition.HeadYaw = KnownPosition.Yaw;
-
-		    if (IsSprinting && !sprint)
-		    {
-			    FOVModifier = 10;
-			    Network.EntityAction((int) EntityId, EntityAction.StartSprinting);
-		    }
-		    else if (!IsSprinting && sprint)
-		    {
-			    FOVModifier = 0;
-			    Network.EntityAction((int) EntityId, EntityAction.StopSprinting);
-		    }
-
-		    if (IsSneaking != sneak)
-		    {
-			    if (IsSneaking)
-			    {
-				    Network.EntityAction((int) EntityId, EntityAction.StartSneaking);
-				    Level.Camera.UpdateOffset(new Vector3(0f, -0.15f, 0.35f));
-			    }
-			    else
-			    {
-				    Network.EntityAction((int) EntityId, EntityAction.StopSneaking);
-				    Level.Camera.UpdateOffset(Vector3.Zero);
-			    }
-		    }
 
 		    //	DoHealthAndExhaustion();
 
@@ -360,12 +364,10 @@ namespace Alex.Entities
 							    StartBreakingBlock();
 						    }
 					    }
-					    else
+					    else if (didLeftClick)
 					    {
-						    if (didLeftClick)
-						    {
-							    HandleLeftClick(IsLeftHanded ? Inventory.OffHand : Inventory.MainHand, IsLeftHanded ? 1 : 0);
-						    }
+						    HandleLeftClick(
+							    IsLeftHanded ? Inventory.OffHand : Inventory.MainHand, IsLeftHanded ? 1 : 0);
 					    }
 				    }
 				   
@@ -379,7 +381,7 @@ namespace Alex.Entities
 				    if (item != null)
 				    {
 					    handledClick = HandleClick(
-						    item, IsLeftHanded ? 1 : 0, Inventory.HotbarOffset + Inventory.SelectedSlot);
+						    item, IsLeftHanded ? 1 : 0, IsLeftHanded ? Inventory.OffHandSlot : (Inventory.HotbarOffset + Inventory.SelectedSlot));
 				    }
 
 				    /*if (!handledClick && Inventory.OffHand != null && !(Inventory.OffHand is ItemAir))
@@ -417,6 +419,9 @@ namespace Alex.Entities
 
 	    private void InteractWithEntity(Entity entity, bool attack, int hand, Vector3 cursorPosition)
 	    {
+		    if ((entity is ItemEntity))
+			    return;
+		    
 		    SwingArm(true);
 		    
 		    bool canAttack = true;
@@ -700,8 +705,13 @@ namespace Alex.Entities
             var remainder = new Vector3(adjacent.X - flooredAdj.X, adjacent.Y - flooredAdj.Y, adjacent.Z - flooredAdj.Z);
 
             Network?.PlayerDigging(DiggingStatus.Started, floored, face, remainder);
-            
+
             Level?.AddOrUpdateBlockBreak(_destroyingTarget, _destroyTimeNeeded);
+
+            if ((Gamemode == GameMode.Creative))
+            {
+	            StopBreakingBlock(true, false);
+            }
         }
 
 	    private void StopBreakingBlock(bool sendToServer = true, bool forceCanceled = false)
@@ -783,13 +793,13 @@ namespace Alex.Entities
 			    var existingBlockState = Level.GetBlockState(coordR);
 			    var existingBlock = existingBlockState.Block;
 
-			    if (existingBlock.CanInteract && ((!(slot is ItemBlock) || isLeftClick) || IsSneaking))
+			    if (existingBlock.CanInteract && (!isLeftClick && !IsSneaking))
 			    {
 				    if (!existingBlock.Interact(this, slot, remainder))
 				    {
 					    Network?.WorldInteraction(this, coordR, face, hand, inventorySlot, remainder);
+					    Log.Info($"Sending world interaction. Block={existingBlock} Face={face} Coordinates={coordR}");
 				    }
-
 				    return true;
 			    }
 
@@ -797,7 +807,7 @@ namespace Alex.Entities
 			    {
 				    BlockState blockState = ib.Block;
 
-				    if (blockState != null && !(blockState.Block is Air) && HasRaytraceResult)
+				    if (blockState != null && !slot.IsAir())
 				    {
 					    BlockCoordinates target;
 					    if (existingBlock.BlockMaterial.IsReplaceable)
@@ -811,16 +821,30 @@ namespace Alex.Entities
 					    
 					    if (CanPlaceBlock(target, (Block) blockState.Block))
 					    {
-						    Level.SetBlockState(target, blockState);
-						    Network?.BlockPlaced(coordR, face, hand, inventorySlot, remainder, this);
-						    
-						    return true;
+						    blockState = blockState.Block.PlaceBlock(Level, this, target, face, remainder);
+
+						    if (blockState != null)
+						    {
+							    Level.SetBlockState(target, blockState);
+							    Network?.BlockPlaced(coordR, face, hand, inventorySlot, remainder, this);
+							    Log.Warn($"Placing block: {coordR} -> {blockState.Name}");
+
+							    return true;
+						    }
+					    }
+					    else
+					    {
+						    Log.Warn($"Tried placing invalid");
 					    }
 				    }
 			    }
+			    else
+			    {
+				    Log.Warn($"Can ModifyWorld: {canModifyWorld} | IsLeftClick={isLeftClick} | ItemBlock={slot.Name} | ItemType={slot.GetType()}");
+			    }
 		    }
 
-		    if (!(slot is ItemAir) && slot.Id > 0 && slot.Count > 0)
+		    if (!slot.IsAir()  && slot.Id > 0 && slot.Count > 0)
 		    {
 			    ItemUseAction action;
 
@@ -834,7 +858,7 @@ namespace Alex.Entities
 			    }
 
 			    Network?.UseItem(slot, hand, action, coordR, face, remainder);
-
+			    Log.Info($"Using item");
 			    return true;
 		    }
 
@@ -926,8 +950,14 @@ namespace Alex.Entities
 
 			    if (renderer != null)
 			    {
-				    renderCount += renderer.Render(
-					    renderArgs, null, Matrix.CreateScale(Scale / 16f) * RenderLocation.CalculateWorldMatrix());
+				    renderer.Update(new UpdateArgs()
+				    {
+					    Camera = renderArgs.Camera,
+					    GameTime = renderArgs.GameTime,
+					    GraphicsDevice = renderArgs.GraphicsDevice
+				    });
+				    //renderCount += renderer.Render(
+					//    renderArgs,Matrix.CreateScale((1f / 16f) * Scale) * RenderLocation.CalculateWorldMatrix());
 			    }
 		    }
 		    else
@@ -937,7 +967,7 @@ namespace Alex.Entities
 			    if (renderer != null)
 			    {
 				    renderCount += renderer.Render(
-					    renderArgs, useCulling, Effect,
+					    renderArgs,
 					    Matrix.CreateScale((1f / 16f) * Scale) * RenderLocation.CalculateWorldMatrix());
 			    }
 		    }

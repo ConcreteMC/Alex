@@ -41,7 +41,7 @@ namespace Alex.Gui.Elements.Inventory
         private void ItemChanged(Item old, Item newItem)
         {
             var renderer = newItem.Renderer;
-            if (renderer == null || renderer.Model == null)
+            if (renderer == null || renderer.ResourcePackModel == null)
             {
                 Log.Warn($"Could not find renderer for hotbar item: {newItem.Name}");
                 return;
@@ -55,7 +55,7 @@ namespace Alex.Gui.Elements.Inventory
             //_item.Renderer.Translation = new Vector3(1.13f, 3.2f, 1.13f);
             //_item.Renderer.Scale = new Vector3(0.5f);
 
-            var itemModel = renderer.Model;
+            var itemModel = renderer.ResourcePackModel;
            /* if (itemModel.Display.TryGetValue("firstperson_righthand", out var value))
             {
                 renderer.Rotation = value.Rotation;
@@ -156,7 +156,7 @@ namespace Alex.Gui.Elements.Inventory
 
                     graphics.Begin();
 
-                    Item.Renderer.Render(renderArgs, null, Matrix.Identity);
+                    Item.Renderer.Render(renderArgs, Matrix.Identity);
                    // Entity.Render(renderArgs);
                     //  EntityModelRenderer?.Render(renderArgs, EntityPosition);
 

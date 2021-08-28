@@ -71,23 +71,24 @@ namespace Alex.Entities
 			_idToData = networkIdToData;
         }
 
-		public static bool ModelByNetworkId(long networkId, out EntityModelRenderer renderer, out EntityData data)
+		public static bool ModelByNetworkId(long networkId, out EntityData data)
 		{
 			if (_idToData.TryGetValue(networkId, out data))
 			{
-				renderer = TryGetRendererer(data);
-				if (renderer != null)
-				{
-					return true;
-                }
-				else
-				{
+				return true;
+				//renderer = TryGetRendererer(data);
+				//if (renderer != null)
+				//{
+				//	return true;
+				//}
+				//else
+				//{
 				//	if (data.OriginalName.Equals("armor_stand"))
-						//Log.Warn($"No entity model renderer found for {data.Name} - {data.OriginalName}");
-				}
+				//Log.Warn($"No entity model renderer found for {data.Name} - {data.OriginalName}");
+				//}
 			}
 
-			renderer = null;
+		//	renderer = null;
 			return false;
 		}
 
@@ -649,132 +650,78 @@ namespace Alex.Entities
 
 			//var stringId = entityType.ToStringId();
 			var resources = Alex.Instance.Resources;
-			if (resources.TryGetEntityDefinition(
-				entityType, out var description, out var resourcePack))
-			{
-				var modelRenderer = GetEntityRenderer(
-					description.Identifier);
-				
-				if (modelRenderer == null)
-				{
-					Log.Warn($"Missing entity renderer: {entityType}");
-					return null;
-				}
 
+			if (resources.TryGetEntityDefinition(entityType, out var description, out var resourcePack))
+			{
 				if (entity == null)
 				{
 					//Log.Warn($"No entity implementation found, falling back to Alex.Entities.Entity for: {entityType}");
 					entity = new Entity(world);
 				}
 
-				if (initRenderController)
-				{
-					entity.AnimationController.UpdateEntityDefinition(resourcePack, description);
-				}
-
-				entity.ModelRenderer = modelRenderer;
-				
-				
-				//Texture2D texture2D = null;
-				//if (renderer == null || texture2D == null)
-				{
-					if (description.Geometry.TryGetValue("default", out var defaultGeometry) 
-					    && ModelFactory.TryGetModel(defaultGeometry, out var model) && model != null)
+				world.BackgroundWorker.Enqueue(
+					() =>
 					{
-						var textures = description.Textures;
-						string texture;
-
-						if (!(textures.TryGetValue("default", out texture)
-						      || textures.TryGetValue(description.Identifier, out texture)))
+						if (initRenderController)
 						{
-							texture = textures.FirstOrDefault().Value;
+							entity.AnimationController.UpdateEntityDefinition(resourcePack, description);
 						}
 
-						if (!_pooledTextures.TryGetValue(texture, out var texture2D))
+						var modelRenderer = GetEntityRenderer(description.Identifier);
+
+						if (modelRenderer == null)
 						{
-							if (resourcePack.TryGetBitmap(texture, out var bmp))
+							Log.Warn($"Missing entity renderer: {entityType}");
+						}
+
+						entity.ModelRenderer = modelRenderer;
+
+
+						//Texture2D texture2D = null;
+						//if (renderer == null || texture2D == null)
+						{
+							if (description.Geometry.TryGetValue("default", out var defaultGeometry)
+							    && ModelFactory.TryGetModel(defaultGeometry, out var model) && model != null)
 							{
-								Alex.Instance.UiTaskManager.Enqueue(
-									() =>
+								var textures = description.Textures;
+								string texture;
+
+								if (!(textures.TryGetValue("default", out texture) || textures.TryGetValue(
+									description.Identifier, out texture)))
+								{
+									texture = textures.FirstOrDefault().Value;
+								}
+
+								if (!_pooledTextures.TryGetValue(texture, out var texture2D))
+								{
+									if (resourcePack.TryGetBitmap(texture, out var bmp))
 									{
-										texture2D = TextureUtils.BitmapToTexture2D(entity, Alex.Instance.GraphicsDevice, bmp);
-										texture2D.Tag = EntityFactory.PooledTagIdentifier;
+										Alex.Instance.UiTaskManager.Enqueue(
+											() =>
+											{
+												texture2D = TextureUtils.BitmapToTexture2D(
+													entity, Alex.Instance.GraphicsDevice, bmp);
 
-										texture2D.Disposing += (sender, args) =>
-										{
-											_pooledTextures.TryRemove(texture, out _);
-										};
-										
-										_pooledTextures.TryAdd(
-											texture, texture2D);
+												texture2D.Tag = EntityFactory.PooledTagIdentifier;
 
-										entity.Texture = texture2D;
-									});
+												texture2D.Disposing += (sender, args) =>
+												{
+													_pooledTextures.TryRemove(texture, out _);
+												};
+
+												_pooledTextures.TryAdd(texture, texture2D);
+
+												entity.Texture = texture2D;
+											});
+									}
+								}
+								else
+								{
+									entity.Texture = texture2D;
+								}
 							}
 						}
-						else
-						{
-							entity.Texture = texture2D;
-						}
-						
-						/*texture2D = _pooledTextures.GetOrAdd(
-							texture, s =>
-							{
-								Texture2D pooled = null;
-
-								Image<Rgba32> bmp;
-								if (resourcePack.TryGetBitmap(s, out bmp))
-								{
-									pooled = TextureUtils.BitmapToTexture2D(entity,
-										Alex.Instance.GraphicsDevice, bmp);
-								}
-								//if (Alex.Instance.Resources.TryGetBedrockBitmap(
-								//	s, out var bmp))
-								//{
-								//	pooled = TextureUtils.BitmapToTexture2D(entity,
-								//		Alex.Instance.GraphicsDevice, bmp);
-								//}
-								//else if (Alex.Instance.Resources.TryGetBitmap(s, out var bmp2))
-								//{
-								//	pooled = TextureUtils.BitmapToTexture2D(entity, Alex.Instance.GraphicsDevice, bmp2);
-								//}
-
-								if (pooled != null)
-								{
-									pooled.Tag = PooledTagIdentifier;
-									pooled.Disposing += (sender, args) =>
-									{
-										//if (_pooledTextures.TryRemove(s, out var p2))
-										{
-											//p2?.MarkForDisposal();
-										}
-									};
-								}
-
-								//pooled?.Use();
-								return pooled;
-							});*/
-						
-					/*	if (Alex.Instance.Resources.TryGetBedrockBitmap(
-							texture, out var bmp))
-						{
-							texture2D = TextureUtils.BitmapToTexture2D(entity,
-								Alex.Instance.GraphicsDevice, bmp);
-						}
-						else if (Alex.Instance.Resources.TryGetBitmap(texture, out var bmp2))
-						{
-							texture2D = TextureUtils.BitmapToTexture2D(entity, Alex.Instance.GraphicsDevice, bmp2);
-						}*/
-
-						//renderer = new EntityModelRenderer(model);
-					}
-				}
-
-				//if (texture2D != null)
-				{
-					//texture2D.Use();
-					//entity.Texture = texture2D;
-				}
+					});
 			}
 
 			return entity;

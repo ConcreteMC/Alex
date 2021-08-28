@@ -181,6 +181,15 @@ namespace Alex.Blocks.Minecraft
 				}
 			}
 		}
+
+		public virtual BlockState PlaceBlock(World world,
+			Player player,
+			BlockCoordinates position,
+			BlockFace face,
+			Vector3 cursorPosition)
+		{
+			return BlockState;
+		}
 		
 		/// <summary>
 		///		Calculates the required tick time for this block to break.

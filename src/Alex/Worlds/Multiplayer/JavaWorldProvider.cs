@@ -441,6 +441,17 @@ namespace Alex.Worlds.Multiplayer
 					       || _disconnected; // Spawned || _disconnected;
 				});
 
+			if (ReadyToSpawn && HasSpawnPosition)
+			{
+				
+				SendPlayerPositionAndLook(World.Player.KnownPosition, SendPositionReason.Server);
+				
+				ClientStatusPacket clientStatus = ClientStatusPacket.CreateObject();
+				clientStatus.ActionID = ClientStatusPacket.Action.PerformRespawnOrConfirmLogin;
+				SendPacket(clientStatus);
+
+			}
+			
 			World.Player.OnSpawn();
 
 			World.Player.Inventory.CursorChanged += InventoryOnCursorChanged;
@@ -495,7 +506,7 @@ namespace Alex.Worlds.Multiplayer
 			
 			Entity entity = null;
 			EntityModel model;
-			if (EntityFactory.ModelByNetworkId((long) type, out var renderer, out EntityData knownData))
+			if (EntityFactory.ModelByNetworkId((long) type, out EntityData knownData))
 			{
 				/*type = MiNET.Entities.EntityHelpers.ToEntityType($"minecraft:{knownData.Name}");
 
@@ -504,15 +515,10 @@ namespace Alex.Worlds.Multiplayer
 				else if (knownData.Name.Equals("fox"))
 					type = (EntityType) 121;
 */
-				entity = EntityFactory.Create($"minecraft:{knownData.Name}", null, type != EntityType.ArmorStand && type != EntityType.PrimedTnt);
-				
+				entity = EntityFactory.Create($"minecraft:{knownData.Name}", World, type != EntityType.ArmorStand && type != EntityType.PrimedTnt);
 
 				if (entity == null)
-				{
-					Log.Warn($"Could not map entity: {knownData.Name}");
-					entity = new Entity(null);
-				}
-
+					entity = new LivingEntity(World);
 				//if (knownData.Height)
 				{
 					entity.Height = knownData.Height;
@@ -533,22 +539,22 @@ namespace Alex.Worlds.Multiplayer
 				return null;
 			}
 
-			if (renderer == null)
-			{
-				Log.Debug($"Missing renderer for entity: {type.ToString()} ({(int) type})");
-
-				return null;
-			}
+		//	if (renderer == null)
+		//	{
+		//		Log.Debug($"Missing renderer for entity: {type.ToString()} ({(int) type})");
+//
+		//		return null;
+		//	}
 			
-			if (entity.Texture == null)
-			{
+		//	if (entity.Texture == null)
+		//	{
 				
-				Log.Debug($"Missing texture for entity: {type.ToString()} ({(int) type})");
+		//		Log.Debug($"Missing texture for entity: {type.ToString()} ({(int) type})");
 
-				return null;
-			}
+		//		return null;
+		//	}
 
-			entity.ModelRenderer = renderer;
+			//entity.ModelRenderer = renderer;
 
 			entity.KnownPosition = position;
 			entity.Velocity = velocity;
@@ -1946,18 +1952,24 @@ namespace Alex.Worlds.Multiplayer
 			//var chunk = get
 			foreach (var blockUpdate in packet.Records)
 			{
+				var pos = new BlockCoordinates(blockUpdate.X, blockUpdate.Y, blockUpdate.Z);
+				var state = BlockFactory.GetBlockState(blockUpdate.BlockId);
+				
+				//Log.Info($"Received blockupdates ({packet.Records.Length})! Coord={pos} State={state.FormattedString}");
 				World?.SetBlockState(
-					new BlockCoordinates(blockUpdate.X, blockUpdate.Y, blockUpdate.Z), 
-					BlockFactory.GetBlockState(blockUpdate.BlockId),
-					BlockUpdatePriority.High | BlockUpdatePriority.Network  | BlockUpdatePriority.Neighbors);
+					pos, 
+					state,
+					BlockUpdatePriority.High);
 			}
 		}
 
 		private void HandleBlockChangePacket(BlockChangePacket packet)
 		{
+			var state = BlockFactory.GetBlockState(packet.PalleteId);
+			//Log.Info($"Received blockupdate. Pos={packet.Location}, State={state.FormattedString}");
 			//throw new NotImplementedException();
-			World?.SetBlockState(packet.Location, BlockFactory.GetBlockState(packet.PalleteId), 
-				BlockUpdatePriority.High | BlockUpdatePriority.Network | BlockUpdatePriority.Neighbors);
+			World?.SetBlockState(packet.Location, state, 
+				BlockUpdatePriority.High);
 		}
 
 		private void HandleHeldItemChangePacket(HeldItemChangePacket packet)
@@ -2535,10 +2547,10 @@ namespace Alex.Worlds.Multiplayer
 
         private void HandleKeepAlivePacket(KeepAlivePacket packet)
         {
-	        //Log.Info($"Keep alive: {packet.KeepAliveid}");
-	        KeepAlivePacket response =  KeepAlivePacket.CreateObject();
+	      //  Log.Info($"Keep alive: {packet.KeepAliveid}");
+	        KeepAliveResponsePacket response =   KeepAliveResponsePacket.CreateObject();
 			response.KeepAliveid = packet.KeepAliveid;
-			response.PacketId = 0x0F;
+				//response.PacketId = 0x0F;
 			//response.PacketId = 0x0E;
 
 			SendPacket(response);
@@ -2607,12 +2619,6 @@ namespace Alex.Worlds.Multiplayer
 			{
 				Log.Info($"Ready to spawn!");
 				
-				SendPlayerPositionAndLook(World.Player.KnownPosition, SendPositionReason.Server);
-				
-				ClientStatusPacket clientStatus = ClientStatusPacket.CreateObject();
-				clientStatus.ActionID = ClientStatusPacket.Action.PerformRespawnOrConfirmLogin;
-				SendPacket(clientStatus);
-				
 				//World.Player.IsSpawned = true;
 				ReadyToSpawn = true;
 			}
@@ -2663,43 +2669,50 @@ namespace Alex.Worlds.Multiplayer
 
 		private void HandleSpawnEntity(SpawnEntity packet)
 		{
-
+			var pos = new PlayerLocation(packet.X, packet.Y, packet.Z, packet.Yaw, packet.Yaw, packet.Pitch);
 			var velocity = Vector3.Zero;
+			var uuid = packet.Uuid;
+			var entityId = packet.EntityId;
+			var entityType = (EntityType)packet.Type;
 
 			if (packet.Data > 0)
 			{
 				velocity = ModifyVelocity(new Vector3(packet.VelocityX, packet.VelocityY, packet.VelocityZ));
 			}
 
-			var mob = SpawnMob(
-				packet.EntityId, packet.Uuid, (EntityType) packet.Type, new PlayerLocation(
-					packet.X, packet.Y, packet.Z, packet.Yaw, packet.Yaw, packet.Pitch)
-				{
-					//	OnGround = packet.SpawnMob
-				}, velocity);
+			//World.BackgroundWorker.Enqueue(
+			//	() =>
+			//	{
 
+					var mob = SpawnMob(entityId, uuid, entityType, pos, velocity);
 
-			if (mob is EntityFallingBlock efb)
-			{
-				//32
-				var blockId = packet.Data << 12 >> 12;
-				var metaData = packet.Data >> 12;
+					if (mob is EntityFallingBlock efb)
+					{
+						//32
+						var blockId = packet.Data << 12 >> 12;
+						var metaData = packet.Data >> 12;
 
-				if (ItemFactory.TryGetItem((short) blockId, (short) metaData, out var item))
-				{
-					efb.SetItem(item);
-				}
-			}
+						if (ItemFactory.TryGetItem((short)blockId, (short)metaData, out var item))
+						{
+							efb.SetItem(item);
+						}
+					}
+			//	});
 		}
 
 		private void HandleSpawnLivingEntity(SpawnLivingEntity packet)
 		{
-			SpawnMob(
-				packet.EntityId, packet.Uuid, (EntityType) packet.Type, new PlayerLocation(
-					packet.X, packet.Y, packet.Z, packet.Yaw, packet.Yaw, packet.Pitch)
-				{
-					//	OnGround = packet.SpawnMob
-				}, ModifyVelocity(new Vector3(packet.VelocityX, packet.VelocityY, packet.VelocityZ)));
+			var pos = new PlayerLocation(packet.X, packet.Y, packet.Z, packet.Yaw, packet.Yaw, packet.Pitch);
+			var velocity = ModifyVelocity(new Vector3(packet.VelocityX, packet.VelocityY, packet.VelocityZ));
+			var uuid = packet.Uuid;
+			var entityId = packet.EntityId;
+			var entityType = (EntityType)packet.Type;
+			//World.BackgroundWorker.Enqueue(
+			//	() =>
+			//	{
+					SpawnMob(
+						entityId, uuid, entityType, pos, velocity);
+			//	});
 
 		}
 

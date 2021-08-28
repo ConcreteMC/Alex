@@ -6,6 +6,8 @@ using System.Text;
 using System.Threading;
 using Alex.Common.Utils;
 using Alex.Common.Utils.Vectors;
+using Alex.Gamestates;
+using Alex.Graphics.Camera;
 using Alex.Graphics.Models.Entity;
 using Alex.Graphics.Models.Items;
 using Alex.Net;
@@ -364,12 +366,11 @@ namespace Alex.Entities
 
 					if (EntityModelRenderer.TryGetRenderer(model, out var renderer))
 					{
-						ModelRenderer = renderer;
-
 						if (skinBitmap != null)
 						{
 							Texture = TextureUtils.BitmapToTexture2D(this, Alex.Instance.GraphicsDevice, skinBitmap);
 						}
+						ModelRenderer = renderer;
 					}
 					else
 					{
@@ -389,11 +390,18 @@ namespace Alex.Entities
 		}
 
 		/// <inheritdoc />
-		protected override void UpdateItemPosition(IItemRenderer renderer)
+		protected override void UpdateItemPosition(IItemRenderer oldValue, IItemRenderer renderer)
 		{
+			var primaryArm = GetPrimaryArm();
+			if (oldValue != renderer)
+			{
+				primaryArm?.Remove(oldValue);
+			}
+
 			if (renderer == null)
 				return;
-			
+
+			//oldValue?.Parent?.Remove(oldValue);
 			var pos = renderer.DisplayPosition;
 			//if (pos.HasFlag(DisplayPosition.FirstPerson) || pos.HasFlag(DisplayPosition.ThirdPerson))
 			{
@@ -432,6 +440,19 @@ namespace Alex.Entities
 				}
 
 				renderer.DisplayPosition = pos;
+			}
+
+			if (oldValue != renderer)
+			{
+				renderer.Update(
+					new UpdateArgs()
+					{
+						Camera = new Camera(),
+						GameTime = new GameTime(),
+						GraphicsDevice = Alex.Instance.GraphicsDevice
+					});
+
+				primaryArm?.AddChild(renderer);
 			}
 		}
 

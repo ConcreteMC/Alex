@@ -72,7 +72,7 @@ namespace Alex.Entities
 			if (itemRenderer == null)
 				return 0;
 			
-			return itemRenderer.Render(renderArgs, null, Matrix.Identity * Matrix.CreateScale(Scale)
+			return itemRenderer.Render(renderArgs, Matrix.Identity * Matrix.CreateScale(Scale)
 			                                                             * Matrix.CreateRotationY(MathHelper.ToRadians(KnownPosition.Yaw))
 			                                                             * Matrix.CreateTranslation(KnownPosition.ToVector3()));
 		}

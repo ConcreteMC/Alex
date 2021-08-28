@@ -197,45 +197,18 @@ namespace Alex.Gamestates
             {
                 if (EntityModelRenderer.TryGetRenderer(Alex.PlayerModel, out var renderer))
                 {
+                    entity.Texture = TextureUtils.BitmapToTexture2D(this, Alex.GraphicsDevice, Alex.PlayerTexture);
                     entity.ModelRenderer = renderer;
-                    entity.Texture = TextureUtils.BitmapToTexture2D(this, Alex.GraphicsDevice, Alex.PlayerTexture);  
                 }
-            }
-        }
-
-        private void PlayerProfileServiceOnProfileChanged(object sender, PlayerProfileChangedEventArgs e)
-        {
-            if (e.Profile?.Skin?.Texture != null)
-            {
-                _playerView.Entity = new RemotePlayer(null,
-                    e.Profile.Skin.Slim ? "geometry.humanoid.customSlim" : "geometry.humanoid.custom");
-                _playerView.Entity.SetInventory(new BedrockInventory(46));
-
-                if (ItemFactory.TryGetItem("minecraft:diamond_sword", out var sword))
-                {
-                    _playerView.Entity.Inventory.MainHand = sword;
-                }
-
-                ApplyModel(_playerView.Entity);
             }
         }
 
         protected override void OnLoad(IRenderArgs args)
         {
-            Skin skin = _profileManager?.CurrentProfile?.Skin;
-            if (skin == null)
-            {
-                Alex.Resources.TryGetBitmap("entity/alex", out var rawTexture);
-                skin = new Skin()
-                {
-                    Slim = true,
-                    Texture = TextureUtils.BitmapToTexture2D(this, Alex.GraphicsDevice, rawTexture)
-                };
-            }
-
             var entity = new RemotePlayer(null);
             entity.RenderLocation = new PlayerLocation(Vector3.Zero, 180f, 180f);
-
+            ApplyModel(entity);
+            
             AddChild(_playerView =
                 new GuiEntityModelView(
                     entity)
@@ -267,15 +240,11 @@ namespace Alex.Gamestates
             Alex.IsMouseVisible = true;
 
             Alex.GameStateManager.AddState("serverlist", new MultiplayerServerSelectionState(_backgroundSkyBox));
-            //Alex.GameStateManager.AddState("profileSelection", new ProfileSelectionState(_backgroundSkyBox));
-
-            //ApplyModel(_playerView.Entity);
         }
 
         private void ChangeSKinBtnPressed()
         {
             Alex.GameStateManager.SetActiveState(new SkinSelectionState(_backgroundSkyBox, Alex), true);
-            //Alex.GameStateManager.SetActiveState(new ProfileSelectionState(_backgroundSkyBox, Alex), true);
         }
 
         private float _rotation;
@@ -314,11 +283,6 @@ namespace Alex.Gamestates
             _playerView.Entity.RenderLocation.Pitch = pitch;
             KeyboardState s = Keyboard.GetState();
 
-            // if (_prevKeyboardState.IsKeyDown(Keys.M) && s.IsKeyUp(Keys.M))
-            // {
-            // 	_mainMenu.ModernStyle = !_mainMenu.ModernStyle;
-            // }
-
             _prevKeyboardState = s;
         }
 
@@ -336,30 +300,17 @@ namespace Alex.Gamestates
 
         protected override void OnShow()
         {
-            /*if (Alex.GameStateManager.TryGetState<OptionsState>("options", out _))
-            {
-                Alex.GameStateManager.RemoveState("options");
-            }
-
-            Alex.GameStateManager.AddState("options", new OptionsState(_backgroundSkyBox));*/
-
             _playerView.Entity.SetInventory(new BedrockInventory(46));
 
             if (ItemFactory.TryGetItem("minecraft:diamond_sword", out var sword))
             {
                 _playerView.Entity.Inventory.MainHand = sword;
-               // _playerView.Entity.Inventory[_playerView.Entity.Inventory.SelectedSlot] = sword;
             }
 
 
             ApplyModel(_playerView.Entity);
            // Alex.Instance.GuiManager.ShowDialog(new BrowserDialog("Microsoft Login", "https://google.com"));
             base.OnShow();
-        }
-
-        protected override void OnHide()
-        {
-            base.OnHide();
         }
 
         private void Debug(IWorldGenerator generator)

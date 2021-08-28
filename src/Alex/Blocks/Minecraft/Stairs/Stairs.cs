@@ -1,11 +1,14 @@
+using System;
 using Alex.Blocks.Materials;
 using Alex.Blocks.State;
 using Alex.Common.Blocks;
 using Alex.Common.Blocks.Properties;
 using Alex.Common.Utils.Vectors;
+using Alex.Entities;
 using Alex.Graphics.Models.Blocks;
 using Alex.Worlds;
 using Alex.Worlds.Abstraction;
+using Microsoft.Xna.Framework;
 using NLog;
 
 namespace Alex.Blocks.Minecraft.Stairs
@@ -187,7 +190,36 @@ namespace Alex.Blocks.Minecraft.Stairs
 
             return state.WithProperty("shape", "straight");
         }
-        
+
+        /// <inheritdoc />
+        public override BlockState PlaceBlock(World world,
+            Player player,
+            BlockCoordinates position,
+            BlockFace face,
+            Vector3 cursorPosition)
+        {
+            var upsideDown = ((cursorPosition.Y > 0.5 && face != BlockFace.Up) || face == BlockFace.Down);
+            var blockState = BlockState;
+
+
+            blockState = blockState.WithProperty("half", upsideDown ? "top" : "bottom");
+
+            if (face == BlockFace.Up || face == BlockFace.Down)
+            {
+                face = player.KnownPosition.GetFacing();
+            }
+            else
+            {
+                face = face.Opposite();
+            }
+            
+            blockState = blockState.WithProperty(Facing, face);
+
+            return blockState;
+
+          //  return base.PlaceBlock(world, player, position, face, cursorPosition);
+        }
+
         /// <inheritdoc />
         public override bool TryGetStateProperty(string prop, out IStateProperty stateProperty)
         {

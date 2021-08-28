@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using Alex.ResourcePackLib.Json.Bedrock.Entity;
 using Microsoft.Xna.Framework;
+using NLog;
 
 namespace Alex.Graphics.Models.Entity.Animations
 {
@@ -12,6 +13,7 @@ namespace Alex.Graphics.Models.Entity.Animations
 	
 	public class EntityAnimation : IAnimation
 	{
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(EntityAnimation));
 		private readonly AnimationComponent _parent;
 		private readonly Animation _definition;
 
@@ -71,7 +73,7 @@ namespace Alex.Graphics.Models.Entity.Animations
 							value.Rotation?.Evaluate(_parent.Runtime, Vector3.Zero, _animationTime) * new Vector3(-1f, 1f, 1f)
 							?? Vector3.Zero;
 
-						var targetPosition = value.Position?.Evaluate(_parent.Runtime, modelBone.Position, _animationTime)
+						var targetPosition = value.Position?.Evaluate(_parent.Runtime,  Vector3.Zero, _animationTime)
 						                     ?? Vector3.Zero;
 
 						var targetScale = value.Scale?.Evaluate(_parent.Runtime, modelBone.Scale, _animationTime) ?? Vector3.One;
@@ -80,6 +82,10 @@ namespace Alex.Graphics.Models.Entity.Animations
 							targetPosition, targetRotation,
 							targetScale, _elapsedTimer.Elapsed, anim.OverridePreviousAnimation,
 							anim.BlendWeight != null ? _parent.Execute(anim.BlendWeight).AsFloat() : 1f);
+					}
+					else
+					{
+						Log.Debug($"Failed to get bone: {bone.Key} for model {renderer.ModelName}");
 					}
 				}
 			}
