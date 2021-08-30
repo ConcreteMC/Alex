@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
+using Alex.Common.Gui.Elements;
 using Alex.Common.Services;
 using Alex.Common.Utils;
 using Alex.Gui;
@@ -27,6 +29,43 @@ namespace Alex.Gamestates.Login
 			_serverType = serverType;
 			_loginSuccesAction = loginSuccesAction;
 			_activeProfile = activeProfile;
+			//AddChild(new AlexButton("XBOX", DoXboxLogin));
+		}
+
+		private void DoXboxLogin()
+		{
+			MojangApi.StartDeviceAuth().ContinueWith(
+				async task =>
+				{
+					var r = task.Result;
+					LoginFailed(r.user_code);
+
+					try
+					{
+						var result = await MojangApi.DoDeviceCodeLogin(r, CancellationToken.None);
+
+						if (result != null)
+						{
+							if (result.IsSuccess)
+							{
+								Log.Info($"Login ok! :)");
+							}
+
+							else
+							{
+								Log.Warn($"Login failed: {result.Error} (Result={result.Result})");
+							}
+						}
+						else
+						{
+							Log.Warn($"Auth response = null");
+						}
+					}
+					catch (Exception ex)
+					{
+						Log.Error(ex, "Auth failed.");
+					}
+				});
 		}
 
 		protected override void Initialized()

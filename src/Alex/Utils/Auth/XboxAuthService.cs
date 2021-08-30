@@ -216,12 +216,12 @@ namespace Alex.Utils.Auth
 		private async Task<AuthResponse<XuiDisplayClaims<XstsXui>>> DoXsts(HttpClient client,
 	        AuthResponse<DeviceDisplayClaims> deviceToken,
 	        AuthResponse<TitleDisplayClaims> title,
-	        string userToken)
+	        string userToken, string relyingParty = "https://multiplayer.minecraft.net/")
         {
 	        //var key = EcDsa.ExportParameters(false);
 	        var authRequest = new AuthRequest
 	        {
-		        RelyingParty = "https://multiplayer.minecraft.net/",
+		        RelyingParty = relyingParty,
 		        TokenType = "JWT",
 		        Properties = new Dictionary<string, object>()
 		        {
@@ -255,6 +255,44 @@ namespace Alex.Utils.Auth
 		        }
 	        }
         }
+		
+		public async Task<AuthResponse<XuiDisplayClaims<XstsXui>>> DoJavaXsts(HttpClient client,
+			string userToken, string relyingParty = "https://multiplayer.minecraft.net/")
+		{
+			//var key = EcDsa.ExportParameters(false);
+			var authRequest = new AuthRequest
+			{
+				RelyingParty = relyingParty,
+				TokenType = "JWT",
+				Properties = new Dictionary<string, object>()
+				{
+					{"UserTokens", new string[] {userToken}},
+					{"SandboxId", "RETAIL"}
+				}
+			};
+
+
+			using (var r = new HttpRequestMessage(HttpMethod.Post, XblAuth))
+			{
+				r.Headers.Add("User-Agent", "MC/Java");
+				r.Headers.Add("Client-Version", McpeProtocolInfo.ProtocolVersion.ToString());
+				SetHeadersAndContent(r, authRequest);
+
+				using (var response = await client.SendAsync(r, HttpCompletionOption.ResponseContentRead)
+				   .ConfigureAwait(false))
+				{
+					response.EnsureSuccessStatusCode();
+
+					var rawResponse = await response.Content.ReadAsStringAsync();
+
+					//  Console.WriteLine(rawResponse);
+					//  Console.WriteLine();
+					return JsonConvert.DeserializeObject<AuthResponse<XuiDisplayClaims<XstsXui>>>(rawResponse);
+
+					//Log.Debug($"Xsts Auth: {rawResponse}");
+				}
+			}
+		}
 
         private async Task<AuthResponse<XuiDisplayClaims<XstsXui>>> ObtainXbox(HttpClient client,
 	        AuthResponse<DeviceDisplayClaims> deviceToken,
@@ -341,7 +379,7 @@ namespace Alex.Utils.Auth
 			}
 		}
 
-        private async Task<AuthResponse<XuiDisplayClaims<Xui>>> ObtainUserToken(HttpClient client, string accessToken)
+        public async Task<AuthResponse<XuiDisplayClaims<Xui>>> ObtainUserToken(HttpClient client, string accessToken)
         {
 	        //var key = EcDsa.ExportParameters(false);
 
@@ -672,8 +710,13 @@ namespace Alex.Utils.Auth
 
 		public async Task<MsaDeviceAuthConnectResponse> StartDeviceAuthConnect()
 		{
+			return await StartDeviceAuthConnect(ClientId);
+		}
+
+		public async Task<MsaDeviceAuthConnectResponse> StartDeviceAuthConnect(string clientId)
+		{
 			Request request = new Request($"https://login.live.com/oauth20_connect.srf?client_id={ClientId}");
-			request.PostData["client_id"] = ClientId;
+			request.PostData["client_id"] = clientId;
 			request.PostData["scope"] = "service::user.auth.xboxlive.com::MBI_SSL";
 			request.PostData["response_type"] = "device_code";
 
@@ -683,10 +726,16 @@ namespace Alex.Utils.Auth
 			
 			return JsonConvert.DeserializeObject<MsaDeviceAuthConnectResponse>(response.Body);
 		}
-		private async Task<MsaDeviceAuthPollState> DevicePollState(HttpClient client, string deviceCode)
+
+		public async Task<MsaDeviceAuthPollState> DevicePollState(HttpClient client, string deviceCode)
 		{
-			Request request = new Request($"https://login.live.com/oauth20_token.srf?client_id={ClientId}");
-			request.PostData["client_id"] = ClientId;
+			return await DevicePollState(client, deviceCode, ClientId);
+		}
+		
+		public async Task<MsaDeviceAuthPollState> DevicePollState(HttpClient client, string deviceCode, string clientId)
+		{
+			Request request = new Request($"https://login.live.com/oauth20_token.srf?client_id={clientId}");
+			request.PostData["client_id"] = clientId;
 			request.PostData["device_code"] = deviceCode;
 			request.PostData["grant_type"] = "urn:ietf:params:oauth:grant-type:device_code";
 
