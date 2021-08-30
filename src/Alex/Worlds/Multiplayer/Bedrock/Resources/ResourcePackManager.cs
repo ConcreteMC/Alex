@@ -256,8 +256,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 				entry.Value?.Dispose();
 			}
 			
-			if (anyComplete)
-				_resourceManager.ReloadBedrockResources(null);
+			//if (anyComplete)
+			//	_resourceManager.ReloadBedrockResources(null);
 		}
 
 		public class ResourceStatusChangedEventArgs : EventArgs

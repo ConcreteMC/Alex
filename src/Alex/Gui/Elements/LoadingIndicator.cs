@@ -11,6 +11,20 @@ namespace Alex.Gui.Elements
 
 		private double _progress = 0f;
 		private bool _add = true;
+
+		public bool DoPingPong { get; set; } = true;
+
+		public double Progress
+		{
+			get
+			{
+				return _progress;
+			}
+			set
+			{
+				_progress = Math.Clamp(value, 0d, 1d);
+			}
+		}
 		public LoadingIndicator()
 		{
 			
@@ -23,24 +37,27 @@ namespace Alex.Gui.Elements
 		{
 			base.OnDraw(graphics, gameTime);
 
-			if (_add)
+			if (DoPingPong)
 			{
-				_progress += gameTime.ElapsedGameTime.TotalSeconds;
-				_progress = Math.Clamp(_progress, 0d, 1d);
-				
-				if (_progress >= 1d)
+				if (_add)
 				{
-					_add = false;
+					_progress += gameTime.ElapsedGameTime.TotalSeconds;
+					_progress = Math.Clamp(_progress, 0d, 1d);
+
+					if (_progress >= 1d)
+					{
+						_add = false;
+					}
 				}
-			}
-			else
-			{
-				_progress -= gameTime.ElapsedGameTime.TotalSeconds;
-				_progress = Math.Clamp(_progress, 0d, 1d);
-				
-				if (_progress <= 0d)
+				else
 				{
-					_add = true;
+					_progress -= gameTime.ElapsedGameTime.TotalSeconds;
+					_progress = Math.Clamp(_progress, 0d, 1d);
+
+					if (_progress <= 0d)
+					{
+						_add = true;
+					}
 				}
 			}
 

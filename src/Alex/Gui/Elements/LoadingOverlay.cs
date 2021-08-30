@@ -3,8 +3,22 @@ using RocketUI;
 
 namespace Alex.Gui.Elements
 {
-	public class LoadingOverlay : Screen
+	public class LoadingOverlay : Screen, IProgressReceiver
 	{
+		private LoadingIndicator _loadingIndicator;
+		private TextElement _textElement;
+		public string Text
+		{
+			get
+			{
+				return _textElement.Text;
+			}
+			set
+			{
+				_textElement.Text = value;
+			}
+		}
+
 		public LoadingOverlay()
 		{
 			Anchor = Alignment.Fill;
@@ -16,12 +30,12 @@ namespace Alex.Gui.Elements
 				Orientation = Orientation.Vertical
 			};
 			
-			container.AddChild(new TextElement("Authenticating...")
+			container.AddChild(_textElement = new TextElement("Authenticating...")
 			{
 				Anchor = Alignment.MiddleCenter
 			});
 			
-			container.AddChild(new LoadingIndicator()
+			container.AddChild(_loadingIndicator = new LoadingIndicator()
 			{
 				Anchor = Alignment.MiddleCenter,
 				Width = 300,
@@ -33,6 +47,26 @@ namespace Alex.Gui.Elements
 			});
 			
 			AddChild(container);
+		}
+
+		public void UpdateProgress(double progress)
+		{
+			_loadingIndicator.DoPingPong = false;
+			_loadingIndicator.Progress = progress;
+		}
+
+		/// <inheritdoc />
+		public void UpdateProgress(int percentage, string statusMessage)
+		{
+			UpdateProgress(percentage, statusMessage, null);
+		}
+
+		/// <inheritdoc />
+		public void UpdateProgress(int percentage, string statusMessage, string sub)
+		{
+			_loadingIndicator.DoPingPong = false;
+			_loadingIndicator.Progress = percentage / 100d;
+			Text = statusMessage;
 		}
 	}
 }

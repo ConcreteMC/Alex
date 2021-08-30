@@ -1185,8 +1185,8 @@ namespace Alex.Net.Bedrock
 			CancellationTokenSource?.Cancel();
 			SendDisconnectionNotification();
 
-			Task.Delay(500).ContinueWith(task =>
-			{
+		//	Task.Delay(500).ContinueWith(task =>
+		//	{
 
 				try
 				{
@@ -1201,7 +1201,7 @@ namespace Alex.Net.Bedrock
 					ThroughPut?.Change(Timeout.Infinite, Timeout.Infinite);
 					//Connection.ConnectionInfo.ThroughPut.Change(Timeout.Infinite, Timeout.Infinite);
 				}
-			});
+		//	});
 
 			//Task.Delay(500).ContinueWith(task => { base.StopClient(); });
 		}

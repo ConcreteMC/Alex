@@ -413,22 +413,41 @@ namespace Alex.Gamestates.InGame
 		{
 			Alex.InGame = false;
 			Alex.ParticleManager.Hide();
+
+			LoadingOverlay loadingOverlay = new LoadingOverlay();
+			loadingOverlay.Text = "Disconnecting...";
+			Alex.GuiManager.AddScreen(loadingOverlay);
+			
 			ThreadPool.QueueUserWorkItem(
 				o =>
 				{
-					NetworkProvider?.Close();
-					NetworkProvider = null;
-					
-					World?.Dispose();
-					World = null;
-					
-					WorldProvider?.Dispose();
-					WorldProvider = null;
+					try
+					{
+						NetworkProvider?.Close();
+						NetworkProvider = null;
 
-					_playingHud?.Unload();
+						World?.Dispose();
+						World = null;
 
-					RichPresenceProvider.ClearPresence();
-					GC.Collect();
+						WorldProvider?.Dispose();
+						WorldProvider = null;
+
+						_playingHud?.Unload();
+
+						loadingOverlay.Text = "Reloading resources...";
+						Alex.Resources.ReloadBedrockResources(loadingOverlay);
+						
+						RichPresenceProvider.ClearPresence();
+						GC.Collect();
+					}
+					catch (Exception ex)
+					{
+						Log.Warn(ex, $"Failed to close session!");
+					}
+					finally
+					{
+						Alex.GuiManager.RemoveScreen(loadingOverlay);
+					}
 				});
 
 			
