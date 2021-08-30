@@ -36,6 +36,7 @@ using Color = Microsoft.Xna.Framework.Color;
 using LogManager = NLog.LogManager;
 using MetadataByte = Alex.Networking.Java.Packets.Play.MetadataByte;
 using MetadataFloat = Alex.Networking.Java.Packets.Play.MetadataFloat;
+using ModelData = Alex.Graphics.Models.Entity.ModelBone;
 using Point = System.Drawing.Point;
 using Skin = MiNET.Utils.Skins.Skin;
 
@@ -348,7 +349,7 @@ namespace Alex.Entities
 						}
 					}
 
-					if (skinBitmap != null)
+					/*if (skinBitmap != null)
 					{
 						var modelTextureSize = new Point(
 							(int) model.Description.TextureWidth, (int) model.Description.TextureHeight);
@@ -362,13 +363,21 @@ namespace Alex.Entities
 								skinBitmap = SkinUtils.ConvertSkin(skinBitmap, modelTextureSize.X, modelTextureSize.Y);
 							}
 						}
-					}
+					}*/
 
 					if (EntityModelRenderer.TryGetRenderer(model, out var renderer))
 					{
 						if (skinBitmap != null)
 						{
-							Texture = TextureUtils.BitmapToTexture2D(this, Alex.Instance.GraphicsDevice, skinBitmap);
+							Alex.Instance.UiTaskManager.Enqueue(
+								(state) =>
+								{
+									var img = (Image<Rgba32>)state;
+									Texture = TextureUtils.BitmapToTexture2D(
+										this, Alex.Instance.GraphicsDevice, img);
+									img.Dispose();
+									
+								}, skinBitmap);
 						}
 						ModelRenderer = renderer;
 					}
@@ -380,7 +389,7 @@ namespace Alex.Entities
 				}
 				finally
 				{
-					skinBitmap?.Dispose();
+					//skinBitmap?.Dispose();
 				}
 			}
 			catch (Exception ex)
@@ -551,6 +560,23 @@ namespace Alex.Entities
 		{
 			base.EntityDied();
 			Alex.Instance.AudioEngine.PlaySound("game.player.die", RenderLocation, 1f, 1f);
+		}
+
+		/// <inheritdoc />
+		protected override ModelData GetPrimaryArm()
+		{
+			ModelData arm = null;
+
+			if (IsLeftHanded)
+			{
+				arm = _leftItemModel;
+			}
+			else
+			{
+				arm = _rightItemModel;
+			}
+	        
+			return arm;
 		}
 
 		/// <inheritdoc />

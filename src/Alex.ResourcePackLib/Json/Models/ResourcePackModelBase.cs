@@ -10,12 +10,16 @@ using Newtonsoft.Json.Converters;
 
 namespace Alex.ResourcePackLib.Json.Models
 {
+    [Flags]
     public enum ModelType
     {
-        Item,
-        Block,
-        Entity,
-        Unknown
+        Unknown = 0,
+        Item = 1,
+        Block = 2,
+        Entity = 4,
+        Handheld = 8,
+        
+        HandheldItem = Item | Handheld
     }
     
     public class ResourcePackModelBase
@@ -46,15 +50,22 @@ namespace Alex.ResourcePackLib.Json.Models
         }*/
 
         [JsonIgnore] public ModelType Type { get; set; } = ModelType.Unknown;
-        
         public void UpdateValuesFromParent(ResourcePackModelBase parent)
         {
             if (parent == null) return;
-		    
-            if (Type == ModelType.Item && parent.Type == ModelType.Block)
+
+            ModelType modelType = Type;
+            if ((modelType & ModelType.Item) != 0 && (parent.Type & ModelType.Block) != 0)
             {
-                Type = ModelType.Block;
+                modelType = ModelType.Block;
             }
+
+            if ((parent.Type & ModelType.Handheld) != 0 && (modelType & ModelType.Handheld) == 0)
+            {
+                modelType |= ModelType.Handheld;
+            }
+
+            Type = modelType;
             
             if (!GuiLight.HasValue && parent.GuiLight.HasValue)
             {

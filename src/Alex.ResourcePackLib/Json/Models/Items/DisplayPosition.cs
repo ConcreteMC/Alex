@@ -36,6 +36,14 @@ namespace Alex.ResourcePackLib.Json.Models.Items
         [JsonEnumValue("fixed")] Fixed = 128
     }
 
+    public enum ItemDisplayType
+    {
+        Undefined = 0,
+        HandHeld = 1,
+        Generated = 2,
+        Fixed = 3
+    }
+
     public class JsonEnumValueAttribute : Attribute
     {
         public string Value { get; set; }

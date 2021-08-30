@@ -532,6 +532,11 @@ namespace Alex.ResourcePackLib
 
 					model.Type = entry.FullName.Contains("models/block/", StringComparison.InvariantCultureIgnoreCase) ?
 						ModelType.Block : ModelType.Item;
+
+					if (entry.FullName.EndsWith("item/handheld.json"))
+					{
+						model.Type |= ModelType.Handheld;
+					}
 					
 					//if (model.ParentName != null)
 					//{

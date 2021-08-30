@@ -607,7 +607,7 @@ namespace Alex
 		        modelsProcessed++;
 	        }
 	        
-	        foreach (var m in models.Where(x => x.Value.Type == ModelType.Block)
+	        foreach (var m in models.Where(x => (x.Value.Type & ModelType.Block) != 0)
 		       .OrderByDescending(x => x.Value.ParentName != null))
 	        {
 		        var model = m.Value;

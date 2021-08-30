@@ -373,7 +373,7 @@ namespace Alex.Worlds.Multiplayer
 			World.Player.WaitingOnChunk = true;
 
 			int loaded = 0;
-
+			World.Player.OnSpawn();
 			SpinWait.SpinUntil(
 				() =>
 				{
@@ -451,8 +451,6 @@ namespace Alex.Worlds.Multiplayer
 				SendPacket(clientStatus);
 
 			}
-			
-			World.Player.OnSpawn();
 
 			World.Player.Inventory.CursorChanged += InventoryOnCursorChanged;
 			World.Player.Inventory.Closed += (sender, args) => { ClosedContainer(0); };

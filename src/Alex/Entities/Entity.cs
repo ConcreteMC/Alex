@@ -484,15 +484,15 @@ namespace Alex.Entities
             }
         }
 
-        protected ModelBone GetPrimaryArm()
+        protected virtual ModelBone GetPrimaryArm()
         {
 	        ModelBone arm = null;
-
+	        
 	        if (_rightItemModel != null)
 	        {
 		        arm = _rightItemModel;
 	        }
-	        else if (_rightArmModel != null)
+	        else if (_leftItemModel != null)
 	        {
 		        arm = _rightArmModel;
 	        }

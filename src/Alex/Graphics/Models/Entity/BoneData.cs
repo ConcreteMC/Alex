@@ -2,75 +2,14 @@ using System;
 using System.Collections.Generic;
 using Alex.Common.Graphics;
 using Alex.Common.Utils;
-using Alex.Gamestates;
-using FmodAudio;
 using Microsoft.Xna.Framework;
 using NLog;
 
 namespace Alex.Graphics.Models.Entity
 {
-	public class ModelBone : IHoldAttachment
+	public class BoneData : IHoldAttachment
 	{
-		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ModelBone));
-		
-		private List<ModelBone> _children = new List<ModelBone>();
-		private List<ModelMesh> _meshes = new List<ModelMesh>();
-		public List<ModelMesh> Meshes
-		{
-			get
-			{
-				return this._meshes;
-			}
-			private set
-			{
-				_meshes = value;
-			}
-		}
-		
-		/// <summary>
-		///		 Gets a collection of bones that are children of this bone.
-		/// </summary>
-		public ModelBoneCollection Children { get; private set; }
-
-		/// <summary>
-		///		Gets the index of this bone in the Bones collection.
-		/// </summary>
-		public int Index { get; set; } = -1;
-		
-		/// <summary>
-		///  Gets the name of this bone.
-		/// </summary>
-		public string Name { get; set; }
-		
-		/// <summary>
-		///		Gets the parent of this bone.
-		/// </summary>
-		public ModelBone Parent { get; set; }
-		
-		/// <summary>
-		///		The root model
-		/// </summary>
-		public Model Model { get; set; }
-		
-		internal Matrix _transform = Matrix.Identity;
-
-		/// <summary>
-		///		Gets or sets the matrix used to transform this bone relative to its parent bone.
-		/// </summary>
-		public Matrix Transform 
-		{ 
-			get { return this._transform; } 
-			set { this._transform = value; }
-		}
-		
-		/// <summary>
-		/// Transform of this node from the root of the model not from the parent
-		/// </summary>
-		public Matrix ModelTransform {
-			get;
-			set;
-		} = Matrix.Identity;
-
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(BoneData));
 		public Vector3 BaseRotation
 		{
 			get => _baseRotation;
@@ -141,36 +80,6 @@ namespace Alex.Graphics.Models.Entity
 				_pivot = value;
 				UpdateTransform();
 			}
-		}
-
-		public bool Rendered { get; set; } = true;
-
-		public ModelBone ()	
-		{
-			Children = new ModelBoneCollection(new List<ModelBone>());
-		}
-		
-		public void AddMesh(ModelMesh mesh)
-		{
-			mesh.ParentBone = this;
-			_meshes.Add(mesh);
-		}
-
-		public void AddChild(ModelBone modelBone)
-		{
-			modelBone.Parent = this;
-			_children.Add(modelBone);
-			Children = new ModelBoneCollection(_children);
-		}
-
-		public void RemoveChild(ModelBone modelBone)
-		{
-			if (modelBone.Parent != this)
-				return;
-			
-			_children.Remove(modelBone);
-			modelBone.Parent = null;
-			Children = new ModelBoneCollection(_children);
 		}
 		
 		private Vector3? _pivot = null;
@@ -250,6 +159,10 @@ namespace Alex.Graphics.Models.Entity
 		private Vector3 _scale = Vector3.One;
 		private Vector3 _position = Vector3.Zero;
 
+		private Vector3 _baseRotation = Vector3.Zero;
+		private Vector3 _basePosition = Vector3.Zero;
+		private Vector3 _baseScale = Vector3.One;
+		
 		public void ApplyMovement()
 		{
 			_startPosition = _position;
@@ -269,6 +182,7 @@ namespace Alex.Graphics.Models.Entity
 		}
 
 
+		public Matrix Transform { get; set; } = Matrix.Identity;
 		private void UpdateTransform()
 		{
 			Matrix matrix = Matrix.Identity;
@@ -283,7 +197,7 @@ namespace Alex.Graphics.Models.Entity
 
 			Transform = Matrix.CreateScale(_baseScale) * matrix;
 		}
-
+		
 		public void Update(IUpdateArgs args)
 		{
 			if (_accumulator < _target)
@@ -313,12 +227,9 @@ namespace Alex.Graphics.Models.Entity
 				attached.Update(args);
 			}
 		}
-
+		
 		private List<IAttached> _attached = new List<IAttached>();
-		private Vector3 _baseRotation = Vector3.Zero;
-		private Vector3 _basePosition = Vector3.Zero;
-		private Vector3 _baseScale = Vector3.One;
-
+		
 		/// <inheritdoc />
 		public void AddChild(IAttached attachment)
 		{
@@ -333,18 +244,7 @@ namespace Alex.Graphics.Models.Entity
 				}
 
 				//var root = model.Root;
-				AddChild(model.Root);
-				Model.AddBone(model.Root);
-
-				foreach (var mesh in model.Meshes)
-				{
-					Model.AddMesh(mesh);
-				}
-
-				attachment.Parent = this;
-				_attached.Add(attachment);
-
-				Model.BuildHierarchy();
+				
 			}
 		}
 
@@ -363,15 +263,7 @@ namespace Alex.Graphics.Models.Entity
 					return;
 				}
 
-				foreach (var mesh in model.Meshes)
-				{
-					Model.RemoveMesh(mesh);
-				}
-
-				model.RemoveBone(model.Root);
-				RemoveChild(model.Root);
-
-				Model.BuildHierarchy();
+				
 			}
 		}
 	}

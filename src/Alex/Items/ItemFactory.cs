@@ -110,14 +110,14 @@ namespace Alex.Items
 				resourceLocation,
 				out var modelEntry))
 			{
-				if (modelEntry.Value.Type == ModelType.Item)
+				if ((modelEntry.Value.Type & ModelType.Item) != 0)
 				{
 					renderer = new ItemModelRenderer(modelEntry.Value);
 
 					return true;
 				}
 
-				if (modelEntry.Value.Type == ModelType.Block)
+				if ((modelEntry.Value.Type & ModelType.Block) != 0)
 				{
 					var bs = BlockFactory.GetBlockState(itemName);
 
@@ -127,7 +127,7 @@ namespace Alex.Items
 					return true;
 				}
 
-				if (modelEntry.Value.Type == ModelType.Entity)
+				if ((modelEntry.Value.Type & ModelType.Entity) != 0)
 				{
 					EntityModelRenderer modelRenderer = null;
 					Texture2D modelTexture = null;

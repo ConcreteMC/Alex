@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
+using System.Timers;
 using Alex.Common.Graphics;
 using Alex.Common.Gui.Elements;
 using Alex.Common.Gui.Graphics;
@@ -54,8 +55,13 @@ namespace Alex.Gamestates
         private          ProfileManager _profileManager;
 
         //private BossBarContainer _bossBarContainer;
+        private System.Timers.Timer _switchItemTimer;
         public TitleState()
         {
+            _switchItemTimer = new System.Timers.Timer();
+            _switchItemTimer.Interval = 1000;
+            _switchItemTimer.Elapsed += SwitchHeldItem;
+
             _backgroundSkyBox = new GuiPanoramaSkyBox(Alex);
 
             Background.Texture = _backgroundSkyBox;
@@ -172,6 +178,18 @@ namespace Alex.Gamestates
             scoreboardView.AddString("Title");
             scoreboardView.AddRow("Key", "200");
             scoreboardView.AddRow("Key 2", "200");*/
+        }
+
+        private void SwitchHeldItem(object sender, ElapsedEventArgs e)
+        {
+            var inventory = _playerView?.Entity?.Inventory;
+
+            if (inventory == null)
+                return;
+            
+            inventory.SelectedSlot++;
+
+            //inventory.SelectedSlot += 1;
         }
 
         private void MultiplayerButtonPressed(object sender, MenuItemClickedEventArgs e)
@@ -301,17 +319,45 @@ namespace Alex.Gamestates
         protected override void OnShow()
         {
             _playerView.Entity.SetInventory(new BedrockInventory(46));
-
+            
+            var inventory = _playerView.Entity.Inventory;
+            
+            int slot = inventory.HotbarOffset;
             if (ItemFactory.TryGetItem("minecraft:diamond_sword", out var sword))
+                inventory.SetSlot(slot++, sword, false);
+
+            if (ItemFactory.TryGetItem("minecraft:glass_pane", out var pane))
+                inventory.SetSlot(slot++, pane, false);
+
+            if (ItemFactory.TryGetItem("minecraft:oak_stairs", out var stairs))
+                inventory.SetSlot(slot++, stairs, false);
+
+            FastRandom fr = FastRandom.Instance;
+            for (int i = slot; i < 8; i++)
             {
-                _playerView.Entity.Inventory.MainHand = sword;
+                Item item;
+
+                do
+                {
+                    item = ItemFactory.AllItems[fr.Next() % ItemFactory.AllItems.Length];
+                } while (item.IsAir() || item.Renderer == null);
+
+                inventory.SetSlot(i, item, false);
             }
 
-
             ApplyModel(_playerView.Entity);
+            _switchItemTimer.Start();
            // Alex.Instance.GuiManager.ShowDialog(new BrowserDialog("Microsoft Login", "https://google.com"));
             base.OnShow();
         }
+
+        /// <inheritdoc />
+        protected override void OnHide()
+        {
+            _switchItemTimer.Stop();
+            base.OnHide();
+        }
+        
 
         private void Debug(IWorldGenerator generator)
         {

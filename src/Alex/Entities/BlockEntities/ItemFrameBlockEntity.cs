@@ -155,7 +155,7 @@ namespace Alex.Entities.BlockEntities
 			if (itemRenderer?.ResourcePackModel == null)
 				return;
 			
-			if (itemRenderer.ResourcePackModel.Type == ModelType.Block)
+			if ((itemRenderer.ResourcePackModel.Type & ModelType.Block) != 0)
 			{
 				Scale = 0.25f;
 				Offset = Vector3.Transform(new Vector3(0.375f, 0.375f,-0.125f), Matrix.CreateRotationY(MathHelper.ToRadians(_yaw)));
