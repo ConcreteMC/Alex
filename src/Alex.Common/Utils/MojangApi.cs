@@ -121,12 +121,11 @@ namespace Alex.Common.Utils
 			return res.Session;
 		}
 		
-		public static async Task<Session> TryMicrosoftAuth(MojangAuth auth, string uhs, string xstsToken)
+		public static async Task<Session> TryMicrosoftAuth(string uhs, string xstsToken)
 		{
 			CheckInit();
 			MojangAuthResponse res;
-
-			res = await auth.RequestSessionWithXbox(uhs, xstsToken);
+			res = await _auth.RequestSessionWithXbox(uhs, xstsToken);
 
 			if (!res.IsSuccess)
 				throw new LoginFailedException(res);

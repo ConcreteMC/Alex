@@ -128,7 +128,7 @@ namespace Alex.Graphics.Models.Entity
 			get => _scale;
 			set
 			{
-				/*_targetScale =*/ _scale = value;
+				_targetScale = _scale = value;
 				UpdateTransform();
 			}
 		}
@@ -212,7 +212,7 @@ namespace Alex.Graphics.Models.Entity
 				_tempTargetRotation += FixInvalidVector(targetRotation); // - _targetRotation;
 
 				//_startScale = _scale;
-				_tempTargetScale += FixInvalidVector(targetScale); // - _targetScale;
+				_tempTargetScale = FixInvalidVector(targetScale); // - _targetScale;
 			}
 
 			_tempTarget = time.TotalSeconds;
@@ -271,17 +271,14 @@ namespace Alex.Graphics.Models.Entity
 
 		private void UpdateTransform()
 		{
-			Matrix matrix = Matrix.Identity;
-
 			var pivot = Pivot.GetValueOrDefault(new Vector3(8f, 8f, 8f));
-
-
-			matrix = Matrix.CreateTranslation(-pivot) * MatrixHelper.CreateRotationDegrees(_rotation )
-			                                          * MatrixHelper.CreateRotationDegrees(_baseRotation)
-			                                          * Matrix.CreateTranslation(pivot)
-			                                          * Matrix.CreateTranslation(_position + _basePosition);
-
-			Transform = Matrix.CreateScale(_baseScale) * matrix;
+			
+			Transform = Matrix.CreateScale(_baseScale * _scale) 
+			            * Matrix.CreateTranslation(-pivot) 
+			            * MatrixHelper.CreateRotationDegrees(_rotation )
+			            * MatrixHelper.CreateRotationDegrees(_baseRotation)
+			            * Matrix.CreateTranslation(pivot)
+			            * Matrix.CreateTranslation(_position + _basePosition);
 		}
 
 		public void Update(IUpdateArgs args)
