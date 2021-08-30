@@ -441,50 +441,55 @@ namespace Alex.Entities
 			CheckHeldItem();
 		}
 
-        private void CheckHeldItem()
-        {
-	        if (_isUsingItem && Inventory.SelectedSlot != _usingSlot)
-	        {
-		        IsUsingItem = false;
-	        }
-	        
-            var inHand = Inventory.MainHand;
+		private void CheckHeldItem()
+		{
 
-            if ((inHand == null || inHand.Count == 0 || inHand.Id <= 0) && ItemRenderer != null && ModelRenderer != null)
-            {
-	            ItemRenderer = null;
-                return;
-            }
+			if (_isUsingItem && Inventory.SelectedSlot != _usingSlot)
+			{
+				IsUsingItem = false;
+			}
 
-            if (inHand != null)
-            {
-	            //if (!string.IsNullOrWhiteSpace(inHand.Name))
-	            {
-		            var renderer = inHand?.Renderer;
-		            if (renderer == null)
-		            { 
-			            //Log.Warn($"No renderer for item: {inHand.Name}");
-			            return;
-		            }
+			var inHand = Inventory.MainHand;
 
-		            if (renderer != ItemRenderer)
-		            {
-			          //  renderer = renderer.CloneItemRenderer();
-			            
-			            ItemRenderer = renderer.CloneItemRenderer();
-		            }
-	            }
-            }
-            else
-            {
-                if (ItemRenderer != null)
-                {
-	                ItemRenderer = null;
-                }
-            }
-        }
+			if ((inHand == null || inHand.Count == 0 || inHand.Id <= 0) && ItemRenderer != null
+			                                                            && ModelRenderer != null)
+			{
+				ItemRenderer = null;
 
-        protected virtual ModelBone GetPrimaryArm()
+				return;
+			}
+
+			if (inHand != null)
+			{
+				//if (!string.IsNullOrWhiteSpace(inHand.Name))
+				{
+					var renderer = inHand?.Renderer;
+
+					if (renderer == null)
+					{
+						//Log.Warn($"No renderer for item: {inHand.Name}");
+						return;
+					}
+
+					if (renderer != ItemRenderer)
+					{
+						//  renderer = renderer.CloneItemRenderer();
+
+						var newRenderer = renderer.CloneItemRenderer();
+						ItemRenderer = newRenderer;
+					}
+				}
+			}
+			else
+			{
+				if (ItemRenderer != null)
+				{
+					ItemRenderer = null;
+				}
+			}
+		}
+
+		protected virtual ModelBone GetPrimaryArm()
         {
 	        ModelBone arm = null;
 	        
@@ -503,17 +508,16 @@ namespace Alex.Entities
         protected virtual void UpdateItemPosition(IItemRenderer oldValue, IItemRenderer renderer)
         {
 	        ModelBone arm = GetPrimaryArm();
-	        if (oldValue != renderer)
-	        {
+	        
 		        arm?.Remove(oldValue);
-	        }
+	        
 
 	        if (renderer == null)
 		        return;
 
 	        renderer.DisplayPosition = DisplayPosition.ThirdPersonRightHand;
 
-	        if (oldValue != renderer)
+	        //if (oldValue != renderer)
 	        {
 		        renderer.Update(
 			        new UpdateArgs()

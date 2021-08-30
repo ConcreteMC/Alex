@@ -979,11 +979,14 @@ namespace Alex.Net.Bedrock
 				return;
 			}
 
-
-			entity.Inventory.Helmet = message.helmet.ToAlexItem().Clone();
-			entity.Inventory.Chestplate = message.chestplate.ToAlexItem().Clone();
-			entity.Inventory.Leggings = message.leggings.ToAlexItem().Clone();
-			entity.Inventory.Boots = message.boots.ToAlexItem().Clone();
+			Client.World.BackgroundWorker.Enqueue(
+				() =>
+				{
+					entity.Inventory.Helmet = message.helmet.ToAlexItem().Clone();
+					entity.Inventory.Chestplate = message.chestplate.ToAlexItem().Clone();
+					entity.Inventory.Leggings = message.leggings.ToAlexItem().Clone();
+					entity.Inventory.Boots = message.boots.ToAlexItem().Clone();
+				});
 		}
 
 		public void HandleMcpeInteract(McpeInteract message)

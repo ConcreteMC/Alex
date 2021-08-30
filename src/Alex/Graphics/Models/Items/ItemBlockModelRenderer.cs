@@ -140,53 +140,16 @@ namespace Alex.Graphics.Models.Items
                 }
             }
         }
-
-        /// <inheritdoc />
-       /* protected override Matrix GetWorldMatrix(DisplayElement activeDisplayItem)
-        {
-            if ((DisplayPosition & DisplayPosition.Ground) != 0)
-            {
-                return Matrix.CreateScale(activeDisplayItem.Scale * Scale)
-                       * MatrixHelper.CreateRotationDegrees(activeDisplayItem.Rotation)
-                       * Matrix.CreateTranslation(activeDisplayItem.Translation);
-            }
-            
-            if ((DisplayPosition & DisplayPosition.FirstPerson) != 0)
-            {
-                var translate = activeDisplayItem.Translation;
-                return Matrix.CreateScale(activeDisplayItem.Scale * (Scale / 2f))
-                       * MatrixHelper.CreateRotationDegrees(new Vector3(-67.5f, 0f, 0f))
-                       * MatrixHelper.CreateRotationDegrees(activeDisplayItem.Rotation)
-                       * Matrix.CreateTranslation(new Vector3(translate.X + 4f, translate.Y + 18f, translate.Z - 2f));
-            }
-            
-            if ((DisplayPosition & DisplayPosition.ThirdPerson) != 0)
-            {
-                var translate = activeDisplayItem.Translation;
-                return Matrix.CreateScale(activeDisplayItem.Scale * Scale)
-                       * MatrixHelper.CreateRotationDegrees(new Vector3(-67.5f, 0f, 0f))
-                       * MatrixHelper.CreateRotationDegrees(activeDisplayItem.Rotation)
-                       * Matrix.CreateTranslation(new Vector3(translate.X + 2f, translate.Y + (8f), translate.Z - 2f));
-            }
-            
-            if ((DisplayPosition & DisplayPosition.Gui) != 0)
-            {
-                return Matrix.CreateScale(activeDisplayItem.Scale)
-                       * MatrixHelper.CreateRotationDegrees(new Vector3(25f, 45f, 0f))
-                       * Matrix.CreateTranslation(activeDisplayItem.Translation) 
-                       * Matrix.CreateTranslation(new Vector3(0f, 0.25f, 0f));
-            }
-
-            return base.GetWorldMatrix(activeDisplayItem);
-        }*/
-
+        
         public override IItemRenderer CloneItemRenderer()
         {
             return new ItemBlockModelRenderer(_blockState, ResourcePackModel, _texture)
             {
                 Vertices = (VertexPositionColorTexture[]) Vertices.Clone(),
                 Size = Size,
-                Scale = Scale
+                Scale = Scale,
+                DisplayPosition = DisplayPosition,
+                ActiveDisplayItem = ActiveDisplayItem.Clone()
             };
         }
     }

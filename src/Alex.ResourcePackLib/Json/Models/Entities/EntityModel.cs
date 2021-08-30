@@ -54,23 +54,28 @@ namespace Alex.ResourcePackLib.Json.Models.Entities
 				{
 					if (!bones.TryAdd(bone.Name, bone.Clone()))
 					{
+						var existingBone = bones[bone.Name];
+						var existingCubes = existingBone.Cubes;
+						
 						var cubes = bone.Cubes?.Select(x => x.Clone()).ToArray();
 
+						//if (existingCubes == null)
+						
 						//Already exists.
-						if (bone.Cubes == null || bone.Cubes.Length == 0)
+						/*if (bone.Cubes == null || bone.Cubes.Length == 0)
 						{
 							if (cubes != null && cubes.Length > 0)
 							{
-								bones[bone.Name].Cubes = cubes;
+								existingBone.Cubes = cubes;
 							}
 						}
 						else if (bone.Cubes != null && bone.Cubes.Length > 0)
 						{
 							if (cubes != null && cubes.Length > 0)
 							{
-								bones[bone.Name].Cubes = bones[bone.Name].Cubes.Concat(cubes).ToArray();
+								existingBone.Cubes = existingCubes.Concat(cubes).ToArray();
 							}
-						}
+						}*/
 
 						//bones[bone.Name].Cubes = ;
 					}

@@ -22,5 +22,12 @@ namespace Alex.ResourcePackLib.Json.Models
 	    }
 	    
 	    public static readonly DisplayElement Default = new DisplayElement(Vector3.Zero, Vector3.Zero, Vector3.One);
+
+	    public DisplayElement Clone()
+	    {
+		    return new DisplayElement(
+			    new Vector3(Rotation.X, Rotation.Y, Rotation.Z),
+			    new Vector3(Translation.X, Translation.Y, Translation.Z), new Vector3(Scale.X, Scale.Y, Scale.Z));
+	    }
     }
 }

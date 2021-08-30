@@ -147,7 +147,9 @@ namespace Alex.Graphics.Models.Items
             {
                 Vertices = Vertices != null ? Vertices.Clone() as VertexPositionColor[] : null,
                 Size = Size,
-                Scale = Scale
+                Scale = Scale,
+                DisplayPosition = DisplayPosition,
+                ActiveDisplayItem = ActiveDisplayItem.Clone()
             };
         }
     }
@@ -350,7 +352,9 @@ namespace Alex.Graphics.Models.Items
             {
                 Size = this.Size,
                 Vertices = Vertices != null ? Vertices.Clone() as TVertice[] : null,
-                Scale = Scale
+                Scale = Scale,
+                DisplayPosition = DisplayPosition,
+                ActiveDisplayItem = ActiveDisplayItem.Clone()
             };
         }
 

@@ -402,7 +402,7 @@ namespace Alex.Entities
 		protected override void UpdateItemPosition(IItemRenderer oldValue, IItemRenderer renderer)
 		{
 			var primaryArm = GetPrimaryArm();
-			if (oldValue != renderer)
+			//if (oldValue != renderer)
 			{
 				primaryArm?.Remove(oldValue);
 			}
@@ -451,7 +451,7 @@ namespace Alex.Entities
 				renderer.DisplayPosition = pos;
 			}
 
-			if (oldValue != renderer)
+			//	if (oldValue != renderer)
 			{
 				renderer.Update(
 					new UpdateArgs()
@@ -530,8 +530,11 @@ namespace Alex.Entities
 			base.OnModelUpdated();
 
 			var modelRenderer = ModelRenderer;
-			if (modelRenderer != null && SkinFlags != null)
-				SkinFlags.ApplyTo(modelRenderer);
+
+			if (modelRenderer != null)
+			{
+				SkinFlags?.ApplyTo(modelRenderer);
+			}
 		}
 
 		/// <inheritdoc />
