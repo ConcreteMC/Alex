@@ -19,7 +19,7 @@ namespace Alex.Graphics.Models.Items
         private BlockState _blockState;
         private Texture2D  _texture;
 
-        public ItemBlockModelRenderer(BlockState block, ResourcePackModelBase resourcePackModel, Texture2D texture) : base(resourcePackModel,
+        public ItemBlockModelRenderer(BlockState block, ResourcePackModelBase resourcePackModel, Texture2D texture, bool calculateSize = true) : base(resourcePackModel,
             VertexPositionColorTexture.VertexDeclaration)
         {
             _blockState = block;
@@ -28,15 +28,20 @@ namespace Alex.Graphics.Models.Items
             Scale = 16f;
             Size = new Vector3(16f, 16f, 16f);
 
-            float biggestDimensions = 0;
-            foreach (var bb in block.Block.GetBoundingBoxes(Vector3.Zero))
+            if (calculateSize)
             {
-                var dimension = bb.GetDimensions();
-                var len = dimension.Length();
-                if (len > biggestDimensions)
+                float biggestDimensions = 0;
+
+                foreach (var bb in block.Block.GetBoundingBoxes(Vector3.Zero))
                 {
-                    biggestDimensions = len;
-                    Size = dimension;
+                    var dimension = bb.GetDimensions();
+                    var len = dimension.Length();
+
+                    if (len > biggestDimensions)
+                    {
+                        biggestDimensions = len;
+                        Size = dimension;
+                    }
                 }
             }
         }
@@ -143,9 +148,12 @@ namespace Alex.Graphics.Models.Items
         
         public override IItemRenderer CloneItemRenderer()
         {
-            return new ItemBlockModelRenderer(_blockState, ResourcePackModel, _texture)
+            return new ItemBlockModelRenderer(_blockState, ResourcePackModel, _texture, false)
             {
-                Vertices = (VertexPositionColorTexture[]) Vertices.Clone(),
+                Vertices = (VertexPositionColorTexture[])Vertices.Select(
+                    x => new VertexPositionColorTexture(
+                        new Vector3(x.Position.X, x.Position.Y, x.Position.Z), new Color(x.Color.PackedValue),
+                        new Vector2(x.TextureCoordinate.X, x.TextureCoordinate.Y))).ToArray(),
                 Size = Size,
                 Scale = Scale,
                 DisplayPosition = DisplayPosition,

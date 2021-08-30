@@ -42,7 +42,7 @@ namespace Alex.Common.Data.Options
             MeshInRam = DefineProperty(true);
             ObjectPools = DefineProperty(true);
             UseChunkCache = DefineProperty(false);
-            LoadServerResources = DefineProperty(false);
+            LoadServerResources = DefineProperty(true);
             ShowNetworkInfoByDefault = DefineProperty(false);
             AntiLagModifier = DefineRangedProperty(0.75d, 0d, 1d);
             SkipFrames = DefineProperty(true);

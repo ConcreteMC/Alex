@@ -197,6 +197,9 @@ namespace Alex.Blocks.Storage
                             int startOffset = bitOffset % 64;
                             bitOffset += bitsPerBlock;
 
+                            if (startLongIndex >= dataArray.Length || end_long_index >= dataArray.Length)
+                                continue;
+                            
                             uint rawId;
 
                             if (startLongIndex == end_long_index)

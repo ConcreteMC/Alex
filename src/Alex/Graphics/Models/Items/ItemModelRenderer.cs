@@ -145,7 +145,9 @@ namespace Alex.Graphics.Models.Items
         {
             return new ItemModelRenderer(ResourcePackModel)
             {
-                Vertices = Vertices != null ? Vertices.Clone() as VertexPositionColor[] : null,
+                Vertices = Vertices != null ? Vertices = Vertices.Select(
+                    x => new VertexPositionColor(
+                        new Vector3(x.Position.X, x.Position.Y, x.Position.Z), new Color(x.Color.PackedValue))).ToArray() : null,
                 Size = Size,
                 Scale = Scale,
                 DisplayPosition = DisplayPosition,
