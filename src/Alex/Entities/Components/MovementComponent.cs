@@ -8,7 +8,7 @@ using NLog;
 
 namespace Alex.Entities.Components
 {
-	public class MovementComponent : EntityComponent
+	public class MovementComponent : EntityComponentUpdatable
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(MovementComponent));
 		public Vector3 Heading { get; private set; }

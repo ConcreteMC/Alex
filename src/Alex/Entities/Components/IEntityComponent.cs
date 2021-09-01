@@ -4,6 +4,7 @@ namespace Alex.Entities.Components
 {
 	public interface IEntityComponent
 	{
-		void Update(GameTime gameTime);
+		bool Enabled { get; }
+		//void Update(GameTime gameTime);
 	}
 }

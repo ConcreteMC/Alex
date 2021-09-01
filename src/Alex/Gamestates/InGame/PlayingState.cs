@@ -267,17 +267,18 @@ namespace Alex.Gamestates.InGame
 				if (player == null)
 					return "";
 				
-				if (player.HasRaytraceResult)
+				if (player.Raytracer.HasValue)
 				{
-					var raytracedBlock = player.RaytracedBlock;
-					var adjacentBlock  = player.AdjacentRaytraceBlock;
-					var adj             =  Vector3.Floor(adjacentBlock) - Vector3.Floor(raytracedBlock);
-					adj.Normalize();
+					var raytracedBlock = player.Raytracer.ResultingCoordinates;
+					var raytracedFace = player.Raytracer.Face;
+					var adjacentBlock  = player.Raytracer.AdjacentBlockCoordinates;
+					//var adj             =  Vector3.Floor(adjacentBlock) - Vector3.Floor(raytracedBlock);
+					//adj.Normalize();
 
-					var face = adj.GetBlockFace();
+				//	var face = adj.GetBlockFace();
 
                     StringBuilder sb = new StringBuilder();
-					sb.AppendLine($"Target: {raytracedBlock} Face: {face}");
+					sb.AppendLine($"Target: {raytracedBlock} Face: {raytracedFace}");
 					sb.AppendLine(
 						$"Skylight: {World.GetSkyLight(raytracedBlock)} Face Skylight: {World.GetSkyLight(adjacentBlock)}");
 					sb.AppendLine(

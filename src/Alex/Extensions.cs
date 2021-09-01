@@ -1,14 +1,12 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices;
 using System.Text;
 using Alex.Blocks.Minecraft;
 using Alex.Blocks.Minecraft.Terracotta;
 using Alex.Common.Blocks;
 using Alex.Common.Gui.Graphics;
+using Alex.Common.Utils.Vectors;
 using Alex.Entities.BlockEntities;
 using Alex.Gui;
 using Alex.Gui.Elements.Map;
@@ -17,7 +15,6 @@ using Alex.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using RocketUI;
-
 
 namespace Alex
 {
@@ -50,7 +47,7 @@ namespace Alex
             if (source == target) return 1.0;
 
             int stepsToSame = ComputeLevenshteinDistance(source, target);
-            return (1.0 - ((double)stepsToSame / (double)Math.Max(source.Length, target.Length)));
+            return (1.0 - (stepsToSame / (double)Math.Max(source.Length, target.Length)));
         }
         /// <summary>
         /// Returns the number of steps required to transform the source string
@@ -360,7 +357,7 @@ namespace Alex
 
 		public static RasterizerState Copy(this RasterizerState state)
 		{
-			return new RasterizerState()
+			return new RasterizerState
 			{
 				CullMode = state.CullMode,
 				DepthBias = state.DepthBias,
@@ -417,34 +414,48 @@ namespace Alex
 
 		public static BlockFace GetBlockFace(this Vector3 vector)
 		{
-			BlockFace face = BlockFace.None;
-
 			if (vector == Vector3.Up)
-			{
-				face = BlockFace.Up;
-			}
-			else if (vector == Vector3.Down)
-			{
-				face = BlockFace.Down;
-			}
-			else if (vector == Vector3.Backward)
-			{
-				face = BlockFace.South;
-			}
-			else if (vector == Vector3.Forward)
-			{
-				face = BlockFace.North;
-			}
-			else if (vector == Vector3.Left)
-			{
-				face = BlockFace.West;
-			}
-			else if (vector == Vector3.Right)
-			{
-				face = BlockFace.East;
-			}
+				return BlockFace.Up;
 
-			return face;
+			if (vector == Vector3.Down)
+				return BlockFace.Down;
+
+			if (vector == Vector3.Forward)
+				return BlockFace.North;
+			
+			if (vector == Vector3.Right)
+				return BlockFace.East;
+			
+			if (vector == Vector3.Backward)
+				return BlockFace.South;
+			
+			if (vector == Vector3.Left)
+				return BlockFace.West;
+
+			return BlockFace.None;
+		}
+		
+		public static BlockFace GetBlockFace(this BlockCoordinates coordinates)
+		{
+			if (coordinates == BlockCoordinates.Up)
+				return BlockFace.Up;
+
+			if (coordinates == BlockCoordinates.Down)
+				return BlockFace.Down;
+
+			if (coordinates == BlockCoordinates.North)
+				return BlockFace.North;
+			
+			if (coordinates == BlockCoordinates.East)
+				return BlockFace.East;
+			
+			if (coordinates == BlockCoordinates.South)
+				return BlockFace.South;
+			
+			if (coordinates == BlockCoordinates.West)
+				return BlockFace.West;
+
+			return BlockFace.None;
 		}
 
 		public static void Fill<TType>(this TType[] data, TType value)

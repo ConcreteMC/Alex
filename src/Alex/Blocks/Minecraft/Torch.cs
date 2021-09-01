@@ -23,19 +23,22 @@ namespace Alex.Blocks.Minecraft
 		}
 
 		/// <inheritdoc />
-		public override BlockState PlaceBlock(World world, Player player, BlockCoordinates position, BlockFace face, Vector3 cursorPosition)
+		public override bool PlaceBlock(World world, Player player, BlockCoordinates position, BlockFace face, Vector3 cursorPosition)
 		{
+			position += face.GetBlockCoordinates();
+			BlockState state = BlockState;
 			if (face != BlockFace.Up && face != BlockFace.Down)
 			{
 				var wallTorch = BlockFactory.GetBlockState("minecraft:wall_torch");
 
 				if (wallTorch != null)
 				{
-					return wallTorch.WithProperty(Facing, face);
+					state = wallTorch.WithProperty(Facing, face);
 				}
 			}
 
-			return BlockState;
+			world.SetBlockState(position, state);
+			return true;
 		}
 	}
 }

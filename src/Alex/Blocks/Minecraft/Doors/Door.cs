@@ -90,12 +90,13 @@ namespace Alex.Blocks.Minecraft.Doors
 		}
 
 		/// <inheritdoc />
-		public override BlockState PlaceBlock(World world, Player player, BlockCoordinates position, BlockFace face, Vector3 cursorPosition)
+		public override bool PlaceBlock(World world, Player player, BlockCoordinates position, BlockFace face, Vector3 cursorPosition)
 		{
+			position += face.GetBlockCoordinates();
 			var blockAbove = world.GetBlockState(position + BlockCoordinates.Up);
 
 			if (!blockAbove.Block.BlockMaterial.IsReplaceable)
-				return null;
+				return true;
 			
 			var facing = player.KnownPosition.GetFacing();
 			BlockState state = BlockState;
@@ -114,7 +115,10 @@ namespace Alex.Blocks.Minecraft.Doors
 				state = state.WithProperty("hinge", "left");
 			}
 			
-			return state;
+			world.SetBlockState(position, state);
+
+			return true;
+			//return state;
 		}
 
 		public override bool ShouldRenderFace(BlockFace face, Block neighbor)

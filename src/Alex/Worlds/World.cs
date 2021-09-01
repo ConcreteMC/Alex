@@ -11,6 +11,7 @@ using Alex.Blocks.Minecraft;
 using Alex.Blocks.State;
 using Alex.Blocks.Storage;
 using Alex.Common;
+using Alex.Common.Blocks;
 using Alex.Common.Data.Options;
 using Alex.Common.Graphics;
 using Alex.Common.Graphics.GpuResources;
@@ -42,6 +43,7 @@ using MiNET.Utils;
 using NLog;
 using RocketUI;
 using BlockCoordinates = Alex.Common.Utils.Vectors.BlockCoordinates;
+using BlockFace = Alex.Common.Blocks.BlockFace;
 using ChunkCoordinates = Alex.Common.Utils.Vectors.ChunkCoordinates;
 using Color = Microsoft.Xna.Framework.Color;
 using Player = Alex.Entities.Player;
@@ -377,12 +379,12 @@ namespace Alex.Worlds
 			        block.Value.BoundingBox, Camera.ViewMatrix, Camera.ProjectionMatrix, Color.White, true, _breakingEffect);
 	        }
 	        
-	        if (Player != null && Player.HasRaytraceResult)
+	        if (Player != null && Player.Raytracer.HasValue)
 	        {
 		        var player = Player;
-		        var block = player.SelBlock;
+		        var block = player.Raytracer.TracedBlock;
 		        //var               blockPos = player.RaytracedBlock;
-		        var boxes = player.RaytraceBoundingBoxes;
+		        var boxes = player.Raytracer.RaytraceBoundingBoxes;
 
 		        if (boxes != null && boxes.Length > 0)
 		        {
@@ -407,6 +409,15 @@ namespace Alex.Worlds
 				        }
 			        }
 		        }
+
+		        //if (player.HasRaytraceResult && player.RaytracedBlockFace != BlockFace.None)
+		      //  {
+			   //     var neighbor = player.AdjacentRaytraceBlock;
+			   //     args.GraphicsDevice.RenderBoundingBox(new BoundingBox(neighbor, neighbor + new BlockCoordinates(1,1,1)), Camera.ViewMatrix, Camera.ProjectionMatrix, Color.Green);
+
+			   //     neighbor = player.RaytracedBlock + player.RaytracedBlockFace.GetBlockCoordinates();
+			   //     args.GraphicsDevice.RenderBoundingBox(new BoundingBox(neighbor, neighbor + new BlockCoordinates(1,1,1)), Camera.ViewMatrix, Camera.ProjectionMatrix, Color.Red);
+		       // }
 	        }
 
 	        if (RenderBoundingBoxes)

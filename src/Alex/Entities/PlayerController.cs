@@ -216,7 +216,7 @@ namespace Alex.Entities
 
 		private bool CheckMovementPredicate()
 		{
-			return CheckMovementInput;
+			return CheckMovementInput && CanOpenDialog();
 		}
 
 		private void SetFlying()

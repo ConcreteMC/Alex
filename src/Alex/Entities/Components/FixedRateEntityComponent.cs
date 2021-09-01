@@ -3,7 +3,7 @@ using Microsoft.Xna.Framework;
 
 namespace Alex.Entities.Components
 {
-	public abstract class FixedRateEntityComponent : EntityComponent
+	public abstract class FixedRateEntityComponent : EntityComponentUpdatable
 	{
 		private       float _frameAccumulator = 0f;
 		private       float _targetTime        = 1f / 20f;

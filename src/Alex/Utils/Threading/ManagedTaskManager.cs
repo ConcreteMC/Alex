@@ -100,52 +100,60 @@ namespace Alex.Utils.Threading
 				_frameSkip--;
 				return;
 			}
-
+			
 			if (_alex.FpsMonitor.IsRunningSlow)
 				return;
 
-			//var avgFrameTime = _alex.FpsMonitor.AverageFrameTime;
+			var avgFrameTime = _alex.FpsMonitor.MinFrameTime;
 
-			//if (avgFrameTime <= 1f)
-			//	avgFrameTime = _alex.FpsMonitor.AverageFrameTime;
+			if (avgFrameTime <= 1f)
+				avgFrameTime = _alex.FpsMonitor.AverageFrameTime;
 			
 			Stopwatch sw = Stopwatch.StartNew();
-
+			int count = _queue.Count;
 			//while (sw.Elapsed.TotalMilliseconds < avgFrameTime && !_queue.IsEmpty && _queue.TryDequeue(out var a))
-			if (_queue.TryDequeue(out var a) && !a.IsCancelled)
+			//for (int i = 0; i < count; i++)
 			{
-				var beforeRun = sw.Elapsed;
-
-				TimeSpan timeTillExecution = a.TimeSinceCreation;
-				try
+				while (sw.Elapsed.TotalMilliseconds < avgFrameTime && _queue.TryDequeue(out var a) && !a.IsCancelled)
 				{
-					a.Execute();
-					_timeTillExecutionMovingAverage.ComputeAverage((float) timeTillExecution.TotalMilliseconds);
-				}
-				catch (Exception ex)
-				{
-					Log.Warn(ex, $"Exception while executing enqueued task");
-				}
+					var beforeRun = sw.Elapsed;
 
-				var afterRun = sw.Elapsed;
-				var executionTime = (afterRun - beforeRun);
-				_executionTimeMovingAverage.ComputeAverage((float) executionTime.TotalMilliseconds);
+					TimeSpan timeTillExecution = a.TimeSinceCreation;
 
-				TaskFinished?.Invoke(this, new TaskFinishedEventArgs(a, executionTime, timeTillExecution));
-
-				if (_skipFrames)
-				{
-					var avgFrameTime = _alex.FpsMonitor.AverageFrameTime;
-
-					if (executionTime.TotalMilliseconds > avgFrameTime)
+					try
 					{
-						var framesToSkip = (int)Math.Ceiling(executionTime.TotalMilliseconds / avgFrameTime);
-
-						_frameSkip += framesToSkip;
-
-						Log.Debug(
-							$"Task execution time exceeds frametime by {(executionTime.TotalMilliseconds - avgFrameTime):F2}ms skipping {framesToSkip} frames (Tag={(a.Tag ?? "null")})");
+						a.Execute();
+						_timeTillExecutionMovingAverage.ComputeAverage((float)timeTillExecution.TotalMilliseconds);
 					}
+					catch (Exception ex)
+					{
+						Log.Warn(ex, $"Exception while executing enqueued task");
+					}
+
+					var afterRun = sw.Elapsed;
+					var executionTime = (afterRun - beforeRun);
+					_executionTimeMovingAverage.ComputeAverage((float)executionTime.TotalMilliseconds);
+
+					TaskFinished?.Invoke(this, new TaskFinishedEventArgs(a, executionTime, timeTillExecution));
+
+					if (_skipFrames)
+					{
+					//	var avgFrameTime = _alex.FpsMonitor.AverageFrameTime;
+
+						if (executionTime.TotalMilliseconds > avgFrameTime)
+						{
+							var framesToSkip = (int)Math.Ceiling(executionTime.TotalMilliseconds / avgFrameTime);
+
+							_frameSkip += framesToSkip;
+
+							Log.Debug(
+								$"Task execution time exceeds frametime by {(executionTime.TotalMilliseconds - avgFrameTime):F2}ms skipping {framesToSkip} frames (Tag={(a.Tag ?? "null")})");
+						}
+					}
+				}
+				//else
+				{
+					//break;
 				}
 			}
 			//var elapsed = (float)sw.Elapsed.TotalMilliseconds;
@@ -159,6 +167,7 @@ namespace Alex.Utils.Threading
 			TaskCreated?.Invoke(this, new TaskCreatedEventArgs(task));
 			
 			task.Enqueued();
+			//task.Execute();
 			_queue.Enqueue(task);
 		}
 		

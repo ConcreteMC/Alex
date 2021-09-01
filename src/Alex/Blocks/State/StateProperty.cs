@@ -122,7 +122,7 @@ namespace Alex.Blocks.State
 		
 		public virtual string ToFormattedString()
 		{
-			return $"{Name}={Value}";
+			return $"{Name}={StringValue}";
 		}
 
 		public virtual IStateProperty<TType> CreateCopy()

@@ -223,16 +223,54 @@ namespace Alex.Common.Utils.Vectors
 		public static readonly BlockCoordinates Zero = new BlockCoordinates(0);
 		public static readonly BlockCoordinates One = new BlockCoordinates(1);
 
+		/// <summary>
+		///		Returns a <see cref="BlockCoordinates"/> with components 0, 1, 0
+		/// </summary>
 		public static readonly BlockCoordinates Up = new BlockCoordinates(0, 1, 0);
+		
+		/// <summary>
+		///		Returns a <see cref="BlockCoordinates"/> with components 0, -1, 0
+		/// </summary>
 		public static readonly BlockCoordinates Down = new BlockCoordinates(0, -1, 0);
+		
+		/// <summary>
+		///		Returns a <see cref="BlockCoordinates"/> with components -1, 0, 0
+		/// </summary>
 		public static readonly BlockCoordinates Left = new BlockCoordinates(-1, 0, 0);
+		
+		/// <summary>
+		///		Returns a <see cref="BlockCoordinates"/> with components 1, 0, 0
+		/// </summary>
 		public static readonly BlockCoordinates Right = new BlockCoordinates(1, 0, 0);
+		
+		/// <summary>
+		///		Returns a <see cref="BlockCoordinates"/> with components 0, 0, -1
+		/// </summary>
 		public static readonly BlockCoordinates Backwards = new BlockCoordinates(0, 0, -1);
+		
+		/// <summary>
+		///		Returns a <see cref="BlockCoordinates"/> with components 0, 0, 1
+		/// </summary>
 		public static readonly BlockCoordinates Forwards = new BlockCoordinates(0, 0, 1);
 
+		/// <summary>
+		///		Returns a <see cref="BlockCoordinates"/> with components 1, 0, 0
+		/// </summary>
 		public static readonly BlockCoordinates East = new BlockCoordinates(1, 0, 0);
+		
+		/// <summary>
+		///		Returns a <see cref="BlockCoordinates"/> with components -1, 0, 0
+		/// </summary>
 		public static readonly BlockCoordinates West = new BlockCoordinates(-1, 0, 0);
+		
+		/// <summary>
+		///		Returns a <see cref="BlockCoordinates"/> with components 0, 0, -1
+		/// </summary>
 		public static readonly BlockCoordinates North = new BlockCoordinates(0, 0, -1);
+		
+		/// <summary>
+		///		Returns a <see cref="BlockCoordinates"/> with components 0, 0, 1
+		/// </summary>
 		public static readonly BlockCoordinates South = new BlockCoordinates(0, 0, 1);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -273,6 +311,26 @@ namespace Alex.Common.Utils.Vectors
 			return this + Down;
 		}
 
+		public BlockCoordinates BlockLeft()
+		{
+			return this + Left;
+		}
+
+		public BlockCoordinates BlockRight()
+		{
+			return this + Right;
+		}
+
+		public BlockCoordinates BlockForwards()
+		{
+			return this + Forwards;
+		}
+
+		public BlockCoordinates BlockBackwards()
+		{
+			return this + Backwards;
+		}
+		
 		public BlockCoordinates BlockWest()
 		{
 			return this + West;

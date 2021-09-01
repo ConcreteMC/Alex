@@ -176,19 +176,28 @@ namespace Alex.Blocks.Minecraft
 				if (Alex.Instance.Resources.TryGetBlockState(BlockState.Name, out blockStateResource))
 				{
 					var state = MultiPartModelHelper.GetBlockState(world, position, BlockState, blockStateResource);
-					if (state != BlockState)
+					if (state.ID != BlockState.ID)
 						world.SetBlockState(position, state);
 				}
 			}
 		}
 
-		public virtual BlockState PlaceBlock(World world,
+		public virtual bool PlaceBlock(World world,
 			Player player,
 			BlockCoordinates position,
 			BlockFace face,
 			Vector3 cursorPosition)
 		{
-			return BlockState;
+			//BlockCoordinates target = position;
+			var existingBlockState = world.GetBlockState(position);
+			var existingBlock = existingBlockState.Block;
+			if (!existingBlock.BlockMaterial.IsReplaceable)
+			{
+				position += face.GetBlockCoordinates();
+			}
+							    
+			world.SetBlockState(position, BlockState);
+			return true;
 		}
 		
 		/// <summary>
@@ -315,7 +324,7 @@ namespace Alex.Blocks.Minecraft
 			        }
 			        
 			        //If neighbor is solid & not transparent. Hmmm?
-			        if (neighbor.Solid && !(neighbor.Transparent || !neighbor.IsFullCube)) return true;
+			        if (neighbor.Solid && !(neighbor.Transparent || !neighbor.IsFullCube)) return false;
 		        }
 		        else
 		        {

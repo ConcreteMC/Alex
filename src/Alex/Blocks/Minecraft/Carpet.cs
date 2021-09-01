@@ -1,4 +1,5 @@
 using Alex.Blocks.Materials;
+using Alex.Common.Blocks;
 
 namespace Alex.Blocks.Minecraft
 {
@@ -11,6 +12,20 @@ namespace Alex.Blocks.Minecraft
             
             base.BlockMaterial = Material.Carpet;
             IsFullCube = false;
+        }
+
+        /// <inheritdoc />
+        public override bool ShouldRenderFace(BlockFace face, Block neighbor)
+        {
+            if (face == BlockFace.Down)
+            {
+                if (neighbor.Solid)
+                {
+                    if (neighbor.IsFullCube || neighbor.Transparent)
+                        return false;
+                }
+            }
+            return base.ShouldRenderFace(face, neighbor);
         }
     }
 }

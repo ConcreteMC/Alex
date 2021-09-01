@@ -192,15 +192,15 @@ namespace Alex.Blocks.Minecraft.Stairs
         }
 
         /// <inheritdoc />
-        public override BlockState PlaceBlock(World world,
+        public override bool PlaceBlock(World world,
             Player player,
             BlockCoordinates position,
             BlockFace face,
             Vector3 cursorPosition)
         {
+            position += face.GetBlockCoordinates();
             var upsideDown = ((cursorPosition.Y > 0.5 && face != BlockFace.Up) || face == BlockFace.Down);
             var blockState = BlockState;
-
 
             blockState = blockState.WithProperty("half", upsideDown ? "top" : "bottom");
 
@@ -215,7 +215,8 @@ namespace Alex.Blocks.Minecraft.Stairs
             
             blockState = blockState.WithProperty(Facing, face);
 
-            return blockState;
+            world.SetBlockState(position, blockState);
+            return true;
 
           //  return base.PlaceBlock(world, player, position, face, cursorPosition);
         }

@@ -486,8 +486,6 @@ namespace Alex.Graphics.Models.Blocks
 					float minX = float.MaxValue, minY = float.MaxValue, minZ = float.MaxValue;
 					float maxX = float.MinValue, maxY = float.MinValue, maxZ = float.MinValue;
 
-
-
 					if (!ShouldRenderFace(world, facing, position, baseBlock))
 						continue;
 
@@ -496,54 +494,6 @@ namespace Alex.Graphics.Models.Blocks
 
 					if (uv == null)
 					{
-						var from = element.From;
-						var to = element.To;
-
-						/*switch (face.Key)
-						{
-							case BlockFace.North:
-								x1 = from.X;
-								y1 = 16f - to.Y;
-								x2 = to.X;
-								y2 = 16f - from.Y;
-								break;
-							
-							case BlockFace.East:
-								x1 = from.Z;
-								y1 = 16f - to.Y;
-								x2 = to.Z;
-								y2 = 16f - from.Y;
-								break;
-							
-							case BlockFace.South:
-								x1 = to.X;
-								y1 = 16f - to.Y;
-								x2 = from.X;
-								y2 = 16f - from.Y;
-								break;
-							
-							case BlockFace.West:
-								x1 = from.Z;
-								y1 = 16f - to.Y;
-								x2 = to.Z;
-								y2 = 16f - from.Y;
-								break;
-							
-							case BlockFace.Up:
-								x1 = from.X;
-								y1 = from.Z;
-								x2 = to.X;
-								y2 = to.Z;
-								break;
-							
-							case BlockFace.Down:
-								x1 = to.X;
-								y1 = from.Z;
-								x2 = from.X;
-								y2 = to.Z;
-								break;
-						}*/
-
 						switch (face.Key)
 						{
 							case BlockFace.North:

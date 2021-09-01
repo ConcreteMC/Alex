@@ -21,21 +21,25 @@ namespace Alex.Blocks.Minecraft.Logs
         }
 
         /// <inheritdoc />
-        public override BlockState PlaceBlock(World world, Player player, BlockCoordinates position, BlockFace face, Vector3 cursorPosition)
+        public override bool PlaceBlock(World world, Player player, BlockCoordinates position, BlockFace face, Vector3 cursorPosition)
         {
+            position += face.GetBlockCoordinates();
+            BlockState state = BlockState;
             if (face == BlockFace.Up || face == BlockFace.Down)
             {
-                return BlockState.WithProperty("axis", "y");
+                state = BlockState.WithProperty("axis", "y");
             }
             else if (face == BlockFace.East || face == BlockFace.West)
             {
-                return BlockState.WithProperty("axis", "x");
+                state = BlockState.WithProperty("axis", "x");
             }
             else if (face == BlockFace.North || face == BlockFace.South)
             {
-                return BlockState.WithProperty("axis", "z");
+                state = BlockState.WithProperty("axis", "z");
             }
-            return base.PlaceBlock(world, player, position, face, cursorPosition);
+
+            world.SetBlockState(position, state);
+            return true;
         }
     }
 

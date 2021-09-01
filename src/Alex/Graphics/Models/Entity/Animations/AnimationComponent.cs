@@ -24,19 +24,14 @@ using RocketUI.Input;
 
 namespace Alex.Graphics.Models.Entity.Animations
 {
-	public class AnimationComponent : ITickedEntityComponent
+	public class AnimationComponent : EntityComponent, ITicked
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(AnimationComponent));
 
 		public bool Initialized => _didInit;
-		
-		public bool Enabled { get; set; } = true;
-
 		public MoLangRuntime Runtime { get; set; }
-		public Entities.Entity Entity { get; }
-		public AnimationComponent(Entities.Entity entity) : base()
+		public AnimationComponent(Entities.Entity entity) : base(entity)
 		{
-			Entity = entity;
 			Runtime = new MoLangRuntime();
 		}
 
@@ -383,13 +378,6 @@ namespace Alex.Graphics.Models.Entity.Animations
 			}
 
 			return false;
-		}
-
-		/// <inheritdoc />
-		public void Update(GameTime gameTime)
-		{
-			if (!Enabled)
-				return;
 		}
 
 		/// <inheritdoc />

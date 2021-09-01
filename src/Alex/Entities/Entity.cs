@@ -301,12 +301,12 @@ namespace Alex.Entities
 
 		public float Experience { get; set; } = 0;
 		public float ExperienceLevel { get; set; } = 0; 
-		protected ConcurrentStack<IEntityComponent> EntityComponents { get; }
+		protected Stack<IEntityComponent> EntityComponents { get; }
 		public EffectManagerComponent Effects { get; }
 		public Entity(World level)
 		{
 			TimeOfCreation = DateTime.UtcNow;
-			EntityComponents = new ConcurrentStack<IEntityComponent>();
+			EntityComponents = new Stack<IEntityComponent>();
 			
 			_lifeTime = Stopwatch.StartNew();
 			
@@ -332,9 +332,9 @@ namespace Alex.Entities
 			AddOrUpdateProperty(new MovementSpeedProperty(this));
 			Movement = new MovementComponent(this);
 			EntityComponents.Push(Movement);
-					
+			AnimationController = new AnimationComponent(this);
 			//EntityComponents.Push(Movement = new EntityMovement(this));
-			EntityComponents.Push(AnimationController = new AnimationComponent(this));
+			EntityComponents.Push(AnimationController);
 			EntityComponents.Push(Effects = new EffectManagerComponent(this));
 			
 			//Effect = new EntityEffect();
@@ -1252,7 +1252,10 @@ namespace Alex.Entities
 			
 			foreach (var entityComponent in EntityComponents)
 			{
-				entityComponent.Update(args.GameTime);
+				if (entityComponent is IUpdated updateable)
+				{
+					updateable.Update(args.GameTime);
+				}
 			}
 
 			var renderer = ModelRenderer;

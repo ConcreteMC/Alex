@@ -20,67 +20,45 @@ namespace Alex.Common.Blocks
 	public static class BlockFaceHelper
     	{
     		public static Vector3 GetVector3(this BlockFace face)
-    		{
-    			switch (face)
-    			{
-    				case BlockFace.Down:
-    					return Vector3.Down;
-    				case BlockFace.Up:
-    					return Vector3.Up;
-    				case BlockFace.East:
-    					return Vector3.Right;
-    				case BlockFace.West:
-    					return Vector3.Left;
-    				case BlockFace.North:
-    					return Vector3.Forward;
-    				case BlockFace.South:
-    					return Vector3.Backward;
-    				default:
-    					return Vector3.Zero;
-    			}
-    		}
+            {
+	            return face switch
+	            {
+		            BlockFace.Down  => Vector3.Down,
+		            BlockFace.Up    => Vector3.Up,
+		            BlockFace.East  => Vector3.Left,
+		            BlockFace.West  => Vector3.Right,
+		            BlockFace.North => Vector3.Forward,
+		            BlockFace.South => Vector3.Backward,
+		            _               => Vector3.Zero
+	            };
+            }
     
     		public static BlockCoordinates GetBlockCoordinates(this BlockFace face)
-    		{
-    			switch (face)
-    			{
-    				case BlockFace.Down:
-    					return BlockCoordinates.Down;
-    				case BlockFace.Up:
-    					return BlockCoordinates.Up;
-    				case BlockFace.East:
-    					return BlockCoordinates.Right;
-    				case BlockFace.West:
-    					return BlockCoordinates.Left;
-    				case BlockFace.North:
-    					return BlockCoordinates.Backwards;
-    				case BlockFace.South:
-    					return BlockCoordinates.Forwards;
-    				default:
-    					return BlockCoordinates.Zero;
-    			}
-    		}
+            {
+	            return face switch
+	            {
+		            BlockFace.Down  => BlockCoordinates.Down,
+		            BlockFace.Up    => BlockCoordinates.Up,
+		            BlockFace.East  => BlockCoordinates.East,
+		            BlockFace.West  => BlockCoordinates.West,
+		            BlockFace.North => BlockCoordinates.North,
+		            BlockFace.South => BlockCoordinates.South,
+		            _               => BlockCoordinates.Zero
+	            };
+            }
     		
     		public static BlockFace Opposite(this BlockFace face)
-    		{
-    			switch (face)
-    			{
-    				case BlockFace.Down:
-    					return BlockFace.Up;
-    				case BlockFace.Up:
-    					return BlockFace.Down;
-    				case BlockFace.East:
-    					return BlockFace.West;
-    				case BlockFace.West:
-    					return BlockFace.East;
-    				case BlockFace.North:
-    					return BlockFace.South;
-    				case BlockFace.South:
-    					return BlockFace.North;
-    
-    					default:
-    					return BlockFace.None;
-    			}
-    		}
+            {
+	            return face switch
+	            {
+		            BlockFace.Down  => BlockFace.Up,
+		            BlockFace.Up    => BlockFace.Down,
+		            BlockFace.East  => BlockFace.West,
+		            BlockFace.West  => BlockFace.East,
+		            BlockFace.North => BlockFace.South,
+		            BlockFace.South => BlockFace.North,
+		            _               => BlockFace.None
+	            };
+            }
     	}
 }
