@@ -10,7 +10,7 @@ namespace Alex
 		/// <summary>
 		///		If true, reports bedrock network statistics to console every second
 		/// </summary>
-		public const bool LogNetworkStatistics = true;
+		public const bool LogNetworkStatistics = false;
 		
 		/// <summary>
 		///		If true, report invalid blockstate properties in debug console

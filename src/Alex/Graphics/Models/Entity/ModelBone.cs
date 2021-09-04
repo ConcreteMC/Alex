@@ -297,10 +297,9 @@ namespace Alex.Graphics.Models.Entity
 				var targetScale = _targetScale;
 				var startScale = _startScale;
 
-				//var rotationDifference = targetRotation - startRotation;
-				_rotation = startRotation + ((targetRotation - startRotation) * progress);
-				_position = startPosition + ((targetPosition - startPosition) * progress);
-				_scale = startScale + ((targetScale - startScale) * progress);
+				_rotation = MathUtils.LerpVector3Degrees(startRotation, targetRotation, progress);
+				_position = Vector3.Lerp(startPosition, targetPosition, progress);// startPosition + ((targetPosition - startPosition) * progress);
+				_scale =  Vector3.Lerp(startScale, targetScale, progress);// startScale + ((targetScale - startScale) * progress);
 
 				UpdateTransform();
 			}

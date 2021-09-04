@@ -21,7 +21,7 @@ namespace Alex.Blocks.Minecraft
             {
                 if (neighbor.Solid)
                 {
-                    if (neighbor.IsFullCube || neighbor.Transparent)
+                    if (neighbor.IsFullCube && !neighbor.Transparent)
                         return false;
                 }
             }

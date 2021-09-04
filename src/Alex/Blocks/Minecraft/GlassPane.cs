@@ -1,3 +1,4 @@
+using System;
 using Alex.Blocks.Materials;
 using Alex.Blocks.Properties;
 using Alex.Blocks.State;
@@ -31,6 +32,17 @@ namespace Alex.Blocks.Minecraft
 			if (block is GlassPane)
 				return true;
 			
+			if (block.Solid && !block.BlockMaterial.IsOpaque)
+				return true;
+			
+			if (block.Solid && block.IsFullCube)
+				return true;
+
+			//if (block.IsFullCube)
+			//	return true;
+
+			return false;
+			
 			return base.CanAttach(face, block);
 		}
 		
@@ -55,6 +67,43 @@ namespace Alex.Blocks.Minecraft
 					return true;
 			}
 			return base.TryGetStateProperty(prop, out stateProperty);
+		}
+
+		/// <inheritdoc />
+		public override bool ShouldRenderFace(BlockFace face, Block neighbor)
+		{
+			bool connected = false;
+			bool neighborConnected = false;
+			switch (face)
+			{
+				case BlockFace.East:
+					connected = BlockState.GetValue(PropertyBool.EAST);
+					neighborConnected = neighbor.BlockState.GetValue(PropertyBool.WEST);
+					break;
+
+				case BlockFace.West:
+					connected = BlockState.GetValue(PropertyBool.WEST);
+					neighborConnected = neighbor.BlockState.GetValue(PropertyBool.EAST);
+					break;
+
+				case BlockFace.North:
+					connected = BlockState.GetValue(PropertyBool.NORTH);
+					neighborConnected = neighbor.BlockState.GetValue(PropertyBool.SOUTH);
+					break;
+
+				case BlockFace.South:
+					connected = BlockState.GetValue(PropertyBool.SOUTH);
+					neighborConnected = neighbor.BlockState.GetValue(PropertyBool.NORTH);
+					break;
+			}
+
+			if (neighbor is GlassPane pane)
+			{
+				if (connected)
+					return false;
+			}
+			
+			return true;
 		}
 	}
 }

@@ -252,8 +252,6 @@ namespace Alex.Worlds
 
 		private AutoResetEvent _processingSync = new AutoResetEvent(false);
 
-		private object _blockLightLock = new object();
-		
 		private bool ProcessQueue()
 		{
 			var maxThreads = Options.MiscelaneousOptions.ChunkThreads.Value;
@@ -297,9 +295,15 @@ namespace Alex.Worlds
 									{
 										if (!Monitor.TryEnter(chunk.UpdateLock, 0))
 											continue;
-
+										
 										try
 										{
+											//if (chunk?.ChunkData?.IsQueued == true)
+											{
+											//	queue.Enqueue(chunkCoordinates);
+											//	continue;
+											}
+											
 											bool newChunk = chunk.IsNew;
 
 											bool c1 = false;
@@ -323,29 +327,31 @@ namespace Alex.Worlds
 											}
 
 											timingWatch.Restart();
-											if (chunk.UpdateBuffer(Graphics, World, true))
+											
+											if (chunk.UpdateBuffer(World, true))
 											{
 												if (newChunk)
 												{
 													if (c1)
 														ScheduleChunkUpdate(
 															new ChunkCoordinates(chunk.X + 1, chunk.Z),
-															ScheduleType.Border);
+															ScheduleType.Border, false, chunkCoordinates);
 
 													if (c2)
 														ScheduleChunkUpdate(
 															new ChunkCoordinates(chunk.X, chunk.Z + 1),
-															ScheduleType.Border);
+															ScheduleType.Border, false, chunkCoordinates);
 
 													if (c3)
 														ScheduleChunkUpdate(
 															new ChunkCoordinates(chunk.X - 1, chunk.Z),
-															ScheduleType.Border);
+															ScheduleType.Border, false, chunkCoordinates);
 
 													if (c4)
 														ScheduleChunkUpdate(
 															new ChunkCoordinates(chunk.X, chunk.Z - 1),
-															ScheduleType.Border);
+															ScheduleType.Border, false, chunkCoordinates);
+															
 												}
 												
 												OnChunkUpdate?.Invoke(this, new ChunkUpdatedEventArgs(chunk, timingWatch.Elapsed));
@@ -354,6 +360,7 @@ namespace Alex.Worlds
 										finally
 										{
 											//Scheduled.Remove(chunkCoordinates);
+											chunk.Scheduled = false;
 											Monitor.Exit(chunk.UpdateLock);
 										}
 									}
@@ -418,8 +425,6 @@ namespace Alex.Worlds
 			ScheduleChunkUpdate(position, ScheduleType.Full, false);
 
 			OnChunkAdded?.Invoke(this, new ChunkAddedEventArgs(column));
-			//EnsureStarted();
-			//UpdateQueue.Enqueue(position);
 		}
 
 		/// <inheritdoc />
@@ -459,14 +464,6 @@ namespace Alex.Worlds
 			return Chunks.ToArray();
 		}
 
-		public IEnumerable<ChunkCoordinates> GetVisibleChunkCoordinates()
-		{
-			foreach (var chunk in Chunks)
-			{
-				yield return chunk.Key;
-			}
-		}
-
 		/// <inheritdoc />
 		public void ClearChunks()
 		{
@@ -484,14 +481,17 @@ namespace Alex.Worlds
 			}
 		}
 
-		public void ScheduleChunkUpdate(ChunkCoordinates position, ScheduleType type, bool prioritize = false)
+		public void ScheduleChunkUpdate(ChunkCoordinates position, ScheduleType type, bool prioritize = false, ChunkCoordinates source = default)
 		{
 			var queue = UpdateQueue;
 			if (Chunks.TryGetValue(position, out var cc))
 			{
+				//if (cc?.ChunkData?.IsQueued == true)
+				//	return;
+					
 				if ((type & ScheduleType.Border) != 0)
 				{
-					cc.ScheduleBorder();
+					cc.ScheduleBorder(source);
 					
 					queue = UpdateBorderQueue;
 				}
@@ -504,8 +504,13 @@ namespace Alex.Worlds
 					return;
 				}
 
-				if (Monitor.TryEnter(cc.UpdateLock, 0))
+				//if (Monitor.TryEnter(cc.UpdateLock, 0))
 				{
+					if (cc.Scheduled && !prioritize)
+						return;
+
+					cc.Scheduled = true;
+					
 					try
 					{
 						queue.Enqueue(position);
@@ -513,7 +518,7 @@ namespace Alex.Worlds
 					}
 					finally
 					{
-						Monitor.Exit(cc.UpdateLock);
+				//		Monitor.Exit(cc.UpdateLock);
 					}
 				}
 			}
@@ -706,8 +711,8 @@ namespace Alex.Worlds
 			foreach (var chunk in Chunks)
 			{
 				bool inView = IsWithinView(chunk.Key, World.Camera);
-				var data = chunk.Value?.ChunkData;
 
+				var data = chunk.Value.ChunkData;
 				if (data != null)
 				{
 					if (inView && index + 1 < max)
@@ -738,11 +743,7 @@ namespace Alex.Worlds
 
 			try
 			{
-				//Graphics?.Dispose();
 				CancellationToken?.Cancel();
-				
-				//BlockLightCalculations?.Dispose();
-
 				SkyLightCalculator?.Dispose();
 
 				_renderSampler?.Dispose();
@@ -757,13 +758,11 @@ namespace Alex.Worlds
 						rendered?.Dispose();
 
 				_renderedChunks = null;
-				//BlockLightCalculations = null;
 				SkyLightCalculator = null;
 			}
 			finally
 			{
 				_disposed = true;
-			//	Log.Info($"ChunkManager disposed.");
 			}
 		}
 	}

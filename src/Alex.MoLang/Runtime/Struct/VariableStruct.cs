@@ -37,12 +37,12 @@ namespace Alex.MoLang.Runtime.Struct
 
 			if (!key.HasChildren)
 			{
-				Map[key.Segment] = value;
+				Map[key.Value] = value;
 
 				return;
 			}
 
-			string main = key.Segment;
+			string main = key.Value;
 
 			if (!string.IsNullOrWhiteSpace(main)) {
 				//object vstruct = Get(main, MoParams.Empty);
@@ -79,7 +79,7 @@ namespace Alex.MoLang.Runtime.Struct
 
 			if (key.HasChildren)
 			{
-				string main = key.Segment;
+				string main = key.Value;
 
 				if (!string.IsNullOrWhiteSpace(main))
 				{
@@ -100,7 +100,7 @@ namespace Alex.MoLang.Runtime.Struct
 				}
 			}
 
-			if (Map.TryGetValue(key.Segment, out var v))
+			if (Map.TryGetValue(key.Value, out var v))
 				return v;
 			
 			//

@@ -15,7 +15,7 @@ namespace Alex.Entities
 		public ThrowableEntity(World level) : base(
 			level)
 		{
-			
+			base.HasPhysics = true;
 		}
 		
 		/// <inheritdoc />

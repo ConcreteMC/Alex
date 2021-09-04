@@ -32,7 +32,7 @@ namespace Alex.MoLang.Runtime
 				//{
 				//	throw new MoLangRuntimeException($"Cannot retrieve struct: {name}", null);
 				//}
-				return Structs[name.Segment].Get(name.Segments[0], param);
+				return Structs[name.Value].Get(name.Segments[0], param);
 			}
 			catch (Exception ex)
 			{
@@ -51,7 +51,7 @@ namespace Alex.MoLang.Runtime
 				//	throw new MoLangRuntimeException($"Cannot set value on struct: {name}", null);
 				//}
 
-				Structs[name.Segment].Set(name.Segments[0], value);
+				Structs[name.Value].Set(name.Segments[0], value);
 			}
 			catch (Exception ex)
 			{

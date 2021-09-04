@@ -324,6 +324,8 @@ namespace Alex.Entities
 			//HasPhysics = true;
 			
 			HealthManager = new HealthManager(this);
+			EntityComponents.Push(HealthManager);
+			
 			UUID = new MiNET.Utils.UUID(Guid.NewGuid().ToByteArray());
 			
 			//BaseMovementSpeed = 4.317D;
@@ -556,10 +558,13 @@ namespace Alex.Entities
 			get => _isSneaking;
 			set
 			{
-				var oldValue = _isSneaking;
-				_isSneaking = value;
-				
-				OnSneakingChanged(value);
+				if (_isSneaking != value)
+				{
+					var oldValue = _isSneaking;
+					_isSneaking = value;
+
+					OnSneakingChanged(value);
+				}
 			}
 		}
 
@@ -573,13 +578,11 @@ namespace Alex.Entities
 			get => _isSprinting;
 			set
 			{
-				_isSprinting = value;
-				OnSprintingChanged(value);
-				/*var movementSpeedAttribute = _entityProperties[Networking.Java.Packets.Play.EntityProperties.MovementSpeed];
-				movementSpeedAttribute.RemoveModifier(SprintingModifierGuid);
-				
-				if (value)
-					movementSpeedAttribute.ApplyModifier(new Modifier(SprintingModifierGuid, 0.3f, ModifierMode.Multiply));*/
+				if (_isSprinting != value)
+				{
+					_isSprinting = value;
+					OnSprintingChanged(value);
+				}
 			}
 		}
 
@@ -591,11 +594,6 @@ namespace Alex.Entities
 			get => _isUsingItem;
 			set
 			{
-				if (_isUsingItem != value)
-				{
-					//Log.Info($"Using Item={value}, duration={(DateTime.UtcNow - _startOfItemUse).TotalMilliseconds}ms");
-				}
-				
 				_isUsingItem = value;
 
 				if (value)
@@ -1252,6 +1250,9 @@ namespace Alex.Entities
 			
 			foreach (var entityComponent in EntityComponents)
 			{
+				if (!entityComponent.Enabled)
+					continue;
+				
 				if (entityComponent is IUpdated updateable)
 				{
 					updateable.Update(args.GameTime);
@@ -1390,16 +1391,13 @@ namespace Alex.Entities
 			
 			foreach (var entityComponent in EntityComponents)
 			{
+				if (!entityComponent.Enabled)
+					continue;
+				
 				if (entityComponent is ITicked ticked)
 					ticked.OnTick();
 			}
-
-			//Movement?.OnTick();
-
-			HealthManager.OnTick();
 			
-			//AnimationController?.OnTick();
-
 			if (DoRotationCalculations)
 			{
 				UpdateRotations();
@@ -1408,7 +1406,6 @@ namespace Alex.Entities
 			{
 				KnownPosition.Yaw = KnownPosition.HeadYaw;
 			}
-			//HealthManager.OnTick();
 		}
 
 		private int _turnTicks;

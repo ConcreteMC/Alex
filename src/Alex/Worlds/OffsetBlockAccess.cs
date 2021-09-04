@@ -26,7 +26,7 @@ namespace Alex.Worlds
 
 		private ChunkCoordinates GetOffset(ChunkCoordinates coordinates)
 		{
-			return new ChunkCoordinates((coordinates.X >> 4) + _offset.X, (coordinates.Z >> 4) + _offset.Z);
+		//	return new ChunkCoordinates((coordinates.X >> 4) + _offset.X, (coordinates.Z >> 4) + _offset.Z);
 			return coordinates + new ChunkCoordinates(_offset);
 		}
 

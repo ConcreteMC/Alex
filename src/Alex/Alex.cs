@@ -512,12 +512,8 @@ namespace Alex
         
         internal void SetFrameRateLimiter(bool enabled, int frameRateLimit)
         {
-            UiTaskManager.Enqueue(
-                () =>
-                {
-                    base.IsFixedTimeStep = enabled;
-                    base.TargetElapsedTime = TimeSpan.FromSeconds(1d / frameRateLimit);
-                });
+            base.IsFixedTimeStep = enabled;
+            base.TargetElapsedTime = TimeSpan.FromSeconds(1d / frameRateLimit);
         }
 
         private void SetVSync(bool enabled)

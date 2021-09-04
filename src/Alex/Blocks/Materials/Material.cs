@@ -157,7 +157,7 @@ namespace Alex.Blocks.Materials
 		public IMapColor MapColor { get; set; }
 		public TintType TintType { get; protected set; } = TintType.Default;
 		public Color TintColor { get; protected set; } = Color.White;
-
+		
 		public Material(IMapColor color)
 		{
 			MapColor = color;

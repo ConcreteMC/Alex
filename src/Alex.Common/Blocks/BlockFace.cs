@@ -25,8 +25,8 @@ namespace Alex.Common.Blocks
 	            {
 		            BlockFace.Down  => Vector3.Down,
 		            BlockFace.Up    => Vector3.Up,
-		            BlockFace.East  => Vector3.Left,
-		            BlockFace.West  => Vector3.Right,
+		            BlockFace.East  => Vector3.Right,
+		            BlockFace.West  => Vector3.Left,
 		            BlockFace.North => Vector3.Forward,
 		            BlockFace.South => Vector3.Backward,
 		            _               => Vector3.Zero

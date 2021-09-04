@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 using Alex.Blocks;
 using Alex.Blocks.State;
@@ -39,6 +40,7 @@ namespace Alex.Worlds.Chunks
 		private object _dataLock = new object();
 
 		private System.Collections.BitArray _scheduledUpdates;
+		private int _scheduledUpdateCount = 0;
 		public WorldSettings WorldSettings { get; }
 		private readonly int _sectionOffset;
 		public ChunkColumn(int x, int z, WorldSettings worldSettings)
@@ -70,7 +72,7 @@ namespace Alex.Worlds.Chunks
 
 		private bool CheckWithinCoordinates(int x, int y, int z, bool throwException = true)
 		{
-			if (y < WorldSettings.MinY || y > WorldSettings.WorldHeight)
+			if (y < WorldSettings.MinY || y >= WorldSettings.WorldHeight)
 			{
 				if (throwException)
 					throw new Exception(
@@ -91,21 +93,59 @@ namespace Alex.Worlds.Chunks
 
 			if (queue != null)
 			{
+				var wasQueued = queue[GetCoordinateIndex(x, y, z)];
 				queue[GetCoordinateIndex(x, y, z)] = value;
+
+				if (wasQueued && !value)
+				{
+					Interlocked.Decrement(ref _scheduledUpdateCount);
+				}else if (!wasQueued && value)
+				{
+					Interlocked.Increment(ref _scheduledUpdateCount);
+				}
 			}
 		}
 
-		public void ScheduleBorder()
+		public void ScheduleBorder(ChunkCoordinates neighbor)
 		{
+			int? validX = null;
+			int? validZ = null;
+
+			if (neighbor.X == X + 1)
+			{
+				validX = 15;
+			}
+			else if (neighbor.X == X - 1)
+			{
+				validX = 0;
+			}
+			
+			if (neighbor.Z == Z + 1)
+			{
+				validZ = 15;
+			}
+			else if (neighbor.Z == Z - 1)
+			{
+				validZ = 0;
+			}
+			
 			for (int x = 0; x < 16; x++)
 			{
 				for (int z = 0; z < 16; z++)
 				{
 					for (int y = WorldSettings.MinY; y < WorldSettings.WorldHeight; y++)
 					{
-						if (x == 0 || x == 15 || z == 0 || z == 15)
+						if (validX.HasValue && x == validX.Value)
 						{
 							SetScheduled(x,y,z, true);
+						}
+						else if (validZ.HasValue && z == validZ.Value)
+						{
+							SetScheduled(x,y,z, true);
+						}
+						if (x == 0 || x == 15 || z == 0 || z == 15)
+						{
+							//SetScheduled(x,y,z, true);
 						}
 					}
 				}
@@ -115,11 +155,11 @@ namespace Alex.Worlds.Chunks
 		public static float AverageUpdateTime => MovingAverage.Average;
 		public static float MaxUpdateTime => MovingAverage.Maximum;
 		public static float MinUpdateTime => MovingAverage.Minimum;
+		public bool Scheduled { get; set; } = false;
 
 		private static readonly MovingAverage MovingAverage = new MovingAverage();
-		
-		private bool _bufferDirty = false;
-		public bool UpdateBuffer(GraphicsDevice device, IBlockAccess world, bool applyChanges)
+
+		public bool UpdateBuffer(IBlockAccess world, bool applyChanges)
 		{
 			//Monitor.Enter(_dataLock);
 			if (!Monitor.TryEnter(_dataLock, 0))
@@ -129,7 +169,8 @@ namespace Alex.Worlds.Chunks
 		
 			try
 			{
-				var chunkData     = ChunkData;
+				var chunkData = ChunkData;
+			//	chunkData.Buffer = 
 
 				if (chunkData == null)
 					return false;
@@ -141,9 +182,7 @@ namespace Alex.Worlds.Chunks
 				
 				bool isNew = IsNew;
 				bool didChange = false;
-				
-				var chunkPosition = new Vector3(X << 4, 0, Z << 4);
-				world = new OffsetBlockAccess(chunkPosition, world);
+				world = new OffsetBlockAccess(new BlockCoordinates(X << 4, 0, Z << 4), world);
 				
 				for (int sectionIndex = 0; sectionIndex < Sections.Length; sectionIndex++)
 				{
@@ -156,10 +195,6 @@ namespace Alex.Worlds.Chunks
 					si -= _sectionOffset;
 					
 					var yOffset = (si << 4);
-					//yOffset -= WorldSettings.MinY;
-
-					//var sectionY = (sectionIndex << 4);
-
 					for (int x = 0; x < 16; x++)
 					{
 						for (int z = 0; z < 16; z++)
@@ -170,16 +205,17 @@ namespace Alex.Worlds.Chunks
 
 								bool scheduled = scheduleQueue[idx]; // IsScheduled(x, y, z)
 
-								if ((!isNew && !scheduled))
-									continue;
+								//if ((!isNew && !scheduled))
+								//	continue;
 								
 								var blockPosition = new BlockCoordinates(x, yOffset + y, z);
 								if (scheduled)
 								{
+									Interlocked.Decrement(ref _scheduledUpdateCount);
 									scheduleQueue[idx] = false;
-									didChange = true;
+									//didChange = true;
 								}
-								chunkData?.Remove(blockPosition);
+								//chunkData?.Remove(blockPosition);
 
 								for (int storage = 0; storage < section.StorageCount; storage++)
 								{
@@ -217,15 +253,10 @@ namespace Alex.Worlds.Chunks
 					}
 				}
 
-				if (didChange || isNew)
-				{
-					_bufferDirty = true;
-				}
-				
-				if (applyChanges && (didChange || isNew))
-				{
+				//if (applyChanges && (didChange || isNew))
+				//{
 					ApplyChanges(world, true, chunkData);
-				}
+				//}
 				
 				ChunkData = chunkData;
 
@@ -243,22 +274,15 @@ namespace Alex.Worlds.Chunks
 			return true;
 		}
 
-		private Stopwatch _lastUpdateWatch = new Stopwatch();
 		private void ApplyChanges(IBlockAccess world, bool force, ChunkData chunkData)
 		{
-			if (!_bufferDirty || (!force && _lastUpdateWatch.IsRunning && _lastUpdateWatch.ElapsedMilliseconds < 50))
+			if (chunkData == null || chunkData.Disposed)
 				return;
-			
-			if (chunkData == null || chunkData.Disposed )
-				return;
-			
+
 			chunkData.ApplyChanges(world, force);
 			ChunkData = chunkData;
-			
-			_bufferDirty = false;
-			_lastUpdateWatch.Restart();
 		}
-		
+
 		public IEnumerable<BlockCoordinates> GetLightSources()
 		{
 			for (int i = 0; i < Sections.Length; i++)
@@ -347,22 +371,12 @@ namespace Alex.Worlds.Chunks
 				
 				if (inLight)
 				{
-					/*if (block.Renderable && block.BlockState.Model != null)
-					{
-						foreach(var box in block.BlockState.Model.GetBoundingBoxes(new Vector3((X << 4) + x, y, (Z << 4) + z)))
-						{
-							_octree.Add(box);
-						}
-					}*/
-					
-					
 					if (!block.Renderable || (!block.BlockMaterial.BlocksLight))
 					{
 						SetSkyLight(x, y, z, 15);
 					}
 					else
 					{
-					//	SetHeight(x, z, (short) (y + 1));
 						SetSkyLight(x, y, z, 0);
 						inLight = false;
 					}
@@ -410,8 +424,6 @@ namespace Alex.Worlds.Chunks
 					RecalculateHeight(x, z, doLighting);
 				}
 			}
-
-			//GetHeighest();
 
 			foreach (var section in Sections)
 			{

@@ -744,20 +744,7 @@ namespace Alex.Worlds
 
 			if (ChunkManager.TryGetChunk(chunkCoords, out chunk))
 			{
-				var cx       = x & 0xf;
-				var cy       = y;
-				var cz       = z & 0xf;
-				
-			//	var chunkPos   = new BlockCoordinates(cx, cy, cz);
-			//	var blockAtPos = chunk.GetBlockState(cx, cy, cz);
-
-				//if (blockAtPos.Block.BlockMaterial == Material.Air)
-				//	return;
-				
-			//	chunk.RemoveBlockEntity(chunkPos);
 				EntityManager.RemoveBlockEntity(coords);
-				
-				//chunk.AddBlockEntity(chunkPos, blockEntity);
 				EntityManager.AddBlockEntity(coords, blockEntity);
 			}
 		}
@@ -778,14 +765,7 @@ namespace Alex.Worlds
 				var cy = y;
 				var cz = z & 0xf;
 
-				//var previousBlock = chunk.GetBlockState(cx, cy, cz, storage);
-				//if (block.Block.RequiresUpdate)
-				{
-					//block = block.Block.BlockPlaced(this, block, new BlockCoordinates(x,y,z));
-				}
-
 				var blockcoords = new BlockCoordinates(x, y, z);
-			//	var previousBlockstate = chunk.GetBlockState(cx, cy, cz, storage);
 				chunk.SetBlockState(cx, cy, cz, block, storage);
 
 				if (storage == 0 && EntityManager.TryGetBlockEntity(blockcoords, out var blockEntity))
@@ -794,9 +774,7 @@ namespace Alex.Worlds
 					{
 						EntityManager.RemoveBlockEntity(blockcoords);
 					}
-					//blockEntity.Block = block.Block;
 				}
-				//EntityManager.RemoveBlockEntity(new BlockCoordinates(x, y, z));
 				
 				var type = ScheduleType.Full;
 				
@@ -816,48 +794,15 @@ namespace Alex.Worlds
 				}
 				*/
 
-				//if (GetBlockLight(blockCoords) > 0)
+				if ((type & ScheduleType.Lighting) == 0)
 				{
-					if ((type & ScheduleType.Lighting) == 0)
-					{
-						type |= ScheduleType.Lighting;
-					}
-				}
-				//	else
-				{
-					//ChunkManager.BlockLightCalculations.Enqueue(blockCoords);
+					type |= ScheduleType.Lighting;
 				}
 
-				//chunk.SetDirty();
-				//chunk.IsDirty = true;
-				ChunkManager.ScheduleChunkUpdate(chunkCoords, type, true);
-				
 				ChunkManager.SkyLightCalculator.Calculate(blockcoords);
-				//ChunkManager.BlockLightUpdate.Enqueue(blockcoords);
-				//CheckForUpdate(chunkCoords, cx, cz);
+				ChunkManager.ScheduleChunkUpdate(chunkCoords, ScheduleType.Scheduled, true);
 			}
 		}
-
-		private void CheckForUpdate(ChunkCoordinates chunkCoords, int cx, int cz)
-		{
-			if (cx == 0)
-			{
-				ChunkManager.ScheduleChunkUpdate(chunkCoords - new ChunkCoordinates(1, 0), ScheduleType.Border | ScheduleType.Lighting, false);
-			}
-			else if (cx == 0xf)
-			{
-				ChunkManager.ScheduleChunkUpdate(chunkCoords + new ChunkCoordinates(1, 0), ScheduleType.Border | ScheduleType.Lighting, false);
-			}
-
-			if (cz == 0)
-			{
-				ChunkManager.ScheduleChunkUpdate(chunkCoords - new ChunkCoordinates(0, 1), ScheduleType.Border | ScheduleType.Lighting, false);
-			}
-			else if (cz == 0xf)
-			{
-				ChunkManager.ScheduleChunkUpdate(chunkCoords + new ChunkCoordinates(0, 1), ScheduleType.Border | ScheduleType.Lighting, false);
-			}
-        }
 
 		private void UpdateNeighbors(int x, int y, int z)
 		{

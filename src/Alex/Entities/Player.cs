@@ -99,7 +99,7 @@ namespace Alex.Entities
 
 			IsAffectedByGravity = true;
 			HasPhysics = true;
-			NoAi = false;
+			base.NoAi = false;
 			CanSwim = true;
 			
 			EntityComponents.Push(Raytracer = new RaytracerComponent(this));

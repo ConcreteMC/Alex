@@ -31,7 +31,7 @@ namespace Alex.Entities
 			}
 		}
 		
-		internal override PlayerLocation RenderLocation
+		/*internal override PlayerLocation RenderLocation
 		{
 			get
 			{
@@ -48,14 +48,18 @@ namespace Alex.Entities
 					KnownPosition = value;
 				}
 			}
-		}
+		}*/
 		
-		private PhysicsComponent PhysicsComponent { get; }
+		protected PhysicsComponent PhysicsComponent { get; }
 		/// <inheritdoc />
 		public LivingEntity(World level) : base(
 			level)
 		{
-			EntityComponents.Push(PhysicsComponent = new PhysicsComponent(this));
+			_hasPhysics = false;
+			EntityComponents.Push(PhysicsComponent = new PhysicsComponent(this)
+			{
+				Enabled = false
+			});
 		}
 		
 		public Item GetItemInHand(bool mainHand)

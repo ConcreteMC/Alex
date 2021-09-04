@@ -5,6 +5,45 @@ namespace Alex.Common.Utils
 {
 	public static class MathUtils
 	{
+
+		public static Vector3 LerpVector3Degrees(Vector3 start, Vector3 end, float amount)
+		{
+			return new Vector3(
+				LerpDegrees(start.X, end.X, amount), 
+				LerpDegrees(start.Y, end.Y, amount),
+				LerpDegrees(start.Z, end.Z, amount));
+		}
+		
+		public static float LerpDegrees(float start, float end, float amount)
+		{
+			float difference = Math.Abs(end - start);
+			if (difference > 180)
+			{
+				// We need to add on to one of the values.
+				if (end > start)
+				{
+					// We'll add it on to start...
+					start += 360;
+				}
+				else
+				{
+					// Add it on to end.
+					end += 360;
+				}
+			}
+
+			// Interpolate it.
+			float value = (start + ((end - start) * amount));
+
+			// Wrap it..
+			float rangeZero = 360;
+
+			if (value >= 0 && value <= 360)
+				return value;
+
+			return (value % rangeZero);
+		}
+		
 		public static float ConstrainAngle(float targetAngle, float centreAngle, float maximumDifference)
 		{
 			return centreAngle + Clamp(targetAngle - centreAngle, -maximumDifference, maximumDifference);

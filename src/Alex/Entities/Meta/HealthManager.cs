@@ -1,13 +1,15 @@
 using System;
 using Alex.Common.Utils.Vectors;
+using Alex.Common.World;
+using Alex.Entities.Components;
 using Microsoft.Xna.Framework;
 using MathF = System.MathF;
 
 namespace Alex.Entities.Meta
 {
-	public class HealthManager
+	public class HealthManager : EntityComponent, ITicked
 	{
-		private Entity Entity { get; }
+	//	private Entity Entity { get; }
 
 		private float _health = 20;
 
@@ -72,9 +74,9 @@ namespace Alex.Entities.Meta
 		public short AvailableAir  { get; set; } = 300;
 		public short MaxAir        { get; set; } = 300;
 
-		public HealthManager(Entity entity)
+		public HealthManager(Entity entity) : base(entity)
 		{
-			Entity = entity;
+			//Entity = entity;
 		}
 
 		private long _ticker = 0;

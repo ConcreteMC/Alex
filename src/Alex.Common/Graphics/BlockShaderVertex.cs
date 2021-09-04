@@ -5,6 +5,23 @@ using Microsoft.Xna.Framework.Graphics.PackedVector;
 
 namespace Alex.Common.Graphics
 {
+	public struct LightingVertex : IVertexType
+	{
+		public Short2 Lighting;
+
+		public LightingVertex(byte blockLight, byte skyLight)
+		{
+			Lighting = new Short2(skyLight, blockLight);
+		}
+		
+		public static VertexDeclaration VertexDeclaration { get; } = new VertexDeclaration
+		(
+			new VertexElement((4 * sizeof(byte)), VertexElementFormat.Short2, VertexElementUsage.TextureCoordinate, 1)
+		);
+        
+		VertexDeclaration IVertexType.VertexDeclaration => VertexDeclaration;
+	}
+	
 	public struct MinifiedBlockShaderVertex : IVertexType
     {
 	    public static readonly MinifiedBlockShaderVertex Default = new MinifiedBlockShaderVertex(Vector3.Zero, BlockFace.None, Vector4.Zero, Color.White);
@@ -28,8 +45,9 @@ namespace Alex.Common.Graphics
         ///     The color of this vertex
         /// </summary>
         public Color Color;
-
+        
         public Short2 Lighting;
+
         
         /// <summary>
         ///     Creates a new MinifiedBlockShaderVertex
@@ -69,8 +87,9 @@ namespace Alex.Common.Graphics
 	        Position = position;
 	        TexCoords = texCoords;
 	        Color = color;
-	        Lighting = new Short2(skyLight, blockLight);
+	       
 	        Normal = (byte)normal;
+	        Lighting = new Short2(skyLight, blockLight);
         }
 
         /// <summary>

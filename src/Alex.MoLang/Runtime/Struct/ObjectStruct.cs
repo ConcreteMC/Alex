@@ -71,7 +71,7 @@ namespace Alex.MoLang.Runtime.Struct
 				throw new MoLangRuntimeException($"Variable was not a struct: {key}", null);
 			}
 
-			string main = key.Segment;
+			string main = key.Value;
 
 			if (!string.IsNullOrWhiteSpace(main)) {
 				//object vstruct = Get(main, MoParams.Empty);
@@ -105,7 +105,7 @@ namespace Alex.MoLang.Runtime.Struct
 
 			if (key.HasChildren)
 			{
-				string main = key.Segment;
+				string main = key.Value;
 
 				if (!string.IsNullOrWhiteSpace(main))
 				{

@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Threading;
 using Alex.Common.Utils;
+using Alex.Worlds.Chunks;
 using Microsoft.Xna.Framework;
 using NLog;
 
@@ -64,15 +65,12 @@ namespace Alex.Utils.Threading
 		public float AverageTimeTillExecution => _timeTillExecutionMovingAverage.Average;
 		
 		private ConcurrentQueue<ManagedTask> _queue = new ConcurrentQueue<ManagedTask>();
-		private Alex _alex;
-
 		private MovingAverage _executionTimeMovingAverage = new MovingAverage();
 		private MovingAverage _timeTillExecutionMovingAverage = new MovingAverage();
 
 		private bool _skipFrames = true;
 		public ManagedTaskManager(Alex game) : base(game)
 		{
-			_alex = game;
 			game.Options.AlexOptions.MiscelaneousOptions.SkipFrames.Bind(ListenerDelegate);
 			_skipFrames = game.Options.AlexOptions.MiscelaneousOptions.SkipFrames.Value;
 		}
@@ -89,83 +87,94 @@ namespace Alex.Utils.Threading
 			return Interlocked.Increment(ref _taskId);
 		}
 
+		private int _tasksEnqueued = 0;
+		private int _tasksExecuted = 0;
 		private int _frameSkip = 0;
+		private int _framesSkipped = 0;
+		private double _executionTimeTotal = 0;
+		private double _accumulator = 0d;
+
 		/// <inheritdoc />
 		public override void Update(GameTime gameTime)
 		{
 			base.Update(gameTime);
+			_accumulator += gameTime.ElapsedGameTime.TotalMilliseconds;
+
+			if (_accumulator >= 1000)
+			{
+				var enqueued = Interlocked.Exchange(ref _tasksEnqueued, 0);
+				var executed = Interlocked.Exchange(ref _tasksExecuted, 0);
+				var framesSkipped = Interlocked.Exchange(ref _framesSkipped, 0);
+				var executionTime = Interlocked.Exchange(ref _executionTimeTotal, 0d);
+				var bufferUploads = Interlocked.Exchange(ref ChunkData.BufferUploads, 0);
+				var bufferCreations = Interlocked.Exchange(ref ChunkData.BufferCreations, 0);
+
+			//	Log.Info(
+				//	$"Tasks enqueued (#/s){enqueued}, Tasks executed (#/s){executed}, Frames Skipped (#/s){framesSkipped}, Time (ms) {executionTime:F2}, BufferUpdates (#/s) {bufferUploads}");
+
+				_accumulator = 0;
+			}
 
 			if (_skipFrames && _frameSkip > 0)
 			{
+				Interlocked.Increment(ref _framesSkipped);
 				_frameSkip--;
+
 				return;
 			}
-			
-			if (_alex.FpsMonitor.IsRunningSlow)
-				return;
 
-			var avgFrameTime = _alex.FpsMonitor.MinFrameTime;
-
-			if (avgFrameTime <= 1f)
-				avgFrameTime = _alex.FpsMonitor.AverageFrameTime;
-			
 			Stopwatch sw = Stopwatch.StartNew();
-			int count = _queue.Count;
-			//while (sw.Elapsed.TotalMilliseconds < avgFrameTime && !_queue.IsEmpty && _queue.TryDequeue(out var a))
-			//for (int i = 0; i < count; i++)
+			if (_queue.TryDequeue(out var a))
 			{
-				while (sw.Elapsed.TotalMilliseconds < avgFrameTime && _queue.TryDequeue(out var a) && !a.IsCancelled)
+				if (a.IsCancelled)
+					return;
+				
+				var beforeRun = sw.Elapsed;
+
+				TimeSpan timeTillExecution = a.TimeSinceCreation;
+
+				try
 				{
-					var beforeRun = sw.Elapsed;
-
-					TimeSpan timeTillExecution = a.TimeSinceCreation;
-
-					try
-					{
-						a.Execute();
-						_timeTillExecutionMovingAverage.ComputeAverage((float)timeTillExecution.TotalMilliseconds);
-					}
-					catch (Exception ex)
-					{
-						Log.Warn(ex, $"Exception while executing enqueued task");
-					}
-
-					var afterRun = sw.Elapsed;
-					var executionTime = (afterRun - beforeRun);
-					_executionTimeMovingAverage.ComputeAverage((float)executionTime.TotalMilliseconds);
-
-					TaskFinished?.Invoke(this, new TaskFinishedEventArgs(a, executionTime, timeTillExecution));
-
-					if (_skipFrames)
-					{
-					//	var avgFrameTime = _alex.FpsMonitor.AverageFrameTime;
-
-						if (executionTime.TotalMilliseconds > avgFrameTime)
-						{
-							var framesToSkip = (int)Math.Ceiling(executionTime.TotalMilliseconds / avgFrameTime);
-
-							_frameSkip += framesToSkip;
-
-							Log.Debug(
-								$"Task execution time exceeds frametime by {(executionTime.TotalMilliseconds - avgFrameTime):F2}ms skipping {framesToSkip} frames (Tag={(a.Tag ?? "null")})");
-						}
-					}
+					a.Execute();
+					_timeTillExecutionMovingAverage.ComputeAverage((float)timeTillExecution.TotalMilliseconds);
 				}
-				//else
+				catch (Exception ex)
 				{
-					//break;
+					Log.Warn(ex, $"Exception while executing enqueued task");
+				}
+
+				var afterRun = sw.Elapsed;
+				var executionTime = (afterRun - beforeRun);
+				_executionTimeMovingAverage.ComputeAverage((float)executionTime.TotalMilliseconds);
+
+				TaskFinished?.Invoke(this, new TaskFinishedEventArgs(a, executionTime, timeTillExecution));
+
+				Interlocked.Increment(ref _tasksExecuted);
+
+				if (_skipFrames)
+				{
+					if (executionTime.TotalMilliseconds > gameTime.ElapsedGameTime.TotalMilliseconds)
+					{
+						var framesToSkip = (int)Math.Ceiling(executionTime.TotalMilliseconds / gameTime.ElapsedGameTime.TotalMilliseconds);
+
+						_frameSkip += framesToSkip;
+
+						Log.Debug(
+							$"Task execution time exceeds frametime by {(executionTime.TotalMilliseconds - gameTime.ElapsedGameTime.TotalMilliseconds):F2}ms skipping {framesToSkip} frames (Tag={(a.Tag ?? "null")})");
+					}
 				}
 			}
-			//var elapsed = (float)sw.Elapsed.TotalMilliseconds;
 
-			//if (elapsed > avgFrameTime)
-			//	_frameSkip = (int)MathF.Ceiling(elapsed / avgFrameTime);
+
+			var elapsed = sw.Elapsed.TotalMilliseconds;
+			_executionTimeTotal += elapsed;
 		}
 
 		private void Enqueue(ManagedTask task)
 		{
 			TaskCreated?.Invoke(this, new TaskCreatedEventArgs(task));
-			
+
+			Interlocked.Increment(ref _tasksEnqueued);
 			task.Enqueued();
 			//task.Execute();
 			_queue.Enqueue(task);

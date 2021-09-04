@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Alex.Common.Input;
@@ -311,6 +312,7 @@ namespace Alex.Entities
 		    
 		    _previousMousePosition = new Vector2(centerX, centerY);
 		    IgnoreNextUpdate = true;
+		    _cursorInputDelta.Restart();
 	    }
 
 	    public float LastSpeedFactor = 0f;
@@ -319,6 +321,7 @@ namespace Alex.Entities
 	    private double GamepadSensitivity { get; set; } = 200d;
 	    private bool _jumping = false;
 
+	    private MouseState _mouseState = new MouseState();
 	    private void UpdateMovementInput(GameTime gt)
 	    {
 		    if (!CheckMovementInput)
@@ -499,16 +502,22 @@ namespace Alex.Entities
 							_previousMousePosition
 							- e;
 
-						var look = (new Vector2((-mouseDelta.X), (mouseDelta.Y)) * (float) CursorSensitivity) * (float) (gt.ElapsedGameTime.TotalSeconds);
+						mouseDelta *= (float)_cursorInputDelta.Elapsed.TotalSeconds;
+
+						
+						var look = (new Vector2((-mouseDelta.X), (mouseDelta.Y)) * (float) CursorSensitivity);
 						Player.KnownPosition.HeadYaw = (Player.KnownPosition.HeadYaw - look.X) % 360f;
 						Player.KnownPosition.SetPitchBounded(Player.KnownPosition.Pitch - look.Y);
 						_previousMousePosition = e;
+						_cursorInputDelta.Restart();
 					}
 				}
 			}
 
 			LastVelocity = Player.Velocity;
 	    }
+	    
+	    private Stopwatch _cursorInputDelta = Stopwatch.StartNew();
 
 	    public bool Disposed { get; private set; } = false;
 	    /// <inheritdoc />

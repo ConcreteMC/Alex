@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Alex.Common.Utils;
 using Alex.Common.Utils.Vectors;
 using Alex.Worlds;
 using Microsoft.Xna.Framework;
@@ -37,8 +38,8 @@ namespace Alex.Entities.Components
 			
 			_frameAccumulator += deltaTime;
 
-			var alpha                 = (float) (_frameAccumulator / TargetTime);
-			alpha = MathF.Min(1f, MathF.Max(alpha, 0f));
+			var amount                 = (float) (_frameAccumulator / TargetTime);
+			//alpha = MathF.Min(1f, MathF.Max(alpha, 0f));
 			
 			var targetPosition        = _target;
 			var previousStatePosition = _from;
@@ -51,22 +52,11 @@ namespace Alex.Entities.Components
 			var targetHeadYaw         = targetPosition.HeadYaw;
 			var targetPitch           = targetPosition.Pitch;
 
-			//var pos = Vector3.Lerp(previousStatePosition.ToVector3(), position.ToVector3(), alpha);
-			var pos = targetPosition.ToVector3() * alpha + previousStatePosition.ToVector3() * (1f - alpha);
-
-			//var yaw = targetPosition.Yaw;
-			//var yaw = MathHelper.Lerp(previousStatePosition.Yaw, targetPosition.Yaw, alpha);
-			var yaw = targetYaw * alpha + previousYaw * (1f - alpha);
-
-			//var headYaw = targetPosition.HeadYaw;
-			//var headYaw = MathHelper.Lerp(previousStatePosition.HeadYaw, targetPosition.HeadYaw, alpha);
-			//var headYawDifference = MathF.Abs(targetHeadYaw - previousHeadYaw);
-			var headYaw          = targetHeadYaw * alpha + previousHeadYaw * (1f - alpha);
-
-			//var pitch = targetPosition.Pitch;
-			var pitch = targetPitch * alpha + previousPitch * (1f - alpha);
-			//var pitch = MathHelper.Lerp(previousStatePosition.Pitch, targetPosition.Pitch, alpha);
-
+			var pos = Vector3.Lerp(previousStatePosition.ToVector3(), targetPosition.ToVector3(), amount);
+			var yaw = MathUtils.LerpDegrees(previousYaw, targetYaw, amount);
+			var headYaw = MathUtils.LerpDegrees(previousHeadYaw, targetHeadYaw, amount);
+			var pitch = MathUtils.LerpDegrees(previousPitch, targetPitch, amount);
+			
 			var renderLocation = entity.RenderLocation;
 			
 			renderLocation.X = pos.X;

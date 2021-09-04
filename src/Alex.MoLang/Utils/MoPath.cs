@@ -9,7 +9,7 @@ namespace Alex.MoLang.Utils
 		public MoPath Previous { get; }
 		
 		public string Path { get; }
-		public string Segment { get; }
+		public string Value { get; }
 
 		public bool HasChildren => Segments.Length > 0;
 		
@@ -20,7 +20,7 @@ namespace Alex.MoLang.Utils
 			Path = path;
 
 			var segments = path.Split('.');
-			Segment = segments[0];
+			Value = segments[0];
 
 			Segments = new MoPath[segments.Length - 1];
 
@@ -37,16 +37,16 @@ namespace Alex.MoLang.Utils
 
 			for (int i = 0; i < Segments.Length; i++)
 			{
-				Segments[i].Segments = Segments.Skip(1).ToArray();
+				Segments[i].Segments = Segments.Skip(1 + i).ToArray();
 			}
 		}
 
-		private MoPath(MoPath root, MoPath parent, string path, string segment)
+		private MoPath(MoPath root, MoPath parent, string path, string value)
 		{
 			Root = root;
 			Path = path;
 			Previous = parent;
-			Segment = segment;
+			Value = value;
 			
 			
 		}
