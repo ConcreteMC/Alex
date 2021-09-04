@@ -502,7 +502,7 @@ namespace Alex.Entities
 							_previousMousePosition
 							- e;
 
-						mouseDelta *= (float)_cursorInputDelta.Elapsed.TotalSeconds;
+						mouseDelta *= (float)gt.ElapsedGameTime.TotalSeconds;
 
 						
 						var look = (new Vector2((-mouseDelta.X), (mouseDelta.Y)) * (float) CursorSensitivity);

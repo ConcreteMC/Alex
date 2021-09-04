@@ -287,83 +287,80 @@ namespace Alex.Worlds
 
 								if (EnqueuedChunkUpdates <= 0 && queue.IsEmpty)
 									return;
+								
+								if (!queue.TryDequeue(out var chunkCoordinates)) continue;
 
+								if (!TryGetChunk(chunkCoordinates, out var chunk)) continue;
 
-								if (queue.TryDequeue(out var chunkCoordinates))
-								{
-									if (TryGetChunk(chunkCoordinates, out var chunk))
-									{
-										if (!Monitor.TryEnter(chunk.UpdateLock, 0))
-											continue;
+								if (!Monitor.TryEnter(chunk.UpdateLock, 0))
+									continue;
 										
-										try
-										{
-											//if (chunk?.ChunkData?.IsQueued == true)
-											{
-											//	queue.Enqueue(chunkCoordinates);
-											//	continue;
-											}
-											
-											bool newChunk = chunk.IsNew;
-
-											bool c1 = false;
-											bool c2 = false;
-											bool c3 = false;
-											bool c4 = false;
-
-											if (newChunk)
-											{
-												c1 = TryGetChunk(new ChunkCoordinates(chunk.X + 1, chunk.Z), out var cc1) && !cc1.IsNew;
-												c2 = TryGetChunk(new ChunkCoordinates(chunk.X, chunk.Z + 1), out var cc2) && !cc2.IsNew;
-
-												c3 = TryGetChunk(new ChunkCoordinates(chunk.X - 1, chunk.Z), out var cc3) && !cc3.IsNew;
-												c4 = TryGetChunk(new ChunkCoordinates(chunk.X, chunk.Z - 1), out var cc4) && !cc4.IsNew;
-											
-												if (BlockLightUpdate != null)
-													BlockLightUpdate.RecalculateChunk(chunk);
-
-												if (SkyLightCalculator != null)
-													SkyLightCalculator.Recalculate(chunk);
-											}
-
-											timingWatch.Restart();
-											
-											if (chunk.UpdateBuffer(World, true))
-											{
-												if (newChunk)
-												{
-													if (c1)
-														ScheduleChunkUpdate(
-															new ChunkCoordinates(chunk.X + 1, chunk.Z),
-															ScheduleType.Border, false, chunkCoordinates);
-
-													if (c2)
-														ScheduleChunkUpdate(
-															new ChunkCoordinates(chunk.X, chunk.Z + 1),
-															ScheduleType.Border, false, chunkCoordinates);
-
-													if (c3)
-														ScheduleChunkUpdate(
-															new ChunkCoordinates(chunk.X - 1, chunk.Z),
-															ScheduleType.Border, false, chunkCoordinates);
-
-													if (c4)
-														ScheduleChunkUpdate(
-															new ChunkCoordinates(chunk.X, chunk.Z - 1),
-															ScheduleType.Border, false, chunkCoordinates);
-															
-												}
-												
-												OnChunkUpdate?.Invoke(this, new ChunkUpdatedEventArgs(chunk, timingWatch.Elapsed));
-											}
-										}
-										finally
-										{
-											//Scheduled.Remove(chunkCoordinates);
-											chunk.Scheduled = false;
-											Monitor.Exit(chunk.UpdateLock);
-										}
+								try
+								{
+									//if (chunk?.ChunkData?.IsQueued == true)
+									{
+										//	queue.Enqueue(chunkCoordinates);
+										//	continue;
 									}
+											
+									bool newChunk = chunk.IsNew;
+
+									bool c1 = false;
+									bool c2 = false;
+									bool c3 = false;
+									bool c4 = false;
+
+									if (newChunk)
+									{
+										c1 = TryGetChunk(new ChunkCoordinates(chunk.X + 1, chunk.Z), out var cc1) && !cc1.IsNew;
+										c2 = TryGetChunk(new ChunkCoordinates(chunk.X, chunk.Z + 1), out var cc2) && !cc2.IsNew;
+
+										c3 = TryGetChunk(new ChunkCoordinates(chunk.X - 1, chunk.Z), out var cc3) && !cc3.IsNew;
+										c4 = TryGetChunk(new ChunkCoordinates(chunk.X, chunk.Z - 1), out var cc4) && !cc4.IsNew;
+											
+										if (BlockLightUpdate != null)
+											BlockLightUpdate.RecalculateChunk(chunk);
+
+										if (SkyLightCalculator != null)
+											SkyLightCalculator.Recalculate(chunk);
+									}
+
+									timingWatch.Restart();
+											
+									if (chunk.UpdateBuffer(World, true))
+									{
+										if (newChunk)
+										{
+											if (c1)
+												ScheduleChunkUpdate(
+													new ChunkCoordinates(chunk.X + 1, chunk.Z),
+													ScheduleType.Border, false, chunkCoordinates);
+
+											if (c2)
+												ScheduleChunkUpdate(
+													new ChunkCoordinates(chunk.X, chunk.Z + 1),
+													ScheduleType.Border, false, chunkCoordinates);
+
+											if (c3)
+												ScheduleChunkUpdate(
+													new ChunkCoordinates(chunk.X - 1, chunk.Z),
+													ScheduleType.Border, false, chunkCoordinates);
+
+											if (c4)
+												ScheduleChunkUpdate(
+													new ChunkCoordinates(chunk.X, chunk.Z - 1),
+													ScheduleType.Border, false, chunkCoordinates);
+															
+										}
+												
+										OnChunkUpdate?.Invoke(this, new ChunkUpdatedEventArgs(chunk, timingWatch.Elapsed));
+									}
+								}
+								finally
+								{
+									//Scheduled.Remove(chunkCoordinates);
+									chunk.Scheduled = false;
+									Monitor.Exit(chunk.UpdateLock);
 								}
 							}
 						}
@@ -484,42 +481,42 @@ namespace Alex.Worlds
 		public void ScheduleChunkUpdate(ChunkCoordinates position, ScheduleType type, bool prioritize = false, ChunkCoordinates source = default)
 		{
 			var queue = UpdateQueue;
-			if (Chunks.TryGetValue(position, out var cc))
+
+			if (!Chunks.TryGetValue(position, out var cc)) return;
+			
+			//if (cc?.ChunkData?.IsQueued == true)
+			//	return;
+					
+			if ((type & ScheduleType.Border) != 0)
 			{
-				//if (cc?.ChunkData?.IsQueued == true)
-				//	return;
+				//cc.ScheduleBorder(source);
 					
-				if ((type & ScheduleType.Border) != 0)
-				{
-					cc.ScheduleBorder(source);
-					
-					queue = UpdateBorderQueue;
-				}
+				queue = UpdateBorderQueue;
+			}
 
-				if (prioritize)
-					queue = FastUpdateQueue;
+			if (prioritize)
+				queue = FastUpdateQueue;
 
-				if (queue.Contains(position) && !prioritize)
-				{
+			if (queue.Contains(position) && !prioritize)
+			{
+				return;
+			}
+
+			//if (Monitor.TryEnter(cc.UpdateLock, 0))
+			{
+				if (cc.Scheduled && !prioritize)
 					return;
-				}
 
-				//if (Monitor.TryEnter(cc.UpdateLock, 0))
-				{
-					if (cc.Scheduled && !prioritize)
-						return;
-
-					cc.Scheduled = true;
+				cc.Scheduled = true;
 					
-					try
-					{
-						queue.Enqueue(position);
-						_processingSync.Set();
-					}
-					finally
-					{
-				//		Monitor.Exit(cc.UpdateLock);
-					}
+				try
+				{
+					queue.Enqueue(position);
+					_processingSync.Set();
+				}
+				finally
+				{
+					//		Monitor.Exit(cc.UpdateLock);
 				}
 			}
 		}

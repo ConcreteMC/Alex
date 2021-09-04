@@ -17,7 +17,7 @@ using Microsoft.Xna.Framework.Graphics.PackedVector;
 
 namespace Alex.Worlds.Chunks
 {
-    public record StageData(DynamicIndexBuffer Buffer, List<int> Indexes);
+    public record StageData(DynamicIndexBuffer Buffer, List<int> Indexes, int IndexCount);
     
     public class ChunkData : IDisposable
     {
@@ -81,7 +81,7 @@ namespace Alex.Worlds.Chunks
                 foreach (var pass in effect.CurrentTechnique.Passes)
                 {
                     pass.Apply();
-                    device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, rStage.Buffer.IndexCount);
+                    device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, rStage.IndexCount);
                     count++;
                 }
 
@@ -230,7 +230,7 @@ namespace Alex.Worlds.Chunks
 
                 for (int i = 0; i < stages.Length; i++)
                 {
-                    newStages[i] = new StageData(stages[i]?.Buffer, new List<int>());
+                    newStages[i] = new StageData(stages[i]?.Buffer, new List<int>(), 0);
                 }
 
                 List<MinifiedBlockShaderVertex> vertices = new List<MinifiedBlockShaderVertex>();
@@ -302,7 +302,7 @@ namespace Alex.Worlds.Chunks
                     indexBuffer.SetData(stage.Indexes.ToArray(), 0, indexCount, SetDataOptions.None);
                     oldIndexBuffer?.Dispose();
 
-                    _stages[index] = new StageData(indexBuffer, stage.Indexes);
+                    _stages[index] = new StageData(indexBuffer, stage.Indexes, indexCount);
                 }
 
               var verticeCount = realVertices.Length;
