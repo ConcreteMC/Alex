@@ -36,9 +36,9 @@ using Image = SixLabors.ImageSharp.Image;
 
 namespace Alex.ResourcePackLib
 {
-	public class BedrockResourcePack : ResourcePack, ITextureProvider, IAnimationProvider, IDisposable
+	public class MCBedrockResourcePack : ResourcePack, ITextureProvider, IAnimationProvider, IDisposable
 	{
-		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(BedrockResourcePack));
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(MCBedrockResourcePack));
 
 		private ConcurrentDictionary<ResourceLocation,Func<Image<Rgba32>>> _bitmaps = new ConcurrentDictionary<ResourceLocation, Func<Image<Rgba32>>>();
         public IReadOnlyDictionary<ResourceLocation, Func<Image<Rgba32>>> Textures => _bitmaps;
@@ -61,7 +61,7 @@ namespace Alex.ResourcePackLib
 		private readonly IFilesystem _archive;
 
 		public string ContentKey { get; set; } = null;
-		public BedrockResourcePack(IFilesystem archive, ResourcePackManifest manifest, ResourcePack.LoadProgress progressReporter = null)
+		public MCBedrockResourcePack(IFilesystem archive, ResourcePackManifest manifest, ResourcePack.LoadProgress progressReporter = null)
 		{
 			Info = manifest;
 			_archive = archive;

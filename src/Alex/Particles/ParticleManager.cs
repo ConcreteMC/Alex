@@ -64,7 +64,7 @@ namespace Alex.Particles
 			_particleMapping = mapped;
 		}
 
-		public int Load(BedrockResourcePack resourcePack, IProgressReceiver progress)
+		public int Load(MCBedrockResourcePack resourcePack, IProgressReceiver progress)
 		{
 			int counter = 0;
 			try

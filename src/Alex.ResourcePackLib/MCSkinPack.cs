@@ -143,8 +143,8 @@ namespace Alex.ResourcePackLib
 			try
 			{
 				Dictionary<string, EntityModel> entityModels = new Dictionary<string, EntityModel>();
-				BedrockResourcePack.LoadEntityModel(entry.ReadAsString(), entityModels);
-				entityModels = BedrockResourcePack.ProcessEntityModels(entityModels);
+				MCBedrockResourcePack.LoadEntityModel(entry.ReadAsString(), entityModels);
+				entityModels = MCBedrockResourcePack.ProcessEntityModels(entityModels);
 
 				EntityModels = entityModels;
 			}

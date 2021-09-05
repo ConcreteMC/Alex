@@ -108,7 +108,7 @@ namespace Alex.Audio
 					});*/
 		}
 
-		public int Initialize(BedrockResourcePack resourcePack, IProgressReceiver progress)
+		public int Initialize(MCBedrockResourcePack resourcePack, IProgressReceiver progress)
 		{
 			if (!Supported)
 				return 0;
