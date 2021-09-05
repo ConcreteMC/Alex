@@ -1,6 +1,6 @@
 namespace Alex.Common
 {
-    public enum RenderStage : int
+    public enum RenderStage : byte
     {
         Opaque = 0,
        // LiquidOld = 16,
