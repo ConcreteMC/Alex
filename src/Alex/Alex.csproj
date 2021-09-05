@@ -1,193 +1,145 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
-    <ApplicationIcon>Resources\Icon.ico</ApplicationIcon>
-    <StartupObject>Alex.Program</StartupObject>
-    <Platforms>x64</Platforms>
-    <Configurations>Debug;Release;Appveyor;DirectX</Configurations>
-    <PublishTrimmed>false</PublishTrimmed>
-    <Description>A Minecraft client written in C#</Description>
-    <PackageProjectUrl>https://github.com/kennyvv/Alex</PackageProjectUrl>
-    <PackageLicenseUrl>https://github.com/kennyvv/Alex/blob/master/LICENSE</PackageLicenseUrl>
-    <RepositoryUrl>https://github.com/kennyvv/Alex</RepositoryUrl>
-    <TieredCompilation>false</TieredCompilation>
-    <PublishSingleFile>false</PublishSingleFile>
-    <PublishReadyToRun>false</PublishReadyToRun>
-    <SelfContained>false</SelfContained>
-    <PackageVersion />
-  </PropertyGroup>
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+        <ApplicationIcon>Resources\Icon.ico</ApplicationIcon>
+        <StartupObject>Alex.Program</StartupObject>
+        <Platforms>x64</Platforms>
+        <Configurations>Debug;Release;Appveyor;DirectX</Configurations>
+        <PublishTrimmed>false</PublishTrimmed>
+        <Description>A Minecraft client written in C#</Description>
+        <PackageProjectUrl>https://github.com/kennyvv/Alex</PackageProjectUrl>
+        <PackageLicenseUrl>https://github.com/kennyvv/Alex/blob/master/LICENSE</PackageLicenseUrl>
+        <RepositoryUrl>https://github.com/kennyvv/Alex</RepositoryUrl>
+        <TieredCompilation>false</TieredCompilation>
+        <PublishSingleFile>false</PublishSingleFile>
+        <PublishReadyToRun>false</PublishReadyToRun>
+        <SelfContained>false</SelfContained>
+        <PackageVersion/>
+    </PropertyGroup>
 
-  <PropertyGroup>
-    <Authors>kennyvv, TruDan</Authors>
-    <VersionSuffix>DEBUG</VersionSuffix>
-  </PropertyGroup>
+    <PropertyGroup>
+        <Authors>kennyvv, TruDan</Authors>
+        <VersionSuffix>DEBUG</VersionSuffix>
+    </PropertyGroup>
 
-  <PropertyGroup>
-    <LangVersion>latest</LangVersion>
-  </PropertyGroup>
-  
-  <PropertyGroup>
-    <OutputPath>../../Output/$(Platform)/$(Configuration)/</OutputPath>
-  </PropertyGroup>
+    <PropertyGroup>
+        <LangVersion>latest</LangVersion>
+    </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <DefineConstants>DESKTOPGL</DefineConstants>
-    <OutputPath>../../Output/x64/Debug/</OutputPath>
-    <!--<OutputPath>bin\Debug\</OutputPath>-->
-  </PropertyGroup>
+    <PropertyGroup>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <OutputPath>../../Output/$(Platform)/$(Configuration)/</OutputPath>
+    </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <OutputPath>../../Output/AnyCPU/Debug/</OutputPath>
-  </PropertyGroup>
+    <PropertyGroup Condition="'$(Configuration)'=='Debug'">
+        <DefineConstants>DESKTOPGL</DefineConstants>
+        <DebugType>full</DebugType>
+    </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <OutputPath>../../Output/x64/Release/</OutputPath>
-    <SelfContained>true</SelfContained>
-  </PropertyGroup>
+    <PropertyGroup Condition="'$(Configuration)'=='Release'">
+        <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+        <IncludeAllContentForselfExtract>true</IncludeAllContentForselfExtract>
+        <SelfContained>true</SelfContained>
+    </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <OutputPath>../../Output/AnyCPU/Release/</OutputPath>
-  </PropertyGroup>
+    <PropertyGroup Condition="'$(Configuration)'=='DirectX'">
+        <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+        <IncludeAllContentForselfExtract>true</IncludeAllContentForselfExtract>
+    </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)'=='Release'">
-    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
-    <IncludeAllContentForselfExtract>true</IncludeAllContentForselfExtract>
-  </PropertyGroup>
+    <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('Linux'))">
+        <RuntimeIdentifier Condition="'$(RuntimeIdentifier)'==''">linux-x64</RuntimeIdentifier>
+    </PropertyGroup>
 
-  <PropertyGroup Condition="'$(OS)' == 'unix'">
-    <RuntimeIdentifier>linux-x64</RuntimeIdentifier>
-  </PropertyGroup>
+    <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('OSX'))">
+        <RuntimeIdentifier Condition="'$(RuntimeIdentifier)'==''">osx-x64</RuntimeIdentifier>
+    </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)'=='DirectX'">
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
-    <IncludeAllContentForselfExtract>true</IncludeAllContentForselfExtract>
-  </PropertyGroup>
+    <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('Windows'))">
+        <RuntimeIdentifier Condition="'$(RuntimeIdentifier)'==''">win10-x64</RuntimeIdentifier>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <Compile Remove="Graphics\Items\**" />
-    <EmbeddedResource Remove="Graphics\Items\**" />
-    <None Remove="Graphics\Items\**" />
-    <None Remove="Resources\ScrollBar.png" />
-    <None Remove="Resources\Splash.png" />
-    <EmbeddedResource Include="Resources\ScrollBar.png" />
-    <EmbeddedResource Include="Resources\Splash.png" />
-    <None Remove="Resources\ProgressBar.png" />
-    <EmbeddedResource Include="Resources\ProgressBar.png" />
-    <None Remove="Resources\registries.json" />
-    <EmbeddedResource Include="Resources\registries.json" />
-    <None Remove="Resources\NewBlocks.json" />
-    <EmbeddedResource Include="Resources\NewBlocks.json" />
-    <None Remove="Resources\NewEntities.txt" />
-    <EmbeddedResource Include="Resources\NewEntities.txt" />
-    <None Remove="Resources\GradientBlur.png" />
-    <EmbeddedResource Include="Resources\GradientBlur.png" />
-    <None Remove="Resources\items2.json" />
-    <None Remove="Resources\items3.json" />
-    <EmbeddedResource Include="Resources\items3.json" />
-    <None Remove="Resources\resources.zip" />
-    <None Update="skin.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Remove="Resources\Blockshader.xnb" />
-    <None Remove="Resources\Lightmap.xnb" />
-    <EmbeddedResource Include="Resources\Lightmap.xnb" />
-    <EmbeddedResource Include="Resources\Lightmap_dx.xnb" />
-    <None Remove="Resources\Entityshader.xnb" />
-    <EmbeddedResource Include="Resources\Entityshader.xnb" />
-    <EmbeddedResource Include="Resources\Entityshader_dx.xnb" />
-    <Compile Remove="Particles\Systems\FlameParticleSystem.cs" />
-    <Compile Remove="Particles\ParticleVertex.cs" />
-    <Compile Remove="Particles\ParticleSystem.cs" />
-    <Compile Remove="Particles\ParticleSettings.cs" />
-    <None Remove="Resources\blockmap.json" />
-    <EmbeddedResource Include="Resources\blockmap.json" />
-    <None Remove="Resources\default_font.png" />
-    <EmbeddedResource Include="Resources\default_font.png" />
-    <None Remove="Resources\nethergames.png" />
-    <EmbeddedResource Include="Resources\nethergames.png" />
-    <None Remove="Resources\AlexDefault.zip" />
-    <EmbeddedResource Include="Resources\AlexDefault.zip" />
-    <None Remove="Resources\sounds.json" />
-    <EmbeddedResource Include="Resources\sounds.json" />
-    <None Remove="Resources\itemmapping.json" />
-    <EmbeddedResource Include="Resources\itemmapping.json" />
-    <None Remove="Resources\particles.json" />
-    <EmbeddedResource Include="Resources\particles.json" />
-    <None Remove="Resources\custom_blockmap.json" />
-    <EmbeddedResource Include="Resources\custom_blockmap.json" />
-  </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="CommandLineParser" Version="2.9.0-preview1" />
-    <PackageReference Include="ConcurrentHashSet" Version="1.2.0" />
-    <PackageReference Include="DiscordRichPresence" Version="1.0.175" />
-    <PackageReference Include="EasyPipes" Version="1.3.0" />
-    <PackageReference Include="FmodAudio" Version="2.0.2" />
-    <PackageReference Include="JetBrains.Profiler.Api" Version="1.1.7" />
-    <PackageReference Include="JKang.IpcServiceFramework.Server" Version="2.3.1" />
-    <PackageReference Include="jose-jwt" Version="3.1.1" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="5.0.1" />
-    <PackageReference Include="Microsoft.Identity.Client" Version="4.28.0" />
-    <PackageReference Include="MiNET.fnbt" Version="1.0.22" />
-    <PackageReference Include="MojangAPI" Version="1.0.3" />
-    <PackageReference Include="Mono.Cecil" Version="0.11.3" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-    <PackageReference Include="NLog" Version="4.7.9" />
-    <PackageReference Include="PuppeteerSharp" Version="4.0.0" />
-    <PackageReference Include="System.Globalization" Version="4.3.0" />
-    <PackageReference Include="System.Reactive.Core" Version="5.0.0" />
-    <PackageReference Include="System.Reactive.Interfaces" Version="5.0.0" />
-    <PackageReference Include="System.Reactive.Linq" Version="5.0.0" />
-    <PackageReference Include="System.Security.Cryptography.OpenSsl" Version="5.0.0" />
-  </ItemGroup>
+    <ItemGroup>
+        <Compile Remove="Graphics\Items\**"/>
+        <None Remove="Graphics\Items\**"/>
+        <EmbeddedResource Remove="Graphics\Items\**"/>
+    </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\Alex.Common\Alex.Common.csproj" />
-    <ProjectReference Include="..\Alex.Networking.Java\Alex.Networking.Java.csproj" />
-    <ProjectReference Include="..\Alex.ResourcePackLib\Alex.ResourcePackLib.csproj" />
-    <ProjectReference Include="..\Networking\Alex.Networking.Bedrock\Alex.Networking.Bedrock.csproj" />
-  </ItemGroup>
+    <ItemGroup>
+        <None Remove="Resources\**"/>
+        <EmbeddedResource Include="Resources\**"/>
+    </ItemGroup>
 
-  <ItemGroup>
-    <Compile Update="Resources.Designer.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
-  </ItemGroup>
+    <ItemGroup>
+        <None Update="skin.json">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+        <Compile Remove="Particles\Systems\FlameParticleSystem.cs"/>
+        <Compile Remove="Particles\ParticleVertex.cs"/>
+        <Compile Remove="Particles\ParticleSystem.cs"/>
+        <Compile Remove="Particles\ParticleSettings.cs"/>
+    </ItemGroup>
 
-  <ItemGroup>
-    <EmbeddedResource Update="Resources.resx">
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-      <Generator>ResXFileCodeGenerator</Generator>
-    </EmbeddedResource>
-  </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="CommandLineParser" Version="2.9.0-preview1"/>
+        <PackageReference Include="ConcurrentHashSet" Version="1.2.0"/>
+        <PackageReference Include="DiscordRichPresence" Version="1.0.175"/>
+        <PackageReference Include="EasyPipes" Version="1.3.0"/>
+        <PackageReference Include="FmodAudio" Version="2.0.2"/>
+        <PackageReference Include="JetBrains.Profiler.Api" Version="1.1.7"/>
+        <PackageReference Include="JKang.IpcServiceFramework.Server" Version="2.3.1"/>
+        <PackageReference Include="jose-jwt" Version="3.1.1"/>
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="5.0.1"/>
+        <PackageReference Include="Microsoft.Identity.Client" Version="4.28.0"/>
+        <PackageReference Include="MiNET.fnbt" Version="1.0.22"/>
+        <PackageReference Include="MojangAPI" Version="1.0.3"/>
+        <PackageReference Include="Mono.Cecil" Version="0.11.3"/>
+        <PackageReference Include="Newtonsoft.Json" Version="13.0.1"/>
+        <PackageReference Include="NLog" Version="4.7.9"/>
+        <PackageReference Include="PuppeteerSharp" Version="4.0.0"/>
+        <PackageReference Include="System.Globalization" Version="4.3.0"/>
+        <PackageReference Include="System.Reactive.Core" Version="5.0.0"/>
+        <PackageReference Include="System.Reactive.Interfaces" Version="5.0.0"/>
+        <PackageReference Include="System.Reactive.Linq" Version="5.0.0"/>
+        <PackageReference Include="System.Security.Cryptography.OpenSsl" Version="5.0.0"/>
+    </ItemGroup>
 
-  <ItemGroup>
-    <EmbeddedResource Include="Resources\Blockshader.xnb" />
-    <EmbeddedResource Include="Resources\Blockshader_dx.xnb" />
-  </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\Alex.Common\Alex.Common.csproj"/>
+        <ProjectReference Include="..\Alex.Networking.Java\Alex.Networking.Java.csproj"/>
+        <ProjectReference Include="..\Alex.ResourcePackLib\Alex.ResourcePackLib.csproj"/>
+        <ProjectReference Include="..\Networking\Alex.Networking.Bedrock\Alex.Networking.Bedrock.csproj"/>
+    </ItemGroup>
 
-  <ItemGroup>
-    <None Remove="Resources\Icon.ico" />
-    <EmbeddedResource Include="Resources\Icon.ico">
-      <LogicalName>Icon.ico</LogicalName>
-    </EmbeddedResource>
-    <None Remove="Resources\Icon.bmp" />
-    <EmbeddedResource Include="Resources\Icon.bmp">
-      <LogicalName>Icon.bmp</LogicalName>
-    </EmbeddedResource>
-  </ItemGroup>
+    <ItemGroup>
+        <Compile Update="Resources.Designer.cs">
+            <DesignTime>True</DesignTime>
+            <AutoGen>True</AutoGen>
+            <DependentUpon>Resources.resx</DependentUpon>
+        </Compile>
+    </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Audio\Models" />
-    <Folder Include="Particles\Builtin" />
-  </ItemGroup>
+    <ItemGroup>
+        <EmbeddedResource Update="Resources.resx">
+            <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+            <Generator>ResXFileCodeGenerator</Generator>
+        </EmbeddedResource>
+    </ItemGroup>
+
+    <ItemGroup>
+        <EmbeddedResource Update="Resources\Icon.ico">
+            <LogicalName>Icon.ico</LogicalName>
+        </EmbeddedResource>
+        <EmbeddedResource Update="Resources\Icon.bmp">
+            <LogicalName>Icon.bmp</LogicalName>
+        </EmbeddedResource>
+    </ItemGroup>
+
+    <ItemGroup>
+        <Folder Include="Audio\Models"/>
+        <Folder Include="Particles\Builtin"/>
+    </ItemGroup>
 
 </Project>
