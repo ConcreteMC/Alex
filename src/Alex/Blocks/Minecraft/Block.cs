@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using Alex.Blocks.Materials;
 using Alex.Blocks.Minecraft.Leaves;
 using Alex.Blocks.Properties;
@@ -40,40 +39,39 @@ namespace Alex.Blocks.Minecraft
 
 		public bool IsWaterLogged => WaterLogged.GetValue(BlockState);// BlockState.GetTypedValue(WaterLogged);
 
-		// private ushort _flags = 0;
-		//
-		// [MethodImpl(MethodImplOptions.AggressiveInlining)]
-		// private bool GetFlagBit(int bit) => (_flags & (1 << bit)) != 0;
-		//
-		// private void SetFlagBit(int bit, bool value)
-		// {
-		// 	var mask = (ushort)(1 << bit);
-		// 	
-		// 	if (value)
-		// 	{
-		// 		_flags |= mask;
-		// 	}
-		// 	else
-		// 	{
-		// 		_flags = (ushort)(_flags & ~mask);
-		// 	}
-		// }
+		private ushort _flags = 0;
+
+		private bool GetFlagBit(int bit) => (_flags & (1 << bit)) != 0;
+
+		private void SetFlagBit(int bit, bool value)
+		{
+			var mask = (ushort)(1 << bit);
+			
+			if (value)
+			{
+				_flags |= mask;
+			}
+			else
+			{
+				_flags = (ushort)(_flags & ~mask);
+			}
+		}
 		
-		public bool Solid { get; set; }
-		public bool Transparent { get; set; }
-		public bool Renderable { get; set; }
-		public bool HasHitbox { get; set; }
-		public virtual bool IsFullCube { get; set; }
+		public bool Solid { get => GetFlagBit(1); set => SetFlagBit(1, value); }
+		public bool Transparent { get => GetFlagBit(2); set => SetFlagBit(2, value); }
+		public bool Renderable { get => GetFlagBit(4); set => SetFlagBit(4, value); }
+		public bool HasHitbox { get => GetFlagBit(5); set => SetFlagBit(5, value); }
+		public virtual bool IsFullCube { get => GetFlagBit(6); set => SetFlagBit(6, value); }
 
 		/// <summary>
 		///		If true, the <see cref="BlockPlaced"/> function gets called whenever a block of this type of placed
 		/// </summary>
-		public bool RequiresUpdate { get; set; }
+		public bool RequiresUpdate { get => GetFlagBit(9); set => SetFlagBit(9, value); }
 		
 		/// <summary>
 		///		If true, clicking this block will send the server an interact event
 		/// </summary>
-		public bool CanInteract { get; set; }
+		public bool CanInteract { get => GetFlagBit(10); set => SetFlagBit(10, value); }
 		
 		/// <summary>
 		///		The amount of light this block emits
