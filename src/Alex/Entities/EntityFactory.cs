@@ -160,7 +160,7 @@ namespace Alex.Entities
 			}
 		}
 
-		public static int LoadEntityDefinitions(BedrockResourcePack resourcePack,
+		public static int LoadEntityDefinitions(MCBedrockResourcePack resourcePack,
 			bool replaceModels,
 			IProgressReceiver progressReceiver = null)
 		{

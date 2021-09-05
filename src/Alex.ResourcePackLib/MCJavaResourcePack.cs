@@ -35,7 +35,7 @@ using MathHelper = Microsoft.Xna.Framework.MathHelper;
 
 namespace Alex.ResourcePackLib
 {
-	public class McResourcePack : ResourcePack, ITextureProvider, IBlockStateResourceProvider, IDisposable
+	public class MCJavaResourcePack : ResourcePack, ITextureProvider, IBlockStateResourceProvider, IDisposable
 	{
 		public delegate void McResourcePackPreloadCallback(Image<Rgba32> fontBitmap, List<char> bitmapFontCharacters);
 
@@ -59,7 +59,7 @@ namespace Alex.ResourcePackLib
 		private readonly Dictionary<ResourceLocation, TextureMeta>         _textureMetaCache = new();
 		private readonly Dictionary<string, LanguageResource>              _languageCache    = new(StringComparer.OrdinalIgnoreCase);
 
-		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(McResourcePack));
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(MCJavaResourcePack));
 		//public IReadOnlyDictionary<ResourceLocation, TextureMeta> TextureMetas => _textureMetaCache;
 		public IReadOnlyDictionary<string, LanguageResource>   Languages		 => _languageCache;
 		
@@ -88,7 +88,7 @@ namespace Alex.ResourcePackLib
 		public  IDictionary<string, SoundDefinition> SoundDefinitions { get; private set; }
 		
 		private IFilesystem Filesystem  { get; set; }
-		public McResourcePack(IFilesystem archive, McResourcePackPreloadCallback preloadCallback, ResourcePackManifest manifest, LoadProgress progressReporter = null)
+		public MCJavaResourcePack(IFilesystem archive, McResourcePackPreloadCallback preloadCallback, ResourcePackManifest manifest, LoadProgress progressReporter = null)
 		{
 			Info = manifest;
 			Filesystem = archive;

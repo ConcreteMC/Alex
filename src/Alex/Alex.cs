@@ -358,7 +358,7 @@ namespace Alex
             var builtInFont = ResourceManager.ReadResource("Alex.Resources.default_font.png");
 
             var image = Image.Load<Rgba32>(builtInFont);
-            OnResourcePackPreLoadCompleted(image, McResourcePack.BitmapFontCharacters.ToList());
+            OnResourcePackPreLoadCompleted(image, MCJavaResourcePack.BitmapFontCharacters.ToList());
 
             var options = Services.GetRequiredService<IOptionsProvider>();
             
@@ -633,8 +633,8 @@ namespace Alex
             if (storage.TryReadBytes("skin.json", out var bytes))
             {
                 Dictionary<string, EntityModel> models = new Dictionary<string, EntityModel>();
-                BedrockResourcePack.LoadEntityModel(Encoding.UTF8.GetString(bytes), models);
-                models = BedrockResourcePack.ProcessEntityModels(models);
+                MCBedrockResourcePack.LoadEntityModel(Encoding.UTF8.GetString(bytes), models);
+                models = MCBedrockResourcePack.ProcessEntityModels(models);
 
                 if (models.Count == 1)
                 {

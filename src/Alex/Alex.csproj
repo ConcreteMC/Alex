@@ -15,7 +15,7 @@
         <PublishSingleFile>false</PublishSingleFile>
         <PublishReadyToRun>false</PublishReadyToRun>
         <SelfContained>false</SelfContained>
-        <PackageVersion/>
+        <PackageVersion />
     </PropertyGroup>
 
     <PropertyGroup>
@@ -62,55 +62,55 @@
 
 
     <ItemGroup>
-        <Compile Remove="Graphics\Items\**"/>
-        <None Remove="Graphics\Items\**"/>
-        <EmbeddedResource Remove="Graphics\Items\**"/>
+        <Compile Remove="Graphics\Items\**" />
+        <None Remove="Graphics\Items\**" />
+        <EmbeddedResource Remove="Graphics\Items\**" />
     </ItemGroup>
 
     <ItemGroup>
-        <None Remove="Resources\**"/>
-        <EmbeddedResource Include="Resources\**"/>
+        <None Remove="Resources\**" />
+        <EmbeddedResource Include="Resources\**" />
     </ItemGroup>
 
     <ItemGroup>
         <None Update="skin.json">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>
-        <Compile Remove="Particles\Systems\FlameParticleSystem.cs"/>
-        <Compile Remove="Particles\ParticleVertex.cs"/>
-        <Compile Remove="Particles\ParticleSystem.cs"/>
-        <Compile Remove="Particles\ParticleSettings.cs"/>
+        <Compile Remove="Particles\Systems\FlameParticleSystem.cs" />
+        <Compile Remove="Particles\ParticleVertex.cs" />
+        <Compile Remove="Particles\ParticleSystem.cs" />
+        <Compile Remove="Particles\ParticleSettings.cs" />
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="CommandLineParser" Version="2.9.0-preview1"/>
-        <PackageReference Include="ConcurrentHashSet" Version="1.2.0"/>
-        <PackageReference Include="DiscordRichPresence" Version="1.0.175"/>
-        <PackageReference Include="EasyPipes" Version="1.3.0"/>
-        <PackageReference Include="FmodAudio" Version="2.0.2"/>
-        <PackageReference Include="JetBrains.Profiler.Api" Version="1.1.7"/>
-        <PackageReference Include="JKang.IpcServiceFramework.Server" Version="2.3.1"/>
-        <PackageReference Include="jose-jwt" Version="3.1.1"/>
-        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="5.0.1"/>
-        <PackageReference Include="Microsoft.Identity.Client" Version="4.28.0"/>
-        <PackageReference Include="MiNET.fnbt" Version="1.0.22"/>
-        <PackageReference Include="MojangAPI" Version="1.0.3"/>
-        <PackageReference Include="Mono.Cecil" Version="0.11.3"/>
-        <PackageReference Include="Newtonsoft.Json" Version="13.0.1"/>
-        <PackageReference Include="NLog" Version="4.7.9"/>
-        <PackageReference Include="PuppeteerSharp" Version="4.0.0"/>
-        <PackageReference Include="System.Globalization" Version="4.3.0"/>
-        <PackageReference Include="System.Reactive.Core" Version="5.0.0"/>
-        <PackageReference Include="System.Reactive.Interfaces" Version="5.0.0"/>
-        <PackageReference Include="System.Reactive.Linq" Version="5.0.0"/>
-        <PackageReference Include="System.Security.Cryptography.OpenSsl" Version="5.0.0"/>
+        <PackageReference Include="CommandLineParser" Version="2.9.0-preview1" />
+        <PackageReference Include="ConcurrentHashSet" Version="1.2.0" />
+        <PackageReference Include="DiscordRichPresence" Version="1.0.175" />
+        <PackageReference Include="EasyPipes" Version="1.3.0" />
+        <PackageReference Include="FmodAudio" Version="2.0.2" />
+        <PackageReference Include="JetBrains.Profiler.Api" Version="1.1.7" />
+        <PackageReference Include="JKang.IpcServiceFramework.Server" Version="2.3.1" />
+        <PackageReference Include="jose-jwt" Version="3.1.1" />
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="5.0.1" />
+        <PackageReference Include="Microsoft.Identity.Client" Version="4.28.0" />
+        <PackageReference Include="MiNET.fnbt" Version="1.0.22" />
+        <PackageReference Include="MojangAPI" Version="1.0.3" />
+        <PackageReference Include="Mono.Cecil" Version="0.11.3" />
+        <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+        <PackageReference Include="NLog" Version="4.7.9" />
+        <PackageReference Include="PuppeteerSharp" Version="4.0.0" />
+        <PackageReference Include="System.Globalization" Version="4.3.0" />
+        <PackageReference Include="System.Reactive.Core" Version="5.0.0" />
+        <PackageReference Include="System.Reactive.Interfaces" Version="5.0.0" />
+        <PackageReference Include="System.Reactive.Linq" Version="5.0.0" />
+        <PackageReference Include="System.Security.Cryptography.OpenSsl" Version="5.0.0" />
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Alex.Common\Alex.Common.csproj"/>
-        <ProjectReference Include="..\Alex.Networking.Java\Alex.Networking.Java.csproj"/>
-        <ProjectReference Include="..\Alex.ResourcePackLib\Alex.ResourcePackLib.csproj"/>
-        <ProjectReference Include="..\Networking\Alex.Networking.Bedrock\Alex.Networking.Bedrock.csproj"/>
+        <ProjectReference Include="..\Alex.Common\Alex.Common.csproj" />
+        <ProjectReference Include="..\Alex.Networking.Java\Alex.Networking.Java.csproj" />
+        <ProjectReference Include="..\Alex.ResourcePackLib\Alex.ResourcePackLib.csproj" />
+        <ProjectReference Include="..\Networking\Alex.Networking.Bedrock\Alex.Networking.Bedrock.csproj" />
     </ItemGroup>
 
     <ItemGroup>
@@ -138,8 +138,8 @@
     </ItemGroup>
 
     <ItemGroup>
-        <Folder Include="Audio\Models"/>
-        <Folder Include="Particles\Builtin"/>
+        <Folder Include="Audio\Models" />
+        <Folder Include="Particles\Builtin" />
     </ItemGroup>
 
 </Project>

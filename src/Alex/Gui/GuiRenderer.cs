@@ -217,7 +217,7 @@ namespace Alex.Gui
 		private readonly Dictionary<string, CultureLanguage>          _languages = new Dictionary<string, CultureLanguage>();
 		public           IReadOnlyDictionary<string, CultureLanguage> Languages => _languages;
 		
-		public void LoadLanguages(McResourcePack resourcePack, IProgressReceiver progressReceiver)
+		public void LoadLanguages(MCJavaResourcePack resourcePack, IProgressReceiver progressReceiver)
 		{
 			if (resourcePack.Languages == null)
 				return;

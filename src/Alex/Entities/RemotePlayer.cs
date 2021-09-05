@@ -262,10 +262,10 @@ namespace Alex.Entities
 									//File.WriteAllText(Path.Combine("playerskins", $"{resourcePatch.Geometry.Default}.json"), skin.GeometryData);
 									
 									Dictionary<string, EntityModel> models = new Dictionary<string, EntityModel>();
-									BedrockResourcePack.LoadEntityModel(skin.GeometryData, models);
+									MCBedrockResourcePack.LoadEntityModel(skin.GeometryData, models);
 
 									int preProcessed = models.Count;
-									models = BedrockResourcePack.ProcessEntityModels(
+									models = MCBedrockResourcePack.ProcessEntityModels(
 										models, s =>
 										{
 											if (Alex.Instance.Resources.TryGetEntityModel(s, out var eModel))

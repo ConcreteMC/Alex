@@ -15,7 +15,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 		private ZipFileSystem FileSystem { get; set; } = null;
 		//public BedrockResourcePack ResourcePack { get; private set; }
 
-		private BedrockResourcePack[] _resourcePacks = null;
+		private MCBedrockResourcePack[] _resourcePacks = null;
 		/// <inheritdoc />
 		public TexturePackEntry(TexturePackInfo info) : base(info.UUID, info.Version)
 		{
