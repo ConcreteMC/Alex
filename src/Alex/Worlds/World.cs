@@ -799,6 +799,7 @@ namespace Alex.Worlds
 					type |= ScheduleType.Lighting;
 				}
 
+				ChunkManager.BlockLightUpdate.Enqueue(blockcoords);
 				ChunkManager.SkyLightCalculator.Calculate(blockcoords);
 				ChunkManager.ScheduleChunkUpdate(chunkCoords, ScheduleType.Scheduled, true);
 			}

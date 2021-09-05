@@ -39,7 +39,7 @@ namespace Alex.Worlds.Chunks
 		internal ChunkData ChunkData { get; private set; }
 		private object _dataLock = new object();
 
-		private System.Collections.BitArray _scheduledUpdates;
+		//private System.Collections.BitArray _scheduledUpdates;
 		private int _scheduledUpdateCount = 0;
 		public WorldSettings WorldSettings { get; }
 		private readonly int _sectionOffset;
@@ -59,10 +59,10 @@ namespace Alex.Worlds.Chunks
 			}
 
 			BlockEntities = new ConcurrentDictionary<BlockCoordinates, NbtCompound>();
-			_scheduledUpdates = new System.Collections.BitArray((16 * 16 * realHeight), false);
+			//_scheduledUpdates = new System.Collections.BitArray((16 * 16 * realHeight), false);
 			_biomeId = new int[16 * 16 * realHeight];
 
-			ChunkData = new ChunkData(x,z);
+			ChunkData = ChunkData.Create(x, z);// new ChunkData(x,z);
 		}
 
 		public ChunkColumn(int x, int z) : this(x,z, WorldSettings.Default)
@@ -89,7 +89,7 @@ namespace Alex.Worlds.Chunks
 			if (!CheckWithinCoordinates(x, y, z, false))
 				return;
 			
-			var queue = _scheduledUpdates;
+			/*var queue = _scheduledUpdates;
 
 			if (queue != null)
 			{
@@ -103,7 +103,7 @@ namespace Alex.Worlds.Chunks
 				{
 					Interlocked.Increment(ref _scheduledUpdateCount);
 				}
-			}
+			}*/
 		}
 
 		public void ScheduleBorder(ChunkCoordinates neighbor)
@@ -175,13 +175,13 @@ namespace Alex.Worlds.Chunks
 				if (chunkData == null)
 					return false;
 
-				var scheduleQueue = _scheduledUpdates;
+				//var scheduleQueue = _scheduledUpdates;
 
-				if (scheduleQueue == null)
-					return false;
+			//	if (scheduleQueue == null)
+				//	return false;
 				
-				bool isNew = IsNew;
-				bool didChange = false;
+				//bool isNew = IsNew;
+				//bool didChange = false;
 				world = new OffsetBlockAccess(new BlockCoordinates(X << 4, 0, Z << 4), world);
 				
 				for (int sectionIndex = 0; sectionIndex < Sections.Length; sectionIndex++)
@@ -203,16 +203,16 @@ namespace Alex.Worlds.Chunks
 							{
 								var idx = GetCoordinateIndex(x, yOffset + y, z);
 
-								bool scheduled = scheduleQueue[idx]; // IsScheduled(x, y, z)
+								//bool scheduled = scheduleQueue[idx]; // IsScheduled(x, y, z)
 
 								//if ((!isNew && !scheduled))
 								//	continue;
 								
 								var blockPosition = new BlockCoordinates(x, yOffset + y, z);
-								if (scheduled)
+								//if (scheduled)
 								{
-									Interlocked.Decrement(ref _scheduledUpdateCount);
-									scheduleQueue[idx] = false;
+								//	Interlocked.Decrement(ref _scheduledUpdateCount);
+								//	scheduleQueue[idx] = false;
 									//didChange = true;
 								}
 								//chunkData?.Remove(blockPosition);
@@ -255,11 +255,16 @@ namespace Alex.Worlds.Chunks
 
 				//if (applyChanges && (didChange || isNew))
 				//{
-					ApplyChanges(world, true, chunkData);
-				//}
+				if (!Destroyed && !chunkData.Disposed)
+				{
+					chunkData.ApplyChanges(world);
+				}
+				else
+				{
+					return false;
+				}
 				
 				ChunkData = chunkData;
-
 				IsNew = false;
 			}
 			finally
@@ -274,14 +279,8 @@ namespace Alex.Worlds.Chunks
 			return true;
 		}
 
-		private void ApplyChanges(IBlockAccess world, bool force, ChunkData chunkData)
-		{
-			if (chunkData == null || chunkData.Disposed)
-				return;
-
-			chunkData.ApplyChanges(world, force);
-			ChunkData = chunkData;
-		}
+		public bool Destroyed { get; set; } = false;
+		public List<ChunkCoordinates> Neighbors { get; set; } = new List<ChunkCoordinates>();
 
 		public IEnumerable<BlockCoordinates> GetLightSources()
 		{
@@ -347,7 +346,7 @@ namespace Alex.Worlds.Chunks
 			//- 16 * (y >> 4)
 			section.Set(storage, x, y & 0xf, z, state);
 
-			_scheduledUpdates[GetCoordinateIndex(x, y, z)] = true;
+			//_scheduledUpdates[GetCoordinateIndex(x, y, z)] = true;
 			//	_heightDirty = true;
 		}
 
@@ -616,8 +615,10 @@ namespace Alex.Worlds.Chunks
 
 		public void Dispose()
 		{
-			lock (_dataLock)
+			//lock (_dataLock)
 			{
+				Destroyed = true;
+				
 				for (var index = 0; index < Sections.Length; index++)
 				{
 					var chunksSection = Sections[index];
@@ -630,7 +631,7 @@ namespace Alex.Worlds.Chunks
 				ChunkData?.Dispose();
 				ChunkData = null;
 				
-				_scheduledUpdates = null;
+				//_scheduledUpdates = null;
 			}
 		}
 	}

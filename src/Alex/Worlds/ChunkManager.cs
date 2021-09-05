@@ -317,14 +317,14 @@ namespace Alex.Worlds
 
 										c3 = TryGetChunk(new ChunkCoordinates(chunk.X - 1, chunk.Z), out var cc3) && !cc3.IsNew;
 										c4 = TryGetChunk(new ChunkCoordinates(chunk.X, chunk.Z - 1), out var cc4) && !cc4.IsNew;
-											
-										if (BlockLightUpdate != null)
-											BlockLightUpdate.RecalculateChunk(chunk);
 
 										if (SkyLightCalculator != null)
 											SkyLightCalculator.Recalculate(chunk);
+										
+										if (BlockLightUpdate != null)
+											BlockLightUpdate.RecalculateChunk(chunk);
 									}
-
+									
 									timingWatch.Restart();
 											
 									if (chunk.UpdateBuffer(World, true))
@@ -431,6 +431,9 @@ namespace Alex.Worlds
 
 			if (Chunks.TryRemove(position, out var column))
 			{
+				if (dispose)
+					column.Destroyed = true;
+				
 				UpdateQueue.Remove(position);
 				UpdateBorderQueue.Remove(position);
 				FastUpdateQueue.Remove(position);
@@ -444,6 +447,18 @@ namespace Alex.Worlds
 				
 				if (dispose)
 					column.Dispose();
+
+				if (TryGetChunk(new ChunkCoordinates(position.X + 1, position.Z), out var c1))
+					c1.Neighbors.Remove(position);
+				
+				if (TryGetChunk(new ChunkCoordinates(position.X - 1, position.Z), out var c2))
+					c2.Neighbors.Remove(position);
+				
+				if (TryGetChunk(new ChunkCoordinates(position.X, position.Z + 1), out var c3))
+					c3.Neighbors.Remove(position);
+				
+				if (TryGetChunk(new ChunkCoordinates(position.X, position.Z - 1), out var c4))
+					c4.Neighbors.Remove(position);
 				
 				OnChunkRemoved?.Invoke(this, new ChunkRemovedEventArgs(position));
 			}
@@ -478,19 +493,29 @@ namespace Alex.Worlds
 			}
 		}
 
-		public void ScheduleChunkUpdate(ChunkCoordinates position, ScheduleType type, bool prioritize = false, ChunkCoordinates source = default)
+		public void ScheduleChunkUpdate(ChunkCoordinates position,
+			ScheduleType type,
+			bool prioritize = false,
+			ChunkCoordinates source = default)
 		{
 			var queue = UpdateQueue;
 
 			if (!Chunks.TryGetValue(position, out var cc)) return;
-			
+
+			if (cc.Scheduled && !prioritize)
+				return;
+
 			//if (cc?.ChunkData?.IsQueued == true)
 			//	return;
-					
+
 			if ((type & ScheduleType.Border) != 0)
 			{
 				//cc.ScheduleBorder(source);
-					
+				if (cc.Neighbors.Contains(source))
+					return;
+
+				cc.Neighbors.Add(source);
+				
 				queue = UpdateBorderQueue;
 			}
 
@@ -501,24 +526,11 @@ namespace Alex.Worlds
 			{
 				return;
 			}
-
-			//if (Monitor.TryEnter(cc.UpdateLock, 0))
-			{
-				if (cc.Scheduled && !prioritize)
-					return;
-
-				cc.Scheduled = true;
-					
-				try
-				{
-					queue.Enqueue(position);
-					_processingSync.Set();
-				}
-				finally
-				{
-					//		Monitor.Exit(cc.UpdateLock);
-				}
-			}
+			
+			cc.Scheduled = true;
+			
+			queue.Enqueue(position);
+			_processingSync.Set();
 		}
 
 		#region  Drawing

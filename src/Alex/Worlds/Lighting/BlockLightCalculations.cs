@@ -13,7 +13,7 @@ namespace Alex.Worlds.Lighting
 {
     public class BlockLightCalculations : IDisposable
     {
-        private static readonly ILogger Log = LogManager.GetCurrentClassLogger(typeof(BlockLightCalculations));
+	    private static readonly ILogger Log = LogManager.GetCurrentClassLogger(typeof(BlockLightCalculations));
         private ConcurrentQueue<BlockCoordinates> Queue { get; }
         private IBlockAccess World             { get; }
         private CancellationToken CancellationToken { get; }

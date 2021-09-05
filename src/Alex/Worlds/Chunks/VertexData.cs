@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using Alex.Common;
 using Alex.Common.Blocks;
 using Alex.Common.Graphics;
+using Alex.Common.Utils.Vectors;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics.PackedVector;
 
@@ -10,8 +11,9 @@ using Microsoft.Xna.Framework.Graphics.PackedVector;
 namespace Alex.Worlds.Chunks
 {
 //	[StructLayout(LayoutKind.Sequential)]
-	public struct VertexData
+	public readonly struct VertexData
 	{
+		public readonly BlockCoordinates LightPosition;
 		public readonly Vector3 Position;
 		
 		public readonly BlockFace Face;
@@ -25,7 +27,6 @@ namespace Alex.Worlds.Chunks
 		public bool IsTransparent => (_flags & VertexFlags.Transparent) != 0;
 		public bool IsFullCube => (_flags & VertexFlags.FullCube) != 0;
 		public bool IsSolid => (_flags & VertexFlags.Solid) != 0;
-		public int Index;
 
 		public readonly RenderStage Stage;
 		public VertexData(Vector3 position,
@@ -33,7 +34,7 @@ namespace Alex.Worlds.Chunks
 			Vector4 textureCoordinates,
 			uint color,
 			VertexFlags flags,
-			RenderStage stage)
+			RenderStage stage, BlockCoordinates lightPosition)
 		{
 			Position = position;
 			Face = face;
@@ -41,7 +42,7 @@ namespace Alex.Worlds.Chunks
 			Color = color;
 			_flags = flags;
 			Stage = stage;
-			Index = -1;
+			LightPosition = lightPosition;
 		}
 	}
 }

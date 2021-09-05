@@ -15,6 +15,8 @@ namespace Alex.Graphics.Models.Entity
 			for (var index = 0; index < list.Count; index++)
 			{
 				var modelBone = list[index];
+				if (modelBone == null)
+					continue;
 				modelBone.Index = index;
 			}
 		}
