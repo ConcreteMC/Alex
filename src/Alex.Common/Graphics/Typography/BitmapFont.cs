@@ -74,23 +74,11 @@ namespace Alex.Common.Graphics.Typography
         
         #endregion
 
-        public Vector2 MeasureString(string text, float scale = 1.0f)
-        {
-            return MeasureString(text, new Vector2(scale));
-        }
-
-        public Vector2 MeasureString(string text, Vector2 scale)
-        {
-            MeasureString(text, out var size);
-            return (size * (scale));
-        }
-
-        private void MeasureString(string text, out Vector2 size)
+        public Vector2 MeasureString(string text)
         {
             if (string.IsNullOrEmpty(text))
             {
-                size = Vector2.Zero;
-                return;
+                return Vector2.Zero;
             }
             
             float width = 0.0f, finalLineHeight = LineSpacing;
@@ -174,8 +162,7 @@ namespace Alex.Common.Graphics.Typography
                 }
             }
 
-            size.X = width;
-            size.Y = offset.Y + finalLineHeight;
+            return new Vector2(width, offset.Y + finalLineHeight);
         }
 
 
@@ -216,10 +203,8 @@ namespace Alex.Common.Graphics.Typography
 			
 			if (flippedVert || flippedHorz)
 			{
-				Vector2 size;
-                
-				MeasureString(text, out size);
-
+				Vector2 size = MeasureString(text);
+				
 				if (flippedHorz)
 				{
 					originVal.X         *= -1;
