@@ -18,8 +18,6 @@ namespace Alex.Worlds.Abstraction
         void GetLight(BlockCoordinates coordinates, out byte blockLight, out byte skyLight);
         
         int GetHeight(BlockCoordinates coordinates);
-        //Block GetBlock(BlockCoordinates coord, ChunkColumn tryChunk = null);
-       // void SetBlock(Block block, bool broadcast = true, bool applyPhysics = true, bool calculateLight = true, ChunkColumn possibleChunk = null);
         IEnumerable<ChunkSection.BlockEntry> GetBlockStates(int positionX, int positionY, int positionZ);
         BlockState GetBlockState(BlockCoordinates position);
 

@@ -4,17 +4,56 @@ namespace Alex.Entities
 {
 	public class PlayerSkinFlags
 	{
+		public static PlayerSkinFlags Default => new PlayerSkinFlags()
+		{
+			Value = byte.MaxValue
+		};
+		
 		public byte Value { get; set; } = 0;
 
-		public bool CapeEnabled        => (Value & 0x01) != 0;
-		public bool JacketEnabled      => (Value & 0x02) != 0;
-		public bool LeftSleeveEnabled  => (Value & 0x04) != 0;
-		public bool RightSleeveEnabled => (Value & 0x08) != 0;
-		public bool LeftPantsEnabled   => (Value & 0x10) != 0;
-		public bool RightPantsEnabled  => (Value & 0x20) != 0;
-		public bool HatEnabled         => (Value & 0x40) != 0;
-		
-		public void ApplyTo(EntityModelRenderer renderer)
+		public bool CapeEnabled
+		{
+			get => Value.IsBitSet(0x01);
+			set => Value = Value.SetBit(0x01, value);
+		}
+
+		public bool JacketEnabled
+		{
+			get => Value.IsBitSet(0x02);
+			set => Value = Value.SetBit(0x02, value);
+		}
+
+		public bool LeftSleeveEnabled
+		{
+			get => Value.IsBitSet(0x04);
+			set => Value = Value.SetBit(0x04, value);
+		}
+
+		public bool RightSleeveEnabled
+		{
+			get => Value.IsBitSet(0x08);
+			set => Value = Value.SetBit(0x08, value);
+		}
+
+		public bool LeftPantsEnabled
+		{
+			get => Value.IsBitSet(0x10);
+			set => Value = Value.SetBit(0x10, value);
+		}
+
+		public bool RightPantsEnabled
+		{
+			get => Value.IsBitSet(0x20);
+			set => Value = Value.SetBit(0x20, value);
+		}
+
+		public bool HatEnabled
+		{
+			get => Value.IsBitSet(0x40);
+			set => Value = Value.SetBit(0x40, value);
+		}
+
+		public void ApplyTo(ModelRenderer renderer)
 		{
 			Set(renderer, "cape", CapeEnabled);
 			Set(renderer, "jacket", JacketEnabled);
@@ -25,7 +64,7 @@ namespace Alex.Entities
 			Set(renderer, "hat", HatEnabled);
 		}
 
-		private void Set(EntityModelRenderer renderer, string bone, bool value)
+		private void Set(ModelRenderer renderer, string bone, bool value)
 		{
 			renderer.SetVisibility(bone, value);
 		}

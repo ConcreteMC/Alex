@@ -370,11 +370,6 @@ namespace Alex.Worlds
 			        _breakingEffect.VertexColorEnabled = true;
 		        }
 
-		        //var color = Color.Red * block.Value.Progress;
-
-		        // var depth = args.GraphicsDevice.DepthStencilState;
-		        // args.GraphicsDevice.DepthStencilState = DepthStencilState.None;
-
 		        args.GraphicsDevice.RenderBoundingBox(
 			        block.Value.BoundingBox, Camera.ViewMatrix, Camera.ProjectionMatrix, Color.White, true, _breakingEffect);
 	        }
@@ -394,14 +389,6 @@ namespace Alex.Worlds
 				        {
 					        Color color = Color.LightGray;
 
-					       /* if (Player.IsBreakingBlock)
-					        {
-						        var progress = Player.BlockBreakProgress;
-						        
-
-						       // args.GraphicsDevice.DepthStencilState = depth;
-					        }
-					        else*/
 					        {
 						        args.GraphicsDevice.RenderBoundingBox(
 							        boundingBox, Camera.ViewMatrix, Camera.ProjectionMatrix, color);
@@ -409,15 +396,6 @@ namespace Alex.Worlds
 				        }
 			        }
 		        }
-
-		        //if (player.HasRaytraceResult && player.RaytracedBlockFace != BlockFace.None)
-		      //  {
-			   //     var neighbor = player.AdjacentRaytraceBlock;
-			   //     args.GraphicsDevice.RenderBoundingBox(new BoundingBox(neighbor, neighbor + new BlockCoordinates(1,1,1)), Camera.ViewMatrix, Camera.ProjectionMatrix, Color.Green);
-
-			   //     neighbor = player.RaytracedBlock + player.RaytracedBlockFace.GetBlockCoordinates();
-			   //     args.GraphicsDevice.RenderBoundingBox(new BoundingBox(neighbor, neighbor + new BlockCoordinates(1,1,1)), Camera.ViewMatrix, Camera.ProjectionMatrix, Color.Red);
-		       // }
 	        }
 
 	        if (RenderBoundingBoxes)
@@ -1051,40 +1029,6 @@ namespace Alex.Worlds
 
 			return false;
 		}
-        
-        private bool _destroyed = false;
-		public void Dispose()
-		{
-			if (_destroyed) return;
-			_destroyed = true;
-			
-			_cancellationTokenSource?.Cancel();
-
-			foreach (var disposable in _disposables)
-			{
-				disposable.Dispose();
-			}
-			_disposables.Clear();
-			
-			TickManager.UnregisterTicked(this);
-			TickManager.UnregisterTicked(EntityManager);
-			TickManager.UnregisterTicked(ChunkManager);
-			
-			Map?.Dispose();
-			//Map = null;
-
-			EntityManager = null;
-			ChunkManager = null;
-
-			Player.Dispose();
-			//Ticker.Dispose();
-			TickManager = null;
-			Player = null;
-			
-			_breakingEffect?.Dispose();
-			
-			//Log.Info($"World disposed.");
-		}
 
 		#region IWorldReceiver (Handle WorldProvider callbacks)
 
@@ -1129,9 +1073,8 @@ namespace Alex.Worlds
 
 			if (EntityManager.TryGet(entityId, out Entity entity))
 			{
-				EntityManager.Remove(entityId);
-
 				entity.OnDespawn();
+				EntityManager.Remove(entityId);
 			}
 		}
 
@@ -1299,6 +1242,40 @@ namespace Alex.Worlds
 		}
 
 		#endregion
+		
+		private bool _destroyed = false;
+		public void Dispose()
+		{
+			if (_destroyed) return;
+			_destroyed = true;
+			
+			_cancellationTokenSource?.Cancel();
+
+			foreach (var disposable in _disposables)
+			{
+				disposable.Dispose();
+			}
+			_disposables.Clear();
+			
+			TickManager.UnregisterTicked(this);
+			TickManager.UnregisterTicked(EntityManager);
+			TickManager.UnregisterTicked(ChunkManager);
+			
+			Map?.Dispose();
+			//Map = null;
+
+			EntityManager = null;
+			ChunkManager = null;
+
+			Player.Dispose();
+			//Ticker.Dispose();
+			TickManager = null;
+			Player = null;
+			
+			_breakingEffect?.Dispose();
+			
+			//Log.Info($"World disposed.");
+		}
 	}
 
 	[Flags]

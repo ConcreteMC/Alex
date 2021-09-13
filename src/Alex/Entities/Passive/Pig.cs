@@ -18,10 +18,7 @@ namespace Alex.Entities.Passive
 
 				if (modelRenderer != null)
 				{
-					if (modelRenderer.GetBone("Bag1", out var bag1))
-					{
-						ToggleCubes(bag1, !IsChested);
-					}
+					ModelRenderer.SetVisibility("Bag1", !IsChested);
 				}
 			}
 		}

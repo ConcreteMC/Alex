@@ -1,6 +1,10 @@
-﻿using Alex.Common.GameStates;
+﻿using System;
+using Alex.Common.Data.Options;
+using Alex.Common.GameStates;
 using Alex.Common.Graphics;
+using Alex.Common.Services;
 using Alex.Common.Utils;
+using Alex.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using NLog;
@@ -13,11 +17,13 @@ namespace Alex.Gamestates.Common
 	    private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(GuiGameStateBase));
 	    
         protected Alex Alex => Alex.Instance;
-		
+        public AlexOptions Options => GetService<IOptionsProvider>().AlexOptions;
 
 		public bool IsLoaded { get; private set; }
 		public bool IsShown  { get; private set; }
 
+		/// <inheritdoc />
+		public string Identifier { get; set; } = Guid.NewGuid().ToString();
 		public IGameState ParentState { get; set; }
 		public GuiGameStateBase()
         {
@@ -64,7 +70,9 @@ namespace Alex.Gamestates.Common
         void IGameState.Update(GameTime gameTime)
         {
 	        ParentState?.Update(gameTime);
-	        OnUpdate(gameTime);
+	        
+	        if (!Alex.GuiManager.HasScreen(this)) 
+				OnUpdate(gameTime);
         }
         
         void IGameState.Draw(IRenderArgs args)
@@ -74,7 +82,7 @@ namespace Alex.Gamestates.Common
 
             //Draw(Alex.GuiManager.GuiSpriteBatch, args.GameTime);
         }
-        
+
         public void Show()
         {
 			if(IsShown) return;

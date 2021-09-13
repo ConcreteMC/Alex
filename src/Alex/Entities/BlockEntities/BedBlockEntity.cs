@@ -8,6 +8,7 @@ using Alex.Common.Utils;
 using Alex.Common.Utils.Vectors;
 using Alex.Graphics.Models.Entity;
 using Alex.ResourcePackLib.Json.Bedrock.Entity;
+using Alex.Utils;
 using Alex.Worlds;
 using fNbt;
 using Microsoft.Xna.Framework;
@@ -99,7 +100,7 @@ namespace Alex.Entities.BlockEntities
 			{
 				if (ModelFactory.TryGetModel("geometry.bed", out var geo))
 				{
-					if (EntityModelRenderer.TryGetRenderer(geo, out var renderer))
+					if (geo.TryGetRenderer(out var renderer))
 					{
 						ModelRenderer = renderer;
 					}

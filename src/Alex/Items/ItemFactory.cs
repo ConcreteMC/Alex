@@ -20,6 +20,7 @@ using Alex.ResourcePackLib;
 using Alex.ResourcePackLib.Json;
 using Alex.ResourcePackLib.Json.Models;
 using Alex.ResourcePackLib.Json.Models.Items;
+using Alex.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Newtonsoft.Json;
@@ -41,17 +42,8 @@ namespace Alex.Items
 
 		public static Item[] AllItems
 		{
-			get
-			{
-				List<Item> items = new List<Item>();
-
-				foreach (var item in Items.Values.ToArray())
-				{
-					items.Add(item());
-				}
-				
-				return items.ToArray();
-			}
+			get;
+			private set;
 		}
 
 		private static void SetItemMaterial(Item item, ItemMaterial material)
@@ -129,26 +121,26 @@ namespace Alex.Items
 
 				if ((modelEntry.Value.Type & ModelType.Entity) != 0)
 				{
-					EntityModelRenderer modelRenderer = null;
+					ModelRenderer modelRenderer = null;
 					Texture2D modelTexture = null;
 					
 					switch (itemName)
 					{
 						case "minecraft:chest":
-							if (EntityModelRenderer.TryGetRenderer(new ChestEntityModel(), out modelRenderer))
+							if (new ChestEntityModel().TryGetRenderer(out modelRenderer))
 							{
 								modelTexture = BlockEntityFactory.ChestTexture;
 							}
 							break;
 						case "minecraft:ender_chest":
-							if (EntityModelRenderer.TryGetRenderer(new ChestEntityModel(), out modelRenderer))
+							if (new ChestEntityModel().TryGetRenderer(out modelRenderer))
 							{
 								modelTexture = BlockEntityFactory.EnderChestTexture;
 							}
 							break;
 						case "minecraft:player_head":
 						case "minecraft:skull":
-							if (EntityModelRenderer.TryGetRenderer(new SkullBlockEntityModel(), out modelRenderer))
+							if (new SkullBlockEntityModel().TryGetRenderer(out modelRenderer))
 							{
 								modelTexture = BlockEntityFactory.SkullTexture;
 							}
@@ -191,15 +183,15 @@ namespace Alex.Items
 						}
 					}
 
-					if (modelRenderer != null && modelTexture != null)
+				//	if (modelRenderer != null && modelTexture != null)
 					{
 						renderer = new EntityItemRenderer(modelRenderer, modelTexture);
 						return true;
 					}
-					else
+				//	else
 					{
-						modelRenderer?.Dispose();
-						modelTexture?.Dispose();
+					//	modelRenderer?.Dispose();
+					//	modelTexture?.Dispose();
 					}
 				}
 
@@ -255,6 +247,7 @@ namespace Alex.Items
             
             int i = 0;
 
+            List<Item> allItems = new List<Item>();
             Parallel.ForEach(
 	            resources.Registries.Items.Entries, (entry) =>
 	            {
@@ -305,14 +298,20 @@ namespace Alex.Items
 		            item.DisplayName = GetDisplayName(resourceLocation);
 
 		            if (renderer != null)
+		            {
+			            renderer.Cache(resources);
 			            item.Renderer = renderer;
+		            }
 
 		            if (item.Renderer == null)
 		            {
 			            Log.Warn($"Could not find item model renderer for: {resourceLocation}");
 		            }
 
-		            items.TryAdd(resourceLocation, () => { return item.Clone(); });
+		            if (items.TryAdd(resourceLocation, () => { return item.Clone(); }))
+		            {
+			            allItems.Add(item);
+		            }
 	            });
 
             
@@ -358,15 +357,15 @@ namespace Alex.Items
 				           item.Name = entry.Key;
 				           item.DisplayName = GetDisplayName(resourceLocation);
 				          // item.DisplayName = Alex.Instance.GuiRenderer.GetTranslation($"block.{resourceLocation.Namespace}.{resourceLocation.Path}");
-
+				          renderer.Cache(resources);
+				          
 				          item.Renderer = renderer;
-				           item.Renderer.Cache(resources);
+				          // item.Renderer.Cache(resources);
 
-				           items.TryAdd(
-					           resourceLocation, () =>
-					           {
-						           return item.Clone();
-					           });
+				          if (items.TryAdd(resourceLocation, () => { return item.Clone(); }))
+				          {
+					          allItems.Add(item);
+				          }
 			           }
 		           }
 		           finally
@@ -382,6 +381,7 @@ namespace Alex.Items
 	           items.TryAdd("minecraft:wooden_door", oakDoorFunc);
            
 			Items = new ReadOnlyDictionary<ResourceLocation, Func<Item>>(items);
+			AllItems = allItems.ToArray();
 	    }
 
 	    public static bool ResolveItemName(int protocolId, out ResourceLocation res)

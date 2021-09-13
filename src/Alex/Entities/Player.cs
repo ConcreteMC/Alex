@@ -239,10 +239,7 @@ namespace Alex.Entities
 	    public override void Update(IUpdateArgs args)
 	    {
 		    base.Update(args);
-		    
-		    bool hasActiveDialog = Alex.Instance.GuiManager.ActiveDialog != null || ((Network is BedrockClient c) && c.WorldProvider.FormManager.IsShowingForm);
-		    Controller.CheckMovementInput = !hasActiveDialog;
-		    
+
 		    if (WaitingOnChunk)
 		    {
 			  //  NoAi = true;
@@ -271,26 +268,17 @@ namespace Alex.Entities
 		    }
 		    
 		    Controller.Update(args.GameTime);
-		    //KnownPosition.HeadYaw = KnownPosition.Yaw;
-
-		    //	DoHealthAndExhaustion();
-
-		    //var previousCheckedInput = _prevCheckedInput;
 
 		    if (_skipUpdate)
 		    {
-			    _skipUpdate = false;
+			    if (Controller.CheckInput && Controller.CheckMovementInput)
+			    {
+				    _skipUpdate = false;
+			    }
 		    }
-		    else if ((Controller.CheckInput && Controller.CheckMovementInput && !hasActiveDialog && !_previousHasActiveDialog))
+		    else if ((Controller.CheckInput && Controller.CheckMovementInput && !_previousHasActiveDialog && !_skipUpdate))
 		    {
-
-			   // UpdateBlockRayTracer();
 			    UpdateRayTracer();
-
-			    //if (Controller.InputManager.IsDown(InputCommand.LeftClick) && DateTime.UtcNow - _lastAnimate >= TimeSpan.FromMilliseconds(500))
-			    //{
-			    //	SwingArm(true);
-			    //}
 
 			    bool didLeftClick     = Controller.InputManager.IsPressed(AlexInputCommand.LeftClick);
 			    bool didRightClick    = Controller.InputManager.IsPressed(AlexInputCommand.RightClick);
@@ -403,10 +391,6 @@ namespace Alex.Entities
 			    Network?.HeldItemChanged(Inventory[Inventory.SelectedSlot], (short) slot);
 			    PreviousSlot = slot;
 		    }
-
-		    _previousHasActiveDialog = hasActiveDialog;
-		    if (hasActiveDialog)
-			    _skipUpdate = true;
 
 		    //if (FeetInWater && HeadInWater)
 			//    IsSwimming = true;
@@ -731,7 +715,7 @@ namespace Alex.Entities
 			    }
 
 			    Network?.UseItem(slot, hand, action, blockPosition, face, Raytracer.CursorPosition);
-			    Log.Info($"Using item");
+			    Log.Info($"Using item, action={action}");
 			    return true;
 		    }
 

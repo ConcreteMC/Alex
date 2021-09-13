@@ -54,6 +54,8 @@ namespace Alex.Gamestates.InGame.Hud
 		private OptionsPropertyAccessor<int> _renderDistanceAccessor;
 		private OptionsPropertyAccessor<bool> _hudVisibleAccessor;
 		private OptionsPropertyAccessor<ZoomLevel> _zoomLevelAccessor;
+
+		private InputActionBinding _chatToggleBinding;
 		public PlayingHud(Alex game, World world, TitleComponent titleComponent, NetworkProvider networkProvider) : base()
         {
 	        Title = titleComponent;
@@ -69,7 +71,7 @@ namespace Alex.Gamestates.InGame.Hud
             _playerController = Player.Controller;
             PlayerInputManager.AddListener(new MouseInputListener(PlayerInputManager.PlayerIndex));
 
-			_healthAndHotbar = new StackContainer()
+            _healthAndHotbar = new StackContainer()
 			{
 				Orientation = Orientation.Vertical,
 				ChildAnchor = Alignment.Fill
@@ -160,7 +162,28 @@ namespace Alex.Gamestates.InGame.Hud
 	        _hudVisibleAccessor = options.VideoOptions.DisplayHud.Bind(DisplayHudValueChanged);
 	        IsVisible = _hudVisibleAccessor.Value;
 	        //IsVisible = 
+	        
+	        _chatToggleBinding = PlayerInputManager.RegisterListener(
+		        AlexInputCommand.ToggleChat, InputBindingTrigger.Discrete, ToggleChat);
         }
+
+		private void ToggleChat()
+		{
+			if (!CheckInput)
+				return;
+			
+			if (!Chat.Focused && Chat.RootScreen?.GuiManager != null)
+			{
+				Chat.Dismiss();
+				Chat.Enabled = true;
+				Alex.GuiManager.FocusManager.FocusedElement = Chat;
+			}
+			else
+			{
+				//Chat.Dismiss();
+				//Alex.GuiManager.FocusManager.FocusedElement = null;
+			}
+		}
 
 		private void OnZoomLevelChanged(ZoomLevel oldvalue, ZoomLevel newvalue)
 		{
@@ -255,34 +278,6 @@ namespace Alex.Gamestates.InGame.Hud
         public bool CheckInput { get; set; } = true;
         protected override void OnUpdate(GameTime gameTime)
 		{
-			if (CheckInput)
-			{
-				if (!Chat.Focused)
-				{
-					Chat.Enabled = false;
-
-					if (PlayerInputManager.IsPressed(AlexInputCommand.ToggleChat))
-					{
-						Chat.Dismiss();
-						Chat.Enabled = true;
-						Alex.GuiManager.FocusManager.FocusedElement = Chat;
-					} 
-					else if (PlayerInputManager.IsPressed(AlexInputCommand.Exit))
-					{
-						//Player.Controller.CheckMovementInput = false;
-						Alex.GameStateManager.SetActiveState<InGameMenuState>("ingamemenu");
-					}
-				}
-				else
-				{
-					if (PlayerInputManager.IsPressed(AlexInputCommand.Exit))
-					{
-						Chat.Dismiss();
-						Alex.GuiManager.FocusManager.FocusedElement = null;
-					}
-				}
-			}
-
 			_experienceComponent.IsVisible = _hotbar.ShowItemCount = _hungerComponent.IsVisible = _healthComponent.IsVisible = Player.Gamemode != GameMode.Creative;
 
 			int offset = 0;
@@ -318,6 +313,12 @@ namespace Alex.Gamestates.InGame.Hud
 
         public void Unload()
         {
+	        if (_chatToggleBinding != null)
+	        {
+		        PlayerInputManager.UnregisterListener(_chatToggleBinding);
+		        _chatToggleBinding = null;
+	        }
+
 	        Chat.Unload();
 	        _minimapAccessor?.Dispose();
 	        _minimapAccessor = null;

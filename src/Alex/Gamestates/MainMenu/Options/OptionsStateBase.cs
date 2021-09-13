@@ -135,8 +135,8 @@ namespace Alex.Gamestates.MainMenu.Options
             
             return new AlexButton(() =>
             {
-                state.ParentState = ParentState;
-                Alex.GameStateManager.SetActiveState(state);
+              //  state.ParentState = ParentState;
+                Alex.GameStateManager.SetActiveState(state, true);
             })
             {
                 Text = fallback ?? translationKey,

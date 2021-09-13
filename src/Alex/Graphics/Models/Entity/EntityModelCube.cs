@@ -10,7 +10,6 @@ namespace Alex.Graphics.Models.Entity
 		private static readonly Color   DefaultColor = Color.White;
 
 		private readonly bool        _mirror = false;
-
 		public Cube(EntityModelCube cube, bool mirrored, float inflation)
 		{
 			_mirror = mirrored;
@@ -78,7 +77,7 @@ namespace Alex.Graphics.Models.Entity
 			Vector2 size)
 		{
 			//Vector3 normal = new Vector3(-1.0f, 0.0f, 0.0f) * Size;
-			Color normal = Models.Model.AdjustColor(DefaultColor, BlockFace.West);
+			Color normal = Models.ModelBase.AdjustColor(DefaultColor, BlockFace.West);
 
 			//var map = GetTextureMapping(uv + new Vector2(Size.Z + Size.X, Size.Z), Size.Z, Size.Y);
 			var map = GetTextureMapping(uv.Origin + size, uv.Size.Value.X, uv.Size.Value.Y);
@@ -103,7 +102,7 @@ namespace Alex.Graphics.Models.Entity
 			Vector2 size)
 		{
 			//Vector3 normal = new Vector3(1.0f, 0.0f, 0.0f) * Size;
-			Color normal = Models.Model.AdjustColor(DefaultColor, BlockFace.East);
+			Color normal = Models.ModelBase.AdjustColor(DefaultColor, BlockFace.East);
 
 			var map = GetTextureMapping(uv.Origin + size, uv.Size.Value.X, uv.Size.Value.Y);
 			//var map = GetTextureMapping(uv + new Vector2(0, Size.Z), Size.Z, Size.Y);
@@ -124,7 +123,7 @@ namespace Alex.Graphics.Models.Entity
 			Vector2 size)
 		{
 			//Vector3 normal = new Vector3(0.0f, 0.0f, 1.0f) * Size;
-			Color normal = Models.Model.AdjustColor(DefaultColor, BlockFace.South);
+			Color normal = Models.ModelBase.AdjustColor(DefaultColor, BlockFace.South);
 
 			var map = GetTextureMapping(uv.Origin + size, uv.Size.Value.X, uv.Size.Value.Y);
 
@@ -148,7 +147,7 @@ namespace Alex.Graphics.Models.Entity
 			Vector2 size)
 		{
 			//Vector3 normal = new Vector3(0.0f, 0.0f, -1.0f) * Size;
-			Color normal = Models.Model.AdjustColor(DefaultColor, BlockFace.North);
+			Color normal = Models.ModelBase.AdjustColor(DefaultColor, BlockFace.North);
 
 			var map = GetTextureMapping(uv.Origin + size, uv.Size.Value.X, uv.Size.Value.Y);
 
@@ -172,7 +171,7 @@ namespace Alex.Graphics.Models.Entity
 			Vector2 size)
 		{
 			//	Vector3 normal = new Vector3(0.0f, 1.0f, 0.0f) * Size;
-			Color normal = Models.Model.AdjustColor(DefaultColor, BlockFace.Up);
+			Color normal = Models.ModelBase.AdjustColor(DefaultColor, BlockFace.Up);
 
 			var map = GetTextureMapping(uv.Origin + size, uv.Size.Value.X, uv.Size.Value.Y);
 
@@ -191,7 +190,7 @@ namespace Alex.Graphics.Models.Entity
 		private (VertexPositionColorTexture[] vertices, short[] indexes) GetBottomVertex(EntityModelUVData uv, Vector2 size)
 		{
 			//	Vector3 normal = new Vector3(0.0f, -1.0f, 0.0f) * Size;
-			Color normal = Models.Model.AdjustColor(DefaultColor, BlockFace.Down);
+			Color normal = Models.ModelBase.AdjustColor(DefaultColor, BlockFace.Down);
 			var   map    = GetTextureMapping(uv.Origin + size, uv.Size.Value.X, uv.Size.Value.Y);
 
 			// Add the vertices for the RIGHT face. 
@@ -225,12 +224,9 @@ namespace Alex.Graphics.Models.Entity
 				float height,
 				bool mirrored)
 			{
-				//var texelWidth  = (1f / textureSize.X);
-				//var texelHeight = (1f / textureSize.Y);
-
-				var x1 = 1f * textureOffset.X;
+				var x1 = textureOffset.X * 1f;
 				var x2 = x1 + (width * 1f);
-				var y1 = 1f * (textureOffset.Y);
+				var y1 = (textureOffset.Y) * 1f;
 				var y2 = y1 + (height * 1f);
 
 				if (mirrored)

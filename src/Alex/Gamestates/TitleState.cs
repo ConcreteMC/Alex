@@ -169,7 +169,7 @@ namespace Alex.Gamestates
             dropDown.Value = 0;
             
             dropDown.Anchor = Alignment.MiddleCenter;
-            
+            Init();
           //  AddChild(dropDown);
             /*ScoreboardView scoreboardView;
             AddChild(scoreboardView = new ScoreboardView());
@@ -211,21 +211,27 @@ namespace Alex.Gamestates
 
         private void ApplyModel(Entity entity)
         {
-            if (Alex.PlayerModel != null && Alex.PlayerTexture != null)
-            {
-                if (EntityModelRenderer.TryGetRenderer(Alex.PlayerModel, out var renderer))
+            Alex.UiTaskManager.Enqueue(
+                () =>
                 {
-                    entity.Texture = TextureUtils.BitmapToTexture2D(this, Alex.GraphicsDevice, Alex.PlayerTexture);
-                    entity.ModelRenderer = renderer;
-                }
-            }
+                    if (Alex.PlayerModel != null && Alex.PlayerTexture != null)
+                    {
+                        if (Alex.PlayerModel.TryGetRenderer(out var renderer))
+                        {
+                            entity.Texture = TextureUtils.BitmapToTexture2D(
+                                this, Alex.GraphicsDevice, Alex.PlayerTexture);
+
+
+                            entity.ModelRenderer = renderer;
+                        }
+                    }
+                });
         }
 
-        protected override void OnLoad(IRenderArgs args)
+        private void Init()
         {
             var entity = new RemotePlayer(null);
             entity.RenderLocation = new PlayerLocation(Vector3.Zero, 180f, 180f);
-            ApplyModel(entity);
             
             AddChild(_playerView =
                 new GuiEntityModelView(
@@ -258,6 +264,43 @@ namespace Alex.Gamestates
             Alex.IsMouseVisible = true;
 
             Alex.GameStateManager.AddState("serverlist", new MultiplayerServerSelectionState(_backgroundSkyBox));
+            
+            _playerView.Entity.SetInventory(new BedrockInventory(46));
+            
+            var inventory = _playerView.Entity.Inventory;
+            
+            int slot = inventory.HotbarOffset;
+            if (ItemFactory.TryGetItem("minecraft:diamond_sword", out var sword))
+                inventory.SetSlot(slot++, sword, false);
+
+            if (ItemFactory.TryGetItem("minecraft:glass_pane", out var pane))
+                inventory.SetSlot(slot++, pane, false);
+
+            if (ItemFactory.TryGetItem("minecraft:oak_stairs", out var stairs))
+                inventory.SetSlot(slot++, stairs, false);
+
+            FastRandom fr = FastRandom.Instance;
+            for (int i = slot; i < 8; i++)
+            {
+                Item item;
+
+                do
+                {
+                    item = ItemFactory.AllItems[fr.Next() % ItemFactory.AllItems.Length];
+                } while (item.IsAir() || item.Renderer == null);
+
+                inventory.SetSlot(i, item, false);
+            }
+
+            ApplyModel(_playerView.Entity);
+        }
+        
+        protected override void OnLoad(IRenderArgs args)
+        {
+            base.OnLoad(args);
+            
+            if (!_backgroundSkyBox.Loaded)
+                _backgroundSkyBox.Load(Alex.GuiRenderer);
         }
 
         private void ChangeSKinBtnPressed()
@@ -306,46 +349,16 @@ namespace Alex.Gamestates
 
         protected override void OnDraw(IRenderArgs args)
         {
-            if (!_backgroundSkyBox.Loaded)
+            if (_backgroundSkyBox.Loaded)
             {
-                _backgroundSkyBox.Load(Alex.GuiRenderer);
+                _backgroundSkyBox.Draw(args);
             }
-
-            _backgroundSkyBox.Draw(args);
 
             base.OnDraw(args);
         }
 
         protected override void OnShow()
         {
-            _playerView.Entity.SetInventory(new BedrockInventory(46));
-            
-            var inventory = _playerView.Entity.Inventory;
-            
-            int slot = inventory.HotbarOffset;
-            if (ItemFactory.TryGetItem("minecraft:diamond_sword", out var sword))
-                inventory.SetSlot(slot++, sword, false);
-
-            if (ItemFactory.TryGetItem("minecraft:glass_pane", out var pane))
-                inventory.SetSlot(slot++, pane, false);
-
-            if (ItemFactory.TryGetItem("minecraft:oak_stairs", out var stairs))
-                inventory.SetSlot(slot++, stairs, false);
-
-            FastRandom fr = FastRandom.Instance;
-            for (int i = slot; i < 8; i++)
-            {
-                Item item;
-
-                do
-                {
-                    item = ItemFactory.AllItems[fr.Next() % ItemFactory.AllItems.Length];
-                } while (item.IsAir() || item.Renderer == null);
-
-                inventory.SetSlot(i, item, false);
-            }
-
-            ApplyModel(_playerView.Entity);
             _switchItemTimer.Start();
            // Alex.Instance.GuiManager.ShowDialog(new BrowserDialog("Microsoft Login", "https://google.com"));
             base.OnShow();

@@ -96,29 +96,19 @@ namespace Alex.Worlds
 
 				foreach (var entity in entities.Concat(blockEntities))
 				{
-					//entity.OnTick();
-
-					//if (!entity.IsSpawned)
-					//	continue;
-					var entityPos = entity.KnownPosition;
+					var entityPos = entity.RenderLocation;
 
 					if (Math.Abs(Vector3.Distance(cameraChunkPosition, entityPos)) <= Math.Min(
 						World.ChunkManager.RenderDistance,
 						OptionsProvider.AlexOptions.VideoOptions.EntityRenderDistance.Value) * 16f)
 					{
 						entityCount++;
-
-						var entityBox = entity.GetVisibilityBoundingBox(entityPos);
-
-						//if (World.Camera.BoundingFrustum.Contains(entityBox) != ContainmentType.Disjoint)
-						{
-							rendered.Add(entity);
-
-							continue;
-						}
+						rendered.Add(entity);
 					}
-
-					entity.IsRendered = false;
+					else
+					{
+						entity.IsRendered = false;
+					}
 				}
 
 				foreach (var entity in rendered)
@@ -171,28 +161,31 @@ namespace Alex.Worlds
 			//_spriteEffect.SetDistance(0.015f, args.Camera.FarDistance);
 			if (_rendered != null)
 			{
-				var blendState = args.GraphicsDevice.BlendState;
-
-				args.GraphicsDevice.BlendState = BlendState.Opaque;
-				
-				int renderCount = 0;
-				int drawCount = 0;
-				//var entities    = _rendered.ToArray();
-
-				foreach (var entity in _rendered)
+			
+				using (GraphicsContext gc = GraphicsContext.CreateContext(
+					args.GraphicsDevice, BlendState.AlphaBlend, DepthStencilState.Default,
+					RasterizerState.CullNone))
 				{
-					// entity.IsRendered = true;
-					if (entity.IsRendered && !entity.IsInvisible && entity.Scale > 0f)
+					
+					int renderCount = 0;
+					int drawCount = 0;
+					//var entities    = _rendered.ToArray();
+
+					foreach (var entity in _rendered)
 					{
-						drawCount += entity.Render(args, OptionsProvider.AlexOptions.VideoOptions.EntityCulling.Value);
+						// entity.IsRendered = true;
+						if (entity.IsRendered && !entity.IsInvisible && entity.Scale > 0f)
+						{
+							drawCount += entity.Render(
+								args, OptionsProvider.AlexOptions.VideoOptions.EntityCulling.Value);
 
-						renderCount++;
+							renderCount++;
+						}
 					}
-				}
 
-				DrawCount = drawCount;
-				EntitiesRendered = renderCount;
-				args.GraphicsDevice.BlendState = blendState;
+					DrawCount = drawCount;
+					EntitiesRendered = renderCount;
+				}
 			}
 		}
 

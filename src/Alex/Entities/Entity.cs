@@ -43,7 +43,7 @@ using HealthManager = Alex.Entities.Meta.HealthManager;
 using Inventory = Alex.Utils.Inventories.Inventory;
 using MathF = System.MathF;
 using MetadataByte = Alex.Networking.Java.Packets.Play.MetadataByte;
-using ModelBone = Alex.Graphics.Models.Entity.ModelBone;
+using ModelBone = Alex.Graphics.Models.ModelBone;
 using PlayerLocation = Alex.Common.Utils.Vectors.PlayerLocation;
 
 namespace Alex.Entities
@@ -52,11 +52,11 @@ namespace Alex.Entities
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(Entity));
 
-		private EntityModelRenderer _modelRenderer;
+		private ModelRenderer _modelRenderer;
 
 		public MapIcon MapIcon { get; protected set; }
 
-		public EntityModelRenderer ModelRenderer
+		public ModelRenderer ModelRenderer
 		{
 			get
 			{
@@ -75,7 +75,7 @@ namespace Alex.Entities
 					{
 						if (_texture != null)
 						{
-							value.Effect.Texture = _texture;
+							value.Texture = _texture;
 						}
 
 						UpdateModelParts();
@@ -408,7 +408,7 @@ namespace Alex.Entities
 		{
 			if (ModelRenderer != null)
 			{
-				ModelRenderer.Scale = _scale;
+				//ModelRenderer.Scale = _scale;
 
 				if (_scale <= 0.01f)
 				{
@@ -521,14 +521,6 @@ namespace Alex.Entities
 
 	        //if (oldValue != renderer)
 	        {
-		        renderer.Update(
-			        new UpdateArgs()
-			        {
-				        Camera = new Camera(),
-				        GameTime = new GameTime(),
-				        GraphicsDevice = Alex.Instance.GraphicsDevice
-			        });
-
 		        arm?.AddChild(renderer);
 	        }
         }
@@ -1180,7 +1172,7 @@ namespace Alex.Entities
 
 					if (_modelRenderer != null)
 					{
-						_modelRenderer.Effect.Texture = value;
+						_modelRenderer.Texture = value;
 					}
 					//value?.Use(this);
 
@@ -1195,7 +1187,7 @@ namespace Alex.Entities
 					{
 						if (!(oldValue.Tag is Guid tag) || tag != EntityFactory.PooledTagIdentifier)
 						{
-						//	oldValue?.Dispose();
+							oldValue?.Dispose();
 						}
 					}
 					//oldValue?.Dispose();
@@ -1215,6 +1207,10 @@ namespace Alex.Entities
 		///  <returns>The amount of draw calls made</returns>
 		public virtual int Render(IRenderArgs renderArgs, bool useCulling)
 		{
+		//	if (_disposed)
+			//	return 0;
+			
+			
 			int renderCount = 0;
 			var  renderer = ModelRenderer;
 
@@ -1274,14 +1270,7 @@ namespace Alex.Entities
 				_head.Rotation = new Vector3(pitch, headYaw, 0f);
 			}
 			
-		//	renderer.Effect.View = args.Camera.ViewMatrix;
-		//	renderer.Effect.Projection = args.Camera.ProjectionMatrix;
-		//	renderer.Effect.DiffuseColor = renderer.EntityColor * renderer.DiffuseColor;
-		//	renderer.Effect.Texture = _texture;
-			
 			renderer.Update(args);
-
-			//if (!ShowItemInHand || _skipRendering || ItemRenderer == null) return;
 		}
 		
 		public virtual void EntityHurt()
@@ -1597,7 +1586,7 @@ namespace Alex.Entities
 
 		protected void ToggleCubes(ModelBone bone, bool isInvisible)
 		{
-			bone.Rendered = !isInvisible;
+			
 		}
 
 		private bool _disposed = false;
@@ -1608,11 +1597,13 @@ namespace Alex.Entities
 
 			try
 			{
+				var model = ModelRenderer;
+				var texture = Texture;
+				ModelRenderer = null;
 				Texture = null;
 				
-				//var model = ModelRenderer;
-				ModelRenderer = null;
-				//model?.Dispose();
+				texture?.Dispose();// = null;
+				model?.Dispose();
 				
 				OnDispose();
 			}

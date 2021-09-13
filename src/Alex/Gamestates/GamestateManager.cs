@@ -16,12 +16,13 @@ namespace Alex.Gamestates
 
 		private ConcurrentDictionary<string, IGameState> States { get; }
 
-		private LinkedList<IGameState> History { get; } = new LinkedList<IGameState>();
-		private readonly object _historyLock = new object();
-		
-        private IGameState ActiveState { get; set; }
+		private IGameState ActiveState
+		{
+			get;
+			set;
+		}
 
-        private GraphicsDevice Graphics { get; }
+		private GraphicsDevice Graphics { get; }
         private SpriteBatch SpriteBatch { get; }
         
         public GameStateManager(Game game, GraphicsDevice graphics, SpriteBatch spriteBatch) : base(game)
@@ -29,39 +30,33 @@ namespace Alex.Gamestates
             Graphics = graphics;
             SpriteBatch = spriteBatch;
 
-            States = new ConcurrentDictionary<string, IGameState>();
+            States = new ConcurrentDictionary<string, IGameState>(StringComparer.OrdinalIgnoreCase);
 		}
 
         public void Back()
-	    {
-		    lock (_historyLock)
-		    {
-			    var last = History.Last;
-			    if (last != null)
-			    {
-				    var prev = last.Value;
-				    if (prev != ActiveState)
-				    {
-					    History.RemoveLast();
-					    SetActiveState(prev, false);
-				    }
-			    }
-		    }
-	    }
+        {
+	        var currentState = ActiveState;
 
-	    public void AddState<TStateType>(string name) where TStateType : class, IGameState, new()
+	        if (currentState.ParentState != null)
+	        {
+		        SetActiveState(currentState.ParentState, false);
+	        }
+        }
+
+        public void AddState<TStateType>(string name) where TStateType : class, IGameState, new()
 	    {
 			AddState(name, new TStateType());
 	    }
 
-        public void AddState(string name, IGameState state)
+        public bool AddState(string name, IGameState state)
         {
-			EnsureStateLoaded(state);
+	        if (States.TryAdd(name, state))
+	        {
+		        state.Identifier = name;
+		        return true;
+	        }
 
-            States.AddOrUpdate(name, state, (s, gamestate) =>
-            {
-                return state;
-            });
+	        return false;
         }
 
         public bool TryGetState<TStateType>(string name, out TStateType state) where TStateType : class, IGameState
@@ -81,12 +76,7 @@ namespace Alex.Gamestates
 
         public bool RemoveState<TStateType>(TStateType state) where TStateType : class, IGameState
         {
-	        var key = States.FirstOrDefault(x => x.Value == state);
-
-	        if (key.Key == null)
-		        return false;
-
-	        return RemoveState(key.Key);
+	        return RemoveState(state.Identifier);
         }
         
 	    public bool RemoveState(string name)
@@ -96,16 +86,7 @@ namespace Alex.Gamestates
 		    {
 			    if (ActiveState == state)
 			    {
-				    //state.Hide();
-				    //var parent = state.ParentState;
-				    //if (parent == null)
-				    {
-					    SetActiveState((IGameState) null);
-					}
-				    //else
-				    //{
-					  //  SetActiveState(state.ParentState);
-				    //}
+				    SetActiveState((IGameState)null);
 			    }
 
 			    state.Unload();
@@ -117,7 +98,12 @@ namespace Alex.Gamestates
 
 		private void EnsureStateLoaded(IGameState state)
 		{
+			if (state == null)
+				return;
+			
 			//if(state.IsLoaded) return;
+			if (state.ParentState == state)
+				state.ParentState = null;
 			state.Load(new RenderArgs()
 			{
 				SpriteBatch    = SpriteBatch,
@@ -126,15 +112,20 @@ namespace Alex.Gamestates
 			});
 		}
 
+		public bool SetActiveState<TStateType>(string key, bool keepHistory) where TStateType : IGameState, new()
+		{
+			if (!States.TryGetValue(key, out var state))
+			{
+				state = new TStateType();
+				AddState(key, state);
+			}
+
+			return SetActiveState(state, keepHistory);
+		}
+		
 	    public bool SetActiveState<TStateType>(string key) where TStateType : IGameState, new()
 	    {
-		    if (!States.TryGetValue(key, out var state))
-		    {
-			    state = new TStateType();
-			    AddState(key, state);
-		    }
-
-		    return SetActiveState(state);
+		    return SetActiveState<TStateType>(key, true);
 	    }
 
 	    public bool SetActiveState<TStateType>() where TStateType : IGameState, new()
@@ -146,37 +137,23 @@ namespace Alex.Gamestates
 
 	    public bool SetActiveState(IGameState state, bool keepHistory = true)
 	    {
-			EnsureStateLoaded(state);
+		    var currentState = ActiveState;
 
-		    var previous = ActiveState;
-
-		    if (state != null && previous != null && state.ParentState == null)
+		    if (state != null && state.ParentState == null && keepHistory)
 		    {
-			    state.ParentState = previous;
-		    }
-		    //if (keepHistory && previous != null && state != null && state.ParentState == null)
-		    //{
-			   // state.ParentState = previous;
-		    //}
-
-		    ActiveState = state;
-		    ActiveState?.Show();
-
-		    if (previous != null)
-		    {
-			    previous.Hide();
-
-			    if (keepHistory)
+			    if (currentState != null && currentState.ParentState != state && state != currentState)
 			    {
-				    lock (_historyLock)
-				    {
-					    if (History.Last?.Previous?.Value != state)
-					    {
-						    History.AddLast(previous);
-					    }
-				    }
+				    state.ParentState = currentState;
 			    }
 		    }
+
+		    EnsureStateLoaded(state);
+		    
+		    if (currentState != null)
+			    currentState.Hide();
+		    
+		    ActiveState = state;
+		    state?.Show();
 
 		    return true;
 	    }
@@ -192,9 +169,6 @@ namespace Alex.Gamestates
 	        return SetActiveState(state, keepHistory);
         }
 
-	   // private IGameState _activeStateDoubleBuffer = null;
-
-	    
 	    public override void Draw(GameTime gameTime)
 	    {
 		    IGameState activeState = ActiveState;
@@ -217,22 +191,14 @@ namespace Alex.Gamestates
 			    Log.Warn(ex, $"An exception occured while trying to render: {ex.ToString()}");
 		    }
 	    }
-
+	    
 	    public override void Update(GameTime gameTime)
 	    {
 		    IGameState activeState = ActiveState;
-
 		    if (activeState == null) return;
 
 		    try
 		    {
-			 //   var parent = activeState.ParentState;
-
-			//	if (parent != null)
-			//    {
-			//		parent.Update(gameTime);
-			 //   }
-
 			    activeState.Update(gameTime);
 		    }
 		    catch (Exception ex)
@@ -246,33 +212,12 @@ namespace Alex.Gamestates
 		    return ActiveState;
 	    }
 
-	    public IGameState GetPreviousState()
-	    {
-		    lock (_historyLock)
-		    {
-			    return History.Last.Value;
-		    }
-	    }
-
 	    private void ClearStates()
 	    {
 		    var states = States.ToArray();
-		    
-		    States.Clear();
-		    
 		    foreach (var gamestate in states)
 		    {
-			    gamestate.Value?.Unload();
-		    }
-
-		    var activeState = ActiveState;
-
-		    if (activeState != null)
-		    {
-			    activeState.Hide();
-			    activeState.Unload();
-			    
-			    ActiveState = null;
+			    RemoveState(gamestate.Key);
 		    }
 	    }
 

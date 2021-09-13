@@ -69,7 +69,7 @@ namespace Alex.Worlds
 		}
 	}
 	
-	public class ChunkManager : IChunkManager, IDisposable, ITicked
+	public class ChunkManager : IDisposable, ITicked
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ChunkManager));
 		private readonly static RenderStage[]   RenderStages = ((RenderStage[]) Enum.GetValues(typeof(RenderStage)));

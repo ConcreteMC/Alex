@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 
-namespace Alex.Graphics.Models.Entity
+namespace Alex.Graphics.Models
 {
 	public sealed class ModelEffectCollection : ReadOnlyCollection<Microsoft.Xna.Framework.Graphics.Effect>
 	{

@@ -2,10 +2,12 @@ using System;
 using Alex.Blocks.Minecraft;
 using Alex.Blocks.Properties;
 using Alex.Common.Blocks;
+using Alex.Graphics.Models;
 using Alex.Graphics.Models.Entity;
 using Alex.Graphics.Models.Entity.Animations;
 using Alex.Graphics.Models.Entity.BlockEntities;
 using Alex.ResourcePackLib.Json.Models.Entities;
+using Alex.Utils;
 using Alex.Worlds;
 using Microsoft.Xna.Framework;
 
@@ -130,7 +132,7 @@ namespace Alex.Entities.BlockEntities
 
 				if (value)
 				{
-					if (EntityModelRenderer.TryGetRenderer(new DoubleChestEntityModel(), out var renderer))
+					if (new DoubleChestEntityModel().TryGetRenderer(out var renderer))
 					{
 						ModelRenderer = renderer;
 					}
@@ -139,7 +141,7 @@ namespace Alex.Entities.BlockEntities
 				}
 				else
 				{
-					if (EntityModelRenderer.TryGetRenderer(new ChestEntityModel(), out var renderer))
+					if (new ChestEntityModel().TryGetRenderer( out var renderer))
 					{
 						ModelRenderer = renderer;
 					}

@@ -5,6 +5,8 @@ namespace Alex.Common.GameStates
 {
     public interface IGameState
     {
+        string Identifier { get; set; }
+        
         IGameState ParentState { get; set; }
 
         void Load(IRenderArgs args);

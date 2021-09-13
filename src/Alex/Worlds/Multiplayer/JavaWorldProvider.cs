@@ -457,126 +457,84 @@ namespace Alex.Worlds.Multiplayer
 
 			return LoadResult.Done;
 		}
-		
 
-		public Entity SpawnMob(int entityId, MiNET.Utils.UUID uuid, EntityType type, PlayerLocation position, Vector3 velocity)
+
+		public Entity SpawnMob(int entityId,
+			MiNET.Utils.UUID uuid,
+			EntityType type,
+			PlayerLocation position,
+			Vector3 velocity)
 		{
-			if ((int) type == 37) //Item
+			Entity entity = null;
+
+			if ((int)type == 37) //Item
 			{
 				ItemEntity itemEntity = new ItemEntity(null);
+				entity = itemEntity;
+
 				itemEntity.EntityId = entityId;
 				itemEntity.Velocity = velocity;
 				itemEntity.KnownPosition = position;
-				
-				//itemEntity.SetItem(itemClone);
 
-				if (World.SpawnEntity(itemEntity))
-				{
-					return itemEntity;
-				}
-				else
-				{
-					Log.Warn($"Could not spawn in item entity, an entity with this entity id already exists! (Runtime: {entityId})");
-				}
-				
-				return null;
+				//itemEntity.SetItem(itemClone);
 			}
-			else if ((int) type == 26)
+			else if ((int)type == 26)
 			{
 				EntityFallingBlock itemEntity = new EntityFallingBlock(null);
 				itemEntity.EntityId = entityId;
 				itemEntity.Velocity = velocity;
 				itemEntity.KnownPosition = position;
+				entity = itemEntity;
 				
 				//itemEntity.SetItem(itemClone);
+			}
 
-				if (World.SpawnEntity(itemEntity))
+			if (entity == null)
+			{
+				if (EntityFactory.ModelByNetworkId((long)type, out EntityData knownData))
 				{
-					return itemEntity;
+					entity = EntityFactory.Create(
+						$"minecraft:{knownData.Name}", World,
+						type != EntityType.ArmorStand && type != EntityType.PrimedTnt);
+
+					if (entity == null)
+						entity = new LivingEntity(World);
+
+					//if (knownData.Height)
+					{
+						entity.Height = knownData.Height;
+					}
+
+					//if (knownData.Width.HasValue)
+					entity.Width = knownData.Width;
+
+					if (string.IsNullOrWhiteSpace(entity.NameTag) && !string.IsNullOrWhiteSpace(knownData.Name))
+					{
+						entity.NameTag = knownData.Name;
+					}
 				}
 				else
 				{
-					Log.Warn($"Could not spawn in item entity, an entity with this entity id already exists! (Runtime: {entityId})");
+					return null;
 				}
-				
-				return null;
 			}
-			
-			Entity entity = null;
-			EntityModel model;
-			if (EntityFactory.ModelByNetworkId((long) type, out EntityData knownData))
-			{
-				/*type = MiNET.Entities.EntityHelpers.ToEntityType($"minecraft:{knownData.Name}");
-
-				if (knownData.Name.Equals("bee"))
-					type = (EntityType)122;
-				else if (knownData.Name.Equals("fox"))
-					type = (EntityType) 121;
-*/
-				entity = EntityFactory.Create($"minecraft:{knownData.Name}", World, type != EntityType.ArmorStand && type != EntityType.PrimedTnt);
-
-				if (entity == null)
-					entity = new LivingEntity(World);
-				//if (knownData.Height)
-				{
-					entity.Height = knownData.Height;
-				}
-
-				//if (knownData.Width.HasValue)
-					entity.Width = knownData.Width;
-
-				if (string.IsNullOrWhiteSpace(entity.NameTag) && !string.IsNullOrWhiteSpace(knownData.Name))
-				{
-					entity.NameTag = knownData.Name;
-				}
-            }
-			else
-			{
-			//	Log.Warn($"Could not create entity of type: {(int) type}:{(knownData != null ? knownData.Name : type.ToString())} (Missing entityfactory mapping...)");
-
-				return null;
-			}
-
-		//	if (renderer == null)
-		//	{
-		//		Log.Debug($"Missing renderer for entity: {type.ToString()} ({(int) type})");
-//
-		//		return null;
-		//	}
-			
-		//	if (entity.Texture == null)
-		//	{
-				
-		//		Log.Debug($"Missing texture for entity: {type.ToString()} ({(int) type})");
-
-		//		return null;
-		//	}
-
-			//entity.ModelRenderer = renderer;
 
 			entity.KnownPosition = position;
 			entity.Velocity = velocity;
 			entity.EntityId = entityId;
 			entity.UUID = uuid;
-			//entity.Texture = texture2D;
 
 			if (entity is EntityArmorStand armorStand)
 			{
 				armorStand.IsAffectedByGravity = false;
 				armorStand.NoAi = true;
 			}
-		//	if (!_initiated)
-		//	{
-		//		_entitySpawnQueue.Enqueue(entity);
-		//	}
-		//	else
-			{
-				World.SpawnEntity(entity);
-			}
+
+			World.SpawnEntity(entity);
 
 			return entity;
 		}
-		
+
 		private void SendPacket(Packet packet)
 		{
 			Client.SendPacket(packet);

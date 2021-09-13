@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Alex.Common.Data;
 using Alex.Common.Graphics.Typography;
+using Alex.Common.Input;
 using Alex.Common.Utils;
 using Alex.Net;
 using Alex.Utils;
@@ -15,6 +16,7 @@ using MiNET;
 using MiNET.Plugins;
 using NLog;
 using RocketUI;
+using RocketUI.Input;
 using RocketUI.Utilities.Extensions;
 using SixLabors.ImageSharp.Drawing;
 
@@ -71,6 +73,7 @@ namespace Alex.Gui.Elements
 			_instance = this;
 		}
 
+		private InputActionBinding _closeChatBinding;
 		protected override void OnFocusActivate()
 		{
 			Height = FocusedHeight;
@@ -83,10 +86,38 @@ namespace Alex.Gui.Elements
 
 			TextElement.Text = string.Empty;
 			Dismiss();
+
+			if (_closeChatBinding == null)
+			{
+				var inputManager = RootScreen?.GuiManager?.InputManager;
+
+				if (inputManager != null)
+				{
+					_closeChatBinding = inputManager.RegisterListener(
+						AlexInputCommand.Exit, InputBindingTrigger.Discrete, () => Focused, CloseChat);
+				}
+			}
+		}
+
+		private void CloseChat()
+		{
+			Dismiss();
+			GuiManager.FocusManager.FocusedElement = null;
 		}
 
 		protected override void OnFocusDeactivate()
 		{
+			if (_closeChatBinding != null)
+			{
+				var inputManager = InputManager;
+
+				if (inputManager != null)
+				{
+					inputManager.UnregisterListener(_closeChatBinding);
+					_closeChatBinding = null;
+				}
+			}
+
 			Height = UnfocusedHeight;
 			Alex.Instance.IsMouseVisible = false;
 

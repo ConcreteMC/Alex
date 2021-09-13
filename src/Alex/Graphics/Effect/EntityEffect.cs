@@ -1,3 +1,4 @@
+using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -25,7 +26,7 @@ namespace Alex.Graphics.Effect
         
         private EffectParameter _textureScaleParam;
          //EffectParameter worldViewProjParam;
-
+        private EffectParameter _bonesParam;
         #endregion
 
         #region Fields
@@ -216,13 +217,26 @@ namespace Alex.Graphics.Effect
             {
                 _textureParam.SetValue(value);
 
-                if (value != null)
-                {
-                    _textureScaleParam.SetValue(Vector2.One / value.Bounds.Size.ToVector2());
-                }
+              //  if (value != null)
+              //  {
+             //       _textureScaleParam.SetValue(Vector2.One / value.Bounds.Size.ToVector2());
+               // }
             }
         }
 
+        public Vector2 TextureScale
+        {
+            get
+            {
+                return _textureScale;
+                return _textureScaleParam.GetValueVector2();
+            }
+            set
+            {
+                _textureScale = value;
+                _textureScaleParam.SetValue(value);
+            }
+        }
 
         /// <summary>
         /// Gets or sets whether vertex color is enabled.
@@ -313,6 +327,15 @@ namespace Alex.Graphics.Effect
             _alphaFunction = cloneSource._alphaFunction;
             _referenceAlpha = cloneSource._referenceAlpha;
             _textureScale = cloneSource._textureScale;
+            
+            Matrix[] identityBones = new Matrix[MaxBones];
+            
+            for (int i = 0; i < MaxBones; i++)
+            {
+                identityBones[i] = Matrix.Identity;
+            }
+            
+            SetBoneTransforms(identityBones);
         }
 
         /// <summary>
@@ -343,6 +366,7 @@ namespace Alex.Graphics.Effect
 
             _viewParam = Parameters["View"];
             _textureScaleParam = Parameters["UvScale"];
+            _bonesParam                  = Parameters["Bones"];
             //  worldViewProjParam = Parameters["WorldViewProj"];
         }
         
@@ -541,5 +565,40 @@ namespace Alex.Graphics.Effect
 
 
         #endregion
+
+        public const int MaxBones = 72;
+        /// <summary>
+        /// Sets an array of skinning bone transform matrices.
+        /// </summary>
+        public void SetBoneTransforms(Matrix[] boneTransforms)
+        {
+            if ((boneTransforms == null) || (boneTransforms.Length == 0))
+                throw new ArgumentNullException("boneTransforms");
+
+            if (boneTransforms.Length > MaxBones)
+                throw new ArgumentException();
+
+            _bonesParam.SetValue(boneTransforms);
+        }
+
+
+        /// <summary>
+        /// Gets a copy of the current skinning bone transform matrices.
+        /// </summary>
+        public Matrix[] GetBoneTransforms(int count)
+        {
+            if (count <= 0 || count > MaxBones)
+                throw new ArgumentOutOfRangeException("count");
+
+            Matrix[] bones = _bonesParam.GetValueMatrixArray(count);
+            
+            // Convert matrices from 43 to 44 format.
+            for (int i = 0; i < bones.Length; i++)
+            {
+                bones[i].M44 = 1;
+            }
+            
+            return bones;
+        }
     }
 }

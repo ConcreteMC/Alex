@@ -11,10 +11,10 @@ namespace Alex.Graphics.Models.Items
 {
 	public class EntityItemRenderer : IItemRenderer, IDisposable
 	{
-		private readonly EntityModelRenderer _entityRenderer;
+		private readonly ModelRenderer _entityRenderer;
 		private readonly Texture2D _texture;
 
-		public EntityItemRenderer(EntityModelRenderer entityRenderer, Texture2D texture)
+		public EntityItemRenderer(ModelRenderer entityRenderer, Texture2D texture)
 		{
 			_entityRenderer = entityRenderer;
 			_texture = texture;
@@ -41,6 +41,7 @@ namespace Alex.Graphics.Models.Items
 
 		private void UpdateDisplay()
 		{
+			return;
 			try
 			{
 				if (ResourcePackModel.Display.TryGetValue(DisplayPositionHelper.ToString(_displayPosition), out var display))
@@ -59,7 +60,7 @@ namespace Alex.Graphics.Models.Items
 		}
 
 		/// <inheritdoc />
-		public Entity.Model Model { get; set; } = null;
+		public Model Model { get; set; } = null;
 
 		/// <inheritdoc />
 		public IHoldAttachment Parent { get; set; }
@@ -107,10 +108,12 @@ namespace Alex.Graphics.Models.Items
             return characterMatrix;
         }
 
+		Matrix _worldMatrix = Matrix.Identity;
 		/// <inheritdoc />
 		public int Render(IRenderArgs args, Matrix worldMatrix)
 		{
-			return _entityRenderer.Render(args, GetWorldMatrix(ActiveDisplayItem, worldMatrix));
+			_worldMatrix = GetWorldMatrix(ActiveDisplayItem, worldMatrix);
+			return _entityRenderer.Render(args, _worldMatrix);
 		}
 
 		/// <inheritdoc />

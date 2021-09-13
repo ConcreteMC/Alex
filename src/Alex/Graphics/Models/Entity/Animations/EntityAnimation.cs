@@ -84,8 +84,7 @@ namespace Alex.Graphics.Models.Entity.Animations
 							anim.BlendWeight != null ? _parent.Execute(anim.BlendWeight).AsFloat() : 1f);
 					}
 					else
-					{
-						Log.Debug($"Failed to get bone: {bone.Key} for model {renderer.ModelName}");
+					{ //Log.Debug($"Failed to get bone: {bone.Key} for model {renderer.ModelName}");
 					}
 				}
 			}

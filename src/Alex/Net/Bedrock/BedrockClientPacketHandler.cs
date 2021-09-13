@@ -410,7 +410,7 @@ namespace Alex.Net.Bedrock
 
 		private class PlayerListData
 		{
-			public MiNET.Utils.Skins.Skin Skin { get; }
+			public MiNET.Utils.Skins.Skin Skin { get; set; }
 			public MiNET.Utils.UUID Uuid { get; }
 			public string Nametag { get; }
 
@@ -460,7 +460,7 @@ namespace Alex.Net.Bedrock
 			
 			if (message.links != null)
 			{
-				foreach (var link in message.links)
+			//	foreach (var link in message.links)
 				{
 					
 				}
@@ -1977,6 +1977,11 @@ namespace Alex.Net.Bedrock
 
 		public void HandleMcpePlayerSkin(McpePlayerSkin message)
 		{
+			if (_playerListPlayers.TryGetValue(message.uuid, out var data))
+			{
+				data.Skin = message.skin;
+			}
+			
 			if (Client.World.EntityManager.TryGet(message.uuid, out var entity) && entity is RemotePlayer player)
 			{
 				player.Skin = message.skin;

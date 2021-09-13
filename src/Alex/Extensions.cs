@@ -491,10 +491,26 @@ namespace Alex
 
 			return new Guid(guidBytes);
 		}
-
+		
 		public static bool IsBitSet(this byte b, int pos)
 		{
 			return (b & (1 << pos)) != 0;
+		}
+
+		public static byte SetBit(this byte b, int bit, bool value)
+		{
+			var mask = (byte)(1 << bit);
+			
+			if (value)
+			{
+				b |= mask;
+			}
+			else
+			{
+				b = (byte)(b & ~mask);
+			}
+
+			return b;
 		}
 	}
 }

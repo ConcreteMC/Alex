@@ -4,7 +4,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Alex.Graphics.Models.Items
 {
-    public sealed class ItemModelCube : Model
+    public sealed class ItemModelCube : ModelBase
     {
         public ItemModelCube(Vector3 size, Color color)
         {

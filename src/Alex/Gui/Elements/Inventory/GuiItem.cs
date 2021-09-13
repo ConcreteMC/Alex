@@ -23,7 +23,7 @@ namespace Alex.Gui.Elements.Inventory
             set
             {
                 _item = value?.Clone();
-                _itemRenderer = _item?.Renderer?.CloneItemRenderer();
+                _itemRenderer = _item?.Renderer;
                 
                 if(_itemRenderer != null)
                     _itemRenderer.DisplayPosition = DisplayPosition.Gui;

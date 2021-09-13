@@ -92,9 +92,9 @@ namespace Alex.Gamestates.InGame
         private void OnOptionsButtonPressed()
         {
 	        OptionsState state = new OptionsState(null);
-	        state.ParentState = ParentState;
+	       //state.ParentState = ParentState;
 	        
-	        Alex.GameStateManager.SetActiveState(state);
+	        Alex.GameStateManager.SetActiveState(state, true);
         }
 
         private void OnQuitButtonPressed()

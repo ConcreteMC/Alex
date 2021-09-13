@@ -8,6 +8,7 @@ using Alex.Graphics.Models.Entity;
 using Alex.Gui.Elements;
 using Alex.Gui.Elements.Context3D;
 using Alex.ResourcePackLib;
+using Alex.Utils;
 using Microsoft.Xna.Framework;
 using RocketUI;
 using RocketUI.Input;
@@ -39,7 +40,7 @@ namespace Alex.Gamestates.MainMenu.Profile
 
             var mob = new RemotePlayer(null, null);
             
-            if (EntityModelRenderer.TryGetRenderer(skin.Model, out var renderer))
+            if (skin.Model.TryGetRenderer(out var renderer))
             {
                 var texture2D = TextureUtils.BitmapToTexture2D(this, Alex.Instance.GraphicsDevice, skin.Texture);
                 mob.ModelRenderer = renderer;

@@ -21,6 +21,7 @@ using Alex.Gui.Elements.Context3D;
 using Alex.ResourcePackLib;
 using Alex.ResourcePackLib.Json.Bedrock.Entity;
 using Alex.ResourcePackLib.Json.Models.Entities;
+using Alex.Utils;
 using Alex.Worlds;
 using Alex.Worlds.Chunks;
 using Microsoft.Xna.Framework;
@@ -306,13 +307,13 @@ namespace Alex.Gamestates.Debugging
 			_entityDefinitions = alex.Resources.BedrockResourcePack.EntityDefinitions.ToArray();
 		}
 
-		private EntityModelRenderer _currentRenderer = null;
+		private ModelRenderer _currentRenderer = null;
 
 		private void SetVertices()
 		{
 			var def = _entityDefinitions[_index];
 
-			EntityModelRenderer renderer = null;
+			ModelRenderer renderer = null;
 
 			//if (def.Value != null)
 			//{
@@ -336,11 +337,11 @@ namespace Alex.Gamestates.Debugging
 					if (Alex.Resources.TryGetBedrockBitmap(texture,
 																				out var bmp))
 					{
-						if (EntityModelRenderer.TryGetRenderer(model, out renderer))
+						if (model.TryGetRenderer(out renderer))
 						{
-							renderer.Scale = 1f / 16f;
+							//renderer.Scale = 1f / 16f;
 							
-							renderer.Effect.Texture = TextureUtils.BitmapToTexture2D(this, Alex.GraphicsDevice, bmp);  
+							renderer.Texture = TextureUtils.BitmapToTexture2D(this, Alex.GraphicsDevice, bmp);  
 						}
 					}
 				}

@@ -1,7 +1,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Alex.Graphics.Models.Entity
+namespace Alex.Graphics.Models
 {
 	public sealed class ModelMesh
 	{
@@ -19,6 +19,7 @@ namespace Alex.Graphics.Models.Entity
 			
 			Effects = new ModelEffectCollection();
 		}
+		      
 
 		/// <summary>
 		///		Gets the BoundingSphere that contains this mesh.
@@ -56,25 +57,30 @@ namespace Alex.Graphics.Models.Entity
 		/// <summary>
 		///  Draws all of the ModelMeshPart objects in this mesh, using their current Effect settings.
 		/// </summary>
-		public void Draw()
-		{	
+		public int Draw()
+		{
+			int c = 0;
 			for(int i = 0; i < MeshParts.Count; i++)
 			{
 				var part = MeshParts[i];
 				var effect = part.Effect;
 				
-				if (part.PrimitiveCount > 0)
+				if (effect != null && part.PrimitiveCount > 0 && part.VertexBuffer != null && part.IndexBuffer != null && !effect.IsDisposed)
 				{
 					this.graphicsDevice.SetVertexBuffer(part.VertexBuffer);
 					this.graphicsDevice.Indices = part.IndexBuffer;
                     
 					for (int j = 0; j < effect.CurrentTechnique.Passes.Count; j++)
 					{
-						effect.CurrentTechnique.Passes[j].Apply ();
+						effect.CurrentTechnique.Passes[j].Apply();
+						//graphicsDevice.DrawInstancedPrimitives(PrimitiveType.TriangleList, part.VertexOffset, part.StartIndex, part.PrimitiveCount, );
 						graphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, part.VertexOffset, part.StartIndex, part.PrimitiveCount);
+						c++;
 					}
 				}
 			}
+
+			return c;
 		}
 	}
 }

@@ -1,35 +1,37 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Microsoft.Xna.Framework.Graphics;
 
-namespace Alex.Graphics.Models.Entity
+namespace Alex.Graphics.Models
 {
-	/// <summary>
-	/// Represents a set of bones associated with a model.
-	/// </summary>
-	public class ModelBoneCollection : System.Collections.ObjectModel.ReadOnlyCollection<ModelBone>
+	public class VertexBufferCollection: System.Collections.ObjectModel.ReadOnlyCollection<VertexBuffer>
 	{
-		public ModelBoneCollection(IList<ModelBone> list)
+		public VertexBufferCollection(IList<VertexBuffer> list)
 			: base(list)
 		{
-			for (var index = 0; index < list.Count; index++)
-			{
-				var modelBone = list[index];
-				if (modelBone == null)
-					continue;
-				modelBone.Index = index;
-			}
+			
 		}
 
+		internal void Add(VertexBuffer item)
+		{
+			Items.Add(item);
+		}
+		
+		internal void Remove(VertexBuffer item)
+		{
+			Items.Remove(item);
+		}
+		
 		/// <summary>
 		/// Retrieves a ModelBone from the collection, given the name of the bone.
 		/// </summary>
 		/// <param name="boneName">The name of the bone to retrieve.</param>
-		public ModelBone this[string boneName]
+		public VertexBuffer this[string boneName]
 		{
 			get
 			{
-				ModelBone ret;
+				VertexBuffer ret;
 				if (!TryGetValue(boneName, out ret))
 					throw new KeyNotFoundException();
 				return ret;
@@ -42,12 +44,12 @@ namespace Alex.Graphics.Models.Entity
 		/// <param name="boneName">The name of the bone to find.</param>
 		/// <param name="value">The bone named boneName, if found.</param>
 		/// <returns>true if the bone was found</returns>
-		public bool TryGetValue(string boneName, out ModelBone value)
+		public bool TryGetValue(string boneName, out VertexBuffer value)
 		{
 			if (string.IsNullOrEmpty(boneName))
 				throw new ArgumentNullException("boneName");
 
-			foreach (ModelBone bone in this)
+			foreach (VertexBuffer bone in this)
 			{
 				if (string.Equals(bone.Name, boneName, StringComparison.OrdinalIgnoreCase))
 				{
@@ -72,12 +74,12 @@ namespace Alex.Graphics.Models.Entity
 		/// <summary>
 		/// Provides the ability to iterate through the bones in an ModelMeshCollection.
 		/// </summary>
-		public struct Enumerator : IEnumerator<ModelBone>
+		public struct Enumerator : IEnumerator<VertexBuffer>
 		{
-			private readonly ModelBoneCollection _collection;
+			private readonly VertexBufferCollection _collection;
 			private int _position;
 
-			internal Enumerator(ModelBoneCollection collection)
+			internal Enumerator(VertexBufferCollection collection)
 			{
 				_collection = collection;
 				_position = -1;
@@ -87,7 +89,7 @@ namespace Alex.Graphics.Models.Entity
 			/// <summary>
 			/// Gets the current element in the ModelMeshCollection.
 			/// </summary>
-			public ModelBone Current { get { return _collection[_position]; } }
+			public VertexBuffer Current { get { return _collection[_position]; } }
 
 			/// <summary>
 			/// Advances the enumerator to the next element of the ModelMeshCollection.

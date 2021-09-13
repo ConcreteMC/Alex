@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 
-namespace Alex.Graphics.Models.Entity
+namespace Alex.Graphics.Models
 {
 	/// <summary>
 	/// Represents a collection of ModelMesh objects.
@@ -14,6 +14,16 @@ namespace Alex.Graphics.Models.Entity
 			: base(list)
 		{
 
+		}
+		
+		internal void Add(ModelMesh item)
+		{
+			Items.Add(item);
+		}
+		
+		internal void Remove(ModelMesh item)
+		{
+			Items.Remove(item);
 		}
 
 		/// <summary>

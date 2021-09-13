@@ -275,7 +275,8 @@ namespace Alex.Gamestates.MainMenu
 
         private void OnCancelButtonPressed()
         {
-            Alex.GameStateManager.SetActiveState<TitleState>("title");
+            Alex.GameStateManager.Back();
+           // Alex.GameStateManager.SetActiveState<TitleState>("title");
         }
 
         protected override void OnUpdate(GameTime gameTime)

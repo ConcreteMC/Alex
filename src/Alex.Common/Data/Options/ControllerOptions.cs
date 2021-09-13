@@ -11,10 +11,19 @@ namespace Alex.Common.Data.Options
 		[DataMember]
 		public OptionsProperty<int> RightJoystickSensitivity { get; set; }
 		
+		[DataMember]
+		public OptionsProperty<bool> InvertX { get; set; }
+		
+		[DataMember]
+		public OptionsProperty<bool> InvertY { get; set; }
+
 		public ControllerOptions()
 		{
 			LeftJoystickSensitivity = DefineRangedProperty(200, 1, 400);
 			RightJoystickSensitivity = DefineRangedProperty(200, 1, 400);
+
+			InvertX = DefineProperty(false);
+			InvertY = DefineProperty(true);
 		}
 	}
 }

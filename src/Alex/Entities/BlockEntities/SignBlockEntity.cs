@@ -6,12 +6,13 @@ using Alex.Common.Graphics;
 using Alex.Common.Utils;
 using Alex.Graphics.Models.Entity;
 using Alex.Graphics.Models.Entity.BlockEntities;
+using Alex.Utils;
 using Alex.Worlds;
 using fNbt;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using RocketUI;
-using ModelBone = Alex.Graphics.Models.Entity.ModelBone;
+using ModelBone = Alex.Graphics.Models.ModelBone;
 
 namespace Alex.Entities.BlockEntities
 {
@@ -190,7 +191,7 @@ namespace Alex.Entities.BlockEntities
 			if (newBlock is WallSign)
 			{
 				TextYStart = 0.75f;
-				if (EntityModelRenderer.TryGetRenderer(new WallSignEntityModel(), out var renderer))
+				if (new WallSignEntityModel().TryGetRenderer(out var renderer))
 				{
 					ModelRenderer = renderer;
 				}
@@ -229,7 +230,7 @@ namespace Alex.Entities.BlockEntities
 			{
 				TextYStart = 0.95f;
 				
-				if (EntityModelRenderer.TryGetRenderer(new StandingSignEntityModel(), out var renderer))
+				if (new StandingSignEntityModel().TryGetRenderer(out var renderer))
 				{
 					ModelRenderer = renderer;
 				}

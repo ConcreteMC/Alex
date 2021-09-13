@@ -4,12 +4,14 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using Alex.Common.Graphics.GpuResources;
 using Microsoft.Xna.Framework.Graphics;
+using NLog;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Advanced;
 using SixLabors.ImageSharp.Drawing.Processing;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 using SixLabors.ImageSharp.Processing.Processors;
+using Valve.VR;
 using Image = SixLabors.ImageSharp.Image;
 using Rectangle = System.Drawing.Rectangle;
 
@@ -17,6 +19,9 @@ namespace Alex.Common.Utils
 {
 	public static class TextureUtils
 	{
+		public delegate void TextureCreated(Texture2D texture);
+		
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(TextureUtils));
 		public static Thread         RenderThread        { get; set; }
 		public static Action<Action> QueueOnRenderThread { get; set; }
 		
@@ -24,72 +29,103 @@ namespace Alex.Common.Utils
 		{
 			return BitmapToTexture2D(caller, device, bmp, out _);
 		}
+
+		private static uint[] GetPixelData(this Image<Rgba32> image)
+		{
+			uint[] colorData;
+
+			if (image.TryGetSinglePixelSpan(out var pixelSpan))
+			{
+				colorData = new uint[pixelSpan.Length];
+
+				for (int i = 0; i < pixelSpan.Length; i++)
+				{
+					colorData[i] = pixelSpan[i].Rgba;
+				}
+			}
+			else
+			{
+				throw new Exception("Could not get image data!");
+			}
+
+			return colorData;
+		}
+		
+		public static void BitmapToTexture2DAsync(object owner, GraphicsDevice device, Image<Rgba32> image, TextureCreated onTextureCreated)
+		{
+			Texture2D Execute()
+			{
+				var r = new Texture2D(
+					device, image.Width,
+					image.Height);
+
+				r.SetData(image.GetPixelData());
+				r.Tag = owner;
+				
+				return r;
+			}
+
+			if (Thread.CurrentThread == RenderThread)
+			{
+				var result = Execute();
+				onTextureCreated?.Invoke(result);
+			}
+			else
+			{
+				QueueOnRenderThread(
+					() =>
+					{
+						var result = Execute();
+						onTextureCreated?.Invoke(result);
+					});
+			}
+		}
 		
 		public static Texture2D BitmapToTexture2D(object owner, GraphicsDevice device, Image<Rgba32> bmp)
         {
 	        return BitmapToTexture2D(owner, device, bmp, out _);
         }
 
-		public static Texture2D BitmapToTexture2D(object owner, GraphicsDevice device, Image<Rgba32> image, out long byteSize)
-        {
-	     //   var bmp = image;//.CloneAs<Rgba32>();
-	        uint[] colorData;
-	        
-	        if (image.TryGetSinglePixelSpan(out var pixelSpan))
-	        {
-		        colorData = new uint[pixelSpan.Length];
+		public static Texture2D BitmapToTexture2D(object owner,
+			GraphicsDevice device,
+			Image<Rgba32> image,
+			out long byteSize)
+		{
+			Texture2D result = null;
 
-		        for (int i = 0; i < pixelSpan.Length; i++)
-		        {
-			        colorData[i] = pixelSpan[i].Rgba;
-		        }
-	        }
-	        else
-	        {
-		        throw new Exception("Could not get image data!");
-	        }
-	       // var colorData = pixels.ToArray().Select(x => x.Rgba).ToArray();
+			Texture2D Execute()
+			{
+				var r = new Texture2D(
+					device, image.Width,
+					image.Height);
 
-	       Texture2D result = null;
-	       if (Thread.CurrentThread != RenderThread)
-	       {
-		       AutoResetEvent resetEvent = new AutoResetEvent(false);
-		       QueueOnRenderThread(
-			       () =>
-			       {
-				      // result = GpuResourceManager.GetTexture2D(owner, device, image.Width, image.Height);
-				      result = new Texture2D(device, image.Width, image.Height);
-				       result.SetData(colorData);
+				r.SetData(image.GetPixelData());
+				r.Tag = owner;
+				
+				return r;
+			}
 
-				       resetEvent.Set();
-			       });
-		       resetEvent.WaitOne();
-	       }
-	       else
-	       {
-		       result = new Texture2D(device, image.Width, image.Height); //GpuResourceManager.GetTexture2D(owner, device, image.Width, image.Height);
-		       result.SetData(colorData);
-	       }
+			if (Thread.CurrentThread == RenderThread)
+			{
+				result = Execute();
+			}
+			else
+			{
+				AutoResetEvent resetEvent = new AutoResetEvent(false);
+				QueueOnRenderThread(
+					() =>
+					{
+						result = Execute();
 
-	       byteSize = result.MemoryUsage();
-	       result.Tag = owner;
-	        return result;
-	        /*for (int x = 0; x < bmp.Width; x++)
-	        {
-		        for (int y = 0; y < bmp.Height; y++)
-		        {
-			        
-		        }
-	        }
-	        using (MemoryStream ms = new MemoryStream())
-	        {
-		        bmp.SaveAsPng(ms);
-		        
-		        ms.Position = 0;
-		        byteSize = ms.Length;
-		        return GpuResourceManager.GetTexture2D("Alex.Api.Utils.TextureUtils.ImageToTexture2D", device, ms);
-	        }*/
-        }
+						resetEvent.Set();
+					});
+
+				resetEvent.WaitOne();
+			}
+
+			byteSize = result.MemoryUsage();
+			return result;
+		}
 
 		public static Texture2D ImageToTexture2D(object owner, GraphicsDevice device, byte[] bmp)
 		{
@@ -180,7 +216,7 @@ namespace Alex.Common.Utils
 			}
 			catch (Exception ex)
 			{
-				
+				Log.Error(ex, $"An error occured!");
 			}
 		}
 	}

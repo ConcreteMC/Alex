@@ -1,6 +1,6 @@
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Alex.Graphics.Models.Entity
+namespace Alex.Graphics.Models
 {
 	public class ModelMeshPart
 	{
@@ -48,7 +48,11 @@ namespace Alex.Graphics.Models.Entity
 		/// <summary>
 		///		The indexbuffer containing the indices to the vertexbuffer elements
 		/// </summary>
-		public IndexBuffer IndexBuffer { get; set; }
+		public IndexBuffer IndexBuffer
+		{
+			get;
+			set;
+		}
 
 		/// <summary>
 		///		The number of vertices in this mesh
@@ -69,23 +73,21 @@ namespace Alex.Graphics.Models.Entity
 		///		Gets or sets an object identifying this mesh.
 		/// </summary>
 		public object Tag { get; set; }
-
+		
 		/// <summary>
 		///		The vertex buffer containing the vertices for this mesh
 		/// </summary>
-		public VertexBuffer VertexBuffer { get; set; }
+		public VertexBuffer VertexBuffer
+		{
+			get;
+			set;
+		}
 
 		/// <summary>
 		///		Used to offset the vertex range indexed from the vertex buffer.
 		/// </summary>
 		public int VertexOffset { get; set; }
 
-		internal int VertexBufferIndex { get; set; }
-
-		internal int IndexBufferIndex { get; set; }
-
-		internal int EffectIndex { get; set; }
-		
 		internal ModelMesh Parent;
 	}
 }

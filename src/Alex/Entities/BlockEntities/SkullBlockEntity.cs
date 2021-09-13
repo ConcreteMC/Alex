@@ -6,11 +6,12 @@ using Alex.Common.Utils;
 using Alex.Common.Utils.Vectors;
 using Alex.Graphics.Models.Entity;
 using Alex.Graphics.Models.Entity.BlockEntities;
+using Alex.Utils;
 using Alex.Worlds;
 using fNbt;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using ModelBone = Alex.Graphics.Models.Entity.ModelBone;
+using ModelBone = Alex.Graphics.Models.ModelBone;
 
 namespace Alex.Entities.BlockEntities
 {
@@ -27,7 +28,7 @@ namespace Alex.Entities.BlockEntities
 		/// <inheritdoc />
 		public SkullBlockEntity(World level, Texture2D texture) : base(level)
 		{
-			if (EntityModelRenderer.TryGetRenderer(new SkullBlockEntityModel(), out var renderer))
+			if (new SkullBlockEntityModel().TryGetRenderer(out var renderer))
 			{
 				ModelRenderer = renderer;
 			}
@@ -178,7 +179,7 @@ namespace Alex.Entities.BlockEntities
 						{
 							if (ModelFactory.TryGetModel("geometry.dragon_head", out var dragonHead))
 							{
-								if (EntityModelRenderer.TryGetRenderer(dragonHead, out var renderer))
+								if (dragonHead.TryGetRenderer(out var renderer))
 								{
 									ModelRenderer = renderer;
 								}

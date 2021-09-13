@@ -79,7 +79,10 @@ namespace Alex
     {
         public static int  MipMapLevel = 6;
         public static bool InGame { get; set; } = false;
-
+        public static TimeSpan DeltaTimeSpan { get; private set; } = TimeSpan.Zero;
+        public static TimeSpan TotalTimeSpan { get; private set; } = TimeSpan.Zero;
+        public static float DeltaTime { get; private set; } = 0f;
+        
         public static EntityModel   PlayerModel   { get; set; }
         public static Image<Rgba32> PlayerTexture { get; set; }
 
@@ -466,23 +469,23 @@ namespace Alex
            // GuiManager.ShowDialog(new BrowserDialog());
             //	Log.Info($"Initializing Alex...");
             ThreadPool.QueueUserWorkItem(
-                async (o) =>
+                (o) =>
                 {
-                  //  try
-                  //  {
-                        await Task.WhenAll(Services.GetServices<IHostedService>().Select(s => s.StartAsync(CancellationToken.None)));
+                    try
+                    {
+                        Task.WaitAll(Services.GetServices<IHostedService>().Select(s => s.StartAsync(CancellationToken.None)).ToArray());
                         
-                        await InitializeGame(splash);
-                  //  }
-                   // catch (Exception ex)
-                   // {
-                   //     Log.Error(ex, $"Could not initialize! {ex}");
-                   // }
-                    //finally
-                    //{
+                        InitializeGame(splash).Wait();
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error(ex, $"Could not initialize! {ex}");
+                    }
+                    finally
+                    {
                         loadingStopwatch.Stop();
                         Log.Info($"Startup time: {loadingStopwatch.Elapsed}");
-                    //}
+                    }
                 });
         }
 
@@ -586,6 +589,11 @@ namespace Alex
         /// <inheritdoc />
         protected override void Update(GameTime gameTime)
         {
+            long elapsedGameTimeTicks = gameTime.ElapsedGameTime.Ticks;
+            DeltaTimeSpan = TimeSpan.FromTicks((long)(elapsedGameTimeTicks * (1d)));
+            TotalTimeSpan += DeltaTimeSpan;
+            DeltaTime = ((float)DeltaTimeSpan.Ticks / TimeSpan.TicksPerSecond);
+            
             base.Update(gameTime);
             
             GpuResourceManager.Update(gameTime, GraphicsDevice);
@@ -667,19 +675,19 @@ namespace Alex
             {
                 using (var skinImage = Image.Load<Rgba32>(skinBytes))
                 {
-                    var modelTextureSize = new Point(0, 0);
+                    //var modelTextureSize = new Point(0, 0);
 
                     if (PlayerModel.Description != null)
                     {
-                        modelTextureSize.X = (int) PlayerModel.Description.TextureWidth;
-                        modelTextureSize.Y = (int) PlayerModel.Description.TextureHeight;
+                  //      modelTextureSize.X = (int) PlayerModel.Description.TextureWidth;
+                   //     modelTextureSize.Y = (int) PlayerModel.Description.TextureHeight;
                     }
 
-                    if (modelTextureSize.Y > skinImage.Height)
-                    {
-                        PlayerTexture = SkinUtils.ConvertSkin(skinImage, modelTextureSize.X, modelTextureSize.Y);
-                    }
-                    else
+                  //  if (modelTextureSize.Y > skinImage.Height)
+                  //  {
+                  //      PlayerTexture = SkinUtils.ConvertSkin(skinImage, modelTextureSize.X, modelTextureSize.Y);
+                   // }
+                   // else
                     {
                         PlayerTexture = skinImage.Clone(); //.Clone<Rgba32>();
                     }
@@ -697,14 +705,12 @@ namespace Alex
             
             if (LaunchSettings.ModelDebugging)
             {
-                GameStateManager.SetActiveState<ModelDebugState>();
+                GameStateManager.SetActiveState<ModelDebugState>("title", false);
             }
             else
             {
-                GameStateManager.SetActiveState<TitleState>("title");
+                GameStateManager.SetActiveState<TitleState>("title", false);
             }
-
-            GameStateManager.RemoveState("splash");
 
             return Task.CompletedTask;
         }
@@ -796,7 +802,7 @@ namespace Alex
                             {
                                 var s = new DisconnectedState();
                                 s.DisconnectedTextElement.TranslationKey = "multiplayer.status.cannot_connect";
-                                s.ParentState = parentState;
+                                //s.ParentState = parentState;
                                 GameStateManager.SetActiveState(s, false);
 
                                 //playState?.Unload();

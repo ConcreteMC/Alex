@@ -36,7 +36,7 @@ using Color = Microsoft.Xna.Framework.Color;
 using LogManager = NLog.LogManager;
 using MetadataByte = Alex.Networking.Java.Packets.Play.MetadataByte;
 using MetadataFloat = Alex.Networking.Java.Packets.Play.MetadataFloat;
-using ModelData = Alex.Graphics.Models.Entity.ModelBone;
+using ModelData = Alex.Graphics.Models.ModelBone;
 using Point = System.Drawing.Point;
 using Skin = MiNET.Utils.Skins.Skin;
 
@@ -47,7 +47,7 @@ namespace Alex.Entities
 		private static readonly Logger   Log = LogManager.GetCurrentClassLogger(typeof(RemotePlayer));
 		public  GameMode Gamemode { get; private set; }
 
-		public PlayerSkinFlags SkinFlags { get; }
+		public PlayerSkinFlags SkinFlags { get; } = PlayerSkinFlags.Default;
 
 		public int Score   { get; set; } = 0;
 		public int Latency { get; set; } = 0;
@@ -59,11 +59,6 @@ namespace Alex.Entities
 		//private PooledTexture2D _texture;
 		public RemotePlayer(World level, string geometry = "geometry.humanoid.customSlim", Skin skin = null) : base(level)
 		{
-			SkinFlags = new PlayerSkinFlags()
-			{
-				Value = 0xff
-			};
-			
 			//Name = name;
 
 			Width = 0.6;
@@ -144,7 +139,7 @@ namespace Alex.Entities
 
 		public void SetFlying(bool flying)
 		{
-			Log.Info($"Tried to toggle fly. CanFly={CanFly} IsFlying={IsFlying} Target={flying}");
+			//Log.Info($"Tried to toggle fly. CanFly={CanFly} IsFlying={IsFlying} Target={flying}");
 
 			if (!CanFly)
 			{
@@ -192,43 +187,44 @@ namespace Alex.Entities
 		private int _skinQueuedCount = 0;
 		private void QueueSkinProcessing()
 		{
-			if (Interlocked.CompareExchange(ref _skinQueuedCount, 1, 0) == 0)
+		//	if (Interlocked.CompareExchange(ref _skinQueuedCount, 1, 0) == 0)
 			{
-				if (Level?.BackgroundWorker == null)
+				//if (Level?.BackgroundWorker == null)
+				//{
+				//	ProcessSkin();
+				//}
+				//else
 				{
-					ProcessSkin();
-				}
-				else
-				{
-					Level.BackgroundWorker.Enqueue(ProcessSkin);
-				}
-			}
-		}
-
-		private void ProcessSkin()
-		{
-			try
-			{
-				if (_skin == null)
-				{
-					LoadSkin(null, null);
-				}
-				else
-				{
-					LoadSkin(_skin);
-				}
+					ThreadPool.QueueUserWorkItem(
+						o =>
+						{
+							try
+							{
+								if (_skin == null)
+								{
+									LoadSkin(null, null);
+								}
+								else
+								{
+									LoadSkin(_skin);
+								}
 				
-				if (!AnimationController.Initialized &&
-				    Alex.Instance.Resources.TryGetEntityDefinition(
-					"minecraft:player", out var description, out var source))
-				{
-					AnimationController.UpdateEntityDefinition(source, description);
+								if (!AnimationController.Initialized &&
+								    Alex.Instance.Resources.TryGetEntityDefinition(
+									    "minecraft:player", out var description, out var source))
+								{
+									AnimationController.UpdateEntityDefinition(source, description);
+								}
+							}
+							finally
+							{
+								_skinQueuedCount = 0;
+								_skinDirty = false;
+							}
+						});
+					
+				//	Level.BackgroundWorker.Enqueue(ProcessSkin);
 				}
-			}
-			finally
-			{
-				_skinQueuedCount = 0;
-				_skinDirty = false;
 			}
 		}
 
@@ -261,7 +257,7 @@ namespace Alex.Entities
 									//if (!Directory.Exists("playerSkins"))
 									//File.WriteAllText(Path.Combine("playerskins", $"{resourcePatch.Geometry.Default}.json"), skin.GeometryData);
 									
-									Dictionary<string, EntityModel> models = new Dictionary<string, EntityModel>();
+									Dictionary<string, EntityModel> models = new Dictionary<string, EntityModel>(StringComparer.OrdinalIgnoreCase);
 									MCBedrockResourcePack.LoadEntityModel(skin.GeometryData, models);
 
 									int preProcessed = models.Count;
@@ -349,10 +345,21 @@ namespace Alex.Entities
 						}
 					}
 
-					/*if (skinBitmap != null)
+					if (model.TryGetRenderer(out var renderer))
 					{
+						ModelRenderer = renderer;
+					}
+					else
+					{
+						Log.Debug(
+							$"No renderer for model: \"{model.Description?.Identifier ?? "N/A"}\" for player \'{nametag.Replace("\n", "")}\' (Disposing)");
+					}
+
+					if (skinBitmap != null)
+					{
+
 						var modelTextureSize = new Point(
-							(int) model.Description.TextureWidth, (int) model.Description.TextureHeight);
+							(int)model.Description.TextureWidth, (int)model.Description.TextureHeight);
 
 						var textureSize = new Point(skinBitmap.Width, skinBitmap.Height);
 
@@ -363,28 +370,19 @@ namespace Alex.Entities
 								skinBitmap = SkinUtils.ConvertSkin(skinBitmap, modelTextureSize.X, modelTextureSize.Y);
 							}
 						}
-					}*/
 
-					if (EntityModelRenderer.TryGetRenderer(model, out var renderer))
-					{
-						if (skinBitmap != null)
-						{
-							Alex.Instance.UiTaskManager.Enqueue(
-								(state) =>
+						TextureUtils.BitmapToTexture2DAsync(
+							this, Alex.Instance.GraphicsDevice, skinBitmap, texture2D =>
+							{
+								if (texture2D == null)
 								{
-									var img = (Image<Rgba32>)state;
-									Texture = TextureUtils.BitmapToTexture2D(
-										this, Alex.Instance.GraphicsDevice, img);
-									img.Dispose();
-									
-								}, skinBitmap);
-						}
-						ModelRenderer = renderer;
-					}
-					else
-					{
-						Log.Debug(
-							$"No renderer for model: \"{model.Description?.Identifier ?? "N/A"}\" for player \'{nametag.Replace("\n", "")}\' (Disposing)");
+									Log.Warn($"Null texture for entity: {NameTag}");
+
+									return;
+								}
+
+								Texture = texture2D;
+							});
 					}
 				}
 				finally
@@ -453,13 +451,6 @@ namespace Alex.Entities
 
 			//	if (oldValue != renderer)
 			{
-				renderer.Update(
-					new UpdateArgs()
-					{
-						Camera = new Camera(),
-						GameTime = new GameTime(),
-						GraphicsDevice = Alex.Instance.GraphicsDevice
-					});
 
 				primaryArm?.AddChild(renderer);
 			}

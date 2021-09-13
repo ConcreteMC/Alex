@@ -8,6 +8,7 @@ using Alex.Gui;
 using Alex.Gui.Elements;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
+using MiNET.Utils;
 using RocketUI.Input;
 using RocketUI.Input.Listeners;
 
@@ -125,6 +126,19 @@ namespace Alex.Gamestates.MainMenu.Options
         {
             base.OnShow();
 
+            AddGuiRow(new TextElement("Cursor Options")
+            {
+                TextAlignment = TextAlignment.Center,
+                FontStyle = FontStyle.Underline
+            });
+            AddGuiRow(CreateToggle("Invert X: {0}", o => o.ControllerOptions.InvertX), CreateToggle("Invert Y: {0}", o => o.ControllerOptions.InvertY));
+            AddGuiRow(new StackMenuSpacer());
+            AddGuiRow(new TextElement("Keybinds")
+            {
+                TextAlignment = TextAlignment.Center,
+                FontStyle = FontStyle.Underline
+            });
+            
             var inputManager = base.Alex.InputManager.GetOrAddPlayerManager(PlayerIndex.One);
 
             if (inputManager.TryGetListener(out KeyboardInputListener inputListener))
@@ -132,6 +146,16 @@ namespace Alex.Gamestates.MainMenu.Options
                 InputListener = inputListener;
                 AddInputs();
             }
+        }
+
+        private void InvertXChanged(bool obj)
+        {
+            throw new NotImplementedException();
+        }
+        
+        private void InvertYChanged(bool obj)
+        {
+            throw new NotImplementedException();
         }
     }
 }

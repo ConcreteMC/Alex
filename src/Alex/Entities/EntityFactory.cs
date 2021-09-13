@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using Alex.Common.Graphics.GpuResources;
 using Alex.Common.Utils;
 using Alex.Entities.Generic;
@@ -33,8 +34,8 @@ namespace Alex.Entities
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(EntityFactory));
 
-		private static ConcurrentDictionary<string, Func<EntityModelRenderer>> _registeredRenderers =
-			new ConcurrentDictionary<string,  Func<EntityModelRenderer>>();
+		private static ConcurrentDictionary<string, Func<ModelRenderer>> _registeredRenderers =
+			new ConcurrentDictionary<string,  Func<ModelRenderer>>();
 
 		private static IReadOnlyDictionary<long, EntityData> _idToData;
 		public static void Load(ResourceManager resourceManager, IProgressReceiver progressReceiver)
@@ -92,7 +93,7 @@ namespace Alex.Entities
 			return false;
 		}
 
-		private static EntityModelRenderer TryGetRendererer(EntityData data)
+		private static ModelRenderer TryGetRendererer(EntityData data)
 		{
 			string lookupName = data.OriginalName;
 
@@ -120,7 +121,7 @@ namespace Alex.Entities
 			return null;
 		}
 
-		public static EntityModelRenderer GetEntityRenderer(string name)
+		public static ModelRenderer GetEntityRenderer(string name)
 		{
 			if (_registeredRenderers.TryGetValue(name, out var func))
 			{
@@ -184,7 +185,7 @@ namespace Alex.Entities
 
 					var geometry = def.Value.Geometry;
 
-					Func<EntityModelRenderer> previousValue = null;
+					Func<ModelRenderer> previousValue = null;
 
 					/*	if (_registeredRenderers.TryGetValue(def.Value.Identifier, out previousValue))
 						{
@@ -215,12 +216,12 @@ namespace Alex.Entities
 
 						_registeredRenderers[def.Value.Identifier] = () =>
 						{
-							if (EntityModelRenderer.TryGetRenderer(model, out var renderer))
+							if (model.TryGetRenderer(out var renderer))
 							{
 								return renderer;
 							}
 
-							return null;
+							return previousValue?.Invoke();
 						};
 						//Add(def.Value, model);
 						//Add(resources, graphics, def.Value, model, def.Key.ToString());
@@ -659,12 +660,15 @@ namespace Alex.Entities
 					entity = new Entity(world);
 				}
 
-				world.BackgroundWorker.Enqueue(
-					() =>
+				ThreadPool.QueueUserWorkItem(
+					(o) =>
 					{
+						if (!(o is Entity e))
+							return;
+						
 						if (initRenderController)
 						{
-							entity.AnimationController.UpdateEntityDefinition(resourcePack, description);
+							e.AnimationController.UpdateEntityDefinition(resourcePack, description);
 						}
 
 						var modelRenderer = GetEntityRenderer(description.Identifier);
@@ -673,8 +677,10 @@ namespace Alex.Entities
 						{
 							Log.Warn($"Missing entity renderer: {entityType}");
 						}
-
-						entity.ModelRenderer = modelRenderer;
+						else
+						{
+							e.ModelRenderer = modelRenderer;
+						}
 
 
 						//Texture2D texture2D = null;
@@ -692,36 +698,24 @@ namespace Alex.Entities
 									texture = textures.FirstOrDefault().Value;
 								}
 
-								if (!_pooledTextures.TryGetValue(texture, out var texture2D))
+								//if (!_pooledTextures.TryGetValue(texture, out var texture2D))
 								{
 									if (resourcePack.TryGetBitmap(texture, out var bmp))
 									{
-										Alex.Instance.UiTaskManager.Enqueue(
-											() =>
+										TextureUtils.BitmapToTexture2DAsync(
+											e, Alex.Instance.GraphicsDevice, bmp, texture2D1 =>
 											{
-												texture2D = TextureUtils.BitmapToTexture2D(
-													entity, Alex.Instance.GraphicsDevice, bmp);
-
-												texture2D.Tag = EntityFactory.PooledTagIdentifier;
-
-												texture2D.Disposing += (sender, args) =>
-												{
-													_pooledTextures.TryRemove(texture, out _);
-												};
-
-												_pooledTextures.TryAdd(texture, texture2D);
-
-												entity.Texture = texture2D;
+												e.Texture = texture2D1;
 											});
 									}
 								}
-								else
-								{
-									entity.Texture = texture2D;
-								}
+								//else
+								//{
+								//	entity.Texture = texture2D;
+								//}
 							}
 						}
-					});
+					}, entity);
 			}
 
 			return entity;

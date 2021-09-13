@@ -103,11 +103,12 @@ namespace Alex.Worlds.Chunks
 
 			if (storage == 0)
 			{
+				var lightSources = LightSources;
 				if (state.Block.Luminance > 0)
 				{
-					if (!LightSources.Contains(blockCoordinates))
+					if (lightSources != null && !lightSources.Contains(blockCoordinates))
 					{
-						LightSources.Add(blockCoordinates);
+						lightSources.Add(blockCoordinates);
 					}
 
 					if (state.Block.Luminance > GetBlocklight(x, y, z))
@@ -117,9 +118,9 @@ namespace Alex.Worlds.Chunks
 				}
 				else
 				{
-					if (LightSources.Contains(blockCoordinates))
+					if (lightSources != null && lightSources.Contains(blockCoordinates))
 					{
-						LightSources.Remove(blockCoordinates);
+						lightSources.Remove(blockCoordinates);
 					}
 
 					if (GetBlocklight(x, y, z) > 0)

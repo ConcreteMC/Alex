@@ -33,7 +33,7 @@ namespace Alex.Entities.Components
 			if (!Enabled)
 				return;
 			
-			var frameTime = (float) gameTime.ElapsedGameTime.TotalSeconds; // / 50;
+			var frameTime = (float) Alex.DeltaTime; // / 50;
 			_frameAccumulator += frameTime;
 
 			while (_frameAccumulator >= _targetTime)

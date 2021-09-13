@@ -7,12 +7,14 @@ using Alex.Common;
 using Alex.Common.Graphics;
 using Alex.Common.Services;
 using Alex.Common.Utils;
+using Alex.Gamestates.Common;
 using Alex.Gamestates.InGame.Hud;
 using Alex.Graphics.Camera;
 using Alex.Gui;
 using Alex.Gui.Elements;
 using Alex.Items;
 using Alex.Net;
+using Alex.Net.Bedrock;
 using Alex.ResourcePackLib.Json.Models.Items;
 using Alex.Services.Discord;
 using Alex.Utils;
@@ -30,7 +32,7 @@ using PlayerLocation = Alex.Common.Utils.Vectors.PlayerLocation;
 
 namespace Alex.Gamestates.InGame
 {
-	public class PlayingState : GameState
+	public class PlayingState : GuiGameStateBase
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(PlayingState));
 		
@@ -43,7 +45,7 @@ namespace Alex.Gamestates.InGame
 		private readonly GuiDebugInfo _debugInfo;
 		private readonly NetworkDebugHud _networkDebugHud;
 		
-		public PlayingState(Alex alex, GraphicsDevice graphics, WorldProvider worldProvider, NetworkProvider networkProvider) : base(alex)
+		public PlayingState(Alex alex, GraphicsDevice graphics, WorldProvider worldProvider, NetworkProvider networkProvider) : base()
 		{
 			NetworkProvider = networkProvider;
 
@@ -86,10 +88,14 @@ namespace Alex.Gamestates.InGame
 			base.OnLoad(args);
 		}
 
+		private TimeSpan _targetElapsed = TimeSpan.Zero;
 		protected override void OnShow()
 		{
+			_targetElapsed = Alex.TotalTimeSpan.Add(TimeSpan.FromMilliseconds(500));
+			
 			Alex.IsMouseVisible = false;
-
+			World.Player.SkipUpdate();
+			
 			//if (RenderNetworking) 
 			Alex.GuiManager.AddScreen(_networkDebugHud);
 			
@@ -320,7 +326,7 @@ namespace Alex.Gamestates.InGame
 				if (player == null || player.HitEntity == null) return string.Empty;
 
 				var entity = player.HitEntity;
-				return $"Hit entity: {entity.EntityId} / {entity.ToString()}\n{ChatFormatting.Reset}Hide nametag: {!entity.HideNameTag}\nNoAI: {entity.NoAi}\nHas Gravity: {entity.IsAffectedByGravity}\nFlying: {entity.IsFlying}\nAllFlying: {entity.IsFlagAllFlying}\nOn Ground: {entity.KnownPosition.OnGround}\nHas Collisions: {entity.HasCollision}\nHas Model: {entity.ModelRenderer != null}\nTextured: {entity.Texture != null}\n";
+				return $"Hit entity: {entity.EntityId} / {entity.ToString()}\n{ChatFormatting.Reset}Hide nametag: {!entity.HideNameTag}\nNoAI: {entity.NoAi}\nHas Gravity: {entity.IsAffectedByGravity}\nFlying: {entity.IsFlying}\nOn Ground: {entity.KnownPosition.OnGround}\nHas Collisions: {entity.HasCollision}\nHas Model: {entity.ModelRenderer != null}\nHas Texture: {entity.Texture != null} (2nd={entity.ModelRenderer?.Texture != null})\nScale: {entity.Scale}\nTextureSize: {entity.ModelRenderer?.TextureSize}\n";
 			}, TimeSpan.FromMilliseconds(500));
 		}
 
@@ -330,21 +336,32 @@ namespace Alex.Gamestates.InGame
 
 		protected override void OnUpdate(GameTime gameTime)
 		{
-			var args = new UpdateArgs() {Camera = World.Camera, GraphicsDevice = Graphics, GameTime = gameTime};
+			if (World?.Camera == null)
+				return;
+			
+			var graphics = Alex.GraphicsDevice;
+			var args = new UpdateArgs() {Camera = World.Camera, GraphicsDevice = graphics, GameTime = gameTime};
 
+			if (Alex.TotalTimeSpan < _targetElapsed)
+				World.Player.SkipUpdate();
+			
 			_playingHud.CheckInput = Alex.GuiManager.ActiveDialog == null;
 
 			//	if (Alex.IsActive)
 
-			if (Math.Abs(AspectRatio - Graphics.Viewport.AspectRatio) > 0f)
+			if (Math.Abs(AspectRatio - graphics.Viewport.AspectRatio) > 0f)
 			{
-				World.Camera.UpdateAspectRatio(Graphics.Viewport.AspectRatio);
-				AspectRatio = Graphics.Viewport.AspectRatio;
+				World.Camera.UpdateAspectRatio(graphics.Viewport.AspectRatio);
+				AspectRatio = graphics.Viewport.AspectRatio;
 			}
 
+			bool hasActiveDialog = Alex.Instance.GuiManager.ActiveDialog != null
+			                       || ((World.Player.Network is BedrockClient c)
+			                           && c.WorldProvider.FormManager.IsShowingForm);
+			
+			World.Player.Controller.CheckMovementInput = Alex.IsActive && !hasActiveDialog;
 			if (!_playingHud.Chat.Focused && Alex.GameStateManager.GetActiveState() is PlayingState)
 			{
-				World.Player.Controller.CheckMovementInput = Alex.IsActive && Alex.GuiManager.ActiveDialog == null;
 				World.Player.Controller.CheckInput = Alex.IsActive;
 
 				if (Alex.GuiManager.ActiveDialog == null)
@@ -398,7 +415,7 @@ namespace Alex.Gamestates.InGame
 			
 			//Alex.ParticleManager.Update(gameTime);
 			
-			base.OnUpdate(gameTime);
+			//base.OnUpdate(gameTime);
 		}
 		
 		protected override void OnDraw(IRenderArgs args)

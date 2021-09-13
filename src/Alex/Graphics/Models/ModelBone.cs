@@ -2,14 +2,70 @@ using System;
 using System.Collections.Generic;
 using Alex.Common.Graphics;
 using Alex.Common.Utils;
+using Alex.Common.Utils.Collections;
+using Alex.Graphics.Models.Entity;
 using Microsoft.Xna.Framework;
 using NLog;
 
-namespace Alex.Graphics.Models.Entity
+namespace Alex.Graphics.Models
 {
-	public class BoneData : IHoldAttachment
+	public class ModelBone : IHoldAttachment
 	{
-		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(BoneData));
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ModelBone));
+		
+		private List<ModelBone> _children = new List<ModelBone>();
+		private List<ModelMesh> _meshes = new List<ModelMesh>();
+		public List<ModelMesh> Meshes
+		{
+			get
+			{
+				return this._meshes;
+			}
+			private set
+			{
+				_meshes = value;
+			}
+		}
+		
+		/// <summary>
+		///		 Gets a collection of bones that are children of this bone.
+		/// </summary>
+		public ModelBoneCollection Children { get; private set; }
+
+		/// <summary>
+		///		Gets the index of this bone in the Bones collection.
+		/// </summary>
+		public int Index { get; set; } = -1;
+		
+		/// <summary>
+		///  Gets the name of this bone.
+		/// </summary>
+		public string Name { get; set; }
+		
+		/// <summary>
+		///		Gets the parent of this bone.
+		/// </summary>
+		public ModelBone Parent { get; set; }
+		
+		/// <summary>
+		///		The root model
+		/// </summary>
+		public Model Model { get; set; }
+		
+
+		/// <summary>
+		///		Gets or sets the matrix used to transform this bone relative to its parent bone.
+		/// </summary>
+		public Matrix Transform { get; set; } = Matrix.Identity;
+		
+		/// <summary>
+		/// Transform of this node from the root of the model not from the parent
+		/// </summary>
+		public Matrix ModelTransform {
+			get;
+			set;
+		} = Matrix.Identity;
+
 		public Vector3 BaseRotation
 		{
 			get => _baseRotation;
@@ -46,7 +102,6 @@ namespace Alex.Graphics.Models.Entity
 			get => _rotation;
 			set
 			{
-				//Log.Info($"Updating rotation for bone. Name={Name} Rotation={value}");
 				_startRotation = _targetRotation = _rotation = value;
 				UpdateTransform();
 			}
@@ -67,7 +122,7 @@ namespace Alex.Graphics.Models.Entity
 			get => _scale;
 			set
 			{
-				/*_targetScale =*/ _scale = value;
+				_targetScale = _scale = value;
 				UpdateTransform();
 			}
 		}
@@ -80,6 +135,36 @@ namespace Alex.Graphics.Models.Entity
 				_pivot = value;
 				UpdateTransform();
 			}
+		}
+
+		public bool Visible { get; set; } = true;
+
+		//	public bool Rendered { get; set; } = true;
+
+		public ModelBone ()	
+		{
+			Children = new ModelBoneCollection(new List<ModelBone>());
+		}
+		
+		public void AddMesh(ModelMesh mesh)
+		{
+			mesh.ParentBone = this;
+			_meshes.Add(mesh);
+		}
+
+		public void AddChild(ModelBone modelBone)
+		{
+			modelBone.Parent = this;
+			Children.Add(modelBone);
+		}
+
+		public void RemoveChild(ModelBone modelBone)
+		{
+			if (modelBone.Parent != this)
+				return;
+			
+			modelBone.Parent = null;
+			Children.Remove(modelBone);
 		}
 		
 		private Vector3? _pivot = null;
@@ -121,7 +206,7 @@ namespace Alex.Graphics.Models.Entity
 				_tempTargetRotation += FixInvalidVector(targetRotation); // - _targetRotation;
 
 				//_startScale = _scale;
-				_tempTargetScale += FixInvalidVector(targetScale); // - _targetScale;
+				_tempTargetScale = FixInvalidVector(targetScale); // - _targetScale;
 			}
 
 			_tempTarget = time.TotalSeconds;
@@ -159,10 +244,6 @@ namespace Alex.Graphics.Models.Entity
 		private Vector3 _scale = Vector3.One;
 		private Vector3 _position = Vector3.Zero;
 
-		private Vector3 _baseRotation = Vector3.Zero;
-		private Vector3 _basePosition = Vector3.Zero;
-		private Vector3 _baseScale = Vector3.One;
-		
 		public void ApplyMovement()
 		{
 			_startPosition = _position;
@@ -182,22 +263,18 @@ namespace Alex.Graphics.Models.Entity
 		}
 
 
-		public Matrix Transform { get; set; } = Matrix.Identity;
 		private void UpdateTransform()
 		{
-			Matrix matrix = Matrix.Identity;
-
 			var pivot = Pivot.GetValueOrDefault(new Vector3(8f, 8f, 8f));
-
-
-			matrix = Matrix.CreateTranslation(-pivot) * MatrixHelper.CreateRotationDegrees(_rotation )
-			                                          * MatrixHelper.CreateRotationDegrees(_baseRotation)
-			                                          * Matrix.CreateTranslation(pivot)
-			                                          * Matrix.CreateTranslation(_position + _basePosition);
-
-			Transform = Matrix.CreateScale(_baseScale) * matrix;
+			
+			Transform = Matrix.CreateScale(_baseScale * _scale) 
+			            * Matrix.CreateTranslation(-pivot) 
+			            * MatrixHelper.CreateRotationDegrees(_rotation )
+			            * MatrixHelper.CreateRotationDegrees(_baseRotation)
+			            * Matrix.CreateTranslation(pivot)
+			            * Matrix.CreateTranslation(_position + _basePosition);
 		}
-		
+
 		public void Update(IUpdateArgs args)
 		{
 			if (_accumulator < _target)
@@ -214,10 +291,9 @@ namespace Alex.Graphics.Models.Entity
 				var targetScale = _targetScale;
 				var startScale = _startScale;
 
-				//var rotationDifference = targetRotation - startRotation;
-				_rotation = startRotation + ((targetRotation - startRotation) * progress);
-				_position = startPosition + ((targetPosition - startPosition) * progress);
-				_scale = startScale + ((targetScale - startScale) * progress);
+				_rotation = MathUtils.LerpVector3Degrees(startRotation, targetRotation, progress);
+				_position = Vector3.Lerp(startPosition, targetPosition, progress);
+				_scale =  Vector3.Lerp(startScale, targetScale, progress);
 
 				UpdateTransform();
 			}
@@ -227,44 +303,66 @@ namespace Alex.Graphics.Models.Entity
 				attached.Update(args);
 			}
 		}
-		
-		private List<IAttached> _attached = new List<IAttached>();
-		
+
+		private ThreadSafeList<IAttached> _attached = new ThreadSafeList<IAttached>();
+		private Vector3 _baseRotation = Vector3.Zero;
+		private Vector3 _basePosition = Vector3.Zero;
+		private Vector3 _baseScale = Vector3.One;
+
 		/// <inheritdoc />
 		public void AddChild(IAttached attachment)
 		{
-			if (!_attached.Contains(attachment))
+			return;
+			if (_attached.Contains(attachment)) return;
+			var model = attachment.Model;
+
+			if (model == null)
 			{
-				var model = attachment.Model;
-
-				if (model == null)
-				{
-					Log.Warn($"Failed to add attachment, no model found.");
-					return;
-				}
-
-				//var root = model.Root;
-				
+				Log.Warn($"Failed to add attachment, no model found.");
+				return;
 			}
+				
+			attachment.Parent = this;
+				
+			
+			Model.Bones.Add(model.Root);
+
+			foreach (var mesh in model.Meshes)
+			{
+				Model.Meshes.Add(mesh);
+			}
+			AddChild(model.Root);
+			_attached.Add(attachment);
+			//Model.BuildHierarchy();
 		}
 
 		/// <inheritdoc />
 		public void Remove(IAttached attachment)
 		{
-			if (_attached.Remove(attachment))
+			return;
+			if (!_attached.Remove(attachment)) 
+				return;
+
+			if (attachment.Parent != this)
+				return;
+			
+			attachment.Parent = null;
+			var model = attachment.Model;
+
+			if (model == null)
 			{
-				attachment.Parent = null;
-
-				var model = attachment.Model;
-
-				if (model == null)
-				{
-					Log.Warn($"Failed to remove attachment, no model found.");
-					return;
-				}
-
-				
+				Log.Warn($"Failed to remove attachment, no model found.");
+				return;
 			}
+
+			foreach (var mesh in model.Meshes)
+			{
+				Model.Meshes.Remove(mesh);
+			}
+				
+			Model.Bones.Remove(model.Root);
+			RemoveChild(model.Root);
+			//Model.BuildHierarchy();
 		}
 	}
 }

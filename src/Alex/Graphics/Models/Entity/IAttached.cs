@@ -11,7 +11,7 @@ namespace Alex.Graphics.Models.Entity
 	
 	public interface IAttached
 	{
-		Entity.Model Model { get; set; }
+		Model Model { get; set; }
 		
 		IHoldAttachment Parent { get; set; }
 		int Render(IRenderArgs args, Matrix characterMatrix);

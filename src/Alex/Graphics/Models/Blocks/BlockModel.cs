@@ -12,12 +12,8 @@ using Microsoft.Xna.Framework;
 
 namespace Alex.Graphics.Models.Blocks
 {
-	public abstract class BlockModel : Model
+	public abstract class BlockModel : ModelBase
 	{
-		public BlockModel()
-		{
-			
-		}
 		public virtual void GetVertices(IBlockAccess blockAccess, ChunkData chunkBuilder, BlockCoordinates position, BlockState state)
         {
 			
@@ -150,98 +146,6 @@ namespace Alex.Graphics.Models.Blocks
 					return new BlockShaderVertex[0];
 			}
 		}
-
-	    public static void GetLight(IBlockAccess world, BlockCoordinates facePosition, out byte blockLight, out byte skyLight, bool smooth = false)
-	    {
-		    /*var chunk = world.GetChunk(facePosition);
-
-		    if (chunk == null)
-		    {
-			    blockLight = 0;
-			    skyLight = 0;
-			    return;
-		    }
-
-		    skyLight = chunk.GetSkylight(facePosition.X & 0xf, facePosition.Y & 0xff, facePosition.Z & 0xf);
-		    blockLight = chunk.GetBlocklight(facePosition.X & 0xf, facePosition.Y & 0xff, facePosition.Z & 0xf);
-		    var faceBlock = chunk.GetBlockState(facePosition.X & 0xf, facePosition.Y & 0xff, facePosition.Z & 0xf).Block;*/
-		   // var faceBlock = world.GetBlockState(facePosition).Block;
-			world.GetLight(facePosition, out blockLight, out skyLight);
-			
-			//if (skyLight == 15 || blockLight == 15)
-			//	return;
-			
-			if (!smooth && !(skyLight > 0 || blockLight > 0))
-			{
-				return;// (byte)Math.Min(blockLight + skyLight, 15);
-			}
-
-
-			BlockCoordinates lightOffset = BlockCoordinates.Zero;
-
-			byte highestBlocklight = blockLight;
-		    byte highestSkylight = skyLight;
-		    bool lightFound = false;
-		    for(int i = 0; i < 6; i++)
-		    {
-			    switch (i)
-			    {
-					case 0:
-						lightOffset = BlockCoordinates.Up;
-						break;
-					case 1:
-						lightOffset = BlockCoordinates.Down;
-						break;
-					case 2:
-						lightOffset = BlockCoordinates.Forwards;
-						break;
-					case 3:
-						lightOffset = BlockCoordinates.Backwards;
-						break;
-					case 4:
-						lightOffset = BlockCoordinates.Left;
-						break;
-					case 5:
-						lightOffset = BlockCoordinates.Right;
-						break;
-			    }
-
-			    world.GetLight(facePosition + lightOffset, out blockLight, out skyLight);
-			    
-			   // skyLight = world.GetSkyLight(facePosition + lightOffset);
-			   // blockLight = world.GetBlockLight(facePosition + lightOffset);
-			    
-				if (skyLight > 0 || blockLight > 0)
-				{
-					if (skyLight > 0)
-				    {
-					    lightFound = true;
-						break;
-				    }
-
-					if (blockLight > highestBlocklight)
-					{
-						highestBlocklight = blockLight;
-						highestSkylight = skyLight;
-					}
-				}
-			}
-
-		    if (!lightFound)
-		    {
-			    skyLight = highestSkylight;
-			    if (highestBlocklight > 0)
-			    {
-				    blockLight = (byte)(highestBlocklight - 1);
-				}
-			    else
-			    {
-				    blockLight = 0;
-			    }
-		    }
-
-		    //(byte)Math.Min(Math.Max(0, blockLight + skyLight), 15);
-	    }
 
 	    protected BlockTextureData GetTextureUVMap(
 		    ResourceManager resources,

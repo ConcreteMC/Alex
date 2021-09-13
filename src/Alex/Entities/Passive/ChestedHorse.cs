@@ -21,15 +21,8 @@ namespace Alex.Entities.Passive
 
 				if (modelRenderer != null)
 				{
-					if (modelRenderer.GetBone("Bag1", out var bag1))
-					{
-						bag1.Rendered = value;
-					}
-					
-					if (modelRenderer.GetBone("Bag2", out var bag2))
-					{
-						bag1.Rendered = value;
-					}
+					modelRenderer.SetVisibility("Bag1", value);
+					modelRenderer.SetVisibility("Bag2", value);
 				}
 			}
 		}

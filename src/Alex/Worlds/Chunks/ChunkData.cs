@@ -21,19 +21,12 @@ namespace Alex.Worlds.Chunks
 
     public class ChunkData : IDisposable
     {
-        // public static ChunkData[] _pool = new ChunkData[128];
         public static ChunkData Create(int x, int y)
         {
-        
-            return new ChunkData(x, y) { Pooled = false, Available = false };
+            return new ChunkData(x, y);
         }
 
-        public bool Available { get; set; } = true;
-
-        public bool Pooled { get; set; } = false;
-
         private StageData[] _stages;
-     //   private static long _instances = 0;
 
         private int _x, _z;
 
@@ -44,8 +37,6 @@ namespace Alex.Worlds.Chunks
 
             var availableStages = Enum.GetValues(typeof(RenderStage));
             _stages = new StageData[availableStages.Length];
-
-        //    Interlocked.Increment(ref _instances);
         }
 
         private VertexBuffer Buffer { get; set; }
@@ -317,51 +308,8 @@ namespace Alex.Worlds.Chunks
         public static int BufferCreations = 0;
         public bool Disposed { get; private set; } = false;
 
-        private void ReturnToPool()
-        {
-            try
-            {
-                _vertexDatas?.Clear();
-                for (var index = 0; index < _stages.Length; index++)
-                {
-                    var stage = _stages[index];
-
-                    if (stage != null)
-                    {
-                        _stages[index] = new StageData(stage.Buffer, new List<int>(), 0);
-                    }
-                    // stage.IndexCount = 0;
-                    //   stage?.Buffer?.Dispose();
-                    //   stage?.Indexes?.Clear();
-                    // stage?.Dispose();
-                    // _stages[index] = null;
-                }
-
-                //Buffer?.Dispose();
-                //  Buffer = null;
-
-                //   Lighting?.Dispose();
-                //   Lighting = null;
-            }
-            finally
-            {
-                Available = true;
-                // _stages = null;
-
-                //  Disposed = true;
-                //  Interlocked.Decrement(ref _instances);
-                //   Disposed = true;
-            }
-        }
-        
         public void Dispose()
         {
-            if (Pooled)
-            {
-                ReturnToPool();
-                return;
-            }
-
             if (Disposed)
                 return;
 

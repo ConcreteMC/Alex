@@ -17,14 +17,12 @@ namespace Alex.Graphics.Models.Items
     public class ItemBlockModelRenderer : ItemModelRenderer<VertexPositionColorTexture>
     {
         private BlockState _blockState;
-        private Texture2D  _texture;
 
-        public ItemBlockModelRenderer(BlockState block, ResourcePackModelBase resourcePackModel, Texture2D texture, bool calculateSize = true) : base(resourcePackModel,
-            VertexPositionColorTexture.VertexDeclaration)
+        public ItemBlockModelRenderer(BlockState block, ResourcePackModelBase resourcePackModel, Texture2D texture, bool calculateSize = true, VertexPositionColorTexture[] vertices = null) : base(resourcePackModel,
+            VertexPositionColorTexture.VertexDeclaration, vertices, texture)
         {
             _blockState = block;
-            _texture = texture;
-            
+
             Scale = 16f;
             Size = new Vector3(16f, 16f, 16f);
 
@@ -46,35 +44,17 @@ namespace Alex.Graphics.Models.Items
             }
         }
 
-        
-        /// <inheritdoc />
-        protected override VertexPositionColorTexture[] Vertices
-        {
-            get
-            {
-                if (_vertices == null)
-                {
-                    if (!_cached)
-                    {
-                        Cache(Alex.Instance.Resources);
-                    }
-                }
-
-                return _vertices;
-            }
-            set => _vertices = value;
-        }
 
         private bool _cached = false;
-        private VertexPositionColorTexture[] _vertices = null;
-
         public override bool Cache(ResourceManager pack)
         {
+            if (Vertices != null && Vertices.Length > 0)
+                return true;
+
             if (_cached)
                 return true;
 
             _cached = true;
-
             var world = new ItemRenderingWorld(_blockState.Block);
 
             ChunkData chunkData = new ChunkData(0,0);
@@ -82,15 +62,19 @@ namespace Alex.Graphics.Models.Items
             _blockState?.VariantMapper.Model.GetVertices(
                 world, chunkData, BlockCoordinates.Zero, _blockState);
 
+            var textureSize = Vector2.One;
+
+            if (_texture != null)
+            {
+                textureSize = _texture.Bounds.Size.ToVector2();
+            }
+            
             var rawVertices = chunkData.BuildVertices();
-            var scale = Vector2.One / _texture.Bounds.Size.ToVector2();
+            var scale = Vector2.One / textureSize;
 
             Vertices = rawVertices.Select(
-                    x =>
-                    {
-                        return new VertexPositionColorTexture(
-                            x.Position, x.Color, new Vector2(x.TexCoords.X, x.TexCoords.Y) * scale);
-                    })
+                    x => new VertexPositionColorTexture(
+                        x.Position, x.Color, new Vector2(x.TexCoords.X, x.TexCoords.Y) * scale))
                .ToArray();
 
             chunkData.Dispose();
@@ -103,7 +87,6 @@ namespace Alex.Graphics.Models.Items
         {
             base.InitEffect(effect);
             effect.TextureEnabled = true;
-            
             effect.Texture = _texture;
         }
 
@@ -148,17 +131,21 @@ namespace Alex.Graphics.Models.Items
         
         public override IItemRenderer CloneItemRenderer()
         {
-            return new ItemBlockModelRenderer(_blockState, ResourcePackModel, _texture, false)
+            var renderer = new ItemBlockModelRenderer(_blockState, ResourcePackModel, _texture, false, Vertices?.Select(
+                x => new VertexPositionColorTexture(
+                    new Vector3(x.Position.X, x.Position.Y, x.Position.Z), new Color(x.Color.PackedValue),
+                    new Vector2(x.TextureCoordinate.X, x.TextureCoordinate.Y))).ToArray() ?? null)
             {
-                Vertices = (VertexPositionColorTexture[])Vertices.Select(
-                    x => new VertexPositionColorTexture(
-                        new Vector3(x.Position.X, x.Position.Y, x.Position.Z), new Color(x.Color.PackedValue),
-                        new Vector2(x.TextureCoordinate.X, x.TextureCoordinate.Y))).ToArray(),
                 Size = Size,
                 Scale = Scale,
                 DisplayPosition = DisplayPosition,
-                ActiveDisplayItem = ActiveDisplayItem.Clone()
+                ActiveDisplayItem = ActiveDisplayItem.Clone(),
             };
+            
+            //if (renderer.Vertices == null || renderer.Vertices.Length == 0)
+             //   renderer.InitCache();
+
+            return renderer;
         }
     }
 }

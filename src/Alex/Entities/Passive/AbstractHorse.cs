@@ -40,10 +40,7 @@ namespace Alex.Entities.Passive
 				{
 					foreach (var bone in PartOfSaddle)
 					{
-						if (modelRenderer.GetBone(bone, out var bag1))
-						{
-							ToggleCubes(bag1, !value);
-						}
+						ModelRenderer.SetVisibility(bone, !value);
 					}
 				}
 			}

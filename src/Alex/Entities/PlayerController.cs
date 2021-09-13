@@ -51,6 +51,7 @@ namespace Alex.Entities
 
 		private List<InputActionBinding> _inputBindings { get; }
 
+		private bool _invertX, _invertY;
 		public PlayerController(GraphicsDevice graphics,
 			InputManager inputManager,
 			Player player,
@@ -77,6 +78,21 @@ namespace Alex.Entities
 			var optionsProvider = Alex.Instance.Services.GetRequiredService<IOptionsProvider>();
 			CursorSensitivity = optionsProvider.AlexOptions.MouseSensitivity.Value;
 
+			_invertX = optionsProvider.AlexOptions.ControllerOptions.InvertX.Value;
+			_invertY = optionsProvider.AlexOptions.ControllerOptions.InvertY.Value;
+
+			optionsProvider.AlexOptions.ControllerOptions.InvertX.Bind(
+				(value, newValue) =>
+				{
+					_invertX = newValue;
+				});
+			
+			optionsProvider.AlexOptions.ControllerOptions.InvertY.Bind(
+				(value, newValue) =>
+				{
+					_invertY = newValue;
+				});
+			
 			optionsProvider.AlexOptions.MouseSensitivity.Bind((value, newValue) => { CursorSensitivity = newValue; });
 
 			GamepadSensitivity = optionsProvider.AlexOptions.ControllerOptions.RightJoystickSensitivity.Value;
@@ -137,9 +153,8 @@ namespace Alex.Entities
 						() => { player.Inventory.SelectedSlot = 8; }),
 					
 					InputManager.RegisterListener(
-						AlexInputCommand.Exit, InputBindingTrigger.Tap,
-						() => Alex.Instance.GuiManager.ActiveDialog != null, CloseActiveDialog),
-					
+						AlexInputCommand.Exit, InputBindingTrigger.Discrete, CloseActiveDialog),
+
 					InputManager.RegisterListener(
 						AlexInputCommand.ToggleInventory, InputBindingTrigger.Discrete, CanOpenDialog, OpenInventory),
 					
@@ -150,6 +165,7 @@ namespace Alex.Entities
 						AlexInputCommand.TakeScreenshot, InputBindingTrigger.Discrete, CheckMovementPredicate, TakeScreenshot)
 				});
 		}
+		
 
 		private void TakeScreenshot()
 		{
@@ -282,10 +298,19 @@ namespace Alex.Entities
 		    }
 		}
 
+	    private bool GetActiveDialog(out DialogBase dialog)
+	    {
+		    dialog = Alex.Instance.GuiManager.ActiveDialog;
+		    return dialog != null && Alex.Instance.GameStateManager.GetActiveState() is PlayingState;
+	    }
+
 	    private bool CanOpenDialog()
 	    {
-		    if (!(Alex.Instance.GuiManager.FocusManager.FocusedElement is TextInput)
-		        && Alex.Instance.GuiManager.ActiveDialog == null)
+		    var focusedElement = Alex.Instance.GuiManager.FocusManager.FocusedElement;
+
+		    if ((focusedElement == null || !focusedElement.CanFocus || !focusedElement.Enabled
+		         || !focusedElement.Focused) && Alex.Instance.GuiManager.ActiveDialog == null
+		                                     && Alex.Instance.GameStateManager.GetActiveState() is PlayingState)
 		    {
 			    return true;
 		    }
@@ -295,12 +320,20 @@ namespace Alex.Entities
 
 	    private void CloseActiveDialog()
 	    {
-		    var activeDialog = Alex.Instance.GuiManager.ActiveDialog;
-		    if (activeDialog == null) 
-			    return;
-		    
-		    CenterCursor();
-		    Alex.Instance.GuiManager.HideDialog(activeDialog);
+		    if (GetActiveDialog(out var dialog))
+		    {
+			    if (dialog == null)
+				    return;
+
+			    CenterCursor();
+			    Alex.Instance.GuiManager.HideDialog(dialog);
+			    Player.SkipUpdate();
+		    }
+		    else if (CanOpenDialog())
+		    {
+			    Alex.Instance.GameStateManager.SetActiveState<InGameMenuState>("ingamemenu");
+			    Player.SkipUpdate();
+		    }
 	    }
 
 	    private void CenterCursor()
@@ -312,10 +345,8 @@ namespace Alex.Entities
 		    
 		    _previousMousePosition = new Vector2(centerX, centerY);
 		    IgnoreNextUpdate = true;
-		    _cursorInputDelta.Restart();
 	    }
-
-	    public float LastSpeedFactor = 0f;
+	    
 	    private Vector3 LastVelocity { get; set; } = Vector3.Zero;
 	    private double CursorSensitivity { get; set; } = 30d;
 	    private double GamepadSensitivity { get; set; } = 200d;
@@ -477,7 +508,7 @@ namespace Alex.Entities
 						checkMouseInput = false;
 						
 						var look = (new Vector2((inputValue.X), (inputValue.Y)) * (float) GamepadSensitivity)
-						                                                       * (float) (gt.ElapsedGameTime.TotalSeconds);
+						                                                       *  Alex.DeltaTime;
 
 						look = -look;
 						
@@ -498,18 +529,22 @@ namespace Alex.Entities
 					}
 					else
 					{
-						var mouseDelta =
-							_previousMousePosition
-							- e;
+						var mouseDelta = e - _previousMousePosition;
+							//_previousMousePosition
+							//- e;
 
-						mouseDelta *= (float)gt.ElapsedGameTime.TotalSeconds;
+						if (_invertX)
+							mouseDelta.X = -mouseDelta.X;
 
-						
-						var look = (new Vector2((-mouseDelta.X), (mouseDelta.Y)) * (float) CursorSensitivity);
+						if (_invertY)
+							mouseDelta.Y = -mouseDelta.Y;
+
+						mouseDelta *= Alex.DeltaTime;
+
+						var look = (new Vector2((mouseDelta.X), (mouseDelta.Y)) * (float) CursorSensitivity);
 						Player.KnownPosition.HeadYaw = (Player.KnownPosition.HeadYaw - look.X) % 360f;
 						Player.KnownPosition.SetPitchBounded(Player.KnownPosition.Pitch - look.Y);
 						_previousMousePosition = e;
-						_cursorInputDelta.Restart();
 					}
 				}
 			}
@@ -517,8 +552,6 @@ namespace Alex.Entities
 			LastVelocity = Player.Velocity;
 	    }
 	    
-	    private Stopwatch _cursorInputDelta = Stopwatch.StartNew();
-
 	    public bool Disposed { get; private set; } = false;
 	    /// <inheritdoc />
 	    public void Dispose()

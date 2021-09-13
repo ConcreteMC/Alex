@@ -271,7 +271,7 @@ namespace Alex.Utils.Skins
 								}
 
 								onComplete?.Invoke(text, r.textures.SKIN.metadata?.model == "slim");
-								//resetEvent.Set();
+							//	resetEvent.Set();
 							});
 						
 						//resetEvent.WaitOne();

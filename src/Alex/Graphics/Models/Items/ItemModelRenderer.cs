@@ -19,51 +19,32 @@ using FmodAudio;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Newtonsoft.Json;
+using NLog;
+using NLog.Fluent;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 using Color = Microsoft.Xna.Framework.Color;
 using MathF = System.MathF;
-using ModelBone = Alex.Graphics.Models.Entity.ModelBone;
-using ModelMesh = Alex.Graphics.Models.Entity.ModelMesh;
-using ModelMeshPart = Alex.Graphics.Models.Entity.ModelMeshPart;
+using ModelBone = Alex.Graphics.Models.ModelBone;
+using ModelMesh = Alex.Graphics.Models.ModelMesh;
+using ModelMeshPart = Alex.Graphics.Models.ModelMeshPart;
 
 namespace Alex.Graphics.Models.Items
 {
     public class ItemModelRenderer : ItemModelRenderer<VertexPositionColor>
     {
-        public ItemModelRenderer(ResourcePackModelBase resourcePackModel) : base(resourcePackModel,
-            VertexPositionColor.VertexDeclaration)
+        public ItemModelRenderer(ResourcePackModelBase resourcePackModel, VertexPositionColor[] vertices = null, Texture2D texture = null) : base(resourcePackModel,
+            VertexPositionColor.VertexDeclaration, vertices, texture)
         {
            
         }
 
         /// <inheritdoc />
-        protected override VertexPositionColor[] Vertices
-        {
-            get
-            {
-                if (_vertices == null)
-                {
-                    if (!_cached)
-                    {
-                        Cache(Alex.Instance.Resources);
-                    }
-                }
-
-                return _vertices;
-            }
-            set => _vertices = value;
-        }
 
         private bool _cached = false;
-        private VertexPositionColor[] _vertices;
-
         public override bool Cache(ResourceManager pack)
         {
-            if (_cached)
-                return true;
-
-            _cached = true;
+            if (_cached) return true;
             
             if (!ResourcePackModel.Textures.TryGetValue("layer0", out var texture))
             {
@@ -75,6 +56,7 @@ namespace Alex.Graphics.Models.Items
                 return false;
             }
 
+            _cached = true;
             List<VertexPositionColor> vertices = new List<VertexPositionColor>();
 
             if (pack.TryGetBitmap(texture, out var bitmap))
@@ -145,21 +127,26 @@ namespace Alex.Graphics.Models.Items
 
         public override IItemRenderer CloneItemRenderer()
         {
-            return new ItemModelRenderer(ResourcePackModel)
+            var renderer = new ItemModelRenderer(ResourcePackModel, Vertices?.Select(
+                x => new VertexPositionColor(
+                    new Vector3(x.Position.X, x.Position.Y, x.Position.Z), new Color(x.Color.PackedValue))).ToArray(), _texture)
             {
-                Vertices = Vertices != null ? Vertices = Vertices.Select(
-                    x => new VertexPositionColor(
-                        new Vector3(x.Position.X, x.Position.Y, x.Position.Z), new Color(x.Color.PackedValue))).ToArray() : null,
                 Size = Size,
                 Scale = Scale,
                 DisplayPosition = DisplayPosition,
                 ActiveDisplayItem = ActiveDisplayItem.Clone()
             };
+            
+           // if (renderer.Vertices == null || renderer.Vertices.Length == 0)
+           //     renderer.InitCache();
+
+            return renderer;
         }
     }
 
-    public class ItemModelRenderer<TVertice> : Model, IItemRenderer where TVertice : struct, IVertexType
+    public class ItemModelRenderer<TVertice> : ModelBase, IItemRenderer where TVertice : struct, IVertexType
     {
+        private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ItemModelRenderer));
         public Vector3               Size  { get; set; } = Vector3.One;
         
         public ResourcePackModelBase ResourcePackModel { get; }
@@ -180,6 +167,7 @@ namespace Alex.Graphics.Models.Items
 
         private void UpdateDisplay()
         {
+            if (Model == null) return;
             try
             {
                 if (ResourcePackModel.Display.TryGetValue(DisplayPositionHelper.ToString(_displayPosition), out var display))
@@ -202,137 +190,219 @@ namespace Alex.Graphics.Models.Items
         {
             var root = Model?.Root;
 
-                if (root != null)
+            if (root != null)
+            {
+                if (_displayPosition.HasFlag(DisplayPosition.Gui))
                 {
-                    if (_displayPosition.HasFlag(DisplayPosition.Gui))
+                    root.BaseScale = Vector3.One / 16f;
+                    root.BaseRotation = Vector3.Zero;
+                    root.BasePosition = Vector3.Zero;
+                }
+                else if (displayPosition.HasFlag(DisplayPosition.Ground))
+                {
+                    root.BaseScale = displayElement.Scale * Scale;
+
+                    root.BaseRotation = new Vector3(
+                        displayElement.Rotation.X, displayElement.Rotation.Y, displayElement.Rotation.Z);
+
+                    root.BasePosition = new Vector3(
+                        displayElement.Translation.X, displayElement.Translation.Y, displayElement.Translation.Z);
+                }
+                else
+                {
+                    root.BaseScale = new Vector3(
+                        ActiveDisplayItem.Scale.X, ActiveDisplayItem.Scale.Y,
+                        ActiveDisplayItem.Scale.Z); // ActiveDisplayItem.Scale;
+
+                    if ((ResourcePackModel.Type & ModelType.Handheld) != 0)
                     {
-                        root.BaseScale = Vector3.One / 16f;
-                        root.BaseRotation = Vector3.Zero;
-                        root.BasePosition = Vector3.Zero;
-                    }
-                    else if (displayPosition.HasFlag(DisplayPosition.Ground))
-                    {
-                        root.BaseScale = displayElement.Scale * Scale;
-                        root.BaseRotation = new Vector3(displayElement.Rotation.X, displayElement.Rotation.Y, displayElement.Rotation.Z);
-                        root.BasePosition = new Vector3(displayElement.Translation.X, displayElement.Translation.Y, displayElement.Translation.Z);
+                        root.BaseRotation = new Vector3(
+                                                ActiveDisplayItem.Rotation.X, -ActiveDisplayItem.Rotation.Y,
+                                                -ActiveDisplayItem.Rotation.Z)
+                                            + new Vector3(-67.5f, -22.5f, 0f);
+
+                        root.BasePosition = new Vector3(
+                            (6f + ActiveDisplayItem.Translation.X), 6f + ActiveDisplayItem.Translation.Y,
+                            -(14f + (ActiveDisplayItem.Translation.Z)));
                     }
                     else
                     {
-                        root.BaseScale = new Vector3(
-                            ActiveDisplayItem.Scale.X, ActiveDisplayItem.Scale.Y, ActiveDisplayItem.Scale.Z);// ActiveDisplayItem.Scale;
+                        root.BaseRotation = new Vector3(
+                                                ActiveDisplayItem.Rotation.X, -ActiveDisplayItem.Rotation.Y,
+                                                -ActiveDisplayItem.Rotation.Z)
+                                            + new Vector3(-67.5f, 0f, 0f);
 
-                        if ((ResourcePackModel.Type & ModelType.Handheld) != 0)
+                        root.BasePosition = new Vector3(
+                            (-ActiveDisplayItem.Translation.X), 8f + ActiveDisplayItem.Translation.Y,
+                            -(12f + ActiveDisplayItem.Translation.Z));
+                    }
+                }
+            }
+        }
+
+        protected TVertice[] Vertices
+        {
+            get => _vertices;
+            set
+            {
+                var previousValue = _vertices;
+                _vertices = value;
+
+                if (value != null && value.Length > 0)
+                {
+                    InitializeModel(Alex.Instance.GraphicsDevice, value);
+                }
+            }
+        }
+
+        protected BasicEffect Effect
+        {
+            get => _effect;
+            set
+            {
+                _effect = value;
+
+                if (value != null && Model != null)
+                {
+                    foreach (var mesh in Model.Meshes)
+                    {
+                        foreach (var part in mesh.MeshParts)
                         {
-                            root.BaseRotation = new Vector3(
-                                ActiveDisplayItem.Rotation.X, -ActiveDisplayItem.Rotation.Y,
-                                -ActiveDisplayItem.Rotation.Z) + new Vector3(-67.5f, -22.5f, 0f);
-
-                            root.BasePosition = new Vector3(
-                                (6f + ActiveDisplayItem.Translation.X), 6f + ActiveDisplayItem.Translation.Y,
-                                -(14f + (ActiveDisplayItem.Translation.Z)));
-                        }
-                        else
-                        {
-                            root.BaseRotation = new Vector3(
-                                ActiveDisplayItem.Rotation.X, -ActiveDisplayItem.Rotation.Y,
-                                -ActiveDisplayItem.Rotation.Z) + new Vector3(-67.5f, 0f, 0f);
-
-                            root.BasePosition = new Vector3(
-                                (-ActiveDisplayItem.Translation.X), 8f + ActiveDisplayItem.Translation.Y,
-                                -(12f +ActiveDisplayItem.Translation.Z));
+                            if (part.Effect == null)
+                                part.Effect = value;
                         }
                     }
                 }
+            }
         }
-        
-        protected virtual TVertice[]  Vertices { get; set; } = null;
-        protected   BasicEffect Effect   { get; set; } = null;
-       // public Vector3 Scale { get; set; } = Vector3.One;
-        
+        // public Vector3 Scale { get; set; } = Vector3.One;
+
         private readonly VertexDeclaration _declaration;
 
-        public Entity.Model Model { get; set; } = null;
-        public ItemModelRenderer(ResourcePackModelBase resourcePackModel, VertexDeclaration declaration)
+        public Model Model { get; set; } = null;
+        
+        protected Texture2D  _texture;
+        public ItemModelRenderer(ResourcePackModelBase resourcePackModel, VertexDeclaration declaration, TVertice[] vertices = null, Texture2D texture = null)
         {
             Scale = 1f;
             ResourcePackModel = resourcePackModel;
             _declaration = declaration;
+
+            if (texture != null)
+            {
+                _texture = texture;
+            }
+
+            Vertices = vertices;
+            if (vertices != null)
+            {
+            //    Vertices = vertices;
+               // InitializeModel(Alex.Instance.GraphicsDevice, vertices);
+            }
+            else
+            {
+              // InitCache();
+            }
         }
-        
+
+        private bool _didInit = false;
+        private TVertice[] _vertices = null;
+        private BasicEffect _effect = null;
+
         public void Update(IUpdateArgs args)
         {
-            if (Effect == null)
+            if (Effect == null || Model == null)
             {
-                var effect = new BasicEffect(args.GraphicsDevice);
-                InitEffect(effect);
-                Effect = effect;
+                return;
             }
 
             Effect.Projection = args.Camera.ProjectionMatrix;
             Effect.View = args.Camera.ViewMatrix;
+        }
+
+        private bool _initalizedModel = false;
+        private void InitializeModel(GraphicsDevice device, TVertice[] vertices)
+        {
+            if (_initalizedModel)
+                return;
             
-            if (Model == null && Vertices != null)
+            if (vertices == null || vertices.Length == 0)
             {
-                var vertices = Vertices;
-                
-                var buffer = new VertexBuffer(
-                    args.GraphicsDevice, _declaration, vertices.Length, BufferUsage.WriteOnly);
-                buffer.SetData(vertices);
+                Log.Warn($"Could not initalize model, no vertices specified.");
 
-                List<short> indices = new List<short>();
-                for(int i = 0; i < vertices.Length; i++)
-                    indices.Add((short)i);
-
-                var indexBuffer = new IndexBuffer(
-                    Alex.Instance.GraphicsDevice, IndexElementSize.SixteenBits, indices.Count, BufferUsage.WriteOnly);
-                indexBuffer.SetData(indices.ToArray());
-                
-                List<ModelBone> bones = new List<ModelBone>();
-                List<ModelMesh> meshes = new List<ModelMesh>();
-                List<ModelMeshPart> meshParts = new List<ModelMeshPart>();
-
-                var rootBone = new ModelBone
-                {
-                    Name = "ItemRoot"
-                };
-
-                var meshPart = new ModelMeshPart()
-                {
-                    StartIndex = 0,
-                    PrimitiveCount = (indices.Count) / 3,
-                    NumVertices = vertices.Length,
-                    
-                    VertexBuffer = buffer,
-                    IndexBuffer = indexBuffer,
-                    VertexOffset = 0
-                };
-                meshParts.Add(meshPart);
-
-                ModelMesh mesh = new ModelMesh(args.GraphicsDevice, meshParts)
-                {
-                    Name = "Item"
-                };
-                meshPart.Effect = Effect;
-                meshes.Add(mesh);
-                rootBone.AddMesh(mesh);
-                
-                bones.Add(rootBone);
-
-                Entity.Model model = new Entity.Model(bones, meshes);
-                model.Root = rootBone;
-                
-                model.BuildHierarchy();
-
-                Model = model;
-                UpdateDisplay();
+                return;
             }
+            _initalizedModel = true;
+            
+            List<ModelBone> bones = new List<ModelBone>();
+            List<ModelMesh> meshes = new List<ModelMesh>();
+            List<ModelMeshPart> meshParts = new List<ModelMeshPart>();
+
+            var rootBone = new ModelBone { Name = "ItemRoot" };
+
+            var meshPart = new ModelMeshPart() { StartIndex = 0, NumVertices = vertices.Length, VertexOffset = 0 };
+           
+            List<short> indices = new List<short>();
+
+            for (int i = 0; i < vertices.Length; i++)
+                indices.Add((short)i);
+
+            meshPart.PrimitiveCount = (indices.Count) / 3;
+            meshParts.Add(meshPart);
+
+            ModelMesh mesh = new ModelMesh(device, meshParts) { Name = "Item" };
+            meshPart.Effect = Effect;
+            meshes.Add(mesh);
+            rootBone.AddMesh(mesh);
+
+            bones.Add(rootBone);
+
+            Model model = new Model(bones, meshes);
+            model.Root = rootBone;
+
+            model.BuildHierarchy();
+            Model = model;
+
+            _setupForRendering = () =>
+            {
+                Alex.Instance.UiTaskManager.Enqueue(
+                    () =>
+                    {
+                        Effect = new BasicEffect(Alex.Instance.GraphicsDevice);
+
+                        if (_texture != null)
+                            Effect.Texture = _texture;
+
+                        InitEffect(Effect);
+
+                        meshPart.VertexBuffer = new VertexBuffer(
+                            device, _declaration, vertices.Length, BufferUsage.WriteOnly);
+
+                        meshPart.VertexBuffer.SetData(vertices);
+
+                        meshPart.IndexBuffer = new IndexBuffer(
+                            device, IndexElementSize.SixteenBits, indices.Count, BufferUsage.WriteOnly);
+
+                        meshPart.IndexBuffer.SetData(indices.ToArray());
+                        
+                        UpdateDisplay();
+                    });
+            };
+            
+            //  var vertices = Vertices;
         }
 
         /// <inheritdoc />
         public IHoldAttachment Parent { get; set; } = null;
 
+        private Action _setupForRendering = null;
         public int Render(IRenderArgs args, Matrix characterMatrix)
         {
+            if (_setupForRendering != null)
+            {
+                _setupForRendering?.Invoke();
+                _setupForRendering = null;
+            }
             if (Effect == null || Model == null)
                 return 0;
 
@@ -341,9 +411,17 @@ namespace Alex.Graphics.Models.Items
 
         protected virtual void InitEffect(BasicEffect effect)
         {
+            if (_texture != null)
+                effect.Texture = _texture;
+            
             effect.VertexColorEnabled = true;
         }
 
+        protected void InitCache()
+        {
+            Cache(Alex.Instance.Resources);
+        }
+        
         public virtual bool Cache(ResourceManager pack)
         {
             return false;
@@ -352,14 +430,18 @@ namespace Alex.Graphics.Models.Items
 
         public virtual IItemRenderer CloneItemRenderer()
         {
-            return new ItemModelRenderer<TVertice>(ResourcePackModel, _declaration)
+            var renderer = new ItemModelRenderer<TVertice>(ResourcePackModel, _declaration, Vertices?.Clone() as TVertice[], _texture)
             {
                 Size = this.Size,
-                Vertices = Vertices != null ? Vertices.Clone() as TVertice[] : null,
                 Scale = Scale,
                 DisplayPosition = DisplayPosition,
                 ActiveDisplayItem = ActiveDisplayItem.Clone()
             };
+
+           // if (renderer._vertices == null || renderer._vertices.Length == 0)
+            //    renderer.InitCache();
+            
+            return renderer;
         }
 
         /// <inheritdoc />
