@@ -16,7 +16,7 @@ namespace Alex.Net.Bedrock.Packets
 		{
 			this.Id = (byte) this.ReadVarInt();
 
-			this.input = ReadItemStacks2();
+			this.input = ReadCreativeItemStacks();
 		}
 
 		public ItemStacks ReadItemStacks2()
