@@ -43,9 +43,12 @@ using Newtonsoft.Json.Serialization;
 using NLog;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Agreement;
+using Org.BouncyCastle.Crypto.Engines;
+using Org.BouncyCastle.Crypto.Modes;
 using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.Security;
 using Org.BouncyCastle.X509;
+using SicStream;
 using BlockCoordinates = Alex.Common.Utils.Vectors.BlockCoordinates;
 using BlockFace = Alex.Common.Blocks.BlockFace;
 using CertificateData = Alex.Utils.CertificateData;
@@ -101,7 +104,7 @@ namespace Alex.Net.Bedrock
 		public BedrockClient(Alex alex, IPEndPoint endpoint, PlayerProfile playerProfile, BedrockWorldProvider wp)
 		{
 			TransactionTracker = new BedrockTransactionTracker(this);
-			PacketFactory.CustomPacketFactory = new AlexPacketFactory();
+		//	PacketFactory.CustomPacketFactory = new AlexPacketFactory();
 			CancellationTokenSource = new CancellationTokenSource();
 
 			Alex = alex;
@@ -582,12 +585,10 @@ namespace Alex.Net.Bedrock
 
 				// Create a decrytor to perform the stream transform.
 
-				IBufferedCipher decryptor = CipherUtilities.GetCipher("AES/CFB8/NoPadding");
-
-				decryptor.Init(false, new ParametersWithIV(new KeyParameter(secret), secret.Take(16).ToArray()));
-
-				IBufferedCipher encryptor = CipherUtilities.GetCipher("AES/CFB8/NoPadding");
-				encryptor.Init(true, new ParametersWithIV(new KeyParameter(secret), secret.Take(16).ToArray()));
+				var encryptor = new StreamingSicBlockCipher(new SicBlockCipher(new AesEngine()));
+				var decryptor = new StreamingSicBlockCipher(new SicBlockCipher(new AesEngine()));
+				decryptor.Init(false, new ParametersWithIV(new KeyParameter(secret), secret.Take(12).Concat(new byte[] {0, 0, 0, 2}).ToArray()));
+				encryptor.Init(true, new ParametersWithIV(new KeyParameter(secret), secret.Take(12).Concat(new byte[] {0, 0, 0, 2}).ToArray()));
 
 				//Thread.Sleep(1250);
 
