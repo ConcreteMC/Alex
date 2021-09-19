@@ -128,11 +128,12 @@ namespace Alex.Graphics.Models
 		public void CopyAbsoluteBoneTransformsTo(Matrix[] destinationBoneTransforms)
 		{
 			if (destinationBoneTransforms == null)
-				throw new ArgumentNullException("destinationBoneTransforms");
+				throw new ArgumentNullException(nameof(destinationBoneTransforms));
+			
 			if (destinationBoneTransforms.Length < this.Bones.Count)
-				throw new ArgumentOutOfRangeException("destinationBoneTransforms");
+				throw new ArgumentOutOfRangeException(nameof(destinationBoneTransforms));
+			
 			int count = this.Bones.Count;
-			//if (count )
 			for (int index1 = 0; index1 < count; index1++)
 			{
 				var modelBone = (this.Bones)[index1];
@@ -142,10 +143,10 @@ namespace Alex.Graphics.Models
 				}
 				else
 				{
-					int index2 = modelBone.Parent.Index;
+					int parentIndex = modelBone.Parent.Index;
 
 					destinationBoneTransforms[index1] = Matrix.Multiply(
-						modelBone.Transform, destinationBoneTransforms[index2]);
+						modelBone.Transform, destinationBoneTransforms[parentIndex]);
 				}
 			}
 		}

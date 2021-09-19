@@ -9,7 +9,7 @@ namespace Alex.ResourcePackLib.Json.Converters.Bedrock
 {
 	internal class ComplexStuffConverter : JsonConverter
 	{
-		public override bool CanConvert(Type t) => t == typeof(ComplexStuff);
+		public override bool CanConvert(Type t) => t == typeof(AnimationChannelData);
 
 		public override object ReadJson(JsonReader reader, Type t, object existingValue, JsonSerializer serializer)
 		{
@@ -18,19 +18,19 @@ namespace Alex.ResourcePackLib.Json.Converters.Bedrock
 			switch (obj.Type)
 			{
 				case JTokenType.Array:
-					var expressions = obj.ToObject<IExpression[][]>(serializer);// serializer.Deserialize<List<IExpression>[]>(reader);
+					var expressions = obj.ToObject<IExpression[][]>(serializer);
 
-					return new ComplexStuff()
+					return new AnimationChannelData()
 					{
 						Expressions = expressions
 					};
 
 				case JTokenType.Object:
-					var frameValue = obj.ToObject<PrePostKeyFrame>(serializer);// serializer.Deserialize<PrePostKeyFrame>(reader);
+					var frameValue = obj.ToObject<AnimationKeyFrame>(serializer);
 
-					return new ComplexStuff()
+					return new AnimationChannelData()
 					{
-						Frame = frameValue
+						KeyFrame = frameValue
 					};
 			}
 

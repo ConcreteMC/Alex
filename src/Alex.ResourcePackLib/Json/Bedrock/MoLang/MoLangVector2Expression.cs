@@ -27,10 +27,10 @@ namespace Alex.ResourcePackLib.Json.Bedrock.MoLang
 			}
 		}
 
-		private IReadOnlyDictionary<double, ComplexStuff> _keyFrames;
-		public MoLangVector2Expression(Dictionary<string, ComplexStuff> keyframes)
+		private IReadOnlyDictionary<double, AnimationChannelData> _keyFrames;
+		public MoLangVector2Expression(Dictionary<string, AnimationChannelData> keyframes)
 		{
-			var newKeyFrames = new Dictionary<double, ComplexStuff>();
+			var newKeyFrames = new Dictionary<double, AnimationChannelData>();
 
 			foreach (var keyframe in keyframes)
 			{
@@ -67,7 +67,7 @@ namespace Alex.ResourcePackLib.Json.Bedrock.MoLang
 			return Evaluate(runtime, expressions[0], expressions[0], currentValue);
 		}
 		
-		private Vector2 Evaluate(MoLangRuntime runtime, ComplexStuff complex, bool lookAHead, Vector2 currentValue)
+		private Vector2 Evaluate(MoLangRuntime runtime, AnimationChannelData complex, bool lookAHead, Vector2 currentValue)
 		{
 			if (complex == null)
 				return Vector2.Zero;
@@ -80,9 +80,9 @@ namespace Alex.ResourcePackLib.Json.Bedrock.MoLang
 			}
 
 			if (lookAHead)
-				return Evaluate(runtime, complex.Frame.Pre, currentValue);
+				return Evaluate(runtime, complex.KeyFrame.Pre, currentValue);
 			
-			return Evaluate(runtime, complex.Frame.Post, currentValue);
+			return Evaluate(runtime, complex.KeyFrame.Post, currentValue);
 		}
 
 		public Vector2 Evaluate(MoLangRuntime runtime, Vector2 currentValue, double animationTime = 0d)
@@ -91,9 +91,9 @@ namespace Alex.ResourcePackLib.Json.Bedrock.MoLang
 			{
 				var elapsedTime = animationTime % _keyFrames.Max(x => x.Key);
 
-				ComplexStuff previous = null;
+				AnimationChannelData previous = null;
 				double previousKey = 0d;
-				ComplexStuff next = null;
+				AnimationChannelData next = null;
 				double nextKey = 0d;
 				foreach (var keyframe in _keyFrames.OrderBy(x=> x.Key))
 				{

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 
 namespace Alex.Graphics.Models.Entity.Animations
@@ -98,6 +99,27 @@ namespace Alex.Graphics.Models.Entity.Animations
 			}
 		}
 
+		/// Gets the current bone transform matrices, relative to their parent bones.
+		/// </summary>
+		public Matrix[] GetBoneTransforms()
+		{
+			return _boneTransforms;
+		}
+
+
+		/// <summary>
+		/// Gets the current bone transform matrices, in absolute format.
+		/// </summary>
+		public Matrix[] GetWorldTransforms()
+		{
+			return _worldTransforms;
+		}
+
+
+		/// <summary>
+		/// Gets the current bone transform matrices,
+		/// relative to the skinning bind pose.
+		/// </summary>
 		public Matrix[] GetSkinTransforms()
 		{
 			return _skinTransforms;

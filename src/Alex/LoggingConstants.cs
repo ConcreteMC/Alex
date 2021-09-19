@@ -21,5 +21,7 @@ namespace Alex
 		///		If true, log server supported entities to console
 		/// </summary>
 		public const bool LogServerEntityDefinitions = false;
+
+		public const bool LogUnknownParticles = false;
 	}
 }

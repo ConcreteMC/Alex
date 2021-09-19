@@ -121,7 +121,7 @@ namespace Alex.ResourcePackLib.Json.Converters.Particles
 						return new InitialSpeedComponent()
 						{
 							Value = new MoLangVector3Expression(
-								jObject.ToObject<Dictionary<string, ComplexStuff>>(
+								jObject.ToObject<Dictionary<string, AnimationChannelData>>(
 									new JsonSerializer() {Converters = {new MoLangExpressionConverter()}}))
 						};
 					}

@@ -5,6 +5,18 @@ namespace Alex.Common.Utils
 {
 	public class MatrixHelper
 	{
+		public static Quaternion FromRotationDegrees(float x, float y, float z)
+		{
+			return Quaternion.CreateFromRotationMatrix(Matrix.CreateRotationX(x.ToRadians()) 
+			                                           * Matrix.CreateRotationY(y.ToRadians())
+			                                           * Matrix.CreateRotationZ(z.ToRadians()));
+		}
+		
+		public static Quaternion FromRotationDegrees(Vector3 input)
+		{
+			return FromRotationDegrees(input.X, input.Y, input.Z);
+		}
+		
 		public static Matrix CreateRotationDegrees(Vector3 input)
 		{
 			return Matrix.CreateRotationX(input.X.ToRadians()) 

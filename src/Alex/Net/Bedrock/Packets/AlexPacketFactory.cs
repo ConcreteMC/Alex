@@ -53,14 +53,8 @@ namespace Alex.Net.Bedrock.Packets
             {
                 switch (messageId)
                 {
-                    case 0x34:
-                        packet = new CraftingData();
-                        break;
                     case 0x8a:
                         packet = McpeEmote.CreateObject();
-                        break;
-                    case 0x91:
-                        packet = new CreativeContent();
                         break;
                     case 0x9e:
                         packet = McpeAnimateEntity.CreateObject();

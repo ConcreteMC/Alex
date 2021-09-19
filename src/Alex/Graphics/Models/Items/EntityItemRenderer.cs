@@ -64,6 +64,9 @@ namespace Alex.Graphics.Models.Items
 
 		/// <inheritdoc />
 		public IHoldAttachment Parent { get; set; }
+
+		/// <inheritdoc />
+		//public IHoldAttachment Parent { get; set; }
 		public Vector3 Scale { get; set; } = new Vector3(1f / 16f, 1f / 16f, 1f / 16f);
 		
 		protected Matrix GetWorldMatrix(DisplayElement activeDisplayItem, Matrix characterMatrix)
@@ -112,6 +115,9 @@ namespace Alex.Graphics.Models.Items
 		/// <inheritdoc />
 		public int Render(IRenderArgs args, Matrix worldMatrix)
 		{
+			if (_entityRenderer == null)
+				return 0;
+			
 			_worldMatrix = GetWorldMatrix(ActiveDisplayItem, worldMatrix);
 			return _entityRenderer.Render(args, _worldMatrix);
 		}
@@ -119,7 +125,7 @@ namespace Alex.Graphics.Models.Items
 		/// <inheritdoc />
 		public void Update(IUpdateArgs args)
 		{
-			_entityRenderer.Update(args);
+			_entityRenderer?.Update(args);
 		}
 
 		/// <inheritdoc />

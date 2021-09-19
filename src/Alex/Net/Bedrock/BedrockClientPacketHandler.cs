@@ -301,7 +301,7 @@ namespace Alex.Net.Bedrock
 
 		public void HandleMcpeAdventureSettings(McpeAdventureSettings message)
 		{
-			var userId = BinaryPrimitives.ReverseEndianness(message.userId);
+			var userId = BinaryPrimitives.ReverseEndianness(message.entityUniqueId);
 			Entity entity = null;
 
 			if (userId == Client.World.Player.EntityId)
@@ -552,13 +552,20 @@ namespace Alex.Net.Bedrock
 		{
 			if (message.runtimeEntityId != Client.EntityId)
 			{
-				if (message is EntityDelta ed)
+			//	if (message is EntityDelta ed)
 				{
 					if (Client.World.TryGetEntity(message.runtimeEntityId, out var entity))
 					{
-						var known = ed.GetCurrentPosition(entity.KnownPosition);
-						
-						Client.World.UpdateEntityPosition(message.runtimeEntityId, known, false, true, true, false, true);
+
+						var known = message.GetCurrentPosition(
+							new MiNET.Utils.Vectors.PlayerLocation(
+								entity.KnownPosition.X, entity.KnownPosition.Y, entity.KnownPosition.Z,
+								entity.KnownPosition.HeadYaw, entity.KnownPosition.Yaw, entity.KnownPosition.Pitch));
+
+						Client.World.UpdateEntityPosition(
+							message.runtimeEntityId,
+							new PlayerLocation(known.X, known.Y, known.Z, known.HeadYaw, known.Yaw, known.Pitch), false,
+							true, true, false, true);
 					}
 				}
 			}
@@ -756,7 +763,7 @@ namespace Alex.Net.Bedrock
 					particleType,
 					new Microsoft.Xna.Framework.Vector3(message.position.X, message.position.Y, message.position.Z), message.data))
 				{
-					if (Client.IsConnected)
+					if (Client.IsConnected && LoggingConstants.LogUnknownParticles)
 						Log.Warn($"Unknown particle type: {particleType}");
 				}
 

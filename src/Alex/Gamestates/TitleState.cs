@@ -211,13 +211,14 @@ namespace Alex.Gamestates
 
         private void ApplyModel(Entity entity)
         {
+            
             Alex.UiTaskManager.Enqueue(
                 () =>
                 {
                     if (Alex.PlayerModel != null && Alex.PlayerTexture != null)
                     {
                         if (Alex.PlayerModel.TryGetRenderer(out var renderer))
-                        {
+                        { 
                             entity.Texture = TextureUtils.BitmapToTexture2D(
                                 this, Alex.GraphicsDevice, Alex.PlayerTexture);
 
@@ -232,6 +233,7 @@ namespace Alex.Gamestates
         {
             var entity = new RemotePlayer(null);
             entity.RenderLocation = new PlayerLocation(Vector3.Zero, 180f, 180f);
+            entity.IsSpawned = true;
             
             AddChild(_playerView =
                 new GuiEntityModelView(

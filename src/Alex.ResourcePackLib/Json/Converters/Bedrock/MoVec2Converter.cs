@@ -42,7 +42,7 @@ namespace Alex.ResourcePackLib.Json.Converters.Bedrock
 					if (obj is JObject jObject)
 					{
 						return new MoLangVector2Expression(
-							jObject.ToObject<Dictionary<string, ComplexStuff>>(
+							jObject.ToObject<Dictionary<string, AnimationChannelData>>(
 								new JsonSerializer()
 								{
 									Converters = { new MoLangExpressionConverter()}

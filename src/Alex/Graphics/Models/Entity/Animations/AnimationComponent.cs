@@ -184,8 +184,8 @@ namespace Alex.Graphics.Models.Entity.Animations
 				{
 					if (animationProvider.TryGetAnimation(kv.Value, out var animation))
 					{
-						var entityAnimation = new EntityAnimation(this, animation);
-						entityAnimation.Play();
+						var entityAnimation = new EntityAnimation(this, animation, kv.Key);
+						//entityAnimation.Play();
 						
 						if (!animations.TryAdd(kv.Key, entityAnimation))
 						{
@@ -213,7 +213,8 @@ namespace Alex.Graphics.Models.Entity.Animations
 
 		private Stopwatch _deltaTimeStopwatch = new Stopwatch();
 		private bool _didInit = false;
-		private void DoImportant()
+		private ModelRenderer _modelRenderer = null;
+		private void ProcessAnimations()
 		{
 			if (!_didInit)
 				return;
@@ -222,7 +223,7 @@ namespace Alex.Graphics.Models.Entity.Animations
 
 			if (renderer == null)
 				return;
-			
+
 			try
 			{
 				var runtime = Runtime;
@@ -239,6 +240,15 @@ namespace Alex.Graphics.Models.Entity.Animations
 
 				if (animations == null)
 					return;
+				
+				if (renderer != _modelRenderer)
+				{
+					foreach (var anim in _animations)
+					{
+						anim.Value.UpdateBindings(renderer);
+					}
+					_modelRenderer = renderer;
+				}
 				
 				Context.Clear();
 				
@@ -297,17 +307,7 @@ namespace Alex.Graphics.Models.Entity.Animations
 					{
 						foreach (var key in def.Scripts.Animate)
 						{
-							if (key.IsString)
-							{
-								ExecuteAnimationUpdate(key.StringValue, true);
-							}
-							else
-							{
-								foreach (var expression in key.Expressions)
-								{
-									ExecuteAnimationUpdate(expression.Key, Execute(expression.Value).AsBool());
-								}
-							}
+							ExecuteAnnoying(key);
 						}
 					}
 				}
@@ -316,7 +316,7 @@ namespace Alex.Graphics.Models.Entity.Animations
 				{
 					foreach (var controller in _animationControllers)
 					{
-						controller.Value.Update();
+						controller.Value.Tick();
 					}
 				}
 				
@@ -331,6 +331,21 @@ namespace Alex.Graphics.Models.Entity.Animations
 		public IMoValue Execute(IExpression[] expressions)
 		{
 			return Runtime.Execute(expressions, Context);
+		}
+
+		public void ExecuteAnnoying(AnnoyingMolangElement key, bool forceStop = false)
+		{
+			if (key.IsString)
+			{
+				ExecuteAnimationUpdate(key.StringValue, !forceStop);
+			}
+			else
+			{
+				foreach (var expression in key.Expressions)
+				{
+					ExecuteAnimationUpdate(expression.Key,  !forceStop && Execute(expression.Value).AsBool());
+				}
+			}
 		}
 
 		//private Stopwatch _animationRunTime = new Stopwatch();
@@ -351,14 +366,14 @@ namespace Alex.Graphics.Models.Entity.Animations
 						if (!ea.Playing)
 							ea.Play();
 					
-						ea.Update();
+						ea.Tick();
 
 						ea.AfterUpdate();
 					}
 				}
 				else
 				{
-					animation.Update();
+					animation.Tick();
 				}
 			}
 			else
@@ -389,7 +404,7 @@ namespace Alex.Graphics.Models.Entity.Animations
 			_deltaTimeStopwatch.Stop();
 			
 			//_queryStruct?.Tick(_deltaTimeStopwatch.Elapsed);
-			DoImportant();
+			ProcessAnimations();
 			
 			_deltaTimeStopwatch.Restart();
 		}

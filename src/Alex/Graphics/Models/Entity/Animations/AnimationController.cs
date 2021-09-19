@@ -36,18 +36,27 @@ namespace Alex.Graphics.Models.Entity.Animations
 				throw new Exception("Initial state not found!");
 		}
 
-		public void Update()
+		public void Tick()
 		{
 			var state = _state;
 
 			if (state == null)
 				return;
 
-			UpdateVariables(state.Variables);
-			
-			UpdateAnimations(state.Animations);
+			ExecuteState(state);
+		}
 
+		private void ExecuteState(AnimationState state)
+		{
+			UpdateVariables(state.Variables);
+			UpdateAnimations(state.Animations);
 			UpdateTransitions(state.Transitions);
+		}
+
+		/// <inheritdoc />
+		public void UpdateBindings(ModelRenderer renderer)
+		{
+			
 		}
 
 		private void UpdateTransitions(AnnoyingMolangElement[] transitions)
@@ -69,8 +78,16 @@ namespace Alex.Graphics.Models.Entity.Animations
 
 					if (result.AsBool())
 					{
+						var previousState = _state;
+
+						if (previousState != null)
+						{
+							UpdateAnimations(previousState.Animations, true);
+						}
 						_state = targetState;
 						stateUpdated = true;
+						
+						
 						break;
 					}
 				}
@@ -80,47 +97,14 @@ namespace Alex.Graphics.Models.Entity.Animations
 			}
 		}
 
-	/*	private void UpdateAnimation(string animation, bool play)
-		{
-			if (Parent.TryGetAnimation(animation, out var entityAnimation))
-			{
-				if (entityAnimation.Playing || play)
-				{
-					if (!entityAnimation.CanPlay() || !play)
-					{
-						entityAnimation.Stop();
-						return;
-					}
-					
-					if (!entityAnimation.Playing)
-						entityAnimation.Play();
-					
-					entityAnimation.Update();
-
-					entityAnimation.AfterUpdate();
-				}
-			}
-		}*/
-		
-		private void UpdateAnimations(AnnoyingMolangElement[] animations)
+		private void UpdateAnimations(AnnoyingMolangElement[] animations, bool forceStop = false)
 		{
 			if (animations == null || animations.Length == 0)
 				return;
 			
 			foreach (var animation in animations)
 			{
-				if (animation.IsString)
-				{
-					Parent.ExecuteAnimationUpdate(animation.StringValue, true);
-				}
-				else
-				{
-					foreach (var expression in animation.Expressions)
-					{
-						Parent.ExecuteAnimationUpdate(expression.Key, Parent.Execute(expression.Value).AsBool());
-					}
-				}
-				//Parent.Execute(animation);
+				Parent.ExecuteAnnoying(animation, forceStop);
 			}
 		}
 

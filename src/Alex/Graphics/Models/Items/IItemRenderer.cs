@@ -9,6 +9,7 @@ namespace Alex.Graphics.Models.Items
 {
     public interface IItemRenderer : IAttached
     {
+        Model Model { get; set; }
         ResourcePackModelBase ResourcePackModel { get; }
         
         DisplayPosition DisplayPosition   { get; set; }

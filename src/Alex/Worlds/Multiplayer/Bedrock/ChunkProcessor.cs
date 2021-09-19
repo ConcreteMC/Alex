@@ -80,6 +80,11 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		    {
 			    while (!CancellationToken.IsCancellationRequested)
 			    {
+				    var chunkManager = Client?.World?.ChunkManager;
+
+				    if (chunkManager == null)
+					    continue;
+				    
 				    bool handled = false;
 
 				    if (_actionQueue != null && _actionQueue.TryDequeue(out var enqueuedChunk))
@@ -97,7 +102,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 					    if (handledChunk != null)
 					    {
-						    Client.World.ChunkManager.AddChunk(
+						    chunkManager.AddChunk(
 							    handledChunk, new ChunkCoordinates(enqueuedChunk.X, enqueuedChunk.Z), true);
 					    }
 

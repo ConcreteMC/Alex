@@ -208,17 +208,19 @@ namespace Alex.Utils
 				new Vector3(bone.Pivot.Value.X, bone.Pivot.Value.Y, bone.Pivot.Value.Z) : null;
 			
 			modelBone.Visible = !bone.NeverRender;
+	
 			if (bone.Rotation.HasValue)
 			{
 				var r = bone.Rotation.Value;
-				modelBone.BaseRotation = new Vector3(r.X, r.Y, r.Z);
+				modelBone.BaseRotation = MatrixHelper.FromRotationDegrees(new Vector3(r.X, r.Y, r.Z));
 			}
 			
 			if (bone.BindPoseRotation.HasValue)
 			{
 				var r = bone.BindPoseRotation.Value;
-				modelBone.BaseRotation += new Vector3(r.X, r.Y, r.Z);
+				modelBone.BaseRotation *= MatrixHelper.FromRotationDegrees(new Vector3(r.X, r.Y, r.Z));
 			}
+
 			
 			foreach (var childBone in source.Bones.Where(
 				x => x.Parent != null && string.Equals(x.Parent, bone.Name, DefaultComparison)))

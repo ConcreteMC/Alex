@@ -187,7 +187,7 @@ namespace Alex.Entities
 		private int _skinQueuedCount = 0;
 		private void QueueSkinProcessing()
 		{
-		//	if (Interlocked.CompareExchange(ref _skinQueuedCount, 1, 0) == 0)
+			if (Interlocked.CompareExchange(ref _skinQueuedCount, 1, 0) == 0)
 			{
 				//if (Level?.BackgroundWorker == null)
 				//{
@@ -402,21 +402,31 @@ namespace Alex.Entities
 			var primaryArm = GetPrimaryArm();
 			//if (oldValue != renderer)
 			{
-				primaryArm?.Remove(oldValue);
+				if (oldValue != null)
+					primaryArm?.Remove(oldValue);
 			}
 
 			if (renderer == null)
 				return;
 
 			//oldValue?.Parent?.Remove(oldValue);
-			var pos = renderer.DisplayPosition;
+			DisplayPosition pos;
+
+			if (IsFirstPersonMode)
+			{
+				pos = DisplayPosition.FirstPerson;
+			}
+			else
+			{
+				pos = DisplayPosition.ThirdPerson;
+			}
 			//if (pos.HasFlag(DisplayPosition.FirstPerson) || pos.HasFlag(DisplayPosition.ThirdPerson))
 			{
 				if (IsLeftHanded)
 				{
 					if (!pos.HasFlag(DisplayPosition.LeftHand))
 					{
-						pos = (pos & ~(DisplayPosition.LeftHand | DisplayPosition.RightHand));
+						//pos = (pos & ~(DisplayPosition.LeftHand | DisplayPosition.RightHand));
 						pos |= DisplayPosition.LeftHand;
 					}
 				}
@@ -424,12 +434,12 @@ namespace Alex.Entities
 				{
 					if (!pos.HasFlag(DisplayPosition.RightHand))
 					{
-						pos = (pos & ~(DisplayPosition.LeftHand | DisplayPosition.RightHand));
+						//pos = (pos & ~(DisplayPosition.LeftHand | DisplayPosition.RightHand));
 						pos |= DisplayPosition.RightHand;
 					}
 				}
 
-				if (IsFirstPersonMode)
+				/*if (IsFirstPersonMode)
 				{
 					if (!pos.HasFlag(DisplayPosition.FirstPerson))
 					{
@@ -444,15 +454,15 @@ namespace Alex.Entities
 						pos = (pos & ~(DisplayPosition.FirstPerson | DisplayPosition.ThirdPerson));
 						pos |= DisplayPosition.ThirdPerson;
 					}
-				}
+				}*/
 
 				renderer.DisplayPosition = pos;
 			}
 
-			//	if (oldValue != renderer)
+		//	if (oldValue != renderer)
 			{
-
-				primaryArm?.AddChild(renderer);
+				//if (renderer != null)
+					primaryArm?.AddChild(renderer);
 			}
 		}
 
@@ -563,11 +573,11 @@ namespace Alex.Entities
 
 			if (IsLeftHanded)
 			{
-				arm = _leftItemModel;
+				arm = _leftItemModel ?? _leftArmModel;
 			}
 			else
 			{
-				arm = _rightItemModel;
+				arm = _rightItemModel ?? _rightArmModel;
 			}
 	        
 			return arm;

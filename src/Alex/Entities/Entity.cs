@@ -246,9 +246,10 @@ namespace Alex.Entities
 
 				if (oldValue != null)
 				{
-					if (oldValue.Parent is ModelBone bone)
+					if (oldValue.Model != null)
 					{
-						bone.Remove(oldValue);
+						
+						//bone.Remove(oldValue.Model);
 					}
 				}
 			}
@@ -453,7 +454,7 @@ namespace Alex.Entities
 
 			var inHand = Inventory.MainHand;
 
-			if ((inHand == null || inHand.Count == 0 || inHand.Id <= 0) && ItemRenderer != null
+			if ((inHand == null || inHand.IsAir()) && ItemRenderer != null
 			                                                            && ModelRenderer != null)
 			{
 				ItemRenderer = null;
@@ -511,17 +512,21 @@ namespace Alex.Entities
         {
 	        ModelBone arm = GetPrimaryArm();
 	        
-		        arm?.Remove(oldValue);
-	        
+	       // if (oldValue != renderer)
+	        {
+		        if (oldValue != null)
+					arm?.Remove(oldValue);
+	        }
 
 	        if (renderer == null)
 		        return;
 
 	        renderer.DisplayPosition = DisplayPosition.ThirdPersonRightHand;
 
-	        //if (oldValue != renderer)
+	       // if (oldValue != renderer)
 	        {
-		        arm?.AddChild(renderer);
+		        if (renderer != null)
+					arm?.AddChild(renderer);
 	        }
         }
 
@@ -1267,7 +1272,9 @@ namespace Alex.Entities
 
 				var pitch = KnownPosition.Pitch;
 
-				_head.Rotation = new Vector3(pitch, headYaw, 0f);
+				
+				//_head.Rotation = new Vector3(pitch, headYaw, 0f);
+				_head.Rotation = Quaternion.CreateFromYawPitchRoll(MathUtils.ToRadians(headYaw), MathUtils.ToRadians(pitch), 0f);
 			}
 			
 			renderer.Update(args);

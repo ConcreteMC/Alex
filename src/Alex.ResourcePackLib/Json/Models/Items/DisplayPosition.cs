@@ -101,5 +101,13 @@ namespace Alex.ResourcePackLib.Json.Models.Items
             
             throw new ArgumentOutOfRangeException(nameof(displayPosition));
         }
+
+        public static bool TryGetString(this DisplayPosition displayPosition, out string result)
+        {
+            if (_reverseLookupCache.TryGetValue(displayPosition, out result))
+                return true;
+
+            return false;
+        }
     }
 }

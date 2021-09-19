@@ -6,9 +6,9 @@ using Newtonsoft.Json;
 namespace Alex.ResourcePackLib.Json.Bedrock.MoLang
 {
 	[JsonConverter(typeof(ComplexStuffConverter))]
-	public class ComplexStuff
+	public class AnimationChannelData
 	{
 		public IExpression[][] Expressions { get; set; }
-		public PrePostKeyFrame Frame { get; set; }
+		public AnimationKeyFrame KeyFrame { get; set; }
 	}
 }

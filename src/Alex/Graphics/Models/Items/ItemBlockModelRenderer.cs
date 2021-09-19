@@ -101,25 +101,25 @@ namespace Alex.Graphics.Models.Items
                 {
                     root.Pivot =Vector3.Zero;
                     root.BaseScale = displayElement.Scale;
-                    root.BaseRotation = new Vector3(25f, 45f, 0f);
+                    root.BaseRotation =  MatrixHelper.FromRotationDegrees(new Vector3(25f, 45f, 0f));
                     root.BasePosition = new Vector3(displayElement.Translation.X, displayElement.Translation.Y + 0.25f, displayElement.Translation.Z);
                 }
                 else if (displayPosition.HasFlag(DisplayPosition.ThirdPerson))
                 {
                     root.BaseScale = displayElement.Scale * Scale;
-                    root.BaseRotation = new Vector3(-67.5f, 0f, 0f);
+                    root.BaseRotation =  MatrixHelper.FromRotationDegrees(new Vector3(-67.5f, 0f, 0f));
                     root.BasePosition = new Vector3(displayElement.Translation.X + 2f, displayElement.Translation.Y +8f, -(16f + displayElement.Translation.Z));
                 }
                 else if (displayPosition.HasFlag(DisplayPosition.FirstPerson))
                 {
                     root.BaseScale = displayElement.Scale * (Scale / 2f);
-                    root.BaseRotation = new Vector3(-67.5f, 0f, 0f) + new Vector3(displayElement.Rotation.X, displayElement.Rotation.Y, displayElement.Rotation.Z);
+                    root.BaseRotation =  MatrixHelper.FromRotationDegrees(new Vector3(-67.5f, 0f, 0f) + new Vector3(displayElement.Rotation.X, displayElement.Rotation.Y, displayElement.Rotation.Z));
                     root.BasePosition = new Vector3(displayElement.Translation.X + 4f, displayElement.Translation.Y + 18f, displayElement.Translation.Z - 2f);
                 }
                 else if (displayPosition.HasFlag(DisplayPosition.Ground))
                 {
                     root.BaseScale = displayElement.Scale * Scale;
-                    root.BaseRotation = new Vector3(displayElement.Rotation.X, displayElement.Rotation.Y, displayElement.Rotation.Z);
+                    root.BaseRotation =  MatrixHelper.FromRotationDegrees(new Vector3(displayElement.Rotation.X, displayElement.Rotation.Y, displayElement.Rotation.Z));
                     root.BasePosition = new Vector3(displayElement.Translation.X, displayElement.Translation.Y, displayElement.Translation.Z);
                 }
                 else

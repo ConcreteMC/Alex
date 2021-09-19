@@ -71,7 +71,7 @@ namespace Alex.Entities.BlockEntities
 				{
 					var targetRotation = _viewers > 0 ? new Vector3(90, 0, 0) : Vector3.Zero;
 
-					HeadBone.MoveOverTime(Vector3.Zero, targetRotation, TimeSpan.FromMilliseconds(250));
+					HeadBone.RotateOverTime(targetRotation, 250);
 				}
 			}
 		}

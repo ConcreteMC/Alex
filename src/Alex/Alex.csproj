@@ -65,6 +65,9 @@
         <Compile Remove="Graphics\Items\**" />
         <None Remove="Graphics\Items\**" />
         <EmbeddedResource Remove="Graphics\Items\**" />
+        <Compile Remove="Graphics\Models\ModelExtra.cs" />
+        <Compile Remove="Graphics\Models\AnimatedModel.cs" />
+        <Compile Remove="Graphics\Models\Bone.cs" />
     </ItemGroup>
 
     <ItemGroup>

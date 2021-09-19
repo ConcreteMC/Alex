@@ -431,8 +431,8 @@ namespace Alex.Net.Bedrock
 				s.DisconnectedTextElement.Text = reason;
 			}
 
-			Alex.GameStateManager.SetActiveState(s, false);
 			Alex.GameStateManager.RemoveState("play");
+			Alex.GameStateManager.SetActiveState(s, false);
 			Dispose();
 		}
 

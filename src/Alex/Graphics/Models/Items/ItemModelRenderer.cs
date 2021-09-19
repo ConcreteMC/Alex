@@ -1,33 +1,17 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
 using System.Threading;
-using Alex.Blocks.Minecraft;
 using Alex.Common.Graphics;
-using Alex.Common.Graphics.GpuResources;
 using Alex.Common.Utils;
-using Alex.Entities;
 using Alex.Graphics.Models.Entity;
-using Alex.ResourcePackLib;
-using Alex.ResourcePackLib.Json;
 using Alex.ResourcePackLib.Json.Models;
 using Alex.ResourcePackLib.Json.Models.Items;
-using Alex.Utils;
-using FmodAudio;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Newtonsoft.Json;
 using NLog;
-using NLog.Fluent;
-using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 using Color = Microsoft.Xna.Framework.Color;
-using MathF = System.MathF;
-using ModelBone = Alex.Graphics.Models.ModelBone;
-using ModelMesh = Alex.Graphics.Models.ModelMesh;
-using ModelMeshPart = Alex.Graphics.Models.ModelMeshPart;
 
 namespace Alex.Graphics.Models.Items
 {
@@ -151,7 +135,7 @@ namespace Alex.Graphics.Models.Items
         
         public ResourcePackModelBase ResourcePackModel { get; }
 
-        private DisplayPosition _displayPosition = DisplayPosition.Undefined;
+        private DisplayPosition _displayPosition = DisplayPosition.ThirdPersonRightHand;
 
         public DisplayPosition DisplayPosition
         {
@@ -168,21 +152,24 @@ namespace Alex.Graphics.Models.Items
         private void UpdateDisplay()
         {
             if (Model == null) return;
-            try
+
+            if (_displayPosition.TryGetString(out string displayPosStr))
             {
-                if (ResourcePackModel.Display.TryGetValue(DisplayPositionHelper.ToString(_displayPosition), out var display))
+                if (ResourcePackModel.Display.TryGetValue(displayPosStr, out var display))
                 {
                     ActiveDisplayItem = display;
+                    UpdateDisplayInfo(_displayPosition, ActiveDisplayItem);
                 }
-                
-                UpdateDisplayInfo(_displayPosition, ActiveDisplayItem);
-                
+                else
+                {
+                   // Log.Warn($"Invalid displayposition (str): {displayPosStr}");
+                }
             }
-            catch(ArgumentOutOfRangeException)
+            else
             {
-                
+               // Log.Warn($"Invalid displayposition (enum): {_displayPosition}");
             }
-            
+
             //ActiveDisplayItem = DisplayElement.Default;
         }
 
@@ -195,15 +182,15 @@ namespace Alex.Graphics.Models.Items
                 if (_displayPosition.HasFlag(DisplayPosition.Gui))
                 {
                     root.BaseScale = Vector3.One / 16f;
-                    root.BaseRotation = Vector3.Zero;
+                    root.BaseRotation = Quaternion.Identity;
                     root.BasePosition = Vector3.Zero;
                 }
                 else if (displayPosition.HasFlag(DisplayPosition.Ground))
                 {
                     root.BaseScale = displayElement.Scale * Scale;
 
-                    root.BaseRotation = new Vector3(
-                        displayElement.Rotation.X, displayElement.Rotation.Y, displayElement.Rotation.Z);
+                    root.BaseRotation =  MatrixHelper.FromRotationDegrees(new Vector3(
+                        displayElement.Rotation.X, displayElement.Rotation.Y, displayElement.Rotation.Z));
 
                     root.BasePosition = new Vector3(
                         displayElement.Translation.X, displayElement.Translation.Y, displayElement.Translation.Z);
@@ -216,10 +203,10 @@ namespace Alex.Graphics.Models.Items
 
                     if ((ResourcePackModel.Type & ModelType.Handheld) != 0)
                     {
-                        root.BaseRotation = new Vector3(
-                                                ActiveDisplayItem.Rotation.X, -ActiveDisplayItem.Rotation.Y,
-                                                -ActiveDisplayItem.Rotation.Z)
-                                            + new Vector3(-67.5f, -22.5f, 0f);
+                        root.BaseRotation = MatrixHelper.FromRotationDegrees(new Vector3(
+                                                                                 ActiveDisplayItem.Rotation.X, -ActiveDisplayItem.Rotation.Y,
+                                                                                 -ActiveDisplayItem.Rotation.Z)
+                                                                             + new Vector3(-67.5f, -22.5f, 0f));
 
                         root.BasePosition = new Vector3(
                             (6f + ActiveDisplayItem.Translation.X), 6f + ActiveDisplayItem.Translation.Y,
@@ -227,10 +214,10 @@ namespace Alex.Graphics.Models.Items
                     }
                     else
                     {
-                        root.BaseRotation = new Vector3(
-                                                ActiveDisplayItem.Rotation.X, -ActiveDisplayItem.Rotation.Y,
-                                                -ActiveDisplayItem.Rotation.Z)
-                                            + new Vector3(-67.5f, 0f, 0f);
+                        root.BaseRotation =  MatrixHelper.FromRotationDegrees(new Vector3(
+                                                                                  ActiveDisplayItem.Rotation.X, -ActiveDisplayItem.Rotation.Y,
+                                                                                  -ActiveDisplayItem.Rotation.Z)
+                                                                              + new Vector3(-67.5f, 0f, 0f));
 
                         root.BasePosition = new Vector3(
                             (-ActiveDisplayItem.Translation.X), 8f + ActiveDisplayItem.Translation.Y,
@@ -280,7 +267,10 @@ namespace Alex.Graphics.Models.Items
         private readonly VertexDeclaration _declaration;
 
         public Model Model { get; set; } = null;
-        
+
+        /// <inheritdoc />
+        public IHoldAttachment Parent { get; set; }
+
         protected Texture2D  _texture;
         public ItemModelRenderer(ResourcePackModelBase resourcePackModel, VertexDeclaration declaration, TVertice[] vertices = null, Texture2D texture = null)
         {
@@ -304,14 +294,13 @@ namespace Alex.Graphics.Models.Items
               // InitCache();
             }
         }
-
-        private bool _didInit = false;
+        
         private TVertice[] _vertices = null;
         private BasicEffect _effect = null;
 
         public void Update(IUpdateArgs args)
         {
-            if (Effect == null || Model == null)
+            if (Effect == null)
             {
                 return;
             }
@@ -338,7 +327,7 @@ namespace Alex.Graphics.Models.Items
             List<ModelMesh> meshes = new List<ModelMesh>();
             List<ModelMeshPart> meshParts = new List<ModelMeshPart>();
 
-            var rootBone = new ModelBone { Name = "ItemRoot" };
+            var rootBone = new ModelBone() { Name = "ItemRoot" };
 
             var meshPart = new ModelMeshPart() { StartIndex = 0, NumVertices = vertices.Length, VertexOffset = 0 };
            
@@ -362,38 +351,41 @@ namespace Alex.Graphics.Models.Items
 
             model.BuildHierarchy();
             Model = model;
+            UpdateDisplay();
+            
+            ThreadPool.QueueUserWorkItem(
+                (o) =>
+                {
+                    Effect = new BasicEffect(Alex.Instance.GraphicsDevice);
 
-            _setupForRendering = () =>
-            {
-                Alex.Instance.UiTaskManager.Enqueue(
-                    () =>
+                    if (_texture != null)
+                        Effect.Texture = _texture;
+
+                    InitEffect(Effect);
+
+                    foreach (var modelMesh in model.Meshes)
                     {
-                        Effect = new BasicEffect(Alex.Instance.GraphicsDevice);
+                        foreach (var subMesh in modelMesh.MeshParts)
+                        {
+                            subMesh.Effect = Effect;
+                        }
+                    }
 
-                        if (_texture != null)
-                            Effect.Texture = _texture;
+                    meshPart.VertexBuffer = new VertexBuffer(
+                        device, _declaration, vertices.Length, BufferUsage.WriteOnly);
 
-                        InitEffect(Effect);
+                    meshPart.VertexBuffer.SetData(vertices);
 
-                        meshPart.VertexBuffer = new VertexBuffer(
-                            device, _declaration, vertices.Length, BufferUsage.WriteOnly);
+                    meshPart.IndexBuffer = new IndexBuffer(
+                        device, IndexElementSize.SixteenBits, indices.Count, BufferUsage.WriteOnly);
 
-                        meshPart.VertexBuffer.SetData(vertices);
-
-                        meshPart.IndexBuffer = new IndexBuffer(
-                            device, IndexElementSize.SixteenBits, indices.Count, BufferUsage.WriteOnly);
-
-                        meshPart.IndexBuffer.SetData(indices.ToArray());
+                    meshPart.IndexBuffer.SetData(indices.ToArray());
                         
-                        UpdateDisplay();
-                    });
-            };
+                    UpdateDisplay();
+                });
             
             //  var vertices = Vertices;
         }
-
-        /// <inheritdoc />
-        public IHoldAttachment Parent { get; set; } = null;
 
         private Action _setupForRendering = null;
         public int Render(IRenderArgs args, Matrix characterMatrix)
