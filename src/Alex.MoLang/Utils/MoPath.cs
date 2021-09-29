@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Text;
 
 namespace Alex.MoLang.Utils
 {
@@ -7,37 +8,45 @@ namespace Alex.MoLang.Utils
 	{
 		public MoPath Root { get; }
 		public MoPath Previous { get; }
-		
+		public MoPath Next { get; private set; }
+
+		private readonly MoPath _last = null;
+		public MoPath Last => _last ?? Root._last;
+
 		public string Path { get; }
 		public string Value { get; }
 
-		public bool HasChildren => Segments.Length > 0;
+		public bool HasChildren => Next != null;
 		
 		public MoPath(string path)
 		{
 			Previous = null;
+			Next = null;
 			Root = this;
 			Path = path;
+			_last = this;
 
 			var segments = path.Split('.');
 			Value = segments[0];
 
-			Segments = new MoPath[segments.Length - 1];
-
-			if (Segments.Length == 0)
-				return;
-
-			MoPath previous = this;
-			for (int i = 0; i < Segments.Length; i++)
+			if (segments.Length > 1)
 			{
-				var moPath = new MoPath(this, previous, string.Join('.', segments.Skip(i + 1)), segments[i + 1]);
-				previous = moPath;
-				Segments[i] = moPath;
-			}
+				string currentPath = $"{Value}";
 
-			for (int i = 0; i < Segments.Length; i++)
-			{
-				Segments[i].Segments = Segments.Skip(1 + i).ToArray();
+				for (int i = 1; i < segments.Length; i++)
+				{
+					var value = segments[i];
+
+					if (string.IsNullOrWhiteSpace(value))
+						break;
+					
+					currentPath += $".{value}";
+
+					var moPath = new MoPath(Root, _last, currentPath, value);
+					_last.Next = moPath;
+
+					_last = moPath;
+				}
 			}
 		}
 
@@ -47,21 +56,19 @@ namespace Alex.MoLang.Utils
 			Path = path;
 			Previous = parent;
 			Value = value;
-			
-			
 		}
 		
-		public MoPath[] Segments { get; private set; }
+	//	public MoPath[] Segments { get; private set; }
 
 		/// <inheritdoc />
 		public override string ToString()
 		{
-			return Path;
+			return Value;
 		}
 
-		public static implicit operator MoPath(string value)
-		{
-			return new MoPath(value);
-		}
+		//public static implicit operator MoPath(string value)
+		//{
+		//	return new MoPath(value);
+		//}
 	}
 }

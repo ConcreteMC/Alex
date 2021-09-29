@@ -8,6 +8,7 @@ using Alex.Items;
 using Alex.MoLang.Runtime;
 using Alex.MoLang.Runtime.Struct;
 using Alex.MoLang.Runtime.Value;
+using Alex.MoLang.Utils;
 using Alex.ResourcePackLib.Json.Bedrock.Particles;
 using Alex.ResourcePackLib.Json.Bedrock.Particles.Components;
 using Microsoft.Xna.Framework;
@@ -42,17 +43,17 @@ namespace Alex.Particles
 			}));
 			
 			var variables = runtime.Environment.Structs["variable"];
-			variables.Set("particle_random_1", new DoubleValue(FastRandom.Instance.NextDouble()));
-			variables.Set("particle_random_2", new DoubleValue(FastRandom.Instance.NextDouble()));
-			variables.Set("particle_random_3", new DoubleValue(FastRandom.Instance.NextDouble()));
-			variables.Set("particle_random_4", new DoubleValue(FastRandom.Instance.NextDouble()));
+			variables.Set(new MoPath("particle_random_1"), new DoubleValue(FastRandom.Instance.NextDouble()));
+			variables.Set(new MoPath("particle_random_2"), new DoubleValue(FastRandom.Instance.NextDouble()));
+			variables.Set(new MoPath("particle_random_3"), new DoubleValue(FastRandom.Instance.NextDouble()));
+			variables.Set(new MoPath("particle_random_4"), new DoubleValue(FastRandom.Instance.NextDouble()));
 			
-			variables.Set("emitter_texture_coordinate.u", new DoubleValue(0));
-			variables.Set("emitter_texture_coordinate.v", new DoubleValue(0));
+			variables.Set(new MoPath("emitter_texture_coordinate.u"), new DoubleValue(0));
+			variables.Set(new MoPath("emitter_texture_coordinate.v"), new DoubleValue(0));
 			
 			//emitter_texture_size
-			variables.Set("emitter_texture_size.u", new DoubleValue(0));
-			variables.Set("emitter_texture_size.v", new DoubleValue(0));
+			variables.Set(new MoPath("emitter_texture_size.u"), new DoubleValue(0));
+			variables.Set(new MoPath("emitter_texture_size.v"), new DoubleValue(0));
 		}
 
 		/// <summary>
@@ -140,18 +141,13 @@ namespace Alex.Particles
 
 		private void SetVariable(string key, IMoValue value)
 		{
-			Runtime.Environment.Structs["variable"].Set(key, value);
+			Runtime.Environment.Structs["variable"].Set(new MoPath(key), value);
 		}
 
 		public void OnTick()
 		{
-			var variableStruct = Runtime.Environment.Structs["variable"];
-					
-			//variableStruct.Set("particle_random_1", new DoubleValue(MaxLifetime * 10));
-			variableStruct.Set("particle_age", new DoubleValue(Lifetime));
-			variableStruct.Set("particle_lifetime", new DoubleValue(MaxLifetime));
-			
-			
+			SetVariable("particle_age", new DoubleValue(Lifetime));
+			SetVariable("particle_lifetime", new DoubleValue(MaxLifetime));
 		}
 		
 		public void SetData(long data, ParticleDataMode dataMode)

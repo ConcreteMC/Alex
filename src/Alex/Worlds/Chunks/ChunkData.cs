@@ -101,13 +101,6 @@ namespace Alex.Worlds.Chunks
 
         public MinifiedBlockShaderVertex[] BuildVertices()
         {
-            //   BlockCoordinates[] blockCoordinates;
-            /*   Vector3[] positions;
-               Vector4[] textureCoordinates;
-               BlockFace[] faces;
-               Color[] colors;
-               RenderStage[] renderStages;*/
-
             VertexData[] data;
 
             lock (_dataLock)
@@ -118,18 +111,8 @@ namespace Alex.Worlds.Chunks
 
 
             List<MinifiedBlockShaderVertex> vertices = new List<MinifiedBlockShaderVertex>();
-            //vertices.AddRange(_vertexDatas);
-
             for (int i = 0; i < data.Length; i++)
             {
-                //    var blockPos = blockCoordinates[i];
-                //  var stage = renderStages[i];
-                //  var position = positions[i];
-                //  var textureCoordinate = textureCoordinates[i];
-                // var face = faces[i];
-                //var color = colors[i];
-                //  var modified = new Vector3(blockPos.X, blockPos.Y, blockPos.Z);
-
                 vertices.Add(
                     new MinifiedBlockShaderVertex(
                         data[i].Position, data[i].Face, data[i].TexCoords.ToVector4(), new Color(data[i].Color), 0, 0));
@@ -138,12 +121,6 @@ namespace Alex.Worlds.Chunks
             return vertices.ToArray();
         }
 
-        // private Collection<BlockCoordinates> _blockCoordinates = new Collection<BlockCoordinates>();
-        /*   private Collection<Vector3> _positions = new Collection<Vector3>();
-           private Collection<BlockFace> _faces = new Collection<BlockFace>();
-           private Collection<Vector4> _textureCoordinates = new Collection<Vector4>();
-           private Collection<Color> _colors = new Collection<Color>();
-           private Collection<RenderStage> _vertexStages = new Collection<RenderStage>();*/
         private List<VertexData> _vertexDatas = new List<VertexData>();
 
         private object _dataLock = new object();
@@ -243,6 +220,7 @@ namespace Alex.Worlds.Chunks
                     return;
                 }
 
+                List<IDisposable> toDisposeOff = new List<IDisposable>();
                 for (var index = 0; index < newStages.Length; index++)
                 {
                     var stage = newStages[index];
@@ -252,13 +230,12 @@ namespace Alex.Worlds.Chunks
 
                     var indexBuffer = stage.Buffer;
 
-                    IndexBuffer oldIndexBuffer = null;
-
                     var indexCount = stage.Indexes.Count;
 
                     if (indexBuffer == null || indexBuffer.IndexCount < indexCount)
                     {
-                        oldIndexBuffer = indexBuffer;
+                        toDisposeOff.Add(indexBuffer);
+                        //oldIndexBuffer = indexBuffer;
 
                         indexBuffer = new IndexBuffer(
                             Alex.Instance.GraphicsDevice, IndexElementSize.ThirtyTwoBits, indexCount,
@@ -266,7 +243,6 @@ namespace Alex.Worlds.Chunks
                     }
 
                     indexBuffer.SetData(stage.Indexes.ToArray(), 0, indexCount);
-                    oldIndexBuffer?.Dispose();
 
                     newStages[index] = new StageData(indexBuffer, null, indexCount);
                 }
@@ -278,11 +254,9 @@ namespace Alex.Worlds.Chunks
                     verticeCount--;
                 }
 
-                VertexBuffer oldBuffer = null;
-
                 if (buffer == null || buffer.VertexCount < verticeCount)
                 {
-                    oldBuffer = buffer;
+                    toDisposeOff.Add(buffer);
 
                     buffer = new VertexBuffer(
                         Alex.Instance.GraphicsDevice, MinifiedBlockShaderVertex.VertexDeclaration, verticeCount,
@@ -294,9 +268,13 @@ namespace Alex.Worlds.Chunks
                 buffer.SetData(realVertices, 0, realVertices.Length);
                 _stages = newStages;
                 Buffer = buffer;
-
-                oldBuffer?.Dispose();
+                
                 Interlocked.Increment(ref BufferUploads);
+
+                foreach (var toDispose in toDisposeOff)
+                {
+                    toDispose?.Dispose();
+                }
             }
             finally
             {

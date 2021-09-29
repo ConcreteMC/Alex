@@ -85,7 +85,7 @@ namespace Alex.MoLang.Runtime.Struct
 				
 				if (container is IMoStruct moStruct)
 				{
-					moStruct.Set(key.Segments[0], value);
+					moStruct.Set(key.Next, value);
 				}
 				else
 				{
@@ -126,7 +126,7 @@ namespace Alex.MoLang.Runtime.Struct
 
 					if (value is IMoStruct moStruct)
 					{
-						return moStruct.Get(key.Segments[0], parameters);
+						return moStruct.Get(key.Next, parameters);
 					}
 
 					return value;

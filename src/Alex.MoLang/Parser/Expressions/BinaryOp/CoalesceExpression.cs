@@ -1,5 +1,6 @@
 using Alex.MoLang.Runtime;
 using Alex.MoLang.Runtime.Value;
+using Alex.MoLang.Utils;
 
 namespace Alex.MoLang.Parser.Expressions.BinaryOp
 {
@@ -12,7 +13,7 @@ namespace Alex.MoLang.Parser.Expressions.BinaryOp
 		public override IMoValue Evaluate(MoScope scope, MoLangEnvironment environment)
 		{
 			IMoValue evalLeft = Left.Evaluate(scope, environment);
-			IMoValue value    = environment.GetValue(evalLeft.AsString());
+			IMoValue value    = environment.GetValue(new MoPath(evalLeft.AsString()));
 
 			if (value == null || !value.AsBool()) {
 				return Right.Evaluate(scope, environment);

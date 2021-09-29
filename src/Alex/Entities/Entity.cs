@@ -26,6 +26,7 @@ using Alex.Items;
 using Alex.MoLang.Attributes;
 using Alex.MoLang.Runtime;
 using Alex.MoLang.Runtime.Value;
+using Alex.MoLang.Utils;
 using Alex.Net;
 using Alex.Networking.Java.Packets.Play;
 using Alex.ResourcePackLib.Json.Models.Items;
@@ -1311,6 +1312,9 @@ namespace Alex.Entities
 			SwingArm(broadcast, isLeftHand);
 		}
 
+		private static readonly MoPath _useItemIntervalProgressMoPath =
+			new MoPath("variable.use_item_interval_progress");
+		
 		private double _useItemProgress = 0d;
 		private double UseItemIntervalProgress
 		{
@@ -1321,9 +1325,12 @@ namespace Alex.Entities
 			set
 			{
 				_useItemProgress = Math.Clamp(value, 0d, 1d);
-				AnimationController.Runtime?.Environment?.SetValue("variable.use_item_interval_progress", new DoubleValue(_useItemProgress));
+				AnimationController.Runtime?.Environment?.SetValue(_useItemIntervalProgressMoPath, new DoubleValue(_useItemProgress));
 			}
 		}
+		
+		private static readonly MoPath _useItemStartupProgressMoPath =
+			new MoPath("variable.use_item_startup_progress");
 		
 		private double _useItemStartupProgress = 0d;
 		private double UseItemStartupProgress
@@ -1335,7 +1342,7 @@ namespace Alex.Entities
 			set
 			{
 				_useItemStartupProgress = Math.Clamp(value, 0d, 1d);
-				AnimationController.Runtime?.Environment?.SetValue("variable.use_item_startup_progress", new DoubleValue(_useItemStartupProgress));
+				AnimationController.Runtime?.Environment?.SetValue(_useItemStartupProgressMoPath, new DoubleValue(_useItemStartupProgress));
 			}
 		}
 

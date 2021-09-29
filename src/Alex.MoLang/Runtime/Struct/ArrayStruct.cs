@@ -16,10 +16,10 @@ namespace Alex.MoLang.Runtime.Struct
 		/// <inheritdoc />
 		public override void Set(MoPath key, IMoValue value)
 		{
-			string[] parts = key.ToString().Split(".");
-			parts[^1] = int.Parse(parts[^1]).ToString();
+			//string[] parts = key.ToString().Split(".");
+			//parts[^1] = int.Parse(parts[^1]).ToString();
 			
-			base.Set(string.Join(".", parts), value);
+			base.Set(key.Last, value);
 		}
 	}
 }

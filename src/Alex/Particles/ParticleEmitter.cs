@@ -9,6 +9,7 @@ using Alex.Common.Utils.Collections;
 using Alex.MoLang.Parser;
 using Alex.MoLang.Runtime;
 using Alex.MoLang.Runtime.Value;
+using Alex.MoLang.Utils;
 using Alex.ResourcePackLib.Json.Bedrock.Particles;
 using Alex.ResourcePackLib.Json.Bedrock.Particles.Components;
 using Microsoft.Xna.Framework;
@@ -75,7 +76,11 @@ namespace Alex.Particles
 
 			return true;
 		}
-
+		
+		private static readonly MoPath _emitterRnd1 = new MoPath("emitter_random_1");
+		private static readonly MoPath _emitterRnd2 = new MoPath("emitter_random_2");
+		private static readonly MoPath _emitterRnd3 = new MoPath("emitter_random_3");
+		private static readonly MoPath _emitterRnd4 = new MoPath("emitter_random_4");
 		public void Tick()
 		{
 			if (_instances.Count == 0)
@@ -99,10 +104,10 @@ namespace Alex.Particles
 				else
 				{
 					var variables = instance.Runtime.Environment.Structs["variable"];
-					variables.Set("emitter_random_1", new DoubleValue(rnd1));
-					variables.Set("emitter_random_2", new DoubleValue(rnd2));
-					variables.Set("emitter_random_3", new DoubleValue(rnd3));
-					variables.Set("emitter_random_4", new DoubleValue(rnd4));
+					variables.Set(_emitterRnd1, new DoubleValue(rnd1));
+					variables.Set(_emitterRnd2, new DoubleValue(rnd2));
+					variables.Set(_emitterRnd3, new DoubleValue(rnd3));
+					variables.Set(_emitterRnd4, new DoubleValue(rnd4));
 
 					foreach (var component in Definition.Components)
 					{

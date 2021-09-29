@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Alex.MoLang.Runtime;
 using Alex.MoLang.Runtime.Value;
+using Alex.MoLang.Utils;
 using Alex.ResourcePackLib.Json.Bedrock.Entity;
 using Alex.ResourcePackLib.Json.Bedrock.MoLang;
 
@@ -118,7 +119,7 @@ namespace Alex.Graphics.Models.Entity.Animations
 				if (anim.Value.Input != null)
 				{
 					var input = Parent.Execute(anim.Value.Input);//.AsDouble();
-					Parent.Runtime.Environment.Structs["variable"].Set(anim.Key, input);
+					Parent.Runtime.Environment.Structs["variable"].Set(new MoPath(anim.Key), input);
 				}
 				//HandleAnnoyingMolangElement(runtime, anim, context);
 			}

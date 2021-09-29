@@ -51,7 +51,7 @@ namespace Alex.Blocks.Minecraft
 			{
 				//if (face == BlockFace.Up || face == BlockFace.Down)
 				{
-					return true;
+				//	return true;
 				}
 			}
 

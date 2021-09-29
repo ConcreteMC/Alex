@@ -13,6 +13,7 @@ using Alex.MoLang.Parser.Expressions;
 using Alex.MoLang.Runtime;
 using Alex.MoLang.Runtime.Struct;
 using Alex.MoLang.Runtime.Value;
+using Alex.MoLang.Utils;
 using Alex.ResourcePackLib;
 using Alex.ResourcePackLib.Abstraction;
 using Alex.ResourcePackLib.Json.Bedrock.Entity;
@@ -211,6 +212,18 @@ namespace Alex.Graphics.Models.Entity.Animations
 			}
 		}
 
+		private static readonly MoPath _glidingSpeed = new MoPath("variable.gliding_speed_value");
+		private static readonly MoPath _isFirstPerson = new MoPath("variable.is_first_person");
+		private static readonly MoPath _attackTime = new MoPath("variable.attack_time");
+		private static readonly MoPath _isUsingVr = new MoPath("variable.is_using_vr");
+		private static readonly MoPath _isPaperDoll = new MoPath("variable.is_paperdoll");
+		private static readonly MoPath _swimAmount = new MoPath("variable.swim_amount");
+		private static readonly MoPath _bobAnimation = new MoPath("variable.bob_animation");
+		private static readonly MoPath _handBob = new MoPath("variable.hand_bob");
+		private static readonly MoPath _isHoldingLeft = new MoPath("variable.is_holding_left");
+		private static readonly MoPath _isHoldingRight = new MoPath("variable.is_holding_right");
+		private static readonly MoPath _playerXRotation = new MoPath("variable.player_x_rotation");
+		
 		private Stopwatch _deltaTimeStopwatch = new Stopwatch();
 		private bool _didInit = false;
 		private ModelRenderer _modelRenderer = null;
@@ -255,14 +268,14 @@ namespace Alex.Graphics.Models.Entity.Animations
 				if (_preRenderExpressions != null)
 					runtime.Execute(_preRenderExpressions, Context);
 				
-				runtime.Environment.SetValue("variable.gliding_speed_value", new DoubleValue(1d));
-				runtime.Environment.SetValue("variable.is_first_person", new DoubleValue(Entity.IsFirstPersonMode ? 1 : 0));
-				runtime.Environment.SetValue("variable.attack_time", new DoubleValue(Entity.AttackTime));
-				runtime.Environment.SetValue("variable.is_using_vr", new DoubleValue(0d));
-				runtime.Environment.SetValue("variable.is_paperdoll", new DoubleValue(0d));
-				runtime.Environment.SetValue("variable.swim_amount", Entity.IsSwimming ? new DoubleValue(1d) : new DoubleValue(0d));
-				runtime.Environment.SetValue("variable.bob_animation", new DoubleValue(1d));
-				runtime.Environment.SetValue("variable.hand_bob", new DoubleValue(1d));
+				runtime.Environment.SetValue(_glidingSpeed, new DoubleValue(1d));
+				runtime.Environment.SetValue(_isFirstPerson, new DoubleValue(Entity.IsFirstPersonMode ? 1 : 0));
+				runtime.Environment.SetValue(_attackTime, new DoubleValue(Entity.AttackTime));
+				runtime.Environment.SetValue(_isUsingVr, new DoubleValue(0d));
+				runtime.Environment.SetValue(_isPaperDoll, new DoubleValue(0d));
+				runtime.Environment.SetValue(_swimAmount, Entity.IsSwimming ? new DoubleValue(1d) : new DoubleValue(0d));
+				runtime.Environment.SetValue(_bobAnimation, new DoubleValue(1d));
+				runtime.Environment.SetValue(_handBob, new DoubleValue(1d));
 				
 				if (Entity is RemotePlayer player)
 				{
@@ -284,14 +297,14 @@ namespace Alex.Graphics.Models.Entity.Animations
 					}
 					
 					runtime.Environment.SetValue(
-						"variable.is_holding_left",
+						_isHoldingLeft,
 						new DoubleValue(holdingLeft));
 
 					runtime.Environment.SetValue(
-						"variable.is_holding_right",
+						_isHoldingRight,
 						new DoubleValue(holdingRight));
 					
-					runtime.Environment.SetValue("variable.player_x_rotation", new DoubleValue(Entity.KnownPosition.Pitch));
+					runtime.Environment.SetValue(_playerXRotation, new DoubleValue(Entity.KnownPosition.Pitch));
 				}
 
 				if (def.Scripts != null)
