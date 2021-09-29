@@ -1347,7 +1347,7 @@ namespace Alex.Worlds.Multiplayer
 			if (scoreboard == null)
 				return;
 
-			if (scoreboard.TryGetObjective(packet.ObjectiveName, out var obj) || scoreboard.TryGetEntityScoreboard(packet.EntityName, out obj))
+			if (scoreboard.TryGetEntityScoreboard(packet.EntityName, out var obj) || scoreboard.TryGetObjective(packet.ObjectiveName, out obj))
 			{
 				if (packet.Action == UpdateScorePacket.UpdateScoreAction.CreateOrUpdate)
 				{
@@ -1379,12 +1379,14 @@ namespace Alex.Worlds.Multiplayer
 			var scoreboard = ScoreboardView;
 			if (scoreboard == null)
 				return;
+
+			bool showScores = Alex.Options.AlexOptions.UserInterfaceOptions.Scoreboard.ShowScore.Value;
 			
 			switch (packet.Mode)
 			{
 				case ScoreboardObjectivePacket.ObjectiveMode.Create:
 					//packet.Type
-					scoreboard.AddObjective(new ScoreboardObjective(packet.ObjectiveName, packet.Value, 1, "dummy"));
+					scoreboard.AddObjective(new ScoreboardObjective(packet.ObjectiveName, packet.Value, 1, showScores ? string.Empty : "dummy"));
 					break;
 
 				case ScoreboardObjectivePacket.ObjectiveMode.Remove:

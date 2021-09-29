@@ -35,6 +35,9 @@ namespace Alex.Common.Data.Options
 		[DataMember]
 		public OptionsProperty<ElementPosition> Position { get; set; }
 		
+		[DataMember]
+		public OptionsProperty<bool> ShowScore { get; set; }
+
 		public ScoreboardOptions()
 		{
 			Enabled = DefineProperty(true);
@@ -45,6 +48,8 @@ namespace Alex.Common.Data.Options
 
 				return value;
 			});
+
+			ShowScore = DefineProperty(true);
 		}
 	}
 

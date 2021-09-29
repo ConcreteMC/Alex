@@ -1,3 +1,4 @@
+using Alex.Common.Utils;
 using RocketUI;
 
 namespace Alex.Gui.Elements.Scoreboard
@@ -78,6 +79,7 @@ namespace Alex.Gui.Elements.Scoreboard
 			{
 				Anchor = Alignment.TopRight,
 				Text = score.ToString(),
+				TextColor = TextColor.Red.ForegroundColor
 				//ParentElement = this
 			});
 			

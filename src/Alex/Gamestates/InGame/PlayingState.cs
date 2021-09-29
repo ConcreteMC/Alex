@@ -92,10 +92,18 @@ namespace Alex.Gamestates.InGame
 		private TimeSpan _targetElapsed = TimeSpan.Zero;
 		protected override void OnShow()
 		{
+			var world = World;
+			if (world == null)
+				return;
+			
+			var player = World?.Player;
+			if (player == null)
+				return;
+			
 			_targetElapsed = Alex.TotalTimeSpan.Add(TimeSpan.FromMilliseconds(500));
 			
 			Alex.IsMouseVisible = false;
-			World.Player.SkipUpdate();
+			player?.SkipUpdate();
 			
 			//if (RenderNetworking) 
 			Alex.GuiManager.AddScreen(_networkDebugHud);
@@ -106,14 +114,18 @@ namespace Alex.Gamestates.InGame
 			if (RenderDebug)
 				Alex.GuiManager.AddScreen(_debugInfo);
 
-			World.TickManager.RegisterTicked(_playingHud.Title);
+			world.TickManager.RegisterTicked(_playingHud.Title);
 			_playingHud.Title.Ready();
 			Alex.ResetFrameRateLimiter();
 		}
 
 		protected override void OnHide()
 		{
-			World.TickManager.UnregisterTicked(_playingHud.Title);
+			var world = World;
+			if (world == null)
+				return;
+	
+			world.TickManager.UnregisterTicked(_playingHud.Title);
 			
 			if (RenderDebug)
 				Alex.GuiManager.RemoveScreen(_debugInfo);
