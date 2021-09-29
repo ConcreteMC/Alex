@@ -66,15 +66,15 @@ namespace Alex.ResourcePackLib.Json.Models.Items
         static DisplayPositionHelper()
         {
             var type = typeof(DisplayPosition);
-            var dict = new Dictionary<string, DisplayPosition>();
+            var dict = new Dictionary<string, DisplayPosition>(StringComparer.OrdinalIgnoreCase);
 
-            foreach (var JsonEnumValue in Enum.GetNames(type))
+            foreach (var value in Enum.GetValues<DisplayPosition>())
             {
-                var i = type.GetField(JsonEnumValue);
+                var i = type.GetField(value.ToString());
                 var attr = i?.GetCustomAttribute<JsonEnumValueAttribute>();
                 if (attr != null)
                 {
-                    dict.Add(attr.Value, (DisplayPosition) i.GetRawConstantValue());
+                    dict.Add(attr.Value, value);
                 }
             }
 
@@ -83,15 +83,15 @@ namespace Alex.ResourcePackLib.Json.Models.Items
                 new ReadOnlyDictionary<DisplayPosition, string>(dict.ToDictionary(ks => ks.Value, vs => vs.Key));
         }
 
-        public static DisplayPosition ToDisplayPosition(string string_value)
+        public static DisplayPosition ToDisplayPosition(string stringValue)
         {
-            if(string.IsNullOrWhiteSpace(string_value))
-                throw new ArgumentNullException(nameof(string_value));
+            if(string.IsNullOrWhiteSpace(stringValue))
+                throw new ArgumentNullException(nameof(stringValue));
             
-            if (_lookupCache.TryGetValue(string_value.ToLowerInvariant(), out var displayPosition))
+            if (_lookupCache.TryGetValue(stringValue.ToLowerInvariant(), out var displayPosition))
                 return displayPosition;
             
-            throw new ArgumentOutOfRangeException(nameof(string_value));
+            throw new ArgumentOutOfRangeException(nameof(stringValue));
         }
 
         public static string ToString(this DisplayPosition displayPosition)

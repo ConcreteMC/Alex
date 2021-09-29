@@ -290,15 +290,13 @@ namespace Alex.Graphics.Models
 			}
 				
 			attachment.Parent = this;
-				
 			
-			Model.Bones.Add(model.Root);
-
 			foreach (var mesh in model.Meshes)
 			{
 				Model.Meshes.Add(mesh);
 			}
 			AddChild(model.Root);
+			Model.Bones.Add(model.Root);
 			_attached.Add(attachment);
 			//Model.BuildHierarchy();
 		}
@@ -321,12 +319,11 @@ namespace Alex.Graphics.Models
 				return;
 			}
 
+			Model.Bones.Remove(model.Root);
 			foreach (var mesh in model.Meshes)
 			{
 				Model.Meshes.Remove(mesh);
 			}
-				
-			Model.Bones.Remove(model.Root);
 			RemoveChild(model.Root);
 			//Model.BuildHierarchy();
 		}
