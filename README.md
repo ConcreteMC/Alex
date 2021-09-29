@@ -10,7 +10,7 @@ About
 
 This is a hobby project i work on from time to time, the end goal being it able to connect to a MC:Bedrock & MC:Java server & be feature compatible with most features required for the typical minigame server.
 
-As of now, it is able to connect to java 1.17 & bedrock 1.16.210 servers.
+As of now, it is able to connect to java 1.17 & bedrock 1.17.11 servers.
 
 Screenshots
 -----------
