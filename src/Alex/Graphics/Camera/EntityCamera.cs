@@ -74,48 +74,37 @@ namespace Alex.Graphics.Camera
 
 		private void UpdateViewMatrixFirstPerson()
 		{
-			var position = Position;
+			var position = Position + Offset;
+			
+			var renderLocation = TrackingEntity.KnownPosition;
+			float pitch = (-renderLocation.Pitch).ToRadians();
+			float yaw = ((renderLocation.HeadYaw)).ToRadians();
 
-			if (TrackingEntity.IsSneaking)
-			{
-				position.Y -= 0.18f;
-			}
-			
-			var direction = new Vector3(Rotation.X, Rotation.Y, Rotation.Z);
-			direction.Normalize();
-			
-			//var target = position
-			
+			Vector3 direction = Vector3.Backward;
+
+			direction = Vector3.Transform(
+				direction, Matrix.CreateRotationX(pitch) * Matrix.CreateRotationY(yaw));
+
 			Target = position + direction;
 			Direction = direction;
-
+			
 			ViewMatrix = Matrix.CreateLookAt(position, Target, Vector3.Up);
 			Frustum = new BoundingFrustum(ViewMatrix * ProjectionMatrix);
 		}
-		
+
 		private static readonly Vector3 ThirdPersonOffset =  new Vector3(0, 2.5f, 3.5f);
 
 		private void UpdateThirdPerson(bool frontSideView)
 		{
-			//var direction = new Vector3(Rotation.X, Rotation.Y, Rotation.Z);
-			//direction.Normalize();
-			
-			//var target = position
-			
-			//Target = position + direction;
-			//Direction = direction;
-
-			//var offset = ThirdPersonOffset;
-			//offset = Vector3.Transform(offset, MatrixHelper.CreateRotationDegrees(Rotation));
 			var boundingBox = TrackingEntity.GetBoundingBox();
 			
-			var renderLocation = TrackingEntity.RenderLocation;
+			var renderLocation = TrackingEntity.KnownPosition;
 			
 			var target = Position;
 			target.Y += boundingBox.GetHeight();
 			
 			float pitch = (-renderLocation.Pitch).ToRadians();
-			float yaw   = ((renderLocation.Yaw)).ToRadians();
+			float yaw   = ((renderLocation.HeadYaw)).ToRadians();
 
 			var directionMatrix = Matrix.CreateRotationX(pitch) * Matrix.CreateRotationY(yaw);
 			

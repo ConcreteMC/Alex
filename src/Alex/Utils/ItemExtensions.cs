@@ -24,33 +24,31 @@ namespace Alex.Utils
 			Item result = null;
 
 
-			Itemstate itemState = null;
+			//Itemstate itemState = null;
 
-			if (ChunkProcessor.Itemstates != null)
-				itemState = ChunkProcessor.Itemstates.FirstOrDefault(x => x.Id == item.Id);
+			//if (ChunkProcessor.Itemstates != null)
+			//	itemState = ChunkProcessor.Itemstates.FirstOrDefault(x => x.Id == item.Id);
 			
 
-			if (itemState == null)
-				itemState = MiNET.Items.ItemFactory.Itemstates.FirstOrDefault(x => x.Id == item.Id);
+			//if (itemState == null)
+			//	itemState = MiNET.Items.ItemFactory.Itemstates.FirstOrDefault(x => x.Id == item.Id);
 
-			if (itemState != null)
+			//if (itemState != null)
+			//{
+			if (ItemFactory.TryGetItem(item.Name, out result))
 			{
-				if (ItemFactory.TryGetItem(itemState.Name, out result))
-				{
 					//	Log.Info($"{item.Id} = {JsonConvert.SerializeObject(itemState, SerializerSettings)} || {JsonConvert.SerializeObject(result, SerializerSettings)}");
-				}
 			}
-
-			if (result == null && item.Id < 256 && item.Id >= 0) //Block
+			else if (result == null && item.Id < 256 && item.Id >= 0) //Block
 			{
 				var id = item.Id;
-				var meta = (byte) item.Metadata;
+				var meta = (byte)item.Metadata;
 
 				var reverseMap = MiNET.Worlds.AnvilWorldProvider.Convert.FirstOrDefault(map => map.Value.Item1 == id);
 
 				if (reverseMap.Value != null)
 				{
-					id = (byte) reverseMap.Key;
+					id = (byte)reverseMap.Key;
 				}
 
 				var res = BlockFactory.GetBlockStateID(id, meta);
@@ -66,7 +64,7 @@ namespace Alex.Utils
 			if (result == null || (result.IsAir() && !(item is MiNET.Items.ItemAir)))
 			{
 				if (!ItemFactory.TryGetBedrockItem(item.Id, item.Metadata, out result))
-					Log.Warn($"Failed to convert MiNET item to Alex item. (MiNET={item}, CallingMethod={source}{(itemState == null ? "" : $", Name={itemState.Name}")})");
+					Log.Warn($"Failed to convert MiNET item to Alex item. (MiNET={item}, CallingMethod={source}{(item == null ? "" : $", Name={item.Name}")})");
 			}
 
 			if (result == null)

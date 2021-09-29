@@ -110,7 +110,8 @@ namespace Alex.Entities.Generic
 			if (ModelRenderer.GetBone("head", out var head))
 			{
 				//rotation.Y = 180f - rotation.Y;
-				head.Rotation = Quaternion.CreateFromYawPitchRoll(MathUtils.ToRadians(rotation.Y), MathUtils.ToRadians(rotation.X), MathUtils.ToRadians(rotation.Z));;
+				head.Rotation = rotation;
+				// Quaternion.CreateFromYawPitchRoll(MathUtils.ToRadians(rotation.Y), MathUtils.ToRadians(rotation.X), MathUtils.ToRadians(rotation.Z));;
 			}
 		}
 
@@ -120,7 +121,9 @@ namespace Alex.Entities.Generic
 			if (ModelRenderer.GetBone("body", out var head))
 			{
 				rotation.Y = 180f - rotation.Y;
-				head.Rotation = Quaternion.CreateFromYawPitchRoll(MathUtils.ToRadians(rotation.Y), MathUtils.ToRadians(rotation.X), MathUtils.ToRadians(rotation.Z));;
+
+				head.Rotation =
+					rotation; //Quaternion.CreateFromYawPitchRoll(MathUtils.ToRadians(rotation.Y), MathUtils.ToRadians(rotation.X), MathUtils.ToRadians(rotation.Z));;
 			}
 		}
 
@@ -129,7 +132,8 @@ namespace Alex.Entities.Generic
 			if (ModelRenderer == null) return;
 			if (ModelRenderer.GetBone(isLeftArm ? "leftarm" : "rightarm", out var head))
 			{
-				head.Rotation = Quaternion.CreateFromYawPitchRoll(MathUtils.ToRadians(rotation.Y), MathUtils.ToRadians(rotation.X), MathUtils.ToRadians(rotation.Z));;
+				head.Rotation =
+					rotation; //Quaternion.CreateFromYawPitchRoll(MathUtils.ToRadians(rotation.Y), MathUtils.ToRadians(rotation.X), MathUtils.ToRadians(rotation.Z));;
 			}
 		}
 		
@@ -139,7 +143,7 @@ namespace Alex.Entities.Generic
 			if (ModelRenderer.GetBone(isLeftLeg ? "leftleg" : "rightleg", out var head))
 			{
 				//rotation.Y = 180f - rotation.Y;
-				head.Rotation = Quaternion.CreateFromYawPitchRoll(MathUtils.ToRadians(rotation.Y), MathUtils.ToRadians(rotation.X), MathUtils.ToRadians(rotation.Z));;
+				head.Rotation = rotation;// Quaternion.CreateFromYawPitchRoll(MathUtils.ToRadians(rotation.Y), MathUtils.ToRadians(rotation.X), MathUtils.ToRadians(rotation.Z));;
 			}
 		}
 

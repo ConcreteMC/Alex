@@ -21,6 +21,11 @@ namespace Alex.Common.Utils.Vectors
 			return (MathF.PI / 180.0F) * angle;
 		}
 
+		public static float ToDegrees(this float angle)
+		{
+			return angle * (180.0f / MathF.PI);
+		}
+		
 		public static double ToRadians(this double angle)
 		{
 			return (Math.PI / 180.0D) * angle;

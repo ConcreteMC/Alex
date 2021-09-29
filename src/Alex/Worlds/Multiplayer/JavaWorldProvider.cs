@@ -183,16 +183,16 @@ namespace Alex.Worlds.Multiplayer
 		
 		private void SendPlayerAbilities(Player player)
 		{
-			int flags = 0;
+			byte flags = 0;
 
 			if (_flying)
 			{
-				flags |= 0x01 << flags;
+				flags.SetBit(0x02, true);
 			}
 
 			if (player.CanFly)
 			{
-				flags |= 0x03 << flags;
+				//flags |= 0x03 << flags;
 			}
 
 			PlayerAbilitiesPacket abilitiesPacket = PlayerAbilitiesPacket.CreateObject();
@@ -301,8 +301,8 @@ namespace Alex.Worlds.Multiplayer
 			//Log.Info($"Sending PlayerPositionAndLook: {reason}");
 			
 			PlayerPositionAndLookPacketServerBound packet = PlayerPositionAndLookPacketServerBound.CreateObject();
-			packet.Yaw = 360f - pos.HeadYaw;
-			packet.Pitch = FixPitch(pos.Pitch);
+			packet.Yaw = -pos.HeadYaw;
+			packet.Pitch = -pos.Pitch;
 			packet.X = pos.X;
 			packet.Y = pos.Y;
 			packet.Z = pos.Z;
@@ -318,8 +318,8 @@ namespace Alex.Worlds.Multiplayer
 		{
 			//Log.Info($"Sending playerlook: {reason}");
 			PlayerLookPacket playerLook = PlayerLookPacket.CreateObject();
-			playerLook.Pitch = FixPitch(pos.Pitch);
-			playerLook.Yaw = 360f - pos.HeadYaw;
+			playerLook.Yaw = -pos.HeadYaw;
+			playerLook.Pitch = -pos.Pitch;
 			playerLook.OnGround = pos.OnGround;
 
 			SendPacket(playerLook);

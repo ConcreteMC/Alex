@@ -406,7 +406,7 @@ namespace Alex.Utils.Inventories
 			{
 				if (_pendingRequests.TryRemove(response.RequestId, out var request))
 				{
-					foreach (var task in response.Responses)
+					foreach (var task in response.ResponseContainerInfos)
 					{
 						if (TryGetContainer(task.ContainerId, out var inventory))
 						{

@@ -35,11 +35,22 @@ namespace Alex.Common.Utils.Vectors
 
 		public float HeadYaw
 		{
-			get => _headYaw;
+			get
+			{
+				return _headYaw;
+			}
 			set
 			{
 				_headYaw = value; //FixValue(value);
 			}
+		}
+
+		float FixYaw(float value)
+		{
+			if (value < 0f)
+				value = 360 + value;
+
+			return value;
 		}
 
 		float FixValue(float value)

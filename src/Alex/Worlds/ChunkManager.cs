@@ -233,7 +233,7 @@ namespace Alex.Worlds
 							break;
 
 						//bool processedLighting = ProcessLighting();
-						int lightUpdatesExecuted = BlockLightUpdate.Execute();
+						int lightUpdatesExecuted = BlockLightUpdate.Execute() + SkyLightCalculator.Execute();
 						bool processedQueue    = ProcessQueue();
 
 						if (!processedQueue && lightUpdatesExecuted == 0)

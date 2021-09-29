@@ -778,7 +778,9 @@ namespace Alex.Worlds
 				}
 
 				ChunkManager.BlockLightUpdate.Enqueue(blockcoords);
-				ChunkManager.SkyLightCalculator.Calculate(blockcoords);
+				ChunkManager.SkyLightCalculator.Enqueue(blockcoords);
+				//ChunkManager.SkyLightCalculator.Calculate(blockcoords);
+				
 				ChunkManager.ScheduleChunkUpdate(chunkCoords, ScheduleType.Scheduled, true);
 			}
 		}
@@ -1107,27 +1109,8 @@ namespace Alex.Worlds
 			{
 				entity.KnownPosition.OnGround = position.OnGround;
 
-				/*if (updateLook)
-				{
-					if (updatePitch)
-					{
-						entity.KnownPosition.Pitch = position.Pitch;
-					}
-
-					entity.KnownPosition.Yaw = position.Yaw;
-					entity.KnownPosition.HeadYaw = position.HeadYaw;
-					//	entity.UpdateHeadYaw(position.HeadYaw);
-				}
-				else
-				{
-					position.Pitch = entity.KnownPosition.Pitch;
-					position.Yaw = entity.KnownPosition.Yaw;
-					position.HeadYaw = entity.KnownPosition.HeadYaw;
-				}*/
-
 				if (relative)
 				{
-					//var adjusted = entity 
 					entity.Movement.Move(position.ToVector3());
 				}
 				else
@@ -1137,10 +1120,6 @@ namespace Alex.Worlds
 						if (entity is RemotePlayer)
 						{
 							position.Y -= Player.EyeLevel;
-						}
-						else
-						{
-						//	position.Y -= (float) (entity.BoundingBox.GetHeight());
 						}
 					}
 

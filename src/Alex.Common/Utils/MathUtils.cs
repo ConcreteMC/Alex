@@ -16,19 +16,19 @@ namespace Alex.Common.Utils
 		
 		public static float LerpDegrees(float start, float end, float amount)
 		{
-			float difference = Math.Abs(end - start);
-			if (difference > 180)
+			float difference = MathF.Abs(end - start);
+			if (difference > 180f)
 			{
 				// We need to add on to one of the values.
 				if (end > start)
 				{
 					// We'll add it on to start...
-					start += 360;
+					start += 360f;
 				}
 				else
 				{
 					// Add it on to end.
-					end += 360;
+					end += 360f;
 				}
 			}
 
@@ -36,9 +36,9 @@ namespace Alex.Common.Utils
 			float value = (start + ((end - start) * amount));
 
 			// Wrap it..
-			float rangeZero = 360;
+			const float rangeZero = 360f;
 
-			if (value >= 0 && value <= 360)
+			if (value >= 0f && value <= 360f)
 				return value;
 
 			return (value % rangeZero);

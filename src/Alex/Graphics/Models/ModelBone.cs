@@ -69,8 +69,8 @@ namespace Alex.Graphics.Models
 			set;
 		} = Matrix.Identity;
 		
-		private Quaternion _baseRotation = Quaternion.Identity;
-		public Quaternion BaseRotation
+		private Vector3 _baseRotation = Vector3.Zero;
+		public Vector3 BaseRotation
 		{
 			get => _baseRotation;
 			set
@@ -102,8 +102,8 @@ namespace Alex.Graphics.Models
 			}
 		}
 
-		private Quaternion _rotation;
-		public Quaternion Rotation
+		private Vector3 _rotation;
+		public Vector3 Rotation
 		{
 			get => _rotation;
 			set
@@ -176,14 +176,13 @@ namespace Alex.Graphics.Models
 
 		public void RotateOverTime(Vector3 targetRotation, double time, bool overrideOthers = false)
 		{
-			var rot = MatrixHelper.FromRotationDegrees(targetRotation * new Vector3(-1f, -1f, 1f));
 			if (overrideOthers)
 			{
-				_tempRotationData.Target = rot;
+				_tempRotationData.Target = targetRotation;
 			}
 			else
 			{
-				_tempRotationData.Target = Quaternion.Multiply(_tempRotationData.Target, rot);
+				_tempRotationData.Target += targetRotation;// Quaternion.Multiply(_tempRotationData.Target, rot);
 			}
 
 			_tempRotationData.TargetTime = time;
@@ -205,21 +204,21 @@ namespace Alex.Graphics.Models
 		
 		public void ScaleOverTime(Vector3 targetScale, double time, bool overrideOthers = false)
 		{
-			if (overrideOthers)
-			{
+			//if (overrideOthers)
+			//{
 				_tempScaleData.Target = targetScale;
-			}
-			else
+			//}
+			//else
 			{
-				_tempScaleData.Target += targetScale;
+			//	_tempScaleData.Target += targetScale;
 			}
 			
 			_tempScaleData.TargetTime = time;
 		}
 
 		
-		private InterpolationData<Quaternion> _rotationData = RotatedInterpolationData.EmptyRotation;
-		private InterpolationData<Quaternion> _tempRotationData = RotatedInterpolationData.EmptyRotation;
+		private InterpolationData<Vector3> _rotationData = RotatedInterpolationData.EmptyRotation;
+		private InterpolationData<Vector3> _tempRotationData = RotatedInterpolationData.EmptyRotation;
 
 		private InterpolationData<Vector3> _tempPositionData = VectorInterpolationData.Empty;
 		private InterpolationData<Vector3> _positionData = VectorInterpolationData.Empty;
@@ -248,9 +247,12 @@ namespace Alex.Graphics.Models
 		{
 			var pivot = Pivot.GetValueOrDefault(new Vector3(8f, 8f, 8f));
 
+			// * MatrixHelper.CreateRotation(Quaternion.Multiply(_rotation, _baseRotation).ToEuler())
 			Transform = Matrix.CreateScale(_baseScale * _scale) * Matrix.CreateTranslation(-pivot)
-			                                                    * Matrix.CreateFromQuaternion(Quaternion.Multiply(_rotation, _baseRotation))
-			                                                   // * MatrixHelper.CreateRotationDegrees(_baseRotation)
+			                                                    * MatrixHelper.CreateRotationDegrees(_baseRotation)
+			                                                    * MatrixHelper.CreateRotationDegrees(_rotation * new Vector3(-1f, 1f, 1f))
+			                                                    //* MatrixHelper.CreateRotation(Quaternion.Multiply(_rotation, _baseRotation).ToEuler())
+			                                                    // * MatrixHelper.CreateRotationDegrees(_baseRotation)
 			                                                    * Matrix.CreateTranslation(pivot)
 			                                                    * Matrix.CreateTranslation(_position + _basePosition);
 		}
@@ -278,7 +280,6 @@ namespace Alex.Graphics.Models
 		/// <inheritdoc />
 		public void AddChild(IAttached attachment)
 		{
-			return;
 			if (_attached.Contains(attachment)) return;
 			var model = attachment.Model;
 
@@ -305,7 +306,6 @@ namespace Alex.Graphics.Models
 		/// <inheritdoc />
 		public void Remove(IAttached attachment)
 		{
-			return;
 			if (!_attached.Remove(attachment)) 
 				return;
 
@@ -335,7 +335,7 @@ namespace Alex.Graphics.Models
 	public abstract class InterpolationData<V>
 	{
 		public static InterpolationData<Vector3> Empty => new VectorInterpolationData(Vector3.Zero, Vector3.Zero, -1d);
-		public static InterpolationData<Quaternion> EmptyRotation => new RotatedInterpolationData(Quaternion.Identity, Quaternion.Identity, -1d);
+		public static InterpolationData<Vector3> EmptyRotation => new RotatedInterpolationData(Vector3.Zero, Vector3.Zero, -1d);
 		public InterpolationData(V start, V target, double targetTime)
 		{
 			TargetTime = targetTime;
@@ -352,7 +352,20 @@ namespace Alex.Graphics.Models
 		protected double ElapsedTime;
 
 		public abstract InterpolationData<V> WithStart(V start);
-		public abstract V Update(double deltaTime);
+		protected abstract V OnUpdate(double deltaTime);
+
+		public V Update(double deltaTime)
+		{
+			if (TargetTime <= 0)
+				return Start;
+
+			if (ElapsedTime >= TargetTime)
+				return Target;
+			
+			ElapsedTime += deltaTime;
+
+			return OnUpdate(deltaTime);
+		}
 	}
 
 	public class VectorInterpolationData : InterpolationData<Vector3>
@@ -380,44 +393,31 @@ namespace Alex.Graphics.Models
 		}
 
 		/// <inheritdoc />
-		public override Vector3 Update(double deltaTime)
+		protected override Vector3 OnUpdate(double deltaTime)
 		{
-			if (TargetTime <= 0)
-				return Target;
-			if (ElapsedTime >= TargetTime)
-				return Target;
-
-			ElapsedTime += deltaTime;
 			return Vector3.Lerp(Start, Target, (float) ((1f / TargetTime) * ElapsedTime));
 		}
 	}
 
-	public class RotatedInterpolationData : InterpolationData<Quaternion>
+	public class RotatedInterpolationData : InterpolationData<Vector3>
 	{
 		/// <inheritdoc />
-		public RotatedInterpolationData(Quaternion start, Quaternion target, double targetTime) : base(
+		public RotatedInterpolationData(Vector3 start, Vector3 target, double targetTime) : base(
 			start, target, targetTime)
 		{
 			
 		}
 
 		/// <inheritdoc />
-		public override InterpolationData<Quaternion> WithStart(Quaternion start)
+		public override InterpolationData<Vector3> WithStart(Vector3 start)
 		{
 			return new RotatedInterpolationData(start, Target, TargetTime);
 		}
 		
 		/// <inheritdoc />
-		public override Quaternion Update(double deltaTime)
+		protected override Vector3 OnUpdate(double deltaTime)
 		{
-			if (TargetTime <= 0)
-				return Start;
-
-			if (ElapsedTime >= TargetTime)
-				return Target;
-			
-			ElapsedTime += deltaTime;
-			return Quaternion.Lerp(Start, Target, (float) ((1f / TargetTime) * ElapsedTime));
+			return MathUtils.LerpVector3Degrees(Start, Target, (float) ((1f / TargetTime) * ElapsedTime));// .Lerp(Start, Target, (float) ((1f / TargetTime) * ElapsedTime));
 		}
 	}
 }

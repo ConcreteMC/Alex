@@ -66,15 +66,29 @@ namespace Alex.Utils
 			List<VertexPositionColorTexture> vertices = new List<VertexPositionColorTexture>();
 			List<short> indices = new List<short>();
 			
-			ModelBone root = new ModelBone { Name = "AlexModelRoot" };
+			ModelBone root;
+
+			var rootDefinition = model.Bones.FirstOrDefault(
+				x => string.IsNullOrWhiteSpace(x.Parent) && string.Equals(x?.Name, "root", StringComparison.InvariantCultureIgnoreCase));
+
+			if (rootDefinition != null)
+			{
+				root = ProcessBone(model, rootDefinition, ref vertices, ref indices);
+			}
+			else
+			{ 
+				root = new ModelBone { Name = "AlexModelRoot" };
+			}
+
 			modelBoneInstances.Add(root);
 			
 			int counter = 0;
-			foreach (var bone in model.Bones.Where(x => string.IsNullOrWhiteSpace(x.Parent)))
+
+			foreach (var bone in model.Bones.Where(x => string.IsNullOrWhiteSpace(x.Parent) && x != rootDefinition))
 			{
 				if (string.IsNullOrWhiteSpace(bone.Name))
 					bone.Name = $"bone{counter++}";
-
+				
 				var processed = ProcessBone(model, bone, ref vertices, ref indices);
 				root.AddChild(processed);
 			}
@@ -212,13 +226,13 @@ namespace Alex.Utils
 			if (bone.Rotation.HasValue)
 			{
 				var r = bone.Rotation.Value;
-				modelBone.BaseRotation = MatrixHelper.FromRotationDegrees(new Vector3(r.X, r.Y, r.Z));
+				modelBone.BaseRotation = new Vector3(r.X, r.Y, r.Z);
 			}
 			
 			if (bone.BindPoseRotation.HasValue)
 			{
 				var r = bone.BindPoseRotation.Value;
-				modelBone.BaseRotation *= MatrixHelper.FromRotationDegrees(new Vector3(r.X, r.Y, r.Z));
+				modelBone.BaseRotation *= new Vector3(r.X, r.Y, r.Z);
 			}
 
 			

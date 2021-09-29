@@ -556,16 +556,27 @@ namespace Alex.Net.Bedrock
 				{
 					if (Client.World.TryGetEntity(message.runtimeEntityId, out var entity))
 					{
+						var pos = new MiNET.Utils.Vectors.PlayerLocation(
+							entity.KnownPosition.X, entity.KnownPosition.Y, entity.KnownPosition.Z,
+							entity.KnownPosition.HeadYaw, entity.KnownPosition.Yaw, entity.KnownPosition.Pitch);
 
-						var known = message.GetCurrentPosition(
-							new MiNET.Utils.Vectors.PlayerLocation(
-								entity.KnownPosition.X, entity.KnownPosition.Y, entity.KnownPosition.Z,
-								entity.KnownPosition.HeadYaw, entity.KnownPosition.Yaw, entity.KnownPosition.Pitch));
+						var known = message.GetCurrentPosition(pos);
 
+						var newPosition = new PlayerLocation(
+							known.X, known.Y, known.Z, known.HeadYaw, known.Yaw, known.Pitch);
+
+						if ((message.flags & McpeMoveEntityDelta.HasY) != 0)
+						{
+							if (entity is RemotePlayer player)
+							{
+								newPosition.Y -= Player.EyeLevel;
+							}
+						}
+						
 						Client.World.UpdateEntityPosition(
 							message.runtimeEntityId,
-							new PlayerLocation(known.X, known.Y, known.Z, known.HeadYaw, known.Yaw, known.Pitch), false,
-							true, true, false, true);
+							newPosition, false,
+							true, true, false, false);
 					}
 				}
 			}

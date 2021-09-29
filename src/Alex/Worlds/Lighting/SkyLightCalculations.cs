@@ -28,6 +28,7 @@ namespace Alex.Worlds.Lighting
 		public  bool              DoLogging         { get; set; } = false;
 		private CancellationToken CancellationToken { get; }
 		private IBlockAccess Level { get; }
+		private ConcurrentQueue<BlockCoordinates> Queue { get; } = new ConcurrentQueue<BlockCoordinates>();
 		public SkyLightCalculations(IBlockAccess level, CancellationToken cancellationToken)
 		{
 			Level = level;
@@ -76,13 +77,39 @@ namespace Alex.Worlds.Lighting
 
 			return true;
 		}
-
-		public void Calculate(BlockCoordinates coordinates)
+		
+		public int Execute()
 		{
-			int currentLight = Level.GetSkyLight(coordinates);
+			int count = 0;
+
+			while (Queue.TryDequeue(out var coords) && !CancellationToken.IsCancellationRequested)
+			{
+				count += Calculate(coords);
+			}
+
+			return count;
+		}
+
+		public void Enqueue(BlockCoordinates coordinates)
+		{
+			Queue.Enqueue(coordinates);
+		}
+		
+		public int Calculate(BlockCoordinates coordinates)
+		{
+			var level = Level;
+
+			if (level == null)
+				return 0;
+			
+			int currentLight = level.GetSkyLight(coordinates);
 
 			var cc = new ChunkCoordinates(coordinates);
-			ChunkColumn chunk = (ChunkColumn) Level.GetChunk(cc);
+			ChunkColumn chunk = (ChunkColumn) level.GetChunk(cc);
+
+			if (chunk == null)
+				return 0;
+			
 			var height = chunk.GetRecalculatedHeight(coordinates.X & 0x0f, coordinates.Z & 0x0f);
 
 			Queue<BlockCoordinates> sourceQueue = new Queue<BlockCoordinates>();
@@ -115,11 +142,11 @@ namespace Alex.Worlds.Lighting
 					}
 				}
 
-				Level.SetSkyLight(coordinates, 0);
+				level.SetSkyLight(coordinates, 0);
 
 				foreach (var delete in deleteQueue)
 				{
-					Level.SetSkyLight(delete, 0);
+					level.SetSkyLight(delete, 0);
 				}
 			}
 			else
@@ -141,6 +168,8 @@ namespace Alex.Worlds.Lighting
 
 		//	SkyLightBlockAccess blockAccess = new SkyLightBlockAccess(level.ChunkManager);
 			Calculate(lightBfQueue, lightBfSet);
+
+			return 1;
 		}
 
 		private void ResetLight(Queue<BlockCoordinates> resetQueue, Queue<BlockCoordinates> sourceQueue, BlockCoordinates coordinates)

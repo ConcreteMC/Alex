@@ -117,7 +117,12 @@ namespace Alex.Graphics.Models.Entity.Animations
 			
 			if (_parent?.Entity is Player)
 			{
-				Log.Info($"Started animation: {_animName}");
+				//Log.Info($"Started animation: {_animName}");
+			}
+
+			foreach (var bone in _boneComps)
+			{
+				bone.Value.Start();
 			}
 			
 			Playing = true;
@@ -140,17 +145,12 @@ namespace Alex.Graphics.Models.Entity.Animations
 			{
 				if (_parent?.Entity is Player)
 				{
-					Log.Info($"Stopped animation: {_animName}");
+				//	Log.Info($"Stopped animation: {_animName}");
 				}
-
-				var renderer = _parent?.Entity?.ModelRenderer;
-
-				if (renderer is not null)
+				
+				foreach (var bone in _boneComps)
 				{
-					foreach (var bone in _boneComps)
-					{
-						bone.Value.Revert();
-					}
+					bone.Value.Stop();
 				}
 			}
 			Playing = false;
@@ -174,6 +174,33 @@ namespace Alex.Graphics.Models.Entity.Animations
 			Bone = null;
 		}
 
+		private Vector3 _startRotation = Vector3.Zero;
+		private Vector3 _startPosition = Vector3.Zero;
+		private Vector3 _startScale = Vector3.Zero;
+		public void Start()
+		{
+			var bone = Bone;
+
+			if (bone == null)
+				return;
+
+			_startRotation = bone.Rotation;
+			_startPosition = bone.Position;
+			_startScale = bone.Scale;
+		}
+
+		public void Stop()
+		{
+			var bone = Bone;
+
+			if (bone == null)
+				return;
+
+			bone.Rotation = _startRotation;
+			bone.Position = _startPosition;
+			bone.Scale = _startScale;
+		}
+		
 		public void Tick(MoLangRuntime runtime, double elapsedTime, double animationTime, bool overrideOthers)
 		{
 			var bone = Bone;
@@ -200,11 +227,6 @@ namespace Alex.Graphics.Models.Entity.Animations
 			double scaleTime = elapsedTime;
 			var targetScale = value.Scale?.Evaluate(runtime, bone.Scale, out scaleTime, animationTime) ?? Vector3.One;
 			bone.ScaleOverTime(targetScale, scaleTime > 0 ? scaleTime : elapsedTime, true);
-		}
-
-		public void Revert()
-		{
-			return;
 		}
 	}
 }

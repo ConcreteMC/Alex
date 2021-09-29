@@ -209,9 +209,7 @@ namespace Alex.Gamestates.Multiplayer
 
 	    private void Reload()
 	    {
-		    ThreadPool.QueueUserWorkItem(
-			    o =>
-			    {
+		    
 				    try
 				    {
 					    _cancellationTokenSource?.Cancel();
@@ -289,7 +287,6 @@ namespace Alex.Gamestates.Multiplayer
 					    }
 				    }
 				    finally { }
-			    });
 	    }
 
 	    protected override void OnSelectedItemChanged(GuiServerListEntryElement newItem)

@@ -7,6 +7,7 @@ using Alex.Common;
 using Alex.Common.Graphics;
 using Alex.Common.Services;
 using Alex.Common.Utils;
+using Alex.Common.Utils.Vectors;
 using Alex.Gamestates.Common;
 using Alex.Gamestates.InGame.Hud;
 using Alex.Graphics.Camera;
@@ -328,6 +329,27 @@ namespace Alex.Gamestates.InGame
 				var entity = player.HitEntity;
 				return $"Hit entity: {entity.EntityId} / {entity.ToString()}\n{ChatFormatting.Reset}Hide nametag: {!entity.HideNameTag}\nNoAI: {entity.NoAi}\nHas Gravity: {entity.IsAffectedByGravity}\nFlying: {entity.IsFlying}\nOn Ground: {entity.KnownPosition.OnGround}\nHas Collisions: {entity.HasCollision}\nHas Model: {entity.ModelRenderer != null}\nHas Texture: {entity.Texture != null} (2nd={entity.ModelRenderer?.Texture != null})\nScale: {entity.Scale}\nTextureSize: {entity.ModelRenderer?.TextureSize}\n";
 			}, TimeSpan.FromMilliseconds(500));
+			
+		/*	_debugInfo.AddDebugRight(
+				() =>
+				{
+					var modelRenderer = World?.Player?.ModelRenderer?.Model;
+
+					if (modelRenderer == null)
+						return string.Empty;
+					
+					StringBuilder sb = new StringBuilder();
+
+					foreach (var bone in modelRenderer.Bones)
+					{
+						sb.AppendLine($"{bone.Name}");
+						sb.AppendLine($"Rotation (X: {(bone.Rotation.X):F3} Y: {bone.Rotation.Y:F3} Z: {bone.Rotation.Z:F3})");
+						sb.AppendLine($"Position (X: {(bone.Position.X):F3} Y: {bone.Position.Y:F3} Z: {bone.Position.Z:F3})");
+						sb.AppendLine();
+					}
+					
+					return sb.ToString();
+				});*/
 		}
 
 		private float AspectRatio { get; set; }
@@ -338,12 +360,18 @@ namespace Alex.Gamestates.InGame
 		{
 			if (World?.Camera == null)
 				return;
+
+			var world = World;
+			var player = world?.Player;
+
+			if (world == null || player == null)
+				return;
 			
 			var graphics = Alex.GraphicsDevice;
-			var args = new UpdateArgs() {Camera = World.Camera, GraphicsDevice = graphics, GameTime = gameTime};
+			var args = new UpdateArgs() {Camera = world.Camera, GraphicsDevice = graphics, GameTime = gameTime};
 
 			if (Alex.TotalTimeSpan < _targetElapsed)
-				World.Player.SkipUpdate();
+				player.SkipUpdate();
 			
 			_playingHud.CheckInput = Alex.GuiManager.ActiveDialog == null;
 
@@ -351,18 +379,18 @@ namespace Alex.Gamestates.InGame
 
 			if (Math.Abs(AspectRatio - graphics.Viewport.AspectRatio) > 0f)
 			{
-				World.Camera.UpdateAspectRatio(graphics.Viewport.AspectRatio);
+				world.Camera.UpdateAspectRatio(graphics.Viewport.AspectRatio);
 				AspectRatio = graphics.Viewport.AspectRatio;
 			}
 
 			bool hasActiveDialog = Alex.Instance.GuiManager.ActiveDialog != null
-			                       || ((World.Player.Network is BedrockClient c)
+			                       || ((player.Network is BedrockClient c)
 			                           && c.WorldProvider.FormManager.IsShowingForm);
 			
-			World.Player.Controller.CheckMovementInput = Alex.IsActive && !hasActiveDialog;
+			player.Controller.CheckMovementInput = Alex.IsActive && !hasActiveDialog;
 			if (!_playingHud.Chat.Focused && Alex.GameStateManager.GetActiveState() is PlayingState)
 			{
-				World.Player.Controller.CheckInput = Alex.IsActive;
+				player.Controller.CheckInput = Alex.IsActive;
 
 				if (Alex.GuiManager.ActiveDialog == null)
 				{
@@ -371,10 +399,10 @@ namespace Alex.Gamestates.InGame
 			}
 			else
 			{
-				World.Player.Controller.CheckInput = false;
+				player.Controller.CheckInput = false;
 			}
 
-			World.Update(args);
+			world.Update(args);
 
 			var now = DateTime.UtcNow;
 
@@ -383,19 +411,19 @@ namespace Alex.Gamestates.InGame
 				_previousMemUpdate = now;
 				_ramUsage = Environment.WorkingSet;
 
-				var pos     = World.Player.KnownPosition.GetCoordinates3D();
-				var biomeId = World.GetBiome(pos.X, pos.Y, pos.Z);
+				var pos     = player.KnownPosition.GetCoordinates3D();
+				var biomeId = world.GetBiome(pos.X, pos.Y, pos.Z);
 				var biome   = BiomeUtils.GetBiome(biomeId);
 				_currentBiomeId = biomeId;
 				_currentBiome = biome;
 			}
 
-			var dir = World.Camera.Position - World.Camera.Target;
+			var dir = world.Camera.Position - World.Camera.Target;
 			dir.Normalize();
 			//dir = new Vector3(MathF.Round(dir.X), MathF.Round(dir.Y), MathF.Round(dir.Z));
 
 			// Calculate the direction vector.
-			var direction = Vector3.Normalize( World.Camera.Target - World.Camera.Position );
+			var direction = Vector3.Normalize(world.Camera.Target - world.Camera.Position );
 
 			// Calculate the angle between direction and forward on XZ.
 			var xzAngle = MathF.Acos(Vector2.Dot(
@@ -411,7 +439,7 @@ namespace Alex.Gamestates.InGame
 			var rotatedForward = Vector3.Transform( Vector3.Forward, rotationY );
 
 			//dir.Normalize();
-			Alex.AudioEngine.Update(gameTime, World.Camera.Position, Vector3.Normalize(rotatedForward));
+			Alex.AudioEngine.Update(gameTime, world.Camera.Position, Vector3.Normalize(rotatedForward));
 			
 			//Alex.ParticleManager.Update(gameTime);
 			
@@ -420,11 +448,20 @@ namespace Alex.Gamestates.InGame
 		
 		protected override void OnDraw(IRenderArgs args)
 		{
-			args.Camera = World?.Camera;
+			var world = World;
+			var player = world?.Player;
 
-			World?.Render(args);
+			if (world == null || player == null)
+				return;
+			
+			if (world?.Camera == null)
+				return;
 
-			World?.RenderSprites(args);
+			args.Camera = world?.Camera;
+
+			world?.Render(args);
+
+			world?.RenderSprites(args);
 		}
 
 		protected override void OnUnload()

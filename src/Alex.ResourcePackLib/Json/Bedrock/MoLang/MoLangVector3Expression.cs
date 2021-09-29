@@ -142,8 +142,8 @@ namespace Alex.ResourcePackLib.Json.Bedrock.MoLang
 			var timeSinceLastKeyFrame = elapsedTime - previousKey;
 			var lerpTime = (float) ((1f / timeBetweenFrames) * timeSinceLastKeyFrame);
 
-			Vector3 previousVector = Evaluate(runtime, previous, true, currentValue);
-			Vector3 nextVector = Evaluate(runtime, next, false, currentValue);
+			Vector3 previousVector = Evaluate(runtime, previous, false, currentValue);
+			Vector3 nextVector = Evaluate(runtime, next, true, currentValue);
 
 			
 			return Vector3.Lerp(previousVector, nextVector, lerpTime);

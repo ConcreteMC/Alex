@@ -17,7 +17,7 @@ namespace Alex.Graphics.Models.Entity
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ModelRenderer));
 		private Vector3 _entityColor = Color.White.ToVector3();
 		private Vector3 _diffuseColor = Color.White.ToVector3();
-		private Model Model { get; set; }
+		internal Model Model { get; set; }
 
 		public double VisibleBoundsWidth { get; set; } = 0;
 		public double VisibleBoundsHeight { get; set; } = 0;
@@ -134,7 +134,7 @@ namespace Alex.Graphics.Models.Entity
 				bone.Update(args);
 			}
 		}
-
+		
 		public bool GetBone(string name, out ModelBone bone)
 		{
 			if (Model.Bones.TryGetValue(name, out bone))

@@ -182,15 +182,15 @@ namespace Alex.Graphics.Models.Items
                 if (_displayPosition.HasFlag(DisplayPosition.Gui))
                 {
                     root.BaseScale = Vector3.One / 16f;
-                    root.BaseRotation = Quaternion.Identity;
+                    root.BaseRotation = Vector3.Zero;//.Identity;
                     root.BasePosition = Vector3.Zero;
                 }
                 else if (displayPosition.HasFlag(DisplayPosition.Ground))
                 {
                     root.BaseScale = displayElement.Scale * Scale;
 
-                    root.BaseRotation =  MatrixHelper.FromRotationDegrees(new Vector3(
-                        displayElement.Rotation.X, displayElement.Rotation.Y, displayElement.Rotation.Z));
+                    root.BaseRotation =  new Vector3(
+                        displayElement.Rotation.X, displayElement.Rotation.Y, displayElement.Rotation.Z);
 
                     root.BasePosition = new Vector3(
                         displayElement.Translation.X, displayElement.Translation.Y, displayElement.Translation.Z);
@@ -203,10 +203,10 @@ namespace Alex.Graphics.Models.Items
 
                     if ((ResourcePackModel.Type & ModelType.Handheld) != 0)
                     {
-                        root.BaseRotation = MatrixHelper.FromRotationDegrees(new Vector3(
+                        root.BaseRotation = new Vector3(
                                                                                  ActiveDisplayItem.Rotation.X, -ActiveDisplayItem.Rotation.Y,
                                                                                  -ActiveDisplayItem.Rotation.Z)
-                                                                             + new Vector3(-67.5f, -22.5f, 0f));
+                                                                             + new Vector3(-67.5f, -22.5f, 0f);
 
                         root.BasePosition = new Vector3(
                             (6f + ActiveDisplayItem.Translation.X), 6f + ActiveDisplayItem.Translation.Y,
@@ -214,10 +214,10 @@ namespace Alex.Graphics.Models.Items
                     }
                     else
                     {
-                        root.BaseRotation =  MatrixHelper.FromRotationDegrees(new Vector3(
+                        root.BaseRotation =  new Vector3(
                                                                                   ActiveDisplayItem.Rotation.X, -ActiveDisplayItem.Rotation.Y,
                                                                                   -ActiveDisplayItem.Rotation.Z)
-                                                                              + new Vector3(-67.5f, 0f, 0f));
+                                                                              + new Vector3(-67.5f, 0f, 0f);
 
                         root.BasePosition = new Vector3(
                             (-ActiveDisplayItem.Translation.X), 8f + ActiveDisplayItem.Translation.Y,
