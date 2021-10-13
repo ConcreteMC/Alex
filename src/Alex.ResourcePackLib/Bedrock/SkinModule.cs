@@ -1,47 +1,22 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.IO.Compression;
 using Alex.Common.Resources;
 using Alex.Common.Utils;
 using Alex.ResourcePackLib.Abstraction;
-using Alex.ResourcePackLib.IO;
 using Alex.ResourcePackLib.IO.Abstract;
 using Alex.ResourcePackLib.Json;
 using Alex.ResourcePackLib.Json.Bedrock;
 using Alex.ResourcePackLib.Json.Models.Entities;
 using Alex.ResourcePackLib.Json.Textures;
 using NLog;
-using NLog.Fluent;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
 
-namespace Alex.ResourcePackLib
+namespace Alex.ResourcePackLib.Bedrock
 {
-	public class MCPackModule
-	{
-		public virtual string Name
-		{
-			get
-			{
-				return Entry.Name;
-			}
-		}
-
-		protected IFilesystem Entry { get; }
-		protected MCPackModule(IFilesystem entry)
-		{
-			Entry = entry;
-		}
-
-		internal virtual bool Load()
-		{
-			return false;
-		}
-	}
-	
-	public class MCSkinPack : MCPackModule, ITextureProvider
+	public class SkinModule : MCPackModule, ITextureProvider
 	{
 		private static readonly ILogger Log = LogManager.GetCurrentClassLogger();
 		
@@ -65,7 +40,7 @@ namespace Alex.ResourcePackLib
 		public IReadOnlyDictionary<string, EntityModel> EntityModels { get; private set; }
 		
 		/// <inheritdoc />
-		internal MCSkinPack(IFilesystem entry) : base(entry)
+		internal SkinModule(IFilesystem entry) : base(entry)
 		{
 			
 		}
@@ -75,8 +50,6 @@ namespace Alex.ResourcePackLib
 		{
 			try
 			{
-				List<LoadedSkin> skins = new List<LoadedSkin>();
-
 				var archive = Entry;
 				//using (var archive = new ZipFileSystem(Entry.Open(), Entry.Name))
 				{
@@ -91,34 +64,6 @@ namespace Alex.ResourcePackLib
 					if (geometryEntry != null)
 					{
 						ProcessGeometryJson(geometryEntry);
-						/*Dictionary<string, EntityModel> models =
-							MCJsonConvert.DeserializeObject<Dictionary<string, EntityModel>>(
-								geometryEntry.ReadAsString());
-
-						foreach (var skin in Info.Skins)
-						{
-							EntityModel model;
-
-							if (!models.TryGetValue(skin.Geometry, out model))
-								continue;
-
-							var textureEntry = archive.GetEntry(skin.Texture);
-
-							if (textureEntry == null)
-								continue;
-
-							Image<Rgba32> img;
-
-							using (var s = textureEntry.Open())
-							{
-								//img = new Bitmap(s);
-								img = Image.Load<Rgba32>(s.ReadToSpan(textureEntry.Length), PngDecoder);
-							}
-
-							LoadedSkin loaded = new LoadedSkin(skin.LocalizationName, model, img);
-							skins.Add(loaded);
-							//skin.
-						}*/
 					}
 					else
 					{

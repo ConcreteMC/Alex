@@ -44,7 +44,10 @@ namespace Alex.ResourcePackLib.Json.Models.Entities
 			{
 				foreach (var bone in baseEntity.Bones)
 				{
-					bones.Add(bone.Name, bone.Clone());
+					if (!bones.TryAdd(bone.Name, bone.Clone()))
+					{
+						Log.Warn($"Duplicate bone: {bone.Name}");
+					}
 				}
 			}
 

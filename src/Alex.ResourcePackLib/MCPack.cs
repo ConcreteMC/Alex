@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using Alex.ResourcePackLib.Bedrock;
 using Alex.ResourcePackLib.Exceptions;
 using Alex.ResourcePackLib.IO.Abstract;
 using Alex.ResourcePackLib.Json;
@@ -46,16 +47,21 @@ namespace Alex.ResourcePackLib
 			{
 				switch (module.Type.ToLower())
 				{
+					//case "resources":
+					//	modules.Add(new ResourceModule(archive));
+					//	break;
 					case "skin_pack":
 						try
 						{
-							MCSkinPack skinPack = new MCSkinPack(archive);
-							modules.Add(skinPack);
+							modules.Add(new SkinModule(archive));
 						}
 						catch
 						{
 							
 						}
+						break;
+					default:
+						Log.Warn($"Unknown resourcepack module type found in pack! Found '{module.Type}' in manifest '{Manifest.Header.Name}'");
 						break;
 				}
 			}
@@ -67,11 +73,11 @@ namespace Alex.ResourcePackLib
 				try
 				{
 					loaded = module.Load();
-					loaded = true;
 				}
 				catch (Exception ex)
 				{
 					Log.Error(ex,$"Failed to load MCPack module: {module.Name} from {Manifest.Header.Name}: {ex}");
+					loaded = false;
 					//toRemove.Add(module);
 				}
 

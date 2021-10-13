@@ -13,6 +13,7 @@ using Alex.Gamestates.MainMenu.Profile;
 using Alex.Graphics.Models.Entity;
 using Alex.Gui;
 using Alex.ResourcePackLib;
+using Alex.ResourcePackLib.Bedrock;
 using Alex.ResourcePackLib.Json;
 using Microsoft.Xna.Framework;
 using NLog;
@@ -187,7 +188,7 @@ namespace Alex.Gamestates.MainMenu
                 if (index >= start + count)
                     break;
                 
-                foreach (var module in skinPack.Modules.Where(x => x is MCSkinPack).Cast<MCSkinPack>())
+                foreach (var module in skinPack.Modules.Where(x => x is SkinModule).Cast<SkinModule>())
                 {
                     if (index >= start + count)
                         break;

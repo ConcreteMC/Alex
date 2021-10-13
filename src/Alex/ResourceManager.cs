@@ -8,6 +8,7 @@ using System.Linq;
 using System.Net;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using Alex.Blocks;
 using Alex.Blocks.Mapping;
 using Alex.Blocks.Minecraft;
@@ -790,16 +791,19 @@ namespace Alex
             Log.Debug($"== End Processing \"{resourcePack.Info.Name}\" ==\n");
         }
 
+        private static Regex _bedrockSearchPattern = new Regex(
+            @"$(?<=.(zip|mcpack))", 
+            RegexOptions.IgnoreCase | RegexOptions.Compiled);
         public void LoadBedrockPacks(IProgressReceiver progressReceiver, DirectoryInfo directoryInfo)
         {
             progressReceiver?.UpdateProgress(0, "Loading bedrock .MCPack files...");
 
-            var files = directoryInfo.EnumerateFiles("*.mcpack").ToArray();
+            var files = directoryInfo.EnumerateFiles().Where(x => _bedrockSearchPattern.IsMatch(x.Name)).ToArray();
 
             for (var index = 0; index < files.Length; index++)
             {
                 var file = files[index];
-                progressReceiver?.UpdateProgress(index, files.Length, "Loading bedrock .MCPack files...", file.Name);
+                progressReceiver?.UpdateProgress(index, files.Length, "Loading bedrock resourcepack files...", file.Name);
 
                 try
                 {
@@ -811,7 +815,7 @@ namespace Alex
                 }
                 catch (Exception ex)
                 {
-                    Log.Warn(ex, $"Failed to load bedrock .MCPack file: {file.Name}: {ex}");
+                    Log.Warn(ex, $"Failed to load bedrockpack file: {file.Name}: {ex}");
                 }
             }
         }

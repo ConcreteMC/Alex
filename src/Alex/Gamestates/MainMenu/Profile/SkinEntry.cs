@@ -8,6 +8,7 @@ using Alex.Graphics.Models.Entity;
 using Alex.Gui.Elements;
 using Alex.Gui.Elements.Context3D;
 using Alex.ResourcePackLib;
+using Alex.ResourcePackLib.Bedrock;
 using Alex.Utils;
 using Microsoft.Xna.Framework;
 using RocketUI;

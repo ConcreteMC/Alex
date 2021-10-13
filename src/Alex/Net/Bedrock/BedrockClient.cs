@@ -1118,6 +1118,9 @@ namespace Alex.Net.Bedrock
 		public override void DropItem(BlockCoordinates position, BlockFace face, Item item, bool dropFullStack)
 		{
 			var player = World.Player;
+			byte inventoryId = 28;
+			byte slot = (byte)(player.Inventory.HotbarOffset + player.Inventory.SelectedSlot);
+			
 			var newItem = item.Clone();
 			var dropItem = item.Clone();
 			
@@ -1165,6 +1168,17 @@ namespace Alex.Net.Bedrock
 							Count = 0
 						},
 						Slot = 0
+					}
+				},
+				RequestRecords = new List<RequestRecord>()
+				{
+					new RequestRecord()
+					{
+						ContainerId = inventoryId,
+						Slots = new List<byte>()
+						{
+							slot
+						}
 					}
 				}
 			};

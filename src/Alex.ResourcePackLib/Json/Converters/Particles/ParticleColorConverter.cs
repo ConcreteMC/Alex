@@ -39,7 +39,7 @@ namespace Alex.ResourcePackLib.Json.Converters.Particles
 
 			if (_expression != null)
 				return new Color(_expression.Evaluate(runtime, new Vector4(1, 1, 1, 1f)));
-
+			
 			if (_gradientColors != null)
 				return _gradientColors.GetValue(runtime);
 
