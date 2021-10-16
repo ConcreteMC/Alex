@@ -280,6 +280,10 @@ namespace Alex.Blocks
 		    this.Register("minecraft:purpur_slab", () => new PurpurSlab());
 		    this.Register("minecraft:polished_andesite_slab", () => new PolishedAndesiteSlab());
 		    this.Register("minecraft:andesite_slab", () => new AndesiteSlab());
+		    this.Register("minecraft:polished_granite_slab", () => new PolishedGraniteSlab());
+		    this.Register("minecraft:granite_slab", () => new GraniteSlab());
+		    this.Register("minecraft:warped_double_slab", () => new StoneSlab());
+		    this.Register("minecraft:warped_slab", () => new StoneSlab());
 		    
 		    //Leaves
 		    this.Register("minecraft:oak_leaves", () => new OakLeaves());
@@ -677,6 +681,9 @@ namespace Alex.Blocks
 		    
 		    this.Register("minecraft:granite", () => new Granite());
 		    this.Register("minecraft:polished_granite", () => new PolishedGranite());
+		    
+		    this.Register("minecraft:basalt", () => new Basalt());
+		    this.Register("minecraft:polished_basalt", () => new PolishedBasalt());
 	    }
     }
 }

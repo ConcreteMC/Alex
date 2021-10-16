@@ -16,21 +16,25 @@ namespace Alex.ResourcePackLib.Json.Converters.MoLang
 		}
 		
 		/// <inheritdoc />
-		public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer)
+		public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
 		{
 			throw new NotImplementedException();
 		}
 
 		/// <inheritdoc />
-		public override object ReadJson(JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer)
+		public override object ReadJson(JsonReader reader,
+			Type objectType,
+			object existingValue,
+			JsonSerializer serializer)
 		{
+
 			JToken token = JToken.Load(reader);
 
 			if (token.Type == JTokenType.String)
 			{
-				string        molang        = token.Value<string>();
+				string molang = token.Value<string>();
 				TokenIterator tokenIterator = new TokenIterator(molang);
-				MoLangParser  parser        = new MoLangParser(tokenIterator);
+				MoLangParser parser = new MoLangParser(tokenIterator);
 
 				var res = parser.Parse();
 
@@ -38,27 +42,18 @@ namespace Alex.ResourcePackLib.Json.Converters.MoLang
 			}
 			else if (token.Type == JTokenType.Integer)
 			{
-				return new IExpression[]
-				{
-					new NumberExpression(token.Value<double>())
-				};
+				return new IExpression[] { new NumberExpression(token.Value<double>()) };
 			}
 			else if (token.Type == JTokenType.Float)
 			{
-				return new IExpression[]
-				{
-					new NumberExpression(token.Value<double>())
-				};
+				return new IExpression[] { new NumberExpression(token.Value<double>()) };
 			}
 			else if (token.Type == JTokenType.Boolean)
 			{
-				return new IExpression[]
-				{
-					new BooleanExpression(token.Value<bool>())
-				};
+				return new IExpression[] { new BooleanExpression(token.Value<bool>()) };
 			}
-
-			return null;
+			
+			return existingValue;
 		}
 
 		/// <inheritdoc />

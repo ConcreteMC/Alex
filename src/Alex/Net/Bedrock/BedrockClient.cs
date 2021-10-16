@@ -104,7 +104,7 @@ namespace Alex.Net.Bedrock
 		public BedrockClient(Alex alex, IPEndPoint endpoint, PlayerProfile playerProfile, BedrockWorldProvider wp)
 		{
 			TransactionTracker = new BedrockTransactionTracker(this);
-		//	PacketFactory.CustomPacketFactory = new AlexPacketFactory();
+			PacketFactory.CustomPacketFactory = new AlexPacketFactory();
 			CancellationTokenSource = new CancellationTokenSource();
 
 			Alex = alex;

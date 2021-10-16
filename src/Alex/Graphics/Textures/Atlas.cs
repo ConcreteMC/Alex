@@ -28,15 +28,15 @@ namespace Alex.Graphics.Textures
 		/// </summary>
 		public List<Node> Nodes;
 
-		public Image<Rgba32> GenerateTexture(bool debugMode)
+		public Image GenerateTexture(bool debugMode)
 		{
-			  Image<Rgba32> img = new Image<Rgba32>(Width, Height);
+			var img = new Image<Rgba32>(Width, Height);
 
             if (debugMode)
             {
                 img.Mutate(x =>
                 {
-                    x.Fill(Color.Green,
+	                x.Fill(Color.Green,
                         new Rectangle(0, 0, Width, Height));
                 });
             }

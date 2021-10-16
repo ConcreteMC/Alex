@@ -621,7 +621,7 @@ namespace Alex.Net.Bedrock
 				message.particleName,
 				new Microsoft.Xna.Framework.Vector3(message.position.X, message.position.Y, message.position.Z)))
 			{
-				Log.Warn($"Unknonw particle: {message.particleName}");
+				Log.Warn($"Unknown particle: {message.particleName}");
 			}
         }
 

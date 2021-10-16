@@ -37,6 +37,8 @@ namespace Alex.Utils.Auth
 		public const string MSA_COBRAND_ID = "90023";
 		public const string PLATFORM_NAME = "android2.1.0504.0524";
 
+		private const string LoginWithXbox = "https://api.minecraftservices.com/authentication/login_with_xbox";
+		
 		private const string UserAuth = "https://user.auth.xboxlive.com/user/authenticate";
 		private const string DeviceAuth = "https://device.auth.xboxlive.com/device/authenticate";
 		private const string TitleAuth = "https://title.auth.xboxlive.com/title/authenticate";
@@ -256,8 +258,8 @@ namespace Alex.Utils.Auth
 	        }
         }
 		
-		public async Task<AuthResponse<XuiDisplayClaims<XstsXui>>> DoJavaXsts(HttpClient client,
-			string userToken, string relyingParty = "https://multiplayer.minecraft.net/")
+		public async Task<AuthResponse<XuiDisplayClaims<XstsXui>>> AuthenticatewithJavaXSTS(HttpClient client,
+			string userToken, string relyingParty = "rp://api.minecraftservices.com/")
 		{
 			//var key = EcDsa.ExportParameters(false);
 			var authRequest = new AuthRequest
@@ -274,8 +276,6 @@ namespace Alex.Utils.Auth
 
 			using (var r = new HttpRequestMessage(HttpMethod.Post, XblAuth))
 			{
-				r.Headers.Add("User-Agent", "MC/Java");
-				r.Headers.Add("Client-Version", McpeProtocolInfo.ProtocolVersion.ToString());
 				SetHeadersAndContent(r, authRequest);
 
 				using (var response = await client.SendAsync(r, HttpCompletionOption.ResponseContentRead)
@@ -284,16 +284,50 @@ namespace Alex.Utils.Auth
 					response.EnsureSuccessStatusCode();
 
 					var rawResponse = await response.Content.ReadAsStringAsync();
-
-					//  Console.WriteLine(rawResponse);
-					//  Console.WriteLine();
 					return JsonConvert.DeserializeObject<AuthResponse<XuiDisplayClaims<XstsXui>>>(rawResponse);
-
-					//Log.Debug($"Xsts Auth: {rawResponse}");
 				}
 			}
 		}
 
+		public async Task<ApiResponse<MinecraftTokenResponse>> AuthenticateWithMinecraft(HttpClient client,
+			string userhash,
+			string xstsToken)
+		{
+			
+			MinecraftTokenResponse tokenResponse = null;
+			bool isOk = false;
+			HttpStatusCode statusCode = HttpStatusCode.RequestTimeout;
+			string error = "";
+			try
+			{
+				using (var r = new HttpRequestMessage(HttpMethod.Post, LoginWithXbox))
+				{
+					SetHeadersAndContent(r, new { identityToken = $"XBL3.0 x={userhash};{xstsToken}" });
+
+					using (var response = await client.SendAsync(r, HttpCompletionOption.ResponseContentRead)
+					   .ConfigureAwait(false))
+					{
+						statusCode = response.StatusCode;
+						response.EnsureSuccessStatusCode();
+
+						var rawResponse = await response.Content.ReadAsStringAsync();
+						tokenResponse = JsonConvert.DeserializeObject<MinecraftTokenResponse>(rawResponse);
+						isOk = true;
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				Log.Error(ex, "Failed to authenticate with minecraft...");
+			}
+			finally
+			{
+				
+			}
+
+			return new ApiResponse<MinecraftTokenResponse>(isOk, statusCode, tokenResponse);
+		}
+		
         private async Task<AuthResponse<XuiDisplayClaims<XstsXui>>> ObtainXbox(HttpClient client,
 	        AuthResponse<DeviceDisplayClaims> deviceToken,
 	        string accessToken)
@@ -378,6 +412,38 @@ namespace Alex.Utils.Auth
 				}
 			}
 		}
+        
+        public async Task<AuthResponse<XuiDisplayClaims<Xui>>> AuthenticateWithXBL(HttpClient client, string accessToken)
+        {
+	        //var key = EcDsa.ExportParameters(false);
+
+	        var authRequest = new AuthRequest
+	        {
+		        RelyingParty = "http://auth.xboxlive.com",
+		        TokenType = "JWT",
+		        Properties = new Dictionary<string, object>()
+		        {
+			        {"AuthMethod", "RPS"},
+			        {"RpsTicket", "d=" + accessToken},
+			        {"SiteName", "user.auth.xboxlive.com"}
+		        }
+	        };
+
+	        using (var r = new HttpRequestMessage(HttpMethod.Post, UserAuth))
+	        {
+		        SetHeadersAndContent(r, authRequest);
+
+		        using (var response = await client.SendAsync(r, HttpCompletionOption.ResponseContentRead)
+			       .ConfigureAwait(false))
+		        {
+			        response.EnsureSuccessStatusCode();
+
+			        return
+				        JsonConvert.DeserializeObject<AuthResponse<XuiDisplayClaims<Xui>>>(
+					        await response.Content.ReadAsStringAsync());
+		        }
+	        }
+        }
 
         public async Task<AuthResponse<XuiDisplayClaims<Xui>>> ObtainUserToken(HttpClient client, string accessToken)
         {
@@ -413,7 +479,9 @@ namespace Alex.Utils.Auth
         }
 
         private void SetHeadersAndContent(HttpRequestMessage request, object data)
-		{
+        {
+	        request.Headers.Accept.ParseAdd("application/json");
+	        
 			request.Content = SetHttpContent(data, out var jsonData);
 			Sign(request, jsonData);
 		}
@@ -603,7 +671,7 @@ namespace Alex.Utils.Auth
 				MsaDeviceAuthPollState token = null;
 				while (r == "authorization_pending" && !cancellationToken.IsCancellationRequested)
 				{
-					var poll = await DevicePollState(client, deviceCode);
+					var poll = await DevicePollState(deviceCode);
 					r = poll.Error;
 					token = poll;
 				}
@@ -713,11 +781,22 @@ namespace Alex.Utils.Auth
 			return await StartDeviceAuthConnect(ClientId);
 		}
 
-		public async Task<MsaDeviceAuthConnectResponse> StartDeviceAuthConnect(string clientId)
+		public async Task<MsaDeviceAuthConnectResponse> StartDeviceAuthConnect(string clientId, params string[] scopes)
 		{
+			string scope = string.Empty;
+
+			if (scopes.Length == 0)
+			{
+				scope = "service::user.auth.xboxlive.com::MBI_SSL";
+			}
+			else
+			{
+				scope = string.Join(' ', scopes);
+			}
+			
 			Request request = new Request($"https://login.live.com/oauth20_connect.srf?client_id={ClientId}");
 			request.PostData["client_id"] = clientId;
-			request.PostData["scope"] = "service::user.auth.xboxlive.com::MBI_SSL";
+			request.PostData["scope"] = scope;
 			request.PostData["response_type"] = "device_code";
 
 			var response = await Send(request);
@@ -727,12 +806,12 @@ namespace Alex.Utils.Auth
 			return JsonConvert.DeserializeObject<MsaDeviceAuthConnectResponse>(response.Body);
 		}
 
-		public async Task<MsaDeviceAuthPollState> DevicePollState(HttpClient client, string deviceCode)
+		public async Task<MsaDeviceAuthPollState> DevicePollState(string deviceCode)
 		{
-			return await DevicePollState(client, deviceCode, ClientId);
+			return await DevicePollState(deviceCode, ClientId);
 		}
 		
-		public async Task<MsaDeviceAuthPollState> DevicePollState(HttpClient client, string deviceCode, string clientId)
+		public async Task<MsaDeviceAuthPollState> DevicePollState(string deviceCode, string clientId)
 		{
 			Request request = new Request($"https://login.live.com/oauth20_token.srf?client_id={clientId}");
 			request.PostData["client_id"] = clientId;

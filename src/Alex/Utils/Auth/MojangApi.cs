@@ -1,4 +1,6 @@
 using System;
+using System.Diagnostics;
+using System.Net;
 using System.Net.Http;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -9,6 +11,7 @@ using MojangAPI;
 using MojangAPI.Cache;
 using MojangAPI.Model;
 using MojangAPI.SecurityQuestion;
+using MojangAuthResponse = Alex.Utils.Auth.MojangAuthResponse;
 using PlayerProfile = MojangAPI.Model.PlayerProfile;
 
 
@@ -81,11 +84,23 @@ namespace Alex.Common.Utils
 
 			throw new Exception("MojangAPI not initialized!");
 		}
+
+		public static async Task<MojangAuthResponse> TryAutoLogin(ISession session)
+		{
+			return new MojangAuthResponse(await _auth.TryAutoLogin(
+				new Session()
+				{
+					AccessToken = session.AccessToken,
+					UUID = session.UUID,
+					Username = session.Username,
+					ClientToken = session.ClientToken
+				}));
+		}
 		
 		public static async Task<MojangAuthResponse> Validate(string accessToken, string clientToken)
 		{
 			CheckInit();
-			return await _auth.Validate(accessToken, clientToken);
+			return new MojangAuthResponse(await _auth.Validate(accessToken, clientToken));
 		}
 		
 		public static async Task<PlayerProfile> GetPlayerProfileByUUID(string uuid)
@@ -109,7 +124,7 @@ namespace Alex.Common.Utils
 		public static async Task<Session> TryMojangLogin(string username, string password, [Optional]Session session)
 		{
 			CheckInit();
-			MojangAuthResponse res;
+			MojangAPI.Model.MojangAuthResponse res;
 			if (session != null)
 			{
 				res = await _auth.TryAutoLogin(session);
@@ -129,8 +144,7 @@ namespace Alex.Common.Utils
 		public static async Task<Session> TryMicrosoftAuth(string uhs, string xstsToken)
 		{
 			CheckInit();
-			MojangAuthResponse res;
-			res = await _auth.RequestSessionWithXbox(uhs, xstsToken);
+			var res = await _auth.RequestSessionWithXbox(uhs, xstsToken);
 
 			if (!res.IsSuccess)
 				throw new LoginFailedException(res);
@@ -140,32 +154,102 @@ namespace Alex.Common.Utils
 
 		public static async Task<MsaDeviceAuthConnectResponse> StartDeviceAuth()
 		{
-			return await _xboxAuth.StartDeviceAuthConnect(ClientID);
+			return await _xboxAuth.StartDeviceAuthConnect(ClientID, "XboxLive.signin", "XboxLive.offline_access");
+			//return await _xboxAuth.StartDeviceAuthConnect(ClientID, "service::user.auth.xboxlive.com::MBI_SSL");
 		}
 
-		public static async Task<MojangAuthResponse> DoDeviceCodeLogin(MsaDeviceAuthConnectResponse authResponse, CancellationToken cancellationToken)
+		public static async Task<MojangAuthResponse> DoDeviceCodeLogin(MsaDeviceAuthConnectResponse authResponse,
+			CancellationToken cancellationToken, params string[] scopes)
 		{
-			XboxAuthService.OpenBrowser(authResponse.verification_uri);
-			
 			HttpClient client = _httpClient;
-				
+
+			var deviceCodeExpiryTime = DateTime.UtcNow.Add(TimeSpan.FromSeconds(authResponse.ExpiresIn));
 			string r = "authorization_pending";
 			MsaDeviceAuthPollState token = null;
-			while (r == "authorization_pending" && !cancellationToken.IsCancellationRequested)
+			Stopwatch sw = Stopwatch.StartNew();
+
+			while (r == "authorization_pending" && !cancellationToken.IsCancellationRequested
+			                                    && DateTime.UtcNow < deviceCodeExpiryTime)
 			{
-				var poll = await _xboxAuth.DevicePollState(client, authResponse.device_code, ClientID);
+				sw.Restart();
+				var poll = await _xboxAuth.DevicePollState(authResponse.DeviceCode, ClientID);
 				r = poll.Error;
 				token = poll;
+				SpinWait.SpinUntil(() => sw.ElapsedMilliseconds >= 250);
 			}
 
+			if (DateTime.UtcNow > deviceCodeExpiryTime)
+			{
+				return new MojangAuthResponse(MojangAuthResult.UnknownError)
+				{
+					StatusCode = (int)HttpStatusCode.RequestTimeout,
+					IsSuccess = false,
+					ErrorMessage = "You took too long to login... Please try again."
+				};
+			}
+			
 			if (token == null)
 				return null;
 			
-			var userToken = await _xboxAuth.ObtainUserToken(client, token.AccessToken);
-			var xsts = await _xboxAuth.DoJavaXsts(_httpClient, userToken.Token, "rp://api.minecraftservices.com/");
-			var xboxLoginResponse = await _auth.RequestSessionWithXbox(userToken.DisplayClaims.Xui[0].Uhs, xsts.Token);
+			var xblResponse = await _xboxAuth.AuthenticateWithXBL(client, token.AccessToken);
+			var xblToken = xblResponse.Token;
+			var userHash = xblResponse.DisplayClaims.Xui[0].Uhs;
 			
-			return xboxLoginResponse;
+			var xsts = await _xboxAuth.AuthenticatewithJavaXSTS(client, xblToken);
+
+			userHash = xsts.DisplayClaims.Xui[0].UserHash;
+			var xstsToken = xsts.Token;
+			var rawLoginResult = await _xboxAuth.AuthenticateWithMinecraft(client, userHash, xstsToken);
+			
+			//var loginResult = await _auth.LoginWithXbox(userHash, xstsToken);
+
+			if (!rawLoginResult.IsSuccess)
+				return new MojangAuthResponse(MojangAuthResult.InvalidCredentials)
+				{
+					ErrorMessage = "Invalid credentials...",
+					StatusCode = (int)rawLoginResult.StatusCode
+				};
+
+			var minecraftTokens = rawLoginResult.Result;
+			
+			var ownsGame = await _mojang.CheckGameOwnership(minecraftTokens.AccessToken);
+
+			if (!ownsGame)
+				return new MojangAuthResponse(MojangAuthResult.NoProfile)
+				{
+					ErrorMessage = "You do not own Minecraft!"
+				};
+
+			var userProfile = await _mojang.GetProfileUsingAccessToken(minecraftTokens.AccessToken);
+
+			if (!userProfile.IsSuccess)
+				return new MojangAuthResponse(MojangAuthResult.NoProfile)
+				{
+					ErrorMessage = userProfile.ErrorMessage,
+					Error = userProfile.Error,
+					StatusCode = userProfile.StatusCode
+				};
+			
+			return new MojangAuthResponse(MojangAuthResult.Success)
+			{
+				Session = new JavaSession()
+				{
+					AccessToken = minecraftTokens.AccessToken,
+					UUID = userProfile.UUID,
+					Username =  userProfile.Name,
+					ClientToken = Guid.NewGuid().ToString(),
+					RefreshToken = token.RefreshToken,
+					ExpiryTime = DateTime.UtcNow.Add(TimeSpan.FromSeconds(minecraftTokens.ExpiresIn))
+				},
+				Profile = userProfile,
+				StatusCode = userProfile.StatusCode,
+				IsSuccess = true
+			};
+		}
+		
+		public static Task<MojangAuthResponse> DoDeviceCodeLogin(MsaDeviceAuthConnectResponse authResponse, CancellationToken cancellationToken)
+		{
+			return DoDeviceCodeLogin(authResponse, cancellationToken, new string[0]);
 		}
 	}
 
@@ -175,6 +259,11 @@ namespace Alex.Common.Utils
 		public LoginFailedException(MojangAuthResponse response)
 		{
 			Response = response;
+		}
+
+		public LoginFailedException(MojangAPI.Model.MojangAuthResponse response)
+		{
+			Response = new MojangAuthResponse(response);
 		}
 	}
 }

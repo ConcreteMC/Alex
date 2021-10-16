@@ -347,7 +347,7 @@ namespace Alex.Worlds.Multiplayer
 			
 			progressReport(LoadingState.ConnectingToServer, 0);
 
-			if (!Login(Profile.PlayerName, Profile.Uuid, Profile.AccessToken))
+			if (!Login(Profile.PlayerName, Profile.UUID, Profile.AccessToken))
 			{
 				_disconnected = true;
 

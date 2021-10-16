@@ -22,7 +22,8 @@ namespace Alex.Graphics.Models.Entity.Animations
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(EntityAnimation));
 		private readonly AnimationComponent _parent;
 		private readonly Animation _definition;
-
+		private bool _loop;
+		
 		private string _animName = String.Empty;
 		public EntityAnimation(AnimationComponent parent, Animation definition, string name)
 		{
@@ -35,6 +36,15 @@ namespace Alex.Graphics.Models.Entity.Animations
 			foreach (var bone in definition.Bones)
 			{
 				_boneComps.TryAdd(bone.Key, new BoneComp(bone.Value));
+			}
+
+			if (definition.Loop != null)
+			{
+				_loop = parent.Execute(definition.Loop).AsBool();
+			}
+			else
+			{
+				_loop = false;
 			}
 		}
 
@@ -102,7 +112,7 @@ namespace Alex.Graphics.Models.Entity.Animations
 			if (_animationLength > 0 && _animationTime >= _animationLength)
 			{
 				Stop();
-				if (_definition.Loop)
+				if (_loop)
 				{
 					Play();
 				}

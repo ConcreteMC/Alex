@@ -3,11 +3,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
+using Alex.Common;
 using Alex.Common.Data.Servers;
 using Alex.Common.Services;
 using Alex.Gui;
 using Alex.Net;
+using Alex.Utils.Auth;
 using Alex.Worlds.Abstraction;
+using Alex.Worlds.Multiplayer.Java;
+using MojangAPI.Model;
+using PlayerProfile = Alex.Common.Services.PlayerProfile;
 
 namespace Alex.Utils
 {
@@ -56,6 +61,8 @@ namespace Alex.Utils
 
 	public class ServerTypeImplementation
 	{
+		public delegate void AuthenticationCallback();
+
 		public IServerQueryProvider QueryProvider { get; }
 		public string DisplayName { get; set; }
 		internal string Id { get; set; }
@@ -71,6 +78,11 @@ namespace Alex.Utils
 			TypeIdentifier = typeIdentifier;
 		}
 
+		public virtual Task<ProfileUpdateResult> UpdateProfile(PlayerProfile session)
+		{
+			throw new NotImplementedException();
+		}
+
 		public virtual bool TryGetWorldProvider(ServerConnectionDetails connectionDetails, PlayerProfile playerProfile, out WorldProvider worldProvider, out NetworkProvider networkProvider)
 		{
 			worldProvider = null;
@@ -83,7 +95,7 @@ namespace Alex.Utils
 			return Task.FromResult(false);
 		}
 
-		public virtual Task Authenticate(GuiPanoramaSkyBox skyBox, PlayerProfile profile, Action<bool> callBack)
+		public virtual Task Authenticate(GuiPanoramaSkyBox skyBox, PlayerProfile profile, AuthenticationCallback callBack)
 		{
 			return Task.CompletedTask;
 		}

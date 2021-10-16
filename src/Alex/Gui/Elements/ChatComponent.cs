@@ -18,7 +18,6 @@ using NLog;
 using RocketUI;
 using RocketUI.Input;
 using RocketUI.Utilities.Extensions;
-using SixLabors.ImageSharp.Drawing;
 
 using MessageType = Alex.Common.Data.MessageType;
 
@@ -109,7 +108,7 @@ namespace Alex.Gui.Elements
 		{
 			if (_closeChatBinding != null)
 			{
-				var inputManager = InputManager;
+				var inputManager = RootScreen?.GuiManager?.InputManager;
 
 				if (inputManager != null)
 				{

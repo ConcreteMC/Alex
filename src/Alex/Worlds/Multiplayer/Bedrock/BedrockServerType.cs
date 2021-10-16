@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Threading.Tasks;
+using Alex.Common;
 using Alex.Common.Data.Servers;
 using Alex.Common.Services;
 using Alex.Gamestates.Login;
@@ -10,11 +11,14 @@ using Alex.Services;
 using Alex.Utils;
 using Alex.Utils.Auth;
 using Alex.Worlds.Abstraction;
+using Alex.Worlds.Multiplayer.Java;
 using Microsoft.Extensions.DependencyInjection;
 using MiNET.Net;
 using MiNET.Utils;
+using MojangAPI.Model;
 using Newtonsoft.Json;
 using NLog;
+using PlayerProfile = Alex.Common.Services.PlayerProfile;
 
 namespace Alex.Worlds.Multiplayer.Bedrock
 {
@@ -83,7 +87,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					return Process(
 						true,
 						new PlayerProfile(
-							profile.Uuid, profile.Username, profile.PlayerName, profile.Skin, profile.AccessToken,
+							profile.UUID, profile.Username, profile.PlayerName, profile.Skin, profile.AccessToken,
 							null, profile.RefreshToken, profile.ExpiryTime));
 				}
 
@@ -101,7 +105,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 						return Process(
 							r.success,
 							new PlayerProfile(
-								profile.Uuid, profile.Username, profile.PlayerName, profile.Skin, r.token.AccessToken,
+								profile.UUID, profile.Username, profile.PlayerName, profile.Skin, r.token.AccessToken,
 								null, r.token?.RefreshToken, r.token?.ExpiryTime));
 					});
 			}
@@ -116,7 +120,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		/// <inheritdoc />
 		public override async Task<bool> VerifyAuthentication(PlayerProfile currentProfile)
 		{
-			if (!currentProfile.Authenticated)
+			if (currentProfile != null && !currentProfile.Authenticated)
 			{
 				var task = await ReAuthenticate(currentProfile);
 
@@ -126,27 +130,27 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				}
 			}
 
-
-			if ((currentProfile == null || !currentProfile.Authenticated))
-			{
-				return false;
-			}
-			else
-			{
-				return true;
-			}
+			return false;
 		}
 
 		/// <inheritdoc />
-		public override async Task Authenticate(GuiPanoramaSkyBox skyBox, PlayerProfile existingProfile, Action<bool> callBack)
+		public override Task Authenticate(GuiPanoramaSkyBox skyBox, PlayerProfile existingProfile, AuthenticationCallback callBack)
 		{
 			BedrockLoginState loginState = new BedrockLoginState(
-				skyBox, (profile) =>
-				{
-					callBack(true);
-				}, XboxAuthService);
+				skyBox, () => callBack(), XboxAuthService, this);
 
 			Alex.GameStateManager.SetActiveState(loginState, true);
+
+			return Task.CompletedTask;
+		}
+
+		/// <inheritdoc />
+		public override Task<ProfileUpdateResult> UpdateProfile(PlayerProfile session)
+		{
+			var profileManager = Alex.Services.GetRequiredService<ProfileManager>();
+			profileManager.CreateOrUpdateProfile(AccountType, session, true);
+
+			return Task.FromResult(new ProfileUpdateResult(true, null, null));
 		}
 	}
 }

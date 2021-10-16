@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Numerics;
 using Alex.MoLang.Parser;
 using Alex.MoLang.Parser.Expressions;
+using Alex.ResourcePackLib.Json.Bedrock.MoLang;
 using Alex.ResourcePackLib.Json.Converters;
 using Newtonsoft.Json;
 
@@ -20,12 +21,15 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Entity
 		{
 			DefaultTimeUpdate = MoLangParser.Parse("query.anim_time + query.delta_time");
 		}
-		
+
 		/// <summary>
 		///		Determines whether the animation should go back to T0 when finished.
 		/// </summary>
 		[JsonProperty("loop")]
-		public bool Loop { get; set; } = false;
+		public IExpression[] Loop { get; set; } = new IExpression[]
+		{
+			new BooleanExpression(false)
+		};
 
 		/// <summary>
 		///		How does time pass when playing the animation.

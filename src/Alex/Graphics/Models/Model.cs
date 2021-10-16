@@ -130,13 +130,17 @@ namespace Alex.Graphics.Models
 			if (destinationBoneTransforms == null)
 				throw new ArgumentNullException(nameof(destinationBoneTransforms));
 			
-			if (destinationBoneTransforms.Length < this.Bones.Count)
+			var bones = this.Bones;
+			if (destinationBoneTransforms.Length <  bones.Count)
 				throw new ArgumentOutOfRangeException(nameof(destinationBoneTransforms));
 			
-			int count = this.Bones.Count;
+			int count = bones.Count;
 			for (int index1 = 0; index1 < count; index1++)
 			{
-				var modelBone = (this.Bones)[index1];
+				if (index1 >= bones.Count)
+					break;
+				
+				var modelBone = bones[index1];
 				if (modelBone.Parent == null)
 				{
 					destinationBoneTransforms[index1] = modelBone.Transform;

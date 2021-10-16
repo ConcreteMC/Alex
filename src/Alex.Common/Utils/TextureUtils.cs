@@ -2,7 +2,6 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using Alex.Common.Graphics.GpuResources;
 using Microsoft.Xna.Framework.Graphics;
 using NLog;
 using SixLabors.ImageSharp;
@@ -25,12 +24,12 @@ namespace Alex.Common.Utils
 		public static Thread         RenderThread        { get; set; }
 		public static Action<Action> QueueOnRenderThread { get; set; }
 		
-		public static Texture2D BitmapToTexture2D(GraphicsDevice device, Image<Rgba32> bmp, [CallerMemberName] string caller = "Image Converter")
+		public static Texture2D BitmapToTexture2D<TImageFormat>(GraphicsDevice device, Image<TImageFormat> bmp, [CallerMemberName] string caller = "Image Converter")  where TImageFormat : unmanaged, IPixel<TImageFormat>
 		{
 			return BitmapToTexture2D(caller, device, bmp, out _);
 		}
 
-		private static uint[] GetPixelData(this Image<Rgba32> image)
+		private static uint[] GetPixelData<TImageFormat>(this Image<TImageFormat> image) where TImageFormat : unmanaged, IPixel<TImageFormat>
 		{
 			uint[] colorData;
 
@@ -38,9 +37,11 @@ namespace Alex.Common.Utils
 			{
 				colorData = new uint[pixelSpan.Length];
 
+				Rgba32 dest = new Rgba32();
 				for (int i = 0; i < pixelSpan.Length; i++)
 				{
-					colorData[i] = pixelSpan[i].Rgba;
+					pixelSpan[i].ToRgba32(ref dest);
+					colorData[i] = dest.Rgba;
 				}
 			}
 			else
@@ -51,7 +52,7 @@ namespace Alex.Common.Utils
 			return colorData;
 		}
 		
-		public static void BitmapToTexture2DAsync(object owner, GraphicsDevice device, Image<Rgba32> image, TextureCreated onTextureCreated)
+		public static void BitmapToTexture2DAsync<TImageFormat>(object owner, GraphicsDevice device, Image<TImageFormat> image, TextureCreated onTextureCreated) where TImageFormat : unmanaged, IPixel<TImageFormat>
 		{
 			Texture2D Execute()
 			{
@@ -81,15 +82,15 @@ namespace Alex.Common.Utils
 			}
 		}
 		
-		public static Texture2D BitmapToTexture2D(object owner, GraphicsDevice device, Image<Rgba32> bmp)
+		public static Texture2D BitmapToTexture2D<TImageFormat>(object owner, GraphicsDevice device, Image<TImageFormat> bmp) where TImageFormat : unmanaged, IPixel<TImageFormat>
         {
 	        return BitmapToTexture2D(owner, device, bmp, out _);
         }
 
-		public static Texture2D BitmapToTexture2D(object owner,
+		public static Texture2D BitmapToTexture2D<TImageFormat>(object owner,
 			GraphicsDevice device,
-			Image<Rgba32> image,
-			out long byteSize)
+			Image<TImageFormat> image,
+			out long byteSize) where TImageFormat : unmanaged, IPixel<TImageFormat>
 		{
 			Texture2D result = null;
 
@@ -136,14 +137,14 @@ namespace Alex.Common.Utils
 			}
 		}
 
-        public static Texture2D Slice(this Image<Rgba32> bmp, GraphicsDevice graphics, Rectangle region)
+        public static Texture2D Slice<TImageFormat>(this Image<TImageFormat> bmp, GraphicsDevice graphics, Rectangle region)  where TImageFormat : unmanaged, IPixel<TImageFormat>
         {
 	        return BitmapToTexture2D(graphics, bmp.Clone(context => context.Crop(new SixLabors.ImageSharp.Rectangle(region.X, region.Y, region.Width, region.Height))));
         }
 
-        public static void ClearRegion(ref Image<Rgba32> target, Rectangle rectangle)
+        public static void ClearRegion<TImageFormat>(ref Image<TImageFormat> target, Rectangle rectangle) where TImageFormat : unmanaged, IPixel<TImageFormat>
         {
-	        target.Mutate(
+	        target.Mutate<TImageFormat>(
 		        x =>
 		        {
 			        x.Clear(
@@ -153,9 +154,9 @@ namespace Alex.Common.Utils
 		        });
         }
         
-        public static void CopyRegionIntoImage(Image<Rgba32> srcBitmap, System.Drawing.Rectangle srcRegion,
-			ref Image<Rgba32> destBitmap,
-			System.Drawing.Rectangle destRegion, bool interpolate = false, float interpolateProgress = 0.5f, bool clear = false)
+        public static void CopyRegionIntoImage<TImageFormat>(Image<TImageFormat> srcBitmap, System.Drawing.Rectangle srcRegion,
+			ref Image<TImageFormat> destBitmap,
+			System.Drawing.Rectangle destRegion, bool interpolate = false, float interpolateProgress = 0.5f, bool clear = false)  where TImageFormat : unmanaged, IPixel<TImageFormat>
 		{
 			try
 			{
@@ -179,8 +180,8 @@ namespace Alex.Common.Utils
 					}
 					else*/
 					{
-						destBitmap.Mutate(
-							context =>
+						destBitmap.Mutate<TImageFormat>(
+							(context) =>
 							{
 								if (clear)
 								{

@@ -14,7 +14,7 @@ namespace Alex.MoLang.Parser.Parselet
 
 			IExpression nameExpr = new NameExpression(name);
 
-			if (args.Count > 0 || MoLangParser.GetNameHead(name).Equals("query") || MoLangParser.GetNameHead(name).Equals("math")){
+			if (args.Count > 0){
 				return new FuncCallExpression(nameExpr, args.ToArray());
 			}
 

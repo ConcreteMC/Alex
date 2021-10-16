@@ -49,7 +49,7 @@ namespace Alex
 						foreach (var profile in profiles)
 						{
 							//profile.Profile.Type = profile.Type;// == ProfileType.Bedrock;
-							if (profile.Profile.Uuid.Equals(saveFile.SelectedProfile))
+							if (profile.Profile.UUID.Equals(saveFile.SelectedProfile))
 							{
 								progressReceiver.UpdateProgress(90, StatusMessage);
 								LastUsedProfile = profile;
@@ -63,7 +63,7 @@ namespace Alex
 					progressReceiver.UpdateProgress(99, StatusMessage);
 					foreach (var profile in profiles)
 					{
-						Profiles.TryAdd(profile.Profile.Uuid, profile);
+						Profiles.TryAdd(profile.Profile.UUID, profile);
 					}
 				}
 				else
@@ -87,7 +87,7 @@ namespace Alex
 			storage.TryWriteJson(ProfilesFile, new ProfilesFileFormat()
 			{
 				Profiles = Profiles.Values.ToArray(),
-				SelectedProfile = CurrentProfile?.Uuid ?? string.Empty
+				SelectedProfile = CurrentProfile?.UUID ?? string.Empty
 			});
 		}
 
@@ -106,18 +106,18 @@ namespace Alex
 				}
 			}
 			SavedProfile savedProfile;
-			if (Profiles.TryGetValue(profile.Uuid, out savedProfile))
+			if (Profiles.TryGetValue(profile.UUID, out savedProfile))
 			{
 				savedProfile.Type = type;
 				savedProfile.Profile = profile;
-				Profiles[profile.Uuid] = savedProfile;
+				Profiles[profile.UUID] = savedProfile;
 			}
 			else
 			{
 				savedProfile = new SavedProfile();
 				savedProfile.Type = type;
 				savedProfile.Profile = profile;
-				Profiles.Add(profile.Uuid, savedProfile);
+				Profiles.Add(profile.UUID, savedProfile);
 			}
 
 			if (setActive)

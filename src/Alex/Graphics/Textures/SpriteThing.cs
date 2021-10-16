@@ -3,10 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using NLog;
 using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Drawing.Processing;
-using SixLabors.ImageSharp.PixelFormats;
-using SixLabors.ImageSharp.Processing;
-using Color = SixLabors.ImageSharp.Color;
 
 namespace Alex.Graphics.Textures
 {

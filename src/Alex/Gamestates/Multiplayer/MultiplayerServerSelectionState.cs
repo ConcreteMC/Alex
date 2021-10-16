@@ -387,12 +387,9 @@ namespace Alex.Gamestates.Multiplayer
 					if (currentProfile == null || !await typeImplementation.VerifyAuthentication(currentProfile))
 					{
 						await typeImplementation.Authenticate(
-							_skyBox, currentProfile, result =>
+							_skyBox, currentProfile, () =>
 							{
-								if (result)
-								{
-									Connect(profileManager.CurrentProfile);
-								}
+								Connect(profileManager.CurrentProfile);
 							});
 					}
 					else

@@ -1,5 +1,4 @@
-﻿using System.Drawing;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 

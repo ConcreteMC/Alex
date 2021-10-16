@@ -196,10 +196,16 @@ namespace Alex.MoLang.Parser
 			return args;
 		}
 
-		public String FixNameShortcut(String name)
+		public string FixNameShortcut(string name)
 		{
 			//String[] splits = name.Split(".");
 			var index = name.IndexOf('.');
+
+			if (index == -1) //Not found.
+			{
+				return name;
+			}
+			
 			var first = name.Substring(0, index);
 
 			switch (first)

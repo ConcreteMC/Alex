@@ -1,34 +1,38 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 using System.Threading.Tasks;
 using MojangAPI;
 using MojangAPI.Model;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Skin = Alex.Common.Utils.Skin;
 
 namespace Alex.Common.Services
 {
-    public class PlayerProfile
+    public class PlayerProfile : ISession
     {
-        public string Uuid { get; }
-        public string Username { get; }
-		public string PlayerName { get; }
+        [JsonProperty("Uuid")]
+        public string UUID { get; set; }
+        public string Username { get; set; }
+		public string PlayerName { get; set; }
 
         [JsonIgnore]
         public Skin Skin { get; set; }
 
-        public string AccessToken { get; }
-        public string ClientToken { get; }
+        public string AccessToken { get; set; }
+        public string ClientToken { get; set; }
         
-        public string RefreshToken { get; }
-        public DateTime? ExpiryTime { get; }
+        public string RefreshToken { get; set; }
+        public DateTime? ExpiryTime { get; set; }
 
         [JsonIgnore] public bool Authenticated { get; set; } = false;
 
+        public Dictionary<string, JToken> ExtraData { get; set; } = new Dictionary<string, JToken>();
 	    public PlayerProfile(string uuid, string username, string playerName, Skin skin, string accessToken, string clientToken, string refreshToken = null, DateTime? expiryTime = null)
         {
-            Uuid = uuid;
+            UUID = uuid;
             Username = username;
 	        PlayerName = playerName;
             Skin = skin;
@@ -36,6 +40,23 @@ namespace Alex.Common.Services
             ClientToken = clientToken;
             RefreshToken = refreshToken;
             ExpiryTime = expiryTime;
+        }
+        
+        public PlayerProfile(){}
+
+        public bool TryGet<T>(string key, out T value)
+        {
+            value = default;
+            if (!ExtraData.TryGetValue(key, out var jObject))
+                return false;
+
+            value = jObject.ToObject<T>();
+            return true;
+        }
+        
+        public bool Add<T>(string key, T value)
+        {
+            return ExtraData.TryAdd(key, JToken.FromObject(value));
         }
     }
 

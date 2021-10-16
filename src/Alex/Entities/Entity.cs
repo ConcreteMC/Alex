@@ -779,7 +779,7 @@ namespace Alex.Entities
 			}
 			else if (entry.Index == 3 && entry is MetadataBool showNametag)
 			{
-				HideNameTag = !showNametag.Value;
+				//HideNameTag = !showNametag.Value;
 			}
 			else if (entry.Index == 4 && entry is MetadataBool sil)
 			{
