@@ -187,7 +187,7 @@ namespace Alex.Entities
 					Graphics.GetBackBufferData(data);
 
 					var pics = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures);
-					var screenshotPath = Path.Combine(pics, $"alex-{DateTime.Now.ToString("s")}.png");
+					var screenshotPath = Path.Combine(pics, $"alex-{DateTime.Now.ToString("MM-dd-yyyy HH-mm-ss")}.png");
 					
 					using (Image<Rgba32> t = Image.LoadPixelData(data, w, h))
 					{
