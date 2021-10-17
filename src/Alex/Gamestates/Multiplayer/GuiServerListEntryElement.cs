@@ -10,6 +10,7 @@ using Alex.Common.Gui.Elements.Icons;
 using Alex.Common.Gui.Graphics;
 using Alex.Common.Services;
 using Alex.Common.Utils;
+using Alex.Gui.Elements;
 using Alex.Networking.Java;
 using Alex.Services;
 using Alex.Utils;
@@ -44,7 +45,7 @@ namespace Alex.Gamestates.Multiplayer
 			}
 		}
 
-		private readonly TextureElement     _serverIcon;
+		private readonly GuiMoveServerElement _serverIcon;
 		private readonly StackContainer     _textWrapper;
 		private readonly GuiConnectionPingIcon _pingStatus;
         
@@ -72,14 +73,14 @@ namespace Alex.Gamestates.Multiplayer
 			Padding = Thickness.One;
 			Anchor = Alignment.TopFill;
 
-			AddChild( _serverIcon = new TextureElement()
+			AddChild(_serverIcon = new GuiMoveServerElement()
 			{
 				Width = ServerIconSize,
 				Height = ServerIconSize,
-                
+
 				Anchor = Alignment.TopLeft,
 
-//				Background = AlexGuiTextures.DefaultServerIcon,
+			  //Background = AlexGuiTextures.DefaultServerIcon,
 			});
 
 			AddChild(_pingStatus = new GuiConnectionPingIcon()
