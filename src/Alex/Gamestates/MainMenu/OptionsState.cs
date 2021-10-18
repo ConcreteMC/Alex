@@ -10,11 +10,6 @@ namespace Alex.Gamestates.MainMenu
         public OptionsState(GuiPanoramaSkyBox skyBox) : base(skyBox)
         {
             TitleTranslationKey = "options.title";
-        }
-
-        protected override void OnInit(IGuiRenderer renderer)
-        {
-            Body.ClearChildren();
 
             AddGuiRow(
                 CreateSlider($"{GuiRenderer.GetTranslation("options.fov")}: {{0}}", o => o.FieldOfVision, 30, 120, 1),
@@ -33,7 +28,10 @@ namespace Alex.Gamestates.MainMenu
                 CreateLinkButton<MiscellaneousOptionsState>("options.miscellaneous", "Miscellaneous Settings..."));
 
             AddGuiRow(CreateLinkButton<UserInterfaceOptionsState>("options.ui", "User Interface..."));
-            
+        }
+
+        protected override void OnInit(IGuiRenderer renderer)
+        {
             base.OnInit(renderer);
         }
     }
