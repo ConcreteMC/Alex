@@ -14,6 +14,8 @@ namespace Alex.Gamestates.MainMenu
 
         protected override void OnInit(IGuiRenderer renderer)
         {
+            Body.ClearChildren();
+
             AddGuiRow(
                 CreateSlider($"{GuiRenderer.GetTranslation("options.fov")}: {{0}}", o => o.FieldOfVision, 30, 120, 1),
                 CreateSlider(f => $"Mouse Sensitivity: {(f)}%", o => o.MouseSensitivity, 0, 60, 1));

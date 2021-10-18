@@ -56,6 +56,10 @@ namespace Alex.Utils
 		{
 			try
 			{
+				if (reader.Value == null)
+				{
+					return null;
+				}
 				string base64Value = reader.Value.ToString();
 
 				if (string.IsNullOrWhiteSpace(base64Value))
