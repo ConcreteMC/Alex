@@ -166,21 +166,28 @@ namespace Alex
                 return false;
             }
 
-            using (FileStream stream = File.OpenRead(file))
-            using (var archive = new ZipFileSystem(stream, Path.GetFileNameWithoutExtension(file)))
+            try
             {
-                manifests = ResourcePackLib.ResourcePack.GetManifests(archive).ToArray();
-
-                if (manifests != null)
+                using (FileStream stream = File.OpenRead(file))
+                using (var archive = new ZipFileSystem(stream, Path.GetFileNameWithoutExtension(file)))
                 {
-                    for (int i = 0; i < manifests.Length; i++)
+                    manifests = ResourcePackLib.ResourcePack.GetManifests(archive).ToArray();
+
+                    if (manifests != null)
                     {
-                        if (manifests[i] != null && string.IsNullOrWhiteSpace(manifests[i].Name))
+                        for (int i = 0; i < manifests.Length; i++)
                         {
-                            manifests[i].Name = archive.Name;
+                            if (manifests[i] != null && string.IsNullOrWhiteSpace(manifests[i].Name))
+                            {
+                                manifests[i].Name = archive.Name;
+                            }
                         }
                     }
                 }
+            }
+            catch(Exception e)
+            {
+                Log.Error($"Could not load resource pack: {file}",e);
             }
 
             if (manifests == null)
@@ -449,15 +456,13 @@ namespace Alex
 
             progressReceiver?.UpdateProgress(100, "Loading registries...");
 
-            string defaultResources;
-            string defaultBedrock;
 
-            if (!CheckJavaAssets(progressReceiver, out defaultResources))
+            if (!CheckJavaAssets(progressReceiver, out string defaultResources))
             {
                 return false;
             }
 
-            if (!CheckBedrockAssets(progressReceiver, out defaultBedrock))
+            if (!CheckBedrockAssets(progressReceiver, out string defaultBedrock))
             {
                 return false;
             }

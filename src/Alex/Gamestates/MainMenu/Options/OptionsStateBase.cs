@@ -118,8 +118,18 @@ namespace Alex.Gamestates.MainMenu.Options
 
                 if (canConstruct)
                 {
-                    state = (TGameState)constructor.Invoke(passedParameters);
-                    break;
+                    try
+                    {
+                        state = (TGameState)constructor.Invoke(passedParameters);
+                    }
+                    catch(Exception e)
+                    {
+                        Log.Error(e);
+                        break;
+                    }
+
+                break;
+
                 }
             }
 
