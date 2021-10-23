@@ -4,13 +4,14 @@ using Alex.Common.Gui.Elements;
 using Alex.Common.Gui.Graphics;
 using Alex.Common.Services;
 using Alex.Gamestates.Common;
+using Alex.Gui;
 using Alex.Gui.Elements;
 using Alex.Utils;
 using Microsoft.Xna.Framework;
 using MiNET.Utils;
 using RocketUI;
 
-namespace Alex.Gui.Dialogs
+namespace Alex.Gamestates.Multiplayer
 {
 	public class ProfileItem : SelectionListItem
 	{
@@ -34,8 +35,9 @@ namespace Alex.Gui.Dialogs
 				Height = 32,
                 
 				Anchor = Alignment.TopLeft,
-				BackgroundOverlay = Color.White * 0.3f
-				//				Background = AlexGuiTextures.DefaultServerIcon,
+				BackgroundOverlay = Color.White * 0.3f,
+				//Texture = AlexGuiTextures.PlayerHead
+				Background = AlexGuiTextures.UnknownPackIcon,
 			});
 
 			bool isGreen = profile.Authenticated;
@@ -85,7 +87,7 @@ namespace Alex.Gui.Dialogs
 		}
 	}
 	
-	public class ProfileSelectionScreen : ListSelectionStateBase<ProfileItem>
+	public class UserSelectionState : ListSelectionStateBase<ProfileItem>
 	{
 		public delegate void ProfileSelected(PlayerProfile selectedProfile);
 		public delegate void Cancelled();
@@ -97,7 +99,7 @@ namespace Alex.Gui.Dialogs
 		
 		private GuiPanoramaSkyBox _skyBox;
 		public bool AllowDelete { get; set; } = true;
-		public ProfileSelectionScreen(ServerTypeImplementation serverType, GuiPanoramaSkyBox skyBox)
+		public UserSelectionState(ServerTypeImplementation serverType, GuiPanoramaSkyBox skyBox)
 		{
 			Title = $"{serverType.DisplayName} - Account Selection";
 			_skyBox = skyBox;

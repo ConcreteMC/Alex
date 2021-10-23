@@ -5,6 +5,7 @@ using Alex.Common.Data.Servers;
 using Alex.Common.Services;
 using Alex.Common.Utils;
 using Alex.Gamestates.Login;
+using Alex.Gamestates.Multiplayer;
 using Alex.Gui;
 using Alex.Gui.Dialogs;
 using Alex.Gui.Elements;
@@ -77,7 +78,7 @@ namespace Alex.Worlds.Multiplayer.Java
 		public override Task Authenticate(GuiPanoramaSkyBox skyBox, AuthenticationCallback callBack)
 		{
 			var profileManager = Alex.Services.GetRequiredService<ProfileManager>();
-			ProfileSelectionScreen pss = new ProfileSelectionScreen(this, skyBox);
+			UserSelectionState pss = new UserSelectionState(this, skyBox);
 			pss.ReloadData(profileManager.GetProfiles(ProfileType));
 			
 			async void LoginCallBack(PlayerProfile p)

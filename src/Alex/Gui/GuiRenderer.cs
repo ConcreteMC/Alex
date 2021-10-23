@@ -424,6 +424,8 @@ namespace Alex.Gui
 			// Other
 			LoadTextureFromResourcePack(AlexGuiTextures.DefaultServerIcon, resourceManager, "misc/unknown_server");
 			
+			LoadTextureFromResourcePack(AlexGuiTextures.UnknownPackIcon, resourceManager, "misc/unknown_pack");
+			
 			Extensions.InitMarkers(this);
 			
 			progressReceiver?.UpdateProgress(100, null, "");

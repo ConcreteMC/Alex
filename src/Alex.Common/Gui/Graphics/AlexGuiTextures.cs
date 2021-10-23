@@ -50,6 +50,7 @@ namespace Alex.Common.Gui.Graphics
         public static readonly GuiTextures ServerPingPending4                   = new(AlexNamespace, nameof(ServerPingPending4));
         public static readonly GuiTextures ServerPingPending5                   = new(AlexNamespace, nameof(ServerPingPending5));
         public static readonly GuiTextures DefaultServerIcon                    = new(AlexNamespace, nameof(DefaultServerIcon));
+        public static readonly GuiTextures UnknownPackIcon                      = new(AlexNamespace, nameof(UnknownPackIcon));
         public static readonly GuiTextures InventoryPlayerBackground            = new(AlexNamespace, nameof(InventoryPlayerBackground));
         public static readonly GuiTextures InventoryChestBackground             = new(AlexNamespace, nameof(InventoryChestBackground));
         public static readonly GuiTextures InventoryCraftingTable               = new(AlexNamespace, nameof(InventoryCraftingTable));
@@ -97,6 +98,8 @@ namespace Alex.Common.Gui.Graphics
         public static readonly GuiTextures Experience                    = new(AlexNamespace, nameof(Experience));
         
         public static readonly GuiTextures GradientBlur = new(AlexNamespace, nameof(GradientBlur));
+
+        public static readonly GuiTextures PlayerHead = new(AlexNamespace, nameof(PlayerHead));
 
         public static class MapMarkers
         {
