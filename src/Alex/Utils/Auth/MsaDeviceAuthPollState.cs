@@ -2,7 +2,7 @@ using Newtonsoft.Json;
 
 namespace Alex.Utils.Auth
 {
-	public class MsaDeviceAuthPollState
+	public class MsaDeviceAuthPollState : BedrockTokenPair
 	{
 		[JsonProperty("user_id")]
 		public string UserId;
@@ -12,13 +12,7 @@ namespace Alex.Utils.Auth
 		
 		[JsonProperty("scope")]
 		public string Scope;
-		
-		[JsonProperty("access_token")]
-		public string AccessToken;
-		
-		[JsonProperty("refresh_token")]
-		public string RefreshToken;
-		
+
 		//public int interval;
 		[JsonProperty("expires_in")]
 		public int ExpiresIn;

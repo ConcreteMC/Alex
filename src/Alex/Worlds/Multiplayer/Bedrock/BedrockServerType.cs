@@ -6,6 +6,8 @@ using Alex.Common.Data.Servers;
 using Alex.Common.Services;
 using Alex.Gamestates.Login;
 using Alex.Gui;
+using Alex.Gui.Dialogs;
+using Alex.Gui.Elements;
 using Alex.Net;
 using Alex.Services;
 using Alex.Utils;
@@ -120,7 +122,10 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		/// <inheritdoc />
 		public override async Task<bool> VerifyAuthentication(PlayerProfile currentProfile)
 		{
-			if (currentProfile != null && !currentProfile.Authenticated)
+			if (currentProfile == null)
+				return false;
+			
+			if (!currentProfile.Authenticated)
 			{
 				var task = await ReAuthenticate(currentProfile);
 
@@ -130,16 +135,57 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				}
 			}
 
-			return false;
+			return currentProfile.Authenticated;
 		}
 
 		/// <inheritdoc />
-		public override Task Authenticate(GuiPanoramaSkyBox skyBox, PlayerProfile existingProfile, AuthenticationCallback callBack)
+		public override Task Authenticate(GuiPanoramaSkyBox skyBox,  AuthenticationCallback callBack)
 		{
-			BedrockLoginState loginState = new BedrockLoginState(
-				skyBox, () => callBack(), XboxAuthService, this);
+			var profileManager = Alex.Services.GetRequiredService<ProfileManager>();
+			ProfileSelectionScreen pss = new ProfileSelectionScreen(this, skyBox);
+			pss.ReloadData(profileManager.GetProfiles(AccountType));
+			
+			pss.OnProfileSelection = async (p) =>
+			{
+				var overlay = new LoadingOverlay();
+				Alex.GuiManager.AddScreen(overlay);
 
-			Alex.GameStateManager.SetActiveState(loginState, true);
+				try
+				{
+					if (!p.Authenticated)
+					{
+						p = await ReAuthenticate(p);
+					}
+
+					if (p.Authenticated)
+					{
+						callBack(p);
+					}
+					else
+					{
+						Log.Warn($"Bedrock authentication failed!");
+						
+						pss.ReloadData(profileManager.GetProfiles(AccountType));
+						Alex.GameStateManager.SetActiveState(pss);
+					}
+				}
+				finally
+				{
+					Alex.GuiManager.RemoveScreen(overlay);
+				}
+			};
+			pss.OnCancel = () =>
+			{
+				
+			};
+			pss.OnAddAccount = () =>
+			{
+				BedrockLoginState loginState = new BedrockLoginState(
+					skyBox, (p) => callBack(p), XboxAuthService, this);
+
+				Alex.GameStateManager.SetActiveState(loginState, true);
+			};
+			Alex.GameStateManager.SetActiveState(pss);
 
 			return Task.CompletedTask;
 		}

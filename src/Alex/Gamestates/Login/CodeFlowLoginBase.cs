@@ -25,7 +25,7 @@ namespace Alex.Gamestates.Login
 {
     public abstract class CodeFlowLoginBase<TType> : GuiMenuStateBase where TType : IDeviceAuthConnectResponse
     {
-	    public delegate void LoginSuccessfulCallback();
+	    public delegate void LoginSuccessfulCallback(PlayerProfile profile);
 	    
 	    private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(CodeFlowLoginBase<TType>));
 	    
@@ -252,7 +252,7 @@ namespace Alex.Gamestates.Login
 					        return;
 				        }
 
-				        _loginSuccessful?.Invoke();
+				        _loginSuccessful?.Invoke(profileUpdateResult.Profile);
 			        }
 			        finally
 			        {

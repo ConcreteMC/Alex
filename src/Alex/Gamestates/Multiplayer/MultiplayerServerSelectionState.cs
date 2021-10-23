@@ -12,6 +12,7 @@ using Alex.Common.Utils;
 using Alex.Gamestates.Common;
 using Alex.Gamestates.Login;
 using Alex.Gui;
+using Alex.Gui.Dialogs;
 using Alex.Gui.Elements;
 using Alex.Services;
 using Alex.Utils;
@@ -354,48 +355,32 @@ namespace Alex.Gamestates.Multiplayer
 			{
 				var selectedItem = SelectedItem;
 				var       entry = selectedItem.SavedServerEntry;
-
-				var           profileManager = GetService<ProfileManager>();
+				
 				if (Alex.ServerTypeManager.TryGet(entry.ServerType, out var typeImplementation))
 				{
-					var           profiles       = profileManager.GetProfiles(entry.ServerType);
-					PlayerProfile currentProfile = null;
+					await typeImplementation.Authenticate(
+						_skyBox, (profile) =>
 
-					if (profiles.Length == 1)
 					{
-						currentProfile = profiles[0];
-					}
-					
-					void Connect(PlayerProfile profile)
-					{
-						var target = selectedItem.ConnectionEndpoint;
-						if (target == null)
+						if (overlay != null)
 						{
 							Alex.GuiManager.RemoveScreen(overlay);
 							overlay = null;
+						}
+
+						if (!profile.Authenticated)
+						{
 							return;
 						}
-						
+
+						var target = selectedItem.ConnectionEndpoint;
+						if (target == null)
+							return;
+
 						Alex.ConnectToServer(
 							typeImplementation, new ServerConnectionDetails(target, entry.Host),
 							profile);
-					
-						Alex.GuiManager.RemoveScreen(overlay);
-						overlay = null;
-					}
-					
-					if (currentProfile == null || !await typeImplementation.VerifyAuthentication(currentProfile))
-					{
-						await typeImplementation.Authenticate(
-							_skyBox, currentProfile, () =>
-							{
-								Connect(profileManager.CurrentProfile);
-							});
-					}
-					else
-					{
-						Connect(currentProfile);
-					}
+					});
 				}
 			}
 			finally

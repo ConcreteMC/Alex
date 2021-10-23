@@ -5,6 +5,7 @@ using Alex.Common.Gui.Elements;
 using Alex.Common.Services;
 using Alex.Common.Utils;
 using Alex.Gui;
+using Alex.Utils;
 using Alex.Utils.Skins;
 using Alex.Worlds.Multiplayer.Java;
 using Microsoft.Xna.Framework;
@@ -22,9 +23,9 @@ namespace Alex.Gamestates.Login
 		private ProfileManager _profileManager;
 
 		private readonly JavaServerType _serverType;
-		private Action _loginSuccesAction;
+		private ServerTypeImplementation.AuthenticationCallback _loginSuccesAction;
 		private PlayerProfile _activeProfile;
-		public MojangLoginState(JavaServerType serverType, GuiPanoramaSkyBox skyBox, Action loginSuccesAction, PlayerProfile activeProfile = null) : base("Minecraft Login", skyBox)
+		public MojangLoginState(JavaServerType serverType, GuiPanoramaSkyBox skyBox, ServerTypeImplementation.AuthenticationCallback loginSuccesAction, PlayerProfile activeProfile = null) : base("Minecraft Login", skyBox)
 		{
 			_serverType = serverType;
 			_loginSuccesAction = loginSuccesAction;
@@ -111,7 +112,7 @@ namespace Alex.Gamestates.Login
 					}
 					
 					_activeProfile = playerProfile = updateResult.Profile;
-					_loginSuccesAction?.Invoke();
+					_loginSuccesAction?.Invoke(playerProfile);
 					return true;
 				});
 		}
