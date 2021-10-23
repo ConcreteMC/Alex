@@ -161,8 +161,6 @@ namespace Alex.Common.Utils
 		public static async Task<MojangAuthResponse> DoDeviceCodeLogin(MsaDeviceAuthConnectResponse authResponse,
 			CancellationToken cancellationToken, params string[] scopes)
 		{
-			HttpClient client = _httpClient;
-
 			var deviceCodeExpiryTime = DateTime.UtcNow.Add(TimeSpan.FromSeconds(authResponse.ExpiresIn));
 			string r = "authorization_pending";
 			MsaDeviceAuthPollState token = null;
@@ -183,14 +181,20 @@ namespace Alex.Common.Utils
 				return new MojangAuthResponse(MojangAuthResult.UnknownError)
 				{
 					StatusCode = (int)HttpStatusCode.RequestTimeout,
-					IsSuccess = false,
+		//			IsSuccess = false,
 					ErrorMessage = "You took too long to login... Please try again."
 				};
 			}
 			
 			if (token == null)
 				return null;
-			
+
+			return await ExchangeLiveForXbox(token);
+		}
+
+		private static async Task<MojangAuthResponse> ExchangeLiveForXbox(BedrockTokenPair token)
+		{
+			HttpClient client = _httpClient;
 			var xblResponse = await _xboxAuth.AuthenticateWithXBL(client, token.AccessToken);
 			var xblToken = xblResponse.Token;
 			var userHash = xblResponse.DisplayClaims.Xui[0].Uhs;
@@ -243,13 +247,19 @@ namespace Alex.Common.Utils
 				},
 				Profile = userProfile,
 				StatusCode = userProfile.StatusCode,
-				IsSuccess = true
+				//	IsSuccess = true
 			};
 		}
 		
 		public static Task<MojangAuthResponse> DoDeviceCodeLogin(MsaDeviceAuthConnectResponse authResponse, CancellationToken cancellationToken)
 		{
 			return DoDeviceCodeLogin(authResponse, cancellationToken, new string[0]);
+		}
+
+		public static async Task<MojangAuthResponse> RefreshSession(ISession session)
+		{
+			var refreshedToken = await _xboxAuth.RefreshAccessToken(session.RefreshToken, ClientID, "XboxLive.signin", "XboxLive.offline_access");
+			return await ExchangeLiveForXbox(refreshedToken);
 		}
 	}
 

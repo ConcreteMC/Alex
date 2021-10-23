@@ -60,6 +60,9 @@ namespace Alex.Gamestates.Login
 				playerProfile.AccessToken = session.AccessToken;
 				playerProfile.ClientToken = session.ClientToken;
 				playerProfile.PlayerName = result.Profile?.Name;
+				playerProfile.RefreshToken = session.RefreshToken;
+				playerProfile.ExpiryTime = session.ExpiryTime;
+				
 				var skin = result.Profile?.Skin;
 
 				if (skin != null)

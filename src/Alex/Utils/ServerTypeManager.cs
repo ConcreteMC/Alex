@@ -61,7 +61,7 @@ namespace Alex.Utils
 
 	public class ServerTypeImplementation
 	{
-		public delegate void AuthenticationCallback();
+		public delegate void AuthenticationCallback(PlayerProfile profile);
 
 		public IServerQueryProvider QueryProvider { get; }
 		public string DisplayName { get; set; }
@@ -95,7 +95,7 @@ namespace Alex.Utils
 			return Task.FromResult(false);
 		}
 
-		public virtual Task Authenticate(GuiPanoramaSkyBox skyBox, PlayerProfile profile, AuthenticationCallback callBack)
+		public virtual Task Authenticate(GuiPanoramaSkyBox skyBox, AuthenticationCallback callBack)
 		{
 			return Task.CompletedTask;
 		}

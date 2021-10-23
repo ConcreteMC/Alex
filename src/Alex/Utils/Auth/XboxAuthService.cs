@@ -730,7 +730,7 @@ namespace Alex.Utils.Auth
 
 		public async Task<(bool success, BedrockTokenPair token)> RefreshTokenAsync(string refreshToken)
 		{
-			var token = await RefreshAccessToken(refreshToken);
+			var token = await RefreshAccessToken(refreshToken, ClientId);
 			if (token?.AccessToken == null)
 			{
 				return (false, null);
@@ -744,19 +744,30 @@ namespace Alex.Utils.Auth
 			});
 		}
 		
-		private async Task<BedrockTokenPair> RefreshAccessToken(string refreshToken)
+		public async Task<BedrockTokenPair> RefreshAccessToken(string refreshToken, string clientId, params string[] scopes)
 		{
 			if (string.IsNullOrEmpty(refreshToken))
 			{
 				throw new ArgumentException("The refresh token is missing.");
 			}
+			
+			string scope = string.Empty;
+
+			if (scopes.Length == 0)
+			{
+				scope = "service::user.auth.xboxlive.com::MBI_SSL";
+			}
+			else
+			{
+				scope = string.Join(' ', scopes);
+			}
 
 			try
 			{
 				AccessTokens tokens = await Get($"{RefreshUri}", new Dictionary<string, string> { 
-					{ "client_id", ClientId  },
+					{ "client_id", clientId  },
 					{ "grant_type", "refresh_token" },
-					{ "scope", "service::user.auth.xboxlive.com::MBI_SSL" },
+					{ "scope", scope },
 					{ "redirect_uri", RedirectUri },
 					{ "refresh_token", refreshToken }
 				}).ConfigureAwait(false);

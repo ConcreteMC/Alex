@@ -6,6 +6,8 @@ using Alex.Common.Services;
 using Alex.Common.Utils;
 using Alex.Gamestates.Login;
 using Alex.Gui;
+using Alex.Gui.Dialogs;
+using Alex.Gui.Elements;
 using Alex.Net;
 using Alex.Networking.Java;
 using Alex.Services;
@@ -19,6 +21,7 @@ using MiNET.Utils;
 using MojangAPI;
 using MojangAPI.Model;
 using NLog;
+using MojangAuthResponse = Alex.Utils.Auth.MojangAuthResponse;
 using PlayerProfile = Alex.Common.Services.PlayerProfile;
 using Skin = MiNET.Utils.Skins.Skin;
 
@@ -71,131 +74,162 @@ namespace Alex.Worlds.Multiplayer.Java
 
 		public const string AuthTypeIdentifier = "MicrosoftAccount";
 		/// <inheritdoc />
-		public override Task Authenticate(GuiPanoramaSkyBox skyBox, PlayerProfile activeProfile, AuthenticationCallback callBack)
+		public override Task Authenticate(GuiPanoramaSkyBox skyBox, AuthenticationCallback callBack)
 		{
+			var profileManager = Alex.Services.GetRequiredService<ProfileManager>();
+			ProfileSelectionScreen pss = new ProfileSelectionScreen(this, skyBox);
+			pss.ReloadData(profileManager.GetProfiles(ProfileType));
+			
+			async void LoginCallBack(PlayerProfile p)
+			{
+				var overlay = new LoadingOverlay();
+				Alex.GuiManager.AddScreen(overlay);
+
+				try
+				{
+					if (await VerifyAuthentication(p) && p.Authenticated)
+					{
+						callBack?.Invoke(p);
+					}
+					else
+					{
+						Log.Warn($"Java authentication failed...");
+
+						if (p.TryGet(AuthTypeIdentifier, out bool isMicrosoftAccount))
+						{
+							if (isMicrosoftAccount)
+							{
+								Alex.GameStateManager.SetActiveState(
+									new JavaCodeFlowLoginState(this, skyBox, c =>
+									{
+										callBack?.Invoke(c);
+									}, p));
+							}
+							else
+							{
+								Alex.GameStateManager.SetActiveState(
+									new MojangLoginState(
+										this, skyBox, c =>
+										{
+											callBack?.Invoke(c);
+										}, p));
+							}
+						}
+						pss.ReloadData(profileManager.GetProfiles(ProfileType));
+						Alex.GameStateManager.SetActiveState(pss);
+					}
+				}
+				finally
+				{
+					Alex.GuiManager.RemoveScreen(overlay);
+				}
+			}
+			
 			void UseMicrosoft()
 			{
 				Alex.GameStateManager.SetActiveState(
-					new JavaCodeFlowLoginState(this, skyBox, () =>
-					{
-						callBack();
-					}, activeProfile));
+					new JavaCodeFlowLoginState(this, skyBox, LoginCallBack));
 			}
 
 			void UseMojang()
 			{
 				Alex.GameStateManager.SetActiveState(
 					new MojangLoginState(
-						this, skyBox, () => callBack(), activeProfile));
+						this, skyBox, LoginCallBack));
 			}
-			
-			if (activeProfile != null && activeProfile.TryGet(AuthTypeIdentifier, out bool isMicrosoftAccount))
+
+			pss.OnProfileSelection = LoginCallBack;
+			pss.OnCancel = () =>
 			{
-				if (isMicrosoftAccount)
-				{
-					UseMicrosoft();
-				}
-				else
-				{
-					UseMojang();
-				}
+				
+			};
+			pss.OnAddAccount = () =>
+			{
+				Alex.GameStateManager.SetActiveState(new JavaProviderSelectionState(
+					this,
+					skyBox,
+					UseMicrosoft, UseMojang), true);
+			};
+			Alex.GameStateManager.SetActiveState(pss);
 
-				return Task.CompletedTask;
-			}
-
-			Alex.GameStateManager.SetActiveState(new JavaProviderSelectionState(
-				this,
-				skyBox,
-				UseMicrosoft, UseMojang), true);
-			
 			return Task.CompletedTask;
 		}
 
 		/// <inheritdoc />
-		public override async Task<bool> VerifyAuthentication(PlayerProfile currentProfile)
+		public override async Task<bool> VerifyAuthentication(PlayerProfile profile)
 		{
-			var profileManager = Alex.Services.GetRequiredService<ProfileManager>();
+			if (profile == null)
+				return false;
 			
-			if (currentProfile != null)
+			if (!profile.Authenticated)
 			{
-				if (await TryAuthenticate(currentProfile))
+				if (await TryAuthenticate(profile))
 				{
-					currentProfile.Authenticated= true;
-
+					profile.Authenticated = true;
+					
 					return true;
 				}
 			}
-			else
-			{
-				foreach (var profile in profileManager.GetProfiles(ProfileType))
-				{
-					if (await TryAuthenticate(profile))
-					{
-						return true;
-					}
-				}
-			}
 
-			return false;
+			return profile.Authenticated;
 		}
 
-		public override async Task<ProfileUpdateResult> UpdateProfile(PlayerProfile session)
+		public override async Task<ProfileUpdateResult> UpdateProfile(PlayerProfile profile)
 		{
 			var profileManager = Alex.Services.GetRequiredService<ProfileManager>();
 
-			var profile = await MojangApi.GetPlayerProfile(session.AccessToken);
+			var mojangProfile = await MojangApi.GetPlayerProfile(profile.AccessToken);
 
-			if (!profile.IsSuccess)
+			if (!mojangProfile.IsSuccess)
 			{
-				return new ProfileUpdateResult(false, profile.Error, profile.ErrorMessage);
+				return new ProfileUpdateResult(false, mojangProfile.Error, mojangProfile.ErrorMessage);
 			}
 
-			Common.Utils.Skin skin = session?.Skin;
-			if (profile?.Skin?.Url != null)
+			Common.Utils.Skin skin = profile?.Skin;
+			if (mojangProfile?.Skin?.Url != null)
 			{
 				Texture2D texture = null;
 
-				if (SkinUtils.TryGetSkin(new Uri(profile?.Skin?.Url), Alex.Instance.GraphicsDevice, out texture))
+				if (SkinUtils.TryGetSkin(new Uri(mojangProfile?.Skin?.Url), Alex.Instance.GraphicsDevice, out texture))
 				{
 					skin = new Common.Utils.Skin()
 					{
-						Slim = (profile.Skin?.Model == SkinType.Alex),
+						Slim = (mojangProfile.Skin?.Model == SkinType.Alex),
 						Texture = texture,
-						Url = profile?.Skin?.Url
+						Url = mojangProfile?.Skin?.Url
 					};
 				}
 			}
 			
-			PlayerProfile playerProfile = session ?? new PlayerProfile();
-			playerProfile.UUID = profile.UUID;
-			playerProfile.Username = session.Username;
-			playerProfile.AccessToken = session.AccessToken;
-			playerProfile.ClientToken = session.ClientToken;
-			playerProfile.PlayerName = profile.Name;
-			playerProfile.RefreshToken = session.RefreshToken;
-			playerProfile.Skin = skin;
-			playerProfile.Authenticated = true;
+			profile.UUID = mojangProfile.UUID;
+			profile.Skin = skin;
+			profile.Authenticated = true;
 			
-			profileManager.CreateOrUpdateProfile("java", playerProfile, true);
-			return new ProfileUpdateResult(true, playerProfile);
+			profileManager.CreateOrUpdateProfile(ProfileType, profile, true);
+			return new ProfileUpdateResult(true, profile);
 		}
 
 		private async Task<bool> TryAuthenticate(PlayerProfile profile)
 		{
-			//	Requester.ClientToken = profile.ClientToken;
-			var response = await MojangApi.TryAutoLogin(profile);
+			MojangAuthResponse response = await MojangApi.Validate(profile.AccessToken, profile.ClientToken);
 
 			if (!response.IsSuccess)
 			{
-				Log.Warn($"Could not auto-login user: {profile.Username} (Error={response.ErrorMessage} Result={response.Result})");
-				response = await MojangApi.Validate(profile.AccessToken, profile.ClientToken);
-			}
+				if (string.IsNullOrWhiteSpace(profile.RefreshToken))
+				{
+					Log.Warn($"Could not validate accesstoken: {profile.Username} (Error={response.ErrorMessage} Result={response.Result})");
+					profile.AuthError = new PlayerProfileAuthenticateEventArgs(response.ErrorMessage, response.Result).ToUserFriendlyString();
+					return false;
+				}
 
-			if (!response.IsSuccess)
-			{
-				Log.Warn($"Could not restore user session: {profile.Username} (Error={response.ErrorMessage} Result={response.Result})");
-
-				return false;
+				response = await MojangApi.RefreshSession(profile);
+				if (!response.IsSuccess)
+				{
+					Log.Warn($"Could not refresh session for user: {profile.Username} (Error={response.ErrorMessage} Result={response.Result})");
+					profile.AuthError = new PlayerProfileAuthenticateEventArgs(response.ErrorMessage, response.Result).ToUserFriendlyString();
+						
+					return false;
+				}
 			}
 
 			if (response.Session != null)
@@ -204,6 +238,8 @@ namespace Alex.Worlds.Multiplayer.Java
 				profile.UUID = response.Session.UUID;
 				profile.ClientToken = response.Session.ClientToken;
 				profile.AccessToken = response.Session.AccessToken;
+				profile.RefreshToken = response.Session.RefreshToken;
+				profile.ExpiryTime = response.Session.ExpiryTime;
 			}
 
 			if (response.Profile != null)
@@ -225,6 +261,7 @@ namespace Alex.Worlds.Multiplayer.Java
 
 			if (updateResult.Success)
 			{
+				updateResult.Profile.Authenticated = true;
 				return true;
 			}
 

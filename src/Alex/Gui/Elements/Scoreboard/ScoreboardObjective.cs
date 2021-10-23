@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Linq;
+using System.Threading;
 using NLog;
 using RocketUI;
 
@@ -29,6 +30,9 @@ namespace Alex.Gui.Elements.Scoreboard
 
 		public EventHandler<string> OnEntryAdded;
 		public EventHandler<string> OnEntryRemoved;
+
+		private int _changes = 0;
+		public bool HasChanges => _changes > 0;
 		public ScoreboardObjective(string name, string displayName, int sortOrder, string criteriaName)
 		{
 			_displayNameElement = new TextElement(displayName) {Anchor = Alignment.CenterX};
@@ -40,10 +44,10 @@ namespace Alex.Gui.Elements.Scoreboard
 			CriteriaName = criteriaName;
 			ChildAnchor = Alignment.Fill;
 			
-			_container = new Container();
-			_container.AddChild(_displayNameElement);
+			var container = new Container();
+			container.AddChild(_displayNameElement);
 			
-			AddChild(_container);
+			AddChild(container);
 
 			_spacer = new StackMenuSpacer();
 		}
@@ -62,7 +66,8 @@ namespace Alex.Gui.Elements.Scoreboard
 				if (value.Score != entry.Score)
 				{
 					value.Score = entry.Score;
-					rebuild = true;
+					
+					Interlocked.Increment(ref _changes);
 				}
 
 				value.DisplayName = entry.DisplayName;
@@ -73,11 +78,12 @@ namespace Alex.Gui.Elements.Scoreboard
 				{
 					OnEntryAdded?.Invoke(this, id);
 				}
-				rebuild = true;
+				Interlocked.Increment(ref _changes);
+				//rebuild = true;
 			}
 
-			if (rebuild)
-				Rebuild();
+			//if (rebuild)
+				//Rebuild();
 			/*Entries.AddOrUpdate(id, entry, (oldId, oldValue) => entry);
 			
 			Rebuild();*/
@@ -89,8 +95,9 @@ namespace Alex.Gui.Elements.Scoreboard
 			{
 				OnEntryRemoved?.Invoke(this, id);
 
-				RemoveChild(old);
-				Rebuild();
+				Interlocked.Increment(ref _changes);
+				//RemoveChild(old);
+				//Rebuild();
 			}
 			else
 			{
@@ -119,11 +126,13 @@ namespace Alex.Gui.Elements.Scoreboard
 			return Entries.TryGetValue(id, out entry);
 		}
 
-		private TextElement _displayNameElement;
-		private Container   _container;
-		private StackMenuSpacer _spacer;
+		private readonly TextElement _displayNameElement;
+		private readonly StackMenuSpacer _spacer;
 		internal void Rebuild()
 		{
+			if (Interlocked.Exchange(ref _changes, 0) <= 0)
+				return;
+			
 			var                 entries = Entries.ToArray();
 
 			if (SortOrder == 0) //Ascending
@@ -143,13 +152,21 @@ namespace Alex.Gui.Elements.Scoreboard
 			//AddChild(_container);
 			
 			RemoveChild(_spacer);
+
+			foreach (var child in ChildElements)
+			{
+				if (child is not ScoreboardEntry sbe)
+					continue;
+				
+				RemoveChild(sbe);
+			}
 			
 			foreach (var entry in entries)
 			{
 				if (CriteriaName == "dummy")
 					entry.Value.ShowScore = false;
 				
-				RemoveChild(entry.Value);
+			//	RemoveChild(entry.Value);
 				AddChild(entry.Value);
 			}
 			

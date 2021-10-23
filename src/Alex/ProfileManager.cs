@@ -105,6 +105,7 @@ namespace Alex
 					profile.Skin.Slim = true;
 				}
 			}
+			
 			SavedProfile savedProfile;
 			if (Profiles.TryGetValue(profile.UUID, out savedProfile))
 			{
@@ -114,9 +115,10 @@ namespace Alex
 			}
 			else
 			{
-				savedProfile = new SavedProfile();
-				savedProfile.Type = type;
-				savedProfile.Profile = profile;
+				savedProfile = new SavedProfile
+				{
+					Type = type, Profile = profile
+				};
 				Profiles.Add(profile.UUID, savedProfile);
 			}
 
@@ -126,6 +128,21 @@ namespace Alex
 			}
 
 			alex.UiTaskManager.Enqueue(SaveProfiles);
+		}
+
+		public void RemoveProfile(PlayerProfile profile)
+		{
+			var alex = ServiceProvider.GetRequiredService<Alex>();
+			
+			if (Profiles.Remove(profile.UUID, out var savedProfile))
+			{
+				if (CurrentProfile == savedProfile.Profile)
+				{
+					CurrentProfile = null;
+				}
+				
+				alex.UiTaskManager.Enqueue(SaveProfiles);
+			}
 		}
 
 		public PlayerProfile[] GetProfiles(string type)

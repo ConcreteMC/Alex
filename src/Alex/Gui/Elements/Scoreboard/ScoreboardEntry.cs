@@ -53,6 +53,8 @@ namespace Alex.Gui.Elements.Scoreboard
 			}
 		}
 
+		internal bool PendingRemoval { get; set; } = false;
+
 		private TextElement Left      { get; }
 		private Container   Right     { get; }
 		private TextElement RightText { get; }

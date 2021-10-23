@@ -1,3 +1,4 @@
+using System;
 using Alex.Common;
 using MojangAPI.Model;
 
@@ -13,11 +14,11 @@ namespace Alex.Utils.Auth
 		public string Error { get; set; }
 		public int StatusCode { get; set; }
 
-		public bool IsSuccess { get; set; }
+		public bool IsSuccess => Result == MojangAuthResult.Success;
 		public MojangAuthResponse(MojangAuthResult result)
 		{
 			Result = result;
-			IsSuccess = result == MojangAuthResult.Success;
+			//IsSuccess = result == MojangAuthResult.Success;
 		}
 
 		public MojangAuthResponse(MojangAPI.Model.MojangAuthResponse response)
@@ -25,7 +26,8 @@ namespace Alex.Utils.Auth
 			StatusCode = response.StatusCode;
 			ErrorMessage = response.ErrorMessage;
 			Error = response.Error;
-			IsSuccess = response.IsSuccess;
+			//IsSuccess = response.IsSuccess;
+			Result = response.Result;
 			
 			if (response.Session != null)
 				Session = new JavaSession(response.Session);

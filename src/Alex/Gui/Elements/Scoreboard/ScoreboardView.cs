@@ -80,5 +80,28 @@ namespace Alex.Gui.Elements.Scoreboard
 				RemoveChild(child);
 			}
 		}
+
+		private double _elapsed = 0d;
+		/// <inheritdoc />
+		protected override void OnUpdate(GameTime gameTime)
+		{
+			base.OnUpdate(gameTime);
+			_elapsed += Alex.DeltaTimeSpan.TotalMilliseconds;
+
+			if (_elapsed >= (1000d / 5d))
+			{
+				_elapsed = 0d;
+				Tick();
+			}
+		}
+
+		public void Tick()
+		{
+			foreach (var objective in Objectives.Values)
+			{
+				if (objective.HasChanges)
+					objective.Rebuild();
+			}
+		}
 	}
 }

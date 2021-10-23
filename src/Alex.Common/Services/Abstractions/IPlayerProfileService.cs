@@ -30,6 +30,8 @@ namespace Alex.Common.Services
         [JsonIgnore] public bool Authenticated { get; set; } = false;
 
         public Dictionary<string, JToken> ExtraData { get; set; } = new Dictionary<string, JToken>();
+
+        [JsonIgnore] public string AuthError { get; set; } = null;
 	    public PlayerProfile(string uuid, string username, string playerName, Skin skin, string accessToken, string clientToken, string refreshToken = null, DateTime? expiryTime = null)
         {
             UUID = uuid;

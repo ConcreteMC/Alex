@@ -12,6 +12,7 @@ using Alex.Common.Utils;
 using Alex.Gamestates.Common;
 using Alex.Gamestates.Login;
 using Alex.Gui;
+using Alex.Gui.Dialogs;
 using Alex.Gui.Elements;
 using Alex.Services;
 using Alex.Utils;

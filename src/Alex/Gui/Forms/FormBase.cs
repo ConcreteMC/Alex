@@ -11,13 +11,13 @@ namespace Alex.Gui.Forms
     {
         public    uint               FormId       { get; set; }
         protected BedrockFormManager Parent       { get; }
-        protected InputManager       InputManager { get; }
+        protected InputManager       ReliableInputManager { get; }
         protected Container       Container    => ContentContainer;
         public FormBase(uint formId, BedrockFormManager parent, InputManager inputManager)
         {
             FormId = formId;
             Parent = parent;
-            InputManager = inputManager;
+            ReliableInputManager = inputManager;
             
             Background = new Color(Color.Black, 0.5f);
             Container.Anchor = Alignment.FillCenter;
@@ -41,7 +41,7 @@ namespace Alex.Gui.Forms
         {
             base.OnUpdate(gameTime);
 
-            if (InputManager.Any(x => x.IsPressed(AlexInputCommand.Exit)))
+            if (ReliableInputManager.Any(x => x.IsPressed(AlexInputCommand.Exit)))
             {
                 Parent.Hide(FormId);
             }

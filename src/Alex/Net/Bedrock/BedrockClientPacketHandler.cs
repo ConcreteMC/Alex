@@ -601,7 +601,7 @@ namespace Alex.Net.Bedrock
 			}
 			else
 			{
-				Log.Warn($"Received unknown block runtime id.");
+				//Log.Warn($"Received unknown block runtime id.");
 			}
 		}
 
@@ -2158,7 +2158,7 @@ namespace Alex.Net.Bedrock
 			}
 			else
 			{
-				Log.Warn($"Received unknown block runtime id.");
+				//Log.Warn($"Received unknown block runtime id.");
 			}
 		}
 
