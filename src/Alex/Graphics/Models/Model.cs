@@ -101,7 +101,8 @@ namespace Alex.Graphics.Models
 			// Draw the model.
 			foreach (var mesh in Meshes)
 			{
-				if (!mesh.ParentBone.Visible)
+				var parentIndex = mesh.ParentBone.Index;
+				if (!mesh.ParentBone.Visible || parentIndex < 0 || parentIndex >= _matrices.Length)
 					continue;
 				
 				foreach (Microsoft.Xna.Framework.Graphics.Effect effect in mesh.Effects)
@@ -110,7 +111,7 @@ namespace Alex.Graphics.Models
 					if (effectMatricies == null) {
 						throw new InvalidOperationException();
 					}
-					effectMatricies.World = _matrices[mesh.ParentBone.Index] * world;
+					effectMatricies.World = _matrices[parentIndex] * world;
 					effectMatricies.View = view;
 					effectMatricies.Projection = projection;
 				}

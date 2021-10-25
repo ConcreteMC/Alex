@@ -1,16 +1,21 @@
 using System;
 using System.Diagnostics;
+using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Alex.Common.Services;
 using Alex.Utils.Auth;
+using Alex.Worlds.Multiplayer;
 using MojangAPI;
 using MojangAPI.Cache;
 using MojangAPI.Model;
 using MojangAPI.SecurityQuestion;
+using Newtonsoft.Json;
+using NLog;
 using MojangAuthResponse = Alex.Utils.Auth.MojangAuthResponse;
 using PlayerProfile = MojangAPI.Model.PlayerProfile;
 
@@ -53,6 +58,7 @@ namespace Alex.Common.Utils
 	
 	public static class MojangApi
 	{
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(MojangApi));
 		private static readonly HttpClient _httpClient = new HttpClient();
 		private static Mojang _mojang;
 		private static MojangAuth _auth;
@@ -272,6 +278,40 @@ namespace Alex.Common.Utils
 					Username = token.Username,
 					ClientToken = token.ClientToken
 				}));
+		}
+
+		public static async Task<bool> JoinServer(ISession session, string server)
+		{
+			try
+			{
+				var baseAddress = "https://sessionserver.mojang.com/session/minecraft/join";
+
+				var http = (HttpWebRequest) WebRequest.Create(new Uri(baseAddress));
+				http.Accept = "application/json";
+				http.ContentType = "application/json";
+				http.Method = "POST";
+
+				var bytes = Encoding.ASCII.GetBytes(JsonConvert.SerializeObject(new JavaWorldProvider.JoinRequest()
+				{
+					ServerId = server,
+					SelectedProfile = session.UUID,
+					AccessToken = session.AccessToken
+				}));
+
+				using (Stream newStream = http.GetRequestStream())
+				{
+					await newStream.WriteAsync(bytes, 0, bytes.Length);
+				}
+
+				await http.GetResponseAsync();
+
+				return true;
+			}
+			catch(Exception ex)
+			{
+				Log.Warn(ex, $"Failed to authenticate for join!");
+				return false;
+			}
 		}
 	}
 

@@ -162,7 +162,7 @@ namespace Alex.Networking.Java.Packets
 		private static void RegisterStatus()
 		{
 			Register(ConnectionState.Status, 0x00, () => ResponsePacket.CreateObject());
-			Register(ConnectionState.Status, 0x01, () => Alex.Networking.Java.Packets.Status.PingPacket.CreateObject());
+			Register(ConnectionState.Status, 0x01, () => PingPacket.CreateObject());
 		}
 
 		private static void RegisterLogin()
@@ -226,7 +226,7 @@ namespace Alex.Networking.Java.Packets
 			
 			Register(ConnectionState.Play, 0x2E, () => OpenWindowPacket.CreateObject());
 			
-			//Register(ConnectionState.Play, 0x30, () => PlayPingPacket.CreateObject());
+			Register(ConnectionState.Play, 0x30, () => PlayPingPacket.CreateObject());
 			Register(ConnectionState.Play, 0x32, () => PlayerAbilitiesPacket.CreateObject());
 			//Register(ConnectionState.Play, 0x31, () => CombatEventPacket.CreateObject());
 			Register(ConnectionState.Play, 0x36, () => PlayerListItemPacket.CreateObject()); //< -----

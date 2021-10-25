@@ -12,6 +12,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Alex.Blocks;
+using Alex.Common;
 using Alex.Common.Commands.Nodes;
 using Alex.Common.Commands.Parsers;
 using Alex.Common.Data;
@@ -58,6 +59,7 @@ using MiNET.Entities;
 using MiNET.Worlds;
 using Newtonsoft.Json;
 using NLog;
+using NLog.Fluent;
 using RocketUI.Input;
 using BlockCoordinates = Alex.Common.Utils.Vectors.BlockCoordinates;
 using ChunkColumn = Alex.Worlds.Chunks.ChunkColumn;
@@ -324,7 +326,7 @@ namespace Alex.Worlds.Multiplayer
 			
 			progressReport(LoadingState.ConnectingToServer, 0);
 
-			if (!Login(Profile.PlayerName, Profile.UUID, Profile.AccessToken))
+			if (!Login(Profile.PlayerName))
 			{
 				_disconnected = true;
 
@@ -824,9 +826,8 @@ namespace Alex.Worlds.Multiplayer
 					break;
 
 				case PlayPingPacket pingPacket:
-				{
-					HandlePingPacket(pingPacket);
-				} break;
+					HandlePingPacket(pingPacket); 
+					break;
 				
 				default:
 				{
@@ -842,7 +843,7 @@ namespace Alex.Worlds.Multiplayer
 
 		private void HandlePingPacket(PlayPingPacket packet)
 		{
-			PongPacket pong = PongPacket.CreateObject();
+			PlayPongPacket pong = PlayPongPacket.CreateObject();
 			pong.PingId = packet.PingId;
 			SendPacket(pong);
 		}
@@ -2653,6 +2654,8 @@ namespace Alex.Worlds.Multiplayer
 
 		private void HandleDisconnectPacket(DisconnectPacket packet)
 		{
+			World?.EntityManager?.ClearEntities();
+			
 			Log.Info($"Received disconnect: {packet.Message}");
 			if (ChatObject.TryParse(packet.Message, out string o))
 			{
@@ -2679,61 +2682,23 @@ namespace Alex.Worlds.Multiplayer
 		{
 			Client.CompressionThreshold = packet.Threshold;
 			Client.CompressionEnabled = packet.Threshold > 0;
-			
-			Log.Info($"Compression threshold: {packet.Threshold}");
 		}
 
 		private async Task<bool> VerifySession(string serverHash)
 		{
-			if (string.IsNullOrWhiteSpace(_accesToken))
+			if (Profile == null)
 			{
+				Log.Warn("Null session");
 				return false;
 			}
 			
-			try
-			{	
-				var baseAddress = "https://sessionserver.mojang.com/session/minecraft/join";
-
-				var http = (HttpWebRequest) WebRequest.Create(new Uri(baseAddress));
-				http.Accept = "application/json";
-				http.ContentType = "application/json";
-				http.Method = "POST";
-
-				var bytes = Encoding.ASCII.GetBytes(JsonConvert.SerializeObject(new JoinRequest()
-				{
-					ServerId = serverHash,
-					SelectedProfile = _uuid,
-					AccessToken = _accesToken
-				}));
-
-				using (Stream newStream = http.GetRequestStream())
-				{
-					await newStream.WriteAsync(bytes, 0, bytes.Length);
-				}
-
-				await http.GetResponseAsync();
-
-				return true;
-				/*using (var stream = r.GetResponseStream())
-				using (var sr = new StreamReader(stream))
-				{
-					var content = await sr.ReadToEndAsync();
-				}*/
-			}
-			catch
-			{
-				return false;
-			}
+			return await MojangApi.JoinServer(Profile, serverHash);
 		}
 		
-		private string _accesToken = "";
-		private string _uuid = "";
-		private string _username = "";
-		private byte[] SharedSecret = new byte[16];
+		private readonly byte[] _sharedSecret = new byte[16];
 		private void HandleEncryptionRequest(EncryptionRequestPacket packet)
 		{
-			Log.Info($"Received encryption request.");
-			FastRandom.Instance.NextBytes(SharedSecret);
+			FastRandom.Instance.NextBytes(_sharedSecret);
 
 			var serverId = packet.ServerId;
 			var publicKey = packet.PublicKey;
@@ -2745,7 +2710,7 @@ namespace Alex.Worlds.Multiplayer
 			{
 				byte[] ascii = Encoding.ASCII.GetBytes(serverId);
 				ms.Write(ascii, 0, ascii.Length);
-				ms.Write(SharedSecret, 0, 16);
+				ms.Write(_sharedSecret, 0, 16);
 				ms.Write(publicKey, 0, publicKey.Length);
 
 				serverHash = JavaHexDigest(ms.ToArray());
@@ -2763,33 +2728,22 @@ namespace Alex.Worlds.Multiplayer
 					}
 					
 					var cryptoProvider = RsaHelper.DecodePublicKey(publicKey);
-					//Log.Info($"Crypto: {cryptoProvider == null} Pub: {packet.PublicKey} Shared: {SharedSecret}");
-					var encrypted = cryptoProvider.Encrypt(SharedSecret, RSAEncryptionPadding.Pkcs1);
+					var encrypted = cryptoProvider.Encrypt(_sharedSecret, RSAEncryptionPadding.Pkcs1);
 
 					EncryptionResponsePacket response = EncryptionResponsePacket.CreateObject();
 					response.SharedSecret = encrypted;
 					response.VerifyToken = cryptoProvider.Encrypt(verificationToken, RSAEncryptionPadding.Pkcs1);
 					
-					Client.InitEncryption(SharedSecret);
+					Client.InitEncryption(_sharedSecret);
 					
-					Client.SendPacket(response);// SendPacket(response);
-				});//.Wait();
+					Client.SendPacket(response);
+				});
 		}
 
-		private bool Login(string username, string uuid, string accessToken)
+		private bool Login(string username)
 		{
 			try
 			{
-				//	_loginCompleteEvent = signalWhenReady;
-				_username = username;
-				_uuid = uuid;
-				_accesToken = accessToken;
-
-			//	TcpClient.Connect(Endpoint);
-			
-					//TcpClient.Connect(Endpoint);
-				//	ServerBound.InitEncryption();
-
 				HandshakePacket handshake = HandshakePacket.CreateObject();
 				handshake.NextState = ConnectionState.Login;
 				handshake.ServerAddress = Hostname;
@@ -2800,7 +2754,7 @@ namespace Alex.Worlds.Multiplayer
 				Client.ConnectionState = ConnectionState.Login;
 
 				LoginStartPacket loginStart = LoginStartPacket.CreateObject();
-				loginStart.Username = _username;
+				loginStart.Username = username;
 				SendPacket(loginStart);
 			}
 			catch (SocketException ex)
@@ -2810,7 +2764,9 @@ namespace Alex.Worlds.Multiplayer
 			}
 			catch (Exception ex)
 			{
+				Log.Warn(ex, "Error while connecting to server.");
 				ShowDisconnect(ex.Message);
+				return false;
 			}
 
 			return true;

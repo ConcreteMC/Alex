@@ -154,6 +154,8 @@ namespace Alex.Common.World
 		/// <inheritdoc />
 		public void Dispose()
 		{
+			Log.Info($"Tickmanager disposing...");
+			
 			_scheduledTicks?.Clear();
 			_tickedItems?.Clear();
 			

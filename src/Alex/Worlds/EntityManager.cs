@@ -457,6 +457,8 @@ namespace Alex.Worlds
 	    
 	    public void Dispose()
 	    {
+		    Log.Info($"Entitymanager disposing...");
+		    
 		    Clear();
 	    }
 	}
