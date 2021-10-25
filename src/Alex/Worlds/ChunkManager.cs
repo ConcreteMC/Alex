@@ -104,7 +104,7 @@ namespace Alex.Worlds
 			var stillAtlas =  serviceProvider.GetRequiredService<ResourceManager>().BlockAtlas.GetAtlas();
 	        
 			var fogStart = 0;
-			Shaders = new RenderingShaders(Graphics);
+			Shaders = new RenderingShaders();
 			Shaders.SetTextures(stillAtlas);
 			Shaders.FogEnabled = Options.VideoOptions.Fog.Value;
 			Options.VideoOptions.Fog.Bind(

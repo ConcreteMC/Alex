@@ -91,8 +91,16 @@ namespace Alex.Gamestates.Multiplayer
 
 		private void SelectAccountClicked()
 		{
-			Alex.GameStateManager.Back();
-			OnProfileSelection?.Invoke(SelectedItem?.Profile);
+			SelectAccount(SelectedItem);
+		}
+
+		private void SelectAccount(UserSelectionItem item)
+		{
+			if (item?.Profile != null)
+			{
+				Alex.GameStateManager.Back();
+				OnProfileSelection?.Invoke(item?.Profile);
+			}
 		}
 
 		public ProfileSelected OnProfileSelection;
@@ -143,6 +151,16 @@ namespace Alex.Gamestates.Multiplayer
 			}
 
 			base.OnDraw(args);
+		}
+		
+		protected override void OnItemDoubleClick(UserSelectionItem item)
+		{
+			base.OnItemDoubleClick(item);
+		    
+			if (SelectedItem != item)
+				return;
+		    
+			SelectAccount(item);
 		}
 	}
 }

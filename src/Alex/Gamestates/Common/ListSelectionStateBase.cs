@@ -1,12 +1,48 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using Alex.Common.Input;
 using Microsoft.Xna.Framework;
 using RocketUI;
 using RocketUI.Events;
+using RocketUI.Input;
 
 namespace Alex.Gamestates.Common
 {
+	public class ListItem : SelectionListItem
+	{
+		public EventHandler CursorDoubleClick;
+
+		protected ListItem()
+		{
+			
+		}
+		
+		private DateTime _lastClick = DateTime.MinValue;
+		/// <inheritdoc />
+		protected override void OnCursorPressed(Point cursorPosition, MouseButton button)
+		{
+			base.OnCursorPressed(cursorPosition, button);
+
+			if (!Focused)
+				return;
+            
+			if (button == MouseButton.Left)
+			{
+				var currentTime = DateTime.UtcNow;
+				var timeSpent = currentTime - _lastClick;
+
+				if (timeSpent.TotalMilliseconds < 500)
+				{
+					CursorDoubleClick?.Invoke(this, EventArgs.Empty);
+				}
+
+				_lastClick = currentTime;
+			}
+		}
+	}
+	
     public class ListSelectionStateBase<TGuiListItemContainer> : GuiMenuStateBase 
-		where TGuiListItemContainer : SelectionListItem
+		where TGuiListItemContainer : ListItem
     {
 	    public override int BodyMinWidth => 356;
 
@@ -23,19 +59,11 @@ namespace Alex.Gamestates.Common
 		        _selectedItem = value;
 
 		        OnSelectedItemChanged(value);
-		      //  SelectedItemChanged?.Invoke(this, _selectedItem);
 	        }
         }
         public ListSelectionStateBase() : base()
         {
 	        Body.BackgroundOverlay = new Color(Color.Black, 0.35f);
-
-	       /* AddRocketElement(ListContainer = new SelectionList()
-            {
-	            Anchor = Alignment.Fill,
-				ChildAnchor = Alignment.TopFill,
-            });
-	        SelectedItemChanged += HandleSelectedItemChanged;*/
         }
 
         public TGuiListItemContainer this[int index]
@@ -72,19 +100,33 @@ namespace Alex.Gamestates.Common
 	    {
 		    base.OnUpdate(gameTime);
 	    }
+        
+        private void CursorDoubleClick(object sender, EventArgs e)
+        {
+	        if (sender is not TGuiListItemContainer item)
+		        return;
 
+	        OnItemDoubleClick(item);
+        }
+
+        protected virtual void OnItemDoubleClick(TGuiListItemContainer item){}
+        
 	    public void AddItem(TGuiListItemContainer item)
         {
+	        item.CursorDoubleClick += CursorDoubleClick;
+	        
             _items.Add(item);
             Body.AddChild(item);
             
             OnAddItem(item);
         }
-        
+
 	    protected virtual void OnAddItem(TGuiListItemContainer item){}
 	    
         public void RemoveItem(TGuiListItemContainer item)
         {
+	        item.CursorDoubleClick -= CursorDoubleClick;
+	        
             Body.RemoveChild(item);
             _items.Remove(item);
 

@@ -10,16 +10,19 @@ using Alex.Common.Gui.Elements.Icons;
 using Alex.Common.Gui.Graphics;
 using Alex.Common.Services;
 using Alex.Common.Utils;
+using Alex.Gamestates.Common;
 using Alex.Services;
 using Alex.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MiNET.Utils;
 using RocketUI;
+using RocketUI.Events;
+using RocketUI.Input;
 
 namespace Alex.Gamestates.Multiplayer
 {
-	public class GuiServerListEntryElement : SelectionListItem
+	public class GuiServerListEntryElement : ListItem
 	{
 		private const string PingTranslationKey = "multiplayer.status.pinging";
 		private const int ServerIconSize = 32;
@@ -57,6 +60,7 @@ namespace Alex.Gamestates.Multiplayer
 		private bool PingCompleted { get; set; }
 		private IServerQueryProvider QueryProvider { get; }
 		private IListStorageProvider<SavedServerEntry> StorageProvider { get; }
+		
 		public GuiServerListEntryElement(ServerTypeImplementation serverTypeImplementation, SavedServerEntry entry)
 		{
 			SavedServerEntry = entry;

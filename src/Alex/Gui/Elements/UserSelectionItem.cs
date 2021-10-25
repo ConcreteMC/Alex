@@ -1,13 +1,14 @@
 using System;
 using Alex.Common.Gui.Graphics;
 using Alex.Common.Services;
+using Alex.Gamestates.Common;
 using Microsoft.Xna.Framework;
 using MiNET.Utils;
 using RocketUI;
 
 namespace Alex.Gui.Elements
 {
-	public class UserSelectionItem : SelectionListItem
+	public class UserSelectionItem : ListItem
 	{
 		private TextureElement _playerHead;
 		private StackContainer _textWrapper;

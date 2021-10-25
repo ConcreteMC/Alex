@@ -206,7 +206,7 @@ namespace Alex.Gamestates.Multiplayer
 
 			    foreach (var entry in serverType.SponsoredServers)
 			    {
-				    var item = new GuiServerListEntryElement(serverType, entry);
+				    var item = CreateItem(serverType, entry);
 				    item.CanDelete = false;
 				    item.SaveEntry = false;
 
@@ -215,8 +215,7 @@ namespace Alex.Gamestates.Multiplayer
 
 			    foreach (var entry in serverType.StorageProvider.Data.ToArray())
 			    {
-				    var element = new GuiServerListEntryElement(serverType, entry);
-				    AddItem(element);
+				    CreateItem(serverType, entry);
 			    }
 			    
 			    serverType.QueryProvider.StartLanDiscovery(
@@ -224,7 +223,26 @@ namespace Alex.Gamestates.Multiplayer
 		    }
 		    finally { }
 	    }
-	    
+
+	    private GuiServerListEntryElement CreateItem(ServerTypeImplementation serverType, SavedServerEntry serverEntry)
+	    {
+		    var item = new GuiServerListEntryElement(serverType, serverEntry);
+		    AddItem(item);
+
+		    return item;
+	    }
+
+	    /// <inheritdoc />
+	    protected override void OnItemDoubleClick(GuiServerListEntryElement item)
+	    {
+		    base.OnItemDoubleClick(item);
+		    
+		    if (SelectedItem != item)
+			    return;
+		    
+		    JoinServer(item);
+	    }
+
 	    private Task LanDiscoveryCallback(LanDiscoveryResult r)
 	    {
 		    var serverType = _serverType;
@@ -234,7 +252,7 @@ namespace Alex.Gamestates.Multiplayer
 		    
 		    if (r.QueryResponse.Success)
 		    {
-			    GuiServerListEntryElement entry = new GuiServerListEntryElement(
+			    var entry = CreateItem(
 				    serverType, new SavedServerEntry()
 				    {
 					    ServerType = serverType.Id,
@@ -315,10 +333,12 @@ namespace Alex.Gamestates.Multiplayer
 		    }));
 	    }
 
-	    private async void OnJoinServerButtonPressed()
+	    private async void JoinServer(GuiServerListEntryElement item)
 	    {
+		    if (item == null)
+			    return;
+		    
 		    var serverType = _serverType;
-
 		    if (serverType == null)
 			    return;
 
@@ -328,8 +348,7 @@ namespace Alex.Gamestates.Multiplayer
 
 		    try
 		    {
-			    var selectedItem = SelectedItem;
-			    var entry = selectedItem.SavedServerEntry;
+			    var entry = item.SavedServerEntry;
 			    
 			    await serverType.Authenticate(
 				    _skyBox, (profile) =>
@@ -345,7 +364,7 @@ namespace Alex.Gamestates.Multiplayer
 						    return;
 					    }
 
-					    var target = selectedItem.ConnectionEndpoint;
+					    var target = item.ConnectionEndpoint;
 
 					    if (target == null)
 						    return;
@@ -359,6 +378,11 @@ namespace Alex.Gamestates.Multiplayer
 			    if (overlay != null)
 				    Alex.GuiManager.RemoveScreen(overlay);
 		    }
+	    }
+	    
+	    private void OnJoinServerButtonPressed()
+	    {
+		    JoinServer(SelectedItem);
 	    }
 
 	    private void OnRefreshButtonPressed()

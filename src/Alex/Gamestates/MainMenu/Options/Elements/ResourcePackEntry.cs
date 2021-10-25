@@ -1,11 +1,12 @@
 using Alex.Common.Gui.Graphics;
 using Alex.Common.Utils;
+using Alex.Gamestates.Common;
 using Alex.ResourcePackLib.Generic;
 using RocketUI;
 
 namespace Alex.Gamestates.MainMenu.Options.Elements
 {
-    public class ResourcePackEntry : SelectionListItem
+    public class ResourcePackEntry : ListItem
     {
         public string Path { get; private set; }
         public ResourcePackManifest Manifest { get; private set; }

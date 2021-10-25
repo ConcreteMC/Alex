@@ -15,7 +15,7 @@ namespace Alex.Worlds
 		public BlockEffect OpaqueEffect              { get; }
 		
 		
-		public RenderingShaders(GraphicsDevice device)
+		public RenderingShaders()
 		{
 			var fogStart = 0f;
 
