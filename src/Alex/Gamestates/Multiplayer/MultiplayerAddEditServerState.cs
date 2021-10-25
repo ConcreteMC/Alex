@@ -22,28 +22,23 @@ namespace Alex.Gamestates.Multiplayer
 
 		private readonly TextInput    _nameInput;
 		private readonly TextInput    _hostnameInput;
-		private readonly TextInput    _portInput;
 		private readonly TextElement  _errorMessage;
 		private readonly Button       _saveButton;
-	//	private readonly ToggleButton _javaEditionButton;
-		//private readonly ToggleButton _bedrockEditionButton;
 		private readonly TextElement  _serverTypeLabel;
-		private readonly ButtonGroup  _serverTypeGroup;
-		
+
 		#endregion
 
 		private readonly SavedServerEntry                       _entry = null;
-	//	private readonly IListStorageProvider<SavedServerEntry> _savedServersStorage;
 		private readonly GuiPanoramaSkyBox                      _skyBox;
-		private readonly ServerTypeManager _serverTypeManager;
-		
+		private readonly ButtonGroup _serverTypeGroup;
 		public MultiplayerAddEditServerState(Action<AddOrEditCallback> callbackAction, GuiPanoramaSkyBox skyBox) :
-			this("java", null, null, callbackAction, skyBox)
+			this(null, null, callbackAction, skyBox)
 		{
 		}
 
 		private ServerTypeImplementation _selectedImplementation = null;
-		public MultiplayerAddEditServerState(string serverType, string name, string address,
+		private ServerTypeManager _serverTypeManager;
+		public MultiplayerAddEditServerState(string name, string address,
 											 Action<AddOrEditCallback> callbackAction,
 											 GuiPanoramaSkyBox        skyBox) :
 			base(callbackAction)
@@ -108,33 +103,6 @@ namespace Alex.Gamestates.Multiplayer
 				ChildAnchor = Alignment.MiddleCenter
 			});
 
-			int tabIndex = 3;
-			foreach (var type in _serverTypeManager.GetAll())
-			{
-				if (_selectedImplementation == null)
-					_selectedImplementation = type;
-
-				ToggleButton element;
-				_serverTypeGroup.AddChild(
-					element = new ToggleButton(type.DisplayName)
-					{
-						Margin = new Thickness(5),
-						Width = 50,
-						Checked = serverType == type.Id,
-						CheckedOutlineThickness = new Thickness(1),
-						DisplayFormat = new ValueFormatter<bool>((val) => $"{type.DisplayName} {(val ? "[Active]" : "")}"),
-						TabIndex = tabIndex++
-					}.ApplyModernStyle());
-
-				element.ValueChanged += (sender, value) =>
-				{
-					if (value)
-					{
-						_selectedImplementation = type;
-					}
-				};
-			}
-
 			var buttonRow = AddGuiRow(_saveButton = new AlexButton(OnSaveButtonPressed)
 			{
 				AccessKey = Keys.Enter,
@@ -170,19 +138,48 @@ namespace Alex.Gamestates.Multiplayer
 				_hostnameInput.Value = address;
 			}
 
-			if (_entry != null)
-			{
-				//EnableButtonsFor(_entry.ServerType);
-			}
-
 			Background = new GuiTexture2D(_skyBox, TextureRepeatMode.Stretch);
 		}
 
 		public MultiplayerAddEditServerState(SavedServerEntry  entry, Action<AddOrEditCallback> callbackAction,
-											 GuiPanoramaSkyBox skyBox) : this(entry.ServerType, entry.Name, entry.Host + ":" + entry.Port,
+											 GuiPanoramaSkyBox skyBox) : this(entry.Name, entry.Host + ":" + entry.Port,
 																			  callbackAction, skyBox)
 		{
 			_entry = entry;
+		}
+
+		/// <inheritdoc />
+		protected override void OnShow()
+		{
+			base.OnShow();
+			
+			string serverType = _entry?.ServerType;
+			int tabIndex = 3;
+			foreach (var type in _serverTypeManager.GetAll())
+			{
+				if (_selectedImplementation == null)
+					_selectedImplementation = type;
+
+				ToggleButton element;
+				_serverTypeGroup.AddChild(
+					element = new ToggleButton(type.DisplayName)
+					{
+						Margin = new Thickness(5),
+						Width = 50,
+						Checked = serverType == type.Id,
+						CheckedOutlineThickness = new Thickness(1),
+						DisplayFormat = new ValueFormatter<bool>((val) => $"{type.DisplayName} {(val ? "[Active]" : "")}"),
+						TabIndex = tabIndex++
+					}.ApplyModernStyle());
+
+				element.ValueChanged += (sender, value) =>
+				{
+					if (value)
+					{
+						_selectedImplementation = type;
+					}
+				};
+			}
 		}
 
 		private void OnSaveButtonPressed()
@@ -237,21 +234,13 @@ namespace Alex.Gamestates.Multiplayer
 				Host       = hostname,
 				Port       = port,
 				ServerType = _selectedImplementation.Id,
-				CachedIcon = _entry?.CachedIcon ?? null,
-				ListIndex  = _entry?.ListIndex ?? -1
+				CachedIcon = _entry?.CachedIcon ?? null
 			};
 
 			if (_entry != null)
 			{
 				entry.InternalIdentifier = _entry.InternalIdentifier;
 			}
-			
-		/*	if (_entry != null)
-			{
-				_savedServersStorage.RemoveEntry(_entry);
-			}
-
-			_savedServersStorage.AddEntry(entry);*/
 
 			InvokeCallback(new AddOrEditCallback(entry, _entry == null));
 		}

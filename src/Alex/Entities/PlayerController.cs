@@ -11,6 +11,7 @@ using Alex.Graphics.Camera;
 using Alex.Gui.Dialogs;
 using Alex.Gui.Dialogs.Containers;
 using Alex.Gui.Elements;
+using Alex.Gui.Elements.Hud;
 using Alex.Net.Bedrock;
 using Alex.Worlds;
 using Alex.Worlds.Multiplayer.Bedrock;
@@ -331,7 +332,7 @@ namespace Alex.Entities
 		    }
 		    else if (CanOpenDialog())
 		    {
-			    Alex.Instance.GameStateManager.SetActiveState<InGameMenuState>("ingamemenu");
+			    Alex.Instance.GameStateManager.SetActiveState<InGameMenuState>();
 			    Player.SkipUpdate();
 		    }
 	    }

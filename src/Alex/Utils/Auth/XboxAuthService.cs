@@ -719,12 +719,12 @@ namespace Alex.Utils.Auth
 
 		public async Task<bool> TryAuthenticate(string accessToken)
 		{
-			var userToken   = await ObtainUserToken(_httpClient, accessToken);
+			var userToken = await ObtainUserToken(_httpClient, accessToken);
 			var deviceToken = await ObtainDeviceToken(_httpClient, Guid.NewGuid().ToString());
-			var titleToken  = await DoTitleAuth(_httpClient, deviceToken, accessToken);
+			var titleToken = await DoTitleAuth(_httpClient, deviceToken, accessToken);
 			//var xsts        = await ObtainXbox(_httpClient, deviceToken, accessToken);
 			var xsts = await DoXsts(_httpClient, deviceToken, titleToken, userToken.Token);
-			
+
 			return await RequestMinecraftChain(_httpClient, xsts);
 		}
 

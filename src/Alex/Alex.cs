@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using Alex.Audio;
 using Alex.Blocks.Minecraft;
 using Alex.Common.Data.Servers;
+using Alex.Common.GameStates;
 using Alex.Common.Graphics.Typography;
 using Alex.Common.Input;
 using Alex.Common.Resources;
@@ -23,6 +24,7 @@ using Alex.Gamestates;
 using Alex.Gamestates.Debugging;
 using Alex.Gamestates.InGame;
 using Alex.Gamestates.Login;
+using Alex.Gamestates.MainMenu;
 using Alex.Graphics.Models.Blocks;
 using Alex.Gui;
 using Alex.Gui.Dialogs;
@@ -212,6 +214,9 @@ namespace Alex
             PluginManager = new PluginManager();
 
             Storage = new StorageSystem(LaunchSettings.WorkDir);
+            Storage.TryCreateDirectory("assets");
+            Storage.TryCreateDirectory(Path.Combine("assets", "resourcepacks"));
+            
             Options = new OptionsProvider(Storage);
             Options.Load();
             
@@ -226,6 +231,7 @@ namespace Alex
             AudioEngine = new AudioEngine(Storage, Options);
             serviceCollection.AddSingleton<Audio.AudioEngine>(AudioEngine);
 
+            serviceCollection.AddSingleton<GuiPanoramaSkyBox>();
             // RocketUI
             serviceCollection.TryAddEnumerable(
                 ServiceDescriptor.Singleton<IInputListenerFactory, AlexKeyboardInputListenerFactory>());
@@ -253,7 +259,7 @@ namespace Alex
 
             serviceCollection.TryAddSingleton<ProfileManager>();
 
-            serviceCollection.TryAddSingleton<IListStorageProvider<SavedServerEntry>, SavedServerDataProvider>();
+           // serviceCollection.TryAddSingleton<IListStorageProvider<SavedServerEntry>, SavedServerDataProvider>();
 
             serviceCollection.TryAddSingleton<IServerQueryProvider>(new JavaServerQueryProvider(this));
            // serviceCollection.TryAddSingleton<IPlayerProfileService, PlayerProfileService>();
@@ -443,6 +449,7 @@ namespace Alex
             GameStateManager.AddState("splash", splash);
             GameStateManager.SetActiveState("splash");
 
+
             GuiManager.Init();
             
            // if (!GuiRenderer.SetLanguage(options.AlexOptions.MiscelaneousOptions.Language) && !GuiRenderer.SetLanguage(CultureInfo.InstalledUICulture.Name))
@@ -626,7 +633,7 @@ namespace Alex
             ServerTypeManager.TryRegister("java", new JavaServerType(this));
 
             ServerTypeManager.TryRegister(
-                "bedrock", new BedrockServerType(this, Services.GetService<XboxAuthService>()));
+                "bedrock", new BedrockServerType(this));
             
             var profileManager = Services.GetRequiredService<ProfileManager>();
             profileManager.LoadProfiles(progressReceiver);
@@ -705,11 +712,11 @@ namespace Alex
             
             if (LaunchSettings.ModelDebugging)
             {
-                GameStateManager.SetActiveState<ModelDebugState>("title", false);
+                GameStateManager.SetActiveState<ModelDebugState>(false);
             }
             else
             {
-                GameStateManager.SetActiveState<TitleState>("title", false);
+                GameStateManager.SetActiveState<TitleState>(false);
             }
 
             return Task.CompletedTask;
@@ -750,17 +757,11 @@ namespace Alex
         public void LoadWorld(WorldProvider worldProvider, NetworkProvider networkProvider, bool isServer = false)
         {
             var state       = new PlayingState(this, GraphicsDevice, worldProvider, networkProvider);
-            var parentState = GameStateManager.GetActiveState();
-
-            if (parentState is PlayingState)
-                parentState = null;
-
             LoadingWorldScreen loadingScreen = new LoadingWorldScreen();
             loadingScreen.ConnectingToServer = isServer;
             loadingScreen.CancelAction = () =>
             {
                 GuiManager.RemoveScreen(loadingScreen);
-                //playState?.Unload();
                 worldProvider?.Dispose();
                 
                 GameStateManager.RemoveState("play");
@@ -768,9 +769,7 @@ namespace Alex
             };
 
             GuiManager.AddScreen(loadingScreen);
-            //GameStateManager.AddState("loading", loadingScreen);
-            //GameStateManager.SetActiveState("loading");
-
+            
             ThreadPool.QueueUserWorkItem(
                 o =>
                 {
@@ -784,35 +783,24 @@ namespace Alex
                         
                         if (networkProvider.IsConnected && result == LoadResult.Done)
                         {
-                            
+                            var currentState = GameStateManager.GetActiveState();
                             GameStateManager.SetActiveState("play", false);
-
-                            return;
+                            GameStateManager.RemoveState(currentState);
                         }
                     }
                     finally
                     {
                         GuiManager.RemoveScreen(loadingScreen);
-                        //GameStateManager.RemoveState("loading");
 
                         if (result != LoadResult.Done)
                         {
-                            if (result != LoadResult.Aborted &&
-                                !(GameStateManager.GetActiveState() is DisconnectedState))
+                            if (result != LoadResult.Aborted)
                             {
-                                var s = new DisconnectedState();
-                                s.DisconnectedTextElement.TranslationKey = "multiplayer.status.cannot_connect";
-                                //s.ParentState = parentState;
-                                GameStateManager.SetActiveState(s, false);
-
-                                //playState?.Unload();
-                                //worldProvider?.Dispose();
-                                //state?.Unload();
+                                DisconnectedDialog.Show(this, "multiplayer.status.cannot_connect", true);
                             }
 
                             worldProvider?.Dispose();
                             GameStateManager.RemoveState("play");
-                            // state?.Unload();
                         }
                     }
                 });

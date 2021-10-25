@@ -94,18 +94,7 @@ namespace Alex
 		public void CreateOrUpdateProfile(string type, PlayerProfile profile, bool setActive = false)
 		{
 			var alex = ServiceProvider.GetRequiredService<Alex>();
-			
-			if (profile.Skin?.Texture == null)
-			{
-				profile.Skin = new Skin();
 
-				if (alex.Resources.TryGetBitmap("entity/alex", out var rawTexture))
-				{
-					profile.Skin.Texture = TextureUtils.BitmapToTexture2D(this, alex.GraphicsDevice, rawTexture);
-					profile.Skin.Slim = true;
-				}
-			}
-			
 			SavedProfile savedProfile;
 			if (Profiles.TryGetValue(profile.UUID, out savedProfile))
 			{

@@ -1,10 +1,8 @@
-﻿using System.Linq;
-using Alex.Common.Data;
+﻿using Alex.Common.Data;
 using Alex.Common.Data.Options;
 using Alex.Common.Gui.Elements;
 using Alex.Common.Input;
 using Alex.Entities;
-using Alex.Gui;
 using Alex.Gui.Elements;
 using Alex.Gui.Elements.Hud;
 using Alex.Gui.Elements.Inventory;
@@ -13,14 +11,13 @@ using Alex.Gui.Elements.Scoreboard;
 using Alex.Net;
 using Alex.Utils.Inventories;
 using Alex.Worlds;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using MiNET.Worlds;
 using RocketUI;
 using RocketUI.Input;
 using RocketUI.Input.Listeners;
 
-namespace Alex.Gamestates.InGame.Hud
+namespace Alex.Gui.Screens.Ingame
 {
     public class PlayingHud : Screen, IChatRecipient
     {

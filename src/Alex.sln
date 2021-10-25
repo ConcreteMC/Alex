@@ -45,6 +45,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Alex.DebugOverlay", "Plugin
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MiNET.Console", "..\submodules\MiNET\src\MiNET\MiNET.Console\MiNET.Console.csproj", "{09378720-C7F2-4AE4-9111-B0D64F0D9496}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Alex.ECS", "Alex.ECS\Alex.ECS.csproj", "{6FB2730B-78B0-4AE5-9E48-E901D2E6DD54}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Appveyor|Any CPU = Appveyor|Any CPU
@@ -214,6 +216,20 @@ Global
 		{09378720-C7F2-4AE4-9111-B0D64F0D9496}.Release|x64.ActiveCfg = Release|Any CPU
 		{09378720-C7F2-4AE4-9111-B0D64F0D9496}.DirectX|x64.ActiveCfg = Debug|Any CPU
 		{09378720-C7F2-4AE4-9111-B0D64F0D9496}.DirectX|x64.Build.0 = Debug|Any CPU
+		{6FB2730B-78B0-4AE5-9E48-E901D2E6DD54}.Appveyor|Any CPU.ActiveCfg = Debug|Any CPU
+		{6FB2730B-78B0-4AE5-9E48-E901D2E6DD54}.Appveyor|Any CPU.Build.0 = Debug|Any CPU
+		{6FB2730B-78B0-4AE5-9E48-E901D2E6DD54}.Appveyor|x64.ActiveCfg = Debug|Any CPU
+		{6FB2730B-78B0-4AE5-9E48-E901D2E6DD54}.Appveyor|x64.Build.0 = Debug|Any CPU
+		{6FB2730B-78B0-4AE5-9E48-E901D2E6DD54}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6FB2730B-78B0-4AE5-9E48-E901D2E6DD54}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6FB2730B-78B0-4AE5-9E48-E901D2E6DD54}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{6FB2730B-78B0-4AE5-9E48-E901D2E6DD54}.Debug|x64.Build.0 = Debug|Any CPU
+		{6FB2730B-78B0-4AE5-9E48-E901D2E6DD54}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6FB2730B-78B0-4AE5-9E48-E901D2E6DD54}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6FB2730B-78B0-4AE5-9E48-E901D2E6DD54}.Release|x64.ActiveCfg = Release|Any CPU
+		{6FB2730B-78B0-4AE5-9E48-E901D2E6DD54}.Release|x64.Build.0 = Release|Any CPU
+		{6FB2730B-78B0-4AE5-9E48-E901D2E6DD54}.DirectX|x64.ActiveCfg = Debug|Any CPU
+		{6FB2730B-78B0-4AE5-9E48-E901D2E6DD54}.DirectX|x64.Build.0 = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

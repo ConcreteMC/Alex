@@ -27,6 +27,7 @@ using Alex.Entities.Components.Effects;
 using Alex.Entities.Generic;
 using Alex.Entities.Projectiles;
 using Alex.Gamestates;
+using Alex.Gamestates.InGame;
 using Alex.Gui.Dialogs.Containers;
 using Alex.Gui.Elements;
 using Alex.Gui.Elements.Scoreboard;
@@ -138,37 +139,13 @@ namespace Alex.Worlds.Multiplayer
 		private bool _disconnectShown = false;
 		public void ShowDisconnect(string reason, bool useTranslation = false, bool force = false)
 		{
-			if (_disconnectShown && force && Alex.GameStateManager.GetActiveState() is DisconnectedState s)
-			{
-				if (useTranslation)
-				{
-					s.DisconnectedTextElement.TranslationKey = reason;
-				}
-				else
-				{
-					s.DisconnectedTextElement.Text = reason;
-				}
-
-				return;
-			}
-
-			if (_disconnectShown)
+			if (_disconnectShown && !force)
 				return;
 			
 			_disconnectShown = true;
-
-			s = new DisconnectedState();
-			if (useTranslation)
-			{
-				s.DisconnectedTextElement.TranslationKey = reason;
-			}
-			else
-			{
-				s.DisconnectedTextElement.Text = reason;
-			}
-
-			Alex.GameStateManager.SetActiveState(s, false);
-			Alex.GameStateManager.RemoveState("play");
+			
+			DisconnectedDialog.Show(Alex, reason, useTranslation);
+			
 			Dispose();
 		}
 

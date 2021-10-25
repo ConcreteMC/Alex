@@ -9,9 +9,9 @@ using Alex.Common.Services;
 using Alex.Common.Utils;
 using Alex.Entities;
 using Alex.Gamestates.Common;
-using Alex.Gamestates.MainMenu.Profile;
 using Alex.Graphics.Models.Entity;
 using Alex.Gui;
+using Alex.Gui.Elements.MainMenu;
 using Alex.ResourcePackLib;
 using Alex.ResourcePackLib.Bedrock;
 using Alex.ResourcePackLib.Json;
@@ -33,11 +33,11 @@ namespace Alex.Gamestates.MainMenu
 
         private Button _cancelBtn, _selectBtn;
         
-        protected SkinEntry[] Items => _items.ToArray();
-        private List<SkinEntry> _items { get; } = new List<SkinEntry>();
+        protected SkinSelectionEntry[] Items => _items.ToArray();
+        private List<SkinSelectionEntry> _items { get; } = new List<SkinSelectionEntry>();
 
-        private SkinEntry _selectedItem;
-        public SkinEntry SelectedItem
+        private SkinSelectionEntry _selectedItem;
+        public SkinSelectionEntry SelectedItem
         {
             get => _selectedItem;
             set
@@ -168,11 +168,11 @@ namespace Alex.Gamestates.MainMenu
                 //    {
                 // var texture = TextureUtils.BitmapToTexture2D(this, Alex.GraphicsDevice, Alex.PlayerTexture);
                         
-                SkinEntry entry = new SkinEntry(
+                SkinSelectionEntry selectionEntry = new SkinSelectionEntry(
                     new LoadedSkin("Default", Alex.PlayerModel, Alex.PlayerTexture), OnDoubleClick);
                  
-                row.AddChild(entry);
-                _items.Add(entry);
+                row.AddChild(selectionEntry);
+                _items.Add(selectionEntry);
                 //AddItem(entry);
                 //    });
             }
@@ -206,12 +206,12 @@ namespace Alex.Gamestates.MainMenu
                         {
                             if (module.TryGetBitmap(skin.Texture, out var bmp))
                             {
-                                SkinEntry entry = new SkinEntry(
+                                SkinSelectionEntry selectionEntry = new SkinSelectionEntry(
                                     new LoadedSkin(skin.LocalizationName, model, bmp), OnDoubleClick);
 
                                 //AddItem(entry);
-                                _items.Add(entry);
-                                row.AddChild(entry);
+                                _items.Add(selectionEntry);
+                                row.AddChild(selectionEntry);
                                 processed++;
 
                                 if (processed % 5 == 0)
@@ -241,7 +241,7 @@ namespace Alex.Gamestates.MainMenu
             }
         }
         
-        private void OnDoubleClick(SkinEntry profile)
+        private void OnDoubleClick(SkinSelectionEntry profile)
         {
             Focus(profile);
 
@@ -307,7 +307,7 @@ namespace Alex.Gamestates.MainMenu
 
         private void OnFocusChanged(object? sender, GuiFocusChangedEventArgs e)
         {
-            if (e.FocusedElement == null || !(e.FocusedElement is SkinEntry listItem))
+            if (e.FocusedElement == null || !(e.FocusedElement is SkinSelectionEntry listItem))
                 return;
 
             if (!_items.Contains(listItem))
@@ -322,8 +322,8 @@ namespace Alex.Gamestates.MainMenu
             base.OnLoad(args);
         }
 
-        private SkinEntry _previous = null;
-        protected void OnSelectedItemChanged(SkinEntry newItem)
+        private SkinSelectionEntry _previous = null;
+        protected void OnSelectedItemChanged(SkinSelectionEntry newItem)
         {
             if (_previous != null)
             {

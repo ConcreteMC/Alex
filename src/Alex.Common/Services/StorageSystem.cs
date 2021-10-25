@@ -19,8 +19,6 @@ namespace Alex.Common.Services
             DataDirectory = directory;
 
             Directory.CreateDirectory(DataDirectory);
-            Directory.CreateDirectory(Path.Combine(DataDirectory, "assets"));
-            Directory.CreateDirectory(Path.Combine(DataDirectory, "assets", "resourcepacks"));
         }
 
         public bool TryWriteJson<T>(string key, T value)
@@ -250,6 +248,13 @@ namespace Alex.Common.Services
         private string GetFileName(string key)
         {
             return Path.Combine(DataDirectory, FileKeySanitizeRegex.Replace(key.ToLowerInvariant(), ""));
+        }
+
+        public IStorageSystem Open(params string[] path)
+        {
+            var subpath = Path.Combine(path);
+
+            return new StorageSystem(Path.Combine(DataDirectory, subpath));
         }
     }
 }

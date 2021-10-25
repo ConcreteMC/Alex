@@ -1799,7 +1799,7 @@ namespace Alex.Net.Bedrock
 					}
 
 					AlexInstance.ConnectToServer(
-						new BedrockServerType(AlexInstance, AlexInstance.Services.GetService<XboxAuthService>()),
+						new BedrockServerType(AlexInstance),
 						new ServerConnectionDetails(new IPEndPoint(resolved.Result, port)), PlayerProfile);
 				});
 		}

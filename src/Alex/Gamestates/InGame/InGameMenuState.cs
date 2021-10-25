@@ -3,6 +3,7 @@ using Alex.Common.Gui.Elements;
 using Alex.Common.Gui.Graphics;
 using Alex.Gamestates.Common;
 using Alex.Gamestates.MainMenu;
+using Alex.Gui.Elements.Ingame;
 using Microsoft.Xna.Framework;
 using NLog;
 using RocketUI;
@@ -72,7 +73,7 @@ namespace Alex.Gamestates.InGame
 				{
 					foreach (var p in s.World.PlayerList)
 					{
-						var element = new PlayerListItemElement(p);
+						var element = new PlayerlistItem(p);
 
 						_playerList.AddChild(element);
 					}
@@ -99,19 +100,18 @@ namespace Alex.Gamestates.InGame
 
         private void OnQuitButtonPressed()
         {
-	        if (!Alex.GameStateManager.SetActiveState("title"))
+	        if (!Alex.GameStateManager.SetActiveState<TitleState>(false))
 	        {
 		        Log.Warn($"Could not go back to titlestate.");
 	        }
 
-            Alex.GameStateManager.RemoveState("serverMenu");
             Alex.GameStateManager.RemoveState("play");
         }
 
         protected override void OnHide()
         {
 	        base.OnHide();
-	        Alex.GameStateManager.RemoveState("ingamemenu");
+	        Alex.GameStateManager.RemoveState(this);
         }
     }
 }

@@ -46,9 +46,8 @@ namespace Alex.Gamestates.Login
 					    x => x.ExtraData != null && !string.IsNullOrWhiteSpace(x.ExtraData.XUID));
 
 				    var profile = new PlayerProfile(
-					    r.ExtraData.XUID, r.ExtraData.DisplayName, r.ExtraData.DisplayName,
-					    new Skin() { Slim = true, Texture = null }, result.token.AccessToken, null,
-					    result.token.RefreshToken, result.token.ExpiryTime);
+					    r.ExtraData.XUID, r.ExtraData.DisplayName, r.ExtraData.DisplayName, result.token.AccessToken,
+					    null, result.token.RefreshToken, result.token.ExpiryTime);
 
 				    return new LoginResponse(profile, true);
 			    }

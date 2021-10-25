@@ -2,13 +2,13 @@ using Alex.Common.Gui.Elements.Icons;
 using Alex.Common.Utils;
 using RocketUI;
 
-namespace Alex.Gamestates.InGame
+namespace Alex.Gui.Elements.Ingame
 {
-    public class PlayerListItemElement : RocketControl
+    public sealed class PlayerlistItem : RocketControl
     {
         private GuiConnectionPingIcon _pingIcon;
         private PlayerListItem _playerListItem;
-        public PlayerListItemElement(PlayerListItem item)
+        public PlayerlistItem(PlayerListItem item)
         {
             _playerListItem = item;
             

@@ -62,14 +62,7 @@ namespace Alex.Gamestates.Login
 				playerProfile.PlayerName = result.Profile?.Name;
 				playerProfile.RefreshToken = session.RefreshToken;
 				playerProfile.ExpiryTime = session.ExpiryTime;
-				
-				var skin = result.Profile?.Skin;
 
-				if (skin != null)
-				{
-					playerProfile.Skin = new Skin() { Slim = skin.Model == SkinType.Alex, Url = skin.Url, Texture = _currentProfile?.Skin?.Texture};
-				}
-				
 				playerProfile.Authenticated = true;
 				playerProfile.Add(JavaServerType.AuthTypeIdentifier, true);
 

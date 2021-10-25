@@ -1,10 +1,10 @@
 ﻿namespace Alex.Common.Services
 {
-    public interface IDataProvider<TDataType>
+    public interface IDataProvider<out TDataType>
     {
         TDataType Data { get; }
         
         void Load();
-        void Save(TDataType data);
+        void Save();
     }
 }

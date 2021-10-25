@@ -16,6 +16,7 @@ using Alex.Common.Services;
 using Alex.Common.Utils;
 using Alex.Entities;
 using Alex.Gamestates;
+using Alex.Gamestates.InGame;
 using Alex.Items;
 using Alex.Net.Bedrock.Packets;
 using Alex.Networking.Bedrock.RakNet;
@@ -399,53 +400,17 @@ namespace Alex.Net.Bedrock
 			if (Transfered)
 				return;
 
-			if (_disconnectShown && overrideActive && Alex.GameStateManager.GetActiveState() is DisconnectedState s)
-			{
-				if (useTranslation)
-				{
-					s.DisconnectedTextElement.TranslationKey = reason;
-				}
-				else
-				{
-					s.DisconnectedTextElement.Text = reason;
-				}
-
+			if (_disconnectShown && !overrideActive)
 				return;
-			}
-
-			if (_disconnectShown)
-				return;
-
+			
 			_disconnectShown = true;
-
 			DisconnectReason = disconnectReason;
-
-			s = new DisconnectedState();
-
-			if (useTranslation)
-			{
-				s.DisconnectedTextElement.TranslationKey = reason;
-			}
-			else
-			{
-				s.DisconnectedTextElement.Text = reason;
-			}
-
-			Alex.GameStateManager.RemoveState("play");
-			Alex.GameStateManager.SetActiveState(s, false);
+			
+			DisconnectedDialog.Show(Alex, reason, useTranslation);
+			
 			Dispose();
 		}
 
-		/*public override void OnConnectionRequestAccepted()
-		{
-			ConnectionAcceptedWaitHandle.Set();
-
-			SendNewIncomingConnection();
-			//_connectedPingTimer = new Timer(state => SendConnectedPing(), null, 1000, 1000);
-
-			SendAlexLogin(Username);
-		}
-*/
 		private bool LoginSent { get; set; } = false;
 
 		private void SendAlexLogin(string username)

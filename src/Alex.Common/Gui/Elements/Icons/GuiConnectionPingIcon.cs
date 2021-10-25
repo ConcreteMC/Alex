@@ -205,8 +205,6 @@ namespace Alex.Common.Gui.Elements.Icons
             {
 	            base.OnDraw(graphics, gameTime);
 	            
-	            //graphics.FillRectangle(RenderBounds, Background,  TextureRepeatMode.NoScaleCenterSlice);
-	            
 	            if (_renderLatency && IsVisible)
 	            {
 		            string text = $"{_ping}ms";

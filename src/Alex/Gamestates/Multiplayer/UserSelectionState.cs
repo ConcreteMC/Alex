@@ -1,93 +1,16 @@
-using System;
 using Alex.Common.Graphics;
 using Alex.Common.Gui.Elements;
-using Alex.Common.Gui.Graphics;
 using Alex.Common.Services;
 using Alex.Gamestates.Common;
 using Alex.Gui;
 using Alex.Gui.Elements;
 using Alex.Utils;
 using Microsoft.Xna.Framework;
-using MiNET.Utils;
 using RocketUI;
 
 namespace Alex.Gamestates.Multiplayer
 {
-	public class ProfileItem : SelectionListItem
-	{
-		private TextureElement _playerHead;
-		private StackContainer _textWrapper;
-		
-		public PlayerProfile Profile { get; }
-		public ProfileItem(PlayerProfile profile)
-		{
-			Profile = profile;
-			
-			SetFixedSize(355, 36);
-
-			Margin = new Thickness(5, 5, 5, 5);
-			Padding = Thickness.One;
-			Anchor = Alignment.TopFill;
-			
-			AddChild(_playerHead = new TextureElement()
-			{
-				Width = 32,
-				Height = 32,
-                
-				Anchor = Alignment.TopLeft,
-				BackgroundOverlay = Color.White * 0.3f,
-				//Texture = AlexGuiTextures.PlayerHead
-				Background = AlexGuiTextures.UnknownPackIcon,
-			});
-
-			bool isGreen = profile.Authenticated;
-
-			if (!isGreen && profile.ExpiryTime.HasValue && profile.ExpiryTime > DateTime.UtcNow)
-			{
-				isGreen = true;
-			}
-			
-			TextureElement authenticatedElement;
-			AddChild(authenticatedElement = new TextureElement()
-			{
-				Anchor = Alignment.TopRight,
-				Background = isGreen ?  AlexGuiTextures.GreenCheckMark :  AlexGuiTextures.GreyCheckMark,
-				Width = 10,
-				Height = 10,
-				AutoSizeMode = AutoSizeMode.None
-			});  
-		//	authenticatedElement.SetFixedSize(10, 8);
-			
-			AddChild( _textWrapper = new StackContainer()
-			{
-				ChildAnchor = Alignment.TopFill,
-				Anchor = Alignment.TopLeft
-			});
-			_textWrapper.Padding = new Thickness(0,0);
-			_textWrapper.Margin = new Thickness(32 + 5, 0, 0, 0);
-
-			_textWrapper.AddChild(new TextElement()
-			{
-				Text = profile.PlayerName,
-				Margin = Thickness.Zero
-			});
-
-			_textWrapper.AddChild(new TextElement()
-			{
-				Text = $"{ChatColors.Gray}{(profile.Username)}",
-				Margin = new Thickness(0, 0, 5, 0),
-				IsVisible = !string.Equals(profile.PlayerName, profile.Username, StringComparison.InvariantCultureIgnoreCase)
-			});
-			
-			_textWrapper.AddChild(new TextElement()
-			{
-				Text = $"{ChatColors.Red}{(profile.AuthError ?? string.Empty)}",
-				Margin = new Thickness(0, 0, 5, 0)
-			});
-		}
-	}
-	
-	public class UserSelectionState : ListSelectionStateBase<ProfileItem>
+	public class UserSelectionState : ListSelectionStateBase<UserSelectionItem>
 	{
 		public delegate void ProfileSelected(PlayerProfile selectedProfile);
 		public delegate void Cancelled();
@@ -140,7 +63,7 @@ namespace Alex.Gamestates.Multiplayer
 			ClearItems();
 			foreach (var profile in availableProfiles)
 			{
-				AddItem(new ProfileItem(profile));
+				AddItem(new UserSelectionItem(profile));
 			}
 		}
 		
@@ -184,7 +107,7 @@ namespace Alex.Gamestates.Multiplayer
 		}
 
 		/// <inheritdoc />
-		protected override void OnSelectedItemChanged(ProfileItem newItem)
+		protected override void OnSelectedItemChanged(UserSelectionItem newItem)
 		{
 			base.OnSelectedItemChanged(newItem);
 			if (newItem == null)

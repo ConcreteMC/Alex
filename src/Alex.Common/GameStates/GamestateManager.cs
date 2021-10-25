@@ -1,14 +1,10 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using Alex.Common.GameStates;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using NLog;
-using RocketUI;
 
-namespace Alex.Gamestates
+namespace Alex.Common.GameStates
 {
     public class GameStateManager : DrawableGameComponent
     {
@@ -16,22 +12,16 @@ namespace Alex.Gamestates
 
 		private ConcurrentDictionary<string, IGameState> States { get; }
 
-		private IGameState ActiveState
-		{
-			get;
-			set;
-		}
-
+		private IGameState ActiveState { get; set; }
 		private GraphicsDevice Graphics { get; }
         private SpriteBatch SpriteBatch { get; }
-        
         public GameStateManager(Game game, GraphicsDevice graphics, SpriteBatch spriteBatch) : base(game)
         { 
             Graphics = graphics;
             SpriteBatch = spriteBatch;
 
             States = new ConcurrentDictionary<string, IGameState>(StringComparer.OrdinalIgnoreCase);
-		}
+        }
 
         public void Back()
         {
@@ -63,9 +53,9 @@ namespace Alex.Gamestates
         {
 	        if (States.TryGetValue(name, out IGameState s))
 	        {
-		        if (s is TStateType)
+		        if (s is TStateType type)
 		        {
-			        state = (TStateType) s;
+			        state = type;
 			        return true;
 		        }
 	        }
@@ -84,26 +74,31 @@ namespace Alex.Gamestates
 		    IGameState state;
 		    if (States.TryRemove(name, out state))
 		    {
-			    if (ActiveState == state)
-			    {
-				    SetActiveState((IGameState)null);
-			    }
-
-			    state.Unload();
+			    EnsureStateUnloaded(state);
 			    return true;
 		    }
 
 		    return false;
 	    }
 
+	    private void EnsureStateUnloaded(IGameState state)
+	    {
+		    if (ActiveState == state)
+		    {
+			    SetActiveState((IGameState)null);
+		    }
+		    
+		    state.Unload();
+	    }
+	    
 		private void EnsureStateLoaded(IGameState state)
 		{
 			if (state == null)
 				return;
 			
-			//if(state.IsLoaded) return;
 			if (state.ParentState == state)
 				state.ParentState = null;
+			
 			state.Load(new RenderArgs()
 			{
 				SpriteBatch    = SpriteBatch,
@@ -130,10 +125,14 @@ namespace Alex.Gamestates
 
 	    public bool SetActiveState<TStateType>() where TStateType : IGameState, new()
 	    {
-		    var key = typeof(TStateType).FullName;
-		    return SetActiveState<TStateType>(key);
+		    return SetActiveState<TStateType>(true);
 	    }
 
+	    public bool SetActiveState<TStateType>(bool keepHistory) where TStateType : IGameState, new()
+	    {
+		    var key = typeof(TStateType).FullName;
+		    return SetActiveState<TStateType>(key, keepHistory);
+	    }
 
 	    public bool SetActiveState(IGameState state, bool keepHistory = true)
 	    {
@@ -224,10 +223,26 @@ namespace Alex.Gamestates
 	    /// <inheritdoc />
 	    protected override void UnloadContent()
 	    {
-		    Log.Info($"Unload content...");
 		    ClearStates();
 		    
 		    base.UnloadContent();
+	    }
+
+	    /// <inheritdoc />
+	    protected override void Dispose(bool disposing)
+	    {
+		    base.Dispose(disposing);
+
+		    if (disposing)
+		    {
+			    var activeState = ActiveState;
+			    ActiveState = null;
+			    
+			    if (activeState != null)
+			    {
+				    EnsureStateUnloaded(activeState);
+			    }
+		    }
 	    }
     }
 }

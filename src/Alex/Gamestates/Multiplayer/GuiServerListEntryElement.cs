@@ -10,20 +10,18 @@ using Alex.Common.Gui.Elements.Icons;
 using Alex.Common.Gui.Graphics;
 using Alex.Common.Services;
 using Alex.Common.Utils;
-using Alex.Networking.Java;
 using Alex.Services;
 using Alex.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using MiNET.Net;
 using MiNET.Utils;
 using RocketUI;
-using GpuResourceManager = Alex.Common.Graphics.GpuResources.GpuResourceManager;
 
 namespace Alex.Gamestates.Multiplayer
 {
 	public class GuiServerListEntryElement : SelectionListItem
 	{
+		private const string PingTranslationKey = "multiplayer.status.pinging";
 		private const int ServerIconSize = 32;
 
 		private IPEndPoint _connectionEndPoint = null;
@@ -50,22 +48,21 @@ namespace Alex.Gamestates.Multiplayer
         
 		private          TextElement _serverName;
 		private readonly TextElement _serverMotd;
-
-		internal SavedServerEntry SavedServerEntry;
-		public bool                     SaveEntry                { get; set; } = true;
+		
+		public bool SaveEntry { get; set; } = true;
 		public bool CanDelete { get; set; } = true;
-		public GuiServerListEntryElement(ServerTypeImplementation serverTypeImplementation, SavedServerEntry entry) : this(
-			serverTypeImplementation.QueryProvider,
-			$"{entry.Name}")
+		
+		
+		internal SavedServerEntry SavedServerEntry;
+		private bool PingCompleted { get; set; }
+		private IServerQueryProvider QueryProvider { get; }
+		private IListStorageProvider<SavedServerEntry> StorageProvider { get; }
+		public GuiServerListEntryElement(ServerTypeImplementation serverTypeImplementation, SavedServerEntry entry)
 		{
 			SavedServerEntry = entry;
-		}
-
-		private IServerQueryProvider QueryProvider { get; }
-	//	private CancellationTokenSource _cancellationTokenSource;
-		private GuiServerListEntryElement(IServerQueryProvider queryProvider, string serverName)
-		{
-			QueryProvider = queryProvider;
+			QueryProvider = serverTypeImplementation.QueryProvider;
+			StorageProvider = serverTypeImplementation.StorageProvider;
+			
 			SetFixedSize(355, 36);
 
 			Margin = new Thickness(5, 5, 5, 5);
@@ -77,9 +74,7 @@ namespace Alex.Gamestates.Multiplayer
 				Width = ServerIconSize,
 				Height = ServerIconSize,
                 
-				Anchor = Alignment.TopLeft,
-
-//				Background = AlexGuiTextures.DefaultServerIcon,
+				Anchor = Alignment.TopLeft
 			});
 
 			AddChild(_pingStatus = new GuiConnectionPingIcon()
@@ -97,24 +92,16 @@ namespace Alex.Gamestates.Multiplayer
 
 			_textWrapper.AddChild(_serverName = new TextElement()
 			{
-				Text = serverName,
+				Text = entry.Name,
 				Margin = Thickness.Zero
 			});
 
 			_textWrapper.AddChild(_serverMotd = new TextElement()
 			{
 				TranslationKey = PingTranslationKey,
-				Margin = new Thickness(0, 0, 5, 0),
-				
-				//Anchor = center
+				Margin = new Thickness(0, 0, 5, 0)
 			});
 		}
-
-
-
-		private const string PingTranslationKey = "multiplayer.status.pinging";
-		
-		public bool PingCompleted { get; private set; }
 
 		protected override void OnInit(IGuiRenderer renderer)
 		{
@@ -128,22 +115,19 @@ namespace Alex.Gamestates.Multiplayer
 			{
 				_serverIcon.Texture = renderer.GetTexture(AlexGuiTextures.DefaultServerIcon);
 			}
-			//   PingAsync();
 		}
-
-		private GraphicsDevice _graphicsDevice = null;
-
-		protected override void OnDraw(GuiSpriteBatch graphics, GameTime gameTime)
-		{
-			_graphicsDevice = graphics.SpriteBatch.GraphicsDevice;
-			base.OnDraw(graphics, gameTime);
-		}
-
-		private bool _pingComplete = false;
+		
+		private CancellationTokenSource _cancellationTokenSource;
 		public async Task PingAsync(bool force, CancellationToken cancellationToken)
 		{
 			if (PingCompleted && !force) return;
 			PingCompleted = true;
+
+			_cancellationTokenSource?.Cancel();
+			_cancellationTokenSource?.Dispose();
+			
+			_cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(
+				new CancellationTokenSource(15 * 1000).Token, cancellationToken);
 
 			var hostname = SavedServerEntry.Host;
 			ushort port = SavedServerEntry.Port;
@@ -168,8 +152,6 @@ namespace Alex.Gamestates.Multiplayer
 
 		private void SetErrorMessage(string error)
 		{
-			// _serverMotd.Text = error;
-	        
 			if (!string.IsNullOrWhiteSpace(error))
 			{
 				_serverMotd.Text = error;
@@ -189,14 +171,6 @@ namespace Alex.Gamestates.Multiplayer
 			SetErrorMessage(null);
 			SetConnectingState(true);
 
-			//  ServerQueryResponse result;
-			// var queryProvider = Alex.GetService<IServerQueryProvider>();
-			/*if (SavedServerEntry.ServerType == ServerType.Bedrock)
-			{
-				await QueryProvider.Q(address, port, PingCallback, QueryCompleted);//(ContinuationAction);
-			}
-			else
-			{*/
 			var resolved = await JavaServerQueryProvider.ResolveHostnameAsync(address);
 
 			if (!resolved.Success)
@@ -219,9 +193,6 @@ namespace Alex.Gamestates.Multiplayer
 					new ServerConnectionDetails(endPoint, address), PingCallback,
 					QueryCompleted, cancellationToken);
 			}
-			//}
-
-			//QueryCompleted(result);
 		}
 
 		private void PingCallback(ServerPingResponse response)
@@ -239,7 +210,6 @@ namespace Alex.Gamestates.Multiplayer
 		private static readonly Regex FaviconRegex = new Regex(@"data:image/png;base64,(?<data>.+)", RegexOptions.Compiled);
 		private void QueryCompleted(ServerQueryResponse response)
 		{
-			//   var response = queryTask.Result;
 			SetConnectingState(false);
             
 			if (response.Success)
@@ -260,7 +230,6 @@ namespace Alex.Gamestates.Multiplayer
 				switch (q.Version.Compatibility)
 				{
 					case CompatibilityResult.OutdatedClient:
-						//_pingStatus.SetOutdated($"multiplayer.status.client_out_of_date", true);
 						_pingStatus.SetOutdated($"Client out of date! (#{q.Version.Protocol})");
 						break;
 
@@ -328,14 +297,14 @@ namespace Alex.Gamestates.Multiplayer
 				if (!string.IsNullOrWhiteSpace(q.Favicon))
 				{
 					var match = FaviconRegex.Match(q.Favicon);
-					if (match.Success && _graphicsDevice != null)
+					if (match.Success)
 					{
 						AutoResetEvent reset = new AutoResetEvent(false);
 						Alex.Instance.UiTaskManager.Enqueue(() =>
 						{
 							using (MemoryStream ms = new MemoryStream(Convert.FromBase64String(match.Groups["data"].Value)))
 							{
-								_serverIcon.Texture = SavedServerEntry.CachedIcon = Texture2D.FromStream(_graphicsDevice, ms);
+								_serverIcon.Texture = SavedServerEntry.CachedIcon = Texture2D.FromStream(Alex.Instance.GraphicsDevice, ms);
 							}
 
 							reset.Set();
@@ -357,7 +326,17 @@ namespace Alex.Gamestates.Multiplayer
 			
 			if (disposing)
 			{
-				//ServerIcon?.Dispose();
+				var source = _cancellationTokenSource;
+
+				if (source != null)
+				{
+					if (!source.IsCancellationRequested)
+						source.Cancel();
+					
+					source.Dispose();
+				}
+				
+				_cancellationTokenSource = null;
 			}
 		}
 	}

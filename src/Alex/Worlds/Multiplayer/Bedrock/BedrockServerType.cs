@@ -1,5 +1,8 @@
 using System;
 using System.IO;
+using System.Linq;
+using System.Net;
+using System.Net.Http;
 using System.Threading.Tasks;
 using Alex.Common;
 using Alex.Common.Data.Servers;
@@ -33,13 +36,17 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		
 		private Alex Alex { get; }
 		private XboxAuthService XboxAuthService { get; }
+		
 		/// <inheritdoc />
-		public BedrockServerType(Alex game, XboxAuthService xboxAuthService) : base(new BedrockServerQueryProvider(game), "Bedrock", "bedrock")
+		public override IListStorageProvider<SavedServerEntry> StorageProvider { get; }
+		
+		/// <inheritdoc />
+		public BedrockServerType(Alex game) : base(new BedrockServerQueryProvider(game), "Bedrock", "bedrock")
 		{
 			DefaultPort = 19132;
 			Alex = game;
 			ProtocolVersion = McpeProtocolInfo.ProtocolVersion;
-			XboxAuthService = xboxAuthService;
+			XboxAuthService = game.Services.GetRequiredService<XboxAuthService>();
 
 			SponsoredServers = new SavedServerEntry[]
 			{
@@ -52,6 +59,22 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					ServerType = TypeIdentifier
 				}
 			};
+			
+			StorageProvider = new SavedServerDataProvider(Alex.Storage.Open("storage", "savedservers"), TypeIdentifier);
+			MigrateServers();	
+		}
+		
+		private void MigrateServers()
+		{
+			SavedServerDataProvider defaultDataProvider = new SavedServerDataProvider(Alex.Storage);
+			defaultDataProvider.Load();
+
+			foreach (var server in defaultDataProvider.Data.ToArray().Where(
+				         x => x.ServerType.Equals(TypeIdentifier, StringComparison.InvariantCultureIgnoreCase)))
+			{
+				defaultDataProvider.RemoveEntry(server);
+				StorageProvider.AddEntry(server);
+			}
 		}
 
 		/// <inheritdoc />
@@ -84,14 +107,20 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		{
 			try
 			{
-				if (profile.ExpiryTime.GetValueOrDefault(DateTime.MaxValue) < DateTime.UtcNow
-				    && await XboxAuthService.TryAuthenticate(profile.AccessToken))
+				try
 				{
-					return Process(
-						true,
-						new PlayerProfile(
-							profile.UUID, profile.Username, profile.PlayerName, profile.Skin, profile.AccessToken,
-							null, profile.RefreshToken, profile.ExpiryTime));
+					if (profile.ExpiryTime.GetValueOrDefault(DateTime.MaxValue) < DateTime.UtcNow
+					    && await XboxAuthService.TryAuthenticate(profile.AccessToken))
+					{
+						return Process(true, profile);
+					}
+				}
+				catch (HttpRequestException requestException)
+				{
+					if (requestException.StatusCode.GetValueOrDefault() != HttpStatusCode.Unauthorized)
+					{
+						throw;
+					}
 				}
 
 				return await XboxAuthService.RefreshTokenAsync(profile.RefreshToken).ContinueWith(
@@ -100,16 +129,16 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 						if (task.IsFaulted)
 						{
 							//Authenticate?.Invoke(this, new PlayerProfileAuthenticateEventArgs("Validation faulted!"));
+							profile.AuthError = "Task faulted";
 							return profile;
 						}
 
 						var r = task.Result;
-
-						return Process(
-							r.success,
-							new PlayerProfile(
-								profile.UUID, profile.Username, profile.PlayerName, profile.Skin, r.token.AccessToken,
-								null, r.token?.RefreshToken, r.token?.ExpiryTime));
+						profile.AccessToken = r.token.AccessToken;
+						profile.RefreshToken = r.token.RefreshToken;
+						profile.ExpiryTime = r.token.ExpiryTime;
+						
+						return Process(r.success, profile);
 					});
 			}
 			catch (Exception ex)
@@ -118,25 +147,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			}
 
 			return profile;
-		}
-
-		/// <inheritdoc />
-		public override async Task<bool> VerifyAuthentication(PlayerProfile currentProfile)
-		{
-			if (currentProfile == null)
-				return false;
-			
-			if (!currentProfile.Authenticated)
-			{
-				var task = await ReAuthenticate(currentProfile);
-
-				if (task.Authenticated)
-				{
-					return true;
-				}
-			}
-
-			return currentProfile.Authenticated;
 		}
 
 		/// <inheritdoc />

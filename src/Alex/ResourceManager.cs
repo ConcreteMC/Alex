@@ -144,18 +144,7 @@ namespace Alex
 
         private void ResourcePacksChanged(string[] oldvalue, string[] newvalue)
         {
-            return;
-            Log.Info($"Resource packs changed.");
-
-            SplashScreen splashScreen = new SplashScreen();
-            Alex.GameStateManager.SetActiveState(splashScreen);
-
-            Task.Run(() =>
-            {
-                LoadResourcePacks(splashScreen, newvalue);
-
-                Alex.GameStateManager.Back();
-            });
+           
         }
 
         public bool TryLoadResourcePackInfo(string file, out ResourcePackManifest[] manifests)

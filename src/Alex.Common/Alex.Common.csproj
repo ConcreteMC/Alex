@@ -31,7 +31,6 @@
   <ItemGroup>
     <Folder Include="Blocks\BlockComponents" />
     <Folder Include="Commands\Properties" />
-    <Folder Include="Data\Commands" />
     <Folder Include="Entities\Effects" />
   </ItemGroup>
   

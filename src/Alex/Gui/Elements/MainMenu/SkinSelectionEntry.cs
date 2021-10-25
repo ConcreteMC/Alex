@@ -1,28 +1,24 @@
 using System;
 using System.Diagnostics;
-using Alex.Common.Graphics.GpuResources;
 using Alex.Common.Utils;
 using Alex.Common.Utils.Vectors;
 using Alex.Entities;
-using Alex.Graphics.Models.Entity;
-using Alex.Gui.Elements;
 using Alex.Gui.Elements.Context3D;
-using Alex.ResourcePackLib;
 using Alex.ResourcePackLib.Bedrock;
 using Alex.Utils;
 using Microsoft.Xna.Framework;
 using RocketUI;
 using RocketUI.Input;
 
-namespace Alex.Gamestates.MainMenu.Profile
+namespace Alex.Gui.Elements.MainMenu
 {
-	public class SkinEntry : SelectionListItem
+	public class SkinSelectionEntry : SelectionListItem
     {
-        public GuiEntityModelView ModelView { get; }
+        private GuiEntityModelView ModelView { get; }
         public LoadedSkin Skin { get; }
-        private Action<SkinEntry> OnDoubleClick { get; }
+        private Action<SkinSelectionEntry> OnDoubleClick { get; }
 
-        public SkinEntry(LoadedSkin skin, Action<SkinEntry> onDoubleClick)
+        public SkinSelectionEntry(LoadedSkin skin, Action<SkinSelectionEntry> onDoubleClick)
         {
             Skin = skin;
             OnDoubleClick = onDoubleClick;
@@ -32,12 +28,8 @@ namespace Alex.Gamestates.MainMenu.Profile
             MinHeight = 96;
             MaxHeight = 96;
 
-            // AutoSizeMode = AutoSizeMode.GrowOnly;
-
             Margin = new Thickness(0, 4);
             Anchor = Alignment.FillY;
-            // AutoSizeMode = AutoSizeMode.GrowAndShrink;
-            // BackgroundOverlay = new GuiTexture2D(GuiTextures.OptionsBackground);
 
             var mob = new RemotePlayer(null, null);
             
@@ -48,11 +40,10 @@ namespace Alex.Gamestates.MainMenu.Profile
                 mob.Texture = texture2D;  
             }
             
-            ModelView = new GuiEntityModelView(mob) /*"geometry.humanoid.customSlim"*/
+            ModelView = new GuiEntityModelView(mob)
                 {
                     BackgroundOverlay = new Color(Color.Black, 0.15f),
                     Background = null,
-                    //   Margin = new Thickness(15, 15, 5, 40),
 
                     Width = 92,
                     Height = 96,
@@ -64,7 +55,7 @@ namespace Alex.Gamestates.MainMenu.Profile
             AddChild(
                 new TextElement()
                 {
-                    Text = skin.Name, Margin = Thickness.Zero, Anchor = Alignment.BottomCenter, //Enabled = false
+                    Text = skin.Name, Margin = Thickness.Zero, Anchor = Alignment.BottomCenter
                 });
         }
 
@@ -90,7 +81,7 @@ namespace Alex.Gamestates.MainMenu.Profile
         }
 
         private Stopwatch _previousClick = null;
-        private bool FirstClick = true;
+        private bool _firstClick = true;
         protected override void OnCursorPressed(Point cursorPosition, MouseButton button)
         {
             base.OnCursorPressed(cursorPosition, button);
@@ -98,14 +89,14 @@ namespace Alex.Gamestates.MainMenu.Profile
             if (_previousClick == null)
             {
                 _previousClick = Stopwatch.StartNew();
-                FirstClick = false;
+                _firstClick = false;
                 return;
             }
 
-            if (FirstClick)
+            if (_firstClick)
             {
                 _previousClick.Restart();
-                FirstClick = false;
+                _firstClick = false;
             }
             else
             {
@@ -114,7 +105,7 @@ namespace Alex.Gamestates.MainMenu.Profile
                     OnDoubleClick?.Invoke(this);
                 }
 
-                FirstClick = true;
+                _firstClick = true;
             }
         }
     }

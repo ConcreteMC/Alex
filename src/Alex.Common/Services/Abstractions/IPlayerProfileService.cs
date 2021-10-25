@@ -18,9 +18,6 @@ namespace Alex.Common.Services
         public string Username { get; set; }
 		public string PlayerName { get; set; }
 
-        [JsonIgnore]
-        public Skin Skin { get; set; }
-
         public string AccessToken { get; set; }
         public string ClientToken { get; set; }
         
@@ -32,12 +29,11 @@ namespace Alex.Common.Services
         public Dictionary<string, JToken> ExtraData { get; set; } = new Dictionary<string, JToken>();
 
         [JsonIgnore] public string AuthError { get; set; } = null;
-	    public PlayerProfile(string uuid, string username, string playerName, Skin skin, string accessToken, string clientToken, string refreshToken = null, DateTime? expiryTime = null)
+	    public PlayerProfile(string uuid, string username, string playerName, string accessToken, string clientToken, string refreshToken = null, DateTime? expiryTime = null)
         {
             UUID = uuid;
             Username = username;
 	        PlayerName = playerName;
-            Skin = skin;
             AccessToken = accessToken;
             ClientToken = clientToken;
             RefreshToken = refreshToken;
@@ -59,16 +55,6 @@ namespace Alex.Common.Services
         public bool Add<T>(string key, T value)
         {
             return ExtraData.TryAdd(key, JToken.FromObject(value));
-        }
-    }
-
-    public class PlayerProfileChangedEventArgs : EventArgs
-    {
-        public PlayerProfile Profile { get; }
-
-        public PlayerProfileChangedEventArgs(PlayerProfile profile)
-        {
-            Profile = profile;
         }
     }
     

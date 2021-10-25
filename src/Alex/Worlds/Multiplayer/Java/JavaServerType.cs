@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Alex.Common;
 using Alex.Common.Data.Servers;
@@ -34,6 +35,10 @@ namespace Alex.Worlds.Multiplayer.Java
 		private const string ProfileType = "java";
 		
 		private       Alex   Alex { get; }
+		
+		/// <inheritdoc />
+		public override IListStorageProvider<SavedServerEntry> StorageProvider { get; }
+		
 		/// <inheritdoc />
 		public JavaServerType(Alex alex) : base(new JavaServerQueryProvider(alex), "Java", "java")
 		{
@@ -42,14 +47,14 @@ namespace Alex.Worlds.Multiplayer.Java
 			
 			SponsoredServers = new SavedServerEntry[]
 			{
-				new SavedServerEntry()
+				new ()
 				{
 					Name = $"{ChatColors.Gold}Hypixel",
 					Host = "mc.hypixel.net",
 					Port = 25565,
 					ServerType = TypeIdentifier
 				},
-				new SavedServerEntry()
+				new ()
 				{
 					Name = $"{ChatColors.Gold}Mineplex",
 					Host = "eu.mineplex.com",
@@ -57,6 +62,22 @@ namespace Alex.Worlds.Multiplayer.Java
 					ServerType = TypeIdentifier
 				}
 			};
+
+			StorageProvider = new SavedServerDataProvider(Alex.Storage.Open("storage", "savedservers"), TypeIdentifier);
+			MigrateServers();
+		}
+
+		private void MigrateServers()
+		{
+			SavedServerDataProvider defaultDataProvider = new SavedServerDataProvider(Alex.Storage);
+			defaultDataProvider.Load();
+
+			foreach (var server in defaultDataProvider.Data.ToArray().Where(
+				         x => x.ServerType.Equals(TypeIdentifier, StringComparison.InvariantCultureIgnoreCase)))
+			{
+				defaultDataProvider.RemoveEntry(server);
+				StorageProvider.AddEntry(server);
+			}
 		}
 
 		/// <inheritdoc />
@@ -74,6 +95,25 @@ namespace Alex.Worlds.Multiplayer.Java
 		}
 
 		public const string AuthTypeIdentifier = "MicrosoftAccount";
+		
+		/// <inheritdoc />
+		private async Task<bool> IsAuthenticated(PlayerProfile profile)
+		{
+			if (profile == null)
+				return false;
+			
+			if (!profile.Authenticated)
+			{
+				if (await TryAuthenticate(profile))
+				{
+					profile.Authenticated = true;
+					return true;
+				}
+			}
+
+			return profile.Authenticated;
+		}
+		
 		/// <inheritdoc />
 		public override Task Authenticate(GuiPanoramaSkyBox skyBox, AuthenticationCallback callBack)
 		{
@@ -88,7 +128,7 @@ namespace Alex.Worlds.Multiplayer.Java
 
 				try
 				{
-					if (await VerifyAuthentication(p) && p.Authenticated)
+					if (await IsAuthenticated(p))
 					{
 						callBack?.Invoke(p);
 					}
@@ -156,25 +196,6 @@ namespace Alex.Worlds.Multiplayer.Java
 			return Task.CompletedTask;
 		}
 
-		/// <inheritdoc />
-		public override async Task<bool> VerifyAuthentication(PlayerProfile profile)
-		{
-			if (profile == null)
-				return false;
-			
-			if (!profile.Authenticated)
-			{
-				if (await TryAuthenticate(profile))
-				{
-					profile.Authenticated = true;
-					
-					return true;
-				}
-			}
-
-			return profile.Authenticated;
-		}
-
 		public override async Task<ProfileUpdateResult> UpdateProfile(PlayerProfile profile)
 		{
 			var profileManager = Alex.Services.GetRequiredService<ProfileManager>();
@@ -186,24 +207,7 @@ namespace Alex.Worlds.Multiplayer.Java
 				return new ProfileUpdateResult(false, mojangProfile.Error, mojangProfile.ErrorMessage);
 			}
 
-			Common.Utils.Skin skin = profile?.Skin;
-			if (mojangProfile?.Skin?.Url != null)
-			{
-				Texture2D texture = null;
-
-				if (SkinUtils.TryGetSkin(new Uri(mojangProfile?.Skin?.Url), Alex.Instance.GraphicsDevice, out texture))
-				{
-					skin = new Common.Utils.Skin()
-					{
-						Slim = (mojangProfile.Skin?.Model == SkinType.Alex),
-						Texture = texture,
-						Url = mojangProfile?.Skin?.Url
-					};
-				}
-			}
-			
 			profile.UUID = mojangProfile.UUID;
-			profile.Skin = skin;
 			profile.Authenticated = true;
 			
 			profileManager.CreateOrUpdateProfile(ProfileType, profile, true);
@@ -249,12 +253,7 @@ namespace Alex.Worlds.Multiplayer.Java
 
 				if (response.Profile.Skin != null)
 				{
-					profile.Skin = new Common.Utils.Skin()
-					{
-						Texture = profile?.Skin?.Texture,
-						Url = response.Profile.Skin.Url,
-						Slim = response.Profile.Skin.Model == SkinType.Alex
-					};
+					profile.Add("skin", response.Profile.Skin);
 				}
 			}
 

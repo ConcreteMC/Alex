@@ -2,7 +2,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Alex.Gamestates
+namespace Alex.Common
 {
 	public class UpdateArgs : IUpdateArgs
 	{

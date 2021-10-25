@@ -77,8 +77,12 @@ namespace Alex.Gamestates.Common
         {
             _items.Add(item);
             Body.AddChild(item);
+            
+            OnAddItem(item);
         }
         
+	    protected virtual void OnAddItem(TGuiListItemContainer item){}
+	    
         public void RemoveItem(TGuiListItemContainer item)
         {
             Body.RemoveChild(item);
@@ -86,7 +90,11 @@ namespace Alex.Gamestates.Common
 
             if (SelectedItem == item)
 	            SelectedItem = null;
+            
+            OnRemoveItem(item);
         }
+        
+        protected virtual void OnRemoveItem(TGuiListItemContainer item){}
         
         public void UnsetSelectedItem(TGuiListItemContainer selected)
         {

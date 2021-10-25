@@ -1,29 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Threading;
 using System.Timers;
 using Alex.Common.Graphics;
 using Alex.Common.Gui.Elements;
 using Alex.Common.Gui.Graphics;
-using Alex.Common.Services;
 using Alex.Common.Utils;
 using Alex.Common.Utils.Vectors;
 using Alex.Entities;
 using Alex.Gamestates.Common;
-using Alex.Gamestates.Login;
-using Alex.Gamestates.MainMenu;
 using Alex.Gamestates.Multiplayer;
-using Alex.Graphics.Models.Entity;
 using Alex.Gui;
-using Alex.Gui.Dialogs;
-using Alex.Gui.Dialogs.Containers;
 using Alex.Gui.Elements;
 using Alex.Gui.Elements.Context3D;
-using Alex.Gui.Elements.Hud;
 using Alex.Items;
-using Alex.Networking.Java.Packets.Play;
-using Alex.ResourcePackLib.Json.Models.Entities;
 using Alex.Utils;
 using Alex.Utils.Inventories;
 using Alex.Worlds.Abstraction;
@@ -32,15 +21,12 @@ using Alex.Worlds.Singleplayer.Generators;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
-using MiNET.Utils;
 using NLog;
 using RocketUI;
 using Color = Microsoft.Xna.Framework.Color;
-using Skin = Alex.Common.Utils.Skin;
-using UUID = MiNET.Utils.UUID;
 
 
-namespace Alex.Gamestates
+namespace Alex.Gamestates.MainMenu
 {
     public class TitleState : GuiGameStateBase, IMenuHolder
     {
@@ -52,9 +38,7 @@ namespace Alex.Gamestates
 
         private readonly GuiPanoramaSkyBox     _backgroundSkyBox;
         private          GuiEntityModelView    _playerView;
-        private          ProfileManager _profileManager;
-
-        //private BossBarContainer _bossBarContainer;
+        
         private System.Timers.Timer _switchItemTimer;
         public TitleState()
         {
@@ -62,7 +46,7 @@ namespace Alex.Gamestates
             _switchItemTimer.Interval = 1000;
             _switchItemTimer.Elapsed += SwitchHeldItem;
 
-            _backgroundSkyBox = new GuiPanoramaSkyBox(Alex);
+            _backgroundSkyBox = GetService<GuiPanoramaSkyBox>();
 
             Background.Texture = _backgroundSkyBox;
             Background.RepeatMode = TextureRepeatMode.Stretch;
@@ -159,9 +143,6 @@ namespace Alex.Gamestates
             };
             guiItemStack.AddChild(row);
 
-            _profileManager = Alex.Services.GetRequiredService<ProfileManager>();
-            //_playerProfileService.ProfileChanged += PlayerProfileServiceOnProfileChanged;
-
             var dropDown = new GuiDropdown() { };
             dropDown.Options.Add("option 1");
             dropDown.Options.Add("option 2");
@@ -170,14 +151,6 @@ namespace Alex.Gamestates
             
             dropDown.Anchor = Alignment.MiddleCenter;
             Init();
-          //  AddChild(dropDown);
-            /*ScoreboardView scoreboardView;
-            AddChild(scoreboardView = new ScoreboardView());
-            scoreboardView.Anchor = Alignment.MiddleRight;
-            
-            scoreboardView.AddString("Title");
-            scoreboardView.AddRow("Key", "200");
-            scoreboardView.AddRow("Key 2", "200");*/
         }
 
         private void SwitchHeldItem(object sender, ElapsedEventArgs e)
@@ -201,7 +174,7 @@ namespace Alex.Gamestates
 
         private void MultiplayerButtonPressed()
         {
-            Alex.GameStateManager.SetActiveState(new MultiplayerServerSelectionState(_backgroundSkyBox)
+            Alex.GameStateManager.SetActiveState(new MultiplayerServerSelectionState()
             {
                 BackgroundOverlay = BackgroundOverlay
             }, true);
@@ -231,10 +204,11 @@ namespace Alex.Gamestates
 
         private void Init()
         {
-            var entity = new RemotePlayer(null);
-            entity.RenderLocation = new PlayerLocation(Vector3.Zero, 180f, 180f);
-            entity.IsSpawned = true;
-            
+            var entity = new RemotePlayer(null)
+                {
+                    RenderLocation = new PlayerLocation(Vector3.Zero, 180f, 180f), IsSpawned = true
+                };
+
             AddChild(_playerView =
                 new GuiEntityModelView(
                     entity)
@@ -265,8 +239,6 @@ namespace Alex.Gamestates
             _splashText.Text = SplashTexts.GetSplashText();
             Alex.IsMouseVisible = true;
 
-            Alex.GameStateManager.AddState("serverlist", new MultiplayerServerSelectionState(_backgroundSkyBox));
-            
             _playerView.Entity.SetInventory(new BedrockInventory(46));
             
             var inventory = _playerView.Entity.Inventory;
@@ -311,11 +283,7 @@ namespace Alex.Gamestates
         }
 
         private float _rotation;
-
         private readonly float _playerViewDepth = -512.0f;
-
-        private KeyboardState _prevKeyboardState = new KeyboardState();
-
         protected override void OnUpdate(GameTime gameTime)
         
         {
@@ -344,9 +312,6 @@ namespace Alex.Gamestates
             _playerView.Entity.RenderLocation.Yaw = yaw;
             _playerView.Entity.RenderLocation.HeadYaw = headYaw;
             _playerView.Entity.RenderLocation.Pitch = pitch;
-            KeyboardState s = Keyboard.GetState();
-
-            _prevKeyboardState = s;
         }
 
         protected override void OnDraw(IRenderArgs args)

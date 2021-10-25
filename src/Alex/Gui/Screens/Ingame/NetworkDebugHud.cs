@@ -5,8 +5,7 @@ using Alex.Net;
 using Microsoft.Xna.Framework;
 using RocketUI;
 
-
-namespace Alex.Gamestates.InGame.Hud
+namespace Alex.Gui.Screens.Ingame
 {
     public class NetworkDebugHud : Screen
     {

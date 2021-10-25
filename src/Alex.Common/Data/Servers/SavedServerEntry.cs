@@ -6,8 +6,6 @@ namespace Alex.Common.Data.Servers
 {
     public class SavedServerEntry
     {
-        public int ListIndex { get; set; }
-
         public string ServerType { get; set; } = "Java";
 
         public string Name { get; set; }

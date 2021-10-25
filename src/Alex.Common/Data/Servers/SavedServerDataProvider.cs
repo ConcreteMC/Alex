@@ -1,34 +1,62 @@
 ﻿using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.Linq;
 using Alex.Common.Services;
+using Alex.Common.Utils.Collections;
 
 namespace Alex.Common.Data.Servers
 {
     public class SavedServerDataProvider : IListStorageProvider<SavedServerEntry>
     {
-        private const string StorageKey = "SavedServers";
+        private string StorageKey { get; }
 
         public IReadOnlyCollection<SavedServerEntry> Data => _data;
 
-        private readonly List<SavedServerEntry> _data = new List<SavedServerEntry>();
+        private readonly ObservableCollection<SavedServerEntry> _data;
 
         private readonly IStorageSystem _storage;
 
-        public SavedServerDataProvider(IStorageSystem storage)
+        public SavedServerDataProvider(IStorageSystem storage) : this(storage, "SavedServers")
         {
+            
+        }
+        
+        public SavedServerDataProvider(IStorageSystem storage, string key)
+        {
+            StorageKey = key;
             _storage = storage;
-
+            
+            _data = new ObservableCollection<SavedServerEntry>();
+            _data.CollectionChanged += DataOnCollectionChanged;
+            
             Load();
         }
 
+        private void DataOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            Save();
+        }
+
+        private object _loadingLock = new object();
         public void Load()
         {
-            if (_storage.TryReadJson(StorageKey, out SavedServerEntry[] newEntries))
+            lock (_loadingLock)
             {
-                _data.Clear();
-                _data.AddRange(newEntries);
+                _data.CollectionChanged -= DataOnCollectionChanged;
 
-                UpdateIndexes();
+                try
+                {
+                    if (_storage.TryReadJson(StorageKey, out SavedServerEntry[] newEntries))
+                    {
+                        _data.Clear();
+                        _data.AddRange(newEntries);
+                    }
+                }
+                finally
+                {
+                    _data.CollectionChanged += DataOnCollectionChanged;
+                }
             }
         }
 
@@ -37,50 +65,72 @@ namespace Alex.Common.Data.Servers
             _storage.TryWriteJson(StorageKey, Data.ToArray());
         }
 
-        void IDataProvider<IReadOnlyCollection<SavedServerEntry>>.Save(IReadOnlyCollection<SavedServerEntry> entries)
+        private int GetIndexOf(SavedServerEntry entry)
         {
-            _storage.TryWriteJson(StorageKey, Data.ToArray());
+            var newEntry = _data.FirstOrDefault(x => x.InternalIdentifier.Equals(entry.InternalIdentifier));
+            return _data.IndexOf(newEntry);
         }
 
+        public bool MoveUp(SavedServerEntry entry)
+        {
+            lock (_loadingLock)
+            {
+                var currentIndex = GetIndexOf(entry);
+
+                if (currentIndex == -1 || currentIndex == 0)
+                    return false;
+
+                _data.Move(currentIndex, currentIndex - 1);
+
+                return true;
+            }
+        }
+
+        public bool MoveDown(SavedServerEntry entry)
+        {
+            lock (_loadingLock)
+            {
+                var currentIndex = GetIndexOf(entry);
+
+                if (currentIndex == -1 || currentIndex == _data.Count - 1)
+                    return false;
+
+                _data.Move(currentIndex, currentIndex + 1);
+
+                return true;
+
+            }
+        }
+        
         public void MoveEntry(int index, SavedServerEntry entry)
         {
-            _data.Remove(entry);
-
-            entry.ListIndex = index;
-
-            _data.Insert(index, entry);
-
-            UpdateIndexes();
-
-            Save();
-        }
-
-        private void UpdateIndexes()
-        {
-            for (var index = 0; index < _data.Count; index++)
+            lock (_loadingLock)
             {
-               _data[index].ListIndex = index;
+                var oldIndex = GetIndexOf(entry);
+
+                if (oldIndex == -1)
+                    return;
+
+                _data.Move(oldIndex, index);
             }
         }
 
         public void AddEntry(SavedServerEntry entry)
         {
-            _data.Add(entry);
-
-            Save();
+            lock (_loadingLock)
+            {
+                _data.Add(entry);
+            }
         }
 
         public bool RemoveEntry(SavedServerEntry entry)
         {
-            var newEntry = _data.FirstOrDefault(x => x.InternalIdentifier.Equals(entry.InternalIdentifier));
-            if (newEntry == null || !_data.Remove(newEntry))
-                return false;
-            
-            UpdateIndexes();
-            
-            Save();
+            lock (_loadingLock)
+            {
+                var newEntry = _data.FirstOrDefault(x => x.InternalIdentifier.Equals(entry.InternalIdentifier));
 
-            return true;
+                return newEntry != null && _data.Remove(newEntry);
+            }
         }
     }
 }

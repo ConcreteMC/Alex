@@ -6,22 +6,17 @@ using Alex.Common.Graphics.Typography;
 using Alex.Common.Input;
 using Alex.Common.Utils;
 using Alex.Net;
-using Alex.Utils;
 using Alex.Utils.Collections;
 using Alex.Utils.Commands;
-using Alex.Worlds;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
-using MiNET;
-using MiNET.Plugins;
 using NLog;
 using RocketUI;
 using RocketUI.Input;
 using RocketUI.Utilities.Extensions;
-
 using MessageType = Alex.Common.Data.MessageType;
 
-namespace Alex.Gui.Elements
+namespace Alex.Gui.Elements.Hud
 {
 	public class ChatComponent : TextInput, IChatRecipient
 	{

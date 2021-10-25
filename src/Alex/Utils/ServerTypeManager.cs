@@ -59,7 +59,7 @@ namespace Alex.Utils
 		}
 	}
 
-	public class ServerTypeImplementation
+	public abstract class ServerTypeImplementation
 	{
 		public delegate void AuthenticationCallback(PlayerProfile profile);
 
@@ -71,13 +71,15 @@ namespace Alex.Utils
 		public int ProtocolVersion { get; protected set; } = 0;
 		
 		public string TypeIdentifier { get; }
-		public ServerTypeImplementation(IServerQueryProvider queryProvider, string displayName, string typeIdentifier)
+		
+		public abstract IListStorageProvider<SavedServerEntry> StorageProvider { get; }
+		protected ServerTypeImplementation(IServerQueryProvider queryProvider, string displayName, string typeIdentifier)
 		{
 			DisplayName = displayName;
 			QueryProvider = queryProvider;
 			TypeIdentifier = typeIdentifier;
 		}
-
+		
 		public virtual Task<ProfileUpdateResult> UpdateProfile(PlayerProfile session)
 		{
 			throw new NotImplementedException();
@@ -88,11 +90,6 @@ namespace Alex.Utils
 			worldProvider = null;
 			networkProvider = null;
 			return false;
-		}
-
-		public virtual Task<bool> VerifyAuthentication(PlayerProfile profile)
-		{
-			return Task.FromResult(false);
 		}
 
 		public virtual Task Authenticate(GuiPanoramaSkyBox skyBox, AuthenticationCallback callBack)
