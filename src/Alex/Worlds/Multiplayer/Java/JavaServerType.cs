@@ -140,20 +140,28 @@ namespace Alex.Worlds.Multiplayer.Java
 						{
 							if (isMicrosoftAccount)
 							{
-								Alex.GameStateManager.SetActiveState(
-									new JavaCodeFlowLoginState(this, skyBox, c =>
+								var codeFlow = new JavaCodeFlowLoginState(
+									this, skyBox, c =>
 									{
 										callBack?.Invoke(c);
-									}, p));
+									}, p);
+								codeFlow.SetSubText($"{ChatColors.Red}Your session has expired, please re-authenticate.");
+								
+								Alex.GameStateManager.SetActiveState(codeFlow);
+
+								return;
 							}
 							else
 							{
-								Alex.GameStateManager.SetActiveState(
-									new MojangLoginState(
-										this, skyBox, c =>
-										{
-											callBack?.Invoke(c);
-										}, p));
+								var javaLoginState = new MojangLoginState(
+									this, skyBox, c =>
+									{
+										callBack?.Invoke(c);
+									}, p);
+								javaLoginState.LoginFailed($"Your session has expired, please re-authenticate.");
+								Alex.GameStateManager.SetActiveState(javaLoginState);
+
+								return;
 							}
 						}
 						pss.ReloadData(profileManager.GetProfiles(ProfileType));
@@ -220,19 +228,30 @@ namespace Alex.Worlds.Multiplayer.Java
 
 			if (!response.IsSuccess)
 			{
-				if (string.IsNullOrWhiteSpace(profile.RefreshToken))
+				bool isMicrosoftAccount = profile.TryGet(AuthTypeIdentifier, out bool isMSA) && isMSA;
+
+				if (isMicrosoftAccount)
 				{
-					Log.Warn($"Could not validate accesstoken: {profile.Username} (Error={response.ErrorMessage} Result={response.Result})");
-					profile.AuthError = new PlayerProfileAuthenticateEventArgs(response.ErrorMessage, response.Result).ToUserFriendlyString();
-					return false;
+					if (string.IsNullOrWhiteSpace(profile.RefreshToken))
+					{
+						Log.Warn($"Could not validate accesstoken: {profile.Username} (Error={response.ErrorMessage} Result={response.Result})");
+						profile.AuthError = new PlayerProfileAuthenticateEventArgs(response.ErrorMessage, response.Result).ToUserFriendlyString();
+						return false;
+					}
+					
+					response = await MojangApi.RefreshXboxSession(profile);
+				}
+				else
+				{
+					response = await MojangApi.RefreshMojangSession(profile);
 				}
 
-				response = await MojangApi.RefreshSession(profile);
+			
 				if (!response.IsSuccess)
 				{
 					Log.Warn($"Could not refresh session for user: {profile.Username} (Error={response.ErrorMessage} Result={response.Result})");
 					profile.AuthError = new PlayerProfileAuthenticateEventArgs(response.ErrorMessage, response.Result).ToUserFriendlyString();
-						
+					
 					return false;
 				}
 			}

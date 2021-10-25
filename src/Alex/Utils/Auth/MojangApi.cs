@@ -133,7 +133,7 @@ namespace Alex.Common.Utils
 					return res.Session;
 			}
 
-			res = await _auth.Authenticate(username, password); // fill your mojang email and password
+			res = await _auth.Authenticate(username, password, session?.ClientToken ?? Guid.NewGuid().ToString()); // fill your mojang email and password
 
 			if (!res.IsSuccess)
 				throw new LoginFailedException(res);
@@ -256,10 +256,22 @@ namespace Alex.Common.Utils
 			return DoDeviceCodeLogin(authResponse, cancellationToken, new string[0]);
 		}
 
-		public static async Task<MojangAuthResponse> RefreshSession(ISession session)
+		public static async Task<MojangAuthResponse> RefreshXboxSession(ISession session)
 		{
 			var refreshedToken = await _xboxAuth.RefreshAccessToken(session.RefreshToken, ClientID, "XboxLive.signin", "XboxLive.offline_access");
 			return await ExchangeLiveForXbox(refreshedToken);
+		}
+
+		public static async Task<MojangAuthResponse> RefreshMojangSession(ISession token)
+		{
+			return new MojangAuthResponse(await _auth.Refresh(
+				new Session()
+				{
+					AccessToken = token.AccessToken,
+					UUID = token.UUID,
+					Username = token.Username,
+					ClientToken = token.ClientToken
+				}));
 		}
 	}
 

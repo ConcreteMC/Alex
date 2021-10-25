@@ -90,6 +90,11 @@ namespace Alex.Gamestates.Login
             Initialize();
         }
 
+		public void SetSubText(string text)
+		{
+			_subTextElement.Text = text;
+		}
+
         private void Initialize()
         {
             base.HeaderTitle.Anchor = Alignment.MiddleCenter;

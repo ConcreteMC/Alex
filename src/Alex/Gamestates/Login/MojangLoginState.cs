@@ -20,7 +20,6 @@ namespace Alex.Gamestates.Login
 	public class MojangLoginState : BaseLoginState
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(MojangLoginState));
-		private ProfileManager _profileManager;
 
 		private readonly JavaServerType _serverType;
 		private ServerTypeImplementation.AuthenticationCallback _loginSuccesAction;
@@ -30,29 +29,16 @@ namespace Alex.Gamestates.Login
 			_serverType = serverType;
 			_loginSuccesAction = loginSuccesAction;
 			_activeProfile = activeProfile;
+			
+			if (activeProfile != null)
+			{
+				NameInput.Value = activeProfile.Username;
+			}
 		}
 
 		protected override void Initialized()
 		{
-			_profileManager = GetService<ProfileManager>();
-			var profiles = _profileManager.GetProfiles("java");
-
-			if (profiles.Length == 1)
-				_activeProfile = profiles[0];
-
-			if (_activeProfile != null)
-			{
-				NameInput.Value = _activeProfile.Username;
-			}
-			else
-			{
-				var activeProfile = _profileManager.LastUsedProfile;
-
-				if (activeProfile != null)
-				{
-					NameInput.Value = activeProfile.Profile.Username;
-				}
-			}
+			
 		}
 
 		protected override void LoginButtonPressed(string username, string password)
@@ -117,9 +103,9 @@ namespace Alex.Gamestates.Login
 				});
 		}
 
-		private void LoginFailed(string error)
+		public void LoginFailed(string error)
 		{
-			ErrorMessage.Text      = "Could not login: " + error;
+			ErrorMessage.Text      = error;
 			ErrorMessage.TextColor = (Color) TextColor.Red;
 
 			EnableInput();
@@ -127,7 +113,7 @@ namespace Alex.Gamestates.Login
 
 		private void LoginFailed(PlayerProfileAuthenticateEventArgs e)
 		{
-			LoginFailed(e.ToUserFriendlyString());
+			LoginFailed( $"Could not login: {e.ToUserFriendlyString()}");
 		}
 	}
 }
