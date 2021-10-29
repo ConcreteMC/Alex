@@ -136,34 +136,30 @@ namespace Alex.Worlds.Multiplayer.Java
 					{
 						Log.Warn($"Java authentication failed...");
 
-						if (p.TryGet(AuthTypeIdentifier, out bool isMicrosoftAccount))
+						if (p.TryGet(AuthTypeIdentifier, out bool isMicrosoftAccount) && isMicrosoftAccount)
 						{
-							if (isMicrosoftAccount)
-							{
-								var codeFlow = new JavaCodeFlowLoginState(
-									this, skyBox, c =>
-									{
-										callBack?.Invoke(c);
-									}, p);
-								codeFlow.SetSubText($"{ChatColors.Red}Your session has expired, please re-authenticate.");
+							var codeFlow = new JavaCodeFlowLoginState(
+								this, skyBox, c =>
+								{
+									callBack?.Invoke(c);
+								}, p);
+							codeFlow.SetSubText($"{ChatColors.Red}Your session has expired, please re-authenticate.");
 								
-								Alex.GameStateManager.SetActiveState(codeFlow);
+							Alex.GameStateManager.SetActiveState(codeFlow);
 
-								return;
-							}
-							else
-							{
-								var javaLoginState = new MojangLoginState(
-									this, skyBox, c =>
-									{
-										callBack?.Invoke(c);
-									}, p);
-								javaLoginState.LoginFailed($"Your session has expired, please re-authenticate.");
-								Alex.GameStateManager.SetActiveState(javaLoginState);
-
-								return;
-							}
+							return;
 						}
+						
+						var javaLoginState = new MojangLoginState(
+							this, skyBox, c =>
+							{
+								callBack?.Invoke(c);
+							}, p);
+						javaLoginState.LoginFailed($"Your session has expired, please re-authenticate.");
+						Alex.GameStateManager.SetActiveState(javaLoginState);
+
+						return;
+						
 						pss.ReloadData(profileManager.GetProfiles(ProfileType));
 						Alex.GameStateManager.SetActiveState(pss);
 					}
