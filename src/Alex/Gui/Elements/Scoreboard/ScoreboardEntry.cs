@@ -5,15 +5,10 @@ namespace Alex.Gui.Elements.Scoreboard
 {
 	public class ScoreboardEntry : Container
 	{
-		private string   _entryId;
 		private uint   _score;
 		private string _displayName;
 
-		public string EntryId
-		{
-			get => _entryId;
-			set => _entryId = value;
-		}
+		public string EntryId { get; set; }
 
 		public uint Score
 		{
@@ -53,8 +48,6 @@ namespace Alex.Gui.Elements.Scoreboard
 			}
 		}
 
-		internal bool PendingRemoval { get; set; } = false;
-
 		private TextElement Left      { get; }
 		private Container   Right     { get; }
 		private TextElement RightText { get; }
@@ -65,10 +58,7 @@ namespace Alex.Gui.Elements.Scoreboard
 
 			Left = new TextElement()
 			{
-				//Text = displayName,
-				Anchor = Alignment.TopLeft,
-				//	Margin = new Thickness(0, 0, 2, 0),
-				//ParentElement = this
+				Anchor = Alignment.TopLeft
 			};
 			
 			Right = new Container()

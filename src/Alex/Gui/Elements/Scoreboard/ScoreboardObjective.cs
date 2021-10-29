@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using NLog;
@@ -11,6 +12,8 @@ namespace Alex.Gui.Elements.Scoreboard
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ScoreboardObjective));
 		private ConcurrentDictionary<string, ScoreboardEntry> Entries      { get; }
+		private List<ScoreboardEntry> _removed { get; } = new List<ScoreboardEntry>();
+		
 		public  string                                      Name         { get; set; }
 
 		public string DisplayName
@@ -60,7 +63,6 @@ namespace Alex.Gui.Elements.Scoreboard
 
 		public void AddOrUpdate(string id, ScoreboardEntry entry)
 		{
-			bool rebuild = false;
 			if (Entries.TryGetValue(id, out var value))
 			{
 				if (value.Score != entry.Score)
@@ -74,51 +76,37 @@ namespace Alex.Gui.Elements.Scoreboard
 			}
 			else
 			{
-				if (Entries.TryAdd(id, entry))
+				var firstRemoved = _removed.FirstOrDefault();
+				if (firstRemoved != null)
 				{
-					OnEntryAdded?.Invoke(this, id);
+					_removed.Remove(firstRemoved);
+					firstRemoved.Score = entry.Score;
+					firstRemoved.DisplayName = entry.DisplayName;
+					firstRemoved.EntryId = id;
+					entry = firstRemoved;
 				}
-				Interlocked.Increment(ref _changes);
-				//rebuild = true;
-			}
+				
+				Entries.TryAdd(id, entry);
+				OnEntryAdded?.Invoke(this, id);
 
-			//if (rebuild)
-				//Rebuild();
-			/*Entries.AddOrUpdate(id, entry, (oldId, oldValue) => entry);
-			
-			Rebuild();*/
+				Interlocked.Increment(ref _changes);
+			}
 		}
 
 		public void Remove(string id)
 		{
 			if (Entries.TryRemove(id, out var old))
 			{
+				_removed.Add(old);
+				
 				OnEntryRemoved?.Invoke(this, id);
 
 				Interlocked.Increment(ref _changes);
-				//RemoveChild(old);
-				//Rebuild();
 			}
 			else
 			{
 				Log.Warn($"Could not find entry with id: {id}");
 			}
-		}
-
-		public bool TryGetByScore(uint score, out ScoreboardEntry entry)
-		{
-			foreach (var e in Entries.Values.ToArray())
-			{
-				if (e.Score == score)
-				{
-					entry = e;
-
-					return true;
-				}
-			}
-
-			entry = null;
-			return false;
 		}
 		
 		public bool TryGet(string id, out ScoreboardEntry entry)
@@ -144,13 +132,6 @@ namespace Alex.Gui.Elements.Scoreboard
 				entries = entries.OrderByDescending(x => x.Value.Score).ToArray();
 			}
 			
-			//ClearChildren();
-
-			//Container container = new Container();
-			//container.BackgroundOverlay = new Color(Color.Black, );
-			//_container.AddChild(_displayNameElement);
-			//AddChild(_container);
-			
 			RemoveChild(_spacer);
 
 			foreach (var child in ChildElements)
@@ -159,15 +140,29 @@ namespace Alex.Gui.Elements.Scoreboard
 					continue;
 				
 				RemoveChild(sbe);
+
+				if (_removed.Contains(sbe))
+					_removed.Remove(sbe);
 			}
-			
+
+			long previousScore = entries.FirstOrDefault().Value?.Score ?? 0;
+			bool showScores = false;
 			foreach (var entry in entries)
 			{
-				if (CriteriaName == "dummy")
-					entry.Value.ShowScore = false;
-				
-			//	RemoveChild(entry.Value);
+				if (!showScores && Math.Abs(previousScore - entry.Value.Score) > 1)
+				{
+					showScores = true;
+				}
+				else
+				{
+					previousScore = entry.Value.Score;
+				}
 				AddChild(entry.Value);
+			}
+
+			foreach (var element in entries)
+			{
+				element.Value.ShowScore = showScores;
 			}
 			
 			AddChild(_spacer);
