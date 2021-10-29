@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Threading;
+using System.Threading.Tasks;
 using Alex.Networking.Java.Framework;
 using Alex.Networking.Java.Util;
 using MiNET.Net;
@@ -11,14 +12,25 @@ namespace Alex.Networking.Java.Packets
 {
 	public abstract class Packet : IPacket<MinecraftStream>
 	{
-		public bool ForceUnencrypted { get; set; } = false;
 		public Stopwatch Stopwatch { get; } = new Stopwatch();
 
 		public int PacketId { get; set; } = -1;
 
-		public abstract void Decode(MinecraftStream stream);
+		public virtual void Decode(MinecraftStream stream){}
 
-		public abstract void Encode(MinecraftStream stream);
+		public virtual Task DecodeAsync(MinecraftStream stream)
+		{
+			Decode(stream);
+			return Task.CompletedTask;
+		}
+
+		public virtual void Encode(MinecraftStream stream){}
+
+		public virtual Task EncodeAsync(MinecraftStream stream)
+		{
+			Encode(stream);
+			return Task.CompletedTask;
+		}
 		
 		public abstract void PutPool();
 		

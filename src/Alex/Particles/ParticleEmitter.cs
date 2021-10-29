@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using Alex.Common.Graphics;
 using Alex.Common.Graphics.GpuResources;
 using Alex.Common.Utils;
@@ -60,19 +61,35 @@ namespace Alex.Particles
 				return false;
 			}
 
-			MoLangRuntime runtime = new MoLangRuntime();
+			var firstInvalid = _instances.FirstOrDefault(x => !x.Valid);
 
-			instance = new ParticleInstance(this, runtime, position);
+			bool isNew = false;
+			if (firstInvalid != null)
+			{
+				instance = firstInvalid;
+			}
+			else
+			{
+				instance = new ParticleInstance(position);
+				if (Definition.TryGetComponent(out AppearanceTintingComponent atc))
+				{
+					if (atc.Color != null)
+						instance.Color = atc.Color.GetValue(instance.Runtime);
+				}
+				isNew = true;
+			}
 
-			runtime.Environment.Structs.TryAdd("query", instance);
 			instance.SetData(data, dataMode);
 
 			foreach (var component in Definition.Components)
 			{
-				component.Value?.OnCreate(instance, runtime);
+				component.Value?.OnCreate(instance, instance.Runtime);
 			}
+
+			instance.Valid = true;
 			
-			_instances.Add(instance);
+			if (isNew)
+				_instances.Add(instance);
 
 			return true;
 		}
@@ -81,7 +98,7 @@ namespace Alex.Particles
 		private static readonly MoPath _emitterRnd2 = new MoPath("emitter_random_2");
 		private static readonly MoPath _emitterRnd3 = new MoPath("emitter_random_3");
 		private static readonly MoPath _emitterRnd4 = new MoPath("emitter_random_4");
-		public void Tick()
+		public void Tick(ICamera camera)
 		{
 			if (_instances.Count == 0)
 				return;
@@ -97,9 +114,19 @@ namespace Alex.Particles
 			{
 				if (instance == null)
 					continue;
+				
+				if (!instance.Valid)
+					continue;
+				
 				if (instance.Lifetime >= instance.MaxLifetime)
 				{
-					toRemove.Add(instance);
+					instance.Valid = false;
+
+					if (_instances.Count - toRemove.Count > MaxParticles)
+					{
+						toRemove.Add(instance);
+					}
+					//toRemove.Add(instance);
 				}
 				else
 				{
@@ -115,14 +142,16 @@ namespace Alex.Particles
 						component.Value.PreRender(instance, instance.Runtime);
 					}
 
-					instance.OnTick();
+					instance.OnTick(camera);
 				}
 			}
 
 			foreach (var removed in toRemove)
+			{
 				_instances.Remove(removed);
+			}
 
-			_activeInstances = _instances.ToArray();
+			_activeInstances = _instances.Where(x => x.Valid).ToArray();
 		}
 		
 		public void Update(GameTime gameTime)
@@ -130,6 +159,9 @@ namespace Alex.Particles
 			var instances = _activeInstances;
 			foreach (var instance in instances)
 			{
+				if (instance == null || !instance.Valid)
+					continue;
+				
 				instance?.Update(gameTime);
 			}
 		}
@@ -141,14 +173,10 @@ namespace Alex.Particles
 			var instances = _activeInstances;
 			foreach (var instance in instances)
 			{
-				if (instance  == null || count >= MaxParticles)
+				if (instance  == null || !instance.Valid || count >= MaxParticles)
 					continue;
 
 				var pos = instance.Position;
-
-				//var scale = 1f - (Vector3.DistanceSquared(camera.Position, pos) / camera.FarDistance);
-				//if (scale <= 0f)
-				//	continue;
 				
 				var screenSpace = spriteBatch.GraphicsDevice.Viewport.Project(
 					pos, camera.ProjectionMatrix, camera.ViewMatrix, Matrix.Identity);
@@ -157,9 +185,8 @@ namespace Alex.Particles
 
 				if (!isOnScreen) continue;
 				
-				count++;
 				float depth = screenSpace.Z;
-				float scale =  1f - (Vector3.Distance(camera.Position, pos) / camera.FarDistance);// 1.0f / depth;
+				float scale =  instance.RenderScale;
 				if (scale <= 0f)
 					continue;
 
@@ -170,15 +197,17 @@ namespace Alex.Particles
 				textPosition.X = screenSpace.X;
 				textPosition.Y = screenSpace.Y;
 
-				var textureLocation = instance.UvPosition;
-				var textureSize = instance.UvSize;
-
 				spriteBatch.Draw(
-					Texture, textPosition, new Rectangle(textureLocation.ToPoint(), textureSize.ToPoint()),
+					Texture, textPosition, instance.Rectangle,
 					instance.Color, 0f, Vector2.Zero,
 					//2f * ((scale)),
 					new Vector2( scale * instance.Size.X, scale * instance.Size.Y) * 16f,
 					SpriteEffects.None, depth);
+				
+				count++;
+
+				if (count >= MaxParticles)
+					break;
 			}
 
 			return count;

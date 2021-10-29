@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using Alex.MoLang.Runtime;
 using Alex.ResourcePackLib.Json.Bedrock.Particles.Components;
 using Alex.ResourcePackLib.Json.Converters.Particles;
@@ -28,6 +29,20 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Particles
 
 				return 50;
 			}
+		}
+
+		public bool TryGetComponent<T>(out T component) where T : ParticleComponent
+		{
+			var result = Components.FirstOrDefault(x => x.Value.GetType() == typeof(T));
+
+			if (result.Value != null)
+			{
+				component = (T)result.Value;
+				return true;
+			}
+
+			component = null;
+			return false;
 		}
 	}
 

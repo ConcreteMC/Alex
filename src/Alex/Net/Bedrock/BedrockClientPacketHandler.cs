@@ -1074,8 +1074,8 @@ namespace Alex.Net.Bedrock
 			}
 			else if (message.spawnType == 0) //Player spawn
 			{
-				Client.World.Player.SpawnPoint = new BlockCoordinates(
-					message.coordinates.X, (message.coordinates.Y), message.coordinates.Z);
+				//Client.World.Player.SpawnPoint = new BlockCoordinates(
+			//		message.coordinates.X, (message.coordinates.Y), message.coordinates.Z);
 			}
 
 			Client.World.SpawnPoint = new Microsoft.Xna.Framework.Vector3(

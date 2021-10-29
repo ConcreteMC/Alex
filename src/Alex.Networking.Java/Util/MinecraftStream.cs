@@ -19,129 +19,32 @@ using BlockCoordinates = Alex.Common.Utils.Vectors.BlockCoordinates;
 
 namespace Alex.Networking.Java.Util
 {
-	public class MinecraftStream : Stream
+	public class MinecraftStream : PacketStream, IMinecraftStream
 	{
-		private CancellationTokenSource CancelationToken { get; }
-		private Stream BaseStream { get; set; }
-		private Stream ReadStream { get; set; }
-		private Stream WriteStream { get; set; }
-		
-		public bool DataAvailable
+		public MinecraftStream(Stream baseStream, CancellationToken cancellationToken = default) : base(baseStream, cancellationToken)
 		{
-			get
-			{
-				if (_originalBaseStream is NetworkStream ns)
-				{
-					return ns.DataAvailable;
-				}
-
-				return _originalBaseStream.Position < _originalBaseStream.Length;
-			}
-		}
-
-		private Stream _originalBaseStream;
-		public MinecraftStream(Stream baseStream, CancellationToken cancellationToken = default)
-		{
-			_originalBaseStream = baseStream;
-			BaseStream = baseStream;
-			CancelationToken = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-			ReadStream = baseStream;
-			WriteStream = baseStream;
+			
 		}
 
 		public MinecraftStream(CancellationToken cancellationToken = default) : this(new MemoryStream(), cancellationToken)
 		{
 			
 		}
-
-		public static Rijndael GenerateAES(byte[] key)
-		{
-			var cipher = new RijndaelManaged ();
-			cipher.Mode = CipherMode.CFB;
-			cipher.Padding = PaddingMode.None;
-			cipher.KeySize = 128;
-			cipher.FeedbackSize = 8;
-			cipher.Key = key;
-			cipher.IV = key;
-
-			return cipher;
-		}
-
-		public void InitEncryption(Rijndael rijndael)
-		{
-			var aes = rijndael;
-			ICryptoTransform encryptTransform = aes.CreateEncryptor ();
-			ICryptoTransform decryptTransform = aes.CreateDecryptor ();
-			ReadStream = new CryptoStream(BaseStream, decryptTransform, CryptoStreamMode.Read);
-			WriteStream = new CryptoStream(BaseStream, encryptTransform, CryptoStreamMode.Write);
-			/*EncryptCipher = new BufferedBlockCipher(new CfbBlockCipher(new AesEngine(), 8));
-			EncryptCipher.Init(true, new ParametersWithIV(
-				new KeyParameter(key), key, 0, 16));
-
-			DecryptCipher = new BufferedBlockCipher(new CfbBlockCipher(new AesEngine(), 8));
-			DecryptCipher.Init(false, new ParametersWithIV(
-				new KeyParameter(key), key, 0, 16));
-
-			BaseStream = new CipherStream(BaseStream, DecryptCipher, EncryptCipher);*/
-		}
-
-		public override bool CanRead => BaseStream.CanRead;
-		public override bool CanSeek => BaseStream.CanRead;
-		public override bool CanWrite => BaseStream.CanRead;
-		public override long Length => BaseStream.Length;
-
-		public override long Position
-		{
-			get { return ReadStream.Position; }
-			set { ReadStream.Position = value; }
-		}
-
-		public override long Seek(long offset, SeekOrigin origin)
-		{
-			return BaseStream.Seek(offset, origin);
-		}
-
-		public override void SetLength(long value)
-		{
-			BaseStream.SetLength(value);
-		}
-
+		
 		public void Read(Span<byte> memory, int count)
 		{
-			var data = ReadStream.ReadToSpan(count);
+			var data = BaseStream.ReadToSpan(count);
 			data.CopyTo(memory);
-			//BaseStream.ReadToSpan()
 		}
 
-		public override int Read(byte[] buffer, int offset, int count)
-		{
-			return ReadStream.Read(buffer, offset, count);
-		}
-
-		public override void Write(byte[] buffer, int offset, int count)
-		{
-			WriteStream.Write(buffer, offset, count);
-		}
-		
 		public void Write(in Memory<byte> buffer, int offset, in int bufferLength)
 		{
 			var bytes = buffer.Slice(offset, bufferLength).ToArray();
 			
-			WriteStream.Write(bytes, offset, bytes.Length);
-		}
-
-		public override void Flush()
-		{
-			WriteStream.Flush();
-			//BaseStream.Flush();
+			BaseStream.Write(bytes, offset, bytes.Length);
 		}
 
 		#region Reader
-
-		public override int ReadByte()
-		{
-			return ReadStream.ReadByte();
-		}
 
 		public byte[] Read(int length)
 		{
@@ -156,7 +59,7 @@ namespace Alex.Networking.Java.Util
 			int read = 0;
 
 			var buffer = new byte[length];
-			while (read < buffer.Length && !CancelationToken.IsCancellationRequested)
+			while (read < buffer.Length && !CancellationToken.IsCancellationRequested)
 			{
 				int oldRead = read;
 
@@ -168,7 +71,7 @@ namespace Alex.Networking.Java.Util
 
 				read += r;
 
-				if (CancelationToken.IsCancellationRequested) 
+				if (CancellationToken.IsCancellationRequested) 
 					throw new ObjectDisposedException("");
 			}
 
@@ -181,31 +84,22 @@ namespace Alex.Networking.Java.Util
 
 		public int ReadInt()
 		{
-			var dat = new byte[4];
-			Read(dat, 0, 4);
-			var value = BitConverter.ToInt32(dat, 0);
-			return IPAddress.NetworkToHostOrder(value);
+			return IPAddress.NetworkToHostOrder(BitConverter.ToInt32(Read(4), 0));
 		}
 
 		public float ReadFloat()
 		{
-			var almost = Read(4);
-			var f = BitConverter.ToSingle(almost, 0);
-			return NetworkToHostOrder(f);
+			return EndianUtils.NetworkToHostOrder(BitConverter.ToSingle(Read(4), 0));
 		}
 
 		public bool ReadBool()
 		{
-			var answer = ReadByte();
-			if (answer == 1)
-				return true;
-			return false;
+			return ReadUnsignedByte() == 1;
 		}
 
 		public double ReadDouble()
 		{
-			var almostValue = Read(8);
-			return NetworkToHostOrder(almostValue);
+			return EndianUtils.NetworkToHostOrder(Read(8));
 		}
 
 		public int ReadVarInt()
@@ -220,7 +114,7 @@ namespace Alex.Networking.Java.Util
 			byte read;
 			do
 			{
-				read = (byte)ReadByte();;
+				read = (byte)ReadUnsignedByte();;
 
 				int value = (read & 0x7f);
 				result |= (value << (7 * numRead));
@@ -242,7 +136,7 @@ namespace Alex.Networking.Java.Util
 			byte read;
 			do
 			{
-				read = (byte)ReadByte();
+				read = (byte)ReadUnsignedByte();
 				int value = (read & 0x7f);
 				result |= (value << (7 * numRead));
 
@@ -258,15 +152,12 @@ namespace Alex.Networking.Java.Util
 
 		public short ReadShort()
 		{
-			var da = Read(2);
-			var d = BitConverter.ToInt16(da, 0);
-			return IPAddress.NetworkToHostOrder(d);
+			return IPAddress.NetworkToHostOrder(BitConverter.ToInt16(Read(2), 0));
 		}
 
 		public ushort ReadUShort()
 		{
-			var da = Read(2);
-			return NetworkToHostOrder(BitConverter.ToUInt16(da, 0));
+			return EndianUtils.NetworkToHostOrder(BitConverter.ToUInt16(Read(2), 0));
 		}
 
 		public ushort[] ReadUShort(int count)
@@ -278,7 +169,7 @@ namespace Alex.Networking.Java.Util
 				var d = BitConverter.ToUInt16(da, 0);
 				us[i] = d;
 			}
-			return NetworkToHostOrder(us);
+			return EndianUtils.NetworkToHostOrder(us);
 		}
 
 		public ushort[] ReadUShortLocal(int count)
@@ -307,22 +198,17 @@ namespace Alex.Networking.Java.Util
 
 		public string ReadString()
 		{
-			var length = ReadVarInt();
-			var stringValue = Read(length);
-
-			return Encoding.UTF8.GetString(stringValue);
+			return Encoding.UTF8.GetString(Read(ReadVarInt()));
 		}
 
 		public long ReadLong()
 		{
-			var l = Read(8);
-			return IPAddress.NetworkToHostOrder(BitConverter.ToInt64(l, 0));
+			return IPAddress.NetworkToHostOrder(BitConverter.ToInt64(Read(8), 0));
 		}
 
 		public ulong ReadULong()
 		{
-			var l = Read(8);
-			return NetworkToHostOrder(BitConverter.ToUInt64(l, 0));
+			return EndianUtils.NetworkToHostOrder(BitConverter.ToUInt64(Read(8), 0));
 		}
 
         public Vector3 ReadPosition()
@@ -392,7 +278,7 @@ namespace Alex.Networking.Java.Util
 			byte count = 0;
 			NbtCompound nbt = null;
 			
-			count = (byte)ReadByte();
+			count = (byte)ReadUnsignedByte();
 			nbt = ReadNbtCompound();
 			
 
@@ -415,51 +301,10 @@ namespace Alex.Networking.Java.Util
 			WriteByte(slot.Count);
 			WriteNbtCompound(slot.Nbt);
 		}
+		
+		#endregion
 
-		private double NetworkToHostOrder(byte[] data)
-		{
-			if (BitConverter.IsLittleEndian)
-			{
-				Array.Reverse(data);
-			}
-			return BitConverter.ToDouble(data, 0);
-		}
-
-		private float NetworkToHostOrder(float network)
-		{
-			var bytes = BitConverter.GetBytes(network);
-
-			if (BitConverter.IsLittleEndian)
-				Array.Reverse(bytes);
-
-			return BitConverter.ToSingle(bytes, 0);
-		}
-
-		private ushort[] NetworkToHostOrder(ushort[] network)
-		{
-			if (BitConverter.IsLittleEndian)
-				Array.Reverse(network);
-			return network;
-		}
-
-		private ushort NetworkToHostOrder(ushort network)
-		{
-			var net = BitConverter.GetBytes(network);
-			if (BitConverter.IsLittleEndian)
-				Array.Reverse(net);
-			return BitConverter.ToUInt16(net, 0);
-		}
-		private ulong NetworkToHostOrder(ulong network)
-		{
-			var net = BitConverter.GetBytes(network);
-			if (BitConverter.IsLittleEndian)
-				Array.Reverse(net);
-			return BitConverter.ToUInt64(net, 0);
-		}
-
-        #endregion
-
-        #region Writer
+		#region Writer
 
         public void Write(byte[] data)
 		{
@@ -479,8 +324,8 @@ namespace Alex.Networking.Java.Util
 	    {
             WritePosition(new Vector3(pos.X, pos.Y, pos.Z));
 	    }
-	    
-	    private int WriteRawVarInt32(uint value)
+
+	    public int WriteRawVarInt32(uint value)
 	    {
 		    int written = 0;
 		    while ((value & -128) != 0)
@@ -532,8 +377,7 @@ namespace Alex.Networking.Java.Util
 
 		public void WriteInt(int data)
 		{
-			var buffer = BitConverter.GetBytes(IPAddress.HostToNetworkOrder(data));
-			Write(buffer);
+			Write(BitConverter.GetBytes(IPAddress.HostToNetworkOrder(data)));
 		}
 
 		public void WriteString(string data)
@@ -545,14 +389,12 @@ namespace Alex.Networking.Java.Util
 
 		public void WriteShort(short data)
 		{
-			var shortData = BitConverter.GetBytes(IPAddress.HostToNetworkOrder(data));
-			Write(shortData);
+			Write(BitConverter.GetBytes(IPAddress.HostToNetworkOrder(data)));
 		}
 
 		public void WriteUShort(ushort data)
 		{
-			var uShortData = BitConverter.GetBytes(data);
-			Write(uShortData);
+			Write(BitConverter.GetBytes(data));
 		}
 
 		public void WriteBool(bool data)
@@ -562,12 +404,12 @@ namespace Alex.Networking.Java.Util
 
 		public void WriteDouble(double data)
 		{
-			Write(HostToNetworkOrder(data));
+			Write(EndianUtils.HostToNetworkOrder(data));
 		}
 
 		public void WriteFloat(float data)
 		{
-			Write(HostToNetworkOrder(data));
+			Write(EndianUtils.HostToNetworkOrder(data));
 		}
 
 		public void WriteLong(long data)
@@ -577,7 +419,7 @@ namespace Alex.Networking.Java.Util
 
 		public void WriteULong(ulong data)
 		{
-			Write(HostToNetworkOrderLong(data));
+			Write(EndianUtils.HostToNetworkOrderLong(data));
 		}
 
         public void WriteUuid(MiNET.Utils.UUID uuid)
@@ -599,41 +441,16 @@ namespace Alex.Networking.Java.Util
 			return new MiNET.Utils.UUID(long1.Concat(long2).ToArray());
 		}
 
-
-		private byte[] HostToNetworkOrder(double d)
-		{
-			var data = BitConverter.GetBytes(d);
-
-			if (BitConverter.IsLittleEndian)
-				Array.Reverse(data);
-
-			return data;
-		}
-
-		private byte[] HostToNetworkOrder(float host)
-		{
-			var bytes = BitConverter.GetBytes(host);
-
-			if (BitConverter.IsLittleEndian)
-				Array.Reverse(bytes);
-
-			return bytes;
-		}
-
-		private byte[] HostToNetworkOrderLong(ulong host)
-		{
-			var bytes = BitConverter.GetBytes(host);
-
-			if (BitConverter.IsLittleEndian)
-				Array.Reverse(bytes);
-
-			return bytes;
-		}
-
-        #endregion
+		#endregion
 
         private object _disposeLock = new object();
 		private bool _disposed = false;
+
+		protected MinecraftStream(byte[] data) : base(data)
+		{
+			
+		}
+
 		protected override void Dispose(bool disposing)
 		{
 			if (!Monitor.IsEntered(_disposeLock))
@@ -645,8 +462,8 @@ namespace Alex.Networking.Java.Util
 				{
 					_disposed = true;
 
-					if (!CancelationToken.IsCancellationRequested)
-						CancelationToken.Cancel();
+					if (!CancellationToken.IsCancellationRequested)
+						CancellationToken.Cancel();
 
 
 				}
@@ -660,7 +477,7 @@ namespace Alex.Networking.Java.Util
 
 		public NbtCompound ReadNbtCompound()
 		{
-			NbtTagType t = (NbtTagType) ReadByte();
+			NbtTagType t = (NbtTagType) ReadUnsignedByte();
 			if (t != NbtTagType.Compound) return null;
 			Position--;
 

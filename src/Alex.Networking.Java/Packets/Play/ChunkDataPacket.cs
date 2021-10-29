@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Alex.Networking.Java.Util;
 using fNbt;
 
@@ -25,16 +26,16 @@ namespace Alex.Networking.Java.Packets.Play
 		}
 
 	
-		public override void Decode(MinecraftStream stream)
+		public override async Task DecodeAsync(MinecraftStream stream)
 		{
-			ChunkX = stream.ReadInt();
-			ChunkZ = stream.ReadInt();
-			var bitmaskLength = stream.ReadVarInt();
+			ChunkX = await stream.ReadIntAsync();
+			ChunkZ = await stream.ReadIntAsync();
+			var bitmaskLength = await stream.ReadVarIntAsync();
 			var bitmasks = new long[bitmaskLength];
 
 			for (int ind = 0; ind < bitmasks.Length; ind++)
 			{
-				bitmasks[ind] = stream.ReadLong();
+				bitmasks[ind] = await stream.ReadLongAsync();
 			}
 
 			PrimaryBitmask = bitmasks;
@@ -42,51 +43,51 @@ namespace Alex.Networking.Java.Packets.Play
 			//IgnoreOldData = stream.ReadBool();
 			//PrimaryBitmask = stream.ReadVarInt();
 
-			HeightMaps = stream.ReadNbtCompound();
+			HeightMaps = await stream.ReadNbtCompoundAsync();
 
 			//if (GroundUp)
 			{
-				int biomeCount = stream.ReadVarInt();
+				int biomeCount = await stream.ReadVarIntAsync();
 				
 				int[] biomeIds = new int[biomeCount];
 				for (int idx = 0; idx < biomeIds.Length; idx++)
 				{
-					biomeIds[idx] = stream.ReadVarInt();
+					biomeIds[idx] = await stream.ReadVarIntAsync();
 				}
 
 				Biomes = biomeIds;
 			}
 
-			int i = stream.ReadVarInt();
+			int i = await stream.ReadVarIntAsync();
 			Buffer = new Memory<byte>(new byte[i]);
-			stream.Read(Buffer.Span, Buffer.Length);
+			await stream.ReadAsync(Buffer);
 			
-			int tileEntities = stream.ReadVarInt();
+			int tileEntities = await stream.ReadVarIntAsync();
 			for (int k = 0; k < tileEntities; k++)
 			{
-				TileEntities.Add(stream.ReadNbtCompound());
+				TileEntities.Add(await stream.ReadNbtCompoundAsync());
 			}
 		}
 
-		public override void Encode(MinecraftStream stream)
+		public override async Task EncodeAsync(MinecraftStream stream)
 		{
-			stream.WriteInt(ChunkX);
-			stream.WriteInt(ChunkZ);
+			await stream.WriteIntAsync(ChunkX);
+			await stream.WriteIntAsync(ChunkZ);
 		//	stream.WriteBool(GroundUp);
-			stream.WriteVarInt(PrimaryBitmask.Length);
+			await stream.WriteVarIntAsync(PrimaryBitmask.Length);
 
 			for (int i = 0; i < PrimaryBitmask.Length; i++)
 			{
-				stream.WriteLong(PrimaryBitmask[i]);
+				await stream.WriteLongAsync(PrimaryBitmask[i]);
 			}
 
 			//stream.WriteVarInt(PrimaryBitmask);
-			stream.WriteVarInt(Buffer.Length);
-			stream.Write(Buffer, 0, Buffer.Length);
-			stream.WriteVarInt(TileEntities.Count);
+			await stream.WriteVarIntAsync(Buffer.Length);
+			await stream.WriteAsync(Buffer);
+			await stream.WriteVarIntAsync(TileEntities.Count);
 			foreach (var tileEntity in TileEntities)
 			{
-				stream.WriteNbtCompound(tileEntity);
+				await stream.WriteNbtCompoundAsync(tileEntity);
 			}
 		}
 

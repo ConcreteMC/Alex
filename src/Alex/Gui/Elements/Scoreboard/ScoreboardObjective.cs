@@ -145,7 +145,17 @@ namespace Alex.Gui.Elements.Scoreboard
 					_removed.Remove(sbe);
 			}
 
-			long previousScore = entries.FirstOrDefault().Value?.Score ?? 0;
+			long previousScore = 0;
+
+			if (SortOrder == 1)
+			{
+				previousScore = entries.Max(x => x.Value.Score);
+			}
+			else
+			{
+				previousScore = entries.Min(x => x.Value.Score);
+			}
+
 			bool showScores = false;
 			foreach (var entry in entries)
 			{

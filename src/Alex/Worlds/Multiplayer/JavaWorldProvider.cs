@@ -519,7 +519,7 @@ namespace Alex.Worlds.Multiplayer
 			Client.SendPacket(packet);
 		}
 
-		void IPacketHandler.HandlePlay(Packet packet)
+		Task IPacketHandler.HandlePlay(Packet packet)
 		{
 			switch (packet)
 			{
@@ -839,6 +839,8 @@ namespace Alex.Worlds.Multiplayer
 					break;
 				}
 			}
+
+			return Task.CompletedTask;
 		}
 
 		private void HandlePingPacket(PlayPingPacket packet)
@@ -2560,17 +2562,17 @@ namespace Alex.Worlds.Multiplayer
 			}
 		}
 
-		void IPacketHandler.HandleHandshake(Packet packet)
-		{
+        Task IPacketHandler.HandleHandshake(Packet packet)
+        {
+	        return Task.CompletedTask;
+        }
 
+		Task IPacketHandler.HandleStatus(Packet packet)
+		{
+			return Task.CompletedTask;
 		}
 
-		void IPacketHandler.HandleStatus(Packet packet)
-		{
-
-		}
-
-		void IPacketHandler.HandleLogin(Packet packet)
+		Task IPacketHandler.HandleLogin(Packet packet)
 		{
 			if (packet is DisconnectPacket disconnect)
 			{
@@ -2592,6 +2594,8 @@ namespace Alex.Worlds.Multiplayer
 			{
 				HandleLoginPluginRequestPacket(loginPluginRequestPacket);
 			}
+
+			return Task.CompletedTask;
 		}
 
 		private void HandleLoginPluginRequestPacket(LoginPluginRequestPacket packet)

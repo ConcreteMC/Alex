@@ -79,9 +79,34 @@ namespace Alex.Entities
 			        // NoAi = false;
 		        }
 	        }
-        }
+        }		
         
-        public BlockCoordinates SpawnPoint { get; set; } = BlockCoordinates.Zero;
+        public override bool IsSprinting
+        {
+	        get => base.IsSprinting;
+	        set
+	        {
+				
+	        }
+        }
+
+        /// <inheritdoc />
+        public override void SetSprinting(bool sprinting)
+        {
+	        bool wasSprinting = IsSprinting;
+	        base.SetSprinting(sprinting);
+
+	        /*if (wasSprinting && !IsSprinting)
+	        {
+		        Network?.EntityAction((int)EntityId, EntityAction.StopSprinting);
+	        }
+	        else if (!wasSprinting && IsSprinting)
+	        {
+		        Network?.EntityAction((int)EntityId, EntityAction.StartSprinting);
+	        }*/
+        }
+
+       // public BlockCoordinates SpawnPoint { get; set; } = BlockCoordinates.Zero;
 
         public RaytracerComponent Raytracer { get; }
         //public Camera Camera { get; internal set; }
@@ -264,7 +289,8 @@ namespace Alex.Entities
 
 		    if (IsSprinting && !CanSprint)
 		    {
-			    IsSprinting = false;
+			    SetSprinting(false);
+			   // IsSprinting = false;
 		    }
 		    
 		    Controller.Update(args.GameTime);

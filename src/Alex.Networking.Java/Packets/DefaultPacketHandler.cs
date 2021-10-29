@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using NLog;
 
 namespace Alex.Networking.Java.Packets
@@ -6,33 +7,35 @@ namespace Alex.Networking.Java.Packets
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(DefaultPacketHandler));
 
-		private void UnhandledPacket(Packet packet)
+		private Task UnhandledPacket(Packet packet)
 		{
 			Log.Warn($"Unhandled packet: 0x{packet.PacketId:X2} ({packet.GetType().Name})");
+
+			return Task.CompletedTask;
 		}
 		
 		/// <inheritdoc />
-		public void HandleHandshake(Packet packet)
+		public Task HandleHandshake(Packet packet)
 		{
-			UnhandledPacket(packet);
+			return UnhandledPacket(packet);
 		}
 
 		/// <inheritdoc />
-		public void HandleStatus(Packet packet)
+		public Task HandleStatus(Packet packet)
 		{
-			UnhandledPacket(packet);
+			return UnhandledPacket(packet);
 		}
 
 		/// <inheritdoc />
-		public void HandleLogin(Packet packet)
+		public Task HandleLogin(Packet packet)
 		{
-			UnhandledPacket(packet);
+			return UnhandledPacket(packet);
 		}
 
 		/// <inheritdoc />
-		public void HandlePlay(Packet packet)
+		public Task HandlePlay(Packet packet)
 		{
-			UnhandledPacket(packet);
+			return UnhandledPacket(packet);
 		}
 	}
 }

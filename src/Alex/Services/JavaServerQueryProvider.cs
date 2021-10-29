@@ -180,14 +180,14 @@ namespace Alex.Services
 		    public long PingId { get; set; }
 
 		    /// <inheritdoc />
-		    public void HandleHandshake(Packet packet)
+		    public Task HandleHandshake(Packet packet)
 		    {
 			    throw new NotImplementedException();
 		    }
 
 		    private Stopwatch _sw = new Stopwatch();
 		    /// <inheritdoc />
-		    public void HandleStatus(Packet packet)
+		    public Task HandleStatus(Packet packet)
 		    {
 			    if (packet is ResponsePacket responsePacket)
 			    {
@@ -221,16 +221,18 @@ namespace Alex.Services
 
 				    _waitHandle.Set();
 			    }
+
+			    return Task.CompletedTask;
 		    }
 
 		    /// <inheritdoc />
-		    public void HandleLogin(Packet packet)
+		    public Task HandleLogin(Packet packet)
 		    {
 			    throw new NotImplementedException();
 		    }
 
 		    /// <inheritdoc />
-		    public void HandlePlay(Packet packet)
+		    public Task HandlePlay(Packet packet)
 		    {
 			    throw new NotImplementedException();
 		    }

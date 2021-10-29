@@ -116,22 +116,22 @@ namespace Alex.Entities
 				OnSkinValueChanged(value);
 			}
 		}
-		
-		public void SetSprinting(bool sprinting)
+
+		public virtual void SetSprinting(bool sprinting)
 		{
 			if (sprinting)
 			{
 				if (!IsSprinting && CanSprint)
 				{
 					//  Player.Network?.EntityAction((int) Player.EntityId, EntityAction.StartSprinting);
-					IsSprinting = true;
+					base.IsSprinting = true;
 				}
 			}
 			else
 			{
 				if (IsSprinting)
 				{
-					IsSprinting = false;
+					base.IsSprinting = false;
 					//  Player.Network?.EntityAction((int) Player.EntityId, EntityAction.StopSprinting);
 				}
 			}

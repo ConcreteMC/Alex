@@ -47,17 +47,19 @@ namespace Alex.Particles
 			Visible = false;
 			Enabled = false;
 			ResourceManager = resourceManager;
-			
-			Dictionary<string, ParticleMapping> soundMappings;
-			string soundJson = ResourceManager.ReadStringResource("Alex.Resources.particles.json");
-			soundMappings = JsonConvert.DeserializeObject<Dictionary<string, ParticleMapping>>(soundJson);
 
-			Dictionary<string, string> mapped = new Dictionary<string, string>();
-			foreach (var mapping in soundMappings)
+			string soundJson = ResourceManager.ReadStringResource("Alex.Resources.particles.json");
+			var particleMappings = JsonConvert.DeserializeObject<Dictionary<string, ParticleMapping>>(soundJson);
+			
+			Dictionary<string, string> mapped = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+			if (particleMappings != null)
 			{
-				if (!string.IsNullOrWhiteSpace(mapping.Value.BedrockId))
+				foreach (var mapping in particleMappings)
 				{
-					mapped.TryAdd($"minecraft:{mapping.Key.ToLower()}", mapping.Value.BedrockId);
+					if (!string.IsNullOrWhiteSpace(mapping.Value.BedrockId))
+					{
+						mapped.TryAdd($"minecraft:{mapping.Key.ToLower()}", mapping.Value.BedrockId);
+					}
 				}
 			}
 
@@ -72,13 +74,14 @@ namespace Alex.Particles
 				Enabled = false;
 				
 				int total = resourcePack.Particles.Count;
+
 				foreach (var particle in resourcePack.Particles)
 				{
 					if (particle.Value?.Description?.Identifier == null)
 						continue;
-					
+
 					progress?.UpdateProgress(counter, total, "Importing particles...", particle.Key);
-					
+
 					if (_particles.ContainsKey(particle.Value.Description.Identifier))
 						continue;
 
@@ -114,25 +117,25 @@ namespace Alex.Particles
 							_sharedTextures.TryAdd(texturePath, particleTexture);
 					}
 
-					if (particleTexture != null)
+					if (particleTexture == null)
 					{
-						ParticleEmitter p = new ParticleEmitter(particleTexture, particle.Value);
-						//particleTexture.Use(this);
+						Log.Warn($"Failed to add particle (missing texture): {particle.Key}");
 
-						if (!TryRegister(particle.Value.Description.Identifier, p))
-						{
-							Log.Warn($"Could not add particle (duplicate): {particle.Key}");
-							//particleTexture.Dispose();
-							//particleTexture.Release(this);
-						}
-						else
-						{
-							counter++;
-						}
+						continue;
+					}
+
+					ParticleEmitter p = new ParticleEmitter(particleTexture, particle.Value);
+					//particleTexture.Use(this);
+
+					if (!TryRegister(particle.Value.Description.Identifier, p))
+					{
+						Log.Warn($"Could not add particle (duplicate): {particle.Key}");
+						//particleTexture.Dispose();
+						//particleTexture.Release(this);
 					}
 					else
 					{
-						Log.Warn($"Failed to add particle (missing texture): {particle.Key}");
+						counter++;
 					}
 				}
 			}
@@ -223,7 +226,7 @@ namespace Alex.Particles
 		{
 			foreach (var particle in _particles.Values)
 			{
-				particle.Tick();
+				particle.Tick(_camera);
 			}
 		}
 

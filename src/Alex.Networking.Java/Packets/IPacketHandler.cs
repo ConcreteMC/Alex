@@ -1,10 +1,12 @@
+using System.Threading.Tasks;
+
 namespace Alex.Networking.Java.Packets
 {
 	public interface IPacketHandler
 	{
-		void HandleHandshake(Packet packet);
-		void HandleStatus(Packet packet);
-		void HandleLogin(Packet packet);
-		void HandlePlay(Packet packet);
+		Task HandleHandshake(Packet packet);
+		Task HandleStatus(Packet packet);
+		Task HandleLogin(Packet packet);
+		Task HandlePlay(Packet packet);
 	}
 }

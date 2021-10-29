@@ -571,7 +571,7 @@ namespace Alex.Entities
 
 		private static readonly MiNET.Utils.UUID SprintingModifierGuid = new MiNET.Utils.UUID("662A6B8D-DA3E-4C1C-8813-96EA6097278D");
 		[MoProperty("is_sprinting")]
-		public bool IsSprinting
+		public virtual bool IsSprinting
 		{
 			get => _isSprinting;
 			set
@@ -779,7 +779,7 @@ namespace Alex.Entities
 			}
 			else if (entry.Index == 3 && entry is MetadataBool showNametag)
 			{
-				//HideNameTag = !showNametag.Value;
+				HideNameTag = !showNametag.Value;
 			}
 			else if (entry.Index == 4 && entry is MetadataBool sil)
 			{
@@ -1031,8 +1031,6 @@ namespace Alex.Entities
 		{
 			
 		}
-
-		private DateTime _attackStart = DateTime.UtcNow;
 		public bool IsAttacking
 		{
 			get => _isAttacking;
@@ -1041,8 +1039,7 @@ namespace Alex.Entities
 				var oldValue = _isAttacking;
 				
 				if (!oldValue && value)
-				{
-					_attackStart = DateTime.UtcNow;
+				{ //_attackStart = DateTime.UtcNow;
 					_isAttacking = true;
 				}
 				else if (oldValue && !value)
@@ -1120,6 +1117,7 @@ namespace Alex.Entities
 			IsSitting = data[(int) MiNET.Entities.Entity.DataFlags.Sitting];
 			
 			IsOnFire = data[(int) MiNET.Entities.Entity.DataFlags.OnFire];
+			
 			IsSprinting = data[(int) MiNET.Entities.Entity.DataFlags.Sprinting];
 			
 			NoAi = data[(int) MiNET.Entities.Entity.DataFlags.NoAi];
