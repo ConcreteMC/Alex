@@ -48,8 +48,8 @@ namespace Alex.Gui.Screens.Ingame
                 Anchor = Alignment.TopLeft,
                 Scale = 1f,
                 FontStyle = FontStyle.DropShadow,
-                BackgroundOverlay = Color.Black * 0.5f,
-                Background = Color.Transparent
+                Background = Color.Transparent,
+                BackgroundOverlay = Color.Black * 0.5f
             };
 
             AddChild(WarningElement);
@@ -60,7 +60,7 @@ namespace Alex.Gui.Screens.Ingame
                 Interval = TimeSpan.FromMilliseconds(500),
                 BackgroundOverlay = Color.Black * 0.5f,
                 Anchor = Alignment.BottomRight,
-                TextOpacity = 0.75f,
+                TextOpacity = 0.95f,
                 TextColor = (Color) TextColor.Red,
                 Scale = 1f,
                 IsVisible = true,

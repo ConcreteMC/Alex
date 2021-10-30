@@ -94,6 +94,10 @@ namespace Alex.Worlds.Chunks
 			if (storage > BlockStorages.Length)
 				throw new IndexOutOfRangeException($"The storage id {storage} does not exist!");
 			
+			var blockStorage = BlockStorages[storage];
+			if (blockStorage == null)
+				return;
+
 			var blockCoordinates = new BlockCoordinates(x, y, z);
 			
 			if (state == null)
@@ -152,7 +156,7 @@ namespace Alex.Worlds.Chunks
 	            }
             }
 
-            BlockStorages[storage].Set(x, y, z, state);
+            blockStorage.Set(x, y, z, state);
 		}
 
 		protected virtual void OnBlockSet(int x, int y, int z, BlockState newState, BlockState oldState)
@@ -200,6 +204,7 @@ namespace Alex.Worlds.Chunks
 
 		public void GetLight(int x, int y, int z, out byte skyLight, out byte blockLight)
 		{
+			
 			var index = GetCoordinateIndex(x, y, z);
 			blockLight = this.BlockLight[index];
 			skyLight = this.SkyLight[index];
@@ -207,6 +212,11 @@ namespace Alex.Worlds.Chunks
 
 		public virtual void RemoveInvalidBlocks()
 		{
+			var lightSources = LightSources;
+
+			if (lightSources == null)
+				return;
+			
 			this.BlockRefCount = 0;
 
 			for (int x = 0; x < 16; x++)
@@ -231,9 +241,9 @@ namespace Alex.Worlds.Chunks
 						{
 							var coords = new BlockCoordinates(x, y, z);
 
-							if (!LightSources.Contains(coords))
+							if (!lightSources.Contains(coords))
 							{
-								LightSources.Add(coords);
+								lightSources.Add(coords);
 							}
 
 							if (GetBlocklight(x, y, z) < block.Luminance)
@@ -246,17 +256,28 @@ namespace Alex.Worlds.Chunks
 			}
 		}
 
+		private bool _disposed = false;
 		public void Dispose()
-	    {
-		    for (int i = 0; i < BlockStorages.Length; i++)
-		    {
-			    BlockStorages[i]?.Dispose();
-			    BlockStorages[i] = null;
-		    }
-		    
-		    LightSources.Clear();
-		    LightSources = null;
-	    }
+		{
+			if (_disposed)
+				return;
+
+			try
+			{
+				for (int i = 0; i < BlockStorages.Length; i++)
+				{
+					BlockStorages[i]?.Dispose();
+					BlockStorages[i] = null;
+				}
+
+				LightSources.Clear();
+				LightSources = null;
+			}
+			finally
+			{
+				_disposed = true;
+			}
+		}
 
 	    public class BlockEntry
 	    {

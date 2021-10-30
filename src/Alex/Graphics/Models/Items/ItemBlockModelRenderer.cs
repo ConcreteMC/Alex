@@ -108,7 +108,7 @@ namespace Alex.Graphics.Models.Items
                 {
                     root.BaseScale = displayElement.Scale * Scale;
                     root.BaseRotation =  new Vector3(-67.5f, 0f, 0f);
-                    root.BasePosition = new Vector3(-displayElement.Translation.X, displayElement.Translation.Y +8f, -(displayElement.Translation.Z));
+                    root.BasePosition = new Vector3(displayElement.Translation.X, displayElement.Translation.Y +8f, (displayElement.Translation.Z));
                 }
                 else if (displayPosition.HasFlag(DisplayPosition.FirstPerson))
                 {

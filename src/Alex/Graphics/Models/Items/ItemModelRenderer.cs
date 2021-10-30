@@ -198,30 +198,34 @@ namespace Alex.Graphics.Models.Items
                 else
                 {
                     root.BaseScale = new Vector3(
-                        ActiveDisplayItem.Scale.X, ActiveDisplayItem.Scale.Y,
-                        ActiveDisplayItem.Scale.Z); // ActiveDisplayItem.Scale;
+                        ActiveDisplayItem.Scale.X, 
+                        ActiveDisplayItem.Scale.Y,
+                        ActiveDisplayItem.Scale.Z);
 
                     if ((ResourcePackModel.Type & ModelType.Handheld) != 0)
                     {
-                        root.BaseRotation = new Vector3(
-                                                                                 ActiveDisplayItem.Rotation.X, -ActiveDisplayItem.Rotation.Y,
-                                                                                 -ActiveDisplayItem.Rotation.Z)
-                                                                             + new Vector3(-67.5f, -22.5f, 0f);
+                        root.BaseRotation = new Vector3(ActiveDisplayItem.Rotation.X, 
+                                                -ActiveDisplayItem.Rotation.Y, 
+                                                -ActiveDisplayItem.Rotation.Z) 
+                                            + new Vector3(-67.5f, -22.5f, 0f);
 
                         root.BasePosition = new Vector3(
-                            (6f + ActiveDisplayItem.Translation.X), 6f + ActiveDisplayItem.Translation.Y,
-                            -((ActiveDisplayItem.Translation.Z)));
+                            6f + ActiveDisplayItem.Translation.X, 
+                            6f + ActiveDisplayItem.Translation.Y,
+                            2f + ActiveDisplayItem.Translation.Z);
                     }
                     else
                     {
                         root.BaseRotation =  new Vector3(
-                                                                                  ActiveDisplayItem.Rotation.X, -ActiveDisplayItem.Rotation.Y,
-                                                                                  -ActiveDisplayItem.Rotation.Z)
-                                                                              + new Vector3(-67.5f, 0f, 0f);
+                                                 ActiveDisplayItem.Rotation.X, 
+                                                 -ActiveDisplayItem.Rotation.Y,
+                                                 -ActiveDisplayItem.Rotation.Z)
+                                             + new Vector3(-67.5f, 0f, 0f);
 
                         root.BasePosition = new Vector3(
-                            (-ActiveDisplayItem.Translation.X), 8f + ActiveDisplayItem.Translation.Y,
-                            -(ActiveDisplayItem.Translation.Z));
+                            ActiveDisplayItem.Translation.X, 
+                            8f + ActiveDisplayItem.Translation.Y,
+                            ActiveDisplayItem.Translation.Z);
                     }
                 }
             }
