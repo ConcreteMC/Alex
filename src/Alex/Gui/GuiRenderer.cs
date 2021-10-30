@@ -284,6 +284,7 @@ namespace Alex.Gui
 			//progressReceiver?.UpdateProgress(0, null, "gui/widgets");
 			//LoadTextureFromResourcePack(GuiTextures.AlexLogo, resourcePack, "");
 
+			_resourceManager = resourceManager;
 			foreach (var color in TextColor.Colors)
 			{
 				var c = GetGlobalOrDefault($"${color.Code}_color_format", color.ForegroundColor.ToVector3());

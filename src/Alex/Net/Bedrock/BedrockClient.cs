@@ -110,19 +110,19 @@ namespace Alex.Net.Bedrock
 
 			Alex = alex;
 			WorldProvider = wp;
-			OptionsProvider = alex.Services.GetRequiredService<IOptionsProvider>();
-			XboxAuthService = alex.Services.GetRequiredService<XboxAuthService>();
+			OptionsProvider = Alex.ServiceContainer.GetRequiredService<IOptionsProvider>();
+			XboxAuthService = Alex.ServiceContainer.GetRequiredService<XboxAuthService>();
 			
 			_disposables.Add(Options.VideoOptions.ClientSideLighting.Bind(ClientSideLightingChanged));
 
 			_disposables.Add(
 				ResourcePackManager = new ResourcePackManager(
-					this, Alex.Resources, alex.Services.GetRequiredService<ResourcePackCache>()));
+					this, Alex.Resources, Alex.ServiceContainer.GetRequiredService<ResourcePackCache>()));
 
 			if (wp != null)
 			{
 				ChunkProcessor = new ChunkProcessor(
-					this, CancellationTokenSource.Token, Alex.Services.GetRequiredService<BlobCache>());
+					this, CancellationTokenSource.Token, Alex.ServiceContainer.GetRequiredService<BlobCache>());
 
 				_disposables.Add(ChunkProcessor);
 			}

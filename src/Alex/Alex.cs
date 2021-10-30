@@ -65,9 +65,11 @@ using RocketUI.Input;
 using RocketUI.Input.Listeners;
 using RocketUI.Utilities.Extensions;
 using RocketUI.Utilities.Helpers;
+using SimpleInjector;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using Color = Microsoft.Xna.Framework.Color;
+using Container = SimpleInjector.Container;
 using GpuResourceManager = Alex.Common.Graphics.GpuResources.GpuResourceManager;
 using Image = SixLabors.ImageSharp.Image;
 using Point = Microsoft.Xna.Framework.Point;
@@ -128,8 +130,6 @@ namespace Alex
         public  PluginManager  PluginManager  { get; }
         public  FpsMonitor     FpsMonitor     { get; }
 
-        public new IServiceProvider Services { get; set; }
-
         // public DedicatedThreadPool ThreadPool { get; private set; }
 
         public StorageSystem     Storage           { get; private set; }
@@ -139,6 +139,7 @@ namespace Alex
         private Point       WindowSize  { get; set; }
         public  AudioEngine AudioEngine { get; set; }
 
+        public Container ServiceContainer { get; private set; }
         public Alex(LaunchSettings launchSettings)
         {
             WindowSize = new Point(1280, 750);
@@ -173,11 +174,7 @@ namespace Alex
             };
 
             Content = new StreamingContentManager(base.Services, "assets");
-            //	Content.RootDirectory = "assets";
-
             IsFixedTimeStep = false;
-            // graphics.ToggleFullScreen();
-
             this.Window.AllowUserResizing = true;
 
             this.Window.ClientSizeChanged += (sender, args) =>
@@ -221,63 +218,7 @@ namespace Alex
             Options.Load();
             
             MojangApi.Init(Storage);
-
-            IServiceCollection serviceCollection = new ServiceCollection();
-            serviceCollection.AddSingleton<Alex>(this);
-            serviceCollection.AddSingleton<Game>(sp => sp.GetRequiredService<Alex>());
-            serviceCollection.AddSingleton<ContentManager>(Content);
-            serviceCollection.AddSingleton<IStorageSystem>(Storage);
-            serviceCollection.AddSingleton<IOptionsProvider>(Options);
             AudioEngine = new AudioEngine(Storage, Options);
-            serviceCollection.AddSingleton<Audio.AudioEngine>(AudioEngine);
-
-            serviceCollection.AddSingleton<GuiPanoramaSkyBox>();
-            // RocketUI
-            serviceCollection.TryAddEnumerable(
-                ServiceDescriptor.Singleton<IInputListenerFactory, AlexKeyboardInputListenerFactory>());
-
-            serviceCollection.TryAddEnumerable(
-                ServiceDescriptor.Singleton<IInputListenerFactory, AlexMouseInputListenerFactory>());
-
-            serviceCollection.TryAddEnumerable(
-                ServiceDescriptor.Singleton<IInputListenerFactory, AlexGamePadInputListenerFactory>());
-
-            serviceCollection.AddSingleton<InputManager>();
-            serviceCollection.AddSingleton<GuiRenderer>();
-            serviceCollection.AddSingleton<IGuiRenderer, GuiRenderer>(sp => sp.GetRequiredService<GuiRenderer>());
-            serviceCollection.AddSingleton<GuiManager>();
-
-            if (LaunchSettings.RocketDebugging)
-            {
-                serviceCollection.AddSingleton<RocketDebugSocketServer>();
-
-                serviceCollection.AddHostedService<RocketDebugSocketServer>(
-                    sp => sp.GetRequiredService<RocketDebugSocketServer>());
-            }
-
-            PluginManager.Initiate(serviceCollection, Options, LaunchSettings);
-
-            serviceCollection.TryAddSingleton<ProfileManager>();
-
-           // serviceCollection.TryAddSingleton<IListStorageProvider<SavedServerEntry>, SavedServerDataProvider>();
-
-            serviceCollection.TryAddSingleton<IServerQueryProvider>(new JavaServerQueryProvider(this));
-           // serviceCollection.TryAddSingleton<IPlayerProfileService, PlayerProfileService>();
-
-            serviceCollection.TryAddSingleton<IRegistryManager, RegistryManager>();
-
-            serviceCollection.TryAddSingleton<ResourceManager>();
-            serviceCollection.TryAddSingleton<ServerTypeManager>(ServerTypeManager);
-            serviceCollection.TryAddSingleton<XboxAuthService>();
-
-            serviceCollection.TryAddSingleton<BlobCache>();
-            serviceCollection.TryAddSingleton<ResourcePackCache>();
-
-            Services = serviceCollection.BuildServiceProvider();
-
-            PluginManager.Setup(Services);
-
-            PluginManager.LoadPlugins();
 
             FpsMonitor = new FpsMonitor(this);
             FpsMonitor.UpdateOrder = 0;
@@ -285,11 +226,6 @@ namespace Alex
 
             UiTaskManager = new ManagedTaskManager(this);
             Components.Add(UiTaskManager);
-
-            Resources = Services.GetRequiredService<ResourceManager>();
-
-            // ThreadPool = new DedicatedThreadPool(new DedicatedThreadPoolSettings(Environment.ProcessorCount,
-            //    ThreadType.Background, "Dedicated ThreadPool"));
 
             TextureUtils.RenderThread = Thread.CurrentThread;
             TextureUtils.QueueOnRenderThread = action => UiTaskManager.Enqueue(action);
@@ -352,24 +288,74 @@ namespace Alex
 
             DeviceManager.ApplyChanges();
 
-            InputManager = Services.GetRequiredService<InputManager>();
-            Components.Add(InputManager);
-            
             base.Initialize();
             // RichPresenceProvider.Initialize();
         }
+
+        private void RegisterServiceContainer()
+        {
+            SimpleInjector.Container container = new SimpleInjector.Container();
+            container.Options.ResolveUnregisteredConcreteTypes = true;
+            
+            container.RegisterInstance<Game>(this);
+            container.RegisterInstance<Alex>(this);
+            container.RegisterInstance<IGraphicsDeviceService>(DeviceManager);
+            container.RegisterInstance<GraphicsDevice>(GraphicsDevice);
+            container.RegisterSingleton<IGuiRenderer, GuiRenderer>();
+            container.RegisterSingleton<GuiManager>();
+            container.RegisterSingleton<InputManager>();
+            container.RegisterInstance<IServiceProvider>(container);
+
+            container.Register<ProfileManager>(Lifestyle.Singleton);
+            container.RegisterInstance<IServerQueryProvider>(new JavaServerQueryProvider(this));
+            container.Register<IRegistryManager, RegistryManager>(Lifestyle.Singleton);
+
+            container.RegisterSingleton<ResourceManager>();
+            container.RegisterInstance<ServerTypeManager>(ServerTypeManager);
+            container.Register<XboxAuthService>(Lifestyle.Singleton);
+
+            container.Register<BlobCache>(Lifestyle.Singleton);
+            container.Register<ResourcePackCache>(Lifestyle.Singleton);
+            
+            container.RegisterInstance<ContentManager>(Content);
+            container.RegisterInstance<IStorageSystem>(Storage);
+            container.RegisterInstance<IOptionsProvider>(Options);
+            container.RegisterInstance<Audio.AudioEngine>(AudioEngine);
+
+            container.Register<GuiPanoramaSkyBox>();
+            
+            // RocketUI
+            container.Collection.Register<IInputListenerFactory>(new Type[]{
+                typeof(AlexKeyboardInputListenerFactory), 
+                typeof(AlexMouseInputListenerFactory),
+                typeof(AlexGamePadInputListenerFactory)}, Lifestyle.Singleton);
+
+            container.Collection.Register<IHostedService>(typeof(Alex).Assembly);
+
+           if (LaunchSettings.RocketDebugging)
+           {
+               container.RegisterSingleton<RocketDebugSocketServer>();
+               container.Collection.Register<IHostedService>(typeof(RocketDebugSocketServer));
+           }
+
+           container.Verify();
+           ServiceContainer = container;
+        }
+
         protected override void LoadContent()
         {
             Stopwatch loadingStopwatch = Stopwatch.StartNew();
             
             RocketUI.GpuResourceManager.Init(GraphicsDevice);
+            SpriteBatchExtensions.Init(GraphicsDevice);
+            Common.Extensions.Init(GraphicsDevice);
             
             var builtInFont = ResourceManager.ReadResource("Alex.Resources.default_font.png");
 
             var image = Image.Load<Rgba32>(builtInFont);
             OnResourcePackPreLoadCompleted(image, MCJavaResourcePack.BitmapFontCharacters.ToList());
 
-            var options = Services.GetRequiredService<IOptionsProvider>();
+            var options = Options;
             
 #if DIRECTX
             ResourceManager.EntityEffect = Content.Load<Effect>("Alex.Resources.Entityshader_dx.xnb").Clone();
@@ -384,16 +370,26 @@ namespace Alex
 
             _spriteBatch = new SpriteBatch(GraphicsDevice);
 
-            InputManager.GetOrAddPlayerManager(PlayerIndex.One); // Init player1's playermanager
+            RegisterServiceContainer();
 
-            GuiRenderer = Services.GetRequiredService<GuiRenderer>();
-            //GuiRenderer.Init(GraphicsDevice);
-
-            GuiManager = Services.GetRequiredService<GuiManager>();
-            Components.Add(GuiManager);
+            Resources = ServiceContainer.GetRequiredService<ResourceManager>();
+            GuiRenderer = ServiceContainer.GetRequiredService<GuiRenderer>();
+            GuiManager = ServiceContainer.GetRequiredService<GuiManager>();
             GuiManager.DrawOrder = 100;
-
-
+            
+            GuiManager.ScaledResolution.TargetWidth = 320;
+            GuiManager.ScaledResolution.TargetHeight = 240;
+            GuiManager.ScaledResolution.GuiScale = Options.AlexOptions.VideoOptions.GuiScale.Value;
+            Options.AlexOptions.VideoOptions.GuiScale.Bind(GuiScaleChanged);
+            
+            InputManager = GuiManager.InputManager;
+            Components.Add(GuiManager);
+            Components.Add(GuiManager.InputManager);
+            
+            GuiManager.Init();
+            GuiRenderer = (GuiRenderer)GuiManager.GuiRenderer;
+            InputManager.GetOrAddPlayerManager(PlayerIndex.One); // Init player1's playermanager
+            
             options.AlexOptions.VideoOptions.FancyGraphics.Bind(
                 (value, newValue) => { Block.FancyGraphics = newValue; });
 
@@ -449,19 +445,6 @@ namespace Alex
             GameStateManager.AddState("splash", splash);
             GameStateManager.SetActiveState("splash");
 
-
-            GuiManager.Init();
-            
-           // if (!GuiRenderer.SetLanguage(options.AlexOptions.MiscelaneousOptions.Language) && !GuiRenderer.SetLanguage(CultureInfo.InstalledUICulture.Name))
-            //{
-            //    GuiRenderer.SetLanguage("en_uk");
-           // }
-
-            GuiManager.ScaledResolution.TargetWidth = 320;
-            GuiManager.ScaledResolution.TargetHeight = 240;
-            GuiManager.ScaledResolution.GuiScale = Options.AlexOptions.VideoOptions.GuiScale.Value;
-            Options.AlexOptions.VideoOptions.GuiScale.Bind(GuiScaleChanged);
-            
             ParticleManager = new ParticleManager(this, GraphicsDevice, Resources);
             ParticleManager.Enabled = Options.AlexOptions.VideoOptions.Particles.Value;
 
@@ -480,7 +463,7 @@ namespace Alex
                 {
                     try
                     {
-                        Task.WaitAll(Services.GetServices<IHostedService>().Select(s => s.StartAsync(CancellationToken.None)).ToArray());
+                        Task.WaitAll(ServiceContainer.GetAllInstances<IHostedService>().Select(s => s.StartAsync(CancellationToken.None)).ToArray());
                         
                         InitializeGame(splash).Wait();
                     }
@@ -611,9 +594,6 @@ namespace Alex
         private Task InitializeGame(IProgressReceiver progressReceiver)
         {
             progressReceiver.UpdateProgress(0, "Initializing...");
-
-            SpriteBatchExtensions.Init(GraphicsDevice);
-            Common.Extensions.Init(GraphicsDevice);
             MCPacketFactory.Load();
             //ConfigureServices();
 
@@ -635,7 +615,7 @@ namespace Alex
             ServerTypeManager.TryRegister(
                 "bedrock", new BedrockServerType(this));
             
-            var profileManager = Services.GetRequiredService<ProfileManager>();
+            var profileManager = ServiceContainer.GetRequiredService<ProfileManager>();
             profileManager.LoadProfiles(progressReceiver);
 
             //GuiRenderer.LoadResourcePack(Resources.ResourcePack, null);
@@ -643,7 +623,7 @@ namespace Alex
 
             PluginManager.EnablePlugins();
 
-            var storage = Services.GetRequiredService<IStorageSystem>();
+            var storage = ServiceContainer.GetRequiredService<IStorageSystem>();
 
             if (storage.TryReadBytes("skin.json", out var bytes))
             {
@@ -757,18 +737,18 @@ namespace Alex
         public void LoadWorld(WorldProvider worldProvider, NetworkProvider networkProvider, bool isServer = false)
         {
             var state       = new PlayingState(this, GraphicsDevice, worldProvider, networkProvider);
-            LoadingWorldScreen loadingScreen = new LoadingWorldScreen();
-            loadingScreen.ConnectingToServer = isServer;
-            loadingScreen.CancelAction = () =>
+            var loadingDialog = GuiManager.CreateDialog<WorldLoadingDialog>();
+            loadingDialog.ConnectingToServer = isServer;
+            loadingDialog.CancelAction = () =>
             {
-                GuiManager.RemoveScreen(loadingScreen);
+                loadingDialog.Close();
                 worldProvider?.Dispose();
                 
                 GameStateManager.RemoveState("play");
                 state?.Unload();
             };
 
-            GuiManager.AddScreen(loadingScreen);
+            //GuiManager.AddScreen(worldLoadingScreen);
             
             ThreadPool.QueueUserWorkItem(
                 o =>
@@ -778,7 +758,7 @@ namespace Alex
                     {
                         GameStateManager.RemoveState("play");
 
-                        result = worldProvider.Load(loadingScreen.UpdateProgress);
+                        result = worldProvider.Load(loadingDialog.UpdateProgress);
                         GameStateManager.AddState("play", state);
                         
                         if (networkProvider.IsConnected && result == LoadResult.Done)
@@ -790,7 +770,7 @@ namespace Alex
                     }
                     finally
                     {
-                        GuiManager.RemoveScreen(loadingScreen);
+                        loadingDialog.Close();
 
                         if (result != LoadResult.Done)
                         {

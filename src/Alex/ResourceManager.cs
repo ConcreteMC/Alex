@@ -89,17 +89,22 @@ namespace Alex
 
         public static Texture2D NethergamesLogo { get; private set; }
 
-        public ResourceManager(IServiceProvider serviceProvider)
+        public ResourceManager(IStorageSystem storage, IOptionsProvider optionsProvider, IRegistryManager registryManager, Alex alex, ContentManager contentManager)
         {
             BlockAtlas = new AtlasGenerator("atlases/blocks/");
             ItemAtlas = new AtlasGenerator("atlases/items/");
 
-            Storage = serviceProvider.GetService<IStorageSystem>();
+            Storage = storage;
+            Options = optionsProvider;
+            RegistryManager = registryManager;
+            Alex = alex;
+            ContentManager = contentManager;
+           // Storage = serviceProvider.GetService<IStorageSystem>();
 
-            Options = serviceProvider.GetService<IOptionsProvider>();
-            RegistryManager = serviceProvider.GetService<IRegistryManager>();
-            Alex = serviceProvider.GetService<Alex>();
-            ContentManager = serviceProvider.GetService<ContentManager>();
+           // Options = serviceProvider.GetService<IOptionsProvider>();
+           // RegistryManager = serviceProvider.GetService<IRegistryManager>();
+           // Alex = serviceProvider.GetService<Alex>();
+         //   ContentManager = serviceProvider.GetService<ContentManager>();
 
             AssetsUtil = new MCJavaAssetsUtil(Storage); //ContentManager.Load<byte[]>();
             BedrockAssetUtil = new MCBedrockAssetUtils(Storage);

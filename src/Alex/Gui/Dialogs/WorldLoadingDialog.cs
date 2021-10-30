@@ -7,11 +7,11 @@ using Microsoft.Xna.Framework;
 using NLog;
 using RocketUI;
 
-namespace Alex.Gui.Elements
+namespace Alex.Gui.Dialogs
 {
-    public class LoadingWorldScreen : Screen
+    public class WorldLoadingDialog : DialogBase
     {
-	    private static readonly Logger    Log = LogManager.GetCurrentClassLogger(typeof(LoadingWorldScreen));
+	    private static readonly Logger    Log = LogManager.GetCurrentClassLogger(typeof(WorldLoadingDialog));
 	    
 	    private readonly SimpleProgressBar _progressBar;
 	    private readonly TextElement _textDisplay;
@@ -52,7 +52,7 @@ namespace Alex.Gui.Elements
 		    }
 	    }
 
-	    public LoadingWorldScreen()
+	    public WorldLoadingDialog()
 		{
 			StackContainer progressBarContainer;
 

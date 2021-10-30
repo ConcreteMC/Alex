@@ -117,7 +117,7 @@ namespace Alex.Worlds.Multiplayer.Java
 		/// <inheritdoc />
 		public override Task Authenticate(GuiPanoramaSkyBox skyBox, AuthenticationCallback callBack)
 		{
-			var profileManager = Alex.Services.GetRequiredService<ProfileManager>();
+			var profileManager = Alex.ServiceContainer.GetRequiredService<ProfileManager>();
 			UserSelectionState pss = new UserSelectionState(this, skyBox);
 			pss.ReloadData(profileManager.GetProfiles(ProfileType));
 			
@@ -202,7 +202,7 @@ namespace Alex.Worlds.Multiplayer.Java
 
 		public override async Task<ProfileUpdateResult> UpdateProfile(PlayerProfile profile)
 		{
-			var profileManager = Alex.Services.GetRequiredService<ProfileManager>();
+			var profileManager = Alex.ServiceContainer.GetRequiredService<ProfileManager>();
 
 			var mojangProfile = await MojangApi.GetPlayerProfile(profile.AccessToken);
 

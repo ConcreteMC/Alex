@@ -50,7 +50,7 @@ namespace Alex.Gamestates.InGame
 		{
 			NetworkProvider = networkProvider;
 
-			World = new World(alex.Services, graphics, Options, networkProvider);
+			World = new World(alex.ServiceContainer, graphics, Options, networkProvider);
 			World.Player.IsFirstPersonMode = true;
 			
 			WorldProvider = worldProvider;

@@ -127,7 +127,7 @@ namespace Alex.Worlds.Singleplayer
         public SPWorldProvider(Alex alex, IWorldGenerator worldGenerator)
 		{
 			Alex = alex;
-			OptionsProvider = alex.Services.GetRequiredService<IOptionsProvider>();
+			OptionsProvider = Alex.ServiceContainer.GetRequiredService<IOptionsProvider>();
 
 			_generator = worldGenerator;
 		

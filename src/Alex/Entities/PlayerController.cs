@@ -76,7 +76,7 @@ namespace Alex.Entities
 				GamePadInputListener = null;
 			}
 
-			var optionsProvider = Alex.Instance.Services.GetRequiredService<IOptionsProvider>();
+			var optionsProvider = Alex.Instance.Options;
 			CursorSensitivity = optionsProvider.AlexOptions.MouseSensitivity.Value;
 
 			_invertX = optionsProvider.AlexOptions.ControllerOptions.InvertX.Value;

@@ -114,7 +114,7 @@ namespace Alex.Gamestates.Common
 
         public TService GetService<TService>() where TService : class
         {
-            return Alex.Services.GetRequiredService<TService>();
+            return Alex.ServiceContainer.GetRequiredService<TService>();
         }
 		
         protected virtual void OnShow() { }

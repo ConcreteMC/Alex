@@ -18,6 +18,7 @@ using Alex.Entities;
 using Alex.Entities.BlockEntities;
 using Alex.Entities.Components.Effects;
 using Alex.Entities.Projectiles;
+using Alex.Gui.Dialogs;
 using Alex.Gui.Elements;
 using Alex.Gui.Elements.Scoreboard;
 using Alex.Net.Bedrock.Packets;
@@ -1441,7 +1442,7 @@ namespace Alex.Net.Bedrock
 					Client.World.Player.OnDespawn();
 					
 					bool cancelled = false;
-					LoadingWorldScreen loadingWorldScreen = new LoadingWorldScreen()
+					WorldLoadingDialog worldLoadingDialog = new WorldLoadingDialog()
 					{
 						ConnectingToServer = true,
 						CancelAction = () =>
@@ -1452,8 +1453,8 @@ namespace Alex.Net.Bedrock
 						}
 					};
 
-					AlexInstance.GuiManager.AddScreen(loadingWorldScreen);
-					loadingWorldScreen.UpdateProgress(LoadingState.LoadingChunks, 0);
+					AlexInstance.GuiManager.AddScreen(worldLoadingDialog);
+					worldLoadingDialog.UpdateProgress(LoadingState.LoadingChunks, 0);
 					
 					try
 					{
@@ -1489,7 +1490,7 @@ namespace Alex.Net.Bedrock
 
 							if (percentage != previousPercentage)
 							{
-								loadingWorldScreen.UpdateProgress(state, percentage);
+								worldLoadingDialog.UpdateProgress(state, percentage);
 								previousPercentage = percentage;
 							}
 
@@ -1517,7 +1518,7 @@ namespace Alex.Net.Bedrock
 					}
 					finally
 					{
-						AlexInstance.GuiManager.RemoveScreen(loadingWorldScreen);
+						AlexInstance.GuiManager.RemoveScreen(worldLoadingDialog);
 						Monitor.Exit(_changeDimensionLock);
 					}
 				});

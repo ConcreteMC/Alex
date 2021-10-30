@@ -114,10 +114,10 @@ namespace Alex.Gamestates.InGame
 
 			if (activeScreen == null)
 			{
-				activeScreen = new DisconnectedDialog(game);
-				game.GuiManager.ShowDialog(activeScreen);
+				//activeScreen = new DisconnectedDialog(game);
+				activeScreen = game.GuiManager.CreateDialog<DisconnectedDialog>();
 			}
-			
+
 			activeScreen?.UpdateText(reason, isTranslation);
 		}
     }

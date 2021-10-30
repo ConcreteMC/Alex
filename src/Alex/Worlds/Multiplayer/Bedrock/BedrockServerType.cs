@@ -46,7 +46,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			DefaultPort = 19132;
 			Alex = game;
 			ProtocolVersion = McpeProtocolInfo.ProtocolVersion;
-			XboxAuthService = game.Services.GetRequiredService<XboxAuthService>();
+			XboxAuthService = game.ServiceContainer.GetRequiredService<XboxAuthService>();
 
 			SponsoredServers = new SavedServerEntry[]
 			{
@@ -92,7 +92,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		{
 			if (success)
 			{
-				var profileManager = Alex.Services.GetRequiredService<ProfileManager>();
+				var profileManager = Alex.ServiceContainer.GetRequiredService<ProfileManager>();
 				
 				profile.Authenticated = true;
 				profileManager.CreateOrUpdateProfile(AccountType, profile, true);
@@ -152,7 +152,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		/// <inheritdoc />
 		public override Task Authenticate(GuiPanoramaSkyBox skyBox,  AuthenticationCallback callBack)
 		{
-			var profileManager = Alex.Services.GetRequiredService<ProfileManager>();
+			var profileManager = Alex.ServiceContainer.GetRequiredService<ProfileManager>();
 			UserSelectionState pss = new UserSelectionState(this, skyBox);
 			pss.ReloadData(profileManager.GetProfiles(AccountType));
 			
@@ -204,7 +204,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		/// <inheritdoc />
 		public override Task<ProfileUpdateResult> UpdateProfile(PlayerProfile session)
 		{
-			var profileManager = Alex.Services.GetRequiredService<ProfileManager>();
+			var profileManager = Alex.ServiceContainer.GetRequiredService<ProfileManager>();
 			profileManager.CreateOrUpdateProfile(AccountType, session, true);
 
 			return Task.FromResult(new ProfileUpdateResult(true, null, null));

@@ -105,7 +105,7 @@ namespace Alex.Worlds.Multiplayer
 			Profile = profile;
 			Endpoint = endPoint;
 
-			OptionsProvider = alex.Services.GetRequiredService<IOptionsProvider>();
+			OptionsProvider = Alex.ServiceContainer.GetRequiredService<IOptionsProvider>();
 			//	ThreadPool = new DedicatedThreadPool(new DedicatedThreadPoolSettings(Environment.ProcessorCount));
 		
 			Client = new NetConnection(endPoint, CancellationToken.None);
