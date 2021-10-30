@@ -467,14 +467,8 @@ namespace Alex.Networking.Bedrock.RakNet
 					{
 						if (!Evicted && WaitingForAckQueue.TryRemove(datagramPair.Key, out datagram))
 						{
-							UnackedBytes -= datagram.Size;
-							//transmissionBandwidth -= datagram.Size;
-							//Interlocked.Add(ref UnackedBytes, -datagram.Size);
-							//UnackedBytes -= datagram.Bytes.Length;
+							Interlocked.Add(ref UnackedBytes, -datagram.Size);
 							
-							//session.ErrorCount++;
-							//session.ResendCount++;
-
 							//if (Log.IsDebugEnabled) 
 								Log.Warn($"{(datagram.RetransmitImmediate ? "NAK RSND" : "TIMEOUT")}, Resent #{datagramPair.Key}, Transmissions: {datagram.TransmissionCount} Type: {datagram.FirstMessageId} (0x{datagram.FirstMessageId:x2}) ({elapsedTime} > {datagramTimeout})");
 
@@ -483,7 +477,8 @@ namespace Alex.Networking.Bedrock.RakNet
 							SlidingWindow.OnResend(RaknetSession.CurrentTimeMillis(), datagramPair.Key);
 							
 							var sent = _connection.SendDatagram(this, datagram);
-							UnackedBytes += sent;
+
+							Interlocked.Add(ref UnackedBytes, sent);
 							
 							transmissionBandwidth -= sent;
 							
@@ -675,7 +670,8 @@ namespace Alex.Networking.Bedrock.RakNet
 
 				foreach (Datagram datagram in Datagram.CreateDatagrams(MtuSize, this, packets))
 				{
-					UnackedBytes += _connection.SendDatagram(this, datagram);
+					var data = _connection.SendDatagram(this, datagram);
+					Interlocked.Add(ref UnackedBytes, data);
 				}
 					
 				foreach(var packet in packets)
@@ -704,7 +700,9 @@ namespace Alex.Networking.Bedrock.RakNet
 			
 			foreach (Datagram datagram in Datagram.CreateDatagrams(MtuSize, this, packet))
 			{
-				UnackedBytes += _connection.SendDatagram(this, datagram);
+				var data = _connection.SendDatagram(this, datagram);
+				Interlocked.Add(ref UnackedBytes, data);
+				//UnackedBytes += _connection.SendDatagram(this, datagram);
 			}
 			
 		//	_packetSender.SendPacket(this, packet);
@@ -806,8 +804,9 @@ namespace Alex.Networking.Bedrock.RakNet
 						//_nacked.Remove(i);
 						
 						//Interlocked.Add(ref UnackedBytes, -datagram.Size);
-						
-						UnackedBytes -= datagram.Size;
+
+						Interlocked.Add(ref UnackedBytes, -datagram.Size);
+						//UnackedBytes -= datagram.Size;
 						//CalculateRto(datagram);
 						SlidingWindow.OnAck(CurrentTimeMillis(), datagram.Timer.ElapsedMilliseconds,i, _bandwidthExceededStatistic);
 						datagram.PutPool();

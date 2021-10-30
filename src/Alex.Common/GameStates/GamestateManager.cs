@@ -66,6 +66,9 @@ namespace Alex.Common.GameStates
 
         public bool RemoveState<TStateType>(TStateType state) where TStateType : class, IGameState
         {
+	        if (state?.Identifier == null)
+		        return false;
+	        
 	        return RemoveState(state.Identifier);
         }
         

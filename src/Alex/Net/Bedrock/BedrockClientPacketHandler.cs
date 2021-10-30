@@ -1429,33 +1429,34 @@ namespace Alex.Net.Bedrock
 			ChunkProcessor.HandleChunkData(cacheEnabled, blobs, subChunkCount, chunkData, cx, cz);
 		}
 
-		private object _changeDimensionLock = new object();
+		//private object _changeDimensionLock = new object();
+		private SemaphoreSlim _changeDimensionSemaphone = new SemaphoreSlim(1);
 		public void HandleMcpeChangeDimension(McpeChangeDimension message)
 		{
 			Log.Info($"Change dimension! Dimension={message.dimension} Respawn={message.respawn} Position={message.position}");
 			ThreadPool.QueueUserWorkItem(
 				(o) =>
 				{
-					if (!Monitor.TryEnter(_changeDimensionLock))
-						return;
+					_changeDimensionSemaphone.Wait(CancellationToken);
+					//if (!Monitor.TryEnter(_changeDimensionLock))
+					//	return;
 					
 					Client.World.Player.OnDespawn();
 					
 					bool cancelled = false;
-					WorldLoadingDialog worldLoadingDialog = new WorldLoadingDialog()
+					WorldLoadingDialog worldLoadingDialog = AlexInstance.GuiManager.CreateDialog<WorldLoadingDialog>();
+					worldLoadingDialog.ConnectingToServer = true;
+					worldLoadingDialog.CancelAction = () =>
 					{
-						ConnectingToServer = true,
-						CancelAction = () =>
-						{
-							cancelled = true;
-							Client.ShowDisconnect("Disconnect requested by user.", false, false, DisconnectReason.Unknown);
-							Client.Close();
-						}
+						cancelled = true;
+
+						Client.ShowDisconnect("Disconnect requested by user.", false, false, DisconnectReason.Unknown);
+
+						Client.Close();
 					};
 
-					AlexInstance.GuiManager.AddScreen(worldLoadingDialog);
 					worldLoadingDialog.UpdateProgress(LoadingState.LoadingChunks, 0);
-					
+					ChunkProcessor.Clear();
 					try
 					{
 						Client.ResetInitialized();
@@ -1518,8 +1519,8 @@ namespace Alex.Net.Bedrock
 					}
 					finally
 					{
-						AlexInstance.GuiManager.RemoveScreen(worldLoadingDialog);
-						Monitor.Exit(_changeDimensionLock);
+						worldLoadingDialog.Close();
+						_changeDimensionSemaphone.Release();
 					}
 				});
 		}
@@ -2228,10 +2229,23 @@ namespace Alex.Net.Bedrock
 				{
 					HandleMcpeAnimateEntity(emote); 
 				} return true;
+
+				case McpeUpdateGm packet:
+				{
+					HandleMcpeUpdatePlayerGameType(packet);
+				} return true;
 			}
 			
 			UnhandledPackage(message);
 			return false;
+		}
+
+		public void HandleMcpeUpdatePlayerGameType(McpeUpdateGm packet)
+		{
+			if (packet.PlayerEntityUniqueId != Client.EntityId)
+				return;
+			Client.World.Player.UpdateGamemode(packet.GameMode);
+			//packet.
 		}
 		
 		/// <inheritdoc />

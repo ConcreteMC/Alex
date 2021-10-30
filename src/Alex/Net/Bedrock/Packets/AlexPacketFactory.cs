@@ -51,15 +51,20 @@ namespace Alex.Net.Bedrock.Packets
 
             try
             {
-                //switch (messageId)
-                //{
-               //     case 0x8a:
-               //         packet = McpeEmote.CreateObject();
-               //         break;
-                //    case 0x9e:
-               //         packet = McpeAnimateEntity.CreateObject();
-               //         break;
-               // }
+                switch (messageId)
+                {
+                    case 0x97:
+                        packet = new McpeUpdateGm();
+                        break;
+                   // case 0x8a:
+                   //     packet = McpeEmote.CreateObject();
+                   //     break;
+                   // case 0x9e:
+                    //    packet = McpeAnimateEntity.CreateObject();
+                     //   break;
+                }
+               
+               
 
                 //packet?.Decode(buffer);
             }

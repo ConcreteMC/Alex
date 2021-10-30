@@ -523,6 +523,11 @@ namespace Alex.Entities
 		public void UpdateGamemode(GameMode gamemode)
 		{
 			Gamemode = gamemode;
+
+			if (Gamemode == GameMode.Creative)
+			{
+				CanFly = true;
+			}
 		}
 
 		/// <inheritdoc />

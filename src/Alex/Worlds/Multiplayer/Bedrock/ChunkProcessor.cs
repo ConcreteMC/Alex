@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Channels;
+using System.Threading.Tasks.Dataflow;
 using Alex.Blocks;
 using Alex.Blocks.Mapping;
 using Alex.Blocks.Minecraft;
@@ -38,6 +39,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	    {
 		    
 	    }
+
+	    private record BufferItem(KeyValuePair<ulong, byte[]> KeyValuePair, ChunkData ChunkData);
 	    
 	    //public IReadOnlyDictionary<uint, BlockStateContainer> BlockStateMap { get; set; } =
 		//    new Dictionary<uint, BlockStateContainer>();
@@ -52,7 +55,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	    private BedrockClient    Client           { get; }
 	    public BlobCache        Cache            { get; }
 
-	    private Thread _processingThread;
+	    private BufferBlock<BufferItem> _dataQueue;
 	    public ChunkProcessor(BedrockClient client, CancellationToken cancellationToken, BlobCache blobCache)
         {
 	        Client = client;
@@ -61,83 +64,70 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 	        Instance = this;
 
-	        _processingThread = new Thread(ProcessChunks)
-	        {
-		        IsBackground = true, Priority = ThreadPriority.Normal, Name = "Chunk Processing"
-	        };
-	        _processingThread.Start();
+	        var blockOptions =
+		        new ExecutionDataflowBlockOptions { CancellationToken = cancellationToken, EnsureOrdered = false };
+	        _dataQueue = new BufferBlock<BufferItem>(blockOptions);
+	        
+	        var handleBufferItemBlock = new ActionBlock<BufferItem>(HandleBufferItem, blockOptions);
+	        var linkOptions = new DataflowLinkOptions { PropagateCompletion = true };
+	        _dataQueue.LinkTo(handleBufferItemBlock, linkOptions);
         }
 
-	    private ConcurrentQueue<KeyValuePair<ulong, byte[]>> _blobQueue =
-		    new ConcurrentQueue<KeyValuePair<ulong, byte[]>>();
-	    
-	    private ConcurrentQueue<ChunkData>            _actionQueue = new ConcurrentQueue<ChunkData>();
-
-	    private ManualResetEventSlim _resetEvent   = new ManualResetEventSlim(false);
-	    private void ProcessChunks()
+	    private void HandleBufferItem(BufferItem item)
 	    {
-		    try
+		    if (item.ChunkData != null)
 		    {
-			    while (!CancellationToken.IsCancellationRequested)
-			    {
-				    var chunkManager = Client?.World?.ChunkManager;
-
-				    if (chunkManager == null)
-					    continue;
-				    
-				    bool handled = false;
-
-				    if (_actionQueue != null && _actionQueue.TryDequeue(out var enqueuedChunk))
-				    {
-					    //if (_actions.TryRemove(chunkCoordinates, out var chunk))
-
-					    if (enqueuedChunk.CacheEnabled)
-					    {
-						    HandleChunkCachePacket(enqueuedChunk);
-
-						    continue;
-					    }
-
-					    var handledChunk = HandleChunk(enqueuedChunk);
-
-					    if (handledChunk != null)
-					    {
-						    chunkManager.AddChunk(
-							    handledChunk, new ChunkCoordinates(enqueuedChunk.X, enqueuedChunk.Z), true);
-					    }
-
-					    handled = true;
-				    }
-
-				    if (_blobQueue != null && _blobQueue.TryDequeue(out var kv))
-				    {
-					    ulong hash = kv.Key;
-					    byte[] data = kv.Value;
-
-					    if (!Cache.Contains(hash))
-						    Cache.TryStore(hash, data);
-
-					    var chunks = _futureChunks.Where(c => c.SubChunks.Contains(hash) || c.Biome == hash).ToArray();
-
-					    foreach (CachedChunk chunk in chunks)
-					    {
-						    chunk.TryBuild(Client, this);
-					    }
-
-					    handled = true;
-				    }
-
-				    if (!handled)
-				    {
-					    _resetEvent.Reset();
-					    _resetEvent.Wait(CancellationToken);
-				    }
-			    }
+			    HandleChunkData(item.ChunkData);
+			    return;
 		    }
-		    catch(OperationCanceledException){}
-		    finally
+
+		    HandleKv(item.KeyValuePair);
+	    }
+
+	    private void HandleKv(KeyValuePair<ulong, byte[]> kv)
+	    {
+		    ulong hash = kv.Key;
+		    byte[] data = kv.Value;
+
+		    if (!Cache.Contains(hash))
+			    Cache.TryStore(hash, data);
+
+		    var chunks = _futureChunks.Where(c => c.SubChunks.Contains(hash) || c.Biome == hash).ToArray();
+
+		    foreach (CachedChunk chunk in chunks)
 		    {
-			    _processingThread = null;
+			    chunk.TryBuild(Client, this);
+		    }
+	    }
+
+	    private void HandleChunkData(ChunkData enqueuedChunk)
+	    {
+		    var chunkManager = Client?.World?.ChunkManager;
+
+		    if (chunkManager == null)
+			    return;
+		    
+		    if (enqueuedChunk.CacheEnabled)
+		    {
+			    HandleChunkCachePacket(enqueuedChunk);
+			    return;
+		    }
+
+		    var handledChunk = HandleChunk(enqueuedChunk);
+
+		    if (handledChunk != null)
+		    {
+			    chunkManager.AddChunk(handledChunk, new ChunkCoordinates(enqueuedChunk.X, enqueuedChunk.Z), true);
+
+			    return;
+		    }
+	    }
+	    
+	    public void Clear()
+	    {
+		    if (_dataQueue.Count > 0)
+		    {
+			    _dataQueue.TryReceiveAll(out _);
 		    }
 	    }
 
@@ -153,8 +143,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 	        var value = new ChunkData(cacheEnabled, blobs, subChunkCount, chunkData, cx, cz);
 
-	        _actionQueue.Enqueue(value);
-	        _resetEvent.Set();
+	        _dataQueue.Post(new BufferItem(default, value));
         }
 
 	    public BlockState GetBlockState(uint p)
@@ -163,12 +152,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	        {
 		        return BlockFactory.GetBlockState(existing);
 	        }
-	        
-	    //    if (!BlockStateMap.TryGetValue(p, out var bs))
-	      //  {
-		 //       var a = MiNET.Blocks.BlockFactory.BlockPalette.FirstOrDefault(x => x.RuntimeId == p);
-		//        bs = a;
-	    //    }
 
 	    var bs = MiNET.Blocks.BlockFactory.BlockPalette.FirstOrDefault(x => x.RuntimeId == p);
 	        if (bs != null)
@@ -217,10 +200,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
         {
 	        foreach (KeyValuePair<ulong, byte[]> kv in message.blobs)
 	        {
-		        _blobQueue.Enqueue(kv);
+		        _dataQueue.Post(new BufferItem(kv, null));
 	        }
-	        
-	        _resetEvent.Set();
         }
         
         private void HandleChunkCachePacket(ChunkData chunkData)
@@ -615,24 +596,16 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
         public void Dispose()
         {
-	        _actionQueue?.Clear();
-			_actionQueue = null;
+	        _dataQueue.Complete();
+	     //   _actionQueue?.Clear();
+		//	_actionQueue = null;
 			
-			_blobQueue?.Clear();
-			_blobQueue = null;
+			//_blobQueue?.Clear();
+			//_blobQueue = null;
 			
 			_convertedStates?.Clear();
 			_convertedStates = null;
 
-			var resetEvent = _resetEvent;
-
-			if (resetEvent != null)
-			{
-				resetEvent.Reset();
-				resetEvent.Dispose();
-				_resetEvent = null;
-			}
-			
 			if (Instance != this)
 			{
 				//BackgroundWorker?.Dispose();
