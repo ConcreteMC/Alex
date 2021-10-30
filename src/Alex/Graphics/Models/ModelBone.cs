@@ -150,7 +150,7 @@ namespace Alex.Graphics.Models
 		{
 			Children = new ModelBoneCollection(new List<ModelBone>());
 		}
-		
+		public BoundingBox Box { get; set; }
 		public void AddMesh(ModelMesh mesh)
 		{
 			mesh.ParentBone = this;
@@ -245,14 +245,12 @@ namespace Alex.Graphics.Models
 
 		private void UpdateTransform()
 		{
-			var pivot = Pivot.GetValueOrDefault(new Vector3(8f, 8f, 8f));
-
-			// * MatrixHelper.CreateRotation(Quaternion.Multiply(_rotation, _baseRotation).ToEuler())
+			var box = Box.GetDimensions();
+			var pivot = Pivot.GetValueOrDefault(box/ 2f);
+			
 			Transform = Matrix.CreateScale(_baseScale * _scale) * Matrix.CreateTranslation(-pivot)
 			                                                    * MatrixHelper.CreateRotationDegrees(_baseRotation)
-			                                                    * MatrixHelper.CreateRotationDegrees(_rotation * new Vector3(-1f, 1f, 1f))
-			                                                    //* MatrixHelper.CreateRotation(Quaternion.Multiply(_rotation, _baseRotation).ToEuler())
-			                                                    // * MatrixHelper.CreateRotationDegrees(_baseRotation)
+			                                                    * MatrixHelper.CreateRotationDegrees((_rotation) * new Vector3(-1f, 1f, 1f))
 			                                                    * Matrix.CreateTranslation(pivot)
 			                                                    * Matrix.CreateTranslation(_position + _basePosition);
 		}

@@ -213,7 +213,7 @@ namespace Alex.Entities
 								    Alex.Instance.Resources.TryGetEntityDefinition(
 									    "minecraft:player", out var description, out var source))
 								{
-									AnimationController.UpdateEntityDefinition(source, description);
+									AnimationController.UpdateEntityDefinition(source, source, description);
 								}
 							}
 							finally
@@ -471,16 +471,16 @@ namespace Alex.Entities
 		{
 			base.HandleJavaMeta(entry);
 
-			if (entry.Index == 14 && entry is MetadataFloat flt)
+			if (entry.Index == 15 && entry is MetadataFloat flt)
 			{
 				//Additional hearts
 				//HealthManager.MaxHealth 
 			}
-			else if (entry.Index == 15 && entry is MetadataVarInt score)
+			else if (entry.Index == 16 && entry is MetadataVarInt score)
 			{
 				Score = score.Value;
 			}
-			else if (entry.Index == 16 && entry is MetadataByte data)
+			else if (entry.Index == 17 && entry is MetadataByte data)
 			{
 				SkinFlags.Value = data.Value;
 
@@ -489,7 +489,7 @@ namespace Alex.Entities
 					SkinFlags.ApplyTo(ModelRenderer);
 				}
 			}
-			else if (entry.Index == 17 && entry is MetadataByte metaByte)
+			else if (entry.Index == 18 && entry is MetadataByte metaByte)
 			{
 				IsLeftHanded = metaByte.Value == 0;
 			}

@@ -639,6 +639,9 @@ namespace Alex.Entities
 						entity = new XpOrbEntity(world);
 
 						break;
+					case EntityType.Turtle:
+						entity = new Turtle(world);
+						break;
 					//case EntityType.Human:
 					//entity = new PlayerMob("test", world, );
 					//	break;
@@ -668,7 +671,7 @@ namespace Alex.Entities
 						
 						if (initRenderController)
 						{
-							e.AnimationController.UpdateEntityDefinition(resourcePack, description);
+							e.AnimationController.UpdateEntityDefinition(resourcePack, resourcePack, description);
 						}
 
 						var modelRenderer = GetEntityRenderer(description.Identifier);

@@ -74,6 +74,13 @@ namespace Alex.Entities.Meta
 		public short AvailableAir  { get; set; } = 300;
 		public short MaxAir        { get; set; } = 300;
 
+		public bool IsDying => Health * (10d / MaxHealth) < 1d;
+		
+		/// <summary>
+		///		Returns the ticks since the entity started dying
+		/// </summary>
+		public int DyingTime { get; private set; } = 0;
+		
 		public HealthManager(Entity entity) : base(entity)
 		{
 			//Entity = entity;

@@ -21,7 +21,7 @@ namespace Alex.Entities.Hostile
 		{
 			base.HandleJavaMeta(entry);
 
-			if (entry.Index == 15 && entry is MetadataByte mtd)
+			if (entry.Index == 16 && entry is MetadataByte mtd)
 			{
 				IsWallClimbing = (mtd.Value & 0x01) != 0;
 			}

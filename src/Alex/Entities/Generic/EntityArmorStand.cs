@@ -40,7 +40,7 @@ namespace Alex.Entities.Generic
 		{
 			base.HandleJavaMeta(entry);
 
-			if (entry.Index == 14 && entry is MetadataByte data)
+			if (entry.Index == 15 && entry is MetadataByte data)
 			{
 				if (ModelRenderer == null)
 				{
@@ -72,7 +72,7 @@ namespace Alex.Entities.Generic
 					renderer.SetVisibility("baseplate", !noBasePlate);
 				}
 			}
-			else if (entry.Index >= 15 && entry.Index <= 20 && entry is MetadataRotation rotation)
+			else if (entry.Index >= 16 && entry.Index <= 21 && entry is MetadataRotation rotation)
 			{
 				if (ModelRenderer == null)
 				{

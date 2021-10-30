@@ -20,12 +20,14 @@ namespace Alex.ResourcePackLib.Json.Converters
 
 	public enum FormatVersion
 	{
-		[JsonEnumValue("1.8.0")] V1_8_0,
-		[JsonEnumValue("1.10.0")] V1_10_0,
-		[JsonEnumValue("1.12.0")] V1_12_0,
-		[JsonEnumValue("1.14.0")] V1_14_0,
-		[JsonEnumValue("1.16.0")] V1_16_0,
-		Unknown
+		Unknown = -1,
+		[JsonEnumValue("1.2.6")] V1_2_6 = 0,
+		[JsonEnumValue("1.8.0")] V1_8_0 = 1,
+		[JsonEnumValue("1.10.0")] V1_10_0 = 2,
+		[JsonEnumValue("1.12.0")] V1_12_0 = 3,
+		[JsonEnumValue("1.14.0")] V1_14_0 = 4,
+		[JsonEnumValue("1.16.0")] V1_16_0 = 5,
+		[JsonEnumValue("1.17.10")] V1_17_10 = 6
 	}
 
 	public static class FormatVersionHelpers
@@ -33,7 +35,7 @@ namespace Alex.ResourcePackLib.Json.Converters
 		private static IReadOnlyDictionary<string, FormatVersion> _helper;
 		static FormatVersionHelpers()
 		{
-			Dictionary<string, FormatVersion> versions = new Dictionary<string, FormatVersion>();
+			Dictionary<string, FormatVersion> versions = new Dictionary<string, FormatVersion>(StringComparer.OrdinalIgnoreCase);
 
 			foreach (FieldInfo fi in typeof(FormatVersion).GetFields())
 			{
@@ -319,19 +321,18 @@ namespace Alex.ResourcePackLib.Json.Converters
 			if (obj.Type != JTokenType.Object) 
 				return null;
 
-			string              formatVersion = "1.8.0";
+			FormatVersion formatVersion = FormatVersion.Unknown;
 			var                 jObject       = (JObject)obj;
 			MobsModelDefinition result        = new MobsModelDefinition();
 			if (jObject.TryGetValue(
 				"format_version", StringComparison.InvariantCultureIgnoreCase, out var versionToken))
 			{
-				string format = versionToken.Value<string>();
-				formatVersion = format;
+				formatVersion = FormatVersionHelpers.FromString(versionToken.Value<string>());
 			}
 
 			switch (formatVersion)
 			{
-				case "1.8.0":
+				case FormatVersion.V1_8_0:
 				{
 					foreach (var model in Decode180(jObject, serializer))
 					{
@@ -355,7 +356,7 @@ namespace Alex.ResourcePackLib.Json.Converters
 					break;
 				}
 
-				case "1.10.0":
+				case FormatVersion.V1_10_0:
 				{
 					foreach (var model in Decode1100(jObject, serializer))
 					{
@@ -365,7 +366,7 @@ namespace Alex.ResourcePackLib.Json.Converters
 					break;
 				}
 
-				case "1.12.0":
+				case FormatVersion.V1_12_0:
 				{
 					foreach (var model in DecodeGeneric(jObject, serializer,  FormatVersion.V1_12_0))
 					{
@@ -377,7 +378,7 @@ namespace Alex.ResourcePackLib.Json.Converters
 					break;
 				}
 
-				case "1.14.0":
+				case FormatVersion.V1_14_0:
 				{
 					foreach (var model in DecodeGeneric(jObject, serializer, FormatVersion.V1_14_0))
 					{
@@ -386,7 +387,7 @@ namespace Alex.ResourcePackLib.Json.Converters
 					break;
 				}
 				
-				case "1.16.0":
+				case FormatVersion.V1_16_0:
 				{
 					foreach (var model in DecodeGeneric(jObject, serializer, FormatVersion.V1_16_0))
 					{
@@ -395,25 +396,23 @@ namespace Alex.ResourcePackLib.Json.Converters
 					break;
 				}
 				
+				case FormatVersion.V1_17_10:
+				{
+					foreach (var model in DecodeGeneric(jObject, serializer, FormatVersion.V1_17_10))
+					{
+						result.TryAdd(model.Description.Identifier, model);
+					}
+					break;
+				}
+				
 				default:
-					Log.Warn($"Invalid format_version: {formatVersion})");
+					Log.Warn($"Invalid format_version! Version={versionToken?.Value<string>()}");
+					foreach (var model in DecodeGeneric(jObject, serializer, formatVersion))
+					{
+						result.TryAdd(model.Description.Identifier, model);
+					}
 					break;
 			}
-			
-			//model.Description.Identifier = obj.
-			/*foreach (var prop in jObject)
-			{
-				var property = prop.Value;
-
-				if (property == null)
-					continue;
-				
-				if (prop.Key.Equals("format_version", StringComparison.InvariantCultureIgnoreCase))
-					continue;
-
-				var model = property.ToObject<EntityModel>(serializer);
-				result.TryAdd(prop.Key, model);
-			}*/
 
 			return result;
 		}

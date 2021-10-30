@@ -1,4 +1,5 @@
 using Alex.MoLang.Attributes;
+using Alex.Networking.Java.Packets.Play;
 using Alex.Worlds;
 using MiNET.Entities;
 
@@ -13,6 +14,17 @@ namespace Alex.Entities.Hostile
 		{
 			Height = 2.9;
 			Width = 0.6;
+		}
+
+		/// <inheritdoc />
+		protected override void HandleJavaMeta(MetaDataEntry entry)
+		{
+			base.HandleJavaMeta(entry);
+
+			if (entry.Index == 16 && entry is MetadataOptBlockId optBlockId)
+			{
+				IsCarryingBlock = optBlockId.Value != 0;
+			}
 		}
 	}
 }

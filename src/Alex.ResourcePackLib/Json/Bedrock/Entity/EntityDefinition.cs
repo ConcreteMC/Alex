@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Alex.ResourcePackLib.Json.Bedrock.MoLang;
+using Alex.ResourcePackLib.Json.Converters;
 using Newtonsoft.Json;
 
 namespace Alex.ResourcePackLib.Json.Bedrock.Entity
@@ -9,7 +10,14 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Entity
         [JsonProperty("identifier")]
         public string Identifier { get; set; }
 
-        [JsonProperty("min_engine_version")] public string MinEngineVersion { get; set; } = null;
+        [JsonIgnore]
+        public FormatVersion FormatVersion { get; set; } = FormatVersion.Unknown;
+
+        [JsonIgnore]
+        public FormatVersion? MinEngine { get; set; }
+        
+        [JsonProperty("min_engine_version")] 
+        public string MinEngineVersion { get; set; }
 
         [JsonProperty("materials")]
         public Dictionary<string, string> Materials { get; set; }

@@ -44,16 +44,16 @@ namespace Alex.Entities.Generic
 		{
 			base.HandleJavaMeta(entry);
 			
-			if (entry.Index == 7 && entry is MetadataFloat radius)
+			if (entry.Index == 8 && entry is MetadataFloat radius)
 			{
 				Radius = radius.Value;
 			}
-			else if (entry.Index == 8 && entry is MetadataVarInt color)
+			else if (entry.Index == 9 && entry is MetadataVarInt color)
 			{
 				Color = color.Value;
 				//Radius = radius.Value;
 			}
-			else if (entry.Index == 9 && entry is MetadataBool ignoreRadiusAndShowAsPoint)
+			else if (entry.Index == 10 && entry is MetadataBool ignoreRadiusAndShowAsPoint)
 			{
 				IgnoreRadiusAndShowPoint = ignoreRadiusAndShowAsPoint.Value;
 				//Radius = radius.Value;

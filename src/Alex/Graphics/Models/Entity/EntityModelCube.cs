@@ -10,26 +10,31 @@ namespace Alex.Graphics.Models.Entity
 		private static readonly Color   DefaultColor = Color.White;
 
 		private readonly bool        _mirror = false;
-		public Cube(EntityModelCube cube, bool mirrored, float inflation)
+		public Cube(EntityModelCube cube, bool mirrored, float inflation, Vector3 originVector)
 		{
 			_mirror = mirrored;
 
+			var inflatedSize = cube.InflatedSize(inflation);
+
+			var from = originVector;// cube.InflatedOrigin(inflation);
+			
+			var to = from +  inflatedSize;
+			
 			var uv     = cube.Uv ?? new EntityModelUV();
 			var rawSize = cube.Size;
-			var size   = cube.InflatedSize(inflation);
 
 			//front verts with position and texture stuff
-			_topLeftFront = new Vector3(0f, size.Y, 0f);
-			_topLeftBack = new Vector3(0f, size.Y, size.Z);
+			_topLeftFront = new Vector3(from.X, to.Y, from.Z);
+			_topLeftBack = new Vector3(from.X, to.Y, to.Z);
 
-			_topRightFront = new Vector3(size.X, size.Y, 0f);
-			_topRightBack = new Vector3(size.X, size.Y, size.Z);
+			_topRightFront = new Vector3(to.X, to.Y, from.Z);
+			_topRightBack = new Vector3(to.X, to.Y, to.Z);
 
 			// Calculate the position of the vertices on the bottom face.
-			_btmLeftFront = new Vector3(0f, 0f, 0f);
-			_btmLeftBack = new Vector3(0f, 0f, size.Z);
-			_btmRightFront = new Vector3(size.X, 0f, 0f);
-			_btmRightBack = new Vector3(size.X, 0f, size.Z);
+			_btmLeftFront = new Vector3(from.X, from.Y, from.Z);
+			_btmLeftBack = new Vector3(from.X, from.Y, to.Z);
+			_btmRightFront = new Vector3(to.X, from.Y, from.Z);
+			_btmRightBack = new Vector3(to.X, from.Y, to.Z);
 
 			Front =
 				GetFrontVertex(

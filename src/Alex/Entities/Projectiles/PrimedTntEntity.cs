@@ -68,7 +68,7 @@ namespace Alex.Entities.Projectiles
 		/// <inheritdoc />
 		protected override void HandleJavaMeta(MetaDataEntry entry)
 		{
-			if (entry.Index == 7 && entry is MetadataVarInt metadataVarInt)
+			if (entry.Index == 8 && entry is MetadataVarInt metadataVarInt)
 			{
 				Fuse = metadataVarInt.Value;
 

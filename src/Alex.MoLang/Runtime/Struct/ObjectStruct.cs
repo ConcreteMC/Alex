@@ -139,7 +139,7 @@ namespace Alex.MoLang.Runtime.Struct
 			if (_functions.TryGetValue(key.ToString(), out var f))
 				return f.Invoke(_instance, parameters);
 			
-			Log.Debug($"({_instance.GetType().Name}) Unknown query: {key}");
+			Log.Debug($"({_instance.ToString()}) Unknown query: {key}");
 			return DoubleValue.Zero;
 		}
 

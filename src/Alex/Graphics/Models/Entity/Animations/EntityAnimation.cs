@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using Alex.Entities;
+using Alex.Entities.Passive;
 using Alex.MoLang.Runtime;
 using Alex.ResourcePackLib.Json.Bedrock.Entity;
 using Alex.ResourcePackLib.Json.Bedrock.MoLang;
@@ -24,10 +25,8 @@ namespace Alex.Graphics.Models.Entity.Animations
 		private readonly Animation _definition;
 		private bool _loop;
 		
-		private string _animName = String.Empty;
 		public EntityAnimation(AnimationComponent parent, Animation definition, string name)
 		{
-			_animName = name;
 			_parent = parent;
 			_definition = definition;
 
@@ -79,6 +78,10 @@ namespace Alex.Graphics.Models.Entity.Animations
 					animTimeUpdate = _parent.Execute(anim.AnimationTimeUpdate).AsDouble();
 				}
 
+				if (entity is Bat)
+				{
+					var a = "b";
+				}
 				_animationTime = entity.AnimationTime = animTimeUpdate;
 				
 				foreach (var bone in _boneComps)

@@ -6,8 +6,7 @@ namespace Alex.Entities.Passive
 {
 	public class Horse : AbstractHorse
 	{
-		public int Variant { get; set; } = 0;
-		public Horse(World level) : base((EntityType)23, level)
+		public Horse(World level) : base(level)
 		{
 			Height = 1.6;
 			Width = 1.396484;
@@ -18,7 +17,7 @@ namespace Alex.Entities.Passive
 		{
 			base.HandleJavaMeta(entry);
 
-			if (entry.Index == 18 && entry is MetadataVarInt varInt)
+			if (entry.Index == 19 && entry is MetadataVarInt varInt)
 			{
 				Variant = varInt.Value;
 			}

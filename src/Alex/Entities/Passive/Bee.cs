@@ -21,14 +21,14 @@ namespace Alex.Entities.Passive
 		{
 			base.HandleJavaMeta(entry);
 
-			if (entry.Index == 16 && entry is MetadataByte meta)
+			if (entry.Index == 17 && entry is MetadataByte meta)
 			{
 				IsAngry = (meta.Value & 0x02) != 0;
 				HasStung = (meta.Value & 0x04) != 0;
 				HasNectar = (meta.Value & 0x08) != 0;
 			}
 
-			if (entry.Index == 17 && entry is MetadataVarInt angerTime)
+			if (entry.Index == 18 && entry is MetadataVarInt angerTime)
 			{
 				AngerTime = angerTime.Value;
 			}

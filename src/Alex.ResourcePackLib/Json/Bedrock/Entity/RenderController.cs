@@ -40,7 +40,7 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Entity
 		};
 		
 		[JsonProperty("arrays")]
-		public Dictionary<string, IReadOnlyDictionary<string, string[]>> Arrays { get; set; }
+		public Dictionary<string, IDictionary<string, IExpression[]>> Arrays { get; set; }
 	}
 
 	public class PartVisibility : Dictionary<string, List<IExpression>>

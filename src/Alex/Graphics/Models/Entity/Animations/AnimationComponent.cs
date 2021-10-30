@@ -7,6 +7,7 @@ using System.Threading;
 using Alex.Common.World;
 using Alex.Entities;
 using Alex.Entities.Components;
+using Alex.Entities.Passive;
 using Alex.Items;
 using Alex.MoLang.Parser;
 using Alex.MoLang.Parser.Expressions;
@@ -37,11 +38,12 @@ namespace Alex.Graphics.Models.Entity.Animations
 		}
 
 		private IExpression[] _preRenderExpressions = null;
-		private EntityDescription _entityDefinition = null;
+		public EntityDescription EntityDefinition { get; private set; }
 		private IReadOnlyDictionary<string, IAnimation> _animations = null;
-
+		private IReadOnlyDictionary<string, EntityRenderController> _renderControllers = null;
+		
 		public readonly IDictionary<string, IMoValue> Context = new Dictionary<string, IMoValue>(StringComparer.OrdinalIgnoreCase);
-		public void UpdateEntityDefinition(IAnimationProvider animationProvider, EntityDescription definition)
+		public void UpdateEntityDefinition(IAnimationProvider animationProvider, IRenderControllerProvider controllerProvider, EntityDescription definition)
 		{
 			//Monitor.Enter(_lock);
 
@@ -87,12 +89,12 @@ namespace Alex.Graphics.Models.Entity.Animations
 					LoadAnimations(animationProvider, definition.Animations);
 
 				if (definition.RenderControllers != null)
-					LoadRenderControllers(animationProvider, definition.RenderControllers);
+					LoadRenderControllers(controllerProvider, definition.RenderControllers);
 				
 				if (definition.AnimationControllers != null)
 					LoadAnimationControllers(animationProvider, definition.AnimationControllers);
 				
-				_entityDefinition = definition;
+				EntityDefinition = definition;
 				_preRenderExpressions = preRender.ToArray();
 				
 				Runtime = runtime;
@@ -109,7 +111,7 @@ namespace Alex.Graphics.Models.Entity.Animations
 		{
 			Dictionary<string, IAnimation> animationControllers =
 				new Dictionary<string, IAnimation>(StringComparer.OrdinalIgnoreCase);
-
+			
 			int idx = 0;
 			foreach (var element in input)
 			{
@@ -126,7 +128,7 @@ namespace Alex.Graphics.Models.Entity.Animations
 						if (kv.Value.Length == 1)
 						{
 							if (kv.Value[0] is NameExpression ne)
-								search = ne.Name.ToString();
+								search = ne.Name.Path.ToString();
 						}
 						else
 						{
@@ -139,6 +141,10 @@ namespace Alex.Graphics.Models.Entity.Animations
 							search = sv.Value;
 						}
 					}
+				}
+				else
+				{
+					search = element.StringValue;
 				}
 				
 				if (search == null)
@@ -161,9 +167,64 @@ namespace Alex.Graphics.Models.Entity.Animations
 			_animationControllers = animationControllers;
 		}
 
-		private void LoadRenderControllers(IAnimationProvider animationProvider, AnnoyingMolangElement[] input)
+		private void LoadRenderControllers(IRenderControllerProvider renderControllerProvider, AnnoyingMolangElement[] input)
 		{
+			Dictionary<string, EntityRenderController> renderControllers =
+				new Dictionary<string, EntityRenderController>(StringComparer.OrdinalIgnoreCase);
 			
+			int idx = 0;
+			foreach (var element in input)
+			{
+				idx++;
+				string key = null;
+				string search = null;
+				
+				if (!element.IsString)
+				{
+					foreach (var kv in element.Expressions)
+					{
+						IMoValue result = null;
+
+						if (kv.Value.Length == 1)
+						{
+							if (kv.Value[0] is NameExpression ne)
+								search = ne.Name.Path.ToString();
+						}
+						else
+						{
+							result = Execute(kv.Value);
+						}
+
+						if (result is StringValue sv)
+						{
+							key = kv.Key;
+							search = sv.Value;
+						}
+					}
+				}
+				else
+				{
+					search = element.StringValue;
+				}
+				
+				if (search == null)
+					continue;
+
+				if (key == null)
+				{
+					key = $"renderer{idx}";
+				}
+				
+				if (renderControllerProvider.TryGetRenderController(search, out var controller))
+				{
+					if (!renderControllers.TryAdd(key, new EntityRenderController(this, controller)))
+					{
+						Log.Warn($"Failed to add RenderController: {search}");
+					}
+				}
+			}
+
+			_renderControllers = renderControllers;
 		}
 
 		private void LoadAnimations(IAnimationProvider animationProvider, Dictionary<string, string> input)
@@ -244,21 +305,27 @@ namespace Alex.Graphics.Models.Entity.Animations
 				if (runtime == null)
 					return;
 
-				var def = _entityDefinition;
+				var def = EntityDefinition;
 
 				if (def == null)
 					return;
 
 				var animations = _animations;
 
+				var renderControllers = _renderControllers;
 				if (animations == null)
 					return;
 				
 				if (renderer != _modelRenderer)
 				{
-					foreach (var anim in _animations)
+					foreach (var anim in animations)
 					{
 						anim.Value.UpdateBindings(renderer);
+					}
+
+					foreach (var controller in renderControllers)
+					{
+						controller.Value.UpdateBindings(renderer);
 					}
 					_modelRenderer = renderer;
 				}
@@ -332,6 +399,14 @@ namespace Alex.Graphics.Models.Entity.Animations
 						controller.Value.Tick();
 					}
 				}
+
+				if (_renderControllers != null)
+				{
+					foreach (var controller in _renderControllers)
+					{
+						controller.Value.Tick();
+					}
+				}
 				
 				renderer.ApplyPending();
 			}
@@ -341,6 +416,17 @@ namespace Alex.Graphics.Models.Entity.Animations
 			}
 		}
 
+		public void InvokeRenderControllerUpdate()
+		{
+			if (_renderControllers != null)
+			{
+				foreach (var controller in _renderControllers)
+				{
+					controller.Value.ForceUpdate();
+				}
+			}
+		}
+		
 		public IMoValue Execute(IExpression[] expressions)
 		{
 			return Runtime.Execute(expressions, Context);
@@ -391,7 +477,8 @@ namespace Alex.Graphics.Models.Entity.Animations
 			}
 			else
 			{
-				Log.Debug($"Could not find animation: {name}");
+				if (!string.Equals(name, "first_person.breathing_bob"))
+					Log.Debug($"Could not find animation: {name}");
 			}
 		}
 		

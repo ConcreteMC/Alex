@@ -84,7 +84,7 @@ namespace Alex.Entities.BlockEntities
 					"minecraft:bed", out var entityDescription, out var source))
 				{
 					_entityDescription = entityDescription;
-					AnimationController?.UpdateEntityDefinition(source, entityDescription);
+					AnimationController?.UpdateEntityDefinition(source, source, entityDescription);
 				}
 			}
 			

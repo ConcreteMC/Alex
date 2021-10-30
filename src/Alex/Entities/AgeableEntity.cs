@@ -15,7 +15,7 @@ namespace Alex.Entities
 		{
 			base.HandleJavaMeta(entry);
 
-			if (entry.Index == 15 && entry is MetadataBool val)
+			if (entry.Index == 16 && entry is MetadataBool val)
 			{
 				IsBaby = val.Value;
 			}

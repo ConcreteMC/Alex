@@ -36,7 +36,7 @@ using Image = SixLabors.ImageSharp.Image;
 
 namespace Alex.ResourcePackLib
 {
-	public class MCBedrockResourcePack : ResourcePack, ITextureProvider, IAnimationProvider, IDisposable
+	public class MCBedrockResourcePack : ResourcePack, ITextureProvider, IAnimationProvider, IRenderControllerProvider, IDisposable
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(MCBedrockResourcePack));
 
@@ -91,7 +91,7 @@ namespace Alex.ResourcePackLib
 		private static readonly Regex IsUiDefinition    = new Regex(@"^ui[\\\/](?'filename'.*)\.json", RegexOpts);
 		private void Load(ResourcePack.LoadProgress progressReporter)
 		{
-			Dictionary<ResourceLocation, EntityDescription> entityDefinitions = new Dictionary<ResourceLocation, EntityDescription>();
+			Dictionary<string, EntityDescription> entityDefinitions = new Dictionary<string, EntityDescription>();
 			Dictionary<string, EntityModel> entityModels = new Dictionary<string, EntityModel>(StringComparer.Ordinal);
 			Dictionary<string, RenderController> renderControllers = new Dictionary<string, RenderController>(StringComparer.Ordinal);
 
@@ -224,18 +224,41 @@ namespace Alex.ResourcePackLib
 					Log.Warn(ex, $"Could not process file in resource pack: '{entry.FullName}' continuing anyways...");
 				}
 			}
-
+			
+			TryAddBitmap("textures/entity/chest/double_normal");
+			ProcessEntityDefinitions(entityDefinitions);
+			
 			EntityModels = entityModels;
-
-			//Log.Info($"Processed {EntityModels.Count} entity models");
-		
-			EntityDefinitions = entityDefinitions;
+			EntityDefinitions = entityDefinitions.ToDictionary(x => new ResourceLocation(x.Key), v => v.Value);
 			RenderControllers = renderControllers;
 			AnimationControllers = animationControllers;
 			Animations = animations;
 			Particles = particleDefinitions;
 			Attachables = attachableDefinitions;
-			// Log.Info($"Processed {EntityDefinitions.Count} entity definitions");
+		}
+
+		private void ProcessEntityDefinitions(IDictionary<string, EntityDescription> definitions)
+		{
+			foreach (var def in definitions.Values)
+			{
+				try
+				{
+					foreach (var texture in def.Textures)
+					{
+						if (_bitmaps.ContainsKey(texture.Value))
+						{
+							//Log.Warn($"Duplicate bitmap: {texture.Value}");
+							continue;
+						}
+
+						TryAddBitmap(texture.Value);
+					}
+				}
+				catch (Exception ex)
+				{
+					Log.Warn($"Could not load texture! {ex}");
+				}
+			}
 		}
 
 		private void ProcessSoundBindings(IFile entry)
@@ -370,7 +393,7 @@ namespace Alex.ResourcePackLib
 		public IReadOnlyDictionary<string, EntityModel> EntityModels { get; private set; }
 		public static Dictionary<string, EntityModel> ProcessEntityModels(Dictionary<string, EntityModel> models, Func<string, EntityModel> lookup = null)
 		{
-			Dictionary<string, EntityModel> final = new Dictionary<string, EntityModel>();
+			Dictionary<string, EntityModel> final = new Dictionary<string, EntityModel>(StringComparer.InvariantCultureIgnoreCase);
 			Queue<KeyValuePair<string, EntityModel>> workQueue = new Queue<KeyValuePair<string, EntityModel>>();
 
 			foreach (var model in models.OrderBy(x => x.Key.Count(k => k == ':')))
@@ -498,31 +521,37 @@ namespace Alex.ResourcePackLib
 
 		public static void LoadEntityModel(string json, Dictionary<string, EntityModel> models)
 		{
-			
-				var d = MCJsonConvert.DeserializeObject<MobsModelDefinition>(json);
+			var d = MCJsonConvert.DeserializeObject<MobsModelDefinition>(json);
 
-				//if (decoded == null)
-				if (d != null)
+			//if (decoded == null)
+			if (d != null)
+			{
+				foreach (var item in d)
 				{
-					foreach (var item in d)
+					if (item.Value.Description?.Identifier == null)
 					{
-						if (item.Value.Description?.Identifier == null)
+						Log.Warn($"Missing identifier for {item.Key}");
+
+						//return;
+					}
+
+					if (!models.TryAdd(item.Key, item.Value))
+					{
+						if (models.TryGetValue(item.Key, out var existingValue))
 						{
-							Log.Warn($"Missing identifier for {item.Key}");
-
-							//return;
+							if (item.Value.FormatVersion > existingValue.FormatVersion)
+							{
+								models[item.Key] = item.Value;
+								return;
+							}
 						}
-
-						if (!models.TryAdd(item.Key, item.Value))
-						{
-							Log.Warn($"Duplicate geometry model: {item.Key}");
-
-							//	return;
-						}
+						
+						Log.Warn($"Duplicate geometry model: {item.Key}");
 					}
 				}
 			}
-		
+		}
+
 		private bool TryLoadMobModels(Dictionary<string, EntityModel> models)
 		{
 			var mobsJson = _archive.GetEntry("models/mobs.json");
@@ -543,15 +572,10 @@ namespace Alex.ResourcePackLib
 		}
 
 		private void LoadEntityDefinition(IFile entry,
-			Dictionary<ResourceLocation, EntityDescription> entityDefinitions)
+			Dictionary<string, EntityDescription> entityDefinitions)
 		{
-
 			string json = entry.ReadAsEncodedString(ContentKey);
-
-			//string fileName = Path.GetFileNameWithoutExtension(entry.Name);
-
-			Dictionary<string, EntityDescription> definitions =
-				new Dictionary<string, EntityDescription>();
+			List<EntityDescription> definitions = new List<EntityDescription>();
 
 			JObject obj = JObject.Parse(json, new JsonLoadSettings());
 
@@ -561,16 +585,7 @@ namespace Alex.ResourcePackLib
 			{
 				if (ftv.Type == JTokenType.String)
 				{
-					switch (ftv.Value<string>())
-					{
-						case "1.10.0":
-							format = FormatVersion.V1_10_0;
-							break;
-
-						case "1.8.0":
-							format = FormatVersion.V1_8_0;
-							break;
-					}
+					format = FormatVersionHelpers.FromString(ftv.Value<string>());
 				}
 			}
 
@@ -583,80 +598,54 @@ namespace Alex.ResourcePackLib
 					EntityDescription desc = null;
 					var clientEntity = (JObject) e.Value;
 
-					if (clientEntity.TryGetValue("description", out var descriptionToken))
+					if (!clientEntity.TryGetValue("description", StringComparison.InvariantCultureIgnoreCase, out var descriptionToken) || descriptionToken.Type != JTokenType.Object) 
+						continue;
+
+					desc = descriptionToken.ToObject<EntityDescription>(MCJsonConvert.Serializer);
+					if (desc == null)
+						continue;
+					
+					desc.FormatVersion = format;
+					
+					string engineText = desc.MinEngineVersion;
+					if (!string.IsNullOrWhiteSpace(engineText))
 					{
-						if (descriptionToken.Type == JTokenType.Object)
-						{
-							desc = descriptionToken.ToObject<EntityDescription>(MCJsonConvert.Serializer);
-						}
+						desc.MinEngine = FormatVersionHelpers.FromString(engineText);
+					}
+					else if (((JObject)descriptionToken).TryGetValue(
+						    "min_engine_version", StringComparison.InvariantCultureIgnoreCase, out var minEngineVersion))
+					{
+						desc.MinEngine = FormatVersionHelpers.FromString(minEngineVersion.Value<string>());
 					}
 
-					/*desc = e.Value.ToObject<EntityDescriptionWrapper>(JsonSerializer.Create(new JsonSerializerSettings()
-					{
-						Converters = MCJsonConvert.DefaultSettings.Converters,
-						MissingMemberHandling = MissingMemberHandling.Ignore,
-						NullValueHandling = NullValueHandling.Ignore,
-					}));*/
-
-					if (desc != null)
-					{
-						if (!definitions.TryAdd(desc.Identifier, desc))
-						{
-							Log.Warn($"Duplicate definition: {desc.Identifier}");
-						}
-					}
+					if (desc.MinEngine == FormatVersion.V1_8_0)
+						continue;
+					
+					definitions.Add(desc);
 				}
 			}
 
-			foreach (var def in definitions)
+			foreach (var items in definitions.GroupBy(x => x.Identifier).ToArray())
 			{
-				//def.Value.Filename = fileName;
-				if (def.Value != null && def.Value.Textures != null)
+				var values = items.ToArray();
+
+				foreach (var def in values.OrderByDescending(x => x.MinEngine.GetValueOrDefault(FormatVersion.Unknown)))
 				{
-					//if (entityDefinitions.TryAdd(def.Key, def.Value))
+					if (def.Textures == null) continue;
+					
+					EntityDescription existing = null;
+					entityDefinitions.TryGetValue(def.Identifier, out existing);
+					
+					if (existing == null
+					    || ((existing.MinEngine.HasValue && def.MinEngine.HasValue
+					                                     && def.MinEngine > existing.MinEngine)
+					        || (existing.MinEngine == null && def.MinEngine != null
+					                                       && def.MinEngine != FormatVersion.Unknown)))
 					{
-						//entityDefinitions.Add(def.Key, def.Value);
-						try
-						{
-							foreach (var texture in def.Value.Textures)
-							{
-								if (_bitmaps.ContainsKey(texture.Value))
-								{
-									//Log.Warn($"Duplicate bitmap: {texture.Value}");
-									continue;
-								}
-
-								TryAddBitmap(texture.Value);
-							}
-						}
-						catch (Exception ex)
-						{
-							Log.Warn($"Could not load texture! {ex}");
-						}
-
-						var key = new ResourceLocation(def.Key);
-						if (entityDefinitions.TryGetValue(key, out var existing))
-						{
-							if (existing.MinEngineVersion != null && def.Value.MinEngineVersion == null)
-							{
-								entityDefinitions[key] = def.Value;
-							}
-						}
-						else
-						{
-							entityDefinitions[key] = def.Value;
-						}
-						//entityDefinitions[def.Key] = def.Value;
-					}
-
-					//	else
-					{
-						//	Log.Warn($"Tried loading duplicate entity: {def.Key}");
+						entityDefinitions[def.Identifier] = def;
 					}
 				}
 			}
-
-			TryAddBitmap("textures/entity/chest/double_normal");
 		}
 
 		private void ProcessFontFile(ResourcePack.LoadProgress progress, IFile entry)
@@ -757,6 +746,12 @@ namespace Alex.ResourcePackLib
 		public bool TryGetAnimation(string key, out Animation animation)
 		{
 			return Animations.TryGetValue(key, out animation);
+		}
+
+		/// <inheritdoc />
+		public bool TryGetRenderController(string key, out RenderController renderController)
+		{
+			return RenderControllers.TryGetValue(key, out renderController);
 		}
 	}
 }

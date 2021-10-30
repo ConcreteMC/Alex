@@ -1,3 +1,4 @@
+using Alex.MoLang.Attributes;
 using Alex.Worlds;
 using MiNET.Entities;
 
@@ -5,6 +6,8 @@ namespace Alex.Entities.Hostile
 {
 	public class EnderDragon : HostileMob
 	{
+		[MoProperty("wing_flap_position")]
+		public double WingFlapPosition { get; set; } = 0d;
 		public EnderDragon(World level) : base(level)
 		{
 			Height = 8;

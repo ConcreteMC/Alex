@@ -19,7 +19,6 @@ namespace Alex.Graphics.Models
 			
 			Effects = new ModelEffectCollection();
 		}
-		      
 
 		/// <summary>
 		///		Gets the BoundingSphere that contains this mesh.

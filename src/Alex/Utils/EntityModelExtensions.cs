@@ -152,8 +152,23 @@ namespace Alex.Utils
 		{
 			ModelBone modelBone = new ModelBone()
 			{
-				Name = bone.Name
+				Name = bone.Name,
+				Box = new BoundingBox()
 			};
+			modelBone.Pivot = bone.Pivot.HasValue ?
+				new Vector3(bone.Pivot.Value.X, bone.Pivot.Value.Y, bone.Pivot.Value.Z) : null;
+			
+			if (bone.Rotation.HasValue)
+			{
+				var r = bone.Rotation.Value;
+				modelBone.BaseRotation = new Vector3(r.X, r.Y, r.Z);
+			}
+			
+			if (bone.BindPoseRotation.HasValue)
+			{
+				var r = bone.BindPoseRotation.Value;
+				modelBone.BaseRotation += new Vector3(r.X, r.Y, r.Z);
+			}
 			
 			if (bone.Cubes != null)
 			{
@@ -172,27 +187,31 @@ namespace Alex.Utils
 					var mirror    = cube.Mirror ?? bone.Mirror;
 
 					var origin = cube.InflatedOrigin(inflation);
+					Cube built = new Cube(cube, mirror, inflation, origin);
+
+					Matrix matrix = Matrix.Identity;
 					
-					Matrix matrix = Matrix.CreateTranslation(origin);
 					if (cube.Rotation.HasValue)
 					{
 						var rotation = cube.Rotation.Value;
-						
-						Vector3 pivot = (cube.InflatedSize(inflation) / 2f);
+						Vector3 pivot = Vector3.Zero;
 
 						if (cube.Pivot.HasValue)
 						{
-							pivot = cube.InflatedPivot(inflation);// cube.Pivot.Value;
+							pivot = cube.InflatedPivot(inflation);
 						}
-						
-						matrix =
-							    Matrix.CreateTranslation(origin)
-								* Matrix.CreateTranslation((-pivot)) 
-						         * MatrixHelper.CreateRotationDegrees(rotation)
-						         * Matrix.CreateTranslation(pivot);
+						else
+						{
+							pivot = cube.InflatedSize(inflation) / 2f;
+						}
+
+						//pivot += origin;
+
+						matrix = Matrix.CreateTranslation(-(pivot)) * MatrixHelper.CreateRotationDegrees(rotation)
+						                                            * Matrix.CreateTranslation(pivot);
 					}
-					
-					Cube built = new Cube(cube, mirror, inflation);
+
+					//var matrix = Matrix.Identity;
 					ModifyCubeIndexes(ref vertices, ref indices, built.Front, matrix);
 					ModifyCubeIndexes(ref vertices, ref indices, built.Back, matrix);
 					ModifyCubeIndexes(ref vertices, ref indices, built.Top, matrix);
@@ -207,6 +226,14 @@ namespace Alex.Utils
 						NumVertices = vertices.Count - vertexStart
 					};
 
+					//var meshVertices = vertices.GetRange(cubeStartIndex - 1, (vertices.Count - vertexStart));
+					
+					var verts = built.Front.vertices.Concat(built.Back.vertices).Concat(built.Top.vertices)
+					   .Concat(built.Bottom.vertices).Concat(built.Left.vertices).Concat(built.Right.vertices);
+					
+					modelBone.Box = BoundingBox.CreateMerged(
+						modelBone.Box, BoundingBox.CreateFromPoints(verts.Select(x => x.Position)));
+					
 					meshParts.Add(part);
 				}
 
@@ -218,26 +245,11 @@ namespace Alex.Utils
 				modelBone.AddMesh(meshInstance);
 			}
 
-			modelBone.Pivot = bone.Pivot.HasValue ?
-				new Vector3(bone.Pivot.Value.X, bone.Pivot.Value.Y, bone.Pivot.Value.Z) : null;
-			
 			modelBone.Visible = !bone.NeverRender;
-	
-			if (bone.Rotation.HasValue)
-			{
-				var r = bone.Rotation.Value;
-				modelBone.BaseRotation = new Vector3(r.X, r.Y, r.Z);
-			}
-			
-			if (bone.BindPoseRotation.HasValue)
-			{
-				var r = bone.BindPoseRotation.Value;
-				modelBone.BaseRotation *= new Vector3(r.X, r.Y, r.Z);
-			}
 
-			
+
 			foreach (var childBone in source.Bones.Where(
-				x => x.Parent != null && string.Equals(x.Parent, bone.Name, DefaultComparison)))
+				         x => x.Parent != null && string.Equals(x.Parent, bone.Name, DefaultComparison)))
 			{
 				if (childBone.Parent != null && childBone.Parent.Equals(childBone.Name, DefaultComparison))
 					continue;

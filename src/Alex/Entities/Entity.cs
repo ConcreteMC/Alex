@@ -179,6 +179,8 @@ namespace Alex.Entities
 
 		private float _scale = 1f;
 
+		[MoProperty("model_scale")] public float ModelScale { get; set; } = 1f;
+		
 		public float Scale
 		{
 			get
@@ -371,6 +373,11 @@ namespace Alex.Entities
 			{
 				_entityProperties[Networking.Java.Packets.Play.EntityProperties.MovementSpeed].Value = value;
 			}
+		}
+
+		protected void InvokeControllerUpdate()
+		{
+			AnimationController?.InvokeRenderControllerUpdate();
 		}
 
 		public void AddOrUpdateProperty(EntityProperty property)
@@ -724,7 +731,10 @@ namespace Alex.Entities
 		[MoProperty("is_on_ground")]
 		public bool IsOnGround => _knownPosition.OnGround;
 
-		[MoProperty("anim_time")] 
+		/// <summary>
+		///		Returns the time in seconds since the current animation started, else 0.0 if not called within an animation
+		/// </summary>
+		[MoProperty("anim_time")]
 		public double AnimationTime { get; set; } = 0d;
 		
 		[MoProperty("is_grazing")]
@@ -1219,7 +1229,7 @@ namespace Alex.Entities
 			var  renderer = ModelRenderer;
 
 			if (renderer != null)
-				renderCount += renderer.Render(renderArgs, Matrix.CreateScale((1f / 16f) * Scale) * RenderLocation.CalculateWorldMatrix());
+				renderCount += renderer.Render(renderArgs, Matrix.CreateScale((1f / 16f) * (Scale * ModelScale)) * RenderLocation.CalculateWorldMatrix());
 
 			return renderCount;
 		}
@@ -1633,7 +1643,7 @@ namespace Alex.Entities
 		/// <inheritdoc />
 		public override string ToString()
 		{
-			return base.ToString();
+			return $"{{Type: \"{GetType().Name}\", Def: \"{AnimationController?.EntityDefinition?.Identifier}\"}}";
 		}
 		
 		private IItemRenderer                            _itemRenderer    = null;
@@ -1643,6 +1653,7 @@ namespace Alex.Entities
 		private bool _isAttacking = false;
 		private bool _isSprinting;
 		private bool _isSneaking;
+		private bool _hasRider = false;
 
 		public bool CanSurface { get; set; } = false;
 		public const float   JumpVelocity = 0.42f;
@@ -1792,9 +1803,6 @@ namespace Alex.Entities
 
 		#region MoLang Functions
 
-		[MoProperty("distance_from_camera")]
-		public double DistanceFromCamera => Vector3.Distance(Level.Camera.Position, KnownPosition);
-		
 		/// <summary>
 		///		takes one optional hand slot as a parameter (0 or 'main_hand' for main hand, 1 or 'off_hand' for off hand),
 		///		and a second parameter (0=default) if you would like the equipped item or any non-zero number for the currently rendered item
@@ -1862,13 +1870,7 @@ namespace Alex.Entities
 
 			return amount;
 		}
-		
-		[MoFunction("life_time")]
-		public double GetLifeTime()
-		{
-			return LifeTime.TotalSeconds;
-		}
-		
+
 		/// <summary>
 		///		Takes one argument that represents the desired axis (0 == x-axis, 1 == y-axis, 2 == z-axis).
 		/// </summary>
@@ -1912,78 +1914,6 @@ namespace Alex.Entities
 				//X Axis
 				return Level.Camera.Rotation.X;
 			}
-		}
-		
-		[MoFunction("modified_distance_moved")]
-		public double ModifiedDistanceMoved()
-		{
-			return Movement.TotalDistanceMoved;
-		}
-		
-		[MoFunction("modified_move_speed")]
-		public double ModifiedMoveSpeed()
-		{
-			var sp = Movement.MetersPerSecond;
-
-			if (MathF.Abs(sp) < 0.01f)
-				return 0;
-			
-			var maxSpeed = 4.317f;
-			if (IsSneaking)
-			{
-				maxSpeed *= 0.3f;
-			}
-			else if (IsSprinting)
-			{
-			//	maxSpeed *= 1.3f;
-			}
-
-			maxSpeed *= 10f;
-			maxSpeed *= (float)CalculateMovementFactor();
-			
-			return sp / maxSpeed;
-		}
-
-		[MoFunction("time_stamp")]
-		public double TimeStamp()
-		{
-			return (double) Level.Time;
-		}
-
-		[MoFunction("frame_alpha")]
-		public double FrameAlpha()
-		{
-			return (1f / 50f) * _deltaTime.TotalMilliseconds;
-		}
-
-		[MoFunction("delta_time")]
-		public double DeltaTime()
-		{
-			return _deltaTime.TotalSeconds;
-		}
-
-		[MoFunction("ground_speed")]
-		public double GroundSpeed()
-		{
-			return Movement.MetersPerSecond;
-		}
-		
-		[MoFunction("walk_distance")]
-		public double WalkDistance()
-		{
-			return Movement.DistanceMoved;
-		}
-		
-		[MoFunction("vertical_speed")]
-		public double VerticalSpeed()
-		{
-			return Movement.VerticalSpeed;
-		}
-		
-		[MoFunction("time_of_day")]
-		public double TimeOfDay()
-		{
-			return ((1f / 24000f) * Level.TimeOfDay);
 		}
 
 		/// <summary>
@@ -2049,33 +1979,74 @@ namespace Alex.Entities
 			return 0d;
 		}
 
-		[MoProperty("has_target")]
-		public bool HasTarget => TargetEntityId != -1;
-		
-		[MoProperty("has_owner")]
-		public bool HasOwner => OwnerEntityId != -1;
+		[MoProperty("modified_move_speed")]
+		public double ModifiedMoveSpeed
+		{
+			get
+			{
+				var sp = Movement.MetersPerSecond;
 
-		[MoProperty("target_x_rotation")]
-		public double TargetXRotation => TargetRotation.X;
+				if (MathF.Abs(sp) < 0.01f)
+					return 0;
+			
+				var maxSpeed = 4.317f;
+				if (IsSneaking)
+				{
+					maxSpeed *= 0.3f;
+				}
+				else if (IsSprinting)
+				{
+					//	maxSpeed *= 1.3f;
+				}
+
+				maxSpeed *= 10f;
+				maxSpeed *= (float)CalculateMovementFactor();
+			
+				return sp / maxSpeed;
+			}
+		}
 		
-		[MoProperty("target_y_rotation")]
-		public double TargetYRotation => TargetRotation.Y;
+		[MoProperty("distance_from_camera")] public double DistanceFromCamera => Vector3.Distance(Level.Camera.Position, KnownPosition);
+		[MoProperty("life_time")] public double GetLifeTime => _lifeTime.Elapsed.TotalSeconds;
+		[MoProperty("modified_distance_moved")] public double ModifiedDistanceMoved => Movement.TotalDistanceMoved;
+		[MoProperty("time_stamp")] public double TimeStamp => (double)Level.Time;
+		[MoProperty("frame_alpha")] public double FrameAlpha => (1f / 50f) * _deltaTime.TotalMilliseconds;
+		[MoProperty("delta_time")] public double DeltaTime => _deltaTime.TotalSeconds;
+		[MoProperty("ground_speed")] public double GroundSpeed => Movement.MetersPerSecond;
+		[MoProperty("walk_distance")] public double WalkDistance => Movement.DistanceMoved;
+		[MoProperty("vertical_speed")] public double VerticalSpeed => Movement.VerticalSpeed;
+		[MoProperty("time_of_day")] public double TimeOfDay => ((1f / 24000f) * Level.TimeOfDay);
+		[MoProperty("has_target")] public bool HasTarget => TargetEntityId != -1;
+		[MoProperty("has_owner")] public bool HasOwner => OwnerEntityId != -1;
+		[MoProperty("target_x_rotation")] public double TargetXRotation => TargetRotation.X;
+		[MoProperty("target_y_rotation")] public double TargetYRotation => TargetRotation.Y;
+
+		[MoProperty(("has_rider"))]
+		public bool HasRider
+		{
+			get => _hasRider;
+			set
+			{
+				_hasRider = value;
+				InvokeControllerUpdate();
+			}
+		}
 
 		/// <summary>
 		///		Returns true if the player has selected an item in the inventory
 		/// </summary>
-		[MoProperty("is_selected_item")]
-		public bool IsSelectedItem => Inventory.MainHand.Count > 0 && !(Inventory.MainHand is ItemAir);
+		[MoProperty("is_selected_item")] public bool IsSelectedItem => Inventory.MainHand.Count > 0 && !(Inventory.MainHand is ItemAir);
+		[MoProperty("main_hand_item_use_duration")] public double MainHandItemUseDuration => ItemInUseDuration;
 
-		[MoProperty("main_hand_item_use_duration")]
-		public double MainHandItemUseDuration => ItemInUseDuration;
+		[MoProperty("main_hand_item_max_duration")] public double MainHandItemMaxDuration { get; set; } = 1d;
 
-		[MoProperty("main_hand_item_max_duration")]
-		public double MainHandItemMaxDuration { get; set; } = 1d;
+		[MoProperty("cape_flap_amount")] public double CapeFlapAmount { get; set; } = 0d;
 
-		[MoProperty("cape_flap_amount")]
-		public double CapeFlapAmount { get; set; } = 0d;
-
+		/// <summary>
+		///			returns the hurt time for the actor, otherwise returns 0
+		/// </summary>
+		[MoProperty("hurt_time")] public double HurtTime { get; set; } = 0d;
+		
 		/// <summary>
 		///		Gets specified axis of the specified locator offset of the root model
 		/// </summary>
@@ -2152,8 +2123,7 @@ namespace Alex.Entities
 		[MoProperty("item_max_use_duration")] 
 		public double ItemMaxUseDuration => 0d;//MainHandItemMaxDuration;
 		
-		[MoProperty("item_remaining_use_duration")]
-		public double ItemRemainingUseDuration => ItemMaxUseDuration > 0d ? (ItemMaxUseDuration - ItemInUseDuration) : 0d;
+		[MoProperty("item_remaining_use_duration")] public double ItemRemainingUseDuration => ItemMaxUseDuration > 0d ? (ItemMaxUseDuration - ItemInUseDuration) : 0d;
 
 		#endregion
 	}

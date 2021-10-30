@@ -18,11 +18,22 @@ namespace Alex.Entities
 		{
 			base.HandleJavaMeta(entry);
 
-			if (entry.Index == 16 && entry is MetadataByte meta)
+			if (entry.Index == 17 && entry is MetadataByte meta)
 			{
 				IsSitting = (meta.Value & 0x01) != 0;
 				IsAngry = (meta.Value & 0x02) != 0;
 				IsTamed = (meta.Value & 0x04) != 0;
+			}
+			else if (entry.Index == 18 && entry is MetadataOptUUID ownerId)
+			{
+				if (ownerId.HasValue && Level.EntityManager.TryGet(ownerId.Value, out var e))
+				{
+					OwnerEntityId = e.EntityId;
+				}
+				else
+				{
+					OwnerEntityId = -1;
+				}
 			}
 		}
 	}

@@ -1,3 +1,4 @@
+using Alex.MoLang.Attributes;
 using Alex.Networking.Java.Packets.Play;
 using Alex.Worlds;
 
@@ -7,6 +8,7 @@ namespace Alex.Entities.Passive
 	{
 		private bool _hasSaddle;
 
+		[MoProperty("is_saddled")]
 		public bool HasSaddle
 		{
 			get => _hasSaddle;
@@ -14,12 +16,13 @@ namespace Alex.Entities.Passive
 			{
 				_hasSaddle = value;
 				
-				var modelRenderer = ModelRenderer;
+				InvokeControllerUpdate();
+			//	var modelRenderer = ModelRenderer;
 
-				if (modelRenderer != null)
-				{
-					ModelRenderer.SetVisibility("Bag1", !IsChested);
-				}
+				//if (modelRenderer != null)
+				//{
+				//	ModelRenderer.SetVisibility("Bag1", !IsChested);
+				//}
 			}
 		}
 
@@ -34,7 +37,7 @@ namespace Alex.Entities.Passive
 		{
 			base.HandleJavaMeta(entry);
 
-			if (entry.Index == 16 && entry is MetadataBool hasSaddle)
+			if (entry.Index == 17 && entry is MetadataBool hasSaddle)
 			{
 				HasSaddle = hasSaddle.Value;
 			}

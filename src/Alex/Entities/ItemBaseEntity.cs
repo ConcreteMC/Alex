@@ -24,7 +24,7 @@ namespace Alex.Entities
 		{
 			base.HandleJavaMeta(entry);
 			
-			if (entry.Index == 7 && entry is MetadataSlot slot)
+			if (entry.Index == 8 && entry is MetadataSlot slot)
 			{
 				var item = JavaWorldProvider.GetItemFromSlotData(slot.Value);
 				if (item != null)

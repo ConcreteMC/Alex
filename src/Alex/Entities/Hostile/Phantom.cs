@@ -40,7 +40,7 @@ namespace Alex.Entities.Hostile
 		{
 			base.HandleJavaMeta(entry);
 
-			if (entry.Index == 15 && entry is MetadataVarInt mtd)
+			if (entry.Index == 16 && entry is MetadataVarInt mtd)
 			{
 				Size = mtd.Value;
 			}

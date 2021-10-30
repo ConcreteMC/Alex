@@ -105,7 +105,7 @@ namespace Alex.Networking.Java.Packets.Play
 						    break;
 
 					    case MetadataType.OptBlockID:
-						    stream.ReadVarInt();
+						    meta = new MetadataOptBlockId(index, (uint)stream.ReadVarInt());
 						    break;
 					    case MetadataType.NBT:
 						    meta = new MetadataNbt(index, stream.ReadNbtCompound());
@@ -117,7 +117,7 @@ namespace Alex.Networking.Java.Packets.Play
 							    index, (MetadataVillagerData.VillagerTypes) stream.ReadVarInt(), (MetadataVillagerData.VillagerProfession) stream.ReadVarInt(), (MetadataVillagerData.VillagerLevel) stream.ReadVarInt());
 						    break;
 					    case MetadataType.OptVarInt:
-						    stream.ReadVarInt();
+						    meta = new MetadataOptVarInt(index, stream.ReadVarInt());
 						    break;
 					    case MetadataType.Pose:
 						    meta = new MetadataPose(index, (Pose) stream.ReadVarInt());
@@ -137,24 +137,24 @@ namespace Alex.Networking.Java.Packets.Play
     public enum MetadataType
     {
 	    Byte = 0,
-	    Varint,
-	    Float,
-	    String,
-	    Chat,
-	    OptChat,
-	    Slot,
-	    Boolean,
-	    Rotation,
-	    Position,
-	    OptPosition,
-	    Direction,
-	    OptUUID,
-	    OptBlockID,
-	    NBT,
-	    Particle,
-	    VillagerData,
-	    OptVarInt,
-	    Pose
+	    Varint = 1,
+	    Float = 2,
+	    String = 3,
+	    Chat = 4,
+	    OptChat = 5,
+	    Slot = 6,
+	    Boolean = 7,
+	    Rotation = 8,
+	    Position = 9,
+	    OptPosition = 10,
+	    Direction = 11,
+	    OptUUID = 12,
+	    OptBlockID = 13,
+	    NBT = 14,
+	    Particle = 15,
+	    VillagerData = 16,
+	    OptVarInt = 17,
+	    Pose = 18
     }
     
     public class MetaDataEntry
@@ -211,6 +211,27 @@ namespace Alex.Networking.Java.Packets.Play
     {
 	    public int Value { get; set; }
 	    public MetadataVarInt(byte index, int value) : base(index, MetadataType.Varint)
+	    {
+		    Value = value;
+	    }
+    }
+    
+    public class MetadataOptVarInt : MetaDataEntry
+    {
+	    private int _value;
+
+	    public int Value
+	    {
+		    get => _value - 1;
+		    set
+		    {
+			    _value = value + 1;
+		    }
+	    }
+
+	    public bool HasValue => _value != 0;
+
+	    public MetadataOptVarInt(byte index, int value) : base(index, MetadataType.Varint)
 	    {
 		    Value = value;
 	    }
@@ -280,10 +301,10 @@ namespace Alex.Networking.Java.Packets.Play
 	    }
     }
     
-    public class MetadataBlockId : MetaDataEntry
+    public class MetadataOptBlockId : MetaDataEntry
     {
 	    public uint Value { get; set; }
-	    public MetadataBlockId(byte index, uint value) : base(index, MetadataType.OptBlockID)
+	    public MetadataOptBlockId(byte index, uint value) : base(index, MetadataType.OptBlockID)
 	    {
 		    Value = value;
 	    }

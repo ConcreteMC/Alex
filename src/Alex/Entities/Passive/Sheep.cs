@@ -29,6 +29,7 @@ namespace Alex.Entities.Passive
 		};
 
 		private DyeColor _color = DyeColor.WhiteDye;
+
 		public DyeColor Color
 		{
 			get
@@ -38,7 +39,12 @@ namespace Alex.Entities.Passive
 			set
 			{
 				_color = value;
-				ModelRenderer.EntityColor = value.Color.ToVector3();
+				var renderer = ModelRenderer;
+
+				if (renderer != null)
+				{
+					renderer.EntityColor = value.Color.ToVector3();
+				}
 			}
 		}
 
@@ -52,7 +58,7 @@ namespace Alex.Entities.Passive
 		{
 			base.HandleJavaMeta(entry);
 
-			if (entry.Index == 16 && entry is MetadataByte meta)
+			if (entry.Index == 17 && entry is MetadataByte meta)
 			{
 				SetSheared((meta.Value & 0x10) != 0);
 				SetColor(meta.Value & 0x0F);
@@ -74,6 +80,12 @@ namespace Alex.Entities.Passive
 		{
 			//TryUpdateGeometry("minecraft:sheep", value ? "sheared" : "default");
 			IsSheared = value;
+		}
+
+		protected override void OnModelUpdated()
+		{
+			base.OnModelUpdated();
+			Color = _color;
 		}
 	}
 }

@@ -210,7 +210,7 @@ namespace Alex.Graphics.Models.Items
 
                         root.BasePosition = new Vector3(
                             (6f + ActiveDisplayItem.Translation.X), 6f + ActiveDisplayItem.Translation.Y,
-                            -(14f + (ActiveDisplayItem.Translation.Z)));
+                            -((ActiveDisplayItem.Translation.Z)));
                     }
                     else
                     {
@@ -221,7 +221,7 @@ namespace Alex.Graphics.Models.Items
 
                         root.BasePosition = new Vector3(
                             (-ActiveDisplayItem.Translation.X), 8f + ActiveDisplayItem.Translation.Y,
-                            -(12f + ActiveDisplayItem.Translation.Z));
+                            -(ActiveDisplayItem.Translation.Z));
                     }
                 }
             }

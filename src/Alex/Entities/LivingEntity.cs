@@ -74,7 +74,7 @@ namespace Alex.Entities
 		{
 			base.HandleJavaMeta(entry);
 
-			if (entry.Index == 7 && entry is MetadataByte data)
+			if (entry.Index == 8 && entry is MetadataByte data)
 			{
 				bool handActive = (data.Value & 0x01) != 0;
 
@@ -106,7 +106,7 @@ namespace Alex.Entities
 					IsUsingItem = false;
 				}
 			}
-			else if (entry.Index == 8 && entry is MetadataFloat flt)
+			else if (entry.Index == 9 && entry is MetadataFloat flt)
 			{
 				HealthManager.Health = flt.Value;
 			}

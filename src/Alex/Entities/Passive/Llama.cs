@@ -7,7 +7,7 @@ namespace Alex.Entities.Passive
 {
 	public class Llama : ChestedHorse
 	{
-		public Llama(World level) : base((EntityType)29, level)
+		public Llama(World level) : base(level)
 		{
 			Height = 1.87;
 			Width = 0.9;

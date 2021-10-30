@@ -1,12 +1,16 @@
 using Alex.Graphics.Models.Entity;
+using Alex.MoLang.Attributes;
+using Alex.MoLang.Runtime;
 using Alex.Networking.Java.Packets.Play;
 using Alex.Worlds;
 using MiNET.Entities;
+using NLog;
 
 namespace Alex.Entities.Passive
 {
 	public abstract class AbstractHorse : PassiveMob
 	{
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(AbstractHorse));
 		protected static readonly string[] PartOfSaddle = new string[]
 		{
 			"Saddle",
@@ -19,11 +23,12 @@ namespace Alex.Entities.Passive
 		public MiNET.Utils.UUID Owner { get; set; }
 		
 		public bool HasBred { get; set; }
-		public bool IsEating { get; set; }
 		public bool IsRearing { get; set; }
 		public bool IsMouthOpen { get; set; }
 
 		private bool _isSaddled = false;
+		
+		[MoProperty("is_saddled")]
 		public bool IsSaddled
 		{
 			get
@@ -33,8 +38,8 @@ namespace Alex.Entities.Passive
 			set
 			{
 				_isSaddled = value;
-				
-				var modelRenderer = ModelRenderer;
+				InvokeControllerUpdate();
+				/*var modelRenderer = ModelRenderer;
 
 				if (modelRenderer != null)
 				{
@@ -42,12 +47,12 @@ namespace Alex.Entities.Passive
 					{
 						ModelRenderer.SetVisibility(bone, !value);
 					}
-				}
+				}*/
 			}
 		}
 
 		/// <inheritdoc />
-		protected AbstractHorse(EntityType type, World level) : base(level)
+		protected AbstractHorse(World level) : base(level)
 		{
 			IsSaddled = false;
 		}
@@ -71,6 +76,26 @@ namespace Alex.Entities.Passive
 			{
 				Owner = uuid.HasValue ? uuid.Value : null;
 			}
+		}
+
+		[MoFunction("armor_texture_slot")]
+		public int ArmorTextureSlot(MoParams mo)
+		{
+			var parameters = mo.GetParams();
+
+			if (parameters.Length == 0)
+				return 0;
+
+			var slotIndex = (int)parameters[0].AsDouble();
+
+			switch (slotIndex)
+			{
+				default:
+					Log.Debug($"Unknown armor texture slot: {slotIndex}");
+					break;
+			}
+
+			return 0;
 		}
 	}
 }

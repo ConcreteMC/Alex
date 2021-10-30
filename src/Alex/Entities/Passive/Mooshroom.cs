@@ -15,7 +15,7 @@ namespace Alex.Entities.Passive
 		{
 			base.HandleJavaMeta(entry);
 
-			if (entry.Index == 16 && entry is MetadataString variant)
+			if (entry.Index == 17 && entry is MetadataString variant)
 			{
 				//TryUpdateTexture("minecraft:mooshroom", variant.Value == "red" ? "default" : "brown");
 			}

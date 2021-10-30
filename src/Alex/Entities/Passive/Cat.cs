@@ -51,7 +51,7 @@ namespace Alex.Entities.Passive
 		{
 			base.HandleJavaMeta(entry);
 
-			if (entry.Index == 18 && entry is MetadataVarInt varInt)
+			if (entry.Index == 19 && entry is MetadataVarInt varInt)
 			{
 				Variant = (CatType) varInt.Value;
 			}

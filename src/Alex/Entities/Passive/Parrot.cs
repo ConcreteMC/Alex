@@ -40,7 +40,7 @@ namespace Alex.Entities.Passive
 		{
 			base.HandleJavaMeta(entry);
 
-			if (entry.Index == 18 && entry is MetadataVarInt varint)
+			if (entry.Index == 19 && entry is MetadataVarInt varint)
 			{
 				Variant = (ParrotType) varint.Value;
 			}

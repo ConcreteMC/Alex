@@ -37,7 +37,7 @@ namespace Alex.Entities.Passive
 		{
 			base.HandleJavaMeta(entry);
 
-			if (entry.Index == 15 && entry is MetadataByte meta)
+			if (entry.Index == 16 && entry is MetadataByte meta)
 			{
 				IsHanging = (meta.Value & 0x01) != 0;
 			}

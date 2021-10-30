@@ -12,6 +12,21 @@ using NLog;
 
 namespace Alex.Graphics.Models.Entity
 {
+	public class TextureBinding
+	{
+		public TextureBinding(Texture2D texture, Vector2 size)
+		{
+			Texture = texture;
+			Size = size;
+			Effect = new EntityEffect();
+			Effect.Texture = texture;
+			Effect.TextureScale = Vector2.One / size;
+		}
+
+		public Vector2 Size { get; }
+		public Texture2D Texture { get; }
+		public EntityEffect Effect { get; }
+	}
 	public class ModelRenderer : IDisposable
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ModelRenderer));
@@ -71,6 +86,7 @@ namespace Alex.Graphics.Models.Entity
 
 		private EntityEffect Effect { get; set; }
 
+		private TextureBinding[] _textures = new TextureBinding[0];
 		private Texture2D _texture;
 		public Texture2D Texture
 		{

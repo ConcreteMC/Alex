@@ -56,7 +56,7 @@ namespace Alex.Entities.Generic
 		{
 			base.HandleJavaMeta(entry);
 
-			if (entry.Index == 7 && entry is MetadataPosition position)
+			if (entry.Index == 8 && entry is MetadataPosition position)
 			{
 				RenderLocation.X = KnownPosition.X = position.Position.X;
 				RenderLocation.Y = KnownPosition.Y = position.Position.Y;

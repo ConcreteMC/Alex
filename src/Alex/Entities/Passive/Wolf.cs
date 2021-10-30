@@ -33,7 +33,7 @@ namespace Alex.Entities.Passive
 		{
 			base.HandleJavaMeta(entry);
 
-			if (entry.Index == 18 && entry is MetadataBool boolean)
+			if (entry.Index == 19 && entry is MetadataBool boolean)
 			{
 				IsBegging = boolean.Value;
 			}
