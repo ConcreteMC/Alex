@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using Microsoft.Xna.Framework;
 using NLog;
 using RocketUI;
 
@@ -53,6 +54,10 @@ namespace Alex.Gui.Elements.Scoreboard
 			AddChild(container);
 
 			_spacer = new StackMenuSpacer();
+
+			Margin = new Thickness(10);
+			
+			BackgroundOverlay = new Color(Color.Black, 0.5f);
 		}
 
 		/// <inheritdoc />

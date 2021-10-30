@@ -68,12 +68,24 @@ namespace Alex.Common.Data.Options
 		[DataMember]
 		public OptionsProperty<bool> AlphaBlending { get; set; }
 		
+		[DataMember]
+		public OptionsProperty<ElementPosition> Position { get; set; }
+
 		public MinimapOptions()
 		{
 			Enabled = DefineProperty(false);
 			Size = DefineRangedProperty(1d, 0.125d, 2d);
 			DefaultZoomLevel = DefineProperty(ZoomLevel.Default, ZoomValidator);
 			AlphaBlending = DefineProperty(true);
+			Position = DefineProperty(ElementPosition.RightTop, ElementValidator);
+		}
+		
+		private ElementPosition ElementValidator(ElementPosition currentValue, ElementPosition newValue)
+		{
+			if (Enum.IsDefined(newValue))
+				return newValue;
+
+			return currentValue;
 		}
 
 		private ZoomLevel ZoomValidator(ZoomLevel currentValue, ZoomLevel newValue)

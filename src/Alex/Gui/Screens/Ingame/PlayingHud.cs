@@ -1,5 +1,6 @@
 ﻿using Alex.Common.Data;
 using Alex.Common.Data.Options;
+using Alex.Common.Gui;
 using Alex.Common.Gui.Elements;
 using Alex.Common.Input;
 using Alex.Entities;
@@ -60,6 +61,7 @@ namespace Alex.Gui.Screens.Ingame
             Alex = game;
 	        Player = world.Player;
 	        
+	        var options = Alex.Options.AlexOptions;
 	        Player.OnInventoryChanged += OnInventoryChanged;
 	        
 	        Anchor = Alignment.Fill;
@@ -142,7 +144,9 @@ namespace Alex.Gui.Screens.Ingame
 		        ChildAnchor = Alignment.Default
 	        };
 
-	        var options = Alex.Options.AlexOptions;
+	        options.UserInterfaceOptions.Scoreboard.Position.Bind(SetScoreboardPosition);
+	        SetScoreboardPosition(ElementPosition.Default, options.UserInterfaceOptions.Scoreboard.Position.Value);
+	        
 	        _renderDistanceAccessor = options.VideoOptions.RenderDistance.Bind(RenderDistanceChanged);
 	        _miniMap.Radius = _renderDistanceAccessor.Value;
 
@@ -153,6 +157,9 @@ namespace Alex.Gui.Screens.Ingame
 	        _minimapSizeAccessor = options.UserInterfaceOptions.Minimap.Size.Bind(OnMinimapSizeChanged);
 	        _miniMap.SetSize(_minimapSizeAccessor.Value);
 
+	        options.UserInterfaceOptions.Scoreboard.Position.Bind(SetMinimapPosition);
+	        SetMinimapPosition(ElementPosition.RightTop, options.UserInterfaceOptions.Minimap.Position.Value);
+	        
 	        _zoomLevelAccessor = options.UserInterfaceOptions.Minimap.DefaultZoomLevel.Bind(OnZoomLevelChanged);
 	        _miniMap.ZoomLevel = _zoomLevelAccessor.Value;
 	        
@@ -163,6 +170,38 @@ namespace Alex.Gui.Screens.Ingame
 	        _chatToggleBinding = PlayerInputManager.RegisterListener(
 		        AlexInputCommand.ToggleChat, InputBindingTrigger.Discrete, ToggleChat);
         }
+
+		private void SetScoreboardPosition(ElementPosition oldvalue, ElementPosition newvalue)
+		{
+			Alignment alignment = newvalue switch
+			{
+				ElementPosition.RightMiddle => Alignment.MiddleRight,
+				ElementPosition.RightTop    => Alignment.TopRight,
+				ElementPosition.RightBottom => Alignment.BottomRight,
+				ElementPosition.LeftTop     => Alignment.TopLeft,
+				ElementPosition.LeftMiddle  => Alignment.MiddleLeft,
+				ElementPosition.LeftBottom  => Alignment.BottomLeft,
+				_                           => Scoreboard.Anchor
+			};
+
+			Scoreboard.Anchor = alignment;
+		}
+		
+		private void SetMinimapPosition(ElementPosition oldvalue, ElementPosition newvalue)
+		{
+			Alignment alignment = newvalue switch
+			{
+				ElementPosition.RightMiddle => Alignment.MiddleRight,
+				ElementPosition.RightTop    => Alignment.TopRight,
+				ElementPosition.RightBottom => Alignment.BottomRight,
+				ElementPosition.LeftTop     => Alignment.TopLeft,
+				ElementPosition.LeftMiddle  => Alignment.MiddleLeft,
+				ElementPosition.LeftBottom  => Alignment.BottomLeft,
+				_                           => Scoreboard.Anchor
+			};
+
+			_miniMap.Anchor = alignment;
+		}
 
 		private void ToggleChat()
 		{

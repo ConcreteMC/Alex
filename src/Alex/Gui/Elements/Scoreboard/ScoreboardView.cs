@@ -15,7 +15,6 @@ namespace Alex.Gui.Elements.Scoreboard
 
 		public ScoreboardView() : base()
 		{
-			BackgroundOverlay = new Color(Color.Black, 0.5f);
 			ChildAnchor = Alignment.Fill;
 		}
 
