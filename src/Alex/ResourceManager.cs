@@ -35,22 +35,16 @@ using Alex.ResourcePackLib.IO.Abstract;
 using Alex.ResourcePackLib.Json.Bedrock.Entity;
 using Alex.ResourcePackLib.Json.BlockStates;
 using Alex.ResourcePackLib.Json.Models;
-using Alex.ResourcePackLib.Json.Models.Blocks;
 using Alex.ResourcePackLib.Json.Models.Entities;
 using Alex.ResourcePackLib.Json.Textures;
-using Alex.Utils;
 using Alex.Utils.Assets;
-using JetBrains.Profiler.Api;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Newtonsoft.Json;
 using NLog;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
-using DateTime = System.DateTime;
 using ResourceLocation = Alex.Common.Resources.ResourceLocation;
-using Task = System.Threading.Tasks.Task;
 
 namespace Alex
 {
@@ -99,14 +93,8 @@ namespace Alex
             RegistryManager = registryManager;
             Alex = alex;
             ContentManager = contentManager;
-           // Storage = serviceProvider.GetService<IStorageSystem>();
 
-           // Options = serviceProvider.GetService<IOptionsProvider>();
-           // RegistryManager = serviceProvider.GetService<IRegistryManager>();
-           // Alex = serviceProvider.GetService<Alex>();
-         //   ContentManager = serviceProvider.GetService<ContentManager>();
-
-            AssetsUtil = new MCJavaAssetsUtil(Storage); //ContentManager.Load<byte[]>();
+            AssetsUtil = new MCJavaAssetsUtil(Storage);
             BedrockAssetUtil = new MCBedrockAssetUtils(Storage);
         }
 
@@ -123,7 +111,6 @@ namespace Alex
                 if (BlockModelRegistry.TryGet(parentKey, out var rawParent))
                 {
                     parent = rawParent.Value;
-                    //else if (TryGetBlockModel(parentKey, out parent)){}
                 }
                 else if (models.TryGetValue(parentKey, out parent))
                 {
@@ -133,7 +120,6 @@ namespace Alex
                 if (parent != null)
                 {
                     model.UpdateValuesFromParent(parent);
-                    //model.Parent = parent;
                 }
                 else if (parentKey.Path.Equals("builtin/entity"))
                 {
@@ -220,8 +206,6 @@ namespace Alex
         internal IEnumerable<MCBedrockResourcePack> LoadBedrockTexturePack(IFilesystem fs,
             IProgressReceiver progress = null, string contentKey = null)
         {
-            //var fs = new ZipFileSystem(new MemoryStream(data), "servertextures");
-
             foreach (var resourcePack in LoadResourcePack(progress, fs, null))
             {
                 if (resourcePack.Info.Type == ResourcePackType.Bedrock)
@@ -242,8 +226,6 @@ namespace Alex
         {
             Stopwatch sw = Stopwatch.StartNew();
 
-            //try
-            //{
             foreach (var manifest in ResourcePackLib.ResourcePack.GetManifests(fs))
             {
                 if (manifest == null)
@@ -257,8 +239,6 @@ namespace Alex
 
                     sw.Stop();
 
-                    //Log.Debug($"Loaded {resourcePack.BlockModels.Count} block models from resourcepack");
-                    //	Log.Debug($"Loaded {resourcePack.ItemModels.Count} item models from resourcepack");
                     Log.Info(
                         $"Loading resourcepack \"{(string.IsNullOrWhiteSpace(manifest.Name) ? fs.Name : manifest.Name)}\" took: {sw.ElapsedMilliseconds}ms");
 
@@ -273,18 +253,12 @@ namespace Alex
 
                     sw.Stop();
 
-                    //	Log.Debug($"Loaded {brp.EntityModels.Count} entity models from resourcepack");
                     Log.Info($"Loading resourcepack \"{manifest.Name}\" took: {sw.ElapsedMilliseconds}ms");
 
                     sw.Restart();
                     yield return brp;
                 }
             }
-            //}
-            //	catch (Exception ex)
-            //	{
-            //		Log.Warn(ex, $"Failed to load resourcepack ({fs.Name})");
-            //	}
         }
 
         private static string ResolveTexture(ResourcePackModelBase var, string texture)
@@ -466,8 +440,6 @@ namespace Alex
                 resourcePacks.Add(vanilla);
             }
 
-            // Log.Info($"Loading bedrock resources...");
-
             progressReceiver?.UpdateProgress(0, "Loading bedrock resources...");
             foreach (var vanilla in LoadResourcePack(progressReceiver, new DiskFileSystem(defaultBedrock)))
             {
@@ -498,7 +470,6 @@ namespace Alex
                     ActiveBedrockResourcePacks.AddLast((MCBedrockResourcePack)pack);
                 }
             }
-            //Log.Info($"Loading known entity data...");
 
             Storage.TryGetDirectory(Path.Combine("assets", "resourcepacks"), out DirectoryInfo root);
             ResourcePackDirectory = root;
@@ -665,11 +636,7 @@ namespace Alex
             progress?.UpdateProgress(100, "Loading language...");
 
             Stopwatch sw = Stopwatch.StartNew();
-            MeasureProfiler.StartCollectingData();
             var imported = BlockFactory.LoadBlockstates(RegistryManager, this, true, false, progress);
-            MeasureProfiler.SaveData();
-
-            MeasureProfiler.StopCollectingData();
 
             Log.Info($"Imported {imported} blockstates from resourcepack in {sw.ElapsedMilliseconds}ms!");
 
@@ -686,9 +653,6 @@ namespace Alex
             FindAndAddTexture(new ResourceLocation(ResourceLocation.DefaultNamespace, "block/lava_flow"), textures);
             FindAndAddTexture(new ResourceLocation(ResourceLocation.DefaultNamespace, "block/lava_still"), textures);
 
-            //if (TryGetBitmap())
-            //textures.Add(, new AtlasGenerator.ImageEntry());
-
             BlockAtlas.LoadResources(device, textures, this, progress, true);
 
             textures.Clear();
@@ -701,12 +665,6 @@ namespace Alex
             ItemAtlas.LoadResources(device, textures, this, progress, true);
 
             ReloadBedrockResources(progress);
-            //  ProcessEntityModels(progress);
-
-            //ProcessBedrockResourcePacks(progress);
-
-            //progress?.UpdateProgress(0, $"Loading UI textures...");
-            //Alex.GuiRenderer.LoadResourcePackTextures(this, progress);
 
             var f = ActiveResourcePacks.LastOrDefault(x => x.FontBitmap != null);
             if (f != null)
@@ -731,19 +689,12 @@ namespace Alex
 
                     if (texture != null)
                         textures[search].Image = texture;
-
-                    //textures[texture.Key] = entry;
                 }
                 else
                 {
                     textures.Add(search, new AtlasGenerator.ImageEntry(texture, meta));
                 }
             }
-
-            // if (TryGetBitmap(search, out var bmp))
-            // {
-            //     textures.TryAdd(search, new AtlasGenerator.ImageEntry(bmp, ));
-            // }
         }
 
         private void GetTextures(IDictionary<ResourceLocation, ResourcePackModelBase> models,
@@ -756,9 +707,6 @@ namespace Alex
                 progress.UpdateProgress(counter, models.Count, null, itemModel.Key.ToString());
                 foreach (var path in itemModel.Value.Textures)
                 {
-                    // if (!path.Value.Contains(Selector, StringComparison.InvariantCultureIgnoreCase))
-                    //    continue;
-
                     var p = new ResourceLocation(path.Value);
 
                     FindAndAddTexture(p, textures);
@@ -914,9 +862,6 @@ namespace Alex
             progress.UpdateProgress(0, "Loading entity model registry...");
             RegistryManager.AddRegistry<EntityModelEntry, EntityModel>(EntityModelRegistry = new EntityModelRegistry());
 
-            // progress.UpdateProgress(0, "Loading blockstate registry...");
-            // RegistryManager.AddRegistry(new RegistryBase<BlockState>("blockstate"));
-
             progress.UpdateProgress(50, "Loading block registry...");
             RegistryManager.AddRegistry(new BlockRegistry());
         }
@@ -946,8 +891,6 @@ namespace Alex
 
                 return ms.ToArray();
             }
-
-            //return fontStream.ReadAllBytes();
         }
 
         public bool TryGetBitmap(ResourceLocation location, out Image<Rgba32> bitmap)
@@ -1089,53 +1032,6 @@ namespace Alex
 
             return new Microsoft.Xna.Framework.Color(94, 157, 52);
         }
-
-        /*public bool TryGetItemModel(ResourceLocation key, out ResourcePackModelBase model)
-        {
-            if (ItemModels.TryGetValue(key, out model))
-                return true;
-            
-            return false;
-            
-            /*model = null;
-            foreach (var resourcePack in ActiveResourcePacks.Reverse())
-            {
-                if (resourcePack.TryGetItemModel(key, out model))
-                {
-                    return true;
-                }
-            }
-
-            return false;*
-        }*/
-
-        /*public bool TryGetBlockModel(ResourceLocation key, out ResourcePackModelBase model)
-        {
-            if (BlockModels.TryGetValue(key, out model))
-                return true;
-
-            var m = BlockModels.FirstOrDefault(x => x.Key.ToString().EndsWith(key.Path, StringComparison.OrdinalIgnoreCase))
-               .Value;
-
-            if (m != null)
-            {
-                model = m;
-                return true;
-            }
-            
-            model = null;
-            return false;
-            /*model = null;
-            foreach (var resourcePack in ActiveResourcePacks.Reverse())
-            {
-                if (resourcePack.TryGetBlockModel(key, out model))
-                {
-                    return true;
-                }
-            }
-
-            return false;*
-        }*/
     }
 
     public class Registries

@@ -127,14 +127,17 @@ namespace Alex.Gui.Elements.Scoreboard
 				return;
 			
 			var                 entries = Entries.ToArray();
-
+			
+			long previousScore = 0;
 			if (SortOrder == 0) //Ascending
 			{
 				entries = entries.OrderBy(x => x.Value.Score).ToArray();
+				previousScore = entries.Max(x => x.Value.Score);
 			}
 			else if (SortOrder == 1)//Descending
 			{
 				entries = entries.OrderByDescending(x => x.Value.Score).ToArray();
+				previousScore = entries.Min(x => x.Value.Score);
 			}
 			
 			RemoveChild(_spacer);
@@ -150,17 +153,6 @@ namespace Alex.Gui.Elements.Scoreboard
 					_removed.Remove(sbe);
 			}
 
-			long previousScore = 0;
-
-			if (SortOrder == 1)
-			{
-				previousScore = entries.Max(x => x.Value.Score);
-			}
-			else
-			{
-				previousScore = entries.Min(x => x.Value.Score);
-			}
-
 			bool showScores = false;
 			foreach (var entry in entries)
 			{
@@ -168,11 +160,9 @@ namespace Alex.Gui.Elements.Scoreboard
 				{
 					showScores = true;
 				}
-				else
-				{
-					previousScore = entry.Value.Score;
-				}
+				
 				AddChild(entry.Value);
+				previousScore = entry.Value.Score;
 			}
 
 			foreach (var element in entries)

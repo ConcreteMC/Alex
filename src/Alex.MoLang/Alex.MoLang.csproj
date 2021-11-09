@@ -15,8 +15,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="csFastFloat" Version="3.0.0" />
-      <PackageReference Include="NLog" Version="4.7.9" />
+      <PackageReference Include="csFastFloat" Version="4.1.0" />
+      <PackageReference Include="NLog" Version="4.7.12" />
     </ItemGroup>
 
 </Project>

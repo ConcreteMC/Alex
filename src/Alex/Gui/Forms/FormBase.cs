@@ -29,6 +29,13 @@ namespace Alex.Gui.Forms
             //    AddChild(Container);
         }
 
+        /// <inheritdoc />
+        public override void OnShow()
+        {
+            base.OnShow();
+            Alex.Instance.IsMouseVisible = true;
+        }
+
         protected string FixContrast(string text)
         {
             return text
@@ -44,11 +51,6 @@ namespace Alex.Gui.Forms
             if (ReliableInputManager.Any(x => x.IsPressed(AlexInputCommand.Exit)))
             {
                 Parent.Hide(FormId);
-            }
-            else
-            {
-                if (!Alex.Instance.IsMouseVisible)
-                    Alex.Instance.IsMouseVisible = true;
             }
         }
 

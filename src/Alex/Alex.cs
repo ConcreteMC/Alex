@@ -766,6 +766,7 @@ namespace Alex
                             var currentState = GameStateManager.GetActiveState();
                             GameStateManager.SetActiveState("play", false);
                             GameStateManager.RemoveState(currentState);
+                            IsMouseVisible = false;
                         }
                     }
                     finally

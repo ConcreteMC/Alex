@@ -92,31 +92,39 @@ namespace Alex.Gamestates.InGame
 		private TimeSpan _targetElapsed = TimeSpan.Zero;
 		protected override void OnShow()
 		{
-			var world = World;
-			if (world == null)
-				return;
-			
-			var player = World?.Player;
-			if (player == null)
-				return;
-			
-			_targetElapsed = Alex.TotalTimeSpan.Add(TimeSpan.FromMilliseconds(500));
-			
-			Alex.IsMouseVisible = false;
-			player?.SkipUpdate();
-			
-			//if (RenderNetworking) 
-			Alex.GuiManager.AddScreen(_networkDebugHud);
-			
-			base.OnShow();
-			Alex.GuiManager.AddScreen(_playingHud);
+			try
+			{
+				var world = World;
 
-			if (RenderDebug)
-				Alex.GuiManager.AddScreen(_debugInfo);
+				if (world == null)
+					return;
 
-			world.TickManager.RegisterTicked(_playingHud.Title);
-			_playingHud.Title.Ready();
-			Alex.ResetFrameRateLimiter();
+				var player = World?.Player;
+
+				if (player == null)
+					return;
+
+				_targetElapsed = Alex.TotalTimeSpan.Add(TimeSpan.FromMilliseconds(500));
+
+				player?.SkipUpdate();
+
+				//if (RenderNetworking) 
+				Alex.GuiManager.AddScreen(_networkDebugHud);
+
+				base.OnShow();
+				Alex.GuiManager.AddScreen(_playingHud);
+
+				if (RenderDebug)
+					Alex.GuiManager.AddScreen(_debugInfo);
+
+				world.TickManager.RegisterTicked(_playingHud.Title);
+				_playingHud.Title.Ready();
+				Alex.ResetFrameRateLimiter();
+			}
+			finally
+			{
+				Alex.IsMouseVisible = false;
+			}
 		}
 
 		protected override void OnHide()
@@ -452,10 +460,6 @@ namespace Alex.Gamestates.InGame
 
 			//dir.Normalize();
 			Alex.AudioEngine.Update(gameTime, world.Camera.Position, Vector3.Normalize(rotatedForward));
-			
-			//Alex.ParticleManager.Update(gameTime);
-			
-			//base.OnUpdate(gameTime);
 		}
 		
 		protected override void OnDraw(IRenderArgs args)
