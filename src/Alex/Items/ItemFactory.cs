@@ -265,18 +265,18 @@ namespace Alex.Items
 						Log.Debug($"No model found for item: {entry.Key}");
 						return;
 		            }
-		            
-		            var bs = BlockFactory.GetBlockState(entry.Key);
-		            if (bs.Block.Renderable)
+
+		            item = new Item();
+		            if (blocks.All(x => x.Key != entry.Key))
 		            {
-			            item = new ItemBlock(bs);
+			            var bs = BlockFactory.GetBlockState(entry.Key);
+			            if (bs is not MissingBlockState && bs.Block.Renderable)
+			            {
+				            item = new ItemBlock(bs);
+			            }
 		            }
-		            else
-		            {
-			            item = new Item();
-		            }
-		            
-		           // item = renderer is ItemBlockModelRenderer ? new ItemBlock() : new Item();
+
+		            // item = renderer is ItemBlockModelRenderer ? new ItemBlock() : new Item();
 
 		            var minetItem = MiNET.Items.ItemFactory.GetItem(resourceLocation.Path);
 
