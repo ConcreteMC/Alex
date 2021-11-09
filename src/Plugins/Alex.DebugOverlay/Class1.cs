@@ -26,7 +26,7 @@ namespace Alex.DebugOverlay
 			_guiRenderer.Init(_alex.GraphicsDevice, _alex.Services);
 			_guiRenderer.Font = _alex.GuiRenderer.Font;
 			
-			_guiManager = new GuiManager(_alex, _alex.Services, _alex.InputManager, _guiRenderer);
+			_guiManager = new GuiManager(_alex,  _guiRenderer, _alex.Services);
 			_alex.Components.Add(_guiManager);
 			_guiManager.DrawOrder = _alex.GuiManager.DrawOrder + 1;
 			//_streamWriter = File.AppendText(Filename);
