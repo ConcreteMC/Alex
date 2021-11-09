@@ -139,12 +139,14 @@ namespace Alex.Worlds.Multiplayer
 		}
 
 		private bool _disconnectShown = false;
-		public void ShowDisconnect(string reason, bool useTranslation = false, bool force = false)
+		private bool _wasKicked = false;
+		public void ShowDisconnect(string reason, bool useTranslation = false, bool force = false, bool wasKicked = false)
 		{
 			if (_disconnectShown && !force)
 				return;
 			
 			_disconnectShown = true;
+			_wasKicked = wasKicked;
 			
 			DisconnectedDialog.Show(Alex, reason, useTranslation);
 			
@@ -319,6 +321,13 @@ namespace Alex.Worlds.Multiplayer
 		private BlockingCollection<ChunkColumn> _generatingHelper     = new BlockingCollection<ChunkColumn>();
 		private int                             _chunksReceived       = 0;
 
+		private LoadResult DetermineDisconnectReason()
+		{
+			if (_wasKicked) return LoadResult.Kicked;
+
+			return LoadResult.ConnectionLost;
+		}
+		
 		public override LoadResult Load(ProgressReport progressReport)
 		{
 			if (!Client.Initialize(CancellationToken.None))
@@ -333,14 +342,14 @@ namespace Alex.Worlds.Multiplayer
 				return LoadResult.LoginFailed;
 			}
 
-			if (_disconnected) return LoadResult.ConnectionLost;
+			if (_disconnected) return DetermineDisconnectReason();
 
 			progressReport(LoadingState.ConnectingToServer, 99);
 
 			if (!_loginCompleteEvent.WaitOne(5000))
 				return LoadResult.Timeout;
 
-			if (_disconnected) return LoadResult.ConnectionLost;
+			if (_disconnected) return DetermineDisconnectReason();
 
 			progressReport(LoadingState.LoadingChunks, 0);
 
@@ -2663,11 +2672,11 @@ namespace Alex.Worlds.Multiplayer
 			Log.Info($"Received disconnect: {packet.Message}");
 			if (ChatObject.TryParse(packet.Message, out string o))
 			{
-				ShowDisconnect(o, force:true);
+				ShowDisconnect(o, force:true, wasKicked: true);
 			}
 			else
 			{
-				ShowDisconnect(packet.Message, false, true);
+				ShowDisconnect(packet.Message, false, true, true);
 			}
 
 			_disconnected = true;

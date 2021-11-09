@@ -136,7 +136,7 @@ namespace Alex.Services
 						client?.Close();
 						client?.Dispose();
 					}
-				});
+				}, cancellationToken);
 		}
 
 		/// <inheritdoc />

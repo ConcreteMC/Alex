@@ -53,6 +53,7 @@ namespace Alex.Worlds.Abstraction
 		ConnectionLost,
 		LoginFailed,
 		Timeout,
-		Aborted
+		Aborted,
+		Kicked
 	}
 }

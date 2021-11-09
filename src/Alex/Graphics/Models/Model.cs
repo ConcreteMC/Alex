@@ -87,7 +87,9 @@ namespace Alex.Graphics.Models
 		public int Draw(Matrix world, Matrix view, Matrix projection)
 		{
 			int drawCount = 0;
-			int boneCount = this.Bones.Count;
+
+			var bones = this.Bones.ToArray();
+			int boneCount = bones.Length;
 			
 			if (_matrices == null ||
 			    _matrices.Length != boneCount)
@@ -96,7 +98,7 @@ namespace Alex.Graphics.Models
 			}
 
 			// Look up combined bone matrices for the entire model.            
-			CopyAbsoluteBoneTransformsTo(_matrices);
+			CopyAbsoluteBoneTransformsTo(bones, _matrices);
 
 			// Draw the model.
 			foreach (var mesh in Meshes)
@@ -128,17 +130,27 @@ namespace Alex.Graphics.Models
 		/// <param name="destinationBoneTransforms">The array receiving the transformed bones.</param>
 		public void CopyAbsoluteBoneTransformsTo(Matrix[] destinationBoneTransforms)
 		{
+			CopyAbsoluteBoneTransformsTo(Bones, destinationBoneTransforms);
+		}
+
+		/// <summary>
+		/// Copies bone transforms relative to all parent bones of the each bone from this model to a given array.
+		/// </summary>
+		/// <param name="destinationBoneTransforms">The array receiving the transformed bones.</param>
+		public static void CopyAbsoluteBoneTransformsTo(IEnumerable<ModelBone> source, Matrix[] destinationBoneTransforms)
+		{
+			var bones = source.ToArray();
 			if (destinationBoneTransforms == null)
 				throw new ArgumentNullException(nameof(destinationBoneTransforms));
 			
-			var bones = this.Bones;
-			if (destinationBoneTransforms.Length <  bones.Count)
+			//var bones = this.Bones;
+			if (destinationBoneTransforms.Length <  bones.Length)
 				throw new ArgumentOutOfRangeException(nameof(destinationBoneTransforms));
 			
-			int count = bones.Count;
+			int count = bones.Length;
 			for (int index1 = 0; index1 < count; index1++)
 			{
-				if (index1 >= bones.Count)
+				if (index1 >= bones.Length)
 					break;
 				
 				var modelBone = bones[index1];

@@ -255,7 +255,7 @@ namespace Alex.Worlds.Multiplayer
 				{
 					if (Client.DisconnectReason == DisconnectReason.Kicked)
 					{
-						return LoadResult.Aborted;
+						return LoadResult.Kicked;
 					}
 
 					Log.Warn($"Failed to connect to server, timed-out.");

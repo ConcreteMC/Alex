@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -272,13 +273,26 @@ namespace Alex.Gamestates.Multiplayer
 
 		    return Task.CompletedTask;
 	    }
+	    
+	    private Task _previousTask = null;
 
 	    /// <inheritdoc />
 	    protected override void OnAddItem(GuiServerListEntryElement item)
 	    {
 		    base.OnAddItem(item);
 
-		    item?.PingAsync(false, _cancellationTokenSource.Token);
+		    var prevTask = _previousTask;
+
+		    if (prevTask == null || prevTask.IsCompleted)
+		    {
+			    _previousTask = item.PingAsync(false, _cancellationTokenSource.Token);
+		    }
+		    else
+		    {
+			    _previousTask = prevTask.ContinueWith(_ => item.PingAsync(false, _cancellationTokenSource.Token));
+		    }
+		    
+		    //item?.PingAsync(false, _cancellationTokenSource.Token);
 	    }
 
 	    protected override void OnSelectedItemChanged(GuiServerListEntryElement newItem)
