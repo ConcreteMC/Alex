@@ -210,8 +210,6 @@ namespace Alex.Gamestates.Multiplayer
 				    var item = CreateItem(serverType, entry);
 				    item.CanDelete = false;
 				    item.SaveEntry = false;
-
-				    AddItem(item);
 			    }
 
 			    foreach (var entry in serverType.StorageProvider.Data.ToArray())

@@ -6,7 +6,7 @@ namespace Alex.Common.Graphics
 	{
 		BoundingFrustum BoundingFrustum  { get; }
 		float           FarDistance      { get; set; }
-		float           FOV              { get; set; }
+		float           FieldOfView              { get; set; }
 		float           AspectRatio      { get;  }
 		Vector3         Position         { get; set; }
 		Matrix        ProjectionMatrix { get; set; }

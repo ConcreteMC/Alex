@@ -169,7 +169,7 @@ namespace Alex.Gui.Elements.Context3D
                 Viewport = new Viewport(256, 128, 128, 256, 0.01f, 128f);
                 Position = basePosition;
                 Rotation = Vector3.Zero;
-                FOV = 75.0f;
+                FieldOfView = 75.0f;
                 
                 SetRenderDistance(128);
             }
@@ -190,7 +190,7 @@ namespace Alex.Gui.Elements.Context3D
             {
                 //ProjectionMatrix = Matrix.CreatePerspectiveOffCenter(Viewport.RenderBounds, NearDistance, FarDistance);
                 ProjectionMatrix =
-                    Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(FOV), Viewport.AspectRatio,
+                    Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(FieldOfView), Viewport.AspectRatio,
                         NearDistance, FarDistance);
             }
 

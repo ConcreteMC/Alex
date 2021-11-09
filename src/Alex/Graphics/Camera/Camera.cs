@@ -21,14 +21,28 @@ namespace Alex.Graphics.Camera
 	    /// </summary>
 	    public float FarDistance { get; set; }
 
-	    public float FOV         { get; set; } = 75f;
-
-	    public float FOVModifier
+	    /// <summary>
+	    ///		The camera's field of view
+	    /// </summary>
+	    public float FieldOfView
 	    {
-		    get => _fovModifier;
+		    get => _fieldOfView;
 		    set
 		    {
-			    _fovModifier = value;
+			    _fieldOfView = value;
+			    UpdateProjectionMatrix();
+		    }
+	    }
+
+	    /// <summary>
+	    ///		An offset on the field of view.
+	    /// </summary>
+	    public float FieldOfViewOffset
+	    {
+		    get => _fieldOfViewOffset;
+		    set
+		    {
+			    _fieldOfViewOffset = value;
 			    UpdateProjectionMatrix();
 		    }
 	    }
@@ -41,12 +55,8 @@ namespace Alex.Graphics.Camera
 		public void SetRenderDistance(int renderDistance)
 		{
 			FarDistance = renderDistance * 16;// MathF.Pow(renderDistance, 2f);
-			
-			ProjectionMatrix = Matrix.CreatePerspectiveFieldOfView(
-				MathHelper.ToRadians(FOV + FOVModifier),
-				AspectRatio,
-				NearDistance,
-				FarDistance);
+
+			UpdateProjectionMatrix();
 		}
 		
 		public Vector3 Offset { get; private set; } = Vector3.Zero;
@@ -125,7 +135,8 @@ namespace Alex.Graphics.Camera
         }
         
         public  Vector3 Direction { get; protected set; }
-        private float   _fovModifier = 0f;
+        private float   _fieldOfViewOffset = 0f;
+        private float _fieldOfView = 75f;
 
         /// <summary>
         /// Updates the camera's looking vector.
@@ -158,7 +169,7 @@ namespace Alex.Graphics.Camera
 	    public virtual void UpdateProjectionMatrix()
 		{
 			_projectionMatrix = Matrix.CreatePerspectiveFieldOfView(
-				MathHelper.ToRadians(FOV + FOVModifier),
+				MathHelper.ToRadians(FieldOfView + FieldOfViewOffset),
 				AspectRatio,
 				NearDistance,
 				FarDistance);

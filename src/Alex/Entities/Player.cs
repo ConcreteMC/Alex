@@ -818,7 +818,7 @@ namespace Alex.Entities
 		    set
 		    {
 			    _fovModifier = value;
-			    Level.Camera.FOVModifier = value;
+			    Level.Camera.FieldOfViewOffset = value;
 		    }
 	    }
 

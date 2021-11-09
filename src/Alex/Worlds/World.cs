@@ -146,7 +146,7 @@ namespace Alex.Worlds
 			Player.KnownPosition = new PlayerLocation(SpawnPoint);
 			_disposables.Add(options.FieldOfVision.Bind(FieldOfVisionOnValueChanged));
 			//Options.FieldOfVision.ValueChanged += FieldOfVisionOnValueChanged;
-			Camera.FOV = Options.FieldOfVision.Value;
+			Camera.FieldOfView = Options.FieldOfVision.Value;
 
 			//PhysicsEngine.AddTickable(Player);
 
@@ -299,7 +299,7 @@ namespace Alex.Worlds
 		
 		private void FieldOfVisionOnValueChanged(int oldvalue, int newvalue)
 		{
-			Camera.FOV = newvalue;
+			Camera.FieldOfView = newvalue;
 		}
 
 		//public long WorldTime { get; private set; } = 6000;
