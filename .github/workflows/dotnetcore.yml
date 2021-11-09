@@ -13,14 +13,16 @@ jobs:
       with:
         submodules: 'recursive'
         
-    - name: Publish NuGet
-      uses: brandedoutcast/publish-nuget@v2.5.5
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v1.8.0
       with:
-        PROJECT_FILE_PATH: src/Alex.MoLang/Alex.MoLang.csproj
-        PACKAGE_NAME: Alex.MoLang
-        NUGET_KEY: ${{secrets.NUGET_PUBLISH_KEY}}
-        VERSION_STATIC: '1.0.${{github.run_id}}'
-        TAG_COMMIT: false
+        dotnet-version: 6.0.x
+
+    - name: Publish
+      run: |
+        dotnet build -c Release src/Alex.MoLang/Alex.MoLang.csproj
+        dotnet pack --no-build -c Release /p:Version="1.0.${{github.run_id}}" src/Alex.MoLang/Alex.MoLang.csproj -o .
+        dotnet nuget push *.nupkg -s https://api.nuget.org/v3/index.json -k ${{secrets.NUGET_PUBLISH_KEY}} --skip-duplicate
         
   package:
     name: Build
