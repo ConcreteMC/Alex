@@ -382,6 +382,12 @@ namespace Alex.Networking.Java.Util
 
 		public void WriteString(string data)
 		{
+			if (data == null)
+			{
+				WriteVarInt(0);
+				return;
+			}
+			
 			var stringData = Encoding.UTF8.GetBytes(data);
 			WriteVarInt(stringData.Length);
 			Write(stringData);

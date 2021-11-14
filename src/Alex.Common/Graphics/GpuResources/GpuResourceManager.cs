@@ -43,7 +43,7 @@ namespace Alex.Common.Graphics.GpuResources
             
             var locker = ReflectionHelper.GetPrivateFieldValue<object>(typeof(GraphicsDevice), device, "_resourcesLock");
 
-            WeakReference[] references;
+            List<WeakReference> references;
 
             if (!Monitor.TryEnter(locker, 0))
                 return;
@@ -53,21 +53,31 @@ namespace Alex.Common.Graphics.GpuResources
                // var refs = ReflectionHelper.GetPrivateFieldValue<List<WeakReference>>(
                //     typeof(GraphicsDevice), device, "_resources");
 
-                references = ((List<WeakReference>)_resourceField.GetValue(device)).ToArray();
+                references = (List<WeakReference>)_resourceField.GetValue(device);
             }
             finally
             {
                 Monitor.Exit(locker);
             }
 
+            if (references == null)
+                return;
+
             long memUsage = 0;
             int count = 0;
-            foreach (var reference in references)
+
+            for (var index = 0; index < references.Count; index++)
             {
+                if (index + 1 >= references.Count)
+                    break;
+                
+                var reference = references[index];
+
                 if (!reference.IsAlive)
                     continue;
-                
+
                 GraphicsResource resource = reference.Target as GraphicsResource;
+
                 if (resource == null)
                     continue;
 

@@ -1,5 +1,7 @@
 using System;
+using System.Buffers;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using Alex.Graphics.Models.Entity.Animations;
 using Microsoft.Xna.Framework;
@@ -14,7 +16,7 @@ namespace Alex.Graphics.Models
 	public sealed class Model
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(Model));
-		private Matrix[] _matrices;
+		//private Matrix[] _matrices;
 
 		/// <summary>
 		/// A collection of <see cref="ModelBone"/> objects which describe how each mesh in the
@@ -78,6 +80,7 @@ namespace Alex.Graphics.Models
 			}
 		}
 
+		private static ArrayPool<Matrix> MatrixArrayPool = ArrayPool<Matrix>.Create();
 		/// <summary>
 		/// Draws the model meshes.
 		/// </summary>
@@ -88,37 +91,50 @@ namespace Alex.Graphics.Models
 		{
 			int drawCount = 0;
 
-			var bones = this.Bones.ToArray();
+			var bones = this.Bones.ToImmutableArray();
 			int boneCount = bones.Length;
-			
-			if (_matrices == null ||
-			    _matrices.Length != boneCount)
-			{
-				_matrices = new Matrix[boneCount];
-			}
 
-			// Look up combined bone matrices for the entire model.            
-			CopyAbsoluteBoneTransformsTo(bones, _matrices);
+			var matrices = MatrixArrayPool.Rent(boneCount);
 
-			// Draw the model.
-			foreach (var mesh in Meshes)
+			try
 			{
-				var parentIndex = mesh.ParentBone.Index;
-				if (!mesh.ParentBone.Visible || parentIndex < 0 || parentIndex >= _matrices.Length)
-					continue;
-				
-				foreach (Microsoft.Xna.Framework.Graphics.Effect effect in mesh.Effects)
+				//if (_matrices == null ||
+				//    _matrices.Length != boneCount)
+				//{
+				//	_matrices = new Matrix[boneCount];
+				//}
+
+				// Look up combined bone matrices for the entire model.            
+				CopyAbsoluteBoneTransformsTo(bones, matrices);
+
+				// Draw the model.
+				foreach (var mesh in Meshes)
 				{
-					IEffectMatrices effectMatricies = effect as IEffectMatrices;
-					if (effectMatricies == null) {
-						throw new InvalidOperationException();
-					}
-					effectMatricies.World = _matrices[parentIndex] * world;
-					effectMatricies.View = view;
-					effectMatricies.Projection = projection;
-				}
+					var parentIndex = mesh.ParentBone.Index;
 
-				drawCount += mesh.Draw();
+					if (!mesh.ParentBone.Visible || parentIndex < 0 || parentIndex >= matrices.Length)
+						continue;
+
+					foreach (Microsoft.Xna.Framework.Graphics.Effect effect in mesh.Effects)
+					{
+						IEffectMatrices effectMatricies = effect as IEffectMatrices;
+
+						if (effectMatricies == null)
+						{
+							throw new InvalidOperationException();
+						}
+
+						effectMatricies.World = matrices[parentIndex] * world;
+						effectMatricies.View = view;
+						effectMatricies.Projection = projection;
+					}
+
+					drawCount += mesh.Draw();
+				}
+			}
+			finally
+			{
+				MatrixArrayPool.Return(matrices, true);
 			}
 
 			return drawCount;
@@ -130,16 +146,16 @@ namespace Alex.Graphics.Models
 		/// <param name="destinationBoneTransforms">The array receiving the transformed bones.</param>
 		public void CopyAbsoluteBoneTransformsTo(Matrix[] destinationBoneTransforms)
 		{
-			CopyAbsoluteBoneTransformsTo(Bones, destinationBoneTransforms);
+			CopyAbsoluteBoneTransformsTo(Bones.ToImmutableArray(), destinationBoneTransforms);
 		}
 
 		/// <summary>
 		/// Copies bone transforms relative to all parent bones of the each bone from this model to a given array.
 		/// </summary>
 		/// <param name="destinationBoneTransforms">The array receiving the transformed bones.</param>
-		public static void CopyAbsoluteBoneTransformsTo(IEnumerable<ModelBone> source, Matrix[] destinationBoneTransforms)
+		public static void CopyAbsoluteBoneTransformsTo(ImmutableArray<ModelBone> source, Matrix[] destinationBoneTransforms)
 		{
-			var bones = source.ToArray();
+			var bones = source;
 			if (destinationBoneTransforms == null)
 				throw new ArgumentNullException(nameof(destinationBoneTransforms));
 			

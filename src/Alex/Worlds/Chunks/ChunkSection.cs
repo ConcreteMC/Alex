@@ -27,6 +27,7 @@ namespace Alex.Worlds.Chunks
 		protected readonly BlockStorage[] BlockStorages;
 		public   readonly LightArray    BlockLight;
 		public   readonly LightArray    SkyLight;
+		public readonly int[] BiomeIds;
 
 		public List<BlockCoordinates> LightSources { get; private set; } = new List<BlockCoordinates>();
         
@@ -46,6 +47,8 @@ namespace Alex.Worlds.Chunks
 	        this.BlockLight = new LightArray();
 	        this.SkyLight = new LightArray();
 
+	        BiomeIds = new int[16 * 16 * 16];
+
 	        ResetLight(true, true);
         }
 
@@ -62,6 +65,16 @@ namespace Alex.Worlds.Chunks
 		{
 			return (y << 8 | z << 4 | x);
 		}
+
+        public int GetBiome(int x, int y, int z)
+        {
+	        return BiomeIds[GetCoordinateIndex(x, y, z)];
+        }
+
+        public void SetBiome(int x, int y, int z, int biomeId)
+        {
+	        BiomeIds[GetCoordinateIndex(x, y, z)] = biomeId;
+        }
         
         public BlockState Get(int x, int y, int z)
 		{
@@ -257,10 +270,15 @@ namespace Alex.Worlds.Chunks
 		}
 
 		private bool _disposed = false;
-		public void Dispose()
+		public void Dispose(bool disposing)
 		{
 			if (_disposed)
 				return;
+
+			if (disposing)
+			{
+				Log.Warn($"Dispose was never called. Cleaning up.");
+			}
 
 			try
 			{
@@ -279,7 +297,17 @@ namespace Alex.Worlds.Chunks
 			}
 		}
 
-	    public class BlockEntry
+		public void Dispose()
+		{
+			Dispose(true);
+		}
+
+		~ChunkSection()
+		{
+			Dispose(false);
+		}
+		
+		public class BlockEntry
 	    {
 		    public BlockState State { get; set; }
 		    public int Storage { get; set; }

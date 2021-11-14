@@ -361,10 +361,16 @@ namespace Alex.Gamestates.Multiplayer
 		    try
 		    {
 			    var entry = item.SavedServerEntry;
-			    
+
+			    bool handledCallback = false;
 			    await serverType.Authenticate(
 				    _skyBox, (profile) =>
 				    {
+					    if (handledCallback)
+						    return;
+
+					    handledCallback = true;
+					    
 					    if (overlay != null)
 					    {
 						    Alex.GuiManager.RemoveScreen(overlay);

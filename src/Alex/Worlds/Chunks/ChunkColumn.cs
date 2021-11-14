@@ -29,20 +29,33 @@ namespace Alex.Worlds.Chunks
 		
 		public           bool           IsNew           { get; set; } = true;
 		public           ChunkSection[] Sections { get; set; }
-		private readonly int[] _biomeId;
+	//	private readonly int[] _biomeId;
 		private readonly  short[]        _height  = new short[256];
 		
 		public  object                                              UpdateLock       { get; set; } = new object();
 		public ConcurrentDictionary<BlockCoordinates, NbtCompound> BlockEntities    { get; }
 		//public  NbtCompound[]                                       GetBlockEntities => BlockEntities.ToArray();
 
-		internal ChunkData ChunkData { get; private set; }
-		private object _dataLock = new object();
+		internal ChunkData ChunkData
+		{
+			get => _chunkData;
+			private set
+			{
+				var oldValue = _chunkData;
+				_chunkData = value;
 
-		//private System.Collections.BitArray _scheduledUpdates;
-		private int _scheduledUpdateCount = 0;
+				if (oldValue != value)
+				{
+					oldValue?.Dispose();
+				}
+			}
+		}
+
+		private object _dataLock = new object();
 		public WorldSettings WorldSettings { get; }
 		private readonly int _sectionOffset;
+		private ChunkData _chunkData;
+
 		public ChunkColumn(int x, int z, WorldSettings worldSettings)
 		{
 			X = x;
@@ -59,10 +72,9 @@ namespace Alex.Worlds.Chunks
 			}
 
 			BlockEntities = new ConcurrentDictionary<BlockCoordinates, NbtCompound>();
-			//_scheduledUpdates = new System.Collections.BitArray((16 * 16 * realHeight), false);
-			_biomeId = new int[16 * 16 * realHeight];
+			//_biomeId = new int[16 * 16 * realHeight];
 
-			ChunkData = ChunkData.Create(x, z);// new ChunkData(x,z);
+			ChunkData = ChunkData.Create(x, z);
 		}
 
 		public ChunkColumn(int x, int z) : this(x,z, WorldSettings.Default)
@@ -89,67 +101,6 @@ namespace Alex.Worlds.Chunks
 			if (!CheckWithinCoordinates(x, y, z, false))
 				return;
 			
-			/*var queue = _scheduledUpdates;
-
-			if (queue != null)
-			{
-				var wasQueued = queue[GetCoordinateIndex(x, y, z)];
-				queue[GetCoordinateIndex(x, y, z)] = value;
-
-				if (wasQueued && !value)
-				{
-					Interlocked.Decrement(ref _scheduledUpdateCount);
-				}else if (!wasQueued && value)
-				{
-					Interlocked.Increment(ref _scheduledUpdateCount);
-				}
-			}*/
-		}
-
-		public void ScheduleBorder(ChunkCoordinates neighbor)
-		{
-			int? validX = null;
-			int? validZ = null;
-
-			if (neighbor.X == X + 1)
-			{
-				validX = 15;
-			}
-			else if (neighbor.X == X - 1)
-			{
-				validX = 0;
-			}
-			
-			if (neighbor.Z == Z + 1)
-			{
-				validZ = 15;
-			}
-			else if (neighbor.Z == Z - 1)
-			{
-				validZ = 0;
-			}
-			
-			for (int x = 0; x < 16; x++)
-			{
-				for (int z = 0; z < 16; z++)
-				{
-					for (int y = WorldSettings.MinY; y < WorldSettings.WorldHeight; y++)
-					{
-						if (validX.HasValue && x == validX.Value)
-						{
-							SetScheduled(x,y,z, true);
-						}
-						else if (validZ.HasValue && z == validZ.Value)
-						{
-							SetScheduled(x,y,z, true);
-						}
-						if (x == 0 || x == 15 || z == 0 || z == 15)
-						{
-							//SetScheduled(x,y,z, true);
-						}
-					}
-				}
-			}
 		}
 
 		public static float AverageUpdateTime => MovingAverage.Average;
@@ -161,7 +112,6 @@ namespace Alex.Worlds.Chunks
 
 		public bool UpdateBuffer(IBlockAccess world, bool applyChanges)
 		{
-			//Monitor.Enter(_dataLock);
 			if (!Monitor.TryEnter(_dataLock, 0))
 				return false;
 
@@ -170,18 +120,10 @@ namespace Alex.Worlds.Chunks
 			try
 			{
 				var chunkData = ChunkData;
-			//	chunkData.Buffer = 
 
 				if (chunkData == null)
 					return false;
 
-				//var scheduleQueue = _scheduledUpdates;
-
-			//	if (scheduleQueue == null)
-				//	return false;
-				
-				//bool isNew = IsNew;
-				//bool didChange = false;
 				world = new OffsetBlockAccess(new BlockCoordinates(X << 4, 0, Z << 4), world);
 				
 				for (int sectionIndex = 0; sectionIndex < Sections.Length; sectionIndex++)
@@ -201,21 +143,7 @@ namespace Alex.Worlds.Chunks
 						{
 							for (int y = 0; y < 16; y++)
 							{
-								var idx = GetCoordinateIndex(x, yOffset + y, z);
-
-								//bool scheduled = scheduleQueue[idx]; // IsScheduled(x, y, z)
-
-								//if ((!isNew && !scheduled))
-								//	continue;
-								
 								var blockPosition = new BlockCoordinates(x, yOffset + y, z);
-								//if (scheduled)
-								{
-								//	Interlocked.Decrement(ref _scheduledUpdateCount);
-								//	scheduleQueue[idx] = false;
-									//didChange = true;
-								}
-								//chunkData?.Remove(blockPosition);
 
 								for (int storage = 0; storage < section.StorageCount; storage++)
 								{
@@ -253,23 +181,20 @@ namespace Alex.Worlds.Chunks
 					}
 				}
 
-				//if (applyChanges && (didChange || isNew))
-				//{
 				if (!Destroyed && !chunkData.Disposed)
 				{
 					chunkData.ApplyChanges(world);
 				}
 				else
 				{
+					chunkData?.Dispose();
 					return false;
 				}
 				
-				ChunkData = chunkData;
 				IsNew = false;
 			}
 			finally
 			{
-				//_previousKeepInMemory = keepInMemory;
 				Monitor.Exit(_dataLock);
 				time.Stop();
 				
@@ -343,11 +268,7 @@ namespace Alex.Worlds.Chunks
 				return;
 
 			var section  = GetSection(y);
-			//- 16 * (y >> 4)
 			section.Set(storage, x, y & 0xf, z, state);
-
-			//_scheduledUpdates[GetCoordinateIndex(x, y, z)] = true;
-			//	_heightDirty = true;
 		}
 
 		private void RecalculateHeight(int x, int z, bool doLighting = true)
@@ -436,20 +357,17 @@ namespace Alex.Worlds.Chunks
 		{
 			if (!CheckWithinCoordinates(bx, by, bz, false))
 			{
-				//yield return new ChunkSection.BlockEntry(Air, 0);
 				yield break;
 			}
 			
 			if ((bx < 0 || bx > ChunkWidth) || (bz < 0 || bz > ChunkDepth))
 			{
-				//yield return new ChunkSection.BlockEntry(Air, 0);
 				yield break;
 			}
 
 			var chunk = GetSection(by);
 			if (chunk == null)
 			{
-				//yield return new ChunkSection.BlockEntry(Air, 0);
 				yield break;
 			}
 			
@@ -501,8 +419,11 @@ namespace Alex.Worlds.Chunks
 			
 			if ((bx < 0 || bx > ChunkWidth) || (bz < 0 || bz > ChunkDepth))
 				return;
+			
+			var section = GetSection(by);
+			if (section == null) return;
 
-			_biomeId[GetCoordinateIndex(bx, by, bz)] = biome;
+			section.SetBiome(bx, by & 0xf, bz, biome);
 		}
 
 		public int GetBiome(int bx, int by, int bz)
@@ -512,8 +433,11 @@ namespace Alex.Worlds.Chunks
 			
 			if ((bx < 0 || bx > ChunkWidth) || (bz < 0 || bz > ChunkDepth))
 				return 0;
+			
+			var section = GetSection(by);
+			if (section == null) return 0;
 
-			return _biomeId[GetCoordinateIndex(bx, by, bz)];
+			return section.GetBiome(bx, by & 0xf, bz);
 		}
 
 		public byte GetBlocklight(int bx, int by, int bz)
@@ -586,9 +510,6 @@ namespace Alex.Worlds.Chunks
 		protected int GetCoordinateIndex(int x, int y, int z)
 		{
 			y += Math.Abs(this.WorldSettings.MinY);
-			
-			//return x + 16 * z + _realHeight * y;
-			
 			return (y << 8 | z << 4 | x);
 		}
 		
@@ -599,7 +520,6 @@ namespace Alex.Worlds.Chunks
 		
 		public bool AddBlockEntity(BlockCoordinates coordinates, NbtCompound entity)
 		{
-			//entity.Block = GetBlockState(coordinates.X & 0x0f, coordinates.Y & 0xf, coordinates.Z & 0x0f).Block;
 			return BlockEntities.TryAdd(coordinates, entity);
 		}
 
@@ -613,26 +533,38 @@ namespace Alex.Worlds.Chunks
 			return BlockEntities.TryRemove(coordinates, out _);
 		}
 
+		private void Dispose(bool disposing)
+		{
+			if (Destroyed)
+				return;
+
+			if (!disposing)
+			{
+				Log.Warn($"Disposing via deconstructor!");
+			}
+
+			Destroyed = true;
+
+			for (var index = 0; index < Sections.Length; index++)
+			{
+				var chunksSection = Sections[index];
+				Sections[index] = null;
+
+				chunksSection?.Dispose();
+			}
+
+			_chunkData?.Dispose();
+			_chunkData = null;
+		}
+
 		public void Dispose()
 		{
-			//lock (_dataLock)
-			{
-				Destroyed = true;
-				
-				for (var index = 0; index < Sections.Length; index++)
-				{
-					var chunksSection = Sections[index];
-					Sections[index] = null;
-					
-					chunksSection?.Dispose();
-				}
+			Dispose(true);
+		}
 
-				//Sections = null;
-				ChunkData?.Dispose();
-				ChunkData = null;
-				
-				//_scheduledUpdates = null;
-			}
+		~ChunkColumn()
+		{
+			Dispose(false);
 		}
 	}
 }

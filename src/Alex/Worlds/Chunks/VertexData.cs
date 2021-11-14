@@ -11,7 +11,7 @@ using Microsoft.Xna.Framework.Graphics.PackedVector;
 namespace Alex.Worlds.Chunks
 {
 //	[StructLayout(LayoutKind.Sequential)]
-	public readonly struct VertexData
+	public class VertexData
 	{
 		public readonly BlockCoordinates LightPosition;
 		public readonly Vector3 Position;

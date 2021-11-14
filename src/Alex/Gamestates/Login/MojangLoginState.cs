@@ -113,7 +113,8 @@ namespace Alex.Gamestates.Login
 
 		private void LoginFailed(PlayerProfileAuthenticateEventArgs e)
 		{
-			LoginFailed( $"Could not login: {e.ToUserFriendlyString()}");
+			LoginFailed($"Could not login: {e.ToUserFriendlyString()}");
+			Log.Warn($"Failed to login to Mojang Account: {e.ToUserFriendlyString()}");
 		}
 	}
 }

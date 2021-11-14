@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -14,6 +15,8 @@ using Alex.Worlds.Abstraction;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Graphics.PackedVector;
+using MiNET.Blocks;
+using NLog;
 
 namespace Alex.Worlds.Chunks
 {
@@ -21,12 +24,40 @@ namespace Alex.Worlds.Chunks
 
     public class ChunkData : IDisposable
     {
+        private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ChunkData));
         public static ChunkData Create(int x, int y)
         {
             return new ChunkData(x, y);
         }
 
         private StageData[] _stages;
+
+        private StageData[] Stages
+        {
+            get
+            {
+                return _stages;
+            }
+            set
+            {
+                if (Disposed)
+                {
+                    if (value != null)
+                    {
+                        foreach (var s in value)
+                        {
+                            s?.Buffer?.Dispose();
+                            s?.Indexes?.Clear();
+                        }
+                    }
+
+                    _stages = null;
+                    return;
+                }
+
+                _stages = value;
+            }
+        }
 
         private int _x, _z;
 
@@ -39,7 +70,20 @@ namespace Alex.Worlds.Chunks
             _stages = new StageData[availableStages.Length];
         }
 
-        private VertexBuffer Buffer { get; set; }
+        private VertexBuffer Buffer
+        {
+            get => _buffer;
+            set
+            {
+                if (Disposed)
+                {
+                    value?.Dispose();
+                    return;
+                }
+
+                _buffer = value;
+            }
+        }
 
         private bool _rendered = false;
 
@@ -62,7 +106,7 @@ namespace Alex.Worlds.Chunks
                 return 0;
             }
 
-            var rStage = _stages[(int)stage];
+            var rStage = Stages[(int)stage];
 
             if (rStage == null || rStage.Buffer == null || rStage.IndexCount <= 0)
             {
@@ -76,7 +120,6 @@ namespace Alex.Worlds.Chunks
 
             try
             {
-                //  device.SetVertexBuffers(new VertexBufferBinding(Buffer, 0), new VertexBufferBinding(Lighting, 0, 1));
                 device.SetVertexBuffer(Buffer);
                 device.Indices = rStage.Buffer;
 
@@ -101,29 +144,31 @@ namespace Alex.Worlds.Chunks
 
         public MinifiedBlockShaderVertex[] BuildVertices()
         {
-            VertexData[] data;
+            LinkedList<VertexData> data;
 
             lock (_dataLock)
             {
-                //blockCoordinates = _blockCoordinates.ToArray();
-                data = _vertexDatas.ToArray();
+                data = _vertexDatas;
+                _vertexDatas = new LinkedList<VertexData>();
             }
 
 
             List<MinifiedBlockShaderVertex> vertices = new List<MinifiedBlockShaderVertex>();
-            for (int i = 0; i < data.Length; i++)
+           // for (int i = 0; i < data.Count; i++) 
+            foreach(var vertex in data)
             {
                 vertices.Add(
                     new MinifiedBlockShaderVertex(
-                        data[i].Position, data[i].Face, data[i].TexCoords.ToVector4(), new Color(data[i].Color), 0, 0));
+                        vertex.Position, vertex.Face, vertex.TexCoords.ToVector4(), new Color(vertex.Color), 0, 0));
             }
 
             return vertices.ToArray();
         }
 
-        private List<VertexData> _vertexDatas = new List<VertexData>();
+        private LinkedList<VertexData> _vertexDatas = new LinkedList<VertexData>();
 
         private object _dataLock = new object();
+        private VertexBuffer _buffer;
 
         public void AddVertex(BlockCoordinates blockCoordinates,
             Vector3 position,
@@ -143,7 +188,7 @@ namespace Alex.Worlds.Chunks
                     lightProbe += (face.GetVector3());
                 }
 
-                _vertexDatas.Add(
+                _vertexDatas.AddLast(
                     new VertexData(
                        v3 + position, face,
                         textureCoordinates, color.PackedValue, flags, stage, lightProbe));
@@ -156,24 +201,30 @@ namespace Alex.Worlds.Chunks
 
         private static readonly MovingAverage MovingAverage = new MovingAverage();
 
+        private static ArrayPool<MinifiedBlockShaderVertex> VertexArrayPool =
+            ArrayPool<MinifiedBlockShaderVertex>.Create();
         public void ApplyChanges(IBlockAccess world, bool forceUpdate = false)
         {
             Stopwatch sw = Stopwatch.StartNew();
 
+            MinifiedBlockShaderVertex[] vertices = null;
             try
             {
-                var stages = _stages;
+                var stages = Stages;
 
                 if (stages == null)
                     return;
 
-                VertexData[] data;
+                LinkedList<VertexData> data;
 
                 lock (_dataLock)
                 {
-                    data = _vertexDatas.ToArray();
-                    _vertexDatas.Clear();
+                    data = _vertexDatas;
+                    _vertexDatas = new LinkedList<VertexData>();
                 }
+
+                if (data.Count == 0)
+                    return;
 
                 StageData[] newStages = new StageData[stages.Length];
 
@@ -182,19 +233,21 @@ namespace Alex.Worlds.Chunks
                     newStages[i] = new StageData(stages[i]?.Buffer, new List<int>(stages[i]?.IndexCount ?? 0), 0);
                 }
 
-                List<MinifiedBlockShaderVertex> vertices = new List<MinifiedBlockShaderVertex>();
+                List<IDisposable> toDisposeOff = new List<IDisposable>();
 
-                for (int i = 0; i < data.Length; i++)
+                vertices = new MinifiedBlockShaderVertex[data.Count];// VertexArrayPool.Rent(data.Count);
+
+               int idx = 0;
+               foreach(var vertex in data)
                 {
 
-                    var stage = data[i].Stage;
+                    var stage = vertex.Stage;
                     var rStage = newStages[(int)stage];
 
-                    var index = vertices.Count;
+                    var index = idx;
                     rStage.Indexes.Add(index);
-                    //vertex.Index = indexPosition;
 
-                    var lightProbe = data[i].LightPosition;
+                    var lightProbe = vertex.LightPosition;
 
                     byte blockLight = 0;
                     byte skyLight = 0;
@@ -204,23 +257,16 @@ namespace Alex.Worlds.Chunks
                         world.GetLight(lightProbe, out blockLight, out skyLight);
                     }
 
-                    vertices.Add(
-                        new MinifiedBlockShaderVertex(
-                            data[i].Position, data[i].Face, data[i].TexCoords.ToVector4(), new Color(data[i].Color),
-                            blockLight, skyLight));
+                    vertices[idx] = new MinifiedBlockShaderVertex(
+                        vertex.Position, vertex.Face, vertex.TexCoords.ToVector4(), new Color(vertex.Color),
+                        blockLight, skyLight);
 
                     newStages[(int)stage] = rStage;
+                    idx++;
                 }
-
-                var realVertices = vertices.ToArray();
+                
                 VertexBuffer buffer = Buffer;
 
-                if (realVertices.Length == 0)
-                {
-                    return;
-                }
-
-                List<IDisposable> toDisposeOff = new List<IDisposable>();
                 for (var index = 0; index < newStages.Length; index++)
                 {
                     var stage = newStages[index];
@@ -235,7 +281,6 @@ namespace Alex.Worlds.Chunks
                     if (indexBuffer == null || indexBuffer.IndexCount < indexCount)
                     {
                         toDisposeOff.Add(indexBuffer);
-                        //oldIndexBuffer = indexBuffer;
 
                         indexBuffer = new IndexBuffer(
                             Alex.Instance.GraphicsDevice, IndexElementSize.ThirtyTwoBits, indexCount,
@@ -247,7 +292,7 @@ namespace Alex.Worlds.Chunks
                     newStages[index] = new StageData(indexBuffer, null, indexCount);
                 }
 
-                var verticeCount = realVertices.Length;
+                var verticeCount = data.Count;
 
                 while (verticeCount % 3 != 0) //Make sure we have a valid triangle list.
                 {
@@ -265,8 +310,8 @@ namespace Alex.Worlds.Chunks
                     Interlocked.Increment(ref BufferCreations);
                 }
 
-                buffer.SetData(realVertices, 0, realVertices.Length);
-                _stages = newStages;
+                buffer.SetData(vertices, 0, data.Count);
+                Stages = newStages;
                 Buffer = buffer;
                 
                 Interlocked.Increment(ref BufferUploads);
@@ -278,6 +323,10 @@ namespace Alex.Worlds.Chunks
             }
             finally
             {
+                if (vertices != null)
+                {
+               //     VertexArrayPool.Return(vertices, true);
+                }
                 MovingAverage.ComputeAverage((float)sw.Elapsed.TotalMilliseconds);
             }
         }
@@ -286,39 +335,51 @@ namespace Alex.Worlds.Chunks
         public static int BufferCreations = 0;
         public bool Disposed { get; private set; } = false;
 
-        public void Dispose()
+        private void Dispose(bool disposing)
         {
             if (Disposed)
                 return;
 
+            if (!disposing)
+            {
+                Log.Warn($"Disposing in deconstructor!");
+            }
+
             try
             {
                 _vertexDatas?.Clear();
+                _vertexDatas = null;
+                
                 for (var index = 0; index < _stages.Length; index++)
                 {
                     var stage = _stages[index];
-                    // stage.IndexCount = 0;
-                       stage?.Buffer?.Dispose();
-                       stage?.Indexes?.Clear();
-                    // stage?.Dispose();
-                     _stages[index] = null;
+                    stage?.Buffer?.Dispose();
+                    stage?.Indexes?.Clear();
+                    _stages[index] = null;
                 }
 
                 Buffer?.Dispose();
                 Buffer = null;
-
-                //   Lighting?.Dispose();
-                //   Lighting = null;
             }
             finally
             {
-               // Available = true;
+                // Available = true;
                 _stages = null;
 
-                  Disposed = true;
-              //  Interlocked.Decrement(ref _instances);
-             //   Disposed = true;
+                Disposed = true;
+                //  Interlocked.Decrement(ref _instances);
+                //   Disposed = true;
             }
+        }
+        
+        public void Dispose()
+        {
+            Dispose(true);
+        }
+
+        ~ChunkData()
+        {
+            Dispose(false);
         }
     }
 }
