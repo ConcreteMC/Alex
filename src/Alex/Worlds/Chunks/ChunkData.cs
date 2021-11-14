@@ -154,7 +154,6 @@ namespace Alex.Worlds.Chunks
 
 
             List<MinifiedBlockShaderVertex> vertices = new List<MinifiedBlockShaderVertex>();
-           // for (int i = 0; i < data.Count; i++) 
             foreach(var vertex in data)
             {
                 vertices.Add(
@@ -235,7 +234,7 @@ namespace Alex.Worlds.Chunks
 
                 List<IDisposable> toDisposeOff = new List<IDisposable>();
 
-                vertices = new MinifiedBlockShaderVertex[data.Count];// VertexArrayPool.Rent(data.Count);
+                vertices = new MinifiedBlockShaderVertex[data.Count];
 
                int idx = 0;
                foreach(var vertex in data)
@@ -323,10 +322,6 @@ namespace Alex.Worlds.Chunks
             }
             finally
             {
-                if (vertices != null)
-                {
-               //     VertexArrayPool.Return(vertices, true);
-                }
                 MovingAverage.ComputeAverage((float)sw.Elapsed.TotalMilliseconds);
             }
         }
@@ -340,38 +335,33 @@ namespace Alex.Worlds.Chunks
             if (Disposed)
                 return;
 
+            Disposed = true;
+
             if (!disposing)
             {
                 Log.Warn($"Disposing in deconstructor!");
             }
 
-            try
+            lock (_dataLock)
             {
                 _vertexDatas?.Clear();
                 _vertexDatas = null;
-                
-                for (var index = 0; index < _stages.Length; index++)
-                {
-                    var stage = _stages[index];
-                    stage?.Buffer?.Dispose();
-                    stage?.Indexes?.Clear();
-                    _stages[index] = null;
-                }
-
-                Buffer?.Dispose();
-                Buffer = null;
             }
-            finally
+
+            for (var index = 0; index < _stages.Length; index++)
             {
-                // Available = true;
-                _stages = null;
-
-                Disposed = true;
-                //  Interlocked.Decrement(ref _instances);
-                //   Disposed = true;
+                var stage = _stages[index];
+                stage?.Buffer?.Dispose();
+                stage?.Indexes?.Clear();
+                _stages[index] = null;
             }
+
+            Buffer?.Dispose();
+            Buffer = null;
+
+            _stages = null;
         }
-        
+
         public void Dispose()
         {
             Dispose(true);

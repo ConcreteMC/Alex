@@ -277,12 +277,22 @@ namespace Alex.Worlds.Multiplayer
 			_tickSinceLastPositionUpdate = 0;
 		}
 
+		private float FixRotation(float value)
+		{
+			if (value < 0)
+			{
+				value = 360f + value;
+			}
+
+			return value;
+		}
+		
 		private void SendPlayerPositionAndLook(PlayerLocation pos, SendPositionReason reason = SendPositionReason.Other)
 		{
 			//Log.Info($"Sending PlayerPositionAndLook: {reason}");
 			
 			PlayerPositionAndLookPacketServerBound packet = PlayerPositionAndLookPacketServerBound.CreateObject();
-			packet.Yaw = -pos.HeadYaw;
+			packet.Yaw = FixRotation(-pos.HeadYaw);
 			packet.Pitch = -pos.Pitch;
 			packet.X = pos.X;
 			packet.Y = pos.Y;
@@ -299,7 +309,7 @@ namespace Alex.Worlds.Multiplayer
 		{
 			//Log.Info($"Sending playerlook: {reason}");
 			PlayerLookPacket playerLook = PlayerLookPacket.CreateObject();
-			playerLook.Yaw = -pos.HeadYaw;
+			playerLook.Yaw = -FixRotation(pos.HeadYaw);
 			playerLook.Pitch = -pos.Pitch;
 			playerLook.OnGround = pos.OnGround;
 
@@ -1902,7 +1912,7 @@ namespace Alex.Worlds.Multiplayer
 				var pos = new BlockCoordinates(blockUpdate.X, blockUpdate.Y, blockUpdate.Z);
 				var state = BlockFactory.GetBlockState(blockUpdate.BlockId);
 				
-				//Log.Info($"Received blockupdates ({packet.Records.Length})! Coord={pos} State={state.FormattedString}");
+				Log.Info($"Received blockupdates ({packet.Records.Length})! Coord={pos} State={state.FormattedString}");
 				World?.SetBlockState(
 					pos, 
 					state,
@@ -1913,7 +1923,7 @@ namespace Alex.Worlds.Multiplayer
 		private void HandleBlockChangePacket(BlockChangePacket packet)
 		{
 			var state = BlockFactory.GetBlockState(packet.PalleteId);
-			//Log.Info($"Received blockupdate. Pos={packet.Location}, State={state.FormattedString}");
+			Log.Info($"Received blockupdate. Pos={packet.Location}, State={state.FormattedString}");
 			//throw new NotImplementedException();
 			World?.SetBlockState(packet.Location, state, 
 				BlockUpdatePriority.High);
@@ -2512,8 +2522,8 @@ namespace Alex.Worlds.Multiplayer
 			var y = (float)packet.Y;
 			var z = (float)packet.Z;
 
-			var yaw = packet.Yaw;
-			var pitch = packet.Pitch;
+			var yaw = -packet.Yaw;
+			var pitch = -packet.Pitch;
 			
 			var flags = packet.Flags;
 			if ((flags & 0x01) != 0)

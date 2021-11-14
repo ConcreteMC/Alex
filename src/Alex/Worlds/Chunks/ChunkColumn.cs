@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
@@ -181,7 +182,7 @@ namespace Alex.Worlds.Chunks
 					}
 				}
 
-				if (!Destroyed && !chunkData.Disposed)
+				if (!_disposed && !chunkData.Disposed)
 				{
 					chunkData.ApplyChanges(world);
 				}
@@ -203,10 +204,7 @@ namespace Alex.Worlds.Chunks
 
 			return true;
 		}
-
-		public bool Destroyed { get; set; } = false;
-		public List<ChunkCoordinates> Neighbors { get; set; } = new List<ChunkCoordinates>();
-
+		
 		public IEnumerable<BlockCoordinates> GetLightSources()
 		{
 			for (int i = 0; i < Sections.Length; i++)
@@ -533,21 +531,24 @@ namespace Alex.Worlds.Chunks
 			return BlockEntities.TryRemove(coordinates, out _);
 		}
 
+		public List<ChunkCoordinates> Neighboring = new List<ChunkCoordinates>();
+		private bool _disposed = false;
 		private void Dispose(bool disposing)
 		{
-			if (Destroyed)
+			if (_disposed)
 				return;
+
+			_disposed = true;
 
 			if (!disposing)
 			{
 				Log.Warn($"Disposing via deconstructor!");
 			}
 
-			Destroyed = true;
-
-			for (var index = 0; index < Sections.Length; index++)
+			var sections = Sections.ToImmutableArray();
+			for (var index = 0; index < sections.Length; index++)
 			{
-				var chunksSection = Sections[index];
+				var chunksSection = sections[index];
 				Sections[index] = null;
 
 				chunksSection?.Dispose();

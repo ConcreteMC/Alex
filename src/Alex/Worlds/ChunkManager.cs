@@ -286,17 +286,25 @@ namespace Alex.Worlds
 					if (BlockLightUpdate != null)
 						BlockLightUpdate.RecalculateChunk(chunk);
 				}
-											
+
 				if (chunk.UpdateBuffer(World, true))
 				{
 					if (newChunk)
 					{
-						foreach (var neighbor in chunk.Neighbors)
+						/*foreach (var neighbor in _neighborOffsets)
+						{
+							var neighborPosition = chunkCoordinates + neighbor;
+							if (chunk.Neighboring.Contains(neighborPosition))
+								continue;
+							
+							ScheduleChunkUpdate(neighborPosition, ScheduleType.Border, false, chunkCoordinates);
+						}*/
+						/*foreach (var neighbor in chunk.Neighbors)
 						{
 							ScheduleChunkUpdate(
 								neighbor,
 								ScheduleType.Border, false, chunkCoordinates);
-						}
+						}*/
 					}
 												
 					OnChunkUpdate?.Invoke(this, new ChunkUpdatedEventArgs(chunk, timingWatch.Elapsed));
@@ -311,6 +319,11 @@ namespace Alex.Worlds
 			}
 		}
 
+		private ChunkCoordinates[] _neighborOffsets = new ChunkCoordinates[]
+		{
+			ChunkCoordinates.Forward, ChunkCoordinates.Right, ChunkCoordinates.Backward, ChunkCoordinates.Left
+		};
+		
 		/// <inheritdoc />
 		public void AddChunk(ChunkColumn chunk, ChunkCoordinates position, bool doUpdates = false)
 		{
@@ -327,7 +340,7 @@ namespace Alex.Worlds
 				if (entity != null)
 					World?.EntityManager?.AddBlockEntity(blockEntity.Key, entity);
 			}
-			
+
 			var column = Chunks.AddOrUpdate(
 				position, coordinates => chunk, (coordinates, oldColumn) =>
 				{
@@ -339,8 +352,6 @@ namespace Alex.Worlds
 					return chunk;
 				});
 
-			ScheduleChunkUpdate(position, ScheduleType.Full, false);
-
 			OnChunkAdded?.Invoke(this, new ChunkAddedEventArgs(column));
 		}
 
@@ -351,9 +362,6 @@ namespace Alex.Worlds
 
 			if (Chunks.TryRemove(position, out var column))
 			{
-				if (dispose)
-					column.Destroyed = true;
-				
 				foreach (var blockEntity in column.BlockEntities)
 				{
 					var pos = blockEntity.Key;
@@ -364,18 +372,6 @@ namespace Alex.Worlds
 				if (dispose)
 					column.Dispose();
 
-				if (TryGetChunk(new ChunkCoordinates(position.X + 1, position.Z), out var c1))
-					c1.Neighbors.Remove(position);
-				
-				if (TryGetChunk(new ChunkCoordinates(position.X - 1, position.Z), out var c2))
-					c2.Neighbors.Remove(position);
-				
-				if (TryGetChunk(new ChunkCoordinates(position.X, position.Z + 1), out var c3))
-					c3.Neighbors.Remove(position);
-				
-				if (TryGetChunk(new ChunkCoordinates(position.X, position.Z - 1), out var c4))
-					c4.Neighbors.Remove(position);
-				
 				OnChunkRemoved?.Invoke(this, new ChunkRemovedEventArgs(position));
 			}
 		}
@@ -416,25 +412,23 @@ namespace Alex.Worlds
 
 			if (cc.Scheduled && !prioritize)
 				return;
+			cc.Scheduled = true;
+			
+			if (!cc.Neighboring.Contains(source))
+				cc.Neighboring.Add(source);
 
-			if ((type & ScheduleType.Border) != 0)
-			{
-				if (cc.Neighbors.Contains(source))
-					return;
-
-				cc.Neighbors.Add(source);
-			}
+			Priority priority = Priority.Medium;
 
 			if (prioritize)
 			{
-				_priorityBuffer.Post(position, Priority.High);
-				cc.Scheduled = true;
+				priority = Priority.High;
 			}
-			else
+			else if ((type & ScheduleType.Border) != 0)
 			{
-				_priorityBuffer.Post(position, ((type & ScheduleType.Border) != 0) ? Priority.Low : Priority.Medium);
-				cc.Scheduled = true;
+				priority = Priority.Low;
 			}
+
+			_priorityBuffer.Post(position, priority);
 		}
 
 		#region  Drawing
@@ -469,15 +463,11 @@ namespace Alex.Worlds
 			//MipMapLevelOfDetailBias = -1f,
 			MipMapLevelOfDetailBias = -3f,
 			MaxMipLevel = Alex.MipMapLevel,
-			//ComparisonFunction = 
-			// MaxMipLevel = 0,
 			FilterMode = TextureFilterMode.Default,
 			AddressW = TextureAddressMode.Wrap,
 			ComparisonFunction = CompareFunction.Never,
 			MaxAnisotropy = 16,
-			BorderColor = Color.Black,
-			//ComparisonFunction = CompareFunction.Greater
-			// ComparisonFunction = 
+			BorderColor = Color.Black
 		};
 
 		private DepthStencilState DepthStencilState { get; } = new DepthStencilState()
@@ -489,11 +479,8 @@ namespace Alex.Worlds
 
 		private RasterizerState _rasterizerState = new RasterizerState()
 		{
-			//DepthBias = 0.0001f,
 			CullMode = CullMode.CullClockwiseFace,
-			FillMode = FillMode.Solid,
-			//DepthClipEnable = true,
-			//ScissorTestEnable = true
+			FillMode = FillMode.Solid
 		};
 
 		private BlendState TranslucentBlendState { get; } = new BlendState()
@@ -502,10 +489,7 @@ namespace Alex.Worlds
 			AlphaDestinationBlend = Microsoft.Xna.Framework.Graphics.Blend.InverseSourceAlpha,
 			ColorDestinationBlend = Microsoft.Xna.Framework.Graphics.Blend.InverseSourceAlpha,
 			ColorSourceBlend = Microsoft.Xna.Framework.Graphics.Blend.SourceAlpha,
-			//ColorBlendFunction = BlendFunction.Add,
-			IndependentBlendEnable = false,
-			//AlphaBlendFunction = BlendFunction.Add,
-			// ColorBlendFunction = BlendFunction.Add
+			IndependentBlendEnable = false
 		};
 		
 		public int Draw(IRenderArgs args, Effect forceEffect = null, params RenderStage[] stages)
@@ -517,21 +501,22 @@ namespace Alex.Worlds
 				return DrawStaged(args, forceEffect, stages.Length > 0 ? stages : RenderStages);
 			}
 		}
-		
+
 		private bool IsWithinView(ChunkCoordinates chunk, ICamera camera)
 		{
 			ChunkCoordinates center = ViewPosition.GetValueOrDefault(new ChunkCoordinates(camera.Position));
-			var frustum  = camera.BoundingFrustum;
-			var chunkPos = new Vector3(chunk.X << 4, -64, chunk.Z << 4);
+			var chunkPos = new Vector3(chunk.X << 4, 0, chunk.Z << 4);
 
 			if (chunk.DistanceTo(center) > RenderDistance)
 				return false;
 
-			return frustum.Intersects(new Microsoft.Xna.Framework.BoundingBox(chunkPos,
-				chunkPos + new Vector3(ChunkColumn.ChunkWidth, MathF.Max(camera.Position.Y + 16f, 256f),
-					ChunkColumn.ChunkDepth)));
+			return camera.BoundingFrustum.Intersects(
+				new Microsoft.Xna.Framework.BoundingBox(
+					chunkPos,
+					chunkPos + new Vector3(
+						ChunkColumn.ChunkWidth, MathF.Max(camera.Position.Y + 16f, 256f), ChunkColumn.ChunkDepth)));
 		}
-		
+
 		private int DrawStaged(IRenderArgs args,
 			Effect forceEffect = null, params RenderStage[] stages)
 		{
@@ -623,22 +608,26 @@ namespace Alex.Worlds
 
 			foreach (var chunk in Chunks)
 			{
-				bool inView = IsWithinView(chunk.Key, World.Camera);
-
 				var data = chunk.Value.ChunkData;
-				if (data != null)
+				if (data == null) 
+					continue;
+				
+				bool inView = IsWithinView(chunk.Key, World.Camera);
+				if (inView && index + 1 < max)
 				{
-					if (inView && index + 1 < max)
+					data.Rendered = true;
+
+					if (chunk.Value.IsNew && !chunk.Value.Scheduled)
 					{
-						data.Rendered = true;
-						
-						array[index] = data;
-						index++;
+						ScheduleChunkUpdate(chunk.Key, ScheduleType.Full);
 					}
-					else
-					{
-						data.Rendered = false;
-					}
+					
+					array[index] = data;
+					index++;
+				}
+				else
+				{
+					data.Rendered = false;
 				}
 			}
 

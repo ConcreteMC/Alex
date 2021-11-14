@@ -6,6 +6,7 @@ using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using Alex.Common.Data;
 using Alex.Common.Utils;
 using fNbt;
@@ -240,33 +241,69 @@ namespace Alex.Networking.Java.Util
             return new Vector3(x, y, z);
 		}
         
-        public BlockCoordinates ReadBlockCoordinates()
+        public async Task<Vector3> ReadPositionAsync()
         {
-	        var val = ReadLong();
-	        var x = (val >> 38);
-	        var y =(val & 0xFFF);
-
-	        //if (y > 2048)
-	        //	y = -(0xFFF - y);
-
-	        var z = ((val << 38 >> 38) >> 12);  //Convert.ToSingle((val << 38 >> 38) >> 12);
+	        var val = await ReadULongAsync();
+	        var x = Convert.ToSingle(val >> 38);
+	        var y = Convert.ToSingle(val & 0xFFF);
+	        var z = Convert.ToSingle(val << 26 >> 38);
 
 	        if (x >= (2^25))
 	        {
 		        x -= 2^26;
 	        }
 
-	        //if (y >= (2^11))
-	        //{
-		    //    y -= 2^12;
-	        //}
+	        if (y >= (2^11))
+	        {
+		        y -= 2^12;
+	        }
 
 	        if (z >= (2^25))
 	        {
 		        z -= 2^26;
 	        }
 
-	        return new BlockCoordinates((int)x, (int)y, (int)z);
+	        return new Vector3(x, y, z);
+        }
+        
+        public BlockCoordinates ReadBlockCoordinates()
+        {
+	        ulong value = ReadULong();
+
+	        long x = (long)(value >> 38);
+	        long y = (long)(value & 0xFFF);
+	        long z = (long)(value << 26 >> 38);
+
+	        if (x >= Math.Pow(2, 25))
+		        x -= (long)Math.Pow(2, 26);
+
+	        if (y >= Math.Pow(2, 11))
+		        y -= (long)Math.Pow(2, 12);
+
+	        if (z >= Math.Pow(2, 25))
+		        z -= (long)Math.Pow(2, 26);
+
+	        return new BlockCoordinates((int)x,(int)y,(int)z);
+        }
+        
+        public async Task<BlockCoordinates> ReadBlockCoordinatesAsync()
+        {
+	        ulong value = await ReadULongAsync();
+
+	        long x = (long)(value >> 38);
+	        long y = (long)(value & 0xFFF);
+	        long z = (long)(value << 26 >> 38);
+
+	        if (x >= Math.Pow(2, 25))
+		        x -= (long)Math.Pow(2, 26);
+
+	        if (y >= Math.Pow(2, 11))
+		        y -= (long)Math.Pow(2, 12);
+
+	        if (z >= Math.Pow(2, 25))
+		        z -= (long)Math.Pow(2, 26);
+
+	        return new BlockCoordinates((int)x,(int)y,(int)z);
         }
 
 		public SlotData ReadSlot()

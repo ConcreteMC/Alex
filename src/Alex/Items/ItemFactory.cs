@@ -245,133 +245,110 @@ namespace Alex.Items
 		    
             ConcurrentDictionary<ResourceLocation, Func<Item>> items = new ConcurrentDictionary<ResourceLocation, Func<Item>>();
             
+            List<Item> allItems = new List<Item>();
+            void HandleEntry(KeyValuePair<string, Registries.RegistryEntry> entry, bool isBlock)
+            {
+	            var resourceLocation = new ResourceLocation(entry.Key);
+
+	            if (items.ContainsKey(resourceLocation))
+		            return;
+
+	            IItemRenderer renderer = null;
+	            Item item;
+
+	            ResourceLocation rendererResourceLocation;
+	            
+
+	            if (isBlock)
+	            {
+		            rendererResourceLocation = new ResourceLocation(
+			            resourceLocation.Namespace, $"block/{resourceLocation.Path}");
+		            
+		            var bs = BlockFactory.GetBlockState(entry.Key);
+		            item = new ItemBlock(bs);
+	            }
+	            else
+	            {
+		            rendererResourceLocation = new ResourceLocation(
+			            resourceLocation.Namespace, $"item/{resourceLocation.Path}");
+		            
+		            item = new Item();
+	            }
+	            
+	            if (!TryGetRenderer(entry.Key, resources, rendererResourceLocation, out renderer))
+	            {
+		            if (isBlock && item is ItemBlock itemBlock)
+		            {
+			            if (modelRegistry.TryGet(rendererResourceLocation, out var modelEntry))
+			            {
+				            ResourcePackModelBase model = modelEntry.Value;
+				            renderer = new ItemBlockModelRenderer(itemBlock.Block, model, resources.BlockAtlas.GetAtlas());
+			            }
+		            }
+	            }
+
+	            if (renderer == default)
+	            {
+		         //   Log.Warn($"No renderer for item: {resourceLocation}");
+		        //    return;
+	            }
+
+	            item.Renderer = renderer;
+
+	            var minetItem = MiNET.Items.ItemFactory.GetItem(resourceLocation.Path);
+
+	            if (minetItem != null)
+	            {
+		            if (Enum.TryParse<ItemType>(minetItem.ItemType.ToString(), out ItemType t))
+		            {
+			            item.ItemType = t;
+		            }
+
+		            SetItemMaterial(item, minetItem.ItemMaterial);
+
+		            item.Meta = minetItem.Metadata;
+		            item.Id = minetItem.Id;
+	            }
+
+	            item.Name = entry.Key;
+
+	            item.DisplayName = GetDisplayName(resourceLocation);
+
+	            if (renderer != null)
+	            {
+		            renderer.Cache(resources);
+		            item.Renderer = renderer;
+	            }
+
+	            if (item.Renderer == null)
+	            {
+		            Log.Warn($"Could not find model renderer for: {resourceLocation}");
+	            }
+
+	            if (items.TryAdd(resourceLocation, () => { return item.Clone(); }))
+	            {
+		            allItems.Add(item);
+	            }
+            }
+            
             int i = 0;
 
-            List<Item> allItems = new List<Item>();
             Parallel.ForEach(
-	            resources.Registries.Items.Entries, (entry) =>
+	            resources.Registries.Items.Entries.Where(x => blocks.All(b => b.Key != x.Key)), (entry) =>
 	            {
-		            progressReceiver?.UpdateProgress(i++,  resources.Registries.Items.Entries.Count, $"Processing items...", entry.Key);
-		        
-		            var resourceLocation = new ResourceLocation(entry.Key);
-
-		            if (items.ContainsKey(resourceLocation))
-			            return;
+		            progressReceiver?.UpdateProgress(
+			            i++, resources.Registries.Items.Entries.Count, $"Processing items...", entry.Key);
 		            
-		            IItemRenderer renderer = null;
-		            Item item;
-		            if (!TryGetRenderer(entry.Key, resources, new ResourceLocation(resourceLocation.Namespace, $"item/{resourceLocation.Path}"), out renderer))
-		            {
-						Log.Debug($"No model found for item: {entry.Key}");
-						return;
-		            }
-
-		            item = new Item();
-		            if (blocks.All(x => x.Key != entry.Key))
-		            {
-			            var bs = BlockFactory.GetBlockState(entry.Key);
-			            if (bs is not MissingBlockState && bs.Block.Renderable)
-			            {
-				            item = new ItemBlock(bs);
-			            }
-		            }
-
-		            // item = renderer is ItemBlockModelRenderer ? new ItemBlock() : new Item();
-
-		            var minetItem = MiNET.Items.ItemFactory.GetItem(resourceLocation.Path);
-
-		            if (minetItem != null)
-		            {
-			            if (Enum.TryParse<ItemType>(minetItem.ItemType.ToString(), out ItemType t))
-			            {
-				            item.ItemType = t;
-			            }
-
-			            SetItemMaterial(item, minetItem.ItemMaterial);
-
-			            item.Meta = minetItem.Metadata;
-			            item.Id = minetItem.Id;
-		            }
-
-		            item.Name = entry.Key;
-
-		            item.DisplayName = GetDisplayName(resourceLocation);
-
-		            if (renderer != null)
-		            {
-			            renderer.Cache(resources);
-			            item.Renderer = renderer;
-		            }
-
-		            if (item.Renderer == null)
-		            {
-			            Log.Warn($"Could not find item model renderer for: {resourceLocation}");
-		            }
-
-		            if (items.TryAdd(resourceLocation, () => { return item.Clone(); }))
-		            {
-			            allItems.Add(item);
-		            }
+		            HandleEntry(entry, false);
 	            });
 
             
            int done = 0;
            Parallel.ForEach(
-	           blocks, e =>
+	           blocks, entry =>
 	           {
-		           try
-		           {
-			           var entry = e;
-			           progressReceiver?.UpdateProgress(done, blocks.Count, $"Processing block items...", entry.Key);
-			           
-			           var resourceLocation = new ResourceLocation(entry.Key);
-			           if (items.ContainsKey(resourceLocation))
-				           return;
-			           
-			           var bs = BlockFactory.GetBlockState(entry.Key);
-
-			           if (!bs.Block.Renderable)
-			           {
-				           return;
-			           }
-
-			           IItemRenderer renderer = null;
-			           if (!TryGetRenderer(entry.Key, resources, new ResourceLocation(resourceLocation.Namespace, $"block/{resourceLocation.Path}"), out renderer))
-			           {
-				           ResourcePackModelBase model            = null;
-
-				           if (modelRegistry.TryGet(new ResourceLocation(resourceLocation.Namespace, $"block/{resourceLocation.Path}"), out var modelEntry))
-				           {
-					           model = modelEntry.Value;
-					           renderer = new ItemBlockModelRenderer(bs, model, resources.BlockAtlas.GetAtlas());
-				           }
-			           }
-
-			           if (renderer == null)
-			           {
-				           Log.Debug($"Missing item render definition for block {entry.Key}, using default.");
-			           }
-			           else
-			           {
-				           var item = new ItemBlock(bs) { };
-				           item.Name = entry.Key;
-				           item.DisplayName = GetDisplayName(resourceLocation);
-				          // item.DisplayName = Alex.Instance.GuiRenderer.GetTranslation($"block.{resourceLocation.Namespace}.{resourceLocation.Path}");
-				          renderer.Cache(resources);
-				          
-				          item.Renderer = renderer;
-				          // item.Renderer.Cache(resources);
-
-				          if (items.TryAdd(resourceLocation, () => { return item.Clone(); }))
-				          {
-					          allItems.Add(item);
-				          }
-			           }
-		           }
-		           finally
-		           {
-			           done++;
-		           }
+		           progressReceiver?.UpdateProgress(done++, blocks.Count, $"Processing block items...", entry.Key);
+		           HandleEntry(entry, true);
 	           });
 
            if (items.TryGetValue("minecraft:player_head", out var func))

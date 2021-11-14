@@ -270,31 +270,27 @@ namespace Alex.Worlds.Chunks
 		}
 
 		private bool _disposed = false;
+
 		public void Dispose(bool disposing)
 		{
 			if (_disposed)
 				return;
 
-			if (disposing)
+			_disposed = true;
+
+			if (!disposing)
 			{
 				Log.Warn($"Dispose was never called. Cleaning up.");
 			}
 
-			try
+			for (int i = 0; i < BlockStorages.Length; i++)
 			{
-				for (int i = 0; i < BlockStorages.Length; i++)
-				{
-					BlockStorages[i]?.Dispose();
-					BlockStorages[i] = null;
-				}
+				BlockStorages[i]?.Dispose();
+				BlockStorages[i] = null;
+			}
 
-				LightSources.Clear();
-				LightSources = null;
-			}
-			finally
-			{
-				_disposed = true;
-			}
+			LightSources?.Clear();
+			LightSources = null;
 		}
 
 		public void Dispose()
