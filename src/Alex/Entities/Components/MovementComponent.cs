@@ -240,10 +240,28 @@ namespace Alex.Entities.Components
 			}
 		}
 
+		/// <summary>
+		///		The max difference in height between the block we are trying to climb and the players feet.
+		/// </summary>
+		/// <remarks>
+		///		Source: https://www.mcpk.wiki/wiki/Stepping
+		/// </remarks>
+		private const float MaxClimbingDistance = 0.6f;
+		
+		/// <summary>
+		///		The max distance we are allowed to fall before sneaking cancels out the movement.
+		/// </summary>
+		/// <remarks>
+		///		Source 1: https://minecraft.fandom.com/wiki/Sneaking
+		///		Source 2: https://www.mcpk.wiki/wiki/Sneaking
+		/// </remarks>
+		private const float MaxFallDistance = 0.625f;
 		public Vector3 Move(Vector3 amount)
 		{
 			if (Entity.HasCollision)
 			{
+				bool wasOnGround = Entity.KnownPosition.OnGround;
+				
 				var beforeAdjustment = new Vector3(amount.X, amount.Y, amount.Z);
 
 				List<ColoredBoundingBox> boxes = new List<ColoredBoundingBox>();
@@ -253,7 +271,7 @@ namespace Alex.Entities.Components
 				bool collideY = CheckY(ref amount, false, ref boxes);
 
 				bool collideX = CheckX(ref amount, false, ref boxes);
-				
+
 				bool collideZ = CheckZ(ref amount, false, ref boxes);
 
 				if (!collideX && CheckX(ref amount, true, ref boxes))
@@ -264,6 +282,11 @@ namespace Alex.Entities.Components
 				if (!collideZ && CheckZ(ref amount, true, ref boxes))
 				{
 					collideZ = true;
+				}
+
+				if (Entity.IsSneaking && wasOnGround)
+				{
+					FixSneaking(ref amount);
 				}
 
 				collided = collideX || collideZ;
@@ -284,12 +307,72 @@ namespace Alex.Entities.Components
 			}
 			
 			Entity.KnownPosition += amount;
-			Entity.KnownPosition.OnGround = DetectOnGround();
+			Entity.KnownPosition.OnGround = DetectOnGround(Entity.KnownPosition);
 			
 			MovedBy(amount);
 			UpdateTarget();
 
 			return amount;
+		}
+
+		private void FixSneaking(ref Vector3 amount)
+		{
+			var dX = amount.X;
+			var dZ = amount.Z;
+			float correctedX = amount.X;
+			float correctedZ = amount.Z;
+			float increment = 0.05f;
+
+			var boundingBox = Entity.GetBoundingBox();
+			//check for furthest ground under player in the X axis (from initial position)
+			while(dX != 0.0f && !GetIntersecting(Entity.Level, boundingBox.OffsetBy(new Vector3(dX, -MaxFallDistance, 0f))).Any())
+			{
+				if (dX < increment && dX >= -increment)
+					dX = 0.0f;
+				else if (dX > 0.0D)
+					dX -= increment;
+				else
+					dX += increment;
+
+				correctedX = dX;
+			}
+                
+			//check for furthest ground under player in the Z axis (from initial position)
+			while(dZ != 0.0f && !GetIntersecting(Entity.Level, boundingBox.OffsetBy(new Vector3(0f, -MaxFallDistance, dZ))).Any())
+			{
+				if (dZ < increment && dZ >= -increment)
+					dZ = 0.0f;
+				else if (dZ > 0.0f)
+					dZ -= increment;
+				else
+					dZ += increment;
+
+				correctedZ = dZ;
+			}
+
+			//calculate definitive dX and dZ based on the previous limits.
+			while(dX != 0.0f && dZ != 0.0f && !GetIntersecting(Entity.Level, boundingBox.OffsetBy(new Vector3(dX, -MaxFallDistance, dZ))).Any())
+			{
+				if (dX < increment && dX >= -increment)
+					dX = 0.0f;
+				else if (dX > 0.0f)
+					dX -= increment;
+				else
+					dX += increment;
+				correctedX = dX;
+
+                    
+				if (dZ < increment && dZ >= -increment)
+					dZ = 0.0f;
+				else if (dZ > 0.0f)
+					dZ -= increment;
+				else
+					dZ += increment;
+				correctedZ = dZ;
+			}
+
+			amount.X = correctedX;
+			amount.Z = correctedZ;
 		}
 
 		private bool CheckY(ref Vector3 amount, bool checkOther, ref List<ColoredBoundingBox> boxes)
@@ -373,7 +456,7 @@ namespace Alex.Entities.Components
 				{
 					var yDifference = box.Max.Y - adjusted.Min.Y;
 
-					if (yDifference > MaxJumpHeight)
+					if (yDifference > MaxClimbingDistance)
 					{
 						canJump = false;
 
@@ -413,10 +496,10 @@ namespace Alex.Entities.Components
 			return canJump;
 		}
 		
-		private bool DetectOnGround()
+		private bool DetectOnGround(Vector3 position)
 		{
 			var entityBoundingBox =
-				Entity.BoundingBox;
+				Entity.GetBoundingBox(position);
 			//entityBoundingBox.Inflate(0.01f);
 			
 			var offset = 0f;
@@ -892,7 +975,5 @@ namespace Alex.Entities.Components
 				}
 			}
 		}
-
-		private const float MaxJumpHeight = 0.55f;
 	}
 }

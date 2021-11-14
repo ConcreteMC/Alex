@@ -74,7 +74,7 @@ namespace Alex.Graphics.Camera
 
 		private void UpdateViewMatrixFirstPerson()
 		{
-			var position = Position + Offset;
+			var position = Position;
 			
 			var renderLocation = TrackingEntity.KnownPosition;
 			float pitch = (-renderLocation.Pitch).ToRadians();
@@ -82,13 +82,15 @@ namespace Alex.Graphics.Camera
 
 			Vector3 direction = Vector3.Backward;
 
-			direction = Vector3.Transform(
-				direction, Matrix.CreateRotationX(pitch) * Matrix.CreateRotationY(yaw));
+			var rotationMatrix = Matrix.CreateRotationX(pitch) * Matrix.CreateRotationY(yaw);
+			direction = Vector3.Transform(direction, rotationMatrix);
 
-			Target = position + direction;
+			var cameraPosition = position;
 			Direction = direction;
+
+			var offset = Vector3.Transform(Offset, Matrix.CreateRotationY(yaw));
 			
-			ViewMatrix = Matrix.CreateLookAt(position, Target, Vector3.Up);
+			ViewMatrix = Matrix.CreateLookAt(cameraPosition + (offset), Target = position + direction, Vector3.Up);
 			Frustum = new BoundingFrustum(ViewMatrix * ProjectionMatrix);
 		}
 

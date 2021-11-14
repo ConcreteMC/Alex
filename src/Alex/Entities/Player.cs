@@ -235,7 +235,7 @@ namespace Alex.Entities
 		    if (newValue)
 		    {
 			    Network.EntityAction((int) EntityId, EntityAction.StartSneaking);
-			    Level.Camera.UpdateOffset(new Vector3(0f, -0.15f, 0.35f));
+			    Level.Camera.UpdateOffset(new Vector3(0f, -0.125F, 0f));
 		    }
 		    else
 		    {
