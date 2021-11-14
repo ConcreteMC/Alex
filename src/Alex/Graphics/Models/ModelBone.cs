@@ -296,7 +296,6 @@ namespace Alex.Graphics.Models
 			AddChild(model.Root);
 			Model.Bones.Add(model.Root);
 			_attached.Add(attachment);
-			//Model.BuildHierarchy();
 		}
 
 		/// <inheritdoc />
@@ -323,7 +322,6 @@ namespace Alex.Graphics.Models
 				Model.Meshes.Remove(mesh);
 			}
 			RemoveChild(model.Root);
-			//Model.BuildHierarchy();
 		}
 	}
 	
@@ -384,7 +382,8 @@ namespace Alex.Graphics.Models
 		/// <inheritdoc />
 		public override InterpolationData<Vector3> WithStart(Vector3 start)
 		{
-			return new VectorInterpolationData(start, Target, TargetTime);
+			this.Start = start;
+			return this;
 		}
 
 		/// <inheritdoc />
@@ -406,7 +405,10 @@ namespace Alex.Graphics.Models
 		/// <inheritdoc />
 		public override InterpolationData<Vector3> WithStart(Vector3 start)
 		{
-			return new RotatedInterpolationData(start, Target, TargetTime);
+			this.Start = start;
+
+			return this;
+			//return new RotatedInterpolationData(start, Target, TargetTime);
 		}
 		
 		/// <inheritdoc />

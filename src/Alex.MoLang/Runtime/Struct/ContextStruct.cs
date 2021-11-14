@@ -7,6 +7,17 @@ namespace Alex.MoLang.Runtime.Struct
 {
 	public class ContextStruct : VariableStruct
 	{
+		internal IDictionary<string, IMoValue> Container
+		{
+			get
+			{
+				return Map;
+			}
+			set
+			{
+				Map = value;
+			}
+		}
 		public ContextStruct() : base()
 		{
 			

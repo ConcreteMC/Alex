@@ -137,20 +137,20 @@ namespace Alex.Graphics.Models
 		/// Copies bone transforms relative to all parent bones of the each bone from this model to a given array.
 		/// </summary>
 		/// <param name="destinationBoneTransforms">The array receiving the transformed bones.</param>
-		public static void CopyAbsoluteBoneTransformsTo(IEnumerable<ModelBone> source, Matrix[] destinationBoneTransforms)
+		public static void CopyAbsoluteBoneTransformsTo(IList<ModelBone> source, Matrix[] destinationBoneTransforms)
 		{
-			var bones = source.ToArray();
+			var bones = source;
 			if (destinationBoneTransforms == null)
 				throw new ArgumentNullException(nameof(destinationBoneTransforms));
 			
 			//var bones = this.Bones;
-			if (destinationBoneTransforms.Length <  bones.Length)
+			if (destinationBoneTransforms.Length <  bones.Count)
 				throw new ArgumentOutOfRangeException(nameof(destinationBoneTransforms));
 			
-			int count = bones.Length;
+			int count = bones.Count;
 			for (int index1 = 0; index1 < count; index1++)
 			{
-				if (index1 >= bones.Length)
+				if (index1 >= bones.Count)
 					break;
 				
 				var modelBone = bones[index1];

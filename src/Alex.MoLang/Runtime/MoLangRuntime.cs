@@ -23,6 +23,8 @@ namespace Alex.MoLang.Runtime
 			Environment.Structs.TryAdd("temp", new VariableStruct());
 			Environment.Structs.TryAdd("variable", new VariableStruct());
 			Environment.Structs.TryAdd("array", new ArrayStruct());
+
+			Environment.Structs.TryAdd("context", new ContextStruct());
 		}
 		
 		/*public IMoValue Execute(IExpression expression) {
@@ -45,7 +47,10 @@ namespace Alex.MoLang.Runtime
 
 			//expressions = _exprTraverser.Traverse(expressions);
 
-			Environment.Structs["context"] = new ContextStruct(context); // .put("context", new ContextStruct(context));
+			if (Environment.Structs.TryGetValue("context", out IMoStruct cont) && cont is ContextStruct contextStruct)
+			{
+				contextStruct.Container = context;
+			}
 
 			IMoValue result = new DoubleValue(0.0);
 			MoScope scope = new MoScope();
@@ -75,15 +80,9 @@ namespace Alex.MoLang.Runtime
 			}
 
 			Environment.Structs["temp"].Clear();
-			; // .getStructs().get("temp").clear();
-			Environment.Structs.Remove("context", out _); //["context"].getStructs().remove("context");
+			//Environment.Structs.Remove("context", out _);
 
 			return result;
-			//	}
-			//catch (Exception ex)
-			//{
-			//	throw new MoLangRuntimeException("An unexpected error occured.", ex);
-			//}
 		}
 	}
 }

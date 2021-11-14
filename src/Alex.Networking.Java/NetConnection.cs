@@ -286,16 +286,16 @@ namespace Alex.Networking.Java
 		    {
 			    if (LogExceptions)
 			    {
-				    Log.Warn(
+				    Log.Error(
 					    ex,
-					    $"Failed write to network (Last packet read=0x{_lastReceivedPacketId:X2}, last packet written=0x{_lastSentPacketId:X2}, State: {ConnectionState})");
+					    $"Failed to send packet. Id=0x{packet.PacketId:X2} Type={packet.GetType().ToString()} (Last Received=0x{_lastReceivedPacketId:X2} Last Sent=0x{_lastSentPacketId:X2} ConnectionState={ConnectionState})");
 
 				    for (int i = 0; i < _lastSentPacketIds.Length; i++)
 				    {
 					    Log.Debug($"Sent: 0x{_lastSentPacketIds[i]:X2}");
 				    }
 			    }
-			    
+
 			    Disconnected(false);
 		    }
 		    finally
