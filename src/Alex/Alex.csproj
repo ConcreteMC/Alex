@@ -143,5 +143,6 @@
         <Folder Include="Audio\Models" />
         <Folder Include="Particles\Builtin" />
     </ItemGroup>
-
+    
+    <Import Project="$(MSBuildThisFileDirectory)/../../submodules/RocketUI/src/RocketUI/RocketUI.targets" />
 </Project>

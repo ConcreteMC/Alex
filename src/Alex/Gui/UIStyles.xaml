@@ -1,0 +1,93 @@
+﻿<StyleSheet xmlns="clr-namespace:RocketUI;assembly=RocketUI"
+            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+            xmlns:xna="clr-namespace:Microsoft.Xna.Framework;assembly=MonoGame.Framework">
+
+    <Style TargetType="Button">
+        <Setter Property="Background">
+            <Setter.Value>
+                <GuiTexture2D>Alex:ButtonDefault</GuiTexture2D>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="DisabledBackground" Value="Alex:ButtonDisabled" />
+        <Setter Property="HighlightedBackground" Value="Alex:ButtonHover" />
+        <Setter Property="FocusedBackground" Value="Alex:ButtonFocused" />
+        <Setter Property="HighlightColor" Value="#FFFF55" />
+        <Setter Property="DefaultColor" Value="#FFFFFF" />
+    </Style>
+    
+    <Style TargetType="Button" Name="Modern" x:Key="Modern">
+        <Setter Property="Background" Value="#33000000" />
+        <Setter Property="DisabledBackground" Value="#00000000" />
+        <Setter Property="FocusedBackground" Value="#00000000" />
+        <Setter Property="HighlightedBackground" Value="#7F000000" />
+        <Setter Property="HighlightColor" Value="#55FFFF" />
+        <Setter Property="DefaultColor" Value="#FFFFFF" />
+    </Style>
+    
+    <Style TargetType="ToggleButton" Name="Modern">
+        <Setter Property="Background" Value="#33000000" />
+        <Setter Property="DisabledBackground" Value="#00000000" />
+        <Setter Property="FocusedBackground" Value="#00000000" />
+        <Setter Property="HighlightedBackground" Value="#7F000000" />
+        <Setter Property="HighlightColor" Value="#55FFFF" />
+        <Setter Property="DefaultColor" Value="#FFFFFF" />
+        <Setter Property="CheckedColor" Value="#55FFFF" />
+    </Style>
+
+    <Style TargetType="Slider">
+        <Setter Property="Background">
+            <Setter.Value>
+                <GuiTexture2D TextureResource="Alex:ButtonDisabled" RepeatMode="Stretch" />
+            </Setter.Value>
+        </Setter>
+        <Setter Property="ThumbBackground">
+            <Setter.Value>
+                <GuiTexture2D TextureResource="Alex:ButtonDefault" RepeatMode="NoScaleCenterSlice" />
+            </Setter.Value>
+        </Setter>
+        <Setter Property="ThumbHighlightBackground">
+            <Setter.Value>
+                <GuiTexture2D TextureResource="Alex:ButtonHover" RepeatMode="NoScaleCenterSlice" />
+            </Setter.Value>
+        </Setter>
+        <Setter Property="ThumbDisabledBackground">
+            <Setter.Value>
+                <GuiTexture2D TextureResource="Alex:ButtonDisabled" RepeatMode="NoScaleCenterSlice" />
+            </Setter.Value>
+        </Setter>
+    </Style>
+    
+    <Style TargetType="StackMenuItem">
+        <Setter Property="Background">
+            <Setter.Value>
+                <GuiTexture2D>#00000000</GuiTexture2D>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="DisabledBackground">
+            <Setter.Value>
+                <GuiTexture2D>#00000000</GuiTexture2D>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="FocusedBackground">
+            <Setter.Value>
+                <GuiTexture2D>#00000000</GuiTexture2D>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="HighlightedBackground">
+            <Setter.Value>
+                <GuiTexture2D>#0000007F</GuiTexture2D>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="HighlightColor">
+            <Setter.Value>
+                <xna:Color>#FF55FFFF</xna:Color>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="DefaultColor">
+            <Setter.Value>
+                <xna:Color>#FFFFFFFF</xna:Color>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+</StyleSheet>

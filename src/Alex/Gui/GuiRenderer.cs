@@ -17,6 +17,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Newtonsoft.Json.Linq;
 using RocketUI;
 using RocketUI.Audio;
+using RocketUI.Serialization.Xaml;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
@@ -130,6 +131,8 @@ namespace Alex.Gui
 		#endregion
 
 		#endregion
+
+		private StyleSheet _styleSheet;
 		
 		public GuiRenderer()
 		{
@@ -143,6 +146,7 @@ namespace Alex.Gui
 			
 			LoadEmbeddedTextures();
 			LoadSoundEffects(serviceProvider.GetRequiredService<AudioEngine>());
+			LoadStyleSheets();
 		}
 
 		private void LoadSoundEffects(AudioEngine audioEngine)
@@ -731,9 +735,17 @@ namespace Alex.Gui
 		{
 			return GraphicsContext.CreateContext(graphics, BlendState.NonPremultiplied, DepthStencilState.None, GuiSpriteBatch.GetDefaultRasterizerState(), SamplerState.PointClamp);
 		}
+
+		private void LoadStyleSheets()
+		{
+			_styleSheet = new StyleSheet();
+			RocketXamlLoader.Load<StyleSheet>(_styleSheet, "Alex.Gui.UIStyles.xaml");
+		}
 		
 		public IStyle[] ResolveStyles(Type elementType, string[] classNames)
 		{
+
+			return _styleSheet.ResolveStyles(elementType, classNames);
 			if (elementType.IsAssignableFrom(typeof(StackMenuItem)))
 			{
 				return new[]

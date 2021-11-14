@@ -29,7 +29,7 @@ namespace Alex.Gamestates.InGame
 			{
 				Margin = new Thickness(15, 0, 15, 0),
 				Padding = new Thickness(0, 50, 0, 0),
-				Width = 125,
+				Width = 150,
 				Anchor = Alignment.FillY | Alignment.MinX,
 
 				ChildAnchor = Alignment.CenterY | Alignment.FillX,

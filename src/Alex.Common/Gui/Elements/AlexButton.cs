@@ -25,36 +25,15 @@ namespace Alex.Common.Gui.Elements
 			}
 			set
 			{
-				_isModern = value;
 				if (value)
 				{
-					Background = Color.Transparent;
-					DisabledBackground = Color.Transparent;
-					FocusedBackground = Color.Transparent;
-					HighlightedBackground = new Color(Color.Black * 0.8f, 0.5f);
-					HighlightColor = (Color) TextColor.Cyan;
-					DefaultColor = (Color) TextColor.White;
-					DisabledColor = (Color) TextColor.Gray;
-                
-					/*if (button is ToggleButton toggleButton)
-					{
-						toggleButton.CheckedColor = (Color) TextColor.Cyan;
-					}*/
+					if (!ClassNames.Contains("Modern"))
+						ClassNames.Add("Modern");
 				}
 				else
 				{
-					Background = GuiTextures.ButtonDefault;
-					DisabledBackground = GuiTextures.ButtonDisabled;
-					HighlightedBackground = GuiTextures.ButtonHover;
-					FocusedBackground = GuiTextures.ButtonFocused;
-					HighlightColor = (Color) TextColor.Yellow;
-					DefaultColor = (Color) TextColor.White;
-					DisabledColor = (Color) TextColor.Gray;
-                
-					/*if (button is ToggleButton toggleButton)
-					{
-						toggleButton.CheckedColor = (Color) TextColor.Yellow;
-					}*/
+					if (ClassNames.Contains("Modern"))
+						ClassNames.Remove("Modern");
 				}
 			}
 		}

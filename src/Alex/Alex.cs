@@ -335,7 +335,7 @@ namespace Alex
            if (LaunchSettings.RocketDebugging)
            {
                container.RegisterSingleton<RocketDebugSocketServer>();
-               container.Collection.Register<IHostedService>(typeof(RocketDebugSocketServer));
+               container.Collection.Append<IHostedService, RocketDebugSocketServer>();
            }
 
            container.Verify();
