@@ -11,6 +11,8 @@ namespace Alex.Gui
         public static TSlider ApplyStyle<TSlider, TValue>(this TSlider slider)
             where TSlider : Slider<TValue> where TValue : IConvertible
         {
+            return slider;
+
             slider.Background = AlexGuiTextures.ButtonDisabled;
             slider.ThumbBackground = AlexGuiTextures.ButtonDefault;
             slider.ThumbHighlightBackground = AlexGuiTextures.ButtonHover;
@@ -57,6 +59,8 @@ namespace Alex.Gui
         public static TSlider ApplyStyle<TSlider>(this TSlider slider)
             where TSlider : Slider
         {
+            return slider;
+            
             slider.Background = AlexGuiTextures.ButtonDisabled;
             slider.ThumbBackground = AlexGuiTextures.ButtonDefault;
             slider.ThumbHighlightBackground = AlexGuiTextures.ButtonHover;
@@ -105,8 +109,21 @@ namespace Alex.Gui
         {
             if (modern)
             {
+                if (!button.ClassNames.Contains("Modern"))
+                    button.ClassNames.Add("Modern");
+            }
+            else
+            {
+                if (button.ClassNames.Contains("Modern"))
+                    button.ClassNames.Remove("Modern");
+            }
+
+            return button;
+            
+            if (modern)
+            {
                 button.Background = Color.Transparent;
-                button.DisabledBackground = Color.Transparent;
+                button.DisabledBackground = Color.Transparent; 
                 button.FocusedBackground = Color.TransparentBlack;
                 button.HighlightedBackground = new Color(Color.Black * 0.8f, 0.5f);
                 button.HighlightColor = (Color) TextColor.Cyan;
