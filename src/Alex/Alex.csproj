@@ -36,9 +36,11 @@
     <PropertyGroup Condition="'$(Configuration)'=='Release'">
         <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
         <IncludeAllContentForselfExtract>true</IncludeAllContentForselfExtract>
-        <PublishSingleFile>false</PublishSingleFile>
+        <PublishSingleFile>true</PublishSingleFile>
         <PublishReadyToRun>false</PublishReadyToRun>
         <SelfContained>true</SelfContained>
+        <DebugSymbols>false</DebugSymbols>
+        <DebugType>none</DebugType>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)'=='DirectX'">
