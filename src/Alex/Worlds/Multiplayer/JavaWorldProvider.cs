@@ -2701,7 +2701,7 @@ namespace Alex.Worlds.Multiplayer
 		{
 			if (Profile == null)
 			{
-				Log.Warn("Null session");
+				Log.Warn("Invalid session, profile was null.");
 				return false;
 			}
 			
@@ -2732,10 +2732,9 @@ namespace Alex.Worlds.Multiplayer
 			VerifySession(serverHash).ContinueWith(
 				x =>
 				{
-					var authenticated = x.Result;
-
-					if (!authenticated)
+					if (x.IsFaulted || !x.Result)
 					{
+						Log.Warn($"Invalid session detected!");
 						ShowDisconnect("disconnect.loginFailedInfo.invalidSession", true);
 						return;
 					}

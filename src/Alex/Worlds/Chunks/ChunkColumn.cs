@@ -553,8 +553,8 @@ namespace Alex.Worlds.Chunks
 				chunksSection?.Dispose();
 			}
 
-			ChunkData?.Dispose();
-			ChunkData = null;
+			_chunkData?.Dispose();
+			_chunkData = null;
 		}
 
 		public void Dispose()
