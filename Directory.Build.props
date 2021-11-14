@@ -40,4 +40,9 @@
 			</ItemGroup>
 		</Otherwise>
 	</Choose>
+
+	<PropertyGroup Condition="'$(Configuration)'=='Release'">
+		<DebugSymbols>false</DebugSymbols>
+		<DebugType>none</DebugType>
+	</PropertyGroup>
 </Project>
