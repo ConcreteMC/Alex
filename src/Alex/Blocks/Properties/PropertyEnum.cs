@@ -32,6 +32,9 @@ namespace Alex.Blocks.Properties
 		}
 
 		/// <inheritdoc />
-		public override string StringValue => Value.ToString().ToLower();
+		protected override string StringifyValue(T value)
+		{
+			return value.ToString().ToLower();
+		}
 	}
 }

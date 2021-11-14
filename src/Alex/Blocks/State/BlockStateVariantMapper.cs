@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Alex.Common.Blocks.Properties;
 using Alex.Graphics.Models.Blocks;
 
 namespace Alex.Blocks.State
@@ -9,6 +10,8 @@ namespace Alex.Blocks.State
     {
         private static NLog.Logger Log = NLog.LogManager.GetCurrentClassLogger(typeof(BlockStateVariantMapper));
         private HashSet<BlockState> Variants { get; }
+        private HashSet<string> _knownKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        private BlockState _default = null;
         
         public  bool       IsMultiPart { get; set; } = false;
         
@@ -32,40 +35,47 @@ namespace Alex.Blocks.State
             foreach (var variant in variants)
             {
                 variant.VariantMapper = this;
+
+                if (variant.Default)
+                    _default = variant;
             }
+
+            foreach (var key in variants.SelectMany(x => x.States.Select(s => s.Name).Distinct()))
+                _knownKeys.Add(key);
         }
 		
         public bool TryResolve<T>(BlockState source, StateProperty<T> property, T value, out BlockState result)
         {
-            //var clone = source.WithPropertyNoResolve(property, value, true);
-            //var propHah = property.GetHashCode(StringComparison.InvariantCultureIgnoreCase);
+            if (!_knownKeys.Contains(property.Name))
+            {
+                result = source;
+                return false;
+            }
+            
             var clone = new BlockState
             {
                 Name = source.Name,
                 ID = source.ID, 
-                //   States = new HashSet<StateProperty>(new StatePropertyComparer()),
                 Block = source.Block,
                 VariantMapper = source.VariantMapper,
                 Default = source.Default,
-                ModelData = source.ModelData
+                ModelData = source.ModelData,
+                States = new HashSet<IStateProperty>(source.States.Count, source.States.Comparer)
             };
             
-            //  List<StateProperty> properties = new List<StateProperty>();
             foreach (var prop in source.States)
             {
                 var p = prop;
 
                 if (p.Identifier == property.Identifier)
                 {
-                    clone.States.Add(property.WithValue(value));
+                    clone.States.Add(p.WithValue(value));
                 }
                 else
                 {
                     clone.States.Add(p);
                 }
             }
-
-            // clone.States = new HashSet<StateProperty>(properties, new StatePropertyComparer());
             
             if (Variants.TryGetValue(clone, out var actualValue))
             {
@@ -79,34 +89,38 @@ namespace Alex.Blocks.State
         
         public bool TryResolve(BlockState source, string property, string value, out BlockState result)
         {
-            //var clone = source.WithPropertyNoResolve(property, value, true);
-            var propHah = property.GetHashCode(StringComparison.InvariantCultureIgnoreCase);
+            if (!_knownKeys.Contains(property))
+            {
+                result = source;
+                return false;
+            }
+            
+            var propHah = property.GetHashCode(StringComparison.OrdinalIgnoreCase);
             var clone = new BlockState
             {
                 Name = source.Name,
-                ID = source.ID, 
-             //   States = new HashSet<StateProperty>(new StatePropertyComparer()),
+                ID = source.ID,
                 Block = source.Block,
                 VariantMapper = source.VariantMapper,
                 Default = source.Default,
-                ModelData = source.ModelData
+                ModelData = source.ModelData,
+                States = new HashSet<IStateProperty>(source.States.Count, source.States.Comparer)
             };
             
-          //  List<StateProperty> properties = new List<StateProperty>();
             foreach (var prop in source.States)
             {
                 var p = prop;
 
                 if (p.Identifier == propHah)
                 {
-                    p = p.WithValue(value);
+                    clone.States.Add(p.WithValue(value));
                 }
-                
-                clone.States.Add(p);
+                else
+                {
+                    clone.States.Add(p);
+                }
             }
-
-           // clone.States = new HashSet<StateProperty>(properties, new StatePropertyComparer());
-            
+          
             if (Variants.TryGetValue(clone, out var actualValue))
             {
                 result = actualValue;
@@ -124,7 +138,8 @@ namespace Alex.Blocks.State
 
         public BlockState GetDefaultState()
         {
-            return Variants.FirstOrDefault(x => x.Default);
+            return _default;
+            //return Variants.FirstOrDefault(x => x.Default);
         }
     }
 }

@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -23,455 +24,505 @@ using NLog;
 
 namespace Alex.Blocks
 {
+	public class BlockRegistryEntry : IRegistryEntry<Block>
+	{
+		private readonly Func<Block> _factory;
+
+		/// <inheritdoc />
+		public ResourceLocation Location { get; private set; }
+
+		public BlockRegistryEntry(Func<Block> factory)
+		{
+			_factory = factory;
+		}
+		
+		/// <inheritdoc />
+		public IRegistryEntry<Block> WithLocation(ResourceLocation location)
+		{
+			Location = location;
+
+			return this;
+		}
+
+		/// <inheritdoc />
+		public Block Value
+		{
+			get
+			{
+				var block = _factory();
+				return block.WithLocation(Location).Value;
+			}
+		}
+	}
+	
     public class BlockRegistry : RegistryBase<Block>
     {
 	    private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(BlockRegistry));
+
+	    private void RegisterBlock(string block, Func<Block> factory)
+	    {
+		    this.Register(block, new BlockRegistryEntry(factory));
+	    }
+
+	    private void RegisterBlockRange(params Func<IRegistryEntry<Block>>[] factories)
+	    {
+		    foreach (var factory in factories)
+		    {
+			    var value = factory();
+			    this.Register(value.Location, new BlockRegistryEntry(
+				    () =>
+				    {
+					    return factory().Value;
+				    }));
+		    }
+	    }
+	    
 	    public BlockRegistry() : base("block")
 	    {
-		    this.Register("minecraft:air", () => new Air());
-		    this.Register("minecraft:cave_air", () => new Air());
-		    this.Register("minecraft:void_air", () => new Air());
+		    RegisterBlock("minecraft:air", () => new Air());
+		    RegisterBlock("minecraft:cave_air", () => new Air());
+		    RegisterBlock("minecraft:void_air", () => new Air());
 		    
-		    this.Register("minecraft:stone", () => new Stone());
-		    this.Register("minecraft:dirt", () => new Dirt());
-		    this.Register("minecraft:podzol", () => new Podzol());
-		    this.Register("minecraft:cobblestone", () => new Cobblestone());
-		    this.Register("minecraft:bedrock", () => new Bedrock());
-		    this.Register("minecraft:sand", () => new Sand());
-		    this.Register("minecraft:gravel", () => new Gravel());
-		    this.Register("minecraft:sponge", () => new Sponge());
-		    this.Register("minecraft:glass", () => new Glass());
-		    this.Register("minecraft:dispenser", () => new Dispenser());
-		    this.Register("minecraft:sandstone", () => new Sandstone());
-		    this.Register("minecraft:note_block", () => new NoteBlock());
-		    this.Register("minecraft:detector_rail", () => new DetectorRail());
-		    this.Register("minecraft:grass", () => new Grass());
-		    this.Register("minecraft:fern", () => new Fern());
-		    this.Register("minecraft:large_fern", () => new Fern());
-		    this.Register("minecraft:brown_mushroom", () => new BrownMushroom());
-		    this.Register("minecraft:red_mushroom", () => new RedMushroom());
-		    this.Register("minecraft:dead_bush", () => new DeadBush());
-		    this.Register("minecraft:tnt", () => new Tnt());
-		    this.Register("minecraft:bookshelf", () => new Bookshelf());
-		    this.Register("minecraft:mossy_cobblestone", () => new MossyCobblestone());
-		    this.Register("minecraft:obsidian", () => new Obsidian());
-		    this.Register("minecraft:fire", () => new Fire());
-		    this.Register("minecraft:mob_spawner", () => new MobSpawner());
-		    this.Register("minecraft:spawner", () => new MobSpawner());
+		    RegisterBlock("minecraft:stone", () => new Stone());
+		    RegisterBlock("minecraft:dirt", () => new Dirt());
+		    RegisterBlock("minecraft:podzol", () => new Podzol());
+		    RegisterBlock("minecraft:cobblestone", () => new Cobblestone());
+		    RegisterBlock("minecraft:bedrock", () => new Bedrock());
+		    RegisterBlock("minecraft:sand", () => new Sand());
+		    RegisterBlock("minecraft:gravel", () => new Gravel());
+		    RegisterBlock("minecraft:sponge", () => new Sponge());
+		    RegisterBlock("minecraft:glass", () => new Glass());
+		    RegisterBlock("minecraft:dispenser", () => new Dispenser());
+		    RegisterBlock("minecraft:sandstone", () => new Sandstone());
+		    RegisterBlock("minecraft:note_block", () => new NoteBlock());
+		    RegisterBlock("minecraft:detector_rail", () => new DetectorRail());
+		    RegisterBlock("minecraft:grass", () => new Grass());
+		    RegisterBlock("minecraft:fern", () => new Fern());
+		    RegisterBlock("minecraft:large_fern", () => new Fern());
+		    RegisterBlock("minecraft:brown_mushroom", () => new BrownMushroom());
+		    RegisterBlock("minecraft:red_mushroom", () => new RedMushroom());
+		    RegisterBlock("minecraft:dead_bush", () => new DeadBush());
+		    RegisterBlock("minecraft:tnt", () => new Tnt());
+		    RegisterBlock("minecraft:bookshelf", () => new Bookshelf());
+		    RegisterBlock("minecraft:mossy_cobblestone", () => new MossyCobblestone());
+		    RegisterBlock("minecraft:obsidian", () => new Obsidian());
+		    RegisterBlock("minecraft:fire", () => new Fire());
+		    RegisterBlock("minecraft:mob_spawner", () => new MobSpawner());
+		    RegisterBlock("minecraft:spawner", () => new MobSpawner());
 		    
-		    this.Register("minecraft:crafting_table", () => new CraftingTable());
-		    this.Register("minecraft:wheat", () => new Wheat());
-		    this.Register("minecraft:farmland", () => new Farmland());
-		    this.Register("minecraft:furnace", () => new Furnace());
-		    this.Register("minecraft:ladder", () => new Ladder());
-		    this.Register("minecraft:rail", () => new Rail());
-		    this.Register("minecraft:snow", () => new Snow());
-		    this.Register("minecraft:snow_block", () => new SnowBlock());
-		    this.Register("minecraft:ice", () => new Ice());
-		    this.Register("minecraft:blue_ice", () => new BlueIce());
-		    this.Register("minecraft:cactus", () => new Cactus());
-		    this.Register("minecraft:clay", () => new Clay());
-		    this.Register("minecraft:pumpkin", () => new Pumpkin());
-		    this.Register("minecraft:netherrack", () => new Netherrack());
-		    this.Register("minecraft:soul_sand", () => new SoulSand());
-		    this.Register("minecraft:glowstone", () => new Glowstone());
-		    this.Register("minecraft:portal", () => new Portal());
-		    this.Register("minecraft:nether_portal", () => new Portal());
-		    this.Register("minecraft:cake", () => new Cake());
-		    this.Register("minecraft:brown_mushroom_block", () => new BrownMushroomBlock());
-		    this.Register("minecraft:red_mushroom_block", () => new RedMushroomBlock());
-		    this.Register("minecraft:iron_bars", () => new IronBars());
-		    this.Register("minecraft:vine", () => new Vine());
-		    this.Register("minecraft:mycelium", () => new Mycelium());
-		    this.Register("minecraft:nether_wart", () => new NetherWart());
-		    this.Register("minecraft:enchanting_table", () => new EnchantingTable());
-		    this.Register("minecraft:brewing_stand", () => new BrewingStand());
-		    this.Register("minecraft:cauldron", () => new Cauldron());
-		    this.Register("minecraft:end_portal", () => new EndPortal());
-		    this.Register("minecraft:end_portal_frame", () => new EndPortalFrame());
-		    this.Register("minecraft:end_stone", () => new EndStone());
-		    this.Register("minecraft:dragon_egg", () => new DragonEgg());
-		    this.Register("minecraft:redstone_lamp", () => new RedstoneLamp());
-		    this.Register("minecraft:cocoa", () => new Cocoa());
+		    RegisterBlock("minecraft:crafting_table", () => new CraftingTable());
+		    RegisterBlock("minecraft:wheat", () => new Wheat());
+		    RegisterBlock("minecraft:farmland", () => new Farmland());
+		    RegisterBlock("minecraft:furnace", () => new Furnace());
+		    RegisterBlock("minecraft:ladder", () => new Ladder());
+		    RegisterBlock("minecraft:rail", () => new Rail());
+		    RegisterBlock("minecraft:snow", () => new Snow());
+		    RegisterBlock("minecraft:snow_block", () => new SnowBlock());
+		    RegisterBlock("minecraft:ice", () => new Ice());
+		    RegisterBlock("minecraft:blue_ice", () => new BlueIce());
+		    RegisterBlock("minecraft:cactus", () => new Cactus());
+		    RegisterBlock("minecraft:clay", () => new Clay());
+		    RegisterBlock("minecraft:pumpkin", () => new Pumpkin());
+		    RegisterBlock("minecraft:netherrack", () => new Netherrack());
+		    RegisterBlock("minecraft:soul_sand", () => new SoulSand());
+		    RegisterBlock("minecraft:glowstone", () => new Glowstone());
+		    RegisterBlock("minecraft:portal", () => new Portal());
+		    RegisterBlock("minecraft:nether_portal", () => new Portal());
+		    RegisterBlock("minecraft:cake", () => new Cake());
+		    RegisterBlock("minecraft:brown_mushroom_block", () => new BrownMushroomBlock());
+		    RegisterBlock("minecraft:red_mushroom_block", () => new RedMushroomBlock());
+		    RegisterBlock("minecraft:iron_bars", () => new IronBars());
+		    RegisterBlock("minecraft:vine", () => new Vine());
+		    RegisterBlock("minecraft:mycelium", () => new Mycelium());
+		    RegisterBlock("minecraft:nether_wart", () => new NetherWart());
+		    RegisterBlock("minecraft:enchanting_table", () => new EnchantingTable());
+		    RegisterBlock("minecraft:brewing_stand", () => new BrewingStand());
+		    RegisterBlock("minecraft:cauldron", () => new Cauldron());
+		    RegisterBlock("minecraft:end_portal", () => new EndPortal());
+		    RegisterBlock("minecraft:end_portal_frame", () => new EndPortalFrame());
+		    RegisterBlock("minecraft:end_stone", () => new EndStone());
+		    RegisterBlock("minecraft:dragon_egg", () => new DragonEgg());
+		    RegisterBlock("minecraft:redstone_lamp", () => new RedstoneLamp());
+		    RegisterBlock("minecraft:cocoa", () => new Cocoa());
 		    
-		    this.Register("minecraft:tripwire_hook", () => new TripwireHook());
-		    this.Register("minecraft:tripwire", () => new Tripwire());
-		    this.Register("minecraft:beacon", () => new Beacon());
-		    this.Register("minecraft:carrots", () => new Carrots());
-		    this.Register("minecraft:potatoes", () => new Potatoes());
-		    this.Register("minecraft:anvil", () => new Anvil());
-		    this.Register("minecraft:chipped_anvil", () => new Anvil());
+		    RegisterBlock("minecraft:tripwire_hook", () => new TripwireHook());
+		    RegisterBlock("minecraft:tripwire", () => new Tripwire());
+		    RegisterBlock("minecraft:beacon", () => new Beacon());
+		    RegisterBlock("minecraft:carrots", () => new Carrots());
+		    RegisterBlock("minecraft:potatoes", () => new Potatoes());
+		    RegisterBlock("minecraft:anvil", () => new Anvil());
+		    RegisterBlock("minecraft:chipped_anvil", () => new Anvil());
 		    
-		    this.Register("minecraft:quartz_block", () => new QuartzBlock());
-		    this.Register("minecraft:activator_rail", () => new ActivatorRail());
-		    this.Register("minecraft:dropper", () => new Dropper());
-		    this.Register("minecraft:prismarine", () => new Prismarine());
-		    this.Register("minecraft:sea_lantern", () => new SeaLantern());
-		    this.Register("minecraft:hay_block", () => new HayBlock());
-		    this.Register("minecraft:coal_block", () => new CoalBlock());
-		    this.Register("minecraft:packed_ice", () => new PackedIce());
-		    this.Register("minecraft:tall_grass", () => new TallGrass());
-		    this.Register("minecraft:red_sandstone", () => new RedSandstone());
-		    this.Register("minecraft:end_rod", () => new EndRod());
-		    this.Register("minecraft:chorus_plant", () => new ChorusPlant());
-		    this.Register("minecraft:chorus_flower", () => new ChorusFlower());
-		    this.Register("minecraft:purpur_block", () => new PurpurBlock());
-		    this.Register("minecraft:end_gateway", () => new EndGateway());
-		    this.Register("minecraft:frosted_ice", () => new FrostedIce());
-		    this.Register("minecraft:observer", () => new Observer());
-		    this.Register("minecraft:grass_block", () => new GrassBlock());
-		    this.Register("minecraft:powered_rail", () => new PoweredRail());
-		    this.Register("minecraft:bricks", () => new Bricks());
-		    this.Register("minecraft:cobweb", () => new Cobweb());
-		    this.Register("minecraft:dandelion", () => new Dandelion());
-		    this.Register("minecraft:poppy", () => new Poppy());
-		    this.Register("minecraft:sugar_cane", () => new SugarCane());
-		    this.Register("minecraft:beetroots", () => new Beetroots());
-		    this.Register("minecraft:nether_wart_block", () => new NetherWartBlock());
-		    this.Register("minecraft:jukebox", () => new Jukebox());
-		    this.Register("minecraft:stone_bricks", () => new StoneBricks());
-		    this.Register("minecraft:flower_pot", () => new FlowerPot());
+		    RegisterBlock("minecraft:quartz_block", () => new QuartzBlock());
+		    RegisterBlock("minecraft:activator_rail", () => new ActivatorRail());
+		    RegisterBlock("minecraft:dropper", () => new Dropper());
+		    RegisterBlock("minecraft:prismarine", () => new Prismarine());
+		    RegisterBlock("minecraft:sea_lantern", () => new SeaLantern());
+		    RegisterBlock("minecraft:hay_block", () => new HayBlock());
+		    RegisterBlock("minecraft:coal_block", () => new CoalBlock());
+		    RegisterBlock("minecraft:packed_ice", () => new PackedIce());
+		    RegisterBlock("minecraft:tall_grass", () => new TallGrass());
+		    RegisterBlock("minecraft:red_sandstone", () => new RedSandstone());
+		    RegisterBlock("minecraft:end_rod", () => new EndRod());
+		    RegisterBlock("minecraft:chorus_plant", () => new ChorusPlant());
+		    RegisterBlock("minecraft:chorus_flower", () => new ChorusFlower());
+		    RegisterBlock("minecraft:purpur_block", () => new PurpurBlock());
+		    RegisterBlock("minecraft:end_gateway", () => new EndGateway());
+		    RegisterBlock("minecraft:frosted_ice", () => new FrostedIce());
+		    RegisterBlock("minecraft:observer", () => new Observer());
+		    RegisterBlock("minecraft:grass_block", () => new GrassBlock());
+		    RegisterBlock("minecraft:powered_rail", () => new PoweredRail());
+		    RegisterBlock("minecraft:bricks", () => new Bricks());
+		    RegisterBlock("minecraft:cobweb", () => new Cobweb());
+		    RegisterBlock("minecraft:dandelion", () => new Dandelion());
+		    RegisterBlock("minecraft:poppy", () => new Poppy());
+		    RegisterBlock("minecraft:sugar_cane", () => new SugarCane());
+		    RegisterBlock("minecraft:beetroots", () => new Beetroots());
+		    RegisterBlock("minecraft:nether_wart_block", () => new NetherWartBlock());
+		    RegisterBlock("minecraft:jukebox", () => new Jukebox());
+		    RegisterBlock("minecraft:stone_bricks", () => new StoneBricks());
+		    RegisterBlock("minecraft:flower_pot", () => new FlowerPot());
 		    
-		    this.Register("minecraft:command_block", () => new CommandBlock());
-		    this.Register("minecraft:nether_quartz_ore", () => new NetherQuartzOre());
-		    this.Register("minecraft:slime_block", () => new SlimeBlock());
-		    this.Register("minecraft:purpur_pillar", () => new PurpurPillar());
-		    this.Register("minecraft:end_stone_bricks", () => new EndStoneBricks());
-		    this.Register("minecraft:repeating_command_block", () => new RepeatingCommandBlock());
-		    this.Register("minecraft:chain_command_block", () => new ChainCommandBlock());
-		    this.Register("minecraft:magma_block", () => new MagmaBlock());
-		    this.Register("minecraft:bone_block", () => new BoneBlock());
-		    this.Register("minecraft:structure_block", () => new StructureBlock());
+		    RegisterBlock("minecraft:command_block", () => new CommandBlock());
+		    RegisterBlock("minecraft:nether_quartz_ore", () => new NetherQuartzOre());
+		    RegisterBlock("minecraft:slime_block", () => new SlimeBlock());
+		    RegisterBlock("minecraft:purpur_pillar", () => new PurpurPillar());
+		    RegisterBlock("minecraft:end_stone_bricks", () => new EndStoneBricks());
+		    RegisterBlock("minecraft:repeating_command_block", () => new RepeatingCommandBlock());
+		    RegisterBlock("minecraft:chain_command_block", () => new ChainCommandBlock());
+		    RegisterBlock("minecraft:magma_block", () => new MagmaBlock());
+		    RegisterBlock("minecraft:bone_block", () => new BoneBlock());
+		    RegisterBlock("minecraft:structure_block", () => new StructureBlock());
 		    
 		    //Walls
-		    this.Register("minecraft:cobblestone_wall", () => new CobblestoneWall());
-		    this.Register("minecraft:mossy_cobblestone_wall", () => new CobblestoneWall());
-		    this.Register("minecraft:andesite_wall", () => new AndesiteWall());
-		    this.Register("minecraft:stone_brick_wall", () => new StoneBrickWall());
-			this.Register("minecraft:red_nether_brick_wall", () => new RedNetherBrickWall());
-			this.Register("minecraft:sandstone_wall", () => new StoneBrickWall()
+		    RegisterBlock("minecraft:cobblestone_wall", () => new CobblestoneWall());
+		    RegisterBlock("minecraft:mossy_cobblestone_wall", () => new CobblestoneWall());
+		    RegisterBlock("minecraft:andesite_wall", () => new AndesiteWall());
+		    RegisterBlock("minecraft:stone_brick_wall", () => new StoneBrickWall());
+			RegisterBlock("minecraft:red_nether_brick_wall", () => new RedNetherBrickWall());
+			RegisterBlock("minecraft:sandstone_wall", () => new StoneBrickWall()
 			{
 				BlockMaterial = Material.Stone.Clone().WithMapColor(MapColor.Sand)
 			});
 		    
 		    //Redstone
-		    this.Register("minecraft:lever", () => new Lever());
-		    this.Register("minecraft:redstone_wire", () => new RedstoneWire());
-		    this.Register("minecraft:piston", () => new Piston());
-		    this.Register("minecraft:piston_head", () => new PistonHead());
-		    this.Register("minecraft:sticky_piston", () => new StickyPiston());
-		    this.Register("minecraft:daylight_detector", () => new DaylightDetector());
-		    this.Register("minecraft:redstone_block", () => new RedstoneBlock());
-		    this.Register("minecraft:hopper", () => new Hopper());
-		    this.Register("minecraft:torch", () => new Torch());
-		    this.Register("minecraft:wall_torch", () => new Torch(true));
-		    this.Register("minecraft:redstone_torch", () => new RedstoneTorch());
-		    this.Register("minecraft:redstone_wall_torch", () => new RedstoneTorch(true));
-		    this.Register("minecraft:repeater", () => new Repeater());
+		    RegisterBlock("minecraft:lever", () => new Lever());
+		    RegisterBlock("minecraft:redstone_wire", () => new RedstoneWire());
+		    RegisterBlock("minecraft:piston", () => new Piston());
+		    RegisterBlock("minecraft:piston_head", () => new PistonHead());
+		    RegisterBlock("minecraft:sticky_piston", () => new StickyPiston());
+		    RegisterBlock("minecraft:daylight_detector", () => new DaylightDetector());
+		    RegisterBlock("minecraft:redstone_block", () => new RedstoneBlock());
+		    RegisterBlock("minecraft:hopper", () => new Hopper());
+		    RegisterBlock("minecraft:torch", () => new Torch());
+		    RegisterBlock("minecraft:wall_torch", () => new Torch(true));
+		    RegisterBlock("minecraft:redstone_torch", () => new RedstoneTorch());
+		    RegisterBlock("minecraft:redstone_wall_torch", () => new RedstoneTorch(true));
+		    RegisterBlock("minecraft:repeater", () => new Repeater());
 		    
 		    //Pressure plates
-		    this.Register("minecraft:light_weighted_pressure_plate", () => new LightWeightedPressurePlate());
-		    this.Register("minecraft:heavy_weighted_pressure_plate", () => new HeavyWeightedPressurePlate());
-		    this.Register("minecraft:stone_pressure_plate", () => new StonePressurePlate());
-		    this.Register("minecraft:polished_blackstone_pressure_plate", () => new PressurePlate());
-		    this.Register("minecraft:oak_pressure_plate", () => new PressurePlate());
-		    this.Register("minecraft:spruce_pressure_plate", () => new PressurePlate());
-		    this.Register("minecraft:birch_pressure_plate", () => new PressurePlate());
-		    this.Register("minecraft:jungle_pressure_plate", () => new PressurePlate());
-		    this.Register("minecraft:acacia_pressure_plate", () => new PressurePlate());
-		    this.Register("minecraft:dark_oak_pressure_plate", () => new PressurePlate());
-		    this.Register("minecraft:warped_pressure_plate", () => new PressurePlate());
-		    this.Register("minecraft:crimson_pressure_plate", () => new PressurePlate());
+		    RegisterBlock("minecraft:light_weighted_pressure_plate", () => new LightWeightedPressurePlate());
+		    RegisterBlock("minecraft:heavy_weighted_pressure_plate", () => new HeavyWeightedPressurePlate());
+		    RegisterBlock("minecraft:stone_pressure_plate", () => new StonePressurePlate());
+		    RegisterBlock("minecraft:polished_blackstone_pressure_plate", () => new PressurePlate());
+		    RegisterBlock("minecraft:oak_pressure_plate", () => new PressurePlate());
+		    RegisterBlock("minecraft:spruce_pressure_plate", () => new PressurePlate());
+		    RegisterBlock("minecraft:birch_pressure_plate", () => new PressurePlate());
+		    RegisterBlock("minecraft:jungle_pressure_plate", () => new PressurePlate());
+		    RegisterBlock("minecraft:acacia_pressure_plate", () => new PressurePlate());
+		    RegisterBlock("minecraft:dark_oak_pressure_plate", () => new PressurePlate());
+		    RegisterBlock("minecraft:warped_pressure_plate", () => new PressurePlate());
+		    RegisterBlock("minecraft:crimson_pressure_plate", () => new PressurePlate());
 		    
 		    //Buttons
-		    this.Register("minecraft:stone_button", () => new StoneButton());
-		    this.Register("minecraft:oak_button", () => new OakButton());
-		    this.Register("minecraft:spruce_button", () => new SpruceButton());
-		    this.Register("minecraft:birch_button", () => new BirchButton());
-		    this.Register("minecraft:jungle_button", () => new JungleButton());
-		    this.Register("minecraft:acacia_button", () => new AcaciaButton());
-		    this.Register("minecraft:dark_oak_button", () => new DarkOakButton());
-		    this.Register("minecraft:polished_blackstone_button", () => new PolishedBlackStoneButton());
+		    RegisterBlock("minecraft:stone_button", () => new StoneButton());
+		    RegisterBlock("minecraft:oak_button", () => new OakButton());
+		    RegisterBlock("minecraft:spruce_button", () => new SpruceButton());
+		    RegisterBlock("minecraft:birch_button", () => new BirchButton());
+		    RegisterBlock("minecraft:jungle_button", () => new JungleButton());
+		    RegisterBlock("minecraft:acacia_button", () => new AcaciaButton());
+		    RegisterBlock("minecraft:dark_oak_button", () => new DarkOakButton());
+		    RegisterBlock("minecraft:polished_blackstone_button", () => new PolishedBlackStoneButton());
 		    
 		    //Glazed Terracotta
-		    this.Register("minecraft:white_glazed_terracotta", () => new WhiteGlazedTerracotta());
-		    this.Register("minecraft:orange_glazed_terracotta", () => new OrangeGlazedTerracotta());
-		    this.Register("minecraft:magenta_glazed_terracotta", () => new MagentaGlazedTerracotta());
-		    this.Register("minecraft:light_blue_glazed_terracotta", () => new LightBlueGlazedTerracotta());
-		    this.Register("minecraft:yellow_glazed_terracotta", () => new YellowGlazedTerracotta());
-		    this.Register("minecraft:lime_glazed_terracotta", () => new LimeGlazedTerracotta());
-		    this.Register("minecraft:pink_glazed_terracotta", () => new PinkGlazedTerracotta());
-		    this.Register("minecraft:gray_glazed_terracotta", () => new GrayGlazedTerracotta());
-		    this.Register("minecraft:cyan_glazed_terracotta", () => new CyanGlazedTerracotta());
-		    this.Register("minecraft:purple_glazed_terracotta", () => new PurpleGlazedTerracotta());
-		    this.Register("minecraft:blue_glazed_terracotta", () => new BlueGlazedTerracotta());
-		    this.Register("minecraft:brown_glazed_terracotta", () => new BrownGlazedTerracotta());
-		    this.Register("minecraft:green_glazed_terracotta", () => new GreenGlazedTerracotta());
-		    this.Register("minecraft:red_glazed_terracotta", () => new RedGlazedTerracotta());
-		    this.Register("minecraft:black_glazed_terracotta", () => new BlackGlazedTerracotta());
-		    this.Register("minecraft:light_gray_glazed_terracotta", () => new LightGrayGlazedTerracotta());
+		    RegisterBlock("minecraft:white_glazed_terracotta", () => new WhiteGlazedTerracotta());
+		    RegisterBlock("minecraft:orange_glazed_terracotta", () => new OrangeGlazedTerracotta());
+		    RegisterBlock("minecraft:magenta_glazed_terracotta", () => new MagentaGlazedTerracotta());
+		    RegisterBlock("minecraft:light_blue_glazed_terracotta", () => new LightBlueGlazedTerracotta());
+		    RegisterBlock("minecraft:yellow_glazed_terracotta", () => new YellowGlazedTerracotta());
+		    RegisterBlock("minecraft:lime_glazed_terracotta", () => new LimeGlazedTerracotta());
+		    RegisterBlock("minecraft:pink_glazed_terracotta", () => new PinkGlazedTerracotta());
+		    RegisterBlock("minecraft:gray_glazed_terracotta", () => new GrayGlazedTerracotta());
+		    RegisterBlock("minecraft:cyan_glazed_terracotta", () => new CyanGlazedTerracotta());
+		    RegisterBlock("minecraft:purple_glazed_terracotta", () => new PurpleGlazedTerracotta());
+		    RegisterBlock("minecraft:blue_glazed_terracotta", () => new BlueGlazedTerracotta());
+		    RegisterBlock("minecraft:brown_glazed_terracotta", () => new BrownGlazedTerracotta());
+		    RegisterBlock("minecraft:green_glazed_terracotta", () => new GreenGlazedTerracotta());
+		    RegisterBlock("minecraft:red_glazed_terracotta", () => new RedGlazedTerracotta());
+		    RegisterBlock("minecraft:black_glazed_terracotta", () => new BlackGlazedTerracotta());
+		    RegisterBlock("minecraft:light_gray_glazed_terracotta", () => new LightGrayGlazedTerracotta());
 		    
 		    // Terracotta
-		    this.Register("minecraft:terracotta", () => new Terracotta(ClayColor.Brown));
-		    this.Register("minecraft:white_terracotta", () => new Terracotta(ClayColor.White));
-		    this.Register("minecraft:orange_terracotta", () => new Terracotta(ClayColor.Orange));
-		    this.Register("minecraft:magenta_terracotta", () => new Terracotta(ClayColor.Magenta));
-		    this.Register("minecraft:light_blue_terracotta", () => new Terracotta(ClayColor.LightBlue));
-		    this.Register("minecraft:yellow_terracotta", () => new Terracotta(ClayColor.Yellow));
-		    this.Register("minecraft:lime_terracotta", () => new Terracotta(ClayColor.Lime));
-		    this.Register("minecraft:pink_terracotta", () => new Terracotta(ClayColor.Pink));
-		    this.Register("minecraft:gray_terracotta", () => new Terracotta(ClayColor.Gray));
-		    this.Register("minecraft:light_gray_terracotta", () => new Terracotta(ClayColor.Gray));
-		    this.Register("minecraft:cyan_terracotta", () => new Terracotta(ClayColor.Cyan));
-		    this.Register("minecraft:purple_terracotta", () => new Terracotta(ClayColor.Purple));
-		    this.Register("minecraft:blue_terracotta", () => new Terracotta(ClayColor.Blue));
-		    this.Register("minecraft:brown_terracotta", () => new Terracotta(ClayColor.Brown));
-		    this.Register("minecraft:green_terracotta", () => new Terracotta(ClayColor.Green));
-		    this.Register("minecraft:red_terracotta", () => new Terracotta(ClayColor.Red));
-		    this.Register("minecraft:black_terracotta", () => new Terracotta(ClayColor.Black));
+		    RegisterBlock("minecraft:terracotta", () => new Terracotta(ClayColor.Brown));
+		    RegisterBlock("minecraft:white_terracotta", () => new Terracotta(ClayColor.White));
+		    RegisterBlock("minecraft:orange_terracotta", () => new Terracotta(ClayColor.Orange));
+		    RegisterBlock("minecraft:magenta_terracotta", () => new Terracotta(ClayColor.Magenta));
+		    RegisterBlock("minecraft:light_blue_terracotta", () => new Terracotta(ClayColor.LightBlue));
+		    RegisterBlock("minecraft:yellow_terracotta", () => new Terracotta(ClayColor.Yellow));
+		    RegisterBlock("minecraft:lime_terracotta", () => new Terracotta(ClayColor.Lime));
+		    RegisterBlock("minecraft:pink_terracotta", () => new Terracotta(ClayColor.Pink));
+		    RegisterBlock("minecraft:gray_terracotta", () => new Terracotta(ClayColor.Gray));
+		    RegisterBlock("minecraft:light_gray_terracotta", () => new Terracotta(ClayColor.Gray));
+		    RegisterBlock("minecraft:cyan_terracotta", () => new Terracotta(ClayColor.Cyan));
+		    RegisterBlock("minecraft:purple_terracotta", () => new Terracotta(ClayColor.Purple));
+		    RegisterBlock("minecraft:blue_terracotta", () => new Terracotta(ClayColor.Blue));
+		    RegisterBlock("minecraft:brown_terracotta", () => new Terracotta(ClayColor.Brown));
+		    RegisterBlock("minecraft:green_terracotta", () => new Terracotta(ClayColor.Green));
+		    RegisterBlock("minecraft:red_terracotta", () => new Terracotta(ClayColor.Red));
+		    RegisterBlock("minecraft:black_terracotta", () => new Terracotta(ClayColor.Black));
 		    
 		    //Doors
-		    this.Register("minecraft:oak_door", () => new OakDoor());
-		    this.Register("minecraft:spruce_door", () => new SpruceDoor());
-		    this.Register("minecraft:birch_door", () => new BirchDoor());
-		    this.Register("minecraft:jungle_door", () => new JungleDoor());
-		    this.Register("minecraft:acacia_door", () => new AcaciaDoor());
-		    this.Register("minecraft:dark_oak_door", () => new DarkOakDoor());
-		    this.Register("minecraft:iron_door", () => new IronDoor());
+		    RegisterBlock("minecraft:oak_door", () => new OakDoor());
+		    RegisterBlock("minecraft:spruce_door", () => new SpruceDoor());
+		    RegisterBlock("minecraft:birch_door", () => new BirchDoor());
+		    RegisterBlock("minecraft:jungle_door", () => new JungleDoor());
+		    RegisterBlock("minecraft:acacia_door", () => new AcaciaDoor());
+		    RegisterBlock("minecraft:dark_oak_door", () => new DarkOakDoor());
+		    RegisterBlock("minecraft:iron_door", () => new IronDoor());
 		    
 		    //Trapdoors
-		    this.Register("minecraft:iron_trapdoor", () => new IronTrapdoor());
-		    this.Register("minecraft:spruce_trapdoor", () => new Trapdoor());
-		    this.Register("minecraft:oak_trapdoor", () => new Trapdoor());
-		    this.Register("minecraft:warped_trapdoor", () => new Trapdoor());
-		    this.Register("minecraft:crimson_trapdoor", () => new Trapdoor());
-		    this.Register("minecraft:acacia_trapdoor", () => new Trapdoor());
-		    this.Register("minecraft:birch_trapdoor", () => new Trapdoor());
-		    this.Register("minecraft:dark_oak_trapdoor", () => new Trapdoor());
-		    this.Register("minecraft:jungle_trapdoor", () => new Trapdoor());
+		    RegisterBlock("minecraft:iron_trapdoor", () => new IronTrapdoor());
+		    RegisterBlock("minecraft:spruce_trapdoor", () => new Trapdoor());
+		    RegisterBlock("minecraft:oak_trapdoor", () => new Trapdoor());
+		    RegisterBlock("minecraft:warped_trapdoor", () => new Trapdoor());
+		    RegisterBlock("minecraft:crimson_trapdoor", () => new Trapdoor());
+		    RegisterBlock("minecraft:acacia_trapdoor", () => new Trapdoor());
+		    RegisterBlock("minecraft:birch_trapdoor", () => new Trapdoor());
+		    RegisterBlock("minecraft:dark_oak_trapdoor", () => new Trapdoor());
+		    RegisterBlock("minecraft:jungle_trapdoor", () => new Trapdoor());
 		    
 		    //Slabs
-		    this.Register("minecraft:oak_slab", () => new OakSlab());
-		    this.Register("minecraft:spruce_slab", () => new SpruceSlab());
-		    this.Register("minecraft:birch_slab", () => new BirchSlab());
-		    this.Register("minecraft:jungle_slab", () => new JungleSlab());
-		    this.Register("minecraft:acacia_slab", () => new AcaciaSlab());
-		    this.Register("minecraft:dark_oak_slab", () => new DarkOakSlab());
-		    this.Register("minecraft:stone_slab", () => new StoneSlab());
-		    this.Register("minecraft:smooth_stone_slab", () => new StoneSlab());
-		    this.Register("minecraft:prismarine_slab", () => new PrismarineSlab());
-		    this.Register("minecraft:prismarine_bricks_slab", () => new PrismarineBricksSlab());
-		    this.Register("minecraft:prismarine_brick_slab", () => new PrismarineBricksSlab());
-		    this.Register("minecraft:dark_prismarine_slab", () => new DarkPrismarineSlab());
-		    this.Register("minecraft:sandstone_slab", () => new SandstoneSlab());
-		    this.Register("minecraft:smooth_sandstone_slab", () => new SandstoneSlab());
-		    this.Register("minecraft:petrified_oak_slab", () => new PetrifiedOakSlab());
-		    this.Register("minecraft:cobblestone_slab", () => new CobblestoneSlab());
-		    this.Register("minecraft:mossy_cobblestone_slab", () => new CobblestoneSlab());
-		    this.Register("minecraft:brick_slab", () => new BrickSlab());
-		    this.Register("minecraft:stone_brick_slab", () => new StoneBrickSlab());
-		    this.Register("minecraft:end_stone_brick_slab", () => new StoneBrickSlab());
-		    this.Register("minecraft:mossy_stone_brick_slab", () => new StoneBrickSlab());
-		    this.Register("minecraft:nether_brick_slab", () => new NetherBrickSlab());
-		    this.Register("minecraft:red_nether_brick_slab", () => new NetherBrickSlab());
-		    this.Register("minecraft:quartz_slab", () => new QuartzSlab());
-		    this.Register("minecraft:smooth_quartz_slab", () => new QuartzSlab());
-		    this.Register("minecraft:red_sandstone_slab", () => new RedSandstoneSlab());
-		    this.Register("minecraft:purpur_slab", () => new PurpurSlab());
-		    this.Register("minecraft:polished_andesite_slab", () => new PolishedAndesiteSlab());
-		    this.Register("minecraft:andesite_slab", () => new AndesiteSlab());
-		    this.Register("minecraft:polished_granite_slab", () => new PolishedGraniteSlab());
-		    this.Register("minecraft:granite_slab", () => new GraniteSlab());
-		    this.Register("minecraft:warped_double_slab", () => new StoneSlab());
-		    this.Register("minecraft:warped_slab", () => new StoneSlab());
-		    this.Register("minecraft:polished_blackstone_brick_slab", () => new BrickSlab());
-		    this.Register("minecraft:polished_blackstone_slab", () => new StoneSlab());
-		   // this.Register("minecraft:warped_slab", () => new NetherBrickSlab());
+		    RegisterBlock("minecraft:oak_slab", () => new OakSlab());
+		    RegisterBlock("minecraft:spruce_slab", () => new SpruceSlab());
+		    RegisterBlock("minecraft:birch_slab", () => new BirchSlab());
+		    RegisterBlock("minecraft:jungle_slab", () => new JungleSlab());
+		    RegisterBlock("minecraft:acacia_slab", () => new AcaciaSlab());
+		    RegisterBlock("minecraft:dark_oak_slab", () => new DarkOakSlab());
+		    RegisterBlock("minecraft:stone_slab", () => new StoneSlab());
+		    RegisterBlock("minecraft:smooth_stone_slab", () => new StoneSlab());
+		    RegisterBlock("minecraft:prismarine_slab", () => new PrismarineSlab());
+		    RegisterBlock("minecraft:prismarine_bricks_slab", () => new PrismarineBricksSlab());
+		    RegisterBlock("minecraft:prismarine_brick_slab", () => new PrismarineBricksSlab());
+		    RegisterBlock("minecraft:dark_prismarine_slab", () => new DarkPrismarineSlab());
+		    RegisterBlock("minecraft:sandstone_slab", () => new SandstoneSlab());
+		    RegisterBlock("minecraft:smooth_sandstone_slab", () => new SandstoneSlab());
+		    RegisterBlock("minecraft:petrified_oak_slab", () => new PetrifiedOakSlab());
+		    RegisterBlock("minecraft:cobblestone_slab", () => new CobblestoneSlab());
+		    RegisterBlock("minecraft:mossy_cobblestone_slab", () => new CobblestoneSlab());
+		    RegisterBlock("minecraft:brick_slab", () => new BrickSlab());
+		    RegisterBlock("minecraft:stone_brick_slab", () => new StoneBrickSlab());
+		    RegisterBlock("minecraft:end_stone_brick_slab", () => new StoneBrickSlab());
+		    RegisterBlock("minecraft:mossy_stone_brick_slab", () => new StoneBrickSlab());
+		    RegisterBlock("minecraft:nether_brick_slab", () => new NetherBrickSlab());
+		    RegisterBlock("minecraft:red_nether_brick_slab", () => new NetherBrickSlab());
+		    RegisterBlock("minecraft:quartz_slab", () => new QuartzSlab());
+		    RegisterBlock("minecraft:smooth_quartz_slab", () => new QuartzSlab());
+		    RegisterBlock("minecraft:red_sandstone_slab", () => new RedSandstoneSlab());
+		    RegisterBlock("minecraft:purpur_slab", () => new PurpurSlab());
+		    RegisterBlock("minecraft:polished_andesite_slab", () => new PolishedAndesiteSlab());
+		    RegisterBlock("minecraft:andesite_slab", () => new AndesiteSlab());
+		    RegisterBlock("minecraft:polished_granite_slab", () => new PolishedGraniteSlab());
+		    RegisterBlock("minecraft:granite_slab", () => new GraniteSlab());
+		    RegisterBlock("minecraft:warped_double_slab", () => new StoneSlab());
+		    RegisterBlock("minecraft:warped_slab", () => new StoneSlab());
+		    RegisterBlock("minecraft:polished_blackstone_brick_slab", () => new BrickSlab());
+		    RegisterBlock("minecraft:polished_blackstone_slab", () => new StoneSlab());
+		   // RegisterBlock("minecraft:warped_slab", () => new NetherBrickSlab());
 		    
 		    //Leaves
-		    this.Register("minecraft:oak_leaves", () => new OakLeaves());
-		    this.Register("minecraft:spruce_leaves", () => new SpruceLeaves());
-		    this.Register("minecraft:birch_leaves", () => new BirchLeaves());
-		    this.Register("minecraft:jungle_leaves", () => new JungleLeaves());
-		    this.Register("minecraft:acacia_leaves", () => new AcaciaLeaves());
-		    this.Register("minecraft:dark_oak_leaves", () => new DarkOakLeaves());
+		    RegisterBlock("minecraft:oak_leaves", () => new OakLeaves());
+		    RegisterBlock("minecraft:spruce_leaves", () => new SpruceLeaves());
+		    RegisterBlock("minecraft:birch_leaves", () => new BirchLeaves());
+		    RegisterBlock("minecraft:jungle_leaves", () => new JungleLeaves());
+		    RegisterBlock("minecraft:acacia_leaves", () => new AcaciaLeaves());
+		    RegisterBlock("minecraft:dark_oak_leaves", () => new DarkOakLeaves());
 		    
 		    //Logs
-		    this.Register("minecraft:oak_log", () => new Log());
-		    this.Register("minecraft:spruce_log", () => new Log(WoodType.Spruce));
-		    this.Register("minecraft:birch_log", () => new BirchLog());
-		    this.Register("minecraft:jungle_log", () => new Log(WoodType.Jungle));
-		    this.Register("minecraft:acacia_log", () => new Log(WoodType.Acacia));
-		    this.Register("minecraft:dark_oak_log", () => new Log(WoodType.DarkOak));
-		    this.Register("minecraft:crimson_log", () => new Log(WoodType.Crimson));
-		    this.Register("minecraft:warped_log", () => new Log(WoodType.Warped));
+		    RegisterBlock("minecraft:oak_log", () => new Log());
+		    RegisterBlock("minecraft:spruce_log", () => new Log(WoodType.Spruce));
+		    RegisterBlock("minecraft:birch_log", () => new BirchLog());
+		    RegisterBlock("minecraft:jungle_log", () => new Log(WoodType.Jungle));
+		    RegisterBlock("minecraft:acacia_log", () => new Log(WoodType.Acacia));
+		    RegisterBlock("minecraft:dark_oak_log", () => new Log(WoodType.DarkOak));
+		    RegisterBlock("minecraft:crimson_log", () => new Log(WoodType.Crimson));
+		    RegisterBlock("minecraft:warped_log", () => new Log(WoodType.Warped));
 		    
-		    this.Register("minecraft:oak_wood", () => new Log());
-		    this.Register("minecraft:spruce_wood", () => new Log(WoodType.Spruce));
-		    this.Register("minecraft:birch_wood", () => new BirchLog());
-		    this.Register("minecraft:jungle_wood", () => new Log(WoodType.Jungle));
-		    this.Register("minecraft:acacia_wood", () => new Log(WoodType.Acacia));
-		    this.Register("minecraft:dark_oak_wood", () => new Log(WoodType.DarkOak));
-		    this.Register("minecraft:crimson_wood", () => new Log(WoodType.Crimson));
-		    this.Register("minecraft:warped_wood", () => new Log(WoodType.Warped));
+		    RegisterBlock("minecraft:oak_wood", () => new Log());
+		    RegisterBlock("minecraft:spruce_wood", () => new Log(WoodType.Spruce));
+		    RegisterBlock("minecraft:birch_wood", () => new BirchLog());
+		    RegisterBlock("minecraft:jungle_wood", () => new Log(WoodType.Jungle));
+		    RegisterBlock("minecraft:acacia_wood", () => new Log(WoodType.Acacia));
+		    RegisterBlock("minecraft:dark_oak_wood", () => new Log(WoodType.DarkOak));
+		    RegisterBlock("minecraft:crimson_wood", () => new Log(WoodType.Crimson));
+		    RegisterBlock("minecraft:warped_wood", () => new Log(WoodType.Warped));
 		    
 		    //Planks
-		    this.Register("minecraft:oak_planks", () => new Planks(WoodType.Oak));
-		    this.Register("minecraft:spruce_planks", () => new Planks(WoodType.Spruce));
-		    this.Register("minecraft:birch_planks", new BirchPlanks());
-		    this.Register("minecraft:jungle_planks", new Planks(WoodType.Jungle));
-		    this.Register("minecraft:acacia_planks", new Planks(WoodType.Acacia));
-		    this.Register("minecraft:crimson_planks", new Planks(WoodType.Crimson));
-		    this.Register("minecraft:warped_planks", new Planks(WoodType.Warped));
-		    this.Register("minecraft:dark_oak_planks", () => new DarkOakPlanks());
+		    RegisterBlock("minecraft:oak_planks", () => new Planks(WoodType.Oak));
+		    RegisterBlock("minecraft:spruce_planks", () => new Planks(WoodType.Spruce));
+		    RegisterBlock("minecraft:birch_planks", () => new BirchPlanks());
+		    RegisterBlock("minecraft:jungle_planks", () => new Planks(WoodType.Jungle));
+		    RegisterBlock("minecraft:acacia_planks", () => new Planks(WoodType.Acacia));
+		    RegisterBlock("minecraft:crimson_planks", () => new Planks(WoodType.Crimson));
+		    RegisterBlock("minecraft:warped_planks", () => new Planks(WoodType.Warped));
+		    RegisterBlock("minecraft:dark_oak_planks", () => new DarkOakPlanks());
 
 		    //Fences & fence gates
-		    this.Register("minecraft:oak_fence", () => new OakFence());
-		    this.Register("minecraft:oak_fence_gate", () => new FenceGate());
-		    this.Register("minecraft:dark_oak_fence_gate", () => new DarkOakFenceGate());
-		    this.Register("minecraft:dark_oak_fence", () => new Fence());
-		    this.Register("minecraft:spruce_fence_gate", () => new SpruceFenceGate());
-		    this.Register("minecraft:spruce_fence", () => new Fence());
-		    this.Register("minecraft:birch_fence_gate", () => new BirchFenceGate());
-		    this.Register("minecraft:birch_fence", () => new BirchFence());
-		    this.Register("minecraft:jungle_fence_gate", () => new JungleFenceGate());
-		    this.Register("minecraft:jungle_fence", () => new Fence());
-		    this.Register("minecraft:acacia_fence_gate", () => new AcaciaFenceGate());
-		    this.Register("minecraft:acacia_fence", () => new Fence());
-		    this.Register("minecraft:nether_brick_fence", () => new NetherBrickFence());
+		    RegisterBlock("minecraft:oak_fence", () => new OakFence());
+		    RegisterBlock("minecraft:oak_fence_gate", () => new FenceGate());
+		    RegisterBlock("minecraft:dark_oak_fence_gate", () => new DarkOakFenceGate());
+		    RegisterBlock("minecraft:dark_oak_fence", () => new Fence());
+		    RegisterBlock("minecraft:spruce_fence_gate", () => new SpruceFenceGate());
+		    RegisterBlock("minecraft:spruce_fence", () => new Fence());
+		    RegisterBlock("minecraft:birch_fence_gate", () => new BirchFenceGate());
+		    RegisterBlock("minecraft:birch_fence", () => new BirchFence());
+		    RegisterBlock("minecraft:jungle_fence_gate", () => new JungleFenceGate());
+		    RegisterBlock("minecraft:jungle_fence", () => new Fence());
+		    RegisterBlock("minecraft:acacia_fence_gate", () => new AcaciaFenceGate());
+		    RegisterBlock("minecraft:acacia_fence", () => new Fence());
+		    RegisterBlock("minecraft:nether_brick_fence", () => new NetherBrickFence());
 		    
 		    //Stairs
-		    this.Register("minecraft:stone_stairs", () => new StoneStairs());
-		    this.Register("minecraft:diorite_stairs", () => new StoneStairs());
-		    this.Register("minecraft:polished_diorite_stairs", () => new StoneStairs());
-		    this.Register("minecraft:purpur_stairs", () => new PurpurStairs());
-		    this.Register("minecraft:cobblestone_stairs", () => new CobblestoneStairs());
-		    this.Register("minecraft:quartz_stairs", () => new QuartzStairs());
-		    this.Register("minecraft:smooth_quartz_stairs", () => new QuartzStairs());
-		    this.Register("minecraft:red_sandstone_stairs", () => new RedSandstoneStairs());
-		    this.Register("minecraft:sandstone_stairs", () => new SandstoneStairs());
-		    this.Register("minecraft:smooth_sandstone_stairs", () => new SandstoneStairs());
-		    this.Register("minecraft:brick_stairs", () => new BrickStairs());
-		    this.Register("minecraft:stone_brick_stairs", () => new StoneBrickStairs());
-		    this.Register("minecraft:end_stone_brick_stairs", () => new StoneBrickStairs());
-		    this.Register("minecraft:mossy_stone_brick_stairs", () => new StoneBrickStairs());
-		    this.Register("minecraft:nether_brick_stairs", () => new NetherBrickStairs());
-		    this.Register("minecraft:red_nether_brick_stairs", () => new NetherBrickStairs());
-		    this.Register("minecraft:acacia_stairs", () => new AcaciaStairs());
-		    this.Register("minecraft:dark_oak_stairs", () => new DarkOakStairs());
-		    this.Register("minecraft:spruce_stairs", () => new SpruceStairs());
-		    this.Register("minecraft:birch_stairs", () => new BirchStairs());
-		    this.Register("minecraft:jungle_stairs", () => new JungleStairs());
-		    this.Register("minecraft:oak_stairs", () => new OakStairs());
-		    this.Register("minecraft:crimson_stairs", () => new CrimsonStairs());
-		    this.Register("minecraft:polished_andesite_stairs", () => new PolisedAndesiteStairs());
-		    this.Register("minecraft:prismarine_stairs", () => new PrismarineStairs());
-		    this.Register("minecraft:dark_prismarine_stairs", () => new PrismarineStairs());
-		    this.Register("minecraft:polished_blackstone_brick_stairs", () => new BrickStairs());
+		    RegisterBlock("minecraft:stone_stairs", () => new StoneStairs());
+		    RegisterBlock("minecraft:diorite_stairs", () => new StoneStairs());
+		    RegisterBlock("minecraft:polished_diorite_stairs", () => new StoneStairs());
+		    RegisterBlock("minecraft:purpur_stairs", () => new PurpurStairs());
+		    RegisterBlock("minecraft:cobblestone_stairs", () => new CobblestoneStairs());
+		    RegisterBlock("minecraft:quartz_stairs", () => new QuartzStairs());
+		    RegisterBlock("minecraft:smooth_quartz_stairs", () => new QuartzStairs());
+		    RegisterBlock("minecraft:red_sandstone_stairs", () => new RedSandstoneStairs());
+		    RegisterBlock("minecraft:sandstone_stairs", () => new SandstoneStairs());
+		    RegisterBlock("minecraft:smooth_sandstone_stairs", () => new SandstoneStairs());
+		    RegisterBlock("minecraft:brick_stairs", () => new BrickStairs());
+		    RegisterBlock("minecraft:stone_brick_stairs", () => new StoneBrickStairs());
+		    RegisterBlock("minecraft:end_stone_brick_stairs", () => new StoneBrickStairs());
+		    RegisterBlock("minecraft:mossy_stone_brick_stairs", () => new StoneBrickStairs());
+		    RegisterBlock("minecraft:nether_brick_stairs", () => new NetherBrickStairs());
+		    RegisterBlock("minecraft:red_nether_brick_stairs", () => new NetherBrickStairs());
+		    RegisterBlock("minecraft:acacia_stairs", () => new AcaciaStairs());
+		    RegisterBlock("minecraft:dark_oak_stairs", () => new DarkOakStairs());
+		    RegisterBlock("minecraft:spruce_stairs", () => new SpruceStairs());
+		    RegisterBlock("minecraft:birch_stairs", () => new BirchStairs());
+		    RegisterBlock("minecraft:jungle_stairs", () => new JungleStairs());
+		    RegisterBlock("minecraft:oak_stairs", () => new OakStairs());
+		    RegisterBlock("minecraft:crimson_stairs", () => new CrimsonStairs());
+		    RegisterBlock("minecraft:polished_andesite_stairs", () => new PolisedAndesiteStairs());
+		    RegisterBlock("minecraft:prismarine_stairs", () => new PrismarineStairs());
+		    RegisterBlock("minecraft:dark_prismarine_stairs", () => new PrismarineStairs());
+		    RegisterBlock("minecraft:polished_blackstone_brick_stairs", () => new BrickStairs());
 		    
-		    this.Register("minecraft:water", () => new Water());
-		    this.Register("minecraft:flowing_water", () => new FlowingWater());
+		    RegisterBlock("minecraft:water", () => new Water());
+		    RegisterBlock("minecraft:flowing_water", () => new FlowingWater());
 		    
-		    this.Register("minecraft:lava", () => new Lava());
-		    this.Register("minecraft:flowing_lava", () => new FlowingLava());
+		    RegisterBlock("minecraft:lava", () => new Lava());
+		    RegisterBlock("minecraft:flowing_lava", () => new FlowingLava());
 		    
-		    this.Register("minecraft:kelp", () => new Kelp());
-		    this.Register("minecraft:kelp_plant", () => new Kelp());
-		    this.Register("minecraft:seagrass", () => new SeaGrass());
-		    this.Register("minecraft:tall_seagrass", () => new SeaGrass());
-		    this.Register("minecraft:lily_pad", () => new LilyPad());
-		    this.Register("minecraft:bubble_column", () => new BubbleColumn());
+		    RegisterBlock("minecraft:kelp", () => new Kelp());
+		    RegisterBlock("minecraft:kelp_plant", () => new Kelp());
+		    RegisterBlock("minecraft:seagrass", () => new SeaGrass());
+		    RegisterBlock("minecraft:tall_seagrass", () => new SeaGrass());
+		    RegisterBlock("minecraft:lily_pad", () => new LilyPad());
+		    RegisterBlock("minecraft:bubble_column", () => new BubbleColumn());
 		    
-		    this.Register("minecraft:bamboo", () => new Bamboo());
+		    RegisterBlock("minecraft:bamboo", () => new Bamboo());
 		    
 		    //Ores
-		    this.Register("minecraft:redstone_ore", () => new RedstoneOre());
-		    this.Register("minecraft:gold_ore", () => new GoldOre());
-		    this.Register("minecraft:iron_ore", () => new IronOre());
-		    this.Register("minecraft:coal_ore", () => new CoalOre());
-		    this.Register("minecraft:diamond_ore", () => new DiamondOre());
-		    this.Register("minecraft:emerald_ore", () => new EmeraldOre());
-		    this.Register("minecraft:lapis_ore", () => new LapisOre());
+		    RegisterBlock("minecraft:redstone_ore", () => new RedstoneOre());
+		    RegisterBlock("minecraft:gold_ore", () => new GoldOre());
+		    RegisterBlock("minecraft:iron_ore", () => new IronOre());
+		    RegisterBlock("minecraft:coal_ore", () => new CoalOre());
+		    RegisterBlock("minecraft:diamond_ore", () => new DiamondOre());
+		    RegisterBlock("minecraft:emerald_ore", () => new EmeraldOre());
+		    RegisterBlock("minecraft:lapis_ore", () => new LapisOre());
 		    
-		    this.Register("minecraft:gold_block", () => new GoldBlock());
-		    this.Register("minecraft:iron_block", () => new IronBlock());
-		    this.Register("minecraft:diamond_block", () => new DiamondBlock());
-		    this.Register("minecraft:emerald_block", () => new EmeraldBlock());
-		    this.Register("minecraft:lapis_block", () => new LapisBlock());
+		    RegisterBlock("minecraft:gold_block", () => new GoldBlock());
+		    RegisterBlock("minecraft:iron_block", () => new IronBlock());
+		    RegisterBlock("minecraft:diamond_block", () => new DiamondBlock());
+		    RegisterBlock("minecraft:emerald_block", () => new EmeraldBlock());
+		    RegisterBlock("minecraft:lapis_block", () => new LapisBlock());
 		    
 		    //Flowers
-		    this.Register("minecraft:lilac", () => new Lilac());
-		    this.Register("minecraft:rose_bush", () => new RoseBush());
-		    this.Register("minecraft:azure_bluet", () => new AzureBluet());
-		    this.Register("minecraft:corn_flower", () => new CornFlower());
-		    this.Register("minecraft:cornflower", () => new CornFlower());
-		    this.Register("minecraft:oxeye_daisy", () => new OxeyeDaisy());
-		    this.Register("minecraft:attached_melon_stem", () => new Stem());
-		    this.Register("minecraft:melon_stem", () => new Stem());
-		    this.Register("minecraft:melon_block", () => new MelonBlock());
-		    this.Register("minecraft:pumpkin_stem", () => new PumpkinStem());
-		    this.Register("minecraft:sunflower", () => new Sunflower());
-		    this.Register("minecraft:red_tulip", () => new Tulip());
-		    this.Register("minecraft:pink_tulip", () => new Tulip());
-		    this.Register("minecraft:white_tulip", () => new Tulip());
-		    this.Register("minecraft:orange_tulip", () => new Tulip());
-		    this.Register("minecraft:allium", () => new Allium());
-		    this.Register("minecraft:lily_of_the_valley", () => new Lilac());
-		    this.Register("minecraft:blue_orchid", () => new BlueOrchid());
-		    this.Register("minecraft:peony", () => new Peony());
-		    this.Register("minecraft:sweet_berry_bush", () => new SweetBerryBush());
+		    RegisterBlock("minecraft:lilac", () => new Lilac());
+		    RegisterBlock("minecraft:rose_bush", () => new RoseBush());
+		    RegisterBlock("minecraft:azure_bluet", () => new AzureBluet());
+		    RegisterBlock("minecraft:corn_flower", () => new CornFlower());
+		    RegisterBlock("minecraft:cornflower", () => new CornFlower());
+		    RegisterBlock("minecraft:oxeye_daisy", () => new OxeyeDaisy());
+		    RegisterBlock("minecraft:attached_melon_stem", () => new Stem());
+		    RegisterBlock("minecraft:melon_stem", () => new Stem());
+		    RegisterBlock("minecraft:melon_block", () => new MelonBlock());
+		    RegisterBlock("minecraft:pumpkin_stem", () => new PumpkinStem());
+		    RegisterBlock("minecraft:sunflower", () => new Sunflower());
+		    RegisterBlock("minecraft:red_tulip", () => new Tulip());
+		    RegisterBlock("minecraft:pink_tulip", () => new Tulip());
+		    RegisterBlock("minecraft:white_tulip", () => new Tulip());
+		    RegisterBlock("minecraft:orange_tulip", () => new Tulip());
+		    RegisterBlock("minecraft:allium", () => new Allium());
+		    RegisterBlock("minecraft:lily_of_the_valley", () => new Lilac());
+		    RegisterBlock("minecraft:blue_orchid", () => new BlueOrchid());
+		    RegisterBlock("minecraft:peony", () => new Peony());
+		    RegisterBlock("minecraft:sweet_berry_bush", () => new SweetBerryBush());
 		    
-		    this.Register("minecraft:barrier", () => new InvisibleBedrock(false));
+		    RegisterBlock("minecraft:barrier", () => new InvisibleBedrock(false));
 
 		    //Stained glass
-		    this.Register("minecraft:white_stained_glass", () => new StainedGlass(BlockColor.White));
-		    this.Register("minecraft:orange_stained_glass", () => new StainedGlass(BlockColor.Orange));
-		    this.Register("minecraft:magenta_stained_glass", () => new StainedGlass(BlockColor.Magenta));
-		    this.Register("minecraft:light_blue_stained_glass", () => new StainedGlass(BlockColor.LightBlue));
-		    this.Register("minecraft:yellow_stained_glass", () => new StainedGlass(BlockColor.Yellow));
-		    this.Register("minecraft:lime_stained_glass", () => new StainedGlass(BlockColor.Lime));
-		    this.Register("minecraft:pink_stained_glass", () => new StainedGlass(BlockColor.Pink));
-		    this.Register("minecraft:gray_stained_glass", () => new StainedGlass(BlockColor.Gray));
-		    this.Register("minecraft:light_gray_stained_glass", () => new StainedGlass(BlockColor.LightGray));
-		    this.Register("minecraft:purple_stained_glass", () => new StainedGlass(BlockColor.Purple));
-		    this.Register("minecraft:blue_stained_glass", () => new StainedGlass(BlockColor.Blue));
-		    this.Register("minecraft:brown_stained_glass", () => new StainedGlass(BlockColor.Brown));
-		    this.Register("minecraft:green_stained_glass", () => new StainedGlass(BlockColor.Green));
-		    this.Register("minecraft:red_stained_glass", () => new StainedGlass(BlockColor.Red));
-		    this.Register("minecraft:black_stained_glass", () => new StainedGlass(BlockColor.Black));
-		    this.Register("minecraft:cyan_stained_glass", () => new StainedGlass(BlockColor.Cyan));
-		    this.Register("minecraft:glass_pane", () => new GlassPane());
+		    RegisterBlock("minecraft:white_stained_glass", () => new StainedGlass(BlockColor.White));
+		    RegisterBlock("minecraft:orange_stained_glass", () => new StainedGlass(BlockColor.Orange));
+		    RegisterBlock("minecraft:magenta_stained_glass", () => new StainedGlass(BlockColor.Magenta));
+		    RegisterBlock("minecraft:light_blue_stained_glass", () => new StainedGlass(BlockColor.LightBlue));
+		    RegisterBlock("minecraft:yellow_stained_glass", () => new StainedGlass(BlockColor.Yellow));
+		    RegisterBlock("minecraft:lime_stained_glass", () => new StainedGlass(BlockColor.Lime));
+		    RegisterBlock("minecraft:pink_stained_glass", () => new StainedGlass(BlockColor.Pink));
+		    RegisterBlock("minecraft:gray_stained_glass", () => new StainedGlass(BlockColor.Gray));
+		    RegisterBlock("minecraft:light_gray_stained_glass", () => new StainedGlass(BlockColor.LightGray));
+		    RegisterBlock("minecraft:purple_stained_glass", () => new StainedGlass(BlockColor.Purple));
+		    RegisterBlock("minecraft:blue_stained_glass", () => new StainedGlass(BlockColor.Blue));
+		    RegisterBlock("minecraft:brown_stained_glass", () => new StainedGlass(BlockColor.Brown));
+		    RegisterBlock("minecraft:green_stained_glass", () => new StainedGlass(BlockColor.Green));
+		    RegisterBlock("minecraft:red_stained_glass", () => new StainedGlass(BlockColor.Red));
+		    RegisterBlock("minecraft:black_stained_glass", () => new StainedGlass(BlockColor.Black));
+		    RegisterBlock("minecraft:cyan_stained_glass", () => new StainedGlass(BlockColor.Cyan));
+		    RegisterBlock("minecraft:glass_pane", () => new GlassPane());
 		    
 		    //Stained glass panes
-		    this.Register("minecraft:white_stained_glass_pane", () => new StainedGlassPane(BlockColor.White));
-		    this.Register("minecraft:orange_stained_glass_pane", () => new StainedGlassPane(BlockColor.Orange));
-		    this.Register("minecraft:magenta_stained_glass_pane", () => new StainedGlassPane(BlockColor.Magenta));
-		    this.Register("minecraft:light_blue_stained_glass_pane", () => new StainedGlassPane(BlockColor.LightBlue));
-		    this.Register("minecraft:yellow_stained_glass_pane", () => new StainedGlassPane(BlockColor.Yellow));
-		    this.Register("minecraft:lime_stained_glass_pane", () => new StainedGlassPane(BlockColor.Lime));
-		    this.Register("minecraft:pink_stained_glass_pane", () => new StainedGlassPane(BlockColor.Pink));
-		    this.Register("minecraft:gray_stained_glass_pane", () => new StainedGlassPane(BlockColor.Gray));
-		    this.Register("minecraft:light_gray_stained_glass_pane", () => new StainedGlassPane(BlockColor.LightGray));
-		    this.Register("minecraft:purple_stained_glass_pane", () => new StainedGlassPane(BlockColor.Purple));
-		    this.Register("minecraft:blue_stained_glass_pane", () => new StainedGlassPane(BlockColor.Blue));
-		    this.Register("minecraft:brown_stained_glass_pane", () => new StainedGlassPane(BlockColor.Brown));
-		    this.Register("minecraft:green_stained_glass_pane", () => new StainedGlassPane(BlockColor.Green));
-		    this.Register("minecraft:red_stained_glass_pane", () => new StainedGlassPane(BlockColor.Red));
-		    this.Register("minecraft:black_stained_glass_pane", () => new StainedGlassPane(BlockColor.Black));
-		    this.Register("minecraft:cyan_stained_glass_pane", () => new StainedGlassPane(BlockColor.Cyan));
+		    RegisterBlock("minecraft:white_stained_glass_pane", () => new StainedGlassPane(BlockColor.White));
+		    RegisterBlock("minecraft:orange_stained_glass_pane", () => new StainedGlassPane(BlockColor.Orange));
+		    RegisterBlock("minecraft:magenta_stained_glass_pane", () => new StainedGlassPane(BlockColor.Magenta));
+		    RegisterBlock("minecraft:light_blue_stained_glass_pane", () => new StainedGlassPane(BlockColor.LightBlue));
+		    RegisterBlock("minecraft:yellow_stained_glass_pane", () => new StainedGlassPane(BlockColor.Yellow));
+		    RegisterBlock("minecraft:lime_stained_glass_pane", () => new StainedGlassPane(BlockColor.Lime));
+		    RegisterBlock("minecraft:pink_stained_glass_pane", () => new StainedGlassPane(BlockColor.Pink));
+		    RegisterBlock("minecraft:gray_stained_glass_pane", () => new StainedGlassPane(BlockColor.Gray));
+		    RegisterBlock("minecraft:light_gray_stained_glass_pane", () => new StainedGlassPane(BlockColor.LightGray));
+		    RegisterBlock("minecraft:purple_stained_glass_pane", () => new StainedGlassPane(BlockColor.Purple));
+		    RegisterBlock("minecraft:blue_stained_glass_pane", () => new StainedGlassPane(BlockColor.Blue));
+		    RegisterBlock("minecraft:brown_stained_glass_pane", () => new StainedGlassPane(BlockColor.Brown));
+		    RegisterBlock("minecraft:green_stained_glass_pane", () => new StainedGlassPane(BlockColor.Green));
+		    RegisterBlock("minecraft:red_stained_glass_pane", () => new StainedGlassPane(BlockColor.Red));
+		    RegisterBlock("minecraft:black_stained_glass_pane", () => new StainedGlassPane(BlockColor.Black));
+		    RegisterBlock("minecraft:cyan_stained_glass_pane", () => new StainedGlassPane(BlockColor.Cyan));
 		    
-		    this.Register("minecraft:grindstone", () => new Grindstone());
-		    this.Register("minecraft:bell", () => new Bell());
+		    RegisterBlock("minecraft:grindstone", () => new Grindstone());
+		    RegisterBlock("minecraft:bell", () => new Bell());
 
-		    this.Register("minecraft:campfire", () => new CampFire());
-		    this.Register("minecraft:stonecutter", () => new StoneCutter());
-		    this.Register("minecraft:crimson_stem", () => new CrimsonStem());
-		    this.Register("minecraft:crimson_hyphae", () => new CrimsonHyphae());
-		    this.Register("minecraft:soul_fire", () => new SoulFire());
-		    this.Register("minecraft:soul_campfire", () => new SoulCampfire());
+		    RegisterBlock("minecraft:campfire", () => new CampFire());
+		    RegisterBlock("minecraft:stonecutter", () => new StoneCutter());
+		    RegisterBlock("minecraft:crimson_stem", () => new CrimsonStem());
+		    RegisterBlock("minecraft:crimson_hyphae", () => new CrimsonHyphae());
+		    RegisterBlock("minecraft:soul_fire", () => new SoulFire());
+		    RegisterBlock("minecraft:soul_campfire", () => new SoulCampfire());
 		    
 		    //Carpet
-		    this.RegisterRange(
+		    RegisterBlockRange(
 			    () => new Carpet().WithLocation("minecraft:white_carpet"),
 			    () => new Carpet().WithLocation("minecraft:orange_carpet"),
 			    () => new Carpet().WithLocation("minecraft:magenta_carpet"),
@@ -489,205 +540,205 @@ namespace Alex.Blocks
 			    () => new Carpet().WithLocation("minecraft:red_carpet"),
 			    () => new Carpet().WithLocation("minecraft:black_carpet"));
 		    
-		    this.Register("minecraft:light_block", () => new LightBlock());
+		    RegisterBlock("minecraft:light_block", () => new LightBlock());
 		    
-		    this.Register("minecraft:soul_lantern", () => new SoulLantern());
-		    this.Register("minecraft:shroomlight", () => new Shroomlight());
-		    this.Register("minecraft:conduit", () => new Conduit());
-		    this.Register("minecraft:nether_sprouts", () => new NetherSprouts());
-		    this.Register("minecraft:twisting_vines", () => new TwistingVines());
-		    this.Register("minecraft:twisting_vines_plant", () => new TwistingVinesPlant());
-		    this.Register("minecraft:weeping_vines_plant", () => new WeepingVinesPlant());
-		    this.Register("minecraft:weeping_vines", () => new WeepingVines());
-		    this.Register("minecraft:crimson_roots", () => new CrimsonRoot());
-		    this.Register("minecraft:crimson_fungus", () =>new CrimsonFungus());
-		    this.Register("minecraft:warped_roots", () => new WarpedRoots());
-		    this.Register("minecraft:warped_fungus", () => new WarpedFungus());
+		    RegisterBlock("minecraft:soul_lantern", () => new SoulLantern());
+		    RegisterBlock("minecraft:shroomlight", () => new Shroomlight());
+		    RegisterBlock("minecraft:conduit", () => new Conduit());
+		    RegisterBlock("minecraft:nether_sprouts", () => new NetherSprouts());
+		    RegisterBlock("minecraft:twisting_vines", () => new TwistingVines());
+		    RegisterBlock("minecraft:twisting_vines_plant", () => new TwistingVinesPlant());
+		    RegisterBlock("minecraft:weeping_vines_plant", () => new WeepingVinesPlant());
+		    RegisterBlock("minecraft:weeping_vines", () => new WeepingVines());
+		    RegisterBlock("minecraft:crimson_roots", () => new CrimsonRoot());
+		    RegisterBlock("minecraft:crimson_fungus", () =>new CrimsonFungus());
+		    RegisterBlock("minecraft:warped_roots", () => new WarpedRoots());
+		    RegisterBlock("minecraft:warped_fungus", () => new WarpedFungus());
 		    
-		    this.Register("minecraft:lantern", () => new Lantern());
-		    this.Register("minecraft:jack_o_lantern", () => new JackOLantern());
+		    RegisterBlock("minecraft:lantern", () => new Lantern());
+		    RegisterBlock("minecraft:jack_o_lantern", () => new JackOLantern());
 		    
-		    this.Register("minecraft:lectern", () => new Lectern());
+		    RegisterBlock("minecraft:lectern", () => new Lectern());
 		    
 		    //Skulls
-		    this.Register("minecraft:skeleton_skull", () => new Skull()
+		    RegisterBlock("minecraft:skeleton_skull", () => new Skull()
 		    {
 			    SkullType = SkullType.Skeleton
 		    });
-		    this.Register("minecraft:wither_skeleton_skull", () => new Skull()
+		    RegisterBlock("minecraft:wither_skeleton_skull", () => new Skull()
 		    {
 			    SkullType = SkullType.WitherSkeleton
 		    });
-		    this.Register("minecraft:zombie_head", () => new Skull()
+		    RegisterBlock("minecraft:zombie_head", () => new Skull()
 		    {
 			    SkullType = SkullType.Zombie
 		    });
-		    this.Register("minecraft:player_head", () => new Skull()
+		    RegisterBlock("minecraft:player_head", () => new Skull()
 		    {
 			    SkullType = SkullType.Player
 		    });
-		    this.Register("minecraft:creeper_head", () => new Skull()
+		    RegisterBlock("minecraft:creeper_head", () => new Skull()
 		    {
 			    SkullType = SkullType.Creeper
 		    });
-		    this.Register("minecraft:dragon_head", () => new Skull()
+		    RegisterBlock("minecraft:dragon_head", () => new Skull()
 		    {
 			    SkullType = SkullType.Dragon
 		    });
 		    
 		    //Wall skulls
-		    this.Register("minecraft:skeleton_wall_skull", () => new WallSkull()
+		    RegisterBlock("minecraft:skeleton_wall_skull", () => new WallSkull()
 		    {
 			    SkullType = SkullType.Skeleton
 		    });
-		    this.Register("minecraft:wither_skeleton_wall_skull", () => new WallSkull()
+		    RegisterBlock("minecraft:wither_skeleton_wall_skull", () => new WallSkull()
 		    {
 			    SkullType = SkullType.WitherSkeleton
 		    });
-		    this.Register("minecraft:zombie_wall_head", () => new WallSkull()
+		    RegisterBlock("minecraft:zombie_wall_head", () => new WallSkull()
 		    {
 			    SkullType = SkullType.Zombie
 		    });
-		    this.Register("minecraft:player_wall_head", () => new WallSkull()
+		    RegisterBlock("minecraft:player_wall_head", () => new WallSkull()
 		    {
 			    SkullType = SkullType.Player
 		    });
-		    this.Register("minecraft:creeper_wall_head", () => new WallSkull()
+		    RegisterBlock("minecraft:creeper_wall_head", () => new WallSkull()
 		    {
 			    SkullType = SkullType.Creeper
 		    });
-		    this.Register("minecraft:dragon_wall_head", () => new WallSkull()
+		    RegisterBlock("minecraft:dragon_wall_head", () => new WallSkull()
 		    {
 			    SkullType = SkullType.Dragon
 		    });
 		    
 		    //Signs
-		    this.Register("minecraft:wall_sign", () => new WallSign());
-		    this.Register("minecraft:oak_wall_sign", () => new WallSign(WoodType.Oak));
-		    this.Register("minecraft:spruce_wall_sign", () => new WallSign(WoodType.Spruce));
-		    this.Register("minecraft:birch_wall_sign", () => new WallSign(WoodType.Birch));
-		    this.Register("minecraft:jungle_wall_sign", () => new WallSign(WoodType.Jungle));
-		    this.Register("minecraft:acacia_wall_sign", () => new WallSign(WoodType.Acacia));
-		    this.Register("minecraft:dark_oak_wall_sign", () => new WallSign(WoodType.DarkOak));
-		    this.Register("minecraft:crimson_wall_sign", () => new WallSign(WoodType.Crimson));
-		    this.Register("minecraft:warped_wall_sign", () => new WallSign(WoodType.Warped));
+		    RegisterBlock("minecraft:wall_sign", () => new WallSign());
+		    RegisterBlock("minecraft:oak_wall_sign", () => new WallSign(WoodType.Oak));
+		    RegisterBlock("minecraft:spruce_wall_sign", () => new WallSign(WoodType.Spruce));
+		    RegisterBlock("minecraft:birch_wall_sign", () => new WallSign(WoodType.Birch));
+		    RegisterBlock("minecraft:jungle_wall_sign", () => new WallSign(WoodType.Jungle));
+		    RegisterBlock("minecraft:acacia_wall_sign", () => new WallSign(WoodType.Acacia));
+		    RegisterBlock("minecraft:dark_oak_wall_sign", () => new WallSign(WoodType.DarkOak));
+		    RegisterBlock("minecraft:crimson_wall_sign", () => new WallSign(WoodType.Crimson));
+		    RegisterBlock("minecraft:warped_wall_sign", () => new WallSign(WoodType.Warped));
 		    
 		    //Standing signs
-		    this.Register("minecraft:standing_sign", () => new StandingSign());
-		    this.Register("minecraft:oak_sign", () => new StandingSign(WoodType.Oak));
-		    this.Register("minecraft:spruce_sign", () => new StandingSign(WoodType.Spruce));
-		    this.Register("minecraft:birch_sign", () => new StandingSign(WoodType.Birch));
-		    this.Register("minecraft:jungle_sign", () => new StandingSign(WoodType.Jungle));
-		    this.Register("minecraft:acacia_sign", () => new StandingSign(WoodType.Acacia));
-		    this.Register("minecraft:dark_oak_sign", () => new StandingSign(WoodType.DarkOak));
-		    this.Register("minecraft:crimson_sign", () => new StandingSign(WoodType.Crimson));
-		    this.Register("minecraft:warped_sign", () => new StandingSign(WoodType.Warped));
+		    RegisterBlock("minecraft:standing_sign", () => new StandingSign());
+		    RegisterBlock("minecraft:oak_sign", () => new StandingSign(WoodType.Oak));
+		    RegisterBlock("minecraft:spruce_sign", () => new StandingSign(WoodType.Spruce));
+		    RegisterBlock("minecraft:birch_sign", () => new StandingSign(WoodType.Birch));
+		    RegisterBlock("minecraft:jungle_sign", () => new StandingSign(WoodType.Jungle));
+		    RegisterBlock("minecraft:acacia_sign", () => new StandingSign(WoodType.Acacia));
+		    RegisterBlock("minecraft:dark_oak_sign", () => new StandingSign(WoodType.DarkOak));
+		    RegisterBlock("minecraft:crimson_sign", () => new StandingSign(WoodType.Crimson));
+		    RegisterBlock("minecraft:warped_sign", () => new StandingSign(WoodType.Warped));
 		    
 		    //Chests
-		    this.Register("minecraft:chest", () => new Chest());
-		    this.Register("minecraft:trapped_chest", () => new TrappedChest());
-		    this.Register("minecraft:ender_chest", () => new EnderChest());
+		    RegisterBlock("minecraft:chest", () => new Chest());
+		    RegisterBlock("minecraft:trapped_chest", () => new TrappedChest());
+		    RegisterBlock("minecraft:ender_chest", () => new EnderChest());
 		    
 		    //Saplings
-		    this.Register("minecraft:oak_sapling", () => new Sapling(WoodType.Oak));
-		    this.Register("minecraft:spruce_sapling", () => new Sapling(WoodType.Spruce));
-		    this.Register("minecraft:birch_sapling", () => new Sapling(WoodType.Birch));
-		    this.Register("minecraft:jungle_sapling", () => new Sapling(WoodType.Jungle));
-		    this.Register("minecraft:acacia_sapling", () => new Sapling(WoodType.Acacia));
-		    this.Register("minecraft:dark_oak_sapling", () => new Sapling(WoodType.DarkOak));
-		    this.Register("minecraft:crimson_sapling", () => new Sapling(WoodType.Crimson));
-		    this.Register("minecraft:warped_sapling", () => new Sapling(WoodType.Warped));
+		    RegisterBlock("minecraft:oak_sapling", () => new Sapling(WoodType.Oak));
+		    RegisterBlock("minecraft:spruce_sapling", () => new Sapling(WoodType.Spruce));
+		    RegisterBlock("minecraft:birch_sapling", () => new Sapling(WoodType.Birch));
+		    RegisterBlock("minecraft:jungle_sapling", () => new Sapling(WoodType.Jungle));
+		    RegisterBlock("minecraft:acacia_sapling", () => new Sapling(WoodType.Acacia));
+		    RegisterBlock("minecraft:dark_oak_sapling", () => new Sapling(WoodType.DarkOak));
+		    RegisterBlock("minecraft:crimson_sapling", () => new Sapling(WoodType.Crimson));
+		    RegisterBlock("minecraft:warped_sapling", () => new Sapling(WoodType.Warped));
 		    
-		    this.Register("minecraft:grass_path", () => new GrassPath());
-		    this.Register("minecraft:dirt_path", () => new GrassPath());
+		    RegisterBlock("minecraft:grass_path", () => new GrassPath());
+		    RegisterBlock("minecraft:dirt_path", () => new GrassPath());
 		    
-		    this.Register("minecraft:potted_cactus", () => new PottedCactus());
-		    this.Register("minecraft:potted_dead_bush", () => new PottedDeadBush());
-		    this.Register("minecraft:sea_pickle", () => new SeaPickle());
+		    RegisterBlock("minecraft:potted_cactus", () => new PottedCactus());
+		    RegisterBlock("minecraft:potted_dead_bush", () => new PottedDeadBush());
+		    RegisterBlock("minecraft:sea_pickle", () => new SeaPickle());
 		    
 		    //Beds (I should really implement block tags...)
-		    this.Register("minecraft:bed", () => new Bed(BlockColor.Red));
-		    this.Register("minecraft:white_bed", () => new Bed(BlockColor.White));
-		    this.Register("minecraft:orange_bed", () => new Bed(BlockColor.Orange));
-		    this.Register("minecraft:magenta_bed", () => new Bed(BlockColor.Magenta));
-		    this.Register("minecraft:light_blue_bed", () => new Bed(BlockColor.LightBlue));
-		    this.Register("minecraft:yellow_bed", () => new Bed(BlockColor.Yellow));
-		    this.Register("minecraft:lime_bed", () => new Bed(BlockColor.Lime));
-		    this.Register("minecraft:pink_bed", () => new Bed(BlockColor.Pink));
-		    this.Register("minecraft:gray_bed", () => new Bed(BlockColor.Gray));
-		    this.Register("minecraft:light_gray_bed", () => new Bed(BlockColor.LightGray));
-		    this.Register("minecraft:cyan_bed", () => new Bed(BlockColor.Cyan));
-		    this.Register("minecraft:purple_bed", () => new Bed(BlockColor.Purple));
-		    this.Register("minecraft:blue_bed", () => new Bed(BlockColor.Blue));
-		    this.Register("minecraft:brown_bed", () => new Bed(BlockColor.Brown));
-		    this.Register("minecraft:green_bed", () => new Bed(BlockColor.Green));
-		    this.Register("minecraft:red_bed", () => new Bed(BlockColor.Red));
-		    this.Register("minecraft:black_bed", () => new Bed(BlockColor.Black));
+		    RegisterBlock("minecraft:bed", () => new Bed(BlockColor.Red));
+		    RegisterBlock("minecraft:white_bed", () => new Bed(BlockColor.White));
+		    RegisterBlock("minecraft:orange_bed", () => new Bed(BlockColor.Orange));
+		    RegisterBlock("minecraft:magenta_bed", () => new Bed(BlockColor.Magenta));
+		    RegisterBlock("minecraft:light_blue_bed", () => new Bed(BlockColor.LightBlue));
+		    RegisterBlock("minecraft:yellow_bed", () => new Bed(BlockColor.Yellow));
+		    RegisterBlock("minecraft:lime_bed", () => new Bed(BlockColor.Lime));
+		    RegisterBlock("minecraft:pink_bed", () => new Bed(BlockColor.Pink));
+		    RegisterBlock("minecraft:gray_bed", () => new Bed(BlockColor.Gray));
+		    RegisterBlock("minecraft:light_gray_bed", () => new Bed(BlockColor.LightGray));
+		    RegisterBlock("minecraft:cyan_bed", () => new Bed(BlockColor.Cyan));
+		    RegisterBlock("minecraft:purple_bed", () => new Bed(BlockColor.Purple));
+		    RegisterBlock("minecraft:blue_bed", () => new Bed(BlockColor.Blue));
+		    RegisterBlock("minecraft:brown_bed", () => new Bed(BlockColor.Brown));
+		    RegisterBlock("minecraft:green_bed", () => new Bed(BlockColor.Green));
+		    RegisterBlock("minecraft:red_bed", () => new Bed(BlockColor.Red));
+		    RegisterBlock("minecraft:black_bed", () => new Bed(BlockColor.Black));
 		    
-		    this.Register("minecraft:glow_lichen", () => new GlowLichen());
-		    this.Register("minecraft:pointed_dripstone", () => new PointedDripstone());
+		    RegisterBlock("minecraft:glow_lichen", () => new GlowLichen());
+		    RegisterBlock("minecraft:pointed_dripstone", () => new PointedDripstone());
 		    
-		    this.Register("minecraft:item_frame", () => new ItemFrame());
+		    RegisterBlock("minecraft:item_frame", () => new ItemFrame());
 		    
 		    //Wool
-		    this.Register("minecraft:white_wool", () => new Wool(BlockColor.White));
-		    this.Register("minecraft:orange_wool", () => new Wool(BlockColor.Orange));
-		    this.Register("minecraft:magenta_wool", () => new Wool(BlockColor.Magenta));
-		    this.Register("minecraft:light_blue_wool", () => new Wool(BlockColor.LightBlue));
-		    this.Register("minecraft:yellow_wool", () => new Wool(BlockColor.Yellow));
-		    this.Register("minecraft:lime_wool", () => new Wool(BlockColor.Lime));
-		    this.Register("minecraft:pink_wool", () => new Wool(BlockColor.Pink));
-		    this.Register("minecraft:gray_wool", () => new Wool(BlockColor.Gray));
-		    this.Register("minecraft:light_gray_wool", () => new Wool(BlockColor.LightGray));
-		    this.Register("minecraft:cyan_wool", () => new Wool(BlockColor.Cyan));
-		    this.Register("minecraft:purple_wool", () => new Wool(BlockColor.Purple));
-		    this.Register("minecraft:blue_wool", () => new Wool(BlockColor.Blue));
-		    this.Register("minecraft:brown_wool", () => new Wool(BlockColor.Brown));
-		    this.Register("minecraft:green_wool", () => new Wool(BlockColor.Green));
-		    this.Register("minecraft:red_wool", () => new Wool(BlockColor.Red));
-		    this.Register("minecraft:black_wool", () => new Wool(BlockColor.Black));
+		    RegisterBlock("minecraft:white_wool", () => new Wool(BlockColor.White));
+		    RegisterBlock("minecraft:orange_wool", () => new Wool(BlockColor.Orange));
+		    RegisterBlock("minecraft:magenta_wool", () => new Wool(BlockColor.Magenta));
+		    RegisterBlock("minecraft:light_blue_wool", () => new Wool(BlockColor.LightBlue));
+		    RegisterBlock("minecraft:yellow_wool", () => new Wool(BlockColor.Yellow));
+		    RegisterBlock("minecraft:lime_wool", () => new Wool(BlockColor.Lime));
+		    RegisterBlock("minecraft:pink_wool", () => new Wool(BlockColor.Pink));
+		    RegisterBlock("minecraft:gray_wool", () => new Wool(BlockColor.Gray));
+		    RegisterBlock("minecraft:light_gray_wool", () => new Wool(BlockColor.LightGray));
+		    RegisterBlock("minecraft:cyan_wool", () => new Wool(BlockColor.Cyan));
+		    RegisterBlock("minecraft:purple_wool", () => new Wool(BlockColor.Purple));
+		    RegisterBlock("minecraft:blue_wool", () => new Wool(BlockColor.Blue));
+		    RegisterBlock("minecraft:brown_wool", () => new Wool(BlockColor.Brown));
+		    RegisterBlock("minecraft:green_wool", () => new Wool(BlockColor.Green));
+		    RegisterBlock("minecraft:red_wool", () => new Wool(BlockColor.Red));
+		    RegisterBlock("minecraft:black_wool", () => new Wool(BlockColor.Black));
 		    
 		    //Concrete
-		    this.Register("minecraft:white_concrete", () => new Concrete(BlockColor.White));
-		    this.Register("minecraft:orange_concrete", () => new Concrete(BlockColor.Orange));
-		    this.Register("minecraft:magenta_concrete", () => new Concrete(BlockColor.Magenta));
-		    this.Register("minecraft:light_blue_concrete", () => new Concrete(BlockColor.LightBlue));
-		    this.Register("minecraft:yellow_concrete", () => new Concrete(BlockColor.Yellow));
-		    this.Register("minecraft:lime_concrete", () => new Concrete(BlockColor.Lime));
-		    this.Register("minecraft:pink_concrete", () => new Concrete(BlockColor.Pink));
-		    this.Register("minecraft:gray_concrete", () => new Concrete(BlockColor.Gray));
-		    this.Register("minecraft:light_gray_concrete", () => new Concrete(BlockColor.LightGray));
-		    this.Register("minecraft:cyan_concrete", () => new Concrete(BlockColor.Cyan));
-		    this.Register("minecraft:purple_concrete", () => new Concrete(BlockColor.Purple));
-		    this.Register("minecraft:blue_concrete", () => new Concrete(BlockColor.Blue));
-		    this.Register("minecraft:brown_concrete", () => new Concrete(BlockColor.Brown));
-		    this.Register("minecraft:green_concrete", () => new Concrete(BlockColor.Green));
-		    this.Register("minecraft:red_concrete", () => new Concrete(BlockColor.Red));
-		    this.Register("minecraft:black_concrete", () => new Concrete(BlockColor.Black));
+		    RegisterBlock("minecraft:white_concrete", () => new Concrete(BlockColor.White));
+		    RegisterBlock("minecraft:orange_concrete", () => new Concrete(BlockColor.Orange));
+		    RegisterBlock("minecraft:magenta_concrete", () => new Concrete(BlockColor.Magenta));
+		    RegisterBlock("minecraft:light_blue_concrete", () => new Concrete(BlockColor.LightBlue));
+		    RegisterBlock("minecraft:yellow_concrete", () => new Concrete(BlockColor.Yellow));
+		    RegisterBlock("minecraft:lime_concrete", () => new Concrete(BlockColor.Lime));
+		    RegisterBlock("minecraft:pink_concrete", () => new Concrete(BlockColor.Pink));
+		    RegisterBlock("minecraft:gray_concrete", () => new Concrete(BlockColor.Gray));
+		    RegisterBlock("minecraft:light_gray_concrete", () => new Concrete(BlockColor.LightGray));
+		    RegisterBlock("minecraft:cyan_concrete", () => new Concrete(BlockColor.Cyan));
+		    RegisterBlock("minecraft:purple_concrete", () => new Concrete(BlockColor.Purple));
+		    RegisterBlock("minecraft:blue_concrete", () => new Concrete(BlockColor.Blue));
+		    RegisterBlock("minecraft:brown_concrete", () => new Concrete(BlockColor.Brown));
+		    RegisterBlock("minecraft:green_concrete", () => new Concrete(BlockColor.Green));
+		    RegisterBlock("minecraft:red_concrete", () => new Concrete(BlockColor.Red));
+		    RegisterBlock("minecraft:black_concrete", () => new Concrete(BlockColor.Black));
 		    
 		    //Concrete Powder
-		    this.Register("minecraft:white_concrete_powder", () => new ConcretePowder(BlockColor.White));
-		    this.Register("minecraft:orange_concrete_powder", () => new ConcretePowder(BlockColor.Orange));
-		    this.Register("minecraft:magenta_concrete_powder", () => new ConcretePowder(BlockColor.Magenta));
-		    this.Register("minecraft:light_blue_concrete_powder", () => new ConcretePowder(BlockColor.LightBlue));
-		    this.Register("minecraft:yellow_concrete_powder", () => new ConcretePowder(BlockColor.Yellow));
-		    this.Register("minecraft:lime_concrete_powder", () => new ConcretePowder(BlockColor.Lime));
-		    this.Register("minecraft:pink_concrete_powder", () => new ConcretePowder(BlockColor.Pink));
-		    this.Register("minecraft:gray_concrete_powder", () => new ConcretePowder(BlockColor.Gray));
-		    this.Register("minecraft:light_gray_concrete_powder", () => new ConcretePowder(BlockColor.LightGray));
-		    this.Register("minecraft:cyan_concrete_powder", () => new ConcretePowder(BlockColor.Cyan));
-		    this.Register("minecraft:purple_concrete_powder", () => new ConcretePowder(BlockColor.Purple));
-		    this.Register("minecraft:blue_concrete_powder", () => new ConcretePowder(BlockColor.Blue));
-		    this.Register("minecraft:brown_concrete_powder", () => new ConcretePowder(BlockColor.Brown));
-		    this.Register("minecraft:green_concrete_powder", () => new ConcretePowder(BlockColor.Green));
-		    this.Register("minecraft:red_concrete_powder", () => new ConcretePowder(BlockColor.Red));
-		    this.Register("minecraft:black_concrete_powder", () => new ConcretePowder(BlockColor.Black));
+		    RegisterBlock("minecraft:white_concrete_powder", () => new ConcretePowder(BlockColor.White));
+		    RegisterBlock("minecraft:orange_concrete_powder", () => new ConcretePowder(BlockColor.Orange));
+		    RegisterBlock("minecraft:magenta_concrete_powder", () => new ConcretePowder(BlockColor.Magenta));
+		    RegisterBlock("minecraft:light_blue_concrete_powder", () => new ConcretePowder(BlockColor.LightBlue));
+		    RegisterBlock("minecraft:yellow_concrete_powder", () => new ConcretePowder(BlockColor.Yellow));
+		    RegisterBlock("minecraft:lime_concrete_powder", () => new ConcretePowder(BlockColor.Lime));
+		    RegisterBlock("minecraft:pink_concrete_powder", () => new ConcretePowder(BlockColor.Pink));
+		    RegisterBlock("minecraft:gray_concrete_powder", () => new ConcretePowder(BlockColor.Gray));
+		    RegisterBlock("minecraft:light_gray_concrete_powder", () => new ConcretePowder(BlockColor.LightGray));
+		    RegisterBlock("minecraft:cyan_concrete_powder", () => new ConcretePowder(BlockColor.Cyan));
+		    RegisterBlock("minecraft:purple_concrete_powder", () => new ConcretePowder(BlockColor.Purple));
+		    RegisterBlock("minecraft:blue_concrete_powder", () => new ConcretePowder(BlockColor.Blue));
+		    RegisterBlock("minecraft:brown_concrete_powder", () => new ConcretePowder(BlockColor.Brown));
+		    RegisterBlock("minecraft:green_concrete_powder", () => new ConcretePowder(BlockColor.Green));
+		    RegisterBlock("minecraft:red_concrete_powder", () => new ConcretePowder(BlockColor.Red));
+		    RegisterBlock("minecraft:black_concrete_powder", () => new ConcretePowder(BlockColor.Black));
 		    
-		    this.Register("minecraft:granite", () => new Granite());
-		    this.Register("minecraft:polished_granite", () => new PolishedGranite());
+		    RegisterBlock("minecraft:granite", () => new Granite());
+		    RegisterBlock("minecraft:polished_granite", () => new PolishedGranite());
 		    
-		    this.Register("minecraft:basalt", () => new Basalt());
-		    this.Register("minecraft:polished_basalt", () => new PolishedBasalt());
+		    RegisterBlock("minecraft:basalt", () => new Basalt());
+		    RegisterBlock("minecraft:polished_basalt", () => new PolishedBasalt());
 	    }
     }
 }

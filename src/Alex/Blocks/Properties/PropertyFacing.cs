@@ -13,8 +13,6 @@ namespace Alex.Blocks.Properties
 		{
 			
 		}
-		
-		public override string StringValue => Value.ToString().ToLower();
 
 		/// <inheritdoc />
 		public override IStateProperty<BlockFace> WithValue(BlockFace value)
@@ -30,6 +28,12 @@ namespace Alex.Blocks.Properties
 			}
 
 			return BlockFace.None;
+		}
+
+		/// <inheritdoc />
+		protected override string StringifyValue(BlockFace value)
+		{
+			return base.StringifyValue(value).ToLower();
 		}
 
 		/// <inheritdoc />

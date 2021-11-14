@@ -29,7 +29,10 @@ namespace Alex.Blocks.Properties
 		}
 
 		/// <inheritdoc />
-		public override string StringValue => Value ? TrueString : FalseString;
+		protected override string StringifyValue(bool value)
+		{
+			return value ? TrueString : FalseString;
+		}
 
 		/// <inheritdoc />
 		public override IStateProperty<bool> WithValue(bool value)
@@ -39,17 +42,7 @@ namespace Alex.Blocks.Properties
 
 		public override bool ParseValue(string value)
 		{
-			if (bool.TryParse(value, out var result))
-			{
-				return result;
-			}
-
-			if (string.Equals(value, TrueString, StringComparison.InvariantCultureIgnoreCase) )
-			{
-				return true;
-			}
-
-			return false;
+			return string.Equals(value, TrueString, StringComparison.OrdinalIgnoreCase);
 		}
 
 		/// <inheritdoc />

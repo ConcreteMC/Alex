@@ -208,7 +208,7 @@ namespace Alex
             };
 
             ServerTypeManager = new ServerTypeManager();
-            PluginManager = new PluginManager();
+        //    PluginManager = new PluginManager();
 
             Storage = new StorageSystem(LaunchSettings.WorkDir);
             Storage.TryCreateDirectory("assets");
@@ -552,7 +552,7 @@ namespace Alex
 
            // GuiDebugHelper.Dispose();
 
-            PluginManager.UnloadAll();
+         //   PluginManager.UnloadAll();
             
             RichPresenceProvider.ClearPresence();
         }
@@ -621,7 +621,7 @@ namespace Alex
             //GuiRenderer.LoadResourcePack(Resources.ResourcePack, null);
             AnvilWorldProvider.LoadBlockConverter();
 
-            PluginManager.EnablePlugins();
+        //    PluginManager.EnablePlugins();
 
             var storage = ServiceContainer.GetRequiredService<IStorageSystem>();
 

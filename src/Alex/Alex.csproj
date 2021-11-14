@@ -11,10 +11,6 @@
         <PackageProjectUrl>https://github.com/kennyvv/Alex</PackageProjectUrl>
         <PackageLicenseUrl>https://github.com/kennyvv/Alex/blob/master/LICENSE</PackageLicenseUrl>
         <RepositoryUrl>https://github.com/kennyvv/Alex</RepositoryUrl>
-        <TieredCompilation>false</TieredCompilation>
-        <PublishSingleFile>false</PublishSingleFile>
-        <PublishReadyToRun>false</PublishReadyToRun>
-        <SelfContained>false</SelfContained>
         <PackageVersion />
     </PropertyGroup>
 
@@ -40,6 +36,8 @@
     <PropertyGroup Condition="'$(Configuration)'=='Release'">
         <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
         <IncludeAllContentForselfExtract>true</IncludeAllContentForselfExtract>
+        <PublishSingleFile>false</PublishSingleFile>
+        <PublishReadyToRun>false</PublishReadyToRun>
         <SelfContained>true</SelfContained>
     </PropertyGroup>
 
@@ -57,7 +55,7 @@
     </PropertyGroup>
 
     <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('Windows'))">
-        <RuntimeIdentifier Condition="'$(RuntimeIdentifier)'==''">win10-x64</RuntimeIdentifier>
+        <RuntimeIdentifier Condition="'$(RuntimeIdentifier)'==''">win-x64</RuntimeIdentifier>
         <OutputType>WinExe</OutputType>
     </PropertyGroup>
 
@@ -92,7 +90,6 @@
         <PackageReference Include="DiscordRichPresence" Version="1.0.175" />
         <PackageReference Include="EasyPipes" Version="1.3.0" />
         <PackageReference Include="FmodAudio" Version="2.2.2" />
-        <PackageReference Include="JKang.IpcServiceFramework.Server" Version="2.3.1" />
         <PackageReference Include="jose-jwt" Version="3.2.0" />
         <PackageReference Include="Microsoft.Identity.Client" Version="4.37.0" />
         <PackageReference Include="MiNET.fnbt" Version="1.0.22" />

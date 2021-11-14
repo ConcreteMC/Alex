@@ -81,7 +81,7 @@ namespace Alex.Blocks.State
 
 		public bool TryGetValue(string property, out string value)
 		{
-			var hashcode = property.GetHashCode(StringComparison.InvariantCultureIgnoreCase);
+			var hashcode = property.GetHashCode(StringComparison.OrdinalIgnoreCase);
 			var first = States.FirstOrDefault(x => x.Identifier == hashcode);
 
 			if (first != null)
@@ -94,44 +94,11 @@ namespace Alex.Blocks.State
 			return false;
 		}
 		
-		/*public bool TryGetValue<T>(StateProperty<T> property, out T value)
-		{
-			if (States.TryGetValue(property, out var first))
-			{
-				var v = first.Value;
-
-				if (v is T t)
-				{
-					value = t;
-				}
-				else
-				{
-					value = property.ParseValue(first.StringValue);
-				}
-
-				return true;
-			}
-
-			value = default(T);
-			return false;
-		}
-		
-		public T GetTypedValue<T>(StateProperty<T> property)
-		{
-			if (TryGetValue(property, out var val))
-			{
-				return val;
-			}
-
-			return default(T);
-		}*/
-
 		public bool Equals(BlockState other)
 		{
 			bool result = Name.Equals(other.Name, StringComparison.InvariantCultureIgnoreCase);
 			if (!result) return false;
 
-			//var thisStates = new HashSet<StateProperty>(States);
 			var otherStates = new HashSet<IStateProperty>(other.States, new StatePropertyComparer());
 
 			otherStates.IntersectWith(States);
@@ -154,25 +121,12 @@ namespace Alex.Blocks.State
 			var hash = new HashCode();
 			//hash.Add(ID);
 			hash.Add(Name);
+			
 			foreach (var state in States)
 			{
-				switch (state)
-				{
-					case PropertyByte blockStateByte:
-						hash.Add(blockStateByte);
-						break;
-					case PropertyInt blockStateInt:
-						hash.Add(blockStateInt);
-						break;
-					case PropertyString blockStateString:
-						hash.Add(blockStateString);
-						break;
-					default:
-						hash.Add(state);
-						break;
-				}
+				hash.Add(state);
 			}
-			
+
 			return hash.ToHashCode();
 		}
 
@@ -208,12 +162,5 @@ namespace Alex.Blocks.State
 		}
 
 		public string FormattedString => $"{Name}[{ToString()}]";
-		
-		private static readonly Regex VariantParser = new Regex("(?'property'[^=,]*?)=(?'value'[^,]*)", RegexOptions.Compiled);
-		public static Dictionary<string, string> ParseData(string variant)
-		{
-			return VariantParser.Matches(variant).ToDictionary(
-				x => x.Groups["property"].Value, x => x.Groups["value"].Value);
-		}
 	}
 }

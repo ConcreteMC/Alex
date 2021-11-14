@@ -39,17 +39,19 @@ namespace Alex.Blocks.State
 
 	public class StateProperty<TType> : IStateProperty<TType>
 	{
+		private TType _value;
 		public string Name { get; }
-
+		
+		private string _stringValue { get; set; } = string.Empty;
 		/// <inheritdoc />
-		public virtual string StringValue => Value.ToString();
+		public string StringValue => _stringValue;
 
 		public TType DefaultValue { get; set; } = default(TType);
 		public int Identifier { get; }
 		protected StateProperty(string name)
 		{
 			Name = name;
-			Identifier = name.GetHashCode(StringComparison.InvariantCultureIgnoreCase);
+			Identifier = name.GetHashCode(StringComparison.OrdinalIgnoreCase);
 		}
 
 		public TType GetValue()
@@ -61,20 +63,22 @@ namespace Alex.Blocks.State
 		{
 			return blockState.GetValue(this);
 		}
-		
-		/// <inheritdoc />
-		public TType Value { get; protected internal set; }
 
 		/// <inheritdoc />
-		/*public virtual StateProperty WithValue(object value)
+		public TType Value
 		{
-			if (value is TType t)
+			get => _value;
+			protected internal set
 			{
-				return WithValue(t);
+				_value = value;
+				_stringValue = StringifyValue(value);
 			}
+		}
 
-			return WithValue(ParseValue(value.ToString()));
-		}*/
+		protected virtual string StringifyValue(TType value)
+		{
+			return value.ToString();
+		}
 
 		public virtual IStateProperty<TType> WithValue(TType value)
 		{

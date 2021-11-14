@@ -300,7 +300,7 @@ namespace Alex.Entities
 				if (model == null)
 				{
 					if (!ModelFactory.TryGetModel(
-						slim ? "geometry.humanoid.custom" : "geometry.humanoid.customSlim", out model))
+						slim ? "geometry.humanoid.customSlim" : "geometry.humanoid.custom", out model))
 					{
 						Log.Debug($"Invalid model for player {nametag.Replace("\n", "")}");
 						return;

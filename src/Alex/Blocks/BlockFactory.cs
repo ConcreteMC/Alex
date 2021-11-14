@@ -151,6 +151,51 @@ namespace Alex.Blocks
 				List<BlockState> states = new List<BlockState>();
 				
 				var location     = new ResourceLocation(entry.Key);
+				IRegistryEntry<Block> registryEntry;
+
+				if (!blockRegistry.TryGet(location, out registryEntry))
+				{
+					registryEntry = new UnknownBlock();
+					registryEntry = registryEntry.WithLocation(location); // = entry.Key;
+				}
+				else
+				{
+					registryEntry = registryEntry.WithLocation(location);
+				}
+				
+				var block = registryEntry.Value;
+				if (string.IsNullOrWhiteSpace(block.DisplayName))
+				{
+					block.DisplayName = entry.Key;
+				}
+
+
+				Dictionary<string, IStateProperty> stateProperties;
+
+				if (entry.Value.Properties != null)
+				{
+					stateProperties = entry.Value.Properties.Select(
+						prop =>
+						{
+							var values = prop.Value;
+							IStateProperty stateProperty;
+
+							if (block.TryGetStateProperty(prop.Key, out var stateProp))
+							{
+								stateProperty = stateProp;
+							}
+							else
+							{
+								stateProperty = new ValidatedPropertyString(prop.Key, values);
+							}
+
+							return stateProperty;
+						}).ToDictionary(x => x.Name, e => e, StringComparer.OrdinalIgnoreCase);
+				}
+				else
+				{
+					stateProperties = new Dictionary<string, IStateProperty>();
+				}
 
 				foreach (var s in entry.Value.States)
 				{
@@ -161,52 +206,30 @@ namespace Alex.Blocks
 						continue;
 					}
 
-					IRegistryEntry<Block> registryEntry;
+					var localBlock = registryEntry.Value;
+					localBlock.DisplayName = block.DisplayName;
 
-					if (!blockRegistry.TryGet(location, out registryEntry))
-					{
-						registryEntry = new UnknownBlock();
-						registryEntry = registryEntry.WithLocation(location); // = entry.Key;
-					}
-					else
-					{
-						registryEntry = registryEntry.WithLocation(location);
-					}
-
-					var block = registryEntry.Value;
-					
 					BlockState variantState = new BlockState();
-					//List<StateProperty> stateProperties = new List<StateProperty>();
-					if (entry.Value.Properties != null)
+
+					foreach (var prop in stateProperties)
 					{
-						foreach (var property in entry.Value.Properties)
-						{
-							if (block.TryGetStateProperty(property.Key, out var stateProp))
-							{
-								variantState.States.Add(stateProp.WithValue(s.Properties[property.Key]));
-							}
-							//	defaultState = (BlockState) defaultState.WithPropertyNoResolve(property.Key, property.Value.FirstOrDefault(), false);
-						}
+						if (!s.Properties.TryGetValue(prop.Key, out var value))
+							variantState.States.Add(prop.Value);
+
+						variantState.States.Add(prop.Value.WithValue(value));
 					}
 
-					if (string.IsNullOrWhiteSpace(block.DisplayName))
-					{
-						block.DisplayName = entry.Key;
-					}
-					//block.DisplayName = 
-					
-					//variantState.States = stateProperties.ToArray();
 					variantState.ID = s.ID;
 					variantState.Name = entry.Key;
 					variantState.ModelData = ResolveVariant(blockStateResource, variantState, isMultipartModel);
-					variantState.Block = block.Value;
+					variantState.Block = localBlock;
 					variantState.Default = s.Default;
-					
-					block.BlockState = variantState;
+
+					localBlock.BlockState = variantState;
 
 					states.Add(variantState);
 				}
-				
+
 				var variantMap   = new BlockStateVariantMapper(states);
 				variantMap.Model = model;
 				variantMap.IsMultiPart = isMultipartModel;
@@ -263,7 +286,7 @@ namespace Alex.Blocks
 					progressReceiver?.UpdateProgress(counter, mapping.Count, "Mapping blockstates...", m.Key);
 					var location     = new ResourceLocation(m.Key);
 
-					List<BlockState> states = new List<BlockState>();
+					List<BlockState> states = new List<BlockState>(m.Count());
 					BlockModel blockModel = null;
 					bool isMultiPart = false;
 					
@@ -288,17 +311,12 @@ namespace Alex.Blocks
 						{
 							if (dataMatch.Success)
 							{
-								var properties = BlockState.ParseData(dataMatch.Value);
-
-								if (properties != null)
+								var properties =
+									new BlockVariantKey(dataMatch.Value);
+								
+								foreach(var prop in properties)
 								{
-									var p = properties.ToArray();
-
-									for (var i = 0; i < p.Length; i++)
-									{
-										var prop = p[i];
-										pcVariant = pcVariant.WithProperty(prop.Key, prop.Value);
-									}
+									pcVariant = pcVariant.WithProperty(prop.Key, prop.Value);
 								}
 							}
 						}
@@ -381,32 +399,21 @@ namespace Alex.Blocks
 			}
 			
 			int                                     closestMatch = -1;
-			KeyValuePair<string, BlockStateVariant> closest      = default(KeyValuePair<string, BlockStateVariant>);
+			KeyValuePair<BlockVariantKey, BlockStateVariant> closest      = default(KeyValuePair<BlockVariantKey, BlockStateVariant>);
 
 			foreach (var v in blockStateResource.Variants)
 			{
 				int matches = 0;
-				var variant = Blocks.State.BlockState.ParseData(v.Key);
+				var variant = v.Key;
 
 				if (variant != null)
 				{
 					foreach (var kv in state)
 					{
-						if (variant.TryGetValue(kv.Name, out string vValue))
-						{
-							if (vValue.Equals(kv.StringValue, StringComparison.OrdinalIgnoreCase))
-							{
-								matches++;
-							}
-							else
-							{
-								break;
-							}
-						}
-						else
-						{
+						if (!variant.TryGetValue(kv.Name, out string vValue) || !vValue.Equals(kv.StringValue, StringComparison.OrdinalIgnoreCase))
 							break;
-						}
+						
+						matches++;
 					}
 				}
 

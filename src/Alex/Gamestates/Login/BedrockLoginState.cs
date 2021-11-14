@@ -20,11 +20,14 @@ namespace Alex.Gamestates.Login
     public class BedrockLoginState : CodeFlowLoginBase<MsaDeviceAuthConnectResponse>
     {
 	    private readonly XboxAuthService _xboxAuthService;
+	    private readonly PlayerProfile _currentProfile;
 	    private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(BedrockLoginState));
-	    public BedrockLoginState(GuiPanoramaSkyBox skyBox, LoginSuccessfulCallback loginSuccessfulCallback, XboxAuthService xboxAuthService, ServerTypeImplementation serverTypeImplementation) : base(skyBox, loginSuccessfulCallback, serverTypeImplementation)
-        {
-	        _xboxAuthService = xboxAuthService;
-        }
+	    public BedrockLoginState(GuiPanoramaSkyBox skyBox, LoginSuccessfulCallback loginSuccessfulCallback, XboxAuthService xboxAuthService, ServerTypeImplementation serverTypeImplementation,
+		    PlayerProfile currentProfile = null) : base(skyBox, loginSuccessfulCallback, serverTypeImplementation)
+	    {
+		    _xboxAuthService = xboxAuthService;
+		    _currentProfile = currentProfile;
+	    }
 
 	    /// <inheritdoc />
 	    protected override Task<MsaDeviceAuthConnectResponse> StartConnect()
@@ -45,9 +48,16 @@ namespace Alex.Gamestates.Login
 				    var r = _xboxAuthService.DecodedChain.Chain.FirstOrDefault(
 					    x => x.ExtraData != null && !string.IsNullOrWhiteSpace(x.ExtraData.XUID));
 
-				    var profile = new PlayerProfile(
-					    r.ExtraData.XUID, r.ExtraData.DisplayName, r.ExtraData.DisplayName, result.token.AccessToken,
-					    null, result.token.RefreshToken, result.token.ExpiryTime);
+				    var profile = _currentProfile ?? new PlayerProfile();
+				    profile.UUID = r.ExtraData.XUID;
+				    profile.Username = r.ExtraData.DisplayName;
+				    profile.AccessToken = result.token.AccessToken;
+				    profile.ClientToken = null;
+				    profile.PlayerName = r.ExtraData.DisplayName;
+				    profile.RefreshToken = result.token.RefreshToken;
+				    profile.ExpiryTime = result.token.ExpiryTime;
+
+				    profile.Authenticated = true;
 
 				    return new LoginResponse(profile, true);
 			    }

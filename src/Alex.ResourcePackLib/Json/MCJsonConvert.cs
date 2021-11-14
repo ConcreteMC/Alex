@@ -42,6 +42,7 @@ namespace Alex.ResourcePackLib.Json
 			DefaultSettings.Converters.Add(new MoLangExpressionConverter());
 			DefaultSettings.Converters.Add(new AnnoyingMolangElementConverter());
 			DefaultSettings.Converters.Add(new ResourceLocationConverter());
+			DefaultSettings.Converters.Add(new BlockVariantKeyConverter());
 			Serializer = JsonSerializer.Create(DefaultSettings);
 		}
 

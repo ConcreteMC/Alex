@@ -24,6 +24,8 @@ using Alex.ResourcePackLib.Json.Models.Items;
 using Alex.ResourcePackLib.Json.Sound;
 using Alex.ResourcePackLib.Json.Textures;
 using Microsoft.Xna.Framework;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using NLog;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Advanced;
@@ -566,43 +568,45 @@ namespace Alex.ResourcePackLib
 
 			bool isJson = match.Groups["filetype"].Value.Equals("json", StringComparison.OrdinalIgnoreCase);
 
+			string text;
+
 			using (var stream = entry.Open())
 			{
-				var text = Encoding.UTF8.GetString(stream.ReadToSpan(entry.Length));
-				LanguageResource lang;
+				text = Encoding.UTF8.GetString(stream.ReadToSpan(entry.Length));
+			}
 
-				if (isJson)
+			LanguageResource lang;
+
+			if (isJson)
+			{
+				var dict = JsonConvert.DeserializeObject<Dictionary<string, string>>(text);
+				
+				if (!dict.TryGetValue("language.code", out var cultureCode)
+				    || !dict.TryGetValue("language.name", out var cultureName)
+				    || !dict.TryGetValue("language.region", out var cultureRegion))
 				{
-					var lng = MCJsonConvert.DeserializeObject<IDictionary<string, string>>(text);
-
-					if (!lng.TryGetValue("language.code", out var cultureCode)
-					|| !lng.TryGetValue("language.name", out var cultureName)
-					|| !lng.TryGetValue("language.region", out var cultureRegion))
-					{
-						return;
-					}
-					lang = new LanguageResource(lng)
-					{
-						CultureCode = cultureCode,
-						CultureName = cultureName,
-						CultureRegion = cultureRegion
-					};
+					return;
+				}
+				
+				lang = new LanguageResource(dict)
+				{
+					CultureCode = cultureCode, CultureName = cultureName, CultureRegion = cultureRegion
+				};
 				/*	if (lang.CultureCode == null)
 					{
 						if (lang.TryGetValue("language.code", out var code))
 							lang.CultureCode = code;
 					}*/
-				}
-				else
-				{
-					lang = LanguageResource.ParseLangFile(text);
-				}
-
-				lang.CultureName = name;
-				//lang.Namespace   = nameSpace;
-
-				_languageCache[$"{nameSpace}:{name}"] = lang;
 			}
+			else
+			{
+				lang = LanguageResource.ParseLangFile(text);
+			}
+
+			lang.CultureName = name;
+			//lang.Namespace   = nameSpace;
+
+			_languageCache[$"{nameSpace}:{name}"] = lang;
 		}
 
 		#endregion

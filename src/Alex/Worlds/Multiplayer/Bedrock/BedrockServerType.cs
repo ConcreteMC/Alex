@@ -134,10 +134,14 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 						}
 
 						var r = task.Result;
-						profile.AccessToken = r.token.AccessToken;
-						profile.RefreshToken = r.token.RefreshToken;
-						profile.ExpiryTime = r.token.ExpiryTime;
-						
+
+						if (r.token != null)
+						{
+							profile.AccessToken = r.token.AccessToken;
+							profile.RefreshToken = r.token.RefreshToken;
+							profile.ExpiryTime = r.token.ExpiryTime;
+						}
+
 						return Process(r.success, profile);
 					});
 			}
@@ -174,7 +178,17 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					}
 					else
 					{
-						Log.Warn($"Bedrock authentication failed!");
+						Log.Warn($"Bedrock authentication failed: {p.AuthError}");
+						var codeFlow = new BedrockLoginState(
+							skyBox, c =>
+							{
+								callBack?.Invoke(c);
+							}, XboxAuthService, this, p);
+						codeFlow.SetSubText($"{ChatColors.Red}Your session has expired, please re-authenticate.");
+								
+						Alex.GameStateManager.SetActiveState(codeFlow);
+
+						return;
 						
 						pss.ReloadData(profileManager.GetProfiles(AccountType));
 						Alex.GameStateManager.SetActiveState(pss);

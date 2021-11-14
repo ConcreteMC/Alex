@@ -406,7 +406,11 @@ namespace Alex.ResourcePackLib.Json.Converters
 				}
 				
 				default:
-					Log.Warn($"Invalid format_version! Version={versionToken?.Value<string>()}");
+					if (!string.IsNullOrWhiteSpace(versionToken?.Value<string>()))
+					{
+						Log.Warn($"Invalid format_version! Version={versionToken?.Value<string>()}");
+					}
+
 					foreach (var model in DecodeGeneric(jObject, serializer, formatVersion))
 					{
 						result.TryAdd(model.Description.Identifier, model);
