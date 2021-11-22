@@ -667,49 +667,48 @@ namespace Alex.Utils.Auth
 			{
 				HttpClient client = _httpClient;
 				
-				string r = "authorization_pending";
 				MsaDeviceAuthPollState token = null;
-				while (r == "authorization_pending" && !cancellationToken.IsCancellationRequested)
+				while (!cancellationToken.IsCancellationRequested)
 				{
-					var poll = await DevicePollState(deviceCode);
-					r = poll.Error;
-					token = poll;
+					token = await DevicePollState(deviceCode);
+
+					if (token.Error != "authorization_pending")
+					{
+						break;
+					}
 				}
-				
-				//Console.WriteLine();
-				
-				//Console.WriteLine($"Live: {JsonConvert.SerializeObject(token, Formatting.Indented)}");
 
-				//Console.WriteLine();
-				
-				var deviceToken = await ObtainDeviceToken(client, deviceId);
+				if (cancellationToken.IsCancellationRequested)
+				{
+					Log.Warn($"Cancellationtoken was canceled.");
+					return (false, null);
+				}
 
-				//Console.WriteLine();
-				
-				//Console.WriteLine($"Device Token: {JsonConvert.SerializeObject(deviceToken, Formatting.Indented)}");
-				
-				//Console.WriteLine();
+				if (token == null)
+				{
+					Log.Warn($"Token was null.");
+					return (false, null);
+				}
 
-				var userToken = await ObtainUserToken(client, token.AccessToken);
+				if (token.ExpiryTime == default)
+				{
+					token.ExpiryTime = DateTime.UtcNow.AddSeconds(token.ExpiresIn);
+				}
 
-				var title = await DoTitleAuth(client, deviceToken, token.AccessToken);
-				
-				//var xsts = await ObtainXbox(client, deviceToken, token.AccessToken);
-				var xsts = await DoXsts(client, deviceToken, title, userToken.Token);
-				
-				//Console.WriteLine();
-				
-				//Console.WriteLine($"XSTS Token: {JsonConvert.SerializeObject(xsts, Formatting.Indented)}");
-				
-				//Console.WriteLine();
-				
-				
-				return (await RequestMinecraftChain(client, xsts), new BedrockTokenPair()
+				var tokenPair = new BedrockTokenPair()
 				{
 					AccessToken = token.AccessToken,
-					ExpiryTime = DateTime.UtcNow.AddSeconds(token.ExpiresIn),
-					RefreshToken = token.RefreshToken
-				});
+					ExpiryTime = token.ExpiryTime,
+					RefreshToken = token.RefreshToken,
+					DeviceId = deviceId
+				};
+
+				if (await TryAuthenticate(token.AccessToken, deviceId))
+				{
+					return (true, tokenPair);
+				}
+				
+				return (false, tokenPair);
 			}
 			catch (OperationCanceledException c)
 			{
@@ -717,31 +716,34 @@ namespace Alex.Utils.Auth
 			}
 		}
 
-		public async Task<bool> TryAuthenticate(string accessToken)
+		public async Task<bool> TryAuthenticate(string accessToken, string deviceId)
 		{
 			var userToken = await ObtainUserToken(_httpClient, accessToken);
-			var deviceToken = await ObtainDeviceToken(_httpClient, Guid.NewGuid().ToString());
+			SpinWait.SpinUntil(() => DateTime.UtcNow >= userToken.IssueInstant.UtcDateTime);
+
+			var deviceToken = await ObtainDeviceToken(_httpClient, deviceId);
+			SpinWait.SpinUntil(() => DateTime.UtcNow >= deviceToken.IssueInstant.UtcDateTime);
+			
 			var titleToken = await DoTitleAuth(_httpClient, deviceToken, accessToken);
-			//var xsts        = await ObtainXbox(_httpClient, deviceToken, accessToken);
+			SpinWait.SpinUntil(() => DateTime.UtcNow >= titleToken.IssueInstant.UtcDateTime);
+			
+			//var xsts        = await ObtainXbox(_httpClient, deviceToken, userToken.Token);
 			var xsts = await DoXsts(_httpClient, deviceToken, titleToken, userToken.Token);
+			SpinWait.SpinUntil(() => DateTime.UtcNow >= xsts.IssueInstant.UtcDateTime);
 
 			return await RequestMinecraftChain(_httpClient, xsts);
 		}
 
-		public async Task<(bool success, BedrockTokenPair token)> RefreshTokenAsync(string refreshToken)
+		public async Task<(bool success, BedrockTokenPair token)> RefreshTokenAsync(string refreshToken, string deviceId)
 		{
 			var token = await RefreshAccessToken(refreshToken, ClientId);
 			if (token?.AccessToken == null)
 			{
 				return (false, null);
 			}
-			
-			return (await TryAuthenticate(token.AccessToken), new BedrockTokenPair()
-			{
-				AccessToken = token.AccessToken,
-				ExpiryTime = token.ExpiryTime,
-				RefreshToken = token.RefreshToken
-			});
+
+			token.DeviceId = deviceId;
+			return (await TryAuthenticate(token.AccessToken, deviceId), token);
 		}
 		
 		public async Task<BedrockTokenPair> RefreshAccessToken(string refreshToken, string clientId, params string[] scopes)

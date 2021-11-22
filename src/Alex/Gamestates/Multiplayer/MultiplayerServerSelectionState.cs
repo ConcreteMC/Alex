@@ -280,15 +280,16 @@ namespace Alex.Gamestates.Multiplayer
 	    {
 		    base.OnAddItem(item);
 
+		    var cancellationToken = _cancellationTokenSource.Token;
 		    var prevTask = _previousTask;
 
 		    if (prevTask == null || prevTask.IsCompleted)
 		    {
-			    _previousTask = item.PingAsync(false, _cancellationTokenSource.Token);
+			    _previousTask = item.PingAsync(false, cancellationToken);
 		    }
 		    else
 		    {
-			    _previousTask = prevTask.ContinueWith(_ => item.PingAsync(false, _cancellationTokenSource.Token));
+			    _previousTask = prevTask.ContinueWith(_ => item.PingAsync(false, cancellationToken));
 		    }
 		    
 		    //item?.PingAsync(false, _cancellationTokenSource.Token);
@@ -363,34 +364,38 @@ namespace Alex.Gamestates.Multiplayer
 		    {
 			    var entry = item.SavedServerEntry;
 
-			    bool handledCallback = false;
-			    await serverType.Authenticate(
-				    _skyBox, (profile) =>
+			    async void OnProfileSelected(PlayerProfile profile)
+			    {
+				    Alex.GuiManager.AddScreen(overlay);
+
+				    try
 				    {
-					    if (handledCallback)
-						    return;
-
-					    handledCallback = true;
-					    
-					    if (overlay != null)
-					    {
-						    Alex.GuiManager.RemoveScreen(overlay);
-						    overlay = null;
-					    }
-
 					    if (!profile.Authenticated)
 					    {
+						    profile = await serverType.VerifySession(profile);
+					    }
+
+					    if (!profile.Authenticated){
+						    Log.Warn($"Invalid session. AuthError={profile.AuthError}");
+						    //await serverType.Authenticate(_skyBox, OnProfileSelected, profile);
 						    return;
 					    }
 
 					    var target = item.ConnectionEndpoint;
 
-					    if (target == null)
-						    return;
+					    if (target == null) return;
 
-					    Alex.ConnectToServer(
-						    serverType, new ServerConnectionDetails(target, entry.Host), profile);
-				    });
+					    Alex.ConnectToServer(serverType, new ServerConnectionDetails(target, entry.Host), profile);
+				    }
+				    finally
+				    {
+					    Alex.GuiManager.RemoveScreen(overlay);
+				    }
+			    }
+
+			    UserSelectionState pss = new UserSelectionState(serverType, _skyBox, OnProfileSelected, () => {});
+			    
+			    Alex.GameStateManager.SetActiveState(pss);
 		    }
 		    finally
 		    {
@@ -398,7 +403,7 @@ namespace Alex.Gamestates.Multiplayer
 				    Alex.GuiManager.RemoveScreen(overlay);
 		    }
 	    }
-	    
+
 	    private void OnJoinServerButtonPressed()
 	    {
 		    JoinServer(SelectedItem);

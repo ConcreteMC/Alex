@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Threading;
 using Alex.Common.Services;
@@ -22,6 +23,12 @@ namespace Alex
 			CurrentFile = new ProfilesFileFormat();
 			
 			Load();
+			CurrentFile.Profiles.CollectionChanged += ProfilesOnCollectionChanged;
+		}
+
+		private void ProfilesOnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+		{
+			Save();
 		}
 
 		private const string ProfilesFile = "profiles";
@@ -31,30 +38,22 @@ namespace Alex
 		{
 			lock (_loadingLock)
 			{
-				var matchingUuid = CurrentFile.Profiles.FirstOrDefault(x => x.UUID.Equals(profile.UUID));
-
-				if (matchingUuid == default)
-				{
-					CurrentFile.Profiles.Add(profile);
-				}
-				else
-				{
-					var index = CurrentFile.Profiles.IndexOf(matchingUuid);
-
-
-					if (index != -1)
-					{
-						CurrentFile.Profiles[index] = profile;
-					}
-				}
+				var currentIndex = GetIndexOf(profile);
 
 				if (setActive)
 				{
 					CurrentFile.SelectedProfile = profile.UUID;
 				}
+				
+				if (currentIndex == -1)
+				{
+					CurrentFile.Profiles.Add(profile);
+				}
+				else
+				{
+					CurrentFile.Profiles[currentIndex] = profile;
+				}
 			}
-
-			Save();
 		}
 
 		private class ProfilesFileFormat
@@ -85,10 +84,24 @@ namespace Alex
 			}
 		}
 
+		private object _saveLock = new object();
 		/// <inheritdoc />
 		public void Save()
 		{
-			StorageSystem.TryWriteJson(ProfilesFile, CurrentFile);
+			var profiles = CurrentFile.Profiles;
+			lock (_loadingLock)
+			{
+				try
+				{
+					profiles.CollectionChanged -= ProfilesOnCollectionChanged;
+					StorageSystem.TryWriteJson(ProfilesFile, CurrentFile);
+				}
+				finally
+				{
+					
+					profiles.CollectionChanged += ProfilesOnCollectionChanged;
+				}
+			}
 		}
 		
 		private int GetIndexOf(PlayerProfile entry)

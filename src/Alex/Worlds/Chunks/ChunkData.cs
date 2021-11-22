@@ -187,7 +187,7 @@ namespace Alex.Worlds.Chunks
                     lightProbe += (face.GetVector3());
                 }
 
-                _vertexDatas.AddLast(
+                _vertexDatas?.AddLast(
                     new VertexData(
                        v3 + position, face,
                         textureCoordinates, color.PackedValue, flags, stage, lightProbe));

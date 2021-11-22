@@ -3,11 +3,13 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using Alex.Common.GameStates;
 using Alex.Common.Graphics;
 using Alex.Common.Gui.Elements;
 using Alex.Common.Services;
 using Alex.Common.Utils;
 using Alex.Gamestates.Common;
+using Alex.Gamestates.Multiplayer;
 using Alex.Gui;
 using Alex.Gui.Elements;
 using Alex.Utils;
@@ -23,7 +25,11 @@ using Skin = Alex.Common.Utils.Skin;
 
 namespace Alex.Gamestates.Login
 {
-    public abstract class CodeFlowLoginBase<TType> : GuiMenuStateBase where TType : IDeviceAuthConnectResponse
+	public interface ILoginState : IGameState
+	{
+		void LoginFailed(string text);
+	}
+    public abstract class CodeFlowLoginBase<TType> : GuiMenuStateBase, ILoginState where TType : IDeviceAuthConnectResponse
     {
 	    public delegate void LoginSuccessfulCallback(PlayerProfile profile);
 	    
@@ -60,10 +66,10 @@ namespace Alex.Gamestates.Login
 
 		private TextElement _authCodeElement;
 		private TextElement _subTextElement;
-		private LoginSuccessfulCallback _loginSuccessful;
+		private UserSelectionState.ProfileSelected _loginSuccessful;
 		private readonly ServerTypeImplementation _serverType;
 
-		protected CodeFlowLoginBase(GuiPanoramaSkyBox skyBox, LoginSuccessfulCallback readyAction, ServerTypeImplementation serverType)
+		protected CodeFlowLoginBase(GuiPanoramaSkyBox skyBox, UserSelectionState.ProfileSelected readyAction, ServerTypeImplementation serverType)
         {
 	        Title = $"{serverType.DisplayName} Login";
             _backgroundSkyBox = skyBox;
@@ -90,7 +96,7 @@ namespace Alex.Gamestates.Login
             Initialize();
         }
 
-		public void SetSubText(string text)
+		public void LoginFailed(string text)
 		{
 			_subTextElement.Text = text;
 		}
@@ -257,6 +263,7 @@ namespace Alex.Gamestates.Login
 					        return;
 				        }
 
+				        Alex.GameStateManager.Back();
 				        _loginSuccessful?.Invoke(profileUpdateResult.Profile);
 			        }
 			        finally
@@ -287,8 +294,8 @@ namespace Alex.Gamestates.Login
 
         private void OnCancelButtonPressed()
         {
-	        Alex.GameStateManager.Back();
 	        CancellationToken.Cancel();
+	        Alex.GameStateManager.Back();
         }
 
         private int _loading = 0;

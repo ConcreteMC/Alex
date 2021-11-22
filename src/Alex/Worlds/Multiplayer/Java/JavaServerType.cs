@@ -33,23 +33,24 @@ namespace Alex.Worlds.Multiplayer.Java
 	public class JavaServerType : ServerTypeImplementation<JavaServerQueryProvider>
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(JavaServerType));
-		private       Alex   Alex { get; }
+		private Alex Alex { get; }
+
 		/// <inheritdoc />
 		public JavaServerType(Alex alex) : base(alex.ServiceContainer, "Java", "java")
 		{
 			Alex = alex;
 			ProtocolVersion = JavaProtocol.ProtocolVersion;
-			
+
 			SponsoredServers = new SavedServerEntry[]
 			{
-				new ()
+				new()
 				{
 					Name = $"{ChatColors.Gold}Hypixel",
 					Host = "mc.hypixel.net",
 					Port = 25565,
 					ServerType = TypeIdentifier
 				},
-				new ()
+				new()
 				{
 					Name = $"{ChatColors.Gold}Mineplex",
 					Host = "eu.mineplex.com",
@@ -74,100 +75,102 @@ namespace Alex.Worlds.Multiplayer.Java
 		}
 
 		public const string AuthTypeIdentifier = "MicrosoftAccount";
-		
+
 		/// <inheritdoc />
-		private async Task<bool> IsAuthenticated(PlayerProfile profile)
+		public override Task Authenticate(GuiPanoramaSkyBox skyBox,
+			UserSelectionState.ProfileSelected callBack,
+			PlayerProfile profile)
 		{
-			if (profile == null)
-				return false;
-			
-			if (!profile.Authenticated)
+			if (profile is not null)
 			{
-				if (await TryAuthenticate(profile))
+				ILoginState loginState;
+
+				if (profile.TryGet(AuthTypeIdentifier, out bool isMicrosoftAccount) && isMicrosoftAccount)
 				{
-					profile.Authenticated = true;
-					return true;
+					loginState = new JavaCodeFlowLoginState(this, skyBox, callBack, profile);
 				}
 				else
 				{
-					profile.Authenticated = false;
+					loginState = new MojangLoginState(this, skyBox, callBack, profile);
 				}
+
+				loginState.LoginFailed(profile.AuthError);
+				Alex.GameStateManager.SetActiveState(loginState);
+
+				return Task.CompletedTask;
 			}
 
-			return profile.Authenticated;
-		}
-		
-		/// <inheritdoc />
-		public override Task Authenticate(GuiPanoramaSkyBox skyBox, AuthenticationCallback callBack)
-		{
-			UserSelectionState pss = new UserSelectionState(this, skyBox);
-			
-			async void LoginCallBack(PlayerProfile p)
-			{
-				var overlay = new LoadingOverlay();
-				Alex.GuiManager.AddScreen(overlay);
+			JavaProviderSelectionState providerSelectionState = new JavaProviderSelectionState(
+				this, skyBox, () => new JavaCodeFlowLoginState(this, skyBox, callBack),
+				() => new MojangLoginState(this, skyBox, callBack));
 
-				try
-				{
-					if (await IsAuthenticated(p))
-					{
-						callBack?.Invoke(p);
-					}
-					else
-					{
-						Log.Warn($"User session was not valid: {p.AuthError}");
-						
-						if (p.TryGet(AuthTypeIdentifier, out bool isMicrosoftAccount) && isMicrosoftAccount)
-						{
-							var codeFlow = new JavaCodeFlowLoginState(
-								this, skyBox, LoginCallBack, p);
-							codeFlow.SetSubText(p.AuthError);
-								
-							Alex.GameStateManager.SetActiveState(codeFlow);
-
-							return;
-						}
-						
-						var javaLoginState = new MojangLoginState(
-							this, skyBox, LoginCallBack, p);
-						javaLoginState.LoginFailed(p.AuthError);
-						Alex.GameStateManager.SetActiveState(javaLoginState);
-					}
-				}
-				finally
-				{
-					Alex.GuiManager.RemoveScreen(overlay);
-				}
-			}
-			
-			void UseMicrosoft()
-			{
-				Alex.GameStateManager.SetActiveState(
-					new JavaCodeFlowLoginState(this, skyBox, LoginCallBack));
-			}
-
-			void UseMojang()
-			{
-				Alex.GameStateManager.SetActiveState(
-					new MojangLoginState(
-						this, skyBox, LoginCallBack));
-			}
-
-			pss.OnProfileSelection = LoginCallBack;
-			pss.OnCancel = () =>
-			{
-				
-			};
-			pss.OnAddAccount = () =>
-			{
-				Alex.GameStateManager.SetActiveState(new JavaProviderSelectionState(
-					this,
-					skyBox,
-					UseMicrosoft, UseMojang), true);
-			};
-			Alex.GameStateManager.SetActiveState(pss);
+			Alex.GameStateManager.SetActiveState(providerSelectionState);
 
 			return Task.CompletedTask;
+		}
+
+		/// <inheritdoc />
+		public override async Task<PlayerProfile> VerifySession(PlayerProfile profile)
+		{
+			var updateResult = await UpdateProfile(profile);
+
+			if (updateResult.Success)
+			{
+				profile = updateResult.Profile;
+				profile.Authenticated = true;
+
+				return profile;
+			}
+
+			MojangAuthResponse response; // = await MojangApi.Validate(profile.AccessToken, profile.ClientToken);
+
+			bool isMicrosoftAccount = profile.TryGet(AuthTypeIdentifier, out bool isMSA) && isMSA;
+
+			if (isMicrosoftAccount)
+			{
+				if (string.IsNullOrWhiteSpace(profile.RefreshToken))
+				{
+					Log.Warn(
+						$"Refresh token was empty!");
+
+					profile.AuthError = "Session expired.";
+					profile.Authenticated = false;
+					return profile;
+				}
+
+				response = await MojangApi.RefreshXboxSession(profile);
+			}
+			else
+			{
+				response = await MojangApi.RefreshMojangSession(profile);
+			}
+
+
+			if (!response.IsSuccess)
+			{
+				Log.Warn(
+					$"Could not refresh session for user: {profile.Username} (ErrorMessage={response.ErrorMessage} Error={response.Error} Result={response.Result} IsMSA={isMicrosoftAccount})");
+
+				profile.AuthError = new PlayerProfileAuthenticateEventArgs(response.ErrorMessage, response.Result)
+				   .ToUserFriendlyString();
+
+				profile.Authenticated = false;
+
+				return profile;
+			}
+
+			profile.Authenticated = response.IsSuccess;
+			if (response.Session != null)
+			{
+				profile.Username = response.Session.Username;
+				profile.UUID = response.Session.UUID;
+				profile.ClientToken = response.Session.ClientToken;
+				profile.AccessToken = response.Session.AccessToken;
+				profile.RefreshToken = response.Session.RefreshToken;
+				profile.ExpiryTime = response.Session.ExpiryTime;
+			}
+
+			return profile;
 		}
 
 		public override async Task<ProfileUpdateResult> UpdateProfile(PlayerProfile profile)
@@ -196,67 +199,6 @@ namespace Alex.Worlds.Multiplayer.Java
 			}
 
 			return new ProfileUpdateResult(true, profile);
-		}
-
-		private async Task<bool> TryAuthenticate(PlayerProfile profile)
-		{
-			MojangAuthResponse response = await MojangApi.Validate(profile.AccessToken, profile.ClientToken);
-
-			if (!response.IsSuccess)
-			{
-				bool isMicrosoftAccount = profile.TryGet(AuthTypeIdentifier, out bool isMSA) && isMSA;
-
-				if (isMicrosoftAccount)
-				{
-					if (string.IsNullOrWhiteSpace(profile.RefreshToken))
-					{
-						Log.Warn($"Could not validate accesstoken: {profile.Username} (Error={response.ErrorMessage} Result={response.Result})");
-						profile.AuthError = new PlayerProfileAuthenticateEventArgs(response.ErrorMessage, response.Result).ToUserFriendlyString();
-						return false;
-					}
-					
-					response = await MojangApi.RefreshXboxSession(profile);
-				}
-				else
-				{
-					response = await MojangApi.RefreshMojangSession(profile);
-				}
-
-			
-				if (!response.IsSuccess)
-				{
-					Log.Warn($"Could not refresh session for user: {profile.Username} (Error={response.ErrorMessage} Result={response.Result} IsMSA={isMicrosoftAccount})");
-					profile.AuthError = new PlayerProfileAuthenticateEventArgs(response.ErrorMessage, response.Result).ToUserFriendlyString();
-					
-					return false;
-				}
-				else
-				{
-					Log.Info($"Success!");
-				}
-			}
-
-			if (response.Session != null)
-			{
-				profile.Username = response.Session.Username;
-				profile.UUID = response.Session.UUID;
-				profile.ClientToken = response.Session.ClientToken;
-				profile.AccessToken = response.Session.AccessToken;
-				profile.RefreshToken = response.Session.RefreshToken;
-				profile.ExpiryTime = response.Session.ExpiryTime;
-			}
-
-			var updateResult = await UpdateProfile(profile);
-
-			if (updateResult.Success)
-			{
-				updateResult.Profile.Authenticated = true;
-				return true;
-			}
-
-			Log.Warn(
-				$"Authentication failed (Could not get profile). Result={response.Result} Error={updateResult.Error} Errormessage={response.ErrorMessage}");
-			return false;
 		}
 	}
 

@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Alex.Common.Gui.Elements;
 using Alex.Common.Services;
 using Alex.Common.Utils;
+using Alex.Gamestates.Multiplayer;
 using Alex.Gui;
 using Alex.Utils;
 using Alex.Utils.Skins;
@@ -17,14 +18,14 @@ using Skin = Alex.Common.Utils.Skin;
 
 namespace Alex.Gamestates.Login
 {
-	public class MojangLoginState : BaseLoginState
+	public class MojangLoginState : BaseLoginState, ILoginState
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(MojangLoginState));
 
 		private readonly JavaServerType _serverType;
-		private ServerTypeImplementation.AuthenticationCallback _loginSuccesAction;
+		private UserSelectionState.ProfileSelected  _loginSuccesAction;
 		private PlayerProfile _activeProfile;
-		public MojangLoginState(JavaServerType serverType, GuiPanoramaSkyBox skyBox, ServerTypeImplementation.AuthenticationCallback loginSuccesAction, PlayerProfile activeProfile = null) : base("Minecraft Login", skyBox)
+		public MojangLoginState(JavaServerType serverType, GuiPanoramaSkyBox skyBox, UserSelectionState.ProfileSelected loginSuccesAction, PlayerProfile activeProfile = null) : base("Minecraft Login", skyBox)
 		{
 			_serverType = serverType;
 			_loginSuccesAction = loginSuccesAction;
@@ -59,7 +60,7 @@ namespace Alex.Gamestates.Login
 								UUID = _activeProfile.UUID
 							};
 
-						session = await MojangApi.TryMojangLogin(username, password, session);
+						session = await MojangApi.TryMojangLogin(username, password);
 					}
 					catch (LoginFailedException ex)
 					{

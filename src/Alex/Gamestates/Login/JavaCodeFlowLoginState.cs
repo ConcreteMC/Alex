@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Alex.Common.Utils;
+using Alex.Gamestates.Multiplayer;
 using Alex.Gui;
 using Alex.Utils;
 using Alex.Utils.Auth;
@@ -24,7 +25,7 @@ namespace Alex.Gamestates.Login
 		/// <inheritdoc />
 		public JavaCodeFlowLoginState(ServerTypeImplementation serverType,
 			GuiPanoramaSkyBox skyBox,
-			LoginSuccessfulCallback readyAction,
+			UserSelectionState.ProfileSelected  readyAction,
 			PlayerProfile currentProfile = null) : base(skyBox, readyAction, serverType)
 		{
 			_serverType = serverType;

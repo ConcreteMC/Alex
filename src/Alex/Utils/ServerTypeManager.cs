@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Alex.Common;
 using Alex.Common.Data.Servers;
 using Alex.Common.Services;
+using Alex.Gamestates.Multiplayer;
 using Alex.Gui;
 using Alex.Net;
 using Alex.Utils.Auth;
@@ -74,8 +75,6 @@ namespace Alex.Utils
 	
 	public abstract class ServerTypeImplementation
 	{
-		public delegate void AuthenticationCallback(PlayerProfile profile);
-
 		public IServerQueryProvider QueryProvider { get; }
 		public string DisplayName { get; set; }
 		internal string Id { get; set; }
@@ -112,10 +111,12 @@ namespace Alex.Utils
 			return false;
 		}
 
-		public virtual Task Authenticate(GuiPanoramaSkyBox skyBox, AuthenticationCallback callBack)
+		public virtual Task Authenticate(GuiPanoramaSkyBox skyBox, UserSelectionState.ProfileSelected callBack, PlayerProfile profile)
 		{
 			return Task.CompletedTask;
 		}
+
+		public abstract Task<PlayerProfile> VerifySession(PlayerProfile profile);
 
 		public SavedServerEntry[] SponsoredServers { get; protected set; } = new SavedServerEntry[0];
 	}

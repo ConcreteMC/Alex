@@ -13,5 +13,8 @@ namespace Alex.Utils.Auth
 
 		[JsonProperty("expiry_time")]
 		public DateTime ExpiryTime;
+
+		[JsonIgnore]
+		public string DeviceId;
 	}
 }

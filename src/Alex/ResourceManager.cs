@@ -389,12 +389,7 @@ namespace Alex
             return true;
         }
 
-        public string DeviceID { get; private set; } = null;
-
-        private void LoadHWID()
-        {
-            DeviceID = Guid.NewGuid().ToString();
-        }
+        public string DeviceID { get; } = Guid.NewGuid().ToString();
 
         public  DirectoryInfo                                    SkinPackDirectory     { get; private set; } = null;
         public  DirectoryInfo                                    ResourcePackDirectory { get; private set; } = null;
@@ -403,8 +398,6 @@ namespace Alex
         public bool CheckResources(GraphicsDevice            device, IProgressReceiver progressReceiver,
             MCJavaResourcePack.McResourcePackPreloadCallback preloadCallback)
         {
-            LoadHWID();
-
             PreloadCallback = preloadCallback;
 
             Log.Info($"Loading registries...");

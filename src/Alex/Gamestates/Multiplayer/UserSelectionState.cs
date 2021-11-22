@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using Alex.Common.Graphics;
 using Alex.Common.Gui.Elements;
 using Alex.Common.Services;
@@ -24,11 +25,15 @@ namespace Alex.Gamestates.Multiplayer
 		private GuiPanoramaSkyBox _skyBox;
 		public bool AllowDelete { get; set; } = true;
 
-		public UserSelectionState(ServerTypeImplementation serverType, GuiPanoramaSkyBox skyBox)
+		private readonly ProfileSelected _onProfileSelected;
+		private readonly Cancelled _onCancel;
+		public UserSelectionState(ServerTypeImplementation serverType, GuiPanoramaSkyBox skyBox, ProfileSelected onProfileSelected, Cancelled onCancel)
 		{
 			Title = $"{serverType.DisplayName} - Account Selection";
 			_serverType = serverType;
 			_skyBox = skyBox;
+			_onProfileSelected = onProfileSelected;
+			_onCancel = onCancel;
 			Background = new GuiTexture2D(skyBox, TextureRepeatMode.Stretch);
 
 			Footer.AddRow(
@@ -59,7 +64,7 @@ namespace Alex.Gamestates.Multiplayer
 
 		private void SaveData()
 		{
-			_serverType.ProfileProvider.Save();
+			//_serverType.ProfileProvider.Save();
 		}
 		
 		private void OnRemoveClicked()
@@ -80,7 +85,8 @@ namespace Alex.Gamestates.Multiplayer
 
 		private void AddAccountClicked()
 		{
-			OnAddAccount?.Invoke();
+			//Show login.
+			_serverType.Authenticate(_skyBox, _onProfileSelected, null);
 		}
 
 		private void SelectAccountClicked()
@@ -92,15 +98,20 @@ namespace Alex.Gamestates.Multiplayer
 		{
 			if (item?.Profile != null)
 			{
-				Alex.GameStateManager.Back();
-				OnProfileSelection?.Invoke(item?.Profile);
+				_onProfileSelected?.Invoke(item?.Profile);/*.ContinueWith(
+					async x =>
+					{
+						var profile = await x;
+
+						profile = await _serverType.VerifySession(profile);
+
+						if (profile.Authenticated)
+						{
+							
+						}
+					});*/
 			}
 		}
-
-		public ProfileSelected OnProfileSelection;
-		public Cancelled OnCancel;
-		public AddAccountButtonClicked OnAddAccount;
-
 		
 		/// <inheritdoc />
 		protected override void OnShow()
@@ -115,7 +126,7 @@ namespace Alex.Gamestates.Multiplayer
 			base.OnHide();
 			SaveData();
 			
-			OnCancel?.Invoke();
+			_onCancel?.Invoke();
 		}
 
 		/// <inheritdoc />

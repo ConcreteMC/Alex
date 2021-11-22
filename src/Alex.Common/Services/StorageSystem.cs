@@ -90,7 +90,7 @@ namespace Alex.Common.Services
 
             try
             {
-                using (var fs = OpenFileStream(fileName, FileMode.OpenOrCreate))
+                using (var fs = OpenFileStream(fileName, FileMode.Create))
                 {
                     fs.Write(value);
                 }
@@ -145,7 +145,7 @@ namespace Alex.Common.Services
                     isWriting = true;
                     break;
                 case FileMode.Append:
-                case FileMode.OpenOrCreate:
+                case FileMode.Create:
                     access = FileAccess.ReadWrite;
                     fileShare = FileShare.None;
                     isWriting = true;
@@ -160,7 +160,7 @@ namespace Alex.Common.Services
                 {
                     fs = new CryptoStream(fs, _decryptor, CryptoStreamMode.Read);
                 }
-                else if (mode == FileMode.OpenOrCreate)
+                else if (mode == FileMode.Create)
                 {
                     fs = new CryptoStream(fs, _encryptor, CryptoStreamMode.Write);
                 }
@@ -181,7 +181,7 @@ namespace Alex.Common.Services
 
             try
             {
-                using (var fs = OpenFileStream(fileName, FileMode.OpenOrCreate))
+                using (var fs = OpenFileStream(fileName, FileMode.Create))
                 { 
                     fs.Write(encoding.GetBytes(value));
                 }

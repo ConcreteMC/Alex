@@ -71,10 +71,12 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		{
 			if (success)
 			{
-				var profileManager = Alex.ServiceContainer.GetRequiredService<ProfileManager>();
-				
 				profile.Authenticated = true;
-				profileManager.CreateOrUpdateProfile(profile, true);
+
+				if (ProfileProvider is ProfileManager pm)
+				{
+					pm.CreateOrUpdateProfile(profile, true);
+				}
 
 				return profile;
 			}
@@ -84,13 +86,14 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		private async Task<PlayerProfile> ReAuthenticate(PlayerProfile profile)
 		{
+			string deviceId = profile.ClientToken ?? Alex.Resources.DeviceID;
 			try
 			{
-				try
+				/*try
 				{
-					if (profile.ExpiryTime.GetValueOrDefault(DateTime.MaxValue) < DateTime.UtcNow
-					    && await XboxAuthService.TryAuthenticate(profile.AccessToken))
+					if (profile.ExpiryTime != null && profile.ExpiryTime.GetValueOrDefault(DateTime.MinValue) > DateTime.UtcNow && await XboxAuthService.TryAuthenticate(profile.AccessToken, deviceId))
 					{
+						profile.ClientToken = deviceId;
 						return Process(true, profile);
 					}
 				}
@@ -98,17 +101,17 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				{
 					if (requestException.StatusCode.GetValueOrDefault() != HttpStatusCode.Unauthorized)
 					{
-						throw;
+						Log.Error(requestException, $"Request exception.");
 					}
-				}
+				}*/
 
-				return await XboxAuthService.RefreshTokenAsync(profile.RefreshToken).ContinueWith(
+				return await XboxAuthService.RefreshTokenAsync(profile.RefreshToken, deviceId).ContinueWith(
 					task =>
 					{
 						if (task.IsFaulted)
 						{
-							//Authenticate?.Invoke(this, new PlayerProfileAuthenticateEventArgs("Validation faulted!"));
-							profile.AuthError = "Task faulted";
+							Log.Error( task.Exception, $"Failed to refresh xbox token");
+							profile.AuthError = task?.Exception?.Message ?? "Unknown error.";
 							return profile;
 						}
 
@@ -119,6 +122,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 							profile.AccessToken = r.token.AccessToken;
 							profile.RefreshToken = r.token.RefreshToken;
 							profile.ExpiryTime = r.token.ExpiryTime;
+							profile.ClientToken = r.token.DeviceId;
 						}
 
 						return Process(r.success, profile);
@@ -126,67 +130,39 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			}
 			catch (Exception ex)
 			{
-				Log.Warn($"Failed to refresh bedrock access token: {ex.ToString()}");
+				Log.Warn(ex, $"Failed to refresh bedrock access token.");
 			}
 
 			return profile;
 		}
 
 		/// <inheritdoc />
-		public override Task Authenticate(GuiPanoramaSkyBox skyBox,  AuthenticationCallback callBack)
+		public override Task Authenticate(GuiPanoramaSkyBox skyBox,  UserSelectionState.ProfileSelected callBack, PlayerProfile currentProfile)
 		{
-			UserSelectionState pss = new UserSelectionState(this, skyBox);
+			BedrockLoginState loginState = new BedrockLoginState(
+				skyBox, callBack, XboxAuthService, this, currentProfile);
+
+			if (currentProfile != null)
+			{
+				loginState.LoginFailed(currentProfile.AuthError);
+			}
 			
-			pss.OnProfileSelection = async (p) =>
-			{
-				var overlay = new LoadingOverlay();
-				Alex.GuiManager.AddScreen(overlay);
-
-				try
-				{
-					if (!p.Authenticated)
-					{
-						p = await ReAuthenticate(p);
-					}
-
-					if (p.Authenticated)
-					{
-						callBack(p);
-					}
-					else
-					{
-						Log.Warn($"Bedrock authentication failed: {p.AuthError}");
-						var codeFlow = new BedrockLoginState(
-							skyBox, c =>
-							{
-								callBack?.Invoke(c);
-							}, XboxAuthService, this, p);
-						codeFlow.SetSubText($"{ChatColors.Red}Your session has expired, please re-authenticate.");
-								
-						Alex.GameStateManager.SetActiveState(codeFlow);
-
-						return;
-					}
-				}
-				finally
-				{
-					Alex.GuiManager.RemoveScreen(overlay);
-				}
-			};
-			pss.OnCancel = () =>
-			{
-				
-			};
-			pss.OnAddAccount = () =>
-			{
-				BedrockLoginState loginState = new BedrockLoginState(
-					skyBox, (p) => callBack(p), XboxAuthService, this);
-
-				Alex.GameStateManager.SetActiveState(loginState, true);
-			};
-			Alex.GameStateManager.SetActiveState(pss);
+			Alex.GameStateManager.SetActiveState(loginState, true);
 
 			return Task.CompletedTask;
+		}
+
+		/// <inheritdoc />
+		public override async Task<PlayerProfile> VerifySession(PlayerProfile profile)
+		{
+			if (profile == null)
+				return null;
+			return await ReAuthenticate(profile);
+		}
+
+		private void OnCancel()
+		{
+			
 		}
 
 		/// <inheritdoc />
@@ -197,7 +173,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				pm.CreateOrUpdateProfile(session, true);
 			}
 
-			return Task.FromResult(new ProfileUpdateResult(true, null, null));
+			return Task.FromResult(new ProfileUpdateResult(true, null, null, session));
 		}
 	}
 }

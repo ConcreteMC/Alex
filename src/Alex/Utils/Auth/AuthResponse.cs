@@ -1,3 +1,4 @@
+using System;
 using Newtonsoft.Json;
 
 namespace Alex.Utils.Auth
@@ -5,10 +6,10 @@ namespace Alex.Utils.Auth
 	public class AuthResponse<TClaims>
 	{
 		[JsonProperty("IssueInstant")]
-		public string IssueInstant { get; set; }
+		public DateTimeOffset IssueInstant { get; set; }
 
 		[JsonProperty("NotAfter")]
-		public string NotAfter { get; set; }
+		public DateTimeOffset NotAfter { get; set; }
 
 		[JsonProperty("Token")]
 		public string Token { get; set; }

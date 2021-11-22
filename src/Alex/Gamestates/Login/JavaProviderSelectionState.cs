@@ -1,4 +1,5 @@
 using System;
+using Alex.Common.GameStates;
 using Alex.Common.Gui.Elements;
 using Alex.Common.Utils;
 using Alex.Gamestates.Common;
@@ -15,10 +16,10 @@ namespace Alex.Gamestates.Login
 		private readonly JavaServerType _serverType;
 
 		private readonly GuiPanoramaSkyBox _backgroundSkyBox;
-		private readonly Action _microsoft;
-		private readonly Action _mojang;
+		private readonly Func<IGameState> _microsoft;
+		private readonly Func<IGameState> _mojang;
 
-		public JavaProviderSelectionState(JavaServerType serverType, GuiPanoramaSkyBox skyBox, Action microsoft, Action mojang)
+		public JavaProviderSelectionState(JavaServerType serverType, GuiPanoramaSkyBox skyBox, Func<IGameState> microsoft, Func<IGameState> mojang)
 		{
 			Title = "Minecraft Login";
 			_serverType = serverType;
@@ -100,14 +101,21 @@ namespace Alex.Gamestates.Login
 			Alex.GameStateManager.Back();
 		}
 
+		private void Authenticate(IGameState state)
+		{
+			Alex.GameStateManager.SetActiveState(state);
+		}
+		
 		private void MicrostLoginButtonPressed()
 		{
-			_microsoft?.Invoke();
+			var state = _microsoft?.Invoke();
+			Authenticate(state);
 		}
 
 		private void MojangLoginButtonPressed()
 		{
-			_mojang?.Invoke();
+			var state = _mojang?.Invoke();
+			Authenticate(state);
 		}
 	}
 }

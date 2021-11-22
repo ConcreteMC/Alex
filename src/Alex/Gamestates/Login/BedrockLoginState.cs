@@ -8,6 +8,7 @@ using Alex.Common.Gui.Elements;
 using Alex.Common.Services;
 using Alex.Common.Utils;
 using Alex.Gamestates.Common;
+using Alex.Gamestates.Multiplayer;
 using Alex.Gui;
 using Alex.Utils;
 using Alex.Utils.Auth;
@@ -22,11 +23,16 @@ namespace Alex.Gamestates.Login
 	    private readonly XboxAuthService _xboxAuthService;
 	    private readonly PlayerProfile _currentProfile;
 	    private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(BedrockLoginState));
-	    public BedrockLoginState(GuiPanoramaSkyBox skyBox, LoginSuccessfulCallback loginSuccessfulCallback, XboxAuthService xboxAuthService, ServerTypeImplementation serverTypeImplementation,
+	    public BedrockLoginState(GuiPanoramaSkyBox skyBox, UserSelectionState.ProfileSelected loginSuccessfulCallback, XboxAuthService xboxAuthService, ServerTypeImplementation serverTypeImplementation,
 		    PlayerProfile currentProfile = null) : base(skyBox, loginSuccessfulCallback, serverTypeImplementation)
 	    {
 		    _xboxAuthService = xboxAuthService;
 		    _currentProfile = currentProfile;
+
+		    if (currentProfile != null)
+		    {
+			    
+		    }
 	    }
 
 	    /// <inheritdoc />
@@ -41,7 +47,7 @@ namespace Alex.Gamestates.Login
 		    try
 		    {
 			    var result = await _xboxAuthService.DoDeviceCodeLogin(
-				    GetService<ResourceManager>().DeviceID, ConnectResponse.DeviceCode, cancellationToken);
+				  Alex.Resources.DeviceID, ConnectResponse.DeviceCode, cancellationToken);
 
 			    if (result.success)
 			    {
