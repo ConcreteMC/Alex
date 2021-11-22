@@ -11,7 +11,9 @@ using Alex.Net;
 using Alex.Utils.Auth;
 using Alex.Worlds.Abstraction;
 using Alex.Worlds.Multiplayer.Java;
+using Microsoft.Extensions.DependencyInjection;
 using MojangAPI.Model;
+using SimpleInjector;
 using PlayerProfile = Alex.Common.Services.PlayerProfile;
 
 namespace Alex.Utils
@@ -59,6 +61,17 @@ namespace Alex.Utils
 		}
 	}
 
+	public abstract class ServerTypeImplementation<TQueryProvider> : ServerTypeImplementation where TQueryProvider : IServerQueryProvider
+	{
+		/// <inheritdoc />
+		protected ServerTypeImplementation(Container container,
+			string displayName,
+			string typeIdentifier) : base(container, container.GetRequiredService<TQueryProvider>(), displayName, typeIdentifier)
+		{
+			
+		}
+	}
+	
 	public abstract class ServerTypeImplementation
 	{
 		public delegate void AuthenticationCallback(PlayerProfile profile);
@@ -72,9 +85,16 @@ namespace Alex.Utils
 		
 		public string TypeIdentifier { get; }
 		
-		public abstract IListStorageProvider<SavedServerEntry> StorageProvider { get; }
-		protected ServerTypeImplementation(IServerQueryProvider queryProvider, string displayName, string typeIdentifier)
+		public IListStorageProvider<SavedServerEntry> ServerStorageProvider { get; }
+		public IListStorageProvider<PlayerProfile> ProfileProvider { get; }
+		protected ServerTypeImplementation(Container container, IServerQueryProvider queryProvider, string displayName, string typeIdentifier)
 		{
+			var storage = container.GetRequiredService<IStorageSystem>();
+			storage = storage.Open("storage", typeIdentifier);
+			
+			ServerStorageProvider = new SavedServerDataProvider(storage, "servers");
+			ProfileProvider = new ProfileManager(storage.Open());
+			
 			DisplayName = displayName;
 			QueryProvider = queryProvider;
 			TypeIdentifier = typeIdentifier;

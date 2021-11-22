@@ -28,20 +28,15 @@ using PlayerProfile = Alex.Common.Services.PlayerProfile;
 
 namespace Alex.Worlds.Multiplayer.Bedrock
 {
-	public class BedrockServerType : ServerTypeImplementation
+	public class BedrockServerType : ServerTypeImplementation<BedrockServerQueryProvider>
 	{
-		private const           string AccountType = "bedrock";
-		
 		private static readonly Logger Log         = LogManager.GetCurrentClassLogger(typeof(BedrockServerType));
 		
 		private Alex Alex { get; }
 		private XboxAuthService XboxAuthService { get; }
-		
+
 		/// <inheritdoc />
-		public override IListStorageProvider<SavedServerEntry> StorageProvider { get; }
-		
-		/// <inheritdoc />
-		public BedrockServerType(Alex game) : base(new BedrockServerQueryProvider(game), "Bedrock", "bedrock")
+		public BedrockServerType(Alex game) : base(game.ServiceContainer, "Bedrock", "bedrock")
 		{
 			DefaultPort = 19132;
 			Alex = game;
@@ -59,22 +54,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					ServerType = TypeIdentifier
 				}
 			};
-			
-			StorageProvider = new SavedServerDataProvider(Alex.Storage.Open("storage", "savedservers"), TypeIdentifier);
-			MigrateServers();	
-		}
-		
-		private void MigrateServers()
-		{
-			SavedServerDataProvider defaultDataProvider = new SavedServerDataProvider(Alex.Storage);
-			defaultDataProvider.Load();
-
-			foreach (var server in defaultDataProvider.Data.ToArray().Where(
-				         x => x.ServerType.Equals(TypeIdentifier, StringComparison.InvariantCultureIgnoreCase)))
-			{
-				defaultDataProvider.RemoveEntry(server);
-				StorageProvider.AddEntry(server);
-			}
 		}
 
 		/// <inheritdoc />
@@ -95,7 +74,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				var profileManager = Alex.ServiceContainer.GetRequiredService<ProfileManager>();
 				
 				profile.Authenticated = true;
-				profileManager.CreateOrUpdateProfile(AccountType, profile, true);
+				profileManager.CreateOrUpdateProfile(profile, true);
 
 				return profile;
 			}
@@ -156,9 +135,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		/// <inheritdoc />
 		public override Task Authenticate(GuiPanoramaSkyBox skyBox,  AuthenticationCallback callBack)
 		{
-			var profileManager = Alex.ServiceContainer.GetRequiredService<ProfileManager>();
 			UserSelectionState pss = new UserSelectionState(this, skyBox);
-			pss.ReloadData(profileManager.GetProfiles(AccountType));
 			
 			pss.OnProfileSelection = async (p) =>
 			{
@@ -189,9 +166,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 						Alex.GameStateManager.SetActiveState(codeFlow);
 
 						return;
-						
-						pss.ReloadData(profileManager.GetProfiles(AccountType));
-						Alex.GameStateManager.SetActiveState(pss);
 					}
 				}
 				finally
@@ -218,8 +192,10 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		/// <inheritdoc />
 		public override Task<ProfileUpdateResult> UpdateProfile(PlayerProfile session)
 		{
-			var profileManager = Alex.ServiceContainer.GetRequiredService<ProfileManager>();
-			profileManager.CreateOrUpdateProfile(AccountType, session, true);
+			if (ProfileProvider is ProfileManager pm)
+			{
+				pm.CreateOrUpdateProfile(session, true);
+			}
 
 			return Task.FromResult(new ProfileUpdateResult(true, null, null));
 		}

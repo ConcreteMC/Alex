@@ -62,7 +62,10 @@ namespace Alex.Common.Data.Servers
 
         public void Save()
         {
-            _storage.TryWriteJson(StorageKey, Data.ToArray());
+            lock (_loadingLock)
+            {
+                _storage.TryWriteJson(StorageKey, Data.ToArray());
+            }
         }
 
         private int GetIndexOf(SavedServerEntry entry)

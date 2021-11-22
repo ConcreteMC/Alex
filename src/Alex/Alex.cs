@@ -305,9 +305,10 @@ namespace Alex
             container.RegisterSingleton<GuiManager>();
             container.RegisterSingleton<InputManager>();
             container.RegisterInstance<IServiceProvider>(container);
-
-            container.Register<ProfileManager>(Lifestyle.Singleton);
-            container.RegisterInstance<IServerQueryProvider>(new JavaServerQueryProvider(this));
+            
+            container.RegisterSingleton<JavaServerQueryProvider>();
+            container.RegisterSingleton<BedrockServerQueryProvider>();
+            
             container.Register<IRegistryManager, RegistryManager>(Lifestyle.Singleton);
 
             container.RegisterSingleton<ResourceManager>();
@@ -614,9 +615,6 @@ namespace Alex
 
             ServerTypeManager.TryRegister(
                 "bedrock", new BedrockServerType(this));
-            
-            var profileManager = ServiceContainer.GetRequiredService<ProfileManager>();
-            profileManager.LoadProfiles(progressReceiver);
 
             //GuiRenderer.LoadResourcePack(Resources.ResourcePack, null);
             AnvilWorldProvider.LoadBlockConverter();
@@ -787,17 +785,4 @@ namespace Alex
                 });
         }
     }
-
-    public interface IProgressReceiver
-    {
-        void UpdateProgress(int percentage, string statusMessage);
-        void UpdateProgress(int percentage, string statusMessage, string sub);
-
-        void UpdateProgress(int done, int total, string statusMessage) =>
-            UpdateProgress((int) (((double) done / (double) total) * 100D), statusMessage);
-
-        void UpdateProgress(int done, int total, string statusMessage, string sub) =>
-            UpdateProgress((int) (((double) done / (double) total) * 100D), statusMessage, sub);
-    }
-   
 }

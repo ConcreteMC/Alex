@@ -19,52 +19,47 @@ namespace Alex.Gamestates.Multiplayer
 		private AlexButton SelectButton { get; set; }
 		private AlexButton AddButton { get; set; }
 		private AlexButton RemoveButton { get; set; }
-		
+
+		private readonly ServerTypeImplementation _serverType;
 		private GuiPanoramaSkyBox _skyBox;
 		public bool AllowDelete { get; set; } = true;
+
 		public UserSelectionState(ServerTypeImplementation serverType, GuiPanoramaSkyBox skyBox)
 		{
 			Title = $"{serverType.DisplayName} - Account Selection";
+			_serverType = serverType;
 			_skyBox = skyBox;
 			Background = new GuiTexture2D(skyBox, TextureRepeatMode.Stretch);
-
-			Footer.AddRow(row =>
-			{
-				row.AddChild(SelectButton = new AlexButton("Select Account",
-					SelectAccountClicked)
-				{
-					Enabled = false
-				});
-				
-				row.AddChild(AddButton = new AlexButton("Add Account",
-					AddAccountClicked)
-				{
-					Enabled = true
-				});
-			});
 
 			Footer.AddRow(
 				row =>
 				{
 					row.AddChild(
-						RemoveButton = new AlexButton("Remove", OnRemoveClicked)
-						{
-							Enabled = false
-						});
-					row.AddChild(new GuiBackButton()
-					{
-						TranslationKey = "gui.cancel"
-					});
+						SelectButton = new AlexButton("Select Account", SelectAccountClicked) { Enabled = false });
+
+					row.AddChild(AddButton = new AlexButton("Add Account", AddAccountClicked) { Enabled = true });
+				});
+
+			Footer.AddRow(
+				row =>
+				{
+					row.AddChild(RemoveButton = new AlexButton("Remove", OnRemoveClicked) { Enabled = false });
+					row.AddChild(new GuiBackButton() { TranslationKey = "gui.cancel" });
 				});
 		}
 
-		public void ReloadData(PlayerProfile[] availableProfiles)
+		public void ReloadData()
 		{
 			ClearItems();
-			foreach (var profile in availableProfiles)
+			foreach (var profile in _serverType.ProfileProvider.Data)
 			{
 				AddItem(new UserSelectionItem(profile));
 			}
+		}
+
+		private void SaveData()
+		{
+			_serverType.ProfileProvider.Save();
 		}
 		
 		private void OnRemoveClicked()
@@ -74,13 +69,12 @@ namespace Alex.Gamestates.Multiplayer
 
 			if (selectedProfile == null)
 				return;
-			
-			var profileManager = GetService<ProfileManager>();
 
-			if (profileManager != null)
+			var profileProvider = _serverType.ProfileProvider;
+			if (profileProvider != null)
 			{
 				RemoveItem(item);
-				profileManager.RemoveProfile(selectedProfile);
+				profileProvider.RemoveEntry(selectedProfile);//.RemoveProfile(selectedProfile);
 			}
 		}
 
@@ -107,10 +101,20 @@ namespace Alex.Gamestates.Multiplayer
 		public Cancelled OnCancel;
 		public AddAccountButtonClicked OnAddAccount;
 
+		
+		/// <inheritdoc />
+		protected override void OnShow()
+		{
+			base.OnShow();
+			ReloadData();
+		}
+		
 		/// <inheritdoc />
 		protected override void OnHide()
 		{
 			base.OnHide();
+			SaveData();
+			
 			OnCancel?.Invoke();
 		}
 

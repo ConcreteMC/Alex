@@ -5,6 +5,7 @@ using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using Alex.Common.Services;
+using Alex.Common.Utils;
 using Alex.ResourcePackLib;
 using Alex.ResourcePackLib.Json.Bedrock.Sound;
 using FmodAudio;

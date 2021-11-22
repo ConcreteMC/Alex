@@ -23,7 +23,7 @@ namespace Alex.Common.Data.Options
 			RightJoystickSensitivity = DefineRangedProperty(200, 1, 400);
 
 			InvertX = DefineProperty(false);
-			InvertY = DefineProperty(true);
+			InvertY = DefineProperty(false);
 		}
 	}
 }

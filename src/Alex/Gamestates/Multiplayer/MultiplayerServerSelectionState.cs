@@ -38,6 +38,7 @@ namespace Alex.Gamestates.Multiplayer
 	    private ServerTypeImplementation _serverType;
 		public MultiplayerServerSelectionState() : base()
 		{
+			_cancellationTokenSource = new CancellationTokenSource();
 			var alex = GetService<Alex>();
 			_skyBox = GetService<GuiPanoramaSkyBox>();
 			CancellationTokenSource = new CancellationTokenSource();
@@ -203,7 +204,7 @@ namespace Alex.Gamestates.Multiplayer
 			    if (serverType == null) 
 				    return;
 			    
-			    serverType.StorageProvider.Load();
+			    serverType.ServerStorageProvider.Load();
 
 			    foreach (var entry in serverType.SponsoredServers)
 			    {
@@ -212,7 +213,7 @@ namespace Alex.Gamestates.Multiplayer
 				    item.SaveEntry = false;
 			    }
 
-			    foreach (var entry in serverType.StorageProvider.Data.ToArray())
+			    foreach (var entry in serverType.ServerStorageProvider.Data.ToArray())
 			    {
 				    CreateItem(serverType, entry);
 			    }
@@ -333,7 +334,7 @@ namespace Alex.Gamestates.Multiplayer
 				    RemoveItem(toDelete);
 
 				    var serverType = _serverType;
-				    if (serverType != null && serverType.StorageProvider.RemoveEntry(toDelete.SavedServerEntry))
+				    if (serverType != null && serverType.ServerStorageProvider.RemoveEntry(toDelete.SavedServerEntry))
 				    {
 					    Reload();
 				    }
@@ -423,14 +424,14 @@ namespace Alex.Gamestates.Multiplayer
 		    if (serverType == null)
 			    return;
 		    
-		    serverType.StorageProvider?.Save();
+		  //  serverType.ServerStorageProvider?.Save();
 	    }
 
 	    private void AddEditServerCallbackAction(MultiplayerAddEditServerState.AddOrEditCallback obj)
 	    {
 		    if (obj == null) return; //Cancelled.
 		    
-		    var storageProvider = _serverType?.StorageProvider;
+		    var storageProvider = _serverType?.ServerStorageProvider;
 		    
 		    if (!obj.IsNew)
 		    {

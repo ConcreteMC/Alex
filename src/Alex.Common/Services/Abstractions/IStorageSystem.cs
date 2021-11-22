@@ -5,6 +5,8 @@ namespace Alex.Common.Services
 {
     public interface IStorageSystem
     {
+	    void EnableEncryption(byte[] key);
+	    
         #region Json
         
         bool TryWriteJson<T>(string key, T value);
@@ -42,6 +44,8 @@ namespace Alex.Common.Services
         bool Exists(string key);
         bool Delete(string key);
 
-        FileStream OpenFileStream(string key, FileMode access);
+        Stream OpenFileStream(string key, FileMode access);
+
+        IStorageSystem Open(params string[] path);
     }
 }

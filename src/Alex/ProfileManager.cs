@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading;
 using Alex.Common.Services;
 using Alex.Common.Utils;
 using Microsoft.Extensions.DependencyInjection;
@@ -8,148 +10,166 @@ using NLog;
 
 namespace Alex
 {
-	public class ProfileManager
+	public class ProfileManager : IListStorageProvider<PlayerProfile>
 	{
+		public IStorageSystem StorageSystem { get; }
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ProfileManager));
-		private Dictionary<string, SavedProfile> Profiles { get; }
-		public SavedProfile LastUsedProfile { get; private set; } = null;
-		private IServiceProvider ServiceProvider { get; }
 		
-		public PlayerProfile CurrentProfile { get; private set; }
-		public ProfileManager(IServiceProvider serviceProvider)
+		private ProfilesFileFormat CurrentFile { get; set; }
+		public ProfileManager(IStorageSystem storageSystem)
 		{
-			Profiles = new Dictionary<string, SavedProfile>();
-			ServiceProvider = serviceProvider;
+			StorageSystem = storageSystem;
+			CurrentFile = new ProfilesFileFormat();
+			
+			Load();
 		}
 
-		private const string StatusMessage = "Loading profiles...";
 		private const string ProfilesFile = "profiles";
-		public void LoadProfiles(IProgressReceiver progressReceiver)
+		private object _loadingLock = new object();
+
+		public void CreateOrUpdateProfile(PlayerProfile profile, bool setActive = false)
 		{
-			IStorageSystem storage = ServiceProvider.GetRequiredService<IStorageSystem>();
-			
-			progressReceiver.UpdateProgress(0, StatusMessage);
-			if (storage.TryReadJson(ProfilesFile, out ProfilesFileFormat saveFile))
+			lock (_loadingLock)
 			{
-				progressReceiver.UpdateProgress(50, StatusMessage);
+				var matchingUuid = CurrentFile.Profiles.FirstOrDefault(x => x.UUID.Equals(profile.UUID));
 
-				SavedProfile[] profiles = null;
-				
-
-				progressReceiver.UpdateProgress(50, StatusMessage);
-
-				if (saveFile != null)
+				if (matchingUuid == default)
 				{
-					profiles = saveFile.Profiles;
-
-					if (!string.IsNullOrWhiteSpace(saveFile.SelectedProfile))
-					{
-						progressReceiver.UpdateProgress(75, StatusMessage);
-
-						foreach (var profile in profiles)
-						{
-							//profile.Profile.Type = profile.Type;// == ProfileType.Bedrock;
-							if (profile.Profile.UUID.Equals(saveFile.SelectedProfile))
-							{
-								progressReceiver.UpdateProgress(90, StatusMessage);
-								LastUsedProfile = profile;
-								//profileService.TryAuthenticateAsync(profile.Profile);
-								//profileService.CurrentProfile = profile;
-								break;
-							}
-						}
-					}
-
-					progressReceiver.UpdateProgress(99, StatusMessage);
-					foreach (var profile in profiles)
-					{
-						Profiles.TryAdd(profile.Profile.UUID, profile);
-					}
+					CurrentFile.Profiles.Add(profile);
 				}
 				else
 				{
-					Log.Warn($"Profiles file not found.");
+					var index = CurrentFile.Profiles.IndexOf(matchingUuid);
+
+
+					if (index != -1)
+					{
+						CurrentFile.Profiles[index] = profile;
+					}
+				}
+
+				if (setActive)
+				{
+					CurrentFile.SelectedProfile = profile.UUID;
 				}
 			}
-			else
-			{
-				storage.TryWriteJson(ProfilesFile, new ProfilesFileFormat());
-			//	File.WriteAllText(ProfilesFile, JsonConvert.SerializeObject(new ProfilesFileFormat(), Formatting.Indented));
-			}
 
-			progressReceiver.UpdateProgress(100, StatusMessage);
-		}
-
-		public void SaveProfiles()
-		{
-			IStorageSystem storage = ServiceProvider.GetRequiredService<IStorageSystem>();
-			
-			storage.TryWriteJson(ProfilesFile, new ProfilesFileFormat()
-			{
-				Profiles = Profiles.Values.ToArray(),
-				SelectedProfile = CurrentProfile?.UUID ?? string.Empty
-			});
-		}
-
-		public void CreateOrUpdateProfile(string type, PlayerProfile profile, bool setActive = false)
-		{
-			var alex = ServiceProvider.GetRequiredService<Alex>();
-
-			SavedProfile savedProfile;
-			if (Profiles.TryGetValue(profile.UUID, out savedProfile))
-			{
-				savedProfile.Type = type;
-				savedProfile.Profile = profile;
-				Profiles[profile.UUID] = savedProfile;
-			}
-			else
-			{
-				savedProfile = new SavedProfile
-				{
-					Type = type, Profile = profile
-				};
-				Profiles.Add(profile.UUID, savedProfile);
-			}
-
-			if (setActive)
-			{
-				CurrentProfile = profile;
-			}
-
-			alex.UiTaskManager.Enqueue(SaveProfiles);
-		}
-
-		public void RemoveProfile(PlayerProfile profile)
-		{
-			var alex = ServiceProvider.GetRequiredService<Alex>();
-			
-			if (Profiles.Remove(profile.UUID, out var savedProfile))
-			{
-				if (CurrentProfile == savedProfile.Profile)
-				{
-					CurrentProfile = null;
-				}
-				
-				alex.UiTaskManager.Enqueue(SaveProfiles);
-			}
-		}
-
-		public PlayerProfile[] GetProfiles(string type)
-		{
-			return Profiles.Values.Where(x => x.Type == type).Select(selector => selector.Profile).ToArray();
+			Save();
 		}
 
 		private class ProfilesFileFormat
 		{
 			public int Version = 1;
 			public string SelectedProfile = string.Empty;
-			public SavedProfile[] Profiles = new SavedProfile[0];
+			public ObservableCollection<PlayerProfile> Profiles = new ObservableCollection<PlayerProfile>();
 		}
 
-		public class SavedProfile
+		/// <inheritdoc />
+		public IReadOnlyCollection<PlayerProfile> Data => CurrentFile.Profiles;
+
+		/// <inheritdoc />
+		public void Load()
 		{
-			public string Type;
-			public PlayerProfile Profile;
+			lock (_loadingLock)
+			{
+				IStorageSystem storage = StorageSystem;
+
+				if (storage.TryReadJson(ProfilesFile, out ProfilesFileFormat saveFile))
+				{
+					CurrentFile = saveFile;
+				}
+				else
+				{
+					storage.TryWriteJson(ProfilesFile, CurrentFile);
+				}
+			}
+		}
+
+		/// <inheritdoc />
+		public void Save()
+		{
+			StorageSystem.TryWriteJson(ProfilesFile, CurrentFile);
+		}
+		
+		private int GetIndexOf(PlayerProfile entry)
+		{
+			var newEntry = CurrentFile.Profiles.FirstOrDefault(x => x.UUID.Equals(entry.UUID));
+			return CurrentFile.Profiles.IndexOf(newEntry);
+		}
+
+		/// <inheritdoc />
+		public bool MoveUp(PlayerProfile entry)
+		{
+			lock (_loadingLock)
+			{
+				var currentIndex = GetIndexOf(entry);
+
+				if (currentIndex == -1 || currentIndex == 0)
+					return false;
+
+				CurrentFile.Profiles.Move(currentIndex, currentIndex - 1);
+
+				return true;
+			}
+		}
+
+		/// <inheritdoc />
+		public bool MoveDown(PlayerProfile entry)
+		{
+			lock (_loadingLock)
+			{
+				var currentIndex = GetIndexOf(entry);
+
+				if (currentIndex == -1 || currentIndex == CurrentFile.Profiles.Count - 1)
+					return false;
+
+				CurrentFile.Profiles.Move(currentIndex, currentIndex + 1);
+
+				return true;
+			}
+		}
+
+		/// <inheritdoc />
+		public void MoveEntry(int index, PlayerProfile entry)
+		{
+			lock (_loadingLock)
+			{
+				var oldIndex = GetIndexOf(entry);
+
+				if (oldIndex == -1)
+					return;
+
+				CurrentFile.Profiles.Move(oldIndex, index);
+			}
+		}
+
+		/// <inheritdoc />
+		public void AddEntry(PlayerProfile entry)
+		{
+			CreateOrUpdateProfile(entry, false);
+		}
+
+		/// <inheritdoc />
+		public bool RemoveEntry(PlayerProfile entry)
+		{
+			lock (_loadingLock)
+			{
+				var found = CurrentFile.Profiles.FirstOrDefault(x => x.UUID.Equals(entry.UUID));
+
+				if (found != default)
+				{
+					CurrentFile.Profiles.Remove(found);
+
+					if (CurrentFile.SelectedProfile == entry.UUID)
+					{
+						CurrentFile.SelectedProfile = CurrentFile.Profiles.FirstOrDefault()?.UUID;
+					}
+
+					return true;
+				}
+
+				return false;
+			}
 		}
 	}
 }

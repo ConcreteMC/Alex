@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Alex.Common;
@@ -29,18 +30,12 @@ using Skin = MiNET.Utils.Skins.Skin;
 
 namespace Alex.Worlds.Multiplayer.Java
 {
-	public class JavaServerType : ServerTypeImplementation
+	public class JavaServerType : ServerTypeImplementation<JavaServerQueryProvider>
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(JavaServerType));
-		private const string ProfileType = "java";
-		
 		private       Alex   Alex { get; }
-		
 		/// <inheritdoc />
-		public override IListStorageProvider<SavedServerEntry> StorageProvider { get; }
-		
-		/// <inheritdoc />
-		public JavaServerType(Alex alex) : base(new JavaServerQueryProvider(alex), "Java", "java")
+		public JavaServerType(Alex alex) : base(alex.ServiceContainer, "Java", "java")
 		{
 			Alex = alex;
 			ProtocolVersion = JavaProtocol.ProtocolVersion;
@@ -62,22 +57,6 @@ namespace Alex.Worlds.Multiplayer.Java
 					ServerType = TypeIdentifier
 				}
 			};
-
-			StorageProvider = new SavedServerDataProvider(Alex.Storage.Open("storage", "savedservers"), TypeIdentifier);
-			MigrateServers();
-		}
-
-		private void MigrateServers()
-		{
-			SavedServerDataProvider defaultDataProvider = new SavedServerDataProvider(Alex.Storage);
-			defaultDataProvider.Load();
-
-			foreach (var server in defaultDataProvider.Data.ToArray().Where(
-				         x => x.ServerType.Equals(TypeIdentifier, StringComparison.InvariantCultureIgnoreCase)))
-			{
-				defaultDataProvider.RemoveEntry(server);
-				StorageProvider.AddEntry(server);
-			}
 		}
 
 		/// <inheritdoc />
@@ -102,7 +81,7 @@ namespace Alex.Worlds.Multiplayer.Java
 			if (profile == null)
 				return false;
 			
-			//if (!profile.Authenticated)
+			if (!profile.Authenticated)
 			{
 				if (await TryAuthenticate(profile))
 				{
@@ -121,9 +100,7 @@ namespace Alex.Worlds.Multiplayer.Java
 		/// <inheritdoc />
 		public override Task Authenticate(GuiPanoramaSkyBox skyBox, AuthenticationCallback callBack)
 		{
-			var profileManager = Alex.ServiceContainer.GetRequiredService<ProfileManager>();
 			UserSelectionState pss = new UserSelectionState(this, skyBox);
-			pss.ReloadData(profileManager.GetProfiles(ProfileType));
 			
 			async void LoginCallBack(PlayerProfile p)
 			{
@@ -195,8 +172,6 @@ namespace Alex.Worlds.Multiplayer.Java
 
 		public override async Task<ProfileUpdateResult> UpdateProfile(PlayerProfile profile)
 		{
-			var profileManager = Alex.ServiceContainer.GetRequiredService<ProfileManager>();
-
 			var mojangProfile = await MojangApi.GetPlayerProfile(profile.AccessToken);
 
 			if (!mojangProfile.IsSuccess)
@@ -204,10 +179,22 @@ namespace Alex.Worlds.Multiplayer.Java
 				return new ProfileUpdateResult(false, mojangProfile.Error, mojangProfile.ErrorMessage);
 			}
 
+
+			profile.PlayerName = mojangProfile?.Name ?? profile.PlayerName;
+
+			if (mojangProfile.Skin != null)
+			{
+				profile.Add("skin", mojangProfile.Skin);
+			}
+
 			profile.UUID = mojangProfile.UUID;
 			profile.Authenticated = true;
-			
-			profileManager.CreateOrUpdateProfile(ProfileType, profile, true);
+
+			if (ProfileProvider is ProfileManager pm)
+			{
+				pm.CreateOrUpdateProfile(profile, true);
+			}
+
 			return new ProfileUpdateResult(true, profile);
 		}
 
@@ -238,10 +225,14 @@ namespace Alex.Worlds.Multiplayer.Java
 			
 				if (!response.IsSuccess)
 				{
-					Log.Warn($"Could not refresh session for user: {profile.Username} (Error={response.ErrorMessage} Result={response.Result})");
+					Log.Warn($"Could not refresh session for user: {profile.Username} (Error={response.ErrorMessage} Result={response.Result} IsMSA={isMicrosoftAccount})");
 					profile.AuthError = new PlayerProfileAuthenticateEventArgs(response.ErrorMessage, response.Result).ToUserFriendlyString();
 					
 					return false;
+				}
+				else
+				{
+					Log.Info($"Success!");
 				}
 			}
 
@@ -253,16 +244,6 @@ namespace Alex.Worlds.Multiplayer.Java
 				profile.AccessToken = response.Session.AccessToken;
 				profile.RefreshToken = response.Session.RefreshToken;
 				profile.ExpiryTime = response.Session.ExpiryTime;
-			}
-
-			if (response.Profile != null)
-			{
-				profile.PlayerName = response.Profile?.Name;
-
-				if (response.Profile.Skin != null)
-				{
-					profile.Add("skin", response.Profile.Skin);
-				}
 			}
 
 			var updateResult = await UpdateProfile(profile);

@@ -1,7 +1,9 @@
 ﻿using System;
 using System.IO;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
+using Alex.Common.Utils;
 using Newtonsoft.Json;
 using NLog;
 
@@ -21,35 +23,49 @@ namespace Alex.Common.Services
             Directory.CreateDirectory(DataDirectory);
         }
 
+        private bool EncryptionEnabled { get; set; } = false;
+        private byte[] EncryptionKey { get; set; } = null;
+
+        private ICryptoTransform _encryptor = null;
+        private ICryptoTransform _decryptor = null;
+        /// <inheritdoc />
+        public void EnableEncryption(byte[] key)
+        {
+            if (EncryptionEnabled)
+                return;
+            
+            EncryptionEnabled = true;
+            EncryptionKey = key;
+
+            using (var aesAlg = Aes.Create())
+            {
+                _encryptor = aesAlg.CreateEncryptor(key, aesAlg.IV);
+                _decryptor = aesAlg.CreateDecryptor(key, aesAlg.IV);
+            }
+        }
+
         public bool TryWriteJson<T>(string key, T value)
         {
-            var fileName = GetFileName(key) + ".json";
-
             try
             {
                 var json = JsonConvert.SerializeObject(value, Formatting.Indented);
-
-                File.WriteAllText(fileName, json, Encoding.Unicode);
-
-                return true;
+                return TryWriteString($"{key}.json", json, Encoding.UTF8);
             }
             catch (Exception ex)
             {
-                Log.Warn($"Could not write to storage! {ex.ToString()}");
+                Log.Warn($"Could not to file: {key} {ex.ToString()}");
                 return false;
             }
         }
 
         public bool TryReadJson<T>(string key, out T value)
         {
-            return TryReadJson<T>(key, out value, Encoding.Unicode);
+            return TryReadJson<T>(key, out value, Encoding.UTF8);
         }
         
         public bool TryReadJson<T>(string key, out T value, Encoding encoding)
         {
-            var fileName = GetFileName(key) + ".json";
-
-            if (!File.Exists(fileName))
+            if (!TryReadString($"{key}.json", out string json, encoding))
             {
                 value = default(T);
                 return false;
@@ -57,14 +73,12 @@ namespace Alex.Common.Services
 
             try
             {
-                var json = File.ReadAllText(fileName, encoding);
-
                 value = JsonConvert.DeserializeObject<T>(json);
                 return true;
             }
             catch (Exception ex)
             {
-                Log.Warn($"Failed to read: {ex.ToString()}");
+                Log.Warn($"Failed to read file ({key}): {ex.ToString()}");
                 value = default(T);
                 return false;
             }
@@ -76,7 +90,11 @@ namespace Alex.Common.Services
 
             try
             {
-                File.WriteAllBytes(fileName, value);
+                using (var fs = OpenFileStream(fileName, FileMode.OpenOrCreate))
+                {
+                    fs.Write(value);
+                }
+                
                 return true;
             }
             catch (Exception ex)
@@ -97,7 +115,11 @@ namespace Alex.Common.Services
 
             try
             {
-                value = File.ReadAllBytes(fileName);
+                using (var fs = OpenFileStream(fileName, FileMode.Open))
+                { 
+                    value = fs.ReadToEnd().ToArray();
+                }
+                
                 return true;
             }
             catch (Exception ex)
@@ -108,11 +130,43 @@ namespace Alex.Common.Services
         }
 
         /// <inheritdoc />
-        public FileStream OpenFileStream(string key, FileMode access)
+        public Stream OpenFileStream(string key, FileMode mode)
         {
             var fileName = Path.Combine(DataDirectory, key);
 
-            return new FileStream(fileName, access);
+            bool isWriting = false;
+            FileAccess access = FileAccess.Read;
+            FileShare fileShare = FileShare.Read;
+            switch (mode)
+            {
+                case FileMode.CreateNew:
+                    access = FileAccess.Write;
+                    fileShare = FileShare.None;
+                    isWriting = true;
+                    break;
+                case FileMode.Append:
+                case FileMode.OpenOrCreate:
+                    access = FileAccess.ReadWrite;
+                    fileShare = FileShare.None;
+                    isWriting = true;
+                    break;
+            }
+            
+            Stream fs = new FileStream(fileName, mode, access, fileShare);
+
+            if (EncryptionEnabled)
+            {
+                if (mode == FileMode.Open)
+                {
+                    fs = new CryptoStream(fs, _decryptor, CryptoStreamMode.Read);
+                }
+                else if (mode == FileMode.OpenOrCreate)
+                {
+                    fs = new CryptoStream(fs, _encryptor, CryptoStreamMode.Write);
+                }
+            }
+            
+            return fs;
         }
 
         public bool TryWriteString(string key, string value)
@@ -124,16 +178,18 @@ namespace Alex.Common.Services
         public bool TryWriteString(string key, string value, Encoding encoding)
         {
             var fileName = GetFileName(key);
-          //  var fileName = Path.Combine(DataDirectory, key);
 
             try
             {
-                File.WriteAllText(fileName, value, encoding);
+                using (var fs = OpenFileStream(fileName, FileMode.OpenOrCreate))
+                { 
+                    fs.Write(encoding.GetBytes(value));
+                }
+                
                 return true;
             }
             catch (Exception ex)
             {
-                value = null;
                 return false;
             }
         }
@@ -150,7 +206,11 @@ namespace Alex.Common.Services
 
             try
             {
-                value = File.ReadAllText(fileName,encoding);
+                using (var fs = OpenFileStream(fileName, FileMode.Open))
+                {
+                    value = encoding.GetString(fs.ReadToEnd());
+                }
+                
                 return true;
             }
             catch (Exception ex)
@@ -167,24 +227,7 @@ namespace Alex.Common.Services
 
         public bool TryReadString(string key, out string value, Encoding encoding)
         {
-            var fileName = GetFileName(key);
-
-            if (!File.Exists(fileName))
-            {
-                value = null;
-                return false;
-            }
-
-            try
-            {
-                value = File.ReadAllText(fileName, encoding);
-                return true;
-            }
-            catch (Exception ex)
-            {
-                value = null;
-                return false;
-            }
+            return TryReadString(key, encoding, out value);
         }
 
         public bool Exists(string key)
@@ -247,14 +290,18 @@ namespace Alex.Common.Services
         
         private string GetFileName(string key)
         {
-            return Path.Combine(DataDirectory, FileKeySanitizeRegex.Replace(key.ToLowerInvariant(), ""));
+            return Path.Combine(DataDirectory, key.ToLowerInvariant());
         }
 
         public IStorageSystem Open(params string[] path)
         {
             var subpath = Path.Combine(path);
 
-            return new StorageSystem(Path.Combine(DataDirectory, subpath));
+            return new StorageSystem(Path.Combine(DataDirectory, subpath))
+            {
+                EncryptionEnabled = EncryptionEnabled,
+                EncryptionKey = EncryptionKey
+            };
         }
     }
 }

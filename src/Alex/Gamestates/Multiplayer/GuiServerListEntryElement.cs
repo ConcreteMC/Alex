@@ -65,7 +65,7 @@ namespace Alex.Gamestates.Multiplayer
 		{
 			SavedServerEntry = entry;
 			QueryProvider = serverTypeImplementation.QueryProvider;
-			StorageProvider = serverTypeImplementation.StorageProvider;
+			StorageProvider = serverTypeImplementation.ServerStorageProvider;
 			
 			SetFixedSize(355, 36);
 
