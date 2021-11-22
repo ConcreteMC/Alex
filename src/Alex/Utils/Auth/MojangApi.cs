@@ -15,6 +15,7 @@ using MojangAPI.Cache;
 using MojangAPI.Model;
 using MojangAPI.SecurityQuestion;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using NLog;
 using MojangAuthResponse = Alex.Utils.Auth.MojangAuthResponse;
 using PlayerProfile = MojangAPI.Model.PlayerProfile;
@@ -55,6 +56,27 @@ namespace Alex.Common.Utils
 			_storageSystem.TryWriteJson(FileKey, obj);
 		}
 	}
+
+	public class NullCacheManager<T> : ICacheManager<T>
+	{
+		/// <inheritdoc />
+		public T GetDefaultObject()
+		{
+			return default(T);
+		}
+
+		/// <inheritdoc />
+		public T ReadCache()
+		{
+			return GetDefaultObject();
+		}
+
+		/// <inheritdoc />
+		public void SaveCache(T obj)
+		{
+			
+		}
+	}
 	
 	public static class MojangApi
 	{
@@ -79,7 +101,7 @@ namespace Alex.Common.Utils
 		{
 			_initialized = true;
 			_mojang = new Mojang(_httpClient);
-			_auth = new MojangAuth(_httpClient, new AlexCacheManager<Session>(storageSystem));
+			_auth = new MojangAuth(_httpClient, new NullCacheManager<Session>());
 			_qflow = new QuestionFlow(_httpClient);
 		}
 
@@ -270,14 +292,15 @@ namespace Alex.Common.Utils
 
 		public static async Task<MojangAuthResponse> RefreshMojangSession(ISession token)
 		{
-			return new MojangAuthResponse(await _auth.Refresh(
-				new Session()
-				{
-					AccessToken = token.AccessToken,
-					UUID = token.UUID,
-					Username = token.Username,
-					ClientToken = token.ClientToken
-				}));
+			return new MojangAuthResponse(
+				await _auth.Refresh(
+					new Session()
+					{
+						Username = token.Username,
+						AccessToken = token.AccessToken,
+						ClientToken = token.ClientToken,
+						UUID = token.UUID
+					}));
 		}
 
 		public static async Task<bool> JoinServer(ISession session, string server)
