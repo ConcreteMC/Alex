@@ -5,26 +5,25 @@ A Minecraft (Java & Bedrock Edition) client written in C#
 
 ##### This client requires a paid Minecraft account!
 
+![Title screen](https://raw.githubusercontent.com/kennyvv/Alex/master/screenshots/menu.png)
+![Nethergames Lobby](https://raw.githubusercontent.com/kennyvv/Alex/master/screenshots/ng-lobby.png)
+
 About
 -----
 
 This is a hobby project i work on from time to time, the end goal being it able to connect to a MC:Bedrock & MC:Java server & be feature compatible with most features required for the typical minigame server.
 
-As of now, it is able to connect to java 1.17 & bedrock 1.17.11 servers.
-
-Screenshots
+Version Support
 -----------
-
-![Title screen](https://raw.githubusercontent.com/kennyvv/Alex/master/screenshots/menu.png)
-
-![Nethergames Lobby](https://raw.githubusercontent.com/kennyvv/Alex/master/screenshots/ng-lobby.png)
+- Java: 1.17
+- Bedrock: 1.17.11
 
 Cloning the Repository
 ----------------------
 
-As we use submodules to add support for MC:Bedrock, you need to pull the submodules in order to compile Alex.
+Alex uses two submodules, so make sure to pull recursively!
 
-The easiest method of doing this is to clone the repository using ```git clone --recursive https://github.com/kennyvv/Alex.git```
+The easiest method of doing this using the command-line would be: ```git clone --recursive https://github.com/kennyvv/Alex.git```
 
 Supported platforms
 ----------------------
@@ -34,20 +33,10 @@ Supported platforms
 - [X] MacOS
 - [ ] Android (planned for .NET 6)
 
-
-Requirements
--------------------
-
-Alex requires SDL2 to create it's Window, this is a free library. See [SDL2](https://wiki.libsdl.org/Installation) for instructions on how to install it on windows.
-
-On Ubuntu you may run ```apt install libsdl2-dev``` for easy installation.
-
-On MacOS you can run the following command if you have [Brew](https://brew.sh) installed: ```brew install sdl2```
-
 Contributing
 ------------
 
-I'm looking for people that want to help me continue development on Alex.  C# experience required, i'd obviously help you setup the client to get started and be there to answer any questions.
+I'm always looking for people that want to help me continue development on Alex!
 
 * [Discord](https://discord.gg/txaahdU) - Join us on Discord!
 
