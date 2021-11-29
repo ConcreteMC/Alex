@@ -129,6 +129,34 @@ namespace Alex.Utils
                 default: throw new InvalidOperationException($"Priority {priority.ToString()} is invalid");
             }
         }
+
+        public void MoveItems(PriorityBufferBlock<T> target)
+        {
+	        if (_highPriorityBuffer.TryReceiveAll(out var highPriority))
+	        {
+		        foreach (var item in highPriority)
+		        {
+			        target._highPriorityBuffer.Post(item);
+		        }
+	        }
+	        
+	        if (_mediumPriorityBuffer.TryReceiveAll(out var midPrio))
+	        {
+		        foreach (var item in midPrio)
+		        {
+			        target._mediumPriorityBuffer.Post(item);
+		        }
+	        }
+	        
+	        if (_lowPriorityBuffer.TryReceiveAll(out var lowPrio))
+	        {
+		        foreach (var item in lowPrio)
+		        {
+			        target._lowPriorityBuffer.Post(item);
+		        }
+	        }
+        }
+        
         #region ISourceBlock methods
         public Task Completion => Task.WhenAll(_lowPriorityBuffer.Completion, _mediumPriorityBuffer.Completion, _highPriorityBuffer.Completion);
 

@@ -15,6 +15,11 @@ namespace Alex.Common.Input
         [InputCommandDescriptor("key.right")] public static readonly InputCommand MoveRight            = InputCommand.MoveRight;
         [InputCommandDescriptor("key.jump")] public static readonly InputCommand MoveUp               = InputCommand.MoveUp;
         [InputCommandDescriptor("key.sneak")] public static readonly InputCommand MoveDown             = InputCommand.MoveDown;
+      
+        [InputCommandDescriptor("key.jump", InputCommandType.Controller)] public static readonly InputCommand Jump                 = new(AlexNamespace, nameof(Jump));
+        [InputCommandDescriptor("key.sneak", InputCommandType.Controller)]public static readonly InputCommand Sneak                = new(AlexNamespace, nameof(Sneak));
+        [InputCommandDescriptor("key.sprint")] public static readonly InputCommand Sprint               = new(AlexNamespace, nameof(Sprint));
+        [InputCommandDescriptor("key.drop")] public static readonly InputCommand DropItem             = new(AlexNamespace, nameof(DropItem));
         
        // [InputCommandDescriptor("")] public static readonly InputCommand MoveSpeedIncrease    = new(AlexNamespace, nameof(MoveSpeedIncrease));
        // [InputCommandDescriptor("")] public static readonly InputCommand MoveSpeedDecrease    = new(AlexNamespace, nameof(MoveSpeedDecrease));
@@ -22,6 +27,9 @@ namespace Alex.Common.Input
         
         [InputCommandDescriptor("")] public static readonly InputCommand ToggleFog            = new(AlexNamespace, nameof(ToggleFog));
         [InputCommandDescriptor("key.keyboard.f3")] public static readonly InputCommand ToggleDebugInfo      = InputCommand.ToggleDebugInfo;
+        [InputCommandDescriptor("")] public static readonly InputCommand ToggleBoundingboxDebugInfo      = new (AlexNamespace, nameof(ToggleBoundingboxDebugInfo));
+        [InputCommandDescriptor("")] public static readonly InputCommand ToggleNetworkDebugInfo      = new (AlexNamespace, nameof(ToggleNetworkDebugInfo));
+        
         [InputCommandDescriptor("key.chat")] public static readonly InputCommand ToggleChat           = new(AlexNamespace, nameof(ToggleChat));
         [InputCommandDescriptor("key.togglePerspective")] public static readonly InputCommand ToggleCamera         = new(AlexNamespace, nameof(ToggleCamera));
         [InputCommandDescriptor("key.screenshot")] public static readonly InputCommand TakeScreenshot         = new(AlexNamespace, nameof(TakeScreenshot));
@@ -31,8 +39,8 @@ namespace Alex.Common.Input
         
       //  [InputCommandDescriptor("")] public static readonly InputCommand RebuildChunks        = new(AlexNamespace, nameof(RebuildChunks));
         
-        [InputCommandDescriptor("")] public static readonly InputCommand HotBarSelectPrevious = new(AlexNamespace, nameof(HotBarSelectPrevious));
-        [InputCommandDescriptor("")] public static readonly InputCommand HotBarSelectNext     = new(AlexNamespace, nameof(HotBarSelectNext));
+        [InputCommandDescriptor("", InputCommandType.Mouse)] public static readonly InputCommand HotBarSelectPrevious = new(AlexNamespace, nameof(HotBarSelectPrevious));
+        [InputCommandDescriptor("", InputCommandType.Mouse)] public static readonly InputCommand HotBarSelectNext     = new(AlexNamespace, nameof(HotBarSelectNext));
         
         [InputCommandDescriptor("key.hotbar.1")] public static readonly InputCommand HotBarSelect1        = new(AlexNamespace, nameof(HotBarSelect1));
         [InputCommandDescriptor("key.hotbar.2")] public static readonly InputCommand HotBarSelect2        = new(AlexNamespace, nameof(HotBarSelect2));
@@ -44,9 +52,9 @@ namespace Alex.Common.Input
         [InputCommandDescriptor("key.hotbar.8")] public static readonly InputCommand HotBarSelect8        = new(AlexNamespace, nameof(HotBarSelect8));
         [InputCommandDescriptor("key.hotbar.9")] public static readonly InputCommand HotBarSelect9        = new(AlexNamespace, nameof(HotBarSelect9));
         
-        [InputCommandDescriptor("key.attack")] public static readonly InputCommand LeftClick            = InputCommand.LeftClick;
-        [InputCommandDescriptor("key.pickItem")] public static readonly InputCommand MiddleClick          = InputCommand.MiddleClick;
-        [InputCommandDescriptor("key.use")] public static readonly InputCommand RightClick           = InputCommand.RightClick;
+        [InputCommandDescriptor("key.attack", InputCommandType.Mouse)] public static readonly InputCommand LeftClick            = InputCommand.LeftClick;
+        [InputCommandDescriptor("key.pickItem", InputCommandType.Mouse)] public static readonly InputCommand MiddleClick          = InputCommand.MiddleClick;
+        [InputCommandDescriptor("key.use", InputCommandType.Mouse)] public static readonly InputCommand RightClick           = InputCommand.RightClick;
         [InputCommandDescriptor("key.keyboard.menu")] public static readonly InputCommand Exit                 = InputCommand.Exit;
         
         /*[InputCommandDescriptor("")] public static readonly InputCommand A                    = InputCommand.A;
@@ -60,23 +68,17 @@ namespace Alex.Common.Input
         [InputCommandDescriptor("key.keyboard.up")] public static readonly InputCommand Up                   = new(AlexNamespace, nameof(Up));
         [InputCommandDescriptor("key.keyboard.down")] public static readonly InputCommand Down                 = new(AlexNamespace, nameof(Down));
         
-        [InputCommandDescriptor("")] public static readonly InputCommand LookUp               = InputCommand.LookUp;
-        [InputCommandDescriptor("")] public static readonly InputCommand LookDown             = InputCommand.LookDown;
-        [InputCommandDescriptor("")] public static readonly InputCommand LookLeft             = InputCommand.LookLeft;
-        [InputCommandDescriptor("")] public static readonly InputCommand LookRight            = InputCommand.LookRight;
-        
-        [InputCommandDescriptor("key.jump")] public static readonly InputCommand Jump                 = new(AlexNamespace, nameof(Jump));
-        [InputCommandDescriptor("key.sneak")]public static readonly InputCommand Sneak                = new(AlexNamespace, nameof(Sneak));
-        [InputCommandDescriptor("key.sprint")] public static readonly InputCommand Sprint               = new(AlexNamespace, nameof(Sprint));
-        
-        [InputCommandDescriptor("key.drop")] public static readonly InputCommand DropItem             = new(AlexNamespace, nameof(DropItem));
-        
-        [InputCommandDescriptor("")] public static readonly InputCommand NavigateUp           = InputCommand.NavigateUp;
-        [InputCommandDescriptor("")] public static readonly InputCommand NavigateDown         = InputCommand.NavigateDown;
-        [InputCommandDescriptor("")] public static readonly InputCommand NavigateLeft         = InputCommand.NavigateLeft;
-        [InputCommandDescriptor("")] public static readonly InputCommand NavigateRight        = InputCommand.NavigateRight;
-        [InputCommandDescriptor("")] public static readonly InputCommand Navigate             = InputCommand.Navigate;
-        [InputCommandDescriptor("")] public static readonly InputCommand NavigateBack         = InputCommand.NavigateBack;
+        [InputCommandDescriptor("", InputCommandType.Controller)] public static readonly InputCommand LookUp               = InputCommand.LookUp;
+        [InputCommandDescriptor("", InputCommandType.Controller)] public static readonly InputCommand LookDown             = InputCommand.LookDown;
+        [InputCommandDescriptor("", InputCommandType.Controller)] public static readonly InputCommand LookLeft             = InputCommand.LookLeft;
+        [InputCommandDescriptor("", InputCommandType.Controller)] public static readonly InputCommand LookRight            = InputCommand.LookRight;
+
+        [InputCommandDescriptor("gui.up", InputCommandType.Controller)] public static readonly InputCommand NavigateUp           = InputCommand.NavigateUp;
+        [InputCommandDescriptor("gui.down", InputCommandType.Controller)] public static readonly InputCommand NavigateDown         = InputCommand.NavigateDown;
+        [InputCommandDescriptor("", InputCommandType.Controller)] public static readonly InputCommand NavigateLeft         = InputCommand.NavigateLeft;
+        [InputCommandDescriptor("", InputCommandType.Controller)] public static readonly InputCommand NavigateRight        = InputCommand.NavigateRight;
+        [InputCommandDescriptor("gui.ok", InputCommandType.Controller)] public static readonly InputCommand Navigate             = InputCommand.Navigate;
+        [InputCommandDescriptor("gui.back", InputCommandType.Controller)] public static readonly InputCommand NavigateBack         = InputCommand.NavigateBack;
 
         [InputCommandDescriptor("")] public static readonly InputCommand ToggleMap = new(AlexNamespace, nameof(ToggleMap));
         
@@ -98,12 +100,14 @@ namespace Alex.Common.Input
                 var descriptor = prop.GetCustomAttribute<InputCommandDescriptorAttribute>();
 
                 string translationKey = null;
+                InputCommandType type = InputCommandType.Keyboard;
                 if (descriptor != null)
                 {
                     translationKey = descriptor.TranslationKey;
+                    type = descriptor.BindingType;
                 }
 
-                wrappers[index] = new InputCommandWrapper((InputCommand) ic, translationKey);
+                wrappers[index] = new InputCommandWrapper((InputCommand) ic, translationKey, type);
             }
 
             return wrappers;
@@ -114,21 +118,31 @@ namespace Alex.Common.Input
     {
         public readonly InputCommand InputCommand;
         public readonly string TranslationKey;
-
-        public InputCommandWrapper(InputCommand inputCommand, string translationKey)
+        public readonly InputCommandType BindingType;
+        
+        public InputCommandWrapper(InputCommand inputCommand, string translationKey, InputCommandType commandType)
         {
             InputCommand = inputCommand;
             TranslationKey = translationKey;
+            BindingType = commandType;
         }
     }
     
     public class InputCommandDescriptorAttribute : Attribute
     {
         public readonly string TranslationKey;
-
-        public InputCommandDescriptorAttribute(string key)
+        public readonly InputCommandType BindingType;
+        public InputCommandDescriptorAttribute(string key, InputCommandType commandType = InputCommandType.Keyboard)
         {
             TranslationKey = key;
+            BindingType = commandType;
         }
+    }
+
+    public enum InputCommandType
+    {
+        Keyboard,
+        Controller,
+        Mouse
     }
 }

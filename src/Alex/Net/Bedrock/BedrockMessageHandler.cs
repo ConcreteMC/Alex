@@ -5,6 +5,7 @@ using System.IO;
 using System.IO.Compression;
 using Alex.Common.Utils;
 using Alex.Networking.Bedrock.RakNet;
+using Microsoft.IO;
 using MiNET;
 using MiNET.Net;
 using MiNET.Net.RakNet;
@@ -111,7 +112,8 @@ namespace Alex.Net.Bedrock
 
 			return sendList;
 		}
-
+        
+        public static RecyclableMemoryStreamManager MemoryStreamManager { get; set; } = new RecyclableMemoryStreamManager();
         private byte[] Compress(ICollection<Packet> packets)
         {
 	      //  long length = 0;
@@ -120,7 +122,7 @@ namespace Alex.Net.Bedrock
 	       // var compressionLevel = _session.CompressionThreshold > -1 && length >= _session.CompressionThreshold ?
 		    //   System.IO.Compression.CompressionLevel.Fastest : System.IO.Compression.CompressionLevel.NoCompression;
 
-	        using (MemoryStream stream = MiNetServer.MemoryStreamManager.GetStream())
+	        using (MemoryStream stream = MemoryStreamManager.GetStream())
 	        {
 		        using (var compressStream = new DeflateStream(stream, CompressionLevel.Fastest, true))
 		        {
@@ -130,7 +132,8 @@ namespace Alex.Net.Bedrock
 
 				        if (bs != null && bs.Length > 0)
 				        {
-					        BatchUtils.WriteLength(compressStream, bs.Length);
+					        VarInt.WriteUInt32(compressStream, (uint)bs.Length);
+					        //BatchUtils.WriteLength(compressStream, bs.Length);
 					        compressStream.Write(bs, 0, bs.Length);
 				        }
 

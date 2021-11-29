@@ -822,11 +822,13 @@ namespace Alex.Worlds
 		
 		private void ScheduleBlockUpdate(BlockCoordinates updatedBlock, BlockCoordinates block)
 		{
-			TickManager.ScheduleTick(() =>
-			{
-				GetBlockState(block).Block.BlockUpdate(this, block, updatedBlock);
-				//GetBlock(block).BlockUpdate(this, block, updatedBlock);
-			}, 0, _cancellationTokenSource.Token);
+			var blockInstance = GetBlockState(block).Block;
+
+			TickManager.ScheduleTick(
+				() =>
+				{
+					blockInstance.BlockUpdate(this, block, updatedBlock);
+				}, 0, _cancellationTokenSource.Token);
 		}
 
 		public IEnumerable<ChunkSection.BlockEntry> GetBlockStates(int x, int y, int z)
@@ -1239,6 +1241,7 @@ namespace Alex.Worlds
 			TickManager.UnregisterTicked(this);
 			TickManager.UnregisterTicked(EntityManager);
 			TickManager.UnregisterTicked(ChunkManager);
+			TickManager.UnregisterTicked(Map);
 			
 			Map?.Dispose();
 			//Map = null;

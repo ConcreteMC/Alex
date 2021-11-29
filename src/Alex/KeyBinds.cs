@@ -9,16 +9,6 @@ namespace Alex
         public static Keys Fog       = Keys.F;
         public static Keys DebugInfo = Keys.F3;
 
-        public static Keys[] EntityBoundingBoxes = new Keys[]
-        {
-            DebugInfo, Keys.B
-        };
-
-        public static Keys[] NetworkDebugging = new Keys[]
-        {
-            DebugInfo, Keys.N
-        };
-
         public static Keys[] AlwaysDay = new Keys[]
         {
             DebugInfo, Keys.D
@@ -26,7 +16,5 @@ namespace Alex
 
         public static Keys ChangeCamera  = Keys.F5;
         public static Keys ReBuildChunks = Keys.F9;
-
-        public static Keys ToggleWireframe = Keys.F10;
     }
 }

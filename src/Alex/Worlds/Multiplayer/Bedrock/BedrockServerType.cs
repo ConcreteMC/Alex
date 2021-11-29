@@ -69,42 +69,20 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		private PlayerProfile Process(bool success, PlayerProfile profile)
 		{
-			if (success)
+			profile.Authenticated = success;
+			if (ProfileProvider is ProfileManager pm)
 			{
-				profile.Authenticated = true;
-
-				if (ProfileProvider is ProfileManager pm)
-				{
-					pm.CreateOrUpdateProfile(profile, true);
-				}
-
-				return profile;
+				pm.CreateOrUpdateProfile(profile, true);
 			}
-
+			
 			return profile;
 		}
 
 		private async Task<PlayerProfile> ReAuthenticate(PlayerProfile profile)
 		{
-			string deviceId = profile.ClientToken ?? Alex.Resources.DeviceID;
+			string deviceId = Guid.NewGuid().ToString();// profile.ClientToken ?? Alex.Resources.DeviceID;
 			try
 			{
-				/*try
-				{
-					if (profile.ExpiryTime != null && profile.ExpiryTime.GetValueOrDefault(DateTime.MinValue) > DateTime.UtcNow && await XboxAuthService.TryAuthenticate(profile.AccessToken, deviceId))
-					{
-						profile.ClientToken = deviceId;
-						return Process(true, profile);
-					}
-				}
-				catch (HttpRequestException requestException)
-				{
-					if (requestException.StatusCode.GetValueOrDefault() != HttpStatusCode.Unauthorized)
-					{
-						Log.Error(requestException, $"Request exception.");
-					}
-				}*/
-
 				return await XboxAuthService.RefreshTokenAsync(profile.RefreshToken, deviceId).ContinueWith(
 					task =>
 					{
@@ -133,7 +111,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				Log.Warn(ex, $"Failed to refresh bedrock access token.");
 			}
 
-			return profile;
+			return Process(false, profile);
 		}
 
 		/// <inheritdoc />
@@ -157,6 +135,29 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		{
 			if (profile == null)
 				return null;
+
+			try
+			{
+				var deviceId = Guid.NewGuid().ToString();
+
+				if (profile.ExpiryTime != null
+				    && profile.ExpiryTime.GetValueOrDefault(DateTime.MinValue) > DateTime.UtcNow
+				    && await XboxAuthService.TryAuthenticate(profile.AccessToken, deviceId))
+				{
+					profile.ClientToken = deviceId;
+
+					return Process(true, profile);
+				}
+			}
+			catch (Exception ex)
+			{
+				if (ex is not HttpRequestException requestException
+				    || requestException.StatusCode != HttpStatusCode.BadRequest)
+				{
+					Log.Warn(ex, $"Failed authentication.");
+				}
+			}
+
 			return await ReAuthenticate(profile);
 		}
 
@@ -170,7 +171,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		{
 			if (ProfileProvider is ProfileManager pm)
 			{
-				pm.CreateOrUpdateProfile(session, true);
+				//pm.CreateOrUpdateProfile(session, true);
 			}
 
 			return Task.FromResult(new ProfileUpdateResult(true, null, null, session));

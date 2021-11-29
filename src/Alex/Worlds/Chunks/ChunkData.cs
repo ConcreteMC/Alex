@@ -20,7 +20,19 @@ using NLog;
 
 namespace Alex.Worlds.Chunks
 {
-    public record StageData(IndexBuffer Buffer, List<int> Indexes, int IndexCount);
+    public class StageData
+    {
+        public IndexBuffer Buffer { get; }
+        public List<int> Indexes { get; }
+        public int IndexCount { get; }
+
+        public StageData(IndexBuffer buffer, List<int> indexes, int indexCount)
+        {
+            Buffer = buffer;
+            Indexes = indexes;
+            IndexCount = indexCount;
+        }
+    }
 
     public class ChunkData : IDisposable
     {

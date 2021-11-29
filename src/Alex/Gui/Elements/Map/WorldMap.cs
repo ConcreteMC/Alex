@@ -46,6 +46,8 @@ namespace Alex.Gui.Elements.Map
         public float Rotation => 180f - (_world?.Player?.KnownPosition?.HeadYaw ?? 0);
 
         public bool AlphaBlending { get; set; } = true;
+        public bool Enabled { get; set; } = false;
+        
         private OptionsPropertyAccessor<bool> _alphaBlendingAccessor;
         private SpriteBatch _spriteBatch;
         private RenderTarget2D _renderTarget;
@@ -67,6 +69,13 @@ namespace Alex.Gui.Elements.Map
             AlphaBlending = _alphaBlendingAccessor.Value;
 
             _spriteBatch = new SpriteBatch(Alex.Instance.GraphicsDevice);
+
+            Enabled = true;/*options.UserInterfaceOptions.Minimap.Enabled.Value;
+            options.UserInterfaceOptions.Minimap.Enabled.Bind(
+                (old, newValue) =>
+                {
+                    Enabled = newValue;
+                });*/
         }
 
         private void AlphaBindSettingChanged(bool oldvalue, bool newvalue)
@@ -188,7 +197,7 @@ namespace Alex.Gui.Elements.Map
         /// <inheritdoc />
         public Texture2D GetTexture(GraphicsDevice device)
         {
-            if (Disposed) return null;
+            if (Disposed || !Enabled) return null;
             
             Texture2D oldTexture = null;
             var texture = _renderTarget;
@@ -249,7 +258,7 @@ namespace Alex.Gui.Elements.Map
         /// <inheritdoc />
         public void OnTick()
         {
-            if (Disposed) return;
+            if (Disposed || !Enabled) return;
 
             foreach (var container in GetSections(new ChunkCoordinates(Center), RenderDistance))
             {

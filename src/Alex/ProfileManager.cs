@@ -106,7 +106,11 @@ namespace Alex
 		
 		private int GetIndexOf(PlayerProfile entry)
 		{
-			var newEntry = CurrentFile.Profiles.FirstOrDefault(x => x.UUID.Equals(entry.UUID));
+			var newEntry = CurrentFile.Profiles.FirstOrDefault(x => x.UUID.Equals(entry.UUID, StringComparison.InvariantCultureIgnoreCase));
+
+			if (newEntry == default)
+				return -1;
+			
 			return CurrentFile.Profiles.IndexOf(newEntry);
 		}
 

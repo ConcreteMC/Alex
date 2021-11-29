@@ -232,6 +232,9 @@ namespace Alex.Worlds.Chunks
 
 		public ChunkSection GetSection(int y)
 		{
+			if (_disposed)
+				return null;
+			
 			y = y >> 4;
 			y += _sectionOffset;
 
@@ -266,7 +269,7 @@ namespace Alex.Worlds.Chunks
 				return;
 
 			var section  = GetSection(y);
-			section.Set(storage, x, y & 0xf, z, state);
+			section?.Set(storage, x, y & 0xf, z, state);
 		}
 
 		private void RecalculateHeight(int x, int z, bool doLighting = true)
@@ -277,6 +280,8 @@ namespace Alex.Worlds.Chunks
 			for (int y = WorldSettings.WorldHeight - 1; y > WorldSettings.MinY; y--)
 			{
 				var section = GetSection(y);
+				if (section == null) continue;
+					
 				var block = section.Get(x, y & 0xf, z).Block;
 				if (calculatingHeight)
 				{
@@ -313,7 +318,7 @@ namespace Alex.Worlds.Chunks
 			{
 				{
 					var chunk = GetSection(y);
-					if (isInAir && chunk.IsAllAir)
+					if (chunk == null || (isInAir && chunk.IsAllAir))
 					{
 						y -= 15;
 						continue;
@@ -460,7 +465,7 @@ namespace Alex.Worlds.Chunks
 			if ((bx < 0 || bx > ChunkWidth) || (bz < 0 || bz > ChunkDepth))
 				return false;
 			
-			return GetSection(by).SetBlocklight(bx, by & 0xf, bz, data);
+			return GetSection(by)?.SetBlocklight(bx, by & 0xf, bz, data) ?? false;
 		}
 
 		public void GetLight(int bx, int by, int bz, out byte skyLight, out byte blockLight)
@@ -502,7 +507,7 @@ namespace Alex.Worlds.Chunks
 			if ((bx < 0 || bx > ChunkWidth) || (bz < 0 || bz > ChunkDepth))
 				return false;
 
-			return GetSection(by).SetSkylight(bx, by &  0xf, bz, data);
+			return GetSection(by)?.SetSkylight(bx, by &  0xf, bz, data) ?? false;
 		}
 
 		protected int GetCoordinateIndex(int x, int y, int z)
@@ -552,6 +557,14 @@ namespace Alex.Worlds.Chunks
 				Sections[index] = null;
 
 				chunksSection?.Dispose();
+			}
+
+			var blockEntities = BlockEntities.ToArray();
+			BlockEntities.Clear();
+			
+			foreach (var blockEntity in blockEntities)
+			{
+				
 			}
 
 			_chunkData?.Dispose();

@@ -117,7 +117,6 @@ namespace Alex.Worlds.Multiplayer
 					continue;
 
 				var distance = chunk.Key.DistanceTo(center);
-
 				if (distance > maxViewDistance)
 				{
 					World.UnloadChunk(chunk.Key);

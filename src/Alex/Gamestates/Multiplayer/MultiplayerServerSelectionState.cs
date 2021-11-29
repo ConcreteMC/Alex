@@ -377,7 +377,7 @@ namespace Alex.Gamestates.Multiplayer
 
 					    if (!profile.Authenticated){
 						    Log.Warn($"Invalid session. AuthError={profile.AuthError}");
-						    //await serverType.Authenticate(_skyBox, OnProfileSelected, profile);
+						    await serverType.Authenticate(_skyBox, OnProfileSelected, profile);
 						    return;
 					    }
 

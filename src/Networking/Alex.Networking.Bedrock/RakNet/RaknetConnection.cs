@@ -90,12 +90,12 @@ namespace Alex.Networking.Bedrock.RakNet
 		{
 			if (_listener != null) return;
 			_listener = CreateListener(_endpoint);
-			//_listener.BeginReceive(ReceiveCallback, _listener);
+			_listener.BeginReceive(ReceiveCallback, _listener);
 
-			var receiveTask = new Task(
-				ReceiveCallback, _cancellationTokenSource.Token, TaskCreationOptions.LongRunning);
+			//var receiveTask = new Task(
+			//	ReceiveCallback, _cancellationTokenSource.Token, TaskCreationOptions.LongRunning);
 
-			receiveTask.Start();
+		//	receiveTask.Start();
 			//_readingThread = new Thread(ReceiveCallback);
 			//_readingThread.Start();
 		}
@@ -202,17 +202,20 @@ namespace Alex.Networking.Bedrock.RakNet
 			return listener;
 		}
 
-		private void ReceiveCallback(object state)
+		private void ReceiveCallback(IAsyncResult ar)
 		{
 			_readingThread = Thread.CurrentThread;
 			_readingThread.Name = $"RaknetConnection Read ({_endpoint})";
 
 			bool hasReadData = false;
 			//UdpClient listener;
-			while (_listener != null)
+			//while (_listener != null)
 			{
 				var listener = _listener;
 
+				if (listener == null)
+					return;
+				
 				// Check if we already closed the server
 			//	if (listener?.Client == null) return;
 
@@ -225,9 +228,10 @@ namespace Alex.Networking.Bedrock.RakNet
 
 				try
 				{
-					//var receiveBytes = listener.EndReceive(ar, ref senderEndpoint);
+					var receiveBytes = listener.EndReceive(ar, ref senderEndpoint);
+					listener.BeginReceive(ReceiveCallback, listener);
 					//var receive = await listener.ReceiveAsync();;
-					var receiveBytes = listener.Receive(ref senderEndpoint);
+					//var receiveBytes = listener.Receive(ref senderEndpoint);
 
 					//	var receiveBytes = receive.Buffer;
 					//senderEndpoint = receive.RemoteEndPoint;

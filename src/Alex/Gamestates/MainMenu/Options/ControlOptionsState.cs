@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using Alex.Common.Gui.Elements;
 using Alex.Common.Input;
+using Alex.Common.Utils;
 using RocketUI;
 using Alex.Gui;
 using Alex.Gui.Elements;
+using Alex.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using MiNET.Utils;
@@ -16,7 +18,9 @@ namespace Alex.Gamestates.MainMenu.Options
 {
     public class ControlOptionsState : OptionsStateBase
     {
-        private KeyboardInputListener InputListener { get; set; }
+        private AlexKeyboardInputListener InputListener { get; set; }
+        private GamePadInputListener ControllerInputListener { get; set; }
+        private MouseInputListener MouseInputListener { get; set; }
         private Dictionary<string, KeybindElement> Inputs { get; } = new Dictionary<string, KeybindElement>();
 
         public ControlOptionsState(GuiPanoramaSkyBox skyBox) : base(skyBox)
@@ -32,18 +36,21 @@ namespace Alex.Gamestates.MainMenu.Options
         
         private void ResetControls()
         {
-            if (InputListener == null)
+            var inputListener = InputListener;
+            if (inputListener == null)
                 return;
             
-            InputListener.ClearMap();
-            AlexKeyboardInputListenerFactory.RegisterDefaults(InputListener);
+            inputListener.ClearMap();
+            AlexKeyboardInputListenerFactory.RegisterDefaults(inputListener);
             
             var inputs = Inputs.Values.ToArray();
 
             foreach (var input in inputs)
             {
-                var value = InputListener.ButtonMap[input.InputCommand];
-                input.Value = value.Count > 0 ? value[0] : KeybindElement.Unbound;
+                if (inputListener.ButtonMap.TryGetValue(input.InputCommand, out var value))
+                {
+                    input.Value = value.Count > 0 ? value[0] : KeybindElement.Unbound;
+                }
             }
             
             //Inputs.Clear();
@@ -60,19 +67,27 @@ namespace Alex.Gamestates.MainMenu.Options
 
         private void AddInputs()
         {
-            var inputListener = InputListener;
-            var inputs = inputListener.ButtonMap;
-
+             var keyboardInputListener = InputListener;
+             var mouseInputListener = MouseInputListener;
+             var gamepadInputListener = ControllerInputListener;
+             
             foreach (var wrapper in AlexInputCommand.GetAll())
             {
+                if (wrapper.BindingType != InputCommandType.Keyboard)
+                    continue;
+                
                 InputCommand inputCommand = wrapper.InputCommand;
 
-                List<Keys> value = new List<Keys>();
+                List<Keys[]> value = new List<Keys[]>();
 
-                if (inputs.TryGetValue(inputCommand, out var keys))
+                if (keyboardInputListener.ButtonMap.TryGetValue(inputCommand, out var keys))
                 {
                     value = keys;
                 }
+                //else if (mouseInputListener.ButtonMap.TryGetValue(inputCommand, out var mouseButton))
+                //{
+                   // value.Add(mouseButton == MouseButton.Left ? keys);
+                //}
 
                 KeybindElement textInput;
 
@@ -100,7 +115,7 @@ namespace Alex.Gamestates.MainMenu.Options
                 {
                     if (newValue == KeybindElement.Unbound)
                     {
-                        inputListener.RemoveMap(inputCommand);
+                        keyboardInputListener.RemoveMap(inputCommand);
                     }
                     else
                     {
@@ -108,19 +123,32 @@ namespace Alex.Gamestates.MainMenu.Options
                         {
                             input.Value.Value = KeybindElement.Unbound;
                         }
-
+                        
                         InputListener.RegisterMap(inputCommand, newValue);
                     }
 
                     base.Alex.GuiManager.FocusManager.FocusedElement = null;
 
                     textInput.ClearFocus();
-                    value = new List<Keys>() {newValue};
+                    value.Clear();
+                    value.Add(newValue);
                 };
 
                 Inputs.TryAdd(inputCommand, textInput);
             }
         }
+        
+        /*private void AddInputs()
+        {
+           if (InputListener != null)
+               AddInputs(InputListener);
+           
+           if (ControllerInputListener != null)
+               AddInputs(ControllerInputListener);
+
+           if (MouseInputListener != null)
+               AddInputs(MouseInputListener);
+        }*/
 
         protected override void OnShow()
         {
@@ -141,11 +169,22 @@ namespace Alex.Gamestates.MainMenu.Options
             
             var inputManager = base.Alex.InputManager.GetOrAddPlayerManager(PlayerIndex.One);
 
-            if (inputManager.TryGetListener(out KeyboardInputListener inputListener))
+            if (inputManager.TryGetListener(out AlexKeyboardInputListener inputListener))
             {
                 InputListener = inputListener;
-                AddInputs();
             }
+            
+            if (inputManager.TryGetListener(out GamePadInputListener controller))
+            {
+                ControllerInputListener = controller;
+            }
+            
+            if (inputManager.TryGetListener(out MouseInputListener mouse))
+            {
+                MouseInputListener = mouse;
+            }
+            
+            AddInputs();
         }
 
         private void InvertXChanged(bool obj)

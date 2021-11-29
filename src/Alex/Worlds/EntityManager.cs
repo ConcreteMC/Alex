@@ -71,6 +71,33 @@ namespace Alex.Worlds
 				FogEnabled = false,
 				PreferPerPixelLighting = false
 			};
+			
+			world.ChunkManager.OnChunkAdded += OnChunkAdded;
+			world.ChunkManager.OnChunkRemoved += OnChunkRemoved;
+		}
+
+		private void OnChunkRemoved(object? sender, ChunkRemovedEventArgs e)
+		{
+			var chunk = e.Chunk;
+			foreach (var blockEntity in chunk.BlockEntities)
+			{
+				var pos = blockEntity.Key;
+				RemoveBlockEntity(
+					new BlockCoordinates((chunk.X << 4) + pos.X, pos.Y, (chunk.Z << 4) + pos.Z));
+			}
+		}
+
+		private void OnChunkAdded(object? sender, ChunkAddedEventArgs e)
+		{
+			var chunk = e.Chunk;
+			foreach (var blockEntity in chunk.BlockEntities)
+			{
+				var entity = BlockEntityFactory.ReadFrom(blockEntity.Value, World, 
+					chunk.GetBlockState(blockEntity.Key.X & 0xf, blockEntity.Key.Y, blockEntity.Key.Z & 0xf).Block);
+				
+				if (entity != null)
+					AddBlockEntity(blockEntity.Key, entity);
+			}
 		}
 
 		private Stopwatch _sw = new Stopwatch();

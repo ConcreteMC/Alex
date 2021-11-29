@@ -91,7 +91,6 @@ namespace Alex.Worlds.Multiplayer
 		private IPEndPoint Endpoint;
 		private ManualResetEvent _loginCompleteEvent = new ManualResetEvent(false);
 
-		//private DedicatedThreadPool ThreadPool;
 		public string Hostname { get; set; }
 		
 		private          JavaNetworkProvider NetworkProvider { get; }
@@ -106,16 +105,12 @@ namespace Alex.Worlds.Multiplayer
 			Endpoint = endPoint;
 
 			OptionsProvider = Alex.ServiceContainer.GetRequiredService<IOptionsProvider>();
-			//	ThreadPool = new DedicatedThreadPool(new DedicatedThreadPoolSettings(Environment.ProcessorCount));
-		
 			Client = new NetConnection(endPoint, CancellationToken.None);
 			Client.OnConnectionClosed += OnConnectionClosed;
 			Client.PacketHandler = this;
 			
 			NetworkProvider = new JavaNetworkProvider(Client);;
 			networkProvider = NetworkProvider;
-
-		//	_disposables.Add(Options.VideoOptions.RenderDistance.Bind(RenderDistanceSettingChanged));
 		}
 
 		private bool _disconnected = false;
@@ -1912,7 +1907,7 @@ namespace Alex.Worlds.Multiplayer
 				var pos = new BlockCoordinates(blockUpdate.X, blockUpdate.Y, blockUpdate.Z);
 				var state = BlockFactory.GetBlockState(blockUpdate.BlockId);
 				
-				Log.Info($"Received blockupdates ({packet.Records.Length})! Coord={pos} State={state.FormattedString}");
+			//	Log.Info($"Received blockupdates ({packet.Records.Length})! Coord={pos} State={state.FormattedString}");
 				World?.SetBlockState(
 					pos, 
 					state,
@@ -1923,7 +1918,7 @@ namespace Alex.Worlds.Multiplayer
 		private void HandleBlockChangePacket(BlockChangePacket packet)
 		{
 			var state = BlockFactory.GetBlockState(packet.PalleteId);
-			Log.Info($"Received blockupdate. Pos={packet.Location}, State={state.FormattedString}");
+		//	Log.Info($"Received blockupdate. Pos={packet.Location}, State={state.FormattedString}");
 			//throw new NotImplementedException();
 			World?.SetBlockState(packet.Location, state, 
 				BlockUpdatePriority.High);

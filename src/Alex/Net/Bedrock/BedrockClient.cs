@@ -494,7 +494,7 @@ namespace Alex.Net.Bedrock
 
 			var skinData = EncodeSkinJwt(signKey, username, b64Key);
 
-			byte[] data = CryptoUtils.CompressJwtBytes(certChain, skinData, CompressionLevel.Fastest);
+			byte[] data = CompressJwtBytes(certChain, skinData, CompressionLevel.Fastest);
 
 			McpeLogin loginPacket = new McpeLogin
 			{
@@ -507,6 +507,30 @@ namespace Alex.Net.Bedrock
 			SendPacket(loginPacket);
 		}
 
+	
+		public static byte[] CompressJwtBytes(byte[] certChain, byte[] skinData, CompressionLevel compressionLevel)
+		{
+			using (MemoryStream stream = BedrockMessageHandler.MemoryStreamManager.GetStream())
+			{
+				{
+					{
+						byte[] lenBytes = BitConverter.GetBytes(certChain.Length);
+						stream.Write(lenBytes, 0, lenBytes.Length);
+						stream.Write(certChain, 0, certChain.Length);
+					}
+					{
+						byte[] lenBytes = BitConverter.GetBytes(skinData.Length);
+						stream.Write(lenBytes, 0, lenBytes.Length);
+						stream.Write(skinData, 0, skinData.Length);
+					}
+				}
+
+				var bytes = stream.ToArray();
+
+				return bytes;
+			}
+		}
+		
 		public void SendMcpeMovePlayer(PlayerLocation location, byte mode = 0, long tick = 0)
 		{
 			if (!CanSpawn || !GameStarted)

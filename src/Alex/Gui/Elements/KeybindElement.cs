@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Alex.Common.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
@@ -7,17 +8,18 @@ using RocketUI.Input;
 
 namespace Alex.Gui.Elements
 {
-    public class KeybindElement : RocketControl, IValuedControl<Keys>
+    public class KeybindElement : RocketControl, IValuedControl<Keys[]>
     {
-        public static readonly Keys Unbound = (Keys) int.MaxValue;
+        public static readonly Keys[] Unbound = new Keys[] { (Keys)int.MaxValue };
         
         private TextElement TextElement { get; }
+        private TextElement TimerText { get; }
         
         public Color BorderColor { get; set; } = Color.LightGray;
         public Thickness BorderThickness { get; set; } = Thickness.One;
         
         public InputCommand InputCommand { get; }
-        public KeybindElement(InputCommand inputCommand, Keys key)
+        public KeybindElement(InputCommand inputCommand, params Keys[] key)
         {
             InputCommand = inputCommand;
             _value = key;
@@ -27,27 +29,73 @@ namespace Alex.Gui.Elements
             TextElement = new TextElement();
             TextElement.Anchor = Alignment.MiddleCenter;
             
+            TimerText = new TextElement();
+            TimerText.Anchor = Alignment.MiddleRight;
+            TimerText.IsVisible = false;
+            
             AddChild(TextElement);
+            AddChild(TimerText);
             
             UpdateText(key);
         }
 
-        private float _cursorAlpha = 1;
-        private bool _prevFocused = false;
+        private float _cursorAlpha = 1f;
+        private List<Keys> _tempBinding = new List<Keys>();
+        private TimeSpan _timer = TimeSpan.Zero;
+
+        private void FocusLost()
+        {
+            TimerText.IsVisible = false;
+            TextElement.TextOpacity = 1f;
+            var newValue = _tempBinding.ToArray();
+            _tempBinding.Clear();
+            _timer = TimeSpan.Zero;
+            
+            if (newValue.Length > 0)
+            {
+                Value = newValue;
+            }
+            else if (Value != Unbound)
+            {
+                Value = Unbound;
+            }
+            
+            UpdateText(_value);
+        }
+        
+        private bool _wasFocused = false;
         protected override void OnUpdate(GameTime gameTime)
         {
             base.OnUpdate(gameTime);
 
-            if (Focused)
+            bool focused = Focused;
+
+            if (focused && !_wasFocused)
             {
+                _tempBinding.Clear();
+                _timer = TimeSpan.FromSeconds(5);
                 TextElement.Text = "_";
+                TimerText.IsVisible = true;
             }
-            else if (!Focused && _prevFocused)
+            else if (!focused && _wasFocused)
             {
-                UpdateText(_value);
+                FocusLost();
             }
 
-            _prevFocused = Focused;
+            if (_timer > TimeSpan.Zero)
+            {
+                _timer -= gameTime.ElapsedGameTime;
+                TimerText.Text = $"{_timer:%s}";
+                
+                TextElement.TextOpacity = 1f - ((float)gameTime.TotalGameTime.TotalSeconds % 0.75f);
+                
+                if (_timer <= TimeSpan.Zero)
+                {
+                    FocusLost();
+                }
+            }
+
+            _wasFocused = focused;
         }
 
         protected override void OnDraw(GuiSpriteBatch graphics, GameTime gameTime)
@@ -61,18 +109,35 @@ namespace Alex.Gui.Elements
 
         protected override bool OnKeyInput(char character, Keys key)
         {
+            /*if (Focused && key == Keys.Escape)
+            {
+                if (_tempBinding.Count == 0)
+                {
+                    _timer = TimeSpan.Zero;
+                    UpdateText(_value);
+                    return true;
+                }   
+            }*/
+            if (_timer <= TimeSpan.Zero)
+            {
+                return true;
+            }
+            
+            _timer = TimeSpan.FromSeconds(5);
+            _tempBinding.Add(key);
+            UpdateText(_tempBinding);
            // if (Focused)
            // {
-                Value = key;
+                //Value = key;
                 
-                ClearFocus();
-                return true;
+                //ClearFocus();
+               // return true;
            // }
 
-            return false;
+            return true;
         }
 
-        private void UpdateText(Keys key)
+        private void UpdateText(ICollection<Keys> key)
         {
             if (key == Unbound)
             {
@@ -80,14 +145,14 @@ namespace Alex.Gui.Elements
             }
             else
             {
-                TextElement.Text = key.ToString().SplitPascalCase();
+                TextElement.Text = string.Join(" + ", key);// key.ToString().SplitPascalCase();
             }
         }
         
-        public event EventHandler<Keys> ValueChanged;
-        private Keys _value;
+        public event EventHandler<Keys[]> ValueChanged;
+        private Keys[] _value;
 
-        public Keys Value
+        public Keys[] Value
         {
             get { return _value; }
             set
@@ -95,15 +160,15 @@ namespace Alex.Gui.Elements
                 var oldValue = _value;
                 _value = value;
                 
-                //if (_value != oldValue)
+                UpdateText(value);
+
+                if (_value != oldValue)
                 {
-                    UpdateText(value);
-                    
                     ValueChanged?.Invoke(this, _value);
                 }
             }
         }
 
-        public ValueFormatter<Keys> DisplayFormat { get; set; }
+        public ValueFormatter<Keys[]> DisplayFormat { get; set; }
     }
 }

@@ -143,10 +143,29 @@ namespace Alex.Gamestates.InGame
 			
 			base.OnHide();
 		}
-		
-		private bool RenderDebug { get; set; } = false;
-		
-		private bool RenderNetworking
+
+		public bool RenderDebug
+		{
+			get => _renderDebug;
+			set
+			{
+				if (value != _renderDebug)
+				{
+					_renderDebug = value;
+
+					if (!value)
+					{
+						Alex.GuiManager.RemoveScreen(_debugInfo);
+					}
+					else
+					{
+						Alex.GuiManager.AddScreen(_debugInfo);
+					}
+				}
+			}
+		}
+
+		public bool RenderNetworking
 		{
 			get
 			{
@@ -160,47 +179,6 @@ namespace Alex.Gamestates.InGame
 				}
 			}
 		}
-		
-		private KeyboardState _oldKeyboardState;
-		protected void CheckInput(GameTime gameTime)
-		{
-			KeyboardState currentKeyboardState = Keyboard.GetState();
-			if (currentKeyboardState != _oldKeyboardState)
-			{
-				if (KeyBinds.NetworkDebugging.All(x => currentKeyboardState.IsKeyDown(x)))
-				{
-					RenderNetworking = !RenderNetworking;
-				}
-				else if (KeyBinds.EntityBoundingBoxes.All(x => currentKeyboardState.IsKeyDown(x)))
-				{
-					World.RenderBoundingBoxes = !World.RenderBoundingBoxes;
-				}
-				else if (currentKeyboardState.IsKeyDown(KeyBinds.DebugInfo))
-				{
-					RenderDebug = !RenderDebug;
-					if (!RenderDebug)
-					{
-						Alex.GuiManager.RemoveScreen(_debugInfo);
-					}
-					else
-					{
-						Alex.GuiManager.AddScreen(_debugInfo);
-					}
-				}
-
-				if (currentKeyboardState.IsKeyDown(KeyBinds.Fog) && !_oldKeyboardState.IsKeyDown(KeyBinds.Fog))
-				{
-					World.ChunkManager.FogEnabled = !World.ChunkManager.FogEnabled;
-				}
-
-				if (currentKeyboardState.IsKeyDown(KeyBinds.ToggleWireframe))
-				{
-					World.ToggleWireFrame();
-				}
-			}
-
-			_oldKeyboardState = currentKeyboardState;
-		}
 
 		private long _ramUsage = 0;
 		private Biome _currentBiome = BiomeUtils.GetBiome(0);
@@ -210,7 +188,7 @@ namespace Alex.Gamestates.InGame
 			string gameVersion = VersionUtils.GetVersion();
 
 			_debugInfo.AddDebugLeft(
-				() => $"Alex {gameVersion} ({Alex.FpsMonitor.Value:##} FPS, {World.TickManager.TicksPerSecond:##} TPS, Chunk Updates: {World.ChunkManager.EnqueuedChunkUpdates} queued, {World.ChunkManager.ConcurrentChunkUpdates} active)", TimeSpan.FromMilliseconds(50));
+				() => $"Alex {gameVersion} ({Alex.FpsMonitor.Value:##} FPS, {World.TickManager.TicksPerSecond:##} TPS, Chunk Updates: {World.ChunkManager.EnqueuedChunkUpdates} queued, {World.ChunkManager.ConcurrentChunkUpdates}/{World.ChunkManager.MaxConcurrentChunksUpdates} active, Lighting: {World.ChunkManager.LightingUpdates})", TimeSpan.FromMilliseconds(50));
 			
 			_debugInfo.AddDebugLeft(() =>
 			{
@@ -375,6 +353,7 @@ namespace Alex.Gamestates.InGame
 		private float AspectRatio { get; set; }
 
 		private DateTime _previousMemUpdate = DateTime.UtcNow;
+		private bool _renderDebug = false;
 
 		protected override void OnUpdate(GameTime gameTime)
 		{
@@ -411,11 +390,6 @@ namespace Alex.Gamestates.InGame
 			if (!_playingHud.Chat.Focused && Alex.GameStateManager.GetActiveState() is PlayingState)
 			{
 				player.Controller.CheckInput = Alex.IsActive;
-
-				if (Alex.GuiManager.ActiveDialog == null)
-				{
-					CheckInput(gameTime);
-				}
 			}
 			else
 			{
@@ -484,7 +458,9 @@ namespace Alex.Gamestates.InGame
 		{
 			Alex.InGame = false;
 			Alex.ParticleManager.Hide();
-
+			
+			World?.TickManager?.UnregisterTicked(WorldProvider);
+			
 			LoadingOverlay loadingOverlay = new LoadingOverlay();
 			loadingOverlay.Text = "Disconnecting...";
 			Alex.GuiManager.AddScreen(loadingOverlay);

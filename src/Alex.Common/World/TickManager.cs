@@ -14,8 +14,8 @@ namespace Alex.Common.World
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(TickManager));
 		
 		private object _tickLock = new object();
-		private ConcurrentDictionary<TickedItem, long> _scheduledTicks { get; }
-		private LinkedList<TickedEntry>                _tickedItems    { get; }
+		private ConcurrentDictionary<TickedItem, long> ScheduledTicks { get; }
+		private LinkedList<TickedEntry>                TickedItems    { get; }
 		private long                               _tick = 0;
 		public  long                               CurrentTick => _tick;
 
@@ -24,8 +24,8 @@ namespace Alex.Common.World
 
 		public TickManager()
 	    {
-		    _scheduledTicks = new ConcurrentDictionary<TickedItem, long>();
-		    _tickedItems = new LinkedList<TickedEntry>();
+		    ScheduledTicks = new ConcurrentDictionary<TickedItem, long>();
+		    TickedItems = new LinkedList<TickedEntry>();
 		    TickTimer = new HighPrecisionTimer(50, DoTick);
 		}
 
@@ -38,11 +38,11 @@ namespace Alex.Common.World
 		    try
 		    {
 			    var startTime = _sw.ElapsedMilliseconds;
-			    var ticks = _scheduledTicks.Where(x => x.Value <= _tick).ToArray();
+			    var ticks = ScheduledTicks.Where(x => x.Value <= _tick).ToArray();
 
 			    foreach (var tick in ticks)
 			    {
-				    _scheduledTicks.TryRemove(tick.Key, out long _);
+				    ScheduledTicks.TryRemove(tick.Key, out long _);
 			    }
 
 			    //Executed scheduled ticks
@@ -63,7 +63,7 @@ namespace Alex.Common.World
 			    TickedEntry[] tickedItems;
 			    lock (_tickLock)
 			    {
-				    tickedItems = _tickedItems.ToArray();
+				    tickedItems = TickedItems.ToArray();
 			    }
 
 			    foreach (var ticked in tickedItems)
@@ -76,7 +76,7 @@ namespace Alex.Common.World
 
 						    lock (_tickLock)
 						    {
-							    _tickedItems.Remove(ticked);
+							    TickedItems.Remove(ticked);
 						    }
 					    }
 				    }
@@ -129,7 +129,7 @@ namespace Alex.Common.World
 	    {
 		    lock (_tickLock)
 		    {
-			    _tickedItems.AddLast(new TickedEntry(ticked));
+			    TickedItems.AddLast(new TickedEntry(ticked));
 		    }
 	    }
 
@@ -137,15 +137,15 @@ namespace Alex.Common.World
 	    {
 		    lock (_tickLock)
 		    {
-			    var item = _tickedItems.FirstOrDefault(x => x.Equals(ticked));
+			    var item = TickedItems.FirstOrDefault(x => x.Equals(ticked));
 			    if (item != null)
-					_tickedItems.Remove(item);
+					TickedItems.Remove(item);
 		    }
 	    }
 	    
 	    public void ScheduleTick(Action action, long ticksFromNow, CancellationToken cancellationToken)
 		{
-			if (!_scheduledTicks.TryAdd(new TickedItem(action, cancellationToken), _tick + ticksFromNow))
+			if (!ScheduledTicks.TryAdd(new TickedItem(action, cancellationToken), _tick + ticksFromNow))
 			{
 				Log.Warn($"Could not schedule tick!");
 			}
@@ -156,8 +156,8 @@ namespace Alex.Common.World
 		{
 			Log.Info($"Tickmanager disposing...");
 			
-			_scheduledTicks?.Clear();
-			_tickedItems?.Clear();
+			ScheduledTicks?.Clear();
+			TickedItems?.Clear();
 			
 			try
 			{
@@ -200,7 +200,17 @@ namespace Alex.Common.World
 				{
 					if (_ticked.TryGetTarget(out var target))
 					{
-						target?.OnTick();
+						if (target is ITickedConditionally conditionally)
+						{
+							if (conditionally.CanTick())
+							{
+								target?.OnTick();
+							}
+						}
+						else
+						{
+							target?.OnTick();
+						}
 
 						return true;
 					}
@@ -228,5 +238,15 @@ namespace Alex.Common.World
     public interface ITicked
     {
 	    void OnTick();
+    }
+
+    public interface ITickedConditionally : ITicked
+    {
+	    bool CanTick();
+    }
+
+    public interface INamed
+    {
+	    string Name { get; }
     }
 }

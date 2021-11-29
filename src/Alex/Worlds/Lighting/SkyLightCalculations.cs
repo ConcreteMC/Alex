@@ -258,7 +258,6 @@ namespace Alex.Worlds.Lighting
 			byte currentSkyLight = GetSkyLight(coordinates, chunk);
 
 			int sectionIdx = coordinates.Y >> 4;
-			ChunkSection subChunk = (ChunkSection) chunk.GetSection(coordinates.Y);
 
 			byte maxSkyLight = currentSkyLight;
 			if (coordinates.Y < chunk.WorldSettings.WorldHeight - 1)

@@ -175,30 +175,37 @@ namespace Alex.Worlds.Multiplayer.Java
 
 		public override async Task<ProfileUpdateResult> UpdateProfile(PlayerProfile profile)
 		{
-			var mojangProfile = await MojangApi.GetPlayerProfile(profile.AccessToken);
-
-			if (!mojangProfile.IsSuccess)
+			try
 			{
-				return new ProfileUpdateResult(false, mojangProfile.Error, mojangProfile.ErrorMessage);
+				var mojangProfile = await MojangApi.GetPlayerProfile(profile.AccessToken);
+
+				if (!mojangProfile.IsSuccess)
+				{
+					return new ProfileUpdateResult(false, mojangProfile.Error, mojangProfile.ErrorMessage);
+				}
+
+
+				profile.PlayerName = mojangProfile?.Name ?? profile.PlayerName;
+
+				if (mojangProfile.Skin != null)
+				{
+					profile.Add("skin", mojangProfile.Skin);
+				}
+
+				profile.UUID = mojangProfile.UUID;
+				profile.Authenticated = true;
+
+				if (ProfileProvider is ProfileManager pm)
+				{
+					pm.CreateOrUpdateProfile(profile, true);
+				}
+
+				return new ProfileUpdateResult(true, profile);
 			}
-
-
-			profile.PlayerName = mojangProfile?.Name ?? profile.PlayerName;
-
-			if (mojangProfile.Skin != null)
+			catch (Exception ex)
 			{
-				profile.Add("skin", mojangProfile.Skin);
+				return new ProfileUpdateResult(false, ex.ToString(), ex.Message);
 			}
-
-			profile.UUID = mojangProfile.UUID;
-			profile.Authenticated = true;
-
-			if (ProfileProvider is ProfileManager pm)
-			{
-				pm.CreateOrUpdateProfile(profile, true);
-			}
-
-			return new ProfileUpdateResult(true, profile);
 		}
 	}
 

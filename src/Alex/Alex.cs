@@ -130,8 +130,6 @@ namespace Alex
         public  PluginManager  PluginManager  { get; }
         public  FpsMonitor     FpsMonitor     { get; }
 
-        // public DedicatedThreadPool ThreadPool { get; private set; }
-
         public StorageSystem     Storage           { get; private set; }
         public ServerTypeManager ServerTypeManager { get; private set; }
         public OptionsProvider   Options           { get; private set; }

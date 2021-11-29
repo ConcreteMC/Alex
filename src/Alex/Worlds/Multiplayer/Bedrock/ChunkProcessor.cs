@@ -65,7 +65,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	        Instance = this;
 
 	        var blockOptions =
-		        new ExecutionDataflowBlockOptions { CancellationToken = cancellationToken, EnsureOrdered = false };
+		        new ExecutionDataflowBlockOptions { CancellationToken = cancellationToken, EnsureOrdered = false, NameFormat = "Chunker: {0}-{1}", MaxDegreeOfParallelism = 1};
 	        _dataQueue = new BufferBlock<BufferItem>(blockOptions);
 	        
 	        var handleBufferItemBlock = new ActionBlock<BufferItem>(HandleBufferItem, blockOptions);

@@ -163,11 +163,47 @@ namespace Alex.Entities
 						AlexInputCommand.ToggleMap, InputBindingTrigger.Discrete, CanOpenDialog, OpenMap),
 					
 					InputManager.RegisterListener(
-						AlexInputCommand.TakeScreenshot, InputBindingTrigger.Discrete, CheckMovementPredicate, TakeScreenshot)
+						AlexInputCommand.TakeScreenshot, InputBindingTrigger.Discrete, CheckMovementPredicate, TakeScreenshot),
+					
+					InputManager.RegisterListener(AlexInputCommand.ToggleDebugInfo, InputBindingTrigger.Discrete, ToggleDebugInfo),
+					InputManager.RegisterListener(AlexInputCommand.ToggleBoundingboxDebugInfo, InputBindingTrigger.Discrete, ToggleBoundingBoxes),
+					InputManager.RegisterListener(AlexInputCommand.ToggleNetworkDebugInfo, InputBindingTrigger.Discrete, ToggleNetworkDebugInfo),
+					InputManager.RegisterListener(AlexInputCommand.ToggleFog, InputBindingTrigger.Discrete, ToggleFog),
+					InputManager.RegisterListener(AlexInputCommand.ToggleWireframe, InputBindingTrigger.Discrete, ToggleWireframe)
 				});
 		}
-		
 
+		private void ToggleWireframe()
+		{
+			Player.Level.ToggleWireFrame();
+		}
+
+		private void ToggleFog()
+		{
+			Player.Level.ChunkManager.FogEnabled = !Player.Level.ChunkManager.FogEnabled;
+		}
+		
+		private void ToggleBoundingBoxes()
+		{
+			Player.Level.RenderBoundingBoxes = !Player.Level.RenderBoundingBoxes;
+		}
+		
+		private void ToggleDebugInfo()
+		{
+			if (Alex.Instance.GameStateManager.GetActiveState() is PlayingState ps)
+			{
+				ps.RenderDebug = !ps.RenderDebug;
+			}
+		}
+		
+		private void ToggleNetworkDebugInfo()
+		{
+			if (Alex.Instance.GameStateManager.GetActiveState() is PlayingState ps)
+			{
+				ps.RenderNetworking = !ps.RenderNetworking;
+			}
+		}
+		
 		private void TakeScreenshot()
 		{
 			Alex.Instance.OnEndDraw += OnEndDraw;
