@@ -11,6 +11,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Threading.Tasks.Dataflow;
 using Alex.Blocks;
 using Alex.Common;
 using Alex.Common.Commands.Nodes;
@@ -98,6 +99,8 @@ namespace Alex.Worlds.Multiplayer
 		private readonly List<IDisposable>   _disposables = new List<IDisposable>();
 		
 		private WorldSettings WorldSettings { get; set; } = WorldSettings.Default;
+		
+		private BufferBlock<JavaChunkData> _chunkQueue;
 		public JavaWorldProvider(Alex alex, IPEndPoint endPoint, PlayerProfile profile, out NetworkProvider networkProvider)
 		{
 			Alex = alex;
@@ -111,6 +114,81 @@ namespace Alex.Worlds.Multiplayer
 			
 			NetworkProvider = new JavaNetworkProvider(Client);;
 			networkProvider = NetworkProvider;
+			
+			var blockOptions =
+				new ExecutionDataflowBlockOptions { CancellationToken = CancellationToken.None, EnsureOrdered = false, NameFormat = "Java Chunker: {0}-{1}", MaxDegreeOfParallelism = 1};
+			_chunkQueue = new BufferBlock<JavaChunkData>(blockOptions);
+	        
+			var handleBufferItemBlock = new ActionBlock<JavaChunkData>(HandleChunkDataPacket, blockOptions);
+			var linkOptions = new DataflowLinkOptions { PropagateCompletion = true };
+			_chunkQueue.LinkTo(handleBufferItemBlock, linkOptions);
+		}
+
+		private void HandleChunkDataPacket(JavaChunkData obj)
+		{
+			using (var memoryStream = new MemoryStream(obj.Buffer))
+			using (var stream = new MinecraftStream(memoryStream))
+			{
+				JavaChunkColumn result = null; // = new ChunkColumn();
+
+				result = new JavaChunkColumn(obj.X, obj.Z, WorldSettings);
+
+				result.Read(stream, obj.PrimaryBitmask, World.Dimension == Dimension.Overworld);
+
+
+				for (int bx = 0; bx < 16; bx++)
+				{
+					for (int bz = 0; bz < 16; bz++)
+					{
+						for (int by = WorldSettings.MinY; by < WorldSettings.WorldHeight; by++)
+						{
+							result.SetBiome(
+								bx, by, bz,
+								obj.Biomes[((by >> 2) & 63) << 4 | ((bz >> 2) & 3) << 2 | ((bx >> 2) & 3)]);
+						}
+					}
+				}
+
+
+				foreach (var tag in obj.Entities)
+				{
+					if (tag == null || !(tag.Contains("id")))
+						continue;
+
+					try
+					{
+						//var blockEntity = BlockEntityFactory.ReadFrom(tag, World, null);
+
+						// if (blockEntity != null)
+						// {
+						int x = tag["x"].IntValue;
+						int y = tag["y"].IntValue;
+						int z = tag["z"].IntValue;
+						result.AddBlockEntity(
+							new BlockCoordinates(x,y,z), tag);
+						// }
+						// else
+						// {
+						//    Log.Debug($"Got null block entity: {tag}");
+						//}
+
+					}
+					catch (Exception ex)
+					{
+						Log.Warn(ex, "Could not add block entity!");
+					}
+				}
+
+				if (!_generatingHelper.IsAddingCompleted)
+				{
+					_generatingHelper.Add(result);
+					_chunksReceived++;
+
+					return;
+				}
+
+				World.ChunkManager.AddChunk(result, new ChunkCoordinates(result.X, result.Z), true);
+			}
 		}
 
 		private bool _disconnected = false;
@@ -2388,6 +2466,16 @@ namespace Alex.Worlds.Multiplayer
 			
         }
 
+		private class JavaChunkData
+		{
+			public byte[] Buffer { get; set; }
+			public int X { get; set; }
+			public int Z { get; set; }
+			public int[] Biomes { get; set; }
+			public NbtCompound HeightMaps { get; set; }
+			public List<NbtCompound> Entities { get; set; }
+			public long[] PrimaryBitmask { get; set; }
+		}
         private void HandleChunkData(ChunkDataPacket packet)
         {
 	        var buffer = packet.Buffer.Span.ToArray();
@@ -2398,73 +2486,18 @@ namespace Alex.Worlds.Multiplayer
 	        var entities = packet.TileEntities;
 	        var primaryBitmask = packet.PrimaryBitmask;
 
-	        World.BackgroundWorker.Enqueue(
-		        () =>
-		        {
-			        using (var memoryStream = new MemoryStream(buffer))
-			        using (var stream = new MinecraftStream(memoryStream))
-			        {
-				        JavaChunkColumn result = null; // = new ChunkColumn();
+	        JavaChunkData jcd = new JavaChunkData()
+	        {
+		        X = x,
+		        Z = z,
+		        Biomes = biomes,
+		        HeightMaps = heightMaps,
+		        Entities = entities,
+		        PrimaryBitmask = primaryBitmask,
+		        Buffer = buffer
+	        };
 
-				        result = new JavaChunkColumn(x, z, WorldSettings);
-
-				        result.Read(stream, primaryBitmask, World.Dimension == Dimension.Overworld);
-
-
-				        for (int bx = 0; bx < 16; bx++)
-				        {
-					        for (int bz = 0; bz < 16; bz++)
-					        {
-						        for (int by = WorldSettings.MinY; by < WorldSettings.WorldHeight; by++)
-						        {
-							        result.SetBiome(
-								        bx, by, bz,
-								        biomes[((by >> 2) & 63) << 4 | ((bz >> 2) & 3) << 2 | ((bx >> 2) & 3)]);
-						        }
-					        }
-				        }
-
-
-				        foreach (var tag in entities)
-				        {
-					        if (tag == null || !(tag.Contains("id")))
-						        continue;
-
-					        try
-					        {
-						        //var blockEntity = BlockEntityFactory.ReadFrom(tag, World, null);
-
-						       // if (blockEntity != null)
-						       // {
-							       int x = tag["x"].IntValue;
-							       int y = tag["y"].IntValue;
-							       int z = tag["z"].IntValue;
-							        result.AddBlockEntity(
-								        new BlockCoordinates(x,y,z), tag);
-						       // }
-						       // else
-						       // {
-							    //    Log.Debug($"Got null block entity: {tag}");
-						        //}
-
-					        }
-					        catch (Exception ex)
-					        {
-						        Log.Warn(ex, "Could not add block entity!");
-					        }
-				        }
-
-				        if (!_generatingHelper.IsAddingCompleted)
-				        {
-					        _generatingHelper.Add(result);
-					        _chunksReceived++;
-
-					        return;
-				        }
-
-				        World.ChunkManager.AddChunk(result, new ChunkCoordinates(result.X, result.Z), true);
-			        }
-		        });
+	        _chunkQueue.Post(jcd);
         }
 
         private void HandleBlockEntityData(BlockEntityDataPacket packet)

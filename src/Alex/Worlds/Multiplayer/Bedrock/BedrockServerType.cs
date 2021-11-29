@@ -171,7 +171,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		{
 			if (ProfileProvider is ProfileManager pm)
 			{
-				//pm.CreateOrUpdateProfile(session, true);
+				pm.CreateOrUpdateProfile(session, true);
 			}
 
 			return Task.FromResult(new ProfileUpdateResult(true, null, null, session));

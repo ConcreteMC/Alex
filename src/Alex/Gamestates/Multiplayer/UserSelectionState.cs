@@ -86,7 +86,7 @@ namespace Alex.Gamestates.Multiplayer
 		private void AddAccountClicked()
 		{
 			//Show login.
-			_serverType.Authenticate(_skyBox, _onProfileSelected, null);
+			_onProfileSelected(null);
 		}
 
 		private void SelectAccountClicked()
@@ -94,22 +94,22 @@ namespace Alex.Gamestates.Multiplayer
 			SelectAccount(SelectedItem);
 		}
 
-		private void SelectAccount(UserSelectionItem item)
+		private async void SelectAccount(UserSelectionItem item)
 		{
 			if (item?.Profile != null)
 			{
-				_onProfileSelected?.Invoke(item?.Profile);/*.ContinueWith(
-					async x =>
-					{
-						var profile = await x;
+				var overlay = new LoadingOverlay();
+				Alex.GuiManager.AddScreen(overlay);
 
-						profile = await _serverType.VerifySession(profile);
-
-						if (profile.Authenticated)
-						{
-							
-						}
-					});*/
+				try
+				{
+					var profile = await _serverType.VerifySession(item.Profile);
+					_onProfileSelected(profile);
+				}
+				finally
+				{
+					Alex.GuiManager.RemoveScreen(overlay);
+				}
 			}
 		}
 		

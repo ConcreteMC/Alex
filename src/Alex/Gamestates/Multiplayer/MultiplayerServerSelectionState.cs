@@ -366,21 +366,14 @@ namespace Alex.Gamestates.Multiplayer
 
 			    async void OnProfileSelected(PlayerProfile profile)
 			    {
-				    Alex.GuiManager.AddScreen(overlay);
-
+				    if (profile == null || !profile.Authenticated)
+				    {
+					    await serverType.Authenticate(_skyBox, OnProfileSelected, profile);
+					    return;
+				    }
+				    
 				    try
 				    {
-					    if (!profile.Authenticated)
-					    {
-						    profile = await serverType.VerifySession(profile);
-					    }
-
-					    if (!profile.Authenticated){
-						    Log.Warn($"Invalid session. AuthError={profile.AuthError}");
-						    await serverType.Authenticate(_skyBox, OnProfileSelected, profile);
-						    return;
-					    }
-
 					    var target = item.ConnectionEndpoint;
 
 					    if (target == null) return;
@@ -399,8 +392,7 @@ namespace Alex.Gamestates.Multiplayer
 		    }
 		    finally
 		    {
-			    if (overlay != null)
-				    Alex.GuiManager.RemoveScreen(overlay);
+			    Alex.GuiManager.RemoveScreen(overlay);
 		    }
 	    }
 
