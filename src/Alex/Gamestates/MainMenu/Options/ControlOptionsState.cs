@@ -155,10 +155,10 @@ namespace Alex.Gamestates.MainMenu.Options
                AddInputs(MouseInputListener);
         }*/
 
-        protected override void OnShow()
+        /// <inheritdoc />
+        protected override void Initialize(IGuiRenderer renderer)
         {
-            base.OnShow();
-
+            base.Initialize(renderer);
             AddGuiRow(new TextElement("Cursor Options")
             {
                 TextAlignment = TextAlignment.Center,

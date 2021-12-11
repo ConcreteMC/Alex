@@ -321,7 +321,7 @@ namespace Alex
             container.RegisterInstance<IOptionsProvider>(Options);
             container.RegisterInstance<Audio.AudioEngine>(AudioEngine);
 
-            container.Register<GuiPanoramaSkyBox>();
+            container.RegisterSingleton<GuiPanoramaSkyBox>();
             
             // RocketUI
             container.Collection.Register<IInputListenerFactory>(new Type[]{
@@ -338,6 +338,8 @@ namespace Alex
            }
 
            container.Verify();
+           Services.AddService<IServiceProvider>(container);
+           
            ServiceContainer = container;
         }
 
@@ -442,7 +444,7 @@ namespace Alex
             
             var splash = new SplashScreen();
             GameStateManager.AddState("splash", splash);
-            GameStateManager.SetActiveState("splash");
+            GameStateManager.SetActiveState(splash, false, false);
 
             ParticleManager = new ParticleManager(this, GraphicsDevice, Resources);
             ParticleManager.Enabled = Options.AlexOptions.VideoOptions.Particles.Value;
@@ -454,6 +456,10 @@ namespace Alex
                 });
             
             Components.Add(ParticleManager);
+
+            var skyBox = ServiceContainer.GetRequiredService<GuiPanoramaSkyBox>();
+            skyBox.Enabled = true;
+            Components.Add(skyBox);
             
            // GuiManager.ShowDialog(new BrowserDialog());
             //	Log.Info($"Initializing Alex...");
@@ -688,11 +694,11 @@ namespace Alex
             
             if (LaunchSettings.ModelDebugging)
             {
-                GameStateManager.SetActiveState<ModelDebugState>(false);
+                GameStateManager.SetActiveState<ModelDebugState>(false, false);
             }
             else
             {
-                GameStateManager.SetActiveState<TitleState>(false);
+                GameStateManager.SetActiveState<TitleState>(false, false);
             }
 
             return Task.CompletedTask;
@@ -732,7 +738,7 @@ namespace Alex
 
         public void LoadWorld(WorldProvider worldProvider, NetworkProvider networkProvider, bool isServer = false)
         {
-            var state       = new PlayingState(this, GraphicsDevice, worldProvider, networkProvider);
+            var playState       = new PlayingState(this, GraphicsDevice, worldProvider, networkProvider);
             var loadingDialog = GuiManager.CreateDialog<WorldLoadingDialog>();
             loadingDialog.ConnectingToServer = isServer;
             loadingDialog.CancelAction = () =>
@@ -740,8 +746,8 @@ namespace Alex
                 loadingDialog.Close();
                 worldProvider?.Dispose();
                 
-                GameStateManager.RemoveState("play");
-                state?.Unload();
+                GameStateManager.RemoveState(PlayingState.Key);
+                IsMouseVisible = true;
             };
 
             //GuiManager.AddScreen(worldLoadingScreen);
@@ -752,15 +758,15 @@ namespace Alex
                     LoadResult result = LoadResult.Timeout;
                     try
                     {
-                        GameStateManager.RemoveState("play");
+                        GameStateManager.RemoveState(PlayingState.Key);
 
                         result = worldProvider.Load(loadingDialog.UpdateProgress);
-                        GameStateManager.AddState("play", state);
+                        GameStateManager.AddState(PlayingState.Key, playState);
                         
                         if (networkProvider.IsConnected && result == LoadResult.Done)
                         {
                             var currentState = GameStateManager.GetActiveState();
-                            GameStateManager.SetActiveState("play", false);
+                            GameStateManager.SetActiveState(PlayingState.Key, false);
                             GameStateManager.RemoveState(currentState);
                             IsMouseVisible = false;
                         }
@@ -777,7 +783,7 @@ namespace Alex
                             }
 
                             worldProvider?.Dispose();
-                            GameStateManager.RemoveState("play");
+                            GameStateManager.RemoveState(PlayingState.Key);
                         }
                     }
                 });

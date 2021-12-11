@@ -145,23 +145,12 @@ namespace Alex.Gamestates.Multiplayer
 		}
 
 		/// <inheritdoc />
-		protected override void OnUpdate(GameTime gameTime)
-		{
-			_skyBox?.Update(gameTime);
-			base.OnUpdate(gameTime);
-		}
-
-		/// <inheritdoc />
 		protected override void OnDraw(IRenderArgs args)
 		{
 			var sb = _skyBox;
 
 			if (sb != null)
 			{
-				if (!sb.Loaded)
-				{
-					sb.Load(Alex.GuiRenderer);
-				}
 				sb.Draw(args);
 			}
 

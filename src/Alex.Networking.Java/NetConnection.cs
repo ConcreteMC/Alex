@@ -551,9 +551,11 @@ namespace Alex.Networking.Java
 		    try
 		    {
 			    _networkStream?.Dispose();
-
+			    _networkStream = null;
+			    
 			    // _writerStream?.Dispose();
 			    Client?.Dispose();
+			    Client = null;
 		    }
 		    catch (Exception ex)
 		    {

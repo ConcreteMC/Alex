@@ -23,9 +23,9 @@ namespace Alex.Gamestates.MainMenu.Options.Ui
 		}
 
 		/// <inheritdoc />
-		protected override void OnInit(IGuiRenderer renderer)
+		protected override void Initialize(IGuiRenderer renderer)
 		{
-			base.OnInit(renderer);
+			base.Initialize(renderer);
 
 			AlphaBlending = CreateToggle(
 				"Alpha Blending: {0}", o => o.UserInterfaceOptions.Minimap.AlphaBlending);

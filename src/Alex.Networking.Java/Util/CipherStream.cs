@@ -163,22 +163,31 @@ namespace Alex.Networking.Java.Util
 			}
 		}
 
-
-
-		protected override void Dispose(bool disposing)
+		/// <inheritdoc />
+		public override void Close()
 		{
 			var stream = Stream;
-			if (disposing && stream != null)
+			var cipher = WriteCipher;
+			if (stream != null && cipher != null)
 			{
-				Stream = null;
-				if (WriteCipher != null)
-				{
-					byte[] data = WriteCipher.DoFinal();
-					stream.Write(data, 0, data.Length);
-					stream.Flush();
-				}
-				stream.Dispose();
+				byte[] data = cipher.DoFinal();
+				stream.Write(data, 0, data.Length);
+				stream.Flush();
 			}
+			
+			base.Close();
+		}
+
+		private bool _disposed = false;
+		protected override void Dispose(bool disposing)
+		{
+			if (disposing && !_disposed)
+			{
+				_disposed = true; 
+				Stream?.Dispose();
+				Stream = null;
+			}
+
 			base.Dispose(disposing);
 		}
 

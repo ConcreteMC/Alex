@@ -20,9 +20,9 @@ namespace Alex.Gamestates.MainMenu.Options
     {
         private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(OptionsStateBase));
         
-        protected AlexOptions Options => _optionsProvider.AlexOptions;
+        protected AlexOptions Options => OptionsProvider.AlexOptions;
 
-        private IOptionsProvider _optionsProvider => GetService<IOptionsProvider>();
+        private IOptionsProvider OptionsProvider => GetService<IOptionsProvider>();
 
         private GuiPanoramaSkyBox _skyBox;
         protected GuiBackButton BackButton { get; }
@@ -65,22 +65,15 @@ namespace Alex.Gamestates.MainMenu.Options
                 //BackgroundOverlay = null;
             }
             
-            _optionsProvider.Load();
+            OptionsProvider.Load();
             base.OnShow();
         }
         
         protected override void OnHide()
         {
-            _optionsProvider.Save();
+            OptionsProvider.Save();
 
             base.OnHide();
-        }
-
-        protected override void OnUnload()
-        {
-            _optionsProvider.Save();
-            
-            base.OnUnload();
         }
 
         private bool _initialized = false;
@@ -88,55 +81,36 @@ namespace Alex.Gamestates.MainMenu.Options
         protected override void OnInit(IGuiRenderer renderer)
         {
             base.OnInit(renderer);
+            Initialize(renderer);
+            
+            if (!_descriptionsAdded)
+            {
+                var row = AddGuiRow(Description);
+                row.ChildAnchor = Alignment.MiddleLeft;
+
+                _descriptionsAdded = true;
+            }
+            
             _initialized = true;
         }
 
-        private TGameState Construct<TGameState>() where TGameState : class, IGameState
+        protected virtual void Initialize(IGuiRenderer renderer)
         {
-            TGameState state = null;
-            foreach (var constructor in (typeof(TGameState).GetConstructors()))
-            {
-                bool canConstruct = true;
-                object[] passedParameters = new object[0];
-                var objparams = constructor.GetParameters();
-                
-                passedParameters = new object[objparams.Length];
-
-                for (var index = 0; index < objparams.Length; index++)
-                {
-                    var param = objparams[index];
-                    if (param.ParameterType == typeof(GuiPanoramaSkyBox))
-                    {
-                        passedParameters[index] = _skyBox;
-                    }
-                    else
-                    {
-                        canConstruct = false;
-                        break;
-                    }
-                }
-
-                if (canConstruct)
-                {
-                    state = (TGameState) constructor.Invoke(passedParameters);
-                    break;
-                }
-            }
-
-            return state;
+            
         }
 
         protected Button CreateLinkButton<TGameState>(string translationKey, string fallback = null) where TGameState : class, IGameState
         {
-            var state = Construct<TGameState>();
+           // var state = Construct<TGameState>();
             
-            if (state == null)
-                throw new Exception($"Can not create linkbutton with type {typeof(TGameState)}");
+           // if (state == null)
+           //     throw new Exception($"Can not create linkbutton with type {typeof(TGameState)}");
             
             return new AlexButton(() =>
             {
               //  state.ParentState = ParentState;
-                Alex.GameStateManager.SetActiveState(state, true);
+                Alex.GameStateManager.SetActiveState<TGameState>(true, false);
+              //  Alex.GameStateManager.SetActiveState(state, true);
             })
             {
                 Text = fallback ?? translationKey,
@@ -291,7 +265,7 @@ namespace Alex.Gamestates.MainMenu.Options
             
             if (!Alex.InGame && _skyBox != null)
             {
-                _skyBox?.Update(gameTime);
+               // _skyBox?.Update(gameTime);
             }
 
             var highlighted = Alex.GuiManager.FocusManager.HighlightedElement;
@@ -322,23 +296,10 @@ namespace Alex.Gamestates.MainMenu.Options
         {
             if (!Alex.InGame && _skyBox != null)
             {
-                if (!_skyBox.Loaded)
-                {
-                    _skyBox.Load(Alex.GuiRenderer);
-                }
-                
                 _skyBox.Draw(args);
             }
 
             base.OnDraw(args);
-
-            if (_initialized && !_descriptionsAdded)
-            {
-                var row = AddGuiRow(Description);
-                row.ChildAnchor = Alignment.MiddleLeft;
-
-                _descriptionsAdded = true;
-            }
         }
         
         protected void AddDescription(IGuiControl control, string title, string line1, string line2 = "")

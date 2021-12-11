@@ -12,7 +12,7 @@ namespace Alex.Gamestates.MainMenu
             TitleTranslationKey = "options.title";
         }
 
-        protected override void OnInit(IGuiRenderer renderer)
+        protected override void Initialize(IGuiRenderer renderer)
         {
             AddGuiRow(
                 CreateSlider($"{GuiRenderer.GetTranslation("options.fov")}: {{0}}", o => o.FieldOfVision, 30, 120, 1),
@@ -32,7 +32,7 @@ namespace Alex.Gamestates.MainMenu
 
             AddGuiRow(CreateLinkButton<UserInterfaceOptionsState>("options.ui", "User Interface..."));
             
-            base.OnInit(renderer);
+            base.Initialize(renderer);
         }
     }
 }

@@ -5,7 +5,8 @@ namespace Alex.Common.GameStates
 {
     public interface IGameState
     {
-        string Identifier { get; set; }
+        //string Identifier { get; set; }
+        StateBehavior StateBehavior { get; set; }
         
         IGameState ParentState { get; set; }
 
@@ -18,5 +19,11 @@ namespace Alex.Common.GameStates
 
         void Show();
         void Hide();
+    }
+
+    public enum StateBehavior
+    {
+        Referenced,
+        Unload
     }
 }

@@ -69,7 +69,7 @@ namespace Alex.Gamestates.InGame
 			{
 				_didInitialization = true;
 
-				if ( Alex.GameStateManager.TryGetState("play", out PlayingState s))
+				if (ParentState is PlayingState s)
 				{
 					foreach (var p in s.World.PlayerList)
 					{
@@ -87,7 +87,6 @@ namespace Alex.Gamestates.InGame
         {
             Alex.IsMouseVisible = false;
             Alex.GameStateManager.Back();
-            Alex.GameStateManager.RemoveState("ingamemenu");
         }
 
         private void OnOptionsButtonPressed()
@@ -100,12 +99,10 @@ namespace Alex.Gamestates.InGame
 
         private void OnQuitButtonPressed()
         {
-	        if (!Alex.GameStateManager.SetActiveState<TitleState>(false))
+	        if (!Alex.GameStateManager.SetActiveState<TitleState>(false, false))
 	        {
 		        Log.Warn($"Could not go back to titlestate.");
 	        }
-
-            Alex.GameStateManager.RemoveState("play");
         }
 
         protected override void OnHide()

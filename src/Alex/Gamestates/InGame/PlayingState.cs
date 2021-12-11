@@ -35,6 +35,7 @@ namespace Alex.Gamestates.InGame
 {
 	public class PlayingState : GuiGameStateBase
 	{
+		public const string Key = "play";
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(PlayingState));
 		
 		public World World { get; private set; }
@@ -149,7 +150,7 @@ namespace Alex.Gamestates.InGame
 			get => _renderDebug;
 			set
 			{
-				if (value != _renderDebug)
+				//if (value != _renderDebug)
 				{
 					_renderDebug = value;
 
@@ -172,8 +173,7 @@ namespace Alex.Gamestates.InGame
 				return _networkDebugHud.Advanced;
 			}
 			set
-			{
-				if (value != _networkDebugHud.Advanced)
+			{ //if (value != _networkDebugHud.Advanced)
 				{
 					_networkDebugHud.Advanced = value;
 				}
@@ -456,6 +456,8 @@ namespace Alex.Gamestates.InGame
 
 		protected override void OnUnload()
 		{
+			Log.Info($"Unloading playstate!");
+			
 			Alex.InGame = false;
 			Alex.ParticleManager.Hide();
 			
@@ -493,6 +495,7 @@ namespace Alex.Gamestates.InGame
 					}
 					finally
 					{
+						Log.Info($"Unloaded playstate!");
 						Alex.GuiManager.RemoveScreen(loadingOverlay);
 					}
 				});

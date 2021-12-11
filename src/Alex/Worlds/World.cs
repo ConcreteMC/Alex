@@ -1230,18 +1230,19 @@ namespace Alex.Worlds
 			if (_destroyed) return;
 			_destroyed = true;
 			
+			Log.Info("World disposing...");
 			_cancellationTokenSource?.Cancel();
 
 			foreach (var disposable in _disposables)
 			{
 				disposable.Dispose();
 			}
-			_disposables.Clear();
+			_disposables?.Clear();
 			
-			TickManager.UnregisterTicked(this);
-			TickManager.UnregisterTicked(EntityManager);
-			TickManager.UnregisterTicked(ChunkManager);
-			TickManager.UnregisterTicked(Map);
+			TickManager?.UnregisterTicked(this);
+			TickManager?.UnregisterTicked(EntityManager);
+			TickManager?.UnregisterTicked(ChunkManager);
+			TickManager?.UnregisterTicked(Map);
 			
 			Map?.Dispose();
 			//Map = null;
@@ -1249,14 +1250,13 @@ namespace Alex.Worlds
 			EntityManager = null;
 			ChunkManager = null;
 
-			Player.Dispose();
+			Player?.Dispose();
 			//Ticker.Dispose();
 			TickManager = null;
 			Player = null;
 			
 			_breakingEffect?.Dispose();
-			
-			//Log.Info($"World disposed.");
+			Log.Info($"World disposed.");
 		}
 	}
 

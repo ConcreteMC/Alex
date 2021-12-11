@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using Alex.Common.Input;
 using Alex.Common.Services;
 using Alex.Common.Utils;
@@ -190,17 +191,27 @@ namespace Alex.Entities
 		
 		private void ToggleDebugInfo()
 		{
-			if (Alex.Instance.GameStateManager.GetActiveState() is PlayingState ps)
+			var activeState = Alex.Instance.GameStateManager.GetActiveState();
+			if (activeState is PlayingState ps)
 			{
 				ps.RenderDebug = !ps.RenderDebug;
+			}
+			else
+			{
+				Log.Warn($"Active state was not playstate, got {activeState?.GetType().ToString()} instead!");
 			}
 		}
 		
 		private void ToggleNetworkDebugInfo()
 		{
-			if (Alex.Instance.GameStateManager.GetActiveState() is PlayingState ps)
+			var activeState = Alex.Instance.GameStateManager.GetActiveState();
+			if (activeState is PlayingState ps)
 			{
 				ps.RenderNetworking = !ps.RenderNetworking;
+			}
+			else
+			{
+				Log.Warn($"Active state was not playstate, got {activeState?.GetType().ToString()} instead!");
 			}
 		}
 		
@@ -212,40 +223,55 @@ namespace Alex.Entities
 		private void OnEndDraw(object? sender, EventArgs e)
 		{
 			Alex.Instance.OnEndDraw -= OnEndDraw;
-			
-			//using (GraphicsContext context = GraphicsContext.CreateContext(Graphics, BlendState.AlphaBlend))
+			var w = Graphics.PresentationParameters.BackBufferWidth;
+			var h = Graphics.PresentationParameters.BackBufferHeight;
+
+			Rgba32[] data = new Rgba32[w * h];
+
+			try
 			{
-				try
-				{
-					var w = Graphics.PresentationParameters.BackBufferWidth;
-					var h = Graphics.PresentationParameters.BackBufferHeight;
-					
-					Rgba32[] data = new Rgba32[w * h];
-					Graphics.GetBackBufferData(data);
-
-					var pics = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures);
-					var screenshotPath = Path.Combine(pics, $"alex-{DateTime.Now.ToString("s")}.png");
-					
-					using (Image<Rgba32> t = Image.LoadPixelData(data, w, h))
-					{
-						using (FileStream fs = File.OpenWrite(screenshotPath))
-						{
-							t.SaveAsPng(fs, new PngEncoder()
-							{
-								TransparentColorMode = PngTransparentColorMode.Preserve
-							});
-						}
-					}
-
-					ChatComponent.AddSystemMessage($"{ChatColors.Gray}{ChatFormatting.Italic}Saved screenshot to: {screenshotPath}");
-				}
-				catch (Exception error)
-				{
-					Log.Error(error, $"Failed to save screenshot.");
-
-					ChatComponent.AddSystemMessage($"{ChatColors.Red}Failed to save screenshot, see console for more information.");
-				}
+				Graphics.GetBackBufferData(data);
 			}
+			catch (Exception ex)
+			{
+				Log.Error(ex, $"Failed to save screenshot.");
+
+				ChatComponent.AddSystemMessage(
+					$"{ChatColors.Red}Failed to save screenshot, see console for more information.");
+
+				return;
+			}
+
+			ThreadPool.QueueUserWorkItem(
+				o =>
+				{
+					try
+					{
+
+
+						var pics = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures);
+						var screenshotPath = Path.Combine(pics, $"alex-{DateTime.Now.ToString("s")}.png");
+
+						using (Image<Rgba32> t = Image.LoadPixelData(data, w, h))
+						{
+							using (FileStream fs = File.OpenWrite(screenshotPath))
+							{
+								t.SaveAsPng(
+									fs, new PngEncoder() { TransparentColorMode = PngTransparentColorMode.Preserve });
+							}
+						}
+
+						ChatComponent.AddSystemMessage(
+							$"{ChatColors.Gray}{ChatFormatting.Italic}Saved screenshot to: {screenshotPath}");
+					}
+					catch (Exception error)
+					{
+						Log.Error(error, $"Failed to save screenshot.");
+
+						ChatComponent.AddSystemMessage(
+							$"{ChatColors.Red}Failed to save screenshot, see console for more information.");
+					}
+				});
 		}
 
 		private void OpenMap()
@@ -368,7 +394,7 @@ namespace Alex.Entities
 		    }
 		    else if (CanOpenDialog())
 		    {
-			    Alex.Instance.GameStateManager.SetActiveState<InGameMenuState>();
+			    Alex.Instance.GameStateManager.SetActiveState<InGameMenuState>(true, false);
 			    Player.SkipUpdate();
 		    }
 	    }

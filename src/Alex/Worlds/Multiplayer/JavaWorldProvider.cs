@@ -83,7 +83,7 @@ namespace Alex.Worlds.Multiplayer
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger();
 
 		private Alex Alex { get; }
-		private NetConnection Client { get; }
+		private NetConnection Client { get; set; }
 		private PlayerProfile Profile { get; }
 		
 		private IOptionsProvider OptionsProvider { get; }
@@ -222,8 +222,6 @@ namespace Alex.Worlds.Multiplayer
 			_wasKicked = wasKicked;
 			
 			DisconnectedDialog.Show(Alex, reason, useTranslation);
-			
-			Dispose();
 		}
 
 		private PlayerLocation _lastSentLocation = new PlayerLocation(Vector3.Zero);
@@ -262,7 +260,7 @@ namespace Alex.Worlds.Multiplayer
 
 		public override void OnTick()
 		{
-			if (World == null) return;
+			if (World == null || _disconnected || Client == null) return;
 
 		//	var isTick = _isRealTick;
 			//_isRealTick = !isTick;
@@ -526,7 +524,7 @@ namespace Alex.Worlds.Multiplayer
 			World.Player.Inventory.CursorChanged += InventoryOnCursorChanged;
 			World.Player.Inventory.Closed += (sender, args) => { ClosedContainer(0); };
 
-			return LoadResult.Done;
+			return _disconnected ? (_wasKicked ? LoadResult.Kicked : LoadResult.ConnectionLost) : LoadResult.Done;
 		}
 
 
@@ -2718,7 +2716,7 @@ namespace Alex.Worlds.Multiplayer
 			}
 
 			_disconnected = true;
-			Client.Stop();
+			Client?.Stop();
 		}
 		
 		private void HandleLoginSuccess(LoginSuccessPacket packet)
@@ -2850,8 +2848,15 @@ namespace Alex.Worlds.Multiplayer
 				return b.ToString("x").TrimStart('0');
 			}
 		}
+
+		private bool _disposed = false;
 		public override void Dispose()
 		{
+			if (_disposed)
+				return;
+			
+			Log.Info("WorldProvider disposing...");
+			
 			_disconnected = true;
 			//World?.Ticker?.UnregisterTicked(this);
 
@@ -2861,15 +2866,18 @@ namespace Alex.Worlds.Multiplayer
 
 			foreach (var disposable in _disposables.ToArray())
 			{
-				disposable.Dispose();
+				disposable?.Dispose();
 			}
 			
-			_disposables.Clear();
+			_disposables?.Clear();
 
-			Client.Stop();
+			Client?.Stop();
 
-			Client.Dispose();
-			
+			Client?.Dispose();
+			Client = null;
+
+			Log.Info($"Worldprovider disposed!");
+			_disposed = true;
 			//Options.VideoOptions.RenderDistance.
 		}
 	}

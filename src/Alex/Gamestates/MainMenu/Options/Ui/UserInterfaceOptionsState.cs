@@ -13,19 +13,20 @@ namespace Alex.Gamestates.MainMenu.Options.Ui
 		}
 
 		/// <inheritdoc />
-		protected override void OnInit(IGuiRenderer renderer)
+		protected override void Initialize(IGuiRenderer renderer)
 		{
-			base.OnInit(renderer);
+			base.Initialize(renderer);
 
 			var scoreboardButton = CreateLinkButton<ScoreboardOptionsState>("options.ui.scoreboard", "Scoreboard");
 			var hudButton = CreateLinkButton<HudOptionsState>("options.ui.hud", "Hud");
 			var minimapButton = CreateLinkButton<MinimapOptionsState>("options.ui.minimap", "Minimap");
-
+			var chatButton = CreateLinkButton<ChatOptionsState>("options.ui.chat", "Chat");
+			
 			scoreboardButton.Enabled = false;
 			hudButton.Enabled = false;
 			
-			AddGuiRow(minimapButton, hudButton);
-			AddGuiRow(scoreboardButton);
+			AddGuiRow(minimapButton, chatButton);
+			AddGuiRow(scoreboardButton, hudButton);
 		}
 	}
 }

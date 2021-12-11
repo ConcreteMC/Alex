@@ -7,7 +7,7 @@ using RocketUI;
 
 namespace Alex.Gui
 {
-	public class GuiPanoramaSkyBox : ITexture2D
+	public class GuiPanoramaSkyBox : GameComponent, ITexture2D
 	{
 		public Texture2D Texture => _renderTarget;
 		public Rectangle ClipBounds => _renderTarget?.Bounds ?? new Rectangle(0, 0, Width, Height);
@@ -31,7 +31,7 @@ namespace Alex.Gui
 	    private Texture2D[] _textures;
 
 		private Alex Game { get; }
-		public GuiPanoramaSkyBox(Alex alex)
+		public GuiPanoramaSkyBox(Alex alex) : base(alex)
 		{
 			Game = alex;
 		}
@@ -165,15 +165,17 @@ namespace Alex.Gui
 		    }
 	    }
 
+	    /// <inheritdoc />
+	    public override void Update(GameTime gameTime)
+	    {
+		    base.Update(gameTime);
+		    _rotation += (float)gameTime.ElapsedGameTime.TotalMilliseconds / (1000.0f / 20.0f);
+
+		    RotateSkyBox();
+	    }
+
 	    private float _rotation = 0f;
-        public void Update(GameTime gameTime)
-        {
-	        _rotation += (float)gameTime.ElapsedGameTime.TotalMilliseconds / (1000.0f / 20.0f);
-
-			RotateSkyBox();
-        }
-
-		private void InitGraphics()
+	    private void InitGraphics()
 		{
 			_depthStencilState = DepthStencilState.None;
 			_rasterizerState = RasterizerState.CullNone;
@@ -202,7 +204,10 @@ namespace Alex.Gui
 		}
 
 		public void Draw(IRenderArgs args)
-        {
+		{
+			if (!Loaded)
+				return;
+	        
             if (!CanRender) return;
 
             var device = args.GraphicsDevice;

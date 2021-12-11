@@ -156,12 +156,6 @@ namespace Alex.Gamestates.Login
 			NameInput.Enabled = true;
 		}
 
-		protected override void OnUpdate(GameTime gameTime)
-		{
-			base.OnUpdate(gameTime);
-			_backgroundSkyBox.Update(gameTime);
-		}
-
 		protected override void OnDraw(IRenderArgs args)
 		{
 			base.OnDraw(args);

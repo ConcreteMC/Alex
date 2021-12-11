@@ -634,6 +634,11 @@ namespace Alex.Gui.Elements.Hud
 		{
 			_instance?.AddMessage(message, MessageType.System);
 		}
+
+		public void SetHistorySize(int newvalue)
+		{
+			_chatEntries.Resize(newvalue);
+		}
 	}
 
 	public interface IChatRecipient

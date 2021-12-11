@@ -283,16 +283,11 @@ namespace Alex.Gamestates.MainMenu
         protected override void OnUpdate(GameTime gameTime)
         {
             base.OnUpdate(gameTime);
-            _skyBox.Update(gameTime);
+           // _skyBox.Update(gameTime);
         }
 
         protected override void OnDraw(IRenderArgs args)
         {
-            if (!_skyBox.Loaded)
-            {
-                _skyBox.Load(Alex.GuiRenderer);
-            }
-
             _skyBox.Draw(args);
             
             base.OnDraw(args);

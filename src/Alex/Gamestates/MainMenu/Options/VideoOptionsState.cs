@@ -31,7 +31,7 @@ namespace Alex.Gamestates.MainMenu.Options
         }
 
         private bool _didInit = false;
-        protected override void OnInit(IGuiRenderer renderer)
+        protected override void Initialize(IGuiRenderer renderer)
         {
             if (!_didInit)
             {
@@ -135,7 +135,7 @@ namespace Alex.Gamestates.MainMenu.Options
                 Descriptions.Add(EntityRenderDistance, $"{TextColor.Bold}Entity Render Distance:{TextColor.Reset}\n{TextColor.Red}High values may decrease performance significantly!\n");
             }
 
-            base.OnInit(renderer);
+            base.Initialize(renderer);
         }
 
         protected override void OnShow()

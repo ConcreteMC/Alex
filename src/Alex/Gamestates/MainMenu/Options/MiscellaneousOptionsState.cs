@@ -30,7 +30,7 @@ namespace Alex.Gamestates.MainMenu.Options
         }
 
         private bool _didInit = false;
-        protected override void OnInit(IGuiRenderer renderer)
+        protected override void Initialize(IGuiRenderer renderer)
         {
             if (!_didInit)
             {
@@ -89,7 +89,7 @@ namespace Alex.Gamestates.MainMenu.Options
                 AddDescription(SkipFrames, "Skip Frames", "Skip frames when a background task takes too long to execute");
             }
 
-            base.OnInit(renderer);
+            base.Initialize(renderer);
         }
         
         protected override void OnUpdate(GameTime gameTime)

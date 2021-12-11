@@ -8,6 +8,7 @@ using Alex.Common.Utils;
 using Alex.Common.Utils.Vectors;
 using Alex.Entities;
 using Alex.Gamestates.Common;
+using Alex.Gamestates.InGame;
 using Alex.Gamestates.Multiplayer;
 using Alex.Gui;
 using Alex.Gui.Elements;
@@ -78,7 +79,7 @@ namespace Alex.Gamestates.MainMenu
                     new MenuItem()
                     {
                         Title = "menu.options",
-                        OnClick = (sender, args) => { Alex.GameStateManager.SetActiveState(new OptionsState(_backgroundSkyBox)); },
+                        OnClick = (sender, args) => { Alex.GameStateManager.SetActiveState<OptionsState>(true, false); },
                         IsTranslatable = true
                     },
                     new MenuItem()
@@ -177,7 +178,7 @@ namespace Alex.Gamestates.MainMenu
             Alex.GameStateManager.SetActiveState(new MultiplayerServerSelectionState()
             {
                 BackgroundOverlay = BackgroundOverlay
-            }, true);
+            }, true, false);
         }
 
         #endregion
@@ -268,14 +269,6 @@ namespace Alex.Gamestates.MainMenu
 
             ApplyModel(_playerView.Entity);
         }
-        
-        protected override void OnLoad(IRenderArgs args)
-        {
-            base.OnLoad(args);
-            
-            if (!_backgroundSkyBox.Loaded)
-                _backgroundSkyBox.Load(Alex.GuiRenderer);
-        }
 
         private void ChangeSKinBtnPressed()
         {
@@ -288,8 +281,6 @@ namespace Alex.Gamestates.MainMenu
         
         {
             base.OnUpdate(gameTime);
-
-            _backgroundSkyBox.Update(gameTime);
 
             _rotation += (float) gameTime.ElapsedGameTime.TotalSeconds;
 
@@ -320,12 +311,18 @@ namespace Alex.Gamestates.MainMenu
             {
                 _backgroundSkyBox.Draw(args);
             }
+            else
+            {
+                _backgroundSkyBox.Load(GuiRenderer);
+            }
 
             base.OnDraw(args);
         }
 
         protected override void OnShow()
         {
+            Alex.GameStateManager.RemoveState(PlayingState.Key);
+            
             _switchItemTimer.Start();
            // Alex.Instance.GuiManager.ShowDialog(new BrowserDialog("Microsoft Login", "https://google.com"));
             base.OnShow();

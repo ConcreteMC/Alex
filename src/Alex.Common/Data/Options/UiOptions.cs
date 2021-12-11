@@ -14,16 +14,38 @@ namespace Alex.Common.Data.Options
 		[DataMember]
 		public ScoreboardOptions Scoreboard { get; set; }
 		
+		[DataMember]
+		public ChatOptions Chat { get; set; }
+		
 		public UiOptions()
 		{
 			Minimap = DefineBranch<MinimapOptions>();
 			Scoreboard = DefineBranch<ScoreboardOptions>();
+			Chat = DefineBranch<ChatOptions>();
 		}
 	}
 
 	public class HudOptions : OptionsBase
 	{
 		
+	}
+
+	public class ChatOptions : OptionsBase
+	{
+		[DataMember]
+		public OptionsProperty<bool> Enabled { get; set; }
+		
+		[DataMember]
+		public OptionsProperty<int> MessageHistory { get; set; }
+
+		public ChatOptions()
+		{
+			Enabled = DefineProperty(true);
+			MessageHistory = DefineProperty(10, (value, newValue) =>
+			{
+				return Math.Clamp(value, 0, 100);
+			});
+		}
 	}
 	
 	[DataContract]

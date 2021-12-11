@@ -1,7 +1,8 @@
 ﻿<StyleSheet xmlns="clr-namespace:RocketUI;assembly=RocketUI"
             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
             xmlns:xna="clr-namespace:Microsoft.Xna.Framework;assembly=MonoGame.Framework"
-            xmlns:alexGui="clr-namespace:Alex.Gui.Elements;assembly=Alex">
+            xmlns:alexGui="clr-namespace:Alex.Gui.Elements;assembly=Alex"
+            xmlns:gui="clr-namespace:Alex.Gui">
 
     <Style TargetType="Button">
         <Setter Property="Background">
@@ -79,40 +80,20 @@
                 <GuiTexture2D>#0000007F</GuiTexture2D>
             </Setter.Value>
         </Setter>
-        <Setter Property="HighlightColor">
-            <Setter.Value>
-                <xna:Color>#FF55FFFF</xna:Color>
-            </Setter.Value>
-        </Setter>
-        <Setter Property="DefaultColor">
-            <Setter.Value>
-                <xna:Color>#FFFFFFFF</xna:Color>
-            </Setter.Value>
-        </Setter>
+        <Setter Property="HighlightColor" Value="#FF55FFFF" />
+        <Setter Property="DefaultColor" Value="#FFFFFFFF" /> 
     </Style>
     
     <Style TargetType="alexGui:KeybindElement">
-        <Setter Property="TextColor">
-            <Setter.Value>
-                <xna:Color>#FFFFFF</xna:Color>
-            </Setter.Value>
-        </Setter>
+        <Setter Property="TextColor" Value="#FFFFFF" />
     </Style>
     
     <Style TargetType="alexGui:KeybindElement" Name="ReadOnly">
-        <Setter Property="TextColor">
-            <Setter.Value>
-                <xna:Color>#999999</xna:Color>
-            </Setter.Value>
-        </Setter>
+        <Setter Property="TextColor" Value="#999999" />
     </Style>
     
     <Style TargetType="alexGui:KeybindElement">
         <Style.Name>Unbound &amp;&amp; !Focused</Style.Name>
-        <Setter Property="TextColor">
-            <Setter.Value>
-                <xna:Color>#ff5555</xna:Color>
-            </Setter.Value>
-        </Setter>
+        <Setter Property="TextColor" Value="#ff5555" />
     </Style>
 </StyleSheet>

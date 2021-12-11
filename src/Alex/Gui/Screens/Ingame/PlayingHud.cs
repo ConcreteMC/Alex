@@ -51,6 +51,8 @@ namespace Alex.Gui.Screens.Ingame
 		private OptionsPropertyAccessor<double> _minimapSizeAccessor;
 		private OptionsPropertyAccessor<int> _renderDistanceAccessor;
 		private OptionsPropertyAccessor<bool> _hudVisibleAccessor;
+		private OptionsPropertyAccessor<bool> _chatVisibleAccessor;
+		private OptionsPropertyAccessor<int> _chatHistoryAccessor;
 		private OptionsPropertyAccessor<ZoomLevel> _zoomLevelAccessor;
 
 		private InputActionBinding _chatToggleBinding;
@@ -169,7 +171,23 @@ namespace Alex.Gui.Screens.Ingame
 	        
 	        _chatToggleBinding = PlayerInputManager.RegisterListener(
 		        AlexInputCommand.ToggleChat, InputBindingTrigger.Discrete, ToggleChat);
+
+	        _chatVisibleAccessor = options.UserInterfaceOptions.Chat.Enabled.Bind(SetChatVisibility);
+	        Chat.IsVisible = _chatVisibleAccessor.Value;
+	        
+	        _chatHistoryAccessor = options.UserInterfaceOptions.Chat.MessageHistory.Bind(SetChatHistorySize);
+	        Chat.SetHistorySize(_chatHistoryAccessor.Value);
         }
+		
+		private void SetChatHistorySize(int oldvalue, int newvalue)
+		{
+			Chat.SetHistorySize(newvalue);
+		}
+		
+		private void SetChatVisibility(bool oldvalue, bool newvalue)
+		{
+			Chat.IsVisible = newvalue;
+		}
 
 		private void SetScoreboardPosition(ElementPosition oldvalue, ElementPosition newvalue)
 		{
@@ -205,6 +223,9 @@ namespace Alex.Gui.Screens.Ingame
 
 		private void ToggleChat()
 		{
+			if (!Chat.IsVisible)
+				return;
+			
 			if (!CheckInput)
 				return;
 			
@@ -370,6 +391,12 @@ namespace Alex.Gui.Screens.Ingame
 	        
 	        _zoomLevelAccessor?.Dispose();
 	        _zoomLevelAccessor = null;
+	        
+	        _chatVisibleAccessor?.Dispose();
+	        _chatVisibleAccessor = null;
+	        
+	        _chatHistoryAccessor?.Dispose();
+	        _chatHistoryAccessor = null;
         }
 
         /// <inheritdoc />

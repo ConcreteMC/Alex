@@ -94,7 +94,7 @@ namespace Alex.Gamestates.Multiplayer
 				    Enabled = false
 			    });
 			    row.AddChild(_directConnectButton = new AlexButton("Direct Connect",
-				    () => Alex.GameStateManager.SetActiveState<MultiplayerConnectState>())
+				    () => Alex.GameStateManager.SetActiveState<MultiplayerConnectState>(true, false))
 			    {
 				    TranslationKey = "selectServer.direct",
 				    Enabled = false
@@ -313,12 +313,12 @@ namespace Alex.Gamestates.Multiplayer
 		
 	    public void OnAddItemButtonPressed()
 	    {
-		    Alex.GameStateManager.SetActiveState(new MultiplayerAddEditServerState(AddEditServerCallbackAction, _skyBox));
+		    Alex.GameStateManager.SetActiveState(new MultiplayerAddEditServerState(AddEditServerCallbackAction, _skyBox), true, false);
 	    }
 
 	    private void OnEditItemButtonPressed()
 	    {
-		    Alex.GameStateManager.SetActiveState(new MultiplayerAddEditServerState(SelectedItem.SavedServerEntry, AddEditServerCallbackAction, _skyBox));
+		    Alex.GameStateManager.SetActiveState(new MultiplayerAddEditServerState(SelectedItem.SavedServerEntry, AddEditServerCallbackAction, _skyBox), true, false);
 	    }
 		
 	    private void OnDeleteItemButtonPressed()
@@ -344,7 +344,7 @@ namespace Alex.Gamestates.Multiplayer
 					    Log.Warn($"Failed to remove item.");
 				    }
 			    }
-		    }));
+		    }), true, false);
 	    }
 
 	    private async void JoinServer(GuiServerListEntryElement item)
@@ -456,20 +456,15 @@ namespace Alex.Gamestates.Multiplayer
 
 	    protected override void OnUpdate(GameTime gameTime)
 	    {
-			_skyBox.Update(gameTime);
+			//_skyBox.Update(gameTime);
 		    base.OnUpdate(gameTime);
 	    }
 
 	    protected override void OnDraw(IRenderArgs args)
 	    {
-		    if (!_skyBox.Loaded)
-		    {
-			    _skyBox.Load(Alex.GuiRenderer);
-		    }
-
 		    _skyBox.Draw(args);
 
-			base.OnDraw(args);
+		    base.OnDraw(args);
 	    }
 
 	    protected override void OnHide()

@@ -362,7 +362,7 @@ namespace Alex.Gamestates.Login
         protected override void OnUpdate(GameTime gameTime)
         {
 	        base.OnUpdate(gameTime);
-	        _backgroundSkyBox.Update(gameTime);
+	       // _backgroundSkyBox.Update(gameTime);
 	        var overlay = _loadingOverlay;
 
 	        if (overlay != null)

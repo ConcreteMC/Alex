@@ -15,16 +15,26 @@ namespace Alex.Gamestates.Common
     public class GuiGameStateBase : Screen, IGameState
     {
 	    private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(GuiGameStateBase));
-	    
-        protected Alex Alex => Alex.Instance;
+	    private IGameState _parentState;
+
+	    protected Alex Alex => Alex.Instance;
         public AlexOptions Options => GetService<IOptionsProvider>().AlexOptions;
 
 		public bool IsLoaded { get; private set; }
 		public bool IsShown  { get; private set; }
 
 		/// <inheritdoc />
-		public string Identifier { get; set; } = Guid.NewGuid().ToString();
-		public IGameState ParentState { get; set; }
+		public StateBehavior StateBehavior { get; set; }
+
+		public IGameState ParentState
+		{
+			get => _parentState;
+			set
+			{
+				_parentState = value;
+			}
+		}
+
 		public GuiGameStateBase()
         {
 	        //IsSelfManaged = true;
@@ -62,7 +72,7 @@ namespace Alex.Gamestates.Common
 
         public void Unload()
 		{
-			if (!IsLoaded) return;
+			//if (!IsLoaded) return;
 			IsLoaded = false;
             OnUnload();
         }
@@ -94,6 +104,8 @@ namespace Alex.Gamestates.Common
 			if (!Alex.GuiManager.HasScreen(this)) 
 				Alex.GuiManager.AddScreen(this);
 			
+			Alex.IsMouseVisible = true;
+			
             OnShow();
 
             InvalidateLayout();
@@ -106,6 +118,8 @@ namespace Alex.Gamestates.Common
 			
 			if (Alex.GuiManager.HasScreen(this)) 
 				Alex.GuiManager.RemoveScreen(this);
+			
+			Alex.IsMouseVisible = false;
 			
 			OnHide();
 

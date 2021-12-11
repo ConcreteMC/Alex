@@ -74,8 +74,7 @@ namespace Alex.Gamestates.InGame
 
 		private void MenuButtonClicked()
 		{
-			_game.GameStateManager.RemoveState("play");
-			_game.GameStateManager.SetActiveState<TitleState>("title");
+			_game.GameStateManager.SetActiveState<TitleState>(false, false);
 			GuiManager?.HideDialog(this);
 
 			_game.IsMouseVisible = true;
@@ -110,6 +109,7 @@ namespace Alex.Gamestates.InGame
 		
 		public static void Show(Alex game, string reason, bool isTranslation = false)
 		{
+			game.IsMouseVisible = true;
 			var activeScreen = _activeDialog;
 
 			if (activeScreen == null)

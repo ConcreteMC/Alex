@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Linq;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using NLog;
@@ -33,20 +35,14 @@ namespace Alex.Common.GameStates
 	        }
         }
 
-        public void AddState<TStateType>(string name) where TStateType : class, IGameState, new()
+        public void AddState<TStateType>(string name) where TStateType : class, IGameState
 	    {
-			AddState(name, new TStateType());
+			AddState(name, Construct<TStateType>());
 	    }
 
         public bool AddState(string name, IGameState state)
         {
-	        if (States.TryAdd(name, state))
-	        {
-		        state.Identifier = name;
-		        return true;
-	        }
-
-	        return false;
+	        return States.TryAdd(name, state);
         }
 
         public bool TryGetState<TStateType>(string name, out TStateType state) where TStateType : class, IGameState
@@ -66,10 +62,11 @@ namespace Alex.Common.GameStates
 
         public bool RemoveState<TStateType>(TStateType state) where TStateType : class, IGameState
         {
-	        if (state?.Identifier == null)
+	        var match = States.FirstOrDefault(x => x.Value == state).Key;
+	        if (match == null)
 		        return false;
 	        
-	        return RemoveState(state.Identifier);
+	        return RemoveState(match);
         }
         
 	    public bool RemoveState(string name)
@@ -91,7 +88,7 @@ namespace Alex.Common.GameStates
 			    SetActiveState((IGameState)null);
 		    }
 		    
-		    state.Unload();
+		    state?.Unload();
 	    }
 	    
 		private void EnsureStateLoaded(IGameState state)
@@ -110,55 +107,144 @@ namespace Alex.Common.GameStates
 			});
 		}
 
-		public bool SetActiveState<TStateType>(string key, bool keepHistory) where TStateType : IGameState, new()
+		private TGameState Construct<TGameState>() where TGameState : class, IGameState
+		{
+			var serviceProvider = base.Game.Services.GetRequiredService<IServiceProvider>();
+			
+			TGameState state = null;
+			foreach (var constructor in (typeof(TGameState).GetConstructors()))
+			{
+				bool canConstruct = true;
+				object[] passedParameters = new object[0];
+				var objparams = constructor.GetParameters();
+                
+				passedParameters = new object[objparams.Length];
+
+				for (var index = 0; index < objparams.Length; index++)
+				{
+					var param = objparams[index];
+					var p = serviceProvider.GetService(param.ParameterType);
+
+					if (p != null)
+					{
+						passedParameters[index] = p;
+					}
+					else
+					{
+						canConstruct = false;
+						break;
+					}
+				}
+
+				if (canConstruct)
+				{
+					state = (TGameState) constructor.Invoke(passedParameters);
+					break;
+				}
+			}
+
+			return state;
+		}
+		
+		public bool SetActiveState<TStateType>() where TStateType : class, IGameState
+		{
+			return SetActiveState<TStateType>(true);
+		}
+		
+		public bool SetActiveState<TStateType>(bool keepHistory) where TStateType : class, IGameState
+		{
+			return SetActiveState<TStateType>(keepHistory, true);
+		}
+		
+		public bool SetActiveState<TStateType>(bool keepHistory, bool keepLoaded) where TStateType : class, IGameState
+		{
+			var key = typeof(TStateType).FullName;
+			
+			return SetActiveState<TStateType>(key, keepHistory, keepLoaded);
+		}
+
+		public bool SetActiveState<TStateType>(string key, bool keepHistory) where TStateType : class, IGameState
+		{
+			return SetActiveState<TStateType>(key, keepHistory, true);
+		}
+		public bool SetActiveState<TStateType>(string key, bool keepHistory, bool keepLoaded)
+			where TStateType : class, IGameState
 		{
 			if (!States.TryGetValue(key, out var state))
 			{
-				state = new TStateType();
-				AddState(key, state);
+				state = Construct<TStateType>();
 			}
-
-			return SetActiveState(state, keepHistory);
+			
+			return SetActiveState(state, keepHistory, keepLoaded);
 		}
 		
-	    public bool SetActiveState<TStateType>(string key) where TStateType : IGameState, new()
+	    public bool SetActiveState<TStateType>(string key) where TStateType : class, IGameState
 	    {
 		    return SetActiveState<TStateType>(key, true);
 	    }
 
-	    public bool SetActiveState<TStateType>() where TStateType : IGameState, new()
-	    {
-		    return SetActiveState<TStateType>(true);
-	    }
+	   // public bool SetActiveState<TStateType>() where TStateType : IGameState, new()
+	  //  {
+		//    return SetActiveState<TStateType>(true);
+	   // }
 
-	    public bool SetActiveState<TStateType>(bool keepHistory) where TStateType : IGameState, new()
-	    {
-		    var key = typeof(TStateType).FullName;
-		    return SetActiveState<TStateType>(key, keepHistory);
-	    }
+	   public bool SetActiveState(IGameState state, string key, bool keepHistory, bool keepLoaded)
+	   {
+		   if (key != null)
+		   {
+			   bool isKnownState = States.TryGetValue(key, out _);
 
-	    public bool SetActiveState(IGameState state, bool keepHistory = true)
-	    {
-		    var currentState = ActiveState;
+			   if (keepLoaded && !isKnownState)
+			   {
+				   state.StateBehavior = StateBehavior.Referenced;
+				   AddState(key, state);
+			   }
+			   else if (!isKnownState)
+			   {
+				   state.StateBehavior = StateBehavior.Unload;
+			   }
+		   }
 
-		    if (state != null && state.ParentState == null && keepHistory)
-		    {
-			    if (currentState != null && currentState.ParentState != state && state != currentState)
-			    {
-				    state.ParentState = currentState;
-			    }
-		    }
+		   var currentState = ActiveState;
 
-		    EnsureStateLoaded(state);
-		    
-		    if (currentState != null)
-			    currentState.Hide();
-		    
-		    ActiveState = state;
-		    state?.Show();
+		   if (state != null && state.ParentState == null && keepHistory)
+		   {
+			   if (currentState != null && currentState.ParentState != state && state != currentState)
+			   {
+				   state.ParentState = currentState;
+			   }
+		   }
 
-		    return true;
-	    }
+		   EnsureStateLoaded(state);
+
+		   if (currentState != null)
+		   {
+			   currentState.Hide();
+		   }
+
+		   ActiveState = state;
+		   state?.Show();
+
+		   if (currentState != null)
+		   {
+			   if (!keepHistory && currentState.StateBehavior == StateBehavior.Unload)
+			   {
+				 //  EnsureStateUnloaded(currentState);
+			   }
+		   }
+
+		   return true;
+	   }
+	   
+	   public bool SetActiveState(IGameState state, bool keepHistory = true)
+	   {
+		   return SetActiveState(state, keepHistory, false);
+	   }
+	   
+	   public bool SetActiveState(IGameState state, bool keepHistory, bool keepLoaded)
+	   {
+		   return SetActiveState(state, state?.GetType()?.FullName, keepHistory, keepLoaded);
+	   }
 
 	    public bool SetActiveState(string name, bool keepHistory = true)
         {

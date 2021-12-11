@@ -158,12 +158,17 @@ namespace Alex.Common.World
 			
 			ScheduledTicks?.Clear();
 			TickedItems?.Clear();
-			
+
 			try
 			{
 				TickTimer?.Dispose();
+				TickTimer?.Dispose();
 				TickTimer = null;
-			}catch(ObjectDisposedException){}
+			}
+			catch (ObjectDisposedException ex)
+			{
+			Log.Warn(ex, $"Failed to dispose TickManager!");
+			}
 		}
 
 		private class TickedItem
