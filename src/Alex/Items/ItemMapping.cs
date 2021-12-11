@@ -11,8 +11,8 @@ namespace Alex.Items
 
 	public partial class ItemMapping
 	{
-		[JsonProperty("bedrock_id")]
-		public int BedrockId { get; set; }
+		[JsonProperty("bedrock_identifier")]
+		public string BedrockId { get; set; }
 
 		[JsonProperty("bedrock_data")]
 		public int BedrockData { get; set; }

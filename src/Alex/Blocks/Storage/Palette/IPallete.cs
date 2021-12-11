@@ -3,14 +3,14 @@ using Alex.Blocks.State;
 
 namespace Alex.Blocks.Storage.Palette
 {
-    public interface IPallete : IDisposable
+    public interface IPallete<TValue> : IDisposable where TValue : class
     {
-        uint GetId(BlockState state);
+        uint GetId(TValue state);
 
-        uint Add(BlockState state);
+        uint Add(TValue state);
 
-        BlockState Get(uint id);
+        TValue Get(uint id);
 
-        void Put(BlockState objectIn, uint intKey);
+        void Put(TValue objectIn, uint intKey);
     }
 }

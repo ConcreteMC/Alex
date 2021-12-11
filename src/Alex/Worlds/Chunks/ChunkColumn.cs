@@ -54,7 +54,7 @@ namespace Alex.Worlds.Chunks
 
 		private object _dataLock = new object();
 		public WorldSettings WorldSettings { get; }
-		private readonly int _sectionOffset;
+		protected readonly int _sectionOffset;
 		private ChunkData _chunkData;
 
 		public ChunkColumn(int x, int z, WorldSettings worldSettings)
@@ -162,7 +162,7 @@ namespace Alex.Worlds.Chunks
 										var newblockState = blockState.Block.BlockPlaced(
 											world, blockState, blockPosition);
 
-										if (blockState.ID != newblockState.ID)
+										if (blockState.Id != newblockState.Id)
 										{
 											blockState = newblockState;
 
@@ -415,7 +415,7 @@ namespace Alex.Worlds.Chunks
 			return _height[((bz << 4) + (bx))];
 		}
 
-		public void SetBiome(int bx, int by, int bz, int biome)
+		public void SetBiome(int bx, int by, int bz, Biome biome)
 		{
 			if (!CheckWithinCoordinates(bx, by, bz, false))
 				return;
@@ -428,17 +428,18 @@ namespace Alex.Worlds.Chunks
 
 			section.SetBiome(bx, by & 0xf, bz, biome);
 		}
-
-		public int GetBiome(int bx, int by, int bz)
+		
+		public Biome GetBiome(int bx, int by, int bz)
 		{
 			if (!CheckWithinCoordinates(bx, by, bz, false))
-				return 0;
+				return BiomeUtils.Biomes[0];
 			
 			if ((bx < 0 || bx > ChunkWidth) || (bz < 0 || bz > ChunkDepth))
-				return 0;
+				return BiomeUtils.Biomes[0];
 			
 			var section = GetSection(by);
-			if (section == null) return 0;
+			if (section == null) 
+				return BiomeUtils.Biomes[0];
 
 			return section.GetBiome(bx, by & 0xf, bz);
 		}

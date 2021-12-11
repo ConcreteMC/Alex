@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Buffers;
+using NLog;
+using NLog.Fluent;
 
 namespace Alex.Blocks.Storage
 {
 	public class FlexibleStorage : IStorage
 	{
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(FlexibleStorage));
 		private long[] _data;
 		private int _bitsPerEntry;
 		private int _size;
@@ -16,11 +19,11 @@ namespace Alex.Blocks.Storage
 			
 		}
 
-		private FlexibleStorage(int bitsPerEntry, long[] data)
+		public FlexibleStorage(int bitsPerEntry, long[] data)
 		{
 			if (bitsPerEntry < 1 || bitsPerEntry > 32)
 			{
-				throw new Exception("BitsPerEntry cannot be outside of accepted range.");
+				throw new Exception($"BitsPerEntry cannot be outside of accepted range: {bitsPerEntry}");
 			}
 
 			this._bitsPerEntry = bitsPerEntry;
@@ -29,7 +32,7 @@ namespace Alex.Blocks.Storage
 			this._size = this._data.Length * 64 / this._bitsPerEntry;
 			this._maxEntryValue = (1L << this._bitsPerEntry) - 1;
 		}
-		
+
 		public uint this[int index]
 		{
 			get

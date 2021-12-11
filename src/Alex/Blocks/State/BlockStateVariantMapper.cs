@@ -55,7 +55,7 @@ namespace Alex.Blocks.State
             var clone = new BlockState
             {
                 Name = source.Name,
-                ID = source.ID, 
+                Id = source.Id, 
                 Block = source.Block,
                 VariantMapper = source.VariantMapper,
                 Default = source.Default,
@@ -99,7 +99,7 @@ namespace Alex.Blocks.State
             var clone = new BlockState
             {
                 Name = source.Name,
-                ID = source.ID,
+                Id = source.Id,
                 Block = source.Block,
                 VariantMapper = source.VariantMapper,
                 Default = source.Default,

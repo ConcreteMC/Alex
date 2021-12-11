@@ -219,7 +219,7 @@ namespace Alex.Blocks
 						variantState.States.Add(prop.Value.WithValue(value));
 					}
 
-					variantState.ID = s.ID;
+					variantState.Id = s.ID;
 					variantState.Name = entry.Key;
 					variantState.ModelData = ResolveVariant(blockStateResource, variantState, isMultipartModel);
 					variantState.Block = localBlock;
@@ -253,17 +253,17 @@ namespace Alex.Blocks
 
 				foreach (var variant in variantMap.GetVariants())
 				{
-					if (!RegisteredBlockStates.TryAdd(variant.ID, variant))
+					if (!RegisteredBlockStates.TryAdd(variant.Id, variant))
 					{
 						if (replace)
 						{
-							RegisteredBlockStates[variant.ID] = variant;
+							RegisteredBlockStates[variant.Id] = variant;
 							importCounter++;
 						}
 						else
 						{
 							Log.Warn(
-								$"Failed to add blockstate (variant), key already exists! ({variant.ID} - {variant.Name})");
+								$"Failed to add blockstate (variant), key already exists! ({variant.Id} - {variant.Name})");
 						}
 					}
 					else
@@ -338,7 +338,7 @@ namespace Alex.Blocks
 						}
 						
 						bedrockState.Name = state.Value.BedrockIdentifier;
-						bedrockState.ID = (uint) Interlocked.Increment(ref counter);
+						bedrockState.Id = (uint) Interlocked.Increment(ref counter);
 						bedrockState.Default = first;
 						bedrockState.ModelData = pcVariant.ModelData;
 

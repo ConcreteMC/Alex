@@ -882,10 +882,10 @@ namespace Alex.Worlds
 		/// <inheritdoc />
 		public Biome GetBiome(BlockCoordinates coordinates)
 		{
-			return BiomeUtils.GetBiome(GetBiome(coordinates.X, coordinates.Y, coordinates.Z));
+			return GetBiome(coordinates.X, coordinates.Y, coordinates.Z);
 		}
 		
-		public int GetBiome(int x, int y, int z)
+		public Biome GetBiome(int x, int y, int z)
 		{
 			ChunkColumn chunk;
 			if (ChunkManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
@@ -895,7 +895,7 @@ namespace Alex.Worlds
 			}
 
 			//Log.Debug($"Failed getting biome: {x} | {y} | {z}");
-			return -1;
+			return BiomeUtils.Biomes[0];
 		}
 
 		public void SetGameRule(MiNET.GameRule gameRule)

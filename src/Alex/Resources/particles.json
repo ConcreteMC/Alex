@@ -10,12 +10,11 @@
 	"ASH": {
 		"bedrockId": "geyseropt:ash"
 	},
-	"BARRIER": {
-		"bedrockId": "geyseropt:barrier"
-	},
+	"BLOCK": {},
+	"BLOCK_MARKER": {},
 	"BUBBLE": {
 		"eventType": "PARTICLE_BUBBLE",
-		"bedrockId": "minecraft:basic_bubble_particle"
+		"bedrockId": "basic_bubble_particle_manual"
 	},
 	"BUBBLE_COLUMN_UP": {
 		"eventType": "PARTICLE_BUBBLE_COLUMN_UP",
@@ -61,6 +60,8 @@
 		"eventType": "PARTICLE_DRAGONS_BREATH",
 		"bedrockId": "minecraft:dragon_breath_lingering"
 	},
+	"DRIPPING_DRIPSTONE_LAVA": {},
+	"DRIPPING_DRIPSTONE_WATER": {},
 	"DRIPPING_HONEY": {
 		"eventType": "PARTICLE_DRIP_HONEY"
 	},
@@ -75,9 +76,13 @@
 		"eventType": "PARTICLE_DRIP_WATER",
 		"bedrockId": "minecraft:water_drip_particle"
 	},
+	"DUST": {},
+	"DUST_COLOR_TRANSITION": {},
 	"EFFECT": {
 		"bedrockId": "minecraft:splash_spell_emitter"
 	},
+	"ELDER_GUARDIAN": {},
+	"ELECTRIC_SPARK": {},
 	"ENCHANT": {
 		"eventType": "PARTICLE_ENCHANTMENT_TABLE",
 		"bedrockId": "minecraft:enchanting_table_particle"
@@ -100,6 +105,9 @@
 	"EXPLOSION_EMITTER": {
 		"bedrockId": "minecraft:huge_explosion_emitter"
 	},
+	"FALLING_DRIPSTONE_LAVA": {},
+	"FALLING_DRIPSTONE_WATER": {},
+	"FALLING_DUST": {},
 	"FALLING_HONEY": {
 		"bedrockId": "minecraft:honey_drip_particle"
 	},
@@ -113,6 +121,7 @@
 	"FALLING_OBSIDIAN_TEAR": {
 		"eventType": "PARTICLE_OBSIDIAN_TEAR"
 	},
+	"FALLING_SPORE_BLOSSOM": {},
 	"FALLING_WATER": {
 		"eventType": "PARTICLE_DRIP_WATER",
 		"bedrockId": "water_splash_particle"
@@ -132,6 +141,8 @@
 	"FLASH": {
 		"bedrockId": "geyseropt:flash"
 	},
+	"GLOW": {},
+	"GLOW_SQUID_INK": {},
 	"HAPPY_VILLAGER": {
 		"eventType": "PARTICLE_VILLAGER_HAPPY",
 		"bedrockId": "minecraft:villager_happy"
@@ -192,31 +203,36 @@
 	"RAIN": {
 		"eventType": "PARTICLE_RAIN_SPLASH"
 	},
+	"REVERSE_PORTAL": {},
+	"SCRAPE": {},
+	"SMALL_FLAME": {},
+	"SMOKE": {
+		"eventType": "PARTICLE_SMOKE"
+	},
+	"SNEEZE": {
+		"eventType": "PARTICLE_SNEEZE"
+	},
+	"SNOWFLAKE": {},
 	"SOUL": {
 		"eventType": "PARTICLE_SOUL",
 		"bedrockId": "minecraft:soul_particle"
 	},
-	"SOUL_FLAME": {
+	"SOUL_FIRE_FLAME": {
 		"eventType": "PARTICLE_BLUE_FLAME",
 		"bedrockId": "minecraft:blue_flame_particle"
 	},
-	"SMOKE": {
-		"eventType": "PARTICLE_SMOKE"
-	},
-	"SQUID_INK": {
-		"eventType": "PARTICLE_INK",
-		"bedrockId": "minecraft:ink"
-	},
-	"SNEEZE": {
-		"eventType": "PARTICLE_SNEEZE"
+	"SPIT": {
+		"eventType": "PARTICLE_SPIT",
+		"bedrockId": "minecraft:llama_spit_smoke"
 	},
 	"SPLASH": {
 		"eventType": "PARTICLE_SPLASH",
 		"bedrockId": "minecraft:water_splash_particle_manual"
 	},
-	"SPIT": {
-		"eventType": "PARTICLE_SPIT",
-		"bedrockId": "minecraft:llama_spit_smoke"
+	"SPORE_BLOSSOM_AIR": {},
+	"SQUID_INK": {
+		"eventType": "PARTICLE_INK",
+		"bedrockId": "minecraft:ink"
 	},
 	"SWEEP_ATTACK": {
 		"bedrockId": "geyseropt:sweep_attack"
@@ -228,13 +244,22 @@
 	"UNDERWATER": {
 		"bedrockId": "geyseropt:underwater"
 	},
+	"VIBRATION": {
+		"eventType": "PARTICLES_VIBRATION_SIGNAL"
+	},
 	"WARPED_SPORE": {
 		"bedrockId": "geyseropt:warped_spore"
 	},
-	"WITCH": {
-		"eventType": "PARTICLE_WITCH_SPELL"
+	"WAX_OFF": {
+		"eventType": "PARTICLE_WAX_OFF"
+	},
+	"WAX_ON": {
+		"eventType": "PARTICLE_WAX_ON"
 	},
 	"WHITE_ASH": {
 		"bedrockId": "geyseropt:white_ash"
+	},
+	"WITCH": {
+		"eventType": "PARTICLE_WITCH_SPELL"
 	}
 }

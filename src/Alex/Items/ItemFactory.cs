@@ -400,7 +400,7 @@ namespace Alex.Items
 		    return false;
 	    }
 
-	    public static bool TryGetBedrockItem(int id, int meta, out Item item)
+	    public static bool TryGetBedrockItem(string id, int meta, out Item item)
 	    {
 		    item = null;
 
@@ -410,7 +410,7 @@ namespace Alex.Items
 				    return true;
 		    }
 		    else if (_allItemMapping.TryGetValue(
-			    new ItemMapping() {BedrockData = id, BlockRuntimeId = meta}, out var actualValue))
+			    new ItemMapping() {BedrockId = id, BedrockData = meta}, out var actualValue))
 		    {
 			    return TryGetItem(actualValue.JavaId, out item);
 		    }
@@ -420,10 +420,10 @@ namespace Alex.Items
 
 	    private class ReverseMapperKey
 	    {
-		    private readonly int _id;
+		    private readonly string _id;
 		    private readonly int _meta;
 
-		    public ReverseMapperKey(int id, int meta)
+		    public ReverseMapperKey(string id, int meta)
 		    {
 			    _id = id;
 			    _meta = meta;

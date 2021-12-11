@@ -63,7 +63,7 @@ namespace Alex.Utils
 
 			if (result == null || (result.IsAir() && !(item is MiNET.Items.ItemAir)))
 			{
-				if (!ItemFactory.TryGetBedrockItem(item.Id, item.Metadata, out result))
+				if (!ItemFactory.TryGetBedrockItem(item.Name, item.Metadata, out result))
 					Log.Warn($"Failed to convert MiNET item to Alex item. (MiNET={item}, CallingMethod={source}{(item == null ? "" : $", Name={item.Name}")})");
 			}
 

@@ -2,19 +2,20 @@
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
+using Alex.Blocks.Storage.Palette;
 using Alex.Common.Utils;
 using Microsoft.Xna.Framework;
 using MathF = System.MathF;
 
 namespace Alex.Worlds
 {
-	public class Biome
+	public class Biome : IHasKey
 	{
 		private static readonly Color DefaultWaterColor    = ColorHelper.HexToColor("#44AFF5");
 		private static readonly Color DefaultWaterFogColor = ColorHelper.HexToColor("#44AFF5");
 		private static readonly Color DefaultFogColor = ColorHelper.HexToColor("#ABD2FF");
 
-		public                  int    Id;
+		public                  uint    Id { get; set; }
 		public                  string Name;
 		public                  float  Temperature;
 		public                  float  Downfall;
@@ -677,7 +678,7 @@ namespace Alex.Worlds
 
 		// elevation == 0 means for precomputed colors and for elevation off
 		// or 64 high or below. 
-		public int ComputeBiomeColor(int biome, int elevation, bool isGrass)
+		public int ComputeBiomeColor(uint biome, int elevation, bool isGrass)
 		{
 			int color;
 
@@ -734,6 +735,11 @@ namespace Alex.Worlds
 		}
 
 		public static Biome GetBiome(int biomeId)
+		{
+			return GetBiome((uint)biomeId);
+		}
+
+		public static Biome GetBiome(uint biomeId)
 		{
 			Biome first = null;
 			foreach (var biome in Biomes)

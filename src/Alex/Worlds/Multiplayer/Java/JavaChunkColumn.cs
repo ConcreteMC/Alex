@@ -1,6 +1,11 @@
 using System;
+using System.Linq;
+using System.Threading.Tasks;
+using Alex.Blocks.Storage;
 using Alex.Networking.Java.Util;
 using Alex.Worlds.Chunks;
+using fNbt;
+using fNbt.Tags;
 using NLog;
 
 namespace Alex.Worlds.Multiplayer.Java
@@ -18,36 +23,83 @@ namespace Alex.Worlds.Multiplayer.Java
 			return new JavaChunkSection(storeSkylight, sections);
 		}
 		
-		public static bool GetBitX(long[] data, int x) {
-			var index = x/64;
-			var bit = x-index*64;
-
-			if (data.Length == 0 || index > data.Length - 1)
-				return false;
-			
-			return (data[index] & (1<<bit)) != 0;
-		}
-		
-		public void Read(MinecraftStream ms, long[] primaryBitMask, bool readSkylight)
+		public void Read(MinecraftStream ms, NbtCompound heightmaps, bool readSkylight)
 		{
-			
-			try
+			if (!heightmaps.TryGet("MOTION_BLOCKING", out NbtLongArray longArray))
 			{
-				//	Stopwatch s = Stopwatch.StartNew();
-				//	Log.Debug($"Reading chunk data...");
+				Log.Warn($"Invalid chunk data!");
+				return;
+			}
 
-				for (int sectionY = 0; sectionY < this.Sections.Length; sectionY++)
+			//
+			var dataArray = longArray.Value;
+			var realHeight = WorldSettings.WorldHeight + Math.Abs(WorldSettings.MinY);
+			var bitsPerBlock = (int)Math.Ceiling(Math.Log2(realHeight + 1));//, 256
+			
+			uint maxHeight = uint.MinValue;
+			FlexibleStorage flexibleStorage = new FlexibleStorage(bitsPerBlock, 256);
+			var valueMask = (uint) ((1L << bitsPerBlock) - 1);
+			int bitOffset = 0;
+			for (int x = 0; x < 16; x++)
+			{
+				for (int z = 0; z < 16; z++)
 				{
-					if (!GetBitX(primaryBitMask, sectionY))
-						continue;
-
-					var storage = (JavaChunkSection) this.Sections[sectionY];
-					if (storage == null)
-					{ 
-						storage = new JavaChunkSection(readSkylight);
+					if (64 - (bitOffset % 64) < bitsPerBlock)
+					{
+						bitOffset += 64 - (bitOffset % 64);
 					}
 
-					storage.Read(ms);
+					int startLongIndex = bitOffset / 64;
+					int end_long_index = startLongIndex;
+					int startOffset = bitOffset % 64;
+					bitOffset += bitsPerBlock;
+
+					if (startLongIndex >= dataArray.Length || end_long_index >= dataArray.Length)
+						continue;
+                            
+					uint rawId;
+
+					if (startLongIndex == end_long_index)
+					{
+						rawId = (uint) (dataArray[startLongIndex] >> startOffset);
+					}
+					else
+					{
+						int endOffset = 64 - startOffset;
+
+						rawId = (uint) (dataArray[startLongIndex] >> startOffset
+						                | dataArray[end_long_index] << endOffset);
+					}
+
+					rawId &= valueMask;
+
+					flexibleStorage[x + z * 16] = rawId;
+				}
+			}
+			//flexibleStorage.SetData(longArray.Value);
+
+			for (int i = 0; i < flexibleStorage.Length; i++)
+			{
+				maxHeight = Math.Max(maxHeight, flexibleStorage[i]);
+			}
+
+			var sections = (int)Math.Ceiling((maxHeight / 16D));// + 1;
+
+			try
+			{
+				for (int sectionY = 0; sectionY < Math.Min(this.Sections.Length, sections); sectionY++)
+				{
+					var storage = this.Sections[sectionY];
+
+					if (storage == null)
+					{
+						storage = CreateSection(readSkylight, 2);
+					}
+
+					if (storage is JavaChunkSection jcs)
+					{
+						jcs.Read(ms);
+					}
 
 					this.Sections[sectionY] = storage;
 				}

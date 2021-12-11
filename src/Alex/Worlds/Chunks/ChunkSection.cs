@@ -25,9 +25,10 @@ namespace Alex.Worlds.Chunks
 		public int StorageCount => BlockStorages.Length;
 		
 		protected readonly BlockStorage[] BlockStorages;
+		protected readonly BiomeStorage[] BiomeStorages;
+		
 		public   readonly LightArray    BlockLight;
 		public   readonly LightArray    SkyLight;
-		public readonly int[] BiomeIds;
 
 		public List<BlockCoordinates> LightSources { get; private set; } = new List<BlockCoordinates>();
         
@@ -39,15 +40,17 @@ namespace Alex.Worlds.Chunks
 		        sections = 1;
 
 	        BlockStorages = new BlockStorage[sections];
+	        BiomeStorages = new BiomeStorage[sections];
 	        for (int i = 0; i < sections; i++)
 	        {
 		        BlockStorages[i] = new BlockStorage();
+		        BiomeStorages[i] = new BiomeStorage();
 	        }
 	        
 	        this.BlockLight = new LightArray();
 	        this.SkyLight = new LightArray();
-
-	        BiomeIds = new int[16 * 16 * 16];
+	        
+	        //BiomeIds = new int[16 * 16 * 16];
 
 	        ResetLight(true, true);
         }
@@ -66,14 +69,16 @@ namespace Alex.Worlds.Chunks
 			return (y << 8 | z << 4 | x);
 		}
 
-        public int GetBiome(int x, int y, int z)
+        public Biome GetBiome(int x, int y, int z)
         {
-	        return BiomeIds[GetCoordinateIndex(x, y, z)];
+	        return BiomeStorages[0].Get(x, y, z);
+	       // return BiomeIds[GetCoordinateIndex(x, y, z)];
         }
 
-        public void SetBiome(int x, int y, int z, int biomeId)
+        public void SetBiome(int x, int y, int z, Biome biome)
         {
-	        BiomeIds[GetCoordinateIndex(x, y, z)] = biomeId;
+	        BiomeStorages[0].Set(x, y, z, biome);
+	       // BiomeIds[GetCoordinateIndex(x, y, z)] = biomeId;
         }
         
         public BlockState Get(int x, int y, int z)

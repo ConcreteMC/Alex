@@ -83,7 +83,7 @@ namespace Alex.Blocks.Minecraft.Doors
 		public override void BlockUpdate(World world, BlockCoordinates position, BlockCoordinates updatedBlock)
 		{
 			var newValue = Update(world, BlockState, position, updatedBlock);
-			if (newValue.ID != BlockState.ID)
+			if (newValue.Id != BlockState.Id)
 			{
 				world.SetBlockState(position.X, position.Y, position.Z, newValue);
 			}

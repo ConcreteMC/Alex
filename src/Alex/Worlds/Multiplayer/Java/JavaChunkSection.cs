@@ -1,7 +1,9 @@
+using System.Threading.Tasks;
 using Alex.Blocks;
 using Alex.Blocks.Materials;
 using Alex.Blocks.Minecraft;
 using Alex.Blocks.State;
+using Alex.Blocks.Storage;
 using Alex.Common.Utils.Vectors;
 using Alex.Networking.Java.Util;
 using Alex.Worlds.Chunks;
@@ -89,7 +91,9 @@ namespace Alex.Worlds.Multiplayer.Java
 
         public void Read(MinecraftStream ms)
         {
+            var blockCount = ms.ReadShort();
             BlockStorages[0].Read(ms);
+            BiomeStorages[0].Read(ms);
         }
     }
 }

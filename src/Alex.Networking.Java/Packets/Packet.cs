@@ -31,7 +31,8 @@ namespace Alex.Networking.Java.Packets
 			Encode(stream);
 			return Task.CompletedTask;
 		}
-		
+
+		public virtual bool IsPooled => false;
 		public abstract void PutPool();
 		
 		public virtual void Reset()
@@ -65,11 +66,9 @@ namespace Alex.Networking.Java.Packets
 		private long _referenceCounter;
 
 		[JsonIgnore]
-		public bool IsPooled
-		{
-			get { return _isPooled; }
-		}
-
+		/// <inheritdoc />
+		public override bool IsPooled => _isPooled;
+		
 		[JsonIgnore]
 		public long ReferenceCounter
 		{

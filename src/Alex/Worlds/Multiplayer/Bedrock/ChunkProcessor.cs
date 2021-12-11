@@ -169,7 +169,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		        {
 			        if (convertedState != null)
 			        {
-				        _convertedStates.TryAdd(p, convertedState.ID);
+				        _convertedStates.TryAdd(p, convertedState.Id);
 			        }
 
 			        return convertedState;
@@ -186,7 +186,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		        }
 		        else
 		        {
-			        _convertedStates.TryAdd(p, t.ID);
+			        _convertedStates.TryAdd(p, t.Id);
 			        return t;
 		        }
 	        }
@@ -452,7 +452,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 					        for (int y = 0; y < 255; y++)
 					        {
-						        chunkColumn.SetBiome(x, y, z, biomeId);
+						        chunkColumn.SetBiome(x, y, z, BiomeUtils.GetBiome(biomeId));
 					        }
 				        }
 			        }

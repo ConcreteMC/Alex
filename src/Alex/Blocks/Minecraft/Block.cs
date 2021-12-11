@@ -176,7 +176,7 @@ namespace Alex.Blocks.Minecraft
 				if (Alex.Instance.Resources.TryGetBlockState(BlockState.Name, out blockStateResource))
 				{
 					var state = MultiPartModelHelper.GetBlockState(world, position, BlockState, blockStateResource);
-					if (state.ID != BlockState.ID)
+					if (state.Id != BlockState.Id)
 						world.SetBlockState(position, state);
 				}
 			}

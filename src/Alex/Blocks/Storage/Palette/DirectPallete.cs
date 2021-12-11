@@ -1,25 +1,36 @@
+using System;
 using Alex.Blocks.State;
 
 namespace Alex.Blocks.Storage.Palette
 {
-    public class DirectPallete : IPallete
+    public interface IHasKey
     {
-        public uint GetId(BlockState state)
+        uint Id { get; }
+    }
+    public class DirectPallete<TValue> : IPallete<TValue> where TValue : class, IHasKey
+    {
+        private readonly Func<uint, TValue> _getById;
+
+        public DirectPallete(Func<uint, TValue> getById)
         {
-            return state.ID;
+            _getById = getById;
+        }
+        public uint GetId(TValue state)
+        {
+            return state.Id;
         }
 
-        public uint Add(BlockState state)
+        public uint Add(TValue state)
         {
             throw new System.NotImplementedException();
         }
 
-        public BlockState Get(uint id)
+        public TValue Get(uint id)
         {
-            return BlockFactory.GetBlockState(id);
+            return _getById(id);// BlockFactory.GetBlockState(id);
         }
 
-        public void Put(BlockState objectIn, uint intKey)
+        public void Put(TValue objectIn, uint intKey)
         {
             
         }

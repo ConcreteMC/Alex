@@ -530,19 +530,19 @@ namespace Alex.Worlds
 			}
 		}
 
-		private bool IsWithinView(ChunkCoordinates chunk, ICamera camera)
+		private bool IsWithinView(ChunkColumn chunk, ChunkCoordinates coordinates, ICamera camera)
 		{
 			ChunkCoordinates center = ViewPosition.GetValueOrDefault(new ChunkCoordinates(camera.Position));
-			var chunkPos = new Vector3(chunk.X << 4, 0, chunk.Z << 4);
-
-			if (chunk.DistanceTo(center) > RenderDistance)
+			if (coordinates.DistanceTo(center) > RenderDistance)
 				return false;
+			
+			var chunkPos = new Vector3(coordinates.X << 4, chunk.WorldSettings.MinY, coordinates.Z << 4);
 
 			return camera.BoundingFrustum.Intersects(
 				new Microsoft.Xna.Framework.BoundingBox(
 					chunkPos,
 					chunkPos + new Vector3(
-						ChunkColumn.ChunkWidth, MathF.Max(camera.Position.Y + 16f, 256f), ChunkColumn.ChunkDepth)));
+						ChunkColumn.ChunkWidth, chunk.WorldSettings.TotalHeight, ChunkColumn.ChunkDepth)));
 		}
 
 		private int DrawStaged(IRenderArgs args,
@@ -643,7 +643,7 @@ namespace Alex.Worlds
 				if (data == null) 
 					continue;
 				
-				bool inView = IsWithinView(chunk.Key, World.Camera);
+				bool inView = IsWithinView(chunk.Value, chunk.Key, World.Camera);
 				if (inView && index + 1 < max)
 				{
 					data.Rendered = true;

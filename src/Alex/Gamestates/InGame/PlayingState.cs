@@ -184,7 +184,7 @@ namespace Alex.Gamestates.InGame
 
 		private long _ramUsage = 0;
 		private Biome _currentBiome = BiomeUtils.GetBiome(0);
-		private int _currentBiomeId = 0;
+		private uint _currentBiomeId = 0;
 		private void InitDebugInfo()
 		{
 			string gameVersion = VersionUtils.GetVersion();
@@ -415,8 +415,8 @@ namespace Alex.Gamestates.InGame
 
 				var pos     = player.KnownPosition.GetCoordinates3D();
 				var biomeId = world.GetBiome(pos.X, pos.Y, pos.Z);
-				var biome   = BiomeUtils.GetBiome(biomeId);
-				_currentBiomeId = biomeId;
+				var biome   = biomeId;
+				_currentBiomeId = biomeId.Id;
 				_currentBiome = biome;
 			}
 

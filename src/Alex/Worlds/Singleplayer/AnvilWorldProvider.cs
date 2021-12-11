@@ -16,7 +16,7 @@ namespace Alex.Worlds.Singleplayer
 		{
 			var res = BlockFactory.GetBlockState(name);
 			if (res == null) return 0;
-			return res.ID;
+			return res.Id;
 		}
 
 		public static Dictionary<uint, uint> BlockStateMapper = new Dictionary<uint, uint>();

@@ -6,6 +6,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using Alex.Blocks.Minecraft;
 using Alex.Blocks.Properties;
+using Alex.Blocks.Storage.Palette;
 using Alex.Common.Blocks.Properties;
 using Alex.Common.Resources;
 using Alex.ResourcePackLib.Json.BlockStates;
@@ -14,7 +15,7 @@ using NLog;
 
 namespace Alex.Blocks.State
 {
-	public class BlockState : IEnumerable<IStateProperty>
+	public class BlockState : IEnumerable<IStateProperty>, IHasKey
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(BlockState));
 		
@@ -26,7 +27,7 @@ namespace Alex.Blocks.State
 		}
 
 		public string Name { get; set; }
-		public uint ID { get; set; }
+		public uint Id { get; set; }
 
 		public BlockStateVariant ModelData { get; set; } = new BlockStateVariant()
 		{

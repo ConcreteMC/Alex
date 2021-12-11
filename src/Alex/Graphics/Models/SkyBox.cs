@@ -244,7 +244,7 @@ namespace Alex.Graphics.Models
 			    int y = (int)MathF.Floor(position.Y);
 			    int z = (int)MathF.Floor(position.Z);
 
-			    Biome biome = BiomeUtils.GetBiome(World.GetBiome(x, y, z));
+			    Biome biome = World.GetBiome(x, y, z);
 			    float biomeTemperature = biome.Temperature;
 
 			    biomeTemperature = biomeTemperature / 3.0F;

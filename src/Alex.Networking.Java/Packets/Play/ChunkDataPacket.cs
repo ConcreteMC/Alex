@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading.Tasks;
 using Alex.Networking.Java.Util;
 using fNbt;
@@ -11,18 +12,26 @@ namespace Alex.Networking.Java.Packets.Play
 	{
 		public int ChunkX;
 		public int ChunkZ;
-		public long[] PrimaryBitmask;
+		
 		public Memory<byte> Buffer;
-		public List<NbtCompound> TileEntities;
+		public List<BlockEntityData> TileEntities;
 		public NbtCompound HeightMaps;
-		//public bool GroundUp;
-	//	public bool IgnoreOldData;
-		public int[] Biomes;
 
+		public BitSet SkyLightMask;
+
+		public BitSet BlockLightMask;
+
+		public BitSet EmptySkyLightMask;
+
+		public BitSet EmptyBlockLightMask;
+
+		public byte[][] SkyLight;
+		public byte[][] BlockLight;
+		
 		public ChunkDataPacket()
 		{
 			PacketId = 0x22;
-			TileEntities = new List<NbtCompound>();
+			TileEntities = new List<BlockEntityData>();
 		}
 
 	
@@ -30,33 +39,8 @@ namespace Alex.Networking.Java.Packets.Play
 		{
 			ChunkX = await stream.ReadIntAsync();
 			ChunkZ = await stream.ReadIntAsync();
-			var bitmaskLength = await stream.ReadVarIntAsync();
-			var bitmasks = new long[bitmaskLength];
-
-			for (int ind = 0; ind < bitmasks.Length; ind++)
-			{
-				bitmasks[ind] = await stream.ReadLongAsync();
-			}
-
-			PrimaryBitmask = bitmasks;
-			//GroundUp = stream.ReadBool();
-			//IgnoreOldData = stream.ReadBool();
-			//PrimaryBitmask = stream.ReadVarInt();
-
+			
 			HeightMaps = await stream.ReadNbtCompoundAsync();
-
-			//if (GroundUp)
-			{
-				int biomeCount = await stream.ReadVarIntAsync();
-				
-				int[] biomeIds = new int[biomeCount];
-				for (int idx = 0; idx < biomeIds.Length; idx++)
-				{
-					biomeIds[idx] = await stream.ReadVarIntAsync();
-				}
-
-				Biomes = biomeIds;
-			}
 
 			int i = await stream.ReadVarIntAsync();
 			Buffer = new Memory<byte>(new byte[i]);
@@ -65,7 +49,31 @@ namespace Alex.Networking.Java.Packets.Play
 			int tileEntities = await stream.ReadVarIntAsync();
 			for (int k = 0; k < tileEntities; k++)
 			{
-				TileEntities.Add(await stream.ReadNbtCompoundAsync());
+				BlockEntityData blockEntity = new BlockEntityData();
+				await blockEntity.ReadAsync(stream);
+				TileEntities.Add(blockEntity);
+			}
+
+			bool trustEdges = await stream.ReadBoolAsync();
+			SkyLightMask = await BitSet.ReadAsync(stream);
+			BlockLightMask = await BitSet.ReadAsync(stream);
+			EmptySkyLightMask = await BitSet.ReadAsync(stream);
+			EmptyBlockLightMask = await BitSet.ReadAsync(stream);
+
+			int skyLightArrayCount = await stream.ReadVarIntAsync();
+			SkyLight = new byte[skyLightArrayCount][];
+			for (int idx = 0; idx < SkyLight.Length; idx++)
+			{
+				int length = await stream.ReadVarIntAsync();
+				SkyLight[idx] = await stream.ReadAsync(length);
+			}
+			
+			int blockLightArrayCount = await stream.ReadVarIntAsync();
+			BlockLight = new byte[blockLightArrayCount][];
+			for (int idx = 0; idx < BlockLight.Length; idx++)
+			{
+				int length = await stream.ReadVarIntAsync();
+				BlockLight[idx] = await stream.ReadAsync(length);
 			}
 		}
 
@@ -74,12 +82,12 @@ namespace Alex.Networking.Java.Packets.Play
 			await stream.WriteIntAsync(ChunkX);
 			await stream.WriteIntAsync(ChunkZ);
 		//	stream.WriteBool(GroundUp);
-			await stream.WriteVarIntAsync(PrimaryBitmask.Length);
+			/*await stream.WriteVarIntAsync(PrimaryBitmask.Length);
 
 			for (int i = 0; i < PrimaryBitmask.Length; i++)
 			{
 				await stream.WriteLongAsync(PrimaryBitmask[i]);
-			}
+			}*/
 
 			//stream.WriteVarInt(PrimaryBitmask);
 			await stream.WriteVarIntAsync(Buffer.Length);
@@ -87,7 +95,7 @@ namespace Alex.Networking.Java.Packets.Play
 			await stream.WriteVarIntAsync(TileEntities.Count);
 			foreach (var tileEntity in TileEntities)
 			{
-				await stream.WriteNbtCompoundAsync(tileEntity);
+				await tileEntity.WriteAsync(stream);
 			}
 		}
 
@@ -96,10 +104,40 @@ namespace Alex.Networking.Java.Packets.Play
 		{
 			base.ResetPacket();
 
-			Biomes = null;
+			//Biomes = null;
 			HeightMaps = null;
 			Buffer = null;
-			TileEntities = new List<NbtCompound>();
+			TileEntities = new List<BlockEntityData>();
+		}
+
+		public class BlockEntityData
+		{
+			public byte X { get; set; }
+			public byte Z { get; set; }
+			public short Y { get; set; }
+			public int Type { get; set; }
+			public NbtCompound Data { get; set; }
+			public BlockEntityData()
+			{
+				
+			}
+
+			public async Task ReadAsync(MinecraftStream stream)
+			{
+				var packedXZ = await stream.ReadUnsignedByteAsync();
+				
+				X = (byte)(packedXZ >> 4);
+				Z = (byte)((packedXZ) & 15);
+				
+				Y = await stream.ReadShortAsync();
+				Type = await stream.ReadVarIntAsync();
+				Data = await stream.ReadNbtCompoundAsync();
+			}
+
+			public async Task WriteAsync(MinecraftStream stream)
+			{
+				
+			}
 		}
 	}
 }

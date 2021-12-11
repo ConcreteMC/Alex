@@ -413,7 +413,10 @@ namespace Alex.Networking.Java
 		    }
 		    finally
 		    {
-			    packet?.PutPool();
+			    if (packet?.IsPooled == true)
+			    {
+				    packet?.PutPool();
+			    }
 		    }
 	    }
 

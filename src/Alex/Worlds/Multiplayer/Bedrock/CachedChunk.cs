@@ -70,7 +70,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 						for (int y = 0; y < 255; y++)
 						{
-							Chunk.SetBiome(x, y, z, biomeId);
+							Chunk.SetBiome(x, y, z, Worlds.BiomeUtils.GetBiome(biomeId));
 						}
 					}
 				}

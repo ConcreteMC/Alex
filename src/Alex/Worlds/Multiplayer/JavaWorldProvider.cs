@@ -100,7 +100,7 @@ namespace Alex.Worlds.Multiplayer
 		
 		private WorldSettings WorldSettings { get; set; } = WorldSettings.Default;
 		
-		private BufferBlock<JavaChunkData> _chunkQueue;
+		private BufferBlock<ChunkDataPacket> _chunkQueue;
 		public JavaWorldProvider(Alex alex, IPEndPoint endPoint, PlayerProfile profile, out NetworkProvider networkProvider)
 		{
 			Alex = alex;
@@ -117,41 +117,24 @@ namespace Alex.Worlds.Multiplayer
 			
 			var blockOptions =
 				new ExecutionDataflowBlockOptions { CancellationToken = CancellationToken.None, EnsureOrdered = false, NameFormat = "Java Chunker: {0}-{1}", MaxDegreeOfParallelism = 1};
-			_chunkQueue = new BufferBlock<JavaChunkData>(blockOptions);
+			_chunkQueue = new BufferBlock<ChunkDataPacket>(blockOptions);
 	        
-			var handleBufferItemBlock = new ActionBlock<JavaChunkData>(HandleChunkDataPacket, blockOptions);
+			var handleBufferItemBlock = new ActionBlock<ChunkDataPacket>(HandleChunkDataPacket, blockOptions);
 			var linkOptions = new DataflowLinkOptions { PropagateCompletion = true };
 			_chunkQueue.LinkTo(handleBufferItemBlock, linkOptions);
 		}
 
-		private void HandleChunkDataPacket(JavaChunkData obj)
+		private void HandleChunkDataPacket(ChunkDataPacket obj)
 		{
-			using (var memoryStream = new MemoryStream(obj.Buffer))
+			using (var memoryStream = new MemoryStream(obj.Buffer.ToArray()))
 			using (var stream = new MinecraftStream(memoryStream))
 			{
-				JavaChunkColumn result = null; // = new ChunkColumn();
+				JavaChunkColumn result  = new JavaChunkColumn(obj.ChunkX, obj.ChunkZ, WorldSettings);
+				result.Read(stream, obj.HeightMaps, World.Dimension == Dimension.Overworld);
 
-				result = new JavaChunkColumn(obj.X, obj.Z, WorldSettings);
-
-				result.Read(stream, obj.PrimaryBitmask, World.Dimension == Dimension.Overworld);
-
-
-				for (int bx = 0; bx < 16; bx++)
+				foreach (var tile in obj.TileEntities)
 				{
-					for (int bz = 0; bz < 16; bz++)
-					{
-						for (int by = WorldSettings.MinY; by < WorldSettings.WorldHeight; by++)
-						{
-							result.SetBiome(
-								bx, by, bz,
-								obj.Biomes[((by >> 2) & 63) << 4 | ((bz >> 2) & 3) << 2 | ((bx >> 2) & 3)]);
-						}
-					}
-				}
-
-
-				foreach (var tag in obj.Entities)
-				{
+					var tag = tile.Data;
 					if (tag == null || !(tag.Contains("id")))
 						continue;
 
@@ -161,9 +144,9 @@ namespace Alex.Worlds.Multiplayer
 
 						// if (blockEntity != null)
 						// {
-						int x = tag["x"].IntValue;
-						int y = tag["y"].IntValue;
-						int z = tag["z"].IntValue;
+						int x = tile.X;// tag["x"].IntValue;
+						int y = tile.Y;//tag["y"].IntValue;
+						int z = tile.Z;// tag["z"].IntValue;
 						result.AddBlockEntity(
 							new BlockCoordinates(x,y,z), tag);
 						// }
@@ -178,15 +161,7 @@ namespace Alex.Worlds.Multiplayer
 						Log.Warn(ex, "Could not add block entity!");
 					}
 				}
-
-				if (!_generatingHelper.IsAddingCompleted)
-				{
-					_generatingHelper.Add(result);
-					_chunksReceived++;
-
-					return;
-				}
-
+				
 				World.ChunkManager.AddChunk(result, new ChunkCoordinates(result.X, result.Z), true);
 			}
 		}
@@ -446,30 +421,31 @@ namespace Alex.Worlds.Multiplayer
 			SpinWait.SpinUntil(
 				() =>
 				{
+					loaded = World.ChunkManager.ChunkCount;
 					int    t             = World.ChunkManager.RenderDistance;
 					double radiusSquared = Math.Pow(t, 2);
 					var    target        = radiusSquared;
 
 					var playerChunkCoords = new ChunkCoordinates(World.Player.KnownPosition);
 
-					if (_chunksReceived >= target && !_generatingHelper.IsAddingCompleted)
+					/*if (_chunksReceived >= target && !_generatingHelper.IsAddingCompleted)
 					{
 						_generatingHelper.CompleteAdding();
-					}
+					}*/
 
 					if (_chunksReceived < target)
 					{
 						progressReport(LoadingState.LoadingChunks, (int) Math.Floor((100 / target) * _chunksReceived));
 					}
-					else if (loaded < target || !allowSpawn || _generatingHelper.Count > 0)
+					else if (loaded < target || !allowSpawn)
 					{
-						if (_generatingHelper.TryTake(out ChunkColumn chunkColumn, 50))
+						/*if (_generatingHelper.TryTake(out ChunkColumn chunkColumn, 50))
 						{
 							World.ChunkManager.AddChunk(
 								chunkColumn, new ChunkCoordinates(chunkColumn.X, chunkColumn.Z), true);
 
 							loaded++;
-						}
+						}*/
 
 						if (!allowSpawn)
 						{
@@ -2463,66 +2439,41 @@ namespace Alex.Worlds.Multiplayer
 			return;
 			
         }
-
-		private class JavaChunkData
-		{
-			public byte[] Buffer { get; set; }
-			public int X { get; set; }
-			public int Z { get; set; }
-			public int[] Biomes { get; set; }
-			public NbtCompound HeightMaps { get; set; }
-			public List<NbtCompound> Entities { get; set; }
-			public long[] PrimaryBitmask { get; set; }
-		}
+		
         private void HandleChunkData(ChunkDataPacket packet)
         {
-	        var buffer = packet.Buffer.Span.ToArray();
-	        var x = packet.ChunkX;
-	        var z = packet.ChunkZ;
-	        var biomes = packet.Biomes;
-	        var heightMaps = packet.HeightMaps;
-	        var entities = packet.TileEntities;
-	        var primaryBitmask = packet.PrimaryBitmask;
-
-	        JavaChunkData jcd = new JavaChunkData()
-	        {
-		        X = x,
-		        Z = z,
-		        Biomes = biomes,
-		        HeightMaps = heightMaps,
-		        Entities = entities,
-		        PrimaryBitmask = primaryBitmask,
-		        Buffer = buffer
-	        };
-
-	        _chunkQueue.Post(jcd);
+	        _chunksReceived++;
+	        _chunkQueue.Post(packet);
         }
 
         private void HandleBlockEntityData(BlockEntityDataPacket packet)
         {
+	        var compound = packet.Compound;
+	        var location = packet.Location;
+	        var action = packet.Action;
 	        World.BackgroundWorker.Enqueue(
 		        () =>
 		        {
-			        if (World.EntityManager.TryGetBlockEntity(packet.Location, out var entity))
+			        if (World.EntityManager.TryGetBlockEntity(location, out var entity))
 			        {
-				        entity.SetData(packet.Action, packet.Compound);
+				        entity.SetData(action, compound);
 			        }
 			        else
 			        {
 				        try
 				        {
-					        var block       = World.GetBlockState(packet.Location);
-					        var blockEntity = BlockEntityFactory.ReadFrom(packet.Compound, World, block.Block);
+					        var block       = World.GetBlockState(location);
+					        var blockEntity = BlockEntityFactory.ReadFrom(compound, World, block.Block);
 
 					        if (blockEntity != null)
 					        {
 						        World.SetBlockEntity(
-							        packet.Location.X, packet.Location.Y, packet.Location.Z, blockEntity);
+							        location.X, location.Y, location.Z, blockEntity);
 					        }
 				        }
 				        catch (Exception ex)
 				        {
-					        Log.Warn(ex, $"Could not add block entity: {packet.Compound.ToString()}");
+					        Log.Warn(ex, $"Could not add block entity: {compound.ToString()}");
 				        }
 			        }
 		        });

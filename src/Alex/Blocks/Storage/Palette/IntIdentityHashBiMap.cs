@@ -7,29 +7,29 @@ using Alex.Blocks.State;
 
 namespace Alex.Blocks.Storage.Palette
 {
-	public class IntIdentityHashBiMap : IEnumerable<BlockState>, IPallete
+	public class IntIdentityHashBiMap<TValue> : IEnumerable<TValue>, IPallete<TValue> where TValue : class, IHasKey
 	{
 		private static object _empty = null;
-		private BlockState[] _values;
+		private TValue[] _values;
 		private uint[] _keys;
-		private BlockState[] _byId;
+		private TValue[] _byId;
 		private uint _nextFreeIndex;
 		private uint _mapSize;
 
 		public IntIdentityHashBiMap(int initialCapacity)
 		{
-			_values = new BlockState[initialCapacity];
+			_values = new TValue[initialCapacity];
 			_keys = new uint[initialCapacity];
-			_byId = new BlockState[initialCapacity];
+			_byId = new TValue[initialCapacity];
 		}
 
-		public uint GetId(BlockState value)
+		public uint GetId(TValue value)
 		{
 			if (value == null) throw new Exception("NULL");
 			return GetValue(GetIndex(value, HashObject(value)));
 		}
 
-		public BlockState Get(uint idIn)
+		public TValue Get(uint idIn)
 		{
 			return idIn < _byId.Length ? _byId[idIn] : null;
 		}
@@ -39,7 +39,7 @@ namespace Alex.Blocks.Storage.Palette
 			return index == uint.MaxValue ? uint.MaxValue : _keys[index];
 		}
 
-		public uint Add(BlockState objectIn)
+		public uint Add(TValue objectIn)
 		{
 			uint i = NextId();
 			Put(objectIn, i);
@@ -58,11 +58,11 @@ namespace Alex.Blocks.Storage.Palette
 		
 		private void Grow(int capacity)
 		{
-			BlockState[] ak = _values;
+			TValue[] ak = _values;
 			uint[] aint = _keys;
-			_values = new BlockState[capacity];
+			_values = new TValue[capacity];
 			_keys = new uint[capacity];
-			_byId = new BlockState[capacity];
+			_byId = new TValue[capacity];
 			_nextFreeIndex = 0;
 			_mapSize = 0;
 
@@ -75,7 +75,7 @@ namespace Alex.Blocks.Storage.Palette
 			}
 		}
 		
-		public void Put(BlockState objectIn, uint intKey)
+		public void Put(TValue objectIn, uint intKey)
 		{
 			uint i = Math.Max(intKey, _mapSize + 1);
 
@@ -102,12 +102,12 @@ namespace Alex.Blocks.Storage.Palette
 			}
 		}
 
-		private uint HashObject(BlockState state)
+		private uint HashObject(TValue state)
 		{
 			return (uint) ((state.GetHashCode() & uint.MaxValue) % _values.Length);
 		}
 
-		private uint GetIndex(BlockState objectIn, uint index)
+		private uint GetIndex(TValue objectIn, uint index)
 		{
 			for (uint i = index; i < _values.Length; i++)
 			{
@@ -173,7 +173,7 @@ namespace Alex.Blocks.Storage.Palette
 			return _mapSize;
 		}
 
-		public IEnumerator<BlockState> GetEnumerator()
+		public IEnumerator<TValue> GetEnumerator()
 		{
 			foreach (var i in _byId.Where(x => !x.Equals(null)))
 			{
