@@ -380,7 +380,8 @@ namespace Alex.Entities
 
 									return;
 								}
-
+								
+								skinBitmap?.Dispose();
 								Texture = texture2D;
 							});
 					}
@@ -406,7 +407,7 @@ namespace Alex.Entities
 					primaryArm?.Remove(oldValue);
 			}
 
-			if (renderer == null)
+			if (renderer == null || renderer.Model == null)
 				return;
 
 			//oldValue?.Parent?.Remove(oldValue);
@@ -574,17 +575,28 @@ namespace Alex.Entities
 		/// <inheritdoc />
 		protected override ModelData GetPrimaryArm()
 		{
+			var modelRenderer = ModelRenderer;
+
+			if (modelRenderer == null)
+				return null;
+			
 			ModelData arm = null;
 
 			if (IsLeftHanded)
 			{
-				arm = _leftItemModel ?? _leftArmModel;
+				if (modelRenderer.GetBone("leftItem", out arm) || modelRenderer.GetBone("leftArm", out arm))
+				{
+					return arm;
+				}
 			}
 			else
 			{
-				arm = _rightItemModel ?? _rightArmModel;
+				if (modelRenderer.GetBone("rightItem", out arm) || modelRenderer.GetBone("rightArm", out arm))
+				{
+					return arm;
+				}
 			}
-	        
+
 			return arm;
 		}
 

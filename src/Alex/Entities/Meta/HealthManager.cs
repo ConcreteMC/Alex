@@ -7,12 +7,68 @@ using MathF = System.MathF;
 
 namespace Alex.Entities.Meta
 {
+	public class HealthChangedEventArgs : EventArgs
+	{
+		public float Health { get; }
+		public float MaxHealth { get; }
+		
+		public HealthChangedEventArgs(float health, float maxHealth) {
+			Health = health;
+			MaxHealth = maxHealth;
+		}
+	}
+	
+	public class ExhaustionChangedEventArgs : EventArgs
+	{
+		public float Exhaustion { get; }
+
+		public ExhaustionChangedEventArgs(float health) {
+			Exhaustion = health;
+		}
+	}
+	
+	public class SaturationChangedEventArgs : EventArgs
+	{
+		public float Saturation { get; }
+
+		public SaturationChangedEventArgs(float health) {
+			Saturation = health;
+		}
+	}
+	
+	public class HungerChangedEventArgs : EventArgs
+	{
+		public int Hunger { get; }
+		public int MaxHunger { get; }
+		
+		public HungerChangedEventArgs(int hunger, int maxHunger) {
+			Hunger = hunger;
+			MaxHunger = maxHunger;
+		}
+	}
+	
+	public class AirChangedEventArgs : EventArgs
+	{
+		public short AirAvailable { get; }
+		public short MaxAirAvailable { get; }
+		
+		public AirChangedEventArgs(short airAvailable, short maxAirAvailable) {
+			AirAvailable = airAvailable;
+			MaxAirAvailable = maxAirAvailable;
+		}
+	}
+	
 	public class HealthManager : EntityComponent, ITicked
 	{
 	//	private Entity Entity { get; }
 
 		private float _health = 20;
 
+		private void InvokeHealthUpdate()
+		{
+			OnHealthChanged?.Invoke(this, new HealthChangedEventArgs(Health, MaxHealth));
+		}
+		
 		public float Health
 		{
 			get
@@ -22,10 +78,19 @@ namespace Alex.Entities.Meta
 			set
 			{
 				_health = MathF.Min(MaxHealth, value);
+				InvokeHealthUpdate();
 			}
 		}
 
-		public float MaxHealth { get; set; } = 20f;
+		public float MaxHealth
+		{
+			get => _maxHealth;
+			set
+			{
+				_maxHealth = value;
+				InvokeHealthUpdate();
+			}
+		}
 
 		public int Hearts
 		{
@@ -48,10 +113,19 @@ namespace Alex.Entities.Meta
 			set
 			{
 				_hunger = Math.Min(MaxHunger, value);
+				InvokeHunger();
 			}
 		}
 
-		public int MaxHunger { get; set; } = 20;
+		public int MaxHunger
+		{
+			get => _maxHunger;
+			set
+			{
+				_maxHunger = value;
+				InvokeHunger();
+			}
+		}
 
 		public float Saturation    { get; set; } = 20;
 		public float MaxSaturation { get; set; } = 20;
@@ -66,13 +140,34 @@ namespace Alex.Entities.Meta
 			}
 			set
 			{
+				var previous = _exhaustion;
 				_exhaustion = value;
+				
+				OnExhaustionChanged?.Invoke(this, new ExhaustionChangedEventArgs(value));
 			}
 		}
 
 		public float MaxExhaustion { get; set; } = 5f;
-		public short AvailableAir  { get; set; } = 300;
-		public short MaxAir        { get; set; } = 300;
+
+		public short AvailableAir
+		{
+			get => _availableAir;
+			set
+			{
+				_availableAir = value;
+				InvokeAirUpdate();
+			}
+		}
+
+		public short MaxAir
+		{
+			get => _maxAir;
+			set
+			{
+				_maxAir = value;
+				InvokeAirUpdate();
+			}
+		}
 
 		public bool IsDying => Health * (10d / MaxHealth) < 1d;
 		
@@ -80,10 +175,26 @@ namespace Alex.Entities.Meta
 		///		Returns the ticks since the entity started dying
 		/// </summary>
 		public int DyingTime { get; private set; } = 0;
+
+		public EventHandler<HealthChangedEventArgs> OnHealthChanged;
+		public EventHandler<HungerChangedEventArgs> OnHungerChanged;
+		public EventHandler<ExhaustionChangedEventArgs> OnExhaustionChanged;
+		public EventHandler<SaturationChangedEventArgs> OnSaturationChanged;
+		public EventHandler<AirChangedEventArgs> OnAvailableAirChanged;
 		
 		public HealthManager(Entity entity) : base(entity)
 		{
 			//Entity = entity;
+		}
+
+		private void InvokeAirUpdate()
+		{
+			OnAvailableAirChanged?.Invoke(this, new AirChangedEventArgs(_availableAir, _maxAir));
+		}
+
+		private void InvokeHunger()
+		{
+			OnHungerChanged?.Invoke(this, new HungerChangedEventArgs(Hunger, MaxHunger));
 		}
 
 		private long _ticker = 0;
@@ -105,7 +216,11 @@ namespace Alex.Entities.Meta
 
 		private DateTime       _lastMovementUpdate     = DateTime.UtcNow;
 		private PlayerLocation _lastExhaustionPosition = new PlayerLocation();
-		
+		private float _maxHealth = 20f;
+		private int _maxHunger = 20;
+		private short _availableAir = 300;
+		private short _maxAir = 300;
+
 		private void DoHealthAndExhaustion()
 		{
 			var elapsed = (DateTime.UtcNow - _lastMovementUpdate).TotalSeconds;
@@ -137,12 +252,12 @@ namespace Alex.Entities.Meta
 			{
 				if (Hunger >= 18 && Health < MaxHealth)
 				{
-					Heal(1);
+					//Heal(1);
 					Exhaust(3);
 				}
 				else if (Hunger <= 0 && _health > 1)
 				{
-					TakeHit(1);
+					//TakeHit(1);
 				}
 			}
 

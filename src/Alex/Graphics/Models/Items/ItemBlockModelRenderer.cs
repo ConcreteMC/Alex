@@ -87,7 +87,11 @@ namespace Alex.Graphics.Models.Items
         {
             base.InitEffect(effect);
             effect.TextureEnabled = true;
-            effect.Texture = _texture;
+
+            if (_texture != null)
+            {
+                effect.Texture = _texture;
+            }
         }
 
         /// <inheritdoc />

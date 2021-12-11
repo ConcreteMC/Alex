@@ -317,7 +317,7 @@ namespace Alex.Gamestates.Login
 	        }
         }
 
-        private LoadingOverlay _loadingOverlay = null;
+        private GenericLoadingDialog _genericLoadingDialog = null;
         private void UpdateLoadingState(int previous, int loading)
         {
 	        lock (_loadingLock)
@@ -325,22 +325,25 @@ namespace Alex.Gamestates.Login
 		        if (previous == 0 && loading == 1)
 		        {
 			        //Started loading.
-			        _loadingOverlay = new LoadingOverlay()
-			        {
-				        SizeToWindow = true, AutoSizeMode = AutoSizeMode.GrowAndShrink,
-			        };
+			        _genericLoadingDialog = GuiManager?.CreateDialog<GenericLoadingDialog>();
 
-			        GuiManager?.AddScreen(_loadingOverlay);
+			        if (_genericLoadingDialog != null)
+			        {
+				        _genericLoadingDialog.SizeToWindow = true;
+				        _genericLoadingDialog.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+
+				        _genericLoadingDialog.Show();
+			        }
 		        }
 		        else if (previous == 1 && loading == 0)
 		        {
 			        //Stopped loading
-			        var loadingOverlay = _loadingOverlay;
+			        var loadingOverlay = _genericLoadingDialog;
 
 			        if (loadingOverlay != null)
 			        {
-				        GuiManager?.RemoveScreen(loadingOverlay);
-				        _loadingOverlay = null;
+				        _genericLoadingDialog.Close();
+				        _genericLoadingDialog = null;
 			        }
 		        }
 	        }
@@ -350,7 +353,7 @@ namespace Alex.Gamestates.Login
         {
 	        lock (_loadingLock)
 	        {
-		        var overlay = _loadingOverlay;
+		        var overlay = _genericLoadingDialog;
 
 		        if (overlay == null)
 			        return;
@@ -363,7 +366,7 @@ namespace Alex.Gamestates.Login
         {
 	        base.OnUpdate(gameTime);
 	       // _backgroundSkyBox.Update(gameTime);
-	        var overlay = _loadingOverlay;
+	        var overlay = _genericLoadingDialog;
 
 	        if (overlay != null)
 	        {

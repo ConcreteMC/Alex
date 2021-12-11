@@ -372,6 +372,14 @@ namespace Alex.Worlds
 				entity.Deconstruct(out _, out var e);
 				e?.Dispose();
 			}
+
+			var rendered = _rendered;
+			_rendered = new Entity[0];
+
+			foreach (var entity in rendered)
+			{
+				entity?.Dispose();
+			}
 		}
 		
 		public void UnloadEntities(ChunkCoordinates coordinates)

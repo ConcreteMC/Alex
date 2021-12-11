@@ -36,24 +36,28 @@ namespace Alex.Gui
 			Game = alex;
 		}
 
-        public void Load(IGuiRenderer renderer)
-        {
-	        _textures = new Texture2D[]
-	        {
-		        renderer.GetTexture2D(AlexGuiTextures.Panorama0),
-		        renderer.GetTexture2D(AlexGuiTextures.Panorama1),
-		        renderer.GetTexture2D(AlexGuiTextures.Panorama2),
-		        renderer.GetTexture2D(AlexGuiTextures.Panorama3),
-		        renderer.GetTexture2D(AlexGuiTextures.Panorama4),
-		        renderer.GetTexture2D(AlexGuiTextures.Panorama5),
-	        };
-
-			CreateSkybox(Game.GraphicsDevice);
+		public void Load(IGuiRenderer renderer)
+		{
+			LoadTextures(renderer);
+	        CreateSkybox(Game.GraphicsDevice);
 			
             CanRender = true;
 	        Loaded = true;
         }
 
+		public void LoadTextures(IGuiRenderer renderer)
+		{
+			_textures = new Texture2D[]
+			{
+				renderer.GetTexture2D(AlexGuiTextures.Panorama0),
+				renderer.GetTexture2D(AlexGuiTextures.Panorama1),
+				renderer.GetTexture2D(AlexGuiTextures.Panorama2),
+				renderer.GetTexture2D(AlexGuiTextures.Panorama3),
+				renderer.GetTexture2D(AlexGuiTextures.Panorama4),
+				renderer.GetTexture2D(AlexGuiTextures.Panorama5),
+			};
+		}
+		
 		private void CreateSkybox(GraphicsDevice device)
 	    {
 		    InitGraphics();

@@ -301,7 +301,8 @@ namespace Alex.Graphics.Models
 		/// <inheritdoc />
 		public void Remove(IAttached attachment)
 		{
-			if (!_attached.Remove(attachment)) 
+			var modelBones = Model?.Bones;
+			if (_attached == null || !_attached.Remove(attachment) || modelBones == null) 
 				return;
 
 			if (attachment.Parent != this)
@@ -316,11 +317,17 @@ namespace Alex.Graphics.Models
 				return;
 			}
 
-			Model.Bones.Remove(model.Root);
-			foreach (var mesh in model.Meshes)
+			modelBones.Remove(model.Root);
+			var modelMeshes = model.Meshes;
+
+			if (modelMeshes != null)
 			{
-				Model.Meshes.Remove(mesh);
+				foreach (var mesh in model.Meshes)
+				{
+					modelMeshes.Remove(mesh);
+				}
 			}
+
 			RemoveChild(model.Root);
 		}
 	}

@@ -11,7 +11,6 @@ namespace Alex.Gui.Elements.Hud
         private Player Player { get; }
         private HungerTexture[] Hungers { get; }
         
-        private int Hunger { get; set; }
         public HungerComponent(Player player)
         {
            // Hunger = player.Hunger;
@@ -31,44 +30,43 @@ namespace Alex.Gui.Elements.Hud
                     Anchor = Alignment.BottomRight
                 });
             }
+            
+            player.HealthManager.OnHungerChanged += (sender, e) =>
+            {
+                Update(e.Hunger, e.MaxHunger);
+            };
+            //Update(player.HealthManager.Hunger, player.HealthManager.MaxHunger);
         }
 
-        protected override void OnUpdate(GameTime gameTime)
+        private void Update(int hunger, int maxHunger)
         {
-            if (Player.HealthManager.Hunger != Hunger)
+            var hearts = hunger * (10d / maxHunger);
+            bool isRounded = (hearts % 1 == 0);
+                
+            var ceil = isRounded ? (int)hearts : (int)Math.Ceiling(hearts);
+                
+            for (int i = 0; i < Hungers.Length; i++)
             {
-                Hunger = Player.HealthManager.Hunger;
-                
-                var hearts = Player.HealthManager.Hunger * (10d / Player.HealthManager.MaxHunger);
-                bool isRounded = (hearts % 1 == 0);
-                
-                var ceil = isRounded ? (int)hearts : (int)Math.Ceiling(hearts);
-                
-                for (int i = 0; i < Hungers.Length; i++)
+                HeartValue value = HeartValue.Full;
+                    
+                if ((i + 1) <= ceil)
                 {
-                    HeartValue value = HeartValue.Full;
-                    
-                    if ((i + 1) <= ceil)
-                    {
-                        value = HeartValue.Full;
+                    value = HeartValue.Full;
                         
-                        if (!isRounded && (i + 1) == ceil)
-                        {
-                            value = HeartValue.Half;
-                        }
-                    }
-                    else
+                    if (!isRounded && (i + 1) == ceil)
                     {
-                        value = HeartValue.None;
+                        value = HeartValue.Half;
                     }
-                    
-                    Hungers[^(i + 1)].Set(value);
                 }
+                else
+                {
+                    value = HeartValue.None;
+                }
+                    
+                Hungers[^(i + 1)].Set(value);
             }
-            
-            base.OnUpdate(gameTime);
         }
-        
+
         public class HungerTexture : RocketControl
         {
             private TextureElement Texture { get; set; }

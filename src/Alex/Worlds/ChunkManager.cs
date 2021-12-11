@@ -15,6 +15,7 @@ using Alex.Common.Utils.Vectors;
 using Alex.Common.World;
 using Alex.Entities.BlockEntities;
 using Alex.Gamestates;
+using Alex.Graphics;
 using Alex.Graphics.Effect;
 using Alex.Utils;
 using Alex.Utils.Collections.Queue;
@@ -93,6 +94,9 @@ namespace Alex.Worlds
 		
 		private ActionBlock<ChunkCoordinates> _actionBlock;
 		private PriorityBufferBlock<ChunkCoordinates> _priorityBuffer;
+		
+		
+		private readonly ResourceManager _resourceManager;
 		public ChunkManager(IServiceProvider serviceProvider, GraphicsDevice graphics, World world, CancellationToken cancellationToken)
 		{
 			Graphics = graphics;
@@ -100,18 +104,19 @@ namespace Alex.Worlds
 			
 			Options = serviceProvider.GetRequiredService<IOptionsProvider>().AlexOptions;
 
-			var stillAtlas =  serviceProvider.GetRequiredService<ResourceManager>().BlockAtlas.GetAtlas();
+			_resourceManager = serviceProvider.GetRequiredService<ResourceManager>();
+			//var stillAtlas =  serviceProvider.GetRequiredService<ResourceManager>().BlockAtlas.GetAtlas();
 	        
 			var fogStart = 0;
 			Shaders = new RenderingShaders();
-			Shaders.SetTextures(stillAtlas);
+			//Shaders.SetTextures(stillAtlas);
 			Shaders.FogEnabled = Options.VideoOptions.Fog.Value;
 			Options.VideoOptions.Fog.Bind(
 				(old, newValue) =>
 				{
 					Shaders.FogEnabled = newValue;
 				});
-			_renderSampler.MaxMipLevel = stillAtlas.LevelCount;
+			//_renderSampler.MaxMipLevel = stillAtlas.LevelCount;
 
 			Chunks = new ConcurrentDictionary<ChunkCoordinates, ChunkColumn>();
 			CancellationToken = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
@@ -123,6 +128,36 @@ namespace Alex.Worlds
 			BuildActionBlock(Options.MiscelaneousOptions.ChunkThreads.Value);
 			
 			EnsureStarted();
+
+			InitTextures();
+		}
+
+		private void InitTextures()
+		{
+			var blockAtlas = _resourceManager?.BlockAtlas;
+			if (blockAtlas == null)
+				return;
+			
+			blockAtlas.AtlasGenerated += AtlasGenerated;
+
+			var texture = blockAtlas.GetAtlas(false);
+			SetTextures(texture);
+		}
+
+		private void AtlasGenerated(object? sender, AtlasTexturesGeneratedEventArgs e)
+		{
+			SetTextures(e.Texture);
+		}
+
+		private void SetTextures(Texture2D texture)
+		{
+			var shaders = Shaders;
+
+			if (shaders == null || texture == null || texture.IsDisposed)
+				return;
+			
+			shaders.SetTextures(texture);
+			_renderSampler.MaxMipLevel = texture.LevelCount;
 		}
 
 		private void BuildActionBlock(int threads)
@@ -632,7 +667,6 @@ namespace Alex.Worlds
 
 		private bool _disposed = false;
 		private int _renderDistance = 0;
-
 		/// <inheritdoc />
 		public void Dispose()
 		{

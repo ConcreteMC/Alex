@@ -4,7 +4,7 @@ using RocketUI;
 
 namespace Alex.Gui.Elements
 {
-	public class LoadingOverlay : Screen, IProgressReceiver
+	public class GenericLoadingDialog : DialogBase, IProgressReceiver
 	{
 		private LoadingIndicator _loadingIndicator;
 		private TextElement _textElement;
@@ -20,7 +20,7 @@ namespace Alex.Gui.Elements
 			}
 		}
 
-		public LoadingOverlay()
+		public GenericLoadingDialog()
 		{
 			Anchor = Alignment.Fill;
 			BackgroundOverlay = Color.Black * 0.5f;

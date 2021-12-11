@@ -12,7 +12,6 @@ namespace Alex.Gui.Elements.Hud
         private Player Player { get; }
         private AirTexture[] AirBubbles { get; }
         
-        private int Air { get; set; }
         public AirComponent(Player player)
         {
            // Hunger = player.Hunger;
@@ -32,8 +31,42 @@ namespace Alex.Gui.Elements.Hud
                     Anchor = Alignment.BottomRight
                 });
             }
+            
+            player.HealthManager.OnAvailableAirChanged += (s, e) =>
+            {
+                UpdateAir(e.AirAvailable, e.MaxAirAvailable);
+            };
         }
 
+        private void UpdateAir(int availableAir, int maxAir)
+        {
+            var hearts = availableAir * (10d / maxAir);
+            bool isRounded = (hearts % 1 == 0);
+                
+            var ceil = isRounded ? (int)hearts : (int)Math.Ceiling(hearts);
+                
+            for (int i = 0; i < AirBubbles.Length; i++)
+            {
+                HeartValue value = HeartValue.Full;
+                    
+                if ((i + 1) <= ceil)
+                {
+                    value = HeartValue.Full;
+                        
+                    if (!isRounded && (i + 1) == ceil)
+                    {
+                        value = HeartValue.Half;
+                    }
+                }
+                else
+                {
+                    value = HeartValue.None;
+                }
+                    
+                AirBubbles[^(i + 1)].Set(value);
+            }
+        }
+        
         protected override void OnUpdate(GameTime gameTime)
         {
             if (Player.HeadInWater)
@@ -45,37 +78,6 @@ namespace Alex.Gui.Elements.Hud
                 IsVisible = false;
             }
 
-            if (Player.HealthManager.AvailableAir != Air)
-            {
-                Air = Player.HealthManager.AvailableAir;
-                
-                var hearts = Player.HealthManager.AvailableAir * (10d / Player.HealthManager.MaxAir);
-                bool isRounded = (hearts % 1 == 0);
-                
-                var ceil = isRounded ? (int)hearts : (int)Math.Ceiling(hearts);
-                
-                for (int i = 0; i < AirBubbles.Length; i++)
-                {
-                    HeartValue value = HeartValue.Full;
-                    
-                    if ((i + 1) <= ceil)
-                    {
-                        value = HeartValue.Full;
-                        
-                        if (!isRounded && (i + 1) == ceil)
-                        {
-                            value = HeartValue.Half;
-                        }
-                    }
-                    else
-                    {
-                        value = HeartValue.None;
-                    }
-                    
-                    AirBubbles[^(i + 1)].Set(value);
-                }
-            }
-            
             base.OnUpdate(gameTime);
         }
         

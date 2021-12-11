@@ -258,13 +258,6 @@ namespace Alex.Entities
 			}
 		}
 
-		protected ModelBone _leftArmModel;
-		protected ModelBone _leftItemModel;
-		protected ModelBone _rightArmModel;
-		protected ModelBone _rightItemModel;
-
-		protected ModelBone _head;
-		
 		public  HealthManager HealthManager { get; }
 		
 		private bool          _isFirstPersonMode = false;
@@ -502,18 +495,20 @@ namespace Alex.Entities
 
 		protected virtual ModelBone GetPrimaryArm()
         {
-	        ModelBone arm = null;
+	        var modelRenderer = ModelRenderer;
+
+	        if (modelRenderer == null)
+		        return null;
 	        
-	        if (_rightItemModel != null)
+	        ModelBone arm = null;
+
+	        if (modelRenderer.GetBone("rightItem", out arm) 
+	            || modelRenderer.GetBone("leftItem", out arm))
 	        {
-		        arm = _rightItemModel;
-	        }
-	        else if (_leftItemModel != null)
-	        {
-		        arm = _rightArmModel;
+		        return arm;
 	        }
 
-	        return arm;
+	        return null;
         }
 
         protected virtual void UpdateItemPosition(IItemRenderer oldValue, IItemRenderer renderer)
@@ -526,14 +521,13 @@ namespace Alex.Entities
 					arm?.Remove(oldValue);
 	        }
 
-	        if (renderer == null)
+	        if (renderer?.Model == null)
 		        return;
 
 	        renderer.DisplayPosition = DisplayPosition.ThirdPersonRightHand;
 
 	       // if (oldValue != renderer)
 	        {
-		        if (renderer != null)
 					arm?.AddChild(renderer);
 	        }
         }
@@ -1275,14 +1269,14 @@ namespace Alex.Entities
 				return;
 			//if (((!RenderEntity || IsInvisible) && !ShowItemInHand) || renderer == null || _skipRendering) return;
 
-			if (_head != null)
+			if (renderer.GetBone("head", out var head))
 			{
 				var headYaw = (KnownPosition.HeadYaw - KnownPosition.Yaw);
 
 				var pitch = KnownPosition.Pitch;
 
 				
-				_head.Rotation = new Vector3(-pitch, headYaw, 0f);
+				head.Rotation = new Vector3(-pitch, headYaw, 0f);
 				//_head.Rotation = Quaternion.CreateFromYawPitchRoll(MathUtils.ToRadians(headYaw), MathUtils.ToRadians(pitch), 0f);
 			}
 			
@@ -1488,22 +1482,11 @@ namespace Alex.Entities
 
 		protected virtual void UpdateModelParts()
 		{
-			if (ModelRenderer == null)
+			var modelRenderer = ModelRenderer;
+			if (modelRenderer == null)
 				return;
 
 			ScaleChanged();
-			
-			//ModelRenderer.GetBone("body", out _body);
-
-			ModelRenderer.GetBone("leftArm", out _leftArmModel);
-			ModelRenderer.GetBone("leftItem", out _leftItemModel);
-			ModelRenderer.GetBone("rightArm", out _rightArmModel);
-			ModelRenderer.GetBone("rightItem", out _rightItemModel);
-
-		//	ModelRenderer.GetBone("rightLeg", out _rightLegModel);
-		//	ModelRenderer.GetBone("leftLeg", out _leftLegModel);
-
-			ModelRenderer.GetBone("head", out _head);
 		}
 
 		protected virtual void OnModelUpdated()
@@ -1619,13 +1602,14 @@ namespace Alex.Entities
 
 			try
 			{
-				var model = ModelRenderer;
-				var texture = Texture;
-				ModelRenderer = null;
-				Texture = null;
+				ItemRenderer?.Dispose();
+				ItemRenderer = null;
 				
-				texture?.Dispose();// = null;
-				model?.Dispose();
+				ModelRenderer?.Dispose();
+				ModelRenderer = null;
+				
+				Texture?.Dispose();
+				Texture = null;
 				
 				OnDispose();
 			}
@@ -1781,7 +1765,13 @@ namespace Alex.Entities
 					case "minecraft:movement":
 						MovementSpeed = attribute.Value.Value;
 						break;
+					case "health":
 					case "minecraft:health":
+						if (this is Player)
+						{
+							Log.Info(
+								$"Player health update! {attribute.Value.ToString()}");
+						}
 						HealthManager.Health = attribute.Value.Value;
 						HealthManager.MaxHealth = attribute.Value.MaxValue;
 						break;
@@ -1790,7 +1780,7 @@ namespace Alex.Entities
 						break;
 					default:
 						if (!TryUpdateAttribute(attribute.Value))
-							Log.Debug($"Unknown attribute: {attribute.Key} (Value={attribute.Value.Value} Min={attribute.Value.MinValue} Max={attribute.Value.MaxValue})");
+							Log.Warn($"Unknown attribute! {attribute.Value.ToString()})");
 						break;
 				}
 			}

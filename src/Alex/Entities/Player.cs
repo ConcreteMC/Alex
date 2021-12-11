@@ -332,7 +332,7 @@ namespace Alex.Entities
 
 			    if (hitEntity != null)
 			    {
-				    if (hitEntity is LivingEntity)
+				    //if (hitEntity is LivingEntity)
 				    {
 					    if (didLeftClick || didRightClick)
 					    {
@@ -344,7 +344,7 @@ namespace Alex.Entities
 						    var remainder = new Vector3(adjacent.X - flooredAdj.X, adjacent.Y - flooredAdj.Y, adjacent.Z - flooredAdj.Z);
 						    
 						    InteractWithEntity(hitEntity, didLeftClick, IsLeftHanded ? 1 : 0, remainder);
-						    return;
+						    
 					    }
 				    }
 			    }
@@ -686,6 +686,16 @@ namespace Alex.Entities
 
 		    var blockPosition = Raytracer.ResultingCoordinates;
 
+		    var hitEntity = HitEntity;
+
+		    if (hitEntity != null)
+		    {
+			    if (isLeftClick)
+			    {
+				    
+			    }
+		    }
+		    
 		    if (Raytracer.HasValue)
 		    {
 			    var existingBlockState = Level.GetBlockState(blockPosition);

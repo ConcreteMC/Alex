@@ -1,9 +1,10 @@
+using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace Alex.Graphics.Models
 {
-	public sealed class ModelMesh
+	public sealed class ModelMesh : IDisposable
 	{
 		private GraphicsDevice graphicsDevice;
 
@@ -58,10 +59,15 @@ namespace Alex.Graphics.Models
 		/// </summary>
 		public int Draw()
 		{
+			var meshParts = MeshParts;
+
+			if (meshParts == null)
+				return 0;
+			
 			int c = 0;
-			for(int i = 0; i < MeshParts.Count; i++)
+			for(int i = 0; i < meshParts.Count; i++)
 			{
-				var part = MeshParts[i];
+				var part = meshParts[i];
 				var effect = part.Effect;
 				
 				if (effect != null && part.PrimitiveCount > 0 && part.VertexBuffer != null && part.IndexBuffer != null && !effect.IsDisposed)
@@ -80,6 +86,32 @@ namespace Alex.Graphics.Models
 			}
 
 			return c;
+		}
+
+		/// <inheritdoc />
+		public void Dispose()
+		{
+			var effects = Effects;
+			Effects = null;
+
+			if (effects != null)
+			{
+				foreach (var effect in effects)
+				{
+					effect?.Dispose();
+				}
+			}
+
+			var parts = MeshParts;
+			MeshParts = null;
+
+			if (parts != null)
+			{
+				foreach (var part in parts)
+				{
+					part?.Dispose();
+				}
+			}
 		}
 	}
 }

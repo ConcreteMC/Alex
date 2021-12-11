@@ -302,7 +302,10 @@ namespace Alex.Gui
 			{
 				mcBmp.Mutate(x => x.Resize(275, 44));
 
+				var oldLogo = _mcLogo;
 				_mcLogo = TextureUtils.BitmapToTexture2D(this, _graphicsDevice, mcBmp);
+				oldLogo?.Dispose();
+				
 				LoadTextureFromSpriteSheet(AlexGuiTextures.AlexLogo, _mcLogo, new Rectangle(0, 0, 275, 44), new Size(275, 44));
 				mcBmp.Dispose();
 			} 
@@ -324,13 +327,18 @@ namespace Alex.Gui
 				_mcLogo = TextureUtils.BitmapToTexture2D(this, _graphicsDevice, finalLogo);
 				LoadTextureFromSpriteSheet(AlexGuiTextures.AlexLogo, _mcLogo, new Rectangle(0, 0, 273, 44), new Size(273, 44));
 				mcBmp.Dispose();
+				part1?.Dispose();
+				part2?.Dispose();
 			}
 			
 			// First load Widgets
 			progressReceiver?.UpdateProgress(0, null, "gui/widgets");
 			if (resourceManager.TryGetBitmap("gui/widgets", out var widgetsBmp))
 			{
+				var o = _widgets;
 				_widgets = TextureUtils.BitmapToTexture2D(this, _graphicsDevice, widgetsBmp);
+				o?.Dispose();
+				
 				LoadWidgets(_widgets);
 				widgetsBmp.Dispose();
 			}
@@ -338,7 +346,9 @@ namespace Alex.Gui
 			progressReceiver?.UpdateProgress(25, null, "gui/icons");
 			if (resourceManager.TryGetBitmap("gui/icons", out var icons))
 			{
+				var o = _icons;
 				_icons = TextureUtils.BitmapToTexture2D(this, _graphicsDevice, icons);
+				o?.Dispose();
 				LoadIcons(_icons);
 				
 				icons.Dispose();
@@ -346,7 +356,9 @@ namespace Alex.Gui
 			
 			if (resourceManager.TryGetBitmap("gui/bars", out var bars))
 			{
+				var o = _bars;
 				_bars = TextureUtils.BitmapToTexture2D(this, _graphicsDevice, bars);
+				o?.Dispose();
 				LoadBars(_bars);
 				
 				bars.Dispose();
@@ -354,15 +366,21 @@ namespace Alex.Gui
 			
 			if (resourceManager.TryGetBitmap("map/map_icons", out var mapIconsBmp))
 			{
+				var o = _mapIcons;
 				_mapIcons = TextureUtils.BitmapToTexture2D(this, _graphicsDevice, mapIconsBmp);
+				o?.Dispose();
+				
 				LoadMapIcons(_mapIcons);
 				mapIconsBmp.Dispose();
 			}
 
 			if (_scrollbar == null)
 			{
+				var o = _scrollbar;
 				_scrollbar = TextureUtils.ImageToTexture2D(this, _graphicsDevice,
 					ResourceManager.ReadResource("Alex.Resources.ScrollBar.png"));
+				o?.Dispose();
+				
 				LoadScrollBar(_scrollbar);
 			}
 
@@ -376,7 +394,9 @@ namespace Alex.Gui
 				
 				if (resourceManager.TryGetBitmap("gui/container/inventory", out var bmp))
 				{
+					var o = _inventory;
 					_inventory = TextureUtils.BitmapToTexture2D(this, _graphicsDevice, bmp);
+					o?.Dispose();
 					LoadTextureFromSpriteSheet(AlexGuiTextures.InventoryPlayerBackground, _inventory, new Rectangle(0, 0, 176, 166), IconSize);
 					
 					bmp.Dispose();
@@ -384,7 +404,9 @@ namespace Alex.Gui
 
 				if (resourceManager.TryGetBitmap("gui/container/generic_54", out var genericInvBmp))
 				{
+					var o = _chestInventory;
 					_chestInventory = TextureUtils.BitmapToTexture2D(this, _graphicsDevice, genericInvBmp);
+					o?.Dispose();
 					LoadTextureFromSpriteSheet(AlexGuiTextures.InventoryChestBackground, _chestInventory, new Rectangle(0, 0, 175, 221), IconSize);
 					
 					genericInvBmp.Dispose();
@@ -392,7 +414,9 @@ namespace Alex.Gui
 
 				if (resourceManager.TryGetBitmap("gui/container/crafting_table", out var craftingTable))
 				{
+					var o = _craftingTable;
 					_craftingTable = TextureUtils.BitmapToTexture2D(this, _graphicsDevice, craftingTable);
+					o?.Dispose();
 					LoadTextureFromSpriteSheet(AlexGuiTextures.InventoryCraftingTable, _craftingTable, new Rectangle(0, 0, 175, 165), IconSize);
 					
 					craftingTable.Dispose();
@@ -400,7 +424,9 @@ namespace Alex.Gui
 				
 				if (resourceManager.TryGetBitmap("gui/container/furnace", out var furnace))
 				{
+					var o = _furnace;
 					_furnace = TextureUtils.BitmapToTexture2D(this, _graphicsDevice, furnace);
+					o?.Dispose();
 					LoadTextureFromSpriteSheet(AlexGuiTextures.InventoryFurnace, _furnace, new Rectangle(0, 0, 175, 165), IconSize);
 					
 					furnace.Dispose();
@@ -408,7 +434,9 @@ namespace Alex.Gui
 
 				if (resourceManager.TryGetBitmap("gui/container/creative_inventory/tab_item_search", out var tabImage))
 				{
+					var o = _tabItemSearch;
 					_tabItemSearch = TextureUtils.BitmapToTexture2D(this, _graphicsDevice, tabImage);
+					o?.Dispose();
 					LoadTextureFromSpriteSheet(AlexGuiTextures.InventoryCreativeItemSearch, _tabItemSearch, new Rectangle(0, 0, 194, 135), IconSize);
 					
 					tabImage.Dispose();
@@ -662,7 +690,11 @@ namespace Alex.Gui
 		{
 			if (resources.TryGetBitmap(path, out var texture))
 			{
+				TextureSlice2D orig = null;
+				_textureCache.TryGetValue(guiTexture, out orig);
 				_textureCache[guiTexture] = TextureUtils.BitmapToTexture2D(this, _graphicsDevice, texture);
+				orig?.Texture?.Dispose();
+				
 				texture.Dispose();
 			}
 		}
@@ -672,20 +704,24 @@ namespace Alex.Gui
 		{
 			var widthScaler = spriteSheet.Width / originalSize.Width;
 			var heightScaler = spriteSheet.Height / originalSize.Height;
-			
+
+			_textureCache.TryGetValue(guiTexture, out var o);
 			_textureCache[guiTexture] = new NinePatchTexture2D(Texture2DExtensions.Slice(spriteSheet, new Rectangle(sliceRectangle.X * widthScaler,
 				sliceRectangle.Y * heightScaler, sliceRectangle.Width * widthScaler,
 				sliceRectangle.Height * heightScaler)), ninePatchThickness);
+			o?.Texture?.Dispose();
 		}
 
 		private void LoadTextureFromSpriteSheet(GuiTextures guiTexture, Texture2D spriteSheet, Rectangle sliceRectangle, Size originalSize)
 		{
 			var widthScaler = spriteSheet.Width / originalSize.Width;
 			var heightScaler = spriteSheet.Height / originalSize.Height;
-
+			
+			_textureCache.TryGetValue(guiTexture, out var o);
 			_textureCache[guiTexture] = Texture2DExtensions.Slice(spriteSheet, new Rectangle(sliceRectangle.X * widthScaler,
 				sliceRectangle.Y * heightScaler, sliceRectangle.Width * widthScaler,
 				sliceRectangle.Height * heightScaler));
+			o?.Texture?.Dispose();
 		}
 		
 		public TextureSlice2D GetTexture(GuiTextures guiTexture)

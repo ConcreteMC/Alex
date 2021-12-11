@@ -13,7 +13,7 @@ namespace Alex.Graphics.Models
 	/// <summary>
 	/// A basic 3D model with per mesh parent bones.
 	/// </summary>
-	public sealed class Model
+	public sealed class Model : IDisposable
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(Model));
 		//private Matrix[] _matrices;
@@ -89,10 +89,15 @@ namespace Alex.Graphics.Models
 		/// <param name="projection">The projection transform.</param>
 		public int Draw(Matrix world, Matrix view, Matrix projection)
 		{
+			var bonesCollection = this.Bones;
+			var meshes = this.Meshes;
+			if (bonesCollection == null || meshes == null)
+				return 0;
+			
 			int drawCount = 0;
 
-			var bones = this.Bones.ToImmutableArray();
-			int boneCount = bones.Length;
+			var bones = bonesCollection;
+			int boneCount = bones.Count;
 
 			var matrices = MatrixArrayPool.Rent(boneCount);
 
@@ -108,12 +113,12 @@ namespace Alex.Graphics.Models
 				CopyAbsoluteBoneTransformsTo(bones, matrices);
 
 				// Draw the model.
-				foreach (var mesh in Meshes)
+				foreach (var mesh in meshes)
 				{
-					var parentIndex = mesh.ParentBone.Index;
-
-					if (!mesh.ParentBone.Visible || parentIndex < 0 || parentIndex >= matrices.Length)
+					if (mesh.ParentBone == null || !mesh.ParentBone.Visible || mesh.ParentBone.Index < 0 || mesh.ParentBone.Index >= matrices.Length || mesh.Effects == null)
 						continue;
+					
+					var parentIndex = mesh.ParentBone.Index;
 
 					foreach (Microsoft.Xna.Framework.Graphics.Effect effect in mesh.Effects)
 					{
@@ -153,20 +158,20 @@ namespace Alex.Graphics.Models
 		/// Copies bone transforms relative to all parent bones of the each bone from this model to a given array.
 		/// </summary>
 		/// <param name="destinationBoneTransforms">The array receiving the transformed bones.</param>
-		public static void CopyAbsoluteBoneTransformsTo(ImmutableArray<ModelBone> source, Matrix[] destinationBoneTransforms)
+		public static void CopyAbsoluteBoneTransformsTo(IList<ModelBone> source, Matrix[] destinationBoneTransforms)
 		{
 			var bones = source;
 			if (destinationBoneTransforms == null)
 				throw new ArgumentNullException(nameof(destinationBoneTransforms));
 			
 			//var bones = this.Bones;
-			if (destinationBoneTransforms.Length <  bones.Length)
+			if (destinationBoneTransforms.Length <  bones.Count)
 				throw new ArgumentOutOfRangeException(nameof(destinationBoneTransforms));
 			
-			int count = bones.Length;
+			int count = bones.Count;
 			for (int index1 = 0; index1 < count; index1++)
 			{
-				if (index1 >= bones.Length)
+				if (index1 >= bones.Count)
 					break;
 				
 				var modelBone = bones[index1];
@@ -230,6 +235,21 @@ namespace Alex.Graphics.Models
 			{
 				destinationBoneTransforms[i] = Bones[i].Transform;
 			}
+		}
+
+		/// <inheritdoc />
+		public void Dispose()
+		{
+			var meshes = Meshes;
+			Meshes = null;
+			
+			foreach (var mesh in meshes)
+			{
+				mesh?.Dispose();
+			}
+
+			var bones = Bones;
+			Bones = null;
 		}
 	}
 }

@@ -357,9 +357,9 @@ namespace Alex.Gamestates.Multiplayer
 			    return;
 
 		    CancellationTokenSource?.Cancel();
-		    var overlay = new LoadingOverlay();
-		    Alex.GuiManager.AddScreen(overlay);
-
+		    var overlay = Alex.GuiManager.CreateDialog<GenericLoadingDialog>();
+			overlay.Show();
+			
 		    try
 		    {
 			    var entry = item.SavedServerEntry;
@@ -382,7 +382,7 @@ namespace Alex.Gamestates.Multiplayer
 				    }
 				    finally
 				    {
-					    Alex.GuiManager.RemoveScreen(overlay);
+						overlay.Close();
 				    }
 			    }
 
@@ -392,7 +392,7 @@ namespace Alex.Gamestates.Multiplayer
 		    }
 		    finally
 		    {
-			    Alex.GuiManager.RemoveScreen(overlay);
+			    overlay.Close();
 		    }
 	    }
 

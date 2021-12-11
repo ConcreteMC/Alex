@@ -856,26 +856,31 @@ namespace Alex.Net.Bedrock
 			if (Client.World.EntityManager.TryGet(message.runtimeEntityId, out entity))
 			{
 				Effect     effect     = null;
-				EffectType effectType = (EffectType) message.effectId;
+				MiNET.Effects.EffectType effectType = (MiNET.Effects.EffectType) message.effectId;
+				EffectType alexEffectType = (EffectType)message.effectId;
 				switch (effectType)
 				{
-					case EffectType.Slowness:
+					case MiNET.Effects.EffectType.Slowness:
+						alexEffectType = EffectType.Slowness;
 						effect = new SlownessEffect();
 						break;
-					case EffectType.Speed:
+					case MiNET.Effects.EffectType.Speed:
+						alexEffectType = EffectType.Speed;
 						effect = new SpeedEffect();
 						break;
 
-					case EffectType.JumpBoost:
+					case MiNET.Effects.EffectType.JumpBoost:
+						alexEffectType = EffectType.JumpBoost;
 						effect = new JumpBoostEffect();
 						break;
 				
-					case EffectType.NightVision:
+					case MiNET.Effects.EffectType.NightVision:
+						alexEffectType = EffectType.NightVision;
 						effect = new NightVisionEffect();
 						break;
 				
 					default:
-						Log.Warn($"Missing effect implementation: {(EffectType) message.effectId}");
+						Log.Warn($"Missing effect implementation. Alex={(EffectType) message.effectId} MiNET={(MiNET.Effects.EffectType)message.effectId}");
 						return;
 				}
 
@@ -889,7 +894,7 @@ namespace Alex.Net.Bedrock
 						break;
 				
 					case 2: //Modify
-						if (entity.Effects.TryGetEffect(effectType, out effect))
+						if (entity.Effects.TryGetEffect(alexEffectType, out effect))
 						{
 							effect.Duration = message.duration;
 							effect.Particles = message.particles;
@@ -1108,31 +1113,48 @@ namespace Alex.Net.Bedrock
 
 		public void HandleMcpeRespawn(McpeRespawn message)
 		{
-			Log.Info($"Respawn state {message.state} | Runtime entity id: {message.runtimeEntityId}");
+			Log.Info($"Respawn state {(McpeRespawn.RespawnState)message.state} | Runtime entity id: {message.runtimeEntityId}");
 
-			if (message.state == 0)
+			switch ((McpeRespawn.RespawnState)message.state)
 			{
-				var response = McpeRespawn.CreateObject();
-				response.runtimeEntityId = message.runtimeEntityId;
-				response.x = message.x;
-				response.y = message.y;
-				response.z = message.z;
-				response.state = 2;
-				
-				Client.SendPacket(response);
-			}
-			else if (message.state == 1)
-			{
-				Client.World.UpdatePlayerPosition(new PlayerLocation(message.x, message.y, message.z), true);
-
-				if (Client.CanSpawn)
+				case McpeRespawn.RespawnState.Search:
 				{
-					Client.SendMcpeMovePlayer(new PlayerLocation(message.x, message.y, message.z), 1);
-				}
+					var response = McpeRespawn.CreateObject();
+					response.runtimeEntityId = message.runtimeEntityId;
+					response.x = message.x;
+					response.y = message.y;
+					response.z = message.z;
+					response.state = (int)McpeRespawn.RespawnState.ClientReady;
 
-				Client.RequestRenderDistance(0, Client.World.ChunkManager.RenderDistance);
+					Client.SendPacket(response);
+				} break;
 
-				Client.ChangeDimensionResetEvent.Set();
+				case McpeRespawn.RespawnState.Ready:
+				{
+					Client.World.SpawnPoint = new Microsoft.Xna.Framework.Vector3(
+						message.x, (float)(message.y), message.z);
+					
+					Client.World.UpdatePlayerPosition(new PlayerLocation(message.x, message.y, message.z), true);
+
+					if (Client.CanSpawn)
+					{
+						Client.SendMcpeMovePlayer(new PlayerLocation(message.x, message.y, message.z), 1);
+					}
+
+					Client.RequestRenderDistance(0, Client.World.ChunkManager.RenderDistance);
+
+					Client.ChangeDimensionResetEvent.Set();
+
+					Client.SendPlayerAction(
+						PlayerAction.Respawn, 
+						null,
+						null);
+				} break;
+
+				case McpeRespawn.RespawnState.ClientReady:
+				{
+					
+				} break;
 			}
 		}
 

@@ -35,6 +35,16 @@ using TextureInfo = Alex.Graphics.Textures.TextureInfo;
 
 namespace Alex.Graphics
 {
+	public class AtlasTexturesGeneratedEventArgs : EventArgs
+	{
+		public Texture2D Texture { get; }
+
+		public AtlasTexturesGeneratedEventArgs(Texture2D texture)
+		{
+			Texture = texture;
+		}
+	}
+	
     public class AtlasGenerator
     {
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(SPWorldProvider));
@@ -44,6 +54,8 @@ namespace Alex.Graphics
 	    
         public Vector2 AtlasSize { get; private set; }
         public string Selector { get; }
+
+        public EventHandler<AtlasTexturesGeneratedEventArgs> AtlasGenerated;
         public AtlasGenerator(string selector)
         {
 	        Selector = selector;
@@ -51,10 +63,11 @@ namespace Alex.Graphics
 
 	    public void Reset()
 	    {
+		   // _textureAtlas?.Dispose();
 		    _atlasLocations = new Dictionary<ResourceLocation,  Utils.TextureInfo>();
 
 		    AtlasSize = default;
-		    _textureAtlas = default;
+		  //  _textureAtlas = default;
 	    }
 
 	    public class ImageEntry
@@ -137,6 +150,7 @@ namespace Alex.Graphics
 
 		    Dictionary<ResourceLocation, Utils.TextureInfo> textureInfos = new Dictionary<ResourceLocation, Utils.TextureInfo>();
 
+		    var oldAtlas = _textureAtlas;
 		    int count = 0;
 		    foreach (var atlas in p.Process(textures, size, 4))
 		    {
@@ -155,32 +169,28 @@ namespace Alex.Graphics
 			    }
 
 			    count++;
-
-			   // if (Selector.Contains("block", StringComparison.InvariantCultureIgnoreCase))
-			    {
-				  //  Log.Info($"Texture atlas: {count}");
-				   // img.SaveAsPng($"{Selector}/atlas{count}.png");
-			    }
-
 			    _textureAtlas = GetMipMappedTexture2D(device, img);
 			    _atlasLocations = textureInfos;
 			    
 			    Log.Debug($"Atlas size: W={_textureAtlas.Width},H={_textureAtlas.Height} | TW: {TextureWidth} TH: {TextureHeight}");
-			    //break;
+			    img?.Dispose();
 		    }
+		    
+		    //oldAtlas?.Dispose();
 		    
 		    AtlasSize = new Vector2(_textureAtlas.Width, _textureAtlas.Height);
 		    totalSize += _textureAtlas.MemoryUsage();
 		    sw.Stop();
-
+		    
 		    Log.Info(
 			    $"TextureAtlas '{Selector}' generated in {sw.ElapsedMilliseconds}ms! ({FormattingUtils.GetBytesReadable(totalSize, 2)})");
+
+		    AtlasGenerated?.Invoke(this, new AtlasTexturesGeneratedEventArgs(_textureAtlas));
 	    }
 
 	    private Texture2D GetMipMappedTexture2D(GraphicsDevice device, Image image)
 	    {
 		    Texture2D texture = new Texture2D(device, image.Width, image.Height, true, SurfaceFormat.Color);
-
 		    for (int level = 0; level < Alex.MipMapLevel; level++)
 		    {
 			    int mipWidth  = (int) System.Math.Max(1, image.Width >> level);
@@ -227,6 +237,7 @@ namespace Alex.Graphics
 			    }
 		    }
 
+		    texture.Tag = Tag;
 		    return texture;
 	    }
 	    
@@ -235,6 +246,7 @@ namespace Alex.Graphics
 
         public void LoadResources(GraphicsDevice device, Dictionary<ResourceLocation, ImageEntry> loadedTextures, ResourceManager resources, IProgressReceiver progressReceiver, bool build)
 		{
+			Reset();
 			int textureWidth = TextureWidth, textureHeight = TextureHeight;
 
 			//GetTextures(resources, loadedTextures, progressReceiver);
@@ -260,7 +272,8 @@ namespace Alex.Graphics
             if (build) GenerateAtlas(device, loadedTextures, progressReceiver);
 		}
 
-        public Texture2D GetAtlas()
+        public static readonly object Tag = "AtlasGeneratorTag!";
+        public Texture2D GetAtlas(bool clone = true)
 		{
 			return _textureAtlas;
 		}

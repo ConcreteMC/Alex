@@ -282,7 +282,7 @@ namespace Alex.Items
 			            if (modelRegistry.TryGet(rendererResourceLocation, out var modelEntry))
 			            {
 				            ResourcePackModelBase model = modelEntry.Value;
-				            renderer = new ItemBlockModelRenderer(itemBlock.Block, model, resources.BlockAtlas.GetAtlas());
+				            renderer = new ItemBlockModelRenderer(itemBlock.Block, model, resources.BlockAtlas.GetAtlas(true));
 			            }
 		            }
 	            }

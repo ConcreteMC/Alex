@@ -1,8 +1,9 @@
+using System;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace Alex.Graphics.Models
 {
-	public class ModelMeshPart
+	public class ModelMeshPart : IDisposable
 	{
 		private Microsoft.Xna.Framework.Graphics.Effect _effect;
 
@@ -89,5 +90,25 @@ namespace Alex.Graphics.Models
 		public int VertexOffset { get; set; }
 
 		internal ModelMesh Parent;
+
+		/// <inheritdoc />
+		public void Dispose()
+		{
+			if (VertexBuffer != null && !VertexBuffer.IsDisposed)
+			{
+				VertexBuffer?.Dispose();
+				VertexBuffer = null;
+			}
+
+			if (IndexBuffer != null && !IndexBuffer.IsDisposed)
+			{
+				IndexBuffer?.Dispose();
+				IndexBuffer = null;
+			}
+
+			_effect?.Dispose();
+			_effect = null;
+			Parent = null;
+		}
 	}
 }

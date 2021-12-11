@@ -17,10 +17,19 @@ namespace Alex.Common.Graphics.GpuResources
     {
         private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(GpuResourceManager));
         
+        private static long _textureMemoryUsage = 0;
+        private static long _vertexMemoryUsage = 0;
+        private static long _indexMemoryUsage = 0;
+        private static long _unknownMemoryUsage = 0;
+        
         private static long _totalMemoryUsage = 0;
         private static long _resourceCount = 0;
         public static long ResourceCount => _resourceCount;
         public static long MemoryUsage => _totalMemoryUsage;
+        public static long TextureMemory => _textureMemoryUsage;
+        public static long VertexMemory => _vertexMemoryUsage;
+        public static long IndexMemory => _indexMemoryUsage;
+        public static long UnknownMemory => _unknownMemoryUsage;
         
         private static double TargetElapsedTime => 1d / 30d;
         private static double _elapsedTime = 0d;
@@ -66,6 +75,11 @@ namespace Alex.Common.Graphics.GpuResources
             long memUsage = 0;
             int count = 0;
 
+            long textureMemory = 0;
+            long vertexMemory = 0;
+            long indexMemory = 0;
+            long unknownMemory = 0;
+            
             for (var index = 0; index < references.Count; index++)
             {
                 if (index + 1 >= references.Count)
@@ -81,10 +95,31 @@ namespace Alex.Common.Graphics.GpuResources
                 if (resource == null)
                     continue;
 
-                memUsage += resource.MemoryUsage();
+                var resMemUsage = resource.MemoryUsage();
+
+                switch (resource)
+                {
+                    case Texture2D t:
+                        textureMemory += resMemUsage;
+                        break;
+                    case VertexBuffer v:
+                        vertexMemory += resMemUsage;
+                        break;
+                    case IndexBuffer i:
+                        indexMemory += resMemUsage;
+                        break;
+                    default:
+                        unknownMemory += resMemUsage;
+                        break;
+                }
+                memUsage += resMemUsage;
                 count++;
             }
 
+            _textureMemoryUsage = textureMemory;
+            _vertexMemoryUsage = vertexMemory;
+            _indexMemoryUsage = indexMemory;
+            _unknownMemoryUsage = unknownMemory;
             _totalMemoryUsage = memUsage;
             _resourceCount = count;
         }

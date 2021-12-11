@@ -253,7 +253,7 @@ namespace Alex.Graphics.Models.Items
             {
                 _effect = value;
 
-                if (value != null && Model != null)
+                /*if (value != null && Model != null)
                 {
                     foreach (var mesh in Model.Meshes)
                     {
@@ -263,12 +263,12 @@ namespace Alex.Graphics.Models.Items
                                 part.Effect = value;
                         }
                     }
-                }
+                }*/
             }
         }
         // public Vector3 Scale { get; set; } = Vector3.One;
 
-        private readonly VertexDeclaration _declaration;
+        private VertexDeclaration _declaration;
 
         public Model Model { get; set; } = null;
 
@@ -288,6 +288,7 @@ namespace Alex.Graphics.Models.Items
             }
 
             Vertices = vertices;
+          
             if (vertices != null)
             {
             //    Vertices = vertices;
@@ -314,18 +315,27 @@ namespace Alex.Graphics.Models.Items
         }
 
         private bool _initalizedModel = false;
+
+        private SemaphoreSlim _initSemaphore = new SemaphoreSlim(1);
         private void InitializeModel(GraphicsDevice device, TVertice[] vertices)
         {
             if (_initalizedModel)
                 return;
-            
+
             if (vertices == null || vertices.Length == 0)
             {
                 Log.Warn($"Could not initalize model, no vertices specified.");
 
                 return;
             }
-            _initalizedModel = true;
+
+            var declaration = _declaration;
+           
+            if (declaration == null)
+                return;
+
+            if (!_initSemaphore.Wait(0))
+                return;
             
             List<ModelBone> bones = new List<ModelBone>();
             List<ModelMesh> meshes = new List<ModelMesh>();
@@ -334,7 +344,7 @@ namespace Alex.Graphics.Models.Items
             var rootBone = new ModelBone() { Name = "ItemRoot" };
 
             var meshPart = new ModelMeshPart() { StartIndex = 0, NumVertices = vertices.Length, VertexOffset = 0 };
-           
+
             List<short> indices = new List<short>();
 
             for (int i = 0; i < vertices.Length; i++)
@@ -344,7 +354,7 @@ namespace Alex.Graphics.Models.Items
             meshParts.Add(meshPart);
 
             ModelMesh mesh = new ModelMesh(device, meshParts) { Name = "Item" };
-            meshPart.Effect = Effect;
+            //meshPart.Effect = Effect;
             meshes.Add(mesh);
             rootBone.AddMesh(mesh);
 
@@ -354,40 +364,59 @@ namespace Alex.Graphics.Models.Items
             model.Root = rootBone;
 
             model.BuildHierarchy();
-            Model = model;
             UpdateDisplay();
-            
-            ThreadPool.QueueUserWorkItem(
-                (o) =>
+
+            void Finish()
+            {
+                try
                 {
-                    Effect = new BasicEffect(Alex.Instance.GraphicsDevice);
+                    var effect = new BasicEffect(Alex.Instance.GraphicsDevice);
+                    _effect = effect;
 
-                    if (_texture != null)
-                        Effect.Texture = _texture;
-
-                    InitEffect(Effect);
-
-                    foreach (var modelMesh in model.Meshes)
+                    foreach (var m in model.Meshes)
                     {
-                        foreach (var subMesh in modelMesh.MeshParts)
+                        var mps = m.MeshParts;
+
+                        if (mps == null)
+                            continue;
+
+                        foreach (var mp in mps)
                         {
-                            subMesh.Effect = Effect;
+                            mp.Effect = effect;
                         }
                     }
 
-                    meshPart.VertexBuffer = new VertexBuffer(
-                        device, _declaration, vertices.Length, BufferUsage.WriteOnly);
+                    InitEffect(effect);
 
-                    meshPart.VertexBuffer.SetData(vertices);
+                    var vertexBuffer = new VertexBuffer(device, declaration, vertices.Length, BufferUsage.WriteOnly);
 
-                    meshPart.IndexBuffer = new IndexBuffer(
+                    vertexBuffer.SetData(vertices);
+                    meshPart.VertexBuffer = vertexBuffer;
+
+                    var indexBuffer = new IndexBuffer(
                         device, IndexElementSize.SixteenBits, indices.Count, BufferUsage.WriteOnly);
 
-                    meshPart.IndexBuffer.SetData(indices.ToArray());
-                        
+                    indexBuffer.SetData(indices.ToArray());
+                    meshPart.IndexBuffer = indexBuffer;
+                    meshPart.Effect = effect;
+
+                    Model = model;
                     UpdateDisplay();
-                });
+
+                    _initalizedModel = true;
+                }
+                finally
+                {
+                    _initSemaphore.Release();
+                }
+            }
             
+             ThreadPool.QueueUserWorkItem(
+                (o) =>
+                {
+                    Finish();
+                });
+
             //  var vertices = Vertices;
         }
 
@@ -407,6 +436,9 @@ namespace Alex.Graphics.Models.Items
 
         protected virtual void InitEffect(BasicEffect effect)
         {
+            if (effect == null)
+                return;
+            
             if (_texture != null)
                 effect.Texture = _texture;
             
@@ -450,6 +482,25 @@ namespace Alex.Graphics.Models.Items
                 return $"Translation= {displayItem.Translation}, Rotation= {displayItem.Rotation} Scale= {displayItem.Scale}";
             }
             return base.ToString();
+        }
+
+        /// <inheritdoc />
+        public void Dispose()
+        {
+            Model?.Dispose();
+            Model = null;
+            
+            var t = _texture;
+            if (t != null && t.Tag != AtlasGenerator.Tag)
+            {
+                t.Dispose();
+            }
+            _texture = null;
+            
+            _effect?.Dispose();
+            _effect = null;
+            _declaration?.Dispose();
+            _declaration = null;
         }
     }
 }

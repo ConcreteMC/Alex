@@ -1,6 +1,7 @@
 using System;
 using Alex.Common.Gui.Graphics;
 using Alex.Entities;
+using Alex.Entities.Meta;
 using Microsoft.Xna.Framework;
 using RocketUI;
 
@@ -18,10 +19,8 @@ namespace Alex.Gui.Elements.Hud
         private Player Player { get; }
         private HealthBarHeart[] Hearts { get; }
         
-        private float Health { get; set; }
         public HealthComponent(Player player)
         {
-            Health = player.HealthManager.Health;
             Player = player;
 
             Height = 10;
@@ -35,37 +34,38 @@ namespace Alex.Gui.Elements.Hud
                     Anchor = Alignment.BottomLeft
                 });
             }
+            
+            player.HealthManager.OnHealthChanged += (sender, e) =>
+            {
+                Update(e.Health, e.MaxHealth);
+            };
+            //Update(player.HealthManager.Health, player.HealthManager.MaxHealth);
         }
 
-        protected override void OnUpdate(GameTime gameTime)
+        private void Update(float health, float max)
         {
-            if (Player.HealthManager.Health != Health)
+            var hearts = health * (10d / max);
+            var ceil = (int)Math.Ceiling(hearts);
+            for (int i = 0; i < Hearts.Length; i++)
             {
-                var hearts = Player.HealthManager.Health * (10d / Player.HealthManager.MaxHealth);
-                var ceil = (int)Math.Ceiling(hearts);
-                for (int i = 0; i < Hearts.Length; i++)
+                HeartValue value = HeartValue.Full;
+                if (i < ceil)
                 {
-                    HeartValue value = HeartValue.Full;
-                    if (i < ceil)
-                    {
-                        value = HeartValue.Full;
-                    }
-                    else if (i == ceil - 1)
-                    {
-                        value = HeartValue.Half;
-                    }
-                    else
-                    {
-                        value = HeartValue.None;
-                    }
-                    
-                    Hearts[i].Set(value);
+                    value = HeartValue.Full;
                 }
+                else if (i == ceil - 1)
+                {
+                    value = HeartValue.Half;
+                }
+                else
+                {
+                    value = HeartValue.None;
+                }
+                    
+                Hearts[i].Set(value);
             }
-            
-            base.OnUpdate(gameTime);
         }
-        
+
         public class HealthBarHeart : RocketControl
         {
             private TextureElement Texture { get; set; }
@@ -92,10 +92,29 @@ namespace Alex.Gui.Elements.Hud
                 Texture.Texture = renderer.GetTexture(AlexGuiTextures.HealthHeart);
             }
 
+            /// <inheritdoc />
+            protected override void OnUpdate(GameTime gameTime)
+            {
+                base.OnUpdate(gameTime);
+            }
+
+            private void Shake()
+            {
+                
+            }
+
+            private HeartValue _previousValue = HeartValue.Full;
             public void Set(HeartValue value)
             {
                 Texture.IsVisible = true;
-            
+
+                if (value != _previousValue)
+                {
+                    Shake();
+                }
+
+                _previousValue = value;
+                
                 switch (value)
                 {
                     case HeartValue.Full:

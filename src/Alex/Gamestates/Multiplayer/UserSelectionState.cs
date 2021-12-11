@@ -98,9 +98,9 @@ namespace Alex.Gamestates.Multiplayer
 		{
 			if (item?.Profile != null)
 			{
-				var overlay = new LoadingOverlay();
-				Alex.GuiManager.AddScreen(overlay);
-
+				var overlay = Alex.GuiManager.CreateDialog<GenericLoadingDialog>();
+				overlay.Show();
+				
 				try
 				{
 					var profile = await _serverType.VerifySession(item.Profile);
@@ -108,7 +108,7 @@ namespace Alex.Gamestates.Multiplayer
 				}
 				finally
 				{
-					Alex.GuiManager.RemoveScreen(overlay);
+					overlay.Close();
 				}
 			}
 		}

@@ -38,6 +38,7 @@ using Alex.ResourcePackLib.Json.Models;
 using Alex.ResourcePackLib.Json.Models.Entities;
 using Alex.ResourcePackLib.Json.Textures;
 using Alex.Utils.Assets;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Newtonsoft.Json;
@@ -181,6 +182,10 @@ namespace Alex
 
             progress?.UpdateProgress(0, $"Loading UI textures...");
             Alex.GuiRenderer.LoadResourcePackTextures(this, progress);
+            Alex.GuiManager.Reinitialize();
+            Alex.ServiceContainer.GetRequiredService<GuiPanoramaSkyBox>().LoadTextures(Alex.GuiRenderer);
+
+          //  GenerateTextureAtlases(Alex.GraphicsDevice, progress);
         }
 
         internal bool Remove(ResourcePack resourcePack)
@@ -633,6 +638,31 @@ namespace Alex
 
             Log.Info($"Imported {imported} blockstates from resourcepack in {sw.ElapsedMilliseconds}ms!");
 
+            GenerateTextureAtlases(device, progress);
+
+            ReloadBedrockResources(progress);
+
+            var f = ActiveResourcePacks.LastOrDefault(x => x.FontBitmap != null);
+            if (f != null)
+            {
+                PreloadCallback?.Invoke(f.FontBitmap, MCJavaResourcePack.BitmapFontCharacters.ToList());
+            }
+        }
+
+        private void GenerateTextureAtlases(GraphicsDevice device, IProgressReceiver progress)
+        {
+            Dictionary<ResourceLocation, ResourcePackModelBase> models =
+                new Dictionary<ResourceLocation, ResourcePackModelBase>();
+            var active = ActiveResourcePacks.ToArray();
+
+            foreach (var resourcePack in active)
+            {
+                foreach (var model in resourcePack.Models)
+                {
+                    models[model.Key] = model.Value;
+                }
+            }
+            
             var textures = new Dictionary<ResourceLocation, AtlasGenerator.ImageEntry>();
 
             progress?.UpdateProgress(0, $"Loading block textures...");
@@ -656,14 +686,6 @@ namespace Alex
                 models, textures, progress, ModelType.Item);
 
             ItemAtlas.LoadResources(device, textures, this, progress, true);
-
-            ReloadBedrockResources(progress);
-
-            var f = ActiveResourcePacks.LastOrDefault(x => x.FontBitmap != null);
-            if (f != null)
-            {
-                PreloadCallback?.Invoke(f.FontBitmap, MCJavaResourcePack.BitmapFontCharacters.ToList());
-            }
         }
 
         private void FindAndAddTexture(ResourceLocation             search,
@@ -690,7 +712,7 @@ namespace Alex
             }
         }
 
-        private void GetTextures(IDictionary<ResourceLocation, ResourcePackModelBase> models,
+        private void GetTextures(IReadOnlyDictionary<ResourceLocation, ResourcePackModelBase> models,
             Dictionary<ResourceLocation, AtlasGenerator.ImageEntry>                   textures,
             IProgressReceiver                                                         progress, ModelType type)
         {

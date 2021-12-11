@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using Alex.Common;
 using Alex.Common.Graphics;
 using Alex.Common.Services;
@@ -11,6 +12,7 @@ using Alex.Common.Utils.Vectors;
 using Alex.Gamestates.Common;
 using Alex.Graphics.Camera;
 using Alex.Gui;
+using Alex.Gui.Dialogs;
 using Alex.Gui.Elements;
 using Alex.Gui.Screens.Ingame;
 using Alex.Items;
@@ -243,6 +245,12 @@ namespace Alex.Gamestates.InGame
 			_debugInfo.AddDebugLeft(
 				() =>
 				{
+					return $"Hunger: {World.Player.HealthManager.Hunger:F1}/{World.Player.HealthManager.MaxHunger}";
+				}, TimeSpan.FromMilliseconds(250));
+			
+			_debugInfo.AddDebugLeft(
+				() =>
+				{
 					return $"Gamemode: {World.Player.Gamemode}";
 				}, TimeSpan.FromSeconds(5));
 			
@@ -259,7 +267,7 @@ namespace Alex.Gamestates.InGame
 			_debugInfo.AddDebugRight(Alex.RenderingEngine);
 			
 			_debugInfo.AddDebugRight(() => $"RAM: {FormattingUtils.GetBytesReadable(_ramUsage, 2)}", TimeSpan.FromMilliseconds(1000));
-			_debugInfo.AddDebugRight(() => $"GPU: {FormattingUtils.GetBytesReadable(GpuResourceManager.MemoryUsage, 2)}", TimeSpan.FromMilliseconds(1000));
+			_debugInfo.AddDebugRight(() => $"GPU: {FormattingUtils.GetBytesReadable(GpuResourceManager.MemoryUsage, 2)}\nTextures: {FormattingUtils.GetBytesReadable(GpuResourceManager.TextureMemory, 2)}\nVertex: {FormattingUtils.GetBytesReadable(GpuResourceManager.VertexMemory, 2)}\nIndexes: {FormattingUtils.GetBytesReadable(GpuResourceManager.IndexMemory, 2)}\nUnknown: {FormattingUtils.GetBytesReadable(GpuResourceManager.UnknownMemory, 2)}", TimeSpan.FromMilliseconds(1000));
 			_debugInfo.AddDebugRight(() => $"Threads: {(ThreadPool.ThreadCount):00}/{Environment.ProcessorCount:00}\nPending: {ThreadPool.PendingWorkItemCount:00}\n", TimeSpan.FromMilliseconds(50));
 			
 			_debugInfo.AddDebugRight(() => $"Updates: {ChunkColumn.AverageUpdateTime:F2}ms avg\nUpload: {ChunkData.AverageUploadTime:F2}ms avg\n", TimeSpan.FromMilliseconds(50));
@@ -462,13 +470,13 @@ namespace Alex.Gamestates.InGame
 			Alex.ParticleManager.Hide();
 			
 			World?.TickManager?.UnregisterTicked(WorldProvider);
+
+			GenericLoadingDialog genericLoadingDialog = Alex.GuiManager.CreateDialog<GenericLoadingDialog>();
+			genericLoadingDialog.Text = "Disconnecting...";
+			genericLoadingDialog.Show();
 			
-			LoadingOverlay loadingOverlay = new LoadingOverlay();
-			loadingOverlay.Text = "Disconnecting...";
-			Alex.GuiManager.AddScreen(loadingOverlay);
-			
-			ThreadPool.QueueUserWorkItem(
-				o =>
+			Task.Run(
+				() =>
 				{
 					try
 					{
@@ -483,8 +491,8 @@ namespace Alex.Gamestates.InGame
 
 						_playingHud?.Unload();
 
-						loadingOverlay.Text = "Reloading resources...";
-						Alex.Resources.ReloadBedrockResources(loadingOverlay);
+						genericLoadingDialog.Text = "Reloading resources...";
+						Alex.Resources.ReloadBedrockResources(genericLoadingDialog);
 						
 						RichPresenceProvider.ClearPresence();
 						GC.Collect();
@@ -496,7 +504,7 @@ namespace Alex.Gamestates.InGame
 					finally
 					{
 						Log.Info($"Unloaded playstate!");
-						Alex.GuiManager.RemoveScreen(loadingOverlay);
+						genericLoadingDialog.Close();
 					}
 				});
 
