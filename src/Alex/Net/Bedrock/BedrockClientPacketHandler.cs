@@ -443,7 +443,7 @@ namespace Alex.Net.Bedrock
 				return;
 			}
 
-			entity.KnownPosition = new PlayerLocation(message.x, message.y, message.z, -message.headYaw, -message.yaw, -message.pitch);
+			entity.RenderLocation = entity.KnownPosition = new PlayerLocation(message.x, message.y, message.z, -message.headYaw, -message.yaw, -message.pitch);
 			entity.KnownPosition.OnGround = false;
 			
 			entity.Velocity = new Microsoft.Xna.Framework.Vector3(message.speedX, message.speedY, message.speedZ);
@@ -466,8 +466,12 @@ namespace Alex.Net.Bedrock
 					
 				}
 			}
-			
-			Client.World.SpawnEntity(entity);
+
+			if (!Client.World.SpawnEntity(entity))
+			{
+				Log.Warn(
+					$"Could not spawn in entity, an entity with this runtimeEntityId already exists! (Runtime: {message.runtimeEntityId} Self: {message.entityIdSelf})");
+			}
 		}
 
 		public void HandleMcpeRemoveEntity(McpeRemoveEntity message)

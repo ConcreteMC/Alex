@@ -21,7 +21,7 @@ namespace Alex.Common.Graphics
         
 		VertexDeclaration IVertexType.VertexDeclaration => VertexDeclaration;
 	}
-	
+
 	public struct MinifiedBlockShaderVertex : IVertexType
     {
 	    public static readonly MinifiedBlockShaderVertex Default = new MinifiedBlockShaderVertex(Vector3.Zero, BlockFace.None, Vector4.Zero, Color.White);

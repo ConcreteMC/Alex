@@ -91,19 +91,24 @@ namespace Alex.Gui.Elements.Hud
             {
                 Background = renderer.GetTexture(AlexGuiTextures.HungerPlaceholder);
                 Texture.Texture = renderer.GetTexture(AlexGuiTextures.HungerFull);
+                Set(_value);
             }
 
+            private HeartValue _value;
             public void Set(HeartValue value)
             {
+                _value = value;
                 Texture.IsVisible = true;
             
                 switch (value)
                 {
                     case HeartValue.Full:
-                        Texture.Texture = GuiRenderer.GetTexture(AlexGuiTextures.HungerFull);
+                        if (GuiRenderer != null)
+                            Texture.Texture = GuiRenderer.GetTexture(AlexGuiTextures.HungerFull);
                         break;
                     case HeartValue.Half:
-                        Texture.Texture = GuiRenderer.GetTexture(AlexGuiTextures.HungerHalf);
+                        if (GuiRenderer != null) 
+                            Texture.Texture = GuiRenderer.GetTexture(AlexGuiTextures.HungerHalf);
                         break;
                     case HeartValue.None:
                         Texture.IsVisible = false;

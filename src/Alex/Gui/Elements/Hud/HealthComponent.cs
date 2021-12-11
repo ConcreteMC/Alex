@@ -90,6 +90,8 @@ namespace Alex.Gui.Elements.Hud
             {
                 Background = renderer.GetTexture(AlexGuiTextures.HealthPlaceholder);
                 Texture.Texture = renderer.GetTexture(AlexGuiTextures.HealthHeart);
+                
+                Set(_previousValue);
             }
 
             /// <inheritdoc />
@@ -118,10 +120,12 @@ namespace Alex.Gui.Elements.Hud
                 switch (value)
                 {
                     case HeartValue.Full:
-                        Texture.Texture = GuiRenderer.GetTexture(AlexGuiTextures.HealthHeart);
+                        if (GuiRenderer != null)
+                            Texture.Texture = GuiRenderer.GetTexture(AlexGuiTextures.HealthHeart);
                         break;
                     case HeartValue.Half:
-                        Texture.Texture = GuiRenderer.GetTexture(AlexGuiTextures.HealthHalfHeart);
+                        if (GuiRenderer != null) 
+                            Texture.Texture = GuiRenderer.GetTexture(AlexGuiTextures.HealthHalfHeart);
                         break;
                     case HeartValue.None:
                         Texture.IsVisible = false;

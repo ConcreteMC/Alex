@@ -105,6 +105,7 @@ namespace Alex.Gui.Elements.Hud
             {
                 //Background = renderer.GetTexture(AlexGuiTextures.HungerPlaceholder);
                 Texture.Texture = renderer.GetTexture(AlexGuiTextures.AirBubble);
+                Set(_previousValue);
             }
 
             private double _animationTimeElapsed = -1;
@@ -131,22 +132,32 @@ namespace Alex.Gui.Elements.Hud
             }
 
             private HeartValue _previousValue = HeartValue.Full;
+
             public void Set(HeartValue value)
             {
+
                 switch (value)
                 {
                     case HeartValue.Full:
                         Texture.IsVisible = true;
-                        Texture.Texture = GuiRenderer.GetTexture(AlexGuiTextures.AirBubble);
+                        
+                        if (GuiRenderer != null)
+                            Texture.Texture = GuiRenderer.GetTexture(AlexGuiTextures.AirBubble);
+
                         break;
+
                     case HeartValue.Half:
                         Texture.IsVisible = true;
+
                         break;
+
                     case HeartValue.None:
                         if (_previousValue != HeartValue.None)
                         {
                             Texture.IsVisible = true;
-                            Texture.Texture = GuiRenderer.GetTexture(AlexGuiTextures.PoppedAirBubble);
+                            if (GuiRenderer != null)
+                                Texture.Texture = GuiRenderer.GetTexture(AlexGuiTextures.PoppedAirBubble);
+                            
                             _animationTimeElapsed = 0d;
                         }
 

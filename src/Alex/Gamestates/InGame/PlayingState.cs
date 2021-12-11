@@ -462,8 +462,13 @@ namespace Alex.Gamestates.InGame
 			world?.RenderSprites(args);
 		}
 
+		private bool _didClose = false;
 		protected override void OnUnload()
 		{
+			if (_didClose)
+				return;
+
+			_didClose = true;
 			Log.Info($"Unloading playstate!");
 			
 			Alex.InGame = false;
@@ -475,20 +480,24 @@ namespace Alex.Gamestates.InGame
 			genericLoadingDialog.Text = "Disconnecting...";
 			genericLoadingDialog.Show();
 			
-			Task.Run(
-				() =>
+			ThreadPool.QueueUserWorkItem(
+				(o) =>
 				{
 					try
 					{
+						genericLoadingDialog.Text = "Closing network connection...";
 						NetworkProvider?.Close();
 						NetworkProvider = null;
-
+						
+						genericLoadingDialog.Text = "Disposing world...";
 						World?.Dispose();
 						World = null;
 
+						genericLoadingDialog.Text = "Disposing world provider...";
 						WorldProvider?.Dispose();
 						WorldProvider = null;
 
+						genericLoadingDialog.Text = "Unloading HUD...";
 						_playingHud?.Unload();
 
 						genericLoadingDialog.Text = "Reloading resources...";
