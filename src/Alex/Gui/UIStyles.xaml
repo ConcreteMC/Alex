@@ -1,6 +1,7 @@
 ﻿<StyleSheet xmlns="clr-namespace:RocketUI;assembly=RocketUI"
             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-            xmlns:xna="clr-namespace:Microsoft.Xna.Framework;assembly=MonoGame.Framework">
+            xmlns:xna="clr-namespace:Microsoft.Xna.Framework;assembly=MonoGame.Framework"
+            xmlns:alexGui="clr-namespace:Alex.Gui.Elements;assembly=Alex">
 
     <Style TargetType="Button">
         <Setter Property="Background">
@@ -89,5 +90,29 @@
             </Setter.Value>
         </Setter>
     </Style>
-
+    
+    <Style TargetType="alexGui:KeybindElement">
+        <Setter Property="TextColor">
+            <Setter.Value>
+                <xna:Color>#FFFFFF</xna:Color>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    
+    <Style TargetType="alexGui:KeybindElement" Name="ReadOnly">
+        <Setter Property="TextColor">
+            <Setter.Value>
+                <xna:Color>#999999</xna:Color>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    
+    <Style TargetType="alexGui:KeybindElement">
+        <Style.Name>Unbound &amp;&amp; !Focused</Style.Name>
+        <Setter Property="TextColor">
+            <Setter.Value>
+                <xna:Color>#ff5555</xna:Color>
+            </Setter.Value>
+        </Setter>
+    </Style>
 </StyleSheet>

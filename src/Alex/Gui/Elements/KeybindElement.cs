@@ -1,10 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Alex.Common.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using RocketUI;
+using RocketUI.Attributes;
 using RocketUI.Input;
+using RocketUI.Input.Listeners;
 
 namespace Alex.Gui.Elements
 {
@@ -14,24 +17,81 @@ namespace Alex.Gui.Elements
         
         private TextElement TextElement { get; }
         private TextElement TimerText { get; }
+
+        [DebuggerVisible]
+        public Color BorderColor
+        {
+            get => _borderColor;
+            set
+            {
+                _borderColor = value;
+                UpdateColors();
+            }
+        }
         
-        public Color BorderColor { get; set; } = Color.LightGray;
-        public Thickness BorderThickness { get; set; } = Thickness.One;
+        [DebuggerVisible]
+        public Thickness BorderThickness
+        {
+            get => _borderThickness;
+            set
+            {
+                _borderThickness = value;
+                UpdateColors();
+            }
+        }
+
+        private Color _textColor;
         
+        [DebuggerVisible]
+        public Color TextColor
+        {
+            get => _textColor;
+            set
+            {
+                _textColor = value;
+                UpdateColors();
+            }
+        }
+
+        [DebuggerVisible]
         public InputCommand InputCommand { get; }
-        public KeybindElement(InputCommand inputCommand, params Keys[] key)
+        public int MaxKeys { get; set; } = 2;
+
+        public bool ReadOnly
+        {
+            get => _readOnly;
+            set
+            {
+                _readOnly = value;
+                Enabled = !value;
+
+                if (value)
+                {
+                    AddClass("ReadOnly");
+                }
+                else
+                {
+                    RemoveClass("ReadOnly");
+                }
+            }
+        }
+
+        public KeybindElement(IInputListener inputListener, InputCommand inputCommand, params Keys[] key)
         {
             InputCommand = inputCommand;
+            _inputListener = inputListener;
             _value = key;
             
             BackgroundOverlay = Color.Black;
             
             TextElement = new TextElement();
             TextElement.Anchor = Alignment.MiddleCenter;
+            TextElement.TextColor = TextColor;
             
             TimerText = new TextElement();
             TimerText.Anchor = Alignment.MiddleRight;
             TimerText.IsVisible = false;
+            TimerText.TextColor = TextColor;
             
             AddChild(TextElement);
             AddChild(TimerText);
@@ -43,24 +103,32 @@ namespace Alex.Gui.Elements
         private List<Keys> _tempBinding = new List<Keys>();
         private TimeSpan _timer = TimeSpan.Zero;
 
-        private void FocusLost()
+        public bool IsChanging { get; private set; }
+        private void FocusLost(bool unbind = false)
         {
+            RemoveClass("Focused");
+            IsChanging = false;
             TimerText.IsVisible = false;
             TextElement.TextOpacity = 1f;
             var newValue = _tempBinding.ToArray();
             _tempBinding.Clear();
+
+            var remainingTime = _timer;
             _timer = TimeSpan.Zero;
             
             if (newValue.Length > 0)
             {
                 Value = newValue;
             }
-            else if (Value != Unbound)
+            else if (unbind)
             {
                 Value = Unbound;
             }
-            
             UpdateText(_value);
+            /*else if (Value != Unbound)
+            {
+                Value = Unbound;
+            }*/
         }
         
         private bool _wasFocused = false;
@@ -68,10 +136,14 @@ namespace Alex.Gui.Elements
         {
             base.OnUpdate(gameTime);
 
+            if (_readOnly) return;
+            
             bool focused = Focused;
 
             if (focused && !_wasFocused)
             {
+                AddClass("Focused");
+                IsChanging = true;
                 _tempBinding.Clear();
                 _timer = TimeSpan.FromSeconds(5);
                 TextElement.Text = "_";
@@ -93,6 +165,18 @@ namespace Alex.Gui.Elements
                 {
                     FocusLost();
                 }
+                else
+                {
+                    var tempBinding = _tempBinding;
+                    if (tempBinding.Count > 0)
+                    {
+                        var keyboardState = Keyboard.GetState();
+                        if (!tempBinding.All(keyboardState.IsKeyDown))
+                        {
+                            FocusLost();
+                        }
+                    }
+                }
             }
 
             _wasFocused = focused;
@@ -106,26 +190,28 @@ namespace Alex.Gui.Elements
             bounds.Inflate(1f, 1f);
             graphics.DrawRectangle(bounds, BorderColor, BorderThickness);
         }
-
+        
         protected override bool OnKeyInput(char character, Keys key)
         {
-            /*if (Focused && key == Keys.Escape)
+            if (_readOnly)
+                return false;
+            if (Focused && key == Keys.Escape)
             {
-                if (_tempBinding.Count == 0)
-                {
-                    _timer = TimeSpan.Zero;
-                    UpdateText(_value);
-                    return true;
-                }   
-            }*/
-            if (_timer <= TimeSpan.Zero)
-            {
+                FocusLost(true);
                 return true;
             }
+            
+            if (_timer <= TimeSpan.Zero || _tempBinding.Contains(key))
+                return true;
             
             _timer = TimeSpan.FromSeconds(5);
             _tempBinding.Add(key);
             UpdateText(_tempBinding);
+
+            if (_tempBinding.Count == MaxKeys)
+            {
+                FocusLost();
+            }
            // if (Focused)
            // {
                 //Value = key;
@@ -141,16 +227,28 @@ namespace Alex.Gui.Elements
         {
             if (key == Unbound)
             {
-                TextElement.Text = $"{TextColor.Red}Unbound";
+                AddClass("Unbound");
+                TextElement.Text = $"Unbound";
             }
             else
             {
+                RemoveClass("Unbound");
                 TextElement.Text = string.Join(" + ", key);// key.ToString().SplitPascalCase();
             }
         }
-        
+
+        private void UpdateColors()
+        {
+            TextElement.TextColor = _textColor;
+            TimerText.TextColor = _textColor;
+        }
+
         public event EventHandler<Keys[]> ValueChanged;
+        private readonly IInputListener _inputListener;
         private Keys[] _value;
+        private bool _readOnly = false;
+        private Color _borderColor = Color.LightGray;
+        private Thickness _borderThickness = Thickness.One;
 
         public Keys[] Value
         {

@@ -102,11 +102,16 @@ namespace Alex.Gamestates.MainMenu.Options
                     Anchor = Alignment.TopLeft
                 });
                 
-                root.AddChild(textInput = new KeybindElement(inputCommand, value.Count > 0 ? value[0] : KeybindElement.Unbound)
+                root.AddChild(textInput = new KeybindElement(keyboardInputListener, inputCommand, value.Count > 0 ? value[0] : KeybindElement.Unbound)
                 {
                     Anchor = Alignment.TopRight,
                     Width = 120
                 });
+
+                if (value.Any(x => x.Any(b => b == Keys.Escape)))
+                {
+                    textInput.ReadOnly = true;
+                }
                 
                 var row = AddGuiRow(root);
                  row.Margin = new Thickness(5, 0);
@@ -187,14 +192,33 @@ namespace Alex.Gamestates.MainMenu.Options
             AddInputs();
         }
 
-        private void InvertXChanged(bool obj)
+        private MouseState _previousState = new MouseState();
+        /// <inheritdoc />
+        protected override void OnUpdate(GameTime gameTime)
         {
-            throw new NotImplementedException();
-        }
-        
-        private void InvertYChanged(bool obj)
-        {
-            throw new NotImplementedException();
+            base.OnUpdate(gameTime);
+
+            var guiManager = GuiManager;
+            var focusManager = guiManager?.FocusManager;
+
+            if (focusManager == null)
+                return;
+                        
+            var mouseState = Mouse.GetState();
+            if (mouseState != _previousState)
+            {
+                if (mouseState.LeftButton == ButtonState.Released && _previousState.LeftButton == ButtonState.Pressed)
+                {
+                    if (focusManager.FocusedElement is KeybindElement keybindElement
+                        && !keybindElement.RenderBounds.Contains(GuiRenderer.Unproject(mouseState.Position.ToVector2()))
+                        && keybindElement.IsChanging)
+                    {
+                        focusManager.FocusedElement = null;
+                    }
+                }
+            }
+            
+            _previousState = mouseState;
         }
     }
 }
