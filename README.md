@@ -15,7 +15,7 @@ This is a hobby project i work on from time to time, the end goal being it able 
 
 Version Support
 -----------
-- Java: 1.17
+- Java: 1.18
 - Bedrock: 1.17.11
 
 Cloning the Repository
