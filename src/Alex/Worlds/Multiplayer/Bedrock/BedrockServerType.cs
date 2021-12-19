@@ -61,9 +61,12 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			out WorldProvider worldProvider,
 			out NetworkProvider networkProvider)
 		{
-			worldProvider = new BedrockWorldProvider(Alex, connectionDetails.EndPoint,
-				profile, out networkProvider);
+			var wp = new BedrockWorldProvider(Alex, connectionDetails.EndPoint,
+				profile);
 				
+			wp.Init(out networkProvider);
+
+			worldProvider = wp;
 			return true;
 		}
 

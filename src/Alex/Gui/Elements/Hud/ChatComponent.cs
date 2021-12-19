@@ -515,7 +515,7 @@ namespace Alex.Gui.Elements.Hud
 			if (TextBuilder.Length > 0)
 			{
 				var text = TextBuilder.Text;
-				if (Alex.IsMultiplayer)
+				if (Network != null)
 				{
 					Network?.SendChatMessage(new ChatObject(text));
 					//EventDispatcher.DispatchEvent(

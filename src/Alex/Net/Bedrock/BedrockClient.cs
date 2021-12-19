@@ -34,6 +34,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using MiNET;
 using MiNET.Net;
+using MiNET.Net.RakNet;
 using MiNET.Utils;
 using MiNET.Utils.Cryptography;
 using MiNET.Utils.Skins;
@@ -67,6 +68,7 @@ namespace Alex.Net.Bedrock
 {
 	public class BedrockClient : NetworkProvider, IDisposable
 	{
+		private readonly PlayerProfile _playerProfile;
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(BedrockClient));
 
 		private ManualResetEventSlim ConnectionAcceptedWaitHandle { get; set; }
@@ -104,6 +106,7 @@ namespace Alex.Net.Bedrock
 
 		public BedrockClient(Alex alex, IPEndPoint endpoint, PlayerProfile playerProfile, BedrockWorldProvider wp)
 		{
+			_playerProfile = playerProfile;
 			TransactionTracker = new BedrockTransactionTracker(this);
 			PacketFactory.CustomPacketFactory = new AlexPacketFactory();
 			CancellationTokenSource = new CancellationTokenSource();
@@ -130,40 +133,47 @@ namespace Alex.Net.Bedrock
 			Connection = new RaknetConnection();
 			Connection.RemoteEndpoint = endpoint;
 
-			Connection.CustomMessageHandlerFactory = session =>
+			Connection.CustomMessageHandlerFactory = CustomMessageHandlerFactory;
+		}
+
+		protected virtual BedrockClientPacketHandler CreateMessageHandler()
+		{
+			return new BedrockClientPacketHandler(
+				this, WorldProvider, _playerProfile, Alex, CancellationTokenSource.Token, ChunkProcessor);
+		}
+		
+		protected virtual ICustomMessageHandler CustomMessageHandlerFactory(RaknetSession session)
+		{
+			var packetHandler = CreateMessageHandler();
+
+			var handler = new BedrockMessageHandler(
+				session,
+				packetHandler);
+
+			if (BedrockMessageHandler != null)
+				Log.Warn($"Messagehandler was already set.");
+
+			if (Session == null)
 			{
-				BedrockClientPacketHandler packetHandler;
+				Session = session;
 
-				var handler = new BedrockMessageHandler(
-					session,
-					packetHandler = new BedrockClientPacketHandler(
-						this, wp, playerProfile, alex, CancellationTokenSource.Token, ChunkProcessor));
-
-				if (BedrockMessageHandler != null)
-					Log.Warn($"Messagehandler was already set.");
-
-				if (Session == null)
+				handler.ConnectionAction = () =>
 				{
-					Session = session;
+					ConnectionAcceptedWaitHandle?.Set();
+					SendAlexLogin(_playerProfile.Username);
+				};
 
-					handler.ConnectionAction = () =>
-					{
-						ConnectionAcceptedWaitHandle?.Set();
-						SendAlexLogin(playerProfile.Username);
-					};
+				handler.DisconnectedAction = (reason, sendDisconnect) =>
+				{
+					Log.Warn($"Got disconnected from server: {reason}");
+					ShowDisconnect(reason, false, false, DisconnectReason.Unknown);
+				};
 
-					handler.DisconnectedAction = (reason, sendDisconnect) =>
-					{
-						Log.Warn($"Got disconnected from server: {reason}");
-						ShowDisconnect(reason, false, false, DisconnectReason.Unknown);
-					};
+				BedrockMessageHandler = handler;
+				PacketHandler = packetHandler;
+			}
 
-					BedrockMessageHandler = handler;
-					PacketHandler = packetHandler;
-				}
-
-				return handler;
-			};
+			return handler;
 		}
 
 		private void ClientSideLightingChanged(bool oldvalue, bool newvalue)
@@ -329,7 +339,7 @@ namespace Alex.Net.Bedrock
 		/// <inheritdoc />
 		public override void EntityFell(long entityId, float distance, bool inVoid) { }
 
-		public void SendPacket(Packet packet)
+		public virtual void SendPacket(Packet packet)
 		{
 			if (Session == null)
 			{

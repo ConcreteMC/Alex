@@ -25,7 +25,7 @@ namespace Alex.Gamestates.Multiplayer
 	public class GuiServerListEntryElement : ListItem
 	{
 		private const string PingTranslationKey = "multiplayer.status.pinging";
-		private const int ServerIconSize = 32;
+		public const int ServerIconSize = 32;
 
 		private IPEndPoint _connectionEndPoint = null;
 		public IPEndPoint ConnectionEndpoint

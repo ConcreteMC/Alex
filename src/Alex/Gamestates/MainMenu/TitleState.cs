@@ -10,6 +10,7 @@ using Alex.Entities;
 using Alex.Gamestates.Common;
 using Alex.Gamestates.InGame;
 using Alex.Gamestates.Multiplayer;
+using Alex.Gamestates.Singleplayer;
 using Alex.Gui;
 using Alex.Gui.Elements;
 using Alex.Gui.Elements.Context3D;
@@ -56,6 +57,12 @@ namespace Alex.Gamestates.MainMenu
             {
                 Children =
                 {
+                    new MenuItem()
+                    {
+                        Title  = "menu.singleplayer",
+                        OnClick = OnSingleplayerButtonPressed,
+                        IsTranslatable = true
+                    },
                     new MenuItem()
                     {
                         Title = "menu.multiplayer",
@@ -152,6 +159,11 @@ namespace Alex.Gamestates.MainMenu
             
             dropDown.Anchor = Alignment.MiddleCenter;
             Init();
+        }
+
+        private void OnSingleplayerButtonPressed(object? sender, MenuItemClickedEventArgs e)
+        {
+            Alex.GameStateManager.SetActiveState<WorldSelectionState>(true, false);
         }
 
         private void SwitchHeldItem(object sender, ElapsedEventArgs e)

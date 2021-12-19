@@ -6,11 +6,13 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Alex.Common.Utils;
+using Alex.Gamestates.Singleplayer;
 using Alex.Utils;
 using Alex.Utils.Auth;
 using CommandLine;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
+using MiNET.Utils;
 using NLog;
 using NLog.Config;
 using RocketUI.Utilities.IO;
@@ -53,6 +55,7 @@ namespace Alex
 		
 		private static void LaunchGame(LaunchSettings launchSettings)
 		{
+			Config.Provider = AlexConfigProvider.Instance;
 			LoggerSetup.ConfigureNLog(launchSettings.WorkDir, Resources.NLogConfig);
 
 			if (launchSettings.Server == null && launchSettings.ConnectOnLaunch)

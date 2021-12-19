@@ -4,10 +4,26 @@ using Alex.Common.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using MiNET.Utils;
 using RocketUI;
 
 namespace Alex.Common.Gui.Elements.Icons
 {
+	public class WorldStatusIcon : RocketElement
+	{
+		public WorldStatusIcon(string version)
+		{
+		//	Background = isCompatible ? AlexGuiTextures.GreenCheckMark : AlexGuiTextures.ServerPing0;
+			SetFixedSize(10, 8);
+			
+			AddChild(new TextElement(false)
+			{
+				Text = version,
+				Anchor = Alignment.TopRight,
+				Margin = new Thickness(5, 0, Background.Width + 15, 0)
+			});
+		}
+	}
 	public class GuiConnectionPingIcon : RocketElement
 	{
 		private static readonly GuiTextures OfflineState = AlexGuiTextures.ServerPing0;

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using Alex.Common.Data.Servers;
@@ -12,6 +13,7 @@ using Alex.Gamestates.Common;
 using Alex.Gui;
 using Alex.Gui.Elements;
 using Alex.Utils;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using NLog;
 using RocketUI;
@@ -318,9 +320,11 @@ namespace Alex.Gamestates.Multiplayer
 
 	    private void OnEditItemButtonPressed()
 	    {
-		    Alex.GameStateManager.SetActiveState(new MultiplayerAddEditServerState(SelectedItem.SavedServerEntry, AddEditServerCallbackAction, _skyBox), true, false);
+		    Alex.GameStateManager.SetActiveState(
+			    new MultiplayerAddEditServerState(SelectedItem.SavedServerEntry, AddEditServerCallbackAction, _skyBox),
+			    true, false);
 	    }
-		
+
 	    private void OnDeleteItemButtonPressed()
 	    {
 		    var toDelete = SelectedItem;
@@ -356,39 +360,42 @@ namespace Alex.Gamestates.Multiplayer
 		    if (serverType == null)
 			    return;
 
-		    CancellationTokenSource?.Cancel();
-		    var overlay = Alex.GuiManager.CreateDialog<GenericLoadingDialog>();
-			overlay.Show();
+		    JoinServer(Alex, serverType, item.ConnectionEndpoint, item.SavedServerEntry.Host, CancellationTokenSource);
+	    }
+	    
+	    public static void JoinServer(Alex alex, ServerTypeImplementation serverType, IPEndPoint endPoint, string host, CancellationTokenSource cancellationTokenSource)
+	    {
+		    if (serverType == null)
+			    return;
+
+		    var skyBox = alex.ServiceContainer.GetRequiredService<GuiPanoramaSkyBox>();
+		    cancellationTokenSource?.Cancel();
+		    var overlay = alex.GuiManager.CreateDialog<GenericLoadingDialog>();
+		    overlay.Show();
 			
 		    try
 		    {
-			    var entry = item.SavedServerEntry;
-
 			    async void OnProfileSelected(PlayerProfile profile)
 			    {
 				    if (profile == null || !profile.Authenticated)
 				    {
-					    await serverType.Authenticate(_skyBox, OnProfileSelected, profile);
+					    await serverType.Authenticate(skyBox, OnProfileSelected, profile);
 					    return;
 				    }
 				    
 				    try
 				    {
-					    var target = item.ConnectionEndpoint;
-
-					    if (target == null) return;
-
-					    Alex.ConnectToServer(serverType, new ServerConnectionDetails(target, entry.Host), profile);
+					    alex.ConnectToServer(serverType, new ServerConnectionDetails(endPoint, host), profile);
 				    }
 				    finally
 				    {
-						overlay.Close();
+					    overlay.Close();
 				    }
 			    }
 
-			    UserSelectionState pss = new UserSelectionState(serverType, _skyBox, OnProfileSelected, () => {});
+			    UserSelectionState pss = new UserSelectionState(serverType, skyBox, OnProfileSelected, () => {});
 			    
-			    Alex.GameStateManager.SetActiveState(pss);
+			    alex.GameStateManager.SetActiveState(pss);
 		    }
 		    finally
 		    {

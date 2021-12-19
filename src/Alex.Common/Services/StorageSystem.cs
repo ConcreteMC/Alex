@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
@@ -28,6 +29,10 @@ namespace Alex.Common.Services
 
         private ICryptoTransform _encryptor = null;
         private ICryptoTransform _decryptor = null;
+
+        /// <inheritdoc />
+        public string PathOnDisk => DataDirectory;
+
         /// <inheritdoc />
         public void EnableEncryption(byte[] key)
         {
@@ -239,7 +244,17 @@ namespace Alex.Common.Services
         {
             try
             {
-                File.Delete(Path.Combine(DataDirectory, key));
+                string path = Path.Combine(DataDirectory, key);
+                var attributes = File.GetAttributes(path);
+                if ((attributes & FileAttributes.Directory) == FileAttributes.Directory)
+                {
+                    Directory.Delete(path);
+                }
+                else
+                {
+                    File.Delete(path);
+                }
+
                 return true;
             }
             catch(Exception ex)
@@ -288,6 +303,16 @@ namespace Alex.Common.Services
             return false;
         }
         
+        
+        /// <inheritdoc />
+        public IEnumerable<string> EnumerateDirectories()
+        {
+            foreach (var dir in Directory.EnumerateDirectories(DataDirectory))
+            {
+                yield return dir.Split(Path.DirectorySeparatorChar)[^1];
+            }
+        }
+        
         private string GetFileName(string key)
         {
             return Path.Combine(DataDirectory, key.ToLowerInvariant());
@@ -296,8 +321,12 @@ namespace Alex.Common.Services
         public IStorageSystem Open(params string[] path)
         {
             var subpath = Path.Combine(path);
+            var newPath = Path.Combine(DataDirectory, subpath);
 
-            return new StorageSystem(Path.Combine(DataDirectory, subpath))
+            if (!Directory.Exists(newPath))
+                Directory.CreateDirectory(newPath);
+            
+            return new StorageSystem(newPath)
             {
                 EncryptionEnabled = EncryptionEnabled,
                 EncryptionKey = EncryptionKey

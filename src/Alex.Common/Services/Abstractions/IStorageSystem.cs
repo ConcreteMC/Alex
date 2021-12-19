@@ -1,10 +1,12 @@
-﻿using System.IO;
+﻿using System.Collections.Generic;
+using System.IO;
 using System.Text;
 
 namespace Alex.Common.Services
 {
     public interface IStorageSystem
     {
+	    string PathOnDisk { get; }
 	    void EnableEncryption(byte[] key);
 	    
         #region Json
@@ -38,7 +40,8 @@ namespace Alex.Common.Services
         bool TryGetDirectory(string key, out DirectoryInfo info);
         bool TryCreateDirectory(string key);
         bool TryDeleteDirectory(string key);
-        
+
+        IEnumerable<string> EnumerateDirectories();
         #endregion
 
         bool Exists(string key);

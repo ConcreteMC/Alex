@@ -21,25 +21,37 @@ namespace Alex.Worlds.Multiplayer
 {
 	public class BedrockWorldProvider : WorldProvider
 	{
+		private readonly IPEndPoint _endPoint;
+		private readonly PlayerProfile _profile;
 		private static Logger Log = LogManager.GetCurrentClassLogger();
 		
 		public Alex Alex { get; }
-		protected BedrockClient Client { get; }
-		public BedrockFormManager FormManager { get; }
+		protected BedrockClient Client { get; set; }
+		public BedrockFormManager FormManager { get; set; }
 		
-		public BedrockWorldProvider(Alex alex, IPEndPoint endPoint, PlayerProfile profile,
-			out NetworkProvider networkProvider)
+		public BedrockWorldProvider(Alex alex, IPEndPoint endPoint, PlayerProfile profile)
 		{
+			_endPoint = endPoint;
+			_profile = profile;
 			Alex = alex;
 			
 			//Client = new ExperimentalBedrockClient(alex, alex.Services, this, endPoint);
-			Client = new BedrockClient(alex, endPoint, profile, this);
+		}
+
+		public void Init(out NetworkProvider networkProvider)
+		{
+			Client = GetClient(Alex, _endPoint, _profile);
 			networkProvider = Client;
 
 			var guiManager = Alex.GuiManager;
-			FormManager = new BedrockFormManager(networkProvider, guiManager, alex.InputManager);
+			FormManager = new BedrockFormManager(networkProvider, guiManager, Alex.InputManager);
 		}
 
+		protected virtual BedrockClient GetClient(Alex alex, IPEndPoint endPoint, PlayerProfile profile)
+		{
+			return new BedrockClient(alex, endPoint, profile, this);
+		}
+		
 		public override Vector3 GetSpawnPoint()
 		{
 			return World?.SpawnPoint ?? Vector3.Zero;
@@ -271,12 +283,18 @@ namespace Alex.Worlds.Multiplayer
 			timer.Stop();
 
 			World.Player.OnSpawn();
+			OnSpawn();
 			_gameStarted = true;
 			
 			if (resourcePackManager != null)
 				resourcePackManager.StatusChanged -= statusHandler;
 			
 			return LoadResult.Done;
+		}
+
+		protected virtual void OnSpawn()
+		{
+			
 		}
 
 		private bool _gameStarted = false;

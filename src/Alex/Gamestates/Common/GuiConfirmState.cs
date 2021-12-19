@@ -6,6 +6,8 @@ namespace Alex.Gamestates.Common
 {
     public class GuiConfirmState : GuiCallbackStateBase<bool>
     {
+        private readonly GuiConfirmStateOptions _options;
+
         public class GuiConfirmStateOptions
         {
             public string MessageText { get; set; }
@@ -16,6 +18,11 @@ namespace Alex.Gamestates.Common
 
             public string CancelText { get; set; } = "No";
             public string CancelTranslationKey { get; set; } = "gui.no";
+
+            public string WarningText { get; set; } = null;
+            public string WarningTranslationKey { get; set; } = null;
+
+            public object?[] WarningParameters { get; set; } = Array.Empty<string>();
         }
 
         public GuiConfirmState(string message, Action<bool> callbackAction) : this(new GuiConfirmStateOptions()
@@ -34,23 +41,61 @@ namespace Alex.Gamestates.Common
 
         }
 
+        private TextElement _warningElement = null;
         public GuiConfirmState(GuiConfirmStateOptions options, Action<bool> callbackAction) : base(callbackAction)
         {
+            _options = options;
+
+            Body.Anchor = Alignment.MiddleCenter;
             AddRocketElement(new TextElement()
             {
                 Text = options.MessageText,
                 TranslationKey = options.MessageTranslationKey
             });
-            AddRocketElement(new AlexButton("Confirm", OnConfirmButtonPressed)
+
+            if (!string.IsNullOrWhiteSpace(options.WarningText) || !string.IsNullOrWhiteSpace(options.WarningTranslationKey))
             {
-                Text           = options.ConfirmText,
-                TranslationKey = options.ConfirmTranslationKey
-            });
-            AddRocketElement(new AlexButton("Cancel", OnCancelButtonPressed)
+                AddRocketElement(
+                    _warningElement = new TextElement() { Text = options.WarningText ?? options.WarningTranslationKey });
+            }
+
+            var row = AddGuiRow(
+                new AlexButton("Confirm", OnConfirmButtonPressed)
+                {
+                    Text = options.ConfirmText, TranslationKey = options.ConfirmTranslationKey
+                },
+                new AlexButton("Cancel", OnCancelButtonPressed)
+                {
+                    Text = options.CancelText, TranslationKey = options.CancelTranslationKey
+                });
+
+            row.Orientation = Orientation.Horizontal;
+        }
+
+        /// <inheritdoc />
+        protected override void OnInit(IGuiRenderer renderer)
+        {
+            base.OnInit(renderer);
+
+            if (_warningElement != null)
             {
-                Text           = options.CancelText,
-                TranslationKey = options.CancelTranslationKey
-            });
+                string text = renderer.GetTranslation(_options.WarningTranslationKey) ?? _options.WarningText;
+                _warningElement.Text = string.Format(PrepareString(text), _options.WarningParameters);
+            }
+        }
+
+        private string PrepareString(string input)
+        {
+            int c = 0;
+            for (int index = input.IndexOf('%'); index >= 0; index = input.IndexOf('%'))
+            {
+                if (index + 1 < input.Length)
+                {
+                    input = input.Remove(index, 2);
+                    input = input.Insert(index, $"{{{c++}}}");
+                }
+            }
+            return input;
         }
 
         private void OnConfirmButtonPressed()
