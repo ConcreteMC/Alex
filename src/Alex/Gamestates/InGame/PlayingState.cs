@@ -268,7 +268,7 @@ namespace Alex.Gamestates.InGame
 			
 			_debugInfo.AddDebugRight(() => $"RAM: {FormattingUtils.GetBytesReadable(_ramUsage, 2)}", TimeSpan.FromMilliseconds(1000));
 			_debugInfo.AddDebugRight(() => $"GPU: {FormattingUtils.GetBytesReadable(GpuResourceManager.MemoryUsage, 2)}\nTextures: {FormattingUtils.GetBytesReadable(GpuResourceManager.TextureMemory, 2)}\nVertex: {FormattingUtils.GetBytesReadable(GpuResourceManager.VertexMemory, 2)}\nIndexes: {FormattingUtils.GetBytesReadable(GpuResourceManager.IndexMemory, 2)}\nUnknown: {FormattingUtils.GetBytesReadable(GpuResourceManager.UnknownMemory, 2)}", TimeSpan.FromMilliseconds(1000));
-			_debugInfo.AddDebugRight(() => $"Threads: {(ThreadPool.ThreadCount):00}/{Environment.ProcessorCount:00}\nPending: {ThreadPool.PendingWorkItemCount:00}\n", TimeSpan.FromMilliseconds(50));
+			_debugInfo.AddDebugRight(() => $"Threads: {(ThreadPool.ThreadCount):00}/{Program.MaxThreads:00}\nPending: {ThreadPool.PendingWorkItemCount:00}\n", TimeSpan.FromMilliseconds(50));
 			
 			_debugInfo.AddDebugRight(() => $"Updates: {ChunkColumn.AverageUpdateTime:F2}ms avg\nUpload: {ChunkData.AverageUploadTime:F2}ms avg\n", TimeSpan.FromMilliseconds(50));
 			_debugInfo.AddDebugRight(() => $"UI Tasks: {Alex.UiTaskManager.Pending:00}\nR: {Alex.UiTaskManager.AverageExecutionTime:F2}ms\nQ: {Alex.UiTaskManager.AverageTimeTillExecution:F2}ms", TimeSpan.FromMilliseconds(50));

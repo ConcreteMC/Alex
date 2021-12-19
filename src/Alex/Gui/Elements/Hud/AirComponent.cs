@@ -120,7 +120,7 @@ namespace Alex.Gui.Elements.Hud
                 {
                     if (_animationTimeElapsed <= AnimationTime)
                     {
-                        _animationTimeElapsed += gameTime.ElapsedGameTime.TotalMilliseconds;
+                        _animationTimeElapsed +=Alex.DeltaTimeSpan.TotalMilliseconds;
                     }
 
                     if (_animationTimeElapsed >= AnimationTime)

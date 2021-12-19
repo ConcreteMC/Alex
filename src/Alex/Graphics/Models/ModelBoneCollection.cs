@@ -1,41 +1,92 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.Linq;
 
 namespace Alex.Graphics.Models
 {
 	/// <summary>
 	/// Represents a set of bones associated with a model.
 	/// </summary>
-	public class ModelBoneCollection : System.Collections.ObjectModel.ReadOnlyCollection<ModelBone>
+	public class ModelBoneCollection : IReadOnlyCollection<ModelBone>
 	{
+		/// <inheritdoc />
+		public int Count => _items.Count;
+
+		public ImmutableArray<ModelBone> ImmutableArray => _bones;
+
+		private ObservableCollection<ModelBone> _items;
+
+		private ImmutableArray<ModelBone> _bones = new ImmutableArray<ModelBone>();
+		private object _boneLock = new object();
+		//public ModelBone[] Data => Items.
 		public ModelBoneCollection(IList<ModelBone> list)
-			: base(list)
 		{
-			SetIndexes();
+			_items = new ObservableCollection<ModelBone>();
+			_items.CollectionChanged += ItemsChanged;
+			
+			foreach (var modelBone in list)
+				_items.Add(modelBone);
 		}
 
-		private void SetIndexes()
+		private void ItemsChanged(object? sender, NotifyCollectionChangedEventArgs e)
 		{
-			for (var index = 0; index < Items.Count; index++)
+			var items = _items;
+
+			lock (_boneLock)
 			{
-				var modelBone = Items[index];
-				if (modelBone == null)
-					continue;
-				modelBone.Index = index;
+				_bones = items.ToImmutableArray();
 			}
+
+			if (e.Action == NotifyCollectionChangedAction.Add && e.NewItems != null)
+			{
+				int startIndex = e.NewStartingIndex;
+				foreach (ModelBone item in e.NewItems)
+				{
+					item.Index = startIndex++;
+				}
+			}
+			else if (e.Action == NotifyCollectionChangedAction.Remove && e.OldItems != null)
+			{
+				foreach (ModelBone removed in e.OldItems)
+				{
+					removed.Index = -1;
+				}
+
+				if (e.OldStartingIndex < items.Count)
+				{
+					for (var index = e.OldStartingIndex; index < items.Count; index++)
+					{
+						var modelBone = items[index];
+
+						if (modelBone == null)
+							continue;
+
+						modelBone.Index = index;
+					}
+				}
+			}
+			//SetIndexes();
 		}
+
 		
 		internal void Add(ModelBone item)
 		{
-			Items.Add(item);
-			SetIndexes();
+			lock (_boneLock)
+			{
+				_items.Add(item);
+			}
 		}
 		
 		internal void Remove(ModelBone item)
 		{
-			Items.Remove(item);
-			SetIndexes();
+			lock (_boneLock)
+			{
+				_items.Remove(item);
+			}
 		}
 		
 		/// <summary>
@@ -50,6 +101,14 @@ namespace Alex.Graphics.Models
 				if (!TryGetValue(boneName, out ret))
 					throw new KeyNotFoundException();
 				return ret;
+			}
+		}
+
+		public ModelBone this[int index]
+		{
+			get
+			{
+				return _items[index];
 			}
 		}
 
@@ -77,13 +136,25 @@ namespace Alex.Graphics.Models
 			return false;
 		}
 
+		/// <inheritdoc />
+		IEnumerator<ModelBone> IEnumerable<ModelBone>.GetEnumerator()
+		{
+			return GetEnumerator();
+		}
+
 		/// <summary>
 		/// Returns a ModelMeshCollection.Enumerator that can iterate through a ModelMeshCollection.
 		/// </summary>
 		/// <returns></returns>
-		public new Enumerator GetEnumerator()
+		public Enumerator GetEnumerator()
 		{
 			return new Enumerator(this);
+		}
+
+		/// <inheritdoc />
+		IEnumerator IEnumerable.GetEnumerator()
+		{
+			return GetEnumerator();
 		}
 
 		/// <summary>

@@ -25,7 +25,7 @@ namespace Alex.Entities.Components
 			if (!Enabled)
 				return;
 			
-			OnUpdate((float) gameTime.ElapsedGameTime.TotalSeconds);
+			OnUpdate(Alex.DeltaTime);
 		}
 
 		protected abstract void OnUpdate(float deltaTime);

@@ -627,7 +627,7 @@ namespace Alex.Worlds
 		
 		public void Update(IUpdateArgs args)
 		{
-			Shaders.Update((float)args.GameTime.ElapsedGameTime.TotalSeconds, args.Camera);
+			Shaders.Update(Alex.DeltaTime, args.Camera);
 		}
 
 		/// <inheritdoc />

@@ -173,7 +173,7 @@ namespace Alex.Gui
 	    public override void Update(GameTime gameTime)
 	    {
 		    base.Update(gameTime);
-		    _rotation += (float)gameTime.ElapsedGameTime.TotalMilliseconds / (1000.0f / 20.0f);
+		    _rotation += (float)Alex.DeltaTimeSpan.TotalMilliseconds / (1000.0f / 20.0f);
 
 		    RotateSkyBox();
 	    }

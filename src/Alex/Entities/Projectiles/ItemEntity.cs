@@ -50,7 +50,7 @@ namespace Alex.Entities.Projectiles
 
             if (DoRotation)
             {
-                _rotation += 45f * (float) args.GameTime.ElapsedGameTime.TotalSeconds;
+                _rotation += 45f * Alex.DeltaTime;
             }
         }
 

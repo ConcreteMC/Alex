@@ -1229,9 +1229,10 @@ namespace Alex.Entities
 		}
 
 		private bool _doUseItemAnimation = false;
+		public DateTime LastUpdate { get; set; }
 		public virtual void Update(IUpdateArgs args)
 		{
-			var elapsed = args.GameTime.ElapsedGameTime.TotalSeconds;
+			var elapsed = Alex.DeltaTime;
 
 			if (_doUseItemAnimation)
 			{

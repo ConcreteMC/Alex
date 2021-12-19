@@ -1002,7 +1002,7 @@ namespace Alex.Net.Bedrock
 
 			if (entity == null)
 			{
-				Log.Warn($"Unknown entity in MobArmorEquipment packet! ({message.runtimeEntityId})");
+				//Log.Warn($"Unknown entity in MobArmorEquipment packet! ({message.runtimeEntityId})");
 
 				return;
 			}

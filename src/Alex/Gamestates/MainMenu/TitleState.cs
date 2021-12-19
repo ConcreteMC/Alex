@@ -282,7 +282,7 @@ namespace Alex.Gamestates.MainMenu
         {
             base.OnUpdate(gameTime);
 
-            _rotation += (float) gameTime.ElapsedGameTime.TotalSeconds;
+            _rotation += Alex.DeltaTime;
 
             _splashText.Scale = 0.65f + (float) Math.Abs(Math.Sin(MathHelper.ToRadians(_rotation * 60.0f))) * 0.5f;
 

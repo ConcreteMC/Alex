@@ -130,13 +130,13 @@ namespace Alex.Gamestates.Multiplayer
 			_cancellationTokenSource?.Cancel();
 			_cancellationTokenSource?.Dispose();
 			
-			_cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(
+			var source = _cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(
 				new CancellationTokenSource(15 * 1000).Token, cancellationToken);
 
 			var hostname = SavedServerEntry.Host;
 			ushort port = SavedServerEntry.Port;
 			
-			await QueryServer(hostname, port, cancellationToken);
+			await QueryServer(hostname, port, source.Token);
 		}
 
 		private void SetConnectingState(bool connecting)

@@ -25,7 +25,8 @@ namespace Alex
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(Program));
 		private static Thread _startupThread = null;
-		
+
+		public static int MaxThreads = Environment.ProcessorCount;
 		/// <summary>
 		/// The main entry point for the application.
 		/// </summary>

@@ -148,7 +148,7 @@ namespace Alex.Graphics.Models.Entity
 			var model = Model;
 			if (model?.Bones == null) return;
 		
-			foreach (var bone in model.Bones)
+			foreach (var bone in model.Bones.ImmutableArray)
 			{
 				bone.Update(args);
 			}

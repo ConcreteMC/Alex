@@ -422,7 +422,7 @@ namespace Alex.Gamestates.Debugging
 		/// <inheritdoc />
 		public override void UpdateContext3D(IUpdateArgs args, IGuiRenderer guiRenderer)
 		{
-			_rot += (float)args.GameTime.ElapsedGameTime.TotalSeconds;
+			_rot += Alex.DeltaTime;
 			_currentRenderer?.Update(args);
 		}
 
@@ -530,7 +530,7 @@ namespace Alex.Gamestates.Debugging
 		/// <inheritdoc />
 		public override void UpdateContext3D(IUpdateArgs args, IGuiRenderer guiRenderer)
 		{
-			_rot += (float)args.GameTime.ElapsedGameTime.TotalSeconds;
+			_rot += Alex.DeltaTime;
 			
 			if (_basicEffect == null)
 			{

@@ -19,12 +19,12 @@ namespace Alex.Net.Java
 	public class JavaNetworkProvider : NetworkProvider
 	{
 		private NetConnection Client            { get; }
-		private HighPrecisionTimer      NetworkReportTimer { get; }
+		private Timer      NetworkReportTimer { get; }
 		public JavaNetworkProvider(NetConnection client)
 		{
 			Client = client;
 			
-			NetworkReportTimer =  new HighPrecisionTimer( 1000,
+			NetworkReportTimer =  new Timer(
 						state =>
 						{
 							long   packetSizeOut = Interlocked.Exchange(ref Client.PacketSizeOut, 0L);
@@ -36,7 +36,7 @@ namespace Alex.Net.Java
 							_connectionInfo = new ConnectionInfo(
 								Client.StartTime, Client.Latency, -1, -1, -1, -1, -1,
 								packetSizeIn, packetSizeOut, packetCountIn, packetCountOut);
-						});
+						}, null, 0, 1000);
 		}
 
 		/// <inheritdoc />
@@ -213,7 +213,7 @@ namespace Alex.Net.Java
 
 		public override void Close()
 		{
-			//NetworkReportTimer?.Change(Timeout.Infinite, Timeout.Infinite);
+			NetworkReportTimer?.Change(Timeout.Infinite, Timeout.Infinite);
 			try
 			{
 				NetworkReportTimer?.Dispose();

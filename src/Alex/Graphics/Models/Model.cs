@@ -96,8 +96,8 @@ namespace Alex.Graphics.Models
 			
 			int drawCount = 0;
 
-			var bones = bonesCollection;
-			int boneCount = bones.Count;
+			var bones = this.Bones.ImmutableArray;
+			int boneCount = bones.Length;
 
 			var matrices = MatrixArrayPool.Rent(boneCount);
 

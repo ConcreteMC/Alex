@@ -16,7 +16,6 @@ namespace Alex.Graphics.Models
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ModelBone));
 		
-		private List<ModelBone> _children = new List<ModelBone>();
 		private List<ModelMesh> _meshes = new List<ModelMesh>();
 		public List<ModelMesh> Meshes
 		{
@@ -257,7 +256,7 @@ namespace Alex.Graphics.Models
 
 		public void Update(IUpdateArgs args)
 		{
-			var dt = args.GameTime.ElapsedGameTime.TotalSeconds;
+			var dt = Alex.DeltaTime;
 			var rotation = _rotationData;
 			var position = _positionData;
 			var scale = _scaleData;

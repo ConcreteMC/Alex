@@ -585,9 +585,9 @@ namespace Alex
         protected override void Update(GameTime gameTime)
         {
             long elapsedGameTimeTicks = gameTime.ElapsedGameTime.Ticks;
-            DeltaTimeSpan = TimeSpan.FromTicks((long)(elapsedGameTimeTicks * (1d)));
+            DeltaTimeSpan = TimeSpan.FromTicks(elapsedGameTimeTicks);
             TotalTimeSpan += DeltaTimeSpan;
-            DeltaTime = ((float)DeltaTimeSpan.Ticks / TimeSpan.TicksPerSecond);
+            DeltaTime = ((float)elapsedGameTimeTicks / TimeSpan.TicksPerSecond);
             
             base.Update(gameTime);
             

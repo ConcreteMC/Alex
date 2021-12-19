@@ -342,9 +342,9 @@ namespace Alex.Particles
 		
 		public void Update(GameTime gameTime)
 		{
-			_deltaTime = gameTime.ElapsedGameTime;
+			_deltaTime = Alex.DeltaTimeSpan;
 
-			var dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
+			var dt = Alex.DeltaTime;
 			Lifetime += dt;
 
 			Position += Velocity * dt;

@@ -212,7 +212,7 @@ namespace Alex.Particles
 				particle.Update(gameTime);
 			}
 			
-			_accumulator += gameTime.ElapsedGameTime.TotalMilliseconds;
+			_accumulator += Alex.DeltaTimeSpan.TotalMilliseconds;
 
 			while (_accumulator >= 50d)
 			{

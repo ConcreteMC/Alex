@@ -117,6 +117,7 @@ namespace Alex.Networking.Java
 			if (_stopped)
 				return;
 
+			_semaphore?.Release();
 			try
 			{
 				if (CancellationToken.IsCancellationRequested) return;
@@ -135,6 +136,7 @@ namespace Alex.Networking.Java
 			catch (SocketException) { }
 			finally
 			{
+				
 				_stopped = true;
 			}
         }
@@ -548,6 +550,9 @@ namespace Alex.Networking.Java
 			
 			_packetQueue?.Complete();
 			_packetQueue = null;
+			
+			_semaphore?.Dispose();
+			_semaphore = null;
 			
 		    CancellationToken?.Dispose();
 

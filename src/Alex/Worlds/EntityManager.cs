@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Threading;
 using Alex.Common;
 using Alex.Common.Graphics;
 using Alex.Common.Graphics.Typography;
@@ -102,11 +103,12 @@ namespace Alex.Worlds
 
 		private Stopwatch _sw = new Stopwatch();
 
+		private object _tickLock = new object();
 		public void OnTick()
 		{
-			if (World?.Camera == null)
+			if (!Monitor.TryEnter(_tickLock, 0))
 				return;
-			
+
 			_sw.Restart();
 
 			int ticked = 0;
@@ -114,6 +116,9 @@ namespace Alex.Worlds
 
 			try
 			{
+				if (World?.Camera == null)
+					return;
+				
 				List<Entity> rendered = new List<Entity>(_rendered.Length);
 
 				var entities = Entities.Values.ToArray();
@@ -150,6 +155,7 @@ namespace Alex.Worlds
 			}
 			finally
 			{
+				Monitor.Exit(_tickLock);
 				if (_sw.Elapsed.TotalMilliseconds >= 50)
 				{
 					Log.Warn(
@@ -162,8 +168,13 @@ namespace Alex.Worlds
 
 		public void Update(IUpdateArgs args)
 		{
-			foreach (var entity in _rendered)
+			var delta = Alex.DeltaTime;
+			float maxTime = delta / _rendered.Length;
+			long elapsedTime = 0;
+			foreach (var entity in _rendered.OrderBy(x => x.LastUpdate))
 			{
+				if (elapsedTime >= delta)
+					break;
 				_updateWatch.Restart();
 				//if (entity.IsRendered)
 
@@ -173,12 +184,14 @@ namespace Alex.Worlds
 					continue;
 				
 				entity.Update(args);
+				entity.LastUpdate = DateTime.UtcNow;
 				
 				var elapsed = _updateWatch.ElapsedMilliseconds;
+				elapsedTime += elapsed;
 
-				if (elapsed > 13)
+				if (elapsed > maxTime)
 				{
-					Log.Warn($"Entity update took to long! Spent {elapsed}ms on entity of type {entity} (EntityId={entity.EntityId})");
+					Log.Warn($"Entity update took {elapsed - maxTime}ms too long. Entity={entity} (EntityId={entity.EntityId})");
 				}
 			}
 		}

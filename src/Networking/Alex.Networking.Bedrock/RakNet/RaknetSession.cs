@@ -89,7 +89,7 @@ namespace Alex.Networking.Bedrock.RakNet
 		public ConcurrentDictionary<int, Datagram> WaitingForAckQueue { get; } = new ConcurrentDictionary<int, Datagram>();
 
 		public int CompressionThreshold { get; set; } = -1;
-		private HighPrecisionTimer _tickerHighPrecisionTimer;
+		private Timer _tickerHighPrecisionTimer;
 		public RaknetSession(ConnectionInfo connectionInfo, RaknetConnection connection, IPEndPoint endPoint, short mtuSize, ICustomMessageHandler messageHandler = null)
 		{
 			_connection = connection;
@@ -101,7 +101,7 @@ namespace Alex.Networking.Bedrock.RakNet
 			_cancellationToken = new CancellationTokenSource();
 
 			SlidingWindow = new SlidingWindow(mtuSize);
-			_tickerHighPrecisionTimer = new HighPrecisionTimer(10, SendTick);
+			_tickerHighPrecisionTimer = new Timer(SendTick, null, 10, 10);
 		}
 
 		/// <summary>
@@ -725,10 +725,13 @@ namespace Alex.Networking.Bedrock.RakNet
 				return;
 
 			_closed = true;
-
-			//_tickerHighPrecisionTimer?.Change(Timeout.Infinite, Timeout.Infinite);
+			
+			_orderingResetEvent?.Dispose();
+			_orderingResetEvent = null;
+			
 			try
 			{
+				_tickerHighPrecisionTimer?.Change(Timeout.Infinite, Timeout.Infinite);
 				_tickerHighPrecisionTimer?.Dispose();
 				_tickerHighPrecisionTimer = null;
 			}catch{}

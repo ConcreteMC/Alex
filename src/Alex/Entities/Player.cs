@@ -277,10 +277,7 @@ namespace Alex.Entities
 		    }
 
 		    if (!IsSpawned)
-		    {
-			    base.Update(args);
 			    return;
-		    }
 
 		    CurrentBiome = Level.GetBiome(RenderLocation.GetCoordinates3D());
 		    

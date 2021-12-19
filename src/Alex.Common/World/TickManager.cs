@@ -19,14 +19,14 @@ namespace Alex.Common.World
 		private long                               _tick = 0;
 		public  long                               CurrentTick => _tick;
 
-		private HighPrecisionTimer TickTimer      { get; set; }
+		private Timer TickTimer      { get; set; }
 		public  double             TicksPerSecond { get; set; }
 
 		public TickManager()
 	    {
 		    ScheduledTicks = new ConcurrentDictionary<TickedItem, long>();
 		    TickedItems = new LinkedList<TickedEntry>();
-		    TickTimer = new HighPrecisionTimer(50, DoTick);
+		    TickTimer = new Timer(DoTick, null, 0, 50);
 		}
 
 		private Stopwatch _sw = Stopwatch.StartNew();

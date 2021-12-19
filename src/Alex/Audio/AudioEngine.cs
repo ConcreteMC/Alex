@@ -238,9 +238,7 @@ namespace Alex.Audio
 		public void Update(GameTime gameTime, Vector3 position, Vector3 forward)
 		{
 			if (!Supported) return;
-			
-			var vel = (position - _lastPos) *  1000f / (float) gameTime.ElapsedGameTime.TotalMilliseconds;
-			
+
 			FmodSystem.Set3DListenerAttributes(
 				0, new System.Numerics.Vector3(position.X, position.Y, position.Z),
 				System.Numerics.Vector3.Zero, //new System.Numerics.Vector3(vel.X, vel.Y, vel.Z), 

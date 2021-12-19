@@ -289,7 +289,7 @@ namespace Alex.Gamestates.Multiplayer
 		    }
 		    else
 		    {
-			    _previousTask = prevTask.ContinueWith(_ => item.PingAsync(false, cancellationToken));
+			    _previousTask = prevTask.ContinueWith(_ => item.PingAsync(false, cancellationToken), cancellationToken);
 		    }
 		    
 		    //item?.PingAsync(false, _cancellationTokenSource.Token);

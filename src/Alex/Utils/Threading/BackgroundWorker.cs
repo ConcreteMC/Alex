@@ -8,9 +8,8 @@ namespace Alex.Utils.Threading
 	public class BackgroundWorker : IDisposable
 	{
 		private CancellationTokenSource _cancellationTokenSource;
-		private ConcurrentQueue<Action> _workerQueue             = new ConcurrentQueue<Action>();
-		private ManualResetEvent        _manualResetEvent        = new ManualResetEvent(false);
-
+		private BlockingCollection<Action> _workerQueue             = new BlockingCollection<Action>();
+		
 		public int MaxThreads { get; set; }
 		
 		//private Thread _workerThread;
@@ -18,50 +17,41 @@ namespace Alex.Utils.Threading
 		{
 			MaxThreads = threads;
 			_cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+			cancellationToken = _cancellationTokenSource.Token;
 			
 			var task = new Task(
 				() =>
 				{
 					Thread.CurrentThread.Name = $"BackgroundWorker Thread";
-					//_workerThread = Thread.CurrentThread;
-					while (!_cancellationTokenSource.IsCancellationRequested)
+
+					while (!_workerQueue.IsCompleted && _workerQueue.TryTake(out var action, -1, cancellationToken))
 					{
-						if (_manualResetEvent.WaitOne(50))
-						{
-							if (_cancellationTokenSource.IsCancellationRequested)
-								break;
-
-							while (_workerQueue.TryDequeue(out var action))
-							{
-								action?.Invoke();
-
-								if (_cancellationTokenSource.IsCancellationRequested)
-									break;
-							}
-
-							_manualResetEvent.Reset();
-						}
-					
-						if (_cancellationTokenSource.IsCancellationRequested)
-							break;
+						action?.Invoke();
 					}
-				}, _cancellationTokenSource.Token, TaskCreationOptions.LongRunning);
+				}, cancellationToken, TaskCreationOptions.LongRunning);
 			
 			task.Start();
 		}
 
 		public void Enqueue(Action action)
 		{
-			_workerQueue.Enqueue(action);
-			_manualResetEvent.Set();
+			_workerQueue.Add(action);
 		}
 
 		/// <inheritdoc />
 		public void Dispose()
 		{
-			_cancellationTokenSource.Cancel();
+			_workerQueue?.CompleteAdding();
+			if (!_cancellationTokenSource.IsCancellationRequested)
+			{
+				_cancellationTokenSource.Cancel();
+			}
 			
-			_manualResetEvent?.Dispose();
+			_cancellationTokenSource?.Dispose();
+			_cancellationTokenSource = null;
+			
+			_workerQueue?.Dispose();
+			_workerQueue = null;
 		}
 	}
 }

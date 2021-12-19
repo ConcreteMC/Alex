@@ -98,7 +98,7 @@ namespace Alex.Utils.Threading
 		public override void Update(GameTime gameTime)
 		{
 			base.Update(gameTime);
-			_accumulator += gameTime.ElapsedGameTime.TotalMilliseconds;
+			_accumulator += Alex.DeltaTimeSpan.TotalMilliseconds;
 
 			if (_accumulator >= 1000)
 			{
@@ -153,14 +153,14 @@ namespace Alex.Utils.Threading
 
 				if (_skipFrames)
 				{
-					if (executionTime.TotalMilliseconds > gameTime.ElapsedGameTime.TotalMilliseconds)
+					if (executionTime.TotalMilliseconds > Alex.DeltaTimeSpan.TotalMilliseconds)
 					{
-						var framesToSkip = (int)Math.Ceiling(executionTime.TotalMilliseconds / gameTime.ElapsedGameTime.TotalMilliseconds);
+						var framesToSkip = (int)Math.Ceiling(executionTime.TotalMilliseconds / Alex.DeltaTimeSpan.TotalMilliseconds);
 
 						_frameSkip += framesToSkip;
 
 						Log.Debug(
-							$"Task execution time exceeds frametime by {(executionTime.TotalMilliseconds - gameTime.ElapsedGameTime.TotalMilliseconds):F2}ms skipping {framesToSkip} frames (Tag={(a.Tag ?? "null")})");
+							$"Task execution time exceeds frametime by {(executionTime.TotalMilliseconds - Alex.DeltaTimeSpan.TotalMilliseconds):F2}ms skipping {framesToSkip} frames (Tag={(a.Tag ?? "null")})");
 					}
 				}
 			}
