@@ -35,8 +35,8 @@ namespace Alex
 		[STAThread]
 		static void Main(string[] args)
 		{
-		//ThreadPool.SetMinThreads(Environment.ProcessorCount, Environment.ProcessorCount);
-			//ThreadPool.SetMaxThreads(Environment.ProcessorCount, Environment.ProcessorCount);
+		ThreadPool.SetMinThreads(Environment.ProcessorCount, Environment.ProcessorCount);
+			ThreadPool.SetMaxThreads(Environment.ProcessorCount, Environment.ProcessorCount);
 			_startupThread = Thread.CurrentThread;
 			_startupThread.Name = "UI Thread";
 			

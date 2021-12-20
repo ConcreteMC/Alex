@@ -1124,10 +1124,10 @@ namespace Alex.Worlds
 			if (entity != null)
 			{
 				entity.KnownPosition.OnGround = position.OnGround;
-
+				
 				if (relative)
 				{
-					entity.Movement.Move(position.ToVector3());
+					entity.Movement.MoveTo(entity.KnownPosition + position.ToVector3());
 				}
 				else
 				{

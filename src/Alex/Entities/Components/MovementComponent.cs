@@ -20,11 +20,16 @@ namespace Alex.Entities.Components
 			Heading = Vector3.Zero;
 		}
 
+		private bool Process => !Entity.NoAi && !Entity.IsInvisible && Entity.IsRendered && Entity.Scale > 0f;
+
 		/// <inheritdoc />
 		protected override void OnUpdate(float deltaTime)
 		{
 			var entity    = Entity;
 
+		//	if (!Process)
+		//		return;
+			
 			UpdateDistanceMoved(deltaTime);
 
 			if ((_target == null || _from == null))
@@ -98,7 +103,7 @@ namespace Alex.Entities.Components
 		private object _headingLock = new object();
 		public void UpdateHeading(Vector3 heading)
 		{
-			lock (_headingLock)
+			//lock (_headingLock)
 			{
 				Heading = heading;
 				//Heading = heading.Transform(Entity.KnownPosition.GetDirectionMatrix(Entity.IsSwimming, true));
@@ -110,7 +115,7 @@ namespace Alex.Entities.Components
 		public void UpdateTarget()
 		{
 			var target = Entity.KnownPosition;
-
+			
 			//if (!InterpolatedMovement)
 			//{
 			//	Entity.RenderLocation = target;

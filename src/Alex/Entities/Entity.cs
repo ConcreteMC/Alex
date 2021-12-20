@@ -1229,6 +1229,8 @@ namespace Alex.Entities
 		///  <returns>The amount of draw calls made</returns>
 		public virtual int Render(IRenderArgs renderArgs, bool useCulling)
 		{
+			if (IsInvisible || _skipRendering)
+				return 0;
 		//	if (_disposed)
 			//	return 0;
 			
@@ -1280,7 +1282,7 @@ namespace Alex.Entities
 
 			var renderer = ModelRenderer;
 
-			if (renderer == null || _skipRendering)
+			if (renderer == null || _skipRendering || IsInvisible)
 				return;
 			//if (((!RenderEntity || IsInvisible) && !ShowItemInHand) || renderer == null || _skipRendering) return;
 

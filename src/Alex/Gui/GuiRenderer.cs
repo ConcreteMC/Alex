@@ -109,9 +109,6 @@ namespace Alex.Gui
 		#region ScrollBar
 
 		public static readonly Rectangle ScrollBarBackgroundDefault  = new Rectangle(0, 0, 10, 10);
-		public static readonly Rectangle ScrollBarBackgroundHover    = new Rectangle(0, 0, 10, 10);
-		public static readonly Rectangle ScrollBarBackgroundFocus    = new Rectangle(0, 0, 10, 10);
-		public static readonly Rectangle ScrollBarBackgroundDisabled = new Rectangle(0, 0, 10, 10);
 
 		public static readonly Rectangle ScrollBarTrackDefault  = new Rectangle(10, 10, 10, 10);
 		public static readonly Rectangle ScrollBarTrackHover    = new Rectangle(10, 10, 10, 10);
@@ -660,22 +657,22 @@ namespace Alex.Gui
 		private Size ScrollbarSize { get; } = new Size(40,40);
 		private void LoadScrollBar(Texture2D spriteSheet)
 		{
-			LoadTextureFromSpriteSheet(AlexGuiTextures.ScrollBarBackground, spriteSheet, ScrollBarBackgroundDefault, ScrollbarSize);
+			LoadTextureFromSpriteSheet(GuiTextures.ScrollBarBackground, spriteSheet, ScrollBarBackgroundDefault, ScrollbarSize);
 
-			LoadTextureFromSpriteSheet(AlexGuiTextures.ScrollBarTrackDefault,  spriteSheet, ScrollBarTrackDefault, ScrollbarSize);
-			LoadTextureFromSpriteSheet(AlexGuiTextures.ScrollBarTrackHover,    spriteSheet, ScrollBarTrackHover, ScrollbarSize);
-			LoadTextureFromSpriteSheet(AlexGuiTextures.ScrollBarTrackFocused,  spriteSheet, ScrollBarTrackFocus, ScrollbarSize);
-			LoadTextureFromSpriteSheet(AlexGuiTextures.ScrollBarTrackDisabled, spriteSheet, ScrollBarTrackDisabled, ScrollbarSize);
+			LoadTextureFromSpriteSheet(GuiTextures.ScrollBarTrackDefault,  spriteSheet, ScrollBarTrackDefault, ScrollbarSize);
+			LoadTextureFromSpriteSheet(GuiTextures.ScrollBarTrackHover,    spriteSheet, ScrollBarTrackHover, ScrollbarSize);
+			LoadTextureFromSpriteSheet(GuiTextures.ScrollBarTrackFocused,  spriteSheet, ScrollBarTrackFocus, ScrollbarSize);
+			LoadTextureFromSpriteSheet(GuiTextures.ScrollBarTrackDisabled, spriteSheet, ScrollBarTrackDisabled, ScrollbarSize);
 
-			LoadTextureFromSpriteSheet(AlexGuiTextures.ScrollBarUpButtonDefault,  spriteSheet, ScrollBarUpButtonDefault, ScrollbarSize);
-			LoadTextureFromSpriteSheet(AlexGuiTextures.ScrollBarUpButtonHover,    spriteSheet, ScrollBarUpButtonHover, ScrollbarSize);
-			LoadTextureFromSpriteSheet(AlexGuiTextures.ScrollBarUpButtonFocused,  spriteSheet, ScrollBarUpButtonFocus, ScrollbarSize);
-			LoadTextureFromSpriteSheet(AlexGuiTextures.ScrollBarUpButtonDisabled, spriteSheet, ScrollBarUpButtonDisabled, ScrollbarSize);
+			LoadTextureFromSpriteSheet(GuiTextures.ScrollBarUpButtonDefault,  spriteSheet, ScrollBarUpButtonDefault, ScrollbarSize);
+			LoadTextureFromSpriteSheet(GuiTextures.ScrollBarUpButtonHover,    spriteSheet, ScrollBarUpButtonHover, ScrollbarSize);
+			LoadTextureFromSpriteSheet(GuiTextures.ScrollBarUpButtonFocused,  spriteSheet, ScrollBarUpButtonFocus, ScrollbarSize);
+			LoadTextureFromSpriteSheet(GuiTextures.ScrollBarUpButtonDisabled, spriteSheet, ScrollBarUpButtonDisabled, ScrollbarSize);
 
-			LoadTextureFromSpriteSheet(AlexGuiTextures.ScrollBarDownButtonDefault,  spriteSheet, ScrollBarDownButtonDefault, ScrollbarSize);
-			LoadTextureFromSpriteSheet(AlexGuiTextures.ScrollBarDownButtonHover,    spriteSheet, ScrollBarDownButtonHover, ScrollbarSize);
-			LoadTextureFromSpriteSheet(AlexGuiTextures.ScrollBarDownButtonFocused,  spriteSheet, ScrollBarDownButtonFocus, ScrollbarSize);
-			LoadTextureFromSpriteSheet(AlexGuiTextures.ScrollBarDownButtonDisabled, spriteSheet, ScrollBarDownButtonDisabled, ScrollbarSize);
+			LoadTextureFromSpriteSheet(GuiTextures.ScrollBarDownButtonDefault,  spriteSheet, ScrollBarDownButtonDefault, ScrollbarSize);
+			LoadTextureFromSpriteSheet(GuiTextures.ScrollBarDownButtonHover,    spriteSheet, ScrollBarDownButtonHover, ScrollbarSize);
+			LoadTextureFromSpriteSheet(GuiTextures.ScrollBarDownButtonFocused,  spriteSheet, ScrollBarDownButtonFocus, ScrollbarSize);
+			LoadTextureFromSpriteSheet(GuiTextures.ScrollBarDownButtonDisabled, spriteSheet, ScrollBarDownButtonDisabled, ScrollbarSize);
 		}
 
 

@@ -1,6 +1,7 @@
 using System;
 using Alex.Common.Gui.Graphics;
 using Alex.Entities;
+using Alex.Entities.Meta;
 using Microsoft.Xna.Framework;
 using MiNET.Effects;
 using RocketUI;
@@ -32,10 +33,12 @@ namespace Alex.Gui.Elements.Hud
                 });
             }
             
-            player.HealthManager.OnAvailableAirChanged += (s, e) =>
-            {
-                UpdateAir(e.AirAvailable, e.MaxAirAvailable);
-            };
+            player.HealthManager.OnAvailableAirChanged += OnAvailableAirChanged;
+        }
+
+        private void OnAvailableAirChanged(object? sender, AirChangedEventArgs e)
+        {
+            UpdateAir(e.AirAvailable, e.MaxAirAvailable);
         }
 
         private void UpdateAir(int availableAir, int maxAir)

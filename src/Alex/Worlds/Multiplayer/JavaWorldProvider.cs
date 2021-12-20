@@ -2490,37 +2490,34 @@ namespace Alex.Worlds.Multiplayer
 
 		private void HandleUpdateLightPacket(UpdateLightPacket packet)
 		{
-			ThreadPool.QueueUserWorkItem(
-				o =>
+			return;
+			var cc = new ChunkCoordinates(packet.ChunkX, packet.ChunkZ);
+
+			if (World.ChunkManager.TryGetChunk(cc, out var chunk))
+			{
+				int skyBit = 0;
+				int blockBit = 0;
+
+				for (int y = 0; y < chunk.Sections.Length; y++)
 				{
-					var cc = new ChunkCoordinates(packet.ChunkX, packet.ChunkZ);
-
-					if (World.ChunkManager.TryGetChunk(cc, out var chunk))
+					if (packet.Data.SkyLightMask.IsSet(y + 1))
 					{
-						int skyBit = 0;
-						int blockBit = 0;
-
-						for (int y = 0; y < chunk.Sections.Length; y++)
-						{
-							if (packet.Data.SkyLightMask.IsSet(y + 1))
-							{
-								var skyLightData = packet.Data.SkyLight[skyBit++];
-								chunk.Sections[y].SkyLight = new LightArray(skyLightData);
-							}
-
-							if (packet.Data.BlockLightMask.IsSet(y + 1))
-							{
-								var blockLightData = packet.Data.BlockLight[blockBit++];
-								chunk.Sections[y].BlockLight = new LightArray(blockLightData);
-							}
-						}
-
-						World.ChunkManager.ScheduleChunkUpdate(cc, ScheduleType.Lighting, false);
+						var skyLightData = packet.Data.SkyLight[skyBit++];
+						chunk.Sections[y].SkyLight = new LightArray(skyLightData);
 					}
-				});
+
+					if (packet.Data.BlockLightMask.IsSet(y + 1))
+					{
+						var blockLightData = packet.Data.BlockLight[blockBit++];
+						chunk.Sections[y].BlockLight = new LightArray(blockLightData);
+					}
+				}
+
+				World.ChunkManager.ScheduleChunkUpdate(cc, ScheduleType.Lighting, false);
+			}
 		}
-		
-        private void HandleChunkData(ChunkDataPacket packet)
+
+		private void HandleChunkData(ChunkDataPacket packet)
         {
 	        packet.AddReferences(1);
 	        
