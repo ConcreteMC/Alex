@@ -17,16 +17,7 @@ namespace Alex.Networking.Java.Packets.Play
 		public List<BlockEntityData> TileEntities;
 		public NbtCompound HeightMaps;
 
-		public BitSet SkyLightMask;
-
-		public BitSet BlockLightMask;
-
-		public BitSet EmptySkyLightMask;
-
-		public BitSet EmptyBlockLightMask;
-
-		public byte[][] SkyLight;
-		public byte[][] BlockLight;
+		public LightingData LightingData;
 		
 		public ChunkDataPacket()
 		{
@@ -54,27 +45,7 @@ namespace Alex.Networking.Java.Packets.Play
 				TileEntities.Add(blockEntity);
 			}
 
-			bool trustEdges = await stream.ReadBoolAsync();
-			SkyLightMask = await BitSet.ReadAsync(stream);
-			BlockLightMask = await BitSet.ReadAsync(stream);
-			EmptySkyLightMask = await BitSet.ReadAsync(stream);
-			EmptyBlockLightMask = await BitSet.ReadAsync(stream);
-
-			int skyLightArrayCount = await stream.ReadVarIntAsync();
-			SkyLight = new byte[skyLightArrayCount][];
-			for (int idx = 0; idx < SkyLight.Length; idx++)
-			{
-				int length = await stream.ReadVarIntAsync();
-				SkyLight[idx] = await stream.ReadAsync(length);
-			}
-			
-			int blockLightArrayCount = await stream.ReadVarIntAsync();
-			BlockLight = new byte[blockLightArrayCount][];
-			for (int idx = 0; idx < BlockLight.Length; idx++)
-			{
-				int length = await stream.ReadVarIntAsync();
-				BlockLight[idx] = await stream.ReadAsync(length);
-			}
+			LightingData = await LightingData.FromStreamAsync(stream);
 		}
 
 		public override async Task EncodeAsync(MinecraftStream stream)
@@ -108,6 +79,7 @@ namespace Alex.Networking.Java.Packets.Play
 			HeightMaps = null;
 			Buffer = null;
 			TileEntities = new List<BlockEntityData>();
+			LightingData = null;
 		}
 
 		public class BlockEntityData

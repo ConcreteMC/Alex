@@ -120,7 +120,7 @@ namespace Alex.Worlds.Multiplayer.Java
 					}
 				}
 				
-				CalculateHeight();
+				CalculateHeight(false);
 			}
 			catch (Exception e)
 			{

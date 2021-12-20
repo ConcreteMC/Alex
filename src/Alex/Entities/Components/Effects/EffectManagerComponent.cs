@@ -39,7 +39,12 @@ namespace Alex.Entities.Components.Effects
 		{
 			var effect1 = effect;
 			
-			effect = _effects.AddOrUpdate(effect.EffectId, effect, (type, e) => effect1);
+			effect = _effects.AddOrUpdate(effect.EffectId, effect, (type, e) =>
+			{
+				e?.Remove(Entity);
+				return effect1;
+			});
+			
 			effect?.ApplyTo(Entity);
 		}
 

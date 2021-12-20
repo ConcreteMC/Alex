@@ -72,6 +72,7 @@ namespace Alex.Entities
 			
 			MovementSpeed = 0.1f;//0000000149011612f;//0000000149011612f;
 			FlyingSpeed = 0.4f;
+			AttackSpeed = 4.0;
 			
 			if (skin != null)
 			{

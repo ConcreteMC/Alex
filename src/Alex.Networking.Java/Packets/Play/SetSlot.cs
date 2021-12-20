@@ -11,6 +11,7 @@ namespace Alex.Networking.Java.Packets.Play
 		    PacketId = 0x16;
 	    }
 
+	    public int StateId = 0;
 	    public byte WindowId = 0;
 	    public short SlotId = 0;
 	    public SlotData Slot;
@@ -18,6 +19,7 @@ namespace Alex.Networking.Java.Packets.Play
 	    public override void Decode(MinecraftStream stream)
 	    {
 		    WindowId = (byte) stream.ReadByte();
+		    StateId = stream.ReadVarInt();
 		    SlotId = stream.ReadShort();
 		    Slot = stream.ReadSlot();
 	    }

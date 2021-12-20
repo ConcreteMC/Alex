@@ -116,5 +116,7 @@ namespace Alex.Utils.Inventories
 				_cursor = value;
 			}
 		}
+
+		public int StateId { get; set; } = -1;
 	}
 }

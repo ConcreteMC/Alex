@@ -27,8 +27,8 @@ namespace Alex.Worlds.Chunks
 		protected readonly BlockStorage[] BlockStorages;
 		protected readonly BiomeStorage[] BiomeStorages;
 		
-		public   readonly LightArray    BlockLight;
-		public   readonly LightArray    SkyLight;
+		public LightArray    BlockLight { get; set; }
+		public LightArray    SkyLight { get; set; }
 
 		public List<BlockCoordinates> LightSources { get; private set; } = new List<BlockCoordinates>();
         
@@ -286,6 +286,10 @@ namespace Alex.Worlds.Chunks
 			if (!disposing)
 			{
 				Log.Warn($"Dispose was never called. Cleaning up.");
+			}
+			else
+			{
+				GC.SuppressFinalize(this);
 			}
 
 			for (int i = 0; i < BlockStorages.Length; i++)

@@ -1,95 +1,90 @@
 ﻿using System;
+using System.Threading.Tasks;
 using Alex.Networking.Java.Util;
 
 namespace Alex.Networking.Java.Packets.Play
 {
+	public class LightingData
+	{
+		public bool TrustEdges;
+
+		public BitSet SkyLightMask;
+
+		public BitSet BlockLightMask;
+
+		public BitSet EmptySkyLightMask;
+
+		public BitSet EmptyBlockLightMask;
+
+		public byte[][] SkyLight;
+		public byte[][] BlockLight;
+
+		public LightingData()
+		{
+			
+		}
+
+		public async Task DecodeAsync(MinecraftStream stream)
+		{
+			TrustEdges = await stream.ReadBoolAsync();
+			SkyLightMask = await BitSet.ReadAsync(stream);
+			BlockLightMask = await BitSet.ReadAsync(stream);
+			EmptySkyLightMask = await BitSet.ReadAsync(stream);
+			EmptyBlockLightMask = await BitSet.ReadAsync(stream);
+
+			int skyLightArrayCount = await stream.ReadVarIntAsync();
+			SkyLight = new byte[skyLightArrayCount][];
+			for (int idx = 0; idx < SkyLight.Length; idx++)
+			{
+				int length = await stream.ReadVarIntAsync();
+				SkyLight[idx] = await stream.ReadAsync(length);
+			}
+			
+			int blockLightArrayCount = await stream.ReadVarIntAsync();
+			BlockLight = new byte[blockLightArrayCount][];
+			for (int idx = 0; idx < BlockLight.Length; idx++)
+			{
+				int length = await stream.ReadVarIntAsync();
+				BlockLight[idx] = await stream.ReadAsync(length);
+			}
+		}
+
+		public static async Task<LightingData> FromStreamAsync(MinecraftStream stream)
+		{
+			var data = new LightingData();
+			await data.DecodeAsync(stream);
+
+			return data;
+		}
+	}
     public class UpdateLightPacket : Packet<UpdateLightPacket>
     {
-	    public int ChunkX,
-		    ChunkZ,
-		    SkyLightMask,
-		    BlockLightMask,
-		    EmptySkyLightMask,
-		    EmptyBlockLightMask;
-
-	    public bool TrustEdges;
-
-	    public byte[][] SkyLightArrays;
-	    public byte[][] BlockLightArrays;
+	    public int ChunkX, ChunkZ;
+	    public LightingData Data;
 
         public UpdateLightPacket()
 	    {
 
 	    }
 
-	    public override void Decode(MinecraftStream stream)
-	    {
-		    ChunkX = stream.ReadVarInt();
-		    ChunkZ = stream.ReadVarInt();
-		    TrustEdges = stream.ReadBool();
-		    SkyLightMask = stream.ReadVarInt();
-		    BlockLightMask = stream.ReadVarInt();
-		    EmptySkyLightMask = stream.ReadVarInt();
-		    EmptyBlockLightMask = stream.ReadVarInt();
-
-		  //  List<byte[]> skyLightList = new List<byte[]>();
-			SkyLightArrays = new byte[16][];
-		    for(int i = 0; i < SkyLightArrays.Length + 1; i++)
-		    {
-			    if (((SkyLightMask & 1) != 0) /*&& ((EmptySkyLightMask & 1) == 0)*/)
-			    {
-				    stream.ReadVarInt();
-					byte[] data = stream.Read(2048);
-
-					if (i != 0)
-					{
-						SkyLightArrays[i - 1] = data;
-					}
-			    }
-			    else
-			    {
-				    if (i != 0)
-				    {
-					    SkyLightArrays[i - 1] = null;
-				    }
-			    }
-
-			    SkyLightMask = SkyLightMask >> 1;
-			    EmptySkyLightMask = EmptySkyLightMask >> 1;
-            }
-            //SkyLightArrays = skyLightList.ToArray();
-
-            // List<byte[]> blockLightList = new List<byte[]>();
-		    BlockLightArrays = new byte[16][];
-            for (int i = 0; i < BlockLightArrays.Length + 1; i++)
-		    {
-			    if (((BlockLightMask & 1) != 0) /*&& ((EmptyBlockLightMask & 1) == 0)*/)
-			    {
-				    stream.ReadVarInt();
-				    byte[] data = stream.Read(2048);
-
-				    if (i != 0)
-				    {
-					    BlockLightArrays[i - 1] = data;
-				    }
-			    }
-			    else
-			    {
-				    if (i != 0)
-				    {
-					    BlockLightArrays[i - 1] = null;
-				    }
-			    }
-
-                BlockLightMask = BlockLightMask >> 1;
-			    EmptyBlockLightMask = EmptyBlockLightMask >> 1;
-		    }
-		   // BlockLightArrays = blockLightList.ToArray();
+        /// <inheritdoc />
+        public override async Task DecodeAsync(MinecraftStream stream)
+        {
+	        ChunkX = await stream.ReadVarIntAsync();
+	        ChunkZ = await stream.ReadVarIntAsync();
+	        Data = await LightingData.FromStreamAsync(stream);
         }
 
-	    public override void Encode(MinecraftStream stream)
+        public override void Encode(MinecraftStream stream)
 	    {
 		    throw new NotImplementedException();
 	    }
+
+        /// <inheritdoc />
+        protected override void ResetPacket()
+        {
+	        base.ResetPacket();
+	        Data = null;
+        }
     }
 }

@@ -28,7 +28,8 @@ namespace Alex.Worlds.Chunks
 		public int X { get; set; }
 		public int Z { get; set; }
 		
-		public           bool           IsNew           { get; set; } = true;
+		public bool IsNew { get; set; } = true;
+		public bool CalculateLighting { get; set; } = true;
 		public           ChunkSection[] Sections { get; set; }
 	//	private readonly int[] _biomeId;
 		private readonly  short[]        _height  = new short[256];

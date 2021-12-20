@@ -874,7 +874,14 @@ namespace Alex.Net.Bedrock
 						alexEffectType = EffectType.Speed;
 						effect = new SpeedEffect();
 						break;
-
+					case MiNET.Effects.EffectType.Haste:
+						alexEffectType = EffectType.Haste;
+						effect = new HasteEffect();
+						break;
+					case MiNET.Effects.EffectType.MiningFatigue:
+						alexEffectType = EffectType.MiningFatigue;
+						effect = new MiningFatigueEffect();
+						break;
 					case MiNET.Effects.EffectType.JumpBoost:
 						alexEffectType = EffectType.JumpBoost;
 						effect = new JumpBoostEffect();

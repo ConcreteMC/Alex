@@ -5,6 +5,7 @@ namespace Alex.Networking.Java.Packets.Play
 {
     public class ClickWindowPacket : Packet<ClickWindowPacket>
     {
+        public int StateId { get; set; }
         public byte WindowId { get; set; }
         public short Slot { get; set; }
         public byte Button { get; set; }
@@ -26,6 +27,7 @@ namespace Alex.Networking.Java.Packets.Play
         public override void Encode(MinecraftStream stream)
         {
             stream.WriteByte(WindowId);
+            stream.WriteVarInt(StateId);
             stream.WriteShort(Slot);
             stream.WriteByte(Button);
         //    stream.WriteShort(Action);

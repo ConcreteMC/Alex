@@ -66,6 +66,7 @@ namespace Alex.Networking.Java.Packets.Play
 		public const string FlyingSpeed   = "generic.flying_speed";
 		public const string MovementSpeed = "generic.movement_speed";
 		public const string GenericMovementSpeed = "minecraft:generic.movement_speed";
+		public const string AttackSpeed = "generic.attack_speed	";
 	}
 
 	public class EntityProperty

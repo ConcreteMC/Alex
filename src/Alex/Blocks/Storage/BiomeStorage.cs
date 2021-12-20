@@ -22,7 +22,7 @@ public class BiomeStorage : GenericStorage<Biome>
 	}
 	
 	/// <inheritdoc />
-	protected override DirectPallete<Biome> GetDirectPalette()
+	protected override DirectPallete<Biome> GetGlobalPalette()
 	{
 		return new DirectPallete<Biome>(GlobalLookup);
 	}

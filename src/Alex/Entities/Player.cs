@@ -610,7 +610,7 @@ namespace Alex.Entities
 		    
 		    Interlocked.Exchange(ref _destroyingTick, 0);
 		    
-		    _destroyTimeNeeded = block.GetBreakTime(Inventory.MainHand ?? new ItemAir()) * 20f;
+		    _destroyTimeNeeded = (block.GetBreakTime(Inventory.MainHand ?? new ItemAir()) * AttackSpeed) * 20f;
 
             Network?.PlayerDigging(DiggingStatus.Started, Raytracer.ResultingCoordinates, face, Raytracer.CursorPosition);
 

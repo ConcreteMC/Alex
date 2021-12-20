@@ -30,7 +30,7 @@ public abstract class GenericStorage<TValue> : IDisposable where TValue : class,
 
 	protected int X = 16, Y = 16, Z = 16;
 
-	protected abstract DirectPallete<TValue> GetDirectPalette();
+	protected abstract DirectPallete<TValue> GetGlobalPalette();
 	
 	public void Set(int x, int y, int z, TValue state)
 	{
@@ -86,7 +86,7 @@ public abstract class GenericStorage<TValue> : IDisposable where TValue : class,
 
 					try
 					{
-						Pallette = GetDirectPalette();
+						Pallette = GetGlobalPalette();
 						Storage = new FlexibleStorage(_bits, _size);
 
 						for (int s = 0; s < _size; s++)
@@ -135,49 +135,72 @@ public abstract class GenericStorage<TValue> : IDisposable where TValue : class,
 	protected abstract int GetIndex(int x, int y, int z);
 
 	protected abstract int CalculateDirectPaletteSize();
-	
+
+	protected virtual IPallete<TValue> ReadIndirectPalette(MinecraftStream ms)
+	{
+		int palleteLength = ms.ReadVarInt();
+		uint[] pallette = new uint[palleteLength];
+		for (int i = 0; i < palleteLength; i++)
+		{
+			pallette[i] = (uint)ms.ReadVarInt();
+		}
+
+		var directPalette = GetGlobalPalette();
+		var palette = new IntIdentityHashBiMap<TValue>(palleteLength + 1);
+		palette.Add(GetDefault());
+
+		for (uint id = 0; id < palleteLength; id++)
+		{
+			uint stateId = pallette[id];
+			TValue state = directPalette.Get(stateId);
+			palette.Put(state, id);
+		}
+
+		return palette;
+	}
+
+	protected virtual IPallete<TValue> ReadSingleValuedPalette(MinecraftStream ms)
+	{
+		var value = ms.ReadVarInt();
+		var directPalette = GetGlobalPalette();
+		return new SinglePallete<TValue>(directPalette.Get((uint)value));
+	}
+
+	protected virtual IPallete<TValue> ReadDirectPalette(MinecraftStream ms)
+	{
+		return GetGlobalPalette();
+	}
+
+	protected virtual IPallete<TValue> ReadPalette(MinecraftStream ms, ref int bitsPerEntry)
+	{
+		if (bitsPerEntry > 0 && bitsPerEntry <= MaxBitsPerEntry)
+			return ReadIndirectPalette(ms);
+
+		if (bitsPerEntry == 0)
+			return ReadSingleValuedPalette(ms);
+
+		bitsPerEntry = CalculateDirectPaletteSize();
+		return ReadDirectPalette(ms);
+	}
+
 	public void Read(MinecraftStream ms)
 	{
+		var oldStorage = Storage;
+		var oldPalette = Pallette;
+		
 		int bitsPerEntry = (byte) ms.ReadUnsignedByte();
-
-		int palleteLength = ms.ReadVarInt();; // = ms.ReadVarInt();
-
+		
 		if (bitsPerEntry <= SmallestValue)
 			bitsPerEntry = SmallestValue;
 
-		var oldStorage = Storage;
-		var oldPalette = Pallette;
-            
+		var palette = ReadPalette(ms, ref bitsPerEntry);
+		var storage = ReadStorage(ms, bitsPerEntry);
+		_bits = bitsPerEntry;
+		
 		try
 		{
-			if (bitsPerEntry > 0 && bitsPerEntry <= MaxBitsPerEntry)
-			{
-				_bits = bitsPerEntry;
-				
-				uint[] pallette = new uint[palleteLength];
-				for (int i = 0; i < palleteLength; i++)
-				{
-					pallette[i] = (uint)ms.ReadVarInt();
-				}
-
-				var directPalette = GetDirectPalette();
-				Pallette = new IntIdentityHashBiMap<TValue>(palleteLength + 1);
-				Pallette.Add(GetDefault());
-
-				for (uint id = 0; id < palleteLength; id++)
-				{
-					uint stateId = pallette[id];
-					TValue state = directPalette.Get(stateId);// _globalLookup(stateId);
-					Pallette.Put(state, id);
-				}
-			}
-			else
-			{
-				_bits = bitsPerEntry = CalculateDirectPaletteSize();
-				Pallette = GetDirectPalette();
-			}
-
-			Storage = ReadStorage(ms, bitsPerEntry);
+			Pallette = palette;
+			Storage = storage;
 		}
 		finally
 		{
@@ -189,7 +212,6 @@ public abstract class GenericStorage<TValue> : IDisposable where TValue : class,
 	private IStorage ReadStorage(MinecraftStream ms, int bitsPerEntry)
 	{
 		int length = ms.ReadVarInt();
-
 		long[] dataArray = new long[length];
 
 		for (int i = 0; i < dataArray.Length; i++)
@@ -197,7 +219,16 @@ public abstract class GenericStorage<TValue> : IDisposable where TValue : class,
 			dataArray[i] = ms.ReadLong();
 		}
 
-		var storage = new FlexibleStorage(bitsPerEntry, _size);
+		IStorage storage;
+		if (bitsPerEntry == 0)
+		{
+			storage = new FlexibleStorage(MaxBitsPerEntry, _size);
+			
+			return storage;
+			bitsPerEntry = 1;
+		}
+
+		storage = new FlexibleStorage(bitsPerEntry, _size);
 		var valueMask = (uint)((1L << bitsPerEntry) - 1);
 
 		int bitOffset = 0;

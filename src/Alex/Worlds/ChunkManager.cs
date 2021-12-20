@@ -341,13 +341,15 @@ namespace Alex.Worlds
 				Stopwatch timingWatch = Stopwatch.StartNew();
 				try
 				{
-					if (chunk.IsNew)
+					if (chunk.CalculateLighting)
 					{
 						if (SkyLightCalculator != null)
 							SkyLightCalculator.Recalculate(chunk);
 
 						if (BlockLightUpdate != null)
 							BlockLightUpdate.RecalculateChunk(chunk);
+
+						chunk.CalculateLighting = false;
 					}
 
 					if (chunk.UpdateBuffer(World, true))

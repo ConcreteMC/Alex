@@ -16,7 +16,8 @@ namespace Alex.Networking.Java.Packets.Play
 		public float Pitch;
 		public byte Flags = 0;
 		public int TeleportId;
-
+		public bool DismountVehicle = false;
+		
 		public override void Decode(MinecraftStream stream)
 		{
 			X = stream.ReadDouble();
@@ -26,6 +27,7 @@ namespace Alex.Networking.Java.Packets.Play
 			Pitch = stream.ReadFloat();
 			Flags = (byte)stream.ReadByte();
 			TeleportId = stream.ReadVarInt();
+			DismountVehicle = stream.ReadBool();
 		}
 
 		public override void Encode(MinecraftStream stream)
@@ -37,6 +39,7 @@ namespace Alex.Networking.Java.Packets.Play
 			stream.WriteFloat(Pitch);
 			stream.WriteByte(Flags);
 			stream.WriteVarInt(TeleportId);
+			stream.WriteBool(DismountVehicle);
 		}
 	}
 

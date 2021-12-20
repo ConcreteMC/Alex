@@ -29,7 +29,7 @@ namespace Alex.Worlds.Lighting
         {
 	        foreach (var section in chunk.Sections)
 	        {
-		        section?.ResetLight(true, false);
+		        //section?.ResetLight(true, false);
 		        section?.RemoveInvalidBlocks();
 	        }
 

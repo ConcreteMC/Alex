@@ -651,11 +651,17 @@ namespace Alex.Worlds
 	        var x = coordinates.X;
 	        var y = coordinates.Y;
 	        var z = coordinates.Z;
-	        
-	        ChunkColumn chunk;
-	        if (ChunkManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
+
+	        var chunkManager = ChunkManager;
+
+	        if (chunkManager != null)
 	        {
-		        chunk.GetLight(x & 0xf, y, z & 0xf, out skyLight, out blockLight);
+		        ChunkColumn chunk;
+
+		        if (chunkManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
+		        {
+			        chunk.GetLight(x & 0xf, y, z & 0xf, out skyLight, out blockLight);
+		        }
 	        }
         }
 

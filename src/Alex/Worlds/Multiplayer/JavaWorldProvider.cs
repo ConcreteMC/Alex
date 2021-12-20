@@ -51,6 +51,7 @@ using Alex.Utils.Commands;
 using Alex.Utils.Inventories;
 using Alex.Utils.Skins;
 using Alex.Worlds.Abstraction;
+using Alex.Worlds.Lighting;
 using Alex.Worlds.Multiplayer.Java;
 using fNbt;
 using Microsoft.Extensions.DependencyInjection;
@@ -143,20 +144,11 @@ namespace Alex.Worlds.Multiplayer
 
 						try
 						{
-							//var blockEntity = BlockEntityFactory.ReadFrom(tag, World, null);
-
-							// if (blockEntity != null)
-							// {
-							int x = tile.X; // tag["x"].IntValue;
-							int y = tile.Y; //tag["y"].IntValue;
-							int z = tile.Z; // tag["z"].IntValue;
+							
+							int x = tile.X;
+							int y = tile.Y; 
+							int z = tile.Z;
 							result.AddBlockEntity(new BlockCoordinates(x, y, z), tag);
-							// }
-							// else
-							// {
-							//    Log.Debug($"Got null block entity: {tag}");
-							//}
-
 						}
 						catch (Exception ex)
 						{
@@ -164,6 +156,25 @@ namespace Alex.Worlds.Multiplayer
 						}
 					}
 
+					var lightingData = obj.LightingData;
+					int skyBit = 0;
+					int blockBit = 0;
+					for (int y = 0; y < result.Sections.Length; y++)
+					{
+						if (lightingData.SkyLightMask.IsSet(y + 1))
+						{
+							var skyLightData = lightingData.SkyLight[skyBit++];
+							result.Sections[y].SkyLight = new LightArray(skyLightData);
+						}
+						
+						if (lightingData.BlockLightMask.IsSet(y + 1))
+						{
+							var blockLightData = lightingData.BlockLight[blockBit++];
+							result.Sections[y].BlockLight = new LightArray(blockLightData);
+						}
+					}
+
+					//result.CalculateLighting = false;
 					World.ChunkManager.AddChunk(result, new ChunkCoordinates(result.X, result.Z), true);
 				}
 			}
@@ -1091,6 +1102,12 @@ namespace Alex.Worlds.Multiplayer
 					case 2:
 						effect = new SlownessEffect();
 						break;
+					case 3:
+						effect = new HasteEffect();
+						break;
+					case 4:
+						effect = new MiningFatigueEffect();
+						break;
 					case 8:
 						effect = new JumpBoostEffect();
 						break;
@@ -1568,6 +1585,9 @@ namespace Alex.Worlds.Multiplayer
 					case MouseButton.Right:
 						button = 1;
 						break;
+					case MouseButton.Middle:
+						button = 2;
+						break;
 				}
 				
 				/*if (e.Value.Id <= 0 || e.Value is ItemAir)
@@ -1582,6 +1602,7 @@ namespace Alex.Worlds.Multiplayer
 				packet.Mode = mode;
 				packet.Button = button;
 				//packet.Action = actionNumber;
+				packet.StateId = inv.StateId;
 				packet.WindowId = (byte) inv.InventoryId;
 				packet.Slot = (short) e.Index;
 				packet.ClickedItem = new SlotData()
@@ -2037,6 +2058,7 @@ namespace Alex.Worlds.Multiplayer
 
 			if (inventory == null) return;
 
+			inventory.StateId = packet.StateId;
 			if (packet.WindowId == -1 && packet.SlotId == -1) //Set cursor
 			{
 				inventory.SetCursor(GetItemFromSlotData(packet.Slot), true);
@@ -2065,6 +2087,7 @@ namespace Alex.Worlds.Multiplayer
 
 			if (inventory == null) return;
 
+			inventory.StateId = packet.StateId;
 			if (packet.Slots != null && packet.Slots.Length > 0)
 			{
 				for (int i = 0; i < packet.Slots.Length; i++)
@@ -2467,9 +2490,35 @@ namespace Alex.Worlds.Multiplayer
 
 		private void HandleUpdateLightPacket(UpdateLightPacket packet)
 		{
-			return;
-			
-        }
+			ThreadPool.QueueUserWorkItem(
+				o =>
+				{
+					var cc = new ChunkCoordinates(packet.ChunkX, packet.ChunkZ);
+
+					if (World.ChunkManager.TryGetChunk(cc, out var chunk))
+					{
+						int skyBit = 0;
+						int blockBit = 0;
+
+						for (int y = 0; y < chunk.Sections.Length; y++)
+						{
+							if (packet.Data.SkyLightMask.IsSet(y + 1))
+							{
+								var skyLightData = packet.Data.SkyLight[skyBit++];
+								chunk.Sections[y].SkyLight = new LightArray(skyLightData);
+							}
+
+							if (packet.Data.BlockLightMask.IsSet(y + 1))
+							{
+								var blockLightData = packet.Data.BlockLight[blockBit++];
+								chunk.Sections[y].BlockLight = new LightArray(blockLightData);
+							}
+						}
+
+						World.ChunkManager.ScheduleChunkUpdate(cc, ScheduleType.Lighting, false);
+					}
+				});
+		}
 		
         private void HandleChunkData(ChunkDataPacket packet)
         {

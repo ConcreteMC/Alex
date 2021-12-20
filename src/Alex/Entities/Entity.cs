@@ -329,6 +329,8 @@ namespace Alex.Entities
 			
 			AddOrUpdateProperty(new FlyingSpeedProperty(this));
 			AddOrUpdateProperty(new MovementSpeedProperty(this));
+			AddOrUpdateProperty(new AttackSpeedProperty(this));
+			
 			Movement = new MovementComponent(this);
 			EntityComponents.Push(Movement);
 			AnimationController = new AnimationComponent(this);
@@ -365,6 +367,18 @@ namespace Alex.Entities
 			set
 			{
 				_entityProperties[Networking.Java.Packets.Play.EntityProperties.MovementSpeed].Value = value;
+			}
+		}
+
+		public double AttackSpeed
+		{
+			get
+			{
+				return _entityProperties[Networking.Java.Packets.Play.EntityProperties.AttackSpeed].Value;
+			}
+			set
+			{
+				_entityProperties[Networking.Java.Packets.Play.EntityProperties.AttackSpeed].Value = value;
 			}
 		}
 
@@ -1647,7 +1661,7 @@ namespace Alex.Entities
 		{
 			IsSpawned = true;
 			
-			HandleEntityFlags(_data, _extendedData);
+			//HandleEntityFlags(_data, _extendedData);
 		}
 
 		public virtual void OnDespawn()
