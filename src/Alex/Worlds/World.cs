@@ -1085,6 +1085,11 @@ namespace Alex.Worlds
 		public void UpdatePlayerPosition(PlayerLocation location, bool teleport = false)
 		{
 			Player.Movement.MoveTo(location);
+
+			if (GetChunk(new ChunkCoordinates(location)) == null)
+			{
+				Player.WaitingOnChunk = true;
+			}
 		}
 
 		public void UpdateEntityPosition(long entityId,

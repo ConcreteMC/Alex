@@ -14,15 +14,16 @@ namespace Alex.Networking.Bedrock.RakNet
         
         private int MtuSize { get; }
 
+        private double _cwnd;
         /// <summary>
         ///      Max bytes on wire
         /// </summary>
-        public double Cwnd
+        public double CongestionWindow
         {
             get => _cwnd;
             private set
             {
-                _cwnd = Math.Clamp(value, 0, MtuSize);
+                _cwnd = value;
             }
         }
 
@@ -63,8 +64,6 @@ namespace Alex.Networking.Bedrock.RakNet
         /// </summary>
         private long _expectedNextSequenceNumber = 0;
 
-        private double _cwnd;
-
         public long NextCongestionControlBlock { get; private set; }
         public bool BackoffThisBlock { get; private set; }
         public bool IsContinuousSend { get; private set; } = false;
@@ -72,7 +71,7 @@ namespace Alex.Networking.Bedrock.RakNet
         public SlidingWindow(int mtuSize)
         {
             MtuSize = mtuSize;
-            Cwnd = mtuSize;
+            CongestionWindow = mtuSize;
         }
 
         public int GetRetransmissionBandwidth(long currentTime, int unAckedBytes)
@@ -87,9 +86,9 @@ namespace Alex.Networking.Bedrock.RakNet
         {
             IsContinuousSend = isContinuousSend;
             
-            if (unAckedBytes <= Cwnd)
+            if (unAckedBytes <= CongestionWindow)
             {
-                return (int) (Cwnd - unAckedBytes);
+                return (int) (CongestionWindow - unAckedBytes);
             }
             else
             {
@@ -98,53 +97,66 @@ namespace Alex.Networking.Bedrock.RakNet
         }
 
         private long _lastPacketReceived = 0;
-        public bool OnPacketReceived(long currentTime, long datagramSequenceNumber, bool isContinuousSend, int sizeInBytes, out long skippedMessageCount)
+
+        public bool OnPacketReceived(long currentTime,
+            long datagramSequenceNumber,
+            bool isContinuousSend,
+            int sizeInBytes,
+            out long skippedMessageCount)
         {
+            if (OldestUnsentAck == 0)
+                OldestUnsentAck = currentTime;
+
             _lastPacketReceived = currentTime;
-            if (datagramSequenceNumber == _expectedNextSequenceNumber)
-             {
-                 skippedMessageCount=0;
-                 _expectedNextSequenceNumber=datagramSequenceNumber+1;
-             }
-             else if (datagramSequenceNumber > _expectedNextSequenceNumber)
-             {
-                 skippedMessageCount = datagramSequenceNumber - _expectedNextSequenceNumber;
-                 // Sanity check, just use timeout resend if this was really valid
-                 if (skippedMessageCount > 1000)
-                 {
-                     // During testing, the nat punchthrough server got 51200 on the first packet. I have no idea where this comes from, but has happened twice
-                     if (skippedMessageCount > 50000)
-                         return false;
-                     
-                     skippedMessageCount=1000;
-                 }
-                 _expectedNextSequenceNumber = datagramSequenceNumber + 1;
-             }
-             else
-             {
-                 skippedMessageCount = 0;
-             }
- 
-             return true;
+
+            var expected = Interlocked.CompareExchange(
+                ref _expectedNextSequenceNumber, datagramSequenceNumber + 1, datagramSequenceNumber);
+
+            if (expected == datagramSequenceNumber)
+            {
+                skippedMessageCount = 0;
+            }
+            else if (datagramSequenceNumber > expected)
+            {
+                skippedMessageCount = datagramSequenceNumber - expected;
+
+                // Sanity check, just use timeout resend if this was really valid
+                if (skippedMessageCount > 1000)
+                {
+                    // During testing, the nat punchthrough server got 51200 on the first packet. I have no idea where this comes from, but has happened twice
+                    if (skippedMessageCount > 50000)
+                        return false;
+
+                    skippedMessageCount = 1000;
+                }
+
+                Interlocked.Exchange(ref _expectedNextSequenceNumber, datagramSequenceNumber + 1);
+            }
+            else
+            {
+                skippedMessageCount = 0;
+            }
+
+            return true;
         }
 
         public void OnResend(long currentTime, long nextActionTime)
         {
-            if (IsContinuousSend && !BackoffThisBlock && Cwnd > MtuSize * 2)
+            if (IsContinuousSend && !BackoffThisBlock && CongestionWindow > MtuSize * 2)
             {
-                SlowStartThreshold = Cwnd / 2;
+                SlowStartThreshold = CongestionWindow / 2;
 
                 if (SlowStartThreshold < MtuSize)
                 {
                     SlowStartThreshold = MtuSize;
                 }
 
-                Cwnd = MtuSize;
+                CongestionWindow = MtuSize;
 
                 NextCongestionControlBlock = Interlocked.Read(ref _nextDatagramSequenceNumber);
                 BackoffThisBlock = true;
                 
-                Log.Info($"(Resend) Enter slow start. Cwnd={Cwnd:F2}");
+                Log.Info($"(Resend) Enter slow start. Cwnd={CongestionWindow:F2}");
             }
         }
 
@@ -156,15 +168,15 @@ namespace Alex.Networking.Bedrock.RakNet
         {
             if (IsContinuousSend && !BackoffThisBlock)
             {
-                SlowStartThreshold = Cwnd / 2D;
+                SlowStartThreshold = CongestionWindow / 2D;
                 
-                Log.Info($"Set congestion avoidance. Cwnd={Cwnd:F2}, SlowStartThreshold={SlowStartThreshold:F2}, NAKSequenceNumber={nakSequenceNumber}");
+                Log.Info($"Set congestion avoidance. Cwnd={CongestionWindow:F2}, SlowStartThreshold={SlowStartThreshold:F2}, NAKSequenceNumber={nakSequenceNumber}");
             }
         }
 
         public long GetAndIncrementNextDatagramSequenceNumber()
         {
-            return Interlocked.Increment(ref _nextDatagramSequenceNumber)  -1;
+            return Interlocked.Increment(ref _nextDatagramSequenceNumber);
         }
 
         /// <summary>
@@ -208,35 +220,35 @@ namespace Alex.Networking.Bedrock.RakNet
             if (isNewCongestionControlPeriod)
             {
                 BackoffThisBlock = false;
-              //  speedUpThisBlock = false;
+                //speedUpThisBlock = false;
                 NextCongestionControlBlock = Interlocked.Read(ref _nextDatagramSequenceNumber);
             }
 
             if (IsInSlowStart())
             {
-                if (Cwnd < MtuSize)
+          //      if (CongestionWindow < MtuSize)
                 {
-                    Cwnd += MtuSize;
+                    CongestionWindow += MtuSize;
 
-                    if (Cwnd > SlowStartThreshold && SlowStartThreshold > 0)
+                    if (CongestionWindow > SlowStartThreshold && SlowStartThreshold > 0)
                     {
-                        Cwnd = SlowStartThreshold + MtuSize * MtuSize / Cwnd;
+                        CongestionWindow = SlowStartThreshold + MtuSize * MtuSize / CongestionWindow;
                     }
 
-                    Log.Info($"Slow start increase... Cwnd={Cwnd:F2}");
+                    Log.Info($"Slow start increase... Cwnd={CongestionWindow:F2}");
                 }
             }
             else if (isNewCongestionControlPeriod)
             {
-                Cwnd += MtuSize * MtuSize / Cwnd;
+                CongestionWindow += MtuSize * MtuSize / CongestionWindow;
                 
-                Log.Info($"Congestion avoidance increase... Cwnd={Cwnd:F2}");
+                Log.Info($"Congestion avoidance increase... Cwnd={CongestionWindow:F2}");
             }
         }
 
         public bool IsInSlowStart()
         {
-            return Cwnd <= SlowStartThreshold || SlowStartThreshold <= 0;
+            return CongestionWindow <= SlowStartThreshold || SlowStartThreshold <= 0;
         }
 
         /// <summary>

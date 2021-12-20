@@ -132,13 +132,13 @@ namespace Alex.Gui.Elements.Scoreboard
 			if (SortOrder == 0) //Ascending
 			{
 				entries = entries.OrderBy(x => x.Value.Score).ToArray();
-				previousScore = entries.Max(x => x.Value.Score);
 			}
 			else if (SortOrder == 1)//Descending
 			{
 				entries = entries.OrderByDescending(x => x.Value.Score).ToArray();
-				previousScore = entries.Min(x => x.Value.Score);
 			}
+
+			previousScore = entries[0].Value.Score;
 			
 			RemoveChild(_spacer);
 
@@ -154,17 +154,26 @@ namespace Alex.Gui.Elements.Scoreboard
 			}
 
 			bool showScores = false;
-			foreach (var entry in entries)
+			long maxDifference = 0;
+
+			for (var index = 0; index < entries.Length; index++)
 			{
-				if (!showScores && Math.Abs(previousScore - entry.Value.Score) > 1)
-				{
-					showScores = true;
-				}
-				
-				AddChild(entry.Value);
+				var entry = entries[index];
+				var difference = (long)Math.Abs(entry.Value.Score - previousScore);
+
+				maxDifference = Math.Max(difference, maxDifference);
+
 				previousScore = entry.Value.Score;
+
+				AddChild(entry.Value);
 			}
 
+			if (maxDifference > 1 && CriteriaName != "dummy")
+			{
+				showScores = true;
+				//Log.Info($"Max difference: {maxDifference}");
+			}
+			
 			foreach (var element in entries)
 			{
 				element.Value.ShowScore = showScores;

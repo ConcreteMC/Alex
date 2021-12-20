@@ -85,7 +85,7 @@ namespace Alex.Net.Bedrock
 
 		private CancellationTokenSource CancellationTokenSource { get; }
 		
-		public bool CanSpawn => PlayerStatus == 3;
+		public bool CanSpawn => PlayerStatus == McpePlayStatus.PlayStatus.PlayerSpawn;
 
 		public AutoResetEvent ChangeDimensionResetEvent { get; } = new AutoResetEvent(false);
 		public RaknetConnection Connection { get; }
@@ -244,7 +244,7 @@ namespace Alex.Net.Bedrock
 			long fails = Interlocked.Exchange(ref Connection.ConnectionInfo.Fails, 0L);
 
 			string str =
-				$"Pkt in/out(#/s) {packetCountIn}/{packetCountOut}, ACK in/out(#/s) {ackReceived}/{ackSent}, NAK in/out(#/s) {nakReceive}/{nakSent}, THR in/out(Kbps){throughPutIn:F2}/{throughtPutOut:F2}, RTT {Session.SlidingWindow.GetRtt()}, RTO {Session.SlidingWindow.GetRtoForRetransmission()}, CWND {Session.SlidingWindow.Cwnd}, UnAcked {Session.UnackedBytes}";
+				$"Pkt in/out(#/s) {packetCountIn}/{packetCountOut}, ACK in/out(#/s) {ackReceived}/{ackSent}, NAK in/out(#/s) {nakReceive}/{nakSent}, THR in/out(Kbps){throughPutIn:F2}/{throughtPutOut:F2}, RTT {Session.SlidingWindow.GetRtt()}, RTO {Session.SlidingWindow.GetRtoForRetransmission()}, CWND {Session.SlidingWindow.CongestionWindow}, UnAcked {Session.UnackedBytes}";
 
 			if (LoggingConstants.LogNetworkStatistics)
 				Log.Info(str);
@@ -389,7 +389,7 @@ namespace Alex.Net.Bedrock
 		//public int ChunkRadius { get; set; }
 		public long EntityId { get; set; }
 		public long NetworkEntityId { get; set; }
-		public int PlayerStatus { get; set; }
+		public McpePlayStatus.PlayStatus PlayerStatus { get; set; }
 
 		private void RenderDistanceChanged(int oldvalue, int newvalue)
 		{

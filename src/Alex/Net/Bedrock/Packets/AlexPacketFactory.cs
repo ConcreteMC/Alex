@@ -2,6 +2,7 @@ using System;
 using MiNET.Net;
 using MiNET.Net.RakNet;
 using NLog;
+using Datagram = Alex.Networking.Bedrock.RakNet.Datagram;
 
 namespace Alex.Net.Bedrock.Packets
 {
@@ -25,9 +26,9 @@ namespace Alex.Net.Bedrock.Packets
             {
 
                 //Hack to spawn on the Hive
-               // case 132:
-              //      PrevBuffer = buffer.ToArray();
-               //    break;
+                //case 0x84:
+                //    packet = Datagram.CreateObject();
+                //    break;
                 case 16:
                    packet = ConnectionRequestAccepted.CreateObject();
                     break;

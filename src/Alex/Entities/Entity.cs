@@ -1548,29 +1548,6 @@ namespace Alex.Entities
 					(float) (pos.X + halfWidth), (float) (pos.Y + (height * Scale)), (float) (pos.Z + halfDepth)));
 		}
 
-		public bool IsColliding(Entity other)
-		{
-			return IsColliding(GetBoundingBox(), other);
-		}
-
-		public bool IsColliding(BoundingBox bbox, Entity other)
-		{
-			//if (!Compare((int) KnownPosition.X, (int) other.KnownPosition.X, 5)) return false;
-			//if (!Compare((int) KnownPosition.Z, (int) other.KnownPosition.Z, 5)) return false;
-			if (!Compare((int) KnownPosition.X, (int) other.KnownPosition.X, 4)) return false;
-			if (!Compare((int) KnownPosition.Z, (int) other.KnownPosition.Z, 4)) return false;
-			if (!bbox.Intersects(other.GetBoundingBox())) return false;
-
-			return true;
-		}
-
-		private bool Compare(int a, int b, int m)
-		{
-			a = a >> m;
-			b = b >> m;
-			return a == b || a == b - 1 || a == b + 1;
-		}
-
 		public virtual float CollidedWithWorld(Vector3 direction, Vector3 position, float impactVelocity)
 		{
 			if (direction == Vector3.Down)
@@ -1588,11 +1565,6 @@ namespace Alex.Entities
 			}
 
 			return 0;
-		}
-
-		protected void ToggleCubes(ModelBone bone, bool isInvisible)
-		{
-			
 		}
 
 		private bool _disposed = false;
@@ -1674,6 +1646,8 @@ namespace Alex.Entities
 		public virtual void OnSpawn()
 		{
 			IsSpawned = true;
+			
+			HandleEntityFlags(_data, _extendedData);
 		}
 
 		public virtual void OnDespawn()

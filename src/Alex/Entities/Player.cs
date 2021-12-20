@@ -265,17 +265,6 @@ namespace Alex.Entities
 	    {
 		    base.Update(args);
 
-		    if (WaitingOnChunk)
-		    {
-			  //  NoAi = true;
-
-			    if (Level.GetChunk(KnownPosition.GetCoordinates3D(), true) != null)
-			    {
-				    WaitingOnChunk = false;
-				   // NoAi = false;
-			    }
-		    }
-
 		    if (!IsSpawned)
 			    return;
 
@@ -868,6 +857,17 @@ namespace Alex.Entities
 	    //private vector
 	    public override void OnTick()
 		{
+			if (WaitingOnChunk)
+			{
+				//  NoAi = true;
+
+				if (Level.GetChunk(KnownPosition.GetCoordinates3D(), true) != null)
+				{
+					WaitingOnChunk = false;
+					// NoAi = false;
+				}
+			}
+			
 			if (_destroyingBlock)
 			{
 				BlockBreakTick();

@@ -44,7 +44,7 @@ namespace Alex.Networking.Bedrock.RakNet
 
 			Header = new InternalDatagramHeader(ReadByte());
 			Header.DatagramSequenceNumber = ReadLittle();
-
+			
 			// End datagram, online packet starts
 
 			Messages.Clear();// = new List<Packet>();
@@ -95,7 +95,7 @@ namespace Alex.Networking.Bedrock.RakNet
 				}
 
 				// Slurp the payload
-				int messageLength = (int) Math.Ceiling((((double) dataBitLength) / 8));
+				int messageLength = dataBitLength / 8;
 				ReadOnlyMemory<byte> internalBuffer = Slice(messageLength);
 				if (internalBuffer.Length != messageLength) Log.Error($"Didn't get expected length {internalBuffer.Length}");
 				if (internalBuffer.Length == 0) continue ; //Log.Error($"Read length {internalBuffer.Length}, expected {messageLength}");
@@ -115,7 +115,7 @@ namespace Alex.Networking.Bedrock.RakNet
 				else
 				{
 					byte id = internalBuffer.Span[0];
-					Packet packet = PacketFactory.Create(id, internalBuffer, "raknet") ?? new UnknownPacket(id, internalBuffer.ToArray());
+					Packet packet = PacketFactory.Create(id, internalBuffer, "raknet") ?? new UnknownPacket(id, internalBuffer);
 					packet.ReliabilityHeader = header;
 
 					Messages.Add(packet);

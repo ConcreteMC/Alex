@@ -284,11 +284,14 @@ namespace Alex.Worlds.Multiplayer
 
 			World.Player.OnSpawn();
 			OnSpawn();
+			
 			_gameStarted = true;
 			
 			if (resourcePackManager != null)
 				resourcePackManager.StatusChanged -= statusHandler;
-			
+
+			progressReport(LoadingState.Spawning, 99, "Waiting for Spawn Chunk");
+			SpinWait.SpinUntil(() => !World.Player.WaitingOnChunk);
 			return LoadResult.Done;
 		}
 

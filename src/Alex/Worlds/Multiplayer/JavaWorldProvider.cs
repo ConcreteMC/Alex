@@ -116,7 +116,7 @@ namespace Alex.Worlds.Multiplayer
 			networkProvider = NetworkProvider;
 			
 			var blockOptions =
-				new ExecutionDataflowBlockOptions { CancellationToken = CancellationToken.None, EnsureOrdered = false, NameFormat = "Java Chunker: {0}-{1}", MaxDegreeOfParallelism = 1};
+				new ExecutionDataflowBlockOptions { CancellationToken = CancellationToken.None, EnsureOrdered = false, NameFormat = "Java Chunker: {0}-{1}", MaxDegreeOfParallelism = 2};
 			_chunkQueue = new BufferBlock<ChunkDataPacket>(blockOptions);
 	        
 			var handleBufferItemBlock = new ActionBlock<ChunkDataPacket>(HandleChunkDataPacket, blockOptions);
@@ -126,43 +126,50 @@ namespace Alex.Worlds.Multiplayer
 
 		private void HandleChunkDataPacket(ChunkDataPacket obj)
 		{
-			using (var memoryStream = new MemoryStream(obj.Buffer.ToArray()))
-			using (var stream = new MinecraftStream(memoryStream))
+			try
 			{
-				JavaChunkColumn result  = new JavaChunkColumn(obj.ChunkX, obj.ChunkZ, WorldSettings);
-				result.Read(stream, obj.HeightMaps, World.Dimension == Dimension.Overworld);
-
-				foreach (var tile in obj.TileEntities)
+				using (var memoryStream = new MemoryStream(obj.Buffer.ToArray()))
+				using (var stream = new MinecraftStream(memoryStream))
 				{
-					var tag = tile.Data;
-					if (tag == null || !(tag.Contains("id")))
-						continue;
+					JavaChunkColumn result = new JavaChunkColumn(obj.ChunkX, obj.ChunkZ, WorldSettings);
+					result.Read(stream, obj.HeightMaps, World.Dimension == Dimension.Overworld);
 
-					try
+					foreach (var tile in obj.TileEntities)
 					{
-						//var blockEntity = BlockEntityFactory.ReadFrom(tag, World, null);
+						var tag = tile.Data;
 
-						// if (blockEntity != null)
-						// {
-						int x = tile.X;// tag["x"].IntValue;
-						int y = tile.Y;//tag["y"].IntValue;
-						int z = tile.Z;// tag["z"].IntValue;
-						result.AddBlockEntity(
-							new BlockCoordinates(x,y,z), tag);
-						// }
-						// else
-						// {
-						//    Log.Debug($"Got null block entity: {tag}");
-						//}
+						if (tag == null || !(tag.Contains("id")))
+							continue;
 
+						try
+						{
+							//var blockEntity = BlockEntityFactory.ReadFrom(tag, World, null);
+
+							// if (blockEntity != null)
+							// {
+							int x = tile.X; // tag["x"].IntValue;
+							int y = tile.Y; //tag["y"].IntValue;
+							int z = tile.Z; // tag["z"].IntValue;
+							result.AddBlockEntity(new BlockCoordinates(x, y, z), tag);
+							// }
+							// else
+							// {
+							//    Log.Debug($"Got null block entity: {tag}");
+							//}
+
+						}
+						catch (Exception ex)
+						{
+							Log.Warn(ex, "Could not add block entity!");
+						}
 					}
-					catch (Exception ex)
-					{
-						Log.Warn(ex, "Could not add block entity!");
-					}
+
+					World.ChunkManager.AddChunk(result, new ChunkCoordinates(result.X, result.Z), true);
 				}
-				
-				World.ChunkManager.AddChunk(result, new ChunkCoordinates(result.X, result.Z), true);
+			}
+			finally
+			{
+				obj.PutPool();
 			}
 		}
 
@@ -309,7 +316,11 @@ namespace Alex.Worlds.Multiplayer
 
 		private void SendPlayerPosition(PlayerLocation pos, SendPositionReason reason = SendPositionReason.Other)
 		{
-			//Log.Info($"Sending PlayerPosition: {reason}");
+			/*if (reason == SendPositionReason.Tick && (!ReadyToSpawn || !HasSpawnPosition || !World.Player.IsSpawned))
+			{
+				return;
+			}
+			Log.Info($"Sending PlayerPosition: {reason}");*/
 			
 			PlayerPosition packet = PlayerPosition.CreateObject();
 			packet.FeetY = pos.Y;
@@ -335,7 +346,11 @@ namespace Alex.Worlds.Multiplayer
 		
 		private void SendPlayerPositionAndLook(PlayerLocation pos, SendPositionReason reason = SendPositionReason.Other)
 		{
-			//Log.Info($"Sending PlayerPositionAndLook: {reason}");
+			/*if (reason == SendPositionReason.Tick && (!ReadyToSpawn || !HasSpawnPosition || !World.Player.IsSpawned))
+			{
+				return;
+			}
+			Log.Info($"Sending PlayerPositionAndLook: {reason}");*/
 			
 			PlayerPositionAndLookPacketServerBound packet = PlayerPositionAndLookPacketServerBound.CreateObject();
 			packet.Yaw = FixRotation(-pos.HeadYaw);
@@ -353,7 +368,11 @@ namespace Alex.Worlds.Multiplayer
 
 		private void SendPlayerLook(PlayerLocation pos, SendPositionReason reason = SendPositionReason.Other)
 		{
-			//Log.Info($"Sending playerlook: {reason}");
+			/*if (reason == SendPositionReason.Tick && (!ReadyToSpawn || !HasSpawnPosition || !World.Player.IsSpawned))
+			{
+				return;
+			}
+			Log.Info($"Sending playerlook: {reason}");*/
 			PlayerLookPacket playerLook = PlayerLookPacket.CreateObject();
 			playerLook.Yaw = -FixRotation(pos.HeadYaw);
 			playerLook.Pitch = -pos.Pitch;
@@ -374,7 +393,6 @@ namespace Alex.Worlds.Multiplayer
 		}
 		
 		private bool                            _hasDoneInitialChunks = false;
-		private BlockingCollection<ChunkColumn> _generatingHelper     = new BlockingCollection<ChunkColumn>();
 		private int                             _chunksReceived       = 0;
 
 		private LoadResult DetermineDisconnectReason()
@@ -482,10 +500,11 @@ namespace Alex.Worlds.Multiplayer
 						progressReport(LoadingState.Spawning, 99);
 					}
 
-					return (loaded >= target && allowSpawn && _hasDoneInitialChunks && ReadyToSpawn)
+					return ((loaded >= target / 2f) && allowSpawn && _hasDoneInitialChunks && ReadyToSpawn)
 					       || _disconnected; // Spawned || _disconnected;
 				});
 
+			//World.Player.OnSpawn();
 			if (ReadyToSpawn && HasSpawnPosition)
 			{
 				
@@ -1526,6 +1545,8 @@ namespace Alex.Worlds.Multiplayer
 
 		private void HandleSpawnPositionPacket(SpawnPositionPacket packet)
 		{
+			Log.Info($"Received SpawnPosition");
+			
 			World.SpawnPoint = packet.SpawnPosition;
 			HasSpawnPosition = true;
 		}
@@ -2452,6 +2473,8 @@ namespace Alex.Worlds.Multiplayer
 		
         private void HandleChunkData(ChunkDataPacket packet)
         {
+	        packet.AddReferences(1);
+	        
 	        _chunksReceived++;
 	        _chunkQueue.Post(packet);
         }
@@ -2549,12 +2572,15 @@ namespace Alex.Worlds.Multiplayer
 					Pitch = pitch
 				});
 
-			// if (World.Player.IsSpawned)
-			//{
+			if (HasSpawnPosition )
+			{
 				TeleportConfirm confirmation = TeleportConfirm.CreateObject();
 				confirmation.TeleportId = packet.TeleportId;
 				SendPacket(confirmation);
-			//}
+				
+				
+				SendPlayerPositionAndLook(World.Player.KnownPosition, SendPositionReason.Other);
+			}
 
 			//UpdatePlayerPosition(
 			//	new PlayerLocation(packet.X, packet.Y, packet.Z, packet.Yaw, packet.Yaw, pitch: packet.Pitch));
@@ -2562,8 +2588,6 @@ namespace Alex.Worlds.Multiplayer
 			if (!ReadyToSpawn)
 			{
 				Log.Info($"Ready to spawn!");
-				
-				//World.Player.IsSpawned = true;
 				ReadyToSpawn = true;
 			}
 		}

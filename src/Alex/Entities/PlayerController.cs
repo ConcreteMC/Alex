@@ -277,21 +277,23 @@ namespace Alex.Entities
 		private void OpenMap()
 		{
 			var dialog = new MapDialog(Player.Level.Map);
-			Alex.Instance.GuiManager.ShowDialog(dialog);
+			dialog.GuiManager = Alex.Instance.GuiManager;
+			
+			dialog.Show();
 		}
 
 		private void OpenInventory()
 		{
 			var dialog = new GuiPlayerInventoryDialog(Player, Player.Inventory);
-
+			dialog.GuiManager = Alex.Instance.GuiManager;
+			
 			if (Player.Network is BedrockClient client)
 			{
 				dialog.TransactionTracker = client.TransactionTracker;
 			}
 
 			//_allowMovementInput = false;H
-			    
-			Alex.Instance.GuiManager.ShowDialog(dialog);
+			dialog.Show();
 		}
 
 		private bool CheckMovementPredicate()
@@ -344,6 +346,28 @@ namespace Alex.Entities
 		public void Update(GameTime gameTime)
 		{
 			UpdatePlayerInput(gameTime);
+
+			bool isShown = Alex.Instance.IsMouseVisible;
+			
+			bool showCursor = false;
+			if (Alex.Instance.IsActive)
+			{
+				bool hasActiveDialog = GetActiveDialog(out _);
+
+				if (hasActiveDialog || !CanOpenDialog())
+				{
+					showCursor = true;
+				}
+			}
+			else
+			{
+				showCursor = true;
+			}
+
+			if (showCursor != isShown)
+			{
+				Alex.Instance.IsMouseVisible = showCursor;
+			}
 		}
 
 	    private void UpdatePlayerInput(GameTime gt)
@@ -389,7 +413,7 @@ namespace Alex.Entities
 				    return;
 
 			    CenterCursor();
-			    Alex.Instance.GuiManager.HideDialog(dialog);
+			    dialog.Close();
 			    Player.SkipUpdate();
 		    }
 		    else if (CanOpenDialog())

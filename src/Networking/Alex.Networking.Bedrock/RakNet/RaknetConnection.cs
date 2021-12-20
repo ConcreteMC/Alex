@@ -367,7 +367,7 @@ namespace Alex.Networking.Bedrock.RakNet
 				{
 					rakSession.Disconnect("Bad packet received from server.");
 
-					Log.Warn(e, $"Bad packet {receivedBytes.Span[0]}\n{Packet.HexDump(receivedBytes)}");
+					Log.Warn(e, $"Bad packet: {receivedBytes.Span[0]}\n{Packet.HexDump(receivedBytes)} ({datagram.Header.ToString()})");
 
 					return;
 				}
@@ -488,6 +488,7 @@ namespace Alex.Networking.Bedrock.RakNet
 			datagram.RetransmissionTimeOut = rto;
 			datagram.Header.DatagramSequenceNumber = sequenceNumber;
 			datagram.RetransmitImmediate = false;
+			datagram.Header.HasBAndAs = false;
 			//datagram.Header.NeedsBAndAs = session.SlidingWindow.IsInSlowStart();
 			//datagram.Header.IsContinuousSend = session.SlidingWindow.IsContinuousSend;
 			//datagram.Header.IsContinuousSend = session.SlidingWindow.

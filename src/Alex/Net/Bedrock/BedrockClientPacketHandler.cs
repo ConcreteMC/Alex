@@ -127,23 +127,11 @@ namespace Alex.Net.Bedrock
         }
         
         public void HandleMcpePlayStatus(McpePlayStatus message)
-		{
-			Log.Info($"Client status: {message.status}");
-			Client.PlayerStatus = message.status;
+        {
+	        var playStatus = (McpePlayStatus.PlayStatus)message.status;
+			Client.PlayerStatus = playStatus;
 
-			if (Client.PlayerStatus == 1)
-			{
-				Client.ShowDisconnect("multiplayer.status.client_out_of_date", true, true, DisconnectReason.Network);
-			}
-			else if (Client.PlayerStatus == 2)
-			{
-				Client.ShowDisconnect("multiplayer.status.server_out_of_date", true, true, DisconnectReason.Network);
-			}
-			else if (Client.PlayerStatus == 3)
-			{
-				//Client.MarkAsInitialized();
-			}
-			else if (Client.PlayerStatus == 0)
+			if (playStatus == McpePlayStatus.PlayStatus.LoginSuccess)
 			{
 				Log.Info($"Play Status: Login success, reporting cache status as {(ChunkProcessor.Cache.Enabled ? "Enabled" : "Disabled")}");
 				
@@ -151,9 +139,24 @@ namespace Alex.Net.Bedrock
 				status.enabled = ChunkProcessor.Cache.Enabled;
 				Client.SendPacket(status);
 			}
+			else if (playStatus == McpePlayStatus.PlayStatus.LoginFailedClient)
+			{
+				Log.Info($"Client out of date!");
+				Client.ShowDisconnect("multiplayer.status.client_out_of_date", true, true, DisconnectReason.Network);
+			}
+			else if (playStatus == McpePlayStatus.PlayStatus.LoginFailedServer)
+			{
+				Log.Info($"Server out of date!");
+				Client.ShowDisconnect("multiplayer.status.server_out_of_date", true, true, DisconnectReason.Network);
+			}
+			else if (playStatus == McpePlayStatus.PlayStatus.PlayerSpawn)
+			{
+				Log.Info($"Play Status: Player spawn");
+				//Client.MarkAsInitialized();
+			}
 			else
 			{
-				Log.Warn($"Received unknown Play Status... {message.status}");
+				Log.Warn($"Received unknown Play Status: ({message.status}){playStatus}");
 				Client.ShowDisconnect($"Unrecognized play status.", false, true, DisconnectReason.Network);
 			}
 		}
@@ -555,34 +558,33 @@ namespace Alex.Net.Bedrock
 
 		public void HandleMcpeMoveEntityDelta(McpeMoveEntityDelta message)
 		{
-			if (message.runtimeEntityId != Client.EntityId)
-			{
+			if (message.runtimeEntityId == Client.EntityId) return;
+
 			//	if (message is EntityDelta ed)
+			{
+				if (Client.World.TryGetEntity(message.runtimeEntityId, out var entity))
 				{
-					if (Client.World.TryGetEntity(message.runtimeEntityId, out var entity))
+					var pos = new MiNET.Utils.Vectors.PlayerLocation(
+						entity.KnownPosition.X, entity.KnownPosition.Y, entity.KnownPosition.Z,
+						entity.KnownPosition.HeadYaw, entity.KnownPosition.Yaw, entity.KnownPosition.Pitch);
+
+					var known = message.GetCurrentPosition(pos);
+
+					var newPosition = new PlayerLocation(
+						known.X, known.Y, known.Z, known.HeadYaw, known.Yaw, known.Pitch);
+
+					if ((message.flags & McpeMoveEntityDelta.HasY) != 0)
 					{
-						var pos = new MiNET.Utils.Vectors.PlayerLocation(
-							entity.KnownPosition.X, entity.KnownPosition.Y, entity.KnownPosition.Z,
-							entity.KnownPosition.HeadYaw, entity.KnownPosition.Yaw, entity.KnownPosition.Pitch);
-
-						var known = message.GetCurrentPosition(pos);
-
-						var newPosition = new PlayerLocation(
-							known.X, known.Y, known.Z, known.HeadYaw, known.Yaw, known.Pitch);
-
-						if ((message.flags & McpeMoveEntityDelta.HasY) != 0)
+						if (entity is RemotePlayer player)
 						{
-							if (entity is RemotePlayer player)
-							{
-								newPosition.Y -= Player.EyeLevel;
-							}
+							newPosition.Y -= Player.EyeLevel;
 						}
-						
-						Client.World.UpdateEntityPosition(
-							message.runtimeEntityId,
-							newPosition, false,
-							true, true, false, false);
 					}
+						
+					Client.World.UpdateEntityPosition(
+						message.runtimeEntityId,
+						newPosition, false,
+						true, true, false, false);
 				}
 			}
 		}
@@ -1031,16 +1033,20 @@ namespace Alex.Net.Bedrock
 		public void HandleMcpeSetEntityData(McpeSetEntityData message)
 		{
 			Entity entity = null;
-			if (!Client.World.TryGetEntity(message.runtimeEntityId, out entity))
+			if (Client.EntityId == message.runtimeEntityId || message.runtimeEntityId == Client.World.Player.EntityId)
 			{
-				if (Client.EntityId == message.runtimeEntityId)
-				{
-					entity = Client.World.Player;
-				}
+				entity = Client.World.Player;
+			}
+			else if (Client.World.TryGetEntity(message.runtimeEntityId, out var e))
+			{
+				entity = e;
 			}
 
 			if (entity == null)
+			{
+			//	Log.Warn($"Unknown entity in SetEntityData: {message.runtimeEntityId}");
 				return;
+			}
 
 			entity.HandleMetadata(message.metadata);
 		}
@@ -1459,44 +1465,54 @@ namespace Alex.Net.Bedrock
 		private SemaphoreSlim _changeDimensionSemaphone = new SemaphoreSlim(1);
 		public void HandleMcpeChangeDimension(McpeChangeDimension message)
 		{
-			Log.Info($"Change dimension! Dimension={message.dimension} Respawn={message.respawn} Position={message.position}");
+			Log.Info($"Initiating dimension change! Dimension={message.dimension} Respawn={message.respawn} Position={message.position}");
+
+			World world = Client.World;
+			world.Dimension = (Dimension)message.dimension;
+			
+			Client.ResetInitialized();
+			var pos = new PlayerLocation(message.position.X, message.position.Y, message.position.Z);
+			Client.ChunkPublisherPosition = new BlockCoordinates(pos);
+						
+			world.UpdatePlayerPosition(pos, true);
+
+			ChunkProcessor.Clear();
+			world.ClearChunksAndEntities();
+
+			WorldProvider?.BossBarContainer?.Reset();
+			_bossBarMapping.Clear();
+
+			McpePlayerAction action = McpePlayerAction.CreateObject();
+			action.runtimeEntityId = Client.EntityId;
+			action.actionId = (int) PlayerAction.DimensionChangeAck;
+			Client.SendPacket(action);
+			
+			if (!_changeDimensionSemaphone.Wait(10, CancellationToken))
+			{
+				return;
+			}
+			
+			Client.World.Player.OnDespawn();
+
+			bool cancelled = false;
+			WorldLoadingDialog worldLoadingDialog = AlexInstance.GuiManager.CreateDialog<WorldLoadingDialog>();
+			worldLoadingDialog.ConnectingToServer = true;
+			worldLoadingDialog.CancelAction = () =>
+			{
+				cancelled = true;
+
+				Client.ShowDisconnect("Disconnect requested by user.", false, false, DisconnectReason.Unknown);
+
+				Client.Close();
+			};
+
+			worldLoadingDialog.UpdateProgress(LoadingState.LoadingChunks, 0);
+			
 			ThreadPool.QueueUserWorkItem(
 				(o) =>
 				{
-					_changeDimensionSemaphone.Wait(CancellationToken);
-					//if (!Monitor.TryEnter(_changeDimensionLock))
-					//	return;
-					
-					Client.World.Player.OnDespawn();
-					
-					bool cancelled = false;
-					WorldLoadingDialog worldLoadingDialog = AlexInstance.GuiManager.CreateDialog<WorldLoadingDialog>();
-					worldLoadingDialog.ConnectingToServer = true;
-					worldLoadingDialog.CancelAction = () =>
-					{
-						cancelled = true;
-
-						Client.ShowDisconnect("Disconnect requested by user.", false, false, DisconnectReason.Unknown);
-
-						Client.Close();
-					};
-
-					worldLoadingDialog.UpdateProgress(LoadingState.LoadingChunks, 0);
-					ChunkProcessor.Clear();
 					try
 					{
-						Client.ResetInitialized();
-						
-						World world = Client.World;
-						
-						WorldProvider?.BossBarContainer?.Reset();
-						_bossBarMapping.Clear();
-						
-						world.ClearChunksAndEntities();
-
-						world.UpdatePlayerPosition(
-							new PlayerLocation(message.position.X, message.position.Y, message.position.Z), true);
-
 						int percentage = 0;
 						bool ready = false;
 						int previousPercentage = 0;
@@ -1529,19 +1545,16 @@ namespace Alex.Net.Bedrock
 								}
 							}
 
-							if (Client.CanSpawn)
+							if (Client.CanSpawn && !Client.World.Player.WaitingOnChunk)
 							{
 								break;
 							}
 						} while (Client.IsConnected);
-						
-						McpePlayerAction action = McpePlayerAction.CreateObject();
-						action.runtimeEntityId = Client.EntityId;
-						action.actionId = (int) PlayerAction.DimensionChangeAck;
-						Client.SendPacket(action);
-						
+
 						Client.MarkAsInitialized();
 						Client.World.Player.OnSpawn();
+						
+						Log.Info($"Finished Respawn. Dimension={Client.World.Dimension}");
 					}
 					finally
 					{

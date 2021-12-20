@@ -172,18 +172,17 @@ namespace Alex.Gui.Elements.Map
 		/// <inheritdoc />
 		public override Texture2D GetTexture(GraphicsDevice device)
 		{
-			if (_texture == null)
+			var texture = _texture;
+			if (texture == null)
 			{
 				var data = GetData();
 
-				var texture = new Texture2D(device, Width, Height);
+				texture = new Texture2D(device, Width, Height);
 
 				if (data != null)
 				{
 					texture.SetData(data);
 				}
-
-				_texture = texture;
 			}
 
 			if (HasChanges && !IsDirty)
@@ -191,10 +190,11 @@ namespace Alex.Gui.Elements.Map
 				var data = GetData();
 				
 				if (data != null)
-					_texture.SetData(data);
+					texture.SetData(data);
 			}
 
-			return _texture;	
+			_texture = texture;
+			return texture;	
 		}
 
 		/// <inheritdoc />
@@ -202,6 +202,12 @@ namespace Alex.Gui.Elements.Map
 		protected override void Dispose(bool disposing)
 		{
 			base.Dispose(disposing);
+
+			if (disposing)
+			{
+				_texture?.Dispose();
+				_texture = null;
+			}
 		}
 	}
 }

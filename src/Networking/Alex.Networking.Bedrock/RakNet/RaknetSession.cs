@@ -394,25 +394,17 @@ namespace Alex.Networking.Bedrock.RakNet
 			try
 
 			{
+				SendAckQueue();
+				
 				if (_tickCounter++ >= 5)
 				{
-					SendAckQueue();
-
 					SendQueue();
-
 					DoResends();
-
 					CheckTimeout();
-
-					SendNackQueue();
-
 					_tickCounter = 0;
 				}
-				else
-				{
-					SendAckQueue();
-					SendNackQueue();
-				}
+				
+				SendNackQueue();
 			}
 			catch (Exception e)
 			{
@@ -435,7 +427,7 @@ namespace Alex.Networking.Bedrock.RakNet
 			
 				if (WaitingForAckQueue.Count == 0) return;
 
-				//long rto = session.SlidingWindow.GetRtoForRetransmission();
+			//	long rto = SlidingWindow.GetRtoForRetransmission();
 				//if (rto == 0) return;
 
 				int transmissionBandwidth = SlidingWindow.GetRetransmissionBandwidth(CurrentTimeMillis(), UnackedBytes);
@@ -460,10 +452,10 @@ namespace Alex.Networking.Bedrock.RakNet
 
 					long elapsedTime = datagram.Timer.ElapsedMilliseconds;
 					long datagramTimeout = datagram.RetransmissionTimeOut;
-					datagramTimeout = Math.Min(datagramTimeout, 3000);
-					datagramTimeout = Math.Max(datagramTimeout, 100);
+					//datagramTimeout = Math.Min(datagramTimeout, 3000);
+					//datagramTimeout = Math.Max(datagramTimeout, 100);
 
-					if (datagram.RetransmitImmediate || elapsedTime >= datagramTimeout)
+					if (datagram.RetransmitImmediate || elapsedTime >= datagram.RetransmissionTimeOut)
 					{
 						if (!Evicted && WaitingForAckQueue.TryRemove(datagramPair.Key, out datagram))
 						{
@@ -605,7 +597,7 @@ namespace Alex.Networking.Bedrock.RakNet
 			try
 			{
 				var unacked = UnackedBytes;
-				int transmissionBandwidth = this.SlidingWindow.GetTransmissionBandwidth(this.UnackedBytes, _bandwidthExceededStatistic);
+				int transmissionBandwidth = this.SlidingWindow.GetTransmissionBandwidth(unacked, _bandwidthExceededStatistic);
 
 				if (transmissionBandwidth <= 0)
 				{
@@ -676,8 +668,9 @@ namespace Alex.Networking.Bedrock.RakNet
 					
 				foreach(var packet in packets)
 					packet?.PutPool();
-				
-				_bandwidthExceededStatistic = UnackedBytes - unacked >= transmissionBandwidth;
+
+				_bandwidthExceededStatistic = !_sendQueue.IsEmpty;
+				//_bandwidthExceededStatistic = UnackedBytes - unacked >= transmissionBandwidth;
 				//UnackedBytes += _packetSender.SendPacket(this, preppedSendList);
 			}
 			catch (Exception e)
@@ -797,65 +790,72 @@ namespace Alex.Networking.Bedrock.RakNet
 		{
 			var queue = WaitingForAckQueue;
 
+			void Ack(int i)
+			{
+				if (queue.TryRemove(i, out Datagram datagram))
+				{
+					Interlocked.Add(ref UnackedBytes, -datagram.Size);
+						
+					SlidingWindow.OnAck(CurrentTimeMillis(), datagram.Timer.ElapsedMilliseconds,i, datagram.Header.IsContinuousSend);
+					datagram.PutPool();
+				}
+				else
+				{
+					//if (Log.IsDebugEnabled) 
+					Log.Warn($"ACK, Failed to remove datagram #{i}");
+				}
+			}
+			
 			foreach ((int start, int end) range in ack.ranges)
 			{
-				for (int i = range.start; i <= range.end; i++)
+				Interlocked.Increment(ref ConnectionInfo.Ack);
+				if (range.start == range.end)
 				{
-					if (queue.TryRemove(i, out Datagram datagram))
+					Ack(range.Item1);
+				}
+				else
+				{
+					for (int i = range.start; i <= range.end; i++)
 					{
-						Interlocked.Increment(ref ConnectionInfo.Ack);
-						//_nacked.Remove(i);
-						
-						//Interlocked.Add(ref UnackedBytes, -datagram.Size);
-
-						Interlocked.Add(ref UnackedBytes, -datagram.Size);
-						//UnackedBytes -= datagram.Size;
-						//CalculateRto(datagram);
-						SlidingWindow.OnAck(CurrentTimeMillis(), datagram.Timer.ElapsedMilliseconds,i, _bandwidthExceededStatistic);
-						datagram.PutPool();
-					}
-					else
-					{
-						//if (Log.IsDebugEnabled) 
-						Log.Warn($"ACK, Failed to remove datagram #{i}");
+						Ack(i);
 					}
 				}
 			}
 		}
 
-		private void DoNak(int sequenceNumber)
-		{
-			if (WaitingForAckQueue.TryGetValue(sequenceNumber, out var datagram))
-			{
-				Interlocked.Increment(ref ConnectionInfo.Nak);
-				SlidingWindow.OnNak(CurrentTimeMillis(), sequenceNumber);
-				//CalculateRto(datagram);
-
-				datagram.RetransmitImmediate = true;
-			}
-			else
-			{
-				//	if (Log.IsDebugEnabled)
-				//Log.Warn($"NAK, no datagram #{sequenceNumber}");
-			}
-		}
-		
 		internal void HandleNak(Nak nak)
 		{
-			foreach (Tuple<int, int> range in nak.ranges)
+			void Nack(int i)
 			{
-				int start = range.Item1;
-				int end = range.Item2;
-
-				if (start == end)
+				if (WaitingForAckQueue.TryGetValue(i, out var datagram))
 				{
-					DoNak(start);
-					continue;
+					SlidingWindow.OnNak(CurrentTimeMillis(), i);
+					//CalculateRto(datagram);
+
+					datagram.RetransmitImmediate = true;
 				}
-
-				for (int i = start; i <= end; i++)
+				else
 				{
-					DoNak(i);
+					//	if (Log.IsDebugEnabled)
+					//
+				//	Log.Warn($"NAK, no datagram #{i}");
+				}
+			}
+
+			foreach (var range in nak.ranges)
+			{
+				Interlocked.Increment(ref ConnectionInfo.Nak);
+
+				if (range.Item1 == range.Item2)
+				{
+					Nack(range.Item1);
+				}
+				else
+				{
+					for (int i = range.Item1; i <= range.Item2; i++)
+					{
+						Nack(i);
+					}
 				}
 			}
 		}
@@ -867,15 +867,12 @@ namespace Alex.Networking.Bedrock.RakNet
 			if (SlidingWindow.OnPacketReceived(
 				CurrentTimeMillis(),  sequenceIndex, datagram.Header.IsContinuousSend, datagram.Size, out var skippedMessageCount))
 			{
-			//	if (skippedMessageCount > 0)
-			//		Log.Info($"Skipped {skippedMessageCount}");
-				//OutgoingAckQueue.Enqueue(sequenceIndex);
-
 				if (skippedMessageCount > 0)
 				{
-					for (long i = skippedMessageCount; i > 0; i--)
+					var start = sequenceIndex - skippedMessageCount;
+					for (int i = 0; i < skippedMessageCount; i++)
 					{
-						OutgoingNackQueue.Enqueue((int) (sequenceIndex - i));
+						OutgoingNackQueue.Enqueue((int)(start + i));
 					}
 				}
 

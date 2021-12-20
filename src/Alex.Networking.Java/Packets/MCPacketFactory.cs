@@ -215,7 +215,7 @@ namespace Alex.Networking.Java.Packets
 			Register(ConnectionState.Play, 0x1E, () => ChangeGameStatePacket.CreateObject());
 			
 			Register(ConnectionState.Play, 0x21, () => KeepAlivePacket.CreateObject());
-			Register(ConnectionState.Play, 0x22, () => new ChunkDataPacket());
+			Register(ConnectionState.Play, 0x22, () => ChunkDataPacket.CreateObject());
 			Register(ConnectionState.Play, 0x24, () => ParticlePacket.CreateObject());
 			Register(ConnectionState.Play, 0x25, () => UpdateLightPacket.CreateObject());
 			Register(ConnectionState.Play, 0x26, () => JoinGamePacket.CreateObject());

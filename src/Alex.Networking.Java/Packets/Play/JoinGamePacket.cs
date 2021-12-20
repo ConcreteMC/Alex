@@ -14,7 +14,8 @@ namespace Alex.Networking.Java.Packets.Play
 		public byte        Gamemode, PreviousGamemode;
 		public NbtCompound Dimension;
 		//public byte Difficulty;
-		//public byte MaxPlayers;
+		public int MaxPlayers;
+		public int SimulationDistance;
 		public bool ReducedDebugInfo;
 		public long HashedSeed;
 		public bool EnableRespawnScreen;
@@ -47,9 +48,9 @@ namespace Alex.Networking.Java.Packets.Play
 			WorldName = stream.ReadString();
 			
 			HashedSeed = stream.ReadLong();
-			//Difficulty = (byte) stream.ReadByte();
-			stream.ReadByte();
+			MaxPlayers = stream.ReadVarInt();
 			ViewDistance = stream.ReadVarInt();
+			SimulationDistance = stream.ReadVarInt();
 			ReducedDebugInfo = stream.ReadBool();
 			EnableRespawnScreen = stream.ReadBool();
 			IsDebug = stream.ReadBool();

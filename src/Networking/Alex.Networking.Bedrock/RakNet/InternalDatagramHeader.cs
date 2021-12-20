@@ -43,5 +43,11 @@ namespace Alex.Networking.Bedrock.RakNet
 		{
 			
 		}
+
+		/// <inheritdoc />
+		public override string ToString()
+		{
+			return $"{{IsContinuousSend={IsContinuousSend}, IsPacketPair={IsPacketPair}, NeedsBAndAs={NeedsBAndAs}, IsACK={IsAck}, IsNAK={IsNak}, IsValid={IsValid}}}";
+		}
 	}
 }

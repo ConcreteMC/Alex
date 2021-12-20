@@ -31,10 +31,10 @@ namespace Alex.Gui.Elements.Map
         public int ChunkSize { get; set; } = 16;
         private int RenderDistance => _world?.ChunkManager?.RenderDistance ?? 1;
         /// <inheritdoc />
-        public int Width => RenderDistance * ChunkSize * 3;
+        public int Width => RenderDistance * ChunkSize;
 
         /// <inheritdoc />
-        public int Height => RenderDistance * ChunkSize * 3;
+        public int Height => RenderDistance * ChunkSize;
 
         /// <inheritdoc />
         public float Scale { get; } = 1f;
@@ -128,8 +128,9 @@ namespace Alex.Gui.Elements.Map
 
         private void OnChunkRemoved(object sender, ChunkRemovedEventArgs e)
         {
-            if (TryGetContainer(e.Position, out var container))
-                container.Invalidate();
+            RemoveContainer(e.Position);
+            //if (TryGetContainer(e.Position, out var container))
+            //    container.Invalidate();
         }
 
         private void OnChunkAdded(object sender, ChunkAddedEventArgs e)
@@ -162,6 +163,7 @@ namespace Alex.Gui.Elements.Map
         {
             if (_textureContainers.TryRemove(coordinates, out var container))
             {
+                container.Invalidate();
                 container.Dispose();
             }
         }

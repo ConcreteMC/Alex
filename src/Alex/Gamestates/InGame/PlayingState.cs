@@ -257,6 +257,18 @@ namespace Alex.Gamestates.InGame
 			_debugInfo.AddDebugLeft(
 				() =>
 				{
+					return $"NoAI: {World.Player.NoAi}";
+				}, TimeSpan.FromSeconds(1));
+			
+			_debugInfo.AddDebugLeft(
+				() =>
+				{
+					return $"WaitingOnChunk: {World.Player.WaitingOnChunk}";
+				}, TimeSpan.FromSeconds(1));
+			
+			_debugInfo.AddDebugLeft(
+				() =>
+				{
 					var effects = World.Player.Effects.AppliedEffects().ToArray();
 					return $"Applied Effects ({effects.Length}): {string.Join('\n',effects.Select(x => x.EffectId.ToString()))}";
 				}, TimeSpan.FromSeconds(1));
