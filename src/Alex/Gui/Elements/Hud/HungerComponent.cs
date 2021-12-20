@@ -48,21 +48,19 @@ namespace Alex.Gui.Elements.Hud
             for (int i = 0; i < Hungers.Length; i++)
             {
                 HeartValue value = HeartValue.Full;
-                    
-                if ((i + 1) <= ceil)
+                if (i < hearts)
                 {
                     value = HeartValue.Full;
-                        
-                    if (!isRounded && (i + 1) == ceil)
-                    {
-                        value = HeartValue.Half;
-                    }
+                }
+                else if (i == ceil)
+                {
+                    value = HeartValue.Half;
                 }
                 else
                 {
                     value = HeartValue.None;
                 }
-                    
+
                 Hungers[^(i + 1)].Set(value);
             }
         }

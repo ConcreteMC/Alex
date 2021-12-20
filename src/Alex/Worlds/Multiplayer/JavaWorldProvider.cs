@@ -2475,7 +2475,7 @@ namespace Alex.Worlds.Multiplayer
 		private void HandleJoinGamePacket(JoinGamePacket packet)
 		{
 			//_dimension = packet.Dimension;
-			
+			World.Difficulty = Difficulty.Easy;
 			World.ChunkManager.RenderDistance = Math.Min(World.ChunkManager.RenderDistance, packet.ViewDistance);
 			
 			SendSettings();

@@ -102,7 +102,7 @@ namespace Alex.Gui
 
 		private static readonly Rectangle IconHeartHolder = new Rectangle(16, 0, 9, 9);
 		private static readonly Rectangle IconHeart = new Rectangle(52, 0, 9, 9);
-		private static readonly Rectangle IconHalfHeart = new Rectangle(69, 0, 9, 9);
+		private static readonly Rectangle IconHalfHeart = new Rectangle(61, 0, 9, 9);
 		
 		#endregion
 

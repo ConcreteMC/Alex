@@ -2,7 +2,10 @@ using System;
 using Alex.Common.Utils.Vectors;
 using Alex.Common.World;
 using Alex.Entities.Components;
+using Alex.Items;
 using Microsoft.Xna.Framework;
+using MiNET;
+using MiNET.Worlds;
 using MathF = System.MathF;
 
 namespace Alex.Entities.Meta
@@ -62,8 +65,12 @@ namespace Alex.Entities.Meta
 	{
 	//	private Entity Entity { get; }
 
-		private float _health = 20;
-
+		private float _health = 20f;
+		private float _maxHealth = 20f;
+		private int _maxHunger = 20;
+		private short _availableAir = 300;
+		private short _maxAir = 300;
+		
 		private void InvokeHealthUpdate()
 		{
 			OnHealthChanged?.Invoke(this, new HealthChangedEventArgs(Health, MaxHealth));
@@ -141,7 +148,7 @@ namespace Alex.Entities.Meta
 			set
 			{
 				var previous = _exhaustion;
-				_exhaustion = value;
+				_exhaustion = Math.Clamp(value, 0f, MaxExhaustion);
 				
 				OnExhaustionChanged?.Invoke(this, new ExhaustionChangedEventArgs(value));
 			}
@@ -182,6 +189,9 @@ namespace Alex.Entities.Meta
 		public EventHandler<SaturationChangedEventArgs> OnSaturationChanged;
 		public EventHandler<AirChangedEventArgs> OnAvailableAirChanged;
 		
+		public int FireTick { get; set; }
+		public int SuffocationTicks { get; set; }
+		public int LavaTicks { get; set; }
 		public HealthManager(Entity entity) : base(entity)
 		{
 			//Entity = entity;
@@ -199,71 +209,123 @@ namespace Alex.Entities.Meta
 
 		private long _ticker = 0;
 
-		public void Heal(int amount)
+		public void Regen(int amount)
 		{
-			Health += amount * 10;
+			Health += amount;
+			if (Health > MaxHealth) Health = MaxHealth;
 		}
 
-		public void TakeHit(int amount)
+		public bool IsDead => Health <= 0;
+		public void Kill()
 		{
-			Health -= amount * 10;
+			if (IsDead)
+				return;
+
+			Health = 0;
+			//	IsDead = true;
 		}
 
-		public void Exhaust(float amount)
+		public DamageCause LastDamageCause { get; protected set; } = DamageCause.Unknown;
+		public float Absorption { get; set; }
+		public void TakeHit(int damage, DamageCause cause = DamageCause.Unknown)
+		{
+			if (Entity is Player player && player.Gamemode != GameMode.Survival)
+				return;
+
+
+			if (CooldownTick > 0) return;
+
+			//LastDamageSource = source;
+			LastDamageCause = cause;
+			if (Absorption > 0)
+			{
+				float abs = Absorption;
+				abs -= damage;
+				if (abs < 0)
+				{
+					Absorption = 0;
+					damage = Math.Abs((int) Math.Floor(abs));
+				}
+				else
+				{
+					Absorption = abs;
+					damage = 0;
+				}
+			}
+
+			if (cause == DamageCause.Starving)
+			{
+				if (Entity.Level.Difficulty <= Difficulty.Easy && Hearts <= 10) return;
+				if (Entity.Level.Difficulty <= Difficulty.Normal && Hearts <= 1) return;
+			}
+
+			Health -= damage;
+			if (Health < 0)
+			{
+				//OnPlayerTakeHit(new HealthEventArgs(this, source, Entity));
+				Health = 0;
+				Kill();
+				return;
+			}
+
+			
+			IncreaseExhaustion(0.3f);
+
+				//	if (source != null)
+		//	{
+		//		DoKnockback(source, tool);
+		//	}
+
+			CooldownTick = 10;
+
+			//OnPlayerTakeHit(new HealthEventArgs(this, source, Entity));
+		}
+
+		protected virtual void DoKnockback(Entity source, Item tool)
+		{
+			
+		}
+		
+		public void IncreaseExhaustion(float amount)
 		{
 			Exhaustion += amount;
+			ProcessHunger();
+		}
+		
+		private PlayerLocation _lastExhaustionPosition = new PlayerLocation();
+		public void Move(float distance)
+		{
+			float movementStrainFactor = 0.01f; // Default for walking
+
+			if (Entity.IsSneaking)
+			{
+				movementStrainFactor = 0.005f;
+			}
+			else if (Entity.IsSprinting)
+			{
+				movementStrainFactor = 0.1f;
+			}
+			
+			Exhaustion += (distance * movementStrainFactor);
+
+			ProcessHunger();
 		}
 
-		private DateTime       _lastMovementUpdate     = DateTime.UtcNow;
-		private PlayerLocation _lastExhaustionPosition = new PlayerLocation();
-		private float _maxHealth = 20f;
-		private int _maxHunger = 20;
-		private short _availableAir = 300;
-		private short _maxAir = 300;
-
-		private void DoHealthAndExhaustion()
+		private void ProcessHunger()
 		{
-			var elapsed = (DateTime.UtcNow - _lastMovementUpdate).TotalSeconds;
-
-			var pos = Entity.KnownPosition;
-
-			var distance = MathF.Abs(
-				Vector3.DistanceSquared(
-					new Vector3(pos.X, 0, pos.Z),
-					new Vector3(_lastExhaustionPosition.X, 0, _lastExhaustionPosition.Z)));
-
-			if (Entity.IsSprinting)
+			if (Hunger > MaxHunger)
 			{
-				Exhaust(distance * 0.1f);
-			}
-			else if (Entity.IsInWater)
-			{
-				Exhaust(distance * 0.01f);
+				Hunger = MaxHunger;
 			}
 
-			_ticker += 1;
-
-			if (_ticker >= 80)
+			if (Saturation > Hunger)
 			{
-				_ticker = 0;
+				Saturation = Hunger;
 			}
 
-			if (_ticker == 0)
+			while (Exhaustion >= 4)
 			{
-				if (Hunger >= 18 && Health < MaxHealth)
-				{
-					//Heal(1);
-					Exhaust(3);
-				}
-				else if (Hunger <= 0 && _health > 1)
-				{
-					//TakeHit(1);
-				}
-			}
-
-			while (_exhaustion >= 4)
-			{
-				_exhaustion -= 4;
+				Exhaustion -= 4;
 
 				if (Saturation > 0)
 				{
@@ -272,27 +334,200 @@ namespace Alex.Entities.Meta
 				else
 				{
 					Hunger -= 1;
-					// Saturation = 0;
-					if (Hunger < 0) Hunger = 0;
+					Saturation = 0;
+
+					if (Hunger < 0) Hunger = 0; // Damage!
+				}
+			}
+		}
+
+		private void ProcessHungerTick()
+		{
+			if (Hunger <= 0)
+			{
+				_ticker++;
+				
+				if (_ticker % 800 == 0)
+				{
+					TakeHit(1, DamageCause.Starving);
+				}
+			}
+			else if (Hunger > 18 && Health < MaxHealth)
+			{
+				_ticker++;
+
+				if (Hunger >= 20 && Saturation > 0)
+				{
+					if (_ticker % 100 == 0)
+					{
+						if (Entity.Level.Difficulty != Difficulty.Hardcore)
+						{
+							IncreaseExhaustion(4);
+							Regen(1);
+						}
+					}
+				}
+				else
+				{
+					if (_ticker % 800 == 0)
+					{
+						if (Entity.Level.Difficulty != Difficulty.Hardcore)
+						{
+							IncreaseExhaustion(4);
+							Regen(1);
+						}
+					}
+				}
+			}
+			else
+			{
+				_ticker = 0;
+			}
+		}
+
+		private void DoHealthTick()
+		{
+			if (CooldownTick > 0) CooldownTick--;
+
+			if (!Entity.IsSpawned) return;
+
+			if (IsDead) return;
+
+			if (Entity.Invulnerable) Health = MaxHealth;
+
+			if (Health <= 0)
+			{
+				Kill();
+				return;
+			}
+			
+			if (Entity.HeadInWater)
+			{
+				AvailableAir--;
+				if (AvailableAir <= 0)
+				{
+					if (Math.Abs(AvailableAir)%10 == 0)
+					{
+						TakeHit(1, DamageCause.Drowning);
+					}
+				}
+
+				if (Entity.IsOnFire)
+				{
+					Entity.IsOnFire = false;
+					FireTick = 0;
+				}
+			}
+			else
+			{
+				AvailableAir = MaxAir;
+
+				if (Entity.HeadInWater)
+				{
+					Entity.HeadInWater = false;
 				}
 			}
 
-			_lastExhaustionPosition = pos;
-			_lastMovementUpdate = DateTime.UtcNow;
-		}
+			if (Entity.HeadInBlock)
+			{
+				if (SuffocationTicks <= 0)
+				{
+					TakeHit(1, DamageCause.Suffocation);
+					SuffocationTicks = 10;
+				}
+				else
+				{
+					SuffocationTicks--;
+				}
+			}
+			else
+			{
+				SuffocationTicks = 10;
+			}
 
+			if (Entity.IsInLava)
+			{
+				if (LastDamageCause.Equals(DamageCause.Lava))
+				{
+					FireTick += 2;
+				}
+				else
+				{
+					FireTick = 300;
+					Entity.IsOnFire = true;
+				}
+
+				if (LavaTicks <= 0)
+				{
+					TakeHit( 4, DamageCause.Lava);
+					LavaTicks = 10;
+				}
+				else
+				{
+					LavaTicks--;
+				}
+			}
+			else
+			{
+				LavaTicks = 0;
+			}
+
+			if (!Entity.IsInLava && Entity.IsOnFire)
+			{
+				FireTick--;
+				if (FireTick <= 0)
+				{
+					Entity.IsOnFire = false;
+				}
+
+				if (Math.Abs(FireTick)%20 == 0)
+				{
+					TakeHit(1, DamageCause.FireTick);
+				}
+			}
+		}
+		
+		public int CooldownTick { get; set; }
 		public void OnTick()
 		{
-			DoHealthAndExhaustion();
+			if (!Entity.IsSpawned)
+				return;
+			
+			ProcessHungerTick();
+			
+			var pos = Entity.KnownPosition;
+
+			var distance = MathF.Abs(
+				Vector3.DistanceSquared(
+					new Vector3(pos.X, 0, pos.Z),
+					new Vector3(_lastExhaustionPosition.X, 0, _lastExhaustionPosition.Z)));
+
+			if (MathF.Abs(distance) >= 0.005f)
+			{
+				Move(distance);
+			}
+
+			_lastExhaustionPosition = pos;
+
+			DoHealthTick();
 		}
 
 		public void Reset()
 		{
-			AvailableAir = MaxAir;
 			Health = MaxHealth;
-			Exhaustion = 0f;
-			Saturation = MaxSaturation;
+			AvailableAir = MaxAir;
+			Entity.IsOnFire = false;
+			FireTick = 0;
+			SuffocationTicks = 10;
+			LavaTicks = 0;
+			//IsDead = false;
+			CooldownTick = 0;
+			LastDamageCause = DamageCause.Unknown;
+		//	LastDamageSource = null;
+		
 			Hunger = MaxHunger;
+			Saturation = MaxHunger;
+			Exhaustion = 0;
 		}
 	}
 }

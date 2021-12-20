@@ -49,11 +49,11 @@ namespace Alex.Gui.Elements.Hud
             for (int i = 0; i < Hearts.Length; i++)
             {
                 HeartValue value = HeartValue.Full;
-                if (i < ceil)
+                if (i <= hearts)
                 {
                     value = HeartValue.Full;
                 }
-                else if (i == ceil - 1)
+                else if (i == ceil)
                 {
                     value = HeartValue.Half;
                 }

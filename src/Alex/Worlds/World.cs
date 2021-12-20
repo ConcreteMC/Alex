@@ -32,7 +32,6 @@ using Alex.Net;
 using Alex.Net.Bedrock;
 using Alex.Utils;
 using Alex.Utils.Threading;
-using Alex.Worlds.Abstraction;
 using Alex.Worlds.Chunks;
 using Alex.Worlds.Lighting;
 using Microsoft.Extensions.DependencyInjection;
@@ -40,12 +39,15 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MiNET;
 using MiNET.Utils;
+using MiNET.Worlds;
 using NLog;
 using RocketUI;
 using BlockCoordinates = Alex.Common.Utils.Vectors.BlockCoordinates;
 using BlockFace = Alex.Common.Blocks.BlockFace;
+using ChunkColumn = Alex.Worlds.Chunks.ChunkColumn;
 using ChunkCoordinates = Alex.Common.Utils.Vectors.ChunkCoordinates;
 using Color = Microsoft.Xna.Framework.Color;
+using IBlockAccess = Alex.Worlds.Abstraction.IBlockAccess;
 using Player = Alex.Entities.Player;
 using PlayerLocation = Alex.Common.Utils.Vectors.PlayerLocation;
 using Skin = Alex.Common.Utils.Skin;
@@ -71,7 +73,8 @@ namespace Alex.Worlds
 		
 		public InventoryManager InventoryManager { get; }
 		private SkyBox SkyBox { get; }
-
+		
+		public Difficulty Difficulty { get; set; }
 		public long Time      { get; private set; } = 1;
 		public long TimeOfDay { get; private set; } = 1;
 		public bool Raining   { get; private set; } = false;
@@ -574,7 +577,7 @@ namespace Alex.Worlds
 	        get { return (_brightnessMod + ((Options.VideoOptions.Brightness - 50f) * (0.5f / 100f))); }
         }
 
-        public ChunkColumn GetChunk(BlockCoordinates coordinates, bool cacheOnly = false)
+		public ChunkColumn GetChunk(BlockCoordinates coordinates, bool cacheOnly = false)
         {
 	        if (ChunkManager.TryGetChunk(new ChunkCoordinates(coordinates), out var c))
 	        {

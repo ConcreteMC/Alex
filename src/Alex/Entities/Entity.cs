@@ -1630,7 +1630,7 @@ namespace Alex.Entities
 		public const float   JumpVelocity = 0.42f;
 		public virtual void Jump()
 		{
-			HealthManager.Exhaust(IsSprinting ? 0.2f : 0.05f);
+			HealthManager.IncreaseExhaustion(IsSprinting ? 0.2f : 0.05f);
 			var jumpVelocity = JumpVelocity;
 			
 			if (IsInWater || IsInLava)
@@ -1748,8 +1748,8 @@ namespace Alex.Entities
 						HealthManager.MaxExhaustion = (int) attribute.Value.MaxValue;
 						break;
 					case "minecraft:player.hunger":
-						HealthManager.Hunger = (int) attribute.Value.Value;
-						HealthManager.MaxHunger = (int) attribute.Value.MaxValue;
+						HealthManager.Hunger = (int)attribute.Value.Value;
+						HealthManager.MaxHunger = (int)attribute.Value.MaxValue;
 						break;
 					case "minecraft:movement":
 						MovementSpeed = attribute.Value.Value;
@@ -1765,7 +1765,8 @@ namespace Alex.Entities
 						HealthManager.MaxHealth = attribute.Value.MaxValue;
 						break;
 					case "minecraft:absorption":
-						//HealthManager
+						HealthManager.Absorption = attribute.Value.Value;
+						//HealthManager.
 						break;
 					default:
 						if (!TryUpdateAttribute(attribute.Value))
