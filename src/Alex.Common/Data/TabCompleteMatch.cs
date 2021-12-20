@@ -11,6 +11,11 @@ namespace Alex.Common.Data
 
 		public string Description = null;
 
+		public TabCompleteMatch()
+		{
+			
+		}
+		
 		public string GetDescriptive()
 		{
 			if (string.IsNullOrWhiteSpace(Description))

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Alex.Common.Commands.Parsers;
 using Alex.Common.Data;
 using Alex.Worlds;
 using NLog;
@@ -39,7 +40,7 @@ namespace Alex.Utils.Commands
 
 		public void Match(string input, OnCommandMatch onMatch)
 		{
-			var split = input.Split(' ');
+			var split = input.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
 			if (split.Length == 0)
 				return;
@@ -80,10 +81,11 @@ namespace Alex.Utils.Commands
 
 			if (remainder.Length > 0)
 			{
-				using (SeekableTextReader sr = new SeekableTextReader(remainder))
-				{
+				
 				//	sr.Position += first.Length + 1;
-					foreach (var command in matchingCommands)
+				foreach (var command in matchingCommands)
+				{
+					using (SeekableTextReader sr = new SeekableTextReader(remainder))
 					{
 						bool isValid = true;
 						int matchCount = 0;
@@ -100,30 +102,40 @@ namespace Alex.Utils.Commands
 								break;
 							}
 
-							while (char.IsWhiteSpace((char) sr.Peek()))
+							while (char.IsWhiteSpace((char)sr.Peek()))
 							{
 								sr.Read();
 							}
 
 							startPos = sr.Position;
 							var property = command.Properties[i];
-							property.Matches = new string[0];
-							
-							if (!property.TryParse(sr))
+
+							bool matched = false;
+
+							if (property is ISuggestive suggestive)
+							{
+								if (suggestive.TryParse(sr, out string[] m))
+								{
+									matched = true;
+
+									matches.AddRange(
+										m.Select(
+											x => new TabCompleteMatch() { Description = property.Name, Match = x, }));
+								}
+							}
+							else
+							{
+								matched = property.TryParse(sr);
+							}
+
+							if (!matched)
 							{
 								isValid = false;
-Log.Debug($"Property \"{property.Name}\" does not match \"{sr}\"");
+								Log.Debug($"Property \"{property.Name}\" does not match \"{sr}\"");
+
 								break;
 							}
 
-							if (property.Matches.Length > 0)
-							{
-								matches.AddRange(property.Matches.Select(x => new TabCompleteMatch()
-								{
-									Description = property.Name,
-									Match = x,
-								}));
-							}
 							matchCount++;
 
 							var endPosition = sr.Position;

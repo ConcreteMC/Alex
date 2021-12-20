@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Alex.Common.Commands.Parsers;
 using Alex.Common.Data;
 
 namespace Alex.Utils.Commands
@@ -10,15 +11,15 @@ namespace Alex.Utils.Commands
 	{
 		public string[] Aliases { get; }
 		public string Description { get; set; } = null;
-		public List<CommandProperty> Properties { get; }
+		public List<IArgumentParser> Properties { get; }
 
 		public Command(params string[] aliases)
 		{
 			Aliases = aliases;
-			Properties = new List<CommandProperty>();
+			Properties = new List<IArgumentParser>();
 		}
 
-		public void AddProperty(CommandProperty property)
+		public void AddProperty(IArgumentParser property)
 		{
 			Properties.Add(property);
 		}

@@ -1728,8 +1728,7 @@ namespace Alex.Net.Bedrock
 						foreach (var overload in version.Overloads)
 						{
 							Command c = new Command(cmd.Key);
-							c.Description = version.Description;
-							
+
 							foreach (var param in overload.Value.Input.Parameters)
 							{
 								if (param.Type == "stringenum")
@@ -1780,6 +1779,7 @@ namespace Alex.Net.Bedrock
 								//c.Properties.Add(cp);
 							}
 							
+							c.Description = c.Describe().FirstOrDefault(version.Description);
 							bcp.Register(c);
 						}
 					}

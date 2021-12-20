@@ -4,7 +4,19 @@ using Alex.Utils;
 
 namespace Alex.Common.Commands.Parsers
 {
-	public abstract class ArgumentParser
+	public interface IArgumentParser
+	{
+		string Name { get; }
+
+		bool TryParse(SeekableTextReader reader);
+	}
+
+	public interface ISuggestive : IArgumentParser
+	{
+		bool TryParse(SeekableTextReader reader, out string[] matches);
+	}
+	
+	public abstract class ArgumentParser : IArgumentParser
 	{
 		public CommandNode Parent { get; set; }
 		public string Name { get; set; }

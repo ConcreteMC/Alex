@@ -936,8 +936,8 @@ namespace Alex.Worlds.Multiplayer
 						if (subChild is ArgumentCommandNode acn)
 						{
 							var parser = acn.Parser;
-							CommandProperty commandProperty = null;
-							if (parser is IntegerArgumentParser icp)
+							IArgumentParser commandProperty = null;
+							/*if (parser is IntegerArgumentParser icp)
 							{
 								commandProperty = new IntCommandProperty(acn.Name, !acn.IsExecutable)
 								{
@@ -961,21 +961,31 @@ namespace Alex.Worlds.Multiplayer
 									MinValue = (dcp.Flags & 0x02) != 0 ? dcp.Min : double.MinValue
 								};
 							}
+							else if (parser is StringArgumentParser sap)
+							{
+								commandProperty =
+									new Utils.Commands.TextCommandProperty(acn.Name, !acn.IsExecutable)
+									{
+										Mode = sap.Mode
+									};
+							}
 							else
 							{
 								commandProperty = new CommandProperty(acn.Name, !acn.IsExecutable);
-							}
+							}*/
+							commandProperty = parser;
 
 							if (!string.IsNullOrWhiteSpace(acn.SuggestionType))
 							{
-								commandProperty.TypeIdentifier = acn.SuggestionType;
+								//commandProperty.TypeIdentifier = acn.SuggestionType;
 							}
 
 							if (commandProperty != null)
 								command.AddProperty(commandProperty);
 						}
 					}
-					
+
+					command.Description = command.Describe().FirstOrDefault();
 					CommandProvider.Register(command);
 				}
 			}
