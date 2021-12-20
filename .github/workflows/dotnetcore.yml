@@ -33,18 +33,33 @@ jobs:
         include:
         - os: ubuntu-latest
           rid: linux-x64
-          artifact: 'Linux Binaries'
-          platform: 'Linux'
+          artifact: 'Linux (x64)'
+          platform: 'Linux-x64'
+          
+        - os: ubuntu-latest
+          rid: linux-arm64
+          artifact: 'Linux (ARM64)'
+          platform: 'Linux-arm64'
           
         - os: macos-latest
           rid: osx-x64
-          artifact: 'MacOS Binaries'
-          platform: 'MacOS'
+          artifact: 'MacOS (x64)'
+          platform: 'MacOS-x64'
+          
+        - os: macos-latest
+          rid: osx.12-arm64
+          artifact: 'MacOS Monterey (ARM64)'
+          platform: 'MacOS-arm64'
           
         - os: windows-latest
           rid: win-x64
-          artifact: 'Windows Binaries'
-          platform: 'Windows'
+          artifact: 'Windows (x64)'
+          platform: 'Windows-x64'
+        
+        - os: windows-latest
+          rid: win-arm64
+          artifact: 'Windows (ARM64)'
+          platform: 'Windows-arm64'
 
     steps:
     - uses: actions/checkout@v2
