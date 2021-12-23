@@ -12,16 +12,14 @@ namespace Alex.MoLang.Parser.Visitors
 		}
 
 		/// <inheritdoc />
-		public override object OnVisit(IExpression expression)
+		public override void OnVisit(ExprTraverser traverser, IExpression expression)
 		{
 			if (_predicate(expression))
 			{
 				Found = expression;
 
-				return ExprTraverser.ActionType.StopTraversal;
+				traverser.Stop();
 			}
-
-			return null;
 		}
 	}
 }

@@ -17,7 +17,7 @@ namespace Alex.MoLang.Parser.Expressions
 					break;
 				}
 			}
-
+			
 			return DoubleValue.Zero;
 		}
 

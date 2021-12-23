@@ -4,6 +4,7 @@ using System.Linq;
 using Alex.MoLang.Parser;
 using Alex.MoLang.Runtime;
 using Alex.MoLang.Runtime.Value;
+using Alex.MoLang.Utils;
 using Alex.ResourcePackLib.Json.Converters.Bedrock;
 using Microsoft.Xna.Framework;
 using Newtonsoft.Json;
@@ -56,18 +57,12 @@ namespace Alex.ResourcePackLib.Json.Bedrock.MoLang
 
 		private Vector3 Evaluate(MoLangRuntime runtime, IExpression[] xExpressions, IExpression[] yExpressions, IExpression[] zExpressions, Vector3 currentValue)
 		{
-			IMoValue x = runtime.Execute(xExpressions, new Dictionary<string, IMoValue>(StringComparer.OrdinalIgnoreCase)
-			{
-				{"this", new DoubleValue(currentValue.X)}
-			});
-			IMoValue y = runtime.Execute(yExpressions, new Dictionary<string, IMoValue>(StringComparer.OrdinalIgnoreCase)
-			{
-				{"this", new DoubleValue(currentValue.Y)}
-			});
-			IMoValue z = runtime.Execute(zExpressions, new Dictionary<string, IMoValue>(StringComparer.OrdinalIgnoreCase)
-			{
-				{"this", new DoubleValue(currentValue.Z)}
-			});
+			runtime.Environment.ThisVariable = new DoubleValue(currentValue.X);
+			IMoValue x = runtime.Execute(xExpressions);
+			runtime.Environment.ThisVariable = new DoubleValue(currentValue.Y);
+			IMoValue y = runtime.Execute(yExpressions);
+			runtime.Environment.ThisVariable = new DoubleValue(currentValue.Z);
+			IMoValue z = runtime.Execute(zExpressions);
 
 			return new Vector3(x.AsFloat(), y.AsFloat(), z.AsFloat());
 		}

@@ -21,6 +21,9 @@ namespace Alex.MoLang.Parser.Expressions
 			MoScope subScope = new MoScope();
 
 			while (loop > 0) {
+				subScope.IsContinue = false;
+				subScope.IsBreak = false;
+				
 				Body.Evaluate(subScope, environment);
 				loop--;
 

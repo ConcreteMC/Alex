@@ -3,6 +3,7 @@ using System.Linq;
 using Alex.MoLang.Parser;
 using Alex.MoLang.Runtime;
 using Alex.MoLang.Runtime.Value;
+using Alex.MoLang.Utils;
 using Alex.ResourcePackLib.Json.Converters.Bedrock;
 using Microsoft.Xna.Framework;
 using Newtonsoft.Json;
@@ -45,14 +46,10 @@ namespace Alex.ResourcePackLib.Json.Bedrock.MoLang
 
 		private Vector2 Evaluate(MoLangRuntime runtime, IExpression[] xExpressions, IExpression[] yExpressions, Vector2 currentValue)
 		{
-			IMoValue x = runtime.Execute(xExpressions, new Dictionary<string, IMoValue>()
-			{
-				{"this", new DoubleValue(currentValue.X)}
-			});
-			IMoValue y = runtime.Execute(yExpressions, new Dictionary<string, IMoValue>()
-			{
-				{"this", new DoubleValue(currentValue.Y)}
-			});
+			runtime.Environment.ThisVariable = new DoubleValue(currentValue.X);
+			IMoValue x = runtime.Execute(xExpressions);
+			runtime.Environment.ThisVariable = new DoubleValue(currentValue.Y);
+			IMoValue y = runtime.Execute(yExpressions);
 
 			return new Vector2(x.AsFloat(), y.AsFloat());
 		}

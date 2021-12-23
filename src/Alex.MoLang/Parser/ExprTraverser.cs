@@ -32,216 +32,112 @@ namespace Alex.MoLang.Parser
     }
     public class ExprTraverser
     {
-        private bool _stopTraversal = false;
-
         public readonly List<IExprVisitor> Visitors = new List<IExprVisitor>();
 
-        public IEnumerable<IExpression> Traverse(IEnumerable<IExpression> expressions)
+        private bool _stop = false;
+        public IExpression[] Traverse(IExpression[] expressions)
         {
-            var enumerable = expressions as IExpression[] ?? expressions.ToArray();
+            TraverseArray(expressions);
 
-            foreach (IExprVisitor visitor in Visitors) {
-                visitor.BeforeTraverse(enumerable);
-            }
-
-            _stopTraversal = false;
-
-            foreach (var expression in TraverseArray(enumerable))
-            {
-                yield return expression;
-            }
-            //TraverseArray(expressions);
-
-            foreach (IExprVisitor visitor in Visitors) {
-                visitor.AfterTraverse(enumerable);
-            }
-
-           // return expressions;
+            return expressions.Where(x => x != null).ToArray();
         }
 
-        private IEnumerable<IExpression> TraverseArray(IEnumerable<IExpression> expressions)
+        private void TraverseArray(IExpression[] expressions)
         {
-            //var list = expressions.ToList();
+            foreach (IExprVisitor visitor in Visitors) {
+                visitor.BeforeTraverse(expressions);
+            }
 
-            //for (var i = 0; i < list.Count; i++)
-            //for (var index = 0; index < expressions.Length; index++)
-            foreach(var e in expressions)
+            for (var index = 0; index < expressions.Length; index++)
             {
-                var expression = e;
-               // IExpression expression = expressions[index];
-                
+                IExpression expression = expressions[index];
+
                 if (expression == null)
                     throw new MoLangRuntimeException("Expression was null", null);
 
-                var removeCurrent = false;
-                var traverseChildren = true;
-                var traverseCurrent = true;
+                expressions[index] = TraverseExpr(expression, null);
 
-                foreach (var visitor in Visitors)
-                {
-                    var result = visitor.OnVisit(expression);
-
-                    if (result is ActionType at)
-                    {
-                        switch (at)
-                        {
-                            case ActionType.RemoveCurrent:
-                                removeCurrent = true;
-
-                                break;
-
-                            case ActionType.StopTraversal:
-                                _stopTraversal = true;
-
-                                break;
-
-                            case ActionType.DontTraverseCurrentAndChildren:
-                                traverseCurrent = false;
-                                traverseChildren = false;
-
-                                break;
-
-                            case ActionType.DontTraverseChildren:
-                                traverseChildren = false;
-
-                                break;
-                        }
-                    }
-                    else if (result is IExpression result1)
-                    {
-                        expression = result1;
-                    }
-                }
-
-                if (!traverseCurrent)
+                if (_stop)
                 {
                     break;
                 }
+            }
 
-                if (traverseChildren && !removeCurrent)
-                {
-                    expression = TraverseExpr(expression);
-                }
-
-                foreach (IExprVisitor visitor in Visitors)
-                {
-                    visitor.OnLeave(expression);
-                }
-
-                if (removeCurrent)
-                {
-                    //list.Remove(expression);
-                  //  expressions[index] = null;//.Remove(expression);
-                }
-                else
-                {
-                 //   expressions[index] = expression;
-
-                    yield return expression;
-                    //expressions[i] = expression;//.set(i, expression);
-                }
-
-                if (_stopTraversal)
-                {
-                    break;
-                }
+            foreach (IExprVisitor visitor in Visitors) {
+                visitor.AfterTraverse(expressions);
             }
 
             //return expressions.Where(x => x != null).ToArray();
         }
 
-        private IExpression TraverseExpr(IExpression expression)
+        private IExpression TraverseExpr(IExpression expression, IExpression parent)
         {
+            Visit(expression);
+            expression.Meta.Parent = parent;
             foreach (var field in GetAllProperties(expression.GetType()))
             {
+                if (!typeof(IEnumerable<Expression>).IsAssignableFrom(field.PropertyType)
+                    && !typeof(IExpression).IsAssignableFrom(field.PropertyType))
+                {
+                    continue;
+                }
+                
                 //field.setAccessible(true);
                 var fieldValue = GetFieldValue(field, expression);
-
-                if (fieldValue is IExpression subExpr)
+                if (fieldValue == null)
+                    continue;
+                
+                if (fieldValue is IExpression original)
                 {
-                    var removeCurrent    = false;
-                    var traverseChildren = true;
-                    var traverseCurrent = true;
-
-                    foreach (var visitor in Visitors)
-                    {
-                        var result = visitor.OnVisit(subExpr);
-
-                        if (result is ActionType at)
-                        {
-                            switch (at)
-                            { 
-                                case ActionType.RemoveCurrent: 
-                                    removeCurrent = true; 
-                                    break;
-
-                                case ActionType.StopTraversal:
-                                    _stopTraversal = true;
-
-                                    break;
-
-                                case ActionType.DontTraverseCurrentAndChildren:
-                                    traverseCurrent = false;
-                                    traverseChildren = false;
-
-                                    break;
-
-                                case ActionType.DontTraverseChildren:
-                                    traverseChildren = false;
-
-                                    break;
-                            }
-                        }
-                        else if (result is IExpression result1)
-                        {
-                            subExpr = result1;
-                        }
-                    }
-
-                    if (!traverseCurrent)
-                    {
-                        break;
-                    }
-
-                    if (traverseChildren && !removeCurrent)
-                    {
-                        subExpr = TraverseExpr(subExpr);
-                    }
-
-                    foreach (var visitor in Visitors)
-                    {
-                        visitor.OnLeave(subExpr);
-                    }
-
-                    if (removeCurrent)
-                    {
-                        SetFieldValue(field, expression, null);
-                    }
-                    else
-                    {
-                        if (subExpr != fieldValue) 
-                            SetFieldValue(field, expression, subExpr);
-                    }
-
-                    if (_stopTraversal)
-                    {
-                        break;
-                    }
+                    fieldValue = TraverseExpr(original, expression);
                 }
-                else if (fieldValue != null && fieldValue.GetType().IsArray)
+                else if (fieldValue is IEnumerable<IExpression> expressions)
                 {
-                    var array = (object[]) fieldValue;
-                    //var exprs = array.Where(x => x is IExpression).Cast<IExpression>().ToArray();
+                    var exprs = expressions.ToArray();
+                    foreach (var ex in exprs)
+                    {
+                        if (ex != null)
+                            ex.Meta.Parent = expression;
+                    }
+                    TraverseArray(exprs);
+                    
+                    fieldValue = exprs;
+                }
+                
+                SetFieldValue(field, expression, fieldValue);
 
-                    //exprs = TraverseArray(array.Where(x => x is IExpression).Cast<IExpression>()).ToArray();
-
-                    SetFieldValue(
-                        field, expression,
-                        TraverseArray(array.Where(x => x is IExpression).Cast<IExpression>()).ToArray());
+                if (_stop)
+                {
+                    break;
                 }
             }
 
+            OnLeave(expression);
             return expression;
+        }
+
+        private void Visit(IExpression expression)
+        {
+          //  VisitationResult visitationResult = VisitationResult.None;
+            foreach (var visitor in Visitors)
+            {
+               visitor.OnVisit(this, expression);
+            }
+
+           // return visitationResult;
+        }
+
+        private void OnLeave(IExpression expression)
+        {
+            foreach (var visitor in Visitors)
+            {
+                visitor.OnLeave(expression);
+            }
+        }
+
+        public void Stop()
+        {
+            _stop = true;
         }
 
         private static ConcurrentDictionary<Type, PropertyInfo[]> _cachedProperties =
@@ -284,12 +180,16 @@ namespace Alex.MoLang.Parser
             }
         }
 
-        public enum ActionType
+        [Flags]
+        public enum VisitationResult
         {
-            RemoveCurrent,
-            StopTraversal,
-            DontTraverseCurrentAndChildren,
-            DontTraverseChildren
+            None,
+            
+            RemoveCurrent = 0x01,
+            StopTraversal = 0x02,
+            DontTraverseChildren = 0x04,
+            DontTraverseCurrent = 0x08,
+            DontTraverseCurrentAndChildren = DontTraverseCurrent | DontTraverseChildren
         }
     }
 }

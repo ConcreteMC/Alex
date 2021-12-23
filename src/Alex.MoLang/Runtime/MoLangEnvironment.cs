@@ -16,6 +16,7 @@ namespace Alex.MoLang.Runtime
 		public object Value => Structs;
 
 		public Dictionary<string, IMoStruct> Structs { get; } = new(StringComparer.OrdinalIgnoreCase);
+		public IMoValue ThisVariable { get; set; } = DoubleValue.Zero;
 
 		public IMoValue GetValue(MoPath name) {
 			return GetValue(name, MoParams.Empty);

@@ -5,6 +5,7 @@ using Alex.MoLang.Parser;
 using Alex.MoLang.Parser.Expressions;
 using Alex.MoLang.Runtime;
 using Alex.MoLang.Runtime.Value;
+using Alex.MoLang.Utils;
 using Alex.ResourcePackLib.Json.Converters.Bedrock;
 using Microsoft.Xna.Framework;
 using Newtonsoft.Json;
@@ -49,22 +50,14 @@ namespace Alex.ResourcePackLib.Json.Bedrock.MoLang
 
 		private Vector4 Evaluate(MoLangRuntime runtime, IExpression[] xExpressions, IExpression[] yExpressions, IExpression[] zExpressions, IExpression[] wExpressions, Vector4 currentValue)
 		{
-			IMoValue x = runtime.Execute(xExpressions, new Dictionary<string, IMoValue>(StringComparer.OrdinalIgnoreCase)
-			{
-				{"this", new DoubleValue(currentValue.X)}
-			});
-			IMoValue y = runtime.Execute(yExpressions, new Dictionary<string, IMoValue>(StringComparer.OrdinalIgnoreCase)
-			{
-				{"this", new DoubleValue(currentValue.Y)}
-			});
-			IMoValue z = runtime.Execute(zExpressions, new Dictionary<string, IMoValue>(StringComparer.OrdinalIgnoreCase)
-			{
-				{"this", new DoubleValue(currentValue.Z)}
-			});
-			IMoValue w = runtime.Execute(wExpressions, new Dictionary<string, IMoValue>(StringComparer.OrdinalIgnoreCase)
-			{
-				{"this", new DoubleValue(currentValue.W)}
-			});
+			runtime.Environment.ThisVariable = new DoubleValue(currentValue.X);
+			IMoValue x = runtime.Execute(xExpressions);
+			runtime.Environment.ThisVariable = new DoubleValue(currentValue.Y);
+			IMoValue y = runtime.Execute(yExpressions);
+			runtime.Environment.ThisVariable = new DoubleValue(currentValue.Z);
+			IMoValue z = runtime.Execute(zExpressions);
+			runtime.Environment.ThisVariable = new DoubleValue(currentValue.W);
+			IMoValue w = runtime.Execute(wExpressions);
 
 			return new Vector4(x.AsFloat(), y.AsFloat(), z.AsFloat(), w.AsFloat());
 		}

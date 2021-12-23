@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Text.Json;
@@ -27,20 +28,33 @@ namespace Alex.MoLang.TestApp
 			
 			TokenIterator tokenIterator = new TokenIterator(@"t.a = 213 + 2 / 0.5 + 5 + 2 * 3;
 
+query.debug_output(1 + 2 * 3);
+
 array.test.0 = 100;
 array.test[1] = 200;
 array.test[2] = 10.5;
+query.debug_output(array.test[1]);
+
+t.b = 3;
+loop(10, {
+	array.test[t.b] = array.test[t.b - 1] + 2;
+	t.b = t.b + 1;
+});
 
 for_each(v.r, array.test, {
   t.a = t.a + v.r;
 query.debug_output('hello1', t.a, v.r);
 });
 
+t.b = 0;
 loop(10, {
+  t.b = t.b + 1;
   t.a = t.a + math.cos((Math.PI / 180.0f) * 270);
-query.debug_output('hello', 'test', t.a, array.test[2]);
+  query.debug_output(array.test[t.b]);
+query.debug_output('hello', 'test', t.a, array.test[2], t.b);
 });
 
+query.debug_output(query.life_time());
 return t.a;");
 			MoLangParser  parser        = new MoLangParser(tokenIterator);
 			
@@ -57,17 +71,20 @@ return t.a;");
 			
 			try
 			{
-				const int runs = 100000;
+				const int runs = 1;///10000;
+				const int warmup = 5;
 				double totalTicks = 0;
 				
 				double longest = 0;
 				double shortest =long.MaxValue;
 				
 				IMoValue value;
-				for (int i = 0; i < runs; i++)
+				for (int i = 0; i < runs + warmup; i++)
 				{
 					sw.Restart();
 					value = runtime.Execute(expressions);
+					if (i < warmup)
+						continue;
 					
 					var elapsed = sw.Elapsed.TotalMilliseconds;
 
@@ -117,6 +134,13 @@ return t.a;");
 			{
 				return _sw.Elapsed.TotalSeconds;
 			}
+		}
+
+		[MoFunction("debug_output")]
+		public void DebugOutput(MoParams mo)
+		{
+			var str = string.Join(" ", mo.GetParams().Select(x => x.AsString()));
+			Console.WriteLine(str);
 		}
 	}
 }

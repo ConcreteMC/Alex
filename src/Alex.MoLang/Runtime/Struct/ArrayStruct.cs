@@ -19,7 +19,7 @@ namespace Alex.MoLang.Runtime.Struct
 			//string[] parts = key.ToString().Split(".");
 			//parts[^1] = int.Parse(parts[^1]).ToString();
 			
-			base.Set(key.Last, value);
+			base.Set(key, value);
 		}
 	}
 }

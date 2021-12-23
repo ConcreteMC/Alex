@@ -5,41 +5,45 @@ namespace Alex.MoLang.Parser.Visitors
 {
 	public class ExprConnectingVisitor : ExprVisitor
 	{
-		private LinkedList<IExpression> Stack { get; set; } = new LinkedList<IExpression>();
-		private IExpression Previous { get; set; }
+		//private LinkedList<IExpression> Stack { get; set; } = new LinkedList<IExpression>();
 
+	//	private LinkedList<IExpression> _previousStack = null;
+
+		private IExpression _last = null;
 		/// <inheritdoc />
 		public override void BeforeTraverse(IEnumerable<IExpression> expressions)
 		{
-			Stack.Clear();
-			Previous = null;
+			_last = null;
+			//	_previousStack = Stack;
+			//	Stack = new LinkedList<IExpression>();
 		}
 
 		/// <inheritdoc />
-		public override object OnVisit(IExpression expression)
+		public override void OnVisit(ExprTraverser traverser, IExpression expression)
 		{
-			if (Stack.Count > 0) {
-				expression.Meta.Parent = Stack.Last.Value;// .Attributes["parent"] = Stack.Last;
-			}
+			var previous = _last;
+			expression.Meta.Previous = previous;
 
-			if (Previous != null && expression.Meta.Parent != null
-			                     && Previous.Meta.Parent != null
-			                     && expression.Meta.Parent == Previous.Meta.Parent)
+			if (previous != null && previous != expression.Meta.Parent)
 			{
-				expression.Meta.Previous = Previous;// .Attributes["previous"] = Previous;
-				Previous.Meta.Next = expression;// .Attributes["next"] = expression;
+				previous.Meta.Next = expression;
 			}
-
-			Stack.AddLast(expression);
-
-			return expression;
+			
+			//Stack.AddLast(expression);
 		}
 
 		/// <inheritdoc />
 		public override void OnLeave(IExpression expression)
 		{
-			Previous = expression;
-			Stack.RemoveLast();
+			_last = expression;
+			//Stack.RemoveLast();
+		}
+
+		/// <inheritdoc />
+		public override void AfterTraverse(IEnumerable<IExpression> expressions)
+		{
+			base.AfterTraverse(expressions);
+			//Stack = _previousStack;
 		}
 	}
 }
