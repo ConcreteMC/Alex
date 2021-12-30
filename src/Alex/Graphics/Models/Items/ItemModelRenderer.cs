@@ -198,6 +198,23 @@ namespace Alex.Graphics.Models.Items
                 root.BasePosition = new Vector3(
                     displayElement.Translation.X, displayElement.Translation.Y, displayElement.Translation.Z);
             }
+            /*else if (displayPosition.HasFlag(DisplayPosition.FirstPerson))
+            {
+                root.BaseScale = new Vector3(
+                    displayElement.Scale.X, 
+                    displayElement.Scale.Y,
+                    displayElement.Scale.Z);
+                
+                root.BaseRotation =  new Vector3(
+                                         displayElement.Rotation.X, 
+                                         displayElement.Rotation.Y, 
+                                         displayElement.Rotation.Z);
+
+                root.BasePosition = new Vector3(
+                    displayElement.Translation.X, 
+                    8f + displayElement.Translation.Y,
+                    displayElement.Translation.Z);
+            }*/
             else
             {
                 root.BaseScale = new Vector3(

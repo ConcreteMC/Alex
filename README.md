@@ -5,8 +5,8 @@ A Minecraft (Java & Bedrock Edition) client written in C#
 
 ##### This client requires a paid Minecraft account!
 
-![Title screen](https://raw.githubusercontent.com/kennyvv/Alex/master/screenshots/menu.png)
-![Nethergames Lobby](https://raw.githubusercontent.com/kennyvv/Alex/master/screenshots/ng-lobby.png)
+![Title screen](https://raw.githubusercontent.com/kennyvv/Alex/master/screenshots/alex-home.png)
+![Nethergames Lobby](https://raw.githubusercontent.com/kennyvv/Alex/master/screenshots/alex-ng-new.png)
 
 About
 -----

@@ -478,16 +478,15 @@ namespace Alex.Entities
 
 	    private void StealSkin(Entity sourceEntity)
 	    {
-		    if (Network is BedrockClient bc)
-		    {
-			    MiNET.Utils.Skins.Skin skin = null;
+		    if (Network is not BedrockClient bc) return;
+		    MiNET.Utils.Skins.Skin skin = null;
 			    
-			    if (sourceEntity is RemotePlayer player)
-			    {
-				    if (player.Skin != null)
-					    skin = player.Skin;
-			    }
-			   /* else
+		    if (sourceEntity is RemotePlayer player)
+		    {
+			    if (player.Skin != null)
+				    skin = player.Skin;
+		    }
+		    /* else
 			    {
 				    if (sourceEntity?.ModelRenderer?.Model == null)
 					    return;
@@ -496,39 +495,37 @@ namespace Alex.Entities
 				    skin = model.ToSkin();
 			    }
 */
-			    if (skin == null)
-				    return;
-
-			    var texture = sourceEntity.Texture;
-
-			    if (skin.Data == null || skin.Data.Length == 0)
-			    {
-				    Image<Rgba32> skinTexture;
-				    using (MemoryStream ms = new MemoryStream())
-				    {
-					    texture.SaveAsPng(ms, texture.Width, texture.Height);
-					    ms.Position = 0;
-
-					    skinTexture = Image.Load(ms, new PngDecoder()).CloneAs<Rgba32>();
-				    }
-				    
-				    skin = skin.UpdateTexture(skinTexture);
-			    }
-
-			    var packet = McpePlayerSkin.CreateObject();
-			    packet.skin = skin;
-
-			    packet.uuid = UUID;
-			    packet.isVerified = skin.IsVerified;
-			    packet.skinName = skin.SkinId;
-			    packet.oldSkinName = Skin?.SkinId ?? "";
-
-			    bc.SendPacket(packet);
-
-			    Skin = skin;
-			    Log.Info($"Stole skin from {sourceEntity.NameTag}");
-		    }
+		    if (skin == null)
+			    return;
 		    
+		    if (skin.Data == null || skin.Data.Length == 0)
+		    {
+			    var texture = sourceEntity.Texture;
+			    Image<Rgba32> skinTexture;
+			    using (MemoryStream ms = new MemoryStream())
+			    {
+				    texture.SaveAsPng(ms, texture.Width, texture.Height);
+				    ms.Position = 0;
+
+				    skinTexture = Image.Load(ms, new PngDecoder()).CloneAs<Rgba32>();
+			    }
+				    
+			    skin = skin.UpdateTexture(skinTexture);
+		    }
+
+		    var packet = McpePlayerSkin.CreateObject();
+		    packet.skin = skin;
+
+		    packet.uuid = UUID;
+		    packet.isVerified = skin.IsVerified;
+		    packet.skinName = skin.SkinId;
+		    packet.oldSkinName = Skin?.SkinId ?? "";
+
+		    bc.SendPacket(packet);
+
+		    Skin = skin;
+		    Log.Info($"Stole skin from {sourceEntity.NameTag}");
+
 	    }
 	    
 	    public Entity HitEntity { get; private set; } = null;
@@ -835,32 +832,17 @@ namespace Alex.Entities
 	    {
 		    int renderCount = 0;
 
-		    if (IsFirstPersonMode)
-		    {
-			    var renderer = ItemRenderer;
+		    var worldMatrix = Matrix.CreateScale((1f / 16f) * (Scale * ModelScale))
+		                      * RenderLocation.CalculateWorldMatrix();
 
-			    if (renderer != null)
-			    {
-				    renderer.Update(new UpdateArgs()
-				    {
-					    Camera = renderArgs.Camera,
-					    GameTime = renderArgs.GameTime,
-					    GraphicsDevice = renderArgs.GraphicsDevice
-				    });
-				    //renderCount += renderer.Render(
-					//    renderArgs,Matrix.CreateScale((1f / 16f) * Scale) * RenderLocation.CalculateWorldMatrix());
-			    }
-		    }
-		    else
-		    {
-			    var renderer = ModelRenderer;
+		    var renderer = ModelRenderer;
 
-			    if (renderer != null)
-			    {
-				    renderCount += renderer.Render(
-					    renderArgs,
-					    Matrix.CreateScale((1f / 16f) * Scale) * RenderLocation.CalculateWorldMatrix());
-			    }
+		    if (renderer != null)
+		    {
+			    if (!IsFirstPersonMode)
+				    renderCount += renderer.Render(renderArgs, worldMatrix);
+
+			    renderCount += RenderHeldItem(renderArgs, renderer, worldMatrix);
 		    }
 
 		    return renderCount;

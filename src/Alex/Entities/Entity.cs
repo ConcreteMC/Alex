@@ -1246,10 +1246,24 @@ namespace Alex.Entities
 				renderCount += renderer.Render(renderArgs, worldMatrix);
 
 				//Hack to render held items
-				if (_itemRenderer != null)
+				renderCount += RenderHeldItem(renderArgs, renderer, worldMatrix);
+			}
+
+			return renderCount;
+		}
+
+		protected int RenderHeldItem(IRenderArgs renderArgs, ModelRenderer renderer, Matrix worldMatrix)
+		{
+			int count = 0;
+			var itemRenderer = _itemRenderer;
+			if (itemRenderer != null)
+			{
+				Matrix matrix = worldMatrix;
+
+				if (!IsFirstPersonMode)
 				{
 					var primaryArm = GetPrimaryArm();
-					
+
 					if (primaryArm != null)
 					{
 						var bones = renderer.Model.Bones.ImmutableArray;
@@ -1258,15 +1272,17 @@ namespace Alex.Entities
 
 						if (primaryArm.Index >= 0 && primaryArm.Index < matrices.Length)
 						{
-							_itemRenderer?.Render(renderArgs, matrices[primaryArm.Index] * worldMatrix);
+							matrix = matrices[primaryArm.Index] * worldMatrix;
 						}
 					}
 				}
+
+				count += itemRenderer?.Render(renderArgs, matrix) ?? 0;
 			}
 
-			return renderCount;
+			return count;
 		}
-
+		
 		private bool _doUseItemAnimation = false;
 		public DateTime LastUpdate { get; set; }
 		public virtual void Update(IUpdateArgs args)
