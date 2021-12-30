@@ -21,8 +21,19 @@ namespace Alex.Common.Utils
 
         public long PacketsIn;
         public long PacketsOut;
-        
-        public long PacketLoss => (100 / (PacketsOut + PacketsIn)) * (Nak + NakSent);
+
+        public long PacketLoss
+        {
+            get
+            {
+                var packets = PacketsIn + PacketsOut;
+
+                if (packets == 0)
+                    return 0;
+
+                return (100 / packets) * (Nak + NakSent);
+            }
+        }
         
         public NetworkState State { get; }
         public ConnectionInfo(DateTime connectionOpenedTime, long latency, long nack, long ack, long acksSent, long fails, long resends, long bytesIn, long bytesOut, long packetsIn, long packetsOut, NetworkState state = NetworkState.Ok)

@@ -12,21 +12,6 @@ using NLog;
 
 namespace Alex.Graphics.Models.Entity
 {
-	public class TextureBinding
-	{
-		public TextureBinding(Texture2D texture, Vector2 size)
-		{
-			Texture = texture;
-			Size = size;
-			Effect = new EntityEffect();
-			Effect.Texture = texture;
-			Effect.TextureScale = Vector2.One / size;
-		}
-
-		public Vector2 Size { get; }
-		public Texture2D Texture { get; }
-		public EntityEffect Effect { get; }
-	}
 	public class ModelRenderer : IDisposable
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ModelRenderer));
@@ -85,6 +70,8 @@ namespace Alex.Graphics.Models.Entity
 		}
 
 		private EntityEffect Effect { get; set; }
+
+		private TextureBinding[] _textures = new TextureBinding[0];
 		private Texture2D _texture;
 		public Texture2D Texture
 		{
@@ -100,11 +87,10 @@ namespace Alex.Graphics.Models.Entity
 				{
 					_textureSize = new Vector2(value.Width, value.Height);
 				}
-
-				var effect = Effect;
-				if (value != null && effect != null)
+				
+				if (value != null && Effect != null)
 				{
-					effect.Texture = value;
+					Effect.Texture = value;
 				}
 				
 				UpdateScale();
@@ -119,12 +105,7 @@ namespace Alex.Graphics.Models.Entity
 		
 		private void UpdateScale()
 		{
-			var effect = Effect;
-
-			if (effect == null)
-				return;
-			
-			effect.TextureScale = Vector2.One / TextureSize;
+			Effect.TextureScale = Vector2.One / TextureSize;
 		}
 
 		///  <summary>
@@ -145,8 +126,9 @@ namespace Alex.Graphics.Models.Entity
 
 		public virtual void Update(IUpdateArgs args)
 		{
+		
 			var model = Model;
-			if (model?.Bones == null) return;
+			if (model == null) return;
 		
 			foreach (var bone in model.Bones.ImmutableArray)
 			{
@@ -156,15 +138,7 @@ namespace Alex.Graphics.Models.Entity
 		
 		public bool GetBone(string name, out ModelBone bone)
 		{
-			var model = Model;
-
-			if (model?.Bones == null)
-			{
-				bone = null;
-				return false;
-			}
-			
-			if (model.Bones.TryGetValue(name, out bone))
+			if (Model.Bones.TryGetValue(name, out bone))
 			{
 				return true;
 			}
@@ -182,14 +156,26 @@ namespace Alex.Graphics.Models.Entity
 
 		public void Dispose()
 		{
-			Model?.Dispose();
-			Model = null;
+			var model = Model;
 
+			if (model != null)
+			{
+				foreach (var mesh in model.Meshes)
+				{
+					foreach (var part in mesh.MeshParts)
+					{
+						if (part.VertexBuffer != null && !part.VertexBuffer.IsDisposed)
+							part.VertexBuffer.Dispose();
+						
+						if (part.IndexBuffer != null && !part.IndexBuffer.IsDisposed)
+							part.IndexBuffer.Dispose();
+					}
+				}
+			}
+			
 			Effect?.Dispose();
 			Effect = null;
 			
-			Texture?.Dispose();
-			Texture = null;
 			//_texture?.Dispose();
 			//_texture = null;
 		}

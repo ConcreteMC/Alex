@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -23,6 +24,7 @@ using Alex.ResourcePackLib.Json.Models.Items;
 using Alex.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using MiNET.Utils;
 using Newtonsoft.Json;
 using NLog;
 using ItemMaterial = MiNET.Items.ItemMaterial;
@@ -81,7 +83,7 @@ namespace Alex.Items
 			{"firstperson_lefthand", new DisplayElement(new Vector3(0, 225, 0), new Vector3(0,0,0), new Vector3(0.4f, 0.4f, 0.4f))}
 		};
 
-		private static IReadOnlyDictionary<ResourceLocation, ItemMapping> _itemMappings;// = new Dictionary<string, ItemMapping>();
+		private static Dictionary<ResourceLocation, ItemMapping> _itemMappings;// = new Dictionary<string, ItemMapping>();
 		private static IReadOnlyDictionary<ReverseMapperKey, ResourceLocation> _reverseItemMappings;
 		private static HashSet<ItemMapping> _allItemMapping = new HashSet<ItemMapping>();
 		
@@ -217,27 +219,61 @@ namespace Alex.Items
 		   // ResourcePack = resourcePack;
 
 		   _itemMappings =
-			   MCJsonConvert.DeserializeObject<IReadOnlyDictionary<ResourceLocation, ItemMapping>>(ResourceManager.ReadStringResource("Alex.Resources.itemmapping.json"));
+			   MCJsonConvert.DeserializeObject<Dictionary<ResourceLocation, ItemMapping>>(ResourceManager.ReadStringResource("Alex.Resources.itemmapping.json"));
 
 		   
 		   Dictionary<ReverseMapperKey, ResourceLocation> reverseMap = new Dictionary<ReverseMapperKey, ResourceLocation>();
+		   var r16Mapping =  MCJsonConvert.DeserializeObject<R16ToCurrentMap>(ResourceManager.ReadStringResource("Alex.Items.Resources.r16_to_current_item_map.json"));
 
-		   if (_itemMappings != null)
+		   foreach (var entry in r16Mapping.Complex)
+		   {
+			   var legacyId = entry.Key;
+
+			   foreach (var meta in entry.Value)
+			   {
+				   var newBedrockId = meta.Value;
+
+				   var matchingMapping = _itemMappings.FirstOrDefault(x => x.Value.BedrockId == newBedrockId);
+
+				   if (matchingMapping.Value != null)
+				   {
+					   if (int.TryParse(meta.Key, out var metadata))
+					   {
+						   var value = new ItemMapping()
+						   {
+							   BedrockId = legacyId, BedrockData = metadata, JavaId = matchingMapping.Key
+						   };
+
+						   reverseMap.Add(new ReverseMapperKey(legacyId, metadata), matchingMapping.Key);
+
+						   _allItemMapping.Add(value);
+					   }
+				   }
+			   }
+		   }
+
+		   /*
+		   foreach (var simple in r16Mapping.Simple)
+		   {
+			   
+		   }*/
+		   
+		    if (_itemMappings != null)
 		   {
 			   foreach (var item in _itemMappings)
 			   {
 				   var value = item.Value;
 				   value.JavaId = item.Key;
 				   
-				   reverseMap.Add(new ReverseMapperKey(item.Value.BedrockId, item.Value.BedrockData), item.Key);
+				   reverseMap.TryAdd(new ReverseMapperKey(value.BedrockId, value.BedrockData), item.Key);
 
 				   _allItemMapping.Add(value);
 			   }
 		   }
-
+		    
 		   _reverseItemMappings = new ReadOnlyDictionary<ReverseMapperKey, ResourceLocation>(reverseMap);
 		  
-		   var otherRaw = ResourceManager.ReadStringResource("Alex.Resources.items3.json");
+		   var otherRaw = ResourceManager.ReadStringResource("Alex.Resources.legacyItemMapping.json");
 		    var legacyIdMapping = JsonConvert.DeserializeObject<LegacyIdMap>(otherRaw);
 		    _legacyIdMap = legacyIdMapping;
 		    
@@ -407,7 +443,13 @@ namespace Alex.Items
 		    if (_reverseItemMappings.TryGetValue(new ReverseMapperKey(id, meta), out var itemName))
 		    {
 			    if (TryGetItem(itemName, out item))
+			    {
 				    return true;
+			    }
+			    else
+			    {
+				    Log.Warn($"Unknown item: {itemName}");
+			    }
 		    }
 		    else if (_allItemMapping.TryGetValue(
 			    new ItemMapping() {BedrockId = id, BedrockData = meta}, out var actualValue))
@@ -418,14 +460,14 @@ namespace Alex.Items
 		    return false;
 	    }
 
-	    private class ReverseMapperKey
+	    private class ReverseMapperKey : IEquatable<ReverseMapperKey>
 	    {
 		    private readonly string _id;
 		    private readonly int _meta;
 
 		    public ReverseMapperKey(string id, int meta)
 		    {
-			    _id = id;
+			    _id = id.ToLowerInvariant();
 			    _meta = meta;
 		    }
 
@@ -433,6 +475,25 @@ namespace Alex.Items
 		    public override int GetHashCode()
 		    {
 			    return HashCode.Combine(_id, _meta);
+		    }
+
+		    /// <inheritdoc />
+		    public bool Equals(ReverseMapperKey other)
+		    {
+			    if (ReferenceEquals(null, other)) return false;
+			    if (ReferenceEquals(this, other)) return true;
+
+			    return _id == other._id && _meta == other._meta;
+		    }
+
+		    /// <inheritdoc />
+		    public override bool Equals(object obj)
+		    {
+			    if (ReferenceEquals(null, obj)) return false;
+			    if (ReferenceEquals(this, obj)) return true;
+			    if (obj.GetType() != this.GetType()) return false;
+
+			    return Equals((ReverseMapperKey)obj);
 		    }
 	    }
 
@@ -443,6 +504,15 @@ namespace Alex.Items
 			
 			[JsonProperty("items")]
 			public IReadOnlyDictionary<string, string> Items { get; set; }
+	    }
+	    
+	    class R16ToCurrentMap
+	    {
+		    [JsonProperty("complex")]
+		    public Dictionary<string, Dictionary<string, string>> Complex { get; set; }
+			
+		    [JsonProperty("simple")]
+		    public Dictionary<string, string> Simple { get; set; }
 	    }
     }
 }

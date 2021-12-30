@@ -69,6 +69,8 @@
         <Compile Remove="Graphics\Models\ModelExtra.cs" />
         <Compile Remove="Graphics\Models\AnimatedModel.cs" />
         <Compile Remove="Graphics\Models\Bone.cs" />
+        <None Remove="Items\Resources\r16_to_current_item_map.json" />
+        <EmbeddedResource Include="Items\Resources\r16_to_current_item_map.json" />
     </ItemGroup>
 
     <ItemGroup>

@@ -92,7 +92,7 @@ namespace Alex.Networking.Java
 				_readThread.Start();
 				
 				var blockOptions =
-					new ExecutionDataflowBlockOptions { CancellationToken = CancellationToken.Token, EnsureOrdered = true };
+					new ExecutionDataflowBlockOptions { CancellationToken = CancellationToken.Token, EnsureOrdered = true, MaxDegreeOfParallelism = 1};
 				_packetQueue = new BufferBlock<Packet>(blockOptions);
 	        
 				var sendPacketBlock = new ActionBlock<Packet>(WriteNetwork, blockOptions);

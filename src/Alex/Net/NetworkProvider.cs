@@ -1,3 +1,4 @@
+using System;
 using Alex.Common;
 using Alex.Common.Items;
 using Alex.Common.Utils;
@@ -21,9 +22,11 @@ namespace Alex.Net
 	
 	public abstract class NetworkProvider
 	{
+		public ConnectionInfo ConnectionInfo { get; private set; } =
+			new ConnectionInfo(DateTime.UtcNow, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 		public CommandProvider CommandProvider { get; set; }
 		public abstract bool IsConnected { get; }
-		public abstract ConnectionInfo GetConnectionInfo();
+		protected abstract ConnectionInfo GetConnectionInfo();
 
 		public abstract void PlayerOnGroundChanged(Player player, bool onGround);
 		
@@ -58,5 +61,17 @@ namespace Alex.Net
 		public abstract void SendChatMessage(ChatObject message);
 
 		public abstract void RequestRenderDistance(int oldValue, int newValue);
+
+		private double _elapsed = 0f;
+		public void Update(GameTime gameTime)
+		{
+			_elapsed += gameTime.ElapsedGameTime.TotalSeconds;
+
+			if (_elapsed >= 1d)
+			{
+				_elapsed -= 1d;
+				ConnectionInfo = GetConnectionInfo();
+			}
+		}
 	}
 }

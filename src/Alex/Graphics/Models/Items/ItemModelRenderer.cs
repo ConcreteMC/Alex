@@ -4,9 +4,12 @@ using System.Linq;
 using System.Threading;
 using Alex.Common.Graphics;
 using Alex.Common.Utils;
+using Alex.Common.Utils.Collections;
 using Alex.Graphics.Models.Entity;
 using Alex.ResourcePackLib.Json.Models;
 using Alex.ResourcePackLib.Json.Models.Items;
+using Alex.Worlds;
+using FmodAudio;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using NLog;
@@ -109,7 +112,7 @@ namespace Alex.Graphics.Models.Items
             }
         }
 
-        public override IItemRenderer CloneItemRenderer()
+        /*public override IItemRenderer CloneItemRenderer()
         {
             var renderer = new ItemModelRenderer(ResourcePackModel, Vertices?.Select(
                 x => new VertexPositionColor(
@@ -125,10 +128,10 @@ namespace Alex.Graphics.Models.Items
            //     renderer.InitCache();
 
             return renderer;
-        }
+        }*/
     }
 
-    public class ItemModelRenderer<TVertice> : ModelBase, IItemRenderer where TVertice : struct, IVertexType
+    public class ItemModelRenderer<TVertice> : ModelBase, IItemRenderer, IItemRendererHolder where TVertice : struct, IVertexType
     {
         private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ItemModelRenderer));
         public Vector3               Size  { get; set; } = Vector3.One;
@@ -177,56 +180,55 @@ namespace Alex.Graphics.Models.Items
         {
             var root = Model?.Root;
 
-            if (root != null)
-            {
-                if (_displayPosition.HasFlag(DisplayPosition.Gui))
-                {
-                    root.BaseScale = Vector3.One / 16f;
-                    root.BaseRotation = Vector3.Zero;//.Identity;
-                    root.BasePosition = Vector3.Zero;
-                }
-                else if (displayPosition.HasFlag(DisplayPosition.Ground))
-                {
-                    root.BaseScale = displayElement.Scale * Scale;
+            if (root == null) return;
 
-                    root.BaseRotation =  new Vector3(
-                        displayElement.Rotation.X, displayElement.Rotation.Y, displayElement.Rotation.Z);
+            if (displayPosition.HasFlag(DisplayPosition.Gui))
+            {
+                root.BaseScale = Vector3.One / 16f;
+                root.BaseRotation = Vector3.Zero;//.Identity;
+                root.BasePosition = Vector3.Zero;
+            }
+            else if (displayPosition.HasFlag(DisplayPosition.Ground))
+            {
+                root.BaseScale = displayElement.Scale * Scale;
+
+                root.BaseRotation =  new Vector3(
+                    displayElement.Rotation.X, displayElement.Rotation.Y, displayElement.Rotation.Z);
+
+                root.BasePosition = new Vector3(
+                    displayElement.Translation.X, displayElement.Translation.Y, displayElement.Translation.Z);
+            }
+            else
+            {
+                root.BaseScale = new Vector3(
+                    displayElement.Scale.X, 
+                    displayElement.Scale.Y,
+                    displayElement.Scale.Z);
+
+                if ((ResourcePackModel.Type & ModelType.Handheld) != 0)
+                {
+                    root.BaseRotation = new Vector3(displayElement.Rotation.X, 
+                                            -displayElement.Rotation.Y, 
+                                            -displayElement.Rotation.Z) 
+                                        + new Vector3(-67.5f, -22.5f, 0f);
 
                     root.BasePosition = new Vector3(
-                        displayElement.Translation.X, displayElement.Translation.Y, displayElement.Translation.Z);
+                        6f + displayElement.Translation.X, 
+                        6f + displayElement.Translation.Y,
+                        2f + displayElement.Translation.Z);
                 }
                 else
                 {
-                    root.BaseScale = new Vector3(
-                        ActiveDisplayItem.Scale.X, 
-                        ActiveDisplayItem.Scale.Y,
-                        ActiveDisplayItem.Scale.Z);
+                    root.BaseRotation =  new Vector3(
+                                             displayElement.Rotation.X, 
+                                             -displayElement.Rotation.Y,
+                                             -displayElement.Rotation.Z)
+                                         + new Vector3(-67.5f, 0f, 0f);
 
-                    if ((ResourcePackModel.Type & ModelType.Handheld) != 0)
-                    {
-                        root.BaseRotation = new Vector3(ActiveDisplayItem.Rotation.X, 
-                                                -ActiveDisplayItem.Rotation.Y, 
-                                                -ActiveDisplayItem.Rotation.Z) 
-                                            + new Vector3(-67.5f, -22.5f, 0f);
-
-                        root.BasePosition = new Vector3(
-                            6f + ActiveDisplayItem.Translation.X, 
-                            6f + ActiveDisplayItem.Translation.Y,
-                            2f + ActiveDisplayItem.Translation.Z);
-                    }
-                    else
-                    {
-                        root.BaseRotation =  new Vector3(
-                                                 ActiveDisplayItem.Rotation.X, 
-                                                 -ActiveDisplayItem.Rotation.Y,
-                                                 -ActiveDisplayItem.Rotation.Z)
-                                             + new Vector3(-67.5f, 0f, 0f);
-
-                        root.BasePosition = new Vector3(
-                            ActiveDisplayItem.Translation.X, 
-                            8f + ActiveDisplayItem.Translation.Y,
-                            ActiveDisplayItem.Translation.Z);
-                    }
+                    root.BasePosition = new Vector3(
+                        displayElement.Translation.X, 
+                        8f + displayElement.Translation.Y,
+                        displayElement.Translation.Z);
                 }
             }
         }
@@ -272,10 +274,8 @@ namespace Alex.Graphics.Models.Items
 
         public Model Model { get; set; } = null;
 
-        /// <inheritdoc />
-        public IHoldAttachment Parent { get; set; }
-
         protected Texture2D  _texture;
+        protected ThreadSafeList<IItemRenderer> _instances = new ThreadSafeList<IItemRenderer>();
         public ItemModelRenderer(ResourcePackModelBase resourcePackModel, VertexDeclaration declaration, TVertice[] vertices = null, Texture2D texture = null)
         {
             Scale = 1f;
@@ -410,9 +410,9 @@ namespace Alex.Graphics.Models.Items
                     _initSemaphore.Release();
                 }
             }
-            
-             ThreadPool.QueueUserWorkItem(
-                (o) =>
+
+             World.BackgroundWorker.Enqueue(
+                () =>
                 {
                     Finish();
                 });
@@ -458,20 +458,93 @@ namespace Alex.Graphics.Models.Items
 
         public virtual IItemRenderer CloneItemRenderer()
         {
-            var renderer = new ItemModelRenderer<TVertice>(ResourcePackModel, _declaration, Vertices?.Clone() as TVertice[], _texture)
-            {
-                Size = this.Size,
-                Scale = Scale,
-                DisplayPosition = DisplayPosition,
-                ActiveDisplayItem = ActiveDisplayItem.Clone()
-            };
+            var newInstance = new RendererInstance(this);
+            _instances.Add(newInstance);
 
-           // if (renderer._vertices == null || renderer._vertices.Length == 0)
-            //    renderer.InitCache();
-            
-            return renderer;
+            return newInstance;
         }
 
+        public void RemoveInstance(IItemRenderer instance)
+        {
+            _instances.Remove(instance);
+        }
+
+        public class RendererInstance : IItemRenderer
+        {
+            private readonly IItemRendererHolder _parent;
+
+            /// <inheritdoc />
+            public Model Model
+            {
+                get => _parent.Model;
+                set { }
+            }
+
+            public RendererInstance(IItemRendererHolder parent)
+            {
+                _parent = parent;
+            }
+
+            /// <inheritdoc />
+            public int Render(IRenderArgs args, Matrix characterMatrix)
+            {
+                var originalParentDisplayPosition = _parent.DisplayPosition;
+                var originalParentScale = _parent.Scale;
+                
+                _parent.DisplayPosition = DisplayPosition;
+                var amount = _parent.Render(args, characterMatrix);
+                
+                _parent.Scale = originalParentScale;
+                _parent.DisplayPosition = originalParentDisplayPosition;
+                return amount;
+            }
+
+            /// <inheritdoc />
+            public void Update(IUpdateArgs args)
+            {
+                _parent.Update(args);
+            }
+
+            private void Dispose(bool disposing)
+            {
+                _parent.RemoveInstance(this);
+
+                if (disposing)
+                {
+                    GC.SuppressFinalize(this);
+                }
+            }
+            
+            /// <inheritdoc />
+            public void Dispose()
+            {
+                Dispose(true);
+            }
+
+            /// <inheritdoc />
+            public ResourcePackModelBase ResourcePackModel => _parent.ResourcePackModel;
+
+            /// <inheritdoc />
+            public DisplayPosition DisplayPosition { get; set; }
+
+            /// <inheritdoc />
+            public bool Cache(ResourceManager pack)
+            {
+                return true;
+            }
+
+            /// <inheritdoc />
+            public IItemRenderer CloneItemRenderer()
+            {
+                return _parent.CloneItemRenderer();
+            }
+            
+            ~RendererInstance()
+            {
+                Dispose(false);
+            }
+        }
+        
         /// <inheritdoc />
         public override string ToString()
         {
@@ -487,20 +560,31 @@ namespace Alex.Graphics.Models.Items
         /// <inheritdoc />
         public void Dispose()
         {
-            Model?.Dispose();
-            Model = null;
-            
-            var t = _texture;
-            if (t != null && t.Tag != AtlasGenerator.Tag)
+            if (_instances.Count == 0)
             {
-                t.Dispose();
+                Model?.Dispose();
+                Model = null;
+
+                var t = _texture;
+
+                if (t != null && t.Tag != AtlasGenerator.Tag)
+                {
+                    t.Dispose();
+                }
+
+                _texture = null;
+
+                _effect?.Dispose();
+                _effect = null;
+                _declaration?.Dispose();
+                _declaration = null;
             }
-            _texture = null;
-            
-            _effect?.Dispose();
-            _effect = null;
-            _declaration?.Dispose();
-            _declaration = null;
         }
+    }
+
+    public interface IItemRendererHolder : IItemRenderer
+    {
+        float Scale { get; set; }
+        void RemoveInstance(IItemRenderer rendererInstance);
     }
 }

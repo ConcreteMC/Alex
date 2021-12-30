@@ -45,7 +45,7 @@ namespace Alex.Gamestates.Debugging
 
 		private readonly GuiDebugInfo _debugInfo;
 		private          long         _ramUsage = 0;
-		private          long         _threadsUsed, _maxThreads, _complPortUsed, _maxComplPorts;
+		//private          long         _threadsUsed, _maxThreads, _complPortUsed, _maxComplPorts;
 
 		//private DebugModelRenderer _modelRenderer;
 
@@ -117,7 +117,7 @@ namespace Alex.Gamestates.Debugging
 			_debugInfo.AddDebugRight(() =>
 			{
 				return
-					$"Threads: {(_threadsUsed):00}/{_maxThreads}\nCompl.ports: {_complPortUsed:00}/{_maxComplPorts}";
+					$"Threads: {(ThreadPool.ThreadCount):00}/{Program.MaxThreads}";
 			});
 
 			_debugInfo.AddDebugRight(() =>
@@ -199,13 +199,13 @@ namespace Alex.Gamestates.Debugging
 				{
 					_ramUsage = Environment.WorkingSet;
 
-					ThreadPool.GetMaxThreads(out int maxThreads, out int maxCompletionPorts);
+					/*ThreadPool.GetMaxThreads(out int maxThreads, out int maxCompletionPorts);
 					ThreadPool.GetAvailableThreads(out int availableThreads, out int availableComplPorts);
 					_threadsUsed   = maxThreads - availableThreads;
 					_complPortUsed = maxCompletionPorts - availableComplPorts;
 
 					_maxThreads    = maxThreads;
-					_maxComplPorts = maxCompletionPorts;
+					_maxComplPorts = maxCompletionPorts;*/
 				} //);
 			}
 

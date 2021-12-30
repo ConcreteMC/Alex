@@ -274,8 +274,6 @@ namespace Alex.Gamestates.Multiplayer
 
 		    return Task.CompletedTask;
 	    }
-	    
-	    private Task _previousTask = null;
 
 	    /// <inheritdoc />
 	    protected override void OnAddItem(GuiServerListEntryElement item)
@@ -283,16 +281,8 @@ namespace Alex.Gamestates.Multiplayer
 		    base.OnAddItem(item);
 
 		    var cancellationToken = _cancellationTokenSource.Token;
-		    var prevTask = _previousTask;
-
-		    if (prevTask == null || prevTask.IsCompleted)
-		    {
-			    _previousTask = item.PingAsync(false, cancellationToken);
-		    }
-		    else
-		    {
-			    _previousTask = prevTask.ContinueWith(_ => item.PingAsync(false, cancellationToken), cancellationToken);
-		    }
+		    Task.Run(() => item.PingAsync(false, cancellationToken), cancellationToken);
+		    //item.PingAsync(false, cancellationToken).ConfigureAwait(true);
 		    
 		    //item?.PingAsync(false, _cancellationTokenSource.Token);
 	    }
@@ -448,7 +438,8 @@ namespace Alex.Gamestates.Multiplayer
 				    entry.SavedServerEntry = obj.Entry;
 				    storageProvider?.AddEntry(entry.SavedServerEntry);
 
-				    entry.PingAsync(false, CancellationToken.None);
+				    var cancellationToken = _cancellationTokenSource.Token;
+				    Task.Run(() => entry.PingAsync(false, cancellationToken), cancellationToken);
 			    }
 		    }
 		    else

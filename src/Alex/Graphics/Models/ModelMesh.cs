@@ -75,11 +75,11 @@ namespace Alex.Graphics.Models
 					this.graphicsDevice.SetVertexBuffer(part.VertexBuffer);
 					this.graphicsDevice.Indices = part.IndexBuffer;
                     
-					for (int j = 0; j < effect.CurrentTechnique.Passes.Count; j++)
+					for (int j = 0; j < effect?.CurrentTechnique?.Passes?.Count; j++)
 					{
-						effect.CurrentTechnique.Passes[j].Apply();
+						effect?.CurrentTechnique?.Passes[j]?.Apply();
 						//graphicsDevice.DrawInstancedPrimitives(PrimitiveType.TriangleList, part.VertexOffset, part.StartIndex, part.PrimitiveCount, );
-						graphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, part.VertexOffset, part.StartIndex, part.PrimitiveCount);
+						graphicsDevice?.DrawIndexedPrimitives(PrimitiveType.TriangleList, part.VertexOffset, part.StartIndex, part.PrimitiveCount);
 						c++;
 					}
 				}

@@ -502,9 +502,11 @@ namespace Alex.Graphics.Models.Entity.Animations
 				return;
 			
 			_deltaTimeStopwatch.Stop();
-			
+			//Stopwatch sw = Stopwatch.StartNew();
 			//_queryStruct?.Tick(_deltaTimeStopwatch.Elapsed);
 			ProcessAnimations();
+			//sw.Stop();
+			//if (sw.Elapsed.TotalMilliseconds > 10)
 			
 			_deltaTimeStopwatch.Restart();
 		}

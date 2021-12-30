@@ -109,7 +109,7 @@ namespace Alex.Entities
 			}
 			set
 			{
-				if (value == null || value == _skin || value.IsPersonaSkin)
+				if (value == null || value == _skin)
 					return;
 				
 				_skin = value;
@@ -164,7 +164,7 @@ namespace Alex.Entities
 
 			if (IsSpawned)
 			{
-				QueueSkinProcessing();
+				QueueSkinProcessing(newSkin);
 			}
 		}
 
@@ -175,7 +175,7 @@ namespace Alex.Entities
 
 			if (_skinDirty)
 			{
-				QueueSkinProcessing();
+				QueueSkinProcessing(_skin);
 			}
 		}
 
@@ -186,46 +186,42 @@ namespace Alex.Entities
 		}
 
 		private int _skinQueuedCount = 0;
-		private void QueueSkinProcessing()
+		private void QueueSkinProcessing(Skin skin)
 		{
-			if (Interlocked.CompareExchange(ref _skinQueuedCount, 1, 0) == 0)
+			if (Interlocked.CompareExchange(ref _skinQueuedCount, 1, 0) != 0)
 			{
-				//if (Level?.BackgroundWorker == null)
-				//{
-				//	ProcessSkin();
-				//}
-				//else
-				{
-					ThreadPool.QueueUserWorkItem(
-						o =>
+				Log.Warn($"Tried loading skin twice!");
+				return;
+			}
+
+			//if (Level?.BackgroundWorker == null)
+			//{
+			//	ProcessSkin();
+			//}
+			//else
+			{
+				World.BackgroundWorker.Enqueue(
+					() =>
+					{
+						try
 						{
-							try
+							LoadSkin(skin);
+
+							if (!AnimationController.Initialized &&
+							    Alex.Instance.Resources.TryGetEntityDefinition(
+								    "minecraft:player", out var description, out var source))
 							{
-								if (_skin == null)
-								{
-									LoadSkin(null, null);
-								}
-								else
-								{
-									LoadSkin(_skin);
-								}
-				
-								if (!AnimationController.Initialized &&
-								    Alex.Instance.Resources.TryGetEntityDefinition(
-									    "minecraft:player", out var description, out var source))
-								{
-									AnimationController.UpdateEntityDefinition(source, source, description);
-								}
+								AnimationController.UpdateEntityDefinition(source, source, description);
 							}
-							finally
-							{
-								_skinQueuedCount = 0;
-								_skinDirty = false;
-							}
-						});
+						}
+						finally
+						{
+							_skinQueuedCount = 0;
+							_skinDirty = false;
+						}
+					});
 					
 				//	Level.BackgroundWorker.Enqueue(ProcessSkin);
-				}
 			}
 		}
 
@@ -401,11 +397,11 @@ namespace Alex.Entities
 		/// <inheritdoc />
 		protected override void UpdateItemPosition(IItemRenderer oldValue, IItemRenderer renderer)
 		{
-			var primaryArm = GetPrimaryArm();
+			//var primaryArm = GetPrimaryArm();
 			//if (oldValue != renderer)
 			{
-				if (oldValue != null)
-					primaryArm?.Remove(oldValue);
+				//if (oldValue != null)
+					//primaryArm?.Remove(oldValue);
 			}
 
 			if (renderer == null || renderer.Model == null)
@@ -464,7 +460,7 @@ namespace Alex.Entities
 		//	if (oldValue != renderer)
 			{
 				//if (renderer != null)
-					primaryArm?.AddChild(renderer);
+				//	primaryArm?.AddChild(renderer);
 			}
 		}
 

@@ -4,7 +4,7 @@ using NLog;
 
 namespace Alex.Networking.Bedrock.RakNet
 {
-    public class SlidingWindow
+    public class SlidingWindow : ICongestionManager
     {
         private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(SlidingWindow));
         private const long UNSET_TIME_US = -1;
@@ -170,7 +170,7 @@ namespace Alex.Networking.Bedrock.RakNet
             {
                 SlowStartThreshold = CongestionWindow / 2D;
                 
-                Log.Info($"Set congestion avoidance. Cwnd={CongestionWindow:F2}, SlowStartThreshold={SlowStartThreshold:F2}, NAKSequenceNumber={nakSequenceNumber}");
+                Log.Info($"Set congestion avoidance. Cwnd={CongestionWindow:F2}");
             }
         }
 
@@ -198,7 +198,7 @@ namespace Alex.Networking.Bedrock.RakNet
             
             LastRtt = rtt;
 
-            if (EstimatedRtt < 0d)
+            if (EstimatedRtt == UNSET_TIME_US)
             {
                 EstimatedRtt = rtt;
                 DeviationRtt = rtt;
@@ -226,17 +226,12 @@ namespace Alex.Networking.Bedrock.RakNet
 
             if (IsInSlowStart())
             {
-          //      if (CongestionWindow < MtuSize)
-                {
-                    CongestionWindow += MtuSize;
+                CongestionWindow += MtuSize;
 
-                    if (CongestionWindow > SlowStartThreshold && SlowStartThreshold > 0)
-                    {
-                        CongestionWindow = SlowStartThreshold + MtuSize * MtuSize / CongestionWindow;
-                    }
+                if (CongestionWindow > SlowStartThreshold && SlowStartThreshold != 0)
+                    CongestionWindow = SlowStartThreshold + MtuSize * MtuSize / CongestionWindow;
 
-                    Log.Info($"Slow start increase... Cwnd={CongestionWindow:F2}");
-                }
+                Log.Info($"Slow start increase... Cwnd={CongestionWindow:F2}");
             }
             else if (isNewCongestionControlPeriod)
             {
@@ -248,7 +243,7 @@ namespace Alex.Networking.Bedrock.RakNet
 
         public bool IsInSlowStart()
         {
-            return CongestionWindow <= SlowStartThreshold || SlowStartThreshold <= 0;
+            return CongestionWindow <= SlowStartThreshold || SlowStartThreshold == 0;
         }
 
         /// <summary>
@@ -282,12 +277,12 @@ namespace Alex.Networking.Bedrock.RakNet
         /// <returns></returns>
         public long GetRtoForRetransmission()
         {
-            if (EstimatedRtt < 0d)
+            if (EstimatedRtt == UNSET_TIME_US)
             {
                 return CcMaximumThreshold;
             }
 
-            long threshold = (long) ((2.0D * EstimatedRtt + 4.0D * DeviationRtt) + CcAdditionalVariance);
+            long threshold = (long) ((2.0 * EstimatedRtt + 4.0 * DeviationRtt) + CcAdditionalVariance);
 
             return (threshold > CcMaximumThreshold ? CcMaximumThreshold : threshold);
         }

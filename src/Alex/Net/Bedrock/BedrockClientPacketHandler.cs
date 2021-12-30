@@ -1016,7 +1016,7 @@ namespace Alex.Net.Bedrock
 				return;
 			}
 
-			Client.World.BackgroundWorker.Enqueue(
+			World.BackgroundWorker.Enqueue(
 				() =>
 				{
 					entity.Inventory.Helmet = message.helmet.ToAlexItem().Clone();

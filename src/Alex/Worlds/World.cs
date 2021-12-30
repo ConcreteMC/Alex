@@ -65,6 +65,9 @@ namespace Alex.Worlds
 	
 	public class World : IBlockAccess, ITicked, IDisposable
 	{
+		public static BackgroundWorker BackgroundWorker { get; private set; } =
+			new BackgroundWorker(CancellationToken.None);
+		
 		private static readonly Logger       Log = LogManager.GetCurrentClassLogger(typeof(World));
 		public                  EntityCamera Camera { get; }
 
@@ -116,8 +119,7 @@ namespace Alex.Worlds
 				_dimension = value;
 			}
 		}
-
-		public  BackgroundWorker  BackgroundWorker { get; }
+		
 		private List<IDisposable> _disposables = new List<IDisposable>();
 		private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 		private static Texture2D[] _destroyStages = null;//new Texture2D[10];
@@ -170,14 +172,16 @@ namespace Alex.Worlds
 			Camera.SetRenderDistance(options.VideoOptions.RenderDistance.Value);
 			ChunkManager.RenderDistance = options.VideoOptions.RenderDistance.Value;
 
-			BackgroundWorker = new BackgroundWorker(_cancellationTokenSource.Token);
+			//BackgroundWorker?.Dispose();
+			//var backgroundWorker = new BackgroundWorker(_cancellationTokenSource.Token);
 			
 			//Player?.OnSpawn();
 			
 			_disposables.Add(TickManager);
 			_disposables.Add(EntityManager);
 			_disposables.Add(ChunkManager);
-			_disposables.Add(BackgroundWorker);
+			//_disposables.Add(backgroundWorker);
+			//BackgroundWorker = backgroundWorker;
 
 			_breakingEffect = new BasicEffect(graphics);
 			_breakingEffect.TextureEnabled = true;
@@ -201,6 +205,8 @@ namespace Alex.Worlds
 			Player.MapIcon.Marker = MapMarker.GreenPointer;
 			Player.MapIcon.DrawOrder = int.MaxValue;
 			Map.Add(Player.MapIcon);
+
+			BackgroundWorker.Start();
 		}
 
 		private const int MORTON3D_BIT_SIZE = 21;
@@ -1246,7 +1252,7 @@ namespace Alex.Worlds
 			
 			Log.Info("World disposing...");
 			_cancellationTokenSource?.Cancel();
-
+			BackgroundWorker.Dispose();
 			foreach (var disposable in _disposables)
 			{
 				disposable.Dispose();

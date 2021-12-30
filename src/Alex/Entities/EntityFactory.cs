@@ -663,12 +663,11 @@ namespace Alex.Entities
 					entity = new Entity(world);
 				}
 
-				ThreadPool.QueueUserWorkItem(
-					(o) =>
-					{
-						if (!(o is Entity e))
-							return;
-						
+				//World.BackgroundWorker.Enqueue(
+			//		() =>
+			//		{
+						var e = entity;
+
 						if (initRenderController)
 						{
 							e.AnimationController.UpdateEntityDefinition(resourcePack, resourcePack, description);
@@ -689,14 +688,12 @@ namespace Alex.Entities
 						//Texture2D texture2D = null;
 						//if (renderer == null || texture2D == null)
 						{
-							if (description.Geometry.TryGetValue("default", out var defaultGeometry)
-							    && ModelFactory.TryGetModel(defaultGeometry, out var model) && model != null)
-							{
+							
 								var textures = description.Textures;
 								string texture;
 
 								if (!(textures.TryGetValue("default", out texture) || textures.TryGetValue(
-									description.Identifier, out texture)))
+									    description.Identifier, out texture)))
 								{
 									texture = textures.FirstOrDefault().Value;
 								}
@@ -716,9 +713,8 @@ namespace Alex.Entities
 								//{
 								//	entity.Texture = texture2D;
 								//}
-							}
 						}
-					}, entity);
+				//	});
 			}
 
 			return entity;

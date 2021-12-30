@@ -54,6 +54,9 @@ namespace Alex.Common.Utils
 		
 		public static void BitmapToTexture2DAsync<TImageFormat>(object owner, GraphicsDevice device, Image<TImageFormat> image, TextureCreated onTextureCreated) where TImageFormat : unmanaged, IPixel<TImageFormat>
 		{
+			if (image == null)
+				return;
+			
 			Texture2D Execute()
 			{
 				var r = new Texture2D(
@@ -134,6 +137,19 @@ namespace Alex.Common.Utils
 			{
 				using (var image = Image.Load(bmp))
 					return BitmapToTexture2D(owner, device, image);
+			}
+		}
+		
+		public static void ImageToTexture2DAsync(object owner, GraphicsDevice device, byte[] bmp, TextureCreated textureCreated)
+		{
+			//using (MemoryStream s = new MemoryStream(bmp))
+			{
+				var image = Image.Load(bmp);
+					BitmapToTexture2DAsync(owner, device, image, (t) =>
+					{
+						image.Dispose();
+						textureCreated?.Invoke(t);
+					});
 			}
 		}
 

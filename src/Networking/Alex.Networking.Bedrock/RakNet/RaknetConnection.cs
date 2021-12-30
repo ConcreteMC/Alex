@@ -341,7 +341,7 @@ namespace Alex.Networking.Bedrock.RakNet
 					{
 						if (datagram.Header.IsPacketPair)
 						{
-							Session.SlidingWindow.OnGotPacketPair(datagram.Header.DatagramSequenceNumber.IntValue());
+							Session.CongestionManager.OnGotPacketPair(datagram.Header.DatagramSequenceNumber.IntValue());
 						}
 
 						Interlocked.Increment(ref ConnectionInfo.PacketsIn);
@@ -481,9 +481,9 @@ namespace Alex.Networking.Bedrock.RakNet
 				return 0;
 			}
 
-			var sequenceNumber = (int)session.SlidingWindow.GetAndIncrementNextDatagramSequenceNumber();// Interlocked.Increment(ref session.DatagramSequenceNumber);
+			var sequenceNumber = (int)session.CongestionManager.GetAndIncrementNextDatagramSequenceNumber();// Interlocked.Increment(ref session.DatagramSequenceNumber);
 			
-			long rto = session.SlidingWindow.GetRtoForRetransmission();
+			long rto = session.CongestionManager.GetRtoForRetransmission();
 			datagram.TransmissionCount++;
 			datagram.RetransmissionTimeOut = rto;
 			datagram.Header.DatagramSequenceNumber = sequenceNumber;

@@ -19,13 +19,13 @@ namespace Alex.Net.Java
 	public class JavaNetworkProvider : NetworkProvider
 	{
 		private NetConnection Client            { get; }
-		private Timer      NetworkReportTimer { get; }
+	//	private HighPrecisionTimer      NetworkReportTimer { get; }
 		public JavaNetworkProvider(NetConnection client)
 		{
 			Client = client;
 			
-			NetworkReportTimer =  new Timer(
-						state =>
+			/*NetworkReportTimer =  new HighPrecisionTimer(
+						1000, state =>
 						{
 							long   packetSizeOut = Interlocked.Exchange(ref Client.PacketSizeOut, 0L);
 							long   packetSizeIn = Interlocked.Exchange(ref Client.PacketSizeIn, 0L);
@@ -36,16 +36,22 @@ namespace Alex.Net.Java
 							_connectionInfo = new ConnectionInfo(
 								Client.StartTime, Client.Latency, -1, -1, -1, -1, -1,
 								packetSizeIn, packetSizeOut, packetCountIn, packetCountOut);
-						}, null, 0, 1000);
+						});*/
 		}
 
 		/// <inheritdoc />
 		public override bool IsConnected => Client.IsConnected;
-
-		private ConnectionInfo _connectionInfo = new ConnectionInfo(DateTime.UtcNow, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-		public override ConnectionInfo GetConnectionInfo()
+		protected override ConnectionInfo GetConnectionInfo()
 		{
-			return _connectionInfo;
+			long   packetSizeOut = Interlocked.Exchange(ref Client.PacketSizeOut, 0L);
+			long   packetSizeIn = Interlocked.Exchange(ref Client.PacketSizeIn, 0L);
+
+			long   packetCountOut = Interlocked.Exchange(ref Client.PacketsOut, 0L);
+			long   packetCountIn = Interlocked.Exchange(ref Client.PacketsIn, 0L);
+
+			return new ConnectionInfo(
+				Client.StartTime, Client.Latency, -1, -1, -1, -1, -1,
+				packetSizeIn, packetSizeOut, packetCountIn, packetCountOut);
 		}
 
 		/// <inheritdoc />
@@ -213,11 +219,8 @@ namespace Alex.Net.Java
 
 		public override void Close()
 		{
-			NetworkReportTimer?.Change(Timeout.Infinite, Timeout.Infinite);
-			try
-			{
-				NetworkReportTimer?.Dispose();
-			}catch{}
+			//NetworkReportTimer?.Change(Timeout.Infinite, Timeout.Infinite);
+			
 		}
 
 		/// <inheritdoc />

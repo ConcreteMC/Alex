@@ -283,15 +283,6 @@ namespace Alex.Worlds.Chunks
 
 			_disposed = true;
 
-			if (!disposing)
-			{
-				Log.Warn($"Dispose was never called. Cleaning up.");
-			}
-			else
-			{
-				GC.SuppressFinalize(this);
-			}
-
 			for (int i = 0; i < BlockStorages.Length; i++)
 			{
 				BlockStorages[i]?.Dispose();
@@ -300,6 +291,15 @@ namespace Alex.Worlds.Chunks
 
 			LightSources?.Clear();
 			LightSources = null;
+			
+			if (!disposing)
+			{
+				Log.Warn($"Dispose was never called. Cleaning up.");
+			}
+			else
+			{
+				GC.SuppressFinalize(this);
+			}
 		}
 
 		public void Dispose()

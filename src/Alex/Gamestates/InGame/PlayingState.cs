@@ -454,6 +454,8 @@ namespace Alex.Gamestates.InGame
 
 			//dir.Normalize();
 			Alex.AudioEngine.Update(gameTime, world.Camera.Position, Vector3.Normalize(rotatedForward));
+
+			NetworkProvider.Update(gameTime);
 		}
 		
 		protected override void OnDraw(IRenderArgs args)

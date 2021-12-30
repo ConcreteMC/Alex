@@ -75,7 +75,7 @@ namespace Alex.Gui.Screens.Ingame
 
         private string GetNetworkInfo()
         {
-            var info = NetworkProvider.GetConnectionInfo();
+            var info = NetworkProvider.ConnectionInfo;
 
             //double dataOut = (double) (info.BytesOut * 8L) / 1000000.0;
             //double dataIn  = (double) (info.BytesIn * 8L) / 1000000.0;
@@ -83,8 +83,13 @@ namespace Alex.Gui.Screens.Ingame
             double        dataIn  = (double) (info.BytesIn) / 1000.0;
             
             StringBuilder sb      = new StringBuilder();
-            sb.AppendLine($"Latency: {info.Latency}ms");
-           // sb.AppendLine($"Packet loss: {info.PacketLoss}%");
+            sb.AppendLine($"Latency: {info.Latency:00}ms");
+
+            /*if (info.Nak >= 0 && info.NakSent >= 0)
+            {
+                sb.AppendLine($"Pkt loss: {info.PacketLoss}%");
+            }*/
+
             sb.AppendLine($"Pkt in/out(#/s): {info.PacketsIn:00}/{info.PacketsOut:00}");
 
             if (info.Ack >= 0)
@@ -97,10 +102,12 @@ namespace Alex.Gui.Screens.Ingame
                 sb.AppendLine($"Nak in/out(#/s): {info.Nak:00}/{info.NakSent:00}");
             }
 
-            // sb.AppendLine($"Resends: {info.Resends:00}");
-              //sb.AppendLine($"Fails: {info.Fails:00}");
-            sb.Append($"THR in/out(Kbps): {dataIn:F2}/{dataOut:F2}");
+            if (info.Resends >= 0 || info.Fails >= 0)
+            {
+                sb.AppendLine($"Resends/Fails: {info.Resends:00}/{info.Fails:00}");
+            }
 
+            sb.Append($"THR in/out: {FormattingUtils.GetBytesReadable(info.BytesIn, 2)}ps/{FormattingUtils.GetBytesReadable(info.BytesOut, 2)}ps"); ;
             // WarningElement.IsVisible = info.State != ConnectionInfo.NetworkState.Ok;
 
             if (info.State != ConnectionInfo.NetworkState.Ok)

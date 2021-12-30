@@ -47,6 +47,13 @@ namespace Alex.Entities.BlockEntities
 			//base.Movement.InterpolatedMovement = false;
 		}
 
+		/// <inheritdoc />
+		public override void Update(IUpdateArgs args)
+		{
+			return;
+			base.Update(args);
+		}
+
 		public virtual bool SetBlock(Block block)
 		{
 			var oldValue = _block;

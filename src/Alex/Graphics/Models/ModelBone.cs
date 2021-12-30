@@ -251,7 +251,7 @@ namespace Alex.Graphics.Models
 			                                                    * MatrixHelper.CreateRotationDegrees(_baseRotation)
 			                                                    * MatrixHelper.CreateRotationDegrees((_rotation) * new Vector3(-1f, 1f, 1f))
 			                                                    * Matrix.CreateTranslation(pivot)
-			                                                    * Matrix.CreateTranslation(_position + _basePosition);
+			                                                    * Matrix.CreateTranslation(_basePosition + _position);
 		}
 
 		public void Update(IUpdateArgs args)
@@ -285,15 +285,13 @@ namespace Alex.Graphics.Models
 				Log.Warn($"Failed to add attachment, no model found.");
 				return;
 			}
-				
-			attachment.Parent = this;
-			
+
 			foreach (var mesh in model.Meshes)
 			{
 				Model.Meshes.Add(mesh);
 			}
-			AddChild(model.Root);
-			Model.Bones.Add(model.Root);
+			AddChild(attachment.Model.Root);
+			Model.Bones.Add(attachment.Model.Root);
 			_attached.Add(attachment);
 		}
 
@@ -303,11 +301,7 @@ namespace Alex.Graphics.Models
 			var modelBones = Model?.Bones;
 			if (_attached == null || !_attached.Remove(attachment) || modelBones == null) 
 				return;
-
-			if (attachment.Parent != this)
-				return;
 			
-			attachment.Parent = null;
 			var model = attachment.Model;
 
 			if (model == null)
@@ -316,18 +310,18 @@ namespace Alex.Graphics.Models
 				return;
 			}
 
-			modelBones.Remove(model.Root);
+			modelBones.Remove(attachment.Model.Root);
 			var modelMeshes = model.Meshes;
 
 			if (modelMeshes != null)
 			{
-				foreach (var mesh in model.Meshes)
+				foreach (var mesh in modelMeshes)
 				{
-					modelMeshes.Remove(mesh);
+					Model.Meshes.Remove(mesh);
 				}
 			}
 
-			RemoveChild(model.Root);
+			RemoveChild(attachment.Model.Root);
 		}
 	}
 	

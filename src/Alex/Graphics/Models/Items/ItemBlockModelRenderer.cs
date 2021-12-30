@@ -133,7 +133,7 @@ namespace Alex.Graphics.Models.Items
             }
         }
         
-        public override IItemRenderer CloneItemRenderer()
+        /*public override IItemRenderer CloneItemRenderer()
         {
             var renderer = new ItemBlockModelRenderer(_blockState, ResourcePackModel, _texture, false, Vertices?.Select(
                 x => new VertexPositionColorTexture(
@@ -150,6 +150,6 @@ namespace Alex.Graphics.Models.Items
              //   renderer.InitCache();
 
             return renderer;
-        }
+        }*/
     }
 }

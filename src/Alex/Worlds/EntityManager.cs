@@ -171,10 +171,10 @@ namespace Alex.Worlds
 			var delta = Alex.DeltaTime;
 			float maxTime = delta / _rendered.Length;
 			long elapsedTime = 0;
-			foreach (var entity in _rendered)
+			foreach (var entity in _rendered.OrderByDescending(x => DateTime.UtcNow - x.LastUpdate))
 			{
-				//if (elapsedTime >= delta)
-				//	break;
+				if (elapsedTime >= delta)
+					break;
 				_updateWatch.Restart();
 				//if (entity.IsRendered)
 

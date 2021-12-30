@@ -17,6 +17,8 @@ namespace Alex.Networking.Bedrock.RakNet
 		public long RetransmissionTimeOut { get; set; }
 		public bool RetransmitImmediate { get; set; }
 		public int TransmissionCount { get; set; }
+		
+		public bool ShouldRetransmit => Timer.ElapsedMilliseconds > RetransmissionTimeOut;
 
 		public InternalDatagramHeader Header { get; private set; }
 

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Threading;
+using Alex.Common.Utils;
 using Alex.ResourcePackLib.Json.Models.Entities;
 using Microsoft.Xna.Framework.Graphics;
 using MiNET.Utils.Skins;
@@ -244,7 +245,7 @@ namespace Alex.Utils.Skins
 			return output;
 		}
 		
-		public static void TryGetSkin(string json, GraphicsDevice graphics, Action<Texture2D, bool> onComplete)
+		public static void TryGetSkin(object owner, string json, Action<Image<Rgba32>, bool> onComplete)
 		{
 			//isSlim = false;
 			try
@@ -261,19 +262,8 @@ namespace Alex.Utils.Skins
 							data = wc.DownloadData(url);
 						}
 
-						Texture2D text = null;
-						Alex.Instance.UiTaskManager.Enqueue(
-							() =>
-							{
-								using (MemoryStream ms = new MemoryStream(data))
-								{
-									text = Texture2D.FromStream(graphics, ms);
-								}
-
-								onComplete?.Invoke(text, r.textures.SKIN.metadata?.model == "slim");
-							//	resetEvent.Set();
-							});
-						
+						var t = Image.Load(data);
+						onComplete?.Invoke(t, r.textures.SKIN.metadata?.model == "slim");
 						//resetEvent.WaitOne();
 
 						//texture = text;
@@ -290,46 +280,6 @@ namespace Alex.Utils.Skins
 
 			//texture = null;
 			//return false;
-		}
-		
-		public static bool TryGetSkin(Uri skinUri, GraphicsDevice graphics, out Texture2D texture)
-		{
-			try
-			{
-				byte[] data;
-				using (WebClient wc = new WebClient())
-				{
-					data = wc.DownloadData(skinUri);
-				}
-				
-				ManualResetEvent resetEvent = new ManualResetEvent(false);
-
-				Texture2D text = null;
-				Alex.Instance.UiTaskManager.Enqueue(
-					() =>
-					{
-						using (MemoryStream ms = new MemoryStream(data))
-						{
-							text = Texture2D.FromStream(graphics, ms);
-						}
-
-						resetEvent.Set();
-					});
-						
-				resetEvent.WaitOne();
-
-				texture = text;
-
-				return true;
-			}
-			catch(Exception ex)
-			{
-				Log.Warn(ex, $"Could not retrieve skin: {ex.ToString()}");
-			}
-
-			texture = null;
-			return false;
-			
 		}
 
 		public static bool TryGetBitmap(this MiNET.Utils.Skins.Skin skin, EntityModel model, out Image<Rgba32> result)
@@ -397,26 +347,20 @@ namespace Alex.Utils.Skins
 
 			foreach (var bone in model.Bones)
 			{
-				var a = new Bone();
-
-				if (Enum.TryParse<BoneName>(bone.Name, true, out var boneName))
+				var a = new ExtendedBone();
+				//a.BoneType = bone.Name;
+				//if (Enum.TryParse<BoneName>(bone.Name, true, out var boneName))
 				{
-					a.Name = boneName;
+					a.Name = bone.Name;
 				}
-				else
+				//else
 				{
-					a.Name = BoneName.Unknown;
+				//	a.Name = BoneName.Unknown;
 				}
 
 				if (!string.IsNullOrWhiteSpace(bone.Parent))
 				{
-					if (Enum.TryParse<BoneName>(bone.Parent, true, out var parentName))
-					{
-						if (parentName != a.Name)
-						{
-							a.Parent = parentName;
-						}
-					}
+					a.Parent = bone.Parent;
 				}
 
 				if (bone.NeverRender)
@@ -518,17 +462,17 @@ namespace Alex.Utils.Skins
 			return skin;
 		}
 
-		public static MiNET.Utils.Skins.Skin UpdateTexture(this MiNET.Utils.Skins.Skin skin, Texture2D texture)
+		public static MiNET.Utils.Skins.Skin UpdateTexture(this MiNET.Utils.Skins.Skin skin, Image<Rgba32> texture)
 		{
-			Image<Rgba32> skinTexture;
+			Image<Rgba32> skinTexture = texture;
 
-			using (MemoryStream ms = new MemoryStream())
+			/*using (MemoryStream ms = new MemoryStream())
 			{
 				texture.SaveAsPng(ms, texture.Width, texture.Height);
 				ms.Position = 0;
 
 				skinTexture = Image.Load(ms, new PngDecoder()).CloneAs<Rgba32>();
-			}
+			}*/
 			    
 			byte[] skinData;
 			using (MemoryStream ms = new MemoryStream())
@@ -568,6 +512,11 @@ namespace Alex.Utils.Skins
 			/// </summary>
 			[JsonProperty("rotation", NullValueHandling = NullValueHandling.Ignore)]
 			public float[] Rotation { get; set; } = null;
+		}
+
+		public class ExtendedBone : MiNET.Utils.Skins.Bone
+		{
+			
 		}
 		
 		public class SkinMetadata

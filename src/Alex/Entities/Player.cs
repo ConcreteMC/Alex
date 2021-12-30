@@ -40,6 +40,9 @@ using Newtonsoft.Json.Serialization;
 using NLog;
 using NLog.Fluent;
 using RocketUI.Input;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats.Png;
+using SixLabors.ImageSharp.PixelFormats;
 using Biome = Alex.Worlds.Biome;
 using BlockCoordinates = Alex.Common.Utils.Vectors.BlockCoordinates;
 using BoundingBox = Microsoft.Xna.Framework.BoundingBox;
@@ -500,16 +503,25 @@ namespace Alex.Entities
 
 			    if (skin.Data == null || skin.Data.Length == 0)
 			    {
-				    skin = skin.UpdateTexture(texture);
+				    Image<Rgba32> skinTexture;
+				    using (MemoryStream ms = new MemoryStream())
+				    {
+					    texture.SaveAsPng(ms, texture.Width, texture.Height);
+					    ms.Position = 0;
+
+					    skinTexture = Image.Load(ms, new PngDecoder()).CloneAs<Rgba32>();
+				    }
+				    
+				    skin = skin.UpdateTexture(skinTexture);
 			    }
 
 			    var packet = McpePlayerSkin.CreateObject();
 			    packet.skin = skin;
 
 			    packet.uuid = UUID;
-			    packet.isVerified = true;
+			    packet.isVerified = skin.IsVerified;
 			    packet.skinName = skin.SkinId;
-			    packet.oldSkinName = "";
+			    packet.oldSkinName = Skin?.SkinId ?? "";
 
 			    bc.SendPacket(packet);
 

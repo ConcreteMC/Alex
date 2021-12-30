@@ -79,7 +79,7 @@ namespace Alex.Networking.Bedrock.RakNet
 		public DateTime LastUpdatedTime { get; set; }
 		//public int ResendCount { get; set; }
 
-		public SlidingWindow SlidingWindow { get; }
+		public ICongestionManager CongestionManager { get; }
 
 		public const long InactivityTimeout = 30000;
 
@@ -89,7 +89,7 @@ namespace Alex.Networking.Bedrock.RakNet
 		public ConcurrentDictionary<int, Datagram> WaitingForAckQueue { get; } = new ConcurrentDictionary<int, Datagram>();
 
 		public int CompressionThreshold { get; set; } = -1;
-		private Timer _tickerHighPrecisionTimer;
+		private HighPrecisionTimer _tickerHighPrecisionTimer;
 		public RaknetSession(ConnectionInfo connectionInfo, RaknetConnection connection, IPEndPoint endPoint, short mtuSize, ICustomMessageHandler messageHandler = null)
 		{
 			_connection = connection;
@@ -100,8 +100,8 @@ namespace Alex.Networking.Bedrock.RakNet
 
 			_cancellationToken = new CancellationTokenSource();
 
-			SlidingWindow = new SlidingWindow(mtuSize);
-			_tickerHighPrecisionTimer = new Timer(SendTick, null, 10, 10);
+			CongestionManager = new SlidingWindow(mtuSize);
+			_tickerHighPrecisionTimer = new HighPrecisionTimer(10, SendTick);
 		}
 
 		/// <summary>
@@ -396,12 +396,12 @@ namespace Alex.Networking.Bedrock.RakNet
 			{
 				SendAckQueue();
 				
-				if (_tickCounter++ >= 5)
+				//if (_tickCounter++ >= 5)
 				{
 					SendQueue();
 					DoResends();
 					CheckTimeout();
-					_tickCounter = 0;
+				//	_tickCounter = 0;
 				}
 				
 				SendNackQueue();
@@ -430,7 +430,7 @@ namespace Alex.Networking.Bedrock.RakNet
 			//	long rto = SlidingWindow.GetRtoForRetransmission();
 				//if (rto == 0) return;
 
-				int transmissionBandwidth = SlidingWindow.GetRetransmissionBandwidth(CurrentTimeMillis(), UnackedBytes);
+				int transmissionBandwidth = CongestionManager.GetRetransmissionBandwidth(CurrentTimeMillis(), UnackedBytes);
 				if (transmissionBandwidth <= 0)
 					return;
 				var queue = WaitingForAckQueue;
@@ -455,18 +455,18 @@ namespace Alex.Networking.Bedrock.RakNet
 					//datagramTimeout = Math.Min(datagramTimeout, 3000);
 					//datagramTimeout = Math.Max(datagramTimeout, 100);
 
-					if (datagram.RetransmitImmediate || elapsedTime >= datagram.RetransmissionTimeOut)
+					if ((datagram.ShouldRetransmit))
 					{
 						if (!Evicted && WaitingForAckQueue.TryRemove(datagramPair.Key, out datagram))
 						{
 							Interlocked.Add(ref UnackedBytes, -datagram.Size);
-							
+
 							//if (Log.IsDebugEnabled) 
 								Log.Warn($"{(datagram.RetransmitImmediate ? "NAK RSND" : "TIMEOUT")}, Resent #{datagramPair.Key}, Transmissions: {datagram.TransmissionCount} Type: {datagram.FirstMessageId} (0x{datagram.FirstMessageId:x2}) ({elapsedTime} > {datagramTimeout})");
 
 							Interlocked.Increment(ref ConnectionInfo.Resends);
 							
-							SlidingWindow.OnResend(RaknetSession.CurrentTimeMillis(), datagramPair.Key);
+							CongestionManager.OnResend(RaknetSession.CurrentTimeMillis(), datagramPair.Key);
 							
 							var sent = _connection.SendDatagram(this, datagram);
 
@@ -489,7 +489,7 @@ namespace Alex.Networking.Bedrock.RakNet
 		{
 			if (Evicted) return;
 
-			ConnectionInfo.Latency = (long) SlidingWindow.GetRtt();
+			ConnectionInfo.Latency = (long) CongestionManager.GetRtt();
 			long now = DateTime.UtcNow.Ticks / TimeSpan.TicksPerMillisecond;
 			long lastUpdate = LastUpdatedTime.Ticks / TimeSpan.TicksPerMillisecond;
 
@@ -538,7 +538,7 @@ namespace Alex.Networking.Bedrock.RakNet
 				
 				byte[] data = acks.Encode();
 				_connection.SendData(data, EndPoint);
-				this.SlidingWindow.OnSendNack();
+				this.CongestionManager.OnSendNack();
 				
 				acks.PutPool();
 			}
@@ -546,7 +546,7 @@ namespace Alex.Networking.Bedrock.RakNet
 
 		private void SendAckQueue()
 		{
-			if (!SlidingWindow.ShouldSendAcks(CurrentTimeMillis()))
+			if (!CongestionManager.ShouldSendAcks(CurrentTimeMillis()))
 				return;
 			
 			var           queue      = OutgoingAckQueue;
@@ -574,7 +574,7 @@ namespace Alex.Networking.Bedrock.RakNet
 					byte[] data = acks.Encode();
 					_connection.SendData(data, EndPoint);
 
-					this.SlidingWindow.OnSendAck();
+					this.CongestionManager.OnSendAck();
 				}
 			}
 			finally
@@ -597,7 +597,7 @@ namespace Alex.Networking.Bedrock.RakNet
 			try
 			{
 				var unacked = UnackedBytes;
-				int transmissionBandwidth = this.SlidingWindow.GetTransmissionBandwidth(unacked, _bandwidthExceededStatistic);
+				int transmissionBandwidth = this.CongestionManager.GetTransmissionBandwidth(unacked, _bandwidthExceededStatistic);
 
 				if (transmissionBandwidth <= 0)
 				{
@@ -660,16 +660,18 @@ namespace Alex.Networking.Bedrock.RakNet
 					//await _packetSender.SendPacketAsync(this, message);
 				}
 
+				var sentData = 0;
 				foreach (Datagram datagram in Datagram.CreateDatagrams(MtuSize, this, packets))
 				{
 					var data = _connection.SendDatagram(this, datagram);
+					sentData += data;
 					Interlocked.Add(ref UnackedBytes, data);
 				}
 					
 				foreach(var packet in packets)
 					packet?.PutPool();
 
-				_bandwidthExceededStatistic = !_sendQueue.IsEmpty;
+				_bandwidthExceededStatistic = _sendQueue.Count > 0;
 				//_bandwidthExceededStatistic = UnackedBytes - unacked >= transmissionBandwidth;
 				//UnackedBytes += _packetSender.SendPacket(this, preppedSendList);
 			}
@@ -722,12 +724,10 @@ namespace Alex.Networking.Bedrock.RakNet
 			_orderingResetEvent?.Dispose();
 			_orderingResetEvent = null;
 			
-			try
-			{
-				_tickerHighPrecisionTimer?.Change(Timeout.Infinite, Timeout.Infinite);
-				_tickerHighPrecisionTimer?.Dispose();
-				_tickerHighPrecisionTimer = null;
-			}catch{}
+			
+			//	_tickerHighPrecisionTimer?.(Timeout.Infinite, Timeout.Infinite);
+			_tickerHighPrecisionTimer?.Dispose();
+			_tickerHighPrecisionTimer = null;
 
 			State = ConnectionState.Unconnected;
 			Evicted = true;
@@ -796,7 +796,7 @@ namespace Alex.Networking.Bedrock.RakNet
 				{
 					Interlocked.Add(ref UnackedBytes, -datagram.Size);
 						
-					SlidingWindow.OnAck(CurrentTimeMillis(), datagram.Timer.ElapsedMilliseconds,i, datagram.Header.IsContinuousSend);
+					CongestionManager.OnAck(CurrentTimeMillis(), datagram.Timer.ElapsedMilliseconds,i, datagram.Header.IsContinuousSend);
 					datagram.PutPool();
 				}
 				else
@@ -829,10 +829,13 @@ namespace Alex.Networking.Bedrock.RakNet
 			{
 				if (WaitingForAckQueue.TryGetValue(i, out var datagram))
 				{
-					SlidingWindow.OnNak(CurrentTimeMillis(), i);
+					CongestionManager.OnNak(CurrentTimeMillis(), i);
 					//CalculateRto(datagram);
 
 					datagram.RetransmitImmediate = true;
+					datagram.RetransmissionTimeOut = (long)(CongestionManager.GetRtt());
+					datagram.Timer.Restart();
+					//datagram.RetransmitImmediate = true;
 				}
 				else
 				{
@@ -864,7 +867,7 @@ namespace Alex.Networking.Bedrock.RakNet
 		{
 			var sequenceIndex = datagram.Header.DatagramSequenceNumber.IntValue();
 			OutgoingAckQueue.Enqueue(sequenceIndex);
-			if (SlidingWindow.OnPacketReceived(
+			if (CongestionManager.OnPacketReceived(
 				CurrentTimeMillis(),  sequenceIndex, datagram.Header.IsContinuousSend, datagram.Size, out var skippedMessageCount))
 			{
 				if (skippedMessageCount > 0)
@@ -876,6 +879,9 @@ namespace Alex.Networking.Bedrock.RakNet
 					}
 				}
 
+				if (datagram.Header.IsPacketPair)
+					CongestionManager.OnGotPacketPair(datagram.Header.DatagramSequenceNumber);
+				
 				return true;
 			}
 

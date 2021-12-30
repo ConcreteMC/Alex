@@ -36,7 +36,7 @@ namespace Alex.Graphics.Models
 		{
 			var items = _items;
 
-			lock (_boneLock)
+			//lock (_boneLock)
 			{
 				_bones = items.ToImmutableArray();
 			}
@@ -75,7 +75,7 @@ namespace Alex.Graphics.Models
 		
 		internal void Add(ModelBone item)
 		{
-			lock (_boneLock)
+		//	lock (_boneLock)
 			{
 				_items.Add(item);
 			}
@@ -83,7 +83,7 @@ namespace Alex.Graphics.Models
 		
 		internal void Remove(ModelBone item)
 		{
-			lock (_boneLock)
+		//	lock (_boneLock)
 			{
 				_items.Remove(item);
 			}

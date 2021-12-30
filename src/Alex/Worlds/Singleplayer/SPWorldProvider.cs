@@ -28,7 +28,7 @@ namespace Alex.Worlds.Singleplayer
 	internal class DebugNetworkProvider : NetworkProvider
 	{
 		public override bool IsConnected { get; } = true;
-		public override ConnectionInfo GetConnectionInfo()
+		protected override ConnectionInfo GetConnectionInfo()
 		{
 			return new ConnectionInfo(DateTime.UtcNow, 0,0,0,0,0,0,0,0,0, 0);
 		}

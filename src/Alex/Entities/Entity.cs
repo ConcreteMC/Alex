@@ -485,14 +485,11 @@ namespace Alex.Entities
 
 					if (renderer == null)
 					{
-						//Log.Warn($"No renderer for item: {inHand.Name}");
 						return;
 					}
 
 					if (renderer != ItemRenderer)
 					{
-						//  renderer = renderer.CloneItemRenderer();
-
 						var newRenderer = renderer.CloneItemRenderer();
 						ItemRenderer = newRenderer;
 					}
@@ -527,12 +524,15 @@ namespace Alex.Entities
 
         protected virtual void UpdateItemPosition(IItemRenderer oldValue, IItemRenderer renderer)
         {
-	        ModelBone arm = GetPrimaryArm();
+	        //ModelBone arm = GetPrimaryArm();
 	        
-	       // if (oldValue != renderer)
+	        if (oldValue != renderer)
 	        {
 		        if (oldValue != null)
-					arm?.Remove(oldValue);
+		        {
+			        //oldValue.Dispose();
+			        //arm?.Remove(oldValue);
+		        }
 	        }
 
 	        if (renderer?.Model == null)
@@ -542,7 +542,7 @@ namespace Alex.Entities
 
 	       // if (oldValue != renderer)
 	        {
-					arm?.AddChild(renderer);
+				//	arm?.AddChild(renderer);
 	        }
         }
 
@@ -1238,8 +1238,31 @@ namespace Alex.Entities
 			int renderCount = 0;
 			var  renderer = ModelRenderer;
 
+			var worldMatrix = Matrix.CreateScale((1f / 16f) * (Scale * ModelScale))
+			                  * RenderLocation.CalculateWorldMatrix();
+
 			if (renderer != null)
-				renderCount += renderer.Render(renderArgs, Matrix.CreateScale((1f / 16f) * (Scale * ModelScale)) * RenderLocation.CalculateWorldMatrix());
+			{
+				renderCount += renderer.Render(renderArgs, worldMatrix);
+
+				//Hack to render held items
+				if (_itemRenderer != null)
+				{
+					var primaryArm = GetPrimaryArm();
+					
+					if (primaryArm != null)
+					{
+						var bones = renderer.Model.Bones.ImmutableArray;
+						Matrix[] matrices = new Matrix[bones.Length];
+						Graphics.Models.Model.CopyAbsoluteBoneTransformsTo(bones, matrices);
+
+						if (primaryArm.Index >= 0 && primaryArm.Index < matrices.Length)
+						{
+							_itemRenderer?.Render(renderArgs, matrices[primaryArm.Index] * worldMatrix);
+						}
+					}
+				}
+			}
 
 			return renderCount;
 		}

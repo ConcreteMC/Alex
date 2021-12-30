@@ -571,6 +571,11 @@ namespace Alex.Worlds.Chunks
 
 			_chunkData?.Dispose();
 			_chunkData = null;
+
+			if (disposing)
+			{
+				GC.SuppressFinalize(this);
+			}
 		}
 
 		public void Dispose()

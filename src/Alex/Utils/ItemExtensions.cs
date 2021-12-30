@@ -60,6 +60,10 @@ namespace Alex.Utils
 					ItemFactory.TryGetItem(t.Name, out result);
 				}
 			}
+			else if (ItemFactory.TryGetItem(item.Id, item.Metadata, out result))
+			{
+				
+			}
 
 			if (result == null || (result.IsAir() && !(item is MiNET.Items.ItemAir)))
 			{

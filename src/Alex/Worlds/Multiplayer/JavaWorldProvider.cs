@@ -117,7 +117,7 @@ namespace Alex.Worlds.Multiplayer
 			networkProvider = NetworkProvider;
 			
 			var blockOptions =
-				new ExecutionDataflowBlockOptions { CancellationToken = CancellationToken.None, EnsureOrdered = false, NameFormat = "Java Chunker: {0}-{1}", MaxDegreeOfParallelism = 2};
+				new ExecutionDataflowBlockOptions { CancellationToken = CancellationToken.None, EnsureOrdered = false, NameFormat = "Java Chunker: {0}-{1}", MaxDegreeOfParallelism = 1};
 			_chunkQueue = new BufferBlock<ChunkDataPacket>(blockOptions);
 	        
 			var handleBufferItemBlock = new ActionBlock<ChunkDataPacket>(HandleChunkDataPacket, blockOptions);
@@ -1136,92 +1136,89 @@ namespace Alex.Worlds.Multiplayer
 		}
 
 		private void HandleParticlePacket(ParticlePacket packet)
-		{	World.BackgroundWorker.Enqueue(() =>
+		{
+			var particleType =
+				Alex.Resources.Registries.Particles.Entries.FirstOrDefault(
+					x => x.Value.ProtocolId == packet.ParticleId);
+
+			if (particleType.Key != null)
 			{
-				var particleType =
-					Alex.Resources.Registries.Particles.Entries.FirstOrDefault(
-						x => x.Value.ProtocolId == packet.ParticleId);
-
-				if (particleType.Key != null )
+				if (!Alex.ParticleManager.TryConvertToBedrock(particleType.Key, out string type))
 				{
-					if (!Alex.ParticleManager.TryConvertToBedrock(particleType.Key, out string type))
+					type = ParticleConversion.ConvertToBedrock(particleType.Key);
+
+					//Log.Warn($"Could not convert particle from java -> bedrock: {particleType.Key}");
+					//return;
+				}
+				//var type = ParticleConversion.ConvertToBedrock(particleType.Key);
+				/*int data = 0;
+
+				if (packet.Color.HasValue)
+				{
+					var color = packet.Color.Value;
+					byte r = color.R;
+					byte g = color.G;
+					byte b = color.B;
+					byte a = color.A;
+					data = ((a & 0xff) << 24) | ((r & 0xff) << 16) | ((g & 0xff) << 8) | (b & 0xff);
+				}*/
+
+				for (int i = 0; i < packet.ParticleCount; i++)
+				{
+					long data = 0;
+					ParticleDataMode dataMode = ParticleDataMode.None;
+
+					if (packet.SlotData != null)
 					{
-						type = ParticleConversion.ConvertToBedrock(particleType.Key);
-						
-						//Log.Warn($"Could not convert particle from java -> bedrock: {particleType.Key}");
-						//return;
-					}
-					//var type = ParticleConversion.ConvertToBedrock(particleType.Key);
-					/*int data = 0;
-	
-					if (packet.Color.HasValue)
-					{
-						var color = packet.Color.Value;
-						byte r = color.R;
-						byte g = color.G;
-						byte b = color.B;
-						byte a = color.A;
-						data = ((a & 0xff) << 24) | ((r & 0xff) << 16) | ((g & 0xff) << 8) | (b & 0xff);
-					}*/
+						//var item = GetItemFromSlotData(packet.SlotData);
 
-					for (int i = 0; i < packet.ParticleCount; i++)
-					{
-						long data = 0;
-						ParticleDataMode dataMode = ParticleDataMode.None;
-
-						if (packet.SlotData != null)
+						//if (item != null)
 						{
-							//var item = GetItemFromSlotData(packet.SlotData);
+							dataMode = ParticleDataMode.Item;
 
-							//if (item != null)
-							{
-								dataMode = ParticleDataMode.Item;
-
-								data = packet.SlotData
-								   .ItemID; //BlockFactory.GetBlockStateID(item.Id, (byte) item.Meta);
-								//particleInstance.SetData(item.Id, ParticleDataMode.Item);
-							}
-						}
-						else if (packet.BlockStateId.HasValue)
-						{
-							dataMode = ParticleDataMode.BlockRuntimeId;
-							data = packet.BlockStateId.Value;
-							//particleInstance.SetData(packet.BlockStateId.Value, ParticleDataMode.BlockRuntimeId);
-						}
-						else if (packet.Color.HasValue)
-						{
-							dataMode = ParticleDataMode.Color;
-							data = packet.Color.Value.PackedValue;
-						}
-
-
-						if (Alex.ParticleManager.SpawnParticle(
-							type,
-							new Vector3(
-								(float) ((float) packet.X + (packet.OffsetX * RandomParticleOffset())),
-								(float) ((float) packet.Y + (packet.OffsetY * RandomParticleOffset())),
-								(float) ((float) packet.Z + (packet.OffsetZ * RandomParticleOffset()))),
-							out var particleInstance, data, dataMode))
-						{
-
-							//particleInstance.Scale = packet.Scale;
-						}
-						else
-						{
-							Log.Debug(
-								$"Could not spawn particle with type: {packet.ParticleId} (Java: {particleType.Key} | Bedrock: {type})");
-
-							break;
+							data = packet.SlotData.ItemID; //BlockFactory.GetBlockStateID(item.Id, (byte) item.Meta);
+							//particleInstance.SetData(item.Id, ParticleDataMode.Item);
 						}
 					}
+					else if (packet.BlockStateId.HasValue)
+					{
+						dataMode = ParticleDataMode.BlockRuntimeId;
+						data = packet.BlockStateId.Value;
+						//particleInstance.SetData(packet.BlockStateId.Value, ParticleDataMode.BlockRuntimeId);
+					}
+					else if (packet.Color.HasValue)
+					{
+						dataMode = ParticleDataMode.Color;
+						data = packet.Color.Value.PackedValue;
+					}
+
+
+					if (Alex.ParticleManager.SpawnParticle(
+						    type,
+						    new Vector3(
+							    (float)((float)packet.X + (packet.OffsetX * RandomParticleOffset())),
+							    (float)((float)packet.Y + (packet.OffsetY * RandomParticleOffset())),
+							    (float)((float)packet.Z + (packet.OffsetZ * RandomParticleOffset()))),
+						    out var particleInstance, data, dataMode))
+					{
+
+						//particleInstance.Scale = packet.Scale;
+					}
+					else
+					{
+						Log.Debug(
+							$"Could not spawn particle with type: {packet.ParticleId} (Java: {particleType.Key} | Bedrock: {type})");
+
+						break;
+					}
 				}
-				else
-				{
-					Log.Debug($"Could not find particle with protocolid: {packet.ParticleId}");
-				}
-			});
+			}
+			else
+			{
+				Log.Debug($"Could not find particle with protocolid: {packet.ParticleId}");
+			}
 		}
-		
+
 		private ThreadSafeList<string> _missingSounds = new ThreadSafeList<string>();
 
 		private static readonly Regex _blockRegex = new Regex("block\\.(?<name>.*)\\.(?<action>.*)", RegexOptions.Compiled);
@@ -2250,24 +2247,32 @@ namespace Alex.Worlds.Multiplayer
 				Log.Warn($"Invalid java skin, skinJson was null or whitespace.");
 				return;
 			}
+
 			World.BackgroundWorker.Enqueue(
 				() =>
 				{
-					SkinUtils.TryGetSkin(skinJson, Alex.GraphicsDevice, (texture, slim) =>
-					{
-						if (texture != null)
+					SkinUtils.TryGetSkin(
+						entity, skinJson, (texture, slim) =>
 						{
-							var geometryName = slim ? "geometry.humanoid.customSlim" : "geometry.humanoid.custom";
-
-							if (ModelFactory.TryGetModel(geometryName, out var entityModel))
+							if (texture != null)
 							{
-								var skin = entityModel.ToSkin();
-								skin.UpdateTexture(texture);
-								entity.Skin = skin;
+
+								var geometryName = slim ? "geometry.humanoid.customSlim" : "geometry.humanoid.custom";
+
+								if (ModelFactory.TryGetModel(geometryName, out var entityModel))
+								{
+									var skin = entityModel.ToSkin();
+									skin.UpdateTexture(texture);
+									entity.Skin = skin;
+								}
+								else
+								{
+									
+								}
+								texture.Dispose();
+								//entity.UpdateSkin(skin);
 							}
-							//entity.UpdateSkin(skin);
-						}
-					});
+						});
 				});
 		}
 
@@ -2533,7 +2538,12 @@ namespace Alex.Worlds.Multiplayer
 	        World.BackgroundWorker.Enqueue(
 		        () =>
 		        {
-			        if (World.EntityManager.TryGetBlockEntity(location, out var entity))
+			        var world = World;
+
+			        if (world?.EntityManager == null)
+				        return;
+			        
+			        if (world.EntityManager.TryGetBlockEntity(location, out var entity))
 			        {
 				        entity.SetData(action, compound);
 			        }
@@ -2541,12 +2551,12 @@ namespace Alex.Worlds.Multiplayer
 			        {
 				        try
 				        {
-					        var block       = World.GetBlockState(location);
+					        var block       = world.GetBlockState(location);
 					        var blockEntity = BlockEntityFactory.ReadFrom(compound, World, block.Block);
 
 					        if (blockEntity != null)
 					        {
-						        World.SetBlockEntity(
+						        world.SetBlockEntity(
 							        location.X, location.Y, location.Z, blockEntity);
 					        }
 				        }

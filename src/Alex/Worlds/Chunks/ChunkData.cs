@@ -349,18 +349,10 @@ namespace Alex.Worlds.Chunks
 
             if (!disposing)
             {
-                Log.Warn($"Disposing in deconstructor!");
+                Log.Warn($"Disposing in destructor!");
             }
 
-            if (_vertexDatas != null)
-            {
-                lock (_dataLock)
-                {
-                    _vertexDatas?.Clear();
-                    _vertexDatas = null;
-                }
-            }
-
+            
             var stages = _stages;
 
             if (stages != null)
@@ -378,6 +370,20 @@ namespace Alex.Worlds.Chunks
 
             Buffer?.Dispose();
             Buffer = null;
+            
+            if (_vertexDatas != null)
+            {
+                lock (_dataLock)
+                {
+                    _vertexDatas?.Clear();
+                    _vertexDatas = null;
+                }
+            }
+
+            if (disposing)
+            {
+                GC.SuppressFinalize(this);
+            }
         }
 
         public void Dispose()

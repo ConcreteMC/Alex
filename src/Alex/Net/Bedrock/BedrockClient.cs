@@ -183,7 +183,6 @@ namespace Alex.Net.Bedrock
 
 		private bool Starting { get; set; } = false;
 		private DateTime StartTime { get; set; }
-		private Timer ThroughPut { get; set; }
 
 		public bool Start(CancellationToken cancellationToken)
 		{
@@ -215,7 +214,6 @@ namespace Alex.Net.Bedrock
 				if (Connection.TryConnect(Connection.RemoteEndpoint, cancellationToken: cancellationToken))
 				{
 					Log.Info("Connected");
-					ThroughPut = new Timer(state => { UpdateConnectionInfo(); }, null, 0, 1000);
 
 					return true;
 				}
@@ -223,57 +221,7 @@ namespace Alex.Net.Bedrock
 
 			return false;
 		}
-
-		private void UpdateConnectionInfo()
-		{
-			long packetSizeOut = Interlocked.Exchange(ref Connection.ConnectionInfo.BytesOut, 0L);
-			long packetSizeIn = Interlocked.Exchange(ref Connection.ConnectionInfo.BytesIn, 0L);
-
-			double throughtPutOut = (double)(packetSizeOut) / 1000.0;
-			double throughPutIn = (double)(packetSizeIn) / 1000.0;
-
-			long packetCountOut = Interlocked.Exchange(ref Connection.ConnectionInfo.PacketsOut, 0L);
-			long packetCountIn = Interlocked.Exchange(ref Connection.ConnectionInfo.PacketsIn, 0L);
-
-			long ackReceived = Interlocked.Exchange(ref Connection.ConnectionInfo.Ack, 0L);
-			long ackSent = Interlocked.Exchange(ref Connection.ConnectionInfo.AckSent, 0L);
-			long nakReceive = Interlocked.Exchange(ref Connection.ConnectionInfo.Nak, 0L);
-			var nakSent = Interlocked.Exchange(ref Connection.ConnectionInfo.NakSent, 0);
-
-			long resends = Interlocked.Exchange(ref Connection.ConnectionInfo.Resends, 0L);
-			long fails = Interlocked.Exchange(ref Connection.ConnectionInfo.Fails, 0L);
-
-			string str =
-				$"Pkt in/out(#/s) {packetCountIn}/{packetCountOut}, ACK in/out(#/s) {ackReceived}/{ackSent}, NAK in/out(#/s) {nakReceive}/{nakSent}, THR in/out(Kbps){throughPutIn:F2}/{throughtPutOut:F2}, RTT {Session.SlidingWindow.GetRtt()}, RTO {Session.SlidingWindow.GetRtoForRetransmission()}, CWND {Session.SlidingWindow.CongestionWindow}, UnAcked {Session.UnackedBytes}";
-
-			if (LoggingConstants.LogNetworkStatistics)
-				Log.Info(str);
-
-			ConnectionInfo.NetworkState networkState = ConnectionInfo.NetworkState.Ok;
-
-			if (nakSent > 0)
-			{
-				//	networkState = ConnectionInfo.NetworkState.PacketLoss;
-			}
-			else if (Connection.IsNetworkOutOfOrder)
-			{
-				networkState = ConnectionInfo.NetworkState.OutOfOrder;
-			}
-			else if (BedrockMessageHandler != null
-			         && BedrockMessageHandler.TimeSinceLastPacket.TotalMilliseconds >= 250)
-			{
-				networkState = ConnectionInfo.NetworkState.Slow;
-			}
-			else if (Connection.ConnectionInfo.Latency > 250)
-			{
-				networkState = ConnectionInfo.NetworkState.HighPing;
-			}
-
-			_connectionInfo = new ConnectionInfo(
-				StartTime, Connection.ConnectionInfo.Latency, nakReceive, ackReceived, ackSent, fails, resends,
-				packetSizeIn, packetSizeOut, packetCountIn, packetCountOut, networkState) { NakSent = nakSent };
-		}
-
+		
 		public bool TryLocate(IPEndPoint targetEndPoint,
 			out (IPEndPoint serverEndPoint, string serverName, long ping) serverInfo,
 			CancellationToken cancellationToken,
@@ -325,12 +273,63 @@ namespace Alex.Net.Bedrock
 			else
 				this.Connection.SendData(data, new IPEndPoint(IPAddress.Broadcast, 19132));
 		}
-
-		private ConnectionInfo _connectionInfo = new ConnectionInfo(DateTime.UtcNow, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-
-		public override ConnectionInfo GetConnectionInfo()
+		
+		protected override ConnectionInfo GetConnectionInfo()
 		{
-			return _connectionInfo;
+			long packetSizeOut = Interlocked.Exchange(ref Connection.ConnectionInfo.BytesOut, 0L);
+			long packetSizeIn = Interlocked.Exchange(ref Connection.ConnectionInfo.BytesIn, 0L);
+
+			double throughtPutOut = (double)(packetSizeOut) / 1000.0;
+			double throughPutIn = (double)(packetSizeIn) / 1000.0;
+
+			long packetCountOut = Interlocked.Exchange(ref Connection.ConnectionInfo.PacketsOut, 0L);
+			long packetCountIn = Interlocked.Exchange(ref Connection.ConnectionInfo.PacketsIn, 0L);
+
+			long ackReceived = Interlocked.Exchange(ref Connection.ConnectionInfo.Ack, 0L);
+			long ackSent = Interlocked.Exchange(ref Connection.ConnectionInfo.AckSent, 0L);
+			long nakReceive = Interlocked.Exchange(ref Connection.ConnectionInfo.Nak, 0L);
+			var nakSent = Interlocked.Exchange(ref Connection.ConnectionInfo.NakSent, 0);
+
+			long resends = Interlocked.Exchange(ref Connection.ConnectionInfo.Resends, 0L);
+			long fails = Interlocked.Exchange(ref Connection.ConnectionInfo.Fails, 0L);
+
+			//string str =
+			//	$"Pkt in/out(#/s) {packetCountIn}/{packetCountOut}, ACK in/out(#/s) {ackReceived}/{ackSent}, NAK in/out(#/s) {nakReceive}/{nakSent}, THR in/out(Kbps){throughPutIn:F2}/{throughtPutOut:F2}, RTT {Session.CongestionManager.GetRtt()}, RTO {Session.CongestionManager.GetRtoForRetransmission()}, CWND {Session.CongestionManager.CongestionWindow}, UnAcked {Session.UnackedBytes}";
+
+			string str = $"Pkt in/out(#/s) {packetCountIn}/{packetCountOut}, "
+			             + $"ACK(in-out) ({ackReceived:00}-{ackSent:00}), "
+			             + $"NAK(in-out) ({nakReceive:00}-{nakSent:00}), "
+			             + $"RSND/FTO(#/s) {resends:00}/{fails:00}, "
+			             + $"THR in/out(Kbps) {throughPutIn:F2}/{throughtPutOut:F2}, "
+			             + $"Total in/out(B/s){packetSizeIn:00}/{packetSizeOut:00}, "
+			             + $"Latency {Connection.ConnectionInfo.Latency:00}ms";
+			
+			if (LoggingConstants.LogNetworkStatistics)
+				Log.Info(str);
+
+			ConnectionInfo.NetworkState networkState = ConnectionInfo.NetworkState.Ok;
+
+			if (nakSent > 0)
+			{
+				//	networkState = ConnectionInfo.NetworkState.PacketLoss;
+			}
+			else if (Connection.IsNetworkOutOfOrder)
+			{
+				networkState = ConnectionInfo.NetworkState.OutOfOrder;
+			}
+			else if (BedrockMessageHandler != null
+			         && BedrockMessageHandler.TimeSinceLastPacket.TotalMilliseconds >= 250)
+			{
+				networkState = ConnectionInfo.NetworkState.Slow;
+			}
+			else if (Connection.ConnectionInfo.Latency > 250)
+			{
+				networkState = ConnectionInfo.NetworkState.HighPing;
+			}
+
+			return new ConnectionInfo(
+				StartTime, Connection.ConnectionInfo.Latency, nakReceive, ackReceived, ackSent, fails, resends,
+				packetSizeIn, packetSizeOut, packetCountIn, packetCountOut, networkState) { NakSent = nakSent };
 		}
 
 		/// <inheritdoc />
@@ -1212,7 +1211,7 @@ namespace Alex.Net.Bedrock
 				}
 				finally
 				{
-					ThroughPut?.Change(Timeout.Infinite, Timeout.Infinite);
+				//ThroughPut?.Change(Timeout.Infinite, Timeout.Infinite);
 					//Connection.ConnectionInfo.ThroughPut.Change(Timeout.Infinite, Timeout.Infinite);
 				}
 		//	});

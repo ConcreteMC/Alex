@@ -94,8 +94,8 @@ namespace Alex.Worlds
 		
 		private ActionBlock<ChunkCoordinates> _actionBlock;
 		private PriorityBufferBlock<ChunkCoordinates> _priorityBuffer;
-		
-		
+		private List<ChunkCoordinates> _queued = new List<ChunkCoordinates>();
+
 		private readonly ResourceManager _resourceManager;
 		public ChunkManager(IServiceProvider serviceProvider, GraphicsDevice graphics, World world, CancellationToken cancellationToken)
 		{
@@ -182,7 +182,7 @@ namespace Alex.Worlds
 			{
 				CancellationToken = CancellationToken.Token, 
 				EnsureOrdered = false, 
-				MaxDegreeOfParallelism = threads,
+				MaxDegreeOfParallelism = Math.Max(1, threads - 3),
 				NameFormat = "Chunk ActionBlock: {0}-{1}"
 			});
 
@@ -296,15 +296,16 @@ namespace Alex.Worlds
 			if (_processingThread != null)
 				return;
 			
-			var task = new Task(
+			var task = new Thread(
 				() =>
 				{
-					_processingThread = Thread.CurrentThread;
 					Thread.CurrentThread.Name = "Chunk Management";
 					
 					SpinWait sw = new SpinWait();
 					while (!CancellationToken.IsCancellationRequested)
 					{
+						Thread.Yield();
+						
 						if (World?.Camera == null)
 						{
 							sw.SpinOnce();
@@ -322,9 +323,11 @@ namespace Alex.Worlds
 					}
 
 					_processingThread = null;
-				}, TaskCreationOptions.LongRunning);
+				});
 			
 			task.Start();
+
+			_processingThread = task;
 		}
 
 		private void DoUpdate(ChunkCoordinates chunkCoordinates)
@@ -359,6 +362,7 @@ namespace Alex.Worlds
 				}
 				finally
 				{
+					_queued.Remove(chunkCoordinates);
 					chunk.Scheduled = false;
 					Monitor.Exit(chunk.UpdateLock);
 				}
@@ -393,6 +397,7 @@ namespace Alex.Worlds
 
 		private void OnRemoveChunk(ChunkColumn column, bool dispose)
 		{
+			_queued?.Remove(new ChunkCoordinates(column.X, column.Z));
 			OnChunkRemoved?.Invoke(this, new ChunkRemovedEventArgs(column));
 			
 			if (dispose)
@@ -458,7 +463,11 @@ namespace Alex.Worlds
 				priority = Priority.Low;
 			}
 
-			_priorityBuffer.Post(position, priority);
+			if (!_queued.Contains(position))
+			{
+				_queued.Add(position);
+				_priorityBuffer.Post(position, priority);
+			}
 		}
 
 		#region  Drawing

@@ -2,45 +2,87 @@ using System;
 using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Threading.Tasks.Dataflow;
+using Alex.Networking.Java.Packets.Play;
+using NLog;
 
 namespace Alex.Utils.Threading
 {
 	public class BackgroundWorker : IDisposable
 	{
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(BackgroundWorker));
 		private CancellationTokenSource _cancellationTokenSource;
-		private BlockingCollection<Action> _workerQueue             = new BlockingCollection<Action>();
+		private BlockingCollection<Action> _workerQueue             = null;
 		
 		public int MaxThreads { get; set; }
-		
+
 		//private Thread _workerThread;
 		public BackgroundWorker(CancellationToken cancellationToken, int threads = 1)
 		{
 			MaxThreads = threads;
-			_cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-			cancellationToken = _cancellationTokenSource.Token;
 			
-			var task = new Task(
+			
+			Start();
+		}
+
+		private void HandleAction(Action obj)
+		{
+			try
+			{
+				obj?.Invoke();
+			}
+			catch (Exception ex)
+			{
+				Log.Warn(ex, "Exception in queued item!");
+			}
+		}
+
+		public void Start()
+		{
+			if (_workerQueue != null)
+				return;
+			
+			_cancellationTokenSource = new CancellationTokenSource();
+			_workerQueue = new BlockingCollection<Action>();
+			
+			
+			var task = new Thread(
 				() =>
 				{
 					Thread.CurrentThread.Name = $"BackgroundWorker Thread";
 
-					while (!_workerQueue.IsCompleted && _workerQueue.TryTake(out var action, -1, cancellationToken))
+					while (!_cancellationTokenSource.IsCancellationRequested && _workerQueue != null
+					                                                         && !_workerQueue.IsCompleted)
 					{
-						action?.Invoke();
+						if (_workerQueue.Count <= 0)
+						{
+							Thread.Yield();
+							continue;
+						}
+						
+						if (_workerQueue.TryTake(out var action, -1, _cancellationTokenSource.Token))
+						{
+							HandleAction(action);
+						}
 					}
-				}, cancellationToken, TaskCreationOptions.LongRunning);
+				});
 			
 			task.Start();
 		}
 
 		public void Enqueue(Action action)
 		{
-			_workerQueue.Add(action);
+			//_queue?.Post(action);
+			_workerQueue?.Add(action);
 		}
 
 		/// <inheritdoc />
 		public void Dispose()
 		{
+			//return;
+			if (_workerQueue == null)
+				return;
+			
 			_workerQueue?.CompleteAdding();
 			if (!_cancellationTokenSource.IsCancellationRequested)
 			{
@@ -48,7 +90,7 @@ namespace Alex.Utils.Threading
 			}
 			
 			_cancellationTokenSource?.Dispose();
-			_cancellationTokenSource = null;
+		//	_cancellationTokenSource = null;
 			
 			_workerQueue?.Dispose();
 			_workerQueue = null;

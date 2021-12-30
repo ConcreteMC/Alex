@@ -41,7 +41,7 @@ namespace Alex.Entities
 			if (item.Renderer != null)
 			{
 				CanRender = true;
-				ItemRenderer = item.Renderer;
+				ItemRenderer = item.Renderer.CloneItemRenderer();
 				ItemRenderer.DisplayPosition = DisplayPosition.Ground;
 
 				//Scale = (float) (item is ItemBlock ? (1f / (1f / Width)) : (1f / 32f));
@@ -75,6 +75,13 @@ namespace Alex.Entities
 			return itemRenderer.Render(renderArgs, Matrix.Identity * Matrix.CreateScale(Scale)
 			                                                             * Matrix.CreateRotationY(MathHelper.ToRadians(KnownPosition.Yaw))
 			                                                             * Matrix.CreateTranslation(KnownPosition.ToVector3()));
+		}
+
+		/// <inheritdoc />
+		protected override void OnDispose()
+		{
+			base.OnDispose();
+			ItemRenderer?.Dispose();
 		}
 	}
 }

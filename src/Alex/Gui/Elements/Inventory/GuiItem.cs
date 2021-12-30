@@ -22,13 +22,17 @@ namespace Alex.Gui.Elements.Inventory
             get => _item;
             set
             {
-                _item = value?.Clone();
-                _itemRenderer = _item?.Renderer;
-                
-                if(_itemRenderer != null)
-                    _itemRenderer.DisplayPosition = DisplayPosition.Gui;
-                
-                Drawable = _itemRenderer == null ? null : this;
+                if (value != _item)
+                {
+                    _item = value?.Clone();
+                    var oldItemRenderer = _itemRenderer;
+                    _itemRenderer = _item?.Renderer?.CloneItemRenderer();
+                    oldItemRenderer?.Dispose();
+                if (_itemRenderer != null)
+                        _itemRenderer.DisplayPosition = DisplayPosition.Gui;
+
+                    Drawable = _itemRenderer == null ? null : this;
+                }
             }
         }
 
