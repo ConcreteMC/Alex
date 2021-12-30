@@ -109,12 +109,40 @@ namespace Alex.Worlds.Multiplayer
 			}
 		}
 
+        private PlayerLocation _previousPlayerLocation = new PlayerLocation();
 		private void SendLocation(PlayerLocation location)
 		{
-			Client.SendMcpeMovePlayer(new PlayerLocation(location.X, location.Y + Player.EyeLevel, location.Z, -location.HeadYaw,-location.Yaw, location.Pitch)
+			if (Client.ServerAuthoritiveMovement)
 			{
-				OnGround = location.OnGround
-			}, 0, World.Time);
+				var player = World?.Player;
+
+				if (player == null)
+					return;
+
+				var delta = location.ToVector3() - _previousPlayerLocation.ToVector3();
+
+				var heading = player.Movement.Heading;
+				McpePlayerAuthInput input = McpePlayerAuthInput.CreateObject();
+				input.InputFlags = player.Controller.GetInputFlags();
+				input.Position = new System.Numerics.Vector3(location.X, location.Y, location.Z);
+				input.Yaw = location.Yaw;
+				input.HeadYaw = location.HeadYaw;
+				input.Pitch = location.Pitch;
+				input.MoveVecX = heading.X;
+				input.MoveVecZ = heading.Z;
+				input.Delta = new System.Numerics.Vector3(delta.X, delta.Y, delta.Z);
+
+				Client.SendPacket(input);
+				
+				_previousPlayerLocation = location;
+			}
+			else
+			{
+				Client.SendMcpeMovePlayer(
+					new PlayerLocation(
+						location.X, location.Y + Player.EyeLevel, location.Z, -location.HeadYaw, -location.Yaw,
+						location.Pitch) { OnGround = location.OnGround }, 0, World.Time);
+			}
 		}
 		
 		private void UnloadChunks(ChunkCoordinates center, double maxViewDistance)

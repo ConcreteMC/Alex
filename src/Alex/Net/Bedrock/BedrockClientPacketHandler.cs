@@ -225,7 +225,8 @@ namespace Alex.Net.Bedrock
 		{
 			if (message.movementType > 0)
 			{
-				Log.Warn($"!!! Server uses server-authoritive movement, only client-auth is currently supported.");
+				Client.ServerAuthoritiveMovement = true;
+				Log.Warn($"!!! Server uses server-authoritive movement, this is not yet FULLY supported!");
 			}
 			
 			try

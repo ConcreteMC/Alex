@@ -20,6 +20,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using MiNET.Net;
 using MiNET.Utils;
 using MiNET.Utils.Vectors;
 using NLog;
@@ -462,19 +463,7 @@ namespace Alex.Entities
 			var moveVector = Vector3.Zero;
 			var now = DateTime.UtcNow;
 
-			/*if (InputManager.IsPressed(AlexInputCommand.Jump) || InputManager.IsPressed(InputCommand.MoveUp))
-			{
-				if (now.Subtract(_lastUp).TotalMilliseconds <= 250)
-				{
-					Player.SetFlying(!Player.IsFlying);
-				}
-
-				_lastUp = now;
-			}*/
-
-			//float speedFactor = (float)Player.CalculateMovementSpeed();
-
-		    bool holdingDownSprint = InputManager.IsDown(AlexInputCommand.Sprint);
+			bool holdingDownSprint = InputManager.IsDown(AlexInputCommand.Sprint);
 
 		    bool canSwim = Player.CanSwim && Player.FeetInWater && Player.HeadInWater;
 
@@ -637,6 +626,39 @@ namespace Alex.Entities
 			}
 
 			LastVelocity = Player.Velocity;
+	    }
+	    
+	    public AuthInputFlags GetInputFlags()
+	    {
+		    AuthInputFlags inputFlags = 0;
+		    
+		 //   bool holdingDownSprint = InputManager.IsDown(AlexInputCommand.Sprint);
+
+		    if (InputManager.IsDown(AlexInputCommand.MoveForwards))
+			    inputFlags |= AuthInputFlags.Up;
+		    
+		    if (InputManager.IsDown(AlexInputCommand.MoveBackwards))
+			    inputFlags |= AuthInputFlags.Down;
+
+		    if (InputManager.IsDown(AlexInputCommand.MoveLeft))
+			    inputFlags |= AuthInputFlags.Left;
+
+		    if (InputManager.IsDown(AlexInputCommand.MoveRight))
+			    inputFlags |= AuthInputFlags.Right;
+		    
+		    if (InputManager.IsDown(AlexInputCommand.Sneak))
+			    inputFlags |= AuthInputFlags.SneakDown;
+		    
+		    if (InputManager.IsDown(AlexInputCommand.Sprint))
+			    inputFlags |= AuthInputFlags.SprintDown;
+		    
+		    if (InputManager.IsDown(AlexInputCommand.Jump))
+			    inputFlags |= AuthInputFlags.Jumping;
+		    
+		    //if (InputManager.IsDown(AlexInputCommand.))
+			 //   inputFlags |= AuthInputFlags.WantUp;
+		    
+		    return inputFlags;
 	    }
 	    
 	    public bool Disposed { get; private set; } = false;

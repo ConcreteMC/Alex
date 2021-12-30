@@ -100,6 +100,7 @@ namespace Alex.Net.Bedrock
 		private readonly List<IDisposable> _disposables = new List<IDisposable>();
 		public BedrockTransactionTracker TransactionTracker { get; }
 		public bool ServerAuthoritiveInventory { get; set; } = false;
+		public bool ServerAuthoritiveMovement { get; set; } = false;
 		
 		public BlockCoordinates ChunkPublisherPosition { get; set; } = BlockCoordinates.Zero;
 		public uint ChunkPublisherRadius { get; set; } = 0;
