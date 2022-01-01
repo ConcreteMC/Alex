@@ -18,6 +18,16 @@ namespace Alex.MoLang.Runtime
 		public Dictionary<string, IMoStruct> Structs { get; } = new(StringComparer.OrdinalIgnoreCase);
 		public IMoValue ThisVariable { get; set; } = DoubleValue.Zero;
 
+		public MoLangEnvironment()
+		{
+			Structs.TryAdd("math", MoLangMath.Library);
+			Structs.TryAdd("temp", new VariableStruct());
+			Structs.TryAdd("variable", new VariableStruct());
+			Structs.TryAdd("array", new ArrayStruct());
+
+			Structs.TryAdd("context", new ContextStruct());
+		}
+		
 		public IMoValue GetValue(MoPath name) {
 			return GetValue(name, MoParams.Empty);
 		}

@@ -493,4 +493,16 @@ namespace Alex.Graphics.Models
 			CloudsPlaneEffect?.Dispose();
 		}
 	}
+
+	public enum MoonPhase
+	{
+		FullMoon = 0,
+		WaningGibbous = 1,
+		FirstQuarter = 2,
+		WaningCrescent = 3,
+		NewMoon = 4,
+		WaxingCrescent = 5,
+		LastQuarter = 6,
+		WaxingGibbous = 7
+	}
 }

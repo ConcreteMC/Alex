@@ -13,8 +13,8 @@ namespace Alex.MoLang.Parser.Expressions.BinaryOp
 		public override IMoValue Evaluate(MoScope scope, MoLangEnvironment environment)
 		{
 			var                 leftEnv = Left.Evaluate(scope, environment);
-			if (leftEnv is MoLangEnvironment) {
-				return Right.Evaluate(scope, (MoLangEnvironment) leftEnv);
+			if (leftEnv is MoLangEnvironment leftMolangEnvironment) {
+				return Right.Evaluate(scope, leftMolangEnvironment);
 			}
 
 			return null;

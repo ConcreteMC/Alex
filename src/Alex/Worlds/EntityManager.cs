@@ -202,7 +202,7 @@ namespace Alex.Worlds
 			if (_rendered != null)
 			{
 			
-				using (GraphicsContext gc = GraphicsContext.CreateContext(
+				using (GraphicsContext.CreateContext(
 					args.GraphicsDevice, BlendState.AlphaBlend, DepthStencilState.Default,
 					RasterizerState.CullNone))
 				{
@@ -493,7 +493,7 @@ namespace Alex.Worlds
 			return EntityByUUID.TryGetValue(uuid, out entity);
 		}
 
-	    public IEnumerable<Entity> GetEntities(Vector3 camPos, int radius)
+	    public IEnumerable<Entity> GetEntities(Vector3 camPos, double radius)
 	    {
 		    return Entities.Values.ToArray().Where(x => x.IsRendered && Math.Abs(Vector3.DistanceSquared(x.KnownPosition.ToVector3(), camPos)) < radius).ToArray();
 	    }

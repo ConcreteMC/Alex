@@ -34,7 +34,7 @@ namespace Alex.Graphics.Models.Entity.Animations
 		public MoLangRuntime Runtime { get; set; }
 		public AnimationComponent(Entities.Entity entity) : base(entity)
 		{
-			Runtime = new MoLangRuntime();
+			Runtime = new MoLangRuntime(entity);
 		}
 
 		private IExpression[] _preRenderExpressions = null;
@@ -51,10 +51,10 @@ namespace Alex.Graphics.Models.Entity.Animations
 			{
 				List<IExpression> preRender = new List<IExpression>();
 
-				MoLangRuntime runtime = new MoLangRuntime();
+				MoLangRuntime runtime = new MoLangRuntime(Entity);
 				Context.Clear();
 				//SetEnvironment(runtime.Environment);
-				runtime.Environment.Structs.TryAdd("query", new ObjectStruct(Entity));
+				//runtime.Environment.Structs.TryAdd("query", new ObjectStruct(Entity));
 
 				if (definition.Scripts != null)
 				{

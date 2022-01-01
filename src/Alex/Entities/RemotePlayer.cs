@@ -59,6 +59,7 @@ namespace Alex.Entities
 		//private PooledTexture2D _texture;
 		public RemotePlayer(World level, string geometry = "geometry.humanoid.customSlim", Skin skin = null) : base(level)
 		{
+			Type = "minecraft:player";
 			//Name = name;
 
 			Width = 0.6;
@@ -209,7 +210,7 @@ namespace Alex.Entities
 
 							if (!AnimationController.Initialized &&
 							    Alex.Instance.Resources.TryGetEntityDefinition(
-								    "minecraft:player", out var description, out var source))
+								    Type, out var description, out var source))
 							{
 								AnimationController.UpdateEntityDefinition(source, source, description);
 							}

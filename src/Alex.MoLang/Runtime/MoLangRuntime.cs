@@ -14,17 +14,16 @@ namespace Alex.MoLang.Runtime
 	public class MoLangRuntime
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(MoLangRuntime));
-		public MoLangEnvironment Environment { get; } = new MoLangEnvironment();
+		public MoLangEnvironment Environment { get; }
 
-
-		public MoLangRuntime()
+		public MoLangRuntime() : this(new MoLangEnvironment())
 		{
-			Environment.Structs.TryAdd("math", MoLangMath.Library);
-			Environment.Structs.TryAdd("temp", new VariableStruct());
-			Environment.Structs.TryAdd("variable", new VariableStruct());
-			Environment.Structs.TryAdd("array", new ArrayStruct());
+			
+		}
 
-			Environment.Structs.TryAdd("context", new ContextStruct());
+		public MoLangRuntime(MoLangEnvironment environment)
+		{
+			Environment = environment;
 		}
 		
 		/*public IMoValue Execute(IExpression expression) {

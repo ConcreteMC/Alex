@@ -1,3 +1,7 @@
+using System.Collections;
+using System.Collections.Generic;
+using Alex.MoLang.Runtime.Struct;
+
 namespace Alex.MoLang.Runtime.Value
 
 {
@@ -25,11 +29,22 @@ namespace Alex.MoLang.Runtime.Value
 		{
 			if (value is IMoValue moValue) {
 				return moValue;
-			} 
-			
+			}
+
 			if (value is string str)
 			{
 				return new StringValue(str);
+			}
+			
+			if (value is IEnumerable enumerable)
+			{
+				List<IMoValue> values = new List<IMoValue>();
+				foreach (var enumObject in enumerable)
+				{
+					values.Add(FromObject(enumObject));
+				}
+
+				return new ArrayStruct(values);
 			}
 			
 			return new DoubleValue(value);

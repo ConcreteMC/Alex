@@ -78,6 +78,7 @@ namespace Alex.Worlds
 		private SkyBox SkyBox { get; }
 		
 		public Difficulty Difficulty { get; set; }
+		public MoonPhase MoonPhase => (MoonPhase)((int)(Time / 24000 % 8 + 8) % 8);
 		public long Time      { get; private set; } = 1;
 		public long TimeOfDay { get; private set; } = 1;
 		public bool Raining   { get; private set; } = false;

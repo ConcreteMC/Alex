@@ -1,5 +1,7 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using Alex.MoLang.Attributes;
 using Alex.MoLang.Runtime.Value;
@@ -120,7 +122,7 @@ namespace Alex.MoLang.Runtime.Struct
 				}
 			}
 		}
-		
+
 		private static void ProcessProperties(IReflect type, IDictionary<string, ValueAccessor> valueAccessors)
 		{
 			var properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);

@@ -10,6 +10,7 @@ using Alex.Blocks.Minecraft;
 using Alex.Common.Entities.Properties;
 using Alex.Common.Graphics;
 using Alex.Common.Graphics.GpuResources;
+using Alex.Common.Resources;
 using Alex.Common.Utils;
 using Alex.Common.World;
 using Alex.Entities.Components;
@@ -17,6 +18,7 @@ using Alex.Entities.Components.Effects;
 using Alex.Entities.Properties;
 using Alex.Gamestates;
 using Alex.Graphics.Camera;
+using Alex.Graphics.Models;
 using Alex.Graphics.Models.Entity;
 using Alex.Graphics.Models.Entity.Animations;
 using Alex.Graphics.Models.Items;
@@ -25,6 +27,7 @@ using Alex.Gui.Elements.Map;
 using Alex.Items;
 using Alex.MoLang.Attributes;
 using Alex.MoLang.Runtime;
+using Alex.MoLang.Runtime.Struct;
 using Alex.MoLang.Runtime.Value;
 using Alex.MoLang.Utils;
 using Alex.Net;
@@ -49,10 +52,11 @@ using PlayerLocation = Alex.Common.Utils.Vectors.PlayerLocation;
 
 namespace Alex.Entities
 {
-	public class Entity
+	public class Entity : MoLangEnvironment
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(Entity));
 
+		public ResourceLocation Type { get; set; } = ResourceLocation.DefaultNamespace;
 		private ModelRenderer _modelRenderer;
 
 		public MapIcon MapIcon { get; protected set; }
@@ -292,8 +296,8 @@ namespace Alex.Entities
 		}
 		
 		public AnimationComponent AnimationController { get; }
-		public TimeSpan LifeTime => DateTime.UtcNow - TimeOfCreation;
-		private readonly DateTime TimeOfCreation;
+		public TimeSpan LifeTime => DateTime.UtcNow - _timeOfCreation;
+		private readonly DateTime _timeOfCreation;
 		private Stopwatch _lifeTime;
 
 		public float Experience { get; set; } = 0;
@@ -302,7 +306,9 @@ namespace Alex.Entities
 		public EffectManagerComponent Effects { get; }
 		public Entity(World level)
 		{
-			TimeOfCreation = DateTime.UtcNow;
+			Structs.Add("query", new ObjectStruct(this));
+			
+			_timeOfCreation = DateTime.UtcNow;
 			EntityComponents = new Stack<IEntityComponent>();
 			
 			_lifeTime = Stopwatch.StartNew();
@@ -1967,6 +1973,11 @@ namespace Alex.Entities
 			return item != null && item.Count > 0 && !(item is ItemAir);
 		}
 
+		/// <summary>
+		///		Gets specified axis of the specified bone orientation pivot
+		/// </summary>
+		/// <param name="mo"></param>
+		/// <returns></returns>
 		[MoFunction("get_default_bone_pivot")]
 		public double GetDefaultBonePivot(MoParams mo)
 		{
@@ -2000,6 +2011,9 @@ namespace Alex.Entities
 			return 0d;
 		}
 
+		/// <summary>
+		///		Returns the current walk speed of the entity modified by status flags such as is_baby or on_fire
+		/// </summary>
 		[MoProperty("modified_move_speed")]
 		public double ModifiedMoveSpeed
 		{
@@ -2027,21 +2041,79 @@ namespace Alex.Entities
 			}
 		}
 		
+		/// <summary>
+		///		Returns the distance of the root of this actor or particle emitter from the camera
+		/// </summary>
 		[MoProperty("distance_from_camera")] public double DistanceFromCamera => Vector3.Distance(Level.Camera.Position, KnownPosition);
+		
+		/// <summary>
+		/// Returns the time in seconds since the current animation started, else 0.0 if not called within an animation
+		/// </summary>
 		[MoProperty("life_time")] public double GetLifeTime => _lifeTime.Elapsed.TotalSeconds;
+		
+		/// <summary>
+		/// Returns the total distance the entity has moved horizontally in meters (since the entity was last loaded, not necessarily since it was originally created) modified along the way by status flags such as is_baby or on_fire
+		/// </summary>
 		[MoProperty("modified_distance_moved")] public double ModifiedDistanceMoved => Movement.TotalDistanceMoved;
+		
+		/// <summary>
+		/// Returns the current time stamp of the level
+		/// </summary>
 		[MoProperty("time_stamp")] public double TimeStamp => (double)Level.Time;
+		
+		/// <summary>
+		///		Returns the ratio (from 0 to 1) of how much between AI ticks this frame is being rendered
+		/// </summary>
 		[MoProperty("frame_alpha")] public double FrameAlpha => (1f / 50f) * _deltaTime.TotalMilliseconds;
+		
+		/// <summary>
+		///		Returns the time in seconds since the previous frame
+		/// </summary>
 		[MoProperty("delta_time")] public double DeltaTime => _deltaTime.TotalSeconds;
+		
+		/// <summary>
+		///		Returns the ground speed of the entity in metres/second
+		/// </summary>
 		[MoProperty("ground_speed")] public double GroundSpeed => Movement.MetersPerSecond;
+		
+		/// <summary>
+		///		Returns the walk distance of the entity.
+		/// </summary>
 		[MoProperty("walk_distance")] public double WalkDistance => Movement.DistanceMoved;
+		
+		/// <summary>
+		///		Returns the speed of the entity up or down in metres/second, where positive is up
+		/// </summary>
 		[MoProperty("vertical_speed")] public double VerticalSpeed => Movement.VerticalSpeed;
+		
+		/// <summary>
+		///		Returns the time of day (midnight=0.0, sunrise=0.25, noon=0.5, sunset=0.75) of the dimension the entity is in.
+		/// </summary>
 		[MoProperty("time_of_day")] public double TimeOfDay => ((1f / 24000f) * Level.TimeOfDay);
+		
+		/// <summary>
+		///		Returns 1.0 if the entity has a target, else it returns 0.0
+		/// </summary>
 		[MoProperty("has_target")] public bool HasTarget => TargetEntityId != -1;
+		
+		/// <summary>
+		///		Returns true if the entity has an owner ID else it returns false
+		/// </summary>
 		[MoProperty("has_owner")] public bool HasOwner => OwnerEntityId != -1;
+		
+		/// <summary>
+		///		Returns the x rotation required to aim at the entity's current target if it has one, else it returns 0.0
+		/// </summary>
 		[MoProperty("target_x_rotation")] public double TargetXRotation => TargetRotation.X;
+		
+		/// <summary>
+		/// Returns the y rotation required to aim at the entity's current target if it has one, else it returns 0.0
+		/// </summary>
 		[MoProperty("target_y_rotation")] public double TargetYRotation => TargetRotation.Y;
 
+		/// <summary>
+		///		Returns true if the entity has a rider, else it returns false
+		/// </summary>
 		[MoProperty(("has_rider"))]
 		public bool HasRider
 		{
@@ -2057,10 +2129,20 @@ namespace Alex.Entities
 		///		Returns true if the player has selected an item in the inventory
 		/// </summary>
 		[MoProperty("is_selected_item")] public bool IsSelectedItem => Inventory.MainHand.Count > 0 && !(Inventory.MainHand is ItemAir);
+		
+		/// <summary>
+		///		Returns the use time for the main hand item.
+		/// </summary>
 		[MoProperty("main_hand_item_use_duration")] public double MainHandItemUseDuration => ItemInUseDuration;
 
+		/// <summary>
+		///		Returns the use time maximum duration for the main hand item if it makes sense, else it returns 0.0
+		/// </summary>
 		[MoProperty("main_hand_item_max_duration")] public double MainHandItemMaxDuration { get; set; } = 1d;
 
+		/// <summary>
+		///		returns value between 0.0 and 1.0 with 0.0 meaning cape is fully down and 1.0 is cape is fully up
+		/// </summary>
 		[MoProperty("cape_flap_amount")] public double CapeFlapAmount { get; set; } = 0d;
 
 		/// <summary>
@@ -2080,6 +2162,11 @@ namespace Alex.Entities
 			return 0d;
 		}
 		
+		/// <summary>
+		///		Takes one argument as a parameter. Returns the nth head x rotation of the entity if it makes sense, else it returns 0.0
+		/// </summary>
+		/// <param name="moParams"></param>
+		/// <returns></returns>
 		[MoFunction("head_x_rotation")]
 		public double HeadXRotation(MoParams moParams)
 		{
@@ -2097,6 +2184,11 @@ namespace Alex.Entities
 			return 0d;
 		}
 		
+		/// <summary>
+		///		Takes one argument as a parameter. Returns the nth head y rotation of the entity if it makes sense, else it returns 0.0
+		/// </summary>
+		/// <param name="moParams"></param>
+		/// <returns></returns>
 		[MoFunction("head_y_rotation")]
 		public double HeadYRotation(MoParams moParams)
 		{
@@ -2141,10 +2233,78 @@ namespace Alex.Entities
 			return 0d;
 		}
 
+		/// <summary>
+		///		Returns the maximum amount of time the item can be used, else 0.0 if it doesn't make sense
+		/// </summary>
 		[MoProperty("item_max_use_duration")] 
 		public double ItemMaxUseDuration => 0d;//MainHandItemMaxDuration;
 		
+		/// <summary>
+		///		Returns the amount of time an item has left to use, else 0.0 if it doesn't make sense.
+		///		Item queried is specified by the slot name 'main_hand' or 'off_hand'.
+		///		Time remaining is normalized using the normalization value, only if one is given, else it is returned in seconds.
+		/// </summary>
 		[MoProperty("item_remaining_use_duration")] public double ItemRemainingUseDuration => ItemMaxUseDuration > 0d ? (ItemMaxUseDuration - ItemInUseDuration) : 0d;
+
+		/// <summary>
+		///		Returns the list of entities within the specified distance, taking an optional second argument as a filter for which mob types to accept (eg: 'minecraft:pig').
+		/// </summary>
+		/// <param name="maxDistance">the max distance from this entity</param>
+		/// <param name="type">filter for which mob types to accept (eg: 'minecraft:pig')</param>
+		/// <returns>list of entities</returns>
+		[MoFunction("get_nearby_entities")]
+		public IEnumerable<Entity> GetNearbyEntities(double maxDistance, string type = "")
+		{
+			var resourceLocation = new ResourceLocation(type);
+			
+			bool checkType = !string.IsNullOrWhiteSpace(type);
+			foreach (var entity in Level.EntityManager.GetEntities(_knownPosition.ToVector3(), maxDistance))
+			{
+				if (!checkType || entity.Type.Equals(resourceLocation))
+				{
+					yield return entity;
+				}
+			}
+		}
+
+		[MoFunction("moon_phase")]
+		public int GetMoonPhase()
+		{
+			return (int)Level.MoonPhase;
+		}
+		
+		[MoFunction("moon_brightness")]
+		public double GetMoonBrightness()
+		{
+			switch (Level.MoonPhase)
+			{
+				case MoonPhase.FullMoon:
+					return 1;
+
+				case MoonPhase.WaningGibbous:
+					return 0.75;
+
+				case MoonPhase.FirstQuarter:
+					return 0.5;
+
+				case MoonPhase.WaningCrescent:
+					return 0.25;
+
+				case MoonPhase.NewMoon:
+					return 0;
+
+				case MoonPhase.WaxingCrescent:
+					return 0.25;
+
+				case MoonPhase.LastQuarter:
+					return 0.5;
+
+				case MoonPhase.WaxingGibbous:
+					return 0.75;
+			}
+
+			return 0;
+		}
 
 		#endregion
 	}

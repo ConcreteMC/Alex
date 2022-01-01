@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Alex.MoLang.Runtime.Value;
 using Alex.MoLang.Utils;
@@ -8,6 +9,16 @@ namespace Alex.MoLang.Runtime.Struct
 	{
 		public ArrayStruct() {}
 
+		public ArrayStruct(IEnumerable<IMoValue> values)
+		{
+			int index = 0;
+			foreach (var value in values)
+			{
+				Map.Add(index.ToString(), value);
+				index++;
+			}
+		}
+		
 		public ArrayStruct(IEnumerable<KeyValuePair<string, IMoValue>> map) : base(map)
 		{
 			

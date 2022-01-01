@@ -717,6 +717,10 @@ namespace Alex.Entities
 				//	});
 			}
 
+			if (entity != null)
+			{
+				entity.Type = entityType;
+			}
 			return entity;
 		}
 	}
