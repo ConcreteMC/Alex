@@ -207,8 +207,8 @@ namespace Alex.Utils
 
 						//pivot += origin;
 
-						matrix = Matrix.CreateTranslation(-(pivot)) * MatrixHelper.CreateRotationDegrees(rotation)
-						                                            * Matrix.CreateTranslation(pivot);
+						matrix = MatrixHelper.CreateRotationDegrees(rotation)
+							;
 					}
 
 					//var matrix = Matrix.Identity;

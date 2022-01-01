@@ -4,6 +4,7 @@ using Alex.Blocks.Minecraft;
 using Alex.Blocks.Properties;
 using Alex.Common.Blocks;
 using Alex.Common.Graphics;
+using Alex.Common.Resources;
 using Alex.Common.Utils;
 using Alex.Common.Utils.Vectors;
 using Alex.Graphics.Models.Entity;
@@ -23,6 +24,8 @@ namespace Alex.Entities.BlockEntities
 		/// <inheritdoc />
 		public BedBlockEntity(World level) : base(level)
 		{
+			Type = new ResourceLocation("minecraft:bed");
+			
 			Width = 1f;
 			Height = 1f;
 			
@@ -81,7 +84,7 @@ namespace Alex.Entities.BlockEntities
 			if (_entityDescription == null)
 			{
 				if (Alex.Instance.Resources.TryGetEntityDefinition(
-					"minecraft:bed", out var entityDescription, out var source))
+					Type, out var entityDescription, out var source))
 				{
 					_entityDescription = entityDescription;
 					AnimationController?.UpdateEntityDefinition(source, source, entityDescription);

@@ -56,7 +56,7 @@ namespace Alex.Entities
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(Entity));
 
-		public ResourceLocation Type { get; set; } = ResourceLocation.DefaultNamespace;
+		public ResourceLocation Type { get; set; } = null;
 		private ModelRenderer _modelRenderer;
 
 		public MapIcon MapIcon { get; protected set; }
@@ -2260,7 +2260,7 @@ namespace Alex.Entities
 			bool checkType = !string.IsNullOrWhiteSpace(type);
 			foreach (var entity in Level.EntityManager.GetEntities(_knownPosition.ToVector3(), maxDistance))
 			{
-				if (!checkType || entity.Type.Equals(resourceLocation))
+				if (!checkType || (entity.Type != null && entity.Type.Equals(resourceLocation)))
 				{
 					yield return entity;
 				}

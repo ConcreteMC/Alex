@@ -35,9 +35,6 @@ namespace Alex.Entities
 	
 	public class ThrowableItemEntity : ItemBaseEntity
 	{
-		public bool StopOnImpact { get; set; } = false;
-		public bool DespawnOnImpact { get; set; } = false;
-
 		private ResourceLocation _item;
 		
 		/// <inheritdoc />

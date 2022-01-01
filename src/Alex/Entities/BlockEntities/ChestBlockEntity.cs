@@ -2,6 +2,7 @@ using System;
 using Alex.Blocks.Minecraft;
 using Alex.Blocks.Properties;
 using Alex.Common.Blocks;
+using Alex.Common.Resources;
 using Alex.Graphics.Models;
 using Alex.Graphics.Models.Entity;
 using Alex.Graphics.Models.Entity.Animations;
@@ -21,6 +22,8 @@ namespace Alex.Entities.BlockEntities
 		/// <inheritdoc />
 		public ChestBlockEntity(World level) : base(level)
 		{
+			Type = new ResourceLocation("minecraft:chest");
+			
 			Width = 1f;
 			Height = 1f;
 		}

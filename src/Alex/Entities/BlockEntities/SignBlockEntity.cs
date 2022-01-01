@@ -3,6 +3,7 @@ using System.Linq;
 using Alex.Blocks.Minecraft;
 using Alex.Common.Blocks;
 using Alex.Common.Graphics;
+using Alex.Common.Resources;
 using Alex.Common.Utils;
 using Alex.Graphics.Models.Entity;
 using Alex.Graphics.Models.Entity.BlockEntities;

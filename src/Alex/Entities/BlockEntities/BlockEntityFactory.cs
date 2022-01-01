@@ -1,5 +1,6 @@
 using Alex.Blocks.Minecraft;
 using Alex.Common.Graphics.GpuResources;
+using Alex.Common.Resources;
 using Alex.Common.Utils;
 using Alex.ResourcePackLib;
 using Alex.Worlds;
@@ -135,8 +136,18 @@ namespace Alex.Entities.BlockEntities
 
 				if (blockEntity != null)
 				{
-					blockEntity.Read(compound);
+					if (blockEntity.Type == null)
+					{
+						blockEntity.Type = id;
+					}
 					
+					if (Alex.Instance.Resources.TryGetEntityDefinition(blockEntity.Type, out var entityDescription, out var source))
+					{
+						blockEntity.AnimationController.UpdateEntityDefinition(source, source, entityDescription);
+					}
+
+					blockEntity.Read(compound);
+
 					if (blockEntity.SetBlock(block))
 						return blockEntity;
 				}

@@ -717,7 +717,7 @@ namespace Alex.Entities
 				//	});
 			}
 
-			if (entity != null)
+			if (entity != null && entity.Type == null)
 			{
 				entity.Type = entityType;
 			}
