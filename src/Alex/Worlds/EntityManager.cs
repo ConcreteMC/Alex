@@ -14,6 +14,7 @@ using Alex.Common.Utils.Vectors;
 using Alex.Common.World;
 using Alex.Entities;
 using Alex.Entities.BlockEntities;
+using Alex.Entities.Components;
 using Alex.Graphics.Camera;
 using Alex.Graphics.Models;
 using Alex.Net;
@@ -130,9 +131,10 @@ namespace Alex.Worlds
 				{
 					var entityPos = entity.RenderLocation;
 
-					if (Math.Abs(Vector3.Distance(cameraChunkPosition, entityPos)) <= Math.Min(
+					if (World.Camera.BoundingFrustum.Contains(entity.GetVisibilityBoundingBox(entityPos)) != ContainmentType.Disjoint)
+					/*if (Math.Abs(Vector3.Distance(cameraChunkPosition, entityPos)) <= Math.Min(
 						World.ChunkManager.RenderDistance,
-						OptionsProvider.AlexOptions.VideoOptions.EntityRenderDistance.Value) * 16f)
+						OptionsProvider.AlexOptions.VideoOptions.EntityRenderDistance.Value) * 16f)*/
 					{
 						entityCount++;
 						rendered.Add(entity);
@@ -169,12 +171,17 @@ namespace Alex.Worlds
 		public void Update(IUpdateArgs args)
 		{
 			var delta = Alex.DeltaTime;
-			float maxTime = delta / _rendered.Length;
+
+			IReadOnlyCollection<Entity> toUpdate;
+			//toUpdate = _rendered.OrderByDescending(x => DateTime.UtcNow - x.LastUpdate);
+			toUpdate = _rendered;
+			
+			float maxTime = delta / toUpdate.Count;
 			long elapsedTime = 0;
-			foreach (var entity in _rendered.OrderByDescending(x => DateTime.UtcNow - x.LastUpdate))
+			foreach (var entity in toUpdate)
 			{
-				if (elapsedTime >= delta)
-					break;
+				//if (elapsedTime >= delta)
+				//	break;
 				_updateWatch.Restart();
 				//if (entity.IsRendered)
 
@@ -191,7 +198,7 @@ namespace Alex.Worlds
 
 				if (elapsed > maxTime)
 				{
-					Log.Warn($"Entity update took {elapsed - maxTime}ms too long. Entity={entity} (EntityId={entity.EntityId})");
+					Log.Warn($"Entity update took {elapsed - maxTime}ms too long. Entity={entity}");
 				}
 			}
 		}

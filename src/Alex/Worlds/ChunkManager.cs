@@ -96,6 +96,9 @@ namespace Alex.Worlds
 		private PriorityBufferBlock<ChunkCoordinates> _priorityBuffer;
 		private List<ChunkCoordinates> _queued = new List<ChunkCoordinates>();
 
+		public bool CalculateSkyLighting { get; set; } = true;
+		public bool CalculateBlockLighting { get; set; } = true;
+		
 		private readonly ResourceManager _resourceManager;
 		public ChunkManager(IServiceProvider serviceProvider, GraphicsDevice graphics, World world, CancellationToken cancellationToken)
 		{
@@ -305,7 +308,7 @@ namespace Alex.Worlds
 					while (!CancellationToken.IsCancellationRequested)
 					{
 						Thread.Yield();
-						
+
 						if (World?.Camera == null)
 						{
 							sw.SpinOnce();
@@ -315,8 +318,16 @@ namespace Alex.Worlds
 						if (CancellationToken.IsCancellationRequested)
 							break;
 
-						int lightUpdatesExecuted = BlockLightUpdate.Execute() + SkyLightCalculator.Execute();
-						Interlocked.Add(ref _lightingUpdates, lightUpdatesExecuted);
+						int lightUpdatesExecuted = 0;//BlockLightUpdate.Execute() + SkyLightCalculator.Execute();
+
+						if (CalculateBlockLighting)
+							lightUpdatesExecuted += BlockLightUpdate.Execute();
+
+						if (CalculateSkyLighting)
+							lightUpdatesExecuted += SkyLightCalculator.Execute();
+						
+						if (lightUpdatesExecuted != 0)
+							Interlocked.Add(ref _lightingUpdates, lightUpdatesExecuted);
 						
 						if (lightUpdatesExecuted <= 0)
 							sw.SpinOnce();
@@ -379,7 +390,7 @@ namespace Alex.Worlds
 			if (CancellationToken.IsCancellationRequested)
 				return;
 			
-			chunk.CalculateHeight();
+			chunk.CalculateHeight(doUpdates);
 
 			var column = Chunks.AddOrUpdate(
 				position, coordinates => chunk, (coordinates, oldColumn) =>

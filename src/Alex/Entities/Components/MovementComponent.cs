@@ -4,6 +4,7 @@ using System.Linq;
 using Alex.Common.Utils;
 using Alex.Common.Utils.Vectors;
 using Alex.Worlds;
+using Alex.Worlds.Abstraction;
 using Microsoft.Xna.Framework;
 using NLog;
 
@@ -263,35 +264,38 @@ namespace Alex.Entities.Components
 		private const float MaxFallDistance = 0.625f;
 		public Vector3 Move(Vector3 amount)
 		{
+			using var blockAccess = new CollisionBlockAccess(Entity.Level);
+
 			if (Entity.HasCollision)
 			{
 				bool wasOnGround = Entity.KnownPosition.OnGround;
-				
+
 				var beforeAdjustment = new Vector3(amount.X, amount.Y, amount.Z);
 
 				List<ColoredBoundingBox> boxes = new List<ColoredBoundingBox>();
-				
+
 				bool collided = false;
 
-				bool collideY = CheckY(ref amount, false, ref boxes);
 
-				bool collideX = CheckX(ref amount, false, ref boxes);
+				bool collideY = CheckY(blockAccess, ref amount, false, ref boxes);
 
-				bool collideZ = CheckZ(ref amount, false, ref boxes);
+				bool collideX = CheckX(blockAccess, ref amount, false, ref boxes);
 
-				if (!collideX && CheckX(ref amount, true, ref boxes))
+				bool collideZ = CheckZ(blockAccess, ref amount, false, ref boxes);
+
+				if (!collideX && CheckX(blockAccess, ref amount, true, ref boxes))
 				{
 					collideX = true;
 				}
 
-				if (!collideZ && CheckZ(ref amount, true, ref boxes))
+				if (!collideZ && CheckZ(blockAccess, ref amount, true, ref boxes))
 				{
 					collideZ = true;
 				}
 
 				if (Entity.IsSneaking && wasOnGround)
 				{
-					FixSneaking(ref amount);
+					FixSneaking(blockAccess, ref amount);
 				}
 
 				collided = collideX || collideZ;
@@ -310,9 +314,9 @@ namespace Alex.Entities.Components
 					LastCollision = boxes.ToArray();
 				}
 			}
-			
+
 			Entity.KnownPosition += amount;
-			Entity.KnownPosition.OnGround = DetectOnGround(Entity.KnownPosition);
+			Entity.KnownPosition.OnGround = DetectOnGround(blockAccess, Entity.KnownPosition);
 			
 			MovedBy(amount);
 			UpdateTarget();
@@ -320,7 +324,7 @@ namespace Alex.Entities.Components
 			return amount;
 		}
 
-		private void FixSneaking(ref Vector3 amount)
+		private void FixSneaking(IBlockAccess blockAccess, ref Vector3 amount)
 		{
 			var dX = amount.X;
 			var dZ = amount.Z;
@@ -330,7 +334,7 @@ namespace Alex.Entities.Components
 
 			var boundingBox = Entity.GetBoundingBox();
 			//check for furthest ground under player in the X axis (from initial position)
-			while(dX != 0.0f && !GetIntersecting(Entity.Level, boundingBox.OffsetBy(new Vector3(dX, -MaxFallDistance, 0f))).Any())
+			while(dX != 0.0f && !GetIntersecting(blockAccess, boundingBox.OffsetBy(new Vector3(dX, -MaxFallDistance, 0f))).Any())
 			{
 				if (dX < increment && dX >= -increment)
 					dX = 0.0f;
@@ -343,7 +347,7 @@ namespace Alex.Entities.Components
 			}
                 
 			//check for furthest ground under player in the Z axis (from initial position)
-			while(dZ != 0.0f && !GetIntersecting(Entity.Level, boundingBox.OffsetBy(new Vector3(0f, -MaxFallDistance, dZ))).Any())
+			while(dZ != 0.0f && !GetIntersecting(blockAccess, boundingBox.OffsetBy(new Vector3(0f, -MaxFallDistance, dZ))).Any())
 			{
 				if (dZ < increment && dZ >= -increment)
 					dZ = 0.0f;
@@ -356,7 +360,7 @@ namespace Alex.Entities.Components
 			}
 
 			//calculate definitive dX and dZ based on the previous limits.
-			while(dX != 0.0f && dZ != 0.0f && !GetIntersecting(Entity.Level, boundingBox.OffsetBy(new Vector3(dX, -MaxFallDistance, dZ))).Any())
+			while(dX != 0.0f && dZ != 0.0f && !GetIntersecting(blockAccess, boundingBox.OffsetBy(new Vector3(dX, -MaxFallDistance, dZ))).Any())
 			{
 				if (dX < increment && dX >= -increment)
 					dX = 0.0f;
@@ -380,11 +384,11 @@ namespace Alex.Entities.Components
 			amount.Z = correctedZ;
 		}
 
-		private bool CheckY(ref Vector3 amount, bool checkOther, ref List<ColoredBoundingBox> boxes)
+		private bool CheckY(IBlockAccess blockAccess, ref Vector3 amount, bool checkOther, ref List<ColoredBoundingBox> boxes)
 		{
 			var beforeAdjustment = amount.Y;
 
-			if (!TestTerrainCollisionY(ref amount, out var yCollisionPoint, out var collisionY, boxes))
+			if (!TestTerrainCollisionY(blockAccess, ref amount, out var yCollisionPoint, out var collisionY, boxes))
 				return false;
 			
 			var yVelocity = Entity.CollidedWithWorld(
@@ -400,12 +404,12 @@ namespace Alex.Entities.Components
 			return true;
 		}
 
-		private bool CheckX(ref Vector3 amount, bool checkOther, ref List<ColoredBoundingBox> boxes)
+		private bool CheckX(IBlockAccess blockAccess, ref Vector3 amount, bool checkOther, ref List<ColoredBoundingBox> boxes)
 		{
-			if (!TestTerrainCollisionX(amount, out _, out var collisionX, boxes, checkOther)) 
+			if (!TestTerrainCollisionX(blockAccess, amount, out _, out var collisionX, boxes, checkOther)) 
 				return false;
 
-			if (CheckJump(amount, out float yValue))
+			if (CheckJump(blockAccess, amount, out float yValue))
 			{
 				amount.Y = yValue;
 			}
@@ -421,12 +425,12 @@ namespace Alex.Entities.Components
 			return true;
 		}
 		
-		private bool CheckZ(ref Vector3 amount, bool checkOther, ref List<ColoredBoundingBox> boxes)
+		private bool CheckZ(IBlockAccess blockAccess, ref Vector3 amount, bool checkOther, ref List<ColoredBoundingBox> boxes)
 		{
-			if (!TestTerrainCollisionZ(amount, out _, out var collisionZ, boxes, checkOther)) 
+			if (!TestTerrainCollisionZ(blockAccess, amount, out _, out var collisionZ, boxes, checkOther)) 
 				return false;
 
-			if (CheckJump(amount, out float yValue))
+			if (CheckJump(blockAccess, amount, out float yValue))
 			{
 				amount.Y = yValue;
 			}
@@ -444,7 +448,7 @@ namespace Alex.Entities.Components
 
 		public ColoredBoundingBox[] LastCollision { get; private set; } = new ColoredBoundingBox[0];
 
-		private bool CheckJump(Vector3 amount, out float yValue)
+		private bool CheckJump(IBlockAccess blockAccess, Vector3 amount, out float yValue)
 		{
 			yValue = amount.Y;
 			var   canJump = false;
@@ -501,7 +505,7 @@ namespace Alex.Entities.Components
 			return canJump;
 		}
 		
-		private bool DetectOnGround(Vector3 position)
+		private bool DetectOnGround(IBlockAccess blockAccess, Vector3 position)
 		{
 			var entityBoundingBox =
 				Entity.GetBoundingBox(position);
@@ -532,7 +536,7 @@ namespace Alex.Entities.Components
 			{
 				for (int z = (int) (Math.Floor(minZ)); z <= (int) (Math.Ceiling(maxZ)); z++)
 				{
-					var blockState = Entity.Level.GetBlockState(x, y, z);
+					var blockState = blockAccess.GetBlockState(x, y, z);
 					if (!blockState.Block.Solid)
 						continue;
 					
@@ -557,7 +561,7 @@ namespace Alex.Entities.Components
 			return foundGround;
 		}
 
-		private bool TestTerrainCollisionY(ref Vector3 velocity, out Vector3 collisionPoint, out float result, List<ColoredBoundingBox> boxes)
+		private bool TestTerrainCollisionY(IBlockAccess blockAccess, ref Vector3 velocity, out Vector3 collisionPoint, out float result, List<ColoredBoundingBox> boxes)
 		{
 			collisionPoint = Vector3.Zero;
 			result = velocity.Y;
@@ -599,7 +603,7 @@ namespace Alex.Entities.Components
 				{
 					for (int y = (int) (Math.Floor(testBox.Min.Y)); y <= (int) (Math.Ceiling(testBox.Max.Y)); y++)
 					{
-						var blockState = Entity.Level.GetBlockState(x, y, z);
+						var blockState = blockAccess.GetBlockState(new BlockCoordinates(x, y, z));
 						if (!blockState.Block.Solid)
 							continue;
 
@@ -664,7 +668,7 @@ namespace Alex.Entities.Components
 			return false;
 		}
 
-		private bool TestTerrainCollisionX(Vector3 velocity, out Vector3 collisionPoint, out float result, List<ColoredBoundingBox> boxes, bool includeOther)
+		private bool TestTerrainCollisionX(IBlockAccess blockAccess, Vector3 velocity, out Vector3 collisionPoint, out float result, List<ColoredBoundingBox> boxes, bool includeOther)
 		{
 			result = velocity.X;
 			collisionPoint = Vector3.Zero;
@@ -727,7 +731,7 @@ namespace Alex.Entities.Components
 				{
 					for (int y = (int) (Math.Floor(minY)); y <= (int) (Math.Ceiling(maxY)); y++)
 					{
-						var blockState = Entity.Level.GetBlockState(x, y, z);
+						var blockState = blockAccess.GetBlockState(new BlockCoordinates(x, y, z));
 						if (!blockState.Block.Solid)
 							continue;
 
@@ -804,7 +808,7 @@ namespace Alex.Entities.Components
 			return false;
 		}
 
-		private bool TestTerrainCollisionZ(Vector3 velocity, out Vector3 collisionPoint, out float result, List<ColoredBoundingBox> boxes, bool includeOther)
+		private bool TestTerrainCollisionZ(IBlockAccess blockAccess, Vector3 velocity, out Vector3 collisionPoint, out float result, List<ColoredBoundingBox> boxes, bool includeOther)
 		{
 			result = velocity.Z; 
 			collisionPoint = Vector3.Zero;
@@ -867,7 +871,7 @@ namespace Alex.Entities.Components
 				{
 					for (int y = (int) (Math.Floor(minY)); y <= (int) (Math.Ceiling(maxY)); y++)
 					{
-						var blockState = Entity.Level.GetBlockState(x, y, z);
+						var blockState = blockAccess.GetBlockState(new BlockCoordinates(x, y, z));
 						if (!blockState.Block.Solid)
 							continue;
 
@@ -943,7 +947,7 @@ namespace Alex.Entities.Components
 			return false;
 		}
 		
-		private static IEnumerable<BoundingBox> GetIntersecting(World world, BoundingBox box)
+		private static IEnumerable<BoundingBox> GetIntersecting(IBlockAccess world, BoundingBox box)
 		{
 			var min = box.Min;
 			var max = box.Max;

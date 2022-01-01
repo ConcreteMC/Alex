@@ -19,10 +19,13 @@ namespace Alex.Entities.Projectiles
 			Gravity = 0.0;
 			Drag = 0.01;
 			
-			HasCollision = true;
+			HasCollision = false;
 			IsAffectedByGravity = true;
-			StopOnImpact = false;
+			StopOnImpact = true;
 		}
+
+		/// <inheritdoc />
+		public override bool NoAi => false;
 
 		/// <inheritdoc />
 		protected override void OnModelUpdated()
@@ -82,7 +85,7 @@ namespace Alex.Entities.Projectiles
 				}
 			}
 
-			return base.CollidedWithWorld(direction, position, impactVelocity);
+			return 0f;
 		}
 
 		/// <inheritdoc />

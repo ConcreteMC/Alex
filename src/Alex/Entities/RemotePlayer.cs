@@ -178,6 +178,13 @@ namespace Alex.Entities
 			{
 				QueueSkinProcessing(_skin);
 			}
+			
+			if (!AnimationController.Initialized &&
+			    Alex.Instance.Resources.TryGetEntityDefinition(
+				    Type, out var description, out var source))
+			{
+				AnimationController.UpdateEntityDefinition(source, source, description);
+			}
 		}
 
 		/// <inheritdoc />
@@ -207,13 +214,6 @@ namespace Alex.Entities
 						try
 						{
 							LoadSkin(skin);
-
-							if (!AnimationController.Initialized &&
-							    Alex.Instance.Resources.TryGetEntityDefinition(
-								    Type, out var description, out var source))
-							{
-								AnimationController.UpdateEntityDefinition(source, source, description);
-							}
 						}
 						finally
 						{

@@ -175,7 +175,7 @@ namespace Alex.Worlds.Multiplayer
 					}
 
 					//result.CalculateLighting = false;
-					World.ChunkManager.AddChunk(result, new ChunkCoordinates(result.X, result.Z), true);
+					World.ChunkManager.AddChunk(result, new ChunkCoordinates(result.X, result.Z), false);
 				}
 			}
 			finally
@@ -401,6 +401,8 @@ namespace Alex.Worlds.Multiplayer
 		{
 			CommandProvider = new JavaCommandProvider(this, Client, World);
 			NetworkProvider.CommandProvider = CommandProvider;
+			World.ChunkManager.CalculateSkyLighting = false;
+			World.ChunkManager.CalculateBlockLighting = false;
 		}
 		
 		private bool                            _hasDoneInitialChunks = false;
@@ -2495,7 +2497,6 @@ namespace Alex.Worlds.Multiplayer
 
 		private void HandleUpdateLightPacket(UpdateLightPacket packet)
 		{
-			return;
 			var cc = new ChunkCoordinates(packet.ChunkX, packet.ChunkZ);
 
 			if (World.ChunkManager.TryGetChunk(cc, out var chunk))
