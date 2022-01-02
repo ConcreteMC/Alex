@@ -455,8 +455,6 @@ namespace Alex.Entities
 			    return;
 		    }
 
-		    var inputFlags = InputFlags;
-		    
 		    if (InputManager.IsPressed(AlexInputCommand.HotBarSelectPrevious)
 		        || MouseInputListener.IsButtonDown(MouseButton.ScrollUp))
 		    {
@@ -467,8 +465,142 @@ namespace Alex.Entities
 		    {
 			    Player.Inventory.SelectedSlot++;
 		    }
+	    }
+
+	    public Vector3 GetMoveVector(AuthInputFlags inputFlags)
+	    {
+		    var moveVector = Vector3.Zero;
+
+		    if ((inputFlags & AuthInputFlags.WalkForwards) != 0)
+			    moveVector.Z += 1;
 		    
-			var now = DateTime.UtcNow;
+		    if ((inputFlags & AuthInputFlags.WalkBackwards) != 0)
+			    moveVector.Z -= 1;
+
+		    if ((inputFlags & AuthInputFlags.StrafeLeft) != 0)
+			    moveVector.X += 1;
+
+		    if ((inputFlags & AuthInputFlags.StrafeRight) != 0)
+			    moveVector.X -= 1;
+		    
+		    if (Player.IsFlying)
+		    {
+			    if ((inputFlags & AuthInputFlags.WantUp) != 0)
+				    moveVector.Y += 1;
+
+			    if ((inputFlags & AuthInputFlags.WantDown) != 0)
+				    moveVector.Y -= 1;
+		    }
+		    
+		    return moveVector;
+	    }
+	    
+	    public AuthInputFlags InputFlags { get; private set; }
+
+	    private bool _canJump = true;
+	    private AuthInputFlags GetInputFlags()
+	    {
+		    AuthInputFlags inputFlags = 0;
+
+		    var previousInputFlags = InputFlags;
+
+		    if (InputManager.IsDown(AlexInputCommand.MoveForwards))
+			    inputFlags |= AuthInputFlags.WalkForwards;
+
+		    if (InputManager.IsDown(AlexInputCommand.MoveBackwards))
+			    inputFlags |= AuthInputFlags.WalkBackwards;
+
+		    if (InputManager.IsDown(AlexInputCommand.MoveLeft))
+			    inputFlags |= AuthInputFlags.StrafeLeft;
+
+		    if (InputManager.IsDown(AlexInputCommand.MoveRight))
+			    inputFlags |= AuthInputFlags.StrafeRight;
+
+		    if (InputManager.IsDown(AlexInputCommand.MoveUp))
+		    {
+			    inputFlags |= AuthInputFlags.Ascend;
+			    inputFlags |= AuthInputFlags.WantUp;
+		    }
+
+		    if (InputManager.IsDown(AlexInputCommand.MoveDown))
+		    {
+			    inputFlags |= AuthInputFlags.Descend;
+			    inputFlags |= AuthInputFlags.WantDown;
+			    inputFlags |= AuthInputFlags.Sneaking;
+		    }
+
+		    if (InputManager.IsDown(AlexInputCommand.Sneak))
+		    {
+			    inputFlags |= AuthInputFlags.SneakDown;
+			    inputFlags |= AuthInputFlags.Sneaking;
+
+			    inputFlags |= AuthInputFlags.WantDown;
+		    }
+
+		    if (InputManager.IsPressed(AlexInputCommand.Sneak))
+		    {
+			    if (Player.IsSneaking)
+			    {
+				    inputFlags |= AuthInputFlags.StopSneaking;
+			    }
+			    else
+			    {
+				    inputFlags |= AuthInputFlags.StartSneaking;
+			    }
+		    }
+
+		    if ((inputFlags & AuthInputFlags.WalkForwards) != 0)
+		    {
+			    bool pressedWalk = (inputFlags & AuthInputFlags.WalkForwards) != 0
+			                       && (previousInputFlags & AuthInputFlags.WalkForwards) == 0;
+
+			    if (Player.IsSprinting || (pressedWalk && Player.Age - _lastForward <= 3))
+			    {
+				    inputFlags |= AuthInputFlags.Sprinting;
+			    }
+
+			    //if (pressedWalk)
+			    {
+				    _lastForward = Player.Age;
+			    }
+		    }
+
+		    if (InputManager.IsDown(AlexInputCommand.Sprint))
+		    {
+			    inputFlags |= AuthInputFlags.SprintDown;
+			    inputFlags |= AuthInputFlags.Sprinting;
+		    }
+
+		    if (InputManager.IsPressed(AlexInputCommand.SprintToggle))
+		    {
+			    if (Player.IsSprinting)
+			    {
+				    inputFlags |= AuthInputFlags.StopSprinting;
+			    }
+			    else
+			    {
+				    inputFlags |= AuthInputFlags.StartSprinting;
+			    }
+		    }
+
+		    if (InputManager.IsDown(AlexInputCommand.Jump))
+		    {
+			    inputFlags |= AuthInputFlags.JumpDown;
+			    inputFlags |= AuthInputFlags.WantUp;
+
+			    if (!Player.IsFlying)
+				    inputFlags |= AuthInputFlags.NorthJump;
+		    }
+
+		    return inputFlags;
+	    }
+
+	    public void Tick()
+	    {
+		    if (!CheckMovementInput)
+			    return;
+		    
+		    var inputFlags = GetInputFlags();
 
 			bool canSwim = Player.CanSwim && Player.FeetInWater && Player.HeadInWater;
 
@@ -503,56 +635,97 @@ namespace Alex.Entities
 			    sprinting = false;
 		    }
 
-		    /*if ((inputFlags & AuthInputFlags.WalkForwards) != 0)
-			{
-				
+			if (_jumping && Player.Velocity.Y <= 0.00001f && Player.FeetInWater)
+			    _jumping = false;
 
-				//_lastForward = now;
-			}
-			else
+		    if (!_canJump && Player.KnownPosition.OnGround && Math.Abs(LastVelocity.Y - Player.Velocity.Y)
+		        < 0.0001f)
 		    {
-			    swimming = false;
-			    sprinting = false;
-			}*/
+			    _canJump = true;
+		    }
 
-		    if (!Player.IsFlying)
-			{
-				if (_jumping && Player.Velocity.Y <= 0.00001f)
-					_jumping = false;
+		    if (!Player.IsFlying && ((inputFlags & AuthInputFlags.JumpDown) != 0 || (inputFlags & AuthInputFlags.WantUp) != 0))
+		    {
+			    if (Player.IsInWater && !_jumping)
+			    {
+				    _jumping = true;
+				    inputFlags |= AuthInputFlags.StartJumping;
+				    Player.Jump();
+			    }
+			    else if (!Player.IsInWater && _canJump)
+			    {
+				    bool readyToJump = Player.Velocity.Y <= 0.00001f && Player.Velocity.Y >= -0.00001f
+				                                                     && Math.Abs(LastVelocity.Y - Player.Velocity.Y)
+				                                                     < 0.0001f;
 
-				if (((inputFlags & AuthInputFlags.JumpDown) != 0
-				     || (inputFlags & AuthInputFlags.WantUp) != 0))
-				{
-					if (Player.IsInWater && !_jumping)
-					{
-						_jumping = true;
-						Player.Jump();
-					}
-					else if (!Player.IsInWater)
-					{
-						bool readyToJump = Player.Velocity.Y <= 0.00001f && Player.Velocity.Y >= -0.00001f
-						                                                 && Math.Abs(LastVelocity.Y - Player.Velocity.Y)
-						                                                 < 0.0001f;
+				    if (Player.KnownPosition.OnGround && readyToJump)
+				    {
+					    inputFlags |= AuthInputFlags.StartJumping;
+					    _canJump = false;
+					    Player.Jump();
+				    }
+			    }
+		    }
 
-						if (Player.KnownPosition.OnGround && readyToJump)
-						{
-							inputFlags |= AuthInputFlags.StartJumping;
-							Player.Jump();
-						}
-					}
-				}
-			}
-		    
+		    bool wasSneaking = Player.IsSneaking;
 		    Player.IsSneaking = !Player.IsInWater && (inputFlags & AuthInputFlags.Sneaking) != 0;
-		    Player.SetSwimming(swimming && canSwim);
-		    Player.SetSprinting(sprinting && !Player.IsSwimming && !Player.IsInWater);
+
+		    if (Player.IsSneaking != wasSneaking)
+		    {
+			    if (Player.IsSneaking)
+			    {
+				    inputFlags |= AuthInputFlags.StartSneaking;
+			    }
+			    else
+			    {
+				    inputFlags |= AuthInputFlags.StopSneaking;
+			    }
+		    }
 		    
-		    var moveVector = GetMoveVector(inputFlags);
-		    Player.Movement.UpdateHeading(moveVector);
+		    bool wasSwimming = Player.IsSwimming;
+		    Player.SetSwimming(swimming && canSwim);
+		    if (Player.IsSwimming != wasSwimming)
+		    {
+			    if (Player.IsSwimming)
+			    {
+				    inputFlags |= AuthInputFlags.StartSwimming;
+			    }
+			    else
+			    {
+				    inputFlags |= AuthInputFlags.StopSwimming;
+			    }
+		    }
+		    
+		    bool wasSprinting = Player.IsSprinting;
+		    Player.SetSprinting(sprinting && !Player.IsSwimming && !Player.IsInWater && Player.CanSprint);
+
+		    if (Player.IsSprinting != wasSprinting)
+		    {
+			    if (Player.IsSprinting)
+			    {
+				    inputFlags |= AuthInputFlags.StartSprinting;
+			    }
+			    else
+			    {
+				    inputFlags |= AuthInputFlags.StopSprinting;
+			    }
+		    }
+
+		    InputFlags = inputFlags;
+		    Player.Movement.UpdateHeading(GetMoveVector(inputFlags));
 		    
 			LastVelocity = Player.Velocity;
-	    }
+		    /*InputFlags = GetInputFlags();
+		    Player.Movement.UpdateHeading(GetMoveVector(InputFlags));
 
+		    if ((InputFlags & AuthInputFlags.StartJumping) != 0)
+		    {
+			    Player.Jump();
+		    }
+		    
+		    LastVelocity = Player.Velocity;*/
+	    }
+	    
 	    private void UpdateMouseInput(GameTime gt)
 	    {
 		    if (IgnoreNextUpdate)
@@ -611,139 +784,6 @@ namespace Alex.Entities
 				    }
 			    }
 		    }
-	    }
-
-	    public Vector3 GetMoveVector(AuthInputFlags inputFlags)
-	    {
-		    var moveVector = Vector3.Zero;
-
-		    if ((inputFlags & AuthInputFlags.WalkForwards) != 0)
-			    moveVector.Z += 1;
-		    
-		    if ((inputFlags & AuthInputFlags.WalkBackwards) != 0)
-			    moveVector.Z -= 1;
-
-		    if ((inputFlags & AuthInputFlags.StrafeLeft) != 0)
-			    moveVector.X += 1;
-
-		    if ((inputFlags & AuthInputFlags.StrafeRight) != 0)
-			    moveVector.X -= 1;
-		    
-		    if (Player.IsFlying)
-		    {
-			    if ((inputFlags & AuthInputFlags.WantUp) != 0)
-				    moveVector.Y += 1;
-
-			    if ((inputFlags & AuthInputFlags.WantDown) != 0)
-				    moveVector.Y -= 1;
-		    }
-		    
-		    return moveVector;
-	    }
-	    
-	    public AuthInputFlags InputFlags { get; private set; }
-	    private AuthInputFlags GetInputFlags()
-	    {
-		    AuthInputFlags inputFlags = 0;
-
-		    var previousInputFlags = InputFlags;
-		    if (InputManager.IsDown(AlexInputCommand.MoveForwards))
-			    inputFlags |= AuthInputFlags.WalkForwards;
-
-		    if (InputManager.IsDown(AlexInputCommand.MoveBackwards))
-			    inputFlags |= AuthInputFlags.WalkBackwards;
-
-		    if (InputManager.IsDown(AlexInputCommand.MoveLeft))
-			    inputFlags |= AuthInputFlags.StrafeLeft;
-
-		    if (InputManager.IsDown(AlexInputCommand.MoveRight))
-			    inputFlags |= AuthInputFlags.StrafeRight;
-
-		    if (InputManager.IsDown(AlexInputCommand.MoveUp))
-		    {
-			    inputFlags |= AuthInputFlags.Ascend;
-			    inputFlags |= AuthInputFlags.WantUp;
-		    }
-
-		    if (InputManager.IsDown(AlexInputCommand.MoveDown))
-		    {
-			    inputFlags |= AuthInputFlags.Descend;
-			    inputFlags |= AuthInputFlags.WantDown;
-			    inputFlags |= AuthInputFlags.Sneaking;
-		    }
-		    
-		    if (InputManager.IsDown(AlexInputCommand.Sneak))
-		    {
-			    inputFlags |= AuthInputFlags.SneakDown;
-			    inputFlags |= AuthInputFlags.Sneaking;
-			    
-			    inputFlags |= AuthInputFlags.WantDown;
-		    }
-		    
-		    if (InputManager.IsPressed(AlexInputCommand.Sneak))
-		    {
-			    if (Player.IsSneaking)
-			    {
-				    inputFlags |= AuthInputFlags.StopSneaking;
-			    }
-			    else
-			    {
-				    inputFlags |= AuthInputFlags.StartSneaking;
-			    }
-		    }
-		    
-		    if ((inputFlags & AuthInputFlags.WalkForwards) != 0)
-		    {
-			    bool pressedWalk = (inputFlags & AuthInputFlags.WalkForwards) != 0
-			                       && (previousInputFlags & AuthInputFlags.WalkForwards) == 0;
-			    
-			    if (Player.IsSprinting || (pressedWalk && Player.Age - _lastForward <= 3))
-			    {
-				    inputFlags |= AuthInputFlags.Sprinting;
-			    }
-
-			    //if (pressedWalk)
-			    {
-				    _lastForward = Player.Age;
-			    }
-		    }
-
-		    if (InputManager.IsDown(AlexInputCommand.Sprint))
-		    {
-			    inputFlags |= AuthInputFlags.SprintDown;
-			    inputFlags |= AuthInputFlags.Sprinting;
-		    }
-
-		    if (InputManager.IsPressed(AlexInputCommand.SprintToggle))
-		    {
-			    if (Player.IsSprinting)
-			    {
-				    inputFlags |= AuthInputFlags.StopSprinting;
-			    }
-			    else
-			    {
-				    inputFlags |= AuthInputFlags.StartSprinting;
-			    }
-		    }
-		    
-		    if (InputManager.IsDown(AlexInputCommand.Jump))
-		    {
-			    inputFlags |= AuthInputFlags.JumpDown;
-			    inputFlags |= AuthInputFlags.WantUp;
-
-			    if (!Player.IsFlying)
-				    inputFlags |= AuthInputFlags.NorthJump;
-		    }
-
-		    //if (InputManager.IsDown(AlexInputCommand.))
-			 //   inputFlags |= AuthInputFlags.WantUp;
-		    
-		    return inputFlags;
-	    }
-
-	    public void Tick()
-	    {
-		    InputFlags = GetInputFlags();
 	    }
 	    
 	    public bool Disposed { get; private set; } = false;

@@ -881,7 +881,6 @@ namespace Alex.Entities
 	    //private vector
 	    public override void OnTick()
 		{
-			Controller?.Tick();
 			if (WaitingOnChunk)
 			{
 				//  NoAi = true;
@@ -911,6 +910,8 @@ namespace Alex.Entities
 			}
 			
 			base.OnTick();
+			
+			Controller?.Tick();
 		}
 
 	    /// <inheritdoc />
