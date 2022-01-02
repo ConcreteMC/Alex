@@ -32,6 +32,7 @@ using Alex.MoLang.Runtime.Value;
 using Alex.MoLang.Utils;
 using Alex.Net;
 using Alex.Networking.Java.Packets.Play;
+using Alex.ResourcePackLib.Json.Bedrock.Entity;
 using Alex.ResourcePackLib.Json.Models.Items;
 using Alex.Utils;
 using Alex.Utils.Inventories;
@@ -55,7 +56,9 @@ namespace Alex.Entities
 	public class Entity : MoLangEnvironment
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(Entity));
-
+		
+		internal EntityDescription Description { get; set; } = null;
+		
 		public ResourceLocation Type { get; set; } = null;
 		private ModelRenderer _modelRenderer;
 
@@ -250,15 +253,6 @@ namespace Alex.Entities
 
 				UpdateItemPosition(oldValue, value);
 				_itemRenderer = value;
-
-				if (oldValue != null)
-				{
-					if (oldValue.Model != null)
-					{
-						
-						//bone.Remove(oldValue.Model);
-					}
-				}
 			}
 		}
 

@@ -465,6 +465,122 @@ namespace Alex.Entities
 		    {
 			    Player.Inventory.SelectedSlot++;
 		    }
+		    
+		      var inputFlags = GetInputFlags();
+
+			bool canSwim = Player.CanSwim && Player.FeetInWater && Player.HeadInWater;
+
+			bool swimming = Player.IsSwimming;
+			bool sprinting = Player.IsSprinting;
+
+			if (!sprinting && (inputFlags & AuthInputFlags.Sprinting) != 0)
+			{
+				sprinting = true;
+			}
+			else if (sprinting && (inputFlags & AuthInputFlags.Sprinting) == 0)
+			{
+				sprinting = false;
+			}
+
+			if ((inputFlags & AuthInputFlags.StartSprinting) != 0)
+		    {
+			    if (canSwim)
+			    {
+				    swimming = true;
+				    sprinting = false;
+			    }
+			    else
+			    {
+				    sprinting = true;
+				    swimming = false;
+			    }
+		    }
+		    else if ((inputFlags & AuthInputFlags.StopSprinting) != 0)
+		    {
+			    swimming = false;
+			    sprinting = false;
+		    }
+
+			if (_jumping && Player.Velocity.Y <= 0.00001f && Player.FeetInWater)
+			    _jumping = false;
+
+		    if (!_canJump && Player.KnownPosition.OnGround && Math.Abs(LastVelocity.Y - Player.Velocity.Y)
+		        < 0.0001f)
+		    {
+			    _canJump = true;
+		    }
+
+		    if (!Player.IsFlying && ((inputFlags & AuthInputFlags.JumpDown) != 0 || (inputFlags & AuthInputFlags.WantUp) != 0))
+		    {
+			    if (Player.IsInWater && !_jumping)
+			    {
+				    _jumping = true;
+				    inputFlags |= AuthInputFlags.StartJumping;
+				    Player.Jump();
+			    }
+			    else if (!Player.IsInWater && _canJump)
+			    {
+				    bool readyToJump = Player.Velocity.Y <= 0.00001f && Player.Velocity.Y >= -0.00001f
+				                                                     && Math.Abs(LastVelocity.Y - Player.Velocity.Y)
+				                                                     < 0.0001f;
+
+				    if (Player.KnownPosition.OnGround && readyToJump)
+				    {
+					    inputFlags |= AuthInputFlags.StartJumping;
+					    _canJump = false;
+					    Player.Jump();
+				    }
+			    }
+		    }
+
+		    bool wasSneaking = Player.IsSneaking;
+		    Player.IsSneaking = !Player.IsInWater && (inputFlags & AuthInputFlags.Sneaking) != 0;
+
+		    if (Player.IsSneaking != wasSneaking)
+		    {
+			    if (Player.IsSneaking)
+			    {
+				    inputFlags |= AuthInputFlags.StartSneaking;
+			    }
+			    else
+			    {
+				    inputFlags |= AuthInputFlags.StopSneaking;
+			    }
+		    }
+		    
+		    bool wasSwimming = Player.IsSwimming;
+		    Player.SetSwimming(swimming && canSwim);
+		    if (Player.IsSwimming != wasSwimming)
+		    {
+			    if (Player.IsSwimming)
+			    {
+				    inputFlags |= AuthInputFlags.StartSwimming;
+			    }
+			    else
+			    {
+				    inputFlags |= AuthInputFlags.StopSwimming;
+			    }
+		    }
+		    
+		    bool wasSprinting = Player.IsSprinting;
+		    Player.SetSprinting(sprinting && !Player.IsSwimming && !Player.IsInWater && Player.CanSprint);
+
+		    if (Player.IsSprinting != wasSprinting)
+		    {
+			    if (Player.IsSprinting)
+			    {
+				    inputFlags |= AuthInputFlags.StartSprinting;
+			    }
+			    else
+			    {
+				    inputFlags |= AuthInputFlags.StopSprinting;
+			    }
+		    }
+
+		    InputFlags = inputFlags;
+		    Player.Movement.UpdateHeading(GetMoveVector(inputFlags));
+		    
+			LastVelocity = Player.Velocity;
 	    }
 
 	    public Vector3 GetMoveVector(AuthInputFlags inputFlags)
@@ -600,121 +716,6 @@ namespace Alex.Entities
 		    if (!CheckMovementInput)
 			    return;
 		    
-		    var inputFlags = GetInputFlags();
-
-			bool canSwim = Player.CanSwim && Player.FeetInWater && Player.HeadInWater;
-
-			bool swimming = Player.IsSwimming;
-			bool sprinting = Player.IsSprinting;
-
-			if (!sprinting && (inputFlags & AuthInputFlags.Sprinting) != 0)
-			{
-				sprinting = true;
-			}
-			else if (sprinting && (inputFlags & AuthInputFlags.Sprinting) == 0)
-			{
-				sprinting = false;
-			}
-
-			if ((inputFlags & AuthInputFlags.StartSprinting) != 0)
-		    {
-			    if (canSwim)
-			    {
-				    swimming = true;
-				    sprinting = false;
-			    }
-			    else
-			    {
-				    sprinting = true;
-				    swimming = false;
-			    }
-		    }
-		    else if ((inputFlags & AuthInputFlags.StopSprinting) != 0)
-		    {
-			    swimming = false;
-			    sprinting = false;
-		    }
-
-			if (_jumping && Player.Velocity.Y <= 0.00001f && Player.FeetInWater)
-			    _jumping = false;
-
-		    if (!_canJump && Player.KnownPosition.OnGround && Math.Abs(LastVelocity.Y - Player.Velocity.Y)
-		        < 0.0001f)
-		    {
-			    _canJump = true;
-		    }
-
-		    if (!Player.IsFlying && ((inputFlags & AuthInputFlags.JumpDown) != 0 || (inputFlags & AuthInputFlags.WantUp) != 0))
-		    {
-			    if (Player.IsInWater && !_jumping)
-			    {
-				    _jumping = true;
-				    inputFlags |= AuthInputFlags.StartJumping;
-				    Player.Jump();
-			    }
-			    else if (!Player.IsInWater && _canJump)
-			    {
-				    bool readyToJump = Player.Velocity.Y <= 0.00001f && Player.Velocity.Y >= -0.00001f
-				                                                     && Math.Abs(LastVelocity.Y - Player.Velocity.Y)
-				                                                     < 0.0001f;
-
-				    if (Player.KnownPosition.OnGround && readyToJump)
-				    {
-					    inputFlags |= AuthInputFlags.StartJumping;
-					    _canJump = false;
-					    Player.Jump();
-				    }
-			    }
-		    }
-
-		    bool wasSneaking = Player.IsSneaking;
-		    Player.IsSneaking = !Player.IsInWater && (inputFlags & AuthInputFlags.Sneaking) != 0;
-
-		    if (Player.IsSneaking != wasSneaking)
-		    {
-			    if (Player.IsSneaking)
-			    {
-				    inputFlags |= AuthInputFlags.StartSneaking;
-			    }
-			    else
-			    {
-				    inputFlags |= AuthInputFlags.StopSneaking;
-			    }
-		    }
-		    
-		    bool wasSwimming = Player.IsSwimming;
-		    Player.SetSwimming(swimming && canSwim);
-		    if (Player.IsSwimming != wasSwimming)
-		    {
-			    if (Player.IsSwimming)
-			    {
-				    inputFlags |= AuthInputFlags.StartSwimming;
-			    }
-			    else
-			    {
-				    inputFlags |= AuthInputFlags.StopSwimming;
-			    }
-		    }
-		    
-		    bool wasSprinting = Player.IsSprinting;
-		    Player.SetSprinting(sprinting && !Player.IsSwimming && !Player.IsInWater && Player.CanSprint);
-
-		    if (Player.IsSprinting != wasSprinting)
-		    {
-			    if (Player.IsSprinting)
-			    {
-				    inputFlags |= AuthInputFlags.StartSprinting;
-			    }
-			    else
-			    {
-				    inputFlags |= AuthInputFlags.StopSprinting;
-			    }
-		    }
-
-		    InputFlags = inputFlags;
-		    Player.Movement.UpdateHeading(GetMoveVector(inputFlags));
-		    
-			LastVelocity = Player.Velocity;
 		    /*InputFlags = GetInputFlags();
 		    Player.Movement.UpdateHeading(GetMoveVector(InputFlags));
 

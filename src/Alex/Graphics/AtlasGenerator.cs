@@ -12,7 +12,7 @@ using Alex.Common.Resources;
 using Alex.Common.Utils;
 using Alex.Gamestates.InGame;
 using Alex.Graphics.Models.Blocks;
-using Alex.Graphics.Textures;
+using Alex.Graphics.Packing;
 using Alex.ResourcePackLib;
 using Alex.ResourcePackLib.Abstraction;
 using Alex.ResourcePackLib.Json.BlockStates;
@@ -31,7 +31,7 @@ using SixLabors.ImageSharp.Processing.Processors.Transforms;
 using Color = SixLabors.ImageSharp.Color;
 using Point = SixLabors.ImageSharp.Point;
 using Rectangle = SixLabors.ImageSharp.Rectangle;
-using TextureInfo = Alex.Graphics.Textures.TextureInfo;
+using TextureInfo = Alex.Graphics.Packing.TextureInfo;
 
 namespace Alex.Graphics
 {
@@ -137,46 +137,46 @@ namespace Alex.Graphics
 			    });
 		    }
 
-		    var size = textures.Sum(x => Math.Max(x.Width, x.Height)) / TextureWidth;
-		    size *= 2;
+		    //var size = textures.Sum(x => Math.Max(x.Width, x.Height)) / TextureWidth;
+		   // size *= 2;
 
-		    while (size % TextureWidth != 0)
-		    {
-			    size++;
-		    }
+		  //  while (size % TextureWidth != 0)
+		    //{
+			//    size++;
+		   // }
 
-		    Packer p = new Packer();
-		    p.FitHeuristic = BestFitHeuristic.Area;
+		   ImagePacker packer = new ImagePacker();
+		   
+		   Dictionary<ResourceLocation, Utils.TextureInfo> textureInfos = new Dictionary<ResourceLocation, Utils.TextureInfo>();
+		   packer.PackImage(progressReceiver,
+			   textures, false, true, TextureWidth * textures.Count, TextureHeight * textures.Count, 4, true,
+			   out var img, out var resultingMap);
 
-		    Dictionary<ResourceLocation, Utils.TextureInfo> textureInfos = new Dictionary<ResourceLocation, Utils.TextureInfo>();
-
-		    var oldAtlas = _textureAtlas;
-		    int count = 0;
-		    foreach (var atlas in p.Process(textures, size, 4))
-		    {
-			    var img = atlas.GenerateTexture(false);// p.CreateAtlasImage(atlas);
-
-			    foreach (var node in atlas.Nodes)
-			    {
-				    if (node.Texture == null)
-					    continue;
-
-				    textureInfos[node.Texture.ResourceLocation] = new Utils.TextureInfo(
-					    new Vector2(img.Width, img.Height), new Vector2(node.Bounds.Location.X, node.Bounds.Location.Y),
-					    node.Bounds.Size.Width, node.Bounds.Size.Height,
-					    node.Bounds.Size.Height != node.Bounds.Size.Width, node.Bounds.Width / TextureWidth,
-					    node.Bounds.Height / TextureHeight);
-			    }
-
-			    count++;
-			    _textureAtlas = GetMipMappedTexture2D(device, img);
-			    _atlasLocations = textureInfos;
+		   var widthScale = TextureWidth / 16;
+		   var heightScale = TextureHeight / 16;
+		   
+		   foreach (var node in resultingMap)
+		   {
+			   textureInfos[node.Key] = new Utils.TextureInfo(
+				   new Vector2(img.Width, img.Height), new Vector2(node.Value.Source.X, node.Value.Source.Y),
+				   node.Value.Source.Width, node.Value.Source.Height,
+				   node.Value.Source.Height != node.Value.Source.Width, node.Value.Source.Width / TextureWidth,
+				   node.Value.Source.Height / TextureHeight);
+		   }
+		   
+		   var oldAtlas = _textureAtlas;
+		   
+		   progressReceiver?.UpdateProgress(99, "Finalizing texture...");
+		   
+		   _textureAtlas = GetMipMappedTexture2D(device, img);
+		   _atlasLocations = textureInfos;
 			    
-			    Log.Debug($"Atlas size: W={_textureAtlas.Width},H={_textureAtlas.Height} | TW: {TextureWidth} TH: {TextureHeight}");
-			    img?.Dispose();
-		    }
+		   int count = 0;
+		   Log.Debug($"Atlas size: W={_textureAtlas.Width},H={_textureAtlas.Height} | TW: {TextureWidth} TH: {TextureHeight}");
+		  // img.SaveAsPng($"/home/kenny/Documents/{Selector}/{count}.png");
+		   img?.Dispose();
 		    
-		    //oldAtlas?.Dispose();
+		    oldAtlas?.Dispose();
 		    
 		    AtlasSize = new Vector2(_textureAtlas.Width, _textureAtlas.Height);
 		    totalSize += _textureAtlas.MemoryUsage();

@@ -389,6 +389,7 @@ namespace Alex.ResourcePackLib
 
 				_foliageHeight = foliage.Height;
 				_foliageWidth  = foliage.Width;
+				foliage.Dispose();
 			}
 
 			if (TryGetBitmap("colormap/grass", out Image<Rgba32> grass))
@@ -397,6 +398,7 @@ namespace Alex.ResourcePackLib
 
 				_grassWidth  = grass.Width;
 				_grassHeight = grass.Height;
+				grass.Dispose();
 			}
 		}
 		

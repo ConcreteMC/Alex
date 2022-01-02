@@ -587,5 +587,10 @@ namespace Alex.Worlds.Chunks
 		{
 			Dispose(false);
 		}
+
+		public void Reset()
+		{
+			IsNew = true;
+		}
 	}
 }

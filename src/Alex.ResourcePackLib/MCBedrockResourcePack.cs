@@ -42,11 +42,11 @@ namespace Alex.ResourcePackLib
 
         private ConcurrentDictionary<ResourceLocation, Func<Image<Rgba32>>> _bitmaps = new ConcurrentDictionary<ResourceLocation, Func<Image<Rgba32>>>();
         public IReadOnlyDictionary<ResourceLocation, Func<Image<Rgba32>>> Textures => _bitmaps;
-        public IReadOnlyDictionary<ResourceLocation, EntityDescription> EntityDefinitions { get; private set; } = new ConcurrentDictionary<ResourceLocation, EntityDescription>();
-        public IReadOnlyDictionary<string, AttachableDefinition> Attachables { get; private set; } = new ConcurrentDictionary<string, AttachableDefinition>();
-        public IReadOnlyDictionary<string, RenderController> RenderControllers { get; private set; } = new ConcurrentDictionary<string, RenderController>();
-        public IReadOnlyDictionary<string, AnimationController> AnimationControllers { get; private set; } = new ConcurrentDictionary<string, AnimationController>();
-        public IReadOnlyDictionary<string, Animation> Animations { get; private set; } = new ConcurrentDictionary<string, Animation>();
+		public IDictionary<ResourceLocation, EntityDescription> EntityDefinitions { get; private set; } = new ConcurrentDictionary<ResourceLocation, EntityDescription>();
+		public IDictionary<string, AttachableDefinition> Attachables { get; private set; } = new ConcurrentDictionary<string, AttachableDefinition>();
+		public IDictionary<string, RenderController> RenderControllers { get; private set; } = new ConcurrentDictionary<string, RenderController>();
+		public IDictionary<string, AnimationController> AnimationControllers { get; private set; } = new ConcurrentDictionary<string, AnimationController>();
+		public IDictionary<string, Animation> Animations { get; private set; } = new ConcurrentDictionary<string, Animation>();
 
         public IReadOnlyDictionary<string, ParticleDefinition> Particles { get; private set; } =
             new ConcurrentDictionary<string, ParticleDefinition>();
@@ -775,10 +775,29 @@ namespace Alex.ResourcePackLib
             return false;
         }
 
-        public void Dispose()
-        {
-            _archive?.Dispose();
-        }
+		public void Dispose()
+		{
+			_archive?.Dispose();
+			
+			EntityDefinitions?.Clear();
+			EntityDefinitions = null;
+			Attachables?.Clear();
+			Attachables = null;
+			RenderControllers?.Clear();
+			RenderControllers = null;
+			AnimationControllers?.Clear();
+			AnimationControllers = null;
+			Animations?.Clear();
+			Animations = null;
+			_bitmaps?.Clear();
+			_bitmaps = null;
+			/*public IReadOnlyDictionary<ResourceLocation, EntityDescription> EntityDefinitions { get; private set; } = new ConcurrentDictionary<ResourceLocation, EntityDescription>();
+			public IReadOnlyDictionary<string, AttachableDefinition> Attachables { get; private set; } = new ConcurrentDictionary<string, AttachableDefinition>();
+			public IReadOnlyDictionary<string, RenderController> RenderControllers { get; private set; } = new ConcurrentDictionary<string, RenderController>();
+			public IReadOnlyDictionary<string, AnimationController> AnimationControllers { get; private set; } = new ConcurrentDictionary<string, AnimationController>();
+			public IReadOnlyDictionary<string, Animation> Animations { get; private set; } = new ConcurrentDictionary<string, Animation>();*/
+
+		}
 
         /// <inheritdoc />
         public bool TryGetAnimationController(string key, out AnimationController animationController)

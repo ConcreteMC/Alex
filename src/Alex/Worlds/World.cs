@@ -740,7 +740,6 @@ namespace Alex.Worlds
 			if (EntityManager.AddBlockEntity(coords, blockEntity))
 			{
 				var blockState = GetBlockState(blockEntity.X, blockEntity.Y, blockEntity.Z);
-
 				if (blockState?.Block != null)
 				{
 					blockEntity.SetBlock(blockState.Block);

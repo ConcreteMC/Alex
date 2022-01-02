@@ -182,12 +182,11 @@ namespace Alex.Entities.BlockEntities
                     blockEntity.Z = blockCoordinates.Z;
                 }
 
-                //var block = world.GetBlockState(blockCoordinates);
-                //if (blockEntity.SetBlock(block.Block))
-                {
-                    blockEntity.KnownPosition = blockCoordinates;
-                    world.SetBlockEntity(blockCoordinates.X, blockCoordinates.Y, blockCoordinates.Z, blockEntity);
-                }
+                // var block = world.GetBlockState(blockCoordinates);
+
+            //    blockEntity.KnownPosition = blockCoordinates;
+                world.SetBlockEntity(blockCoordinates.X, blockCoordinates.Y, blockCoordinates.Z, blockEntity);
+
             }
 
             return blockEntity;

@@ -438,7 +438,6 @@ namespace Alex.Graphics.Models.Blocks
 				
 				//v.TexCoords = textureCoordinates;
 				
-			//	v.TexCoords = (v.TexCoords / 16f);
 				v.Position /= 16f;
 				v.Face = blockFace;
 				vertices[i] = v;
@@ -602,7 +601,7 @@ namespace Alex.Graphics.Models.Blocks
 					}
 
 					faceColor = AdjustColor(faceColor, facing, element.Shade);
-
+					
 					BlockTextureData uvMap = GetTextureUVMap(
 						Resources, face.Value.Texture, x1, x2, y1, y2, face.Value.Rotation, faceColor, null);
 					//uvMap.Rotate(face.Value.Rotation);

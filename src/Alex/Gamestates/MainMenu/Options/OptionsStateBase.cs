@@ -81,8 +81,12 @@ namespace Alex.Gamestates.MainMenu.Options
         protected override void OnInit(IGuiRenderer renderer)
         {
             base.OnInit(renderer);
-            Initialize(renderer);
-            
+
+            if (!_initialized)
+            {
+                Initialize(renderer);
+            }
+
             if (!_descriptionsAdded)
             {
                 var row = AddGuiRow(Description);

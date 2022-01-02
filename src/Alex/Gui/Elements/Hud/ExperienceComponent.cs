@@ -27,7 +27,7 @@ namespace Alex.Gui.Elements.Hud
 			
 			Background = AlexGuiTextures.ExperienceBackground;
 			BackgroundOverlay = AlexGuiTextures.Experience;
-			
+
 			Height = 5;
 			//AutoSizeMode = AutoSizeMode.None;
 		}
@@ -37,6 +37,9 @@ namespace Alex.Gui.Elements.Hud
 		{
 			base.OnInit(renderer);
 			_bg = renderer.GetTexture(AlexGuiTextures.Experience);
+			
+			Background.Scale = new Vector2(182f / Background.Width, 5f / Background.Height);
+			BackgroundOverlay.Scale = new Vector2(182f / BackgroundOverlay.Width, 5f / BackgroundOverlay.Height);
 		}
 
 		protected override void OnUpdate(GameTime gameTime)
@@ -47,8 +50,9 @@ namespace Alex.Gui.Elements.Hud
 				Experience = Player.Experience;
 				var source = _bg.ClipBounds.Location;
 				var sourceSize = _bg.ClipBounds.Size;
+				
 				BackgroundOverlay = _bg.Texture.Slice(source.X, source.Y, (int) (Experience * sourceSize.X), sourceSize.Y);
-				BackgroundOverlay.Scale = new Vector2(1f, 1f);
+				BackgroundOverlay.Scale = new Vector2(182f / BackgroundOverlay.Width, 5f / BackgroundOverlay.Height);
 			}
 			
 			if (Math.Abs(Player.ExperienceLevel - ExperienceLevel) > 0.001f)

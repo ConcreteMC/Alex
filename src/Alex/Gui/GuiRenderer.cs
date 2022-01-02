@@ -703,7 +703,8 @@ namespace Alex.Gui
 			var heightScaler = spriteSheet.Height / originalSize.Height;
 
 			_textureCache.TryGetValue(guiTexture, out var o);
-			_textureCache[guiTexture] = new NinePatchTexture2D(Texture2DExtensions.Slice(spriteSheet, new Rectangle(sliceRectangle.X * widthScaler,
+			_textureCache[guiTexture] = new NinePatchTexture2D(spriteSheet.Slice(
+				new Rectangle(sliceRectangle.X * widthScaler,
 				sliceRectangle.Y * heightScaler, sliceRectangle.Width * widthScaler,
 				sliceRectangle.Height * heightScaler)), ninePatchThickness);
 			o?.Texture?.Dispose();
@@ -715,9 +716,14 @@ namespace Alex.Gui
 			var heightScaler = spriteSheet.Height / originalSize.Height;
 			
 			_textureCache.TryGetValue(guiTexture, out var o);
-			_textureCache[guiTexture] = Texture2DExtensions.Slice(spriteSheet, new Rectangle(sliceRectangle.X * widthScaler,
+			
+			var slice = spriteSheet.Slice(
+				new Rectangle(sliceRectangle.X * widthScaler,
 				sliceRectangle.Y * heightScaler, sliceRectangle.Width * widthScaler,
 				sliceRectangle.Height * heightScaler));
+			
+			_textureCache[guiTexture] = slice;
+			
 			o?.Texture?.Dispose();
 		}
 		

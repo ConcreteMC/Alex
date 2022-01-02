@@ -194,6 +194,7 @@ namespace Alex.Entities
 			    Alex.Instance.Resources.TryGetEntityDefinition(
 				    Type, out var description, out var source))
 			{
+				Description = description;
 				AnimationController.UpdateEntityDefinition(source, source, description);
 			}
 		}

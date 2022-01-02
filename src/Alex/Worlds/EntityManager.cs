@@ -128,10 +128,10 @@ namespace Alex.Worlds
 				{
 					var entityPos = entity.RenderLocation;
 
-					if (World.Camera.BoundingFrustum.Contains(entity.GetVisibilityBoundingBox(entityPos)) != ContainmentType.Disjoint)
-					/*if (Math.Abs(Vector3.Distance(cameraChunkPosition, entityPos)) <= Math.Min(
+					//if (World.Camera.BoundingFrustum.Contains(entity.GetVisibilityBoundingBox(entityPos)) != ContainmentType.Disjoint)
+					if (Math.Abs(Vector3.Distance(cameraChunkPosition, entityPos)) <= Math.Min(
 						World.ChunkManager.RenderDistance,
-						OptionsProvider.AlexOptions.VideoOptions.EntityRenderDistance.Value) * 16f)*/
+						OptionsProvider.AlexOptions.VideoOptions.EntityRenderDistance.Value) * 16f)
 					{
 						entityCount++;
 						rendered.Add(entity);
@@ -170,15 +170,15 @@ namespace Alex.Worlds
 			var delta = Alex.DeltaTime;
 
 			IReadOnlyCollection<Entity> toUpdate;
-			//toUpdate = _rendered.OrderByDescending(x => DateTime.UtcNow - x.LastUpdate);
-			toUpdate = _rendered;
+			toUpdate = _rendered.OrderByDescending(x => DateTime.UtcNow - x.LastUpdate).ToArray();
+			//toUpdate = _rendered;
 			
 			float maxTime = delta / toUpdate.Count;
 			long elapsedTime = 0;
 			foreach (var entity in toUpdate)
 			{
-				//if (elapsedTime >= delta)
-				//	break;
+				if (elapsedTime >= delta)
+					break;
 				_updateWatch.Restart();
 				//if (entity.IsRendered)
 
@@ -456,7 +456,7 @@ namespace Alex.Worlds
 
 		public bool AddBlockEntity(BlockCoordinates coordinates, BlockEntity entity)
 		{
-			entity.KnownPosition = coordinates;
+			//entity.KnownPosition = coordinates;
 			//entity.Block = World.GetBlockState(coordinates).Block;
 			if (!BlockEntities.TryAdd(coordinates, entity))
 			{

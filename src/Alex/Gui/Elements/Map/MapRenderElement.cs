@@ -173,29 +173,32 @@ namespace Alex.Gui.Elements.Map
 
             foreach (var icon in _map.GetMarkers(center, radius))
             {
-                var position = GetRenderPosition(icon.Position, centerPosition, zoomScale);
+                var scaler = zoomScale;
+                var texture = icon.Marker.ToTexture();
 
-                if (!RenderBounds.Contains(position))
+                if (texture.HasValue)
                 {
-                    if (icon.AlwaysShown)
-                    {
-                        position = Vector2.Clamp(
-                            position, RenderBounds.Location.ToVector2() + MarkerRotationOrigin,
-                            (RenderBounds.Location + RenderBounds.Size).ToVector2() - MarkerRotationOrigin);
-                    }
-                    else
-                    {
-                        continue;
-                    }
-                }
-                
-                var value = icon.Marker.ToTexture();
+                    var position = GetRenderPosition(icon.Position, centerPosition, scaler);
 
-                if (value.HasValue)
-                {
+                    if (!RenderBounds.Contains(position))
+                    {
+                        if (icon.AlwaysShown)
+                        {
+                            position = Vector2.Clamp(
+                                position, RenderBounds.Location.ToVector2() + MarkerRotationOrigin,
+                                (RenderBounds.Location + RenderBounds.Size).ToVector2() - MarkerRotationOrigin);
+                        }
+                        else
+                        {
+                            continue;
+                        }
+                    }
+                   // graphics.SpriteBatch.Draw(texture.Texture, new Rectangle(position.ToPoint(), new Point()), texture.Color.GetValueOrDefault(icon.Color));
+                   
+                   scaler *= 8f / texture.Width;
                     graphics.SpriteBatch.Draw(
-                        value, position, value.Color.GetValueOrDefault(icon.Color),
-                       ((icon.Rotation).ToRadians()) - Rotation, MarkerRotationOrigin, Vector2.One * zoomScale );
+                        texture, position, texture.Color.GetValueOrDefault(icon.Color),
+                        ((icon.Rotation).ToRadians()) - Rotation, MarkerRotationOrigin, Vector2.One * scaler);
                 }
             }
         }

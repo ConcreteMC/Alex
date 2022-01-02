@@ -20,8 +20,8 @@ namespace Alex.Graphics.Models.Items
 {
     public class ItemModelRenderer : ItemModelRenderer<VertexPositionColor>
     {
-        public ItemModelRenderer(ResourcePackModelBase resourcePackModel, VertexPositionColor[] vertices = null, Texture2D texture = null) : base(resourcePackModel,
-            VertexPositionColor.VertexDeclaration, vertices, texture)
+        public ItemModelRenderer(ResourcePackModelBase resourcePackModel, VertexPositionColor[] vertices = null) : base(resourcePackModel,
+            VertexPositionColor.VertexDeclaration, vertices)
         {
            
         }
@@ -46,9 +46,12 @@ namespace Alex.Graphics.Models.Items
             _cached = true;
             List<VertexPositionColor> vertices = new List<VertexPositionColor>();
 
+            //if (pack.TryGetBitmap(texture, out var bitmap))
+
             if (pack.TryGetBitmap(texture, out var bitmap))
             {
-                if (ResourcePackModel.ParentName.Path.Contains("handheld", StringComparison.InvariantCultureIgnoreCase))
+                var parentName = ResourcePackModel?.ParentName?.Path;
+                if (parentName != null && parentName.Contains("handheld", StringComparison.InvariantCultureIgnoreCase))
                 {
                     bitmap.Mutate(
                         x =>
@@ -252,14 +255,11 @@ namespace Alex.Graphics.Models.Items
 
         protected TVertice[] Vertices
         {
-            get => _vertices;
             set
             {
-                var previousValue = _vertices;
-                _vertices = value;
-
                 if (value != null && value.Length > 0)
                 {
+                    _isCached = true;
                     InitializeModel(Alex.Instance.GraphicsDevice, value);
                 }
             }
@@ -291,34 +291,17 @@ namespace Alex.Graphics.Models.Items
 
         public Model Model { get; set; } = null;
 
-        protected Texture2D  _texture;
+        //protected Texture2D  _texture;
         protected ThreadSafeList<IItemRenderer> _instances = new ThreadSafeList<IItemRenderer>();
-        public ItemModelRenderer(ResourcePackModelBase resourcePackModel, VertexDeclaration declaration, TVertice[] vertices = null, Texture2D texture = null)
+        private BasicEffect _effect = null;
+        public ItemModelRenderer(ResourcePackModelBase resourcePackModel, VertexDeclaration declaration, TVertice[] vertices = null)
         {
             Scale = 1f;
             ResourcePackModel = resourcePackModel;
             _declaration = declaration;
 
-            if (texture != null)
-            {
-                _texture = texture;
-            }
-
             Vertices = vertices;
-          
-            if (vertices != null)
-            {
-            //    Vertices = vertices;
-               // InitializeModel(Alex.Instance.GraphicsDevice, vertices);
-            }
-            else
-            {
-              // InitCache();
-            }
         }
-        
-        private TVertice[] _vertices = null;
-        private BasicEffect _effect = null;
 
         public void Update(IUpdateArgs args)
         {
@@ -334,6 +317,7 @@ namespace Alex.Graphics.Models.Items
         private bool _initalizedModel = false;
 
         private SemaphoreSlim _initSemaphore = new SemaphoreSlim(1);
+
         private void InitializeModel(GraphicsDevice device, TVertice[] vertices)
         {
             if (_initalizedModel)
@@ -347,13 +331,15 @@ namespace Alex.Graphics.Models.Items
             }
 
             var declaration = _declaration;
-           
+
             if (declaration == null)
                 return;
 
             if (!_initSemaphore.Wait(0))
                 return;
-            
+
+
+            _initalizedModel = true;
             List<ModelBone> bones = new List<ModelBone>();
             List<ModelMesh> meshes = new List<ModelMesh>();
             List<ModelMeshPart> meshParts = new List<ModelMeshPart>();
@@ -419,8 +405,6 @@ namespace Alex.Graphics.Models.Items
 
                     Model = model;
                     UpdateDisplay();
-
-                    _initalizedModel = true;
                 }
                 finally
                 {
@@ -428,11 +412,9 @@ namespace Alex.Graphics.Models.Items
                 }
             }
 
-             World.BackgroundWorker.Enqueue(
-                () =>
-                {
-                    Finish();
-                });
+
+            Finish();
+
 
             //  var vertices = Vertices;
         }
@@ -456,15 +438,10 @@ namespace Alex.Graphics.Models.Items
             if (effect == null)
                 return;
             
-            if (_texture != null)
-                effect.Texture = _texture;
+            /*if (_texture != null)
+                effect.Texture = _texture;*/
             
             effect.VertexColorEnabled = true;
-        }
-
-        protected void InitCache()
-        {
-            Cache(Alex.Instance.Resources);
         }
         
         public virtual bool Cache(ResourceManager pack)
@@ -486,9 +463,21 @@ namespace Alex.Graphics.Models.Items
             _instances.Remove(instance);
         }
 
+        protected bool _isCached = false;
+        public void TryCache(ResourceManager resourceManager)
+        {
+            if (!_isCached)
+            {
+                if (Cache(resourceManager))
+                {
+                    _isCached = true;
+                }
+            }
+        }
+
         public class RendererInstance : IItemRenderer
         {
-            private readonly IItemRendererHolder _parent;
+            private IItemRendererHolder _parent;
 
             /// <inheritdoc />
             public Model Model
@@ -505,27 +494,33 @@ namespace Alex.Graphics.Models.Items
             /// <inheritdoc />
             public int Render(IRenderArgs args, Matrix characterMatrix)
             {
-                var originalParentDisplayPosition = _parent.DisplayPosition;
-                var originalParentScale = _parent.Scale;
+                var parent = _parent;
+
+                if (parent == null)
+                    return 0;
                 
-                _parent.DisplayPosition = DisplayPosition;
-                var amount = _parent.Render(args, characterMatrix);
+                var originalParentDisplayPosition = parent.DisplayPosition;
+                var originalParentScale = parent.Scale;
                 
-                _parent.Scale = originalParentScale;
-                _parent.DisplayPosition = originalParentDisplayPosition;
+                parent.DisplayPosition = DisplayPosition;
+                var amount = parent.Render(args, characterMatrix);
+                
+                parent.Scale = originalParentScale;
+                parent.DisplayPosition = originalParentDisplayPosition;
                 return amount;
             }
 
             /// <inheritdoc />
             public void Update(IUpdateArgs args)
             {
-                _parent.Update(args);
+                _parent?.Update(args);
             }
 
             private void Dispose(bool disposing)
             {
-                _parent.RemoveInstance(this);
-
+                _parent?.RemoveInstance(this);
+                _parent = null;
+                
                 if (disposing)
                 {
                     GC.SuppressFinalize(this);
@@ -574,27 +569,38 @@ namespace Alex.Graphics.Models.Items
             return base.ToString();
         }
 
+        protected virtual void OnDispose(bool disposing)
+        {
+            
+        }
+        
         /// <inheritdoc />
         public void Dispose()
         {
             if (_instances.Count == 0)
             {
+                OnDispose(true);
+                
                 Model?.Dispose();
                 Model = null;
 
-                var t = _texture;
+                /*var t = _texture;
 
                 if (t != null && t.Tag != AtlasGenerator.Tag)
                 {
                     t.Dispose();
                 }
 
-                _texture = null;
+                _texture = null;*/
 
                 _effect?.Dispose();
                 _effect = null;
                 _declaration?.Dispose();
                 _declaration = null;
+            }
+            else
+            {
+                Log.Warn($"Tried to dispose of ModelRendererer with {_instances.Count} remaining instances!");
             }
         }
     }

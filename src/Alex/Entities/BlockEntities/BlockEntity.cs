@@ -60,7 +60,7 @@ namespace Alex.Entities.BlockEntities
             {
                 return false;
             }
-
+            
             EntityFactory.LoadEntityDefinition(Alex.Instance.Resources, this, true);
             return true;
         }

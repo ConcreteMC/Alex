@@ -421,7 +421,7 @@ namespace Alex.Gamestates.InGame
 				player.Controller.CheckInput = false;
 			}
 
-			world.Update(args);
+			world?.Update(args);
 
 			var now = DateTime.UtcNow;
 
@@ -460,7 +460,7 @@ namespace Alex.Gamestates.InGame
 			//dir.Normalize();
 			Alex.AudioEngine.Update(gameTime, world.Camera.Position, Vector3.Normalize(rotatedForward));
 
-			NetworkProvider.Update(gameTime);
+			NetworkProvider?.Update(gameTime);
 		}
 		
 		protected override void OnDraw(IRenderArgs args)

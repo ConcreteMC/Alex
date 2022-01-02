@@ -134,6 +134,7 @@ namespace Alex.Gui.Elements.Hud
 			Width = MaxWidth;
 			Height = 18;
 			Color = BossBarPacket.BossBarColor.Pink;
+			base.MaxWidth = MaxWidth;
 		}
 
 		private bool _divisionDirty = false;
@@ -247,10 +248,13 @@ namespace Alex.Gui.Elements.Hud
 
 		private void UpdateDirty(bool force = false)
 		{
+			_textureElement.Background.Scale = new Vector2(182f / _textureElement.Background.Width, 5f / _textureElement.Background.Height);
+			
 			if (_colorDirty || force)
 			{
 				_colorDirty = false;
 				_textureElement.BackgroundOverlay.Scale = new Vector2(_health, 1f);
+				_textureElement.BackgroundOverlay.Scale = new Vector2(182f / _textureElement.BackgroundOverlay.Width, 5f / _textureElement.BackgroundOverlay.Height);
 			}
 			
 			if ((_divisionDirty || force) && GuiRenderer != null)

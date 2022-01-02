@@ -673,6 +673,7 @@ namespace Alex.Entities
 		public static void LoadEntityDefinition(ResourceManager resources, Entity entity, bool initRenderController = true)
 		{
 			if (!resources.TryGetEntityDefinition(entity.Type, out var description, out var resourcePack)) return;
+			entity.Description = description;
 			//World.BackgroundWorker.Enqueue(
 			//		() =>
 			//		{
@@ -716,6 +717,7 @@ namespace Alex.Entities
 							e, Alex.Instance.GraphicsDevice, bmp, texture2D1 =>
 							{
 								e.Texture = texture2D1;
+								bmp.Dispose();
 							});
 					}
 					else if (resources.TryGetBitmap(texture, out var bmp2))
@@ -724,6 +726,8 @@ namespace Alex.Entities
 							e, Alex.Instance.GraphicsDevice, bmp2, texture2D1 =>
 							{
 								e.Texture = texture2D1;
+								
+								bmp2.Dispose();
 							});
 					}
 				}

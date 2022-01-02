@@ -177,7 +177,7 @@ namespace Alex.Graphics.Models.Blocks
 			}
 
 			var textureInfo = ti.Value;
-
+			
 			if (rotation != 0)
 			{
 				var ox1 = x1;
@@ -207,6 +207,14 @@ namespace Alex.Graphics.Models.Blocks
 						break;
 				}
 			}
+			
+			var tw = textureInfo.FrameWidth / 16;
+			var th = textureInfo.FrameHeight / 16;
+			
+			x1 = (x1 * (tw));
+			x2 = (x2 * (tw));
+			y1 = (y1 * (th));
+			y2 = (y2 * (th));
 			
 			var topLeft = new Vector2(x1, y1);
 			var topRight = new Vector2(x2, y1);

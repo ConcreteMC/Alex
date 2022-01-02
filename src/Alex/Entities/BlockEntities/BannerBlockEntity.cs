@@ -6,6 +6,7 @@ using System.Linq;
 using System.Numerics;
 using Alex.Blocks.Minecraft;
 using Alex.Common.Blocks;
+using Alex.Common.Graphics;
 using Alex.Common.Utils;
 using Alex.Common.Utils.Vectors;
 using Alex.Networking.Java.Packets.Play;
@@ -39,7 +40,6 @@ namespace Alex.Entities.BlockEntities;
 public class BannerBlockEntity : BlockEntity
 {
     private BlockColor _bannerColor;
-    private EntityDescription _entityDescription = null;
     private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(BannerBlockEntity));
     private ModelBone RootBone { get; set; }
 
@@ -152,16 +152,11 @@ public class BannerBlockEntity : BlockEntity
 
             _isTextureDirty = false;
         }
-
-        //if (ModelRenderer != null)
-        //{
-        var newTexure = TextureUtils.BitmapToTexture2D(this, Alex.Instance.GraphicsDevice, _canvasTexture.Clone());
-        if (Texture != null)
+        
+        TextureUtils.BitmapToTexture2DAsync(this, Alex.Instance.GraphicsDevice, _canvasTexture.Clone(), newTexture =>
         {
-            var oldTexture = Texture;
-            Texture = newTexure;
-            oldTexture?.Dispose();
-        }
+            Texture = newTexture;
+        });
     }
 
     private void ApplyCanvasLayer(PatternLayer layer)
@@ -196,7 +191,7 @@ public class BannerBlockEntity : BlockEntity
 
     private Image<Rgba32> ResolvePatternMask(BannerPattern pattern)
     {
-        if (_entityDescription?.Textures == null)
+        if (Description?.Textures == null)
         {
             Log.Warn($"Unable to resolve pattern mask due to null entity description!");
             return null;
@@ -204,7 +199,7 @@ public class BannerBlockEntity : BlockEntity
 
         var key = pattern.ToString().ToLowerSnakeCase();
 
-        if (_entityDescription.Textures.TryGetValue(key, out var patternMaskPath))
+        if (Description.Textures.TryGetValue(key, out var patternMaskPath))
         {
             Image<Rgba32> patternMask;
             if (Alex.Instance.Resources.TryGetBedrockBitmap(patternMaskPath, out patternMask))
@@ -237,6 +232,7 @@ public class BannerBlockEntity : BlockEntity
         return null;
     }
 
+    private bool _dirty = false;
     protected override bool BlockChanged(Block oldBlock, Block newBlock)
     {
         var success = false;
@@ -287,19 +283,10 @@ public class BannerBlockEntity : BlockEntity
             }
 
             success = true;
+            
         }
-
-        if (_entityDescription == null)
-        {
-            if (Alex.Instance.Resources.TryGetEntityDefinition(
-                    Type, out var entityDescription, out var source))
-            {
-                _entityDescription = entityDescription;
-                AnimationController?.UpdateEntityDefinition(source, source, entityDescription);
-            }
-        }
-
-        UpdateCanvasTexture();
+        
+        _dirty = true;
 
         return success;
     }
@@ -335,8 +322,7 @@ public class BannerBlockEntity : BlockEntity
                 }
 
                 Patterns = newPatterns;
-
-                UpdateCanvasTexture();
+                _dirty = true;
             }
         }
     }
@@ -350,6 +336,26 @@ public class BannerBlockEntity : BlockEntity
         else
         {
             base.SetData(action, compound);
+        }
+    }
+
+    /// <inheritdoc />
+    public override void OnTick()
+    {
+        base.OnTick();
+    }
+
+    /// <inheritdoc />
+    public override void Update(IUpdateArgs args)
+    {
+        base.Update(args);
+
+        if (Description != null && _dirty)
+        {
+            _dirty = false;
+            
+            World.BackgroundWorker.Enqueue(
+                UpdateCanvasTexture);
         }
     }
 

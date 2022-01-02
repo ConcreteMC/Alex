@@ -40,7 +40,7 @@ namespace Alex.Items
 		private static IReadOnlyDictionary<ResourceLocation, Func<Item>> Items { get; set; }
 		//private static SecondItemEntry[] SecItemEntries { get; set; }
 
-		//private static ConcurrentDictionary<ResourceLocation, ItemModelRenderer> ItemRenderers { get; } = new ConcurrentDictionary<ResourceLocation, ItemModelRenderer>();
+		private static ConcurrentDictionary<ResourceLocation, IItemRenderer> ItemRenderers { get; } = new ConcurrentDictionary<ResourceLocation, IItemRenderer>();
 
 		public static Item[] AllItems
 		{
@@ -99,120 +99,138 @@ namespace Alex.Items
 
 		private static bool TryGetRenderer(string itemName, ResourceManager resources, ResourceLocation resourceLocation, out IItemRenderer renderer)
 		{
-			var modelRegistry = resources.BlockModelRegistry;
-			if (modelRegistry.TryGet(
-				resourceLocation,
-				out var modelEntry))
-			{
-				if ((modelEntry.Value.Type & ModelType.Item) != 0)
+			var result = ItemRenderers.GetOrAdd(
+				resourceLocation, location =>
 				{
-					renderer = new ItemModelRenderer(modelEntry.Value);
+					var modelRegistry = resources.BlockModelRegistry;
 
-					return true;
-				}
+					if (!modelRegistry.TryGet(resourceLocation, out var modelEntry)) return null;
 
-				if ((modelEntry.Value.Type & ModelType.Block) != 0)
-				{
-					var bs = BlockFactory.GetBlockState(itemName);
-
-					renderer = new ItemBlockModelRenderer(
-						bs, modelEntry.Value, resources.BlockAtlas.GetAtlas());
-
-					return true;
-				}
-
-				if ((modelEntry.Value.Type & ModelType.Entity) != 0)
-				{
-					ModelRenderer modelRenderer = null;
-					Texture2D modelTexture = null;
-					
-					switch (itemName)
+					if ((modelEntry.Value.Type & ModelType.Item) != 0)
 					{
-						case "minecraft:chest":
-							if (new ChestEntityModel().TryGetRenderer(out modelRenderer))
-							{
-								modelTexture = BlockEntityFactory.ChestTexture;
-							}
-							break;
-						case "minecraft:ender_chest":
-							if (new ChestEntityModel().TryGetRenderer(out modelRenderer))
-							{
-								modelTexture = BlockEntityFactory.EnderChestTexture;
-							}
-							break;
-						case "minecraft:player_head":
-						case "minecraft:skull":
-							if (new SkullBlockEntityModel().TryGetRenderer(out modelRenderer))
-							{
-								modelTexture = BlockEntityFactory.SkullTexture;
-							}
-							break;
+						return new ItemModelRenderer(modelEntry.Value);
 					}
 
-					if (modelRenderer == null || modelTexture == null)
+					if ((modelEntry.Value.Type & ModelType.Block) != 0)
 					{
-						if (resources.TryGetEntityDefinition(itemName, out var description, out var resourcePack))
+						var bs = BlockFactory.GetBlockState(itemName);
+
+						return new ItemBlockModelRenderer(
+							bs, modelEntry.Value, resources.BlockAtlas.GetAtlas(false));
+					}
+
+					if ((modelEntry.Value.Type & ModelType.Entity) != 0)
 						{
-							if (modelRenderer == null)
-								modelRenderer = EntityFactory.GetEntityRenderer(description.Identifier);
-
-							if (modelRenderer != null)
+							ModelRenderer modelRenderer = null;
+							Texture2D modelTexture = null;
+							
+							switch (itemName)
 							{
-								if (description.Geometry.TryGetValue("default", out var defaultGeometry)
-								    && ModelFactory.TryGetModel(defaultGeometry, out var model) && model != null)
+								case "minecraft:chest":
+									if (new ChestEntityModel().TryGetRenderer(out modelRenderer))
+									{
+										modelTexture = BlockEntityFactory.ChestTexture;
+									}
+									break;
+								case "minecraft:ender_chest":
+									if (new ChestEntityModel().TryGetRenderer(out modelRenderer))
+									{
+										modelTexture = BlockEntityFactory.EnderChestTexture;
+									}
+									break;
+								case "minecraft:player_head":
+								case "minecraft:skull":
+									if (new SkullBlockEntityModel().TryGetRenderer(out modelRenderer))
+									{
+										modelTexture = BlockEntityFactory.SkullTexture;
+									}
+									break;
+							}
+		
+							if (modelRenderer == null || modelTexture == null)
+							{
+								if (resources.TryGetEntityDefinition(itemName, out var description, out var resourcePack))
 								{
-									var textures = description.Textures;
-									string texture;
-
-									if (!(textures.TryGetValue("default", out texture) || textures.TryGetValue(
-										description.Identifier, out texture)))
+									if (modelRenderer == null)
+										modelRenderer = EntityFactory.GetEntityRenderer(description.Identifier);
+		
+									if (modelRenderer != null)
 									{
-										texture = textures.FirstOrDefault().Value;
-									}
-
-									if (resources.TryGetBedrockBitmap(texture, out var bmp))
-									{
-										modelTexture = TextureUtils.BitmapToTexture2D(
-											Alex.Instance.GraphicsDevice, bmp);
-									}
-									else if (resources.TryGetBitmap(texture, out var bmp2))
-									{
-										modelTexture = TextureUtils.BitmapToTexture2D(
-											Alex.Instance.GraphicsDevice, bmp2);
+										if (description.Geometry.TryGetValue("default", out var defaultGeometry)
+										    && ModelFactory.TryGetModel(defaultGeometry, out var model) && model != null)
+										{
+											var textures = description.Textures;
+											string texture;
+		
+											if (!(textures.TryGetValue("default", out texture) || textures.TryGetValue(
+												description.Identifier, out texture)))
+											{
+												texture = textures.FirstOrDefault().Value;
+											}
+		
+											if (resources.TryGetBedrockBitmap(texture, out var bmp))
+											{
+												modelTexture = TextureUtils.BitmapToTexture2D(
+													Alex.Instance.GraphicsDevice, bmp);
+												bmp.Dispose();
+											}
+											else if (resources.TryGetBitmap(texture, out var bmp2))
+											{
+												modelTexture = TextureUtils.BitmapToTexture2D(
+													Alex.Instance.GraphicsDevice, bmp2);
+												bmp2.Dispose();
+											}
+										}
 									}
 								}
 							}
+		
+							if (modelRenderer != null && modelTexture != null)
+							{
+								return new EntityItemRenderer(modelRenderer, modelTexture);
+							}
+							else
+							{
+							//	modelRenderer?.Dispose();
+							//	modelTexture?.Dispose();
+							}
 						}
-					}
 
-				//	if (modelRenderer != null && modelTexture != null)
+					if (modelEntry.Value.Textures.Count > 0)
 					{
-						renderer = new EntityItemRenderer(modelRenderer, modelTexture);
-						return true;
+						return new ItemModelRenderer(modelEntry.Value);
 					}
-				//	else
-					{
-					//	modelRenderer?.Dispose();
-					//	modelTexture?.Dispose();
-					}
-				}
 
-				if (modelEntry.Value.Textures.Count > 0)
-				{
-					renderer = new ItemModelRenderer(modelEntry.Value);
-					return true;
-				}
+					Log.Debug(
+						$"Unsupported model for item. ModelType={modelEntry.Value.Type} Item={resourceLocation}");
 
-				Log.Debug($"Unsupported model for item. ModelType={modelEntry.Value.Type} Item={resourceLocation}");
+					return null;
+				});
+
+			if (result != null && result is ItemModelRenderer imr)
+			{
+				imr?.TryCache(resources);
+			}
+			else if (result != null && result is ItemBlockModelRenderer bmr)
+			{
+				bmr.TryCache(resources);
 			}
 
-			renderer = null;
-			return false;
+			renderer = result?.CloneItemRenderer();
+			return renderer != null;
 		}
 		
 		private static LegacyIdMap _legacyIdMap;
 	    public static void Init(IRegistryManager registryManager, ResourceManager resources, IProgressReceiver progressReceiver = null)
 	    {
+		    var existing = ItemRenderers.ToArray();
+		    ItemRenderers.Clear();
+
+		    foreach (var ex in existing)
+		    {
+			    ex.Value?.Dispose();
+		    }
+		    
 		    _allItemMapping.Clear();
 		    ResourceManager = resources;
 		    var modelRegistry = resources.BlockModelRegistry;
@@ -318,7 +336,8 @@ namespace Alex.Items
 			            if (modelRegistry.TryGet(rendererResourceLocation, out var modelEntry))
 			            {
 				            ResourcePackModelBase model = modelEntry.Value;
-				            renderer = new ItemBlockModelRenderer(itemBlock.Block, model, resources.BlockAtlas.GetAtlas(true));
+				            renderer = new ItemBlockModelRenderer(itemBlock.Block, model, resources.BlockAtlas.GetAtlas(false));
+				            renderer.Cache(resources);
 			            }
 		            }
 	            }
@@ -352,7 +371,6 @@ namespace Alex.Items
 
 	            if (renderer != null)
 	            {
-		            renderer.Cache(resources);
 		            item.Renderer = renderer;
 	            }
 
@@ -370,7 +388,7 @@ namespace Alex.Items
             int i = 0;
 
             Parallel.ForEach(
-	            resources.Registries.Items.Entries.Where(x => blocks.All(b => b.Key != x.Key)), (entry) =>
+	            resources.Registries.Items.Entries, (entry) =>
 	            {
 		            progressReceiver?.UpdateProgress(
 			            i++, resources.Registries.Items.Entries.Count, $"Processing items...", entry.Key);

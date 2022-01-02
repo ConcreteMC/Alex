@@ -133,6 +133,19 @@ namespace Alex.Worlds
 			EnsureStarted();
 
 			InitTextures();
+			
+			_resourceManager.OnResourcesReloaded += OnResourcesReloaded;
+		}
+
+		private void OnResourcesReloaded(object? sender, EventArgs e)
+		{
+			InitTextures();
+			
+			foreach (var chunk in Chunks.ToArray())
+			{
+				chunk.Value.Reset();
+				ScheduleChunkUpdate(chunk.Key, ScheduleType.Full, true);
+			}
 		}
 
 		private void InitTextures()
@@ -140,11 +153,10 @@ namespace Alex.Worlds
 			var blockAtlas = _resourceManager?.BlockAtlas;
 			if (blockAtlas == null)
 				return;
-			
-			blockAtlas.AtlasGenerated += AtlasGenerated;
 
 			var texture = blockAtlas.GetAtlas(false);
 			SetTextures(texture);
+			blockAtlas.AtlasGenerated += AtlasGenerated;
 		}
 
 		private void AtlasGenerated(object? sender, AtlasTexturesGeneratedEventArgs e)
@@ -152,6 +164,7 @@ namespace Alex.Worlds
 			SetTextures(e.Texture);
 		}
 
+		private bool _hadTexture = false;
 		private void SetTextures(Texture2D texture)
 		{
 			var shaders = Shaders;
@@ -160,7 +173,12 @@ namespace Alex.Worlds
 				return;
 			
 			shaders.SetTextures(texture);
-			_renderSampler.MaxMipLevel = texture.LevelCount;
+
+			if (!_hadTexture)
+			{
+				_hadTexture = true;
+				_renderSampler.MaxMipLevel = texture.LevelCount;
+			}
 		}
 
 		private void BuildActionBlock(int threads)

@@ -9,7 +9,6 @@ using Alex.Common.Utils;
 using Alex.Common.World;
 using Alex.Graphics;
 using Alex.Graphics.Camera;
-using Alex.Graphics.Textures;
 using Alex.MoLang.Runtime;
 using Alex.ResourcePackLib;
 using Microsoft.Xna.Framework;
@@ -107,6 +106,7 @@ namespace Alex.Particles
 								if (resourcePack.TryGetBitmap(texturePath, out var img))
 								{
 									particleTexture = TextureUtils.BitmapToTexture2D(this, _graphics, img);
+									img.Dispose();
 									//particleTexture = pooled;
 								}
 

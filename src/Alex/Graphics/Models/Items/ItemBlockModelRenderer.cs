@@ -17,11 +17,13 @@ namespace Alex.Graphics.Models.Items
     public class ItemBlockModelRenderer : ItemModelRenderer<VertexPositionColorTexture>
     {
         private BlockState _blockState;
+        private Texture2D _texture;
 
         public ItemBlockModelRenderer(BlockState block, ResourcePackModelBase resourcePackModel, Texture2D texture, bool calculateSize = true, VertexPositionColorTexture[] vertices = null) : base(resourcePackModel,
-            VertexPositionColorTexture.VertexDeclaration, vertices, texture)
+            VertexPositionColorTexture.VertexDeclaration, vertices)
         {
             _blockState = block;
+            _texture = texture;
 
             Scale = 16f;
             Size = new Vector3(16f, 16f, 16f);
@@ -48,9 +50,6 @@ namespace Alex.Graphics.Models.Items
         private bool _cached = false;
         public override bool Cache(ResourceManager pack)
         {
-            if (Vertices != null && Vertices.Length > 0)
-                return true;
-
             if (_cached)
                 return true;
 
@@ -62,6 +61,7 @@ namespace Alex.Graphics.Models.Items
             _blockState?.VariantMapper.Model.GetVertices(
                 world, chunkData, BlockCoordinates.Zero, _blockState);
 
+            //pack.BlockAtlas.GetAtlasLocation(ResourcePackModel)
             var textureSize = Vector2.One;
 
             if (_texture != null)
@@ -132,24 +132,21 @@ namespace Alex.Graphics.Models.Items
                 }
             }
         }
-        
-        /*public override IItemRenderer CloneItemRenderer()
-        {
-            var renderer = new ItemBlockModelRenderer(_blockState, ResourcePackModel, _texture, false, Vertices?.Select(
-                x => new VertexPositionColorTexture(
-                    new Vector3(x.Position.X, x.Position.Y, x.Position.Z), new Color(x.Color.PackedValue),
-                    new Vector2(x.TextureCoordinate.X, x.TextureCoordinate.Y))).ToArray() ?? null)
-            {
-                Size = Size,
-                Scale = Scale,
-                DisplayPosition = DisplayPosition,
-                ActiveDisplayItem = ActiveDisplayItem.Clone(),
-            };
-            
-            //if (renderer.Vertices == null || renderer.Vertices.Length == 0)
-             //   renderer.InitCache();
 
-            return renderer;
-        }*/
+        /// <inheritdoc />
+        protected override void OnDispose(bool disposing)
+        {
+            base.OnDispose(disposing);
+
+            if (disposing)
+            {
+                var t = _texture;
+                _texture = null;
+                if (t != null && t.Tag != AtlasGenerator.Tag)
+                {
+                    t?.Dispose();
+                }
+            }
+        }
     }
 }
