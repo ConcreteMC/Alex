@@ -728,6 +728,9 @@ namespace Alex.Entities
 	    
 	    private void UpdateMouseInput(GameTime gt)
 	    {
+		    if (!CheckMovementInput)
+			    return;
+		    
 		    if (IgnoreNextUpdate)
 		    {
 			    IgnoreNextUpdate = false;
