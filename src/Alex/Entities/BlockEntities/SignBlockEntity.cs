@@ -181,7 +181,7 @@ namespace Alex.Entities.BlockEntities
 		/// <inheritdoc />
 		public override void SetData(BlockEntityActionType action, NbtCompound compound)
 		{
-			if (action == BlockEntityActionType.SetSignText) //Set text on sign
+			if (action == BlockEntityActionType.SetSignText || action == BlockEntityActionType._Init) //Set text on sign
 			{
 				ReadTextFrom(compound);
 			}

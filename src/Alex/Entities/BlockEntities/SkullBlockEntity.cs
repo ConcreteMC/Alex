@@ -221,7 +221,7 @@ namespace Alex.Entities.BlockEntities
 		/// <inheritdoc />
 		public override void SetData(BlockEntityActionType action, NbtCompound compound)
 		{
-			if (action == BlockEntityActionType.SetRotationAndSkinOfModHead)
+			if (action == BlockEntityActionType.SetRotationAndSkinOfModHead || action == BlockEntityActionType._Init)
 			{
 				ReadFrom(compound);
 			}

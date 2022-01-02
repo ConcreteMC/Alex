@@ -110,7 +110,7 @@ public class BeaconBlockEntity : BlockEntity
     
     public override void SetData(BlockEntityActionType action, NbtCompound compound)
     {
-        if (action == BlockEntityActionType.SetBeaconData)
+        if (action == BlockEntityActionType.SetBeaconData || action == BlockEntityActionType._Init)
         {
             ReadFrom(compound);
         }
