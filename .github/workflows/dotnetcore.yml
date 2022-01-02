@@ -89,10 +89,12 @@ jobs:
     #  run: chmod +x Alex
         
     - name: Zip Build
-      uses: papeloto/action-zip@v1
+      uses: thedoctor0/zip-release@master
       with:
-        files: "src/Alex/build"
-        dest: ./release.zip
+        type: 'zip'
+        path: "src/Alex/build"
+        exclusions: '*.pdb'
+        filename: ./release.zip
         
     - name: Create Release
       uses: tix-factory/release-manager@v1
