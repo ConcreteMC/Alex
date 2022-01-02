@@ -1432,7 +1432,7 @@ namespace Alex.Net.Bedrock
 
 				//if (block.BlockMaterial != Material.Air)
 				{
-					var blockEntity = BlockEntityFactory.ReadFrom(compound, Client.World, block);
+					var blockEntity = BlockEntityFactory.ReadFrom(compound, Client.World, block, worldPos);
 
 					if (blockEntity == null)
 					{

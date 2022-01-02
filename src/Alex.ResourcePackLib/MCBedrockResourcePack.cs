@@ -226,6 +226,9 @@ namespace Alex.ResourcePackLib
 			}
 			
 			TryAddBitmap("textures/entity/chest/double_normal");
+			TryAddBitmap("textures/entity/enchanting_table_book");
+			TryAddBitmap("textures/entity/beacon_beam");
+			TryAddBitmap("textures/entity/banner/banner");
 			ProcessEntityDefinitions(entityDefinitions);
 			
 			EntityModels = entityModels;

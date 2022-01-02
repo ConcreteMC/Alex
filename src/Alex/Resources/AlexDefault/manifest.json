@@ -1,0 +1,18 @@
+{
+  "format_version": 2,
+  "header": {
+    "description": "Default Resources",
+    "name": "Alex default resources",
+    "uuid": "d32876c8-fbac-40c2-b040-8bf4c18a9b7e",
+    "version": [1, 0, 0],
+    "min_engine_version": [1, 16, 0]
+  },
+  "modules": [
+    {
+      "description": "Alex default resources",
+      "type": "resources",
+      "uuid": "c476b91e-e003-40cd-a7d4-2d8c1c3ff914",
+      "version": [1, 0, 0]
+    }
+  ]
+}

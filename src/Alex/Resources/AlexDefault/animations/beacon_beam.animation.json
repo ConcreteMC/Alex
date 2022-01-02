@@ -1,0 +1,24 @@
+{
+	"format_version": "1.8.0",
+	"animations": {
+		"animation.beacon_beam.default": {
+			"loop": true,
+			"animation_length": 2,
+			"bones": {
+				"root": {
+					"rotation": {
+						"0.0": [0, 0, 0],
+						"2.0": {"pre": [0, -90, 0], "post": [0, 0, 0]}
+					},
+					"position": {
+						"0.0": [0, 0, 0],
+						"0.5": {"pre": [0, 16, 0], "post": [0, 0, 0]},
+						"1.0": {"pre": [0, 16, 0], "post": [0, 0, 0]},
+						"1.5": {"pre": [0, 16, 0], "post": [0, 0, 0]},
+						"2.0": {"pre": [0, 16, 0], "post": [0, 0, 0]}
+					}
+				}
+			}
+		}
+	}
+}

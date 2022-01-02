@@ -1,0 +1,20 @@
+{
+  "format_version": "1.8.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "minecraft:enchanttable",
+      "textures": {
+        "default": "textures/entity/enchanting_table_book"
+      },
+      "geometry": {
+        "default": "geometry.alex.enchanttable"
+      },
+      "animations": {
+        "idle": "animation.alex.enchanttable.idle"
+      },
+      "animation_controllers": [
+        { "idle": "controller.animation.alex.enchanttable.idle"}
+      ]
+    }
+  }
+}

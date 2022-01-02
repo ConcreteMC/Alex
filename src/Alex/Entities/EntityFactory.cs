@@ -654,74 +654,85 @@ namespace Alex.Entities
 
 			//var stringId = entityType.ToStringId();
 			var resources = Alex.Instance.Resources;
-
-			if (resources.TryGetEntityDefinition(entityType, out var description, out var resourcePack))
+			if (entity == null)
 			{
-				if (entity == null)
-				{
-					//Log.Warn($"No entity implementation found, falling back to Alex.Entities.Entity for: {entityType}");
-					entity = new Entity(world);
-				}
-
-				//World.BackgroundWorker.Enqueue(
-			//		() =>
-			//		{
-						var e = entity;
-
-						if (initRenderController)
-						{
-							e.AnimationController.UpdateEntityDefinition(resourcePack, resourcePack, description);
-						}
-
-						var modelRenderer = GetEntityRenderer(description.Identifier);
-
-						if (modelRenderer == null)
-						{
-							Log.Warn($"Missing entity renderer: {entityType}");
-						}
-						else
-						{
-							e.ModelRenderer = modelRenderer;
-						}
-
-
-						//Texture2D texture2D = null;
-						//if (renderer == null || texture2D == null)
-						{
-							
-								var textures = description.Textures;
-								string texture;
-
-								if (!(textures.TryGetValue("default", out texture) || textures.TryGetValue(
-									    description.Identifier, out texture)))
-								{
-									texture = textures.FirstOrDefault().Value;
-								}
-
-								//if (!_pooledTextures.TryGetValue(texture, out var texture2D))
-								{
-									if (resourcePack.TryGetBitmap(texture, out var bmp))
-									{
-										TextureUtils.BitmapToTexture2DAsync(
-											e, Alex.Instance.GraphicsDevice, bmp, texture2D1 =>
-											{
-												e.Texture = texture2D1;
-											});
-									}
-								}
-								//else
-								//{
-								//	entity.Texture = texture2D;
-								//}
-						}
-				//	});
+				//Log.Warn($"No entity implementation found, falling back to Alex.Entities.Entity for: {entityType}");
+				entity = new Entity(world);
 			}
 
 			if (entity != null && entity.Type == null)
 			{
 				entity.Type = entityType;
 			}
+			
+			LoadEntityDefinition(resources, entity, initRenderController);
+			
 			return entity;
+		}
+
+		public static void LoadEntityDefinition(ResourceManager resources, Entity entity, bool initRenderController = true)
+		{
+			if (!resources.TryGetEntityDefinition(entity.Type, out var description, out var resourcePack)) return;
+			//World.BackgroundWorker.Enqueue(
+			//		() =>
+			//		{
+			var e = entity; 
+
+			if (initRenderController)
+			{
+				e.AnimationController.UpdateEntityDefinition(resourcePack, resourcePack, description);
+			}
+
+			var modelRenderer = GetEntityRenderer(description.Identifier);
+
+			if (modelRenderer == null)
+			{
+				Log.Warn($"Missing entity renderer: {entity.Type}");
+			}
+			else
+			{
+				e.ModelRenderer = modelRenderer;
+			}
+
+
+			//Texture2D texture2D = null;
+			//if (renderer == null || texture2D == null)
+			{
+							
+				var textures = description.Textures;
+				string texture;
+
+				if (!(textures.TryGetValue("default", out texture) || textures.TryGetValue(
+					    description.Identifier, out texture)))
+				{
+					texture = textures.FirstOrDefault().Value;
+				}
+
+				//if (!_pooledTextures.TryGetValue(texture, out var texture2D))
+				{
+					if (resources.TryGetBedrockBitmap(texture, out var bmp))
+					{
+						TextureUtils.BitmapToTexture2DAsync(
+							e, Alex.Instance.GraphicsDevice, bmp, texture2D1 =>
+							{
+								e.Texture = texture2D1;
+							});
+					}
+					else if (resources.TryGetBitmap(texture, out var bmp2))
+					{
+						TextureUtils.BitmapToTexture2DAsync(
+							e, Alex.Instance.GraphicsDevice, bmp2, texture2D1 =>
+							{
+								e.Texture = texture2D1;
+							});
+					}
+				}
+				//else
+				//{
+				//	entity.Texture = texture2D;
+				//}
+			}
+			//	});
 		}
 	}
 }

@@ -1,0 +1,21 @@
+{
+  "format_version": "1.8.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "minecraft:wall_banner",
+      "textures": {
+        "default": "textures/entity/banner/banner"
+      },
+      "geometry": {
+        "default": "geometry.wall_banner"      },
+      "animations": {
+        "default": "animation.banner.default"
+      },
+      "animation_controllers": [
+        {
+          "default": "controller.animation.banner.default"
+        }
+      ]
+    }
+  }
+}

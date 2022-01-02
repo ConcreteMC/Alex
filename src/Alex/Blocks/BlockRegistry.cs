@@ -656,6 +656,42 @@ namespace Alex.Blocks
 		    RegisterBlock("minecraft:potted_dead_bush", () => new PottedDeadBush());
 		    RegisterBlock("minecraft:sea_pickle", () => new SeaPickle());
 		    
+		    // Banners (Standing)
+		    RegisterBlock("minecraft:white_banner"     , () => new StandingBanner(BlockColor.White));
+		    RegisterBlock("minecraft:orange_banner"    , () => new StandingBanner(BlockColor.Orange));
+		    RegisterBlock("minecraft:magenta_banner"   , () => new StandingBanner(BlockColor.Magenta));
+		    RegisterBlock("minecraft:light_blue_banner", () => new StandingBanner(BlockColor.LightBlue));
+		    RegisterBlock("minecraft:yellow_banner"    , () => new StandingBanner(BlockColor.Yellow));
+		    RegisterBlock("minecraft:lime_banner"      , () => new StandingBanner(BlockColor.Lime));
+		    RegisterBlock("minecraft:pink_banner"      , () => new StandingBanner(BlockColor.Pink));
+		    RegisterBlock("minecraft:gray_banner"      , () => new StandingBanner(BlockColor.Gray));
+		    RegisterBlock("minecraft:light_gray_banner", () => new StandingBanner(BlockColor.LightGray));
+		    RegisterBlock("minecraft:cyan_banner"      , () => new StandingBanner(BlockColor.Cyan));
+		    RegisterBlock("minecraft:purple_banner"    , () => new StandingBanner(BlockColor.Purple));
+		    RegisterBlock("minecraft:blue_banner"      , () => new StandingBanner(BlockColor.Blue));
+		    RegisterBlock("minecraft:brown_banner"     , () => new StandingBanner(BlockColor.Brown));
+		    RegisterBlock("minecraft:green_banner"     , () => new StandingBanner(BlockColor.Green));
+		    RegisterBlock("minecraft:red_banner"       , () => new StandingBanner(BlockColor.Red));
+		    RegisterBlock("minecraft:black_banner"     , () => new StandingBanner(BlockColor.Black));
+		    
+		    // Banners (Wall)
+		    RegisterBlock("minecraft:white_wall_banner"     , () => new WallBanner(BlockColor.White));
+		    RegisterBlock("minecraft:orange_wall_banner"    , () => new WallBanner(BlockColor.Orange));
+		    RegisterBlock("minecraft:magenta_wall_banner"   , () => new WallBanner(BlockColor.Magenta));
+		    RegisterBlock("minecraft:light_blue_wall_banner", () => new WallBanner(BlockColor.LightBlue));
+		    RegisterBlock("minecraft:yellow_wall_banner"    , () => new WallBanner(BlockColor.Yellow));
+		    RegisterBlock("minecraft:lime_wall_banner"      , () => new WallBanner(BlockColor.Lime));
+		    RegisterBlock("minecraft:pink_wall_banner"      , () => new WallBanner(BlockColor.Pink));
+		    RegisterBlock("minecraft:gray_wall_banner"      , () => new WallBanner(BlockColor.Gray));
+		    RegisterBlock("minecraft:light_gray_wall_banner", () => new WallBanner(BlockColor.LightGray));
+		    RegisterBlock("minecraft:cyan_wall_banner"      , () => new WallBanner(BlockColor.Cyan));
+		    RegisterBlock("minecraft:purple_wall_banner"    , () => new WallBanner(BlockColor.Purple));
+		    RegisterBlock("minecraft:blue_wall_banner"      , () => new WallBanner(BlockColor.Blue));
+		    RegisterBlock("minecraft:brown_wall_banner"     , () => new WallBanner(BlockColor.Brown));
+		    RegisterBlock("minecraft:green_wall_banner"     , () => new WallBanner(BlockColor.Green));
+		    RegisterBlock("minecraft:red_wall_banner"       , () => new WallBanner(BlockColor.Red));
+		    RegisterBlock("minecraft:black_wall_banner"     , () => new WallBanner(BlockColor.Black));
+		    
 		    //Beds (I should really implement block tags...)
 		    RegisterBlock("minecraft:bed", () => new Bed(BlockColor.Red));
 		    RegisterBlock("minecraft:white_bed", () => new Bed(BlockColor.White));

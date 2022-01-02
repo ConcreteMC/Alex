@@ -7,6 +7,7 @@ using Alex.Common.Resources;
 using Alex.Common.Utils;
 using Alex.Graphics.Models.Entity;
 using Alex.Graphics.Models.Entity.BlockEntities;
+using Alex.Networking.Java.Packets.Play;
 using Alex.Utils;
 using Alex.Worlds;
 using fNbt;
@@ -178,9 +179,9 @@ namespace Alex.Entities.BlockEntities
 		}
 
 		/// <inheritdoc />
-		public override void SetData(byte action, NbtCompound compound)
+		public override void SetData(BlockEntityActionType action, NbtCompound compound)
 		{
-			if (action == 9) //Set text on sign
+			if (action == BlockEntityActionType.SetSignText) //Set text on sign
 			{
 				ReadTextFrom(compound);
 			}
