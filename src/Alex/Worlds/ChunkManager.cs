@@ -395,19 +395,25 @@ namespace Alex.Worlds
 
 			chunk.CalculateHeight(doUpdates);
 
+			ChunkColumn toRemove = null;
 			var column = Chunks.AddOrUpdate(
 				position, chunk, (coordinates, oldColumn) =>
 				{
-					Log.Warn($"Replaced: {coordinates}");
 					if (!ReferenceEquals(oldColumn, chunk))
 					{
-						OnRemoveChunk(oldColumn, true);
+						Log.Warn($"Replaced: {coordinates}");
+						toRemove = oldColumn;
 					}
 
 					return chunk;
 				});
 
 			OnChunkAdded?.Invoke(this, new ChunkAddedEventArgs(column));
+			
+			if (toRemove != null)
+			{
+				toRemove?.Dispose();
+			}
 		}
 
 		private void OnRemoveChunk(ChunkColumn column, bool dispose)
@@ -674,15 +680,16 @@ namespace Alex.Worlds
 
 				if (inView && index + 1 < max)
 				{
-					data.Rendered = true;
-
 					if (chunk.Value.IsNew && !chunk.Value.Scheduled)
 					{
 						ScheduleChunkUpdate(chunk.Key, ScheduleType.Full);
 					}
-
-					array[index].SetTarget(data); // = data;
-					index++;
+					else
+					{
+						data.Rendered = true;
+						array[index].SetTarget(data); // = data;
+						index++;
+					}
 				}
 				else
 				{

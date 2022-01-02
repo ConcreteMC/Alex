@@ -11,6 +11,12 @@
 		StopHorseJump = 6,
 		OpenHorseInventory = 7,
 		StartElytraFlying = 8,
-		Jump
+		Jump,
+		
+		StartFlying = 999,
+		StopFlying = 998,
+		
+		StartSwimming = 997,
+		StopSwimming = 996
 	}
 }

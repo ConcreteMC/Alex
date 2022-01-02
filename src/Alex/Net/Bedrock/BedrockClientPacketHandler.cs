@@ -223,6 +223,7 @@ namespace Alex.Net.Bedrock
 		
 		public void HandleMcpeStartGame(McpeStartGame message)
 		{
+			var player = Client.World.Player;
 			if (message.movementType > 0)
 			{
 				Client.ServerAuthoritiveMovement = true;
@@ -231,20 +232,23 @@ namespace Alex.Net.Bedrock
 			
 			try
 			{
-				Client.World.Player.EntityId = Client.EntityId = message.runtimeEntityId;
+				player.EntityId = Client.EntityId = message.runtimeEntityId;
 				Client.NetworkEntityId = message.entityIdSelf;
-
+				Client.World.SetRain(false, message.rainLevel);
+				Client.World.SetThunder(false, message.lightningLevel);
+				Client.Tick = message.currentTick;
+				
 				//Client.World.SpawnPoint 
 			//	Client.SpawnPoint = new Vector3(
 			//		message.spawn.X, message.spawn.Y - Player.EyeLevel, message.spawn.Z); //message.spawn;
 
 				Client.World.Dimension = (Dimension) message.dimension;
-
+				Client.World.Difficulty = (Difficulty)message.difficulty;
 				Client.World?.UpdatePlayerPosition(
 					new PlayerLocation(
 						new Microsoft.Xna.Framework.Vector3(message.spawn.X, message.spawn.Y, message.spawn.Z),
 						message.rotation.Y, message.rotation.Y, message.rotation.X), true);
-
+				
 				if (message.enableNewInventorySystem)
 				{
 					Client.ServerAuthoritiveInventory = true;
@@ -256,10 +260,12 @@ namespace Alex.Net.Bedrock
 					Log.Info($"New blockbreak system?");
 				}
 
-				Client.World.Player.SetInventory(new BedrockInventory(46));
-
-				Client.World.Player.UpdateGamemode((GameMode) message.playerGamemode);
-
+				player.SetInventory(new BedrockInventory(46));
+				player.UpdateGamemode((GameMode) message.playerGamemode);
+				player.PermissionLevel = (PermissionLevel)message.permissionLevel;
+				
+				player.Controller.SetRewindHistorySize(message.movementRewindHistorySize);//.RewindHistory = message.movementRewindHistorySize;
+				
 				foreach (var gr in message.gamerules)
 				{
 					Client.World.SetGameRule(gr);
@@ -288,7 +294,7 @@ namespace Alex.Net.Bedrock
 			Client.World.UpdateEntityPosition(message.runtimeEntityId, pos, false, true, true, adjustForEntityHeight:true, teleport:message.mode == 2);
 		}
 
-		private void UpdateEntityAdventureFlags(Entity entity, uint flags, uint actionPermissions)
+		private void UpdateEntityAdventureFlags(Entity entity, uint flags, uint actionPermissions, uint commandPermissions, uint permissionLevel, uint customStoredPermissions)
 		{
 			if (entity == null)
 				return;
@@ -300,8 +306,15 @@ namespace Alex.Net.Bedrock
 			
 			//if (entity is Player)
 			entity.HasCollision = (flags & 0x80) == 0;
-			
 			entity.IsFlying = (flags & 0x200) != 0;
+
+			if (entity is RemotePlayer player)
+			{
+				player.ActionPermissions = (ActionPermissions) actionPermissions;
+				player.CommandPermissions = (CommandPermission) commandPermissions;
+				player.PermissionLevel = (PermissionLevel) permissionLevel;
+				player.CustomStoredPermissions = customStoredPermissions;
+			}
 		}
 
 		public void HandleMcpeAdventureSettings(McpeAdventureSettings message)
@@ -320,8 +333,10 @@ namespace Alex.Net.Bedrock
 
 			if (entity == null)
 				return;
-			
-			UpdateEntityAdventureFlags(entity, message.flags, message.actionPermissions);
+
+			UpdateEntityAdventureFlags(
+				entity, message.flags, message.actionPermissions, message.commandPermission, message.permissionLevel,
+				message.customStoredPermissions);
 		}
 
 		public void HandleMcpeAddPlayer(McpeAddPlayer message)
@@ -349,7 +364,9 @@ namespace Alex.Net.Bedrock
 					remotePlayer.HandleMetadata(message.metadata);
 				}
 
-				UpdateEntityAdventureFlags(remotePlayer, message.flags, message.actionPermissions);
+				UpdateEntityAdventureFlags(
+					remotePlayer, message.flags, message.actionPermissions, message.commandPermission,
+					message.permissionLevel, message.customStoredPermissions);
 
 				Client.World.SpawnEntity(remotePlayer);
 

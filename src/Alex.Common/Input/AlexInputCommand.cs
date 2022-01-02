@@ -19,6 +19,7 @@ namespace Alex.Common.Input
         [InputCommandDescriptor("key.jump", InputCommandType.Controller)] public static readonly InputCommand Jump                 = new(AlexNamespace, nameof(Jump));
         [InputCommandDescriptor("key.sneak", InputCommandType.Controller)]public static readonly InputCommand Sneak                = new(AlexNamespace, nameof(Sneak));
         [InputCommandDescriptor("key.sprint")] public static readonly InputCommand Sprint               = new(AlexNamespace, nameof(Sprint));
+        [InputCommandDescriptor("key.sprint", InputCommandType.Controller)] public static readonly InputCommand SprintToggle               = new(AlexNamespace, nameof(SprintToggle));
         [InputCommandDescriptor("key.drop")] public static readonly InputCommand DropItem             = new(AlexNamespace, nameof(DropItem));
         
        // [InputCommandDescriptor("")] public static readonly InputCommand MoveSpeedIncrease    = new(AlexNamespace, nameof(MoveSpeedIncrease));

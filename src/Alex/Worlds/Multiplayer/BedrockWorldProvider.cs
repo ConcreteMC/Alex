@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Net;
+using System.Numerics;
 using System.Threading;
 using Alex.Common.Services;
 using Alex.Common.World;
@@ -10,12 +11,12 @@ using Alex.Net.Bedrock;
 using Alex.Worlds.Abstraction;
 using Alex.Worlds.Multiplayer.Bedrock;
 using Alex.Worlds.Multiplayer.Bedrock.Resources;
-using Microsoft.Xna.Framework;
 using MiNET.Net;
 using NLog;
 using ChunkCoordinates = Alex.Common.Utils.Vectors.ChunkCoordinates;
 using Player = Alex.Entities.Player;
 using PlayerLocation = Alex.Common.Utils.Vectors.PlayerLocation;
+using Vector3 = Microsoft.Xna.Framework.Vector3;
 
 namespace Alex.Worlds.Multiplayer
 {
@@ -57,42 +58,22 @@ namespace Alex.Worlds.Multiplayer
 			return World?.SpawnPoint ?? Vector3.Zero;
 		}
 
-		private uint GetAdventureFlags()
-		{
-			uint flags = 0;
-
-			if (_flying) flags |= 0x200;
-
-			return flags;
-		}
-		
 		private bool _initiated = false;
-		private bool _flying = false;
 		private PlayerLocation _lastLocation = new PlayerLocation();
         
         private long _tickTime = 0;
         private long _lastPrioritization = 0;
-        private long _serverTick = 0;
         public override void OnTick()
 		{
 			if (World == null) return;
 
 			if (_initiated)
 			{
-				_serverTick++;
 				_tickTime++;
-
+				Client.Tick++;
+				
 				if (World.Player != null && World.Player.IsSpawned && _gameStarted)
 				{
-					if (World.Player.IsFlying != _flying)
-					{
-						_flying = World.Player.IsFlying;
-
-						McpeAdventureSettings settings = McpeAdventureSettings.CreateObject();
-						settings.flags = GetAdventureFlags();
-						Client.SendPacket(settings);
-					}
-
 					var pos = (PlayerLocation) World.Player.KnownPosition.Clone();
 
 					if ((pos.DistanceTo(_lastLocation) >= 16f)
@@ -119,18 +100,22 @@ namespace Alex.Worlds.Multiplayer
 				if (player == null)
 					return;
 
-				var delta = location.ToVector3() - _previousPlayerLocation.ToVector3();
+				var delta = _previousPlayerLocation.ToVector3() - location.ToVector3();
 
-				var heading = player.Movement.Heading;
+				var inputFlags = player.Controller.InputFlags;
+				var heading = player.Controller.GetMoveVector(inputFlags);
+				
 				McpePlayerAuthInput input = McpePlayerAuthInput.CreateObject();
-				input.InputFlags = player.Controller.GetInputFlags();
-				input.Position = new System.Numerics.Vector3(location.X, location.Y, location.Z);
-				input.Yaw = location.Yaw;
-				input.HeadYaw = location.HeadYaw;
-				input.Pitch = location.Pitch;
-				input.MoveVecX = heading.X;
-				input.MoveVecZ = heading.Z;
+				input.InputFlags = inputFlags;
+				input.Position = new System.Numerics.Vector3(location.X, location.Y + Player.EyeLevel, location.Z);
+				input.Yaw = -location.Yaw;
+				input.HeadYaw = -location.HeadYaw;
+				input.Pitch = -location.Pitch;
+				input.MoveVector = new Vector2(heading.X, heading.Z);
 				input.Delta = new System.Numerics.Vector3(delta.X, delta.Y, delta.Z);
+				input.Tick = Client.Tick;
+				input.PlayMode = McpePlayerAuthInput.PlayerPlayMode.Normal;
+				input.InputMode = McpePlayerAuthInput.PlayerInputMode.Mouse;
 
 				Client.SendPacket(input);
 				

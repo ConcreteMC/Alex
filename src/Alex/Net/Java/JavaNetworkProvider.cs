@@ -74,7 +74,7 @@ namespace Alex.Net.Java
 
 		public override void EntityAction(int entityId, EntityAction action)
 		{
-			if (action == Common.Utils.EntityAction.Jump)
+			if (action >= Common.Utils.EntityAction.Jump)
 				return;
 
 			EntityActionPacket packet = EntityActionPacket.CreateObject();

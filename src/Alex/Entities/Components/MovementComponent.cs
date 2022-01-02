@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Alex.Common.Utils;
 using Alex.Common.Utils.Vectors;
+using Alex.Common.World;
 using Alex.Worlds;
 using Alex.Worlds.Abstraction;
 using Microsoft.Xna.Framework;
@@ -10,7 +11,7 @@ using NLog;
 
 namespace Alex.Entities.Components
 {
-	public class MovementComponent : EntityComponentUpdatable
+	public class MovementComponent : EntityComponentUpdatable, ITicked
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(MovementComponent));
 		public Vector3 Heading { get; private set; }
@@ -316,12 +317,19 @@ namespace Alex.Entities.Components
 			}
 
 			Entity.KnownPosition += amount;
-			Entity.KnownPosition.OnGround = DetectOnGround(blockAccess, Entity.KnownPosition);
+			//Entity.KnownPosition.OnGround = DetectOnGround(blockAccess, Entity.KnownPosition);
 			
 			MovedBy(amount);
 			UpdateTarget();
 
 			return amount;
+		}
+		
+		
+		/// <inheritdoc />
+		public void OnTick()
+		{
+			Entity.KnownPosition.OnGround = DetectOnGround(Entity.Level, Entity.KnownPosition);
 		}
 
 		private void FixSneaking(IBlockAccess blockAccess, ref Vector3 amount)

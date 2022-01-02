@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -784,8 +785,31 @@ namespace Alex.Net.Bedrock
 		}
 
 		public World World { get; set; }
-	
-	//public System.Numerics.Vector3 SpawnPoint { get; set; } = System.Numerics.Vector3.Zero;
+		public long Tick { get; set; }
+
+		//public System.Numerics.Vector3 SpawnPoint { get; set; } = System.Numerics.Vector3.Zero;
+
+		public void SendAdventureFlags()
+		{
+			uint flags = 0;
+			
+			if (World.Player.IsWorldImmutable) flags |= 0x01;
+			if (World.Player.IsNoPvP) flags |= 0x02;
+			if (World.Player.IsNoPvM) flags |= 0x04;
+			if (World.Player.CanFly) flags |= 0x40;
+			if (World.Player.HasCollision) flags |= 0x80;
+			if (World.Player.IsFlying) flags |= 0x200;
+			
+			McpeAdventureSettings settings = McpeAdventureSettings.CreateObject();
+			settings.flags = (uint)flags;
+			settings.actionPermissions = (uint)World.Player.ActionPermissions;
+			settings.commandPermission = (uint)World.Player.CommandPermissions;
+			settings.permissionLevel = (uint)World.Player.PermissionLevel;
+			settings.customStoredPermissions = World.Player.CustomStoredPermissions;
+			settings.entityUniqueId = BinaryPrimitives.ReverseEndianness(EntityId);
+			
+			SendPacket(settings);
+		}
 
 		public override void EntityAction(int entityId, EntityAction action)
 		{
@@ -798,6 +822,20 @@ namespace Alex.Net.Bedrock
 			PlayerAction translated;
 			switch (action)
 			{
+				case Common.Utils.EntityAction.StartFlying:
+					SendAdventureFlags();
+					return;
+				case Common.Utils.EntityAction.StopFlying:
+					SendAdventureFlags();
+					return;
+				
+				case Common.Utils.EntityAction.StartSwimming:
+					translated = PlayerAction.StartSwimming;
+					break;
+				case Common.Utils.EntityAction.StopSwimming:
+					translated = PlayerAction.StopSwimming;
+					break;
+				
 				case Common.Utils.EntityAction.StartSneaking:
 					translated = PlayerAction.StartSneak;
 					break;

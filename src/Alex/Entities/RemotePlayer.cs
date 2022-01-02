@@ -25,6 +25,7 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MiNET;
+using MiNET.Net;
 using MiNET.Utils.Metadata;
 using MiNET.Worlds;
 using Newtonsoft.Json;
@@ -54,6 +55,11 @@ namespace Alex.Entities
 
 		public BlockCoordinates BedPosition { get; set; } = BlockCoordinates.Zero;
 		public Color PotionColor { get; set; } = Color.White;
+		
+		public ActionPermissions ActionPermissions { get; set; }
+		public CommandPermission CommandPermissions { get; set; }
+		public PermissionLevel PermissionLevel { get; set; }
+		public uint CustomStoredPermissions { get; set; }
 		
 		public  bool CanSprint    => HealthManager.Hunger > 6;
 		//private PooledTexture2D _texture;
@@ -139,7 +145,7 @@ namespace Alex.Entities
 			}
 		}
 
-		public void SetFlying(bool flying)
+		public virtual void SetFlying(bool flying)
 		{
 			//Log.Info($"Tried to toggle fly. CanFly={CanFly} IsFlying={IsFlying} Target={flying}");
 
@@ -157,6 +163,11 @@ namespace Alex.Entities
 			{
 				IsFlying = false;
 			}
+		}
+
+		public virtual void SetSwimming(bool swimming)
+		{
+			IsSwimming = swimming;
 		}
 
 		protected virtual void OnSkinValueChanged(Skin newSkin)
