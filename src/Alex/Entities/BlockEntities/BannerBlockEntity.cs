@@ -27,6 +27,8 @@ using ColorMatrix = SixLabors.ImageSharp.ColorMatrix;
 using ModelBone = Alex.Graphics.Models.ModelBone;
 using Point = SixLabors.ImageSharp.Point;
 using Vector3 = Microsoft.Xna.Framework.Vector3;
+using Microsoft.Xna.Framework;
+using NLog;
 
 namespace Alex.Entities.BlockEntities;
 
@@ -34,6 +36,7 @@ public class BannerBlockEntity : BlockEntity
 {
     private BlockColor _color;
     private EntityDescription _entityDescription = null;
+    private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(BannerBlockEntity));
     private ModelBone RootBone { get; set; }
 
     private byte _rotation = 0;
@@ -41,8 +44,8 @@ public class BannerBlockEntity : BlockEntity
 
     public PatternLayer[] Patterns { get; set; } = Array.Empty<PatternLayer>();
     private Image<Rgba32> _canvasTexture;
-
-    public byte Rotation
+    
+    public byte BannerRotation
     {
         get { return _rotation; }
         set
@@ -87,9 +90,8 @@ public class BannerBlockEntity : BlockEntity
         if (ModelRenderer != null && ModelRenderer.GetBone("root", out var bone))
         {
             var rot = bone.Rotation;
-            //rot.Y = _yRotation;
-            //bone.Rotation = rot;
-
+            rot.Y = _yRotation;
+            bone.Rotation = rot;
             RootBone = bone;
         }
     }
@@ -286,19 +288,19 @@ public class BannerBlockEntity : BlockEntity
                     switch (face)
                     {
                         case BlockFace.West:
-                            Rotation = 4;
+                            BannerRotation = 4;
                             break;
 
                         case BlockFace.East:
-                            Rotation = 12;
+                            BannerRotation = 12;
                             break;
 
                         case BlockFace.North:
-                            Rotation = 8;
+                            BannerRotation = 8;
                             break;
 
                         case BlockFace.South:
-                            Rotation = 0;
+                            BannerRotation = 0;
                             break;
                     }
                 }
@@ -316,7 +318,7 @@ public class BannerBlockEntity : BlockEntity
             {
                 if (byte.TryParse(r, out var rot))
                 {
-                    Rotation = (byte)rot; // // ((rot + 3) % 15);
+                    BannerRotation = (byte)rot; // // ((rot + 3) % 15);
                 }
             }
 

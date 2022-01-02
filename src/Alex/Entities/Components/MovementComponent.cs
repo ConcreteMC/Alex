@@ -317,7 +317,7 @@ namespace Alex.Entities.Components
 			}
 
 			Entity.KnownPosition += amount;
-			//Entity.KnownPosition.OnGround = DetectOnGround(blockAccess, Entity.KnownPosition);
+			Entity.KnownPosition.OnGround = DetectOnGround(blockAccess, Entity.KnownPosition);
 			
 			MovedBy(amount);
 			UpdateTarget();
@@ -329,7 +329,7 @@ namespace Alex.Entities.Components
 		/// <inheritdoc />
 		public void OnTick()
 		{
-			Entity.KnownPosition.OnGround = DetectOnGround(Entity.Level, Entity.KnownPosition);
+		//	Entity.KnownPosition.OnGround = DetectOnGround(Entity.Level, Entity.KnownPosition);
 		}
 
 		private void FixSneaking(IBlockAccess blockAccess, ref Vector3 amount)

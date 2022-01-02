@@ -1069,6 +1069,9 @@ namespace Alex
         [JsonProperty("minecraft:particle_type")]
         public RegistryBase Particles { get; set; }
 
+        [JsonProperty("minecraft:block_entity_type")]
+        public RegistryBase BlockEntities { get; set; }
+        
         public class RegistryBase
         {
             [JsonProperty("default")]

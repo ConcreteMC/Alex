@@ -18,7 +18,6 @@ using Alex.Entities.Components;
 using Alex.Graphics.Camera;
 using Alex.Graphics.Models;
 using Alex.Net;
-using Alex.Networking.Java.Packets.Play;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -86,7 +85,7 @@ namespace Alex.Worlds
 			{
 				var pos = blockEntity.Key;
 				RemoveBlockEntity(
-					new BlockCoordinates((chunk.X << 4) + pos.X, pos.Y, (chunk.Z << 4) + pos.Z));
+					new BlockCoordinates(pos.X, pos.Y, pos.Z));
 			}
 		}
 
@@ -95,28 +94,8 @@ namespace Alex.Worlds
 			var chunk = e.Chunk;
 			foreach (var blockEntity in chunk.BlockEntities)
 			{
-				try
-				{
-					// if (TryGetBlockEntity(blockEntity.Key, out var entity) && entity != null)
-					// {
-					// 	entity.SetData(BlockEntityActionType._Init, blockEntity.Value);
-					// }
-					// else
-					// {
-						var block = chunk.GetBlockState(blockEntity.Key.X & 0xf, blockEntity.Key.Y, blockEntity.Key.Z & 0xf);
-						var blockEntityObj = BlockEntityFactory.ReadFrom(blockEntity.Value, World, block.Block, blockEntity.Key);
-
-						if (blockEntityObj != null)
-						{
-							RemoveBlockEntity(blockEntity.Key);
-							AddBlockEntity(blockEntity.Key, blockEntityObj);
-						}
-//					}
-				}
-				catch (Exception ex)
-				{
-					Log.Warn(ex, $"Could not add block entity: {blockEntity.Value}");
-				}
+				var pos = blockEntity.Key;
+				BlockEntityFactory.ReadFrom(blockEntity.Value, World, pos);
 			}
 		}
 
@@ -479,7 +458,12 @@ namespace Alex.Worlds
 		{
 			entity.KnownPosition = coordinates;
 			//entity.Block = World.GetBlockState(coordinates).Block;
-			return BlockEntities.TryAdd(coordinates, entity);
+			if (!BlockEntities.TryAdd(coordinates, entity))
+			{
+				return false;
+			}
+
+			return true;
 		}
 
 		public bool TryGetBlockEntity(BlockCoordinates coordinates, out BlockEntity entity)

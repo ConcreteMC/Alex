@@ -831,23 +831,42 @@ namespace Alex.Net.Bedrock
 				
 				case Common.Utils.EntityAction.StartSwimming:
 					translated = PlayerAction.StartSwimming;
+
+					if (ServerAuthoritiveMovement)
+						return;
+					
 					break;
 				case Common.Utils.EntityAction.StopSwimming:
 					translated = PlayerAction.StopSwimming;
+					if (ServerAuthoritiveMovement)
+						return;
+					
 					break;
 				
 				case Common.Utils.EntityAction.StartSneaking:
 					translated = PlayerAction.StartSneak;
+					if (ServerAuthoritiveMovement)
+						return;
+					
 					break;
 				case Common.Utils.EntityAction.StopSneaking:
 					translated = PlayerAction.StopSneak;
+					if (ServerAuthoritiveMovement)
+						return;
+					
 					break;
 
 				case Common.Utils.EntityAction.StartSprinting:
 					translated = PlayerAction.StartSprint;
+					if (ServerAuthoritiveMovement)
+						return;
+					
 					break;
 				case Common.Utils.EntityAction.StopSprinting:
 					translated = PlayerAction.StopSprint;
+					if (ServerAuthoritiveMovement)
+						return;
+					
 					break;
 				
 				case Common.Utils.EntityAction.Jump:

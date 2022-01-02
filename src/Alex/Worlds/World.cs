@@ -733,15 +733,24 @@ namespace Alex.Worlds
         public void SetBlockEntity(int x, int y, int z, BlockEntity blockEntity)
 		{
 			var coords      = new BlockCoordinates(x, y, z);
-			var chunkCoords = new ChunkCoordinates(x >> 4, z >> 4);
-
-			ChunkColumn chunk;
-
-			if (ChunkManager.TryGetChunk(chunkCoords, out chunk))
+		
+			//if (ChunkManager.TryGetChunk(chunkCoords, out chunk))
+			//{
+			//	EntityManager.RemoveBlockEntity(coords);
+			if (EntityManager.AddBlockEntity(coords, blockEntity))
 			{
-				EntityManager.RemoveBlockEntity(coords);
-				EntityManager.AddBlockEntity(coords, blockEntity);
+				var blockState = GetBlockState(blockEntity.X, blockEntity.Y, blockEntity.Z);
+
+				if (blockState?.Block != null)
+				{
+					blockEntity.SetBlock(blockState.Block);
+				}
 			}
+			else
+			{
+				//Log.Warn($"Could not add blockEntity! Coords={coords} Entity={blockEntity}");
+			}
+			//}
 		}
 		
 		public void SetBlockState(int x, int y, int z, BlockState block, BlockUpdatePriority priority = BlockUpdatePriority.High)

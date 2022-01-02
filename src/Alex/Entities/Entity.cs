@@ -1695,26 +1695,21 @@ namespace Alex.Entities
 			
 			if (IsInWater || IsInLava)
 			{
-				jumpVelocity = 0.04f;
-				
 				if (((FeetInWater && !HeadInWater) || (FeetInLava && !HeadInLava)) && CanSurface)
 				{
-					jumpVelocity += 0.3f;
+					jumpVelocity = 0.4f;
+				}
+				else
+				{
+					jumpVelocity = 0.04f;
 				}
 			}
 			else
 			{
 				jumpVelocity = Effects.ApplyEffect(EffectType.JumpBoost, jumpVelocity);
-				//if (_effects.TryGetValue(EffectType.JumpBoost, out var effect))
-				//{
-				//	jumpVelocity += ((jumpVelocity * 0.5f) * effect.Level);
-				//}
 			}
 
-			//Movement.Move(new Vector3(0f, jumpVelocity, 0f));
-			Velocity += new Vector3(0f, jumpVelocity, 0f);
-			//Velocity += new Vector3(0f, MathF.Sqrt(2f * (float) (Gravity * 20f) * 1.2f), 0f);
-			//	Network?.EntityAction((int) EntityId, EntityAction.Jump);
+			Movement.Push(new Vector3(0f, jumpVelocity, 0f));
 		}
 		
 		public virtual void OnSpawn()
