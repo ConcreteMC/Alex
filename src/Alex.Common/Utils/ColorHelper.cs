@@ -6,6 +6,11 @@ namespace Alex.Common.Utils
 {
     public static class ColorHelper
     {
+        public static Color Unpack(int rgb)
+        {
+            return new Color((rgb >> 16) & 0xff, (rgb >> 8) & 0xff, (rgb >> 0) & 0xff);
+        }
+        
         public static Color HexToColor(string hexString)
         {
             //replace # occurences

@@ -245,20 +245,35 @@ namespace Alex.Graphics.Models
 			    int z = (int)MathF.Floor(position.Z);
 
 			    Biome biome = World.GetBiome(x, y, z);
-			    float biomeTemperature = biome.Temperature;
+			    
+			    float r, g, b;
+			    if (biome.SkyColor != null)
+			    {
+				    var skyColor = biome.SkyColor.Value;
+				    r = (1f / 255) * skyColor.R;
+				    g = (1f / 255) *skyColor.G;
+				    b = (1f / 255) *skyColor.B;
+			    }
+			    else
+			    {
+				    float biomeTemperature = biome.Temperature;
 
-			    biomeTemperature = biomeTemperature / 3.0F;
-			    biomeTemperature = MathHelper.Clamp(biomeTemperature, -1.0F, 1.0F);
-			    int l = MathUtils.HsvToRGB(0.62222224F - biomeTemperature * 0.05F, 0.5F + biomeTemperature * 0.1F, 1.0F);
+				    biomeTemperature /= 3.0F;
+				    biomeTemperature = MathHelper.Clamp(biomeTemperature, -1.0F, 1.0F);
 
-			    float r = (l >> 16 & 255) / 255.0F;
-			    float g = (l >> 8 & 255) / 255.0F;
-			    float b = (l & 255) / 255.0F;
-			    r = r * BrightnessModifier;
-			    g = g * BrightnessModifier;
-			    b = b * BrightnessModifier;
+				    int l = MathUtils.HsvToRGB(
+					    0.62222224F - biomeTemperature * 0.05F, 0.5F + biomeTemperature * 0.1F, 1.0F);
 
-				return new Color(r,g,b);
+				    r = (l >> 16 & 255) / 255.0F;
+				    g = (l >> 8 & 255) / 255.0F;
+				    b = (l & 255) / 255.0F;
+			    }
+			    
+			    r *= BrightnessModifier;
+			    g *= BrightnessModifier; 
+			    b *= BrightnessModifier;
+			    
+			    return new Color(r,g,b);
 		    }
 	    }
 

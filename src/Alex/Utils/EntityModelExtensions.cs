@@ -199,16 +199,13 @@ namespace Alex.Utils
 						if (cube.Pivot.HasValue)
 						{
 							pivot = cube.InflatedPivot(inflation);
+							matrix = Matrix.CreateTranslation(-pivot) * MatrixHelper.CreateRotationDegrees(rotation) * Matrix.CreateTranslation(pivot);
 						}
 						else
 						{
-							pivot = cube.InflatedSize(inflation) / 2f;
+							//pivot = cube.InflatedSize(inflation) / 2f;
+							matrix = MatrixHelper.CreateRotationDegrees(rotation);
 						}
-
-						//pivot += origin;
-
-						matrix = MatrixHelper.CreateRotationDegrees(rotation)
-							;
 					}
 
 					//var matrix = Matrix.Identity;

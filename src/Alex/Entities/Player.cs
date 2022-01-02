@@ -92,6 +92,36 @@ namespace Alex.Entities
 				
 	        }
         }
+        
+        /// <inheritdoc />
+        public override void SetSwimming(bool swimming)
+        {
+	        if (swimming && !IsSwimming)
+	        {
+		        IsSwimming = true;
+		        Network?.EntityAction((int)EntityId, EntityAction.StartSwimming);
+	        }
+	        else if (!swimming && IsSwimming)
+	        {
+		        IsSwimming = false;
+		        Network?.EntityAction((int)EntityId, EntityAction.StopSwimming);
+	        }
+        }
+
+        /// <inheritdoc />
+        public override void SetFlying(bool flying)
+        {
+	        if (flying && !IsFlying)
+	        {
+		        IsFlying = true;
+		        Network?.EntityAction((int)EntityId, EntityAction.StartFlying);
+	        }
+	        else if (!flying && IsFlying)
+	        {
+		        IsFlying = false;
+		        Network?.EntityAction((int)EntityId, EntityAction.StopFlying);
+	        }
+        }
 
         /// <inheritdoc />
         public override void SetSprinting(bool sprinting)
@@ -851,6 +881,7 @@ namespace Alex.Entities
 	    //private vector
 	    public override void OnTick()
 		{
+			Controller?.Tick();
 			if (WaitingOnChunk)
 			{
 				//  NoAi = true;

@@ -96,6 +96,9 @@ namespace Alex.Worlds
 		private PriorityBufferBlock<ChunkCoordinates> _priorityBuffer;
 		private List<ChunkCoordinates> _queued = new List<ChunkCoordinates>();
 
+		public bool CalculateSkyLighting { get; set; } = true;
+		public bool CalculateBlockLighting { get; set; } = true;
+		
 		private readonly ResourceManager _resourceManager;
 		public ChunkManager(IServiceProvider serviceProvider, GraphicsDevice graphics, World world, CancellationToken cancellationToken)
 		{
@@ -169,7 +172,7 @@ namespace Alex.Worlds
 			{
 				CancellationToken = CancellationToken.Token, 
 				EnsureOrdered = false, 
-				MaxDegreeOfParallelism = 1,
+				MaxDegreeOfParallelism = Math.Max(threads / 3, 1),
 				NameFormat = "Chunk Builder: {0}-{1}"
 			};
 			
@@ -182,7 +185,7 @@ namespace Alex.Worlds
 			{
 				CancellationToken = CancellationToken.Token, 
 				EnsureOrdered = false, 
-				MaxDegreeOfParallelism = Math.Max(1, threads - 3),
+				MaxDegreeOfParallelism = threads,
 				NameFormat = "Chunk ActionBlock: {0}-{1}"
 			});
 
@@ -304,8 +307,8 @@ namespace Alex.Worlds
 					SpinWait sw = new SpinWait();
 					while (!CancellationToken.IsCancellationRequested)
 					{
-						Thread.Yield();
-						
+						//Thread.Yield();
+
 						if (World?.Camera == null)
 						{
 							sw.SpinOnce();
@@ -315,8 +318,16 @@ namespace Alex.Worlds
 						if (CancellationToken.IsCancellationRequested)
 							break;
 
-						int lightUpdatesExecuted = BlockLightUpdate.Execute() + SkyLightCalculator.Execute();
-						Interlocked.Add(ref _lightingUpdates, lightUpdatesExecuted);
+						int lightUpdatesExecuted = 0;//BlockLightUpdate.Execute() + SkyLightCalculator.Execute();
+
+						if (CalculateBlockLighting)
+							lightUpdatesExecuted += BlockLightUpdate.Execute();
+
+						if (CalculateSkyLighting)
+							lightUpdatesExecuted += SkyLightCalculator.Execute();
+						
+						if (lightUpdatesExecuted != 0)
+							Interlocked.Add(ref _lightingUpdates, lightUpdatesExecuted);
 						
 						if (lightUpdatesExecuted <= 0)
 							sw.SpinOnce();
@@ -346,10 +357,10 @@ namespace Alex.Worlds
 				{
 					if (chunk.CalculateLighting)
 					{
-						if (SkyLightCalculator != null)
+						if (SkyLightCalculator != null && CalculateSkyLighting)
 							SkyLightCalculator.Recalculate(chunk);
 
-						if (BlockLightUpdate != null)
+						if (BlockLightUpdate != null && CalculateBlockLighting)
 							BlockLightUpdate.RecalculateChunk(chunk);
 
 						chunk.CalculateLighting = false;
@@ -377,22 +388,32 @@ namespace Alex.Worlds
 		public void AddChunk(ChunkColumn chunk, ChunkCoordinates position, bool doUpdates = false)
 		{
 			if (CancellationToken.IsCancellationRequested)
+			{
+				Log.Warn($"Cancellation requested?!");
 				return;
-			
-			chunk.CalculateHeight();
+			}
 
+			chunk.CalculateHeight(doUpdates);
+
+			ChunkColumn toRemove = null;
 			var column = Chunks.AddOrUpdate(
-				position, coordinates => chunk, (coordinates, oldColumn) =>
+				position, chunk, (coordinates, oldColumn) =>
 				{
 					if (!ReferenceEquals(oldColumn, chunk))
 					{
-						OnRemoveChunk(oldColumn, true);
+						Log.Warn($"Replaced: {coordinates}");
+						toRemove = oldColumn;
 					}
 
 					return chunk;
 				});
 
 			OnChunkAdded?.Invoke(this, new ChunkAddedEventArgs(column));
+			
+			if (toRemove != null)
+			{
+				toRemove?.Dispose();
+			}
 		}
 
 		private void OnRemoveChunk(ChunkColumn column, bool dispose)
@@ -533,7 +554,7 @@ namespace Alex.Worlds
 		
 		public int Draw(IRenderArgs args, Effect forceEffect = null, params RenderStage[] stages)
 		{
-			using (GraphicsContext gc = GraphicsContext.CreateContext(
+			using (GraphicsContext.CreateContext(
 				args.GraphicsDevice, Block.FancyGraphics ? BlendState.AlphaBlend : BlendState.Opaque, DepthStencilState, _rasterizerState,
 				_renderSampler))
 			{
@@ -651,21 +672,24 @@ namespace Alex.Worlds
 			foreach (var chunk in Chunks)
 			{
 				var data = chunk.Value.ChunkData;
-				if (data == null) 
+
+				if (data == null)
 					continue;
-				
+
 				bool inView = IsWithinView(chunk.Value, chunk.Key, World.Camera);
+
 				if (inView && index + 1 < max)
 				{
-					data.Rendered = true;
-
 					if (chunk.Value.IsNew && !chunk.Value.Scheduled)
 					{
 						ScheduleChunkUpdate(chunk.Key, ScheduleType.Full);
 					}
-					
-					array[index].SetTarget(data);// = data;
-					index++;
+					else
+					{
+						data.Rendered = true;
+						array[index].SetTarget(data); // = data;
+						index++;
+					}
 				}
 				else
 				{

@@ -35,7 +35,7 @@ public class BiomeStorage : GenericStorage<Biome>
 	/// <inheritdoc />
 	protected override int CalculateDirectPaletteSize()
 	{
-		return (int)Math.Ceiling(Math.Log2(BiomeUtils.Biomes.Length));
+		return (int)Math.Ceiling(Math.Log2(BiomeUtils.BiomeCount));
 	}
 
 	/// <inheritdoc />

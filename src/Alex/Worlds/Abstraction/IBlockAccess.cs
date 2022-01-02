@@ -29,5 +29,7 @@ namespace Alex.Worlds.Abstraction
 	        BlockUpdatePriority priority = BlockUpdatePriority.High | BlockUpdatePriority.Neighbors);
 
         Biome GetBiome(BlockCoordinates coordinates);
+
+        BlockState GetBlockState(int x, int y, int z) => GetBlockState(new BlockCoordinates(x, y, z));
     }
 }

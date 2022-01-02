@@ -558,17 +558,24 @@ namespace Alex.Graphics.Models.Blocks
 									var bz = (int) position.Z;
 
 									faceColor = CombineColors(
-										GetGrassBiomeColor(world, bx, y, bz), GetGrassBiomeColor(world, bx - 1, y, bz),
-										GetGrassBiomeColor(world, bx, y, bz - 1),
-										GetGrassBiomeColor(world, bx + 1, y, bz),
-										GetGrassBiomeColor(world, bx, y, bz + 1),
-										GetGrassBiomeColor(world, bx + 1, y, bz - 1));
+										GetBiomeGrassColor(world, bx, y, bz), 
+										GetBiomeGrassColor(world, bx - 1, y, bz),
+										GetBiomeGrassColor(world, bx, y, bz - 1),
+										GetBiomeGrassColor(world, bx + 1, y, bz),
+										GetBiomeGrassColor(world, bx, y, bz + 1),
+										GetBiomeGrassColor(world, bx + 1, y, bz - 1));
 								}
 								else
 								{
-
-									faceColor = Resources.GetGrassColor(
-										biome.Temperature, biome.Downfall, (int) position.Y);
+									if (biome.GrassColor != null)
+									{
+										faceColor = biome.GrassColor.Value;
+									}
+									else
+									{
+										faceColor = Resources.GetGrassColor(
+											biome.Temperature, biome.Downfall, (int)position.Y);
+									}
 								}
 
 								break;
@@ -576,8 +583,15 @@ namespace Alex.Graphics.Models.Blocks
 							case TintType.Foliage:
 								if (face.Value.TintIndex.HasValue && face.Value.TintIndex == 0)
 								{
-									faceColor = Resources.GetFoliageColor(
-										biome.Temperature, biome.Downfall, (int) position.Y);
+									if (biome.FoliageColor != null)
+									{
+										faceColor = biome.FoliageColor.Value;
+									}
+									else
+									{
+										faceColor = Resources.GetFoliageColor(
+											biome.Temperature, biome.Downfall, (int)position.Y);
+									}
 								}
 
 								break;
@@ -657,7 +671,14 @@ namespace Alex.Graphics.Models.Blocks
 			}
 		}
 
-		private Color GetGrassBiomeColor(IBlockAccess access, int x, int y, int z)
+		private Color GetBiomeFoliageColor(IBlockAccess access, int x, int y, int z)
+		{
+			var biome = access.GetBiome(new BlockCoordinates(x, y, z));
+			return Resources.GetFoliageColor(
+				biome.Temperature, biome.Downfall, y);
+		}
+
+		private Color GetBiomeGrassColor(IBlockAccess access, int x, int y, int z)
 		{
 			var biome = access.GetBiome(new BlockCoordinates(x, y, z));
 			return Resources.GetGrassColor(

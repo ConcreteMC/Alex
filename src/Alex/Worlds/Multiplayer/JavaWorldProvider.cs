@@ -55,6 +55,7 @@ using Alex.Worlds.Lighting;
 using Alex.Worlds.Multiplayer.Java;
 using fNbt;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MiNET;
 using MiNET.Entities;
@@ -129,54 +130,65 @@ namespace Alex.Worlds.Multiplayer
 		{
 			try
 			{
+				JavaChunkColumn result = new JavaChunkColumn(obj.ChunkX, obj.ChunkZ, WorldSettings);
+
 				using (var memoryStream = new MemoryStream(obj.Buffer.ToArray()))
 				using (var stream = new MinecraftStream(memoryStream))
 				{
-					JavaChunkColumn result = new JavaChunkColumn(obj.ChunkX, obj.ChunkZ, WorldSettings);
 					result.Read(stream, obj.HeightMaps, World.Dimension == Dimension.Overworld);
+				}
 
-					foreach (var tile in obj.TileEntities)
+				foreach (var tile in obj.TileEntities)
+				{
+					var tag = tile.Data;
+
+					if (tag == null || !(tag.Contains("id")))
+						continue;
+
+					try
 					{
-						var tag = tile.Data;
 
-						if (tag == null || !(tag.Contains("id")))
-							continue;
-
-						try
-						{
-							
-							int x = tile.X;
-							int y = tile.Y; 
-							int z = tile.Z;
-							result.AddBlockEntity(new BlockCoordinates(x, y, z), tag);
-						}
-						catch (Exception ex)
-						{
-							Log.Warn(ex, "Could not add block entity!");
-						}
+						int x = tile.X;
+						int y = tile.Y;
+						int z = tile.Z;
+						result.AddBlockEntity(new BlockCoordinates(x, y, z), tag);
 					}
+					catch (Exception ex)
+					{
+						Log.Warn(ex, "Could not add block entity!");
+					}
+				}
 
-					var lightingData = obj.LightingData;
-					int skyBit = 0;
-					int blockBit = 0;
-					for (int y = 0; y < result.Sections.Length; y++)
+				var lightingData = obj.LightingData;
+				int skyBit = 0;
+				int blockBit = 0;
+
+				for (int y = 0; y < result.Sections.Length; y++)
+				{
+					if (result.Sections[y] == null)
+						continue;
+					
+					if (lightingData.SkyLightMask.Count >= y + 1)
 					{
 						if (lightingData.SkyLightMask.IsSet(y + 1))
 						{
 							var skyLightData = lightingData.SkyLight[skyBit++];
 							result.Sections[y].SkyLight = new LightArray(skyLightData);
 						}
-						
+					}
+
+					if (lightingData.BlockLightMask.Count >= y + 1)
+					{
 						if (lightingData.BlockLightMask.IsSet(y + 1))
 						{
 							var blockLightData = lightingData.BlockLight[blockBit++];
 							result.Sections[y].BlockLight = new LightArray(blockLightData);
 						}
 					}
-
-					//result.CalculateLighting = false;
-					World.ChunkManager.AddChunk(result, new ChunkCoordinates(result.X, result.Z), true);
 				}
+
+				//result.CalculateLighting = false;
+				World.ChunkManager.AddChunk(result, new ChunkCoordinates(result.X, result.Z), false);
 			}
 			finally
 			{
@@ -261,7 +273,7 @@ namespace Alex.Worlds.Multiplayer
 			//if (!_initiated) return;
 			
 			var player = World.Player;
-			if (player != null && player.IsSpawned && Client.ConnectionState == ConnectionState.Play)
+			if (player != null && player.IsSpawned && Client.ConnectionState == ConnectionState.Play && ReadyToSpawn && HasSpawnPosition)
 			{
 				Client.Latency = player.Latency;
 				//player.IsSpawned = Spawned;
@@ -401,6 +413,8 @@ namespace Alex.Worlds.Multiplayer
 		{
 			CommandProvider = new JavaCommandProvider(this, Client, World);
 			NetworkProvider.CommandProvider = CommandProvider;
+			World.ChunkManager.CalculateSkyLighting = false;
+			World.ChunkManager.CalculateBlockLighting = false;
 		}
 		
 		private bool                            _hasDoneInitialChunks = false;
@@ -451,10 +465,11 @@ namespace Alex.Worlds.Multiplayer
 				() =>
 				{
 					loaded = World.ChunkManager.ChunkCount;
+					
 					int    t             = World.ChunkManager.RenderDistance;
 					double radiusSquared = Math.Pow(t, 2);
 					var    target        = radiusSquared;
-
+					
 					var playerChunkCoords = new ChunkCoordinates(World.Player.KnownPosition);
 
 					/*if (_chunksReceived >= target && !_generatingHelper.IsAddingCompleted)
@@ -464,30 +479,20 @@ namespace Alex.Worlds.Multiplayer
 
 					if (_chunksReceived < target)
 					{
-						progressReport(LoadingState.LoadingChunks, (int) Math.Floor((100 / target) * _chunksReceived));
+						progressReport(LoadingState.LoadingChunks, (int) Math.Floor((100 / target) * _chunksReceived), $"{_chunksReceived} of {target}");
 					}
 					else if (loaded < target || !allowSpawn)
 					{
-						/*if (_generatingHelper.TryTake(out ChunkColumn chunkColumn, 50))
+						if (!allowSpawn && World.ChunkManager.TryGetChunk(playerChunkCoords, out _))
 						{
-							World.ChunkManager.AddChunk(
-								chunkColumn, new ChunkCoordinates(chunkColumn.X, chunkColumn.Z), true);
-
-							loaded++;
-						}*/
-
-						if (!allowSpawn)
-						{
-							if (World.ChunkManager.TryGetChunk(playerChunkCoords, out _))
-							{
-								allowSpawn = true;
-							}
+							allowSpawn = true;
 						}
 
 						if (!allowSpawn && !World.Player.WaitingOnChunk)
 						{
 							allowSpawn = true;
 						}
+						
 
 						if (loaded >= target)
 						{
@@ -498,11 +503,11 @@ namespace Alex.Worlds.Multiplayer
 								p += 25;
 							}
 
-							progressReport(LoadingState.Spawning, p);
+							progressReport(LoadingState.Spawning, p, (ReadyToSpawn && !allowSpawn) ? "Waiting on spawn chunk" : "");
 						}
 						else
 						{
-							progressReport(LoadingState.GeneratingVertices, (int) Math.Floor((100 / target) * loaded));
+							progressReport(LoadingState.GeneratingVertices, (int) Math.Floor((100 / target) * loaded), $"{loaded} of {target}");
 						}
 					}
 					else
@@ -511,20 +516,18 @@ namespace Alex.Worlds.Multiplayer
 						progressReport(LoadingState.Spawning, 99);
 					}
 
-					return ((loaded >= target / 2f) && allowSpawn && _hasDoneInitialChunks && ReadyToSpawn)
+					return (ReadyToSpawn && HasSpawnPosition && allowSpawn)
 					       || _disconnected; // Spawned || _disconnected;
 				});
 
 			//World.Player.OnSpawn();
 			if (ReadyToSpawn && HasSpawnPosition)
 			{
-				
-				SendPlayerPositionAndLook(World.Player.KnownPosition, SendPositionReason.Server);
+				//SendPlayerPositionAndLook(World.Player.KnownPosition, SendPositionReason.Server);
 				
 				ClientStatusPacket clientStatus = ClientStatusPacket.CreateObject();
 				clientStatus.ActionID = ClientStatusPacket.Action.PerformRespawnOrConfirmLogin;
 				SendPacket(clientStatus);
-
 			}
 
 			World.Player.Inventory.CursorChanged += InventoryOnCursorChanged;
@@ -789,6 +792,10 @@ namespace Alex.Worlds.Multiplayer
 
 					break;
 
+				case SetTitleSubTextPacket setTitleSubTextPacket:
+					HandleSetTitleSubTextPacket(setTitleSubTextPacket);
+					break;
+				
 				case SetTitleTextPacket titleTextPacket:
 					HandleSetTitlePacket(titleTextPacket);
 					break;
@@ -925,6 +932,10 @@ namespace Alex.Worlds.Multiplayer
 					HandlePingPacket(pingPacket); 
 					break;
 				
+				case ServerDifficultyPacket serverDifficultyPacket:
+					HandleDifficulty(serverDifficultyPacket);
+					break;
+				
 				default:
 				{
 					if (UnhandledPackets.TryAdd(packet.PacketId, packet.GetType()))
@@ -939,6 +950,11 @@ namespace Alex.Worlds.Multiplayer
 			return Task.CompletedTask;
 		}
 
+		private void HandleDifficulty(ServerDifficultyPacket packet)
+		{
+			World.Difficulty = (Difficulty)packet.Difficulty;
+		}
+		
 		private void HandlePingPacket(PlayPingPacket packet)
 		{
 			PlayPongPacket pong = PlayPongPacket.CreateObject();
@@ -1548,8 +1564,8 @@ namespace Alex.Worlds.Multiplayer
 
 		private void HandleUpdateViewDistancePacket(UpdateViewDistancePacket packet)
 		{
-		//	World.ChunkManager.RenderDistance = Math.Min(packet.ViewDistance / 16, Alex.Options.AlexOptions.VideoOptions.RenderDistance);
-			//World.ChunkManager.RenderDistance = packet.ViewDistance / 16;
+		//	World.ChunkManager.RenderDistance = Math.Min(packet.ViewDistance, Alex.Options.AlexOptions.VideoOptions.RenderDistance);
+		//	World.ChunkManager.RenderDistance = packet.ViewDistance;
 		}
 		
 		private void HandleUpdateViewPositionPacket(UpdateViewPositionPacket packet)
@@ -1559,8 +1575,8 @@ namespace Alex.Worlds.Multiplayer
 
 		private void HandleSpawnPositionPacket(SpawnPositionPacket packet)
 		{
-			Log.Info($"Received SpawnPosition");
-			
+			Log.Info($"Received SpawnPosition...");
+
 			World.SpawnPoint = packet.SpawnPosition;
 			HasSpawnPosition = true;
 		}
@@ -1757,6 +1773,10 @@ namespace Alex.Worlds.Multiplayer
 
 		private Dictionary<int, Type> UnhandledPackets = new Dictionary<int, Type>();
 
+		private void HandleSetTitleSubTextPacket(SetTitleSubTextPacket packet)
+		{
+			TitleComponent.SetSubtitle(packet.Text);
+		}
 		private void HandleSetTitlePacket(SetTitleTextPacket packet)
 		{
 			TitleComponent.SetTitle(packet.Text);
@@ -1855,6 +1875,7 @@ namespace Alex.Worlds.Multiplayer
 		
 		private void HandleRespawnPacket(RespawnPacket packet)
 		{
+			Log.Info("Respawn!");
 			HandleDimension(packet.Dimension);
 			
 			World.Player.UpdateGamemode(packet.Gamemode);
@@ -2481,7 +2502,12 @@ namespace Alex.Worlds.Multiplayer
 		{
 			//_dimension = packet.Dimension;
 			World.Difficulty = Difficulty.Easy;
-			World.ChunkManager.RenderDistance = Math.Min(World.ChunkManager.RenderDistance, packet.ViewDistance);
+
+			if (packet.ViewDistance != World.ChunkManager.RenderDistance)
+			{
+			//	Log.Warn()
+			}
+			//World.ChunkManager.RenderDistance = Math.Min(World.ChunkManager.RenderDistance, packet.ViewDistance);
 			
 			SendSettings();
 			
@@ -2490,12 +2516,76 @@ namespace Alex.Worlds.Multiplayer
 			World.Player.EntityId = packet.EntityId;
 			World.Player.UpdateGamemode((GameMode) packet.Gamemode);
 			
+			HandleDimensionCodec(packet.DimensionCodec);
 			HandleDimension(packet.Dimension);
+		}
+
+		private void HandleDimensionCodec(NbtCompound compound)
+		{
+			int registered = 0;
+			if (compound.TryGet("minecraft:worldgen/biome", out NbtCompound biomeCompound)
+			    && biomeCompound.TryGet("value", out NbtList biomeList))
+			{
+				foreach (var tag in biomeList)
+				{
+					if (tag is NbtCompound registryEntry && registryEntry.TryGet("element", out NbtCompound biomeElement))
+					{
+						var biomeName = registryEntry["name"].StringValue;
+						var biomeId = (uint)registryEntry["id"].IntValue;
+						var biome = GetBiome(biomeName, biomeId, biomeElement);
+
+						if (biome != null)
+						{
+							BiomeUtils.Overrides.AddOrUpdate(biome.Id, biome, (i, biome1) => biome);
+							registered++;
+						}
+					}
+				}
+			}
+
+			Log.Info($"Registered {registered} biomes");
+		}
+
+		private Biome GetBiome(string name, uint id, NbtCompound compound)
+		{
+			if (!compound.TryGet("effects", out NbtCompound effects))
+				return null;
+			
+			Biome biome = new Biome();
+			biome.Name = name;
+			biome.Id = id;
+
+			if (compound.TryGet("precipitation", out NbtString precipitationTag))
+			{
+				
+			}
+
+			if (compound.TryGet("temperature", out NbtFloat temperatureTag))
+				biome.Temperature = temperatureTag.Value;
+			
+			if (compound.TryGet("downfall", out NbtFloat downfallTag))
+				biome.Downfall = downfallTag.Value;
+			
+			if (effects.TryGet("sky_color", out NbtInt colorTag))
+				biome.SkyColor = ColorHelper.Unpack(colorTag.Value);
+				
+			if (effects.TryGet("water_fog_color", out colorTag))
+				biome.WaterFogColor = ColorHelper.Unpack(colorTag.Value);//new Color(colorTag.Value);
+				
+			if (effects.TryGet("fog_color", out colorTag))
+				biome.FogColor = ColorHelper.Unpack(colorTag.Value);//new Color(colorTag.Value);
+				
+			if (effects.TryGet("grass_color", out colorTag))
+				biome.GrassColor = ColorHelper.Unpack(colorTag.Value);//new Color(colorTag.Value);
+				
+			if (effects.TryGet("foliage_color", out colorTag))
+				biome.FoliageColor = ColorHelper.Unpack(colorTag.Value);//new Color(colorTag.Value);
+
+			return biome;
 		}
 
 		private void HandleUpdateLightPacket(UpdateLightPacket packet)
 		{
-			return;
 			var cc = new ChunkCoordinates(packet.ChunkX, packet.ChunkZ);
 
 			if (World.ChunkManager.TryGetChunk(cc, out var chunk))
@@ -2543,27 +2633,26 @@ namespace Alex.Worlds.Multiplayer
 			        if (world?.EntityManager == null)
 				        return;
 			        
-			        if (world.EntityManager.TryGetBlockEntity(location, out var entity))
+			        try
 			        {
-				        entity.SetData(action, compound);
-			        }
-			        else
-			        {
-				        try
+				        if (world.EntityManager.TryGetBlockEntity(location, out var entity) && entity != null)
 				        {
-					        var block       = world.GetBlockState(location);
+					        entity.SetData(action, compound);
+				        }
+				        else
+				        {
+					        var block = world.GetBlockState(location);
 					        var blockEntity = BlockEntityFactory.ReadFrom(compound, World, block.Block, location);
 
 					        if (blockEntity != null)
 					        {
-						        world.SetBlockEntity(
-							        location.X, location.Y, location.Z, blockEntity);
+						        world.SetBlockEntity(location.X, location.Y, location.Z, blockEntity);
 					        }
 				        }
-				        catch (Exception ex)
-				        {
-					        Log.Warn(ex, $"Could not add block entity: {compound}");
-				        }
+			        }
+			        catch (Exception ex)
+			        {
+				        Log.Warn(ex, $"Could not add block entity: {compound}");
 			        }
 		        });
         }
@@ -2628,24 +2717,24 @@ namespace Alex.Worlds.Multiplayer
 					Pitch = pitch
 				});
 
-			if (HasSpawnPosition )
+			if (HasSpawnPosition)
 			{
 				TeleportConfirm confirmation = TeleportConfirm.CreateObject();
 				confirmation.TeleportId = packet.TeleportId;
 				SendPacket(confirmation);
-				
-				
+
 				SendPlayerPositionAndLook(World.Player.KnownPosition, SendPositionReason.Other);
 			}
-
-			//UpdatePlayerPosition(
-			//	new PlayerLocation(packet.X, packet.Y, packet.Z, packet.Yaw, packet.Yaw, pitch: packet.Pitch));
-
+			
+			
 			if (!ReadyToSpawn)
 			{
 				Log.Info($"Ready to spawn!");
 				ReadyToSpawn = true;
 			}
+
+			//UpdatePlayerPosition(
+			//	new PlayerLocation(packet.X, packet.Y, packet.Z, packet.Yaw, packet.Yaw, pitch: packet.Pitch));
 		}
 
         Task IPacketHandler.HandleHandshake(Packet packet)

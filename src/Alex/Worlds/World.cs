@@ -208,6 +208,7 @@ namespace Alex.Worlds
 			Map.Add(Player.MapIcon);
 
 			BackgroundWorker.Start();
+			BiomeUtils.Overrides.Clear();
 		}
 
 		private const int MORTON3D_BIT_SIZE = 21;

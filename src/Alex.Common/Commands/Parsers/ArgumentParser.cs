@@ -53,7 +53,7 @@ namespace Alex.Common.Commands.Parsers
 				sb.Append('>');
 			}
 
-			return base.ToString();
+			return sb.ToString();
 		}
 
 		public bool TryParse(SeekableTextReader input, out string s)

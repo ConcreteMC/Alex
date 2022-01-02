@@ -78,10 +78,6 @@ namespace Alex.Graphics.Models.Entity.Animations
 					animTimeUpdate = _parent.Execute(anim.AnimationTimeUpdate).AsDouble();
 				}
 
-				if (entity is Bat)
-				{
-					var a = "b";
-				}
 				_animationTime = entity.AnimationTime = animTimeUpdate;
 				
 				foreach (var bone in _boneComps)
@@ -94,6 +90,15 @@ namespace Alex.Graphics.Models.Entity.Animations
 			finally
 			{
 				_elapsedTimer.Restart();
+			}
+			
+			if (_animationLength > 0 && _animationTime >= _animationLength)
+			{
+				Stop();
+				if (_loop)
+				{
+					Play();
+				}
 			}
 		}
 
@@ -109,29 +114,10 @@ namespace Alex.Graphics.Models.Entity.Animations
 			}
 		}
 
-		public void AfterUpdate()
-		{
-			//Check if animation ended.
-			if (_animationLength > 0 && _animationTime >= _animationLength)
-			{
-				Stop();
-				if (_loop)
-				{
-					Play();
-				}
-			}
-
-		}
-
 		public void Play()
 		{
 			if (Playing)
 				return;
-			
-			if (_parent?.Entity is Player)
-			{
-				//Log.Info($"Started animation: {_animName}");
-			}
 
 			foreach (var bone in _boneComps)
 			{
@@ -156,11 +142,6 @@ namespace Alex.Graphics.Models.Entity.Animations
 		{
 			if (Playing)
 			{
-				if (_parent?.Entity is Player)
-				{
-				//	Log.Info($"Stopped animation: {_animName}");
-				}
-				
 				foreach (var bone in _boneComps)
 				{
 					bone.Value.Stop();
@@ -187,11 +168,14 @@ namespace Alex.Graphics.Models.Entity.Animations
 			Bone = null;
 		}
 
+		private bool _started = false;
 		private Vector3 _startRotation = Vector3.Zero;
 		private Vector3 _startPosition = Vector3.Zero;
 		private Vector3 _startScale = Vector3.Zero;
 		public void Start()
 		{
+			if (_started) return;
+			
 			var bone = Bone;
 
 			if (bone == null)
@@ -200,18 +184,28 @@ namespace Alex.Graphics.Models.Entity.Animations
 			_startRotation = bone.Rotation;
 			_startPosition = bone.Position;
 			_startScale = bone.Scale;
+
+			_started = true;
 		}
 
 		public void Stop()
 		{
+			if (!_started)
+				return;
+			
 			var bone = Bone;
 
 			if (bone == null)
 				return;
 
-			bone.Rotation = _startRotation;
-			bone.Position = _startPosition;
-			bone.Scale = _startScale;
+			bone.RotateOverTime(_startRotation, Alex.DeltaTime, true);
+			bone.TranslateOverTime(_startPosition, Alex.DeltaTime, true);
+			bone.ScaleOverTime(_startScale, Alex.DeltaTime, true);
+			//bone.Rotation = _startRotation;
+			//bone.Position = _startPosition;
+			//bone.Scale = _startScale;
+			
+			_started = false;
 		}
 		
 		public void Tick(MoLangRuntime runtime, double elapsedTime, double animationTime, bool overrideOthers)

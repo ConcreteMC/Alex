@@ -1331,13 +1331,12 @@ namespace Alex.Entities
 				return;
 			//if (((!RenderEntity || IsInvisible) && !ShowItemInHand) || renderer == null || _skipRendering) return;
 
-			if (renderer.GetBone("head", out var head))
+			var head = _headBone;
+			if (head != null)
 			{
 				var headYaw = (KnownPosition.HeadYaw - KnownPosition.Yaw);
-
 				var pitch = KnownPosition.Pitch;
 
-				
 				head.Rotation = new Vector3(-pitch, headYaw, 0f);
 				//_head.Rotation = Quaternion.CreateFromYawPitchRoll(MathUtils.ToRadians(headYaw), MathUtils.ToRadians(pitch), 0f);
 			}
@@ -1542,13 +1541,27 @@ namespace Alex.Entities
 			_previousPosition = known;
 		}
 
+		private ModelBone _headBone = null;
 		protected virtual void UpdateModelParts()
 		{
 			var modelRenderer = ModelRenderer;
+
 			if (modelRenderer == null)
+			{
+				_headBone = null;
 				return;
+			}
 
 			ScaleChanged();
+
+			if (modelRenderer.GetBone("head", out var headBone))
+			{
+				_headBone = headBone;
+			}
+			else
+			{
+				_headBone = null;
+			}
 		}
 
 		protected virtual void OnModelUpdated()
@@ -1661,7 +1674,7 @@ namespace Alex.Entities
 		/// <inheritdoc />
 		public override string ToString()
 		{
-			return $"{{Type: \"{GetType().Name}\", Def: \"{AnimationController?.EntityDefinition?.Identifier}\"}}";
+			return $"{{Type: \"{GetType().Name}\", Def: \"{AnimationController?.EntityDefinition?.Identifier}\", EntityId: {EntityId}}}";
 		}
 		
 		private IItemRenderer                            _itemRenderer    = null;
