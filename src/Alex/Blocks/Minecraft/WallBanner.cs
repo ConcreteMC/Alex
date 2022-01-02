@@ -9,18 +9,17 @@ namespace Alex.Blocks.Minecraft;
 
 public class WallBanner : Block
 {
+    public BlockColor Color { get; set; }
+
     public WallBanner(BlockColor color)
     {
+        Color = color;
         Solid = false;
         Transparent = true;
         Renderable = false;
         CanInteract = true;
-			
+
         HasHitbox = true;
-
-        BlockMaterial = Material.Wool.Clone().WithMapColor(color.ToMapColor());
-
-       // RequiresUpdate = true;
     }
     
     /*/// <inheritdoc />
@@ -49,17 +48,18 @@ public class WallBanner : Block
 
 public class StandingBanner : Block
 {
+    public BlockColor Color { get; set; }
+
     public StandingBanner(BlockColor color)
     {
+        Color = color;
+
         Solid = false;
         Transparent = true;
         Renderable = false;
         CanInteract = true;
-			
+
         HasHitbox = true;
-        
-        BlockMaterial = Material.Wool.Clone().WithMapColor(color.ToMapColor());
-       // RequiresUpdate = true;
     }
     
     /*/// <inheritdoc />

@@ -6,6 +6,7 @@ namespace Alex.Networking.Java.Packets.Play
 {
     public enum BlockEntityActionType : byte
     {
+        _Init = 0,
         SetMobSpawnerData = 1,
         SetCommandBlockText = 2,
         SetBeaconData = 3,

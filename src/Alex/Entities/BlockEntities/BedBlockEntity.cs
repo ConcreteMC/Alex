@@ -122,7 +122,6 @@ namespace Alex.Entities.BlockEntities
 						case BlockColor.LightGray:
 							texture = "default";
 							break;
-						case BlockColor.Silver:
 						case BlockColor.Cyan:
 						case BlockColor.Purple:
 						case BlockColor.Blue:
@@ -159,7 +158,6 @@ namespace Alex.Entities.BlockEntities
 		Pink,
 		Gray,
 		LightGray,
-		Silver,
 		Cyan,
 		Purple,
 		Blue,
