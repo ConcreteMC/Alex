@@ -29,6 +29,7 @@ using Point = SixLabors.ImageSharp.Point;
 using Vector3 = Microsoft.Xna.Framework.Vector3;
 using Microsoft.Xna.Framework;
 using NLog;
+using Rectangle = SixLabors.ImageSharp.Rectangle;
 
 namespace Alex.Entities.BlockEntities;
 
@@ -63,9 +64,9 @@ public class BannerBlockEntity : BlockEntity
         }
     }
 
-    public BannerBlockEntity(World level, BlockCoordinates coordinates, BlockColor color) : base(level)
+    public BannerBlockEntity(World level, BlockCoordinates coordinates) : base(level)
     {
-        _color = color;
+//        _color = color;
         Type = "minecraft:standing_banner";
 
         Width = 1f;

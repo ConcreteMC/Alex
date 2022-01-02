@@ -143,16 +143,7 @@ namespace Alex.Entities.BlockEntities
                 case "green_banner":  	    case "green_wall_banner":
                 case "red_banner":  	    case "red_wall_banner":
                 case "black_banner":  	    case "black_wall_banner":
-                    if (block is StandingBanner standingBanner)
-                    {
-
-                        blockEntity = new BannerBlockEntity(world, blockCoordinates, standingBanner.Color);
-                    }
-                    else if (block is WallBanner wallBanner)
-                    {
-
-                        blockEntity = new BannerBlockEntity(world, blockCoordinates, wallBanner.Color);
-                    }
+                        blockEntity = new BannerBlockEntity(world, blockCoordinates);
                     break;
 
                 case "enchanttable":
