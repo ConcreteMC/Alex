@@ -58,7 +58,7 @@
 
     <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('Windows'))">
         <RuntimeIdentifier Condition="'$(RuntimeIdentifier)'==''">win-x64</RuntimeIdentifier>
-        <OutputType>WinExe</OutputType>
+<!--        <OutputType>WinExe</OutputType>-->
     </PropertyGroup>
 
 
@@ -71,6 +71,7 @@
         <Compile Remove="Graphics\Models\Bone.cs" />
         <None Remove="Items\Resources\r16_to_current_item_map.json" />
         <EmbeddedResource Include="Items\Resources\r16_to_current_item_map.json" />
+        <Compile Remove="Graphics\Models\Entity\BlockEntities\EnchantTableEntityModel.cs" />
     </ItemGroup>
 
     <ItemGroup>

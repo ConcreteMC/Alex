@@ -318,15 +318,22 @@ namespace Alex.Graphics.Models.Entity.Animations
 				
 				if (renderer != _modelRenderer)
 				{
-					foreach (var anim in animations)
+					if (animations != null)
 					{
-						anim.Value.UpdateBindings(renderer);
+						foreach (var anim in animations)
+						{
+							anim.Value.UpdateBindings(renderer);
+						}
 					}
 
-					foreach (var controller in renderControllers)
+					if (renderControllers != null)
 					{
-						controller.Value.UpdateBindings(renderer);
+						foreach (var controller in renderControllers)
+						{
+							controller.Value.UpdateBindings(renderer);
+						}
 					}
+
 					_modelRenderer = renderer;
 				}
 				

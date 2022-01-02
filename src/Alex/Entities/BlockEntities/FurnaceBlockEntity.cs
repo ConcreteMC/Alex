@@ -1,5 +1,6 @@
 using Alex.Blocks.Minecraft;
 using Alex.Items;
+using Alex.Networking.Java.Packets.Play;
 using Alex.Utils.Inventories;
 using Alex.Worlds;
 using fNbt;
@@ -63,7 +64,7 @@ namespace Alex.Entities.BlockEntities
 		}
 
 		/// <inheritdoc />
-		public override void SetData(byte action, NbtCompound compound)
+		public override void SetData(BlockEntityActionType action, NbtCompound compound)
 		{
 			base.SetData(action, compound);
 		}

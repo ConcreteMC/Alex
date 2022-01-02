@@ -1,0 +1,16 @@
+{
+    "format_version": "1.17.30",
+    "animation_controllers": {
+        "controller.animation.beacon_beam.default": {
+            "initial_state": "default",
+            "states": {
+                "default": {
+                    "animations": [
+                        "default"
+                    ],
+                    "transitions": []
+                }
+            }
+        }
+    }
+}

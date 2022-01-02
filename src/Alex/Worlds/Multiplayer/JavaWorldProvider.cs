@@ -2641,8 +2641,8 @@ namespace Alex.Worlds.Multiplayer
 				        }
 				        else
 				        {
-					        var block       = world.GetBlockState(location);
-					        var blockEntity = BlockEntityFactory.ReadFrom(compound, World, block.Block);
+					        var block = world.GetBlockState(location);
+					        var blockEntity = BlockEntityFactory.ReadFrom(compound, World, block.Block, location);
 
 					        if (blockEntity != null)
 					        {
@@ -2652,7 +2652,7 @@ namespace Alex.Worlds.Multiplayer
 			        }
 			        catch (Exception ex)
 			        {
-				        Log.Warn(ex, $"Could not add block entity: {compound.ToString()}");
+				        Log.Warn(ex, $"Could not add block entity: {compound}");
 			        }
 		        });
         }

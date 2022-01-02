@@ -2,6 +2,7 @@ using Alex.Blocks.Minecraft;
 using Alex.Common.Graphics.GpuResources;
 using Alex.Common.Resources;
 using Alex.Common.Utils;
+using Alex.Common.Utils.Vectors;
 using Alex.ResourcePackLib;
 using Alex.Worlds;
 using fNbt;
@@ -11,149 +12,185 @@ using NLog;
 
 namespace Alex.Entities.BlockEntities
 {
-	public class BlockEntityFactory
-	{
-		private static readonly Logger          Log = LogManager.GetCurrentClassLogger(typeof(BlockEntityFactory));
-		internal static         Texture2D DoubleChestTexture      { get; set; }
-		internal static         Texture2D ChestTexture      { get; set; }
-		internal static         Texture2D EnderChestTexture { get; set; }
-		internal static         Texture2D SkullTexture      { get; set; }
-		internal static         Texture2D SignTexture       { get; set; }
-		
-		public static void LoadResources(GraphicsDevice graphicsDevice, ResourceManager resources)
-		{
-			if (resources.TryGetBitmap("minecraft:entity/chest/normal", out var bmp))
-			{
-				ChestTexture = TextureUtils.BitmapToTexture2D($"BlockEntityFactory/Chest", graphicsDevice, bmp);
-				//ChestTexture?.Use();
-			}
-			else
-			{
-				Log.Warn($"Could not load chest texture.");
-			}
-			
-			if (resources.TryGetBedrockBitmap("minecraft:textures/entity/chest/double_normal", out var doubleBmp))
-			{
-				DoubleChestTexture = TextureUtils.BitmapToTexture2D("BlockEntityFactory/Chest/Double", graphicsDevice, doubleBmp);
-				//DoubleChestTexture?.Use();
-			}
-			else
-			{
-				Log.Warn($"Could not load double chest texture.");
-			}
-			
-			if (resources.TryGetBitmap("minecraft:entity/chest/ender", out var enderBmp))
-			{
-				EnderChestTexture = TextureUtils.BitmapToTexture2D("BlockEntityFactory/Chest/Ender", graphicsDevice, enderBmp);
-				//EnderChestTexture?.Use();
-			}
-			else
-			{
-				Log.Warn($"Could not load enderchest texture");
-			}
-			
-			if (resources.TryGetBitmap("minecraft:entity/steve", out var steveBmp))
-			{
-				SkullTexture = TextureUtils.BitmapToTexture2D("BlockEntityFactory/Steve", graphicsDevice, steveBmp);
-				//SkullTexture?.Use(this);
-			}
-			else
-			{
-				Log.Warn($"Could not load skull texture");
-			}
-			
-						
-			if (resources.TryGetBitmap("minecraft:entity/signs/oak", out var signBmp))
-			{
-				SignTexture = TextureUtils.BitmapToTexture2D("BlockEntityFactory/Signs/Oak", graphicsDevice, signBmp);
-				//SignTexture?.Use(this);
-			}
-			else
-			{
-				Log.Warn($"Could not load sign texture");
-			}
-		}
-		
-		public static BlockEntity ReadFrom(NbtCompound compound, World world, Block block)
-		{
-			if (compound.TryGet("id", out var tag) || compound.TryGet("ID", out tag))
-			{
-				var id = tag.StringValue;
+    public class BlockEntityFactory
+    {
+        private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(BlockEntityFactory));
+        internal static Texture2D DoubleChestTexture { get; set; }
+        internal static Texture2D ChestTexture { get; set; }
+        internal static Texture2D EnchantingTableBookTexture { get; set; }
+        internal static Texture2D EnderChestTexture { get; set; }
+        internal static Texture2D SkullTexture { get; set; }
+        internal static Texture2D SignTexture { get; set; }
 
-				BlockEntity blockEntity = null;
+        public static void LoadResources(GraphicsDevice graphicsDevice, ResourceManager resources)
+        {
+            if (resources.TryGetBitmap("minecraft:entity/chest/normal", out var bmp))
+            {
+                ChestTexture = TextureUtils.BitmapToTexture2D($"BlockEntityFactory/Chest", graphicsDevice, bmp);
+                //ChestTexture?.Use();
+            }
+            else
+            {
+                Log.Warn($"Could not load chest texture.");
+            }
 
-				switch (id.ToLower())
-				{
-					case "minecraft:bed":
-					case "bed":
-						blockEntity = new BedBlockEntity(world);
-						break;
-					
-					case "minecraft:chest":
-					case "chest":
-						blockEntity = new ChestBlockEntity(world);
+            if (resources.TryGetBitmap("minecraft:entity/enchanting_table_book", out var enchantingTableBookBmp))
+            {
+                EnchantingTableBookTexture = TextureUtils.BitmapToTexture2D($"BlockEntityFactory/EnchantingTableTexture", graphicsDevice, enchantingTableBookBmp);
+                //ChestTexture?.Use();
+            }
+            else
+            {
+                Log.Warn($"Could not load enchanting table book texture.");
+            }
 
-						break;
-					case "minecraft:ender_chest":
-					case "ender_chest":
-					case "enderchest":
-						blockEntity = new EnderChestBlockEntity(world);
-						break;
+            if (resources.TryGetBedrockBitmap("minecraft:textures/entity/chest/double_normal", out var doubleBmp))
+            {
+                DoubleChestTexture = TextureUtils.BitmapToTexture2D("BlockEntityFactory/Chest/Double", graphicsDevice, doubleBmp);
+                //DoubleChestTexture?.Use();
+            }
+            else
+            {
+                Log.Warn($"Could not load double chest texture.");
+            }
 
-					case "minecraft:sign":
-					case "sign":
-						blockEntity = new SignBlockEntity(world);
+            if (resources.TryGetBitmap("minecraft:entity/chest/ender", out var enderBmp))
+            {
+                EnderChestTexture = TextureUtils.BitmapToTexture2D("BlockEntityFactory/Chest/Ender", graphicsDevice, enderBmp);
+                //EnderChestTexture?.Use();
+            }
+            else
+            {
+                Log.Warn($"Could not load enderchest texture");
+            }
 
-						break;
-					
-					case "minecraft:skull":
-					case "skull":
-						blockEntity = new SkullBlockEntity(world, SkullTexture);
-						break;
-					
-					case "minecraft:flowerpot":
-					case "flowerpot":
-						blockEntity = new FlowerPotBlockEntity(world);
-						break;
-					
-					case "item_frame":
-					case "minecraft:item_frame":
-					case "minecraft:itemframe":
-					case "itemframe":
-						blockEntity = new ItemFrameBlockEntity(world);
-						break;
-					
-					case "minecraft:furnace":
-					case "furnace":
-						blockEntity = new FurnaceBlockEntity(world);
-						break;
-					
-					default:
-						Log.Debug($"Missing block entity type: {id}");
+            if (resources.TryGetBitmap("minecraft:entity/steve", out var steveBmp))
+            {
+                SkullTexture = TextureUtils.BitmapToTexture2D("BlockEntityFactory/Steve", graphicsDevice, steveBmp);
+                //SkullTexture?.Use(this);
+            }
+            else
+            {
+                Log.Warn($"Could not load skull texture");
+            }
 
-						break;
-				}
 
-				if (blockEntity != null)
-				{
-					if (blockEntity.Type == null)
-					{
-						blockEntity.Type = id;
-					}
-					
-					if (Alex.Instance.Resources.TryGetEntityDefinition(blockEntity.Type, out var entityDescription, out var source))
-					{
-						blockEntity.AnimationController.UpdateEntityDefinition(source, source, entityDescription);
-					}
+            if (resources.TryGetBitmap("minecraft:entity/signs/oak", out var signBmp))
+            {
+                SignTexture = TextureUtils.BitmapToTexture2D("BlockEntityFactory/Signs/Oak", graphicsDevice, signBmp);
+                //SignTexture?.Use(this);
+            }
+            else
+            {
+                Log.Warn($"Could not load sign texture");
+            }
+        }
 
-					blockEntity.Read(compound);
+        public static BlockEntity ReadFrom(NbtCompound compound, World world, Block block, BlockCoordinates blockCoordinates)
+        {
+            BlockEntity blockEntity = null;
+            ResourceLocation id = string.Empty;
 
-					if (blockEntity.SetBlock(block))
-						return blockEntity;
-				}
-			}
+            if (compound != null && (compound.TryGet("id", out var tag) || compound.TryGet("ID", out tag)))
+            {
+                id = tag.StringValue;
+            }
+            else if(block != null)
+            {
+                id = block.Location.Path;
+            }
 
-			return null;
-		}
-	}
+            switch (id.Path.ToLower())
+            {
+                case "bed":
+                    blockEntity = new BedBlockEntity(world);
+                    break;
+
+                case "chest":
+                    blockEntity = new ChestBlockEntity(world);
+
+                    break;
+                case "ender_chest":
+                case "enderchest":
+                    blockEntity = new EnderChestBlockEntity(world);
+                    break;
+
+                case "sign":
+                    blockEntity = new SignBlockEntity(world);
+
+                    break;
+
+                case "skull":
+                    blockEntity = new SkullBlockEntity(world, SkullTexture);
+                    break;
+
+                case "flowerpot":
+                    blockEntity = new FlowerPotBlockEntity(world);
+                    break;
+
+                case "item_frame":
+                case "itemframe":
+                    blockEntity = new ItemFrameBlockEntity(world);
+                    break;
+
+                case "furnace":
+                    blockEntity = new FurnaceBlockEntity(world);
+                    break;
+
+                case "banner":              case "wall_banner":
+                case "white_banner":  	    case "white_wall_banner":
+                case "orange_banner":  	    case "orange_wall_banner":
+                case "magenta_banner":  	case "magenta_wall_banner":
+                case "light_blue_banner":  	case "light_blue_wall_banner":
+                case "yellow_banner":  	    case "yellow_wall_banner":
+                case "lime_banner":  	    case "lime_wall_banner":
+                case "pink_banner":  	    case "pink_wall_banner":
+                case "gray_banner":  	    case "gray_wall_banner":
+                case "light_gray_banner":  	case "light_gray_wall_banner":
+                case "cyan_banner":  	    case "cyan_wall_banner":
+                case "purple_banner":  	    case "purple_wall_banner":
+                case "blue_banner":  	    case "blue_wall_banner":
+                case "brown_banner":  	    case "brown_wall_banner":
+                case "green_banner":  	    case "green_wall_banner":
+                case "red_banner":  	    case "red_wall_banner":
+                case "black_banner":  	    case "black_wall_banner":
+                    blockEntity = new BannerBlockEntity(world, blockCoordinates);
+                    break;
+
+                case "enchanttable":
+                    blockEntity = new EnchantTableBlockEntity(world);
+                    break;
+
+                case "hopper":
+                    blockEntity = new HopperBlockEntity(world);
+                    break;
+
+                case "beacon":
+                    blockEntity = new BeaconBlockEntity(world, blockCoordinates);
+                    break;
+
+                default:
+                    Log.Warn($"Missing block entity type: {id}");
+
+                    break;
+            }
+
+            if (blockEntity != null)
+            {
+                if (blockEntity.Type == null)
+                {
+                    blockEntity.Type = id;
+                }
+
+                EntityFactory.LoadEntityDefinition(Alex.Instance.Resources, blockEntity, true);
+
+                blockEntity.Read(compound);
+
+                if (blockEntity.SetBlock(block))
+                    return blockEntity;
+            }
+
+            return null;
+        }
+    }
 }

@@ -95,7 +95,7 @@ namespace Alex.Worlds
 			foreach (var blockEntity in chunk.BlockEntities)
 			{
 				var entity = BlockEntityFactory.ReadFrom(blockEntity.Value, World, 
-					chunk.GetBlockState(blockEntity.Key.X & 0xf, blockEntity.Key.Y, blockEntity.Key.Z & 0xf).Block);
+					chunk.GetBlockState(blockEntity.Key.X & 0xf, blockEntity.Key.Y, blockEntity.Key.Z & 0xf).Block, blockEntity.Key);
 				
 				if (entity != null)
 					AddBlockEntity(blockEntity.Key, entity);

@@ -6,6 +6,7 @@ using Alex.Common.Utils;
 using Alex.Common.Utils.Vectors;
 using Alex.Graphics.Models.Entity;
 using Alex.Graphics.Models.Entity.BlockEntities;
+using Alex.Networking.Java.Packets.Play;
 using Alex.Utils;
 using Alex.Worlds;
 using fNbt;
@@ -218,9 +219,9 @@ namespace Alex.Entities.BlockEntities
 		}
 
 		/// <inheritdoc />
-		public override void SetData(byte action, NbtCompound compound)
+		public override void SetData(BlockEntityActionType action, NbtCompound compound)
 		{
-			if (action == 4)
+			if (action == BlockEntityActionType.SetRotationAndSkinOfModHead)
 			{
 				ReadFrom(compound);
 			}
