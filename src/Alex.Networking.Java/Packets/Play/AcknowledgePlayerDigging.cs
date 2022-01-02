@@ -13,7 +13,7 @@ namespace Alex.Networking.Java.Packets.Play
 		/// <inheritdoc />
 		public override void Decode(MinecraftStream stream)
 		{
-			Position = stream.ReadPosition();
+			Position = stream.ReadBlockCoordinates();
 			Block = stream.ReadVarInt();
 			Status = (DigStatus) stream.ReadVarInt();
 			Successful = stream.ReadBool();

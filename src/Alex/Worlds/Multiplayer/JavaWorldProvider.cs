@@ -142,15 +142,34 @@ namespace Alex.Worlds.Multiplayer
 				{
 					var tag = tile.Data;
 
-					if (tag == null || !(tag.Contains("id")))
+					if (tag == null)
 						continue;
 
 					try
 					{
-
-						int x = tile.X;
+						int x = (result.X << 4) + tile.X;
 						int y = tile.Y;
-						int z = tile.Z;
+						int z = (result.Z << 4) + tile.Z;
+						
+						tag["x"] = new NbtInt("x", x);
+						tag["y"] = new NbtInt("y", y);
+						tag["z"] = new NbtInt("z", z);
+						
+						var pos = new BlockCoordinates(x, y, z);
+						
+						var registry = Alex.Resources.Registries.BlockEntities;
+
+						if (registry != null)
+						{
+							var match = registry.Entries.FirstOrDefault(x => x.Value.ProtocolId == tile.Type);
+
+							if (match.Key != null)
+							{
+								tag["id"] = new NbtString("id", match.Key);
+								//Log.Info($"Resolved BlockEntity: {match.Key} = {pos}");
+							}
+						}
+						
 						result.AddBlockEntity(new BlockCoordinates(x, y, z), tag);
 					}
 					catch (Exception ex)
@@ -2624,35 +2643,50 @@ namespace Alex.Worlds.Multiplayer
         {
 	        var compound = packet.Compound;
 	        var location = packet.Location;
-	        var action = packet.Action;
+	        var type = packet.Type;
+	       // var action = packet.Action;
+	        packet.AddReferences(1);
+	        
 	        World.BackgroundWorker.Enqueue(
 		        () =>
 		        {
-			        var world = World;
-
-			        if (world?.EntityManager == null)
-				        return;
-			        
 			        try
 			        {
-				        if (world.EntityManager.TryGetBlockEntity(location, out var entity) && entity != null)
-				        {
-					        entity.SetData(action, compound);
-				        }
-				        else
-				        {
-					        var block = world.GetBlockState(location);
-					        var blockEntity = BlockEntityFactory.ReadFrom(compound, World, block.Block, location);
+				        var world = World;
 
-					        if (blockEntity != null)
+				        if (world?.EntityManager == null)
+					        return;
+
+				        try
+				        {
+					        if (compound == null)
 					        {
-						        world.SetBlockEntity(location.X, location.Y, location.Z, blockEntity);
+						        world.EntityManager.RemoveBlockEntity(location);
+						        return;
 					        }
+
+					        var registry = Alex.Resources.Registries.BlockEntities;
+
+					        if (registry != null)
+					        {
+						        var match = registry.Entries.FirstOrDefault(x => x.Value.ProtocolId == type);
+
+						        if (match.Key != null)
+						        {
+							        compound["id"] = new NbtString("id", match.Key);
+						        }
+					        }
+					        
+					        BlockEntityFactory.ReadFrom(compound, World, location);
+				        }
+				        catch (Exception ex)
+				        {
+					        Log.Warn(ex, $"Could not add block entity: {compound}");
 				        }
 			        }
-			        catch (Exception ex)
+			        finally
 			        {
-				        Log.Warn(ex, $"Could not add block entity: {compound}");
+				        packet.PutPool();
 			        }
 		        });
         }

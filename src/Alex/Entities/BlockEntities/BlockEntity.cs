@@ -61,6 +61,7 @@ namespace Alex.Entities.BlockEntities
                 return false;
             }
 
+            EntityFactory.LoadEntityDefinition(Alex.Instance.Resources, this, true);
             return true;
         }
 
@@ -165,6 +166,12 @@ namespace Alex.Entities.BlockEntities
         public virtual void SetData(BlockEntityActionType action, NbtCompound compound)
         {
             //throw new System.NotImplementedException();
+        }
+
+        /// <inheritdoc />
+        public override string ToString()
+        {
+            return base.ToString();
         }
     }
 }

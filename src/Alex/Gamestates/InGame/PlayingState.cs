@@ -310,7 +310,7 @@ namespace Alex.Gamestates.InGame
 						$"Blocklight: {World.GetBlockLight(raytracedBlock)} Face Blocklight: {World.GetBlockLight(adjacentBlock)}");
 
 					foreach (var bs in World
-						.GetBlockStates((int) raytracedBlock.X, (int) raytracedBlock.Y, (int) raytracedBlock.Z))
+						        .GetBlockStates((int) raytracedBlock.X, (int) raytracedBlock.Y, (int) raytracedBlock.Z))
 					{
 						var blockstate = bs.State;
 						if (blockstate != null && blockstate.Block.HasHitbox)
@@ -321,7 +321,7 @@ namespace Alex.Gamestates.InGame
 							if (dict.Length > 0)
 							{
 								sb.AppendLine();
-								sb.AppendLine("Blockstate:");
+								//sb.AppendLine("Blockstate:");
 
 								foreach (var kv in dict)
 								{
@@ -329,6 +329,11 @@ namespace Alex.Gamestates.InGame
 								}
 							}
 						}
+					}
+					
+					if (World.EntityManager.TryGetBlockEntity(raytracedBlock, out var blockEntity))
+					{
+						sb.AppendLine($"BlockEntity: {blockEntity.Type} ");
 					}
 
 					return sb.ToString();

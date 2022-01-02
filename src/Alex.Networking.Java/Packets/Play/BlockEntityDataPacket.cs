@@ -25,14 +25,14 @@ namespace Alex.Networking.Java.Packets.Play
     public class BlockEntityDataPacket : Packet<BlockEntityDataPacket>
     {
         public BlockCoordinates Location { get; set; }
-        public BlockEntityActionType Action { get; set; }
+        public int Type { get; set; }
         public NbtCompound Compound { get; set; }
 
         /// <inheritdoc />
         public override void Decode(MinecraftStream stream)
         {
             Location = stream.ReadBlockCoordinates();
-            Action = (BlockEntityActionType)stream.ReadByte();
+            Type = stream.ReadVarInt();
             Compound = stream.ReadNbtCompound();
         }
 

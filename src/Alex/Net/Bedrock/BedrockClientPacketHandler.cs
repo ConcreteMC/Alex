@@ -1445,20 +1445,7 @@ namespace Alex.Net.Bedrock
 				var worldPos = new BlockCoordinates(
 					message.coordinates.X, message.coordinates.Y, message.coordinates.Z);
 
-				var block = Client.World.GetBlockState(worldPos).Block;
-
-				//if (block.BlockMaterial != Material.Air)
-				{
-					var blockEntity = BlockEntityFactory.ReadFrom(compound, Client.World, block, worldPos);
-
-					if (blockEntity == null)
-					{
-						return;
-					}
-
-					Client.World.SetBlockEntity(
-						message.coordinates.X, message.coordinates.Y, message.coordinates.Z, blockEntity);
-				}
+				BlockEntityFactory.ReadFrom(compound, Client.World, worldPos);
 			}
 			else
 			{

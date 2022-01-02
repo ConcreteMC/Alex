@@ -86,20 +86,9 @@ namespace Alex.Entities.BlockEntities
             }
         }
 
-        public static BlockEntity ReadFrom(NbtCompound compound, World world, Block block, BlockCoordinates blockCoordinates)
+        public static BlockEntity GetById(ResourceLocation id, World world, BlockCoordinates blockCoordinates, NbtCompound compound = null)
         {
             BlockEntity blockEntity = null;
-            ResourceLocation id = string.Empty;
-
-            if (compound != null && (compound.TryGet("id", out var tag) || compound.TryGet("ID", out tag)))
-            {
-                id = tag.StringValue;
-            }
-            else if(block != null)
-            {
-                id = block.Location.Path;
-            }
-
             switch (id.Path.ToLower())
             {
                 case "bed":
@@ -182,15 +171,45 @@ namespace Alex.Entities.BlockEntities
                     blockEntity.Type = id;
                 }
 
-                EntityFactory.LoadEntityDefinition(Alex.Instance.Resources, blockEntity, true);
+                if (compound != null)
+                {
+                    blockEntity.Read(compound);
+                }
+                else
+                {
+                    blockEntity.X = blockCoordinates.X;
+                    blockEntity.Y = blockCoordinates.Y;
+                    blockEntity.Z = blockCoordinates.Z;
+                }
 
-                blockEntity.Read(compound);
-
-                if (blockEntity.SetBlock(block))
-                    return blockEntity;
+                //var block = world.GetBlockState(blockCoordinates);
+                //if (blockEntity.SetBlock(block.Block))
+                {
+                    blockEntity.KnownPosition = blockCoordinates;
+                    world.SetBlockEntity(blockCoordinates.X, blockCoordinates.Y, blockCoordinates.Z, blockEntity);
+                }
             }
 
-            return null;
+            return blockEntity;
+        }
+        
+        public static BlockEntity ReadFrom(NbtCompound compound, World world, BlockCoordinates blockCoordinates)
+        {
+            BlockEntity blockEntity = null;
+            ResourceLocation id = string.Empty;
+
+            if (compound != null && (compound.TryGet("id", out var tag) || compound.TryGet("ID", out tag)))
+            {
+                id = tag.StringValue;
+            }
+            /*else if(block != null)
+            {
+                id = block.Location.Path;
+            }*/
+
+            blockEntity = GetById(id, world, blockCoordinates, compound);
+
+            return blockEntity;
         }
     }
 }

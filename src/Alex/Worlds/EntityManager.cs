@@ -85,7 +85,7 @@ namespace Alex.Worlds
 			{
 				var pos = blockEntity.Key;
 				RemoveBlockEntity(
-					new BlockCoordinates((chunk.X << 4) + pos.X, pos.Y, (chunk.Z << 4) + pos.Z));
+					new BlockCoordinates(pos.X, pos.Y, pos.Z));
 			}
 		}
 
@@ -94,11 +94,8 @@ namespace Alex.Worlds
 			var chunk = e.Chunk;
 			foreach (var blockEntity in chunk.BlockEntities)
 			{
-				var entity = BlockEntityFactory.ReadFrom(blockEntity.Value, World, 
-					chunk.GetBlockState(blockEntity.Key.X & 0xf, blockEntity.Key.Y, blockEntity.Key.Z & 0xf).Block, blockEntity.Key);
-				
-				if (entity != null)
-					AddBlockEntity(blockEntity.Key, entity);
+				var pos = blockEntity.Key;
+				BlockEntityFactory.ReadFrom(blockEntity.Value, World, pos);
 			}
 		}
 
@@ -461,7 +458,12 @@ namespace Alex.Worlds
 		{
 			entity.KnownPosition = coordinates;
 			//entity.Block = World.GetBlockState(coordinates).Block;
-			return BlockEntities.TryAdd(coordinates, entity);
+			if (!BlockEntities.TryAdd(coordinates, entity))
+			{
+				return false;
+			}
+
+			return true;
 		}
 
 		public bool TryGetBlockEntity(BlockCoordinates coordinates, out BlockEntity entity)
