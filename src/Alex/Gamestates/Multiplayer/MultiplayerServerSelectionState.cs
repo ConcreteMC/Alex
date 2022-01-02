@@ -353,7 +353,7 @@ namespace Alex.Gamestates.Multiplayer
 		    JoinServer(Alex, serverType, item.ConnectionEndpoint, item.SavedServerEntry.Host, CancellationTokenSource);
 	    }
 	    
-	    public static void JoinServer(Alex alex, ServerTypeImplementation serverType, IPEndPoint endPoint, string host, CancellationTokenSource cancellationTokenSource)
+	    public void JoinServer(Alex alex, ServerTypeImplementation serverType, IPEndPoint endPoint, string host, CancellationTokenSource cancellationTokenSource)
 	    {
 		    if (serverType == null)
 			    return;
@@ -384,6 +384,7 @@ namespace Alex.Gamestates.Multiplayer
 			    }
 
 			    UserSelectionState pss = new UserSelectionState(serverType, skyBox, OnProfileSelected, () => {});
+			    pss.BackgroundOverlay = BackgroundOverlay;
 			    
 			    alex.GameStateManager.SetActiveState(pss);
 		    }
