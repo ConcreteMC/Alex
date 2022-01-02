@@ -254,17 +254,18 @@ namespace Alex.Networking.Java.Packets
 			Register(ConnectionState.Play, 0x53, () => ScoreboardObjectivePacket.CreateObject());
 			Register(ConnectionState.Play, 0x55, () => TeamsPacket.CreateObject());
 			Register(ConnectionState.Play, 0x56, () => UpdateScorePacket.CreateObject());
-			Register(ConnectionState.Play, 0x58, () => TimeUpdatePacket.CreateObject());
+			Register(ConnectionState.Play, 0x58, () => SetTitleSubTextPacket.CreateObject());
+			Register(ConnectionState.Play, 0x59, () => TimeUpdatePacket.CreateObject());
 			
-			Register(ConnectionState.Play, 0x59, () => SetTitleTextPacket.CreateObject());
-			Register(ConnectionState.Play, 0x5A, () => SetTitleTimesPacket.CreateObject());
+			Register(ConnectionState.Play, 0x5A, () => SetTitleTextPacket.CreateObject());
+			Register(ConnectionState.Play, 0x5B, () => SetTitleTimesPacket.CreateObject());
 			
-			Register(ConnectionState.Play, 0x5B, () => EntitySoundEffectPacket.CreateObject());
-			Register(ConnectionState.Play, 0x5C, () => SoundEffectPacket.CreateObject());
+			Register(ConnectionState.Play, 0x5C, () => EntitySoundEffectPacket.CreateObject());
+			Register(ConnectionState.Play, 0x5D, () => SoundEffectPacket.CreateObject());
 			
-			Register(ConnectionState.Play, 0x61, () => EntityTeleport.CreateObject());
-			Register(ConnectionState.Play, 0x63, () => EntityPropertiesPacket.CreateObject());
-			Register(ConnectionState.Play, 0x64, () => EntityEffectPacket.CreateObject());
+			Register(ConnectionState.Play, 0x62, () => EntityTeleport.CreateObject());
+			Register(ConnectionState.Play, 0x64, () => EntityPropertiesPacket.CreateObject());
+			Register(ConnectionState.Play, 0x65, () => EntityEffectPacket.CreateObject());
 		}
 		
 		public static string GetPlayPacketName(int id)

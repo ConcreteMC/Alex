@@ -467,7 +467,7 @@ namespace Alex.Graphics.Models.Entity.Animations
 					
 						ea.Tick();
 
-						ea.AfterUpdate();
+						//ea.AfterUpdate();
 					}
 				}
 				else

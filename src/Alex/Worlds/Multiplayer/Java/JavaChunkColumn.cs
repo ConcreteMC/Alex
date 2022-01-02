@@ -78,9 +78,11 @@ namespace Alex.Worlds.Multiplayer.Java
 			}
 			//flexibleStorage.SetData(longArray.Value);
 
+			uint minHeight = uint.MaxValue;
 			for (int i = 0; i < flexibleStorage.Length; i++)
 			{
 				maxHeight = Math.Max(maxHeight, flexibleStorage[i]);
+				minHeight = Math.Min(minHeight, flexibleStorage[i]);
 			}
 
 			var sections = (int)Math.Ceiling((maxHeight / 16D));// + 1;
@@ -101,21 +103,17 @@ namespace Alex.Worlds.Multiplayer.Java
 						jcs.Read(ms);
 					}
 
+					storage.RemoveInvalidBlocks();
 					this.Sections[sectionY] = storage;
-				}
-
-				for (int i = 0; i < Sections.Length; i++)
-				{
-					Sections[i]?.RemoveInvalidBlocks();
 				}
 
 				for (int x = 0; x < 16; x++)
 				{
 					for (int z = 0; z < 16; z++)
 					{
-						for (int y = WorldSettings.MinY; y < WorldSettings.WorldHeight; y++)
+						for (var y = WorldSettings.MinY + minHeight; y < WorldSettings.MinY + maxHeight; y++)
 						{
-							SetScheduled(x, y, z, true);
+							SetScheduled(x, (int)y, z, true);
 						}
 					}
 				}

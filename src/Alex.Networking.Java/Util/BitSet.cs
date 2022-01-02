@@ -46,6 +46,9 @@ public class BitSet
 
 	public bool IsSet(int bit)
 	{
+		if (bit / 64 >= _data.Length)
+			return false;
+		
 		return (_data[bit / 64] & (1L << (bit % 64))) != 0;
 	}
 

@@ -27,12 +27,14 @@ namespace Alex.Gui.Dialogs
 		    }
 	    }
 
+	    private bool _textDirty = false;
 	    public string SubText
 	    {
-		    get { return _subTextDisplay?.Text ?? string.Empty; }
+		    get { return _subString; }
 		    set
 		    {
-			    _subTextDisplay.Text = value ?? string.Empty;
+			    _subString = value ?? string.Empty;
+			    _textDirty = true;
 		    }
 	    }
 
@@ -52,11 +54,26 @@ namespace Alex.Gui.Dialogs
 		    }
 	    }
 
+	    public string CancelText
+	    {
+		    get
+		    {
+			    return _cancelButton.Text;
+		    }
+		    set
+		    {
+			    _cancelButton.Text = value;
+		    }
+	    }
+
 	    public WorldLoadingDialog()
 		{
 			StackContainer progressBarContainer;
+			
+			BackgroundOverlay = new Color(Color.Black, 0.5f);
 
-			AddChild(new Image(AlexGuiTextures.AlexLogo)
+			Image logo;
+			AddChild(logo = new Image(AlexGuiTextures.AlexLogo)
 			{
 				Margin = new Thickness(0, 25, 0, 0),
 				Anchor = Alignment.TopCenter
@@ -73,27 +90,8 @@ namespace Alex.Gui.Dialogs
 				BackgroundOverlay = Color.Transparent,
 				Orientation = Orientation.Vertical
 			});
-			
-			BackgroundOverlay = new Color(Color.Black, 0.65f);
-			
-			/*if (parent == null)
-			{
-				Background = new GuiTexture2D
-				{ 
-					TextureResource = GuiTextures.OptionsBackground, 
-					RepeatMode = TextureRepeatMode.Tile,
-					Scale =  new Vector2(2f, 2f),
-				};
-				
-				BackgroundOverlay = new Color(Color.Black, 0.65f);
-			}
-			else
-			{
-				ParentState = parent;
-				HeaderTitle.IsVisible = false;
-			}*/
-			
-			progressBarContainer.AddChild(_textDisplay = new TextElement()
+
+			/*progressBarContainer.AddChild(_textDisplay = new TextElement()
 			{
 				Text      = Text,
 				TextColor = (Color) TextColor.White,
@@ -101,41 +99,60 @@ namespace Alex.Gui.Dialogs
 				Anchor    = Alignment.TopCenter,
 				HasShadow = false,
 				Scale = 1.5f
-			});
+			});*/
 
-			RocketElement element;
+			MultiStackContainer element;
 
-			progressBarContainer.AddChild(element = new RocketElement()
+			progressBarContainer.AddChild(element = new MultiStackContainer()
 			{
 				Width  = 300,
-				Height = 35,
+				//Height = 35,
 				Margin = new Thickness(12),
+				Orientation = Orientation.Vertical,
+				ChildAnchor = Alignment.Fill
 			});
-			
-			element.AddChild(_percentageDisplay = new TextElement()
+
+			RocketControl rc = new RocketControl() { Anchor = Alignment.Fill, Margin = new Thickness(3, 0, 3, 0)};
+			rc.AddChild(_textDisplay = new TextElement()
 			{
 				Text      = Text,
 				TextColor = (Color) TextColor.White,
 				
-				Anchor    = Alignment.TopRight,
+				Anchor    = Alignment.TopLeft,
 				HasShadow = false
 			});
-
-			element.AddChild(_progressBar = new SimpleProgressBar()
-			{
-				Width  = 300,
-				Height = 9,
-				
-				Anchor = Alignment.MiddleCenter,
-			});
-
-			progressBarContainer.AddChild(
-				_subTextDisplay = new TextElement()
+			
+			rc.AddChild(
+				_percentageDisplay = new TextElement()
 				{
-					Text = Text, TextColor = (Color) TextColor.White, Anchor = Alignment.BottomLeft, HasShadow = false
+					Text = Text,
+					TextColor = (Color)TextColor.White, 
+					Anchor = Alignment.TopRight, HasShadow = false
+				});
+			
+			element.AddRow(rc);
+
+			var progressRow= element.AddRow(
+				_progressBar = new SimpleProgressBar()
+				{
+					Height = 12, 
+					Anchor = Alignment.MiddleCenter,
 				});
 
-			AddChild(_cancelButton = new AlexButton("Cancel", Cancel)
+			progressRow.Margin = new Thickness(3);
+			progressRow.ChildAnchor = Alignment.MiddleFill;
+
+			element.AddRow(
+				_subTextDisplay = new TextElement()
+				{
+					Text = Text, 
+					TextColor = (Color)TextColor.White, 
+					Anchor = Alignment.TopLeft,
+					HasShadow = false,
+					Margin = new Thickness(3, 0, 3, 0)
+				});
+			
+			progressBarContainer.AddChild(_cancelButton = new AlexButton("Cancel", Cancel)
 			{
 				Anchor = Alignment.TopLeft
 			});
@@ -154,8 +171,10 @@ namespace Alex.Gui.Dialogs
 	    public int          Percentage   { get; private set; } = 0;
 	    public Action       CancelAction { get; set; }         = null;
 
+	    private string _subString = null;
 	    public void UpdateProgress(LoadingState state, int percentage, string substring = null)
 	    {
+		    _subString = substring;
 		    switch (state)
 		    {
 			    case LoadingState.LoadingResources:
@@ -165,19 +184,15 @@ namespace Alex.Gui.Dialogs
 				    _textDisplay.TranslationKey = "resourcepack.downloading";
 				    break;
 			    case LoadingState.ConnectingToServer:
-				   // Text = "Connecting to server...";
 				    _textDisplay.TranslationKey = "connect.connecting";
 				    break;
 			    case LoadingState.LoadingChunks:
-				  //  Text = $"Loading chunks...";
 				  _textDisplay.TranslationKey = _connectingToServer ? "multiplayer.downloadingTerrain" : "menu.loadingLevel";
 				    break;
 			    case LoadingState.GeneratingVertices:
-				  //  Text = $"Building world...";
 				  _textDisplay.TranslationKey = "menu.generatingTerrain";
 				    break;
 			    case LoadingState.Spawning:
-				  //  Text = $"Getting ready...";
 				  _textDisplay.TranslationKey = "connect.joining";
 				    break;
 		    }
@@ -207,6 +222,33 @@ namespace Alex.Gui.Dialogs
 		    ParentElement?.InvalidateLayout();
 		    
 		    base.OnUpdateLayout();
+	    }
+	    
+	    private double _temp = 0f;
+	    private int _state = 0;
+	    
+	    /// <inheritdoc />
+	    protected override void OnUpdate(GameTime gameTime)
+	    {
+		    base.OnUpdate(gameTime);
+		    
+		    _temp += gameTime.ElapsedGameTime.TotalSeconds;
+
+		    if (_temp >= 0.75)
+		    {
+			    _temp -= 0.75;
+
+			    if (_state + 1 > 3)
+			    {
+				    _state = 1;
+			    }
+			    else
+			    {
+				    _state += 1;
+			    }
+			    
+			    _subTextDisplay.Text = $"{(string.IsNullOrWhiteSpace(_subString) ? "Please wait" : _subString)}{new string('.', _state)}";
+		    }
 	    }
     }
 }
