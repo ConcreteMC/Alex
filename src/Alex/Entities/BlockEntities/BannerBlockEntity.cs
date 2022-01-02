@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Drawing.Imaging;
+using System.Linq;
 using System.Numerics;
 using Alex.Blocks.Minecraft;
 using Alex.Common.Blocks;
@@ -35,7 +38,7 @@ namespace Alex.Entities.BlockEntities;
 
 public class BannerBlockEntity : BlockEntity
 {
-    private BlockColor _color;
+    private BlockColor _bannerColor;
     private EntityDescription _entityDescription = null;
     private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(BannerBlockEntity));
     private ModelBone RootBone { get; set; }
@@ -43,12 +46,37 @@ public class BannerBlockEntity : BlockEntity
     private byte _rotation = 0;
     private float _yRotation = 0f;
 
-    public PatternLayer[] Patterns { get; set; } = Array.Empty<PatternLayer>();
+    public IReadOnlyCollection<PatternLayer> Patterns
+    {
+        get => _patterns;
+        private set
+        {
+            if (_patterns?.SequenceEqual(value) ?? false)
+                return;
+
+            _patterns = value;
+            _isTextureDirty = true;
+        }
+    }
+
     private Image<Rgba32> _canvasTexture;
-    
+
+    public BlockColor BannerColor
+    {
+        get => _bannerColor;
+        set
+        {
+            if (_bannerColor == value)
+                return;
+
+            _bannerColor = value;
+            _isTextureDirty = true;
+        }
+    }
+
     public byte BannerRotation
     {
-        get { return _rotation; }
+        get => _rotation;
         set
         {
             _rotation = Math.Clamp(value, (byte)0, (byte)15);
@@ -81,6 +109,9 @@ public class BannerBlockEntity : BlockEntity
         HideNameTag = true;
         IsAlwaysShowName = false;
         AnimationController.Enabled = true;
+
+        Patterns = Array.Empty<PatternLayer>();
+        BannerColor = BlockColor.White;
     }
 
     /// <inheritdoc />
@@ -97,33 +128,45 @@ public class BannerBlockEntity : BlockEntity
         }
     }
 
+    private bool _isTextureDirty;
+    private IReadOnlyCollection<PatternLayer> _patterns;
+
     private void UpdateCanvasTexture()
     {
-        _canvasTexture ??= new Image<Rgba32>(64, 64, Color.Black);
-        _canvasTexture.Mutate(cxt => { cxt.Clear(Color.Black); });
-
-        ApplyCanvasLayer(new PatternLayer() { Pattern = BannerPattern.Base, Color = BannerColor.FromId((int)_color) });
-
-        if (!(Patterns == null || Patterns.Length == 0))
+        if (_isTextureDirty)
         {
-            for (int i = 0; i < Patterns.Length; i++)
-            {
-                var layer = Patterns[i];
-                if (layer == null) continue;
+            _canvasTexture ??= new Image<Rgba32>(64, 64, Color.Black);
+            _canvasTexture.Mutate(cxt => { cxt.Clear(Color.Black); });
 
-                ApplyCanvasLayer(layer);
+            ApplyCanvasLayer(new PatternLayer(Common.Utils.BannerColor.FromId((int)BannerColor), BannerPattern.Base));
+
+            if (Patterns?.Count > 0)
+            {
+                foreach (var layer in Patterns)
+                {
+                    if (layer == null) continue;
+
+                    ApplyCanvasLayer(layer);
+                }
             }
+
+            _isTextureDirty = false;
         }
 
         //if (ModelRenderer != null)
         //{
-        Texture = TextureUtils.BitmapToTexture2D(this, Alex.Instance.GraphicsDevice, _canvasTexture.Clone());
-        //}
+        var newTexure = TextureUtils.BitmapToTexture2D(this, Alex.Instance.GraphicsDevice, _canvasTexture.Clone());
+        if (Texture != null)
+        {
+            var oldTexture = Texture;
+            Texture = newTexure;
+            oldTexture?.Dispose();
+        }
     }
 
     private void ApplyCanvasLayer(PatternLayer layer)
     {
-        var texture = ResolvePatternMask(layer.Pattern);
+        using var texture = ResolvePatternMask(layer.Pattern);
 
         if (texture == null)
         {
@@ -149,85 +192,6 @@ public class BannerBlockEntity : BlockEntity
                 _canvasTexture[x, y] = d;
             }
         }
-    }
-    
-    
-    private void ApplyCanvasLayerTheShittyWay(PatternLayer layer)
-    {
-        var texture = ResolvePatternMask(layer.Pattern);
-
-        if (texture == null)
-        {
-            Log.Warn($"Could not resolve pattern mask/texture for {layer.Pattern}");
-            return;
-        }
-
-        //var color = Color.FromRgba(layer.Color.Color.R, layer.Color.Color.G, layer.Color.Color.B, layer.Color.Color.A);
-        var color = layer.Color.Color;
-        
-        texture.Mutate(cxt =>
-        {
-            cxt.SetGraphicsOptions(opt =>
-            {
-                opt.ColorBlendingMode = PixelColorBlendingMode.Normal;
-                opt.AlphaCompositionMode = PixelAlphaCompositionMode.SrcOver;
-            });
-            cxt .BackgroundColor(Color.Transparent)
-                //.AdaptiveThreshold(Color.White, Color.Black, 0.5f)
-                //.DetectEdges()
-                //.Fill(new RecolorBrush(Color.White, color, 0.5f))
-                //.Quantize()
-                //.Dither()
-                .ProcessPixelRowsAsVector4(row =>
-                {
-                    var totalW = 0;
-                    var abovehalfW = 0;
-                    
-                    for (int i = 0; i < row.Length; i++)
-                    {
-                        totalW++;
-                        var c = row[i];
-                        if (c.W <= 0.5f)
-                        {
-                            abovehalfW++;
-                            //row[i].X = 0f;
-                            //row[i].Y = 0f;
-                            //row[i].Z = 0f;
-                            //row[i].W = 0f;
-                        }
-                        else
-                        {
-                            var w = row[i].W;
-                            var c2 = color.ToVector4();
-                            row[i].X = c2.X;
-                            row[i].Y = c2.Y;
-                            row[i].Z = c2.Z;
-                            //row[i].W = c2.W;
-                        }
-                    }
-
-                    Log.Warn($"Big wieener counter: {abovehalfW}/{totalW}");
-                })
-                ;
-            var str = $"hello {color.ToHexString()}";
-        });
-
-
-        _canvasTexture.Mutate(cxt =>
-        {
-            cxt.SetGraphicsOptions(opt =>
-            {
-                opt.ColorBlendingMode = PixelColorBlendingMode.Normal;
-                opt.AlphaCompositionMode = PixelAlphaCompositionMode.SrcOver;
-                opt.BlendPercentage = 0.5f;
-            });
-                cxt.DrawImage(texture,
-                    new Point(0, 0),
-                    PixelColorBlendingMode.Normal,
-                    PixelAlphaCompositionMode.SrcOver,
-                    1f);
-            
-        });
     }
 
     private Image<Rgba32> ResolvePatternMask(BannerPattern pattern)
@@ -256,15 +220,14 @@ public class BannerBlockEntity : BlockEntity
             }
 
             if (patternMask == null) return null;
-            var img = new Image<Rgba32>(patternMask.Width, patternMask.Height, new Rgba32(1f, 1f, 1f, 0f));
-            img.Mutate(cxt =>
-            {
-                cxt.DrawImage(patternMask, new Point(0, 0), 1f);
-            });
-            return patternMask.Clone(cxt =>
-            {
-                cxt.Crop(new Rectangle(0, 0, 64, 64));
-            });
+            //
+            // var cloned = patternMask.Clone(cxt =>
+            // {
+            //     cxt.Crop(new Rectangle(0, 0, 64, 64));
+            // });
+
+//            patternMask.Dispose();
+            return patternMask;
         }
         else
         {
@@ -280,7 +243,7 @@ public class BannerBlockEntity : BlockEntity
         if (newBlock is WallBanner wallBanner)
         {
             Type = "minecraft:wall_banner";
-            _color = wallBanner.Color;
+            BannerColor = wallBanner.Color;
 
             if (newBlock.BlockState.TryGetValue("facing", out var facing))
             {
@@ -313,7 +276,7 @@ public class BannerBlockEntity : BlockEntity
         if (newBlock is StandingBanner standingBanner)
         {
             Type = "minecraft:standing_banner";
-            _color = standingBanner.Color;
+            BannerColor = standingBanner.Color;
 
             if (newBlock.BlockState.TryGetValue("rotation", out var r))
             {
@@ -352,20 +315,23 @@ public class BannerBlockEntity : BlockEntity
                 for (int i = 0; i < patterns.Count; i++)
                 {
                     var patternCompound = patterns.Get<NbtCompound>(i);
-                    newPatterns[i] = new PatternLayer();
+                    BannerColor lColor = Common.Utils.BannerColor.White;
+                    BannerPattern lPattern = BannerPattern.Base;
 
                     if (patternCompound.TryGet<NbtInt>("Color", out var color))
                     {
-                        newPatterns[i].Color = BannerColor.FromId(color.IntValue);
+                        lColor = Common.Utils.BannerColor.FromId(color.IntValue);
                     }
 
                     if (patternCompound.TryGet<NbtString>("Pattern", out var pattern))
                     {
                         if (EnumHelper.TryParseUsingEnumMember<BannerPattern>(pattern.StringValue, out var bannerPattern))
                         {
-                            newPatterns[i].Pattern = bannerPattern;
+                            lPattern = bannerPattern;
                         }
                     }
+
+                    newPatterns[i] = new PatternLayer(lColor, lPattern);
                 }
 
                 Patterns = newPatterns;
@@ -387,9 +353,23 @@ public class BannerBlockEntity : BlockEntity
         }
     }
 
+    protected override void OnDispose()
+    {
+        base.OnDispose();
+
+        _canvasTexture?.Dispose();
+        _canvasTexture = null;
+    }
+
     public class PatternLayer
     {
-        public BannerColor Color { get; set; }
-        public BannerPattern Pattern { get; set; }
+        public BannerColor Color { get; }
+        public BannerPattern Pattern { get; }
+
+        public PatternLayer(BannerColor color, BannerPattern pattern)
+        {
+            Color = color;
+            Pattern = pattern;
+        }
     }
 }

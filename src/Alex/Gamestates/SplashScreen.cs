@@ -39,7 +39,7 @@ namespace Alex.Gamestates
 
         public SplashScreen()
 		{
-			Background = Color.White;
+			Background = new Color(0xFF312823);
 			Background.TextureResource = AlexGuiTextures.SplashBackground;
 			Background.RepeatMode = TextureRepeatMode.ScaleToFit;
 
@@ -55,7 +55,7 @@ namespace Alex.Gamestates
 			_progressBarContainer.AddChild(_textDisplay = new TextElement()
 			{
 				Text      = Text,
-				TextColor = (Color) TextColor.Black,
+				TextColor = (Color) TextColor.White,
 				
 				Anchor    = Alignment.TopLeft,
 				HasShadow = false
@@ -64,7 +64,7 @@ namespace Alex.Gamestates
 			_progressBarContainer.AddChild(_percentageDisplay = new TextElement()
 			{
 				Text      = Text,
-				TextColor = (Color) TextColor.Black,
+				TextColor = (Color) TextColor.White,
 				
 				Anchor    = Alignment.TopRight,
 				HasShadow = false
@@ -81,7 +81,7 @@ namespace Alex.Gamestates
 			_progressBarContainer.AddChild(_subTextDisplay = new TextElement()
 			{
 				Text = Text,
-				TextColor = (Color) TextColor.Black,
+				TextColor = (Color) TextColor.White,
 
 				Anchor = Alignment.BottomLeft,
 				HasShadow = false

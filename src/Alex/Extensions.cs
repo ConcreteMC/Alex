@@ -238,9 +238,6 @@ namespace Alex
 				case BlockColor.Gray:
 					return MapColor.Gray;
 
-				case BlockColor.Silver:
-					return MapColor.LightGray;
-
 				case BlockColor.Cyan:
 					return MapColor.Cyan;
 
