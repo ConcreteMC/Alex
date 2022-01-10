@@ -74,6 +74,7 @@ namespace Alex.Gamestates.Multiplayer
 
 		    foreach (var serverType in alex.ServerTypeManager.GetAll())
 		    {
+			    serverType.ServerStorageProvider.Load();
 			    var button = AddTabButton(serverType.DisplayName, () =>
 			    {
 				    _serverType = serverType;
@@ -205,8 +206,6 @@ namespace Alex.Gamestates.Multiplayer
 			    var serverType = _serverType;
 			    if (serverType == null) 
 				    return;
-			    
-			    serverType.ServerStorageProvider.Load();
 
 			    foreach (var entry in serverType.SponsoredServers)
 			    {
@@ -406,20 +405,7 @@ namespace Alex.Gamestates.Multiplayer
 
 	    private void SaveAll()
 	    {
-		    foreach (var item in Items.ToArray())
-		    {
-			    if (!item.SaveEntry)
-			    {
-				    RemoveItem(item);
-			    }
-		    }
 		    
-		    var serverType = _serverType;
-
-		    if (serverType == null)
-			    return;
-		    
-		  //  serverType.ServerStorageProvider?.Save();
 	    }
 
 	    private void AddEditServerCallbackAction(MultiplayerAddEditServerState.AddOrEditCallback obj)
