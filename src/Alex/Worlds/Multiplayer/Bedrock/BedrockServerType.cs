@@ -30,13 +30,15 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 {
 	public class BedrockServerType : ServerTypeImplementation<BedrockServerQueryProvider>
 	{
+		public const string Identifier = "bedrock";
+		
 		private static readonly Logger Log         = LogManager.GetCurrentClassLogger(typeof(BedrockServerType));
 		
 		private Alex Alex { get; }
 		private XboxAuthService XboxAuthService { get; }
 
 		/// <inheritdoc />
-		public BedrockServerType(Alex game) : base(game.ServiceContainer, "Bedrock", "bedrock")
+		public BedrockServerType(Alex game) : base(game.ServiceContainer, "Bedrock", Identifier)
 		{
 			DefaultPort = 19132;
 			Alex = game;
@@ -61,7 +63,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			out WorldProvider worldProvider,
 			out NetworkProvider networkProvider)
 		{
-			var wp = new BedrockWorldProvider(Alex, connectionDetails.EndPoint,
+			var wp = new BedrockWorldProvider(Alex, connectionDetails,
 				profile);
 				
 			wp.Init(out networkProvider);

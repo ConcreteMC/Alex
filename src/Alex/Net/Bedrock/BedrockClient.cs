@@ -106,7 +106,7 @@ namespace Alex.Net.Bedrock
 		public BlockCoordinates ChunkPublisherPosition { get; set; } = BlockCoordinates.Zero;
 		public uint ChunkPublisherRadius { get; set; } = 0;
 
-		public BedrockClient(Alex alex, IPEndPoint endpoint, PlayerProfile playerProfile, BedrockWorldProvider wp)
+		public BedrockClient(Alex alex, ServerConnectionDetails endpoint, PlayerProfile playerProfile, BedrockWorldProvider wp)
 		{
 			_playerProfile = playerProfile;
 			TransactionTracker = new BedrockTransactionTracker(this);
@@ -133,7 +133,7 @@ namespace Alex.Net.Bedrock
 			}
 
 			Connection = new RaknetConnection();
-			Connection.RemoteEndpoint = endpoint;
+			Connection.RemoteEndpoint = endpoint.EndPoint;
 
 			Connection.CustomMessageHandlerFactory = CustomMessageHandlerFactory;
 		}
@@ -413,11 +413,11 @@ namespace Alex.Net.Bedrock
 
 			if (_disconnectShown && !overrideActive)
 				return;
-			
+
 			_disconnectShown = true;
 			DisconnectReason = disconnectReason;
 			
-			DisconnectedDialog.Show(Alex, reason, useTranslation);
+			DisconnectedDialog.Show(Alex, reason, useTranslation, new Gamestates.InGame.ConnectionInfo(WorldProvider.ConnectionDetails.EndPoint, BedrockServerType.Identifier, WorldProvider.ConnectionDetails.Hostname, _playerProfile));
 			
 			Dispose();
 		}
@@ -764,7 +764,7 @@ namespace Alex.Net.Bedrock
 					LanguageCode = Alex.GuiRenderer.Language.Code.Replace("-", "_"),
 					// Alex.Services.GetService<IOptionsProvider>().AlexOptions.MiscelaneousOptions.Language.Value,
 					ServerAddress =
-						$"{Connection.RemoteEndpoint.Address.ToString()}:{Connection.RemoteEndpoint.Port.ToString()}",
+						$"{WorldProvider.ConnectionDetails.Hostname}:{Connection.RemoteEndpoint.Port.ToString()}",
 					ThirdPartyName = username,
 					DeviceId = Alex.Resources.DeviceID,
 					GameVersion = McpeProtocolInfo.GameVersion,
@@ -1314,15 +1314,26 @@ namespace Alex.Net.Bedrock
 			SendPacket(new DisconnectionNotification());
 		}
 
+		private bool _disposed = false;
 		public void Dispose()
 		{
-			foreach (var disposable in _disposables.ToArray())
+			if (_disposed)
+				return;
+
+			try
 			{
-				disposable.Dispose();
+				foreach (var disposable in _disposables.ToArray())
+				{
+					disposable.Dispose();
+				}
+
+				_disposables.Clear();
+				Close();
 			}
-			
-			_disposables.Clear();
-			Close();
+			finally
+			{
+				_disposed = true;
+			}
 		}
 	}
 
@@ -1330,6 +1341,8 @@ namespace Alex.Net.Bedrock
 	{
 		Network,
 		Kicked,
+		ClientOutOfDate,
+		ServerOutOfDate,
 		Unknown
 	}
 }

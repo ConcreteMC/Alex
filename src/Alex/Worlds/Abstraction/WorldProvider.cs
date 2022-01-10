@@ -54,6 +54,9 @@ namespace Alex.Worlds.Abstraction
 		LoginFailed,
 		Timeout,
 		Aborted,
-		Kicked
+		Kicked,
+		VersionMismatch,
+		
+		Unknown
 	}
 }

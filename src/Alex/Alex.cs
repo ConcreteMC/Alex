@@ -777,7 +777,7 @@ namespace Alex
 
                         if (result != LoadResult.Done)
                         {
-                            if (result != LoadResult.Aborted && result != LoadResult.Kicked)
+                            if (result != LoadResult.Aborted && result != LoadResult.Kicked && result != LoadResult.VersionMismatch)
                             {
                                 DisconnectedDialog.Show(this, "multiplayer.status.cannot_connect", true);
                             }

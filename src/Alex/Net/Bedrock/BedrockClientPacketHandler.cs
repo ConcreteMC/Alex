@@ -142,12 +142,12 @@ namespace Alex.Net.Bedrock
 			else if (playStatus == McpePlayStatus.PlayStatus.LoginFailedClient)
 			{
 				Log.Info($"Client out of date!");
-				Client.ShowDisconnect("multiplayer.status.client_out_of_date", true, true, DisconnectReason.Network);
+				Client.ShowDisconnect("multiplayer.status.client_out_of_date", true, true, DisconnectReason.ClientOutOfDate);
 			}
 			else if (playStatus == McpePlayStatus.PlayStatus.LoginFailedServer)
 			{
 				Log.Info($"Server out of date!");
-				Client.ShowDisconnect("multiplayer.status.server_out_of_date", true, true, DisconnectReason.Network);
+				Client.ShowDisconnect("multiplayer.status.server_out_of_date", true, true, DisconnectReason.ServerOutOfDate);
 			}
 			else if (playStatus == McpePlayStatus.PlayStatus.PlayerSpawn)
 			{

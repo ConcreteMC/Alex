@@ -58,8 +58,8 @@ namespace Alex.Gui.Forms
             {
                 if (_activeForm.FormId == id)
                 {
+                    _activeForm?.Close();
                     _activeForm = null;
-                    GuiManager.HideDialog(_activeForm);
                 }
             }
         }
