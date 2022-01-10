@@ -301,7 +301,14 @@ namespace Alex
             {
                 string targetPath = Path.Combine("assets", "bedrock");
                 string bedrockPath;
-                if (!BedrockAssetUtil.CheckUpdate(progressReceiver, out bedrockPath))
+
+                if (Storage.TryGetDirectory(targetPath, out var targetDirInfo)
+                    && targetDirInfo.GetFileSystemInfos().Length == 0)
+                {
+                    Storage.TryDeleteDirectory(targetPath);
+                }
+                
+                if (!BedrockAssetUtil.CheckUpdate(progressReceiver, targetPath, out bedrockPath))
                 {
                     if (Storage.TryGetDirectory(targetPath, out var directoryInfo))
                     {
@@ -327,6 +334,8 @@ namespace Alex
                         zipArchive.ExtractToDirectory(di.FullName);
                     }
 
+                    Storage.Delete(bedrockPath);
+                    
                     bedrockResources = di.FullName;
                     return true;
                 }
@@ -355,10 +364,11 @@ namespace Alex
                 {
                     Storage.TryDeleteDirectory(assetDirectory);
 
-                    var zipPath = AssetsUtil.EnsureTargetReleaseAsync(JavaProtocol.VersionId, progressReceiver)
+                    var zipPath = AssetsUtil.EnsureTargetReleaseAsync(JavaProtocol.VersionId, progressReceiver, assetDirectory)
                         .Result;
 
-                    if (Storage.TryCreateDirectory(assetDirectory)
+                    Storage.TryGetDirectory(assetDirectory, out directoryInfo);
+                    /*if (Storage.TryCreateDirectory(assetDirectory)
                         && Storage.TryGetDirectory(assetDirectory, out directoryInfo))
                     {
                         Log.Info($"Extracting resources....");
@@ -366,7 +376,7 @@ namespace Alex
                         {
                             zipArchive.ExtractToDirectory(directoryInfo.FullName, true);
                         }
-                    }
+                    }*/
                 }
 
                 if (directoryInfo != null)

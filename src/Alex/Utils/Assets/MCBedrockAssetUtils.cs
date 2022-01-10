@@ -41,7 +41,7 @@ namespace Alex.Utils.Assets
             return false;
         }
 
-        public bool CheckUpdate(IProgressReceiver progressReceiver, out string path)
+        public bool CheckUpdate(IProgressReceiver progressReceiver, string targetPath, out string path)
         {
             path = String.Empty;
             progressReceiver?.UpdateProgress(0, "Checking for resource updates...");
@@ -56,11 +56,12 @@ namespace Alex.Utils.Assets
               //  string assetsZipSavePath = String.Empty;
 
                 string currentVersion;
+
                 if (TryGetStoredAssetVersion(out currentVersion))
                 {
                     path = Path.Combine("assets", $"bedrock-{currentVersion}.zip");
 
-                    if (!Storage.Exists(path))
+                    if (!Storage.TryGetDirectory(targetPath, out var targetDirInfo) || targetDirInfo.GetFileSystemInfos().Length == 0)
                         currentVersion = null;
                 }
 
@@ -78,8 +79,7 @@ namespace Alex.Utils.Assets
                     {
                         var latestVersion = versionMatch.Groups["version"].Value;
 
-                        if (latestVersion != currentVersion
-                            || (!string.IsNullOrWhiteSpace(path) && !Storage.Exists(path)))
+                        if (latestVersion != currentVersion)
                         {
                             if (Storage.Exists(path))
                                 Storage.Delete(path);
