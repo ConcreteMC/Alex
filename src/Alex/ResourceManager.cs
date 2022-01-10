@@ -250,7 +250,7 @@ namespace Alex
                     sw.Stop();
 
                     Log.Info(
-                        $"Loading resourcepack \"{(string.IsNullOrWhiteSpace(manifest.Name) ? fs.Name : manifest.Name)}\" took: {sw.ElapsedMilliseconds}ms");
+                        $"Loading java resourcepack \"{(string.IsNullOrWhiteSpace(manifest.Name) ? fs.Name : manifest.Name)}\" took: {sw.ElapsedMilliseconds}ms");
 
                     sw.Restart();
                     yield return resourcePack;
@@ -263,7 +263,7 @@ namespace Alex
 
                     sw.Stop();
 
-                    Log.Info($"Loading resourcepack \"{manifest.Name}\" took: {sw.ElapsedMilliseconds}ms");
+                    Log.Info($"Loading bedrock resourcepack \"{manifest.Name}\" took: {sw.ElapsedMilliseconds}ms");
 
                     sw.Restart();
                     yield return brp;
