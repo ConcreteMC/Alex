@@ -77,6 +77,9 @@ namespace Alex.Common.Gui.Elements.Icons
 			}
 		}
 
+		public delegate void ShowPingStatusCallback(bool show);
+
+		public ShowPingStatusCallback ShowPingStatusChanged;
 		public GuiConnectionPingIcon() : base()
 	    {
 		    Background = AlexGuiTextures.ServerPing0;
@@ -199,6 +202,7 @@ namespace Alex.Common.Gui.Elements.Icons
 
 	            var mouseState = Mouse.GetState();
 
+	            bool renderLatency = _renderLatency;
 	            _cursorPosition = GuiRenderer.Unproject(new Vector2(mouseState.X, mouseState.Y)).ToPoint();
 	            if (RenderBounds.Contains(_cursorPosition) || _playerCountElement.RenderBounds.Contains(_cursorPosition))
 	            {
@@ -207,6 +211,11 @@ namespace Alex.Common.Gui.Elements.Icons
 	            else
 	            {
 		            _renderLatency = false;
+	            }
+
+	            if (_renderLatency != renderLatency)
+	            {
+		            ShowPingStatusChanged?.Invoke(_renderLatency);
 	            }
             }
         }
@@ -220,22 +229,6 @@ namespace Alex.Common.Gui.Elements.Icons
             else
             {
 	            base.OnDraw(graphics, gameTime);
-	            
-	            if (_renderLatency && IsVisible)
-	            {
-		            string text = $"{_ping}ms";
-
-		            if (!string.IsNullOrWhiteSpace(_version))
-		            {
-			            text = $"Server Ping: {text}\nGame Version: {_version.Trim()}";
-		            }
-		            
-		            var size = graphics.Font.MeasureString(text);
-		            var position = _cursorPosition + new Point(5, 5);
-		            
-		            graphics.SpriteBatch.FillRectangle(new Rectangle(position, size.ToPoint()), Color.Black * 0.5f);
-		            graphics.DrawString(graphics.Font, text, position.ToVector2(), TextColor.White, FontStyle.None);
-	            }
             }
         }
     }

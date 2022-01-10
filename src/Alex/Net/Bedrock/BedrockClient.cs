@@ -242,7 +242,7 @@ namespace Alex.Net.Bedrock
 					if (!cancellationToken.IsCancellationRequested && DateTime.UtcNow >= nextPingAttempt
 					                                               && numberOfAttempts-- > 0)
 					{
-						this.SendUnconnectedPingInternal(targetEndPoint);
+						Connection.SendUnconnectedPingInternal(targetEndPoint ?? new IPEndPoint(IPAddress.Broadcast, 19132));
 
 						nextPingAttempt = DateTime.UtcNow.Add(TimeSpan.FromMilliseconds(500));
 					}
@@ -255,7 +255,7 @@ namespace Alex.Net.Bedrock
 
 				sw.Stop();
 
-				serverInfo = (this.Connection.RemoteEndpoint, this.Connection.RemoteServerName, sw.ElapsedMilliseconds);
+				serverInfo = (this.Connection.RemoteEndpoint, this.Connection.RemoteServerName, this.Connection.RemoteServerPing);
 
 				return this.Connection.FoundServer;
 			}
@@ -265,17 +265,6 @@ namespace Alex.Net.Bedrock
 			}
 		}
 
-		private void SendUnconnectedPingInternal(IPEndPoint targetEndPoint)
-		{
-			byte[] data = new UnconnectedPing() { pingId = Stopwatch.GetTimestamp(), guid = this.Connection.ClientGuid }
-			   .Encode();
-
-			if (targetEndPoint != null)
-				this.Connection.SendData(data, targetEndPoint);
-			else
-				this.Connection.SendData(data, new IPEndPoint(IPAddress.Broadcast, 19132));
-		}
-		
 		protected override ConnectionInfo GetConnectionInfo()
 		{
 			long packetSizeOut = Interlocked.Exchange(ref Connection.ConnectionInfo.BytesOut, 0L);

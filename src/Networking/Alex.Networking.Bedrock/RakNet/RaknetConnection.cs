@@ -65,7 +65,8 @@ namespace Alex.Networking.Bedrock.RakNet
 		// information regarding a located server.
 		public IPEndPoint RemoteEndpoint { get; set; }
 		public string RemoteServerName { get; set; }
-
+		public long RemoteServerPing { get; set; } = 0;
+		
 		public Func<RaknetSession, ICustomMessageHandler> CustomMessageHandlerFactory { get; set; }
 
 		// RakNet found a remote server using Ping.
@@ -145,7 +146,7 @@ namespace Alex.Networking.Bedrock.RakNet
 		{
 			byte[] data = new UnconnectedPing()
 			{
-				pingId = Stopwatch.GetTimestamp(),
+				pingId = DateTime.UtcNow.ToBinary(),
 				guid = ClientGuid
 			}.Encode();
 			
@@ -651,25 +652,21 @@ namespace Alex.Networking.Bedrock.RakNet
 			if (!HaveServer)
 			{
 				string[] motdParts = message.serverName.Split(';');
+
 				if (motdParts.Length >= 11)
 				{
 					senderEndpoint.Port = int.Parse(motdParts[10]);
 				}
+
+				var currentTime = DateTime.UtcNow;
+				var pingId = DateTime.FromBinary(message.pingId);
+				var elapsedTime = currentTime - pingId;
+
 				RemoteEndpoint = senderEndpoint;
+				RemoteServerName = message.serverName;
+				RemoteServerPing = (long)Math.Round(elapsedTime.TotalMilliseconds);
 				
-				if (AutoConnect)
-				{
-				//	Log.Warn($"Connecting to {senderEndpoint}");
-					HaveServer = true;
-					//SendOpenConnectionRequest1(senderEndpoint, MtuSize);
-				}
-				else
-				{
-				//	Log.Warn($"Connect to server using actual endpoint={senderEndpoint}");
-					RemoteEndpoint = senderEndpoint;
-					RemoteServerName = message.serverName;
-					HaveServer = true;
-				}
+				HaveServer = true;
 			}
 		}
 
