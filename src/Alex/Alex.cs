@@ -354,7 +354,7 @@ namespace Alex
             var builtInFont = ResourceManager.ReadResource("Alex.Resources.default_font.png");
 
             var image = Image.Load<Rgba32>(builtInFont);
-            OnResourcePackPreLoadCompleted(image, MCJavaResourcePack.BitmapFontCharacters.ToList());
+            OnResourcePackPreLoadCompleted(image, MCJavaResourcePack.BitmapFontCharacters);
 
             var options = Options;
             
@@ -704,12 +704,12 @@ namespace Alex
             return Task.CompletedTask;
         }
 
-        private void OnResourcePackPreLoadCompleted(Image<Rgba32> fontBitmap, List<char> bitmapCharacters)
+        private void OnResourcePackPreLoadCompleted(Image<Rgba32> fontBitmap, string[] bitmapCharacters)
         {
             UiTaskManager.Enqueue(
                 () =>
                 {
-                    Font = new BitmapFont(GraphicsDevice, fontBitmap, 16, bitmapCharacters);
+                    Font = new BitmapFont(GraphicsDevice, fontBitmap, bitmapCharacters[0].Length, bitmapCharacters.Length, bitmapCharacters);
 
                     GuiManager.ApplyFont(Font);
                 });

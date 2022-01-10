@@ -552,7 +552,7 @@ namespace Alex
                                  progressReceiver,
                                  new ZipFileSystem(
                                      new FileStream(resourcePackPath, FileMode.Open),
-                                     Path.GetFileNameWithoutExtension(resourcePackPath)), preloadCallback))
+                                     Path.GetFileNameWithoutExtension(resourcePackPath))))
                     {
                         if (pack.Info.Type == ResourcePackType.Bedrock)
                         {
@@ -620,7 +620,7 @@ namespace Alex
             var f = ActiveResourcePacks.LastOrDefault(x => x.FontBitmap != null);
             if (f != null)
             {
-                PreloadCallback?.Invoke(f.FontBitmap, MCJavaResourcePack.BitmapFontCharacters.ToList());
+                PreloadCallback?.Invoke(f.FontBitmap, MCJavaResourcePack.BitmapFontCharacters);
             }
             
             if (wasInit)

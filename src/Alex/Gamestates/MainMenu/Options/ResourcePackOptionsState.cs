@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Alex.Common.Data.Options;
 using Alex.Common.Gui.Elements;
@@ -160,7 +161,6 @@ namespace Alex.Gamestates.MainMenu.Options
             AddItem(stockItem);
 
             var enabled = this.Options.ResourceOptions.LoadedResourcesPacks.Value;
-            
             foreach (var resource in Alex.Resources.ResourcePackDirectory.EnumerateFiles())
             {
                 try
@@ -170,14 +170,12 @@ namespace Alex.Gamestates.MainMenu.Options
                         if (Alex.Resources.TryLoadResourcePackInfo(resource.FullName,
                             out ResourcePackManifest[] packInfos))
                         {
+                            bool isLoaded = enabled.Any(x => x.EndsWith(Path.GetFileName(resource.FullName), StringComparison.InvariantCultureIgnoreCase));
+
                             foreach (var packInfo in packInfos)
                             {
                                 var item = new ResourcePackEntry(packInfo, resource.FullName);
-
-                                if (enabled.Any(x => x.ToLower().Contains(resource.Name.ToLower())))
-                                {
-                                    item.SetLoaded(true);
-                                }
+                                item.SetLoaded(isLoaded);
 
                                 AddItem(item);
                             }
