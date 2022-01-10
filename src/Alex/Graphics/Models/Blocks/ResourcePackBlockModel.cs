@@ -662,7 +662,7 @@ namespace Alex.Graphics.Models.Blocks
 						chunkBuilder.AddVertex(
 							position, vertex.Position, vertex.Face,
 							new Vector4(
-								textureCoordinates.X, textureCoordinates.Y, uvMap.TextureInfo.Width,
+								textureCoordinates.X, textureCoordinates.Y, uvMap.TextureInfo.FrameHeight,
 								uvMap.TextureInfo.Height), vertex.Color, targetState, vertexFlags);
 
 					}
