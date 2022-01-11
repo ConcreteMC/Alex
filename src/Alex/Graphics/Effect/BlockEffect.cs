@@ -509,7 +509,7 @@ namespace Alex.Graphics.Effect
             _lightOffsetParam = Parameters["LightOffset"];
             _ambientColorParam = Parameters["AmbientColor"];
             _lightDirectionParam = Parameters["LightDirection"];
-            _cameraPositionParam = Parameters["CameraPosition"];
+           // _cameraPositionParam = Parameters["CameraPosition"];
             _cameraFarDistanceParam = Parameters["CameraFarDistance"];
 
             _lightViewParam = Parameters["LightView"];
@@ -591,7 +591,7 @@ namespace Alex.Graphics.Effect
             
             if ((_dirtyFlags & EffectDirtyFlags.CameraPosition) != 0)
             {
-                _cameraPositionParam.SetValue(_cameraPosition);
+               // _cameraPositionParam.SetValue(_cameraPosition);
                 _dirtyFlags &= ~EffectDirtyFlags.CameraPosition;
             }
             

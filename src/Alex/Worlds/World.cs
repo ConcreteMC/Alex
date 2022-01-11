@@ -492,7 +492,7 @@ namespace Alex.Worlds
 					if (Options.VideoOptions.Fog.Value)
 					{
 						ChunkManager.FogColor = SkyBox.WorldFogColor.ToVector3();
-						ChunkManager.FogDistance = args.Camera.FarDistance;
+						ChunkManager.FogDistance =  ChunkManager.RenderDistance;
 						ChunkManager.FogEnabled = Options.VideoOptions.Fog.Value;
 					}
 				}
@@ -523,7 +523,7 @@ namespace Alex.Worlds
 			else if (_wasInWater && !inWater)
 			{
 				ChunkManager.FogColor = SkyBox.WorldFogColor.ToVector3();
-				ChunkManager.FogDistance = args.Camera.FarDistance;
+				ChunkManager.FogDistance = ChunkManager.RenderDistance;
 				ChunkManager.FogEnabled = Options.VideoOptions.Fog.Value;
 			}
 

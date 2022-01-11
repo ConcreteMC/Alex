@@ -13,7 +13,7 @@ float4x4 View;
 float4x4 LightProjection;
 float4x4 LightView;
 
-float3 CameraPosition;
+//float3 CameraPosition;
 float CameraFarDistance;
 
 float4 DiffuseColor;
@@ -54,15 +54,16 @@ struct PixelToFrame  {
 
 float ComputeFogFactor(float d) 
 {
-    return saturate((d - FogStart) / (FogEnd - FogStart)) * FogEnabled;
+      return saturate((d - FogStart) / (FogEnd - FogStart)) * FogEnabled;
+   // return saturate((FogEnd - d) / (FogEnd - FogStart)) * FogEnabled;
 }
 
 float2 ApplyFrameOffset(float4 inTexCoords, float2 uv){
-    if (inTexCoords.z % inTexCoords.w != 0){
-        float totalFrames = floor(inTexCoords.w / inTexCoords.z);
-        float index = floor(ElapsedTime % totalFrames);
+    if (inTexCoords.z != inTexCoords.w){
+        float yFrames = floor(inTexCoords.w / inTexCoords.z);
+        float index = floor(ElapsedTime);
 
-        uv += float2(0, inTexCoords.z * index);
+        return uv + float2(0, floor(index % yFrames) * inTexCoords.z);
     }
 
     return uv;
@@ -70,6 +71,8 @@ float2 ApplyFrameOffset(float4 inTexCoords, float2 uv){
 
 VertexToPixel VertexShaderFunction(float4 inPosition : POSITION, float4 inNormal : NORMAL, float4 inTexCoords : TEXCOORD0, float4 inColor : COLOR0, float2 lightValues : TEXCOORD01)  {
     VertexToPixel Output = (VertexToPixel)0;
+
+    inPosition.w = 1.0f;
 
     float4 worldPos = mul(inPosition, World);
     float4 viewPos = mul(worldPos, View);
@@ -85,9 +88,9 @@ VertexToPixel VertexShaderFunction(float4 inPosition : POSITION, float4 inNormal
         uv = ApplyFrameOffset(inTexCoords, uv);
 
     uv *= UvScale;
-    
+
     Output.TexCoords = uv;
-    Output.FogFactor = ComputeFogFactor(distance(CameraPosition, worldPos));
+    Output.FogFactor = ComputeFogFactor(viewPos.z);
     Output.Normal = inNormal;
 
     return Output;
@@ -98,18 +101,19 @@ PixelToFrame PixelShaderFunction(VertexToPixel PSIn)  {
 
     float4 baseColor = 0.086f;
     float4 textureColor = tex2D(textureSampler, PSIn.TexCoords);
-    
+    //float4 fogColor = float4(FogColor.x, FogColor.y, FogColor.z, 1.0f);
+
     float4 colorValue = pow((1.0f / 16.0f) * PSIn.Lighting, 1.2f) + baseColor;
 
     float4 output = textureColor * PSIn.Color;
     output.r *= colorValue;
     output.g *= colorValue;
     output.b *= colorValue;
-    
+
     output.rgb = lerp(output.rgb, FogColor, PSIn.FogFactor);
     clip((output.a < AlphaTest.x) ? AlphaTest.z : AlphaTest.w);
 
-    result.Color = output;
+    result.Color = output;// PSIn.FogFactor * output + (1.0 - PSIn.FogFactor) * fogColor;
 
     return result;
    // return output * float4();

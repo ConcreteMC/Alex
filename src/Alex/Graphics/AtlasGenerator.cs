@@ -161,7 +161,7 @@ namespace Alex.Graphics
 				   new Vector2(img.Width, img.Height), new Vector2(node.Value.Source.X, node.Value.Source.Y),
 				   node.Value.Source.Width, node.Value.Source.Height,
 				   node.Value.Source.Height != node.Value.Source.Width, node.Value.Source.Width / TextureWidth,
-				   node.Value.Source.Height / TextureHeight);
+				   node.Value.Source.Height / node.Value.Source.Width);
 		   }
 		   
 		   var oldAtlas = _textureAtlas;

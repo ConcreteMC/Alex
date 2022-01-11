@@ -114,11 +114,13 @@ namespace Alex.Worlds
 			var fogStart = 0;
 			Shaders = new RenderingShaders();
 			//Shaders.SetTextures(stillAtlas);
-			Shaders.FogEnabled = Options.VideoOptions.Fog.Value;
+			FogEnabled = Options.VideoOptions.Fog.Value;
+			FogDistance = Options.VideoOptions.RenderDistance.Value;
 			Options.VideoOptions.Fog.Bind(
 				(old, newValue) =>
 				{
-					Shaders.FogEnabled = newValue;
+					FogEnabled = newValue;
+					FogDistance = RenderDistance;
 				});
 			//_renderSampler.MaxMipLevel = stillAtlas.LevelCount;
 
