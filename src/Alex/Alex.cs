@@ -151,9 +151,9 @@ namespace Alex
 
             DeviceManager = new GraphicsDeviceManager(this)
             {
-                PreferMultiSampling = true,
+               // PreferMultiSampling = true,
                 SynchronizeWithVerticalRetrace = false,
-                GraphicsProfile = GraphicsProfile.Reach,
+                GraphicsProfile = GraphicsProfile.HiDef,
                 PreferHalfPixelOffset = false,
                 PreferredDepthStencilFormat = DepthFormat.Depth24Stencil8
             };
@@ -165,7 +165,7 @@ namespace Alex
                 args.GraphicsDeviceInformation.PresentationParameters.DepthStencilFormat = DepthFormat.Depth24Stencil8;
 
                 DeviceManager.PreferredBackBufferFormat = SurfaceFormat.Color;
-                DeviceManager.PreferMultiSampling = true;
+              //  DeviceManager.PreferMultiSampling = true;
 
                 DeviceManager.PreferredBackBufferWidth = WindowSize.X;
                 DeviceManager.PreferredBackBufferHeight = WindowSize.Y;
@@ -494,7 +494,7 @@ namespace Alex
             UiTaskManager.Enqueue(
                 () =>
                 {
-                    DeviceManager.PreferMultiSampling = enabled;
+                   // DeviceManager.PreferMultiSampling = enabled;
                     GraphicsDevice.PresentationParameters.MultiSampleCount = count;
 
                     DeviceManager.ApplyChanges();

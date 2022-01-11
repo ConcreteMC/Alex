@@ -1,6 +1,6 @@
 #if OPENGL
-#define VS_SHADERMODEL vs_3_0
-#define PS_SHADERMODEL ps_3_0
+#define VS_SHADERMODEL vs_4_0
+#define PS_SHADERMODEL ps_4_0
 #else
 #define VS_SHADERMODEL vs_4_0_level_9_1
 #define PS_SHADERMODEL ps_4_0_level_9_1
@@ -19,21 +19,16 @@ float FogEnd;
 float3 FogColor;
 float2 UvScale;
 
-Texture Texture;
-//: register(s0);
-sampler2D textureSampler: register(s0) = sampler_state {
-    Texture = <Texture>;
+Texture2D MyTexture;
+sampler textureSampler : register(s0) = sampler_state {
+    Texture = (MyTexture);
 };
 
 struct VertexToPixel  {
-    float4 Position     : POSITION;
+    float4 Position     : SV_POSITION;
     float4 TexCoords    : TEXCOORD0;
     float4 Color        : COLOR0;
     float FogFactor    : COLOR1;
-};
-
-struct PixelToFrame  {
-    float4 Color        : COLOR0;
 };
 
 float ComputeFogFactor(float d) 
@@ -56,26 +51,25 @@ VertexToPixel VertexShaderFunction(float4 inPosition : POSITION, float4 inTexCoo
     return Output;
 }
 
-PixelToFrame PixelShaderFunction(VertexToPixel PSIn)  {
-    PixelToFrame Output = (PixelToFrame)0;
-
-    float4 textureColor = tex2D(textureSampler, PSIn.TexCoords * UvScale);
+float4 PixelShaderFunction(VertexToPixel PSIn) : SV_Target  {
+    float4 textureColor = MyTexture.Sample(textureSampler, PSIn.TexCoords * UvScale);
     
+    float4 output;
     if (textureColor.a < 255 && textureColor.a > 0){
         textureColor.a = 255;
-        Output.Color = textureColor * PSIn.Color;
+        output = textureColor * PSIn.Color;
     }
     else
     {
-        Output.Color = textureColor;// * PSIn.Color;
+       output = textureColor;// * PSIn.Color;
     }
 
-    Output.Color.rgb = lerp(Output.Color.rgb, FogColor, PSIn.FogFactor);
+    output.rgb = lerp(output.rgb, FogColor, PSIn.FogFactor);
     
 
-    clip((Output.Color.a < AlphaTest.x) ? AlphaTest.z : AlphaTest.w);
+    clip((output.a < AlphaTest.x) ? AlphaTest.z : AlphaTest.w);
 
-    return Output;
+    return output;
 }
 
 technique Entity  {

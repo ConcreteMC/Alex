@@ -25,7 +25,7 @@ namespace Alex.Common.Utils
 		
 		public static long MemoryUsage(this VertexBuffer buffer)
 		{
-			return buffer.VertexDeclaration.VertexStride * buffer.VertexCount;
+			return buffer?.VertexDeclaration?.VertexStride * buffer?.VertexCount ?? 0;
 		}
 		
 		public static long MemoryUsage(this IndexBuffer buffer)

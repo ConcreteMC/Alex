@@ -47,6 +47,14 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MiNET.Console", "..\submodu
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Alex.ECS", "Alex.ECS\Alex.ECS.csproj", "{6FB2730B-78B0-4AE5-9E48-E901D2E6DD54}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Shaders", "Shaders", "{A1B11EA5-36F6-45A3-B9CF-0DDB43DEACA9}"
+	ProjectSection(SolutionItems) = preProject
+		Shaders\Blockshader.fx = Shaders\Blockshader.fx
+		Shaders\Entityshader.fx = Shaders\Entityshader.fx
+		Shaders\Lightmap.fx = Shaders\Lightmap.fx
+		Shaders\ShawowMap.fx = Shaders\ShawowMap.fx
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Appveyor|Any CPU = Appveyor|Any CPU
@@ -246,6 +254,7 @@ Global
 		{3825C1C5-02EE-41B9-B679-1A724D256F3E} = {FB362EE7-987B-4316-BEC6-7F27C7117E92}
 		{18E484B8-B625-45CD-92DD-52B9CA6A8838} = {56040BCF-D80D-4435-B420-BF8B29A5B4B1}
 		{09378720-C7F2-4AE4-9111-B0D64F0D9496} = {66F9179F-DEB1-45B9-B067-D613A2857D5C}
+		{A1B11EA5-36F6-45A3-B9CF-0DDB43DEACA9} = {5339DA92-BA8E-441B-AF71-27B75FEEC760}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {32B4D997-4F97-43FC-9636-1E35A79AA844}

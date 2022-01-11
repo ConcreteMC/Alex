@@ -33,10 +33,10 @@
 		<Otherwise>
 			<PropertyGroup>
 				<TargetFramework>net6.0</TargetFramework>
-				<RuntimeIdentifiers>win-x64;linux-x64;osx-x64</RuntimeIdentifiers>
+				<RuntimeIdentifiers>linux-x64</RuntimeIdentifiers>
 			</PropertyGroup>
 			<ItemGroup>
-				<PackageReference  Include="MonoGame.Framework.DesktopGL" Version="3.8.0.1641" />
+				<PackageReference  Include="MonoGame.Framework.Compute.DesktopGL" Version="3.8.1.1" />
 			</ItemGroup>
 		</Otherwise>
 	</Choose>

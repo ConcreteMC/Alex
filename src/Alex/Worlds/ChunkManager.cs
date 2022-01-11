@@ -114,14 +114,14 @@ namespace Alex.Worlds
 			var fogStart = 0;
 			Shaders = new RenderingShaders();
 			//Shaders.SetTextures(stillAtlas);
-			FogEnabled = Options.VideoOptions.Fog.Value;
+			/*FogEnabled = Options.VideoOptions.Fog.Value;
 			FogDistance = Options.VideoOptions.RenderDistance.Value;
 			Options.VideoOptions.Fog.Bind(
 				(old, newValue) =>
 				{
 					FogEnabled = newValue;
 					FogDistance = RenderDistance;
-				});
+				});*/
 			//_renderSampler.MaxMipLevel = stillAtlas.LevelCount;
 
 			Chunks = new ConcurrentDictionary<ChunkCoordinates, ChunkColumn>();
@@ -275,16 +275,16 @@ namespace Alex.Worlds
 		/// <inheritdoc />
 		public int RenderedChunks { get; private set; } = 0;
 
-		public bool FogEnabled
+		/*public bool FogEnabled
 		{
 			get { return Shaders.FogEnabled; }
 			set
 			{
 				Shaders.FogEnabled = value;
 			}
-		}
+		}*/
 
-		public Vector3 FogColor
+		/*public Color FogColor
 		{
 			get { return Shaders.FogColor; }
 			set
@@ -309,7 +309,7 @@ namespace Alex.Worlds
 			{
 				Shaders.AmbientLightColor = value;
 			}
-		}
+		}*/
 
 		public float WaterSurfaceTransparency { get; set; } = 0.65f;
 		
@@ -450,7 +450,7 @@ namespace Alex.Worlds
 				{
 					if (!ReferenceEquals(oldColumn, chunk))
 					{
-						Log.Warn($"Replaced: {coordinates}");
+						//Log.Warn($"Replaced: {coordinates}");
 						toRemove = oldColumn;
 					}
 

@@ -119,37 +119,6 @@ namespace Alex.Gui
             }
 
             return button;
-            
-            if (modern)
-            {
-                button.Background = Color.Transparent;
-                button.DisabledBackground = Color.Transparent; 
-                button.FocusedBackground = Color.TransparentBlack;
-                button.HighlightedBackground = new Color(Color.Black * 0.8f, 0.5f);
-                button.HighlightColor = (Color) TextColor.Cyan;
-                button.DefaultColor = (Color) TextColor.White;
-                
-                if (button is ToggleButton toggleButton)
-                {
-                    toggleButton.CheckedColor = (Color) TextColor.Cyan;
-                }
-            }
-            else
-            {
-                button.Background = AlexGuiTextures.ButtonDefault;
-                button.DisabledBackground = AlexGuiTextures.ButtonDisabled;
-                button.HighlightedBackground = AlexGuiTextures.ButtonHover;
-                button.FocusedBackground = AlexGuiTextures.ButtonFocused;
-                button.HighlightColor = (Color) TextColor.Yellow;
-                button.DefaultColor = (Color) TextColor.White;
-                
-                if (button is ToggleButton toggleButton)
-                {
-                    toggleButton.CheckedColor = (Color) TextColor.Yellow;
-                }
-            }
-
-            return button;
         }
     }
 }

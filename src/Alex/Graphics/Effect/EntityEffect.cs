@@ -351,7 +351,7 @@ namespace Alex.Graphics.Effect
         /// </summary>
         void CacheEffectParameters()
         {
-            _textureParam = Parameters["Texture"];
+            _textureParam = Parameters["MyTexture"];
            // diffuseColorParam = Parameters["DiffuseColor"];
             _alphaTestParam = Parameters["AlphaTest"];
             _fogColorParam = Parameters["FogColor"];

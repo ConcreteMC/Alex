@@ -41,6 +41,7 @@
   
   <ItemGroup>
     <ProjectReference Include="..\..\submodules\MiNET\src\MiNET\MiNET\MiNET.csproj" />
-    <ProjectReference Include="..\..\submodules\RocketUI\src\RocketUI\RocketUI.csproj" />
+    <ProjectReference Include="..\..\submodules\RocketUI\src\RocketUI\RocketUI.csproj" Exclude="MonoGame.Framework.DesktopGL">
+    </ProjectReference>
   </ItemGroup>
 </Project>

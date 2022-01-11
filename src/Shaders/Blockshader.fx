@@ -1,6 +1,6 @@
 ﻿#if OPENGL
-#define VS_SHADERMODEL vs_3_0
-#define PS_SHADERMODEL ps_3_0
+#define VS_SHADERMODEL vs_4_0
+#define PS_SHADERMODEL ps_4_0
 #else
 #define VS_SHADERMODEL vs_4_0_level_9_1
 #define PS_SHADERMODEL ps_4_0_level_9_1
@@ -13,7 +13,7 @@ float4x4 View;
 float4x4 LightProjection;
 float4x4 LightView;
 
-//float3 CameraPosition;
+float3 CameraPosition;
 float CameraFarDistance;
 
 float4 DiffuseColor;
@@ -30,26 +30,21 @@ float3 FogColor;
 
 float ElapsedTime;
 float2 UvScale;
-float ApplyAnimations = 0;
+float ApplyAnimations;
 
-Texture Texture;
-//: register(s0);
-sampler2D textureSampler: register(s0) = sampler_state {
-    Texture = <Texture>;
+Texture2D MyTexture;
+sampler textureSampler : register(s0) = sampler_state {
+    Texture = (MyTexture);
 };
 
 struct VertexToPixel  {
-    float4 Position     : POSITION;
+    float4 Position     : SV_POSITION;
     float4 WorldPos     : TEXCOORD2;
     float2 TexCoords    : TEXCOORD0;
     float4 Lighting   : TEXCOORD1;
     float4 Color        : COLOR0;
     float FogFactor    : COLOR1;
     float4 Normal : NORMAL;
-};
-
-struct PixelToFrame  {
-    float4 Color        : COLOR0;
 };
 
 float ComputeFogFactor(float d) 
@@ -74,6 +69,7 @@ VertexToPixel VertexShaderFunction(float4 inPosition : POSITION, float4 inNormal
 
     inPosition.w = 1.0f;
 
+    float4 cameraPosition = float4(CameraPosition, 1.0f);
     float4 worldPos = mul(inPosition, World);
     float4 viewPos = mul(worldPos, View);
 
@@ -90,33 +86,26 @@ VertexToPixel VertexShaderFunction(float4 inPosition : POSITION, float4 inNormal
     uv *= UvScale;
 
     Output.TexCoords = uv;
-    Output.FogFactor = ComputeFogFactor(viewPos.z);
+    Output.FogFactor = ComputeFogFactor(length(cameraPosition - worldPos));
     Output.Normal = inNormal;
 
     return Output;
 }
 
-PixelToFrame PixelShaderFunction(VertexToPixel PSIn)  {
-    PixelToFrame result = (PixelToFrame)0;
-
-    float4 baseColor = 0.086f;
-    float4 textureColor = tex2D(textureSampler, PSIn.TexCoords);
+float4 PixelShaderFunction(VertexToPixel PSIn) : SV_Target  {
+    float baseColor = 0.086f;
+    float4 textureColor = MyTexture.Sample(textureSampler, PSIn.TexCoords);
     //float4 fogColor = float4(FogColor.x, FogColor.y, FogColor.z, 1.0f);
 
-    float4 colorValue = pow((1.0f / 16.0f) * PSIn.Lighting, 1.2f) + baseColor;
+    float colorValue = pow((1.0f / 16.0f) * PSIn.Lighting, 1.2f) + baseColor;
 
     float4 output = textureColor * PSIn.Color;
-    output.r *= colorValue;
-    output.g *= colorValue;
-    output.b *= colorValue;
+    output.rgb *= colorValue;
 
     output.rgb = lerp(output.rgb, FogColor, PSIn.FogFactor);
     clip((output.a < AlphaTest.x) ? AlphaTest.z : AlphaTest.w);
 
-    result.Color = output;// PSIn.FogFactor * output + (1.0 - PSIn.FogFactor) * fogColor;
-
-    return result;
-   // return output * float4();
+    return output;// PSIn.FogFactor * output + (1.0 - PSIn.FogFactor) * fogColor;
 }
 
 technique Block  {
@@ -150,7 +139,7 @@ OUT_DEPTH RenderDepthMapVS(float4 inPosition: POSITION)
     return Out;
 }
 
-float4 RenderDepthMapPS(OUT_DEPTH In) : COLOR
+float4 RenderDepthMapPS(OUT_DEPTH In) : SV_Target
 {
     return float4(In.Distance.x,0, 0,1);
 }
@@ -163,7 +152,7 @@ technique DepthMapShader
         ZEnable = true;
         ZWriteEnable = true;
 
-        VertexShader = compile vs_2_0 RenderDepthMapVS();
-        PixelShader  = compile ps_2_0 RenderDepthMapPS();
+        VertexShader = compile VS_SHADERMODEL RenderDepthMapVS();
+        PixelShader  = compile PS_SHADERMODEL RenderDepthMapPS();
     }
 }

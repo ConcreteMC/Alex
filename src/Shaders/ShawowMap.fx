@@ -1,7 +1,6 @@
 ﻿#if OPENGL
-	#define SV_POSITION POSITION
-	#define VS_SHADERMODEL vs_3_0
-	#define PS_SHADERMODEL ps_3_0
+	#define VS_SHADERMODEL vs_4_0
+	#define PS_SHADERMODEL ps_4_0
 #else
 	#define VS_SHADERMODEL vs_4_0_level_9_1
 	#define PS_SHADERMODEL ps_4_0_level_9_1
@@ -11,22 +10,28 @@ matrix WorldViewProjection;
 
 struct VertexShaderOutput
 {
-	float4 position : SV_Position;
-    	float2 depth : TEXCOORD0;
+	float4 position : SV_POSITION;
+    float2 depth : TEXCOORD0;
 };
 
-VertexShaderOutput VSShadowMap(float3 position : SV_Position)
+struct PixelToFrame  {
+    float4 Color : SV_Target;
+};
+
+VertexShaderOutput VSShadowMap(float4 position : POSITION)
 {
 	VertexShaderOutput output = (VertexShaderOutput)0;
-
-	output.position = mul(float4(position, 1), WorldViewProjection);
-    	output.depth = output.position.zw;
-    	return output;
+	position.w = 1.0f;
+	output.position = mul(position, WorldViewProjection);
+    output.depth = output.position.zw;
+    return output;
 }
 
-float4 PSShadowMap(VertexShaderOutput input) : COLOR
+PixelToFrame PSShadowMap(VertexShaderOutput input)
 {
-	return float4(input.depth.x / input.depth.y, 0, 0, 1);
+	PixelToFrame Output = (PixelToFrame)0;
+	Output.Color = float4(input.depth.x / input.depth.y, 0, 0, 1);
+	return Output;
 }
 
 technique BasicColorDrawing
