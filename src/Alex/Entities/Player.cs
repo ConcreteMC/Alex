@@ -112,6 +112,11 @@ namespace Alex.Entities
         /// <inheritdoc />
         public override void SetFlying(bool flying)
         {
+	        if (!CanFly && flying)
+	        {
+		        IsFlying = false;
+		        return;
+	        }
 	        if (flying && !IsFlying)
 	        {
 		        IsFlying = true;

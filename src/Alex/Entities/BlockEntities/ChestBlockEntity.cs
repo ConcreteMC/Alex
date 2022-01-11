@@ -122,34 +122,44 @@ namespace Alex.Entities.BlockEntities
 			}
 		}
 
-		private bool _isDoubleChest = false;
-		public bool IsDoubleChest
+		private ChestType _chestType = ChestType.Single;
+		public ChestType ChestType
 		{
 			get
 			{
-				return _isDoubleChest;
+				return _chestType;
 			}
 			set
 			{
-				_isDoubleChest = value;
+				_chestType = value;
 
-				if (value)
+				if ((value & ChestType.Double) != 0)
 				{
-					if (new DoubleChestEntityModel().TryGetRenderer(out var renderer))
+					if ((value & ChestType.LeftHalf) != 0)
 					{
-						ModelRenderer = renderer;
+						if (new DoubleChestEntityModel().TryGetRenderer(out var renderer))
+						{
+							ModelRenderer = renderer;
+							Texture = BlockEntityFactory.DoubleChestTexture;
+						
+							Offset = new Vector3(0f, 0f, 0.5f);
+						}
 					}
-					
-					Texture = BlockEntityFactory.DoubleChestTexture;
+					else if ((value & ChestType.RightHalf) != 0)
+					{
+						IsInvisible = true;
+						ModelRenderer = null;
+						Texture = null;
+					}
 				}
-				else
+				else if ((value & ChestType.Single) != 0)
 				{
 					if (new ChestEntityModel().TryGetRenderer( out var renderer))
 					{
 						ModelRenderer = renderer;
+						Texture = BlockEntityFactory.ChestTexture;
+						Body.Position = Vector3.Zero;
 					}
-					
-					Texture = BlockEntityFactory.ChestTexture;
 				}
 			}
 		}
@@ -175,23 +185,26 @@ namespace Alex.Entities.BlockEntities
 
 			if (newBlock.BlockState.TryGetValue("type", out string type))
 			{
+				BlockEntities.ChestType chestType = 0;
 				switch (type)
 				{
 					case "single":
-						IsDoubleChest = false;
+						chestType = ChestType.Single;
 
 						break;
 
 					case "left":
-						IsDoubleChest = true;
+						chestType = ChestType.Double | ChestType.LeftHalf;
 
 						break;
 
 					case "right":
-						IsDoubleChest = true;
+						chestType = ChestType.Double | ChestType.RightHalf;
 
 						break;
 				}
+
+				ChestType = chestType;
 			}
 
 
@@ -200,5 +213,14 @@ namespace Alex.Entities.BlockEntities
 
 			return true;
 		}
+	}
+	
+	[Flags]
+	public enum ChestType
+	{
+		Single = 0x01,
+		Double = 0x02,
+		LeftHalf = 0x04,
+		RightHalf = 0x08
 	}
 }

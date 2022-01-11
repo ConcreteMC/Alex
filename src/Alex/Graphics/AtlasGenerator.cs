@@ -208,11 +208,22 @@ namespace Alex.Graphics
 			    {
 				    bmp.Mutate(x => x.Resize(mipWidth, mipHeight, KnownResamplers.NearestNeighbor, true));
 
-				    uint[] colorData;
-	        
-				    if (bmp.TryGetSinglePixelSpan(out var pixelSpan))
+				    uint[] colorData = new uint[bmp.Height * bmp.Width];
+
+				    int idx = 0;
+				    for (int row = 0; row < bmp.Height; row++)
 				    {
-					    colorData = new uint[pixelSpan.Length];
+					    var rowSpan = bmp.GetPixelRowSpan(row);
+
+					    for (int col = 0; col < rowSpan.Length; col++)
+					    {
+						    colorData[idx] = rowSpan[col].Rgba;
+						    idx++;
+					    }
+				    }
+				    /*if (bmp.TryGetSinglePixelSpan(out var pixelSpan))
+				    {
+					   // colorData = new uint[pixelSpan.Length];
 
 					    for (int i = 0; i < pixelSpan.Length; i++)
 					    {
@@ -222,7 +233,7 @@ namespace Alex.Graphics
 				    else
 				    {
 					    throw new Exception("Could not get image data!");
-				    }
+				    }*/
 
 				    //TODO: Resample per texture instead of whole texture map.
 

@@ -860,6 +860,9 @@ namespace Alex.Net.Bedrock
 				
 				case Common.Utils.EntityAction.Jump:
 					translated = PlayerAction.Jump;
+					if (ServerAuthoritiveMovement)
+						return;
+					
 					break;
 
 				default:
