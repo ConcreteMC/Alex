@@ -259,7 +259,8 @@ namespace Alex.Utils.Assets
                     {
                         foreach (var file in dir.EnumerateFiles("*", SearchOption.AllDirectories))
                         {
-                            zip.CreateEntryFromFile(file.FullName, Path.GetRelativePath(dir.FullName, file.FullName));
+                            // Zip file entries MUST use '/' as directory separator 
+                            zip.CreateEntryFromFile(file.FullName, Path.GetRelativePath(dir.FullName, file.FullName).Replace(Path.DirectorySeparatorChar, '/'));
                         }
                     }
 

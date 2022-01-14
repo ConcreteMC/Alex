@@ -1,10 +1,5 @@
 ﻿namespace ResourcePackLib.Core;
 
-public interface IResourcePackReader
-{
-    Task<bool> CanLoadAsync();
-}
-
 public class ResourcePackFactory
 {
     private List<IResourcePackReader> _readers = new List<IResourcePackReader>();

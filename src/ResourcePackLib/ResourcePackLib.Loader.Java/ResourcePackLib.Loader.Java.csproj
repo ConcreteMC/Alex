@@ -10,4 +10,8 @@
       <ProjectReference Include="..\ResourcePackLib.Core\ResourcePackLib.Core.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="JsonConverters" />
+    </ItemGroup>
+
 </Project>
