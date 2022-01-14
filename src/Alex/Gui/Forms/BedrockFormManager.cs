@@ -54,13 +54,11 @@ namespace Alex.Gui.Forms
 
         public void Hide(uint id)
         {
-            if (_activeForm != null)
+            var activeForm = _activeForm;
+            if (activeForm != null && activeForm.FormId == id)
             {
-                if (_activeForm.FormId == id)
-                {
-                    _activeForm = null;
-                    GuiManager.HideDialog(_activeForm);
-                }
+                _activeForm = null;
+                activeForm?.Close();
             }
         }
 

@@ -162,7 +162,7 @@ namespace Alex.Networking.Java.Packets
 		private static void RegisterStatus()
 		{
 			Register(ConnectionState.Status, 0x00, () => ResponsePacket.CreateObject());
-			Register(ConnectionState.Status, 0x01, () => PingPacket.CreateObject());
+			Register(ConnectionState.Status, 0x01, () => PongPacket.CreateObject());
 		}
 
 		private static void RegisterLogin()

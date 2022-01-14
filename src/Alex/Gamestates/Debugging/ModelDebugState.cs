@@ -63,7 +63,7 @@ namespace Alex.Gamestates.Debugging
 			AddChild(_modelExplorerView = new GuiModelExplorerView(ModelExplorer, new Vector3(8f, 0f, 8f), new Vector3(0f, 0f, 0f))
 			{
 				Anchor = Alignment.Fill,
-				Background = Color.TransparentBlack,
+				Background = Color.Black * 0.8f,
 				BackgroundOverlay = new Color(Color.Black, 0.15f),
 
 				Margin = new Thickness(0),

@@ -1,24 +1,15 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using Alex.Common;
 using Alex.Common.Graphics;
-using Alex.Common.Services;
 using Alex.Common.Utils;
-using Alex.Common.Utils.Vectors;
 using Alex.Gamestates.Common;
-using Alex.Graphics.Camera;
-using Alex.Gui;
-using Alex.Gui.Dialogs;
 using Alex.Gui.Elements;
 using Alex.Gui.Screens.Ingame;
-using Alex.Items;
 using Alex.Net;
 using Alex.Net.Bedrock;
-using Alex.ResourcePackLib.Json.Models.Items;
 using Alex.Services.Discord;
 using Alex.Utils;
 using Alex.Worlds;
@@ -26,10 +17,8 @@ using Alex.Worlds.Abstraction;
 using Alex.Worlds.Chunks;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
 using MiNET.Utils;
 using NLog;
-using RocketUI;
 using GpuResourceManager = Alex.Common.Graphics.GpuResources.GpuResourceManager;
 using PlayerLocation = Alex.Common.Utils.Vectors.PlayerLocation;
 
@@ -481,6 +470,50 @@ namespace Alex.Gamestates.InGame
 			world?.RenderSprites(args);
 		}
 
+		private void CloseLevel()
+		{
+			GenericLoadingDialog genericLoadingDialog = Alex.GuiManager.CreateDialog<GenericLoadingDialog>();
+			genericLoadingDialog.Text = "Disconnecting...";
+			genericLoadingDialog.Show();
+
+			ThreadPool.QueueUserWorkItem(
+				(o) =>
+				{
+					try
+					{
+						genericLoadingDialog.Text = "Closing network connection...";
+						NetworkProvider?.Close();
+						NetworkProvider = null;
+
+						genericLoadingDialog.Text = "Disposing world...";
+						World?.Dispose();
+						World = null;
+
+						genericLoadingDialog.Text = "Disposing world provider...";
+						WorldProvider?.Dispose();
+						WorldProvider = null;
+
+						genericLoadingDialog.Text = "Unloading HUD...";
+						_playingHud?.Unload();
+
+						genericLoadingDialog.Text = "Reloading resources...";
+						Alex.Resources.ReloadBedrockResources(genericLoadingDialog);
+
+						RichPresenceProvider.ClearPresence();
+						GC.Collect();
+					}
+					catch (Exception ex)
+					{
+						Log.Warn(ex, $"Failed to close session!");
+					}
+					finally
+					{
+						Log.Info($"Unloaded playstate!");
+						genericLoadingDialog.Close();
+					}
+				});
+		}
+
 		private bool _didClose = false;
 		protected override void OnUnload()
 		{
@@ -495,48 +528,17 @@ namespace Alex.Gamestates.InGame
 			
 			World?.TickManager?.UnregisterTicked(WorldProvider);
 
-			GenericLoadingDialog genericLoadingDialog = Alex.GuiManager.CreateDialog<GenericLoadingDialog>();
-			genericLoadingDialog.Text = "Disconnecting...";
-			genericLoadingDialog.Show();
-			
-			ThreadPool.QueueUserWorkItem(
-				(o) =>
+			if (Alex.GuiManager.ActiveDialog is DisconnectedDialog dialog)
+			{
+				dialog.OnDialogClosed += (_, _) =>
 				{
-					try
-					{
-						genericLoadingDialog.Text = "Closing network connection...";
-						NetworkProvider?.Close();
-						NetworkProvider = null;
-						
-						genericLoadingDialog.Text = "Disposing world...";
-						World?.Dispose();
-						World = null;
+					CloseLevel();
+				};
 
-						genericLoadingDialog.Text = "Disposing world provider...";
-						WorldProvider?.Dispose();
-						WorldProvider = null;
+				return;
+			}
 
-						genericLoadingDialog.Text = "Unloading HUD...";
-						_playingHud?.Unload();
-
-						genericLoadingDialog.Text = "Reloading resources...";
-						Alex.Resources.ReloadBedrockResources(genericLoadingDialog);
-						
-						RichPresenceProvider.ClearPresence();
-						GC.Collect();
-					}
-					catch (Exception ex)
-					{
-						Log.Warn(ex, $"Failed to close session!");
-					}
-					finally
-					{
-						Log.Info($"Unloaded playstate!");
-						genericLoadingDialog.Close();
-					}
-				});
-
-			
+			CloseLevel();
 			//GetService<IEventDispatcher>().UnregisterEvents(_playingHud.Chat);
 			//_playingHud.Chat = 
 		}

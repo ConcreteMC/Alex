@@ -103,14 +103,14 @@ namespace Alex.Utils.Assets
             return false;
         }
         
-        public async Task<string> EnsureTargetReleaseAsync(string targetRelease, IProgressReceiver progressReceiver)
+        public async Task<string> EnsureTargetReleaseAsync(string targetRelease, IProgressReceiver progressReceiver, string assetDirectory)
         {
             var targetVersion = targetRelease; //manifest.Latest.Release;
 
        //     string assetDirectory    = Path.Combine("assets", "java");
             string assetsZipSavePath = Path.Combine("assets", $"java-{targetVersion}.zip");
 
-            if (TryGetStoredVersion(out string currentVersion))
+            /*if (TryGetStoredVersion(out string currentVersion))
             {
                 if (currentVersion == targetVersion)
                 {
@@ -120,7 +120,7 @@ namespace Alex.Utils.Assets
                         return assetsZipSavePath;
                     }
                 }
-            }
+            }*/
 
             /*if (CheckLocal(targetRelease, out var jarPath))
             {
@@ -150,13 +150,13 @@ namespace Alex.Utils.Assets
                 LauncherMeta launcherMeta;
                 AssetIndex   assetIndex;
 
-                var dirpath = Path.Combine("assets", $"java-{targetVersion}_cache");
+                //var dirpath = Path.Combine("assets", $"java-{targetVersion}_cache");
 
-                if (!_storage.TryGetDirectory(dirpath, out var dir))
+                if (!_storage.TryGetDirectory(assetDirectory, out var dir))
                 {
-                    if (_storage.TryCreateDirectory(dirpath))
+                    if (_storage.TryCreateDirectory(assetDirectory))
                     {
-                        if (!_storage.TryGetDirectory(dirpath, out dir))
+                        if (!_storage.TryGetDirectory(assetDirectory, out dir))
                             return assetsZipSavePath;
                     }
                 }
@@ -253,7 +253,7 @@ namespace Alex.Utils.Assets
                 }
 
                 //  make new zip m8
-                using (var ms = new MemoryStream())
+                /*using (var ms = new MemoryStream())
                 {
                     using (var zip = new ZipArchive(ms, ZipArchiveMode.Create, true))
                     {
@@ -270,10 +270,10 @@ namespace Alex.Utils.Assets
 
                     _storage.TryWriteBytes(assetsZipSavePath, allBytes);
                     Log.Info($"Written Archive to '{assetsZipSavePath}' (Size: {allBytes.Length})");
-                }
+                }*/
 
-                Thread.Sleep(500);
-                dir.Delete(true);
+               // Thread.Sleep(500);
+                //dir.Delete(true);
             }
             
             _storage.TryWriteString(CurrentVersionStorageKey, targetVersion);

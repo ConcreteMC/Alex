@@ -22,7 +22,7 @@ namespace Alex.Worlds.Multiplayer
 {
 	public class BedrockWorldProvider : WorldProvider
 	{
-		private readonly IPEndPoint _endPoint;
+		public readonly ServerConnectionDetails ConnectionDetails;
 		private readonly PlayerProfile _profile;
 		private static Logger Log = LogManager.GetCurrentClassLogger();
 		
@@ -30,9 +30,9 @@ namespace Alex.Worlds.Multiplayer
 		protected BedrockClient Client { get; set; }
 		public BedrockFormManager FormManager { get; set; }
 		
-		public BedrockWorldProvider(Alex alex, IPEndPoint endPoint, PlayerProfile profile)
+		public BedrockWorldProvider(Alex alex, ServerConnectionDetails connectionDetails, PlayerProfile profile)
 		{
-			_endPoint = endPoint;
+			ConnectionDetails = connectionDetails;
 			_profile = profile;
 			Alex = alex;
 			
@@ -41,14 +41,14 @@ namespace Alex.Worlds.Multiplayer
 
 		public void Init(out NetworkProvider networkProvider)
 		{
-			Client = GetClient(Alex, _endPoint, _profile);
+			Client = GetClient(Alex, ConnectionDetails, _profile);
 			networkProvider = Client;
 
 			var guiManager = Alex.GuiManager;
 			FormManager = new BedrockFormManager(networkProvider, guiManager, Alex.InputManager);
 		}
 
-		protected virtual BedrockClient GetClient(Alex alex, IPEndPoint endPoint, PlayerProfile profile)
+		protected virtual BedrockClient GetClient(Alex alex, ServerConnectionDetails endPoint, PlayerProfile profile)
 		{
 			return new BedrockClient(alex, endPoint, profile, this);
 		}
@@ -188,124 +188,151 @@ namespace Alex.Worlds.Multiplayer
 			bool loadingResources = false;
 			
 			var resourcePackManager = Client?.ResourcePackManager;
-			void statusHandler (object sender, ResourcePackManager.ResourceStatusChangedEventArgs args)
+			void statusHandler(object sender, ResourcePackManager.ResourceStatusChangedEventArgs args)
 			{
 				switch (args.Status)
 				{
 					case ResourcePackManager.ResourceManagerStatus.Ready:
 						waitingOnResources = false;
 						loadingResources = false;
+
 						break;
+
 					case ResourcePackManager.ResourceManagerStatus.ReceivingResources:
 						waitingOnResources = true;
 						loadingResources = false;
+
 						break;
+
 					case ResourcePackManager.ResourceManagerStatus.StartLoading:
 						waitingOnResources = false;
 						loadingResources = true;
+
 						break;
+
 					case ResourcePackManager.ResourceManagerStatus.FinishedLoading:
 						waitingOnResources = false;
 						loadingResources = false;
+
 						break;
 				}
 			}
-
-			if (resourcePackManager != null)
+			
+			try
 			{
-				resourcePackManager.StatusChanged += statusHandler;
-
-				waitingOnResources = resourcePackManager.Status != ResourcePackManager.ResourceManagerStatus.Ready
-				                     && resourcePackManager.Status
-				                     != ResourcePackManager.ResourceManagerStatus.Initialized;
-			}
-
-			while (Client.IsConnected && Client.DisconnectReason != DisconnectReason.Unknown)
-			{
-				progressReport(state, percentage, subTitle);
-
-				if (waitingOnResources)
+				if (resourcePackManager != null)
 				{
-					state = LoadingState.RetrievingResources;
-					percentage = (int) Math.Ceiling(resourcePackManager.Progress * 100);
+					resourcePackManager.StatusChanged += statusHandler;
+
+					waitingOnResources = resourcePackManager.Status != ResourcePackManager.ResourceManagerStatus.Ready
+					                     && resourcePackManager.Status
+					                     != ResourcePackManager.ResourceManagerStatus.Initialized;
 				}
-				else if (loadingResources)
-				{
-					state = LoadingState.LoadingResources;
-					percentage = resourcePackManager.LoadingProgress;
-				}
-				else if (!Client.Connection.IsNetworkOutOfOrder && !outOfOrder)
-				{
-					double radiusSquared = Math.Pow(Client.World.ChunkManager.RenderDistance, 2);
-					var target = radiusSquared;
-					percentage = (int) ((100 / target) * World.ChunkManager.ChunkCount);
 
-					state = percentage >= 100 ? LoadingState.Spawning : LoadingState.LoadingChunks;
+				LoadResult loadResult = LoadResult.Unknown;
+				while (Client.IsConnected && Client.DisconnectReason != DisconnectReason.Unknown)
+				{
+					progressReport(state, percentage, subTitle);
 
-					if (!Client.GameStarted)
+					if (waitingOnResources)
 					{
-						subTitle = "Waiting on game start...";
+						state = LoadingState.RetrievingResources;
+						percentage = (int)Math.Ceiling(resourcePackManager.Progress * 100);
+					}
+					else if (loadingResources)
+					{
+						state = LoadingState.LoadingResources;
+						percentage = resourcePackManager.LoadingProgress;
+					}
+					else if (!Client.Connection.IsNetworkOutOfOrder && !outOfOrder)
+					{
+						double radiusSquared = Math.Pow(Client.World.ChunkManager.RenderDistance, 2);
+						var target = radiusSquared;
+						percentage = (int)((100 / target) * World.ChunkManager.ChunkCount);
+
+						state = percentage >= 100 ? LoadingState.Spawning : LoadingState.LoadingChunks;
+
+						if (!Client.GameStarted)
+						{
+							subTitle = "Waiting on game start...";
+						}
+						else
+						{
+							subTitle = "Waiting on spawn confirmation...";
+						}
+					}
+
+					if (Client.Connection.IsNetworkOutOfOrder)
+					{
+						if (!outOfOrder)
+						{
+							subTitle = "Waiting for network to catch up...";
+							outOfOrder = true;
+						}
 					}
 					else
 					{
-						subTitle = "Waiting on spawn confirmation...";
+						if (outOfOrder)
+						{
+							subTitle = "";
+							outOfOrder = false;
+							sw.Restart();
+						}
 					}
-				}
 
-				if (Client.Connection.IsNetworkOutOfOrder)
-				{
-					if (!outOfOrder)
+					if (Client.CanSpawn && Client.GameStarted && !waitingOnResources && !loadingResources)
 					{
-						subTitle = "Waiting for network to catch up...";
-						outOfOrder = true;
+						break;
 					}
-				}
-				else
-				{
-					if (outOfOrder)
+
+					if ((!Client.GameStarted || percentage == 0) && sw.ElapsedMilliseconds >= 15000)
 					{
-						subTitle = "";
-						outOfOrder = false;
-						sw.Restart();
+						if (Client.DisconnectReason == DisconnectReason.Kicked)
+						{
+							loadResult = LoadResult.Kicked;
+							break;
+						}
+
+						Log.Warn($"Failed to connect to server, timed-out.");
+
+						loadResult = LoadResult.Timeout;
+						break;
 					}
 				}
 
-				if (Client.CanSpawn && Client.GameStarted && !waitingOnResources && !loadingResources)
-				{
-					break;
-				}
+				if (Client.DisconnectReason == DisconnectReason.Kicked)
+					return LoadResult.Kicked;
+				
+				if (Client.DisconnectReason == DisconnectReason.ServerOutOfDate || Client.DisconnectReason == DisconnectReason.ClientOutOfDate)
+					return LoadResult.VersionMismatch;
 
-				if ((!Client.GameStarted || percentage == 0) && sw.ElapsedMilliseconds >= 15000)
-				{
-					if (Client.DisconnectReason == DisconnectReason.Kicked)
-					{
-						return LoadResult.Kicked;
-					}
-
-					Log.Warn($"Failed to connect to server, timed-out.");
-
+				if (!Client.IsConnected)
 					return LoadResult.Timeout;
+				
+				if (loadResult != LoadResult.Unknown)
+				{
+					return loadResult;
 				}
+
+				Client.MarkAsInitialized();
+
+				timer.Stop();
+
+				World.Player.OnSpawn();
+				OnSpawn();
+
+				_gameStarted = true;
+
+				progressReport(LoadingState.Spawning, 99, "Waiting for Spawn Chunk");
+				SpinWait.SpinUntil(() => !World.Player.WaitingOnChunk);
+
+				return LoadResult.Done;
 			}
-
-			if (!Client.IsConnected)
-				return LoadResult.Timeout;
-
-			Client.MarkAsInitialized();
-
-			timer.Stop();
-
-			World.Player.OnSpawn();
-			OnSpawn();
-			
-			_gameStarted = true;
-			
-			if (resourcePackManager != null)
-				resourcePackManager.StatusChanged -= statusHandler;
-
-			progressReport(LoadingState.Spawning, 99, "Waiting for Spawn Chunk");
-			SpinWait.SpinUntil(() => !World.Player.WaitingOnChunk);
-			return LoadResult.Done;
+			finally
+			{
+				if (resourcePackManager != null)
+					resourcePackManager.StatusChanged -= statusHandler;
+			}
 		}
 
 		protected virtual void OnSpawn()

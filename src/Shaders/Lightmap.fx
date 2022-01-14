@@ -1,6 +1,6 @@
 #if OPENGL
-#define VS_SHADERMODEL vs_3_0
-#define PS_SHADERMODEL ps_3_0
+#define VS_SHADERMODEL vs_4_0
+#define PS_SHADERMODEL ps_4_0
 #else
 #define VS_SHADERMODEL vs_4_0_level_9_1
 #define PS_SHADERMODEL ps_4_0_level_9_1
@@ -13,7 +13,8 @@ float4x4 View;
 float4 AlphaTest;
 float4 LightOffset;
 
-sampler2D textureSampler = sampler_state  {
+SamplerState textureSampler
+{
     Texture = <Texture>;
     MipFilter = Point;
     MagFilter = Point;
@@ -29,7 +30,7 @@ struct VertexToPixel  {
 };
 
 struct PixelToFrame  {
-    float4 Color        : COLOR0;
+    float4 Color        : SV_Target;
 };
 
 VertexToPixel VertexShaderFunction(float4 inPosition : POSITION, float4 inTexCoords : TEXCOORD0, float4 inColor : COLOR0, float4 blockLight : TEXCOORD01, float4 skyLight : TEXCOORD02)  {

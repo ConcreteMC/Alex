@@ -28,6 +28,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Net;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -280,6 +281,11 @@ namespace Alex.Networking.Bedrock.RakNet
 					catch (Exception e)
 					{
 						// ignore
+						if (e is InvalidDataException)
+						{
+							throw;
+						}
+						
 						Log.Warn(e, $"Custom message handler error");
 					}
 				}
@@ -287,8 +293,9 @@ namespace Alex.Networking.Bedrock.RakNet
 			}
 			catch (Exception e)
 			{
-				Log.Error(e, "Packet handling");
-
+				Log.Error(e, "Packet handling error!");
+				Disconnect("Packet handling error!", false);
+				
 				throw;
 			}
 			finally

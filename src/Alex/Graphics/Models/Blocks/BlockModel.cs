@@ -177,13 +177,34 @@ namespace Alex.Graphics.Models.Blocks
 			}
 
 			var textureInfo = ti.Value;
-			
+
+			var xDifference = x2 - x1;
+			if (xDifference < 16)
+				xDifference = 16;
+
+			var yDifference = y2 - y1;
+			if (yDifference < 16)
+				yDifference = 16;
+
+			var tw = textureInfo.FrameWidth / xDifference;
+			var th = textureInfo.FrameHeight / yDifference;
+
+			var ox1 = x1;
+			var ox2 = x2;
+			var oy1 = y1;
+			var oy2 = y2;
+
+			x1 = (ox1 * (tw));
+			x2 = (ox2 * (tw));
+			y1 = (oy1 * (th));
+			y2 = (oy2 * (th));
+
 			if (rotation != 0)
 			{
-				var ox1 = x1;
-				var ox2 = x2;
-				var oy1 = y1;
-				var oy2 = y2;
+				ox1 = x1;
+				ox2 = x2;
+				oy1 = y1;
+				oy2 = y2;
 
 				switch (rotation)
 				{
@@ -207,14 +228,6 @@ namespace Alex.Graphics.Models.Blocks
 						break;
 				}
 			}
-			
-			var tw = textureInfo.FrameWidth / 16;
-			var th = textureInfo.FrameHeight / 16;
-			
-			x1 = (x1 * (tw));
-			x2 = (x2 * (tw));
-			y1 = (y1 * (th));
-			y2 = (y2 * (th));
 			
 			var topLeft = new Vector2(x1, y1);
 			var topRight = new Vector2(x2, y1);

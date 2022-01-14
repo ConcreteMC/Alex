@@ -151,9 +151,9 @@ namespace Alex
 
             DeviceManager = new GraphicsDeviceManager(this)
             {
-                PreferMultiSampling = true,
+               // PreferMultiSampling = true,
                 SynchronizeWithVerticalRetrace = false,
-                GraphicsProfile = GraphicsProfile.Reach,
+                GraphicsProfile = GraphicsProfile.HiDef,
                 PreferHalfPixelOffset = false,
                 PreferredDepthStencilFormat = DepthFormat.Depth24Stencil8
             };
@@ -165,7 +165,7 @@ namespace Alex
                 args.GraphicsDeviceInformation.PresentationParameters.DepthStencilFormat = DepthFormat.Depth24Stencil8;
 
                 DeviceManager.PreferredBackBufferFormat = SurfaceFormat.Color;
-                DeviceManager.PreferMultiSampling = true;
+              //  DeviceManager.PreferMultiSampling = true;
 
                 DeviceManager.PreferredBackBufferWidth = WindowSize.X;
                 DeviceManager.PreferredBackBufferHeight = WindowSize.Y;
@@ -354,7 +354,7 @@ namespace Alex
             var builtInFont = ResourceManager.ReadResource("Alex.Resources.default_font.png");
 
             var image = Image.Load<Rgba32>(builtInFont);
-            OnResourcePackPreLoadCompleted(image, MCJavaResourcePack.BitmapFontCharacters.ToList());
+            OnResourcePackPreLoadCompleted(image, MCJavaResourcePack.BitmapFontCharacters);
 
             var options = Options;
             
@@ -494,7 +494,7 @@ namespace Alex
             UiTaskManager.Enqueue(
                 () =>
                 {
-                    DeviceManager.PreferMultiSampling = enabled;
+                   // DeviceManager.PreferMultiSampling = enabled;
                     GraphicsDevice.PresentationParameters.MultiSampleCount = count;
 
                     DeviceManager.ApplyChanges();
@@ -704,12 +704,12 @@ namespace Alex
             return Task.CompletedTask;
         }
 
-        private void OnResourcePackPreLoadCompleted(Image<Rgba32> fontBitmap, List<char> bitmapCharacters)
+        private void OnResourcePackPreLoadCompleted(Image<Rgba32> fontBitmap, string[] bitmapCharacters)
         {
             UiTaskManager.Enqueue(
                 () =>
                 {
-                    Font = new BitmapFont(GraphicsDevice, fontBitmap, 16, bitmapCharacters);
+                    Font = new BitmapFont(GraphicsDevice, fontBitmap, bitmapCharacters[0].Length, bitmapCharacters.Length, bitmapCharacters);
 
                     GuiManager.ApplyFont(Font);
                 });
@@ -777,7 +777,7 @@ namespace Alex
 
                         if (result != LoadResult.Done)
                         {
-                            if (result != LoadResult.Aborted && result != LoadResult.Kicked)
+                            if (result != LoadResult.Aborted && result != LoadResult.Kicked && result != LoadResult.VersionMismatch)
                             {
                                 DisconnectedDialog.Show(this, "multiplayer.status.cannot_connect", true);
                             }

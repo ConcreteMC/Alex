@@ -32,11 +32,12 @@ namespace Alex.Worlds.Multiplayer.Java
 {
 	public class JavaServerType : ServerTypeImplementation<JavaServerQueryProvider>
 	{
+		public const string Identifier = "java";
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(JavaServerType));
 		private Alex Alex { get; }
 
 		/// <inheritdoc />
-		public JavaServerType(Alex alex) : base(alex.ServiceContainer, "Java", "java")
+		public JavaServerType(Alex alex) : base(alex.ServiceContainer, "Java", Identifier)
 		{
 			Alex = alex;
 			ProtocolVersion = JavaProtocol.ProtocolVersion;

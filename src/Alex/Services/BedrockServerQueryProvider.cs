@@ -44,7 +44,7 @@ namespace Alex.Services
 							connectionDetails.EndPoint.Address, (int) connectionDetails.EndPoint.Port);
 
 						client = new BedrockClient(
-							Game, serverEndpoint,
+							Game, connectionDetails,
 							new PlayerProfile(
 								string.Empty, $"Pinger{serverEndpoint.ToString()}",
 								$"Pinger{serverEndpoint.ToString()}", null, null, null), null)

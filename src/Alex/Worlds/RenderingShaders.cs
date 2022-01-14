@@ -1,3 +1,4 @@
+using System;
 using Alex.Common.Graphics;
 using Alex.Graphics.Camera;
 using Alex.Graphics.Effect;
@@ -111,30 +112,33 @@ namespace Alex.Worlds
 			}
 		}
 
-		public Vector3 FogColor
+		private Color _fogColor = Biome.DefaultFogColor;
+		public Color FogColor
 		{
-			get { return TransparentEffect.FogColor; }
+			get { return _fogColor; }
 			set
 			{
-				TransparentEffect.FogColor = value;
-				OpaqueEffect.FogColor = value;
-				AnimatedEffect.FogColor = value;
+				if (value != _fogColor)
+				{
+					_fogColor = value;
+					AnimatedEffect.FogColor = OpaqueEffect.FogColor = TransparentEffect.FogColor = value.ToVector3();
+				}
 			}
 		}
 
+		private float _fogDistance = 0f;
 		public float FogDistance
 		{
-			get { return TransparentEffect.FogEnd; }
+			get { return _fogDistance; }
 			set
 			{
-				var fogStart = value - (value / 2);
-				TransparentEffect.FogStart = fogStart;
-				OpaqueEffect.FogStart = fogStart;
-				AnimatedEffect.FogStart = fogStart;
-				
-				TransparentEffect.FogEnd = value;
-				OpaqueEffect.FogEnd = value;
-				AnimatedEffect.FogEnd = value;
+				if (Math.Abs(value - _fogDistance) > 0.01f)
+				{
+					_fogDistance = value;
+					var fogStart = _fogDistance - (_fogDistance / 2f);
+					AnimatedEffect.FogStart = OpaqueEffect.FogStart = TransparentEffect.FogStart = fogStart;
+					AnimatedEffect.FogEnd = OpaqueEffect.FogEnd = TransparentEffect.FogEnd = _fogDistance;
+				}
 			}
 		}
 
@@ -143,9 +147,7 @@ namespace Alex.Worlds
 			get { return TransparentEffect.DiffuseColor; }
 			set
 			{
-				TransparentEffect.DiffuseColor = value;
-				OpaqueEffect.DiffuseColor = value;
-				AnimatedEffect.DiffuseColor = value;
+				AnimatedEffect.DiffuseColor = OpaqueEffect.DiffuseColor = TransparentEffect.DiffuseColor = value;
 			}
 		}
 
@@ -157,9 +159,7 @@ namespace Alex.Worlds
 			}
 			set
 			{
-				TransparentEffect.LightOffset = value;
-				OpaqueEffect.LightOffset = value;
-				AnimatedEffect.LightOffset = value;
+				AnimatedEffect.LightOffset = OpaqueEffect.LightOffset = TransparentEffect.LightOffset = value;
 			}
 		}
 	}

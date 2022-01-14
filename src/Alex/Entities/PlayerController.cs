@@ -182,7 +182,7 @@ namespace Alex.Entities
 
 		private void ToggleFog()
 		{
-			Player.Level.ChunkManager.FogEnabled = !Player.Level.ChunkManager.FogEnabled;
+			//Player.Level.ChunkManager.FogEnabled = !Player.Level.ChunkManager.FogEnabled;
 		}
 		
 		private void ToggleBoundingBoxes()

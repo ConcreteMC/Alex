@@ -106,7 +106,7 @@ namespace Alex.Net.Bedrock
 		public BlockCoordinates ChunkPublisherPosition { get; set; } = BlockCoordinates.Zero;
 		public uint ChunkPublisherRadius { get; set; } = 0;
 
-		public BedrockClient(Alex alex, IPEndPoint endpoint, PlayerProfile playerProfile, BedrockWorldProvider wp)
+		public BedrockClient(Alex alex, ServerConnectionDetails endpoint, PlayerProfile playerProfile, BedrockWorldProvider wp)
 		{
 			_playerProfile = playerProfile;
 			TransactionTracker = new BedrockTransactionTracker(this);
@@ -133,7 +133,7 @@ namespace Alex.Net.Bedrock
 			}
 
 			Connection = new RaknetConnection();
-			Connection.RemoteEndpoint = endpoint;
+			Connection.RemoteEndpoint = endpoint.EndPoint;
 
 			Connection.CustomMessageHandlerFactory = CustomMessageHandlerFactory;
 		}
@@ -242,7 +242,7 @@ namespace Alex.Net.Bedrock
 					if (!cancellationToken.IsCancellationRequested && DateTime.UtcNow >= nextPingAttempt
 					                                               && numberOfAttempts-- > 0)
 					{
-						this.SendUnconnectedPingInternal(targetEndPoint);
+						Connection.SendUnconnectedPingInternal(targetEndPoint ?? new IPEndPoint(IPAddress.Broadcast, 19132));
 
 						nextPingAttempt = DateTime.UtcNow.Add(TimeSpan.FromMilliseconds(500));
 					}
@@ -255,7 +255,7 @@ namespace Alex.Net.Bedrock
 
 				sw.Stop();
 
-				serverInfo = (this.Connection.RemoteEndpoint, this.Connection.RemoteServerName, sw.ElapsedMilliseconds);
+				serverInfo = (this.Connection.RemoteEndpoint, this.Connection.RemoteServerName, this.Connection.RemoteServerPing);
 
 				return this.Connection.FoundServer;
 			}
@@ -265,17 +265,6 @@ namespace Alex.Net.Bedrock
 			}
 		}
 
-		private void SendUnconnectedPingInternal(IPEndPoint targetEndPoint)
-		{
-			byte[] data = new UnconnectedPing() { pingId = Stopwatch.GetTimestamp(), guid = this.Connection.ClientGuid }
-			   .Encode();
-
-			if (targetEndPoint != null)
-				this.Connection.SendData(data, targetEndPoint);
-			else
-				this.Connection.SendData(data, new IPEndPoint(IPAddress.Broadcast, 19132));
-		}
-		
 		protected override ConnectionInfo GetConnectionInfo()
 		{
 			long packetSizeOut = Interlocked.Exchange(ref Connection.ConnectionInfo.BytesOut, 0L);
@@ -413,11 +402,11 @@ namespace Alex.Net.Bedrock
 
 			if (_disconnectShown && !overrideActive)
 				return;
-			
+
 			_disconnectShown = true;
 			DisconnectReason = disconnectReason;
 			
-			DisconnectedDialog.Show(Alex, reason, useTranslation);
+			DisconnectedDialog.Show(Alex, reason, useTranslation, new Gamestates.InGame.ConnectionInfo(WorldProvider.ConnectionDetails.EndPoint, BedrockServerType.Identifier, WorldProvider.ConnectionDetails.Hostname, _playerProfile));
 			
 			Dispose();
 		}
@@ -764,7 +753,7 @@ namespace Alex.Net.Bedrock
 					LanguageCode = Alex.GuiRenderer.Language.Code.Replace("-", "_"),
 					// Alex.Services.GetService<IOptionsProvider>().AlexOptions.MiscelaneousOptions.Language.Value,
 					ServerAddress =
-						$"{Connection.RemoteEndpoint.Address.ToString()}:{Connection.RemoteEndpoint.Port.ToString()}",
+						$"{WorldProvider.ConnectionDetails.Hostname}:{Connection.RemoteEndpoint.Port.ToString()}",
 					ThirdPartyName = username,
 					DeviceId = Alex.Resources.DeviceID,
 					GameVersion = McpeProtocolInfo.GameVersion,
@@ -871,6 +860,9 @@ namespace Alex.Net.Bedrock
 				
 				case Common.Utils.EntityAction.Jump:
 					translated = PlayerAction.Jump;
+					if (ServerAuthoritiveMovement)
+						return;
+					
 					break;
 
 				default:
@@ -1314,15 +1306,26 @@ namespace Alex.Net.Bedrock
 			SendPacket(new DisconnectionNotification());
 		}
 
+		private bool _disposed = false;
 		public void Dispose()
 		{
-			foreach (var disposable in _disposables.ToArray())
+			if (_disposed)
+				return;
+
+			try
 			{
-				disposable.Dispose();
+				foreach (var disposable in _disposables.ToArray())
+				{
+					disposable.Dispose();
+				}
+
+				_disposables.Clear();
+				Close();
 			}
-			
-			_disposables.Clear();
-			Close();
+			finally
+			{
+				_disposed = true;
+			}
 		}
 	}
 
@@ -1330,6 +1333,8 @@ namespace Alex.Net.Bedrock
 	{
 		Network,
 		Kicked,
+		ClientOutOfDate,
+		ServerOutOfDate,
 		Unknown
 	}
 }

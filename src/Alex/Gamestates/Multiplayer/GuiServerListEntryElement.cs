@@ -61,7 +61,9 @@ namespace Alex.Gamestates.Multiplayer
 		private IServerQueryProvider QueryProvider { get; }
 		private IListStorageProvider<SavedServerEntry> StorageProvider { get; }
 		
-		public GuiServerListEntryElement(ServerTypeImplementation serverTypeImplementation, SavedServerEntry entry)
+		public long Latency { get; private set; }
+		public string Version { get; private set; } = "N/A";
+		public GuiServerListEntryElement(ServerTypeImplementation serverTypeImplementation, SavedServerEntry entry, GuiConnectionPingIcon.ShowPingStatusCallback showPingStatusCallback)
 		{
 			SavedServerEntry = entry;
 			QueryProvider = serverTypeImplementation.QueryProvider;
@@ -85,6 +87,8 @@ namespace Alex.Gamestates.Multiplayer
 			{
 				Anchor = Alignment.TopRight,
 			});
+
+			_pingStatus.ShowPingStatusChanged += showPingStatusCallback;
 
 			AddChild( _textWrapper = new StackContainer()
 			{
@@ -119,6 +123,12 @@ namespace Alex.Gamestates.Multiplayer
 			{
 				_serverIcon.Texture = renderer.GetTexture(AlexGuiTextures.DefaultServerIcon);
 			}
+		}
+
+		private void SetLatency(long latency)
+		{
+			Latency = latency;
+			_pingStatus.SetPing(latency);
 		}
 		
 		private CancellationTokenSource _cancellationTokenSource;
@@ -203,7 +213,7 @@ namespace Alex.Gamestates.Multiplayer
 		{
 			if (response.Success)
 			{
-				_pingStatus.SetPing(response.Ping);
+				SetLatency(response.Ping);
 			}
 			else
 			{
@@ -224,11 +234,11 @@ namespace Alex.Gamestates.Multiplayer
 
 				ConnectionEndpoint = s.EndPoint;
 
-				_pingStatus.SetVersion(!string.IsNullOrWhiteSpace(q.Version.Name) ? q.Version.Name : q.Version.Protocol.ToString());
+				_pingStatus.SetVersion(Version = !string.IsNullOrWhiteSpace(q.Version.Name) ? q.Version.Name : q.Version.Protocol.ToString());
 				
 				if (!s.WaitingOnPing)
 				{
-					_pingStatus.SetPing(s.Delay);
+					SetLatency(s.Delay);
 				}
 				
 				switch (q.Version.Compatibility)

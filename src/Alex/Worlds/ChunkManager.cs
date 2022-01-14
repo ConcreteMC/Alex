@@ -71,7 +71,8 @@ namespace Alex.Worlds
 			ExecutionTime = executionTime;
 		}
 	}
-	
+
+	public record ChunkUpdateData(ChunkCoordinates Coordinates, ScheduleType Type, ChunkCoordinates? Source);
 	public class ChunkManager : IDisposable, ITicked
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ChunkManager));
@@ -92,8 +93,8 @@ namespace Alex.Worlds
 		public EventHandler<ChunkAddedEventArgs> OnChunkAdded;
 		public EventHandler<ChunkRemovedEventArgs> OnChunkRemoved;
 		
-		private ActionBlock<ChunkCoordinates> _actionBlock;
-		private PriorityBufferBlock<ChunkCoordinates> _priorityBuffer;
+		private ActionBlock<ChunkUpdateData> _actionBlock;
+		private PriorityBufferBlock<ChunkUpdateData> _priorityBuffer;
 		private List<ChunkCoordinates> _queued = new List<ChunkCoordinates>();
 
 		public bool CalculateSkyLighting { get; set; } = true;
@@ -113,12 +114,14 @@ namespace Alex.Worlds
 			var fogStart = 0;
 			Shaders = new RenderingShaders();
 			//Shaders.SetTextures(stillAtlas);
-			Shaders.FogEnabled = Options.VideoOptions.Fog.Value;
+			/*FogEnabled = Options.VideoOptions.Fog.Value;
+			FogDistance = Options.VideoOptions.RenderDistance.Value;
 			Options.VideoOptions.Fog.Bind(
 				(old, newValue) =>
 				{
-					Shaders.FogEnabled = newValue;
-				});
+					FogEnabled = newValue;
+					FogDistance = RenderDistance;
+				});*/
 			//_renderSampler.MaxMipLevel = stillAtlas.LevelCount;
 
 			Chunks = new ConcurrentDictionary<ChunkCoordinates, ChunkColumn>();
@@ -194,12 +197,12 @@ namespace Alex.Worlds
 				NameFormat = "Chunk Builder: {0}-{1}"
 			};
 			
-			var priorityBuffer = new PriorityBufferBlock<ChunkCoordinates>(
+			var priorityBuffer = new PriorityBufferBlock<ChunkUpdateData>(
 				options,
 				options,
 				options);
 			
-			var actionBlock = new ActionBlock<ChunkCoordinates>(DoUpdate, new ExecutionDataflowBlockOptions
+			var actionBlock = new ActionBlock<ChunkUpdateData>(DoUpdate, new ExecutionDataflowBlockOptions
 			{
 				CancellationToken = CancellationToken.Token, 
 				EnsureOrdered = false, 
@@ -272,16 +275,16 @@ namespace Alex.Worlds
 		/// <inheritdoc />
 		public int RenderedChunks { get; private set; } = 0;
 
-		public bool FogEnabled
+		/*public bool FogEnabled
 		{
 			get { return Shaders.FogEnabled; }
 			set
 			{
 				Shaders.FogEnabled = value;
 			}
-		}
+		}*/
 
-		public Vector3 FogColor
+		/*public Color FogColor
 		{
 			get { return Shaders.FogColor; }
 			set
@@ -306,7 +309,7 @@ namespace Alex.Worlds
 			{
 				Shaders.AmbientLightColor = value;
 			}
-		}
+		}*/
 
 		public float WaterSurfaceTransparency { get; set; } = 0.65f;
 		
@@ -359,13 +362,13 @@ namespace Alex.Worlds
 			_processingThread = task;
 		}
 
-		private void DoUpdate(ChunkCoordinates chunkCoordinates)
+		private void DoUpdate(ChunkUpdateData data)
 		{
 			Interlocked.Increment(ref _threadsRunning);
 
 			try
 			{
-				if (!TryGetChunk(chunkCoordinates, out var chunk) || !chunk.Scheduled) return;
+				if (!TryGetChunk(data.Coordinates, out var chunk) || !chunk.Scheduled) return;
 
 				if (!Monitor.TryEnter(chunk.UpdateLock, 0))
 					return;
@@ -387,11 +390,39 @@ namespace Alex.Worlds
 					if (chunk.UpdateBuffer(World, true))
 					{
 						OnChunkUpdate?.Invoke(this, new ChunkUpdatedEventArgs(chunk, timingWatch.Elapsed));
+
+						/*//if (data.Type != ScheduleType.Border)
+						{
+							for (int nx = -1; nx < 1; nx++)
+							{
+								for (int ny = -1; ny < 1; ny++)
+								{
+									if (nx == 0 && ny == 0)
+										continue;
+
+									var neighboringCoordinates = new ChunkCoordinates(
+										data.Coordinates.X + nx, data.Coordinates.Z + ny);
+
+									if (!Chunks.ContainsKey(neighboringCoordinates))
+										continue;
+									
+									if (data.Source.HasValue && data.Source.Value == neighboringCoordinates)
+										continue;
+									
+									if (chunk.Neighboring.Contains(neighboringCoordinates))
+										continue;
+
+									chunk.Neighboring.Add(neighboringCoordinates);
+									ScheduleChunkUpdate(
+										neighboringCoordinates, ScheduleType.Border, false, data.Coordinates);
+								}
+							}
+						}*/
 					}
 				}
 				finally
 				{
-					_queued.Remove(chunkCoordinates);
+					_queued.Remove(data.Coordinates);
 					chunk.Scheduled = false;
 					Monitor.Exit(chunk.UpdateLock);
 				}
@@ -419,7 +450,7 @@ namespace Alex.Worlds
 				{
 					if (!ReferenceEquals(oldColumn, chunk))
 					{
-						Log.Warn($"Replaced: {coordinates}");
+						//Log.Warn($"Replaced: {coordinates}");
 						toRemove = oldColumn;
 					}
 
@@ -488,8 +519,8 @@ namespace Alex.Worlds
 				return;
 			cc.Scheduled = true;
 			
-			if (!cc.Neighboring.Contains(source))
-				cc.Neighboring.Add(source);
+			//if (!cc.Neighboring.Contains(source))
+			//	cc.Neighboring.Add(source);
 
 			Priority priority = Priority.Medium;
 
@@ -505,7 +536,7 @@ namespace Alex.Worlds
 			if (!_queued.Contains(position))
 			{
 				_queued.Add(position);
-				_priorityBuffer.Post(position, priority);
+				_priorityBuffer.Post(new ChunkUpdateData(position, type, source), priority);
 			}
 		}
 

@@ -146,6 +146,12 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 		public void Dispose()
 		{
 			Dispose(true);
+			GC.SuppressFinalize(this);
+		}
+
+		~ResourcePackEntry()
+		{
+			Dispose(false);
 		}
 	}
 }

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Linq;
+using System.Threading;
 using Alex.Common.Utils;
 using Alex.Gamestates.InGame;
 using Alex.Net.Bedrock;
@@ -198,11 +199,15 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 				{
 					LoadingProgress = 0;
 					Status = ResourceManagerStatus.StartLoading;
-					_resourceManager.ReloadBedrockResources(this);
-					Status = ResourceManagerStatus.FinishedLoading;
+					ThreadPool.QueueUserWorkItem(
+						_ =>
+						{
+							_resourceManager.ReloadBedrockResources(this); 
+							Status = ResourceManagerStatus.FinishedLoading;
 					
-					Status = ResourceManagerStatus.Ready;
-					LoadingProgress = 0;
+							Status = ResourceManagerStatus.Ready;
+							LoadingProgress = 0;
+						});
 				}
 			}
 			else

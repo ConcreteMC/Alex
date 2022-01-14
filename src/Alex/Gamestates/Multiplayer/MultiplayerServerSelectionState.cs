@@ -4,8 +4,10 @@ using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
+using Alex.Common;
 using Alex.Common.Data.Servers;
 using Alex.Common.Graphics;
+using Alex.Common.Graphics.Typography;
 using Alex.Common.Gui.Elements;
 using Alex.Common.Services;
 using Alex.Common.Utils;
@@ -15,6 +17,7 @@ using Alex.Gui.Elements;
 using Alex.Utils;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Input;
 using NLog;
 using RocketUI;
 
@@ -74,6 +77,7 @@ namespace Alex.Gamestates.Multiplayer
 
 		    foreach (var serverType in alex.ServerTypeManager.GetAll())
 		    {
+			    serverType.ServerStorageProvider.Load();
 			    var button = AddTabButton(serverType.DisplayName, () =>
 			    {
 				    _serverType = serverType;
@@ -205,8 +209,6 @@ namespace Alex.Gamestates.Multiplayer
 			    var serverType = _serverType;
 			    if (serverType == null) 
 				    return;
-			    
-			    serverType.ServerStorageProvider.Load();
 
 			    foreach (var entry in serverType.SponsoredServers)
 			    {
@@ -226,9 +228,24 @@ namespace Alex.Gamestates.Multiplayer
 		    finally { }
 	    }
 
+	    private GuiServerListEntryElement _showStatus = null;
 	    private GuiServerListEntryElement CreateItem(ServerTypeImplementation serverType, SavedServerEntry serverEntry)
 	    {
-		    var item = new GuiServerListEntryElement(serverType, serverEntry);
+		    GuiServerListEntryElement item = null;
+
+		    void ShowPingCallback(bool show)
+		    {
+			    if (!show)
+			    {
+				    _showStatus = null;
+			    }
+			    else
+			    {
+				    _showStatus = item;
+			    }
+		    }
+
+		    item = new GuiServerListEntryElement(serverType, serverEntry, ShowPingCallback);
 		    AddItem(item);
 
 		    return item;
@@ -406,20 +423,7 @@ namespace Alex.Gamestates.Multiplayer
 
 	    private void SaveAll()
 	    {
-		    foreach (var item in Items.ToArray())
-		    {
-			    if (!item.SaveEntry)
-			    {
-				    RemoveItem(item);
-			    }
-		    }
 		    
-		    var serverType = _serverType;
-
-		    if (serverType == null)
-			    return;
-		    
-		  //  serverType.ServerStorageProvider?.Save();
 	    }
 
 	    private void AddEditServerCallbackAction(MultiplayerAddEditServerState.AddOrEditCallback obj)
@@ -453,10 +457,40 @@ namespace Alex.Gamestates.Multiplayer
 		    Reload();
 	    }
 
+	    private Point _cursorPosition = Point.Zero;
 	    protected override void OnUpdate(GameTime gameTime)
 	    {
 			//_skyBox.Update(gameTime);
 		    base.OnUpdate(gameTime);
+
+		    if (_showStatus != null)
+		    {
+			    var mouseState = Mouse.GetState();
+			    _cursorPosition = GuiRenderer.Unproject(new Vector2(mouseState.X, mouseState.Y)).ToPoint();
+		    }
+	    }
+
+	    /// <inheritdoc />
+	    protected override void OnDraw(GuiSpriteBatch graphics, GameTime gameTime)
+	    {
+		    base.OnDraw(graphics, gameTime);
+		    
+		    var status = _showStatus;
+		    if (status == null)
+			    return;
+		    
+		    string text = $"{status.Latency}ms";
+
+		    if (!string.IsNullOrWhiteSpace(status.Version))
+		    {
+			    text = $"Server Ping: {text}\nGame Version: {status.Version.Trim()}";
+		    }
+		            
+		    var size = graphics.Font.MeasureString(text);
+		    var position = _cursorPosition + new Point(5, 5);
+		            
+		    graphics.SpriteBatch.FillRectangle(new Rectangle(position, size.ToPoint()), Color.Black * 0.5f);
+		    graphics.DrawString(graphics.Font, text, position.ToVector2(), TextColor.White, FontStyle.None);
 	    }
 
 	    protected override void OnDraw(IRenderArgs args)

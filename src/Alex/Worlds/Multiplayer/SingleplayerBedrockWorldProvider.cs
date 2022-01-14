@@ -17,7 +17,7 @@ public class SinglePlayerClient : BedrockClient
 	private readonly SingleplayerBedrockWorldProvider _provider;
 
 	/// <inheritdoc />
-	public SinglePlayerClient(Alex alex, IPEndPoint endpoint, PlayerProfile playerProfile, SingleplayerBedrockWorldProvider wp) :
+	public SinglePlayerClient(Alex alex, ServerConnectionDetails endpoint, PlayerProfile playerProfile, SingleplayerBedrockWorldProvider wp) :
 		base(alex, endpoint, playerProfile, wp)
 	{
 		_provider = wp;
@@ -47,7 +47,7 @@ public class SingleplayerBedrockWorldProvider : BedrockWorldProvider
 	public SingleplayerBedrockWorldProvider(Alex alex,
 		MiNetServer miNetServer,
 		PlayerProfile profile) : base(
-		alex, new IPEndPoint(IPAddress.Loopback, 19132), profile)
+		alex, new ServerConnectionDetails(new IPEndPoint(IPAddress.Loopback, 19132)), profile)
 	{
 		_miNetServer = miNetServer;
 		_miNetServer.StartServer();
@@ -59,7 +59,7 @@ public class SingleplayerBedrockWorldProvider : BedrockWorldProvider
 	}
 
 	/// <inheritdoc />
-	protected override BedrockClient GetClient(Alex alex, IPEndPoint endPoint, PlayerProfile profile)
+	protected override BedrockClient GetClient(Alex alex, ServerConnectionDetails endPoint, PlayerProfile profile)
 	{
 		return new SinglePlayerClient(alex, endPoint, profile, this);
 	}

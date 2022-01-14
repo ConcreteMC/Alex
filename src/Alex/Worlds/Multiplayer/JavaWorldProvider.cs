@@ -245,7 +245,7 @@ namespace Alex.Worlds.Multiplayer
 			_disconnectShown = true;
 			_wasKicked = wasKicked;
 			
-			DisconnectedDialog.Show(Alex, reason, useTranslation);
+			DisconnectedDialog.Show(Alex, reason, useTranslation, new Gamestates.InGame.ConnectionInfo(Endpoint, JavaServerType.Identifier, Hostname, Profile));
 		}
 
 		private PlayerLocation _lastSentLocation = new PlayerLocation(Vector3.Zero);

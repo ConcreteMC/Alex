@@ -16,6 +16,7 @@ using Alex.Common.Utils.Vectors;
 using Alex.Entities.Components;
 using Alex.Entities.Projectiles;
 using Alex.Gamestates;
+using Alex.Gamestates.InGame;
 using Alex.Gui.Elements.Map;
 using Alex.Items;
 using Alex.Net;
@@ -111,6 +112,11 @@ namespace Alex.Entities
         /// <inheritdoc />
         public override void SetFlying(bool flying)
         {
+	        if (!CanFly && flying)
+	        {
+		        IsFlying = false;
+		        return;
+	        }
 	        if (flying && !IsFlying)
 	        {
 		        IsFlying = true;
@@ -175,7 +181,7 @@ namespace Alex.Entities
 		        bc.WorldProvider.FormManager.CloseAll();
 		        var activeDialog = Alex.Instance.GuiManager.ActiveDialog;
 
-		        if (activeDialog != null)
+		        if (activeDialog != null && activeDialog is not DisconnectedDialog)
 		        {
 			        Alex.Instance.GuiManager.HideDialog(activeDialog);
 		        }

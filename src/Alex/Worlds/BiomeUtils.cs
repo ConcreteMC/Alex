@@ -14,8 +14,8 @@ namespace Alex.Worlds
 	{
 		private static readonly Color DefaultWaterColor    = ColorHelper.HexToColor("#44AFF5");
 		private static readonly Color DefaultWaterFogColor = ColorHelper.HexToColor("#44AFF5");
-		private static readonly Color DefaultFogColor = ColorHelper.HexToColor("#ABD2FF");
-		private static readonly Color DefaultSkyColor = ColorHelper.HexToColor("#ABD2FF");
+		public static readonly Color DefaultFogColor = ColorHelper.HexToColor("#ABD2FF");
+		public static readonly Color DefaultSkyColor = ColorHelper.HexToColor("#ABD2FF");
 		
 		public                  uint    Id { get; set; }
 		public                  string Name;

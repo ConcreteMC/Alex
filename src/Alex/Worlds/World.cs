@@ -485,17 +485,7 @@ namespace Alex.Worlds
 				_brightnessMod = SkyBox.BrightnessModifier;
 				
 				var diffuseColor = Color.White.ToVector3() * SkyBox.BrightnessModifier;
-				ChunkManager.AmbientLightColor = diffuseColor;
-
-				if (!inWater)
-				{
-					if (Options.VideoOptions.Fog.Value)
-					{
-						ChunkManager.FogColor = SkyBox.WorldFogColor.ToVector3();
-						ChunkManager.FogDistance = args.Camera.FarDistance;
-						ChunkManager.FogEnabled = Options.VideoOptions.Fog.Value;
-					}
-				}
+				ChunkManager.Shaders.AmbientLightColor = diffuseColor;
 
 				if (Math.Abs(ChunkManager.Shaders.BrightnessModifier - SkyBox.BrightnessModifier) > 0f)
 				{
@@ -513,18 +503,18 @@ namespace Alex.Worlds
 			Player?.Update(args);
 			var biome = Player.CurrentBiome;
 			ChunkManager.WaterSurfaceTransparency = biome.WaterSurfaceTransparency;
-			
-			if (inWater && !_wasInWater)
+
+			bool fogEnabled = Options.VideoOptions.Fog.Value || inWater;
+
+			if (ChunkManager.Shaders.FogEnabled != fogEnabled)
 			{
-				ChunkManager.FogColor = biome.WaterFogColor.ToVector3();
-				ChunkManager.FogDistance = biome.WaterFogDistance;
-				ChunkManager.FogEnabled = true;
+				ChunkManager.Shaders.FogEnabled = fogEnabled;
 			}
-			else if (_wasInWater && !inWater)
+
+			if (ChunkManager.Shaders.FogEnabled)
 			{
-				ChunkManager.FogColor = SkyBox.WorldFogColor.ToVector3();
-				ChunkManager.FogDistance = args.Camera.FarDistance;
-				ChunkManager.FogEnabled = Options.VideoOptions.Fog.Value;
+				ChunkManager.Shaders.FogColor = inWater ? biome.WaterFogColor : SkyBox.WorldFogColor;
+				ChunkManager.Shaders.FogDistance = inWater ? biome.WaterFogDistance : camera.FarDistance;
 			}
 
 			_wasInWater = inWater;
