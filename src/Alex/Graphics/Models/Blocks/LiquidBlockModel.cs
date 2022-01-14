@@ -1,20 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Alex.Blocks.Minecraft;
 using Alex.Blocks.Minecraft.Liquid;
-using Alex.Blocks.Properties;
 using Alex.Blocks.State;
 using Alex.Common;
 using Alex.Common.Blocks;
 using Alex.Common.Utils.Vectors;
-using Alex.ResourcePackLib.Json;
 using Alex.Utils;
-using Alex.Worlds;
 using Alex.Worlds.Abstraction;
 using Alex.Worlds.Chunks;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics.PackedVector;
 
 namespace Alex.Graphics.Models.Blocks
 {
@@ -34,13 +29,11 @@ namespace Alex.Graphics.Models.Blocks
 				return LiquidBlock.LEVEL.GetValue(state);
 			}
 
-			return 0;
+			return -1;
 		}
 
 		public override void GetVertices(IBlockAccess blockAccess, ChunkData chunkBuilder, BlockCoordinates blockCoordinates, BlockState baseBlock)
 		{
-			//var myLiquidLevel = GetLevel(baseBlock);
-			
 			var position = blockCoordinates;
 			var blocksUp = blockAccess.GetBlockState(new BlockCoordinates(position.X, position.Y + 1, position.Z));//.GetType();
 
@@ -92,20 +85,12 @@ namespace Alex.Graphics.Models.Blocks
 				bottomLeft = GetAverageLiquidLevels(blockAccess, position + new BlockCoordinates(0, 0, 1));
 
 				bottomRight = GetAverageLiquidLevels(blockAccess, position + new BlockCoordinates(1, 0, 1));
-
-				//if (lowestFound != GetLevel(baseBlock.Value))
-				//	isFlowing = true;
 			}
 
 			if (baseBlock.Block is FlowingWater || baseBlock.Block is FlowingLava)
 				isFlowing = true;
 
-			double lowestDistance = 9999;
-
-			//isFlowing = isFlowing || (topLeft > 0 || topRight > 0 || bottomLeft > 0 || bottomRight > 0);
-			
-			//if (l)
-			
+			double lowestDistance = 9999;			
 			if (lowestBlock.Y <= position.Y && isFlowing)
 			{
 				for (int i = 0; i < 4; i++)
@@ -151,7 +136,7 @@ namespace Alex.Graphics.Models.Blocks
 			{
 				texture = "block/water";
 			}
-			//texture = texture + "_flow";
+			
 			if (isFlowing)
 			{
 				texture += "_flow";
@@ -189,36 +174,28 @@ namespace Alex.Graphics.Models.Blocks
 					vertColor = GetBiomeColor(blockAccess, bx, y, bz);
 				}
 
-				//float height   = 0;
-
 				for (var index = 0; index < vertices.Length; index++)
 				{
 					var vert = vertices[index];
 
 					if (vert.Position.Y > start.Y)
 					{
-						//const float modifier = 2f;
-
 						int height = 0;
 						if (vert.Position.X < end.X && vert.Position.Z < end.Z)
 						{
 							height = (int)((16.0 / 8.0) * (topLeft));
-							rot = 0;
 						}
 						else if (vert.Position.X > start.X && vert.Position.Z < end.Z)
 						{
 							height = (int)((16.0 / 8.0) * (topRight));
-							rot = 270;
 						}
 						else if (vert.Position.X < end.X && vert.Position.Z > start.Z)
 						{
 							height = (int)((16.0 / 8.0) * (bottomLeft));
-							rot = 90;
 						}
 						else
 						{
 							height = (int)((16.0 / 8.0) * (bottomRight));
-							rot = 270;
 						}
 					
 						vert.Position.Y = ((float)height) / 16f;
@@ -263,19 +240,19 @@ namespace Alex.Graphics.Models.Blocks
 
 					if (above.Block is LiquidBlock)
 						return 8;
-					
+
 					var bs = world.GetBlockState(new BlockCoordinates(position.X + xx, position.Y, position.Z + zz));
-
-					//if (bs.Block is Lava && !()) continue;
-
-					var lvl = (GetLevel(bs));
+					var raw = GetLevel(bs);
+					if (raw == -1)
+						continue;
+					var lvl =  7 - (raw & 0x7);
 
 					if (lvl > level)
 						level = lvl;
 				}
 			}
 
-			return 7 - (level & 0x7);
+			return level;
 		}
 	}
 }
