@@ -248,11 +248,11 @@ public class BannerBlockEntity : BlockEntity
                     switch (face)
                     {
                         case BlockFace.West:
-                            BannerRotation = 4;
+                            BannerRotation = 12;
                             break;
 
                         case BlockFace.East:
-                            BannerRotation = 12;
+                            BannerRotation = 4;
                             break;
 
                         case BlockFace.North:

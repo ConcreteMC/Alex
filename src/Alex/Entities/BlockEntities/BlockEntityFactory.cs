@@ -170,6 +170,7 @@ namespace Alex.Entities.BlockEntities
                         blockEntity = new BannerBlockEntity(world, blockCoordinates);
                     break;
 
+                case "enchanting_table":
                 case "enchanttable":
                     blockEntity = new EnchantTableBlockEntity(world);
                     break;
