@@ -238,7 +238,7 @@ namespace Alex.Utils
 					Matrix matrix = Matrix.Identity;
 					if (bone.BindPoseRotation.HasValue && bonePivotPoint.HasValue)
 					{
-						bonePivotPoint *= new Vector3(-1f, 1f, 1f);
+					//	bonePivotPoint *= new Vector3(-1f, 1f, 1f);
 						var r = bone.BindPoseRotation.Value;
 						matrix *= Matrix.CreateTranslation(-bonePivotPoint.Value) * MatrixHelper.CreateRotationDegrees(new Vector3(r.X, r.Y, r.Z)) * Matrix.CreateTranslation(bonePivotPoint.Value);
 					}
@@ -246,7 +246,7 @@ namespace Alex.Utils
 					{
 						var rotation = cube.Rotation.Value;
 						Vector3 pivot = cube.Pivot.GetValueOrDefault(bone.Pivot.GetValueOrDefault(Vector3.Zero));
-						pivot *= new Vector3(-1f, 1f, 1f);
+					//	pivot *= new Vector3(-1f, 1f, 1f);
 						//if (cube.Pivot.HasValue)
 						{
 							//pivot = cube.InflatedPivot(inflation);

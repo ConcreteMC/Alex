@@ -220,8 +220,8 @@ namespace Alex.Graphics.Models.Entity.Animations
 			double rotationTime = elapsedTime;
 
 			var targetRotation =
-				value.Rotation?.Evaluate(runtime, Vector3.Zero, out rotationTime, animationTime)
-				 ?? Vector3.Zero;
+				(value.Rotation?.Evaluate(runtime, Vector3.Zero, out rotationTime, animationTime)
+				 ?? Vector3.Zero);
 			
 			bone.RotateOverTime(targetRotation, rotationTime > 0 ? rotationTime : elapsedTime, overrideOthers);
 

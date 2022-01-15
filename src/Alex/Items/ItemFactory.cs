@@ -123,7 +123,7 @@ namespace Alex.Items
 						{
 							ModelRenderer modelRenderer = null;
 							Texture2D modelTexture = null;
-							
+
 							switch (itemName)
 							{
 								case "minecraft:chest":
@@ -191,8 +191,8 @@ namespace Alex.Items
 							}
 							else
 							{
-							//	modelRenderer?.Dispose();
-							//	modelTexture?.Dispose();
+								modelRenderer?.Dispose();
+								modelTexture?.Dispose();
 							}
 						}
 
@@ -209,11 +209,11 @@ namespace Alex.Items
 
 			if (result != null && result is ItemModelRenderer imr)
 			{
-			//	imr?.TryCache(resources);
+				imr?.TryCache(resources);
 			}
 			else if (result != null && result is ItemBlockModelRenderer bmr)
 			{
-			//	bmr.TryCache(resources);
+				bmr.TryCache(resources);
 			}
 
 			renderer = result?.CloneItemRenderer();

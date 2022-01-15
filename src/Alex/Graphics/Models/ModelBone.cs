@@ -250,9 +250,9 @@ namespace Alex.Graphics.Models
 			var scale = _scale;
 			Transform = Matrix.CreateScale(_baseScale * scale) * Matrix.CreateTranslation(-pivot)
 			                                                    * MatrixHelper.CreateRotationDegrees(_baseRotation * new Vector3(1f, 1f, 1f))
-			                                                    * MatrixHelper.CreateRotationDegrees((_rotation) * new Vector3(-1f, 1f, 1f))
+			                                                    * MatrixHelper.CreateRotationDegrees((_rotation) * new Vector3(-1f, -1f, 1f))
 			                                                    * Matrix.CreateTranslation(pivot)
-			                                                    * Matrix.CreateTranslation(_basePosition + _position);
+			                                                    * Matrix.CreateTranslation(_basePosition + (_position * new Vector3(-1f, 1f, 1f)));
 		}
 
 		public void Update(IUpdateArgs args)
