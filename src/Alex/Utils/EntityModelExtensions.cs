@@ -199,16 +199,54 @@ namespace Alex.Utils
 							
 						}
 					}*/
+
+					var modifier = new Vector3(origin.X, origin.Y, origin.Z);
+					
+					var bonePivotPoint = bone.Pivot;
+
+					/*if (bonePivotPoint != null)
+					{
+						if (modifier.X < 0f)
+						{
+							var piv = bonePivotPoint.Value;
+
+							if (piv.X < 0f)
+							{
+								modifier.X = MathF.Abs(modifier.X) - (cube.Size.X);
+								piv.X =  MathF.Abs(piv.X);
+
+								bonePivotPoint = piv;
+							}
+						}
+						else if (modifier.X > 0f)
+						{
+							var piv = bonePivotPoint.Value;
+
+							if (piv.X > 0f)
+							{
+								modifier.X = -(modifier.X + (cube.Size.X));
+								piv.X = -piv.X;
+
+								bonePivotPoint = piv;
+							}
+						}
+					}*/
+
 					//origin.Y -= origin.Y;	
-					Cube built = new Cube(cube, mirror, inflation, origin);
+					Cube built = new Cube(cube, mirror, inflation, modifier);
 
 					Matrix matrix = Matrix.Identity;
-					
+					if (bone.BindPoseRotation.HasValue && bonePivotPoint.HasValue)
+					{
+						bonePivotPoint *= new Vector3(-1f, 1f, 1f);
+						var r = bone.BindPoseRotation.Value;
+						matrix *= Matrix.CreateTranslation(-bonePivotPoint.Value) * MatrixHelper.CreateRotationDegrees(new Vector3(r.X, r.Y, r.Z)) * Matrix.CreateTranslation(bonePivotPoint.Value);
+					}
 					if (cube.Rotation.HasValue)
 					{
 						var rotation = cube.Rotation.Value;
 						Vector3 pivot = cube.Pivot.GetValueOrDefault(bone.Pivot.GetValueOrDefault(Vector3.Zero));
-
+						pivot *= new Vector3(-1f, 1f, 1f);
 						//if (cube.Pivot.HasValue)
 						{
 							//pivot = cube.InflatedPivot(inflation);
@@ -221,14 +259,7 @@ namespace Alex.Utils
 						//}
 					}
 
-					if (bone.BindPoseRotation.HasValue)
-					{
-						var r = bone.BindPoseRotation.Value;
-						var pivot = bone.Pivot.Value;
-						matrix *= Matrix.CreateTranslation(-pivot) * MatrixHelper.CreateRotationDegrees(new Vector3(r.X, r.Y, r.Z)) * Matrix.CreateTranslation(pivot);
-					}
-
-				//	matrix *= Matrix.CreateTranslation(origin);
+					//	matrix *= Matrix.CreateTranslation(origin);
 					
 					ModifyCubeIndexes(ref vertices, ref indices, built.Front, matrix);
 					ModifyCubeIndexes(ref vertices, ref indices, built.Back, matrix);
