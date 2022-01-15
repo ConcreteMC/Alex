@@ -60,7 +60,7 @@ namespace Alex.Gamestates.Debugging
 
 			ModelExplorer = BlockModelExplorer;
 			
-			AddChild(_modelExplorerView = new GuiModelExplorerView(ModelExplorer, new Vector3(8f, 0f, 8f), new Vector3(0f, 0f, 0f))
+			AddChild(_modelExplorerView = new GuiModelExplorerView(ModelExplorer, new Vector3(8,8, 8), new Vector3(0f, 0f, 0f))
 			{
 				Anchor = Alignment.Fill,
 				Background = Color.Black * 0.8f,
@@ -151,7 +151,7 @@ namespace Alex.Gamestates.Debugging
 		protected override void OnShow()
 		{
 			base.OnShow();
-			//Alex.GuiManager.AddScreen(_debugInfo);
+			Alex.GuiManager.AddScreen(_debugInfo);
 
 			Alex.IsMouseVisible = true;
 		}
@@ -159,7 +159,7 @@ namespace Alex.Gamestates.Debugging
 		protected override void OnHide()
 		{
 			base.OnHide();
-			//Alex.GuiManager.RemoveScreen(_debugInfo);
+			Alex.GuiManager.RemoveScreen(_debugInfo);
 
 			Alex.IsMouseVisible = false;
 		}
@@ -429,7 +429,11 @@ namespace Alex.Gamestates.Debugging
 		/// <inheritdoc />
 		public override void DrawContext3D(IRenderArgs args, IGuiRenderer guiRenderer)
 		{
-			_currentRenderer?.Render(args, new PlayerLocation(args.Camera.Position, 16f * _rot % 360f, 16f * _rot % 360f, 8f * _rot % 360f).CalculateWorldMatrix());
+
+			_currentRenderer?.Render(
+				args,
+				Matrix.CreateScale(1f / 16f) * new PlayerLocation(
+					Vector3.Zero, 16f * _rot % 360f, 16f * _rot % 360f, 8f * _rot % 360f).CalculateWorldMatrix());
 		}
 	}
 

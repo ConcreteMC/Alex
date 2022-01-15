@@ -26,7 +26,11 @@ namespace Alex.Entities.BlockEntities
         {
             if (resources.TryGetBitmap("minecraft:entity/chest/normal", out var bmp))
             {
+                var old = ChestTexture;
+                old?.Dispose();
+                
                 ChestTexture = TextureUtils.BitmapToTexture2D($"BlockEntityFactory/Chest", graphicsDevice, bmp);
+                ChestTexture.Tag = 0;
                 //ChestTexture?.Use();
             }
             else
@@ -36,7 +40,11 @@ namespace Alex.Entities.BlockEntities
 
             if (resources.TryGetBitmap("minecraft:entity/enchanting_table_book", out var enchantingTableBookBmp))
             {
+                var old = EnchantingTableBookTexture;
+                old?.Dispose();
+                
                 EnchantingTableBookTexture = TextureUtils.BitmapToTexture2D($"BlockEntityFactory/EnchantingTableTexture", graphicsDevice, enchantingTableBookBmp);
+                EnchantingTableBookTexture.Tag = 0;
                 //ChestTexture?.Use();
             }
             else
@@ -46,7 +54,11 @@ namespace Alex.Entities.BlockEntities
 
             if (resources.TryGetBedrockBitmap("minecraft:textures/entity/chest/double_normal", out var doubleBmp))
             {
+                var old = DoubleChestTexture;
+                old?.Dispose();
+                
                 DoubleChestTexture = TextureUtils.BitmapToTexture2D("BlockEntityFactory/Chest/Double", graphicsDevice, doubleBmp);
+                DoubleChestTexture.Tag = 0;
                 //DoubleChestTexture?.Use();
             }
             else
@@ -56,7 +68,11 @@ namespace Alex.Entities.BlockEntities
 
             if (resources.TryGetBitmap("minecraft:entity/chest/ender", out var enderBmp))
             {
+                var old = EnderChestTexture;
+                old?.Dispose();
+                
                 EnderChestTexture = TextureUtils.BitmapToTexture2D("BlockEntityFactory/Chest/Ender", graphicsDevice, enderBmp);
+                EnderChestTexture.Tag = 0;
                 //EnderChestTexture?.Use();
             }
             else
@@ -66,7 +82,11 @@ namespace Alex.Entities.BlockEntities
 
             if (resources.TryGetBitmap("minecraft:entity/steve", out var steveBmp))
             {
+                var old = SkullTexture;
+                old?.Dispose();
+                
                 SkullTexture = TextureUtils.BitmapToTexture2D("BlockEntityFactory/Steve", graphicsDevice, steveBmp);
+                SkullTexture.Tag = 0;
                 //SkullTexture?.Use(this);
             }
             else
@@ -77,7 +97,11 @@ namespace Alex.Entities.BlockEntities
 
             if (resources.TryGetBitmap("minecraft:entity/signs/oak", out var signBmp))
             {
+                var old = SignTexture;
+                old?.Dispose();
+                
                 SignTexture = TextureUtils.BitmapToTexture2D("BlockEntityFactory/Signs/Oak", graphicsDevice, signBmp);
+                SignTexture.Tag = 0;
                 //SignTexture?.Use(this);
             }
             else

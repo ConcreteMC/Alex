@@ -7,6 +7,7 @@ using Alex.Networking.Java.Packets.Play;
 using Alex.Worlds;
 using fNbt;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace Alex.Entities.BlockEntities
 {
@@ -43,6 +44,24 @@ namespace Alex.Entities.BlockEntities
             DoRotationCalculations = false;
             AnimationController.Enabled = false;
             //base.Movement.InterpolatedMovement = false;
+        }
+
+        /// <inheritdoc />
+        protected override void OnTextureChanged(Texture2D oldValue, Texture2D newValue)
+        {
+            if (oldValue != null && oldValue.Tag is int references)
+            {
+                oldValue.Tag = references - 1;
+            }
+            else
+            {
+                oldValue?.Dispose();
+            }
+
+            if (newValue != null && newValue.Tag is int newReferences)
+            {
+                newValue.Tag = newReferences + 1;
+            }
         }
 
         /// <inheritdoc />
@@ -172,6 +191,12 @@ namespace Alex.Entities.BlockEntities
         public override string ToString()
         {
             return base.ToString();
+        }
+
+        /// <inheritdoc />
+        protected override void OnDispose()
+        {
+            base.OnDispose();
         }
     }
 }

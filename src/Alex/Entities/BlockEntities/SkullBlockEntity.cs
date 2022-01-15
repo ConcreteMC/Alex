@@ -62,7 +62,9 @@ namespace Alex.Entities.BlockEntities
 		
 		private byte  _rotation  = 0;
 		private float _yRotation = 0f;
-		public byte Rotation
+		private SkullType _skullType;
+
+		public byte BlockRotation
 		{
 			get
 			{
@@ -86,14 +88,13 @@ namespace Alex.Entities.BlockEntities
 			}
 		}
 
-		/// <inheritdoc />
-		protected override bool BlockChanged(Block oldBlock, Block newBlock)
+		public SkullType SkullType
 		{
-			if (!(newBlock is Skull s))
-				return false;
-			
+			get => _skullType;
+			set
 			{
-				switch (s.SkullType)
+				_skullType = value;
+				switch (value)
 				{
 					case SkullType.Player:
 						break;
@@ -193,6 +194,17 @@ namespace Alex.Entities.BlockEntities
 						break;
 				}
 			}
+		}
+
+		/// <inheritdoc />
+		protected override bool BlockChanged(Block oldBlock, Block newBlock)
+		{
+			if (!(newBlock is Skull s))
+				return false;
+
+			{
+				SkullType = s.SkullType;
+			}
 			
 			if (newBlock is WallSkull)
 			{
@@ -210,7 +222,7 @@ namespace Alex.Entities.BlockEntities
 				{
 					if (byte.TryParse(r, out var rot))
 					{
-						Rotation = rot;
+						BlockRotation = rot;
 					}
 				}
 			}
@@ -241,25 +253,24 @@ namespace Alex.Entities.BlockEntities
 
 			if (compound.TryGet<NbtByte>("Rot", out var rotation) || compound.TryGet<NbtByte>("rot", out rotation))
 			{
-				Rotation = rotation.Value;
+				BlockRotation = rotation.Value;
 			}
-		}
 
-		private Vector3 Offset { get; set; } = Vector3.Zero;// = new Vector3(0.5f, 0, 0.5f);
-		/// <inheritdoc />
-		public override PlayerLocation KnownPosition
-		{
-			get => base.KnownPosition;
-			set => base.KnownPosition = value;
-		}
-		
-		/// <inheritdoc />
-		internal override PlayerLocation RenderLocation
-		{
-			get => base.RenderLocation + Offset;
-			set
+			if (compound.TryGet<NbtFloat>("Rotation", out var floatRotation))
 			{
-				base.RenderLocation = value;
+				_yRotation          = floatRotation.Value;
+
+				if (HeadBone != null)
+				{
+					var headRotation = HeadBone.Rotation;
+					headRotation.Y = _yRotation;
+					HeadBone.Rotation = headRotation;
+				}
+			}
+
+			if (compound.TryGet("SkullType", out NbtByte skullType))
+			{
+				SkullType = (SkullType)skullType.Value;
 			}
 		}
 	}

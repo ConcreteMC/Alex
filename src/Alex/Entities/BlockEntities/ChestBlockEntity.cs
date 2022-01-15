@@ -3,6 +3,7 @@ using Alex.Blocks.Minecraft;
 using Alex.Blocks.Properties;
 using Alex.Common.Blocks;
 using Alex.Common.Resources;
+using Alex.Common.Utils.Vectors;
 using Alex.Graphics.Models;
 using Alex.Graphics.Models.Entity;
 using Alex.Graphics.Models.Entity.Animations;
@@ -10,6 +11,7 @@ using Alex.Graphics.Models.Entity.BlockEntities;
 using Alex.ResourcePackLib.Json.Models.Entities;
 using Alex.Utils;
 using Alex.Worlds;
+using fNbt;
 using Microsoft.Xna.Framework;
 
 namespace Alex.Entities.BlockEntities
@@ -212,6 +214,46 @@ namespace Alex.Entities.BlockEntities
 
 
 			return true;
+		}
+
+		/// <inheritdoc />
+		protected override void ReadFrom(NbtCompound compound)
+		{
+			base.ReadFrom(compound);
+
+			if (compound.TryGet("pairx", out NbtInt pairX) && compound.TryGet("pairz", out NbtInt pairZ))
+			{
+				var pairPos = new BlockCoordinates(pairX.Value, 0, pairZ.Value);
+				var myPos = new BlockCoordinates(X, 0, Z);
+				var difference = myPos - pairPos;
+
+				switch (Facing)
+				{
+					case BlockFace.South:
+					case BlockFace.North:
+						if (difference == BlockCoordinates.Forwards)
+						{
+							ChestType = ChestType.RightHalf | ChestType.Double;
+						}
+						else if (difference == BlockCoordinates.Backwards)
+						{
+							ChestType = ChestType.LeftHalf | ChestType.Double;
+						}
+						break;
+					case BlockFace.West:
+					case BlockFace.East:
+						if (difference == BlockCoordinates.Left)
+						{
+							ChestType = ChestType.RightHalf | ChestType.Double;
+						}
+						else if (difference == BlockCoordinates.Right)
+						{
+							ChestType = ChestType.LeftHalf | ChestType.Double;
+						}
+						break;
+				}
+				
+			}
 		}
 	}
 	

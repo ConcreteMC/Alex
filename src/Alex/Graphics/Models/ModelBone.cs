@@ -203,13 +203,13 @@ namespace Alex.Graphics.Models
 		
 		public void ScaleOverTime(Vector3 targetScale, double time, bool overrideOthers = false)
 		{
-			//if (overrideOthers)
-			//{
-				_tempScaleData.Target = targetScale;
-			//}
-			//else
+			if (overrideOthers)
 			{
-			//	_tempScaleData.Target += targetScale;
+				_tempScaleData.Target = targetScale;
+			}
+			else
+			{
+				_tempScaleData.Target += targetScale;// (_tempScaleData.Target + targetScale) / 2f;
 			}
 			
 			_tempScaleData.TargetTime = time;
@@ -246,9 +246,10 @@ namespace Alex.Graphics.Models
 		{
 			var box = Box.GetDimensions();
 			var pivot = Pivot.GetValueOrDefault(box/ 2f);
-			
-			Transform = Matrix.CreateScale(_baseScale * _scale) * Matrix.CreateTranslation(-pivot)
-			                                                    * MatrixHelper.CreateRotationDegrees(_baseRotation)
+
+			var scale = _scale;
+			Transform = Matrix.CreateScale(_baseScale * scale) * Matrix.CreateTranslation(-pivot)
+			                                                    * MatrixHelper.CreateRotationDegrees(_baseRotation * new Vector3(1f, 1f, 1f))
 			                                                    * MatrixHelper.CreateRotationDegrees((_rotation) * new Vector3(-1f, 1f, 1f))
 			                                                    * Matrix.CreateTranslation(pivot)
 			                                                    * Matrix.CreateTranslation(_basePosition + _position);

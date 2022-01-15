@@ -41,7 +41,7 @@ namespace Alex.Entities.BlockEntities
 				_facing = value;
 				
 				var rotation = Rotation;
-				rotation.X = -90f;
+				//rotation.X = -90f;
 				switch (value)
 				{
 					case BlockFace.East:

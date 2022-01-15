@@ -19,6 +19,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MiNET.Utils;
 using NLog;
+using RocketUI;
 using GpuResourceManager = Alex.Common.Graphics.GpuResources.GpuResourceManager;
 using PlayerLocation = Alex.Common.Utils.Vectors.PlayerLocation;
 
@@ -530,10 +531,7 @@ namespace Alex.Gamestates.InGame
 
 			if (Alex.GuiManager.ActiveDialog is DisconnectedDialog dialog)
 			{
-				dialog.OnDialogClosed += (_, _) =>
-				{
-					CloseLevel();
-				};
+				dialog.OnDialogClosed += OnDialogClosed;
 
 				return;
 			}
@@ -541,6 +539,19 @@ namespace Alex.Gamestates.InGame
 			CloseLevel();
 			//GetService<IEventDispatcher>().UnregisterEvents(_playingHud.Chat);
 			//_playingHud.Chat = 
+		}
+
+		private void OnDialogClosed(object? sender, EventArgs e)
+		{
+			if (sender is DisconnectedDialog dialog)
+			{
+				dialog.OnDialogClosed -= OnDialogClosed;
+
+				if (_didClose)
+					return;
+				
+				CloseLevel();
+			}
 		}
 	}
 }

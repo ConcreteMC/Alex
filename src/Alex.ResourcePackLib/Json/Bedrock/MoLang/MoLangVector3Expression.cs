@@ -131,7 +131,7 @@ namespace Alex.ResourcePackLib.Json.Bedrock.MoLang
 				}
 			}
 			
-			timeRemaining = elapsedTime - nextKey;
+			timeRemaining = nextKey - elapsedTime;
 
 			var timeBetweenFrames = (nextKey - previousKey);
 			var timeSinceLastKeyFrame = elapsedTime - previousKey;
@@ -140,8 +140,8 @@ namespace Alex.ResourcePackLib.Json.Bedrock.MoLang
 			Vector3 previousVector = Evaluate(runtime, previous, false, currentValue);
 			Vector3 nextVector = Evaluate(runtime, next, true, currentValue);
 
-			
-			return Vector3.Lerp(previousVector, nextVector, lerpTime);
+
+			return nextVector; Vector3.Lerp(previousVector, nextVector, lerpTime);
 		}
 	}
 }

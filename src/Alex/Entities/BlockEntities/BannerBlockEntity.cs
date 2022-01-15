@@ -296,6 +296,10 @@ public class BannerBlockEntity : BlockEntity
         base.ReadFrom(compound);
         if (compound != null)
         {
+            if (compound.TryGet<NbtInt>("Base", out var baseColor))
+            {
+                BannerColor = (BlockColor)baseColor.Value;
+            }
             if (compound.TryGet<NbtList>("Patterns", out var patterns))
             {
                 var newPatterns = new PatternLayer[patterns.Count];

@@ -209,11 +209,11 @@ namespace Alex.Items
 
 			if (result != null && result is ItemModelRenderer imr)
 			{
-				imr?.TryCache(resources);
+			//	imr?.TryCache(resources);
 			}
 			else if (result != null && result is ItemBlockModelRenderer bmr)
 			{
-				bmr.TryCache(resources);
+			//	bmr.TryCache(resources);
 			}
 
 			renderer = result?.CloneItemRenderer();
@@ -337,7 +337,7 @@ namespace Alex.Items
 			            {
 				            ResourcePackModelBase model = modelEntry.Value;
 				            renderer = new ItemBlockModelRenderer(itemBlock.Block, model, resources.BlockAtlas.GetAtlas(false));
-				            renderer.Cache(resources);
+				           // renderer.Cache(resources);
 			            }
 		            }
 	            }

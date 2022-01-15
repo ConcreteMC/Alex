@@ -118,7 +118,7 @@ namespace Alex.Entities.BlockEntities
 		
 		private byte  _rotation  = 0;
 		private float _yRotation = 0f;
-		public byte Rotation
+		public byte SignRotation
 		{
 			get
 			{
@@ -141,6 +141,18 @@ namespace Alex.Entities.BlockEntities
 
 		private void ReadTextFrom(NbtCompound compound)
 		{
+			if (compound.TryGet("SignTextColor", out NbtInt signTextColor))
+			{
+				
+			}
+			if (compound.TryGet("Text", out NbtString text) && text.HasValue)
+			{
+				var str = text.Value;
+				var lines = str.Split('\n');
+				_lines = lines;
+				TextChanged();
+				return;
+			}
 			if (compound.TryGet("text1", out var text1)
 			    || compound.TryGet("Text1", out text1))
 			{
@@ -207,19 +219,19 @@ namespace Alex.Entities.BlockEntities
 						switch (face)
 						{
 							case BlockFace.West:
-								Rotation = 4;
+								SignRotation = 4;
 								break;
 
 							case BlockFace.East:
-								Rotation = 12;
+								SignRotation = 12;
 								break;
 
 							case BlockFace.North:
-								Rotation = 8;
+								SignRotation = 8;
 								break;
 
 							case BlockFace.South:
-								Rotation = 0;
+								SignRotation = 0;
 								break;
 						}
 					}
@@ -243,7 +255,7 @@ namespace Alex.Entities.BlockEntities
 				{
 					if (byte.TryParse(r, out var rot))
 					{
-						Rotation = (byte) rot;// // ((rot + 3) % 15);
+						SignRotation = (byte) rot;// // ((rot + 3) % 15);
 					}
 				}
 
@@ -267,12 +279,13 @@ namespace Alex.Entities.BlockEntities
 
 		private void TextChanged()
 		{
-			var text1 = Text1;
+			/*var text1 = Text1;
 			var text2 = Text2;
 			var text3 = Text3;
-			var text4 = Text4;
+			var text4 = Text4;*/
 
-			NameTag = $"{text1}\n{text2}\n{text3}\n{text4}";
+			NameTag = string.Join('\n', _lines);
+		//NameTag = $"{text1}\n{text2}\n{text3}\n{text4}";
 
 			//if (_lines.All(string.IsNullOrWhiteSpace))
 			//	HideNameTag = true;

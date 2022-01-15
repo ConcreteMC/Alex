@@ -197,7 +197,6 @@ namespace Alex.Entities
 			set
 			{
 				_scale = value;
-
 				ScaleChanged();
 			}
 		}
@@ -422,10 +421,15 @@ namespace Alex.Entities
 		private bool _skipRendering = false;
 		private void ScaleChanged()
 		{
-			if (ModelRenderer != null)
-			{
-				//ModelRenderer.Scale = _scale;
+			var modelRenderer = ModelRenderer;
 
+			if (modelRenderer != null)
+			{
+				var root = modelRenderer?.Model?.Root;
+
+				if (root != null)
+					root.BaseScale = Vector3.One * _scale;
+					
 				if (_scale <= 0.01f)
 				{
 					_skipRendering = true;
@@ -1196,25 +1200,24 @@ namespace Alex.Entities
 					{
 						_modelRenderer.Texture = value;
 					}
-					//value?.Use(this);
-
-					//if (Effect != null && value != null)
-					//{
-					//	Effect.Texture = value;
-					//}
 				}
 				finally
 				{
-					if (oldValue != null)
-					{
-						if (!(oldValue.Tag is Guid tag) || tag != EntityFactory.PooledTagIdentifier)
-						{
-							oldValue?.Dispose();
-						}
-					}
+					OnTextureChanged(oldValue, value);
 					//oldValue?.Dispose();
 					//oldValue?.Release(this);
 					//oldValue?.ReturnResource(this);
+				}
+			}
+		}
+
+		protected virtual void OnTextureChanged(Texture2D oldValue, Texture2D newValue)
+		{
+			if (oldValue != null)
+			{
+				if (!(oldValue.Tag is Guid tag) || tag != EntityFactory.PooledTagIdentifier)
+				{
+					oldValue?.Dispose();
 				}
 			}
 		}
@@ -1238,7 +1241,7 @@ namespace Alex.Entities
 			int renderCount = 0;
 			var  renderer = ModelRenderer;
 
-			var worldMatrix = Matrix.CreateScale((1f / 16f) * (Scale * ModelScale))
+			var worldMatrix = Matrix.CreateScale((1f / 16f) * (ModelScale))
 			                  * RenderLocation.CalculateWorldMatrix();
 
 			if (renderer != null)
@@ -1648,10 +1651,15 @@ namespace Alex.Entities
 				
 				ModelRenderer?.Dispose();
 				ModelRenderer = null;
-				
-				Texture?.Dispose();
-				Texture = null;
-				
+
+				var texture = Texture;
+
+				if (texture != null)
+				{
+					Texture = null;
+					texture?.Dispose();
+				}
+
 				OnDispose();
 			}
 			finally

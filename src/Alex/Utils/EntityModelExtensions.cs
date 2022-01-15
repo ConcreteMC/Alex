@@ -167,7 +167,7 @@ namespace Alex.Utils
 			if (bone.BindPoseRotation.HasValue)
 			{
 				var r = bone.BindPoseRotation.Value;
-				modelBone.BaseRotation += new Vector3(r.X, r.Y, r.Z);
+			//	modelBone.BaseRotation += new Vector3(r.X, r.Y, r.Z);
 			}
 			
 			if (bone.Cubes != null)
@@ -187,6 +187,19 @@ namespace Alex.Utils
 					var mirror    = cube.Mirror ?? bone.Mirror;
 
 					var origin = cube.InflatedOrigin(inflation);
+
+					/*if (cube.Pivot == null)
+					{
+						var bonePivot = bone.Pivot;
+
+						if (bonePivot.HasValue)
+						{
+							var original = origin;
+							origin.Z += cube.Size.Z;
+							
+						}
+					}*/
+					//origin.Y -= origin.Y;	
 					Cube built = new Cube(cube, mirror, inflation, origin);
 
 					Matrix matrix = Matrix.Identity;
@@ -194,21 +207,29 @@ namespace Alex.Utils
 					if (cube.Rotation.HasValue)
 					{
 						var rotation = cube.Rotation.Value;
-						Vector3 pivot = Vector3.Zero;
+						Vector3 pivot = cube.Pivot.GetValueOrDefault(bone.Pivot.GetValueOrDefault(Vector3.Zero));
 
-						if (cube.Pivot.HasValue)
+						//if (cube.Pivot.HasValue)
 						{
-							pivot = cube.InflatedPivot(inflation);
+							//pivot = cube.InflatedPivot(inflation);
 							matrix = Matrix.CreateTranslation(-pivot) * MatrixHelper.CreateRotationDegrees(rotation) * Matrix.CreateTranslation(pivot);
 						}
-						else
-						{
+						//else
+						//{
 							//pivot = cube.InflatedSize(inflation) / 2f;
-							matrix = MatrixHelper.CreateRotationDegrees(rotation);
-						}
+						//	matrix = MatrixHelper.CreateRotationDegrees(rotation);
+						//}
 					}
 
-					//var matrix = Matrix.Identity;
+					if (bone.BindPoseRotation.HasValue)
+					{
+						var r = bone.BindPoseRotation.Value;
+						var pivot = bone.Pivot.Value;
+						matrix *= Matrix.CreateTranslation(-pivot) * MatrixHelper.CreateRotationDegrees(new Vector3(r.X, r.Y, r.Z)) * Matrix.CreateTranslation(pivot);
+					}
+
+				//	matrix *= Matrix.CreateTranslation(origin);
+					
 					ModifyCubeIndexes(ref vertices, ref indices, built.Front, matrix);
 					ModifyCubeIndexes(ref vertices, ref indices, built.Back, matrix);
 					ModifyCubeIndexes(ref vertices, ref indices, built.Top, matrix);
@@ -253,8 +274,14 @@ namespace Alex.Utils
 
 				if (string.IsNullOrWhiteSpace(childBone.Name))
 					childBone.Name = Guid.NewGuid().ToString();
-				
+
+				/*if (bone.BindPoseRotation.HasValue)
+				{
+					var r = bone.BindPoseRotation.Value;
+					childBone.BindPoseRotation -= new Vector3(r.X, r.Y, r.Z);
+				}*/
 				var child = ProcessBone(source, childBone, ref vertices, ref indices);
+				
 				modelBone.AddChild(child);
 			}
 
