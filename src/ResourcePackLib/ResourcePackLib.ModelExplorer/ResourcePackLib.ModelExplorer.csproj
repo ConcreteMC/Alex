@@ -1,0 +1,55 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net6.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <LangVersion>latest</LangVersion>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="JetBrains.Annotations" Version="2021.3.0" />
+        <PackageReference Include="Microsoft.Extensions.Hosting" Version="6.0.0" />
+        <PackageReference Include="Microsoft.Extensions.Logging" Version="6.0.0" />
+        <PackageReference Include="MonoGame.Content.Builder.Task.Compute" Version="3.8.1" />
+        <PackageReference Include="MonoGame.Framework.Compute.DesktopGL" Version="3.8.1.1" />
+        <PackageReference Include="MonoGame.Framework.Content.Pipeline" Version="3.8.0.1641" />
+        <PackageReference Include="NLog" Version="4.7.12" />
+        <PackageReference Include="NLog.Extensions.Hosting" Version="1.7.4" />
+        <PackageReference Include="NLog.Extensions.Logging" Version="1.7.4" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\..\..\submodules\RocketUI\src\RocketUI\RocketUI.csproj" />
+      <ProjectReference Include="..\ResourcePackLib.Core\ResourcePackLib.Core.csproj" />
+    </ItemGroup>
+    <ItemGroup>
+        <!-- 
+                Hide Content files from NuGet packages
+                Thanks to: https://github.com/NuGet/Home/issues/4856#issuecomment-287957396
+             -->
+        <Content Update="@(Content)">
+            <Visible Condition="'%(NuGetItemType)' == 'Content'">false</Visible>
+        </Content>
+    </ItemGroup>
+    <ItemGroup>
+        <None Remove="**\*.xaml" />
+        <EmbeddedResource Include="**\*.xaml">
+            <DependentUpon Condition="Exists('%(Filename).cs')">%(Filename).cs</DependentUpon>
+        </EmbeddedResource>
+        <None Update="NLog.config">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
+    <ItemGroup>
+      <Compile Update="Scenes\Screens\MainMenuScreen.cs">
+        <DependentUpon>MainMenuScreen.xaml</DependentUpon>
+      </Compile>
+      <Compile Update="Scenes\Scene.Components.cs">
+        <DependentUpon>Scene.cs</DependentUpon>
+      </Compile>
+    </ItemGroup>
+    <ItemGroup>
+      <Folder Include="Meshes" />
+    </ItemGroup>
+</Project>

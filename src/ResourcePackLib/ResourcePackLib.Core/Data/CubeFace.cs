@@ -2,10 +2,10 @@
 
 public enum CubeFace
 {
-    Up,
-    Down,
-    North,
-    South,
-    East,
-    West
+    Up = 1,
+    Down = 4,
+    North = 5,
+    South = 2,
+    East = 0,
+    West = 3
 }

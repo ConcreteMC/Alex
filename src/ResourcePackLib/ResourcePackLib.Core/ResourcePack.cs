@@ -35,13 +35,13 @@ public class ResourcePack
         Directory = directory;
     }
 
-    public bool Contains(ResourceLocation resourceLocation)
-    {
-        
-    }
-
-    public bool TryGet<T>(ResourceLocation resourceLocation, out T resource)
-    {
-        
-    }
+    // public bool Contains(ResourceLocation resourceLocation)
+    // {
+    //     
+    // }
+    //
+    // public bool TryGet<T>(ResourceLocation resourceLocation, out T resource)
+    // {
+    //     
+    // }
 }
