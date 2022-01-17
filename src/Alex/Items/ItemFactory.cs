@@ -376,7 +376,11 @@ namespace Alex.Items
 
 	            if (item.Renderer == null)
 	            {
+		            /*if (isBlock && resources.Registries.Items.Entries.ContainsKey(entry.Key))
+			            return;*/
 		            Log.Warn($"Could not find model renderer for: {resourceLocation}");
+
+		            return;
 	            }
 
 	            if (items.TryAdd(resourceLocation, () => { return item.Clone(); }))
@@ -384,6 +388,15 @@ namespace Alex.Items
 		            allItems.Add(item);
 	            }
             }
+            
+                        
+            int done = 0;
+            Parallel.ForEach(
+	            blocks, entry =>
+	            {
+		            progressReceiver?.UpdateProgress(done++, blocks.Count, $"Processing block items...", entry.Key);
+		            HandleEntry(entry, true);
+	            });
             
             int i = 0;
 
@@ -396,16 +409,7 @@ namespace Alex.Items
 		            HandleEntry(entry, false);
 	            });
 
-            
-           int done = 0;
-           Parallel.ForEach(
-	           blocks, entry =>
-	           {
-		           progressReceiver?.UpdateProgress(done++, blocks.Count, $"Processing block items...", entry.Key);
-		           HandleEntry(entry, true);
-	           });
-
-           if (items.TryGetValue("minecraft:player_head", out var func))
+            if (items.TryGetValue("minecraft:player_head", out var func))
 	           items.TryAdd("minecraft:skull", func);
 
            if (items.TryGetValue("minecraft:oak_door", out var oakDoorFunc))

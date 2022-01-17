@@ -38,6 +38,7 @@ namespace Alex.Entities
 {
     public class PlayerController : IDisposable
     {
+	    private readonly GuiManager _guiManager;
 	    private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(PlayerController));
 
 		public PlayerIndex PlayerIndex { get; }
@@ -55,11 +56,13 @@ namespace Alex.Entities
 		private List<InputActionBinding> _inputBindings { get; }
 
 		private bool _invertX, _invertY;
-		public PlayerController(GraphicsDevice graphics,
+		public PlayerController(GraphicsDevice graphics, 
+			GuiManager guiManager,
 			InputManager inputManager,
 			Player player,
 			PlayerIndex playerIndex)
 		{
+			_guiManager = guiManager;
 			Player = player;
 			Graphics = graphics;
 			PlayerIndex = playerIndex;
@@ -67,7 +70,15 @@ namespace Alex.Entities
 
 			GlobalInputManager = inputManager;
 			InputManager = inputManager.GetOrAddPlayerManager(playerIndex);
-			InputManager.AddListener(MouseInputListener = new MouseInputListener(playerIndex));
+
+			if (InputManager.TryGetListener<MouseInputListener>(out var mouseInputListener))
+			{
+				MouseInputListener = mouseInputListener;
+			}
+			else
+			{
+				InputManager.AddListener(MouseInputListener = new MouseInputListener(playerIndex));
+			}
 
 			if (InputManager.TryGetListener<GamePadInputListener>(out var gamePadInputListener))
 			{
@@ -278,22 +289,22 @@ namespace Alex.Entities
 		private void OpenMap()
 		{
 			var dialog = new MapDialog(Player.Level.Map);
-			dialog.GuiManager = Alex.Instance.GuiManager;
+			dialog.GuiManager = _guiManager;
 			
 			dialog.Show();
+			//Alex.Instance.GuiManager.ShowDialog(dialog);
 		}
 
 		private void OpenInventory()
 		{
 			var dialog = new GuiPlayerInventoryDialog(Player, Player.Inventory);
-			dialog.GuiManager = Alex.Instance.GuiManager;
-			
 			if (Player.Network is BedrockClient client)
 			{
 				dialog.TransactionTracker = client.TransactionTracker;
 			}
 
-			//_allowMovementInput = false;H
+			dialog.GuiManager = _guiManager;
+			
 			dialog.Show();
 		}
 
@@ -355,7 +366,7 @@ namespace Alex.Entities
 			{
 				bool hasActiveDialog = GetActiveDialog(out _);
 
-				if (hasActiveDialog || !CanOpenDialog())
+				if (hasActiveDialog || !CanOpenDialog() || Alex.Instance.GameStateManager.GetActiveState() is not PlayingState)
 				{
 					showCursor = true;
 				}
@@ -393,27 +404,21 @@ namespace Alex.Entities
 
 	    private bool GetActiveDialog(out DialogBase dialog)
 	    {
-		    dialog = Alex.Instance.GuiManager.ActiveDialog;
+		    dialog = _guiManager.ActiveDialog;
 		    return dialog != null && Alex.Instance.GameStateManager.GetActiveState() is PlayingState;
 	    }
 
 	    private bool CanOpenDialog()
 	    {
-		    var focusedElement = Alex.Instance.GuiManager.FocusManager.FocusedElement;
+		    var focusedElement = _guiManager.FocusManager.FocusedElement;
 
-		    if ((focusedElement == null || !focusedElement.CanFocus || !focusedElement.Enabled
-		         || !focusedElement.Focused) && Alex.Instance.GuiManager.ActiveDialog == null
-		                                     && Alex.Instance.GameStateManager.GetActiveState() is PlayingState)
-		    {
-			    return true;
-		    }
-
-		    return false;
+		    return !GetActiveDialog(out _) && (focusedElement == null || !focusedElement.CanFocus || !focusedElement.Enabled
+		                                    || !focusedElement.Focused);
 	    }
 
 	    private void CloseActiveDialog()
 	    {
-		    if (GetActiveDialog(out var dialog))
+		    if (GetActiveDialog(out var dialog) || dialog != null)
 		    {
 			    if (dialog == null)
 				    return;
@@ -802,10 +807,13 @@ namespace Alex.Entities
 		    var bindings = _inputBindings.ToArray();
 		    _inputBindings.Clear();
 
+		    Log.Info($"Unbinding input listeners...");
 		    foreach (var binding in bindings)
 		    {
 			    InputManager.UnregisterListener(binding);
 		    }
+
+		    //GlobalInputManager.TryRemovePlayerManager(InputManager.PlayerIndex);
 	    }
 
 	    public void SetRewindHistorySize(int rewindHistorySize)

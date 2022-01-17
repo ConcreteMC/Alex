@@ -420,13 +420,13 @@ namespace Alex
 			if (vector == Vector3.Forward)
 				return BlockFace.North;
 			
-			if (vector == Vector3.Right)
+			if (vector == Vector3.Left)
 				return BlockFace.East;
 			
 			if (vector == Vector3.Backward)
 				return BlockFace.South;
 			
-			if (vector == Vector3.Left)
+			if (vector == Vector3.Right)
 				return BlockFace.West;
 
 			return BlockFace.None;

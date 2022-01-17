@@ -11,6 +11,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Alex.Common;
+using Alex.Common.Blocks;
 using Alex.Common.Data.Options;
 using Alex.Common.Items;
 using Alex.Common.Services;
@@ -916,13 +917,24 @@ namespace Alex.Net.Bedrock
 			SendPacket(packet);
 		}
 
+		private uint GetBlockRuntimeId(MiNET.Items.Item item)
+		{
+			if (item is MiNET.Items.ItemBlock itemBlock)
+			{
+				return (uint) itemBlock.Block.GetRuntimeId();
+			}
+
+			return 0;
+		}
+		
 		public override void PlayerDigging(DiggingStatus status,
 			BlockCoordinates position,
 			BlockFace face,
 			Vector3 cursorPosition)
 		{
 			var player = World.Player;
-			var item = player.Inventory[player.Inventory.SelectedSlot];
+			var selectedSlot = player.Inventory.SelectedSlot;
+			var item = player.Inventory[selectedSlot];
 
 			if (status == DiggingStatus.Started)
 			{
@@ -930,14 +942,8 @@ namespace Alex.Net.Bedrock
 			}
 			else if (status == DiggingStatus.Finished)
 			{
-				uint blockRuntimeId = 0;
 				var minetItem = GetMiNETItem(item);
-                            
-				if (minetItem is MiNET.Items.ItemBlock itemBlock)
-				{
-					blockRuntimeId = (uint) itemBlock.Block.GetRuntimeId();
-				}
-				
+
 				SendPlayerAction(PlayerAction.StopBreak, position, (int) face);
 				var packet = McpeInventoryTransaction.CreateObject();
 
@@ -948,11 +954,11 @@ namespace Alex.Net.Bedrock
 					ClickPosition = new System.Numerics.Vector3(cursorPosition.X, cursorPosition.Y, cursorPosition.Z),
 					Position = new MiNET.Utils.Vectors.BlockCoordinates(position.X, position.Y, position.Z),
 					Face = (int) ConvertBlockFace(face),
-					Slot = player.Inventory.SelectedSlot,
+					Slot = selectedSlot,
 					Item = minetItem,
 					FromPosition = new System.Numerics.Vector3(player.KnownPosition.X, player.KnownPosition.Y, player.KnownPosition.Z),
 					HasNetworkIds = ServerAuthoritiveInventory,
-					BlockRuntimeId = blockRuntimeId
+					BlockRuntimeId = GetBlockRuntimeId(minetItem)
 				};
 
 				SendPacket(packet);
@@ -987,7 +993,7 @@ namespace Alex.Net.Bedrock
 		    
 		    return minetItem;
 	    }
-
+		
 	    private MiNET.BlockFace ConvertBlockFace(BlockFace face)
 	    {
 		    return face switch
@@ -1007,6 +1013,7 @@ namespace Alex.Net.Bedrock
 	    {
 		    if (entity is Player p)
 		    {
+			  //  Log.Info($"Placing a block at: {(position + face.GetBlockCoordinates())}");
 			    var itemInHand = p.Inventory[slot];
 			    var minetItem = GetMiNETItem(itemInHand);
 			    
@@ -1018,11 +1025,11 @@ namespace Alex.Net.Bedrock
 					    new System.Numerics.Vector3(cursorPosition.X, cursorPosition.Y, cursorPosition.Z),
 				    Position = new MiNET.Utils.Vectors.BlockCoordinates(position.X, position.Y, position.Z),
 				    Face = (int) ConvertBlockFace(face),
-				    TransactionRecords = new List<TransactionRecord>() { },
 				    Item = minetItem,
 				    FromPosition = new System.Numerics.Vector3(p.KnownPosition.X, p.KnownPosition.Y, p.KnownPosition.Z),
 				    Slot = slot,
-				    HasNetworkIds = ServerAuthoritiveInventory
+				    HasNetworkIds = false,
+				    BlockRuntimeId = GetBlockRuntimeId(minetItem)
 			    };
 
 			    SendPacket(packet);
@@ -1065,7 +1072,7 @@ namespace Alex.Net.Bedrock
 				    Slot = slot,
 				    FromPosition = new System.Numerics.Vector3(p.KnownPosition.X, p.KnownPosition.Y, p.KnownPosition.Z),
 				    ClickPosition = new System.Numerics.Vector3(cursorPosition.X, cursorPosition.Y, cursorPosition.Z),
-				    HasNetworkIds = ServerAuthoritiveInventory
+				    HasNetworkIds = ServerAuthoritiveInventory,
 			    };
 
 			    SendPacket(packet);
@@ -1074,17 +1081,11 @@ namespace Alex.Net.Bedrock
 
 	    public override void WorldInteraction(Entity entity, BlockCoordinates position, BlockFace face, int hand, int slot, Vector3 cursorPosition)
 	    {
-		    uint blockRuntimeId = 0;
 		    MiNET.Items.Item minetItem;// = GetMiNETItem(item);
 		     var orig = entity.Inventory[slot];
 		     minetItem = GetMiNETItem(orig);
-                            
-		    if (minetItem is MiNET.Items.ItemBlock itemBlock)
-		    {
-			    blockRuntimeId = (uint) itemBlock.Block.GetRuntimeId();
-		    }
-		    
-		    var packet = McpeInventoryTransaction.CreateObject();
+
+		     var packet = McpeInventoryTransaction.CreateObject();
 		    packet.transaction = new ItemUseTransaction()
 		    {
 			    ActionType = McpeInventoryTransaction.ItemUseAction.Clickblock,
@@ -1097,7 +1098,7 @@ namespace Alex.Net.Bedrock
 			    FromPosition = new System.Numerics.Vector3(entity.KnownPosition.X, entity.KnownPosition.Y, entity.KnownPosition.Z),
 			    HasNetworkIds = true,
 			    TransactionRecords = new List<TransactionRecord>(),
-			    BlockRuntimeId = blockRuntimeId
+			    BlockRuntimeId = GetBlockRuntimeId(minetItem)
 		    };
 
 		  SendPacket(packet);
@@ -1105,15 +1106,10 @@ namespace Alex.Net.Bedrock
 
 	    public override void UseItem(Item item, int hand, ItemUseAction action, BlockCoordinates position, BlockFace face, Vector3 cursorPosition)
 	    {
-		    uint blockRuntimeId = 0;
+		    var slot = World.Player.Inventory.SelectedSlot;
 		    MiNET.Items.Item minetItem;// = GetMiNETItem(item);
 		    minetItem = GetMiNETItem(item);
 
-		    if (minetItem is MiNET.Items.ItemBlock itemBlock)
-		    {
-			    blockRuntimeId = (uint) itemBlock.Block.GetRuntimeId();
-		    }
-		    
 		    McpeInventoryTransaction.ItemUseAction useAction = McpeInventoryTransaction.ItemUseAction.Use;
 		    switch (action)
 		    {
@@ -1143,9 +1139,9 @@ namespace Alex.Net.Bedrock
 			    Position = new MiNET.Utils.Vectors.BlockCoordinates(position.X, position.Y, position.Z),
 			    Face = (int) ConvertBlockFace(face),
 			    Item = minetItem,
-			    Slot = World.Player.Inventory.SelectedSlot,
+			    Slot = slot,
 			    FromPosition = new System.Numerics.Vector3(World.Player.KnownPosition.X, World.Player.KnownPosition.Y, World.Player.KnownPosition.Z),
-			    BlockRuntimeId = blockRuntimeId
+			    BlockRuntimeId = GetBlockRuntimeId(minetItem)
 		    };
 
 		    SendPacket(packet);
@@ -1166,7 +1162,7 @@ namespace Alex.Net.Bedrock
 		public override void DropItem(BlockCoordinates position, BlockFace face, Item item, bool dropFullStack)
 		{
 			var player = World.Player;
-			byte inventoryId = 28;
+			byte inventoryId = (byte)player.Inventory.InventoryId;
 			byte slot = (byte)(player.Inventory.HotbarOffset + player.Inventory.SelectedSlot);
 			
 			var newItem = item.Clone();

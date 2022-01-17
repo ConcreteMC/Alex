@@ -985,7 +985,7 @@ namespace Alex.Net.Bedrock
 
 		public void HandleMcpeMobEquipment(McpeMobEquipment message)
 		{
-			if (Client.EntityId == message.runtimeEntityId)
+			if (Client.EntityId == message.runtimeEntityId && message.windowsId == 0)
 			{
 				Client.World.Player.Inventory.SelectedSlot = message.selectedSlot;
 				return;

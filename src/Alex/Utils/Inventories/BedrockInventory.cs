@@ -16,9 +16,7 @@ namespace Alex.Utils.Inventories
 
 			InventoryId = 28;
 		}
-
-		protected byte _selectedSlot = 0;
-
+		
 		public override int SelectedSlot
 		{
 			get { return _selectedSlot; }

@@ -403,12 +403,12 @@ namespace Alex.Networking.Bedrock.RakNet
 			{
 				SendAckQueue();
 				
-				//if (_tickCounter++ >= 5)
+				if (_tickCounter++ >= 5)
 				{
 					SendQueue();
 					DoResends();
 					CheckTimeout();
-				//	_tickCounter = 0;
+					_tickCounter = 0;
 				}
 				
 				SendNackQueue();

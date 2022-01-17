@@ -254,11 +254,11 @@ namespace Alex.Worlds.Multiplayer
 
 						if (!Client.GameStarted)
 						{
-							subTitle = "Waiting on game start...";
+							subTitle = "Waiting on game start";
 						}
 						else
 						{
-							subTitle = "Waiting on spawn confirmation...";
+							subTitle = "Waiting on spawn confirmation";
 						}
 					}
 
@@ -266,7 +266,7 @@ namespace Alex.Worlds.Multiplayer
 					{
 						if (!outOfOrder)
 						{
-							subTitle = "Waiting for network to catch up...";
+							subTitle = "Waiting for network to catch up";
 							outOfOrder = true;
 						}
 					}

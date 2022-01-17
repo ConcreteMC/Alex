@@ -145,7 +145,7 @@ namespace Alex.Worlds
 			
 			var resources = serviceProvider.GetRequiredService<ResourceManager>();
 
-			Player = new Player(graphics, serviceProvider.GetRequiredService<Alex>().InputManager, this, networkProvider, PlayerIndex.One);
+			Player = new Player(graphics, serviceProvider.GetRequiredService<GuiManager>(), serviceProvider.GetRequiredService<Alex>().InputManager, this, networkProvider, PlayerIndex.One);
 			
 			Camera = new EntityCamera(Player);
 

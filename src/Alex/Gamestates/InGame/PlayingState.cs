@@ -471,8 +471,13 @@ namespace Alex.Gamestates.InGame
 			world?.RenderSprites(args);
 		}
 
+		private bool _closedLevel = false;
 		private void CloseLevel()
 		{
+			if (_closedLevel)
+				return;
+
+			_closedLevel = true;
 			GenericLoadingDialog genericLoadingDialog = Alex.GuiManager.CreateDialog<GenericLoadingDialog>();
 			genericLoadingDialog.Text = "Disconnecting...";
 			genericLoadingDialog.Show();
@@ -546,10 +551,6 @@ namespace Alex.Gamestates.InGame
 			if (sender is DisconnectedDialog dialog)
 			{
 				dialog.OnDialogClosed -= OnDialogClosed;
-
-				if (_didClose)
-					return;
-				
 				CloseLevel();
 			}
 		}

@@ -40,6 +40,7 @@ using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 using NLog;
 using NLog.Fluent;
+using RocketUI;
 using RocketUI.Input;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Png;
@@ -48,6 +49,7 @@ using Biome = Alex.Worlds.Biome;
 using BlockCoordinates = Alex.Common.Utils.Vectors.BlockCoordinates;
 using BoundingBox = Microsoft.Xna.Framework.BoundingBox;
 using ContainmentType = Microsoft.Xna.Framework.ContainmentType;
+using Image = SixLabors.ImageSharp.Image;
 using Skin = Alex.Common.Utils.Skin;
 using SkinResourcePatch = Alex.Utils.Skins.SkinResourcePatch;
 
@@ -149,11 +151,11 @@ namespace Alex.Entities
 
         public RaytracerComponent Raytracer { get; }
         //public Camera Camera { get; internal set; }
-        public Player(GraphicsDevice graphics, InputManager inputManager, World world, NetworkProvider networkProvider, PlayerIndex playerIndex) : base(world)
+        public Player(GraphicsDevice graphics, GuiManager guiManager, InputManager inputManager, World world, NetworkProvider networkProvider, PlayerIndex playerIndex) : base(world)
         {
 	        Network = networkProvider;
 	        
-		    Controller = new PlayerController(graphics, inputManager, this, playerIndex);
+		    Controller = new PlayerController(graphics, guiManager, inputManager, this, playerIndex);
 
 		    SnapHeadYawRotationOnMovement = false;
 			SnapYawRotationOnMovement = true;

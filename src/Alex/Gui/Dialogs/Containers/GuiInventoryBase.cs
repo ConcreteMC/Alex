@@ -67,10 +67,14 @@ namespace Alex.Gui.Dialogs.Containers
 
 		public void RegisterInventory(InventoryBase inventory)
 		{
-			_registeredInventories.Add(inventory);
+			if (!_registeredInventories.Contains(inventory))
+			{
+				_registeredInventories.Add(inventory);
+
+				inventory.SlotChanged += InventoryOnSlotChanged;
+				inventory.CursorChanged += InventoryOnCursorChanged;
+			}
 			
-			inventory.SlotChanged += InventoryOnSlotChanged;
-			inventory.CursorChanged += InventoryOnCursorChanged;
 		}
 
 		public void UpdateSlot(int inventoryId, int slotId, Item item)
@@ -382,8 +386,8 @@ namespace Alex.Gui.Dialogs.Containers
 			}
 			else
 			{
-				_overlayText = item?.GetDisplayName() ?? item.Name;
-
+				//_overlayText = item?.GetDisplayName() ?? item.Name;
+				TextOverlay.Text = item?.GetDisplayName() ?? item.Name;
 				_overlayStart = 0;
 				_nextUpdate = TimeSpan.Zero;
 
@@ -452,7 +456,7 @@ namespace Alex.Gui.Dialogs.Containers
 			CursorItemRenderer.Margin = new Thickness(point.Y, point.X);
 			TextOverlay.Margin = new Thickness(point.Y, point.X);
 			
-			Marqueue(gameTime);
+			//Marqueue(gameTime);
 			
 			
 			base.OnUpdate(gameTime);
@@ -483,12 +487,19 @@ namespace Alex.Gui.Dialogs.Containers
 		}
 
 		/// <inheritdoc />
+		public override void OnShow()
+		{
+			base.OnShow();
+			RegisterInventory(Inventory);
+		}
+
+		/// <inheritdoc />
 		public override void OnClose()
 		{
 			//TransactionTracker?.DialogClosed();
 			OnContainerClose?.Invoke(this, EventArgs.Empty);
 
-			var registered = _registeredInventories;
+			var registered = _registeredInventories.ToArray();
 			_registeredInventories.Clear();
 			
 			foreach (var inventory in registered)
