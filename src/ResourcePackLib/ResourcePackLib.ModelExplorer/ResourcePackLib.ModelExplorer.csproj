@@ -49,7 +49,4 @@
         <DependentUpon>Scene.cs</DependentUpon>
       </Compile>
     </ItemGroup>
-    <ItemGroup>
-      <Folder Include="Meshes" />
-    </ItemGroup>
 </Project>
