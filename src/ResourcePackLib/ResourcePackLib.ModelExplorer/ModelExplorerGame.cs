@@ -104,9 +104,9 @@ public class ModelExplorerGame : Game, IGame
 
     protected override void Update(GameTime gameTime)
     {
-        if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed ||
-            Keyboard.GetState().IsKeyDown(Keys.Escape))
-            Exit();
+        // if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed ||
+        //     Keyboard.GetState().IsKeyDown(Keys.Escape))
+        //     Exit();
 
         if (_keyboardListener.IsAnyPressed(Keys.F8))
         {
@@ -124,10 +124,10 @@ public class ModelExplorerGame : Game, IGame
         if (keyboard.IsKeyDown(Keys.LeftControl))
         {
             var rotateDiff = (float)((gameTime.ElapsedGameTime.TotalSeconds / 1f) * rotateSpeed);
-            if (_keyboardListener.IsAnyDown(Keys.NumPad8)) _camera.Rotation *= Quaternion.CreateFromAxisAngle(_camera.Up, MathHelper.ToRadians(-rotateDiff));
-            if (_keyboardListener.IsAnyDown(Keys.NumPad2)) _camera.Rotation *= Quaternion.CreateFromAxisAngle(_camera.Up, MathHelper.ToRadians(rotateDiff));
-            if (_keyboardListener.IsAnyDown(Keys.NumPad4)) _camera.Rotation *= Quaternion.CreateFromAxisAngle(_camera.Right, MathHelper.ToRadians(-rotateDiff));
-            if (_keyboardListener.IsAnyDown(Keys.NumPad6)) _camera.Rotation *= Quaternion.CreateFromAxisAngle(_camera.Right, MathHelper.ToRadians(rotateDiff));
+            if (_keyboardListener.IsAnyDown(Keys.NumPad8)) _camera.Rotation += (Vector3.UnitX * MathHelper.ToRadians(-rotateDiff));
+            if (_keyboardListener.IsAnyDown(Keys.NumPad2)) _camera.Rotation += (Vector3.UnitX * MathHelper.ToRadians(rotateDiff));
+            if (_keyboardListener.IsAnyDown(Keys.NumPad4)) _camera.Rotation += (Vector3.UnitY * MathHelper.ToRadians(-rotateDiff));
+            if (_keyboardListener.IsAnyDown(Keys.NumPad6)) _camera.Rotation += (Vector3.UnitY * MathHelper.ToRadians(rotateDiff));
         }
         else
         {

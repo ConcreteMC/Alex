@@ -29,7 +29,7 @@ namespace ResourcePackLib.ModelExplorer.Entities
             set => Transform.Position = value;
         }
 
-        public Quaternion Rotation
+        public Vector3 Rotation
         {
             get => Transform.Rotation;
             set => Transform.Rotation = value;

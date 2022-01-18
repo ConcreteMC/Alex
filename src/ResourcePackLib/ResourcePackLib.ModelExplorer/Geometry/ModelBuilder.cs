@@ -1,5 +1,7 @@
 ﻿using System.Numerics;
 using ResourcePackLib.Core.Data;
+using ResourcePackLib.ModelExplorer.Utilities.Extensions;
+using Quaternion = Microsoft.Xna.Framework.Quaternion;
 
 namespace ResourcePackLib.ModelExplorer.Geometry;
 
@@ -16,12 +18,13 @@ public struct ModelVertexIndexPositionTexture
 }
 public class ModelCubeMeshBuilder
 {
-    private readonly ModelBoneBuilder _parentBone;
+    internal readonly ModelBoneBuilder _parentBone;
     private Vector3 _origin;
     private Vector3 _size;
-    private Vector2 _uv;
+    internal Vector2 _uv;
+    internal Vector2 _uvSize;
 
-    internal Cuboid _cuboid;
+    internal (ModelVertexIndexPositionTexture[] vertices, short[] indices) _mesh;
 
     public ModelCubeMeshBuilder(ModelBoneBuilder parentBone)
     {
@@ -46,7 +49,7 @@ public class ModelCubeMeshBuilder
         return this;
     }
 
-    private (ModelVertexIndexPositionTexture[] vertices, short[] indices) CreateCuboid(Vector3 min, Vector3 max, Vector2 uvSize)
+    private (ModelVertexIndexPositionTexture[] vertices, short[] indices) CreateCuboid(Vector3 min, Vector3 max)
     {
         var baseVertices = new Vector3[8]; // 8 distinct coordinates
 
@@ -75,7 +78,9 @@ public class ModelCubeMeshBuilder
         short b = 0, c = 0;
 
         var size = max - min;
-        var o1 = new Vector2((2 * size.Y) + (2 * size.X), (size.Y + size.Z));
+        _uvSize = new Vector2((2 * size.Y) + (2 * size.X), (size.Y + size.Z));
+        var uvOffset = _uv;
+        var globUvSize = _parentBone._modelBuilder._textureSize;
         
         var defineFace = (short[] vertexIndices, Vector2 uvMin, Vector2 uvSize) =>
         {
@@ -83,10 +88,10 @@ public class ModelCubeMeshBuilder
             //for (int i = 0; i < baseFaceIndices.Length; i++)
             //{
             var d = b;
-            vertices[b++] = new ModelVertexIndexPositionTexture(baseVertices[vertexIndices[0]], new Vector2(uvMin.X, uvMin.Y) / o1);
-            vertices[b++] = new ModelVertexIndexPositionTexture(baseVertices[vertexIndices[1]], new Vector2(uvMax.X, uvMin.Y) / o1);
-            vertices[b++] = new ModelVertexIndexPositionTexture(baseVertices[vertexIndices[2]], new Vector2(uvMax.X, uvMax.Y) / o1);
-            vertices[b++] = new ModelVertexIndexPositionTexture(baseVertices[vertexIndices[3]], new Vector2(uvMin.X, uvMax.Y) / o1);
+            vertices[b++] = new ModelVertexIndexPositionTexture(baseVertices[vertexIndices[0]], (uvOffset + new Vector2(uvMin.X, uvMin.Y)) / globUvSize);
+            vertices[b++] = new ModelVertexIndexPositionTexture(baseVertices[vertexIndices[1]], (uvOffset + new Vector2(uvMax.X, uvMin.Y)) / globUvSize);
+            vertices[b++] = new ModelVertexIndexPositionTexture(baseVertices[vertexIndices[2]], (uvOffset + new Vector2(uvMax.X, uvMax.Y)) / globUvSize);
+            vertices[b++] = new ModelVertexIndexPositionTexture(baseVertices[vertexIndices[3]], (uvOffset + new Vector2(uvMin.X, uvMax.Y)) / globUvSize);
 
             indices[c++] = (short)(d + 0);
             indices[c++] = (short)(d + 1);
@@ -121,23 +126,29 @@ public class ModelCubeMeshBuilder
 
     public TruModelMesh Build()
     {
-        var cuboid = new Cuboid(_origin, _origin + _size);
-        _cuboid = cuboid;
-
+        _mesh = CreateCuboid(_origin, _origin+_size);
         return new TruModelMesh()
         {
+            NumVertices = _mesh.vertices.Length,
+            PrimitiveCount = _mesh.indices.Length/3,
+            IndexOffset = 0,
+            VertexOffset = 0
         };
     }
 }
 
 public class ModelBoneBuilder
 {
-    private readonly ModelBuilder _modelBuilder;
+    internal readonly ModelBuilder _modelBuilder;
     private readonly string _name;
     internal string _parentName;
     private Vector3 _pivot;
+    private Vector3 _bindPoseRotation;
     private List<ModelCubeMeshBuilder> _cubeBuilders = new List<ModelCubeMeshBuilder>();
     internal TruModelBone _built;
+    public int _nVertices;
+    public int _nIndices;
+    internal (ModelVertexIndexPositionTexture[] vertices, short[] indices)[] _meshes;
 
     public ModelBoneBuilder(ModelBuilder modelBuilder, string name)
     {
@@ -154,6 +165,12 @@ public class ModelBoneBuilder
     public ModelBoneBuilder Pivot(Vector3 pivot)
     {
         _pivot = pivot;
+        return this;
+    }
+    
+    public ModelBoneBuilder BindPoseRotation(Vector3 bindPoseRotation)
+    {
+        _bindPoseRotation = bindPoseRotation;
         return this;
     }
 
@@ -174,13 +191,22 @@ public class ModelBoneBuilder
         {
             Name = _name,
         };
+        _nVertices = 0;
+        _nIndices = 0;
 
-        foreach (var cube in _cubeBuilders)
+        _meshes = new  (ModelVertexIndexPositionTexture[] vertices, short[] indices)[_cubeBuilders.Count];
+        for (var i = 0; i < _cubeBuilders.Count; i++)
         {
-            bone.AddMesh(cube.Build());
+            var cube = _cubeBuilders[i];
+            var mesh = cube.Build();
+            bone.AddMesh(mesh);
+            _meshes[i] = cube._mesh;
+            _nVertices += cube._mesh.vertices.Length;
+            _nIndices += cube._mesh.indices.Length;
         }
 
         bone.Transform.LocalRotationOrigin = _pivot;
+        bone.Transform.LocalRotation = _bindPoseRotation;
 
         _built = bone;
         return bone;
@@ -189,7 +215,7 @@ public class ModelBoneBuilder
 
 public class ModelBuilder
 {
-    private Vector2 _textureSize;
+    internal Vector2 _textureSize;
     private readonly List<ModelBoneBuilder> _boneBuilders = new List<ModelBoneBuilder>();
 
     public ModelBuilder()
@@ -213,10 +239,47 @@ public class ModelBuilder
     {
         var bones = new List<TruModelBone>();
 
+        var nVertices = 0;
+        var nIndices = 0;
+        
         foreach (var boneBuilder in _boneBuilders)
         {
             var bone = boneBuilder.Build();
+            nVertices += boneBuilder._nVertices;
+            nIndices += boneBuilder._nIndices;
             bones.Add(bone);
+        }
+
+        var vertices = new ModelVertexIndexPositionTexture[nVertices];
+        var indices = new short[nIndices];
+
+        var verticesIndex = 0;
+        var indicesIndex = 0;
+        
+        for (int i = 0; i < _boneBuilders.Count; i++)
+        {
+            var bb = _boneBuilders[i];
+            for (int j = 0; j < bb._meshes.Length; j++)
+            {
+                var bbm = bb._meshes[j];
+                
+                for (var k = 0; k < bbm.vertices.Length; k++)
+                {
+                    vertices[verticesIndex + k] = bbm.vertices[k];
+                }
+                
+                for(var k = 0; k < bbm.indices.Length; k++)
+                {
+                    indices[indicesIndex + k] = (short)(verticesIndex + bbm.indices[k]);
+                }
+
+                var m = bb._built.Meshes[j];
+                m.VertexOffset = verticesIndex;
+                m.IndexOffset = indicesIndex;
+                
+                verticesIndex += bbm.vertices.Length;
+                indicesIndex += bbm.indices.Length;
+            }
         }
 
         foreach (var boneBuilder in _boneBuilders)
@@ -228,14 +291,16 @@ public class ModelBuilder
                 {
                     if (string.Equals(bone.Name, boneBuilder._parentName, StringComparison.OrdinalIgnoreCase))
                     {
-                        boneBuilder._built.Parent = bone;
+                        bone.AddChild(boneBuilder._built);
                         break;
                     }
                 }
             }
         }
 
-        var model = new TruModel();
+        // var textureUvScale = 
+        
+        var model = new TruModel(vertices, indices, bones);
         return model;
     }
 }

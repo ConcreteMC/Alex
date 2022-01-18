@@ -31,7 +31,7 @@ namespace Alex.Gamestates.InGame
 		
 		public World World { get; private set; }
 
-        private WorldProvider WorldProvider { get; set; }
+        private WorldProvider WorldProvider { get; set; } 
         private NetworkProvider NetworkProvider { get; set; }
 
 		private readonly PlayingHud _playingHud;

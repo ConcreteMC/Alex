@@ -15,9 +15,7 @@ public class CameraMouseController : GameComponent
 
     public bool InvertX { get; set; }
     public bool InvertY { get; set; }
-    public double Sensitivity { get; set; } = 180d;
-
-    private Vector3 _rotation = Vector3.Zero;
+    public double Sensitivity { get; set; } = 60d;
     
     private Vector3 _previous;
     private MouseInputListener _cursorInputListener;
@@ -56,10 +54,9 @@ public class CameraMouseController : GameComponent
         
         var lookDelta = delta * (float)Sensitivity;
 
-        _rotation -= new Vector3(MathHelper.ToRadians(lookDelta.X), MathHelper.ToRadians(lookDelta.Y), MathHelper.ToRadians(lookDelta.Z));
+        //Camera.LookAt(Vector3.Zero);
+        Camera.Rotation -= new Vector3(lookDelta.X, lookDelta.Y, 0f);
         //_rotation.Normalize();
-        
-        Camera.Rotation = Quaternion.CreateFromYawPitchRoll(_rotation.X, _rotation.Y, _rotation.Z);
         
         _previous = p;
     }

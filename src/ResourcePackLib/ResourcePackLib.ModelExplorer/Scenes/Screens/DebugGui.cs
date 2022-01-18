@@ -27,7 +27,7 @@ public class DebugGui : Screen
         AddDebugLine(() =>
         {
             var p = ModelExplorerGame.Instance.Camera.Rotation;
-            return $"Camera Rotation: {p.X:F2}, {p.Y:F2}, {p.Z:F2}, {p.W:F2}";
+            return $"Camera Rotation: {p.X:F2}, {p.Y:F2}, {p.Z:F2}";
         });
         
         AddDebugLine(() =>

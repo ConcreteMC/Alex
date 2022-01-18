@@ -11,7 +11,7 @@ namespace ResourcePackLib.ModelExplorer.Abstractions
         public Viewport Viewport { get; }
         
         public Vector3 Position { get; set; }
-        public Quaternion Rotation { get; set; }
+        public Vector3 Rotation { get; set; }
         
         public Matrix View { get; }
         public Matrix Projection { get; }
@@ -22,5 +22,6 @@ namespace ResourcePackLib.ModelExplorer.Abstractions
         public void Draw(Action doDraw);
         public void MoveRelative(Vector3 move);
 
+        void LookAt(Vector3 target);
     }
 }

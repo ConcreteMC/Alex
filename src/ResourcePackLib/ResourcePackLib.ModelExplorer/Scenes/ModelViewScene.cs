@@ -16,10 +16,31 @@ public class MainMenuScene : GuiSceneBase<MainMenuScreen>
         cube.Visible = true;
         cube.Position = Vector3.Zero;
         cube.Scale = Vector3.One;
+
+        var fox = Services.CreateInstance<MCEntity>();
+        fox.Visible = true;
+        fox.Position = Vector3.Up;
+        fox.Transform.LocalScale = Vector3.One / 16f;
         
         Components.Add(Services.GetOrCreateInstance<AxisEntity>());
-        Components.Add(cube);
+        //Components.Add(cube);
+        Components.Add(fox);
         
         Components.Add(Services.GetOrCreateInstance<CameraMouseController>());
+        
+        Game.Camera.Position = Vector3.Backward;
+    }
+
+    protected override void OnUpdate(GameTime gameTime)
+    {
+        var a = "b";
+        foreach (var c in Components)
+        {
+            if (c is MCEntity mcEntity)
+            {
+               // mcEntity.Scale = Vector3.One / 16f;
+            }
+        }
+        base.OnUpdate(gameTime);
     }
 }

@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Input;
 using ResourcePackLib.ModelExplorer.Abstractions;
 using ResourcePackLib.ModelExplorer.Utilities.Extensions;
 using RocketUI;
+using RocketUI.Utilities.Helpers;
 
 namespace ResourcePackLib.ModelExplorer.Graphics
 {
@@ -12,19 +13,19 @@ namespace ResourcePackLib.ModelExplorer.Graphics
         Perspective,
         Orthographic
     }
-    
+
     public class Camera : GameComponent, ICamera, ITransformable
     {
-        private readonly IGame       _game;
-        private          Viewport       _viewport;
-        private          Rectangle   _bounds       = Rectangle.Empty;
-        private          float       _nearDistance = 0.1f;
-        private          float       _farDistance         = 1000.0f;
-        public           Transform3D Transform { get; } = new Transform3D();
+        private readonly IGame _game;
+        private Viewport _viewport;
+        private Rectangle _bounds = Rectangle.Empty;
+        private float _nearDistance = 0.1f;
+        private float _farDistance = 10000.0f;
+        public Transform3D Transform { get; } = new Transform3D();
         private Vector3 _up;
         private Vector3 _forward;
         private Vector3 _right;
-        
+
         public Vector3 Up => _up;
         public Vector3 Forward => _forward;
         public Vector3 Right => _right;
@@ -34,22 +35,25 @@ namespace ResourcePackLib.ModelExplorer.Graphics
             get => Transform.Scale;
             set => Transform.Scale = value;
         }
+
         public Vector3 Position
         {
             get => Transform.Position;
             set => Transform.Position = value;
         }
-        public Quaternion Rotation
+
+        public Vector3 Rotation
         {
             get => Transform.Rotation;
             set => Transform.Rotation = value;
         }
+
         public Matrix World
         {
             get => Transform.World;
         }
 
-        public Matrix View       { get; private set; }
+        public Matrix View { get; private set; }
         public Matrix Projection { get; private set; }
 
         public float NearDistance
@@ -76,6 +80,7 @@ namespace ResourcePackLib.ModelExplorer.Graphics
         {
             get => _viewport;
         }
+
         public Rectangle Bounds
         {
             get => _bounds;
@@ -87,7 +92,7 @@ namespace ResourcePackLib.ModelExplorer.Graphics
         }
 
         public ProjectionType ProjectionType { get; set; } = ProjectionType.Perspective;
-        
+
         public RenderTarget2D RenderTarget { get; set; }
 
         public Camera(IGame game) : base(game.Game)
@@ -97,17 +102,20 @@ namespace ResourcePackLib.ModelExplorer.Graphics
             UpdateProjection();
 
             _game.GraphicsDeviceManager.DeviceCreated += (sender, args) => UpdateProjection();
-            _game.GraphicsDeviceManager.DeviceReset   += (sender, args) => UpdateProjection();
-            _game.Window.ClientSizeChanged            += (sender, args) => UpdateProjection();
-            Transform.Changed                         += (sender, args) => UpdateView();
+            _game.GraphicsDeviceManager.DeviceReset += (sender, args) => UpdateProjection();
+            _game.Window.ClientSizeChanged += (sender, args) => UpdateProjection();
+            Transform.Changed += (sender, args) => UpdateView();
         }
-        
+
         private void UpdateView()
         {
-            _forward = Vector3.Normalize(Vector3.Transform(Vector3.Forward, Rotation));
-            _up      = Vector3.Normalize(Vector3.Transform(Vector3.Up, Rotation));
-            _right   = Vector3.Normalize(Vector3.Transform(Vector3.Right, Rotation));
+            Quaternion rot = default;
+            Transform.World.ExtractRotation(ref rot);
             
+            _forward = Vector3.Normalize(Vector3.Transform(Vector3.Forward, rot));
+            _up = Vector3.Normalize(Vector3.Transform(Vector3.Up, rot));
+            _right = Vector3.Normalize(Vector3.Transform(Vector3.Right, rot));
+
             View = Matrix.CreateLookAt(Position, Position + _forward, _up);
         }
 
@@ -117,7 +125,7 @@ namespace ResourcePackLib.ModelExplorer.Graphics
             {
                 Bounds = _game.Window.ClientBounds;
             }
-            
+
             var w = Bounds.Width;
             var h = Bounds.Height;
 
@@ -132,8 +140,8 @@ namespace ResourcePackLib.ModelExplorer.Graphics
 
             if (ProjectionType == ProjectionType.Perspective)
             {
-                var aspect = (float) w / (float) h;
-                Projection = Matrix.CreatePerspectiveFieldOfView(60.0f.ToRadians(), aspect, NearDistance, FarDistance);
+                var aspect = (float)w / (float)h;
+                Projection = Matrix.CreatePerspectiveFieldOfView(80.0f.ToRadians(), aspect, NearDistance, FarDistance);
             }
             else
             {
@@ -141,11 +149,23 @@ namespace ResourcePackLib.ModelExplorer.Graphics
             }
         }
 
-        
-        
+
+        public void LookAt(Vector3 target)
+        {
+            var d = Vector3.Normalize(target - Position);
+            var t = 90f - MathHelper.ToDegrees((float)Math.Atan(d.X / d.Z));
+            var yaw = (d.Z < 0 ? 90f : 270f) + t;
+
+            var pitch = MathHelper.ToDegrees((float)Math.Atan(d.Y / (Math.Sqrt((d.X * d.X) + (d.Z * d.Z)))));
+
+            Rotation = new Vector3(pitch, yaw, 0f);
+        }
+
         public void MoveRelative(Vector3 move)
         {
-            var forward = Vector3.Transform(move, Rotation);
+            Quaternion rot = default;
+            Transform.World.ExtractRotation(ref rot);
+            var forward = Vector3.Transform(move, rot);
             Position += forward;
         }
 

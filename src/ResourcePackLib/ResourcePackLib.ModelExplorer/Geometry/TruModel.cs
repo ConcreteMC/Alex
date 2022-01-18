@@ -1,8 +1,9 @@
 ﻿using System.Collections.ObjectModel;
-using System.Numerics;
 using JetBrains.Annotations;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using RocketUI;
+using Vector2 = System.Numerics.Vector2;
 
 namespace ResourcePackLib.ModelExplorer.Geometry;
 
@@ -12,6 +13,7 @@ public class TruModelMesh
     public int VertexOffset { get; internal set; }
     public int PrimitiveCount { get; internal set; }
     public int IndexOffset { get; internal set; }
+    
     public TruModelMesh()
     {
         
@@ -43,22 +45,29 @@ public class TruModelBone
 {
     private List<TruModelBone> _children = new List<TruModelBone>();
     private List<TruModelMesh> _meshes = new List<TruModelMesh>();
+    private TruModelBone _parent;
 
-    public List<TruModelMesh> Meshes
-    {
-        get => _meshes;
-        private set => _meshes = value;
-    }
+    public TruModelMeshCollection Meshes { get; }
     
     public string Name { get; set; }
-    
-    public TruModelBone Parent { get; set; }
-    public TruModelBoneCollection Children { get; private set; }
+
+    public TruModelBone Parent
+    {
+        get => _parent;
+        private set
+        {
+            _parent = value;
+            Transform.ParentTransform = value?.Transform;
+        }
+    }
+
+    public TruModelBoneCollection Children { get; }
     public TruModelTransform Transform { get; }
 
     public TruModelBone()
     {
         Transform = new TruModelTransform();
+        Meshes = new TruModelMeshCollection(_meshes);
         Children = new TruModelBoneCollection(_children);
     }
 		
@@ -80,19 +89,27 @@ public class TruModel
     
     public TruModelBoneCollection Bones { get; private set; }
     
-    public TruModelMeshCollection Meshes { get; private set; }
-    
     public TruModelBone RootBone { get; set; }
     
     public object Tag { get; set; }
     
-    public Vector2 TextureSize { get; }
-
-    public VertexPositionTexture[] Vertices { get; }
+    public VertexPositionColorTexture[] Vertices { get; }
     public short[] Indices { get; }
     
-    public TruModel()
+    public TruModel(ModelVertexIndexPositionTexture[] vertices, short[] indices, List<TruModelBone> bones)
     {
         Transform = new TruModelTransform();
+        Vertices = vertices.Select(v => new VertexPositionColorTexture(
+            new Microsoft.Xna.Framework.Vector3(v.Position.X, v.Position.Y, v.Position.Z),
+            Color.WhiteSmoke,
+            new Microsoft.Xna.Framework.Vector2(v.Uv.X, v.Uv.Y)))
+            .ToArray();
+        Indices = indices;
+        Bones = new TruModelBoneCollection(bones);
+        foreach (var bone in Bones)
+        {
+            if (bone.Parent == null)
+                bone.Transform.ParentTransform = Transform;
+        }
     }
 }
