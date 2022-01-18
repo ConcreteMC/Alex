@@ -766,7 +766,9 @@ namespace Alex.Entities
 			    {
 				    var e = MouseInputListener.GetCursorPosition();
 					
-				    if (e.X < 10 || e.X > Graphics.Viewport.Width - 10 || e.Y < 10
+				    if (e.X < 10
+				        || e.X > Graphics.Viewport.Width - 10
+				        || e.Y < 10
 				        || e.Y > Graphics.Viewport.Height - 10)
 				    {
 					    CenterCursor();

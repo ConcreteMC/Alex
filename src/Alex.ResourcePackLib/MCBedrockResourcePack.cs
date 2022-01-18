@@ -47,15 +47,9 @@ namespace Alex.ResourcePackLib
 		public IDictionary<string, RenderController> RenderControllers { get; private set; } = new ConcurrentDictionary<string, RenderController>();
 		public IDictionary<string, AnimationController> AnimationControllers { get; private set; } = new ConcurrentDictionary<string, AnimationController>();
 		public IDictionary<string, Animation> Animations { get; private set; } = new ConcurrentDictionary<string, Animation>();
-
-        public IReadOnlyDictionary<string, ParticleDefinition> Particles { get; private set; } =
-            new ConcurrentDictionary<string, ParticleDefinition>();
-
-        public IReadOnlyDictionary<string, JToken> GlobalUiVariables { get; private set; } =
-            new Dictionary<string, JToken>();
-
+        public IReadOnlyDictionary<string, ParticleDefinition> Particles { get; private set; } = new ConcurrentDictionary<string, ParticleDefinition>();
+        public IReadOnlyDictionary<string, JToken> GlobalUiVariables { get; private set; } = new Dictionary<string, JToken>();
         public SoundDefinitionFormat SoundDefinitions { get; private set; } = null;
-
         public SoundBindingsCollection SoundBindings { get; private set; } = null;
 
         private readonly IFilesystem _archive;
@@ -87,7 +81,6 @@ namespace Alex.ResourcePackLib
         private static readonly Regex IsFontFile = new Regex(@"^font[\\\/](?'filename'.*)\.png$", RegexOpts);
         private static readonly Regex IsParticleFile = new Regex(@"^particles[\\\/](?'filename'.*)\.json$", RegexOpts);
         private static readonly Regex IsAttachableFile = new Regex(@"^attachables[\\\/](?'filename'.*)\.json$", RegexOpts);
-
         private static readonly Regex IsUiTexture = new Regex(@"^textures[\\\/]ui[\\\/](?'filename'.*)\.png", RegexOpts);
         private static readonly Regex IsUiDefinition = new Regex(@"^ui[\\\/](?'filename'.*)\.json", RegexOpts);
 
@@ -96,16 +89,10 @@ namespace Alex.ResourcePackLib
             Dictionary<string, EntityDescription> entityDefinitions = new Dictionary<string, EntityDescription>();
             Dictionary<string, EntityModel> entityModels = new Dictionary<string, EntityModel>(StringComparer.Ordinal);
             Dictionary<string, RenderController> renderControllers = new Dictionary<string, RenderController>(StringComparer.Ordinal);
-
-            Dictionary<string, AnimationController>
-                animationControllers = new Dictionary<string, AnimationController>(StringComparer.Ordinal);
-
+            Dictionary<string, AnimationController> animationControllers = new Dictionary<string, AnimationController>(StringComparer.Ordinal);
             Dictionary<string, ParticleDefinition> particleDefinitions = new Dictionary<string, ParticleDefinition>(StringComparer.Ordinal);
-
-            Dictionary<string, AttachableDefinition> attachableDefinitions =
-                new Dictionary<string, AttachableDefinition>(StringComparer.Ordinal);
-            Dictionary<string, Animation>
-                animations = new Dictionary<string, Animation>(StringComparer.Ordinal);
+            Dictionary<string, AttachableDefinition> attachableDefinitions = new Dictionary<string, AttachableDefinition>(StringComparer.Ordinal);
+            Dictionary<string, Animation> animations = new Dictionary<string, Animation>(StringComparer.Ordinal);
 
             TryAddBitmap("textures/ui/title");
 

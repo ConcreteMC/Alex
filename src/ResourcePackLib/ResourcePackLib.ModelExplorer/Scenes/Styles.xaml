@@ -1,0 +1,5 @@
+﻿<StyleSheet xmlns="clr-namespace:RocketUI;assembly=RocketUI"
+            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+            xmlns:markup="clr-namespace:Portable.Xaml.Markup;assembly=Portable.Xaml">
+
+</StyleSheet>

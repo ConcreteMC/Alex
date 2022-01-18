@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Screen x:Class="ResourcePackLib.ModelExplorer.Scenes.Screens.MainMenuScreen"
+        xmlns="clr-namespace:RocketUI;assembly=RocketUI"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Width="800"
+        Height="480">
+    <StackMenu Anchor="FillLeft" 
+               ChildAnchor="MiddleFill" 
+               Orientation="Vertical" 
+               MinWidth="200" 
+               MinHeight="300"
+               Width="300" 
+               Height="400">
+        <StackMenuItem Name="PlayButton" Text="PLAY"  />
+        <StackMenuItem Name="OptionsButton" Text="OPTIONS" />
+        <StackMenuItem Name="ExitButton" Text="EXIT" />
+    </StackMenu>
+</Screen>
