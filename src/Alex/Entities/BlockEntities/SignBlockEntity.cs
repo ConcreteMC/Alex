@@ -5,6 +5,7 @@ using Alex.Common.Blocks;
 using Alex.Common.Graphics;
 using Alex.Common.Resources;
 using Alex.Common.Utils;
+using Alex.Graphics.Models;
 using Alex.Graphics.Models.Entity;
 using Alex.Graphics.Models.Entity.BlockEntities;
 using Alex.Networking.Java.Packets.Play;
@@ -20,7 +21,7 @@ namespace Alex.Entities.BlockEntities
 {
 	public class SignBlockEntity : BlockEntity
 	{
-		private ModelBone RootBone { get; set; }
+		private BoneMatrices RootBone { get; set; }
 
 		/// <inheritdoc />
 		public SignBlockEntity(World level) : base(level)
@@ -45,7 +46,7 @@ namespace Alex.Entities.BlockEntities
 		{
 			base.UpdateModelParts();
 
-			if (ModelRenderer != null && ModelRenderer.GetBone("root", out var bone))
+			if (ModelRenderer != null && ModelRenderer.GetBoneTransform("root", out var bone))
 			{
 				var rot = bone.Rotation;
 				rot.Y = _yRotation;

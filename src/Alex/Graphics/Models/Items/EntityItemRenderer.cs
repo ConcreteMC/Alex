@@ -60,11 +60,7 @@ namespace Alex.Graphics.Models.Items
 		}
 
 		/// <inheritdoc />
-		public Model Model { get; set; } = null;
-
-		/// <inheritdoc />
-		public IHoldAttachment Parent { get; set; }
-
+		public IModel Model { get; set; } = null;
 		/// <inheritdoc />
 		//public IHoldAttachment Parent { get; set; }
 		public Vector3 Scale { get; set; } = new Vector3(1f / 16f, 1f / 16f, 1f / 16f);

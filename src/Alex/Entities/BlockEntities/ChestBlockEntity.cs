@@ -18,8 +18,8 @@ namespace Alex.Entities.BlockEntities
 {
 	public class ChestBlockEntity : BlockEntity
 	{
-		private ModelBone HeadBone { get; set; }
-		private ModelBone Body     { get; set; }
+		private BoneMatrices HeadBone { get; set; }
+		private BoneMatrices Body     { get; set; }
 		
 		/// <inheritdoc />
 		public ChestBlockEntity(World level) : base(level)
@@ -46,12 +46,12 @@ namespace Alex.Entities.BlockEntities
 		protected override void UpdateModelParts()
 		{
 			//base.UpdateModelParts();
-			if (ModelRenderer.GetBone("head", out var head))
+			if (ModelRenderer.GetBoneTransform("head", out var head))
 			{
 				HeadBone = head;
 			}
 
-			if (ModelRenderer.GetBone("body", out var body))
+			if (ModelRenderer.GetBoneTransform("body", out var body))
 			{
 				Body = body;
 				

@@ -1,8 +1,11 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Linq;
 using Alex.Common.Graphics;
 using Alex.Common.Utils;
+using Alex.Entities;
 using Alex.Graphics.Effect;
 using Alex.ResourcePackLib.Json.Models.Entities;
 using Alex.Utils;
@@ -12,13 +15,11 @@ using NLog;
 
 namespace Alex.Graphics.Models.Entity
 {
-	public class ModelRenderer : IDisposable
+	public class ModelRenderer : ModelMatrixHolder, IDisposable
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ModelRenderer));
 		private Vector3 _entityColor = Color.White.ToVector3();
 		private Vector3 _diffuseColor = Color.White.ToVector3();
-		internal Model Model { get; set; }
-
 		public double VisibleBoundsWidth { get; set; } = 0;
 		public double VisibleBoundsHeight { get; set; } = 0;
 
@@ -71,7 +72,6 @@ namespace Alex.Graphics.Models.Entity
 
 		private EntityEffect Effect { get; set; }
 
-		private TextureBinding[] _textures = new TextureBinding[0];
 		private Texture2D _texture;
 		public Texture2D Texture
 		{
@@ -97,12 +97,12 @@ namespace Alex.Graphics.Models.Entity
 			}
 		}
 
-		public ModelRenderer(Model model, EntityEffect effect)
+		public ModelRenderer(IModel model, EntityEffect effect)
 		{
 			Model = model;
 			Effect = effect;
 		}
-		
+
 		private void UpdateScale()
 		{
 			Effect.TextureScale = Vector2.One / TextureSize;
@@ -120,22 +120,15 @@ namespace Alex.Graphics.Models.Entity
 
 			if (modelInstance == null)
 				return 0;
+
+			var matrices = GetTransforms();
+
+			if (matrices == null)
+				return 0;
 			
-			return modelInstance.Draw(worldMatrix, args.Camera.ViewMatrix, args.Camera.ProjectionMatrix);
+			return modelInstance.Draw(worldMatrix, args.Camera.ViewMatrix, args.Camera.ProjectionMatrix, matrices, Effect);
 		}
 
-		public virtual void Update(IUpdateArgs args)
-		{
-		
-			var model = Model;
-			if (model == null) return;
-		
-			foreach (var bone in model.Bones.ImmutableArray)
-			{
-				bone.Update(args);
-			}
-		}
-		
 		public bool GetBone(string name, out ModelBone bone)
 		{
 			if (Model.Bones.TryGetValue(name, out bone))
@@ -154,30 +147,36 @@ namespace Alex.Graphics.Models.Entity
 			}
 		}
 
-		public void Dispose()
+		protected void Dispose(bool disposing)
 		{
 			var model = Model;
-
+			
 			if (model != null)
 			{
-				foreach (var mesh in model.Meshes)
-				{
-					foreach (var part in mesh.MeshParts)
-					{
-						if (part.VertexBuffer != null && !part.VertexBuffer.IsDisposed)
-							part.VertexBuffer.Dispose();
-						
-						if (part.IndexBuffer != null && !part.IndexBuffer.IsDisposed)
-							part.IndexBuffer.Dispose();
-					}
-				}
+				model?.Dispose();
+				Model = null;
 			}
 			
 			Effect?.Dispose();
 			Effect = null;
-			
-			//_texture?.Dispose();
-			//_texture = null;
+
+			var texture = _texture;
+			if (texture != null)
+			{
+				_texture = null;
+				if (texture.Tag is Guid guid)
+				{
+					if (guid == EntityFactory.PooledTagIdentifier)
+						return;
+				}
+			//	texture?.Dispose();
+			}
+		}
+
+		public override void Dispose()
+		{
+			Dispose(true);
+			GC.SuppressFinalize(this);
 		}
 
 		public void ApplyPending()
@@ -186,11 +185,13 @@ namespace Alex.Graphics.Models.Entity
 
 			if (modelInstance == null)
 				return;
-			
-			foreach (var b in modelInstance.Bones)
-			{
-				b?.ApplyMovement();
-			}
+
+			ApplyMovement();
+		}
+
+		~ModelRenderer()
+		{
+			Dispose(false);
 		}
 	}
 }

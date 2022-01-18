@@ -104,7 +104,7 @@ namespace Alex.Graphics.Models.Entity.Animations
 		{
 			foreach (var bone in _components)
 			{
-				if (renderer.GetBone(bone.Name, out var modelBone))
+				if (renderer.GetBoneTransform(bone.Name, out var modelBone))
 				{
 					bone.Bone = modelBone;
 				}
@@ -145,13 +145,8 @@ namespace Alex.Graphics.Models.Entity.Animations
 	{
 		public string Name { get; }
 		private readonly EntityAnimation _animation;
-
 		private readonly AnimationBoneElement _element;
-		//private Vector3 _rotation = Vector3.Zero;
-		//private Vector3 _position = Vector3.Zero;
-		//private Vector3 _scale = Vector3.Zero;
-
-		public ModelBone Bone { get; set; }
+		public BoneMatrices Bone { get; set; }
 
 		public BoneComp(string name, EntityAnimation animation, AnimationBoneElement element)
 		{
@@ -191,12 +186,12 @@ namespace Alex.Graphics.Models.Entity.Animations
 			if (bone == null)
 				return;
 
-			bone.RotateOverTime(_startRotation, Alex.DeltaTime, true);
-			bone.TranslateOverTime(_startPosition, Alex.DeltaTime, true);
-			bone.ScaleOverTime(_startScale, Alex.DeltaTime, true);
-			//bone.Rotation = _startRotation;
-			//bone.Position = _startPosition;
-			//bone.Scale = _startScale;
+			//bone.RotateOverTime(_startRotation, Alex.DeltaTime, true);
+			//bone.TranslateOverTime(_startPosition, Alex.DeltaTime, true);
+			//bone.ScaleOverTime(_startScale, Alex.DeltaTime, true);
+			bone.Rotation = _startRotation;
+			bone.Position = _startPosition;
+			bone.Scale = _startScale;
 			
 			_started = false;
 		}
@@ -230,6 +225,15 @@ namespace Alex.Graphics.Models.Entity.Animations
 			{
 				var targetScale = value.Scale.Evaluate(runtime, bone.Scale, _animation.AnimationLength, animationTime);
 
+				if (targetScale.X < 0.001d)
+					targetScale.X = 0;
+				
+				if (targetScale.Y < 0.001d)
+					targetScale.Y = 0;
+				
+				if (targetScale.Z < 0.001d)
+					targetScale.Z = 0;
+				
 				bone.ScaleOverTime(targetScale, elapsedTime, true);
 			}
 		}

@@ -23,6 +23,8 @@ namespace Alex.Graphics.Models
 		private ImmutableArray<ModelBone> _bones = new ImmutableArray<ModelBone>();
 		private object _boneLock = new object();
 		//public ModelBone[] Data => Items.
+
+		public EventHandler<NotifyCollectionChangedEventArgs> CollectionChanged;
 		public ModelBoneCollection(IList<ModelBone> list)
 		{
 			_items = new ObservableCollection<ModelBone>();
@@ -69,6 +71,8 @@ namespace Alex.Graphics.Models
 					}
 				}
 			}
+			
+			CollectionChanged?.Invoke(this, e);
 			//SetIndexes();
 		}
 

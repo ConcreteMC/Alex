@@ -9,6 +9,8 @@ using Alex.Common.Blocks;
 using Alex.Common.Graphics;
 using Alex.Common.Utils;
 using Alex.Common.Utils.Vectors;
+using Alex.Graphics.Models;
+using Alex.Graphics.Models.Entity;
 using Alex.Networking.Java.Packets.Play;
 using Alex.ResourcePackLib.Json.Bedrock.Entity;
 using Alex.Worlds;
@@ -41,7 +43,7 @@ public class BannerBlockEntity : BlockEntity
 {
     private BlockColor _bannerColor;
     private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(BannerBlockEntity));
-    private ModelBone RootBone { get; set; }
+    private BoneMatrices RootBone { get; set; }
 
     private byte _rotation = 0;
     private float _yRotation = 0f;
@@ -119,7 +121,7 @@ public class BannerBlockEntity : BlockEntity
     {
         base.UpdateModelParts();
 
-        if (ModelRenderer != null && ModelRenderer.GetBone("root", out var bone))
+        if (ModelRenderer != null && ModelRenderer.GetBoneTransform("root", out var bone))
         {
             var rot = bone.Rotation;
             rot.Y = _yRotation;

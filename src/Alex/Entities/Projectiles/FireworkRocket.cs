@@ -35,7 +35,7 @@ namespace Alex.Entities.Projectiles
 
 			if (model != null)
 			{
-				model.Root.Rotation = new Vector3(-90f, 0f, 0f);
+				model.Root.BaseRotation = new Vector3(-90f, 0f, 0f);
 			}
 		}
 

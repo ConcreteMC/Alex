@@ -72,16 +72,7 @@ namespace Alex.Graphics.Models
 				
 				if (effect != null && part.PrimitiveCount > 0 && part.VertexBuffer != null && part.IndexBuffer != null && !effect.IsDisposed)
 				{
-					this.graphicsDevice.SetVertexBuffer(part.VertexBuffer);
-					this.graphicsDevice.Indices = part.IndexBuffer;
-                    
-					for (int j = 0; j < effect?.CurrentTechnique?.Passes?.Count; j++)
-					{
-						effect?.CurrentTechnique?.Passes[j]?.Apply();
-						//graphicsDevice.DrawInstancedPrimitives(PrimitiveType.TriangleList, part.VertexOffset, part.StartIndex, part.PrimitiveCount, );
-						graphicsDevice?.DrawIndexedPrimitives(PrimitiveType.TriangleList, part.VertexOffset, part.StartIndex, part.PrimitiveCount);
-						c++;
-					}
+					c += part.Draw(graphicsDevice, effect);
 				}
 			}
 

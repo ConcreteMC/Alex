@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Threading;
 using Alex.Common.Graphics;
@@ -289,7 +291,21 @@ namespace Alex.Graphics.Models.Items
 
         private VertexDeclaration _declaration;
 
-        public Model Model { get; set; } = null;
+        public IModel Model
+        {
+            get => _model;
+            set
+            {
+                var oldValue = _model;
+                _model = value;
+
+                foreach (var instance in _instances)
+                {
+                    if (instance is RendererInstance rendererInstance)
+                        rendererInstance.OnModelChanged(oldValue, value);
+                }
+            }
+        }
 
         //protected Texture2D  _texture;
         protected ThreadSafeList<IItemRenderer> _instances = new ThreadSafeList<IItemRenderer>();
@@ -302,7 +318,7 @@ namespace Alex.Graphics.Models.Items
 
             Vertices = vertices;
         }
-
+    
         public void Update(IUpdateArgs args)
         {
             if (Effect == null)
@@ -430,7 +446,20 @@ namespace Alex.Graphics.Models.Items
             if (Effect == null || Model == null)
                 return 0;
 
-            return Model.Draw(characterMatrix, args.Camera.ViewMatrix, args.Camera.ProjectionMatrix);
+            return Model.Draw(characterMatrix, args.Camera.ViewMatrix, args.Camera.ProjectionMatrix, null);
+        }
+        
+        public int Render(IRenderArgs args, Matrix characterMatrix, Matrix[] matrices)
+        {
+            if (_setupForRendering != null)
+            {
+                _setupForRendering?.Invoke();
+                _setupForRendering = null;
+            }
+            if (Effect == null || Model == null)
+                return 0;
+
+            return Model.Draw(characterMatrix, args.Camera.ViewMatrix, args.Camera.ProjectionMatrix, matrices);
         }
 
         protected virtual void InitEffect(BasicEffect effect)
@@ -464,6 +493,8 @@ namespace Alex.Graphics.Models.Items
         }
 
         protected bool _isCached = false;
+        private IModel _model = null;
+
         public void TryCache(ResourceManager resourceManager)
         {
             if (!_isCached)
@@ -475,44 +506,81 @@ namespace Alex.Graphics.Models.Items
             }
         }
 
-        public class RendererInstance : IItemRenderer
+        public class RendererInstance : ModelMatrixHolder, IItemRenderer
         {
             private IItemRendererHolder _parent;
 
             /// <inheritdoc />
-            public Model Model
+            public override IModel Model
             {
-                get => _parent.Model;
+                get => _parent?.Model;
                 set { }
             }
 
             public RendererInstance(IItemRendererHolder parent)
             {
                 _parent = parent;
+                OnModelChanged(null, parent.Model);
             }
+
+            /// <inheritdoc />
+            protected override void ModelChanged(Model newModel)
+            {
+                base.ModelChanged(newModel);
+                IsMatricesDirty = true;
+            }
+            
+            private DisplayPosition _displayPosition1;
 
             /// <inheritdoc />
             public int Render(IRenderArgs args, Matrix characterMatrix)
             {
                 var parent = _parent;
 
-                if (parent == null)
+                var model = Model;
+                if (parent == null || model == null)
                     return 0;
-                
+
                 var originalParentDisplayPosition = parent.DisplayPosition;
                 var originalParentScale = parent.Scale;
-                
+
                 parent.DisplayPosition = DisplayPosition;
-                var amount = parent.Render(args, characterMatrix);
-                
+                int amount = 0;
+
+                var matrices = GetTransforms();
+                if (matrices != null)
+                {
+                    amount = parent.Render(args, characterMatrix, matrices);
+                }
+
+
                 parent.Scale = originalParentScale;
                 parent.DisplayPosition = originalParentDisplayPosition;
+
                 return amount;
             }
 
             /// <inheritdoc />
-            public void Update(IUpdateArgs args)
+            public override void Update(IUpdateArgs args)
             {
+                base.Update(args);
+                var parent = _parent;
+                var model = Model;
+
+                /*if (parent != null && model != null && _transformsDirty)
+                {
+                    var originalParentDisplayPosition = parent.DisplayPosition;
+                    var originalParentScale = parent.Scale;
+
+                    parent.DisplayPosition = DisplayPosition;
+                    
+                    base.Update(args);
+                    
+                    parent.Scale = originalParentScale;
+                    parent.DisplayPosition = originalParentDisplayPosition;
+                    _transformsDirty = false;
+                }*/
+
                 _parent?.Update(args);
             }
 
@@ -520,24 +588,28 @@ namespace Alex.Graphics.Models.Items
             {
                 _parent?.RemoveInstance(this);
                 _parent = null;
-                
-                if (disposing)
-                {
-                    GC.SuppressFinalize(this);
-                }
             }
-            
+
             /// <inheritdoc />
-            public void Dispose()
+            public override void Dispose()
             {
                 Dispose(true);
+                GC.SuppressFinalize(this);
             }
 
             /// <inheritdoc />
             public ResourcePackModelBase ResourcePackModel => _parent.ResourcePackModel;
 
             /// <inheritdoc />
-            public DisplayPosition DisplayPosition { get; set; }
+            public DisplayPosition DisplayPosition
+            {
+                get => _displayPosition1;
+                set
+                {
+                    _displayPosition1 = value;
+                    IsMatricesDirty = true;
+                }
+            }
 
             /// <inheritdoc />
             public bool Cache(ResourceManager pack)
@@ -550,13 +622,13 @@ namespace Alex.Graphics.Models.Items
             {
                 return _parent.CloneItemRenderer();
             }
-            
+
             ~RendererInstance()
             {
                 Dispose(false);
             }
         }
-        
+
         /// <inheritdoc />
         public override string ToString()
         {
@@ -609,5 +681,7 @@ namespace Alex.Graphics.Models.Items
     {
         float Scale { get; set; }
         void RemoveInstance(IItemRenderer rendererInstance);
+
+        int Render(IRenderArgs args, Matrix characterMatrix, Matrix[] matrices);
     }
 }

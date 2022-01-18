@@ -1,8 +1,10 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using Alex.Common.Utils;
 using Alex.Graphics.Effect;
+using Alex.Graphics.Models;
 using Alex.Graphics.Models.Entity;
 using Alex.ResourcePackLib.Json.Models.Entities;
 using Microsoft.Xna.Framework;
@@ -20,31 +22,57 @@ namespace Alex.Utils
 
 		public static bool TryGetRenderer(this EntityModel model, out ModelRenderer renderer)
 		{
-			if (!model.BuildModel(out var instance))
+			IModel instance;
+
+			bool isNewModel = false;
+			if (!_models.TryGetValue(model.Description.Identifier, out instance))
 			{
-				renderer = null;
-
-				return false;
-			}
-
-			var textureSize = new Vector2(model.Description.TextureWidth, model.Description.TextureHeight);
-			var effect = new EntityEffect()
-			{
-				VertexColorEnabled = true,
-				TextureScale = Vector2.One / textureSize,
-				FogEnabled = false
-			};
-
-
-			foreach (var mesh in instance.Meshes)
-			{
-				foreach (var part in mesh.MeshParts)
+				if (!model.BuildModel(out instance))
 				{
-					part.Effect = effect;
+					renderer = null;
+
+					return false;
+				}
+
+				isNewModel = true;
+				if (_models.TryAdd(model.Description.Identifier, instance))
+				{
+					instance.Disposed += (sender, args) =>
+					{
+						_models.TryRemove(model.Description.Identifier, out _);
+					};
 				}
 			}
 
-			var r = new ModelRenderer(instance, effect)
+			var textureSize = new Vector2(model.Description.TextureWidth, model.Description.TextureHeight);
+
+			if (isNewModel)
+			{
+				var newEffect = new EntityEffect()
+				{
+					VertexColorEnabled = true, TextureScale = Vector2.One / textureSize, FogEnabled = false
+				};
+				
+				foreach (var mesh in instance.Meshes)
+				{
+					foreach (var part in mesh.MeshParts)
+					{
+						part.Effect = newEffect;
+					}
+				}
+			}
+			
+			if (instance is Model m)
+			{
+				instance = m.Instanced();
+			}
+
+			var r = new ModelRenderer(
+				instance,
+				new EntityEffect()
+				{
+					VertexColorEnabled = true, TextureScale = Vector2.One / textureSize, FogEnabled = false
+				})
 			{
 				VisibleBoundsWidth = model.Description.VisibleBoundsWidth,
 				VisibleBoundsHeight = model.Description.VisibleBoundsHeight,
@@ -56,7 +84,8 @@ namespace Alex.Utils
 			return true;
 		}
 
-		private static bool BuildModel(this EntityModel model, out Model instance)
+		private static ConcurrentDictionary<string, IModel> _models = new ConcurrentDictionary<string, IModel>(StringComparer.InvariantCultureIgnoreCase); 
+		private static bool BuildModel(this EntityModel model, out IModel instance)
 		{
 			instance = null;
 
@@ -136,11 +165,12 @@ namespace Alex.Utils
 				}
 			}
 
-			instance = new Model(
+			var mi = new Model(
 				modelBoneInstances, modelMeshInstances);
-			instance.Root = root;
+			mi.Root = root;
 
-			instance.BuildHierarchy();
+			mi.BuildHierarchy();
+			instance = mi;
 			return true;
 		}
 		
@@ -306,13 +336,7 @@ namespace Alex.Utils
 				if (string.IsNullOrWhiteSpace(childBone.Name))
 					childBone.Name = Guid.NewGuid().ToString();
 
-				/*if (bone.BindPoseRotation.HasValue)
-				{
-					var r = bone.BindPoseRotation.Value;
-					childBone.BindPoseRotation -= new Vector3(r.X, r.Y, r.Z);
-				}*/
 				var child = ProcessBone(source, childBone, ref vertices, ref indices);
-				
 				modelBone.AddChild(child);
 			}
 

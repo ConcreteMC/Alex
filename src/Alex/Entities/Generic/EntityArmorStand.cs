@@ -107,7 +107,7 @@ namespace Alex.Entities.Generic
 		public void SetHeadRotation(Vector3 rotation)
 		{
 			if (ModelRenderer == null) return;
-			if (ModelRenderer.GetBone("head", out var head))
+			if (ModelRenderer.GetBoneTransform("head", out var head))
 			{
 				//rotation.Y = 180f - rotation.Y;
 				head.Rotation = rotation;
@@ -118,7 +118,7 @@ namespace Alex.Entities.Generic
 		public void SetBodyRotation(Vector3 rotation)
 		{
 			if (ModelRenderer == null) return;
-			if (ModelRenderer.GetBone("body", out var head))
+			if (ModelRenderer.GetBoneTransform("body", out var head))
 			{
 				rotation.Y = 180f - rotation.Y;
 
@@ -130,7 +130,7 @@ namespace Alex.Entities.Generic
 		public void SetArmRotation(Vector3 rotation, bool isLeftArm)
 		{
 			if (ModelRenderer == null) return;
-			if (ModelRenderer.GetBone(isLeftArm ? "leftarm" : "rightarm", out var head))
+			if (ModelRenderer.GetBoneTransform(isLeftArm ? "leftarm" : "rightarm", out var head))
 			{
 				head.Rotation =
 					rotation; //Quaternion.CreateFromYawPitchRoll(MathUtils.ToRadians(rotation.Y), MathUtils.ToRadians(rotation.X), MathUtils.ToRadians(rotation.Z));;
@@ -140,7 +140,7 @@ namespace Alex.Entities.Generic
 		public void SetLegRotation(Vector3 rotation, bool isLeftLeg)
 		{
 			if (ModelRenderer == null) return;
-			if (ModelRenderer.GetBone(isLeftLeg ? "leftleg" : "rightleg", out var head))
+			if (ModelRenderer.GetBoneTransform(isLeftLeg ? "leftleg" : "rightleg", out var head))
 			{
 				//rotation.Y = 180f - rotation.Y;
 				head.Rotation = rotation;// Quaternion.CreateFromYawPitchRoll(MathUtils.ToRadians(rotation.Y), MathUtils.ToRadians(rotation.X), MathUtils.ToRadians(rotation.Z));;

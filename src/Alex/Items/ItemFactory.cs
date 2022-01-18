@@ -378,7 +378,8 @@ namespace Alex.Items
 	            {
 		            /*if (isBlock && resources.Registries.Items.Entries.ContainsKey(entry.Key))
 			            return;*/
-		            Log.Warn($"Could not find model renderer for: {resourceLocation}");
+		            if (!isBlock)
+						Log.Warn($"Could not find model renderer for: {resourceLocation}");
 
 		            return;
 	            }

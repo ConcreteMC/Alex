@@ -91,6 +91,26 @@ namespace Alex.Graphics.Models
 
 		internal ModelMesh Parent;
 
+		public int Draw(GraphicsDevice graphicsDevice, Microsoft.Xna.Framework.Graphics.Effect effect)
+		{
+			int count = 0;
+			if (effect != null && PrimitiveCount > 0 && VertexBuffer != null && IndexBuffer != null && !effect.IsDisposed)
+			{
+				graphicsDevice.SetVertexBuffer(VertexBuffer);
+				graphicsDevice.Indices = IndexBuffer;
+                    
+				for (int j = 0; j < effect?.CurrentTechnique?.Passes?.Count; j++)
+				{
+					effect?.CurrentTechnique?.Passes[j]?.Apply();
+					//graphicsDevice.DrawInstancedPrimitives(PrimitiveType.TriangleList, part.VertexOffset, part.StartIndex, part.PrimitiveCount, );
+					graphicsDevice?.DrawIndexedPrimitives(PrimitiveType.TriangleList, VertexOffset, StartIndex, PrimitiveCount);
+					count++;
+				}
+			}
+
+			return count;
+		}
+		
 		/// <inheritdoc />
 		public void Dispose()
 		{

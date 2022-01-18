@@ -4,6 +4,7 @@ using Alex.Common.Blocks;
 using Alex.Common.Graphics.GpuResources;
 using Alex.Common.Utils;
 using Alex.Common.Utils.Vectors;
+using Alex.Graphics.Models;
 using Alex.Graphics.Models.Entity;
 using Alex.Graphics.Models.Entity.BlockEntities;
 using Alex.Networking.Java.Packets.Play;
@@ -24,7 +25,7 @@ namespace Alex.Entities.BlockEntities
 			_creeper                             = null,
 			_dragon                              = null;
 		
-		private ModelBone HeadBone { get; set; }
+		private BoneMatrices HeadBone { get; set; }
 		
 		/// <inheritdoc />
 		public SkullBlockEntity(World level, Texture2D texture) : base(level)
@@ -51,7 +52,7 @@ namespace Alex.Entities.BlockEntities
 		protected override void UpdateModelParts()
 		{
 			//base.UpdateModelParts();
-			if (ModelRenderer.GetBone("head", out var head))
+			if (ModelRenderer.GetBoneTransform("head", out var head))
 			{
 				var rot = head.Rotation;
 				rot.Y = _yRotation;

@@ -13,10 +13,13 @@ namespace Alex.Graphics.Models
 	/// <summary>
 	/// A basic 3D model with per mesh parent bones.
 	/// </summary>
-	public sealed class Model : IDisposable
+	public sealed class Model : IModel
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(Model));
 		//private Matrix[] _matrices;
+
+		/// <inheritdoc />
+		public EventHandler Disposed { get; set; }
 
 		/// <summary>
 		/// A collection of <see cref="ModelBone"/> objects which describe how each mesh in the
@@ -93,14 +96,47 @@ namespace Alex.Graphics.Models
 			var meshes = this.Meshes;
 			if (bonesCollection == null || meshes == null)
 				return 0;
+
+			var bones = this.Bones.ImmutableArray;
+			int boneCount = bones.Length;
+
+			var matrices = MatrixArrayPool.Rent(boneCount);
+			CopyAbsoluteBoneTransformsTo(bones, matrices);
+			
+			try
+			{
+				return Draw(world, view, projection, matrices);
+			}
+			finally
+			{
+				MatrixArrayPool.Return(matrices, true);
+			}
+		}
+
+		public int Draw(Matrix world, Matrix view, Matrix projection, Matrix[] matrices)
+		{
+			if (matrices == null)
+			{
+				return Draw(world, view, projection);
+			}
+			return Draw(world, view, projection, matrices, null);
+		}
+		
+		public int Draw(Matrix world, Matrix view, Matrix projection, Matrix[] matrices, Microsoft.Xna.Framework.Graphics.Effect effect)
+		{
+			var bonesCollection = this.Bones;
+			var meshes = this.Meshes;
+			if (bonesCollection == null || meshes == null)
+				return 0;
 			
 			int drawCount = 0;
 
 			var bones = this.Bones.ImmutableArray;
 			int boneCount = bones.Length;
 
-			var matrices = MatrixArrayPool.Rent(boneCount);
-
+			if (matrices.Length < boneCount)
+				return 0;
+			
 			try
 			{
 				//if (_matrices == null ||
@@ -110,7 +146,7 @@ namespace Alex.Graphics.Models
 				//}
 
 				// Look up combined bone matrices for the entire model.            
-				CopyAbsoluteBoneTransformsTo(bones, matrices);
+				//CopyAbsoluteBoneTransformsTo(bones, matrices);
 
 				// Draw the model.
 				foreach (var mesh in meshes)
@@ -120,26 +156,42 @@ namespace Alex.Graphics.Models
 					
 					var parentIndex = mesh.ParentBone.Index;
 
-					foreach (Microsoft.Xna.Framework.Graphics.Effect effect in mesh.Effects)
+					var setEffectParams = (Microsoft.Xna.Framework.Graphics.Effect eff) =>
 					{
-						IEffectMatrices effectMatricies = effect as IEffectMatrices;
-
-						if (effectMatricies == null)
+						IEffectMatrices effectMatricies = eff as IEffectMatrices;
+						if (effectMatricies != null)
 						{
-							throw new InvalidOperationException();
+							effectMatricies.World = matrices[parentIndex] * world;
+							effectMatricies.View = view;
+							effectMatricies.Projection = projection;
 						}
+					};
 
-						effectMatricies.World = matrices[parentIndex] * world;
-						effectMatricies.View = view;
-						effectMatricies.Projection = projection;
+					if (effect != null)
+					{
+						setEffectParams(effect);
+					}
+					else
+					{
+
+						foreach (Microsoft.Xna.Framework.Graphics.Effect eff in mesh.Effects)
+						{
+							setEffectParams(eff);
+						}
+						
 					}
 
-					drawCount += mesh.Draw();
+					foreach (var meshPart in mesh.MeshParts)
+					{
+						var meshEffect = effect ?? meshPart.Effect;
+						if (meshEffect != null)
+							drawCount += meshPart.Draw(meshEffect.GraphicsDevice, meshEffect);
+					}
 				}
 			}
 			finally
 			{
-				MatrixArrayPool.Return(matrices, true);
+				
 			}
 
 			return drawCount;
@@ -240,16 +292,134 @@ namespace Alex.Graphics.Models
 		/// <inheritdoc />
 		public void Dispose()
 		{
-			var meshes = Meshes;
-			Meshes = null;
-			
-			foreach (var mesh in meshes)
+			Dispose(true);
+			GC.SuppressFinalize(this);
+		}
+		
+		private void Dispose(bool disposing)
+		{
+			var instances = _instances;
+			if (instances != null && instances.Count == 0)
 			{
-				mesh?.Dispose();
+				_instances = null;
+				Disposed?.Invoke(this, EventArgs.Empty);
+				var meshes = Meshes;
+				Meshes = null;
+
+				foreach (var mesh in meshes)
+				{
+					mesh?.Dispose();
+				}
+
+				var bones = Bones;
+				
+				Bones = null;
+			}
+		}
+		
+		~Model()
+		{
+			Log.Warn($"Model not garbage collected!");
+			Dispose(false);
+		}
+		
+		public IModel Instanced()
+		{
+			return new InstancedModel(this);
+		}
+
+		private List<InstancedModel> _instances = new List<InstancedModel>();
+		private void RegisterInstance(InstancedModel instance)
+		{
+			_instances.Add(instance);
+		}
+
+		private void InstanceDestroyed(InstancedModel instance)
+		{
+			if (_instances.Remove(instance) && _instances.Count == 0)
+			{
+				Dispose();
+			}
+		}
+		
+		private class InstancedModel : IModel
+		{
+			private Model _parent;
+
+			public InstancedModel(Model parent)
+			{
+				_parent = parent;
+				parent.RegisterInstance(this);
+				parent.Disposed += ParentDisposed;
 			}
 
-			var bones = Bones;
-			Bones = null;
+			private void ParentDisposed(object? sender, EventArgs e)
+			{
+				Disposed?.Invoke(this, EventArgs.Empty);
+			}
+
+			/// <inheritdoc />
+			public EventHandler Disposed { get; set; }
+
+			/// <inheritdoc />
+			public ModelBoneCollection Bones => _parent?.Bones;
+
+			/// <inheritdoc />
+			public ModelMeshCollection Meshes => _parent?.Meshes;
+
+			/// <inheritdoc />
+			public ModelBone Root
+			{
+				get
+				{
+					return _parent?.Root;
+				}
+				set{}
+			}
+
+			/// <inheritdoc />
+			public object Tag { get; set; }
+
+			/// <inheritdoc />
+			public int Draw(Matrix world, Matrix view, Matrix projection, Matrix[] matrices)
+			{
+				return _parent.Draw(world, view, projection, matrices);
+			}
+
+			public int Draw(Matrix world,
+				Matrix view,
+				Matrix projection,
+				Matrix[] matrices,
+				Microsoft.Xna.Framework.Graphics.Effect effect)
+			{
+				return _parent.Draw(world, view, projection, matrices, effect);
+			}
+
+
+			private void Dispose(bool disposing)
+			{
+				var parent = _parent;
+
+				if (parent != null)
+				{
+					_parent.Disposed -= ParentDisposed;
+					_parent.InstanceDestroyed(this);
+					_parent = null;
+				}
+			}
+			
+			/// <inheritdoc />
+			public void Dispose()
+			{
+				Dispose(true);
+				GC.SuppressFinalize(this);
+			}
+
+			~InstancedModel()
+			{
+				Log.Warn($"InstancedModel not garbage collected!");
+				Dispose(false);
+			}
 		}
 	}
 }

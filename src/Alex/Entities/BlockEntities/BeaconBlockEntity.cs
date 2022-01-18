@@ -82,7 +82,7 @@ public class BeaconBlockEntity : BlockEntity
         var model = ModelRenderer?.Model;
         if (model == null) return;
 
-        model.Root.ScaleOverTime(new Vector3(1f, (float)Height, 1f), 500, true);
+        //model.Root.ScaleOverTime(new Vector3(1f, (float)Height, 1f), 500, true);
         //model.Root.Scale = new Vector3(1f, Level.GetChunkColumn(X, Z).WorldSettings.TotalHeight - Y, 1f);
     }
 

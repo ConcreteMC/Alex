@@ -1241,7 +1241,7 @@ namespace Alex.Entities
 			int renderCount = 0;
 			var  renderer = ModelRenderer;
 
-			var worldMatrix = Matrix.CreateScale((1f / 16f) * (ModelScale))
+			var worldMatrix = Matrix.CreateScale((ModelScale / 16f))
 			                  * RenderLocation.CalculateWorldMatrix();
 
 			if (renderer != null)
@@ -1269,9 +1269,8 @@ namespace Alex.Entities
 
 					if (primaryArm != null)
 					{
-						var bones = renderer.Model.Bones.ImmutableArray;
-						Matrix[] matrices = new Matrix[bones.Length];
-						Graphics.Models.Model.CopyAbsoluteBoneTransformsTo(bones, matrices);
+						//var bones = renderer.Model.Bones.ImmutableArray;
+						var matrices = renderer.GetTransforms();
 
 						if (primaryArm.Index >= 0 && primaryArm.Index < matrices.Length)
 						{
@@ -1538,7 +1537,7 @@ namespace Alex.Entities
 			_previousPosition = known;
 		}
 
-		private ModelBone _headBone = null;
+		private BoneMatrices _headBone = null;
 		protected virtual void UpdateModelParts()
 		{
 			var modelRenderer = ModelRenderer;
@@ -1551,7 +1550,7 @@ namespace Alex.Entities
 
 			ScaleChanged();
 
-			if (modelRenderer.GetBone("head", out var headBone))
+			if (modelRenderer.GetBoneTransform("head", out var headBone))
 			{
 				_headBone = headBone;
 			}
@@ -2187,7 +2186,7 @@ namespace Alex.Entities
 				headNumber = moParams.GetInt(0);
 			}
 			
-			if (ModelRenderer.GetBone(headNumber > 0 ? $"head{headNumber}" : "head", out var bone))
+			if (ModelRenderer.GetBoneTransform(headNumber > 0 ? $"head{headNumber}" : "head", out var bone))
 			{
 				return bone.Rotation.X;
 			}
@@ -2209,7 +2208,7 @@ namespace Alex.Entities
 				headNumber = moParams.GetInt(0);
 			}
 			
-			if (ModelRenderer.GetBone(headNumber > 0 ? $"head{headNumber}" : "head", out var bone))
+			if (ModelRenderer.GetBoneTransform(headNumber > 0 ? $"head{headNumber}" : "head", out var bone))
 			{
 				return bone.Rotation.Y;
 			}
