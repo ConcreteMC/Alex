@@ -157,7 +157,7 @@ public class BoneMatrices
 		}
 		else
 		{
-			_tempScaleData.Target += targetScale; // (_tempScaleData.Target + targetScale) / 2f;
+			_tempScaleData.Target = (_tempScaleData.Target + targetScale) / 2f;
 		}
 
 		_tempScaleData.TargetTime = time;

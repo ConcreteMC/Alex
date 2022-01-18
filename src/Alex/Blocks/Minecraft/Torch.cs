@@ -1,6 +1,9 @@
+using System.Collections.Generic;
+using System.Linq;
 using Alex.Blocks.Materials;
 using Alex.Blocks.State;
 using Alex.Common.Blocks;
+using Alex.Common.Utils;
 using Alex.Common.Utils.Vectors;
 using Alex.Entities;
 using Alex.Worlds;
@@ -10,8 +13,11 @@ namespace Alex.Blocks.Minecraft
 {
 	public class Torch : Block
 	{
+		private readonly bool _wallTorch;
+
 		public Torch(bool wallTorch = false) : base()
 		{
+			_wallTorch = wallTorch;
 			Solid = false;
 			Transparent = true;
 
@@ -39,6 +45,16 @@ namespace Alex.Blocks.Minecraft
 
 			world.SetBlockState(position, state);
 			return true;
+		}
+
+		/// <inheritdoc />
+		public override IEnumerable<BoundingBox> GetBoundingBoxes(Vector3 blockPos)
+		{
+			var min = base.GetBoundingBoxes(blockPos).MinBy(x => x.GetDimensions().LengthSquared());
+			min.Inflate(0.25f);
+			yield return min;
+				
+			yield break;
 		}
 	}
 }

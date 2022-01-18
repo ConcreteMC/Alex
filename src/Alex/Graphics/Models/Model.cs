@@ -139,15 +139,6 @@ namespace Alex.Graphics.Models
 			
 			try
 			{
-				//if (_matrices == null ||
-				//    _matrices.Length != boneCount)
-				//{
-				//	_matrices = new Matrix[boneCount];
-				//}
-
-				// Look up combined bone matrices for the entire model.            
-				//CopyAbsoluteBoneTransformsTo(bones, matrices);
-
 				// Draw the model.
 				foreach (var mesh in meshes)
 				{
@@ -383,7 +374,7 @@ namespace Alex.Graphics.Models
 			/// <inheritdoc />
 			public int Draw(Matrix world, Matrix view, Matrix projection, Matrix[] matrices)
 			{
-				return _parent.Draw(world, view, projection, matrices);
+				return _parent?.Draw(world, view, projection, matrices) ?? 0;
 			}
 
 			public int Draw(Matrix world,
@@ -392,7 +383,7 @@ namespace Alex.Graphics.Models
 				Matrix[] matrices,
 				Microsoft.Xna.Framework.Graphics.Effect effect)
 			{
-				return _parent.Draw(world, view, projection, matrices, effect);
+				return _parent?.Draw(world, view, projection, matrices, effect) ?? 0;
 			}
 
 

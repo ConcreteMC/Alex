@@ -1,4 +1,8 @@
+using System.Collections.Generic;
+using System.Linq;
 using Alex.Blocks.Materials;
+using Alex.Common.Utils;
+using Microsoft.Xna.Framework;
 
 namespace Alex.Blocks.Minecraft
 {
@@ -14,6 +18,15 @@ namespace Alex.Blocks.Minecraft
 			Luminance = 7;
 			
 			BlockMaterial = Material.Decoration;
+		}
+		
+		public override IEnumerable<BoundingBox> GetBoundingBoxes(Vector3 blockPos)
+		{
+			var min = base.GetBoundingBoxes(blockPos).MinBy(x => x.GetDimensions().LengthSquared());
+			min.Inflate(0.25f);
+			yield return min;
+				
+			yield break;
 		}
 	}
 }

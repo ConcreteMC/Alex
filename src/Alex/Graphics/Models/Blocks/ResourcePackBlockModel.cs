@@ -70,6 +70,9 @@ namespace Alex.Graphics.Models.Blocks
 			foreach (var box in boxes)
 			{
 				var x = box;
+				if (x.Min == new Vector3(float.MaxValue) || x.Max == new Vector3(float.MinValue))
+					continue;
+				
 				var dimensions = x.GetDimensions();
 
 				if (dimensions.X < 0.015f)
@@ -202,67 +205,22 @@ namespace Alex.Graphics.Models.Blocks
 						{
 							maxZ = v.Position.Z;
 						}
-						
+
 						//
-						
-						if (v.Position.X < eMinX)
-						{
-							eMinX = v.Position.X;
-						}
-						else if (v.Position.X > eMaxX)
-						{
-							eMaxX = v.Position.X;
-						}
-
-						if (v.Position.Y < eMinY)
-						{
-							eMinY = v.Position.Y;
-						}
-						else if (v.Position.Y > eMaxY)
-						{
-							eMaxY = v.Position.Y;
-						}
-
-						if (v.Position.Z < eMinZ)
-						{
-							eMinZ = v.Position.Z;
-						}
-						else if (v.Position.Z > eMaxZ)
-						{
-							eMaxZ = v.Position.Z;
-						}
-
 						verts[i] = v;
 					}
 
-					/*if (minX < facesMinX)
-					{
-						facesMinX = minX;
-					}
-					else if (maxX >facesMaxX)
-					{
-						facesMaxX = maxX;
-					}
-
-					if (minY < facesMinY)
-					{
-						facesMinY = minY;
-					}
-					else if (maxY > facesMaxY)
-					{
-						facesMaxY = maxY;
-					}
-
-					if (minZ < facesMinZ)
-					{
-						facesMinZ = minZ;
-					}
-					else if (maxZ > facesMaxZ)
-					{
-						facesMaxZ = maxZ;
-					}*/
+					eMinX = Math.Min(eMinX, minX);
+					eMaxX = Math.Max(eMaxX, maxX);
+				
+					eMinY = Math.Min(eMinY, minY);
+					eMaxY = Math.Max(eMaxY, maxY);
+					
+					eMinZ = Math.Min(eMinZ, minZ);
+					eMaxZ = Math.Max(eMaxZ, maxZ);
 				}
-
+				
+				//yield return new BoundingBox(FixRotation(element.From, element, stateModel) / 16, FixRotation(element.To, element,stateModel) / 16);
 				yield return new BoundingBox(new Vector3(eMinX, eMinY, eMinZ), new Vector3(eMaxX, eMaxY, eMaxZ));
 			}
 			//return boxes.ToArray();
@@ -270,7 +228,8 @@ namespace Alex.Graphics.Models.Blocks
 
 		private Vector3 FixRotation(
 			Vector3 v,
-			ModelElement element)
+			ModelElement element,
+			BlockStateModel bsModel)
 		{
 			if (element.Rotation.Axis != Axis.Undefined)
 			{
@@ -343,6 +302,30 @@ namespace Alex.Graphics.Models.Blocks
 				v.Y += (origin.Y );
 				v.Z += (origin.Z );
 			}
+			
+			if (bsModel.X > 0)
+			{
+				var rotX = bsModel.X * (MathHelper.Pi / 180f);
+				var cc    = MathF.Cos(rotX);
+				var ss    = MathF.Sin(rotX);
+				var z    = v.Z - 8f;
+				var y    = v.Y - 8f;
+
+				v.Z = 8f + (z * cc - y * ss);
+				v.Y = 8f + (y * cc + z * ss);
+			}
+
+			if (bsModel.Y > 0)
+			{
+				var rotY = bsModel.Y * (MathHelper.Pi / 180f);
+				var cc    = MathF.Cos(rotY);
+				var ss    = MathF.Sin(rotY);
+				var x    = v.X - 8f;
+				var z    = v.Z - 8f;
+
+				v.X = 8f + (x * cc - z * ss);
+				v.Z = 8f + (z * cc + x * ss);
+			}
 
 			return v;
 		}
@@ -359,31 +342,8 @@ namespace Alex.Graphics.Models.Blocks
 				var v = vertices[i];
 			
 				
-				v.Position = FixRotation(v.Position, element);
-
-				if (bsModel.X > 0)
-				{
-					var rotX = bsModel.X * (MathHelper.Pi / 180f);
-					var c    = MathF.Cos(rotX);
-					var s    = MathF.Sin(rotX);
-					var z    = v.Position.Z - 8f;
-					var y    = v.Position.Y - 8f;
-
-					v.Position.Z = 8f + (z * c - y * s);
-					v.Position.Y = 8f + (y * c + z * s);
-				}
-
-				if (bsModel.Y > 0)
-				{
-					var rotY = bsModel.Y * (MathHelper.Pi / 180f);
-					var c    = MathF.Cos(rotY);
-					var s    = MathF.Sin(rotY);
-					var x    = v.Position.X - 8f;
-					var z    = v.Position.Z - 8f;
-
-					v.Position.X = 8f + (x * c - z * s);
-					v.Position.Z = 8f + (z * c + x * s);
-				}
+				v.Position = FixRotation(v.Position, element, bsModel);
+				
 
 				if (uvMap.HasValue)
 				{

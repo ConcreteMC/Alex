@@ -1196,9 +1196,10 @@ namespace Alex.Entities
 				{
 					_texture = value;
 
-					if (_modelRenderer != null)
+					var modelRenderer = _modelRenderer;
+					if (modelRenderer != null)
 					{
-						_modelRenderer.Texture = value;
+						modelRenderer.Texture = value;
 					}
 				}
 				finally

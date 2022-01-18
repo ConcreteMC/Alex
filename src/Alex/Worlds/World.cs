@@ -747,7 +747,7 @@ namespace Alex.Worlds
 			SetBlockState(x, y, z, block, 0, priority);
 		}
 		
-		public void SetBlockState(int x, int y, int z, BlockState block, int storage, BlockUpdatePriority priority = BlockUpdatePriority.High | BlockUpdatePriority.Neighbors)
+		public void SetBlockState(int x, int y, int z, BlockState blockState, int storage, BlockUpdatePriority priority = BlockUpdatePriority.High | BlockUpdatePriority.Neighbors)
 		{
 			var chunkCoords = new ChunkCoordinates(x >> 4, z >> 4);
 
@@ -759,11 +759,11 @@ namespace Alex.Worlds
 				var cz = z & 0xf;
 
 				var blockcoords = new BlockCoordinates(x, y, z);
-				chunk.SetBlockState(cx, cy, cz, block, storage);
+				chunk.SetBlockState(cx, cy, cz, blockState, storage);
 
 				if (storage == 0 && EntityManager.TryGetBlockEntity(blockcoords, out var blockEntity))
 				{
-					if (!blockEntity.SetBlock(block.Block))
+					if (!blockEntity.SetBlock(blockState.Block))
 					{
 						EntityManager.RemoveBlockEntity(blockcoords);
 					}
