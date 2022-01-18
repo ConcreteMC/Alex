@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Alex.Common.Utils;
 using Alex.MoLang.Parser;
 using Alex.MoLang.Runtime;
 using Alex.MoLang.Runtime.Value;
@@ -36,9 +37,8 @@ namespace Alex.ResourcePackLib.Json.Bedrock.MoLang
 		}
 
 		public bool IsKeyFramed { get; }
-		public IReadOnlyDictionary<double, AnimationChannelData> KeyFrames => _keyFrames;
 
-		private IReadOnlyDictionary<double, AnimationChannelData> _keyFrames;
+		private LinkedList<KeyValuePair<double, AnimationChannelData>> _keyFrames;
 		public MoLangVector3Expression(Dictionary<string, AnimationChannelData> keyframes)
 		{
 			IsKeyFramed = true;
@@ -52,7 +52,12 @@ namespace Alex.ResourcePackLib.Json.Bedrock.MoLang
 				}
 			}
 			
-			_keyFrames = newKeyFrames;
+			_keyFrames = new LinkedList<KeyValuePair<double, AnimationChannelData>>();
+
+			foreach (var keyframe in newKeyFrames.OrderBy(x => x.Key))
+			{
+				_keyFrames.AddLast(keyframe);
+			}
 		}
 
 		private Vector3 Evaluate(MoLangRuntime runtime, IExpression[] xExpressions, IExpression[] yExpressions, IExpression[] zExpressions, Vector3 currentValue)
@@ -96,52 +101,51 @@ namespace Alex.ResourcePackLib.Json.Bedrock.MoLang
 			return Evaluate(runtime, complex.KeyFrame.Post, currentValue);
 		}
 
-		public Vector3 Evaluate(MoLangRuntime runtime,
-			Vector3 currentValue,
-			double animationTime = 0d)
+		public Vector3 Evaluate(MoLangRuntime runtime, Vector3 currentValue, double? animationLength = null, double elapsedTime = 0d, bool isRotational = false)
 		{
-			return Evaluate(runtime, currentValue, out _, animationTime);
-		}
-
-		public Vector3 Evaluate(MoLangRuntime runtime, Vector3 currentValue, out double timeRemaining, double elapsedTime = 0d)
-		{
-			timeRemaining = -1;
-			if (_keyFrames == null) return Evaluate(runtime, _x, _y, _z, currentValue);
+			if (_keyFrames == null || !animationLength.HasValue) return Evaluate(runtime, _x, _y, _z, currentValue);
 			
 
-			AnimationChannelData previous = null;
-			double previousKey = 0d;
-			AnimationChannelData next = null;
-			double nextKey = 0d;
+			KeyValuePair<double, AnimationChannelData>? previous = default;
+			KeyValuePair<double, AnimationChannelData>? next = default;
 
-			double difference = double.MaxValue;
-			foreach (var keyframe in _keyFrames)
+			var f = _keyFrames.FirstOrDefault(x => (x.Key - elapsedTime) > 0d);
+			var element = _keyFrames.Find(f) ?? _keyFrames.First;
+
+			if (element == _keyFrames.First)
 			{
-				var diff = keyframe.Key - elapsedTime;
-				if (keyframe.Key >= previousKey && keyframe.Key <= elapsedTime)
-				{
-					previousKey = keyframe.Key;
-					previous = keyframe.Value;
-				}
-				else if (diff >= 0d && diff < difference)
-				{
-					difference = diff;
-					next = keyframe.Value;
-					nextKey = keyframe.Key;
-				}
+				previous = _keyFrames.Last.Value;
 			}
+			else
+			{
+				previous = element.Previous.Value;
+			}
+
+			next = element.Value;
+
+			var nextTimeStamp = next.Value.Key;
+			var nextChannelData = next.Value.Value;
 			
-			timeRemaining = nextKey - elapsedTime;
+			var previousTimeStamp = previous.Value.Key;
+			var previousChannelData = previous.Value.Value;
 
-			var timeBetweenFrames = (nextKey - previousKey);
-			var timeSinceLastKeyFrame = elapsedTime - previousKey;
-			var lerpTime = (float) ((1f / timeBetweenFrames) * timeSinceLastKeyFrame);
+			if (element == _keyFrames.First) //If this is the first frame, we need to adjust for that.
+			{
+				previousTimeStamp = (animationLength.Value - previous.Value.Key);
+			}
 
-			Vector3 previousVector = Evaluate(runtime, previous, false, currentValue);
-			Vector3 nextVector = Evaluate(runtime, next, true, currentValue);
+			var timeBetweenFrames = (nextTimeStamp - previousTimeStamp);
+			var timeSinceLastKeyFrame = elapsedTime - previousTimeStamp;
 
+			var lerpTime = (float) (timeSinceLastKeyFrame / timeBetweenFrames);
 
-			return nextVector; Vector3.Lerp(previousVector, nextVector, lerpTime);
+			Vector3 previousVector = Evaluate(runtime, previousChannelData, false, currentValue);
+			Vector3 nextVector = Evaluate(runtime, nextChannelData, true, currentValue);
+
+			if (isRotational)
+				return MathUtils.LerpVector3Degrees(previousVector, nextVector, lerpTime);
+			
+			return MathUtils.LerpVector3Safe(previousVector, nextVector, lerpTime);
 		}
 	}
 }

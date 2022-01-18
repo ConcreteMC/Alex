@@ -275,42 +275,6 @@ namespace Alex.Worlds
 		/// <inheritdoc />
 		public int RenderedChunks { get; private set; } = 0;
 
-		/*public bool FogEnabled
-		{
-			get { return Shaders.FogEnabled; }
-			set
-			{
-				Shaders.FogEnabled = value;
-			}
-		}*/
-
-		/*public Color FogColor
-		{
-			get { return Shaders.FogColor; }
-			set
-			{
-				Shaders.FogColor = value;
-			}
-		}
-
-		public float FogDistance
-		{
-			get { return Shaders.FogDistance; }
-			set
-			{
-				Shaders.FogDistance = value;
-			}
-		}
-
-		public Vector3 AmbientLightColor
-		{
-			get { return Shaders.AmbientLightColor; }
-			set
-			{
-				Shaders.AmbientLightColor = value;
-			}
-		}*/
-
 		public float WaterSurfaceTransparency { get; set; } = 0.65f;
 		
 		private Thread _processingThread = null;
@@ -387,37 +351,12 @@ namespace Alex.Worlds
 						chunk.CalculateLighting = false;
 					}
 
-					if (chunk.UpdateBuffer(World, true))
+					using (var ba = new CachedBlockAccess(World))
 					{
-						OnChunkUpdate?.Invoke(this, new ChunkUpdatedEventArgs(chunk, timingWatch.Elapsed));
-
-						/*//if (data.Type != ScheduleType.Border)
+						if (chunk.UpdateBuffer(ba, true))
 						{
-							for (int nx = -1; nx < 1; nx++)
-							{
-								for (int ny = -1; ny < 1; ny++)
-								{
-									if (nx == 0 && ny == 0)
-										continue;
-
-									var neighboringCoordinates = new ChunkCoordinates(
-										data.Coordinates.X + nx, data.Coordinates.Z + ny);
-
-									if (!Chunks.ContainsKey(neighboringCoordinates))
-										continue;
-									
-									if (data.Source.HasValue && data.Source.Value == neighboringCoordinates)
-										continue;
-									
-									if (chunk.Neighboring.Contains(neighboringCoordinates))
-										continue;
-
-									chunk.Neighboring.Add(neighboringCoordinates);
-									ScheduleChunkUpdate(
-										neighboringCoordinates, ScheduleType.Border, false, data.Coordinates);
-								}
-							}
-						}*/
+							OnChunkUpdate?.Invoke(this, new ChunkUpdatedEventArgs(chunk, timingWatch.Elapsed));
+						}
 					}
 				}
 				finally

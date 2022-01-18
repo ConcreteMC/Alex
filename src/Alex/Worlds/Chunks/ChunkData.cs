@@ -214,11 +214,14 @@ namespace Alex.Worlds.Chunks
 
         private static ArrayPool<MinifiedBlockShaderVertex> VertexArrayPool =
             ArrayPool<MinifiedBlockShaderVertex>.Create();
+
         public void ApplyChanges(IBlockAccess world, bool forceUpdate = false)
         {
             Stopwatch sw = Stopwatch.StartNew();
-            
+
             List<IDisposable> toDisposeOff = new List<IDisposable>();
+
+            MinifiedBlockShaderVertex[] vertices = null;
             try
             {
                 var stages = Stages;
@@ -243,11 +246,12 @@ namespace Alex.Worlds.Chunks
                 {
                     newStages[i] = new StageData(stages[i]?.Buffer, new List<int>(stages[i]?.IndexCount ?? 0), 0);
                 }
+                
+                vertices = new MinifiedBlockShaderVertex[data.Count];
 
-                MinifiedBlockShaderVertex[] vertices = new MinifiedBlockShaderVertex[data.Count];
+                int idx = 0;
 
-               int idx = 0;
-               foreach(var vertex in data)
+                foreach (var vertex in data)
                 {
 
                     var stage = vertex.Stage;
@@ -267,14 +271,15 @@ namespace Alex.Worlds.Chunks
                     }
 
                     vertices[idx] = new MinifiedBlockShaderVertex(
-                        vertex.Position, vertex.Face, vertex.TexCoords.ToVector4(), new Color(vertex.Color),
-                        blockLight, skyLight);
+                        vertex.Position, vertex.Face, vertex.TexCoords.ToVector4(), new Color(vertex.Color), blockLight,
+                        skyLight);
 
                     newStages[(int)stage] = rStage;
                     idx++;
                 }
-                
-               DynamicVertexBuffer buffer = Buffer;
+
+
+                DynamicVertexBuffer buffer = Buffer;
 
                 for (var index = 0; index < newStages.Length; index++)
                 {
@@ -322,16 +327,19 @@ namespace Alex.Worlds.Chunks
                 buffer.SetData(vertices, 0, data.Count);
                 Stages = newStages;
                 Buffer = buffer;
-                
+
                 Interlocked.Increment(ref BufferUploads);
             }
             finally
             {
+              //  if (vertices != null)
+             //       VertexArrayPool.Return(vertices);
+                
                 foreach (var toDispose in toDisposeOff)
                 {
                     toDispose?.Dispose();
                 }
-                
+
                 MovingAverage.ComputeAverage((float)sw.Elapsed.TotalMilliseconds);
             }
         }

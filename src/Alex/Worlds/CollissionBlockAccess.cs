@@ -8,12 +8,13 @@ using Alex.Worlds.Chunks;
 
 namespace Alex.Worlds;
 
-public class CollisionBlockAccess : IBlockAccess, IDisposable
+public class CachedBlockAccess : IBlockAccess, IDisposable
 {
 	private readonly IBlockAccess _source;
 
-	private ConcurrentDictionary<BlockCoordinates, BlockState> _cached = new ConcurrentDictionary<BlockCoordinates, BlockState>();
-	public CollisionBlockAccess(IBlockAccess source)
+	private record CachedEntry(BlockState BlockState, byte SkyLight, byte BlockLight, Biome Biome);
+	private ConcurrentDictionary<BlockCoordinates, CachedEntry> _cached = new ConcurrentDictionary<BlockCoordinates, CachedEntry>();
+	public CachedBlockAccess(IBlockAccess source)
 	{
 		_source = source;
 	}
@@ -21,67 +22,71 @@ public class CollisionBlockAccess : IBlockAccess, IDisposable
 	/// <inheritdoc />
 	public ChunkColumn GetChunk(BlockCoordinates coordinates, bool cacheOnly = false)
 	{
-		throw new System.NotImplementedException();
+		return _source.GetChunk(coordinates, cacheOnly);
 	}
 
 	/// <inheritdoc />
 	public ChunkColumn GetChunk(ChunkCoordinates coordinates, bool cacheOnly = false)
 	{
-		throw new System.NotImplementedException();
+		return _source.GetChunk(coordinates, cacheOnly);
 	}
 
 	/// <inheritdoc />
 	public void SetSkyLight(BlockCoordinates coordinates, byte skyLight)
 	{
-		throw new System.NotImplementedException();
+		_source.SetSkyLight(coordinates, skyLight);
 	}
 
 	/// <inheritdoc />
 	public byte GetSkyLight(BlockCoordinates coordinates)
 	{
-		throw new System.NotImplementedException();
+		return GetCachedEntry(coordinates).SkyLight;
 	}
 
 	/// <inheritdoc />
 	public byte GetBlockLight(BlockCoordinates coordinates)
 	{
-		throw new System.NotImplementedException();
+		return GetCachedEntry(coordinates).BlockLight;
 	}
 
 	/// <inheritdoc />
 	public void SetBlockLight(BlockCoordinates coordinates, byte blockLight)
 	{
-		throw new System.NotImplementedException();
+		_source.SetBlockLight(coordinates, blockLight);
 	}
 
 	/// <inheritdoc />
 	public bool TryGetBlockLight(BlockCoordinates coordinates, out byte blockLight)
 	{
-		throw new System.NotImplementedException();
+		blockLight = GetCachedEntry(coordinates).BlockLight;
+
+		return true;
 	}
 
 	/// <inheritdoc />
 	public void GetLight(BlockCoordinates coordinates, out byte blockLight, out byte skyLight)
 	{
-		throw new System.NotImplementedException();
+		var entry = GetCachedEntry(coordinates);
+		blockLight = entry.BlockLight;
+		skyLight = entry.SkyLight;
 	}
 
 	/// <inheritdoc />
 	public int GetHeight(BlockCoordinates coordinates)
 	{
-		throw new System.NotImplementedException();
+		return _source.GetHeight(coordinates);
 	}
 
 	/// <inheritdoc />
 	public IEnumerable<ChunkSection.BlockEntry> GetBlockStates(int positionX, int positionY, int positionZ)
 	{
-		throw new System.NotImplementedException();
+		return _source.GetBlockStates(positionX, positionY, positionZ);
 	}
 
 	/// <inheritdoc />
 	public BlockState GetBlockState(BlockCoordinates position)
 	{
-		return _cached.GetOrAdd(position, v => _source.GetBlockState(v));
+		return GetCachedEntry(position).BlockState;
 	}
 
 	/// <inheritdoc />
@@ -92,18 +97,28 @@ public class CollisionBlockAccess : IBlockAccess, IDisposable
 		int storage,
 		BlockUpdatePriority priority = BlockUpdatePriority.High)
 	{
-		throw new System.NotImplementedException();
+		_source.SetBlockState(x,y,z, block, storage, priority);
 	}
 
 	/// <inheritdoc />
 	public Biome GetBiome(BlockCoordinates coordinates)
 	{
-		throw new System.NotImplementedException();
+		return GetCachedEntry(coordinates).Biome;
+	}
+
+	private CachedEntry GetCachedEntry(BlockCoordinates coordinates)
+	{
+		return _cached.GetOrAdd(coordinates, v =>
+		{
+			_source.GetLight(v, out var blockLight, out var skyLight);
+
+			return new CachedEntry(_source.GetBlockState(v), skyLight, blockLight, _source.GetBiome(v));
+		});
 	}
 
 	/// <inheritdoc />
 	public void Dispose()
 	{
-		
+		_cached.Clear();
 	}
 }

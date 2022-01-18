@@ -129,18 +129,6 @@ namespace Alex.Graphics.Models.Items
 		}
 
 		/// <inheritdoc />
-		public void AddChild(IAttached modelBone)
-		{
-			throw new System.NotImplementedException();
-		}
-
-		/// <inheritdoc />
-		public void Remove(IAttached modelBone)
-		{
-			throw new System.NotImplementedException();
-		}
-
-		/// <inheritdoc />
 		public IAttached Clone()
 		{
 			return CloneItemRenderer();

@@ -51,7 +51,7 @@ namespace Alex.MoLang.Runtime
 				contextStruct.Container = context;
 			}
 
-			IMoValue result = new DoubleValue(0.0);
+			IMoValue result = null;
 			MoScope scope = new MoScope();
 
 			foreach (IExpression expression in expressions)
@@ -81,7 +81,7 @@ namespace Alex.MoLang.Runtime
 			Environment.Structs["temp"].Clear();
 			//Environment.Structs.Remove("context", out _);
 
-			return result;
+			return result ?? DoubleValue.Zero;
 		}
 	}
 }

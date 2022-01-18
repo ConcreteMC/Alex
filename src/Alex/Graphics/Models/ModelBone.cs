@@ -12,7 +12,7 @@ using Vector3 = Microsoft.Xna.Framework.Vector3;
 
 namespace Alex.Graphics.Models
 {
-	public class ModelBone : IHoldAttachment
+	public class ModelBone
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ModelBone));
 		
@@ -228,17 +228,16 @@ namespace Alex.Graphics.Models
 		public void ApplyMovement()
 		{
 			var posData = _tempPositionData;
-			_tempPositionData = VectorInterpolationData.Empty;
-			_positionData = posData.WithStart(_position);
+			_positionData = _positionData.WithValues(_position, posData.Target, posData.TargetTime);
+			_tempPositionData.Reset();
 
 			var rotData = _tempRotationData;
-			_tempRotationData = RotatedInterpolationData.EmptyRotation;
-			_rotationData = rotData.WithStart(_rotation);
-
-
+			_rotationData = _rotationData.WithValues(_rotation, rotData.Target, rotData.TargetTime);
+			_tempRotationData.Reset();
+			
 			var scaleData = _tempScaleData;
-			_tempScaleData = VectorInterpolationData.Empty;
-			_scaleData = scaleData.WithStart(_scale);
+			_scaleData = _scaleData.WithValues(_scale, scaleData.Target, scaleData.TargetTime);
+			_tempScaleData.Reset();
 		}
 
 
@@ -267,62 +266,24 @@ namespace Alex.Graphics.Models
 			
 			if (position.IsValid)
 				_position = position.Update(dt);
-			
+
 			if (scale.IsValid)
-				_scale = scale.Update(dt);
+			{
+				var s = scale.Update(dt);
+
+				if (s.X < 0)
+					s.X = 0;
+				
+				if (s.Y < 0)
+					s.Y = 0;
+				
+				if (s.Z < 0)
+					s.Z = 0;
+
+				_scale = s;
+			}
 
 			UpdateTransform();
-		}
-
-		private ThreadSafeList<IAttached> _attached = new ThreadSafeList<IAttached>();
-		/// <inheritdoc />
-		public void AddChild(IAttached attachment)
-		{
-			if (_attached.Contains(attachment)) return;
-			var model = attachment.Model;
-
-			if (model == null)
-			{
-				Log.Warn($"Failed to add attachment, no model found.");
-				return;
-			}
-
-			foreach (var mesh in model.Meshes)
-			{
-				Model.Meshes.Add(mesh);
-			}
-			AddChild(attachment.Model.Root);
-			Model.Bones.Add(attachment.Model.Root);
-			_attached.Add(attachment);
-		}
-
-		/// <inheritdoc />
-		public void Remove(IAttached attachment)
-		{
-			var modelBones = Model?.Bones;
-			if (_attached == null || !_attached.Remove(attachment) || modelBones == null) 
-				return;
-			
-			var model = attachment.Model;
-
-			if (model == null)
-			{
-				Log.Warn($"Failed to remove attachment, no model found.");
-				return;
-			}
-
-			modelBones.Remove(attachment.Model.Root);
-			var modelMeshes = model.Meshes;
-
-			if (modelMeshes != null)
-			{
-				foreach (var mesh in modelMeshes)
-				{
-					Model.Meshes.Remove(mesh);
-				}
-			}
-
-			RemoveChild(attachment.Model.Root);
 		}
 	}
 	
@@ -338,16 +299,19 @@ namespace Alex.Graphics.Models
 			ElapsedTime = 0d;
 		}
 
-		public bool IsValid => TargetTime > 0d;
+		public bool IsValid => TargetTime > 0d && ElapsedTime < TargetTime;
 
 		public V Start;
 		public V Target;
 		public double TargetTime;
 		protected double ElapsedTime;
 
-		public abstract InterpolationData<V> WithStart(V start);
-		protected abstract V OnUpdate(double deltaTime);
+		public abstract InterpolationData<V> WithValues(V start, V target, double targetTime);
+		
+		protected abstract V OnUpdate(double elapsedTime);
 
+		public abstract void Reset();
+		
 		public V Update(double deltaTime)
 		{
 			if (TargetTime <= 0)
@@ -358,7 +322,7 @@ namespace Alex.Graphics.Models
 			
 			ElapsedTime += deltaTime;
 
-			return OnUpdate(deltaTime);
+			return OnUpdate(ElapsedTime);
 		}
 	}
 
@@ -380,17 +344,28 @@ namespace Alex.Graphics.Models
 			return vector;
 		}
 
-		/// <inheritdoc />
-		public override InterpolationData<Vector3> WithStart(Vector3 start)
+		public override InterpolationData<Vector3> WithValues(Vector3 start, Vector3 target, double targetTime)
 		{
-			this.Start = start;
+			Start = FixInvalidVector(start);
+			Target = FixInvalidVector(target);
+			TargetTime = targetTime;
+			ElapsedTime = 0d;
 			return this;
 		}
 
 		/// <inheritdoc />
-		protected override Vector3 OnUpdate(double deltaTime)
+		protected override Vector3 OnUpdate(double elapsedTime)
 		{
-			return Vector3.Lerp(Start, Target, (float) ((1f / TargetTime) * ElapsedTime));
+			return MathUtils.LerpVector3Safe(Start, Target, (float) (elapsedTime / TargetTime));
+		}
+
+		/// <inheritdoc />
+		public override void Reset()
+		{
+			Start = Vector3.Zero;
+			Target = Vector3.Zero;
+			TargetTime = -1d;
+			ElapsedTime = 0d;
 		}
 	}
 
@@ -404,18 +379,28 @@ namespace Alex.Graphics.Models
 		}
 
 		/// <inheritdoc />
-		public override InterpolationData<Vector3> WithStart(Vector3 start)
+		public override InterpolationData<Vector3> WithValues(Vector3 start, Vector3 target, double targetTime)
 		{
-			this.Start = start;
-
+			Start = start;
+			Target = target;
+			TargetTime = targetTime;
+			ElapsedTime = 0d;
 			return this;
-			//return new RotatedInterpolationData(start, Target, TargetTime);
+		}
+
+		/// <inheritdoc />
+		protected override Vector3 OnUpdate(double elapsedTime)
+		{
+			return MathUtils.LerpVector3Degrees(Start, Target, (float) (elapsedTime / TargetTime));// .Lerp(Start, Target, (float) ((1f / TargetTime) * ElapsedTime));
 		}
 		
 		/// <inheritdoc />
-		protected override Vector3 OnUpdate(double deltaTime)
+		public override void Reset()
 		{
-			return MathUtils.LerpVector3Degrees(Start, Target, (float) ((1f / TargetTime) * ElapsedTime));// .Lerp(Start, Target, (float) ((1f / TargetTime) * ElapsedTime));
+			Start = Vector3.Zero;
+			Target = Vector3.Zero;
+			TargetTime = -1d;
+			ElapsedTime = 0d;
 		}
 	}
 }

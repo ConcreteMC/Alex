@@ -68,8 +68,8 @@ namespace Alex.MoLang.Runtime.Value
 			return (float)Value;
 		}
 
-		public static DoubleValue Zero => new DoubleValue(0d);
-		public static DoubleValue One => new DoubleValue(1d);
+		public static DoubleValue Zero { get; } = new DoubleValue(0d);
+		public static DoubleValue One { get; } = new DoubleValue(1d);
 	}
 	
 	/*public class FloatValue : IMoValue<float>

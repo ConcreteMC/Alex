@@ -32,10 +32,7 @@ namespace Alex.Graphics.Models.Entity.Animations
 
 			_animationLength = definition.AnimationLength;
 
-			foreach (var bone in definition.Bones)
-			{
-				_boneComps.TryAdd(bone.Key, new BoneComp(bone.Value));
-			}
+			_components = definition.Bones.Select(x => new BoneComp(x.Key, this, x.Value)).ToArray();
 
 			if (definition.Loop != null)
 			{
@@ -48,7 +45,7 @@ namespace Alex.Graphics.Models.Entity.Animations
 		}
 
 		public bool Playing { get; private set; } = false;
-
+		public double AnimationLength => _animationLength;
 		private double _animationLength = 0d;
 		private double _animationTime = 0d;
 
@@ -57,7 +54,7 @@ namespace Alex.Graphics.Models.Entity.Animations
 			return true;
 		}
 
-		private Dictionary<string, BoneComp> _boneComps = new Dictionary<string, BoneComp>(StringComparer.Ordinal);
+		private BoneComp[] _components;
 
 		private Stopwatch _elapsedTimer = new Stopwatch();
 		public void Tick()
@@ -80,11 +77,11 @@ namespace Alex.Graphics.Models.Entity.Animations
 
 				_animationTime = entity.AnimationTime = animTimeUpdate;
 				
-				foreach (var bone in _boneComps)
+				foreach (var bone in _components)
 				{
-					if (bone.Value == null || bone.Value.Bone == null) continue;
+					if (bone == null || bone.Bone == null) continue;
 					
-					bone.Value.Tick(_parent.Runtime, _elapsedTimer.Elapsed.TotalSeconds, _animationTime, anim.OverridePreviousAnimation);
+					bone.Tick(_parent.Runtime, _elapsedTimer.Elapsed.TotalSeconds, _animationTime, anim.OverridePreviousAnimation);
 				}
 			}
 			finally
@@ -105,11 +102,11 @@ namespace Alex.Graphics.Models.Entity.Animations
 		/// <inheritdoc />
 		public void UpdateBindings(ModelRenderer renderer)
 		{
-			foreach (var bone in _boneComps)
+			foreach (var bone in _components)
 			{
-				if (renderer.GetBone(bone.Key, out var modelBone))
+				if (renderer.GetBone(bone.Name, out var modelBone))
 				{
-					bone.Value.Bone = modelBone;
+					bone.Bone = modelBone;
 				}
 			}
 		}
@@ -119,9 +116,9 @@ namespace Alex.Graphics.Models.Entity.Animations
 			if (Playing)
 				return;
 
-			foreach (var bone in _boneComps)
+			foreach (var bone in _components)
 			{
-				bone.Value.Start();
+				bone.Start();
 			}
 			
 			Playing = true;
@@ -129,22 +126,13 @@ namespace Alex.Graphics.Models.Entity.Animations
 			_elapsedTimer.Restart();
 		}
 
-		public void Pause()
-		{
-			if (!Playing)
-				return;
-
-			Playing = false;
-			_elapsedTimer.Stop();
-		}
-
 		public void Stop()
 		{
 			if (Playing)
 			{
-				foreach (var bone in _boneComps)
+				foreach (var bone in _components)
 				{
-					bone.Value.Stop();
+					bone.Stop();
 				}
 			}
 			Playing = false;
@@ -155,6 +143,9 @@ namespace Alex.Graphics.Models.Entity.Animations
 
 	public class BoneComp
 	{
+		public string Name { get; }
+		private readonly EntityAnimation _animation;
+
 		private readonly AnimationBoneElement _element;
 		//private Vector3 _rotation = Vector3.Zero;
 		//private Vector3 _position = Vector3.Zero;
@@ -162,8 +153,10 @@ namespace Alex.Graphics.Models.Entity.Animations
 
 		public ModelBone Bone { get; set; }
 
-		public BoneComp(AnimationBoneElement element)
+		public BoneComp(string name, EntityAnimation animation, AnimationBoneElement element)
 		{
+			Name = name;
+			_animation = animation;
 			_element = element;
 			Bone = null;
 		}
@@ -217,23 +210,28 @@ namespace Alex.Graphics.Models.Entity.Animations
 
 			var value = _element;
 
-			double rotationTime = elapsedTime;
+			if (value.Rotation != null)
+			{
+				var targetRotation = value.Rotation.Evaluate(runtime, Vector3.Zero, _animation.AnimationLength, animationTime, true);
 
-			var targetRotation =
-				(value.Rotation?.Evaluate(runtime, Vector3.Zero, out rotationTime, animationTime)
-				 ?? Vector3.Zero);
-			
-			bone.RotateOverTime(targetRotation, rotationTime > 0 ? rotationTime : elapsedTime, overrideOthers);
+				bone.RotateOverTime(targetRotation, elapsedTime, overrideOthers);
+			}
 
-			double positioningTime = elapsedTime;
-			var targetPosition = value.Position?.Evaluate(runtime, Vector3.Zero, out positioningTime, animationTime)
-			                     ?? Vector3.Zero;
 
-			bone.TranslateOverTime(targetPosition, positioningTime > 0 ? positioningTime : elapsedTime, overrideOthers);
+			if (value.Position != null)
+			{
+				var targetPosition = value.Position.Evaluate(runtime, Vector3.Zero, _animation.AnimationLength, animationTime);
 
-			double scaleTime = elapsedTime;
-			var targetScale = value.Scale?.Evaluate(runtime, bone.Scale, out scaleTime, animationTime) ?? Vector3.One;
-			bone.ScaleOverTime(targetScale, scaleTime > 0 ? scaleTime : elapsedTime, true);
+				bone.TranslateOverTime(
+					targetPosition, elapsedTime, overrideOthers);
+			}
+
+			if (value.Scale != null)
+			{
+				var targetScale = value.Scale.Evaluate(runtime, bone.Scale, _animation.AnimationLength, animationTime);
+
+				bone.ScaleOverTime(targetScale, elapsedTime, true);
+			}
 		}
 	}
 }

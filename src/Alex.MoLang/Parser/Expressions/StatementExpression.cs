@@ -3,12 +3,14 @@ using Alex.MoLang.Runtime.Value;
 
 namespace Alex.MoLang.Parser.Expressions
 {
-	public class StatementExpression : Expression<IExpression[]>
+	public class StatementExpression : Expression
 	{
+		private readonly IExpression[] _value;
+
 		/// <inheritdoc />
 		public override IMoValue Evaluate(MoScope scope, MoLangEnvironment environment)
 		{
-			foreach (IExpression expression in Value) {
+			foreach (IExpression expression in _value) {
 				expression.Evaluate(scope, environment);
 
 				if (scope.ReturnValue != null) {
@@ -22,6 +24,8 @@ namespace Alex.MoLang.Parser.Expressions
 		}
 
 		/// <inheritdoc />
-		public StatementExpression(IExpression[] value) : base(value) { }
+		public StatementExpression(IExpression[] value) : base() {
+			_value = value;
+		}
 	}
 }

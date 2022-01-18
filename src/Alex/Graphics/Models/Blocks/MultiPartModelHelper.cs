@@ -171,7 +171,15 @@ namespace Alex.Graphics.Models.Blocks
 				return false;
 			}
 			
-			return rule.KeyValues.All(x => Passes(world, position, baseBlock, x.Key, x.Value.ToLower()));
+			foreach (var x in rule.KeyValues)
+			{
+				if (!Passes(world, position, baseBlock, x.Key, x.Value.ToLower()))
+				{
+					return false;
+				}
+			}
+
+			return true;
 		}
 
 		private static bool Passes(IBlockAccess world, Vector3 position, BlockState baseblockState, string rule,

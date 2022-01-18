@@ -265,7 +265,7 @@ namespace Alex.Entities.Components
 		private const float MaxFallDistance = 0.625f;
 		public Vector3 Move(Vector3 amount)
 		{
-			using var blockAccess = new CollisionBlockAccess(Entity.Level);
+			using var blockAccess = new CachedBlockAccess(Entity.Level);
 
 			if (Entity.HasCollision)
 			{

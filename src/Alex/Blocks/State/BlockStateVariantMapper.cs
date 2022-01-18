@@ -89,13 +89,17 @@ namespace Alex.Blocks.State
         
         public bool TryResolve(BlockState source, string property, string value, out BlockState result)
         {
+            result = source;
             if (!_knownKeys.Contains(property))
             {
-                result = source;
                 return false;
             }
             
             var propHah = property.GetHashCode(StringComparison.OrdinalIgnoreCase);
+            if (source.States.All(x => x.Identifier != propHah))
+                return false;
+            
+          
             var clone = new BlockState
             {
                 Name = source.Name,
